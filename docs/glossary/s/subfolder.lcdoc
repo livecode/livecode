@@ -1,0 +1,14 @@
+Name: subfolder
+
+Synonyms: subdirectory,subdirectories,subfolder
+
+Type: glossary
+
+Description:
+A <folder> inside another <folder>. 
+ 
+If Folder A contains Folder B (and possibly other <folder|folders> and <file|files>), B is a subfolder of A.
+
+References: file (glossary), folder (glossary)
+
+Tags: file system

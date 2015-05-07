@@ -19,21 +19,50 @@
 #include <foundation-system.h>
 
 #include <float.h>
+#include <errno.h>
+
+#ifndef _WIN32
+#  include <fenv.h>
+#endif
 
 // Older versions of MSVC don't supply "trunc"
 #ifdef _WIN32
 double trunc(double f) { return f < 0 ? ceil(f) : floor(f); }
+#  define isnan(x) _isnan(x)
 #endif
+
+////////////////////////////////////////////////////////////////
+
+MCTypeInfoRef kMCMathDomainErrorTypeInfo;
+
+////////////////////////////////////////////////////////////////
+
+static inline bool
+__MCMathPropagateNanUnary (double p_in, double p_out)
+{
+    if (isnan (p_out) && !isnan (p_in))
+        return false;
+    return true;
+}
+
+static inline bool
+__MCMathPropagateNanBinary (double p_left, double p_right, double p_out)
+{
+    if (isnan (p_out) && (!(isnan (p_left) || isnan (p_right))))
+        return false;
+    return true;
+}
+
+////////////////////////////////////////////////////////////////
 
 extern "C" MC_DLLEXPORT void MCMathEvalRealToPowerOfReal(double p_left, double p_right, double& r_output)
 {
-    if (p_right == 0)
-    {
-        r_output = 1.0;
-        return;
-    }
-
     r_output = pow(p_left, p_right);
+
+    if (__MCMathPropagateNanBinary (p_left, p_right, r_output))
+        return;
+
+    MCErrorCreateAndThrow (kMCMathDomainErrorTypeInfo, nil);
 }
 
 extern "C" MC_DLLEXPORT void MCMathEvalNumberToPowerOfNumber(MCNumberRef p_left, MCNumberRef p_right, MCNumberRef& r_output)
@@ -52,6 +81,11 @@ extern "C" MC_DLLEXPORT void MCMathEvalNumberToPowerOfNumber(MCNumberRef p_left,
 extern "C" MC_DLLEXPORT void MCMathEvalBase10LogReal(double p_operand, double& r_output)
 {
     r_output = log10(p_operand);
+
+    if (__MCMathPropagateNanUnary (p_operand, r_output))
+        return;
+
+    MCErrorCreateAndThrow (kMCMathDomainErrorTypeInfo, nil);
 }
 
 extern "C" MC_DLLEXPORT void MCMathEvalBase10LogNumber(MCNumberRef p_operand, MCNumberRef& r_output)
@@ -69,6 +103,11 @@ extern "C" MC_DLLEXPORT void MCMathEvalBase10LogNumber(MCNumberRef p_operand, MC
 extern "C" MC_DLLEXPORT void MCMathEvalNaturalLogReal(double p_operand, double& r_output)
 {
     r_output = log(p_operand);
+
+    if (__MCMathPropagateNanUnary (p_operand, r_output))
+        return;
+
+    MCErrorCreateAndThrow (kMCMathDomainErrorTypeInfo, nil);
 }
 
 extern "C" MC_DLLEXPORT void MCMathEvalNaturalLogNumber(MCNumberRef p_operand, MCNumberRef& r_output)
@@ -154,6 +193,11 @@ extern "C" MC_DLLEXPORT void MCMathEvalTanNumber(MCNumberRef p_operand, MCNumber
 extern "C" MC_DLLEXPORT void MCMathEvalAsinReal(double p_operand, double& r_output)
 {
     r_output = asin(p_operand);
+
+    if (__MCMathPropagateNanUnary (p_operand, r_output))
+        return;
+
+    MCErrorCreateAndThrow (kMCMathDomainErrorTypeInfo, nil);
 }
 
 extern "C" MC_DLLEXPORT void MCMathEvalAsinNumber(MCNumberRef p_operand, MCNumberRef& r_output)
@@ -171,6 +215,11 @@ extern "C" MC_DLLEXPORT void MCMathEvalAsinNumber(MCNumberRef p_operand, MCNumbe
 extern "C" MC_DLLEXPORT void MCMathEvalAcosReal(double p_operand, double& r_output)
 {
     r_output = acos(p_operand);
+
+    if (__MCMathPropagateNanUnary (p_operand, r_output))
+        return;
+
+    MCErrorCreateAndThrow (kMCMathDomainErrorTypeInfo, nil);
 }
 
 extern "C" MC_DLLEXPORT void MCMathEvalAcosNumber(MCNumberRef p_operand, MCNumberRef& r_output)
@@ -361,7 +410,7 @@ extern "C" MC_DLLEXPORT void MCMathEvalConvertToBase10(MCStringRef p_operand, in
     
     bool t_negative;
     uinteger_t t_result;
-    bool t_error;
+    bool t_error = false;
     if (MCMathConvertToBase10(p_operand, p_source_base, t_negative, t_result, t_error))
     {
         if ((t_negative && t_result > INTEGER_MAX) || (!t_negative && t_result > abs(INTEGER_MIN)))
@@ -369,6 +418,10 @@ extern "C" MC_DLLEXPORT void MCMathEvalConvertToBase10(MCStringRef p_operand, in
         else
             r_output = t_negative ? -t_result : t_result;
     }
+	else if (t_error)
+	{
+		MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("integer overflow, or invalid character in source"), nil);
+	}
 }
 
 extern "C" MC_DLLEXPORT void MCMathEvalConvertFromBase10(integer_t p_operand, integer_t p_dest_base, MCStringRef& r_output)
@@ -411,6 +464,23 @@ extern "C" MC_DLLEXPORT void MCMathEvalConvertBase(MCStringRef p_operand, intege
     // If t_error is false then we failed because of a memory error, so no need to throw
     if (t_error)
         MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("integer overflow, or invalid character in source"), nil);
+}
+
+////////////////////////////////////////////////////////////////
+
+bool
+MCMathModuleInitialize (void)
+{
+	if (!MCNamedErrorTypeInfoCreate (MCNAME("com.livecode.math.DomainError"), MCNAME("math"), MCSTR("mathematical function domain error"), kMCMathDomainErrorTypeInfo))
+		return false;
+
+	return true;
+}
+
+void
+MCMathModuleFinalize (void)
+{
+	MCValueRelease (kMCMathDomainErrorTypeInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

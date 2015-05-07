@@ -23,7 +23,7 @@ use com.livecode.system
 use com.livecode.unittest
 
 -- Workaround string formatting issues
-handler FormatInt(in pNumber as Number) as String
+handler FormatInt(in pNumber as Number) returns String
 	variable tNumberString
 
 	put pNumber formatted as string into tNumberString
@@ -41,9 +41,9 @@ end handler
 -- Wrapper for "system" library function
 ----------------------------------------------------------------
 
-foreign handler __system(in Command as ZStringNative) as CInt binds to "system"
+foreign handler __system(in Command as ZStringNative) returns CInt binds to "system"
 
-handler Shell(in pCommand as String) as Number
+handler Shell(in pCommand as String) returns Number
 	variable tExitStatus as Number
 	put __system(pCommand) into tExitStatus
 
@@ -66,16 +66,16 @@ end handler
 -- FIXME this should use proper LiveCode builder syntax for string
 -- encoding/decoding.
 
-foreign handler MCStringEncode(in Source as String, in Encoding as CInt, in IsExternalRep as CBool, out Encoded as Data) as CBool binds to "<builtin>"
-foreign handler MCStringDecode(in Encoded as Data, in Encoding as CInt, in IsExternalRep as CBool, out Result as String) as CBool binds to "<builtin>"
+foreign handler MCStringEncode(in Source as String, in Encoding as CInt, in IsExternalRep as CBool, out Encoded as Data) returns CBool binds to "<builtin>"
+foreign handler MCStringDecode(in Encoded as Data, in Encoding as CInt, in IsExternalRep as CBool, out Result as String) returns CBool binds to "<builtin>"
 
-handler EncodeUTF8(in pString as String) as Data
+handler EncodeUTF8(in pString as String) returns Data
 	variable tEncoded as Data
 	MCStringEncode(pString, 4 /* UTF-8 */, false, tEncoded)
 	return tEncoded
 end handler
 
-handler DecodeUTF8(in pData as Data) as String
+handler DecodeUTF8(in pData as Data) returns String
 	variable tString as String
 	MCStringDecode(pData, 4 /* UTF-8 */, false, tString)
 	return tString
@@ -128,7 +128,7 @@ end handler
 
 variable sLcRunPath as String
 
-handler GetModuleTempPath(in pModulePath as String) as String
+handler GetModuleTempPath(in pModulePath as String) returns String
 	return pModulePath & ".tmp"
 end handler
 
@@ -137,7 +137,7 @@ end handler
 --
 -- Eliminate any common prefix between the module path and the path to
 -- the test runner's module file, then remove ".lcm" suffix.
-handler GetModulePrettyPath(in pModulePath as String) as String
+handler GetModulePrettyPath(in pModulePath as String) returns String
 	-- FIXME HACK HACK HACK
 	variable tPrefix as String
 	put the command name into tPrefix
@@ -164,7 +164,7 @@ end handler
 -- FIXME Currently, this is implemented by redirecting the lc-run's
 -- output into a temporary file, then reading the file in.  It would
 -- be much better to use a pipe instead, if possible.
-handler GetModuleHandlers(in pModulePath as String, out rHandlerNames as List) as Boolean
+handler GetModuleHandlers(in pModulePath as String, out rHandlerNames as List) returns Boolean
 	variable tTempPath as String
 	put GetModuleTempPath(pModulePath) into tTempPath
 
@@ -195,7 +195,7 @@ end handler
 --
 -- FIXME We may want to capture the stderr output into the log at some
 -- point.
-handler GetTestOutput(in pModulePath as String, in pHandlerName as String, out rOutput as String) as Boolean
+handler GetTestOutput(in pModulePath as String, in pHandlerName as String, out rOutput as String) returns Boolean
 
 	variable tTempPath as String
 	put GetModuleTempPath(pModulePath) into tTempPath
@@ -221,7 +221,7 @@ end handler
 
 ----------------------------------------------------------------
 -- Check whether a handler should be considered as a test
-handler IsTestHandler(in pHandlerName as String) as Boolean
+handler IsTestHandler(in pHandlerName as String) returns Boolean
 	if 1 is the first offset of "Test" in pHandlerName then
 		return true
 	else
@@ -235,7 +235,7 @@ end handler
 -- Performs a basic pass over a set of test output and returns one of
 -- "PASS", "XPASS", "FAIL", "XFAIL", "SKIP", or "" (if the output
 -- contained no test results).
-handler GetTestStatus(in pOutput as String) as String
+handler GetTestStatus(in pOutput as String) returns String
 	variable tFail as Boolean
 	variable tXFail as Boolean
 	variable tXPass as Boolean

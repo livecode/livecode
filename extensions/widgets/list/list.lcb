@@ -15,15 +15,11 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
--- declaring the extension as a widget, followed by the identifier
-widget com.livecode.extensions.livecode.list
---
+/*
+*/
 
--- adding metadata to ensure the extension displays correctly in LiveCode
-metadata author is "LiveCode"
-metadata version is "1.0.1"
-metadata title is "List"
---
+-- declaring the extension as a widget, followed by the identifier
+widget community.livecode.livecode.list
 
 -- dependency declarations
 use com.livecode.canvas
@@ -31,31 +27,35 @@ use com.livecode.widget
 use com.livecode.engine
 --
 
+-- metadata
+metadata author is "LiveCode"
+metadata version is "1.0.1"
+metadata title is "List"
+
 -- property declarations
 property listData 		get mListData 		set setListData
 --
 
 -- private instance variables
-private variable mListData as list
-private variable mListCount as integer
-private variable mlistHeight as real
-private variable mRowHeight as real
-private variable mViewHeight as real
-private variable mViewWidth as real
-private variable mListTravel as real
-private variable mViewTopPosition as real
-private variable mFirstListItem as integer
-private variable mMargin as real
+private variable mListData as List
+private variable mListCount as Integer
+private variable mlistHeight as Real
+private variable mRowHeight as Real
+private variable mViewHeight as Real
+private variable mViewWidth as Real
+private variable mListTravel as Real
+private variable mViewTopPosition as Real
+private variable mFirstListItem as Integer
+private variable mMargin as Real
 
 // Drag related 
-private variable mDragging as boolean
+private variable mDragging as Boolean
 private variable mDragStartLoc as Point
 --
 
-----------
--- this handler is called when the widget is created
+
 public handler OnCreate() as undefined
-	variable tArray as array
+	variable tArray as Array
 	put the empty array into tArray
 	put the empty list into mListData
 	
@@ -86,14 +86,11 @@ public handler OnCreate() as undefined
 	
 	setupConstants()
 end handler
-----------
 
-----------
--- this handler is called whenever LiveCode needs to redraw the widget
 public handler OnPaint() as undefined
-	variable tTop as real
+	variable tTop as Real
 	variable tPath as Path
-	variable tLeft as real
+	variable tLeft as Real
 	
 	put mlistHeight - mViewHeight into mListTravel
 	if mListTravel < 0 then
@@ -118,10 +115,10 @@ public handler OnPaint() as undefined
 	set the paint of this canvas to getPaint("background","fill")
 	fill tPath on this canvas	
 	
-	variable tListItem as array
+	variable tListItem as Array
 	put the empty array into tListItem
 	
-	variable tx as integer
+	variable tx as Integer
 	put 1 into tx
 	
 	put the floor of mViewTopPosition / mRowHeight into mFirstListItem
@@ -190,10 +187,7 @@ public handler OnPaint() as undefined
 	set the paint of this canvas to getPaint("scrollbar", "fill")
 	fill tPath on this canvas	
 end handler
-----------
 
-----------
--- the following handlers deal with mouse events
 public handler OnMouseDown() as undefined
 	put the mouse position into mDragStartLoc
 	
@@ -206,34 +200,34 @@ end handler
 public handler onMouseMove() as undefined
 	if mDragging is true then
 		// Get the scrollbar ratio
-		variable tScrollbarRatio as real
+		variable tScrollbarRatio as Real
 		put mViewHeight / mlistHeight into tScrollbarRatio
 		if tScrollbarRatio > 1 then
 			put 1 into tScrollbarRatio
 		end if
 	
 		// Get the scrollbar height
-		variable tScrollbarHeight as real
+		variable tScrollbarHeight as Real
 		put mViewHeight * tScrollbarRatio into tScrollbarHeight
 		if tScrollbarHeight < 25 then
 			put 25 into tScrollbarHeight
 		end if
 	
 		// Get the scrollbar position ratio
-		variable tScrollPositionRatio as real
+		variable tScrollPositionRatio as Real
 		put mViewTopPosition / mListTravel into tScrollPositionRatio
 	
 		// Get the scrollbar space
-		variable tScrollbarSpace as real
-		variable tScrollbarSpaceTop as real
+		variable tScrollbarSpace as Real
+		variable tScrollbarSpaceTop as Real
 		put mViewHeight - tScrollbarHeight into tScrollbarSpace
 		put tScrollbarHeight / 2 into tScrollbarSpaceTop
 		
 		// Get the mouse y position within the space
-		variable sMouseY as real
+		variable sMouseY as Real
 		put the y of the mouse position into sMouseY
 		
-		variable tNewScrollbarY as real
+		variable tNewScrollbarY as Real
 		put sMouseY-tScrollbarSpaceTop into tNewScrollbarY
 		if tNewScrollbarY < tScrollbarSpaceTop then
 			put tScrollbarSpaceTop into tNewScrollbarY
@@ -264,7 +258,7 @@ public handler OnMouseCancel() as undefined
 	put false into mDragging
 end handler
 
-public handler OnMouseScroll(in pDeltaX as real, in pDeltaY as real) as undefined
+public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real) as undefined
 	if pDeltaY < 0 then
 		subtract mRowHeight from mViewTopPosition
 	else
@@ -275,18 +269,12 @@ public handler OnMouseScroll(in pDeltaX as real, in pDeltaY as real) as undefine
 	end if
 	redraw all
 end handler
-----------
 
-----------
--- this handler sets the list data
-private handler setListData(in pListData as array) as undefined
+private handler setListData(in pListData as Array) as undefined
 	put pListData into mListData
 	redraw all
 end handler
-----------
 
-----------
--- this handler returns a paint
 public handler getPaint(pLocation, pType) as Paint
 	if pLocation is "background" then
 		if pType is "fill" then
@@ -318,26 +306,17 @@ public handler getPaint(pLocation, pType) as Paint
 	
 	return solid paint with stringToColor("255,100,200")
 end handler
-----------
 
-----------
--- this handler returns the font name as a string
-private handler getFontName() as string
+private handler getFontName() as String
 	return "Helvetica Neue"
 	
 	return the name of the font of this canvas
 end handler
-----------
 
-----------
--- this handler returns a font size
-private handler getFontSize() as number
+private handler getFontSize() as Number
 	return 11
 end handler
-----------
 
-----------
--- this handler puts values into variables
 private handler setupConstants() as undefined
 	put the number of elements in mListData into mListCount
 	put 40 into mRowHeight
@@ -356,40 +335,34 @@ private handler setupConstants() as undefined
 	end if
 	put false into mDragging
 end handler
-----------
 
-----------
--- this handler returns the rect of the scrollbar
 private handler scrollbarRect() as Rectangle
-	variable tScrollbarRatio as real
+	variable tScrollbarRatio as Real
 	put mViewHeight / mlistHeight into tScrollbarRatio
 	if tScrollbarRatio > 1 then
 		put 1 into tScrollbarRatio
 	end if
 	
-	variable tScrollbarHeight as real
+	variable tScrollbarHeight as Real
 	put mViewHeight * tScrollbarRatio into tScrollbarHeight
 	if tScrollbarHeight < 25 then
 		put 25 into tScrollbarHeight
 	end if
 	
-	variable tScrollPositionRatio as real
+	variable tScrollPositionRatio as Real
 	put mViewTopPosition / mListTravel into tScrollPositionRatio
 	
-	variable tScrollbarSpace as real
-	variable tScrollbarY as real
+	variable tScrollbarSpace as Real
+	variable tScrollbarY as Real
 	put mViewHeight - tScrollbarHeight into tScrollbarSpace
 	put tScrollbarSpace * tScrollPositionRatio into tScrollbarY
 
 	return rectangle [mViewWidth-10,tScrollbarY,mViewWidth-5,tScrollbarY+tScrollbarHeight]
 end handler
-----------
 
-----------
--- this handler returns the scrollbar height
-private handler scrollbarHeight() as real
-	variable tScrollbarHeight as real
-	variable tScrollbarRatio as real
+private handler scrollbarHeight() as Real
+	variable tScrollbarHeight as Real
+	variable tScrollbarRatio as Real
 
 	put mViewHeight / mlistHeight into tScrollbarRatio
 	
@@ -405,9 +378,8 @@ private handler scrollbarHeight() as real
 		return tScrollbarHeight
 	end if
 end handler
-----------
 
-//public handler OnDragStart() as boolean
+//public handler OnDragStart() as Boolean
 	//put the mouse position into sDragLastPosition
 	
 	//if sDragLastPosition is within scrollbarRect() then
@@ -421,7 +393,7 @@ end handler
 //	log "Drag ended: %@" with [the mouse position]
 //end handler
 
-//public handler onDragMove(in pX as real, in pY as real) as undefined
+//public handler onDragMove(in pX as Real, in pY as Real) as undefined
 //	log "Drag move: %@" with [pY]
 //	if element 2 of sDragLastPosition is not pY then
 //		add element 2 of sDragLastPosition - pY to mViewTopPosition
@@ -429,15 +401,13 @@ end handler
 //	end if
 //end handler
 
-----------
--- this handler returns an RGBA color from a string
-private handler stringToColor(in pString as string) as Color
-	variable tRed as real
-	variable tGreen as real
-	variable tBlue as real
-	variable tAlpha as real
+private handler stringToColor(in pString as String) as Color
+	variable tRed as Real
+	variable tGreen as Real
+	variable tBlue as Real
+	variable tAlpha as Real
 
-	variable tComponentList as list
+	variable tComponentList as List
 	split pString by "," into tComponentList
 
 	variable tComponentCount
@@ -459,6 +429,5 @@ private handler stringToColor(in pString as string) as Color
 
 	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha ]
 end handler
-----------
 
 end widget

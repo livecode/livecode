@@ -71,26 +71,26 @@ on initialiseLibrary
    end if
    # AL-2015-01-29: [[ Scriptify revSaveAsStandalone ]] The library autodetection uses various patterns to find library handlers being used.
    # Geometry
-   put "cRevGeometry" into sPatternsA["revGeometryLibrary"]["Property"]
+   put "cRevGeometry" into sPatternsA["Geometry"]["Property"]
    
    # Animation
-   put "cRevAnimation" into sPatternsA["revAnimationLibrary"]["Property"]
+   put "cRevAnimation" into sPatternsA["Animation"]["Property"]
    
    # Table
-   put "cRevTable" into sPatternsA["revTableLibrary"]["Property"]
+   put "cRevTable" into sPatternsA["Table"]["Property"]
    
    # Database
-   put "cRevDatabase" into sPatternsA["revDatabaseLibrary"]["Property"]
-   put "revDatabase,revdb_" into sPatternsA["revDatabaseLibrary"]["Root"]
-   put "revCloseCursor,revCloseDatabase,revCommitDatabase,revCurrentRecord,revCurrentRecordIsFirst,revCurrentRecordIsLast,revDataFromQuery,revExecuteSQL,revMoveToFirstRecord,revMoveToLastRecord,revMoveToNextRecord,revMoveToPreviousRecord,revNumberOfRecords,revOpenDatabase,revOpenDatabases,revQueryDatabase,revQueryDatabaseBLOB,revQueryResult,revRollBackDatabase" into sPatternsA["revDatabaseLibrary"]["Script"]
+   put "cRevDatabase" into sPatternsA["Database"]["Property"]
+   put "revDatabase,revdb_" into sPatternsA["Database"]["Root"]
+   put "revCloseCursor,revCloseDatabase,revCommitDatabase,revCurrentRecord,revCurrentRecordIsFirst,revCurrentRecordIsLast,revDataFromQuery,revExecuteSQL,revMoveToFirstRecord,revMoveToLastRecord,revMoveToNextRecord,revMoveToPreviousRecord,revNumberOfRecords,revOpenDatabase,revOpenDatabases,revQueryDatabase,revQueryDatabaseBLOB,revQueryResult,revRollBackDatabase" into sPatternsA["Database"]["Script"]
    
    # Internet
-   put "libUrl" into sPatternsA["revLibUrl"]["Root"]
-   put "cachedURL,cachedURLs,ftp,http,https,SSL & Encryption,load,post,resetAll,URL,URLStatus" into sPatternsA["revLibUrl"]["Script"]
+   put "libUrl" into sPatternsA["Internet"]["Root"]
+   put "cachedURL,cachedURLs,ftp,http,https,SSL & Encryption,load,post,resetAll,URL,URLStatus" into sPatternsA["Internet"]["Script"]
    
    # XML
-   put "revXML" into sPatternsA["revXMLRPCLibrary"]["Root"]
-   put "revSetDatabaseDriverPath,revAddXMLNode,revAppendXML,revCreateXMLTree,revCreateXMLTreeFromFile,revDeleteAllXMLTrees,revDeleteXMLNode,revDeleteXMLTree,revPutIntoXMLNode,revSetXMLAttribute" into sPatternsA["revXMLRPCLibrary"]["Script"]
+   put "revXML" into sPatternsA["XMLRPC"]["Root"]
+   put "revSetDatabaseDriverPath,revAddXMLNode,revAppendXML,revCreateXMLTree,revCreateXMLTreeFromFile,revDeleteAllXMLTrees,revDeleteXMLNode,revDeleteXMLTree,revPutIntoXMLNode,revSetXMLAttribute" into sPatternsA["XMLRPC"]["Script"]
    
    # Speech
    put "revIsSpeaking,revSetSpeechPitch,revSetSpeechSpeed,revSetSpeechVoice,revSpeak,revSpeechVoices,revStopSpeech,revUnloadSpeech" into sPatternsA["Speech"]["Script"]
@@ -102,7 +102,7 @@ on initialiseLibrary
    put "secure,encrypt,decrypt,cipherNames,randomBytes" into sPatternsA["SSL & Encryption"]["Script"]
    
    # Printing
-   put "revPrintField,revPrintText,revShowPrintDialog" into sPatternsA["revPrintLibrary"]["Script"]
+   put "revPrintField,revPrintText,revShowPrintDialog" into sPatternsA["Printing"]["Script"]
    
    # Browser
    put "revBrowser,xBrowser" into sPatternsA["Browser"]["Script"]
@@ -371,51 +371,53 @@ end folderNameMakeLegal
 
 private function revStandalonePlatformDetails pPlatform
    local tDetailsA
+
+   -- SN-2015-03-04: [[ IDE Restructure ]] Externals folder contains the externals,
+   --  and Support contains support libraries (revpdfprinter and revsecurity):
+   --  they should have their own keys in the details array.
+   local tArchFolder
    switch
       case pPlatform contains "MacOSX"
          -- MM-2014-03-21: [[ PPC Support Dropped ]] We now only support intel Mac builds. Assume all mac builds to be intel.
          -- MW-2013-06-13: [[ CloneAndRun ]] If not installated type, then take from the binaries folder.
-         if not revEnvironmentIsInstalled() then
-            put revEnvironmentBinariesPath() into tDetailsA["externals_folder"]
-         else
-            put revEnvironmentRuntimePath() & "/Mac OS X/x86-32/Support" into tDetailsA["externals_folder"]
-         end if
+         put "Mac OS X/x86-32" into tArchFolder
          put ".bundle" into tDetailsA["loadable_extension"]
          put ".dylib" into tDetailsA["shared_extension"]
          put "MacOSX" into  tDetailsA["platform"]
          put "x86-32" into tDetailsA["architecture"]
          break
       case pPlatform = "Windows"
-         -- MW-2013-06-13: [[ CloneAndRun ]] If not installated type, then take from the binaries folder.
-         if not revEnvironmentIsInstalled() then
-            put revEnvironmentBinariesPath() into tDetailsA["externals_folder"]
-         else
-            put revEnvironmentRuntimePath() &  "/Windows/x86-32/Support" into tDetailsA["externals_folder"]
-         end if
+         put "Windows/x86-32" into tArchFolder
          put ".dll" into tDetailsA["loadable_extension"]
          put "Windows" into tDetailsA["platform"]
          put "x86-32" into tDetailsA["architecture"]
          break
       default
          if pPlatform is "Linux" then
-            put revEnvironmentRuntimePath() &  "/Linux/x86-32/Support" into tDetailsA["externals_folder"]
+            put "Linux/x86-32" into tArchFolder
             put "x86-32" into tDetailsA["architecture"]
          else if pPlatform is "Linux x64" then
             -- MW-2013-11-06: [[ LinuxX64 ]] Compute the correct path for 64-bit linux.
-            put revEnvironmentRuntimePath() & "/Linux/x86-64/Support" into tDetailsA["externals_folder"]
+            put "Linux/x86-64" into tArchFolder
             put "x86-64" into tDetailsA["architecture"]
          else -- if pPlatform is "Linux armv6-hf" then
             -- FG-2014-08-19: [[ RPi ]] Compute the correct path for 64-bit Linux
-            put revEnvironmentRuntimePath() & "/Linux/armv6-hf/Support" into tDetailsA["externals_folder"]
+            put "Linux/armv6-hf" into tArchFolder
             put "armv6-hf" into tDetailsA["architecture"]
-         end if
-         -- MW-2013-06-13: [[ CloneAndRun ]] If not installated type, then take from the binaries folder.
-         if not revEnvironmentIsInstalled() then
-            put revEnvironmentBinariesPath() into tDetailsA["externals_folder"]
          end if
          put ".so" into tDetailsA["loadable_extension"]
          put "Linux" into tDetailsA["platform"]
    end switch
+
+   -- SN-2015-03-04: [[ CloneAndRun ]] Refactor the setting of externals / support location
+   if revEnvironmentIsInstalled() then
+      put revEnvironmentRuntimePath() & slash & tArchFolder into tRuntimeFolder
+      put tRuntimeFolder & slash & "Support" into tDetailsA["support_folder"]
+      put tRuntimeFolder & slash & "Externals" into tDetailsA["externals_folder"]
+   else
+      put revEnvironmentBinariesPath() into tDetailsA["externals_folder"]
+      put revEnvironmentBinariesPath() into tDetailsA["support_folder"]
+   end if
    return tDetailsA
 end revStandalonePlatformDetails
 
@@ -854,7 +856,7 @@ end revOutputDirectories
 # to the stack being built. Will remove any existing group called revLibraries from card 1 of the stack.
 private command revCopyScriptLibraries pStack, pPlatform
    # AL-2015-02-03: [[ Scriptify IDE ]] Ensure revCommonLibrary is always included in a standalone
-   revAddLibrary "revCommonLibrary"
+   revAddLibrary "Common"
    
    -- data grid
    if "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
@@ -862,11 +864,11 @@ private command revCopyScriptLibraries pStack, pPlatform
    end if
    
    if sStandaloneSettingsA["databaseDrivers"] = "" then 
-      revAddLibrary "revDatabaseLibrary"
+      revAddLibrary "Database"
    end if
    
    if sStandaloneSettingsA["includeProfiles"] = "" then 
-      revAddLibrary "revProfilesLibrary"
+      revAddLibrary "Profiles"
    end if
    
    /*
@@ -1765,15 +1767,14 @@ private command revCopyDatabaseDrivers pPlatform, pStackFilePath, pStandalonePat
    end if
    
    # AL-2015-02-06: [[ SB Inclusions ]] Ensure revDatabaseLibrary stack is included
-   put return & "revDatabaseLibrary" after sStandaloneSettingsA["scriptLibraries"]
+   put return & "Database" after sStandaloneSettingsA["scriptLibraries"]
    
    local tDBLibPath
    put revStandaloneDatabaseDriversPath(pPlatform) into tDBLibPath
    
-   local tExternalsFolder, tExtension, tSharedExtension, tPlatform, tArch
+   local tExtension, tSharedExtension, tPlatform, tArch
    local tDetailsA
    put revStandalonePlatformDetails(pPlatform) into tDetailsA
-   put tDetailsA["externals_folder"] into tExternalsFolder
    put tDetailsA["loadable_extension"] into tExtension
    if tDetailsA["shared_extension"] is not empty then
       put tDetailsA["shared_extension"] into tSharedExtension
@@ -1818,6 +1819,10 @@ private command revCopyDatabaseDrivers pPlatform, pStackFilePath, pStandalonePat
       # OK-2010-01-13 : No Oracle support
       if tPlatform is "Linux" and tDriver is "Oracle" then
          revStandaloneAddWarning "Linux, Oracle is not currently supported on this platform"
+         next repeat
+      else if tDriver is "Oracle" and line 3 of the revlicenseinfo is "Community" then
+         -- SN-2015-03-06: [[ DBDriverInclusion ]] Under community, the Oracle database
+         -- is not visible, and should simply be ignored as it will fail.
          next repeat
       end if
       
@@ -1939,10 +1944,11 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
    put item 1 to -2 of pStandalonePath into tCurrentLocation
    set the itemDel to ","
    
-   local tExternalsFolder, tExtension, tSharedExtension, tPlatform, tArch
+   local tSupportFolder, tExtension, tSharedExtension, tPlatform, tArch
    local tDetailsA
    put revStandalonePlatformDetails(pPlatform) into tDetailsA
-   put tDetailsA["externals_folder"] into tExternalsFolder
+   -- SN-2015-03-04: [[ IDE Restructure ]] revpdfprinter and revsecurity are in the support folder
+   put tDetailsA["support_folder"] into tSupportFolder
    put tDetailsA["loadable_extension"] into tExtension
    if tDetailsA["shared_extension"] is not empty then
       put tDetailsA["shared_extension"] into tSharedExtension
@@ -1955,7 +1961,7 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
    
    # OK-2010-04-26: Bug 8539 - PDF Printer not included
    if sStandaloneSettingsA["pdfPrinter"] then
-      revCopyModule tPlatform, "revpdfprinter", "revpdfprinter" & tExtension, tExternalsFolder, tCurrentLocation, "", tPlatform is "MacOSX"
+      revCopyModule tPlatform, "revpdfprinter", "revpdfprinter" & tExtension, tSupportFolder, tCurrentLocation, "", tPlatform is "MacOSX"
       if the result is not empty then
          revStandaloneAddWarning tPlatform && tArch & ", Support, revpdfprinter" & tExtension && the result & ": required for PDF printing."
       else
@@ -1965,7 +1971,7 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
    
    -- MM-2014-01-29: [[ OpenSSL ]] We now build our own version of OpenSSL. 
    if "SSL & Encryption" is among the lines of sStandaloneSettingsA["scriptLibraries"] then
-      revCopyModule tPlatform, "revsecurity", "revsecurity" & tSharedExtension, tExternalsFolder, tCurrentLocation, "", false
+      revCopyModule tPlatform, "revsecurity", "revsecurity" & tSharedExtension, tSupportFolder, tCurrentLocation, "", false
       if the result is not empty then
          revStandaloneAddWarning tPlatform && tArch & ", Support, revsecurity" & tSharedExtension && the result & ": required for SSL."
       else
@@ -2040,6 +2046,18 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
       
       -- get the path to the external
       put revExternalPath(tExternalName, tPlatform, tArch) into tExternalPath
+      
+      -- SN-2015-03-06: [[ DBDriverInclusion ]] In case Database drivers were
+      -- included, then the revdb external has been copied.
+      -- No issue to copy over it on Windows / Linux, but copying a folder (revdb.bundle)
+      -- will fail on Mac.
+      local tSourceExternal
+      put item -1 of tExternalPath into tSourceExternal
+      if tSourceExternal contains "revdb" and \
+            (there is a folder (tCurrentLocation & "/Externals/" &  tSourceExternal) \
+            or there is a file (tCurrentLocation & "/Externals/" & tSourceExternal)) then
+         next repeat
+      end if
       
       revCopyModule tPlatform, tExternalName, item -1 of tExternalPath, item 1 to -2 of tExternalPath, tCurrentLocation, "Externals", tPlatform is "MacOSX"
       if the result is not empty then
@@ -2154,14 +2172,22 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
    
    # AL-2015-01-29: [[ Scriptify IDE ]] Add the library inclusions to the deploy parameters
    repeat for each line tLibrary in sStandaloneSettingsA["scriptLibraries"]
-      if there is a stack tLibrary then
-         put return & the effective filename of stack tLibrary after sStandaloneSettingsA["auxiliary_stackfiles"]
-         put return & "revInternal__LoadLibrary" && tLibrary after sStandaloneSettingsA["startup_script"]
+      # AL-2015-03-05: [[ Bug 14813 ]] Transform script library display name to stack name at deploy time
+      local tLibraryStack
+      put revSBStackNameFromScriptLibraryName(tLibrary) into tLibraryStack
+      if there is a stack tLibraryStack then
+         if sStandaloneSettingsA["auxiliary_stackfiles"] is not empty then put return after sStandaloneSettingsA["auxiliary_stackfiles"]
+         put the effective filename of stack tLibraryStack after sStandaloneSettingsA["auxiliary_stackfiles"]
+         put return & "revInternal__LoadLibrary" && tLibraryStack after sStandaloneSettingsA["startup_script"]
       end if
    end repeat
    if sStandaloneSettingsA["auxiliary_stackfiles"] is not empty then
-      put the effective filename of stack "revInitialisationLibrary" before sStandaloneSettingsA["auxiliary_stackfiles"]
-      put "insert the script of stack revInitialisationLibrary into back" before sStandaloneSettingsA["startup_script"]
+      local tRevInitialisationLibrary
+      put the effective filename of stack "revInitialisationLibrary" into tRevInitialisationLibrary
+      if tRevInitialisationLibrary is not among the lines of sStandaloneSettingsA["auxiliary_stackfiles"] then
+         put tRevInitialisationLibrary & cr before sStandaloneSettingsA["auxiliary_stackfiles"]
+         put "insert the script of stack" && quote & "revInitialisationLibrary" & quote && "into back" & cr before sStandaloneSettingsA["startup_script"]
+      end if
       repeat for each line tStackFile in sStandaloneSettingsA["auxiliary_stackfiles"]
          local tTempStackFile
          put the tempname into tTempStackFile

@@ -30,6 +30,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 MCImageRep::MCImageRep()
 {
 	m_reference_count = 0;
+    
+    MCMemoryClear(&m_metadata, sizeof(m_metadata));
 }
 
 MCImageRep::~MCImageRep()
@@ -74,6 +76,7 @@ MCLoadableImageRep::MCLoadableImageRep()
 	m_frames_premultiplied = false;
 	
 	m_next = m_prev = nil;
+    
 }
 
 MCLoadableImageRep::~MCLoadableImageRep()
@@ -431,6 +434,17 @@ void MCLoadableImageRep::UnlockBitmap(uindex_t p_index, MCImageBitmap *p_bitmap)
 	Release();
 
 	MoveRepToHead(this);
+}
+
+// MERG-2014-09-16: [[ ImageMetadata ]] Support for image metadata property
+bool MCLoadableImageRep::GetMetadata(MCImageMetadata& r_metadata)
+{
+    if (!EnsureHeader())
+        return false;
+    
+    r_metadata = m_metadata;
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

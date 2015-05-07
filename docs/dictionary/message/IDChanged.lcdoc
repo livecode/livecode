@@ -1,0 +1,45 @@
+Name: IDChanged
+
+Type: message
+
+Syntax: IDChanged <oldID>, <newID> 
+
+Summary: Sent to an <image> when its <ID> <property> is changed.
+
+Associations: image
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+on IDChanged prevID,currentID -- update ID stored in another object
+  set the storedID[the short name of image ID prevID] of this stack \
+     to currentID
+end IDChanged
+
+Parameters:
+oldID: The image's original ID number.
+newID: The image's new ID number.
+
+Description:
+Handle the <IDChanged> <message> if you want to make updates when an <image(object)|image's> <ID> is changed.
+
+The <ID> <property> of most <object|objects> is set when the <object> is created and cannot be changed. There are two exceptions: <stacks> and <image(object)|images>.
+
+You can set the <ID> of an <image> to any positive <integer>. Be careful not to set an <image> <ID> to a number that's the <ID> of another <image> in the same <stack> : since LiveCode uses IDs to keep track of <object|objects>, a conflict may result in the inability to access one or both <object|objects>. The following ID numbers are reserved and should not be used for <image> IDs:
+
+        * 1-100: reserved for built-in cursors
+        * 101-135: reserved for built-in brush shapes
+        * 236-300: reserved for built-in patterns
+        * 301-1000: reserved for built-in icons
+        * 101,000-103,000: reserved
+        * 200,000-299,999: reserved for application use
+
+The actual change is not triggered by the <IDChanged> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <ID> from being changed.
+
+References: altID (property), ID (property), nameChanged (message), image (keyword), integer (keyword), stack (object), image (object), object (object), property (glossary), trap (glossary), message (glossary), image (glossary), stacks (function), pass (control_st)
+
+Tags: objects

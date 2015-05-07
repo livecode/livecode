@@ -1,0 +1,14 @@
+Name: network byte order
+
+Synonyms: network byte order
+
+Type: glossary
+
+Description:
+The <byte order> used by a network. To avoid confusion, all systems on a network use the same <byte order> when communicating with each other, even if they use a different <byte order> internally. 
+ 
+For the Internet, by convention, the network byte order is "big-endian", with the most significant <byte> first.
+
+References: byte order (glossary), byte (glossary)
+
+Tags: networking

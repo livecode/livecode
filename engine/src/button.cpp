@@ -327,6 +327,8 @@ MCButton::MCButton()
     
     // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure the default button animate message is only posted from a single thread.
     m_animate_posted = false;
+	
+	m_menu_handler = nil;
 }
 
 MCButton::MCButton(const MCButton &bref) : MCControl(bref)
@@ -378,6 +380,8 @@ MCButton::MCButton(const MCButton &bref) : MCControl(bref)
     
     // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure the default button animate message is only posted from a single thread.
     m_animate_posted = false;
+
+	m_menu_handler = nil;
 }
 
 MCButton::~MCButton()
@@ -732,7 +736,7 @@ Boolean MCButton::kdown(MCStringRef p_string, KeySym key)
                     flags |= F_LABEL;
 					if (entry != NULL)
 						entry->settext(0, *t_pick, False);
-					Exec_stat es = message_with_valueref_args(MCM_menu_pick, *t_pick);
+					Exec_stat es = handlemenupick(*t_pick, nil);
 					if (es == ES_NOT_HANDLED || es == ES_PASS)
 						message_with_args(MCM_mouse_up, menubutton);
 					// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
@@ -766,7 +770,7 @@ Boolean MCButton::kdown(MCStringRef p_string, KeySym key)
 						t_label = mbptr->getlabeltext();
 	
 					menu->menukdown(p_string, key, &t_pick, menuhistory);
-					Exec_stat es = message_with_valueref_args(MCM_menu_pick, t_label);
+					Exec_stat es = handlemenupick(t_label, nil);
 					if (es == ES_NOT_HANDLED || es == ES_PASS)
 						message_with_args(MCM_mouse_up, menubutton);
 				}
@@ -1190,7 +1194,7 @@ Boolean MCButton::mdown(uint2 which)
 						setmenuhistoryprop(starttab + 1);
 						// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 						layer_redrawall();
-						message_with_valueref_args(MCM_menu_pick, t_tab, t_oldhist);
+						handlemenupick(t_tab, t_oldhist);
 					}
 				}
 			}
@@ -1452,7 +1456,7 @@ Boolean MCButton::mup(uint2 which, bool p_release)
 						setmenuhistoryprop(starttab + 1);
 						// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 						layer_redrawall();
-						message_with_valueref_args(MCM_menu_pick, t_tab, t_oldhist);
+						handlemenupick(t_tab, t_oldhist);
 					}
 				}
 				else
@@ -2882,7 +2886,7 @@ void MCButton::activate(Boolean notify, KeySym p_key)
 		else
 		{
 			if (!t_disabled)
-				message_with_valueref_args(MCM_menu_pick, *t_pick);
+				handlemenupick(*t_pick, nil);
 		}
 	}
 	else
@@ -3576,6 +3580,25 @@ Boolean MCButton::findmenu(bool p_just_for_accel)
 	return menu != NULL;
 }
 
+void MCButton::setmenuhandler(MCButtonMenuHandler *p_handler)
+{
+	m_menu_handler = p_handler;
+}
+
+Exec_stat MCButton::handlemenupick(MCValueRef p_pick, MCValueRef p_old_pick)
+{
+	if (m_menu_handler != nil)
+	{
+		if (m_menu_handler->OnMenuPick(this, p_pick, p_old_pick))
+			return ES_NORMAL;
+	}
+	
+	if (p_old_pick == nil)
+		return message_with_valueref_args(MCM_menu_pick, p_pick);
+	else
+		return message_with_valueref_args(MCM_menu_pick, p_pick, p_old_pick);
+}
+
 bool MCSystemPick(MCStringRef p_options, bool p_use_checkmark, uint32_t p_initial_index, uint32_t& r_chosen_index, MCRectangle p_button_rect);
 
 void MCButton::openmenu(Boolean grab)
@@ -3625,7 +3648,7 @@ void MCButton::openmenu(Boolean grab)
 												  &t_label);
 			MCValueAssign(label, *t_label);
 			flags |= F_LABEL;
-			message_with_valueref_args(MCM_menu_pick, *t_label);
+			handlemenupick(*t_label, nil);
 		}
 		return;
 	}
@@ -3792,13 +3815,16 @@ void MCButton::docascade(MCStringRef p_pick)
 	
 	if (pptr != this)
 	{
-		MCParameter *param = new MCParameter;
-		param->setvalueref_argument(*t_pick);
-		MCscreen->addmessage(pptr, MCM_menu_pick, MCS_time(), param);
+		if (m_menu_handler == nil || !m_menu_handler->OnMenuPick(pptr, *t_pick, nil))
+		{
+			MCParameter *param = new MCParameter;
+			param->setvalueref_argument(*t_pick);
+			MCscreen->addmessage(pptr, MCM_menu_pick, MCS_time(), param);
+		}
 	}
 	else
 	{
-		Exec_stat es = pptr->message_with_valueref_args(MCM_menu_pick, *t_pick);
+		Exec_stat es = pptr->handlemenupick(*t_pick, nil);
 		if (es == ES_NOT_HANDLED || es == ES_PASS)
 			pptr->message_with_args(MCM_mouse_up, menubutton);
 	}
@@ -3807,6 +3833,15 @@ void MCButton::docascade(MCStringRef p_pick)
 void MCButton::setupmenu()
 {
 	flags = MENU_FLAGS;
+}
+
+bool MCButton::menuisopen()
+{
+#ifdef _MAC_DESKTOP
+	return macmenuisopen();
+#else
+	return menu != nil && menu->getopened();
+#endif
 }
 
 bool MCButton::selectedchunk(MCStringRef& r_string)
@@ -4096,7 +4131,7 @@ void MCButton::setmenuhistory(int2 newline)
 		
 		MCStringRef t_which;
 		t_builder.GetPickString(t_which);
-		message_with_valueref_args(MCM_menu_pick, t_which);
+		handlemenupick(t_which, nil);
 		
 		resetlabel();
 	}
@@ -4122,7 +4157,7 @@ void MCButton::setmenuhistory(int2 newline)
 			MCValueRef t_oldline = nil;
 			/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, menuhistory, t_menuhistory);
 			/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, oldline, t_oldline);
-			message_with_valueref_args(MCM_menu_pick, t_menuhistory, t_oldline);
+			handlemenupick(t_menuhistory, t_oldline);
 		}
 
 		resetlabel();

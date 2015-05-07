@@ -1,0 +1,23 @@
+Name: image
+
+Type: keyword
+
+Syntax: image
+
+Summary: Designates the Image <tool>, which is used to create new paint <image|images>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+choose image tool
+
+Description:
+Use the <image> <keyword> to create <image|images>.
+
+When using the Image tool, the cursor is a crosshairs. This tool is used for creating images by clicking at one corner of the image and dragging to the opposite corner.
+
+References: choose (command), tool (function), image (object), keyword (glossary)

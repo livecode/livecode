@@ -22,16 +22,16 @@ module com.livecode.logic
 
 use com.livecode.foreign
 
-//foreign handler MCLogicEvalAnd(in Left as CBool, in Right as CBool, out Value as CBool) as undefined binds to "<builtin>"
-//foreign handler MCLogicEvalOr(in Left as CBool, in Right as CBool, out Value as CBool) as undefined binds to "<builtin>"
-public foreign handler MCLogicEvalNot(in Operand as CBool, out Value as CBool) as undefined binds to "<builtin>"
-public foreign handler MCLogicEvalIsEqualTo(in Left as CBool, in Right as CBool, out Value as CBool) as undefined binds to "<builtin>"
-public foreign handler MCLogicEvalIsNotEqualTo(in Left as CBool, in Right as CBool, out Value as CBool) as undefined binds to "<builtin>"
+//foreign handler MCLogicEvalAnd(in Left as CBool, in Right as CBool, out Value as CBool) returns nothing binds to "<builtin>"
+//foreign handler MCLogicEvalOr(in Left as CBool, in Right as CBool, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCLogicEvalNot(in Operand as CBool, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCLogicEvalIsEqualTo(in Left as CBool, in Right as CBool, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCLogicEvalIsNotEqualTo(in Left as CBool, in Right as CBool, out Value as CBool) returns nothing binds to "<builtin>"
 
-public foreign handler MCLogicEvalBoolFormattedAsString(in Target as CBool, out Value as String) as undefined binds to "<builtin>"
-public foreign handler MCLogicEvalStringParsedAsBool(in Target as String, out Value as optional Boolean) as undefined binds to "<builtin>"
-public foreign handler MCLogicExecFormatBoolAsString(in Target as CBool) as String binds to "<builtin>"
-public foreign handler MCLogicExecParseStringAsBool(in Target as String) as optional Boolean binds to "<builtin>"
+public foreign handler MCLogicEvalBoolFormattedAsString(in Target as CBool, out Value as String) returns nothing binds to "<builtin>"
+public foreign handler MCLogicEvalStringParsedAsBool(in Target as String, out Value as optional Boolean) returns nothing binds to "<builtin>"
+public foreign handler MCLogicExecFormatBoolAsString(in Target as CBool) returns String binds to "<builtin>"
+public foreign handler MCLogicExecParseStringAsBool(in Target as String) returns optional Boolean binds to "<builtin>"
 
 --
 

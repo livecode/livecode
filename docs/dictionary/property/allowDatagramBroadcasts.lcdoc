@@ -1,0 +1,24 @@
+Name: allowDatagramBroadcasts
+
+Type: property
+
+Syntax: set the allowDatagramBroadcasts to {true | false}
+
+Summary: Set the per-socket flag for whether sending to a broadcast address is allowed
+
+Introduced: 6.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Security: network
+
+Example:
+set the allowDatagramBroadcasts to true
+
+Description:
+The global property <allowDatagramBroadcasts> needs to be set to true
+before sending to a broadcast address (enables the per-socket flag for whether they are allowed).
+
+References: write to socket (command), open socket (command), close socket (command)

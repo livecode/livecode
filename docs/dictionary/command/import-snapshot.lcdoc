@@ -1,0 +1,79 @@
+Name: import snapshot
+
+Type: command
+
+Syntax: import snapshot [from rect[angle] <rectangle>] [of <object>] [(with | without) effects] [at size <width>, <height>]
+
+Summary: Creates an <image> of a portion of the screen, portion of a stack or a specific object.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,web,mobile
+
+Security: privacy
+
+Example:
+import snapshot from image "image 1" with effects
+
+Example:
+import snapshot from rectangle 100,100,500,400
+
+Example:
+import snapshot from rectangle (the rect of group "Picture")
+
+Example:
+import snapshot from rect myRect of window 91373124
+
+Example:
+import snapshot from the selectedObject at size 100,100
+
+Parameters:
+rectangle: Specifies the edges of the rectangle to be imported, separated by commas, in the same order as the rectangle property (left, top, right, bottom). If a window, stack or object is specified, the rectangle is given in relative (window) coordinates; otherwise, it is given in absolute coordinates.
+object: 
+width: 
+height: 
+
+The result: The format of the resulting image depends on the current setting of the <paintCompression> <property>.
+
+Description:
+Use the <import snapshot> <command> to place a screenshot in the <current stack>.
+
+The <import snapshot> <command> creates a new <image> in the center of the <current card> and places the snapshot in the <image>.
+
+iOS supports both the object and screen snapshot variants of the <import snapshot> command. In the screen snapshot case, coordinates are given relative to the top-left of the screen and include the status bar.
+
+If you do not specify a <rectangle> or an object, LiveCode displays a crosshairs <cursor>. Click at one corner of the rectangle to be imported and drag to the opposite corner to <select> the area.
+
+If taking a snapshot of an object, the rectangle's coordinates are relative to the top left corner of the card containing the object. The object is rendered into an image as if no other objects existed around it, the snapshot is taken without applying the object's blendlevel or ink. You can take a snapshot of an object regardless of its visibility or open status - in particular, snapshots can be taken of objects that are not on the current card or in stacks that are not open.
+
+If taking a snapshot of a stack the rectangle's coordinates are relative to the top left corner of the window you specify. However, if the window is partly overlapped by another window, whatever is visible on the screen within that rectangle is placed in the snapshot. In other words, you cannot take a snapshot of a part of a window that is hidden by another overlapping window.
+
+Use the at size extensions if you wish the engine to resize the snapshot taken to the dimensions specified.
+
+While you take the snapshot, LiveCode hides its own windows (such as the Tools palette).
+
+To import a snapshot for a portion of a stack you use the form:
+<import snapshot> from rect[angle] of window <windowID> 
+Where <windowID> is the <windowID> property of the required stack.
+
+To import a snapshot of a specific (non-stack) object, use the form:
+<import snapshot> from rect[angle] of chunk
+Where chunk is any chunk expression resolving to a control, or any expression evaluating to a control reference.
+
+To import a snapshot of an object that has graphic effects applied to it, use the with effects form:
+<import snapshot> from rect[angle] of chunk with effects
+Where chunk is any chunk expression resolving to a control, or any expression evaluating to a control reference.
+
+To import a snapshot of an object in iOS use the form:
+<import snapshot> from [ rectangle rect of ] <object> 
+
+To import a snapshot of the screen in iOS use the form:
+<import snapshot> from rectangle rect
+
+>*Note:*  There is no way to render the status bar without using private features of the iOS API. Therefore, if your snapshot rectangle includes part of the screen where the status bar is, it will be clipped out.
+
+References: image (keyword), cursor (property), paintCompression (property), windowID (property), select (command), export snapshot (command), import (command), property (glossary), current stack (glossary), current card (glossary), command (glossary)
+
+Tags: multimedia

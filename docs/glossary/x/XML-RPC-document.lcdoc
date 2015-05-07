@@ -1,0 +1,13 @@
+Name: XML-RPC document
+
+Synonyms: XML-RPC document
+
+Type: glossary
+
+Description:
+An <XML-RPC> document is a data structure containing all the information associated with a remote procedure call according to the <XML-RPC> protocol. 
+An XML-RPC document contains either a request to execute, or a response to such an executed request.
+
+References: XML-RPC (glossary)
+
+Tags: networking

@@ -1,0 +1,39 @@
+Name: printMargins
+
+Type: property
+
+Syntax: set the printMargins to <left>, <top>, <right>, <bottom> 
+
+Summary: Specifies the width of the page margins when printing <card|cards>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios
+
+Platforms: desktop,server,web,mobile
+
+Security: printing
+
+Example:
+set the printMargins to 72,144,72,144
+
+Value: The <printMargins> consists of four non-negative <integer|integers>, separated by commas.
+
+Description:
+Use the <printMargins> <property> to control how much blank space is left at each edge of the page when printing.
+
+By default, the printMargins is set to 72,72,72,72 (a one-inch margin on each side).
+
+The <left> is the width in <points> of blank space between the left edge of the page and the leftmost edge of the printed <card|cards>. (There are 72 <points> to an inch.)
+
+The <top> is the height in <points> of blank space between the top edge of the page and the topmost edge of the printed <card|cards>.
+
+The <right> is the width in <points> of blank space between the right edge of the page and the rightmost edge of the printed <card|cards>.
+
+The <bottom> is the height in <points> of blank space between the bottom edge of the page and the bottommost edge of the printed <card|cards>.
+
+Set this property before calling the "open printing" or "open printing to pdf" command, to apply the new value to the current print run.
+
+References: printGutters (property), printCardBorders (property), points (property), printRowsFirst (property), answer page setup (command), answer printer (command), card (object), property (glossary), integer (glossary)
+
+Tags: printing

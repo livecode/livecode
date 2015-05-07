@@ -1,0 +1,12 @@
+Name: font
+
+Synonyms: font face,font
+
+Type: glossary
+
+Description:
+A typeface available on the computer. A design for all the <character|characters> in the system's <character set>.
+
+References: character (glossary), character set (glossary)
+
+Tags: ui

@@ -158,7 +158,8 @@ struct SyntaxRule
     SyntaxNodeRef expr;
     SyntaxMethodRef methods;
     long *mapping;
-
+    const char *deprecation_message;
+    
     SyntaxMethodRef current_method;
 };
 
@@ -175,7 +176,7 @@ static SyntaxRuleRef s_rule = NULL;
 static SyntaxNodeRef s_stack[MAX_NODE_DEPTH];
 static unsigned int s_stack_index = 0;
 
-static int IsSyntaxNodeEqualTo(SyntaxNodeRef p_left, SyntaxNodeRef p_right);
+static int IsSyntaxNodeEqualTo(SyntaxNodeRef p_left, SyntaxNodeRef p_right, int p_with_mark_values);
 
 static FILE* s_output;
 
@@ -270,10 +271,26 @@ void EndSyntaxRule(void)
     for(t_group = s_groups; t_group != NULL; t_group = t_group -> next)
     {
         if (s_rule -> kind != kSyntaxRuleKindPhrase &&
-            IsSyntaxNodeEqualTo(s_rule -> expr, t_group -> rules -> expr) &&
-            s_rule -> kind == t_group -> rules -> kind &&
-            s_rule -> precedence == t_group -> rules -> precedence)
+            IsSyntaxNodeEqualTo(s_rule -> expr, t_group -> rules -> expr, 0) &&
+            s_rule -> kind == t_group -> rules -> kind)
+        {
+            const char *t_rule_name, *t_other_rule_name;
+            GetStringOfNameLiteral(s_rule -> name, &t_rule_name);
+            GetStringOfNameLiteral(t_group -> rules -> name, &t_other_rule_name);
+            if (s_rule -> precedence != t_group -> rules -> precedence)
+            {
+                Error_Bootstrap("Rule '%s' and '%s' have conflicting precedence", t_rule_name, t_other_rule_name);
+                break;
+            }
+            
+            if (!IsSyntaxNodeEqualTo(s_rule -> expr, t_group -> rules -> expr, 1))
+            {
+                Error_Bootstrap("Rule '%s' and '%s' have conflicting methods", t_rule_name, t_other_rule_name);
+                break;
+            }
+            
             break;
+        }
     }
     
     if (t_group == NULL)
@@ -289,6 +306,12 @@ void EndSyntaxRule(void)
     t_group -> rules = s_rule;
     
     s_rule = NULL;
+}
+
+void DeprecateSyntaxRule(const char *p_message)
+{
+	assert(s_rule != NULL);
+    s_rule -> deprecation_message = p_message;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -309,7 +332,41 @@ static int IsMarkSyntaxNode(SyntaxNodeRef p_node)
     return p_node -> kind >= kSyntaxNodeKindBooleanMark;
 }
 
-static int IsSyntaxNodeEqualTo(SyntaxNodeRef p_left, SyntaxNodeRef p_right)
+static int IsMarkSyntaxNodeEqualTo(SyntaxNodeRef p_left, SyntaxNodeRef p_right)
+{
+    if (p_left -> kind != p_right -> kind)
+        return 0;
+    
+    switch(p_left -> kind)
+    {
+        case kSyntaxNodeKindBooleanMark:
+            if (p_left -> boolean_mark  . value != p_right -> boolean_mark . value)
+                return 0;
+            break;
+            
+        case kSyntaxNodeKindIntegerMark:
+            if (p_left -> integer_mark  . value != p_right -> integer_mark . value)
+                return 0;
+            break;
+            
+        case kSyntaxNodeKindRealMark:
+            if (p_left -> real_mark  . value != p_right -> real_mark . value)
+                return 0;
+            break;
+            
+        case kSyntaxNodeKindStringMark:
+            if (p_left -> string_mark . value != p_right -> string_mark . value)
+                return 0;
+            break;
+            
+        default:
+            return 0;
+    }
+    
+    return 1;
+}
+
+static int IsSyntaxNodeEqualTo(SyntaxNodeRef p_left, SyntaxNodeRef p_right, int p_with_mark_values)
 {
     if (p_left -> kind != p_right -> kind)
         return 0;
@@ -335,6 +392,10 @@ static int IsSyntaxNodeEqualTo(SyntaxNodeRef p_left, SyntaxNodeRef p_right)
         case kSyntaxNodeKindStringMark:
             if (p_left -> boolean_mark . index != p_right -> boolean_mark . index)
                 return 0;
+            if (p_with_mark_values == 0)
+                return 1;
+            if (!IsMarkSyntaxNodeEqualTo(p_left, p_right))
+                return 0;
             break;
             
         case kSyntaxNodeKindConcatenate:
@@ -354,7 +415,7 @@ static int IsSyntaxNodeEqualTo(SyntaxNodeRef p_left, SyntaxNodeRef p_right)
                 
                 if (t_left_child != NULL && t_right_child != NULL)
                 {
-                    if (!IsSyntaxNodeEqualTo(t_left_child, t_right_child))
+                    if (!IsSyntaxNodeEqualTo(t_left_child, t_right_child, p_with_mark_values))
                         return 0;
                 }
                 else if (t_left_child != NULL)
@@ -374,30 +435,30 @@ static int IsSyntaxNodeEqualTo(SyntaxNodeRef p_left, SyntaxNodeRef p_right)
 		}
         case kSyntaxNodeKindAlternate:
 		{
-			int i;
+			int i, t_found;
             if (p_left -> alternate . operand_count != p_right -> alternate . operand_count)
                 return 0;
             if (p_left -> alternate . is_nullable != p_right -> alternate . is_nullable)
                 return 0;
+            t_found = 0;
             for(i = 0; i < p_left -> alternate . operand_count; i++)
             {
-                int j, t_found;
-                t_found = 0;
+                int j;
                 for(j = 0; j < p_right -> alternate . operand_count; j++)
-                    if (IsSyntaxNodeEqualTo(p_left -> alternate . operands[i], p_right -> alternate . operands[j]))
+                    if (IsSyntaxNodeEqualTo(p_left -> alternate . operands[i], p_right -> alternate . operands[j], p_with_mark_values))
                     {
-                        t_found = 1;
+                        t_found += 1;
                         break;
                     }
-                if (!t_found)
-                    return 0;
             }
+            if (t_found != p_left -> alternate . operand_count)
+                return 0;
             break;
 		}
         case kSyntaxNodeKindRepeat:
-            if (!IsSyntaxNodeEqualTo(p_left -> repeat . element, p_right -> repeat . element))
+            if (!IsSyntaxNodeEqualTo(p_left -> repeat . element, p_right -> repeat . element, p_with_mark_values))
                 return 0;
-            if (!IsSyntaxNodeEqualTo(p_left -> repeat . delimiter, p_right -> repeat . delimiter))
+            if (!IsSyntaxNodeEqualTo(p_left -> repeat . delimiter, p_right -> repeat . delimiter, p_with_mark_values))
                 return 0;
             break;
     }
@@ -1101,7 +1162,7 @@ static void MergeSyntaxNodes(SyntaxNodeRef p_node, SyntaxNodeRef p_other_node, l
         {
             int j;
 			for(j = 0; j < p_other_node -> alternate . operand_count; j++)
-                if (IsSyntaxNodeEqualTo(p_node -> alternate . operands[i], p_other_node -> alternate . operands[j]))
+                if (IsSyntaxNodeEqualTo(p_node -> alternate . operands[i], p_other_node -> alternate . operands[j], 0))
                     MergeSyntaxNodes(p_node -> alternate . operands[i], p_other_node -> alternate . operands[j], x_next_mark, x_mapping);
         }
     }
@@ -1335,7 +1396,10 @@ static void GenerateSyntaxRuleExplicitAndUnusedMarks(SyntaxNodeRef p_node)
                     fprintf(s_output, "EXPRESSION'%s(UndefinedPosition)", p_node -> marks[i] . value -> boolean_mark . value == 0 ? "false" : "true");
                     break;
                 case kSyntaxNodeKindIntegerMark:
-                    fprintf(s_output, "EXPRESSION'integer(UndefinedPosition, %ld)", p_node -> marks[i] . value -> integer_mark . value);
+                    if (p_node -> marks[i] . value -> integer_mark . value < 0)
+                        fprintf(s_output, "EXPRESSION'integer(UndefinedPosition, %ld)", p_node -> marks[i] . value -> integer_mark . value);
+                    else
+                        fprintf(s_output, "EXPRESSION'unsignedinteger(UndefinedPosition, %lu)", (unsigned long)p_node -> marks[i] . value -> integer_mark . value);
                     break;
                 case kSyntaxNodeKindRealMark:
                     fprintf(s_output, "EXPRESSION'real(UndefinedPosition, Mark%ldValue)", p_node -> marks[i] . index);
@@ -1730,6 +1794,7 @@ static void GenerateTokenList(void)
 }
 
 extern void DumpSyntaxRules(void);
+extern void DumpSyntaxMethods(void);
 void GenerateSyntaxRules(void)
 {
     FILE *t_template;
@@ -1782,6 +1847,8 @@ void GenerateSyntaxRules(void)
         
         t_group -> index = t_index;
         GenerateSyntaxRule(&t_index, t_rule -> expr, t_rule -> kind, t_rule);
+        if (t_rule -> deprecation_message != NULL)
+            fprintf(s_output, "    Warning_DeprecatedSyntax(Position, \"%s\")\n", t_rule -> deprecation_message);
         
         if (t_rule -> kind == kSyntaxRuleKindPhrase)
         {
@@ -1804,6 +1871,7 @@ void GenerateSyntaxRules(void)
     GenerateTokenList();
 
     DumpSyntaxRules();
+    DumpSyntaxMethods();
 }
 
 void DumpSyntaxRules(void)
@@ -1823,6 +1891,54 @@ void DumpSyntaxRules(void)
             printf("[%d] ", t_gindex);
             PrintSyntaxNode(t_rule -> expr);
             printf("\n");
+        }
+        t_gindex += 1;
+    }
+}
+
+void PrintSyntaxMethod(SyntaxMethodRef self)
+{
+    const char *t_name;
+    struct SyntaxArgument *t_arg;
+    GetStringOfNameLiteral(self -> name, &t_name);
+    printf("%s(", t_name);
+    for(t_arg = self -> arguments; t_arg != NULL; t_arg = t_arg -> next)
+    {
+        if (t_arg != self -> arguments)
+            printf(", ");
+        printf("%s %ld", t_arg -> mode == 0 ? "in" : t_arg -> mode == 1 ? "out" : "inout", t_arg -> index);
+        
+        {
+            printf(" {");
+        
+            printf("}");
+        }
+    }
+    printf(")");
+}
+
+void DumpSyntaxMethods(void)
+{
+    int t_gindex;
+	SyntaxRuleGroupRef t_group;
+    
+    t_gindex = 0;
+    for (t_group = s_groups; t_group != NULL; t_group = t_group -> next)
+    {
+        SyntaxRuleRef t_rule;
+		
+		for (t_rule = t_group -> rules; t_rule != NULL; t_rule = t_rule -> next)
+        {
+            const char *t_name;
+            SyntaxMethodRef t_method;
+            
+            GetStringOfNameLiteral(t_rule -> name, &t_name);
+            for(t_method = t_rule -> methods; t_method != NULL; t_method = t_method -> next)
+            {
+                printf("[%d] [%s] ", t_gindex, t_name);
+                PrintSyntaxMethod(t_method);
+                printf("\n");
+            }
         }
         t_gindex += 1;
     }

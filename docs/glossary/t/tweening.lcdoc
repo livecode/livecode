@@ -1,0 +1,14 @@
+Name: tweening
+
+Synonyms: tween,tweened,tweening
+
+Type: glossary
+
+Description:
+The process of automatically generating intermediate <frame|frames> in an animation. 
+ 
+Tweening lets you specify only the <frame|frames> where a change takes place, rather than having to generate all the details of each <frame>.
+
+References: frame (glossary)
+
+Tags: multimedia

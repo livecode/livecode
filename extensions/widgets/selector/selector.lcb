@@ -16,29 +16,47 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 /*
-Module: com.livecode.extensions.livecode.selector
+A multi-option selection widget, where each selectable item is numbered in sequence and displayed in
+horizontally arranged circles
 
-Type: widget
+Name: selectedOption
+Type: property
 
-Description: This widget is a selector. 
-This widget has two properties that can be set: numSelections and selected.
+Syntax: set the selectedOption of <widget> to <pSelection>
+Syntax: get the selectedOption of <widget>
+
+Summary: Sets the selected option.
+pSelection (integer): The number of the selected option.
+
+Description:
+Sets the selected option to selection number pSelection.
+
+Name: totalOptions
+Type: property
+Summary: Sets the number of selections.
+
+Syntax: set the totalOptions of <widget> to <pNumSelections>
+Syntax: get the totalOptions of <widget>
+
+pNumSelections(integer): The number of selections.
+
+Description:
+Sets the number of options available in the selector.
 */
 
 -- declaring extension as widget, followed by identifier
 widget com.livecode.extensions.livecode.selector
 --
 
--- adding metadata to ensure the extension displays correctly in livecode
-metadata title is "Selector"
-metadata author is "LiveCode"
-metadata version is "1.0.2"
---
-
 -- dependancy declarations
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
---
+
+--metadata
+metadata title is "Selector"
+metadata author is "LiveCode"
+metadata version is "1.0.2"
 
 -- property declarations
 property totalOptions		get mNumSelections		set setNumSelections
@@ -51,9 +69,7 @@ private variable mNumSelections		as Integer
 private variable mSelected			as Integer
 --
 
-----------
--- this handler is called when the widget is saved
-public handler OnSave(out rProperties as array)
+public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
 	
 	put mNumSelections into rProperties["numSelections"]
@@ -61,30 +77,20 @@ public handler OnSave(out rProperties as array)
 	
 	return rProperties
 end handler
-----------
 
-----------
--- this handler is called when the widget is loaded
-public handler OnLoad(in pProperties as array)
+public handler OnLoad(in pProperties as Array)
 	put pProperties["numSelections"] into mNumSelections
 	put pProperties["selected"] into mSelected
 end handler
-----------
 
-
-----------
--- called when the widget is created
 public handler OnCreate()
 	put 5 into mNumSelections
 	put 1 into mSelected
 end handler
-----------
 
-----------
--- called whenever LiveCode needs to redraw the widget
 public handler OnPaint()
 	
-	variable tCount as integer
+	variable tCount as Integer
 	repeat with tCount from 1 up to mNumSelections
 		
 		set the paint of this canvas to getPaint("background",tCount)
@@ -97,20 +103,15 @@ public handler OnPaint()
 	end repeat
 	
 end handler
-----------
 
-----------
 public handler OnMouseUp()
 	put getSelected() into mSelected
 	redraw all
     
 	post "mouseUp" with [mSelected]
 end handler
-----------
 
-----------
--- this handler returns a label
-private handler getLabel(in pSelection as integer) as string
+private handler getLabel(in pSelection as Integer) as String
 
 	variable tLabel
 	put pSelection formatted as string into tLabel
@@ -123,11 +124,8 @@ private handler getLabel(in pSelection as integer) as string
 	
 	--return tLabel
 end handler
-----------
 
-----------
--- this handler returns a paint
-private handler getPaint(in pObject as string, in pSelection as integer) as Paint
+private handler getPaint(in pObject as String, in pSelection as Integer) as Paint
 	
 	if pObject is "background" then
 		if pSelection is mSelected then
@@ -141,12 +139,9 @@ private handler getPaint(in pObject as string, in pSelection as integer) as Pain
 	end if
 	
 end handler
-----------
 
-----------
--- this handler returns a path
-private handler getPath(in pShape as string, in pSelection as integer) as Path
-	variable tCenterX as number
+private handler getPath(in pShape as String, in pSelection as Integer) as Path
+	variable tCenterX as Number
 	put (my width)/(2*mNumSelections) + (pSelection-1)*(my width)/mNumSelections into tCenterX
 	
 	if pShape is "circle" then
@@ -154,12 +149,9 @@ private handler getPath(in pShape as string, in pSelection as integer) as Path
 	end if
 
 end handler
-----------
 
-----------
--- this handler returns a rectangle
-private handler getRect(in pType as string, in pSelection as integer) as Rectangle
-	variable tCenterX as number
+private handler getRect(in pType as String, in pSelection as Integer) as Rectangle
+	variable tCenterX as Number
 	put (my width)/(2*mNumSelections) + (pSelection-1)*(my width)/mNumSelections into tCenterX
 	
 	if pType is "label" then
@@ -167,22 +159,16 @@ private handler getRect(in pType as string, in pSelection as integer) as Rectang
 	end if
 	
 end handler
-----------
 
-----------
--- this handler returns the font name 
-private handler getFontName() as string
+private handler getFontName() as String
 	return the name of the font of this canvas
 end handler
-----------
 
-----------
--- this handler returns the number of the action the mouse has clicked on
-private handler getSelected() as number
+private handler getSelected() as Number
 
-	variable tZ as integer
-	variable tCenter as real
-	variable tDifference as real
+	variable tZ as Integer
+	variable tCenter as Real
+	variable tDifference as Real
 	variable tRectangle as Rectangle
 	
 	repeat with tZ from 1 up to mNumSelections
@@ -197,42 +183,15 @@ private handler getSelected() as number
 		
 	return mSelected
 end handler
-----------
 
-----------
--- this handler sets the number of selections
-/*
-Summary: Sets the number of selections.
-
-Parameters:
-pSelections: The number of selections.
-
-Description:
-Sets the numSelections property.
-Sets the number of options available in the selector.
-*/
 public handler setNumSelections(in pSelections as Integer) as undefined
 	put pSelections into mNumSelections
 	redraw all
 end handler
-----------
 
-----------
--- this handler sets the number that is selected
-/*
-Summary: Sets the selected option.
-
-Parameters:
-pSelected: The number of the selected option.
-
-Description:
-Sets the selected property.
-Sets the selected option to selection number pNumber.
-*/
 public handler setSelected(in pSelected as Integer) as undefined
 	put pSelected into mSelected
 	redraw all
 end handler
-----------
 
 end widget

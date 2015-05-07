@@ -1,0 +1,34 @@
+Name: mouseChar
+
+Type: function
+
+Syntax: the mouseChar
+
+Syntax: mouseChar()
+
+Summary: <return|Returns> the <character> the <mouse pointer> is over.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+the mouseChar
+
+Example:
+if the mouseChar is a number then goToFootnote
+
+Returns: The <mouseChar> <function> <return|returns> a <character>.
+
+Description:
+Use the <mouseChar> <function> within a <handler> to determine which <character> the mouse is hovering over, in order to take some action based on the current <character>.
+
+The <mouseChar> <function> only <return|returns> <characters> in a <field>. If the <mouse pointer> is not over a <field>, the <mouseChar> <function> <return|returns> empty.
+
+To find the position of the <mouseChar> within the <field>, use the <mouseCharChunk> <function>.
+
+References: characters (keyword), character (keyword), field (keyword), mouseLine (function), clickChar (function), mouseCharChunk (function), handler (glossary), mouse pointer (glossary), return (glossary), function (control_st)
+
+Tags: ui

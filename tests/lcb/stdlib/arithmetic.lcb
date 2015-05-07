@@ -18,12 +18,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 module com.livecode.arithmetic.tests
 
 public handler TestUnarySigns()
-	variable t
-	put 10 into t
-	test "unary−" when -t is -10
+	variable tNum
+	put 10 into tNum
+	test "unary−" when -tNum is -10
 
-	put -10 into t
-	test "unary+" when +t is -10
+	put -10 into tNum
+	test "unary+" when +tNum is -10
 end handler
 
 public handler TestAdd()
@@ -176,35 +176,35 @@ public handler TestFormatString()
 	test diagnostic "TODO -1 formatted as string (bug 14594)"
 	broken test "format as string (int)" when (-1) formatted as string is "-1" because "bug 14546"
 
-	variable t
-	put (-1.0) formatted as string into t
+	variable tNum
+	put (-1.0) formatted as string into tNum
 	test diagnostic "TODO test full string, not just prefix"
-	test diagnostic t
-	test "format as string (real)" when t begins with "-1."
+	test diagnostic tNum
+	test "format as string (real)" when tNum begins with "-1."
 end handler
 
 public handler TestParseString()
 	test "parsed (int)" when "-1" parsed as number = -1
 	test "parsed (real)" when "+1.1" parsed as number = 1.1
-	test "parsed (undefined)" when "x" parsed as number is not defined
+	test "parsed (nothing)" when "x" parsed as number is nothing
 
 	parse "-1" as number
 	test "parse (int)" when the result is -1
 	parse "+1.1" as number
 	test "parse (real)" when the result is 1.1
 	parse "x" as number
-	test "parse (undefined)" when the result is not defined
+	test "parse (nothing)" when the result is nothing
 end handler
 
 public handler TestParseStringList()
 	test "parsed list" when ["-1", "+2.2"] parsed as list of number is [-1, 2.2]
 
-	variable t
+	variable tList
 	parse ["-1", "+2.2", "x"] as list of number
-	put the result into t
+	put the result into tList
 
-	test "parse list (defined)" when element 1 to 2 of t is [-1, 2.2]
-	test "parse list (undefined)" when element 3 of t is not defined
+	test "parse list (defined)" when element 1 to 2 of tList is [-1, 2.2]
+	test "parse list (nothing)" when element 3 of tList is nothing
 end handler
 
 end module

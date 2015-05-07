@@ -15,15 +15,6 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
-Module: com.livecode.extensions.livecode.progressBar
-
-Type: widget
-
-Desciption: This widget is a progress bar. 
-This widget has three propeties that can be set: theme; thumbPosition and progress.
-*/
-
 -- declaring extension as widget, followed by identifier
 widget com.livecode.extensions.livecode.progressBar
 --
@@ -46,11 +37,11 @@ property progress				get mProgress			set setProgress
 --
 
 -- private instance variables
-private variable mTheme 			as string
-private variable mThumbPosition		as real
-private variable mProgress 			as real
+private variable mTheme 			as String
+private variable mThumbPosition		as Real
+private variable mProgress 			as Real
 
-private variable mShift 			as real
+private variable mShift 			as Real
 --
 
 -- constants
@@ -61,10 +52,7 @@ constant kTransparent is [1,1,1,0]
 constant kWhite is [1,1,1]
 constant kBlack is [0,0,0]
 --
-
-----------
--- this handler is called when the widget is saved
-public handler OnSave(out rProperties as array)
+public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
 	
 	put mTheme into rProperties["theme"]
@@ -73,20 +61,13 @@ public handler OnSave(out rProperties as array)
 	
 	return rProperties
 end handler
-----------
 
-----------
--- this handler is called when the widget is loaded
-public handler OnLoad(in pProperties as array)
+public handler OnLoad(in pProperties as Array)
 	put pProperties["theme"] into mTheme
 	put pProperties["thumbPosition"] into mThumbPosition
 	put pProperties["progress"] into mProgress
 end handler
-----------
 
-
-----------
--- called when the widget is created
 public handler OnCreate()
 	-- properties
 	put "macos-yosemite" into mTheme
@@ -101,10 +82,7 @@ public handler OnCreate()
 		schedule timer in 0.05 seconds
 	end if
 end handler
-----------
 
-----------
--- called whenever LiveCode needs to redraw the widget
 public handler OnPaint()
 	
 	-- getting the thumb position
@@ -143,19 +121,13 @@ public handler OnPaint()
 	--
 	
 end handler
-----------
 
-----------
--- this handler is called when the timer scheduled with 'schedule timer' fires
 public handler OnTimer()
 	add 1.0 to mShift
 	redraw all
 	schedule timer in 0.05 seconds
 end handler
-----------
 
-----------
--- this handler returns the path for the empty bar
 private handler getBarPath()
 
 	if mTheme is "macos-10.0" then
@@ -169,10 +141,7 @@ private handler getBarPath()
 	end if
 	
 end handler
-----------
 
-----------
--- this handler returns the path for the progress bar (background progress path for yosemite)
 private handler getProgressPath() as Path
 
 	if mTheme is "macos-10.0" then
@@ -186,10 +155,7 @@ private handler getProgressPath() as Path
 	
 	end if
 end handler
-----------
 
-----------
--- this handler returns the paint for the empty bar
 private handler getBarPaint() as Paint
 
 	variable tPaint as Paint
@@ -216,17 +182,14 @@ private handler getBarPaint() as Paint
 	
 	return tPaint
 end handler
-----------
 
-----------
--- this handler returns the paint for the progress
 private handler getProgressPaint() as Paint
 
 	variable tPaint as Paint
 	
 	if mTheme is "macos-10.0" then
 		variable tImage as Image
-		variable tFile as string
+		variable tFile as String
 		
 		if mThumbPosition is my width then
 			
@@ -251,10 +214,7 @@ private handler getProgressPaint() as Paint
 	end if
 	return tPaint
 end handler
-----------
 
-----------
--- this handler returns the color of the stroke
 private handler getStrokeColor() as Color
 	if mTheme is "macos-10.0" then
 		return color [128/255, 128/255, 128/255]
@@ -264,11 +224,8 @@ private handler getStrokeColor() as Color
 		return color kTransparent
 	end if
 end handler
-----------
 
-----------
--- the following handlers draw straight lines at the end of the mac progress bars
-private handler getStrokeWidth() as real
+private handler getStrokeWidth() as Real
 	if mTheme is "macos-10.0" then
 		return 0.5
 	else if mTheme is "macos-yosemite" then
@@ -291,10 +248,7 @@ private handler getStrokePath() as Path
 		return line path from point [mThumbPosition, kBarHeight/2 - kProgressHeight/2] to point [mThumbPosition, kBarHeight/2 + kProgressHeight/2]
 	end if
 end handler
-----------
 
-----------
--- the following handlers draw the progress bar for macos-yosemite
 private handler getYosemiteProgressPath() as Path
 	return rounded rectangle path of rectangle [2, kBarHeight/2 - kProgressHeight/2, mThumbPosition, kBarHeight/2 + kProgressHeight/2] with radius 10	
 end handler
@@ -302,41 +256,15 @@ end handler
 private handler getYosemiteProgressPaint() as Paint
 	return solid paint with color [51/255, 153/255, 1.0]
 end handler
-----------
 
-----------
--- this handler sets the theme of the widget
-/*
-Summary: Sets the theme of the progress bar.
-
-Parameters:
-pTheme: The name of the theme.
-
-Description:
-Sets the theme property of the progress bar to either "macos-10", "macos-yosemite" or "windows-8".
-*/
-public handler setTheme(in pTheme as string)
+public handler setTheme(in pTheme as String)
 	put pTheme into mTheme
 	redraw all
 end handler
-----------
 
-----------
--- this handler sets the thumb position of the progress bar
--- pProgress should be a number between 0 and 100 (a percentage)
-/*
-Summary: Sets the thumb position of the progress bar.
-
-Parameters:
-pProgress: The progress of the bar as a number between 0 and 100.
-
-Description:
-Sets the thumbPosition property of the progress bar from the progress as a percentage.
-If pProgress is more than 100, then it will be set to 100. If pProgress is less than 0, then it will be set to 0.
-*/
-public handler setThumbPosition(in pProgress as real) as undefined
+public handler setThumbPosition(in pProgress as Real) as undefined
 	
-	variable tProgress as real
+	variable tProgress as Real
 	if pProgress > 100 then
 		put 100 into tProgress
 	else if pProgress < 0 then
@@ -353,28 +281,12 @@ public handler setThumbPosition(in pProgress as real) as undefined
 	
 	redraw all
 end handler
-----------
 
-----------
--- this handler sets the progress 
--- pProgress should be a number between 0 and 100 (a percentage)
-/*
-Summary: Sets the progress of the progress bar.
-
-Parameters:
-pProgress: The progress of the bar as a number between 0 and 100.
-
-Description:
-Sets the progress property of the progress bar to pProgress.
-*/
-public handler setProgress(in pProgress as real) as undefined
+public handler setProgress(in pProgress as Real) as undefined
 	put pProgress into mProgress
 	redraw all
 end handler
-----------
 
-----------
--- this handler updates the value of the thumb position
 private handler updateThumbPosition() as undefined
 	if mTheme is "macos-yosemite" then
 		put (mProgress/100)*(my width - 4) + 2 into mThumbPosition
@@ -382,6 +294,5 @@ private handler updateThumbPosition() as undefined
 		put (mProgress/100)*(my width) into mThumbPosition
 	end if
 end handler
-----------
 
 end widget

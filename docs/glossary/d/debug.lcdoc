@@ -1,0 +1,10 @@
+Name: debug
+
+Synonyms: debugging,debug,debugged
+
+Type: glossary
+
+Description:
+To find and fix <anomaly|anomalies> in a <handler> that cause <error|errors> or unsatisfactory results when the <handler> is <execute|executed>.
+
+References: handler (glossary), error (glossary), execute (glossary), anomaly (glossary)

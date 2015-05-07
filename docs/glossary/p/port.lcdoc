@@ -1,0 +1,16 @@
+Name: port
+
+Synonyms: port,port number,ported,porting
+
+Type: glossary
+
+Description:
+A connection into a computer. In a <socket> identifier, the port is the part of the address that specifies the particular channel on the <host>. If the <IP address> is like a telephone number, the port number is like an extension. 
+ 
+Also, to modify an application for a different <platform> from the one it was originally designed for; or to translate an application to a different programming language than the one the software was originally written in. 
+ 
+Also, an application that has been ported.
+
+References: socket (glossary), host (glossary), IP address (glossary), platform (glossary)
+
+Tags: networking

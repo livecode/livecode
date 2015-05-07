@@ -1,0 +1,61 @@
+Name: $_SERVER
+
+Type: keyword
+
+Syntax: $_SERVER
+
+Summary: <$_SERVER> is an array variable containing the CGI interface related variables, along with any HTTP_* variables that are available.
+
+Introduced: 4.6.3
+
+OS: mac,windows,linux
+
+Platforms: server
+
+Example:
+put $_SERVER into tServerArray
+
+Example:
+put $_SERVER['QUERY_STRING'] into tQueryString
+
+Example:
+if $_SERVER['SERVER_ADDR'] is "" then
+  ... do something ...
+end if
+
+Description:
+Use the <$_SERVER> keyword to access the CGI interface related variables, along with any HTTP_* variables that are available.
+
+<$_SERVER> is only available when running in CGI mode (Server).
+
+The list of CGI variables is:
+
+GATEWAY_INTERFACE
+SERVER_ADDR
+SERVER_NAME
+SERVER_SOFTWARE
+SERVER_PROTOCOL
+REQUEST_METHOD
+REQUEST_TIME
+QUERY_STRING
+DOCUMENT_ROOT
+HTTPS
+REMOTE_USER
+REDIRECT_REMOTE_USER
+REMOTE_ADDR
+REMOTE_HOST
+REMOTE_PORT
+SERVER_ADMIN
+SERVER_PORT
+SERVER_SIGNATURE
+PATH_TRANSLATED
+REQUEST_URI
+PATH_INFO
+SCRIPT_NAME
+SCRIPT_FILENAME
+CONTENT_TYPE
+CONTENT_LENGTH
+
+>*Note:* $_SERVER can be modified doing so has no effect and should be avoided (indeed, it might become read-only in future).
+
+References: $_POST (keyword), $_GET (keyword)

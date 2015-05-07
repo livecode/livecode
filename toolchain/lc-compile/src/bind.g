@@ -128,7 +128,7 @@
     'rule' DeclareImportedDefinitions(event(Position, _, Name, _)):
         DeclareId(Name)
 
-    'rule' DeclareImportedDefinitions(syntax(Position, _, Name, _, _, _)):
+    'rule' DeclareImportedDefinitions(syntax(Position, _, Name, _, _, _, _)):
         DeclareId(Name)
 
     'rule' DeclareImportedDefinitions(metadata(_, _, _)):
@@ -145,7 +145,7 @@
         Head'Name -> Id
         Head'Kind -> import
         Id'Name -> ModName
-        eq(Name, ModName)
+        IsNameEqualToName(Name, ModName)
         
     'rule' FindModuleInList(Name, modulelist(_, Rest) -> Found):
         FindModuleInList(Name, Rest -> Found)
@@ -190,7 +190,7 @@
     'rule' Declare(event(Position, _, Name, _)):
         DeclareId(Name)
 
-    'rule' Declare(syntax(Position, _, Name, _, _, _)):
+    'rule' Declare(syntax(Position, _, Name, _, _, _, _)):
         DeclareId(Name)
     
     'rule' Declare(metadata(_, _, _)):
@@ -266,7 +266,7 @@
         DefineSymbolId(Name, ModuleId, Access, event, nil)
         DefineParameters(Name, Parameters)
     
-    'rule' Define(ModuleId, syntax(Position, Access, Name, Class, Syntax, Methods)):
+    'rule' Define(ModuleId, syntax(Position, Access, Name, Class, Warnings, Syntax, Methods)):
         DefineSyntaxId(Name, ModuleId, Class, Syntax, Methods)
     
     'rule' Define(_, metadata(_, _, _)):
@@ -288,6 +288,7 @@
     'rule' ComputeTypeOfConstantTermExpression(undefined(Position) -> undefined(Position)):
     'rule' ComputeTypeOfConstantTermExpression(true(Position) -> boolean(Position)):
     'rule' ComputeTypeOfConstantTermExpression(false(Position) -> boolean(Position)):
+    'rule' ComputeTypeOfConstantTermExpression(unsignedinteger(Position, _) -> integer(Position)):
     'rule' ComputeTypeOfConstantTermExpression(integer(Position, _) -> integer(Position)):
     'rule' ComputeTypeOfConstantTermExpression(real(Position, _) -> real(Position)):
     'rule' ComputeTypeOfConstantTermExpression(string(Position, _) -> string(Position)):
@@ -472,7 +473,7 @@
 
     ---------
 
-    'rule' Apply(DEFINITION'syntax(_, _, _, _, Syntax, Methods)):
+    'rule' Apply(DEFINITION'syntax(_, _, _, _, _, Syntax, Methods)):
         -- We index all mark variabless starting at 0.
         LastSyntaxMarkIndexVar <- 0
 
@@ -727,7 +728,7 @@
     'rule' DumpBindings(DEFINITION'event(_, _, Name, Signature)):
         DumpId("event", Name)
         DumpBindings(Signature)
-    'rule' DumpBindings(DEFINITION'syntax(_, _, Name, _, Syntax, Methods)):
+    'rule' DumpBindings(DEFINITION'syntax(_, _, Name, _, _, Syntax, Methods)):
         DumpId("syntax", Name)
         DumpBindings(Syntax)
         DumpBindings(Methods)

@@ -1,0 +1,31 @@
+Name: yOffset
+
+Type: property
+
+Syntax: set the yOffset of <EPSObject> to <points> 
+
+Summary: Specifies the location of the top edge of an <EPS|EPS object's> <PostScript> code.
+
+Introduced: 1.0
+
+OS: linux
+
+Platforms: desktop,web
+
+Example:
+set the yOffset of EPS 1 to 72 -- 1 inch
+
+Value: The <yOffset> of an <EPS|EPS object> is an integer.
+
+Description:
+Use the <yOffset> <property> to control the placement of an <EPS|EPS object> on the paper when it's printed.
+
+The <yOffset> is the distance in <points> from the top edge of the paper to the top edge of the <PostScript> object. This controls the placement of the <PostScript> object when it's rendered.
+
+The <yOffset> of an <EPS|EPS object> is equal to the second <item> in the object's <boundingBox> <property>.
+
+This property is supported only on Unix systems with Display PostScript installed.
+
+References: boundingBox (property), points (property), postScript (property), top (property), xOffset (property), yExtent (property), EPS (glossary), property (glossary), item (keyword)
+
+Tags: multimedia

@@ -69,11 +69,17 @@ public:
 	virtual void UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_frame) = 0;
 
 	virtual bool GetGeometry(uindex_t &r_width, uindex_t &r_height) = 0;
-
+    
 	//////////
 
 	MCImageRep *Retain();
 	void Release();
+    
+    // MERG-2014-09-16: [[ ImageMetadata ]] Support for image metadata property
+    virtual bool GetMetadata(MCImageMetadata& r_metadata) = 0;
+    
+protected:
+    MCImageMetadata m_metadata;
 
 private:
 	uindex_t m_reference_count;
@@ -109,7 +115,7 @@ public:
 
 	static void FlushCache();
 	static void FlushCacheToLimit();
-	
+    
 protected:
 	MCCachedImageRep *m_next;
 	MCCachedImageRep *m_prev;
@@ -144,7 +150,10 @@ public:
 
 	virtual uint32_t GetFrameByteCount();
 	virtual void ReleaseFrames();
-	
+    
+    // MERG-2014-09-16: [[ ImageMetadata ]] Support for image metadata property
+    bool GetMetadata(MCImageMetadata& r_metadata);
+    
 protected:
 	// IM-2014-11-25: [[ ImageRep ]] Return some basic info readable from the image header.
 	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_frame_count) = 0;
@@ -181,6 +190,7 @@ private:
     
     // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single threrad locks an image frame at a time.
     MCThreadMutexRef m_frame_lock;
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -196,13 +206,13 @@ public:
 	virtual ~MCEncodedImageRep();
 
 	uint32_t GetDataCompression();
-
+    
 protected:
 	// returns the image frames as decoded from the input stream
 	bool LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
 	bool LoadHeader(uindex_t &r_width, uindex_t &r_height, uint32_t &r_frame_count);
 
-	//////////
+    //////////
 
 	// return the input stream from which the image data will be read
 	virtual bool GetDataStream(IO_handle &r_stream) = 0;
@@ -333,7 +343,7 @@ public:
 	{
 		return m_compressed;
 	}
-
+    
 protected:
 	bool LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
 	bool LoadHeader(uindex_t &r_width, uindex_t &r_height, uint32_t &r_frame_count);
@@ -396,6 +406,9 @@ public:
 	bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
 	bool GetFrameDuration(uindex_t p_index, uint32_t &r_duration);
 	
+    // MERG-2014-09-16: [[ ImageMetadata ]] Support for image metadata property
+    bool GetMetadata(MCImageMetadata& r_metadata);
+    
 	//////////
 
 	MCStringRef GetSearchKey() { return m_filename; }

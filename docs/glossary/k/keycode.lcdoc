@@ -1,0 +1,10 @@
+Name: keycode
+
+Synonyms: keycode,key code,raw keycode,raw key code
+
+Type: glossary
+
+Description:
+The internal numeric identifier for a key on the keyboard. Each physical key on the keyboard can be identified by its keycode.
+
+Tags: ui

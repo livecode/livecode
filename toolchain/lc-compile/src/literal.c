@@ -21,6 +21,11 @@
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <errno.h>
+
+#ifdef _WIN32
+#  define strcasecmp _stricmp
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -28,6 +33,7 @@
 struct Name
 {
     NameRef next;
+    NameRef key;
     char *token;
 };
 
@@ -63,9 +69,22 @@ void FinalizeLiterals(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MakeIntegerLiteral(const char *p_token, long *r_literal)
+// Integer literals are actually unsigned, even though they pass through as
+// longs. Indeed, a -ve integer literal is not possible since it is prevented
+// by the token's regex.
+int MakeIntegerLiteral(const char *p_token, long *r_literal)
 {
-    *r_literal = atoi(p_token);
+    unsigned long t_value;
+	errno = 0;
+
+    t_value = strtoul(p_token, NULL, 10);
+    
+    if (errno == ERANGE || t_value > 0xFFFFFFFFU)
+        return 0;
+    
+    *r_literal = (long)t_value;
+    
+    return 1;
 }
 
 void MakeDoubleLiteral(const char *p_token, long *r_literal)
@@ -250,9 +269,18 @@ void MakeStringLiteral(const char *p_token, long *r_literal)
 void MakeNameLiteralN(const char *p_token, int p_token_length, NameRef *r_literal)
 {
     NameRef t_name;
+    NameRef t_key;
+    t_name = NULL;
+    t_key = NULL;
     for(t_name = s_names; t_name != NULL; t_name = t_name -> next)
+    {
         if (strcmp(p_token, t_name -> token) == 0)
             break;
+        
+        // We want the last name in the list which matches case-insensitively.
+        if (strcasecmp(p_token, t_name -> token) == 0)
+            t_key = t_name;
+    }
     
     if (t_name == NULL)
     {
@@ -265,6 +293,13 @@ void MakeNameLiteralN(const char *p_token, int p_token_length, NameRef *r_litera
             Fatal_OutOfMemory();
         memcpy(t_name -> token, p_token, p_token_length);
         t_name -> token[p_token_length] = '\0';
+        
+        // If we found a key (one which matches this case-insensitively) then
+        // that is the key of this name. Otherwise the name is its own key.
+        if (t_key != NULL)
+            t_name -> key = t_key;
+        else
+            t_name -> key = t_name;
         
         t_name -> next = s_names;
         s_names = t_name;
@@ -283,9 +318,19 @@ void GetStringOfNameLiteral(NameRef p_literal, const char **r_string)
     *r_string = ((NameRef)p_literal) -> token;
 }
 
+int IsNameEqualToName(NameRef p_left, NameRef p_right)
+{
+    return p_left == p_right || p_left -> key == p_right -> key;
+}
+
+int IsNameNotEqualToName(NameRef p_left, NameRef p_right)
+{
+    return IsNameEqualToName(p_left, p_right) == 0 ? 1 : 0;
+}
+
 int IsNameEqualToString(NameRef p_name, const char *p_string)
 {
-    return strcmp(p_name -> token, p_string) == 0;
+    return strcasecmp(p_name -> token, p_string) == 0;
 }
 
 int IsStringEqualToString(const char *p_left, const char *p_right)
@@ -324,7 +369,7 @@ static int FindNameInScope(ScopeRef p_scope, NameRef p_name, BindingRef *r_bindi
     BindingRef t_binding;
 
 	for (t_binding = p_scope -> bindings; t_binding != NULL; t_binding = t_binding -> next)
-        if (t_binding -> name == p_name)
+        if (IsNameEqualToName(t_binding -> name, p_name))
         {
             *r_binding = t_binding;
             return 1;
@@ -456,6 +501,66 @@ void DumpScopes(void)
                 fprintf(stderr, "[%d] %s = %ld\n", t_depth, t_binding -> name -> token, t_binding -> meaning);
         t_depth += 1;
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+/* Check that module names contain a '.' character. */
+int
+IsNameSuitableForModule (NameRef p_id)
+{
+	const char *t_id;
+	size_t i;
+
+	GetStringOfNameLiteral (p_id, &t_id);
+
+	for (i = 0; '\0' != t_id[i]; ++i)
+	{
+		if ('.' == t_id[i])
+			return 1;
+	}
+
+	return 0;
+}
+
+/* Check that defined names *don't* match [a-z]+ (because these names
+ * are reserved for syntax keywords) */
+int
+IsNameSuitableForDefinition (NameRef p_id)
+{
+	const char *t_id;
+	size_t i;
+
+	GetStringOfNameLiteral (p_id, &t_id);
+
+	for (i = 0; '\0' != t_id[i]; ++i)
+	{
+		/* If char is not in [a-z] then string is okay */
+		if (t_id[i] < 'a' || t_id[i] > 'z')
+			return 1;
+	}
+
+	return 0;
+}
+
+/* Keywords mustn't conflict with valid identifiers.  Ensure this by
+ * forbidding keywords from containing any of the characters
+ * [A-Z0-9_.] */
+int
+IsStringSuitableForKeyword (const char *p_keyword)
+{
+	size_t i;
+
+	for (i = 0; p_keyword[i] != '\0'; ++i)
+	{
+		if ((p_keyword[i] == '.') ||
+		    (p_keyword[i] == '_') ||
+		    (p_keyword[i] >= 'A' && p_keyword[i] <= 'Z') ||
+		    (p_keyword[i] >= '0' && p_keyword[i] <= '9'))
+			return 0;
+	}
+
+	return 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

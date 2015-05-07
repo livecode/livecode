@@ -1,0 +1,29 @@
+Name: iphoneHeadingCalibrationTimeout
+
+Type: function
+
+Syntax: iphoneHeadingCalibrationTimeout()
+
+Summary: Returns the current value of the magnetometer calibration timeout.
+
+Introduced: 4.6.1
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+get iphoneHeadingCalibrationTimeout()
+
+Example:
+put iphoneHeadingCalibrationTimeout() into tTimeout
+
+Returns (integer):The <iphoneHeadingCalibrationTimeout> function returns an integer describing the maximum length of time a prompt for calibration is displayed to the user.
+A value of 0 means no calibration prompt is displayed.
+
+Description:
+Use the <iphoneHeadingCalibrationTimeout> function to find the current value of the magnetometer calibration timeout.
+
+It is sometimes necessary for the system to prompt the user to calibrate the magnetometer in order to provide reliable heading information. The <iphoneHeadingCalibrationTimeout> function returns the number of seconds this prompt is shown for. The calibration timeout can be set using the <iphoneSetHeadingCalibrationTimeout> command.
+
+References: iphoneStopTrackingHeading (command), iphoneSetHeadingCalibrationTimeout (command), iphoneStartTrackingHeading (command), mobileCurrentHeading (function), mobileCanTrackHeading (function), trackingError (message), headingChanged (message)

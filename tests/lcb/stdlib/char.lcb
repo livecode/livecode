@@ -27,29 +27,29 @@ end handler
 ----------------------------------------------------------------
 
 handler TestPutChar_Zero()
-	variable t
-	put "xxx" into t
-	put "." into char 0 of t
+	variable tString
+	put "xxx" into tString
+	put "." into char 0 of tString
 end handler
 handler TestPutChar_Before()
-	variable t
-	put "xxx" into t
-	put "." into char -4 of t
+	variable tString
+	put "xxx" into tString
+	put "." into char -4 of tString
 end handler
 handler TestPutChar_After()
-	variable t
-	put "xxx" into t
-	put "." into char 4 of t
+	variable tString
+	put "xxx" into tString
+	put "." into char 4 of tString
 end handler
 public handler TestPutChar()
-	variable t
-	put "xxx" into t
-	put "." into char 2 of t
-	test "put char (+ve)" when t is "x.x"
+	variable tString
+	put "xxx" into tString
+	put "." into char 2 of tString
+	test "put char (+ve)" when tString is "x.x"
 
-	put "xxx" into t
-	put "." into char -2 of t
-	test "put char (-ve)" when t is "x.x"
+	put "xxx" into tString
+	put "." into char -2 of tString
+	test "put char (-ve)" when tString is "x.x"
 
 	MCUnitTestHandlerThrows(TestPutChar_Zero, "put char (0)")
 	MCUnitTestHandlerThrows(TestPutChar_Before, "put char (before)")
@@ -57,25 +57,23 @@ public handler TestPutChar()
 end handler
 
 handler TestGetChar_Zero()
-	variable t
-	put "xxx" into t
-	get char 0 of t
+	variable tString
+	put "xxx" into tString
+	get char 0 of tString
 end handler
 handler TestGetChar_Before()
-	variable t
-	put char -4 of "xxx" into t
+	return char -4 of "xxx"
 end handler
 handler TestGetChar_After()
-	variable t
-	put char 4 of "xxx" into t
+	return char 4 of "xxx"
 end handler
 public handler TestGetChar()
-	variable t
-	put char 2 of "x.x" into t
-	test "get char (+ve)" when t is "."
+	variable tString
+	put char 2 of "x.x" into tString
+	test "get char (+ve)" when tString is "."
 
-	put char -2 of "x.x" into t
-	test "get char (-ve)" when t is "."
+	put char -2 of "x.x" into tString
+	test "get char (-ve)" when tString is "."
 
 	MCUnitTestHandlerThrows(TestGetChar_Zero, "get char (0)")
 	MCUnitTestHandlerThrows(TestGetChar_Before, "get char (before)")
@@ -85,84 +83,84 @@ end handler
 ----------------------------------------------------------------
 
 public handler TestRange()
-	variable t
+	variable tString
 
 	-- Put into range
-	put "xxxx" into t
-	put "." into char 2 to 2 of t
-	test "range (put, +ve, equal)" when t is "x.xx"
+	put "xxxx" into tString
+	put "." into char 2 to 2 of tString
+	test "range (put, +ve, equal)" when tString is "x.xx"
 
-	put "." into char 2 to 3 of t
-	test "range (put, +ve)" when t is "x.x"
+	put "." into char 2 to 3 of tString
+	test "range (put, +ve)" when tString is "x.x"
 
-	put "xxxx" into t
-	put "." into char -2 to -2 of t
-	test "range (put, -ve, equal)" when t is "xx.x"
+	put "xxxx" into tString
+	put "." into char -2 to -2 of tString
+	test "range (put, -ve, equal)" when tString is "xx.x"
 
-	put "." into char -3 to -2 of t
-	test "range (put, -ve)" when t is "x.x"
+	put "." into char -3 to -2 of tString
+	test "range (put, -ve)" when tString is "x.x"
 
 	-- Get from range
-	put "xx.x" into t
-	test "range (get, +ve, equal)" when char 3 to 3 of t is "."
-	test "range (get, +ve)" when char 2 to 3 of t is "x."
-	test "range (get, +ve, equal)" when char -2 to -2 of t is "."
-	test "range (get, +ve)" when char -3 to -2 of t is "x."
+	put "xx.x" into tString
+	test "range (get, +ve, equal)" when char 3 to 3 of tString is "."
+	test "range (get, +ve)" when char 2 to 3 of tString is "x."
+	test "range (get, +ve, equal)" when char -2 to -2 of tString is "."
+	test "range (get, +ve)" when char -3 to -2 of tString is "x."
 end handler
 
 ----------------------------------------------------------------
 
 handler TestFirst_GetEmpty()
-	variable t
-	put the first char of "" into t
+	return the first char of ""
 end handler
 handler TestFirst_PutEmpty()
-	variable t
-	put the first char of "" into t
+	variable tString
+	put "" into tString
+	put "xxx" into the first char of tString
 end handler
 public handler TestFirst()
-	variable t
+	variable tString
 
-	put "xxx" into t
-	put "." into the first char of t
-	test "first (put single)" when t is ".xx"
+	put "xxx" into tString
+	put "." into the first char of tString
+	test "first (put single)" when tString is ".xx"
 
-	put "yz" into the first char of t
-	test "first (put multiple)" when t is "yzxx"
+	put "yz" into the first char of tString
+	test "first (put multiple)" when tString is "yzxx"
 
-	test "first (get)" when the first char of t is "y"
+	test "first (get)" when the first char of tString is "y"
 
-	put "xyz" into t
-	put t into the first char of t
-	test "first (self)" when t is "xyzyz"
+	put "xyz" into tString
+	put tString into the first char of tString
+	test "first (self)" when tString is "xyzyz"
 
 	MCUnitTestHandlerThrows(TestFirst_GetEmpty, "first (get empty)")
 	MCUnitTestHandlerThrows(TestFirst_PutEmpty, "first (put empty)")
 end handler
 
 handler TestLast_GetEmpty()
-	variable t
-	put the last char of "" into t
+	return the last char of ""
 end handler
 handler TestLast_PutEmpty()
-	variable t
-	put the last char of "" into t
+	variable tString
+	put "" into tString
+	put "xxx" into the last char of tString
 end handler
 public handler TestLast()
-	variable t
+	variable tString
 
-	put "xxx" into t
-	put "." into the last char of t
-	test "last (put)" when t is "xx."
+	put "xxx" into tString
+	put "." into the last char of tString
+	test "last (put)" when tString is "xx."
 
-	put "yz" into the last char of t
-	test "last (put multiple)" when t is "xxyz"
+	put "yz" into the last char of tString
+	test "last (put multiple)" when tString is "xxyz"
 
-	test "last (get)" when the last char of t is "z"
+	test "last (get)" when the last char of tString is "z"
 
-	put "xyz" into t
-	put t into the last char of t
-	test "first (self)" when t is "xyxyz"
+	put "xyz" into tString
+	put tString into the last char of tString
+	test "first (self)" when tString is "xyxyz"
 
 	MCUnitTestHandlerThrows(TestLast_GetEmpty, "last (get empty)")
 	MCUnitTestHandlerThrows(TestLast_PutEmpty, "last (put empty)")
@@ -171,96 +169,96 @@ end handler
 ----------------------------------------------------------------
 
 handler TestDeleteSingle_Zero()
-	variable t
-	put "x" into t
-	delete char 0 of t
+	variable tString
+	put "x" into tString
+	delete char 0 of tString
 end handler
 handler TestDeleteSingle_Before()
-	variable t
-	put "x" into t
-	delete char -2 of t
+	variable tString
+	put "x" into tString
+	delete char -2 of tString
 end handler
 handler TestDeleteSingle_After()
-	variable t
-	put "x" into t
-	delete char 2 of t
+	variable tString
+	put "x" into tString
+	delete char 2 of tString
 end handler
 handler TestDeleteSingle_FirstEmpty()
-	variable t
-	put "" into t
-	delete the first char of t
+	variable tString
+	put "" into tString
+	delete the first char of tString
 end handler
 handler TestDeleteSingle_LastEmpty()
-	variable t
-	put "" into t
-	delete the last char of t
+	variable tString
+	put "" into tString
+	delete the last char of tString
 end handler
 public handler TestDeleteSingle()
-	variable t
+	variable tString
 
-	put "xyz" into t
-	delete char 2 of t
-	test "delete single (+ve)" when t is "xz"
+	put "xyz" into tString
+	delete char 2 of tString
+	test "delete single (+ve)" when tString is "xz"
 
-	put "xyz" into t
-	delete char -2 of t
-	test "delete single (-ve)" when t is "xz"
+	put "xyz" into tString
+	delete char -2 of tString
+	test "delete single (-ve)" when tString is "xz"
 
 	MCUnitTestHandlerThrows(TestDeleteSingle_Zero, "delete (single, 0)")
 	MCUnitTestHandlerThrows(TestDeleteSingle_Before, "delete (single, before)")
 	MCUnitTestHandlerThrows(TestDeleteSingle_After, "delete (single, after)")
 
-	put "xyz" into t
-	delete the first char of t
-	test "delete first" when t is "yz"
+	put "xyz" into tString
+	delete the first char of tString
+	test "delete first" when tString is "yz"
 
-	put "xyz" into t
-	delete the last char of t
-	test "delete last" when t is "xy"
+	put "xyz" into tString
+	delete the last char of tString
+	test "delete last" when tString is "xy"
 
 	MCUnitTestHandlerThrows(TestDeleteSingle_FirstEmpty, "delete first (empty)")
 	MCUnitTestHandlerThrows(TestDeleteSingle_LastEmpty, "delete last (empty)")
 end handler
 
 handler TestDeleteRange_Zero()
-	variable t
-	put "xxx" into t
-	delete char 0 to 0 of t
+	variable tString
+	put "xxx" into tString
+	delete char 0 to 0 of tString
 end handler
 handler TestDeleteRange_Reverse()
-	variable t
-	put "xxx" into t
-	delete char 3 to 2 of t
+	variable tString
+	put "xxx" into tString
+	delete char 3 to 2 of tString
 end handler
 handler TestDeleteRange_After()
-	variable t
-	put "xyz" into t
-	delete char 3 to 5 of t
+	variable tString
+	put "xyz" into tString
+	delete char 3 to 5 of tString
 end handler
 handler TestDeleteRange_Before()
-	variable t
-	put "xyz" into t
-	delete char -5 to -3 of t
-	test diagnostic t
+	variable tString
+	put "xyz" into tString
+	delete char -5 to -3 of tString
+	test diagnostic tString
 end handler
 public handler TestDeleteRange()
-	variable t
+	variable tString
 
-	put "xyz" into t
-	delete char 2 to 2 of t
-	test "delete range (+ve, equal)" when t is "xz"
+	put "xyz" into tString
+	delete char 2 to 2 of tString
+	test "delete range (+ve, equal)" when tString is "xz"
 
-	put "xyz" into t
-	delete char -2 to -2 of t
-	test "delete range (-ve, equal)" when t is "xz"
+	put "xyz" into tString
+	delete char -2 to -2 of tString
+	test "delete range (-ve, equal)" when tString is "xz"
 
-	put "wxyz" into t
-	delete char 2 to 3 of t
-	test "delete range (+ve)" when t is "wz"
+	put "wxyz" into tString
+	delete char 2 to 3 of tString
+	test "delete range (+ve)" when tString is "wz"
 
-	put "wxyz" into t
-	delete char -3 to -2 of t
-	test "delete range (+ve)" when t is "wz"
+	put "wxyz" into tString
+	delete char -3 to -2 of tString
+	test "delete range (+ve)" when tString is "wz"
 
 	MCUnitTestHandlerThrows(TestDeleteRange_Zero, "delete range (0)")
 	MCUnitTestHandlerThrows(TestDeleteRange_Before, "delete range (before)")
@@ -272,7 +270,7 @@ end handler
 
 public handler TestContainsChar()
 	test "char is in" when "y" is in "xyz"
-	test "char isn't in" when not "w" is in "xyz"
+	test "char isn'tString in" when not "w" is in "xyz"
 
 	test diagnostic "TODO 'y' is not in 'xyz'"
 end handler
@@ -304,15 +302,14 @@ public handler TestOffset()
 	test "index" when the index of "x" in ".xx." is 2
 end handler
 
-/* bug 14846
 public handler TestOffsetAfter()
 	-- Only test single-character needles for now
-	test "offset after (single, +ve)" when the offset of "x" after 1 in "x.xx." is 2
-	test "first offset after (single, +ve)" when the first offset of "x" after 1 in "x.xx." is 2
-	test "last offset after (single, +ve)" when the last offset of "x" after 1 in "x.xx." is 3
-	test "offset after (single, -ve)" when the offset of "x" after -5 in "x.xx." is 2
-	test "first offset after (single, -ve)" when the first offset of "x" after -5 in "x.xx." is 2
-	test "last offset after (single, -ve)" when the last offset of "x" after -5 in "x.xx." is 3
+	test "offset after (single, +ve)" when the offset of "x" after 1 in "x.xx." is 3
+	test "first offset after (single, +ve)" when the first offset of "x" after 1 in "x.xx." is 3
+	test "last offset after (single, +ve)" when the last offset of "x" after 1 in "x.xx." is 4
+	test "offset after (single, -ve)" when the offset of "x" after -5 in "x.xx." is 3
+	test "first offset after (single, -ve)" when the first offset of "x" after -5 in "x.xx." is 3
+	test "last offset after (single, -ve)" when the last offset of "x" after -5 in "x.xx." is 4
 
 	test "offset after (single, missing, +ve)" when the offset of "x" after 1 in "x.." is 0
 	test "first offset after (single, missing, +ve)" when the first offset of "x" after 1 in "x.." is 0
@@ -329,7 +326,7 @@ public handler TestOffsetAfter()
 	MCUnitTestHandlerThrows(TestLastOffsetAfter_SingleInvalidNegative, "last offset after (single, invalid -ve)")
 
 	-- For chars, "index" is synonymous with "offset"
-	test "index after" when the index of "x" after 2 in ".xx." is 1
+	test "index after" when the index of "x" after 2 in ".xx." is 3
 end handler
 
 handler TestOffsetAfter_SingleInvalidPositive()
@@ -373,7 +370,6 @@ public handler TestOffsetAfterZero()
 	put the last offset of "x" in "x" into tNoAfter
 	test "the last offset after (single, 0, same)" when the last offset of "x" after 0 in "x" is tNoAfter
 end handler
-*/
 
 public handler TestBeginsWith()
 	test "begins with" when "xx." begins with "xx"
@@ -409,16 +405,16 @@ handler TestCharWithCode_Negative()
 	return the char with code -1
 end handler
 public handler TestCharWithCode()
-	variable t
+	variable tString
 
-	put the char with code 120 into t
-	test "code->byte" when t is "x"
+	put the char with code 120 into tString
+	test "code->byte" when tString is "x"
 
-	put the char with code 8594 into t
-	test "code->byte (BMP)" when t is "\u{2192}"
+	put the char with code 8594 into tString
+	test "code->byte (BMP)" when tString is "\u{2192}"
 
-	put the char with code 119070 into t
-	test "code->byte (SMP)" when t is "\u{1d11e}"
+	put the char with code 119070 into tString
+	test "code->byte (SMP)" when tString is "\u{1d11e}"
 
 	MCUnitTestHandlerThrows(TestCharWithCode_Negative, "code->byte (-ve)")
 end handler

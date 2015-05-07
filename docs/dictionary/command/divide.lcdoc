@@ -1,0 +1,52 @@
+Name: divide
+
+Type: command
+
+Syntax: divide [<chunk> of] <container> by <number> 
+
+Syntax: divide <arrayContainer> by {<number> | <array>}
+
+Summary: Divides a <container> by a number and places the resulting <value> in the <container>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+divide field 1 by 52
+
+Example:
+divide field "Total Income" by 12
+
+Example:
+divide line x of field "Expenses" by percentageRate
+
+Example:
+put 100 into tValue
+divide tValue by 2
+
+Parameters:
+chunk: A chunk expression specifying a portion of the container.
+container: A field, button, or variable, or the message box.
+number: Any expression that evaluates to a number.
+arrayContainer (array): 
+array (array): 
+
+The result: If <container> is a <field> or <button>, the <format> of the result is determined by the <numberFormat> <property>.
+
+Description:
+Use the <divide> <command> to divide a <container> or a portion of a <container> by a number, or to divide two <array|arrays> containing numbers.
+
+The contents of the <container> (or the <chunk> of the <container>) must be a number or an <expression> that <evaluate|evaluates> to a number.
+
+If an <arrayContainer> is divided by a <number>, each element is divided by the <number>. If an <arrayContainer> is divided by an <array>, both <array|arrays> must have the same number of <element(glossary)|elements> and the same dimension, and each <element(keyword)> in the <arrayContainer> is divided by the corresponding <element(keyword)> of the <array>.
+
+If the <container> or an <element(keyword)> of the <arrayContainer> is empty, the <divide> <command> treats its contents as zero.
+
+Attempting to divide by zero causes an execution error.
+
+References: field (keyword), element (keyword), button (keyword), / (operator), numberFormat (property), multiply (command), format (function), value (function), property (glossary), element (glossary), container (glossary), expression (glossary), array (glossary), evaluate (glossary), command (glossary)
+
+Tags: math

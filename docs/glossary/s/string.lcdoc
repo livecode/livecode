@@ -1,0 +1,14 @@
+Name: string
+
+Synonyms: string
+
+Type: glossary
+
+Description:
+A sequence of <character|characters>. 
+ 
+Also, a type of <operator> whose resulting <value> is a string.
+
+References: operator (glossary), character (glossary), value (glossary)
+
+Tags: text processing

@@ -1,0 +1,14 @@
+Name: single-byte character
+
+Synonyms: single-byte character,single-byte,one-byte character,1-byte character
+
+Type: glossary
+
+Description:
+A <character> from a character set that supports 256 <character|characters>; an extended-ASCII <character>, as opposed to a <Unicode> <character>. 
+ 
+The numeric equivalent of single-byte <character|characters> is between zero and 255, for 256 total <character|characters>. 256 is 2^8, so it takes 8 <bit|bits> (one <byte>) to store an extended-ASCII <character>.
+
+References: character (glossary), bit (glossary), Unicode (glossary), byte (glossary)
+
+Tags: text processing

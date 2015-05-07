@@ -15,6 +15,9 @@
 *.xml text
 *.md text
 *.livecodescript text
+*.lcdoc text
+*.mlc text
+*.lcb text
 
 # Declare files that will always have CRLF line endings on checkout.
 *.sln text eol=crlf

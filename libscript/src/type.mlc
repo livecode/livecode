@@ -22,16 +22,21 @@ module com.livecode.type
 
 use com.livecode.foreign
 
-public foreign handler MCTypeEvalIsEmpty(in Target as any, out Value as CBool) as undefined binds to "<builtin>"
-public foreign handler MCTypeEvalIsNotEmpty(in Target as any, out Value as CBool) as undefined binds to "<builtin>"
-public foreign handler MCTypeEvalIsDefined(in Target as optional any, out Value as CBool) as undefined binds to "<builtin>"
-public foreign handler MCTypeEvalIsNotDefined(in Target as optional any, out Value as CBool) as undefined binds to "<builtin>"
-public foreign handler MCTypeEvalIsABoolean(in Target as optional any, out Value as CBool) as undefined binds to "<builtin>"
-public foreign handler MCTypeEvalIsANumber(in Target as optional any, out Value as CBool) as undefined binds to "<builtin>"
-public foreign handler MCTypeEvalIsAString(in Target as optional any, out Value as CBool) as undefined binds to "<builtin>"
-public foreign handler MCTypeEvalIsAData(in Target as optional any, out Value as CBool) as undefined binds to "<builtin>"
-public foreign handler MCTypeEvalIsAnArray(in Target as optional any, out Value as CBool) as undefined binds to "<builtin>"
-public foreign handler MCTypeEvalIsAList(in Target as optional any, out Value as CBool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsEmpty(in Target as any, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCTypeEvalIsNotEmpty(in Target as any, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCTypeEvalIsDefined(in Target as optional any, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCTypeEvalIsNotDefined(in Target as optional any, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCTypeEvalIsABoolean(in Target as optional any, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCTypeEvalIsANumber(in Target as optional any, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCTypeEvalIsAString(in Target as optional any, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCTypeEvalIsAData(in Target as optional any, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCTypeEvalIsAnArray(in Target as optional any, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCTypeEvalIsAList(in Target as optional any, out Value as CBool) returns nothing binds to "<builtin>"
+
+public foreign handler MCNothingEvalIsEqualToNothing(in Left as optional any, in Right as nothing, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCNothingEvalIsNothingEqualTo(in Left as nothing, in Right as optional any, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCNothingEvalIsNotEqualToNothing(in Left as optional any, in Right as nothing, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCNothingEvalIsNothingNotEqualTo(in Left as nothing, in Right as optional any, out Value as CBool) returns nothing binds to "<builtin>"
 
 /*
 Summary:    Determines whether <Target> is empty or not.
@@ -72,6 +77,7 @@ output:     Returns true if the given expression <Target> is defined, and false 
 */
 
 syntax IsDefined is postfix operator with precedence 7
+    deprecate with message "Use 'is not nothing' instead"
 	<Target: Expression> "is" "defined"
 begin
 	MCTypeEvalIsDefined(Target, output)
@@ -86,6 +92,7 @@ output:     Returns false if the given expression <Target> is defined, and true 
 */
 
 syntax IsNotDefined is postfix operator with precedence 7
+    deprecate with message "Use 'is nothing' instead"
 	<Target: Expression> "is not" "defined"
 begin
 	MCTypeEvalIsNotDefined(Target, output)
@@ -98,6 +105,7 @@ Target:	Any expression
 Output:	Returns false if the given expression <Target> is defined, and true otherwise
 */
 syntax IsUndefined is postfix operator with precedence 7
+    deprecate with message "Use 'is nothing' instead"
 	<Target: Expression> "is undefined"
 begin
 	MCTypeEvalIsNotDefined(Target, output)
@@ -109,9 +117,26 @@ Target:	Any expression
 Output:	Returns true if the given expression <Target> is defined, and false otherwise.
 */
 syntax IsNotUndefined is postfix operator with precedence 7
+    deprecate with message "Use 'is not nothing' instead"
 	<Target: Expression> "is not undefined"
 begin
 	MCTypeEvalIsDefined(Target, output)
+end syntax
+
+--
+
+syntax NothingIsNothing is neutral binary operator with precedence 7
+    <Left: Expression> "is" <Right: Expression>
+begin
+    MCNothingEvalIsEqualToNothing(Left, Right, output)
+    MCNothingEvalIsNothingEqualTo(Left, Right, output)
+end syntax
+
+syntax NothingIsNotNothing is neutral binary operator with precedence 7
+    <Left: Expression> "is not" <Right: Expression>
+begin
+    MCNothingEvalIsNotEqualToNothing(Left, Right, output)
+    MCNothingEvalIsNothingNotEqualTo(Left, Right, output)
 end syntax
 
 --

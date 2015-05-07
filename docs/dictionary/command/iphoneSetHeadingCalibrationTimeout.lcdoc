@@ -1,0 +1,35 @@
+Name: iphoneSetHeadingCalibrationTimeout
+
+Type: command
+
+Syntax: iphoneSetHeadingCalibrationTimeout <timeoutInSeconds> 
+
+Summary: Sets the maximum length of time a prompt for calibration is displayed to the user.
+
+Introduced: 4.6.1
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+iphoneSetHeadingCalibrationTimeout 5
+
+Example:
+iphoneSetHeadingCalibrationTimeout 0
+
+Parameters:
+timeoutInSeconds (integer): An integer specifying the maximum length of time a prompt for calibration is displayed to the user, in seconds. If <timeoutInSeconds> is 0 no calibration prompt will be displayed.
+
+Description:
+Use the <iphoneSetHeadingCalibrationTimeout> command to control the length of time the system shows the calibration prompt to the user.
+
+It is sometimes necessary for the system to prompt the user to calibrate the magnetometer in order to provide reliable heading information. 
+
+By default this facility is turned off - i.e. the system will not prompt for calibration.
+
+Use the <iphoneSetHeadingCalibrationTimeout> command to set the maximum length of time a prompt for calibration is displayed to the user. If <timeoutInSeconds> is 0 no calibration prompt is shown to the user, if non-zero it determines the maximum length of time the prompt for calibration is shown to the user. If the user does not choose to calibrate the device within that time the prompt will be dismissed.
+
+The current setting of the timeout can be queried using the iphoneHeadingCalibrationTimeout function.
+
+References: mobileStopTrackingSensor (command), mobileStartTrackingSensor (command), mobileCurrentHeading (function), iphoneHeadingCalibrationTimeout (function), mobileCanTrackHeading (function), trackingError (message), headingChanged (message)

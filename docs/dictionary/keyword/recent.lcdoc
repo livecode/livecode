@@ -1,0 +1,28 @@
+Name: recent
+
+Type: keyword
+
+Syntax: recent
+
+Summary: Used in card references.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+go recent card
+
+Example:
+put field "Type" of recent card into lastTypeChecked
+
+Description:
+Use the <recent> <keyword> to refer to the previously-visited <card>.
+
+Whenever you switch cards, unless the lockRecent <property> is set to true, each <card> you've visited is added to the <recent cards|recent cards list>. In <object reference|card references>, the <recent> <keyword> specifies the <card> most recently visited.
+
+References: go (command), card (keyword), keyword (glossary), property (glossary), recent cards (glossary), object reference (glossary)
+
+Tags: ui

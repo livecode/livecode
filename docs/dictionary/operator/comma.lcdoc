@@ -1,0 +1,37 @@
+Name: ,
+
+Type: operator
+
+Syntax: <string1> , <string2> 
+
+Summary: <concatenate|Concatenates> (joins) two <string|strings> and inserts a comma between them.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+put "first","second" -- evaluates to "first,second"
+
+Example:
+get lastName,firstName  middleName
+
+Parameters:
+string1 (string): The operands string1 and string2 are literal strings of characters (delimited with double quotes), or expressions that evaluate to strings.
+string2 (string): 
+
+The result: The result of the <,> <operator> is a <string(keyword)> consisting of <string1>, a comma, and <string2>.
+
+Description:
+Use the <,> <operator> to combine two <string(glossary)|strings> with a comma between them.
+
+The <,> <operator> is equivalent to  comma <a/>. In other words,
+  "this" , "that"
+does the same thing as
+  "this"  comma  "that"
+
+References: comma (constant), string (glossary), concatenate (glossary), operator (glossary), string (keyword)
+
+Tags: text processing

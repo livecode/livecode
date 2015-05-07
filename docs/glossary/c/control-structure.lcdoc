@@ -1,0 +1,10 @@
+Name: control structure
+
+Synonyms: structure,control structure
+
+Type: glossary
+
+Description:
+A <statement> (or set of <statement|statements>) that determines the order in which other <statement|statements> are <execute|executed>.
+
+References: statement (glossary), execute (glossary)

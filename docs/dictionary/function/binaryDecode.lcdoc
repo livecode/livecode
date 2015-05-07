@@ -1,0 +1,56 @@
+Name: binaryDecode
+
+Type: function
+
+Syntax: binaryDecode(<formatsList>, <data>, <variablesList>)
+
+Summary: <Decodesbinary data> and places it into the specified <variable|variables>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+binaryDecode("h","M",theHex) - converts M to its hex equivalent
+
+Example:
+binaryDecode("a*",receivedData,textData) -- converts data to text
+
+Example:
+binaryDecode("x12Sh16",picHeader,junk,numColors,colorTable)
+
+Example:
+binaryDecode(myFormat,placeHolder,importantStuff)
+
+Parameters:
+formatsList: The formatsList consists of one or more dataTypes, each followed optionally by an amount. A dataType is one of the following single letters: x: skip next amount bytes of data
+data (string): A string of encoded binary data.
+variablesList: A comma-separated list of local or global variable names. The number of variable names must be the same as the number of dataTypes specified in the formatsList, and the variables must already exist.
+amount: a: convert next amount bytes of data to charactersA: convert next amount bytes of data (skipping spaces) to charactersb: convert next amount bits of data to 1s and 0sB: convert next amount bits of data to 1s and 0s, starting at the high end of each byteh: convert next amount bytes of data to hexadecimal digitsH: convert next amount bytes of data to hexadecimal digits, starting at the high end of each bytec: convert next amount bytes of data to signed 1-byte integersC: convert next amount bytes of data to unsigned 1-byte integerss: convert next amount 2-byte chunks of data to signed integers in host byte orderS: convert next amount 2-byte chunks of data to unsigned integers in host byte orderi: convert next amount 4-byte chunks of data to signed integers in host byte orderI: convert next amount 4-byte chunks of data to unsigned integers in host byte ordern: convert next amount 2-byte chunks of data to signed integers in network byte orderN: convert next amount 4-byte chunks of data to signed integers in network byte orderm: convert next amount 2-byte chunks of data to unsigned integers in network byte orderM: convert next amount 4-byte chunks of data to unsigned integers in network byte orderf: convert next amount 4-byte chunks of data to a single-precision floatd: convert next amount 8-byte chunks of data to a double-precision floatThe amount corresponding to each dataType is an integer or the * character. If no amount is specified, the dataType is used for a single byte of data. The * character causes the rest of the data to be converted according to the formatType, so it should appear only as the last character in the formatsList.>*Important:* If you specify an amount with a string dataType (a or A), the binaryDecode function places amount bytes in the next variable of the variablesList. If you specify an amount with a numeric dataType, the function places amount chunks of data in the next amount variables of the variablesList. For example, the dataType "a3" requires only one variable, which will hold a 3-characterstring, but the dataType "h3" requires three variables, each of which will hold a single hex digit.
+
+Returns:
+The <binaryDecode> <function> <return|returns> the number of dataTypes that were successfully converted and placed in <variable|variables> (not counting data skipped by the x dataType).
+The actual data is placed in the variables, rather than returned by the function.
+
+Description:
+Use the <binaryDecode> function to convert <binary file|binary data> into a form that can be manipulated by <handler|handlers>.
+
+The binary data format used by <binaryDecode> is similar to the <format> produced by the "pack" function of the Perl programming language.
+
+You must declare or otherwise create all variables in the <variablesList> before using them in the <binaryDecode> <function>. Unlike the <put> <command>, the <binaryDecode> <function> does not automatically create <local variable|local variables> when you use them.
+
+Although the x dataType skips the specified number of <byte|bytes> rather than converting them, you still must provide a <variable> for instances of x that appear in the <formatsList>. The <binaryDecode> <function> does not change the <value> of a <variable> used for the dataType x.
+
+If the <formatsList> specifies fewer <byte|bytes> than are in the <data>, the <binaryDecode> <function> ignores the remaining <byte|bytes>. If the <formatsList> specifies more <byte|bytes> than are in the data, the <binaryDecode> <function> converts as many of the dataTypes as there is data for. Check the <value> that the <binaryDecode> <function> <return|returns> to determine how much data was actually converted. Here is an example:
+
+  on convertStuff dataToConvert
+    global headerData,placeholder,bodyData,footerData
+    put binaryDecode("i5x2a24xi2",dataToConvert, \
+       headerData,placeholder,bodyData,placeholder,footerData) \
+       into convertResult
+    if convertResult &lt; 3 then return "Error: data was corrupted"
+  end convertStuff
+
+References: put (command), numToChar (function), format (function), value (function), return (glossary), binary file (glossary), variable (glossary), handler (glossary), local variable (glossary), Decodesbinary data (glossary), byte (glossary), command (glossary), function (control_st)

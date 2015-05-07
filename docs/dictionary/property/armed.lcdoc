@@ -1,0 +1,37 @@
+Name: armed
+
+Type: property
+
+Syntax: set the armed of <button> to {true | false}
+
+Summary: Specifies whether a <button> has a changed (active) <appearance> due to the <mouse pointer> moving into it
+
+Synonyms: arm
+
+Associations: button
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the armed of first button to false
+
+Example:
+if the armed of button "Font" then showFontSamples
+
+Description:
+Check the <armed> <property> to determine whether a <button(object)|button's> <menu> is open--that is, whether the user is in the process of choosing an item from the <menu>. You can also set a <button(object)|button's> <armed> <property> to change its <appearance>.
+
+A button's <armed> <property> is analogous to its <hilite> <property>. A <button(keyword)> is usually <armed> when the <mouse pointer> moves into it. You can automate this behavior by setting the <button(object)|button's> <autoArm> <property> to true.
+
+The appearance of an armed button is determined by its armBorder and <armFill> <properties>.
+
+Changes:
+The armed keyword was introduced in version 1.1. In previous versions, the arm synonym was used.
+
+References: armed (property), armFill (property), properties (property), autoArm (property), hiliteBorder (property), menu (keyword), button (keyword), hilite (command), button (object), appearance (glossary), mouse pointer (glossary), property (glossary)
+
+Tags: ui

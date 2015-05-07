@@ -47,7 +47,6 @@
 		728636831A6D7359001D1FBF /* logic.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 720166121A420EE8002B53F9 /* logic.mlc */; };
 		728636851A6D7359001D1FBF /* math-foundation.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 720166141A420EE8002B53F9 /* math-foundation.mlc */; };
 		728636861A6D7359001D1FBF /* math.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 720166151A420EE8002B53F9 /* math.mlc */; };
-		728636871A6D7359001D1FBF /* segmentchunk.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 7201662E1A420EE8002B53F9 /* segmentchunk.mlc */; };
 		728636881A6D7359001D1FBF /* sort.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 7201662F1A420EE8002B53F9 /* sort.mlc */; };
 		728636891A6D7359001D1FBF /* string.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 720166301A420EE8002B53F9 /* string.mlc */; };
 		7286368A1A6D7359001D1FBF /* type-convert.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 720166311A420EE8002B53F9 /* type-convert.mlc */; };
@@ -127,7 +126,6 @@
 		7201662B1A420EE8002B53F9 /* script-object.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "script-object.cpp"; path = "src/script-object.cpp"; sourceTree = "<group>"; };
 		7201662C1A420EE8002B53F9 /* script-package.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "script-package.cpp"; path = "src/script-package.cpp"; sourceTree = "<group>"; };
 		7201662D1A420EE8002B53F9 /* script-private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "script-private.h"; path = "src/script-private.h"; sourceTree = "<group>"; };
-		7201662E1A420EE8002B53F9 /* segmentchunk.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = segmentchunk.mlc; path = src/segmentchunk.mlc; sourceTree = "<group>"; };
 		7201662F1A420EE8002B53F9 /* sort.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = sort.mlc; path = src/sort.mlc; sourceTree = "<group>"; };
 		720166301A420EE8002B53F9 /* string.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = string.mlc; path = src/string.mlc; sourceTree = "<group>"; };
 		720166311A420EE8002B53F9 /* type-convert.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "type-convert.mlc"; path = "src/type-convert.mlc"; sourceTree = "<group>"; };
@@ -251,7 +249,6 @@
 				720166121A420EE8002B53F9 /* logic.mlc */,
 				720166141A420EE8002B53F9 /* math-foundation.mlc */,
 				720166151A420EE8002B53F9 /* math.mlc */,
-				7201662E1A420EE8002B53F9 /* segmentchunk.mlc */,
 				7201662F1A420EE8002B53F9 /* sort.mlc */,
 				720166301A420EE8002B53F9 /* string.mlc */,
 				720166311A420EE8002B53F9 /* type-convert.mlc */,
@@ -332,7 +329,6 @@
 				728636831A6D7359001D1FBF /* logic.mlc in Sources */,
 				728636851A6D7359001D1FBF /* math-foundation.mlc in Sources */,
 				728636861A6D7359001D1FBF /* math.mlc in Sources */,
-				728636871A6D7359001D1FBF /* segmentchunk.mlc in Sources */,
 				728636881A6D7359001D1FBF /* sort.mlc in Sources */,
 				728636891A6D7359001D1FBF /* string.mlc in Sources */,
 				7286368A1A6D7359001D1FBF /* type-convert.mlc in Sources */,

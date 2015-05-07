@@ -1,0 +1,31 @@
+Name: scrollerDidScroll
+
+Type: message
+
+Syntax: scrollerDidScroll <hScroll>, <vScroll> 
+
+Summary: Sent when the properties of a scroller have changed.
+
+Introduced: 4.5.3
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+on scrollerDidScroll pHScroll, pVScroll
+   put "Scrolled to" && pHScroll & comma & pVScroll into field "scroller status"
+end scrollerDidScroll
+
+Parameters:
+hScroll: The horizontal scroll of an iOS scroller control.
+vScroll: The vertical scroll of an iOS scroller control.
+
+Description:
+The <scrollerDidScroll> message is sent when the scroll properties of a scroller control created using the <mobileControlCreate> command change.
+
+Handle the <scrollerDidScroll> message if you want to move LiveCode controls, make changes to the interface or set the appropriate scroll properties of groups and fields to get a native scrolling effect.
+
+The <scrollerDidScroll> message is sent to the object containing the script that created the scroller control.
+
+References: mobileControlCreate (command), mobileControlDelete (command), mobileControlSet (command), mobileControlGet (function), mobileControlTarget (function), mobileControls (function), scrollerEndDecelerate (message), scrollerBeginDecelerate (message), scrollerBeginDrag (message), scrollerEndDrag (message), scrollerScrollToTop (message)

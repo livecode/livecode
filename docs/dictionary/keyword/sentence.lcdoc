@@ -1,0 +1,32 @@
+Name: sentence
+
+Type: keyword
+
+Syntax: sentence
+
+Summary: Designates a string as part of a chunk expression, delimited by Unicode sentence breaks, as determined by the ICU Library.
+
+Introduced: 7.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+put "This is the first sentence. This is the second sentence." into tText
+put sentence 2 of tText -- returns "This is the second sentence."
+
+Example:
+put "The green apple costs $0.50, the red apple costs $0.60. Which one should I buy?" into tText
+put the first sentence of tText -- returns "The green apple costs $0.50, the red apple costs $0.60. " also note that the space after the full stop is included in the return value.
+
+Description:
+Use the <sentence> keyword to refer to one or more sentences in a container.
+
+A <sentence> is a chunk delimited by Unicode sentence breaks, as determined by the ICU Library. A sentence can contain multiple words, but not multiple lines.
+
+>*Note:*  The sentence chunk includes the punctuation mark at the end of the sentence, if there is one. It will also include any trailing spaces. The rules describing Unicode sentence breaks are available at <a> http://www.unicode.org/reports/tr29/#Sentence_Boundaries</a>.
+
+References: item (keyword), character (keyword), segment (keyword), trueWord (keyword), line (keyword), word (keyword), token (keyword), paragraph (keyword)
+
+Tags: text processing

@@ -1,0 +1,12 @@
+Name: recursion
+
+Synonyms: recursion,recurse,recursed,recursing,recursive
+
+Type: glossary
+
+Description:
+The process by which a <handler> calls itself. 
+ 
+(Recursion is a useful programming technique, but may also occur accidentally, resulting in a <error|script error>.)
+
+References: error (glossary), handler (glossary)

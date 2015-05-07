@@ -1,0 +1,12 @@
+Name: blocking
+
+Synonyms: blocking,block,blocking read,blocking write,blocked
+
+Type: glossary
+
+Description:
+An operation that causes the current <handler> to stop and wait until the operation is completed.
+
+References: handler (glossary)
+
+Tags: networking

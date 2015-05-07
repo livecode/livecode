@@ -1,0 +1,37 @@
+Name: lockMessages
+
+Type: property
+
+Syntax: set the lockMessages to {true | false}
+
+Summary: Specifies whether <setProp trigger|setProp triggers>, <getProp call|getProp calls>, and certain <built-in message|built-in messages> are sent automatically.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the lockMessages to false
+
+Value (bool):The <lockMessages> is true or false
+By default, the <lockMessages> <property> is set to false. It is <reset> to false when no <handler|handlers> are <execute|executing>.
+
+Description:
+Use the <lockMessages> <property> to prevent unwanted <handler|handlers> from being <trigger|triggered>,or to speed up operations when <handler|handlers> that are normally run automatically are not needed.
+
+If the <lockMessages> <property> is set to true, the following are not sent:
+
+        * Navigation messages (such as openCard, <closeStack>, and so on) 
+        * Object creation messages (such as newCard, <newButton>, and so on)
+        * getProp calls
+        * setProp triggers
+
+It is useful to set this property if a handler temporarily visits a card and you don't want the normal messages to be triggered.
+
+The <lockMessages> <property> is automatically set to false when a <palette>, <modeless>, or <modal> <stack> is opened, even if a <handler> is still running.
+
+References: newButton (message), closeStack (message), reset (command), lock messages (command), modal (command), modeless (command), palette (command), stack (object), property (glossary), getProp call (glossary), built-in message (glossary), handler (glossary), setProp trigger (glossary), trigger (glossary), execute (glossary)
+
+Tags: objects

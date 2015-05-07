@@ -41,6 +41,8 @@ extern void MCIPhoneSwitchToOpenGL(void);
 #include <GLES/glext.h>
 extern void MCAndroidEnableOpenGLMode(void);
 extern void MCAndroidDisableOpenGLMode(void);
+#else
+#error tilecachegl.cpp not supported on this platform
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////

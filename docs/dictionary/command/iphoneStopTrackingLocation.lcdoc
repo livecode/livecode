@@ -1,0 +1,23 @@
+Name: iphoneStopTrackingLocation
+
+Type: command
+
+Syntax: iphoneStopTrackingLocation
+
+Summary: Stops tracking the location of the device.
+
+Introduced: 4.5.2
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+iphoneStopTrackingLocation
+
+Description:
+Use the <iphoneStopTrackingLocation> command to stop tracking the location of the device.
+
+The <iphoneStopTrackingLocation> command stops tracking the location of the device using CoreLocation.
+
+References: iphoneStartTrackingLocation (command), mobileCurrentLocation (function), trackingError (message), locationChanged (message)

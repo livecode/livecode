@@ -1,0 +1,30 @@
+Name: mobileLockOrientation
+
+Type: command
+
+Syntax: mobileLockOrientation
+
+Summary: Temporarily prevents orientation changes.
+
+Synonyms: iphoneLockOrientation
+
+Introduced: 4.5.3
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+mobileLockOrientation
+
+Example:
+if loading then mobileLockOrientation
+
+Description:
+Use the <mobileLockOrientation> command to temporarily prevent orientation changes.
+
+The <mobileLockOrientation> command temporarily prevents orientation changes, for example while your application is performing a task and you do not want the orientation to change until the task is complete.
+
+The orientation lock can be nested, and when an unlock request causes the nesting to return to zero, the interface rotates to match the device's current orientation (assuming it is in the set of allowed orientations). You can query the current orientation lock state with the <mobileOrientationLocked> function.
+
+References: mobileSetAllowedOrientations (command), mobileUnlockOrientation (command), mobileDeviceOrientation (function), mobileOrientationLocked (function), mobileAllowedOrientations (function), mobileOrientation (function), orientationChanged (message)

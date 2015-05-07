@@ -271,6 +271,8 @@ MCStack::MCStack()
 	
 	// MW-2011-09-13: [[ Masks ]] The window mask starts off as nil.
 	m_window_shape = nil;
+
+	m_window_buffer = nil;
 	
 	// MW-2011-11-24: [[ UpdateScreen ]] Start off with defer updates false.
 	m_defer_updates = false;
@@ -477,6 +479,8 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	// MW-2011-09-13: [[ Masks ]] The windowmask starts off as nil.
 	m_window_shape = nil;
 
+	m_window_buffer = nil;
+
 	// MW-2011-11-24: [[ UpdateScreen ]] Start off with defer updates false.
 	m_defer_updates = false;
 	
@@ -622,6 +626,8 @@ MCStack::~MCStack()
     MCThreadMutexRelease(m_id_cache_lock);
 	
 	view_destroy();
+
+	release_window_buffer();
 }
 
 Chunk_term MCStack::gettype() const

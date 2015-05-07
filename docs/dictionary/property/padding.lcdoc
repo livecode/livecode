@@ -1,0 +1,34 @@
+Name: padding
+
+Type: property
+
+Syntax: set the padding of line <lineNumber> of <fieldReference> to <pixels> 
+
+Summary: Determines the padding of the cells of a table in a <field>.
+
+Associations: field
+
+Introduced: 5.5
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the padding of line 5 of field 1 to 10
+
+Parameters:
+pixels: The number of pixels to add as padding around the contents of the cells in a table.
+
+Value: The <padding> of a line or field returns the padding size as a number.
+
+Description:
+Use the <padding> property to add padding to table cells.
+
+The <padding> property adds padding to all sides of a table cell. The padding property only has an effect on a table in a field.
+
+To create a table within a field use the <tabStops> property.
+
+References: leftIndent (property), borderWidth (property), vgrid (property), textAlign (property), dontWrap (property), formattedText (property), spaceAbove (property), backgroundColor (property), listBehavior (property), listIndent (property), hidden (property), textSize (property), firstIndent (property), listStyle (property), spaceBelow (property), tabStops (property), rightIndent (property), listDepth (property), hgrid (property), hScrollbar (property), borderColor (property), formattedWidth (property), field (keyword)
+
+Tags: ui

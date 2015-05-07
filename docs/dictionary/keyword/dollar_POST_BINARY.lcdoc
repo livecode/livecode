@@ -1,0 +1,30 @@
+Name: $_POST_BINARY
+
+Type: keyword
+
+Syntax: $_POST_BINARY
+
+Summary: <$_POST_BINARY> is an array variable, formed from reading stdin and translating the url-form-encoded or multi-part-encoded data.
+
+Introduced: 4.6.3
+
+OS: mac,windows,linux
+
+Platforms: server
+
+Example:
+put $_POST_BINARY into tPOSTArray
+
+Example:
+put uniEncode($_POST_BINARY["name"],"UTF8") into tUnicodeName
+
+The result: If the data is not url-form-encoded or multi-part-encoded then the result is empty.
+
+Description:
+Use the <$_POST_BINARY> keyword to access posted form data. It is an array formed from reading stdin and translating the data.  <$_POST_BINARY> is identical to $_POST except that it does not perform any character set translation.
+
+<$_POST_BINARY> is only available when running in CGI mode (Server).
+
+The <$_POST_BINARY> keyword supports multi dimensional arrays.
+
+References: $_POST (keyword), $_POST_RAW (keyword), $_SERVER (keyword), $_GET_BINARY (keyword), $_GET_RAW (keyword), $_GET (keyword)

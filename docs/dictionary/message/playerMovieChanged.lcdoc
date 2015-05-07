@@ -1,0 +1,25 @@
+Name: playerMovieChanged
+
+Type: message
+
+Syntax: playerMovieChanged
+
+Summary: Sent when the content of the player has changed.
+
+Introduced: 4.6
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+on playerMovieChanged
+    answer "Your movie content has changed?" with "Okay"
+end playerMovieChanged
+
+Description:
+Handle the <playerMovieChanged> message when the content of the movie player has changed.
+
+You can probe the filename or URL of the movie by using the function <mobileControlGet>.
+
+References: playerFinished (message), playerError (message), playerLeaveFullscreen (message), playerStopped (message), playerProgressChanged (message), playerPropertyAvailable (message), playerEnterFullscreen (message), mobileControlGet (function)
