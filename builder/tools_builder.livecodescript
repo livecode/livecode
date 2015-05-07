@@ -398,7 +398,7 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
          
          -- Get us an installer by dieting the source installer
          if false then
-            put abstractPinFile(builderInstallerEngine("macosx") & slash & "Contents/MacOS/installer") into tDietParams["input"]
+            put abstractPinFile(builderInstallerEngine("macosx") & slash & "Contents/MacOS/Installer") into tDietParams["input"]
             put tTempFolder & slash & "macosx-installer-x86" into tDietParams["output"]
             put true into tDietParams["keep_x86"]
             put false into tDietParams["keep_ppc"]
