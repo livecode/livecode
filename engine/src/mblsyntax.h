@@ -245,6 +245,9 @@ bool MCSoundGetStatusOfChannel(MCExecContext& ctxt, const char *p_channel, MCSou
 bool MCSoundGetSoundOfChannel(MCExecContext& ctxt, const char *p_channel, char*& r_sound);
 bool MCSoundGetNextSoundOfChannel(MCExecContext& ctxt, const char *p_channel, char*& r_sound);
 bool MCSoundGetSoundChannels(MCExecContext& ctxt, char*& r_channels);
+// SN-2015-05-07: [[ Bug 15134 ]] Add getter/setter for audio workaround
+bool MCSoundSetUseAndroidAudioWorkaround(MCExecContext &ctxt, bool p_use_patched_player);
+bool MCSoundGetUseAndroidAudioWorkaround(MCExecContext &ctxt, bool &r_use_patched_player);
 
 bool MCSoundSetAudioCategory(MCExecContext &ctxt, MCSoundAudioCategory p_category);
 

@@ -1540,6 +1540,9 @@ extern Exec_stat MCHandleSoundChannelStatus(void *context, MCParameter *p_parame
 extern Exec_stat MCHandleSoundOnChannel(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleNextSoundOnChannel(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleSoundChannels(void *context, MCParameter *p_parameters);
+// SN-2015-05-07: [[ Bug 15134 ]] Added getter/setter for audio workaround
+extern Exec_stat MCHandleSetUseAndroidAudioWorkaround(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleGetUseAndroidAudioWorkaround(void *context, MCParameter *p_parameters);
 
 // MM-2012-02-22: Added support for ad management
 extern Exec_stat MCHandleAdRegister(void *context, MCParameter *p_parameters);
@@ -1783,7 +1786,10 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	{false, "mobileSoundChannelStatus", MCHandleSoundChannelStatus, nil},
 	{false, "mobileSoundOnChannel", MCHandleSoundOnChannel, nil},
 	{false, "mobileNextSoundOnChannel", MCHandleNextSoundOnChannel, nil},
-	{false, "mobileSoundChannels", MCHandleSoundChannels, nil},
+    {false, "mobileSoundChannels", MCHandleSoundChannels, nil},
+    // SN-2015-05-07: [[ Bug 15134 ]] Added getter/setter for audio workaround
+    {false, "mobileSetUseAndroidAudioWorkaround", MCHandleSetUseAndroidAudioWorkaround, nil},
+    {false, "mobileGetUseAndroidAudioWorkaround", MCHandleGetUseAndroidAudioWorkaround, nil},
 	
 	{false, "iphoneLockIdleTimer", MCHandleLockIdleTimer, nil},
 	{false, "mobileLockIdleTimer", MCHandleLockIdleTimer, nil},
