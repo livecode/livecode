@@ -196,12 +196,25 @@ void FinalizeFiles(void)
 {
 }
 
+int FileAlreadyAdded(const char *p_filename)
+{
+    FileRef t_file;
+    for(t_file = s_files; t_file != NULL; t_file = t_file -> next)
+        if (strcmp(t_file -> path, p_filename) == 0)
+            return 1;
+
+    return 0;
+}
+
 void AddFile(const char *p_filename)
 {	
 	FileRef t_new_file;
 	FileRef *t_last_file_ptr;
 	const char *t_name;
 
+    if (FileAlreadyAdded(p_filename))
+        return;
+    
     t_new_file = (FileRef)calloc(sizeof(struct File), 1);
     if (t_new_file == NULL)
         Fatal_OutOfMemory();
