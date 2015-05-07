@@ -301,6 +301,8 @@
     Error_HandlerNotSuitableForPropertyGetter
     Error_HandlerNotSuitableForPropertySetter
     Error_UnsuitableStringForKeyword
+    Error_NextRepeatOutOfContext
+    Error_ExitRepeatOutOfContext
     Warning_DeprecatedTypeName
     Warning_UnsuitableNameForDefinition
     Warning_UsingAsForHandlerReturnTypeDeprecated
@@ -661,6 +663,9 @@
 'action' Error_HandlerNotSuitableForPropertySetter(Position: POS, Identifier: NAME)
 
 'action' Error_UnsuitableStringForKeyword(Position: POS, Token: STRING)
+
+'action' Error_NextRepeatOutOfContext(Position: POS)
+'action' Error_ExitRepeatOutOfContext(Position: POS)
 
 'action' Warning_DeprecatedTypeName(Position: POS, NewType: STRING)
 'action' Warning_UnsuitableNameForDefinition(Position: POS, Identifier: NAME)
