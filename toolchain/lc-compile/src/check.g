@@ -43,6 +43,9 @@
 
         -- Check that suitable identifiers are used in definitions
         CheckIdentifiers(Module)
+        
+        -- Check that repeat-specific commands are appropriate
+        CheckRepeats(Module, 0)
 
 --------------------------------------------------------------------------------
 
@@ -1700,6 +1703,42 @@
             IsNameSuitableForDefinition(Name)
         ||
             Warning_UnsuitableNameForDefinition(Position, Name)
+        |)
+
+--------------------------------------------------------------------------------
+
+'sweep' CheckRepeats(ANY, INT)
+
+    'rule' CheckRepeats(repeatforever(_, Body), Depth):
+        CheckRepeats(Body, Depth + 1)
+
+    'rule' CheckRepeats(repeatcounted(_, _, Body), Depth):
+        CheckRepeats(Body, Depth + 1)
+
+    'rule' CheckRepeats(repeatwhile(_, _, Body), Depth):
+        CheckRepeats(Body, Depth + 1)
+        
+    'rule' CheckRepeats(repeatuntil(_, _, Body), Depth):
+        CheckRepeats(Body, Depth + 1)
+
+    'rule' CheckRepeats(repeatupto(_, _, _, _, _, Body), Depth):
+        CheckRepeats(Body, Depth + 1)
+
+    'rule' CheckRepeats(repeatforeach(_, _, _, Body), Depth):
+        CheckRepeats(Body, Depth + 1)
+        
+    'rule' CheckRepeats(nextrepeat(Position), Depth):
+        (|
+            gt(Depth, 0)
+        ||
+            Error_NextRepeatOutOfContext(Position)
+        |)
+
+    'rule' CheckRepeats(exitrepeat(Position), Depth):
+        (|
+            gt(Depth, 0)
+        ||
+            Error_ExitRepeatOutOfContext(Position)
         |)
 
 --------------------------------------------------------------------------------
