@@ -1866,6 +1866,11 @@ end revCopyDatabaseDrivers
 #####################################################################
 
 private command revAddExternal pExternalName
+   if pExternalName is among the lines of sStandaloneSettingsA["externals"]  then
+      exit revAddExternal
+   end if
+
+   // AL-2015-05-07: [[ Bug 15320 ]] Don't duplicate external names in standalone settings
    if sStandaloneSettingsA["externals"] is not empty then put return after sStandaloneSettingsA["externals"]
    put pExternalName after sStandaloneSettingsA["externals"]
 end revAddExternal
@@ -2057,7 +2062,12 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
          next repeat
       end if
       
-      revCopyModule tPlatform, item -1 of tExternalPath, item -1 of tExternalPath, item 1 to -2 of tExternalPath, tCurrentLocation, "Externals", tPlatform is "MacOSX"
+      // AL-2015-05-07: [[ Bug 15320 ]] Make sure universal external name is used.
+      local tExternal
+      set the itemdel to "."
+      put item 1 of tSourceExternal into tExternal
+      set the itemDel to slash 
+      revCopyModule tPlatform, tExternal, tSourceExternal, item 1 to -2 of tExternalPath, tCurrentLocation, "Externals", tPlatform is "MacOSX"
       if the result is not empty then
          revStandaloneAddWarning tPlatform && tArch & ", external" && the result & ":" && quote & tExternalPath & quote
          next repeat
@@ -2066,7 +2076,7 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
             put "BNDL????" into URL ("binfile:" & (tCurrentLocation & slash & "Externals/" & (item -1 of tExternalPath) & "/Contents/PkgInfo"))
          end if
       end if
-      revAddExternal item -1 of tExternalPath
+      revAddExternal tExternal
    end repeat
    
    
