@@ -413,9 +413,9 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
             put tTempFolder & slash & "macosx-installer-x86" into tParams["engine_x86"]
          end if
          
-         put abstractPinFile(builderInstallerEngine("macosx") & slash & "Contents/MacOS/installer") into tParams["engine_x86"]
+         put abstractPinFile(builderInstallerEngine("macosx") & slash & "Contents/MacOS/Installer") into tParams["engine_x86"]
          put tInstallerStackFile into tParams["stackfile"]
-         put tOutputFileStub & ".app" & slash & "Contents/MacOS/installer" into tParams["output"]
+         put tOutputFileStub & ".app" & slash & "Contents/MacOS/Installer" into tParams["output"]
          
          put url ("binfile:" & pPackageFile) into url ("binfile:" & tOutputFileStub & ".app" & slash & "Contents/Resources/payload")
          
