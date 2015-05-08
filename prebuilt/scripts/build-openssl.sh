@@ -3,7 +3,7 @@
 source "${BASEDIR}/scripts/platform.inc"
 
 # Version and configuration flags
-OPENSSL_VERSION=1.0.1g
+OPENSSL_VERSION=1.0.1m
 
 # Grab the source for the library
 OPENSSL_TGZ="openssl-${OPENSSL_VERSION}.tar.gz"
@@ -111,6 +111,9 @@ function buildOpenSSL {
 				sed -i "" -e "s!static volatile sig_atomic_t intr_signal;!static volatile intr_signal;!" "crypto/ui/ui_openssl.c"
 			fi
 			
+			# Ensure that variables get exported as functions
+			echo "#define OPENSSL_EXPORT_VAR_AS_FUNCTION 1" >> crypto/opensslconf.h
+
 			echo "Building OpenSSL for ${NAME}"
 			make clean >> "${OPENSSL_ARCH_LOG}" 2>&1 && make ${MAKEFLAGS} depend >> "${OPENSSL_ARCH_LOG}" 2>&1 && make ${MAKEFLAGS} >> "${OPENSSL_ARCH_LOG}" 2>&1 && make install_sw >> "${OPENSSL_ARCH_LOG}" 2>&1
 			RESULT=$?

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Library versions
-VERSION_OpenSSL="1.0.1g"
+VERSION_OpenSSL="1.0.1m"
 VERSION_Curl="7.21.1"
 VERSION_ICU="52.1"
 
