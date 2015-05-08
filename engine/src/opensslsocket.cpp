@@ -665,9 +665,14 @@ void MCS_read_socket(MCSocket *s, MCExecPoint &ep, uint4 length, char *until, MC
 			//  to hang: the wait statement, in the following loop, would
 			//  never be reached since s->read_done always returns true
 			//  when reading until empty.
+			// SN-2015-05-08: [[ Bug 14466 ]] On native Windows machine,
+			//  we want to wait more, to allow Windows to send the 
+			//  FD_READ message asked for in MCSocket::setselect(uint2)
+			//  Otherwise, we'll reach s->read_done() too early, and will
+			//  not find any byte to read.
 			bool t_continue;
 			t_continue = true;
-			if (MCscreen->wait(0.0, False, True))
+			if (MCscreen->wait(READ_INTERVAL, False, True))
 			{
 				MCresult->sets("interrupted");
 				t_continue = false;
