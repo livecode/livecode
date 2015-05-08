@@ -961,6 +961,15 @@
 					],
 				},
 			],
+			[
+				'server_mode != 0',
+				{
+					'sources!':
+					[
+						'src/opensslsocket.cpp',
+					],
+				},
+			],
 		],
 	},
 }
