@@ -205,12 +205,12 @@ void MCCefInitNSApplication()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCCefPlatformCreateBrowser(int p_window_id, MCCefBrowserBase *&r_browser)
+bool MCCefPlatformCreateBrowser(void *p_parent_window, MCCefBrowserBase *&r_browser)
 {
 	MCCefInitNSApplication();
 	
 	NSWindow *t_app_window;
-	t_app_window = [NSApp windowWithWindowNumber:p_window_id];
+	t_app_window = (NSWindow*)p_parent_window;
 	
 	if (t_app_window == nil)
 		return false;

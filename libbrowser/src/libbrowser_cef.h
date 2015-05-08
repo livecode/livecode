@@ -152,7 +152,7 @@ public:
 
 bool MCCefBrowserFactoryCreate(MCBrowserFactoryRef &r_factory);
 
-bool MCCefPlatformCreateBrowser(int p_window_id, MCCefBrowserBase *&r_browser);
+bool MCCefPlatformCreateBrowser(void *p_parent_window, MCCefBrowserBase *&r_browser);
 void MCCefPlatformCloseBrowserWindow(CefRefPtr<CefBrowser> p_browser);
 
 const char *MCCefPlatformGetSubProcessName(void);
@@ -192,6 +192,7 @@ typedef void (MCRunloopActionCallback)(void *p_context);
 extern "C" bool MCEngineAddRunloopAction(MCRunloopActionCallback p_callback, void *p_context, MCRunloopActionRef &r_action);
 extern "C" void MCEngineRemoveRunloopAction(MCRunloopActionRef p_action);
 extern "C" bool MCEngineRunloopWait();
-extern "C" bool MCEngineGetNativeLayerParentID(int &r_window_id);
+
+extern "C" void MCWidgetExecGetStackNativeView(void *&r_native_view);
 
 #endif /* __LIBBROWSER_CEF_H__ */

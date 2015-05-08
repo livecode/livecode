@@ -866,14 +866,14 @@ MCCefBrowserBase::~MCCefBrowserBase(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCBrowser *MCCefBrowserInstantiate(int p_window_id)
+MCBrowser *MCCefBrowserInstantiate(void *p_parent_window)
 {
 	// IM-2014-03-18: [[ revBrowserCEF ]] Make sure cef library is loaded before trying to create browser
 	if (!MCCefBrowserInitialise())
 		return nil;
 	
 	MCCefBrowserBase *t_browser;
-	if (!MCCefPlatformCreateBrowser(p_window_id, t_browser))
+	if (!MCCefPlatformCreateBrowser(p_parent_window, t_browser))
 		return nil;
 	
 	if (!t_browser->Initialize())
@@ -1477,12 +1477,16 @@ bool MCCefBrowserFactory::Initialize()
 
 bool MCCefBrowserFactory::CreateBrowser(MCBrowser *&r_browser)
 {
-	int t_parent_id;
-	if (!MCEngineGetNativeLayerParentID(t_parent_id))
+	void *t_parent_view;
+	t_parent_view = nil;
+	
+	MCWidgetExecGetStackNativeView(t_parent_view);
+	
+	if (t_parent_view == nil)
 		return false;
 	
 	MCBrowser *t_browser;
-	t_browser = MCCefBrowserInstantiate(t_parent_id);
+	t_browser = MCCefBrowserInstantiate(t_parent_view);
 	
 	if (t_browser == nil)
 		return false;
