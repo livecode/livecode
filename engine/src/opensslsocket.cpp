@@ -159,12 +159,27 @@ static void socketCallback (CFSocketRef cfsockref, CFSocketCallBackType type, CF
 }
 #endif
 
-#if defined(_MACOSX)
 Boolean MCS_handle_sockets()
 {
+#ifdef _WINDOWS
+    if (MCnsockets == 0)
+        return False;
+    
+    bool t_dispatched;
+    MSG t_msg;
+    t_dispatched = false;
+    while(PeekMessage(&t_msg, sockethwnd, WM_USER, WM_USER, TRUE))
+    {
+        TranslateMessage(&t_msg);
+        DispatchMessage(&t_msg);
+        
+        t_dispatched = true;
+    }
+    return t_dispatched;
+#else
 	return MCS_poll(0.0, 0.0);
-}
 #endif
+}
 
 #ifdef _WINDOWS
 typedef SOCKADDR_IN mc_sockaddr_in_t;
@@ -656,24 +671,9 @@ void MCS_read_socket(MCSocket *s, MCExecPoint &ep, uint4 length, char *until, MC
 		{
 			s->waiting = True;
 
-			// SN-2015-03-30: [[ Bug 14466 ]] We want a wait to occur
-			//  to avoid any tigh script loop such as
-			//     repeat forever
-			//        read from socket tSocket until empty
-			//        if it is not empty then exit repeat
-			//     end repeat
-			//  to hang: the wait statement, in the following loop, would
-			//  never be reached since s->read_done always returns true
-			//  when reading until empty.
-			bool t_continue;
-			t_continue = true;
-			if (MCscreen->wait(0.0, False, True))
-			{
-				MCresult->sets("interrupted");
-				t_continue = false;
-			}
+            MCS_handle_sockets();
 
-			while (t_continue)
+			while(true)
 			{
 				if (eptr == s->revents && s->read_done())
 				{
