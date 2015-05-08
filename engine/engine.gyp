@@ -463,6 +463,36 @@
 		},
 		
 		{
+			'target_name': 'development-postprocess',
+			'type': 'none',
+
+			'dependencies':
+			[
+				'development',
+				'../thirdparty/libopenssl/libopenssl.gyp:revsecurity',
+			],
+
+			'conditions':
+			[
+				[
+					'OS == "mac"',
+					{
+						'copies':
+						[
+							{
+								'destination': '<(PRODUCT_DIR)/LiveCode-Community.app/Contents/MacOS',
+								'files':
+								[
+									'<(PRODUCT_DIR)/revsecurity.dylib',
+								],
+							},
+						],
+					},
+				],
+			],
+		},
+
+		{
 			'target_name': 'development',
 			'product_name': 'livecode-community',
 			
@@ -481,8 +511,6 @@
 				'kernel-development',
 				'encode_environment_stack',
 				'security-community',
-				
-				'../thirdparty/libopenssl/libopenssl.gyp:revsecurity',
 			],
 			
 			'sources':
@@ -497,17 +525,6 @@
 					'OS == "mac"',
 					{
 						'product_name': 'LiveCode-Community',
-
-						'copies':
-						[
-							{
-								'destination': '<(PRODUCT_DIR)/<(_product_name).app/Contents/MacOS',
-								'files':
-								[
-									'<(PRODUCT_DIR)/revsecurity.dylib',
-								],
-							},
-						],
 					},
 				],
 				[
