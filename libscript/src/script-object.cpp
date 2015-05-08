@@ -279,7 +279,7 @@ void MCScriptFinalize(void)
     for(uindex_t i = 0; i < s_builtin_module_count; i++)
         MCScriptReleaseModule(s_builtin_modules[i]);
     MCMemoryDeleteArray(s_builtin_modules);
-    MCValueRelease(s_builtin_module);
+    MCScriptReleaseModule(s_builtin_module);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
