@@ -100,10 +100,10 @@ public:
 	virtual bool GetStringProperty(MCBrowserProperty p_property, char *&r_utf8_string) = 0;
 	virtual bool SetStringProperty(MCBrowserProperty p_property, const char *p_utf8_string) = 0;
 	
-	virtual bool GoBack();
-	virtual bool GoForward();
-	virtual bool GoToURL(const char *p_url);
-	virtual bool EvaluateJavaScript(const char *p_script, char *&r_result);
+	virtual bool GoBack() = 0;
+	virtual bool GoForward() = 0;
+	virtual bool GoToURL(const char *p_url) = 0;
+	virtual bool EvaluateJavaScript(const char *p_script, char *&r_result) = 0;
 	
 protected:
 	void OnNavigationBegin(bool p_in_frame, const char *p_url);
@@ -132,8 +132,17 @@ public:
 
 // C API
 
-extern "C" bool MCBrowserLibraryInitialize();
+extern "C"
+{
+	
+bool MCBrowserLibraryInitialize();
 void MCBrowserLibraryFinalize();
+	
+	typedef void *(MCBrowserAllocator)(size_t p_size);
+	typedef void (MCBrowserDeallocator)(void *p_mem);
+	
+	void MCBrowserLibrarySetAllocator(MCBrowserAllocator p_alloc);
+	void MCBrowserSetDeallocator(MCBrowserDeallocator p_dealloc);
 
 typedef struct __MCBrowser *MCBrowserRef;
 typedef struct __MCBrowserFactory *MCBrowserFactoryRef;
@@ -145,9 +154,6 @@ MCBrowserRef MCBrowserRetain(MCBrowserRef p_browser);
 void MCBrowserRelease(MCBrowserRef p_browser);
 
 void *MCBrowserGetNativeLayer(MCBrowserRef p_browser);
-
-bool MCBrowserGetRect(MCBrowserRef p_browser, MCBrowserRect &r_rect);
-bool MCBrowserSetRect(MCBrowserRef p_browser, const MCBrowserRect &p_rect);
 
 bool MCBrowserGetBoolProperty(MCBrowserRef p_browser, MCBrowserProperty p_property, bool &r_value);
 bool MCBrowserSetBoolProperty(MCBrowserRef p_browser, MCBrowserProperty p_property, bool p_value);
@@ -178,5 +184,7 @@ typedef void (*MCBrowserJavaScriptCallback)(void *p_context, MCBrowserRef p_brow
 
 bool MCBrowserSetRequestHandler(MCBrowserRef p_browser, MCBrowserRequestCallback p_callback, void *p_context);
 bool MCBrowserSetJavaScriptHandler(MCBrowserRef p_browser, MCBrowserJavaScriptCallback p_callback, void *p_context);
+
+}
 
 #endif//__LIBBROWSER_H__

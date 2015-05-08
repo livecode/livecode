@@ -1,0 +1,169 @@
+/*
+Copyright (C) 2015 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+Module: com.livecode.extension.livecode.browser
+
+Type: widget
+
+Description: This widget is a web browser.
+*/
+
+-- declaring extension as widget, followed by identifier
+widget com.livecode.extensions.livecode.browser
+--
+
+-- dependancy declarations
+use com.livecode.widget
+use com.livecode.engine
+--
+
+-- adding metadata to ensure the extension displays correctly in livecode
+metadata title is "Browser"
+metadata author is "Ian Macphail"
+metadata version is "1.0.0"
+--
+
+property url get getUrl set setUrl
+metadata url.editor is "com.livecode.pi.text"
+
+property htmltext get getHtmlText set setHtmlText
+metadata htmltext.editor is "com.livecode.pi.text"
+
+property scrollbars get getScrollbars set setScrollbars
+metadata scrollbars.editor is "com.livecode.pi.boolean"
+
+property useragent get getUserAgent set setUserAgent
+metadata useragent.editor is "com.livecode.pi.text"
+
+property javascripthandlers get getJavaScriptHandlers set setJavaScriptHandlers
+metadata javascripthandlers.editor is "com.livecode.pi.text"
+
+--------------------------------------------------------------------------------
+
+type MCBrowserFactoryRef is Pointer
+type MCBrowserRef is Pointer
+
+foreign handler MCBrowserFactoryGet(in pFactoryId as NativeCString, out rFactory as MCBrowserFactoryRef) as CBool binds to "<builtin>"
+foreign handler MCBrowserFactoryCreateBrowser(in pFactory as MCBrowserFactoryRef, out rBrowser as MCBrowserRef) as CBool binds to "<builtin>"
+
+foreign handler MCBrowserRetain(in pBrowser as MCBrowserRef) as MCBrowserRef binds to "<builtin>"
+foreign handler MCBrowserRelease(in pBrowser as MCBrowserRef) as undefined binds to "<builtin>"
+
+foreign handler MCBrowserGetNativeLayer(in pBrowser as MCBrowserRef) as Pointer binds to "<builtin>"
+
+foreign handler MCBrowserGetBoolProperty(in pBrowser as MCBrowserRef, in pProperty as CInt, out rValue as CBool) as CBool binds to "<builtin>"
+foreign handler MCBrowserSetBoolProperty(in pBrowser as MCBrowserRef, in pProperty as CInt, in pValue as CBool) as CBool binds to "<builtin>"
+
+foreign handler MCBrowserGetStringProperty(in pBrowser as MCBrowserRef, in pProperty as CInt, out rValue as NativeCString) as CBool binds to "<builtin>"
+foreign handler MCBrowserSetStringProperty(in pBrowser as MCBrowserRef, in pProperty as CInt, in pValue as NativeCString) as CBool binds to "<builtin>"
+
+foreign handler MCBrowserGoBack(in pBrowser as MCBrowserRef) as CBool binds to "<builtin>"
+foreign handler MCBrowserGoForward(in pBrowser as MCBrowserRef) as CBool binds to "<builtin>"
+foreign handler MCBrowserGoToURL(in pBrowser as MCBrowserRef) as CBool binds to "<builtin>"
+foreign handler MCBrowserEvaluateJavaScript(in pBrowser as MCBrowserRef, in pScript as NativeCString, out rResult as NativeCString) as CBool binds to "<builtin>"
+
+// TODO - declare functions that accept callbacks (not sure of the format here)
+
+--------------------------------------------------------------------------------
+
+variable mBrowser as MCBrowserRef
+variable mBrowserType as optional String
+
+--------------------------------------------------------------------------------
+
+----------
+
+-- called when the widget is created
+public handler OnCreate()
+end handler
+
+--
+
+public handler OnOpen()
+	variable tParent as Pointer
+	// TODO - add widget code to get stack window handler
+	// put my native window into tParent
+
+	variable tFactory as MCBrowserFactoryRef
+	/* UNCHECKED */
+	MCBrowserFactoryGet("default", tFactory)
+	
+	/* UNCHECKED */
+	MCBrowserFactoryCreate(tFactory, mBrowser)
+	
+	variable tBrowserView as Pointer
+	/* UNCHECKED */
+	MCBrowserGetNativeLayer(mBrowser, tBrowserView)
+	
+	// TODO - add widget code to set native layer from view
+	// set my native layer to tBrowserView
+end handler
+
+--
+
+public handler OnClose()
+	// TODO - add widget code to set native layer from view
+	// set my native layer to nothing
+	
+	MCBrowserRelease(mBrowser)
+	put nothing into mBrowser -- TODO - check if this is equivalent to mBrowser = nil
+end handler
+
+----------
+
+public handler getUrl() as String
+	// TODO - implement
+end handler
+
+public handler setUrl(in pUrl as String)
+	// TODO - implement
+end handler
+
+--
+
+public handler getHtmlText() as String
+	// TODO - implement
+end handler
+
+public handler setHtmlText(in pHtmlText as String)
+	// TODO - implement
+end handler
+
+--
+
+public handler getUserAgent() as String
+	// TODO - implement
+end handler
+
+public handler setUserAgent(in pUserAgent as String)
+	// TODO - implement
+end handler
+
+--
+
+public handler getScrollbars() as Boolean
+	// TODO - implement
+end handler
+
+public handler setScrollbars(in pScrollbars as Boolean)
+	// TODO - implement
+end handler
+
+----------
+
+end widget
