@@ -577,6 +577,13 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 			abort = True;
 			break;
 		}
+        
+        if (MCS_handle_sockets())
+        {
+            if (anyevent)
+                done = True;
+            waittime = 0.0;
+        }
 
 		if ((dispatch && MCEventQueueDispatch() ||
 			handle(waittime, dispatch, anyevent, abort, reset) ||
