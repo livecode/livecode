@@ -438,14 +438,6 @@ command toolsBuilderMakeDisk pVersion, pEdition, pPlatform, tInputZip
    put tOutputFileFolder & slash & getInstallerFilenameStub(pVersion, pPlatform, pEdition) into tOutputFileStub
    builderEnsureFolderForFile tOutputFileStub
    
-   -- Unzip the input zip
-   builderLog "message", "Unzipping macosx instaler to " && tOutputFileStub & ".app" & "'"
-   get shell("unzip -qq -o -d" && quote & tOutputFileFolder & quote && quote & tInputZip & quote)
-   if it is not empty then
-      builderLog "error", "Could not extract macosx app from zip:" && it
-      throw "failure"
-   end if
-   
    get shell("/usr/bin/security -q find-identity -v")
    filter it with "*Developer ID Application: Runtime Revolution Ltd*"
    if it is not empty then
@@ -457,6 +449,8 @@ command toolsBuilderMakeDisk pVersion, pEdition, pPlatform, tInputZip
          throw "failure"
       end if
       builderLog "report", "Successfully signed macosx installer'" && tOutputFileStub & ".app" & "'"
+   else
+      builderLog "warning", "No valid identity found for signing OSX installer"
    end if
    
    local tDmgFile, tDmgName, tDmgAppFolder
