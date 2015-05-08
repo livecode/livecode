@@ -1760,5 +1760,6 @@ private function createManifest pBase, pPath, pPrefix
       end repeat
    end if
    
+   replace "//" with "/" in tManifest
    return tManifest
 end createManifest
