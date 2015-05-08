@@ -429,6 +429,8 @@ public:
 
 	virtual uintptr_t dtouint(Drawable d);
 	virtual Boolean uinttowindow(uintptr_t, Window &w);
+	
+	virtual void *GetNativeWindowHandle(Window p_window);
 
 	virtual void getbeep(uint4 property, int4& r_value);
 	virtual void setbeep(uint4 property, int4 beep);

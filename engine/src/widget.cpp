@@ -845,6 +845,28 @@ void MCWidget::SetDisabled(MCExecContext& ctxt, uint32_t p_part_id, bool p_flag)
         recompute();
 }
 
+bool MCWidget::SetNativeView(void *p_view)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCNativeLayer *t_layer;
+	t_layer = nil;
+	
+	if (p_view != nil)
+		t_success = nil != (t_layer = MCNativeLayer::CreateNativeLayer(this, p_view));
+	
+	if (t_success)
+	{
+		if (m_native_layer != nil)
+			delete m_native_layer;
+		
+		m_native_layer = t_layer;
+	}
+	
+	return t_success;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCWidget::inEditMode()
@@ -2259,6 +2281,23 @@ MCValueRef MCWidgetPopupAtLocationWithProperties(MCNameRef p_kind, const MCPoint
 	MCWidgetPopup *t_old_popup;
 	t_old_popup = s_widget_popup;
 	
+	/*
+	// IM-2015-03-10: [[ Bug 14851 ]] Send mouseup release for each depressed button.
+	uint16_t t_state;
+	t_state = MCbuttonstate;
+	
+	uint16_t t_which;
+	t_which = 1;
+	
+	while (t_state)
+	{
+		if (t_state & 0x1)
+			MCtargetptr -> mup(t_which, true);
+		t_state >>= 1;
+		t_which += 1;
+	}
+	 */
+	
 	s_widget_popup = new MCWidgetPopup();
 	if (s_widget_popup == nil)
 	{
@@ -2269,7 +2308,7 @@ MCValueRef MCWidgetPopupAtLocationWithProperties(MCNameRef p_kind, const MCPoint
 	
 	s_widget_popup -> setparent(MCdispatcher);
 	MCdispatcher -> add_transient_stack(s_widget_popup);
-	
+
 	if (!s_widget_popup->openpopup(p_kind, p_at, p_properties))
 	{
 		s_widget_popup->scheduledelete();
@@ -2362,6 +2401,30 @@ extern "C" MC_DLLEXPORT void MCWidgetExecClosePopupWithResult(MCValueRef p_resul
 extern "C" MC_DLLEXPORT void MCWidgetExecClosePopup(MCValueRef p_result)
 {
 	MCWidgetExecClosePopupWithResult(kMCNull);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" MC_DLLEXPORT void MCWidgetExecSetNativeView(void *p_native_view)
+{
+	if (MCwidgetobject == nil)
+	{
+		MCWidgetThrowNoCurrentWidgetError();
+		return;
+	}
+	
+	MCwidgetobject->SetNativeView(p_native_view);
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetEvalStackNativeView(void *&r_native_view)
+{
+	if (MCwidgetobject == nil)
+	{
+		MCWidgetThrowNoCurrentWidgetError();
+		return;
+	}
+	
+	r_native_view = MCscreen->GetNativeWindowHandle(MCwidgetobject->getw());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

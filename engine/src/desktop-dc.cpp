@@ -487,6 +487,16 @@ Boolean MCScreenDC::uinttowindow(uintptr_t p_id, Window &w)
 	return True;
 }
 
+void *MCScreenDC::GetNativeWindowHandle(Window p_window)
+{
+	void *t_window;
+	t_window = nil;
+	
+	MCPlatformGetWindowProperty(p_window, kMCPlatformWindowPropertySystemHandle, kMCPlatformPropertyTypePointer, &t_window);
+	
+	return t_window;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCScreenDC::seticon(uint4 p_icon)

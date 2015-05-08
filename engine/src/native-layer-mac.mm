@@ -56,12 +56,12 @@
 #include "mac-internal.h"
 
 
-MCNativeLayerMac::MCNativeLayerMac(MCWidget* p_widget) :
+MCNativeLayerMac::MCNativeLayerMac(MCWidget* p_widget, NSView *p_view) :
   m_widget(p_widget),
-  m_view(nil),
+  m_view(p_view),
   m_cached(nil)
 {
-    ;
+	[m_view retain];
 }
 
 MCNativeLayerMac::~MCNativeLayerMac()
@@ -117,23 +117,6 @@ void MCNativeLayerMac::OnAttach()
 
 void MCNativeLayerMac::doAttach()
 {
-    if (m_view == nil)
-    {
-        NSRect t_nsrect;
-        MCRectangle t_rect, t_cardrect;
-        t_rect = m_widget->getrect();
-        t_cardrect = m_widget->getcard()->getrect();
-        t_nsrect = NSMakeRect(t_rect.x, t_cardrect.height-t_rect.y-t_rect.height-1, t_rect.width, t_rect.height);
-        
-        NSButton *t_button;
-        t_button = [[NSButton alloc] initWithFrame:t_nsrect];
-        [t_button setTitle:@"Native button"];
-        [t_button setButtonType:NSMomentaryPushInButton];
-        [t_button setBezelStyle:NSRoundedBezelStyle];
-        [t_button setHidden:YES];
-        m_view = t_button;
-    }
-    
     // Act as if there was a re-layer to put the widget in the right place
     // *** Can we assume open happens in back-to-front order? ***
     doRelayer();
@@ -250,7 +233,10 @@ NSWindow* MCNativeLayerMac::getStackWindow()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeLayer* MCWidget::createNativeLayer()
+MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCWidget *p_widget, void *p_view)
 {
-    return new MCNativeLayerMac(this);
+	if (p_view == nil)
+		return nil;
+	
+    return new MCNativeLayerMac(p_widget, (NSView*)p_view);
 }

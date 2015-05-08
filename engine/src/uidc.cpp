@@ -695,6 +695,12 @@ Boolean MCUIDC::uinttowindow(uintptr_t, Window &w)
 	return True;
 }
 
+void *MCUIDC::GetNativeWindowHandle(Window p_window)
+{
+	return nil;
+}
+
+
 void MCUIDC::getbeep(uint4 property, int4& r_value)
 {
 	r_value = 0;

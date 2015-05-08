@@ -99,6 +99,8 @@ public:
 	virtual uintptr_t dtouint(Drawable d);
 	virtual Boolean uinttowindow(uintptr_t, Window &w);
 	
+	virtual void *GetNativeWindowHandle(Window p_window);
+	
 	virtual void enablebackdrop(bool p_hard);
 	virtual void disablebackdrop(bool p_hard);
 	virtual void configurebackdrop(const MCColor& p_colour, MCPatternRef p_pattern, MCImage *p_badge);

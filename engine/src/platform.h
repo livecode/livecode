@@ -123,6 +123,8 @@ enum MCPlatformPropertyType
 	kMCPlatformPropertyTypeCursorRef,
     
     kMCPlatformPropertyTypeUInt32Array,
+	
+	kMCPlatformPropertyTypePointer,
 };
 
 // The lower 21-bits hold a codepoint, the upper bits hold modifiers. Some
@@ -786,6 +788,7 @@ enum MCPlatformWindowProperty
 	kMCPlatformWindowPropertyUseLiveResizing,
 	
 	kMCPlatformWindowPropertySystemId,
+	kMCPlatformWindowPropertySystemHandle,
 	
 	kMCPlatformWindowPropertyCursor,
     

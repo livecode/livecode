@@ -81,6 +81,8 @@ public:
     
     virtual void layerchanged();
     
+	bool SetNativeView(void *p_view);
+	
     virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool flag);
     
     void GetKind(MCExecContext& ctxt, MCNameRef& r_kind);
@@ -232,9 +234,6 @@ private:
     // If this is true then the widget has scheduled a timer message, but it triggered
     // during edit mode.
     bool m_timer_deferred : 1;
-    
-    // Implemented by the platform-specific native layers: creates a new layer
-    MCNativeLayer* createNativeLayer();
 };
 
 ////////////////////////////////////////////////////////////////////////////////

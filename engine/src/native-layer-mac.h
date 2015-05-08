@@ -37,7 +37,7 @@ public:
     virtual void OnToolChanged(Tool p_new_tool);
     virtual void OnLayerChanged();
     
-    MCNativeLayerMac(MCWidget*);
+    MCNativeLayerMac(MCWidget*, NSView *p_view);
     ~MCNativeLayerMac();
     
 private:

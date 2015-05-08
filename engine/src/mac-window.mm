@@ -1965,7 +1965,16 @@ bool MCMacPlatformWindow::DoGetProperty(MCPlatformWindowProperty p_property, MCP
                 RealizeAndNotify();
 			*(uint32_t *)r_value = m_window_handle != nil ? [m_window_handle windowNumber] : 0;
 			return true;
+			
+		case kMCPlatformWindowPropertySystemHandle:
+			assert(p_type == kMCPlatformPropertyTypePointer);
+			// MW-2014-04-30: [[ Bug 12328 ]] If we don't have a handle yet make sure we create one.
+			if (m_window_handle == nil)
+				RealizeAndNotify();
+			*(void**)r_value = m_window_handle;
+			return true;
 	}
+	
 	return false;
 }
 
