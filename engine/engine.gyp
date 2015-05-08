@@ -341,6 +341,32 @@
 						},
 					},
 				],
+				[
+					'OS == "ios"',
+					{
+						'all_dependent_settings':
+						{
+							'variables':
+							{
+								'dist_aux_files':
+								[
+									'rsrc/Default-568h@2x.png',
+									'rsrc/fontmap',
+									'rsrc/mobile-device-template.plist',
+									'rsrc/mobile-remote-notification-template.plist',
+									'rsrc/mobile-splashscreen-template.plist',
+									'rsrc/mobile-template.plist',
+									'rsrc/mobile-url-scheme-template.plist',
+									'rsrc/template-entitlements.xcent',
+									'rsrc/template-store-entitlements.xcent',
+									'rsrc/template-remote-notification-entitlements.xcent',
+									'rsrc/template-remote-notification-store-entitlements.xcent',
+									'rsrc/template-ResourceRules.plist',
+								],
+							},
+						},
+					},
+				],
 			],
 			
 			'all_dependent_settings':
