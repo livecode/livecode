@@ -1,7 +1,15 @@
 #!/bin/bash
 
 set -e
-echo $1
+
+case "$1" in
+	*-community.lcext)
+		SECTIONS="${SRCROOT}/standalone.ios"
+		;;
+	*-commercial.lcext)
+		SECTIONS="${SRCROOT}/../livecode/engine/standalone.ios"
+		;;
+esac
 
 case "${SDKROOT}" in
 	iphonesimulator*)
@@ -33,7 +41,7 @@ else
 	STRIP_FLAG=""
 fi
 
-"${BIN_DIR}/g++" -nodefaultlibs -Wl,-r ${STRIP_FLAG} -arch ${ARCHS//\ /\ -arch\ } -isysroot "${SDKROOT}" -o $@ -Wl,-sectcreate -Wl,-__MISC -Wl,__deps -Wl,"${SRCROOT}/standalone.ios" -Wl,-exported_symbol -Wl,_main -Wl,-exported_symbol -Wl,_load_module -Wl,-exported_symbol -Wl,_resolve_symbol
+"${BIN_DIR}/g++" -nodefaultlibs -Wl,-r ${STRIP_FLAG} -arch ${ARCHS//\ /\ -arch\ } -isysroot "${SDKROOT}" -o $@ -Wl,-sectcreate -Wl,-__MISC -Wl,__deps -Wl,"${SECTIONS}" -Wl,-exported_symbol -Wl,_main -Wl,-exported_symbol -Wl,_load_module -Wl,-exported_symbol -Wl,_resolve_symbol
 
 case "$1" in
 	*-community.lcext)
