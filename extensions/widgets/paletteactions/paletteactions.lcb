@@ -231,12 +231,14 @@ private handler updateHover()
     end if
 
     if tIndex is not mHoverIndex or tTab is not mHoverTab then
-    	// AL-2015-04-24: [[ Bug 15286 ]] Set tooltip of palette actions
-    	if tTab then
-	    	set property "tooltip" of my script object to mNavData[tIndex]["label"]
-    	else
-    		set property "tooltip" of my script object to mActionData[tIndex]["label"]
-    	end if
+        if tIndex is not 0 then
+            // AL-2015-04-24: [[ Bug 15286 ]] Set tooltip of palette actions
+            if tTab then
+                set property "tooltip" of my script object to mNavData[tIndex]["label"]
+            else
+                set property "tooltip" of my script object to mActionData[tIndex]["label"]
+            end if
+        end if
         put tIndex into mHoverIndex
         put tTab into mHoverTab
         redraw all
