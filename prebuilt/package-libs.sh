@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Versions
-OPENSSL_VERSION="1.0.1g"
+OPENSSL_VERSION="1.0.1m"
 CURL_VERSION="7.21.1"
 ICU_VERSION="52.1"
 
