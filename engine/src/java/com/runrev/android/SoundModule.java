@@ -59,10 +59,6 @@ public class SoundModule
     private int m_audio_volume;
     private boolean m_play_audio_player;
     
-    // SN-2015-05-06: [[ Bug 15134 ]] Add LiveCode script-modifiable class
-    //  member to choose whether the patched MediaPlayer will be used.
-    private boolean m_use_patched_played;
-    
     ////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ////////////////////////////////////////////////////////////////////////////////
@@ -74,8 +70,6 @@ public class SoundModule
         m_audio_player = new MediaPlayer();
 		m_audio_volume = 100;
         m_play_audio_player = false;
-        // SN-2015-05-07: [[ BUg 15134 ]] No patched media player by default
-        m_use_patched_played = false;
     }    
     
     ////////////////////////////////////////////////////////////////////////////////
@@ -194,7 +188,7 @@ public class SoundModule
     {
         SoundChannel t_channel = getSoundChannel(p_channel, true);
         if (t_channel != null)
-            return t_channel.playSound(p_sound, p_type, p_sound_path, p_is_asset, p_callback_handle, m_use_patched_played);
+            return t_channel.playSound(p_sound, p_type, p_sound_path, p_is_asset, p_callback_handle);
         return false;
     }
     
@@ -298,19 +292,7 @@ public class SoundModule
             return true;
         }
         return false;
-    }
-    
-    // SN-2015-05-07: [[ Bug 15134 ]] Add getter / setter for the use of the
-    //  patched media player.
-    public void setUseAndroidAudioWorkaround(boolean p_use_patched_player)
-    {
-        m_use_patched_played = p_use_patched_player;
-    }
-    
-    public boolean getUseAndroidAudioWorkaround()
-    {
-        return m_use_patched_played;
-    }
+    }    
     
     ////////////////////////////////////////////////////////////////////////////////
     // Internals
@@ -334,6 +316,7 @@ public class SoundModule
         private SoundPlayer m_current_player;
         private SoundPlayer m_next_player;
         private boolean m_resume_channel;
+                
         
         public SoundChannel(String p_name)
         {
@@ -365,7 +348,7 @@ public class SoundModule
                 m_current_player.m_player.start();
         }
         
-        public boolean playSound(String p_sound, int p_type, String p_sound_path, boolean p_is_asset, long p_callback_handle, boolean p_use_patched_player)
+        public boolean playSound(String p_sound, int p_type, String p_sound_path, boolean p_is_asset, long p_callback_handle)
         {            
             switch (p_type)
             {
@@ -378,7 +361,7 @@ public class SoundModule
                         m_current_player.reset();
                     else
                     {
-                        m_current_player = new SoundPlayer(p_use_patched_player);
+                        m_current_player = new SoundPlayer();
                         if (m_current_player == null)
                             return false;
                     }
@@ -410,7 +393,7 @@ public class SoundModule
                     }
                     else
                     {
-                        t_player = new SoundPlayer(p_use_patched_player);
+                        t_player = new SoundPlayer();
                         if (m_current_player == null)
                             m_current_player = t_player;
                         else
@@ -497,7 +480,7 @@ public class SoundModule
             }
             return k_channel_status_stopped;
         }
-    
+        
         private void playerComplete(long p_callback_handle)
         {
             if (m_current_player != null)
@@ -528,10 +511,8 @@ public class SoundModule
             private boolean m_pending;
             private String m_sound;
             private long m_callback_handle;
-            
-            // SN-2015-05-07: [[ Bug 15134 ]] We choose to use the patched player
-            //  on the player creation.
-            public SoundPlayer(boolean p_use_patched_player)
+                        
+            public SoundPlayer()
             {
                 m_prepared = false;
                 m_pending = false;
@@ -539,8 +520,7 @@ public class SoundModule
                 m_callback_handle = -1;
                 
                 // MM-2012-10-15: [[ Bug 10437 ]] On the Kindle Fire, use the patched MediaPlayer, which invokes the completion listener at the correct point.
-                if (android.os.Build.MANUFACTURER.equals("Amazon") && android.os.Build.MODEL.equals("Kindle Fire")
-                        || p_use_patched_player)
+                if (android.os.Build.MANUFACTURER.equals("Amazon") && android.os.Build.MODEL.equals("Kindle Fire"))
                     m_player = new PatchedMediaPlayer();
                 else
                     m_player = new MediaPlayer();

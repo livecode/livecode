@@ -58,7 +58,6 @@
 		<command tag="mobileResumePlayingOnChannel">mobileResumePlayingOnChannel Command</command>
 		<command tag="mobileSetSoundChannelVolume">mobileSetSoundChannelVolume Command</command>
 		<command tag="mobileDeleteSoundChannel">mobileDeleteSoundChannel Command</command>
-		<command tag="mobileSetUseAndroidAudioWorkaround">mobileSetUseAndroidAudioWorkaround Command</command>
 		<message tag="soundFinishedOnChannel">soundFinishedOnChannel Message</message>
 	</references>
 

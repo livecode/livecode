@@ -211,19 +211,6 @@ bool MCSystemListSoundChannels(char*& r_channels)
     return true;
 }
 
-// SN-2015-05-07: [[ Bug 15134 ]] Added getter/setter for audio workaround
-bool MCSystemSetUseAndroidAudioWorkaround(bool p_use_patched_player)
-{
-    MCAndroidEngineRemoteCall("setUseAndroidAudioWorkaround", "vb", nil, p_use_patched_player);
-    return true;
-}
-
-bool MCSystemGetUseAndroidAudioWorkaround(bool &r_use_patched_player)
-{
-    MCAndroidEngineRemoteCall("getUseAndroidAudioWorkaround", "b", &r_use_patched_player);
-    return true;
-}
-
 bool MCSystemSetAudioCategory(MCSoundAudioCategory p_category)
 {
     return true;

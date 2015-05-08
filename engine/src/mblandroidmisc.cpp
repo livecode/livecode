@@ -1093,9 +1093,6 @@ extern Exec_stat MCHandleSoundChannelStatus(void *context, MCParameter *p_parame
 extern Exec_stat MCHandleSoundOnChannel(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleNextSoundOnChannel(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleSoundChannels(void *context, MCParameter *p_parameters);
-// SN-2015-05-07: [[ Bug 15134 ]] Added getter/setter for audio workaround
-extern Exec_stat MCHandleSetUseAndroidAudioWorkaround(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleGetUseAndroidAudioWorkaround(void *context, MCParameter *p_parameters);
 
 extern Exec_stat MCHandleCreateLocalNotification(void *, MCParameter *);
 extern Exec_stat MCHandleGetRegisteredNotifications(void *, MCParameter *);
@@ -1269,9 +1266,6 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	{"mobileSoundOnChannel", MCHandleSoundOnChannel, nil},
 	{"mobileNextSoundOnChannel", MCHandleNextSoundOnChannel, nil},
 	{"mobileSoundChannels", MCHandleSoundChannels, nil},
-    // SN-2015-05-07: [[ Bug 15134 ]] Added getter/setter for audio workaround
-    {"mobileSetUseAndroidAudioWorkaround", MCHandleSetUseAndroidAudioWorkaround, nil},
-    {"mobileGetUseAndroidAudioWorkaround", MCHandleGetUseAndroidAudioWorkaround, nil},
     
 	{"mobileLockIdleTimer", MCHandleLockIdleTimer, nil},
 	{"mobileUnlockIdleTimer", MCHandleUnlockIdleTimer, nil},
