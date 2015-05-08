@@ -119,7 +119,7 @@ end startup
 command __loadExternal pExternal
    set the itemdelimiter to slash
    
-   if the platform is "mac" then
+   if the platform is "MacOS" then
       set the externals of the templateStack to item 1 to -4 of specialFolderPath("engine") & slash & pExternal & ".bundle"
    else if the platform is "linux" then
       set the externals of the templateStack to specialFolderPath("engine") & slash & pExternal & ".so"
