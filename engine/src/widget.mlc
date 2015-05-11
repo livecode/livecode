@@ -977,7 +977,7 @@ end syntax
 
 
 public foreign handler MCWidgetExecGetNativeLayer(out rNativeLayer as Pointer) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetExecSetNativeLayer(in pNativeLayer as Pointer) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecSetNativeLayer(in pNativeLayer as optional Pointer) returns nothing binds to "<builtin>"
 /*
 TODO - docs
 */

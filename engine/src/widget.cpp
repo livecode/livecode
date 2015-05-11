@@ -994,10 +994,10 @@ MCNativeLayer* MCWidget::getNativeLayer() const
 
 void MCWidget::OnOpen()
 {
-    CallHandler(MCNAME("OnOpen"), nil, 0);
-	
 	if (m_native_layer)
 		m_native_layer->OnOpen();
+	
+    CallHandler(MCNAME("OnOpen"), nil, 0);
 }
 
 void MCWidget::OnClose()
@@ -1010,14 +1010,14 @@ void MCWidget::OnClose()
 
 void MCWidget::OnAttach()
 {
-    if (m_native_layer)
-        m_native_layer->OnAttach();
-    
     // OnAttach handlers mustn't mutate the world, or cause re-entrancy so no
     // script access is allowed.
     MCEngineScriptObjectPreventAccess();
     CallHandler(MCNAME("OnAttach"), nil, 0);
     MCEngineScriptObjectAllowAccess();
+
+	if (m_native_layer)
+		m_native_layer->OnAttach();
 }
 
 void MCWidget::OnDetach()

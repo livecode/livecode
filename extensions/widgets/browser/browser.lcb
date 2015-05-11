@@ -120,7 +120,7 @@ end handler
 
 --
 
-public handler OnOpen()
+public handler OnAttach()
 	variable tParent as Pointer
 	// TODO - add widget code to get stack window handler
 	// put my native window into tParent
@@ -137,15 +137,14 @@ public handler OnOpen()
 	put MCBrowserGetNativeLayer(mBrowser) into tBrowserView
 	
 	// TODO - add widget code to set native layer from view
---	set my native layer to tBrowserView
-	put tBrowserView into my native layer
+	set my native layer to tBrowserView
 	
 	setBrowserProperties(mProperties)
 end handler
 
 --
 
-public handler OnClose()
+public handler OnDetach()
 	// Save browser properties
 	put getBrowserProperties() into mProperties
 	
