@@ -80,7 +80,8 @@ public:
     virtual void toolchanged(Tool p_new_tool);
     
     virtual void layerchanged();
-    
+	
+	bool GetNativeView(void *&r_view);
 	bool SetNativeView(void *p_view);
 	
     virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool flag);

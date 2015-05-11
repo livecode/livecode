@@ -83,8 +83,13 @@ struct MCBrowserRect
 class MCBrowser : public MCBrowserRefCounted
 {
 public:
-	MCBrowser() {}
-	virtual ~MCBrowser() {}
+	MCBrowser() : m_event_handler(nil), m_javascript_handler(nil)
+	{
+	}
+	
+	virtual ~MCBrowser()
+	{
+	}
 	
 	void SetEventHandler(MCBrowserEventHandler *p_handler);
 	void SetJavaScriptHandler(MCBrowserJavaScriptHandler *p_handler);

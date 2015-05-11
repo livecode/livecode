@@ -845,6 +845,14 @@ void MCWidget::SetDisabled(MCExecContext& ctxt, uint32_t p_part_id, bool p_flag)
         recompute();
 }
 
+bool MCWidget::GetNativeView(void *&r_view)
+{
+	if (m_native_layer == nil)
+		return false;
+	
+	return m_native_layer->GetNativeView(r_view);
+}
+
 bool MCWidget::SetNativeView(void *p_view)
 {
 	bool t_success;
@@ -986,10 +994,10 @@ MCNativeLayer* MCWidget::getNativeLayer() const
 
 void MCWidget::OnOpen()
 {
-    if (m_native_layer)
-        m_native_layer->OnOpen();
-    
     CallHandler(MCNAME("OnOpen"), nil, 0);
+	
+	if (m_native_layer)
+		m_native_layer->OnOpen();
 }
 
 void MCWidget::OnClose()
@@ -2405,7 +2413,7 @@ extern "C" MC_DLLEXPORT void MCWidgetExecClosePopup(MCValueRef p_result)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" MC_DLLEXPORT void MCWidgetExecSetNativeView(void *p_native_view)
+extern "C" MC_DLLEXPORT void MCWidgetExecGetNativeLayer(void *&r_native_layer)
 {
 	if (MCwidgetobject == nil)
 	{
@@ -2413,7 +2421,18 @@ extern "C" MC_DLLEXPORT void MCWidgetExecSetNativeView(void *p_native_view)
 		return;
 	}
 	
-	MCwidgetobject->SetNativeView(p_native_view);
+	MCwidgetobject->GetNativeView(r_native_layer);
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetExecSetNativeLayer(void *p_native_layer)
+{
+	if (MCwidgetobject == nil)
+	{
+		MCWidgetThrowNoCurrentWidgetError();
+		return;
+	}
+	
+	MCwidgetobject->SetNativeView(p_native_layer);
 }
 
 extern "C" MC_DLLEXPORT void MCWidgetEvalStackNativeView(void *&r_native_view)

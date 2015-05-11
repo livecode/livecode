@@ -37,7 +37,9 @@ public:
     
     // Returns true if the layer would be attached if its card were visible
     bool isAttached() const;
-    
+	
+	virtual bool GetNativeView(void *&r_view) = 0;
+	
 	// Implemented by the platform-specific native layers: creates a new layer
 	static MCNativeLayer* CreateNativeLayer(MCWidget *p_widget, void *p_native_view);
 protected:

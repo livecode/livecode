@@ -1480,7 +1480,7 @@ bool MCCefBrowserFactory::CreateBrowser(MCBrowser *&r_browser)
 	void *t_parent_view;
 	t_parent_view = nil;
 	
-	MCWidgetExecGetStackNativeView(t_parent_view);
+	MCWidgetEvalStackNativeView(t_parent_view);
 	
 	if (t_parent_view == nil)
 		return false;

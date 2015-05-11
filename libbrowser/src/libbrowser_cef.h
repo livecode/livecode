@@ -193,6 +193,6 @@ extern "C" bool MCEngineAddRunloopAction(MCRunloopActionCallback p_callback, voi
 extern "C" void MCEngineRemoveRunloopAction(MCRunloopActionRef p_action);
 extern "C" bool MCEngineRunloopWait();
 
-extern "C" void MCWidgetExecGetStackNativeView(void *&r_native_view);
+extern "C" void MCWidgetEvalStackNativeView(void *&r_native_view);
 
 #endif /* __LIBBROWSER_CEF_H__ */

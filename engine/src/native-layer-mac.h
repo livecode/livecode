@@ -37,6 +37,8 @@ public:
     virtual void OnToolChanged(Tool p_new_tool);
     virtual void OnLayerChanged();
     
+	virtual bool GetNativeView(void *&r_view);
+	
     MCNativeLayerMac(MCWidget*, NSView *p_view);
     ~MCNativeLayerMac();
     

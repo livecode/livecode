@@ -975,4 +975,17 @@ begin
 	MCWidgetExecClosePopupWithResult(Result)
 end syntax
 
+
+public foreign handler MCWidgetExecGetNativeLayer(out rNativeLayer as Pointer) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecSetNativeLayer(in pNativeLayer as Pointer) returns nothing binds to "<builtin>"
+/*
+TODO - docs
+*/
+syntax MyNativeLayer is expression
+	"my" "native" "layer"
+begin
+	MCWidgetExecGetNativeLayer(output)
+	MCWidgetExecSetNativeLayer(input)
+end syntax
+
 end module

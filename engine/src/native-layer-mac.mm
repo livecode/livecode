@@ -231,6 +231,12 @@ NSWindow* MCNativeLayerMac::getStackWindow()
     return ((MCMacPlatformWindow*)(m_widget->getstack()->getwindow()))->GetHandle();
 }
 
+bool MCNativeLayerMac::GetNativeView(void *&r_view)
+{
+	r_view = m_view;
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCWidget *p_widget, void *p_view)

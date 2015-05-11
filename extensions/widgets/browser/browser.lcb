@@ -28,6 +28,7 @@ widget com.livecode.extensions.livecode.browser
 --
 
 -- dependancy declarations
+use com.livecode.foreign
 use com.livecode.widget
 use com.livecode.engine
 --
@@ -38,8 +39,8 @@ metadata author is "Ian Macphail"
 metadata version is "1.0.0"
 --
 
-property url get getUrl set setUrl
-metadata url.editor is "com.livecode.pi.text"
+property uri get getUrl set setUrl
+metadata uri.editor is "com.livecode.pi.text"
 
 property htmltext get getHtmlText set setHtmlText
 metadata htmltext.editor is "com.livecode.pi.text"
@@ -58,38 +59,63 @@ metadata javascripthandlers.editor is "com.livecode.pi.text"
 type MCBrowserFactoryRef is Pointer
 type MCBrowserRef is Pointer
 
-foreign handler MCBrowserFactoryGet(in pFactoryId as NativeCString, out rFactory as MCBrowserFactoryRef) as CBool binds to "<builtin>"
-foreign handler MCBrowserFactoryCreateBrowser(in pFactory as MCBrowserFactoryRef, out rBrowser as MCBrowserRef) as CBool binds to "<builtin>"
+foreign handler MCBrowserFactoryGet(in pFactoryId as NativeCString, out rFactory as MCBrowserFactoryRef) returns CBool binds to "<builtin>"
+foreign handler MCBrowserFactoryCreateBrowser(in pFactory as MCBrowserFactoryRef, out rBrowser as MCBrowserRef) returns CBool binds to "<builtin>"
 
-foreign handler MCBrowserRetain(in pBrowser as MCBrowserRef) as MCBrowserRef binds to "<builtin>"
-foreign handler MCBrowserRelease(in pBrowser as MCBrowserRef) as undefined binds to "<builtin>"
+foreign handler MCBrowserRetain(in pBrowser as MCBrowserRef) returns MCBrowserRef binds to "<builtin>"
+foreign handler MCBrowserRelease(in pBrowser as MCBrowserRef) returns nothing binds to "<builtin>"
 
-foreign handler MCBrowserGetNativeLayer(in pBrowser as MCBrowserRef) as Pointer binds to "<builtin>"
+foreign handler MCBrowserGetNativeLayer(in pBrowser as MCBrowserRef) returns Pointer binds to "<builtin>"
 
-foreign handler MCBrowserGetBoolProperty(in pBrowser as MCBrowserRef, in pProperty as CInt, out rValue as CBool) as CBool binds to "<builtin>"
-foreign handler MCBrowserSetBoolProperty(in pBrowser as MCBrowserRef, in pProperty as CInt, in pValue as CBool) as CBool binds to "<builtin>"
+foreign handler MCBrowserGetBoolProperty(in pBrowser as MCBrowserRef, in pProperty as CInt, out rValue as CBool) returns CBool binds to "<builtin>"
+foreign handler MCBrowserSetBoolProperty(in pBrowser as MCBrowserRef, in pProperty as CInt, in pValue as CBool) returns CBool binds to "<builtin>"
 
-foreign handler MCBrowserGetStringProperty(in pBrowser as MCBrowserRef, in pProperty as CInt, out rValue as NativeCString) as CBool binds to "<builtin>"
-foreign handler MCBrowserSetStringProperty(in pBrowser as MCBrowserRef, in pProperty as CInt, in pValue as NativeCString) as CBool binds to "<builtin>"
+foreign handler MCBrowserGetStringProperty(in pBrowser as MCBrowserRef, in pProperty as CInt, out rValue as NativeCString) returns CBool binds to "<builtin>"
+foreign handler MCBrowserSetStringProperty(in pBrowser as MCBrowserRef, in pProperty as CInt, in pValue as NativeCString) returns CBool binds to "<builtin>"
 
-foreign handler MCBrowserGoBack(in pBrowser as MCBrowserRef) as CBool binds to "<builtin>"
-foreign handler MCBrowserGoForward(in pBrowser as MCBrowserRef) as CBool binds to "<builtin>"
-foreign handler MCBrowserGoToURL(in pBrowser as MCBrowserRef) as CBool binds to "<builtin>"
-foreign handler MCBrowserEvaluateJavaScript(in pBrowser as MCBrowserRef, in pScript as NativeCString, out rResult as NativeCString) as CBool binds to "<builtin>"
+foreign handler MCBrowserGoBack(in pBrowser as MCBrowserRef) returns CBool binds to "<builtin>"
+foreign handler MCBrowserGoForward(in pBrowser as MCBrowserRef) returns CBool binds to "<builtin>"
+foreign handler MCBrowserGoToURL(in pBrowser as MCBrowserRef) returns CBool binds to "<builtin>"
+foreign handler MCBrowserEvaluateJavaScript(in pBrowser as MCBrowserRef, in pScript as NativeCString, out rResult as NativeCString) returns CBool binds to "<builtin>"
 
 // TODO - declare functions that accept callbacks (not sure of the format here)
 
 --------------------------------------------------------------------------------
 
-variable mBrowser as MCBrowserRef
-variable mBrowserType as optional String
+variable mBrowser as optional MCBrowserRef
+variable mBrowserType as String
+variable mProperties as optional Array
+
+--
+
+variable sPropertyMap as Array
+variable sStringProps as List
+variable sBoolProps as List
 
 --------------------------------------------------------------------------------
+
+public handler OnLoad()
+	put the empty array into sPropertyMap
+	put 0 into sPropertyMap["scrollbars"]
+	put 1 into sPropertyMap["allowNewWindows"]
+	put 2 into sPropertyMap["enableContextMenu"]
+	put 3 into sPropertyMap["url"]
+	put 4 into sPropertyMap["htmlText"]
+	put 5 into sPropertyMap["userAgent"]
+	put 6 into sPropertyMap["javaScriptHandlers"]
+	
+	put ["url", "htmlText", "userAgent", "javaScriptHandlers"] into sStringProps
+	put ["scrollbars", "allowNewWindows", "enableContextMenu"] into sBoolProps
+end handler
 
 ----------
 
 -- called when the widget is created
 public handler OnCreate()
+	OnLoad() -- TODO - placed this here temporarily - need proper module init
+
+	put the empty string into mBrowserType
+	put the empty array into mProperties
 end handler
 
 --
@@ -101,24 +127,30 @@ public handler OnOpen()
 
 	variable tFactory as MCBrowserFactoryRef
 	/* UNCHECKED */
-	MCBrowserFactoryGet("default", tFactory)
+	MCBrowserFactoryGet(mBrowserType, tFactory)
 	
 	/* UNCHECKED */
-	MCBrowserFactoryCreate(tFactory, mBrowser)
+	MCBrowserFactoryCreateBrowser(tFactory, mBrowser)
 	
 	variable tBrowserView as Pointer
 	/* UNCHECKED */
-	MCBrowserGetNativeLayer(mBrowser, tBrowserView)
+	put MCBrowserGetNativeLayer(mBrowser) into tBrowserView
 	
 	// TODO - add widget code to set native layer from view
-	// set my native layer to tBrowserView
+--	set my native layer to tBrowserView
+	put tBrowserView into my native layer
+	
+	setBrowserProperties(mProperties)
 end handler
 
 --
 
 public handler OnClose()
+	// Save browser properties
+	put getBrowserProperties() into mProperties
+	
 	// TODO - add widget code to set native layer from view
-	// set my native layer to nothing
+	set my native layer to nothing
 	
 	MCBrowserRelease(mBrowser)
 	put nothing into mBrowser -- TODO - check if this is equivalent to mBrowser = nil
@@ -126,44 +158,125 @@ end handler
 
 ----------
 
-public handler getUrl() as String
-	// TODO - implement
+private handler getProperty(in pProperty as String) returns any
+	if mBrowser is nothing then
+		return mProperties[pProperty]
+	else
+		return getBrowserProperty(pProperty)
+	end if
+end handler
+
+private handler setProperty(in pProperty as String, in pValue as any)
+	if mBrowser is nothing then
+		put pValue into mProperties[pProperty]
+	else
+		setBrowserProperty(pProperty, pValue)
+	end if
+end handler
+
+--
+
+public handler getUrl() returns String
+	return getProperty("url")
 end handler
 
 public handler setUrl(in pUrl as String)
-	// TODO - implement
+	setProperty("url", pUrl)
 end handler
 
 --
 
-public handler getHtmlText() as String
-	// TODO - implement
+public handler getHtmlText() returns String
+	return getProperty("htmlText")
 end handler
 
 public handler setHtmlText(in pHtmlText as String)
-	// TODO - implement
+	setProperty("htmlText", pHtmlText)
 end handler
 
 --
 
-public handler getUserAgent() as String
-	// TODO - implement
+public handler getUserAgent() returns String
+	return getProperty("userAgent")
 end handler
 
 public handler setUserAgent(in pUserAgent as String)
-	// TODO - implement
+	setProperty("userAgent", pUserAgent)
 end handler
 
 --
 
-public handler getScrollbars() as Boolean
-	// TODO - implement
+public handler getJavaScriptHandlers() returns String
+	return getProperty("javaScriptHandlers")
+end handler
+
+public handler setJavaScriptHandlers(in pJavaScriptHandlers as String)
+	setProperty("javaScriptHandlers", pJavaScriptHandlers)
+end handler
+
+--
+
+public handler getScrollbars() returns Boolean
+	return getProperty("scrollbars")
 end handler
 
 public handler setScrollbars(in pScrollbars as Boolean)
-	// TODO - implement
+	setProperty("scrollbars", pScrollbars)
 end handler
 
 ----------
+
+private handler propertyEnum(in pProp as String) returns Integer
+	return sPropertyMap[pProp]
+end handler
+
+----------
+
+private handler getBrowserProperty(in pProperty as String) returns any
+	variable tValue as optional any
+	
+	if pProperty is in sStringProps then
+		/* UNCHECKED */
+		MCBrowserGetStringProperty(mBrowser, propertyEnum(pProperty), tValue)
+	else if pProperty is in sBoolProps then
+		/* UNCHECKED */
+		MCBrowserGetBoolProperty(mBrowser, propertyEnum(pProperty), tValue)
+	end if
+	
+	return tValue
+end handler
+
+private handler setBrowserProperty(in pProperty as String, in pValue as any)
+	if pProperty is in sStringProps then
+		/* UNCHECKED */
+		MCBrowserSetStringProperty(mBrowser, propertyEnum(pProperty), pValue)
+	else if pProperty is in sBoolProps then
+		/* UNCHECKED */
+		MCBrowserSetBoolProperty(mBrowser, propertyEnum(pProperty), pValue)
+	end if
+end handler
+
+--
+
+private handler setBrowserProperties(in pProperties as Array)
+	variable tKey
+	repeat for each key tKey in pProperties
+		if mProperties[tKey] is not nothing then
+			setBrowserProperty(tKey, pProperties[tKey])
+		end if
+	end repeat
+end handler
+
+private handler getBrowserProperties() returns Array
+	variable tProps
+	put the empty array into tProps
+	
+	variable tKey
+	repeat for each key tKey in sPropertyMap
+		put getBrowserProperty(tKey) into tProps[tKey]
+	end repeat
+	
+	return tProps
+end handler
 
 end widget
