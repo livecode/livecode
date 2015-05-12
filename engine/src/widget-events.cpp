@@ -86,7 +86,6 @@ MCWidgetEventManager::MCWidgetEventManager() :
 
 void MCWidgetEventManager::event_open(MCWidget* p_widget)
 {
-	p_widget->OnAttach();
     p_widget->OnOpen();
     if (MCcurtool != T_BROWSE)
         p_widget -> OnToolChanged(MCcurtool);
@@ -95,7 +94,6 @@ void MCWidgetEventManager::event_open(MCWidget* p_widget)
 void MCWidgetEventManager::event_close(MCWidget* p_widget)
 {
     p_widget->OnClose();
-	p_widget->OnDetach();
 }
 
 void MCWidgetEventManager::event_kfocus(MCWidget* p_widget)

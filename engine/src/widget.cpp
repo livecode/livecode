@@ -994,14 +994,18 @@ MCNativeLayer* MCWidget::getNativeLayer() const
 
 void MCWidget::OnOpen()
 {
+	CallHandler(MCNAME("OnOpen"), nil, 0);
+	
 	if (m_native_layer)
 		m_native_layer->OnOpen();
 	
-    CallHandler(MCNAME("OnOpen"), nil, 0);
+	OnAttach();
 }
 
 void MCWidget::OnClose()
 {
+	OnDetach();
+	
     if (m_native_layer)
         m_native_layer->OnClose();
     
