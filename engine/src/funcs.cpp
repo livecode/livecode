@@ -3408,7 +3408,7 @@ void MCMatch::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 #endif /* MCMatch */
     
     MCAutoValueRef t_source_valueref;
-    MCAutoStringRef t_source;
+    MCAutoStringRef t_source, t_source_normalised;
     if (!params->eval(ctxt, &t_source_valueref) || !ctxt . ConvertToString(*t_source_valueref, &t_source))
 	{
 		ctxt . LegacyThrow(EE_MATCH_BADSOURCE);
@@ -3416,12 +3416,29 @@ void MCMatch::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 	}
 
     MCAutoValueRef t_pattern_valueref;
-    MCAutoStringRef t_pattern;
+    MCAutoStringRef t_pattern, t_pattern_normalised;
 	if (!params->getnext()->eval(ctxt, &t_pattern_valueref) || !ctxt . ConvertToString(*t_pattern_valueref, &t_pattern))
 	{
 		ctxt . LegacyThrow(EE_MATCH_BADPATTERN);
 		return;
 	}
+    
+    // SN-2015-05-12: [[ Bug 15311 ]] Use identically normalised strings if the
+    //  formSensitive is set to false
+    if (!ctxt . GetFormSensitive())
+    {
+        if (!MCStringNormalizedCopyNFC(*t_source, &t_source_normalised)
+                || !MCStringNormalizedCopyNFC(*t_pattern, &t_pattern_normalised))
+        {
+            ctxt . Throw();
+            return;
+        }
+    }
+    else
+    {
+        t_pattern_normalised = *t_pattern;
+        t_source_normalised = *t_source;
+    }
     
     MCParameter *t_result_params = params->getnext()->getnext();
     uindex_t t_result_count = 0;
@@ -3432,9 +3449,9 @@ void MCMatch::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     /* UNCHECKED */ t_results.New(t_result_count);
     
     if (chunk)
-        MCStringsEvalMatchChunk(ctxt, *t_source, *t_pattern, *t_results, t_result_count, r_value . bool_value);
+        MCStringsEvalMatchChunk(ctxt, *t_source_normalised, *t_pattern_normalised, *t_results, t_result_count, r_value . bool_value);
     else
-        MCStringsEvalMatchText(ctxt, *t_source, *t_pattern, *t_results, t_result_count, r_value . bool_value);
+        MCStringsEvalMatchText(ctxt, *t_source_normalised, *t_pattern_normalised, *t_results, t_result_count, r_value . bool_value);
     r_value .type = kMCExecValueTypeBool;
     
     if (!ctxt.HasError())
@@ -4278,7 +4295,25 @@ void MCReplaceText::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     if (!ctxt . EvalExprAsStringRef(replacement, EE_REPLACETEXT_BADSOURCE, &t_replacement))
         return;
     
-	MCStringsEvalReplaceText(ctxt, *t_source, *t_pattern, *t_replacement, r_value . stringref_value);
+    // SN-2015-05-12: [[ Bug 15311 ]] Use identically normalised strings if the
+    //  formSensitive is set to false
+    MCAutoStringRef t_replacement_normalised, t_pattern_normalised;
+    if (!ctxt . GetFormSensitive())
+    {
+        if (!MCStringNormalizedCopyNFC(*t_replacement, &t_replacement_normalised)
+            || !MCStringNormalizedCopyNFC(*t_pattern, &t_pattern_normalised))
+        {
+            ctxt . Throw();
+            return;
+        }
+    }
+    else
+    {
+        t_pattern_normalised = *t_pattern;
+        t_replacement_normalised = *t_replacement;
+    }
+    
+	MCStringsEvalReplaceText(ctxt, *t_source, *t_pattern_normalised, *t_replacement_normalised, r_value . stringref_value);
     r_value . type = kMCExecValueTypeStringRef;
 }
 
