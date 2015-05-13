@@ -202,6 +202,7 @@ static struct {const char *name; MCNativeControlType type;} s_native_control_typ
 	{"player", kMCNativeControlTypePlayer},
 	{"input", kMCNativeControlTypeInput},
 	{"multiline", kMCNativeControlTypeMultiLineInput},
+	{"camera", kMCNativeControlTypeCamera},
 	{nil, kMCNativeControlTypeUnknown}
 };
 
@@ -299,6 +300,13 @@ static struct {const char *name; Properties property;} s_native_control_properti
 	{"contenttype", P_CONTENT_TYPE},
 	
     {"multiline", P_MULTI_LINE},
+
+	{"devices", P_DEVICES},
+	{"device", P_DEVICE},
+	{"features", P_FEATURES},
+	{"flashmode", P_FLASH_MODE},
+	{"isflashactive", P_IS_FLASH_ACTIVE},
+	{"isflashavailable", P_IS_FLASH_AVAILABLE},
     
 	{nil, P_UNDEFINED}
 };
@@ -327,6 +335,10 @@ static struct {const char *name; MCNativeControlAction action;} s_native_control
 	
 	{"scrollrangetovisible", kMCNativeControlActionScrollRangeToVisible},
 	
+	{"startrecording", kMCNativeControlActionCameraStartRecording},
+	{"stoprecording", kMCNativeControlActionCameraStopRecording},
+	{"takepicture", kMCNativeControlActionCameraTakePicture},
+
 	{nil, kMCNativeControlActionUnknown}
 };
 
@@ -452,6 +464,7 @@ extern bool MCNativeScrollerControlCreate(MCNativeControl *&r_control);
 extern bool MCNativePlayerControlCreate(MCNativeControl *&r_control);
 extern bool MCNativeInputControlCreate(MCNativeControl *&r_control);
 extern bool MCNativeMultiLineInputControlCreate(MCNativeControl *&r_control);
+extern bool MCNativeCameraControlCreate(MCNativeControl*& r_control);
 
 bool MCNativeControl::CreateWithType(MCNativeControlType p_type, MCNativeControl*& r_control)
 {
@@ -474,6 +487,8 @@ bool MCNativeControl::CreateWithType(MCNativeControlType p_type, MCNativeControl
 		case kMCNativeControlTypeMultiLineInput:
 			t_success = MCNativeMultiLineInputControlCreate(t_control);
 			break;
+		case kMCNativeControlTypeCamera:
+			t_success = MCNativeCameraControlCreate(t_control);
             
 		default:
             t_success = false;

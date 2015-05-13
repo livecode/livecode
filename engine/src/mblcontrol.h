@@ -27,6 +27,7 @@ enum MCNativeControlType
 	kMCNativeControlTypePlayer,
 	kMCNativeControlTypeInput,
 	kMCNativeControlTypeMultiLineInput,
+	kMCNativeControlTypeCamera,
 };
 
 enum MCNativeControlProperty
@@ -132,6 +133,14 @@ enum MCNativeControlProperty
     
     // Android specific properties
     kMCNativeControlPropertyMultiLine,
+
+	// Camera Preview specific properties
+	kMCNativeControlPropertyCameraAvailableDevices,
+	kMCNativeControlPropertyCameraDevice,
+	kMCNativeControlPropertyCameraFeatures,
+	kMCNativeControlPropertyCameraFlashMode,
+	kMCNativeControlPropertyCameraFlashIsActive,
+	kMCNativeControlPropertyCameraFlashIsAvailable,
 };
 
  
@@ -167,6 +176,11 @@ enum MCNativeControlAction
 	
 	// TextView-specific actions
 	kMCNativeControlActionScrollRangeToVisible,
+
+	// Camera specific actions
+	kMCNativeControlActionCameraStartRecording,
+	kMCNativeControlActionCameraStopRecording,
+	kMCNativeControlActionCameraTakePicture,
 };
 
 class MCNativeControl;
@@ -364,6 +378,22 @@ enum MCNativeControlInputVerticalAlign
     kMCNativeControlInputVerticalAlignCenter,
     kMCNativeControlInputVerticalAlignTop,
     kMCNativeControlInputVerticalAlignBottom,
+};
+
+enum MCNativeControlCameraFlashMode
+{
+	kMCNativeControlCameraFlashModeOff,
+	kMCNativeControlCameraFlashModeOn,
+	kMCNativeControlCameraFlashModeAuto,
+};
+
+enum MCNativeControlCameraFeature
+{
+    kMCNativeControlCameraFeatureFlashBit,
+    kMCNativeControlCameraFeatureFlashModeBit,
+	
+	kMCNativeControlCameraFeatureFlash = 1 << kMCNativeControlCameraFeatureFlashBit,
+	kMCNativeControlCameraFeatureFlashMode = 1 << kMCNativeControlCameraFeatureFlashModeBit,
 };
 
 struct MCNativeControlActionInfo

@@ -562,6 +562,37 @@ static MCExecEnumTypeInfo _kMCNativeControlBorderStyleTypeInfo =
     _kMCNativeControlBorderStyleElementInfo
 };
 
+//////////
+
+static MCExecEnumTypeElementInfo _kMCNativeControlCameraFlashModeElementInfo[] =
+{
+	{"off", kMCNativeControlCameraFlashModeOff},
+	{"on", kMCNativeControlCameraFlashModeOn},
+	{"auto", kMCNativeControlCameraFlashModeAuto},
+};
+
+static MCExecEnumTypeInfo _kMCNativeControlCameraFlashModeTypeInfo =
+{
+	"NativeControl.CameraFlashMode",
+	sizeof(_kMCNativeControlCameraFlashModeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+	_kMCNativeControlCameraFlashModeElementInfo
+};
+
+//////////
+
+static MCExecSetTypeElementInfo _kMCNativeControlCameraFeatureElementInfo[] =
+{
+	{ "flash", kMCNativeControlCameraFeatureFlash },
+	{ "flashmode", kMCNativeControlCameraFeatureFlashMode },
+};
+
+static MCExecSetTypeInfo _kMCNativeControlCameraFeatureTypeInfo =
+{
+    "NativeControl.CameraFeature",
+    sizeof(_kMCNativeControlCameraFeatureElementInfo) / sizeof(MCExecSetTypeElementInfo),
+    _kMCNativeControlCameraFeatureElementInfo
+};
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -587,6 +618,7 @@ MCExecEnumTypeInfo *kMCNativeControlInputTextAlignTypeInfo = &_kMCNativeControlI
 MCExecEnumTypeInfo *kMCNativeControlInputVerticalAlignTypeInfo = &_kMCNativeControlInputVerticalAlignTypeInfo;
 MCExecEnumTypeInfo *kMCNativeControlClearButtonModeTypeInfo = &_kMCNativeControlClearButtonModeTypeInfo;
 MCExecEnumTypeInfo *kMCNativeControlBorderStyleTypeInfo = &_kMCNativeControlBorderStyleTypeInfo;
+MCExecEnumTypeInfo *kMCNativeControlCameraFlashModeTypeInfo = &_kMCNativeControlCameraFlashModeTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 

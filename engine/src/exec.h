@@ -5135,6 +5135,8 @@ extern MCExecEnumTypeInfo *kMCNativeControlInputTextAlignTypeInfo;
 extern MCExecEnumTypeInfo *kMCNativeControlInputVerticalAlignTypeInfo;
 extern MCExecEnumTypeInfo *kMCNativeControlClearButtonModeTypeInfo;
 extern MCExecEnumTypeInfo *kMCNativeControlBorderStyleTypeInfo;
+extern MCExecEnumTypeInfo *kMCNativeControlCameraFlashModeTypeInfo;
+extern MCExecSetTypeInfo *kMCNativeControlCameraFeatureTypeInfo;
 
 extern MCExecMethodInfo* kMCNativeControlExecCreateControlMethodInfo;
 extern MCExecMethodInfo* kMCNativeControlExecDeleteControlMethodInfo;
