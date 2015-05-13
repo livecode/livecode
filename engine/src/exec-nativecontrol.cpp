@@ -564,6 +564,22 @@ static MCExecEnumTypeInfo _kMCNativeControlBorderStyleTypeInfo =
 
 //////////
 
+static MCExecSetTypeElementInfo _kMCNativeControlCameraDeviceElementInfo[] =
+{
+	{ "default", kMCNativeControlCameraDeviceDefault },
+	{ "front", kMCNativeControlCameraDeviceFront },
+	{ "back", kMCNativeControlCameraDeviceBack },
+};
+
+static MCExecSetTypeInfo _kMCNativeControlCameraDeviceTypeInfo =
+{
+    "NativeControl.CameraDevice",
+    sizeof(_kMCNativeControlCameraDeviceElementInfo) / sizeof(MCExecSetTypeElementInfo),
+    _kMCNativeControlCameraDeviceElementInfo
+};
+
+//////////
+
 static MCExecEnumTypeElementInfo _kMCNativeControlCameraFlashModeElementInfo[] =
 {
 	{"off", kMCNativeControlCameraFlashModeOff},
@@ -618,7 +634,9 @@ MCExecEnumTypeInfo *kMCNativeControlInputTextAlignTypeInfo = &_kMCNativeControlI
 MCExecEnumTypeInfo *kMCNativeControlInputVerticalAlignTypeInfo = &_kMCNativeControlInputVerticalAlignTypeInfo;
 MCExecEnumTypeInfo *kMCNativeControlClearButtonModeTypeInfo = &_kMCNativeControlClearButtonModeTypeInfo;
 MCExecEnumTypeInfo *kMCNativeControlBorderStyleTypeInfo = &_kMCNativeControlBorderStyleTypeInfo;
+MCExecSetTypeInfo *kMCNativeControlCameraDeviceTypeInfo = &_kMCNativeControlCameraDeviceTypeInfo;
 MCExecEnumTypeInfo *kMCNativeControlCameraFlashModeTypeInfo = &_kMCNativeControlCameraFlashModeTypeInfo;
+MCExecSetTypeInfo *kMCNativeControlCameraFeatureTypeInfo = &_kMCNativeControlCameraFeatureTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 

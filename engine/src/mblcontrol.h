@@ -380,6 +380,17 @@ enum MCNativeControlInputVerticalAlign
     kMCNativeControlInputVerticalAlignBottom,
 };
 
+enum MCNativeControlCameraDevice
+{
+	kMCNativeControlCameraDeviceDefaultBit,
+	kMCNativeControlCameraDeviceFrontBit,
+	kMCNativeControlCameraDeviceBackBit,
+
+	kMCNativeControlCameraDeviceDefault = 1 << kMCNativeControlCameraDeviceDefaultBit,
+	kMCNativeControlCameraDeviceFront = 1 << kMCNativeControlCameraDeviceFrontBit,
+	kMCNativeControlCameraDeviceBack = 1 << kMCNativeControlCameraDeviceBackBit,
+};
+
 enum MCNativeControlCameraFlashMode
 {
 	kMCNativeControlCameraFlashModeOff,
