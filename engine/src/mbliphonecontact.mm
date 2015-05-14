@@ -796,7 +796,8 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 		}
 	}
 
-	if (t_success)
+    // AL-2015-05-14: [[ Bug 15370 ]] Crash when matching contact not found
+    if (t_success && t_chosen != nil)
 		t_success = MCStringCreateWithCFString((CFStringRef)t_chosen, r_chosen);
 	
     if (t_people != nil)
