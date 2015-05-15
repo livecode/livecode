@@ -1212,6 +1212,42 @@ MCPlatformDialogResult MCPlatformSoundRecorderEndConfigurationDialog(MCPlatformS
 
 ////////////////////////////////////////////////////////////////////////////////
 
+typedef struct MCPlatformCamera *MCPlatformCameraRef;
+
+enum MCPlatformCameraProperty
+{
+	kMCPlatformCameraPropertyRectangle,
+	kMCPlatformCameraPropertyVisible,
+    kMCPlatformCameraPropertyActive,
+    kMCPlatformCameraPropertyDevice,
+    kMCPlatformCameraPropertyDevices,
+    kMCPlatformCameraPropertyFeatures,
+    kMCPlatformCameraPropertyFlashMode,
+    kMCPlatformCameraPropertyIsFlashActive,
+    kMCPlatformCameraPropertyIsFlashAvailable,
+};
+
+void MCPlatformCameraCreate(MCPlatformCameraRef& r_camera);
+
+void MCPlatformCameraRetain(MCPlatformCameraRef camera);
+void MCPlatformCameraRelease(MCPlatformCameraRef camera);
+
+void MCPlatformCameraAttach(MCPlatformCameraRef camera, void *target);
+void MCPlatformCameraDetach(MCPlatformCameraRef camera);
+
+void MCPlatformCameraOpen(MCPlatformCameraRef camera);
+void MCPlatformCameraClose(MCPlatformCameraRef camera);
+
+bool MCPlatformCameraSetProperty(MCPlatformCameraRef camera, MCPlatformCameraProperty property, MCPlatformPropertyType type, void *value);
+bool MCPlatformCameraGetProperty(MCPlatformCameraRef sound, MCPlatformCameraProperty property, MCPlatformPropertyType type, void *value);
+
+bool MCPlatformCameraStartRecording(MCPlatformCameraRef camera, MCStringRef filename);
+bool MCPlatformCameraStopRecording(MCPlatformCameraRef camera);
+
+bool MCPlatformCameraTakePicture(MCPlatformCameraRef camera, MCDataRef& r_image_data);
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCPlatformSwitchFocusToView(MCPlatformWindowRef window, uint32_t id);
 
 ////////////////////////////////////////////////////////////////////////////////

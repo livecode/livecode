@@ -131,6 +131,21 @@ typedef bool (*MCStackUpdateCallback)(MCStackSurface *p_surface, MCRegionRef p_r
 
 typedef bool (*MCStackForEachCallback)(MCStack *p_stack, void *p_context);
 
+enum MCStackAttachmentEvent
+{
+    kMCStackAttachmentEventDeleting,
+    kMCStackAttachmentEventRealizing,
+    kMCStackAttachmentEventUnrealizing,
+    kMCStackAttachmentEventToolChanged,
+};
+typedef void (*MCStackAttachmentCallback)(void *context, MCStack *stack, MCStackAttachmentEvent event);
+struct MCStackAttachment
+{
+    MCStackAttachment *next;
+    void *context;
+    MCStackAttachmentCallback callback;
+};
+
 class MCStack : public MCObject
 {
 	friend class MCHcstak;
@@ -274,6 +289,8 @@ protected:
 	// IM-2014-05-27: [[ Bug 12321 ]] Indicate if we need to purge fonts when reopening the window
 	bool m_purge_fonts;
 
+    MCStackAttachment *m_attachments;
+    
 public:
 	Boolean menuwindow;
 
@@ -609,6 +626,7 @@ public:
 
 	Window getwindow();
 	Window getparentwindow();
+    Window getwindowalways() { return window; }
 	
 	// IM-2014-07-23: [[ Bug 12930 ]] Set the stack whose window is parent to this stack
 	void setparentstack(MCStack *p_parent);
@@ -819,6 +837,8 @@ public:
 	
 	// IM-2014-07-23: [[ Bug 12930 ]] Replace findchildstack method with iterating method
 	bool foreachchildstack(MCStackForEachCallback p_callback, void *p_context);
+    
+	bool foreachstack(MCStackForEachCallback p_callback, void *p_context);
 	
 	void realize();
 	void sethints();
@@ -995,6 +1015,10 @@ public:
 	void enablewindow(bool p_enable);
 	bool haswindow(void);
 
+    bool attach(void *ctxt, MCStackAttachmentCallback callback);
+    void detach(void *ctxt, MCStackAttachmentCallback callback);
+    void notifyattachments(MCStackAttachmentEvent event);
+    
 	void mode_openasmenu(MCStack *grab);
 	void mode_closeasmenu(void);
 

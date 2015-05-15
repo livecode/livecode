@@ -342,29 +342,6 @@ Exec_stat MCDispatch::handle(Handler_type htype, MCNameRef mess, MCParameter *pa
 			stat = ES_PASS;
 	}
 
-//#ifdef TARGET_SUBPLATFORM_IPHONE
-//	extern Exec_stat MCIPhoneHandleMessage(MCNameRef message, MCParameter *params);
-//	if (stat == ES_NOT_HANDLED || stat == ES_PASS)
-//	{
-//		stat = MCIPhoneHandleMessage(mess, params);
-//		
-//		if (stat != ES_NOT_HANDLED && stat != ES_PASS)
-//			return stat;
-//	}
-//#endif
-//
-//#ifdef _MOBILE
-//	if (stat == ES_NOT_HANDLED || stat == ES_PASS)
-//	{
-//		stat = MCHandlePlatformMessage(htype, MCNameGetOldString(mess), params);
-//
-//		// MW-2011-08-22: [[ Bug 9686 ]] Make sure we exit as soon as the
-//		//   message is handled.
-//		if (stat != ES_NOT_HANDLED && stat != ES_PASS)
-//			return stat;
-//	}
-//#endif
-
 	if (MCmessagemessages && stat != ES_PASS)
 		MCtargetptr->sendmessage(htype, mess, False);
 		
@@ -1735,6 +1712,28 @@ MCStack *MCDispatch::findstackid(uint4 fid)
 	}
 	while (tstk != stacks);
 	return NULL;
+}
+
+bool MCDispatch::foreachstack(MCStackForEachCallback p_callback, void *p_context)
+{
+	bool t_continue;
+	t_continue = true;
+	
+	if (stacks)
+	{
+		MCStack *t_stack;
+		t_stack = stacks;
+		
+		do
+		{
+			t_continue = t_stack->foreachstack(p_callback, p_context);
+			
+			t_stack = (MCStack*)t_stack->next();
+		}
+		while (t_continue && t_stack != stacks);
+	}
+	
+	return t_continue;
 }
 
 bool MCDispatch::foreachchildstack(MCStack *p_stack, MCStackForEachCallback p_callback, void *p_context)

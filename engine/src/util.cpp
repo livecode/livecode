@@ -1999,6 +1999,12 @@ void MCU_getshift(uint4 mask, uint2 &shift, uint2 &outmask)
 	outmask = j;
 }
 
+static bool _MCStackNotifyToolChange(MCStack *p_stack, void *p_context)
+{
+    p_stack -> notifyattachments(kMCStackAttachmentEventToolChanged);
+    return true;
+}
+
 void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
 {
 	Tool t_new_tool;
@@ -2057,6 +2063,8 @@ void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
     // MW-2014-04-24: [[ Bug 12249 ]] Prod each player to make sure its buffered correctly for the new tool.
     for(MCPlayer *t_player = MCplayers; t_player != NULL; t_player = t_player -> getnextplayer())
         t_player -> syncbuffering(nil);
+    
+    MCdispatcher -> foreachstack(_MCStackNotifyToolChange, nil);
     
 	ctxt . GetObject()->message_with_valueref_args(MCM_new_tool, *t_tool_name);
 }

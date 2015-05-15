@@ -353,10 +353,8 @@ void MCStatement::compile(MCSyntaxFactoryRef ctxt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifdef _MOBILE
 extern bool MCIsPlatformMessage(MCNameRef handler_name);
 extern Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters);
-#endif
 
 MCComref::MCComref(MCNameRef n)
 {
@@ -386,13 +384,12 @@ Parse_stat MCComref::parse(MCScriptPoint &sp)
 		MCperror->add(PE_STATEMENT_BADPARAMS, sp);
 		return PS_ERROR;
 	}
-#ifdef _MOBILE
+    
     if (MCIsPlatformMessage(name))
     {
         platform_message = true;
         resolved = true;
     }
-#endif
     
 	return PS_NORMAL;
 }
