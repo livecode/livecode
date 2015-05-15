@@ -513,3 +513,11 @@ bool MCCefWin32Browser::PlatformGetAuthCredentials(bool p_is_proxy, const CefStr
 
 	return t_success;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+// AL-2015-02-17: [[ SB Inclusions ]] Work around problems linking to MCU_ functions from CEF
+#include <stdlib.h>
+#include <stdio.h>
+#include <cstring>
+

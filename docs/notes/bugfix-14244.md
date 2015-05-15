@@ -1,0 +1,1 @@
+#    acceleratedRendering property causes crash

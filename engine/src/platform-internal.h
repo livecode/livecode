@@ -129,6 +129,8 @@ public:
 	void HandleDragMove(MCPoint location, MCPlatformDragOperation& r_operation);
 	void HandleDragLeave(void);
 	void HandleDragDrop(bool& r_accepted);
+    // Called to tell attachments there is a handle.
+    void RealizeAndNotify(void);
 	
 	//////////
 	
@@ -153,8 +155,6 @@ public:
 	virtual void DoMapFrameRectToContentRect(MCRectangle frame, MCRectangle& r_content) = 0;
 	
 protected:
-	// Called to tell attachments there is a handle.
-	void RealizeAndNotify(void);
 	
 	// The window's reference count.
 	uint32_t m_references;
@@ -272,7 +272,7 @@ void MCPlatformWindowDeathGrip(MCPlatformWindowRef window);
 void MCPlatformCallbackSendApplicationStartup(int argc, char **argv, char **envp, int& r_error_code, char*& r_error_message);
 void MCPlatformCallbackSendApplicationShutdown(int& r_exit_code);
 void MCPlatformCallbackSendApplicationShutdownRequest(bool& r_terminate);
-void MCPlatformCallbackSendApplicationRun(void);
+void MCPlatformCallbackSendApplicationRun(bool& r_continue);
 void MCPlatformCallbackSendApplicationSuspend(void);
 void MCPlatformCallbackSendApplicationResume(void);
 

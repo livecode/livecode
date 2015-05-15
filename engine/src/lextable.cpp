@@ -1994,6 +1994,8 @@ static LT sugar_table[] =
         {"message", TT_CHUNK, CT_UNDEFINED},
         {"new", TT_CHUNK, CT_UNDEFINED},
 		{"nothing", TT_UNDEFINED, SG_NOTHING},
+        // MW-2014-09-30: [[ ScriptOnlyStack ]] Token for 'only'.
+        {"only", TT_UNDEFINED, SG_ONLY},
 		{"open", TT_UNDEFINED, SG_OPEN},
 		{"optimized", TT_UNDEFINED, SG_OPTIMIZED},
 		{"options", TT_UNDEFINED, SG_OPTIONS},

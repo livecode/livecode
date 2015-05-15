@@ -229,6 +229,9 @@ protected:
 	// IM-2013-10-14: [[ FullscreenMode ]] Indicates whether the view needs to be redrawn
 	bool m_view_need_redraw;
 	
+	// IM-2014-09-23: [[ Bug 13349 ]] Indicates whether the view window needs to be resized
+	bool m_view_need_resize;
+	
 	MCGAffineTransform m_view_transform;
 
 	// MW-2011-08-26: [[ TileCache ]] The stack's tilecache renderer - if any.
@@ -248,8 +251,12 @@ protected:
 	// IM-2014-01-23: [[ HiDPI ]] The backing scale of the surface onto which this view is drawn
     
 	MCGFloat m_view_backing_scale;
+    
 	// MW-2014-03-12: [[ Bug 11914 ]] If this is true then the stack is an engine menu.
 	bool m_is_menu : 1;
+    
+    // MW-2014-09-30: [[ ScriptOnlyStack ]] If true, the stack is a script-only-stack.
+    bool m_is_script_only : 1;
 	
 	// IM-2014-05-27: [[ Bug 12321 ]] Indicate if we need to purge fonts when reopening the window
 	bool m_purge_fonts;
@@ -458,6 +465,9 @@ public:
 	// IM-2014-01-24: [[ HiDPI ]] Set the view window rect in logical coords
 	MCRectangle view_setgeom(const MCRectangle &p_rect);
 	
+	// IM-2014-09-23: [[ Bug 13349 ]] Perform any deferred view window resizing needed
+	void view_update_geometry(void);
+	
 	// IM-2014-01-24: [[ HiDPI ]] Return the scale factor from logical to pixel coords for the surface onto which the view is drawn
 	MCGFloat view_getbackingscale(void) const;
 
@@ -647,7 +657,11 @@ public:
 	void installaccels(MCStack *stack);
 	void removeaccels(MCStack *stack);
 	void setwindowname();
+	
 	void openwindow(Boolean override);
+	// IM-2014-09-23: [[ Bug 13349 ]] Platform-specific openwindow method
+	void platform_openwindow(Boolean override);
+	
 	void reopenwindow();
 	Exec_stat openrect(const MCRectangle &rel, Window_mode wm, MCStack *parentwindow,
 	                   Window_position wpos,  Object_pos walign);
@@ -761,7 +775,7 @@ public:
 	void effectrect(const MCRectangle &drect, Boolean &abort);
 	
 	// IM-2014-07-09: [[ Bug 12225 ]] Find the stack by window ID
-	MCStack *findstackwindowid(uint32_t p_win_id);
+	MCStack *findstackwindowid(uintptr_t p_win_id);
 	MCStack *findstackd(Window w);
 	
 	// IM-2014-07-23: [[ Bug 12930 ]] Replace findchildstack method with iterating method
@@ -819,6 +833,11 @@ public:
 	//   metrics.
 	bool getuseideallayout(void);
 
+    // MW-2014-09-30: [[ ScriptOnlyStack ]] Set the stack as a 'script stack'. The script for
+    //   the stack is taken from ep.
+    bool isscriptonly(void) const { return m_is_script_only; }
+    void setasscriptonly(MCExecPoint& ep);
+    
 	inline bool getextendedstate(uint4 flag) const
 	{
 		return (f_extended_state & flag) != 0;

@@ -52,6 +52,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacktile.h"
 #include "graphics.h"
 
+#include "revbuild.h"
+#include "license.h"
+
 static uint2 calldepth;
 static uint2 nwait;
 
@@ -257,7 +260,18 @@ void MCStack::sethints()
 	XClassHint chints;
 	chints.res_name = (char *)getname_cstring();
 
-	chints.res_class = (char *)MCapplicationstring;
+    // SN-2015-02-27: [[ Bug 13536 ]] Fix the naming of the application
+    MCExecPoint ep;
+    ep . setchars(MCapplicationstring, strlen((char*)MCapplicationstring));
+    if (MClicenseparameters.license_class == kMCLicenseClassCommunity)
+            ep . appendcstring("community");
+    ep . appendchar('_');
+    ep . appendcstring(MC_BUILD_ENGINE_SHORT_VERSION);
+    ep . replacechar('.', '_');
+    ep . replacechar('-', '_');
+
+    chints.res_class = (char *)ep . getcstring();
+
 	XSetClassHint(MCdpy, window, &chints);
 
 	Atom protocols[3];
@@ -599,7 +613,7 @@ void MCStack::setgeom()
 	 unloadexternals();
 }
  
-void MCStack::openwindow(Boolean override)
+void MCStack::platform_openwindow(Boolean override)
 {
 	if (MCModeMakeLocalWindows())
 	{

@@ -72,22 +72,14 @@ typedef struct
     char *error;
 } MCAndroidPurchase;
 
-static bool s_can_make_purchase_returned = false;
-static bool s_can_make_purchase = false;
-
 bool MCStoreCanMakePurchase()
 {
     bool t_result = false;
     
-    s_can_make_purchase_returned = false;
-    s_can_make_purchase = false;
-    
     MCAndroidEngineRemoteCall("storeCanMakePurchase", "b", &t_result);
     
-    while (!s_can_make_purchase_returned)
-        MCscreen->wait(60, True, True);
-    
-    return s_can_make_purchase;
+    // PM-2015-01-05: [[ Bug 14285 ]] Removed code. The bool variable that indicates if in-app billing is supported has already been initialised in initBilling() method, so no need to block-wait
+    return t_result;
 }
 
 bool MCStoreEnablePurchaseUpdates()
@@ -181,59 +173,6 @@ bool MCStoreMakePurchase(const char *p_prod_id, const char *p_quantity, const ch
   
 }
   
-/*
-bool MCStoreMakePurchase(MCPurchase *p_purchase)
-{
-    if (p_purchase->state != kMCPurchaseStateInitialized)
-        return false;
-    
-    MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
-    
-    bool t_success = false;
-    
-    MCAndroidEngineRemoteCall("storeMakePurchase", "bsss", &t_success, p_purchase->prod_id, "1", t_android_data->developer_payload);
-    
-    return t_success;
-}
-
-
-char* MCStoreAndroidRequestProductDetails(const char *p_purchase_id)
-{
-    
-    char* t_result;
-    
-    MCAndroidEngineRemoteCall("storeRequestProductDetails", "ss", &t_result, p_purchase_id);
-    
-    return t_result;
-    
-}
-*/
-
-
-// REMOVE THIS METHOD
-bool MCStoreRequestForProductDetails(const char *p_purchase_id)
-{
-    
-    bool t_result;
-    
-    MCAndroidEngineRemoteCall("storeRequestProductDetails", "bs", &t_result, p_purchase_id);
-    
-    return t_result;
-    
-}
-
-char* MCStoreReceiveProductDetails(const char *p_purchase_id)
-{
-    
-    char* t_result;
-    
-    MCAndroidEngineRemoteCall("storeReceiveProductDetails", "ss", &t_result, p_purchase_id);
-    
-    return t_result;
-    
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCPurchaseFindByProductId(const char *p_product_id, MCPurchase *&r_purchase)
@@ -414,6 +353,15 @@ static bool purchase_confirm(MCPurchase *p_purchase)
     MCLog("confirming notification: purchaseId=%d, notificationId=%s", p_purchase->id, t_android_data->notification_id);
     MCAndroidEngineRemoteCall("purchaseConfirmDelivery", "bis", &t_result, p_purchase->id, t_android_data->notification_id);
     
+    if (t_result)
+    {
+        // PM-2015-03-04: [[ Bug 14779 ]] Send a purchaseStateUpdate msg with state=complete
+        p_purchase->state = kMCPurchaseStateComplete;
+        MCPurchaseCompleteListUpdate(p_purchase);
+        MCPurchaseNotifyUpdate(p_purchase);
+        MCPurchaseRelease(p_purchase);
+    }
+    
     return t_result;
 }
 
@@ -423,7 +371,7 @@ bool MCPurchaseConfirmDelivery(MCPurchase *p_purchase)
     if (!(p_purchase->state == kMCPurchaseStatePaymentReceived || p_purchase->state == kMCPurchaseStateRefunded || p_purchase->state == kMCPurchaseStateRestored))
         return false;
     
-    purchase_confirm(p_purchase);
+    return purchase_confirm(p_purchase);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -534,14 +482,6 @@ void MCCStringReplace(char *&src, char *&dest)
     dest = src;
     src = NULL;
 }
-
-extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doBillingSupported(JNIEnv *env, jobject object, jboolean supported) __attribute__((visibility("default")));
-JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doBillingSupported(JNIEnv *env, jobject object, jboolean supported)
-{
-    s_can_make_purchase_returned = true;
-	s_can_make_purchase = supported;
-}
-
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doRestoreTransactionsResponse(JNIEnv *env, jobject object, jint responseCode) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doRestoreTransactionsResponse(JNIEnv *env, jobject object, jint responseCode)

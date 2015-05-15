@@ -66,12 +66,12 @@ void MCLine::takebreaks(MCLine *lptr)
 	lptr->width = 0;
 }
 
-MCBlock *MCLine::fitblocks(MCBlock* p_first, MCBlock* p_sentinal, uint2 p_max_width)
+MCBlock *MCLine::fitblocks(MCBlock* p_first, MCBlock* p_sentinal, coord_t p_max_width)
 {
 	MCBlock *t_block;
 	t_block = p_first;
 	
-	int4 t_frontier_width;
+	coord_t t_frontier_width;
 	t_frontier_width = 0;
 
 	MCBlock *t_break_block;
@@ -176,7 +176,15 @@ MCBlock *MCLine::fitblocks(MCBlock* p_first, MCBlock* p_sentinal, uint2 p_max_wi
 		// Consume all spaces after the break index.
 		while(t_break_index < (t_break_block -> getindex() + t_break_block -> getsize()) &&
 			  t_break_block -> textisspace(&t_text[t_break_index]))
-			t_break_index++;
+        {
+            // SN-2015-01-21: [[ Bug 14421 ]] If the break block is a unicode block,
+            //  then the next index is 2 'char' (a unichar) further, not one. This can lead to a
+            //  size of 1 for a unicode block, and a hang in FontBreaking.
+            if (t_break_block -> getflag(F_HAS_UNICODE))
+                t_break_index += sizeof(unichar_t);
+            else
+                t_break_index++;
+        }
 		
 		if (t_break_index < (t_break_block -> getindex() + t_break_block -> getsize()))
 			break;
@@ -437,7 +445,8 @@ uint2 MCLine::getcursorindex(coord_t cx, Boolean chunk)
 
 uint2 MCLine::getwidth()
 {
-	return width;
+    // AL-2014-10-21: [[ Bug 13403 ]] Returned line width as integer needs to be rounded up
+	return ceil(width);
 }
 
 uint2 MCLine::getheight()

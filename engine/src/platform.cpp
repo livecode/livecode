@@ -8,7 +8,7 @@ void MCPlatformHandleApplicationShutdown(int& r_exit_code);
 void MCPlatformHandleApplicationShutdownRequest(bool& r_terminate);
 void MCPlatformHandleApplicationSuspend(void);
 void MCPlatformHandleApplicationResume(void);
-void MCPlatformHandleApplicationRun(void);
+void MCPlatformHandleApplicationRun(bool& r_continue);
 
 void MCPlatformHandleScreenParametersChanged(void);
 
@@ -82,9 +82,9 @@ void MCPlatformCallbackSendApplicationShutdownRequest(bool& r_terminate)
 	MCPlatformHandleApplicationShutdownRequest(r_terminate);
 }
 
-void MCPlatformCallbackSendApplicationRun(void)
+void MCPlatformCallbackSendApplicationRun(bool& r_continue)
 {
-	MCPlatformHandleApplicationRun();
+	MCPlatformHandleApplicationRun(r_continue);
 }
 
 void MCPlatformCallbackSendApplicationSuspend(void)
@@ -406,48 +406,5 @@ void MCPlatformCallbackSendSoundFinished(MCPlatformSoundRef p_sound)
     MCLog("Sound(%p) -> Finished()", p_sound);
     MCPlatformHandleSoundFinished(p_sound);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-#if 0
-void MCPlatformCallbackSendApplicationStartup(int p_argc, char **p_argv, char **p_envp, int& r_error_code, char*& r_error_message)
-{
-	MCPlatformCallback t_callback;
-	t_callback . type = kMCPlatformCallbackApplicationStartup;
-	t_callback . application . startup . argc = p_argc;
-	t_callback . application . startup . argv = p_argv;
-	t_callback . application . startup . envp = p_envp;
-	t_callback . application . startup . error_code = 0;
-	t_callback . application . startup . error_message = nil;
-	MCPlatformProcess(t_callback);
-	r_error_code = t_callback . application . startup . error_code;
-	r_error_message = t_callback . application . startup . error_message;
-}
-
-void MCPlatformCallbackSendApplicationShutdown(int& r_exit_code)
-{
-	MCPlatformCallback t_callback;
-	t_callback . type = kMCPlatformCallbackApplicationShutdown;
-	t_callback . application . shutdown . exit_code = 0;
-	MCPlatformProcess(t_callback);
-	r_exit_code = t_callback . application . shutdown . exit_code;
-}
-
-void MCPlatformCallbackSendApplicationShutdownRequest(bool& r_terminate)
-{
-	MCPlatformCallback t_callback;
-	t_callback . type = kMCPlatformCallbackApplicationShutdownRequest;
-	t_callback . application . shutdown_request . terminate = false;
-	MCPlatformProcess(t_callback);
-	r_terminate = t_callback . application . shutdown_request . terminate;
-}
-
-void MCPlatformCallbackSendApplicationRun(void)
-{
-	MCPlatformCallback t_callback;
-	t_callback . type = kMCPlatformCallbackApplicationRun;
-	MCPlatformProcess(t_callback);
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////

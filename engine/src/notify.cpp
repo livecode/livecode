@@ -46,7 +46,13 @@ struct MCNotifySyncEvent
 struct MCNotification
 {
 	MCNotification *next;
-	void (*callback)(void *);
+    // MW-2014-10-23: [[ Bug 13721 ]] Required field indicates signature of callback.
+    bool required;
+    union
+    {
+        void (*callback)(void *);
+        void (*required_callback)(void *, int);
+    };
 	void *state;
 	MCNotifySyncEvent *notify;
 };
@@ -237,7 +243,12 @@ static void MCNotifyFinalizeList(MCNotification*& p_list)
 	{
 		MCNotification *t_notify;
 		t_notify = MCListPopFront(p_list);
-
+        
+        // MW-2014-10-23: [[ Bug 13721 ]] If the callback is required, then invoke it with 1 as the
+        //   flags. This tells it not to take action, but just to free up state.
+        if (t_notify -> required)
+            t_notify -> required_callback(t_notify -> state, 1);
+        
 		// Make sure we release any pending threads.
 		if (t_notify -> notify != NULL)
 		{
@@ -292,7 +303,10 @@ void MCNotifyFinalize(void)
 #endif
 }
 
-bool MCNotifyPush(void (*p_callback)(void *), void *p_state, bool p_block, bool p_safe)
+// MW-2014-10-23: [[ Bug 13721 ]] Added 'required' parameter. Indicates whether the callback should always
+//   be invoked. If in action context, then with 0, otherwise in finalize context with 1 (should free up state
+//  but not do anything else.
+bool MCNotifyPush(void (*p_callback)(void *), void *p_state, bool p_block, bool p_safe, bool p_required)
 {
 	bool t_success;
 	t_success = true;
@@ -301,7 +315,12 @@ bool MCNotifyPush(void (*p_callback)(void *), void *p_state, bool p_block, bool 
 	// on the main thread should just invoke the callback.
 	if (p_block && !p_safe && MCNotifyIsMainThread())
 	{
-		p_callback(p_state);
+        // MW-2014-10-23: [[ Bug 13721 ]] If the callback is required, then it expects a 0 second
+        //   argument if it should take action (otherwise 1 to free up, but not take action).
+        if (p_required)
+            ((void(*)(void *, int))p_callback)(p_state, 0);
+        else
+            p_callback(p_state);
 		return true;
 	}
 	
@@ -319,7 +338,9 @@ bool MCNotifyPush(void (*p_callback)(void *), void *p_state, bool p_block, bool 
 	// Fill it in.
 	if (t_success)
 	{
+        // MW-2014-10-23: [[ Bug 13721 ]] Add the required field (indicates callback sig).
 		t_notification -> next = NULL;
+        t_notification -> required = p_required;
 		t_notification -> callback = p_callback;
 		t_notification -> state = p_state;
 		t_notification -> notify = NULL;
@@ -402,9 +423,13 @@ static bool MCNotifyDispatchList(MCNotification*& p_list)
 #endif
 			t_notify = MCListPopFront(p_list);
 			MCNotifyUnlock();
-
-			// Invoke the callback
-			t_notify -> callback(t_notify -> state);
+            
+			// MW-2014-10-23: [[ Bug 13721 ]] If the callback is required then use a different
+            //   signature.
+            if (t_notify -> required)
+                t_notify -> required_callback(t_notify -> state, 0);
+            else
+                t_notify -> callback(t_notify -> state);
 
 			// Notify the blocking thread which will destroy the event
 			if (t_notify -> notify != NULL)

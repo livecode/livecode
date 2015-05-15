@@ -170,6 +170,7 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
 
 void MCIPhoneUseDeviceResolution(bool p_use_dev_res, bool p_use_control_device_res);
 float MCIPhoneGetDeviceScale(void);
+const char* MCIPhoneGetLocationAuthorizationStatus(void);
 UIViewController *MCIPhoneGetViewController(void);
 UIView *MCIPhoneGetView(void);
 UITextView *MCIPhoneGetTextView(void);
@@ -241,7 +242,9 @@ static bool is_jpeg_data(const MCString& p_data)
 struct export_image_t
 {
 	MCExportImageToAlbumDelegate *delegate;
-	MCString raw_data;
+    // PM-2014-12-12: [[ Bug 13860 ]] Added support for exporting referenced images to album
+	MCString image_data;
+    bool is_raw_data;
 };
 
 static void export_image(void *p_context)
@@ -250,14 +253,25 @@ static void export_image(void *p_context)
 	ctxt = (export_image_t *)p_context;
 	
 	NSData *t_data;
-	t_data = [[NSData alloc] initWithBytes: (void *)ctxt -> raw_data . getstring() length: ctxt -> raw_data . getlength()];
-	
+    // PM-2014-12-12: [[ Bug 13860 ]] Allow exporting referenced images to album
+    if (ctxt -> is_raw_data)
+        t_data = [[NSData alloc] initWithBytes: (void *)ctxt -> image_data . getstring() length: ctxt -> image_data . getlength()];
+    else
+        t_data = nil;
+    
 	UIImage *t_img;
-	t_img = [[UIImage alloc] initWithData: t_data];
+    // For referenced images, init with filename rather than with bytes
+    if (t_data != nil)
+        t_img = [[UIImage alloc] initWithData: t_data];
+    else
+        t_img = [[UIImage alloc] initWithContentsOfFile:[NSString stringWithUTF8String:ctxt -> image_data . getstring()]];
+
 	UIImageWriteToSavedPhotosAlbum(t_img, ctxt -> delegate, @selector(image:didFinishSavingWithError:contextInfo:), nil);
 	
 	[t_img release];
-	[t_data release];
+    
+    if (t_data !=nil)
+        [t_data release];
 }
 
 #ifdef /* MCHandleExportImageToAlbumIphone */ LEGACY_EXEC
@@ -269,11 +283,12 @@ Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
 	MCExecPoint ep(nil, nil, nil);	
 	p_parameters -> eval_argument(ep);
 
-	MCString t_raw_data;
+	MCString t_image_data;
+    bool t_is_raw_data;
 	if (is_png_data(ep . getsvalue()) ||
 		is_gif_data(ep . getsvalue()) ||
 		is_jpeg_data(ep . getsvalue()))
-		t_raw_data = ep . getsvalue();
+		t_image_data = ep . getsvalue();
 	else
 	{
 		uint4 parid;
@@ -306,11 +321,22 @@ Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
 			return ES_NORMAL;
 		}
 		
-		t_raw_data = t_image -> getrawdata();
+        // PM-2014-12-12: [[ Bug 13860 ]] For referenced images we need the filename rather than the raw data
+        if (t_image -> isReferencedImage())
+        {
+            t_image_data = t_image -> getimagefilename();
+            t_is_raw_data = false;
+        }
+        else
+        {
+            t_image_data = t_image -> getrawdata();
+            t_is_raw_data = true;
+        }
 	}
 	
 	export_image_t ctxt;
-	ctxt . raw_data = t_raw_data;
+    ctxt . is_raw_data = t_is_raw_data;
+	ctxt . image_data = t_image_data;
 	ctxt . delegate = [[MCExportImageToAlbumDelegate alloc] init];
 	
 	MCIPhoneRunOnMainFiber(export_image, &ctxt);
@@ -469,11 +495,26 @@ static Exec_stat MCHandleSetStatusBarStyle(void *context, MCParameter *p_paramet
 	{
 		p_parameters -> eval_argument(ep);
 		if (ep . getsvalue() == "default")
+        {
 			t_style = UIStatusBarStyleDefault;
+            [MCIPhoneGetApplication() setStatusBarSolid:NO];
+        }
 		else if (ep . getsvalue() == "translucent")
+        {
 			t_style = UIStatusBarStyleBlackTranslucent;
+            [MCIPhoneGetApplication() setStatusBarSolid:NO];
+        }
 		else if (ep . getsvalue() == "opaque")
+        {
 			t_style = UIStatusBarStyleBlackOpaque;
+            [MCIPhoneGetApplication() setStatusBarSolid:NO];
+        }
+        // PM-2015-02-17: [[ Bug 14482 ]] "solid" status bar style means opaque and automatically shift down the app view by 20 pixels
+        else if (ep . getsvalue() == "solid")
+        {
+            t_style = UIStatusBarStyleBlackOpaque;
+            [MCIPhoneGetApplication() setStatusBarSolid:YES];
+        }
 	}
 	
 	[MCIPhoneGetApplication() switchToStatusBarStyle: t_style];
@@ -697,6 +738,16 @@ static Exec_stat MCHandleDeviceScale(void *context, MCParameter *p_parameters)
 	return ES_NORMAL;
 #endif /* MCHandleDeviceScale */
 }
+
+static Exec_stat MCHandleLocationAuthorizationStatus(void *context, MCParameter *p_parameters)
+{
+#ifdef /* MCHandleLocationAuthorizationStatus */ LEGACY_EXEC
+    MCresult -> sets(MCIPhoneGetLocationAuthorizationStatus());
+    
+    return ES_NORMAL;
+#endif /* MCHandleLocationAuthorizationStatus */
+}
+
 
 #ifdef /* MCHandleDeviceOrientationIphone */ LEGACY_EXEC
 static Exec_stat MCHandleDeviceOrientation(void *context, MCParameter *p_parameters)
@@ -922,6 +973,15 @@ static Exec_stat MCHandleSetKeyboardReturnKey (void *context, MCParameter *p_par
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+#ifdef /* MCHandleIsVoiceOverRunning */ LEGACY_EXEC
+// PM-2014-12-08: [[ Bug 13659 ]] New function to detect if Voice Over is turned on (iOS only)
+static Exec_stat MCHandleIsVoiceOverRunning(void *context, MCParameter *p_parameters)
+{
+    MCresult -> sets(UIAccessibilityIsVoiceOverRunning() ? MCtruestring : MCfalsestring);
+    return ES_NORMAL;
+    
+}
+#endif /* MCHandleIsVoiceOverRunning */
 
 #ifdef /* MCHandleCurrentLocaleIphone */ LEGACY_EXEC
 static Exec_stat MCHandleCurrentLocale(void *context, MCParameter *p_parameters)
@@ -1016,6 +1076,11 @@ static Exec_stat MCHandleClearTouches(void *context, MCParameter *p_parameters)
 	MCscreen -> wait(1/25.0, False, False);
 	static_cast<MCScreenDC *>(MCscreen) -> clear_touches();
 	MCEventQueueClearTouches();
+    
+    // PM-2015-03-16: [[ Bug 14333 ]] Make sure the object that triggered a mouse down msg is not focused, as this stops later mouse downs from working
+    if (MCtargetptr != nil)
+        MCtargetptr -> munfocus();
+    
 	return ES_NORMAL;
 }
 #endif /* MCHandleClearTouchesIphone */
@@ -1590,20 +1655,29 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	{false, "iphoneUseDeviceResolution", MCHandleUseDeviceResolution, nil},
 	{false, "iphoneDeviceScale", MCHandleDeviceScale, nil},
     {false, "mobilePixelDensity", MCHandleDeviceScale, nil},
+    
+    {false, "iphoneLocationAuthorizationStatus", MCHandleLocationAuthorizationStatus, nil},
+    {false, "mobileLocationAuthorizationStatus", MCHandleLocationAuthorizationStatus, nil},
 	
-    {false, "mobileStartTrackingSensor", MCHandleStartTrackingSensor, nil},
-    {false, "mobileStopTrackingSensor", MCHandleStopTrackingSensor, nil},
+    // PM-2014-10-07: [[ Bug 13590 ]] StartTrackingSensor and StopTrackingSensor must run on the script thread
+    {true, "mobileStartTrackingSensor", MCHandleStartTrackingSensor, nil},
+    {true, "mobileStopTrackingSensor", MCHandleStopTrackingSensor, nil},
     {false, "mobileSensorReading", MCHandleSensorReading, nil},
     {false, "mobileSensorAvailable", MCHandleSensorAvailable, nil},	
     
     // MM-2012-02-11: Added support old style senseor syntax (iPhoneEnableAcceleromter etc)
 	/* DEPRECATED */ {false, "iphoneCanTrackLocation", MCHandleCanTrackLocation, nil},
-	/* DEPRECATED */ {false, "iphoneStartTrackingLocation", MCHandleLocationTrackingState, (void *)true},
-	/* DEPRECATED */ {false, "iphoneStopTrackingLocation", MCHandleLocationTrackingState, (void *)false},
+    
+    // PM-2014-10-07: [[ Bug 13590 ]] StartTrackingLocation and StopTrackingLocation must run on the script thread
+	/* DEPRECATED */ {true, "iphoneStartTrackingLocation", MCHandleLocationTrackingState, (void *)true},
+	/* DEPRECATED */ {true, "iphoneStopTrackingLocation", MCHandleLocationTrackingState, (void *)false},
+    
 	/* DEPRECATED */ {false, "iphoneCurrentLocation", MCHandleCurrentLocation, nil},
     /* DEPRECATED */ {false, "mobileCanTrackLocation", MCHandleCanTrackLocation, nil},
-    /* DEPRECATED */ {false, "mobileStartTrackingLocation", MCHandleLocationTrackingState, (void *)true},
-	/* DEPRECATED */ {false, "mobileStopTrackingLocation", MCHandleLocationTrackingState, (void *)false},
+    
+    // PM-2014-10-07: [[ Bug 13590 ]] StartTrackingLocation and StopTrackingLocation must run on the script thread
+    /* DEPRECATED */ {true, "mobileStartTrackingLocation", MCHandleLocationTrackingState, (void *)true},
+	/* DEPRECATED */ {true, "mobileStopTrackingLocation", MCHandleLocationTrackingState, (void *)false},
 	/* DEPRECATED */ {false, "mobileCurrentLocation", MCHandleCurrentLocation, nil},
 	
 	/* DEPRECATED */ {false, "iphoneCanTrackHeading", MCHandleCanTrackHeading, nil},
@@ -1681,6 +1755,10 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	{false, "mobilePreferredLanguages", MCHandlePreferredLanguages, nil},
 	{false, "iphoneCurrentLocale", MCHandleCurrentLocale, nil},
 	{false, "mobileCurrentLocale", MCHandleCurrentLocale, nil},
+    
+    // PM-2014-12-05: [[ Bug 13659 ]] Detect if Voice Over is enabled
+    {false, "mobileIsVoiceOverRunning", MCHandleIsVoiceOverRunning, nil},
+    {false, "iphoneIsVoiceOverRunning", MCHandleIsVoiceOverRunning, nil},
 	
 	{false, "iphonePlaySoundOnChannel", MCHandlePlaySoundOnChannel, nil},
 	{false, "iphonePausePlayingOnChannel", MCHandlePausePlayingOnChannel},
@@ -1770,9 +1848,10 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {true, "mobileGetContactData", MCHandleGetContactData, nil}, // ABNewPersonViewController
     {true, "mobileUpdateContact", MCHandleUpdateContact, nil},   // ABUnknownPersonViewController
     {true, "mobileCreateContact", MCHandleCreateContact, nil},
-    {false, "mobileAddContact", MCHandleAddContact, nil},
-    {false, "mobileFindContact", MCHandleFindContact, nil},
-    {false, "mobileRemoveContact", MCHandleRemoveContact, nil},
+    // PM-2014-10-08: [[ Bug 13621 ]] Add/Find/Remove contact must run on the script thread
+    {true, "mobileAddContact", MCHandleAddContact, nil},
+    {true, "mobileFindContact", MCHandleFindContact, nil},
+    {true, "mobileRemoveContact", MCHandleRemoveContact, nil},
     
     {false, "iphoneSetDoNotBackupFile", MCHandleFileSetDoNotBackup, nil},
     {false, "iphoneDoNotBackupFile", MCHandleFileGetDoNotBackup, nil},

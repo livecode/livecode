@@ -83,6 +83,7 @@ enum MCIPhoneApplicationStatus
 	// the app wants.
 	UIStatusBarStyle m_status_bar_style;
 	BOOL m_status_bar_hidden;
+    BOOL m_status_bar_solid;
 	
 	// The startup controller is that which is displayed on startup. This is
 	// presented as a modal over the main controller until the app starts
@@ -112,6 +113,10 @@ enum MCIPhoneApplicationStatus
 	bool m_keyboard_activation_pending : 1;
 	// An orientation changed request was received, but not yet acted on.
 	bool m_orientation_changed_pending : 1;
+    
+    bool m_keyboard_is_visible : 1;
+
+    bool m_is_remote_notification :1;
 
     // We store the payload from a pending local notification here until the stack has become active and is ready to receive the message with the data.
     NSString *m_pending_local_notification;
@@ -140,6 +145,11 @@ enum MCIPhoneApplicationStatus
 
 //////////
 
+// MM-2014-09-30: [[ iOS 8 Support ]] Method called after successully registering (push) notification settings.
+#ifdef __IPHONE_8_0
+- (void)application: (UIApplication *)application didRegisterUserNotificationSettings: (UIUserNotificationSettings *)notificationSettings;
+#endif
+
 //- (void)applicationDidFinishLaunching:(UIApplication *)application;
 - (BOOL)application:(UIApplication *)p_application didFinishLaunchingWithOptions:(NSDictionary *)p_launchOptions;
 - (void)application:(UIApplication *)p_application didReceiveLocalNotification:(UILocalNotification *)p_notification;
@@ -155,6 +165,8 @@ enum MCIPhoneApplicationStatus
 - (void)orientationChanged:(NSNotification *)notification;
 - (void)keyboardWillActivate:(NSNotification *)notification;
 - (void)keyboardWillDeactivate:(NSNotification *)notification;
+- (void)keyboardDidActivate:(NSNotification *)notification;
+- (void)keyboardDidDeactivate:(NSNotification *)notification;
 
 //////////
 
@@ -173,6 +185,8 @@ enum MCIPhoneApplicationStatus
 - (void)switchToStatusBarStyle: (UIStatusBarStyle)newStyle;
 // Switch the visibility of the status bar to 'newVisible'.
 - (void)switchToStatusBarVisibility: (BOOL)newVisibile;
+// If statusbarstyle=solid, we move stack down to 20pixels
+- (void)setStatusBarSolid: (BOOL)p_is_solid;
 
 // Returns the current screen bounds in logical units - taking into account the
 // current orientation.
@@ -191,6 +205,8 @@ enum MCIPhoneApplicationStatus
 - (MCIPhoneDisplayView *)fetchDisplayView;
 // Returns the main view controller.
 - (UIViewController *)fetchMainViewController;
+// MM-2014-10-15: [[ Bug 13665 ]] Returns the currently active view controller.
+- (UIViewController *)fetchCurrentViewController;
 // Returns the device token that is used for push notificaiton.
 - (const char *)fetchDeviceToken;
 // Returns the URL from which the device was launched.
@@ -360,6 +376,7 @@ void MCIPhoneHandlePerformRedraw(void);
 ////////////////////////////////////////////////////////////////////////////////
 
 MCIPhoneApplication *MCIPhoneGetApplication(void);
+NSString* MCIPhoneGetDeviceModelName(void);
 
 UIViewController *MCIPhoneGetViewController(void);
 UIView *MCIPhoneGetView(void);
@@ -369,6 +386,7 @@ CGRect MCIPhoneGetViewBounds(void);
 CGRect MCIPhoneGetScreenBounds(void);
 void MCIPhoneActivateKeyboard(void);
 void MCIPhoneDeactivateKeyboard(void);
+bool MCIPhoneIsKeyboardVisible(void);
 void MCIPhoneConfigureContentScale(int32_t scale);
 void MCIPhoneSwitchViewToUIKit(void);
 void MCIPhoneSwitchViewToOpenGL(void);

@@ -54,6 +54,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "resolution.h"
 
+#include "graphics_util.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // MW-2011-09-14: [[ Redraw ]] If non-nil, this pixmap is used in the next
@@ -88,10 +90,10 @@ static inline MCRectangle MCRectangleFromWin32RECT(const RECT &p_rect)
 MCStack *MCStack::findstackd(Window w)
 {
 	// IM-2014-07-09: [[ Bug 12225 ]] Use window ID to find stack
-	return findstackwindowid(MCscreen->dtouint4((Drawable)w));
+	return findstackwindowid(MCscreen->dtouint((Drawable)w));
 }
 
-void MCStack::openwindow(Boolean p_override)
+void MCStack::platform_openwindow(Boolean p_override)
 {
 	if (MCModeMakeLocalWindows())
 		MCscreen -> openwindow(window, p_override);
@@ -671,49 +673,6 @@ bool __MCApplyMaskCallback(void *p_context, const MCGIntegerRectangle &p_rect)
 	return true;
 }
 
-// IM-2014-01-28: [[ HiDPI ]] Parameterize raster scale value instead of using global system value
-bool MCWin32ApplyMaskToRasterRegion(MCGRaster &p_raster, MCGFloat p_raster_scale, uint32_t p_x_origin, uint32_t p_y_origin, const MCGRaster &p_mask, MCGRegionRef p_region)
-{
-	// IM-2013-09-11: [[ ResIndependence ]] reduce mask params to single MCGRaster
-	bool t_success;
-	t_success = true;
-
-	MCGContextRef t_gcontext;
-	t_gcontext = nil;
-
-	if (t_success)
-		t_success = MCGContextCreateWithRaster(p_raster, t_gcontext);
-
-	MCGImageRef t_mask_image;
-	t_mask_image = nil;
-
-	if (t_success)
-		t_success = MCGImageCreateWithRasterNoCopy(p_mask, t_mask_image);
-
-	if (t_success)
-	{
-		// IM-2013-09-11: [[ ResIndependence ]] Apply scaled mask to target raster.
-		// Drawing the mask directly will not work as the effective shape of the drawing operation
-		// will be defined by the opaque parts of the mask - areas outside will be unaffected. Instead we
-		// draw a solid rectangle over the intended areas using the mask as a pattern.
-		MCGFloat t_scale;
-		t_scale = MCResGetPixelScale();
-
-        // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
-		MCGContextSetFillPattern(t_gcontext, t_mask_image, MCGAffineTransformMakeScale(t_scale, t_scale), kMCGImageFilterNone);
-		MCGContextTranslateCTM(t_gcontext, -(MCGFloat)p_x_origin, -(MCGFloat)p_y_origin);
-		MCGContextSetBlendMode(t_gcontext, kMCGBlendModeDestinationIn);
-
-		t_success = MCGRegionIterate(p_region, __MCApplyMaskCallback, t_gcontext);
-	}
-
-	MCGImageRelease(t_mask_image);
-
-	MCGContextRelease(t_gcontext);
-
-	return t_success;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 // MM-2014-07-31: [[ ThreadedRendering ]] Updated to implement the new stack surface API.
@@ -730,16 +689,14 @@ class MCWindowsStackSurface: public MCStackSurface
 
 	HBITMAP m_bitmap;
 	MCGRaster m_raster;
-	MCGFloat m_raster_scale;
 
 public:
-	MCWindowsStackSurface(MCGRaster *p_mask, MCGFloat p_mask_scale, MCGRegionRef p_region, HDC p_dc)
+	MCWindowsStackSurface(MCGRaster *p_mask, MCGRegionRef p_region, HDC p_dc)
 	{
 		m_region = p_region;
 		m_dc = p_dc;
 
 		m_mask = p_mask;
-		m_raster_scale = p_mask_scale;
 
 		m_bitmap = nil;
 	}
@@ -800,7 +757,7 @@ public:
 		if (p_update)
 		{
 			if (m_mask != nil)
-				MCWin32ApplyMaskToRasterRegion(m_raster, m_raster_scale, m_area.origin.x, m_area.origin.y, *m_mask, m_redraw_region);
+				MCGRasterApplyAlpha(m_raster, *m_mask, m_area.origin);
 
 			HDC t_src_dc = ((MCScreenDC *)MCscreen) -> getsrchdc();
 
@@ -884,7 +841,7 @@ public:
         r_raster . width = t_actual_area . size . width ;
         r_raster . height = t_actual_area . size . height;
         r_raster . stride = m_raster . stride;
-        r_raster . format = kMCGRasterFormat_ARGB;
+        r_raster . format = kMCGRasterFormat_xRGB;
 		r_raster . pixels = (uint8_t*)m_raster . pixels + (t_actual_area . origin . y - t_bounds . origin.y) * m_raster . stride + (t_actual_area . origin . x - t_bounds . origin . x) * sizeof(uint32_t);
 
 		r_locked_area = t_actual_area;
@@ -937,18 +894,18 @@ public:
 // MM-2014-07-31: [[ ThreadedRendering ]] Updated to implement the new stack surface API.
 class MCWindowsLayeredStackSurface: public MCStackSurface
 {
+	MCGIntegerPoint m_raster_offset;
 	MCGRaster m_raster;
-	MCGFloat m_raster_scale;
 	MCGRaster *m_mask;
 	MCGRegionRef m_redraw_region;
 
 	bool m_locked;
 
 public:
-	MCWindowsLayeredStackSurface(MCGRaster p_raster, MCGFloat p_raster_scale, MCGRaster *p_mask)
+	MCWindowsLayeredStackSurface(MCGRaster p_raster, const MCGIntegerPoint &p_raster_offset, MCGRaster *p_mask)
 	{
 		m_raster = p_raster;
-		m_raster_scale = p_raster_scale;
+		m_raster_offset = p_raster_offset;
 		m_mask = p_mask;
 		m_redraw_region = nil;
 		m_locked = false;
@@ -984,7 +941,7 @@ public:
 		if (p_update)
 		{
 			void *t_src_ptr, *t_dst_ptr;
-			MCWin32ApplyMaskToRasterRegion(m_raster, m_raster_scale, 0, 0, *m_mask, m_redraw_region);
+			MCGRasterApplyAlpha(m_raster, *m_mask, MCGIntegerPointMake(-m_raster_offset.x, -m_raster_offset.y));
 		}
 	}
 
@@ -1031,7 +988,7 @@ public:
 			return false;
 
         MCGIntegerRectangle t_actual_area;
-        t_actual_area = MCGIntegerRectangleIntersection(p_area, MCGIntegerRectangleMake(0, 0, m_raster . width, m_raster . height));
+        t_actual_area = MCGIntegerRectangleIntersection(p_area, MCGIntegerRectangleMake(m_raster_offset.x, m_raster_offset.y, m_raster . width, m_raster . height));
         
         if (MCGIntegerRectangleIsEmpty(t_actual_area))
             return false;
@@ -1041,8 +998,8 @@ public:
         r_raster . width = t_actual_area . size . width ;
         r_raster . height = t_actual_area . size . height;
         r_raster . stride = m_raster . stride;
-        r_raster . format = kMCGRasterFormat_ARGB;
-		r_raster . pixels = (uint8_t*) m_raster . pixels + t_actual_area . origin . y * m_raster . stride + t_actual_area . origin . x * sizeof(uint32_t);
+        r_raster . format = kMCGRasterFormat_xRGB;
+		r_raster . pixels = (uint8_t*) m_raster . pixels + (t_actual_area . origin . y - m_raster_offset.y) * m_raster . stride + (t_actual_area . origin . x - m_raster_offset.x) * sizeof(uint32_t);
 
 		r_locked_area = t_actual_area;
 
@@ -1138,16 +1095,16 @@ void MCStack::view_platform_updatewindow(MCRegionRef p_region)
 	}
 	else
 	{
+		MCGIntegerRectangle t_region_bounds = MCGRegionGetBounds(t_surface_region);
 
-		MCRectangle t_device_rect;
-		t_device_rect = MCRectangleGetScaledBounds(MCRectangleMake(0, 0, m_window_shape->width, m_window_shape->height), t_surface_scale);
+		t_region_bounds = MCGIntegerRectangleIntersection(t_region_bounds, MCGIntegerRectangleMake(0, 0, m_window_shape->width, m_window_shape->height));
 
 		HBITMAP t_bitmap = nil;
 		void *t_bits = nil;
 
 		if (m_window_shape -> handle == nil)
 		{
-			if (!create_temporary_dib(((MCScreenDC*)MCscreen)->getdsthdc(), t_device_rect.width, t_device_rect.height, t_bitmap, t_bits))
+			if (!create_temporary_dib(((MCScreenDC*)MCscreen)->getdsthdc(), m_window_shape->width, m_window_shape->height, t_bitmap, t_bits))
 				return;
 
 			m_window_shape -> handle = t_bitmap;
@@ -1162,16 +1119,16 @@ void MCStack::view_platform_updatewindow(MCRegionRef p_region)
 		}
 
 		MCGRaster t_raster;
-		t_raster.width = t_device_rect.width;
-		t_raster.height = t_device_rect.height;
-		t_raster.pixels = t_bits;
-		t_raster.stride = t_raster.width * sizeof(uint32_t);
-		t_raster.format = kMCGRasterFormat_ARGB;
+		t_raster.width = t_region_bounds.size.width;
+		t_raster.height = t_region_bounds.size.height;
+		t_raster.stride = m_window_shape->width * sizeof(uint32_t);
+		t_raster.pixels = ((uint8_t*)t_bits) + t_region_bounds.origin.y * t_raster.stride + t_region_bounds.origin.x * sizeof(uint32_t);
+		t_raster.format = kMCGRasterFormat_xRGB;
 
 		MCGRaster t_mask;
 		/* UNCHECKED */ MCWin32GetWindowShapeAlphaMask(m_window_shape, t_mask);
 
-		MCWindowsLayeredStackSurface t_surface(t_raster, t_surface_scale, &t_mask);
+		MCWindowsLayeredStackSurface t_surface(t_raster, t_region_bounds.origin, &t_mask);
 
 		if (t_surface.Lock())
 		{
@@ -1222,7 +1179,7 @@ void MCStack::onpaint(void)
 	else
 		t_mask_ptr = nil;
 
-	MCWindowsStackSurface t_surface(t_mask_ptr, view_getbackingscale(), t_update_region, t_paint . hdc);
+	MCWindowsStackSurface t_surface(t_mask_ptr, t_update_region, t_paint . hdc);
 
 	if (t_surface.Lock())
 	{
@@ -1262,9 +1219,6 @@ void MCStack::composite(void)
 
 	MCRectangle t_device_shape_rect;
 	t_device_shape_rect = MCRectangleMake(0, 0, m_window_shape->width, m_window_shape->height);
-
-	// IM-2014-01-28: [[ HiDPI ]] Convert logical to screen coords
-	t_device_shape_rect = MCscreen->logicaltoscreenrect(t_device_shape_rect);
 
 	t_offset . x = 0;
 	t_offset . y = 0;

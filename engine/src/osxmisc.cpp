@@ -261,6 +261,8 @@ IO_stat MCHcstak::macreadresources(void)
 
 #include "systhreads.h"
 
+extern bool MCMacPlatformGetImageColorSpace(CGColorSpaceRef &r_colorspace);
+
 bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPatternRef &r_pattern)
 {
 	bool t_success = true;
@@ -343,7 +345,7 @@ bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPattern
     extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
     
     CGColorSpaceRef t_colorspace;
-    t_colorspace = CGColorSpaceCreateDeviceRGB();
+	/* UNCHECKED */ MCMacPlatformGetImageColorSpace(t_colorspace);
     
     CGContextRef t_context;
     t_context = CGBitmapContextCreate(NULL, 64, 64, 8, 64 * 4, t_colorspace, MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, true));

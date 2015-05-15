@@ -25,7 +25,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define UNLICENSED_USING_LIMIT 50
 #define UNLICENSED_INSERT_LIMIT 10
 
-#define DEFAULT_TEXT_FONT "helvetica"
+// SN-2015-05-14: [[ Bug 14116 ]] Make the default font a correct PostScript font
+#define DEFAULT_TEXT_FONT "Helvetica"
 #define DEFAULT_TEXT_SIZE 14
 #define DEFAULT_TAB_SPACING 8
 #define DEFAULT_BORDER 2
@@ -401,10 +402,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define CS_MIXED                (1UL << 20)
 #define CS_MOUSE_UP_MENU        (1UL << 21)
 #define CS_VISITED              (1UL << 22)
-
-// MW-2008-10-28: [[ ParentScripts ]] If this state flag is set it means that
-//   the button is referenced as a parentScript.
-#define CS_IS_PARENTSCRIPT		(1UL << 21)
 
 // MCImage state
 #define CS_BEEN_MOVED           (1UL << 13)

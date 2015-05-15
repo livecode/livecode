@@ -422,7 +422,7 @@ void MCField::kfocus()
 			// MW-2011-08-18: [[ Layers ]] Invalidate the whole object, noting
 			//   possible change in transient.
 			layer_transientchangedandredrawall(t_old_trans);
-			replacecursor(False, False);
+			
 			MCscreen->addtimer(this, MCM_internal, MCblinkrate);
 			if (!(state & CS_MFOCUSED) && flags & F_AUTO_TAB)
 				seltext(0, getpgsize(paragraphs), True);
@@ -430,6 +430,9 @@ void MCField::kfocus()
 				message(MCM_open_field);
 			else
 				message(MCM_focus_in);
+                
+            // PM-2015-03-05: [[ Bug 14664 ]] Avoid flickering and draw cursor in the correct position after focussing the field
+            replacecursor(False, False);
 		}
 		if (!(flags & F_LOCK_TEXT))
 			MCModeActivateIme(getstack(), true);
@@ -1388,8 +1391,14 @@ Exec_stat MCField::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 				if (pgptr == paragraphs)
 					break;
 			}
+            // SN-2014-09-17: [[ Bug 13462 ]] If no break has been found, we return the height of the field
 			if (theight != height)
-				ep.concatuint(height - theight, EC_RETURN, j++ == 0);
+            {
+                if (j)
+                    ep.concatuint(height - theight, EC_RETURN, false);
+                else
+                    ep.concatuint(height, EC_RETURN, true);
+            }
 		}
 		break;
     // JS-2013-05-15: [[ PageRanges ]] Return the pageRanges of the whole field.

@@ -68,6 +68,8 @@ Exec_stat MCField::sort(MCExecPoint &ep, uint4 parid, Chunk_term type,
 
 	if (flags & F_SHARED_TEXT)
 		parid = 0;
+	else if (parid == 0)
+        parid = getcard()->getid();
 
 	if (type == CT_ITEM)
 	{
@@ -196,8 +198,12 @@ Boolean MCField::find(MCExecPoint &ep, uint4 cardid, Find_mode mode,
 		return False;
 	if (opened)
 		fdata->setparagraphs(paragraphs);
+    
 	if (flags & F_SHARED_TEXT)
 		cardid = 0;
+	else if (cardid == 0)
+        cardid = getcard()->getid();
+    
 	MCCdata *tptr = fdata;
 	do
 	{
@@ -467,9 +473,9 @@ void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid)
 {
 	if (flags & F_SHARED_TEXT)
 		parid = 0;
-	else
-		if (parid == 0)
-			parid = getcard()->getid();
+	else if (parid == 0)
+        parid = getcard()->getid();
+    
 	MCCdata *fptr = getcarddata(fdata, parid, True);
 	MCParagraph *pgptr = fptr->getparagraphs();
 	if (opened && fptr == fdata)
@@ -629,11 +635,12 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
 	state &= ~CS_CHANGED;
 	if (!undoing)
 		MCundos->freestate();
+    
 	if (flags & F_SHARED_TEXT)
 		parid = 0;
-	else
-		if (parid == 0)
-			parid = getcard()->getid();
+	else if (parid == 0)
+        parid = getcard()->getid();
+    
 	MCCdata *fptr = getcarddata(fdata, parid, True);
 	if (opened && fptr == fdata && focusedparagraph != NULL)
 	{
@@ -796,7 +803,9 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
         
         // SN-2014-05-12 [[ Bug 12365 ]]
         // Redraw the cursor after the update
-        replacecursor(True, True);
+        // SN-2014-10-17: [[ Bug 13493 ]] Don't replace the cursor - unnecessary and causes
+        //  unwanted scrolling
+//        replacecursor(True, True);
 	}
 
 	return ES_NORMAL;
@@ -971,8 +980,9 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 			int4 maxy = 0;
 			do
 			{
-				if (maxy != 0)
-					maxy += sptr -> prev() -> computebottommargin() + sptr -> computetopmargin();
+                // FG-2014-12-03: [[ Bug 11688 ]] The margins get counted twice...
+                //if (maxy != 0)
+                //	maxy += sptr -> prev() -> computebottommargin() + sptr -> computetopmargin();
 				maxy += sptr->getyextent(ei, fixedheight);
 				ei -= sptr->gettextsizecr();
 				sptr = sptr->next();
@@ -1005,7 +1015,9 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 			while (ei > 0 && sptr != pgptr);
 
 			// MW-2012-01-25: [[ FieldMetrics ]] Make sure the rect we return is in card coords.
-			ep.setrectangle(minx + getcontentx(), y + yoffset, maxx + getcontentx(), (maxy - y) + yoffset);
+            // AL-2014-10-28: [[ Bug 13829 ]] The left and right of the formattedRect should be
+            // floorf'd and ceilf'd respectively, to give the correct integer bounds.
+			ep.setrectangle(floorf(minx + getcontentx()), y + yoffset, ceilf(maxx + getcontentx()), (maxy - y) + yoffset);
 		}
 		else
 			ep.setrectangle(0, 0, 0, 0);
@@ -1377,6 +1389,8 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 	
 	if (flags & F_SHARED_TEXT)
 		parid = 0;
+	else if (parid == 0)
+        parid = getcard()->getid();
 
 	// MW-2011-12-08: [[ StyledText ]] Handle the styledText case.
 	if (which == P_HTML_TEXT || which == P_RTF_TEXT || which == P_STYLED_TEXT || which == P_UNICODE_TEXT || which == P_TEXT)
@@ -1567,6 +1581,9 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 	Boolean newstate;
 	void *t_value;
 
+    bool t_redraw_field;
+    t_redraw_field = false;
+    
 	// If true, it means process this prop set as a paragraph style.
 	bool t_is_para_attr;
 	t_is_para_attr = false;
@@ -1592,9 +1609,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		t_value = color;
 		break;
 	case P_TEXT_STYLE:
-        // AL-2014-07-30: [[ Bug 12923 ]] Field relayout may be necessary when setting textStyle in the array style 
-        all = True;
-            
+        // AL-2014-09-22: [[ Bug 11817 ]] Don't necessarily recompute the whole field when changing text styles
 		// MW-2011-11-23: [[ Array TextStyle ]] If we have an index then change the prop
 		//   to the pseudo add/remove ones. In this case 'value' is the textStyle to process.
 		if (!MCNameIsEmpty(index))
@@ -1619,19 +1634,21 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 			t_value = (void *)t_text_style;
 			break;
 		}
-		// Fall through for default (non-array) handling.
+
+		if (MCF_parsetextatts(which, s, flags, fname, fontheight, size, style) != ES_NORMAL)
+            return ES_ERROR;
+        t_value = (void *)style;
+        break;
 	case P_TEXT_FONT:
 	case P_TEXT_SIZE:
+		all = True;
 		if (MCF_parsetextatts(which, s, flags, fname, fontheight, size, style) != ES_NORMAL)
 			return ES_ERROR;
-		all = True;
 		if (which == P_TEXT_FONT)
 			t_value = (void *)fname;
-		else if (which == P_TEXT_SIZE)
-			t_value = (void *)size;
 		else
-			t_value = (void *)style;
-		break;
+			t_value = (void *)size;
+        break;
 	case P_TEXT_SHIFT:
 		if (!MCU_stoi2(s, shift))
 		{
@@ -1769,8 +1786,12 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 			if (t_need_layout && !all)
 			{
 				// MW-2012-01-25: [[ ParaStyles ]] Ask the paragraph to reflow itself.
-				pgptr -> layout(all);
-				drect.height += pgptr->getheight(fixedheight);
+                // AL-2014-09-22: [[ Bug 11817 ]] If we changed the amount of lines of this paragraph
+                //  then redraw the whole field.
+				if (pgptr -> layout(all, true))
+                    t_redraw_field = true;
+                else
+                    drect.height += pgptr->getheight(fixedheight);
 			}
 		}
 		si = MCU_max(0, si - l);
@@ -1797,7 +1818,12 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 				seltext(ssi, sei, False);
 		}
 		else
+        {
 			removecursor();
+            // AL-2014-09-22: [[ Bug 11817 ]] If we are redrawing, then the dirty rect is the whole rect.
+            if (t_redraw_field)
+                drect = rect;
+        }
 		// MW-2011-08-18: [[ Layers ]] Invalidate the dirty rect.
 		layer_redrawrect(drect);
 		if (!all)
@@ -1827,8 +1853,10 @@ Exec_stat MCField::seltext(int4 si, int4 ei, Boolean focus, Boolean update)
 		getstack()->kfocusset(this);
 		if (!(state & CS_KFOCUSED))
 			return ES_NORMAL;
-	}
-	else
+    }
+    // SN-2014-12-08: [[ Bug 12784 ]] Only make this field the selectedfield
+    //  if it is Focusable
+	else if (flags & F_TRAVERSAL_ON)
 		MCactivefield = this;
 	removecursor();
 	

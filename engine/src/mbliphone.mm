@@ -376,8 +376,12 @@ char *MCIPhoneSystem::GetMachine(void)
 
 char *MCIPhoneSystem::GetProcessor(void)
 {
-#ifdef __i386__
+#if defined __i386__
 	return strclone("i386");
+#elif defined __amd64__
+    return strclone("x86_64");
+#elif defined __arm64__
+    return strclone("arm64");
 #else
 	return strclone("ARM");
 #endif
@@ -571,8 +575,11 @@ char *MCIPhoneSystem::GetStandardFolder(const char *p_folder)
 		NSArray *t_paths;
 		t_paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
 		t_path = strdup([[t_paths objectAtIndex: 0] cString]);
-	}
-	else if (strcasecmp(p_folder, "engine") == 0)
+    }
+    // SN-2015-04-16: [[ Bug 14295 ]] The resources folder on Mobile is the same
+    //   as the engine folder.
+	else if (strcasecmp(p_folder, "engine") == 0 ||
+            strcasecmp(p_folder, "resources") == 0)
 	{
 		extern char *MCcmd;
 		t_path = my_strndup(MCcmd, strrchr(MCcmd, '/') - MCcmd);

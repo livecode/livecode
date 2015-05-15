@@ -2467,7 +2467,11 @@ enum Exec_errors
 	
 	// MM-2014-06-13: [[ Bug 12567 ]] New variant open socket <socket> with verification for host <host>
 	// {EE-0809} open: error in host name expression
-	EE_OPEN_BADHOST,	
+	EE_OPEN_BADHOST,
+    
+    // SN-2014-12-15: [[ Bug 14211 ]] put ... into the next line of ... should return an error
+    // {EE-0810} Chunk: bad extents provided
+    EE_CHUNK_BADEXTENTS,
 };
 
 extern const char *MCexecutionerrors;

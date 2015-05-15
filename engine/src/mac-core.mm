@@ -49,15 +49,18 @@ enum
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// MW-2014-04-22: [[ Bug 12259 ]] Override sendEvent so that we always get a chance
-//   at the MouseSync event.
-@interface com_runrev_livecode_MCApplication: NSApplication
-
-- (void)sendEvent:(NSEvent *)event;
-
-@end
-
 @implementation com_runrev_livecode_MCApplication
+
+-(id)init
+{
+    self = [super init];
+    if (self)
+    {
+        m_pseudo_modal_for = nil;
+    }
+    
+    return self;
+}
 
 - (void)sendEvent:(NSEvent *)event
 {
@@ -86,7 +89,7 @@ enum
 - (void)windowStartedMoving: (MCPlatformWindowRef)window
 {
     if (s_moving_window != nil)
-        [self windowStoppedMoving: window];
+        [self windowStoppedMoving: s_moving_window];
     
     MCPlatformRetainWindow(window);
     s_moving_window = window;
@@ -97,10 +100,22 @@ enum
     if (s_moving_window == nil)
         return;
     
-    [[((MCMacPlatformWindow *)s_moving_window) -> GetHandle() delegate] windowWillMoveFinished: nil];
-    
+	// IM-2014-10-29: [[ Bug 13814 ]] Call windowMoveFinished to signal end of dragging,
+	//   which is not reported to the delegate when the window doesn't actually move.
+	[[((MCMacPlatformWindow*)s_moving_window)->GetHandle() delegate] windowMoveFinished];
+
     MCPlatformReleaseWindow(s_moving_window);
     s_moving_window = nil;
+}
+
+- (void)becomePseudoModalFor: (NSWindow*)window
+{
+    m_pseudo_modal_for = window;
+}
+
+- (NSWindow*)pseudoModalFor
+{
+    return m_pseudo_modal_for;
 }
 
 @end
@@ -240,16 +255,20 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
     
     if (aeclass == kCoreEventClass && aeid == kAEAnswer)
         return MCAppleEventHandlerDoAEAnswer(p_event, p_reply, 0);
-
+    
+    // SN-2014-10-13: [[ Bug 13644 ]] Break the wait loop after we handled the Apple Event
     OSErr t_err;
     t_err = MCAppleEventHandlerDoSpecial(p_event, p_reply, 0);
+    if (t_err == errAEEventNotHandled)
+    {
+        if (aeclass == kCoreEventClass && aeid == kAEOpenDocuments)
+            t_err = MCAppleEventHandlerDoOpenDoc(p_event, p_reply, 0);
+    }
+    
     if (t_err != errAEEventNotHandled)
-        return t_err;
+        MCPlatformBreakWait();
     
-    if (aeclass == kCoreEventClass && aeid == kAEOpenDocuments)
-        return MCAppleEventHandlerDoOpenDoc(p_event, p_reply, 0);
-    
-    return errAEEventNotHandled;
+    return t_err;
 }
 
 - (void)applicationWillFinishLaunching: (NSNotification *)notification
@@ -320,7 +339,20 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 
 - (void)runMainLoop
 {
-	MCPlatformCallbackSendApplicationRun();
+    for(;;)
+    {
+        bool t_continue;
+    
+        NSAutoreleasePool *t_pool;
+        t_pool = [[NSAutoreleasePool alloc] init];
+    
+        MCPlatformCallbackSendApplicationRun(t_continue);
+        
+        [t_pool release];
+        
+        if (!t_continue)
+            break;
+    }
     
     // If we get here then it was due to an exit from the main runloop caused
     // by an explicit quit. In this case, then we set a flag so that termination
@@ -636,8 +668,28 @@ static void runloop_observer(CFRunLoopObserverRef observer, CFRunLoopActivity ac
 		MCPlatformBreakWait();
 }
 
+static bool s_event_checking_enabled = true;
+
+void MCMacPlatformEnableEventChecking(void)
+{
+	s_event_checking_enabled = true;
+}
+
+void MCMacPlatformDisableEventChecking(void)
+{
+	s_event_checking_enabled = false;
+}
+
+bool MCMacPlatformIsEventCheckingEnabled(void)
+{
+	return s_event_checking_enabled;
+}
+
 bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 {
+	if (!MCMacPlatformIsEventCheckingEnabled())
+		return false;
+	
 	// Handle all the pending callbacks.
     MCCallback *t_callbacks;
     uindex_t t_callback_count;
@@ -675,20 +727,17 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
     // MW-2014-07-24: [[ Bug 12939 ]] If we are running a modal session, then don't then wait
     //   for events - event handling happens inside the modal session.
     NSEvent *t_event;
+    
+    // MW-2014-04-09: [[ Bug 10767 ]] Don't run in the modal panel runloop mode as this stops
+    //   WebViews from working.    
+    // SN-2014-10-02: [[ Bug 13555 ]] We want the event to be sent in case it passes through
+    //   the modal session.
+    t_event = [NSApp nextEventMatchingMask: p_blocking ? NSApplicationDefinedMask : NSAnyEventMask
+                                 untilDate: [NSDate dateWithTimeIntervalSinceNow: p_duration]
+                                    inMode: p_blocking ? NSEventTrackingRunLoopMode : NSDefaultRunLoopMode
+                                   dequeue: YES];
 	if (t_modal)
-    {
 		[NSApp runModalSession: s_modal_sessions[s_modal_session_count - 1] . session];
-        t_event = nil;
-    }
-	else
-    {
-        // MW-2014-04-09: [[ Bug 10767 ]] Don't run in the modal panel runloop mode as this stops
-        //   WebViews from working.
-        t_event = [NSApp nextEventMatchingMask: p_blocking ? NSApplicationDefinedMask : NSAnyEventMask
-                                     untilDate: [NSDate dateWithTimeIntervalSinceNow: p_duration]
-                                        inMode: p_blocking ? NSEventTrackingRunLoopMode : NSDefaultRunLoopMode
-                                       dequeue: YES];
-    }
     
 	s_in_blocking_wait = false;
 
@@ -730,7 +779,10 @@ void MCMacPlatformBeginModalSession(MCMacPlatformWindow *p_window)
 	s_modal_sessions[s_modal_session_count - 1] . is_done = false;
 	s_modal_sessions[s_modal_session_count - 1] . window = p_window;
 	p_window -> Retain();
+	// IM-2015-01-30: [[ Bug 14140 ]] lock the window frame to prevent it from being centered on the screen.
+	p_window->SetFrameLocked(true);
 	s_modal_sessions[s_modal_session_count - 1] . session = [NSApp beginModalSessionForWindow: (NSWindow *)(p_window -> GetHandle())];
+	p_window->SetFrameLocked(false);
 }
 
 void MCMacPlatformEndModalSession(MCMacPlatformWindow *p_window)
@@ -1626,8 +1678,9 @@ void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef p_window)
         // PM-2014-04-02: [[ Bug 12082 ]] IDE no longer crashes when changing an applied pattern
         if (t_cursor != nil)
             MCPlatformShowCursor(t_cursor);
+        // SN-2014-10-01: [[ Bug 13516 ]] Hiding a cursor here is not what we want to happen if a cursor hasn't been found
         else
-            MCPlatformHideCursor();
+            MCMacPlatformResetCursor();
     }
 }
 
@@ -1796,8 +1849,13 @@ void MCMacPlatformSyncMouseBeforeDragging(void)
 			MCPlatformCallbackSendMouseRelease(s_mouse_window, t_button_to_release, false);
 		MCPlatformCallbackSendMouseLeave(s_mouse_window);
 		
-		MCPlatformReleaseWindow(s_mouse_window);
-		s_mouse_window = nil;
+        // SN-2015-01-13: [[ Bug 14350 ]] The user can close the stack in
+        //  a mouseLeave handler
+        if (s_mouse_window != nil)
+        {
+            MCPlatformReleaseWindow(s_mouse_window);
+            s_mouse_window = nil;
+        }
 	}
 }
 

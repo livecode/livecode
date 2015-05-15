@@ -582,7 +582,7 @@ static bool MCUnicodeCanBreakBetween(uint2 x, uint2 y)
 	return !t_prohibit_break_after_x && !t_prohibit_break_before_y;
 }
 
-bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fits)
+bool MCBlock::fit(coord_t x, coord_t maxwidth, uint2& r_break_index, bool& r_break_fits)
 {
 	// If the block of zero length, then it can't be broken and must be kept with previous blocks.
 	if (size == 0)
@@ -635,14 +635,12 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fi
 	//   but use the integer width to break. This ensures measure(a & b) == measure(a) + measure(b)
 	//   (otherwise you get drift as the accumulated width the block calculates is different
 	//    from the width of the text that is drawn).
-	MCGFloat twidth_float;
+	coord_t twidth_float;
 	twidth_float = 0;
-	int32_t twidth;
-	twidth = 0;
 
 	// MW-2009-04-23: [[ Bug ]] For printing, we measure complete runs of text otherwise we get
 	//   positioning issues.
-	int4 t_last_break_width;
+	coord_t t_last_break_width;
 	t_last_break_width = 0;
 	uint2 t_last_break_i;
 	t_last_break_i = index;
@@ -718,32 +716,31 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fi
 		//   generally now).
 		if (t_this_char == '\t')
 		{
-			twidth = twidth + gettabwidth(x + twidth, text, initial_i);
-			twidth_float = (MCGFloat)twidth;
+            twidth_float = floorf(twidth_float);
+            twidth_float = twidth_float + gettabwidth(x + int(twidth_float), text, initial_i);
 			
-			t_last_break_width = twidth;
+			t_last_break_width = twidth_float;
 			t_last_break_i = i;
 		}
 		else
 		{
 			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
 			twidth_float += MCFontMeasureTextFloat(m_font, &text[initial_i], i - initial_i, hasunicode(), parent -> getparent() -> getstack() -> getdevicetransform());
-			twidth = (int32_t)floorf(twidth_float);
 		}
 
-		if (t_can_fit && twidth > maxwidth)
+		if (t_can_fit && twidth_float > maxwidth)
 			break;
 
 		if (t_can_break)
 			t_break_index = i;
 
-        if (twidth <= maxwidth)
+        if (twidth_float <= maxwidth)
         {
             t_can_fit = true;
             t_whole_block = t_end_of_block;
         }
 
-		if (twidth >= maxwidth)
+		if (twidth_float >= maxwidth)
 			break;
 	}
 

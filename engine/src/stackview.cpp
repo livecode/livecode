@@ -127,6 +127,10 @@ void MCStack::view_copy(const MCStack &p_view)
 
 	// IM-2014-01: [[ HiDPI ]] Initialize the view backing surface scale
 	m_view_backing_scale = p_view.m_view_backing_scale;
+
+    // SN-2014-14-10: [[ ViewRect ]] Ensure that the view rect is copied (uninitialised m_view_rect
+    //  might lead to a crash)
+    m_view_rect = p_view.m_view_rect;
 }
 
 void MCStack::view_destroy(void)
@@ -201,10 +205,15 @@ MCRectangle MCStack::view_getrect(void) const
 
 void MCStack::view_set_content_scale(MCGFloat p_scale)
 {
+	if (m_view_content_scale == p_scale)
+		return;
+	
 	m_view_content_scale = p_scale;
 	
 	// IM-2014-01-16: [[ StackScale ]] Update view transform after changing view property
 	view_update_transform();
+	// IM-2014-10-22: [[ Bug 13746 ]] Update window mask when stack scale changes
+	loadwindowshape();
 }
 
 MCGFloat MCStack::view_get_content_scale(void) const
@@ -455,6 +464,9 @@ void MCStack::view_configure(bool p_user)
 {
 	MCRectangle t_view_rect;
 	mode_getrealrect(t_view_rect);
+
+	// IM-2014-10-29: [[ Bug 13812 ]] Remove need resize check and unset flag
+	m_view_need_resize = false;
 	
 	if (!MCU_equal_rect(t_view_rect, m_view_rect))
 	{
@@ -842,9 +854,21 @@ bool MCStack::view_snapshottilecache(const MCRectangle &p_stack_rect, MCGImageRe
 // IM-2013-10-14: [[ FullscreenMode ]] Move update region tracking into view abstraction
 void MCStack::view_apply_updates()
 {
+	// IM-2014-09-23: [[ Bug 13349 ]] Sync window geometry before any redraw updates.
+	if (m_view_need_resize)
+	{
+		view_update_geometry();
+		m_view_need_redraw = true;
+	}
+	
 	// Ensure the content is up to date.
 	if (m_view_need_redraw)
 	{
+		// IM-2014-09-30: [[ Bug 13501 ]] Unset need_redraw flag here to prevent further updates while drawing
+
+		// We no longer need to redraw.
+		m_view_need_redraw = false;
+		
 		// MW-2012-04-20: [[ Bug 10185 ]] Only update if there is a window to update.
 		//   (we can get here if a stack has its window taken over due to go in window).
 		if (window != nil)
@@ -867,9 +891,6 @@ void MCStack::view_apply_updates()
 			// Clear the update region.
 			MCRegionSetEmpty(m_view_update_region);
 		}
-		
-		// We no longer need to redraw.
-		m_view_need_redraw = false;
 	}
 }
 
@@ -879,6 +900,9 @@ void MCStack::view_reset_updates()
 	MCRegionDestroy(m_view_update_region);
 	m_view_update_region = nil;
 	m_view_need_redraw = false;
+	
+	// IM-2014-09-23: [[ Bug 13349 ]] reset geometry update flag
+	m_view_need_resize = false;
 }
 
 // IM-2013-10-14: [[ FullscreenMode ]] Move update region tracking into view abstraction
@@ -922,7 +946,24 @@ MCRectangle MCStack::view_getwindowrect(void) const
 
 MCRectangle MCStack::view_setgeom(const MCRectangle &p_rect)
 {
+	// IM-2014-09-23: [[ Bug 13349 ]] Defer window resizing if the screen is locked.
+	if ((MCRedrawIsScreenLocked() || !MCRedrawIsScreenUpdateEnabled()) && (opened && getflag(F_VISIBLE)))
+	{
+		m_view_need_resize = true;
+		MCRedrawScheduleUpdateForStack(this);
+		
+		return p_rect;
+	}
+	
 	return view_platform_setgeom(p_rect);
+}
+
+void MCStack::view_update_geometry()
+{
+	if (m_view_need_resize)
+		view_platform_setgeom(m_view_rect);
+	
+	m_view_need_resize = false;
 }
 
 MCGFloat MCStack::view_getbackingscale(void) const
@@ -943,6 +984,8 @@ void MCStack::view_setbackingscale(MCGFloat p_scale)
 	view_flushtilecache();
 	view_updatetilecacheviewport();
 	view_updatetilecache();
+	// IM-2014-10-22: [[ Bug 13746 ]] Update window mask when backing scale changes
+	loadwindowshape();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -488,7 +488,9 @@ bool MCGRasterToSkBitmap(const MCGRaster& p_raster, MCGPixelOwnershipType p_owne
 		// for non-premultiplied bitmaps, allocate the space then set pixels one by one
 		// for premultiplied bitmaps, just set the pixels in the target directly
 		// if the copy pixels flag is set, allocate space and copy the pixels from the raster first, then set in target
-		if (p_raster . format == kMCGRasterFormat_U_ARGB)
+
+		// IM-2014-09-16: [[ Bug 13458 ]] Don't copy if we're taking ownership. instead we'll premultiply in place below
+		if (p_raster . format == kMCGRasterFormat_U_ARGB && p_ownership != kMCGPixelOwnershipTypeTake)
 			p_ownership = kMCGPixelOwnershipTypeCopy;
 		
 		switch (p_ownership)
@@ -545,22 +547,45 @@ bool MCGRasterToSkBitmap(const MCGRaster& p_raster, MCGPixelOwnershipType p_owne
 	{
 		if (p_raster . format == kMCGRasterFormat_U_ARGB)
 		{
+			r_bitmap.lockPixels();
+			
 			// for non-premultiplied bitmaps, loop through the source bitmap pixel by pixel
 			// premultiplying each pixel before writing to destination bitmap
-			uint8_t *t_row_ptr;
-			t_row_ptr = (uint8_t*) p_raster . pixels;
+			uint8_t *t_dst_ptr;
+			t_dst_ptr = (uint8_t*)r_bitmap.getPixels();
+			uint32_t t_dst_stride;
+			t_dst_stride = r_bitmap.rowBytes();
+			
+			uint8_t *t_src_ptr;
+			uint32_t t_src_stride;
+			// IM-2014-09-16: [[ Bug 13458 ]] If we're taking ownership then the bitmap pixels are
+			//     both source and destination
+			if (p_ownership == kMCGPixelOwnershipTypeTake)
+			{
+				t_src_ptr = t_dst_ptr;
+				t_src_stride = t_dst_stride;
+			}
+			else
+			{
+				t_src_ptr = (uint8_t*)p_raster.pixels;
+				t_src_stride = p_raster.stride;
+			}
+			
 			for (uint32_t y = 0; y < p_raster . height; y++)
 			{
-				uint32_t *t_pixel;
-				t_pixel = (uint32_t*) t_row_ptr;
-				uint32_t *t_dst_pxl;
-				t_dst_pxl = r_bitmap . getAddr32(0, y);
+				uint32_t *t_src_pixel;
+				t_src_pixel = (uint32_t*)t_src_ptr;
+				uint32_t *t_dst_pixel;
+				t_dst_pixel = (uint32_t*)t_dst_ptr;
 				
 				// IM-2014-07-23: [[ Bug 12892 ]] Use MCGPixel function to premultiply native format pixels
 				for (uint32_t x = 0; x < p_raster . width; x++)
-					*t_dst_pxl++ = MCGPixelPreMultiplyNative(*t_pixel++);
-				t_row_ptr += p_raster . stride;
+					*t_dst_pixel++ = MCGPixelPreMultiplyNative(*t_src_pixel++);
+				t_dst_ptr += t_dst_stride;
+				t_src_ptr += t_src_stride;
 			}
+			
+			r_bitmap.unlockPixels();
 		}
 		else if (p_ownership == kMCGPixelOwnershipTypeCopy)
 			MCMemoryCopy(r_bitmap . getPixels(), p_raster . pixels, p_raster . height * p_raster . stride);
@@ -664,9 +689,10 @@ MCGIntegerRectangle MCGIntegerRectangleIntersection(const MCGIntegerRectangle &p
 	t_left = MCMax(p_rect_1.origin.x, p_rect_2.origin.x);
 	t_top = MCMax(p_rect_1.origin.y, p_rect_2.origin.y);
 	
+	// IM-2014-10-22: [[ Bug 13746 ]] Cast to signed ints to fix unsigned arithmetic overflow
 	int32_t t_right, t_bottom;
-	t_right = MCMin(p_rect_1.origin.x + p_rect_1.size.width, p_rect_2.origin.x + p_rect_2.size.width);
-	t_bottom = MCMin(p_rect_1.origin.y + p_rect_1.size.height, p_rect_2.origin.y + p_rect_2.size.height);
+	t_right = MCMin(p_rect_1.origin.x + (int32_t)p_rect_1.size.width, p_rect_2.origin.x + (int32_t)p_rect_2.size.width);
+	t_bottom = MCMin(p_rect_1.origin.y + (int32_t)p_rect_1.size.height, p_rect_2.origin.y + (int32_t)p_rect_2.size.height);
 	
 	t_right = MCMax(t_left, t_right);
 	t_bottom = MCMax(t_top, t_bottom);

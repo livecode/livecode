@@ -4973,8 +4973,12 @@ Exec_stat MCSound::eval(MCExecPoint &ep)
 		return ES_NORMAL;
 	}
 #endif
-	MCU_play();
-	if (MCacptr != NULL)
+
+// Keep old behaviour if FEATURE_PLATFORM_AUDIO is not defined
+#ifndef FEATURE_PLATFORM_AUDIO
+    MCU_play();
+#endif
+	if (MCacptr != NULL && MCacptr -> isPlaying())
 		return MCacptr->getprop(0, P_NAME, ep, False);
 	ep.setstaticcstring(MCdonestring);
 	return ES_NORMAL;
@@ -6274,7 +6278,12 @@ Exec_stat MCSpecialFolderPath::eval(MCExecPoint &ep)
 		MCeerror->add(EE_SPECIALFOLDERPATH_BADPARAM, line, pos);
 		return ES_ERROR;
 	}
-	MCS_getspecialfolder(ep);
+    
+    // SN-2015-01-16: [[ Bug 14295 ]] Added mode-specific way to get the resources folder
+    if (ep . getsvalue() == "resources")
+        MCModeGetResourcesFolder(ep);
+    else
+        MCS_getspecialfolder(ep);
 	return ES_NORMAL;
 #endif /* MCSpecialFolderPath */
 }

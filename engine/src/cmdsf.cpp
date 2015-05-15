@@ -3280,7 +3280,13 @@ Exec_stat MCRead::exec(MCExecPoint &ep)
 				if (arg == OA_FILE)
 					t_is_text = MCfiles[index] . textmode != 0;
 				else if (arg == OA_PROCESS)
+                {
 					t_is_text = MCprocesses[index] . textmode != 0;
+                    // SN-2014-10-14: [[ Bug 13658 ]] Ensure that we read all we can from a binary process, not
+                    //  until 0x4 (which might be read before the end, when outputting binary data)
+                    if (!t_is_text && *sptr == 0x4)
+                        ep.setsvalue("");
+                }
 				else
 					t_is_text = true;
 				if (!t_is_text)

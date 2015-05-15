@@ -824,17 +824,18 @@ Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
 	MCExecPoint ep(nil, nil, nil);	
 	p_parameters -> eval_argument(ep);
     
+    // SN-2015-01-05: [[ Bug 11417 ]] The extension can't finish with a LF
 	if (is_png_data(ep . getsvalue()))
     {
-        sprintf (t_file_extension, ".png\n");
+        sprintf (t_file_extension, ".png");
     }
     else if (is_gif_data(ep . getsvalue()))
     {
-        sprintf (t_file_extension, ".gif\n");
+        sprintf (t_file_extension, ".gif");
     }
     else if (is_jpeg_data(ep . getsvalue()))
     {
-        sprintf (t_file_extension, ".jpg\n");
+        sprintf (t_file_extension, ".jpg");
     }
     if (t_file_extension[0] != '\0')
     {
@@ -867,17 +868,18 @@ Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
 		
 		MCImage *t_image;
 		t_image = static_cast<MCImage *>(objptr);
+        // SN-2015-01-05: [[ Bug 11417 ]] The extension can't finish with a LF
 		if (t_image -> getcompression() == F_PNG)
         {
-            sprintf (t_file_extension, ".png\n");
+            sprintf (t_file_extension, ".png");
         }
         else if (t_image -> getcompression() == F_JPEG)
         {
-            sprintf (t_file_extension, ".jpg\n");
+            sprintf (t_file_extension, ".jpg");
         }
         else if (t_image -> getcompression() == F_GIF)
 		{
-            sprintf (t_file_extension, ".gif\n");
+            sprintf (t_file_extension, ".gif");
         }
         else
         {
@@ -1005,9 +1007,7 @@ extern Exec_stat MCHandleProductSetType(void *context, MCParameter *p_parameters
 extern Exec_stat MCHandleGetPurchaseProperty(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleGetPurchases(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleSetPurchaseProperty(void *context, MCParameter *p_parameters);
-//extern Exec_stat MCHandleRequestForProductDetails(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleReceiveProductDetails(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseCreate(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseState(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseError(void *context, MCParameter *p_parameters);
@@ -1235,8 +1235,6 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {"mobileStorePurchasedProducts", MCHandleGetPurchases, nil},
     {"mobileStoreProductProperty", MCHandleGetPurchaseProperty, nil},
     //{"mobileSetPurchaseProperty", MCHandleSetPurchaseProperty, nil},
-    //{"mobileRequestForProductDetails", MCHandleRequestForProductDetails, nil},
-    //{"mobileReceiveProductDetails", MCHandleReceiveProductDetails, nil},
     {"mobileStoreRequestProductDetails", MCHandleRequestProductDetails, nil},
     {"mobileStoreMakePurchase", MCHandleMakePurchase, nil},
     {"mobileStoreConfirmPurchase", MCHandleConfirmPurchase, nil},

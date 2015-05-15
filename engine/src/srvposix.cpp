@@ -767,6 +767,15 @@ struct MCPosixSystem: public MCSystemInterface
 	
 	bool HostNameToAddress(const char *p_hostname, MCSystemHostResolveCallback p_callback, void *p_context)
 	{
+		/* Use inet_aton to check whether p_hostname is
+		 * already an IP address; if so, don't bother calling
+		 * gethostbyname(). */
+		struct in_addr t_inaddr;
+		if (inet_aton (p_hostname, &t_inaddr))
+		{
+			return p_callback (p_context, inet_ntoa (t_inaddr));
+		}
+
 		struct hostent *he;
 		he = gethostbyname(p_hostname);
 		if (he == NULL)

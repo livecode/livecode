@@ -258,6 +258,7 @@ extern MCNameRef MCM_open_stack;
 extern MCNameRef MCM_option_key_down;
 extern MCNameRef MCM_paste_key;
 extern MCNameRef MCM_play_paused;
+extern MCNameRef MCM_play_rate_changed;
 extern MCNameRef MCM_play_started;
 extern MCNameRef MCM_play_stopped;
 extern MCNameRef MCM_post_url;

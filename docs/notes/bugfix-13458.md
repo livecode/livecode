@@ -1,0 +1,1 @@
+# Memory leak when setting the text of an image

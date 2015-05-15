@@ -243,6 +243,12 @@ IO_stat MCParagraph::load(IO_handle stream, const char *version, bool is_ext)
 				}
 				uint2 index, len;
 				newblock->getindex(index, len);
+                
+                // SN-2014-10-31: [[ Bug 13881 ]] Ensure that the block hasn't been corrupted.
+                //  (leads to a potential crash, in case the corrupted stack ends up to be valid).
+                if (index > textsize || len + index > textsize)
+                    return IO_ERROR;
+                
 				if (newblock->hasunicode())
 				{
 					len >>= 1;
@@ -540,21 +546,45 @@ void MCParagraph::defrag()
 
 // MW-2012-01-25: [[ ParaStyles ]] This method causes a reflow of the paragraph depending
 //   on the setting of 'dontWrap'.
-void MCParagraph::layout(bool p_force)
+// AL-2014-09-22: [[ Bug 11817 ]] Added cascade parameter to enable conditional r
+//  of subsequent paragraphs if the number of lines changes
+bool MCParagraph::layout(bool p_force, bool p_check_redraw)
 {
 	// MP-2013-09-02: [[ FasterField ]] If we don't need layout, and layout isn't being forced,
 	//   do nothing.
 	if (!needs_layout && !p_force)
-		return;
+		return false;
 
+    uindex_t t_count;
+    if (p_check_redraw)
+        t_count = countlines();
+    
 	if (getdontwrap())
 		noflow();
 	else
 		flow();
-	
+    
 	// MP-2013-09-02: [[ FasterField ]] We've layed out the paragraph, so it doesn't need to
 	//   be again until mutated.
 	needs_layout = false;
+    
+    if (p_check_redraw)
+        return t_count != countlines();
+    
+    return false;
+}
+
+uindex_t MCParagraph::countlines()
+{
+    MCLine *t_line = lines;
+    uindex_t t_count = 0;
+    do
+    {
+        t_count++;
+        t_line = t_line -> next();
+    }
+    while (t_line != lines);
+    return t_count;
 }
 
 //reflow paragraph with wrapping
@@ -3544,6 +3574,19 @@ Boolean MCParagraph::pageheight(uint2 fixedheight, uint2 &theight,
 {
 	if (lptr == NULL)
 		lptr = lines;
+    
+    // FG-2014-12-03: [[ Bug 11688 ]] Hidden paragraphs have a zero height
+    if (gethidden())
+    {
+        lptr = NULL;
+        return True;
+    }
+    
+    // SN-2014-09-17: [[ Bug 13462 ]] Added the space above and below each paragraph
+    // FG-2014-11-03: [[ Bug 11688 ]] Take all of the top margin into account
+    if (attrs != nil)
+        theight -= computetopmargin();
+    
 	do
 	{
 		uint2 lheight = fixedheight == 0 ? lptr->getheight() : fixedheight;
@@ -3554,6 +3597,13 @@ Boolean MCParagraph::pageheight(uint2 fixedheight, uint2 &theight,
 	}
 	while (lptr != lines);
 	lptr = NULL;
+    
+    // SN-2014-09-17: [[ Bug 13462 ]] Added the space above and below each paragraph.
+    // There is no failure for this paragraph if only the space below does not fit in the field
+    // FG-2014-12-03: [[ Bug 11688 ]] Take all of the bottom margin into account
+    if (attrs != nil)
+        theight = MCU_max(((int32_t)theight) - computebottommargin(), 0);
+    
 	return True;
 }
 
@@ -3564,6 +3614,19 @@ Boolean MCParagraph::pagerange(uint2 fixedheight, uint2 &theight,
 {
 	if (lptr == NULL)
 		lptr = lines;
+    
+    // SN-2014-09-17: [[ Bug 13462 ]] Added the space above and below each paragraph
+    // FG-2014-12-03: [[ Bug 11688 ]] Hidden paragraphs have a zero height
+    if (gethidden())
+    {
+        lptr = NULL;
+        return True;
+    }
+    
+    // FG-2014-11-03: [[ Bug 11688 ]] Take all of the top margin into account
+    if (attrs != nil)
+        theight -= computetopmargin();
+    
 	do
 	{
 		uint2 lheight = fixedheight == 0 ? lptr->getheight() : fixedheight;
@@ -3577,6 +3640,13 @@ Boolean MCParagraph::pagerange(uint2 fixedheight, uint2 &theight,
 	}
 	while (lptr != lines);
 	lptr = NULL;
+    
+    // SN-2014-09-17: [[ Bug 13462 ]] Added the space above and below each paragraph.
+    // There is no failure for this paragraph if only the space below does not fit in the field
+    // FG-2014-12-03: [[ Bug 11688 ]] Take all of the bottom margin into account
+    if (attrs != nil)
+        theight = MCU_max(((int32_t)theight) - computebottommargin(), 0);
+    
 	return True;
 }
 

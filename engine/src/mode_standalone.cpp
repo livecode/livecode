@@ -120,6 +120,7 @@ extern IO_stat readheader(IO_handle& stream, char *version);
 extern void send_startup_message(bool p_do_relaunch = true);
 
 extern void add_simulator_redirect(const char *);
+extern void add_ios_fontmap(const char *);
 
 // This structure contains the information we collect from reading in the
 // project.
@@ -177,7 +178,26 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 		delete t_redirect;
 	}
 	break;
-			
+            
+    case kMCCapsuleSectionTypeFontmap:
+    {
+        char *t_fontmap;
+        t_fontmap = new char[p_length];
+        if (IO_read_bytes(t_fontmap, p_length, p_stream) != IO_NORMAL)
+        {
+            MCresult -> sets("failed to read fontmap");
+            return false;
+        }
+        
+#ifdef TARGET_SUBPLATFORM_IPHONE
+        // The font mapping is only viable (and needed) on iOS
+        add_ios_fontmap(t_fontmap);
+#endif
+        
+        delete[] t_fontmap;
+    }
+    break;
+        
 	case kMCCapsuleSectionTypeStack:
 		if (MCdispatcher -> readstartupstack(p_stream, self -> stack) != IO_NORMAL)
 		{
@@ -210,7 +230,23 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 		delete t_external;
 	}
 	break;
-	
+
+    // AL-2015-02-10: [[ Standalone Inclusions ]] Fetch a resource mapping and add it to the array stored in MCdispatcher.
+    case kMCCapsuleSectionTypeLibrary:
+    {
+        char *t_mapping;
+        t_mapping = new char[p_length];
+        if (IO_read_bytes(t_mapping, p_length, p_stream) != IO_NORMAL)
+        {
+            MCresult -> sets("failed to read library mapping");
+            return false;
+        }
+        
+        MCdispatcher -> addlibrarymapping(t_mapping);
+        delete t_mapping;
+    }
+        break;
+            
 	case kMCCapsuleSectionTypeStartupScript:
 	{
 		char *t_script;
@@ -229,7 +265,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	}
 	break;
 			
-	case kMCCapsuleSectionTypeAuxillaryStack:
+	case kMCCapsuleSectionTypeAuxiliaryStack:
 	{
 		MCStack *t_aux_stack;
 		if (MCdispatcher -> readfile(NULL, NULL, p_stream, t_aux_stack) != IO_NORMAL)
@@ -712,6 +748,12 @@ uint32_t MCModeGetEnvironmentType(void)
 	if (MCnofiles)
 		return kMCModeEnvironmentTypeHelper;
 	return kMCModeEnvironmentTypeDesktop;
+}
+
+// SN-2015-01-16: [[ Bug 14295 ]] Get the standalone, redirected resources folder.
+void MCModeGetResourcesFolder(MCExecPoint &ep)
+{
+    MCS_getresourcesfolder(ep, true);
 }
 
 // In standalone mode, we are never licensed.

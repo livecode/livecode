@@ -84,6 +84,11 @@ typedef double          real8;
 
 // New-style (C99) integer definitions and limits
 
+
+#ifndef _WIN32
+#include <stdint.h>
+#else
+
 typedef unsigned char uint8_t;
 typedef signed char int8_t;
 typedef unsigned short uint16_t;
@@ -105,6 +110,8 @@ typedef signed int int32_t;
 	#else
 		typedef signed long int int64_t;
 	#endif
+#endif
+
 #endif
 
 typedef float float32_t;
@@ -144,6 +151,12 @@ typedef uint32_t codepoint_t;
 #define INT64_MAX 0x7FFFFFFFFFFFFFFFLL
 #endif
 
+// These are non-standard
+#define UINT8_MIN   0
+#define UINT16_MIN  0
+#define UINT32_MIN  0
+#define UINT64_MIN  0
+
 #define UINDEX_MIN UINT32_MIN
 #define UINDEX_MAX UINT32_MAX
 
@@ -169,13 +182,30 @@ typedef uint32_t codepoint_t;
 #endif
 
 // Null pointer defines (nil is preferred)
-
+// PM-2015-03-31: [[ Bug 15090 ]] Better definition of nil/NULL fixes crashes in 64 bit iOS
 #ifndef NULL
-#define NULL 0
+
+#if defined(__cplusplus) /* C++ */
+#	if defined(__GCC__)
+#		define NULL __null
+#	else
+#		define NULL uintptr_t(0)
+#	endif
+
+#else /* C */
+#	if defined(__GCC__)
+#		define NULL __null
+#	else
+#		define NULL ((void*)0)
+#	endif
+
+#endif
+
+
 #endif
 
 #ifndef nil
-#define nil 0
+#   define nil NULL
 #endif
 
 // Boolean definitions

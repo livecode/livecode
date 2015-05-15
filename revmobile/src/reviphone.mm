@@ -110,6 +110,10 @@ bool CheckError(MCError err)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MM-2014-10-07: [[ Bug 13584 ]] The choosen sim runtime, does a similar job to s_simulator_system_root.
+//  Ensures we launch the correct simulator version.
+SimRuntime * s_simulator_runtime;
+
 // the currently set simulator root, corresponding to a specific version of the
 // iPhone SDK
 DTiPhoneSimulatorSystemRoot *s_simulator_system_root = nil;
@@ -162,25 +166,55 @@ bool revIPhoneListSimulatorSDKs(MCVariableRef *argv, uint32_t argc, MCVariableRe
 	return t_success;
 }
 
-static bool fetch_named_simulator_root(const char *p_display_name, DTiPhoneSimulatorSystemRoot *&r_root)
-{		
-	DTiPhoneSimulatorSystemRoot *t_root = nil;
-	NSArray *t_knownroots;
-	t_knownroots = [s_simulator_proxy getKnownRoots];
-	NSString *t_sdk_string = [NSString stringWithCString:p_display_name encoding: NSMacOSRomanStringEncoding];
-	for (DTiPhoneSimulatorSystemRoot *t_candidate in t_knownroots)
+// MM-2014-10-07: [[ Bug 13584 ]] Also return the SimRuntime where applicable.
+static bool fetch_named_simulator_root(const char *p_display_name, DTiPhoneSimulatorSystemRoot *&r_root, SimRuntime *&r_runtime)
+{
+	DTiPhoneSimulatorSystemRoot *t_root;
+	t_root = nil;
+	SimRuntime *t_runtime;
+	t_runtime = nil;
+	
+	NSString *t_sdk_string;
+	t_sdk_string = [NSString stringWithCString:p_display_name encoding: NSMacOSRomanStringEncoding];
+	
+	NSArray *t_runtimes;
+	t_runtimes = [s_simulator_proxy getSimRuntimes];
+	
+	if (t_runtimes != nil)
 	{
-		if ([[t_candidate sdkDisplayName] caseInsensitiveCompare: t_sdk_string] == NSOrderedSame ||
-			[[t_candidate sdkVersion] caseInsensitiveCompare: t_sdk_string] == NSOrderedSame ||
-			[[t_candidate sdkRootPath] caseInsensitiveCompare: t_sdk_string] == NSOrderedSame)
+		for (SimRuntime *t_candidate in t_runtimes)
 		{
-			t_root = t_candidate;
-			break;
+			if ([[t_candidate name] caseInsensitiveCompare: t_sdk_string] == NSOrderedSame ||
+				[[t_candidate identifier] caseInsensitiveCompare: t_sdk_string] == NSOrderedSame ||
+				[[t_candidate root] caseInsensitiveCompare: t_sdk_string] == NSOrderedSame ||
+				[[t_candidate versionString] caseInsensitiveCompare: t_sdk_string] == NSOrderedSame)
+			{
+				t_runtime = t_candidate;
+				t_root = [s_simulator_proxy getRootWithSimRuntime: t_runtime];
+				break;
+			}			
 		}
 	}
+	else
+	{	
+		NSArray *t_knownroots;
+		t_knownroots = [s_simulator_proxy getKnownRoots];
+		for (DTiPhoneSimulatorSystemRoot *t_candidate in t_knownroots)
+		{
+			if ([[t_candidate sdkDisplayName] caseInsensitiveCompare: t_sdk_string] == NSOrderedSame ||
+				[[t_candidate sdkVersion] caseInsensitiveCompare: t_sdk_string] == NSOrderedSame ||
+				[[t_candidate sdkRootPath] caseInsensitiveCompare: t_sdk_string] == NSOrderedSame)
+			{
+				t_root = t_candidate;
+				break;
+			}
+		}
+	}
+	
 	if (t_root != nil)
 	{
 		r_root = t_root;
+		r_runtime = t_runtime;
 		return true;
 	}	
 	return false;
@@ -204,7 +238,10 @@ bool revIPhoneSetSimulatorSDK(MCVariableRef *argv, uint32_t argc, MCVariableRef 
 		s_simulator_proxy == nil)
 		t_success = Throw("no toolset");
 	
-	DTiPhoneSimulatorSystemRoot * t_root = nil;
+	DTiPhoneSimulatorSystemRoot * t_root;
+	t_root = nil;
+	SimRuntime *t_runtime;
+	t_runtime = nil;
 	if (t_success)
 	{
 		if (argc == 0)
@@ -217,7 +254,7 @@ bool revIPhoneSetSimulatorSDK(MCVariableRef *argv, uint32_t argc, MCVariableRef 
 			t_success = CheckError(MCVariableFetch(argv[0], kMCOptionAsCString, &t_sdk_cstring));
 			if (t_success)
 			{
-				t_success = fetch_named_simulator_root(t_sdk_cstring, t_root);
+				t_success = fetch_named_simulator_root(t_sdk_cstring, t_root, t_runtime);
 				if (!t_success)
 				{
 					t_success = Throw("iPhone Simulator version not found");
@@ -236,6 +273,8 @@ bool revIPhoneSetSimulatorSDK(MCVariableRef *argv, uint32_t argc, MCVariableRef 
 		if (t_root != nil)
 			[t_root retain];
 		s_simulator_system_root = t_root;
+		if (t_runtime != nil)
+			s_simulator_runtime = t_runtime;
 	}
 	if (!t_success)
 		Catch(result);
@@ -499,33 +538,97 @@ bool revIPhoneLaunchAppInSimulator(MCVariableRef *argv, uint32_t argc, MCVariabl
 		t_session_config = [s_simulator_proxy newSessionConfig];
 		
 		[t_session_config setApplicationToSimulateOnStart:t_app_spec];
+		
 		[t_session_config setSimulatedSystemRoot:s_simulator_system_root];
+		
+		// MM-2014-10-07: [[ Bug 13584 ]] As well as setting the sys root, also set the sim runtime where applicable.
+		//   Ensures we launch the correct version of the simulator.
+		if (s_simulator_runtime != nil && [t_session_config respondsToSelector: @selector(setRuntime:)])
+			[t_session_config setRuntime: s_simulator_runtime];
+		
 		[t_session_config setSimulatedApplicationShouldWaitForDebugger: NO];
 		[t_session_config setSimulatedApplicationLaunchArgs: [NSArray array]];
 		[t_session_config setSimulatedApplicationLaunchEnvironment: [NSDictionary dictionary]];
 		[t_session_config setLocalizedClientName: @"LiveCode"];
 		
+		bool t_is_ipad;
+		t_is_ipad = strcasecmp(t_family, "ipad") == 0;
+		
 		if ([t_session_config respondsToSelector: @selector(setSimulatedDeviceFamily:)])
 		{
 			int32_t t_family_int;
-			if (strcasecmp(t_family, "ipad") == 0)
+			if (t_is_ipad)
 				t_family_int = 2;
 			else
 				t_family_int = 1;
 			[t_session_config setSimulatedDeviceFamily: [NSNumber numberWithInt: t_family_int]];
 		}
-		
-		// MM-2014-03-18: [[ iOS 7.1 Support ]] Device name is required by the DVT framework.
-		if ([t_session_config respondsToSelector: @selector(setSimulatedDeviceInfoName:)])
+
+		// MM-2014-09-30: [[ iOS 8 Support ]] For iOS 8, we must choose a device from the set the simulator offers
+		//  in order to launch successfully.
+		// MM-2014-10-07: [[ Bug 13584 ]] Make sure we choose the device which matches the sim runtime. This ensures
+		//   we launch the correct device when the sim SDK has multiple sim versions installed.
+		NSArray *t_devices;
+		t_devices = [s_simulator_proxy getSimDeviceSet];
+		if (t_devices != nil)
 		{
-            // MW-2014-03-20: [[ Bug 11946 ]] Fetch the current device preference from the simulator
-            //   and if it matches the requested family, then use that string for the device. This
-            //   ensures the last set device in the simulator gets used rather than falling back to
-            //   just iPad or iPhone.
-            NSString *t_current;
-            t_current = (NSString *)CFPreferencesCopyAppValue((CFStringRef)@"SimulateDevice", (CFStringRef)@"com.apple.iphonesimulator");
+			SimDevice *t_device;
+			t_device = nil;
+			
+			bool t_found_device;
+			t_found_device = false;
+			
+			// Choose the last run device if it is of the desired type.
+			// Each device has a plist with a state entry. A state of 3 appears to suggest it's the last run.
+			for (t_device in t_devices)
+			{
+				if (!(t_is_ipad && [[t_device name] hasPrefix: @"iPad"] || !t_is_ipad && [[t_device name] hasPrefix: @"iPhone"]))
+					continue;
+				
+				NSString *t_dev_plist_path;
+				t_dev_plist_path = [[t_device devicePath] stringByAppendingPathComponent: @"device.plist"];
+				if ([[NSFileManager defaultManager] fileExistsAtPath: t_dev_plist_path])
+				{					
+					NSDictionary *t_dev_plist;
+					t_dev_plist= [NSDictionary dictionaryWithContentsOfFile: t_dev_plist_path];					
+					if (t_dev_plist != nil)
+					{
+						NSNumber *t_state;
+						t_state = [t_dev_plist objectForKey: @"state"];		
+						if (t_state != nil && [t_state intValue] == 3 && [t_device runtime] == s_simulator_runtime)
+						{
+							t_found_device = true;
+							break;
+						}
+					}
+				}				
+			}
+			
+			// If the last run device is not suitable or not found, then just choose the first device in the list of the desired type.
+			if (!t_found_device)
+				for (t_device in t_devices)
+					if ((t_is_ipad && [[t_device name] hasPrefix: @"iPad"] || !t_is_ipad && [[t_device name] hasPrefix: @"iPhone"])
+						&& [t_device runtime] == s_simulator_runtime)
+					{
+						t_found_device = true;
+						break;
+					}
+			
+			if (t_found_device)
+				[t_session_config setDevice: t_device];
+		}
+		else if ([t_session_config respondsToSelector: @selector(setSimulatedDeviceInfoName:)])
+		{
+			// MM-2014-03-18: [[ iOS 7.1 Support ]] Device name is required by the DVT framework.
+			
+			// MW-2014-03-20: [[ Bug 11946 ]] Fetch the current device preference from the simulator
+			//   and if it matches the requested family, then use that string for the device. This
+			//   ensures the last set device in the simulator gets used rather than falling back to
+			//   just iPad or iPhone.
+			NSString *t_current;
+			t_current = (NSString *)CFPreferencesCopyAppValue((CFStringRef)@"SimulateDevice", (CFStringRef)@"com.apple.iphonesimulator");			
             
-			if (strcasecmp(t_family, "ipad") == 0)
+			if (t_is_ipad)
             {
                 if ([t_current hasPrefix: @"iPad"])
                     [t_session_config setSimulatedDeviceInfoName: t_current];
@@ -545,7 +648,7 @@ bool revIPhoneLaunchAppInSimulator(MCVariableRef *argv, uint32_t argc, MCVariabl
 		s_simulator_session = [s_simulator_proxy newSession];
 		[s_simulator_session setDelegate: t_delegate];
 	
-		// MM-2014-03-18: [[ iOS 7.1 Support ]] For the DVT framework, the application PIS is an int rather than a NSNumber.
+		// MM-2014-03-18: [[ iOS 7.1 Support ]] For the DVT framework, the application PID is an int rather than a NSNumber.
 		//  Check to see which type the session accepts.
 		if ([s_simulator_session respondsToSelector: @selector(setSimulatedApplicationPID:)])
 		{

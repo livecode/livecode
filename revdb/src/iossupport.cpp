@@ -182,10 +182,12 @@ extern "C" void *resolve_symbol(void *, const char *);
 DATABASEREC *DoLoadDatabaseDriver(const char *p_path)
 {
 	char *t_filename;
-	t_filename = (char *)malloc((sizeof(char) * strlen(p_path)) + 4);
+    // SN-2015-05-12: [[ Bug 14972 ]] We don't want to write somewhere we don't
+    //  own the memory
+	t_filename = (char *)malloc((sizeof(char) * strlen(p_path)) + 7);
 	sprintf(t_filename, "%s.dylib", p_path);
 
-#ifdef __i386__
+#if defined(__i386__) || defined(__x86_64__)
 	void *t_driver_handle;
 	t_driver_handle = dlopen(t_filename, RTLD_NOW);
 
@@ -203,6 +205,8 @@ DATABASEREC *DoLoadDatabaseDriver(const char *p_path)
 	t_result -> idcounterptr = (idcounterrefptr)dlsym(t_driver_handle, "setidcounterref");
 	t_result -> newconnectionptr = (new_connectionrefptr)dlsym(t_driver_handle, "newdbconnectionref");
 	t_result -> releaseconnectionptr = (release_connectionrefptr)dlsym(t_driver_handle, "releasedbconnectionref");
+    // PM-2015-04-09: [[ Bug 14972 ]] Init setcallbacksptr to prevent a crash when LoadDatabaseDriver is called
+    t_result -> setcallbacksptr = (set_callbacksrefptr)nil;
 	free(t_filename);
 	return t_result;
 #else
@@ -223,6 +227,8 @@ DATABASEREC *DoLoadDatabaseDriver(const char *p_path)
 	t_result -> idcounterptr = (idcounterrefptr)resolve_symbol(t_driver_handle, "setidcounterref");
 	t_result -> newconnectionptr = (new_connectionrefptr)resolve_symbol(t_driver_handle, "newdbconnectionref");
 	t_result -> releaseconnectionptr = (release_connectionrefptr)resolve_symbol(t_driver_handle, "releasedbconnectionref");
+    // PM-2015-04-09: [[ Bug 14972 ]] Init setcallbacksptr to prevent a crash when LoadDatabaseDriver is called
+    t_result -> setcallbacksptr = (set_callbacksrefptr)nil;
 	free(t_filename);
 	return t_result;
 #endif

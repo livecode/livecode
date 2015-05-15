@@ -1,0 +1,1 @@
+# Sample - Book Library.livecode edit and delete features broken

@@ -38,6 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mbliphone.h"
 #include "mbliphonecontrol.h"
+#include "mbliphoneapp.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -263,7 +264,33 @@ Exec_stat MCiOSControl::Set(MCNativeControlProperty p_property, MCExecPoint& ep)
 					[m_view setBackgroundColor: t_color];
 		}
 		return ES_NORMAL;
-		
+        
+		// PM-2014-12-08: [[ Bug 13659 ]] New property of iOS native controls to allow them interact with Voice Over.
+        // Note that in order to make a UIWebView accessible, we have to mark its parent view as 'not-accessible'
+        case kMCNativeControlPropertyIgnoreVoiceOverSensitivity:
+        {
+            if (m_view != nil)
+            {
+                if (ep . getsvalue() == MCtruemcstring)
+                {
+                    [m_view.superview setAccessibilityTraits:UIAccessibilityTraitNone];
+                    m_view.superview.isAccessibilityElement = NO;
+                    MCignorevoiceoversensitivity = True;
+                }
+                else
+                {
+                    m_view.superview.isAccessibilityElement = YES;
+#ifdef __IPHONE_5_0
+                    [m_view.superview setAccessibilityTraits:UIAccessibilityTraitAllowsDirectInteraction];
+#endif
+                    MCignorevoiceoversensitivity = False;
+                }
+                
+            }
+
+        }
+        return ES_NORMAL;
+            
 		default:
 			break;
 	}
@@ -319,6 +346,11 @@ Exec_stat MCiOSControl::Get(MCNativeControlProperty p_property, MCExecPoint& ep)
 			if (m_view != nil)
 				FormatColor(ep, [m_view backgroundColor]);
 			return ES_NORMAL;
+          
+        // PM-2014-12-08: [[ Bug 13659 ]] New property of iOS native controls to allow them interact with Voice Over
+        case kMCNativeControlPropertyIgnoreVoiceOverSensitivity:
+            ep.setsvalue(MCU_btos(m_view != nil ? MCignorevoiceoversensitivity == True : NO));
+            return ES_NORMAL;
             
         default:
             break;

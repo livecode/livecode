@@ -708,54 +708,240 @@ MCPlatformDialogResult MCPlatformEndFileDialog(MCPlatformFileDialogKind p_kind, 
 
 static MCPlatformDialogResult s_color_dialog_result = kMCPlatformDialogResultContinue;
 static MCColor s_color_dialog_color;
+// SN-2014-10-20 [[ Bub 13628 ]] Added a static delegate for the colour picker
+static MCColorPanelDelegate* s_color_dialog_delegate;
+
+////////////////////////////////////////////////////////////////////////////////
+
+@implementation com_runrev_livecode_MCColorPanelDelegate
+
+-(id) initWithColorPanel: (NSColorPanel*) p_panel
+             contentView: (NSView*) p_view
+{
+    self = [super init];
+    
+    NSButton *t_ok_button;
+    NSButton *t_cancel_button;
+    
+    // Get the colour picker's view and store it
+    mColorPanel = p_panel;
+    
+    mColorPickerView = p_view;
+    
+    // Remove the colour picker's view
+    [mColorPanel setContentView:0];
+    
+    // Create the 'OK' and 'Cancel' buttons
+    mOkButton = [[NSButton alloc] init];
+    mCancelButton = [[NSButton alloc] init];
+    
+    mOkButton.bezelStyle = NSRoundedBezelStyle;
+    mOkButton.imagePosition = NSNoImage;
+    [mOkButton setTitle: @"OK"];
+    [mOkButton setAction:@selector(pickerOkClicked)];
+    [mOkButton setTarget:self];
+    
+    mCancelButton.bezelStyle = NSRoundedBezelStyle;
+    mCancelButton.imagePosition = NSNoImage;
+    [mCancelButton setTitle: @"Cancel"];
+    [mCancelButton setAction:@selector(pickerCancelClicked)];
+    [mCancelButton setTarget:self];
+    
+    mResult = kMCPlatformDialogResultContinue;
+    
+    // Add all the views (colour picker panel + buttons)
+    NSRect frameRect = { { 0.0, 0.0 }, { 0.0, 0.0 } };
+    mUpdatedView = [[NSView alloc] initWithFrame:frameRect];
+    [mUpdatedView addSubview:mColorPickerView];
+    [mUpdatedView addSubview: mOkButton];
+    [mUpdatedView addSubview: mCancelButton];
+    
+    [mColorPanel setContentView: mUpdatedView];
+    [mColorPanel setDefaultButtonCell:[mOkButton cell]];
+    
+    [self relayout];
+    
+    return self;
+}
+
+-(void)dealloc
+{
+    NSColorPanel *t_color_picker;
+    t_color_picker = [NSColorPanel sharedColorPanel];
+    
+    [[mColorPickerView window] close];
+    
+    // Reset the color's picker view
+    [mColorPickerView removeFromSuperview];
+    [t_color_picker setContentView: mColorPickerView];
+    
+    [mOkButton release];
+    [mCancelButton release];
+    [mUpdatedView release];
+    
+    [super dealloc];
+}
+
+// Redrawing method - adapts the size of the buttons to the size of the picker
+-(void)relayout
+{
+    // Get the colorpicker's initial size
+    NSRect rect = [[mColorPickerView superview] frame];
+    
+    const CGFloat ButtonMinWidth = 78.0; // 84.0 for Carbon
+    const CGFloat ButtonMinHeight = 28.0;
+    const CGFloat ButtonMaxWidth = 200.0;
+    const CGFloat ButtonSpacing = 5.0;
+    const CGFloat ButtonTopMargin = 0.0;
+    const CGFloat ButtonBottomMargin = 7.0;
+    const CGFloat ButtonSideMargin = 9.0;
+    
+    // Compute the desired width
+    const CGFloat ButtonWidth = MCU_max(ButtonMinWidth,
+                                        MCU_min(ButtonMaxWidth,
+                                                CGFloat((rect.size.width - 2.0 * ButtonSideMargin - ButtonSpacing) * 0.5)));
+    
+    const CGFloat ButtonHeight = ButtonMinHeight;
+    
+    // SN-2014-11-28: [[ Bug 14098 ]] OK and Cancel buttons were inverted.
+    // Update frame for the Cancel button
+    NSRect cancelRect = { { ButtonSideMargin,
+        ButtonBottomMargin },
+        { ButtonWidth, ButtonHeight } };
+    [mCancelButton setButtonType: NSMomentaryLightButton];
+    [mCancelButton setFrame:cancelRect];
+    [mCancelButton setNeedsDisplay:YES];
+    
+    // Update frame for the OK button
+    NSRect okRect = { { cancelRect.origin.x + ButtonWidth + ButtonSpacing,
+        ButtonBottomMargin },
+        { ButtonWidth, ButtonHeight } };
+    [mOkButton setButtonType: NSMomentaryLightButton];
+    [mOkButton setFrame:okRect];
+    [mOkButton setNeedsDisplay:YES];
+    
+    const CGFloat Y = ButtonBottomMargin + ButtonHeight + ButtonTopMargin;
+    NSRect pickerCVRect = { { 0.0, Y },
+        { rect.size.width, rect.size.height - Y } };
+    
+    [mColorPickerView setFrame:pickerCVRect];
+    [mColorPickerView setNeedsDisplay:YES];
+    
+    [[mColorPickerView superview] setNeedsDisplay:YES];
+}
+
+// Sets the static MCColor to the value available from the color picker
+-(void) getColor
+{
+    s_color_dialog_result = mResult;
+    
+    // In case of a successful event, set the color selected
+    if (s_color_dialog_result == kMCPlatformDialogResultSuccess)
+    {
+        NSColor *t_color;
+        
+        // PM-2015-01-07: [[ Bug 14308]] Do not use calibrated RGB color space unless necessary since it makes magnifying glass misbehaving
+        t_color =  [mColorPanel color];
+        
+        // PM-2014-12-15: [[ Bug 14210 ]] Use calibrated RGB color space to prevent throwing an exception when adjusting the grayscale color in the color slider tab of property inspector
+        if ([[t_color colorSpace] colorSpaceModel] != NSRGBColorSpaceModel)
+           t_color = [t_color colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+    
+        // Convert the value from to a colour component value.
+        s_color_dialog_color . red   = (uint2) ([t_color redComponent] * UINT16_MAX);
+        s_color_dialog_color . green = (uint2) ([t_color greenComponent] * UINT16_MAX);
+        s_color_dialog_color . blue  = (uint2) ([t_color blueComponent] * UINT16_MAX);
+    }
+}
+
+//////////
+// NSWindow delegate's method
+- (void)windowDidResize:(NSNotification *)notification
+{
+    [self relayout];
+}
+
+-(void) windowWillClose:(NSNotification *)notification
+{
+    if (mResult != kMCPlatformDialogResultSuccess)
+        mResult = kMCPlatformDialogResultCancel;
+}
+
+//////////
+// Selectors called when the according button is pressed.
+-(void) pickerCancelClicked
+{
+    mResult = kMCPlatformDialogResultCancel;
+    [self getColor];
+}
+
+-(void) pickerOkClicked
+{
+    mResult = kMCPlatformDialogResultSuccess;
+    [self getColor];
+}
+
+//////////
+
+-(MCPlatformDialogResult) result
+{
+    return mResult;
+}
+
+@end
+
+////////////////////////////////////////////////////////////////////////////////
 
 void MCPlatformBeginColorDialog(const char *p_title, const MCColor& p_color)
 {
-	uint32_t t_red, t_green, t_blue;
-	t_red = p_color.red;
-	t_green = p_color.green;
-	t_blue = p_color.blue;
-	
-	NColorPickerInfo theColorInfo;
-	memset(&theColorInfo, 0, sizeof(theColorInfo));
-	theColorInfo.placeWhere = kCenterOnMainScreen;
-	//pStrcpy(theColorInfo.prompt, "\pChoose a color:");
-	
-	CMProfileLocation t_location;
-	t_location . locType = cmPathBasedProfile;
-	strcpy(t_location . u . pathLoc . path, "/System/Library/ColorSync/Profiles/Generic RGB Profile.icc");
-	
-	OSErr t_err;
-	CMProfileRef t_icc_profile;
-	t_err = CMOpenProfile(&t_icc_profile, &t_location);
-	if (t_err != noErr)
-		t_icc_profile = NULL;
-	
-	theColorInfo.theColor.color.rgb.red = t_red;
-	theColorInfo.theColor.color.rgb.green = t_green;
-	theColorInfo.theColor.color.rgb.blue = t_blue;
-	
-	theColorInfo . theColor . profile = t_icc_profile;
-	
-	if (NPickColor(&theColorInfo) == noErr && theColorInfo.newColorChosen)
-	{
-		s_color_dialog_color . red = theColorInfo . theColor . color . rgb . red;
-		s_color_dialog_color . green = theColorInfo . theColor . color . rgb . green;
-		s_color_dialog_color . blue = theColorInfo . theColor . color . rgb . blue;
-		s_color_dialog_result = kMCPlatformDialogResultSuccess;
-	}
-	else
-		s_color_dialog_result = kMCPlatformDialogResultCancel;
-
-	if (t_icc_profile != NULL)
-		CMCloseProfile(t_icc_profile);
-	
+    // SN-2014-10-20: [[ Bug 13628 ]] Update to use the Cocoa picker
+    NSColorPanel *t_colorPicker;
+    
+    // Set the display type of the singleton colour panel.
+    [NSColorPanel setPickerMask: NSColorPanelAllModesMask];
+    
+    t_colorPicker = [NSColorPanel sharedColorPanel];
+    
+    // SN-2014-11-28: [[ Bug 14098 ]] Make use of the initial colour
+    CGFloat t_divider = UINT16_MAX;
+    NSColor* t_initial_color = [NSColor colorWithCalibratedRed:(CGFloat)p_color.red / t_divider
+                                                         green:(CGFloat)p_color.green / t_divider
+                                                          blue:(CGFloat)p_color.blue / t_divider
+                                                         alpha:1];
+    [t_colorPicker setColor:t_initial_color];
+    
+    NSView* t_pickerView;
+    t_pickerView = [t_colorPicker contentView];
+    [t_pickerView retain];
+    
+    s_color_dialog_result = kMCPlatformDialogResultContinue;
+    s_color_dialog_delegate = [[com_runrev_livecode_MCColorPanelDelegate alloc] initWithColorPanel:t_colorPicker
+                                                                                       contentView:t_pickerView];
+    
+    // Set the color picker attributes
+    [t_colorPicker setStyleMask:[t_colorPicker styleMask] & ~NSClosableWindowMask];
+    [t_colorPicker setDelegate: s_color_dialog_delegate];
+    
+    // Make the colour picker the first window.
+    // as modal mode breaks the color picker
+    //[NSApp runModalForWindow: t_colorPicker];
+    [t_colorPicker makeKeyAndOrderFront:t_colorPicker];
+    [NSApp becomePseudoModalFor: t_colorPicker];
 }
 
 MCPlatformDialogResult MCPlatformEndColorDialog(MCColor& r_color)
 {
-	if (s_color_dialog_result == kMCPlatformDialogResultSuccess)
-		r_color = s_color_dialog_color;
+    // SN-2014-10-20: [[ Bug 13628 ]] Deallocate the delegate in case we don't continue
+    if (s_color_dialog_result != kMCPlatformDialogResultContinue)
+    {
+        if (s_color_dialog_result == kMCPlatformDialogResultSuccess)
+            r_color = s_color_dialog_color;
+        
+        [NSApp becomePseudoModalFor: nil];
+        [s_color_dialog_delegate dealloc];
+        s_color_dialog_delegate = NULL;
+    }
+    
 	return s_color_dialog_result;
 }
 

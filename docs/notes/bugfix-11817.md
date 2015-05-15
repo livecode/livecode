@@ -1,0 +1,1 @@
+# major speed degradation between 7.x, 6.x and 5.x with text styling

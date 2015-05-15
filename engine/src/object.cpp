@@ -66,6 +66,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "resolution.h"
 
+// PM-2014-11-11: [[ Bug 13970 ]] Added for the MCplayers' syncbuffering call
+#ifdef FEATURE_PLATFORM_PLAYER
+#include "platform.h"
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 uint1 MCObject::dashlist[2] = {4, 4};
@@ -144,9 +149,12 @@ MCObject::MCObject()
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	m_in_id_cache = false;
-	
+    
 	// IM-2013-04-16: Initialize to false;
 	m_script_encrypted = false;
+    
+    // Object's do not begin in the parentScript table.
+    m_is_parent_script = false;
 }
 
 MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
@@ -235,6 +243,10 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	m_in_id_cache = false;
+    
+    // Cloned objects have a different identifier so are not in the parentScript
+    // table at the start.
+    m_is_parent_script = false;
 }
 
 MCObject::~MCObject()
@@ -285,6 +297,10 @@ MCObject::~MCObject()
 	//   all deletions vector through 'scheduledelete'.
 	if (m_in_id_cache)
 		getstack() -> uncacheobjectbyid(this);
+    
+    // If this object is a parent-script make sure we flush it from the table.
+	if (m_is_parent_script)
+		MCParentScript::FlushObject(this);
 }
 
 Chunk_term MCObject::gettype() const
@@ -503,7 +519,9 @@ Boolean MCObject::kdown(const char *string, KeySym key)
 		break;
 	default:
 		char tstring[U2L];
-		if (key > 0xFF)
+        // SN-2014-12-08: [[ Bug 12681 ]] Avoid to print the keycode in case we have a
+        // numeric keypad keycode.
+        if (key > 0xFF && (key < XK_KP_Space || key > XK_KP_Equal))
 			sprintf(tstring, "%ld", key);
 		else
 			if ((uint1)string[0] < ' ' || MCmodifierstate & MS_CONTROL)
@@ -798,8 +816,15 @@ void MCObject::deselect()
 
 Boolean MCObject::del()
 {
-	fprintf(stderr, "Object: ERROR tried to delete %s\n", getname_cstring());
-	return False;
+    // If the object is marked as being used as a parentScript, flush the parentScript
+    // table so we don't get any dangling pointers.
+	if (m_is_parent_script)
+	{
+		MCParentScript::FlushObject(this);
+        m_is_parent_script = false;
+	}
+    
+	return True;
 }
 
 void MCObject::paste(void)
@@ -2742,6 +2767,14 @@ MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_si
 	{
 		t_context -> setopacity(blendlevel * 255 / 100);
 		t_context -> setfunction(GXblendSrcOver);
+
+        // PM-2014-11-11: [[ Bug 13970 ]] Make sure each player is buffered correctly for export snapshot
+        for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
+            t_player -> syncbuffering(t_context);
+            
+#ifdef FEATURE_PLATFORM_PLAYER
+        MCPlatformWaitForEvent(0.0, true);
+#endif
 		if (t_effects != nil)
 			t_context -> begin_with_effects(t_effects, static_cast<MCControl *>(this) -> getrect());
 		// MW-2011-09-06: [[ Redraw ]] Render the control isolated, but not as a sprite.
@@ -2861,7 +2894,11 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 	{
 		if ((stat = IO_read_string(script, stream)) != IO_NORMAL)
 			return stat;
-		
+        
+        // SN-2014-11-07: [[ Bug 13957 ]] It's possible to get a NULL script but having the
+        //  F_SCRIPT flag. Unset the flag in case it's needed
+        if (script == NULL)
+            flags &= ~F_SCRIPT;
 		getstack() -> securescript(this);
 	}
 
@@ -3591,20 +3628,26 @@ bool MCObject::resolveparentscript(void)
 	t_stack = getstack() -> findstackname(MCNameGetOldString(t_script -> GetObjectStack()));
 
 	// Next search for the control we need.
-	MCControl *t_control;
-	t_control = NULL;
+	MCObject *t_object;
+	t_object = NULL;
 	if (t_stack != NULL)
-		t_control = t_stack -> getcontrolid(CT_BUTTON, t_script -> GetObjectId(), true);
+    {
+        if (t_script -> GetObjectId() != 0)
+            t_object = t_stack -> getcontrolid(CT_BUTTON, t_script -> GetObjectId(), true);
+        else
+            t_object = t_stack;
+    }
 
 	// If we found a control, resolve the parent script. Otherwise block it.
-	if (t_control != NULL)
+	if (t_object != NULL &&
+        t_object != this)
 	{
-		t_script -> Resolve(t_control);
+		t_script -> Resolve(t_object);
 
 		// MW-2015-05-30: [[ InheritedPscripts ]] Next we must ensure the
 		//   existence of the inheritence hierarchy, so resolve the parentScript's
 		//   parentScript.
-		if (!t_control -> resolveparentscript())
+		if (!t_object -> resolveparentscript())
 			return false;
 
 		// MW-2015-05-30: [[ InheritedPscripts ]] And then make sure it creates its

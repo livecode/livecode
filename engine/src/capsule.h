@@ -86,9 +86,9 @@ enum MCCapsuleSectionType
 	// (e.g. encryption DLLs on Windows).
 	kMCCapsuleSectionTypeModule,
 
-	// Auxillary stack sections contain other mainstacks that should be loaded
+	// Auxiliary stack sections contain other mainstacks that should be loaded
 	// alongside the mainstack (but not opened initially).
-	kMCCapsuleSectionTypeAuxillaryStack,
+	kMCCapsuleSectionTypeAuxiliaryStack,
 	
 	// Simulator redirect sections contain mappings from engine relative
 	// paths to absolute paths on the host system.
@@ -97,6 +97,15 @@ enum MCCapsuleSectionType
 	// Startup script to be executed after all stacks have loaded but before
 	// the main stack is opened.
 	kMCCapsuleSectionTypeStartupScript,
+    
+    // Font mapping sections contain a mapping from a font name to another font
+    // name (usually PostScript name). Whenever a font name is looked up it is
+    // indirected through the font map first (and only once - not iteratively).
+    kMCCapsuleSectionTypeFontmap,
+
+    // AL-2015-02-10: [[ Standalone Inclusions ]] Library consists of the mappings from universal names
+    //  of resources to their platform-specific paths relative to the executable.
+    kMCCapsuleSectionTypeLibrary,
 };
 
 // Each section begins with a header that defines its type and length. This is
@@ -145,8 +154,8 @@ struct MCCapsuleStackSection
 	// uint8_t data[]
 };
 
-// The Stack section contains the stackfile data for an auxillary stack.
-struct MCCapsuleAuxillaryStackSection
+// The Stack section contains the stackfile data for an auxiliary stack.
+struct MCCapsuleAuxiliaryStackSection
 {
 	// uint8_t data[]
 };

@@ -103,7 +103,7 @@ public:
 	Boolean sameatts(MCBlock *bptr, bool p_persistent_only);
 	Boolean breakat(int2 x, uint2 width, Boolean first,
 	                MCFontStruct *pfont, Boolean &broken);
-	bool fit(int2 x, uint2 width, uint2& r_break_index, bool& r_break_fits);
+	bool fit(coord_t x, coord_t width, uint2& r_break_index, bool& r_break_fits);
 	void split(uint2 p_index);
 	coord_t gettabwidth(coord_t x, const char *text, uint2 index);
 	void drawstring(MCDC *dc, coord_t x, coord_t cx, int2 y, uint2 start, uint2 length, Boolean image, uint32_t style);

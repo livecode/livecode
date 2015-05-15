@@ -507,6 +507,7 @@ public:
         m_font = nil;
         
         m_player = nil;
+        m_grabbed_part = -1;
     }
     
     ~MCPlayerRatePopup(void)
@@ -722,6 +723,9 @@ public:
     
     Boolean mup(uint2 which, bool release)
     {
+        // PM-2014-09-30: [[ Bug 13119 ]] Make sure a playRateChanged message is sent when the mouse is up/released, but not when creating the ratepopup
+        if (m_grabbed_part != -1)
+            m_player -> timer(MCM_play_rate_changed,nil);
         m_grabbed_part = kMCPlayerControllerPartUnknown;
         return True;
     }
@@ -855,6 +859,11 @@ MCPlayer::MCPlayer()
     // MW-2014-07-16: [[ Bug ]] Put the player in the list.
     nextplayer = MCplayers;
     MCplayers = this;
+    
+    // PM-2104-10-14: [[ Bug 13569 ]] Make sure changes to player in preOpenCard are not visible
+    m_is_attached = false;
+    m_should_attach = false;
+    m_should_recreate = false;
 }
 
 MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
@@ -892,6 +901,7 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
     // MW-2014-07-16: [[ Bug ]] Put the player in the list.
     nextplayer = MCplayers;
     MCplayers = this;
+    
 }
 
 MCPlayer::~MCPlayer()
@@ -944,6 +954,15 @@ void MCPlayer::open()
 {
 	MCControl::open();
 	prepare(MCnullstring);
+    // PM-2014-10-15: [[ Bug 13650 ]] Check for nil to prevent a crash
+    // PM-2014-10-21: [[ Bug 13710 ]] Check if the player is already attached
+    
+    if (m_platform_player != nil && !m_is_attached && m_should_attach)
+    {
+        MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
+        m_is_attached = true;
+        m_should_attach = false;
+    }
 }
 
 void MCPlayer::close()
@@ -958,6 +977,18 @@ void MCPlayer::close()
     
     if (s_volume_popup != nil)
         s_volume_popup -> close();
+    
+    // PM-2014-10-15: [[ Bug 13650 ]] Check for nil to prevent a crash
+    // PM-2014-10-21: [[ Bug 13710 ]] Detach the player only if already attached
+    if (m_platform_player != nil && m_is_attached)
+    {
+        MCPlatformDetachPlayer(m_platform_player);
+        m_is_attached = false;
+    }
+    // PM-2014-11-03: [[ Bug 13917 ]] m_platform_player should be recreated when reopening a recently closed stack, to take into account if the value of dontuseqt has changed in the meanwhile
+    // PM-2015-03-13: [[ Bug 14821 ]] Use a bool to decide whether to recreate a player, since assigning nil to m_platform_player caused player to become unresponsive when switching between cards
+    if (m_platform_player != nil)
+        m_should_recreate = true;
 }
 
 Boolean MCPlayer::kdown(const char *string, KeySym key)
@@ -1087,8 +1118,9 @@ Boolean MCPlayer::mup(uint2 which, bool p_release) //mouse up
 
 Boolean MCPlayer::doubledown(uint2 which)
 {
-    // PM-2014-08-11: [[ Bug 13063 ]] Treat a doubledown on the controller as a single mdown 
-    if (hittestcontroller(mx, my) == kMCPlayerControllerPartUnknown)
+    // PM-2014-08-11: [[ Bug 13063 ]] Treat a doubledown on the controller as a single mdown
+    // PM-2014-10-22: [[ Bug 13752 ]] If on edit mode, treat a doubledown on the controller as a MCControl::doubledown
+    if (hittestcontroller(mx, my) == kMCPlayerControllerPartUnknown || (which == Button1 && getstack() -> gettool(this) == T_POINTER))
         return MCControl::doubledown(which);
     if (which == Button1 && getstack() -> gettool(this) == T_BROWSE)
     {
@@ -1103,7 +1135,8 @@ Boolean MCPlayer::doubledown(uint2 which)
 Boolean MCPlayer::doubleup(uint2 which)
 {
     // PM-2014-08-11: [[ Bug 13063 ]] Treat a doubleup on the controller as a single mup
-    if (hittestcontroller(mx, my) == kMCPlayerControllerPartUnknown)
+    // PM-2014-10-22: [[ Bug 13752 ]] If on edit mode, treat a doubledown on the controller as a MCControl::doubledown
+    if (hittestcontroller(mx, my) == kMCPlayerControllerPartUnknown || (which == Button1 && getstack() -> gettool(this) == T_POINTER))
         return MCControl::doubleup(which);
     if (which == Button1 && getstack() -> gettool(this) == T_BROWSE)
         handle_mup(which);
@@ -1351,6 +1384,33 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 	return ES_NORMAL;
 }
 
+static bool MCPathIsAbsolute(const char *p_path)
+{
+	if (p_path == nil || p_path[0] == '\0')
+		return false;
+	
+	return p_path[0] == '/' || p_path[0] == ':';
+}
+
+static bool MCPathIsRemoteURL(const char *p_path)
+{
+	return MCCStringBeginsWith(p_path, "http://") ||
+	MCCStringBeginsWith(p_path, "https://") ||
+	MCCStringBeginsWith(p_path, "ftp://");
+}
+
+// PM-2014-12-19: [[ Bug 14245 ]] Make possible to set the filename using a relative path
+bool MCPlayer::resolveplayerfilename(const char *p_filename, char *&r_filename)
+{
+    if (MCPathIsAbsolute(p_filename) || MCPathIsRemoteURL(p_filename))
+    {
+        r_filename = strdup(p_filename);
+        return true;
+    }
+    
+   return getstack()->resolve_relative_path(p_filename, r_filename);
+}
+
 Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = False;
@@ -1369,11 +1429,29 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                 playstop();
                 starttime = MAXUINT4; //clears the selection
                 endtime = MAXUINT4;
+                
                 if (data != MCnullmcstring)
-                    filename = data.clone();
+                {
+                    // PM-2014-12-19: [[ Bug 14245 ]] Make possible to set the filename using a relative path
+                    char *t_filename = data.clone();
+                    resolveplayerfilename(t_filename, filename);
+                }
                 prepare(MCnullstring);
+                
+                // PM-2014-10-20: [[ Bug 13711 ]] Make sure we attach the player after prepare()
+                // PM-2014-10-21: [[ Bug 13710 ]] Check if the player is already attached
+                if (m_platform_player != nil && !m_is_attached && m_should_attach)
+                {
+                    MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
+                    m_is_attached = true;
+                    m_should_attach = false;
+                }
+               
                 dirty = wholecard = True;
             }
+            // PM-2014-12-22: [[ Bug 14232 ]] Update the result in case a an invalid/corrupted filename is set more than once in a row
+            else if (data == filename && hasinvalidfilename())
+                MCresult->sets("could not create movie reference");
             break;
         case P_DONT_REFRESH:
             if (!MCU_matchflags(data, flags, F_DONT_REFRESH, dirty))
@@ -1984,27 +2062,40 @@ Boolean MCPlayer::prepare(const char *options)
     }
 
 	Boolean ok = False;
+    m_should_attach = false;
     
 	if (state & CS_PREPARED)
 		return True;
     
-    // Fixes the issue of invisible player being created by script
-	if (!hasfilename())
-        return True;
-    
-	if (!opened)
+   	if (!opened)
 		return False;
     
-	if (m_platform_player == nil)
-		MCPlatformCreatePlayer(m_platform_player);
+	if (m_platform_player == nil || m_should_recreate)
+    {
+        if (m_platform_player != nil)
+            MCPlatformPlayerRelease(m_platform_player);
+        MCPlatformCreatePlayer(m_platform_player);
+    }
+		
     
 	if (strnequal(filename, "https:", 6) || strnequal(filename, "http:", 5) || strnequal(filename, "ftp:", 4) || strnequal(filename, "file:", 5) || strnequal(filename, "rtsp:", 5))
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyURL, kMCPlatformPropertyTypeNativeCString, &filename);
 	else
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFilename, kMCPlatformPropertyTypeNativeCString, &filename);
 	
+    if (!hasfilename())
+        return True;
+    
 	MCRectangle t_movie_rect;
 	MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMovieRect, kMCPlatformPropertyTypeRectangle, &t_movie_rect);
+    
+    // PM-2014-12-17: [[ Bug 14233 ]] If an invalid filename is used then keep the previous dimensions of the player rect instead of displaying only the controller
+    // PM-2014-12-17: [[ Bug 14232 ]] Update the result in case a filename is invalid or the file is corrupted
+    if (hasinvalidfilename())
+    {
+        MCresult->sets("could not create movie reference");
+        return False;
+    }
 	
 	MCRectangle trect = resize(t_movie_rect);
 	
@@ -2044,8 +2135,15 @@ Boolean MCPlayer::prepare(const char *options)
 	t_visible = getflag(F_VISIBLE);
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
 	
-	MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
-	
+    if (m_is_attached)
+    {
+        MCPlatformDetachPlayer(m_platform_player);
+        m_is_attached = false;
+        m_should_attach = true;
+    }
+    else
+        m_should_attach = true;
+    	
 	layer_redrawall();
 	
 	setloudness();
@@ -2062,10 +2160,46 @@ Boolean MCPlayer::prepare(const char *options)
 	return ok;
 }
 
+// PM-2014-10-14: [[ Bug 13569 ]] Make sure changes to player are not visible in preOpenCard
+void MCPlayer::attachplayer()
+{
+    if (m_platform_player == nil)
+        return;
+    
+    // Make sure we attach the player only if it was previously detached by detachplayer().
+    if (!m_is_attached && m_should_attach)
+    {
+        MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
+        m_is_attached = true;
+        m_should_attach = false;
+    }
+}
+
+// PM-2014-10-14: [[ Bug 13569 ]] Make sure changes to player are not visible in preOpenCard
+void MCPlayer::detachplayer()
+{
+    if (m_platform_player == nil)
+        return;
+    
+    if (m_is_attached)
+    {
+        MCPlatformDetachPlayer(m_platform_player);
+        m_is_attached = false;
+        m_should_attach = true;
+    }
+}
+
 Boolean MCPlayer::playstart(const char *options)
 {
-	if (!prepare(options))
+	if (!prepare(options) || !hasfilename())
 		return False;
+    
+    // PM-2014-10-21: [[ Bug 13710 ]] Attach the player if not already attached
+    if (m_platform_player != nil && !m_is_attached)
+    {
+        MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
+        m_is_attached = true;
+    }
 	playpause(False);
 	return True;
 }
@@ -2145,13 +2279,15 @@ Boolean MCPlayer::playstop()
     
     m_modify_selection_while_playing = false;
 	
-	if (m_platform_player != nil)
+    // PM-2014-10-21: [[ Bug 13710 ]] Detach the player only if already attached
+	if (m_platform_player != nil && m_is_attached)
 	{
 		MCPlatformStopPlayer(m_platform_player);
 
 		needmessage = getduration() > getmoviecurtime();
 		
 		MCPlatformDetachPlayer(m_platform_player);
+        m_is_attached = false;
 	}
     
     redrawcontroller();
@@ -2314,7 +2450,7 @@ void MCPlayer::getenabledtracks(MCExecPoint &ep)
 			for(uindex_t i = 0; i < t_track_count; i++)
 			{
 				uint32_t t_id;
-				uint32_t t_enabled;
+				bool t_enabled;
 				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyId, kMCPlatformPropertyTypeUInt32, &t_id);
 				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
 				if (t_enabled)
@@ -2498,7 +2634,8 @@ void MCPlayer::moviefinished(void)
 {
     // PM-2014-08-06: [[ Bug 13104 ]] Set rate to zero when movie finish
     rate = 0.0;
-    timer(MCM_play_stopped, nil);
+    // PM-2014-12-02: [[ Bug 14141 ]] Delay the playStopped message to prevent IDE hang in case where the player's filename is set in the playStopped message (AVFoundation does not like nested callbacks)
+    MCscreen -> delaymessage(this, MCM_play_stopped);
 }
 
 void MCPlayer::SynchronizeUserCallbacks(void)
@@ -3887,6 +4024,14 @@ void MCPlayer::handle_shift_mdown(int p_which)
         case kMCPlayerControllerPartThumb:
         case kMCPlayerControllerPartWell:
         {
+            // PM-2014-09-30: [[ Bug 13540 ]] shift+clicking on controller well/thumb/play button does something only if showSelection is true
+            if (!getflag(F_SHOW_SELECTION))
+            {
+                handle_mdown(p_which);
+                return;
+            }
+                
+            
             MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
             MCRectangle t_part_thumb_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartThumb);
             
@@ -3958,20 +4103,20 @@ void MCPlayer::handle_shift_mdown(int p_which)
             }
             
             if (hasfilename())
-            {
-                bool t_show_selection;
-                t_show_selection = true;
-                setflag(True, F_SHOW_SELECTION);
-                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
-                
                 setselection(true);
-            }
-            
+
             layer_redrawrect(getcontrollerrect());
         }
             break;
             
         case kMCPlayerControllerPartPlay:
+            // PM-2014-09-30: [[ Bug 13540 ]] shift+clicking on controller well/thumb/play button does something only if showSelection is true
+            if (!getflag(F_SHOW_SELECTION))
+            {
+                handle_mdown(p_which);
+                return;
+            }
+            
             shift_play();
             break;
           
@@ -4084,11 +4229,6 @@ void MCPlayer::shift_play()
     
     if (hasfilename())
     {
-        bool t_show_selection;
-        t_show_selection = true;
-        setflag(True, F_SHOW_SELECTION);
-        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
-        
         // MW-2014-07-18: [[ Bug 12825 ]] When play button clicked, previous behavior was to
         //   force rate to 1.0.
         if (!getstate(CS_PREPARED) || ispaused())

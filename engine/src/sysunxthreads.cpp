@@ -361,10 +361,11 @@ uint32_t MCThreadGetNumberOfCores()
     //return (uint32_t) sysconf(_SC_NPROCESSORS_CONF);
     
     // SN-2014-08-26: [[ Bug 13264 ]] Android multi-core won't draw images without a bit of rework
-#ifdef _ANDROID_MOBILE
-    return 1;
-#else
+    // SN-2014-10-14: [[ Bug 13535 ]] Multithread rendering de-activated for now.
+#ifdef _MULTI_THREAD_RENDERING_
     return (uint32_t) sysconf(_SC_NPROCESSORS_ONLN);
+#else
+    return 1;
 #endif
 }
 

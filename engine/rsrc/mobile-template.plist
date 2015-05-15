@@ -25,6 +25,10 @@
 		${BUNDLE_DISPLAY_NAME_SUPPORT}
 	<key>MinimumOSVersion</key>
 		${MINIMUM_OS_SUPPORT}
+	<key>UILaunchImages</key>
+	<array>
+		${SPLASHSCREENS}
+	</array>
 	<key>UIDeviceFamily</key>
 	<array>
 		${DEVICE_SUPPORT}
@@ -51,12 +55,17 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>
+	${LOCATION_AUTH_TYPE}
 	<key>UIStatusBarHidden</key>
 		${STATUS_BAR_HIDDEN}
 	<key>UIStatusBarHidden~ipad</key>
 		${IPAD_STATUS_BAR_HIDDEN}
 	<key>UIStatusBarStyle</key>
 		${STATUS_BAR_STYLE}
+	<key>com_livecode_StatusBarSolid</key>
+		${STATUS_BAR_SOLID}
+	<key>com_livecode_UsesLocalNotifications</key>
+		${USES_LOCAL_NOTIFICATIONS}
 	<key>UIFileSharingEnabled</key>
 		${FILE_SHARING}
 	<key>UIPrerenderedIcon</key>

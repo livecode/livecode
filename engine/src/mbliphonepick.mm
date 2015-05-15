@@ -57,6 +57,9 @@ UIViewController *MCIPhoneGetViewController(void);
 	UITableView *tableView;
 	UIActionSheet *actionSheet;
 	UIPopoverController* popoverController;
+    UIView *m_action_sheet_view;
+    UIControl *m_blocking_view;
+    bool m_should_show_keyboard;
 }
 
 - (id)init;
@@ -84,6 +87,9 @@ UIViewController *MCIPhoneGetViewController(void);
 	column_widths = nil;
 	pickerView = nil;
 	tableView = nil;
+    m_action_sheet_view = nil;
+    m_blocking_view = nil;
+    m_should_show_keyboard = false;
 	return self;
 }
 
@@ -348,7 +354,10 @@ return 1;
 					m_selected_index_path = [[NSIndexPath alloc] initWithIndex:0];
 				}
 				m_selected_index_path = [NSIndexPath indexPathForRow:[[m_selected_index objectAtIndex:0] intValue] inSection:0];
-				[tableView scrollToRowAtIndexPath: m_selected_index_path atScrollPosition: UITableViewScrollPositionMiddle animated:NO];				
+        
+                // PM-2014-12-11: [[ Bug 12899 ]] Scroll only if there is a record
+                if ([tableView numberOfRowsInSection:0] > 0)
+                    [tableView scrollToRowAtIndexPath: m_selected_index_path atScrollPosition: UITableViewScrollPositionMiddle animated:NO];				
 				m_bar_visible = true;
 			}
 		}
@@ -395,7 +404,11 @@ return 1;
 				[t_toolbar_items addObject: [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone target: self action: @selector(dismissPickWheel:)]];
 			[t_toolbar setItems: t_toolbar_items animated: NO];
 		}
+        
+        
 		// create the action sheet that can contain the "Cancel" and "Done" buttons and date pick wheel
+        
+        
 		actionSheet = [[UIActionSheet alloc] initWithTitle:nil //[pickerArray objectAtIndex:0]
 												  delegate:self
 										 cancelButtonTitle:nil //@"Done"
@@ -415,7 +428,9 @@ return 1;
 			[actionSheet addSubview: t_toolbar];
 			[t_toolbar release];
 		}	
-		// set up the bounding box of the popover 
+        
+
+		// set up the bounding box of the popover
 		// the height depends on whether or not we are displaying buttons
 		if (m_use_table_view)
 		{
@@ -430,17 +445,24 @@ return 1;
 				self.contentSizeForViewInPopover = CGSizeMake(t_horizontal, 261);
 			else
 				self.contentSizeForViewInPopover = CGSizeMake(t_horizontal, 216);
-		}	
+		}
+        
 		// create the popover controller
 		popoverController = [[t_popover alloc] initWithContentViewController:self];
+        
+        // need to make self as delegate otherwise overridden delegates are not called
+        popoverController.delegate = self;
+        
+        [popoverController setPopoverContentSize:self.contentSizeForViewInPopover];
 		[popoverController presentPopoverFromRect:MCUserRectToLogicalCGRect(p_button_rect)
 										   inView:MCIPhoneGetView()
 						 permittedArrowDirections:UIPopoverArrowDirectionAny
-										 animated:YES];						
+										 animated:YES];
+        
 		
-		// need to make self as delegate otherwise overridden delegates are not called
-		popoverController.delegate = self;
-		[popoverController setContentViewController:self];	
+        // The following line creates problem on iOS 8 - Remove it
+		//[popoverController setContentViewController:self];
+        
 	}
 	else
 	{
@@ -449,9 +471,15 @@ return 1;
 		// compute orientation
 		bool t_is_landscape;
 		t_is_landscape = UIInterfaceOrientationIsLandscape(MCIPhoneGetOrientation());
+        
+        // PM-2015-03-25: [[ Bug 15070 ]] The actionSheet that contains the pickWheel should be of fixed height
+        CGFloat t_toolbar_portrait_height, t_toolbar_landscape_height;
+        t_toolbar_portrait_height = 44;
+        t_toolbar_landscape_height = 32;
 		
 		// create the pick wheel
-		pickerView = [[UIPickerView alloc] initWithFrame: CGRectMake(0, (t_is_landscape ? 32 : 44), 0, 0)];
+		pickerView = [[UIPickerView alloc] initWithFrame: CGRectMake(0, (t_is_landscape ? t_toolbar_landscape_height : t_toolbar_portrait_height), 0, 0)];
+
 		pickerView.delegate = self;
 		
 		// HC-2011-10-03 [[ Picker Buttons ]] Showing the bar dynamicaly, to indicate if any initial selections have been made.
@@ -463,7 +491,12 @@ return 1;
 			pickerView.showsSelectionIndicator = YES;
 			m_bar_visible = true;
 		}
-		
+
+        // PM-2014-10-22: [[ Bug 13750 ]] Make sure the view under the pickerView is not visible (iphone 4 only)
+        NSString *t_device_model_name = MCIPhoneGetDeviceModelName();
+        if ([t_device_model_name isEqualToString:@"iPhone 4"] || [t_device_model_name isEqualToString:@"iPhone 4(Rev A)"] || [t_device_model_name isEqualToString:@"iPhone 4(CDMA)"])
+            pickerView.backgroundColor = [UIColor colorWithWhite:1.0 alpha:0.90];
+        
 		// set the label item
 		for (t_i = 0; t_i < [m_selected_index count]; t_i++)
 			[pickerView selectRow:[[m_selected_index objectAtIndex:t_i] integerValue] inComponent:t_i animated:NO];
@@ -471,11 +504,12 @@ return 1;
 		// make a toolbar
         // MM-2012-10-15: [[ Bug 10463 ]] Make the picker scale to the width of the device rather than a hard coded value (fixes issue with landscape iPhone 5 being 568 not 480).
 		UIToolbar *t_toolbar;
-		t_toolbar = [[UIToolbar alloc] initWithFrame: (t_is_landscape ? CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . height, 32) : CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, 44))];
+		t_toolbar = [[UIToolbar alloc] initWithFrame: (t_is_landscape ? CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . height, t_toolbar_landscape_height) : CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, t_toolbar_portrait_height))];
 		t_toolbar.barStyle = UIBarStyleBlack;
 		t_toolbar.translucent = YES;
+        
 		[t_toolbar sizeToFit];
-		
+        
 		NSMutableArray *t_toolbar_items;
 		t_toolbar_items = [[NSMutableArray alloc] init];
 		// HC-2011-09-28 [[ Picker Buttons ]] Enable cancel button on request.
@@ -485,29 +519,100 @@ return 1;
 		[t_toolbar_items addObject: [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone target: self action: @selector(dismissPickWheel:)]];
 		
 		[t_toolbar setItems: t_toolbar_items animated: NO];
-		
-		// create the action sheet that contains the "Done" button and pick wheel
-		actionSheet = [[UIActionSheet alloc] initWithTitle:nil
-												  delegate:self
-										 cancelButtonTitle:nil
-									destructiveButtonTitle:nil
-										 otherButtonTitles:nil];
-		// set the style of the acionsheet
-		[actionSheet setActionSheetStyle:UIActionSheetStyleBlackTranslucent];
-		// add the subviews to the action sheet
-		[actionSheet addSubview: t_toolbar];
-		[actionSheet addSubview: pickerView];
-		[t_toolbar release];
-		
-		// initialize the pick wheel, this also calls viewDidLoad and populates pickerArray
-		[actionSheet showInView: MCIPhoneGetView()];
-		// set up the bounding box of the action sheet
-        // MM-2012-10-15: [[ Bug 10463 ]] Make the picker scale to the width of the device rather than a hard coded value (fixes issue with landscape iPhone 5 being 568 not 480).
-		if (!t_is_landscape)
-			[actionSheet setBounds:CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, 496)];
-		else
-			[actionSheet setBounds:CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . height, 365)];
-	}
+        
+        if (MCmajorosversion < 800)
+        {
+            // create the action sheet that contains the "Done" button and pick wheel
+            actionSheet = [[UIActionSheet alloc] initWithTitle:nil
+                                                      delegate:self
+                                             cancelButtonTitle:nil
+                                        destructiveButtonTitle:nil
+                                             otherButtonTitles:nil];
+            // set the style of the acionsheet
+            [actionSheet setActionSheetStyle:UIActionSheetStyleBlackTranslucent];
+            // add the subviews to the action sheet
+            [actionSheet addSubview: t_toolbar];
+            [actionSheet addSubview: pickerView];
+            [t_toolbar release];
+            
+            // initialize the pick wheel, this also calls viewDidLoad and populates pickerArray
+            [actionSheet showInView: MCIPhoneGetView()];
+            // set up the bounding box of the action sheet
+            // MM-2012-10-15: [[ Bug 10463 ]] Make the picker scale to the width of the device rather than a hard coded value (fixes issue with landscape iPhone 5 being 568 not 480).
+            if (!t_is_landscape)
+                [actionSheet setBounds:CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, 496)];
+            else
+                [actionSheet setBounds:CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . height, 365)];
+            
+        }
+        
+        
+        else
+        {
+            // PM-2014-09-25: [[ Bug 13484 ]] In iOS 8 and above, UIActionSheet is not working properly
+            
+            CGRect t_rect;
+            // PM-2015-04-13: [[ Bug 15070 ]] There are only three valid values (162.0, 180.0 and 216.0) for the height of the picker
+            uint2 t_pick_wheel_height = pickerView.frame.size.height;
+            
+            // PM-2015-03-25: [[ Bug 15070 ]] Make the rect of the m_action_sheet_view to be of fixed height
+            if (!t_is_landscape)
+                t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height - t_toolbar_portrait_height - t_pick_wheel_height, [[UIScreen mainScreen] bounds] . size . width, t_toolbar_portrait_height + t_pick_wheel_height);
+            else
+                t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height - t_toolbar_landscape_height - t_pick_wheel_height, [[UIScreen mainScreen] bounds] . size . width, t_toolbar_landscape_height + t_pick_wheel_height);
+            
+            m_action_sheet_view = [[UIView alloc] initWithFrame:t_rect];
+            
+            [m_action_sheet_view addSubview: t_toolbar];
+            [m_action_sheet_view addSubview: pickerView];
+            m_action_sheet_view.backgroundColor = [UIColor whiteColor];
+            [t_toolbar release];
+                        
+            [MCIPhoneGetView() addSubview:m_action_sheet_view];
+            
+           // This is offscreen
+            if (!t_is_landscape)
+                m_action_sheet_view.frame = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height , t_rect . size . width, t_rect. size . height);
+            else
+                m_action_sheet_view.frame = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . width , t_rect . size . width, t_rect. size . height);
+            
+            // Add animation to simulate old behaviour (slide from bottom)
+            [UIView animateWithDuration:0.2 animations:^{m_action_sheet_view.frame = t_rect;}];
+            
+            
+            // Add m_blocking_view to block any touch events in MCIPhoneGetView()
+            CGRect t_blocking_rect;
+            
+            if (!t_is_landscape)
+                t_blocking_rect = CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height - t_toolbar_portrait_height - t_pick_wheel_height);
+            else
+                t_blocking_rect = CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height - t_toolbar_landscape_height - t_pick_wheel_height);
+            
+            m_blocking_view = [[UIControl alloc] initWithFrame:t_blocking_rect];
+            
+            // Add effects and animation to simulate old behaviour
+            m_blocking_view.backgroundColor = [UIColor blackColor];
+            m_blocking_view.alpha = 0.4;
+            m_blocking_view.userInteractionEnabled = YES;
+            
+#ifdef __IPHONE_8_0
+            CATransition *applicationLoadViewIn =[CATransition animation];
+            [applicationLoadViewIn setDuration:0.7];
+            [applicationLoadViewIn setType:kCATransitionReveal];
+            [applicationLoadViewIn setTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseIn]];
+            [[m_blocking_view layer]addAnimation:applicationLoadViewIn forKey:kCATransitionFromTop];
+#endif
+            // PM-2014-10-15: [[ Bug 13677 ]] If the keyboard is activated, hide it and show the picker. We should reactivate the keyboard once the picker hides
+            if (MCIPhoneIsKeyboardVisible())
+            {
+                MCIPhoneDeactivateKeyboard();
+                m_should_show_keyboard = true;
+            }
+            [MCIPhoneGetView() addSubview:m_blocking_view];
+        }
+        
+        
+    }
 }
 
 - (NSString *)finishPicking
@@ -567,8 +672,46 @@ return 1;
 		for (t_i = 0; t_i < [m_selected_index count]; t_i++)
 			[m_selected_index replaceObjectAtIndex:t_i withObject: [NSNumber numberWithInt:-1]];
 	}
-	[actionSheet dismissWithClickedButtonIndex:0 animated:YES];
-	[popoverController dismissPopoverAnimated:YES];
+    
+    if (iSiPad)
+    {
+        [actionSheet dismissWithClickedButtonIndex:0 animated:YES];
+        [popoverController dismissPopoverAnimated:YES];
+    }
+    else
+    {
+        // PM-2014-09-25: [[ Bug 13484 ]] In iOS 8 and above, UIActionSheet is not working properly
+        if (MCmajorosversion >= 800)
+        {
+            [pickerView removeFromSuperview];
+        
+            [UIView animateWithDuration:0.5
+                             animations:^{
+                                 m_action_sheet_view.frame = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height);//move it out of screen
+                             } completion:^(BOOL finished) {
+                                 [m_action_sheet_view removeFromSuperview];
+                             }];
+            
+
+            [m_action_sheet_view release];
+            
+            [m_blocking_view removeFromSuperview];
+            [m_blocking_view release];
+            
+            m_running = false;
+            MCscreen -> pingwait();
+            
+            // PM-2014-10-15: [[ Bug 13677 ]] Make sure we re-activate the keyboard if it was previously deactivated because of the picker
+            if (m_should_show_keyboard)
+            {
+                // show the keyboard as in iOS 7
+                [UIView animateWithDuration:0.9 animations:^{ MCIPhoneActivateKeyboard(); } completion:nil];
+                m_should_show_keyboard = false;
+            }
+        }
+        else
+            [actionSheet dismissWithClickedButtonIndex:0 animated:YES];
+    }
 }
 
 - (void)cancelPickWheel: (NSObject *)sender
@@ -577,8 +720,47 @@ return 1;
 	m_selection_made = false;
 	for (t_i = 0; t_i < [m_selected_index count]; t_i++)
 		[m_selected_index replaceObjectAtIndex:t_i withObject:[NSNumber numberWithInt:-1]];
-	[actionSheet dismissWithClickedButtonIndex:0 animated:YES];
-	[popoverController dismissPopoverAnimated:YES];
+    
+    if (iSiPad)
+    {
+        [actionSheet dismissWithClickedButtonIndex:0 animated:YES];
+        [popoverController dismissPopoverAnimated:YES];
+    }
+    
+    else
+    {
+        // PM-2014-09-25: [[ Bug 13484 ]] In iOS 8 and above, UIActionSheet is not working properly
+        if (MCmajorosversion >= 800)
+        {
+            [pickerView removeFromSuperview];
+            
+            [UIView animateWithDuration:0.5
+                             animations:^{
+                                 m_action_sheet_view.frame = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height);//move it out of screen
+                             } completion:^(BOOL finished) {
+                                 [m_action_sheet_view removeFromSuperview];
+                             }];
+            
+            
+            [m_action_sheet_view release];
+            
+            [m_blocking_view removeFromSuperview];
+            [m_blocking_view release];
+            
+            m_running = false;
+            MCscreen -> pingwait();
+            
+            // PM-2014-10-15: [[ Bug 13677 ]] Make sure we re-activate the keyboard if it was previously deactivated because of the picker
+            if (m_should_show_keyboard)
+            {
+                // show the keyboard as in iOS 7
+                [UIView animateWithDuration:0.9 animations:^{ MCIPhoneActivateKeyboard(); } completion:nil];
+                m_should_show_keyboard = false;
+            }
+        }
+        else
+            [actionSheet dismissWithClickedButtonIndex:0 animated:YES];
+    }
 }
 
 // MW-2010-12-20: [[ Bug 9254 ]] Stop running the action sheet here, after the animation
@@ -606,7 +788,9 @@ return 1;
 	if (iSiPad)
 	{
 		// HC-2011-09-28 [[ Picker Buttons ]] We are now using an actionSheet on the iPad.
-		self.view = actionSheet;
+        self.view = actionSheet;
+		//self.view = actionSheet.view;
+        
 	}
 	else
 		self.view = pickerView;

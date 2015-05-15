@@ -377,7 +377,9 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		Boolean icondrawed = False;
 		
         // SN-2014-08-12: [[ Bug 13155 ]] Don't try to draw the icons if the button has not got any
-		if (icons != NULL && m_icon_gravity != kMCGravityNone)
+        // SN-2014-12-17: [[ Bug 14249 ]] Do not try to draw the curicon if there is no current
+        //  icon (as it may after loading a stack).
+		if (icons != NULL && icons -> curicon && m_icon_gravity != kMCGravityNone)
 		{
 			// MW-2014-06-19: [[ IconGravity ]] Use iconGravity to place the icon.
 			int t_left, t_top, t_right, t_bottom;
@@ -510,6 +512,21 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 					}
 					setforeground(dc, DI_BOTTOM, False);
 				}
+#ifdef _MACOSX
+                // FG-2014-10-29: [[ Bugfix 13842 ]] On Yosemite, glowing buttons
+                // should draw with white text.
+                if (IsMacLFAM() && MCmajorosversion >= 0x10A0 && MCaqua
+                    && !(flags & F_DISABLED) && isstdbtn && getstyleint(flags) == F_STANDARD
+                    && ((state & CS_HILITED) || (state & CS_SHOW_DEFAULT))
+                    && rect.height <= 24 && MCappisactive
+                    && !(MCbuttonstate && MCmousestackptr && MCmousestackptr == getstack()
+                        && MCmousestackptr->getcard()->getmfocused() != nil
+                        && MCmousestackptr->getcard()->getmfocused() != this
+                        && MCmousestackptr->getcard()->getmfocused()->gettype() == CT_BUTTON))
+                    setforeground(dc, DI_BACK, False, True);
+                // PM-2014-11-26: [[ Bug 14070 ]] [Removed code] Make sure text color in menuButton inverts when hilited
+        
+#endif
 				drawlabel(dc, sx + loff, sy + loff, twidth, shadowrect, lines[i], isunicode, fontstyle);
 				if (getstyleint(flags) == F_MENU && menumode == WM_CASCADE && !t_themed_menu)
 					drawcascade(dc, shadowrect); // draw arrow in text color
@@ -1338,6 +1355,14 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 				MCcurtheme->drawwidget(dc, tabwinfo, tabrect);
 			twidth -= taboverlap;
 
+#ifdef _MACOSX
+            // FG-2014-10-24: [[ Bugfix 11912 ]]
+            // On OSX, reverse the text colour for selected tab buttons
+            if (i+1 == menuhistory)
+                reversetext = True;
+            else
+                reversetext = False;
+#endif
 		}
 		else
 			switch (MClook)
@@ -1676,7 +1701,15 @@ void MCButton::drawstandardbutton(MCDC *dc, MCRectangle &srect)
 				// if the mouse button is down after clicking on a button, don't draw the default button animation
 				MCControl *t_control = MCmousestackptr->getcard()->getmfocused();
 				if (MCbuttonstate && t_control && t_control->gettype() == CT_BUTTON)
-					winfo.state |= WTHEME_STATE_SUPPRESSDEFAULT;
+                {
+                    // FG-2014-11-05: [[ Bugfix 13909 ]]
+                    // Don't suppress the default on OSX Yosemite if it is this
+                    // button being pressed but the mouse is outside the button.
+                    if (!(IsMacLFAM() && MCaqua && MCmajorosversion >= 0x10A0 && t_control == this)
+                          || (rect.x > MCmousex && MCmousex >= rect.x+rect.width
+                              && rect.y > MCmousey && MCmousey >= rect.y+rect.height))
+                        winfo.state |= WTHEME_STATE_SUPPRESSDEFAULT;
+                }
 			}
 			
 #ifdef _MACOSX

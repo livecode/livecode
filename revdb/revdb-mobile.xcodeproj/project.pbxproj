@@ -446,7 +446,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "export SYMBOLS=_getXtable\nsh \"$SRCROOT/../tools/build-extension-ios.sh\"";
+			shellScript = "export SYMBOLS=\"_getXtable _configureSecurity _setExternalInterfaceVersion\"\nsh \"$SRCROOT/../tools/build-extension-ios.sh\"";
 			showEnvVarsInLog = 0;
 		};
 		4DA0BA7E12E842B500B4F692 /* Build External */ = {

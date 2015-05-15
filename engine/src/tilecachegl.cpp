@@ -136,7 +136,7 @@ static inline void glvColor4ub(MCTileCacheOpenGLVersion p_version, uint8_t r, ui
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static inline void MCTileCacheOpenGLCompositorDecodeTile(MCTileCacheOpenGLCompositorContext *self, uint32_t p_tile, uint32_t& r_super_tile, uint32_t& r_sub_tile)
+static inline void MCTileCacheOpenGLCompositorDecodeTile(MCTileCacheOpenGLCompositorContext *self, uintptr_t p_tile, uint32_t& r_super_tile, uint32_t& r_sub_tile)
 {
 	r_super_tile = (p_tile & 0xffff) - 1;
 	r_sub_tile = (p_tile >> 16) - 1;
@@ -219,7 +219,7 @@ static bool MCTileCacheOpenGLCompositorCreateTile(MCTileCacheOpenGLCompositorCon
 	return true;
 }
 
-static void MCTileCacheOpenGLCompositorDestroyTile(MCTileCacheOpenGLCompositorContext *self, uint32_t p_tile)
+static void MCTileCacheOpenGLCompositorDestroyTile(MCTileCacheOpenGLCompositorContext *self, uintptr_t p_tile)
 {
 	// Fetch the super/sub indices of the tile.
 	uint32_t t_super_tile_index, t_sub_tile_index;
@@ -354,7 +354,14 @@ bool MCTileCacheOpenGLCompositor_AllocateTile(void *p_context, int32_t p_size, c
 		
 		// Fill the texture.
 		// IM_2013-08-21: [[ RefactorGraphics ]] set iOS pixel format to RGBA
-		glTexSubImage2D(GL_TEXTURE_2D, 0, t_x * self -> tile_size, t_y * self -> tile_size, self -> tile_size, self -> tile_size, GL_RGBA, GL_UNSIGNED_BYTE, t_data);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, t_x * self -> tile_size, t_y * self -> tile_size, self -> tile_size, self -> tile_size, GL_RGBA, GL_UNSIGNED_BYTE, t_data);
+        // SN-2015-04-13: [[ Bug 14879 ]] This function seems to fail sometimes,
+        //  and we want to get the error here, not in
+        //  MCTileCacheOpenGLCompositorFlushSuperTiles as it happens in the
+        //  stack attached to the bug report.
+        GLenum t_error = glGetError();
+        if (t_error != GL_NO_ERROR)
+            MCLog("glTextSubImage2D(x,x,%d,%d,%d,%d,...) returned error 0x%X", t_x * self -> tile_size, t_y * self -> tile_size, self -> tile_size, self -> tile_size, t_error);
 
 		// Set the tile id.
 		t_tile = (void *)t_tile_id;
@@ -376,7 +383,7 @@ void MCTileCacheOpenGLCompositor_DeallocateTile(void *p_context, void *p_tile)
 	MCTileCacheOpenGLCompositorContext *self;
 	self = (MCTileCacheOpenGLCompositorContext *)p_context;
 	
-	MCTileCacheOpenGLCompositorDestroyTile(self, (uint32_t)p_tile);
+	MCTileCacheOpenGLCompositorDestroyTile(self, (uintptr_t)p_tile);
 }
 
 static void MCTileCacheOpenGLCompositor_PrepareFrame(MCTileCacheOpenGLCompositorContext *self)
@@ -570,7 +577,7 @@ bool MCTileCacheOpenGLCompositor_CompositeTile(void *p_context, int32_t p_x, int
 	self = (MCTileCacheOpenGLCompositorContext *)p_context;
 
 	uint32_t t_super_tile_index, t_sub_tile_index;
-	MCTileCacheOpenGLCompositorDecodeTile(self, (uint32_t)p_tile, t_super_tile_index, t_sub_tile_index);
+	MCTileCacheOpenGLCompositorDecodeTile(self, (uintptr_t)p_tile, t_super_tile_index, t_sub_tile_index);
 	
 	GLuint t_texture;
 	t_texture = self -> super_tiles[t_super_tile_index] -> texture;

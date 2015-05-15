@@ -100,6 +100,7 @@ typedef uint32_t       cpu_subtype_t;
 #define CPU_TYPE_MC98000        ((cpu_type_t) 10)
 #define CPU_TYPE_HPPA           ((cpu_type_t) 11)
 #define CPU_TYPE_ARM            ((cpu_type_t) 12)
+#define CPU_TYPE_ARM64          (CPU_TYPE_ARM | CPU_ARCH_ABI64)
 #define CPU_TYPE_MC88000        ((cpu_type_t) 13)
 #define CPU_TYPE_SPARC          ((cpu_type_t) 14)
 #define CPU_TYPE_I860           ((cpu_type_t) 15)
@@ -189,6 +190,30 @@ typedef uint32_t       cpu_subtype_t;
 #define CPU_SUBTYPE_POWERPC_7450        ((cpu_subtype_t) 11)
 #define CPU_SUBTYPE_POWERPC_970         ((cpu_subtype_t) 100)
 
+/*
+ *	ARM subtypes
+ */
+#define CPU_SUBTYPE_ARM_ALL             ((cpu_subtype_t) 0)
+#define CPU_SUBTYPE_ARM_V4T             ((cpu_subtype_t) 5)
+#define CPU_SUBTYPE_ARM_V6              ((cpu_subtype_t) 6)
+#define CPU_SUBTYPE_ARM_V5TEJ           ((cpu_subtype_t) 7)
+#define CPU_SUBTYPE_ARM_XSCALE		((cpu_subtype_t) 8)
+#define CPU_SUBTYPE_ARM_V7		((cpu_subtype_t) 9)
+#define CPU_SUBTYPE_ARM_V7F		((cpu_subtype_t) 10) /* Cortex A9 */
+#define CPU_SUBTYPE_ARM_V7S		((cpu_subtype_t) 11) /* Swift */
+#define CPU_SUBTYPE_ARM_V7K		((cpu_subtype_t) 12) /* Kirkwood40 */
+#define CPU_SUBTYPE_ARM_V6M		((cpu_subtype_t) 14) /* Not meant to be run under xnu */
+#define CPU_SUBTYPE_ARM_V7M		((cpu_subtype_t) 15) /* Not meant to be run under xnu */
+#define CPU_SUBTYPE_ARM_V7EM		((cpu_subtype_t) 16) /* Not meant to be run under xnu */
+
+#define CPU_SUBTYPE_ARM_V8		((cpu_subtype_t) 13)
+
+/*
+ *  ARM64 subtypes
+ */
+#define CPU_SUBTYPE_ARM64_ALL           ((cpu_subtype_t) 0)
+#define CPU_SUBTYPE_ARM64_V8            ((cpu_subtype_t) 1)
+
 #define FAT_MAGIC       0xcafebabe
 #define FAT_CIGAM       0xbebafeca      /* NXSwapLong(FAT_MAGIC) */
 
@@ -222,6 +247,26 @@ struct mach_header {
 /* Constant for the magic field of the mach_header (32-bit architectures) */
 #define MH_MAGIC        0xfeedface      /* the mach magic number */
 #define MH_CIGAM        0xcefaedfe      /* NXSwapInt(MH_MAGIC) */
+
+/*
+ * The 64-bit mach header appears at the very beginning of object files for
+ * 64-bit architectures.
+ */
+struct mach_header_64 {
+	uint32_t	magic;		/* mach magic number identifier */
+	cpu_type_t	cputype;	/* cpu specifier */
+	cpu_subtype_t	cpusubtype;	/* machine specifier */
+	uint32_t	filetype;	/* type of file */
+	uint32_t	ncmds;		/* number of load commands */
+	uint32_t	sizeofcmds;	/* the size of all the load commands */
+	uint32_t	flags;		/* flags */
+	uint32_t	reserved;	/* reserved */
+};
+
+/* Constant for the magic field of the mach_header_64 (64-bit architectures) */
+#define MH_MAGIC_64 0xfeedfacf /* the 64-bit mach magic number */
+#define MH_CIGAM_64 0xcffaedfe /* NXSwapInt(MH_MAGIC_64) */
+
 /*
  * The layout of the file depends on the filetype.  For all but the MH_OBJECT
  * file type the segments are padded out and aligned on a segment alignment
@@ -341,6 +386,10 @@ struct load_command {
 #define LC_DYLD_INFO 0x22
 #define LC_DYLD_INFO_ONLY 0x80000022
 #define LC_SOURCE_VERSION 0x2A
+#define LC_ENCRYPTION_INFO_64 0x2C
+
+// MM-2014-09-30: [[ iOS 8 Support ]] Used by iOS 8 simulator builds.
+#define LC_MAIN (0x28|LC_REQ_DYLD) /* replacement for LC_UNIXTHREAD */
 
 /*
  * A variable length string in a load command is represented by an lc_str
@@ -414,6 +463,26 @@ struct segment_command { /* for 32-bit architectures */
 };
 
 /*
+ * The 64-bit segment load command indicates that a part of this file is to be
+ * mapped into a 64-bit task's address space.  If the 64-bit segment has
+ * sections then section_64 structures directly follow the 64-bit segment
+ * command and their size is reflected in cmdsize.
+ */
+struct segment_command_64 { /* for 64-bit architectures */
+	uint32_t	cmd;		/* LC_SEGMENT_64 */
+	uint32_t	cmdsize;	/* includes sizeof section_64 structs */
+	char		segname[16];	/* segment name */
+	uint64_t	vmaddr;		/* memory address of this segment */
+	uint64_t	vmsize;		/* memory size of this segment */
+	uint64_t	fileoff;	/* file offset of this segment */
+	uint64_t	filesize;	/* amount to map from the file */
+	vm_prot_t	maxprot;	/* maximum VM protection */
+	vm_prot_t	initprot;	/* initial VM protection */
+	uint32_t	nsects;		/* number of sections in segment */
+	uint32_t	flags;		/* flags */
+};
+
+/*
  * A segment is made up of zero or more sections.  Non-MH_OBJECT files have
  * all of their segments with the proper sections in each, and padded to the
  * specified segment alignment when produced by the link editor.  The first
@@ -452,6 +521,21 @@ struct section { /* for 32-bit architectures */
 	uint32_t	flags;		/* flags (section type and attributes)*/
 	uint32_t	reserved1;	/* reserved (for offset or index) */
 	uint32_t	reserved2;	/* reserved (for count or sizeof) */
+};
+
+struct section_64 { /* for 64-bit architectures */
+	char		sectname[16];	/* name of this section */
+	char		segname[16];	/* segment this section goes in */
+	uint64_t	addr;		/* memory address of this section */
+	uint64_t	size;		/* size in bytes of this section */
+	uint32_t	offset;		/* file offset of this section */
+	uint32_t	align;		/* section alignment (power of 2) */
+	uint32_t	reloff;		/* file offset of relocation entries */
+	uint32_t	nreloc;		/* number of relocation entries */
+	uint32_t	flags;		/* flags (section type and attributes)*/
+	uint32_t	reserved1;	/* reserved (for offset or index) */
+	uint32_t	reserved2;	/* reserved (for count or sizeof) */
+	uint32_t	reserved3;	/* reserved */
 };
 
 /*
@@ -708,6 +792,33 @@ struct dylib_module {
         objc_module_info_size;  /*  the (__OBJC,__module_info) section */
 };
 
+/* a 64-bit module table entry */
+struct dylib_module_64 {
+    uint32_t module_name;	/* the module name (index into string table) */
+    
+    uint32_t iextdefsym;	/* index into externally defined symbols */
+    uint32_t nextdefsym;	/* number of externally defined symbols */
+    uint32_t irefsym;		/* index into reference symbol table */
+    uint32_t nrefsym;		/* number of reference symbol table entries */
+    uint32_t ilocalsym;		/* index into symbols for local symbols */
+    uint32_t nlocalsym;		/* number of local symbols */
+    
+    uint32_t iextrel;		/* index into external relocation entries */
+    uint32_t nextrel;		/* number of external relocation entries */
+    
+    uint32_t iinit_iterm;	/* low 16 bits are the index into the init
+                             section, high 16 bits are the index into
+                             the term section */
+    uint32_t ninit_nterm;      /* low 16 bits are the number of init section
+                                entries, high 16 bits are the number of
+                                term section entries */
+    
+    uint32_t			/* for this module size of */
+    objc_module_info_size;	/*  the (__OBJC,__module_info) section */
+    uint64_t			/* for this module address of the start of */
+    objc_module_info_addr;	/*  the (__OBJC,__module_info) section */
+};
+
 /* 
  * The entries in the reference symbol table are used when loading the module
  * (both by the static and dynamic link editors) and if the module is unloaded
@@ -774,6 +885,40 @@ struct dyld_info_command
 	uint32_t lazy_bind_size;
 	uint32_t export_off;
 	uint32_t export_size;
+};
+
+/*
+ * The version_min_command contains the min OS version on which this
+ * binary was built to run.
+ */
+struct version_min_command {
+    uint32_t	cmd;		/* LC_VERSION_MIN_MACOSX or
+                             LC_VERSION_MIN_IPHONEOS  */
+    uint32_t	cmdsize;	/* sizeof(struct min_version_command) */
+    uint32_t	version;	/* X.Y.Z is encoded in nibbles xxxx.yy.zz */
+    uint32_t	sdk;		/* X.Y.Z is encoded in nibbles xxxx.yy.zz */
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct mach_32bit
+{
+    typedef ::mach_header mach_header;
+    typedef ::segment_command segment_command;
+    typedef ::section section;
+    typedef uint32_t field;
+    typedef int32_t sfield;
+    static const int seg_load_command = LC_SEGMENT;
+};
+
+struct mach_64bit
+{
+    typedef ::mach_header_64 mach_header;
+    typedef ::segment_command_64 segment_command;
+    typedef ::section_64 section;
+    typedef uint64_t field;
+    typedef int64_t sfield;
+    static const int seg_load_command = LC_SEGMENT_64;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -855,6 +1000,11 @@ static void swap_relocation_info(bool p_to_network, relocation_info& x)
 	MCDeployByteSwapRecord(p_to_network, "ll", &x, sizeof(relocation_info));
 }
 
+static void swap_version_min_command(bool p_to_network, version_min_command& x)
+{
+    MCDeployByteSwapRecord(p_to_network, "llll", &x, sizeof(version_min_command));
+}
+
 static void swap_load_command(bool p_to_network, uint32_t p_type, load_command* x)
 {
 	switch(p_type)
@@ -886,16 +1036,22 @@ static void swap_load_command(bool p_to_network, uint32_t p_type, load_command* 
 		case LC_THREAD:
 		case LC_UNIXTHREAD:
 		case LC_LOAD_DYLINKER:
+		case LC_MAIN:
 			swap_load_command_hdr(p_to_network, *x);
 			break;
 
-		default:
+        case LC_VERSION_MIN_MACOSX:
+        case LC_VERSION_MIN_IPHONEOS:
+            swap_version_min_command(p_to_network, *(version_min_command *)x);
+            break;
+		
+        default:
 			swap_load_command_hdr(p_to_network, *x);
 			break;
 	}
 }
 
-static void relocate_segment_command(segment_command *x, int32_t p_file_delta, int32_t p_address_delta)
+template<typename T>static void relocate_segment_command(typename T::segment_command *x, typename T::sfield p_file_delta, typename T::sfield p_address_delta)
 {
 	x -> vmaddr += p_address_delta;
 	x -> fileoff += p_file_delta;
@@ -970,6 +1126,330 @@ static void relocate_function_starts_command(linkedit_data_command *x, int32_t p
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MW-2014-10-02: [[ Bug 13536 ]] iOS Segment alignment has to be 16k now - this
+//   should be made a parameter at some point. Additionally, for FAT binary
+//   generation, the existing alignment in the header should be followed for
+//   binary concatenation.
+#define MACHO_ALIGNMENT 16384
+#define MACHO_ALIGN(x) ((x + MACHO_ALIGNMENT - 1) & ~(MACHO_ALIGNMENT - 1))
+
+////////////////////////////////////////////////////////////////////////////////
+
+static bool MCDeployToMacOSXFetchMinOSVersion(const MCDeployParameters& p_params, mach_header& p_header, uint32_t& r_version)
+{
+    // First work out what DeployArchitecture to look for.
+    MCDeployArchitecture t_arch;
+    if (p_header . cputype == CPU_TYPE_X86)
+        t_arch = kMCDeployArchitecture_I386;
+    else if (p_header . cputype == CPU_TYPE_X86_64)
+        t_arch = kMCDeployArchitecture_X86_64;
+    else if (p_header . cputype == CPU_TYPE_ARM && p_header . cpusubtype == CPU_SUBTYPE_ARM_V6)
+        t_arch = kMCDeployArchitecture_ARMV6;
+    else if (p_header . cputype == CPU_TYPE_ARM && p_header . cpusubtype == CPU_SUBTYPE_ARM_V7)
+        t_arch = kMCDeployArchitecture_ARMV7;
+    else if (p_header . cputype == CPU_TYPE_ARM && p_header . cpusubtype == CPU_SUBTYPE_ARM_V7S)
+        t_arch = kMCDeployArchitecture_ARMV7S;
+    else if (p_header . cputype == CPU_TYPE_ARM64)
+        t_arch = kMCDeployArchitecture_ARM64;
+    else if (p_header . cputype == CPU_TYPE_POWERPC)
+        t_arch = kMCDeployArchitecture_PPC;
+    else if (p_header . cputype == CPU_TYPE_POWERPC64)
+        t_arch = kMCDeployArchitecture_PPC64;
+    else
+        t_arch = kMCDeployArchitecture_Unknown;
+    
+    // Search for both the architecture in the mach header and for the 'unknown'
+    // architecture. If the real arch is found, then we use that version; otherwise
+    // if there is an unknown arch then we use that version. If neither are found we
+    // return false which means the caller can do nothing.
+    int t_unknown_index, t_found_index;
+    t_unknown_index = -1;
+    t_found_index = -1;
+    for(uindex_t i = 0; i < p_params . min_os_version_count; i++)
+        if (p_params . min_os_versions[i] . architecture == t_arch &&
+            t_found_index < 0)
+            t_found_index = (signed)i;
+        else if (p_params . min_os_versions[i] . architecture == kMCDeployArchitecture_Unknown &&
+                 t_unknown_index < 0)
+            t_unknown_index = (signed)i;
+    
+    if (t_found_index < 0 && t_unknown_index < 0)
+        return false;
+    
+    if (t_found_index >= 0)
+    {
+        r_version = p_params . min_os_versions[t_found_index] . version;
+        return true;
+    }
+    
+    r_version = p_params . min_os_versions[t_unknown_index] . version;
+    return true;
+}
+
+template<typename T> bool MCDeployToMacOSXMainBody(const MCDeployParameters& p_params, bool p_big_endian, MCDeployFileRef p_engine, uint32_t p_engine_offset, uint32_t t_engine_size, uint32_t& x_offset, MCDeployFileRef p_output, mach_header& t_header, load_command **t_commands, uint32_t t_command_count)
+{
+    bool t_success;
+    t_success = true;
+    
+	// MW-2013-05-04: [[ iOSDeployMisc ]] Search for a rogue 'misc' segment.
+	// Next check that the executable is in a form we can work with
+	typename T::segment_command *t_linkedit_segment, *t_project_segment, *t_payload_segment, *t_misc_segment;
+	uint32_t t_linkedit_index, t_project_index, t_payload_index, t_misc_index;
+	t_linkedit_segment = t_project_segment = t_payload_segment = t_misc_segment = NULL;
+	if (t_success)
+		for(uint32_t i = 0; i < t_header . ncmds; i++)
+			if (t_commands[i] -> cmd == T::seg_load_command)
+			{
+				typename T::segment_command *t_command;
+				t_command = (typename T::segment_command *)t_commands[i];
+				if (memcmp(t_command -> segname, "__LINKEDIT", 11) == 0)
+				{
+					t_linkedit_index = i;
+					t_linkedit_segment = t_command;
+				}
+				else if (memcmp(t_command -> segname, "__PROJECT", 10) == 0)
+				{
+					t_project_index = i;
+					t_project_segment = t_command;
+				}
+				else if (memcmp(t_command -> segname, "__PAYLOAD", 10) == 0)
+				{
+					t_payload_index = i;
+					t_payload_segment = t_command;
+				}
+				else if (memcmp(t_command -> segname, "__MISC", 6) == 0)
+				{
+					t_misc_index = i;
+					t_misc_segment = t_command;
+				}
+			}
+    
+	// Make sure we have both segments we think should be there
+	if (t_success && t_linkedit_segment == NULL)
+		t_success = MCDeployThrow(kMCDeployErrorMacOSXNoLinkEditSegment);
+	if (t_success && t_project_segment == NULL)
+		t_success = MCDeployThrow(kMCDeployErrorMacOSXNoProjectSegment);
+	if (t_success && p_params . payload != NULL && t_payload_segment == NULL)
+		t_success = MCDeployThrow(kMCDeployErrorMacOSXNoPayloadSegment);
+	
+	// MW-2013-05-04: [[ iOSDeployMisc ]] If 'misc' segment is present but not between
+	//   linkedit and project, then all is well.
+	if (t_success &&
+		t_misc_segment != nil && (t_linkedit_index != t_misc_index + 1 || t_misc_index != t_project_index + 1))
+		t_misc_segment = nil;
+	
+	// MW-2013-05-04: [[ iOSDeployMisc ]] Check 'misc' segment (if potentially an issue) is
+	//   in a place we can handle it.
+	// Make sure linkedit follows project, or linkedit follows misc, follows project
+	if (t_success &&
+		(t_linkedit_index != t_project_index + 1) &&
+		(t_misc_segment != nil && (t_linkedit_index != t_misc_index + 1 || t_misc_index != t_project_index + 1)))
+		t_success = MCDeployThrow(kMCDeployErrorMacOSXBadSegmentOrder);
+    
+	// Make sure project follows payload (if required)
+	if (t_success && t_payload_segment != NULL && t_project_index != t_payload_index + 1)
+		t_success = MCDeployThrow(kMCDeployErrorMacOSXBadSegmentOrder);
+    
+	// Make sure no segments follow linkedit
+	if (t_success)
+		for(uint32_t i = t_linkedit_index + 1; i < t_header . ncmds && t_success; i++)
+			if (t_commands[i] -> cmd == T::seg_load_command)
+				t_success = MCDeployThrow(kMCDeployErrorMacOSXBadSegmentOrder);
+    
+	// Next we write out everything up to the beginning of the project (or payload)
+	// segment, followed by our new segments themselves. This gives us the info we
+	// need to recalculate the required header info.
+    
+	typename T::field t_output_offset;
+	t_output_offset = 0;
+	if (t_success)
+	{
+		if (t_payload_segment == NULL)
+			t_output_offset = t_project_segment -> fileoff;
+		else
+			t_output_offset = t_payload_segment -> fileoff;
+	}
+    
+	// Write out the original data up to the beginning of the project section.
+	if (t_success)
+		t_success = MCDeployFileCopy(p_output, x_offset, p_engine, p_engine_offset, t_output_offset);
+    
+	// Write out the payload segment (if necessary)
+	typename T::field t_payload_offset;
+    uint32_t t_payload_size;
+	t_payload_offset = 0;
+	t_payload_size = 0;
+	if (t_success && t_payload_segment != NULL)
+	{
+		t_payload_offset = x_offset + t_output_offset;
+		if (p_params . payload != nil)
+			t_success = MCDeployWritePayload(p_params, p_big_endian, p_output, t_payload_offset, t_payload_size);
+        // MW-2014-10-02: [[ Bug 13536 ]] Use macro to align to required alignment.
+		if (t_success)
+			t_output_offset += MACHO_ALIGN(t_payload_size);
+	}
+    
+	// Write out the project info struct
+	typename T::field t_project_offset;
+    uint32_t t_project_size;
+	t_project_offset = 0;
+	t_project_size = 0;
+	if (t_success)
+	{
+		t_project_offset = x_offset + t_output_offset;
+		t_success = MCDeployWriteProject(p_params, p_big_endian, p_output, t_project_offset, t_project_size);
+	}
+    
+	// Now we update the relevant pieces of the header and command table.
+	typename T::field t_old_linkedit_offset, t_old_project_offset, t_old_payload_offset;
+	if (t_success)
+	{
+        // MW-2014-10-02: [[ Bug 13536 ]] Use macro to align to required alignment.
+		t_project_size = MACHO_ALIGN(t_project_size);
+		t_old_project_offset = t_project_segment -> fileoff;
+		t_project_segment -> filesize = t_project_size;
+		t_project_segment -> vmsize = t_project_size;
+		((section *)(t_project_segment + 1))[0] . size = t_project_size;
+        
+		if (t_payload_segment != nil)
+		{
+            // MW-2014-10-02: [[ Bug 13536 ]] Use macro to align to required alignment.
+			t_payload_size = MACHO_ALIGN(t_payload_size);
+			t_old_payload_offset = t_payload_segment -> fileoff;
+			t_payload_segment -> filesize = t_payload_size;
+			t_payload_segment -> vmsize = t_payload_size;
+			((section *)(t_payload_segment + 1))[0] . size = t_payload_size;
+			relocate_segment_command<T>(t_project_segment, (t_payload_segment -> fileoff + t_payload_size) - t_old_project_offset, (t_payload_segment -> fileoff + t_payload_size) - t_old_project_offset);
+		}
+		
+		// MW-2013-05-04: [[ iOSDeployMisc ]] If there is a 'misc' segment then use a different
+		//   'post' project offset (which will include 'misc').
+		if (t_misc_segment == nil)
+			t_old_linkedit_offset = t_linkedit_segment -> fileoff;
+		else
+			t_old_linkedit_offset = t_misc_segment -> fileoff;
+        
+		// Now go through, updating the offsets for all load commands after
+		// and including linkedit.
+		typename T::sfield t_file_delta, t_address_delta;
+		t_file_delta = (t_project_segment -> fileoff + t_project_size) - t_old_linkedit_offset;
+		t_address_delta = t_file_delta;
+		for(uint32_t i = t_linkedit_index; i < t_header . ncmds && t_success; i++)
+		{
+			switch(t_commands[i] -> cmd)
+			{
+                // Relocate the commands we know about that contain file offset
+                case LC_SEGMENT:
+                    relocate_segment_command<mach_32bit>((segment_command *)t_commands[i], t_file_delta, t_address_delta);
+                    break;
+                case LC_SEGMENT_64:
+                    relocate_segment_command<mach_64bit>((segment_command_64 *)t_commands[i], t_file_delta, t_address_delta);
+                    break;
+                case LC_TWOLEVEL_HINTS:
+                    relocate_twolevel_hints_command((twolevel_hints_command *)t_commands[i], t_file_delta, t_address_delta);
+                    break;
+                case LC_SYMTAB:
+                    relocate_symtab_command((symtab_command *)t_commands[i], t_file_delta, t_address_delta);
+                    break;
+                case LC_DYSYMTAB:
+                    relocate_dysymtab_command((dysymtab_command *)t_commands[i], t_file_delta, t_address_delta);
+                    break;
+                case LC_CODE_SIGNATURE:
+                    relocate_code_signature_command((linkedit_data_command *)t_commands[i], t_file_delta, t_address_delta);
+                    break;
+                case LC_DYLD_INFO:
+                case LC_DYLD_INFO_ONLY:
+                    relocate_dyld_info_command((dyld_info_command *)t_commands[i], t_file_delta, t_address_delta);
+                    break;
+                case LC_FUNCTION_STARTS:
+                case LC_DYLIB_CODE_SIGN_DRS:
+                case LC_DATA_IN_CODE:
+                    relocate_function_starts_command((linkedit_data_command *)t_commands[i], t_file_delta, t_address_delta);
+                    break;
+					
+                // These commands have no file offsets
+                case LC_UUID:
+                case LC_THREAD:
+                case LC_UNIXTHREAD:
+                case LC_LOAD_DYLIB:
+                case LC_LOAD_WEAK_DYLIB:
+                case LC_LOAD_DYLINKER:
+                case LC_ENCRYPTION_INFO:
+                case LC_ENCRYPTION_INFO_64:
+                case LC_SOURCE_VERSION:
+                case LC_MAIN:
+                    break;
+                    
+                // We rewrite the contents of these commands as appropriate to
+                // the 'min_os_versions' list in the params.
+                case LC_VERSION_MIN_MACOSX:
+                case LC_VERSION_MIN_IPHONEOS:
+                {
+                    // Notice that we leave the SDK version alone - this is tied
+                    // to linkage and so is probably unwise to adjust.
+                    uint32_t t_version;
+                    if (MCDeployToMacOSXFetchMinOSVersion(p_params, t_header, t_version))
+                        ((version_min_command *)t_commands[i]) -> version = t_version;
+                }
+                break;
+                    
+                // Any others that are present are an error since we don't know
+                // what to do with them.
+                default:
+                    t_success = MCDeployThrow(kMCDeployErrorMacOSXUnknownLoadCommand);
+                    break;
+			}
+		}
+	}
+    
+	// Overwrite the mach header
+	if (t_success)
+	{
+        if (p_big_endian)
+            swap_mach_header(p_big_endian, t_header);
+        
+        typename T::mach_header t_actual_header;
+        memset(&t_actual_header, 0, sizeof(t_actual_header));
+        memcpy(&t_actual_header, &t_header, sizeof(t_header));
+        
+		t_success = MCDeployFileWriteAt(p_output, &t_actual_header, sizeof(t_actual_header), x_offset);
+	}
+    
+	// Overwrite the load commands array
+	if (t_success)
+	{
+		typename T::field t_offset;
+		t_offset = x_offset + sizeof(typename T::mach_header);
+		for(uint32_t i = 0; i < t_command_count && t_success; i++)
+		{
+			typename T::field t_size;
+			t_size = t_commands[i] -> cmdsize;
+			swap_load_command(p_big_endian, t_commands[i] -> cmd, t_commands[i]);
+			t_success = MCDeployFileWriteAt(p_output, t_commands[i], t_size, t_offset);
+			if (t_success)
+				t_offset += t_size;
+		}
+	}
+    
+	// Output the linkedit segment and beyond.
+	if (t_success)
+		t_success = MCDeployFileCopy(p_output, t_project_offset + t_project_size, p_engine, p_engine_offset + t_old_linkedit_offset, t_engine_size - t_old_linkedit_offset);
+    
+	// Update the offset in case we are producing a fat binary.
+	if (t_success)
+		x_offset += t_output_offset + t_project_size + (t_engine_size - t_old_linkedit_offset);
+    
+	// Free the temporary data structures we needed.
+	if (t_commands != NULL)
+	{
+		for(uint32_t i = 0; i < t_command_count; i++)
+			free(t_commands[i]);
+		delete[] t_commands;
+	}
+    
+	return t_success;
+}
+
 typedef bool (*MCDeployValidateHeaderCallback)(const MCDeployParameters& params, mach_header& header, load_command **commands);
 
 static bool MCDeployToMacOSXReadHeader(bool p_big_endian, MCDeployFileRef p_engine, uint32_t p_offset, mach_header& r_header, load_command**& r_commands)
@@ -977,10 +1457,12 @@ static bool MCDeployToMacOSXReadHeader(bool p_big_endian, MCDeployFileRef p_engi
 	// Read the mach-o header.
 	if (!MCDeployFileReadAt(p_engine, &r_header, sizeof(mach_header), p_offset))
 		return MCDeployThrow(kMCDeployErrorMacOSXNoHeader);
-	swap_mach_header(p_big_endian, r_header);
+
+    if (p_big_endian)
+        swap_mach_header(p_big_endian, r_header);
 
 	// Validate the header
-	if (r_header . magic != MH_MAGIC ||
+	if ((r_header . magic != MH_MAGIC && r_header . magic != MH_MAGIC_64) ||
 		(r_header . filetype != MH_EXECUTE && r_header . filetype != MH_BUNDLE && r_header . filetype != MH_OBJECT))
 		return MCDeployThrow(kMCDeployErrorMacOSXBadHeader);
 
@@ -992,14 +1474,18 @@ static bool MCDeployToMacOSXReadHeader(bool p_big_endian, MCDeployFileRef p_engi
 
 	// And read them in
 	uint32_t t_offset;
-	t_offset = p_offset + sizeof(mach_header);
+    if (r_header . magic == MH_MAGIC)
+        t_offset = p_offset + sizeof(mach_header);
+    else
+        t_offset = p_offset + sizeof(mach_header_64);
 	for(uint32_t i = 0; i < r_header . ncmds; i++)
 	{
 		// First read the command header
 		load_command t_command;
 		if (!MCDeployFileReadAt(p_engine, &t_command, sizeof(load_command), t_offset))
 			return MCDeployThrow(kMCDeployErrorMacOSXBadCommand);
-		swap_load_command_hdr(p_big_endian, t_command);
+        if (p_big_endian)
+            swap_load_command_hdr(p_big_endian, t_command);
 
 		// Now allocate memory for the full command record
 		r_commands[i] = (load_command *)malloc(t_command . cmdsize);
@@ -1012,7 +1498,8 @@ static bool MCDeployToMacOSXReadHeader(bool p_big_endian, MCDeployFileRef p_engi
 
 		// And swap if we are actually interested in the contents otherwise
 		// just swap the header.
-		swap_load_command(p_big_endian, t_command . cmd, r_commands[i]);
+        if (p_big_endian)
+            swap_load_command(p_big_endian, t_command . cmd, r_commands[i]);
 
 		// Move to the next command
 		t_offset += t_command . cmdsize;
@@ -1071,7 +1558,7 @@ static bool MCDeployToMacOSXMain(const MCDeployParameters& p_params, bool p_big_
 		t_success = MCDeployThrow(kMCDeployErrorBadFile);
 
 	// Read in the header and load command list
-	mach_header t_header;
+    mach_header t_header;
 	load_command **t_commands;
 	uint32_t t_command_count;
 	t_commands = NULL;
@@ -1084,238 +1571,18 @@ static bool MCDeployToMacOSXMain(const MCDeployParameters& p_params, bool p_big_
 	if (t_success && p_validate_header_callback != nil)
 		t_success = p_validate_header_callback(p_params, t_header, t_commands);
 
-	// MW-2013-05-04: [[ iOSDeployMisc ]] Search for a rogue 'misc' segment.
-	// Next check that the executable is in a form we can work with
-	segment_command *t_linkedit_segment, *t_project_segment, *t_payload_segment, *t_misc_segment;
-	uint32_t t_linkedit_index, t_project_index, t_payload_index, t_misc_index;
-	t_linkedit_segment = t_project_segment = t_payload_segment = t_misc_segment = NULL;
-	if (t_success)
-		for(uint32_t i = 0; i < t_header . ncmds; i++)
-			if (t_commands[i] -> cmd == LC_SEGMENT)
-			{
-				segment_command *t_command;
-				t_command = (segment_command *)t_commands[i];
-				if (memcmp(t_command -> segname, "__LINKEDIT", 11) == 0)
-				{
-					t_linkedit_index = i;
-					t_linkedit_segment = t_command;
-				}
-				else if (memcmp(t_command -> segname, "__PROJECT", 10) == 0)
-				{
-					t_project_index = i;
-					t_project_segment = t_command;
-				}
-				else if (memcmp(t_command -> segname, "__PAYLOAD", 10) == 0)
-				{
-					t_payload_index = i;
-					t_payload_segment = t_command;
-				}
-				else if (memcmp(t_command -> segname, "__MISC", 6) == 0)
-				{
-					t_misc_index = i;
-					t_misc_segment = t_command;
-				}
-			}
-
-	// Make sure we have both segments we think should be there
-	if (t_success && t_linkedit_segment == NULL)
-		t_success = MCDeployThrow(kMCDeployErrorMacOSXNoLinkEditSegment);
-	if (t_success && t_project_segment == NULL)
-		t_success = MCDeployThrow(kMCDeployErrorMacOSXNoProjectSegment);
-	if (t_success && p_params . payload != NULL && t_payload_segment == NULL)
-		t_success = MCDeployThrow(kMCDeployErrorMacOSXNoPayloadSegment);
-	
-	// MW-2013-05-04: [[ iOSDeployMisc ]] If 'misc' segment is present but not between
-	//   linkedit and project, then all is well.
-	if (t_success &&
-		t_misc_segment != nil && (t_linkedit_index != t_misc_index + 1 || t_misc_index != t_project_index + 1))
-		t_misc_segment = nil;
-	
-	// MW-2013-05-04: [[ iOSDeployMisc ]] Check 'misc' segment (if potentially an issue) is
-	//   in a place we can handle it.
-	// Make sure linkedit follows project, or linkedit follows misc, follows project
-	if (t_success &&
-		(t_linkedit_index != t_project_index + 1) &&
-		(t_misc_segment != nil && (t_linkedit_index != t_misc_index + 1 || t_misc_index != t_project_index + 1)))
-		t_success = MCDeployThrow(kMCDeployErrorMacOSXBadSegmentOrder);
-
-	// Make sure project follows payload (if required)
-	if (t_success && t_payload_segment != NULL && t_project_index != t_payload_index + 1)
-		t_success = MCDeployThrow(kMCDeployErrorMacOSXBadSegmentOrder);
-
-	// Make sure no segments follow linkedit
-	if (t_success)
-		for(uint32_t i = t_linkedit_index + 1; i < t_header . ncmds && t_success; i++)
-			if (t_commands[i] -> cmd == LC_SEGMENT)
-				t_success = MCDeployThrow(kMCDeployErrorMacOSXBadSegmentOrder);
-
-	// Next we write out everything up to the beginning of the project (or payload)
-	// segment, followed by our new segments themselves. This gives us the info we
-	// need to recalculate the required header info.
-
-	uint32_t t_output_offset;
-	t_output_offset = 0;
-	if (t_success)
-	{
-		if (t_payload_segment == NULL)
-			t_output_offset = t_project_segment -> fileoff;
-		else
-			t_output_offset = t_payload_segment -> fileoff;
-	}
-
-	// Write out the original data up to the beginning of the project section.
-	if (t_success)
-		t_success = MCDeployFileCopy(p_output, x_offset, p_engine, p_engine_offset, t_output_offset);
-
-	// Write out the payload segment (if necessary)
-	uint32_t t_payload_size, t_payload_offset;
-	t_payload_offset = 0;
-	t_payload_size = 0;
-	if (t_success && t_payload_segment != NULL)
-	{
-		t_payload_offset = x_offset + t_output_offset;
-		if (p_params . payload != nil)
-			t_success = MCDeployWritePayload(p_params, p_big_endian, p_output, t_payload_offset, t_payload_size);
-		if (t_success)
-			t_output_offset += (t_payload_size + 4095) & ~4095;
-	}
-
-	// Write out the project info struct
-	uint32_t t_project_size, t_project_offset;
-	t_project_offset = 0;
-	t_project_size = 0;
-	if (t_success)
-	{
-		t_project_offset = x_offset + t_output_offset;
-		t_success = MCDeployWriteProject(p_params, p_big_endian, p_output, t_project_offset, t_project_size);
-	}
-
-	// Now we update the relevant pieces of the header and command table.
-	uint32_t t_old_linkedit_offset, t_old_project_offset, t_old_payload_offset;
-	if (t_success)
-	{
-		t_project_size = (t_project_size + 4095) & ~4095;
-		t_old_project_offset = t_project_segment -> fileoff;
-		t_project_segment -> filesize = t_project_size;
-		t_project_segment -> vmsize = t_project_size;
-		((section *)(t_project_segment + 1))[0] . size = t_project_size;
-
-		if (t_payload_segment != nil)
-		{
-			t_payload_size = (t_payload_size + 4095) & ~4095;
-			t_old_payload_offset = t_payload_segment -> fileoff;
-			t_payload_segment -> filesize = t_payload_size;
-			t_payload_segment -> vmsize = t_payload_size;
-			((section *)(t_payload_segment + 1))[0] . size = t_payload_size;
-			relocate_segment_command(t_project_segment, (t_payload_segment -> fileoff + t_payload_size) - t_old_project_offset, (t_payload_segment -> fileoff + t_payload_size) - t_old_project_offset);
-		}
-		
-		// MW-2013-05-04: [[ iOSDeployMisc ]] If there is a 'misc' segment then use a different
-		//   'post' project offset (which will include 'misc').
-		if (t_misc_segment == nil)
-			t_old_linkedit_offset = t_linkedit_segment -> fileoff;
-		else
-			t_old_linkedit_offset = t_misc_segment -> fileoff;
-
-		// Now go through, updating the offsets for all load commands after
-		// and including linkedit.
-		int32_t t_file_delta, t_address_delta;
-		t_file_delta = (t_project_segment -> fileoff + t_project_size) - t_old_linkedit_offset;
-		t_address_delta = t_file_delta;
-		for(uint32_t i = t_linkedit_index; i < t_header . ncmds && t_success; i++)
-		{
-			switch(t_commands[i] -> cmd)
-			{
-			// Relocate the commands we know about that contain file offset
-			case LC_SEGMENT:
-				relocate_segment_command((segment_command *)t_commands[i], t_file_delta, t_address_delta);
-				break;
-			case LC_TWOLEVEL_HINTS:
-				relocate_twolevel_hints_command((twolevel_hints_command *)t_commands[i], t_file_delta, t_address_delta);
-				break;
-			case LC_SYMTAB:
-				relocate_symtab_command((symtab_command *)t_commands[i], t_file_delta, t_address_delta);
-				break;
-			case LC_DYSYMTAB:
-				relocate_dysymtab_command((dysymtab_command *)t_commands[i], t_file_delta, t_address_delta);
-				break;
-			case LC_CODE_SIGNATURE:
-				relocate_code_signature_command((linkedit_data_command *)t_commands[i], t_file_delta, t_address_delta);
-				break;
-			case LC_DYLD_INFO:
-			case LC_DYLD_INFO_ONLY:
-				relocate_dyld_info_command((dyld_info_command *)t_commands[i], t_file_delta, t_address_delta);
-				break;
-			case LC_FUNCTION_STARTS:
-			case LC_DYLIB_CODE_SIGN_DRS:
-			case LC_DATA_IN_CODE:
-				relocate_function_starts_command((linkedit_data_command *)t_commands[i], t_file_delta, t_address_delta);
-				break;
-					
-			// These commands have no file offsets
-			case LC_UUID:
-			case LC_THREAD:
-			case LC_UNIXTHREAD:
-			case LC_LOAD_DYLIB:
-			case LC_LOAD_WEAK_DYLIB:
-			case LC_LOAD_DYLINKER:
-			case LC_ENCRYPTION_INFO:
-			case LC_VERSION_MIN_MACOSX:
-			case LC_VERSION_MIN_IPHONEOS:
-			case LC_SOURCE_VERSION:
-				break;
-
-			// Any others that are present are an error since we don't know
-			// what to do with them.
-			default:
-				t_success = MCDeployThrow(kMCDeployErrorMacOSXUnknownLoadCommand);
-				break;
-			}
-		}
-	}
-
-	// Overwrite the mach header
-	if (t_success)
-	{
-		swap_mach_header(p_big_endian, t_header);
-		t_success = MCDeployFileWriteAt(p_output, &t_header, sizeof(mach_header), x_offset);
-	}
-
-	// Overwrite the load commands array
-	if (t_success)
-	{
-		uint32_t t_offset;
-		t_offset = x_offset + sizeof(mach_header);
-		for(uint32_t i = 0; i < t_command_count && t_success; i++)
-		{
-			uint32_t t_size;
-			t_size = t_commands[i] -> cmdsize;
-			swap_load_command(p_big_endian, t_commands[i] -> cmd, t_commands[i]);
-			t_success = MCDeployFileWriteAt(p_output, t_commands[i], t_size, t_offset);
-			if (t_success)
-				t_offset += t_size;
-		}
-	}
-
-	// Output the linkedit segment and beyond.
-	if (t_success)
-		t_success = MCDeployFileCopy(p_output, t_project_offset + t_project_size, p_engine, p_engine_offset + t_old_linkedit_offset, t_engine_size - t_old_linkedit_offset);
-
-	// Update the offset in case we are producing a fat binary.
-	if (t_success)
-		x_offset += t_output_offset + t_project_size + (t_engine_size - t_old_linkedit_offset);
-
-	// Free the temporary data structures we needed.
-	if (t_commands != NULL)
-	{
-		for(uint32_t i = 0; i < t_command_count; i++)
-			free(t_commands[i]);
-		delete[] t_commands;
-	}
-
-	return t_success;
+    if (t_success)
+    {
+        if ((t_header . cputype & CPU_ARCH_ABI64) == 0)
+            t_success = MCDeployToMacOSXMainBody<mach_32bit>(p_params, p_big_endian, p_engine, p_engine_offset, t_engine_size, x_offset, p_output, t_header, t_commands, t_command_count);
+        else
+            t_success = MCDeployToMacOSXMainBody<mach_64bit>(p_params, p_big_endian, p_engine, p_engine_offset, t_engine_size, x_offset, p_output, t_header, t_commands, t_command_count);
+    }
+    
+    return t_success;
 }
 
+#if 0
 static bool MCDeployToMacOSXEmbedded(const MCDeployParameters& p_params, bool p_big_endian, MCDeployFileRef p_engine, uint32_t p_engine_offset, uint32_t p_engine_size, uint32_t& x_offset, MCDeployFileRef p_output)
 {
 	bool t_success;
@@ -1416,7 +1683,8 @@ static bool MCDeployToMacOSXEmbedded(const MCDeployParameters& p_params, bool p_
 	{
 		t_old_project_end_offset = t_project_section -> offset + t_project_section -> size;
 		
-		t_project_size = (t_project_size + 4095) & ~4095;
+        // MW-2014-10-02: [[ Bug 13536 ]] Use macro to align to required alignment.
+		t_project_size = MACHO_ALIGN(t_project_size);
 			
 		int32_t t_file_delta, t_address_delta;
 		t_file_delta = t_project_size - t_project_section -> size;
@@ -1549,6 +1817,7 @@ static bool MCDeployToMacOSXEmbedded(const MCDeployParameters& p_params, bool p_
 	
 	return t_success;
 }
+#endif
 
 // MW-2013-06-13: This method builds a capsule into each part of a (potentially) fat binary.
 static bool MCDeployToMacOSXFat(const MCDeployParameters& p_params, bool p_embedded, MCDeployFileRef p_engine, MCDeployFileRef p_output, MCDeployValidateHeaderCallback p_validate_header_callback)
@@ -1567,20 +1836,23 @@ static bool MCDeployToMacOSXFat(const MCDeployParameters& p_params, bool p_embed
 		swap_fat_header(true, t_fat_header);
 	
 	// If this isn't a fat binary, then we assume its just a single arch binary.
-	if (t_success && t_fat_header . magic != FAT_MAGIC)
+	if (t_success && t_fat_header . magic != FAT_MAGIC && t_fat_header . magic != FAT_CIGAM)
 	{
 		uint32_t t_output_offset;
 		t_output_offset = 0;
 		if (!p_embedded)
-			t_success = MCDeployToMacOSXMain(p_params, false, p_engine, 0, 0, t_output_offset, p_output, p_validate_header_callback);
+            t_success = MCDeployToMacOSXMain(p_params, false, p_engine, 0, 0, t_output_offset, p_output, p_validate_header_callback);
+#if 0
 		else
 			t_success = MCDeployToMacOSXEmbedded(p_params, false, p_engine, 0, 0, t_output_offset, p_output);
+#endif
 	}
 	else
 	{
-		// The output offset starts at 4096 - the fat header is updated as we go.
+		// The output offset for the slice is aligned up to fat_arch.align after the
+        // fat header.
 		uint32_t t_output_offset;
-		t_output_offset = 4096;
+		t_output_offset = sizeof(fat_header);
 		
 		// The fat_arch structures follow the fat header directly
 		uint32_t t_header_offset;
@@ -1596,10 +1868,10 @@ static bool MCDeployToMacOSXFat(const MCDeployParameters& p_params, bool p_embed
 			uint32_t t_last_output_offset;
 			if (t_success)
 			{
-				swap_fat_arch(true, t_fat_arch);
+                swap_fat_arch(true, t_fat_arch);
 				
 				// Round the end of the last engine up to the nearest page boundary.
-				t_output_offset = (t_output_offset + 4095) & ~4095;
+				t_output_offset = (t_output_offset + ((1 << t_fat_arch . align))) & ~((1 << t_fat_arch . align) - 1);
 				
 				// Record the end of the last engine.
 				t_last_output_offset = t_output_offset;
@@ -1607,8 +1879,10 @@ static bool MCDeployToMacOSXFat(const MCDeployParameters& p_params, bool p_embed
 				// Write out this arch's portion.
 				if (!p_embedded)
 					t_success = MCDeployToMacOSXMain(p_params, false, p_engine, t_fat_arch . offset, t_fat_arch . size, t_output_offset, p_output, p_validate_header_callback);
+#if 0
 				else
 					t_success = MCDeployToMacOSXEmbedded(p_params, false, p_engine, 0, 0, t_output_offset, p_output);
+#endif
 			}
 			
 			if (t_success)
@@ -1618,7 +1892,7 @@ static bool MCDeployToMacOSXFat(const MCDeployParameters& p_params, bool p_embed
 				t_fat_arch . size = t_output_offset - t_last_output_offset;
 				
 				// Put it back to network byte order.
-				swap_fat_arch(true, t_fat_arch);
+                swap_fat_arch(true, t_fat_arch);
 				
 				// Write out the header.
 				t_success = MCDeployFileWriteAt(p_output, &t_fat_arch, sizeof(t_fat_arch), t_header_offset);
@@ -1690,9 +1964,9 @@ Exec_stat MCDeployToMacOSX(const MCDeployParameters& p_params)
 	MCDeployFileRef t_engine, t_engine_ppc, t_engine_x86, t_output;
 	t_engine = t_engine_ppc = t_engine_x86 = t_output = NULL;
 	if (t_success &&
-		(p_params . engine != NULL && !MCDeployFileOpen(p_params . engine, "rb", t_engine) ||
-		 p_params . engine_ppc != NULL && !MCDeployFileOpen(p_params . engine_ppc, "rb", t_engine_ppc) ||
-		 p_params . engine_x86 != NULL && !MCDeployFileOpen(p_params . engine_x86, "rb", t_engine_x86)))
+		((p_params . engine != NULL && !MCDeployFileOpen(p_params . engine, "rb", t_engine)) ||
+		 (p_params . engine_ppc != NULL && !MCDeployFileOpen(p_params . engine_ppc, "rb", t_engine_ppc)) ||
+		 (p_params . engine_x86 != NULL && !MCDeployFileOpen(p_params . engine_x86, "rb", t_engine_x86))))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 	
 	if (t_success && !MCDeployFileOpen(p_params . output, "wb+", t_output))
@@ -1800,8 +2074,8 @@ Exec_stat MCDeployToMacOSX(const MCDeployParameters& p_params)
 static bool MCDeployValidateIOSEngine(const MCDeployParameters& p_params, mach_header& p_header, load_command **p_commands)
 {
 	// Check the CPU type is ARM or X86
-	if (p_header . cputype != CPU_TYPE_ARM &&
-		p_header . cputype != CPU_TYPE_X86)
+	if ((p_header . cputype & ~CPU_ARCH_ABI64) != CPU_TYPE_ARM &&
+		(p_header . cputype & ~CPU_ARCH_ABI64)  != CPU_TYPE_X86)
 		return MCDeployThrow(kMCDeployErrorMacOSXBadCpuType);
 
 	// Check that UIKit is one of the libraries linked to
@@ -1847,87 +2121,6 @@ Exec_stat MCDeployToIOS(const MCDeployParameters& p_params, bool p_embedded)
 	// Generate the binary.
 	if (t_success)
 		t_success = MCDeployToMacOSXFat(p_params, p_embedded, t_engine, t_output, MCDeployValidateIOSEngine);
-	
-#if 0
-	// Next read in the fat header.
-	fat_header t_fat_header;
-	if (t_success && !MCDeployFileReadAt(t_engine, &t_fat_header, sizeof(fat_header), 0))
-		t_success = MCDeployThrow(kMCDeployErrorMacOSXNoHeader);
-	
-	// Swap the header - note that the 'fat_*' structures are always in network
-	// byte-order.
-	if (t_success)
-		swap_fat_header(true, t_fat_header);
-	
-	// If this isn't a fat binary, then we assume its just a single arch binary.
-	if (t_success && t_fat_header . magic != FAT_MAGIC)
-	{
-		uint32_t t_output_offset;
-		t_output_offset = 0;
-		if (!p_embedded)
-			t_success = MCDeployToMacOSXMain(p_params, false, t_engine, 0, 0, t_output_offset, t_output, MCDeployValidateIOSEngine);
-		else
-			t_success = MCDeployToMacOSXEmbedded(p_params, false, t_engine, 0, 0, t_output_offset, t_output);
-	}
-	else
-	{
-		// The output offset starts at 4096 - the fat header is updated as we go.
-		uint32_t t_output_offset;
-		t_output_offset = 4096;
-		
-		// The fat_arch structures follow the fat header directly
-		uint32_t t_header_offset;
-		t_header_offset = sizeof(fat_header);
-		
-		// Loop through all the fat headers.
-		for(uint32_t i = 0; i < t_fat_header . nfat_arch && t_success; i++)
-		{
-			fat_arch t_fat_arch;
-			if (!MCDeployFileReadAt(t_engine, &t_fat_arch, sizeof(fat_arch), t_header_offset))
-				t_success = MCDeployThrow(kMCDeployErrorMacOSXBadHeader);
-			
-			uint32_t t_last_output_offset;
-			if (t_success)
-			{
-				swap_fat_arch(true, t_fat_arch);
-				
-				// Round the end of the last engine up to the nearest page boundary.
-				t_output_offset = (t_output_offset + 4095) & ~4095;
-				
-				// Record the end of the last engine.
-				t_last_output_offset = t_output_offset;
-
-				// Write out this arch's portion.
-				if (!p_embedded)
-					t_success = MCDeployToMacOSXMain(p_params, false, t_engine, t_fat_arch . offset, t_fat_arch . size, t_output_offset, t_output, MCDeployValidateIOSEngine);
-				else
-					t_success = MCDeployToMacOSXEmbedded(p_params, false, t_engine, 0, 0, t_output_offset, t_output);
-			}
-			
-			if (t_success)
-			{
-				// Update the fat header.
-				t_fat_arch . offset = t_last_output_offset;
-				t_fat_arch . size = t_output_offset - t_last_output_offset;
-				
-				// Put it back to network byte order.
-				swap_fat_arch(true, t_fat_arch);
-				
-				// Write out the header.
-				t_success = MCDeployFileWriteAt(t_output, &t_fat_arch, sizeof(t_fat_arch), t_header_offset);
-			}
-			
-			t_header_offset += sizeof(fat_arch);
-		}
-		
-		// Final step is to update the fat header.
-		if (t_success)
-		{
-			swap_fat_header(true, t_fat_header);
-			t_success = MCDeployFileWriteAt(t_output, &t_fat_header, sizeof(t_fat_header), 0);
-		}
-	}
-#endif
 	
 	MCDeployFileClose(t_output);
 	MCDeployFileClose(t_engine);
@@ -1987,7 +2180,7 @@ static bool MCDeployForEachMacOSXArchitecture(MCDeployFileRef p_exe, MCDeployMac
 	// byte-order.
 	swap_fat_header(true, t_fat_header);
 
-	if (t_fat_header . magic == FAT_MAGIC)
+	if (t_fat_header . magic == FAT_MAGIC || t_fat_header . magic == FAT_CIGAM)
 	{
 		// This is fat binary, so iterate through each architecture calling the callback
 		// each time.
@@ -2002,7 +2195,7 @@ static bool MCDeployForEachMacOSXArchitecture(MCDeployFileRef p_exe, MCDeployMac
 			if (!MCDeployFileReadAt(p_exe, &t_fat_arch, sizeof(fat_arch), t_offset))
 				return MCDeployThrow(kMCDeployErrorMacOSXBadHeader);
 
-			swap_fat_arch(true, t_fat_arch);
+            swap_fat_arch(t_fat_header . magic == FAT_MAGIC, t_fat_arch);
 
 			if (!p_callback(p_context, p_exe, t_fat_arch))
 				return false;
@@ -2024,7 +2217,11 @@ static bool MCDeployForEachMacOSXArchitecture(MCDeployFileRef p_exe, MCDeployMac
 			swap_mach_header(false, t_mach_header);
 		else if (t_mach_header . magic == MH_CIGAM)
 			swap_mach_header(true, t_mach_header);
-		else
+		else if (t_mach_header . magic == MH_MAGIC_64)
+        {
+            // MW-2015-01-06: [[ ARM64 ]] No need to byteswap 64-bit (we don't support PPC64)
+        }
+        else
 			return MCDeployThrow(kMCDeployErrorMacOSXBadHeader);
 
 		// Fetch the size of the file
@@ -2522,6 +2719,52 @@ struct MCDeployExtractContext
 	bool error;
 };
 
+template<typename T> static bool MCDeployExtractArchCallbackBody(MCDeployExtractContext *context, MCDeployFileRef, const fat_arch& p_header, mach_header& t_header, load_command **t_commands, uint32_t t_command_count)
+{
+	typename T::section *t_section;
+	t_section = nil;
+	for(uint32_t i = 0; i < t_header . ncmds; i++)
+	{
+		if (t_commands[i] -> cmd != LC_SEGMENT)
+			continue;
+		
+		typename T::segment_command *t_segment;
+		t_segment = (typename T::segment_command *)t_commands[i];
+		
+		for(uint32_t j = 0; j < t_segment -> nsects; j++)
+		{
+			typename T::section *t_next_section;
+			t_next_section = &((typename T::section *)(t_segment + 1))[j];
+			if (memcmp(t_next_section -> segname, context -> segment, MCMin(16U, MCCStringLength(context -> segment))) != 0)
+				continue;
+			
+			if (memcmp(t_next_section -> sectname, context -> section, MCMin(16U, MCCStringLength(context -> section))) != 0)
+				continue;
+			
+			t_section = t_next_section;
+			break;
+		}
+		
+		if (t_section != nil)
+			break;
+	}
+	
+	if (t_section != nil)
+	{
+		context -> offset = p_header . offset + t_section -> offset;
+		context -> size = t_section -> size;
+	}
+    
+	if (t_commands != NULL)
+	{
+		for(uint32_t i = 0; i < t_command_count; i++)
+			free(t_commands[i]);
+		delete[] t_commands;
+	}
+	
+	return context -> offset == 0;
+}
+
 static bool MCDeployExtractArchCallback(void *p_context, MCDeployFileRef p_exe, const fat_arch& p_header)
 {
 	MCDeployExtractContext *context;
@@ -2540,48 +2783,10 @@ static bool MCDeployExtractArchCallback(void *p_context, MCDeployFileRef p_exe, 
 	uint32_t t_command_count;
 	t_command_count = t_header . ncmds;
 	
-	section *t_section;
-	t_section = nil;
-	for(uint32_t i = 0; i < t_header . ncmds; i++)
-	{
-		if (t_commands[i] -> cmd != LC_SEGMENT)
-			continue;
-		
-		segment_command *t_segment;
-		t_segment = (segment_command *)t_commands[i];
-		
-		for(uint32_t j = 0; j < t_segment -> nsects; j++)
-		{
-			section *t_next_section;
-			t_next_section = &((section *)(t_segment + 1))[j];
-			if (memcmp(t_next_section -> segname, context -> segment, MCMin(16U, MCCStringLength(context -> segment))) != 0)
-				continue;
-			
-			if (memcmp(t_next_section -> sectname, context -> section, MCMin(16U, MCCStringLength(context -> section))) != 0)
-				continue;
-			
-			t_section = t_next_section;
-			break;			
-		}
-		
-		if (t_section != nil)
-			break;
-	}
-	
-	if (t_section != nil)
-	{
-		context -> offset = p_header . offset + t_section -> offset;
-		context -> size = t_section -> size;
-	}
-			
-	if (t_commands != NULL)
-	{
-		for(uint32_t i = 0; i < t_command_count; i++)
-			free(t_commands[i]);
-		delete[] t_commands;
-	}
-	
-	return context -> offset == 0;
+    if ((t_header . cputype & CPU_ARCH_ABI64) == 0)
+        return MCDeployExtractArchCallbackBody<mach_32bit>(context, p_exe, p_header, t_header, t_commands, t_command_count);
+    
+    return MCDeployExtractArchCallbackBody<mach_64bit>(context, p_exe, p_header, t_header, t_commands, t_command_count);
 }
 
 // This method extracts a segment from a Mach-O file - if the file is a fat

@@ -116,6 +116,7 @@ private:
     bool m_switch_scheduled : 1;
     bool m_playing : 1;
     bool m_synchronizing : 1;
+    bool m_has_invalid_filename : 1;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -375,6 +376,10 @@ Boolean MCQTKitPlayer::MovieActionFilter(MovieController mc, short action, void 
             QTTime t_current_time;
             t_current_time = [self -> m_movie currentTime];
             
+            // PM-2014-10-28: [[ Bug 13773 ]] If the thumb is after the first marker and the user drags it before the first marker, then we have to reset m_last marker, so as to be dispatched
+            if (t_current_time . timeValue < self -> m_last_marker)
+                self -> m_last_marker = -1;
+            
             if (do_QTTimeCompare(t_current_time, self -> m_last_current_time) != 0)
             {
                 self -> m_last_current_time = t_current_time;
@@ -396,12 +401,16 @@ Boolean MCQTKitPlayer::MovieActionFilter(MovieController mc, short action, void 
                         {
                             self -> m_last_marker = self -> m_markers[t_index - 1];
                             MCPlatformCallbackSendPlayerMarkerChanged(self, self -> m_last_marker);
+                            self -> m_synchronizing = true;
                         }
                     }
                 }
                 
-                if (!self -> m_offscreen)
+                // PM-2014-10-28: [[ Bug 13773 ]] Make sure we don't send a currenttimechanged messsage if the callback is processed
+                if (!self -> m_offscreen && !self -> m_synchronizing && self -> IsPlaying())
                     self -> CurrentTimeChanged();
+                
+                self -> m_synchronizing = false;
             }
         }
         break;
@@ -447,8 +456,15 @@ void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
 	if (t_error != nil)
 	{
 		[t_new_movie release];
+        // PM-2014-12-17: [[ Bug 14233 ]] If invalid filename is used, reset previous open movie
+        m_movie = nil;
+        [m_view setMovie:nil];
+        m_has_invalid_filename = true;
+
 		return;
 	}
+    
+    m_has_invalid_filename = false;
 	
     // MW-2014-07-18: [[ Bug ]] Clean up callbacks before we release.
     MCSetActionFilterWithRefCon([m_movie quickTimeMovieController], nil, nil);
@@ -572,7 +588,7 @@ void MCQTKitPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
 		extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
 		
 		CGColorSpaceRef t_colorspace;
-		t_colorspace = CGColorSpaceCreateDeviceRGB();
+		/* UNCHECKED */ MCMacPlatformGetImageColorSpace(t_colorspace);
 		
 		CGContextRef t_cg_context;
 		t_cg_context = CGBitmapContextCreate(t_bitmap -> data, t_bitmap -> width, t_bitmap -> height, 8, t_bitmap -> stride, t_colorspace, MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, true));
@@ -822,6 +838,10 @@ void MCQTKitPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 			break;
 		case kMCPlatformPlayerPropertyLoop:
 			*(bool *)r_value = [(NSNumber *)[m_movie attributeForKey: *QTMovieLoopsAttribute_ptr] boolValue] == YES;
+			break;
+        // PM-2014-12-17: [[ Bug 14232 ]] Read-only property that indicates if a filename is invalid or if the file is corrupted
+        case kMCPlatformPlayerPropertyInvalidFilename:
+			*(bool *)r_value = m_has_invalid_filename;
 			break;
 	}
 }

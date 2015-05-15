@@ -21,6 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
+#include "stack.h"
 #include "execpt.h"
 #include "object.h"
 #include "globals.h"
@@ -108,6 +109,49 @@ bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, const MCString& p_data)
 	// MW-2012-02-23: [[ PutUnicode ]] If we don't understand the king
 	//   then return false (caller can then throw an error).
 	return false;
+}
+
+// SN-2015-01-16: [[ Bug 14295 ]] Added mode-specific way to get the resources folder
+void MCS_getresourcesfolder(MCExecPoint &p_context, bool p_standalone)
+{
+    bool t_path_found;
+    t_path_found = true;
+    
+    if (p_standalone)
+    {
+        extern char *MCcmd;
+        
+        p_context . copysvalue(MCcmd, strrchr(MCcmd, '/') - MCcmd);
+        
+#ifdef TARGET_PLATFORM_MACOS_X
+        extern bool MCS_apply_redirect(char*& x_path, bool p_is_file);
+        
+        char *t_redirected;
+        t_redirected = p_context . getsvalue() . clone();
+
+        MCS_apply_redirect(t_redirected, false);
+        p_context . copysvalue(t_redirected);
+#endif
+    }
+    else
+    {
+        // If we are not in a standalone, we return the folder in which sits 'this stack'
+        MCExecPoint ep;
+        if (MCdefaultstackptr->getprop(0, P_FILE_NAME, ep, true))
+        {
+            const char *t_filename;
+            t_filename = ep . getsvalue() . getstring();
+            p_context . copysvalue(t_filename, strrchr(t_filename, '/') - t_filename);
+        }
+        else
+            t_path_found = false;
+    }
+    
+    if (!t_path_found)
+    {
+        p_context . clear();
+        MCresult -> sets("folder not found");
+    }
 }
 
 void MCS_set_outputtextencoding(MCSOutputTextEncoding encoding)

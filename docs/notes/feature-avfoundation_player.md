@@ -20,4 +20,7 @@ You can also query the **status** property of the player. This property can take
 - **playing**
 - **paused**
 
+A new message is added to the player:
+- The **playRateChanged** message is sent to the player when the rate is changed by the rate scrollbar controller. To enable the rate scrollbar controller, hold shift + click on scrubForward/scrubBack buttons of the player controller.
+
 Note AVFoundation player is supported in OSX 10.8 and above. On systems running OSX 10.6 and 10.7, LiveCode continues to provide player functionality using the QTKit API.

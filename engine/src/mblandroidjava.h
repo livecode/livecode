@@ -68,6 +68,10 @@ bool MCJavaStringToNative(JNIEnv *env, jstring p_java_string, char *&r_native);
 bool MCJavaByteArrayFromData(JNIEnv *env, const MCString *p_data, jbyteArray &r_byte_array);
 bool MCJavaByteArrayToData(JNIEnv *env, jbyteArray p_byte_array, void *&r_data, uint32_t &r_length);
 
+// PM-2015-02-18: [[ Bug 14489 ]] Create/Delete global refs for statics
+bool MCJavaInitialize(JNIEnv *env);
+void MCJavaFinalize(JNIEnv *env);
+
 bool MCJavaInitList(JNIEnv *env, jobject&);
 bool MCJavaFreeList(JNIEnv *env, jobject);
 bool MCJavaListAppendObject(JNIEnv *env, jobject, jobject);

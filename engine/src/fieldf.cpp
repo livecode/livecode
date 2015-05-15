@@ -851,28 +851,60 @@ void MCField::adjustpixmapoffset(MCContext *dc, uint2 index, int4 dy)
 	int2 t_current_x;
 	int2 t_current_y;
 	dc -> getfillstyle(t_current_style, t_current_pixmap, t_current_x, t_current_y);
-	
+
 	int4 t_offset_x, t_offset_y;
 	t_offset_x = t_current_x - textx;
 	t_offset_y = t_current_y - texty + dy;
+
+    // SN-2014-12-19: [[ Bug 14238 ]] Split the update for x and y offsets, as one of them
+    // being out of [INT16_MIN; INT16_MAX] shouldn't have the other one affected.
+
+    // IM-2014-05-13: [[ HiResPatterns ]] Update to use pattern geometry function
+    uint32_t t_width, t_height;
+    /* UNCHECKED */ MCPatternGetGeometry(t_current_pixmap, t_width, t_height);
 	
 	// MW-2009-01-22: [[ Bug 3869 ]] We need to use the actual width/height of the
 	//   pixmap tile in this case to ensure the offset falls within 32767.
-	if (MCU_abs(t_offset_y) > 32767 || MCU_abs(t_offset_x) > 32767)
-	{
-		// IM-2014-05-13: [[ HiResPatterns ]] Update to use pattern geometry function
-		uint32_t t_width, t_height;
-		/* UNCHECKED */ MCPatternGetGeometry(t_current_pixmap, t_width, t_height);
-
-		t_offset_x %= t_width;
-		if (t_offset_x < 0)
-			t_offset_x += t_width;
+	if (MCU_abs(t_offset_y) > INT16_MAX)
+    {
+        // SN-2014-12-19: [[ Bug 14238 ]] Ensure that overflowing offsets are recomputed.
+        if (t_offset_y > INT16_MAX)
+            t_offset_y %= INT16_MAX;
+        else
+        {
+            // SN-2015-01-06: [[ Bug 14238 ]] Don't use % with negative numbers, as the result sign
+            //  is implementation-defined.
+            int4 t_positive_offset;
+            t_positive_offset = -t_offset_y;
+            t_positive_offset %= INT16_MAX;
+            t_offset_y = -t_positive_offset;
+        }
 		
 		t_offset_y %= t_height;
 		if (t_offset_y < 0)
 			t_offset_y += t_height;
 	}
-	
+
+    if (MCU_abs(t_offset_x) > INT16_MAX)
+    {
+        // SN-2014-12-19: [[ Bug 14238 ]] Ensure that overflowing offsets are recomputed.
+        if (t_offset_x > INT16_MAX)
+            t_offset_x %= INT16_MAX;
+        else
+        {
+            // SN-2015-01-06: [[ Bug 14238 ]] Don't use % with negative numbers, as the result sign
+            //  is implementation-defined.
+            int4 t_positive_offset;
+            t_positive_offset = -t_offset_x;
+            t_positive_offset %= INT16_MAX;
+            t_offset_x = -t_positive_offset;
+        }
+        
+        t_offset_x %= t_width;
+        if (t_offset_x < 0)
+            t_offset_x += t_width;
+    }
+
 	dc -> setfillstyle(t_current_style, t_current_pixmap, t_offset_x, t_offset_y);
 }
 
@@ -1023,14 +1055,18 @@ void MCField::drawrect(MCDC *dc, const MCRectangle &dirty)
 		{
 			setforeground(dc, DI_BORDER, False);
 			
-			int32_t cy;
-			cy = y + pgheight;
-			while(cy < grect . y + grect . height)
-			{
-				if (y >= grect . y)
-					dc -> drawline(grect . x, cy, grect . x + grect . width, cy);
-				cy += pgheight;
-			}
+            // SN-2014-09-10: [[ Bug 13374 ]] If the last line is hidden, the we take the field's lineheight.
+            if (pgheight == 0)
+                pgheight = fixedheight;
+            
+            int32_t cy;
+            cy = y + pgheight;
+            while(cy < grect . y + grect . height)
+            {
+                if (y >= grect . y)
+                    dc -> drawline(grect . x, cy, grect . x + grect . width, cy);
+                cy += pgheight;
+            }
 		}
 		
 		// MW-2012-03-15: [[ Bug 10069 ]] If we have vGrid set on the field, then render grid lines
@@ -1372,7 +1408,10 @@ void MCField::startselection(int2 x, int2 y, Boolean words)
 		firstparagraph = lastparagraph = focusedparagraph;
 		firsty = focusedy;
 	}
-	MCactivefield = this;
+    // SN-2014-12-08: [[ Bug 12784 ]] Only make this field the selectedfield
+    //  if it is Focusable
+    if (flags & F_TRAVERSAL_ON)
+        MCactivefield = this;
 	if (!(flags & F_LOCK_TEXT))
 	{
 		replacecursor(True, True);
@@ -1435,7 +1474,10 @@ void MCField::endselection()
 			t_data = MCSharedString::Create(ep . getsvalue());
 			if (t_data != NULL)
 			{
-				if (MCselectiondata -> Store(TRANSFER_TYPE_TEXT, t_data))
+                // SN-2014-12-08: [[ Bug 12784 ]] Only make this field the selectedfield
+                //  if it is Focusable
+				if (MCselectiondata -> Store(TRANSFER_TYPE_TEXT, t_data)
+                        && flags & F_TRAVERSAL_ON)
 					MCactivefield = this;
 				t_data -> Release();
 			}

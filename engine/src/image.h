@@ -538,7 +538,8 @@ public:
 	MCSharedString *getclipboardtext(void);
 
 	// MW-2011-09-13: [[ Masks ]] Updated to return a 'MCWindowMask'
-	MCWindowShape *makewindowshape(void);
+	// IM-2014-10-22: [[ Bug 13746 ]] Add size parameter to allow scaled window shapes
+	MCWindowShape *makewindowshape(const MCGIntegerSize &p_size);
 	
 #if defined(_MAC_DESKTOP)
 	CGImageRef makeicon(uint4 p_width, uint4 p_height);
@@ -551,7 +552,11 @@ public:
 	void set_gif(uint1 *data, uint4 length);
 
 	MCString getrawdata(void);
-	
+    
+    // PM-2014-12-12: [[ Bug 13860 ]] Allow exporting referenced images to album
+    MCString getimagefilename(void);
+    bool isReferencedImage(void);
+    
 	MCImage *next()
 	{
 		return (MCImage *)MCDLlist::next();

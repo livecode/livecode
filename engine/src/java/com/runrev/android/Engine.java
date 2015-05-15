@@ -1977,7 +1977,7 @@ public class Engine extends View implements EngineApi
 		if (m_opengl_view == null)
 		{
 			m_opengl_view = new OpenGLView(getContext());
-
+            
 			// Add the view to the hierarchy - we add at the bottom and bring to
 			// the front as soon as we've shown the first frame.
 			((ViewGroup)getParent()).addView(m_opengl_view, 0,
@@ -2014,12 +2014,19 @@ public class Engine extends View implements EngineApi
 		}
 		});
 	}
-
-	public void hideBitmapView()
-	{
-		m_bitmap_view.setVisibility(View.INVISIBLE);
-	}
-
+    
+    // MW-2015-05-06: [[ Bug 15232 ]] Post a runnable to prevent black flash when enabling openGLView
+    public void hideBitmapViewInTime()
+    {
+        post(new Runnable() {
+            public void run() {
+                if (m_opengl_view == null)
+                    return;
+                m_bitmap_view.setVisibility(View.INVISIBLE);
+            }
+        });
+    }
+    
 	public void showBitmapView()
 	{
 		m_bitmap_view.setVisibility(View.VISIBLE);
@@ -2763,30 +2770,47 @@ public class Engine extends View implements EngineApi
 
     public String exportImageToAlbum (byte[] t_image_data, String t_file_name, String t_file_type)
     {
-        Log.i("revandroid", "exportToAlbum called 1" + t_file_name + t_file_type);
+        Log.i("revandroid", String.format("exportToAlbum called: %s %s", t_file_name, t_file_type));
         File t_file = null;
         UUID t_uuid;
         if (t_image_data == null)
             return "export failed";
         else
         {
+            File t_folder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+            String t_filename;
+            
+            // SN-2015-01-05: [[ Bug 11417 ]] Ensure that the folder exists.
+            t_folder.mkdirs();
+            
             // The user did not supply a file name, so create one now
             if (t_file_name == null)
             {
                 t_uuid = UUID.randomUUID();
                 Log.i("revandroid", "Generated File Name: " + Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/I" + t_uuid.toString().substring(0,7) + t_file_type);
-                t_file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/I" + t_uuid.toString().substring(0,7) + t_file_type);
+                t_filename = "I" + t_uuid.toString().substring(0,7) + t_file_type;
             }
             else
             {
-                t_file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/" + t_file_name + t_file_type);
+                t_filename = t_file_name + t_file_type;
             }
+            
+            // SN-2015-01-05: [[ Bug 11417 ]] Let File create the file with the File returned
+            //  by getExternalStoragePublicDirectory and t_file_type.
+            t_file = new File(t_folder, t_filename);
+            
             FileOutputStream fs = null;
             try
             {
                 fs = new FileOutputStream(t_file);
                 fs.write(t_image_data,0,t_image_data.length);
+                
                 fs.close();
+                
+                // SN-2015-01-05 [[ Bug 11417 ]] Ask the Media Scanner to scan the newly created file.
+                Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                intent.setData(Uri.fromFile(t_file));
+                getContext().sendBroadcast(intent);
             }
             catch (IOException e)
             {
@@ -2921,7 +2945,6 @@ public class Engine extends View implements EngineApi
 
 	// callbacks from the billing service
 
-	public static native void doBillingSupported(boolean supported);
 	public static native void doPurchaseStateChanged(boolean verified, int purchaseState,
 		String notificationId, String productId, String orderId, long purchaseTime,
 		String developerPayload, String signedData, String signature);

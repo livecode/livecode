@@ -216,6 +216,9 @@ protected:
 	
 	// IM-2013-04-16: [[ BZ 10848 ]] // flag to record encrypted state of object script
 	bool m_script_encrypted : 1;
+    
+    // If this is true, then this object is in the parentScript resolution table.
+    bool m_is_parent_script : 1;
 	
 	char *tooltip;
 	
@@ -697,6 +700,16 @@ public:
 	{
 		return m_in_id_cache;
 	}
+    
+    void setisparentscript(bool p_value)
+    {
+        m_is_parent_script = p_value;
+    }
+    
+    bool getisparentscript(void)
+    {
+        return m_is_parent_script;
+    }
 
 	// IM-2013-02-11 image change notification (used by button icons, field images, etc.)
 	// returns true if the referenced image is still in use by this object
@@ -719,11 +732,13 @@ protected:
 	//   font attrs after the font table loads.
 	void loadfontattrs(uint2 index);
 	
+    // MW-2014-09-30: [[ ScriptStack ]] Used by MCStack::setasscriptonly.
+	Exec_stat setscriptprop(MCExecPoint& ep);
+    
 private:
 	Exec_stat getrectprop(Properties which, MCExecPoint& ep, Boolean effective);
 
 	Exec_stat setrectprop(Properties which, MCExecPoint& ep, Boolean effective);
-	Exec_stat setscriptprop(MCExecPoint& ep);
 	Exec_stat setparentscriptprop(MCExecPoint& ep);
 	Exec_stat setvisibleprop(uint4 parid, Properties which, MCExecPoint& ep);
 	Exec_stat setshowfocusborderprop(MCExecPoint& ep);

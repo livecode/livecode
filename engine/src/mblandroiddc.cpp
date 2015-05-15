@@ -1054,7 +1054,8 @@ void MCStack::view_device_updatewindow(MCRegionRef p_region)
 			//   to prevent a flicker back to an old frame when making the opengl layer visible.
 			view_device_updatewindow(p_region);
 
-			MCAndroidEngineRemoteCall("hideBitmapView", "v", nil);
+            // MW-2015-05-06: [[ Bug 15232 ]] Prevent black flash when enabling setting acceleratedRendering to true
+			MCAndroidEngineRemoteCall("hideBitmapViewInTime", "v", nil);
 		}
 	}
 
@@ -1184,6 +1185,13 @@ static void *mobile_main(void *arg)
 		return (void *)1;
 	}
 
+    // PM-2015-02-19: [[ Bug 14489 ]] Init statics on restart of an app
+    if (!MCJavaInitialize(s_java_env))
+    {
+		co_leave_engine();
+		return (void *)1;
+	}
+    
 	// MW-2011-08-11: [[ Bug 9671 ]] Make sure we initialize MCstackbottom.
 	int i;
 	MCstackbottom = (char *)&i;
@@ -1227,6 +1235,9 @@ static void *mobile_main(void *arg)
 		// Yield for now as we don't detect error states correctly.
 		co_yield_to_android();
 
+        // Free global refs
+        MCJavaFinalize(s_java_env);
+        
 		// Now detach (will be called as a result of doDestroy)
 		s_java_vm -> DetachCurrentThread();
 		co_leave_engine();
@@ -1249,14 +1260,15 @@ static void *mobile_main(void *arg)
 
 	MCLog("Starting up project", 0);
 	send_startup_message(false);
-
+    
+    // PM-2015-02-02: [[ Bug 14456 ]] Make sure the billing provider is properly initialized before a preopenstack/openstack message is sent
+    MCAndroidInitEngine();
+    
 	if (!MCquit)
 		MCdispatcher -> gethome() -> open();
-
+    
 	MCLog("Hiding splash screen", 0);
 	MCAndroidEngineRemoteCall("hideSplashScreen", "v", nil);
-
-    MCAndroidInitEngine();
 
 	while(s_engine_running)
 	{
@@ -1279,6 +1291,8 @@ static void *mobile_main(void *arg)
 	// Free argument.
 	MCCStringFree(t_args[0]);
 
+    // Free global refs
+    MCJavaFinalize(s_java_env);
 	// We have finished with the engine now, so detach from the thread
 	s_java_vm -> DetachCurrentThread();
 

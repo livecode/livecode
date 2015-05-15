@@ -377,9 +377,18 @@ void MCLoadableImageRep::ReleaseFrames()
 
 bool MCLoadableImageRep::GetGeometry(uindex_t &r_width, uindex_t &r_height)
 {
-	if (m_have_geometry || CalculateGeometry(m_width, m_height))
+	if (!m_have_geometry)
 	{
-		m_have_geometry = true;
+		// IM-2014-09-30: [[ Bug 13501 ]] CalculateGeometry is not thread-safe due to 
+		//   possible geturl call.
+		MCThreadMutexLock(MCimagerepmutex);
+		if (!m_have_geometry)
+			m_have_geometry = CalculateGeometry(m_width, m_height);
+		MCThreadMutexUnlock(MCimagerepmutex);
+	}
+	
+	if (m_have_geometry)
+	{
 		r_width = m_width;
 		r_height = m_height;
 

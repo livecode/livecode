@@ -27,6 +27,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "lnxdc.h"
 #include "imagebitmap.h"
 
+#include "graphics.h"
+
 // Linux image conversion functions
 
 bool MCImageBitmapCreateWithXImage(XImage *p_image, MCImageBitmap *&r_bitmap)
@@ -186,7 +188,7 @@ bool MCPatternToX11Pixmap(MCPatternRef p_pattern, Pixmap &r_pixmap)
 }
 
 void surface_extract_alpha(void *p_pixels, uint4 p_pixel_stride, void *p_alpha, uint4 p_alpha_stride, uint4 p_width, uint4 p_height);
-MCWindowShape *MCImage::makewindowshape(void)
+MCWindowShape *MCImage::makewindowshape(const MCGIntegerSize &p_size)
 {
 	bool t_success;
 	t_success = true;
@@ -195,15 +197,17 @@ MCWindowShape *MCImage::makewindowshape(void)
 	if (!MCMemoryNew(t_mask))
 		return nil;
 	
-	// Get the width / height.
-	t_mask -> width = rect . width;
-	t_mask -> height = rect . height;
-
 	MCImageBitmap *t_bitmap = nil;
 	bool t_has_mask = false, t_has_alpha = false;
-	t_success = lockbitmap(t_bitmap, true);
+
+	t_success = lockbitmap(true, true, &p_size, t_bitmap);
+
 	if (t_success)
 	{
+		// Get the width / height.
+		t_mask -> width = t_bitmap->width;
+		t_mask -> height = t_bitmap->height;
+		
 		t_has_mask = MCImageBitmapHasTransparency(t_bitmap, t_has_alpha);
 #ifdef LIBGRAPHICS_BROKEN
 		if (t_has_alpha)

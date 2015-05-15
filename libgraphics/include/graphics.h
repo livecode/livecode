@@ -592,6 +592,12 @@ inline MCGIntegerRectangle MCGIntegerRectangleMake(int32_t x, int32_t y, uint32_
 	return t_rect;
 }
 
+// IM-2014-10-22: [[ Bug 13746 ]] Add convenience function to construct rectangle from left, top, right, bottom coords
+inline MCGIntegerRectangle MCGIntegerRectangleMakeLTRB(int32_t l, int32_t t, int32_t r, int32_t b)
+{
+	return MCGIntegerRectangleMake(l, t, r - l, b - t);
+}
+
 inline bool MCGIntegerRectangleIsEmpty(const MCGIntegerRectangle &p_rect)
 {
 	return p_rect.size.width == 0 || p_rect.size.height == 0;

@@ -294,7 +294,14 @@ public class IabHelper {
         mSetupDone = false;
         if (mServiceConn != null) {
             logDebug("Unbinding from service.");
-            if (mContext != null) mContext.unbindService(mServiceConn);
+            
+            /** PM-2015-02-25: [[ Bug 14665 ]]
+             * mService is only set once the Service has been registered,
+             * so checking it for != null will guarantee that service is indeed registered, 
+             * before we try to unbind from it. The service will not be registered only in 
+             * devices with a very old version of Google Play app or with no Google Play app at all
+             */
+            if (mContext != null && mService != null) mContext.unbindService(mServiceConn);
         }
         mDisposed = true;
         mContext = null;

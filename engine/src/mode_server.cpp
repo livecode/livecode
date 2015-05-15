@@ -60,10 +60,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //  Globals specific to SERVER mode
 //
 
+// AL-2014-11-07: [[ Bug 13919 ]] Set the script limits to 0 for server community
+//  as script only stacks are subjected to license parameter checks
+
 MCLicenseParameters MClicenseparameters =
 {
 	NULL, NULL, NULL, kMCLicenseClassNone, 0,
-	10, 10, 50, 10,
+	0, 0, 0, 0,
 	0,
 	NULL,
 };
@@ -210,6 +213,13 @@ const char *MCModeGetEnvironment(void)
 uint32_t MCModeGetEnvironmentType(void)
 {
 	return kMCModeEnvironmentTypeServer;
+}
+
+// SN-2015-01-16: [[ Bug 14295 ]] Not implemented for server
+void MCModeGetResourcesFolder(MCExecPoint &ep)
+{
+    // Not implemented on server
+    ep . clear();
 }
 
 // In standalone mode, we are never licensed.

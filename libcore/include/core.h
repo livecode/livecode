@@ -26,6 +26,10 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifndef _WIN32
+#include <stdint.h>
+#else
+
 typedef unsigned char uint8_t;
 typedef signed char int8_t;
 typedef unsigned short uint16_t;
@@ -48,6 +52,8 @@ typedef signed int int32_t;
 	#else
 		typedef long long int int64_t;
 	#endif
+#endif
+
 #endif
 
 typedef uint32_t uindex_t;
@@ -102,8 +108,26 @@ typedef const struct __CFString * CFStringRef;
 typedef const struct __CFData * CFDataRef;
 #endif
 
+// PM-2015-03-31: [[ Bug 15090 ]] Better definition of nil fixes crashes in 64 bit iOS
 #ifndef nil
-#define nil 0
+
+#if defined(__cplusplus) /* C++ */
+#	if defined(__GCC__)
+#		define nil __null
+#	else
+#		define nil uintptr_t(0)
+#	endif
+
+#else /* C */
+#	if defined(__GCC__)
+#		define nil __null
+#	else
+#		define nil ((void*)0)
+#	endif
+
+#endif
+
+
 #endif
 
 #if defined(_MACOSX) && defined(__LP64__)
@@ -523,16 +547,19 @@ inline double MCMin(double a, double b) { return a < b ? a : b; }
 inline double MCMax(double a, double b) { return a > b ? a : b; }
 inline float MCMin(float a, float b) { return a < b ? a : b; }
 inline float MCMax(float a, float b) { return a > b ? a : b; }
+
 inline uint32_t MCAbs(int32_t a) { return a < 0 ? -a : a; }
 inline uint64_t MCAbs(int64_t a) { return a < 0 ? -a : a; }
 inline float MCAbs(float a) { return fabsf(a); }
 inline double MCAbs(double a) { return fabs(a); }
 inline compare_t MCSgn(int32_t a) { return a < 0 ? -1 : (a > 0 ? 1 : 0); }
 inline compare_t MCSgn(int64_t a) { return a < 0 ? -1 : (a > 0 ? 1 : 0); }
-inline compare_t MCCompare(int32_t a, int32_t b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(uint32_t a, uint32_t b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(int64_t a, int64_t b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(uint64_t a, uint64_t b) { return a < b ? -1 : (a > b ? 1 : 0); }
+inline compare_t MCCompare(int a, int b) { return a < b ? -1 : (a > b ? 1 : 0); }
+inline compare_t MCCompare(unsigned int a, unsigned int b) { return a < b ? -1 : (a > b ? 1 : 0); }
+inline compare_t MCCompare(long a, long b) { return a < b ? -1 : (a > b ? 1 : 0); }
+inline compare_t MCCompare(unsigned long a, unsigned long b) { return a < b ? -1 : (a > b ? 1 : 0); }
+inline compare_t MCCompare(long long a, long long b) { return a < b ? -1 : (a > b ? 1 : 0); }
+inline compare_t MCCompare(unsigned long long a, unsigned long long b) { return a < b ? -1 : (a > b ? 1 : 0); }
 
 inline bool MCIsPowerOfTwo(uint32_t x) { return (x & (x - 1)) == 0; }
 

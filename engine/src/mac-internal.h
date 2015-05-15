@@ -81,15 +81,29 @@ class MCMacPlatformSurface;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MW-2014-04-22: [[ Bug 12259 ]] Override sendEvent so that we always get a chance
+//   at the MouseSync event.
+@interface com_runrev_livecode_MCApplication: NSApplication
+{
+    NSWindow* m_pseudo_modal_for;
+}
+
+-(id)init;
+
+- (void)sendEvent:(NSEvent *)event;
+
+// FG-2014-11-07: [[ Bugfix 13628 ]] Fake being modal for a non-modal window
+- (void)becomePseudoModalFor: (NSWindow*)window;
+- (NSWindow*)pseudoModalFor;
+
+@end
+
 @interface com_runrev_livecode_MCWindow: NSWindow
 {
 	bool m_can_become_key : 1;
-    bool m_is_popup : 1;
-    id m_monitor;
 }
 
 - (id)initWithContentRect:(NSRect)contentRect styleMask:(NSUInteger)windowStyle backing:(NSBackingStoreType)bufferingType defer:(BOOL)deferCreation;
-- (void)dealloc;
 
 - (void)setCanBecomeKeyWindow: (BOOL)value;
 
@@ -99,24 +113,59 @@ class MCMacPlatformSurface;
 // MW-2014-04-23: [[ Bug 12270 ]] Override so we can stop constraining.
 - (NSRect)constrainFrameRect: (NSRect)frameRect toScreen: (NSScreen *)screen;
 
-- (void)popupAndMonitor;
 
 @end
 
 @interface com_runrev_livecode_MCPanel: NSPanel
 {
 	bool m_can_become_key : 1;
+    bool m_is_popup : 1;
+    id m_monitor;
 }
 
 - (void)setCanBecomeKeyWindow: (BOOL)value;
+- (void)dealloc;
 
 - (BOOL)canBecomeKeyWindow;
 - (BOOL)makeFirstResponder: (NSResponder *)responder;
 
 // MW-2014-04-23: [[ Bug 12270 ]] Override so we can stop constraining.
 - (NSRect)constrainFrameRect: (NSRect)frameRect toScreen: (NSScreen *)screen;
+- (void)popupAndMonitor;
 
 @end
+
+////////////////////////////////////////////////////////////////////////////////
+
+// SN-2014-12-05: [[ Bug 14019 ]] Interface declaration moved to be available from mac-menu.mm
+
+// SN-2014-10-20: [[ Bug 13628 ]] ColorDelegate to react when the colour picker window is closed
+@interface com_runrev_livecode_MCColorPanelDelegate: NSObject<NSWindowDelegate>
+{
+    NSButton *mCancelButton;
+    NSButton *mOkButton;
+    NSView   *mColorPickerView;
+    NSView   *mUpdatedView;
+    NSColorPanel *mColorPanel;
+    
+    MCPlatformDialogResult mResult;
+    MCColor mColorPicked;
+}
+
+-(id)   initWithColorPanel: (NSColorPanel*)p_panel
+               contentView: (NSView*) p_view;
+-(void) dealloc;
+-(void) windowWillClose: (NSNotification *)notification;
+-(void) windowDidResize:(NSNotification *)notification;
+-(void) getColor;
+//-(void) changeColor:(id)sender;
+-(void) pickerCancelClicked;
+-(void) pickerOkClicked;
+-(void) relayout;
+
+@end
+
+@compatibility_alias MCColorPanelDelegate com_runrev_livecode_MCColorPanelDelegate;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -343,6 +392,10 @@ class MCMacPlatformSurface;
 
 - (void)aboutMenuItemSelected: (id)sender;
 - (void)preferencesMenuItemSelected: (id)sender;
+// SN-2014-11-06: [[ Bug 13940 ]] Added declaration for quitMenuItemSelected
+//  and quitApplicationSelected, the latter quitting the app straight.
+- (void)quitMenuItemSelected: (id)sender;
+- (void)quitApplicationSelected: (id)sender;
 
 - (void)menuNeedsUpdate: (NSMenu *)menu;
 
@@ -379,12 +432,17 @@ public:
 private:
     void Lock(void);
 	void Unlock(void);
+	
+	// IM-2014-10-03: [[ Bug 13432 ]] Convenience method to clear context and clip to the window mask
+	void ApplyMaskToCGContext(void);
     
 	MCMacPlatformWindow *m_window;
 	CGContextRef m_cg_context;
 	MCGRegionRef m_update_rgn;
     
     MCGRaster m_raster;
+	
+	bool m_cg_context_first_lock;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -425,6 +483,9 @@ public:
 	
 	void MapMCRectangleToNSRect(MCRectangle rect, NSRect& r_ns_rect);
 	void MapNSRectToMCRectangle(NSRect rect, MCRectangle& r_mc_rect);
+	
+	// IM-2015-01-30: [[ Bug 14140 ]] Locking the frame will prevent the window from being moved or resized
+	void SetFrameLocked(bool p_locked);
 	
 protected:
 	virtual void DoRealize(void);
@@ -475,6 +536,9 @@ private:
 		
 		// When set to true, the window has a sheet.
 		bool m_has_sheet : 1;
+		
+		// When the frame is locked, any changes to the window rect will be prevented.
+		bool m_frame_locked : 1;
 	};
 	
 	// A window might map to one of several different classes, so we use a
@@ -534,7 +598,8 @@ NSMenu *MCMacPlatformGetIconMenu(void);
 
 void MCMacPlatformLockMenuSelect(void);
 void MCMacPlatformUnlockMenuSelect(void);
-bool MCMacPlatformWasMenuSelect(void);
+// SN-2014-11-06: [[ Bug 13836 ]] Returns whether the last item selected was a shadowed item
+bool MCMacPlatformWasShadowItemSelected(void);
 
 bool MCMacPlatformMapMenuItemActionToSelector(MCPlatformMenuItemAction action, SEL& r_selector);
 
@@ -567,6 +632,27 @@ void MCPlatformFinalizeAbortKey(void);
 
 bool MCPlatformInitializeColorTransform(void);
 void MCPlatformFinalizeColorTransform(void);
+
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-09-29: [[ Bug 13451 ]] Return the standard colorspace for images on OSX
+bool MCMacPlatformGetImageColorSpace(CGColorSpaceRef &r_colorspace);
+
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-10-03: [[ Bug 13432 ]] Store both alpha data and derived cg image in the mask.
+struct MCMacPlatformWindowMask
+{
+	MCGRaster mask;
+	CGImageRef cg_mask;
+	
+	uint32_t references;
+};
+
+// IM-2014-09-30: [[ Bug 13501 ]] Allow system event checking to be enabled/disabled
+void MCMacPlatformEnableEventChecking(void);
+void MCMacPlatformDisableEventChecking(void);
+bool MCMacPlatformIsEventCheckingEnabled(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 

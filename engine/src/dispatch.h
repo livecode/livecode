@@ -57,6 +57,8 @@ class MCDispatch : public MCObject
     
 	static MCImage *imagecache;
 
+    // AL-2015-02-10: [[ Standalone Inclusions ]] Add resource mapping array to MCDispatch object.
+    MCVariableValue *m_library_mapping;
 public:
 	MCDispatch();
 	// virtual functions from MCObject
@@ -196,7 +198,7 @@ public:
 	MCStack *findstackname(const MCString &);
 	MCStack *findstackid(uint4 fid);
 	// IM-2014-07-09: [[ Bug 12225 ]] Find the stack by window ID
-	MCStack *findstackwindowid(uint32_t p_win_id);
+	MCStack *findstackwindowid(uintptr_t p_win_id);
 	MCStack *findstackd(Window w);
 	
 	// IM-2014-07-23: [[ Bug 12930 ]] Replace findchildstack method with iterating method
@@ -223,7 +225,12 @@ public:
 	{
 		return stacks;
 	}
-
+    
+    // AL-2015-02-10: [[ Standalone Inclusions ]] Add functions to fetch relative paths present
+    //  in the resource mapping array of MCdispatcher.
+    void addlibrarymapping(const char *p_mapping);
+    bool fetchlibrarymapping(const char *p_name, char*& r_path);
+    
 private:
 	// MW-2012-02-17: [[ LogFonts ]] Actual method which performs a load stack. This
 	//   is wrapped by readfile to handle logical font table.
@@ -231,5 +238,7 @@ private:
 	// MW-2012-02-17: [[ LogFonts ]] Actual method which performs a save stack. This
 	//   is wrapped by savestack to handle logical font table.
 	IO_stat dosavestack(MCStack *sptr, const MCString &);
+    // MW-2014-09-30: [[ ScriptOnlyStack ]] Save a stack if it is marked as script-only.
+	IO_stat dosavescriptonlystack(MCStack *sptr, const MCString &);
 };
 #endif

@@ -882,12 +882,12 @@ void MCScreenDC::setfunction(uint4 rop)
 		XSetFunction(dpy, getgc(), rop);
 }
 
-uint4 MCScreenDC::dtouint4(Drawable d)
+uintptr_t MCScreenDC::dtouint(Drawable d)
 {
 	return d;
 }
 
-Boolean MCScreenDC::uint4towindow(uint4 id, Window &w)
+Boolean MCScreenDC::uinttowindow(uintptr_t id, Window &w)
 {
 	w = id;
 	return True;

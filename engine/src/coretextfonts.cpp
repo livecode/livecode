@@ -23,6 +23,7 @@
 #include "util.h"
 #include "globals.h"
 #include "osspec.h"
+#include "variable.h"
 
 #include "prefix.h"
 
@@ -30,6 +31,54 @@
 #import <CoreText/CoreText.h>
 #else
 #import <ApplicationServices/ApplicationServices.h>
+#endif
+
+#ifdef TARGET_SUBPLATFORM_IPHONE
+// Stored as a global variable
+static MCVariableArray *s_font_map = nil;
+
+// Populate the VariableArray s_font_map
+// from the input mapping list (<mapped name>=<PostScript name>).
+// Each <PostScript name> is storred keyed as <mapped name>
+void add_ios_fontmap(const char *p_mapping)
+{
+    if (s_font_map == nil)
+    {
+        s_font_map = new MCVariableArray;
+        if (s_font_map == nil)
+            return;
+        s_font_map -> presethash(8);
+    }
+    
+    const char *t_separator;
+    t_separator = strchr(p_mapping, '=');
+    if (t_separator == nil)
+        return;
+    
+    MCString t_from, t_to;
+    t_from . set(p_mapping, (uint4)(t_separator - p_mapping));
+    
+    // Make sure we make the 'to' string a C-string (including the NUL terminator
+    // in the size of the MCString).
+    t_to . set(t_separator + 1, (uint4)strlen(t_separator + 1) + 1);
+    
+    MCHashentry *t_entry;
+    t_entry = s_font_map -> lookuphash(t_from, False, True);
+    if (t_entry == nil)
+        return;
+    
+    t_entry -> value . assign_string(t_to);
+}
+
+void ios_clear_font_mapping(void)
+{
+    if (s_font_map != nil)
+    {
+        s_font_map -> freehash();
+        delete s_font_map;
+        s_font_map = nil;
+    }
+}
 #endif
 
 static void *coretext_font_create_with_name_and_size(const char *p_name, uint32_t p_size)
@@ -50,12 +99,32 @@ static void *coretext_font_create_with_name_and_size(const char *p_name, uint32_
     
     bool t_success;
     t_success = true;
+
+    // SN-2015-02-16: [[ iOS Font mapping ]] On iOS, try to fetch the mapped
+    //  if one exists.
+    //  Defaults to the given name if no one matches, or on MacOS
+    const char *t_mapped_name;
+    t_mapped_name = p_name;
+    
+#ifdef TARGET_SUBPLATFORM_IPHONE
+    if (t_success && s_font_map != nil)
+    {
+        MCHashentry *t_entry;
+        t_entry = s_font_map -> lookuphash(p_name, False, False);
+        
+        // We have constructed the s_font_map so that the values are C-strings,
+        // thus we are okay to just used the 'getstring()' ptr here.
+        if (t_entry != NULL)
+            t_mapped_name = t_entry -> value . get_string() . getstring();
+    }
+#endif
     
     CFStringRef t_name;
     t_name = NULL;
     if (t_success)
     {
-        t_name = CFStringCreateWithCString(NULL, p_name, kCFStringEncodingMacRoman);
+        // SN-2015-02-16: [[ iOS Font mapping ]] Use the (maybe) mapped font name
+        t_name = CFStringCreateWithCString(NULL, t_mapped_name, kCFStringEncodingMacRoman);
         t_success = t_name != NULL;
     }
     
@@ -77,9 +146,9 @@ static void *coretext_font_create_with_name_and_size(const char *p_name, uint32_
 //            kCTFontFamilyNameAttribute,
         };
         CFTypeRef t_values[] = {
+            //t_name,
             t_name,
-            t_name,
-            t_name,
+           // t_name,
         };
         t_attributes = CFDictionaryCreate(NULL,
                                           (const void **)&t_keys, (const void **)&t_values,
@@ -95,14 +164,12 @@ static void *coretext_font_create_with_name_and_size(const char *p_name, uint32_
         t_descriptor = CTFontDescriptorCreateWithAttributes(t_attributes);
         t_success = t_descriptor != NULL;
     }
-    
+
     CTFontRef t_font;
     t_font = NULL;
     if (t_success)
         t_font = CTFontCreateWithFontDescriptor(t_descriptor, p_size, NULL);
-    
-    CFStringRef t_font_name = CTFontCopyFullName(t_font);
-    
+
     if (t_descriptor != NULL)
         CFRelease(t_descriptor);
     if (t_attributes != NULL)

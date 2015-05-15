@@ -370,8 +370,11 @@ char *MCAndroidSystem::GetTemporaryFileName(void)
 
 char *MCAndroidSystem::GetStandardFolder(const char *p_folder)
 {
-	char *t_stdfolder = NULL;
-	if (MCCStringEqualCaseless(p_folder, "engine"))
+    char *t_stdfolder = NULL;
+    // SN-2015-04-16: [[ Bug 14295 ]] The resources folder on Mobile is the same
+    //   as the engine folder.
+	if (MCCStringEqualCaseless(p_folder, "engine") ||
+            MCCStringEqualCaseless(p_folder, "resources"))
 		MCCStringClone(MCcmd, t_stdfolder);
 	else
 		MCAndroidEngineCall("getSpecialFolderPath", "ss", &t_stdfolder, p_folder);

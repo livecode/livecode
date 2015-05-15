@@ -141,7 +141,7 @@ void MCStack::stop_externals()
 	unloadexternals();
 }
 
-void MCStack::openwindow(Boolean override)
+void MCStack::platform_openwindow(Boolean override)
 {
 	MCscreen -> openwindow(window, override);
 }
