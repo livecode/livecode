@@ -84,7 +84,8 @@ bool MCNameClone(MCNameRef name, MCNameRef& r_new_name);
 
 bool MCNameGetAsIndex(MCNameRef name, index_t& r_index);
 
-const char *MCNameGetCString(MCNameRef name);
+// SN-2015-05-14: [[ MCStringGetCString Removal ]] End of the super-evil function
+//const char *MCNameGetCString(MCNameRef name);
 MCString MCNameGetOldString(MCNameRef name);
 char MCNameGetCharAtIndex(MCNameRef name, uindex_t at);
 

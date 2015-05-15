@@ -219,8 +219,17 @@ static bool path_to_dataref(MCStringRef p_path, DataReferenceRecord& r_rec)
 {
 	bool t_success = true;
 	CFStringRef t_cf_path = NULL;
-	t_cf_path = CFStringCreateWithCString(NULL, MCStringGetCString(p_path), kCFStringEncodingWindowsLatin1);
-	t_success = (t_cf_path != NULL);
+
+	// SN-2015-05-14: [[ MCStringGetCString Removal ]] Use a UTF-8 string
+	MCAutoStringRefAsUTF8String t_cstring_path;	
+	t_success = t_cstring_path . Lock(p_path);
+
+	if (t_success)
+	{
+		t_cf_path = CFStringCreateWithCString(NULL, *t_cstring_path, kCFStringEncodingUTF8);
+		t_success = (t_cf_path != NULL);
+	}
+
 	if (t_success)
 	{
 		OSErr t_error;

@@ -716,10 +716,11 @@ static void cgi_fix_path_variables()
     // SN-2014-07-29: [[ Bug 12865 ]] When a LiveCode CGI script has a .cgi extension and has
     //  the appropriate shebang pointing to the LiveCode server, PATH_TRANSLATED is not set by Apache.
     //  The current file (stored in SCRIPT_FILENAME) is the one containing the script.
+	// SN-2015-05-14: [[ MCStringGetCString Removal ]] Use ConvertToCString
 	if (MCS_getenv(MCSTR("PATH_TRANSLATED"), env))
-		t_path = strdup(MCStringGetCString(env));
+		/* UNCHECKED */ MCStringConvertToCString(env, t_path);
     else if (MCS_getenv(MCSTR("SCRIPT_FILENAME"), env))
-        t_path = strdup(MCStringGetCString(env));
+		/* UNCHECKED */ MCStringConvertToCString(env, t_path);
 
     // SN-2015-02-11: [[ Bug 14457 ]] We want to split PATH_TRANSLATED
     //  between what is the real filename (into PATH_TRANSLATED)
@@ -850,7 +851,11 @@ static bool cgi_compute_post_raw_var(void *p_context, MCVariable *p_var)
 	if (MCS_getenv(MCSTR("CONTENT_LENGTH"), &t_content_length))
 	{
 		uint32_t t_length;
-		t_length = atoi(MCStringGetCString(*t_content_length));
+		// SN-2015-05-15: [[ MCStringGetCString removal ]] Use a temporary value
+		MCAutoStringRefAsCString t_content_length_cstring;
+		if (!t_content_length_cstring . Lock(*t_content_length))
+			return false;
+		t_length = atoi(*t_content_length_cstring);
 		
 		uint32_t t_read = 0;
 		
@@ -1326,16 +1331,18 @@ bool cgi_initialize()
 
 	
 	// Set the current folder to be that containing the CGI file.
-	char *t_server_script_folder;
-    t_server_script_folder = strdup(MCStringGetCString(MCserverinitialscript));
+	// SN-2015-05-14: [[ MCStringGetCString Removal ]] Do no change the value
+	//  of the initial script path - and we might want to keep a valid folder
+	MCAutoStringRef t_folder_path;
+	uindex_t t_last_slash;
 
-	// Windows paths have been fixed - no backslashes in the environment variables
-	strrchr(t_server_script_folder, '/')[0] = '\0';
+	if (!MCStringLastIndexOfChar(MCserverinitialscript, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash))
+		t_last_slash = MCStringGetLength(MCserverinitialscript);
 
-    MCAutoStringRef t_server_script_folder_string;
-    /* UNCHECKED */ MCStringCreateWithCString(t_server_script_folder, &t_server_script_folder_string);
+	if (!MCStringCopySubstring(MCserverinitialscript, MCRangeMake(0, t_last_slash_index), &t_folder_path))
+		return false;
 
-	MCsystem -> SetCurrentFolder(*t_server_script_folder_string);
+	MCsystem -> SetCurrentFolder(**t_folder_path);
 	delete t_server_script_folder;
 	
 	// Initialize the headers.
@@ -1526,7 +1533,8 @@ static bool cgi_send_cookies(void)
 			t_success = MCD_convert(ctxt, *t_num, CF_SECONDS, CF_UNDEFINED, CF_INTERNET_DATE, CF_UNDEFINED, &t_string);
 			if (t_success)
 			{
-				t_success = MCCStringAppendFormat(t_cookie_header, "; Expires=%s", MCStringGetCString(*t_string));
+				// SN-2015-05-14: [[ MCStringGetCString Removal ]] Use %@ format
+				t_success = MCCStringAppendFormat(t_cookie_header, "; Expires=%@", *t_string);
 			}
 		}
 		

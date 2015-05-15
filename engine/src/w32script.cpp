@@ -596,10 +596,12 @@ void MCWindowsActiveScriptEnvironment::Finalize(void)
 void MCWindowsActiveScriptEnvironment::Run(MCStringRef p_script, MCStringRef& r_out)
 {
 	LPOLESTR t_ole_script;
-	char *temp;
-	/* UNCHECKED */ MCStringConvertToCString(p_script, temp);
-	t_ole_script = ConvertUTF8ToOLESTR(temp);
-	delete temp;
+
+	// SN-2015-05-14: [[ MCStringGetCString ]] Make use of UTF-8 automatic conversion
+	MCAutoStringRefAsUTF8String t_utf8_script;
+	/* UNCHECKED */ t_utf8_script . Lock(p_script);
+	t_ole_script = ConvertUTF8ToOLESTR(*t_utf8_script);
+
 	if (t_ole_script == NULL)
 		return;
 
@@ -672,7 +674,11 @@ void MCWindowsActiveScriptEnvironment::Run(MCStringRef p_script, MCStringRef& r_
 	if (t_ole_script != NULL)
 		delete t_ole_script;
 
-	/* UNCHECKED */ MCStringCreateWithCString(t_return_value, r_out);
+	// SN-2015-05-14: [[ MCStringGetCString Removal ]] Use appropriately
+	//  UTF-8 encoding - we leave r_out NULL in case of failure
+	if (t_return_value != NULL)
+		/* UNCHECKED */ MCStringCreateWithBytesAndRelease((byte_t*)t_return_value, strlen(t_return_value), kMCStringEncodingUTF8, false, r_out);
+
 	return;
 }
 

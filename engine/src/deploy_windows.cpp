@@ -1111,7 +1111,11 @@ static bool add_version_info_entry(void *p_context, MCArrayRef p_array, MCNameRe
 		t_bytes[t_byte_count - 2] = '\0';
 		t_bytes[t_byte_count - 1] = '\0';	 
 	}
-	return MCWindowsVersionInfoAdd((MCWindowsVersionInfo *)p_context, MCNameGetCString(p_key), true, t_bytes, t_byte_count, t_string);
+
+	// SN-2015-05-14: [[ MCStringGetCString Removal ]] Use ConvertToCString
+	MCAutoStringRefAsCString t_key_as_cstring;
+	/* UNCHECKED */ t_key_as_cstring . Lock(MCNameGetString(p_key));
+	return MCWindowsVersionInfoAdd((MCWindowsVersionInfo *)p_context, *t_key_as_cstring, true, t_bytes, t_byte_count, t_string);
 }
 
 static bool MCWindowsResourcesAddVersionInfo(MCWindowsResources& self, MCArrayRef p_info)

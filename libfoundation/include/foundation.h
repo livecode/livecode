@@ -1422,7 +1422,8 @@ extern MCStringRef kMCTabString;
 // the c-string must be a C static string.
 MCStringRef MCSTR(const char *string);
 
-const char *MCStringGetCString(MCStringRef p_string);
+// SN-2015-05-014: [[ MCStringGetCString Removal ]] End of the evil function.
+//const char *MCStringGetCString(MCStringRef p_string);
 bool MCStringIsEqualToCString(MCStringRef string, const char *cstring, MCStringOptions options);
 
 // Create an immutable string from the given bytes, interpreting them using

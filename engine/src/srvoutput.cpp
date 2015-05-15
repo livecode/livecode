@@ -509,11 +509,15 @@ bool MCServerSetCookie(MCStringRef p_name, MCStringRef p_value, uint32_t p_expir
 	
 	if (t_success)
 	{
-        MCservercgicookies[t_index].name = MCStringIsEmpty(p_name) ? strdup("") : strdup(MCStringGetCString(p_name));
-		MCservercgicookies[t_index].value = strdup(MCStringGetCString(*t_encoded));
-        MCservercgicookies[t_index].path = MCStringIsEmpty(p_domain) ? strdup("") : strdup(MCStringGetCString(p_path));
-        MCservercgicookies[t_index].domain = MCStringIsEmpty(p_domain) ? strdup("") : strdup(MCStringGetCString(p_domain));
+		// SN-2015-05-14: [[ MCStringGetCString Removal ]] Use ConvertToCString
+		t_success = MCStringConvertToCString(p_name, MCservercgicookies[t_index].name)
+				&& MCStringConvertToCString(*t_encoded, MCservercgicookies[t_index].value)
+				&& MCStringConvertToCString(p_path, MCservercgicookies[t_index].path)
+				&& MCStringConvertToCString(p_domain, MCservercgicookies[t_index].domain;
+	}
 
+	if (t_success)
+	{
 		MCservercgicookies[t_index].expires = p_expires;
 		MCservercgicookies[t_index].secure = p_secure;
 		MCservercgicookies[t_index].http_only = p_http_only;
