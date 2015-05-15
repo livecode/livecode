@@ -947,6 +947,11 @@ public class Engine extends View implements EngineApi
     {
         return m_native_control_module.createInput();
     }
+	
+	Object createCameraControl()
+	{
+		return m_native_control_module.createCamera();
+	}
 
 ////////////////////////////////////////////////////////////////////////////////
 

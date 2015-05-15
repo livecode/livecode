@@ -99,6 +99,12 @@ public class NativeControlModule
         initContainer();
         return new InputControl(this);
     }
+	
+	public Object createCamera()
+	{
+		initContainer();
+		return new CameraControl(this);
+	}
     
     public static ViewGroup.LayoutParams createLayoutParams(int left, int top, int right, int bottom)
     {

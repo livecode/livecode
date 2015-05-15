@@ -65,7 +65,11 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	mblcontrol.cpp mbldc.cpp mbldialog.cpp mblflst.cpp mblhandlers.cpp mblmain.cpp mblnotification.cpp \
 	mblsensor.cpp mblspec.cpp mblsound.cpp mblstack.cpp mblstore.cpp mbltheme.cpp \
 	mblandroid.cpp mblandroidbrowser.cpp  mblandroidbusyindicator.cpp \
-	mblandroidcalendar.cpp mblandroidcamera.cpp mblandroidcontact.cpp mblandroidcontrol.cpp \
+	mblandroidcalendar.cpp \
+	mblandroidcamera.cpp \
+	mblandroidcapture.cpp \
+	mblandroidcontact.cpp \
+	mblandroidcontrol.cpp \
 	mblandroiddc.cpp mblandroiddialog.cpp mblandroidfont.cpp mblandroidfs.cpp mblandroididletimer.cpp mblandroidinput.cpp \
 	mblandroidio.cpp mblandroidjava.cpp mblandroidmail.cpp mblandroidmediapick.cpp mblandroidmisc.cpp mblandroidmm.cpp \
 	mblandroidnetwork.cpp mblandroidnotification.cpp mblandroidorientation.cpp mblandroidplayer.cpp \
