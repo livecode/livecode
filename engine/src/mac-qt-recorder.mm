@@ -192,16 +192,17 @@ static SampleDescriptionHandle scanSoundTracks(Movie tmovie)
 static bool path_to_dataref(MCStringRef p_path, DataReferenceRecord& r_rec)
 {
 	bool t_success = true;
-	CFStringRef t_cf_path = NULL;
-	t_cf_path = CFStringCreateWithCString(NULL, MCStringGetCString(p_path), kCFStringEncodingWindowsLatin1);
-	t_success = (t_cf_path != NULL);
+    // SN-2015-05-15: [[ MCStringGetCString Removal ]] Use AutoStringRefAsCFStringRef
+    MCAutoStringRefAsCFString t_cf_path;
+    t_success = t_cf_path . Lock(p_path);
+    
 	if (t_success)
 	{
 		OSErr t_error;
-		t_error = QTNewDataReferenceFromFullPathCFString(t_cf_path, kQTNativeDefaultPathStyle, 0, &r_rec . dataRef, &r_rec . dataRefType);
+		t_error = QTNewDataReferenceFromFullPathCFString(*t_cf_path, kQTNativeDefaultPathStyle, 0, &r_rec . dataRef, &r_rec . dataRefType);
 		t_success = noErr == t_error;
 	}
-	CFRelease(t_cf_path);
+
 	return t_success;
 }
 
