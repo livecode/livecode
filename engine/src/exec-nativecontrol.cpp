@@ -851,6 +851,9 @@ void MCNativeControlExecDo(MCExecContext& ctxt, MCStringRef p_control_name, MCSt
             case kMCNativeControlActionBeginSeekingBackward:
             case kMCNativeControlActionEndSeeking:
             case kMCNativeControlActionFocus:
+			case kMCNativeControlActionCameraStartRecording:
+			case kMCNativeControlActionCameraStopRecording:
+			case kMCNativeControlActionCameraTakePicture:
             {
                 ((void(*)(MCExecContext&, MCNativeControlPtr*))t_info -> exec_method)(ctxt, &t_control);
                 return;

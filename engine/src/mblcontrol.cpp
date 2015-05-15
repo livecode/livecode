@@ -489,6 +489,7 @@ bool MCNativeControl::CreateWithType(MCNativeControlType p_type, MCNativeControl
 			break;
 		case kMCNativeControlTypeCamera:
 			t_success = MCNativeCameraControlCreate(t_control);
+			break;
             
 		default:
             t_success = false;
