@@ -1087,6 +1087,8 @@
 		E89DBC51198A6F410009651B /* imageloader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = imageloader.h; path = src/imageloader.h; sourceTree = "<group>"; };
 		E8AB9052180E9DCD0050A249 /* image_rep_densitymapped.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_densitymapped.cpp; path = src/image_rep_densitymapped.cpp; sourceTree = "<group>"; };
 		E8B4FDD8152CAF8300CBAF90 /* mbliphonefs.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonefs.mm; path = src/mbliphonefs.mm; sourceTree = "<group>"; };
+		E8BC4B0C1B04C4EE00E9BDB0 /* mblandroidcapture.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidcapture.cpp; path = src/mblandroidcapture.cpp; sourceTree = "<group>"; };
+		E8BC4B0D1B04DAB800E9BDB0 /* CameraControl.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = CameraControl.java; sourceTree = "<group>"; };
 		E8C8A774147BC020003780F0 /* mblsensor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblsensor.cpp; path = src/mblsensor.cpp; sourceTree = "<group>"; };
 		E8C8A776147BCA60003780F0 /* mblsensor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblsensor.h; path = src/mblsensor.h; sourceTree = "<group>"; };
 		E8D0566B14F3DB640093E16F /* PushReceiver.java */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.java; path = PushReceiver.java; sourceTree = "<group>"; };
@@ -1364,13 +1366,13 @@
 				4D91B3ED134CB7AE000D7AA5 /* mblandroid.java */,
 				4C34550014F3FE8D008D7E50 /* mblandroidad.cpp */,
 				E85A405A14D8470900AF2300 /* mblandroidbrowser.cpp */,
-				BE8EA6891768A78700EF66EE /* mblandroidcamera.cpp */,
 				F6436EA314D7F5FF00A4FF60 /* mblandroidbusyindicator.cpp */,
 				F6E610F4156B9D4B00E87FD6 /* mblandroidcalendar.cpp */,
+				BE8EA6891768A78700EF66EE /* mblandroidcamera.cpp */,
+				E8BC4B0C1B04C4EE00E9BDB0 /* mblandroidcapture.cpp */,
 				F6D2312E1545B4CD003A19EE /* mblandroidcontact.cpp */,
 				E823E63114D2EA88001F73C4 /* mblandroidcontrol.cpp */,
 				E823E63314D2F2A1001F73C4 /* mblandroidcontrol.h */,
-				7607CFD5176B232E00ADB512 /* mblandroidmediapick.cpp */,
 				4DB983C6130BB1DF008A03DC /* mblandroiddc.cpp */,
 				4DB983C7130BB1DF008A03DC /* mblandroiddialog.cpp */,
 				4CF8A31615067985000745A4 /* mblandroidfont.cpp */,
@@ -1381,6 +1383,7 @@
 				E8720DE114C46AF60016F645 /* mblandroidjava.cpp */,
 				E8720DE014C46AB80016F645 /* mblandroidjava.h */,
 				4DB9694A135E3D8300DCAE93 /* mblandroidmail.cpp */,
+				7607CFD5176B232E00ADB512 /* mblandroidmediapick.cpp */,
 				4DB983CA130BB1DF008A03DC /* mblandroidmisc.cpp */,
 				4DB983CB130BB1DF008A03DC /* mblandroidmm.cpp */,
 				4DB983CC130BB1DF008A03DC /* mblandroidnetwork.cpp */,
@@ -1990,6 +1993,7 @@
 			isa = PBXGroup;
 			children = (
 				E867E3B2163EC874003579AC /* BrowserControl.java */,
+				E8BC4B0D1B04DAB800E9BDB0 /* CameraControl.java */,
 				E8E35F11152367E40036396B /* ExtVideoView.java */,
 				E867E3B4163ECE4D003579AC /* InputControl.java */,
 				E8E370D1154FED2F00F3396A /* InputView.java */,
