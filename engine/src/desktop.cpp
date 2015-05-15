@@ -864,15 +864,15 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
                     uint8_t t_mapped_char[2];
                     map_key_to_engine(s_pending_key_down -> key_code, s_pending_key_down -> mapped_codepoint, s_pending_key_down -> unmapped_codepoint, t_mapped_key_code, t_mapped_char);
                     
+                    // SN-2014-11-03: [[ Bug 13832 ]] Enqueue the event, instead of firing it now (we are still in the NSApplication's keyDown).
+                    
+                    // PM-2015-05-15: [[ Bug 15372]] call MCKeyMessageAppend before wkdown to prevent a crash if 'wait with messages' is used (since s_pending_key_down might become nil after wkdown
+                    MCKeyMessageAppend(s_pending_key_up, s_pending_key_down -> key_code, s_pending_key_down -> mapped_codepoint, s_pending_key_down -> unmapped_codepoint);
+                    
                     MCdispatcher -> wkdown(p_window, (const char *)t_mapped_char, t_mapped_key_code);
                     
-                    // SN-2014-11-03: [[ Bug 13832 ]] Enqueue the event, instead of firing it now (we are still in the NSApplication's keyDown).
-                    // PM-2015-05-15: [[ Bug 15372]] s_pending_key_down might become nil in the meanwhile, if 'wait with messages' is used
-                    if (s_pending_key_down != nil)
-                    {
-                        MCKeyMessageAppend(s_pending_key_up, s_pending_key_down -> key_code, s_pending_key_down -> mapped_codepoint, s_pending_key_down -> unmapped_codepoint);
-                        MCKeyMessageNext(s_pending_key_down);
-                    }
+                    MCKeyMessageNext(s_pending_key_down);
+                
                 }
 				return;
 			}
