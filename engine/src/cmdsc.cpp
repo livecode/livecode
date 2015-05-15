@@ -3416,7 +3416,8 @@ void MCReplace::exec_ctxt(MCExecContext& ctxt)
     
     
     MCAutoStringRef t_target;
-    if (!ctxt . EvalExprAsMutableStringRef(container, EE_REPLACE_BADCONTAINER, &t_target))
+    // PM-2015-05-15: [[ Bug 15352 ]] Prevent crash when setting label field contents to empty
+    if (!ctxt . EvalOptionalExprAsStringRef(container, kMCEmptyString, EE_REPLACE_BADCONTAINER, &t_target))
         return;
 
     MCStringsExecReplace(ctxt, *t_pattern, *t_replacement, *t_target);
