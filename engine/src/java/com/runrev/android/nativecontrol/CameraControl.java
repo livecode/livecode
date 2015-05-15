@@ -20,6 +20,7 @@ import android.content.Context;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 import android.util.Log;
+import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
@@ -107,6 +108,42 @@ class CameraControl extends NativeControl
 	
 	//////////
 	
+	private int getCameraOrientationSetting()
+	{
+		fetchCameraInfo();
+		
+		int t_id;
+		t_id = currentCameraId();
+		
+		if (t_id == -1)
+			return 0;
+		
+		int t_rotation;
+		t_rotation = NativeControlModule.getActivity().getWindowManager().getDefaultDisplay().getRotation();
+		
+		switch (t_rotation)
+		{
+			case Surface.ROTATION_0:
+				t_rotation = 0;
+				break;
+			case Surface.ROTATION_90:
+				t_rotation = 90;
+				break;
+			case Surface.ROTATION_180:
+				t_rotation = 180;
+				break;
+			case Surface.ROTATION_270:
+				t_rotation = 270;
+				break;
+		}
+		
+		// Reverse direction for front-facing camera
+		if (m_camera_info[t_id].facing == CameraInfo.CAMERA_FACING_FRONT)
+			t_rotation = 360 - t_rotation;
+		
+		return (m_camera_info[t_id].orientation + t_rotation) % 360;
+	}
+	
 	private void enablePreview()
 	{
 		if (m_is_recording)
@@ -136,6 +173,7 @@ class CameraControl extends NativeControl
 		
 		try
 		{
+			t_cam.setDisplayOrientation(getCameraOrientationSetting());
 			t_cam.setPreviewDisplay(t_preview.getHolder());
 			t_cam.startPreview();
 		}
