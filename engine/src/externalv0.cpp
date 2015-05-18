@@ -558,9 +558,17 @@ static char *eval_expr(const char *arg1, const char *arg2,
 	}
 	
 	MCAutoStringRef t_return;
-	/* UNCHECKED */ MCECptr->ConvertToString(*t_result, &t_return);
-	*retval = xresSucc;
-	return MCStringGetOldString(*t_return).clone();
+    char *t_cstring_return;
+    t_cstring_return = NULL;
+    
+    // SN-2015-05-18: [[ MCStringGetCString Removal ]] Convert to CString
+    if (MCECptr->ConvertToString(*t_result, &t_return)
+            && MCStringConvertToCString(*t_return, t_cstring_return))
+        *retval = xresSucc;
+    else
+        *retval = xresFail;
+    
+	return t_cstring_return;
 }
 
 static char *get_global(const char *arg1, const char *arg2,

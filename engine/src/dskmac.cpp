@@ -6842,7 +6842,12 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         // SN-2014-12-09: [[ Bug 14001 ]] Update the module loading for Mac server
 #ifdef _SERVER
-        return (MCSysModuleHandle)dlsym(p_module, MCStringGetCString(p_symbol));
+        // SN-2015-05-18: [[ MCStringGetCString Removal ]] Use AutoStringRefAsCString
+        MCAutoStringRefAsCString t_symbol_as_cstring;
+        if (t_symbol_as_cstring . Lock(p_symbol))
+            return (MCSysModuleHandle)dlsym(p_module, *t_symbol_as_cstring);
+        else
+            return NULL;
 #else
         CFStringRef t_cf_symbol;
        

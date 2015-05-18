@@ -2323,8 +2323,9 @@ Exec_stat MCHandleAdCreate(void *context, MCParameter *p_parameters)
     
     if (t_success)
     {
+        // SN-2015-05-18: [[ MCStringGetCtring Removal ]] Use MCU_stoui4x2
         if (MCParseParameters(p_parameters, "x", &(&t_topleft_string)))
-            /* UNCHECKED */ sscanf(MCStringGetCString(*t_topleft_string), "%u,%u", &t_topleft.x, &t_topleft.y);
+            t_success = MCU_stoui4x2(*t_topleft_string, t_topleft.x, t_topleft.y);
     }
     
     MCAutoArrayRef t_metadata;

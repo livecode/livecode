@@ -432,11 +432,18 @@ void MCServerPutOutput(MCStringRef s)
 
 void MCServerPutHeader(MCStringRef s, bool p_new)
 {
+    // SN-2015-05-18: [[ MCStringGetCString Removal ]] Use AutoStringRefAsCString
+    MCAutoStringRefAsCString t_input_as_cstring;
 	// Find where the ':' is
-	const char *t_loc;
-	t_loc = MCStringGetCString(s);
-	uint4 t_loc_len;
-	t_loc_len = MCStringGetLength(s);
+    const char *t_loc;
+    uint4 t_loc_len;
+    
+    if (!t_input_as_cstring . Lock(s))
+        return;
+
+    t_loc = *t_input_as_cstring;
+    t_loc_len = strlen(*t_input_as_cstring);
+    
 	if (!MCU_strchr(t_loc, t_loc_len, ':', False))
 		return;
 	
@@ -447,7 +454,7 @@ void MCServerPutHeader(MCStringRef s, bool p_new)
 	else
 		for(i = MCservercgiheadercount; i > 0; i--)
 		{
-			if (MCU_strncasecmp(MCStringGetCString(s), MCservercgiheaders[i - 1], t_loc - MCStringGetCString(s)) == 0)
+			if (MCU_strncasecmp(*t_input_as_cstring, MCservercgiheaders[i - 1], t_loc - *t_input_as_cstring) == 0)
 				break;
 		}
 	
@@ -460,7 +467,7 @@ void MCServerPutHeader(MCStringRef s, bool p_new)
 	else
 		free(MCservercgiheaders[i - 1]);
 	
-	MCservercgiheaders[i - 1] = strdup(MCStringGetCString(s));
+	MCservercgiheaders[i - 1] = strdup(*t_input_as_cstring);
 }
 
 void MCServerPutContent(MCStringRef s)
@@ -513,7 +520,7 @@ bool MCServerSetCookie(MCStringRef p_name, MCStringRef p_value, uint32_t p_expir
 		t_success = MCStringConvertToCString(p_name, MCservercgicookies[t_index].name)
 				&& MCStringConvertToCString(*t_encoded, MCservercgicookies[t_index].value)
 				&& MCStringConvertToCString(p_path, MCservercgicookies[t_index].path)
-				&& MCStringConvertToCString(p_domain, MCservercgicookies[t_index].domain;
+				&& MCStringConvertToCString(p_domain, MCservercgicookies[t_index].domain);
 	}
 
 	if (t_success)

@@ -981,17 +981,28 @@ class MCStdioFileHandle;
 
 bool MCS_create_temporary_file(MCStringRef p_path, MCStringRef p_prefix, IO_handle &r_file, MCStringRef &r_name)
 {
-    char* t_temp_file;
-    if (!MCCStringFormat(t_temp_file, "%s/%sXXXXXXXX", MCStringGetCString(p_path), MCStringGetCString(p_prefix)))
+    // SN-2015-05-18: [[ MCStringGetCString Removal ]] Use a StringRef (to keep
+    //  a potential Unicode path to the temp folder).
+    MCAutoStringRef t_temp_file;
+    if (!MCStringFormat(&t_temp_file, "%@/%@XXXXXXXX", p_path, p_prefix))
 		return false;
-	
+    
+    // Use SysString on Linux, and UTF-8 encoded string on MacServer
+#ifdef _LINUX_SERVER
+    MCAutoStringRefAsSysString t_filename_as_cstring;
+#else // _MAC_SERVER
+    MCAutoStringRefAsUTF8String t_filename_as_cstring;
+#endif
+    
+    if (!t_filename_as_cstring . Lock(*t_temp_file))
+        return false;
+    
 	int t_fd;
-    t_fd = mkstemp(t_temp_file);
+    t_fd = mkstemp(*t_filename_as_cstring);
     if (t_fd == -1)
         return false;
 	
-    if (!MCStringCreateWithCString(t_temp_file, r_name))
-        return false;
+    r_name = MCValueRetain(*t_temp_file);
 
     r_file = MCsystem->OpenFd(t_fd, kMCOpenFileModeWrite);
 	return true;

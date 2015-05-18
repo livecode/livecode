@@ -1968,13 +1968,19 @@ void MCEngineDoEvalUuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStrin
         return;
     }
     
-    if (p_is_md5)
-        MCUuidGenerateMD5(t_namespace, MCStringGetOldString(p_name), t_uuid);
-    else
-        MCUuidGenerateSHA1(t_namespace, MCStringGetOldString(p_name), t_uuid);
+    // SN-2015-05-18: [[ MCStringGetCString Removal ]] Use an AutoStringRefAsCString
+    MCAutoStringRefAsCString t_cstring_name;
     
-    if (MCEngineUuidToStringRef(t_uuid, r_uuid))
-        return;
+    if (t_cstring_name . Lock(p_name))
+    {
+        if (p_is_md5)
+            MCUuidGenerateMD5(t_namespace, *t_cstring_name, t_uuid);
+        else
+            MCUuidGenerateSHA1(t_namespace, *t_cstring_name, t_uuid);
+        
+        if (MCEngineUuidToStringRef(t_uuid, r_uuid))
+            return;
+    }
     
     ctxt . Throw();
 }

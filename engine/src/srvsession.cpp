@@ -340,14 +340,17 @@ bool MCSessionFindMatchingSession(MCSessionIndexRef p_index, MCStringRef p_sessi
 {
 	MCAutoStringRef t_remote_addr_str;
 	
+    // SN-2015-05-18: [[ MCStringGetCString Removal ]] Use AutoStringRefAsCString
+    bool t_success;
+    MCAutoStringRefAsCString t_addr_as_cstring;
 	const char *t_remote_addr = NULL;
 
 	if (!MCS_getenv(MCSTR("REMOTE_ADDR"), &t_remote_addr_str))
-		t_remote_addr = "";
+		t_success = t_addr_as_cstring . Lock(kMCEmptyString);
 	else
-		t_remote_addr = MCStringGetCString(*t_remote_addr_str);
+		t_success = t_addr_as_cstring . Lock(*t_remote_addr_str);
 
-	for (uint32_t i = 0; i < p_index->session_count; i++)
+	for (uint32_t i = 0; t_success && i < p_index->session_count; i++)
 	{
 		if (MCStringIsEqualToCString(p_session_id, p_index->session[i]->id, kMCCompareExact) && MCCStringEqual(p_index->session[i]->ip, t_remote_addr))
 		{
@@ -385,34 +388,38 @@ bool MCSessionCreateSession(MCSessionIndexRef p_index, MCStringRef p_session_id,
 	MCSession *t_session = NULL;
 
 	MCAutoStringRef t_remote_addr_string;
-	char *t_remote_addr;
-	t_remote_addr = NULL;
+    // SN-2015-05-18: [[ MCStringGetCString Removal ]] Use AutoStringRefAsCString
+    MCAutoStringRefAsCString t_addr_as_cstring;
 
 	if (MCS_getenv(MCSTR("REMOTE_ADDR"), &t_remote_addr_string))
-		MCCStringClone(MCStringGetCString(*t_remote_addr_string), t_remote_addr);
+		t_success = t_addr_as_cstring . Lock(*t_remote_addr_string);
+    else
+        t_success = t_addr_as_cstring . Lock(kMCEmptyString);
 	
-	t_success = MCMemoryNew(t_session);
+    if (t_success)
+        t_success = MCMemoryNew(t_session);
 	
 	if (t_success)
-		t_success = MCCStringClone(t_remote_addr ? t_remote_addr : "", t_session->ip);
+		t_success = MCCStringClone(*t_addr_as_cstring, t_session->ip);
 
 	if (t_success)
 	{
 		if (p_session_id != nil && !MCStringIsEmpty(p_session_id))
 		{
-			t_session->id = strdup(MCStringGetCString(p_session_id));
-			t_success = true;
+            // SN-2015-05-18: [[ MCStringGetCString Removal ]] Convert to CString
+            t_success = MCStringConvertToCString(p_session_id, t_session->id);
 		}
 		else
 		{
+            // SN-2015-05-18: [[ MCStringGetCString Removal ]] Convert to CString
 			MCAutoStringRef t_session_id;
-			t_success = MCSessionGenerateID(&t_session_id);
-			t_session->id = strdup(MCStringGetCString(*t_session_id));
+			t_success = MCSessionGenerateID(&t_session_id)
+                    && MCStringConvertToCString(*t_session_id, t_session->id);
 		}
 	}
 	
 	if (t_success)
-		t_success = MCCStringFormat(t_session->filename, "%s_%s", t_remote_addr ? t_remote_addr : "", t_session->id);
+		t_success = MCCStringFormat(t_session->filename, "%s_%s", *t_addr_as_cstring, t_session->id);
 	
 	if (t_success)
 		t_success = MCSessionIndexAddSession(p_index, t_session);
@@ -684,12 +691,15 @@ bool MCSessionGenerateID(MCStringRef &r_id)
 {
 	// php calculates session ids by hashing a string composed of REMOTE_ADDR, time in seconds & milliseconds, and a random value
 
+    // SN-2015-05-18: [[ MCStringGetCString Removal ]] Use AutoStringRefAsCString
 	MCAutoStringRef t_remote_addr_string;
-	char *t_remote_addr;
-	t_remote_addr = NULL;
+    MCAutoStringRefAsCString t_addr_as_cstring;
 
 	if (MCS_getenv(MCSTR("REMOTE_ADDR"), &t_remote_addr_string))
-		MCCStringClone(MCStringGetCString(*t_remote_addr_string), t_remote_addr);
+    {
+        if (!t_addr_as_cstring . Lock(*t_remote_addr_string))
+            return false;
+    }
 		
 	time_t t_time;
 	time(&t_time);
@@ -703,8 +713,8 @@ bool MCSessionGenerateID(MCStringRef &r_id)
 	md5_state_t t_state;
 	md5_byte_t t_digest[16];
 	md5_init(&t_state);
-	if (t_remote_addr != NULL)
-		md5_append(&t_state, (md5_byte_t *)t_remote_addr, MCCStringLength(t_remote_addr));
+	if (*t_addr_as_cstring != NULL)
+		md5_append(&t_state, (md5_byte_t *)*t_addr_as_cstring, MCCStringLength(*t_addr_as_cstring));
 	md5_append(&t_state, (md5_byte_t *)&t_time, sizeof(t_time));
 	md5_append(&t_state, (md5_byte_t *)MCDataGetBytePtr(*t_randombytes), 64);
 	md5_finish(&t_state, t_digest);

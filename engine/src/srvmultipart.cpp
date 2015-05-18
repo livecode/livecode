@@ -89,8 +89,14 @@ public:
 		r_boundary_reached = false;
 		r_bytes_read = 0;
 		r_bytes_consumed = 0;
-		
-		while ((!r_boundary_reached) && r_bytes_read < p_buffer_size)
+        
+        // SN-2015-05-18: [[ MCStringGetCString Removal ]] Convert to CString
+        MCAutoStringRefAsCString t_boundary_as_cstring;
+        uindex_t t_boundary_length;
+        t_boundary_as_cstring . Lock(m_boundary);
+        t_boundary_length = strlen(*t_boundary_as_cstring);
+        
+        while ((!r_boundary_reached) && r_bytes_read < p_buffer_size)
 		{
 			if (!m_have_char)
 			{
@@ -101,11 +107,11 @@ public:
 				r_bytes_consumed++;
 				m_have_char = true;
 			}
-			if (MCStringGetNativeCharAtIndex(m_boundary, m_match_index) == m_match_char)
+			if ((*t_boundary_as_cstring)[m_match_index] == m_match_char)
 			{
 				m_match_index++;
 				m_have_char = false;
-				if (m_match_index == MCStringGetLength(m_boundary))
+				if (m_match_index == t_boundary_length)
 				{
 					m_match_index = 0;
 					r_boundary_reached = true;
@@ -127,7 +133,7 @@ public:
 					{
 						uint32_t t_out = MCMin(t_diff - m_match_frontier, p_buffer_size - r_bytes_read);
                         
-						MCMemoryCopy(r_buffer + r_bytes_read, MCStringGetCString(m_boundary) + m_match_frontier, t_out);
+						MCMemoryCopy(r_buffer + r_bytes_read, *t_boundary_as_cstring + m_match_frontier, t_out);
 						m_match_frontier += t_out;
 						r_bytes_read += t_out;
 					}
@@ -912,9 +918,11 @@ void MCMultiPartCleanTempFolder(const char *p_temp_folder)
 #define TEMP_PREFIX "livecode_"
 bool MCS_create_temporary_file(MCStringRef p_path, MCStringRef p_prefix, IO_handle &r_file, MCStringRef &r_name);
 
+// SN-2015-05-18: [[ MCStringGetCString Removal ]] Change to a StringRef - we
+//  won't be able to delete the temp files if the path contains Unicode otherwise
 typedef struct _mcmultiparttempfilelist
 {
-	char *file_name;
+	MCStringRef file_name;
 	
 	struct _mcmultiparttempfilelist *next;
 } MCMultiPartTempFileList;
@@ -941,7 +949,7 @@ bool MCMultiPartCreateTempFile(MCStringRef p_temp_folder, IO_handle &r_file_hand
 
 	if (t_success)
 	{
-		t_list_item->file_name = strdup(MCStringGetCString(*t_temp_name_string));
+		t_list_item->file_name = MCValueRetain(*t_temp_name_string);
 		t_list_item->next = s_temp_files;
 		s_temp_files = t_list_item;
 		
@@ -960,11 +968,10 @@ void MCMultiPartRemoveTempFiles()
 {
 	while (s_temp_files != NULL)
 	{
-		MCAutoStringRef file_name_string;
-		/* UNCHECKED */ MCStringCreateWithCString(s_temp_files->file_name, &file_name_string);
-
-		MCS_unlink(*file_name_string);
-		MCCStringFree(s_temp_files->file_name);
+        // SN-2015-056-18: [[ MCStringGetCString Removal ]] s_temp_files now
+        //  stores file names as StringRef
+		MCS_unlink(s_temp_files -> file_name);
+		MCValueRelease(s_temp_files->file_name);
 
 		MCMultiPartTempFileList *t_item;
 		t_item = s_temp_files;

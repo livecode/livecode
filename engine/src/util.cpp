@@ -2494,12 +2494,19 @@ void MCU_dofunc(Functions func, uint4 nparams, real8 &n,
 //   could be a url. It checks for strings of the form:
 //     <letter> (<letter> | <digit> | '+' | '.' | '-')+ ':' <char>+
 // MW-2013-07-01: [[ Bug 10975 ]] Update to a MCU_* utility function.
-bool MCU_couldbeurl(const MCString& p_potential_url)
+// SN-2015-05-18: [[ MCStringGetCString Removal ]] Change the input param to a
+//  StringRef.
+bool MCU_couldbeurl(MCStringRef p_potential_url)
 {
 	uint4 t_length;
 	const char *t_url;
-	t_length = p_potential_url . getlength();
-	t_url = p_potential_url . getstring();
+    
+    MCAutoStringRefAsCString t_cstring_url;
+    if (!t_cstring_url . Lock(p_potential_url))
+        return false;
+    
+    t_length = strlen(*t_cstring_url);
+    t_url = *t_cstring_url;
 	
 	// If the first char isn't a letter, then we are done.
 	if (t_length == 0 || !isalpha(t_url[0]))
@@ -2547,7 +2554,7 @@ void MCU_geturl(MCExecContext& ctxt, MCStringRef p_url, MCValueRef &r_output)
 		MCStringCopySubstring(p_url, MCRangeMake(8, MCStringGetLength(p_url)-8), &t_filename);
 		MCS_loadresfile(*t_filename, (MCStringRef&)r_output);
 	}
-	else if (MCU_couldbeurl(MCStringGetOldString(p_url)))
+	else if (MCU_couldbeurl(p_url))
 	{
 		// Send a "getURL" message
 		Boolean oldlock = MClockmessages;
@@ -2628,7 +2635,7 @@ void MCU_puturl(MCExecContext &ctxt, MCStringRef p_url, MCValueRef p_data)
 		/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
 		MCS_saveresfile(*t_path, *t_data);
 	}
-	else if (MCU_couldbeurl(MCStringGetOldString(p_url)))
+	else if (MCU_couldbeurl(p_url))
 	{
 		MCAutoDataRef t_data;
 
