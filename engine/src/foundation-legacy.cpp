@@ -1298,10 +1298,10 @@ static uint32_t measure_array_entry(MCNameRef p_key, MCValueRef p_value)
 	//   * bytes - C string of key
 
 	// SN-2015-05-14: [[ MCStringGetCString ]] Use ConvertToCString
-	MCAutoPointer<char> t_key_as_cstring;
+	MCAutoStringRefAsCString t_key_as_cstring;
 	uint32_t t_size;
 
-	/* UNCHECKED */ MCStringConvertToCString(MCNameGetString(p_key), &t_key_as_cstring);
+	/* UNCHECKED */t_key_as_cstring . Lock(MCNameGetString(p_key));
 	t_size = 1 + 4 + strlen(*t_key_as_cstring) + 1;
 
 	switch(MCValueGetTypeCode(p_value))
