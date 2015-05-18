@@ -566,9 +566,9 @@ static MCExecEnumTypeInfo _kMCNativeControlBorderStyleTypeInfo =
 
 static MCExecSetTypeElementInfo _kMCNativeControlCameraDeviceElementInfo[] =
 {
-	{ "default", kMCNativeControlCameraDeviceDefault },
-	{ "front", kMCNativeControlCameraDeviceFront },
-	{ "back", kMCNativeControlCameraDeviceBack },
+	{ "default", kMCNativeControlCameraDeviceDefaultBit },
+	{ "front", kMCNativeControlCameraDeviceFrontBit },
+	{ "back", kMCNativeControlCameraDeviceBackBit },
 };
 
 static MCExecSetTypeInfo _kMCNativeControlCameraDeviceTypeInfo =
@@ -598,8 +598,8 @@ static MCExecEnumTypeInfo _kMCNativeControlCameraFlashModeTypeInfo =
 
 static MCExecSetTypeElementInfo _kMCNativeControlCameraFeatureElementInfo[] =
 {
-	{ "flash", kMCNativeControlCameraFeatureFlash },
-	{ "flashmode", kMCNativeControlCameraFeatureFlashMode },
+	{ "flash", kMCNativeControlCameraFeatureFlashBit },
+	{ "flashmode", kMCNativeControlCameraFeatureFlashModeBit },
 };
 
 static MCExecSetTypeInfo _kMCNativeControlCameraFeatureTypeInfo =
