@@ -139,9 +139,11 @@ class CameraControl extends NativeControl
 		
 		// Reverse direction for front-facing camera
 		if (m_camera_info[t_id].facing == CameraInfo.CAMERA_FACING_FRONT)
-			t_rotation = 360 - t_rotation;
+			t_rotation = (720 - (m_camera_info[t_id].orientation + t_rotation)) % 360;
+		else
+			t_rotation = (m_camera_info[t_id].orientation + 360 - t_rotation) % 360;
 		
-		return (m_camera_info[t_id].orientation + t_rotation) % 360;
+		return t_rotation;
 	}
 	
 	private void enablePreview()
