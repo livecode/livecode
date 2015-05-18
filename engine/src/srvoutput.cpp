@@ -493,21 +493,22 @@ bool MCServerSetCookie(MCStringRef p_name, MCStringRef p_value, uint32_t p_expir
 	bool t_success = true;
 	uint32_t t_index = 0;
 	
-	if (t_success && !MCStringIsEmpty(p_name) && !MCStringIsEmpty(p_path) && !MCStringIsEmpty(p_domain))
-		t_success = true;
-	
 	MCAutoStringRef t_encoded;
 	if (t_success && !MCStringIsEmpty(p_value))
 		MCU_urlencode(p_value, false, &t_encoded);
+	else
+		// Make sure that t_encoded is initialised
+		t_encoded = kMCEmptyString;
 	
 	if (t_success)
 	{
 		// try to find matching cookie (name, path, domain)
 		for (; t_index < MCservercgicookiecount; t_index++)
 		{
-			if (MCStringIsEqualToCString(p_name, MCservercgicookies[t_index].name, kMCCompareExact) &&
-                (!MCStringIsEmpty(p_path) && MCStringIsEqualToCString(p_path, MCservercgicookies[t_index].path, kMCCompareExact)) &&
-                !(MCStringIsEmpty(p_domain) && MCStringIsEqualToCString(p_domain, MCservercgicookies[t_index].domain, kMCCompareExact)))
+			// p_path and p_domain are never NULL - MCStringIsEqualTo can always be used
+			if (MCStringIsEqualTo(p_name, MCservercgicookies[t_index].name, kMCCompareExact) &&
+                MCStringIsEqualTo(p_path, MCservercgicookies[t_index].path, kMCCompareExact) &&
+                MCStringIsEqualTo(p_domain, MCservercgicookies[t_index].domain, kMCCompareExact))
 				break;
 		}
 		if (t_index == MCservercgicookiecount)
@@ -516,21 +517,32 @@ bool MCServerSetCookie(MCStringRef p_name, MCStringRef p_value, uint32_t p_expir
 	
 	if (t_success)
 	{
-		// SN-2015-05-14: [[ MCStringGetCString Removal ]] Use ConvertToCString
-		t_success = MCStringConvertToCString(p_name, MCservercgicookies[t_index].name)
-				&& MCStringConvertToCString(*t_encoded, MCservercgicookies[t_index].value)
-				&& MCStringConvertToCString(p_path, MCservercgicookies[t_index].path)
-				&& MCStringConvertToCString(p_domain, MCservercgicookies[t_index].domain);
-	}
-
-	if (t_success)
-	{
+		// SN-2015-05-14: [[ MCservercgicookies Refactor ]] Now stores StringRefs
+		MCservercgicookies[t_index].name = MCValueRetain(p_name);
+		MCservercgicookies[t_index].value = MCValueRetain(*t_encoded);
+		MCservercgicookies[t_index].path = MCValueRetain(p_path);
+		MCservercgicookies[t_index].domain = MCValueRetain(p_domain);
 		MCservercgicookies[t_index].expires = p_expires;
 		MCservercgicookies[t_index].secure = p_secure;
 		MCservercgicookies[t_index].http_only = p_http_only;
 	}
 	
 	return t_success;
+}
+
+void MCServerReleaseCookiesArray(void)
+{
+	if (MCservercgicookies != NULL)
+	{
+		for (uint32_t i = 0; i < MCservercgicookiecount; ++i)
+		{
+			MCValueRelease(MCservercgicookies[i] . name);
+			MCValueRelease(MCservercgicookies[i] . value);
+			MCValueRelease(MCservercgicookies[i] . path);
+			MCValueRelease(MCservercgicookies[i] . domain);
+		}
+		MCMemoryDeleteArray(MCservercgicookies);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

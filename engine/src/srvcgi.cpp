@@ -1527,7 +1527,8 @@ static bool cgi_send_cookies(void)
 	
 	for (uint32_t i = 0; t_success && i < MCservercgicookiecount; i++)
 	{
-		t_success = MCCStringFormat(t_cookie_header, "Set-Cookie: %s=%s", MCservercgicookies[i].name, MCservercgicookies[i].value);
+		// SN-2015-05-18: [[ MCservercgicookies Refactor ]] Now stores StringRefs
+		t_success = MCCStringFormat(t_cookie_header, "Set-Cookie: %@=%@", MCservercgicookies[i].name, MCservercgicookies[i].value);
 		
 		if (t_success && MCservercgicookies[i].expires != 0)
 		{
@@ -1542,11 +1543,12 @@ static bool cgi_send_cookies(void)
 			}
 		}
 		
-		if (t_success && MCservercgicookies[i].path != NULL)
-			t_success = MCCStringAppendFormat(t_cookie_header, "; Path=%s", MCservercgicookies[i].path);
+		// SN-2015-05-18: [[ MCservercgicookies Refactor ]] Now stores StringRefs
+		if (t_success && !MCStringIsEmpty(MCservercgicookies[i].path))
+			t_success = MCCStringAppendFormat(t_cookie_header, "; Path=%@", MCservercgicookies[i].path);
 		
-		if (t_success && MCservercgicookies[i].domain != NULL)
-			t_success = MCCStringAppendFormat(t_cookie_header, "; Domain=%s", MCservercgicookies[i].domain);
+		if (t_success && !MCStringIsEmpty(MCservercgicookies[i].domain))
+			t_success = MCCStringAppendFormat(t_cookie_header, "; Domain=%@", MCservercgicookies[i].domain);
 
 		if (t_success && MCservercgicookies[i].secure)
 			t_success = MCCStringAppend(t_cookie_header, "; Secure");

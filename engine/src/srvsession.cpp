@@ -44,6 +44,8 @@ typedef struct
 
 extern bool MCSystemLockFile(IO_handle p_file, bool p_shared, bool p_wait);
 bool MCServerSetCookie(MCStringRef p_name, MCStringRef p_value, uint32_t p_expires, MCStringRef p_path, MCStringRef p_domain, bool p_secure, bool p_http_only);
+// SN-2015-05-18: [[ ServerMemoryLeak ]] Ensure that MCservercgicookies is released
+void MCServerReleaseCookiesArray(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -555,7 +557,9 @@ bool MCSessionStart(MCStringRef p_session_id, MCSessionRef &r_session)
 		{
 			MCAutoStringRef t_session_id_str;
 			/* UNCHECKED */ MCStringCreateWithCString(t_session->id, &t_session_id_str);
-			t_success = MCServerSetCookie(*t_session_name, *t_session_id_str, 0, nil, nil, false, true);
+			// SN-2015-05-18: [[ MCservercgicookies Refactor ]] Do not pass nil
+			//  params to MCServerSetCookie
+			t_success = MCServerSetCookie(*t_session_name, *t_session_id_str, 0, kMCEmptyString, kMCEmptyString, false, true);
 		}
 		
 		if (t_success)
@@ -612,7 +616,9 @@ bool MCSessionExpireCookie()
 	MCAutoStringRef t_session_name;
 	/* UNCHECKED */ MCS_get_session_name(&t_session_name);
 	
-	return MCServerSetCookie(*t_session_name, MCSTR("EXPIRE"), MCS_time() - 60 * 60 * 24, nil, nil, false, true);
+	// SN-2015-05-18: [[ MCservercgicookies Refactor ]] Do not pass nil params
+	//  to MCServerSetCookie
+	return MCServerSetCookie(*t_session_name, MCSTR("EXPIRE"), MCS_time() - 60 * 60 * 24, kMCEmptyString, kMCEmptyString, false, true);
 }
 
 bool MCSessionExpire(MCStringRef p_id)
@@ -658,6 +664,10 @@ bool MCSessionCleanup(void)
 				MCSessionIndexRemoveSession(t_index, t_index->session[i]);
 		}
 	}
+
+	// SN-2015-05-18: [[ ServerMemoryLeak ]] Ensure that the cookies array
+	//  is released when the server quits.
+	MCServerReleaseCookiesArray();
 	
 	if (t_index != NULL)
 		t_success &= MCSessionCloseIndex(t_index, t_success);
