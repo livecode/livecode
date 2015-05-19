@@ -224,6 +224,7 @@ void __MCListFinalize(void)
 
 void __MCListDestroy(__MCList *self)
 {
+    MCValueRelease(self -> delimiter);
 	MCValueRelease(self -> buffer);
 }
 
