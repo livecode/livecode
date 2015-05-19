@@ -7,6 +7,9 @@ SOURCES=\
 	stacksecurity.cpp \
 	linuxstubs.cpp
 
+$(CACHE_DIR)/linuxstubs.o: CCFLAGS+= -fvisibility=hidden
+
+
 SOURCE_DIRS=
 
 CUSTOM_OVERRIDE_DEFINES=1

@@ -610,6 +610,9 @@ extern void MCModulesFinalize();
 
 int main(int argc, char *argv[], char *envp[])
 {
+	void initialize_mem_dbg();
+	initialize_mem_dbg();
+	
 	if (!MCInitialize() || !MCSInitialize() ||
 	    !MCModulesInitialize() || !MCScriptInitialize())
 		exit(-1);
@@ -667,6 +670,12 @@ int main(int argc, char *argv[], char *envp[])
 		MCValueRelease(t_new_envp[i]);
 	}
 	MCMemoryDeleteArray(t_new_envp);
+
+	void report_mem_dbg();
+	report_mem_dbg();
+	
+	void restore_handlers();
+	restore_handlers();
 
 	exit(t_exit_code);
 }
