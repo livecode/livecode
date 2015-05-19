@@ -1051,12 +1051,13 @@ Boolean MCPlayer::mdown(uint2 which)
             switch (getstack()->gettool(this))
 		{
             case T_BROWSE:
-                message_with_args(MCM_mouse_down, "1");
                 // PM-2014-07-16: [[ Bug 12817 ]] Create selection when click and drag on the well while shift key is pressed
                 if ((MCmodifierstate & MS_SHIFT) != 0)
                     handle_shift_mdown(which);
                 else
                     handle_mdown(which);
+                // Send mouseDown msg after mdown is passed to the controller, to prevent blocking if the mouseDown handler has an 'answer' command
+                message_with_args(MCM_mouse_down, "1");
                 MCscreen -> addtimer(this, MCM_internal, MCblinkrate);
                 break;
             case T_POINTER:
