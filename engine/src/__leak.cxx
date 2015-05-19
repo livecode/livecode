@@ -64,6 +64,7 @@ static void* my_malloc_hook (size_t size, const void *caller)
 {
 	restore_handlers();
 	void* result = malloc(size);
+	assert(result != 0);
 	__MarkAllocated(result, size);
 	set_handlers();
 	return result;
@@ -82,6 +83,7 @@ static void* my_realloc_hook(void* ptr, size_t size, const void* caller)
 	restore_handlers();
 	__MarkFreed(ptr);
 	void* result = realloc(ptr, size);
+	assert(result != 0);
 	__MarkAllocated(result, size);
 	set_handlers();
 	return result;
@@ -92,6 +94,7 @@ static void* my_memalign_hook(size_t alignment, size_t size, const void* caller)
 {
 	restore_handlers();
 	void* result = memalign(alignment, size);
+	assert(result != 0);
 	__MarkAllocated(result, size);
 	set_handlers();
 	return result;
