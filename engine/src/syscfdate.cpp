@@ -370,8 +370,9 @@ static bool osx_cf_fetch_format(CFLocaleRef p_locale, CFDateFormatterStyle p_dat
 		CFRelease(t_formatter);
 	
 	if (t_success)
-        MCStringCopyAndRelease(t_format, r_string);
-    else
+        t_success = MCStringCopyAndRelease(t_format, r_string);
+    
+    if (!t_success)
         MCValueRelease(t_format);
     
     return t_success;
