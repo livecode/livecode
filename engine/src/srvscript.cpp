@@ -548,7 +548,13 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 					break;
 				}
 			}
-
+            
+            while (MCtodelete != NULL)
+            {
+                MCObject *optr = MCtodelete->remove(MCtodelete);
+                delete optr;
+            }
+            
 			t_statement = t_statement -> getnext();
 		}
 
