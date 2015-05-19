@@ -935,7 +935,16 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
         MCKeyMessageNext(s_pending_key_down);
     }
     else
+    {
+        // SN-2015-05-19: [[ Bug 15208 ]] This is only preventing the crash, does
+        //  not solved the situation detailed in the bug report
+        //  http://quality.runrev.com/show_bug.cgi?id=15208
+        MCField *t_activeField;
+        t_activeField = MCactivefield;
         MCactivefield -> finsertnew(FT_IMEINSERT, MCString((char *)p_chars, p_char_count * 2), True, true);
+        if (!MCactivefield)
+            MCactivefield = t_activeField;
+    }
 	
 	// And update the selection range.
 	int32_t t_s_si, t_s_ei;
