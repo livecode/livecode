@@ -349,11 +349,12 @@ bool __MCSetCopyDescription(__MCSet *self, MCStringRef& r_string)
 	if (t_success)
 		t_success = MCStringAppendFormat(t_string, "}");
 	if (t_success)
-		return MCStringCopyAndRelease(t_string, r_string);
+		t_success = MCStringCopyAndRelease(t_string, r_string);
 	
-	MCValueRelease(t_string);
+    if (!t_success)
+        MCValueRelease(t_string);
 
-	return false;
+	return t_success;
 }
 
 bool __MCSetImmutableCopy(__MCSet *self, bool p_release, __MCSet*& r_immutable_value)
