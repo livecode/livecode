@@ -1829,13 +1829,15 @@ void MCStringsEvalOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p
 {
 	MCStringOptions t_options = ctxt.GetStringComparisonType();
     uindex_t t_offset;
+    MCRange t_char_range, t_cu_range;
+    // AL-2015-05-07: [[ Bug 15327 ]] Start offset is grapheme offset not codeunit, so map to grapheme offset first.
+    MCStringMapIndices(p_string, kMCCharChunkTypeGrapheme, MCRangeMake(0, p_start_offset), t_cu_range);
     // AL-2014-05-27: [[ Bug 12517 ]] Offset should be 0 for an empty input string
 	if (MCStringIsEmpty(p_chunk) || !MCStringFirstIndexOf(p_string, p_chunk, p_start_offset, t_options, t_offset))
 		r_result = 0;
 	else
     {
         // We want to get the grapheme length, not the codeunit one
-        MCRange t_cu_range, t_char_range;
         t_cu_range . offset = 0;
         t_cu_range . length = t_offset;
         MCStringUnmapIndices(p_string, kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);

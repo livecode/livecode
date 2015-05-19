@@ -98,9 +98,9 @@ static MCExecEnumTypeInfo _kMCPasteboardDragActionTypeInfo =
 
 static MCExecSetTypeElementInfo _kMCPasteboardAllowableDragActionsElementInfo[] =
 {
-	{ "move", DRAG_ACTION_MOVE },
-	{ "copy", DRAG_ACTION_COPY },
-	{ "link", DRAG_ACTION_LINK },
+	{ "move", DRAG_ACTION_MOVE_BIT },
+	{ "copy", DRAG_ACTION_COPY_BIT },
+	{ "link", DRAG_ACTION_LINK_BIT },
 };
 
 static MCExecSetTypeInfo _kMCPasteboardAllowableDragActionsTypeInfo =

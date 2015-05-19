@@ -650,6 +650,8 @@ public:
 	void importattrs(const MCFieldParagraphStyle& x_style);
 	// MW-2012-03-03: [[ StackFile5500 ]] Computes the size of the attrs when serialized.
 	uint32_t measureattrs(void);
+    // SN-2015-05-01: [[ Bug 15175 ]] Make easier to find out whether we need an extra flag
+    bool hasextraflag(void);
 
 	// MW-2012-03-05: [[ HiddenText ]] Get whether the paragraph is hidden or not.
 	bool gethidden(void) const;

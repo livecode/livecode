@@ -1,0 +1,1 @@
+# global allowabledragactions property broken

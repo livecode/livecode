@@ -957,7 +957,10 @@ void MCStringsAddChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, uindex_t p
     
     // the text has changed
     // SN-2014-09-03: [[ Bug 13314 ]] MCMarkedText::changed updated to store the number of chars appended
-    x_text . changed = p_to_add * MCStringGetLength(t_delimiter);
+    // SN-2015-05-05: [[ Bug 15315 ]] put "hello" into item 2 of line 4 of ...
+    //  will add twice chunk delimiters, and we want to keep the count
+    //  (see note for bug 15315 in MCInterfaceExecPutIntoField).
+    x_text . changed += p_to_add * MCStringGetLength(t_delimiter);
 }
 
 void MCStringsEvalTextChunk(MCExecContext& ctxt, MCMarkedText p_source, MCStringRef& r_string)

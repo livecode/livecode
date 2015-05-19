@@ -962,7 +962,9 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
         
         // SN-2015-05-18: [[ Bug 3537 ]] Use p_mark to determine whether we are
         //  in an IME state
-        if (!p_mark)
+        // SN-2015-05-05: [[ Bug 15305 ]] Check that s_pending_key_down is not
+        //  nil before trying to use it, and use IME only if p_mark says so.
+        if (s_pending_key_down && !p_mark)
         {
             MCAutoStringRef t_mapped_char;
             MCPlatformKeyCode t_mapped_key_code;
