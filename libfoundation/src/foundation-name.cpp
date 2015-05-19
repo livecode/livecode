@@ -171,7 +171,12 @@ bool MCNameCreateWithNativeChars(const char_t *p_chars, uindex_t p_count, MCName
 	MCStringRef t_string;
 	if (!MCStringCreateWithNativeChars(p_chars, p_count, t_string))
 		return false;
-	return MCNameCreateAndRelease(t_string, r_name);
+	if (!MCNameCreateAndRelease(t_string, r_name))
+	{
+		MCValueRelease(t_string);
+		return false;
+	}
+	return true;
 }
 
 bool MCNameCreateWithChars(const unichar_t *p_chars, uindex_t p_count, MCNameRef& r_name)
