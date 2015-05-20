@@ -824,19 +824,6 @@ MCPlayer::MCPlayer()
 	lasttime = 0;
 	starttime = endtime = MAXUINT4;
     
-    // Default controller font color (darkgray)
-    controllerfontcolor = controllercolors[0];
-    
-    // Default controller icons color (white)
-    controllericoncolor = controllercolors[1];
-    
-    // Default controller played area color (platform default - light blue)
-    controllermaincolor = MChilitecolor;
-    
-    // Default controller selected area color (platform default - light gray)
-    // PM-2014-09-16: [[ Bug 13391 ]] Changed default forecolor
-    selectedareacolor = MCselectioncolor;
-    
 	disposable = istmpfile = False;
 	userCallbackStr = NULL;
 	formattedwidth = formattedheight = 0;
@@ -875,9 +862,6 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	rate = sref.rate;
 	lasttime = sref.lasttime;
 	starttime = sref.starttime;
-    controllerfontcolor = sref.controllerfontcolor;
-    controllermaincolor = sref.controllermaincolor;
-    selectedareacolor = sref.selectedareacolor;
 	endtime = sref.endtime;
 	disposable = istmpfile = False;
 	userCallbackStr = strclone(sref.userCallbackStr);
@@ -2366,7 +2350,8 @@ uint2 MCPlayer::getloudness()
 
 MCColor MCPlayer::getcontrollerfontcolor()
 {
-    return controllerfontcolor;
+    // Default controller font color (darkgray)
+    return controllercolors[0];
 }
 
 // PM-2014-09-16: [[ Bug 12834 ]] Allow setting the color of controller icons (backcolor property of player)
@@ -2376,26 +2361,29 @@ MCColor MCPlayer::getcontrollericoncolor()
     if (getcindex(DI_BACK, i))
         return colors[i];
     
-    return controllericoncolor;
+    return controllercolors[1];
 }
 
 // PM-2014-09-16: [[ Bug 13390 ]] use the MCObject colors list since we are using the standard color prop names, so no extra stuff needs to be saved
 MCColor MCPlayer::getcontrollermaincolor()
 {
     uint2 i;
-    if (getcindex(DI_FORE, i))
-        return colors[i];
-    
-    return controllermaincolor;
-}
-
-MCColor MCPlayer::getcontrollerselectedareacolor()
-{
-    uint2 i;
     if (getcindex(DI_HILITE, i))
         return colors[i];
     
-    return selectedareacolor;
+    // Default controller played area color (platform default - light blue)
+    return MChilitecolor;
+}
+
+// PM-2014-09-16: [[ Bug 13391 ]] Changed default forecolor
+MCColor MCPlayer::getcontrollerselectedareacolor()
+{
+    uint2 i;
+    if (getcindex(DI_FORE, i))
+        return colors[i];
+    
+    // Default controller selected area color (platform default - light gray)
+    return MCselectioncolor;
 }
 
 void MCPlayer::updateloudness(int2 newloudness)
