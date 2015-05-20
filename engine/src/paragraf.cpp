@@ -1041,9 +1041,8 @@ void MCParagraph::flow(void)
 
     // SN-2015-01-21: [[ Bug 14229 ]] We want to keep the former lines, to be able
     //  to update the dirtywidth of a newly empty line with the former line length.
-    MCLine *t_old_line, *t_first_line;
+    MCLine *t_old_line;
     t_old_line = lines;
-    t_first_line = lines;
     lines = NULL;
     
     // Delete all existing lines and segments
@@ -1069,10 +1068,9 @@ void MCParagraph::flow(void)
         
         if (t_old_line != NULL)
         {
-            lptr -> takewidth(t_old_line);
-            t_old_line = t_old_line -> next();
-            if (t_old_line == t_first_line)
-                t_old_line = NULL;
+            MCLine *t_line_to_remove;
+            t_line_to_remove = lines->remove(t_old_line);
+            lptr -> takewidth(t_line_to_remove);
         }
         
         lptr = t_leftover;
