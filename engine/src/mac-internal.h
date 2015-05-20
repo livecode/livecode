@@ -466,8 +466,9 @@ public:
 	void ProcessWillMiniaturize(void);
 	void ProcessDidMiniaturize(void);
 	void ProcessDidDeminiaturize(void);
-	void ProcessDidBecomeKey(void);
-	void ProcessDidResignKey(void);
+    // SN-2015-05-20: [[ Bug 15208 ]] Renamed to better reflect the functions action
+	void ProcessGainedMainFocus(void);
+	void ProcessLostMainFocus(void);
 	
 	void ProcessMouseMove(NSPoint location);
 	void ProcessMousePress(NSInteger button, bool is_down);
@@ -538,7 +539,7 @@ private:
 		bool m_has_sheet : 1;
 		
 		// When the frame is locked, any changes to the window rect will be prevented.
-		bool m_frame_locked : 1;
+        bool m_frame_locked : 1;
 	};
 	
 	// A window might map to one of several different classes, so we use a
