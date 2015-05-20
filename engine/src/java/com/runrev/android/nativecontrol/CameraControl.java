@@ -527,6 +527,7 @@ class CameraControl extends NativeControl
 		}
 		
 		m_flash_mode = p_mode;
+		m_camera_view.setFlashMode(m_flash_mode);
 	}
 	
 	public int getFlashMode()
