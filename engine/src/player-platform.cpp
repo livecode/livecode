@@ -2414,6 +2414,7 @@ MCColor MCPlayer::getcontrollericoncolor()
     if (getcindex(DI_BACK, i))
         return colors[i];
     
+    // Default controller icons color (white)
     return controllercolors[1];
 }
 
@@ -2931,7 +2932,7 @@ void MCPlayer::drawControllerVolumeButton(MCGContextRef p_gcontext)
         MCGContextFill(p_gcontext);
     }
     
-    MCGContextSetFillRGBAColor(p_gcontext, getcontrollericoncolor() . red / 257.0, getcontrollericoncolor() . green / 257.0, getcontrollericoncolor() . blue / 257.0, 1.0f);
+    MCGContextSetFillRGBAColor(p_gcontext, (getcontrollericoncolor() . red / 255) / 257.0, (getcontrollericoncolor() . green / 255) / 257.0, (getcontrollericoncolor() . blue / 255) / 257.0, 1.0f);
 
     MCGContextSetShouldAntialias(p_gcontext, true);
     
@@ -2963,7 +2964,7 @@ void MCPlayer::drawControllerVolumeButton(MCGContextRef p_gcontext)
         MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_volume_rect, 0.8 , 0.7));
     }
     
-    MCGContextSetStrokeRGBAColor(p_gcontext, getcontrollericoncolor() . red / 257.0, getcontrollericoncolor() . green / 257.0, getcontrollericoncolor() . blue / 257.0, 1.0f);
+    MCGContextSetStrokeRGBAColor(p_gcontext, (getcontrollericoncolor() . red / 255) / 257.0, (getcontrollericoncolor() . green / 255) / 257.0, (getcontrollericoncolor() . blue / 255) / 257.0, 1.0f);
 
     MCGContextSetStrokeWidth(p_gcontext, t_volume_rect . width / 20.0 );
     MCGContextStroke(p_gcontext);
@@ -2996,7 +2997,7 @@ void MCPlayer::drawControllerPlayPauseButton(MCGContextRef p_gcontext)
         
     }
     
-    MCGContextSetFillRGBAColor(p_gcontext, getcontrollericoncolor() . red / 257.0, getcontrollericoncolor() . green / 257.0, getcontrollericoncolor() . blue / 257.0, 1.0f);
+    MCGContextSetFillRGBAColor(p_gcontext, (getcontrollericoncolor() . red / 255) / 257.0, (getcontrollericoncolor() . green / 255) / 257.0, (getcontrollericoncolor() . blue / 255) / 257.0, 1.0f);
     MCGContextFill(p_gcontext);
 }
 
@@ -3132,7 +3133,7 @@ void MCPlayer::drawControllerSelectionStartButton(MCGContextRef p_gcontext)
     MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_start_rect, 0.3, 0.88));
     MCGContextCloseSubpath(p_gcontext);
 
-    MCGContextSetFillRGBAColor(p_gcontext, getcontrollericoncolor() . red / 257.0, getcontrollericoncolor() . green / 257.0, getcontrollericoncolor() . blue / 257.0, 1.0f);
+    MCGContextSetFillRGBAColor(p_gcontext, (getcontrollericoncolor() . red / 255) / 257.0, (getcontrollericoncolor() . green / 255) / 257.0, (getcontrollericoncolor() . blue / 255) / 257.0, 1.0f);
     MCGContextFill(p_gcontext);
 }
 
@@ -3161,7 +3162,7 @@ void MCPlayer::drawControllerSelectionFinishButton(MCGContextRef p_gcontext)
     MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_finish_rect, 0.3, 0.88));
     MCGContextCloseSubpath(p_gcontext);
     
-    MCGContextSetFillRGBAColor(p_gcontext, getcontrollericoncolor() . red / 257.0, getcontrollericoncolor() . green / 257.0, getcontrollericoncolor() . blue / 257.0, 1.0f);
+    MCGContextSetFillRGBAColor(p_gcontext, (getcontrollericoncolor() . red / 255) / 257.0, (getcontrollericoncolor() . green / 255) / 257.0, (getcontrollericoncolor() . blue / 255) / 257.0, 1.0f);
     MCGContextFill(p_gcontext);
 }
 
@@ -3190,7 +3191,7 @@ void MCPlayer::drawControllerScrubForwardButton(MCGContextRef p_gcontext)
     MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_scrub_forward_rect, 0.75, 0.5));
     MCGContextCloseSubpath(p_gcontext);
     
-    MCGContextSetFillRGBAColor(p_gcontext, getcontrollericoncolor() . red / 257.0, getcontrollericoncolor() . green / 257.0, getcontrollericoncolor() . blue / 257.0, 1.0f);
+    MCGContextSetFillRGBAColor(p_gcontext, (getcontrollericoncolor() . red / 255) / 257.0, (getcontrollericoncolor() . green / 255) / 257.0, (getcontrollericoncolor() . blue / 255) / 257.0, 1.0f);
     MCGContextFill(p_gcontext);
 }
 
@@ -3219,7 +3220,7 @@ void MCPlayer::drawControllerScrubBackButton(MCGContextRef p_gcontext)
     MCGContextAddRectangle(p_gcontext, t_grect);
     MCGContextCloseSubpath(p_gcontext);
     
-    MCGContextSetFillRGBAColor(p_gcontext, getcontrollericoncolor() . red / 257.0, getcontrollericoncolor() . green / 257.0, getcontrollericoncolor() . blue / 257.0, 1.0f);
+    MCGContextSetFillRGBAColor(p_gcontext, (getcontrollericoncolor() . red / 255) / 257.0, (getcontrollericoncolor() . green / 255) / 257.0, (getcontrollericoncolor() . blue / 255) / 257.0, 1.0f);
     MCGContextFill(p_gcontext);
 }
 
