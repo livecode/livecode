@@ -2029,6 +2029,12 @@ bool MCObject::GetColor(MCExecContext& ctxt, Properties which, bool effective, M
 	if (getcindex(which - P_FORE_COLOR, i))
 	{
 		get_interface_color(colors[i], colornames[i], r_color);
+        
+        // AL-2015-05-20: [[ Bug 15378 ]] Reinstate fix for bug 9419:
+        //  If the object isn't already open, then alloc the color first.
+        if (!opened)
+            MCscreen -> alloccolor(r_color . color);
+        
 		return true;	
 	}
 	else if (effective)
