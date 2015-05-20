@@ -17,14 +17,18 @@
 package com.runrev.android.nativecontrol;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
+import android.hardware.Camera.PictureCallback;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
 import android.view.View;
+import android.widget.FrameLayout;
 import java.io.IOException;
 import java.util.List;
 
@@ -50,157 +54,316 @@ class CameraControl extends NativeControl
 	
 	private int m_device;
 	private int m_flash_mode;
+	private CameraView m_camera_view;
 	
-	private boolean m_surface_ready;
-	private boolean m_record;
-	private boolean m_is_recording;
-	private Camera m_camera;
+	public class CameraView extends SurfaceView
+	{
+		private int m_camera_id;
+		private String m_flash_mode;
+
+		private Camera m_camera;
+		private CameraInfo m_info;
+		
+		private boolean m_previewing;
+		private boolean m_surface_ready;
+		
+		public CameraView(Context context, int p_camera_id)
+		{
+			super(context);
+			
+			m_camera = null;
+			m_info = null;
+			
+			m_camera_id = -1;
+
+			m_previewing = false;
+			m_surface_ready = false;
+			
+			getHolder().addCallback(new SurfaceHolder.Callback() {
+				@Override
+				public void surfaceCreated(SurfaceHolder p_holder)
+				{
+					m_surface_ready = true;
+					enablePreview();
+				}
+				
+				@Override
+				public void surfaceDestroyed(SurfaceHolder p_holder)
+				{
+					m_surface_ready = false;
+					disablePreview();
+					closeCamera();
+				}
+				
+				@Override
+				public void surfaceChanged(SurfaceHolder p_holder, int p_format, int p_width, int p_height)
+				{
+					// reconfigure preview
+					disablePreview();
+					enablePreview();
+				}
+			});
+			
+			getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+			
+			setCamera(p_camera_id);
+		}
+		
+		private Camera.Size getPreviewSize()
+		{
+			if (!openCamera())
+				return null;
+			
+			Camera.Size t_size = m_camera.getParameters().getPreviewSize();
+			
+			int t_rotation = getCameraOrientationSetting();
+			if ((t_rotation % 180) == 90)
+			{
+				int t_tmp = t_size.width;
+				t_size.width = t_size.height;
+				t_size.height = t_tmp;
+			}
+			
+			return t_size;
+		}
+		
+		public void setCamera(int p_camera_id)
+		{
+			if (p_camera_id == m_camera_id)
+				return;
+			
+			disablePreview();
+			closeCamera();
+
+			m_camera_id = p_camera_id;
+			
+			if (!openCamera())
+				return;
+
+			enablePreview();
+		}
+		
+		private boolean openCamera()
+		{
+			if (m_camera != null)
+				return true;
+			
+			if (m_camera_id == -1)
+				return false;
+			
+			Camera t_camera;
+			CameraInfo t_info;
+			
+			try
+			{
+				t_info = new CameraInfo();
+				Camera.getCameraInfo(m_camera_id, t_info);
+				
+				t_camera = Camera.open(m_camera_id);
+			}
+			catch (Exception e)
+			{
+				return false;
+			}
+			
+			m_camera = t_camera;
+			m_info = t_info;
+			
+			Camera.Size t_size = getPreviewSize();
+			
+			getHolder().setFixedSize(t_size.width, t_size.height);
+			
+			return true;
+		}
+		
+		private void closeCamera()
+		{
+			if (m_camera == null)
+				return;
+			
+			m_camera.release();
+			m_camera = null;
+		}
+		
+		private void enablePreview()
+		{
+			if (m_previewing)
+				return;
+			
+			if (!m_surface_ready)
+				return;
+			
+			if (!openCamera())
+				return;
+			
+			try
+			{
+				Camera.Parameters t_params = m_camera.getParameters();
+				
+				if (m_flash_mode != null)
+				{
+					List<String> t_modes = t_params.getSupportedFlashModes();
+					if (t_modes != null && t_modes.contains(m_flash_mode))
+						t_params.setFlashMode(m_flash_mode);
+				}
+				
+				m_camera.setParameters(t_params);
+				m_camera.setDisplayOrientation(getCameraOrientationSetting());
+				m_camera.setPreviewDisplay(getHolder());
+				m_camera.startPreview();
+			}
+			catch (IOException e)
+			{
+				return;
+			}
+			
+			m_previewing = true;
+		}
+		
+		private void disablePreview()
+		{
+			if (!m_previewing)
+				return;
+			
+			m_camera.stopPreview();
+			m_previewing = false;
+		}
+		
+		private int getCameraOrientationSetting()
+		{
+			int t_rotation;
+			t_rotation = NativeControlModule.getActivity().getWindowManager().getDefaultDisplay().getRotation();
+			
+			switch (t_rotation)
+			{
+				case Surface.ROTATION_0:
+					t_rotation = 0;
+					break;
+				case Surface.ROTATION_90:
+					t_rotation = 90;
+					break;
+				case Surface.ROTATION_180:
+					t_rotation = 180;
+					break;
+				case Surface.ROTATION_270:
+					t_rotation = 270;
+					break;
+			}
+			
+			// Reverse direction for front-facing camera
+			if (m_info.facing == CameraInfo.CAMERA_FACING_FRONT)
+				t_rotation = (720 - (m_info.orientation + t_rotation)) % 360;
+			else
+				t_rotation = (m_info.orientation + 360 - t_rotation) % 360;
+			
+			return t_rotation;
+		}
+		
+		@Override
+		protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec)
+		{
+			Camera.Size t_size = getPreviewSize();
+			if (t_size == null)
+			{
+				setMeasuredDimension(0, 0);
+				return;
+			}
+			
+			int t_width = getDefaultSize(t_size.width, widthMeasureSpec);
+			int t_height = getDefaultSize(t_size.height, heightMeasureSpec);
+			
+			if (t_size.width > 0 && t_size.height > 0)
+			{
+				if (t_size.width * t_height > t_width * t_size.height)
+					t_height = t_width * t_size.height / t_size.width;
+				else if (t_size.width * t_height < t_width * t_size.height)
+					t_width = t_height * t_size.width / t_size.height;
+			}
+			
+			setMeasuredDimension(t_width, t_height);
+		}
+		
+		public void setFlashMode(int p_mode)
+		{
+			String t_mode = null;
+			switch (p_mode)
+			{
+				case FLASH_OFF:
+					t_mode = Camera.Parameters.FLASH_MODE_OFF;
+					break;
+				case FLASH_ON:
+					t_mode = Camera.Parameters.FLASH_MODE_ON;
+					break;
+				case FLASH_AUTO:
+					t_mode = Camera.Parameters.FLASH_MODE_AUTO;
+					break;
+			}
+			
+			if (t_mode == m_flash_mode)
+				return;
+			
+			disablePreview();
+			m_flash_mode = t_mode;
+			enablePreview();
+		}
+	}
 	
 	public CameraControl(NativeControlModule p_module)
 	{
 		super(p_module);
-		
-		Log.i(TAG, "new");
-
-		m_device = DEVICE_DEFAULT;
-
-		m_camera_info = null;
-		m_devices = 0;
-		m_flash_mode = FLASH_AUTO;
-		
-		m_surface_ready = false;
-		m_record = false;
-		m_is_recording = false;
-		m_camera = null;
 	}
 	
 	@Override
 	public View createView(Context p_context)
 	{
-		SurfaceView t_view;
-		t_view = new SurfaceView(p_context);
-		t_view.getHolder().addCallback(new SurfaceHolder.Callback() {
-			@Override
-			public void surfaceCreated(SurfaceHolder p_holder)
-			{
-				m_surface_ready = true;
-				enablePreview();
-			}
-			
-			@Override
-			public void surfaceDestroyed(SurfaceHolder p_holder)
-			{
-				m_surface_ready = false;
-				disablePreview();
-			}
-			
-			@Override
-			public void surfaceChanged(SurfaceHolder p_holder, int p_format, int p_width, int p_height)
-			{
-				
-			}
-		});
+		m_device = DEVICE_DEFAULT;
 		
-		t_view.getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-		
-		return t_view;
-	}
-	
-	//////////
-	
-	private int getCameraOrientationSetting()
-	{
+		m_camera_info = null;
+		m_devices = 0;
+		m_flash_mode = FLASH_AUTO;
+
 		fetchCameraInfo();
 		
 		int t_id;
 		t_id = currentCameraId();
 		
 		if (t_id == -1)
-			return 0;
+			return null;
 		
-		int t_rotation;
-		t_rotation = NativeControlModule.getActivity().getWindowManager().getDefaultDisplay().getRotation();
-		
-		switch (t_rotation)
-		{
-			case Surface.ROTATION_0:
-				t_rotation = 0;
-				break;
-			case Surface.ROTATION_90:
-				t_rotation = 90;
-				break;
-			case Surface.ROTATION_180:
-				t_rotation = 180;
-				break;
-			case Surface.ROTATION_270:
-				t_rotation = 270;
-				break;
-		}
-		
-		// Reverse direction for front-facing camera
-		if (m_camera_info[t_id].facing == CameraInfo.CAMERA_FACING_FRONT)
-			t_rotation = (720 - (m_camera_info[t_id].orientation + t_rotation)) % 360;
-		else
-			t_rotation = (m_camera_info[t_id].orientation + 360 - t_rotation) % 360;
-		
-		return t_rotation;
-	}
-	
-	private void enablePreview()
-	{
-		if (m_is_recording)
-			return;
-		
-		if (!(m_surface_ready && m_record))
-			return;
-		
-		int t_id;
-		t_id = currentCameraId();
-		
-		if (t_id == -1)
-			return;
-		
-		Camera t_cam;
 		try
 		{
-			t_cam = Camera.open(t_id);
+			m_camera_view = new CameraView(p_context, t_id);
 		}
 		catch (Exception e)
 		{
-			return;
+			StringWriter t_out = new StringWriter();
+			e.printStackTrace(new PrintWriter(t_out));
+			Log.i(TAG, e.toString());
+			Log.i(TAG, t_out.toString());
+			return null;
 		}
 		
-		SurfaceView t_preview;
-		t_preview = (SurfaceView)getView();
+		FrameLayout t_container;
+		t_container = new FrameLayout(p_context);
 		
-		try
-		{
-			t_cam.setDisplayOrientation(getCameraOrientationSetting());
-			t_cam.setPreviewDisplay(t_preview.getHolder());
-			t_cam.startPreview();
-		}
-		catch (IOException e)
-		{
-			t_cam.release();
-			return;
-		}
+		t_container.setBackgroundColor(Color.BLACK);
+		t_container.addView(m_camera_view,
+							new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
+														 FrameLayout.LayoutParams.MATCH_PARENT,
+														 Gravity.CENTER));
 		
-		m_camera = t_cam;
-		m_is_recording = true;
+		return t_container;
 	}
 	
-	private void disablePreview()
+	public void onPause()
 	{
-		if (!m_is_recording)
-			return;
-		
-		if (m_camera == null)
-			return;
-		
-		m_camera.stopPreview();
-		m_camera.release();
-		m_camera = null;
-		m_is_recording = false;
+		m_camera_view.disablePreview();
+		m_camera_view.closeCamera();
+	}
+	
+	public void onResume()
+	{
+		m_camera_view.enablePreview();
 	}
 	
 	//////////
@@ -327,6 +490,7 @@ class CameraControl extends NativeControl
 		}
 		
 		m_device = p_device;
+		m_camera_view.setCamera(currentCameraId());
 	}
 	
 	public int getDevice()
@@ -383,18 +547,13 @@ class CameraControl extends NativeControl
 	
 	public void startRecording()
 	{
-		m_record = true;
-		enablePreview();
 	}
 	
 	public void stopRecording()
 	{
-		m_record = false;
-		disablePreview();
 	}
 	
 	public void takePicture()
 	{
-		
 	}
 }

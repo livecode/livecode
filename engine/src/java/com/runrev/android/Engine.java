@@ -2683,6 +2683,9 @@ public class Engine extends View implements EngineApi
         if (m_sound_module != null)
             m_sound_module.onPause();
 
+		if (m_native_control_module != null)
+			m_native_control_module.onPause();
+		
 		if (m_video_is_playing)
 			m_video_control . suspend();
 
@@ -2702,6 +2705,9 @@ public class Engine extends View implements EngineApi
 
         if (m_sound_module != null)
             m_sound_module.onResume();
+		
+		if (m_native_control_module != null)
+			m_native_control_module.onResume();
 
 		if (m_video_is_playing)
 			m_video_control . resume();
