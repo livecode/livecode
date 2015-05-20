@@ -960,10 +960,8 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
         uint32_t t_codepoint;
         t_codepoint = MCStringGetCodepointAtIndex(*t_string, 0);
         
-        // SN-2015-01-20: [[ Bug 14406 ]] Same as above: *p_chars > 127 means that we are in IME.
-        //  Use UnicodeMapToNative as well, as it may cause issues with Hiragana, when parts
-        //  of the whole word are individual Kanji as well, and Unicode valid alphanum.
-        //  (they would be appended to the in-process IME string).
+        // SN-2015-05-18: [[ Bug 3537 ]] Use p_mark to determine whether we are
+        //  in an IME state
         // SN-2015-05-05: [[ Bug 15305 ]] Check that s_pending_key_down is not
         //  nil before trying to use it, and use IME only if p_mark says so.
         if (s_pending_key_down && !p_mark)
@@ -975,7 +973,14 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 
             MCdispatcher -> wkdown(p_window, *t_string, *p_chars);
 
-            MCKeyMessageAppend(s_pending_key_up, *p_chars, s_pending_key_down -> mapped_codepoint, s_pending_key_down -> unmapped_codepoint);
+            // SN-2015-05-18: [[ Bug 3537 ]] If we were compositing, then we want
+            //  to send the same message for keyUp and keyDown - which might be
+            //  seeveral character-long
+            if (t_was_compositing)
+                MCdispatcher -> wkup(p_window, *t_string, *p_chars);
+            else
+                MCKeyMessageAppend(s_pending_key_up, *p_chars, s_pending_key_down -> mapped_codepoint, s_pending_key_down -> unmapped_codepoint);
+            
             MCKeyMessageNext(s_pending_key_down);
         }
         else
