@@ -935,6 +935,7 @@ static void MCPickleReleaseField(MCPickleFieldType p_kind, void *p_base_ptr, voi
             
         case kMCPickleFieldTypeArrayOfValueRef:
         case kMCPickleFieldTypeArrayOfNameRef:
+        case kMCPickleFieldTypeArrayOfTypeInfoRef:
             if (*(MCValueRef **)p_field_ptr != nil)
             {
                 for(uindex_t i = 0; i < *(uindex_t *)p_aux_ptr; i++)
@@ -976,6 +977,7 @@ static void MCPickleReleaseField(MCPickleFieldType p_kind, void *p_base_ptr, voi
                             if (t_kind == t_info -> cases[i] . kind)
                             {
                                 MCPickleRelease(t_info -> cases[i] . record, t_variant);
+                                free(t_variant);
                                 break;
                             }
                     }
