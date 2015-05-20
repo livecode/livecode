@@ -1071,6 +1071,7 @@ void MCParagraph::flow(void)
             MCLine *t_line_to_remove;
             t_line_to_remove = lines->remove(t_old_line);
             lptr -> takewidth(t_line_to_remove);
+            delete t_line_to_remove;
         }
         
         lptr = t_leftover;
