@@ -143,6 +143,20 @@ class CameraControl extends NativeControl
 			enablePreview();
 		}
 		
+		private void setCameraParameters(Camera t_camera)
+		{
+			Camera.Parameters t_params = t_camera.getParameters();
+			
+			if (m_flash_mode != null)
+			{
+				List<String> t_modes = t_params.getSupportedFlashModes();
+				if (t_modes != null && t_modes.contains(m_flash_mode))
+					t_params.setFlashMode(m_flash_mode);
+			}
+			
+			t_camera.setParameters(t_params);
+		}
+		
 		private boolean openCamera()
 		{
 			if (m_camera != null)
@@ -198,16 +212,7 @@ class CameraControl extends NativeControl
 			
 			try
 			{
-				Camera.Parameters t_params = m_camera.getParameters();
-				
-				if (m_flash_mode != null)
-				{
-					List<String> t_modes = t_params.getSupportedFlashModes();
-					if (t_modes != null && t_modes.contains(m_flash_mode))
-						t_params.setFlashMode(m_flash_mode);
-				}
-				
-				m_camera.setParameters(t_params);
+				setCameraParameters(m_camera);
 				m_camera.setDisplayOrientation(getCameraOrientationSetting());
 				m_camera.setPreviewDisplay(getHolder());
 				m_camera.startPreview();
@@ -302,9 +307,9 @@ class CameraControl extends NativeControl
 			if (t_mode == m_flash_mode)
 				return;
 			
-			disablePreview();
 			m_flash_mode = t_mode;
-			enablePreview();
+			if (m_camera != null)
+				setCameraParameters(m_camera);
 		}
 	}
 	
