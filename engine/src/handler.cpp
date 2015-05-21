@@ -455,6 +455,7 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
         
 		// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
 		MCRedrawUpdateScreen();
+        MCObjectPoolFrameDrain();
         
 		switch(stat)
 		{
@@ -675,6 +676,7 @@ Exec_stat MCHandler::exec(MCExecPoint &ep, MCParameter *plist)
 
 		// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
 		MCRedrawUpdateScreen();
+        MCObjectPoolFrameDrain();
 
 		switch(stat)
 		{

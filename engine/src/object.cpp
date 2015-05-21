@@ -262,8 +262,6 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
 
 MCObject::~MCObject()
 {
-    MCLog("~MCObject(%p)", this);
-    
 	while (opened)
 		close();
 
@@ -5210,23 +5208,23 @@ bool MCObjectHandle::Exists(void)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-MCObjectPool **MCcurrentobjectpoolptr = nil;
+MCObjectPoolFrame *MCcurrentobjectpoolframe = nil;
 
 MCObjectPoolFrame::MCObjectPoolFrame(void)
 {
-    parent_pool_ptr = MCcurrentobjectpoolptr;
-    MCcurrentobjectpoolptr = &pool;
+    parent_frame = MCcurrentobjectpoolframe;
+    MCcurrentobjectpoolframe = this;
     pool = nil;
     
-    MCLog("ENTER Frame (parent_pool_ptr = %p, current pool_ptr = %p)", parent_pool_ptr, &pool);
+    MCLog("ENTER Frame (parent_frame = %p, current pool_ptr = %p)", parent_frame, &pool);
 }
 
 MCObjectPoolFrame::~MCObjectPoolFrame(void)
 {
-    MCLog("LEAVE Frame (parent_pool_ptr = %p, current_pool_ptr = %p)", parent_pool_ptr, &pool);
+    MCLog("LEAVE Frame (parent_frame = %p, current_pool_ptr = %p)", parent_frame, &pool);
     
     // Unwind the current pool ptr.
-    MCcurrentobjectpoolptr = parent_pool_ptr;
+    MCcurrentobjectpoolframe = parent_frame;
     
     // If there is no object pool, there is nothing to do.
     if (pool == nil)
@@ -5249,7 +5247,7 @@ MCObjectPoolFrame::~MCObjectPoolFrame(void)
     }
     
     // If the parent_pool_ptr is nil then this is a root frame.
-    if (parent_pool_ptr == nil)
+    if (parent_frame == nil)
     {
         MCLog("  Deleting pool %p (%d) as parent is root", pool, pool -> references);
         delete pool;
@@ -5258,18 +5256,18 @@ MCObjectPoolFrame::~MCObjectPoolFrame(void)
     }
     
     // If there is no parent pool at the moment, then we can reuse this pool.
-    if (*parent_pool_ptr == nil)
+    if (parent_frame -> pool == nil)
     {
         MCLog("  Reusing pool %p as no parent pool", pool);
-        *parent_pool_ptr = pool;
+        parent_frame -> pool = pool;
         pool = nil;
         return;
     }
     
     // Otherwise we must mark this pool as defunct and give it a parent.
-    MCLog("  Pool %p (%d) is defunct, giving it parent %p", pool, pool -> references, *parent_pool_ptr);
+    MCLog("  Pool %p (%d) is defunct, giving it parent %p", pool, pool -> references, parent_frame -> pool);
     pool -> defunct = true;
-    pool -> parent = *parent_pool_ptr;
+    pool -> parent = parent_frame -> pool;
     pool -> parent -> references += 1;
 }
 
@@ -5277,6 +5275,8 @@ void MCObjectPoolFrame::drain(void)
 {
     if (pool == nil)
         return;
+    
+    MCLog("DRAIN pool %p", pool);
     
     while(pool -> to_delete != nil)
     {
@@ -5292,7 +5292,7 @@ MCObjectPool *MCObjectPool::objectcreated(MCObject *p_object)
     MCLog("CREATE Object %p", p_object);
     // If there is no current object pool, then create one.
     MCObjectPool *t_pool;
-    t_pool = *MCcurrentobjectpoolptr;
+    t_pool = MCcurrentobjectpoolframe -> pool;
     if (t_pool == nil)
     {
         t_pool = new MCObjectPool;
@@ -5300,7 +5300,7 @@ MCObjectPool *MCObjectPool::objectcreated(MCObject *p_object)
         t_pool -> defunct = false;
         t_pool -> references = 0;
         t_pool -> to_delete = nil;
-        *MCcurrentobjectpoolptr = t_pool;
+        MCcurrentobjectpoolframe -> pool = t_pool;
         
         MCLog("  No current pool so creating %p", t_pool);
     }

@@ -233,7 +233,7 @@ struct MCObjectPool
 
 struct MCObjectPoolFrame
 {
-    MCObjectPool **parent_pool_ptr;
+    MCObjectPoolFrame *parent_frame;
     MCObjectPool *pool;
     
     MCObjectPoolFrame(void);
@@ -242,7 +242,17 @@ struct MCObjectPoolFrame
     void drain(void);
 };
 
-extern MCObjectPool **MCcurrentobjectpoolptr;
+extern MCObjectPoolFrame *MCcurrentobjectpoolframe;
+extern MCObjectPoolFrame *MCrootobjectpoolframe;
+
+inline void MCObjectPoolFrameDrain(void)
+{
+    if (MCcurrentobjectpoolframe -> pool == nil)
+        return;
+    if (MCcurrentobjectpoolframe -> pool -> to_delete == nil)
+        return;
+    MCcurrentobjectpoolframe -> drain();
+}
 
 class MCObject : public MCDLlist
 {
