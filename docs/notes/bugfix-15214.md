@@ -1,0 +1,1 @@
+# IDE-Widgets: Icon picker does odd things when resized 
