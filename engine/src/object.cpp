@@ -5304,9 +5304,13 @@ void MCObjectPool::objectdestroyed(MCObjectPool*& x_pool, MCObject *p_object)
 {
     MCLog("DESTROY Object %p", p_object);
     if (x_pool == nil)
+    {
+        MCLog("  Object has no pool - doing nothing", 0);
         return;
+    }
     
     // Reduce the references to the pool.
+    MCLog("  Reducing references to pool %p (%d)", x_pool, x_pool -> references);
     x_pool -> references -= 1;
     
     // If the pool has reached reference count zero then clean up and is defunct.
