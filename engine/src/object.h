@@ -225,9 +225,9 @@ struct MCObjectPool
     MCObjectPool *parent;
     MCObject *to_delete;
     
-    static void objectcreated(MCObjectPool*& r_pool, MCObject *object);
-    static void objectdestroyed(MCObjectPool*& p_pool, MCObject *object);
-    static void objectdeleted(MCObjectPool*& x_pool, MCObject *object);
+    static MCObjectPool *objectcreated(MCObject *object);
+    void objectdestroyed(MCObject *object);
+    void objectdeleted(MCObject *object);
 };
 
 struct MCObjectPoolFrame

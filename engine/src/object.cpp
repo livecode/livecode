@@ -159,7 +159,7 @@ MCObject::MCObject()
     m_is_parent_script = false;
     
     // Make sure we attach ourselves to an objectpool.
-    MCObjectPool::objectcreated(pool, this);
+    pool = MCObjectPool::objectcreated(this);
 }
 
 MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
@@ -257,7 +257,7 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
     m_is_parent_script = false;
     
     // Make sure we attach ourselves to an objectpool.
-    MCObjectPool::objectcreated(pool, this);
+    pool = MCObjectPool::objectcreated(this);
 }
 
 MCObject::~MCObject()
@@ -316,7 +316,8 @@ MCObject::~MCObject()
 		MCParentScript::FlushObject(this);
     
     // Detach ourselves from the object pool.
-    MCObjectPool::objectdestroyed(pool, this);
+    if (pool != nil)
+        pool -> objectdestroyed(this);
 }
 
 Chunk_term MCObject::gettype() const
@@ -4985,7 +4986,11 @@ void MCObject::scheduledelete(void)
 {
     // Schedule deletion of the object - this might change the pool ptr if the
     // object's current pool is defunct.
-    MCObjectPool::objectdeleted(pool, this);
+    if (pool != nil)
+    {
+        pool -> objectdeleted(this);
+        pool = nil;
+    }
     
 	if (m_weak_handle != nil)
 	{
@@ -5275,7 +5280,7 @@ MCObjectPoolFrame::~MCObjectPoolFrame(void)
     pool -> parent -> references += 1;
 }
 
-void MCObjectPool::objectcreated(MCObjectPool*& x_pool, MCObject *p_object)
+MCObjectPool *MCObjectPool::objectcreated(MCObject *p_object)
 {
     MCLog("CREATE Object %p", p_object);
     // If there is no current object pool, then create one.
@@ -5297,64 +5302,60 @@ void MCObjectPool::objectcreated(MCObjectPool*& x_pool, MCObject *p_object)
     
     // Attach the object to the pool.
     t_pool -> references += 1;
-    x_pool = t_pool;
+    return t_pool;
 }
 
-void MCObjectPool::objectdestroyed(MCObjectPool*& x_pool, MCObject *p_object)
+void MCObjectPool::objectdestroyed(MCObject *p_object)
 {
-    if (x_pool == nil)
-        return;
-    
     MCLog("DESTROY Object %p", p_object);
     
     // Reduce the references to the pool.
-    MCLog("  Reducing references to pool %p (%d)", x_pool, x_pool -> references);
-    x_pool -> references -= 1;
+    MCLog("  Reducing references to pool %p (%d)", this, references);
+    references -= 1;
     
     // If the pool has reached reference count zero then clean up and is defunct.
-    while(x_pool -> defunct && x_pool -> references == 0)
+    MCObjectPool *t_pool;
+    t_pool = this;
+    while(t_pool -> defunct && t_pool -> references == 0)
     {
-        MCLog("  Destroying defunct pool %p", x_pool);
-        x_pool -> parent -> references -= 1;
+        MCLog("  Destroying defunct pool %p", t_pool);
+        t_pool -> parent -> references -= 1;
         
         MCObjectPool *t_this_pool;
-        t_this_pool = x_pool;
-        x_pool = x_pool -> parent;
+        t_this_pool = t_pool;
+        t_pool = t_pool -> parent;
         delete t_this_pool;
     }
-    
-    x_pool = nil;
 }
 
-void MCObjectPool::objectdeleted(MCObjectPool*& x_pool, MCObject *p_object)
+void MCObjectPool::objectdeleted(MCObject *p_object)
 {
     MCLog("DELETE Object %p", p_object);
     
     // Reduce the references to the object's pool.
-    x_pool -> references -= 1;
+    references -= 1;
     
     // Move the object to the most recent non-defunct pool, cleaning up empty
     // defunct pools as we go (defunct pools never have a to_delete list).
-    while(x_pool -> defunct)
+    MCObjectPool *t_pool;
+    t_pool = this;
+    while(t_pool -> defunct)
     {
         MCObjectPool *t_this_pool;
-        t_this_pool = x_pool;
-        x_pool = x_pool -> parent;
+        t_this_pool = t_pool;
+        t_pool = t_pool -> parent;
         
         if (t_this_pool -> references == 0)
         {
-            MCLog("  Destroying defunct pool %p", x_pool);
+            MCLog("  Destroying defunct pool %p", t_pool);
             t_this_pool -> parent -> references -= 1;
             delete t_this_pool;
         }
     }
 
     // We now have the pool in which to add the object to the deletion list.
-    MCLog("  Putting object in pool %p", x_pool);
-    p_object -> appendto(x_pool -> to_delete);
-    
-    // Unlink the object from the pool.
-    x_pool = nil;
+    MCLog("  Putting object in pool %p", t_pool);
+    p_object -> appendto(t_pool -> to_delete);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
