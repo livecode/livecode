@@ -3123,7 +3123,13 @@ void MCInterfaceExecCreateWidget(MCExecContext& ctxt, MCStringRef p_new_name, MC
     Boolean wasvisible = t_widget->isvisible();
     if (p_force_invisible)
         t_widget->setflag(!p_force_invisible, F_VISIBLE);
-    t_widget->setparent(MCdefaultstackptr->getcard());
+    
+    // AL-2015-05-21: [[ Bug 15405 ]] Honour specified parent container when creating widget
+    if (p_container == nil)
+        t_widget->setparent(MCdefaultstackptr->getcard());
+    else
+        t_widget -> setparent(p_container);
+    
     t_widget->attach(OP_CENTER, false);
     
     if (p_new_name != nil)
