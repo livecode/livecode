@@ -110,7 +110,8 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       -- SN-2015-02-05: [[ Bug 14422 ]] We only support 5.1 simulator or later.
       --
       local tSuffix
-      put pTarget into tSuffix
+      // SN-2015-05-08: We only want the simulator version, not the whole string 'Simulator X.Y'
+      put last word of pTarget into tSuffix
       replace "." with "_" in tSuffix
       put tSuffix into tSDKS["sim"]["suffix"]
       put revMobileRuntimeFolder(pTarget, tSDKs["sim"]["suffix"]) into tSDKs["sim"]["runtime path"]
