@@ -5269,7 +5269,7 @@ MCObjectPoolFrame::~MCObjectPoolFrame(void)
     }
     
     // Otherwise we must mark this pool as defunct and give it a parent.
-    MCLog("  Pool %p is defunct, giving it parent %p", pool, *parent_pool_ptr);
+    MCLog("  Pool %p (%d) is defunct, giving it parent %p", pool, pool -> references, *parent_pool_ptr);
     pool -> defunct = true;
     pool -> parent = *parent_pool_ptr;
     pool -> parent -> references += 1;
@@ -5293,7 +5293,7 @@ void MCObjectPool::objectcreated(MCObjectPool*& x_pool, MCObject *p_object)
         MCLog("  No current pool so creating %p", t_pool);
     }
     else
-        MCLog("  Using current pool %p", t_pool);
+        MCLog("  Using current pool %p (%d)", t_pool, t_pool -> references + 1);
     
     // Attach the object to the pool.
     t_pool -> references += 1;
@@ -5302,12 +5302,10 @@ void MCObjectPool::objectcreated(MCObjectPool*& x_pool, MCObject *p_object)
 
 void MCObjectPool::objectdestroyed(MCObjectPool*& x_pool, MCObject *p_object)
 {
-    MCLog("DESTROY Object %p", p_object);
     if (x_pool == nil)
-    {
-        MCLog("  Object has no pool - doing nothing", 0);
         return;
-    }
+    
+    MCLog("DESTROY Object %p", p_object);
     
     // Reduce the references to the pool.
     MCLog("  Reducing references to pool %p (%d)", x_pool, x_pool -> references);
@@ -5331,6 +5329,10 @@ void MCObjectPool::objectdestroyed(MCObjectPool*& x_pool, MCObject *p_object)
 void MCObjectPool::objectdeleted(MCObjectPool*& x_pool, MCObject *p_object)
 {
     MCLog("DELETE Object %p", p_object);
+    
+    // Reduce the references to the object's pool.
+    x_pool -> references -= 1;
+    
     // Move the object to the most recent non-defunct pool, cleaning up empty
     // defunct pools as we go (defunct pools never have a to_delete list).
     while(x_pool -> defunct)
@@ -5339,10 +5341,10 @@ void MCObjectPool::objectdeleted(MCObjectPool*& x_pool, MCObject *p_object)
         t_this_pool = x_pool;
         x_pool = x_pool -> parent;
         
-        t_this_pool -> references -= 1;
         if (t_this_pool -> references == 0)
         {
             MCLog("  Destroying defunct pool %p", x_pool);
+            t_this_pool -> parent -> references -= 1;
             delete t_this_pool;
         }
     }
