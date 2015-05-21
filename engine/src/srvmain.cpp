@@ -646,19 +646,23 @@ int main(int argc, char *argv[], char *envp[])
 	t_new_envp[i] = nil;
 // END MAC SPECIFIC	
 
-	if (!X_init(argc, t_new_argv, t_new_envp))
-		exit(-1);
+    MCObjectPoolFrame t_object_pool_frame;
+    
+    int t_exit_code;
+	if (X_init(argc, t_new_argv, t_new_envp))
+    {
+        X_main_loop();
 	
-	X_main_loop();
-	
-	int t_exit_code;
-	t_exit_code = X_close();
+        t_exit_code = X_close();
+    }
+    else
+        t_exit_code = -1;
 
     MCScriptFinalize();
     MCModulesFinalize();
 	MCFinalize();
 	
-	exit(t_exit_code);
+    return t_exit_code;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
