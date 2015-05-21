@@ -225,10 +225,20 @@ private handler updateHover()
 	variable tIndex as Integer
 	if positionToRect(tPoint, tTab, tIndex) is false then
 		put 0 into tIndex
-        put false into tTab
+        put false into tTab    	
+        // AL-2015-04-24: [[ Bug 15286 ]] Empty tooltip of palette actions if nothing is being hovered over.
+        set property "tooltip" of my script object to ""
     end if
 
     if tIndex is not mHoverIndex or tTab is not mHoverTab then
+        if tIndex is not 0 then
+            // AL-2015-04-24: [[ Bug 15286 ]] Set tooltip of palette actions
+            if tTab then
+                set property "tooltip" of my script object to mNavData[tIndex]["label"]
+            else
+                set property "tooltip" of my script object to mActionData[tIndex]["label"]
+            end if
+        end if
         put tIndex into mHoverIndex
         put tTab into mHoverTab
         redraw all

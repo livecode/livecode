@@ -1678,7 +1678,7 @@ MCFontStruct *MCDispatch::loadfont(MCNameRef fname, uint2 &size, uint2 style, Bo
 
 MCFontStruct *MCDispatch::loadfontwithhandle(MCSysFontHandle p_handle)
 {
-#if defined(_MACOSX)
+#if defined(_MACOSX) || defined(_MAC_SERVER)
     if (fonts == nil)
         fonts = new MCFontlist;
     return fonts->getfontbyhandle(p_handle);

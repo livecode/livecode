@@ -425,6 +425,8 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 		}
 	}
     
+    MCObjectPoolFrame t_object_pool_frame;
+    
 	executing++;
 	ctxt . SetTheResultToEmpty();
 	Exec_stat stat = ES_NORMAL;
@@ -453,6 +455,7 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
         
 		// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
 		MCRedrawUpdateScreen();
+        MCObjectPoolFrameDrain();
         
 		switch(stat)
 		{
@@ -545,7 +548,8 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 	nvnames = oldnvnames;
 	nconstants = oldnconstants;
 	if (stat == ES_PASS)
-		gotpass = True;  // so MCObject::timer can distinguish pass from not handled
+		gotpass = True;  // so MCObject::timer can distinguish pass from not handle
+    
 	return stat;
 }
 
@@ -672,6 +676,7 @@ Exec_stat MCHandler::exec(MCExecPoint &ep, MCParameter *plist)
 
 		// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
 		MCRedrawUpdateScreen();
+        MCObjectPoolFrameDrain();
 
 		switch(stat)
 		{

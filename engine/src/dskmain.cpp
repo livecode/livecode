@@ -318,7 +318,7 @@ void X_main_loop_iteration()
 	MCstackbottom = (char *)&i;
 
 	////
-
+    
 	if (MCiconicstacks == 0 && !MCscreen->hasmessages() && MCstacks->isempty() && MCnsockets == 0)
 	{
 		// MW-2005-11-01: We want to keep the result here so we call with send=True
@@ -337,16 +337,9 @@ void X_main_loop_iteration()
 		MCtracedobject->message(MCM_trace_done);
 		MCtracedobject = NULL;
 	}
-	if (!MCtodestroy->isempty() || MCtodelete != NULL)
-	{
-		MCtooltip->cleartip();
-		while (MCtodelete != NULL)
-		{
-			MCObject *optr = MCtodelete->remove(MCtodelete);
-			delete optr;
-		}
-		MCtodestroy->destroy();
-	}
+    MCtooltip->cleartip();
+    extern MCObjectPoolFrame *MCrootobjectpoolframe;
+    MCrootobjectpoolframe -> drain();
 	MCU_cleaninserted();
 	MCscreen->siguser();
 	MCdefaultstackptr = MCstaticdefaultstackptr;
