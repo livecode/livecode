@@ -42,6 +42,7 @@
 #include "dispatch.h"
 
 #include "graphics_util.h"
+#include "objectstream.h"
 
 #include "player-platform.h"
 
@@ -88,18 +89,17 @@ static const char *ppmediastrings[] =
 
 
 static MCColor controllercolors[] = {
+    {0, 0x2b2b, 0x2b2b, 0x2b2b, 0, 0},         /* gray */
+    
+    {0, 0xa8a8, 0x0101, 0xffff, 0, 0},         /* Purple */
+
+    {0, 0x2222, 0x2222, 0x2222, 0, 0},         /* dark gray */
+
     {0, 0x8000, 0x8000, 0x8000, 0, 0},         /* 50% gray */
     
     {0, 0xCCCC, 0xCCCC, 0xCCCC, 0, 0},         /* 20% gray -- 80% white */
     
-    {0, 0xa8a8, 0x0101, 0xffff, 0, 0},         /* Purple */
-    
     //{0, 0xcccc, 0x9999, 0xffff, 0, 0},         /* Magenda */
-    
-    {0, 0x2b2b, 0x2b2b, 0x2b2b, 0, 0},         /* gray */
-    
-    {0, 0x2222, 0x2222, 0x2222, 0, 0},         /* dark gray */
-    
     
 };
 
@@ -832,19 +832,13 @@ MCPlayer::MCPlayer()
 	starttime = endtime = MAXUINT4;
     
     // Default controller back area color (darkgray)
-    controllerbackcolor . red = 34 * 257;
-    controllerbackcolor . green = 34 * 257;
-    controllerbackcolor . blue = 34 * 257;
+    controllerbackcolor = controllercolors[2];
     
-    // Default controller played area color (purple)
-    controllermaincolor . red = 168 * 257;
-    controllermaincolor . green = 1 * 257;
-    controllermaincolor . blue = 255 * 257;
+    // Default controller played area color == hilitecolor property
+    controllermaincolor = controllercolors[1];
     
-    // Default controller selected area color (some gray)
-    selectedareacolor . red = 43 * 257;
-    selectedareacolor . green = 43 * 257;
-    selectedareacolor . blue = 43 * 257;
+    // Default controller selected area color  == forecolor property
+    selectedareacolor = controllercolors[0];
     
 	disposable = istmpfile = False;
 	userCallbackStr = MCValueRetain(kMCEmptyString);
@@ -1776,14 +1770,89 @@ MCControl *MCPlayer::clone(Boolean attach, Object_pos p, bool invisible)
 	return newplayer;
 }
 
+static bool MCColorIsEqual(MCColor p_color1, MCColor p_color2)
+{
+    return ((p_color1 . red == p_color2 . red) && (p_color1 . green == p_color2 . green) && (p_color1 . blue ==p_color2 . blue));
+}
+
+#define F_HAS_SELECTION_COLOR   (1UL << 0)
+#define F_HAS_HILITE_COLOR      (1UL << 1)
+
 IO_stat MCPlayer::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 {
-	return defaultextendedsave(p_stream, p_part);
+    uint32_t t_size, t_flags;
+    t_size = 0;
+    t_flags = 0;
+    
+    // PM-2014-09-11: [[ Bug 13390 ]] Save the forecolor and hilitecolor properties
+    if (!MCColorIsEqual(selectedareacolor, controllercolors[0]))
+    {
+        t_flags |= F_HAS_SELECTION_COLOR;
+        t_size += 3 * sizeof(uint16_t);
+    }
+    
+    if (!MCColorIsEqual(controllermaincolor, controllercolors[1]))
+    {
+        t_flags |= F_HAS_HILITE_COLOR;
+        t_size += 3 * sizeof(uint16_t);
+    }
+    
+    IO_stat t_stat;
+	t_stat = p_stream . WriteTag(t_flags, t_size);
+    
+    if (t_stat == IO_NORMAL && (t_flags & F_HAS_SELECTION_COLOR))
+        t_stat = p_stream . WriteColor(selectedareacolor);
+    
+    if (t_stat == IO_NORMAL && (t_flags & F_HAS_HILITE_COLOR))
+        t_stat = p_stream . WriteColor(controllermaincolor);
+    
+	if (t_stat == IO_NORMAL)
+		t_stat = MCObject::extendedsave(p_stream, p_part);
+    
+	return t_stat;
 }
 
 IO_stat MCPlayer::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_remaining)
 {
-	return defaultextendedload(p_stream, p_version, p_remaining);
+    IO_stat t_stat;
+    t_stat = IO_NORMAL;
+    
+    if (p_remaining > 0)
+    {
+        uint4 t_flags, t_length, t_header_length;
+        t_stat = p_stream . ReadTag(t_flags, t_length, t_header_length);
+        
+        if (t_stat == IO_NORMAL)
+            t_stat = p_stream . Mark();
+        
+        // PM-2014-09-11: [[ Bug 13390 ]] Load the forecolor and hilitecolor properties
+        if (t_stat == IO_NORMAL && (t_flags & F_HAS_SELECTION_COLOR) != 0)
+        {
+            MCColor t_selected_area_color;
+            t_stat = p_stream . ReadColor(t_selected_area_color);
+            if (t_stat == IO_NORMAL)
+                selectedareacolor = t_selected_area_color;
+        }
+        
+        if (t_stat == IO_NORMAL && (t_flags & F_HAS_HILITE_COLOR) != 0)
+        {
+            MCColor t_hilite_color;
+            t_stat = p_stream . ReadColor(t_hilite_color);
+            if (t_stat == IO_NORMAL)
+                controllermaincolor = t_hilite_color;
+        }
+        
+        if (t_stat == IO_NORMAL)
+            t_stat = p_stream . Skip(t_length);
+        
+        if (t_stat == IO_NORMAL)
+            p_remaining -= t_length + t_header_length;
+    }
+    
+    if (t_stat == IO_NORMAL)
+        t_stat = MCObject::extendedload(p_stream, p_version, p_remaining);
+    
+    return t_stat;
 }
 
 IO_stat MCPlayer::save(IO_handle stream, uint4 p_part, bool p_force_ext)
@@ -1793,13 +1862,18 @@ IO_stat MCPlayer::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	{
 		if ((stat = IO_write_uint1(OT_PLAYER, stream)) != IO_NORMAL)
 			return stat;
-		if ((stat = MCControl::save(stream, p_part, p_force_ext)) != IO_NORMAL)
+        
+        // PM-2014-09-11: [[ Bug 13390 ]] Force an extension if a default color has changed
+        bool t_has_extension;
+        t_has_extension = !MCColorIsEqual(selectedareacolor, controllercolors[0]) || !MCColorIsEqual(controllermaincolor, controllercolors[1]);
+        
+		if ((stat = MCControl::save(stream, p_part, t_has_extension || p_force_ext)) != IO_NORMAL)
 			return stat;
         
         // MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
         if ((stat = IO_write_stringref_new(filename, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 			return stat;
-		if ((stat = IO_write_uint4(starttime, stream)) != IO_NORMAL)
+        if ((stat = IO_write_uint4(starttime, stream)) != IO_NORMAL)
 			return stat;
 		if ((stat = IO_write_uint4(endtime, stream)) != IO_NORMAL)
 			return stat;
