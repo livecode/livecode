@@ -566,6 +566,9 @@ public:
 	// IM-2013-10-30: [[ FullscreenMode ]] Resolve the given path relative to the location of the stack file
 	// - Will return a path regardless of whether or not the file exists.
 	bool resolve_relative_path(const char *p_path, char *&r_resolved);
+    
+    // PM-2015-01-26: [[ Bug 14435 ]] Make possible to set the filename using a relative path to the default folder
+    bool resolve_relative_path_to_default_folder(const char *p_path, char *&r_resolved);
 
 	void setopacity(uint1 p_value);
 	

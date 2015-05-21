@@ -182,7 +182,9 @@ extern "C" void *resolve_symbol(void *, const char *);
 DATABASEREC *DoLoadDatabaseDriver(const char *p_path)
 {
 	char *t_filename;
-	t_filename = (char *)malloc((sizeof(char) * strlen(p_path)) + 4);
+    // SN-2015-05-12: [[ Bug 14972 ]] We don't want to write somewhere we don't
+    //  own the memory
+	t_filename = (char *)malloc((sizeof(char) * strlen(p_path)) + 7);
 	sprintf(t_filename, "%s.dylib", p_path);
 
 #if defined(__i386__) || defined(__x86_64__)

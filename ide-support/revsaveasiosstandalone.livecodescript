@@ -1,4 +1,4 @@
-﻿script "revSaveAsIOSStandalone"
+script "revSaveAsIOSStandalone"
 -- Each stackfile has:
 --   moveSubstacks
 --   renameGeneric
@@ -220,7 +220,8 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       revCopyMobileNewSplash tSettings, tBaseFolder, pAppBundle
    end if
    
-   revCopyMobileFiles tFiles, tBaseFolder, pAppBundle, pTarget, tSDKs, tRedirects, tCopiedExternals, tCopiedFonts
+   local tPlist
+   revCopyMobileFiles tFiles, tBaseFolder, pAppBundle, pTarget, tSDKs, tRedirects, tCopiedExternals, tCopiedFonts, tPlist
    revCopyMobileStackFiles tStackFiles, tBaseFolder, pAppBundle
    
    -- Copy in the appropriate externals and drivers
@@ -228,7 +229,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    revCopyMobileDrivers tDrivers, pAppBundle, pTarget, tSDKs, tCopiedExternals
    
    -- Generate the plist
-   revCreateMobilePlist tSettings, pAppBundle, pTarget, tCopiedFonts
+   revCreateMobilePlist tSettings, pAppBundle, pTarget, tCopiedFonts, tPlist
    
    -- Generate the PkgInfo file
    put "APPL????" into url ("binfile:" & pAppBundle & slash & "PkgInfo")
@@ -843,7 +844,7 @@ end revModifyMobileImageFile
 --   foobar/baz -> <base>/foobar/baz
 --   C:/foobar/baz -> <base>/baz
 --
-private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, pSDKs, @rRedirects, @rExternals, @rFonts
+private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, pSDKs, @rRedirects, @rExternals, @rFonts, @rPlist
    revStandaloneProgress "Copying files..."
    
    -- Only use redirects in simulator 4.x
@@ -979,6 +980,11 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
       --
       if tSource ends with ".lcext" or tSource ends with ".dylib" then         
          next repeat
+      end if
+	  
+      -- MERG-2015-04-24: [[ TemplateAppMetadata ]] If a template plist is found then we use it instead of the default template.
+      if tSource ends with "Info.plist" then
+         put url ("binfile:" & tSource) into rPlist
       end if
       
       -- Otherwise its just a file
@@ -1121,11 +1127,14 @@ private function revGetMinimumOSByArch pMinimumOS
    return tMinimumOSByArch
 end revGetMinimumOSByArch
 
-private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
+private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPlist
    local tTemplateFile
-   put mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Settings.plist") into tTemplateFile
-   if there is no file tTemplateFile then
-      throw "could not find plist template for" && tolower(pTarget) && "target"
+   
+   if pPlist is empty then
+      put mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Settings.plist") into tTemplateFile
+      if there is no file tTemplateFile then
+         throw "could not find plist template for" && tolower(pTarget) && "target"
+      end if
    end if
    
    ----------
@@ -1244,22 +1253,23 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    end repeat
    
    ----------
-   
-   local tPlist
-   put url ("file:" & tTemplateFile) into tPlist
-   replace "${EXECUTABLE_NAME}" with tExeName in tPlist
-   replace "${BUNDLE_IDENTIFIER}" with tBundleId in tPlist
-   replace "${BUNDLE_VERSION}" with tBundleVersion in tPlist
-   replace "${BUNDLE_DISPLAY_NAME_SUPPORT}" with "<string>" & tDisplayName & "</string>" in tPlist
+   if pPlist is empty then
+      put url ("binfile:" & tTemplateFile) into pPlist
+   end if
+   // SN-2014-10-27: [[ Bug 13827 ]] Strings in a Plist file should be UTF-8 encoded
+   replace "${EXECUTABLE_NAME}" with textEncode(tExeName, "utf-8") in pPlist
+   replace "${BUNDLE_IDENTIFIER}" with textEncode(tBundleId, "utf-8") in pPlist
+   replace "${BUNDLE_VERSION}" with tBundleVersion in pPlist
+   replace "${BUNDLE_DISPLAY_NAME_SUPPORT}" with "<string>" & tDisplayName & "</string>" in pPlist
    -- SN-2015-02-02: [[ Bug 14422 ]] We now have minimum version depending on the arch.
-   replace "${MINIMUM_OS_SUPPORT}" with "<string>" & tMinimumOSByArch["i386"] & "</string>" in tPlist
-   replace "${CUSTOM_FONTS}" with tCustomFonts in tPlist
+   replace "${MINIMUM_OS_SUPPORT}" with "<string>" & tMinimumOSByArch["i386"] & "</string>" in pPlist
+   replace "${CUSTOM_FONTS}" with tCustomFonts in pPlist
    
    get empty
    repeat for each item tItem in tDeviceFamily
       put "<integer>" & tItem & "</integer>" after it
    end repeat
-   replace "${DEVICE_SUPPORT}" with it in tPlist
+   replace "${DEVICE_SUPPORT}" with it in pPlist
    
    get empty
    repeat for each key tKey in tRequiredCapabilities
@@ -1276,36 +1286,36 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
       put "<key>armv7</key><true/>" after it
    end if
    
-   replace "${DEVICE_CAPABILITY}" with it in tPlist
+   replace "${DEVICE_CAPABILITY}" with it in pPlist
    
-   replace "${PERSISTENT_WIFI}" with "<" & tPersistentWifi & "/>" in tPlist
-   replace "${APPLICATION_EXITS_ON_SUSPEND}" with "<" & tExitsOnSuspend & "/>" in tPlist
-   replace "${FILE_SHARING}" with "<" & tFileSharing & "/>" in tPlist
-   replace "${PRE_RENDERED_ICON}" with "<" & tPrerenderedIcon & "/>" in tPlist
+   replace "${PERSISTENT_WIFI}" with "<" & tPersistentWifi & "/>" in pPlist
+   replace "${APPLICATION_EXITS_ON_SUSPEND}" with "<" & tExitsOnSuspend & "/>" in pPlist
+   replace "${FILE_SHARING}" with "<" & tFileSharing & "/>" in pPlist
+   replace "${PRE_RENDERED_ICON}" with "<" & tPrerenderedIcon & "/>" in pPlist
    
    -- MW-2010-11-30: We need to make sure the first item in the list is the
    --     initial orientation as otherwise we get odd behavior (in the simulator
    --     at least!)
    -- MM-2011-09-28: Updated oreintation handling to generate new plist values.
    --   
-   replace "${IPHONE_INITIAL_ORIENTATION}" with "<string>UIInterfaceOrientation" & tIPhoneOrientation & "</string>" in tPlist
-   replace "${IPHONE_SUPPORTED_ORIENTATIONS}" with "<string>UIInterfaceOrientation" & tIPhoneOrientation & "</string>" in tPlist
-   replace "${IPAD_INITIAL_ORIENTATION}" with "<string>UIInterfaceOrientation" & item 1 of  tIPadOrientations & "</string>" in tPlist
+   replace "${IPHONE_INITIAL_ORIENTATION}" with "<string>UIInterfaceOrientation" & tIPhoneOrientation & "</string>" in pPlist
+   replace "${IPHONE_SUPPORTED_ORIENTATIONS}" with "<string>UIInterfaceOrientation" & tIPhoneOrientation & "</string>" in pPlist
+   replace "${IPAD_INITIAL_ORIENTATION}" with "<string>UIInterfaceOrientation" & item 1 of  tIPadOrientations & "</string>" in pPlist
    get empty
    repeat for each item tItem in tIPadOrientations
       put "<string>UIInterfaceOrientation" & tItem & "</string>" after it
    end repeat 
-   replace "${IPAD_SUPPORTED_ORIENTATIONS}" with it in tPlist
+   replace "${IPAD_SUPPORTED_ORIENTATIONS}" with it in pPlist
    
-   replace "${STATUS_BAR_STYLE}" with "<string>UIStatusBarStyle" & tStatusBarStyle & "</string>" in tPlist
-   replace "${STATUS_BAR_HIDDEN}" with "<" & tStatusBarHidden & "/>" in tPlist
-   replace "${IPAD_STATUS_BAR_HIDDEN}" with "<" & tIPadStatusBarHidden & "/>" in tPlist
+   replace "${STATUS_BAR_STYLE}" with "<string>UIStatusBarStyle" & tStatusBarStyle & "</string>" in pPlist
+   replace "${STATUS_BAR_HIDDEN}" with "<" & tStatusBarHidden & "/>" in pPlist
+   replace "${IPAD_STATUS_BAR_HIDDEN}" with "<" & tIPadStatusBarHidden & "/>" in pPlist
    
    -- PM-2015-02-17: [[ Bug 14482 ]] Added a new "solid" statusbarstyle
    if tStatusBarSolid is empty then
       put false into tStatusBarSolid
    end if
-   replace "${STATUS_BAR_SOLID}" with "<" & tStatusBarSolid & "/>" in tPlist
+   replace "${STATUS_BAR_SOLID}" with "<" & tStatusBarSolid & "/>" in pPlist
    
    
    -- MM-2013-10-08: [[ Bug 11257 ]] Make sure we include the new iOS 7 icons in the plist.
@@ -1315,7 +1325,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
          put "<string>" & "Icon" & tItem & ".png</string>" after it
       end if
    end repeat
-   replace "${BUNDLE_ICONS}" with it in tPlist
+   replace "${BUNDLE_ICONS}" with it in pPlist
    
    -- MM-2014-09-30: [[ iOS8 Support ]] Added new iOS 7 style entries for the splash screens
    -- MM-2014-10-06: [[ Bug 13512 ]] Splash screen sizes are in points and should omit the @2x @3x suffix, iOS is smart enough to figure that out.
@@ -1358,15 +1368,15 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    end repeat
    set the itemDel to comma
    
-   replace "${SPLASHSCREENS}" with tSplashData in tPlist
+   replace "${SPLASHSCREENS}" with tSplashData in pPlist
    
    ----------
    -- MM-2012-02-12: Added support for push notificaitons and custom URL schemes
    
    if pSettings["ios,push notifications"] then
-      replace "${REMOTE_NOTIFICATION_TYPES}" with URL ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "RemoteNotificationSettings.plist")) in tPlist      
+      replace "${REMOTE_NOTIFICATION_TYPES}" with URL ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "RemoteNotificationSettings.plist")) in pPlist      
    else
-      replace "${REMOTE_NOTIFICATION_TYPES}" with empty in tPlist
+      replace "${REMOTE_NOTIFICATION_TYPES}" with empty in pPlist
    end if
    
    local tUsesLocalNotifications
@@ -1376,15 +1386,15 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
       put "false" into tUsesLocalNotifications 
    end if
    
-   replace "${USES_LOCAL_NOTIFICATIONS}" with "<" & tUsesLocalNotifications & "/>" in tPlist
+   replace "${USES_LOCAL_NOTIFICATIONS}" with "<" & tUsesLocalNotifications & "/>" in pPlist
    
    if pSettings["ios,url name"] is not empty then
       get URL ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "URLSchemeSettings.plist"))
       replace "${BUNDLE_IDENTIFIER}" with tBundleId in it
       replace "${URL_NAME}" with pSettings["ios,url name"] in it
-      replace "${URL_TYPES}" with it in tPlist
+      replace "${URL_TYPES}" with it in pPlist
    else
-      replace "${URL_TYPES}" with empty in tPlist
+      replace "${URL_TYPES}" with empty in pPlist
    end if
    
    ----------
@@ -1404,11 +1414,11 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    else
       get empty
    end if
-   replace "${LOCATION_AUTH_TYPE}" with it in tPlist
+   replace "${LOCATION_AUTH_TYPE}" with it in pPlist
    
    ----------   
    
-   put tPlist into url ("binfile:" & pAppBundle & slash & "Info.plist")   
+   put pPlist into url ("binfile:" & pAppBundle & slash & "Info.plist")   
 end revCreateMobilePlist
 
 ################################################################################
