@@ -776,8 +776,19 @@ bool MCHandlerlist::enumerate(MCExecContext& ctxt, bool p_first, uindex_t& r_cou
 
 void MCHandlerlist::eval(MCExecContext &ctxt, MCStringRef p_expression, MCValueRef &r_value)
 {
-	// TODO: Implement execution outside of a handler.
-	ctxt. Unimplemented();
+    // SN-2015-05-21: [[ Bug 15396 ]] Implement the parsing of the expression -
+    //  same as MCHandler::eval, but no handler is set the ScriptPoint.
+    MCScriptPoint sp(ctxt, p_expression);
+
+    MCExpression *exp = NULL;
+    Symbol_type type;
+
+    if (sp.parseexp(False, True, &exp) == PS_NORMAL && sp.next(type) == PS_EOF)
+        ctxt . EvalExprAsValueRef(exp, EE_HANDLER_BADEXP, r_value);
+    else
+        ctxt . Throw();
+
+    delete exp;
 }
 
 void MCHandlerlist::doscript(MCExecContext& ctxt, MCStringRef p_script, uinteger_t p_line, uinteger_t p_pos)
