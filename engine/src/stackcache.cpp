@@ -115,7 +115,7 @@ void MCStackIdCache::CacheObject(MCObject *p_object)
 {
 	if (p_object -> getinidcache())
 		return;
-	
+    
 	uint32_t t_id;
 	t_id = p_object -> getid();
 	
@@ -135,7 +135,7 @@ void MCStackIdCache::CacheObject(MCObject *p_object)
 	
 	if (t_target_slot == UINDEX_MAX)
 		return;
-
+    
 	p_object -> setinidcache(true);
 	m_buckets[t_target_slot] = (uintptr_t)p_object;
 	m_count += 1;
@@ -374,6 +374,9 @@ bool MCStackIdCache::RehashBuckets(index_t p_new_item_count_delta)
 
 void MCStack::cacheobjectbyid(MCObject *p_object)
 {
+    // Disable for now
+    return;
+    
     MCThreadMutexLock(m_id_cache_lock);
 	if (m_id_cache == nil)
 	{
@@ -392,6 +395,9 @@ void MCStack::cacheobjectbyid(MCObject *p_object)
 
 void MCStack::uncacheobjectbyid(MCObject *p_object)
 {
+    // Disable for now
+    return;
+    
 	if (m_id_cache == nil)
 		return;
 		
