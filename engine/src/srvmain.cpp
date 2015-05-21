@@ -554,6 +554,8 @@ void X_main_loop(void)
 		return;
 #endif
 	
+    MCObjectPoolFrame t_object_pool_frame;
+    
 	MCExecContext ctxt;
 	if (!MCserverscript -> Include(ctxt, MCserverinitialscript, false) &&
 		MCS_get_errormode() != kMCSErrorModeDebugger)

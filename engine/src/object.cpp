@@ -157,6 +157,9 @@ MCObject::MCObject()
     
     // Object's do not begin in the parentScript table.
     m_is_parent_script = false;
+    
+    // Make sure we attach ourselves to an objectpool.
+    MCObjectPool::objectcreated(pool, this);
 }
 
 MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
@@ -252,6 +255,9 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
     // Cloned objects have a different identifier so are not in the parentScript
     // table at the start.
     m_is_parent_script = false;
+    
+    // Make sure we attach ourselves to an objectpool.
+    MCObjectPool::objectcreated(pool, this);
 }
 
 MCObject::~MCObject()
@@ -308,6 +314,9 @@ MCObject::~MCObject()
     // If this object is a parent-script make sure we flush it from the table.
 	if (m_is_parent_script)
 		MCParentScript::FlushObject(this);
+    
+    // Detach ourselves from the object pool.
+    MCObjectPool::objectdestroyed(pool, this);
 }
 
 Chunk_term MCObject::gettype() const
@@ -4974,7 +4983,10 @@ void MCObject::relayercontrol_insert(MCControl *p_control, MCControl *p_target)
 
 void MCObject::scheduledelete(void)
 {
-	appendto(MCtodelete);
+    // Schedule deletion of the object - this might change the pool ptr if the
+    // object's current pool is defunct.
+    MCObjectPool::objectdeleted(pool, this);
+    
 	if (m_weak_handle != nil)
 	{
 		m_weak_handle -> Clear();
@@ -5191,3 +5203,119 @@ bool MCObjectHandle::Exists(void)
 {
 	return m_object != NULL;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+
+MCObjectPool **MCcurrentobjectpoolptr = nil;
+
+MCObjectPoolFrame::MCObjectPoolFrame(void)
+{
+    parent_pool_ptr = MCcurrentobjectpoolptr;
+    MCcurrentobjectpoolptr = &pool;
+    pool = nil;
+}
+
+MCObjectPoolFrame::~MCObjectPoolFrame(void)
+{
+    // If there is no object pool, there is nothing to do.
+    if (pool == nil)
+        return;
+    
+    // First we delete any objects which are attached (these objects are already
+    // detached from the pool).
+    while(pool -> to_delete != nil)
+    {
+        MCObject *t_object;
+        t_object = pool -> to_delete -> remove(pool -> to_delete);
+        delete t_object;
+    }
+    
+    // If the pool has no references, then we can safely delete it (it means
+    // there are no alive objects pointing to it, nor any child pools).
+    if (pool -> references == 0)
+    {
+        delete pool;
+        pool = nil;
+        return;
+    }
+    
+    // If the parent pool ptr is nil, then we can reuse this pool.
+    if (*parent_pool_ptr == nil)
+    {
+        *parent_pool_ptr = pool;
+        pool = nil;
+        return;
+    }
+    
+    // Otherwise we must mark this pool as defunct and give it a parent.
+    pool -> defunct = true;
+    pool -> parent = *parent_pool_ptr;
+    pool -> parent -> references += 1;
+}
+
+void MCObjectPool::objectcreated(MCObjectPool*& x_pool, MCObject *p_object)
+{
+    // If there is no current object pool, then create one.
+    MCObjectPool *t_pool;
+    t_pool = *MCcurrentobjectpoolptr;
+    if (t_pool == nil)
+    {
+        t_pool = new MCObjectPool;
+        t_pool -> parent = nil;
+        t_pool -> defunct = false;
+        t_pool -> references = 0;
+        t_pool -> to_delete = nil;
+    }
+    
+    // Attach the object to the pool.
+    t_pool -> references += 1;
+    x_pool = t_pool;
+}
+
+void MCObjectPool::objectdestroyed(MCObjectPool*& x_pool, MCObject *p_object)
+{
+    if (x_pool == nil)
+        return;
+    
+    // Reduce the references to the pool.
+    x_pool -> references -= 1;
+    
+    // If the pool has reached reference count zero then clean up and is defunct.
+    while(x_pool -> defunct && x_pool -> references == 0)
+    {
+        x_pool -> parent -> references -= 1;
+        
+        MCObjectPool *t_this_pool;
+        t_this_pool = x_pool;
+        x_pool = x_pool -> parent;
+        delete t_this_pool;
+    }
+    
+    x_pool = nil;
+}
+
+void MCObjectPool::objectdeleted(MCObjectPool*& x_pool, MCObject *p_object)
+{
+    // Move the object to the most recent non-defunct pool, cleaning up empty
+    // defunct pools as we go (defunct pools never have a to_delete list).
+    while(x_pool -> defunct)
+    {
+        x_pool -> references -= 1;
+        if (x_pool -> references == 0)
+        {
+            MCObjectPool *t_this_pool;
+            t_this_pool = x_pool;
+            x_pool = x_pool -> parent;
+            delete t_this_pool;
+        }
+    }
+
+    // We now have the pool in which to add the object to the deletion list.
+    p_object -> appendto(x_pool -> to_delete);
+    
+    // Unlink the object from the pool.
+    x_pool = nil;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+

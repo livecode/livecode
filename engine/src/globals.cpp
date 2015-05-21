@@ -257,8 +257,6 @@ uint2 MCdragdelta = 4;
 MCUndolist *MCundos;
 MCSellist *MCselected;
 MCStacklist *MCstacks;
-MCStacklist *MCtodestroy;
-MCObject *MCtodelete;
 MCCardlist *MCrecent;
 MCCardlist *MCcstack;
 MCDispatch *MCdispatcher;
@@ -645,8 +643,6 @@ void X_clear_globals(void)
 	MCundos = nil;
 	MCselected = nil;
 	MCstacks = nil;
-	MCtodestroy = nil;
-	MCtodelete = nil;
 	MCrecent = nil;
 	MCcstack = nil;
 	MCdispatcher = nil;
@@ -979,7 +975,6 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	MCundos = new MCUndolist;
 	MCselected = new MCSellist;
 	MCstacks = new MCStacklist;
-	MCtodestroy = new MCStacklist;
 	MCrecent = new MCCardlist;
 	MCcstack = new MCCardlist;
 
@@ -1132,12 +1127,6 @@ int X_close(void)
 
 	MCscreen -> flushclipboard();
 
-	while (MCtodelete != NULL)
-	{
-		MCObject *optr = MCtodelete->remove(MCtodelete);
-		delete optr;
-	}
-
     MCdispatcher -> remove_transient_stack(MCtooltip);
 	delete MCtooltip;
 	MCtooltip = NULL;
@@ -1191,7 +1180,6 @@ int X_close(void)
 	delete MCtemplateimage;
 	delete MCtemplatefield;
 	delete MCselected;
-	delete MCtodestroy;
 	delete MCstacks;
 	delete MCcstack;
 	delete MCrecent;
@@ -1294,8 +1282,6 @@ int X_close(void)
     MCValueRelease(MClicenseparameters . license_name);
     MCValueRelease(MClicenseparameters . license_organization);
 	MCValueRelease(MClicenseparameters . addons);
-
-
 
 	// Cleanup the startup stacks list
 	for(uint4 i = 0; i < MCnstacks; ++i)

@@ -218,10 +218,34 @@ struct MCPatternInfo
 	MCPatternRef pattern;
 };
 
+struct MCObjectPool
+{
+    uindex_t references;
+    bool defunct : 1;
+    MCObjectPool *parent;
+    MCObject *to_delete;
+    
+    static void objectcreated(MCObjectPool*& r_pool, MCObject *object);
+    static void objectdestroyed(MCObjectPool*& p_pool, MCObject *object);
+    static void objectdeleted(MCObjectPool*& x_pool, MCObject *object);
+};
+
+struct MCObjectPoolFrame
+{
+    MCObjectPool **parent_pool_ptr;
+    MCObjectPool *pool;
+    
+    MCObjectPoolFrame(void);
+    ~MCObjectPoolFrame(void);
+};
+
+extern MCObjectPool **MCcurrentobjectpoolptr;
+
 class MCObject : public MCDLlist
 {
 protected:
 	uint4 obj_id;
+    MCObjectPool *pool;
 	MCObject *parent;
 	MCNameRef _name;
 	uint4 flags;

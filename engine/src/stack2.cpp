@@ -112,8 +112,7 @@ void MCStack::checkdestroy()
 					}
 					while (sptr != substacks);
 				}
-				MCtodestroy->remove(this); // prevent duplicates
-				MCtodestroy->add(this);
+                scheduledelete();
 			}
 	}
 	else if (!MCdispatcher -> is_transient_stack(this))
@@ -2116,7 +2115,6 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	if (state & (CS_IGNORE_CLOSE | CS_NO_FOCUS | CS_DELETE_STACK))
 		return ES_NORMAL;
 
-	MCtodestroy->remove(this); // prevent delete
 	if (wm == WM_LAST)
 		if (opened)
 			wm = mode;
