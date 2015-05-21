@@ -2026,7 +2026,7 @@ int main(int argc, char *argv[], char *envp[])
 	
 	// Assign our delegate
 	[t_application setDelegate: t_delegate];
-	
+    
 	// Run the application - this never returns!
 	[t_application run];    
 	

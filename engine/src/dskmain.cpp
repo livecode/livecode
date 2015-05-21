@@ -318,8 +318,6 @@ void X_main_loop_iteration()
 	MCstackbottom = (char *)&i;
 
 	////
-
-    MCObjectPoolFrame t_object_pool_frame;
     
 	if (MCiconicstacks == 0 && !MCscreen->hasmessages() && MCstacks->isempty() && MCnsockets == 0)
 	{
@@ -340,6 +338,8 @@ void X_main_loop_iteration()
 		MCtracedobject = NULL;
 	}
     MCtooltip->cleartip();
+    extern MCObjectPoolFrame *MCrootobjectpoolframe;
+    MCrootobjectpoolframe -> drain();
 	MCU_cleaninserted();
 	MCscreen->siguser();
 	MCdefaultstackptr = MCstaticdefaultstackptr;

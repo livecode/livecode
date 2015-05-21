@@ -226,8 +226,9 @@ struct MCObjectPool
     MCObject *to_delete;
     
     static MCObjectPool *objectcreated(MCObject *object);
-    void objectdestroyed(MCObject *object);
-    void objectdeleted(MCObject *object);
+    static MCObjectPool *objectdeleted(MCObjectPool *pool, MCObject *object);
+    
+    static void objectdestroyed(MCObjectPool *pool, MCObject *object);
 };
 
 struct MCObjectPoolFrame
@@ -237,6 +238,8 @@ struct MCObjectPoolFrame
     
     MCObjectPoolFrame(void);
     ~MCObjectPoolFrame(void);
+    
+    void drain(void);
 };
 
 extern MCObjectPool **MCcurrentobjectpoolptr;

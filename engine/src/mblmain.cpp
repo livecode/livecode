@@ -141,13 +141,13 @@ bool X_main_loop_iteration(void)
 		MCquit = True;
 		return false;
 	}
-    MCObjectPoolFrame t_object_pool_frame;
 	MCscreen->wait(MCmaxwait, True, True);
 	MCU_resetprops(True);
 	// MW-2011-08-26: [[ Redraw ]] Make sure we flush any updates.
 	MCRedrawUpdateScreen();
 	MCabortscript = False;
 	MCU_cleaninserted();
+    MCrootobjectpoolframe -> drain();
 	MCscreen->siguser();
 	MCdefaultstackptr = MCstaticdefaultstackptr;
 	MCS_alarm(0.0);

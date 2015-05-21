@@ -553,8 +553,6 @@ void X_main_loop(void)
 	if (setrlimit(RLIMIT_RSS, &t_limits) < 0)
 		return;
 #endif
-	
-    MCObjectPoolFrame t_object_pool_frame;
     
 	MCExecContext ctxt;
 	if (!MCserverscript -> Include(ctxt, MCserverinitialscript, false) &&
@@ -644,9 +642,7 @@ int main(int argc, char *argv[], char *envp[])
 	
 	/* UNCHECKED */ MCMemoryResizeArray(i + 1, t_new_envp, t_envp_count);
 	t_new_envp[i] = nil;
-// END MAC SPECIFIC	
-
-    MCObjectPoolFrame t_object_pool_frame;
+// END MAC SPECIFIC
     
     int t_exit_code;
 	if (X_init(argc, t_new_argv, t_new_envp))

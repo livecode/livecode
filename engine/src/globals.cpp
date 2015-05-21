@@ -500,6 +500,8 @@ MCThreadMutexRef MCfieldmutex = NULL;
 MCThreadMutexRef MCthememutex = NULL;
 MCThreadMutexRef MCgraphicmutex = NULL;
 
+MCObjectPoolFrame *MCrootobjectpoolframe = nil;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern MCUIDC *MCCreateScreenDC(void);
@@ -953,6 +955,8 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 		}
 #endif // _SERVER
 
+    MCrootobjectpoolframe = new MCObjectPoolFrame;
+    
 	/* UNCHECKED */ MCStackSecurityCreateStack(MCtemplatestack);
 	MCtemplateaudio = new MCAudioClip;
 	MCtemplateaudio->init();
@@ -1183,6 +1187,8 @@ int X_close(void)
 	delete MCstacks;
 	delete MCcstack;
 	delete MCrecent;
+    
+    delete MCrootobjectpoolframe;
 
 	// Temporary workaround for a crash
     //MCS_close(IO_stdin);
@@ -1272,7 +1278,7 @@ int X_close(void)
 	// VALGRIND: Still causing a single invalid memory
 	MCscreen->close(True);
 #endif
-
+    
 	delete MCscreen;
 
 	MCExternal::Cleanup();
