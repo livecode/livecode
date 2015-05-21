@@ -154,6 +154,8 @@ class CameraControl extends NativeControl
 					t_params.setFlashMode(m_flash_mode);
 			}
 			
+			t_params.setRotation(getCameraRotationSetting());
+			
 			t_camera.setParameters(t_params);
 		}
 		
@@ -234,7 +236,7 @@ class CameraControl extends NativeControl
 			m_previewing = false;
 		}
 		
-		private int getCameraOrientationSetting()
+		private int getDisplayRotation()
 		{
 			int t_rotation;
 			t_rotation = NativeControlModule.getActivity().getWindowManager().getDefaultDisplay().getRotation();
@@ -254,6 +256,26 @@ class CameraControl extends NativeControl
 					t_rotation = 270;
 					break;
 			}
+			
+			return t_rotation;
+		}
+		
+		private int getCameraRotationSetting()
+		{
+			int t_rotation = getDisplayRotation();
+			
+			// Reverse direction for front-facing camera
+			if (m_info.facing == CameraInfo.CAMERA_FACING_FRONT)
+				t_rotation = (m_info.orientation + t_rotation) % 360;
+			else
+				t_rotation = (m_info.orientation + 360 - t_rotation) % 360;
+			
+			return t_rotation;
+		}
+		
+		private int getCameraOrientationSetting()
+		{
+			int t_rotation = getDisplayRotation();
 			
 			// Reverse direction for front-facing camera
 			if (m_info.facing == CameraInfo.CAMERA_FACING_FRONT)
@@ -310,6 +332,30 @@ class CameraControl extends NativeControl
 			m_flash_mode = t_mode;
 			if (m_camera != null)
 				setCameraParameters(m_camera);
+		}
+		
+		//////////
+		
+		public boolean takePicture()
+		{
+			if (!m_previewing || m_camera == null)
+				return false;
+			
+			m_camera.takePicture(new Camera.ShutterCallback() {
+				@Override
+				public void onShutter()
+				{
+					m_previewing = false;
+				}
+			}, null, null, new Camera.PictureCallback() {
+				@Override
+				public void onPictureTaken(byte[] p_data, Camera p_camera)
+				{
+					CameraControl.this.onPictureTaken(p_data);
+					enablePreview();
+				}
+			});
+			return true;
 		}
 	}
 	
@@ -559,7 +605,10 @@ class CameraControl extends NativeControl
 	{
 	}
 	
-	public void takePicture()
+	public boolean takePicture()
 	{
+		return m_camera_view.takePicture();
 	}
+	
+	private static native void onPictureTaken(byte[] p_data);
 }

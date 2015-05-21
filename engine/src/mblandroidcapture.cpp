@@ -229,6 +229,9 @@ void MCAndroidCameraControl::ExecStopRecording(MCExecContext& ctxt)
 	MCAndroidObjectRemoteCall(t_view, "stopRecording", "v", nil);
 }
 
+static bool s_take_picture_finished;
+static MCDataRef s_picture_data;
+
 void MCAndroidCameraControl::ExecTakePicture(MCExecContext& ctxt)
 {
 	jobject t_view;
@@ -237,7 +240,24 @@ void MCAndroidCameraControl::ExecTakePicture(MCExecContext& ctxt)
 	if (t_view == nil)
 		return;
 	
-	MCAndroidObjectRemoteCall(t_view, "takePicture", "v", nil);
+	s_take_picture_finished = false;
+	s_picture_data = nil;
+	
+	bool t_success;
+	t_success = true;
+	
+	MCAndroidObjectRemoteCall(t_view, "takePicture", "b", &t_success);
+	
+	if (t_success)
+	{
+		while (!s_take_picture_finished)
+			MCscreen->wait(60.0, True, True);
+	}
+	
+	if (s_picture_data == nil)
+		ctxt.SetTheResultToEmpty();
+	else
+		ctxt.SetTheResultToValue(s_picture_data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -267,6 +287,18 @@ bool MCNativeCameraControlCreate(MCNativeControl *&r_control)
 	
 	r_control = t_control;
 	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_CameraControl_onPictureTaken(JNIEnv *env, jobject object, jbyteArray p_data) __attribute__((visibility("default")));
+JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_CameraControl_onPictureTaken(JNIEnv *env, jobject object, jbyteArray p_data)
+{
+	s_picture_data = nil;
+	/* UNCHECKED */ MCJavaByteArrayToDataRef(env, p_data, s_picture_data);
+	
+	s_take_picture_finished = true;
+	MCAndroidBreakWait();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
