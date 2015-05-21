@@ -610,8 +610,8 @@ extern void MCModulesFinalize();
 
 int main(int argc, char *argv[], char *envp[])
 {
-	void initialize_mem_dbg();
-	initialize_mem_dbg();
+	// void initialize_mem_dbg();
+	// initialize_mem_dbg();
 	
 	if (!MCInitialize() || !MCSInitialize() ||
 	    !MCModulesInitialize() || !MCScriptInitialize())
@@ -673,11 +673,11 @@ int main(int argc, char *argv[], char *envp[])
 	}
 	MCMemoryDeleteArray(t_new_envp);
 
-	void report_mem_dbg();
-	report_mem_dbg();
+	// void report_mem_dbg();
+	// report_mem_dbg();
 	
-	void restore_handlers();
-	restore_handlers();
+	// void restore_handlers();
+	// restore_handlers();
 
     return t_exit_code;
 }
