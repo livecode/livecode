@@ -21,6 +21,8 @@ import android.graphics.Color;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 import android.hardware.Camera.PictureCallback;
+import android.media.CamcorderProfile;
+import android.media.MediaRecorder;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Surface;
@@ -67,12 +69,18 @@ class CameraControl extends NativeControl
 		private boolean m_previewing;
 		private boolean m_surface_ready;
 		
+		private boolean m_recording;
+		private MediaRecorder m_recorder;
+		
 		public CameraView(Context context, int p_camera_id)
 		{
 			super(context);
 			
 			m_camera = null;
 			m_info = null;
+			
+			m_recording = false;
+			m_recorder = null;
 			
 			m_camera_id = -1;
 
@@ -236,6 +244,59 @@ class CameraControl extends NativeControl
 			m_previewing = false;
 		}
 		
+		private boolean enableRecording(String p_filename)
+		{
+			if (m_recorder != null)
+				return true;
+			
+			enablePreview();
+			if (!m_previewing)
+				return false;
+			
+			MediaRecorder t_recorder = new MediaRecorder();
+			
+			m_camera.unlock();
+			
+			try
+			{
+				t_recorder.setCamera(m_camera);
+				t_recorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
+				t_recorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
+				t_recorder.setProfile(CamcorderProfile.get(m_camera_id, CamcorderProfile.QUALITY_HIGH));
+				t_recorder.setOutputFile(p_filename);
+				t_recorder.setOrientationHint(getCameraRotationSetting());
+				t_recorder.prepare();
+			}
+			catch (Exception e)
+			{
+				t_recorder.release();
+				m_camera.lock();
+				return false;
+			}
+			
+			t_recorder.start();
+			
+			m_recorder = t_recorder;
+			m_recording = true;
+			
+			return true;
+		}
+		
+		private void disableRecording()
+		{
+			if (m_recorder == null)
+				return;
+			
+			m_recorder.stop();
+			m_recorder.reset();
+			m_recorder.release();
+			m_recorder = null;
+			
+			m_camera.lock();
+			
+			m_recording = false;
+		}
+		
 		private int getDisplayRotation()
 		{
 			int t_rotation;
@@ -336,6 +397,20 @@ class CameraControl extends NativeControl
 		
 		//////////
 		
+		public boolean startRecording(String p_filename)
+		{
+			enablePreview();
+			if (!m_previewing)
+				return false;
+			
+			return enableRecording(p_filename);
+		}
+		
+		public void stopRecording()
+		{
+			disableRecording();
+		}
+		
 		public boolean takePicture()
 		{
 			if (!m_previewing || m_camera == null)
@@ -408,6 +483,7 @@ class CameraControl extends NativeControl
 	
 	public void onPause()
 	{
+		m_camera_view.disableRecording();
 		m_camera_view.disablePreview();
 		m_camera_view.closeCamera();
 	}
@@ -599,10 +675,12 @@ class CameraControl extends NativeControl
 	
 	public boolean startRecording(String p_filename)
 	{
+		return m_camera_view.startRecording(p_filename);
 	}
 	
 	public void stopRecording()
 	{
+		m_camera_view.stopRecording();
 	}
 	
 	public boolean takePicture()
