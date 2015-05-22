@@ -103,7 +103,7 @@ MCNewFontlist::~MCNewFontlist()
     {
 		MCNewFontStruct* t_font = m_fonts;
 		m_fonts = t_font -> next;
-		delete t_font -> family;
+		MCValueRelease(t_font -> family);
 		pango_font_description_free(t_font -> description);
 		delete t_font;
 	}
