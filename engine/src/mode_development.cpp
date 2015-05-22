@@ -1839,8 +1839,15 @@ void MCObject::GetRevAvailableVariables(MCExecContext& ctxt, MCNameRef p_key, MC
         case 'S':
             t_handler_type = HT_SETPROP;
             break;
+        case 'A':
+            t_handler_type = HT_AFTER;
+            break;
+        case 'B':
+            t_handler_type = HT_BEFORE;
+            break;
         default:
             t_handler_type = HT_MESSAGE;
+            break;
     }
     
     Exec_stat t_status;
@@ -1850,12 +1857,14 @@ void MCObject::GetRevAvailableVariables(MCExecContext& ctxt, MCNameRef p_key, MC
     MCHandler *t_handler;
     t_status = hlist -> findhandler(t_handler_type, *t_name, t_handler);
 
-    if (t_handler != NULL)
+    if (t_status == ES_NORMAL)
     {
         MCAutoListRef t_list;
         t_handler -> getvarnames(true, &t_list);
         MCListCopyAsString(*t_list, r_variables);
     }
+    else
+        r_variables = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
