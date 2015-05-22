@@ -83,7 +83,8 @@ SOURCES=\
     srvcgi.cpp srvmultipart.cpp \
 	sysunxthreads.cpp, stacktile.cpp \
 	widget.cpp \
-	widget-events.cpp
+	widget-events.cpp \
+	__leak.c11
 
 MLC_LIST = libkernel-modules.list
 	

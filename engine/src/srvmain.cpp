@@ -553,7 +553,7 @@ void X_main_loop(void)
 	if (setrlimit(RLIMIT_RSS, &t_limits) < 0)
 		return;
 #endif
-	
+    
 	MCExecContext ctxt;
 	if (!MCserverscript -> Include(ctxt, MCserverinitialscript, false) &&
 		MCS_get_errormode() != kMCSErrorModeDebugger)
@@ -610,6 +610,9 @@ extern void MCModulesFinalize();
 
 int main(int argc, char *argv[], char *envp[])
 {
+	// void initialize_mem_dbg();
+	// initialize_mem_dbg();
+	
 	if (!MCInitialize() || !MCSInitialize() ||
 	    !MCModulesInitialize() || !MCScriptInitialize())
 		exit(-1);
@@ -642,21 +645,41 @@ int main(int argc, char *argv[], char *envp[])
 	
 	/* UNCHECKED */ MCMemoryResizeArray(i + 1, t_new_envp, t_envp_count);
 	t_new_envp[i] = nil;
-// END MAC SPECIFIC	
-
-	if (!X_init(argc, t_new_argv, t_new_envp))
-		exit(-1);
+// END MAC SPECIFIC
+    
+    int t_exit_code;
+	if (X_init(argc, t_new_argv, t_new_envp))
+    {
+        X_main_loop();
 	
-	X_main_loop();
-	
-	int t_exit_code;
-	t_exit_code = X_close();
+        t_exit_code = X_close();
+    }
+    else
+        t_exit_code = -1;
 
     MCScriptFinalize();
     MCModulesFinalize();
 	MCFinalize();
+
+	for (int i = 0; i < argc; i++)
+	{
+		MCValueRelease(t_new_argv[i]);
+	}
+	MCMemoryDeleteArray(t_new_argv);
+
+	for (int i = 0; i < t_envp_count; i++)
+	{
+		MCValueRelease(t_new_envp[i]);
+	}
+	MCMemoryDeleteArray(t_new_envp);
+
+	// void report_mem_dbg();
+	// report_mem_dbg();
 	
-	exit(t_exit_code);
+	// void restore_handlers();
+	// restore_handlers();
+
+    return t_exit_code;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

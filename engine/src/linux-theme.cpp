@@ -197,6 +197,10 @@ static GtkStyle* getStyleForControlType(MCPlatformControlType p_type, MCPlatform
 
 bool MCPlatformGetControlThemePropInteger(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_prop, int& r_int)
 {
+#ifdef _SERVER
+    return false;
+#endif
+    
     GtkStyle* t_style;
     t_style = getStyleForControlType(p_type, p_part);
     if (t_style == NULL)
@@ -231,6 +235,10 @@ bool MCPlatformGetControlThemePropInteger(MCPlatformControlType p_type, MCPlatfo
 
 bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_prop, MCColor& r_color)
 {
+#ifdef _SERVER
+    return false;
+#endif
+    
     GtkStyle* t_style;
     t_style = getStyleForControlType(p_type, p_part);
     if (t_style == NULL)
@@ -327,6 +335,10 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatform
 
 bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_prop, MCFontRef& r_font)
 {
+#ifdef _SERVER
+    return MCFontCreate(MCNAME("Helvetica"), 0, 13, r_font);
+#endif
+    
     GtkStyle* t_style;
     t_style = getStyleForControlType(p_type, p_part);
     if (t_style == NULL)

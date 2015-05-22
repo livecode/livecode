@@ -33,6 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "debug.h"
 #include "stack.h"
 #include "cmds.h"
+#include "object.h"
 
 
 #include "system.h"
@@ -548,10 +549,13 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 					break;
 				}
 			}
-
+            
 			t_statement = t_statement -> getnext();
 		}
-
+        
+        extern MCObjectPoolFrame *MCrootobjectpoolframe;
+        MCrootobjectpoolframe -> drain();
+        
 		t_statements -> deletestatements(t_statements);
 	}
 	

@@ -636,7 +636,8 @@ void MCScriptEndHandlerTypeInModule(MCScriptModuleBuilderRef self, uindex_t& r_n
         t_equal = true;
         for(uindex_t j = 0; j < t_type -> parameter_count; j++)
             if (t_type -> parameters[j] . mode != t_other_type -> parameters[j] . mode ||
-                t_type -> parameters[j] . type != t_other_type -> parameters[j] . type)
+                t_type -> parameters[j] . type != t_other_type -> parameters[j] . type ||
+                !MCNameIsEqualTo(t_type -> parameter_names[j], t_other_type -> parameter_names[j]))
             {
                 t_equal = false;
                 break;
@@ -646,6 +647,7 @@ void MCScriptEndHandlerTypeInModule(MCScriptModuleBuilderRef self, uindex_t& r_n
             continue;
         
         MCMemoryDeleteArray(t_type -> parameters);
+        MCMemoryDeleteArray(t_type -> parameter_names);
         MCMemoryDelete(t_type);
         
         r_new_type = i;

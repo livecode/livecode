@@ -63,9 +63,9 @@ FALLBACK_INCLUDES=-I$(SOLUTION_DIR)/thirdparty/headers/linux/include -I$(SOLUTIO
 INCLUDES=$(CUSTOM_INCLUDES) $(TYPE_INCLUDES) $(GLOBAL_INCLUDES)
 
 ifeq ($(MODE),release)
-	CCFLAGS=$(CUSTOM_CCFLAGS) $(TYPE_CCFLAGS) -O3 -fvisibility=hidden -g
+	CCFLAGS=$(CUSTOM_CCFLAGS) $(TYPE_CCFLAGS) -O3 -g
 else
-	CCFLAGS=$(CUSTOM_CCFLAGS) $(TYPE_CCFLAGS) -g -fvisibility=hidden
+	CCFLAGS=$(CUSTOM_CCFLAGS) $(TYPE_CCFLAGS) -g
 endif
 
 DEPS=$(addprefix $(BUILD_DIR)/, $(CUSTOM_DEPS))
@@ -84,6 +84,10 @@ VPATH=$(SOURCE_DIR) $(SOURCE_DIRS) $(CACHE_DIR) $(BUILD_DIR)
 $(CACHE_DIR)/%.o: %.cpp
 	mkdir -p $(CACHE_DIR)/$(dir $*)
 	$(CXX) $(CCFLAGS) $(addprefix -I,$(INCLUDES)) $(PACKAGE_INCLUDES) $(FALLBACK_INCLUDES) $(addprefix -D,$(DEFINES)) -MMD -MF $(patsubst %.o,%.d,$@) -c -o$(CACHE_DIR)/$*.o $(SOURCE_DIR)/$*.cpp
+
+$(CACHE_DIR)/%.o: %.cxx
+	mkdir -p $(CACHE_DIR)/$(dir $*)
+	$(CXX) $(CCFLAGS) --std=c++11 $(addprefix -I,$(INCLUDES)) $(PACKAGE_INCLUDES) $(FALLBACK_INCLUDES) $(addprefix -D,$(DEFINES)) -MMD -MF $(patsubst %.o,%.d,$@) -c -o$(CACHE_DIR)/$*.o $(SOURCE_DIR)/$*.cxx
 
 $(CACHE_DIR)/%.o: %.cc
 	mkdir -p $(CACHE_DIR)/$(dir $*)

@@ -65,6 +65,7 @@ static Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p
         ctxt . IgnoreLastError();
         // MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
         MCRedrawUpdateScreen();
+        MCObjectPoolFrameDrain();
         
         switch(stat)
         {
@@ -722,6 +723,7 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
         
 		// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
 		MCRedrawUpdateScreen();
+        MCObjectPoolFrameDrain();
         
 		switch(stat)
 		{
