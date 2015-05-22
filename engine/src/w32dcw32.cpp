@@ -354,6 +354,9 @@ static uint32_t lastcodepoint;
 static KeySym lastkeysym;
 // SN-2014-09-12: [[ Bug 13423 ]] Keeps whether a the next char follows a dead char
 static Boolean deadcharfollower = False;
+// SN-2015-05-18: [[ Bug 15040 ]] Keep an indication if we are in an Alt+<number>
+//  sequence. We don't want to send any keyDown/Up message (same as dead chars).
+static Boolean isInAltPlusSequence = False;
 static Boolean doubleclick;
 Boolean tripleclick;
 static uint4 clicktime;
@@ -796,8 +799,22 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 				// SN-2014-09-05: [[ Bug 13348 ]] Call the appropriate message
 				//	 [[ MERGE-6_7_RC_2 ]] and add the KeyDown/Up in case we follow
 				//   a dead-key started sequence
-				if (curinfo->keymove == KM_KEY_DOWN || deadcharfollower)
-					MCdispatcher->wkdown(dw, *t_input, t_keysym);
+				// SN-2015-05-18: [[ Bug 15040 ]] We must send the char resulting
+				//  from an Alt+<number> sequence.
+				if (curinfo->keymove == KM_KEY_DOWN || deadcharfollower || isInAltPlusSequence)
+				{
+					// Pressing Alt and the key "+" starts a number-typing sequence.
+					//  Otherwise, we are not in such a sequence - be it because a normal
+					//  char has been typed, or because the sequence is terminated.
+					isInAltPlusSequence = (t_keysym == '+' && MCmodifierstate == MS_ALT);
+
+					// We don't want to send any Key message for the "+" pressed
+					//  to start the Alt+<number> sequence
+					if (isInAltPlusSequence
+							|| (!MCdispatcher->wkdown(dw, *t_input, t_keysym)
+								&& msg == WM_SYSCHAR))
+						return IsWindowUnicode(hwnd) ? DefWindowProcW(hwnd, msg, wParam, lParam) : DefWindowProcA(hwnd, msg, wParam, lParam);
+				}
 				
 				if (curinfo->keymove == KM_KEY_UP || deadcharfollower)
   					MCdispatcher->wkup(dw, *t_input, t_keysym);
@@ -805,6 +822,10 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 
 			curinfo->handled = curinfo->reset = true;
 		}
+
+		// SN-2015-05-18: [[ Bug 15040 ]] Make sure that it can't let be set to True
+		isInAltPlusSequence = False;
+
 		break;
 	}
 
@@ -837,7 +858,10 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 
 		if (curinfo->dispatch)
 		{
-			if (MCtracewindow == DNULL || hwnd != (HWND)MCtracewindow->handle.window)
+			// SN-2015-05-18: [[ Bug 15040 ]] We do not want to send any key
+			//  message if we are in an Alt+<number> sequence.
+			if ((MCtracewindow == DNULL || hwnd != (HWND)MCtracewindow->handle.window) 
+					&& !isInAltPlusSequence)
 			{
 				// The low word contains the repeat count
 				uint2 count = LOWORD(lParam);
@@ -915,7 +939,10 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 				MCeventtime = GetMessageTime(); //krevent->time;
 				// SN-2014-09-10: [[ Bug 13348 ]] Send the string we could build from the last
 				// codepoint.
-				MCdispatcher->wkup(dw, *t_string, keysym);
+				// SN-2015-05-18: [[ Bug 15040 ]] We don't send any key message
+				//  if we are in an Alt+<number> sequence.
+				if (!isInAltPlusSequence)
+					MCdispatcher->wkup(dw, *t_string, keysym);
 				curinfo->handled = curinfo->reset = True;
 			}
 		}
