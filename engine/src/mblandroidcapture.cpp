@@ -75,7 +75,7 @@ public:
 	void GetFlashIsAvailable(MCExecContext& ctxt, bool& r_mode);
 	
 	// Camera-specific actions
-	void ExecStartRecording(MCExecContext& ctxt);
+	void ExecStartRecording(MCExecContext& ctxt, MCStringRef p_filename);
 	void ExecStopRecording(MCExecContext& ctxt);
 	void ExecTakePicture(MCExecContext& ctxt);
 	
@@ -108,7 +108,7 @@ MCObjectPropertyTable MCAndroidCameraControl::kPropertyTable =
 
 MCNativeControlActionInfo MCAndroidCameraControl::kActions[] =
 {
-	DEFINE_CTRL_EXEC_METHOD(CameraStartRecording, MCAndroidCameraControl, StartRecording)
+	DEFINE_CTRL_EXEC_UNARY_METHOD(CameraStartRecording, MCAndroidCameraControl, String, StartRecording)
 	DEFINE_CTRL_EXEC_METHOD(CameraStopRecording, MCAndroidCameraControl, StopRecording)
 	DEFINE_CTRL_EXEC_METHOD(CameraTakePicture, MCAndroidCameraControl, TakePicture)
 };
@@ -207,7 +207,7 @@ void MCAndroidCameraControl::GetFlashIsActive(MCExecContext& ctxt, bool& r_activ
 		MCAndroidObjectRemoteCall(t_view, "getFlashIsActive", "i", &r_active);
 }
 
-void MCAndroidCameraControl::ExecStartRecording(MCExecContext& ctxt)
+void MCAndroidCameraControl::ExecStartRecording(MCExecContext& ctxt, MCStringRef p_filename)
 {
 	jobject t_view;
 	t_view = GetView();
@@ -215,7 +215,13 @@ void MCAndroidCameraControl::ExecStartRecording(MCExecContext& ctxt)
 	if (t_view == nil)
 		return;
 	
-	MCAndroidObjectRemoteCall(t_view, "startRecording", "v", nil);
+	MCAutoStringRef t_resolved_path;
+	/* UNCHECKED */ MCS_resolvepath(p_filename, &t_resolved_path);
+	
+	bool t_success;
+	t_success = true;
+	
+	MCAndroidObjectRemoteCall(t_view, "startRecording", "bx", &t_success, *t_resolved_path);
 }
 
 void MCAndroidCameraControl::ExecStopRecording(MCExecContext& ctxt)

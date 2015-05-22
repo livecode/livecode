@@ -597,7 +597,7 @@ class CameraControl extends NativeControl
 	
 	//////////
 	
-	public void startRecording()
+	public boolean startRecording(String p_filename)
 	{
 	}
 	

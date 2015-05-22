@@ -850,7 +850,6 @@ void MCNativeControlExecDo(MCExecContext& ctxt, MCStringRef p_control_name, MCSt
             case kMCNativeControlActionBeginSeekingBackward:
             case kMCNativeControlActionEndSeeking:
             case kMCNativeControlActionFocus:
-			case kMCNativeControlActionCameraStartRecording:
 			case kMCNativeControlActionCameraStopRecording:
 			case kMCNativeControlActionCameraTakePicture:
             {
@@ -859,6 +858,7 @@ void MCNativeControlExecDo(MCExecContext& ctxt, MCStringRef p_control_name, MCSt
             }
             
             // single string param
+			case kMCNativeControlActionCameraStartRecording:
             case kMCNativeControlActionExecute:
                 if (p_argument_count == 1)
                 {
