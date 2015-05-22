@@ -1726,13 +1726,11 @@ void MCButton::drawstandardbutton(MCDC *dc, MCRectangle &srect)
                 // MM-2014-07-31: [[ ThreadedRendering ]] Make sure only a single thread posts the timer message (i.e. the first that gets here)
                 if (!m_animate_posted)
                 {
-                    MCThreadMutexLock(MCanimationmutex);
                     if (!m_animate_posted)
                     {
                         m_animate_posted = true;
                         MCscreen->addtimer(this, MCM_internal, THROB_RATE);
                     }
-                    MCThreadMutexUnlock(MCanimationmutex);
                 }
 			}
 			else
