@@ -499,6 +499,10 @@ bool MCImageGetScaledFiles(MCStringRef p_base, MCStringRef p_extension, MCImageS
 		}
 	}
 	
+	// Fail if we don't find any matching files.
+	if (t_success)
+		t_success = t_count > 0;
+	
 	if (t_success)
 	{
 		r_list = t_list;

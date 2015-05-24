@@ -1530,7 +1530,9 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 				// SN-2014-08-11: [[ Bug 13145 ]] If ReadFile can't read more, but no error is triggered, we should stop here,
 				//  but return true. The new imageLoader reads buffer by buffer, and doesn't expect and error when reading the
 				//  the last buffer (which might ask for more than remaining in the file).
-				if (nread == 0 && GetLastError() == 0)
+				// IM-2015-03-17: [[ Bug 14960 ]] GetLastError is only meaningful if ReadFile fails. A return value of TRUE
+				//  with 0 bytes read is used to indicate EOF for synchronous file handles.
+				if (nread == 0)
 				{
 					r_read = t_offset;
 					m_is_eof = true;
@@ -3067,13 +3069,19 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		bool t_device = false;
 		bool t_serial_device = false;
 
+		// SN-2015-02-26: [[ Bug 14612 ]] Also process the device path
+		//  translation when using <open file>
+		MCAutoStringRef t_devicepath;
+		if (!get_device_path(p_path, &t_devicepath))
+			return NULL;
+
 		// Is this a device path?
-		if (MCStringBeginsWithCString(p_path, (const char_t*)"\\\\.\\", kMCStringOptionCompareExact))
+		if (MCStringBeginsWithCString(*t_devicepath, (const char_t*)"\\\\.\\", kMCStringOptionCompareExact))
 		{
 			t_device = true;
 
 			// Is this a path to a serial port?
-			if (MCStringBeginsWithCString(p_path, (const char_t*)"\\\\.\\COM", kMCStringOptionCompareCaseless))
+			if (MCStringBeginsWithCString(*t_devicepath, (const char_t*)"\\\\.\\COM", kMCStringOptionCompareCaseless))
 				t_serial_device = true;
         }
 
@@ -3110,7 +3118,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			sharemode = FILE_SHARE_READ | FILE_SHARE_WRITE;
 
 		MCAutoStringRefAsWString t_path_wstr;
-		/* UNCHECKED */ t_path_wstr.Lock(p_path);
+		/* UNCHECKED */ t_path_wstr.Lock(*t_devicepath);
 
 		t_file_handle = CreateFileW(*t_path_wstr, omode, sharemode, NULL,
 							 createmode, fa, NULL);
@@ -3203,11 +3211,11 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 	virtual IO_handle OpenDevice(MCStringRef p_path, intenum_t p_mode)
 	{
 		// For Windows, the path is used to determine whether a file or a device is being opened
-        MCAutoStringRef t_device_path;        
-		if (get_device_path(p_path, &t_device_path))
-			return OpenFile(*t_device_path, p_mode, True);
-		else
-			return nil;
+		// SN-2015-02-16: [[ Bug 14612 ]] <open file "COM:"> should do the same as
+		//  <open device "COM:">, so no difference in the path
+		//  translation must exist between MCWindowsDesktop::OpenDevice
+		//  and MCWindowsDesktop::OpenFile
+		return OpenFile(p_path, p_mode, True);
 	}
 	
 	// NOTE: 'GetTemporaryFileName' returns a non-native path.
@@ -4045,7 +4053,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		uint32_t t_buf_size;
 		bool t_success;
 
-		t_success = MCS_closetakingbuffer(MCprocesses[index].ohandle, t_buffer, t_buf_size) == IO_NORMAL;
+		t_success = MCS_closetakingbuffer_uint32(MCprocesses[index].ohandle, t_buffer, t_buf_size) == IO_NORMAL;
         MCprocesses[index].ohandle = nil;
         
         IO_cleanprocesses();

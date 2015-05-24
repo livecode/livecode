@@ -441,6 +441,10 @@ extern "C" MC_DLLEXPORT void MCCanvasPathCurveThroughPoint(MCCanvasPointRef p_th
 extern "C" MC_DLLEXPORT void MCCanvasPathCurveThroughPoints(MCCanvasPointRef p_through_a, MCCanvasPointRef p_through_b, MCCanvasPointRef p_to, MCCanvasPathRef &x_path);
 extern "C" MC_DLLEXPORT void MCCanvasPathClosePath(MCCanvasPathRef &x_path);
 
+extern "C" MC_DLLEXPORT void MCCanvasPathArcTo(MCCanvasPointRef p_tangent, MCCanvasPointRef p_to, MCCanvasFloat p_radius, MCCanvasPathRef &x_path);
+extern "C" MC_DLLEXPORT void MCCanvasPathEllipticArcToWithFlagsWithRadiiAsList(MCCanvasPointRef p_to, MCProperListRef p_radii, MCCanvasFloat p_rotation, bool p_largest, bool p_clockwise, MCCanvasPathRef &x_path);
+extern "C" MC_DLLEXPORT void MCCanvasPathEllipticArcToWithRadiiAsList(MCCanvasPointRef p_to, MCProperListRef p_radii, MCCanvasFloat p_rotation, MCCanvasPathRef &x_path);
+
 //////////
 
 // Effect
@@ -487,7 +491,10 @@ extern "C" MC_DLLEXPORT void MCCanvasFontGetSize(MCCanvasFontRef p_font, uintege
 extern "C" MC_DLLEXPORT void MCCanvasFontSetSize(uinteger_t p_size, MCCanvasFontRef &x_font);
 
 // Operations
-extern "C" MC_DLLEXPORT void MCCanvasFontMeasureText(MCStringRef p_text, MCCanvasFontRef p_font, MCCanvasRectangleRef& r_rect);
+extern "C" MC_DLLEXPORT void MCCanvasFontMeasureTextTypographicBounds(MCStringRef p_text, MCCanvasFontRef p_font, MCCanvasRectangleRef& r_rect);
+extern "C" MC_DLLEXPORT void MCCanvasFontMeasureTextTypographicBoundsOnCanvas(MCStringRef p_text, MCCanvasRef p_canvas, MCCanvasRectangleRef& r_rect);
+extern "C" MC_DLLEXPORT void MCCanvasFontMeasureTextImageBounds(MCStringRef p_text, MCCanvasFontRef p_font, MCCanvasRectangleRef& r_rect);
+extern "C" MC_DLLEXPORT void MCCanvasFontMeasureTextImageBoundsOnCanvas(MCStringRef p_text, MCCanvasRef p_canvas, MCCanvasRectangleRef& r_rect);
 
 //////////
 

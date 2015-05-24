@@ -773,7 +773,7 @@ bool MCBlock::fit(coord_t x, coord_t maxwidth, findex_t& r_break_index, bool& r_
             }
 			
 			if (t_this_char == '\t' ||
-				t_next_char == CODEPOINT_NONE ||
+				t_next_char == -1 ||
 				MCUnicodeCanBreakBetween(t_this_char, t_next_char))
 			{
 				t_can_break = true;

@@ -89,6 +89,7 @@
     BeginRightBinaryOperatorSyntaxRule
     BeginNeutralBinaryOperatorSyntaxRule
     EndSyntaxRule
+    DeprecateSyntaxRule
     BeginSyntaxGrammar
     EndSyntaxGrammar
     ConcatenateSyntaxGrammar
@@ -300,12 +301,14 @@
     Error_HandlerNotSuitableForPropertyGetter
     Error_HandlerNotSuitableForPropertySetter
     Error_UnsuitableStringForKeyword
-    Warning_MetadataClausesShouldComeAfterUseClauses
+    Error_IntegerLiteralOutOfRange
+    Error_NextRepeatOutOfContext
+    Error_ExitRepeatOutOfContext
     Warning_DeprecatedTypeName
     Warning_UnsuitableNameForDefinition
     Warning_UsingAsForHandlerReturnTypeDeprecated
-    Warning_UsingAsUndefinedForVoidHandlerReturnTypeDeprecated
-    Warning_UndefinedTypeDeprecated
+    Warning_UndefinedConstantDeprecated
+    Warning_DeprecatedSyntax
 
 --------------------------------------------------------------------------------
 
@@ -404,6 +407,8 @@
 'action' BeginRightBinaryOperatorSyntaxRule(NAME, NAME, INT)
 'action' BeginNeutralBinaryOperatorSyntaxRule(NAME, NAME, INT)
 'action' EndSyntaxRule()
+
+'action' DeprecateSyntaxRule(Message: STRING)
 
 'action' BeginSyntaxGrammar()
 'action' EndSyntaxGrammar()
@@ -660,11 +665,14 @@
 
 'action' Error_UnsuitableStringForKeyword(Position: POS, Token: STRING)
 
-'action' Warning_MetadataClausesShouldComeAfterUseClauses(Position: POS)
+'action' Error_IntegerLiteralOutOfRange(Position: POS)
+'action' Error_NextRepeatOutOfContext(Position: POS)
+'action' Error_ExitRepeatOutOfContext(Position: POS)
+
 'action' Warning_DeprecatedTypeName(Position: POS, NewType: STRING)
 'action' Warning_UnsuitableNameForDefinition(Position: POS, Identifier: NAME)
 'action' Warning_UsingAsForHandlerReturnTypeDeprecated(Position: POS)
-'action' Warning_UsingAsUndefinedForVoidHandlerReturnTypeDeprecated(Position: POS)
-'action' Warning_UndefinedTypeDeprecated(Position: POS)
+'action' Warning_UndefinedConstantDeprecated(Position: POS)
+'action' Warning_DeprecatedSyntax(Position: POS, Message: STRING)
 
 --------------------------------------------------------------------------------

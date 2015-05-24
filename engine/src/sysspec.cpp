@@ -1092,6 +1092,25 @@ IO_stat MCS_closetakingbuffer(IO_handle& p_stream, void*& r_buffer, size_t& r_le
 	return IO_NORMAL;
 }
 
+IO_stat MCS_closetakingbuffer_uint32(IO_handle& p_stream, void*& r_buffer, uint32_t& r_length)
+{
+    size_t t_size;
+    void *t_buffer;
+    if (MCS_closetakingbuffer(p_stream, t_buffer, t_size) != IO_NORMAL)
+        return IO_ERROR;
+    
+    if (t_size > UINT32_MAX)
+    {
+        free(t_buffer);
+        return IO_ERROR;
+    }
+    
+    r_buffer = t_buffer;
+    r_length = (uint32_t)t_size;
+    
+	return IO_NORMAL;
+}
+
 IO_stat MCS_writeat(const void *p_buffer, uint32_t p_size, uint32_t p_pos, IO_handle p_stream)
 {
     uint64_t t_old_pos;

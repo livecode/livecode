@@ -1,33 +1,35 @@
 -- declaring extension as widget, followed by identifier
-widget com.livecode.extensions.devore.svgIcon
+widget community.livecode.livecode.svgpath
 --
 
 -- dependency declarations
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
+use com.livecode.library.iconSVG
 
 -- adding metadata to ensure the extension displays correctly in livecode
 metadata title is "SVG Icon"
 metadata author is "Trevor DeVore / Benjamin Beaumont"
-metadata version is "1.0.1"
+metadata version is "1.0.2"
 
 private variable mState        as String
 private variable mColor        as Color
 private variable mHiliteColor  as Color
-private variable mPresets    	as List
 private variable  mPath    		as String
 private variable mHilited      as Boolean
 private variable mToggleHilite as Boolean
 private variable mMaintainAspectRatio as Boolean
 private variable mFlipVertically     as Boolean // some SVG Paths need to be flipped (all font awesome SVG paths do, Illustrator SVG does not)
+private variable mAngle     as Real
+variable mPathName as String
 property iconColor            get getColor          set setColor
 metadata iconColor.editor is "com.livecode.pi.color"
 property iconHiliteColor      get getHiliteColor    set setHiliteColor
 metadata iconHiliteColor.editor is "com.livecode.pi.color"
 property iconPathPreset            get getPathPreset           set setPathPreset
 metadata iconPathPreset.editor is "com.livecode.pi.enum"
-metadata iconPathPreset.options is "Star,Facebook,Camera,Chart,Bank"
+metadata iconPathPreset.options is "execute: get iconNames()"
 metadata iconPathPreset.default is "Star"
 property iconPath       get mPath           set setPath
 metadata iconPath.editor is "com.livecode.pi.text"
@@ -35,46 +37,27 @@ property isHilited            get mHilited          set setIsHilited
 property toggleHilite         get mToggleHilite     set mToggleHilite
 property maintainAspectRatio  get mMaintainAspectRatio  set setMaintainAspectRatio
 property flipVertically       get mFlipVertically       set setFlipVertically
+property iconAngle       get mAngle       set setAngle
 --
 
 ----------
 -- called when widget is created
 public handler OnCreate()
 	put "up" into mState
-	put "M1186 579l257 250l-356 52l-66 10l-30 60l-159 322v-963l59 -31l318 -168l-60 355l-12 66zM1638 841l-363 -354l86 -500q5 -33 -6 -51.5t-34 -18.5q-17 0 -40 12l-449 236l-449 -236q-23 -12 -40 -12q-23 0 -34 18.5t-6 51.5l86 500l-364 354q-32 32 -23 59.5t54 34.5 l502 73l225 455q20 41 49 41q28 0 49 -41l225 -455l502 -73q45 -7 54 -34.5t-24 -59.5z" into mPath
+	
 	put color [0,0,0] into mColor
 	put stringToColor("255,0,100") into mHiliteColor
+	put 0 into mAngle
 	
 	put false into mHilited
 	put false into mToggleHilite
 	put true into mMaintainAspectRatio
-	put true into mFlipVertically
-	
+	put false into mFlipVertically
+
 	variable tArray as Array
 	put the empty array into tArray
-	put the empty list into mPresets
-	
-	put "Star" into tArray["name"]
-	put "M1186 579l257 250l-356 52l-66 10l-30 60l-159 322v-963l59 -31l318 -168l-60 355l-12 66zM1638 841l-363 -354l86 -500q5 -33 -6 -51.5t-34 -18.5q-17 0 -40 12l-449 236l-449 -236q-23 -12 -40 -12q-23 0 -34 18.5t-6 51.5l86 500l-364 354q-32 32 -23 59.5t54 34.5 l502 73l225 455q20 41 49 41q28 0 49 -41l225 -455l502 -73q45 -7 54 -34.5t-24 -59.5z" into tArray["path"]
-	push tArray onto mPresets
-	
-	put "Facebook" into tArray["name"]
-	put "M959 1524v-264h-157q-86 0 -116 -36t-30 -108v-189h293l-39 -296h-254v-759h-306v759h-255v296h255v218q0 186 104 288.5t277 102.5q147 0 228 -12z" into tArray["path"]
-	push tArray onto mPresets
-	
-	put "Camera" into tArray["name"]
-	put "M960 864q119 0 203.5 -84.5t84.5 -203.5t-84.5 -203.5t-203.5 -84.5t-203.5 84.5t-84.5 203.5t84.5 203.5t203.5 84.5zM1664 1280q106 0 181 -75t75 -181v-896q0 -106 -75 -181t-181 -75h-1408q-106 0 -181 75t-75 181v896q0 106 75 181t181 75h224l51 136 q19 49 69.5 84.5t103.5 35.5h512q53 0 103.5 -35.5t69.5 -84.5l51 -136h224zM960 128q185 0 316.5 131.5t131.5 316.5t-131.5 316.5t-316.5 131.5t-316.5 -131.5t-131.5 -316.5t131.5 -316.5t316.5 -131.5z" into tArray["path"]
-	push tArray onto mPresets
-	
-	put "Chart" into tArray["name"]
-	put "M2048 0v-128h-2048v1536h128v-1408h1920zM1664 1024l256 -896h-1664v576l448 576l576 -576z" into tArray["path"]
-	push tArray onto mPresets
-	
-	put "Bank" into tArray["name"]
-	put "M960 1536l960 -384v-128h-128q0 -26 -20.5 -45t-48.5 -19h-1526q-28 0 -48.5 19t-20.5 45h-128v128zM256 896h256v-768h128v768h256v-768h128v768h256v-768h128v768h256v-768h59q28 0 48.5 -19t20.5 -45v-64h-1664v64q0 26 20.5 45t48.5 19h59v768zM1851 -64 q28 0 48.5 -19t20.5 -45v-128h-1920v128q0 26 20.5 45t48.5 19h1782z" into tArray["path"]
-	push tArray onto mPresets
-	
-	end handler
+	setPathPreset("Star")	
+end handler
 ----------
 
 ----------
@@ -89,6 +72,7 @@ public handler OnSave(out rProperties as Array)
 	put mToggleHilite into rProperties["toggle hilite"]
 	put mMaintainAspectRatio into rProperties["maintain aspect ratio"]
 	put mFlipVertically into rProperties["flip vertically"]
+	put mAngle into rProperties["angle"]
 	
 	return rProperties
 end handler
@@ -104,6 +88,7 @@ public handler OnLoad(in pProperties as Array)
 	put pProperties["toggle hilite"] into mToggleHilite
 	put pProperties["maintain aspect ratio"] into mMaintainAspectRatio
 	put pProperties["flip vertically"] into mFlipVertically
+	put pProperties["angle"] into mAngle
 end handler
 ----------
 
@@ -182,24 +167,18 @@ public handler getHiliteColor() as String
 end handler
 
 public handler setPathPreset(in pPresetName as String) as undefined
-	variable tElement
-	repeat for each element tElement in mPresets
-		if tElement["name"] is pPresetName then
-			put tElement["path"] into mPath
-			redraw all
-			exit repeat
-		end if
-	end repeat
+	put iconSVGPathFromName(pPresetName) into mPath
+	put pPresetName into mPathName
+	redraw all
 end handler
 
 public handler getPathPreset() as String
-	variable tElement
-	repeat for each element tElement in mPresets
-		if tElement["path"] is mPath then
-			return tElement["name"]
-		end if
-	end repeat
-	return ""
+	return mPathName
+end handler
+
+public handler setAngle(in pAngle as Number) as undefined
+	put pAngle into mAngle
+	redraw all
 end handler
 
 
@@ -213,6 +192,11 @@ public handler OnPaint()
 	if mFlipVertically then
 		scale tPath by [1,-1]
 		translate tPath by [0, the height of the bounding box of tPath]
+	end if
+	
+	if mAngle > 0 then
+		rotate tPath by mAngle
+		log the instructions of tPath
 	end if
 		
 	// scale to fit within widget and maintain aspect ratio

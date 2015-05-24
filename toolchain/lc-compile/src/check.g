@@ -43,6 +43,9 @@
 
         -- Check that suitable identifiers are used in definitions
         CheckIdentifiers(Module)
+        
+        -- Check that repeat-specific commands are appropriate
+        CheckRepeats(Module, 0)
 
 --------------------------------------------------------------------------------
 
@@ -434,15 +437,42 @@
 'condition' IsExpressionSimpleConstant(EXPRESSION)
 
     'rule' IsExpressionSimpleConstant(undefined(_)):
+
     'rule' IsExpressionSimpleConstant(true(_)):
+
     'rule' IsExpressionSimpleConstant(false(_)):
+
     'rule' IsExpressionSimpleConstant(unsignedinteger(_, _)):
+
     'rule' IsExpressionSimpleConstant(integer(_, _)):
+
     'rule' IsExpressionSimpleConstant(real(_, _)):
+
     'rule' IsExpressionSimpleConstant(string(_, _)):
+
     'rule' IsExpressionSimpleConstant(list(_, List)):
         IsExpressionListSimpleConstant(List)
-        
+
+    'rule' IsExpressionSimpleConstant(invoke(Position, invokelist(Info, nil), expressionlist(Operand, nil))):
+        Info'Name -> SyntaxName
+        (|
+            eq(SyntaxName, "PlusUnaryOperator")
+        ||
+            eq(SyntaxName, "MinusUnaryOperator")
+        |)
+        (|
+            where(Operand -> integer(_, _))
+        ||
+            where(Operand -> unsignedinteger(_, UIntValue))
+            (|
+                ge(UIntValue, 0)
+            ||
+                Error_IntegerLiteralOutOfRange(Position)
+            |)
+        ||
+            where(Operand -> real(_, _))
+        |)
+
 'condition' IsExpressionListSimpleConstant(EXPRESSIONLIST)
 
     'rule' IsExpressionListSimpleConstant(expressionlist(Head, Tail)):
@@ -484,7 +514,7 @@
 
 'sweep' CheckSyntaxDefinitions(ANY)
 
-    'rule' CheckSyntaxDefinitions(DEFINITION'syntax(Position, _, _, Class, Syntax, Methods)):
+    'rule' CheckSyntaxDefinitions(DEFINITION'syntax(Position, _, _, Class, _, Syntax, Methods)):
         -- Check that mark variables are only defined once on each path.
         PushEmptySet()
         /* S1 */ CheckSyntaxMarkDefinitions(Syntax)
@@ -1678,7 +1708,7 @@
         CheckIdIsSuitableForDefinition(Id)
         CheckIdentifiers(Signature)
 
-    'rule' CheckIdentifiers(DEFINITION'syntax(_, _, Id, _, _, _)):
+    'rule' CheckIdentifiers(DEFINITION'syntax(_, _, Id, _, _, _, _)):
         CheckIdIsSuitableForDefinition(Id)
 
     --
@@ -1700,6 +1730,45 @@
             IsNameSuitableForDefinition(Name)
         ||
             Warning_UnsuitableNameForDefinition(Position, Name)
+        |)
+
+--------------------------------------------------------------------------------
+
+'sweep' CheckRepeats(ANY, INT)
+
+    'rule' CheckRepeats(repeatforever(_, Body), Depth):
+        CheckRepeats(Body, Depth + 1)
+
+    'rule' CheckRepeats(repeatcounted(_, _, Body), Depth):
+        CheckRepeats(Body, Depth + 1)
+
+    'rule' CheckRepeats(repeatwhile(_, _, Body), Depth):
+        CheckRepeats(Body, Depth + 1)
+        
+    'rule' CheckRepeats(repeatuntil(_, _, Body), Depth):
+        CheckRepeats(Body, Depth + 1)
+
+    'rule' CheckRepeats(repeatupto(_, _, _, _, _, Body), Depth):
+        CheckRepeats(Body, Depth + 1)
+
+    'rule' CheckRepeats(repeatdownto(_, _, _, _, _, Body), Depth):
+        CheckRepeats(Body, Depth + 1)
+
+    'rule' CheckRepeats(repeatforeach(_, _, _, Body), Depth):
+        CheckRepeats(Body, Depth + 1)
+        
+    'rule' CheckRepeats(nextrepeat(Position), Depth):
+        (|
+            gt(Depth, 0)
+        ||
+            Error_NextRepeatOutOfContext(Position)
+        |)
+
+    'rule' CheckRepeats(exitrepeat(Position), Depth):
+        (|
+            gt(Depth, 0)
+        ||
+            Error_ExitRepeatOutOfContext(Position)
         |)
 
 --------------------------------------------------------------------------------

@@ -499,7 +499,7 @@
     'rule' GenerateDefinitionIndexes(event(_, _, Name, _)):
         GenerateDefinitionIndex(Name)
 
-    'rule' GenerateDefinitionIndexes(syntax(_, _, Name, _, _, _)):
+    'rule' GenerateDefinitionIndexes(syntax(_, _, Name, _, _, _, _)):
         GenerateDefinitionIndex(Name)
     
     'rule' GenerateDefinitionIndexes(_):
@@ -582,7 +582,7 @@
     'rule' GenerateExportedDefinitions(event(_, _, Id, _)):
         GenerateExportedDefinition(Id)
         
-    'rule' GenerateExportedDefinitions(syntax(_, _, Id, _, _, _)):
+    'rule' GenerateExportedDefinitions(syntax(_, _, Id, _, _, _, _)):
         GenerateExportedDefinition(Id)
         
     'rule' GenerateExportedDefinitions(_):
@@ -698,7 +698,7 @@
         Info'Index -> DefIndex
         EmitEventDefinition(DefIndex, Position, Name, TypeIndex)
         
-    'rule' GenerateDefinitions(syntax(Position, _, Id, Class, _, _)):
+    'rule' GenerateDefinitions(syntax(Position, _, Id, Class, _, _, _)):
         QuerySyntaxId(Id -> Info)
         Id'Name -> Name
         Info'Methods -> Methods
@@ -976,6 +976,8 @@
         EmitDestroyRegister(LimitRegister)
         EmitDestroyRegister(StepRegister)
 
+        EmitPopRepeatLabels()
+
     'rule' GenerateBody(Result, Context, repeatdownto(Position, Slot, Start, Finish, Step, Body)):
         QuerySymbolId(Slot -> Info)
         Info'Index -> VarIndex
@@ -1021,6 +1023,8 @@
         EmitDestroyRegister(CounterRegister)
         EmitDestroyRegister(LimitRegister)
         EmitDestroyRegister(StepRegister)
+
+        EmitPopRepeatLabels()
         
     'rule' GenerateBody(Result, Context, repeatforeach(Position, Invoke:invoke(_, IteratorInvokes, Arguments), Container, Body)):
         EmitDeferLabel(-> RepeatHead)
@@ -1057,6 +1061,8 @@
         EmitDestroyRegister(TargetReg)
 
         EmitResolveLabel(RepeatTail)
+
+        EmitPopRepeatLabels()
 
         
     'rule' GenerateBody(Result, Context, nextrepeat(Position)):
@@ -1727,6 +1733,27 @@
         EmitBeginListConstant()
         EmitListConstant(Indicies)
         EmitEndListConstant(-> Index)
+
+    'rule' EmitConstant(invoke(_, invokelist(Info, nil), expressionlist(Operand, nil)) -> Index)
+        Info'Name -> SyntaxName
+        (|
+            eq(SyntaxName, "PlusUnaryOperator")
+            EmitConstant(Operand -> Index)
+        ||
+            eq(SyntaxName, "MinusUnaryOperator")
+            (|
+                where(Operand -> integer(_, IntValue))
+                EmitIntegerConstant(-IntValue -> Index)
+            ||
+                where(Operand -> unsignedinteger(_, UIntValue))
+                EmitIntegerConstant(-UIntValue -> Index)
+            ||
+                where(Operand -> real(_, RealValue))
+                NegateReal(RealValue -> MinusRealValue)
+                EmitRealConstant(MinusRealValue -> Index)
+            |)
+        |)
+
 
 'action' EmitListConstantElements(EXPRESSIONLIST -> INTLIST)
 

@@ -29,18 +29,15 @@ Example:
 put the effective htmlText of field "description"
 
 Description:
-<overview> Use the <HTMLText> <property> to display text from a web page in a <field(keyword)>, or copy or export a <field(object)|field's> contents with the text <format|formatting> intact.</overview>
-  <value> 
+Use the <HTMLText> <property> to display text from a web page in a <field(keyword)>, or copy or export a <field(object)|field's> contents with the text <format|formatting> intact.
 The <HTMLText> of a <field(keyword)> or <chunk> is a <string>.
-If the effective keyword is specified the <htmlText> property retuns the html of the field with explicit formatting. For example if the <textFont> of the stack is set this is not included in the <htmlText> but is inlcuded in the effective <htmlText>.</value>
-   <comments> 
+If the effective keyword is specified the <htmlText> property retuns the html of the field with explicit formatting. For example if the <textFont> of the stack is set this is not included in the <htmlText> but is inlcuded in the effective <htmlText>.
+
 The <HTMLText> <property> is a representation of the styled text of the <field(keyword)>. LiveCode uses a subset of <HTML> tags that includes font, size, style, and text color information.
 
 Setting the <HTMLText> of a <field(keyword)> (or a <chunk> of a <field(keyword)>) sets both the text contents and the style attributes corresponding to the tags listed below. (Other tags are ignored.)
 
 Getting the <HTMLText> <property> reports a <string> consisting of the text of the <field(keyword)> (or <chunk> of a <field(keyword)>), with any font, size, style, or color <properties> embedded in the text in the form of the tags listed below.
-
->*Note:* The <HTMLText> of a <field(keyword)> or <chunk> includes formatting information for the text, but does not include information about the text <properties> of the <field(keyword)> itself. If you use the <HTMLText> <property> to transfer text between <field(object)|fields>, you must make sure that the destination <field(object)|field's> <textFont> and other text <properties> match the settings of the source field, if you want the text in both <field(object)|fields> to look identical.
 
 The tags translate as follows:
 
@@ -73,20 +70,23 @@ Encloses text whose textStyle is "threeDBox".
 
 &lt;font&gt; &lt;/font&gt;
 Encloses text whose <textFont>, <textSize>, <foregroundColor>, or <backgroundColor> is different from the <field(object)|field's> <default>. These five <properties> are represented as attributes of the &lt;font&gt; tag.
-        * face="fontName" appears in the &lt;font&gt; tag if the <textFont> is not the <default>.
-        * size="pointSize" appears if the <textSize> is not the <default>.
+* face="fontName" appears in the &lt;font&gt; tag if the <textFont> is not the <default>.
+* size="pointSize" appears if the <textSize> is not the <default>.
 In standard HTML, the size attribute normally takes a value between 1 and 7, representing a relative text size, with 3 being the normal text size for the web page. To accommodate this convention, when setting the <HTMLText> of a <field(keyword)>, if the pointSize is between 1 and 7, the <textSize> of the text is set to a standard value:
-pointSize            textSize
-        1               8 point
-        2               10 point
-        3               12 point
-        4               14 point
-        5               17 point
-        6               20 point
-        7               25 point
-        * lang="languageName" appears if the <textFont> includes a language specification.
-        * color="colorSpec" appears if the <foregroundColor> is not the <default>.
-        * bgcolor="colorSpec" appears if the backgroundColor is not the <default>.
+
+pointSize | textSize
+--------------------
+1 | 8 point
+2 | 10 point
+3 | 12 point
+4 | 14 point
+5 | 17 point
+6 | 20 point
+7 | 25 point
+* lang="languageName" appears if the <textFont> includes a language specification.
+* color="colorSpec" appears if the <foregroundColor> is not the <default>.
+* bgcolor="colorSpec" appears if the backgroundColor is not the <default>.
+
 When getting the <htmlText> of a <field(keyword)>, a color is represented as an <HTML> -style color consisting of a hash mark (#) followed by three 2-digit <hexadecimal> numbers, one for each of red, green, and blue.
 
 &lt;a&gt; &lt;/a&gt;
@@ -96,127 +96,128 @@ Encloses text whose textStyle is "link" or whose <linkText> <property> is not em
 Replaces a character whose imageSource <property> is not empty. The value of the <imageSource> <property> is included as the value of the "src" attribute.
 
 When you set the <HTMLText> of a <field(keyword)>, all tags other than those above are ignored, except heading tags (&lt;h1&gt;--&lt;h6&gt;), which change the size of the text in the heading element:
-tag           textSize
-&lt;h1&gt;               34 point
-&lt;h2&gt;               24 point
-&lt;h3&gt;               18 point
-&lt;h4&gt;               14 point
-&lt;h5&gt;               12 point
-&lt;h6&gt;               10 point
+tag | textSize
+--------------
+&lt;h1&gt; | 34 point
+&lt;h2&gt; | 24 point
+&lt;h3&gt; | 18 point
+&lt;h4&gt; | 14 point
+&lt;h5&gt; | 12 point
+&lt;h6&gt; | 10 point
 
 You can use LiveCode color references for the "color" and "bgcolor" attributes. LiveCode translates these into standard HTML-style color specifications.
 
 If a chunk of text includes more than one of the above styles, LiveCode encloses the text in the tags corresponding to each style, from the inside out. For example, if the word "Flail" in a field is underlined and bold, its corresponding <HTMLText> is "&lt;u&gt;&lt;b&gt;Flail&lt;/b&gt;&lt;/u&gt;".
 
 Special characters (whose ASCII value is greater than 127) are <encode|encoded> as <HTML> entities. LiveCode recognizes the following named entities:
-
-       Á       &Aacute;
-       Á       &aacute;
-                 Acirc;
-                 acirc;
-                 acute;
-                 AElig;
-                 aelig;
-                 Agrave;
-                 agrave;
-                 Aring;
-                 aring;
-                 Atilde;
-                 atilde;
-                 Auml;
-                 auml;
-                 brvbar;
-                 Ccedil;
-                 ccedil;
-                 cedil;
-                 cent;
-                 copy;
-                 curren;
-       °      deg;
-                 divide;
-       é    Eacute;
-       é    eacute;
-                 Ecirc;
-                 ecirc;
-                 Egrave;
-                 egrave;
-                 ETH;
-                 eth;
-                 Euml;
-                 euml;
-                 frac12;
-                 frac14;
-                 frac34;
-                 gt;
-                 Iacute;
-                 iacute;
-                 Icirc;
-                 icirc;
-                 iexcl;
-                 Igrave;
-                 igrave;
-                 iquest;
-                 Iuml;
-                 iuml;
-                 laquo;
-                 lt;
-                 macr;
-                 micro;
-                 middot;
-                 nbsp;
-                 not;
-                 Ntilde;
-                 ntilde;
-                 Oacute;
-                 oacute;
-                 Ocirc;
-                 ocirc;
-                 Ograve;
-                 ograve;
-                 ordf;
-                 ordm;
-                 Oslash;
-                 oslash;
-                 Otilde;
-                 otilde;
-                 Ouml;
-                 ouml;
-                 para;
-                 plusmn;
-                 pound;
-                 raquo;
-                 reg;
-                 sect;
-                 shy;
-                 sup1;
-                 sup2;
-                 sup3;
-                 szlig;
-                 THORN;
-                 thorn;
-                 times;
-                 Uacute;
-                 uacute;
-                 Ucirc;
-                 ucirc;
-                 Ugrave;
-                 ugrave;
-                 uml;
-                 Uuml;
-                 uuml;
-                 Yacute;
-                 yacute;
-                 yen;
-                 yuml;
+character | entity
+------------------
+Á | &amp;Aacute;
+á | &amp;aacute;
+Â | &amp;Acirc;
+â | &amp;acirc;
+´ | &amp;acute;
+Æ | &amp;AElig;
+æ | &amp;aelig;
+À | &amp;Agrave;
+à | &amp;agrave;
+Å | &amp;Aring;
+å | &amp;aring;
+Ã | &amp;Atilde;
+ã | &amp;atilde;
+Ä | &amp;Auml;
+ä | &amp;auml;
+¦ | &amp;brvbar;
+Ç | &amp;Ccedil;
+ç | &amp;ccedil;
+¸ | &amp;cedil;
+¢ | &amp;cent;
+© | &amp;copy;
+¤ | &amp;curren;
+° | &amp;deg;
+÷ | &amp;divide;
+É | &amp;Eacute;
+é | &amp;eacute;
+Ê | &amp;Ecirc;
+ê | &amp;ecirc;
+È | &amp;Egrave;
+è | &amp;egrave;
+Ð | &amp;ETH;
+ð | &amp;eth;
+Ë | &amp;Euml;
+ë | &amp;euml;
+½ | &amp;frac12;
+¼ | &amp;frac14;
+¾ | &amp;frac34;
+&gt; | &amp;gt;
+Í | &amp;Iacute;
+í | &amp;iacute;
+Î | &amp;Icirc;
+î | &amp;icirc;
+¡ | &amp;iexcl;
+Ì | &amp;Igrave;
+ì | &amp;igrave;
+¿ | &amp;iquest;
+Ï | &amp;Iuml;
+ï | &amp;iuml;
+« | &amp;laquo;
+&lt; | &amp;lt;
+¯ | &amp;macr;
+µ | &amp;micro;
+· | &amp;middot;
+  | &amp;nbsp;
+¬ | &amp;not;
+Ñ | &amp;Ntilde;
+ñ | &amp;ntilde;
+Ó | &amp;Oacute;
+ó | &amp;oacute;
+Ô | &amp;Ocirc;
+ô | &amp;ocirc;
+Ò | &amp;Ograve;
+ò | &amp;ograve;
+ª | &amp;ordf;
+º | &amp;ordm;
+Ø | &amp;Oslash;
+ø | &amp;oslash;
+Õ | &amp;Otilde;
+õ | &amp;otilde;
+Ö | &amp;Ouml;
+ö | &amp;ouml;
+¶ | &amp;para;
+± | &amp;plusmn;
+£ | &amp;pound;
+» | &amp;raquo;
+® | &amp;reg;
+§ | &amp;sect;
+­ | &amp;shy;
+¹ | &amp;sup1;
+² | &amp;sup2;
+³ | &amp;sup3;
+ß | &amp;szlig;
+Þ | &amp;THORN;
+þ | &amp;thorn;
+× | &amp;times;
+Ú | &amp;Uacute;
+ú | &amp;uacute;
+Û | &amp;Ucirc;
+û | &amp;ucirc;
+Ù | &amp;Ugrave;
+ù | &amp;ugrave;
+¨ | &amp;uml;
+Ü | &amp;Uuml;
+ü | &amp;uuml;
+Ý | &amp;Yacute;
+ý | &amp;yacute;
+¥ | &amp;yen;
+ÿ | &amp;yuml;
 
 Unicode characters whose numeric value is greater than 255 are encoded as "bignum" entities, with a leading ampersand and trailing semicolon. For example, the Japanese character whose numeric value is 12387 is encoded as "#12387;".
 
+>*Note:* The <HTMLText> of a <field(keyword)> or <chunk> includes formatting information for the text, but does not include information about the text <properties> of the <field(keyword)> itself. If you use the <HTMLText> <property> to transfer text between <field(object)|fields>, you must make sure that the destination <field(object)|field's> <textFont> and other text <properties> match the settings of the source field, if you want the text in both <field(object)|fields> to look identical.
+
 >*Important:* The <HTMLText> <property> uses a tag <control structure|structure> that is HTML-like, but is not completely standard <HTML>, in order to accommodate the full <range> of text styling available in LiveCode. Specifically:
-
 * The link, box and threedbox tags, as well as the bgColor attribute of the font tag, have been added to accommodate styles that don't exist in standard HTML.
-
 * The size attribute of the font tag can encode the font's point size, in addition to the standard 7 HTML sizes.
-
 * The <HTMLText> reports entities whose <ASCII|ASCII value> is between 129 and 159. These correspond to characters in the <Windows> <character set> (code page 1252) that are not legal <HTML> entities.
 
 Changes:

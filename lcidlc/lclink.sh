@@ -14,7 +14,7 @@ if [ -f "$LIVECODE_DEP_FILE" ]; then
     DEPS=$(cat "$LIVECODE_DEP_FILE")
 
     # Frameworks may not exist in older sdks so conditionally include
-    for MAJORVERSION in 3 4 5 6 7; do
+    for MAJORVERSION in 3 4 5 6 7 8 9; do
         for MINORVERSION in 0 1 2 3 4; do
             if [[ $SDK_MAJORVERSION -lt $MAJORVERSION || ($SDK_MAJORVERSION == $MAJORVERSION && $SDK_MINORVERSION -lt $MINORVERSION) ]]; then
                 DEPS="$(sed "/framework-$MAJORVERSION\.$MINORVERSION /d" <<< "$DEPS")"

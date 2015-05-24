@@ -248,6 +248,9 @@ DEFINE_ERROR_I(HandlerNotSuitableForPropertySetter, "'%s' has inappropriate sign
 
 DEFINE_ERROR_S(UnsuitableStringForKeyword, "Keyword '%s' is ambiguous with identifiers")
 
+DEFINE_ERROR(NextRepeatOutOfContext, "'next repeat' must appear within a repeat")
+DEFINE_ERROR(ExitRepeatOutOfContext, "'exit repeat' must appear within a repeat")
+
 #define DEFINE_WARNING(Name, Message) \
     void Warning_##Name(long p_position) { _Warning(p_position, Message); }
 #define DEFINE_WARNING_I(Name, Message) \
@@ -255,14 +258,13 @@ DEFINE_ERROR_S(UnsuitableStringForKeyword, "Keyword '%s' is ambiguous with ident
 #define DEFINE_WARNING_S(Name, Message) \
 	void Warning_##Name(long p_position, const char *p_string) { _WarningS(p_position, Message, p_string); }
 
-DEFINE_WARNING(MetadataClausesShouldComeAfterUseClauses, "Metadata clauses should come after use clauses")
 DEFINE_WARNING(EmptyUnicodeEscape, "Unicode escape sequence specified with no nibbles")
 DEFINE_WARNING(UnicodeEscapeTooBig, "Unicode escape sequence too big, replaced with U+FFFD");
 DEFINE_WARNING_S(DeprecatedTypeName, "Deprecated type name: use '%s'")
 DEFINE_WARNING_I(UnsuitableNameForDefinition, "All-lowercase name '%s' may cause future syntax error")
 DEFINE_WARNING(UsingAsForHandlerReturnTypeDeprecated, "Deprecated syntax: use 'returns <Type>'")
-DEFINE_WARNING(UsingAsUndefinedForVoidHandlerReturnTypeDeprecated, "Deprecated syntax: use 'returns nothing'")
-DEFINE_WARNING(UndefinedTypeDeprecated, "Deprecated: 'undefined' should not be used as a type")
+DEFINE_WARNING(UndefinedConstantDeprecated, "Deprecated keyword: use 'nothing' rather than 'undefined'");
+DEFINE_WARNING_S(DeprecatedSyntax, "Deprecated syntax: %s")
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -172,10 +172,6 @@ Boolean MCWidgetEventManager::event_mfocus(MCWidget* p_widget, int2 p_x, int2 p_
     bool t_pos_changed;
     t_pos_changed = !(p_x == m_mouse_x && p_y == m_mouse_y);
     
-    // Update the mouse position
-    m_mouse_x = p_x;
-    m_mouse_y = p_y;
-    
     // Do a quick bounds test on the targeted widget. If this fails, the widget
     // wasn't the target of the mouse focus event.
     MCRectangle p_rect;
@@ -284,7 +280,14 @@ void MCWidgetEventManager::event_draw(MCWidget* p_widget, MCDC* p_dc, const MCRe
 {
     // Ignored parameter: p_isolated
     // Ignored parameter: p_sprite
-    p_widget->OnPaint(p_dc, p_dirty);
+    
+    if (p_dc -> gettype() == CONTEXT_TYPE_PRINTER)
+        return;
+    
+    MCGContextRef t_gcontext;
+    t_gcontext = ((MCGraphicsContext *)p_dc) -> getgcontextref();
+    
+    p_widget->OnPaint(t_gcontext, p_dirty);
 }
 
 void MCWidgetEventManager::event_touch(MCWidget* p_widget, uint32_t p_id, MCEventTouchPhase p_phase, int2 p_x, int2 p_y)
@@ -583,9 +586,15 @@ bool MCWidgetEventManager::mouseScroll(MCWidget* p_widget, real32_t p_delta_x, r
     if (!widgetIsInRunMode(p_widget))
         return false;
     
-    // TODO: this should probably be conditional on handing the event
-    p_widget->OnMouseScroll(p_delta_x, p_delta_y);
-    return true;
+    // Only send a mouseScroll if the widget handles it, otherwise we pass
+    // it on.
+    if (p_widget -> handlesMouseScroll())
+    {
+        p_widget->OnMouseScroll(p_delta_x, p_delta_y);
+        return true;
+    }
+    
+    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

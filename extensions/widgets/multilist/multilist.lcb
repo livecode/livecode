@@ -64,25 +64,26 @@ constant kBlack is [0,0,0]
 public handler OnCreate()
 	
 	-- properties
-	variable tItemArray as Array
+	variable tItemList as List
 	put the empty array into mListArray
-	put the empty array into tItemArray
+	put the empty list into tItemList
 	
-	// item array, each element contains a list => label, icon, hint, next, check
-	// if element 2 is empty then no icon in list
-	// if element 3 is empty then no hint
-	// if element 4 is empty then no next chevron
-	// if element 5 is empty then not a check list
+	// item list, each element contains an array with keys label, icon, hint, next, check
+	// if icon is empty then no icon in list
+	// if hint is empty then no hint
+	// if next is empty then no next chevron
+	// if check is empty then not a check list
 	
-	put ["Item 1",the empty string,"hint 1","next","checked"] into tItemArray["element1"]
-	put ["Item 2",the empty string,the empty string,"next","unchecked"] into tItemArray["element2"]
-	put tItemArray into mListArray["ALERT TONES"]
+	push elementWithValues("Item 1",the empty string,"hint 1","next","checked") onto tItemList
+	push elementWithValues("Item 2",the empty string,the empty string,"next","unchecked") onto tItemList
 	
-	put the empty array into tItemArray
-	put ["Item 1","f0c2",the empty string,the empty string,the empty string] into tItemArray["element1"]
-	put ["Item 2","f0ed",the empty string,the empty string,the empty string] into tItemArray["element2"]
-	put ["Item 3","f0ee",the empty string,the empty string,the empty string] into tItemArray["element3"]
-	put tItemArray into mListArray["CUSTOM"]
+	put tItemList into mListArray["ALERT TONES"]
+	
+	put the empty list into tItemList
+	push elementWithValues("Item 1","f0c2",the empty string,the empty string,the empty string) onto tItemList
+	push elementWithValues("Item 2","f0ed",the empty string,the empty string,the empty string) onto tItemList
+	push elementWithValues("Item 3","f0ee",the empty string,the empty string,the empty string) onto tItemList
+	put tItemList into mListArray["CUSTOM"]
 	
 	variable tElement
 	put the empty list into mNumItems
@@ -127,25 +128,30 @@ public handler OnPaint()
 		set the stroke width of this canvas to 1
 		stroke getHLine(0,my width,mTopView+mBottom+kHeight-0.5) on this canvas
 		
-		variable tArray as Array
-		put mListArray[tElement1] into tArray
+		variable tList as List
+		put mListArray[tElement1] into tList
 		
 		variable tY as optional Integer
 		put 0 into tY
 		
 		variable tLabelRect as Rectangle
-			
+		variable tRowRectData as Array
+		put the empty array into tRowRectData
+		
 		variable tElement2
-		repeat for each element tElement2 in tArray
+		repeat for each element tElement2 in tList
 			add 1 to tY
 			
-			push [0, mTopView+mBottom+(tY)*kHeight, my width, mTopView+mBottom+(tY+1)*kHeight] onto back of mRowRectList
+			put [0, mTopView+mBottom+(tY)*kHeight, my width, mTopView+mBottom+(tY+1)*kHeight] into tRowRectData["rect"]
+			put tElement1 into tRowRectData["section"]
+			put tY into tRowRectData["index"]
+			push tRowRectData onto mRowRectList
 			
-			if element 2 of tElement2 is not empty then
+			if tElement2["icon"] is not the empty string then
 				put kPadding+kIconMargin into mMargin
 				set the paint of this canvas to getPaint("icon")
 				set the font of this canvas to getFont("icon")
-                get the char with code ((element 2 of tElement2) converted from base 16)
+                get the char with code ((tElement2["icon"]) converted from base 16)
 				fill text the result at center of getRect("icon",tY) on this canvas
 				
 			else
@@ -155,9 +161,9 @@ public handler OnPaint()
 			
 			put getRect("item",tY) into tLabelRect
 			
-			if element 5 of tElement2 is not empty then
+			if tElement2["check"] is not empty then
 			
-				if element 5 of tElement2 is "checked" then
+				if tElement2["check"] is "checked" then
 					set the paint of this canvas to getPaint("icon")
 					set the font of this canvas to getFont("icon")
 					fill text "\u{f00c}" at left of tLabelRect on this canvas
@@ -170,9 +176,9 @@ public handler OnPaint()
 				
 			set the font of this canvas to getFont("item")
 			set the paint of this canvas to getPaint("item")
-			fill text (element 1 of tElement2) at left of tLabelRect on this canvas
+			fill text tElement2["label"] at left of tLabelRect on this canvas
 				
-			if element 4 of tElement2 is not empty then
+			if tElement2["next"] is not empty then
 				add (-kPadding) to the x of tLabelRect
 				set the paint of this canvas to getPaint("lines")
 				set the font of this canvas to getFont("icon")
@@ -180,11 +186,11 @@ public handler OnPaint()
 				
 			end if
 			
-			if element 3 of tElement2 is not empty then
+			if tElement2["hint"] is not empty then
 				add (-kIconMargin) to the x of tLabelRect
 				set the paint of this canvas to getPaint("hint")
 				set the font of this canvas to getFont("hint")
-				fill text (element 3 of tElement2) at right of tLabelRect on this canvas
+				fill text tElement2["hint"] at right of tLabelRect on this canvas
 				
 			end if
 			
@@ -214,7 +220,7 @@ public handler OnPaint()
 	
 	if mPressed is true then
 		set the paint of this canvas to getPaint("row")
-		fill rectangle path of rectangle (element mSelectedRow of mRowRectList) on this canvas
+		fill rectangle path of rectangle (mRowRectList[mSelectedRow]["rect"]) on this canvas
 	end if
 	
 end handler
@@ -227,7 +233,7 @@ public handler OnMouseDown()
 			
 	variable tZ as Integer
 	repeat with tZ from 1 up to (the number of elements in mRowRectList)
-		if the click position is within rectangle (element tZ of mRowRectList) then
+		if the click position is within rectangle mRowRectList[tZ]["rect"] then
 			put true into mPressed
 			put tZ into mSelectedRow
 			redraw all
@@ -237,7 +243,13 @@ public handler OnMouseDown()
 end handler	
 
 public handler OnMouseUp()
-	post "rowSelected" with [element 1 of element mSelectedRow of mListArray]
+	variable tArray as Array
+	put mRowRectList[mSelectedRow] into tArray
+
+	variable tLabel as String
+	put mListArray[tArray["section"]][tArray["index"]]["label"] into tLabel
+
+	post "rowSelected" with [tLabel]
 	put false into mPressed
 	put 0 into mSelectedRow
 	redraw all
@@ -341,5 +353,57 @@ end handler
 private handler getHLine(in pLeft as Real, in pRight as Real, in pHeight as Real) as Path
 	return line path from point [pLeft, pHeight] to point [pRight, pHeight]
 end handler
+
+public handler getDataList() returns Array
+	variable tArray as Array
+	put the empty array into tArray
+	
+	variable tKey as String
+	variable tCount as Integer
+	put 0 into tCount
+	repeat for each key tKey in mListArray
+		put the empty array into tArray[tKey]
+		variable tElement as Array
+		repeat for each element tElement in mListArray[tKey]
+			add 1 to tCount
+			put tElement into tArray[tKey][tCount formatted as string]
+		end repeat
+	end repeat
+	return tArray
+end handler
+
+public handler setDataList(in pArray as Array)
+	variable tArray as Array
+	put the empty array into tArray
+	
+	variable tKey as String
+	repeat for each key tKey in pArray
+		put the empty array into tArray[tKey]
+		variable tElement as List
+		put the empty list into tElement
+		variable tKeys as List
+		variable tOrder as String
+		put the keys of pArray[tKey] into tKeys
+		sort tKeys in ascending order
+		repeat for each element tOrder in tKeys
+			push pArray[tKey][tOrder] onto tElement
+			put tElement into tArray[tKey]
+		end repeat
+	end repeat
+	return tArray
+end handler
+
+private handler elementWithValues(in pLabel as String, in pIcon as String, in pHint as String, in pNext as String, in pCheck as String) returns Array
+	variable tArray as Array
+	put the empty array into tArray
+	put pLabel into tArray["label"]
+	put pIcon into tArray["icon"]
+	put pHint into tArray["hint"]
+	put pNext into tArray["next"]
+	put pCheck into tArray["check"]
+	
+	return tArray
+end handler
+
 
 end widget

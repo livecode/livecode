@@ -186,14 +186,14 @@ end handler
 public handler TestParseString()
 	test "parsed (int)" when "-1" parsed as number = -1
 	test "parsed (real)" when "+1.1" parsed as number = 1.1
-	test "parsed (undefined)" when "x" parsed as number is not defined
+	test "parsed (nothing)" when "x" parsed as number is nothing
 
 	parse "-1" as number
 	test "parse (int)" when the result is -1
 	parse "+1.1" as number
 	test "parse (real)" when the result is 1.1
 	parse "x" as number
-	test "parse (undefined)" when the result is not defined
+	test "parse (nothing)" when the result is nothing
 end handler
 
 public handler TestParseStringList()
@@ -204,7 +204,7 @@ public handler TestParseStringList()
 	put the result into tList
 
 	test "parse list (defined)" when element 1 to 2 of tList is [-1, 2.2]
-	test "parse list (undefined)" when element 3 of tList is not defined
+	test "parse list (nothing)" when element 3 of tList is nothing
 end handler
 
 end module

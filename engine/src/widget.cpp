@@ -365,7 +365,7 @@ static void lookup_name_for_prop(Properties p_which, MCNameRef& r_name)
     extern LT factor_table[];
     extern const uint4 factor_table_size;
     for(uindex_t i = 0; i < factor_table_size; i++)
-        if (factor_table[i] . which == p_which)
+        if (factor_table[i] . type == TT_PROPERTY && factor_table[i] . which == p_which)
         {
             /* UNCHECKED */ MCNameCreateWithCString(factor_table[i] . token, r_name);
             return;
@@ -431,6 +431,8 @@ bool MCWidget::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
 		case P_LOCK_LOCATION:
 		case P_VISIBLE:
 		case P_INVISIBLE:
+        case P_ENABLED:
+        case P_DISABLED:
 		case P_SELECTED:
 		case P_TRAVERSAL_ON:
 		case P_OWNER:
@@ -561,6 +563,8 @@ bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
 		case P_TOOL_TIP:
 		case P_UNICODE_TOOL_TIP:
 		case P_LAYER_MODE:
+        case P_ENABLED:
+        case P_DISABLED:
             
         case P_KIND:
 			return MCControl::setprop(ctxt, p_part_id, p_which, p_index, p_effective, p_value);
@@ -658,6 +662,9 @@ IO_stat MCWidget::load(IO_handle p_stream, uint32_t p_version)
         bind(*t_kind, t_actual_rep);
     }
     
+	if ((t_stat = loadpropsets(p_stream, p_version)) != IO_NORMAL)
+		return t_stat;
+    
     return t_stat;
 }
 
@@ -690,6 +697,9 @@ IO_stat MCWidget::save(IO_handle p_stream, uint4 p_part, bool p_force_ext)
     
     // Now the widget's rep.
     if ((t_stat = IO_write_valueref_new(t_rep, p_stream)) != IO_NORMAL)
+        return t_stat;
+    
+    if ((t_stat = savepropsets(p_stream)) != IO_NORMAL)
         return t_stat;
     
     // We are done.
@@ -738,19 +748,68 @@ void MCWidget::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 
     if (m_instance != nil)
     {
-        MCGContextRef t_gcontext;
-        t_gcontext = ((MCGraphicsContext *)dc) -> getgcontextref();
-        
-        MCGContextSave(t_gcontext);
-        MCGContextSetShouldAntialias(t_gcontext, true);
-        MCGContextTranslateCTM(t_gcontext, rect . x, rect . y);
-        
-        uintptr_t t_cookie;
-        MCCanvasPush(t_gcontext, t_cookie);
-        MCwidgeteventmanager->event_draw(this, dc, dirty, p_isolated, p_sprite);
-        MCCanvasPop(t_cookie);
-        
-        MCGContextRestore(t_gcontext);
+        if (dc -> gettype() != CONTEXT_TYPE_PRINTER)
+        {
+            MCGContextRef t_gcontext;
+            t_gcontext = ((MCGraphicsContext *)dc) -> getgcontextref();
+            
+            MCGContextSave(t_gcontext);
+            MCGContextSetShouldAntialias(t_gcontext, true);
+            MCGContextTranslateCTM(t_gcontext, rect . x, rect . y);
+            
+            MCwidgeteventmanager->event_draw(this, dc, dirty, p_isolated, p_sprite);
+            
+            MCGContextRestore(t_gcontext);
+        }
+        else
+        {
+            bool t_success;
+            t_success = true;
+            
+            // Create a raster to draw into.
+            MCGRaster t_raster;
+            t_raster . format = kMCGRasterFormat_ARGB;
+            t_raster . width = dirty . width;
+            t_raster . height = dirty . height;
+            t_raster . stride = t_raster . width * sizeof(uint32_t);
+            if (t_success)
+                t_success = MCMemoryAllocate(t_raster . height * t_raster . stride, t_raster . pixels);
+            
+            MCGContextRef t_gcontext;
+            t_gcontext = nil;
+            if (t_success)
+            {
+                memset(t_raster . pixels, 0, t_raster . height * t_raster . stride);
+                t_success = MCGContextCreateWithRaster(t_raster, t_gcontext);
+            }
+            
+            MCGImageRef t_image;
+            t_image = nil;
+            if (t_success)
+            {
+                MCGContextSetShouldAntialias(t_gcontext, true);
+                MCGContextTranslateCTM(t_gcontext, rect . x - dirty . x, rect . y - dirty . y);
+                
+                OnPaint(t_gcontext, dirty);
+                
+                t_success = MCGImageCreateWithRasterAndRelease(t_raster, t_image);
+                if (t_success)
+                    t_raster . pixels = NULL;
+            }
+            
+            if (t_success)
+            {
+                MCImageDescriptor t_descriptor;
+                memset(&t_descriptor, 0, sizeof(MCImageDescriptor));
+                t_descriptor . image = t_image;
+                t_descriptor . x_scale = t_descriptor . y_scale = 1.0;
+                dc -> drawimage(t_descriptor, 0, 0, dirty . width, dirty . height, dirty . x, dirty . y);
+            }
+            
+            MCGContextRelease(t_gcontext);
+            MCGImageRelease(t_image);
+            MCMemoryDeallocate(t_raster . pixels);
+        }
     }
     else
     {
@@ -779,6 +838,17 @@ Boolean MCWidget::maskrect(const MCRectangle& p_rect)
 	MCRectangle drect = MCU_intersect_rect(p_rect, rect);
 
 	return drect.width != 0 && drect.height != 0;
+}
+
+void MCWidget::SetDisabled(MCExecContext& ctxt, uint32_t p_part_id, bool p_flag)
+{
+    bool t_is_disabled;
+    t_is_disabled = getflag(F_DISABLED);
+    
+    MCControl::SetDisabled(ctxt, p_part_id, p_flag);
+    
+    if (t_is_disabled != getflag(F_DISABLED))
+        recompute();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -818,6 +888,15 @@ bool MCWidget::handlesMouseCancel() const
     
     MCTypeInfoRef t_signature;
     return MCScriptQueryHandlerOfModule(MCScriptGetModuleOfInstance(m_instance), MCNAME("OnMouseCancel"), t_signature);
+}
+
+bool MCWidget::handlesMouseScroll() const
+{
+    if (m_instance == nil)
+        return false;
+    
+    MCTypeInfoRef t_signature;
+    return MCScriptQueryHandlerOfModule(MCScriptGetModuleOfInstance(m_instance), MCNAME("OnMouseScroll"), t_signature);
 }
 
 bool MCWidget::handlesKeyPress() const
@@ -929,17 +1008,17 @@ void MCWidget::OnDetach()
     MCEngineScriptObjectAllowAccess();
 }
 
-void MCWidget::OnPaint(MCDC* p_dc, const MCRectangle& p_rect)
+void MCWidget::OnPaint(MCGContextRef p_gcontext, const MCRectangle& p_rect)
 {
-    if (m_native_layer)
-        m_native_layer->OnPaint(p_dc, p_rect);
+    // if (m_native_layer)
+    //    m_native_layer->OnPaint(p_dc, p_rect);
     
     // Re-entering into the draw chain is distinctly unwise, so no script access
     // for OnPaint() handlers.
     MCEngineScriptObjectPreventAccess();
     
     uintptr_t t_cookie;
-    MCCanvasPush(((MCGraphicsContext*)p_dc)->getgcontextref(), t_cookie);
+    MCCanvasPush(p_gcontext, t_cookie);
     CallHandler(MCNAME("OnPaint"), nil, 0);
     MCCanvasPop(t_cookie);
     
@@ -1678,6 +1757,9 @@ private:
 		if (MCErrorIsPending())
 			return false;
 		
+		if (MCValueIsEmpty(*t_value))
+			return false;
+		
 		if (!WidgetGeometryFromLCBList(*t_value, r_width, r_height))
 			return MCErrorCreateAndThrow(kMCWidgetSizeFormatErrorTypeInfo, nil);
 		
@@ -1930,6 +2012,28 @@ extern "C" MC_DLLEXPORT void MCWidgetGetFont(MCCanvasFontRef& r_canvas_font)
     
     if (!MCCanvasFontCreateWithMCFont(*t_font, r_canvas_font))
         return;
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetGetEnabled(bool& r_enabled)
+{
+    if (MCwidgetobject == nil)
+    {
+        MCWidgetThrowNoCurrentWidgetError();
+        return;
+    }
+    
+    r_enabled = !MCwidgetobject -> getflag(F_DISABLED);
+}
+
+extern "C" MC_DLLEXPORT void MCWidgetGetDisabled(bool& r_disabled)
+{
+    if (MCwidgetobject == nil)
+    {
+        MCWidgetThrowNoCurrentWidgetError();
+        return;
+    }
+    
+    r_disabled = MCwidgetobject -> getflag(F_DISABLED);
 }
 
 extern "C" MC_DLLEXPORT void MCWidgetGetMousePosition(bool p_current, MCCanvasPointRef& r_point)

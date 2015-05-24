@@ -99,7 +99,15 @@ bool MCEngineAddExtensionFromModule(MCStringRef p_filename, MCScriptModuleRef p_
 {
     if (!MCScriptEnsureModuleIsUsable(p_module))
     {
-        MCresult -> sets("module is not usable");
+        MCAutoErrorRef t_error;
+        if (MCErrorCatch(&t_error))
+        {
+            MCresult -> setvalueref(MCErrorGetMessage(*t_error));
+        }
+        else
+        {
+            MCresult -> sets("module is not usable");
+        }
         return false;
     }
     
@@ -524,11 +532,24 @@ bool MCExtensionConvertToScriptType(MCExecContext& ctxt, MCValueRef& x_value)
             if (!MCArrayCreateMutable(t_array))
                 return false;
             for(uindex_t i = 0; i < MCProperListGetLength((MCProperListRef)x_value); i++)
-                if (!MCArrayStoreValueAtIndex(t_array, i + 1, MCProperListFetchElementAtIndex((MCProperListRef)x_value, i)))
+            {
+                // 'Copy' the value (as we don't own it).
+                MCAutoValueRef t_new_element;
+                t_new_element = MCProperListFetchElementAtIndex((MCProperListRef)x_value, i);
+                
+                // Attempt to convert it to a script type.
+                if (!MCExtensionConvertToScriptType(ctxt, InOut(t_new_element)))
                 {
                     MCValueRelease(t_array);
                     return false;
                 }
+                
+                if (!MCArrayStoreValueAtIndex(t_array, i + 1, *t_new_element))
+                {
+                    MCValueRelease(t_array);
+                    return false;
+                }
+            }
             if (!MCArrayCopyAndRelease(t_array, t_array))
             {
                 MCValueRelease(t_array);

@@ -983,36 +983,41 @@ Parse_stat MCCreate::parse(MCScriptPoint &sp)
 			return PS_ERROR;
 		}
 	}
-	else if (sp.skip_token(SP_FACTOR, TT_IN) == PS_NORMAL ||
-             (otype == CT_STACK && sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL))
+	else
     {
-        if (!script_only_stack)
+        // AL-2015-05-21: [[ Bug 15405 ]] Allow 'create widget as ... in group ...'
+        if (otype == CT_WIDGET)
         {
-            container = new MCChunk(False);
-            if (container->parse(sp, False) != PS_NORMAL)
+            if (sp.skip_token(SP_FACTOR, TT_PREP, PT_AS) != PS_NORMAL)
             {
-                MCperror->add
-                (PE_CREATE_BADBGORCARD, sp);
+                MCperror -> add(PE_CREATE_BADTYPE, sp);
+                return PS_ERROR;
+            }
+            if (sp.parseexp(False, True, &kind) != PS_NORMAL)
+            {
+                MCperror -> add(PE_CREATE_BADTYPE, sp);
                 return PS_ERROR;
             }
         }
-        else
+        
+        if (sp.skip_token(SP_FACTOR, TT_IN) == PS_NORMAL ||
+            (otype == CT_STACK && sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL))
         {
-            MCperror -> add(PE_CREATE_BADTYPE, sp);
-            return PS_ERROR;
-        }
-    }
-    else if (otype == CT_WIDGET)
-    {
-        if (sp.skip_token(SP_FACTOR, TT_PREP, PT_AS) != PS_NORMAL)
-        {
-            MCperror -> add(PE_CREATE_BADTYPE, sp);
-            return PS_ERROR;
-        }
-        if (sp.parseexp(False, True, &kind) != PS_NORMAL)
-        {
-            MCperror -> add(PE_CREATE_BADTYPE, sp);
-            return PS_ERROR;
+            if (!script_only_stack)
+            {
+                container = new MCChunk(False);
+                if (container->parse(sp, False) != PS_NORMAL)
+                {
+                    MCperror->add
+                    (PE_CREATE_BADBGORCARD, sp);
+                    return PS_ERROR;
+                }
+            }
+            else
+            {
+                MCperror -> add(PE_CREATE_BADTYPE, sp);
+                return PS_ERROR;
+            }
         }
     }
 	return PS_NORMAL;

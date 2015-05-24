@@ -260,13 +260,13 @@ Summary: Sent when the mouse pointer hovers over the widget's rect.
 
 Name: OnMouseStillHover
 Type: message
-Syntax: OnMouseHover
+Syntax: OnMouseStillHover
 Summary: Sent when the mouse pointer continues to hover over the widget's rect.
 
 
 Name: OnMouseCancelHover
 Type: message
-Syntax: OnMouseHover
+Syntax: OnMouseCancelHover
 Summary: Sent when the mouse pointer continues to hover outside of the widget's rect.
 
 
@@ -317,7 +317,7 @@ Summary: Sent when an object is dragged onto the widget rect.
 
 Name: OnDragLeave
 Type: message
-Syntax: OnDragEnter
+Syntax: OnDragLeave
 Summary: Sent when an object is dragged outside of the widget rect.
 
 
@@ -341,7 +341,7 @@ Summary: Sent when the widget begins to be dragged
 
 Name: OnDragFinish
 Type: message
-Syntax: OnDragStart
+Syntax: OnDragFinish
 Summary: Sent when the widget finishes being dragged
 
 
@@ -493,6 +493,8 @@ public foreign handler MCWidgetSetWidth(in pWidth as Real) returns nothing binds
 public foreign handler MCWidgetGetHeight(out rHeight as Real) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetSetHeight(in pHeight as Real) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetFont(out rFont as Font) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetEnabled(out rEnabled as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetDisabled(out rDisabled as CBool) returns nothing binds to "<builtin>"
 
 /* 
 Summary:	Returns the widget script object.
@@ -582,6 +584,29 @@ syntax MyFont is expression
 begin
     MCWidgetGetFont(output)
 end syntax
+
+/*
+Summary:    Returns the enabled state of the widget.
+
+Returns:    The enabled state of the widget.
+*/
+syntax MyEnabled is expression
+    "my" "enabled"
+begin
+    MCWidgetGetEnabled(output)
+end syntax
+
+/*
+Summary:    Returns the disabled state of the widget.
+
+Returns:    The disabled state of the widget.
+*/
+syntax MyDisabled is expression
+    "my" "disabled"
+begin
+    MCWidgetGetDisabled(output)
+end syntax
+
 
 // ---------- Synchronous and asynchronous ("current") event information ---------- //
 
@@ -778,11 +803,11 @@ end syntax
 
 // ---------- popups ---------- //
 public foreign handler MCWidgetExecPopupMenuAtLocation(in pMenu as String, in pAt as Point) returns optional String binds to "<builtin>"
-public foreign handler MCWidgetExecPopupAtLocation(in pKind as string, in pAt as Point) as any binds to "<builtin>"
-public foreign handler MCWidgetExecPopupAtLocationWithProperties(in pKind as string, in pAt as Point, in pProperties as array) as any binds to "<builtin>"
-public foreign handler MCWidgetEvalIsPopup(out rPopup as bool) as undefined binds to "<builtin>"
-public foreign handler MCWidgetExecClosePopup() as undefined binds to "<builtin>"
-public foreign handler MCWidgetExecClosePopupWithResult(in pResult as any) as undefined binds to "<builtin>"
+public foreign handler MCWidgetExecPopupAtLocation(in pKind as String, in pAt as Point) returns any binds to "<builtin>"
+public foreign handler MCWidgetExecPopupAtLocationWithProperties(in pKind as String, in pAt as Point, in pProperties as Array) returns any binds to "<builtin>"
+public foreign handler MCWidgetEvalIsPopup(out rPopup as bool) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecClosePopup() returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecClosePopupWithResult(in pResult as any) returns nothing binds to "<builtin>"
 
 
 /*

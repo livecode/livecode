@@ -3123,7 +3123,13 @@ void MCInterfaceExecCreateWidget(MCExecContext& ctxt, MCStringRef p_new_name, MC
     Boolean wasvisible = t_widget->isvisible();
     if (p_force_invisible)
         t_widget->setflag(!p_force_invisible, F_VISIBLE);
-    t_widget->setparent(MCdefaultstackptr->getcard());
+    
+    // AL-2015-05-21: [[ Bug 15405 ]] Honour specified parent container when creating widget
+    if (p_container == nil)
+        t_widget->setparent(MCdefaultstackptr->getcard());
+    else
+        t_widget -> setparent(p_container);
+    
     t_widget->attach(OP_CENTER, false);
     
     if (p_new_name != nil)
@@ -3683,23 +3689,31 @@ void MCInterfaceExportBitmap(MCExecContext &ctxt, MCImageBitmap *p_bitmap, int p
 	}
 	
 	IO_handle t_stream = nil;
-	/* UNCHECKED */ t_stream = MCS_fakeopenwrite();
-	t_success = MCImageExport(p_bitmap, (Export_format)p_format, t_ps_ptr, p_dither, p_metadata, t_stream, nil);
+	t_stream = MCS_fakeopenwrite();
+    if (t_stream == nil)
+        t_success = false;
+    if (t_success)
+        t_success = MCImageExport(p_bitmap, (Export_format)p_format, t_ps_ptr, p_dither, p_metadata, t_stream, nil);
 	
 	MCAutoByteArray t_autobuffer;
 	void *t_buffer = nil;
 	size_t t_size = 0;
-	MCS_closetakingbuffer(t_stream, t_buffer, t_size);
-	t_autobuffer.Give((char_t*)t_buffer, t_size);
+    if (t_success &&
+        MCS_closetakingbuffer(t_stream, t_buffer, t_size) != IO_NORMAL)
+        t_success = false;
+    
+    if (t_success)
+        t_autobuffer.Give((char_t*)t_buffer, t_size);
 
+    if (t_success)
+        t_success = t_autobuffer.CreateDataAndRelease(r_data);
+    
 	if (!t_success)
 	{
 		ctxt.LegacyThrow(EE_EXPORT_CANTWRITE);
 		
 		return;
 	}
-	
-	/* UNCHECKED */ t_autobuffer.CreateDataAndRelease(r_data);
 }
 
 void MCInterfaceExportBitmapAndRelease(MCExecContext &ctxt, MCImageBitmap *p_bitmap, int p_format, MCInterfaceImagePaletteSettings *p_palette, bool p_dither, MCImageMetadata* p_metadata, MCDataRef &r_data)

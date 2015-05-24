@@ -612,6 +612,7 @@ inline bool MCGRectangleIsEqual(const MCGRectangle &p_a, const MCGRectangle &p_b
 }
 
 MCGRectangle MCGRectangleIntersection(const MCGRectangle &rect_1, const MCGRectangle &rect_2);
+MCGRectangle MCGRectangleUnion(const MCGRectangle &rect_1, const MCGRectangle &rect_2);
 
 inline MCGPoint MCGPointMake(MCGFloat p_x, MCGFloat p_y)
 {
@@ -782,6 +783,8 @@ void MCGPathLineTo(MCGPathRef path, MCGPoint end_point);
 void MCGPathQuadraticTo(MCGPathRef path, MCGPoint control_point, MCGPoint end_point);
 void MCGPathCubicTo(MCGPathRef path, MCGPoint first_control_point, MCGPoint second_control_point, MCGPoint end_point);
 void MCGPathArcTo(MCGPathRef path, MCGSize radii, MCGFloat rotation, bool large_arc, bool sweep, MCGPoint end_point);
+void MCGPathArcToBestFit(MCGPathRef path, MCGSize p_radii, MCGFloat p_rotation, MCGPoint p_end_point);
+void MCGPathArcToTangent(MCGPathRef path, const MCGPoint &p_tangent, const MCGPoint &p_end, MCGFloat p_radius);
 void MCGPathCloseSubpath(MCGPathRef path);
 
 void MCGPathThicken(MCGPathRef path, const MCGStrokeAttr& attr, MCGPathRef& r_thick_path);
@@ -790,7 +793,8 @@ void MCGPathSimplify(MCGPathRef path, MCGPathRef& r_simple_path);
 
 bool MCGPathTransform(MCGPathRef path, const MCGAffineTransform &p_transform);
 
-bool MCGPathGetLastPoint(MCGPathRef self, MCGPoint &r_last);
+bool MCGPathGetCurrentPoint(MCGPathRef self, MCGPoint &r_current);
+bool MCGPathGetPreviousPoint(MCGPathRef self, MCGPoint &r_last);
 bool MCGPathGetBoundingBox(MCGPathRef path, MCGRectangle &r_bounds);
 
 typedef bool (*MCGPathIterateCallback)(void *p_context, MCGPathCommand p_command, MCGPoint *p_points, uint32_t p_point_count);
@@ -936,6 +940,7 @@ MCGFloat MCGContextMeasureText(MCGContextRef context, const char *text, uindex_t
 void MCGContextDrawPlatformText(MCGContextRef context, const unichar_t *text, uindex_t length, MCGPoint location, const MCGFont &font, bool p_rtl);
 // MM-2014-04-16: [[ Bug 11964 ]] Updated prototype to take transform parameter.
 MCGFloat MCGContextMeasurePlatformText(MCGContextRef context, const unichar_t *text, uindex_t length, const MCGFont &p_font, const MCGAffineTransform &p_transform);
+bool MCGContextMeasurePlatformTextImageBounds(MCGContextRef context, const unichar_t *text, uindex_t length, const MCGFont &p_font, const MCGAffineTransform &p_transform, MCGRectangle &r_bounds);
 
 ////////////////////////////////////////////////////////////////////////////////
 

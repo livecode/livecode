@@ -108,9 +108,27 @@ MCRunHandlerError (void)
 	MCErrorRef t_error;
 
 	if (MCErrorCatch (t_error))
+	{
 		t_reason = MCErrorGetMessage (t_error);
+
+		/* Print stack trace */
+		uindex_t t_num_frames = MCErrorGetDepth (t_error);
+		for (uindex_t t_depth = 0; t_depth < t_num_frames; ++t_depth)
+		{
+			MCAutoStringRef t_frame;
+			/* UNCHECKED */ MCStringFormat (&t_frame,
+			                                "#%u\tat %@:%u:%u\n",
+			                                t_depth,
+			                                MCErrorGetTargetAtLevel (t_error, t_depth),
+			                                MCErrorGetRowAtLevel (t_error, t_depth),
+			                                MCErrorGetColumnAtLevel (t_error, t_depth));
+			MCRunPrintMessage (stderr, *t_frame);
+		}
+	}
 	else
+	{
 		/* UNCHECKED */ MCStringCopy (MCSTR("Unknown error"), &t_reason);
+	}
 
 	/* UNCHECKED */ MCStringFormat (&t_message,
 	                                "ERROR: Uncaught error: %@\n",

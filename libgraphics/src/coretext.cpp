@@ -315,4 +315,30 @@ MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_
 	return t_width;	
 }
 
+bool MCGContextMeasurePlatformTextImageBounds(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font, const MCGAffineTransform &p_transform, MCGRectangle &r_bounds)
+{
+	bool t_success;
+	t_success = true;
+	
+	CTLineRef t_line;
+	t_line = NULL;
+	if (t_success)
+	{
+		t_line = unitext_to_cfline(p_text, p_length, p_font);
+		t_success = t_line != NULL;
+	}
+	
+	CGRect t_bounds;
+	if (t_success)
+	{
+		t_bounds = CTLineGetImageBounds(t_line, s_measure_context);
+		r_bounds = MCGRectangleMake(t_bounds.origin.x, - (t_bounds.origin.y + t_bounds.size.height), t_bounds.size.width, t_bounds.size.height);
+	}
+	
+	if (t_line != NULL)
+		CFRelease(t_line);
+	
+	return t_success;
+}
+
 ////////////////////////////////////////////////////////////////////////////////

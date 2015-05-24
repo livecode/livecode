@@ -140,9 +140,7 @@ MCErrorCreateWithMessage (MCTypeInfoRef p_typeinfo,
     if (p_info != nil)
         self -> info = MCValueRetain(p_info);
     
-    self -> target = nil;
-    self -> row = 0;
-    self -> column = 0;
+    self -> backtrace = nil;
     
     r_error = self;
     
@@ -159,12 +157,24 @@ bool MCErrorCreate(MCTypeInfoRef p_typeinfo, MCArrayRef p_info, MCErrorRef& r_er
 
 bool MCErrorUnwind(MCErrorRef p_error, MCValueRef p_target, uindex_t p_row, uindex_t p_column)
 {
-    if (p_error -> target != nil)
-        return true;
+    MCErrorFrame *t_frame;
+    if (!MCMemoryNew(t_frame))
+        return false;
     
-    p_error -> target = MCValueRetain(p_target);
-    p_error -> row = p_row;
-    p_error -> column = p_column;
+    t_frame -> caller = nil;
+    t_frame -> target = MCValueRetain(p_target);
+    t_frame -> row = p_row;
+    t_frame -> column = p_column;
+    
+    if (p_error -> backtrace == nil)
+        p_error -> backtrace = t_frame;
+    else
+    {
+        MCErrorFrame *t_other_frame;
+        for(t_other_frame = p_error -> backtrace; t_other_frame -> caller != nil; t_other_frame = t_other_frame -> caller)
+            ;
+        t_other_frame -> caller = t_frame;
+    }
     
     return true;
 }
@@ -186,22 +196,59 @@ MCStringRef MCErrorGetMessage(MCErrorRef self)
 
 uindex_t MCErrorGetDepth(MCErrorRef self)
 {
-    return self -> target != nil ? 1 : 0;
+    if (self -> backtrace == nil)
+        return 0;
+    
+    uindex_t t_depth;
+    t_depth = 0;
+    for(MCErrorFrame *t_frame = self -> backtrace; t_frame != nil; t_frame = t_frame -> caller)
+        t_depth += 1;
+    
+    return t_depth;
 }
 
-MCValueRef MCErrorGetTargetAtLevel(MCErrorRef self, uindex_t level)
+////////////////////////////////////////////////////////////////////////////////
+
+static MCErrorFrame *__MCErrorGetFrameAtLevel(MCErrorRef self, uindex_t p_level)
 {
-    return self -> target;
+    MCErrorFrame *t_frame;
+    for(t_frame = self -> backtrace; t_frame != nil && p_level != 0; t_frame = t_frame -> caller)
+        p_level -= 1;
+    
+    if (p_level != 0)
+        return nil;
+    
+    return t_frame;
 }
 
-uindex_t MCErrorGetRowAtLevel(MCErrorRef self, uindex_t row)
+MCValueRef MCErrorGetTargetAtLevel(MCErrorRef self, uindex_t p_level)
 {
-    return self -> row;
+    MCErrorFrame *t_frame;
+    t_frame = __MCErrorGetFrameAtLevel(self, p_level);
+    if (t_frame == nil)
+        return nil;
+    
+    return t_frame -> target;
 }
 
-uindex_t MCErrorGetColumnAtLevel(MCErrorRef self, uindex_t column)
+uindex_t MCErrorGetRowAtLevel(MCErrorRef self, uindex_t p_level)
 {
-    return self -> column;
+    MCErrorFrame *t_frame;
+    t_frame = __MCErrorGetFrameAtLevel(self, p_level);
+    if (t_frame == nil)
+        return 0;
+    
+    return t_frame -> row;
+}
+
+uindex_t MCErrorGetColumnAtLevel(MCErrorRef self, uindex_t p_level)
+{
+    MCErrorFrame *t_frame;
+    t_frame = __MCErrorGetFrameAtLevel(self, p_level);
+    if (t_frame == nil)
+        return 0;
+    
+    return t_frame -> column;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -271,7 +318,7 @@ MCErrorCreateAndThrowWithMessageV (MCTypeInfoRef p_error_type,
     }
     
     MCAutoErrorRef t_error;
-    if (!MCErrorCreate(p_error_type, *t_info, &t_error))
+    if (!MCErrorCreateWithMessage(p_error_type, p_message, *t_info, &t_error))
         return false;
     
     return MCErrorThrow(*t_error);
@@ -352,7 +399,15 @@ void __MCErrorDestroy(__MCError *self)
     MCValueRelease(self -> typeinfo);
     MCValueRelease(self -> message);
     MCValueRelease(self -> info);
-    MCValueRelease(self -> target);
+    while(self -> backtrace != nil)
+    {
+        MCErrorFrame *t_frame;
+        t_frame = self -> backtrace;
+        self -> backtrace = self -> backtrace -> caller;
+        
+        MCValueRelease(t_frame -> target);
+        MCMemoryDelete(t_frame);
+    }
 }
 
 hash_t __MCErrorHash(__MCError *self)
