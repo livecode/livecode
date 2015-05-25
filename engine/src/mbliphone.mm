@@ -97,7 +97,7 @@ struct LibInfo
 	struct LibExport *exports;
 };
 
-void *load_module(const char *p_path)
+void *load_module(const char *p_path) __attribute__((__visibility__("default")))
 {
 	const char *t_last_component;
 	t_last_component = strrchr(p_path, '/');
@@ -135,7 +135,8 @@ void *load_module(const char *p_path)
 	return NULL;	
 }
 
-void *resolve_symbol(void *p_module, const char *p_symbol)
+void *resolve_symbol(void *p_module, const char *p_symbol) __attribute__((__visibility__("default")))
+
 {
 	LibInfo *t_lib;
 	t_lib = (LibInfo *)((uintptr_t)p_module & ~1);

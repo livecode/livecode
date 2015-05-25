@@ -2423,6 +2423,6 @@ EXTERNAL_END_DECLARATIONS
 extern "C"
 {
 	extern struct LibInfo __libinfo;
-	__attribute((section("__DATA,__libs"))) volatile struct LibInfo *__libinfoptr_revdb = &__libinfo;
+	__attribute((section("__DATA,__libs"))) volatile struct LibInfo *__libinfoptr_revdb __attribute__((__visibility__("default"))) = &__libinfo;
 }
 #endif
