@@ -58,7 +58,7 @@
 			[
 				# Java writes the output file based on the class name.
 				# Use some Make nastiness to correct the output name
-				'<(PRODUCT_DIR)/>(java_classes_dir_name)/$(subst\t/../livecode/engine,,$(subst\t<(INTERMEDIATE_DIR)/,,$(subst\tsrc/java/,,<(RULE_INPUT_DIRNAME))))/<(RULE_INPUT_ROOT).class',
+				'<(PRODUCT_DIR)/>(java_classes_dir_name)/$(subst\t../livecode/engine/,,$(subst\t<(INTERMEDIATE_DIR)/,,$(subst\tsrc/java/,,<(RULE_INPUT_DIRNAME))))/<(RULE_INPUT_ROOT).class',
 			],
 
 			'action':
