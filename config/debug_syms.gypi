@@ -42,5 +42,15 @@
 				],
 			}
 		],
+		[
+			'OS == "win"',
+			{
+				# Not yet implemented...
+				'variables':
+				{
+					'debug_syms_outputs': [],
+				},
+			},
+		],
 	],
 }
