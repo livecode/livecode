@@ -1054,7 +1054,8 @@ void MCStack::view_device_updatewindow(MCRegionRef p_region)
 			//   to prevent a flicker back to an old frame when making the opengl layer visible.
 			view_device_updatewindow(p_region);
 
-			MCAndroidEngineRemoteCall("hideBitmapView", "v", nil);
+            // MW-2015-05-06: [[ Bug 15232 ]] Prevent black flash when enabling setting acceleratedRendering to true
+			MCAndroidEngineRemoteCall("hideBitmapViewInTime", "v", nil);
 		}
 	}
 
