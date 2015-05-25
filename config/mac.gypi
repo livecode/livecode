@@ -25,6 +25,7 @@
 		'GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS': 'NO',
 		'ALWAYS_SEARCH_USER_PATHS': 'NO',
 		'MACOSX_DEPLOYMENT_TARGET': '10.6',
+		'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES',
 	},
 	
 	'target_defaults':
@@ -38,7 +39,7 @@
 			'exe_suffix': '',
 			'lib_suffix': '.dylib',
 			'ext_suffix': '.so',
-			'debug_info_suffix': '.dsym',
+			'debug_info_suffix': '.dSYM',
 		},
 		
 		'target_conditions':

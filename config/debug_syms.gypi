@@ -2,7 +2,7 @@
 	'conditions':
 	[
 		[
-			'OS == "linux" or OS == "android"',
+			'OS != "win"',
 			{
 				'variables':
 				{
@@ -34,6 +34,7 @@
 						'action':
 						[
 							'<(extract-debug-symbols_path)',
+							'<(OS)',
 							'>(debug_info_suffix)',
 							'>@(debug_syms_inputs)',
 						],

@@ -33,6 +33,7 @@
 		'DEBUG_INFORMATION_FORMAT': 'dwarf-with-dsym',
 		'ARCHS_STANDARD': 'armv7 arm64',
 		'CLANG_CXX_LIBRARY': 'libc++',
+		'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES',
 		
 		'CODE_SIGN_IDENTITY[sdk=iphoneos*]': 'iPhone Developer',
 	},
@@ -48,7 +49,7 @@
 			'exe_suffix': '',
 			'lib_suffix': '.dylib',
 			'ext_suffix': '.so',
-			'debug_info_suffix': '.dsym',
+			'debug_info_suffix': '.dSYM',
 		},
 		
 		'defines':
