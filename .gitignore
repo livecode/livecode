@@ -92,6 +92,8 @@ xcprojects/
 _build/
 _cache/
 build/
+*-bin/
+build-*/
 
 # SDKs          #
 #################
