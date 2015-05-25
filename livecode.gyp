@@ -99,55 +99,31 @@
 				'LiveCode-all',
 			],
 			
-			'conditions':
+			'variables':
+			{
+				'debug_syms_inputs%': [ '<@(debug_syms_inputs)' ],
+				'variables':
+				{
+					'debug_syms_inputs': [ '>@(dist_files)' ],
+				},
+			},
+			
+			'includes':
 			[
-				[
-					'OS == "linux" or OS == "android"',
-					{
-						'variables':
-						{
-							'debug_symbol_files':
-							[
-								'>!@(["sh", "-c", "echo $@ | xargs -n1 | sed -e \\\"s/$/>(debug_info_suffix)/g\\\"", "echo", \'>@(dist_files)\'])',
-							],
-						},
-			
-						'actions':
-						[
-							{
-								'action_name': 'extract-debug-symbols',
-								'message': 'Extracting debug symbols',
-					
-								'inputs':
-								[
-									'>@(dist_files)',
-									'./tools/extract-debug-symbols.sh',
-								],
-					
-								'outputs':
-								[
-									'<@(debug_symbol_files)',
-								],
-					
-								'action':
-								[
-									'./tools/extract-debug-symbols.sh',
-									'>(debug_info_suffix)',
-									'<@(_inputs)',
-								],
-							},
-						],
-			
-						'all_dependent_settings':
-						{
-							'variables':
-							{
-								'dist_aux_files': [ '<@(debug_symbol_files)' ],
-							},
-						},
-					}
-				],
+				'config/debug_syms.gypi',
 			],
+			
+			'all_dependent_settings':
+			{
+				'variables':
+				{
+					'dist_aux_files': [ '<@(debug_syms_outputs)' ],
+					'variables':
+					{
+						'debug_syms_inputs%': [ '<@(debug_syms_inputs)' ],
+					},
+				},
+			},
 		},
 		
 		{
