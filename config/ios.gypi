@@ -34,6 +34,8 @@
 		'ARCHS_STANDARD': 'armv7 arm64',
 		'CLANG_CXX_LIBRARY': 'libc++',
 		'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES',
+		'COPY_PHASE_STRIP': 'NO',
+		'STRIP_INSTALLED_PRODUCT': 'NO',
 		
 		'CODE_SIGN_IDENTITY[sdk=iphoneos*]': 'iPhone Developer',
 	},
@@ -132,7 +134,6 @@
 		{
 			'xcode_settings':
 			{
-				'COPY_PHASE_STRIP': 'NO',
 				'GCC_OPTIMIZATION_LEVEL': '0',
 				'ARCHS': '<(target_arch)'
 			},

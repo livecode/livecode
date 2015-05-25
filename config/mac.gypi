@@ -26,6 +26,8 @@
 		'ALWAYS_SEARCH_USER_PATHS': 'NO',
 		'MACOSX_DEPLOYMENT_TARGET': '10.6',
 		'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES',
+		'COPY_PHASE_STRIP': 'NO',
+		'STRIP_INSTALLED_PRODUCT': 'NO',
 	},
 	
 	'target_defaults':
@@ -114,7 +116,6 @@
 			'xcode_settings':
 			{
 				'ARCHS': 'i386',
-				'COPY_PHASE_STRIP': 'NO',
 				'GCC_OPTIMIZATION_LEVEL': '0',
 			},
 		},
