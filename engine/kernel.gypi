@@ -228,61 +228,15 @@
 				[
 					'OS == "android"',
 					{
-						'rules':
+						'variables':
+						{
+							'java_classes_dir_name': 'classes_livecode_community',
+						},
+						
+						# Include the rules for compiling Java
+						'includes':
 						[
-								
-							{
-								'rule_name': 'aidl_interface_gen',
-								'extension': 'aidl',
-					
-								'message': '  AIDL <(RULE_INPUT_DIRNAME)/<(RULE_INPUT_ROOT).java',
-								'process_outputs_as_sources': 1,
-					
-								'inputs':
-								[
-									'<(aidl_framework_path)',
-								],
-					
-								'outputs':
-								[
-									'<(INTERMEDIATE_DIR)/<(RULE_INPUT_DIRNAME)/<(RULE_INPUT_ROOT).java',
-								],
-					
-								'action':
-								[
-									'<(aidl_path)',
-									'-Isrc/java',
-									'-p' '<@(_inputs)',
-									'-o' '<(INTERMEDIATE_DIR)/src/java',
-									'<(RULE_INPUT_PATH)',
-								],
-							},
-				
-							{
-								'rule_name': 'javac',
-								'extension': 'java',
-					
-								'message': '  JAVAC <(RULE_INPUT_DIRNAME)/<(RULE_INPUT_ROOT).class',
-					
-								'outputs':
-								[
-									# Java writes the output file based on the class name.
-									# Use some Make nastiness to correct the output name
-									'<(PRODUCT_DIR)/classes_livecode_community/$(subst\t<(INTERMEDIATE_DIR)/,,$(subst\tsrc/java/,,<(RULE_INPUT_DIRNAME)))/<(RULE_INPUT_ROOT).class',
-								],
-					
-								'action':
-								[
-									'<(javac_path)',
-									'-d', '<(PRODUCT_DIR)/classes_livecode_community',
-									'-source', '1.5',
-									#'-target', '1.5',
-									'-implicit:none',
-									'-cp', '<(java_classpath)',
-									'-sourcepath', 'src/java:<(INTERMEDIATE_DIR)/src/java',
-									'<(RULE_INPUT_PATH)',
-								],
-							},
+							'../config/java.gypi',
 						],
 					}
 				]
