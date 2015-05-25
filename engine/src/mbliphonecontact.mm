@@ -569,10 +569,14 @@ bool MCCreatePerson(MCArrayRef p_contact, ABRecordRef &r_person)
 		{
 			if (!s_property_map[i].has_labels)
 			{
-				if (MCStringGetLength((MCStringRef)t_value) > 0)
+                // PM-2015-05-25: [[ Bug 15403 ]] Convert the valueref to a stringref
+                MCExecContext ctxt(nil,nil,nil);
+                MCAutoStringRef t_value_string;
+                ctxt.ConvertToString(t_value, &t_value_string);
+				if (MCStringGetLength(*t_value_string) > 0)
 				{
 					t_success = ABRecordSetValue(t_person, *s_property_map[i].property,
-									 [NSString stringWithMCStringRef: (MCStringRef)t_value],
+									 [NSString stringWithMCStringRef: *t_value_string],
 									 nil);
 				}
 			}
@@ -599,10 +603,14 @@ bool MCCreatePerson(MCArrayRef p_contact, ABRecordRef &r_person)
 
 								if (!s_property_map[i].has_keys)
 								{
-									if (MCStringGetLength((MCStringRef)t_index_value) > 0)
+                                    // PM-2015-05-25: [[ Bug 15403 ]] Convert the valueref to a stringref
+                                    MCExecContext ctxt(nil,nil,nil);
+                                    MCAutoStringRef t_index_value_string;
+                                    /* UNCHECKED */ ctxt.ConvertToString(t_index_value, &t_index_value_string);
+									if (MCStringGetLength(*t_index_value_string) > 0)
 									{
 										t_success = ABMultiValueAddValueAndLabel(t_multi_value,
-																				 [NSString stringWithMCStringRef: (MCStringRef)t_value],
+																				 [NSString stringWithMCStringRef: *t_index_value_string],
 																				 s_label_map[j].label,
 																				 nil);
 									}
