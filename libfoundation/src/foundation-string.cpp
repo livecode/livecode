@@ -3972,15 +3972,16 @@ bool MCStringFindAndReplaceNative(MCStringRef self, MCStringRef p_pattern, MCStr
 			// we update the offset, and need just room up to it.
 			uindex_t t_space_needed;
 			if (t_found)
-				t_space_needed = t_next_offset + p_replacement -> char_count;
+				t_space_needed = (t_next_offset - t_offset) + p_replacement -> char_count;
 			else
 			{
 				t_next_offset = self -> char_count;
-				t_space_needed = t_next_offset;
+				t_space_needed = t_next_offset - t_offset;
 			}
             
 			// Expand the buffer as necessary.
-			if (t_output_length + t_space_needed > t_output_capacity)
+            // MW-2015-05-26: [[ Bug 15352 ]] Allocate more memory
+			if (t_output_length + t_space_needed + 1 > t_output_capacity)
 			{
 				if (t_output_capacity == 0)
 					t_output_capacity = 4096;
@@ -4293,15 +4294,16 @@ bool MCStringFindAndReplace(MCStringRef self, MCStringRef p_pattern, MCStringRef
 			// we update the offset, and need just room up to it.
 			uindex_t t_space_needed;
 			if (t_found)
-				t_space_needed = t_next_offset + p_replacement -> char_count;
+				t_space_needed = (t_next_offset - t_offset) + p_replacement -> char_count;
 			else
 			{
 				t_next_offset = self -> char_count;
-				t_space_needed = t_next_offset;
+				t_space_needed = t_next_offset - t_offset;
 			}
 
 			// Expand the buffer as necessary.
-			if (t_output_length + t_space_needed > t_output_capacity)
+            // MW-2015-05-26: [[ Bug 15352 ]] Allocate more memory
+			if (t_output_length + t_space_needed + 1 > t_output_capacity)
 			{
 				if (t_output_capacity == 0)
 					t_output_capacity = 4096;
