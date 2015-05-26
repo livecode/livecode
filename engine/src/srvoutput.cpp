@@ -518,10 +518,12 @@ bool MCServerSetCookie(MCStringRef p_name, MCStringRef p_value, uint32_t p_expir
 	if (t_success)
 	{
 		// SN-2015-05-14: [[ MCservercgicookies Refactor ]] Now stores StringRefs
-		MCservercgicookies[t_index].name = MCValueRetain(p_name);
-		MCservercgicookies[t_index].value = MCValueRetain(*t_encoded);
-		MCservercgicookies[t_index].path = MCValueRetain(p_path);
-		MCservercgicookies[t_index].domain = MCValueRetain(p_domain);
+        //  Use MCValueAssign since we can overwrite another value - otherwise,
+        //  will be initialised to NULL by MCMemoryResizeArray
+		MCValueAssign(MCservercgicookies[t_index].name, p_name);
+		MCValueAssign(MCservercgicookies[t_index].value, *t_encoded);
+		MCValueAssign(MCservercgicookies[t_index].path, p_path);
+		MCValueAssign(MCservercgicookies[t_index].domain, p_domain);
 		MCservercgicookies[t_index].expires = p_expires;
 		MCservercgicookies[t_index].secure = p_secure;
 		MCservercgicookies[t_index].http_only = p_http_only;

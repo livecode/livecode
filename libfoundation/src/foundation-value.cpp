@@ -272,6 +272,20 @@ bool MCValueInterAndRelease(MCValueRef p_value, MCValueRef& r_unique_value)
 	return __MCValueInter((__MCValue *)p_value, true, r_unique_value);
 }
 
+// SN-2015-05-26: [[ MCStringGetCString Removal ]] Add new function to debug the
+//  ValueRefs, since MCStringGetCString is gone.
+void MCValueShow(MCValueRef p_value)
+{
+    MCStringRef t_description;
+    
+    if (MCValueCopyDescription(p_value, t_description))
+    {
+        MCLog("%@", t_description);
+        MCValueRelease(t_description);
+    }
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // MW-2014-03-21: [[ Faster ]] Memory allocation is relatively slow, therefore
