@@ -591,12 +591,10 @@ bool MCCreatePerson(MCArrayRef p_contact, ABRecordRef &r_person)
 						{
 							uindex_t t_index = 1;
 							MCValueRef t_index_value;
-							
-							while ((t_success = MCArrayFetchValueAtIndex((MCArrayRef)t_element, t_index++, t_index_value)))
+                            
+                            // PM-2015-05-21: [[ Bug 14792 ]] t_success should not become false if MCArrayFetchValueAtIndex fails
+							while ((MCArrayFetchValueAtIndex((MCArrayRef)t_element, t_index++, t_index_value)))
 							{
-								if (t_index_value == nil)
-									break;
-
 								if (!s_property_map[i].has_keys)
 								{
 									if (MCStringGetLength((MCStringRef)t_index_value) > 0)
