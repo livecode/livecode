@@ -65,8 +65,7 @@ SOURCES=\
 	linuxstubs.cpp notify.cpp eventqueue.cpp \
 	objectprops.cpp objectpropsets.cpp variablevalue.cpp internal.cpp mcutility.cpp name.cpp \
 	redraw.cpp tilecache.cpp tilecachesw.cpp syslnxregion.cpp fieldstyledtext.cpp paragrafattr.cpp \
-	fonttable.cpp fieldrtf.cpp fieldhtml.cpp stackcache.cpp quicktime.cpp \
-	sysunxthreads.cpp, stacktile.cpp
+	fonttable.cpp fieldrtf.cpp fieldhtml.cpp stackcache.cpp quicktime.cpp
 
 linuxstubs.cpp: src/linux.stubs
 	../prebuilt/bin/Revolution.lnx "../tools/weak_stub_maker.lc" <./src/linux.stubs >./src/linuxstubs.cpp
