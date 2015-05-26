@@ -10,6 +10,11 @@
 			'target_name': 'libFoundation',
 			'type': 'static_library',
 			
+			'dependencies':
+			[
+				'../prebuilt/libicu.gyp:libicu',
+			],
+			
 			'include_dirs':
 			[
 				'include',
