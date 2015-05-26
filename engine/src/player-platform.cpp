@@ -2135,14 +2135,14 @@ Boolean MCPlayer::prepare(MCStringRef options)
     
     // PM-2015-01-26: [[ Bug 14435 ]] Avoid prepending the defaultFolder or the stack folder
     //  to the filename property. Use resolved_filename to set the "internal" absolute path
-    MCAutoStringRef *t_resolved_filename;
+    MCAutoStringRef t_resolved_filename;
     bool t_path_resolved = false;
     t_path_resolved = resolveplayerfilename(filename, &t_resolved_filename);
     
     if (!t_path_resolved)
         MCValueAssign(resolved_filename, kMCEmptyString);
     else
-        MCvalueAssign(resolved_filename, *t_resolved_filename);
+        MCValueAssign(resolved_filename, *t_resolved_filename);
 
     if (MCStringBeginsWithCString(resolved_filename, (const char_t*)"https:", kMCStringOptionCompareCaseless)
             // SN-2014-08-14: [[ Bug 13178 ]] Check if the sentence starts with 'http:' instead of 'https'
@@ -2162,7 +2162,7 @@ Boolean MCPlayer::prepare(MCStringRef options)
     
     // PM-2014-12-17: [[ Bug 14233 ]] If an invalid filename is used then keep the previous dimensions of the player rect instead of displaying only the controller
     // PM-2014-12-17: [[ Bug 14232 ]] Update the result in case a filename is invalid or the file is corrupted
-    if (hasinvalidfilename() || !t_resolved_filename)
+    if (hasinvalidfilename() || !t_path_resolved)
     {
         MCresult->sets("could not create movie reference");
         return False;

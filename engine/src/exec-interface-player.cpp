@@ -344,7 +344,7 @@ void MCPlayer::SetFileName(MCExecContext& ctxt, MCStringRef p_name)
     }
 #ifdef FEATURE_PLATFORM_PLAYER
     // PM-2014-12-22: [[ Bug 14232 ]] Update the result in case a an invalid/corrupted filename is set more than once in a row
-    else if (MCStringIsEqualTo(p_name, filename, kMCStringOptionCompareCaseless) && (hasinvalidfilename() || !t_success)
+    else if (MCStringIsEqualTo(p_name, filename, kMCStringOptionCompareCaseless) && (hasinvalidfilename() || !t_resolved_path))
         ctxt . SetTheResultToCString("could not create movie reference");
 #endif
 
