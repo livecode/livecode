@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globdefs.h"
 #include "filedefs.h"
 #include "parsedef.h"
+#include "exec.h"
 
 //#include "execpt.h"
 
@@ -842,7 +843,13 @@ bool MCJavaMapFromArray(JNIEnv *p_env, MCArrayRef p_array, jobject &r_object)
 		{
 			jstring t_jstring = nil;
 			if (t_success)
-				t_success = MCJavaStringFromStringRef(p_env, (MCStringRef)t_element, t_jstring);
+            {
+                // PM-2015-05-25: [[ Bug 15403 ]] Make sure we pass a stringref to MCJavaStringFromStringRef
+                MCExecContext ctxt(nil,nil,nil);
+                MCAutoStringRef t_element_string;
+                /* UNCHECKED */ ctxt.ConvertToString(t_element, &t_element_string);
+				t_success = MCJavaStringFromStringRef(p_env, *t_element_string, t_jstring);
+            }
 			if (t_success)
 				t_jobj = t_jstring;
 		}
