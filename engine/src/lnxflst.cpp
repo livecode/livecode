@@ -102,8 +102,8 @@ MCNewFontlist::~MCNewFontlist()
 	while (m_fonts)
     {
 		MCNewFontStruct* t_font = m_fonts;
-		m_fonts = t_font -> next;
-		MCValueRelease(t_font -> family);
+        m_fonts = t_font -> next;
+        MCValueRelease(t_font -> family);
 		pango_font_description_free(t_font -> description);
 		delete t_font;
 	}

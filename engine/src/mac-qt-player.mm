@@ -51,7 +51,14 @@
 - (NSArray*)loadedRanges;
 - (QTTime)maxTimeLoaded;
 @end
- 
+
+// PM-2015-05-12: [[ Bug 14349 ]] Subclass QTMoviewView and override hitTest method to make mouse events respond to the superview
+@interface com_runrev_livecode_MCQTPlayerView : QTMovieView
+
+- (NSView *) hitTest: (NSPoint) aPoint;
+
+@end
+
 class MCQTKitPlayer: public MCPlatformPlayer
 {
 public:
@@ -95,7 +102,7 @@ private:
     static Boolean MovieActionFilter(MovieController mc, short action, void *params, long refcon);
     
     QTMovie *m_movie;
-    QTMovieView *m_view;
+    com_runrev_livecode_MCQTPlayerView *m_view;
     CVImageBufferRef m_current_frame;
     QTTime m_last_current_time;
     QTTime m_buffered_time;
@@ -144,7 +151,16 @@ private:
 }
 
 @end
- 
+
+// PM-2015-05-12: [[ Bug 14349 ]] Override hitTest method to make mouse events respond to the superview
+@implementation com_runrev_livecode_MCQTPlayerView
+
+- (NSView *) hitTest: (NSPoint) aPoint
+{
+    return [self superview];
+}
+
+@end
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -165,8 +181,8 @@ inline NSComparisonResult do_QTTimeCompare (QTTime time, QTTime otherTime)
 MCQTKitPlayer::MCQTKitPlayer(void)
 {
 	m_movie = [[NSClassFromString(@"QTMovie") movie] retain];
-	m_view = [[NSClassFromString(@"QTMovieView") alloc] initWithFrame: NSZeroRect];
-	m_observer = [[com_runrev_livecode_MCQTKitPlayerObserver alloc] initWithPlayer: this];
+    m_view = [[com_runrev_livecode_MCQTPlayerView alloc] initWithFrame: NSZeroRect];
+    m_observer = [[com_runrev_livecode_MCQTKitPlayerObserver alloc] initWithPlayer: this];
     
 	m_current_frame = nil;
 	

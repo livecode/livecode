@@ -42,7 +42,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "context.h"
 #include "redraw.h"
-#include "systhreads.h"
 #include "objectstream.h"
 
 #include "exec.h"
@@ -3100,7 +3099,6 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
     if (m_recompute)
     {
         // MM-2014-08-05: [[ Bug 13012 ]] Put locks around recompute to prevent threading issues.
-        MCThreadMutexLock(MCfieldmutex);
         if (m_recompute)
         {
             if (state & CS_SIZE)
@@ -3115,7 +3113,6 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
             }
             m_recompute = false;
         }
-        MCThreadMutexUnlock(MCfieldmutex);
     }
 
 	MCRectangle frect = getfrect();
