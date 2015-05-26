@@ -4,6 +4,7 @@
 OPENSSL_VERSION="1.0.1m"
 CURL_VERSION="7.21.1"
 ICU_VERSION="52.1"
+CEF_VERSION="3.2062.1796"
 
 # Package directory
 PACKAGE_DIR="`pwd`/packaged"
@@ -34,6 +35,7 @@ function doPackage {
 	local OPENSSL_TAR="${PACKAGE_DIR}/OpenSSL-${OPENSSL_VERSION}${SUFFIX}.tar"
 	local CURL_TAR="${PACKAGE_DIR}/Curl-${CURL_VERSION}${SUFFIX}.tar"
 	local ICU_TAR="${PACKAGE_DIR}/ICU-${ICU_VERSION}${SUFFIX}.tar"
+	local CEF_TAR="${PACKAGE_DIR}/CEF-${CEF_VERSION}${SUFFIX}.tar"
 
 	# Package up OpenSSL
 	if [ -f "${LIBPATH}/libcustomcrypto.a" ] ; then
@@ -70,6 +72,13 @@ function doPackage {
 		tar -cf "${ICU_TAR}" ${ICU_LIBS}
 	fi
 
+	# Package up CEF
+	if [ "$PLATFORM" = "win32" ] ; then
+		tar -cf "${CEF_TAR}" "${LIBPATH}/CEF"
+	elif [ "$PLATFORM" = "mac" ] ; then
+		tar -cf "${CEF_TAR}" "${LIBPATH}/Chromium Embedded Framework.framework"
+	fi
+
 	# Compress the packages
 	if [ -f "${OPENSSL_TAR}" ] ; then
 		bzip2 -z --best "${OPENSSL_TAR}"
@@ -80,6 +89,9 @@ function doPackage {
 	if [ -f "${ICU_TAR}" ] ; then
 		bzip2 -z --best "${ICU_TAR}"
 	fi
+	if [ -f "${CEF_TAR}" ] ; then
+		bzip2 -z --best "${CEF_TAR}"
+	fi
 }
 
 # Package up the various libraries and headers
@@ -88,11 +100,11 @@ for PLATFORM in `find lib/ -type d -mindepth 1 -maxdepth 1` ; do
 	if [ "${PLATFORM}" == "mac" ] ; then
 		doPackage "${PLATFORM}" "Universal" 
 	elif [ "${PLATFORM}" == "ios" ] ; then
-		for SUBPLATFORM in `find "lib/${PLATFORM}/" -type d -mindepth 1` ; do
+		for SUBPLATFORM in `find "lib/${PLATFORM}/" -type d -mindepth 1 -maxdepth 1` ; do
 			doPackage "${PLATFORM}" "Universal" $(basename "${SUBPLATFORM}")
 		done
 	else
-		for ARCH in `find "lib/${PLATFORM}/" -type d -mindepth 1` ; do
+		for ARCH in `find "lib/${PLATFORM}/" -type d -mindepth 1 -maxdepth 1` ; do
 			doPackage "${PLATFORM}" $(basename "${ARCH}")
 		done
 	fi	

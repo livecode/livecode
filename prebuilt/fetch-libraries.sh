@@ -4,6 +4,7 @@
 VERSION_OpenSSL="1.0.1m"
 VERSION_Curl="7.21.1"
 VERSION_ICU="52.1"
+VERSION_CEF="3.2062.1796"
 
 # Libraries to fetch
 PLATFORMS=( mac linux win32 android ios )
@@ -13,9 +14,9 @@ ARCHS_ios=( Universal )
 ARCHS_win32=( i386 )
 ARCHS_linux=( i386 x86_64 )
 LIBS_android=( OpenSSL ICU )
-LIBS_mac=( OpenSSL ICU )
+LIBS_mac=( OpenSSL ICU CEF )
 LIBS_ios=( OpenSSL ICU )
-LIBS_win32=( OpenSSL Curl ICU )
+LIBS_win32=( OpenSSL Curl ICU CEF )
 LIBS_linux=( OpenSSL Curl ICU )
 SUBPLATFORMS_ios=( iPhoneSimulator5.1 iPhoneSimulator6.1 iPhoneSimulator7.1 iPhoneSimulator8.2 iPhoneSimulator8.3 iPhoneOS8.2 iPhoneOS8.3 )
 
