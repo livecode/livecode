@@ -12,7 +12,7 @@
 			
 			'dependencies':
 			[
-				'../libcore/libcore.gyp:libCore',
+				'../libfoundation/libfoundation.gyp:libFoundation',
 				'../thirdparty/libskia/libskia.gyp:libskia',
 			],
 			
