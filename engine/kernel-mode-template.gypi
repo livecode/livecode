@@ -3,7 +3,7 @@
 	[
 		'encode_version',
 		
-		'../libcore/libcore.gyp:libCore',
+		'../libfoundation/libfoundation.gyp:libFoundation',
 		'../libgraphics/libgraphics.gyp:libGraphics',
 	],
 

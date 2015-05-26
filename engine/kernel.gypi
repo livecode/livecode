@@ -7,7 +7,7 @@
 			
 			'dependencies':
 			[
-				'../libcore/libcore.gyp:libCore',
+				'../libfoundation/libfoundation.gyp:libFoundation',
 				#'../libexternal/libexternal.gyp:libExternal',
 				'../libgraphics/libgraphics.gyp:libGraphics',
 				

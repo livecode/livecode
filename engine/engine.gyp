@@ -119,7 +119,7 @@
 				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl',
 				
 				# Because our headers are so messed up...
-				'../libcore/libcore.gyp:libCore',
+				'../libfoundation/libfoundation.gyp:libFoundation',
 				'../libgraphics/libgraphics.gyp:libGraphics',
 			],
 			
@@ -138,7 +138,7 @@
 			[
 				'kernel-server',
 				
-				'../libcore/libcore.gyp:libCore',
+				'../libfoundation/libfoundation.gyp:libFoundation',
 				'../libgraphics/libgraphics.gyp:libGraphics',
 			],
 			
