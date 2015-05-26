@@ -22,6 +22,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define LIBRARY_EXPORT
 #elif defined(_LINUX)
 #define LIBRARY_EXPORT
+#elif defined(TARGET_PLATFORM_MOBILE) && defined(TARGET_SUBPLATFORM_IPHONE)
+#define LIBRARY_EXPORT
 #endif
 
 unsigned int *DBObject::idcounter = NULL;

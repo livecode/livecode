@@ -1,29 +1,0 @@
-bundle revxml
-	import ../libexternal
-	import ../libxml
-	import ../libz	support-ppc 10.3.9	support-386 10.4.0	define _MACOSX	enable c++-exceptions
-	include ../libexternal/include
-	include ../libxml/include
-	include ../libz/include	compile-c++ src/revxml.cpp
-	compile-c++ src/xmlattribute.cpp
-	compile-c++ src/xmldoc.cpp
-	compile-c++ src/xmlelement.cpp	compile-plist rsrc/revxml-Info.plist
-	link-framework Carbon
-	link-library external	link-library xml
-	link-library z
-	output revxml
-
-dylib server-revxml
-	import ../libexternal
-	import ../libxml
-	import ../libz	support-ppc 10.3.9	support-386 10.4.0	define _MACOSX	enable c++-exceptions
-	include ../libexternal/include
-	include ../libxml/include
-	include ../libz/include	compile-c++ src/revxml.cpp
-	compile-c++ src/xmlattribute.cpp
-	compile-c++ src/xmldoc.cpp
-	compile-c++ src/xmlelement.cpp
-	link-framework CoreServices
-	link-library external	link-library xml
-	link-library z
-	output server-revxml

@@ -108,7 +108,7 @@ void MCInternalObjectListenerGetListeners(MCExecContext& ctxt, MCStringRef*& r_l
 MCLicenseParameters MClicenseparameters =
 {
 	NULL, NULL, NULL, kMCLicenseClassNone, 0,
-	10, 10, 50, 10,
+	0, 0, 0, 0,
 	0,
 	NULL,
 };
@@ -308,11 +308,17 @@ IO_stat MCDispatch::startup(void)
 	/* UNCHECKED */ MCFiltersDecompress(t_compressed, t_decompressed);
 	MCValueRelease(t_compressed);
     
-    IO_handle stream = MCS_fakeopen(MCDataGetBytePtr(t_decompressed), MCDataGetLength(t_decompressed));
+	IO_handle stream = MCS_fakeopen(MCDataGetBytePtr(t_decompressed), MCDataGetLength(t_decompressed));
 	if ((stat = MCdispatcher -> readfile(NULL, NULL, stream, sptr)) != IO_NORMAL)
 	{
-		MCS_close(stream);
-		return stat;
+		if (MCdispatcher -> loadfile(MCstacknames[0], sptr) != IO_NORMAL)
+		{
+			MCresult -> sets("failed to read stackfile");
+			return IO_ERROR;
+		}
+		
+		MCMemoryMove(MCstacknames, MCstacknames + 1, sizeof(MCStack *) * (MCnstacks - 1));
+		MCnstacks -= 1;
 	}
 
 	MCS_close(stream);
@@ -322,12 +328,12 @@ IO_stat MCDispatch::startup(void)
 
 	// Temporary fix to make sure environment stack doesn't get lost behind everything.
 #if defined(_MACOSX)
-	ProcessSerialNumber t_psn = { 0, kCurrentProcess };
-	SetFrontProcess(&t_psn);
+        ProcessSerialNumber t_psn = { 0, kCurrentProcess };
+        SetFrontProcess(&t_psn);
 #elif defined(_WINDOWS)
-	SetForegroundWindow(((MCScreenDC *)MCscreen) -> getinvisiblewindow());
+        SetForegroundWindow(((MCScreenDC *)MCscreen) -> getinvisiblewindow());
 #endif
-	
+
 	MCenvironmentactive = True;
 	sptr -> setfilename(MCcmd);
 	MCdefaultstackptr = MCstaticdefaultstackptr = stacks;
@@ -369,11 +375,6 @@ IO_stat MCDispatch::startup(void)
 		// if (sptr -> getscript() != NULL)
 		//	memset(sptr -> getscript(), 0, strlen(sptr -> getscript()));
 
-		destroystack(sptr, True);
-		MCtopstackptr = NULL;
-		MCquit = False;
-		MCenvironmentactive = False;
-
 		send_relaunch();
         MCNewAutoNameRef t_name;
         if(!ctxt . ConvertToName(t_valueref, &t_name))
@@ -390,8 +391,8 @@ IO_stat MCDispatch::startup(void)
 
 		if (sptr == NULL && (stat = loadfile(MCNameGetString(*t_name), sptr)) != IO_NORMAL)
 			return stat;
-	}
-
+    }
+    
 	if (!MCquit)
 	{
 		// OK-2007-11-13 : Bug 5525, after opening the IDE engine, the allowInterrupts should always default to false,

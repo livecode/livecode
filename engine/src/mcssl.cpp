@@ -963,7 +963,7 @@ bool export_system_root_cert_stack(STACK_OF(X509) *&r_cert_stack)
 	t_success = NULL != (t_cert_stack = sk_X509_new(NULL));
 
 	if (t_success)
-		t_success = NULL != (t_cert_store = CertOpenSystemStore(NULL, L"ROOT"));
+		t_success = NULL != (t_cert_store = CertOpenSystemStoreW(NULL, L"ROOT"));
 
 	while (t_success && NULL != (t_cert_enum = CertEnumCertificatesInStore(t_cert_store, t_cert_enum)))
 	{
@@ -1009,7 +1009,7 @@ bool export_system_crl_stack(STACK_OF(X509_CRL) *&r_crls)
 	t_success = NULL != (t_crl_stack = sk_X509_CRL_new(NULL));
 
 	if (t_success)
-		t_success = NULL != (t_cert_store = CertOpenSystemStore(NULL, L"ROOT"));
+		t_success = NULL != (t_cert_store = CertOpenSystemStoreW(NULL, L"ROOT"));
 
 	while (t_success && NULL != (t_crl_enum = CertEnumCRLsInStore(t_cert_store, t_crl_enum)))
 	{

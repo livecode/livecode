@@ -931,7 +931,8 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
     {
         MCnoui = True;
         MCscreen = new MCUIDC;
-        /* UNCHECKED */ MCStackSecurityCreateStack(stacks);
+        /* UNCHECKED */ MCStackSecurityCreateStack(sptr);
+        stacks = sptr;
         MCdefaultstackptr = MCstaticdefaultstackptr = stacks;
         stacks->setparent(this);
         stacks->setname_cstring("revScript");

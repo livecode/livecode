@@ -874,6 +874,7 @@ void MCS_fakewriteat(IO_handle stream, uint4 p_pos, const void *p_buffer, uint4 
 // MW-2005-02-22: Make these global for opensslsocket.cpp
 static Boolean wsainited = False;
 HWND sockethwnd;
+HANDLE g_socket_wakeup;
 
 Boolean wsainit()
 {
@@ -892,6 +893,8 @@ Boolean wsainit()
 			if (!MCnoui)
 				sockethwnd = CreateWindowA(MC_WIN_CLASS_NAME, "MCsocket", WS_POPUP, 0, 0,
 				                          8, 8, NULL, NULL, MChInst, NULL);
+			else
+				g_socket_wakeup = CreateEvent(NULL, FALSE, FALSE, NULL);
 		}
 	}
 	MCS_seterrno(0);
@@ -1043,6 +1046,17 @@ void MCS_saveresfile(const MCString &s, const MCString data)
 
 Boolean MCS_poll(real8 delay, int fd)
 {
+	extern HANDLE g_notify_wakeup;
+	HANDLE t_handles[2];
+	t_handles[0] = g_notify_wakeup;
+	t_handles[1] = g_socket_wakeup;
+
+	int t_num_handles = 2;
+	if (t_handles[1] == NULL)
+		t_num_handles = 1;
+
+	MsgWaitForMultipleObjects(t_num_handles, t_handles, FALSE, delay * 1000.0, 0);
+
 	Boolean handled = False;
 	int4 n;
 	uint2 i;
@@ -1081,9 +1095,7 @@ Boolean MCS_poll(real8 delay, int fd)
 			handled = True;
 		}
 	}
-	struct timeval timeoutval;
-	timeoutval.tv_sec = (long)delay;
-	timeoutval.tv_usec = (long)((delay - floor(delay)) * 1000000.0);
+	struct timeval timeoutval = {0, 0};
 	n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
 	if (n <= 0)
 		return handled;

@@ -3,8 +3,18 @@
 use warnings;
 use Text::ParseWords;
 
-# Read all the data available on stdin
-my @spec = <STDIN>;
+my $inputFile = $ARGV[0];
+my $outputFile = $ARGV[1];
+
+# Read all of the input data
+open INPUT, "<$inputFile"
+	or die "Could not open input file \"$inputFile\": $!";
+my @spec = <INPUT>;
+close INPUT;
+
+# Open the output file
+open OUTPUT, ">$outputFile"
+	or die "Could not open output file \"$outputFile\": $!";
 
 # Modules
 my %moduleSymbols = ();
@@ -124,6 +134,7 @@ foreach my $module (keys %moduleDetails)
 
 output "}";
 
+close OUTPUT;
 
 sub generateModule
 {
@@ -433,5 +444,5 @@ sub output
 		$line = "";
 	}
 	
-	print STDOUT "$line\n";
+	print OUTPUT "$line\n";
 }

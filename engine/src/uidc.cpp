@@ -41,6 +41,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "redraw.h"
 #include "notify.h"
 #include "dispatch.h"
+#include "notify.h"
+#include "mode.h"
+#include "eventqueue.h"
 
 #include "graphicscontext.h"
 
@@ -201,6 +204,8 @@ MCMovingList::~MCMovingList()
 
 MCUIDC::MCUIDC()
 {
+	MCNotifyInitialize();
+    
 	messageid = 0;
 	nmessages = maxmessages = 0;
 	messages = NULL;
@@ -224,6 +229,8 @@ MCUIDC::~MCUIDC()
 	while (nmessages != 0)
 		cancelmessageindex(0, True);
 	delete messages;
+    
+	MCNotifyFinalize();
 }
 
 
@@ -814,10 +821,13 @@ Boolean MCUIDC::getmouseclick(uint2 button, Boolean& r_abort)
 
 Boolean MCUIDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 {
+	MCwaitdepth++;
+    
 	real8 curtime = MCS_time();
 	if (duration < 0.0)
 		duration = 0.0;
 	real8 exittime = curtime + duration;
+    Boolean abort = False;
 	Boolean done = False;
 	Boolean donepending = False;
 	do
@@ -828,8 +838,17 @@ Boolean MCUIDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		real8 eventtime = exittime;
 		donepending = handlepending(curtime, eventtime, dispatch);
 		siguser();
+        
+		MCModeQueueEvents();
+        
+        if ((MCNotifyDispatch(dispatch == True) ||
+             donepending) && anyevent ||
+            abort)
+            break;
+        
 		if (MCquit)
-			return True;
+            break;
+        
 		if (curtime < eventtime)
 		{
 			done = MCS_poll(donepending ? 0 : eventtime - curtime, 0);
@@ -837,7 +856,11 @@ Boolean MCUIDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		}
 	}
 	while (curtime < exittime  && !(anyevent && (done || donepending)));
-	return False;
+    if (MCquit)
+        abort = True;
+    MCwaitdepth--;
+    
+	return abort;
 }
 
 void MCUIDC::pingwait(void)

@@ -1,13 +1,0 @@
-bundle revpdfprinter
-	import ../libcairo
-	import ../libcore
-	import ../libz	support-ppc 10.3.9	support-386 10.4.0	define _MACOSX
-	include src
-	include ../libcore/include
-	include ../libcairo/src
-	include ../engine/include	compile-c++ src/revpdfprinter.cpp
-	compile-c++ src/revpdfprinter_osx.cpp	compile-plist rsrc/revpdfprinter-Info.plist	link-framework Carbon
-	link-library core
-	link-library z
-	link-library cairo
-	link-framework Carbon	output revpdfprinter

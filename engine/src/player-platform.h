@@ -64,7 +64,7 @@ struct MCPlayerCallback
 class MCPlayer : public MCControl, public MCPlayerInterface
 {
 	MCPlayer *nextplayer;
-    
+
     MCColor controllerbackcolor;
     MCColor controllermaincolor;
     MCColor selectedareacolor;

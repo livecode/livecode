@@ -963,7 +963,8 @@ MCRectangle MCStack::view_setgeom(const MCRectangle &p_rect)
 
 void MCStack::view_update_geometry()
 {
-	if (m_view_need_resize)
+	if (m_view_need_resize &&
+        window != NULL)
 		view_platform_setgeom(m_view_rect);
 	
 	m_view_need_resize = false;
