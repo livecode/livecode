@@ -3,12 +3,7 @@
 	{
 		# Sources shared between ctocppdesktop and server builds
 		'engine_common_source_files':
-		[
-			# Group "Core - Foundation"
-			'src/name.h',
-			'src/rawarray.h',
-			'src/name.cpp',
-			
+		[	
 			# Group "Core - Graphics"
 			'include/customprinter.h',
 			'src/bitmapeffect.h',
@@ -66,7 +61,6 @@
 			'src/cmds.h',
 			'src/constant.h',
 			'src/date.h',
-			'src/execpt.h',
 			'src/executionerrors.h',
 			'src/express.h',
 			'src/external.h',
@@ -99,7 +93,6 @@
 			'src/cmdss.cpp',
 			'src/constant.cpp',
 			'src/date.cpp',
-			'src/execpt.cpp',
 			'src/express.cpp',
 			'src/external.cpp',
 			'src/externalv0.cpp',
@@ -119,8 +112,6 @@
 			'src/scriptpt.cpp',
 			'src/statemnt.cpp',
 			'src/variable.cpp',
-			'src/variablearray.cpp',
-			'src/variablevalue.cpp',
 			'src/visual.cpp',
 			
 			# Group "Core - Misc"
@@ -176,7 +167,6 @@
 			'src/regex.cpp',
 			'src/securemode.cpp',
 			'src/sha1.cpp',			
-			'src/sysspec.cpp',
 			'src/text.cpp',
 			'src/transfer.cpp',
 			'src/uidc.cpp',
@@ -291,6 +281,7 @@
 			'src/rtfsupport.cpp',
 			'src/scrolbar.cpp',
 			'src/scrollbardraw.cpp',
+			'src/segment.cpp',
 			'src/sellst.cpp',
 			'src/stack.cpp',
 			'src/stack2.cpp',
@@ -304,6 +295,66 @@
 			'src/tooltip.cpp',
 			'src/undolst.cpp',
 			'src/vclip.cpp',
+			
+			# Group "Desktop"
+			'src/dskmac.cpp',
+			
+			# Group "Exec"
+			'src/exec.h',
+			'src/exec-interface.h',
+			'src/exec-strings.h',
+			'src/exec.cpp',
+			'src/exec-ad.cpp',
+			'src/exec-addressbook.cpp',
+			'src/exec-idletimer.cpp',
+			'src/exec-mail.cpp',
+			'src/exec-orientation.cpp',
+			'src/exec-sensor.cpp',
+			'src/exec-store.cpp',
+			'src/exec-textmessaging.cpp',
+			'src/exec-array.cpp',
+			'src/exec-datetime.cpp',
+			'src/exec-debugging.cpp',
+			'src/exec-dialog.cpp',
+			'src/exec-engine.cpp',
+			'src/exec-files.cpp',
+			'src/exec-filters.cpp',
+			'src/exec-graphics.cpp',
+			'src/exec-ide.cpp',
+			'src/exec-interface.cpp',
+			'src/exec-interface2.cpp',
+			'src/exec-interface-aclip.cpp',
+			'src/exec-interface-button.cpp',
+			'src/exec-interface-card.cpp',
+			'src/exec-interface-control.cpp',
+			'src/exec-interface-field.cpp',
+			'src/exec-interface-field-chunk.cpp',
+			'src/exec-interface-graphic.cpp',
+			'src/exec-interface-group.cpp',
+			'src/exec-interface-image.cpp',
+			'src/exec-interface-object.cpp',
+			'src/exec-interface-player.cpp',
+			'src/exec-interface-scrollbar.cpp',
+			'src/exec-interface-stack.cpp',
+			'src/exec-interface-vclip.cpp',
+			'src/exec-keywords.cpp',
+			'src/exec-legacy.cpp',
+			'src/exec-logic.cpp',
+			'src/exec-math.cpp',
+			'src/exec-multimedia.cpp',
+			'src/exec-network.cpp',
+			'src/exec-pasteboard.cpp',
+			'src/exec-printing.cpp',
+			'src/exec-scripting.cpp',
+			'src/exec-security.cpp',
+			'src/exec-server.cpp',
+			'src/exec-strings.cpp',
+			'src/exec-strings-chunk.cpp',
+			'src/exec-text.cpp',
+			
+			# Group "Foundation"
+			'src/foundation-legacy.h',
+			'src/foundation-legacy.cpp',
 			
 			# Group "Mobile"
 			'src/mblad.h',
@@ -422,18 +473,22 @@
 			
 			# Group "System"
 			'src/globdefs.h',
+			'src/osspec.h',
 			'src/sysdefs.h',
 			'src/system.h',
 			'src/systhreads.h',
 			'src/typedefs.h',
 			'src/syscfdate.cpp',
+			'src/syslnxfs.cpp',
 			'src/syslnxregion.cpp',
 			'src/sysosxrandom.cpp',
 			'src/sysosxregion.cpp',
+			'src/sysspec.cpp',
 			'src/sysunxdate.cpp',
 			'src/sysunxnetwork.cpp',
 			'src/sysunxrandom.cpp',
 			'src/sysunxthreads.cpp',
+			'src/sysw32fs.cpp',
 			'src/sysw32network.cpp',
 			'src/sysw32random.cpp',
 			'src/sysw32region.cpp',
@@ -454,14 +509,18 @@
 			
 			# Group "Desktop - Windows"
 			'src/w32date.cpp',
+				
+			# Group "Syntax"
+			'src/syntax.h',
+			'src/syntax.cpp',
+			
+			# Other files
+			'src/socket_resolve.cpp',
 		],
 		
 		# Sources that are only for desktop mode
 		'engine_desktop_source_files':
 		[
-			# Other desktop-specific source files
-			'src/socket_resolve.cpp',
-			
 			# Group "Desktop"
 			'src/desktop-dc.h',
 			'src/dsklnxmain.cpp',
@@ -558,7 +617,6 @@
 			'src/osximage.cpp',
 			'src/osxmisc.cpp',
 			'src/osxprinter.cpp',
-			'src/osxspec.cpp',
 			'src/osxstack.cpp',
 			'src/osxtextlayout.cpp',
 			'src/osxtheme.cpp',
@@ -646,6 +704,7 @@
 			'src/minizip.h',
 			'src/bsdiff_apply.cpp',
 			'src/internal.cpp',
+			'src/legacy_spec.cpp',
 			'src/minizip.cpp',
 			'src/mode_installer.cpp',
 			'src/mode_installer_lnx.cpp',
@@ -656,6 +715,7 @@
 		# Sources for the standalone engine
 		'engine_standalone_mode_source_files':
 		[
+			'src/legacy_spec.cpp',
 			'src/mode_standalone.cpp',
 		],
 		
@@ -675,7 +735,6 @@
 			'src/srvdbgvar.cpp',
 			'src/srvdebug.cpp',
 			'src/srvflst.cpp',
-			'src/srvmac.cpp',
 			'src/srvmain.cpp',
 			'src/srvmultipart.cpp',
 			'src/srvoutput.cpp',
@@ -803,11 +862,6 @@
 						['exclude', '(^|/)sysosx.*\\.(cpp|mm)$'],
 						['exclude', '\\.mac\\.'],
 					],
-					
-					'sources!':
-					[
-						'src/srvmac.cpp',
-					],
 				},
 			],
 			[
@@ -817,11 +871,6 @@
 					[
 						['exclude', '(^|/)dsklnx.*\\.cpp$'],
 						['exclude', '(^|/)syslnx.*\\.cpp$'],
-					],
-					
-					'sources!':
-					[
-						'src/srvposix.cpp',
 					],
 				},
 			],
@@ -865,6 +914,7 @@
 					[
 						'src/tilecachegl.cpp',
 						'src/player-legacy.cpp',
+						'src/player-platform.cpp',
 						'src/sysunxrandom.cpp',
 						'src/sysunxregion.cpp',
 						'src/sysunxdate.cpp',
@@ -940,6 +990,15 @@
 				},
 			],
 			[
+				'OS != "linux" and OS != "mac"',
+				{
+					'sources!':
+					[
+						'src/srvposix.cpp',
+					],
+				},
+			],
+			[
 				'mobile != 0',
 				{
 					'sources/':
@@ -947,28 +1006,6 @@
 						# Note that this does *not* exclude player.cpp
 						['exclude', '^src/player.+\\.(cpp|mm)$'],
 						['exclude', '^src/dsk.*\\.(cpp|mm)$'],
-					],
-				},
-			],
-		],
-		
-		'target_conditions':
-		[
-			[
-				'server_mode == 0 and (OS != "ios" and OS != "android")',
-				{
-					'sources!':
-					[
-						'src/sysspec.cpp',
-					],
-				},
-			],
-			[
-				'server_mode != 0',
-				{
-					'sources!':
-					[
-						'src/opensslsocket.cpp',
 					],
 				},
 			],

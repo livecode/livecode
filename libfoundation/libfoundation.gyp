@@ -79,6 +79,23 @@
 					'include',
 				],
 			},
+			
+			'link_settings':
+			{
+				'conditions':
+				[
+					[
+						'OS == "mac" or OS == "ios"',
+						{
+							'libraries':
+							[
+								'$(SDKROOT)/System/Library/Frameworks/CoreFoundation.framework',
+								'$(SDKROOT)/System/Library/Frameworks/Foundation.framework',
+							],
+						},
+					],
+				],
+			},
 		},
 	],
 }

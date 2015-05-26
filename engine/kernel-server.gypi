@@ -93,6 +93,8 @@
 								'$(SDKROOT)/System/Library/Frameworks/AudioToolbox.framework',
 								'$(SDKROOT)/System/Library/Frameworks/ApplicationServices.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Carbon.framework',
+								'$(SDKROOT)/System/Library/Frameworks/IOKit.framework',
+								'$(SDKROOT)/System/Library/Frameworks/Security.framework',
 							],
 						},
 					],
