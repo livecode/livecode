@@ -165,24 +165,26 @@ bool MCStringsSplit(MCStringRef p_string, MCStringRef p_separator, MCStringRef*&
 
 void MCStringsEvalToLower(MCExecContext& ctxt, MCStringRef p_string, MCStringRef& r_lower)
 {
-	MCAutoStringRef t_string;
-	if (MCStringMutableCopy(p_string, &t_string) &&
-		MCStringLowercase(*t_string, kMCSystemLocale) &&
-		MCStringCopy(*t_string, r_lower))
-		return;
-
-	ctxt.Throw();
+	MCStringRef t_string = nil;
+	if (!MCStringMutableCopy(p_string, t_string) ||
+		!MCStringLowercase(t_string, kMCSystemLocale) ||
+		!MCStringCopyAndRelease(t_string, r_lower))
+	{
+		MCValueRelease(t_string);
+		ctxt.Throw();
+	}
 }
 
 void MCStringsEvalToUpper(MCExecContext& ctxt, MCStringRef p_string, MCStringRef& r_upper)
 {
-	MCAutoStringRef t_string;
-	if (MCStringMutableCopy(p_string, &t_string) &&
-		MCStringUppercase(*t_string, kMCSystemLocale) &&
-		MCStringCopy(*t_string, r_upper))
-		return;
-
-	ctxt.Throw();
+	MCStringRef t_string = nil;
+	if (!MCStringMutableCopy(p_string, t_string) ||
+		!MCStringUppercase(t_string, kMCSystemLocale) ||
+		!MCStringCopyAndRelease(t_string, r_upper))
+	{
+		MCValueRelease(t_string);
+		ctxt.Throw();
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1445,19 +1447,29 @@ void MCStringsEvalMerge(MCExecContext& ctxt, MCStringRef p_format, MCStringRef& 
 
 bool MCStringsConcatenate(MCStringRef p_left, MCStringRef p_right, MCStringRef& r_result)
 {
-	MCAutoStringRef t_string;
-	return MCStringMutableCopy(p_left, &t_string) &&
-		MCStringAppend(*t_string, p_right) &&
-		MCStringCopy(*t_string, r_result);
+	MCStringRef t_string = nil;
+	if (!MCStringMutableCopy(p_left, t_string) ||
+		!MCStringAppend(t_string, p_right) ||
+		!MCStringCopyAndRelease(t_string, r_result))
+	{
+		MCValueRelease(t_string);
+		return false;
+	}
+	return true;
 }
 
 bool MCStringsConcatenateWithChar(MCStringRef p_left, MCStringRef p_right, unichar_t p_char, MCStringRef& r_result)
 {
-	MCAutoStringRef t_string;
-	return MCStringMutableCopy(p_left, &t_string) &&
-		MCStringAppendChar(*t_string, p_char) &&
-		MCStringAppend(*t_string, p_right) &&
-		MCStringCopy(*t_string, r_result);
+	MCStringRef t_string = nil;
+	if (!MCStringMutableCopy(p_left, t_string) ||
+		!MCStringAppendChar(t_string, p_char) ||
+		!MCStringAppend(t_string, p_right) ||
+		!MCStringCopyAndRelease(t_string, r_result))
+	{
+		MCValueRelease(t_string);
+		return false;
+	}
+	return true;
 }
 
 void MCStringsEvalConcatenate(MCExecContext& ctxt, MCStringRef p_left, MCStringRef p_right, MCStringRef& r_result)
@@ -1473,10 +1485,15 @@ void MCStringsEvalConcatenate(MCExecContext& ctxt, MCStringRef p_left, MCStringR
 
 bool MCDataConcatenate(MCDataRef p_left, MCDataRef p_right, MCDataRef& r_result)
 {
-	MCAutoDataRef t_string;
-	return MCDataMutableCopy(p_left, &t_string) &&
-    MCDataAppend(*t_string, p_right) &&
-    MCDataCopy(*t_string, r_result);
+	MCDataRef t_string = nil;
+	if (!MCDataMutableCopy(p_left, t_string) ||
+		!MCDataAppend(t_string, p_right) ||
+		!MCDataCopyAndRelease(t_string, r_result))
+	{
+		MCValueRelease(t_string);
+		return false;
+	}
+	return true;
 }
 
 void MCStringsEvalConcatenate(MCExecContext& ctxt, MCDataRef p_left, MCDataRef p_right, MCDataRef& r_result)
