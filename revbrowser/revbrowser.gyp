@@ -171,6 +171,7 @@
 			'dependencies':
 			[
 				'../libcore/libcore.gyp:libCore',
+				'../libfoundation/libfoundation.gyp:libFoundation',
 				'../thirdparty/libcef/libcef.gyp:libcef_library_wrapper',
 				'../thirdparty/libcef/libcef.gyp:libcef_stubs',
 			],
