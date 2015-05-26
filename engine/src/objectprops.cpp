@@ -1593,17 +1593,17 @@ Exec_stat MCObject::sendsetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 
 bool MCObject::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCExecValue p_value)
 {
-    MCValueRef t_value;
-    MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value , kMCExecValueTypeValueRef, &t_value);
+    MCAutoValueRef t_value;
+    MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value , kMCExecValueTypeValueRef, &(&t_value));
     
 	Exec_stat t_stat;
-	t_stat = sendsetprop(ctxt, p_set_name, p_prop_name, t_value);
+	t_stat = sendsetprop(ctxt, p_set_name, p_prop_name, *t_value);
     
 	if (t_stat == ES_PASS || t_stat == ES_NOT_HANDLED)
 	{
 		MCObjectPropertySet *p;
 		/* UNCHECKED */ ensurepropset(p_set_name, false, p);
-		if (!p -> storeelement(ctxt, p_prop_name, t_value))
+		if (!p -> storeelement(ctxt, p_prop_name, *t_value))
 			return false;
 		return true;
 	}
