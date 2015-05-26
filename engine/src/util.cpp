@@ -1369,7 +1369,7 @@ Boolean MCU_parsepoints(MCPoint *&points, uint2 &noldpoints,
 			MCU_realloc((char **)&points, npoints, npoints + 1, sizeof(MCPoint));
 		points[npoints].x = i1;
 		points[npoints++].y = i2;
-		if (data.getlength() - l > 2 && *(sptr - 1) == '\n'
+		if (l > 0 && sptr - data . getstring() > 2 && *(sptr - 1) == '\n'
 		        && *(sptr - 2) == '\n')
 		{
 			if (npoints + 1 > noldpoints)
