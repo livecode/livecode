@@ -2933,11 +2933,12 @@ Boolean MCPlayer::qt_prepare(void)
 	// MW-2010-06-02: [[ Bug 8773 ]] Make sure we pass 'https' urls through to QT's
 	//   URL data handler.
 	theMovie = NULL;
-	if (MCStringIsEqualToCString(filename, "https:", kMCCompareExact) ||
-		MCStringIsEqualToCString(filename, "http:", kMCCompareExact) ||
-		MCStringIsEqualToCString(filename, "ftp:", kMCCompareExact) ||
-		MCStringIsEqualToCString(filename, "file:", kMCCompareExact) ||
-		MCStringIsEqualToCString(filename, "rtsp:", kMCCompareExact))
+    // PM-2015-05-27: [[ Bug 15424 ]] Check properly if the filename refers to a remote file
+	if (MCStringBeginsWithCString(filename, (const char_t*)"https:", kMCStringOptionCompareCaseless)
+        || MCStringBeginsWithCString(filename, (const char_t*)"http:", kMCStringOptionCompareCaseless)
+        || MCStringBeginsWithCString(filename, (const char_t*)"ftp:", kMCStringOptionCompareCaseless)
+        || MCStringBeginsWithCString(filename, (const char_t*)"file:", kMCStringOptionCompareCaseless)
+        || MCStringBeginsWithCString(filename, (const char_t*)"rtsp:", kMCStringOptionCompareCaseless))
 	{
 		Size mySize = (Size)MCStringGetLength(filename) + 1;
 		if (mySize)
@@ -2949,6 +2950,7 @@ Boolean MCPlayer::qt_prepare(void)
                 /* UNCHECKED */ t_utf8_filename . Lock(filename);
                 BlockMove(*t_utf8_filename, *myHandle, mySize);
                 NewMovieFromDataRef((Movie *)&theMovie, newMovieActive, NULL, myHandle, URLDataHandlerSubType);
+                DisposeHandle(myHandle);
 			}
 		}
 	}
