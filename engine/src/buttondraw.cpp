@@ -518,11 +518,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
                 if (IsMacLFAM() && MCmajorosversion >= 0x10A0 && MCaqua
                     && !(flags & F_DISABLED) && isstdbtn && getstyleint(flags) == F_STANDARD
                     && ((state & CS_HILITED) || (state & CS_SHOW_DEFAULT))
-                    && rect.height <= 24 && MCappisactive
-                    && !(MCbuttonstate && MCmousestackptr && MCmousestackptr == getstack()
-                        && MCmousestackptr->getcard()->getmfocused() != nil
-                        && MCmousestackptr->getcard()->getmfocused() != this
-                        && MCmousestackptr->getcard()->getmfocused()->gettype() == CT_BUTTON))
+                    && rect.height <= 24 && MCappisactive)
                     setforeground(dc, DI_BACK, False, True);
                 // PM-2014-11-26: [[ Bug 14070 ]] [Removed code] Make sure text color in menuButton inverts when hilited
         
@@ -1705,13 +1701,20 @@ void MCButton::drawstandardbutton(MCDC *dc, MCRectangle &srect)
                     // FG-2014-11-05: [[ Bugfix 13909 ]]
                     // Don't suppress the default on OSX Yosemite if it is this
                     // button being pressed but the mouse is outside the button.
-                    if (!(IsMacLFAM() && MCaqua && MCmajorosversion >= 0x10A0 && t_control == this)
-                          || (rect.x > MCmousex && MCmousex >= rect.x+rect.width
-                              && rect.y > MCmousey && MCmousey >= rect.y+rect.height))
+                    if (rect.x > MCmousex && MCmousex >= rect.x+rect.width
+                              && rect.y > MCmousey && MCmousey >= rect.y+rect.height)
                         winfo.state |= WTHEME_STATE_SUPPRESSDEFAULT;
                 }
 			}
-			
+	
+            // On Yosemite, the default button theme is only suppressed when the
+            // app is not active.
+            if (getflag(F_DEFAULT) && IsMacLFAM() && MCaqua && MCmajorosversion >= 0x10A0)
+            {
+                winfo.state &= ~WTHEME_STATE_SUPPRESSDEFAULT;
+                winfo.state |= WTHEME_STATE_HASDEFAULT;
+            }
+            
 #ifdef _MACOSX
 			// MW-2010-12-05: [[ Bug 9210 ]] Make sure we disable the default look when the app is
 			//   in the background.
