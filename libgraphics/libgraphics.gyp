@@ -55,6 +55,16 @@
 						],
 					},
 				],
+				[
+					'OS == "android"',
+					{
+						'dependencies':
+						[
+							'../thirdparty/libfreetype/libfreetype.gyp:libfreetype',
+							'../thirdparty/libharfbuzz/libharfbuzz.gyp:libharfbuzz',
+						],
+					},
+				],
 			],
 			
 			'direct_dependent_settings':

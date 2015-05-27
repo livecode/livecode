@@ -78,7 +78,7 @@
 							# Gyp doesn't seem to handle non-absolute paths here properly...
 							'library_dirs':
 							[
-								'<(src_top_dir_abs)/prebuilt/lib/andoid/<(target_arch)',
+								'<(src_top_dir_abs)/prebuilt/lib/android/<(target_arch)',
 							],
 							
 							'libraries':
@@ -88,7 +88,6 @@
 								'-licuio',
 								'-licule',
 								'-liculx',
-								'-licutu',
 								'-licuuc',
 							],
 						},

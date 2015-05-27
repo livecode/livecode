@@ -195,6 +195,11 @@ extern "C" time_t time(time_t *);
 #include <stdio.h>
 #include <ctype.h>
 
+// Work-around for the Android headers being strict
+#if !defined(va_copy) && defined(__va_copy)
+#  define va_copy __va_copy
+#endif
+
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
