@@ -145,7 +145,7 @@
 					
 					'outputs':
 					[
-						'lib/mac',
+						'lib',
 					],
 					
 					'action':

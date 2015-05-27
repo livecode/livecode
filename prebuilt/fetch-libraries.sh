@@ -42,23 +42,27 @@ function fetchLibrary {
 		NAME+="-${SUBPLATFORM}"
 	fi
 
-	echo "Fetching library: ${NAME}"
-	curl --silent "${URL}/${NAME}.tar.bz2" -o "${FETCH_DIR}/${NAME}.tar.bz2"
-	#cp "`pwd`/packaged/${NAME}.tar.bz2" "${FETCH_DIR}/${NAME}.tar.bz2"
-	if [ $? -ne 0 ] ; then
-		echo "    failed"
-		exit
-	fi
+	if [ ! -f "${FETCH_DIR}/${NAME}.tar.bz2" ] ; then
+		echo "Fetching library: ${NAME}"
+		curl --silent "${URL}/${NAME}.tar.bz2" -o "${FETCH_DIR}/${NAME}.tar.bz2"
+		#cp "`pwd`/packaged/${NAME}.tar.bz2" "${FETCH_DIR}/${NAME}.tar.bz2"
+		if [ $? -ne 0 ] ; then
+			echo "    failed"
+			exit
+		fi
 
-	echo "Extracting library: ${NAME}"
-	DIR="`pwd`"
-	cd "${EXTRACT_DIR}"
-	tar -jxf "${FETCH_DIR}/${NAME}.tar.bz2"
-	RESULT=$?
-	cd "${DIR}"
-	if [ "${RESULT}" -ne 0 ] ; then
-		echo "    failed"
-		exit
+		echo "Extracting library: ${NAME}"
+		DIR="`pwd`"
+		cd "${EXTRACT_DIR}"
+		tar -jxf "${FETCH_DIR}/${NAME}.tar.bz2"
+		RESULT=$?
+		cd "${DIR}"
+		if [ "${RESULT}" -ne 0 ] ; then
+			echo "    failed"
+			exit
+		fi
+	else
+		echo "Already fetched: ${NAME}"
 	fi
 }
 
