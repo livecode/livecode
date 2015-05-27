@@ -10,6 +10,11 @@
 			'target_name': 'libopenssl',
 			'type': 'none',
 
+			'dependencies':
+			[
+				'fetch.gyp:fetch',
+			],
+
 			'direct_dependent_settings':
 			{
 				'include_dirs':

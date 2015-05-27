@@ -12,6 +12,7 @@
 			
 			'dependencies':
 			[
+				'fetch.gyp:fetch',
 				'libopenssl.gyp:libopenssl',
 			],
 			
