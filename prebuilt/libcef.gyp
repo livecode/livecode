@@ -32,7 +32,7 @@
 							
 							'xcode_settings':
 							{
-								'FRAMEWORK_SEARCH_PATHS': '$(SOLUTION_DIR)/prebuilt/lib/libcef/mac',
+								'FRAMEWORK_SEARCH_PATHS': '$(SOLUTION_DIR)/prebuilt/lib/mac',
 							},
 						},
 					},

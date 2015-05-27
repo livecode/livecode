@@ -84,7 +84,7 @@
 									'<(PRODUCT_DIR)/revbrowser-cefprocess.app',
 									'<(PRODUCT_DIR)/revbrowser-cefprocess EH.app',
 									'<(PRODUCT_DIR)/revbrowser-cefprocess NP.app',
-									'$(SOLUTION_DIR)/prebuilt/lib/libcef/mac/Chromium Embedded Framework.framework',
+									'$(SOLUTION_DIR)/prebuilt/lib/mac/Chromium Embedded Framework.framework',
 								],
 							},
 						],
