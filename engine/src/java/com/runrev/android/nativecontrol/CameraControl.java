@@ -493,6 +493,35 @@ class CameraControl extends NativeControl
 		m_camera_view.enablePreview();
 	}
 	
+	@Override
+	public void setVisible(boolean p_visible)
+	{
+		// Override setVisible method to remove preview surface from view heirarchy,
+		//   otherwise it interferes with other surfaces.
+		if (p_visible)
+		{
+			if (((FrameLayout)getView()).indexOfChild(m_camera_view) == -1)
+			{
+				((FrameLayout)getView()).addView(m_camera_view,
+												 new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
+																			  FrameLayout.LayoutParams.MATCH_PARENT,
+																			  Gravity.CENTER));
+			}
+			
+			m_camera_view.enablePreview();
+		}
+		else
+		{
+			m_camera_view.disableRecording();
+			m_camera_view.disablePreview();
+			m_camera_view.closeCamera();
+			
+			((FrameLayout)getView()).removeView(m_camera_view);
+		}
+		
+		super.setVisible(p_visible);
+	}
+	
 	//////////
 
 	private int fetchFeatures(int p_cam_id)
