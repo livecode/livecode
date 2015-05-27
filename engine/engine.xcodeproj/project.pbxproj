@@ -50,6 +50,7 @@
 		4D01C89812247CBA00AAD151 /* mode_installer_osx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D01C89712247CBA00AAD151 /* mode_installer_osx.cpp */; };
 		4D05B91013E06AB3001CD82A /* dskmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D05B90D13E06AAB001CD82A /* dskmain.cpp */; };
 		4D05B91113E06AB4001CD82A /* dskosxmain.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D05B90E13E06AAC001CD82A /* dskosxmain.mm */; };
+		4D076F321B04D4EB0010F699 /* platform-av-camera.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D076F311B04D4EB0010F699 /* platform-av-camera.mm */; };
 		4D17F4371042877000C49A3B /* externalv0.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D17F4351042877000C49A3B /* externalv0.cpp */; };
 		4D17F4381042877000C49A3B /* externalv1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D17F4361042877000C49A3B /* externalv1.cpp */; };
 		4D1F9C3C171C64DF0091C6CB /* stacksecurity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8A7EF0016FC98A200C39491 /* stacksecurity.cpp */; };
@@ -329,6 +330,7 @@
 		4DC66D8B1045D41700D1CFA3 /* notify.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DC66D8A1045D41700D1CFA3 /* notify.cpp */; };
 		4DCB65721653B2F700E438E6 /* stackcache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DCB65711653B2F700E438E6 /* stackcache.cpp */; };
 		4DCFFD2E10CE927700FA2262 /* iquantize_new.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DCFFD2D10CE927700FA2262 /* iquantize_new.cpp */; };
+		4DD39DE41B060C5900DCDA0E /* dskmessage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD39DE31B060C5900DCDA0E /* dskmessage.cpp */; };
 		4DDB666F14139FF500E5C84C /* tilecache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDB666D14139FF500E5C84C /* tilecache.cpp */; };
 		4DDB66721413A02000E5C84C /* redraw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDB66701413A02000E5C84C /* redraw.cpp */; };
 		4DDC26C9122692B10071CB31 /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5881C10B80C7C300200116 /* Quartz.framework */; };
@@ -1045,6 +1047,7 @@
 		4D05B90D13E06AAB001CD82A /* dskmain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dskmain.cpp; path = src/dskmain.cpp; sourceTree = "<group>"; };
 		4D05B90E13E06AAC001CD82A /* dskosxmain.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = dskosxmain.mm; path = src/dskosxmain.mm; sourceTree = "<group>"; };
 		4D05B90F13E06AAC001CD82A /* dskw32main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dskw32main.cpp; path = src/dskw32main.cpp; sourceTree = "<group>"; };
+		4D076F311B04D4EB0010F699 /* platform-av-camera.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "platform-av-camera.mm"; path = "src/platform-av-camera.mm"; sourceTree = "<group>"; };
 		4D140F6F15A5A82300191B5E /* AdModule.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = AdModule.java; sourceTree = "<group>"; };
 		4D140F7015A5A82300191B5E /* Alert.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = Alert.java; sourceTree = "<group>"; };
 		4D140F7515A5A82300191B5E /* PurchaseObserver.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = PurchaseObserver.java; sourceTree = "<group>"; };
@@ -1452,6 +1455,7 @@
 		4DD27A8A0D5B36E70000CC15 /* rtfsupport.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = rtfsupport.cpp; path = src/rtfsupport.cpp; sourceTree = "<group>"; };
 		4DD27ABE0D5B39C20000CC15 /* text.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = text.cpp; path = src/text.cpp; sourceTree = "<group>"; };
 		4DD27ABF0D5B39C20000CC15 /* text.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = text.h; path = src/text.h; sourceTree = "<group>"; };
+		4DD39DE31B060C5900DCDA0E /* dskmessage.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dskmessage.cpp; path = src/dskmessage.cpp; sourceTree = "<group>"; };
 		4DD54D18134F591500981610 /* AccelerationChangeListener.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = AccelerationChangeListener.java; sourceTree = "<group>"; };
 		4DD54D19134F591500981610 /* CameraCompat.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = CameraCompat.java; sourceTree = "<group>"; };
 		4DD54D1A134F591500981610 /* Email.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = Email.java; sourceTree = "<group>"; };
@@ -2706,6 +2710,7 @@
 				4D05B90F13E06AAC001CD82A /* dskw32main.cpp */,
 				4DE7ED0D13B33B7F002634F5 /* dskspec.cpp */,
 				BEF3110417C217C30073D70F /* dskw32.cpp */,
+				4DD39DE31B060C5900DCDA0E /* dskmessage.cpp */,
 			);
 			name = Desktop;
 			sourceTree = "<group>";
@@ -2905,6 +2910,7 @@
 				BEBC51ED195350F700215C85 /* platform-window.cpp */,
 				BEBC51EE195350F700215C85 /* platform.cpp */,
 				BEBC51EF195350F700215C85 /* platform.h */,
+				4D076F311B04D4EB0010F699 /* platform-av-camera.mm */,
 			);
 			name = Platform;
 			sourceTree = "<group>";
@@ -4191,6 +4197,7 @@
 				4DEE2AAE0FDE42710009423C /* field.cpp in Sources */,
 				4DEE2AAF0FDE42710009423C /* fieldf.cpp in Sources */,
 				4DEE2AB00FDE42710009423C /* fieldh.cpp in Sources */,
+				4D076F321B04D4EB0010F699 /* platform-av-camera.mm in Sources */,
 				4DEE2AB10FDE42710009423C /* fields.cpp in Sources */,
 				4DEE2AB20FDE42710009423C /* font.cpp in Sources */,
 				4DEE2AB30FDE42710009423C /* funcs.cpp in Sources */,
@@ -4320,6 +4327,7 @@
 				E8189EB615D17E8000194F25 /* exec-logic.cpp in Sources */,
 				4D6C27FD1647D942007C96B7 /* exec-graphics.cpp in Sources */,
 				4D6C27FE1647D942007C96B7 /* exec-security.cpp in Sources */,
+				4DD39DE41B060C5900DCDA0E /* dskmessage.cpp in Sources */,
 				4D67BB24164A76090092CF4C /* exec-ide.cpp in Sources */,
 				4D67BBB9164AB2C50092CF4C /* exec-printing.cpp in Sources */,
 				4D606EB01670C781004A71AA /* exec-debugging.cpp in Sources */,

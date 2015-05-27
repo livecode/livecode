@@ -38,10 +38,8 @@
 
 #include "globals.h"
 
-#ifdef _MOBILE
 extern bool MCIsPlatformMessage(MCNameRef handler_name);
 extern Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters);
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -183,7 +181,6 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
     
     if (platform_message)
     {
-#ifdef _MOBILE
         extern Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters);
         
         // AL-2014-03-14: Currently no mobile handler's execution is halted when ES_ERROR
@@ -191,7 +188,6 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
         stat = MCHandlePlatformMessage(name, params);
         if (stat != ES_NOT_HANDLED)
             stat = ES_NORMAL;
-#endif
     }
 	else if (handler != nil)
 	{

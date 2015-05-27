@@ -1758,6 +1758,7 @@ bool MCSystemSetAnimateAutorotation(bool p_enabled)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
 #ifdef LEGACY_EXEC
 static MCPlatformMessageSpec s_platform_messages[] =
 {

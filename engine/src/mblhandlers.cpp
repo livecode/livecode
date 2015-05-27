@@ -6587,7 +6587,7 @@ Exec_stat MCHandleControlDo(void *context, MCParameter *p_parameters)
     
     // SN-2014-11-20: [[ Bug 14062 ]] Cleanup the memory
     for (uint32_t i = 0; i < t_params . Size(); ++i)
-        MCValueRelease(t_params[i]);\
+        MCValueRelease(t_params[i]);
 	
 	return ES_NORMAL;
 }
