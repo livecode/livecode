@@ -648,7 +648,19 @@ int main(int argc, char *argv[], char *envp[])
 	t_exit_code = X_close();
 
 	MCFinalize();
-	
+
+	for (int i = 0; i < argc; i++)
+	{
+		MCValueRelease(t_new_argv[i]);
+	}
+	MCMemoryDeleteArray(t_new_argv);
+
+	for (int i = 0; i < t_envp_count; i++)
+	{
+		MCValueRelease(t_new_envp[i]);
+	}
+	MCMemoryDeleteArray(t_new_envp);
+
 	exit(t_exit_code);
 }
 

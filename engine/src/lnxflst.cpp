@@ -98,6 +98,15 @@ MCNewFontlist::~MCNewFontlist()
 		g_object_unref(m_layout);
 	if (m_pango != nil)
 		g_object_unref(m_pango);
+
+	while (m_fonts)
+    {
+		MCNewFontStruct* t_font = m_fonts;
+		m_fonts = t_font -> next;
+		MCValueRelease(t_font -> family);
+		pango_font_description_free(t_font -> description);
+		delete t_font;
+	}
 }
 
 bool MCNewFontlist::create(void)

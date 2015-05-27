@@ -5701,7 +5701,8 @@ MCTextChunkIterator::MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_
             /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCBasicLocale, kMCBreakIteratorTypeWord, break_iterator);
             /* UNCHECKED */ MCLocaleBreakIteratorSetText(break_iterator, *t_substring);
             MCRange t_range;
-            t_range . length = p_restriction . length;
+            // PM-2015-05-26: [[ Bug 15422 ]] Start with zero length to make sure the first trueWord is counted
+            t_range . length = 0;
             t_range . offset = p_restriction . offset;
             
             while (MCLocaleWordBreakIteratorAdvance(*t_substring, break_iterator, t_range)
