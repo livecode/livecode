@@ -7,7 +7,7 @@
 #ifdef _WINDOWS
 #define LIBRARY_EXPORT __declspec(dllexport)
 #else
-#define LIBRARY_EXPORT
+#define LIBRARY_EXPORT __attribute__((__visibility__("default")))
 #endif
 
 enum

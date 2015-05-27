@@ -475,7 +475,7 @@ extern Bool SecurityCanAccessLibrary(const char *p_library);
 #ifdef __cplusplus
 
 #define EXTERNAL_REFERENCE_LIBRARY \
-  extern "C" void getXtable(void) __attribute__((__visibility__("default"))); \
+  extern "C" void getXtable(void); \
 	void __dummy_function(void) \
 	{ \
 	  getXtable(); \
@@ -484,7 +484,7 @@ extern Bool SecurityCanAccessLibrary(const char *p_library);
 #else
 
 #define EXTERNAL_REFERENCE_LIBRARY \
-  void getXtable(void) __attribute__((__visibility__("default"))); \
+  void getXtable(void); \
 	void __dummy_function(void) \
 	{ \
 	  getXtable(); \
