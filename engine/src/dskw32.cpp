@@ -167,6 +167,7 @@ static bool get_device_path(MCStringRef p_path, MCStringRef &r_device_path)
 // MW-2005-02-22: Make these global for opensslsocket.cpp
 static Boolean wsainited = False;
 HWND sockethwnd;
+HANDLE g_socket_wakeup;
 
 Boolean wsainit()
 {
@@ -2536,7 +2537,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 						
 						// What is the length of the path that was retrieved?
 						size_t t_path_len;
-						/* UNCHECKED */ StringCchLength(t_buffer.Ptr(), t_buffer.Size(), &t_path_len);
+						/* UNCHECKED */ StringCchLengthW(t_buffer.Ptr(), t_buffer.Size(), &t_path_len);
 
 						/* UNCHECKED */ MCStringCreateWithChars(t_buffer.Ptr(), t_path_len, &t_retrieved_path);
                     }
@@ -2742,7 +2743,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 				
 				// Get the length of the returned path
 				size_t t_pathlen;
-				if (t_wasfound && StringCchLength(t_buffer.Ptr(), t_buffer.Size(), &t_pathlen) != S_OK)
+				if (t_wasfound && StringCchLengthW(t_buffer.Ptr(), t_buffer.Size(), &t_pathlen) != S_OK)
 					return false;
 
 				// Path was successfully retrieved
@@ -3476,7 +3477,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		do
 		{
 			// Don't list the current directory
-			if (lstrcmpi(data.cFileName, L".") == 0)
+			if (lstrcmpiW(data.cFileName, L".") == 0)
 				continue;
 
 			// Retrieve as many of the file attributes as Windows supports
@@ -4612,7 +4613,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
                 // If the launched process vanished before (4) it is treated as failure.
                 
                 unichar_t t_parameters[64];
-                wsprintf(t_parameters, L"-elevated-slave%08x", GetCurrentThreadId());
+                wsprintfW(t_parameters, L"-elevated-slave%08x", GetCurrentThreadId());
                 
 				MCAutoStringRefAsWString t_cmd_wstr;
 				/* UNCHECKED */ t_cmd_wstr.Lock(MCcmd);

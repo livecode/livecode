@@ -143,6 +143,7 @@
 								'-loleaut32',
 								'-lrpcrt4',
 								'-lshell32',
+								'-lshlwapi',
 								'-luser32',
 								'-lusp10',
 								'-lwinmm',

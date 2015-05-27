@@ -540,6 +540,7 @@
 			'src/desktop-pasteboard.cpp',
 			'src/desktop-image.cpp',
 			'src/desktop-ans.cpp',
+			'src/legacy_spec.cpp',
 			
 			# Group "Platform"
 			'src/platform.h',
@@ -656,7 +657,6 @@
 			'src/w32relaunch.cpp',
 			'src/w32script.cpp',
 			'src/w32sound.cpp',
-			'src/w32spec.cpp',
 			'src/w32stack.cpp',
 			'src/w32text.cpp',
 			'src/w32textlayout.cpp',
@@ -709,7 +709,6 @@
 			'src/minizip.h',
 			'src/bsdiff_apply.cpp',
 			'src/internal.cpp',
-			'src/legacy_spec.cpp',
 			'src/minizip.cpp',
 			'src/mode_installer.cpp',
 			'src/mode_installer_lnx.cpp',
@@ -720,7 +719,6 @@
 		# Sources for the standalone engine
 		'engine_standalone_mode_source_files':
 		[
-			'src/legacy_spec.cpp',
 			'src/mode_standalone.cpp',
 		],
 		
@@ -818,19 +816,6 @@
 		[
 			'src/player-platform.cpp',
 			'src/stacke.cpp',
-		],
-		
-		'conditions':
-		[
-			[
-				'OS == "win"',
-				{
-					'engine_server_exclude_files':
-					[
-						'src/opensslsocket.cpp',
-					],
-				}
-			],
 		],
 	},
 	
