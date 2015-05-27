@@ -47,7 +47,6 @@
 								'lib/ios/$(SDK_NAME)/libicuio.a',
 								'lib/ios/$(SDK_NAME)/libicule.a',
 								'lib/ios/$(SDK_NAME)/libiculx.a',
-								'lib/ios/$(SDK_NAME)/libicutu.a',
 								'lib/ios/$(SDK_NAME)/libicuuc.a',
 							],
 						},
