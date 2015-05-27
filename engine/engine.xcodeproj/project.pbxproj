@@ -21,7 +21,6 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		1D46D3021B038BE500681BE3 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08EA1945F10A000E3705 /* QTKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		1DC1249518FC422B00C2FEF3 /* quicktimestubs.mac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DC1249418FC422300C2FEF3 /* quicktimestubs.mac.cpp */; };
 		1DC1249618FC423200C2FEF3 /* quicktimestubs.mac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DC1249418FC422300C2FEF3 /* quicktimestubs.mac.cpp */; };
 		1DDE08D11945DD32000E3705 /* mac-qt-player.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE08D01945DD31000E3705 /* mac-qt-player.mm */; };
@@ -1610,7 +1609,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1D46D3021B038BE500681BE3 /* QTKit.framework in Frameworks */,
 				4C529CB11973CC4D007C5F7C /* AVFoundation.framework in Frameworks */,
 				4C529CB01973CC45007C5F7C /* CoreMedia.framework in Frameworks */,
 				4DEE2C7A0FDE52770009423C /* libkernel.a in Frameworks */,
