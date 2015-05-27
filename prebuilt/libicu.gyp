@@ -63,13 +63,13 @@
 							
 							'libraries':
 							[
-								'-licudata',
 								'-licui18n',
 								'-licuio',
 								'-licule',
 								'-liculx',
 								'-licutu',
 								'-licuuc',
+								'-licudata',
 							],
 						},
 					],

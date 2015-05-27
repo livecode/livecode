@@ -205,7 +205,6 @@
 			'src/paragraf.h',
 			'src/parentscript.h',
 			'src/player.h',
-			'src/player-legacy.h',
 			'src/player-platform.h',
 			'src/rtf.h',
 			'src/scrolbar.h',
@@ -273,7 +272,6 @@
 			'src/paragrafattr.cpp',
 			'src/parentscript.cpp',
 			'src/pickle.cpp',
-			'src/player-legacy.cpp',
 			'src/player-platform.cpp',
 			'src/player.cpp',
 			'src/props.cpp',
@@ -298,6 +296,8 @@
 			
 			# Group "Desktop"
 			'src/dskmac.cpp',
+			'src/dsklnx.cpp',
+			'src/dskw32.cpp',
 			
 			# Group "Exec"
 			'src/exec.h',
@@ -505,6 +505,7 @@
 			'src/osxflst.cpp',
 			
 			# Group "Desktop - Linux"
+			'src/lnxelevate.cpp',
 			'src/lnxflst.cpp',
 			
 			# Group "Desktop - Windows"
@@ -567,7 +568,6 @@
 			'src/lnxdclnx.cpp',
 			'src/lnxdcs.cpp',
 			'src/lnxdnd.cpp',
-			'src/lnxelevate.cpp',
 			'src/lnxflstold.cpp',
 			'src/lnxgtktheme.cpp',
 			'src/lnxgtkthemedrawing.cpp',
@@ -723,7 +723,6 @@
 		'engine_server_source_files':
 		[
 			'src/srvcgi.h',
-			'src/srvdbgvar.h',
 			'src/srvdebug.h',
 			'src/srvflst.h',
 			'src/srvmain.h',
@@ -732,7 +731,6 @@
 			'src/srvsession.h',
 			'src/mode_server.cpp',
 			'src/srvcgi.cpp',
-			'src/srvdbgvar.cpp',
 			'src/srvdebug.cpp',
 			'src/srvflst.cpp',
 			'src/srvmain.cpp',
@@ -825,7 +823,6 @@
 					'engine_server_exclude_files':
 					[
 						'src/opensslsocket.cpp',
-						'src/player-legacy.cpp',
 					],
 				}
 			],
@@ -861,6 +858,11 @@
 					[
 						['exclude', '(^|/)sysosx.*\\.(cpp|mm)$'],
 						['exclude', '\\.mac\\.'],
+					],
+					
+					'sources!':
+					[
+						'src/dskmac.cpp',
 					],
 				},
 			],
@@ -900,7 +902,6 @@
 					'sources!':
 					[
 						'src/fiber.cpp',
-						'src/player-legacy.cpp',
 						'src/player-platform.cpp',
 						'src/tilecachegl.cpp',
 					],
@@ -913,13 +914,11 @@
 					'sources!':
 					[
 						'src/tilecachegl.cpp',
-						'src/player-legacy.cpp',
 						'src/player-platform.cpp',
 						'src/sysunxrandom.cpp',
 						'src/sysunxregion.cpp',
 						'src/sysunxdate.cpp',
 						
-						'src/srvdbgvar.cpp',
 						'src/srvflst.cpp',
 					],
 				},

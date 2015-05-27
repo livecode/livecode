@@ -28,6 +28,7 @@
 		'include_dirs':
 		[
 			'../thirdparty/headers/linux/include',
+			'../thirdparty/libcairo/src',			# Required by the GDK headers
 			'../thirdparty/libfreetype/include',	# Required by the Pango headers
 		],
 		
