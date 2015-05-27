@@ -90,6 +90,11 @@ for PLATFORM in "${SELECTED_PLATFORMS}" ; do
 			fi
 		done
 	done
+	
+	# Re-name the "i386" output folder to "x86"
+	if [ -d "${EXTRACT_DIR}/lib/${PLATFORM}/i386" ] ; then
+		mv "${EXTRACT_DIR}/lib/${PLATFORM}/i386" "${EXTRACT_DIR}/lib/${PLATFORM}/x86"
+	fi
 done
 
 # Don't forget the headers

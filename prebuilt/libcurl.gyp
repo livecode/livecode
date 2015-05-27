@@ -58,7 +58,7 @@
 						{
 							'library_dirs':
 							[
-								'lib/win32/i386'
+								'lib/win32/<(target_arch)',
 							],
 							
 							'libraries':
