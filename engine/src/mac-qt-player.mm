@@ -58,7 +58,7 @@
 
 @interface com_runrev_livecode_MCQTKitHelper : NSObject
 
-- (void) dynamicallySubclassQTMovieView:(QTMovieView *)view ;
++ (void) dynamicallySubclassQTMovieView:(QTMovieView *)view ;
 - (NSView *) newHitTest: (NSPoint) aPoint;
 
 @end
@@ -109,7 +109,6 @@ private:
     
     QTMovie *m_movie;
     QTMovieView *m_view;
-    com_runrev_livecode_MCQTKitHelper *m_helper;
     CVImageBufferRef m_current_frame;
     QTTime m_last_current_time;
     QTTime m_buffered_time;
@@ -163,17 +162,12 @@ private:
 @implementation com_runrev_livecode_MCQTKitHelper
 
 // We cannot subclass QTMovieView statically, because we have to dynamically load QTKit
-- (void) dynamicallySubclassQTMovieView:(QTMovieView *)p_qt_movie_view
++ (void) dynamicallySubclassQTMovieView:(QTMovieView *)p_qt_movie_view
 {
-    const char *t_prefix = "custom_dynamic_subclass_of_";
     Class t_qt_movie_view_class = [p_qt_movie_view class];
-    NSString *t_qt_movie_view_class_name = NSStringFromClass(t_qt_movie_view_class);
-    
-    if (strncmp(t_prefix, [t_qt_movie_view_class_name UTF8String], strlen(t_prefix)) == 0)
-        return;
     
     // Build the name of the new class
-    NSString *t_subclass_name = [NSString stringWithFormat:@"%s%@", t_prefix, t_qt_movie_view_class_name];
+    NSString *t_subclass_name = @"com_runrev_livecode_MCQTMovieView";
     Class t_subclass = NSClassFromString(t_subclass_name);
     
     // Look in the runtime to see if class of this name already exists
@@ -183,7 +177,7 @@ private:
         t_subclass = objc_allocateClassPair(t_qt_movie_view_class, [t_subclass_name UTF8String], 0);
         if (t_subclass != nil)
         {
-            IMP hitTest = class_getMethodImplementation([self class], @selector(newHitTest:));
+            IMP hitTest = class_getMethodImplementation([com_runrev_livecode_MCQTKitHelper class], @selector(newHitTest:));
             
             // Add the custom -hitTest method (called newHitTest) to the new subclass
             class_addMethod(t_subclass, @selector(hitTest:), hitTest, "v@:");
@@ -199,7 +193,7 @@ private:
         object_setClass(p_qt_movie_view, t_subclass);
     }
 }
- 
+
 - (NSView *) newHitTest: (NSPoint) aPoint
 {
     return [self superview];
@@ -227,8 +221,7 @@ MCQTKitPlayer::MCQTKitPlayer(void)
 {
 	m_movie = [[NSClassFromString(@"QTMovie") movie] retain];
 	m_view = [[NSClassFromString(@"QTMovieView") alloc] initWithFrame: NSZeroRect];
-    m_helper = [[com_runrev_livecode_MCQTKitHelper alloc] init];
-    [m_helper dynamicallySubclassQTMovieView:m_view];
+    [com_runrev_livecode_MCQTKitHelper dynamicallySubclassQTMovieView:m_view];
 	m_observer = [[com_runrev_livecode_MCQTKitPlayerObserver alloc] initWithPlayer: this];
     
 	m_current_frame = nil;
@@ -265,7 +258,6 @@ MCQTKitPlayer::~MCQTKitPlayer(void)
     [[NSNotificationCenter defaultCenter] removeObserver: m_observer];
     [m_observer release];
 	[m_view release];
-    [m_helper release];
 	[m_movie release];
     
     MCMemoryDeleteArray(m_markers);
