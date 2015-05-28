@@ -466,7 +466,10 @@ static void IO_printf(IO_handle stream, const char *format, ...)
 	va_start(args, format);
 	vsprintf(t_buffer, format, args);
 	va_end(args);
-	MCS_write(t_buffer, 1, strlen(t_buffer), stream);
+    
+    MCAutoStringRefAsSysString t_sys_string;
+    t_sys_string . Lock(*t_string);
+	MCS_write(*t_sys_string, 1, t_sys_string . Size(), stream);
 }
 
 static bool load_extension_callback(void *p_context, const MCSystemFolderEntry *p_entry)
