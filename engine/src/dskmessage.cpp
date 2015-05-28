@@ -115,6 +115,7 @@ static MCCameraControlProp s_camera_control_props[] =
 	{ "devices", kMCPlatformCameraPropertyDevices, kMCPlatformPropertyTypeCameraDevice },
 	{ "device", kMCPlatformCameraPropertyDevice, kMCPlatformPropertyTypeCameraDevice },
 	{ "features", kMCPlatformCameraPropertyFeatures, kMCPlatformPropertyTypeCameraFeature },
+	{ "flashmodes", kMCPlatformCameraPropertyFlashModes, kMCPlatformPropertyTypeCameraFlashMode },
 	{ "flashmode", kMCPlatformCameraPropertyFlashMode, kMCPlatformPropertyTypeCameraFlashMode },
 	{ "isflashactive", kMCPlatformCameraPropertyIsFlashActive, kMCPlatformPropertyTypeBool },
 	{ "isflashavailable", kMCPlatformCameraPropertyIsFlashAvailable, kMCPlatformPropertyTypeBool },
