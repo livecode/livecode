@@ -475,7 +475,8 @@ bool MCAVCamera::GetProperty(MCPlatformCameraProperty p_property, MCPlatformProp
         case kMCPlatformCameraPropertyDevice:
             break;
         case kMCPlatformCameraPropertyDevices:
-            break;
+			return GetDevices(*(intset_t*)r_value);
+		
         case kMCPlatformCameraPropertyFeatures:
             break;
         case kMCPlatformCameraPropertyFlashMode:
