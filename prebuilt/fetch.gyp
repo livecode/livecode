@@ -178,7 +178,9 @@
 					
 					'action':
 					[
-						'../util/invoke-unix.bat',
+						'cmd',
+						'/V',
+						'/K', '../util/invoke-unix.bat',
 						'./fetch-libraries.sh',
 						'win32',
 					],

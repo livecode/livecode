@@ -21,8 +21,9 @@ LIBS_linux=( OpenSSL Curl ICU )
 SUBPLATFORMS_ios=( iPhoneSimulator5.1 iPhoneSimulator6.1 iPhoneSimulator7.1 iPhoneSimulator8.2 iPhoneSimulator8.3 iPhoneOS8.2 iPhoneOS8.3 )
 
 # Fetch settings
-FETCH_DIR=`pwd`/fetched
-EXTRACT_DIR=`pwd`
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+FETCH_DIR="${SCRIPT_DIR}/fetched"
+EXTRACT_DIR="${SCRIPT_DIR}"
 URL="http://downloads.livecode.com/prebuilts"
 
 mkdir -p "${FETCH_DIR}"
@@ -44,11 +45,18 @@ function fetchLibrary {
 
 	if [ ! -f "${FETCH_DIR}/${NAME}.tar.bz2" ] ; then
 		echo "Fetching library: ${NAME}"
-		curl --silent "${URL}/${NAME}.tar.bz2" -o "${FETCH_DIR}/${NAME}.tar.bz2"
-		#cp "`pwd`/packaged/${NAME}.tar.bz2" "${FETCH_DIR}/${NAME}.tar.bz2"
+		
+		# Download using an HTTP client of some variety
+		if $(which curl 2>/dev/null) ; then
+			curl --silent "${URL}/${NAME}.tar.bz2" -o "${FETCH_DIR}/${NAME}.tar.bz2"
+		else
+			# Perl as a last resort (useful for Cygwin)
+			perl -MLWP::Simple -e "getstore('${URL}/${NAME}.tar.bz2', '${FETCH_DIR}/${NAME}.tar.bz2') == 200 or exit 1"
+		fi
+
 		if [ $? -ne 0 ] ; then
 			echo "    failed"
-			exit
+			exit 1
 		fi
 
 		echo "Extracting library: ${NAME}"
@@ -59,7 +67,7 @@ function fetchLibrary {
 		cd "${DIR}"
 		if [ "${RESULT}" -ne 0 ] ; then
 			echo "    failed"
-			exit
+			exit 1
 		fi
 	else
 		echo "Already fetched: ${NAME}"
@@ -72,9 +80,10 @@ else
     SELECTED_PLATFORMS="$@"
 fi
 
-echo "$SELECTED_PLATFORMS"
+for PLATFORM in ${SELECTED_PLATFORMS} ; do
+	# Work around an issue where Gyp is too enthusiastic in path-ifying arguments
+	PLATFORM=$(basename "$PLATFORM")
 
-for PLATFORM in "${SELECTED_PLATFORMS}" ; do
 	eval "ARCHS=( \${ARCHS_${PLATFORM}[@]} )"
 	eval "LIBS=( \${LIBS_${PLATFORM}[@]} )"
 	eval "SUBPLATFORMS=( \${SUBPLATFORMS_${PLATFORM}[@]} )"
@@ -93,7 +102,11 @@ for PLATFORM in "${SELECTED_PLATFORMS}" ; do
 	
 	# Re-name the "i386" output folder to "x86"
 	if [ -d "${EXTRACT_DIR}/lib/${PLATFORM}/i386" ] ; then
-		mv "${EXTRACT_DIR}/lib/${PLATFORM}/i386" "${EXTRACT_DIR}/lib/${PLATFORM}/x86"
+		if [ ! -d "${EXTRACT_DIR}/lib/${PLATFORM}/x86" ] ; then
+			mkdir "${EXTRACT_DIR}/lib/${PLATFORM}/x86"
+		fi
+		mv "${EXTRACT_DIR}/lib/${PLATFORM}/i386"/* "${EXTRACT_DIR}/lib/${PLATFORM}/x86/"
+		rmdir "${EXTRACT_DIR}/lib/${PLATFORM}/i386"
 	fi
 done
 
