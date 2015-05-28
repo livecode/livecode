@@ -15,7 +15,8 @@
 				'fetch.gyp:fetch',
 			],
 
-			'direct_dependent_settings':
+			# Needs to be all dependents as used by the HarfBuzz public headers
+			'all_dependent_settings':
 			{
 				'include_dirs':
 				[
