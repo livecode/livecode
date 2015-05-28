@@ -638,6 +638,9 @@ public:
 
 extern "C" MC_DLLEXPORT void MCEngineExecLog(MCValueRef p_message)
 {
+	if (p_message == nil)
+		p_message = kMCNull;
+
     MCAutoStringRef t_message_desc;
     if (!MCValueCopyDescription(p_message, &t_message_desc))
         return;

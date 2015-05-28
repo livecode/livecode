@@ -53,7 +53,7 @@ public foreign handler MCEngineExecPostToScriptObjectWithArguments(in pMessage a
 public foreign handler MCEngineEvalMessageWasHandled(out pHandled as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCEngineEvalMessageWasNotHandled(out pHandled as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCEngineExecExecuteScript(in pScript as String) returns any binds to "<builtin>"
-public foreign handler MCEngineExecLog(in pMessage as any) returns nothing binds to "<builtin>"
+public foreign handler MCEngineExecLog(in pMessage as optional any) returns nothing binds to "<builtin>"
 public foreign handler MCEngineExecLogWithValues(in pFormat as String, in pValues as List) returns nothing binds to "<builtin>"
 
 /*
