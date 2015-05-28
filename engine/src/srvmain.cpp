@@ -461,10 +461,10 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 	
 static void IO_printf(IO_handle stream, const char *format, ...)
 {
-	char t_buffer[4096];
+    MCAutoStringRef t_string;
 	va_list args;
 	va_start(args, format);
-	vsprintf(t_buffer, format, args);
+    MCStringFormatV(&t_string, format, args);
 	va_end(args);
     
     MCAutoStringRefAsSysString t_sys_string;
