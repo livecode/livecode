@@ -617,7 +617,7 @@ public foreign handler MCWidgetGetClickPosition(in pCurrent as CBool, out rLocat
 public foreign handler MCWidgetGetClickButton(in pCurrent as CBool, out rButton as CUInt) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetClickCount(in pCurrent as CBool, out rCount as CUInt) returns nothing binds to "<builtin>"
 
-public foreign handler MCWidgetGetMouseButtonState(in pIndex as LCUInt, out rPressed /*as PressedState*/) returns nothing binds to "<builtin>"
+--public foreign handler MCWidgetGetMouseButtonState(in pIndex as LCUInt, out rPressed /*as PressedState*/) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetModifierKeys(in pCurrent as CBool, out rKeys as List) returns nothing binds to "<builtin>"
 
 /* 
@@ -714,7 +714,7 @@ begin
     MCWidgetGetClickCount(IsCurrent, output)
 end syntax
 
-syntax MouseButtonName is phrase
+/*syntax MouseButtonName is phrase
     ( "primary" <Index=1> | "secondary" <Index=2> | "left" <Index=1> | "right" <Index=2> | "middle" <Index=3> )
 begin
 end syntax
@@ -723,7 +723,7 @@ syntax TheMouseButtonState is expression
   "the" <Index: MouseButtonName> "mouse" "button"
 begin
     MCWidgetGetMouseButtonState(Index, output)
-end syntax
+end syntax*/
 
 syntax TheModifierKeys is expression
   "the" ( "current" <IsCurrent=true> | <IsCurrent=false> ) "modifier" "keys"
@@ -734,10 +734,10 @@ end syntax
 
 // ---------- Syntactic sugar for "is [not] [currently] pressed" ---------- //
 
-public foreign handler MCWidgetEvalStateIsPressed(in pState /*as PressedState*/, in pCurrently as CBool, out rPressed as CBool) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetEvalStateIsNotPressed(in pState /*as PressedState*/, in pCurrently as CBool, out rNotPressed as CBool) returns nothing binds to "<builtin>"
+//public foreign handler MCWidgetEvalStateIsPressed(in pState /*as PressedState*/, in pCurrently as CBool, out rPressed as CBool) returns nothing binds to "<builtin>"
+//public foreign handler MCWidgetEvalStateIsNotPressed(in pState /*as PressedState*/, in pCurrently as CBool, out rNotPressed as CBool) returns nothing binds to "<builtin>"
 
-syntax IsPressed is postfix operator with precedence 5
+/*syntax IsPressed is postfix operator with precedence 5
   <mState: Expression> "is" ( "currently" <Currently=true> | <Currently=false> ) "pressed"
 begin
     MCWidgetEvalStateIsPressed(mState, Currently, output)
@@ -747,7 +747,7 @@ syntax IsNotPressed is postfix operator with precedence 5
   <mState: Expression> "is not" ( "currently" <Currently=true> | <Currently=false> ) "pressed"
 begin
     MCWidgetEvalStateIsNotPressed(mState, Currently, output)
-end syntax
+end syntax*/
 
 
 // ---------- Syntactic sugar for points and rects ---------- //
