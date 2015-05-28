@@ -5026,7 +5026,9 @@ bool MCStringConvertToSysString(MCStringRef p_string, char *& r_system_string, s
     t_bytes . Take(t_size, t_ptr);
     
     r_system_string = t_ptr;
-    r_byte_count = t_size;
+    
+    // Account for the fact that array size includes the NUL byte.
+    r_byte_count = t_size - 1;
     
     return true;
 }
