@@ -27,12 +27,16 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "hndlrlst.h"
 #include "handler.h"
 #include "keywords.h"
+#include "statemnt.h"
+#include "newobj.h"
 #include "literal.h"
 #include "mcerror.h"
 #include "object.h"
 #include "util.h"
 #include "debug.h"
 #include "parentscript.h"
+#include "license.h"
+#include "cmds.h"
 
 #include "globals.h"
 
@@ -660,15 +664,149 @@ bool MCHandlerlist::enumerate(MCExecPoint& ep, bool p_first)
 	return p_first;
 }
 
+// SN-2015-05-28: [[ Bug 11277 ]] Similiar function to MCHandler::deletestatements
+void MCHandlerlist::deletestatements(MCStatement *p_statements)
+{
+    while (p_statements != NULL)
+    {
+        MCStatement *tsptr = p_statements;
+        p_statements = p_statements->getnext();
+        delete tsptr;
+    }
+}
+
 Exec_stat MCHandlerlist::eval(MCExecPoint& ep)
 {
-	// TODO: Implement execution outside of a handler.
-	return ES_ERROR;
+#idef /* MCHandlerlist */ LEGACY_EXEC
+    // SN-2015-05-28: [[ Bug 11277 ]] Implement the parsing of the expression -
+    //  same as MCHandler::eval, but no handler is set the ScriptPoint.
+    MCScriptPoint sp(ep);
+    MCExpression *exp = NULL;
+    Symbol_type type;
+    Exec_stat stat = ES_ERROR;
+    if (sp.parseexp(False, True, &exp) == PS_NORMAL && sp.next(type) == PS_EOF)
+    {
+        stat = exp->eval(ep);
+        ep.grabsvalue();
+    }
+    delete exp;
+    return stat;
+#endif /* MCHandlerlist */
 }
 
 Exec_stat MCHandlerlist::doscript(MCExecPoint& ep, uint2 line, uint2 pos)
 {
-	// TODO: Implement execution outside of a handler.
-	return ES_ERROR;
+#ifdef /* MCHandlerlist::doscript */ LEGACY_EXEC
+	// SN-2015-05-28: [[ Bug 11277 ]] Implement the "do" command for MCHandlerlist.
+	//  Same as MCHandler::doscript.
+    MCScriptPoint sp(ep);
+    MCStatement *curstatement = NULL;
+    MCStatement *statements = NULL;
+    MCStatement *newstatement = NULL;
+    Symbol_type type;
+    const LT *te;
+    Exec_stat stat = ES_NORMAL;
+    Boolean oldexplicit = MCexplicitvariables;
+    MCexplicitvariables = False;
+    uint4 count = 0;
+    sp.setline(line - 1);
+    while (stat == ES_NORMAL)
+    {
+        switch (sp.next(type))
+        {
+            case PS_NORMAL:
+                if (type == ST_ID)
+                    if (sp.lookup(SP_COMMAND, te) != PS_NORMAL)
+                        newstatement = new MCComref(sp.gettoken_nameref());
+                    else
+                    {
+                        if (te->type != TT_STATEMENT)
+                        {
+                            MCeerror->add(EE_DO_NOTCOMMAND, line, pos, sp.gettoken());
+                            stat = ES_ERROR;
+                        }
+                        else
+                            newstatement = MCN_new_statement(te->which);
+                    }
+                    else
+                    {
+                        MCeerror->add(EE_DO_NOCOMMAND, line, pos, sp.gettoken());
+                        stat = ES_ERROR;
+                    }
+                if (stat == ES_NORMAL)
+                {
+                    if (curstatement == NULL)
+                        statements = curstatement = newstatement;
+                    else
+                    {
+                        curstatement->setnext(newstatement);
+                        curstatement = newstatement;
+                    }
+                    if (curstatement->parse(sp) != PS_NORMAL)
+                    {
+                        MCeerror->add(EE_DO_BADCOMMAND, line, pos, ep.getsvalue());
+                        stat = ES_ERROR;
+                    }
+                    count += curstatement->linecount();
+                }
+                break;
+            case PS_EOL:
+                if (sp.skip_eol() != PS_NORMAL)
+                {
+                    MCeerror->add(EE_DO_BADLINE, line, pos, ep.getsvalue());
+                    stat = ES_ERROR;
+                }
+                break;
+            case PS_EOF:
+                stat = ES_PASS;
+                break;
+            default:
+                stat = ES_ERROR;
+        }
+    }
+    MCexplicitvariables = oldexplicit;
+    
+    if (MClicenseparameters . do_limit > 0 && count >= MClicenseparameters . do_limit)
+    {
+        MCeerror -> add(EE_DO_NOTLICENSED, line, pos, ep . getsvalue());
+        stat = ES_ERROR;
+    }
+    
+    if (stat == ES_ERROR)
+    {
+        deletestatements(statements);
+        return ES_ERROR;
+    }
+    MCExecPoint ep2(ep);
+    while (statements != NULL)
+    {
+        Exec_stat stat = statements->exec(ep2);
+        if (stat == ES_ERROR)
+        {
+            deletestatements(statements);
+            MCeerror->add(EE_DO_BADEXEC, line, pos, ep.getsvalue());
+            return ES_ERROR;
+        }
+        if (MCexitall || stat != ES_NORMAL)
+        {
+            deletestatements(statements);
+            if (stat != ES_ERROR)
+                stat = ES_NORMAL;
+            return stat;
+        }
+        else
+        {
+            MCStatement *tsptr = statements;
+            statements = statements->getnext();
+            delete tsptr;
+        }
+    }
+    if (MCscreen->abortkey())
+    {
+        MCeerror->add(EE_DO_ABORT, line, pos);
+        return ES_ERROR;
+    }
+    return ES_NORMAL;
+#endif /* MCHandlerlist::doscript */
 }
 

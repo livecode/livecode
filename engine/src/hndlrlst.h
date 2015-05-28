@@ -129,6 +129,9 @@ public:
 	uint2 getnglobals(void);
 	MCVariable *getglobal(uint2 p_index);
 	bool enumerate(MCExecPoint& ep, bool p_first = true);
+    
+    // SN-2015-05-28: [[ Bug 11277 ]] Similar function to MCHandler::deletestatements
+    void deletestatements(MCStatement *p_statements);
 
 	// MW-2013-11-15: [[ Bug 11277 ]] Methods for eval/exec in handlerlist context.
 	Exec_stat eval(MCExecPoint& ep);
