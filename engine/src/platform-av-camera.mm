@@ -107,6 +107,9 @@ private:
     MCNameRef m_device;
     bool m_visible : 1;
     
+	bool m_capturing_image : 1;
+	MCDataRef m_jpeg_image;
+	
     ////
     
     AVCaptureSession *m_session;
@@ -192,6 +195,9 @@ MCAVCamera::MCAVCamera(void)
     MCU_set_rect(m_rectangle, 0, 0, 0, 0);
     m_device = nil;
     m_visible = true;
+	
+	m_capturing_image = false;
+	m_jpeg_image = nil;
     
     m_session = nil;
     m_audio_device = nil;
@@ -461,7 +467,44 @@ bool MCAVCamera::StopRecording(void)
 
 bool MCAVCamera::TakePicture(MCDataRef& r_data)
 {
-    return false;
+	if (!m_prepared)
+		return false;
+	
+	if (m_capturing_image)
+		return false;
+	
+	AVCaptureConnection *t_connection;
+	t_connection = [m_image_output connectionWithMediaType: AVMediaTypeVideo];
+	
+	if (t_connection == nil)
+		return false;
+	
+	m_jpeg_image = nil;
+	
+	m_capturing_image = true;
+	[m_image_output captureStillImageAsynchronouslyFromConnection:t_connection completionHandler:^(CMSampleBufferRef imageDataSampleBuffer, NSError *error) {
+		if (error != nil)
+		{
+			NSData *t_data;
+			t_data = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageDataSampleBuffer];
+
+			/* UNCHECKED */ MCDataCreateWithBytes((const byte_t*)[t_data bytes], [t_data length], m_jpeg_image);
+		}
+		m_capturing_image = false;
+	}];
+	
+	while (!MCquit && m_capturing_image)
+	{
+		MCPlatformWaitForEvent(60.0, true);
+	}
+	
+	if (m_jpeg_image == nil)
+		return false;
+
+	r_data = m_jpeg_image;
+	m_jpeg_image = nil;
+	
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

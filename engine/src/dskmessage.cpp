@@ -58,6 +58,20 @@ static MCCameraControlProp s_camera_control_props[] =
     { nil },
 };
 
+struct MCCameraControlAction
+{
+	const char *name;
+	MCPlatformCameraAction action;
+};
+
+static MCCameraControlAction s_camera_control_actions[] =
+{
+	{ "takepicture", kMCPlatformCameraActionTakePicture },
+	{ "startrecording", kMCPlatformCameraActionStartRecording },
+	{ "stoprecording", kMCPlatformCameraActionStopRecording },
+	{ nil },
+};
+
 static MCCameraControl *s_camera_controls = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -243,6 +257,15 @@ static MCCameraControlProp *find_camera_control_prop(MCNameRef p_prop_name)
             return &s_camera_control_props[i];
     
     return nil;
+}
+
+static MCCameraControlAction *find_camera_control_action(MCNameRef p_action_name)
+{
+	for (uindex_t i = 0; s_camera_control_actions[i].name != nil; i++)
+		if (MCNameIsEqualToCString(p_action_name, s_camera_control_actions[i].name, kMCStringOptionCompareCaseless))
+			return &s_camera_control_actions[i];
+	
+	return nil;
 }
 
 static bool convert_to_platform_prop_type(MCExecContext& ctxt, MCValueRef p_value, MCPlatformPropertyType p_type, MCCameraControlPropValue& r_prop_value)
@@ -453,8 +476,8 @@ Exec_stat MCHandleCameraControlGet(void *p_context, MCParameter *p_parameters)
 Exec_stat MCHandleCameraControlDo(void *p_context, MCParameter *p_parameters)
 {
     MCNewAutoNameRef t_control_name;
-    MCNewAutoNameRef t_property;
-    if (!MCParseParameters(p_parameters, "nn", &(&t_control_name), &(&t_property)))
+    MCNewAutoNameRef t_action_name;
+    if (!MCParseParameters(p_parameters, "nn", &(&t_control_name), &(&t_action_name)))
         return ES_ERROR;
     
     MCExecContext ctxt(nil, nil, nil);
@@ -472,8 +495,53 @@ Exec_stat MCHandleCameraControlDo(void *p_context, MCParameter *p_parameters)
         p_parameters = p_parameters -> getnext();
     }
     
-    // Do it.
-    
+	MCCameraControl *t_control;
+	t_control = find_camera_control(*t_control_name);
+	
+	// Do nothing if control not found.
+	if (t_control == nil)
+		return ES_NORMAL;
+	
+	MCCameraControlAction *t_action;
+	t_action = find_camera_control_action(*t_action_name);
+	
+	if (t_action == nil)
+		return ES_NORMAL; // TODO - throw error?
+	
+	// Do it.
+	switch (t_action->action)
+	{
+		case kMCPlatformCameraActionTakePicture:
+		{
+			MCAutoDataRef t_data;
+			if (!MCPlatformCameraTakePicture(t_control->camera, &t_data))
+				return ES_ERROR; // TODO - throw error
+			
+			ctxt.SetTheResultToValue(*t_data);
+			return ES_NORMAL;
+		}
+		
+		case kMCPlatformCameraActionStartRecording:
+		{
+			MCAutoStringRef t_string;
+			if (t_params.Count() < 1 || !ctxt.ConvertToString(t_params[0], &t_string))
+				return ES_ERROR; // TODO - throw error
+			
+			if (!MCPlatformCameraStartRecording(t_control->camera, *t_string))
+				return ES_ERROR; // TODO - throw error
+			
+			return ES_NORMAL;
+		}
+		
+		case kMCPlatformCameraActionStopRecording:
+		{
+			if (!MCPlatformCameraStopRecording(t_control->camera))
+				return ES_ERROR; // TODO - throw error
+			
+			return ES_NORMAL;
+		}
+	}
+	
     return ES_NORMAL;
 }
 

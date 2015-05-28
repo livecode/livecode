@@ -1227,6 +1227,13 @@ enum MCPlatformCameraProperty
     kMCPlatformCameraPropertyIsFlashAvailable,
 };
 
+enum MCPlatformCameraAction
+{
+	kMCPlatformCameraActionTakePicture,
+	kMCPlatformCameraActionStartRecording,
+	kMCPlatformCameraActionStopRecording,
+};
+
 void MCPlatformCameraCreate(MCPlatformCameraRef& r_camera);
 
 void MCPlatformCameraRetain(MCPlatformCameraRef camera);
