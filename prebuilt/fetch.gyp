@@ -283,8 +283,6 @@
 					
 					'outputs':
 					[
-						'>@(openssl_headers)',
-						'>@(icu_headers)',
 						'lib/android/armv6',
 					],
 					
@@ -313,8 +311,6 @@
 					
 					'outputs':
 					[
-						'>@(openssl_headers)',
-						'>@(icu_headers)',
 						'lib/linux',
 					],
 					
@@ -343,8 +339,6 @@
 					
 					'outputs':
 					[
-						'>@(openssl_headers)',
-						'>@(icu_headers)',
 						'lib/mac',
 					],
 					
@@ -373,8 +367,6 @@
 					
 					'outputs':
 					[
-						'>@(openssl_headers)',
-						'>@(icu_headers)',
 						'lib/win32/<(target_arch)',
 					],
 					
@@ -405,8 +397,6 @@
 					
 					'outputs':
 					[
-						'>@(openssl_headers)',
-						'>@(icu_headers)',
 						'lib/ios',
 					],
 					
