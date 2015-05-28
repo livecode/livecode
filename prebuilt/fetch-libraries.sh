@@ -47,7 +47,7 @@ function fetchLibrary {
 		echo "Fetching library: ${NAME}"
 		
 		# Download using an HTTP client of some variety
-		if $(which curl 2>/dev/null) ; then
+		if $(which curl 1>/dev/null 2>/dev/null) ; then
 			curl --silent "${URL}/${NAME}.tar.bz2" -o "${FETCH_DIR}/${NAME}.tar.bz2"
 		else
 			# Perl as a last resort (useful for Cygwin)
