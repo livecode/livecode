@@ -4991,17 +4991,6 @@ bool MCStringConvertToSysString(MCStringRef p_string, char *& r_system_string, s
     
 	return true;
 }
-
-#elif defined(__MAC__)
-bool MCStringConvertToSysString(MCStringRef p_string, char *& r_system_string, size_t& r_byte_count)
-{
-    bool t_success;
-    uindex_t t_byte_count;
-    if (!MCStringConvertToUTF8(p_string, r_system_string, t_byte_count))
-        return false;
-    r_byte_count = t_byte_count;
-    return true;
-}
 #elif defined(__WINDOWS__)
 bool MCStringConvertToSysString(MCStringRef p_string, char *& r_system_string, size_t& r_byte_count)
 {
@@ -5039,6 +5028,16 @@ bool MCStringConvertToSysString(MCStringRef p_string, char *& r_system_string, s
     r_system_string = t_ptr;
     r_byte_count = t_size;
     
+    return true;
+}
+#else
+bool MCStringConvertToSysString(MCStringRef p_string, char *& r_system_string, size_t& r_byte_count)
+{
+    bool t_success;
+    uindex_t t_byte_count;
+    if (!MCStringConvertToUTF8(p_string, r_system_string, t_byte_count))
+        return false;
+    r_byte_count = t_byte_count;
     return true;
 }
 #endif
