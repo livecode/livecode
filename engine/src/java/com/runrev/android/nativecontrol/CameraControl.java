@@ -42,21 +42,26 @@ class CameraControl extends NativeControl
 	public static final int DEVICE_FRONT = 2;
 	public static final int DEVICE_BACK = 4;
 	
-	public static final int FLASH_OFF = 0;
-	public static final int FLASH_ON = 1;
-	public static final int FLASH_AUTO = 2;
+	public static final int FLASH_OFF = 1;
+	public static final int FLASH_ON = 2;
+	public static final int FLASH_AUTO = 4;
 	
 	public static final int FEATURE_FLASH = 1;
-	public static final int FEATURE_FLASH_MODE = 2;
 	
 	private int m_devices;
 	private int m_default;
-	private Camera.CameraInfo[] m_camera_info;
-	private int[] m_features;
+	private CameraProperties[] m_camera_properties;
 	
 	private int m_device;
 	private int m_flash_mode;
 	private CameraView m_camera_view;
+	
+	public class CameraProperties
+	{
+		public Camera.CameraInfo info;
+		public int features;
+		public int flash_modes;
+	}
 	
 	public class CameraView extends SurfaceView
 	{
@@ -373,19 +378,7 @@ class CameraControl extends NativeControl
 		
 		public void setFlashMode(int p_mode)
 		{
-			String t_mode = null;
-			switch (p_mode)
-			{
-				case FLASH_OFF:
-					t_mode = Camera.Parameters.FLASH_MODE_OFF;
-					break;
-				case FLASH_ON:
-					t_mode = Camera.Parameters.FLASH_MODE_ON;
-					break;
-				case FLASH_AUTO:
-					t_mode = Camera.Parameters.FLASH_MODE_AUTO;
-					break;
-			}
+			String t_mode = flashModeString(p_mode);
 			
 			if (t_mode == m_flash_mode)
 				return;
@@ -444,7 +437,7 @@ class CameraControl extends NativeControl
 	{
 		m_device = DEVICE_DEFAULT;
 		
-		m_camera_info = null;
+		m_camera_properties = null;
 		m_devices = 0;
 		m_flash_mode = FLASH_AUTO;
 
@@ -524,8 +517,14 @@ class CameraControl extends NativeControl
 	
 	//////////
 
-	private int fetchFeatures(int p_cam_id)
+	private CameraProperties fetchCameraProperties(int p_cam_id)
 	{
+		CameraProperties t_properties;
+		t_properties = new CameraProperties();
+		
+		t_properties.info = new CameraInfo();
+		Camera.getCameraInfo(p_cam_id, t_properties.info);
+		
 		Camera t_cam;
 		
 		try
@@ -534,14 +533,15 @@ class CameraControl extends NativeControl
 		}
 		catch (Exception e)
 		{
-			return -1;
+			return null;
 		}
 		
 		Camera.Parameters t_params;
 		t_params = t_cam.getParameters();
 		
-		int t_features;
-		t_features = 0;
+		t_properties.features = 0;
+		
+		t_properties.flash_modes = 0;
 		
 		// TODO - revisit: can we assume that all cameras support on/off/auto modes?
 		//    Also, does no flash modes mean no flash unit?
@@ -550,18 +550,25 @@ class CameraControl extends NativeControl
 		
 		if (t_flash_modes != null)
 		{
-			t_features |= FEATURE_FLASH;
-			t_features |= FEATURE_FLASH_MODE;
+			t_properties.features |= FEATURE_FLASH;
+			for (String t_mode : t_flash_modes)
+			{
+				int t_mode_enum;
+				t_mode_enum = flashModeEnum(t_mode);
+				
+				if (t_mode_enum != -1)
+					t_properties.flash_modes |= t_mode_enum;
+			}
 		}
 		
 		t_cam.release();
 		
-		return t_features;
+		return t_properties;
 	}
 	
 	private void fetchCameraInfo()
 	{
-		if (m_camera_info == null)
+		if (m_camera_properties == null)
 		{
 			int t_num_devices;
 			t_num_devices = Camera.getNumberOfCameras();
@@ -569,20 +576,16 @@ class CameraControl extends NativeControl
 			if (t_num_devices > 0)
 				m_devices |= DEVICE_DEFAULT;
 			
-			m_camera_info = new CameraInfo[t_num_devices];
-			m_features = new int[t_num_devices];
+			m_camera_properties = new CameraProperties[t_num_devices];
 			
 			for (int i = 0; i < t_num_devices; i++)
 			{
-				m_camera_info[i] = new CameraInfo();
-				Camera.getCameraInfo(i, m_camera_info[i]);
+				m_camera_properties[i] = fetchCameraProperties(i);
 
-				if (m_camera_info[i].facing == CameraInfo.CAMERA_FACING_FRONT)
+				if (m_camera_properties[i].info.facing == CameraInfo.CAMERA_FACING_FRONT)
 					m_devices |= DEVICE_FRONT;
-				else if (m_camera_info[i].facing == CameraInfo.CAMERA_FACING_BACK)
+				else if (m_camera_properties[i].info.facing == CameraInfo.CAMERA_FACING_BACK)
 					m_devices |= DEVICE_BACK;
-				
-				m_features[i] = fetchFeatures(i);
 			}
 		}
 	}
@@ -594,25 +597,25 @@ class CameraControl extends NativeControl
 		int t_cam;
 		t_cam = -1;
 		
-		for (int i = 0; i < m_camera_info.length; i++)
+		for (int i = 0; i < m_camera_properties.length; i++)
 		{
 			switch (m_device)
 			{
 				case DEVICE_BACK:
 					// return first back-facing camera
-					if (m_camera_info[i].facing == CameraInfo.CAMERA_FACING_BACK)
+					if (m_camera_properties[i].info.facing == CameraInfo.CAMERA_FACING_BACK)
 						return i;
 					break;
 					
 				case DEVICE_FRONT:
 					// return first front-facing camera
-					if (m_camera_info[i].facing == CameraInfo.CAMERA_FACING_FRONT)
+					if (m_camera_properties[i].info.facing == CameraInfo.CAMERA_FACING_FRONT)
 						return i;
 					break;
 				
 				case DEVICE_DEFAULT:
 					// return first back-facing camera, or first front-facing otherwise
-					if (m_camera_info[i].facing == CameraInfo.CAMERA_FACING_BACK)
+					if (m_camera_properties[i].info.facing == CameraInfo.CAMERA_FACING_BACK)
 						return i;
 					else if (t_cam == -1)
 						t_cam = i;
@@ -662,7 +665,18 @@ class CameraControl extends NativeControl
 		if (t_cam == -1)
 			return -1;
 		
-		return m_features[t_cam];
+		return m_camera_properties[t_cam].features;
+	}
+	
+	public int getFlashModes()
+	{
+		int t_cam;
+		t_cam = currentCameraId();
+		
+		if (t_cam == -1)
+			return -1;
+		
+		return m_camera_properties[t_cam].flash_modes;
 	}
 	
 	public void setFlashMode(int p_mode)
@@ -676,9 +690,9 @@ class CameraControl extends NativeControl
 			return;
 		}
 		
-		if ((m_features[t_cam] & FEATURE_FLASH_MODE) == 0)
+		if ((m_camera_properties[t_cam].flash_modes & p_mode) == 0)
 		{
-			// TODO - error: cannot set flash mode of selected camera device
+			// TODO - error: flash mode not supported by selected camera device
 			return;
 		}
 		
@@ -694,7 +708,7 @@ class CameraControl extends NativeControl
 		if (t_cam == -1)
 			return -1;
 		
-		if ((m_features[t_cam] & FEATURE_FLASH_MODE) == 0)
+		if ((m_camera_properties[t_cam].features & FEATURE_FLASH) == 0)
 			return -1;
 		
 		return m_flash_mode;
@@ -716,6 +730,51 @@ class CameraControl extends NativeControl
 	{
 		return m_camera_view.takePicture();
 	}
+	
+////////////////////////////////////////////////////////////////////////////////
+
+	public static String flashModeString(int p_mode)
+	{
+		switch (p_mode)
+		{
+			case FLASH_OFF:
+				return Camera.Parameters.FLASH_MODE_OFF;
+				
+			case FLASH_ON:
+				return Camera.Parameters.FLASH_MODE_ON;
+				
+			case FLASH_AUTO:
+				return Camera.Parameters.FLASH_MODE_AUTO;
+		}
+		
+		return null;
+	}
+	
+	public static int flashModeEnum(String p_mode)
+	{
+		if (Camera.Parameters.FLASH_MODE_OFF.equals(p_mode))
+			return FLASH_OFF;
+		else if (Camera.Parameters.FLASH_MODE_ON.equals(p_mode))
+			return FLASH_ON;
+		else if (Camera.Parameters.FLASH_MODE_AUTO.equals(p_mode))
+			return FLASH_AUTO;
+		
+//		switch (p_mode)
+//		{
+//			case Camera.Parameters.FLASH_MODE_OFF:
+//				return FLASH_OFF;
+//				
+//			case Camera.Parameters.FLASH_MODE_ON:
+//				return FLASH_ON;
+//				
+//			case Camera.Parameters.FLASH_MODE_AUTO:
+//				return FLASH_AUTO;
+//		}
+		
+		return -1;
+	}
+	
+////////////////////////////////////////////////////////////////////////////////
 	
 	private static native void onPictureTaken(byte[] p_data);
 }
