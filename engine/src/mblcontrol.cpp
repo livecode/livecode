@@ -304,6 +304,7 @@ static struct {const char *name; Properties property;} s_native_control_properti
 	{"devices", P_DEVICES},
 	{"device", P_DEVICE},
 	{"features", P_FEATURES},
+	{"flashmodes", P_FLASH_MODES},
 	{"flashmode", P_FLASH_MODE},
 	{"isflashactive", P_IS_FLASH_ACTIVE},
 	{"isflashavailable", P_IS_FLASH_AVAILABLE},

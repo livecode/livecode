@@ -579,17 +579,17 @@ static MCExecSetTypeInfo _kMCNativeControlCameraDeviceTypeInfo =
 
 //////////
 
-static MCExecEnumTypeElementInfo _kMCNativeControlCameraFlashModeElementInfo[] =
+static MCExecSetTypeElementInfo _kMCNativeControlCameraFlashModeElementInfo[] =
 {
-	{"off", kMCNativeControlCameraFlashModeOff},
-	{"on", kMCNativeControlCameraFlashModeOn},
-	{"auto", kMCNativeControlCameraFlashModeAuto},
+	{"off", kMCNativeControlCameraFlashModeOffBit},
+	{"on", kMCNativeControlCameraFlashModeOnBit},
+	{"auto", kMCNativeControlCameraFlashModeAutoBit},
 };
 
-static MCExecEnumTypeInfo _kMCNativeControlCameraFlashModeTypeInfo =
+static MCExecSetTypeInfo _kMCNativeControlCameraFlashModeTypeInfo =
 {
 	"NativeControl.CameraFlashMode",
-	sizeof(_kMCNativeControlCameraFlashModeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+	sizeof(_kMCNativeControlCameraFlashModeElementInfo) / sizeof(MCExecSetTypeElementInfo),
 	_kMCNativeControlCameraFlashModeElementInfo
 };
 
@@ -598,7 +598,6 @@ static MCExecEnumTypeInfo _kMCNativeControlCameraFlashModeTypeInfo =
 static MCExecSetTypeElementInfo _kMCNativeControlCameraFeatureElementInfo[] =
 {
 	{ "flash", kMCNativeControlCameraFeatureFlashBit },
-	{ "flashmode", kMCNativeControlCameraFeatureFlashModeBit },
 };
 
 static MCExecSetTypeInfo _kMCNativeControlCameraFeatureTypeInfo =
@@ -634,7 +633,7 @@ MCExecEnumTypeInfo *kMCNativeControlInputVerticalAlignTypeInfo = &_kMCNativeCont
 MCExecEnumTypeInfo *kMCNativeControlClearButtonModeTypeInfo = &_kMCNativeControlClearButtonModeTypeInfo;
 MCExecEnumTypeInfo *kMCNativeControlBorderStyleTypeInfo = &_kMCNativeControlBorderStyleTypeInfo;
 MCExecSetTypeInfo *kMCNativeControlCameraDeviceTypeInfo = &_kMCNativeControlCameraDeviceTypeInfo;
-MCExecEnumTypeInfo *kMCNativeControlCameraFlashModeTypeInfo = &_kMCNativeControlCameraFlashModeTypeInfo;
+MCExecSetTypeInfo *kMCNativeControlCameraFlashModeTypeInfo = &_kMCNativeControlCameraFlashModeTypeInfo;
 MCExecSetTypeInfo *kMCNativeControlCameraFeatureTypeInfo = &_kMCNativeControlCameraFeatureTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////

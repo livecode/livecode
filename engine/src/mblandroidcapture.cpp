@@ -92,7 +92,7 @@ MCPropertyInfo MCAndroidCameraControl::kProperties[] =
 	DEFINE_RO_CTRL_SET_PROPERTY(P_DEVICES, NativeControlCameraDevice, MCAndroidCameraControl, AvailableDevices)
 	DEFINE_RW_CTRL_SET_PROPERTY(P_DEVICE, NativeControlCameraDevice, MCAndroidCameraControl, Device)
 	DEFINE_RO_CTRL_SET_PROPERTY(P_FEATURES, NativeControlCameraFeature, MCAndroidCameraControl, Features)
-	DEFINE_RW_CTRL_ENUM_PROPERTY(P_FLASH_MODE, NativeControlCameraFlashMode, MCAndroidCameraControl, FlashMode)
+	DEFINE_RW_CTRL_SET_PROPERTY(P_FLASH_MODE, NativeControlCameraFlashMode, MCAndroidCameraControl, FlashMode)
 	DEFINE_RO_CTRL_PROPERTY(P_IS_FLASH_AVAILABLE, Bool, MCAndroidCameraControl, FlashIsAvailable)
 	DEFINE_RO_CTRL_PROPERTY(P_IS_FLASH_ACTIVE, Bool, MCAndroidCameraControl, FlashIsActive)
 };

@@ -394,18 +394,20 @@ enum MCNativeControlCameraDevice
 
 enum MCNativeControlCameraFlashMode
 {
-	kMCNativeControlCameraFlashModeOff,
-	kMCNativeControlCameraFlashModeOn,
-	kMCNativeControlCameraFlashModeAuto,
+	kMCNativeControlCameraFlashModeOffBit,
+	kMCNativeControlCameraFlashModeOnBit,
+	kMCNativeControlCameraFlashModeAutoBit,
+	
+	kMCNativeControlCameraFlashModeOff = 1 << kMCNativeControlCameraFlashModeOffBit,
+	kMCNativeControlCameraFlashModeOn = 1 << kMCNativeControlCameraFlashModeOnBit,
+	kMCNativeControlCameraFlashModeAuto = 1 << kMCNativeControlCameraFlashModeAutoBit,
 };
 
 enum MCNativeControlCameraFeature
 {
     kMCNativeControlCameraFeatureFlashBit,
-    kMCNativeControlCameraFeatureFlashModeBit,
 	
 	kMCNativeControlCameraFeatureFlash = 1 << kMCNativeControlCameraFeatureFlashBit,
-	kMCNativeControlCameraFeatureFlashMode = 1 << kMCNativeControlCameraFeatureFlashModeBit,
 };
 
 struct MCNativeControlActionInfo
