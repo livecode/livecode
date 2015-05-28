@@ -174,6 +174,7 @@
 					'outputs':
 					[
 						'lib/win32/<(target_arch)',
+						'lib/win32/<(target_arch)/dummy.txt',
 					],
 					
 					'action':
