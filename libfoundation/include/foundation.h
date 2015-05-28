@@ -1680,9 +1680,10 @@ bool MCStringConvertToCFStringRef(MCStringRef string, CFStringRef& r_cfstring);
 bool MCStringConvertToBSTR(MCStringRef string, BSTR& r_bstr);
 #endif
 
-#ifdef __LINUX__
-bool MCStringConvertToSysString(MCStringRef string, const char *&sys_string);
-#endif
+// Converts the given string ref to a string in the system encoding.
+// Note that the 'bytes' ptr is typed as 'char', however it should be considered
+// as an opaque sequence of bytes with an 'unknowable' encoding.
+bool MCStringConvertToSysString(MCStringRef string, char*& r_bytes, size_t& r_byte_count);
 
 /////////
 
