@@ -105,7 +105,7 @@ for PLATFORM in ${SELECTED_PLATFORMS} ; do
 		if [ ! -d "${EXTRACT_DIR}/lib/${PLATFORM}/x86" ] ; then
 			mkdir "${EXTRACT_DIR}/lib/${PLATFORM}/x86"
 		fi
-		cp -R "${EXTRACT_DIR}/lib/${PLATFORM}/i386/" "${EXTRACT_DIR}/lib/${PLATFORM}/x86/"
+		cp -R "${EXTRACT_DIR}/lib/${PLATFORM}/i386/"* "${EXTRACT_DIR}/lib/${PLATFORM}/x86/"
 		rm -r "${EXTRACT_DIR}/lib/${PLATFORM}/i386"
 	fi
 done
