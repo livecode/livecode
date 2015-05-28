@@ -93,6 +93,9 @@ public:
 	
 	bool GetDevices(intset_t &r_devices);
 	
+	bool SetDevice(intset_t p_device);
+	bool GetDevice(intset_t &r_device);
+	
 	//////////
 	
     bool StartRecording(MCStringRef p_filename);
@@ -108,11 +111,13 @@ private:
     bool m_prepared : 1;
     bool m_running : 1;
     
+	// Properties
     bool m_active : 1;
     MCRectangle m_rectangle;
-    MCNameRef m_device;
     bool m_visible : 1;
-    
+	MCPlatformCameraDevice m_device;
+	
+	// Image capture status
 	bool m_capturing_image : 1;
 	MCDataRef m_jpeg_image;
 	
@@ -192,6 +197,33 @@ void MCPlatformCamera::Release(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCPlatformCameraDevice MCCameraDeviceFromAVCaptureDevicePosition(AVCaptureDevicePosition p_position)
+{
+	switch (p_position)
+	{
+		case AVCaptureDevicePositionFront:
+			return kMCPlatformCameraDeviceFront;
+		case AVCaptureDevicePositionBack:
+			return kMCPlatformCameraDeviceBack;
+	}
+
+	return kMCPlatformCameraDeviceDefault;
+}
+
+AVCaptureDevice *AVCaptureDeviceForCameraDevice(MCPlatformCameraDevice p_device)
+{
+	if (p_device == kMCPlatformCameraDeviceDefault)
+	return [AVCaptureDevice defaultDeviceWithMediaType: AVMediaTypeVideo];
+	
+	for (AVCaptureDevice *t_device in [AVCaptureDevice devicesWithMediaType: AVMediaTypeVideo])
+		if (MCCameraDeviceFromAVCaptureDevicePosition([t_device position]) == p_device)
+			return t_device;
+	
+	return nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 MCAVCamera::MCAVCamera(void)
 {
     m_prepared = false;
@@ -199,7 +231,7 @@ MCAVCamera::MCAVCamera(void)
     
     m_active = true;
     MCU_set_rect(m_rectangle, 0, 0, 0, 0);
-    m_device = nil;
+    m_device = kMCPlatformCameraDeviceDefault;
     m_visible = true;
 	
 	m_capturing_image = false;
@@ -251,6 +283,48 @@ bool MCAVCamera::GetDevices(intset_t &r_devices)
 	return true;
 }
 
+bool MCAVCamera::SetDevice(intset_t p_device)
+{
+	if (p_device == m_device)
+		return true;
+	
+	intset_t t_devices;
+	if (!GetDevices(t_devices))
+		return false;
+	
+	// Test if p_device is among the set of available devices
+	if ((t_devices & p_device) == 0)
+		return false;
+	
+	m_device = (MCPlatformCameraDevice)p_device;
+	
+	if (m_prepared)
+	{
+		// reconfigure capture session with new device
+		
+		[m_session removeInput:m_video_input];
+		[m_video_input release];
+		m_video_input = nil;
+		[m_video_device release];
+		m_video_device = nil;
+
+		m_video_device = [AVCaptureDeviceForCameraDevice(m_device) retain];
+		if (m_video_device != nil)
+			m_video_input = [[AVCaptureDeviceInput deviceInputWithDevice:m_video_device error:nil] retain];
+
+		if (m_video_input != nil)
+			[m_session addInput:m_video_input];
+	}
+	
+	return true;
+}
+
+bool MCAVCamera::GetDevice(intset_t &r_device)
+{
+	r_device = m_device;
+	return true;
+}
+
 void MCAVCamera::Open(void)
 {
     if (m_prepared)
@@ -259,8 +333,8 @@ void MCAVCamera::Open(void)
     m_session = [[AVCaptureSession alloc] init];
     
     m_audio_device = [[AVCaptureDevice defaultDeviceWithMediaType: AVMediaTypeAudio] retain];
-    m_video_device = [[AVCaptureDevice defaultDeviceWithMediaType: AVMediaTypeVideo] retain];
-    
+	m_video_device = [AVCaptureDeviceForCameraDevice(m_device) retain];
+	
     if (m_audio_device != nil)
         m_audio_input = [[AVCaptureDeviceInput deviceInputWithDevice: m_audio_device error: nil] retain];
     
@@ -441,7 +515,8 @@ bool MCAVCamera::SetProperty(MCPlatformCameraProperty p_property, MCPlatformProp
         break;
 
         case kMCPlatformCameraPropertyDevice:
-            break;
+			return SetDevice(*(intset_t*)p_value);
+
         case kMCPlatformCameraPropertyDevices:
             break;
         case kMCPlatformCameraPropertyFeatures:
@@ -472,10 +547,11 @@ bool MCAVCamera::GetProperty(MCPlatformCameraProperty p_property, MCPlatformProp
             *(bool *)r_value = m_active;
             break;
             
-        case kMCPlatformCameraPropertyDevice:
-            break;
         case kMCPlatformCameraPropertyDevices:
 			return GetDevices(*(intset_t*)r_value);
+		
+        case kMCPlatformCameraPropertyDevice:
+			return GetDevice(*(intset_t*)r_value);
 		
         case kMCPlatformCameraPropertyFeatures:
             break;
