@@ -89,6 +89,12 @@ public:
     bool SetProperty(MCPlatformCameraProperty property, MCPlatformPropertyType type, void *value);
     bool GetProperty(MCPlatformCameraProperty property, MCPlatformPropertyType type, void *value);
     
+	//////////
+	
+	bool GetDevices(intset_t &r_devices);
+	
+	//////////
+	
     bool StartRecording(MCStringRef p_filename);
     bool StopRecording(void);
     
@@ -215,6 +221,34 @@ MCAVCamera::MCAVCamera(void)
 MCAVCamera::~MCAVCamera(void)
 {
     Close();
+}
+
+bool MCAVCamera::GetDevices(intset_t &r_devices)
+{
+	NSArray *t_devices;
+	t_devices = [AVCaptureDevice devicesWithMediaType: AVMediaTypeVideo];
+	
+	if (t_devices == nil)
+		return false;
+	
+	intset_t t_device_set;
+	t_device_set = 0;
+	
+	if ([t_devices count] > 0)
+		t_device_set |= kMCPlatformCameraDeviceDefault;
+	
+	for (AVCaptureDevice *t_device in t_devices)
+	{
+		AVCaptureDevicePosition t_position = [t_device position];
+		if ([t_device position] == AVCaptureDevicePositionFront)
+			t_device_set |= kMCPlatformCameraDeviceFront;
+		else if ([t_device position] == AVCaptureDevicePositionBack)
+			t_device_set |= kMCPlatformCameraDeviceBack;
+	}
+	
+	r_devices = t_device_set;
+	
+	return true;
 }
 
 void MCAVCamera::Open(void)
