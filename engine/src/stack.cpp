@@ -3143,7 +3143,9 @@ bool MCStack::resolve_relative_path_to_default_folder(MCStringRef p_path, MCStri
 	
     MCS_getcurdir(&t_cur_dir);
 
-    return MCStringFormat(r_resolved, "%@/%*@", *t_cur_dir, MCRangeMake(t_start_index, MCStringGetLength(p_path) - t_start_index), p_path);
+    MCRange t_range;
+    t_range = MCRangeMake(t_start_index, MCStringGetLength(p_path) - t_start_index);
+    return MCStringFormat(r_resolved, "%@/%*@", *t_cur_dir, &t_range, p_path);
 }
 
 // OK-2009-01-09: [[Bug 1161]]
