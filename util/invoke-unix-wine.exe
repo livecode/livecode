@@ -4,5 +4,5 @@
 command=$1
 shift
 
-"$command" $@
-
+$(winepath --unix "$command") $@
+exit $?
