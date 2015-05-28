@@ -636,17 +636,27 @@ public:
     }
 };
 
-extern "C" MC_DLLEXPORT void MCEngineExecLog(MCStringRef p_message)
+extern "C" MC_DLLEXPORT void MCEngineExecLog(MCValueRef p_message)
 {
+    MCAutoStringRef t_message_desc;
+    if (!MCValueCopyDescription(p_message, &t_message_desc))
+        return;
+
+#ifdef _SERVER
+	MCS_write(MCStringGetCString(*t_message_desc),
+			  1,
+			  MCStringGetLength(*t_message_desc),
+			  IO_stderr);
+	MCS_write("\n", 1, 1, IO_stderr);
+	MCS_flush(IO_stderr);
+
+#else
     if (!MCStringIsEmpty(s_log_buffer))
     {
         if (!MCStringAppendChar(s_log_buffer, '\n'))
             return;
     }
 
-    MCAutoStringRef t_message_desc;
-    if (!MCValueCopyDescription(p_message, &t_message_desc))
-        return;
 
     if (!MCStringAppend(s_log_buffer, *t_message_desc))
         return;
@@ -656,6 +666,7 @@ extern "C" MC_DLLEXPORT void MCEngineExecLog(MCStringRef p_message)
     
     s_log_update_pending = true;
     MCEventQueuePostCustom(new MCEngineLogChangedEvent);
+#endif
 }
 
 extern "C" MC_DLLEXPORT void MCEngineExecLogWithValues(MCStringRef p_message, MCProperListRef p_values)
