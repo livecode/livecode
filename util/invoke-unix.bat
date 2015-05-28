@@ -1,26 +1,33 @@
 @echo off
 
 REM This batch file forwards commands to a Unix-like shell
-REM
-REM We need to work around what looks to be a MCVS bug: the final parameter is
-REM missing the terminating '"' when quoted
-SET commands=%*"
 
-@echo Invoking Unix command '%commands%'
+REM We use the delayed-expansion feature of the command processor
+SETLOCAL EnableDelayedExpansion
+
+SET commands=%*
 
 REM Does this look like a wine environment?
 REM We guess this by looking for a common-ish Wine env var
 IF DEFINED WINEDEBUG (
-  START /wait %~dp0\invoke-unix-wine.exe %commands%
+  @echo Invoking Unix command '%commands%' via Wine
+  %~dp0\invoke-unix-wine.exe %commands%
   EXIT %ERRORLEVEL%
 )
 
 
 IF EXIST C:\Cygwin\bin (
+  REM We need to work around what looks to be a MCVS bug: the final parameter is
+  REM missing the terminating '"' in come circumstances
+  SET commands=%commands%
+  
+  @echo Invoking Unix command '!commands!' via Cygwin
+  
   REM Obscure way to get the cmd.exe equivalent to `...` substitution
   FOR /F "usebackq tokens=*" %%x IN (`C:\Cygwin\bin\cygpath.exe %CD%`) DO SET cygwin_cd=%%x
-  FOR /F "usebackq tokens=*" %%x IN (`C:\Cygwin\bin\cygpath.exe %*"`)  DO SET cygwin_cmd=!cygwin_cmd! %%x
+  FOR /F "usebackq tokens=*" %%x IN (`C:\Cygwin\bin\cygpath.exe !commands!`)  DO SET cygwin_cmd=!cygwin_cmd! %%x
 
+  SET PATH=C:\Cygwin\bin:%PATH%
   C:\Cygwin\bin\bash.exe -c 'cd !cygwin_cd! ^&^& !cygwin_cmd!'
   EXIT %ERRORLEVEL%
 )

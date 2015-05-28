@@ -380,9 +380,8 @@
 					
 					'action':
 					[
-						'cmd',
-						'/V',
-						'/K', '../util/invoke-unix.bat',
+						'call',
+						'../util/invoke-unix.bat',
 						'./fetch-libraries.sh',
 						'win32',
 					],
