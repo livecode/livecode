@@ -1227,6 +1227,7 @@ enum MCPlatformCameraProperty
     kMCPlatformCameraPropertyDevices,
     kMCPlatformCameraPropertyFeatures,
     kMCPlatformCameraPropertyFlashMode,
+    kMCPlatformCameraPropertyFlashModes,
     kMCPlatformCameraPropertyIsFlashActive,
     kMCPlatformCameraPropertyIsFlashAvailable,
 };
