@@ -465,10 +465,10 @@ static void IO_printf(IO_handle stream, const char *format, ...)
 	va_start(args, format);
     MCStringFormatV(&t_string, format, args);
 	va_end(args);
-    MCAutoStringRefAsUTF8String t_utf8_string;
-    t_utf8_string . Lock(*t_string);
     
-	MCS_write(*t_utf8_string, 1, t_utf8_string . Size(), stream);
+    MCAutoStringRefAsSysString t_sys_string;
+    t_sys_string . Lock(*t_string);
+	MCS_write(*t_sys_string, 1, t_sys_string . Size(), stream);
 }
 
 static bool load_extension_callback(void *p_context, const MCSystemFolderEntry *p_entry)
