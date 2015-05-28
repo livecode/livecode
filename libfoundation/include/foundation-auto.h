@@ -462,13 +462,13 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if defined(__LINUX__)
 class MCAutoStringRefAsSysString
 {
 public:
     MCAutoStringRefAsSysString()
     {
-        m_sysstring = nil;
+        m_bytes = nil;
+        m_byte_count = 0;
     }
 
     ~MCAutoStringRefAsSysString()
@@ -478,29 +478,39 @@ public:
 
     bool Lock(MCStringRef p_string)
     {
-        return MCStringConvertToSysString(p_string, m_sysstring);
+        MCAssert(m_bytes == nil);
+        return MCStringConvertToSysString(p_string, m_bytes, m_byte_count);
     }
 
     void Unlock()
     {
-        if (m_sysstring != nil)
-            free((void*)m_sysstring);
-        m_sysstring = nil;
+        if (m_bytes != nil)
+        {
+            free(m_bytes);
+            m_byte_count = nil;
+        }
     }
 
-    const char * operator * () const
+    const char *operator * () const
     {
-        return m_sysstring;
+        return Ptr();
+    }
+    
+    const char *Ptr(void) const
+    {
+        MCAssert(m_bytes != nil);
+        return m_bytes;
+    }
+    
+    size_t Size(void) const
+    {
+        return m_byte_count;
     }
 
 private:
-    const char *m_sysstring;
+    char *m_bytes;
+    size_t m_byte_count;
 };
-#elif defined(__WINDOWS__)
-#  define MCAutoStringRefAsSysString MCAutoStringRefAsWS
-#else
-#  define MCAutoStringRefAsSysString MCAutoStringRefAsUTF8String
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
