@@ -47,17 +47,17 @@ static MCExecSetTypeInfo _kMCPlatformCameraDeviceTypeInfo =
 
 //////////
 
-static MCExecEnumTypeElementInfo _kMCPlatformCameraFlashModeElementInfo[] =
+static MCExecSetTypeElementInfo _kMCPlatformCameraFlashModeElementInfo[] =
 {
-	{"off", kMCPlatformCameraFlashModeOff},
-	{"on", kMCPlatformCameraFlashModeOn},
-	{"auto", kMCPlatformCameraFlashModeAuto},
+	{"off", kMCPlatformCameraFlashModeOffBit},
+	{"on", kMCPlatformCameraFlashModeOnBit},
+	{"auto", kMCPlatformCameraFlashModeAutoBit},
 };
 
-static MCExecEnumTypeInfo _kMCPlatformCameraFlashModeTypeInfo =
+static MCExecSetTypeInfo _kMCPlatformCameraFlashModeTypeInfo =
 {
 	"Platform.CameraFlashMode",
-	sizeof(_kMCPlatformCameraFlashModeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+	sizeof(_kMCPlatformCameraFlashModeElementInfo) / sizeof(MCExecSetTypeElementInfo),
 	_kMCPlatformCameraFlashModeElementInfo
 };
 
@@ -66,7 +66,6 @@ static MCExecEnumTypeInfo _kMCPlatformCameraFlashModeTypeInfo =
 static MCExecSetTypeElementInfo _kMCPlatformCameraFeatureElementInfo[] =
 {
 	{ "flash", kMCPlatformCameraFeatureFlashBit },
-	{ "flashmode", kMCPlatformCameraFeatureFlashModeBit },
 };
 
 static MCExecSetTypeInfo _kMCPlatformCameraFeatureTypeInfo =
@@ -79,7 +78,7 @@ static MCExecSetTypeInfo _kMCPlatformCameraFeatureTypeInfo =
 ////////////////////////////////////////////////////////////////////////////////
 
 MCExecSetTypeInfo *kMCPlatformCameraDeviceTypeInfo = &_kMCPlatformCameraDeviceTypeInfo;
-MCExecEnumTypeInfo *kMCPlatformCameraFlashModeTypeInfo = &_kMCPlatformCameraFlashModeTypeInfo;
+MCExecSetTypeInfo *kMCPlatformCameraFlashModeTypeInfo = &_kMCPlatformCameraFlashModeTypeInfo;
 MCExecSetTypeInfo *kMCPlatformCameraFeatureTypeInfo = &_kMCPlatformCameraFeatureTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -356,7 +355,7 @@ static bool convert_to_platform_prop_type(MCExecContext& ctxt, MCValueRef p_valu
 			MCExecTypeSetValueRef(t_val, MCValueRetain(p_value));
 			
 			/* UNCHECKED */
-			MCExecParseEnum(ctxt, kMCPlatformCameraFlashModeTypeInfo, t_val, r_prop_value.enumeration);
+			MCExecParseSet(ctxt, kMCPlatformCameraFlashModeTypeInfo, t_val, r_prop_value.set);
 			
 			return true;
 		}
@@ -399,7 +398,7 @@ static bool convert_from_platform_prop_type(MCExecContext& ctxt, MCCameraControl
 		{
 			MCExecValue t_val;
 			/* UNCHECKED */
-			MCExecFormatEnum(ctxt, kMCPlatformCameraFlashModeTypeInfo, p_prop_value.enumeration, t_val);
+			MCExecFormatSet(ctxt, kMCPlatformCameraFlashModeTypeInfo, p_prop_value.set, t_val);
 			MCExecTypeConvertToValueRefAndReleaseAlways(ctxt, t_val.type, &t_val, r_value);
 			/* UNCHECKED */
 			return true;

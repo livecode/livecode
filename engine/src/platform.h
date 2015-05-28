@@ -1251,18 +1251,20 @@ enum MCPlatformCameraDevice
 
 enum MCPlatformCameraFlashMode
 {
-	kMCPlatformCameraFlashModeOff,
-	kMCPlatformCameraFlashModeOn,
-	kMCPlatformCameraFlashModeAuto,
+	kMCPlatformCameraFlashModeOffBit,
+	kMCPlatformCameraFlashModeOnBit,
+	kMCPlatformCameraFlashModeAutoBit,
+
+	kMCPlatformCameraFlashModeOff = 1 << kMCPlatformCameraFlashModeOffBit,
+	kMCPlatformCameraFlashModeOn = 1 << kMCPlatformCameraFlashModeOnBit,
+	kMCPlatformCameraFlashModeAuto = 1 << kMCPlatformCameraFlashModeAutoBit,
 };
 
 enum MCPlatformCameraFeature
 {
 	kMCPlatformCameraFeatureFlashBit,
-	kMCPlatformCameraFeatureFlashModeBit,
 	
 	kMCPlatformCameraFeatureFlash = 1 << kMCPlatformCameraFeatureFlashBit,
-	kMCPlatformCameraFeatureFlashMode = 1 << kMCPlatformCameraFeatureFlashModeBit,
 };
 
 void MCPlatformCameraCreate(MCPlatformCameraRef& r_camera);
