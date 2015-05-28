@@ -328,7 +328,7 @@
     'rule' OptionalTypeClause(-> Type):
         "as" Type(-> Type)
         
-    'rule' OptionalTypeClause(-> optional(Position, any(Position))):
+    'rule' OptionalTypeClause(-> unspecified):
         @(-> Position)
 
 ---------- Type
@@ -453,7 +453,7 @@
     'rule' OptionalReturnsClause(-> Type)
         "returns" @(-> Position) Type(-> Type)
 
-    'rule' OptionalReturnsClause(-> optional(Position, any(Position)))
+    'rule' OptionalReturnsClause(-> unspecified)
         @(-> Position)
 
 'nonterm' OptionalParameterList(-> PARAMETERLIST)
@@ -656,7 +656,7 @@
     'rule' OptionalElementType(-> Type)
         "of" Type(-> Type)
         
-    'rule' OptionalElementType(-> optional(Position, any(Position))):
+    'rule' OptionalElementType(-> unspecified):
         @(-> Position)
 
 --------------------------------------------------------------------------------

@@ -251,6 +251,9 @@ DEFINE_ERROR_S(UnsuitableStringForKeyword, "Keyword '%s' is ambiguous with ident
 DEFINE_ERROR(NextRepeatOutOfContext, "'next repeat' must appear within a repeat")
 DEFINE_ERROR(ExitRepeatOutOfContext, "'exit repeat' must appear within a repeat")
 
+DEFINE_ERROR(NoReturnTypeSpecifiedForForeignHandler, "Foreign handlers must specify a return type")
+DEFINE_ERROR(NoTypeSpecifiedForForeignHandlerParameter, "Foreign handler parameters must be typed")
+
 #define DEFINE_WARNING(Name, Message) \
     void Warning_##Name(long p_position) { _Warning(p_position, Message); }
 #define DEFINE_WARNING_I(Name, Message) \

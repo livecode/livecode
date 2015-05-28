@@ -304,6 +304,8 @@
     Error_IntegerLiteralOutOfRange
     Error_NextRepeatOutOfContext
     Error_ExitRepeatOutOfContext
+    Error_NoReturnTypeSpecifiedForForeignHandler
+    Error_NoTypeSpecifiedForForeignHandlerParameter
     Warning_DeprecatedTypeName
     Warning_UnsuitableNameForDefinition
     Warning_UsingAsForHandlerReturnTypeDeprecated
@@ -668,6 +670,9 @@
 'action' Error_IntegerLiteralOutOfRange(Position: POS)
 'action' Error_NextRepeatOutOfContext(Position: POS)
 'action' Error_ExitRepeatOutOfContext(Position: POS)
+
+'action' Error_NoReturnTypeSpecifiedForForeignHandler(Position: POS)
+'action' Error_NoTypeSpecifiedForForeignHandlerParameter(Position: POS)
 
 'action' Warning_DeprecatedTypeName(Position: POS, NewType: STRING)
 'action' Warning_UnsuitableNameForDefinition(Position: POS, Identifier: NAME)
