@@ -123,6 +123,10 @@ enum MCPlatformPropertyType
 	kMCPlatformPropertyTypeCursorRef,
     
     kMCPlatformPropertyTypeUInt32Array,
+	
+	kMCPlatformPropertyTypeCameraDevice,
+	kMCPlatformPropertyTypeCameraFeature,
+	kMCPlatformPropertyTypeCameraFlashMode,
 };
 
 // The lower 21-bits hold a codepoint, the upper bits hold modifiers. Some
@@ -1232,6 +1236,33 @@ enum MCPlatformCameraAction
 	kMCPlatformCameraActionTakePicture,
 	kMCPlatformCameraActionStartRecording,
 	kMCPlatformCameraActionStopRecording,
+};
+
+enum MCPlatformCameraDevice
+{
+	kMCPlatformCameraDeviceDefaultBit,
+	kMCPlatformCameraDeviceFrontBit,
+	kMCPlatformCameraDeviceBackBit,
+	
+	kMCPlatformCameraDeviceDefault = 1 << kMCPlatformCameraDeviceDefaultBit,
+	kMCPlatformCameraDeviceFront = 1 << kMCPlatformCameraDeviceFrontBit,
+	kMCPlatformCameraDeviceBack = 1 << kMCPlatformCameraDeviceBackBit,
+};
+
+enum MCPlatformCameraFlashMode
+{
+	kMCPlatformCameraFlashModeOff,
+	kMCPlatformCameraFlashModeOn,
+	kMCPlatformCameraFlashModeAuto,
+};
+
+enum MCPlatformCameraFeature
+{
+	kMCPlatformCameraFeatureFlashBit,
+	kMCPlatformCameraFeatureFlashModeBit,
+	
+	kMCPlatformCameraFeatureFlash = 1 << kMCPlatformCameraFeatureFlashBit,
+	kMCPlatformCameraFeatureFlashMode = 1 << kMCPlatformCameraFeatureFlashModeBit,
 };
 
 void MCPlatformCameraCreate(MCPlatformCameraRef& r_camera);

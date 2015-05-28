@@ -25,7 +25,62 @@
 #include "util.h"
 #include "stack.h"
 
+#include "exec.h"
+
 #include "platform.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+static MCExecSetTypeElementInfo _kMCPlatformCameraDeviceElementInfo[] =
+{
+	{ "default", kMCPlatformCameraDeviceDefaultBit },
+	{ "front", kMCPlatformCameraDeviceFrontBit },
+	{ "back", kMCPlatformCameraDeviceBackBit },
+};
+
+static MCExecSetTypeInfo _kMCPlatformCameraDeviceTypeInfo =
+{
+	"Platform.CameraDevice",
+	sizeof(_kMCPlatformCameraDeviceElementInfo) / sizeof(MCExecSetTypeElementInfo),
+	_kMCPlatformCameraDeviceElementInfo
+};
+
+//////////
+
+static MCExecEnumTypeElementInfo _kMCPlatformCameraFlashModeElementInfo[] =
+{
+	{"off", kMCPlatformCameraFlashModeOff},
+	{"on", kMCPlatformCameraFlashModeOn},
+	{"auto", kMCPlatformCameraFlashModeAuto},
+};
+
+static MCExecEnumTypeInfo _kMCPlatformCameraFlashModeTypeInfo =
+{
+	"Platform.CameraFlashMode",
+	sizeof(_kMCPlatformCameraFlashModeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+	_kMCPlatformCameraFlashModeElementInfo
+};
+
+//////////
+
+static MCExecSetTypeElementInfo _kMCPlatformCameraFeatureElementInfo[] =
+{
+	{ "flash", kMCPlatformCameraFeatureFlashBit },
+	{ "flashmode", kMCPlatformCameraFeatureFlashModeBit },
+};
+
+static MCExecSetTypeInfo _kMCPlatformCameraFeatureTypeInfo =
+{
+	"Platform.CameraFeature",
+	sizeof(_kMCPlatformCameraFeatureElementInfo) / sizeof(MCExecSetTypeElementInfo),
+	_kMCPlatformCameraFeatureElementInfo
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCExecSetTypeInfo *kMCPlatformCameraDeviceTypeInfo = &_kMCPlatformCameraDeviceTypeInfo;
+MCExecEnumTypeInfo *kMCPlatformCameraFlashModeTypeInfo = &_kMCPlatformCameraFlashModeTypeInfo;
+MCExecSetTypeInfo *kMCPlatformCameraFeatureTypeInfo = &_kMCPlatformCameraFeatureTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -48,6 +103,8 @@ union MCCameraControlPropValue
 {
     MCRectangle rectangle;
     bool cbool;
+	intset_t set;
+	intenum_t enumeration;
 };
 
 static MCCameraControlProp s_camera_control_props[] =
@@ -55,6 +112,13 @@ static MCCameraControlProp s_camera_control_props[] =
     { "rectangle", kMCPlatformCameraPropertyRectangle, kMCPlatformPropertyTypeRectangle },
     { "rect", kMCPlatformCameraPropertyRectangle, kMCPlatformPropertyTypeRectangle },
     { "visible", kMCPlatformCameraPropertyVisible, kMCPlatformPropertyTypeBool },
+	
+	{ "devices", kMCPlatformCameraPropertyDevices, kMCPlatformPropertyTypeCameraDevice },
+	{ "device", kMCPlatformCameraPropertyDevice, kMCPlatformPropertyTypeCameraDevice },
+	{ "features", kMCPlatformCameraPropertyFeatures, kMCPlatformPropertyTypeCameraFeature },
+	{ "flashmode", kMCPlatformCameraPropertyFlashMode, kMCPlatformPropertyTypeCameraFlashMode },
+	{ "isflashactive", kMCPlatformCameraPropertyIsFlashActive, kMCPlatformPropertyTypeBool },
+	{ "isflashavailable", kMCPlatformCameraPropertyIsFlashAvailable, kMCPlatformPropertyTypeBool },
     { nil },
 };
 
@@ -276,6 +340,36 @@ static bool convert_to_platform_prop_type(MCExecContext& ctxt, MCValueRef p_valu
             return ctxt . ConvertToBool(p_value, r_prop_value . cbool);
         case kMCPlatformPropertyTypeRectangle:
             return ctxt . ConvertToLegacyRectangle(p_value, r_prop_value . rectangle);
+		case kMCPlatformPropertyTypeCameraDevice:
+		{
+			MCExecValue t_val;
+			MCExecTypeSetValueRef(t_val, MCValueRetain(p_value));
+			
+			/* UNCHECKED */
+			MCExecParseSet(ctxt, kMCPlatformCameraDeviceTypeInfo, t_val, r_prop_value.set);
+			
+			return true;
+		}
+		case kMCPlatformPropertyTypeCameraFlashMode:
+		{
+			MCExecValue t_val;
+			MCExecTypeSetValueRef(t_val, MCValueRetain(p_value));
+			
+			/* UNCHECKED */
+			MCExecParseEnum(ctxt, kMCPlatformCameraFlashModeTypeInfo, t_val, r_prop_value.enumeration);
+			
+			return true;
+		}
+		case kMCPlatformPropertyTypeCameraFeature:
+		{
+			MCExecValue t_val;
+			MCExecTypeSetValueRef(t_val, MCValueRetain(p_value));
+			
+			/* UNCHECKED */
+			MCExecParseSet(ctxt, kMCPlatformCameraFeatureTypeInfo, t_val, r_prop_value.set);
+			
+			return true;
+		}
         default:
             break;
     }
@@ -292,6 +386,33 @@ static bool convert_from_platform_prop_type(MCExecContext& ctxt, MCCameraControl
             return true;
         case kMCPlatformPropertyTypeRectangle:
             return MCStringFormat((MCStringRef&)r_value, "%d,%d,%d,%d", p_prop_value . rectangle . x, p_prop_value . rectangle . y, p_prop_value . rectangle . x + p_prop_value . rectangle . width, p_prop_value . rectangle . y + p_prop_value . rectangle . height);
+		case kMCPlatformPropertyTypeCameraDevice:
+		{
+			MCExecValue t_val;
+			/* UNCHECKED */
+			MCExecFormatSet(ctxt, kMCPlatformCameraDeviceTypeInfo, p_prop_value.set, t_val);
+			MCExecTypeConvertToValueRefAndReleaseAlways(ctxt, t_val.type, &t_val, r_value);
+			/* UNCHECKED */
+			return true;
+		}
+		case kMCPlatformPropertyTypeCameraFlashMode:
+		{
+			MCExecValue t_val;
+			/* UNCHECKED */
+			MCExecFormatEnum(ctxt, kMCPlatformCameraFlashModeTypeInfo, p_prop_value.enumeration, t_val);
+			MCExecTypeConvertToValueRefAndReleaseAlways(ctxt, t_val.type, &t_val, r_value);
+			/* UNCHECKED */
+			return true;
+		}
+		case kMCPlatformPropertyTypeCameraFeature:
+		{
+			MCExecValue t_val;
+			/* UNCHECKED */
+			MCExecFormatSet(ctxt, kMCPlatformCameraFeatureTypeInfo, p_prop_value.set, t_val);
+			MCExecTypeConvertToValueRefAndReleaseAlways(ctxt, t_val.type, &t_val, r_value);
+			/* UNCHECKED */
+			return true;
+		}
         default:
             break;
     }
