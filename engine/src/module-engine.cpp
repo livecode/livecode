@@ -643,11 +643,12 @@ extern "C" MC_DLLEXPORT void MCEngineExecLog(MCValueRef p_message)
         return;
 
 #ifdef _SERVER
-	MCS_write(MCStringGetCString(*t_message_desc),
-			  1,
-			  MCStringGetLength(*t_message_desc),
-			  IO_stderr);
+	MCAutoStringRefAsUTF8String t_utf8_string;
+	t_utf8_string . Lock(*t_message_desc);
+
+	MCS_write(*t_utf8_string, 1, t_utf8_string . Size(), IO_stderr);
 	MCS_write("\n", 1, 1, IO_stderr);
+
 	MCS_flush(IO_stderr);
 
 #else
