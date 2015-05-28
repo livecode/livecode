@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# Just run the command given
+command=$1
+shift
+
+"$command" $@
+

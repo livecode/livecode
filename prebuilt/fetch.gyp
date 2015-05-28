@@ -173,11 +173,12 @@
 					
 					'outputs':
 					[
-						'lib/win32/i386',
+						'lib/win32/<(target_arch)',
 					],
 					
 					'action':
 					[
+						'../util/invoke-unix.bat',
 						'./fetch-libraries.sh',
 						'win32',
 					],
