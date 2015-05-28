@@ -89,6 +89,9 @@
 					
 					'outputs':
 					[
+						'include/layout',
+						'include/openssl',
+						'include/unicode',
 						'lib/android/armv6',
 					],
 					
@@ -117,6 +120,9 @@
 					
 					'outputs':
 					[
+						'include/layout',
+						'include/openssl',
+						'include/unicode',
 						'lib/linux',
 					],
 					
@@ -145,6 +151,9 @@
 					
 					'outputs':
 					[
+						'include/layout',
+						'include/openssl',
+						'include/unicode',
 						'lib/mac',
 					],
 					
@@ -173,8 +182,10 @@
 					
 					'outputs':
 					[
+						'include/layout',
+						'include/openssl',
+						'include/unicode',
 						'lib/win32/<(target_arch)',
-						'lib/win32/<(target_arch)/dummy.txt',
 					],
 					
 					'action':
@@ -205,6 +216,9 @@
 					
 					'outputs':
 					[
+						'include/layout',
+						'include/openssl',
+						'include/unicode',
 						'lib/ios',
 					],
 					
