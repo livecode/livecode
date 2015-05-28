@@ -54,6 +54,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "cmds.h"
 #include "mode.h"
 #include "osspec.h"
+#include "hndlrlst.h"
 
 #include "core.h"
 
@@ -309,7 +310,6 @@ MCDo::~MCDo()
 Parse_stat MCDo::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
-	h = sp.gethandler();
 	if (sp.parseexp(False, True, &source) != PS_NORMAL)
 	{
 		MCperror->add(PE_DO_BADEXP, sp);
@@ -418,7 +418,13 @@ Exec_stat MCDo::exec(MCExecPoint &ep)
 		MCeerror->add(EE_DO_BADEXP, line, pos);
 		return ES_ERROR;
 	}
-	Exec_stat stat = h->doscript(*epptr, line, pos);
+	// MW-2013-11-15: [[ Bug 11277 ]] If no handler, then evaluate in context of the
+	//   server script object.
+	Exec_stat stat;
+	if (ep . gethandler() != nil)
+		stat = ep.gethandler()->doscript(*epptr, line, pos);
+	else
+		stat = ep.gethlist()->doscript(*epptr, line, pos);
 	if (added)
 		MCnexecutioncontexts--;
 	return stat;
