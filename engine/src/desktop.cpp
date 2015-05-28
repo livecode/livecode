@@ -878,11 +878,14 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 
                     map_key_to_engine(s_pending_key_down -> key_code, s_pending_key_down -> mapped_codepoint, s_pending_key_down -> unmapped_codepoint, t_mapped_key_code, &t_mapped_char);
                     
+                    // SN-2014-11-03: [[ Bug 13832 ]] Enqueue the event, instead of firing it now (we are still in the NSApplication's keyDown).
+                    // PM-2015-05-15: [[ Bug 15372]] call MCKeyMessageAppend before wkdown to prevent a crash if 'wait with messages' is used (since s_pending_key_down might become nil after wkdown
+                    MCKeyMessageAppend(s_pending_key_up, s_pending_key_down -> key_code, s_pending_key_down -> mapped_codepoint, s_pending_key_down -> unmapped_codepoint);
+                    
                     MCdispatcher -> wkdown(p_window, *t_mapped_char, t_mapped_key_code);
                     
-                    // SN-2014-11-03: [[ Bug 13832 ]] Enqueue the event, instead of firing it now (we are still in the NSApplication's keyDown).
-                    MCKeyMessageAppend(s_pending_key_up, s_pending_key_down -> key_code, s_pending_key_down -> mapped_codepoint, s_pending_key_down -> unmapped_codepoint);
                     MCKeyMessageNext(s_pending_key_down);
+                
                 }
 				return;
 			}
@@ -920,6 +923,10 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
         s_pending_key_down -> key_code = (uint1)*p_chars;
         s_pending_key_down -> mapped_codepoint = (uint1)*p_chars;
         s_pending_key_down -> unmapped_codepoint = (uint1)*p_chars;
+        
+        // SN-2015-05-18: [[ Bug 15385 ]] Enqueue the first char in the sequence
+        //  here - that will be the same as keyDown.
+        MCKeyMessageAppend(s_pending_key_up, (uint1)*p_chars, (uint1)*p_chars, (uint1)*p_chars);
     }
     
 	// Set the text.	
@@ -945,9 +952,6 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
     {
         MCStringCreateWithNativeChars((const char_t *)t_char, 1, &t_string);
         MCdispatcher -> wkdown(p_window, *t_string, *t_char);
-        // SN-2014-11-03: [[ Bug 13832 ]] Enqueue the event, instead of firing it now (we are still in NSApplication's keyDown).
-        //  We use the mapped codepoint of the message to send, instead of t_char.
-        MCKeyMessageAppend(s_pending_key_up, (MCPlatformKeyCode)*t_char, s_pending_key_down -> next -> mapped_codepoint, (codepoint_t)*t_char);
         
         MCKeyMessageNext(s_pending_key_down);
     }

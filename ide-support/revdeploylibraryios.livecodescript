@@ -505,23 +505,29 @@ function deployIsValidSDK pSDK
       return false
    end if
    
-   local tOldFolder, tSDKVersion
+   local tOldFolder, tSDKVersion, tValidSDK
    put the defaultfolder into tOldFolder
    set the defaultfolder to pSDK & slash & "Platforms/iPhoneSimulator.platform/Developer/SDKs"
    
    put the files & LF & the folders into tSDKList
+   
+   put false into tValidSDK
    
    // SN-2015-03-24: [[ Bug 15037 ]] We accept any SDK having a simulator for
    //  which we provide an engine.
    repeat for each line tSDK in tSDKList
       if matchtext(tSDK, "iPhoneSimulator([0-9]\.[0-9]).sdk", tSDKVersion) and \
             tSDKVersion is among the items of deployUsableIosSdk() then
-         return true
+         put true into tValidSDK
+         exit repeat
       end if
    end repeat
    
+   // SN-2015-05-21: [[ Bug 15401 ]] We should restore the default path to its initial value
+   set the defaultFolder to tOldFolder
+   
    -- Otherwise it must be invalid
-   return false
+   return tValidSDK
 end deployIsValidSDK
 
 ////////////////////////////////////////////////////////////////////////////////

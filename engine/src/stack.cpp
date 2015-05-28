@@ -277,9 +277,6 @@ MCStack::MCStack()
 
 	// MW-2012-10-10: [[ IdCache ]]
 	m_id_cache = nil;
-    
-    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single thread mutates the ID cache at a time.
-    /* UNCHECKED */ MCThreadMutexCreate(m_id_cache_lock);
 
 	// MW-2014-03-12: [[ Bug 11914 ]] Stacks are not engine menus by default.
 	m_is_menu = false;
@@ -357,9 +354,6 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	m_id_cache = nil;
-	
-    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single thread mutates the ID cache at a time.
-    /* UNCHECKED */ MCThreadMutexCreate(m_id_cache_lock);
     
 	mnemonics = NULL;
 	nfuncs = 0;
@@ -617,9 +611,6 @@ MCStack::~MCStack()
 	
 	// MW-2012-10-10: [[ IdCache ]] Free the idcache.
 	freeobjectidcache();
-    
-    // MM-2014-07-31: [[ ThreadedRendering ]] Release cache mutex.
-    MCThreadMutexRelease(m_id_cache_lock);
 	
 	view_destroy();
 }
@@ -3131,6 +3122,30 @@ bool MCStack::resolve_relative_path(MCStringRef p_path, MCStringRef& r_resolved)
 	}
     
     return false;
+}
+
+// PM-2015-01-26: [[ Bug 14435 ]] Make possible to set the filename using a relative path to the default folder
+bool MCStack::resolve_relative_path_to_default_folder(MCStringRef p_path, MCStringRef &r_resolved)
+{
+    if (MCStringIsEmpty(p_path))
+		return false;
+	
+	// If the relative path begins with "./" or ".\", we must remove this, otherwise
+    // certain system calls will get confused by the path.
+    uindex_t t_start_index;
+    MCAutoStringRef t_cur_dir;
+
+    if (MCStringBeginsWith(p_path, MCSTR("./"), kMCCompareExact)
+            || MCStringBeginsWith(p_path, MCSTR(".\\"), kMCCompareExact))
+        t_start_index = 2;
+    else
+        t_start_index = 0;
+	
+    MCS_getcurdir(&t_cur_dir);
+
+    MCRange t_range;
+    t_range = MCRangeMake(t_start_index, MCStringGetLength(p_path) - t_start_index);
+    return MCStringFormat(r_resolved, "%@/%*@", *t_cur_dir, &t_range, p_path);
 }
 
 // OK-2009-01-09: [[Bug 1161]]

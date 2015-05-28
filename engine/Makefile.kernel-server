@@ -59,7 +59,7 @@ SOURCES=\
 	srvmain.cpp dsklnx.cpp srvspec.cpp srvsession.cpp srvstack.cpp srvdebug.cpp \
 	srvscript.cpp srvoutput.cpp srvtheme.cpp \
     eventqueue.cpp encodederrors.cpp redraw.cpp tilecache.cpp tilecachesw.cpp \
-	fonttable.cpp fieldrtf.cpp fieldhtml.cpp fieldstyledtext.cpp paragrafattr.cpp \
+        fonttable.cpp fieldrtf.cpp fieldhtml.cpp fieldstyledtext.cpp paragrafattr.cpp \
     graphicscontext.cpp lnxflst.cpp lnxflstold.cpp lnxelevate.cpp \
 	exec-array.cpp exec-datetime.cpp exec-engine.cpp exec-files.cpp exec-filters.cpp exec-interface.cpp \
 	exec-logic exec-math.cpp exec-multimedia.cpp exec-network.cpp exec-pasteboard.cpp exec-scripting \
@@ -72,8 +72,7 @@ SOURCES=\
     syntax.cpp quicktime.cpp \
 	foundation-legacy.cpp legacy_spec.cpp \
 	srvposix.cpp \
-    srvcgi.cpp srvmultipart.cpp \
-	sysunxthreads.cpp, stacktile.cpp
+    srvcgi.cpp srvmultipart.cpp
 	
 SOURCE_DIRS=
 

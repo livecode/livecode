@@ -52,6 +52,29 @@ private command buildAPK pUnalignedApkFile, pUnsignedParam, pAssetArchive, pClas
    return tResult
 end buildAPK
 
+private function updateMinimumAPI pVersionSet, pLimit
+   local tLimitType
+   if pVersionSet < pLimit then
+      put "lowest" into tLimitType
+   else
+      put "highest" into tLimitType
+   end if
+   
+   answer "The minimum Android API is currently set to" && \
+         pVersionSet && \
+         "but the" & tLimitType & " Android API available from LiveCode" && the version && \
+         "is" && pLimit & "." & LF & \
+         "Do you want to update the minimum Android API to" && pLimit & "?" \
+         with "No" or "Yes" \
+         titled "Minimum Android API error"
+   
+   return (it is "Yes")
+end updateMinimumAPI
+
+private function badAndroidApiMessage
+   return "Not a valid Android API"
+end badAndroidApiMessage
+
 private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    start using stack "revSBLibrary"
    
@@ -91,8 +114,28 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    if tSettings["android,status bar hidden"] is empty then
       put "false" into tSettings["android,status bar hidden"]
    end if
+   
+   // SN-2015-05-13: [[ AndroidVersions ]] Make sure that the minimum version is
+   // the minimum version that we can use.
+   put item 1 of revIDEDeployAndroidGetApisList() into tMinimumVersion
+   put last item of revIDEDeployAndroidGetApisList() into tMaximumVersion
+   
    if tSettings["android,minimum version"] is empty then
-      put 8 into tSettings["android,minimum version"]
+      put tMinimumVersion into tSettings["android,minimum version"]
+   else if tSettings["android,minimum version"] < tMinimumVersion then
+      // In case the minimum version is still 2.2 (for instance), we warn the user
+      //  that we want to update it, before doing so.
+      if updateMinimumAPI(tSettings["android,minimum version"], tMinimumVersion) then
+         put tMinimumVersion into tSettings["android,minimum version"]
+      else
+         throw badAndroidAPIMessage()
+      end if
+   else if tSettings["android,minimum version"] > tMaximumVersion then
+      if updateMinimumAPI(tSettings["android,minimum version"], tMaximumVersion) then
+         put tMaximumVersion into tSettings["android,minimum version"]
+      else
+         throw badAndroidAPIMessage()
+      end if
    end if
    
    put tSettings["android,statusBarIcon"] into tStatusBarIcon
@@ -207,18 +250,17 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       if tExternals is not empty then
          put return after tExternals
       end if
+      set the itemDelimiter to "."
       repeat for each line tFile in tFiles
          local tFilePath, tFileName
          computeAssetLocation tBaseFolder, tFile, tFilePath, tFileName
          
          -- Look for manifest template
-         set the itemDelimiter to slash
-         if the last item of tFilePath is "AndroidManifest.xml" then
-            put tFilePath into tManifestFile
+         if tFilePath ends with "AndroidManifest.xml" then
+            put url ("binfile:" & tFilePath) into tManifest
          end if
          
          -- Only look for lcext files.
-         set the itemDelimiter to "."
          if the last item of tFilePath is not "lcext" then
             next repeat
          end if
@@ -246,8 +288,9 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
          put tBuildFolder & slash & "AndroidManifest.xml" into tManifestFile
       end if
       
-      local tManifest
-      put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Manifest.xml")) into tManifest
+      if tManifest is empty then
+         put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Manifest.xml")) into tManifest
+      end if
       // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occured
       if the result is not empty then
          throw "Cannot find the template Manifest"
@@ -850,6 +893,8 @@ private command addAssetsToArchive pFiles, pBaseFolder, pArchive
             put tFile & return after tFonts
          else if tFile ends with ".lcext" or tFile ends with ".dylib" then
             -- MW-2012-07-05: [[ Externals ]] If an 'lcext' file or dylib file is found then we ignore it.
+         else if tFile ends with "AndroidManifest.xml" then
+            -- MW-2015-04-24: [[ TemplateAppMetadata ]] If an template manifest is found then we ignore it.
          else
             revZipAddUncompressedItemWithFile pArchive, "assets/" & tName, tFile
          end if
