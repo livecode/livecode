@@ -2077,6 +2077,8 @@ MC_DLLEXPORT bool MCStringConvertToBSTR(MCStringRef string, BSTR& r_bstr);
 // Converts the given string ref to a string in the system encoding.
 // Note that the 'bytes' ptr is typed as 'char', however it should be considered
 // as an opaque sequence of bytes with an 'unknowable' encoding.
+// Note that the output string is allocated with an implicit NUL byte, but this
+// is not included in the byte_count.
 MC_DLLEXPORT bool MCStringConvertToSysString(MCStringRef string, char*& r_bytes, size_t& r_byte_count);
 
 /////////
