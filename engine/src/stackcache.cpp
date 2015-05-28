@@ -23,8 +23,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "stack.h"
 
-#include "systhreads.h"
-
 ////////////////////////////////////////////////////////////////////////////////
 
 #define UINDEX_MAX UINT32_MAX
@@ -374,7 +372,6 @@ bool MCStackIdCache::RehashBuckets(index_t p_new_item_count_delta)
 
 void MCStack::cacheobjectbyid(MCObject *p_object)
 {
-    MCThreadMutexLock(m_id_cache_lock);
 	if (m_id_cache == nil)
 	{
 		m_id_cache = new MCStackIdCache;
@@ -387,7 +384,6 @@ void MCStack::cacheobjectbyid(MCObject *p_object)
 		
 	if (m_id_cache != nil)
 		m_id_cache -> CacheObject(p_object);
-    MCThreadMutexUnlock(m_id_cache_lock);
 }
 
 void MCStack::uncacheobjectbyid(MCObject *p_object)
@@ -395,9 +391,7 @@ void MCStack::uncacheobjectbyid(MCObject *p_object)
 	if (m_id_cache == nil)
 		return;
 		
-    MCThreadMutexLock(m_id_cache_lock);
 	m_id_cache -> UncacheObject(p_object);
-    MCThreadMutexUnlock(m_id_cache_lock);
 }
 
 MCObject *MCStack::findobjectbyid(uint32_t p_id)
@@ -405,19 +399,15 @@ MCObject *MCStack::findobjectbyid(uint32_t p_id)
 	if (m_id_cache == nil)
 		return nil;
 		
-    MCThreadMutexLock(m_id_cache_lock);
     MCObject *t_object;
     t_object = m_id_cache -> FindObject(p_id);
-    MCThreadMutexUnlock(m_id_cache_lock);
     
     return t_object;
 }
 
 void MCStack::freeobjectidcache(void)
 {
-    MCThreadMutexLock(m_id_cache_lock);
 	delete m_id_cache;
-    MCThreadMutexUnlock(m_id_cache_lock);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -2,6 +2,10 @@
 #include <string.h>
 #include <stdio.h>
 
+#ifndef _WINDOWS
+#include <stdint.h>
+#endif
+
 #include <revolution/external.h>
 
 #ifdef _WINDOWS
@@ -78,6 +82,9 @@ enum
     // SN-2015-02-25: [[ Merge 6.7.4-rc-1 ]] OPERATION_GET_XDISPLAY_HANDLE is
     //  actually from the version 4 (V3 is Ali's module functions).
     /* V3 */ OPERATION_GET_XDISPLAY_HANDLE,
+    // SN-2015-03-12: [[ Bug 14413 ]] Add new UTF-8 <-> native conversion functions
+    /* V4 */ OPERATION_CONVERT_FROM_NATIVE_TO_UTF8,
+    /* V4 */ OPERATION_CONVERT_TO_NATIVE_FROM_UTF8,
 };
 
 enum
@@ -92,7 +99,7 @@ enum
 	/* V2 */ SECURITY_CHECK_LIBRARY_UTF8
 };
 
-typedef char *(*ExternalOperationCallback)(const char *p_arg_1, const char *p_arg_2, const char *p_arg_3, int *r_success);
+typedef char *(*ExternalOperationCallback)(const void *p_arg_1, const void *p_arg_2, const void *p_arg_3, int *r_success);
 typedef void (*ExternalDeleteCallback)(void *p_block);
 
 typedef Bool (*ExternalSecurityHandler)(const char *p_op);
@@ -406,7 +413,7 @@ void RunloopWait(int *r_success)
 		return;
 	}
 
-	t_result = (s_operations[OPERATION_RUNLOOP_WAIT])(NULL, NULL, NULL, &r_success);
+	t_result = (s_operations[OPERATION_RUNLOOP_WAIT])(NULL, NULL, NULL, r_success);
 	if (t_result != NULL)
 		s_delete(t_result);
 }
@@ -422,7 +429,7 @@ void StackToWindowRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_succ
 		return;
 	}
     
-	t_result = (s_operations[OPERATION_STACK_TO_WINDOW_RECT])(p_win_id, x_rect, NULL, &r_success);
+    t_result = (s_operations[OPERATION_STACK_TO_WINDOW_RECT])((const void*)(uintptr_t)p_win_id, x_rect, NULL, r_success);
 	if (t_result != NULL)
 		s_delete(t_result);
 }
@@ -437,7 +444,7 @@ void WindowToStackRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_succ
 		return;
 	}
     
-	t_result = (s_operations[OPERATION_WINDOW_TO_STACK_RECT])(p_win_id, x_rect, NULL, &r_success);
+	t_result = (s_operations[OPERATION_WINDOW_TO_STACK_RECT])((const void*)(uintptr_t)p_win_id, x_rect, NULL, r_success);
 	if (t_result != NULL)
 		s_delete(t_result);
 }
@@ -929,6 +936,38 @@ extern void GetXDisplayHandle(void **r_display, int *r_success)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// V4: UTF-8 <-> native string conversion
+
+const char *ConvertCStringFromNativeToUTF8(const char *p_native, int *r_success)
+{
+    char *t_result;
+    
+    if (s_external_interface_version < 4)
+    {
+        *r_success = EXTERNAL_FAILURE;
+        return NULL;
+    }
+    
+    t_result = (s_operations[OPERATION_CONVERT_FROM_NATIVE_TO_UTF8])(p_native, NULL, NULL, r_success);
+    
+    return t_result;
+}
+
+const char *ConvertCStringToNativeFromUTF8(const char *p_utf8, int *r_success)
+{
+    char *t_result;
+    
+    if (s_external_interface_version < 4)
+    {
+        *r_success = EXTERNAL_FAILURE;
+        return NULL;
+    }
+    
+    t_result = (s_operations[OPERATION_CONVERT_TO_NATIVE_FROM_UTF8])(p_utf8, NULL, NULL, r_success);
+    
+    return t_result;
+}
 
 #ifdef TARGET_SUBPLATFORM_IPHONE
 struct LibExport

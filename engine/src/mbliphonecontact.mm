@@ -114,7 +114,8 @@ static bool label_to_name(CFStringRef p_label, MCNameRef &r_name)
 	{
 		if (CFStringCompare(s_label_map[i].label, p_label, 0) == kCFCompareEqualTo)
 		{
-			r_name = *s_label_map[i].name;
+            // SN-201-04-28: [[ Bug 15124 ]] The value must be retained.
+			r_name = MCValueRetain(*s_label_map[i].name);
 			return true;
 		}
 	}
@@ -568,10 +569,14 @@ bool MCCreatePerson(MCArrayRef p_contact, ABRecordRef &r_person)
 		{
 			if (!s_property_map[i].has_labels)
 			{
-				if (MCStringGetLength((MCStringRef)t_value) > 0)
+                // PM-2015-05-25: [[ Bug 15403 ]] Convert the valueref to a stringref
+                MCExecContext ctxt(nil,nil,nil);
+                MCAutoStringRef t_value_string;
+                ctxt.ConvertToString(t_value, &t_value_string);
+				if (MCStringGetLength(*t_value_string) > 0)
 				{
 					t_success = ABRecordSetValue(t_person, *s_property_map[i].property,
-									 [NSString stringWithMCStringRef: (MCStringRef)t_value],
+									 [NSString stringWithMCStringRef: *t_value_string],
 									 nil);
 				}
 			}
@@ -590,18 +595,20 @@ bool MCCreatePerson(MCArrayRef p_contact, ABRecordRef &r_person)
 						{
 							uindex_t t_index = 1;
 							MCValueRef t_index_value;
-							
-							while ((t_success = MCArrayFetchValueAtIndex((MCArrayRef)t_element, t_index++, t_index_value)))
+                            
+                            // PM-2015-05-21: [[ Bug 14792 ]] t_success should not become false if MCArrayFetchValueAtIndex fails
+							while ((MCArrayFetchValueAtIndex((MCArrayRef)t_element, t_index++, t_index_value)))
 							{
-								if (t_index_value == nil)
-									break;
-
 								if (!s_property_map[i].has_keys)
 								{
-									if (MCStringGetLength((MCStringRef)t_index_value) > 0)
+                                    // PM-2015-05-25: [[ Bug 15403 ]] Convert the valueref to a stringref
+                                    MCExecContext ctxt(nil,nil,nil);
+                                    MCAutoStringRef t_index_value_string;
+                                    /* UNCHECKED */ ctxt.ConvertToString(t_index_value, &t_index_value_string);
+									if (MCStringGetLength(*t_index_value_string) > 0)
 									{
 										t_success = ABMultiValueAddValueAndLabel(t_multi_value,
-																				 [NSString stringWithMCStringRef: (MCStringRef)t_value],
+																				 [NSString stringWithMCStringRef: *t_index_value_string],
 																				 s_label_map[j].label,
 																				 nil);
 									}
@@ -795,7 +802,8 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 		}
 	}
 
-	if (t_success)
+    // AL-2015-05-14: [[ Bug 15370 ]] Crash when matching contact not found
+    if (t_success && t_chosen != nil)
 		t_success = MCStringCreateWithCFString((CFStringRef)t_chosen, r_chosen);
 	
     if (t_people != nil)
