@@ -435,9 +435,17 @@ void MCEngineEvalVariableNames(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCEngineEvalParam(MCExecContext& ctxt, integer_t p_index, MCValueRef& r_value)
 {
+    // MW-2013-11-15: [[ Bug 11277 ]] If we don't have a handler then 'the param'
+    //   makes no sense so just return empty.
+    if (ctxt . GetHandler() == nil)
+    {
+        r_value = MCValueRetain(kMCEmptyString);
+        return;
+    }
+
     if (MCValueCopy(ctxt.GetHandler()->getparam(p_index), r_value))
         return;
-    
+
     ctxt.Throw();
 }
 
@@ -445,11 +453,10 @@ void MCEngineEvalParamCount(MCExecContext& ctxt, integer_t& r_count)
 {
 	// MW-2013-11-15: [[ Bug 11277 ]] If we don't have a handler then 'the param'
 	//   makes no sense so just return 0.
-    // PM-2014-04-14: [[Bug 12105]] Do this check to prevent crash in LC server
 	if (ctxt.GetHandler() != nil)
 		r_count = ctxt.GetHandler()->getnparams();
 	else
-        ctxt . LegacyThrow(EE_PARAMCOUNT_NOHANDLER);
+        r_count = 0;
 }
 
 void MCEngineEvalParams(MCExecContext& ctxt, MCStringRef& r_string)
