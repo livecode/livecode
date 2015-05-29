@@ -23,6 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "image.h"
 #include "image_rep.h"
+#include "systhreads.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -39,14 +40,13 @@ MCImageRep::~MCImageRep()
 
 MCImageRep *MCImageRep::Retain()
 {
-    m_reference_count += 1;
+    MCThreadAtomicInc((int32_t *)&m_reference_count);
 	return this;
 }
 
 void MCImageRep::Release()
 {
-    m_reference_count -= 1;
-	if (m_reference_count == 0)
+	if (MCThreadAtomicDec((int32_t *)&m_reference_count) == 1)
         delete this;
 }
 
@@ -369,20 +369,23 @@ bool MCLoadableImageRep::LockImageFrame(uindex_t p_frame, MCGFloat p_density, MC
 	// frame index check
 	if (p_frame >= m_frame_count)
 		return false;
-    
-	if (m_frame_count != 0 && p_frame >= m_frame_count)
-        return false;
-    
-	if (!EnsureMCGImageFrames())
-		return false;
 	
-	if (p_frame >= m_frame_count)
-        return false;
+    // MM-2014-07-31: [[ ThreadedRendering ]] Make sure only a single thread locks an image frame at a time.
+    //  This could potentially be improved to be less obtrusive and resource hungry (mutex per image)
+    MCThreadMutexLock(MCimagerepmutex);
     
+	if (!EnsureImageFrames())
+    {
+        MCThreadMutexUnlock(MCimagerepmutex);
+		return false;
+    }
+	
 	r_frame = m_frames[p_frame];
     MCGImageRetain(r_frame . image);
     
 	MoveRepToHead(this);
+    
+    MCThreadMutexUnlock(MCimagerepmutex);
 	
 	return true;
 }
@@ -492,13 +495,8 @@ void MCLoadableImageRep::ReleaseFrames()
 
 bool MCLoadableImageRep::GetGeometry(uindex_t &r_width, uindex_t &r_height)
 {
-	if (!m_have_geometry)
-	{
-		// IM-2014-09-30: [[ Bug 13501 ]] CalculateGeometry is not thread-safe due to 
-		//   possible geturl call.
-		if (!m_have_geometry)
-			m_have_geometry = CalculateGeometry(m_width, m_height);
-	}
+	if (!EnsureHeader())
+		return false;
 	
 	r_width = m_width;
 	r_height = m_height;
