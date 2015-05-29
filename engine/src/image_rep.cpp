@@ -370,6 +370,7 @@ bool MCLoadableImageRep::LockImageFrame(uindex_t p_frame, MCGFloat p_density, MC
 		return false;
 	
 	r_frame = m_frames[p_frame];
+    MCGImageRetain(r_frame . image);
     
 	MoveRepToHead(this);
 	
