@@ -364,6 +364,8 @@ bool MCAVCamera::SetDevice(intset_t p_device)
 	{
 		// reconfigure capture session with new device
 		
+		[m_session beginConfiguration];
+		
 		[m_session removeInput:m_video_input];
 		[m_video_input release];
 		m_video_input = nil;
@@ -372,10 +374,15 @@ bool MCAVCamera::SetDevice(intset_t p_device)
 
 		m_video_device = [AVCaptureDeviceForCameraDevice(m_device) retain];
 		if (m_video_device != nil)
+		{
+			/* UNCHECKED */ ConfigureDevice(m_video_device);
 			m_video_input = [[AVCaptureDeviceInput deviceInputWithDevice:m_video_device error:nil] retain];
+		}
 
 		if (m_video_input != nil)
 			[m_session addInput:m_video_input];
+		
+		[m_session commitConfiguration];
 	}
 	
 	return true;
@@ -539,6 +546,10 @@ void MCAVCamera::Close(void)
     if (!m_prepared)
         return;
     
+	[m_preview setSession: nil];
+	[m_preview release];
+	m_preview = nil;
+	
     Unrealize();
     
     if (m_running)
@@ -549,10 +560,6 @@ void MCAVCamera::Close(void)
     
     m_prepared = false;
 
-    [m_preview setSession: nil];
-    [m_preview release];
-    m_preview = nil;
-    
     [m_movie_output release];
     m_movie_output = nil;
     [m_image_output release];
@@ -757,7 +764,7 @@ bool MCAVCamera::TakePicture(MCDataRef& r_data)
 	
 	m_capturing_image = true;
 	[m_image_output captureStillImageAsynchronouslyFromConnection:t_connection completionHandler:^(CMSampleBufferRef imageDataSampleBuffer, NSError *error) {
-		if (error != nil)
+		if (error == nil)
 		{
 			NSData *t_data;
 			t_data = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageDataSampleBuffer];
