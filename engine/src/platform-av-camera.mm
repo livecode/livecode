@@ -131,6 +131,8 @@ private:
 	bool m_capturing_image : 1;
 	MCDataRef m_jpeg_image;
 	
+	bool m_video_recording : 1;
+	
     ////
     
     AVCaptureSession *m_session;
@@ -736,14 +738,77 @@ bool MCAVCamera::GetProperty(MCPlatformCameraProperty p_property, MCPlatformProp
     return true;
 }
 
+@interface MCAVCameraRecordingDelegate : NSObject<AVCaptureFileOutputRecordingDelegate>
+- (bool) didStartRecording;
+
+- (id) init;
+@end
+
+@implementation MCAVCameraRecordingDelegate
+
+bool m_did_start_recording;
+
+- (id) init
+{
+	self = [super init];
+	
+	m_did_start_recording = false;
+	
+	return self;
+}
+
+- (bool) didStartRecording
+{
+	return m_did_start_recording;
+}
+
+- (void) captureOutput:(AVCaptureFileOutput *)captureOutput didStartRecordingToOutputFileAtURL:(NSURL *)fileURL fromConnections:(NSArray *)connections
+{
+	m_did_start_recording = true;
+}
+
+- (void) captureOutput:(AVCaptureFileOutput *)captureOutput didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL fromConnections:(NSArray *)connections error:(NSError *)error
+{
+	
+}
+
+@end
+
 bool MCAVCamera::StartRecording(MCStringRef p_filename)
 {
-    return false;
+	if (!m_prepared)
+		return false;
+	
+	if (m_capturing_image)
+		return false;
+	
+	MCAutoStringRef t_resolved_filename;
+	if (!MCS_resolvepath(p_filename, &t_resolved_filename))
+		return false;
+	
+	MCAVCameraRecordingDelegate *t_delegate;
+	t_delegate = [[[MCAVCameraRecordingDelegate alloc] autorelease] init];
+	
+	[m_movie_output startRecordingToOutputFileURL:[NSURL fileURLWithPath: [NSString stringWithMCStringRef:p_filename]] recordingDelegate:t_delegate];
+	
+	while (!MCquit && ![t_delegate didStartRecording])
+		MCPlatformWaitForEvent(60.0, True);
+	
+	m_video_recording = [t_delegate didStartRecording];
+	
+	return m_video_recording;
 }
 
 bool MCAVCamera::StopRecording(void)
 {
-    return false;
+	if (!m_video_recording)
+		return true;
+	
+	[m_movie_output stopRecording];
+	
+	m_video_recording = false;
+	
+	return true;
 }
 
 bool MCAVCamera::TakePicture(MCDataRef& r_data)
