@@ -6,7 +6,7 @@ Syntax: export <image> [with metadata <metadata>] to {file <filePath> | <contain
 
 Syntax: export <image> [with metadata <metadata>] to {file <filePath> | <container>} as {gif | png} with optimized palette
 
-Syntax: export <image> [with metadata <metadata>] to {file <filePath> | <container>} as {gif | png} with <colorCount> [optimized] color palette
+Syntax: export <image> [with metadata <metadata>] to {file <filePath> | <container>} as {gif | png} with <colorCount> color [optimized] palette
 
 Syntax: export <image> [with metadata <metadata>] to {file <filePath> | <container>} as {gif | png} with palette <colorList> 
 
@@ -37,13 +37,13 @@ colorList: A return-delimited list of up to 256 colors to be used as the palette
 Description:
 Use the <export with palette> <command> to <export> an <image> to a <file> or <container> with color reduction.
 
-The  form exports an image in either PNG or GIF format with a specific size or type of palette. 
+The export with palette form exports an image in either PNG or GIF format with a specific size or type of palette. 
 
-If the  form is used, then the image will be color-matched to the default 256 color LiveCode palette before export.
+If the standard palette form is used, then the image will be color-matched to the default 256 color LiveCode palette before export.
 
-If the  form is used, then a palette with the <colorCount> colors will be generated that does its best to approximate all the colors present in the image. The image will be color-matched to this palette before export. If  is not specified, a 256 entry palette will be generated. 
+If the optimized palette form is used, then a palette with the <colorCount> colors will be generated that does its best to approximate all the colors present in the image. The image will be color-matched to this palette before export. If colorList is not specified, a 256 entry palette will be generated. 
 
-If the  form is used, the image will be color-matched to that palette before export.
+If the palette colorList form is used, the image will be color-matched to that palette before export.
 
 If the image has any sort of transparency, then this will utilize one palette entry. In particular, if you ask for a 256 color palette with a transparent image, you may get only 255 colors.
 
