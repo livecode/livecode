@@ -60,6 +60,7 @@
 					{
 						'dependencies':
 						[
+							'../prebuilt/libicu.gyp:libicu',
 							'../thirdparty/libfreetype/libfreetype.gyp:libfreetype',
 							'../thirdparty/libharfbuzz/libharfbuzz.gyp:libharfbuzz',
 						],
