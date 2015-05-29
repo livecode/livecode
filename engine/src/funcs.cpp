@@ -5606,7 +5606,7 @@ Parse_stat MCVariables::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCVariables::eval(MCExecPoint &ep)
 {
-#ifdef /* MCVariables */ LEGACY_EXECs
+#ifdef /* MCVariables */ LEGACY_EXEC
 	// MW-2013-11-15: [[ Bug 11277 ]] If no handler, then process the handler list
 	//   (server script scope).
 	if (ep . gethandler() != nil)

@@ -677,7 +677,7 @@ void MCHandlerlist::deletestatements(MCStatement *p_statements)
 
 Exec_stat MCHandlerlist::eval(MCExecPoint& ep)
 {
-#idef /* MCHandlerlist */ LEGACY_EXEC
+#ifdef /* MCHandlerlist */ LEGACY_EXEC
     // SN-2015-05-28: [[ Bug 11277 ]] Implement the parsing of the expression -
     //  same as MCHandler::eval, but no handler is set the ScriptPoint.
     MCScriptPoint sp(ep);
