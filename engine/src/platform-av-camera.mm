@@ -93,6 +93,7 @@ public:
 	
 	bool GetDevices(intset_t &r_devices);
 	bool GetFeatures(intset_t &r_features);
+	bool GetFlashModes(intset_t &r_modes);
 	
 	bool SetDevice(intset_t p_device);
 	bool GetDevice(intset_t &r_device);
@@ -237,6 +238,24 @@ intset_t MCCameraFeaturesOfAVCaptureDevice(AVCaptureDevice *p_device)
 	return t_features;
 }
 
+intset_t MCCameraFlashModesOfAVCaptureDevice(AVCaptureDevice *p_device)
+{
+	intset_t t_flash_modes;
+	t_flash_modes = 0;
+	
+	if (p_device != nil)
+	{
+		if ([p_device isFlashModeSupported: AVCaptureFlashModeOff])
+			t_flash_modes |= kMCPlatformCameraFlashModeOff;
+		if ([p_device isFlashModeSupported: AVCaptureFlashModeOn])
+			t_flash_modes |= kMCPlatformCameraFlashModeOn;
+		if ([p_device isFlashModeSupported: AVCaptureFlashModeAuto])
+			t_flash_modes |= kMCPlatformCameraFlashModeAuto;
+	}
+	
+	return t_flash_modes;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCAVCamera::MCAVCamera(void)
@@ -349,6 +368,18 @@ bool MCAVCamera::GetFeatures(intset_t &r_features)
 		return false;
 	
 	r_features = MCCameraFeaturesOfAVCaptureDevice(t_device);
+	return true;
+}
+
+bool MCAVCamera::GetFlashModes(intset_t &r_modes)
+{
+	AVCaptureDevice *t_device;
+	t_device = AVCaptureDeviceForCameraDevice(m_device);
+	
+	if (t_device == nil)
+	return false;
+	
+	r_modes = MCCameraFlashModesOfAVCaptureDevice(t_device);
 	return true;
 }
 
@@ -583,6 +614,9 @@ bool MCAVCamera::GetProperty(MCPlatformCameraProperty p_property, MCPlatformProp
         case kMCPlatformCameraPropertyFeatures:
 			return GetFeatures(*(intset_t*)r_value);
 
+		case kMCPlatformCameraPropertyFlashModes:
+			return GetFlashModes(*(intset_t*)r_value);
+		
         case kMCPlatformCameraPropertyFlashMode:
             break;
         case kMCPlatformCameraPropertyIsFlashActive:
