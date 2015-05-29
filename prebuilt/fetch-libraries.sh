@@ -54,6 +54,8 @@ function fetchLibrary {
 		# Download using an HTTP client of some variety
 		if $(which curl 1>/dev/null 2>/dev/null) ; then
 			curl --silent "${URL}/${NAME}.tar.bz2" -o "${FETCH_DIR}/${NAME}.tar.bz2"
+		elif $(which wget 1>/dev/null 2>/dev/null) ; then
+			wget "${URL}/${NAME}.tar.bz2" -O "${FETCH_DIR}/${NAME}.tar.bz2"
 		else
 			# Perl as a last resort (useful for Cygwin)
 			perl -MLWP::Simple -e "getstore('${URL}/${NAME}.tar.bz2', '${FETCH_DIR}/${NAME}.tar.bz2') == 200 or exit 1"
