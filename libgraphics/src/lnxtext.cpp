@@ -280,13 +280,6 @@ bool MCGContextMeasurePlatformTextImageBounds(MCGContextRef self, const unichar_
 	if (t_success)
 		t_success = lnx_pango_objects_intialize();
 	
-	PangoLayout *t_layout;
-	if (t_success)
-	{
-		t_layout = (PangoLayout *)pthread_getspecific(s_layout_key);
-		t_success = t_layout != NULL;
-	}
-	
 	char *t_text;
 	t_text = nil;
 	if (t_success)
@@ -296,14 +289,14 @@ bool MCGContextMeasurePlatformTextImageBounds(MCGContextRef self, const unichar_
 	PangoLayoutLine *t_line;
 	if (t_success)
 	{
-		pango_layout_set_text(t_layout, t_text, -1);
-		pango_layout_set_font_description(t_layout, (PangoFontDescription *) p_font . fid);
+		pango_layout_set_text(s_layout, t_text, -1);
+		pango_layout_set_font_description(s_layout, (PangoFontDescription *) p_font . fid);
 		
 		extern PangoLayoutLine *(*pango_layout_get_line_readonly_ptr)(PangoLayout *, int);
 		if (pango_layout_get_line_readonly_ptr != nil)
-			t_line = pango_layout_get_line_readonly_ptr(t_layout, 0);
+			t_line = pango_layout_get_line_readonly_ptr(s_layout, 0);
 		else
-			t_line = pango_layout_get_line(t_layout, 0);
+			t_line = pango_layout_get_line(s_layout, 0);
 		t_success = t_line != nil;
 	}
 	
