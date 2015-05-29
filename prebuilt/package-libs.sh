@@ -95,16 +95,16 @@ function doPackage {
 }
 
 # Package up the various libraries and headers
-for PLATFORM in `find lib/ -type d -mindepth 1 -maxdepth 1` ; do
+for PLATFORM in `find lib/ -mindepth 1 -maxdepth 1 -type d` ; do
 	PLATFORM=$(basename "${PLATFORM}")
 	if [ "${PLATFORM}" == "mac" ] ; then
 		doPackage "${PLATFORM}" "Universal" 
 	elif [ "${PLATFORM}" == "ios" ] ; then
-		for SUBPLATFORM in `find "lib/${PLATFORM}/" -type d -mindepth 1 -maxdepth 1` ; do
+		for SUBPLATFORM in `find "lib/${PLATFORM}/" -mindepth 1 -maxdepth 1 -type d` ; do
 			doPackage "${PLATFORM}" "Universal" $(basename "${SUBPLATFORM}")
 		done
 	else
-		for ARCH in `find "lib/${PLATFORM}/" -type d -mindepth 1 -maxdepth 1` ; do
+		for ARCH in `find "lib/${PLATFORM}/" -mindepth 1 -maxdepth 1 -type d` ; do
 			doPackage "${PLATFORM}" $(basename "${ARCH}")
 		done
 	fi	

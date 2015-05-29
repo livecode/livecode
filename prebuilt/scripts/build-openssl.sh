@@ -101,11 +101,6 @@ function buildOpenSSL {
 			setCCForArch "${ARCH}" "${SUBPLATFORM_INDEX}"
 			./Configure ${OPENSSL_ARCH_CONFIG} > "${OPENSSL_ARCH_LOG}" 2>&1
 			
-			# Only some platforms have a "makedepends" script installed
-			if [ ! "${PLATFORM}" == "linux" ] ; then
-				sed -i "" "s|MAKEDEPPROG=makedepend|MAKEDEPPROG=${CC} -M|g" Makefile Makefile.org
-			fi
-			
 			# iOS requires some tweaks to the source when building for devices
 			if [ "${PLATFORM}" == "ios" -a "${ARCH}" != "i386 " ] ; then
 				sed -i "" -e "s!static volatile sig_atomic_t intr_signal;!static volatile intr_signal;!" "crypto/ui/ui_openssl.c"
@@ -115,7 +110,7 @@ function buildOpenSSL {
 			echo "#define OPENSSL_EXPORT_VAR_AS_FUNCTION 1" >> crypto/opensslconf.h
 
 			echo "Building OpenSSL for ${NAME}"
-			make clean >> "${OPENSSL_ARCH_LOG}" 2>&1 && make ${MAKEFLAGS} depend >> "${OPENSSL_ARCH_LOG}" 2>&1 && make ${MAKEFLAGS} >> "${OPENSSL_ARCH_LOG}" 2>&1 && make install_sw >> "${OPENSSL_ARCH_LOG}" 2>&1
+			make clean >> "${OPENSSL_ARCH_LOG}" 2>&1 && make ${MAKEFLAGS} >> "${OPENSSL_ARCH_LOG}" 2>&1 && make install_sw >> "${OPENSSL_ARCH_LOG}" 2>&1
 			RESULT=$?
 			cd ..
 			
