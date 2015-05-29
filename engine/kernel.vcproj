@@ -625,14 +625,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\stacktile.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\stacktile.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\stackview.cpp"
 				>
 			</File>
@@ -6158,10 +6150,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\systhreads.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\sysunxdate.cpp"
 				>
 				<FileConfiguration
@@ -6276,6 +6264,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						PrecompiledHeaderThrough="w32prefix.h"
+						PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
 					/>
 				</FileConfiguration>
 			</File>

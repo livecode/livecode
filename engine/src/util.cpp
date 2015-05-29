@@ -1543,6 +1543,9 @@ void MCU_unparsepoints(MCPoint *points, uint2 npoints, MCExecPoint &ep)
 
 Boolean MCU_parsepoints(MCPoint *&points, uindex_t &noldpoints, MCStringRef data)
 {
+    // This method will parse as much as it can from the string, so we need to
+    // nativize first.
+    
 	Boolean allvalid = True;
 	uint2 npoints = 0;
 	uint4 l = MCStringGetLength(data);
@@ -1569,7 +1572,7 @@ Boolean MCU_parsepoints(MCPoint *&points, uindex_t &noldpoints, MCStringRef data
 			MCU_realloc((char **)&points, npoints, npoints + 1, sizeof(MCPoint));
 		points[npoints].x = i1;
 		points[npoints++].y = i2;
-		if (MCStringGetLength(data) - l > 2 && *(sptr - 1) == '\n'
+        if (l > 0 && (sptr - *t_data) > 2 && *(sptr - 1) == '\n'
 		        && *(sptr - 2) == '\n')
 		{
 			if (npoints + 1 > noldpoints)
@@ -1585,10 +1588,16 @@ Boolean MCU_parsepoints(MCPoint *&points, uindex_t &noldpoints, MCStringRef data
 
 Boolean MCU_parsepoint(MCPoint &point, MCStringRef data)
 {
+    // This method returns False if it can't parse the point - which will happen
+    // if the string isn't native.
+    if (!MCStringCanBeNative(data))
+        return false;
+    
     MCAutoPointer<char> t_data;
     /* UNCHECKED */ MCStringConvertToCString(data, &t_data);
-	const char *sptr = *t_data;
-	uint4 l = MCStringGetLength(data);
+    const char *sptr = *t_data;
+    uint4 l = MCStringGetLength(data);
+
 	Boolean done1, done2;
 	// MDW-2013-06-09: [[ Bug 11041 ]] Round non-integer values to nearest.
 	int2 i1= (int2)(MCU_strtol(sptr, l, ',', done1, True));
@@ -3204,17 +3213,32 @@ bool MCU_compare_strings_native(const char *p_a, bool p_a_isunicode, const char 
 
 ///////////////////////////////////////////////////////////////////////////////
 
+// SN-2015-04-07: [[ Bug 15164 ]] MCU_loadmodule is now a wrapper of MCU_loadmodule_stringref
+//  to keep consistent its use from the externals.
+void* MCU_loadmodule(const char* p_module)
+{
+    MCAutoStringRef t_module;
+    if (!MCStringCreateWithCString(p_module, &t_module))
+        return NULL;
+
+    return MCU_loadmodule_stringref(*t_module);
+}
+
 // AL-2015-02-06: [[ SB Inclusions ]] Add utility functions for module loading where
 //  p_module can be a universal module name, where a mapping from module names to
 // relative paths has been provided.
 // SN-2015-02-23: [[ Broken Win Compilation ]] Use void*, as the function is imported
 //  as extern in revbrowser/src/cefshared.h - where MCSysModuleHandle does not exist
-void* MCU_loadmodule(const char *p_module)
+void* MCU_loadmodule_stringref(MCStringRef p_module)
 {
     MCSysModuleHandle t_handle;
     t_handle = nil;
 #if defined(_MACOSX)
-    t_handle = (MCSysModuleHandle)NSAddImage(p_module, NSADDIMAGE_OPTION_RETURN_ON_ERROR | NSADDIMAGE_OPTION_WITH_SEARCHING);
+    MCAutoPointer<char> t_module_cstring;
+    // SN-2015-04-07: [[ Bug 15164 ]] NSAddImage understands UTF-8.
+    if (!MCStringConvertToUTF8String(p_module, &t_module_cstring))
+        return NULL;
+    t_handle = (MCSysModuleHandle)NSAddImage(*t_module_cstring, NSADDIMAGE_OPTION_RETURN_ON_ERROR | NSADDIMAGE_OPTION_WITH_SEARCHING);
     if (t_handle != nil)
         return t_handle;
     // MM-2014-02-06: [[ LipOpenSSL 1.0.1e ]] On Mac, if module cannot be found then look relative to current executable.
@@ -3222,7 +3246,7 @@ void* MCU_loadmodule(const char *p_module)
     t_buffer_size = 0;
     _NSGetExecutablePath(NULL, &t_buffer_size);
     char *t_module_path;
-    t_module_path = (char *) malloc(t_buffer_size + strlen(p_module) + 1);
+    t_module_path = (char *) malloc(t_buffer_size + strlen(*t_module_cstring) + 1);
     if (t_module_path != NULL)
     {
         if (_NSGetExecutablePath(t_module_path, &t_buffer_size) == 0)
@@ -3238,7 +3262,7 @@ void* MCU_loadmodule(const char *p_module)
                 }
                 t_last_slash--;
             }
-            strcat(t_module_path, p_module);
+            strcat(t_module_path, *t_module_cstring);
             t_handle = (MCSysModuleHandle)NSAddImage(t_module_path, NSADDIMAGE_OPTION_RETURN_ON_ERROR | NSADDIMAGE_OPTION_WITH_SEARCHING);
         }
         free(t_module_path);
@@ -3252,7 +3276,7 @@ void* MCU_loadmodule(const char *p_module)
     
     if (!MCdispatcher || !MCdispatcher -> fetchlibrarymapping(p_module, &t_path))
     {
-        if (!MCStringCreateWithCString(p_module, &t_path))
+        if (!MCStringCopy(p_module, &t_path))
             return nil;
     }
 
@@ -3317,7 +3341,9 @@ void *MCU_resolvemodulesymbol(void* p_module, const char *p_symbol)
 
 #ifndef _DEBUG_MEMORY
 
-#ifdef __VISUALC__
+// SN-2015-04-17: [[ Bug 15187 ]] Don't use the nothrow variant on iOS Simulator
+//  as they won't let iOS Simulator 6.3 engine compile.
+#if defined __VISUALC__ || TARGET_IPHONE_SIMULATOR
 void *operator new (size_t size)
 {
     return malloc(size);

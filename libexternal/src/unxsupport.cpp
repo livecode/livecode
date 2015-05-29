@@ -35,14 +35,15 @@ char *string_to_utf8(const char *p_string)
 		unsigned int v;
 		v = ((unsigned char *)p_string)[i];
 
-		if (v < 128)
+        if (v < 128)
 			t_utf8_string[j++] = v;
 		else
 		{
-			t_utf8_string[j++] = 0xC0 | (v >> 5);
-			t_utf8_string[j++] = 0x80 | (v & 63);
+            // SN-2015-03-11: [[ Bug 14413 ]] Do the expected shift
+            t_utf8_string[j++] = (0xC0 | (v >> 6));
+            t_utf8_string[j++] = (0x80 | (v & 63));
 		}
-	}
+    }
 
 	t_utf8_string[j] = '\0';
 

@@ -46,53 +46,32 @@ static inline MCGRectangle MCGRectangleFromPangoRectangle(const PangoRectangle &
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// MM-2014-07-31: [[ ThreadedRendering ]] Updated to make text rendering thread safe, by using pthread TLS to ensure we have seperate panog objects for each thread.
-//  This should probably be moved to a central thread library at some point, which will also help with clean up (we only clean up the main thread at the moment).
-static pthread_key_t /* PangoFontMap * */ s_font_map_key = 0;
-static pthread_key_t /* PangoContext * */ s_pango_key = 0;
-static pthread_key_t /* PangoLayout * */ s_layout_key = 0;
+static PangoFontMap *s_font_map = NULL;
+static PangoContext *s_pango = NULL;
+static PangoLayout *s_layout = NULL;
 
 static bool lnx_pango_objects_intialize()
 {
     bool t_success;
 	t_success = true;
     
-    PangoFontMap *t_font_map;
-    PangoContext *t_pango;
-    PangoLayout *t_layout;
     if (t_success)
     {
-        t_font_map = (PangoFontMap *)pthread_getspecific(s_font_map_key);
-        t_pango = (PangoContext *)pthread_getspecific(s_pango_key);
-        t_layout = (PangoLayout *)pthread_getspecific(s_layout_key);
+        s_font_map = pango_ft2_font_map_new();
+        t_success = s_font_map != NULL;
     }
     
-    if (t_success)
-		if (t_font_map == NULL)
-		{
-			t_font_map = pango_ft2_font_map_new();
-			t_success = t_font_map != NULL;
-            if (t_success)
-                pthread_setspecific(s_font_map_key, t_font_map);
-		}
+	if (t_success)
+    {
+        s_pango = pango_ft2_font_map_create_context((PangoFT2FontMap *) s_font_map);
+        t_success = s_pango != NULL;
+    }
 	
 	if (t_success)
-		if (t_pango == NULL)
-		{
-			t_pango = pango_ft2_font_map_create_context((PangoFT2FontMap *) t_font_map);
-			t_success = t_pango != NULL;
-            if (t_success)
-                pthread_setspecific(s_pango_key, t_pango);
-		}
-	
-	if (t_success)
-		if (t_layout == NULL)
-		{
-			t_layout = pango_layout_new(t_pango);
-			t_success = t_layout != NULL;
-            if (t_success)
-                pthread_setspecific(s_layout_key, t_layout);
-		}
+    {
+        s_layout = pango_layout_new(s_pango);
+        t_success = s_layout != NULL;
+    }
     
 	return t_success;
 }
@@ -111,44 +90,21 @@ static bool lnx_pango_initialize(void)
 			initialise_weak_link_glib() != 0;
     
     if (t_success)
-    {
-        pthread_key_create(&s_font_map_key, NULL);
-        pthread_key_create(&s_pango_key, NULL);
-        pthread_key_create(&s_layout_key, NULL);
         t_success = lnx_pango_objects_intialize();
-    }
 	
 	return t_success;
 }
 
 static void lnx_pango_finalize(void)
 {
-    PangoLayout *t_layout;
-    if (s_layout_key != 0)
-    {
-        t_layout = (PangoLayout *)pthread_getspecific(s_layout_key);
-        pthread_setspecific(s_layout_key, NULL);
-        if (t_layout != NULL)
-            g_object_unref(t_layout);
-    }
+    if (s_layout != NULL)
+        g_object_unref(s_layout);
     
-    PangoContext *t_pango;
-    if (s_pango_key != 0)
-    {
-        t_pango = (PangoContext *)pthread_getspecific(s_pango_key);
-        pthread_setspecific(s_pango_key, NULL);
-        if (t_pango != NULL)
-            g_object_unref(t_pango);
-    }
-    
-    PangoFontMap *t_font_map;
-    if (s_font_map_key != 0)
-    {
-        t_font_map = (PangoFontMap *)pthread_getspecific(s_font_map_key);
-        pthread_setspecific(s_font_map_key, NULL);
-        if (t_font_map != NULL)
-            g_object_unref(t_font_map);
-    }
+    if (s_pango != NULL)
+        g_object_unref(s_pango);
+
+    if (s_font_map != NULL)
+        g_object_unref(s_font_map);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -177,19 +133,7 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 	
 	bool t_success;
 	t_success = true;
-    
-    if (t_success)
-        t_success = lnx_pango_objects_intialize();
-    
-    PangoContext *t_pango;
-    PangoLayout *t_layout;
-    if (t_success)
-    {
-        t_pango = (PangoContext *)pthread_getspecific(s_pango_key);
-        t_layout = (PangoLayout *)pthread_getspecific(s_layout_key);
-        t_success = t_pango != NULL && t_layout != NULL;
-    }
-	
+
 	char *t_text;
 	t_text = nil;
 	if (t_success)
@@ -213,17 +157,17 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		t_ptransform . yy = t_transform . d;
 		t_ptransform . x0 = t_transform . tx;
 		t_ptransform . y0 = t_transform . ty;
-		pango_context_set_matrix(t_pango, &t_ptransform);
+		pango_context_set_matrix(s_pango, &t_ptransform);
 		
-		pango_layout_set_font_description(t_layout, (PangoFontDescription *) p_font . fid);
-		pango_layout_set_text(t_layout, t_text, -1);
+		pango_layout_set_font_description(s_layout, (PangoFontDescription *) p_font . fid);
+		pango_layout_set_text(s_layout, t_text, -1);
 		MCCStringFree(t_text);
 		
 		extern PangoLayoutLine *(*pango_layout_get_line_readonly_ptr)(PangoLayout *, int);
 		if (pango_layout_get_line_readonly_ptr != nil)
-			t_line = pango_layout_get_line_readonly_ptr(t_layout, 0);
+			t_line = pango_layout_get_line_readonly_ptr(s_layout, 0);
 		else
-			t_line = pango_layout_get_line(t_layout, 0);
+			t_line = pango_layout_get_line(s_layout, 0);
 		t_success = t_line != nil;
 	}
 	
@@ -301,16 +245,6 @@ MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_
 	
 	bool t_success;
 	t_success = true;
-    
-    if (t_success)
-        t_success = lnx_pango_objects_intialize();
-    
-    PangoLayout *t_layout;
-    if (t_success)
-    {
-        t_layout = (PangoLayout *)pthread_getspecific(s_layout_key);
-        t_success = t_layout != NULL;
-    }
 	
 	char *t_text;
 	t_text = nil;
@@ -321,12 +255,12 @@ MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_
 	t_width = 0.0;
 	if (t_success)
 	{
-		pango_layout_set_text(t_layout, t_text, -1);
-		pango_layout_set_font_description(t_layout, (PangoFontDescription *) p_font . fid);
+		pango_layout_set_text(s_layout, t_text, -1);
+		pango_layout_set_font_description(s_layout, (PangoFontDescription *) p_font . fid);
 		
 		PangoRectangle t_bounds;
-		pango_layout_get_extents(t_layout, NULL, &t_bounds);
-		t_width = t_bounds . width / (MCGFloat)PANGO_SCALE;
+		pango_layout_get_pixel_extents(s_layout, NULL, &t_bounds);
+		t_width = t_bounds . width;
 	}
 	
 	MCCStringFree(t_text);

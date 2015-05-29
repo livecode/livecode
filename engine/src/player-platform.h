@@ -63,8 +63,7 @@ struct MCPlayerCallback
 //  since we use &MCControl::kPropertyTable
 class MCPlayer : public MCControl, public MCPlayerInterface
 {
-	MCPlayer *nextplayer;
-    
+    MCPlayer *nextplayer;
     MCColor controllerbackcolor;
     MCColor controllermaincolor;
     MCColor selectedareacolor;
@@ -83,10 +82,12 @@ class MCPlayer : public MCControl, public MCPlayerInterface
 
     bool m_is_attached : 1;
     bool m_should_attach : 1;
-    
+
+    bool m_should_recreate : 1;
+
 	static MCPropertyInfo kProperties[];
     static MCObjectPropertyTable kPropertyTable;
-	
+
 public:
 	MCPlayer();
 	MCPlayer(const MCPlayer &sref);

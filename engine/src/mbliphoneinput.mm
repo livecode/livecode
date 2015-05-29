@@ -1680,7 +1680,7 @@ void MCiOSMultiLineControl::SetDataDetectorTypes(MCExecContext& ctxt, MCNativeCo
         
         if (p_type & kMCNativeControlInputDataDetectorTypeAll)
             t_types |= UIDataDetectorTypeAll;
-        if (p_type & kMCNativeControlInputDataDetectorTypeEmailAddress)
+        if (p_type & kMCNativeControlInputDataDetectorTypeMapAddress)
             t_types |= UIDataDetectorTypeAddress;
         if (p_type & kMCNativeControlInputDataDetectorTypePhoneNumber)
             t_types |= UIDataDetectorTypePhoneNumber;
@@ -1750,7 +1750,7 @@ void MCiOSMultiLineControl::GetDataDetectorTypes(MCExecContext& ctxt, MCNativeCo
         if (t_native_types & UIDataDetectorTypeAll)
         {
             t_types |= kMCNativeControlInputDataDetectorTypeCalendarEvent;
-            t_types |= kMCNativeControlInputDataDetectorTypeEmailAddress;
+            t_types |= kMCNativeControlInputDataDetectorTypeMapAddress;
             t_types |= kMCNativeControlInputDataDetectorTypePhoneNumber;
             t_types |= kMCNativeControlInputDataDetectorTypeWebUrl;
         }
@@ -1758,7 +1758,7 @@ void MCiOSMultiLineControl::GetDataDetectorTypes(MCExecContext& ctxt, MCNativeCo
         if (t_native_types & UIDataDetectorTypeCalendarEvent)
             t_types |= kMCNativeControlInputDataDetectorTypeCalendarEvent;
         if (t_native_types & UIDataDetectorTypeAddress)
-            t_types |= kMCNativeControlInputDataDetectorTypeEmailAddress;
+            t_types |= kMCNativeControlInputDataDetectorTypeMapAddress;
         if (t_native_types & UIDataDetectorTypePhoneNumber)
             t_types |= kMCNativeControlInputDataDetectorTypePhoneNumber;
         if (t_native_types & UIDataDetectorTypeLink)
