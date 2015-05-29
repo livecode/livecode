@@ -29,6 +29,11 @@ URL="http://downloads.livecode.com/prebuilts"
 mkdir -p "${FETCH_DIR}"
 mkdir -p "${EXTRACT_DIR}"
 
+# Override the fetch location via an environment variable
+if [ ! -z "${PREBUILT_CACHE_DIR}" ] ; then
+    FETCH_DIR="${PREBUILT_CACHE_DIR}"
+fi
+
 function fetchLibrary {
 	local LIB=$1
 	local PLATFORM=$2
