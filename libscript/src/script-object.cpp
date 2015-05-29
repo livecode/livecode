@@ -276,10 +276,27 @@ bool MCScriptInitialize(void)
 
 void MCScriptFinalize(void)
 {
+    MCValueRelease(kMCScriptInParameterNotDefinedErrorTypeInfo);
+    MCValueRelease(kMCScriptOutParameterNotDefinedErrorTypeInfo);
+    MCValueRelease(kMCScriptVariableUsedBeforeDefinedErrorTypeInfo);
+    MCValueRelease(kMCScriptInvalidReturnValueErrorTypeInfo);
+    MCValueRelease(kMCScriptInvalidVariableValueErrorTypeInfo);
+    MCValueRelease(kMCScriptInvalidArgumentValueErrorTypeInfo);
+    MCValueRelease(kMCScriptNotABooleanValueErrorTypeInfo);
+    MCValueRelease(kMCScriptWrongNumberOfArgumentsErrorTypeInfo);
+    MCValueRelease(kMCScriptForeignHandlerBindingErrorTypeInfo);
+    MCValueRelease(kMCScriptMultiInvokeBindingErrorTypeInfo);
+    MCValueRelease(kMCScriptTypeBindingErrorTypeInfo);
+    MCValueRelease(kMCScriptNoMatchingHandlerErrorTypeInfo);
+    MCValueRelease(kMCScriptCannotSetReadOnlyPropertyErrorTypeInfo);
+    MCValueRelease(kMCScriptInvalidPropertyValueErrorTypeInfo);
+    MCValueRelease(kMCScriptNotAHandlerValueErrorTypeInfo);
+    MCValueRelease(kMCScriptCannotCallContextHandlerErrorTypeInfo);
+                   
     for(uindex_t i = 0; i < s_builtin_module_count; i++)
         MCScriptReleaseModule(s_builtin_modules[i]);
     MCMemoryDeleteArray(s_builtin_modules);
-    MCValueRelease(s_builtin_module);
+    MCScriptReleaseModule(s_builtin_module);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
