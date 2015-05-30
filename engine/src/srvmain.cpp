@@ -556,7 +556,7 @@ void X_main_loop(void)
 	if (setrlimit(RLIMIT_RSS, &t_limits) < 0)
 		return;
 #endif
-	
+    
 	MCExecContext ctxt;
 	if (!MCserverscript -> Include(ctxt, MCserverinitialscript, false) &&
 		MCS_get_errormode() != kMCSErrorModeDebugger)
@@ -645,21 +645,23 @@ int main(int argc, char *argv[], char *envp[])
 	
 	/* UNCHECKED */ MCMemoryResizeArray(i + 1, t_new_envp, t_envp_count);
 	t_new_envp[i] = nil;
-// END MAC SPECIFIC	
-
-	if (!X_init(argc, t_new_argv, t_new_envp))
-		exit(-1);
+// END MAC SPECIFIC
+    
+    int t_exit_code;
+	if (X_init(argc, t_new_argv, t_new_envp))
+    {
+        X_main_loop();
 	
-	X_main_loop();
-	
-	int t_exit_code;
-	t_exit_code = X_close();
+        t_exit_code = X_close();
+    }
+    else
+        t_exit_code = -1;
 
     MCScriptFinalize();
     MCModulesFinalize();
 	MCFinalize();
 	
-	exit(t_exit_code);
+    return t_exit_code;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

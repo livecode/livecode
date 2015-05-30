@@ -1940,8 +1940,6 @@ void MCInterfaceExecRevert(MCExecContext& ctxt)
 	t_sptr->del();
 	MCerrorlock--;
 	MClockmessages = oldlock;
-	MCtodestroy->add
-	(t_sptr);
 	MCNewAutoNameRef t_name;
 	/* UNCHECKED */ MCNameCreate(*t_filename, &t_name);
 	t_sptr = MCdispatcher->findstackname(*t_name);
@@ -2189,8 +2187,6 @@ void MCInterfaceExecDeleteObjects(MCExecContext& ctxt, MCObjectPtr *p_objects, u
 			return;
 		}
 
-		if (p_objects[i] . object -> gettype() == CT_STACK)
-			MCtodestroy -> remove((MCStack *)p_objects[i] . object);
 		p_objects[i] . object -> scheduledelete();
 	}
 }

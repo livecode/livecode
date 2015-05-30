@@ -492,6 +492,7 @@ Exec_stat MCIf::exec(MCExecPoint &ep)
 		
 		// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
 		MCRedrawUpdateScreen();
+        MCObjectPoolFrameDrain();
 
 		switch(stat)
 		{
@@ -1146,6 +1147,7 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 
 			// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
 			MCRedrawUpdateScreen();
+            MCObjectPoolFrameDrain();
 			
 			switch(stat)
 			{
@@ -1657,6 +1659,7 @@ Exec_stat MCSwitch::exec(MCExecPoint &ep)
 			
 			// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
 			MCRedrawUpdateScreen();
+            MCObjectPoolFrameDrain();
 
 			switch(stat)
 			{
@@ -1905,6 +1908,7 @@ Exec_stat MCTry::exec(MCExecPoint &ep)
 
 		// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
 		MCRedrawUpdateScreen();
+        MCObjectPoolFrameDrain();
 
 		switch(stat)
 		{
