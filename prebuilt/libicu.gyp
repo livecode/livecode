@@ -95,6 +95,7 @@
 								'-liculx',
 								'-licuuc',
 								'-licudata',
+								'-lstdc++',
 							],
 						},
 					],

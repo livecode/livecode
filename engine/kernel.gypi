@@ -170,7 +170,6 @@
 								'-ljnigraphics',
 								'-llog',
 								'-lm',
-								'-lstdc++',
 							],
 						},
 					],
