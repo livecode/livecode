@@ -1975,7 +1975,7 @@ bool MCPlayer::changezoom(real8 zoom)
 }
 
 
-void MCPlayer::getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id)
+void MCPlayer::getenabledtracks(MCStringRef &r_tracks_id)
 {
     uindex_t t_count;
     uint32_t *t_tracks_id;
@@ -1997,8 +1997,15 @@ void MCPlayer::getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id)
         0 == 0;
 #endif
     
-    r_count = t_count;
-    r_tracks_id = t_tracks_id;
+    bool t_success;
+    MCAutoListRef t_list;
+    t_success = MCListCreateMutable('\n', &t_list);
+    
+	for(uindex_t i = 0; t_success && i < t_count; i++)
+		t_success = MCListAppendUnsignedInteger(*t_list, t_tracks_id[i]);
+    
+    if (t_success)
+		t_success = MCListCopyAsString(*t_list, r_tracks_id);
 }
 
 void MCPlayer::gettracks(MCStringRef &r_tracks)

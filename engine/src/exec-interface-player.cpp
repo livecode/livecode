@@ -731,24 +731,18 @@ void MCPlayer::SetTraversalOn(MCExecContext& ctxt, bool setting)
     }
 }
 
-void MCPlayer::GetEnabledTracks(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tracks)
+void MCPlayer::GetEnabledTracks(MCExecContext& ctxt, MCStringRef& r_tracks)
 {
     // SN-2014-07-03: [[ PlatformPlayer ]]
     // P_ENABLED_TRACKS getter refactored to the MCPlayer implementations
-    getenabledtracks(r_count, r_tracks);
+    getenabledtracks(r_tracks);
 }
 
-void MCPlayer::SetEnabledTracks(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_tracks)
+void MCPlayer::SetEnabledTracks(MCExecContext& ctxt, MCStringRef p_tracks)
 {
     // PM-2015-06-01: [[ PlatformPlayer ]]
     // P_ENABLED_TRACKS setter refactored to the MCPlayer implementations
-    uindex_t t_length = 0;
-    while (p_tracks && p_tracks[t_length] != 0)
-        t_length++;
-    MCAutoStringRef t_tracks;
-    MCStringCreateWithCString((const char *)p_tracks, &t_tracks);
-    //MCStringCreateWithNativeChars((const char_t *)p_tracks, t_length, &t_tracks);
-    setenabledtracks(*t_tracks);
+    setenabledtracks(p_tracks);
 }
 
 void MCPlayer::GetForeColor(MCExecContext &ctxt, MCInterfaceNamedColor &r_color)

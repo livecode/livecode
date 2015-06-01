@@ -2772,7 +2772,7 @@ void MCPlayer::getconstraints(MCMultimediaQTVRConstraints &r_constraints)
         MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRConstraints, kMCPlatformPropertyTypePlayerQTVRConstraints, (MCPlatformPlayerQTVRConstraints*)&(r_constraints));
 }
 
-void MCPlayer::getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id)
+void MCPlayer::getenabledtracks(MCStringRef &r_tracks_id)
 {
     uinteger_t *t_track_ids;
     uindex_t t_count;
@@ -2780,28 +2780,30 @@ void MCPlayer::getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id)
     t_track_ids = nil;
     t_count = 0;
     
+    bool t_success;
+    MCAutoListRef t_list;
+    t_success = MCListCreateMutable('\n', &t_list);
+    
     if (m_platform_player != nil)
     {
         uindex_t t_track_count;
         MCPlatformCountPlayerTracks(m_platform_player, t_track_count);
         t_count = 0;
         
-        for(uindex_t i = 0; i < t_track_count; i++)
+        for(uindex_t i = 0; t_success && i < t_track_count; i++)
         {
             uint32_t t_id;
             bool t_enabled;
             MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyId, kMCPlatformPropertyTypeUInt32, &t_id);
             MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
             if (t_enabled)
-            {
-                MCMemoryReallocate(t_track_ids, ++t_count * sizeof(uinteger_t), t_track_ids);
-                t_track_ids[t_count - 1] = t_id;
-            }
+                t_success = MCListAppendUnsignedInteger(*t_list, t_id);
         }
     }
     
-    r_count = t_count;
-    r_tracks_id = t_track_ids;
+    if (t_success)
+		t_success = MCListCopyAsString(*t_list, r_tracks_id);
+	
 }
 
 void MCPlayer::updatevisibility()

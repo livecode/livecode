@@ -178,7 +178,7 @@ public:
     virtual void getnodes(MCStringRef &r_nodes) = 0;
     virtual void gethotspots(MCStringRef &r_nodes) = 0;
     virtual void getconstraints(MCMultimediaQTVRConstraints &r_constraints) = 0;
-    virtual void getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id) = 0;
+    virtual void getenabledtracks(MCStringRef &r_tracks_id) = 0;
     virtual void updatevisibility() = 0;
     virtual void updatetraversal() = 0;
     
@@ -260,8 +260,8 @@ public:
     virtual void SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting) = 0;
     virtual void SetTraversalOn(MCExecContext& ctxt, bool setting) = 0;
     
-    virtual void GetEnabledTracks(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tracks) = 0;
-    virtual void SetEnabledTracks(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_tracks) = 0;
+    virtual void GetEnabledTracks(MCExecContext& ctxt, MCStringRef& r_tracks) = 0;
+    virtual void SetEnabledTracks(MCExecContext& ctxt, MCStringRef p_tracks) = 0;
 
     
     virtual void SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color) = 0;
