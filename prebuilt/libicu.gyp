@@ -33,13 +33,13 @@
 						{
 							'libraries':
 							[
-								'lib/mac/libicudata.a',
 								'lib/mac/libicui18n.a',
 								'lib/mac/libicuio.a',
 								'lib/mac/libicule.a',
 								'lib/mac/libiculx.a',
 								'lib/mac/libicutu.a',
 								'lib/mac/libicuuc.a',
+								'lib/mac/libicudata.a',
 							],
 						},
 					],
@@ -48,12 +48,12 @@
 						{
 							'libraries':
 							[
-								'lib/ios/$(SDK_NAME)/libicudata.a',
 								'lib/ios/$(SDK_NAME)/libicui18n.a',
 								'lib/ios/$(SDK_NAME)/libicuio.a',
 								'lib/ios/$(SDK_NAME)/libicule.a',
 								'lib/ios/$(SDK_NAME)/libiculx.a',
 								'lib/ios/$(SDK_NAME)/libicuuc.a',
+								'lib/ios/$(SDK_NAME)/libicudata.a',
 							],
 						},
 					],
@@ -89,12 +89,12 @@
 							
 							'libraries':
 							[
-								'-licudata',
 								'-licui18n',
 								'-licuio',
 								'-licule',
 								'-liculx',
 								'-licuuc',
+								'-licudata',
 							],
 						},
 					],
@@ -108,13 +108,13 @@
 							
 							'libraries':
 							[
-								'-lsicudt',
 								'-lsicuin',
 								'-lsicuio',
 								'-lsicule',
 								'-lsiculx',
 								'-lsicutu',
 								'-lsicuuc',
+								'-lsicudt',
 							],
 						},
 					],

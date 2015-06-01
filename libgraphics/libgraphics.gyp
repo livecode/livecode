@@ -64,6 +64,11 @@
 							'../thirdparty/libfreetype/libfreetype.gyp:libfreetype',
 							'../thirdparty/libharfbuzz/libharfbuzz.gyp:libharfbuzz',
 						],
+						
+						'sources':
+						[
+							'src/hb-sk.cpp',
+						],
 					},
 				],
 			],
