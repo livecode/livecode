@@ -17,6 +17,16 @@
 # This file contains rules used by the LiveCode Buildbot installation at
 # <https://vulcan.livecode.com/>
 
+# Load version information
+include version
+
+# Get git commit information
+ifeq ($(BUILD_EDITION),commercial)
+GIT_VERSION=g$(shell git --git-dir=../.git rev-parse --short HEAD)
+else
+GIT_VERSION=g$(shell git rev-parse --short HEAD)
+endif
+
 ################################################################
 # Configure with gyp
 ################################################################
@@ -91,6 +101,12 @@ buildtool_command = $(LIVECODE) -ui $(BUILDTOOL_STACK) \
 	--engine-dir . --output-dir . --work-dir ./_cache/builder_tool \
 	--private-dir ..
 
+# Settings for upload
+RSYNC ?= rsync
+UPLOAD_SERVER ?= meg.on-rev.com
+UPLOAD_PATH = staging/$(BUILD_LONG_VERSION)/$(GIT_VERSION)
+UPLOAD_MAX_RETRIES = 50
+
 dist-docs:
 	$(buildtool_command) --platform $(buildtool_platform) --stage docs
 
@@ -121,12 +137,39 @@ dist-tools: dist-tools-community
 distmac-disk: distmac-disk-community
 
 dist-tools-community:
-	$(buildtool_command) --platform linux --platform mac --stage tools --edition community
+	$(buildtool_command) --platform linux --platform mac --platform win --stage tools --edition community
 dist-tools-commercial:
-	$(buildtool_command) --platform linux --platform mac --stage tools --edition commercial
+	$(buildtool_command) --platform linux --platform mac --platform win --stage tools --edition commercial
 
-# FIXME upload installers to distribution server
-dist-upload:
+# Make a list of installers to be uploaded to the distribution server
+dist-upload-files.txt:
+	find . -maxdepth 1 -name 'LiveCode*Installer-*-Mac.dmg' \
+	                -o -name 'LiveCode*Installer-*-Windows.exe' \
+	                -o -name 'LiveCode*Installer-*-Linux.*' \
+	  > $@
+
+# Perform the upload.  This is in two steps:
+# (1) Create the target directory
+# (2) Transfer the files using rsync
+#
+# We need to do the actual transfer in a loop to deal with possible
+# connection drops
+dist-upload-mkdir:
+	ssh $(UPLOAD_SERVER) "mkdir -p $(UPLOAD_PATH)"
+dist-upload: dist-upload-files.txt dist-upload-mkdir
+	trap "echo Interrupted; exit;" SIGINT SIGTERM; \
+	i=0; \
+	false; \
+	while [ $$? -ne 0 -a $$i -lt $(UPLOAD_MAX_RETRIES) ] ; do \
+	  i=$$(($$i+1)); \
+	  rsync -v --progress --partial --chmod=ugo=rwX --executability \
+	    --files-from=dist-upload-files.txt . $(UPLOAD_SERVER):$(UPLOAD_PATH); \
+	done; \
+	rc=$$?; \
+	if [ $$i -eq $(UPLOAD_MAX_RETRIES) ]; then \
+	  echo "Maximum retries reached, giving up"; \
+	fi; \
+	exit $$rc
 
 # This rule is used for packing the Mac installer contents; the
 # resulting archive gets transferred to a Mac for signing and

@@ -60,6 +60,15 @@
 							'src/mblactivityindicator.cpp',
 							'src/mblcamera.cpp',
 						],
+										
+						# Force the entry point to be included in the output
+						'link_settings':
+						{
+							'ldflags':
+							[
+								'-Wl,--undefined,Java_com_runrev_android_Engine_doCreate'
+							],
+						},
 					},
 				],
 				[
