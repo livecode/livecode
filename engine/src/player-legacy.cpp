@@ -1977,35 +1977,20 @@ bool MCPlayer::changezoom(real8 zoom)
 
 void MCPlayer::getenabledtracks(MCStringRef &r_tracks_id)
 {
-    uindex_t t_count;
-    uint32_t *t_tracks_id;
-    
-    t_count = 0;
-    t_tracks_id = nil;
-    
     if (getstate(CS_PREPARED))
 #ifdef FEATURE_QUICKTIME
         if (qtstate == QT_INITTED)
-            qt_getenabledtracks(t_count, t_tracks_id);
+            qt_getenabledtracks(r_tracks_id);
 #ifdef TARGET_PLATFORM_WINDOWS
         else
-            avi_getenabledtracks(t_count, t_tracks_id);
+            avi_getenabledtracks(r_tracks_id);
 #endif
 #elif defined(X11)
-        x11_getenabledtracks(t_count, t_tracks_id);
+        x11_getenabledtracks(r_tracks_id);
 #else
         0 == 0;
 #endif
     
-    bool t_success;
-    MCAutoListRef t_list;
-    t_success = MCListCreateMutable('\n', &t_list);
-    
-	for(uindex_t i = 0; t_success && i < t_count; i++)
-		t_success = MCListAppendUnsignedInteger(*t_list, t_tracks_id[i]);
-    
-    if (t_success)
-		t_success = MCListCopyAsString(*t_list, r_tracks_id);
 }
 
 void MCPlayer::gettracks(MCStringRef &r_tracks)
@@ -3500,23 +3485,26 @@ void MCPlayer::qt_getenabledtracks(MCExecPoint& ep)
 }
 #endif
 
-void MCPlayer::qt_getenabledtracks(uindex_t& r_count, uinteger_t*& r_tracks)
+void MCPlayer::qt_getenabledtracks(MCStringRef& r_tracks)
 {
-    MCAutoArray<uinteger_t> t_tracks;
-    
-	uint2 trackcount = (uint2)GetMovieTrackCount((Movie)theMovie);
+    uint2 trackcount = (uint2)GetMovieTrackCount((Movie)theMovie);
 	uint2 i;
     
-	for (i = 1 ; i <= trackcount ; i++)
+    bool t_success;
+    MCAutoListRef t_list;
+    t_success = MCListCreateMutable('\n', &t_list);
+    
+	for (i = 1 ; t_success && i <= trackcount ; i++)
 	{
 		Track trak = GetMovieIndTrack((Movie)theMovie,i);
 		if (trak == nil)
 			break;
 		if (GetTrackEnabled(trak))
-			t_tracks . Push(GetTrackID(trak));
+			 t_success = MCListAppendInteger(*t_list, GetTrackID(trak));
 	}
-    
-    t_tracks . Take(r_tracks, r_count);
+
+    if (t_success)
+		t_success = MCListCopyAsString(*t_list, r_tracks);
 }
 
 Boolean MCPlayer::qt_setenabledtracks(MCStringRef s)
@@ -4098,9 +4086,9 @@ void MCPlayer::avi_gettracks(MCStringRef &r_tracks)
 	r_tracks = MCValueRetain(kMCEmptyString);
 }
 
-void MCPlayer::avi_getenabledtracks(uindex_t& r_count, uinteger_t*& r_tracks)
+void MCPlayer::avi_getenabledtracks(MCStringRef & r_tracks)
 {
-	r_count = 0;
+	r_tracks = MCValueRetain(kMCEmptyString);
 }
 
 Boolean MCPlayer::avi_setenabledtracks(MCStringRef s)
