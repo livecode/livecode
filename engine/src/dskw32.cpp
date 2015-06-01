@@ -3650,7 +3650,12 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		if (MCStringGetLength(p_path) == 0)
 			return MCS_getcurdir_native(r_resolved_path);
 
-		MCU_fix_path(p_path, r_resolved_path);
+        MCAutoStringRef t_native;
+        MCAutoStringRef t_native_resolved;
+        
+        MCS_pathtonative(p_path, &t_native);
+		MCU_fix_path(*t_native, &t_native_resolved);
+        MCS_pathfromnative(*t_native_resolved, r_resolved_path);
 		return true;
 	}
 	
