@@ -874,17 +874,9 @@ IO_stat MCDispatch::loadfile(const char *inname, MCStack *&sptr)
 	char *openpath = NULL;
 	char *fname = strclone(inname);
 	if ((stream = MCS_open(fname, IO_READ_MODE, True, False, 0)) != NULL)
-		if (fname[0] != PATH_SEPARATOR && fname[1] != ':')
-		{
-			char *curpath = MCS_getcurdir();
-			if (curpath[strlen(curpath) - 1] == '/')
-				curpath[strlen(curpath) - 1] = '\0';
-			openpath = new char[strlen(curpath) + strlen(fname) + 2];
-			sprintf(openpath, "%s/%s", curpath, fname);
-			delete curpath;
-		}
-		else
-			openpath = strclone(fname);
+        // SN-20015-06-01: [[ Bug 15432 ]] We want to use MCS_resolvepath to
+        //  keep consistency and let '~' be resolved as it is in MCS_open
+        openpath = MCS_resolvepath(fname);
 	else
 	{
 		char *tmparray = new char[strlen(fname) + 1];
@@ -894,13 +886,10 @@ IO_stat MCDispatch::loadfile(const char *inname, MCStack *&sptr)
 			tname = tmparray;
 		else
 			tname++;
-		if ((stream = MCS_open(tname, IO_READ_MODE, True, False, 0)) != NULL)
-		{
-			char *curpath = MCS_getcurdir();
-			openpath = new char[strlen(curpath) + strlen(tname) + 2];
-			sprintf(openpath, "%s/%s", curpath, tname);
-			delete curpath;
-		}
+        if ((stream = MCS_open(tname, IO_READ_MODE, True, False, 0)) != NULL)
+            // SN-20015-06-01: [[ Bug 15432 ]] We want to use MCS_resolvepath to
+            //  keep consistency and let '~' be resolved as it is in MCS_open
+            openpath = MCS_resolvepath(tname);
 		else
 		{
 			if (!openstartup(tname, &openpath, stream)
