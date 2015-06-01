@@ -122,6 +122,13 @@ function buildICU {
 				"../${ICU_SRC}/source/runConfigureICU" ${CONFIG_TYPE} ${ICU_CONFIG} ${CONFIG_FLAGS} > "${ICU_ARCH_LOG}" 2>&1
 			fi
 			
+			# Disable C++11 support on platforms where we can't guarantee a compatible runtime
+			case "${PLATFORM}" in
+				android|linux)
+					sed -i -e "s/\(^CXXFLAGS.*\)--std=c++0x/\1/" icudefs.mk
+					;;
+			esac	
+
 			echo "Building ICU for ${NAME}"
 			export VERBOSE=1
 			make clean >> "${ICU_ARCH_LOG}" 2>&1 && make ${MAKEFLAGS} >> "${ICU_ARCH_LOG}" 2>&1 && make DESTDIR="${INSTALL_DIR}/${NAME}" install >> "${ICU_ARCH_LOG}" 2>&1
