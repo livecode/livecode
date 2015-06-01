@@ -738,6 +738,19 @@ void MCPlayer::GetEnabledTracks(MCExecContext& ctxt, uindex_t& r_count, uinteger
     getenabledtracks(r_count, r_tracks);
 }
 
+void MCPlayer::SetEnabledTracks(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_tracks)
+{
+    // PM-2015-06-01: [[ PlatformPlayer ]]
+    // P_ENABLED_TRACKS setter refactored to the MCPlayer implementations
+    uindex_t t_length = 0;
+    while (p_tracks && p_tracks[t_length] != 0)
+        t_length++;
+    MCAutoStringRef t_tracks;
+    MCStringCreateWithCString((const char *)p_tracks, &t_tracks);
+    //MCStringCreateWithNativeChars((const char_t *)p_tracks, t_length, &t_tracks);
+    setenabledtracks(*t_tracks);
+}
+
 void MCPlayer::GetForeColor(MCExecContext &ctxt, MCInterfaceNamedColor &r_color)
 {
     getforegrouncolor(r_color);
