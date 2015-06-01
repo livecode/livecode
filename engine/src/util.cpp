@@ -2306,14 +2306,30 @@ void MCU_fix_path(MCStringRef in, MCStringRef& r_out)
 				{ //search backword for '/'
 					if (*bptr == '/')
 					{
-						/* Delete "/xxx/.." component */
-						t_length -= strmove(bptr, fptr + 3, true);
-						fptr = bptr;
+                        // Leave "/../.." unchanged
+                        if (fptr-bptr == 3 && bptr[1] == '.' && bptr[2] == '.')
+                        {
+                            // Ignore this "/../" sequence and move to next component
+                            fptr += 3;
+                            break;
+                        }
+                        
+                        /* Delete "/xxx/.." component */
+                        t_length -= strmove(bptr, fptr + 3, true);
+                        fptr = bptr;
 						break;
 					}
 					else if (bptr == t_unicode_str)
 					{
-						/* Delete "xxx/../" component */
+                        // Leave "../../" unchanged
+                        if (fptr-bptr == 2 && bptr[0] == '.' && bptr[1] == '.')
+                        {
+                            // Ignore this "/../" sequence and move to next component
+                            fptr += 3;
+                            break;
+                        }
+                        
+                        /* Delete "xxx/../" component */
 						t_length -= strmove (bptr, fptr + 4, true);
 						fptr = bptr;
 						break;
