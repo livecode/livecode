@@ -2426,7 +2426,19 @@ Exec_stat MCRevert::exec(MCExecPoint &ep)
 		ep.grabsvalue();
 		Boolean oldlock = MClockmessages;
 		MClockmessages = True;
-		MCerrorlock++;
+        MCerrorlock++;
+        // SN-2015-06-02: [[ Bug 14642 ]] Each time a control is deleted using
+        //  the backspace key, it is added to the MCundos list - and is not
+        //  actually deleted. On revert (Revert to Saved stack from the menubar)
+        //  this causes the control to be still existing, while its parent stack
+        //  (i.e. the current MCtopstackptr) will be deleted in the next line.
+        //  After the revert, that control will still be part of the internal
+        //  object listener list, and if its deallocated stack parent is
+        //  accessed, that causes a crash.
+        //  Clearing the Undos, since the stask is deleted after all, seems to
+        //  be the missing step.
+        MCundos -> freestate();
+
 		sptr->del();
 		MCerrorlock--;
 		MClockmessages = oldlock;
