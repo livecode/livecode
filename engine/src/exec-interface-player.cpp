@@ -738,10 +738,9 @@ void MCPlayer::GetEnabledTracks(MCExecContext& ctxt, MCStringRef& r_tracks)
     getenabledtracks(r_tracks);
 }
 
+// PM-2015-06-01: [[ Bug 15439 ]] Added setter for enabledTracks property of the player object
 void MCPlayer::SetEnabledTracks(MCExecContext& ctxt, MCStringRef p_tracks)
 {
-    // PM-2015-06-01: [[ PlatformPlayer ]]
-    // P_ENABLED_TRACKS setter refactored to the MCPlayer implementations
     setenabledtracks(p_tracks);
 }
 
