@@ -2143,7 +2143,15 @@ void MCInterfaceGetScreenRect(MCExecContext& ctxt, bool p_working, bool p_effect
 	const MCDisplay *t_displays;
 	MCscreen -> getdisplays(t_displays, p_effective);
 
-	r_value = p_working ? t_displays[0] . workarea : t_displays[0] . viewport;
+    if (t_displays)
+    {
+        r_value = p_working ? t_displays[0] . workarea : t_displays[0] . viewport;
+    }
+    else
+    {
+        // No-UI mode
+        r_value = MCRectangleMake(0, 0, 0, 0);
+    }
 }
 
 void MCInterfaceGetScreenRects(MCExecContext& ctxt, bool p_working, bool p_effective, MCStringRef& r_value)
