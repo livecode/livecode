@@ -14,9 +14,6 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include <Cocoa/Cocoa.h>
-#include <AVFoundation/AVFoundation.h>
-
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -30,7 +27,33 @@
 
 #include "platform.h"
 #include "platform-internal.h"
+
+#ifdef _MACOSX
+#include <Cocoa/Cocoa.h>
+
 #include "mac-internal.h"
+#endif
+
+#include <AVFoundation/AVFoundation.h>
+
+#ifndef _MACOSX
+#include "mbliphoneapp.h"
+
+#import <UIKit/UIKit.h>
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+
+#ifndef _MACOSX
+
+#include "uidc.h"
+bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
+{
+	MCscreen->wait(p_duration, p_blocking ? False : True, True);
+	return true;
+}
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -49,7 +72,7 @@ public:
     virtual void Attach(void *owner) = 0;
     virtual void Detach(void) = 0;
 	
-	virtual bool GetNativeView(void *&r_view);
+	virtual bool GetNativeView(void *&r_view) = 0;
     
     virtual bool SetProperty(MCPlatformCameraProperty property, MCPlatformPropertyType type, void *value) = 0;
     virtual bool GetProperty(MCPlatformCameraProperty property, MCPlatformPropertyType type, void *value) = 0;
@@ -65,7 +88,11 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef _MACOSX
 @interface com_runrev_livecode_MCAVCameraView : NSView
+#else
+@interface com_runrev_livecode_MCAVCameraView : UIView
+#endif
 
 #ifndef _MACOSX
 + (Class)layerClass;
@@ -533,7 +560,7 @@ void MCAVCamera::Open(void)
     m_movie_output = [[AVCaptureMovieFileOutput alloc] init];
     [m_session addOutput: m_movie_output];
     
-    m_preview = [[com_runrev_livecode_MCAVCameraView alloc] initWithFrame: NSMakeRect(0, 0, 0, 0)];
+	m_preview = [[com_runrev_livecode_MCAVCameraView alloc] initWithFrame: CGRectMake(0, 0, 0, 0)];
     [m_preview setSession: m_session];
     if (m_owner != nil)
         Realize();
@@ -843,6 +870,22 @@ bool MCAVCamera::TakePicture(MCDataRef& r_data)
 	m_jpeg_image = nil;
 	
 	m_capturing_image = true;
+	
+#ifndef _MACOSX
+	MCIPhoneRunBlockOnMainFiber(^() {
+		[m_image_output captureStillImageAsynchronouslyFromConnection:t_connection completionHandler:^(CMSampleBufferRef imageDataSampleBuffer, NSError *error) {
+			if (error == nil)
+			{
+				NSData *t_data;
+				t_data = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageDataSampleBuffer];
+				
+				/* UNCHECKED */ MCDataCreateWithBytes((const byte_t*)[t_data bytes], (uindex_t)[t_data length], m_jpeg_image);
+			}
+			m_capturing_image = false;
+			MCIPhoneBreakWait();
+		}];
+	});
+#else
 	[m_image_output captureStillImageAsynchronouslyFromConnection:t_connection completionHandler:^(CMSampleBufferRef imageDataSampleBuffer, NSError *error) {
 		if (error == nil)
 		{
@@ -853,7 +896,8 @@ bool MCAVCamera::TakePicture(MCDataRef& r_data)
 		}
 		m_capturing_image = false;
 	}];
-	
+#endif
+
 	while (!MCquit && m_capturing_image)
 	{
 		MCPlatformWaitForEvent(60.0, true);
@@ -872,10 +916,14 @@ bool MCAVCamera::TakePicture(MCDataRef& r_data)
 
 void MCPlatformCameraCreate(MCPlatformCameraRef& r_camera)
 {
+#ifdef _MACOSX
     if (MCmajorosversion >= 0x1070)
         r_camera = new MCAVCamera;
     else
         r_camera = nil;
+#else
+	r_camera = new MCAVCamera();
+#endif
 }
 
 void MCPlatformCameraRetain(MCPlatformCameraRef camera)
