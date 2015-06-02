@@ -195,16 +195,11 @@ void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename, MCSt
     
     MCValueRelease(t_stream);
     
-    for(MCLoadedExtension *t_ext = MCextensions; t_ext != nil; t_ext = t_ext -> next)
-        if (MCNameIsEqualTo(t_ext -> module_name, MCScriptGetNameOfModule(t_module), kMCStringOptionCompareCaseless))
-            return;
-    
     MCEngineAddExtensionFromModule(*t_resolved_filename, t_module);
 	if (p_resource_path != nil)
 		MCEngineAddResourcePathForModule(t_module, p_resource_path);
     
     MCScriptReleaseModule(t_module);
-    
     
     return;
 }
