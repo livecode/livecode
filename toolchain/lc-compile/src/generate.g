@@ -1141,6 +1141,7 @@
         Info'Index -> VarIndex
         IsVariableInRegister(Kind)
         --
+        EmitPosition(Position)
         GenerateDefinitionGroupForInvokes(Invokes, execute, Arguments -> Index, Signature)
         GenerateInvoke_EvaluateArguments(Result, Context, Signature, Arguments)
         EmitBeginInvoke(Index, Context, VarIndex)
