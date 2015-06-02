@@ -375,6 +375,11 @@ IO_stat MCDispatch::startup(void)
 		// if (sptr -> getscript() != NULL)
 		//	memset(sptr -> getscript(), 0, strlen(sptr -> getscript()));
 
+        destroystack(sptr, True);
+        MCtopstackptr = NULL;
+        MCquit = False;
+        MCenvironmentactive = False;
+        
 		send_relaunch();
         MCNewAutoNameRef t_name;
         if(!ctxt . ConvertToName(t_valueref, &t_name))
