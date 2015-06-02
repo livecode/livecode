@@ -412,6 +412,7 @@ enum MCNativeControlCameraFeature
 
 struct MCNativeControlActionInfo
 {
+	bool waitable;
     MCNativeControlAction action;
     void *exec_method;
 };

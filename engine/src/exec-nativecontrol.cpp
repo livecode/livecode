@@ -817,124 +817,190 @@ static MCNativeControlActionInfo *lookup_control_action(const MCNativeControlAct
 	return nil;
 }
 
+void _MCNativeControlDo(MCExecContext &ctxt, MCNativeControlPtr *p_control, MCNativeControlActionInfo *p_info, MCValueRef *p_arguments, uindex_t p_argument_count)
+{
+	switch (p_info -> action)
+	{
+		// no params
+		case kMCNativeControlActionAdvance:
+		case kMCNativeControlActionRetreat:
+		case kMCNativeControlActionReload:
+		case kMCNativeControlActionStop:
+		case kMCNativeControlActionFlashScrollIndicators:
+		case kMCNativeControlActionPlay:
+		case kMCNativeControlActionPause:
+		case kMCNativeControlActionPrepareToPlay:
+		case kMCNativeControlActionBeginSeekingForward:
+		case kMCNativeControlActionBeginSeekingBackward:
+		case kMCNativeControlActionEndSeeking:
+		case kMCNativeControlActionFocus:
+		case kMCNativeControlActionCameraStopRecording:
+		case kMCNativeControlActionCameraTakePicture:
+		{
+			((void(*)(MCExecContext&, MCNativeControlPtr*))p_info -> exec_method)(ctxt, p_control);
+			return;
+		}
+		
+		// single string param
+		case kMCNativeControlActionCameraStartRecording:
+		case kMCNativeControlActionExecute:
+		if (p_argument_count == 1)
+		{
+			// SN-2014-11-20: [[ Bug 14062 ]] Convert the argument (that could for example be a NameRef
+			MCAutoStringRef t_string;
+			if (!ctxt . ConvertToString(p_arguments[0], &t_string))
+			break;
+			
+			((void(*)(MCExecContext&, MCNativeControlPtr*, MCStringRef))p_info -> exec_method)(ctxt, p_control, *t_string);
+			return;
+		}
+		break;
+		
+		// double string param
+		case kMCNativeControlActionLoad:
+		if (p_argument_count == 2)
+		{
+			MCAutoStringRef t_url;
+			MCAutoStringRef t_text;
+			
+			// SN-2014-11-20: [[ Bug 14062 ]] Convert the arguments (that could for example be a NameRef)
+			if (!ctxt . ConvertToString(p_arguments[0], &t_url)
+				|| !ctxt . ConvertToString(p_arguments[1], &t_text))
+			break;
+			
+			((void(*)(MCExecContext&, MCNativeControlPtr*, MCStringRef, MCStringRef))p_info -> exec_method)(ctxt, p_control, *t_url, *t_text);
+			return;
+		}
+		break;
+		
+		// double integer param
+		case kMCNativeControlActionScrollRangeToVisible:
+		if (p_argument_count == 2)
+		{
+			integer_t t_start;
+			integer_t t_end;
+			// SN-2014-11-20: [[ Bug 14062 ]] Convert the argument (that could for example be a NameRef)
+			if (!ctxt . ConvertToInteger(p_arguments[0], t_start)
+				|| ctxt . ConvertToInteger(p_arguments[1], t_end))
+			break;
+			
+			((void(*)(MCExecContext&, MCNativeControlPtr*, integer_t, integer_t))p_info -> exec_method)(ctxt, p_control, t_start, t_end);
+			return;
+		}
+		break;
+		//other
+		case kMCNativeControlActionSnapshot:
+		case kMCNativeControlActionSnapshotExactly:
+		{
+			integer_t t_time;
+			// SN-2014-11-20: [[ Bug 14062 ]] Convert the argument (that could for example be a NameRef)
+			if (ctxt . ConvertToInteger(p_arguments[0], t_time))
+			{
+				if (p_argument_count == 1)
+				{
+					((void(*)(MCExecContext&, MCNativeControlPtr*, integer_t, integer_t*, integer_t*))p_info -> exec_method)(ctxt, p_control, t_time, nil, nil);
+					return;
+				}
+				else if (p_argument_count == 3)
+				{
+					integer_t t_max_width;
+					integer_t t_max_height;
+					// SN-2014-11-20: [[ Bug 14062 ]] Convert the arguments (that could for example be a NameRef)
+					if (ctxt . ConvertToInteger(p_arguments[1], t_max_width) && ctxt . ConvertToInteger(p_arguments[2], t_max_height))
+					{
+						((void(*)(MCExecContext&, MCNativeControlPtr*, integer_t, integer_t*, integer_t*))p_info -> exec_method)(ctxt, p_control, t_time, &t_max_width, &t_max_height);
+						return;
+					}
+				}
+			}
+		}
+		break;
+		
+		case kMCNativeControlActionUnknown:
+		default:
+		break;
+	}
+	ctxt . Throw();
+}
+
+#ifdef TARGET_SUBPLATFORM_IPHONE
+struct handle_context_t
+{
+	MCExecContext *ctxt;
+	MCNativeControlPtr *control;
+	MCNativeControlActionInfo *info;
+	MCValueRef *arguments;
+	uindex_t argument_count;
+};
+
+static void invoke_platform(void *p_context)
+{
+	handle_context_t *ctxt;
+	ctxt = (handle_context_t *)p_context;
+	
+	_MCNativeControlDo(*(ctxt->ctxt), ctxt->control, ctxt->info, ctxt->arguments, ctxt->argument_count);
+}
+
+extern void MCIPhoneCallOnMainFiber(void (*)(void *), void *);
+
 void MCNativeControlExecDo(MCExecContext& ctxt, MCStringRef p_control_name, MCStringRef p_action_name, MCValueRef *p_arguments, uindex_t p_argument_count)
 {
 	MCNativeControl *t_native_control;
-    if (!MCNativeControl::FindByNameOrId(p_control_name, t_native_control))
-        return;
-
+	if (!MCNativeControl::FindByNameOrId(p_control_name, t_native_control))
+		return;
+	
 	MCNativeControlAction t_action;
-    if (!MCNativeControl::LookupAction(p_action_name, t_action))
-        return;
-    
-    MCNativeControlActionInfo *t_info;
-    t_info = lookup_control_action(t_native_control -> getactiontable(), t_action);
-    if (t_info != nil)
-    {
-        MCNativeControlPtr t_control;
-        t_control . control = t_native_control;
-        
-        switch (t_info -> action)
-        {
-            // no params
-            case kMCNativeControlActionAdvance:
-            case kMCNativeControlActionRetreat:
-            case kMCNativeControlActionReload:
-            case kMCNativeControlActionStop:
-            case kMCNativeControlActionFlashScrollIndicators:
-            case kMCNativeControlActionPlay:
-            case kMCNativeControlActionPause:
-            case kMCNativeControlActionPrepareToPlay:
-            case kMCNativeControlActionBeginSeekingForward:
-            case kMCNativeControlActionBeginSeekingBackward:
-            case kMCNativeControlActionEndSeeking:
-            case kMCNativeControlActionFocus:
-			case kMCNativeControlActionCameraStopRecording:
-			case kMCNativeControlActionCameraTakePicture:
-            {
-                ((void(*)(MCExecContext&, MCNativeControlPtr*))t_info -> exec_method)(ctxt, &t_control);
-                return;
-            }
-            
-            // single string param
-			case kMCNativeControlActionCameraStartRecording:
-            case kMCNativeControlActionExecute:
-                if (p_argument_count == 1)
-                {
-                    // SN-2014-11-20: [[ Bug 14062 ]] Convert the argument (that could for example be a NameRef
-                    MCAutoStringRef t_string;
-                    if (!ctxt . ConvertToString(p_arguments[0], &t_string))
-                        break;
-                    
-                    ((void(*)(MCExecContext&, MCNativeControlPtr*, MCStringRef))t_info -> exec_method)(ctxt, &t_control, *t_string);
-                    return;
-                }
-                break;
-                
-            // double string param
-            case kMCNativeControlActionLoad:
-                if (p_argument_count == 2)
-                {
-                    MCAutoStringRef t_url;
-                    MCAutoStringRef t_text;
-                    
-                    // SN-2014-11-20: [[ Bug 14062 ]] Convert the arguments (that could for example be a NameRef)
-                    if (!ctxt . ConvertToString(p_arguments[0], &t_url)
-                            || !ctxt . ConvertToString(p_arguments[1], &t_text))
-                        break;
-                    
-                    ((void(*)(MCExecContext&, MCNativeControlPtr*, MCStringRef, MCStringRef))t_info -> exec_method)(ctxt, &t_control, *t_url, *t_text);
-                    return;
-                }
-                break;
-            
-            // double integer param
-            case kMCNativeControlActionScrollRangeToVisible:
-                if (p_argument_count == 2)
-                {
-                    integer_t t_start;
-                    integer_t t_end;
-                    // SN-2014-11-20: [[ Bug 14062 ]] Convert the argument (that could for example be a NameRef)
-                    if (!ctxt . ConvertToInteger(p_arguments[0], t_start)
-                            || ctxt . ConvertToInteger(p_arguments[1], t_end))
-                        break;
-                    
-                    ((void(*)(MCExecContext&, MCNativeControlPtr*, integer_t, integer_t))t_info -> exec_method)(ctxt, &t_control, t_start, t_end);
-                    return;
-                }
-                    break;
-            //other
-            case kMCNativeControlActionSnapshot:
-            case kMCNativeControlActionSnapshotExactly:
-            {
-                integer_t t_time;
-                // SN-2014-11-20: [[ Bug 14062 ]] Convert the argument (that could for example be a NameRef)
-                if (ctxt . ConvertToInteger(p_arguments[0], t_time))
-                {
-                    if (p_argument_count == 1)
-                    {
-                        ((void(*)(MCExecContext&, MCNativeControlPtr*, integer_t, integer_t*, integer_t*))t_info -> exec_method)(ctxt, &t_control, t_time, nil, nil);
-                        return;
-                    }
-                    else if (p_argument_count == 3)
-                    {
-                        integer_t t_max_width;
-                        integer_t t_max_height;
-                        // SN-2014-11-20: [[ Bug 14062 ]] Convert the arguments (that could for example be a NameRef)
-                        if (ctxt . ConvertToInteger(p_arguments[1], t_max_width) && ctxt . ConvertToInteger(p_arguments[2], t_max_height))
-                        {
-                            ((void(*)(MCExecContext&, MCNativeControlPtr*, integer_t, integer_t*, integer_t*))t_info -> exec_method)(ctxt, &t_control, t_time, &t_max_width, &t_max_height);
-                            return;
-                        }
-                    }
-                }
-            }
-                break;
-    
-            case kMCNativeControlActionUnknown:
-            default:
-                break;
-        }
-        ctxt . Throw();
-    }
+	if (!MCNativeControl::LookupAction(p_action_name, t_action))
+		return;
+	
+	MCNativeControlActionInfo *t_info;
+	t_info = lookup_control_action(t_native_control -> getactiontable(), t_action);
+	if (t_info != nil)
+	{
+		MCNativeControlPtr t_control;
+		t_control . control = t_native_control;
+		
+		// MW-2012-07-31: [[ Fibers ]] If the method doesn't need script / wait, then
+		//   jump to the main fiber for it.
+		if (!t_info -> waitable)
+		{
+			handle_context_t t_context;
+			t_context.ctxt = &ctxt;
+			t_context.control = &t_control;
+			t_context.info = t_info;
+			t_context.arguments = p_arguments;
+			t_context.argument_count = p_argument_count;
+			
+			MCIPhoneCallOnMainFiber(invoke_platform, &ctxt);
+			return;
+		}
+		
+		// Execute the method as normal, in this case the method will have to jump
+		// to the main fiber to do any system stuff.
+		_MCNativeControlDo(ctxt, &t_control, t_info, p_arguments, p_argument_count);
+	}
 }
+
+#else // Android
+void MCNativeControlExecDo(MCExecContext& ctxt, MCStringRef p_control_name, MCStringRef p_action_name, MCValueRef *p_arguments, uindex_t p_argument_count)
+{
+	MCNativeControl *t_native_control;
+	if (!MCNativeControl::FindByNameOrId(p_control_name, t_native_control))
+		return;
+	
+	MCNativeControlAction t_action;
+	if (!MCNativeControl::LookupAction(p_action_name, t_action))
+		return;
+	
+	MCNativeControlActionInfo *t_info;
+	t_info = lookup_control_action(t_native_control -> getactiontable(), t_action);
+	if (t_info != nil)
+	{
+		MCNativeControlPtr t_control;
+		t_control . control = t_native_control;
+		
+		_MCNativeControlDo(ctxt, &t_control, t_info, p_arguments, p_argument_count);
+	}
+}
+#endif
+
