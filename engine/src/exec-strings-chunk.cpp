@@ -135,16 +135,18 @@ void MCStringsGetExtentsByOrdinalInRange(MCExecContext& ctxt, Chunk_term p_chunk
                     MCStringsCountChunks(ctxt, p_chunk_type, (MCStringRef)p_string, t_count);
             }
             
+            // AL-2015-04-09: [[ Bug 15156 ]] Prevent underflow of r_first
+            if (t_count == 0)
+            {
+                r_first = 0;
+                r_chunk_count = 0;
+                return;
+            }
+            
             if (p_ordinal_type == CT_ANY)
                 r_first = MCU_any(t_count);
             else if (p_ordinal_type == CT_LAST)
-            {
-                // AL-2015-04-09: [[ Bug 15156 ]] Prevent underflow of r_first
-                if (t_count == 0)
-                    r_first = 0;
-                else
-                    r_first = t_count - 1;
-            }
+                r_first = t_count - 1;
             else
                 r_first = t_count / 2;
             break;
@@ -167,11 +169,8 @@ void MCStringsGetExtentsByOrdinalInRange(MCExecContext& ctxt, Chunk_term p_chunk
             ctxt . LegacyThrow(EE_CHUNK_BADEXTENTS);
             return;
 	}
-    
-    if (r_first == 0)
-        r_chunk_count = 0;
-    else
-        r_chunk_count = 1;
+
+    r_chunk_count = 1;
 }
 
 // AL-2015-02-10: [[ Bug 14532 ]] Allow chunk extents to be counted in a given range, to prevent substring copying in text chunk resolution.
