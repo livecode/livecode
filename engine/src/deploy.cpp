@@ -405,29 +405,6 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
                 t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeModule, t_module_files[i]);
         }
     
-    // TEMPORARY - Iterator through all loaded extensions and add them to the list.
-    if (t_success)
-    {
-        extern bool MCEngineIterateExtensionFilenames(uintptr_t& x_iterator, MCStringRef& r_filename);
-        MCStringRef t_filename;
-        uintptr_t t_iterator;
-        t_iterator = 0;
-        while(t_success && MCEngineIterateExtensionFilenames(t_iterator, t_filename))
-        {
-            MCDeployFileRef t_file;
-            t_file = nil;
-            if (t_success &&
-                !MCDeployFileOpen(t_filename, kMCOpenFileModeRead, t_file))
-                t_success = MCDeployThrow(kMCDeployErrorNoModule);
-            if (t_success)
-                t_success = t_module_files . Push(t_file);
-            if (t_success)
-                t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeModule, t_file);
-            if (!t_success && t_file != nil)
-                MCDeployFileClose(t_file);
-        }
-    }
-    
     ////////
     
 			

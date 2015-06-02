@@ -1719,10 +1719,16 @@ enum Parse_errors
 	// {PE-0558} load: error in resource path expression
 	PE_LOAD_BADRESOURCEPATH,
     
-    // {PE-0553} import: no array expression
+    // {PE-0559} load: missing file or display name
+    PE_LOAD_NOFILE,
+    
+    // {PE-0560} load: missing 'from'
+    PE_LOAD_NOFROM,
+    
+    // {PE-0561} import: no array expression
     PE_IMPORT_NOARRAY,
     
-    // {PE-0554} export: no array expression
+    // {PE-0562} export: no array expression
     PE_EXPORT_NOARRAY,
 };
 

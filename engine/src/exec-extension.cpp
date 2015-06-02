@@ -55,7 +55,7 @@
 struct MCLoadedExtension
 {
     MCLoadedExtension *next;
-    MCStringRef filename;
+    MCNameRef module_name;
 	MCStringRef resource_path;
     MCScriptModuleRef module;
     MCScriptInstanceRef instance;
@@ -125,7 +125,7 @@ bool MCEngineAddExtensionFromModule(MCStringRef p_filename, MCScriptModuleRef p_
     MCLoadedExtension *t_ext;
     /* UNCHECKED */ MCMemoryNew(t_ext);
     
-    t_ext -> filename = MCValueRetain(p_filename);
+    t_ext -> module_name = MCValueRetain(MCScriptGetNameOfModule(p_module));
     t_ext -> module = MCScriptRetainModule(p_module);
     t_ext -> instance = t_instance;
     
@@ -178,10 +178,6 @@ void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename, MCSt
     if (!MCS_loadbinaryfile(*t_resolved_filename, &t_data))
         return;
     
-    for(MCLoadedExtension *t_ext = MCextensions; t_ext != nil; t_ext = t_ext -> next)
-        if (MCStringIsEqualTo(t_ext -> filename, *t_resolved_filename, kMCStringOptionCompareCaseless))
-            return;
-    
     MCStreamRef t_stream;
     /* UNCHECKED */ MCMemoryInputStreamCreate(MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), t_stream);
     
@@ -205,22 +201,21 @@ void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename, MCSt
     
     MCScriptReleaseModule(t_module);
     
-    
     return;
 }
 
-void MCEngineExecUnloadExtension(MCExecContext& ctxt, MCStringRef p_filename)
+void MCEngineExecUnloadExtension(MCExecContext& ctxt, MCStringRef p_module_name)
 {
-    MCAutoStringRef t_resolved_filename;
-    /* UNCHECKED */ MCS_resolvepath(p_filename, &t_resolved_filename);
+    MCNewAutoNameRef t_name;
+    MCNameCreate(p_module_name, &t_name);
     
     for(MCLoadedExtension *t_previous = nil, *t_ext = MCextensions; t_ext != nil; t_previous = t_ext, t_ext = t_ext -> next)
-        if (MCStringIsEqualTo(t_ext -> filename, *t_resolved_filename, kMCStringOptionCompareCaseless))
+        if (MCNameIsEqualTo(t_ext -> module_name, *t_name))
         {
             if (t_ext -> instance != nil)
                 MCScriptReleaseInstance(t_ext -> instance);
             MCScriptReleaseModule(t_ext -> module);
-            MCValueRelease(t_ext -> filename);
+            MCValueRelease(t_ext -> module_name);
 			MCValueRelease(t_ext -> resource_path);
             if (t_previous != nil)
                 t_previous -> next = t_ext -> next;
@@ -245,7 +240,7 @@ void MCEngineGetLoadedExtensions(MCExecContext& ctxt, MCProperListRef& r_list)
         t_success = MCProperListCreateMutable(t_list);
     
     for(MCLoadedExtension *t_ext = MCextensions; t_success && t_ext != nil; t_ext = t_ext -> next)
-        t_success = MCProperListPushElementOntoBack(t_list, MCScriptGetNameOfModule(t_ext -> module));
+        t_success = MCProperListPushElementOntoBack(t_list, t_ext -> module_name);
     
     if (t_success)
         t_success = MCProperListCopyAndRelease(t_list, r_list);
@@ -256,21 +251,6 @@ void MCEngineGetLoadedExtensions(MCExecContext& ctxt, MCProperListRef& r_list)
         ctxt . Throw();
         return;
     }
-}
-
-bool MCEngineIterateExtensionFilenames(uintptr_t& x_iterator, MCStringRef& r_filename)
-{
-    if (x_iterator == 0)
-        x_iterator = (uintptr_t)MCextensions;
-    else
-        x_iterator = (uintptr_t)(((MCLoadedExtension *)x_iterator) -> next);
-    
-    if (x_iterator == 0)
-        return false;
-    
-    r_filename = ((MCLoadedExtension *)x_iterator) -> filename;
-    
-    return true;
 }
 
 Exec_stat MCEngineHandleLibraryMessage(MCNameRef p_message, MCParameter *p_parameters)
