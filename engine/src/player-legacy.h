@@ -65,6 +65,7 @@ class MCPlayer : public MCControl
 	uint2 formattedheight;
 	uint2 loudness;
 	int4 lasttime;
+	Boolean dontuseqt;
 
 #ifdef FEATURE_PLATFORM_PLAYER
 	MCPlatformPlayerRef m_platform_player;
@@ -174,6 +175,7 @@ public:
 	void setselection();                  //set movie selection
 	void setlooping(Boolean loop);        //to loop or not to loop a movie
 	void setplayrate();                   //set the movie playing rate
+	void setdontuseqt(Boolean noqt);
 	Boolean setInterestingTimeCB();       //True, if set, False, if not
 	void showbadge(Boolean show);         //show & hide the movie's badge
 	void showcontroller(Boolean show);
