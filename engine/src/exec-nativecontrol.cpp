@@ -971,7 +971,7 @@ void MCNativeControlExecDo(MCExecContext& ctxt, MCStringRef p_control_name, MCSt
 			t_context.arguments = p_arguments;
 			t_context.argument_count = p_argument_count;
 			
-			MCIPhoneCallOnMainFiber(invoke_platform, &ctxt);
+			MCIPhoneCallOnMainFiber(invoke_platform, &t_context);
 			return;
 		}
 		
