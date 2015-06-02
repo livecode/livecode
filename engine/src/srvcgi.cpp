@@ -865,8 +865,10 @@ static Exec_stat cgi_compute_post_variables()
     // SN-2015-06-01: [[ Bug 9820 ]] We should discard the erroneous parameters
     //  that may have been added after the content type (such as "charset", see
     //  the green box about MIME parameters for x-www-form-urlencoded at
-    //  http://www.w3.org/TR/html5/forms.html#application/x-www-form-urlencoded-encoding-algorithm
-    if (t_content_type != NULL && MCCStringBeginsWithCaseless(t_content_type, "application/x-www-form-urlencoded"))
+    //  http://www.w3.org/TR/html5/forms.html#application/x-www-form-urlencoded-encoding-algorithm)
+    if (t_content_type != NULL
+            && (MCCStringEqualCaseless(t_content_type, "application/x-www-form-urlencoded")
+                || MCCStringBeginsWithCaseless(t_content_type, "application/x-www-form-urlencoded;")))
 	{
 		// TODO: currently we assume that urlencoded form data is small enough to fit into memory,
 		// so we fetch the contents from $_POST_RAW (which automatically reads the data from stdin).
