@@ -58,43 +58,26 @@ property preferredSize		get getPreferredSize
 property showFrameBorder	get mFrameBorder	set setFrameBorder
 
 constant kIconColor is [0,0,0]
-constant kIconPadding is 20
+constant kIconPadding is 10
 
 constant kNumRows is 5
 constant kNumCols is 5
 
 public handler OnCreate()
+
+    put kNumRows into mNumRows
+    put kNumCols into mNumCols
+
 	put iconList() into mDataList
-	
 	put the empty array into mPaths
-	
 	put 1 into mFirstDataItem
-	
-	put kNumRows into mNumRows
-	put kNumCols into mNumCols
-	
 	put true into mRecalculate
-	
-	put my height into mViewHeight
-	
-	if mViewHeight < 0 then
-		put 1 into mViewHeight
-	end if
-	
-	put my width into mViewWidth
-	
-	put mViewHeight / (mNumRows + 1) into mRowHeight
-	subtract mRowHeight from mViewHeight
-	
-	put mViewWidth / mNumCols into mColWidth
-	
-	put the number of elements in mDataList into mDataCount
-	put mRowHeight * the ceiling of (mDataCount / mNumCols) into mDataHeight
 	
 	put 0 into mHoverRow
 	put 0 into mViewTopPosition
 	put true into mFrameBorder
-	
+
+    updateParameters()
 	initialiseScrollbar()
 end handler
 
@@ -335,17 +318,25 @@ private handler ensureViewTopPosition()
 end handler
 
 private handler updateFirstDataItem()
-	put the floor of (mViewTopPosition / mRowHeight + 1) * mNumCols into mFirstDataItem
+	put the floor of (mViewTopPosition / mRowHeight) * mNumCols + 1 into mFirstDataItem
 	if mFirstDataItem < 1 then
 		put 1 into mFirstDataItem
 	end if	
 end handler
 
 private handler updateParameters() returns nothing
-	put my height into mViewHeight
-	
-	put my width into mViewWidth
-	
+    put my height into mViewHeight
+
+    if mViewHeight < 250 then
+        put 250 into mViewHeight
+    end if
+
+    put my width into mViewWidth
+
+    if mViewWidth < 200 then
+        put 200 into mViewWidth
+    end if
+
 	put mViewHeight / (mNumRows + 1) into mRowHeight
 	subtract mRowHeight from mViewHeight
 	put mViewWidth / mNumCols into mColWidth
