@@ -3675,6 +3675,46 @@ void MCInterfaceExecImportImage(MCExecContext& ctxt, MCStringRef p_filename, MCS
 	MCU_unwatchcursor(ctxt . GetObject()->getstack(), True);
 }
 
+void MCInterfaceExecImportObjectFromArray(MCExecContext& ctxt, MCArrayRef p_array, MCObject *p_container)
+{
+    if ((p_container == nil && MCdefaultstackptr->islocked()) ||
+        (p_container != nil && p_container -> getstack() -> islocked()))
+    {
+        ctxt . LegacyThrow(EE_CREATE_LOCKED);
+        return;
+    }
+    
+    MCNewAutoNameRef t_kind;
+    MCAutoArrayRef t_state;
+    MCValueRef t_value;
+    if (!MCArrayFetchValue(p_array, false, MCNAME("$kind"), t_value) ||
+        !ctxt . ConvertToName(t_value, &t_kind) ||
+        !MCArrayFetchValue(p_array, false, MCNAME("$state"), t_value) ||
+        !ctxt . ConvertToArray(t_value, &t_state))
+    {
+        ctxt . LegacyThrow(EE_IMPORT_NOTANOBJECTARRAY);
+        return;
+    }
+    
+    MCWidget *t_widget;
+    t_widget = new MCWidget;
+    if (t_widget == NULL)
+        return;
+    
+    t_widget -> bind(*t_kind, *t_state);
+    
+    if (p_container == nil)
+        t_widget -> setparent(MCdefaultstackptr -> getcard());
+    else
+        t_widget -> setparent(p_container);
+    
+    t_widget -> attach(OP_CENTER, false);
+    
+    MCAutoValueRef t_id;
+    t_widget -> names(P_LONG_ID, &t_id);
+    ctxt . SetItToValue(*t_id);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCInterfaceExportBitmap(MCExecContext &ctxt, MCImageBitmap *p_bitmap, int p_format, MCInterfaceImagePaletteSettings *p_palette, bool p_dither, MCImageMetadata* p_metadata, MCDataRef &r_data)
@@ -3977,6 +4017,37 @@ void MCInterfaceExecExportImageToFile(MCExecContext& ctxt, MCImage *p_target, in
             p_target->unlockbitmap(t_bitmap);
 		}
 	}
+}
+
+void MCInterfaceExecExportObjectToArray(MCExecContext& ctxt, MCObject *p_object, MCArrayRef& r_array)
+{
+    if (p_object -> gettype() != CT_WIDGET)
+    {
+        r_array = MCValueRetain(kMCEmptyArray);
+        return;
+    }
+    
+    MCWidget *t_widget;
+    t_widget = static_cast<MCWidget *>(p_object);
+    
+    MCNewAutoNameRef t_kind;
+    t_widget -> GetKind(ctxt, &t_kind);
+    if (ctxt . HasError())
+        return;
+    
+    MCAutoArrayRef t_state;
+    t_widget -> GetState(ctxt, &t_state);
+    if (ctxt . HasError())
+        return;
+    
+    MCAutoArrayRef t_array;
+    if (!MCArrayCreateMutable(&t_array) ||
+        !MCArrayStoreValue(*t_array, false, MCNAME("$kind"), *t_kind) ||
+        !MCArrayStoreValue(*t_array, false, MCNAME("$state"), *t_state) ||
+        !t_array . MakeImmutable())
+        return;
+    
+    r_array = t_array . Take();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

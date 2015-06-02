@@ -1718,6 +1718,12 @@ enum Parse_errors
 	
 	// {PE-0558} load: error in resource path expression
 	PE_LOAD_BADRESOURCEPATH,
+    
+    // {PE-0553} import: no array expression
+    PE_IMPORT_NOARRAY,
+    
+    // {PE-0554} export: no array expression
+    PE_EXPORT_NOARRAY,
 };
 
 extern const char *MCparsingerrors;

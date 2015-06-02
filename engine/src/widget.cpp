@@ -1582,6 +1582,11 @@ void MCWidget::GetKind(MCExecContext& ctxt, MCNameRef& r_kind)
     r_kind = MCValueRetain(m_kind);
 }
 
+void MCWidget::GetState(MCExecContext& ctxt, MCArrayRef& r_state)
+{
+    OnSave((MCValueRef&)r_state);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern MCValueRef MCEngineGetPropertyOfObject(MCExecContext &ctxt, MCStringRef p_property, MCObject *p_object, uint32_t p_part_id);

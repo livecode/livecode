@@ -233,6 +233,7 @@ enum Export_format {
 	EX_RAW_GRAY,
 	EX_RAW_INDEXED,
 	EX_BMP,
+    EX_OBJECT,
 };
 
 enum Factor_rank {
