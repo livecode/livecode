@@ -2265,6 +2265,17 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
       put sStandaloneSettingsA[tPlatformDetailsA["platform"] & ",library"] into tDeployInfo["library"]
    end if
    
+   # AL-2015-04-12: [[ Standalone Extensions ]] Add chosen extensions to the standalone inclusions
+   repeat for each line tExtension in sStandaloneSettingsA["extensions"]
+      local tExtensionFile
+      put revIDEExtensionModuleFile(tExtension) into tExtensionFile
+      if tDeployInfo["modules"] is empty then
+         put tExtensionFile into tDeployInfo["modules"]
+      else
+         put return & tExtensionFile after tDeployInfo["modules"]
+      end if
+   end repeat
+   
    if tPlatformDetailsA["platform"] is "MacOSX" then
       -- MW-2013-06-13: [[ CloneAndRun ]] If installed do things in the usual way, otherwise pass
       --    through in 'engine' (so it builds using archs present there).
