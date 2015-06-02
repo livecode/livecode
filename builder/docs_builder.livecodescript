@@ -261,7 +261,7 @@ private command libDocumentationListXMLFiles pDirectory, @rFileToPath
          end if
       end repeat
    end repeat
-   
+
    set the directory to tOldDirectory
    
 end libDocumentationListXMLFiles
@@ -275,9 +275,14 @@ private command libDocumentationCreateDocRefs @rFileToDirectory
       read from file rFileToDirectory[tArrIndex]["path"] until EOF
       // extract the <name> or <term> from the files and update the rFileToDirectory information
       
-      put revCreateXMLTree(it, false, true, false) into tTree
+      -- Try parsing strictly and fall back if it fails
+      put revCreateXMLTree(it, true, true, false) into tTree
       if tTree is not an integer then
-         errorShow "Failed to parse XML: " & tTree && "(" & rFileToDirectory[tArrIndex]["path"] & ")"
+         reportProgress "Dictionary", 0, "WARNING: Failed to parse XML in strict mode: " & tTree && "(" & rFileToDirectory[tArrIndex]["path"] & ")"
+         put revCreateXMLTree(it, false, true, false) into tTree
+         if tTree is not an integer then
+            errorShow "Could not parse XML file:" && tTree
+         end if
       end if
       
       put revXMLNodeContents(tTree, "doc/name") into tName
