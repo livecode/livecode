@@ -560,7 +560,12 @@ void MCAVCamera::Open(void)
     m_movie_output = [[AVCaptureMovieFileOutput alloc] init];
     [m_session addOutput: m_movie_output];
     
+#ifdef _MACOSX
+	m_preview = [[com_runrev_livecode_MCAVCameraView alloc] initWithFrame: NSMakeRect(0, 0, 0, 0)];
+#else
 	m_preview = [[com_runrev_livecode_MCAVCameraView alloc] initWithFrame: CGRectMake(0, 0, 0, 0)];
+#endif
+	
     [m_preview setSession: m_session];
     if (m_owner != nil)
         Realize();
