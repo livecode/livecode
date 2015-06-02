@@ -691,10 +691,13 @@ Boolean MCIPhoneSystem::GetStandardFolder(MCNameRef p_type, MCStringRef& r_folde
 	else if (MCNameIsEqualToCString(p_type, "cache", kMCCompareCaseless))
 	{
 		NSArray *t_paths;
-		t_paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+        t_paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
 		MCStringCreateWithCFString((CFStringRef)[t_paths objectAtIndex: 0] , &t_path);
 	}
-	else if (MCNameIsEqualToCString(p_type, "engine", kMCCompareCaseless))
+    // SN-2015-04-16: [[ Bug 14295 ]] The resources folder on Mobile is the same
+    //   as the engine folder.
+    else if (MCNameIsEqualToCString(p_type, "engine", kMCCompareCaseless)
+             || MCNameIsEqualToCString(p_type, "resources", kMCCompareCaseless))
 	{
 		extern MCStringRef MCcmd;
         uindex_t t_index;

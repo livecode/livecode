@@ -35,6 +35,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec-interface.h"
 #include "filepath.h"
 
+#include "osspec.h"
+
 #include "player.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -251,7 +253,8 @@ void MCPlayer::Redraw(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// PM-2014-12-19: [[ Bug 14245 ]] Make possible to set the filename using a relative path
+// PM-2014-12-19: [[ Bug 14245 ]] Make possible to set the filename using a relative path to the stack folder
+// PM-2015-01-26: [[ Bug 14435 ]] Make possible to set the filename using a relative path to the default folder
 bool MCPlayer::resolveplayerfilename(MCStringRef p_filename, MCStringRef &r_filename)
 {
     if (MCPathIsAbsolute(p_filename) || MCPathIsRemoteURL(p_filename))
@@ -260,7 +263,16 @@ bool MCPlayer::resolveplayerfilename(MCStringRef p_filename, MCStringRef &r_file
         return true;
     }
 
-   return getstack()->resolve_relative_path(p_filename, r_filename);
+    MCAutoStringRef t_filename;
+    bool t_relative_to_stack = getstack()->resolve_relative_path(p_filename, &t_filename);
+    if (t_relative_to_stack && MCS_exists(*t_filename, True))
+        return MCStringCopy(*t_filename, r_filename);
+
+    bool t_relative_to_default_folder = getstack()->resolve_relative_path_to_default_folder(p_filename, &t_filename);
+    if (t_relative_to_default_folder && MCS_exists(*t_filename, True))
+        return MCStringCopy(*t_filename, r_filename);
+
+    return false;
 }
 
 void MCPlayer::GetFileName(MCExecContext& ctxt, MCStringRef& r_name)
@@ -273,24 +285,33 @@ void MCPlayer::GetFileName(MCExecContext& ctxt, MCStringRef& r_name)
 
 void MCPlayer::SetFileName(MCExecContext& ctxt, MCStringRef p_name)
 {
-	if (filename == nil || p_name == nil ||
-		!MCStringIsEqualTo(p_name, filename, kMCCompareExact))
+    // Edge case: Suppose filenameA is a valid relative path to defaultFolderA,
+    //  but invalid relative path to defaultFolderB
+    //    1. Set defaultFolder to defaultFolderB. Set the filename to filenameA.
+    //       Video will become empty, since the relative path is invalid.
+    //    2. Change the defaultFolder to defaultFolderA. Set the filename again
+    //       to filenameA. Now the relative path is valid
+    MCAutoStringRef t_string;
+    bool t_resolved_path;
+    t_resolved_path = false;
+
+    t_resolved_path = resolveplayerfilename(p_name, &t_string);
+
+    // handle the edge case mentioned below: If t_resolved_path then the movie path has to be updated
+    // PM-2015-04-14: [[ Bug 15196 ]] Allow setting the player filename to empty more than once
+	if (filename == nil || MCStringIsEmpty(p_name) ||
+        !MCStringIsEqualTo(p_name, filename, kMCCompareExact) || t_resolved_path)
 	{
 		MCValueRelease(filename);
 		filename = NULL;
 		playstop();
 		starttime = MAXUINT4; //clears the selection
 		endtime = MAXUINT4;
+
+        // PM-2015-01-26: [[ Bug 14435 ]] Resolve the filename in MCPlayer::prepare(),
+        //  to avoid prepending the defaultFolder or the stack folder to the filename property
 		if (p_name != nil)
-        {
-#ifdef FEATURE_PLATFORM_PLAYER
-            // PM-2014-12-19: [[ Bug 14245 ]] Make possible to set the filename using a relative path
-            resolveplayerfilename(p_name, filename);
-#else
-            // PM-2015-01-27: [[ Bug 14449 ]] Keep the old behaviour when not in OSX, since the filename is resolved later in x11_prepare/qt_prepare/avi_prepare depending on platform
             filename = MCValueRetain(p_name);
-#endif
-        }
 		prepare(kMCEmptyString);
 #ifdef FEATURE_PLATFORM_PLAYER
         // PM-2014-10-24: [[ Bug 13776 ]] Make sure we attach the player after prepare()
@@ -307,7 +328,7 @@ void MCPlayer::SetFileName(MCExecContext& ctxt, MCStringRef p_name)
     }
 #ifdef FEATURE_PLATFORM_PLAYER
     // PM-2014-12-22: [[ Bug 14232 ]] Update the result in case a an invalid/corrupted filename is set more than once in a row
-    else if (MCStringIsEqualTo(p_name, filename, kMCStringOptionCompareCaseless) && hasinvalidfilename())
+    else if (MCStringIsEqualTo(p_name, filename, kMCStringOptionCompareCaseless) && (hasinvalidfilename() || !t_resolved_path))
         ctxt . SetTheResultToCString("could not create movie reference");
 #endif
 

@@ -684,11 +684,37 @@ MCDataRef MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const 
 			ctxt . SetTheResultToEmpty();
 			
 		}
-		
 		else
 		{
 			s->waiting = True;
-			while (True)
+
+			// SN-2015-05-11: [[ Bug 14466 ]] On a native Windows machine,
+			//  the time between the call to WSAAsyncSelect in setselect()
+			//  and the call to s->read_done() below might not be enough
+			//  to let Windows send the message to MCWindowProc.
+            //  If that occurs, with a read until empty, no byte will be
+			//  found by read_done, and the read will always return an
+			//  an empty value the first time.
+			s -> readsome();
+
+			// SN-2015-03-30: [[ Bug 14466 ]] We want a wait to occur
+			//  to avoid any tigh script loop such as
+			//     repeat forever
+			//        read from socket tSocket until empty
+			//        if it is not empty then exit repeat
+			//     end repeat
+			//  to hang: the wait statement, in the following loop, would
+			//  never be reached since s->read_done always returns true
+			//  when reading until empty.
+			bool t_continue;
+			t_continue = true;
+			if (MCscreen->wait(0.0, False, True))
+			{
+				MCresult->sets("interrupted");
+				t_continue = false;
+			}
+
+			while (t_continue)
 			{
 				if (eptr == s->revents && s->read_done())
 				{
@@ -724,8 +750,7 @@ MCDataRef MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const 
 					break;
 				}
 			}
-			eptr->remove
-			(s->revents);
+			eptr->remove(s->revents);
 			delete eptr;
 			s->waiting = False;
             return t_data;
@@ -888,10 +913,13 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 #endif
 
 	char *portname = new char[U2L];
-	sprintf(portname, "%d", port);
+    
+    // AL-2015-01-05: [[ Bug 14287 ]] Create name using the number of chars written to the string.
+    uindex_t t_length;
+    t_length = sprintf(portname, "%d", port);
 
 	MCNewAutoNameRef t_portname;
-	MCNameCreateWithNativeChars((char_t*)portname, U2L, &t_portname);
+	MCNameCreateWithNativeChars((char_t*)portname, t_length, &t_portname);
 	return new MCSocket(*t_portname, object, message, datagram, sock, True, False, secure);
 }
 

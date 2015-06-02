@@ -82,6 +82,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mode.h"
 #include "license.h"
 
+#include "debug.h"
+
 #include "capsule.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -269,6 +271,14 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
     MCValueRelease(t_temp_string);
     MCValueRelease(t_temp_array);
 
+    // SN-2015-02-16: [[ iOS Font mapping ]] Read the fontmappings options from the deploy parameters.
+    if (!ctxt.CopyOptElementAsString(p_array, MCNAME("fontmappings"), false, t_temp_string))
+        return false;
+    MCStringSplit(t_temp_string, MCSTR("\n"), nil, kMCStringOptionCompareExact, t_temp_array);
+    MCValueAssign(fontmappings, t_temp_array);
+    MCValueRelease(t_temp_string);
+    MCValueRelease(t_temp_array);
+
     // The 'min_os_version' is either a string or an array. If it is a string then
     // it encodes the version against the 'Unknown' architecture which is interpreted
     // by the deploy command to mean all architectures. Otherwise, the keys in the
@@ -420,6 +430,16 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
     
     ////////
     
+			
+    // Add any font mappings
+    if (t_success)
+        for(uint32_t i = 0; i < MCArrayGetCount(p_params.fontmappings) && t_success; i++)
+        {
+            MCValueRef t_val;
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.fontmappings, i + 1, t_val);
+            t_success = MCDeployCapsuleDefineString(t_capsule, kMCCapsuleSectionTypeFontmap, (MCStringRef)t_val);
+        }
+
 	// Now we add the main stack
 	if (t_success)
 		t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeStack, t_stackfile);
@@ -621,7 +641,7 @@ Parse_stat MCIdeDeploy::parse(MCScriptPoint& sp)
 
 void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 {
-	bool t_soft_error;
+    bool t_soft_error;
     t_soft_error = false;
     bool t_has_error;
     t_has_error = false;
@@ -788,8 +808,15 @@ void MCIdeSign::exec_ctxt(MCExecContext &ctxt)
 
 	if (t_can_sign && !ctxt . HasError())
 	{
+        MCExecContext *t_old_ec;
+        t_old_ec = MCECptr;
+        
+        MCECptr = &ctxt;
+        
 		if (m_platform == PLATFORM_WINDOWS)
 			MCDeploySignWindows(t_params);
+        
+        MCECptr = t_old_ec;
 
 		MCDeployError t_error;
 		t_error = MCDeployCatch();
