@@ -508,8 +508,10 @@ static bool MCS_posturl_callback(void *p_context, MCSystemUrlStatus p_status, co
 	if (p_status == kMCSystemUrlStatusError)
     {
         MCAutoDataRef t_err;
-        MCDataCreateWithBytes((const byte_t *)MCStringGetCString((MCStringRef)p_data), MCStringGetLength((MCStringRef)p_data), &t_err);
-		MCValueAssign(context -> data, *t_err);
+        // SN-2015-05-18: [[ MCStringGetCString Removal ]] Use string <-> data
+        //  conversion function.
+        if (MCStringEncode((MCStringRef)p_data, kMCStringEncodingASCII, false, &t_err))
+            MCValueAssign(context -> data, *t_err);
     }
 	else if (p_status == kMCSystemUrlStatusLoading)
     {

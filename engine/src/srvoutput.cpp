@@ -432,11 +432,18 @@ void MCServerPutOutput(MCStringRef s)
 
 void MCServerPutHeader(MCStringRef s, bool p_new)
 {
+    // SN-2015-05-18: [[ MCStringGetCString Removal ]] Use AutoStringRefAsCString
+    MCAutoStringRefAsCString t_input_as_cstring;
 	// Find where the ':' is
-	const char *t_loc;
-	t_loc = MCStringGetCString(s);
-	uint4 t_loc_len;
-	t_loc_len = MCStringGetLength(s);
+    const char *t_loc;
+    uint4 t_loc_len;
+    
+    if (!t_input_as_cstring . Lock(s))
+        return;
+
+    t_loc = *t_input_as_cstring;
+    t_loc_len = strlen(*t_input_as_cstring);
+    
 	if (!MCU_strchr(t_loc, t_loc_len, ':', False))
 		return;
 	
@@ -447,7 +454,7 @@ void MCServerPutHeader(MCStringRef s, bool p_new)
 	else
 		for(i = MCservercgiheadercount; i > 0; i--)
 		{
-			if (MCU_strncasecmp(MCStringGetCString(s), MCservercgiheaders[i - 1], t_loc - MCStringGetCString(s)) == 0)
+			if (MCU_strncasecmp(*t_input_as_cstring, MCservercgiheaders[i - 1], t_loc - *t_input_as_cstring) == 0)
 				break;
 		}
 	
@@ -460,7 +467,7 @@ void MCServerPutHeader(MCStringRef s, bool p_new)
 	else
 		free(MCservercgiheaders[i - 1]);
 	
-	MCservercgiheaders[i - 1] = strdup(MCStringGetCString(s));
+	MCservercgiheaders[i - 1] = strdup(*t_input_as_cstring);
 }
 
 void MCServerPutContent(MCStringRef s)
@@ -486,21 +493,22 @@ bool MCServerSetCookie(MCStringRef p_name, MCStringRef p_value, uint32_t p_expir
 	bool t_success = true;
 	uint32_t t_index = 0;
 	
-	if (t_success && !MCStringIsEmpty(p_name) && !MCStringIsEmpty(p_path) && !MCStringIsEmpty(p_domain))
-		t_success = true;
-	
 	MCAutoStringRef t_encoded;
 	if (t_success && !MCStringIsEmpty(p_value))
 		MCU_urlencode(p_value, false, &t_encoded);
+	else
+		// Make sure that t_encoded is initialised
+		t_encoded = kMCEmptyString;
 	
 	if (t_success)
 	{
 		// try to find matching cookie (name, path, domain)
 		for (; t_index < MCservercgicookiecount; t_index++)
 		{
-			if (MCStringIsEqualToCString(p_name, MCservercgicookies[t_index].name, kMCCompareExact) &&
-                (!MCStringIsEmpty(p_path) && MCStringIsEqualToCString(p_path, MCservercgicookies[t_index].path, kMCCompareExact)) &&
-                !(MCStringIsEmpty(p_domain) && MCStringIsEqualToCString(p_domain, MCservercgicookies[t_index].domain, kMCCompareExact)))
+			// p_path and p_domain are never NULL - MCStringIsEqualTo can always be used
+			if (MCStringIsEqualTo(p_name, MCservercgicookies[t_index].name, kMCCompareExact) &&
+                MCStringIsEqualTo(p_path, MCservercgicookies[t_index].path, kMCCompareExact) &&
+                MCStringIsEqualTo(p_domain, MCservercgicookies[t_index].domain, kMCCompareExact))
 				break;
 		}
 		if (t_index == MCservercgicookiecount)
@@ -509,17 +517,34 @@ bool MCServerSetCookie(MCStringRef p_name, MCStringRef p_value, uint32_t p_expir
 	
 	if (t_success)
 	{
-        MCservercgicookies[t_index].name = MCStringIsEmpty(p_name) ? strdup("") : strdup(MCStringGetCString(p_name));
-		MCservercgicookies[t_index].value = strdup(MCStringGetCString(*t_encoded));
-        MCservercgicookies[t_index].path = MCStringIsEmpty(p_domain) ? strdup("") : strdup(MCStringGetCString(p_path));
-        MCservercgicookies[t_index].domain = MCStringIsEmpty(p_domain) ? strdup("") : strdup(MCStringGetCString(p_domain));
-
+		// SN-2015-05-14: [[ MCservercgicookies Refactor ]] Now stores StringRefs
+        //  Use MCValueAssign since we can overwrite another value - otherwise,
+        //  will be initialised to NULL by MCMemoryResizeArray
+		MCValueAssign(MCservercgicookies[t_index].name, p_name);
+		MCValueAssign(MCservercgicookies[t_index].value, *t_encoded);
+		MCValueAssign(MCservercgicookies[t_index].path, p_path);
+		MCValueAssign(MCservercgicookies[t_index].domain, p_domain);
 		MCservercgicookies[t_index].expires = p_expires;
 		MCservercgicookies[t_index].secure = p_secure;
 		MCservercgicookies[t_index].http_only = p_http_only;
 	}
 	
 	return t_success;
+}
+
+void MCServerReleaseCookiesArray(void)
+{
+	if (MCservercgicookies != NULL)
+	{
+		for (uint32_t i = 0; i < MCservercgicookiecount; ++i)
+		{
+			MCValueRelease(MCservercgicookies[i] . name);
+			MCValueRelease(MCservercgicookies[i] . value);
+			MCValueRelease(MCservercgicookies[i] . path);
+			MCValueRelease(MCservercgicookies[i] . domain);
+		}
+		MCMemoryDeleteArray(MCservercgicookies);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

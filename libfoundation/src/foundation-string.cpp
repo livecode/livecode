@@ -182,21 +182,6 @@ bool MCStringCreateWithCStringAndRelease(char* p_cstring, MCStringRef& r_string)
     return false;
 }
 
-const char *MCStringGetCString(MCStringRef p_string)
-{
-    if (p_string == nil)
-        return nil;
-    
-    MCStringNativize(p_string);
-    
-	const char *t_cstring;
-	t_cstring = (const char *)MCStringGetNativeCharPtr(p_string);
-	
-	MCAssert(t_cstring != nil);
-    
-	return t_cstring;
-}
-
 bool MCStringIsEqualToCString(MCStringRef p_string, const char *p_cstring, MCStringOptions p_options)
 {
 	return MCStringIsEqualToNativeChars(p_string, (const char_t *)p_cstring, strlen(p_cstring), p_options);

@@ -37,12 +37,14 @@ extern uint32_t MCsessionlifetime;
 extern char **MCservercgiheaders;
 extern uint32_t MCservercgiheadercount;
 
+// SN-2015-05-18: [[ MCservercgicookies Refactor ]] Update MCServerCookie
+//  to hold StringRefs
 typedef struct mcservercookie_t
 {
-	char *name;
-	char *value;
-	char *path;
-	char *domain;
+	MCStringRef name;
+	MCStringRef value;
+	MCStringRef path;
+	MCStringRef domain;
 	uint32_t expires;
 	bool secure;
 	bool http_only;

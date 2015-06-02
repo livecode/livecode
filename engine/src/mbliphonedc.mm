@@ -1216,7 +1216,8 @@ static void MCIPhoneDoDidBecomeActive(void *)
 		
 		if (MCValueGetTypeCode(MCresult -> getvalueref()) == kMCValueTypeCodeString)
 		{
-			NSLog(@"Startup error: %s\n", MCStringGetCString((MCStringRef)MCresult -> getvalueref()));
+            // SN0-2015-05-18: [[ MCStringGetCString Removal ]] Use %@ format
+			NSLog(@"Startup error: %@\n", ((MCStringRef)MCresult -> getvalueref()));
 			abort();
 			return;
 		}

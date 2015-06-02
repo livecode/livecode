@@ -3358,7 +3358,10 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 	return GetProcAddress((HMODULE)p_module, p_symbol);
 #endif /* MCS_resolvemodulesymbol_dsk_w32 */
         // NOTE: symbol addresses are never Unicode and only an ANSI call exists
-		return (MCSysModuleHandle)GetProcAddress((HMODULE)p_module, MCStringGetCString(p_symbol));
+		// SN-2015-05-14: [[ MCStringGetCString Removal ]] Use AutoStringRefAsCString
+		MCAutoStringRefAsCString t_symbol;
+		/* UNCHECKED */ t_symbol . Lock(p_symbol);
+		return (MCSysModuleHandle)GetProcAddress((HMODULE)p_module, *t_symbol);
     }
 	virtual void UnloadModule(MCSysModuleHandle p_module)
     {
@@ -5050,24 +5053,15 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			MCresult -> sets("alternate language not found");
 		else
 		{
-			MCAutoStringRefAsUTF8String t_utf8;
-			/* UNCHECKED */ t_utf8.Lock(p_script);
-			
+			// SN-2015-05-14: [[ MCStringGetCString Removal ]] Use the encodings as they
+			//  should be used (no CString required anymore).
 			MCAutoStringRef t_result;
-			MCAutoStringRef t_string;
-			/* UNCHECKED */ MCStringCreateWithCString(*t_utf8, &t_string);
-			t_environment -> Run(*t_string, &t_result);
+
+			t_environment -> Run(p_script, &t_result);
 			t_environment -> Release();
 
-			if (*t_result != nil)
-			{
-				MCAutoDataRef t_data;
-				MCAutoStringRef t_native;
-				MCDataCreateWithBytes((const byte_t*)MCStringGetCString(*t_result), MCStringGetLength(*t_result), &t_data);
-
-				MCStringDecode(*t_data, kMCStringEncodingUTF8, false, &t_native);
-				MCresult -> setvalueref(*t_native);
-			}
+			if (*t_result != NULL)
+				MCresult -> setvalueref(*t_result);
 			else
 				MCresult -> sets("execution error");
 		}

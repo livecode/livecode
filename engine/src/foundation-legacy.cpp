@@ -718,14 +718,6 @@ bool MCStringCreateWithOldString(const MCString& p_old_string, MCStringRef& r_st
 	return MCStringCreateWithNativeChars((const char_t *)p_old_string . getstring(), p_old_string . getlength(), r_string);
 }
 
-MCString MCStringGetOldString(MCStringRef p_string)
-{
-    if (!MCStringIsNative(p_string))
-        MCStringNativize(p_string);
-    
-    return MCString((const char *)MCStringGetNativeCharPtr(p_string), MCStringGetLength(p_string));
-}
-
 bool MCStringIsEqualToOldString(MCStringRef p_string, const MCString& p_oldstring, MCCompareOptions p_options)
 {
 	return MCStringIsEqualToNativeChars(p_string, (const char_t *)p_oldstring . getstring(), p_oldstring . getlength(), p_options);
@@ -737,9 +729,14 @@ bool MCStringToInteger(MCStringRef p_string, integer_t& r_integer)
 	t_end = nil;
 	
 	integer_t t_value;
-	t_value = strtol(MCStringGetCString(p_string), &t_end, 10);
+	// SN-2015-05-14: [[ MCStringGetCString Removal ]] Use ConvertToCString
+	MCAutoStringRefAsCString t_cstring;
+    if (!t_cstring . Lock(p_string))
+		return false;
+
+	t_value = strtol(*t_cstring, &t_end, 10);
 	
-	if (t_end != MCStringGetCString(p_string) + strlen(MCStringGetCString(p_string)))
+	if (t_end != *t_cstring + strlen(*t_cstring))
 		return false;
 	
 	r_integer = t_value;
@@ -1158,16 +1155,6 @@ bool MCNameClone(MCNameRef p_name, MCNameRef& r_new_name)
 	return true;
 }
 
-const char *MCNameGetCString(MCNameRef p_name)
-{
-	return MCStringGetCString(MCNameGetString(p_name));
-}
-
-MCString MCNameGetOldString(MCNameRef p_name)
-{
-	return MCStringGetOldString(MCNameGetString(p_name));
-}
-
 bool MCNameGetAsIndex(MCNameRef p_name, index_t& r_index)
 {
     MCStringRef t_key;
@@ -1310,8 +1297,13 @@ static uint32_t measure_array_entry(MCNameRef p_key, MCValueRef p_value)
 	//   4 bytes - length not including identifier byte
 	//   * bytes - C string of key
 
+	// SN-2015-05-14: [[ MCStringGetCString ]] Use ConvertToCString
+	MCAutoStringRefAsCString t_key_as_cstring;
 	uint32_t t_size;
-	t_size = 1 + 4 + MCCStringLength(MCStringGetCString(MCNameGetString(p_key))) + 1;
+
+	/* UNCHECKED */t_key_as_cstring . Lock(MCNameGetString(p_key));
+	t_size = 1 + 4 + strlen(*t_key_as_cstring) + 1;
+
 	switch(MCValueGetTypeCode(p_value))
 	{
 	case kMCValueTypeCodeNull:

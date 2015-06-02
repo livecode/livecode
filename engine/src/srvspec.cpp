@@ -232,7 +232,8 @@ typedef const char *(*MCUrlExecuteCallback)(void *state, CURL *curl_handle);
 
 extern char *strndup(const char *, size_t);
 
-static bool url_build_header_list(const char *p_list, curl_slist*& r_headers)
+// SN-2015-05-18: [[ MCStringGetCString Removal ]] Change input param to StringRef
+static bool url_build_header_list(MCStringRef p_list, curl_slist*& r_headers)
 {
 	bool t_success;
 	t_success = true;
@@ -240,8 +241,12 @@ static bool url_build_header_list(const char *p_list, curl_slist*& r_headers)
 	curl_slist *t_slist;
 	t_slist = NULL;
 	
+    MCAutoStringRefAsCString t_list_as_cstring;
+    if (!t_list_as_cstring . Lock(p_list))
+        return false;
+    
 	const char *t_ptr;
-	t_ptr = p_list;
+	t_ptr = *t_list_as_cstring;
 	while(t_success)
 	{
 		const char *t_break;
@@ -315,7 +320,7 @@ static void url_execute(MCStringRef p_url, MCUrlExecuteCallback p_callback, void
 	t_headers = NULL;
 	if (t_error == NULL && !MCStringIsEmpty(MChttpheaders) && t_is_http)
 	{
-		if (!url_build_header_list(MCStringGetCString(MChttpheaders), t_headers))
+		if (!url_build_header_list(MChttpheaders, t_headers))
 			t_error = "couldn't build header list";
 	}
 	
@@ -330,7 +335,10 @@ static void url_execute(MCStringRef p_url, MCUrlExecuteCallback p_callback, void
 	
 	if (t_error == NULL)
 	{
-		if (curl_easy_setopt(t_url_handle, CURLOPT_URL, MCStringGetCString(p_url)) != CURLE_OK)
+        // SN-2015-05-18: [[ MCStringGetCString Removal ]] Use AutoStringRefAsCString
+        MCAutoStringRefAsCString t_url_as_cstring;
+		if (!t_url_as_cstring . Lock(p_url)
+                || curl_easy_setopt(t_url_handle, CURLOPT_URL, *t_url_as_cstring) != CURLE_OK)
 			t_error = "couldn't set url";
 	}
 	
@@ -558,8 +566,12 @@ static const char *url_execute_http_delete(void *p_state, CURL *p_curl)
 
 static const char *url_execute_ftp_delete(void *p_state, CURL *p_curl)
 {
+    // SN-2015-05-18: [[ MCStringGetCString Removal ]] p_state is now a StringRef
+    MCAutoStringRefAsCString t_state_as_cstring;
 	const char *t_url;
-	t_url = static_cast<const char *>(p_state);
+    
+    /* UNCHECKED */ t_state_as_cstring . Lock((MCStringRef)p_state);
+    t_url = *t_state_as_cstring;
 	
 	curl_slist *t_command;
 	t_command = NULL;
@@ -601,7 +613,7 @@ void MCS_deleteurl(MCObject *p_target, MCStringRef p_url)
 	if (MCStringBeginsWithCString(p_url, (const char_t*)"http://", kMCCompareExact) || MCStringBeginsWithCString(p_url, (const char_t*)"https://", kMCCompareExact))
 		url_execute(p_url, url_execute_http_delete, NULL, &t_error);
 	else if (MCStringBeginsWithCString(p_url, (const char_t*)"ftp://", kMCCompareExact))
-		url_execute(p_url, url_execute_ftp_delete, (void *) MCStringGetCString(p_url), &t_error);
+		url_execute(p_url, url_execute_ftp_delete, (void *) p_url, &t_error);
 	else
 		/* UNCHECKED */ MCStringCreateWithCString("unsupported protocol", &t_error);
 

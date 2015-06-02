@@ -707,19 +707,20 @@ static void cgi_store_form_urlencoded(MCVariable *p_variable, MCDataRef p_data, 
 
 static void cgi_fix_path_variables()
 {
-    char *t_path;
+    // SN-2015-05-18: [[ MCStringGetCString Removal ]] Update to autopointer
+    MCAutoPointer<char> t_path;
 
 	MCStringRef env;
     env = nil;
-    t_path = nil;
     
     // SN-2014-07-29: [[ Bug 12865 ]] When a LiveCode CGI script has a .cgi extension and has
     //  the appropriate shebang pointing to the LiveCode server, PATH_TRANSLATED is not set by Apache.
     //  The current file (stored in SCRIPT_FILENAME) is the one containing the script.
+	// SN-2015-05-14: [[ MCStringGetCString Removal ]] Use ConvertToCString
 	if (MCS_getenv(MCSTR("PATH_TRANSLATED"), env))
-		t_path = strdup(MCStringGetCString(env));
+		/* UNCHECKED */ MCStringConvertToCString(env, &t_path);
     else if (MCS_getenv(MCSTR("SCRIPT_FILENAME"), env))
-        t_path = strdup(MCStringGetCString(env));
+		/* UNCHECKED */ MCStringConvertToCString(env, &t_path);
 
     // SN-2015-02-11: [[ Bug 14457 ]] We want to split PATH_TRANSLATED
     //  between what is the real filename (into PATH_TRANSLATED)
@@ -727,12 +728,12 @@ static void cgi_fix_path_variables()
     MCStringRef t_path_string;
     MCStringRef t_path_info;
              
-    if (t_path != nil)
+    if (*t_path != nil)
     {
 #ifdef _WINDOWS_SERVER
-		for(uint32_t i = 0; t_path[i] != '\0'; i++)
-			if (t_path[i] == '\\')
-				t_path[i] = '/';
+		for(uint32_t i = 0; (*t_path)[i] != '\0'; i++)
+			if ((*t_path)[i] == '\\')
+				(*t_path)[i] = '/';
 #endif
 
         // SN-2015-02-12: [[ Bug 14457 ]] We use a mutable string for
@@ -740,7 +741,7 @@ static void cgi_fix_path_variables()
         //  cut off of the TRANSLATED_PATH.
         // Initialise path_string and path_info
         MCAutoStringRef t_mutable_path_info;
-        /* UNCHECKED */ MCStringCreateWithCString(t_path, t_path_string);
+        /* UNCHECKED */ MCStringCreateWithCString(*t_path, t_path_string);
         MCStringCreateMutable(0, &t_mutable_path_info);
         
         // SN-2015-02-12: [[ Bug 14457 ]] As long as the path does not lead
@@ -783,7 +784,6 @@ static void cgi_fix_path_variables()
 
     MCValueRelease(t_path_string);
     MCValueRelease(t_path_info);
-	free(t_path);
 }
 
 static bool cgi_compute_get_var(void *p_context, MCVariable *p_var)
@@ -850,7 +850,12 @@ static bool cgi_compute_post_raw_var(void *p_context, MCVariable *p_var)
 	if (MCS_getenv(MCSTR("CONTENT_LENGTH"), &t_content_length))
 	{
 		uint32_t t_length;
-		t_length = atoi(MCStringGetCString(*t_content_length));
+		// SN-2015-05-15: [[ MCStringGetCString removal ]] Use a temporary value
+        MCAutoNumberRef t_length_as_numberref;
+		if (!MCNumberParse(*t_content_length, &t_length_as_numberref))
+            return false;
+        
+        t_length = MCNumberFetchAsUnsignedInteger(*t_length_as_numberref);
 		
 		uint32_t t_read = 0;
 		
@@ -970,9 +975,14 @@ static bool cgi_multipart_get_boundary(char *&r_boundary)
 	uint32_t t_param_count = 0;
 	
 	t_success = MCStringFirstIndexOfChar(*t_content_type, ';', 0, kMCStringOptionCompareExact, t_index);
+    
+    // SN-2015-05-18: [[ MCStringGetCString Removal ]] Use AutoStringRefAsCString
+    MCAutoStringRefAsCString t_content_as_cstring;
+    if (t_success)
+        t_success = t_content_as_cstring . Lock(*t_content_type);
 
 	if (t_success)
-		t_success = MCMultiPartParseHeaderParams(MCStringGetCString(*t_content_type) + t_index + 1, t_names, t_values, t_param_count);
+		t_success = MCMultiPartParseHeaderParams((*t_content_as_cstring) + t_index + 1, t_names, t_values, t_param_count);
 
 	r_boundary = NULL;
 	
@@ -1326,17 +1336,18 @@ bool cgi_initialize()
 
 	
 	// Set the current folder to be that containing the CGI file.
-	char *t_server_script_folder;
-    t_server_script_folder = strdup(MCStringGetCString(MCserverinitialscript));
+	// SN-2015-05-14: [[ MCStringGetCString Removal ]] Do no change the value
+	//  of the initial script path - and we might want to keep a valid folder
+	MCAutoStringRef t_folder_path;
+	uindex_t t_last_slash_index;
 
-	// Windows paths have been fixed - no backslashes in the environment variables
-	strrchr(t_server_script_folder, '/')[0] = '\0';
+	if (!MCStringLastIndexOfChar(MCserverinitialscript, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash_index))
+		t_last_slash_index = MCStringGetLength(MCserverinitialscript);
 
-    MCAutoStringRef t_server_script_folder_string;
-    /* UNCHECKED */ MCStringCreateWithCString(t_server_script_folder, &t_server_script_folder_string);
+	if (!MCStringCopySubstring(MCserverinitialscript, MCRangeMake(0, t_last_slash_index), &t_folder_path))
+		return false;
 
-	MCsystem -> SetCurrentFolder(*t_server_script_folder_string);
-	delete t_server_script_folder;
+	MCsystem -> SetCurrentFolder(*t_folder_path);
 	
 	// Initialize the headers.
 	MCservercgiheaders = NULL;
@@ -1516,7 +1527,8 @@ static bool cgi_send_cookies(void)
 	
 	for (uint32_t i = 0; t_success && i < MCservercgicookiecount; i++)
 	{
-		t_success = MCCStringFormat(t_cookie_header, "Set-Cookie: %s=%s", MCservercgicookies[i].name, MCservercgicookies[i].value);
+		// SN-2015-05-18: [[ MCservercgicookies Refactor ]] Now stores StringRefs
+		t_success = MCCStringFormat(t_cookie_header, "Set-Cookie: %@=%@", MCservercgicookies[i].name, MCservercgicookies[i].value);
 		
 		if (t_success && MCservercgicookies[i].expires != 0)
 		{
@@ -1526,15 +1538,17 @@ static bool cgi_send_cookies(void)
 			t_success = MCD_convert(ctxt, *t_num, CF_SECONDS, CF_UNDEFINED, CF_INTERNET_DATE, CF_UNDEFINED, &t_string);
 			if (t_success)
 			{
-				t_success = MCCStringAppendFormat(t_cookie_header, "; Expires=%s", MCStringGetCString(*t_string));
+				// SN-2015-05-14: [[ MCStringGetCString Removal ]] Use %@ format
+				t_success = MCCStringAppendFormat(t_cookie_header, "; Expires=%@", *t_string);
 			}
 		}
 		
-		if (t_success && MCservercgicookies[i].path != NULL)
-			t_success = MCCStringAppendFormat(t_cookie_header, "; Path=%s", MCservercgicookies[i].path);
+		// SN-2015-05-18: [[ MCservercgicookies Refactor ]] Now stores StringRefs
+		if (t_success && !MCStringIsEmpty(MCservercgicookies[i].path))
+			t_success = MCCStringAppendFormat(t_cookie_header, "; Path=%@", MCservercgicookies[i].path);
 		
-		if (t_success && MCservercgicookies[i].domain != NULL)
-			t_success = MCCStringAppendFormat(t_cookie_header, "; Domain=%s", MCservercgicookies[i].domain);
+		if (t_success && !MCStringIsEmpty(MCservercgicookies[i].domain))
+			t_success = MCCStringAppendFormat(t_cookie_header, "; Domain=%@", MCservercgicookies[i].domain);
 
 		if (t_success && MCservercgicookies[i].secure)
 			t_success = MCCStringAppend(t_cookie_header, "; Secure");

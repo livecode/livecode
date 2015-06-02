@@ -595,12 +595,9 @@ void MCWindowsActiveScriptEnvironment::Finalize(void)
 
 void MCWindowsActiveScriptEnvironment::Run(MCStringRef p_script, MCStringRef& r_out)
 {
-	LPOLESTR t_ole_script;
-	char *temp;
-	/* UNCHECKED */ MCStringConvertToCString(p_script, temp);
-	t_ole_script = ConvertUTF8ToOLESTR(temp);
-	delete temp;
-	if (t_ole_script == NULL)
+	// SN-2015-05-14: [[ MCStringGetCString ]] Make use of UTF-8 automatic conversion
+	MCAutoStringRefAsWString t_script_as_wstring;
+	if (!t_script_as_wstring . Lock(p_script))
 		return;
 
 	EXCEPINFO t_exception = { 0 };
@@ -609,7 +606,7 @@ void MCWindowsActiveScriptEnvironment::Run(MCStringRef p_script, MCStringRef& r_
 	t_result = S_OK;
 
 	if (t_result == S_OK)
-		t_result = m_parser -> ParseScriptText(t_ole_script, NULL, NULL, NULL, 0, 0, SCRIPTTEXT_ISVISIBLE, NULL, &t_exception);
+		t_result = m_parser -> ParseScriptText((LPOLESTR)*t_script_as_wstring, NULL, NULL, NULL, 0, 0, SCRIPTTEXT_ISVISIBLE, NULL, &t_exception);
 
 	IDispatch *t_lang_dispatch;
 	t_lang_dispatch = NULL;
@@ -669,10 +666,11 @@ void MCWindowsActiveScriptEnvironment::Run(MCStringRef p_script, MCStringRef& r_
 	if (t_lang_dispatch != NULL)
 		t_lang_dispatch -> Release();
 
-	if (t_ole_script != NULL)
-		delete t_ole_script;
+	// SN-2015-05-14: [[ MCStringGetCString Removal ]] Use appropriately
+	//  UTF-8 encoding - we leave r_out NULL in case of failure
+	if (t_return_value != NULL)
+		/* UNCHECKED */ MCStringCreateWithBytesAndRelease((byte_t*)t_return_value, strlen(t_return_value), kMCStringEncodingUTF8, false, r_out);
 
-	/* UNCHECKED */ MCStringCreateWithCString(t_return_value, r_out);
 	return;
 }
 

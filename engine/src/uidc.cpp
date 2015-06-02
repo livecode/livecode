@@ -1518,8 +1518,14 @@ Boolean MCUIDC::lookupcolor(MCStringRef s, MCColor *color)
 	uint4 slength = MCStringGetLength(s);
 	MCAutoPointer<char> startptr;
     startptr = new char[slength + 1];
-	char *sptr = *startptr;
-	MCU_lower(sptr, MCStringGetOldString(s));
+    char *sptr = *startptr;
+    
+    // SN-2015-05-18: [[ MCStringGetCString Removal ]] Use AutoStringRefAsCString
+    MCAutoStringRefAsCString t_cstring;
+    if (!t_cstring . Lock(s))
+        return False;
+	MCU_lower(sptr, *t_cstring);
+    
 	sptr[slength] = '\0';
 	if (*sptr == '#')
 	{

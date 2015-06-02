@@ -1247,14 +1247,13 @@ bool MCS_get_temporary_folder(MCStringRef &r_temp_folder)
 
 bool MCS_create_temporary_file(MCStringRef p_path_string, MCStringRef p_prefix_string, IO_handle &r_file, MCStringRef &r_name_string)
 {
-	const char *t_path = MCStringGetCString(p_path_string);
-	const char *t_prefix = MCStringGetCString(p_prefix_string);
-	char *t_name = (char*)MCStringGetCString(r_name_string);
+	// SN-2015-05-18: [[ MCStringGetCString Removal ]] Do not convert
+	//  the parameters to CStrings
+	MCAutoStringRef t_temp_filename;
 
 	bool t_success = true;
 	bool t_have_file = false;
 	
-	char *t_temp_file = NULL;
 	GUID t_guid;
 	WCHAR *t_guid_utf16 = NULL;
 	
@@ -1262,13 +1261,12 @@ bool MCS_create_temporary_file(MCStringRef p_path_string, MCStringRef p_prefix_s
 	
 	while (t_success && !t_have_file)
 	{
+		// SN-2015-05-18: [[ MCStringGetCString Removal ]] Use a WString
+		//  to allow the users to create temp file in a Unicode path.
+		MCAutoStringRefAsWString t_temp_file_as_wstring;
+		MCAutoStringRef t_temp_file;
 		CoCreateGuid(&t_guid);
-		
-		if (t_temp_file != NULL)
-		{
-			MCCStringFree(t_temp_file);
-			t_temp_file = NULL;
-		}
+
 		if (t_guid_utf16 != NULL)
 		{
 			CoTaskMemFree(t_guid_utf16);
@@ -1283,14 +1281,19 @@ bool MCS_create_temporary_file(MCStringRef p_path_string, MCStringRef p_prefix_s
 			for (i = 0; t_guid_utf16[i] != '\0'; i++)
 				t_guid_string[i] = t_guid_utf16[i] & 0xFF;
 			t_guid_string[i] = '\0';
-			t_success = MCCStringFormat(t_temp_file, "%s/%s%s", t_path, t_prefix, t_guid_string);
+			t_success = MCStringFormat(&t_temp_file, "%@/%@%s", p_path_string, p_prefix_string, t_guid_string)
+				&& t_temp_file_as_wstring . Lock(*t_temp_file);
 		}
-		
+
 		if (t_success)
 		{
-			t_temp_handle = CreateFileA(t_temp_file, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+			t_temp_handle = CreateFileW(*t_temp_file_as_wstring, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
 			if (t_temp_handle != INVALID_HANDLE_VALUE)
+			{
 				t_have_file = true;
+				// Store the successfully created temp file name
+				t_temp_filename = *t_temp_file;
+			}
 			else
 				t_success = GetLastError() == ERROR_FILE_EXISTS;
 		}
@@ -1299,12 +1302,9 @@ bool MCS_create_temporary_file(MCStringRef p_path_string, MCStringRef p_prefix_s
 	if (t_success)
 	{
 		r_file = MCsystem -> OpenFd(_open_osfhandle((intptr_t)t_temp_handle, _O_RDWR), kMCOpenFileModeCreate);
-		t_name = t_temp_file;
-		/* UNCHECKED */ MCStringCreateWithCString(t_name, r_name_string);
+		r_name_string = MCValueRetain(*t_temp_filename);
 
 	}
-	else
-		MCCStringFree(t_temp_file);
 	
 	CoTaskMemFree(t_guid_utf16);
 	return t_success;

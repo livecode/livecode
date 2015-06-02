@@ -981,19 +981,42 @@ class MCStdioFileHandle;
 
 bool MCS_create_temporary_file(MCStringRef p_path, MCStringRef p_prefix, IO_handle &r_file, MCStringRef &r_name)
 {
-    char* t_temp_file;
-    if (!MCCStringFormat(t_temp_file, "%s/%sXXXXXXXX", MCStringGetCString(p_path), MCStringGetCString(p_prefix)))
+    // SN-2015-05-18: [[ MCStringGetCString Removal ]] Use a StringRef (to keep
+    //  a potential Unicode path to the temp folder).
+    MCAutoStringRef t_temp_filename;
+    if (!MCStringFormat(&t_temp_filename, "%@/%@XXXXXXXX", p_path, p_prefix))
 		return false;
-	
+    
+    // Use SysString on Linux, and UTF-8 encoded string on MacServer
+    char *t_template_as_cstring;
+#ifdef _LINUX_SERVER
+    if (!MCStringConvertToSysString(*t_temp_filename, (const char*&)t_template_as_cstring))
+#else // _MAC_SERVER
+
+    if (!MCStringConvertToUTF8String(*t_temp_filename, t_template_as_cstring))
+#endif
+        return false;
+    
 	int t_fd;
-    t_fd = mkstemp(t_temp_file);
+    t_fd = mkstemp(t_template_as_cstring);
     if (t_fd == -1)
         return false;
-	
-    if (!MCStringCreateWithCString(t_temp_file, r_name))
-        return false;
 
+#ifdef _LINUX_SERVER
+    if (!MCStringCreateWithSysString(t_template_as_cstring, r_name))
+#else
+    if (!MCStringCreateWithBytes((byte_t*)t_template_as_cstring, strlen(t_template_as_cstring), kMCStringEncodingUTF8, false, r_name))
+#endif
+    {
+        // Clean up the file created, and free the memory
+        unlink(t_template_as_cstring);
+        MCMemoryDelete(t_template_as_cstring);
+        return false;
+    }
+
+    MCMemoryDelete(t_template_as_cstring);
     r_file = MCsystem->OpenFd(t_fd, kMCOpenFileModeWrite);
+
 	return true;
 }
 

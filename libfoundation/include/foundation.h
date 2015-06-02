@@ -1219,6 +1219,10 @@ bool MCValueInterAndRelease(MCValueRef value, MCValueRef& r_unique_value);
 // Fetch the 'extra bytes' field for the given custom value.
 inline void *MCValueGetExtraBytesPtr(MCValueRef value) { return ((uint8_t *)value) + kMCValueCustomHeaderSize; }
 
+// SN-2015-05-26: [[ MCStringGetCString Removal ]] Add new function to debug the
+//  ValueRefs, since MCStringGetCString is gone.
+void MCValueShow(MCValueRef p_value);
+
 //////////
 
 template<typename T> inline T MCValueRetain(T value)
@@ -1422,7 +1426,6 @@ extern MCStringRef kMCTabString;
 // the c-string must be a C static string.
 MCStringRef MCSTR(const char *string);
 
-const char *MCStringGetCString(MCStringRef p_string);
 bool MCStringIsEqualToCString(MCStringRef string, const char *cstring, MCStringOptions options);
 
 // Create an immutable string from the given bytes, interpreting them using
