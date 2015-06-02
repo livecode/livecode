@@ -1722,8 +1722,17 @@ enum Parse_errors
     // {PE-0559} load: missing file or display name
     PE_LOAD_NOFILE,
     
-    // {PE-0195} load: missing 'from'
+    // {PE-0560} load: missing 'from'
     PE_LOAD_NOFROM,
+    
+    // {PE-0561} is really: missing 'an' or 'a'
+    PE_ISREALLY_NOAN,
+    
+    // {PE-0562} is really: missing 'string'
+    PE_ISREALLY_NOSTRING,
+    
+    // {PE-0563} is really: missing type
+    PE_ISREALLY_NOTYPE,
 };
 
 extern const char *MCparsingerrors;

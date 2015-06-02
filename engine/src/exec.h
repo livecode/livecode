@@ -3884,6 +3884,21 @@ void MCEngineGetEditionType(MCExecContext& ctxt, MCStringRef& r_edition);
 
 void MCEngineGetLoadedExtensions(MCExecContext& ctxt, MCProperListRef& r_extensions);
 
+void MCEngineEvalIsReallyNothing(MCExecContext& ctxt, MCValueRef value, bool& r_result);
+void MCEngineEvalIsNotReallyNothing(MCExecContext& ctxt, MCValueRef value, bool& r_result);
+void MCEngineEvalIsReallyABoolean(MCExecContext& ctxt, MCValueRef value, bool& r_result);
+void MCEngineEvalIsNotReallyABoolean(MCExecContext& ctxt, MCValueRef value, bool& r_result);
+void MCEngineEvalIsReallyAnInteger(MCExecContext& ctxt, MCValueRef value, bool& r_result);
+void MCEngineEvalIsNotReallyAnInteger(MCExecContext& ctxt, MCValueRef value, bool& r_result);
+void MCEngineEvalIsReallyAReal(MCExecContext& ctxt, MCValueRef value, bool& r_result);
+void MCEngineEvalIsNotReallyAReal(MCExecContext& ctxt, MCValueRef value, bool& r_result);
+void MCEngineEvalIsReallyAString(MCExecContext& ctxt, MCValueRef value, bool& r_result);
+void MCEngineEvalIsNotReallyAString(MCExecContext& ctxt, MCValueRef value, bool& r_result);
+void MCEngineEvalIsReallyABinaryString(MCExecContext& ctxt, MCValueRef value, bool& r_result);
+void MCEngineEvalIsNotReallyABinaryString(MCExecContext& ctxt, MCValueRef value, bool& r_result);
+void MCEngineEvalIsReallyAnArray(MCExecContext& ctxt, MCValueRef value, bool& r_result);
+void MCEngineEvalIsNotReallyAnArray(MCExecContext& ctxt, MCValueRef value, bool& r_result);
+
 ///////////
 
 extern MCExecMethodInfo *kMCFilesEvalDirectoriesMethodInfo;

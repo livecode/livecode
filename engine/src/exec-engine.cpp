@@ -2000,3 +2000,82 @@ void MCEngineGetEditionType(MCExecContext& ctxt, MCStringRef& r_edition)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCEngineEvalIsReallyNothing(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+{
+    r_result = MCValueGetTypeCode(value) == kMCValueTypeCodeNull;
+}
+
+void MCEngineEvalIsNotReallyNothing(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+{
+    r_result = MCValueGetTypeCode(value) != kMCValueTypeCodeNull;
+}
+
+void MCEngineEvalIsReallyABoolean(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+{
+    r_result = MCValueGetTypeCode(value) == kMCValueTypeCodeBoolean;
+}
+
+void MCEngineEvalIsNotReallyABoolean(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+{
+    r_result = MCValueGetTypeCode(value) != kMCValueTypeCodeBoolean;
+}
+
+void MCEngineEvalIsReallyAnInteger(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+{
+    r_result = MCValueGetTypeCode(value) == kMCValueTypeCodeNumber &&
+                MCNumberIsInteger((MCNumberRef)value);
+}
+
+void MCEngineEvalIsNotReallyAnInteger(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+{
+    r_result = !(MCValueGetTypeCode(value) == kMCValueTypeCodeNumber &&
+                 MCNumberIsInteger((MCNumberRef)value));
+}
+
+void MCEngineEvalIsReallyAReal(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+{
+    r_result = MCValueGetTypeCode(value) == kMCValueTypeCodeNumber &&
+                MCNumberIsReal((MCNumberRef)value);
+}
+
+void MCEngineEvalIsNotReallyAReal(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+{
+    r_result = !(MCValueGetTypeCode(value) == kMCValueTypeCodeNumber &&
+                 MCNumberIsReal((MCNumberRef)value));
+}
+
+void MCEngineEvalIsReallyAString(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+{
+    r_result = MCValueGetTypeCode(value) == kMCValueTypeCodeString ||
+                MCValueGetTypeCode(value) == kMCValueTypeCodeName;
+}
+
+void MCEngineEvalIsNotReallyAString(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+{
+    r_result = !(MCValueGetTypeCode(value) == kMCValueTypeCodeString ||
+                 MCValueGetTypeCode(value) == kMCValueTypeCodeName);
+}
+
+void MCEngineEvalIsReallyABinaryString(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+{
+    r_result = MCValueGetTypeCode(value) == kMCValueTypeCodeData;
+}
+
+void MCEngineEvalIsNotReallyABinaryString(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+{
+    r_result = MCValueGetTypeCode(value) != kMCValueTypeCodeData;
+}
+
+void MCEngineEvalIsReallyAnArray(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+{
+    r_result = MCValueGetTypeCode(value) == kMCValueTypeCodeArray;
+}
+
+void MCEngineEvalIsNotReallyAnArray(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+{
+    r_result = MCValueGetTypeCode(value) != kMCValueTypeCodeArray;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
