@@ -30,6 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 #include "util.h"
 #include "uidc.h"
+#include "mcerror.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -741,13 +742,15 @@ void MCFilesEvalShell(MCExecContext& ctxt, MCStringRef p_command, MCStringRef& r
 {
 	if (MCsecuremode & MC_SECUREMODE_PROCESS)
 	{
-		ctxt . LegacyThrow(EE_SHELL_NOPERM);
+		MCeerror->add(EE_SHELL_NOPERM, 0, 0, p_command);
+		ctxt . Throw();
 		return;
 	}
 
 	if (MCS_runcmd(p_command, r_output) != IO_NORMAL)
 	{
-		ctxt . LegacyThrow(EE_SHELL_BADCOMMAND);
+		MCeerror->add(EE_SHELL_BADCOMMAND, 0, 0, p_command);
+		ctxt . Throw();
 		return;
 	}
 }
