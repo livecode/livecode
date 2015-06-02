@@ -1156,6 +1156,9 @@ template<typename C, void (C::*Method)(MCExecContext&)> inline void MCExecNative
 #define DEFINE_CTRL_WAITABLE_EXEC_METHOD(act, ctrl, tag) \
 { true, kMCNativeControlAction##act, (void *)MCExecNativeControlThunkExec(ctrl, Exec##tag) },
 
+#define DEFINE_CTRL_WAITABLE_EXEC_UNARY_METHOD(act, ctrl, param1, tag) \
+{ true, kMCNativeControlAction##act, (void *)MCExecNativeControlThunkExec##param1(ctrl, Exec##tag) },
+
 ////////////////////////////////////////////////////////////////////////////////
 
 

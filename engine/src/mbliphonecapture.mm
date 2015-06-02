@@ -103,7 +103,7 @@ MCObjectPropertyTable MCiOSCameraControl::kPropertyTable =
 
 MCNativeControlActionInfo MCiOSCameraControl::kActions[] =
 {
-	DEFINE_CTRL_EXEC_UNARY_METHOD(CameraStartRecording, MCiOSCameraControl, String, StartRecording)
+	DEFINE_CTRL_WAITABLE_EXEC_UNARY_METHOD(CameraStartRecording, MCiOSCameraControl, String, StartRecording)
 	DEFINE_CTRL_EXEC_METHOD(CameraStopRecording, MCiOSCameraControl, StopRecording)
 	DEFINE_CTRL_WAITABLE_EXEC_METHOD(CameraTakePicture, MCiOSCameraControl, TakePicture)
 };
