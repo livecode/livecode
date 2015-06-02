@@ -54,5 +54,16 @@ extern "C" double __cdecl fmod(double x, double y);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef __ANDROID__
+
+// Work-around for the Android headers being strict
+#if !defined(va_copy) && defined(__va_copy)
+#  define va_copy __va_copy
+#endif
+
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+
 #endif
 

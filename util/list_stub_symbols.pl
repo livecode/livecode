@@ -9,8 +9,18 @@ sub trim
 	return $trim;
 }
 
-# Read in from stdin
-my @spec = <STDIN>;
+my $inputFile = $ARGV[1];
+my $outputFile = $ARGV[2];
+
+# Read all of the input data
+open INPUT, "<$inputFile"
+	or die "Could not open input file \"$inputFile\": $!";
+my @spec = <INPUT>;
+close INPUT;
+
+# Open the output file
+open OUTPUT, ">$outputFile"
+	or die "Could not open output file \"$outputFile\": $!";
 
 # Prefix for symbols
 my $prefix = "";
@@ -59,5 +69,5 @@ foreach my $line (@spec)
 	$symbol =~ s/:$// ;
 	
 	# Write the symbol to the output
-	print STDOUT "$prefix$symbol\n";
+	print OUTPUT "$prefix$symbol\n";
 }

@@ -110,9 +110,6 @@ MCScreenDC::MCScreenDC(void)
 	
 	// Initialize the list of active touches.
 	m_active_touches = nil;
-	
-	// MW-2013-06-18: [[ XPlatNotify ]] Initialize the notify module.
-	MCNotifyInitialize();
 }
 
 MCScreenDC::~MCScreenDC(void)
@@ -122,9 +119,6 @@ MCScreenDC::~MCScreenDC(void)
 	
 	// Delete the main windows stack.
 	delete m_main_windows;
-	
-	// MW-2013-06-18: [[ XPlatNotify ]] Finalize the notify module.
-	MCNotifyFinalize();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

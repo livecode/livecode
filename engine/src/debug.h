@@ -14,6 +14,9 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#ifndef __MC_DEBUG_H__
+#define __MC_DEBUG_H__
+
 //
 // script debugger functions
 //
@@ -87,3 +90,5 @@ extern void MCB_clearbreaks(MCObject *object);
 extern void MCB_parsewatches(MCExecContext& ctxt, MCStringRef p_input);
 extern bool MCB_unparsewatches(MCStringRef &r_watches);
 extern void MCB_clearwatches(void);
+
+#endif

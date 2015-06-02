@@ -25,7 +25,7 @@ extensions/*/*/*.lci
 extensions/*/*/*.lcm
 extensions/*/*/*.lce
 
-# Compiled source #
+# Compiled source and intermediates #
 ###################
 *.i
 *.ii
@@ -35,6 +35,10 @@ extensions/*/*/*.lce
 *.exe
 *.o
 *.so
+*.a
+*.pyc
+*.d
+*.stamp
 
 # Packages #
 ############
@@ -70,7 +74,7 @@ Thumbs.db
 ####################
 .svn/
 
-# Project setting files #
+# Projects and project setting files #
 #########################
 *.pbxuser
 *.perspectivev3
@@ -83,7 +87,15 @@ xcuserdata/
 *.mode1v3
 *.xcworkspacedata
 *.creator.user
-
+*.Makefile
+*.mk
+*.xcodeproj/*
+*.pbxproj
+*.vcproject
+*.vcxproject
+make-*_*/
+vsprojects/
+xcprojects/
 
 # Build folders #
 #################
@@ -91,6 +103,8 @@ _build/
 _cache/
 build/
 /_tests/
+*-bin/
+build-*/
 
 # SDKs          #
 #################

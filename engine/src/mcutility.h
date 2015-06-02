@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 #include "foundation-unicode.h"
+#include <ctype.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -33,6 +33,8 @@ command docsBuilderRun pEdition, pVersion
    put docsBuilderGetSourceDirectory() into tSourceDir
    put docsBuilderGetOutputDirectory() & "/packaged_xml" into tOutputDir
    
+   start using stack (builderIdeRepoFolder() & slash & "Toolset/palettes/revdocumentationlibrary.rev")
+   
    builderLog "report", "Building docs into" && tOutputDir
    buildDocumentation tSourceDir & "/dictionary", tSourceDir & "/glossary", tOutputDir & "/dictionary", tOutputDir & "/glossary", tOutputDir, "docsBuilderProgressUpdate", the long id of me
    builderLog "report", "Building docs into" && tOutputDir && "complete"   
@@ -259,7 +261,7 @@ private command libDocumentationListXMLFiles pDirectory, @rFileToPath
          end if
       end repeat
    end repeat
-   
+
    set the directory to tOldDirectory
    
 end libDocumentationListXMLFiles
@@ -273,10 +275,14 @@ private command libDocumentationCreateDocRefs @rFileToDirectory
       read from file rFileToDirectory[tArrIndex]["path"] until EOF
       // extract the <name> or <term> from the files and update the rFileToDirectory information
       
-      put revCreateXMLTree(it, false, true, false) into tTree
+      -- Try parsing strictly and fall back if it fails
+      put revCreateXMLTree(it, true, true, false) into tTree
       if tTree is not an integer then
-         errorShow "Failed to process preferences file with error: " & tTree
-         return empty
+         reportProgress "Dictionary", 0, "WARNING: Failed to parse XML in strict mode: " & tTree && "(" & rFileToDirectory[tArrIndex]["path"] & ")"
+         put revCreateXMLTree(it, false, true, false) into tTree
+         if tTree is not an integer then
+            errorShow "Could not parse XML file:" && tTree
+         end if
       end if
       
       put revXMLNodeContents(tTree, "doc/name") into tName
@@ -284,7 +290,7 @@ private command libDocumentationCreateDocRefs @rFileToDirectory
          put revXMLNodeContents(tTree, "doc/term") into tName
       end if
       if matchText(tName,"xmlerr")  then
-         //breakpoint
+         errorShow "Entry must have either a doc/name or doc/term node (you may see this if the file is malformed XML):" && rFileToDirectory[tArrIndex]["path"]
       end if
       
       // Build XRef symmetry - add see also links to the array structure
@@ -327,6 +333,9 @@ command libDocumentationCreateXRefSymmertry @rFileToDirectory, @rLinkLookup
       if "xrefs" is among the keys of rFileToDirectory[tArrIndex] then
          repeat for each line tReferenceTo in rFileToDirectory[tArrIndex]["xrefs"]
             if rFileToDirectory[tArrIndex]["type"] && rFileToDirectory[tArrIndex]["ref"] is not among the lines of rFileToDirectory[rLinkLookup[tReferenceTo]]["xrefs"] then
+               if rLinkLookup[tReferenceTo] is not a number then
+                  errorShow "Bad cross-reference in" && rFileToDirectory[tArrIndex]["path"] & ":" && quote & tReferenceTo & quote
+               end if
                put rFileToDirectory[tArrIndex]["type"] && rFileToDirectory[tArrIndex]["ref"] & return after rFileToDirectory[rLinkLookup[tReferenceTo]]["xrefs"]
             end if
          end repeat
@@ -417,7 +426,7 @@ private command compileDictionaryIntoStacks pInputDirectory, pOutputDirectory, @
    put pInputDirectory into tPath
    set the directory to tPath
    
-   reportProgress "Dictionary", 0, "Listed XML files"
+   reportProgress "Dictionary", 0, "Listed" && the number of elements of pFileToDirectory && "XML files"
    
    -- Now loop through the list of files and add the file data to the relevant clump
    local tFileNumber, tClumpNumber, tClumpName, tCount = 1
@@ -438,9 +447,9 @@ private command compileDictionaryIntoStacks pInputDirectory, pOutputDirectory, @
 
          put libDocumentationClumpAddTo(tClumpName, tArrIndex, pFileToDirectory, pOutputDirectory, pLinkLookup) into tKeyNumber
          
-         if tArrIndex mod 10 is 0 then
+         --if tArrIndex mod 10 is 0 then
             reportProgress "Dictionary", ((tArrIndex / the number of elements of pFileToDirectory) * 100), "Added dictionary entry: " & item -1 of tFilePath
-         end if
+         --end if
          
          set the itemDelimiter to comma
          
@@ -2058,3 +2067,45 @@ command docsBuilderGenerateDistributedAPI
    
    put textEncode(tJSON, "utf-8") into url ("binfile:" & builderAPIFolder() & slash & "distributed_api.js")
 end docsBuilderGenerateDistributedAPI
+
+--- LEGACY
+
+function revDocumentationRetrieve pType, pTag, pFolder
+   -- We know how many files per clump cuz of kFilesPerClump
+   -- pType is either "dictionary/" or "glossary/"
+   local tClumpNumber, tFileNumber, tPropNumber, tPropName
+   local tClumpName, tDocData, tClumpPath, tType, tOpenClumps
+   ---------
+   
+   put pType into tType
+   if the last char of tType is not slash then put slash after tType
+   
+   if pFolder is empty then
+      put revEnvironmentDocumentationPath() & slash & "packaged_xml/" & tType into tClumpPath
+   else
+      put pFolder & slash & "packaged_xml/" & tType into tClumpPath
+   end if
+   
+   set the itemDelimiter to "."
+   put item 1 of pTag into tFileNumber
+   if tFileNumber is not a number then
+      return empty
+   end if
+   put ((tFileNumber - 1) div kFilesPerClump) + 1 into tClumpNumber
+   put ((tFileNumber - 1) mod kFilesPerClump) + 1 into tPropNumber
+   
+   put "c" & tPropNumber into tPropName
+   put the mainStacks into tOpenClumps
+   filter tOpenClumps with kClumpNamePrefix & "*"
+   
+   put kClumpNamePrefix & tClumpNumber into tClumpName
+   
+   put the tPropName of stack (tClumpPath & tClumpName & ".rev") into tDocData
+   if tDocData is empty then
+      return empty
+   end if
+   
+   -- We've got the doc's compressed data, uncompress and return
+   return the decompress of tDocData
+end revDocumentationRetrieve
+

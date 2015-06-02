@@ -1,0 +1,14 @@
+SECTIONS
+{
+	.payload :
+	{
+		*(.payload);
+	}
+
+	.project :
+	{
+		*(.project);
+	}
+}
+INSERT AFTER .bss;
+

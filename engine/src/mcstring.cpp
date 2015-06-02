@@ -206,6 +206,7 @@ MCNameRef MCN_html;
 MCNameRef MCN_browser;
 MCNameRef MCN_command_line;
 MCNameRef MCN_development;
+MCNameRef MCN_development_cmdline;
 MCNameRef MCN_helper_application;
 MCNameRef MCN_installer;
 MCNameRef MCN_mobile;
@@ -646,6 +647,7 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("browser", MCN_browser);
 	/* UNCHECKED */ MCNameCreateWithCString("command line", MCN_command_line);
 	/* UNCHECKED */ MCNameCreateWithCString("development", MCN_development);
+    /* UNCHECKED */ MCNameCreateWithCString("development command line", MCN_development_cmdline);
 	/* UNCHECKED */ MCNameCreateWithCString("helper application", MCN_helper_application);
 	/* UNCHECKED */ MCNameCreateWithCString("installer", MCN_installer);
 	/* UNCHECKED */ MCNameCreateWithCString("mobile", MCN_mobile);
@@ -1084,6 +1086,7 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCN_browser);
 	MCNameDelete(MCN_command_line);
 	MCNameDelete(MCN_development);
+    MCNameDelete(MCN_development_cmdline);
 	MCNameDelete(MCN_helper_application);
 	MCNameDelete(MCN_installer);
 	MCNameDelete(MCN_mobile);

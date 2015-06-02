@@ -86,16 +86,13 @@ MCScreenDC::MCScreenDC()
 	
 	backdrop_hard = false;
 	backdrop_active = false;
-    
-    m_im_context = NULL;
+	m_im_context = NULL;
 
 	MCNotifyInitialize();
 }
 
 MCScreenDC::~MCScreenDC()
 {
-	MCNotifyFinalize();
-
 	if (opened)
 		close(True);
 	if (ncolors != 0)

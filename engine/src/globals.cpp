@@ -78,7 +78,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define HOLD_SIZE2 16384
 
 #ifdef TARGET_PLATFORM_MACOS_X
-#include <Foundation/NSAutoreleasePool.h>
+//#include <Foundation/NSAutoreleasePool.h>
 #endif
 
 #ifdef _ANDROID_MOBILE
