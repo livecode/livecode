@@ -957,7 +957,6 @@ enum Properties {
     P_EFFECT_RATE,
     P_DONT_USE_NS,
     P_DONT_USE_QT,
-	P_DONT_USE_QTW,
     P_DONT_USE_QT_EFFECTS,
     P_DOUBLE_TIME,
     P_DOUBLE_DELTA,

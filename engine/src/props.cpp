@@ -578,7 +578,7 @@ static PropList playerprops[] =
         {"cantSelect", P_CANT_SELECT},
         {"colorOverlay", P_BITMAP_EFFECT_COLOR_OVERLAY},
         {"disabled", P_DISABLED},
-		{"dontuseqtw", P_DONT_USE_QTW},
+		{"dontuseqt", P_DONT_USE_QT},
         {"dropShadow", P_BITMAP_EFFECT_DROP_SHADOW},
         {"endTime", P_END_TIME},
         {"fileName", P_FILE_NAME},

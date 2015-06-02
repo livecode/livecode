@@ -742,7 +742,6 @@ LT factor_table[] =
         {"dontsearch", TT_PROPERTY, P_DONT_SEARCH},
         {"dontusens", TT_PROPERTY, P_DONT_USE_NS},
         {"dontuseqt", TT_PROPERTY, P_DONT_USE_QT},
-		{"dontuseqtw", TT_PROPERTY, P_DONT_USE_QTW},
         {"dontuseqteffects", TT_PROPERTY, P_DONT_USE_QT_EFFECTS},
         {"dontwrap", TT_PROPERTY, P_DONT_WRAP},
         {"doubleclickdelta", TT_PROPERTY, P_DOUBLE_DELTA},

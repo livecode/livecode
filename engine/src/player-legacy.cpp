@@ -725,7 +725,7 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 	case P_LOOPING:
 		ep.setboolean(getflag(F_LOOPING));
 		break;
-	case P_DONT_USE_QTW:
+	case P_DONT_USE_QT:
 		ep.setboolean(getflag(F_DONTUSEQT));
 		break;
 	case P_PAUSED:
@@ -1023,7 +1023,8 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 		if (dirty)
 			setlooping((flags & F_LOOPING) != 0); //set/unset movie looping
 		break;
-	case P_DONT_USE_QTW:
+
+	case P_DONT_USE_QT:
 		if (!MCU_matchflags(data, flags, F_DONTUSEQT, dirty))
 		{
 			MCeerror->add(EE_OBJECT_NAB, 0, 0, data);
