@@ -23,6 +23,8 @@
 #include "parsedef.h"
 #include "mcio.h"
 
+#include "osspec.h"
+
 #include "globals.h"
 #include "util.h"
 
@@ -46,6 +48,8 @@ public:
     
     virtual void Attach(void *owner) = 0;
     virtual void Detach(void) = 0;
+	
+	virtual bool GetNativeView(void *&r_view);
     
     virtual bool SetProperty(MCPlatformCameraProperty property, MCPlatformPropertyType type, void *value) = 0;
     virtual bool GetProperty(MCPlatformCameraProperty property, MCPlatformPropertyType type, void *value) = 0;
@@ -88,6 +92,8 @@ public:
     
     bool SetProperty(MCPlatformCameraProperty property, MCPlatformPropertyType type, void *value);
     bool GetProperty(MCPlatformCameraProperty property, MCPlatformPropertyType type, void *value);
+	
+	bool GetNativeView(void *&r_view);
     
 	//////////
 	
@@ -657,6 +663,15 @@ void MCAVCamera::Display(void)
 #endif
 }
 
+bool MCAVCamera::GetNativeView(void *&r_view)
+{
+	if (!m_prepared)
+		return false;
+	
+	r_view = m_preview;
+	return true;
+}
+
 bool MCAVCamera::SetProperty(MCPlatformCameraProperty p_property, MCPlatformPropertyType p_type, void *p_value)
 {
     switch(p_property)
@@ -897,6 +912,13 @@ void MCPlatformCameraClose(MCPlatformCameraRef camera)
 {
     if (camera != nil)
         camera -> Close();
+}
+
+bool MCPlatformCameraGetNativeView(MCPlatformCameraRef camera, void *&r_view)
+{
+	if (camera != nil)
+		return camera->GetNativeView(r_view);
+	return false;
 }
 
 bool MCPlatformCameraSetProperty(MCPlatformCameraRef camera, MCPlatformCameraProperty property, MCPlatformPropertyType type, void *value)

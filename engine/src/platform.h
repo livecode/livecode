@@ -1279,6 +1279,8 @@ void MCPlatformCameraDetach(MCPlatformCameraRef camera);
 void MCPlatformCameraOpen(MCPlatformCameraRef camera);
 void MCPlatformCameraClose(MCPlatformCameraRef camera);
 
+bool MCPlatformCameraGetNativeView(MCPlatformCameraRef camera, void *&r_view);
+
 bool MCPlatformCameraSetProperty(MCPlatformCameraRef camera, MCPlatformCameraProperty property, MCPlatformPropertyType type, void *value);
 bool MCPlatformCameraGetProperty(MCPlatformCameraRef sound, MCPlatformCameraProperty property, MCPlatformPropertyType type, void *value);
 
