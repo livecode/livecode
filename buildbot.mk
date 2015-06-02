@@ -93,6 +93,9 @@ ifeq ($(BUILD_PLATFORM),mac)
 else ifeq ($(BUILD_PLATFORM),linux-x86)
   LIVECODE = $(bin_dir)/livecode-community
   buildtool_platform = linux
+else ifeq ($(BUILD_PLATFORM),linux-x86_64)
+  LIVECODE = $(bin_dir)/standalone-community
+  buildtool_platform = linux
 endif
 
 # FIXME add --warn-as-error
