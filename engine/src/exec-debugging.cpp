@@ -417,7 +417,9 @@ void MCDebuggingExecAssert(MCExecContext& ctxt, int type, bool p_eval_success, b
 	
 	// Dispatch 'assertError <handler>, <line>, <pos>, <object>'
 	MCParameter t_handler, t_line, t_pos, t_object;
-	t_handler.setvalueref_argument(ctxt .GetHandler() -> getname());
+	if (ctxt . GetHandler() != NULL) {
+		t_handler.setvalueref_argument(ctxt . GetHandler() -> getname());
+	}
 	t_handler.setnext(&t_line);
 	t_line.setn_argument((real8)ctxt . GetLine());
 	t_line.setnext(&t_pos);
