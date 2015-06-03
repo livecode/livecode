@@ -4029,15 +4029,19 @@ Parse_stat MCParamCount::parse(MCScriptPoint &sp, Boolean the)
 
 
 #ifdef /* MCParamCount */ LEGACY_EXEC
-	uint2 count;
-    // PM-2014-04-14: [[Bug 12105]] Do this check to prevent crash in LC server
-    if (h == NULL)
-    {
-        MCeerror->add(EE_PARAMCOUNT_NOHANDLER, line, pos);
-        return ES_ERROR;
-    }
-	h->getnparams(count);
-	ep.setnvalue(count);
+	// MW-2013-11-15: [[ Bug 11277 ]] If we don't have a handler then 'the param'
+	//   makes no sense so just return 0.
+	if (ep.gethandler() != nil)
+	{
+		uint2 count;
+		ep.gethandler()->getnparams(count);
+		ep.setnvalue(count);
+	}
+	else
+	{
+		ep.setnvalue(0);
+	}
+
 	return ES_NORMAL;
 #endif /* MCParamCount */
 

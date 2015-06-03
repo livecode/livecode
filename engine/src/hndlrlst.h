@@ -136,6 +136,9 @@ public:
 	bool enumerate(MCExecPoint& ep, bool p_first = true);
 #endif
     bool enumerate(MCExecContext& ctxt, bool p_first, uindex_t& r_count, MCStringRef*& r_handlers);
+    
+    // SN-2015-05-28: [[ Bug 11277 ]] Similar function to MCHandler::deletestatements
+    void deletestatements(MCStatement *p_statements);
 
 	// MW-2013-11-15: [[ Bug 11277 ]] Methods for eval/exec in handlerlist context.
 	void eval(MCExecContext &ctxt, MCStringRef p_expression, MCValueRef &r_value);
