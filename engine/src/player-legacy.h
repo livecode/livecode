@@ -265,7 +265,6 @@ public:
 	
 	Boolean mustUseQT()
 	{
-		//return (qtstate == QT_INITTED && !dontuseqt);
 		return usingqt;
 	}
 
