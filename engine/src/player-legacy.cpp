@@ -219,6 +219,7 @@ MCPlayer::MCPlayer()
 	formattedwidth = formattedheight = 0;
 	loudness = 100;
 	dontuseqt = MCdontuseQT;
+	usingqt = !MCdontuseQT;
 
 #ifdef FEATURE_PLATFORM_PLAYER
 	m_platform_player = nil;
@@ -266,6 +267,7 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	formattedwidth = formattedheight = 0;
 	loudness = sref.loudness;
 	dontuseqt = MCdontuseQT;
+	usingqt = !MCdontuseQT;
 	
 #ifdef FEATURE_PLATFORM_PLAYER
 	m_platform_player = nil;
@@ -726,7 +728,7 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 		ep.setboolean(getflag(F_LOOPING));
 		break;
 	case P_DONT_USE_QT:
-		ep.setboolean(getflag(F_DONTUSEQT));
+		ep.setboolean(dontuseqt);
 		break;
 	case P_PAUSED:
 		ep.setboolean(ispaused());
@@ -1025,13 +1027,7 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 		break;
 
 	case P_DONT_USE_QT:
-		if (!MCU_matchflags(data, flags, F_DONTUSEQT, dirty))
-		{
-			MCeerror->add(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		if (dirty)
-			setdontuseqt((flags & F_DONTUSEQT) != 0); //set/unset movie looping
+		setdontuseqt(data == MCtruemcstring); //set/unset movie looping
 		break;
 	case P_PAUSED:
 		playpause(data == MCtruemcstring); //pause or unpause the player
@@ -1441,7 +1437,7 @@ void MCPlayer::getversion(MCExecPoint &ep)
 	}
 
 	long attrs;
-	if ((t_transient_qt || mustUseQT()) && Gestalt(gestaltQuickTimeVersion, &attrs) == noErr)
+	if ((t_transient_qt || qtstate == QT_INITTED) && Gestalt(gestaltQuickTimeVersion, &attrs) == noErr)
 		ep.setstringf("%ld.%ld.%ld", attrs >> 24, (attrs >> 20) & 0xF, (attrs >> 16) & 0xF);
 	else
 		ep.setstaticcstring("0.0");
@@ -1844,13 +1840,17 @@ Boolean MCPlayer::prepare(const char *options)
 	ok = x11_prepare();
 #elif defined FEATURE_QUICKTIME
 	initqt();
-	if (dontuseqt)
-		flags |= F_DONTUSEQT;
-	if (mustUseQT())
+	if (!dontuseqt && !MCdontuseQT && qtstate == QT_INITTED)
+	{
 		ok = qt_prepare();
+		usingqt = True;
+	}
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
+	{
 		ok = avi_prepare();
+		usingqt = False;
+	}
 #endif
 #endif
 #endif

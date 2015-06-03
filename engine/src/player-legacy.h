@@ -66,6 +66,7 @@ class MCPlayer : public MCControl
 	uint2 loudness;
 	int4 lasttime;
 	Boolean dontuseqt;
+	Boolean usingqt;
 
 #ifdef FEATURE_PLATFORM_PLAYER
 	MCPlatformPlayerRef m_platform_player;
@@ -264,7 +265,8 @@ public:
 	
 	Boolean mustUseQT()
 	{
-		return (qtstate == QT_INITTED && !dontuseqt);
+		//return (qtstate == QT_INITTED && !dontuseqt);
+		return usingqt;
 	}
 
 #ifdef _WINDOWS_DESKTOP
