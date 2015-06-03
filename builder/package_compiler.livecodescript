@@ -299,6 +299,8 @@ private command compilerParse @self, pScript
       repeat while tDepth < the number of lines of tContext
          delete the last line of tContext
          put "pop" into tComponentCommands[tComponentCommandCount]["type"]
+         put tLine into tComponentCommands[tComponentCommandCount]["line content"]
+         put tLineNumber into tComponentCommands[tComponentCommandCount]["line"]
          add 1 to tComponentCommandCount
       end repeat
       
@@ -330,6 +332,8 @@ private command compilerParse @self, pScript
       local tCommand, tNeedPush
       put false into tNeedPush
       put empty into tCommand
+      put tLine into tCommand["line content"]
+      put tLineNumber into tCommand["line"]
       switch word 1 of tLine
          case "installer"
          case "component"
@@ -593,6 +597,8 @@ private command compilerParse @self, pScript
       
       if tNeedPush then
          put "push" into tComponentCommands[tComponentCommandCount]["type"]
+         put tLine into tComponentCommands[tComponentCommandCount]["line content"]
+         put tLineNumber into tComponentCommands[tComponentCommandCount]["line"]
          add 1 to tComponentCommandCount
       end if
       
@@ -631,6 +637,10 @@ private command compilerExecute @self, pCommands
       -- nesting is sound.
       if self["context"]["__IGNORE__"] and tCommand["type"] is not among the items of "push,pop" then
          next repeat
+      end if
+      
+      if false then
+         compilerProgress self, "TRACE: Op =" && tCommand["type"] && "(line" && tCommand["line"] && colon && tCommand["line content"] & ")"
       end if
       
       switch tCommand["type"]
@@ -689,6 +699,9 @@ end compilerExecutePush
 
 private command compilerExecutePop @self, pCommand
    get the number of elements of self["stack"]
+   if it is zero then
+      compilerExecutionError self, "Attempt to pop context when stack is empty (" & quote & pCommand["line content"] & quote && "on line" && pCommand["line"] & ")"
+   end if
    put self["stack"][it - 1] into self["context"]
    delete variable self["stack"][it - 1]
 end compilerExecutePop
