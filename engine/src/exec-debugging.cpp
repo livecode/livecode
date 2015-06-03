@@ -78,7 +78,7 @@ void MCDebuggingExecDebugDo(MCExecContext& ctxt, MCStringRef p_script, uinteger_
 	MCExecContext *t_ctxt_ptr;
 	t_ctxt_ptr = MCexecutioncontexts[MCdebugcontext];
 
-	t_ctxt_ptr->GetHandler()->doscript(*t_ctxt_ptr, p_script, p_line, p_pos);
+    t_ctxt_ptr->doscript(*t_ctxt_ptr, p_script, p_line, p_pos);
     
     // AL-2014-03-21: [[ Bug 11940 ]] Ensure the debug context is not permanently in a state of error.
     t_ctxt_ptr -> IgnoreLastError();
