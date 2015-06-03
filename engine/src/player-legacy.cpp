@@ -218,8 +218,8 @@ MCPlayer::MCPlayer()
 	userCallbackStr = NULL;
 	formattedwidth = formattedheight = 0;
 	loudness = 100;
-	dontuseqt = MCdontuseQT;
-	usingqt = !MCdontuseQT;
+	dontuseqt = False;
+	usingqt = False;
 
 #ifdef FEATURE_PLATFORM_PLAYER
 	m_platform_player = nil;
@@ -266,8 +266,8 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	userCallbackStr = strclone(sref.userCallbackStr);
 	formattedwidth = formattedheight = 0;
 	loudness = sref.loudness;
-	dontuseqt = MCdontuseQT;
-	usingqt = !MCdontuseQT;
+	dontuseqt = False;
+	usingqt = False;
 	
 #ifdef FEATURE_PLATFORM_PLAYER
 	m_platform_player = nil;
@@ -314,7 +314,7 @@ MCPlayer::~MCPlayer()
 #else
 	
 #ifdef FEATURE_QUICKTIME
-	if (this == MCtemplateplayer && mustUseQT() && MCplayers == NULL)
+	if (this == MCtemplateplayer && usingQT() && MCplayers == NULL)
 	{
 		extern void MCQTStopRecording(void);
 		MCQTStopRecording();
@@ -391,7 +391,7 @@ Boolean MCPlayer::kdown(const char *string, KeySym key)
 
 #ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
-	if (mustUseQT() && state & CS_PREPARED)
+	if (usingQT() && state & CS_PREPARED)
 	{
 		checktimes();
 		qt_key(true, key);
@@ -406,7 +406,7 @@ Boolean MCPlayer::kup(const char *string, KeySym key)
 {
 #ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
-	if (mustUseQT())
+	if (usingQT())
 	{
 		qt_key(false, key);
 	}
@@ -424,7 +424,7 @@ Boolean MCPlayer::mfocus(int2 x, int2 y)
 		
 #ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
-	if (mustUseQT())
+	if (usingQT())
 		qt_move(x, y);
 #endif
 #endif
@@ -455,7 +455,7 @@ Boolean MCPlayer::mdown(uint2 which)
 		case T_BROWSE:
 #ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
-			if (mustUseQT())
+			if (usingQT())
 				qt_click(true, 1);
 #endif
 #endif
@@ -476,7 +476,7 @@ Boolean MCPlayer::mdown(uint2 which)
 		case Button2:
 #ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
-		if (mustUseQT())
+		if (usingQT())
 			qt_click(true, 2);
 #endif
 #endif
@@ -486,7 +486,7 @@ Boolean MCPlayer::mdown(uint2 which)
 		case Button3:
 #ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
-		if (mustUseQT())
+		if (usingQT())
 			qt_click(true, 3);
 #endif
 #endif
@@ -526,7 +526,7 @@ Boolean MCPlayer::mup(uint2 which, bool p_release) //mouse up
 #endif
 
 #ifdef FEATURE_QUICKTIME
-			if (mustUseQT())
+			if (usingQT())
 				qt_click(false, 1);
 #endif
 #endif
@@ -552,7 +552,7 @@ Boolean MCPlayer::mup(uint2 which, bool p_release) //mouse up
 	case Button3:
 #ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
-		if (mustUseQT())
+		if (usingQT())
 			qt_click(false, which == Button2 ? 2 : 3);
 #endif
 #endif
@@ -591,7 +591,7 @@ void MCPlayer::setrect(const MCRectangle &nrect)
 	}
 #else
 #ifdef FEATURE_QUICKTIME
-	if (mustUseQT())
+	if (usingQT())
 		qt_setrect(nrect);
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -607,7 +607,7 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
 {
 #ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
-	if (this == s_ephemeral_player && mustUseQT() && MCplayers != NULL && MCNameIsEqualTo(mptr, MCM_internal2, kMCCompareCaseless))
+	if (this == s_ephemeral_player && usingQT() && MCplayers != NULL && MCNameIsEqualTo(mptr, MCM_internal2, kMCCompareCaseless))
 	{
 		long t_next_time;
 		
@@ -693,7 +693,7 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
 		}
 #ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
-	else if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless) && mustUseQT() && state & CS_PREPARED)
+	else if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless) && usingQT() && state & CS_PREPARED)
 			{
 				checktimes();
 				return;
@@ -797,7 +797,7 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 		}
 #else
 #ifdef FEATURE_QUICKTIME
-		if (mustUseQT() && state & CS_PREPARED)
+		if (usingQT() && state & CS_PREPARED)
 			i = (uint2)GetMovieTrackCount((Movie)theMovie);
 #endif
 #endif
@@ -826,7 +826,7 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 		}
 #else
 #ifdef FEATURE_QUICKTIME
-		if (mustUseQT() && state & CS_PREPARED)
+		if (usingQT() && state & CS_PREPARED)
 		{
 			uint2 i;
 			bool first = true;
@@ -1085,7 +1085,7 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 			return ES_ERROR;
 #ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
-		if (mustUseQT() && getstate(CS_PREPARED))
+		if (usingQT() && getstate(CS_PREPARED))
 			MCDoAction((MovieController)theMC, mcActionSetKeysEnabled, (void*)((flags & F_TRAVERSAL_ON) != 0));
 #endif
 #endif
@@ -1446,7 +1446,7 @@ void MCPlayer::getversion(MCExecPoint &ep)
 		TerminateQTML();
 #elif defined(_MACOSX)
 	initqt();
-	if (mustUseQT())
+	if (usingQT())
 	{//for QT
 		long attrs;
 		if (Gestalt(gestaltQuickTimeVersion, &attrs) == noErr)
@@ -1483,7 +1483,7 @@ uint4 MCPlayer::getduration() //get movie duration/length
 	return duration;
 #else
 #ifdef FEATURE_QUICKTIME
-	if (mustUseQT())
+	if (usingQT())
 		return qt_getduration();
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1508,7 +1508,7 @@ uint4 MCPlayer::gettimescale() //get moive time scale
 	return timescale;
 #else
 #ifdef FEATURE_QUICKTIME
-	if (mustUseQT())
+	if (usingQT())
 		return qt_gettimescale();
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1533,7 +1533,7 @@ uint4 MCPlayer::getmoviecurtime()
 	return curtime;
 #else
 #ifdef FEATURE_QUICKTIME
-	if (mustUseQT())
+	if (usingQT())
 		return qt_getmoviecurtime();
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1555,7 +1555,7 @@ void MCPlayer::setcurtime(uint4 newtime)
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &newtime);
 #else
 #ifdef FEATURE_QUICKTIME
-	if (mustUseQT())
+	if (usingQT())
 		qt_setcurtime(newtime);
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1585,7 +1585,7 @@ void MCPlayer::setselection()
 	}
 #else
 #ifdef FEATURE_QUICKTIME
-	if (mustUseQT())
+	if (usingQT())
 		qt_setselection();
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1608,7 +1608,7 @@ void MCPlayer::setlooping(Boolean loop)
 	}
 #else
 #ifdef FEATURE_QUICKTIME
-	if (mustUseQT()) // loop or unloop QT movie
+	if (usingQT()) // loop or unloop QT movie
 		qt_setlooping(loop);
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1636,7 +1636,7 @@ void MCPlayer::setplayrate()
 	}
 #else
 #ifdef FEATURE_QUICKTIME //MAC or WIN
-	if (mustUseQT())
+	if (usingQT())
 		qt_setplayrate();
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1664,7 +1664,7 @@ void MCPlayer::showbadge(Boolean show)
 	}
 #else
 #ifdef FEATURE_QUICKTIME
-	if (mustUseQT())// set QT movie's play rate, for QT movie only
+	if (usingQT())// set QT movie's play rate, for QT movie only
 		qt_showbadge(show);
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1687,7 +1687,7 @@ void MCPlayer::editmovie(Boolean edit)
 	}
 #else
 #ifdef FEATURE_QUICKTIME
-	if (mustUseQT())//on & off the ability to set selection
+	if (usingQT())//on & off the ability to set selection
 		qt_editmovie(edit);
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1710,7 +1710,7 @@ void MCPlayer::playselection(Boolean play)
 	}
 #else
 #ifdef FEATURE_QUICKTIME
-	if (mustUseQT())
+	if (usingQT())
 		qt_playselection(play);
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1729,7 +1729,7 @@ Boolean MCPlayer::ispaused()
 		return !MCPlatformPlayerIsPlaying(m_platform_player);
 #else
 #ifdef FEATURE_QUICKTIME
-	if (mustUseQT())
+	if (usingQT())
 		return qt_ispaused();
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1754,7 +1754,7 @@ void MCPlayer::showcontroller(Boolean show)
 	}
 #else
 #ifdef FEATURE_QUICKTIME
-	if (mustUseQT())
+	if (usingQT())
 		qt_showcontroller(show);
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1924,7 +1924,7 @@ Boolean MCPlayer::playpause(Boolean on)
 
 
 #ifdef FEATURE_QUICKTIME
-	if (mustUseQT())
+	if (usingQT())
 		ok = qt_playpause(on);
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1951,7 +1951,7 @@ void MCPlayer::playstepforward()
 		MCPlatformStepPlayer(m_platform_player, 1);
 #else
 #ifdef FEATURE_QUICKTIME
-	if (mustUseQT())
+	if (usingQT())
 		qt_playstepforward();
 #ifdef TARGET_PLATFORM_WINDOWS		
 	else
@@ -1973,7 +1973,7 @@ void MCPlayer::playstepback()
 		MCPlatformStepPlayer(m_platform_player, -1);
 #else
 #ifdef FEATURE_QUICKTIME
-	if (mustUseQT())
+	if (usingQT())
 		qt_playstepback();
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -2008,7 +2008,7 @@ Boolean MCPlayer::playstop()
 #else
 	
 #ifdef FEATURE_QUICKTIME
-	if (mustUseQT())
+	if (usingQT())
 		needmessage = qt_playstop();
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -2083,7 +2083,7 @@ MCRectangle MCPlayer::getpreferredrect()
     }
 #else
 #ifdef FEATURE_QUICKTIME
-	if (mustUseQT())
+	if (usingQT())
 		return qt_getpreferredrect();
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -2107,7 +2107,7 @@ uint2 MCPlayer::getloudness()
 			MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVolume, kMCPlatformPropertyTypeUInt16, &loudness);
 #else
 #ifdef FEATURE_QUICKTIME
-		if (mustUseQT())
+		if (usingQT())
 			loudness = qt_getloudness();
 #ifdef TARGET_PLATFORM_WINDOWS
 		else
@@ -2130,7 +2130,7 @@ void MCPlayer::setloudness()
 			MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVolume, kMCPlatformPropertyTypeUInt16, &loudness);
 #else
 #ifdef FEATURE_QUICKTIME
-		if (mustUseQT())
+		if (usingQT())
 			qt_setloudness(loudness);
 #ifdef TARGET_PLATFORM_WINDOWS
 		else
@@ -2171,7 +2171,7 @@ void MCPlayer::gettracks(MCExecPoint &ep)
 		}
 #else
 #ifdef FEATURE_QUICKTIME
-		if (mustUseQT())
+		if (usingQT())
 			qt_gettracks(ep);
 #ifdef TARGET_PLATFORM_WINDOWS
 		else
@@ -2207,7 +2207,7 @@ void MCPlayer::getenabledtracks(MCExecPoint &ep)
 		}
 #else
 #ifdef FEATURE_QUICKTIME
-		if (mustUseQT())
+		if (usingQT())
 			qt_getenabledtracks(ep);
 #ifdef TARGET_PLATFORM_WINDOWS
 		else
@@ -2269,7 +2269,7 @@ Boolean MCPlayer::setenabledtracks(const MCString &s)
 		}
 #else
 #ifdef FEATURE_QUICKTIME
-		if (mustUseQT())
+		if (usingQT())
 			return qt_setenabledtracks(s);
 #ifdef TARGET_PLATFORM_WINDOWS
 		else
@@ -2643,7 +2643,7 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 	if (!(state & CS_CLOSING))
 		prepare(MCnullstring);
 
-	if (mustUseQT())
+	if (usingQT())
 		qt_draw(dc, dirty);
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -2876,7 +2876,7 @@ void MCPlayer::initqt()
 	if (MCdontuseQT)
 		return;
 
-	if (mustUseQT())
+	if (usingQT())
 		return;
 
 	s_ephemeral_player = new MCPlayer;
@@ -3276,7 +3276,7 @@ MCRegionRef MCPlayer::makewindowregion()
 	RgnHandle myRegion = NULL;
 	MatrixRecord myMatrix;
 	OSErr myErr = noErr;
-	if (mustUseQT() && state & CS_PREPARED)
+	if (usingQT() && state & CS_PREPARED)
 	{
 		myTrack = GetMovieIndTrackType(theMovie, 1, FOUR_CHAR_CODE('skin'),
 		                               movieTrackCharacteristic);

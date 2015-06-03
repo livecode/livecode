@@ -263,7 +263,7 @@ public:
 		return (m_offscreen != NULL);
 	}
 	
-	Boolean mustUseQT()
+	Boolean usingQT()
 	{
 		return usingqt;
 	}
