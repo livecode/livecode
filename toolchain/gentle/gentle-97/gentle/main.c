@@ -47,44 +47,119 @@ int SymbolFileOption ()
    return SymbolFileFlag;
 }
 
+/* --BEGIN-PATCH-- */
+struct FileMapping
+{
+    struct FileMapping *next;
+    char *name;
+    char *replacement;
+    int used;
+};
+
+static struct FileMapping *FileMappings;
+
+void DefFileMapping(const char *p_map_str)
+{
+    struct FileMapping *t_mapping;
+    t_mapping = (struct FileMapping *)malloc(sizeof(struct FileMapping));
+    t_mapping -> next = FileMappings;
+    
+    const char *t_equal;
+    t_equal = strchr(p_map_str, '=');
+    
+    t_mapping -> name = strndup(p_map_str, t_equal - p_map_str);
+    
+    t_equal++;
+    if (t_equal[0] == '\"')
+        t_equal++;
+    
+    t_mapping -> replacement = strdup(t_equal);
+    
+    size_t t_length;
+    t_length = strlen(t_mapping -> replacement);
+    if (t_length > 0)
+        if (t_mapping -> replacement[t_length - 1] == '\"')
+            t_mapping -> replacement[t_length - 1] = '\0';
+    
+    t_mapping -> used = 0;
+    FileMappings = t_mapping;
+}
+
+const char *MapFile(const char *p_input)
+{
+    const char* t_input;
+    struct FileMapping *t_mapping;
+    
+    // Only map on the basename component
+#ifndef _WIN32
+    t_input = strrchr(p_input, '/');
+#else
+    t_input = strrchr(p_input, '\\');
+#endif
+    if (t_input == NULL)
+        t_input = p_input;
+    else
+        t_input = t_input + 1;
+    
+    for(t_mapping = FileMappings; t_mapping != NULL; t_mapping = t_mapping -> next)
+    {
+        if (strcmp(t_mapping -> name, t_input) == 0)
+            return t_mapping -> replacement;
+    }
+    return p_input;
+}
+
+/* --END-PATCH-- */
+
 /*----------------------------------------------------------------------------*/
 
 static scanargs (argc, argv)
-   int argc;
-   char ** argv;
+int argc;
+char ** argv;
 {
-   int i;
-   int source_defined = 0;
-
-   i = 1;
-   while (i < argc) {
-      /* -- PATCH -- */ if (strcmp (argv[i], "-subdir") == 0) { if (argv[i+1] == NULL) { printf("Invalid option: parameter expected for -subdir"); exit(1); } SetOption_SUBDIR(argv[++i]); }
-      else if (strcmp (argv[i], "-alert") == 0) SetOption_ALERT();
-      else if (strcmp (argv[i], "-if") == 0) SymbolFileFlag = 1;
-      else if (strcmp (argv[i], "-trace") == 0) TraceFlag = 1;
-      else {
-	 int len;
-
-	 len = strlen(argv[i]);
-
-         if (len > 0 && argv[i][0] == '-') {
-            printf ("Invalid option: %s\n", argv[i]);
-            exit(1);
-         }
-	 if (len <= 2 || argv[i][len-2] != '.' || argv[i][len-1] != 'g') {
-	    printf ("Invalid filename: %s\n", argv[i]);
-	    exit(1);
-	 }
-
-	 DefSourceName (argv[i]);
-	 source_defined = 1;
-      }
-      i++;
-   }
-   if (! source_defined) {
-      printf("Missing file name\n");
-      exit(1);
-   }
+    int i;
+    int source_defined = 0;
+    
+    i = 1;
+    while (i < argc) {
+        /* -- PATCH -- */ if (strcmp (argv[i], "-subdir") == 0) { if (argv[i+1] == NULL) { printf("Invalid option: parameter expected for -subdir"); exit(1); } SetOption_SUBDIR(argv[++i]); }
+        else if (strcmp (argv[i], "-alert") == 0) SetOption_ALERT();
+        else if (strcmp (argv[i], "-if") == 0) SymbolFileFlag = 1;
+        else if (strcmp (argv[i], "-trace") == 0) TraceFlag = 1;
+        else {
+            int len;
+            
+            len = strlen(argv[i]);
+            
+            if (len > 0 && argv[i][0] == '-') {
+                printf ("Invalid option: %s\n", argv[i]);
+                exit(1);
+            }
+            
+            /* --BEGIN-PATCH-- */
+            if (strchr(argv[i], '=') != NULL)
+            {
+                DefFileMapping(argv[i]);
+                goto continue_args;
+            }
+            /* --END-PATCH-- */
+            
+            if (len <= 2 || argv[i][len-2] != '.' || argv[i][len-1] != 'g') {
+                printf ("Invalid filename: %s\n", argv[i]);
+                exit(1);
+            }
+            
+            DefSourceName (argv[i]);
+            source_defined = 1;
+        }
+        
+    continue_args:
+        i++;
+    }
+    if (! source_defined) {
+        printf("Missing file name\n");
+        exit(1);
+    }
 }
 
 /*----------------------------------------------------------------------------*/
