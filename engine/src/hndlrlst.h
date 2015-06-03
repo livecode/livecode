@@ -129,7 +129,7 @@ public:
 	uint2 getnglobals(void);
 	MCVariable *getglobal(uint2 p_index);
 	bool enumerate(MCExecPoint& ep, bool p_first = true);
-
+	
 	uint2 getnvars(void)
 	{
 		return nvars;

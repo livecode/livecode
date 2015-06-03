@@ -3349,14 +3349,21 @@ Exec_stat MCLocalLoc::eval(MCExecPoint &ep)
 
 Parse_stat MCLocals::parse(MCScriptPoint &sp, Boolean the)
 {
-	h = sp.gethandler();
 	return MCFunction::parse(sp, the);
 }
 
 Exec_stat MCLocals::eval(MCExecPoint &ep)
 {
 #ifdef /* MCLocals */ LEGACY_EXEC
-	return h->getvarnames(ep, False);
+	// MW-2013-11-15: [[ Bug 11277 ]] Server mode may call this outwith a handler.
+	
+	if (ep . gethandler() != nil)
+		return ep . gethandler() -> getvarnames(ep, False);
+
+	ep.clear();
+	ep . gethlist() -> appendlocalnames(ep);
+
+	return ES_NORMAL;
 #endif /* MCLocals */
 }
 
@@ -3598,7 +3605,6 @@ MCMerge::~MCMerge()
 
 Parse_stat MCMerge::parse(MCScriptPoint &sp, Boolean the)
 {
-	h = sp.gethandler();
 	if (get1param(sp, &source, the) != PS_NORMAL)
 	{
 		MCperror->add
@@ -3682,9 +3688,14 @@ Exec_stat MCMerge::eval(MCExecPoint &ep)
 			uint4 ei = si + sptr + 1 - pstart;
 			MCString s(pstart + 2, pend - pstart - 4);
 			ep2.setsvalue(s);
+			// MW-2013-11-15: [[ Bug 11277 ]] If ep has no handler, then execute in
+			//   server script object context.
 			if (isexpression)
 			{
-				if (h->eval(ep2) != ES_ERROR)
+				Exec_stat t_stat;
+                t_stat = ep . eval(ep2);
+                
+				if (t_stat != ES_ERROR)
 				{
 					ep.insert(ep2.getsvalue(), si, ei);
 					rlength += ep2.getsvalue().getlength() - (pend - pstart);
@@ -3692,7 +3703,12 @@ Exec_stat MCMerge::eval(MCExecPoint &ep)
 			}
 			else
 			{
-				if (h->doscript(ep2, line, pos) != ES_ERROR)
+                // SN-2015-06-03: [[ Bug 11277 ]] Refactor doscript (same for both
+                //  MCHandler and MCHandlerlist)
+				Exec_stat t_stat;
+                t_stat = ep . doscript(ep2, line, pos);
+                
+				if (t_stat != ES_ERROR)
 				{
 					MCresult->fetch(ep2);
 					ep.insert(ep2.getsvalue(), si, ei);
@@ -4148,7 +4164,6 @@ MCParam::~MCParam()
 
 Parse_stat MCParam::parse(MCScriptPoint &sp, Boolean the)
 {
-	h = sp.gethandler();
 	if (get1param(sp, &source, the) != PS_NORMAL)
 	{
 		MCperror->add
@@ -4166,10 +4181,19 @@ Exec_stat MCParam::eval(MCExecPoint &ep)
 		MCeerror->add(EE_PARAM_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
-	if (h->getparam(ep.getuint2(), ep) != ES_NORMAL)
+	// MW-2013-11-15: [[ Bug 11277 ]] If we don't have a handler then 'the param'
+	//   makes no sense so just return empty.
+	if (ep.gethandler() != nil)
 	{
-		MCeerror->add(EE_PARAM_BADINDEX, line, pos, ep.getsvalue());
-		return ES_ERROR;
+		if (ep . gethandler()->getparam(ep.getuint2(), ep) != ES_NORMAL)
+		{
+			MCeerror->add(EE_PARAM_BADINDEX, line, pos, ep.getsvalue());
+			return ES_ERROR;
+		}
+	}
+	else
+	{
+		ep.clear();
 	}
 	return ES_NORMAL;
 #endif /* MCParam */
@@ -4177,35 +4201,48 @@ Exec_stat MCParam::eval(MCExecPoint &ep)
 
 Parse_stat MCParamCount::parse(MCScriptPoint &sp, Boolean the)
 {
-	h = sp.gethandler();
 	return MCFunction::parse(sp, the);
 }
 
 Exec_stat MCParamCount::eval(MCExecPoint &ep)
 {
 #ifdef /* MCParamCount */ LEGACY_EXEC
-	uint2 count;
-    // PM-2014-04-14: [[Bug 12105]] Do this check to prevent crash in LC server
-    if (h == NULL)
-    {
-        MCeerror->add(EE_PARAMCOUNT_NOHANDLER, line, pos);
-        return ES_ERROR;
-    }
-	h->getnparams(count);
-	ep.setnvalue(count);
+	// MW-2013-11-15: [[ Bug 11277 ]] If we don't have a handler then 'the param'
+	//   makes no sense so just return 0.
+	if (ep.gethandler() != nil)
+	{
+		uint2 count;
+		ep.gethandler()->getnparams(count);
+		ep.setnvalue(count);
+	}
+	else
+	{
+		ep.setnvalue(0);
+	}
+
 	return ES_NORMAL;
 #endif /* MCParamCount */
 }
 
 Parse_stat MCParams::parse(MCScriptPoint &sp, Boolean the)
 {
-	h = sp.gethandler();
 	return MCFunction::parse(sp, the);
 }
 
 Exec_stat MCParams::eval(MCExecPoint &ep)
 {
 #ifdef /* MCParams */ LEGACY_EXEC
+	// MW-2013-11-15: [[ Bug 11277 ]] If we don't have a handler then 'the param'
+	//   makes no sense so just return empty.
+	if (ep.gethandler() == nil)
+	{
+		ep . clear();
+		return ES_NORMAL;
+	}
+	
+	MCHandler *h;
+	h = ep.gethandler();
+	
 	ep . setnameref_unsafe(h -> getname());
 	ep . appendchar(h -> gettype() == HT_FUNCTION ? '(' : ' ');
 
@@ -5431,7 +5468,6 @@ MCValue::~MCValue()
 
 Parse_stat MCValue::parse(MCScriptPoint &sp, Boolean the)
 {
-	h = sp.gethandler();
 	if (the)
 	{
 		if (get1param(sp, &source, the) != PS_NORMAL)
@@ -5543,26 +5579,41 @@ Exec_stat MCValue::eval(MCExecPoint &ep)
 		delete tptr;
 	}
 	else
-		if (h->eval(ep) != ES_NORMAL)
+	{
+		Exec_stat t_stat;
+        t_stat = ep . eval(ep);
+		
+		if (t_stat != ES_NORMAL)
 		{
 			MCeerror->add
 			(EE_VALUE_ERROR, line, pos, ep.getsvalue());
 			return ES_ERROR;
 		}
+	}
 	return ES_NORMAL;
 #endif /* MCValue */
 }
 
 Parse_stat MCVariables::parse(MCScriptPoint &sp, Boolean the)
 {
-	h = sp.gethandler();
 	return MCFunction::parse(sp, the);
 }
 
 Exec_stat MCVariables::eval(MCExecPoint &ep)
 {
 #ifdef /* MCVariables */ LEGACY_EXEC
-	return h->getvarnames(ep, True);
+	// MW-2013-11-15: [[ Bug 11277 ]] If no handler, then process the handler list
+	//   (server script scope).
+	if (ep . gethandler() != nil)
+		return ep.gethandler()->getvarnames(ep, True);
+	else
+	{
+		ep.clear();
+		ep.gethlist() -> appendlocalnames(ep);
+		ep.appendnewline();
+		ep.gethlist() -> appendglobalnames(ep, True);
+	}
+	return ES_NORMAL;
 #endif /* MCVariables */
 }
 
