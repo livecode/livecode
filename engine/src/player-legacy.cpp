@@ -1027,7 +1027,7 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 		break;
 
 	case P_DONT_USE_QT:
-		setdontuseqt(data == MCtruemcstring); //set/unset movie looping
+		setdontuseqt(data == MCtruemcstring); //set/unset dontuseqt 
 		break;
 	case P_PAUSED:
 		playpause(data == MCtruemcstring); //pause or unpause the player
