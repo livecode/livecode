@@ -143,7 +143,6 @@
 		4DABCDEA15ECD4700085E214 /* mblcalendar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F6DF4C9F1559561D00450B64 /* mblcalendar.cpp */; };
 		4DABCDEB15ECD4700085E214 /* mblcamera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C7D1CE5147674C300129F01 /* mblcamera.cpp */; };
 		4DABCDEC15ECD4700085E214 /* mblcontact.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F68B5683154195C200097647 /* mblcontact.cpp */; };
-		4DABCDED15ECD4700085E214 /* mblcontrol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E823E62D14D178BE001F73C4 /* mblcontrol.cpp */; };
 		4DABCDEE15ECD4700085E214 /* mbldc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D01C31613CE36F60041A281 /* mbldc.cpp */; };
 		4DABCDEF15ECD4700085E214 /* mbldialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E89112EB148E73EB00B554CF /* mbldialog.cpp */; };
 		4DABCDF015ECD4700085E214 /* mblflst.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE761040AD4D00CAC7EF /* mblflst.cpp */; };
@@ -337,10 +336,13 @@
 		E8111F8C1541938E00DB16E3 /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8B1541938E00DB16E3 /* CoreMotion.framework */; };
 		E8111F8E154193A500DB16E3 /* AddressBook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8D154193A500DB16E3 /* AddressBook.framework */; };
 		E8111F90154193AB00DB16E3 /* AddressBookUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8F154193AB00DB16E3 /* AddressBookUI.framework */; };
+		E82F40CE1B18927E00032D12 /* mbliphonecapture.mm in Sources */ = {isa = PBXBuildFile; fileRef = E82F40CD1B18927E00032D12 /* mbliphonecapture.mm */; };
+		E82F40D21B1C650800032D12 /* platform-av-camera.mm in Sources */ = {isa = PBXBuildFile; fileRef = E82F40D01B1C650800032D12 /* platform-av-camera.mm */; };
 		E84A254E1680BFFD00EA7ACC /* image_rep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E84A254C1680BFF600EA7ACC /* image_rep.cpp */; };
 		E85A91BF16C2B4D300C07FA9 /* stackcache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E85A91BE16C2B4D300C07FA9 /* stackcache.cpp */; };
 		E86481931439BCE100775960 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E86481921439BCE100775960 /* StoreKit.framework */; };
 		E877A6181850D85F008FDE2C /* resolution.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E877A6171850D85F008FDE2C /* resolution.cpp */; };
+		E89DA45E1B1779CA002F73AC /* mblcontrol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E823E62D14D178BE001F73C4 /* mblcontrol.cpp */; };
 		F670DB6A147D462B008FEA1E /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F62512621455C7F100BDAACF /* CoreMedia.framework */; };
 		F6DF4CA615597DD000450B64 /* EventKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F6DF4CA515597DD000450B64 /* EventKit.framework */; };
 		F6DF4CA815597DEB00450B64 /* EventKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F6DF4CA715597DEA00450B64 /* EventKitUI.framework */; };
@@ -1054,6 +1056,10 @@
 		E823E62F14D19886001F73C4 /* mblcontrol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblcontrol.h; path = src/mblcontrol.h; sourceTree = "<group>"; };
 		E823E63114D2EA88001F73C4 /* mblandroidcontrol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidcontrol.cpp; path = src/mblandroidcontrol.cpp; sourceTree = "<group>"; };
 		E823E63314D2F2A1001F73C4 /* mblandroidcontrol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = mblandroidcontrol.h; path = src/mblandroidcontrol.h; sourceTree = "<group>"; };
+		E82F40CD1B18927E00032D12 /* mbliphonecapture.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonecapture.mm; path = src/mbliphonecapture.mm; sourceTree = "<group>"; };
+		E82F40D01B1C650800032D12 /* platform-av-camera.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "platform-av-camera.mm"; path = "src/platform-av-camera.mm"; sourceTree = "<group>"; };
+		E82F40D11B1C650800032D12 /* platform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = platform.h; path = src/platform.h; sourceTree = "<group>"; };
+		E82F40D31B1C694D00032D12 /* platform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = platform.cpp; path = src/platform.cpp; sourceTree = "<group>"; };
 		E83CD56C14E92A7B00F17A02 /* EngineReceiver.java */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.java; path = EngineReceiver.java; sourceTree = "<group>"; };
 		E83CD56F14E937B900F17A02 /* NotificationModule.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = NotificationModule.java; sourceTree = "<group>"; };
 		E83CD57114E9436100F17A02 /* mblandroidnotification.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidnotification.cpp; path = src/mblandroidnotification.cpp; sourceTree = "<group>"; };
@@ -1266,6 +1272,7 @@
 				4DDA602A113C7E7000930F4F /* mbliphoneurl.mm */,
 				4D5435DD129EE62E0086A96E /* mbliphonevideo.mm */,
 				4DC684761348E5AC002469A4 /* mbliphoneview.h */,
+				E82F40CD1B18927E00032D12 /* mbliphonecapture.mm */,
 			);
 			name = iOS;
 			sourceTree = "<group>";
@@ -1463,6 +1470,7 @@
 				BE4494B6175CDE4E00346B49 /* Exec */,
 				BE449503175CE10F00346B49 /* Legacy */,
 				4DB983BE130BB1AE008A03DC /* Mobile */,
+				E82F40CF1B1C64DF00032D12 /* Platform */,
 				E84BE363170C99F700807CF6 /* Standalone */,
 				BE449507175CE88F00346B49 /* Syntax */,
 				E84BE35B170C967B00807CF6 /* System */,
@@ -1889,6 +1897,16 @@
 				4DD3E13F1040BD3700CAC7EF /* libpcre-mobile.xcodeproj */,
 			);
 			name = Projects;
+			sourceTree = "<group>";
+		};
+		E82F40CF1B1C64DF00032D12 /* Platform */ = {
+			isa = PBXGroup;
+			children = (
+				E82F40D31B1C694D00032D12 /* platform.cpp */,
+				E82F40D01B1C650800032D12 /* platform-av-camera.mm */,
+				E82F40D11B1C650800032D12 /* platform.h */,
+			);
+			name = Platform;
 			sourceTree = "<group>";
 		};
 		E84BE35B170C967B00807CF6 /* System */ = {
@@ -2402,7 +2420,6 @@
 				4DABCDEA15ECD4700085E214 /* mblcalendar.cpp in Sources */,
 				4DABCDEB15ECD4700085E214 /* mblcamera.cpp in Sources */,
 				4DABCDEC15ECD4700085E214 /* mblcontact.cpp in Sources */,
-				4DABCDED15ECD4700085E214 /* mblcontrol.cpp in Sources */,
 				4DABCDEE15ECD4700085E214 /* mbldc.cpp in Sources */,
 				4DABCDEF15ECD4700085E214 /* mbldialog.cpp in Sources */,
 				4DABCDF015ECD4700085E214 /* mblflst.cpp in Sources */,
@@ -2439,6 +2456,7 @@
 				4DABCE0F15ECD4B50085E214 /* mbliphonestore.mm in Sources */,
 				4DABCE1115ECD4B50085E214 /* mbliphonetextmessaging.mm in Sources */,
 				4DABCE1215ECD4B50085E214 /* mbliphoneurl.mm in Sources */,
+				E89DA45E1B1779CA002F73AC /* mblcontrol.cpp in Sources */,
 				4DABCE1315ECD4B50085E214 /* mbliphonevideo.mm in Sources */,
 				4DABCE1415ECD4B50085E214 /* mblmain.cpp in Sources */,
 				4DABCE1515ECD4B50085E214 /* mblnotification.cpp in Sources */,
@@ -2491,6 +2509,7 @@
 				4DABCE4615ECD4B50085E214 /* stack.cpp in Sources */,
 				4DABCE4715ECD4B50085E214 /* stack2.cpp in Sources */,
 				4DABCE4815ECD4B50085E214 /* stack3.cpp in Sources */,
+				E82F40CE1B18927E00032D12 /* mbliphonecapture.mm in Sources */,
 				E85A91BF16C2B4D300C07FA9 /* stackcache.cpp in Sources */,
 				4DABCE4915ECD4B50085E214 /* stacklst.cpp in Sources */,
 				4DABCE4A15ECD4B50085E214 /* statemnt.cpp in Sources */,
@@ -2572,6 +2591,7 @@
 				BE940431175F6308003EAB87 /* exec-sensor.cpp in Sources */,
 				BE4494FE175CDE7400346B49 /* exec-server.cpp in Sources */,
 				7268ED941848C30200D10598 /* exec-sound.cpp in Sources */,
+				E82F40D21B1C650800032D12 /* platform-av-camera.mm in Sources */,
 				BE7506F0175E0BD200A339DA /* exec-store.cpp in Sources */,
 				BE02B4FB17FEC652001BAFF0 /* exec-strings-chunk.cpp in Sources */,
 				BE4494FF175CDE7400346B49 /* exec-strings.cpp in Sources */,
