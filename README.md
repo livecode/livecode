@@ -1,7 +1,7 @@
 LiveCode Source Repository
 ==========================
 
-This is the source-code repository for LiveCode <http://www.livecode.com>.
+This is the source-code repository for LiveCode <http://www.livecode.com>.  LiveCode is awesome!
 
 Build Overview
 --------------
