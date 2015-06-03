@@ -468,7 +468,7 @@ static void MCScreenDCDoSnapshot(void *p_env)
 	window = env -> window;
 	
 	/////
-	
+    
 	bool t_success = true;
 	
 	MCImageBitmap *t_bitmap = NULL;

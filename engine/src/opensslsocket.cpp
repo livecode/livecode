@@ -123,7 +123,7 @@ extern "C" char *strdup(const char *);
 
 Boolean MCSocket::sslinited = False;
 
-#ifdef _MACOSX
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
 static void socketCallback (CFSocketRef cfsockref, CFSocketCallBackType type, CFDataRef address, const void *pData, void *pInfo)
 {
 	uint2 i;
@@ -160,13 +160,18 @@ static void socketCallback (CFSocketRef cfsockref, CFSocketCallBackType type, CF
 			MCsockets[i]->readsome();
 			break;
 		}
+#ifdef _MACOSX
         MCPlatformBreakWait();
+#else
+        extern void MCIPhoneBreakWait(void);
+        MCIPhoneBreakWait();
+#endif
 	}
 	MCS_poll(0.0,0);//quick poll of other sockets
 }
 #endif
 
-#if defined(_MACOSX)
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
 Boolean MCS_handle_sockets()
 {
 	return MCS_poll(0.0, 0.0);
@@ -1626,7 +1631,7 @@ void MCSocket::setselect(uint2 sflags)
 		WSAAsyncSelect(fd, sockethwnd, WM_USER, event);
 	}
 #endif
-#ifdef _MACOSX
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
 	if (sflags & BIONB_TESTWRITE)
 		CFSocketEnableCallBacks(cfsockref,kCFSocketWriteCallBack);
 	if (sflags & BIONB_TESTREAD)
@@ -1637,7 +1642,7 @@ void MCSocket::setselect(uint2 sflags)
 Boolean MCSocket::init(MCSocketHandle newfd)
 {
 	fd = newfd;
-#ifdef _MACOSX
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
 
 	cfsockref = NULL;
 	rlref = NULL;
@@ -1661,7 +1666,7 @@ void MCSocket::close()
 	{
 		if (secure)
 			sslclose();
-#ifdef _MACOSX
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
 
 		if (rlref != NULL)
 		{
@@ -1678,7 +1683,7 @@ void MCSocket::close()
 #endif
 
 		fd = 0;
-#ifdef _MACOSX
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
 
 		if (cfsockref != NULL)
 		{
