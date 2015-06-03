@@ -176,6 +176,9 @@ args(argc, argv)
    int i;
    int len, j, eq, dot;
 
+   char *t_name;
+   char *t_replacement;
+        
    struct info *new;
 
     for (i = 1; i < argc; i++) {
@@ -227,9 +230,6 @@ args(argc, argv)
         new->replacement[len-eq-1] = '\0';
 */
 /* --PATCH--END-- */
-        
-        char *t_name;
-        char *t_replacement;
         
         if (eq == -1)
         {
@@ -305,7 +305,7 @@ main(argc, argv)
 	 printf("cannot open gen.lit\n");
 	 exit(1);
       }
-      copy_lit(F);
+      copy(F);
    }
    /* ( 9) <token>.t for each <token> in gen.tkn */
    filelist();
@@ -378,34 +378,6 @@ copy_or_text(filename, text)
       copy(INFILE);
       fclose(INFILE);
    }
-}
-
-/*----------------------------------------------------------------------------*/
-
-copy_lit(INFILE)
-FILE *INFILE;
-{    
-    for(;;)
-    {
-        char t_line[4096];
-		char *t_space;
-
-        if (fgets(t_line, 4096, INFILE) == NULL)
-            break;
-        
-        t_space = strchr(t_line, ' ');
-        if (t_space != NULL &&
-            t_space != t_line &&
-            t_space[-1] != '\"')
-        {
-            char *t_brace;
-            t_brace = strchr(t_space + 1, '{');
-            
-            fprintf(OUTFILE, "%.*s/[^a-zA-Z] %s", (t_brace - 1) - t_line, t_line, t_brace);
-        }
-        else
-            fprintf(OUTFILE, "%s", t_line);
-    }
 }
 
 /*----------------------------------------------------------------------------*/

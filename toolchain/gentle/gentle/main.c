@@ -61,21 +61,26 @@ static struct FileMapping *FileMappings;
 void DefFileMapping(const char *p_map_str)
 {
     struct FileMapping *t_mapping;
+	const char *t_equal;
+	size_t t_length;
+
     t_mapping = (struct FileMapping *)malloc(sizeof(struct FileMapping));
     t_mapping -> next = FileMappings;
-    
-    const char *t_equal;
+
     t_equal = strchr(p_map_str, '=');
     
-    t_mapping -> name = strndup(p_map_str, t_equal - p_map_str);
-    
+	t_length = strlen(p_map_str);
+	t_length = t_length > t_equal - p_map_str ? t_equal - p_map_str : t_length;
+    t_mapping -> name = malloc(t_length + 1);
+	memcpy(t_mapping -> name, p_map_str, t_length);
+	t_mapping -> name[t_length] = '\0';
+
     t_equal++;
     if (t_equal[0] == '\"')
         t_equal++;
-    
+
     t_mapping -> replacement = strdup(t_equal);
-    
-    size_t t_length;
+
     t_length = strlen(t_mapping -> replacement);
     if (t_length > 0)
         if (t_mapping -> replacement[t_length - 1] == '\"')
@@ -87,24 +92,26 @@ void DefFileMapping(const char *p_map_str)
 
 const char *MapFile(const char *p_input)
 {
-    const char* t_input;
-    struct FileMapping *t_mapping;
-    
-    // Only map on the basename component
+	const char* t_input;
+	struct FileMapping *t_mapping;
+
+	// Only map on the basename component
 #ifndef _WIN32
-    t_input = strrchr(p_input, '/');
+	t_input = strrchr(p_input, '/');
 #else
-    t_input = strrchr(p_input, '\\');
+	t_input = strrchr(p_input, '\\');
 #endif
-    if (t_input == NULL)
-        t_input = p_input;
-    else
-        t_input = t_input + 1;
-    
+	if (t_input == NULL)
+		t_input = p_input;
+	else
+		t_input = t_input + 1;
+	
     for(t_mapping = FileMappings; t_mapping != NULL; t_mapping = t_mapping -> next)
     {
         if (strcmp(t_mapping -> name, t_input) == 0)
-            return t_mapping -> replacement;
+		{
+			return t_mapping -> replacement;
+		}
     }
     return p_input;
 }
@@ -144,7 +151,7 @@ char ** argv;
             }
             /* --END-PATCH-- */
             
-            if (len <= 2 || argv[i][len-2] != '.' || argv[i][len-1] != 'g') {
+            if (len <= 2 || argv[i][len-2] != '.' || tolower(argv[i][len-1]) != 'g') {
                 printf ("Invalid filename: %s\n", argv[i]);
                 exit(1);
             }
