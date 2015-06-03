@@ -1375,7 +1375,11 @@ private command archiveAddItemWithData @self, pItemName, pData
    end if
    
    if self["type"] is "zip" then
-      revZipAddItemWithData self["output"], pItemName, "pData"
+      -- LiveCode 7 has a bug where externals can't access parameter variables
+      -- so the data needs to be copied into a local so revZip can access it.
+      local tData
+      put pData into tData
+      revZipAddItemWithData self["output"], pItemName, "tData"
       if the result is not empty then
          put "on add item '" & pItemName & "' as data:" && item 2 to -1 of the result into self["error"]
       end if
