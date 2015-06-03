@@ -56,8 +56,19 @@ SOURCES=\
 	externalv0.cpp externalv1.cpp lextable.cpp uuid.cpp \
 	objectprops.cpp objectpropsets.cpp mcutility.cpp notify.cpp customprinter.cpp \
 	sysspec.cpp mode_server.cpp sysunxdate.cpp sysunxnetwork.cpp sysunxrandom.cpp \
-	srvmain.cpp dsklnx.cpp srvspec.cpp srvsession.cpp srvstack.cpp srvdebug.cpp \
-	srvscript.cpp srvoutput.cpp srvtheme.cpp \
+	dsklnx.cpp \
+	srvcgi.cpp \
+	srvdebug.cpp \
+	srvmain.cpp \
+	srvmessage.cpp \
+	srvmultipart.cpp \
+	srvoutput.cpp \
+	srvposix.cpp \
+	srvscript.cpp \
+	srvsession.cpp \
+	srvspec.cpp \
+	srvstack.cpp \
+	srvtheme.cpp \
     eventqueue.cpp encodederrors.cpp redraw.cpp tilecache.cpp tilecachesw.cpp \
 	fonttable.cpp fieldrtf.cpp fieldhtml.cpp fieldstyledtext.cpp paragrafattr.cpp \
     graphicscontext.cpp lnxflst.cpp lnxflstold.cpp lnxelevate.cpp \
@@ -71,8 +82,6 @@ SOURCES=\
 	exec-interface-vclip.cpp exec-keywords.cpp exec-legacy.cpp exec-dialog.cpp exec-strings-chunk.cpp \
     syntax.cpp quicktime.cpp \
 	foundation-legacy.cpp legacy_spec.cpp \
-	srvposix.cpp \
-    srvcgi.cpp srvmultipart.cpp \
 	sysunxthreads.cpp, stacktile.cpp
 	
 SOURCE_DIRS=

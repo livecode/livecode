@@ -55,14 +55,20 @@ SOURCES=\
 	menuparse.cpp parentscript.cpp securemode.cpp \
 	bitmapeffect.cpp bitmapeffectblur.cpp md5.cpp sha1.cpp capsule.cpp \
 	externalv0.cpp externalv1.cpp uuid.cpp \
-	sysspec.cpp dsklnx.cpp dskspec.cpp sysunxdate.cpp sysunxnetwork.cpp sysunxrandom.cpp \
+	sysspec.cpp sysunxdate.cpp sysunxnetwork.cpp sysunxrandom.cpp \
 	lnxpasteboard.cpp lnxtransfer.cpp lnxclipboard.cpp \
 	lnxdc.cpp lnxdce.cpp lnxdcs.cpp lnxdclnx.cpp lnxflst.cpp lnxflstold.cpp \
 	lnxstack.cpp lnxans.cpp \
 	lnxgtktheme.cpp lnxgtkthemedrawing.cpp lnximagecache.cpp lnxpsprinter.cpp \
 	lnxdnd.cpp lnxmplayer.cpp lnxaudio.cpp lnxkeymapping.cpp \
 	lnxtextlayout.cpp lnxcolor.cpp lnxcursor.cpp lnxelevate.cpp lnxflst.cpp lnxmisc.cpp \
-	lnximage.cpp dskmain.cpp dsklnxmain.cpp \
+	lnximage.cpp \
+	dsklnx.cpp \
+	dsklnxmain.cpp \
+	dskmain.cpp \
+	dskmessage.cpp \
+	dskspec.cpp \
+	platform-lnx-camera.cpp \
 	linuxstubs.cpp notify.cpp eventqueue.cpp \
 	objectprops.cpp objectpropsets.cpp internal.cpp mcutility.cpp \
 	redraw.cpp tilecache.cpp tilecachesw.cpp syslnxregion.cpp fieldstyledtext.cpp paragrafattr.cpp \
