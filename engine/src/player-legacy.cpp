@@ -607,7 +607,7 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
 {
 #ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
-	if (this == s_ephemeral_player && usingQT() && MCplayers != NULL && MCNameIsEqualTo(mptr, MCM_internal2, kMCCompareCaseless))
+	if (this == s_ephemeral_player && qtstate == QT_INITTED && MCplayers != NULL && MCNameIsEqualTo(mptr, MCM_internal2, kMCCompareCaseless))
 	{
 		long t_next_time;
 		
@@ -2876,7 +2876,7 @@ void MCPlayer::initqt()
 	if (MCdontuseQT)
 		return;
 
-	if (usingQT())
+	if (qtstate == QT_INITTED)
 		return;
 
 	s_ephemeral_player = new MCPlayer;
