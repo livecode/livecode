@@ -196,7 +196,8 @@ bool MCSystemOpenElevatedProcess(MCStringRef p_command, int32_t& r_pid, int32_t&
 	// Convert the command string into the system encoding so that we can pass
 	// Unicode unscathed (hopefully)
 	MCAutoPointer<char> t_command;
-	/* UNCHECKED */ MCStringConvertToSysString(p_command, (const char*&)&t_command);
+    size_t t_command_len;
+	/* UNCHECKED */ MCStringConvertToSysString(p_command, &t_command, t_command_len);
 	
 	// First split the command args into the argc/argv array we need.
 	char **t_argv;
@@ -226,16 +227,13 @@ bool MCSystemOpenElevatedProcess(MCStringRef p_command, int32_t& r_pid, int32_t&
 	if (t_pid == 0)
 	{
 		// We must escape MCcmd to make gksu plays nice.
-        MCAutoPointer<const char> t_unescaped_cmd;
+        MCAutoPointer<char> t_unescaped_cmd;
         MCAutoArray<char> t_escaped_cmd;
-		uindex_t t_unescaped_len;
+		size_t t_unescaped_len;
 		uindex_t t_escaped_len = 0;
 		
 		if (t_success)
-			t_success = MCStringConvertToSysString(MCcmd, &t_unescaped_cmd);
-        
-        if (t_success)
-            t_unescaped_len = strlen(*t_unescaped_cmd);
+			t_success = MCStringConvertToSysString(MCcmd, &t_unescaped_cmd, t_unescaped_len);
 		
 		// The escaping can potentially double the length of the command
 		if (t_success)

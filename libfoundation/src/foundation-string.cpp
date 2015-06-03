@@ -28,6 +28,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <locale.h>
 #endif
 
+#ifdef __WINDOWS__
+#include <windows.h>
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // CAVEAT!
@@ -4923,7 +4927,7 @@ bool MCStringCreateWithSysString(const char *p_system_string, MCStringRef &r_str
 	return true;
 }
 
-bool MCStringConvertToSysString(MCStringRef p_string, const char * &r_system_string)
+bool MCStringConvertToSysString(MCStringRef p_string, char *& r_system_string, size_t& r_byte_count)
 {
     // Create the pseudo-FD that iconv uses for character conversion. For
     // efficiency, convert straight from the internal format.
@@ -4983,9 +4987,61 @@ bool MCStringConvertToSysString(MCStringRef p_string, const char * &r_system_str
     t_sys_string[t_sys_len] = '\0';
 
 	r_system_string = t_sys_string;
+    r_byte_count = t_sys_len;
+    
 	return true;
 }
-
+#elif defined(__WINDOWS__)
+bool MCStringConvertToSysString(MCStringRef p_string, char *& r_system_string, size_t& r_byte_count)
+{
+    UINT t_codepage;
+    t_codepage = GetConsoleOutputCP();
+    
+    int t_needed;
+    t_needed = WideCharToMultibyte(t_codepage,
+                                   WC_COMPOSITECHECK | WC_NO_BEST_FIT_CHARS,
+                                   MCStringGetCharPtr(p_string),
+                                   -1,
+                                   NULL,
+                                   0,
+                                   NULL,
+                                   NULL);
+    
+    MCAutoArray<char> t_bytes;
+    if (!t_bytes . New(t_needed))
+        return false;
+    
+    if (WideCharToMultibyte(t_codepage,
+                            WC_COMPOSITECHECK | WC_NO_BEST_FIT_CHARS,
+                            MCStringGetCharPtr(p_string),
+                            -1,
+                            t_bytes . Ptr(),
+                            t_needed,
+                            NULL,
+                            NULL) == 0)
+        return false;
+    
+    uindex_t t_size;
+    char *t_ptr;
+    t_bytes . Take(t_size, t_ptr);
+    
+    r_system_string = t_ptr;
+    
+    // Account for the fact that array size includes the NUL byte.
+    r_byte_count = t_size - 1;
+    
+    return true;
+}
+#else
+bool MCStringConvertToSysString(MCStringRef p_string, char *& r_system_string, size_t& r_byte_count)
+{
+    bool t_success;
+    uindex_t t_byte_count;
+    if (!MCStringConvertToUTF8(p_string, r_system_string, t_byte_count))
+        return false;
+    r_byte_count = t_byte_count;
+    return true;
+}
 #endif
 
 bool MCStringNormalizedCopyNFC(MCStringRef self, MCStringRef &r_string)

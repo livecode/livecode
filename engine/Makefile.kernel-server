@@ -81,8 +81,7 @@ SOURCES=\
 	exec-interface-object.cpp exec-interface-field-chunk.cpp exec-interface-player.cpp exec-interface-scrollbar.cpp exec-interface-stack.cpp \
 	exec-interface-vclip.cpp exec-keywords.cpp exec-legacy.cpp exec-dialog.cpp exec-strings-chunk.cpp \
     syntax.cpp quicktime.cpp \
-	foundation-legacy.cpp legacy_spec.cpp \
-	sysunxthreads.cpp, stacktile.cpp
+	foundation-legacy.cpp legacy_spec.cpp
 	
 SOURCE_DIRS=
 

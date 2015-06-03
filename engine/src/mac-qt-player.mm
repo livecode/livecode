@@ -28,6 +28,7 @@
 
 #include "mac-player.h"
 #include "graphics_util.h"
+#include <objc/objc-runtime.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -48,9 +49,19 @@
  @end
 
 @interface QTMovie(QtExtensions)
+
 - (NSArray*)loadedRanges;
 - (QTTime)maxTimeLoaded;
+
 @end
+
+@interface com_runrev_livecode_MCQTKitHelper : NSObject
+
++ (void) dynamicallySubclassQTMovieView:(QTMovieView *)view ;
+- (NSView *) newHitTest: (NSPoint) aPoint;
+
+@end
+
  
 class MCQTKitPlayer: public MCPlatformPlayer
 {
@@ -93,6 +104,7 @@ private:
     static void DoSwitch(void *context);
     static OSErr MovieDrawingComplete(Movie movie, long ref);
     static Boolean MovieActionFilter(MovieController mc, short action, void *params, long refcon);
+    
     
     QTMovie *m_movie;
     QTMovieView *m_view;
@@ -144,7 +156,49 @@ private:
 }
 
 @end
- 
+
+// PM-2015-05-27: [[ Bug 14349 ]] Dynamically subclass QTMovieView and override hitTest method to make mouse events respond to the superview
+@implementation com_runrev_livecode_MCQTKitHelper
+
+// We cannot subclass QTMovieView statically, because we have to dynamically load QTKit
++ (void) dynamicallySubclassQTMovieView:(QTMovieView *)p_qt_movie_view
+{
+    Class t_qt_movie_view_class = [p_qt_movie_view class];
+    
+    // Build the name of the new class
+    NSString *t_subclass_name = @"com_runrev_livecode_MCQTMovieView";
+    Class t_subclass = NSClassFromString(t_subclass_name);
+    
+    // Look in the runtime to see if class of this name already exists
+    if (t_subclass == nil)
+    {
+        // Create the class
+        t_subclass = objc_allocateClassPair(t_qt_movie_view_class, [t_subclass_name UTF8String], 0);
+        if (t_subclass != nil)
+        {
+            IMP hitTest = class_getMethodImplementation([com_runrev_livecode_MCQTKitHelper class], @selector(newHitTest:));
+            
+            // Add the custom -hitTest method (called newHitTest) to the new subclass
+            class_addMethod(t_subclass, @selector(hitTest:), hitTest, "v@:");
+            
+            // Register the class with the runtime
+            objc_registerClassPair(t_subclass);
+        }
+    }
+    
+    if (t_subclass != nil)
+    {
+        // Set the class of p_qt_movie_view to the new subclass
+        object_setClass(p_qt_movie_view, t_subclass);
+    }
+}
+
+- (NSView *) newHitTest: (NSPoint) aPoint
+{
+    return [self superview];
+}
+
+@end
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -166,6 +220,7 @@ MCQTKitPlayer::MCQTKitPlayer(void)
 {
 	m_movie = [[NSClassFromString(@"QTMovie") movie] retain];
 	m_view = [[NSClassFromString(@"QTMovieView") alloc] initWithFrame: NSZeroRect];
+    [com_runrev_livecode_MCQTKitHelper dynamicallySubclassQTMovieView:m_view];
 	m_observer = [[com_runrev_livecode_MCQTKitPlayerObserver alloc] initWithPlayer: this];
     
 	m_current_frame = nil;
@@ -285,6 +340,7 @@ void MCQTKitPlayer::Switch(bool p_new_offscreen)
 	
 	m_switch_scheduled = true;
 }
+
 
 void MCQTKitPlayer::DoSwitch(void *ctxt)
 {

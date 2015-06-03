@@ -228,9 +228,6 @@ protected:
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	MCStackIdCache *m_id_cache;
-    
-    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single thread mutates the ID cache at a time.
-    MCThreadMutexRef m_id_cache_lock;
 	
 	// MW-2011-11-24: [[ UpdateScreen ]] If true, then updates to this stack should only
 	//   be flushed at the next updateScreen point.
@@ -600,8 +597,11 @@ public:
 	bool resolve_filename(MCStringRef filename, MCStringRef& r_resolved);
 	
 	// IM-2013-10-30: [[ FullscreenMode ]] Resolve the given path relative to the location of the stack file
-	// - Will return a path regardless of whether or not the file exists.
-	bool resolve_relative_path(MCStringRef p_path, MCStringRef& r_resolved);
+    // - Will return a path regardless of whether or not the file exists.
+    bool resolve_relative_path(MCStringRef p_path, MCStringRef& r_resolved);
+    
+    // PM-2015-01-26: [[ Bug 14435 ]] Make possible to set the filename using a relative path to the default folder
+    bool resolve_relative_path_to_default_folder(MCStringRef p_path, MCStringRef &r_resolved);
 
 	void setopacity(uint1 p_value);
 	

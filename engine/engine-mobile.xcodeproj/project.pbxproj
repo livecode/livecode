@@ -22,8 +22,6 @@
 
 /* Begin PBXBuildFile section */
 		3CC6F42812AD0A6100852B3B /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3CC6F42712AD0A6100852B3B /* CFNetwork.framework */; };
-		4C529CBC1973CF16007C5F7C /* sysunxthreads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C529CBB1973CF16007C5F7C /* sysunxthreads.cpp */; };
-		4C529CBF1973CF4A007C5F7C /* stacktile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C529CBD1973CF4A007C5F7C /* stacktile.cpp */; };
 		4C8544E8199E10DB00A568B6 /* coretextlayout.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4C8544E7199E10DB00A568B6 /* coretextlayout.mm */; };
 		4C977245193C986700DB2F4A /* coretextfonts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C977244193C986700DB2F4A /* coretextfonts.cpp */; };
 		4CCD60C319DB0535002DFCE5 /* mobile-splashscreen-template.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4CCD60C219DB0535002DFCE5 /* mobile-splashscreen-template.plist */; };
@@ -573,9 +571,6 @@
 		4C34550114F3FEA1008D7E50 /* mbliphonead.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonead.mm; path = src/mbliphonead.mm; sourceTree = "<group>"; };
 		4C34550314F3FF12008D7E50 /* AdModule.java */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.java; path = AdModule.java; sourceTree = "<group>"; };
 		4C529CBA1973CF16007C5F7C /* systhreads.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = systhreads.h; path = src/systhreads.h; sourceTree = "<group>"; };
-		4C529CBB1973CF16007C5F7C /* sysunxthreads.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysunxthreads.cpp; path = src/sysunxthreads.cpp; sourceTree = "<group>"; };
-		4C529CBD1973CF4A007C5F7C /* stacktile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stacktile.cpp; path = src/stacktile.cpp; sourceTree = "<group>"; };
-		4C529CBE1973CF4A007C5F7C /* stacktile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = stacktile.h; path = src/stacktile.h; sourceTree = "<group>"; };
 		4C6D0A371407D04D003B1BA3 /* sysunxnetwork.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysunxnetwork.cpp; path = src/sysunxnetwork.cpp; sourceTree = "<group>"; };
 		4C7D1CE31476747700129F01 /* exec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = exec.h; path = src/exec.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		4C7D1CE5147674C300129F01 /* mblcamera.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblcamera.cpp; path = src/mblcamera.cpp; sourceTree = "<group>"; };
@@ -1828,8 +1823,7 @@
 				4DD3DEE61040ADEF00CAC7EF /* stacke.cpp */,
 				4DD3DEE51040ADEF00CAC7EF /* stacklst.cpp */,
 				4DD3DEE41040ADEF00CAC7EF /* stacklst.h */,
-				4C529CBD1973CF4A007C5F7C /* stacktile.cpp */,
-				4C529CBE1973CF4A007C5F7C /* stacktile.h */,
+				E8B6EE1317F0A1C900F77E0E /* stackview.cpp */,
 				4DD3DF061040ADFC00CAC7EF /* styledtext.cpp */,
 				4DD3DF051040ADFC00CAC7EF /* styledtext.h */,
 				4DD3DF111040ADFC00CAC7EF /* tooltip.cpp */,
@@ -1920,8 +1914,6 @@
 				4DD3DF041040ADFC00CAC7EF /* System.h */,
 				4C529CBA1973CF16007C5F7C /* systhreads.h */,
 				4C6D0A371407D04D003B1BA3 /* sysunxnetwork.cpp */,
-				76EF323E182145CA00FAC195 /* sysunxrandom.cpp */,
-				4C529CBB1973CF16007C5F7C /* sysunxthreads.cpp */,
 			);
 			name = System;
 			sourceTree = "<group>";
@@ -2347,7 +2339,6 @@
 				4DABCDA015ECD4700085E214 /* buttondraw.cpp in Sources */,
 				4DABCDA115ECD4700085E214 /* capsule.cpp in Sources */,
 				4DABCDA215ECD4700085E214 /* card.cpp in Sources */,
-				4C529CBC1973CF16007C5F7C /* sysunxthreads.cpp in Sources */,
 				4DABCDA315ECD4700085E214 /* cardlst.cpp in Sources */,
 				4DABCDA415ECD4700085E214 /* cdata.cpp in Sources */,
 				4DABCDA515ECD4700085E214 /* chunk.cpp in Sources */,
@@ -2600,7 +2591,6 @@
 				BE449501175CDE7400346B49 /* exec.cpp in Sources */,
 				4DBF5B291802E63F009CAB2E /* socket_resolve.cpp in Sources */,
 				4C977245193C986700DB2F4A /* coretextfonts.cpp in Sources */,
-				4C529CBF1973CF4A007C5F7C /* stacktile.cpp in Sources */,
 				E877A6181850D85F008FDE2C /* resolution.cpp in Sources */,
 				7231B08718CF3FFF00295AE6 /* graphicscontext.cpp in Sources */,
 				7231B08A18CF40B600295AE6 /* imagelist.cpp in Sources */,

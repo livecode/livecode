@@ -87,8 +87,7 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	exec-interface-object.cpp exec-interface-player.cpp exec-interface-scrollbar.cpp exec-interface-stack.cpp \
 	exec-interface-vclip.cpp exec-legacy.cpp exec-dialog.cpp exec-keywords.cpp \
 	syntax.cpp \
-	foundation-legacy.cpp legacy_spec.cpp \
-	stacktile.cpp sysunxthreads.cpp)
+	foundation-legacy.cpp legacy_spec.cpp )
 
 LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/include \

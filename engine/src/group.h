@@ -127,6 +127,8 @@ public:
 	virtual void relayercontrol_remove(MCControl *control);
 	virtual void relayercontrol_insert(MCControl *control, MCControl *target);
 
+    virtual void scheduledelete(bool p_is_child);
+    
 	MCControl *findchildwithid(Chunk_term type, uint4 p_id);
 
 	// MCGroup functions

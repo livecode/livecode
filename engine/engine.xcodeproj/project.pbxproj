@@ -21,8 +21,6 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		1D733BC5198AA31C0098E717 /* stacktile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C8B5BBB19733AB10014058F /* stacktile.cpp */; };
-		1D733BC6198AA3340098E717 /* sysunxthreads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C8B5BB91972A6B90014058F /* sysunxthreads.cpp */; };
 		1DC1249518FC422B00C2FEF3 /* quicktimestubs.mac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DC1249418FC422300C2FEF3 /* quicktimestubs.mac.cpp */; };
 		1DDE08D11945DD32000E3705 /* mac-qt-player.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE08D01945DD31000E3705 /* mac-qt-player.mm */; };
 		1DDE08D31945DD43000E3705 /* mac-av-player.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE08D21945DD43000E3705 /* mac-av-player.mm */; };
@@ -36,8 +34,6 @@
 		4C13880F18A12E6600EFF7B6 /* libopenssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DBF58631801CA57009CAB2E /* libopenssl.a */; };
 		4C13881D18A12ED800EFF7B6 /* libopenssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DBF58631801CA57009CAB2E /* libopenssl.a */; };
 		4C529CAF1973CC08007C5F7C /* mac-av-player.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE08D21945DD43000E3705 /* mac-av-player.mm */; };
-		4C8B5BBA1972B7300014058F /* sysunxthreads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C8B5BB91972A6B90014058F /* sysunxthreads.cpp */; };
-		4C8B5BBC19733AB10014058F /* stacktile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C8B5BBB19733AB10014058F /* stacktile.cpp */; };
 		4CC1535714E7FB91009FA80E /* paragrafattr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CC1535614E7FB91009FA80E /* paragrafattr.cpp */; };
 		4CC1536214E7FE1D009FA80E /* fieldstyledtext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CC1536114E7FE1D009FA80E /* fieldstyledtext.cpp */; };
 		4CF4B864199E05F300E33AEE /* customprinter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6A00EE10C578C600FA48D2 /* customprinter.cpp */; };
@@ -1016,7 +1012,6 @@
 		1DDE08D21945DD43000E3705 /* mac-av-player.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-av-player.mm"; path = "src/mac-av-player.mm"; sourceTree = "<group>"; };
 		1DDE08E61945F036000E3705 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		1DDE08E81945F0DE000E3705 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
-		1DDE08EA1945F10A000E3705 /* QTKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QTKit.framework; path = System/Library/Frameworks/QTKit.framework; sourceTree = SDKROOT; };
 		1DED771C19124F24000FFFE3 /* player-legacy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "player-legacy.cpp"; path = "src/player-legacy.cpp"; sourceTree = "<group>"; };
 		1DED771D19124F24000FFFE3 /* player-legacy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "player-legacy.h"; path = "src/player-legacy.h"; sourceTree = "<group>"; };
 		1DED771E19126451000FFFE3 /* player-platform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "player-platform.cpp"; path = "src/player-platform.cpp"; sourceTree = "<group>"; };
@@ -1029,11 +1024,6 @@
 		3C6286C50E6C4BF4004839CB /* menuparse.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = menuparse.cpp; path = src/menuparse.cpp; sourceTree = "<group>"; };
 		3C6286C90E6C4C04004839CB /* menuparse.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = menuparse.h; path = src/menuparse.h; sourceTree = "<group>"; };
 		4C1EA4FA13CF513E00F17AFC /* server_test.lc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = server_test.lc; sourceTree = "<group>"; };
-		4C529CC219741CC8007C5F7C /* sysw32threads.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = sysw32threads.cpp; path = src/sysw32threads.cpp; sourceTree = "<group>"; };
-		4C8B5BB81972A4000014058F /* systhreads.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = systhreads.h; path = src/systhreads.h; sourceTree = "<group>"; };
-		4C8B5BB91972A6B90014058F /* sysunxthreads.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = sysunxthreads.cpp; path = src/sysunxthreads.cpp; sourceTree = "<group>"; };
-		4C8B5BBB19733AB10014058F /* stacktile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stacktile.cpp; path = src/stacktile.cpp; sourceTree = "<group>"; };
-		4C8B5BBD19733D230014058F /* stacktile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = stacktile.h; path = src/stacktile.h; sourceTree = "<group>"; };
 		4CC1535614E7FB91009FA80E /* paragrafattr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = paragrafattr.cpp; path = src/paragrafattr.cpp; sourceTree = "<group>"; };
 		4CC1536114E7FE1D009FA80E /* fieldstyledtext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fieldstyledtext.cpp; path = src/fieldstyledtext.cpp; sourceTree = "<group>"; };
 		4CF4B87F199E0C1C00E33AEE /* coretextlayout.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = coretextlayout.mm; path = src/coretextlayout.mm; sourceTree = "<group>"; };
@@ -2137,7 +2127,6 @@
 			isa = PBXGroup;
 			children = (
 				BE6444461965B8A700C2092C /* AudioToolbox.framework */,
-				1DDE08EA1945F10A000E3705 /* QTKit.framework */,
 				1DDE08E81945F0DE000E3705 /* CoreMedia.framework */,
 				1DDE08E61945F036000E3705 /* AVFoundation.framework */,
 				4D982B1813C1CDD20066119A /* ApplicationServices.framework */,
@@ -2768,8 +2757,6 @@
 				4DFD486613BA28DA008DB91F /* sysspec.cpp */,
 				4DFD486713BA28DA008DB91F /* system.h */,
 				4DDB66581413993500E5C84C /* sysosxregion.cpp */,
-				4C8B5BB81972A4000014058F /* systhreads.h */,
-				4C529CC219741CC8007C5F7C /* sysw32threads.cpp */,
 			);
 			name = System;
 			sourceTree = "<group>";
@@ -3216,8 +3203,6 @@
 				4D587E6A0B8096FD00200116 /* stacklst.cpp */,
 				4D587E030B8096E600200116 /* stacklst.h */,
 				76EF319F181E79FF00FAC195 /* stackview.cpp */,
-				4C8B5BBB19733AB10014058F /* stacktile.cpp */,
-				4C8B5BBD19733D230014058F /* stacktile.h */,
 				4D61BD9C0CCF74C800D74FDB /* styledtext.cpp */,
 				4D61BDAC0CCF74EF00D74FDB /* styledtext.h */,
 				4D3772671507869A000B0EB0 /* textbuffer.h */,
@@ -3954,7 +3939,6 @@
 				4D1F9D61171C682E0091C6CB /* line.cpp in Sources */,
 				4D1F9D62171C682E0091C6CB /* literal.cpp in Sources */,
 				4D1F9D63171C682E0091C6CB /* mcerror.cpp in Sources */,
-				1D733BC5198AA31C0098E717 /* stacktile.cpp in Sources */,
 				4D1F9D64171C682E0091C6CB /* mcio.cpp in Sources */,
 				4D1F9D65171C682E0091C6CB /* mcssl.cpp in Sources */,
 				4D1F9D66171C682E0091C6CB /* mcstring.cpp in Sources */,
@@ -3989,7 +3973,6 @@
 				4D1F9D85171C682E0091C6CB /* sha1.cpp in Sources */,
 				4D1F9D86171C682E0091C6CB /* stack.cpp in Sources */,
 				4D1F9D87171C682E0091C6CB /* stack2.cpp in Sources */,
-				1D733BC6198AA3340098E717 /* sysunxthreads.cpp in Sources */,
 				4D1F9D88171C682E0091C6CB /* stack3.cpp in Sources */,
 				4D1F9D89171C682E0091C6CB /* stacklst.cpp in Sources */,
 				4D1F9D8A171C682E0091C6CB /* statemnt.cpp in Sources */,
@@ -4398,8 +4381,6 @@
 				BE64444119656F7300C2092C /* player.cpp in Sources */,
 				BEEC4C67196C0DF3000DA7F5 /* mac-av-player.mm in Sources */,
 				BEEC4C68196C0DF3000DA7F5 /* mac-qt-player.mm in Sources */,
-				4C8B5BBA1972B7300014058F /* sysunxthreads.cpp in Sources */,
-				4C8B5BBC19733AB10014058F /* stacktile.cpp in Sources */,
 				BEB059451993C046006AE3FD /* imageloader.cpp in Sources */,
 				BEB059471993CE0D006AE3FD /* exec-scripting.cpp in Sources */,
 				BEB059481993CE50006AE3FD /* exec-interface-aclip.cpp in Sources */,

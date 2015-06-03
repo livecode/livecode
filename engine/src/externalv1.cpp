@@ -1795,7 +1795,8 @@ static MCExternalError MCExternalVariableCreate(MCExternalVariableRef* r_var)
         return kMCExternalErrorNoVariable;
 
 	*r_var = new MCTemporaryExternalVariable(kMCEmptyString);
-	if (r_var == nil)
+    // SN-2015-06-02: [[ CID 90609 ]] Check that the pointed value has been allocated
+	if (*r_var == nil)
 		return kMCExternalErrorOutOfMemory;
 
 	return kMCExternalErrorNone;
