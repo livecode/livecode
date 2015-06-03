@@ -262,6 +262,11 @@ public:
 		return (m_offscreen != NULL);
 	}
 	
+	Boolean mustUseQT()
+	{
+		return (qtstate == QT_INITTED && !dontuseqt);
+	}
+
 #ifdef _WINDOWS_DESKTOP
 	void changewindow(MCSysWindowHandle p_old_window);
 
