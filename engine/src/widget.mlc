@@ -476,7 +476,7 @@ Summary:	Posts a message to the widget script object.
 */	
 
 syntax Post is statement
-    "post"<Message: Expression> [ "with" <Arguments: Expression> ]
+    "post" <Message: Expression> [ "with" <Arguments: Expression> ]
 begin
     MCWidgetExecPost(Message)
     MCWidgetExecPostWithArguments(Message, Arguments)
@@ -973,6 +973,73 @@ syntax ClosePopupWithResult is statement
 begin
 	MCWidgetExecClosePopup()
 	MCWidgetExecClosePopupWithResult(Result)
+end syntax
+
+// ---------- composed widgets ---------- //
+
+// this widget
+// the children of <widget>
+// the owner of <widget>
+
+// put a new widget <type> into tWidget
+
+// remove <widget> from <widget>
+// add <widget> to <widget> [ ( above | below ) <widget> ]
+
+public foreign type Widget binds to "kMCWidgetType"
+
+public foreign handler MCWidgetEvalThisWidget(out rThisWidget as Widget) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetEvalTheChildrenOfWidget(in pTargetWidget as Widget, out rChildWidgets as List) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetEvalTheOwnerOfWidget(in pTargetWidget as Widget, out rOwner as optional Widget) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetEvalANewWidget(in pKind as String, out rWidget as Widget) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecRemoveWidgetFromWidget(in pChildWidget as Widget, in pOwningWidget as Widget) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecAddWidgetToWidget(in pChildWidget as Widget, in pOwningWidget as Widget) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecAddWidgetToWidgetRelative(in pChildWidget as Widget, in pOwningWidget as Widget, in pIsAbove as CBool, in pOtherChildWidget as Widget) returns nothing binds to "<builtin>"
+
+syntax ThisWidget is expression
+    "this" "widget"
+begin
+    MCWidgetEvalThisWidget(output)
+end syntax
+
+syntax ChildrenOfWidget is prefix operator with precedence 4
+    "the" "children" "of" <mTarget: Expression>
+begin
+    MCWidgetEvalTheChildrenOfWidget(mTarget, output)
+end syntax
+
+syntax OwnerOfWidget is prefix operator with precedence 4
+    "the" "owner" "of" <mTarget: Expression>
+begin
+    MCWidgetEvalTheOwnerOfWidget(mTarget, output)
+end syntax
+
+//
+
+syntax ANewWidget is prefix operator with precedence 1
+    "a" "new" "widget" <mKind: Expression>
+begin
+    MCWidgetEvalANewWidget(mKind, output)
+end syntax
+
+//
+
+syntax RemoveWidgetFromWidget is statement
+    "remove" <mChildWidget: Expression> "from" <mOwningWidget: Expression>
+begin
+    MCWidgetExecRemoveWidgetFromWidget(mChildWidget, mOwningWidget)
+end syntax
+
+syntax AddWidgetToWidget is statement
+    "add" <mChildWidget: Expression> "to" <mWidget: Expression>
+begin
+    MCWidgetExecAddWidgetToWidget(mChildWidget, mWidget)
+end syntax
+
+syntax AddWidgetToWidgetRelative is statement
+    "add" <mChildWidget: Expression> "to" <mWidget: Expression> ( "above" <mIsAbove=true> | "below" <mIsAbove=false> ) <mOtherChildWidget: Expression>
+begin
+    MCWidgetExecAddWidgetToWidgetRelative(mChildWidget, mWidget, mIsAbove, mOtherChildWidget)
 end syntax
 
 end module
