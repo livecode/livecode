@@ -3693,10 +3693,8 @@ Exec_stat MCMerge::eval(MCExecPoint &ep)
 			if (isexpression)
 			{
 				Exec_stat t_stat;
-				if (ep.gethandler() != nil)
-					t_stat = ep . gethandler()->eval(ep2);
-				else
-					t_stat = ep . gethlist()-> eval(ep2);
+                t_stat = ep . eval(ep2);
+                
 				if (t_stat != ES_ERROR)
 				{
 					ep.insert(ep2.getsvalue(), si, ei);
@@ -3705,11 +3703,11 @@ Exec_stat MCMerge::eval(MCExecPoint &ep)
 			}
 			else
 			{
+                // SN-2015-06-03: [[ Bug 11277 ]] Refactor doscript (same for both
+                //  MCHandler and MCHandlerlist)
 				Exec_stat t_stat;
-				if (ep.gethandler() != nil)
-					t_stat = ep . gethandler() -> doscript(ep2, line, pos);
-				else
-					t_stat = ep . gethlist() -> doscript(ep2, line, pos);
+                t_stat = ep . doscript(ep2, line, pos);
+                
 				if (t_stat != ES_ERROR)
 				{
 					MCresult->fetch(ep2);
@@ -5583,10 +5581,7 @@ Exec_stat MCValue::eval(MCExecPoint &ep)
 	else
 	{
 		Exec_stat t_stat;
-		if (ep . gethandler() != nil)
-			t_stat = ep . gethandler() -> eval(ep);
-		else
-			t_stat = ep . gethlist() -> eval(ep);
+        t_stat = ep . eval(ep);
 		
 		if (t_stat != ES_NORMAL)
 		{

@@ -932,7 +932,6 @@ public:
 	virtual ~MCMerge();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 	virtual Exec_stat eval(MCExecPoint &);
-	Exec_stat doscript(MCExecPoint &);
 	void deletestatements(MCStatement *statements);
 };
 

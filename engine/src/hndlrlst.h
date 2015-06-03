@@ -129,10 +129,6 @@ public:
 	uint2 getnglobals(void);
 	MCVariable *getglobal(uint2 p_index);
 	bool enumerate(MCExecPoint& ep, bool p_first = true);
-
-	// MW-2013-11-15: [[ Bug 11277 ]] Methods for eval/exec in handlerlist context.
-	Exec_stat eval(MCExecPoint& ep);
-	Exec_stat doscript(MCExecPoint& ep, uint2 line, uint2 pos);
 	
 	uint2 getnvars(void)
 	{

@@ -659,16 +659,3 @@ bool MCHandlerlist::enumerate(MCExecPoint& ep, bool p_first)
 	
 	return p_first;
 }
-
-Exec_stat MCHandlerlist::eval(MCExecPoint& ep)
-{
-	// TODO: Implement execution outside of a handler.
-	return ES_ERROR;
-}
-
-Exec_stat MCHandlerlist::doscript(MCExecPoint& ep, uint2 line, uint2 pos)
-{
-	// TODO: Implement execution outside of a handler.
-	return ES_ERROR;
-}
-

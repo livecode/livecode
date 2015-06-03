@@ -377,7 +377,7 @@ static char *eval_expr(const char *arg1, const char *arg2,
 		return NULL;
 	}
 	MCEPptr->setsvalue(arg1);
-	*retval = trans_stat(MCEPptr->gethandler()->eval(*MCEPptr));
+	*retval = trans_stat(MCEPptr->eval(*MCEPptr));
 	return MCEPptr->getsvalue().clone();
 }
 

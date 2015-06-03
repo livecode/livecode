@@ -421,10 +421,8 @@ Exec_stat MCDo::exec(MCExecPoint &ep)
 	// MW-2013-11-15: [[ Bug 11277 ]] If no handler, then evaluate in context of the
 	//   server script object.
 	Exec_stat stat;
-	if (ep . gethandler() != nil)
-		stat = ep.gethandler()->doscript(*epptr, line, pos);
-	else
-		stat = ep.gethlist()->doscript(*epptr, line, pos);
+    stat = ep.doscript(*epptr, line, pos);
+    
 	if (added)
 		MCnexecutioncontexts--;
 	return stat;
