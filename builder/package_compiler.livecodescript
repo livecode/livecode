@@ -631,7 +631,9 @@ private command compilerRun @self, pInstaller
 end compilerRun
 
 private command compilerExecute @self, pCommands
-   repeat for each element tCommand in pCommands
+   local tCommand 
+   repeat with tCommandIndex = 0 to (the number of elements of pCommands-1)
+      put pCommands[tCommandIndex] into tCommand
       -- If we are ignoring commands at the moment (as a result of an if)
       -- then skip. Note we always execute pushes and pops to ensure
       -- nesting is sound.
