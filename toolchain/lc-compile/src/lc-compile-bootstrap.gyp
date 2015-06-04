@@ -56,6 +56,7 @@
 					'xcode_settings':
 					{
 						'OTHER_CFLAGS': [ '-W', '-Wno-error', '-std=gnu89' ],
+						'OTHER_CPLUSPLUSFLAGS': [],		# Suppress the default "$(OTHER_CFLAGS)"
 					},
 				},
 			],
@@ -103,7 +104,7 @@
 				[
 					'<(bison)',
 					'-o', '<@(_outputs)',
-					'-Wnone',				# Ignore warnings
+					#'-Wnone',				# Ignore warnings -- disabled as incompatible with XCode bison
 					'<(RULE_INPUT_PATH)',
 				],
 			},

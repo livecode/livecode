@@ -37,6 +37,8 @@
 			],
 		},
 		
+		'cross_compile%': '<(cross_compile)',
+		
 		'conditions':
 		[
 			[
