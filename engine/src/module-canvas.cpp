@@ -26,7 +26,7 @@
 
 //////////
 
-extern MCCommonWidget *MCcurrentwidget;
+extern MCWidgetRef MCcurrentwidget;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1760,7 +1760,7 @@ void MCCanvasImageMakeWithPath(MCStringRef p_path, MCCanvasImageRef &r_image)
 	MCImageRep *t_image_rep;
 	t_image_rep = nil;
 	
-	if (!MCImageGetRepForFileWithStackContext(p_path, MCcurrentwidget->GetHost()->getstack(), t_image_rep))
+	if (!MCImageGetRepForFileWithStackContext(p_path, MCWidgetGetPtr(MCcurrentwidget)->GetHost()->getstack(), t_image_rep))
 	{
 		MCCanvasThrowError(kMCCanvasImageRepReferencedErrorTypeInfo);
 		return;
