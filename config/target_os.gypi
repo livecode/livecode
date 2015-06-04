@@ -2,6 +2,7 @@
 	'variables':
 	{
 		'mobile': 0,
+		'src_top_dir_abs': '',	# Only needed for Linux and Android
 	},
 	
 	'conditions':

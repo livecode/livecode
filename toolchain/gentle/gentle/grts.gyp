@@ -12,6 +12,8 @@
 			
 			'toolsets': ['host','target'],
 			
+			'suppress_warnings': 1,
+			
 			'sources':
 			[
 				'grts.c',

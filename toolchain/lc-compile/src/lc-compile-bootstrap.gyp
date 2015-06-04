@@ -10,14 +10,14 @@
 		[
 			'lc-compile-sources.gypi',
 		],
-		
+
 		'dependencies':
 		[
 			'../../../libfoundation/libfoundation.gyp:libFoundation',
 			'../../../libscript/libscript.gyp:libScript',
-			'../../gentle/gentle/gentle.gyp:gentle',
+			'../../gentle/gentle/gentle.gyp:gentle#host',
 			'../../gentle/gentle/grts.gyp:grts',
-			'../../gentle/reflex/reflex.gyp:reflex',
+			'../../gentle/reflex/reflex.gyp:reflex#host',
 		],
 		
 		'include_dirs':
@@ -46,16 +46,15 @@
 					],
 				},
 				{
-					# Use an old C standard and disable warnings as these files
-					# are machine-generated
+					# Use an old C standardare machine-generated
 					'cflags_c':
 					[
-						'-w', '-Wno-error', '-Wno-return-type', '-std=gnu89',
+						'-std=gnu89',
 					],
 					
 					'xcode_settings':
 					{
-						'OTHER_CFLAGS': [ '-W', '-Wno-error', '-std=gnu89' ],
+						'OTHER_CFLAGS': [ '-std=gnu89' ],
 						'OTHER_CPLUSPLUSFLAGS': [],		# Suppress the default "$(OTHER_CFLAGS)"
 					},
 				},
@@ -143,6 +142,8 @@
 			'type': 'executable',
 			
 			'toolsets': ['host','target'],
+
+			'suppress_warnings': 1,
 
 			'product_name': 'lc-bootstrap-compile-<(_toolset)',
 			

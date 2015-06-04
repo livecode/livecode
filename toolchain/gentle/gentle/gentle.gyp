@@ -12,6 +12,8 @@
 			
 			'toolsets': ['host','target'],
 			
+			'suppress_warnings': 1,
+			
 			'product_name': 'gentle-<(_toolset)',
 			
 			'dependencies':

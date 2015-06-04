@@ -1,4 +1,6 @@
 {
+	'suppress_warnings': 1,
+	
 	'direct_dependent_settings':
 	{
 		'variables':

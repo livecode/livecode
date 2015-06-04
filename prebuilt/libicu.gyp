@@ -27,24 +27,8 @@
 			},
 			
 			'link_settings':
-			{
-				'variables':
-				{
-					'conditions':
-					[
-						[
-							'_toolset == "host"',
-							{
-								'toolset_os': '<(host_os)',
-							},
-							{
-								'toolset_os': '<(OS)',
-							},
-						],
-					],
-				},
-				
-				'conditions':
+			{	
+				'target_conditions':
 				[
 					[
 						'toolset_os == "mac"',
@@ -81,7 +65,7 @@
 							# Gyp doesn't seem to handle non-absolute paths here properly...
 							'library_dirs':
 							[
-								'<(src_top_dir_abs)/prebuilt/lib/linux/<(target_arch)',
+								'<(src_top_dir_abs)/prebuilt/lib/linux/>(toolset_arch)',
 							],
 							
 							'libraries':

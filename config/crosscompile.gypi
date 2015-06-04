@@ -61,6 +61,33 @@
 		{
 			'host_and_target': '0',
 			'host_only': '0',
+			
+			'conditions':
+			[
+				[
+					'cross_compile != 0',
+					{
+						'target_conditions':
+						[
+							[
+								'_toolset == "host"',
+								{
+									'toolset_os': '<(host_os)',
+									'toolset_arch': '<(host_arch)',
+								},
+								{
+									'toolset_os': '<(OS)',
+									'toolset_arch': '<(target_arch)',
+								},
+							],
+						],
+					},
+					{
+						'toolset_os': '<(OS)',
+						'toolset_arch': '<(target_arch)',
+					},
+				],
+			],
 		},
 		
 		'target_conditions':
