@@ -211,7 +211,6 @@
 			'src/sellst.h',
 			'src/stack.h',
 			'src/stacklst.h',
-			'src/stacktile.h',
 			'src/styledtext.h',
 			'src/textbuffer.h',
 			'src/tooltip.h',
@@ -287,7 +286,6 @@
 			'src/stackcache.cpp',
 			'src/stacke.cpp',
 			'src/stacklst.cpp',
-			'src/stacktile.cpp',
 			'src/stackview.cpp',
 			'src/styledtext.cpp',
 			'src/tooltip.cpp',
@@ -484,7 +482,6 @@
 			'src/osspec.h',
 			'src/sysdefs.h',
 			'src/system.h',
-			'src/systhreads.h',
 			'src/typedefs.h',
 			'src/syscfdate.cpp',
 			'src/syslnxfs.cpp',
@@ -495,13 +492,11 @@
 			'src/sysunxdate.cpp',
 			'src/sysunxnetwork.cpp',
 			'src/sysunxrandom.cpp',
-			'src/sysunxthreads.cpp',
 			'src/sysw32fs.cpp',
 			'src/sysw32network.cpp',
 			'src/sysw32random.cpp',
 			'src/sysw32region.cpp',
 			'src/sysw32registry.cpp',
-			'src/sysw32threads.cpp',
 			
 			# Group "Desktop"
 			'src/quicktime.cpp',
@@ -961,7 +956,6 @@
 					'sources!':
 					[
 						'src/player-platform.cpp',
-						'src/stacktile.cpp',
 						'src/sysunxnetwork.cpp',
 					],
 				},
