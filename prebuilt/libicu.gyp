@@ -10,6 +10,8 @@
 			'target_name': 'libicu',
 			'type': 'none',
 
+			'toolsets': ['host','target'],
+
 			'dependencies':
 			[
 				'fetch.gyp:fetch',
@@ -26,10 +28,26 @@
 			
 			'link_settings':
 			{
+				'variables':
+				{
+					'conditions':
+					[
+						[
+							'_toolset == "host"',
+							{
+								'toolset_os': '<(host_os)',
+							},
+							{
+								'toolset_os': '<(OS)',
+							},
+						],
+					],
+				},
+				
 				'conditions':
 				[
 					[
-						'OS == "mac"',
+						'toolset_os == "mac"',
 						{
 							'libraries':
 							[
@@ -58,7 +76,7 @@
 						},
 					],
 					[
-						'OS == "linux"',
+						'toolset_os == "linux"',
 						{
 							# Gyp doesn't seem to handle non-absolute paths here properly...
 							'library_dirs':
@@ -75,6 +93,7 @@
 								'-licutu',
 								'-licuuc',
 								'-licudata',
+								'-ldl',
 							],
 						},
 					],

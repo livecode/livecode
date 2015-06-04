@@ -10,12 +10,22 @@
 			'target_name': 'gentle',
 			'type': 'executable',
 			
-			#'toolsets': [ '<(host_only)' ],
+			'toolsets': ['host','target'],
+			
+			'product_name': 'gentle-<(_toolset)',
 			
 			'dependencies':
 			[ 
 				'./grts.gyp:grts'
 			],
+			
+			'direct_dependent_settings':
+			{
+				'variables':
+				{
+					'gentle_exe_file': '<(PRODUCT_DIR)/<(_product_name)<(EXECUTABLE_SUFFIX)',
+				},
+			},
 			
 			'sources':
 			[

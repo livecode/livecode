@@ -36,5 +36,45 @@
 				],
 			],
 		},
+		
+		'conditions':
+		[
+			[
+				'cross_compile != 0',
+				{
+					'host_toolset_var': ['host'],
+					'both_toolset_var': ['host','target'],
+				},
+				{
+					'host_toolset_var': ['target'],
+					'both_toolset_var': ['target'],
+				},
+			],
+		],
+	},
+	
+	'target_defaults':
+	{
+		'variables':
+		{
+			'host_and_target': '0',
+			'host_only': '0',
+		},
+		
+		'target_conditions':
+		[
+			[
+				'host_and_target != 0',
+				{
+					'toolsets': ['<@(both_toolset_var)'],
+				},
+			],
+			[
+				'host_and_target == 0 and host_only != 0',
+				{
+					'toolsets': ['<@(host_toolset_var)'],
+				},
+			],
+		],
 	},
 }
