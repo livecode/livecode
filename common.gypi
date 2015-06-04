@@ -10,6 +10,7 @@
 		'config/perl.gypi',
 		'config/target_os.gypi',
 		'config/thirdparty.gypi',
+		'config/warnings.gypi',
 		'config/yacc.gypi',
 	],
 }
