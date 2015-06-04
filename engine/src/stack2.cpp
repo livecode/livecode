@@ -2599,69 +2599,12 @@ void MCStack::view_surface_redrawwindow(MCStackSurface *p_surface, MCGRegionRef 
 	{
         MCGIntegerRectangle t_bounds;
         t_bounds = MCGRegionGetBounds(p_region);
-        
-        uint32_t t_cores;
-        t_cores = MCThreadGetNumberOfCores();
-        
-        // MM-2014-07-31: [[ ThreadedRendering ]] If the region is suitably large and the machine supports simultaneous execution,
-        //  split the stack surface into multiple regions and render each in an individual thread. The collect all function waits until all pending tiles have been rendered.
-        //  For dual core machines, we just split things into top and bottom half.
-        //  For machines with 4 or more cores, we split into 4 tiles -  top left, top right, bottom left, bottom right.
-        if (t_cores > 1 && t_bounds . size . width > 32 && t_bounds . size . height > 32)
+    
+        MCGContextStackTile t_tile(this, p_surface, t_bounds);
+        if (t_tile . Lock())
         {
-            if (t_cores >= 4)
-            {
-                MCGContextStackTile t_tile1(this, p_surface,
-                                            MCGIntegerRectangleMake(t_bounds . origin . x,
-                                                                    t_bounds . origin . y,
-                                                                    t_bounds . size . width / 2,
-                                                                    t_bounds . size . height / 2));
-                MCGContextStackTile t_tile2(this, p_surface,
-                                            MCGIntegerRectangleMake(t_bounds . origin . x + t_bounds . size . width / 2,
-                                                                    t_bounds . origin . y,
-                                                                    t_bounds . size . width - t_bounds . size . width / 2,
-                                                                    t_bounds . size . height / 2));
-                MCGContextStackTile t_tile3(this, p_surface,
-                                            MCGIntegerRectangleMake(t_bounds . origin . x,
-                                                                    t_bounds . origin . y + t_bounds . size . height / 2,
-                                                                    t_bounds . size . width / 2,
-                                                                    t_bounds . size . height - t_bounds . size . height / 2));
-                MCGContextStackTile t_tile4(this, p_surface,
-                                            MCGIntegerRectangleMake(t_bounds . origin . x + t_bounds . size . width / 2,
-                                                                    t_bounds . origin . y + t_bounds . size . height / 2,
-                                                                    t_bounds . size . width - t_bounds . size . width / 2,
-                                                                    t_bounds . size . height - t_bounds . size . height / 2));
-                MCStackTilePush(&t_tile1);
-                MCStackTilePush(&t_tile2);
-                MCStackTilePush(&t_tile3);
-                MCStackTilePush(&t_tile4);
-                MCStackTileCollectAll();
-            }
-            else
-            {
-                MCGContextStackTile t_tile1(this, p_surface,
-                                            MCGIntegerRectangleMake(t_bounds . origin . x,
-                                                                    t_bounds . origin . y,
-                                                                    t_bounds . size . width,
-                                                                    t_bounds . size . height / 2));
-                MCGContextStackTile t_tile2(this, p_surface,
-                                            MCGIntegerRectangleMake(t_bounds . origin . x,
-                                                                    t_bounds . origin . y + t_bounds . size . height / 2,
-                                                                    t_bounds . size . width,
-                                                                    t_bounds . size . height - t_bounds . size . height / 2));
-                MCStackTilePush(&t_tile1);
-                MCStackTilePush(&t_tile2);
-                MCStackTileCollectAll();
-            }
-        }
-        else
-        {
-            MCGContextStackTile t_tile(this, p_surface, t_bounds);
-            if (t_tile . Lock())
-            {
-                t_tile . Render();
-                t_tile . Unlock();
-            }
+            t_tile . Render();
+            t_tile . Unlock();
         }
 	}
 	else

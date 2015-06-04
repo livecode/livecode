@@ -596,38 +596,44 @@ private command revCreateStandalone pStack, pFolder
          end switch
       else
          -- Make sure the platform is correct
+         // SN-2015-05-15: [[ DeployAllPlatforms ]] Allow the deployment to happen
+         //  for another platform, from the repository.
+         local tBinariesPath
+         
          if tPlatform contains "MacOSX" and the platform is not "macos" or \
-               tPlatform is "Linux" and the platform is not "linux" or \
+               tPlatform contains "Linux" and the platform is not "linux" or \
                tPlatform is "Windows" and the platform is not "win32" then
-            put empty into tEngineSourceFile[tPlatform]
+            put revEnvironmentNonNativeBinariesPath(tPlatform) into tBinariesPath
          else
-            switch word 1 of tPlatform
-               case "MacOSX"
-                  if revLicenseType() is "community" then
-                     put revEnvironmentBinariesPath() & slash & "Standalone-Community.app/Contents/MacOS/Standalone-Community" into tEngineSourceFile[tPlatform]
-                  else
-                     put revEnvironmentBinariesPath() & slash & "Standalone-Commercial.app/Contents/MacOS/Standalone-Commercial" into tEngineSourceFile[tPlatform]
-                  end if
-                  break;
-               case "Windows"
-                  if revLicenseType() is "community" then
-                     put revEnvironmentBinariesPath() & slash & "standalone-community.exe" into tEngineSourceFile[tPlatform]
-                  else
-                     put revEnvironmentBinariesPath() & slash & "standalone-commercial.exe" into tEngineSourceFile[tPlatform]
-                  end if
-                  break
-               case "Linux"
-                  if revLicenseType() is "community" then
-                     put revEnvironmentBinariesPath() & slash & "standalone-community" into tEngineSourceFile[tPlatform]
-                  else
-                     put revEnvironmentBinariesPath() & slash & "standalone-commercial" into tEngineSourceFile[tPlatform]
-                  end if
-                  break
-               default
-                  put empty into tEngineSourceFile[tPlatform]
-                  break
-            end switch
+            put revEnvironmentBinariesPath() into tBinariesPath
          end if
+         
+         switch word 1 of tPlatform
+            case "MacOSX"
+               if revLicenseType() is "community" then
+                  put tBinariesPath & slash & "Standalone-Community.app/Contents/MacOS/Standalone-Community" into tEngineSourceFile[tPlatform]
+               else
+                  put tBinariesPath & slash & "Standalone-Commercial.app/Contents/MacOS/Standalone-Commercial" into tEngineSourceFile[tPlatform]
+               end if
+               break;
+            case "Windows"
+               if revLicenseType() is "community" then
+                  put tBinariesPath & slash & "standalone-community.exe" into tEngineSourceFile[tPlatform]
+               else
+                  put tBinariesPath & slash & "standalone-commercial.exe" into tEngineSourceFile[tPlatform]
+               end if
+               break
+            case "Linux"
+               if revLicenseType() is "community" then
+                  put tBinariesPath & slash & "standalone-community" into tEngineSourceFile[tPlatform]
+               else
+                  put tBinariesPath & slash & "standalone-commercial" into tEngineSourceFile[tPlatform]
+               end if
+               break
+            default
+               put empty into tEngineSourceFile[tPlatform]
+               break
+         end switch
       end if
       
       -- Necessary as some "users" might rename the actual executable file, arghhhh!

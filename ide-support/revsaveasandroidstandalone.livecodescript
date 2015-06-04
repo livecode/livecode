@@ -52,6 +52,29 @@ private command buildAPK pUnalignedApkFile, pUnsignedParam, pAssetArchive, pClas
    return tResult
 end buildAPK
 
+private function updateMinimumAPI pVersionSet, pLimit
+   local tLimitType
+   if pVersionSet < pLimit then
+      put "lowest" into tLimitType
+   else
+      put "highest" into tLimitType
+   end if
+   
+   answer "The minimum Android API is currently set to" && \
+         pVersionSet && \
+         "but the" & tLimitType & " Android API available from LiveCode" && the version && \
+         "is" && pLimit & "." & LF & \
+         "Do you want to update the minimum Android API to" && pLimit & "?" \
+         with "No" or "Yes" \
+         titled "Minimum Android API error"
+   
+   return (it is "Yes")
+end updateMinimumAPI
+
+private function badAndroidApiMessage
+   return "Not a valid Android API"
+end badAndroidApiMessage
+
 private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    start using stack "revSBLibrary"
    
@@ -91,8 +114,28 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    if tSettings["android,status bar hidden"] is empty then
       put "false" into tSettings["android,status bar hidden"]
    end if
+   
+   // SN-2015-05-13: [[ AndroidVersions ]] Make sure that the minimum version is
+   // the minimum version that we can use.
+   put item 1 of revIDEDeployAndroidGetApisList() into tMinimumVersion
+   put last item of revIDEDeployAndroidGetApisList() into tMaximumVersion
+   
    if tSettings["android,minimum version"] is empty then
-      put 8 into tSettings["android,minimum version"]
+      put tMinimumVersion into tSettings["android,minimum version"]
+   else if tSettings["android,minimum version"] < tMinimumVersion then
+      // In case the minimum version is still 2.2 (for instance), we warn the user
+      //  that we want to update it, before doing so.
+      if updateMinimumAPI(tSettings["android,minimum version"], tMinimumVersion) then
+         put tMinimumVersion into tSettings["android,minimum version"]
+      else
+         throw badAndroidAPIMessage()
+      end if
+   else if tSettings["android,minimum version"] > tMaximumVersion then
+      if updateMinimumAPI(tSettings["android,minimum version"], tMaximumVersion) then
+         put tMaximumVersion into tSettings["android,minimum version"]
+      else
+         throw badAndroidAPIMessage()
+      end if
    end if
    
    put tSettings["android,statusBarIcon"] into tStatusBarIcon
