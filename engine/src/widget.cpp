@@ -61,7 +61,22 @@ void MCCanvasPop(uintptr_t p_cookie);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCWidget *MCwidgetobject;
+class MCWidgetHandle
+{
+public:
+    virtual bool IsRoot(void);
+    virtual MCWidget *GetWidgetPtr(void);
+    virtual MCChildWidget *GetChildWidgetPtr(void);
+    
+    virtual MCGRectangle GetFrame(void);
+    virtual void SetFrame(MCGRectangle);
+    
+    virtual MCGFloat GetWidth(void);
+    virtual MCGFloat GetHeight(void);
+    
+};
+
+MCWidgetHandleRef MCcurrentwidget;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -83,6 +98,7 @@ MCWidget::MCWidget(void)
 {
     m_kind = MCValueRetain(kMCEmptyName);
     m_instance = nil;
+    m_children = nil;
     m_native_layer = nil;
     m_rep = nil;
     m_timer_deferred = false;
@@ -93,6 +109,7 @@ MCWidget::MCWidget(const MCWidget& p_other) :
 {
     m_kind = MCValueRetain(kMCEmptyName);
     m_instance = nil;
+    m_children = nil;
     m_native_layer = nil;
     m_rep = nil;
     m_timer_deferred = false;
@@ -1475,9 +1492,9 @@ bool MCWidget::CallHandler(MCNameRef p_name, MCValueRef* x_parameters, uindex_t 
     if (m_instance == nil)
         return true;
     
-	MCWidget *t_old_widget_object;
-	t_old_widget_object = MCwidgetobject;
-	MCwidgetobject = this;
+	MCWidgetHandleRef t_old_widget_object;
+	t_old_widget_object = MCcurrentwidget;
+	MCcurrentwidget = m_self;
 	
 	MCStack *t_old_default_stack, *t_this_stack;
 	t_old_default_stack = MCdefaultstackptr;
@@ -1510,7 +1527,7 @@ bool MCWidget::CallHandler(MCNameRef p_name, MCValueRef* x_parameters, uindex_t 
         senderror();
     }
     
-	MCwidgetobject = t_old_widget_object;
+	MCcurrentwidget = t_old_widget_object;
     
 	MCtargetptr = t_old_target;
 	if (MCdefaultstackptr == t_this_stack)
@@ -1527,15 +1544,15 @@ bool MCWidget::CallGetProp(MCExecContext& ctxt, MCNameRef p_property, MCNameRef 
         return true;
     }
     
-	MCWidget *t_old_widget_object;
-	t_old_widget_object = MCwidgetobject;
-	MCwidgetobject = this;
+	MCWidgetHandleRef t_old_widget_object;
+	t_old_widget_object = MCcurrentwidget;
+	MCcurrentwidget = m_self;
 
     // Invoke event handler.
     bool t_success;
     t_success = MCScriptGetPropertyOfInstance(m_instance, p_property, r_value);
     
-	MCwidgetobject = t_old_widget_object;
+	MCcurrentwidget = t_old_widget_object;
     
     if (t_success)
     {
@@ -1553,9 +1570,9 @@ bool MCWidget::CallSetProp(MCExecContext& ctxt, MCNameRef p_property, MCNameRef 
         return true;
     }
     
-	MCWidget *t_old_widget_object;
-	t_old_widget_object = MCwidgetobject;
-	MCwidgetobject = this;
+	MCWidgetHandleRef t_old_widget_object;
+	t_old_widget_object = MCcurrentwidget;
+	MCcurrentwidget = m_self;
     
     // Convert to the appropriate type
     MCTypeInfoRef t_gettype, t_settype;
@@ -1572,7 +1589,7 @@ bool MCWidget::CallSetProp(MCExecContext& ctxt, MCNameRef p_property, MCNameRef 
     bool t_success;
     t_success = MCScriptSetPropertyOfInstance(m_instance, p_property, p_value);
     
-	MCwidgetobject = t_old_widget_object;
+	MCcurrentwidget = t_old_widget_object;
 
 	return t_success;
 }
@@ -1785,45 +1802,147 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCWidgetHandleIsRoot(MCWidgetHandleRef self);
+MCWidget *MCWidgetHandleGetWidgetPtr(MCWidgetHandleRef self);
+MCChildWidget *MCWidgetHandleGetChildWidgetPtr(MCWidgetHandleRef self);
+
+////////////////////////////////////////////////////////////////////////////////
+
 static bool MCWidgetThrowNoCurrentWidgetError(void)
 {
 	return MCErrorCreateAndThrow(kMCWidgetNoCurrentWidgetErrorTypeInfo, nil);
+}
+
+static bool MCWidgetEnsureCurrentWidget(void)
+{
+    if (MCcurrentwidget == nil)
+    {
+        MCWidgetThrowNoCurrentWidgetError();
+        return false;
+    }
+    
+    return true;
+}
+
+static bool MCWidgetEnsureCurrentWidgetIsRoot(void)
+{
+    if (!MCWidgetEnsureCurrentWidget())
+        return false;
+    
+    if (!MCWidgetHandleIsRoot(MCcurrentwidget))
+    {
+        MCWidgetThrowNotSupportedInChildWidgetError();
+        return false;
+    }
+    
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static void MCWidgetHandleRedrawAll(MCWidgetHandleRef self)
+{
+    if (MCWidgetHandleIsRoot(self))
+        MCWidgetHandleGetWidgetPtr(self) -> layer_redrawall();
+    else
+    {
+        // Handle child widget redraw.
+    }
+}
+
+static MCGRectangle MCWidgetHandleGetFrame(MCWidgetHandleRef self)
+{
+    if (MCWidgetHandleIsRoot(self))
+    {
+        MCWidget *t_widget;
+        t_widget = MCWidgetHandleGetWidgetPtr(self);
+        
+        MCRectangle t_rect;
+        t_rect = t_widget -> getrect();
+        
+        // Adjust for the parent's rect
+        MCRectangle t_parent_rect;
+        t_parent_rect = t_widget->getparent()->getrect();
+        t_rect.x -= t_parent_rect.x;
+        t_rect.y -= t_parent_rect.y;
+        
+        return MCGRectangleMake(t_rect.x, t_rect.y, t_rect.width, t_rect.height);
+    }
+    else
+    {
+        // Handle child widget getframe
+    }
+}
+
+static MCGRectangle MCWidgetHandleGetBounds(MCWidgetHandleRef self)
+{
+    if (MCWidgetHandleIsRoot(self))
+    {
+        MCWidget *t_widget;
+        t_widget = MCWidgetHandleGetWidgetPtr(self);
+        
+        MCRectangle t_rect;
+        t_rect = t_widget -> getrect();
+        
+        return MCGRectangleMake(0, 0, t_rect.width, t_rect.height);
+    }
+    else
+    {
+        // Handle child widget bounds
+    }
+}
+
+static MCGFloat MCWidgetHandleGetWidth(MCWidgetHandleRef self)
+{
+    if (MCWidgetHandleIsRoot(self))
+    {
+        MCWidget *t_widget;
+        t_widget = MCWidgetHandleGetWidgetPtr(self);
+        
+        return t_widget -> getrect() . width;
+    }
+    else
+    {
+        // Handle child widget width
+    }
+}
+
+static MCGFloat MCWidgetHandleGetHeight(MCWidgetHandleRef self)
+{
+    
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 extern "C" MC_DLLEXPORT void MCWidgetExecRedrawAll(void)
 {
-    if (MCwidgetobject == nil)
-    {
-        MCWidgetThrowNoCurrentWidgetError();
+    if (!MCWidgetEnsureCurrentWidget())
         return;
-    }
     
-    MCwidgetobject -> layer_redrawall();
+    MCWidgetRedrawAll(MCcurrentwidget);
 }
 
 extern "C" MC_DLLEXPORT void MCWidgetExecScheduleTimerIn(double p_after)
 {
-    if (MCwidgetobject == nil)
-    {
-        MCWidgetThrowNoCurrentWidgetError();
+    if (!MCWidgetEnsureCurrentWidgetIsRoot())
         return;
-    }
     
-    MCscreen -> cancelmessageobject(MCwidgetobject, MCM_internal);
-    MCscreen -> addtimer(MCwidgetobject, MCM_internal, (uint4)(p_after * 1000));
+    MCWidget *t_widget;
+    t_widget = MCWidgetHandleGetWidgetPtr(MCcurrentwidget);
+    
+    MCscreen -> cancelmessageobject(t_widget, MCM_internal);
+    MCscreen -> addtimer(t_widget, MCM_internal, (uint4)(p_after * 1000));
 }
 
 extern "C" MC_DLLEXPORT void MCWidgetExecCancelTimer(void)
 {
-    if (MCwidgetobject == nil)
-    {
-        MCWidgetThrowNoCurrentWidgetError();
+    if (!MCWidgetEnsureCurrentWidgetIsRoot())
         return;
-    }
     
-    MCscreen -> cancelmessageobject(MCwidgetobject, MCM_internal);
+    MCWidget *t_widget;
+    t_widget = MCWidgetHandleGetWidgetPtr(MCcurrentwidget);
+    
+    MCscreen -> cancelmessageobject(t_widget, MCM_internal);
 }
 
 extern "C" MC_DLLEXPORT void MCWidgetEvalInEditMode(bool& r_in_edit_mode)
@@ -1838,73 +1957,55 @@ extern void MCEngineDoPostToObjectWithArguments(MCStringRef p_message, MCObject 
 
 extern "C" MC_DLLEXPORT void MCWidgetGetScriptObject(MCScriptObjectRef& r_script_object)
 {
-    if (MCwidgetobject == nil)
-    {
-        MCWidgetThrowNoCurrentWidgetError();
+    if (!MCWidgetEnsureCurrentWidgetIsRoot())
         return;
-    }
     
-    if (!MCEngineScriptObjectCreate(MCwidgetobject, 0, r_script_object))
+    if (!MCEngineScriptObjectCreate(MCWidgetHandleGetWidgetPtr(MCcurrentwidget), 0, r_script_object))
         return;
 }
 
 extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecSend(bool p_is_function, MCStringRef p_message)
 {
-    if (MCwidgetobject == nil)
-    {
-        MCWidgetThrowNoCurrentWidgetError();
+    if (!MCWidgetEnsureCurrentWidgetIsRoot())
         return nil;
-    }
     
-    return MCEngineDoSendToObjectWithArguments(p_is_function, p_message, MCwidgetobject, kMCEmptyProperList);
+    return MCEngineDoSendToObjectWithArguments(p_is_function, p_message, MCWidgetHandleGetWidgetPtr(MCcurrentwidget), kMCEmptyProperList);
 }
 
 extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecSendWithArguments(bool p_is_function, MCStringRef p_message, MCProperListRef p_arguments)
 {
-    if (MCwidgetobject == nil)
-    {
-        MCWidgetThrowNoCurrentWidgetError();
+    if (!MCWidgetEnsureCurrentWidgetIsRoot())
         return nil;
-    }
     
-    return MCEngineDoSendToObjectWithArguments(p_is_function, p_message, MCwidgetobject, p_arguments);
+    return MCEngineDoSendToObjectWithArguments(p_is_function, p_message, MCWidgetHandleGetWidgetPtr(MCcurrentwidget), p_arguments);
 }
 
 extern "C" MC_DLLEXPORT void MCWidgetExecPost(MCStringRef p_message)
 {
-    if (MCwidgetobject == nil)
-    {
-        MCWidgetThrowNoCurrentWidgetError();
+    if (!MCWidgetEnsureCurrentWidgetIsRoot())
         return;
-    }
     
-    MCEngineDoPostToObjectWithArguments(p_message, MCwidgetobject, kMCEmptyProperList);
+    MCEngineDoPostToObjectWithArguments(p_message, MCWidgetHandleGetWidgetPtr(MCcurrentwidget), kMCEmptyProperList);
 }
 
 extern "C" MC_DLLEXPORT void MCWidgetExecPostWithArguments(MCStringRef p_message, MCProperListRef p_arguments)
 {
-    if (MCwidgetobject == nil)
-    {
-        MCWidgetThrowNoCurrentWidgetError();
+    if (!MCWidgetEnsureCurrentWidgetIsRoot())
         return;
-    }
     
-    MCEngineDoPostToObjectWithArguments(p_message, MCwidgetobject, p_arguments);
+    MCEngineDoPostToObjectWithArguments(p_message, MCWidgetHandleGetWidgetPtr(MCcurrentwidget), p_arguments);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 extern "C" MC_DLLEXPORT void MCWidgetGetRectangle(MCCanvasRectangleRef& r_rect)
 {
-    if (MCwidgetobject == nil)
-    {
-        MCWidgetThrowNoCurrentWidgetError();
+    if (!MCWidgetEnsureCurrentWidgetIsRoot())
         return;
-    }
     
     MCRectangle t_rect;
     MCGRectangle t_grect;
-    t_rect = MCwidgetobject -> getrect();
+    t_rect = MCWidgetHandleGetWidgetPtr(MCcurrentwidget) -> getrect();
     
     // Absolute rectangle
     t_grect = MCGRectangleMake(t_rect.x, t_rect.y, t_rect.width, t_rect.height);
@@ -1913,72 +2014,40 @@ extern "C" MC_DLLEXPORT void MCWidgetGetRectangle(MCCanvasRectangleRef& r_rect)
 
 extern "C" MC_DLLEXPORT void MCWidgetGetFrame(MCCanvasRectangleRef& r_rect)
 {
-    if (MCwidgetobject == nil)
-    {
-        MCWidgetThrowNoCurrentWidgetError();
+    if (!MCWidgetEnsureCurrentWidget())
         return;
-    }
     
-    MCRectangle t_rect;
-    MCGRectangle t_grect;
-    t_rect = MCwidgetobject -> getrect();
-    
-    // Adjust for the parent's rect
-    MCRectangle t_parent_rect;
-    t_parent_rect = MCwidgetobject->getparent()->getrect();
-    t_rect.x -= t_parent_rect.x;
-    t_rect.y -= t_parent_rect.y;
-    
-    t_grect = MCGRectangleMake(t_rect.x, t_rect.y, t_rect.width, t_rect.height);
-    MCCanvasRectangleCreateWithMCGRectangle(t_grect, r_rect);
+    MCCanvasRectangleCreateWithMCGRectangle(MCWidgetHandleGetFrame(MCcurrentwidget), r_rect);
 }
 
 extern "C" MC_DLLEXPORT void MCWidgetGetBounds(MCCanvasRectangleRef& r_rect)
 {
-    if (MCwidgetobject == nil)
-    {
-        MCWidgetThrowNoCurrentWidgetError();
+    if (!MCWidgetEnsureCurrentWidget())
         return;
-    }
     
-    MCRectangle t_rect;
-    MCGRectangle t_grect;
-    t_rect = MCwidgetobject -> getrect();
-    
-    // Only the size is wanted
-    t_grect = MCGRectangleMake(0, 0, t_rect.width, t_rect.height);
-    MCCanvasRectangleCreateWithMCGRectangle(t_grect, r_rect);
+    MCCanvasRectangleCreateWithMCGRectangle(MCWidgetHandleGetBounds(MCcurrentwidget), r_rect);
 }
 
 extern "C" MC_DLLEXPORT void MCWidgetGetWidth(MCNumberRef& r_width)
 {
-    if (MCwidgetobject == nil)
-    {
-        MCWidgetThrowNoCurrentWidgetError();
+    if (!MCWidgetEnsureCurrentWidget())
         return;
-    }
     
-    MCNumberCreateWithReal(MCwidgetobject->getrect().width, r_width);
+    MCNumberCreateWithReal(MCWidgetHandleGetWidth(MCcurrentwidget), r_width);
 }
 
 extern "C" MC_DLLEXPORT void MCWidgetGetHeight(MCNumberRef& r_height)
 {
-    if (MCwidgetobject == nil)
-    {
-        MCWidgetThrowNoCurrentWidgetError();
+    if (!MCWidgetEnsureCurrentWidget())
         return;
-    }
     
-    MCNumberCreateWithReal(MCwidgetobject->getrect().height, r_height);
+    MCNumberCreateWithReal(MCWidgetHandleGetHeight(MCcurrentwidget), r_height);
 }
 
 extern "C" MC_DLLEXPORT void MCWidgetSetWidth(MCNumberRef p_width)
 {
-    if (MCwidgetobject == nil)
-    {
-        MCWidgetThrowNoCurrentWidgetError();
+    if (!MCWidgetEnsureCurrentWidget())
         return;
-    }
     
     MCRectangle t_rect = MCwidgetobject->getrect();
     t_rect.width = MCNumberFetchAsReal(p_width);
@@ -1987,11 +2056,8 @@ extern "C" MC_DLLEXPORT void MCWidgetSetWidth(MCNumberRef p_width)
 
 extern "C" MC_DLLEXPORT void MCWidgetSetHeight(MCNumberRef p_height)
 {
-    if (MCwidgetobject == nil)
-    {
-        MCWidgetThrowNoCurrentWidgetError();
+    if (!MCWidgetEnsureCurrentWidget())
         return;
-    }
     
     MCRectangle t_rect = MCwidgetobject->getrect();
     t_rect.height = MCNumberFetchAsReal(p_height);
@@ -2000,11 +2066,8 @@ extern "C" MC_DLLEXPORT void MCWidgetSetHeight(MCNumberRef p_height)
 
 extern "C" MC_DLLEXPORT void MCWidgetGetFont(MCCanvasFontRef& r_canvas_font)
 {
-    if (MCwidgetobject == nil)
-    {
-        MCWidgetThrowNoCurrentWidgetError();
+    if (!MCWidgetEnsureCurrentWidgetIsRoot())
         return;
-    }
     
     MCAutoCustomPointer<struct MCFont, MCFontRelease> t_font;
     if (!MCwidgetobject -> copyfont(&t_font))
@@ -2016,22 +2079,16 @@ extern "C" MC_DLLEXPORT void MCWidgetGetFont(MCCanvasFontRef& r_canvas_font)
 
 extern "C" MC_DLLEXPORT void MCWidgetGetEnabled(bool& r_enabled)
 {
-    if (MCwidgetobject == nil)
-    {
-        MCWidgetThrowNoCurrentWidgetError();
+    if (!MCWidgetEnsureCurrentWidget())
         return;
-    }
     
     r_enabled = !MCwidgetobject -> getflag(F_DISABLED);
 }
 
 extern "C" MC_DLLEXPORT void MCWidgetGetDisabled(bool& r_disabled)
 {
-    if (MCwidgetobject == nil)
-    {
-        MCWidgetThrowNoCurrentWidgetError();
+    if (!MCWidgetEnsureCurrentWidget())
         return;
-    }
     
     r_disabled = MCwidgetobject -> getflag(F_DISABLED);
 }
@@ -2331,8 +2388,6 @@ extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecPopupAtLocation(MCStringRef p_kin
 	return MCWidgetExecPopupAtLocationWithProperties(p_kind, p_at, kMCEmptyArray);
 }
 
-
-
 extern "C" MC_DLLEXPORT void MCWidgetEvalIsPopup(bool &r_popup)
 {
 	if (MCwidgetobject == nil)
@@ -2372,32 +2427,22 @@ extern "C" MC_DLLEXPORT void MCWidgetExecClosePopup(MCValueRef p_result)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCErrorCreateNamedTypeInfo(MCNameRef p_domain, MCNameRef p_name, MCStringRef p_message, MCTypeInfoRef &r_error_type)
+extern "C" MC_DLLEXPORT void MCWidgetEvalThisWidget(MCWidgetRef& r_widget)
 {
-	MCAutoTypeInfoRef t_type, t_named_type;
-	
-	if (!MCErrorTypeInfoCreate(p_domain, p_message, &t_type))
-		return false;
-	
-	if (!MCNamedTypeInfoCreate(p_name, &t_named_type))
-		return false;
-	
-	if (!MCNamedTypeInfoBind(*t_named_type, *t_type))
-		return false;
-	
-	r_error_type = MCValueRetain(*t_named_type);
-	return true;
+    
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCTypeInfoRef kMCWidgetNoCurrentWidgetErrorTypeInfo = nil;
 MCTypeInfoRef kMCWidgetSizeFormatErrorTypeInfo = nil;
 
 bool MCWidgetModuleInitialize(void)
 {
-	if (!MCErrorCreateNamedTypeInfo(MCNAME("widget"), MCNAME("com.livecode.widget.NoCurrentWidgetError"), MCSTR("No current widget."), kMCWidgetNoCurrentWidgetErrorTypeInfo))
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.widget.NoCurrentWidgetError"), MCNAME("widget"), MCSTR("No current widget."), kMCWidgetNoCurrentWidgetErrorTypeInfo))
 		return false;
 	
-	if (!MCErrorCreateNamedTypeInfo(MCNAME("widget"), MCNAME("com.livecode.widget.WidgetSizeFormatError"), MCSTR("Size must be a list of two numbers"), kMCWidgetSizeFormatErrorTypeInfo))
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.widget.WidgetSizeFormatError"), MCNAME("widget"), MCSTR("Size must be a list of two numbers"), kMCWidgetSizeFormatErrorTypeInfo))
 		return false;
 	
 	return true;

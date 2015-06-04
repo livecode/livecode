@@ -22,6 +22,25 @@
 
 #include "script.h"
 
+class MCChildWidget
+{
+public:
+    MCChildWidget(void);
+    virtual ~MCChildWidget(void);
+    
+private:
+    MCNameRef m_kind;
+    MCScriptInstanceRef m_instance;
+    
+    uindex_t m_references;
+    
+    MCChildWidget *m_owner;
+    MCChildWidget *m_previous_sibling;
+    MCChildWidget *m_next_sibling;
+    MCChildWidget *m_children;
+    
+    MCGRectangle m_frame;
+};
 
 class MCWidget: public MCControl
 {
@@ -221,6 +240,9 @@ private:
     // The kind and script instance for this widget
     MCNameRef m_kind;
     MCScriptInstanceRef m_instance;
+    
+    // The children of the widget
+    MCChildWidget *m_children;
     
     // The rep of the widget - this is non-nil if the widget kind is unresolved
     // after loading.
