@@ -4799,9 +4799,11 @@ void MCObject::relayercontrol_insert(MCControl *p_control, MCControl *p_target)
 {
 }
 
-void MCObject::scheduledelete(void)
+void MCObject::scheduledelete(bool p_is_child)
 {
-	appendto(MCtodelete);
+    if (!p_is_child)
+        appendto(MCtodelete);
+    
 	if (m_weak_handle != nil)
 	{
 		m_weak_handle -> Clear();

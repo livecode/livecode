@@ -1275,7 +1275,10 @@ void revZipEnumerateItems(char *p_arguments[], int p_argument_count, char **r_re
 			{
 				std::string t_outerr = "ziperr," + std::string((zip_strerror(t_archive)));
 				t_result = strdup(t_outerr.c_str());
-				t_error = False;
+                // SN-2015-06-02: [[ CID 90610 ]] Quit the loop if an error is
+                //  encountered - and set t_error to the right value.
+				t_error = True;
+                break;
 			}
 			else
 			{

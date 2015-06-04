@@ -696,7 +696,7 @@ MCDataRef MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const 
 			//  the time between the call to WSAAsyncSelect in setselect()
 			//  and the call to s->read_done() below might not be enough
 			//  to let Windows send the message to MCWindowProc.
-			//  If that occurs, with a read until empty, no byte will be 
+            //  If that occurs, with a read until empty, no byte will be
 			//  found by read_done, and the read will always return an
 			//  an empty value the first time.
 			s -> readsome();

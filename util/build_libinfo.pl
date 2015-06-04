@@ -77,10 +77,11 @@ foreach my $line (@spec)
 	# Remove any trailing colons
 	$symbol =~ s/:$// ;
 	$symbolExterns .= "extern \"C\" void *$symbol;\n";
-	$symbolEntries .= "    { \"$symbol\", $symbol },\n";
+	$symbolEntries .= "    { \"$symbol\", &$symbol },\n";
 }
 
 print OUTPUT $symbolExterns;
+output "extern \"C\" {";
 output "struct LibExport { const char *name; void *address; };";
 output "struct LibInfo { const char **name; struct LibExport *exports; };";
 output "static const char *__libexternalname = \"$name\";";
@@ -95,6 +96,7 @@ output "    &__libexternalname,";
 output "    __libexports";
 output "};";
 output "LibInfo *__libinfoptr_$name __attribute__((__visibility__(\"default\"))) = &__libinfo;";
+output "};";
 
 sub output
 {

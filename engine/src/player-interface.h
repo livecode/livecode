@@ -68,6 +68,7 @@ class MCPlayerInterface
 {
 protected:
 	MCStringRef filename;
+    MCStringRef resolved_filename;
 	uint2 framerate;
 	Boolean disposable;
 	Boolean istmpfile;

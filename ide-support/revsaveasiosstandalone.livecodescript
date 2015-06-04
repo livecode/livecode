@@ -1266,13 +1266,14 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    
    ----------
 
-   local tPlist
-   put url ("file:" & tTemplateFile) into tPlist
+   if pPlist is empty then
+      put url ("binfile:" & tTemplateFile) into pPlist
+   end if
    // SN-2014-10-27: [[ Bug 13827 ]] Strings in a Plist file should be UTF-8 encoded
-   replace "${EXECUTABLE_NAME}" with textEncode(tExeName, "utf-8") in tPlist
-   replace "${BUNDLE_IDENTIFIER}" with textEncode(tBundleId, "utf-8") in tPlist
-   replace "${BUNDLE_VERSION}" with tBundleVersion in tPlist
-   replace "${BUNDLE_DISPLAY_NAME_SUPPORT}" with "<string>" & tDisplayName & "</string>" in tPlist
+   replace "${EXECUTABLE_NAME}" with textEncode(tExeName, "utf-8") in pPlist
+   replace "${BUNDLE_IDENTIFIER}" with textEncode(tBundleId, "utf-8") in pPlist
+   replace "${BUNDLE_VERSION}" with tBundleVersion in pPlist
+   replace "${BUNDLE_DISPLAY_NAME_SUPPORT}" with "<string>" & tDisplayName & "</string>" in pPlist
    -- SN-2015-02-02: [[ Bug 14422 ]] We now have minimum version depending on the arch.
    replace "${MINIMUM_OS_SUPPORT}" with "<string>" & tMinimumOSByArch["i386"] & "</string>" in pPlist
    replace "${CUSTOM_FONTS}" with tCustomFonts in pPlist

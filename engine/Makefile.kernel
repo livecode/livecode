@@ -77,7 +77,6 @@ SOURCES=\
 	exec-interface-vclip.cpp exec-keywords.cpp exec-legacy.cpp exec-dialog.cpp exec-strings-chunk.cpp \
 	syntax.cpp \
 	foundation-legacy.cpp legacy_spec.cpp \
-	sysunxthreads.cpp, stacktile.cpp \
 	mcstring.cpp
 
 linuxstubs.cpp: src/linux.stubs ../util/weak_stub_maker.pl

@@ -39,7 +39,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 #include "exec-interface.h"
-#include "systhreads.h"
 
 
 #define GRAPHIC_EXTRA_MITERLIMIT		(1UL << 0)
@@ -2162,7 +2161,6 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
         
         // MM-2014-08-20: [[ Bug 13230 ]] Marker points are offset as they are drawn which causes issues with multi-threading.
         //  Could be refactored so that the offsetting happens in a separate buffer, but for the moment just put locks around it.
-        MCThreadMutexLock(MCgraphicmutex);
 		for (i = 0 ; i < nrealpoints ; i++)
 		{
 			if (realpoints[i].x != MININT2)
@@ -2190,7 +2188,6 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		if (last != MAXUINT2)
 			MCU_offset_points(markerpoints, nmarkerpoints,
 			                  -realpoints[last].x, -realpoints[last].y);
-        MCThreadMutexUnlock(MCgraphicmutex);
 	}
 	MCStringRef slabel = getlabeltext();
 	if (flags & F_G_SHOW_NAME &&  !MCStringIsEmpty(slabel))

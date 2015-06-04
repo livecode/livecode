@@ -889,7 +889,9 @@ static bool cgi_compute_post_variables()
 	MCAutoStringRef t_content_type;
 
 	bool gotenv = MCS_getenv(MCSTR("CONTENT_TYPE"), &t_content_type);
-	if (gotenv && MCStringIsEqualToCString(*t_content_type, "application/x-www-form-urlencoded", kMCCompareCaseless))
+    if (gotenv
+            && (MCStringIsEqualToCString(*t_content_type, "application/x-www-form-urlencoded", kMCCompareCaseless)
+                || MCStringBeginsWithCString(*t_content_type, (const char_t*)"application/x-www-form-urlencoded;", kMCCompareCaseless)))
 	{
 		// TODO: currently we assume that urlencoded form data is small enough to fit into memory,
 		// so we fetch the contents from $_POST_RAW (which automatically reads the data from stdin).

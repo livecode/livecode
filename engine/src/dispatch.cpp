@@ -963,7 +963,7 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 
 IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
 {
-	IO_handle stream;
+    IO_handle stream;
 	MCAutoStringRef t_open_path;
 
 	bool t_found;
@@ -971,20 +971,10 @@ IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
 	if (!t_found)
 	{
 		if ((stream = MCS_open(p_name, kMCOpenFileModeRead, True, False, 0)) != NULL)
-		{
-			// This should probably use resolvepath().
-			if (MCStringGetCharAtIndex(p_name, 0) != PATH_SEPARATOR 
-				&& MCStringGetCharAtIndex(p_name, 1) != ':')
-			{
-				MCAutoStringRef t_curpath;
-				
-				/* UNCHECKED */ MCS_getcurdir(&t_curpath);
-				/* UNCHECKED */ MCStringFormat(&t_open_path, "%@/%@", *t_curpath, p_name); 
-			}
-			else
-				t_open_path = p_name;
-
-			t_found = true;
+        {
+            // This should probably use resolvepath().
+            // SN-2015-06-03: [[ Bug 15432 ]] Use resolvepath
+            t_found = MCS_resolvepath(p_name, &t_open_path);
 		}
 	}
     
@@ -999,7 +989,7 @@ IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
 		else
 			t_leaf_name = p_name;
 		if ((stream = MCS_open(*t_leaf_name, kMCOpenFileModeRead, True, False, 0)) != NULL)
-		{
+        {
 			MCAutoStringRef t_curpath;
 			/* UNCHECKED */ MCS_getcurdir(&t_curpath);
 			/* UNCHECKED */ MCStringFormat(&t_open_path, "%@/%@", *t_curpath, p_name); 
