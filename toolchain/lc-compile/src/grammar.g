@@ -136,36 +136,30 @@
 
 'nonterm' Module(-> MODULE)
 
-    'rule' Module(-> module(Position, module, Name, Imports, Definitions)):
+    'rule' Module(-> module(Position, module, Name, Definitions)):
         OptionalSeparator
         "module" @(-> Position) Identifier(-> Name) Separator
-        Imports(-> Imports)
         Definitions(-> Definitions)
         "end" "module" OptionalSeparator
         END_OF_UNIT
 
-    'rule' Module(-> module(Position, widget, Name, Imports, sequence(PreImportDefs, Definitions))):
+    'rule' Module(-> module(Position, widget, Name, Definitions)):
         OptionalSeparator
         "widget" @(-> Position) Identifier(-> Name) Separator
-        PreImportMetadata(-> PreImportDefs)
-        Imports(-> Imports)
         Definitions(-> Definitions)
         "end" "widget" OptionalSeparator
         END_OF_UNIT
 
-    'rule' Module(-> module(Position, library, Name, Imports, sequence(PreImportDefs, Definitions))):
+    'rule' Module(-> module(Position, library, Name, Definitions)):
         OptionalSeparator
         "library" @(-> Position) Identifier(-> Name) Separator
-        PreImportMetadata(-> PreImportDefs)
-        Imports(-> Imports)
         Definitions(-> Definitions)
         "end" "library" OptionalSeparator
         END_OF_UNIT
 
-    'rule' Module(-> module(Position, import, Name, Imports, Definitions)):
+    'rule' Module(-> module(Position, import, Name, Definitions)):
         OptionalSeparator
         "import" "module" @(-> Position) Identifier(-> Name) Separator
-        Imports(-> Imports)
         ImportDefinitions(-> Definitions)
         "end" "module" OptionalSeparator
         END_OF_UNIT
@@ -180,6 +174,9 @@
         -- done!
         
 'nonterm' ImportDefinition(-> DEFINITION)
+
+    'rule' ImportDefinition(-> Import):
+        Import(-> Import)
 
     'rule' ImportDefinition(-> type(Position, public, Id, foreign(Position, ""))):
         "foreign" @(-> Position) "type" Identifier(-> Id)
@@ -206,15 +203,6 @@
 -- Metadata Syntax
 --------------------------------------------------------------------------------
 
-'nonterm' PreImportMetadata(-> DEFINITION)
-
-    'rule' PreImportMetadata(-> sequence(Left, Right)):
-        Metadata(-> Left) Separator
-        PreImportMetadata(-> Right)
-
-    'rule' PreImportMetadata(-> nil):
-        -- do nothing
-
 'nonterm' Metadata(-> DEFINITION)
 
     'rule' Metadata(-> metadata(Position, Key, Value)):
@@ -224,22 +212,12 @@
 -- Import Syntax
 --------------------------------------------------------------------------------
 
-'nonterm' Imports(-> IMPORT)
-
-    'rule' Imports(-> sequence(Head, Tail)):
-        Import(-> Head) Separator
-        Imports(-> Tail)
-        
-    'rule' Imports(-> nil):
-        -- empty
-        
-'nonterm' Import(-> IMPORT)
-
+'nonterm' Import(-> DEFINITION)
     'rule' Import(-> ImportList):
         "use" @(-> Position) IdentifierList(-> Identifiers)
         ExpandImports(Position, Identifiers -> ImportList)
 
-'action' ExpandImports(POS, IDLIST -> IMPORT)
+'action' ExpandImports(POS, IDLIST -> DEFINITION)
 
     'rule' ExpandImports(Position, idlist(Id, nil) -> import(Position, Id)):
         Id'Name -> Name
@@ -270,6 +248,9 @@
 
     'rule' Definition(-> Metadata):
         Metadata(-> Metadata)
+
+    'rule' Definition(-> Import):
+        Import(-> Import)
         
     'rule' Definition(-> Constant):
         ConstantDefinition(-> Constant)
