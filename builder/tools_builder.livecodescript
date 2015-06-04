@@ -15,7 +15,7 @@ command toolsBuilderRun pPlatform, pEdition, pVersion
    -- If on windows or linux, we can't do anything macosxy due to lack of lipo/strip :o(
    local tEngineFolders
 
-   get "windows linux linux-x64 linux-armv6hf macosx ios android"
+   get "windows linux-x86 linux-x86_64 linux-armv6hf macosx ios android"
       
    repeat for each word tPlatform in it
       builderFetchEngine pVersion, tPlatform
@@ -95,9 +95,8 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    packageCompilerConfigureSource tPackager, "docs", pDocsFolder
    packageCompilerConfigureSource tPackager, "engine", pEngineFolders[pPlatform]
    packageCompilerConfigureSource tPackager, "macosx", pEngineFolders["macosx"]
-   packageCompilerConfigureSource tPackager, "linux", pEngineFolders["linux"]
-   packageCompilerConfigureSource tPackager, "linux-i386", pEngineFolders["linux"]
-   packageCompilerConfigureSource tPackager, "linux-x86_64", pEngineFolders["linux-x64"]
+   packageCompilerConfigureSource tPackager, "linux-x86", pEngineFolders["linux-x86"]
+   packageCompilerConfigureSource tPackager, "linux-x86_64", pEngineFolders["linux-x86_64"]
    packageCompilerConfigureSource tPackager, "linux-armv6-hf", pEngineFolders["linux-armv6hf"]
    packageCompilerConfigureSource tPackager, "windows", pEngineFolders["windows"]
    packageCompilerConfigureSource tPackager, "ios", pEngineFolders["ios"]
@@ -117,7 +116,7 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
       packageCompilerConfigureVariable tPackager, "SupportFolder", "[[installFolder]]"
       packageCompilerConfigureVariable tPackager, "ToolsFolder", "[[installFolder]]"
    end if
-   if pPlatform is "linux-x64" or pPlatform is "linux-armv6hf" or pPlatform is "linux" then
+   if pPlatform begins with "linux" then
       packageCompilerConfigureVariable tPackager, "TargetPlatform", "linux"
    else
       packageCompilerConfigureVariable tPackager, "TargetPlatform", pPlatform
@@ -126,9 +125,9 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    packageCompilerConfigureVariable tPackager, "VersionTag", pVersion
    packageCompilerConfigureVariable tPackager, "ProductBranch", char 1 to 3 of pVersion
    packageCompilerConfigureVariable tPackager, "TargetArchitectures", "i386"
-   if pPlatform is "linux" then
-      packageCompilerConfigureVariable tPackager, "TargetArchitecture", "i386"
-   else if pPlatform is "linux-x64" then
+   if pPlatform is "linux-x86" then
+      packageCompilerConfigureVariable tPackager, "TargetArchitecture", "x86"
+   else if pPlatform is "linux-x86_64" then
       packageCompilerConfigureVariable tPackager, "TargetArchitecture", "x86_64"
    else if pPlatform is "linux-armv6hf" then
       packageCompilerConfigureVariable tPackager, "TargetArchitecture", "armv6-hf"
@@ -138,7 +137,7 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    if pEdition is "Community" then
       packageCompilerConfigureVariable tPackager, "ProductTitle", "LiveCode Community" && getReadableVersion(pVersion)
       packageCompilerConfigureVariable tPackager, "ProductTag", "livecodecommunity_" & getTaggedVersion(pVersion)
-      if pPlatform is "Linux" or pPlatform is "Linux-x64" or pPlatform is "Linux-armv6hf" then
+      if pPlatform is "Linux" or pPlatform is "Linux-x86_64" or pPlatform is "Linux-armv6hf" then
          packageCompilerConfigureVariable tPackager, "ProductName", "livecodecommunity"
       else
          packageCompilerConfigureVariable tPackager, "ProductName", "LiveCode Community"
@@ -146,7 +145,7 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    else
       packageCompilerConfigureVariable tPackager, "ProductTitle", "LiveCode" && getReadableVersion(pVersion)
       packageCompilerConfigureVariable tPackager, "ProductTag", "livecode_" & getTaggedVersion(pVersion)
-      if pPlatform is "Linux" or pPlatform is "Linux-x64" or pPlatform is "Linux-armv6hf" then
+      if pPlatform is "Linux" or pPlatform is "Linux-x86_64" or pPlatform is "Linux-armv6hf" then
          packageCompilerConfigureVariable tPackager, "ProductName", "livecode"
       else
          packageCompilerConfigureVariable tPackager, "ProductName", "LiveCode"
@@ -355,16 +354,16 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
          builderLog "report", "Deployed windows installer to '" && tOutputFileStub & ".exe" & "'"
          break
          
-      case "linux"
-      case "linux-x64"
+      case "linux-x86"
+      case "linux-x86_64"
       case "linux-armv6hf"
          put abstractPinFile(builderInstallerEngine(pPlatform)) into tParams["engine"]
          put tInstallerStackFile into tParams["stackfile"]
          put pPackageFile into tParams["payload"]
-         if pPlatform is "linux" then
+         if pPlatform is "linux-x86" then
             put tOutputFileStub & ".x86" into tParams["output"]
-         else if pPlatform is "linux-x64" then
-            put tOutputFileStub & ".x64" into tParams["output"]
+         else if pPlatform is "linux-x86_64" then
+            put tOutputFileStub & ".x86_64" into tParams["output"]
          else -- if pPlatform is "linux-armv6hf"
             put tOutputFileStub & ".rpi" into tParams["output"]
          end if
@@ -534,7 +533,7 @@ function getInstallerFilenameStub pVersion, pPlatform, pEdition
       put "Mac" into pPlatform
    else if pPlatform is "windows" then
       put "Windows" into pPlatform
-   else if pPlatform is "linux" or pPlatform is "linux-x64" or pPlatform is "linux-armv6hf" then
+   else if pPlatform begins with "linux" then
       put "Linux" into pPlatform
    end if
    if pEdition is "Community" then

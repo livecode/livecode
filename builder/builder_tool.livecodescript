@@ -28,12 +28,17 @@ on startup
    repeat while tArgIndex is among the keys of tArgs
       if tArgs[tArgIndex] is "--platform" then
          get tArgs[tArgIndex + 1]
-         if it is not among the items of "windows,win,macosx,mac,linux" then
+         if it is not among the items of "windows,win,macosx,mac,linux,linux-x86,linux-x86_64" then
             __builderLog "error", "Unknown platform '" & tArgs[tArgIndex + 1] & "'"
          end if
-         if it is "win" then get "windows"
-         if it is "mac" then get "macosx"
-         put true into tPlatforms[it]
+         if it is "linux" then
+            put true into tPlatforms["linux-x86"]
+            put true into tPlatforms["linux-x86_64"]
+         else
+            if it is "win" then get "windows"
+            if it is "mac" then get "macosx"
+            put true into tPlatforms[it]
+         end if
          add 1 to tArgIndex
       else if tArgs[tArgIndex] is "--stage" then
          if tArgs[tArgIndex + 1] is not among the items of "environment,tools,server,notes,docs,disk" then
