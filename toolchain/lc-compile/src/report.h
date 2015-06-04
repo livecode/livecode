@@ -21,6 +21,8 @@
 extern "C" {
 #endif
 
+extern int s_verbose_level;
+
 void InitializeReports(void);
 void FinalizeReports(void);
 

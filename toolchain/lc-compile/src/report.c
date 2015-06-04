@@ -25,10 +25,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 static int s_error_count;
+int s_verbose_level;
 
 void InitializeReports(void)
 {
     s_error_count = 0;
+    s_verbose_level = 0;
 }
 
 void FinalizeReports(void)
