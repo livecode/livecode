@@ -44,7 +44,9 @@ void Warning_EmptyUnicodeEscape(long position);
 void Warning_UnicodeEscapeTooBig(long position);
 
 void Error_Bootstrap(const char *format, ...);
-    
+
+void Debug_Emit(const char *p_format, ...);
+
 #ifdef __cplusplus
 }
 #endif

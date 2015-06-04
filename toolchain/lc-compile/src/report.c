@@ -58,6 +58,24 @@ void Fatal_InternalInconsistency(const char *p_message)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void
+Debug_Emit(const char *p_format, ...)
+{
+	if (s_verbose_level < 1)
+		return;
+
+	va_list t_args;
+	va_start(t_args, p_format);
+
+	fprintf(stderr, "debug: [Emit] ");
+	vfprintf(stderr, p_format, t_args);
+	fprintf(stderr, "\n");
+
+	va_end(t_args);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void Error_Bootstrap(const char *p_format, ...)
 {
     va_list t_args;
