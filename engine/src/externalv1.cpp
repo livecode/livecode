@@ -1079,7 +1079,7 @@ MCExternalError MCExternalVariable::GetInteger(MCExternalValueOptions p_options,
 	MCAutoStringRef t_string_value;
 	t_error = GetString(p_options, &t_string_value);
 	if (t_error != kMCExternalErrorNone)
-		return t_error;
+        return t_error;
 	
 	return string_to_integer(*t_string_value, p_options, &r_value);
 }
@@ -1737,7 +1737,8 @@ MCExternalError MCExternalContextEvaluate(const char *p_expression, unsigned int
 		return kMCExternalErrorOutOfMemory;
 	
 	MCAutoValueRef t_value;
-	MCECptr -> GetHandler() -> eval(*MCECptr, *t_expr, &t_value);
+    // SN-2015-06-03: [[ Bug 11277 ]] MCHandler::eval refactored
+    MCECptr -> eval(*MCECptr, *t_expr, &t_value);
 	if (MCECptr -> HasError())
 	{	
 		if (MCECptr -> GetExecStat() == ES_ERROR)
@@ -1761,7 +1762,7 @@ MCExternalError MCExternalContextExecute(const char *p_commands, unsigned int p_
 		return kMCExternalErrorOutOfMemory;
 	
 	Exec_stat t_stat;
-	MCECptr -> GetHandler() -> doscript(*MCECptr, *t_expr, 0, 0);
+    MCECptr -> doscript(*MCECptr, *t_expr, 0, 0);
 	if (MCECptr -> HasError())
 	{	
 		if (MCECptr -> GetExecStat() == ES_ERROR)
@@ -1783,7 +1784,8 @@ static MCExternalError MCExternalVariableCreate(MCExternalVariableRef* r_var)
         return kMCExternalErrorNoVariable;
 
 	*r_var = new MCTemporaryExternalVariable(kMCEmptyString);
-	if (r_var == nil)
+    // SN-2015-06-02: [[ CID 90609 ]] Check that the pointed value has been allocated
+	if (*r_var == nil)
 		return kMCExternalErrorOutOfMemory;
 
 	return kMCExternalErrorNone;
