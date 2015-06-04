@@ -5,6 +5,7 @@
 		
 		'../libfoundation/libfoundation.gyp:libFoundation',
 		'../libgraphics/libgraphics.gyp:libGraphics',
+		'../libscript/libscript.gyp:libScript',
 	],
 
 	'conditions':

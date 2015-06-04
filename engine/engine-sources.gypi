@@ -1,7 +1,7 @@
 {
 	'variables':
 	{
-		# Sources shared between ctocppdesktop and server builds
+		# Sources shared between desktop and server builds
 		'engine_common_source_files':
 		[	
 			# Group "Core - Graphics"
@@ -216,6 +216,8 @@
 			'src/tooltip.h',
 			'src/undolst.h',
 			'src/vclip.h',
+			'src/widget.h',
+			'src/widget-events.h',
 			'src/aclip.cpp',
 			'src/block.cpp',
 			'src/button.cpp',
@@ -291,6 +293,8 @@
 			'src/tooltip.cpp',
 			'src/undolst.cpp',
 			'src/vclip.cpp',
+			'src/widget.cpp',
+			'src/widget-events.cpp',
 			
 			# Group "Desktop"
 			'src/dskmac.cpp',
@@ -311,6 +315,7 @@
 			'src/exec-debugging.cpp',
 			'src/exec-dialog.cpp',
 			'src/exec-engine.cpp',
+			'src/exec-extension.cpp',
 			'src/exec-files.cpp',
 			'src/exec-filters.cpp',
 			'src/exec-graphics.cpp',
@@ -486,17 +491,44 @@
 			'src/syscfdate.cpp',
 			'src/syslnxfs.cpp',
 			'src/syslnxregion.cpp',
-			'src/sysosxrandom.cpp',
 			'src/sysosxregion.cpp',
 			'src/sysspec.cpp',
 			'src/sysunxdate.cpp',
 			'src/sysunxnetwork.cpp',
-			'src/sysunxrandom.cpp',
 			'src/sysw32fs.cpp',
 			'src/sysw32network.cpp',
-			'src/sysw32random.cpp',
 			'src/sysw32region.cpp',
 			'src/sysw32registry.cpp',
+			
+			# Group "Text"
+			'src/text.h',
+			'src/text-api.h',
+			'src/text-block.h',
+			'src/text-breakblock.h',
+			'src/text-breakingengine.h',
+			'src/text-cell.h',
+			'src/text-controlblock.h',
+			'src/text-imageblock.h',
+			'src/text-line.h',
+			'src/text-pane.h',
+			'src/text-paragraph.h',
+			'src/text-run.h',
+			'src/text-segment.h',
+			'src/text-simplebreakingengine.h',
+			'src/text.cpp',
+			'src/text-api.cpp',
+			'src/text-block.cpp',
+			'src/text-breakblock.cpp',
+			'src/text-breakingengine.cpp',
+			'src/text-cell.cpp',
+			'src/text-controlblock.cpp',
+			'src/text-imageblock.cpp',
+			'src/text-line.cpp',
+			'src/text-pane.cpp',
+			'src/text-paragraph.cpp',
+			'src/text-run.cpp',
+			'src/text-segment.cpp',
+			'src/text-simplebreakingengine.cpp',
 			
 			# Group "Desktop"
 			'src/quicktime.cpp',
@@ -814,6 +846,20 @@
 		[
 			'src/player-platform.cpp',
 			'src/stacke.cpp',
+		],
+		
+		# Sources used to implement LCB modules in the engine
+		'engine_module_source_files':
+		[
+			'src/module-canvas.h',
+			'src/module-canvas-internal.h',
+			'src/module-engine.h',
+			'src/module-resources.h',
+			
+			'src/modules.cpp',
+			'src/module-canvas.cpp',
+			'src/module-engine.cpp',
+			'src/module-resources.cpp',
 		],
 	},
 	
