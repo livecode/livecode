@@ -4998,7 +4998,7 @@ bool MCStringConvertToSysString(MCStringRef p_string, char *& r_system_string, s
     t_codepage = GetConsoleOutputCP();
     
     int t_needed;
-    t_needed = WideCharToMultibyte(t_codepage,
+    t_needed = WideCharToMultiByte(t_codepage,
                                    WC_COMPOSITECHECK | WC_NO_BEST_FIT_CHARS,
                                    MCStringGetCharPtr(p_string),
                                    -1,
@@ -5011,7 +5011,7 @@ bool MCStringConvertToSysString(MCStringRef p_string, char *& r_system_string, s
     if (!t_bytes . New(t_needed))
         return false;
     
-    if (WideCharToMultibyte(t_codepage,
+    if (WideCharToMultiByte(t_codepage,
                             WC_COMPOSITECHECK | WC_NO_BEST_FIT_CHARS,
                             MCStringGetCharPtr(p_string),
                             -1,
@@ -5023,7 +5023,7 @@ bool MCStringConvertToSysString(MCStringRef p_string, char *& r_system_string, s
     
     uindex_t t_size;
     char *t_ptr;
-    t_bytes . Take(t_size, t_ptr);
+    t_bytes . Take(t_ptr, t_size);
     
     r_system_string = t_ptr;
     
