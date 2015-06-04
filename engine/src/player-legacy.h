@@ -207,7 +207,7 @@ public:
     virtual void getnodes(MCStringRef &r_nodes);
     virtual void gethotspots(MCStringRef &r_nodes);
     virtual void getconstraints(MCMultimediaQTVRConstraints &r_constraints);
-    virtual void getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id);
+    virtual void getenabledtracks(MCStringRef &r_tracks_id);
     
     virtual void updatevisibility();
     virtual void updatetraversal();
@@ -325,7 +325,7 @@ public:
 	void qt_getenabledtracks(MCExecPoint& ep);
 #endif
     void qt_gettracks(MCStringRef &r_tracks);
-    void qt_getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id);
+    void qt_getenabledtracks(MCStringRef &r_tracks_id);
     Boolean qt_setenabledtracks(MCStringRef s);
 	void qt_draw(MCDC *dc, const MCRectangle& dirty);
 	void qt_move(int2 x, int2 y);
@@ -361,7 +361,7 @@ public:
 	void avi_getenabledtracks(MCExecPoint& ep);
 #endif
     void avi_gettracks(MCStringRef &r_tracks);
-    void avi_getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id);
+    void avi_getenabledtracks(MCStringRef &r_tracks_id);
     Boolean avi_setenabledtracks(MCStringRef s);
 	void avi_draw(MCDC *dc, const MCRectangle& dirty);
 
@@ -398,7 +398,7 @@ public:
 	void x11_getenabledtracks(MCExecPoint& ep) {}
 #endif
     void x11_gettracks(MCStringRef &r_tracks) { r_tracks = MCValueRetain(kMCEmptyString); }
-    void x11_getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id) { r_count = 0; }
+    void x11_getenabledtracks(MCStringRef &r_tracks_id) { r_tracks_id = MCValueRetain(kMCEmptyString); }
     Boolean x11_setenabledtracks(MCStringRef & s) { return False;}
 	void x11_draw(MCDC *dc, const MCRectangle& dirty) {}
 	
@@ -473,7 +473,8 @@ public:
     virtual void SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting);
     virtual void SetTraversalOn(MCExecContext& ctxt, bool setting);
     
-    virtual void GetEnabledTracks(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tracks);
+    virtual void GetEnabledTracks(MCExecContext& ctxt, MCStringRef& r_tracks);
+    virtual void SetEnabledTracks(MCExecContext& ctxt, MCStringRef p_tracks);
     
     virtual void SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color);
     virtual void GetForeColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);

@@ -736,11 +736,17 @@ void MCPlayer::SetTraversalOn(MCExecContext& ctxt, bool setting)
     }
 }
 
-void MCPlayer::GetEnabledTracks(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tracks)
+void MCPlayer::GetEnabledTracks(MCExecContext& ctxt, MCStringRef& r_tracks)
 {
     // SN-2014-07-03: [[ PlatformPlayer ]]
     // P_ENABLED_TRACKS getter refactored to the MCPlayer implementations
-    getenabledtracks(r_count, r_tracks);
+    getenabledtracks(r_tracks);
+}
+
+// PM-2015-06-01: [[ Bug 15439 ]] Added setter for enabledTracks property of the player object
+void MCPlayer::SetEnabledTracks(MCExecContext& ctxt, MCStringRef p_tracks)
+{
+    setenabledtracks(p_tracks);
 }
 
 void MCPlayer::GetForeColor(MCExecContext &ctxt, MCInterfaceNamedColor &r_color)
