@@ -99,6 +99,7 @@
 								'-licuuc',
 								'-licudata',
 								'-lstdc++',
+								'-lm',
 							],
 						},
 					],

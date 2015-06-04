@@ -16,6 +16,7 @@
 			[
 				'../prebuilt/libicu.gyp:libicu',
 				'../thirdparty/libffi/libffi.gyp:libffi',
+				'../thirdparty/libz/libz.gyp:libz',
 			],
 			
 			'include_dirs':
@@ -137,6 +138,15 @@
 							[
 								'$(SDKROOT)/System/Library/Frameworks/CoreFoundation.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Foundation.framework',
+							],
+						},
+					],
+					[
+						'OS == "android"',
+						{
+							'libraries':
+							[
+								'-lm',
 							],
 						},
 					],
