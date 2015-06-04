@@ -779,3 +779,13 @@ void MCPlayer::GetStatus(MCExecContext& ctxt, intenum_t& r_status)
     
 }
 #endif
+
+void MCPlayer::SetDontUseQT(MCExecContext &ctxt, bool p_dont_use_qt)
+{
+    setdontuseqt(p_dont_use_qt);
+}
+
+void MCPlayer::GetDontUseQT(MCExecContext &ctxt, bool &r_dont_use_qt)
+{
+    getdontuseqt(r_dont_use_qt);
+}
