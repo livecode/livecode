@@ -2015,7 +2015,7 @@ void MCPlayer::gettracks(MCStringRef &r_tracks)
 {
     if (getstate(CS_PREPARED))
 #ifdef FEATURE_QUICKTIME
-        if (qusingQT())
+        if (usingQT())
             qt_gettracks(r_tracks);
 #ifdef TARGET_PLATFORM_WINDOWS
         else
