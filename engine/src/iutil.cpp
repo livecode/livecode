@@ -738,6 +738,9 @@ MCCursorRef MCImage::createcursor()
 	{
 		MCColor t_palette[2];
 		MCColor *t_colors;
+        // SN-2015-06-02: [[ CID 90611 ]] Initialise t_colors
+        t_colors = NULL;
+        
 		if (!MCcursorbwonly)
 			MCImageGenerateOptimalPaletteWithWeightedPixels(t_cursor_bitmap, 2, t_colors);
 		else
