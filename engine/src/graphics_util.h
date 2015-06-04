@@ -145,6 +145,20 @@ inline MCRectangle MCGRectangleGetIntegerInterior(MCGRectangle p_rect)
 	return t_rect;
 }
 
+inline MCRectangle MCGRectangleGetIntegerExterior(const MCGRectangle& p_rect)
+{
+	int32_t t_left, t_right, t_top, t_bottom;
+	t_left = floorf(p_rect.origin.x);
+	t_top = floorf(p_rect.origin.y);
+	t_right = ceilf(p_rect.origin.x + p_rect.size.width);
+	t_bottom = ceilf(p_rect.origin.y + p_rect.size.height);
+	
+	MCRectangle t_rect;
+	t_rect = MCRectangleMake(t_left, t_top, t_right - t_left, t_bottom - t_top);
+	
+	return t_rect;
+}
+
 inline MCRectangle MCGRectangleGetIntegerRect(const MCGRectangle &p_rect)
 {
 	int32_t t_left, t_right, t_top, t_bottom;

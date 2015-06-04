@@ -484,17 +484,14 @@ end syntax
 
 // ---------- External properties of widgets ---------- //
 
-public foreign handler MCWidgetGetScriptObject(out rObject as ScriptObject) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetGetRectangle(out rRect as Rectangle) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetGetFrame(out rRect as Rectangle) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetGetBounds(out rRect as Rectangle) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetGetWidth(out rWidth as Real) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetSetWidth(in pWidth as Real) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetGetHeight(out rHeight as Real) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetSetHeight(in pHeight as Real) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetGetFont(out rFont as Font) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetGetEnabled(out rEnabled as CBool) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetGetDisabled(out rDisabled as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetMyScriptObject(out rObject as ScriptObject) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetMyRectangle(out rRect as Rectangle) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetMyBounds(out rRect as Rectangle) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetMyWidth(out rWidth as Real) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetMyHeight(out rHeight as Real) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetMyFont(out rFont as Font) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetMyEnabled(out rEnabled as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetMyDisabled(out rDisabled as CBool) returns nothing binds to "<builtin>"
 
 /* 
 Summary:	Returns the widget script object.
@@ -505,43 +502,31 @@ Returns:	The widget script object.
 syntax MyScriptObject is expression
   "my" "script" "object"
 begin
-    MCWidgetGetScriptObject(output)
+    MCWidgetGetMyScriptObject(output)
 end syntax
 
 /* 
-Summary:	Returns the rectangle of the widget script object.
+Summary:	Returns the rectangle of the widget in the parent
 
-Returns:	The rectangle of the widget script object.
+Returns:	The rectangle of the widget in the parent
 */	
 
 syntax MyRectangle is expression
   "my" "rectangle"
 begin
-    MCWidgetGetRectangle(output)
+    MCWidgetGetMyRectangle(output)
 end syntax
 
 /* 
-Summary:	Returns the frame of the widget script object.
+Summary:	Returns the bounds of the widget.
 
-Returns:	The frame of the widget script object.
-*/	
-
-syntax MyFrame is expression
-  "my" "frame"
-begin
-    MCWidgetGetFrame(output)
-end syntax
-
-/* 
-Summary:	Returns the bounds of the widget script object.
-
-Returns:	The bounds of the widget script object.
+Returns:	The bounds of the widget.
 */	
 
 syntax MyBounds is expression
   "my" "bounds"
 begin
-    MCWidgetGetBounds(output)
+    MCWidgetGetMyBounds(output)
 end syntax
 
 /*
@@ -553,8 +538,7 @@ Returns:	The height of the widget.
 syntax MyWidth is expression
   "my" "width"
 begin
-    MCWidgetGetWidth(output)
-    MCWidgetSetWidth(input)
+    MCWidgetGetMyWidth(output)
 end syntax
 
 /*
@@ -566,8 +550,7 @@ Returns:	The height of the widget.
 syntax MyHeight is expression
   "my" "height"
 begin
-    MCWidgetGetHeight(output)
-    MCWidgetSetHeight(input)
+    MCWidgetGetMyHeight(output)
 end syntax
 
 /*
@@ -582,7 +565,7 @@ widget's textFont, textSize and textStyle properties.
 syntax MyFont is expression
     "my" "font"
 begin
-    MCWidgetGetFont(output)
+    MCWidgetGetMyFont(output)
 end syntax
 
 /*
@@ -593,7 +576,7 @@ Returns:    The enabled state of the widget.
 syntax MyEnabled is expression
     "my" "enabled"
 begin
-    MCWidgetGetEnabled(output)
+    MCWidgetGetMyEnabled(output)
 end syntax
 
 /*
@@ -604,7 +587,7 @@ Returns:    The disabled state of the widget.
 syntax MyDisabled is expression
     "my" "disabled"
 begin
-    MCWidgetGetDisabled(output)
+    MCWidgetGetMyDisabled(output)
 end syntax
 
 
@@ -977,44 +960,55 @@ end syntax
 
 // ---------- composed widgets ---------- //
 
-// this widget
-// the children of <widget>
-// the owner of <widget>
+// my children
+// a new widget <type>
+// place <widget> [ ( above | below ) <widget> ]
+// unplace <widget>
 
-// put a new widget <type> into tWidget
+// property <name> of <widget>
+// the rectangle of <widget>
+// the width of <widget>
+// the height of <widget>
+// the enabled of <widget>
+// the disabled of <widget>
+// the font of <widget>
 
-// remove <widget> from <widget>
-// add <widget> to <widget> [ ( above | below ) <widget> ]
+// annotation <name> of <widget>
 
 public foreign type Widget binds to "kMCWidgetType"
 
-public foreign handler MCWidgetEvalThisWidget(out rThisWidget as Widget) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetEvalTheChildrenOfWidget(in pTargetWidget as Widget, out rChildWidgets as List) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetEvalTheOwnerOfWidget(in pTargetWidget as Widget, out rOwner as optional Widget) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetEvalMyChildren(out rChildWidgets as List) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetEvalANewWidget(in pKind as String, out rWidget as Widget) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetExecRemoveWidgetFromWidget(in pChildWidget as Widget, in pOwningWidget as Widget) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetExecAddWidgetToWidget(in pChildWidget as Widget, in pOwningWidget as Widget) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetExecAddWidgetToWidgetRelative(in pChildWidget as Widget, in pOwningWidget as Widget, in pIsAbove as CBool, in pOtherChildWidget as Widget) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecPlaceWidget(in pChild as Widget) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecPlaceWidgetAt(in pChild as Widget, in pAtBottom as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecPlaceWidgetRelative(in pChild as Widget, in pIsBelow as CBool, in pOtherChild as Widget) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecUnplaceWidget(in pChild as Widget) returns nothing binds to "<builtin>"
 
-syntax ThisWidget is expression
-    "this" "widget"
-begin
-    MCWidgetEvalThisWidget(output)
-end syntax
+public foreign handler MCWidgetGetPropertyOfWidget(in pName as String, in pWidget as Widget, out rValue as optional any) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetSetPropertyOfWidget(in pValue as optional any, in pName as String, in pWidget as Widget) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetRectangleOfWidget(in pWidget as Widget, out rRect as Rectangle) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetSetRectangleOfWidget(in pRect as Rectangle, in pWidget as Widget) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetWidthOfWidget(in pWidget as Widget, out rWidth as CanvasFloat) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetSetWidthOfWidget(in pWidth as CanvasFloat, in pWidget as Widget) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetHeightOfWidget(in pWidget as Widget, out rHeight as CanvasFloat) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetSetHeightOfWidget(in pHeight as CanvasFloat, in pWidget as Widget) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetEnabledOfWidget(in pWidget as Widget, out rEnabled as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetSetEnabledOfWidget(in pEnabled as CBool, in pWidget as Widget) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetDisabledOfWidget(in pWidget as Widget, out rDisabled as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetSetDisabledOfWidget(in pDisabled as CBool, in pWidget as Widget) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetFontOfWidget(in pWidget as Widget, out rFont as optional Font) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetSetFontOfWidget(in pFont as optional Font, in pWidget as Widget) returns nothing binds to "<builtin>"
 
-syntax ChildrenOfWidget is prefix operator with precedence 4
-    "the" "children" "of" <mTarget: Expression>
-begin
-    MCWidgetEvalTheChildrenOfWidget(mTarget, output)
-end syntax
-
-syntax OwnerOfWidget is prefix operator with precedence 4
-    "the" "owner" "of" <mTarget: Expression>
-begin
-    MCWidgetEvalTheOwnerOfWidget(mTarget, output)
-end syntax
+public foreign handler MCWidgetGetAnnotationOfWidget(in pName as String, in pWidget as Widget, out rValue as optional any) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetSetAnnotationOfWidget(in pValue as optional any, in pName as String, in pWidget as Widget) returns nothing binds to "<builtin>"
 
 //
+
+syntax MyChildren is expression
+    "my" "children"
+begin
+    MCWidgetEvalMyChildren(output)
+end syntax
 
 syntax ANewWidget is prefix operator with precedence 1
     "a" "new" "widget" <mKind: Expression>
@@ -1022,24 +1016,88 @@ begin
     MCWidgetEvalANewWidget(mKind, output)
 end syntax
 
+syntax PlaceWidget is statement
+    "place" <mWidget: Expression>
+begin
+    MCWidgetExecPlaceWidget(mWidget)
+end syntax
+
+syntax PlaceWidgetAt is statement
+    "place" <mWidget: Expression> "at" ( "bottom" <mAtBottom=true> | "top" <mAtBottom=false> )
+begin
+    MCWidgetExecPlaceWidgetAt(mWidget, mAtBottom)
+end syntax
+
+syntax PlaceWidgetRelative is statement
+    "place" <mWidget: Expression> ( "below" <mIsBelow=true> | "above" <mIsAbove=false> ) <mOtherWidget: Expression>
+begin
+    MCWidgetExecPlaceWidgetRelative(mWidget, mIsBelow, mOtherWidget)
+end syntax
+
+syntax UnplaceWidget is statement
+    "unplace" <mWidget: Expression>
+begin
+    MCWidgetExecUnplaceWidget(mWidget)
+end syntax
+
 //
 
-syntax RemoveWidgetFromWidget is statement
-    "remove" <mChildWidget: Expression> "from" <mOwningWidget: Expression>
+syntax PropertyOfWidget is prefix operator with precedence 3
+	"property" <mName: Expression> "of" <mWidget: Expression>
 begin
-    MCWidgetExecRemoveWidgetFromWidget(mChildWidget, mOwningWidget)
+	MCWidgetGetPropertyOfWidget(mName, mWidget, output)
+	MCWidgetSetPropertyOfWidget(input, mName, mWidget)
 end syntax
 
-syntax AddWidgetToWidget is statement
-    "add" <mChildWidget: Expression> "to" <mWidget: Expression>
+syntax WidgetRectangleProperty is prefix operator with precedence 2
+	"the" "rectangle" "of" <mWidget: Expression>
 begin
-    MCWidgetExecAddWidgetToWidget(mChildWidget, mWidget)
+	MCWidgetGetRectangleOfWidget(mWidget, output)
+	MCWidgetSetRectangleOfWidget(input, mWidget)
 end syntax
 
-syntax AddWidgetToWidgetRelative is statement
-    "add" <mChildWidget: Expression> "to" <mWidget: Expression> ( "above" <mIsAbove=true> | "below" <mIsAbove=false> ) <mOtherChildWidget: Expression>
+syntax WidgetWidthProperty is prefix operator with precedence 2
+	"the" "width" "of" <mWidget: Expression>
 begin
-    MCWidgetExecAddWidgetToWidgetRelative(mChildWidget, mWidget, mIsAbove, mOtherChildWidget)
+	MCWidgetGetWidthOfWidget(mWidget, output)
+	MCWidgetSetWidthOfWidget(input, mWidget)
+end syntax
+
+syntax WidgetHeightProperty is prefix operator with precedence 2
+	"the" "height" "of" <mWidget: Expression>
+begin
+	MCWidgetGetHeightOfWidget(mWidget, output)
+	MCWidgetSetHeightOfWidget(input, mWidget)
+end syntax
+
+syntax WidgetEnabledProperty is prefix operator with precedence 2
+	"the" "enabled" "of" <mWidget: Expression>
+begin
+	MCWidgetGetEnabledOfWidget(mWidget, output)
+	MCWidgetSetEnabledOfWidget(input, mWidget)
+end syntax
+
+syntax WidgetDisabledProperty is prefix operator with precedence 2
+	"the" "disabled" "of" <mWidget: Expression>
+begin
+	MCWidgetGetDisabledOfWidget(mWidget, output)
+	MCWidgetSetDisabledOfWidget(input, mWidget)
+end syntax
+
+syntax WidgetFontProperty is prefix operator with precedence 4
+	"the" "font" "of" <mWidget: Expression>
+begin
+	MCWidgetGetFontOfWidget(mWidget, output)
+	MCWidgetSetFontOfWidget(input, mWidget)
+end syntax
+
+//
+
+syntax AnnotationOfWidget is prefix operator with precedence 3
+	"annotation" <mName: Expression> "of" <mWidget: Expression>
+begin
+	MCWidgetGetAnnotationOfWidget(mName, mWidget, output)
+	MCWidgetSetAnnotationOfWidget(input, mName, mWidget)
 end syntax
 
 end module

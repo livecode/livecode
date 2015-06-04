@@ -21,25 +21,181 @@
 #include "native-layer.h"
 
 #include "script.h"
+#include "module-engine.h"
 
-class MCChildWidget
+typedef MCValueRef MCWidgetRef;
+
+class MCCommonWidget
+{
+public:
+    MCCommonWidget(void);
+    ~MCCommonWidget(void);
+    
+    virtual MCCommonWidget *Retain(void) = 0;
+    virtual void Release(void) = 0;
+    
+    virtual void RedrawAll(void) = 0;
+    virtual void RedrawRect(const MCGRectangle& area) = 0;
+    
+    virtual MCGRectangle GetRectangle(void) = 0;
+    virtual void SetRectangle(const MCGRectangle& rectangle) = 0;
+    
+    virtual bool GetDisabled(void) = 0;
+    virtual void SetDisabled(bool disabled) = 0;
+    
+    virtual void CopyFont(MCFontRef& r_font) = 0;
+    virtual void SetFont(MCFontRef font) = 0;
+    
+    virtual MCProperListRef GetChildren(void) = 0;
+    
+    virtual void ScheduleTimerIn(double after) = 0;
+    virtual void CancelTimer(void) = 0;
+    
+    virtual void CopyScriptObject(MCScriptObjectRef& r_script_object) = 0;
+    
+    virtual MCValueRef Send(bool p_is_function, MCStringRef message, MCProperListRef arguments) = 0;
+    virtual void Post(MCStringRef message, MCProperListRef arguments) = 0;
+    
+    ////
+    
+    virtual MCCommonWidget *GetParent(void) = 0;
+    virtual MCWidget *GetHost(void) = 0;
+    
+    virtual MCGPoint MapPointFromGlobal(MCGPoint point) = 0;
+    virtual MCGPoint MapPointToGlobal(MCGPoint point) = 0;
+    
+    virtual void Reparent(MCCommonWidget *parent) = 0;
+    
+    ////
+    
+    void PlaceWidget(MCWidgetRef p_widget, MCWidgetRef p_other_widget, bool p_is_below);
+    void UnplaceWidget(MCWidgetRef p_widget);
+    
+    ////
+    
+    void OnCreate(void);
+    void OnDestroy(void);
+    
+    void OnOpen(void);
+    void OnClose(void);
+    
+    void OnPaint(MCGContextRef gcontext);
+    
+    void OnGeometryChanged(void);
+    void OnParentPropChanged(void);
+    
+    ////
+    
+    bool CallHandler(MCScriptInstanceRef p_instance, MCNameRef p_name, MCValueRef* x_parameters, uindex_t p_param_count, MCValueRef* r_retval = nil);
+    bool CallGetProp(MCScriptInstanceRef p_instance, MCExecContext& ctxt, MCNameRef p_property, MCNameRef p_key, MCValueRef& r_value);
+    bool CallSetProp(MCScriptInstanceRef p_instance, MCExecContext& ctxt, MCNameRef p_property, MCNameRef p_key, MCValueRef p_value);
+    
+private:
+    // The children of the widget
+    MCProperListRef m_children;
+};
+
+class MCChildWidget: public MCCommonWidget
 {
 public:
     MCChildWidget(void);
     virtual ~MCChildWidget(void);
     
+    virtual MCChildWidget *Retain(void);
+    virtual void Release(void);
+    
+    virtual void RedrawAll(void);
+    virtual void RedrawRect(const MCGRectangle& area);
+    
+    virtual MCGRectangle GetRectangle(void);
+    virtual void SetRectangle(const MCGRectangle& rectangle);
+    
+    virtual bool GetDisabled(void);
+    virtual void SetDisabled(bool disabled);
+    
+    virtual bool GetVisible(void);
+    virtual void SetVisible(bool disabled);
+    
+    virtual void CopyFont(MCFontRef& r_font);
+    virtual void SetFont(MCFontRef font);
+    
+    virtual MCProperListRef GetChildren(void);
+    
+    virtual void ScheduleTimerIn(double after);
+    virtual void CancelTimer(void);
+    
+    virtual void CopyScriptObject(MCScriptObjectRef& r_script_object);
+    
+    virtual MCValueRef Send(bool p_is_function, MCStringRef message, MCProperListRef arguments);
+    virtual void Post(MCStringRef message, MCProperListRef arguments);
+    
+    ////
+    
+    virtual MCCommonWidget *GetParent(void);
+    virtual MCWidget *GetHost(void);
+    
+    virtual MCGPoint MapPointFromGlobal(MCGPoint point);
+    virtual MCGPoint MapPointToGlobal(MCGPoint point);
+    
+    virtual void Reparent(MCCommonWidget *parent);
+    
 private:
-    MCNameRef m_kind;
-    MCScriptInstanceRef m_instance;
+    ////
     
     uindex_t m_references;
+    MCNameRef m_kind;
+    MCScriptInstanceRef m_instance;
+    MCGRectangle m_rectangle;
+    MCFontRef m_font;
+    MCArrayRef m_annotations;
+    MCCommonWidget *m_parent;
+    bool m_disabled : 1;
+    bool m_visible : 1;
+};
+
+class MCHostWidget: public MCCommonWidget
+{
+public:
+    MCHostWidget(MCWidget *p_widget);
     
-    MCChildWidget *m_owner;
-    MCChildWidget *m_previous_sibling;
-    MCChildWidget *m_next_sibling;
-    MCChildWidget *m_children;
+    virtual MCHostWidget *Retain(void);
+    virtual void Release(void);
     
-    MCGRectangle m_frame;
+    virtual void RedrawAll(void);
+    virtual void RedrawRect(const MCGRectangle& area);
+    
+    virtual MCGRectangle GetRectangle(void);
+    virtual void SetRectangle(const MCGRectangle& rectangle);
+    
+    virtual bool GetDisabled(void);
+    virtual void SetDisabled(bool disabled);
+    
+    virtual void CopyFont(MCFontRef& r_font);
+    virtual void SetFont(MCFontRef font);
+    
+    virtual MCProperListRef GetChildren(void);
+    virtual void SetChildren(MCProperListRef children);
+    
+    virtual void ScheduleTimerIn(double after);
+    virtual void CancelTimer(void);
+    
+    virtual void CopyScriptObject(MCScriptObjectRef& r_script_object);
+    
+    virtual MCValueRef Send(bool p_is_function, MCStringRef message, MCProperListRef arguments);
+    virtual void Post(MCStringRef message, MCProperListRef arguments);
+    
+    ////
+    
+    virtual MCCommonWidget *GetParent(void);
+    virtual MCWidget *GetHost(void);
+    
+    virtual MCGPoint MapPointFromGlobal(MCGPoint point);
+    virtual MCGPoint MapPointToGlobal(MCGPoint point);
+    
+    virtual void Reparent(MCCommonWidget *parent);
+    
+private:
+    MCWidget *m_widget;
 };
 
 class MCWidget: public MCControl
@@ -241,9 +397,6 @@ private:
     MCNameRef m_kind;
     MCScriptInstanceRef m_instance;
     
-    // The children of the widget
-    MCChildWidget *m_children;
-    
     // The rep of the widget - this is non-nil if the widget kind is unresolved
     // after loading.
     MCValueRef m_rep;
@@ -257,6 +410,8 @@ private:
     
     // Implemented by the platform-specific native layers: creates a new layer
     MCNativeLayer* createNativeLayer();
+    
+    MCHostWidget *m_host_widget;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

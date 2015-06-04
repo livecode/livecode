@@ -4762,7 +4762,7 @@ bool MCObject::recomputefonts(MCFontRef p_parent_font)
 	return t_changed;
 }
 
-bool MCObject::copyfont(MCFontRef& r_font)
+void MCObject::copyfont(MCFontRef& r_font)
 {
     bool t_need_unmap;
     t_need_unmap = false;
@@ -4772,18 +4772,13 @@ bool MCObject::copyfont(MCFontRef& r_font)
         t_need_unmap = true;
     }
     
-    MCFontRef t_font;
-    t_font = m_font;
+    if (m_font != nil)
+        r_font = MCFontRetain(m_font);
+    else
+        r_font = nil;
     
     if (t_need_unmap)
         unmapfont();
-    
-    if (t_font == nil)
-        return false;
-    
-    r_font = MCFontRetain(t_font);
-    
-    return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
