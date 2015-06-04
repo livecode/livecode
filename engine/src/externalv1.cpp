@@ -1045,7 +1045,7 @@ MCExternalError MCExternalContextEvaluate(const char *p_expression, unsigned int
 	MCEPptr -> setsvalue(p_expression);
 	
 	Exec_stat t_stat;
-	t_stat = MCEPptr -> gethandler() -> eval(*MCEPptr);
+	t_stat = MCEPptr -> eval(*MCEPptr);
 	
 	if (t_stat == ES_ERROR)
 		return kMCExternalErrorFailed;
@@ -1064,7 +1064,7 @@ MCExternalError MCExternalContextExecute(const char *p_commands, unsigned int p_
 	MCEPptr -> setsvalue(p_commands);
 	
 	Exec_stat t_stat;
-	t_stat = MCEPptr -> gethandler() -> doscript(*MCEPptr, 0, 0);
+	t_stat = MCEPptr -> doscript(*MCEPptr, 0, 0);
 	
 	if (t_stat == ES_ERROR)
 		return kMCExternalErrorFailed;
