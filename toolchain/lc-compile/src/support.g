@@ -122,6 +122,8 @@
     PushOutMarkArgumentSyntaxMapping
     PushInOutMarkArgumentSyntaxMapping
 
+    EmitStart
+    EmitFinish
     EmitBeginModule
     EmitBeginLibraryModule
     EmitBeginWidgetModule
@@ -304,6 +306,9 @@
     Error_IntegerLiteralOutOfRange
     Error_NextRepeatOutOfContext
     Error_ExitRepeatOutOfContext
+    Error_DependentModuleNotIncludedWithInputs
+    Error_InterfaceFileNameMismatch
+    Warning_MetadataClausesShouldComeAfterUseClauses
     Warning_DeprecatedTypeName
     Warning_UnsuitableNameForDefinition
     Warning_UsingAsForHandlerReturnTypeDeprecated
@@ -455,6 +460,9 @@
 'action' PushIndexedMarkArgumentSyntaxMapping(MarkIndex: INT, Index: INT)
 
 --------------------------------------------------------------------------------
+
+'action' EmitStart()
+'action' EmitFinish()
 
 'action' EmitBeginModule(Name: NAME -> ModuleIndex: INT)
 'action' EmitBeginWidgetModule(Name: NAME -> ModuleIndex: INT)
@@ -669,6 +677,10 @@
 'action' Error_NextRepeatOutOfContext(Position: POS)
 'action' Error_ExitRepeatOutOfContext(Position: POS)
 
+'action' Error_DependentModuleNotIncludedWithInputs(Position: POS, Module: NAME)
+'action' Error_InterfaceFileNameMismatch(Position: POS, Module: NAME)
+
+'action' Warning_MetadataClausesShouldComeAfterUseClauses(Position: POS)
 'action' Warning_DeprecatedTypeName(Position: POS, NewType: STRING)
 'action' Warning_UnsuitableNameForDefinition(Position: POS, Identifier: NAME)
 'action' Warning_UsingAsForHandlerReturnTypeDeprecated(Position: POS)

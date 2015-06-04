@@ -59,3 +59,16 @@ MCSystemExecGetCommandArguments (MCProperListRef & r_list)
 {
 	/* UNCHECKED */ MCSCommandLineGetArguments (r_list);
 }
+
+////////////////////////////////////////////////////////////////
+
+extern "C" bool com_livecode_system_Initialize (void)
+{
+	return true;
+}
+
+extern "C" void com_livecode_system_Finalize (void)
+{
+}
+
+////////////////////////////////////////////////////////////////

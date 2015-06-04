@@ -205,7 +205,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			++csptr;
 	}
 
-    extern bool MCModulesInitialize();
+    extern "C" bool MCModulesInitialize();
     if (!MCInitialize() || !MCSInitialize() ||
         !MCModulesInitialize() || !MCScriptInitialize())
 		exit(-1);
@@ -314,7 +314,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	g_mainthread_errno = _errno();
 	int r = X_close();
 
-    extern void MCModulesFinalize();
+    extern "C" void MCModulesFinalize();
     MCScriptFinalize();
     MCModulesFinalize();
 	MCFinalize();

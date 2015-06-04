@@ -25,8 +25,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #	include <windows.h>
 #endif
 
-extern bool MCModulesInitialize(void);
-extern void MCModulesFinalize(void);
+extern "C" bool MCModulesInitialize(void);
+extern "C" void MCModulesFinalize(void);
 
 /* Possible exit statuses used by lc-run */
 enum {
@@ -500,3 +500,14 @@ main (int argc,
 
 	exit (0);
 }
+
+/* ----------------------------------------------------------------
+ * Dummy module finit/inits - no canvas, engine, widget module
+ * ---------------------------------------------------------------- */
+
+extern "C" bool com_livecode_engine_Initialize(void) { return true; }
+extern "C" void com_livecode_engine_Finalize(void) { }
+extern "C" bool com_livecode_widget_Initialize(void) { return true; }
+extern "C" void com_livecode_widget_Finalize(void) { }
+extern "C" bool com_livecode_canvas_Initialize(void) { return true; }
+extern "C" void com_livecode_canvas_Finalize(void) { }

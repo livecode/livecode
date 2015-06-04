@@ -30,6 +30,9 @@ int OutputFileAsC = 0;
 extern "C" int OutputFileAsBytecode;
 int OutputFileAsBytecode = 0;
 
+extern "C" void EmitStart(void);
+extern "C" void EmitFinish(void);
+
 extern "C" void EmitBeginModule(NameRef name, long& r_index);
 extern "C" void EmitBeginWidgetModule(NameRef name, long& r_index);
 extern "C" void EmitBeginLibraryModule(NameRef name, long& r_index);
@@ -154,6 +157,8 @@ extern "C" void OutputWrite(const char *msg);
 extern "C" void OutputWriteI(const char *left, NameRef name, const char *right);
 extern "C" void OutputWriteS(const char *left, const char *string, const char *right);
 
+extern "C" int IsBootstrapCompile(void);
+
 //////////
 
 //static MCTypeInfoRef *s_typeinfos = nil;
@@ -195,46 +200,28 @@ static NameRef nameref_from_mcstringref(MCStringRef p_string)
 
 //////////
 
+extern "C" void *Allocate(size_t p_size);
+extern "C" void *Reallocate(void *p_ptr, size_t p_new_size);
+
 static MCScriptModuleBuilderRef s_builder;
 static NameRef s_module_name;
 
+static NameRef *s_ordered_modules = NULL;
+static unsigned int s_ordered_module_count;
+
+static FILE *s_output_code_file = NULL;
+static const char *s_output_code_filename = NULL;
+
+struct EmittedModule
+{
+    EmittedModule *next;
+    NameRef name;
+    char *modified_name;
+    bool has_foreign : 1;
+};
+static EmittedModule *s_emitted_modules = NULL;
+
 //////////
-
-void EmitBeginModule(NameRef p_name, long& r_index)
-{
-    MCInitialize();
-    
-    MCLog("[Emit] BeginModule(%@) -> 0", to_mcnameref(p_name));
-
-    s_module_name = p_name;
-    
-    MCScriptBeginModule(kMCScriptModuleKindNone, to_mcnameref(p_name), s_builder);
-    r_index = 0;
-}
-
-void EmitBeginWidgetModule(NameRef p_name, long& r_index)
-{
-    MCInitialize();
-    
-    MCLog("[Emit] BeginWidgetModule(%@) -> 0", to_mcnameref(p_name));
-    
-    s_module_name = p_name;
-    
-    MCScriptBeginModule(kMCScriptModuleKindWidget, to_mcnameref(p_name), s_builder);
-    r_index = 0;
-}
-
-void EmitBeginLibraryModule(NameRef p_name, long& r_index)
-{
-    MCInitialize();
-    
-    MCLog("[Emit] BeginLibraryModule(%@) -> 0", to_mcnameref(p_name));
-    
-    s_module_name = p_name;
-    
-    MCScriptBeginModule(kMCScriptModuleKindLibrary, to_mcnameref(p_name), s_builder);
-    r_index = 0;
-}
 
 // String used for output as C sources
 #define MC_AS_C_PREFIX "\n" \
@@ -247,6 +234,159 @@ void EmitBeginLibraryModule(NameRef p_name, long& r_index)
     "#  define MODULE_SECTION __attribute__((section(\"__modules\"))) __attribute__((used)) \n" \
     "#endif \n"
 
+void EmitStart(void)
+{
+    MCInitialize();
+
+    s_output_code_file = OpenOutputCodeFile(&s_output_code_filename);
+    s_emitted_modules = NULL;
+    
+    if (s_output_code_file != NULL)
+    {
+        if (fprintf(s_output_code_file, MC_AS_C_PREFIX) < 0)
+            goto error_cleanup;
+        if (fprintf(s_output_code_file, "typedef struct { const char *name; unsigned char *data; unsigned long length; } builtin_module_descriptor;\n\n") < 0)
+            goto error_cleanup;
+    }
+    
+    return;
+
+error_cleanup:
+	if (nil != s_output_code_file)
+    {
+		fclose (s_output_code_file);
+        s_output_code_file = NULL;
+    }
+    Error_CouldNotWriteOutputFile (s_output_code_filename);
+}
+
+static void __EmitModuleOrder(NameRef p_name)
+{
+    for(unsigned int i = 0; i < s_ordered_module_count; i++)
+        if (IsNameEqualToName(p_name, s_ordered_modules[i]))
+            return;
+    
+    s_ordered_modules = (NameRef *)Reallocate(s_ordered_modules, sizeof(NameRef) * (s_ordered_module_count + 1));
+    s_ordered_modules[s_ordered_module_count++] = p_name;
+}
+
+static bool __FindEmittedModule(NameRef p_name, EmittedModule*& r_module)
+{
+    for(EmittedModule *t_module = s_emitted_modules; t_module != NULL; t_module = t_module -> next)
+        if (IsNameEqualToName(p_name, t_module -> name))
+        {
+            r_module = t_module;
+            return true;
+        }
+    
+    return false;
+}
+
+void EmitFinish(void)
+{
+    if (s_output_code_file != NULL && IsBootstrapCompile())
+    {
+        if (fprintf(s_output_code_file, "builtin_module_descriptor* g_builtin_modules[] =\n{\n") < 0)
+            goto error_cleanup;
+        
+        for(unsigned int i = 0; i < s_ordered_module_count; i++)
+        {
+            EmittedModule *t_module;
+            if (__FindEmittedModule(s_ordered_modules[i], t_module))
+                if (fprintf(s_output_code_file, "    &__%s_module_info,\n", t_module -> modified_name) < 0)
+                    goto error_cleanup;
+        }
+        
+        if (fprintf(s_output_code_file, "};\n\n") < 0)
+            goto error_cleanup;
+        
+        if (fprintf(s_output_code_file, "unsigned int g_builtin_module_count = sizeof(g_builtin_modules) / sizeof(builtin_module_descriptor*);\n\n") < 0)
+            goto error_cleanup;
+        
+        if (fprintf(s_output_code_file, "int MCModulesInitialize(void)\n{\n") < 0)
+            goto error_cleanup;
+        for(unsigned int i = 0; i < s_ordered_module_count; i++)
+        {
+            EmittedModule *t_module;
+            if (__FindEmittedModule(s_ordered_modules[i], t_module))
+            {
+                if (fprintf(s_output_code_file,
+                            "    extern int %s_Initialize(void);\n"
+                            "    if (!%s_Initialize())\n"
+                            "        return 0;\n",
+                            t_module -> modified_name,
+                            t_module -> modified_name) < 0)
+                    goto error_cleanup;
+            }
+        }
+        if (fprintf(s_output_code_file, "    return 1;\n}\n\n") < 0)
+            goto error_cleanup;
+        if (fprintf(s_output_code_file, "void MCModulesFinalize(void)\n{\n") < 0)
+            goto error_cleanup;
+        for(unsigned int i = s_ordered_module_count; i > 0; i--)
+        {
+            EmittedModule *t_module;
+            if (__FindEmittedModule(s_ordered_modules[i - 1], t_module))
+            {
+                if (fprintf(s_output_code_file,
+                            "    extern void %s_Finalize(void);\n"
+                            "    %s_Finalize();\n",
+                            t_module -> modified_name,
+                            t_module -> modified_name) < 0)
+                    goto error_cleanup;
+            }
+        }
+        
+        if (fprintf(s_output_code_file, "}\n\n") < 0)
+            goto error_cleanup;
+    }
+    
+	if (nil != s_output_code_file)
+    {
+		fclose (s_output_code_file);
+        s_output_code_file = NULL;
+    }
+    
+    return;
+    
+error_cleanup:
+	if (nil != s_output_code_file)
+    {
+		fclose (s_output_code_file);
+        s_output_code_file = NULL;
+    }
+    Error_CouldNotWriteOutputFile (s_output_code_filename);
+}
+
+void EmitBeginModule(NameRef p_name, long& r_index)
+{
+    MCLog("[Emit] BeginModule(%@) -> 0", to_mcnameref(p_name));
+
+    s_module_name = p_name;
+    
+    MCScriptBeginModule(kMCScriptModuleKindNone, to_mcnameref(p_name), s_builder);
+    r_index = 0;
+}
+
+void EmitBeginWidgetModule(NameRef p_name, long& r_index)
+{
+    MCLog("[Emit] BeginWidgetModule(%@) -> 0", to_mcnameref(p_name));
+    
+    s_module_name = p_name;
+    
+    MCScriptBeginModule(kMCScriptModuleKindWidget, to_mcnameref(p_name), s_builder);
+    r_index = 0;
+}
+
+void EmitBeginLibraryModule(NameRef p_name, long& r_index)
+{
+    MCLog("[Emit] BeginLibraryModule(%@) -> 0", to_mcnameref(p_name));
+    
+    s_module_name = p_name;
+    
+    MCScriptBeginModule(kMCScriptModuleKindLibrary, to_mcnameref(p_name), s_builder);
+    r_index = 0;
+}
 
 static bool
 EmitEndModuleGetByteCodeBuffer (MCAutoByteArray & r_bytecode)
@@ -278,7 +418,7 @@ EmitEndModuleOutputBytecode (const byte_t *p_bytecode,
                              size_t p_bytecode_len)
 {
 	const char *t_filename = nil;
-	FILE *t_file = OpenOutputFile (&t_filename);
+	FILE *t_file = OpenOutputBytecodeFile (&t_filename);
 
 	if (nil == t_file)
 		goto error_cleanup;
@@ -302,27 +442,27 @@ EmitEndModuleOutputBytecode (const byte_t *p_bytecode,
 }
 
 static bool
-EmitEndModuleOutputC (const char *p_module_name,
+EmitEndModuleOutputC (NameRef p_module_name,
+                      const char *p_module_name_string,
                       const byte_t *p_bytecode,
                       size_t p_bytecode_len)
 {
 	char *t_modified_name = nil;
-	const char *t_filename = nil;
 	FILE *t_file = nil;
 
-	t_file = OpenOutputFile (&t_filename);
+	t_file = s_output_code_file;
 	if (nil == t_file)
 		goto error_cleanup;
 
-	t_modified_name = strdup(p_module_name);
+	t_modified_name = strdup(p_module_name_string);
 	if (nil == t_modified_name)
 		goto error_cleanup;
 
 	for(int i = 0; t_modified_name[i] != '\0'; i++)
 		if (t_modified_name[i] == '.')
 			t_modified_name[i] = '_';
-
-	if (0 > fprintf(t_file, "static unsigned char module_data[] = {"))
+    
+	if (0 > fprintf(t_file, "static unsigned char %s_module_data[] = {", t_modified_name))
 		goto error_cleanup;
 
 	for(size_t i = 0; i < p_bytecode_len; i++)
@@ -334,22 +474,30 @@ EmitEndModuleOutputC (const char *p_module_name,
 		if (0 > fprintf(t_file, "0x%02x, ", ((unsigned char *)p_bytecode)[i]))
 			goto error_cleanup;
 	}
-	if (0 > fprintf(t_file, "};\n"))
+	if (0 > fprintf(t_file, "};\n\n"))
 		goto error_cleanup;
 
-	if (0 > fprintf(t_file, MC_AS_C_PREFIX "\nvolatile struct { const char *name; unsigned char *data; unsigned long length; } __%s_module_info = { \"%s\", module_data, sizeof(module_data) };\n", t_modified_name, p_module_name))
+	if (0 > fprintf(t_file, "builtin_module_descriptor __%s_module_info = { \"%s\", %s_module_data, sizeof(%s_module_data) };\n\n", t_modified_name, p_module_name_string, t_modified_name, t_modified_name))
 		goto error_cleanup;
 
-	free(t_modified_name);
+    EmittedModule *t_mod;
+    t_mod = (EmittedModule *)Allocate(sizeof(EmittedModule));
+    t_mod -> next = s_emitted_modules;
+    t_mod -> name = p_module_name;
+    t_mod -> modified_name = t_modified_name;
+    s_emitted_modules = t_mod;
+    
 	fflush (t_file);
-	fclose (t_file);
 	return true;
 
  error_cleanup:
 	free (t_modified_name);
-	if (nil != t_file)
-		fclose (t_file);
-	Error_CouldNotWriteOutputFile (t_filename);
+	if (nil != s_output_code_file)
+    {
+		fclose (s_output_code_file);
+        s_output_code_file = NULL;
+    }
+    Error_CouldNotWriteOutputFile (s_output_code_filename);
 	return false;
 }
 
@@ -436,6 +584,8 @@ EmitEndModule (void)
 
 	MCLog("[Emit] EndModule()", 0);
 
+    __EmitModuleOrder(s_module_name);
+    
 	GetStringOfNameLiteral(s_module_name, &t_module_string);
 	MCAssert (nil != t_module_string);
 
@@ -450,7 +600,7 @@ EmitEndModule (void)
 	/* ---------- 2. Output module contents */
 	if (OutputFileAsC)
 	{
-		if (!EmitEndModuleOutputC (t_module_string,
+		if (!EmitEndModuleOutputC (s_module_name, t_module_string,
 		                           t_bytecode_buf, t_bytecode_len))
 			goto cleanup;
 	}
@@ -472,12 +622,14 @@ EmitEndModule (void)
 	                                   t_interface_buf, t_interface_len))
 		goto cleanup;
 
- cleanup:
-	MCFinalize ();
+cleanup:
+    return;
 }
 
 void EmitModuleDependency(NameRef p_name, long& r_index)
 {
+    __EmitModuleOrder(p_name);
+    
     uindex_t t_index;
     MCScriptAddDependencyToModule(s_builder, to_mcnameref(p_name), t_index);
     r_index = t_index + 1;

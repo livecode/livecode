@@ -118,3 +118,16 @@ extern "C" MC_DLLEXPORT void MCStringEvalEmpty(MCStringRef& r_output)
 {
     r_output = MCValueRetain(kMCEmptyString);
 }
+
+////////////////////////////////////////////////////////////////
+
+extern "C" bool com_livecode_string_Initialize (void)
+{
+	return true;
+}
+
+extern "C" void com_livecode_string_Finalize (void)
+{
+}
+
+////////////////////////////////////////////////////////////////

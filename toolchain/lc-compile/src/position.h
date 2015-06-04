@@ -54,10 +54,14 @@ void GetFileIndex(FileRef file, long *r_index);
 int GetFileWithIndex(long index, FileRef *r_file);
 int GetCurrentFile(FileRef *r_file);
 
-void SetOutputFile(const char *filename);
+void SetOutputBytecodeFile(const char *filename);
+void SetOutputCodeFile(const char *filename);
+void SetOutputGrammarFile(const char *filename);
 void SetManifestOutputFile(const char *filename);
 void SetTemplateFile(const char *filename);
-FILE *OpenOutputFile(const char **r_filename);
+FILE *OpenOutputBytecodeFile(const char **r_filename);
+FILE *OpenOutputGrammarFile(const char **r_filename);
+FILE *OpenOutputCodeFile(const char **r_filename);
 FILE *OpenManifestOutputFile(void);
 FILE *OpenTemplateFile(void);
 FILE *OpenImportedModuleFile(const char *module, char **r_filename);

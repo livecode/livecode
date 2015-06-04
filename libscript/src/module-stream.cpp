@@ -51,3 +51,16 @@ MCStreamExecGetStandardError (MCStreamRef & r_stream)
 {
 	MCSStreamGetStandardError (r_stream);
 }
+
+////////////////////////////////////////////////////////////////
+
+extern "C" bool com_livecode_stream_Initialize (void)
+{
+	return true;
+}
+
+extern "C" void com_livecode_stream_Finalize (void)
+{
+}
+
+////////////////////////////////////////////////////////////////

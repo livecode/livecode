@@ -31,12 +31,7 @@
     (|
         ErrorsDidOccur()
     ||
-        (|
-            IsBootstrapCompile()
-            BootstrapCompile(Modules)
-        ||
-            Compile(Modules)
-        |)
+        Compile(Modules)
     |)
 
 ---------
@@ -46,35 +41,32 @@
     'rule' Compile(Modules):
         InitializeBind
         BindModules(Modules, Modules)
-        CheckModules(Modules)
         (|
             ErrorsDidOccur()
         ||
-            where(Modules -> modulelist(Head, _))
-            Generate(Head)
-        |)
-
-'action' BootstrapCompile(MODULELIST)
-
-    'rule' BootstrapCompile(Modules):
-        BindModules(Modules, Modules)
-        CheckModules(Modules)
-        (|
-            ErrorsDidOccur()
-        ||
-            GenerateSyntaxForModules(Modules)
+            CheckModules(Modules)
             (|
                 ErrorsDidOccur()
             ||
-                GenerateSyntaxRules()
+                (|
+                    IsBootstrapCompile()
+                    GenerateSyntaxForModules(Modules)
+                    (|
+                        ErrorsDidOccur()
+                    ||
+                        GenerateSyntaxRules()
+                        GenerateModules(Modules)
+                    |)
+                ||
+                    where(Modules -> modulelist(Head, _))
+                    Generate(Head)
+                |)
             |)
         |)
 
 'action' BindModules(MODULELIST, MODULELIST)
 
     'rule' BindModules(modulelist(Head, Tail), Imports):
-        InitializeBind
-        
         (|
             Head'Kind -> import
         ||
@@ -245,7 +237,12 @@
         Id'Name -> Name
         GetStringOfNameLiteral(Name -> NameString)
         (|
-            AddImportedModuleFile(NameString)
+            (|
+                -- In bootstrap mode, all modules have to be listed on command line.
+                IsBootstrapCompile()
+            ||
+                AddImportedModuleFile(NameString)
+            |)
         ||
             Error_UnableToFindImportedModule(Position, Name)
         |)

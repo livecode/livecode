@@ -54,7 +54,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "script.h"
 
-extern bool MCModulesInitialize();
+extern "C" bool MCModulesInitialize();
 
 ////////////////////////////////////////////////////////////////////////////////
 

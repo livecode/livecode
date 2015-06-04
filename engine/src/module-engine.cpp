@@ -729,7 +729,7 @@ MCTypeInfoRef kMCEngineScriptObjectNoContextErrorTypeInfo = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCEngineModuleInitialize(void)
+extern "C" bool com_livecode_engine_Initialize(void)
 {
 	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.engine.ScriptObjectDoesNotExistError"), MCNAME("engine"), MCSTR("object does not exist"), kMCEngineScriptObjectDoesNotExistErrorTypeInfo))
 		return false;
@@ -748,7 +748,7 @@ bool MCEngineModuleInitialize(void)
     return true;
 }
 
-void MCEngineModuleFinalize(void)
+extern "C" void com_livecode_engine_Finalize(void)
 {
     MCValueRelease(s_log_buffer);
     MCValueRelease(kMCEngineScriptObjectTypeInfo);
