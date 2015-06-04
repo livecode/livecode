@@ -26,7 +26,7 @@
 			
 			'outputs':
 			[
-				'<(INTERMEDIATE_DIR)/>(stage)/grammar-full.g',
+				'<(INTERMEDIATE_DIR)/>(stage)/grammar_full.g',
 				'<(INTERMEDIATE_DIR)/>(stage)/builtin-modules.c',
 				'<(INTERMEDIATE_DIR)/>(stage)/modules/lci/dummy.file',
 			],
@@ -37,7 +37,7 @@
 				'--bootstrap',
 				'--inputg', '>(template_grammar_file)',
 				'--outputi', '<(INTERMEDIATE_DIR)/>(stage)/modules/lci',
-				'--outputg', '<(INTERMEDIATE_DIR)/>(stage)/grammar-full.g',
+				'--outputg', '<(INTERMEDIATE_DIR)/>(stage)/grammar_full.g',
 				'--outputc', '<(INTERMEDIATE_DIR)/>(stage)/builtin-modules.c',
 				'>@(all_syntax_files)',
 			],
@@ -49,14 +49,14 @@
 			
 			'inputs':
 			[
-				'<(INTERMEDIATE_DIR)/>(stage)/grammar-full.g',
+				'<(INTERMEDIATE_DIR)/>(stage)/grammar_full.g',
 			],
 			
 			'outputs':
 			[
 				'<(INTERMEDIATE_DIR)/>(stage)/gen.lit',
 				'<(INTERMEDIATE_DIR)/>(stage)/gen.tkn',
-				'<(INTERMEDIATE_DIR)/>(stage)/grammar.c',
+				'<(INTERMEDIATE_DIR)/>(stage)/grammar_full.c',
 				'<(INTERMEDIATE_DIR)/>(stage)/gen.h',
 				'<(INTERMEDIATE_DIR)/>(stage)/gen.y',
 			],
@@ -64,10 +64,10 @@
 			'action':
 			[
 				'>(gentle_exe_file)',
-				'<(INTERMEDIATE_DIR)/>(stage)/grammar-full.g',
+				'<(INTERMEDIATE_DIR)/>(stage)/grammar_full.g',
 				'gen.lit=<(INTERMEDIATE_DIR)/>(stage)/gen.lit',
 				'gen.tkn=<(INTERMEDIATE_DIR)/>(stage)/gen.tkn',
-				'grammar.c=<(INTERMEDIATE_DIR)/>(stage)/grammar.c',
+				'grammar_full.c=<(INTERMEDIATE_DIR)/>(stage)/grammar_full.c',
 				'gen.h=<(INTERMEDIATE_DIR)/>(stage)/gen.h',
 				'gen.y=<(INTERMEDIATE_DIR)/>(stage)/gen.y',
 			],

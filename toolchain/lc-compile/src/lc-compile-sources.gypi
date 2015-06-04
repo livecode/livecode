@@ -1,9 +1,14 @@
 {
+	'includes':
+	[
+		'../../../libscript/stdscript-sources.gypi',
+	],
+	
 	'variables':
 	{
 		'all_syntax_files':
 		[
-		
+			'<@(stdscript_syntax_lcb_files)',
 		],
 		
 		'gentle_auxiliary_grammar_files':

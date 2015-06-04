@@ -1,0 +1,41 @@
+{
+	'variables':
+	{
+		# Source LCB files for the stdscript library containing syntax
+		'stdscript_syntax_lcb_files':
+		[
+			'src/arithmetic.mlc',
+			'src/array.mlc',
+			'src/binary.mlc',
+			'src/bitwise.mlc',
+			'src/byte.mlc',
+			'src/char.mlc',
+			'src/codeunit.mlc',
+			'src/date.mlc',
+			#'src/encoding.mlc',
+			'src/file.mlc',
+			'src/foreign.mlc',
+			#'src/item.mlc',
+			#'src/line.mlc',
+			'src/list.mlc',
+			'src/logic.mlc',
+			#'src/map.mlc',
+			'src/math.mlc',
+			'src/math-foundation.mlc',
+			#'src/segmentchunk.mlc',
+			'src/sort.mlc',
+			'src/stream.mlc',
+			'src/string.mlc',
+			'src/system.mlc',
+			'src/type.mlc',
+			'src/type-convert.mlc',
+			'src/unittest.mlc',
+			#'src/url.mlc',
+		],
+		
+		'stdscript_other_lcb_files':
+		[
+			'src/unittest-impl.mlc',
+		],
+	},
+}
