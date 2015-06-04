@@ -252,7 +252,7 @@ args(argc, argv)
             strncpy(t_name, argv[i], eq);
             t_name[eq] = '\0';
             
-            t_replacement = (char *) malloc(len-eq-1);
+            t_replacement = (char *) malloc(len-eq);
             strncpy(t_replacement, argv[i]+eq+1, len-eq-1);
             t_replacement[len-eq-1] = '\0';
         }
