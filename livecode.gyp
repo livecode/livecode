@@ -15,6 +15,9 @@
 				# Engines
 				'engine/engine.gyp:standalone',
 
+				# LCB toolchain
+				'toolchain/toolchain.gyp:toolchain-all',
+
 				# The revsecurity library is an output and not an intermediate product
 				'thirdparty/libopenssl/libopenssl.gyp:revsecurity',
 				

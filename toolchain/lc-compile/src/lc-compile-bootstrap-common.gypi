@@ -3,7 +3,7 @@
 	{
 		'variables':
 		{
-			'current_lc-compile': '<(PRODUCT_DIR)/>(_product_name)',
+			'current_lc-compile': '<(PRODUCT_DIR)/<(_product_name)',
 		},
 	},
 	

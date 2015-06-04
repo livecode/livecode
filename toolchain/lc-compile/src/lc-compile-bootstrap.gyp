@@ -253,5 +253,74 @@
 				'lc-compile-bootstrap-common.gypi',
 			],
 		},
+		{
+			'target_name': 'lc-compile-stage3',
+			'type': 'executable',
+			
+			'toolsets': ['host','target'],
+			
+			'conditions':
+			[
+				[
+					'cross_compile == 0 and _toolset == "target"',
+					{
+						'product_name': 'lc-compile',
+					},
+					{
+						'product_name': 'lc-compile-stage3-<(_toolset)',
+					},
+				],
+			],
+			
+			'variables':
+			{
+				'stage': 'stage3',
+			},
+			
+			'dependencies':
+			[
+				'lc-compile-stage2',
+			],
+			
+			'includes':
+			[
+				'lc-compile-bootstrap-common.gypi',
+			],
+		},
+	],
+	
+	'conditions':
+	[
+		[
+			'cross_compile != 0',
+			{
+				'targets':
+				[
+					{
+						'target_name': 'lc-compile-stage4',
+						'type': 'executable',
+						
+						'toolsets': ['target'],
+						
+						'product_name': 'lc-compile',
+						
+						'variables':
+						{
+							'stage': 'stage4',
+						},
+						
+						'dependencies':
+						[
+							'lc-compile-stage3#host',
+						],
+						
+						'includes':
+						[
+							'lc-compile-bootstrap-common.gypi',
+						],
+					},
+				],
+			},
+		],
 	],
 }
