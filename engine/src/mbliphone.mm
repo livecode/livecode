@@ -25,6 +25,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "variable.h"
 
+#include "socket.h"
+
 #undef isatty
 #include <unistd.h>
 #include <stdio.h>
@@ -1120,9 +1122,92 @@ void MCIPhoneSystem::KillAll()
     return;
 }
 
+// MM-2015-06-04: [[ MobileSockets ]] Pulled over the socket polling code from the OS X port.
 Boolean MCIPhoneSystem::Poll(real8 p_delay, int p_fd)
 {
-    return False;
+    Boolean handled = False;
+    fd_set rmaskfd, wmaskfd, emaskfd;
+    FD_ZERO(&rmaskfd);
+    FD_ZERO(&wmaskfd);
+    FD_ZERO(&emaskfd);
+    int4 maxfd = 0;
+    if (!MCnoui)
+    {
+        if (p_fd != 0)
+            FD_SET(p_fd, &rmaskfd);
+        maxfd = p_fd;
+    }
+    if (MCshellfd != -1)
+    {
+        FD_SET(MCshellfd, &rmaskfd);
+        if (MCshellfd > maxfd)
+            maxfd = MCshellfd;
+    }
+    
+    uint2 i;
+    for (i = 0 ; i < MCnsockets ; i++)
+    {
+        int fd = MCsockets[i]->fd;
+        if (!fd || MCsockets[i]->resolve_state == kMCSocketStateResolving ||
+            MCsockets[i]->resolve_state == kMCSocketStateError)
+            continue;
+        if (MCsockets[i]->connected && !MCsockets[i]->closing
+            && !MCsockets[i]->shared || MCsockets[i]->accepting)
+            FD_SET(fd, &rmaskfd);
+        if (!MCsockets[i]->connected || MCsockets[i]->wevents != NULL)
+            FD_SET(fd, &wmaskfd);
+        FD_SET(fd, &emaskfd);
+        if (fd > maxfd)
+            maxfd = fd;
+        if (MCsockets[i]->added)
+        {
+            p_delay = 0.0;
+            MCsockets[i]->added = False;
+            handled = True;
+        }
+    }
+    
+    struct timeval timeoutval;
+    timeoutval.tv_sec = (long)p_delay;
+    timeoutval.tv_usec = (long)((p_delay - floor(p_delay)) * 1000000.0);
+    int n = 0;
+    
+    n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
+    
+    if (n <= 0)
+        return handled;
+    
+    if (MCshellfd != -1 && FD_ISSET(MCshellfd, &rmaskfd))
+        return True;
+    
+    for (i = 0 ; i < MCnsockets ; i++)
+    {
+        int fd = MCsockets[i]->fd;
+        if (FD_ISSET(fd, &emaskfd) && fd != 0)
+        {
+            
+            if (!MCsockets[i]->waiting)
+            {
+                MCsockets[i]->error = strclone("select error");
+                MCsockets[i]->doclose();
+            }
+            
+        }
+        else
+        {
+            if (FD_ISSET(fd, &rmaskfd) && !MCsockets[i]->shared)
+            {
+                MCsockets[i]->readsome();
+            }
+            if (FD_ISSET(fd, &wmaskfd))
+            {
+                MCsockets[i]->writesome();
+            }
+        }
+        MCsockets[i]->setselect();
+    }
+    
+    return True;
 }
 
 Boolean MCIPhoneSystem::IsInteractiveConsole(int p_fd)

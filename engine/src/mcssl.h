@@ -46,4 +46,9 @@ bool MCCrypt_rsa_op(bool p_encrypt, bool p_is_public, MCStringRef p_message_in, 
 // IM-2014-07-28: [[ Bug 12822 ]] Shared certificate loading function for SSL contexts.
 bool MCSSLContextLoadCertificates(SSL_CTX *p_context, MCStringRef *r_error);
 
+#if defined(TARGET_SUBPLATFORM_IPHONE)
+// MM-2015-06-04: [[ MobileSockets ]] Return true if we should trust the certificates in the given SSL connection.
+bool MCSSLVerifyCertificate(SSL *ssl, MCStringRef p_host_name, MCStringRef &r_error);
+#endif
+
 #endif

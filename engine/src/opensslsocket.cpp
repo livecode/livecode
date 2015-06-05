@@ -123,7 +123,7 @@ extern "C" char *strdup(const char *);
 
 Boolean MCSocket::sslinited = False;
 
-#ifdef _MACOSX
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
 static void socketCallback (CFSocketRef cfsockref, CFSocketCallBackType type, CFDataRef address, const void *pData, void *pInfo)
 {
 	uint2 i;
@@ -160,13 +160,19 @@ static void socketCallback (CFSocketRef cfsockref, CFSocketCallBackType type, CF
 			MCsockets[i]->readsome();
 			break;
 		}
+#ifdef _MACOSX
         MCPlatformBreakWait();
+#else
+        extern void MCIPhoneBreakWait(void);
+        MCIPhoneBreakWait();
+#endif
+
 	}
 	MCS_poll(0.0,0);//quick poll of other sockets
 }
 #endif
 
-#if defined(_MACOSX)
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
 Boolean MCS_handle_sockets()
 {
 	return MCS_poll(0.0, 0.0);
@@ -1626,7 +1632,7 @@ void MCSocket::setselect(uint2 sflags)
 		WSAAsyncSelect(fd, sockethwnd, WM_USER, event);
 	}
 #endif
-#ifdef _MACOSX
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
 	if (sflags & BIONB_TESTWRITE)
 		CFSocketEnableCallBacks(cfsockref,kCFSocketWriteCallBack);
 	if (sflags & BIONB_TESTREAD)
@@ -1637,7 +1643,7 @@ void MCSocket::setselect(uint2 sflags)
 Boolean MCSocket::init(MCSocketHandle newfd)
 {
 	fd = newfd;
-#ifdef _MACOSX
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
 
 	cfsockref = NULL;
 	rlref = NULL;
@@ -1646,7 +1652,8 @@ Boolean MCSocket::init(MCSocketHandle newfd)
 	if (cfsockref)
 	{
 		rlref = CFSocketCreateRunLoopSource(kCFAllocatorDefault, cfsockref, 0);
-		CFRunLoopAddSource((CFRunLoopRef)CFRunLoopGetCurrent(), rlref, kCFRunLoopCommonModes);
+        // MM-2015-06-04: [[ MobileSockets ]] Make sure we post the callbacks to the main thread (since we run a twin thread set up on iOS)
+		CFRunLoopAddSource((CFRunLoopRef) CFRunLoopGetMain(), rlref, kCFRunLoopCommonModes);
 		CFOptionFlags socketOptions = 0 ;
 		CFSocketSetSocketFlags( cfsockref, socketOptions );
 	}
@@ -1661,7 +1668,7 @@ void MCSocket::close()
 	{
 		if (secure)
 			sslclose();
-#ifdef _MACOSX
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
 
 		if (rlref != NULL)
 		{
@@ -1678,7 +1685,7 @@ void MCSocket::close()
 #endif
 
 		fd = 0;
-#ifdef _MACOSX
+#ifdef _MACOSX || defined(TARGET_SUBPLATFORM_IPHONE)
 
 		if (cfsockref != NULL)
 		{
@@ -1880,8 +1887,14 @@ Boolean MCSocket::initsslcontext()
 	
 	if (t_success)
 	{
-		SSL_CTX_set_verify(_ssl_context, sslverify? SSL_VERIFY_PEER: SSL_VERIFY_NONE,verify_callback);
-		SSL_CTX_set_verify_depth(_ssl_context, 9);
+#if defined(TARGET_SUBPLATFORM_IPHONE)
+        // MM-2015-06-04: [[ MobileSockets ]] Since iOS doesn't expose the root certificates directly, we can't use OpenSSL's verification routines.
+        //   Instead we'll do it ourselves using the iOS APIs.
+        SSL_CTX_set_verify(_ssl_context, SSL_VERIFY_NONE, NULL);
+#else
+        SSL_CTX_set_verify(_ssl_context, sslverify? SSL_VERIFY_PEER: SSL_VERIFY_NONE,verify_callback);
+        SSL_CTX_set_verify_depth(_ssl_context, 9);
+#endif
 	}
 	return t_success;
 }
@@ -1925,20 +1938,29 @@ Boolean MCSocket::sslconnect()
             /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
             else if (MCStringFirstIndexOfChar(*t_hostname, '|', 0, kMCCompareExact, t_pos))
             /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
-			
+        
+#if defined(TARGET_SUBPLATFORM_IPHONE)
+            // MM-2015-06-04: [[ MobileSockets ]] On iOS we verify the certificate ourselves rather than using OpenSSL
+            if (!MCSSLVerifyCertificate(_ssl_conn, *t_hostname, sslerror))
+            {
+                errno = EPIPE;
+                return False;
+            }
+#else
             MCAutoPointer<char> t_host;
             /* UNCHECKED */ MCStringConvertToCString(*t_hostname, &t_host);
-			
+
             rc = post_connection_check(_ssl_conn, *t_host);
             
-			if (rc != X509_V_OK)
-			{
-				MCAutoStringRef t_message;
-				/* UNCHECKED */ MCStringCreateWithCString(X509_verify_cert_error_string(rc), &t_message);
-				sslerror = MCValueRetain(*t_message);
-				errno = EPIPE;
-				return False;
-			}
+            if (rc != X509_V_OK)
+            {
+                MCAutoStringRef t_message;
+                /* UNCHECKED */ MCStringCreateWithCString(X509_verify_cert_error_string(rc), &t_message);
+                sslerror = MCValueRetain(*t_message);
+                errno = EPIPE;
+                return False;
+            }
+#endif
 		}
 
 		sslstate |= SSTATE_CONNECTED;
@@ -2109,12 +2131,21 @@ Boolean MCSocket::sslaccept()
             else if (MCStringFirstIndexOfChar(*t_hostname, '|', 0, kMCCompareExact, t_pos))
                 /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
 			
+#if defined(TARGET_SUBPLATFORM_IPHONE)
+            // MM-2015-06-04: [[ MobileSockets ]] On iOS we verify the certificate ourselves rather than using OpenSSL
+            if (!MCSSLVerifyCertificate(_ssl_conn, *t_hostname, sslerror))
+            {
+                errno = EPIPE;
+                return False;
+            }
+#else
             MCAutoPointer<char> t_host;
             /* UNCHECKED */ MCStringConvertToCString(*t_hostname, &t_host);
 			rc = post_connection_check(_ssl_conn, *t_host);
 
 			if (rc != X509_V_OK)
 				return False;
+#endif
 		}
 
 		sslstate |= SSTATE_CONNECTED;
