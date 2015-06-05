@@ -1,5 +1,5 @@
 {
-	'include':
+	'includes':
 	[
 		'../common.gypi',
 	],
@@ -13,6 +13,7 @@
 			'dependencies':
 			[
 				'lc-compile/lc-compile.gyp:lc-compile',
+				'lc-compile/lc-run.gyp:lc-run',
 			],
 		},
 	],
