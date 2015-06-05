@@ -670,8 +670,19 @@ char *MCS_resolvepath(const char *path)
 		}
 		delete tpath;
 	}
-	else
-		tildepath = strclone(path);
+    else if (path[0] != '/')
+    {
+        // SN-2015-06-05: [[ Bug 15432 ]] Fix resolvepath on Linux: we want an
+        //  absolute path.
+        char *t_curfolder;
+        t_curfolder = MCS_getcurdir();
+        tildepath = new char[strlen(t_curfolder) + strlen(path) + 2];
+        /* UNCHECKED */ sprintf(tildepath, "%s/%s", t_curfolder, path);
+
+        delete t_curfolder;
+    }
+    else
+        tildepath = strclone(path);
 
 	struct stat64 buf;
 	if (lstat64(tildepath, &buf) != 0 || !S_ISLNK(buf.st_mode))
