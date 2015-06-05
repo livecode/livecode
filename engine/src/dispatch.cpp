@@ -874,12 +874,30 @@ IO_stat MCDispatch::loadfile(const char *inname, MCStack *&sptr)
 	char *openpath = NULL;
 	char *fname = strclone(inname);
 	if ((stream = MCS_open(fname, IO_READ_MODE, True, False, 0)) != NULL)
-        // SN-20015-06-01: [[ Bug 15432 ]] We want to use MCS_resolvepath to
-        //  keep consistency and let '~' be resolved as it is in MCS_open
-		//  MCS_resolve_path leaves a backslash-delimited path on Windows,
-		//  and MCS_get_canonical_path is made to cope with this.
-        openpath = MCS_get_canonical_path(fname);
-	else
+    {
+        // SN-20015-06-01: [[ Bug 15432 ]] We want to resolve the path first
+        //  to get rid of any tilde or such, and then we need to apply the
+        //  old way to get the full path (MCS_get_canonical_path does not
+        //  return a canonical path on Linux...)
+        char *t_resolved_path;
+        t_resolved_path = MCS_get_canonical_path(fname);
+
+        // Make sure that the path is absolute
+        if (t_resolved_path[0] != PATH_SEPARATOR && t_resolved_path[1] != ':')
+        {
+            char *curpath = MCS_getcurdir();
+            if (curpath[strlen(curpath) - 1] == '/')
+                curpath[strlen(curpath) - 1] = '\0';
+            openpath = new char[strlen(curpath) + strlen(t_resolved_path) + 2];
+            sprintf(openpath, "%s/%s", curpath, t_resolved_path);
+            delete curpath;
+
+            delete t_resolved_path;
+        }
+        else
+            openpath = t_resolved_path;
+    }
+    else
 	{
 		char *tmparray = new char[strlen(fname) + 1];
 		strcpy(tmparray, fname);
@@ -889,11 +907,20 @@ IO_stat MCDispatch::loadfile(const char *inname, MCStack *&sptr)
 		else
 			tname++;
         if ((stream = MCS_open(tname, IO_READ_MODE, True, False, 0)) != NULL)
-            // SN-20015-06-01: [[ Bug 15432 ]] We want to use MCS_resolvepath to
-            //  keep consistency and let '~' be resolved as it is in MCS_open
-			//  MCS_resolve_path leaves a backslash-delimited path on Windows,
-			//  and MCS_get_canonical_path is made to cope with this.
-            openpath = MCS_get_canonical_path(tname);
+        {
+            // SN-20015-06-01: [[ Bug 15432 ]] We want to resolve the path first
+            //  to get rid of any tilde or such, and then we need to apply the
+            //  old way to get the full path (MCS_get_canonical_path does not
+            //  return a canonical path on Linux...)
+            char *t_resolved_path;
+            t_resolved_path = MCS_get_canonical_path(tname);
+            char *curpath = MCS_getcurdir();
+            openpath = new char[strlen(curpath) + strlen(t_resolved_path) + 2];
+            sprintf(openpath, "%s/%s", curpath, t_resolved_path);
+
+            delete curpath;
+            delete t_resolved_path;
+        }
 		else
 		{
 			if (!openstartup(tname, &openpath, stream)
