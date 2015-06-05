@@ -161,7 +161,6 @@ public:
     
     virtual void gettracks(MCStringRef& r_tracks);
     
-    virtual Boolean setenabledtracks(MCStringRef s);
     virtual MCRectangle getpreferredrect();
 	virtual uint2 getloudness();
     virtual void updateloudness(int2 newloudness);
@@ -256,6 +255,7 @@ public:
     virtual void gethotspots(MCStringRef &r_nodes);
     virtual void getconstraints(MCMultimediaQTVRConstraints &r_constraints);
     virtual void getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id);
+    virtual void setenabledtracks(uindex_t p_count, uint32_t *p_tracks_id);
     
     virtual void updatevisibility();
     virtual void updatetraversal();
@@ -342,6 +342,7 @@ public:
     virtual void SetTraversalOn(MCExecContext& ctxt, bool setting);
     
     virtual void GetEnabledTracks(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tracks);
+    virtual void SetEnabledTracks(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_tracks);
     
     virtual void SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color);
     virtual void GetForeColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);

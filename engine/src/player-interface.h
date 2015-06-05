@@ -108,7 +108,6 @@ public:
 	virtual MCRectangle getpreferredrect() = 0;
 	virtual uint2 getloudness() = 0;
 	virtual void setloudness() = 0;
-	virtual Boolean setenabledtracks(MCStringRef s) = 0;
     
 #ifdef LEGACY_EXEC
 	void gettracks(MCExecPoint &ep);
@@ -184,6 +183,8 @@ public:
     virtual void gethotspots(MCStringRef &r_nodes) = 0;
     virtual void getconstraints(MCMultimediaQTVRConstraints &r_constraints) = 0;
     virtual void getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id) = 0;
+    virtual void setenabledtracks(uindex_t p_count, uint32_t *p_tracks_id) = 0;
+    
     virtual void updatevisibility() = 0;
     virtual void updatetraversal() = 0;
     
@@ -266,6 +267,7 @@ public:
     virtual void SetTraversalOn(MCExecContext& ctxt, bool setting) = 0;
     
     virtual void GetEnabledTracks(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tracks) = 0;
+    virtual void SetEnabledTracks(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_tracks) = 0;
     
     virtual void SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color) = 0;
     virtual void GetForeColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color) = 0;
