@@ -84,7 +84,7 @@
         (|
             ne(Kind, widget)
             (|
-                ImportContainsCanvas(Imports)
+                ImportContainsCanvas(Definitions)
                 MakeNameLiteral("com.livecode.widget" -> WidgetModuleName)
                 IgnoredModuleList <- namelist(WidgetModuleName, nil)
             ||
@@ -113,7 +113,7 @@
         
         GenerateManifest(Module)
 
-'condition' ImportContainsCanvas(IMPORT)
+'condition' ImportContainsCanvas(DEFINITION)
 
     'rule' ImportContainsCanvas(sequence(Left, _)):
         ImportContainsCanvas(Left)
@@ -130,7 +130,7 @@
 
 'action' GenerateManifest(MODULE)
 
-    'rule' GenerateManifest(module(_, Kind, Id, Imports, Definitions)):
+    'rule' GenerateManifest(module(_, Kind, Id, Definitions)):
         OutputBeginManifest()
         Id'Name -> Name
         OutputWrite("<package version=\"0.0\">\n")
@@ -743,6 +743,9 @@
         EmitEndSyntaxDefinition()
         
     'rule' GenerateDefinitions(metadata(_, _, _)):
+        -- do nothing
+
+    'rule' GenerateDefinitions(import(_, _)):
         -- do nothing
 
     'rule' GenerateDefinitions(nil):

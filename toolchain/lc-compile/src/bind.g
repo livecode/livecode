@@ -31,12 +31,11 @@
 -- the defining id.
 'action' Bind(MODULE, MODULELIST)
 
-    'rule' Bind(Module:module(Position, Kind, Name, Imports, Definitions), ImportedModules):
+    'rule' Bind(Module:module(Position, Kind, Name, Definitions), ImportedModules):
         DefineModuleId(Name)
 
         -- Make sure all the imported modules are bound
-        BindImports(Imports, ImportedModules)
-
+        BindImports(Definitions, ImportedModules)
         (|
             ErrorsDidOccur()
         ||
@@ -45,7 +44,7 @@
             EnterScope
 
             -- Import all the used modules
-            DeclareImports(Imports, ImportedModules)
+            DeclareImports(Definitions, ImportedModules)
             
             EnterScope
 
@@ -66,7 +65,7 @@
             --DumpBindings(Module)
         |)
 
-'action' BindImports(IMPORT, MODULELIST)
+'action' BindImports(DEFINITION, MODULELIST)
 
     'rule' BindImports(sequence(Left, Right), Imports):
         BindImports(Left, Imports)
@@ -92,11 +91,11 @@
             |)
         |)
         
-    'rule' BindImports(nil, _):
+    'rule' BindImports(_, _):
         -- do nothing
 --
 
-'action' DeclareImports(IMPORT, MODULELIST)
+'action' DeclareImports(DEFINITION, MODULELIST)
 
     'rule' DeclareImports(sequence(Left, Right), Imports):
         DeclareImports(Left, Imports)
@@ -117,7 +116,7 @@
             |)
         |)
         
-    'rule' DeclareImports(nil, _):
+    'rule' DeclareImports(_, _):
         -- do nothing
         
 'action' DeclareImportedDefinitions(DEFINITION)
@@ -154,6 +153,9 @@
         DeclareId(Name)
 
     'rule' DeclareImportedDefinitions(metadata(_, _, _)):
+        -- do nothing
+
+    'rule' DeclareImportedDefinitions(import(_, _)):
         -- do nothing
 
     'rule' DeclareImportedDefinitions(nil):
@@ -214,6 +216,9 @@
         DeclareId(Name)
     
     'rule' Declare(metadata(_, _, _)):
+        -- do nothing
+
+    'rule' Declare(import(_, _)):
         -- do nothing
         
     'rule' Declare(nil):
@@ -290,6 +295,9 @@
         DefineSyntaxId(Name, ModuleId, Class, Syntax, Methods)
     
     'rule' Define(_, metadata(_, _, _)):
+        -- do nothing
+
+    'rule' Define(_, import(_, _)):
         -- do nothing
         
     'rule' Define(_, nil):
@@ -712,12 +720,11 @@
 
 'sweep' DumpBindings(ANY)
 
-    'rule' DumpBindings(MODULE'module(_, Kind, Name, Imports, Definitions)):
+    'rule' DumpBindings(MODULE'module(_, Kind, Name, Definitions)):
         DumpId("module", Name)
-        DumpBindings(Imports)
         DumpBindings(Definitions)
         
-    'rule' DumpBindings(IMPORT'import(_, Name)):
+    'rule' DumpBindings(DEFINITION'import(_, Name)):
         DumpId("import", Name)
         
     'rule' DumpBindings(DEFINITION'type(_, _, Name, Type)):

@@ -91,6 +91,7 @@ usage(int status)
 "      --output OUTFILE     Filename for bytecode output.\n"
 "      --outputc OUTFILE    Filename for C source code output.\n"
 "      --manifest MANIFEST  Filename for generated manifest.\n"
+"  -v, --verbose            Output extra debugging information.\n"
 "  -h, --help               Print this message.\n"
 "  --                       Treat all remaining arguments as filenames.\n"
 "\n"
@@ -139,6 +140,11 @@ static void full_main(int argc, char *argv[])
             if (0 == strcmp(opt, "--manifest") && optarg)
             {
                 SetManifestOutputFile(argv[++argi]);
+                continue;
+            }
+            if (0 == strcmp(opt, "-v") || 0 == strcmp(opt, "--verbose"))
+            {
+                ++s_verbose_level;
                 continue;
             }
             if (0 == strcmp(opt, "-h") || 0 == strcmp(opt, "--help"))

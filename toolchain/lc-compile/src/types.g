@@ -21,7 +21,6 @@
 
 'export'
     MODULE MODULELIST MODULEKIND
-    IMPORT
     DEFINITION SIGNATURE ACCESS SCOPE
     TYPE FIELD FIELDLIST
     PARAMETER MODE PARAMETERLIST
@@ -53,12 +52,7 @@
     application
 
 'type' MODULE
-    module(Position: POS, Kind: MODULEKIND, Name: ID, Imports: IMPORT, Definitions: DEFINITION)
-
-'type' IMPORT
-    sequence(Left: IMPORT, Right: IMPORT)
-    import(Position: POS, Name: ID)
-    nil
+    module(Position: POS, Kind: MODULEKIND, Name: ID, Definitions: DEFINITION)
 
 'type' SCOPE
     normal
@@ -67,6 +61,7 @@
 'type' DEFINITION
     sequence(Left: DEFINITION, Right: DEFINITION)
     metadata(Position: POS, Key: STRING, Value: STRING)
+    import(Position: POS, Name: ID)
     type(Position: POS, Access: ACCESS, Name: ID, Type: TYPE)
     constant(Position: POS, Access: ACCESS, Name: ID, Value: EXPRESSION)
     variable(Position: POS, Access: ACCESS, Name: ID, Type: TYPE)
