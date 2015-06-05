@@ -25,10 +25,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 static int s_error_count;
+int s_verbose_level;
 
 void InitializeReports(void)
 {
     s_error_count = 0;
+    s_verbose_level = 0;
 }
 
 void FinalizeReports(void)
@@ -52,6 +54,24 @@ void Fatal_InternalInconsistency(const char *p_message)
 {
     fprintf(stderr, "*** INTERNAL INCONSISTENCY (%s) ***\n", p_message);
     exit(1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void
+Debug_Emit(const char *p_format, ...)
+{
+	if (s_verbose_level < 1)
+		return;
+
+	va_list t_args;
+	va_start(t_args, p_format);
+
+	fprintf(stderr, "debug: [Emit] ");
+	vfprintf(stderr, p_format, t_args);
+	fprintf(stderr, "\n");
+
+	va_end(t_args);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
