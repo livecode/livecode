@@ -877,7 +877,9 @@ IO_stat MCDispatch::loadfile(const char *inname, MCStack *&sptr)
 	if ((stream = MCS_open(fname, IO_READ_MODE, True, False, 0)) != NULL)
         // SN-20015-06-01: [[ Bug 15432 ]] We want to use MCS_resolvepath to
         //  keep consistency and let '~' be resolved as it is in MCS_open
-        openpath = MCS_resolvepath(fname);
+		//  MCS_resolve_path leaves a backslash-delimited path on Windows,
+		//  and MCS_get_canonical_path is made to cope with this.
+        openpath = MCS_get_canonical_path(fname);
 	else
 	{
 		char *tmparray = new char[strlen(fname) + 1];
@@ -890,7 +892,9 @@ IO_stat MCDispatch::loadfile(const char *inname, MCStack *&sptr)
         if ((stream = MCS_open(tname, IO_READ_MODE, True, False, 0)) != NULL)
             // SN-20015-06-01: [[ Bug 15432 ]] We want to use MCS_resolvepath to
             //  keep consistency and let '~' be resolved as it is in MCS_open
-            openpath = MCS_resolvepath(tname);
+			//  MCS_resolve_path leaves a backslash-delimited path on Windows,
+			//  and MCS_get_canonical_path is made to cope with this.
+            openpath = MCS_get_canonical_path(tname);
 		else
 		{
 			if (!openstartup(tname, &openpath, stream)
