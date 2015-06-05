@@ -56,7 +56,7 @@ int main(int argc, char *argv[], char *envp[])
 	setlocale(LC_ALL, "");
 	MCsysencoding = strclone(nl_langinfo(CODESET));
 	
-	extern "C" bool MCModulesInitialize();
+	extern bool MCModulesInitialize();
 	if (!MCInitialize() || !MCSInitialize() ||
 	    !MCModulesInitialize() || !MCScriptInitialize())
 		exit(-1);
@@ -115,7 +115,7 @@ int main(int argc, char *argv[], char *envp[])
 	
 	int t_exit_code = X_close();
 
-	extern "C" void MCModulesFinalize();
+	extern void MCModulesFinalize();
 	MCScriptFinalize();
 	MCModulesFinalize();
 	MCFinalize();

@@ -2,6 +2,7 @@
 	'includes':
 	[
 		'../common.gypi',
+		'stdscript-sources.gypi',
 	],
 	
 	'variables':
@@ -24,33 +25,6 @@
 			'src/script-module.cpp',
 			'src/script-object.cpp',
 			'src/script-package.cpp',
-		],
-		
-		'stdscript_sources':
-		[
-			'src/module-arithmetic.cpp',
-			'src/module-array.cpp',
-			'src/module-binary.cpp',
-			'src/module-bitwise.cpp',
-			'src/module-byte.cpp',
-			'src/module-char.cpp',
-			'src/module-codeunit.cpp',
-			'src/module-date.cpp',
-			'src/module-encoding.cpp',
-			'src/module-file.cpp',
-			'src/module-foreign.cpp',
-			'src/module-list.cpp',
-			'src/module-logic.cpp',
-			'src/module-map.cpp',
-			'src/module-math_foundation.cpp',
-			'src/module-math.cpp',
-			'src/module-sort.cpp',
-			'src/module-stream.cpp',
-			'src/module-string.cpp',
-			'src/module-system.cpp',
-			'src/module-type_convert.cpp',
-			'src/module-type.cpp',
-			'src/module-url.cpp',
 		],
 	},
 	
@@ -103,6 +77,29 @@
 						},	
 					},
 				],
+			],
+		},
+		{
+			'target_name': 'stdscript',
+			'type': 'static_library',
+			
+			'toolsets': ['host','target'],
+			
+			'dependencies':
+			[
+				'libScript',
+				'../libfoundation/libfoundation.gyp:libFoundation',
+			],
+			
+			'include_dirs':
+			[
+				'include',
+				'src',
+			],
+			
+			'sources':
+			[
+				'<@(stdscript_sources)',
 			],
 		},
 	],
