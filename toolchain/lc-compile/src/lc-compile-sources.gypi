@@ -1,6 +1,7 @@
 {
 	'includes':
 	[
+		'../../../engine/engine-sources.gypi',
 		'../../../libscript/stdscript-sources.gypi',
 	],
 	
@@ -8,6 +9,7 @@
 	{
 		'all_syntax_files':
 		[
+			'<@(engine_syntax_lcb_files)',
 			'<@(stdscript_syntax_lcb_files)',
 		],
 		

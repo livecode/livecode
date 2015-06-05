@@ -15,9 +15,7 @@
 		[
 			'../../../libfoundation/libfoundation.gyp:libFoundation',
 			'../../../libscript/libscript.gyp:libScript',
-			'../../gentle/gentle/gentle.gyp:gentle#host',
 			'../../gentle/gentle/grts.gyp:grts',
-			'../../gentle/reflex/reflex.gyp:reflex#host',
 		],
 		
 		'include_dirs':
@@ -57,6 +55,23 @@
 						'OTHER_CFLAGS': [ '-std=gnu89' ],
 						'OTHER_CPLUSPLUSFLAGS': [],		# Suppress the default "$(OTHER_CFLAGS)"
 					},
+				},
+			],
+			[
+				'cross_compile != 0',
+				{
+					'dependencies':
+					[
+						'../../gentle/gentle/gentle.gyp:gentle#host',
+						'../../gentle/reflex/reflex.gyp:reflex#host',
+					],
+				},
+				{
+					'dependencies':
+					[
+						'../../gentle/gentle/gentle.gyp:gentle#target',
+						'../../gentle/reflex/reflex.gyp:reflex#target',
+					],
 				},
 			],
 		],
@@ -266,6 +281,17 @@
 					'cross_compile == 0 and _toolset == "target"',
 					{
 						'product_name': 'lc-compile',
+						
+						'all_dependent_settings':
+						{
+							'variables':
+							{
+								'dist_files':
+								[
+									'<(PRODUCT_DIR)/<(_product_name)>(exe_suffix)',
+								],
+							},
+						},
 					},
 					{
 						'product_name': 'lc-compile-stage3-<(_toolset)',
@@ -304,6 +330,17 @@
 						'toolsets': ['target'],
 						
 						'product_name': 'lc-compile',
+						
+						'all_dependent_settings':
+						{
+							'variables':
+							{
+								'dist_files':
+								[
+									'<(PRODUCT_DIR)/<(_product_name)>(exe_suffix)',
+								],
+							},
+						},
 						
 						'variables':
 						{

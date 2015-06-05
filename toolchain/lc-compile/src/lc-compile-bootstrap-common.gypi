@@ -40,7 +40,7 @@
 				'--inputg', '>(template_grammar_file)',
 				'--outputi', '<(INTERMEDIATE_DIR)/>(stage)/modules/lci',
 				'--outputg', '<(INTERMEDIATE_DIR)/>(stage)/grammar_full.g',
-				'--outputc', '<(INTERMEDIATE_DIR)/>(stage)/builtin-modules.c',
+				#'--outputc', '<(INTERMEDIATE_DIR)/>(stage)/builtin-modules.c',
 				'>@(all_syntax_files)',
 			],
 		},
