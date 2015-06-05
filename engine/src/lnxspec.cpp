@@ -708,6 +708,8 @@ char *MCS_resolvepath(const char *path)
 			sptr++;
 		strcpy(sptr, newname);
 		delete newname;
+        // SN-2015-06-05: [[ Bug 15432 ]] Calling MCS_resolvepath ensures that
+        //  we will get an absolute path here, if any
 		newname = MCS_resolvepath(fullpath);
 		delete fullpath;
 	}

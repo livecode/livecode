@@ -524,6 +524,17 @@ struct MCPosixSystem: public MCSystemInterface
 			else
 				t_tilde_path = strdup(p_path);
 		}
+        else if (path[0] != '/')
+        {
+            // SN-2015-06-05: [[ Bug 15432 ]] Fix resolvepath on Linux: we want an
+            //  absolute path.
+            char *t_curfolder;
+            t_curfolder = MCS_getcurdir();
+            tildepath = new char[strlen(t_curfolder) + strlen(path) + 2];
+            /* UNCHECKED */ sprintf(tildepath, "%s/%s", t_curfolder, path);
+
+            delete t_curfolder;
+        }
 		else
 			t_tilde_path = strdup(p_path);
 		
