@@ -84,33 +84,44 @@ MCWidgetEventManager::MCWidgetEventManager() :
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// These methods are the bridge between the 'old' MCControl world and the new
+// Widget world.
+
 void MCWidgetEventManager::event_open(MCWidget* p_widget)
 {
-    p_widget->OnOpen();
+    TriggerEvent(p_widget -> getwidget(), kMCWidgetEventTriggerTargetFirst, MCNAME("OnOpen"));
     if (MCcurtool != T_BROWSE)
-        p_widget -> OnToolChanged(MCcurtool);
+        event_toolchanged(p_widget, MCcurtool);
 }
 
 void MCWidgetEventManager::event_close(MCWidget* p_widget)
 {
-    p_widget->OnClose();
+    TriggerEvent(p_widget -> getwidget(), kMCWidgetEventTriggerTargetLast, MCNAME("OnClose"));
 }
 
 void MCWidgetEventManager::event_kfocus(MCWidget* p_widget)
 {
+    // TODO: Keyboard events
+    
+#if 0
     // Keyboard focus has changed
     m_keyboard_focus = p_widget;
     
     p_widget->OnFocusEnter();
+#endif
 }
 
 void MCWidgetEventManager::event_kunfocus(MCWidget* p_widget)
 {
+    // TODO: Keyboard events
+    
+#if 0
     // Keyboard focus has changed
     // TODO: does the unfocus *always* happen before the next focus?
     m_keyboard_focus = nil;
     
     p_widget->OnFocusLeave();
+#endif
 }
 
 Boolean MCWidgetEventManager::event_kdown(MCWidget* p_widget, MCStringRef p_text, KeySym p_key)
@@ -134,12 +145,21 @@ Boolean MCWidgetEventManager::event_kdown(MCWidget* p_widget, MCStringRef p_text
             break;
     }
     
+    // TODO: Keyboard events
+#if 0
     return keyDown(p_widget, p_text, p_key);
+#else
+    return False;
+#endif
 }
 
 Boolean MCWidgetEventManager::event_kup(MCWidget* p_widget, MCStringRef p_text, KeySym p_key)
 {
+#if 0
     return keyUp(p_widget, p_text, p_key);
+#else
+    return False;
+#endif
 }
 
 Boolean MCWidgetEventManager::event_mdown(MCWidget* p_widget, uint2 p_which)
@@ -158,9 +178,9 @@ Boolean MCWidgetEventManager::event_mup(MCWidget* p_widget, uint2 p_which, bool 
         return p_widget->MCControl::mup(p_which, p_release);
     
     if (p_release)
-        return mouseRelease(p_widget, p_which);
-    else
-        return mouseUp(p_widget, p_which);
+        return mouseCancel(p_widget -> getwidget(), p_which);
+
+    return mouseUp(p_widget -> getwidget(), p_which);
 }
 
 Boolean MCWidgetEventManager::event_mfocus(MCWidget* p_widget, int2 p_x, int2 p_y)
@@ -168,21 +188,58 @@ Boolean MCWidgetEventManager::event_mfocus(MCWidget* p_widget, int2 p_x, int2 p_
     if (!widgetIsInRunMode(p_widget))
         return False;
     
-    // Did the mouse position change?
+    // Check to see if the mouse position has changed.
     bool t_pos_changed;
     t_pos_changed = !(p_x == m_mouse_x && p_y == m_mouse_y);
-    
-    // Do a quick bounds test on the targeted widget. If this fails, the widget
-    // wasn't the target of the mouse focus event.
-    MCRectangle p_rect;
-    p_rect = MCU_make_rect(p_x, p_y, 1, 1);
-    bool t_within_bounds;
-    p_widget->OnBoundsTest(p_rect, t_within_bounds);
-    if (t_within_bounds)
-        p_widget->OnHitTest(p_rect, t_within_bounds);
 
+    // Compute the new focused widget.
+    MCWidgetRef t_focused_widget;
+    t_focused_widget = hitTest(p_widget -> getwidget(), p_x, p_y);
+
+    // Check to see if the focused widget changed.
+    bool t_focused_changed;
+    t_focused_changed = !(m_mouse_focus == t_focused_widget);
+    
+    // Update the current mouse position so that it is correct in mouseEnter and
+    // mouseLeave events.
+    m_mouse_x = p_x;
+    m_mouse_y = p_y;
+    
+    // Now what we do depends on whether the mouse is grabbed.
+    if (m_mouse_grab != nil)
+    {
+        // If a widget is handling a mouse press event then we want to inform
+        // the grabbed widget about enter / leave, but it keeps getting all the
+        // move events.
+        if (t_focused_widget != m_mouse_grab)
+        {
+            mouseLeave(m_mouse_grab);
+            
+            // We want to keep track of the focused widget we computed above,
+            // but don't want to send it enter / leave in this case.
+            MCValueAssign(m_mouse_focus, t_focused_widget);
+        }
+        else if (m_mouse_focus != m_mouse_grab)
+            mouseEnter(m_mouse_grab);
+        
+        // We only post a mouse-move message if the position changed.
+        if (t_pos_changed)
+            mouseMove(m_mouse_grab);
+    }
+    else
+    {
+        // If there is no active mouse press then we sync the focused widget.
+        syncMouseFocus(t_focused_widget);
+    }
+    
+    // Synchronize the current focused widget - after this m_mouse_focus will
+    // be t_focused_widget.
+    synchronizeMouseFocus(t_focused_widget);
+    
+    
+    
     // If the hit test was failed, the widget doesn't get a move event
-    if (!t_within_bounds)
+    if (t_focused_widget)
     {
         // If this was previously the focused widget, send a leave message
         if (p_widget == m_mouse_focus)

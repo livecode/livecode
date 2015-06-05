@@ -298,6 +298,9 @@
 		4D8BED0211B959F500DED42A /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8BED0111B959F500DED42A /* Security.framework */; };
 		4D8BED0311B95A0300DED42A /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8BED0111B959F500DED42A /* Security.framework */; };
 		4D8BED4811B95A1000DED42A /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8BED0111B959F500DED42A /* Security.framework */; };
+		4D96FCA41B2197AD0047C60E /* widgetimp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D96FCA31B2197AD0047C60E /* widgetimp.cpp */; };
+		4D96FCAA1B219B230047C60E /* widgetsyntax.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D96FCA91B219B230047C60E /* widgetsyntax.cpp */; };
+		4D96FCAC1B219BAC0047C60E /* widgetpopup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D96FCAB1B219BAC0047C60E /* widgetpopup.cpp */; };
 		4DAB7B370FE120060009F91E /* bitmapeffect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DAB7B350FE120060009F91E /* bitmapeffect.cpp */; };
 		4DAB7D280FF3A0100009F91E /* md5.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DAB7D270FF3A0100009F91E /* md5.cpp */; };
 		4DADCD5B12392EAF003CD17C /* sha1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DADCD5912392EAF003CD17C /* sha1.cpp */; };
@@ -2027,6 +2030,10 @@
 		4D8B47960BE7B3240046CD2F /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		4D8BEC4411B9389C00DED42A /* bsdiff_build.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bsdiff_build.cpp; path = src/bsdiff_build.cpp; sourceTree = "<group>"; };
 		4D8BED0111B959F500DED42A /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		4D96FCA31B2197AD0047C60E /* widgetimp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = widgetimp.cpp; path = src/widgetimp.cpp; sourceTree = "<group>"; };
+		4D96FCA81B2197E80047C60E /* widgetimp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = widgetimp.h; path = src/widgetimp.h; sourceTree = "<group>"; };
+		4D96FCA91B219B230047C60E /* widgetsyntax.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = widgetsyntax.cpp; path = src/widgetsyntax.cpp; sourceTree = "<group>"; };
+		4D96FCAB1B219BAC0047C60E /* widgetpopup.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = widgetpopup.cpp; path = src/widgetpopup.cpp; sourceTree = "<group>"; };
 		4D9797D10D1845B700CD2DD0 /* itransform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = itransform.cpp; path = src/itransform.cpp; sourceTree = "<group>"; };
 		4D982A4513C1B9A90066119A /* srvmac.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = srvmac.cpp; path = src/srvmac.cpp; sourceTree = "<group>"; };
 		4D982B1113C1CDC10066119A /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
@@ -3999,6 +4006,10 @@
 				72DDBF7619E8256500361E88 /* native-layer-win32.h */,
 				723BDBFE19E6C34E007365F3 /* native-layer-mac.mm */,
 				723BDBFD19E6C25D007365F3 /* native-layer-mac.h */,
+				4D96FCAB1B219BAC0047C60E /* widgetpopup.cpp */,
+				4D96FCA91B219B230047C60E /* widgetsyntax.cpp */,
+				4D96FCA31B2197AD0047C60E /* widgetimp.cpp */,
+				4D96FCA81B2197E80047C60E /* widgetimp.h */,
 				4D6F06AA19CC1D0F00DDC6E0 /* widget.cpp */,
 				4D6F06AB19CC1D0F00DDC6E0 /* widget.h */,
 				4D587E870B8096FD00200116 /* aclip.cpp */,
@@ -5402,6 +5413,8 @@
 				4DEE2AF70FDE42710009423C /* regex.cpp in Sources */,
 				4DEE2AF80FDE42710009423C /* rtf.cpp in Sources */,
 				4DEE2AF90FDE42710009423C /* rtfsupport.cpp in Sources */,
+				4D96FCAC1B219BAC0047C60E /* widgetpopup.cpp in Sources */,
+				4D96FCAA1B219B230047C60E /* widgetsyntax.cpp in Sources */,
 				4DEE2AFA0FDE42710009423C /* scriptpt.cpp in Sources */,
 				4DEE2AFB0FDE42710009423C /* scrolbar.cpp in Sources */,
 				723BDBFF19E6C34E007365F3 /* native-layer-mac.mm in Sources */,
@@ -5418,6 +5431,7 @@
 				4DEE2B040FDE42710009423C /* styledtext.cpp in Sources */,
 				4DEE2B050FDE42710009423C /* text.cpp in Sources */,
 				4DEE2B060FDE42710009423C /* tooltip.cpp in Sources */,
+				4D96FCA41B2197AD0047C60E /* widgetimp.cpp in Sources */,
 				7269ECD01A1E507C000723DB /* text-paragraph.cpp in Sources */,
 				4DEE2B070FDE42710009423C /* transfer.cpp in Sources */,
 				4DEE2B080FDE42710009423C /* uidc.cpp in Sources */,
