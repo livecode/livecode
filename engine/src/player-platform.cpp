@@ -880,8 +880,8 @@ MCPlayer::MCPlayer()
     m_should_attach = false;
     m_should_recreate = false;
     
-    dontuseqt = false;
-    MCdontuseQT = false;
+    dontuseqt = False;
+    usingqt = False;
 }
 
 MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
