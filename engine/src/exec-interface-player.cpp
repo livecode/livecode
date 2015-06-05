@@ -748,7 +748,6 @@ void MCPlayer::SetEnabledTracks(MCExecContext& ctxt, uindex_t p_count, uinteger_
     // PM-2015-06-01: [[ PlatformPlayer ]]
     // P_ENABLED_TRACKS setter refactored to the MCPlayer implementations
     setenabledtracks(p_count, p_tracks);
-    
 }
 
 void MCPlayer::GetForeColor(MCExecContext &ctxt, MCInterfaceNamedColor &r_color)
