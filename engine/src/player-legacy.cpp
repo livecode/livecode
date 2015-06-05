@@ -1804,8 +1804,6 @@ void MCPlayer::setenabledtracks(uindex_t p_count, uint32_t *p_tracks_id)
 #else
     0 == 0;
 #endif
-    
-	return True;
 }
 
 #ifdef LEGACY_EXEC
@@ -3548,8 +3546,6 @@ void MCPlayer::qt_setenabledtracks(uindex_t p_count, uinteger_t* p_tracks)
 	if (flags & F_SHOW_BORDER)
 		trect = MCU_reduce_rect(trect, -borderwidth);
 	setrect(trect);
-    
-	return True;
 }
 
 #if defined(TARGET_PLATFORM_MACOS_X)
