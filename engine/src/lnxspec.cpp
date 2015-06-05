@@ -687,33 +687,19 @@ char *MCS_resolvepath(const char *path)
 	struct stat64 buf;
 	if (lstat64(tildepath, &buf) != 0 || !S_ISLNK(buf.st_mode))
 		return tildepath;
-	int4 size;
-	char *newname = new char[PATH_MAX + 2];
-	if ((size = readlink(tildepath, newname, PATH_MAX)) < 0)
-	{
-		delete tildepath;
-		delete newname;
-		return NULL;
-	}
-	delete tildepath;
-	newname[size] = '\0';
-	if (newname[0] != '/')
-	{
-		char *fullpath = new char[strlen(path) + strlen(newname) + 2];
-		strcpy(fullpath, path);
-		char *sptr = strrchr(fullpath, '/');
-		if (sptr == NULL)
-			sptr = fullpath;
-		else
-			sptr++;
-		strcpy(sptr, newname);
-		delete newname;
-        // SN-2015-06-05: [[ Bug 15432 ]] Calling MCS_resolvepath ensures that
-        //  we will get an absolute path here, if any
-		newname = MCS_resolvepath(fullpath);
-		delete fullpath;
-	}
-	return newname;
+
+    char *newname = new char[PATH_MAX + 2];
+
+    // SN-2015-06-05: [[ Bug 15432 ]] Use realpath to solve the symlink.
+    if (realpath(tildepath, newname) == NULL)
+    {
+        // Clear the memory in case of failure
+        delete newname;
+        newname = NULL;
+    }
+
+    delete tildepath;
+    return newname;
 }
 
 char *MCS_get_canonical_path(const char *p_path)
