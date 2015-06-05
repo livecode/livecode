@@ -33,6 +33,8 @@
 				
 				'encode_version',
 				'quicktime_stubs',
+				
+				'lcb-modules.gyp:engine_lcb_modules',
 			],
 			
 			'include_dirs':
@@ -92,6 +94,7 @@
 							[
 								'$(SDKROOT)/usr/lib/libcups.dylib',
 								'$(SDKROOT)/System/Library/Frameworks/AudioToolbox.framework',
+								'$(SDKROOT)/System/Library/Frameworks/AppKit.framework',
 								'$(SDKROOT)/System/Library/Frameworks/ApplicationServices.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Carbon.framework',
 								'$(SDKROOT)/System/Library/Frameworks/IOKit.framework',

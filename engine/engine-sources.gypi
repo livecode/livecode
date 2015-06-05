@@ -123,6 +123,7 @@
 			'src/eventqueue.h',
 			'src/fiber.h',
 			'src/filedefs.h',
+			'src/filepath.h',
 			'src/flst.h',
 			'src/globals.h',
 			'src/license.h',
@@ -154,6 +155,7 @@
 			'src/dllst.cpp',
 			'src/eventqueue.cpp',
 			'src/fiber.cpp',
+			'src/filepath.cpp',
 			'src/globals.cpp',
 			'src/mcerror.cpp',
 			'src/mcio.cpp',
@@ -545,6 +547,11 @@
 			
 			# Group "Desktop - Windows"
 			'src/w32date.cpp',
+							
+			# Group "Theming"
+			'src/linux-theme.cpp',
+			'src/mac-theme.mm',
+			'src/windows-theme.cpp',
 				
 			# Group "Syntax"
 			'src/syntax.h',
@@ -861,6 +868,20 @@
 			'src/module-engine.cpp',
 			'src/module-resources.cpp',
 		],
+		
+		# Engine LCB files containing syntax
+		'engine_syntax_lcb_files':
+		[
+			'src/canvas.mlc',
+			'src/engine.mlc',
+			'src/widget.mlc',
+		],
+		
+		# Other engine LCB files
+		'engine_other_lcb_files':
+		[
+		
+		],
 	},
 	
 	'target_defaults':
@@ -892,6 +913,7 @@
 					[
 						['exclude', '(^|/)sysosx.*\\.(cpp|mm)$'],
 						['exclude', '\\.mac\\.'],
+						['exclude', '(^|/)mac-'],
 					],
 					
 					'sources!':
@@ -907,6 +929,7 @@
 					[
 						['exclude', '(^|/)dsklnx.*\\.cpp$'],
 						['exclude', '(^|/)syslnx.*\\.cpp$'],
+						['exclude', '(^|/)linux-'],
 					],
 				},
 			],
@@ -917,6 +940,7 @@
 					[
 						['exclude', '(^|/)sysw32.*\\.cpp$'],
 						['exclude', '(^|/)dskw32.*\\.cpp$'],
+						['exclude', '(^|/)win(dows|32)?-'],
 					],
 					
 					'sources!':

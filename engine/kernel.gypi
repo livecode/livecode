@@ -21,6 +21,8 @@
 				
 				'encode_version',
 				'quicktime_stubs',
+				
+				'lcb-modules.gyp:engine_lcb_modules',
 			],
 			
 			'include_dirs':
