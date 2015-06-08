@@ -874,6 +874,9 @@ MCPlayer::MCPlayer()
     m_is_attached = false;
     m_should_attach = false;
     m_should_recreate = false;
+    
+    dontuseqt = False;
+    usingqt = False;
 }
 
 MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
@@ -913,6 +916,8 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
     nextplayer = MCplayers;
     MCplayers = this;
     
+    dontuseqt = False;
+    usingqt = False;
 }
 
 MCPlayer::~MCPlayer()
