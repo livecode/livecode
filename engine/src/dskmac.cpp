@@ -6464,7 +6464,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         // return something though, so we keep the input path (as it
         // is done for desktop).
         if (t_resolved_path != NULL)
-            t_success = MCStringCreateWithBytes(t_resolved_path, strlen(t_resolved_path), kMCStringEncodingUTF8, false, r_resolved_path);
+            t_success = MCStringCreateWithBytes((const byte_t*)t_resolved_path, strlen(t_resolved_path), kMCStringEncodingUTF8, false, r_resolved_path);
         else
             t_success = false;
 
