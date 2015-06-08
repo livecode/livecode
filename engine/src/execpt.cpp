@@ -2559,7 +2559,7 @@ Exec_stat MCExecPoint::eval(MCExecPoint &ep)
     Exec_stat stat = ES_ERROR;
     if (sp.parseexp(False, True, &exp) == PS_NORMAL && sp.next(type) == PS_EOF)
     {
-        stat = exp->eval(*this);
+        stat = exp->eval(ep);
         grabsvalue();
     }
     delete exp;
