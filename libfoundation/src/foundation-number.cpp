@@ -143,7 +143,15 @@ bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_t char_co
         char *t_end;
         // SN-2014-10-06: [[ Bug 13594 ]] We want an unsigned integer if possible
         uinteger_t t_uinteger;
+#ifdef __LP64__
+        unsigned long t_ulong;
+        t_ulong = strtoul(t_chars, &t_end, 10);
+        if (t_ulong > UINTEGER_MAX)
+            errno = ERANGE;
+        t_uinteger = (uinteger_t) t_ulong;
+#elif __LP32__ || __LLP64__
         t_uinteger = strtoul(t_chars, &t_end, 10);
+#endif
         
         // AL-2014-07-31: [[ Bug 12936 ]] Check the right number of chars has been consumed
         // SN-2014-10-06: [[ Bug 13594 ]] Also check that no error was encountered
