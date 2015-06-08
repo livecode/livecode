@@ -18,7 +18,7 @@ on purchaseStateUpdate pPurchaseID, pProductID, pState
   case "paymentReceived" 
    ...   
   case "error"
-   answer "Error occured during purchase handling:" && mobilePurchaseError(pPurchaseID)
+   answer "Error occurred during purchase handling:" && mobilePurchaseError(pPurchaseID)
    mobileStoreDisablePurchaseUpdates
          
   case "invalidSKU"

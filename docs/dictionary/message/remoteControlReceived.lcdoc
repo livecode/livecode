@@ -18,7 +18,7 @@ on remoteControlReceived pEventType
 end remoteControlReceived
 
 Parameters:
-eventType (enum): A string describing the event type which occured. One of
+eventType (enum): A string describing the event type which occurred. One of
 - "pause"
 - "stop"
 - "toggle play pause"

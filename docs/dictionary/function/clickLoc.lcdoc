@@ -27,7 +27,7 @@ Use the <clickLoc> <function> to determine where a user clicked, or to determine
 
 The first item of the returned value is the horizontal distance in pixels from the left edge of the clicked stack to the location of the click. (Use the <clickStack> function to identify which <stack> was clicked.) The second <item> of the <return value|returned value> is the vertical distance from the top edge of the clicked <stack> to the location of the click.
 
-The click location is the position of the mouse pointer when the user pressed the mouse button, not when the user released the button. In particular, inside a mouseDown handler, the clickLoc returns the position of the mouse as it was when the mouse down action occured.
+The click location is the position of the mouse pointer when the user pressed the mouse button, not when the user released the button. In particular, inside a mouseDown handler, the clickLoc returns the position of the mouse as it was when the mouse down action occurred.
 
 The first item of the <clickLoc> is equal to the <clickH>. The second <item> is equal to the <clickV>.
 

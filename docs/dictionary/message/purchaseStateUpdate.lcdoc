@@ -22,7 +22,7 @@ on purchaseStateUpdate pPurchaseID, pProductID, pState
    mobileStoreDisablePurchaseUpdates
          
   case "error"
-   answer "Error occured during purchase handling:" && mobileStorePurchaseError(pPurchaseID)
+   answer "Error occurred during purchase handling:" && mobileStorePurchaseError(pPurchaseID)
    mobileStoreDisablePurchaseUpdates
          
   case "invalidSKU"
@@ -58,7 +58,7 @@ state (enum): The state of the purchase request :
 - "complete": the purchase has now been paid for and delivered
 - "restored": the purchase has been restored after a call to mobileStoreRestorePurchases. The purchase should now be delivered to the user and confirmed via the mobileStoreConfirmPurchase command
 - "cancelled": the purchase was cancelled by the user before payment was received
-- "error": an error occured during the payment request. More detailed information is available from the mobileStorePurchaseError function
+- "error": an error occurred during the payment request. More detailed information is available from the mobileStorePurchaseError function
 
 Description:
 Use the <purchaseStateUpdate> message to notify the app of any changes in state to the purchase request.

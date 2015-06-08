@@ -31,7 +31,7 @@ If the <mouseH> is positive, the <pointer> is to the right of the leftmost edge 
 
 This function is equal to item 1 of the mouseLoc <function>.
 
->*Note:* When in a mouseDown handler, you can use the <clickH> function to get the position of the mouse as it was when the mouseDown actiion occured.
+>*Note:* When in a mouseDown handler, you can use the <clickH> function to get the position of the mouse as it was when the mouseDown actiion occurred.
 
 >*Tip:*  The <mouseMove> message sends the mouse's horizontal position as a <parameter>. This means that in a <mouseMove> <handler>, normally it's not necessary to use the <mouseH> <function>.
 
