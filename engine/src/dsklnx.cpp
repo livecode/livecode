@@ -2123,7 +2123,7 @@ public:
             else
                 t_tilde_path = p_path;
         }
-        else if (MCStringGetCharAtIndex(p_path, 0) == '/')
+        else if (MCStringGetNativeCharAtIndex(p_path, 0) != '/')
         {
             // SN-2015-06-05: [[ Bug 15432 ]] Fix resolvepath on Linux: we want an
             //  absolute path.
