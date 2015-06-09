@@ -2520,7 +2520,6 @@ void MCPlayer::getenabledtracks(MCExecPoint &ep)
 }
 #endif
 
-//Boolean MCPlayer::setenabledtracks(MCStringRef s)
 void MCPlayer::setenabledtracks(uindex_t p_count, uint32_t *p_tracks_id)
 {
 	if (getstate(CS_PREPARED))
