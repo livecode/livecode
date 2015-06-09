@@ -1216,7 +1216,7 @@ MCPlatformDialogResult MCPlatformSoundRecorderEndConfigurationDialog(MCPlatformS
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef struct MCPlatformCamera *MCPlatformCameraRef;
+typedef struct __MCPlatformCamera *MCPlatformCameraRef;
 
 enum MCPlatformCameraProperty
 {

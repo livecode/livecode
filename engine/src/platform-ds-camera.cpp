@@ -117,7 +117,6 @@ private:
 	bool m_capture_video;
 	MCRectangle m_rect;
 
-	bool m_prepared;
 	bool m_visible;
 	bool m_previewing;
 
@@ -148,7 +147,7 @@ MCDSCamera::MCDSCamera()
 {
 	m_device = kMCPlatformCameraDeviceDefault;
 	m_capture_video = false;
-	m_prepared = false;
+	m_previewing = false;
 	m_visible = false;
 
 	m_rect = MCRectangleMake(0,0,0,0);
@@ -160,56 +159,6 @@ MCDSCamera::MCDSCamera()
 MCDSCamera::~MCDSCamera()
 {
 	Close();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-extern HINSTANCE MChInst;
-
-#define PREVIEW_WINDOW_CLASS L"MCDSCameraPreview"
-
-LRESULT CALLBACK MCDSCameraPreviewProc(HWND p_hwnd, UINT p_msg, WPARAM p_wparam, LPARAM p_lparam)
-{
-	return DefWindowProc(p_hwnd, p_msg, p_wparam, p_lparam);
-}
-
-bool MCDSCameraCreatePreviewWindow(HWND &r_window)
-{
-	static ATOM s_class_atom = nil;
-
-	if (s_class_atom == nil)
-	{
-		WNDCLASS t_class;
-		t_class.style = CS_DBLCLKS | CS_VREDRAW | CS_HREDRAW | CS_OWNDC;
-		t_class.cbClsExtra = 0;
-		t_class.cbWndExtra = 4;
-		t_class.hInstance = MChInst;
-		t_class.hIcon = nil;
-		t_class.hCursor = nil;
-		t_class.hbrBackground = nil;
-		t_class.lpszMenuName = nil;
-		t_class.lpfnWndProc = MCDSCameraPreviewProc;
-		t_class.lpszClassName = PREVIEW_WINDOW_CLASS;
-
-		s_class_atom = RegisterClass(&t_class);
-
-		if (s_class_atom == nil)
-			return false;
-	}
-
-	bool t_success;
-	t_success = true;
-
-	HWND t_window;
-	t_window = nil;
-
-	t_window = CreateWindow(PREVIEW_WINDOW_CLASS, L"Preview", SS_WHITERECT | WS_CHILD, 0, 0, 0, 0, nil, nil, nil, nil);
-	t_success = t_window != nil;
-
-	if (t_success)
-		r_window = t_window;
-
-	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -430,6 +379,11 @@ bool MCDSCamera::OpenCaptureGraph()
 	return t_success;
 }
 
+void MCDSCamera::CloseCaptureGraph()
+{
+	m_capture_graph.Release();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCDSCamera::StartPreview()
@@ -476,6 +430,7 @@ void MCDSCamera::StartPreview()
 	if (t_success)
 	{
 		m_media_control = t_media_control;
+		m_video_window = t_video_window;
 		m_previewing = true;
 
 		ShowWindow(m_preview_window, SW_SHOW);
@@ -494,26 +449,68 @@ void MCDSCamera::StopPreview()
 	m_video_window->put_Owner(NULL);
 	m_video_window.Release();
 
-	m_capture_graph.Release();
-	m_filter_graph.Release();
-
 	ShowWindow(m_preview_window, SW_HIDE);
+
+	CloseCaptureGraph();
+	CloseFilterGraph();
 
 	m_previewing = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern HINSTANCE MChInst;
+
+#define PREVIEW_WINDOW_CLASS L"MCDSCameraPreview"
+
+LRESULT CALLBACK MCDSCameraPreviewProc(HWND p_hwnd, UINT p_msg, WPARAM p_wparam, LPARAM p_lparam)
+{
+	return DefWindowProc(p_hwnd, p_msg, p_wparam, p_lparam);
+}
+
 void MCDSCamera::Open()
 {
 	if (m_preview_window != nil)
 		return;
 
+	static ATOM s_class_atom = nil;
+
+	if (s_class_atom == nil)
+	{
+		WNDCLASS t_class;
+		t_class.style = CS_DBLCLKS | CS_VREDRAW | CS_HREDRAW | CS_OWNDC;
+		t_class.cbClsExtra = 0;
+		t_class.cbWndExtra = 4;
+		t_class.hInstance = MChInst;
+		t_class.hIcon = nil;
+		t_class.hCursor = nil;
+		t_class.hbrBackground = nil;
+		t_class.lpszMenuName = nil;
+		t_class.lpfnWndProc = MCDSCameraPreviewProc;
+		t_class.lpszClassName = PREVIEW_WINDOW_CLASS;
+
+		s_class_atom = RegisterClass(&t_class);
+
+		if (s_class_atom == nil)
+			return;
+	}
+
 	bool t_success;
 	t_success = true;
 
+	HWND t_window;
+	t_window = nil;
+	
+	DWORD t_flags;
+	t_flags = SS_WHITERECT | (m_visible ? WS_VISIBLE : 0) | (m_parent != nil ? WS_CHILD : 0);
+	t_window = CreateWindow(PREVIEW_WINDOW_CLASS, L"Preview", t_flags, m_rect.x, m_rect.y, m_rect.width, m_rect.height, m_parent, nil, nil, nil);
+	t_success = t_window != nil;
+
+	DWORD t_error;
+	t_error = GetLastError();
+
 	if (t_success)
-		t_success = MCDSCameraCreatePreviewWindow(m_preview_window);
+		m_preview_window = t_window;
 
 	if (t_success)
 		StartPreview();
@@ -531,22 +528,42 @@ void MCDSCamera::Close()
 
 void MCDSCamera::Attach(void *owner)
 {
-	if (owner == m_parent)
+	HWND t_parent;
+	t_parent = nil;
+
+	if (owner != nil)
+	{
+		Window t_window = (Window)owner;
+		t_parent = (HWND)t_window->handle.window;
+	}
+
+	if (t_parent == m_parent)
 		return;
 
-	m_parent = (HWND)owner;
-	SetParent(m_preview_window, m_parent);
+	m_parent = (HWND)t_parent;
+	if (m_preview_window != nil)
+	{
+		SetParent(m_preview_window, m_parent);
+		StartPreview();
+	}
 }
 
 void MCDSCamera::Detach()
 {
+	StopPreview();
+	if (m_preview_window != nil)
+		SetParent(m_preview_window, NULL);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCDSCamera::GetNativeView(void *&r_view)
 {
-	return false;
+	if (m_preview_window == nil)
+		return false;
+
+	r_view = m_preview_window;
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -562,7 +579,7 @@ bool MCDSCamera::SetRect(const MCRectangle &p_rect)
 		MoveWindow(m_preview_window, p_rect.x, p_rect.y, p_rect.width, p_rect.height, TRUE);
 		StartPreview();
 	}
-	else
+	else if (m_preview_window != nil)
 		MoveWindow(m_preview_window, p_rect.x, p_rect.y, p_rect.width, p_rect.height, TRUE);
 
 	m_rect = p_rect;
@@ -601,7 +618,7 @@ bool MCDSCamera::GetDevices(intset_t &r_devices)
 	if (!OpenVideoInput())
 		return false;
 
-	if (t_moniker == nil)
+	if (m_video_input == nil)
 		r_devices = 0;
 	else
 		r_devices = kMCPlatformCameraDeviceDefault;
