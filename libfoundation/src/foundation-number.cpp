@@ -141,6 +141,9 @@ bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_t char_co
     else
     {
         char *t_end;
+        
+        errno = 0;
+        
         // SN-2014-10-06: [[ Bug 13594 ]] We want an unsigned integer if possible
         uinteger_t t_uinteger;
 #ifdef __LP64__
@@ -159,6 +162,8 @@ bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_t char_co
             t_success = MCNumberCreateWithUnsignedInteger(t_uinteger, r_number);
         else
         {
+            errno = 0;
+            
             real64_t t_real;
             t_real = strtod(t_chars, &t_end);
             
@@ -191,6 +196,8 @@ bool MCNumberParseUnicodeChars(const unichar_t *p_chars, uindex_t p_char_count, 
 		t_success = MCNumberCreateWithInteger(strtoul(t_native_chars + 2, nil, 16), r_number);
 	else
 	{
+        errno = 0;
+        
 		char *t_end;
 		integer_t t_integer;
 		t_integer = strtoul(t_native_chars, &t_end, 10);
@@ -200,6 +207,8 @@ bool MCNumberParseUnicodeChars(const unichar_t *p_chars, uindex_t p_char_count, 
 			t_success = MCNumberCreateWithInteger(t_integer, r_number);
 		else
 		{
+            errno = 0;
+            
 			real64_t t_real;
 			t_real = strtod(t_native_chars, &t_end);
 
