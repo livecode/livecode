@@ -1480,6 +1480,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\dskmessage.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\dskosxmain.mm"
 				>
 				<FileConfiguration
@@ -7928,6 +7932,54 @@
 			>
 			<File
 				RelativePath=".\src\legacy_spec.cpp"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Platform"
+			>
+			<File
+				RelativePath=".\src\platform-av-camera.mm"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\platform-camera-internal.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\platform-camera.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\platform-ds-camera.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\platform-internal.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\platform.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\platform.h"
 				>
 			</File>
 		</Filter>

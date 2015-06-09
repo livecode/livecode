@@ -27,6 +27,7 @@
 
 #include "platform.h"
 #include "platform-internal.h"
+#include "platform-camera-internal.h"
 
 #ifdef _MACOSX
 #include <Cocoa/Cocoa.h>
@@ -54,37 +55,6 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 }
 
 #endif
-
-////////////////////////////////////////////////////////////////////////////////
-
-class MCPlatformCamera
-{
-public:
-    MCPlatformCamera(void);
-    virtual ~MCPlatformCamera(void);
-    
-    void Retain(void);
-    void Release(void);
-
-    virtual void Open(void) = 0;
-    virtual void Close(void) = 0;
-    
-    virtual void Attach(void *owner) = 0;
-    virtual void Detach(void) = 0;
-	
-	virtual bool GetNativeView(void *&r_view) = 0;
-    
-    virtual bool SetProperty(MCPlatformCameraProperty property, MCPlatformPropertyType type, void *value) = 0;
-    virtual bool GetProperty(MCPlatformCameraProperty property, MCPlatformPropertyType type, void *value) = 0;
-    
-    virtual bool StartRecording(MCStringRef filename) = 0;
-    virtual bool StopRecording(void) = 0;
-    
-    virtual bool TakePicture(MCDataRef& r_data) = 0;
-    
-private:
-    uindex_t m_references;
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -182,29 +152,6 @@ private:
     
     void *m_owner;
 };
-
-////////////////////////////////////////////////////////////////////////////////
-
-MCPlatformCamera::MCPlatformCamera(void)
-{
-    m_references = 1;
-}
-
-MCPlatformCamera::~MCPlatformCamera(void)
-{
-}
-
-void MCPlatformCamera::Retain(void)
-{
-    m_references += 1;
-}
-
-void MCPlatformCamera::Release(void)
-{
-    m_references -= 1;
-    if (m_references == 0)
-        delete this;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -929,84 +876,6 @@ void MCPlatformCameraCreate(MCPlatformCameraRef& r_camera)
 #else
 	r_camera = new MCAVCamera();
 #endif
-}
-
-void MCPlatformCameraRetain(MCPlatformCameraRef camera)
-{
-    if (camera != nil)
-        camera -> Retain();
-}
-
-void MCPlatformCameraRelease(MCPlatformCameraRef camera)
-{
-    if (camera != nil)
-        camera -> Release();
-}
-
-void MCPlatformCameraAttach(MCPlatformCameraRef camera, void *p_target)
-{
-    if (camera != nil)
-        camera -> Attach(p_target);
-}
-
-void MCPlatformCameraDetach(MCPlatformCameraRef camera)
-{
-    if (camera != nil)
-        camera -> Detach();
-}
-
-void MCPlatformCameraOpen(MCPlatformCameraRef camera)
-{
-    if (camera != nil)
-        camera -> Open();
-}
-
-void MCPlatformCameraClose(MCPlatformCameraRef camera)
-{
-    if (camera != nil)
-        camera -> Close();
-}
-
-bool MCPlatformCameraGetNativeView(MCPlatformCameraRef camera, void *&r_view)
-{
-	if (camera != nil)
-		return camera->GetNativeView(r_view);
-	return false;
-}
-
-bool MCPlatformCameraSetProperty(MCPlatformCameraRef camera, MCPlatformCameraProperty property, MCPlatformPropertyType type, void *value)
-{
-    if (camera != nil)
-        return camera -> SetProperty(property, type, value);
-    return true;
-}
-
-bool MCPlatformCameraGetProperty(MCPlatformCameraRef camera, MCPlatformCameraProperty property, MCPlatformPropertyType type, void *value)
-{
-    if (camera != nil)
-        return camera -> GetProperty(property, type, value);
-    return true;
-}
-
-bool MCPlatformCameraStartRecording(MCPlatformCameraRef camera, MCStringRef filename)
-{
-    if (camera != nil)
-        return camera -> StartRecording(filename);
-    return false;
-}
-
-bool MCPlatformCameraStopRecording(MCPlatformCameraRef camera)
-{
-    if (camera != nil)
-        return camera -> StopRecording();
-    return false;
-}
-
-bool MCPlatformCameraTakePicture(MCPlatformCameraRef camera, MCDataRef& r_image_data)
-{
-    if (camera != nil)
-        return camera -> TakePicture(r_image_data);
-    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
