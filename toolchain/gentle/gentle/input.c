@@ -33,6 +33,7 @@ static FillBuf ();
 static FILE   *InFile;
 /* --PATCH-- */ static char   InFileName[PATHLENGTH];
 /* --PATCH-- */ static char   CurFileName[PATHLENGTH];
+/* --PATCH-- */ const char*   InputDir = NULL;
 static long   filecount = 0;
 static long   CurFile = 0;
 static char * PATH[MAXPATH];
@@ -121,29 +122,45 @@ static open_next_file ()
 /*----------------------------------------------------------------------------*/
 
 define_file (path)
-   char * path;
+char * path;
 {
-/* --PATCH-- */    char fullpath[PATHLENGTH];
-/* --PATCH-- */    if (path[0] != '/' && path[1] != ':')
-/* --PATCH-- */    {
-/* --PATCH-- */         char cwd[PATHLENGTH];
-/* --PATCH-- */         getcwd(cwd, PATHLENGTH);
-#ifndef _WIN32
-/* --PATCH-- */         sprintf(fullpath, "%s/%s", cwd, path);
-#else
-/* --PATCH-- */         sprintf(fullpath, "%s\\%s", cwd, path);
-#endif
-/* --PATCH-- */    }
-/* --PATCH-- */    else
-/* --PATCH-- */         sprintf(fullpath, "%s", path);
+    /* --PATCH-- */ char partpath[PATHLENGTH];
+    /* --PATCH-- */ char fullpath[PATHLENGTH];
     
+#ifdef _WIN32
+#  define sep '\\'
+#else
+#  define sep '/'
+#endif
+    
+/* --PATCH-- */ if (strchr(path, sep) == NULL)
+/* --PATCH-- */ {
+/* --PATCH-- */     if (InputDir != NULL)
+/* --PATCH-- */         sprintf(partpath, "%s%c%s", InputDir, sep, path);
+/* --PATCH-- */     else
+/* --PATCH-- */         strncpy(partpath, path, PATHLENGTH);
+/* --PATCH-- */ }
+/* --PATCH-- */ else
+/* --PATCH-- */ {
+/* --PATCH-- */     strncpy(partpath, path, PATHLENGTH);
+/* --PATCH-- */ }
+/* --PATCH-- */
+/* --PATCH-- */ if (partpath[0] != '/' && partpath[1] != ':')
+/* --PATCH-- */ {
+/* --PATCH-- */     char cwd[PATHLENGTH];
+/* --PATCH-- */     getcwd(cwd, PATHLENGTH);
+/* --PATCH-- */
+/* --PATCH-- */     sprintf(fullpath, "%s%c%s", cwd, sep, partpath);
+/* --PATCH-- */ }
+/* --PATCH-- */ else
+/* --PATCH-- */     sprintf(fullpath, "%s", partpath);
 /* --PATCH-- */   if (! is_defined(fullpath)) {
-      filecount++;
-      if (filecount >= MAXPATH) {
-	 Fatal("pathtable overflow\n");
-      }
+        filecount++;
+        if (filecount >= MAXPATH) {
+            Fatal("pathtable overflow\n");
+        }
 /* --PATCH-- */      PATH[filecount] = strdup(fullpath);
-   }
+    }
 }
 
 /*----------------------------------------------------------------------------*/

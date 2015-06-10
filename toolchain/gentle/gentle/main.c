@@ -12,6 +12,12 @@
 */
 
 
+#ifndef _WIN32
+#  define sep '/'
+#else
+#  define sep '\\'
+#endif
+
 int ErrorOccured = 0;
 
 static scanargs();
@@ -58,21 +64,31 @@ struct FileMapping
 
 static struct FileMapping *FileMappings;
 
+extern const char* InputDir;
+
 void DefFileMapping(const char *p_map_str)
 {
     struct FileMapping *t_mapping;
 	const char *t_equal;
+    const char *t_map_str;
 	size_t t_length;
+    size_t i;
 
     t_mapping = (struct FileMapping *)malloc(sizeof(struct FileMapping));
     t_mapping -> next = FileMappings;
 
     t_equal = strchr(p_map_str, '=');
     
+    // Ignore leading directory components on the LHS of the =
+    t_map_str = p_map_str;
+    for (i = 0; i < t_equal-p_map_str; i++)
+        if (p_map_str[i] == sep)
+            t_map_str = &p_map_str[i+1];
+    
 	t_length = strlen(p_map_str);
-	t_length = t_length > t_equal - p_map_str ? t_equal - p_map_str : t_length;
+	t_length = t_length > t_equal - t_map_str ? t_equal - t_map_str : t_length;
     t_mapping -> name = malloc(t_length + 1);
-	memcpy(t_mapping -> name, p_map_str, t_length);
+	memcpy(t_mapping -> name, t_map_str, t_length);
 	t_mapping -> name[t_length] = '\0';
 
     t_equal++;
@@ -133,6 +149,12 @@ char ** argv;
         else if (strcmp (argv[i], "-alert") == 0) SetOption_ALERT();
         else if (strcmp (argv[i], "-if") == 0) SymbolFileFlag = 1;
         else if (strcmp (argv[i], "-trace") == 0) TraceFlag = 1;
+        else if (strcmp (argv[i], "-inputdir") == 0)
+        {
+            InputDir = argv[i+1];
+            i += 2;
+            continue;
+        }
         else {
             int len;
             

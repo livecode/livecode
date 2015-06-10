@@ -2,6 +2,12 @@
 /* --PATCH-- */ #include <string.h>
 #include <stdio.h>
 
+#ifdef _WIN32
+#  define SLASH '\\'
+#else
+#  define SLASH '/'
+#endif
+
 /* ( 1) %{ */
 /* ( 2) YYSTYPE block */
 /* ( 3) SETPOS block */
@@ -234,10 +240,10 @@ args(argc, argv)
         if (eq == -1)
         {
             const char *t_slash;
-            t_slash = strchr(argv[i], "/");
+            t_slash = strrchr(argv[i], SLASH);
             if (t_slash != NULL)
             {
-                t_name = strdup(t_slash);
+                t_name = strdup(t_slash + 1);
                 t_replacement = strdup(argv[i]);
             }
             else
@@ -248,9 +254,30 @@ args(argc, argv)
         }
         else
         {
+            // Locate the last slash, if any, before the equals sign
+            size_t t_slash = NULL;
+            size_t j;
+            size_t t_length;
+            for (j = 0; j < eq; j++)
+            {
+                if (argv[i][j] == SLASH)
+                {
+                    t_slash = j;
+                }
+            }
+            
             t_name = (char *) malloc(eq+1);
-            strncpy(t_name, argv[i], eq);
-            t_name[eq] = '\0';
+            if (t_slash != NULL)
+            {
+                t_length = eq - t_slash - 1;
+                strncpy(t_name, &argv[i][t_slash] + 1, eq - t_slash);
+            }
+            else
+            {
+                t_length = eq;
+                strncpy(t_name, argv[i], eq);
+            }
+            t_name[t_length] = '\0';
             
             t_replacement = (char *) malloc(len-eq);
             strncpy(t_replacement, argv[i]+eq+1, len-eq-1);
