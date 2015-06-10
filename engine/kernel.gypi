@@ -220,22 +220,6 @@
 			'target_name': 'kernel-java',
 			'type': 'none',
 			
-			# A little indirection needed to get INTERMEDIATE_DIR escaped properly
-			'intermediate_dir_escaped': '<!(["sh", "-c", "echo $1 | sed -e $2", "echo", "<(INTERMEDIATE_DIR)", "s/\\\\$/\\\\\\$/g"])',
-			
-			'sources':
-			[
-				'<@(engine_aidl_source_files)',
-				
-				# Outputs from a rule don't get considered as
-				# inputs to another rule in Gyp, unfortunately
-				'<!@((for x in <@(engine_aidl_source_files); do echo "<(_intermediate_dir_escaped)/${x}"; done) | sed -e "s/\\.aidl$/\\.java/g")',
-				
-				# Some of the Java sources depend on the output
-				# from AIDL so they come last
-				'<@(engine_java_source_files)',
-			],
-			
 			'conditions':
 			[
 				[
@@ -250,6 +234,22 @@
 						'includes':
 						[
 							'../config/java.gypi',
+						],
+						
+						# A little indirection needed to get INTERMEDIATE_DIR escaped properly
+						'intermediate_dir_escaped': '<!(["sh", "-c", "echo $1 | sed -e $2", "echo", "<(INTERMEDIATE_DIR)", "s/\\\\$/\\\\\\$/g"])',
+	
+						'sources':
+						[
+							'<@(engine_aidl_source_files)',
+		
+							# Outputs from a rule don't get considered as
+							# inputs to another rule in Gyp, unfortunately
+							'<!@((for x in <@(engine_aidl_source_files); do echo "<(_intermediate_dir_escaped)/${x}"; done) | sed -e "s/\\.aidl$/\\.java/g")',
+		
+							# Some of the Java sources depend on the output
+							# from AIDL so they come last
+							'<@(engine_java_source_files)',
 						],
 					}
 				]
