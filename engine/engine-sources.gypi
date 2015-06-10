@@ -863,7 +863,6 @@
 			'src/module-engine.h',
 			'src/module-resources.h',
 			
-			'src/modules.cpp',
 			'src/module-canvas.cpp',
 			'src/module-engine.cpp',
 			'src/module-resources.cpp',
