@@ -61,7 +61,7 @@
 
 'action' GenerateSingleModule(MODULE)
 
-    'rule' GenerateSingleModule(Module:module(_, Kind, Id, Imports, Definitions)):
+    'rule' GenerateSingleModule(Module:module(_, Kind, Id, Definitions)):
         ModuleDependencyList <- nil
         
         QueryModuleId(Id -> Info)
