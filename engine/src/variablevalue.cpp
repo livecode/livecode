@@ -624,59 +624,17 @@ void MCVariableValue::assign_constant_both(const MCString& s, real64_t n)
 // a string.
 bool MCVariableValue::append_string(const MCString& s)
 {
-	const char *t_new_string;
-	t_new_string = s . getstring();
-
-	uint32_t t_new_length;
-	t_new_length = s . getlength();
-
-	if (t_new_length > 0)
-	{
-		uint32_t t_new_size;
-		t_new_size = t_new_length + strnum . svalue . length;
-
-		if (t_new_size > strnum . buffer . size)
-		{
-			t_new_size = (t_new_size + VAR_PAD) & VAR_MASK;
-			if (strnum . buffer . data != NULL)
-				t_new_size += MCU_min(t_new_size, VAR_APPEND_MAX);
-
-			char *t_new_buffer;
-			t_new_buffer = (char *)malloc(t_new_size);
-			if (t_new_buffer != NULL)
-			{
-				memcpy(t_new_buffer, strnum . svalue . string, strnum . svalue . length);
-				memmove(t_new_buffer + strnum . svalue . length, t_new_string, t_new_length);
-				
-				free(strnum . buffer . data);
-
-				strnum . buffer . data = t_new_buffer;
-				strnum . buffer . size = t_new_size;
-
-				strnum . svalue . string = t_new_buffer;
-				strnum . svalue . length += t_new_length;
-			}
-			else
-				return false;
-		}
-		else
-		{
-			memmove(strnum . buffer . data + strnum . svalue . length, t_new_string, t_new_length);
-			strnum . svalue . string = strnum . buffer . data;
-			strnum . svalue . length += t_new_length;
-		}
-
-		set_type(VF_STRING);
-	}
-
-	set_dbg_changed(true);
-
-	return true;
+    return insert_string(s, strnum . svalue . length);
 }
 
 bool MCVariableValue::prepend_string(const MCString& s)
 {
-	const char *t_new_string;
+    return insert_string(s, 0);
+}
+
+bool MCVariableValue::insert_string(const MCString& s, int insert_at)
+{
+    const char *t_new_string;
 	t_new_string = s . getstring();
     
 	uint32_t t_new_length;
@@ -697,8 +655,9 @@ bool MCVariableValue::prepend_string(const MCString& s)
 			t_new_buffer = (char *)malloc(t_new_size);
 			if (t_new_buffer != NULL)
 			{
-                memcpy(t_new_buffer, t_new_string, t_new_length);
-				memmove(t_new_buffer + t_new_length, strnum . svalue . string, strnum . svalue . length);
+                memcpy(t_new_buffer, strnum . svalue . string, insert_at);
+                memmove(t_new_buffer + insert_at, t_new_string, t_new_length);
+                memmove(t_new_buffer + insert_at + t_new_length, strnum . svalue . string + insert_at, strnum . svalue . length - insert_at);
 				
 				free(strnum . buffer . data);
                 
@@ -713,8 +672,8 @@ bool MCVariableValue::prepend_string(const MCString& s)
 		}
 		else
 		{
-            memmove(strnum . buffer . data + t_new_length, strnum . buffer . data, strnum . svalue . length);
-            memmove(strnum . buffer . data, t_new_string, t_new_length);
+            memmove(strnum . buffer . data + insert_at + t_new_length, strnum . buffer . data + insert_at, strnum . svalue . length - insert_at);
+            memmove(strnum . buffer . data + insert_at, t_new_string, t_new_length);
 			strnum . svalue . string = strnum . buffer . data;
 			strnum . svalue . length += t_new_length;
 		}
