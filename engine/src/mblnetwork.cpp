@@ -48,6 +48,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#if 0
 static bool MCS_mbl_hostNameToAddress(MCStringRef p_hostname, MCSystemHostResolveCallback p_callback, void *p_context)
 {
 	struct hostent *he;
@@ -219,3 +220,4 @@ bool MCS_hostaddress(MCStringRef& r_host_address)
 {
 	return false;
 }
+#endif
