@@ -120,6 +120,9 @@
 								'-lsicutu',
 								'-lsicuuc',
 								'-lsicudt',
+								
+								# ICU dependencies
+								'-ladvapi32',
 							],
 						},
 					],

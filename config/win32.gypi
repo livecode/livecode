@@ -38,7 +38,6 @@
 						'PreprocessorDefinitions': ['_DEBUG'],
 						'RuntimeLibrary': '1',
 						'DebugInformationFormat': '4',
-						'BasicRuntimeChecks': '3',
 					},
 					
 					'VCLinkerTool':
@@ -50,6 +49,22 @@
 						'EnableCOMDATFolding': '2',
 					},
 				},
+				
+				'target_conditions':
+				[
+					[
+						'_suppress_warnings == 0',
+						{
+							'msvs_settings':
+							{
+								'VCCLCompilerTool':
+								{
+									'BasicRuntimeChecks': 3,
+								},
+							},
+						},
+					],
+				],
 			},
 			
 			'Release':

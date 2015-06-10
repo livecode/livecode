@@ -28,6 +28,14 @@
 			[
 				'reflex.c',
 			],
+			
+			'msvs_settings':
+			{
+				'VCLinkerTool':
+				{
+					'SubSystem': '1',	# /SUBSYSTEM:CONSOLE
+				},
+			},
 		},
 	],
 }

@@ -37,11 +37,21 @@
 			[
 				'OS == "win"',
 				{
-					# MSVC doesn't recognise "inline" in C mode
+					# MSVC doesn't recognise "inline" in C mode and has no
+					# <unistd.h> header
 					'defines':
 					[
 						['inline', '_inline'],
+						['YY_NO_UNISTD_H', '1'],
 					],
+					
+					'msvs_settings':
+					{
+						'VCLinkerTool':
+						{
+							'SubSystem': '1',	# /SUBSYSTEM:CONSOLE
+						},
+					},
 				},
 				{
 					# Use an old C standardare machine-generated
@@ -143,8 +153,9 @@
 				'action':
 				[
 					'>(gentle_exe_file)',
-					'<(RULE_INPUT_PATH)',
+					'-inputdir', '.',
 					'<(RULE_INPUT_ROOT).c=<(INTERMEDIATE_DIR)/>(stage)/<(RULE_INPUT_ROOT).c',
+					'<(RULE_INPUT_PATH)',
 				],
 			},
 		],
@@ -195,7 +206,7 @@
 					'inputs':
 					[ 
 						'>(gentle_bootstrap_grammar_file)',
-						'>@(gentle_auxiliary_grammar_files)',
+						#'>@(gentle_auxiliary_grammar_files)',	# Confuses Gyp/MSVS when listed here
 					],
 					
 					'outputs':
@@ -210,6 +221,7 @@
 					'action':
 					[
 						'>(gentle_exe_file)',
+						'-inputdir', '.',
 						'>(gentle_bootstrap_grammar_file)',
 						'gen.lit=<(INTERMEDIATE_DIR)/<(stage)/gen.lit',
 						'gen.tkn=<(INTERMEDIATE_DIR)/<(stage)/gen.tkn',

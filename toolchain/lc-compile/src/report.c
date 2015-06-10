@@ -61,10 +61,11 @@ void Fatal_InternalInconsistency(const char *p_message)
 void
 Debug_Emit(const char *p_format, ...)
 {
+	va_list t_args;
+	
 	if (s_verbose_level < 1)
 		return;
 
-	va_list t_args;
 	va_start(t_args, p_format);
 
 	fprintf(stderr, "debug: [Emit] ");

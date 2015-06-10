@@ -22,8 +22,8 @@
 			
 			'inputs':
 			[
-				'>@(all_syntax_files)',
 				'>(template_grammar_file)',
+				'>@(all_syntax_files)',
 			],
 			
 			'outputs':
@@ -66,12 +66,13 @@
 			'action':
 			[
 				'>(gentle_exe_file)',
-				'<(INTERMEDIATE_DIR)/>(stage)/grammar_full.g',
+				'-inputdir', '.',
 				'gen.lit=<(INTERMEDIATE_DIR)/>(stage)/gen.lit',
 				'gen.tkn=<(INTERMEDIATE_DIR)/>(stage)/gen.tkn',
 				'grammar_full.c=<(INTERMEDIATE_DIR)/>(stage)/grammar_full.c',
 				'gen.h=<(INTERMEDIATE_DIR)/>(stage)/gen.h',
 				'gen.y=<(INTERMEDIATE_DIR)/>(stage)/gen.y',
+				'<(INTERMEDIATE_DIR)/>(stage)/grammar_full.g',
 			],
 		},
 		{

@@ -39,6 +39,14 @@
 				'symtab.c',
 				'yytab.c',
 			],
+			
+			'msvs_settings':
+			{
+				'VCLinkerTool':
+				{
+					'SubSystem': '1',	# /SUBSYSTEM:CONSOLE
+				},
+			},
 		},
 	],
 }
