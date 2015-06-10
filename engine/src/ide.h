@@ -382,6 +382,58 @@ private:
 	MCChunk *m_target;
 };
 
+class MCIdeBuilderValidate: public MCStatement
+{
+public:
+    MCIdeBuilderValidate(void);
+    ~MCIdeBuilderValidate(void);
+    
+	virtual Parse_stat parse(MCScriptPoint& p_script);
+    virtual void exec_ctxt(MCExecContext &ctxt);
+    
+private:
+    MCExpression *m_module_file;
+};
+
+class MCIdeBuilderProtect: public MCStatement
+{
+public:
+    MCIdeBuilderProtect(void);
+    ~MCIdeBuilderProtect(void);
+    
+	virtual Parse_stat parse(MCScriptPoint& p_script);
+    virtual void exec_ctxt(MCExecContext &ctxt);
+    
+private:
+    MCExpression *m_module_file;
+};
+
+class MCIdeBuilderSign: public MCStatement
+{
+public:
+    MCIdeBuilderSign(void);
+    ~MCIdeBuilderSign(void);
+    
+	virtual Parse_stat parse(MCScriptPoint& p_script);
+    virtual void exec_ctxt(MCExecContext &ctxt);
+    
+private:
+    MCExpression *m_params;
+};
+
+class MCIdeBuilderCheck: public MCStatement
+{
+public:
+    MCIdeBuilderCheck(void);
+    ~MCIdeBuilderCheck(void);
+    
+	virtual Parse_stat parse(MCScriptPoint& p_script);
+    virtual void exec_ctxt(MCExecContext &ctxt);
+    
+private:
+    MCExpression *m_params;
+};
+
 //////////
 
 #endif

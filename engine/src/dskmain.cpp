@@ -98,6 +98,10 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 	X_clear_globals();
 	
 	////
+    
+    extern Boolean MCruninternalaction;
+    if (MCruninternalaction)
+        MCnoui = True;
 
 #ifndef _WINDOWS_DESKTOP
 	MCS_init();

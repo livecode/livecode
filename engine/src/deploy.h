@@ -367,6 +367,21 @@ bool MCDeployDmgDump(const char *p_dmg_file, void (*p_log)(void *, const char *,
 
 ////////////////////////////////////////////////////////////////////////////////
 
+struct MCDeployBuilderTrustParameters
+{
+    MCStringRef package_file;
+    MCStringRef certificate_file;
+    MCStringRef key_file;
+    MCStringRef passphrase;
+};
+
+void MCDeployBuilderValidate(MCStringRef p_filename);
+void MCDeployBuilderProtect(MCStringRef p_filename);
+void MCDeployBuilderSign(MCDeployBuilderTrustParameters& p_params);
+void MCDeployBuilderCheck(MCDeployBuilderTrustParameters& p_params);
+
+////////////////////////////////////////////////////////////////////////////////
+
 Exec_stat MCDeployExtractMacOSX(MCStringRef p_filename, MCStringRef p_segment, MCStringRef p_section, void*& r_data, uint32_t& r_data_size);
 
 ////////////////////////////////////////////////////////////////////////////////

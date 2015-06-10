@@ -1975,18 +1975,13 @@ int main(int argc, char *argv[], char *envp[])
 	if (argc == 2 && strcmp(argv[1], "-elevated-slave") == 0)
 		if (!MCS_mac_elevation_bootstrap_main(argc, argv))
 			return -1;
-	
+    
+    //////////
+    //
+    // Perform low-level initialization (so 'internal' mode has a change to work).
+    
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];
-	
-    s_callback_lock = [[NSLock alloc] init];
-    
-	// Create the normal NSApplication object.
-	NSApplication *t_application;
-	t_application = [com_runrev_livecode_MCApplication sharedApplication];
-	
-	// Register for reconfigurations.
-	CGDisplayRegisterReconfigurationCallback(display_reconfiguration_callback, nil);
     
     extern bool MCModulesInitialize();
 	if (!MCInitialize() || !MCSInitialize() ||
@@ -2019,6 +2014,35 @@ int main(int argc, char *argv[], char *envp[])
 	
 	/* UNCHECKED */ MCMemoryResizeArray(i + 1, t_new_envp, t_envp_count);
 	t_new_envp[i] = nil;
+    
+    //////////
+    //
+    // Defer to the internal actions list if appropriate parameter is present.
+    
+    int t_result;
+    t_result = 0;
+    
+    if (argc >= 2 && strcmp(argv[1], "-internal") == 0)
+    {
+        extern int MCU_internal_action(int argc, MCStringRef *argv);
+        t_result = MCU_internal_action(argc, t_new_argv);
+        goto exit_main;
+    }
+        
+    //////////
+    //
+    // Startup the engine as a desktop app.
+    
+    
+    s_callback_lock = [[NSLock alloc] init];
+    
+	// Create the normal NSApplication object.
+	NSApplication *t_application;
+	t_application = [com_runrev_livecode_MCApplication sharedApplication];
+	
+	// Register for reconfigurations.
+	CGDisplayRegisterReconfigurationCallback(display_reconfiguration_callback, nil);
+    
 	
 	// Setup our delegate
 	com_runrev_livecode_MCApplicationDelegate *t_delegate;
@@ -2030,6 +2054,7 @@ int main(int argc, char *argv[], char *envp[])
 	// Run the application - this never returns!
 	[t_application run];    
 	
+exit_main:
 	for (i = 0; i < argc; i++)
 		MCValueRelease(t_new_argv[i]);
 	for (i = 0; i < t_envp_count; i++)
@@ -2046,7 +2071,7 @@ int main(int argc, char *argv[], char *envp[])
     MCModulesFinalize();
 	MCFinalize();
 	
-	return 0;
+	return t_result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

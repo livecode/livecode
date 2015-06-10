@@ -126,6 +126,8 @@ uint32_t MCmessageboxlastline = 0;
 Boolean MCcrashreportverbose = False;
 MCStringRef MCcrashreportfilename = nil;
 
+Boolean MCruninternalaction = False;
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Property tables specific to DEVELOPMENT mode
@@ -319,12 +321,15 @@ IO_stat MCDispatch::startup(void)
 	/* FRAGILE */ memset((void *)MCDataGetBytePtr(*t_decompressed), 0, MCDataGetLength(*t_decompressed));
 
 	// Temporary fix to make sure environment stack doesn't get lost behind everything.
+    if (!MCnoui)
+    {
 #if defined(_MACOSX)
-	ProcessSerialNumber t_psn = { 0, kCurrentProcess };
-	SetFrontProcess(&t_psn);
+        ProcessSerialNumber t_psn = { 0, kCurrentProcess };
+        SetFrontProcess(&t_psn);
 #elif defined(_WINDOWS)
-	SetForegroundWindow(((MCScreenDC *)MCscreen) -> getinvisiblewindow());
+        SetForegroundWindow(((MCScreenDC *)MCscreen) -> getinvisiblewindow());
 #endif
+    }
 	
 	MCenvironmentactive = True;
 	sptr -> setfilename(MCcmd);
@@ -335,7 +340,7 @@ IO_stat MCDispatch::startup(void)
 		MCdefaultstackptr -> message(MCM_start_up, nil, False, True);
 		MCdefaultstackptr -> setextendedstate(false, ECS_DURING_STARTUP);
 	}
-	
+    
 	if (!MCquit)
     {
         MCExecContext ctxt(nil, nil, nil);
@@ -347,6 +352,13 @@ IO_stat MCDispatch::startup(void)
 		
 		if (MCValueIsEmpty(t_valueref))
 		{
+            if (MCnoui)
+            {
+                MCErrorThrowGeneric(MCSTR("engine not licensed"));
+                return IO_ERROR;
+            }
+            
+            
 			sptr -> open();
 			MCImage::init();
 			
@@ -362,6 +374,9 @@ IO_stat MCDispatch::startup(void)
                 MCValueAssign(t_valueref, t_valueref2);
                 
 		}
+        
+        if (MCnoui)
+            return IO_NORMAL;
 
 		// TODO: Script Wiping
 		// if (sptr -> getscript() != NULL)

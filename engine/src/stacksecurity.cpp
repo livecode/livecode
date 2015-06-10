@@ -109,4 +109,11 @@ void MCStackSecurityProcessCapsule(void *p_start, void *p_finish)
 {
 }
 
+///////////
+
+bool MCStackSecurityProcessModule(MCStreamRef p_input, MCStreamRef& r_output)
+{
+    MCErrorThrowGeneric(MCSTR("protected modules not supported in community"));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
