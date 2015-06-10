@@ -48,6 +48,9 @@ void X_main_loop(void)
 		X_main_loop_iteration();
 }
 
+extern "C" bool MCModulesInitialize();
+extern "C" void MCModulesFinalize();
+
 int main(int argc, char *argv[], char *envp[])
 {
 	// On Linux, the argv and envp could be in pretty much any format. The
@@ -56,7 +59,6 @@ int main(int argc, char *argv[], char *envp[])
 	setlocale(LC_ALL, "");
 	MCsysencoding = strclone(nl_langinfo(CODESET));
 	
-	extern bool MCModulesInitialize();
 	if (!MCInitialize() || !MCSInitialize() ||
 	    !MCModulesInitialize() || !MCScriptInitialize())
 		exit(-1);
@@ -115,7 +117,6 @@ int main(int argc, char *argv[], char *envp[])
 	
 	int t_exit_code = X_close();
 
-	extern void MCModulesFinalize();
 	MCScriptFinalize();
 	MCModulesFinalize();
 	MCFinalize();
