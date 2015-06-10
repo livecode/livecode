@@ -674,6 +674,60 @@ bool MCVariableValue::append_string(const MCString& s)
 	return true;
 }
 
+bool MCVariableValue::prepend_string(const MCString& s)
+{
+	const char *t_new_string;
+	t_new_string = s . getstring();
+    
+	uint32_t t_new_length;
+	t_new_length = s . getlength();
+    
+	if (t_new_length > 0)
+	{
+		uint32_t t_new_size;
+		t_new_size = t_new_length + strnum . svalue . length;
+        
+		if (t_new_size > strnum . buffer . size)
+		{
+			t_new_size = (t_new_size + VAR_PAD) & VAR_MASK;
+			if (strnum . buffer . data != NULL)
+				t_new_size += MCU_min(t_new_size, VAR_APPEND_MAX);
+            
+			char *t_new_buffer;
+			t_new_buffer = (char *)malloc(t_new_size);
+			if (t_new_buffer != NULL)
+			{
+                memcpy(t_new_buffer, t_new_string, t_new_length);
+				memmove(t_new_buffer + t_new_length, strnum . svalue . string, strnum . svalue . length);
+				
+				free(strnum . buffer . data);
+                
+				strnum . buffer . data = t_new_buffer;
+				strnum . buffer . size = t_new_size;
+                
+				strnum . svalue . string = t_new_buffer;
+				strnum . svalue . length += t_new_length;
+			}
+			else
+				return false;
+		}
+		else
+		{
+            memmove(strnum . buffer . data + t_new_length, strnum . buffer . data, strnum . svalue . length);
+            memmove(strnum . buffer . data, t_new_string, t_new_length);
+			strnum . svalue . string = strnum . buffer . data;
+			strnum . svalue . length += t_new_length;
+		}
+        
+		set_type(VF_STRING);
+	}
+    
+	set_dbg_changed(true);
+    
+	return true;
+}
+
+
 Exec_stat MCVariableValue::append(MCExecPoint& ep)
 {
 	if (!ensure_string(ep))
@@ -698,6 +752,32 @@ Exec_stat MCVariableValue::append(MCExecPoint& ep)
 
 	return ES_NORMAL;
 }
+
+Exec_stat MCVariableValue::prepend(MCExecPoint& ep)
+{
+	if (!ensure_string(ep))
+		return ES_ERROR;
+    
+	// If we attempt to prepend an array, the array gets converted to empty,
+	// thus resulting in a no-op.
+	if (ep . getformat() == VF_ARRAY)
+		return ES_NORMAL;
+    
+	// Attempt to prepend the string value of the ep.
+	if (!prepend_string(ep . getsvalue()))
+	{
+		if (!MCabortscript)
+		{
+			MCeerror -> add(EE_NO_MEMORY, 0, 0);
+			MCabortscript = True;
+		}
+        
+		return ES_ERROR;
+	}
+    
+	return ES_NORMAL;
+}
+
 
 // This is a helper method for the V1 externals interface. It ensures that the
 // string is terminated by a NUL, but without affecting the value's size. It
