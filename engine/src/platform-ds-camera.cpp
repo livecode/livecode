@@ -28,6 +28,11 @@
 #include "qedit.h"
 
 #include "graphics_util.h"
+#include "imagebitmap.h"
+#include "parsedef.h"
+#include "objdefs.h"
+#include "mcio.h"
+#include "image.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 template <class T>
@@ -39,6 +44,25 @@ void inline MCMemoryClearStruct(T&p_struct)
 static inline bool MCRectangleIsEqual(const MCRectangle &p_left, const MCRectangle &p_right)
 {
 	return p_left.x == p_right.x && p_left.y == p_right.y && p_left.width == p_right.width && p_left.height == p_right.height;
+}
+
+void DeleteMediaType(AM_MEDIA_TYPE *p_type)
+{
+    if (p_type == NULL) {
+        return;
+    }
+
+    if (p_type->cbFormat != 0) {
+        CoTaskMemFree((PVOID)p_type->pbFormat);
+        p_type->cbFormat = 0;
+        p_type->pbFormat = NULL;
+    }
+    if (p_type->pUnk != NULL) {
+        p_type->pUnk->Release();
+        p_type->pUnk = NULL;
+    }
+
+    CoTaskMemFree((PVOID)p_type);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -95,6 +119,7 @@ private:
 
 	bool OpenVideoInput();
 	void CloseVideoInput();
+	bool ConfigureVideoInput(IAMStreamConfig* p_config);
 
 	bool OpenAudioInput();
 	void CloseAudioInput();
@@ -119,6 +144,8 @@ private:
 
 	bool m_visible;
 	bool m_previewing;
+	uint32_t m_snapshot_width;
+	uint32_t m_snapshot_height;
 
 	HWND m_parent;
 
@@ -130,7 +157,8 @@ private:
 	CComPtr<IBaseFilter> m_video_input;
 	CComPtr<IBaseFilter> m_audio_input;
 
-	CComPtr<IBaseFilter> m_sample_grabber;
+	CComPtr<ISampleGrabber> m_sample_grabber;
+	CComPtr<IBaseFilter> m_sample_grabber_output;
 
 	CComPtr<IGraphBuilder> m_filter_graph;
 	CComPtr<ICaptureGraphBuilder2> m_capture_graph;
@@ -205,6 +233,9 @@ bool MCDSCamera::OpenVideoInput()
 
 	if (!MCDSCameraFetchDefaultDeviceMoniker(CLSID_VideoInputDeviceCategory, &t_device))
 		return false;
+
+	if (t_device == nil)
+		return false;
 	
 	if (!SUCCEEDED(t_device->BindToObject(NULL, NULL, IID_IBaseFilter, (void**)&t_input)))
 		return false;
@@ -275,14 +306,22 @@ bool MCDSCamera::OpenSampleGrabber()
 	if (t_success)
 		t_success = SUCCEEDED(t_grabber->SetOneShot(FALSE));
 
+	CComPtr<IBaseFilter> t_output_filter;
 	if (t_success)
-		t_success = SUCCEEDED(t_grabber->QueryInterface(&m_sample_grabber));
+		t_success = SUCCEEDED(t_grabber->QueryInterface(&t_output_filter));
+
+	if (t_success)
+	{
+		m_sample_grabber = t_grabber;
+		m_sample_grabber_output = t_output_filter;
+	}
 
 	return t_success;
 }
 
 void MCDSCamera::CloseSampleGrabber()
 {
+	m_sample_grabber_output.Release();
 	m_sample_grabber.Release();
 }
 
@@ -312,7 +351,7 @@ bool MCDSCamera::OpenFilterGraph()
 		t_success = SUCCEEDED(t_builder->AddFilter(m_audio_input, L"AudioInput"));
 
 	if (t_success)
-		t_success = SUCCEEDED(t_builder->AddFilter(m_sample_grabber, L"Grabber"));
+		t_success = SUCCEEDED(t_builder->AddFilter(m_sample_grabber_output, L"Grabber"));
 
 	if (t_success)
 		m_filter_graph = t_builder;
@@ -323,6 +362,56 @@ bool MCDSCamera::OpenFilterGraph()
 void MCDSCamera::CloseFilterGraph()
 {
 	m_filter_graph.Release();
+}
+
+bool MCDSCamera::ConfigureVideoInput(IAMStreamConfig *p_config)
+{
+	bool t_success;
+	t_success = true;
+
+	int t_count, t_size;
+	if (t_success)
+		t_success = SUCCEEDED(p_config->GetNumberOfCapabilities(&t_count, &t_size));
+
+	if (t_success)
+		t_success = t_size == sizeof(VIDEO_STREAM_CONFIG_CAPS);
+
+	AM_MEDIA_TYPE *t_preferred_format;
+	t_preferred_format = nil;
+
+	VIDEOINFOHEADER *t_pref_vidinfo;
+	t_pref_vidinfo = nil;
+
+	for (uint32_t i = 0; t_success && i < t_count; i++)
+	{
+		VIDEO_STREAM_CONFIG_CAPS t_caps;
+		AM_MEDIA_TYPE *t_type;
+		t_success = SUCCEEDED(p_config->GetStreamCaps(i, &t_type, (BYTE*)&t_caps));
+		if (t_success)
+		{
+			if (t_type->formattype == FORMAT_VideoInfo)
+			{
+				VIDEOINFOHEADER *t_vidinfo;
+				t_vidinfo = (VIDEOINFOHEADER*)t_type->pbFormat;
+
+				if (t_preferred_format == nil || (t_vidinfo->bmiHeader.biWidth > t_pref_vidinfo->bmiHeader.biWidth && t_vidinfo->bmiHeader.biHeight > t_pref_vidinfo->bmiHeader.biHeight))
+				{
+					DeleteMediaType(t_preferred_format);
+					t_preferred_format = t_type;
+					t_pref_vidinfo = (VIDEOINFOHEADER*)t_preferred_format->pbFormat;
+					t_type = nil;
+				}
+			}
+			DeleteMediaType(t_type);
+		}
+	}
+
+	if (t_success && t_preferred_format != nil)
+		t_success = SUCCEEDED(p_config->SetFormat(t_preferred_format));
+
+	DeleteMediaType(t_preferred_format);
+
+	return t_success;
 }
 
 bool MCDSCamera::OpenCaptureGraph()
@@ -352,29 +441,52 @@ bool MCDSCamera::OpenCaptureGraph()
 			t_success = SUCCEEDED(m_filter_graph->AddFilter(t_null_renderer, L"NULL Renderer"));
 	}
 
+	CComPtr<IAMStreamConfig> t_stream_config;
+	if (t_success)
+		t_success =
+			SUCCEEDED(t_capture_graph->FindInterface(NULL, &MEDIATYPE_Interleaved, m_video_input, IID_IAMStreamConfig, (void**)&t_stream_config)) ||
+			SUCCEEDED(t_capture_graph->FindInterface(NULL, &MEDIATYPE_Video, m_video_input, IID_IAMStreamConfig, (void**)&t_stream_config));
+
+	if (t_success)
+		t_success = ConfigureVideoInput(t_stream_config);
+
 	if (t_success)
 		t_success = 
 			SUCCEEDED(t_capture_graph->RenderStream(
 				&PIN_CATEGORY_PREVIEW,
 				&MEDIATYPE_Interleaved,
 				m_video_input,
-				m_sample_grabber,
+				m_sample_grabber_output,
 				t_null_renderer)) ||
 			SUCCEEDED(t_capture_graph->RenderStream(
 				&PIN_CATEGORY_PREVIEW,
 				&MEDIATYPE_Video,
 				m_video_input,
-				m_sample_grabber,
+				m_sample_grabber_output,
 				t_null_renderer)) ||
 			SUCCEEDED(t_capture_graph->RenderStream(
 				&PIN_CATEGORY_CAPTURE,
 				&MEDIATYPE_Video,
 				m_video_input,
-				m_sample_grabber,
+				m_sample_grabber_output,
 				t_null_renderer));
 
+	AM_MEDIA_TYPE t_media_type;
 	if (t_success)
+		t_success = SUCCEEDED(m_sample_grabber->GetConnectedMediaType(&t_media_type));
+
+	if (t_success)
+	{
+		if (t_media_type.formattype == FORMAT_VideoInfo)
+		{
+			VIDEOINFOHEADER *t_video_info;
+			t_video_info = (VIDEOINFOHEADER*)t_media_type.pbFormat;
+			m_snapshot_width = t_video_info->bmiHeader.biWidth;
+			m_snapshot_height = t_video_info->bmiHeader.biHeight;
+		}
+
 		m_capture_graph = t_capture_graph;
+	}
 
 	return t_success;
 }
@@ -760,7 +872,96 @@ bool MCDSCamera::StopRecording()
 
 bool MCDSCamera::TakePicture(MCDataRef &r_data)
 {
-	return false;
+	if (!m_previewing)
+		return false;
+
+	bool t_success;
+	t_success = true;
+
+	long t_buffer_size;
+	t_buffer_size = 0;
+
+	long *t_buffer;
+	t_buffer = nil;
+
+	if (t_success)
+		t_success = SUCCEEDED(m_sample_grabber->GetCurrentBuffer(&t_buffer_size, NULL));
+
+	if (t_success)
+		t_success = MCMemoryAllocate(t_buffer_size, t_buffer);
+
+	if (t_success)
+		t_success = SUCCEEDED(m_sample_grabber->GetCurrentBuffer(&t_buffer_size, t_buffer));
+
+	//if (t_success)
+	MCImageBitmap *t_bitmap;
+	t_bitmap = nil;
+
+	if (t_success)
+		t_success = MCImageBitmapCreate(m_snapshot_width, m_snapshot_height, t_bitmap);
+
+	if (t_success)
+	{
+		// point to last row of dst bitmap (convert bottom-up to top-down)
+		uint8_t *t_dst_row;
+		t_dst_row = (uint8_t*)t_bitmap->data + (t_bitmap->height - 1) * t_bitmap->stride;
+
+		uint8_t *t_src_ptr;
+		t_src_ptr = (uint8_t*)t_buffer;
+
+		for (uint32_t y = 0; y < t_bitmap->height; y++)
+		{
+			uint32_t *t_dst_pixel;
+			t_dst_pixel = (uint32_t*)t_dst_row;
+			for (uint32_t x = 0; x < t_bitmap->width; x++)
+			{
+				uint8_t r, g, b;
+				b = *t_src_ptr++;
+				g = *t_src_ptr++;
+				r = *t_src_ptr++;
+
+				*t_dst_pixel++ = MCGPixelPackNative(r, g, b, 0xFF);
+			}
+			t_dst_row -= t_bitmap->stride;
+		}
+	}
+
+	if (t_buffer != nil)
+		MCMemoryDeallocate(t_buffer);
+
+	IO_handle t_stream;
+	t_stream = nil;
+	
+	if (t_success)
+		t_success = nil != (t_stream = MCS_fakeopenwrite());
+
+	uindex_t t_byte_count;
+	t_byte_count = 0;
+
+	if (t_success)
+		t_success = MCImageEncodeJPEG(t_bitmap, nil, t_stream, t_byte_count);
+
+	if (t_bitmap != nil)
+		MCImageFreeBitmap(t_bitmap);
+
+	size_t t_data_size;
+	t_data_size = 0;
+
+	void *t_data;
+	t_data = nil;
+
+	if (t_success)
+		t_success = IO_NORMAL == MCS_closetakingbuffer(t_stream, t_data, t_data_size);
+	else if (t_stream != nil)
+		MCS_close(t_stream);
+
+	if (t_success)
+		t_success = MCDataCreateWithBytesAndRelease((byte_t*)t_data, t_data_size, r_data);
+
+	if (!t_success && t_data != nil)
+		MCMemoryDeallocate(t_data);
+
+	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
