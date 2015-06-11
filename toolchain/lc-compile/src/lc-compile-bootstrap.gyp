@@ -104,7 +104,7 @@
 		
 				'action':
 				[
-					'<(flex)',
+					'<@(flex)',
 					'-o', '<@(_outputs)',
 					'-w',					# Ignore warnings
 					'<(RULE_INPUT_PATH)',
@@ -126,7 +126,7 @@
 		
 				'action':
 				[
-					'<(bison)',
+					'<@(bison)',
 					'-o', '<@(_outputs)',
 					#'-Wnone',				# Ignore warnings -- disabled as incompatible with XCode bison
 					'<(RULE_INPUT_PATH)',
