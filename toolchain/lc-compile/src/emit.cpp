@@ -310,25 +310,44 @@ void EmitFinish(void)
         
         if (fprintf(s_output_code_file, "unsigned int g_builtin_module_count = sizeof(g_builtin_modules) / sizeof(builtin_module_descriptor*);\n\n") < 0)
             goto error_cleanup;
-        
+		for(unsigned int i = 0; i < s_ordered_module_count; i++)
+		{
+            EmittedModule *t_module;
+            if (__FindEmittedModule(s_ordered_modules[i], t_module))
+            {
+                if (fprintf(s_output_code_file,
+                            "extern int %s_Initialize(void);\n",
+                            t_module -> modified_name) < 0)
+                    goto error_cleanup;
+            }
+		}
         if (fprintf(s_output_code_file, "int MCModulesInitialize(void)\n{\n") < 0)
             goto error_cleanup;
-        for(unsigned int i = 0; i < s_ordered_module_count; i++)
+		for(unsigned int i = 0; i < s_ordered_module_count; i++)
         {
             EmittedModule *t_module;
             if (__FindEmittedModule(s_ordered_modules[i], t_module))
             {
                 if (fprintf(s_output_code_file,
-                            "    extern int %s_Initialize(void);\n"
                             "    if (!%s_Initialize())\n"
                             "        return 0;\n",
-                            t_module -> modified_name,
                             t_module -> modified_name) < 0)
                     goto error_cleanup;
             }
         }
         if (fprintf(s_output_code_file, "    return 1;\n}\n\n") < 0)
             goto error_cleanup;
+		for(unsigned int i = 0; i < s_ordered_module_count; i++)
+		{
+            EmittedModule *t_module;
+            if (__FindEmittedModule(s_ordered_modules[i], t_module))
+            {
+                if (fprintf(s_output_code_file,
+                            "extern int %s_Finalize(void);\n",
+                            t_module -> modified_name) < 0)
+                    goto error_cleanup;
+            }
+		}
         if (fprintf(s_output_code_file, "void MCModulesFinalize(void)\n{\n") < 0)
             goto error_cleanup;
         for(unsigned int i = s_ordered_module_count; i > 0; i--)
@@ -337,9 +356,7 @@ void EmitFinish(void)
             if (__FindEmittedModule(s_ordered_modules[i - 1], t_module))
             {
                 if (fprintf(s_output_code_file,
-                            "    extern void %s_Finalize(void);\n"
                             "    %s_Finalize();\n",
-                            t_module -> modified_name,
                             t_module -> modified_name) < 0)
                     goto error_cleanup;
             }
