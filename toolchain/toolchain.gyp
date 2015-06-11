@@ -13,7 +13,19 @@
 			'dependencies':
 			[
 				'lc-compile/lc-compile.gyp:lc-compile',
-				'lc-compile/lc-run.gyp:lc-run',
+			],
+			
+			'conditions':
+			[
+				[
+					'mobile == 0',
+					{
+						'dependencies':
+						[
+							'lc-compile/lc-run.gyp:lc-run',
+						],
+					},
+				],
 			],
 		},
 	],

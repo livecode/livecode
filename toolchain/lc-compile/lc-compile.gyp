@@ -36,7 +36,32 @@
 						'dependencies':
 						[
 							'src/lc-compile-bootstrap.gyp:lc-compile-stage3#host',
-							'src/lc-compile-bootstrap.gyp:lc-compile-stage4#target',
+						],
+						
+						'conditions':
+						[
+							[
+								'mobile == 0',
+								{
+									'dependencies':
+									[
+										'src/lc-compile-bootstrap.gyp:lc-compile-stage4#target',
+									],
+								},
+							],
+							[
+								'OS == "ios"',
+								{
+									'direct_dependent_settings':
+									{
+										'variables':
+										{
+											# Work-around for Xcode/Gyp impedance mismatch
+											'lc-compile_host': '<(mac_tools_dir)/lc-compile-stage3-host',
+										},
+									},
+								},
+							],
 						],
 						
 						'direct_dependent_settings':

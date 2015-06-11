@@ -12,6 +12,8 @@
 			
 			'toolsets': ['host','target'],
 			
+			'product_name': 'libFoundation',
+			
 			'dependencies':
 			[
 				'../prebuilt/libicu.gyp:libicu',
@@ -126,6 +128,16 @@
 					'include',
 				],
 			},
+			
+			'target_conditions':
+			[
+				[
+					'_toolset != "target"',
+					{
+						'product_name': 'libFoundation->(_toolset)',
+					},
+				],
+			],
 			
 			'link_settings':
 			{

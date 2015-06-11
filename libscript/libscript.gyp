@@ -36,6 +36,8 @@
 			
 			'toolsets': ['host','target'],
 			
+			'product_name': 'libScript',
+			
 			'dependencies':
 			[
 				'../libfoundation/libfoundation.gyp:libFoundation',
@@ -78,12 +80,24 @@
 					},
 				],
 			],
+			
+			'target_conditions':
+			[
+				[
+					'_toolset != "target"',
+					{
+						'product_name': 'libScript->(_toolset)',
+					},
+				],
+			],
 		},
 		{
 			'target_name': 'stdscript',
 			'type': 'static_library',
 			
 			'toolsets': ['host','target'],
+			
+			'product_name': 'stdscript',
 			
 			'dependencies':
 			[
@@ -100,6 +114,16 @@
 			'sources':
 			[
 				'<@(stdscript_sources)',
+			],
+			
+			'target_conditions':
+			[
+				[
+					'_toolset != "target"',
+					{
+						'product_name': 'stdscript->(_toolset)',
+					},
+				],
 			],
 		},
 	],

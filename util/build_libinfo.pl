@@ -96,7 +96,7 @@ output "    &__libexternalname,";
 output "    __libexports";
 output "};";
 output "LibInfo *__libinfoptr_$name __attribute__((__visibility__(\"default\"))) = &__libinfo;";
-output "}"
+output "}";
 
 sub output
 {

@@ -6,6 +6,8 @@
 		'host_sdk%': 'macosx',
 		
 		'output_dir': '../ios-bin/<(target_sdk)',
+		
+		'mac_tools_dir': '$(SOLUTION_DIR)/_build/ios/<(host_sdk)/$(CONFIGURATION)'
 	},
 	
 	'xcode_config_file': '../version',
@@ -13,6 +15,7 @@
 	'xcode_settings':
 	{
 		'SDKROOT': '<(target_sdk)',
+		'SUPPORTED_PLATFORMS': 'iphoneos iphonesimulator',
 
 		'SOLUTION_DIR': '<(DEPTH)',
 		'SYMROOT': '$(SOLUTION_DIR)/_build/ios/$(SDK_NAME)',
@@ -52,7 +55,11 @@
 			'lib_suffix': '.dylib',
 			'ext_suffix': '.so',
 			'debug_info_suffix': '.dSYM',
+			
+			'mac_tools_dir': '$(SOLUTION_DIR)/_build/ios/<(host_sdk)/$(CONFIGURATION)'
 		},
+		
+		'mac_bundle': 0,
 		
 		'defines':
 		[
@@ -123,6 +130,21 @@
 							],
 						},
 					],
+				},
+			],
+			[
+				# If building a host tool, use the OSX settings
+				'_toolset != "target"',
+				{
+					'xcode_settings':
+					{
+						'SDKROOT[platform=macosx*]': '<(host_sdk)',
+						'SUPPORTED_PLATFORMS': 'macosx',
+						'ARCHS': 'x86_64',
+						
+						'SYMROOT': '$(SOLUTION_DIR)/_build/ios/<(host_sdk)',
+						'OBJROOT': '$(SOLUTION_DIR)/_cache/ios/<(host_sdk)',
+					},
 				},
 			],
 		],

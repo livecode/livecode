@@ -11,8 +11,7 @@
 	'conditions':
 	[
 		[
-			# Only the Linux and Android builds support proper cross-compilation
-			'OS == "linux" or OS == "android"',
+			'cross_compile != 0',
 			{
 				'dependencies':
 				[
