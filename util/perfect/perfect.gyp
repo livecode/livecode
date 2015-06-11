@@ -12,7 +12,7 @@
 
 			'toolsets': ['target','host'],
 
-			'product_name': 'perfect->(_toolset)',
+			'product_name': 'perfect-<(_toolset)',
 
 			'sources':
 			[
