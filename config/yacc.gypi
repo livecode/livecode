@@ -6,8 +6,8 @@
 			[
 				'OS == "win"',
 				{
-					'flex': 'C:/cygwin/bin/flex.exe',
-					'bison': 'C:/cygwin/bin/bison.exe',
+					'flex': ['../util/invoke-unix.bat', 'flex'],
+					'bison': ['../util/invoke-unix.bat', 'bison'],
 				},
 				{
 					'flex': 'flex',
