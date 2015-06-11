@@ -36,6 +36,7 @@
 			
 			'toolsets': ['host','target'],
 			
+			'product_prefix': '',
 			'product_name': 'libScript',
 			
 			'dependencies':
@@ -97,6 +98,7 @@
 			
 			'toolsets': ['host','target'],
 			
+			'product_prefix': '',
 			'product_name': 'stdscript',
 			
 			'dependencies':

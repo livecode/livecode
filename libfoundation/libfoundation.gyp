@@ -12,6 +12,7 @@
 			
 			'toolsets': ['host','target'],
 			
+			'product_prefix': '',
 			'product_name': 'libFoundation',
 			
 			'dependencies':
