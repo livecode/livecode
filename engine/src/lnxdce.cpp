@@ -389,13 +389,10 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		// MW-2012-09-19: [[ Bug 10218 ]] Make sure we update the screen in case
 		//   any engine event handling methods need us to.
 		MCRedrawUpdateScreen();
-        MCDeletedObjectsDrain();
 
 		if (curtime < eventtime)
 			done = MCS_poll(donepending ? 0 : eventtime - curtime, ConnectionNumber(dpy));
 		curtime = MCS_time();
-        
-        MCDeletedObjectsDrain();
 	}
 	while (curtime < exittime && !(anyevent && (done || donepending)));
 	if (MCquit)

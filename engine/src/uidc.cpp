@@ -857,8 +857,6 @@ Boolean MCUIDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 			return True;
         }
         
-        MCDeletedObjectsDrain();
-        
 		if (curtime < eventtime)
 		{
 			done = MCS_poll(donepending ? 0 : eventtime - curtime, 0);

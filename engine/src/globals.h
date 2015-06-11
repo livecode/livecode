@@ -410,6 +410,44 @@ extern MCPoint MCgroupedobjectoffset;
 //   addresses will work.
 extern Boolean MCallowdatagrambroadcasts;
 
+//////////
+
+enum
+{
+    kMCActionsUpdateScreen = 1 << 0,
+    kMCActionsDrainDeletedObjects = 1 << 2,
+};
+
+extern uint32_t MCactionsrequired;
+extern void MCActionsDoRunSome(uint32_t mask);
+
+inline void MCActionsSchedule(uint32_t mask)
+{
+    MCactionsrequired |= mask;
+}
+
+inline void MCActionsRunAll(void)
+{
+    if (MCactionsrequired != 0)
+        MCActionsDoRunSome(UINT32_MAX);
+}
+
+inline void MCActionsRunSome(uint32_t mask)
+{
+    if ((MCactionsrequired & mask) != 0)
+        MCActionsDoRunSome(mask);
+}
+
+inline void MCRedrawUpdateScreen(void)
+{
+    MCActionsRunSome(kMCActionsUpdateScreen);
+}
+
+inline void MCDeletedObjectsDrain(void)
+{
+    MCActionsRunSome(kMCActionsDrainDeletedObjects);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 #endif

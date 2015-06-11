@@ -450,9 +450,7 @@ Exec_stat MCIf::exec(MCExecPoint &ep)
 		
 		stat = tspr->exec(ep);
 		
-		// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
-		MCRedrawUpdateScreen();
-        MCDeletedObjectsDrain();
+        MCActionsRunAll();
 
 		switch(stat)
 		{
@@ -1110,10 +1108,8 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 			ep.setline(tspr->getline());
 
 			stat = tspr->exec(ep);
-
-			// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
-			MCRedrawUpdateScreen();
-            MCDeletedObjectsDrain();
+            
+            MCActionsRunAll();
 			
 			switch(stat)
 			{
@@ -1563,9 +1559,7 @@ Exec_stat MCSwitch::exec(MCExecPoint &ep)
 			
 			stat = tspr->exec(ep);
 			
-			// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
-			MCRedrawUpdateScreen();
-            MCDeletedObjectsDrain();
+            MCActionsRunAll();
 
 			switch(stat)
 			{
@@ -1788,10 +1782,8 @@ Exec_stat MCTry::exec(MCExecPoint &ep)
 		ep.setline(tspr->getline());
 
 		stat = tspr->exec(ep);
-
-		// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
-		MCRedrawUpdateScreen();
-        MCDeletedObjectsDrain();
+        
+        MCActionsRunAll();
 
 		switch(stat)
 		{

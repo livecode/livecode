@@ -171,10 +171,11 @@ void MCDeletedObjectsSetup(void);
 void MCDeletedObjectsTeardown(void);
 void MCDeletedObjectsEnterWait(bool p_dispatching);
 void MCDeletedObjectsLeaveWait(bool p_dispatching);
-void MCDeletedObjectsDrain(void);
 void MCDeletedObjectsOnObjectCreated(MCObject *object);
 void MCDeletedObjectsOnObjectDeleted(MCObject *object);
 void MCDeletedObjectsOnObjectDestroyed(MCObject *object);
+
+void MCDeletedObjectsDoDrain(void);
 
 struct MCPatternInfo
 {

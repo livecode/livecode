@@ -336,8 +336,6 @@ void X_main_loop_iteration()
 		MCtracedobject->message(MCM_trace_done);
 		MCtracedobject = NULL;
 	}
-    
-    MCDeletedObjectsDrain();
 	MCU_cleaninserted();
 	MCscreen->siguser();
 	MCdefaultstackptr = MCstaticdefaultstackptr;

@@ -4850,7 +4850,7 @@ void MCDeletedObjectsTeardown(void)
     MCAssert(MCdeletedobjectpool != nil && MCdeletedobjectpool -> parent == nil);
     
     // Ensure all objects in the pool are deleted.
-    MCDeletedObjectsDrain();
+    MCDeletedObjectsDoDrain();
     
     MCMemoryDelete(MCdeletedobjectpool);
     MCdeletedobjectpool = nil;
@@ -4867,6 +4867,9 @@ void MCDeletedObjectsEnterWait(bool p_dispatching)
     // If this isn't a dispatching wait, then no objects can be created.
     if (!p_dispatching)
         return;
+    
+    // First drain any objects in the current pool.
+    MCDeletedObjectsDoDrain();
     
     // Fetch the spare object pool if there is one, otherwise allocate a new
     // one.
@@ -4896,7 +4899,7 @@ void MCDeletedObjectsLeaveWait(bool p_dispatching)
     MCLog("DeletedObject-LeaveWait: %p", MCdeletedobjectpool);
     
     // Drain any objects in the pool.
-    MCDeletedObjectsDrain();
+    MCDeletedObjectsDoDrain();
     
     // Make the parent pool the current one.
     MCDeletedObjectPool *t_pool;
@@ -4909,9 +4912,12 @@ void MCDeletedObjectsLeaveWait(bool p_dispatching)
     // If the objectpool has no references then we can delete it.
     if (t_pool -> references == 0)
         MCDeletedObjectPoolDestroy(t_pool);
+    
+    // Now drain any objects which have accumulated in this pool.
+    MCDeletedObjectsDoDrain();
 }
 
-void MCDeletedObjectsDrain(void)
+void MCDeletedObjectsDoDrain(void)
 {
     if (MCdeletedobjectpool -> to_delete == nil)
         return;
@@ -4964,6 +4970,10 @@ void MCDeletedObjectsOnObjectDeleted(MCObject *p_object)
     
     // We now have a pool in which to place the object.
     p_object -> appendto(t_pool -> to_delete);
+    
+    // If the pool is the current one, then schedule a drain.
+    if (t_pool == MCdeletedobjectpool)
+        MCActionsSchedule(kMCActionsDrainDeletedObjects);
     
     MCLog("DeletedObject-OnDelete: %p added to deletion list of %p", p_object, MCdeletedobjectpool);
 }

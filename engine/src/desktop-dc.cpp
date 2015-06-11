@@ -809,7 +809,6 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
         {
             if (anyevent)
                 break;
-            MCDeletedObjectsDrain();
         }
 		
 		// Handle pending events
@@ -824,8 +823,6 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 				abort = True;
 				break;
 			}
-            
-            MCDeletedObjectsDrain();
 		}
 		
 		// MW-2012-09-19: [[ Bug 10218 ]] Make sure we update the screen in case
@@ -870,8 +867,6 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
             if (anyevent)
                 done = True;
             t_sleep = 0.0;
-            
-            MCDeletedObjectsDrain();
         }
         
         
@@ -881,8 +876,6 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
         {
             if (anyevent)
                 done = True;
-            
-            MCDeletedObjectsDrain();
         }
 		
 		s_animation_current_time = CFAbsoluteTimeGetCurrent();

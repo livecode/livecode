@@ -680,8 +680,6 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
         {
             if (anyevent)
                 break;
-            
-            MCDeletedObjectsDrain();
         }
 		
 		real8 eventtime = exittime;
@@ -695,8 +693,6 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 				abort = True;
 				break;
 			}
-            
-            MCDeletedObjectsDrain();
 		}
 		
 		if (dispatch && MCEventQueueDispatch())
@@ -709,8 +705,6 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 				abort = True;
 				break;
 			}
-            
-            MCDeletedObjectsDrain();
 		}
 		
 		// MW-2012-09-19: [[ Bug 10218 ]] Make sure we update the screen in case

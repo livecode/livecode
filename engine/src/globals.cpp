@@ -68,6 +68,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcssl.h"
 #include "stacksecurity.h"
 #include "resolution.h"
+#include "redraw.h"
 
 #include "stacktile.h"
 
@@ -498,6 +499,8 @@ Boolean MCmainstackschanged = False;
 //   UDP sockets.
 Boolean MCallowdatagrambroadcasts = False;
 
+uint32_t MCactionsrequired = 0;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern MCUIDC *MCCreateScreenDC(void);
@@ -821,6 +824,8 @@ void X_clear_globals(void)
     
 	// MW-2013-03-20: [[ MainStacksChanged ]]
 	MCmainstackschanged = False;
+    
+    MCactionsrequired = 0;
 
 #ifdef _ANDROID_MOBILE
     // MM-2012-02-22: Initialize up any static variables as Android static vars are preserved between sessions
@@ -1233,6 +1238,24 @@ int X_close(void)
 #endif
 	
 	return MCretcode;
+}
+
+void MCActionsDoRunSome(uint32_t p_mask)
+{
+    uint32_t t_actions;
+    t_actions = MCactionsrequired & p_mask;
+    
+    if ((t_actions & kMCActionsDrainDeletedObjects) != 0)
+    {
+        MCactionsrequired &= ~kMCActionsDrainDeletedObjects;
+        MCDeletedObjectsDoDrain();
+    }
+    
+    if ((t_actions & kMCActionsUpdateScreen) != 0)
+    {
+        MCactionsrequired &= ~kMCActionsUpdateScreen;
+        MCRedrawDoUpdateScreen();
+    }
 }
 
 // MW-2013-10-08: [[ Bug 11259 ]] Make sure the Linux specific case tables are

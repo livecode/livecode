@@ -521,8 +521,6 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
         {
             if (anyevent)
                 break;
-        
-            MCDeletedObjectsDrain();
         }
 
 		// MW-2014-04-16: [[ Bug 11690 ]] Work out the next pending message time.
@@ -572,9 +570,6 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 			donepending = False;
 			waittime = t_pending_eventtime - curtime;
 		}
-        
-        if (donepending)
-            MCDeletedObjectsDrain();
 		
 		// MW-2014-08-20: [[ Bug 12361 ]] If the waittime is negative then it gets coerced
 		//   to a large positive value which causes waits to stall until an event occurs.
@@ -603,7 +598,6 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		// MW-2012-09-19: [[ Bug 10218 ]] Make sure we update the screen in case
 		//   any engine event handling methods need us to.
 		MCRedrawUpdateScreen();
-        MCDeletedObjectsDrain();
 
 		curtime = MCS_time();
 	}
