@@ -405,6 +405,7 @@ Exec_stat MCHandler::exec(MCExecPoint &ep, MCParameter *plist)
 
 		// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
 		MCRedrawUpdateScreen();
+        MCDeletedObjectsDrain();
 
 		switch(stat)
 		{

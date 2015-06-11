@@ -32,6 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "newobj.h"
 #include "cmds.h"
 #include "redraw.h"
+#include "object.h"
 
 #include "globals.h"
 
@@ -451,6 +452,7 @@ Exec_stat MCIf::exec(MCExecPoint &ep)
 		
 		// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
 		MCRedrawUpdateScreen();
+        MCDeletedObjectsDrain();
 
 		switch(stat)
 		{
@@ -1111,6 +1113,7 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 
 			// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
 			MCRedrawUpdateScreen();
+            MCDeletedObjectsDrain();
 			
 			switch(stat)
 			{
@@ -1562,6 +1565,7 @@ Exec_stat MCSwitch::exec(MCExecPoint &ep)
 			
 			// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
 			MCRedrawUpdateScreen();
+            MCDeletedObjectsDrain();
 
 			switch(stat)
 			{
@@ -1787,6 +1791,7 @@ Exec_stat MCTry::exec(MCExecPoint &ep)
 
 		// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
 		MCRedrawUpdateScreen();
+        MCDeletedObjectsDrain();
 
 		switch(stat)
 		{

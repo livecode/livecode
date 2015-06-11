@@ -835,6 +835,8 @@ Boolean MCUIDC::getmouseclick(uint2 button, Boolean& r_abort)
 
 Boolean MCUIDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 {
+    MCDeletedObjectsEnterWait(dispatch);
+    
 	real8 curtime = MCS_time();
 	if (duration < 0.0)
 		duration = 0.0;
@@ -850,7 +852,13 @@ Boolean MCUIDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		donepending = handlepending(curtime, eventtime, dispatch);
 		siguser();
 		if (MCquit)
+        {
+            MCDeletedObjectsLeaveWait(dispatch);
 			return True;
+        }
+        
+        MCDeletedObjectsDrain();
+        
 		if (curtime < eventtime)
 		{
 			done = MCS_poll(donepending ? 0 : eventtime - curtime, 0);

@@ -458,6 +458,8 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *di
 
 Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 {
+    MCDeletedObjectsEnterWait(dispatch);
+    
 	real8 curtime = MCS_time();
 
 	if (duration < 0.0)
@@ -487,6 +489,8 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 				abort = True;
 				break;
 			}
+            
+            MCDeletedObjectsDrain();
 		}
 
 		if (dispatch && MCEventQueueDispatch())
@@ -502,6 +506,8 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 				abort = True;
 				break;
 			}
+            
+            MCDeletedObjectsDrain();
 		}
 
 		// MW-2012-09-19: [[ Bug 10218 ]] Make sure we update the screen in case
@@ -545,7 +551,9 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 	// MW-2012-09-19: [[ Bug 10218 ]] Make sure we update the screen in case
 	//   any engine event handling methods need us to.
 	MCRedrawUpdateScreen();
-
+    
+    MCDeletedObjectsLeaveWait(dispatch);
+    
 	return abort;
 }
 

@@ -348,6 +348,8 @@ Boolean MCScreenDC::getmouseclick(uint2 button, Boolean& r_abort)
 
 Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 {
+    MCDeletedObjectsEnterWait(dispatch);
+    
 	MCwaitdepth++;
 	real8 curtime = MCS_time();
 	if (duration < 0.0)
@@ -387,10 +389,13 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		// MW-2012-09-19: [[ Bug 10218 ]] Make sure we update the screen in case
 		//   any engine event handling methods need us to.
 		MCRedrawUpdateScreen();
+        MCDeletedObjectsDrain();
 
 		if (curtime < eventtime)
 			done = MCS_poll(donepending ? 0 : eventtime - curtime, ConnectionNumber(dpy));
 		curtime = MCS_time();
+        
+        MCDeletedObjectsDrain();
 	}
 	while (curtime < exittime && !(anyevent && (done || donepending)));
 	if (MCquit)
@@ -401,6 +406,8 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 	//   any engine event handling methods need us to.
 	MCRedrawUpdateScreen();
 
+    MCDeletedObjectsLeaveWait(dispatch);
+    
 	return abort;
 }
 
