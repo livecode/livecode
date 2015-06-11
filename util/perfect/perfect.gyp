@@ -12,17 +12,7 @@
 
 			'toolsets': ['target','host'],
 
-			'product_name': 'perfect',
-
-			'target_conditions':
-			[
-				[
-					'_toolset != "target"',
-					{
-						'product_name': 'perfect->(_toolset)',
-					},
-				],
-			],
+			'product_name': 'perfect->(_toolset)',
 
 			'sources':
 			[
@@ -41,7 +31,7 @@
 			{
 				'variables':
 				{
-					'perfect_path': '<(PRODUCT_DIR)/perfect<(EXECUTABLE_SUFFIX)',
+					'perfect_path': '<(PRODUCT_DIR)/<(_product_name)',
 				},
 			},
 			
