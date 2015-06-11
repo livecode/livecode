@@ -6,8 +6,13 @@
 			[
 				'OS == "win"',
 				{
-					'flex': ['../util/invoke-unix.bat', 'flex'],
-					'bison': ['../util/invoke-unix.bat', 'bison'],
+					'variables':
+					{
+						'invoke_unix_path': '$(ProjectDir)../../../../../util/invoke-unix.bat',
+					},
+					
+					'flex': ['<(invoke_unix_path)', 'flex'],
+					'bison': ['<(invoke_unix_path)', 'bison'],
 				},
 				{
 					'flex': 'flex',
