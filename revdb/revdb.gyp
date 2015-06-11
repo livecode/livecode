@@ -449,11 +449,11 @@
 			'conditions':
 			[
 				[
-					'OS == "linux" or OS == "android"',
+					'OS != "win"',
 					{
-						'cflags_cc':
+						'cflags_cc!':
 						[
-							'-fexceptions',
+							'-fno-exceptions',
 						],
 					},
 				],
