@@ -46,6 +46,12 @@ typedef enum
     kMCJavaTypeByteArray,
     kMCJavaTypeList,
     kMCJavaTypeMap, // MM-2012-02-22: Added ability to create Java maps
+    
+    // special retuyrn types used by MCValueRef
+    kMCJavaTypeObjectArray,
+    kMCJavaTypeBooleanRef,
+    kMCJavaTypeNumberRef,
+    kMCJavaTypeMCValueRef,
 } MCJavaType;
 
 typedef struct
@@ -78,7 +84,6 @@ void MCJavaFinalize(JNIEnv *env);
 bool MCJavaInitList(JNIEnv *env, jobject&);
 bool MCJavaFreeList(JNIEnv *env, jobject);
 bool MCJavaListAppendObject(JNIEnv *env, jobject, jobject);
-//bool MCJavaListAppendString(JNIEnv *env, jobject p_list, const MCString *p_string);
 bool MCJavaListAppendStringRef(JNIEnv *env, jobject p_list, MCStringRef p_string);
 bool MCJavaListAppendInt(JNIEnv *env, jobject p_list, jint p_int);
 
@@ -87,12 +92,8 @@ bool MCJavaFreeMap(JNIEnv *env, jobject p_map);
 bool MCJavaMapPutObjectToObject(JNIEnv *env, jobject p_map, jobject p_key, jobject p_value);
 bool MCJavaMapPutStringToObject(JNIEnv *env, jobject p_map, MCStringRef p_key, jobject p_value);
 bool MCJavaMapPutStringToString(JNIEnv *env, jobject p_map, MCStringRef p_key, MCStringRef p_value);
-/*
-bool MCJavaMapFromArray(JNIEnv *p_env, MCExecPoint &p_ep, MCVariableValue *p_array, jobject &r_object);
-bool MCJavaMapToArray(JNIEnv *p_env, MCExecPoint &p_ep, jobject p_map, MCVariableValue *&r_array);
- */
-bool MCJavaMapFromArray(JNIEnv *p_env, MCArrayRef p_array, jobject &r_object);
-bool MCJavaMapToArray(JNIEnv *p_env, jobject p_map, MCArrayRef &r_array);
+bool MCJavaMapFromArrayRef(JNIEnv *p_env, MCArrayRef p_array, jobject &r_object);
+bool MCJavaMapToArrayRef(JNIEnv *p_env, jobject p_map, MCArrayRef &r_array);
 
 typedef bool (*MCJavaMapCallback)(JNIEnv *env, MCNameRef p_key, jobject p_value, void *p_context);
 bool MCJavaIterateMap(JNIEnv *env, jobject p_map, MCJavaMapCallback p_callback, void *p_context);
@@ -103,5 +104,14 @@ bool MCJavaConvertParameters(JNIEnv *env, const char *p_signature, va_list p_arg
 void MCJavaMethodParamsFree(JNIEnv *env, MCJavaMethodParams *p_params, bool p_global_refs = false);
 
 void MCJavaColorToComponents(uint32_t p_color, uint16_t &r_red, uint16_t &r_green, uint16_t &r_blue, uint16_t &r_alpha);
+
+bool MCJavaBooleanFromBooleanRef(JNIEnv *p_env, MCBooleanRef p_value, jobject& r_object);
+bool MCJavaBooleanToBooleanRef(JNIEnv *p_env, jobject p_object, MCBooleanRef& r_value);
+bool MCJavaNumberFromNumberRef(JNIEnv *p_env, MCNumberRef p_value, jobject& r_object);
+bool MCJavaNumberToNumberRef(JNIEnv *p_env, jobject p_object, MCNumberRef& r_value);
+bool MCJavaArrayFromArrayRef(JNIEnv *p_env, MCArrayRef p_value, jobjectArray& r_object);
+bool MCJavaArrayToArrayRef(JNIEnv *p_env, jobjectArray p_object, MCArrayRef& r_value);
+bool MCJavaObjectFromValueRef(JNIEnv *p_env, MCValueRef p_value, jobject& r_object);
+bool MCJavaObjectToValueRef(JNIEnv *p_env, jobject p_object, MCValueRef &r_value);
 
 #endif //__MBLANDROIDJAVA_H__

@@ -1616,6 +1616,25 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
 				t_env -> DeleteLocalRef(t_byte_array);
 			}
 			break;
+        case kMCJavaTypeMCValueRef:
+            {
+                jobject t_object;
+                t_object = t_env -> CallObjectMethodA(context->object, t_method_id, t_params->params);
+                if (t_cleanup_java_refs && t_env -> ExceptionCheck())
+                {
+                    t_exception_thrown = true;
+                    t_success = false;
+                }
+                
+                MCValueRef t_value;
+                if (t_success)
+                    t_success = MCJavaObjectToValueRef(t_env, t_object, t_value);
+                if (t_success)
+                    *((MCValueRef *)context -> return_value) = t_value;
+                
+                t_env -> DeleteLocalRef(t_object);
+            }
+            break;
         case kMCJavaTypeObject:
 		case kMCJavaTypeMap:
             {
