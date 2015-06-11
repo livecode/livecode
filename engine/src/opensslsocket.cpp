@@ -1685,7 +1685,7 @@ void MCSocket::close()
 #endif
 
 		fd = 0;
-#ifdef _MACOSX || defined(TARGET_SUBPLATFORM_IPHONE)
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
 
 		if (cfsockref != NULL)
 		{
@@ -1887,9 +1887,9 @@ Boolean MCSocket::initsslcontext()
 	
 	if (t_success)
 	{
-#if defined(TARGET_SUBPLATFORM_IPHONE)
-        // MM-2015-06-04: [[ MobileSockets ]] Since iOS doesn't expose the root certificates directly, we can't use OpenSSL's verification routines.
-        //   Instead we'll do it ourselves using the iOS APIs.
+#if defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID)
+        // MM-2015-06-04: [[ MobileSockets ]] Since iOS and Android don't expose the root certificates directly, we can't use OpenSSL's verification routines.
+        //   Instead we'll do it ourselves using the OS APIs.
         SSL_CTX_set_verify(_ssl_context, SSL_VERIFY_NONE, NULL);
 #else
         SSL_CTX_set_verify(_ssl_context, sslverify? SSL_VERIFY_PEER: SSL_VERIFY_NONE,verify_callback);
@@ -1939,8 +1939,8 @@ Boolean MCSocket::sslconnect()
             else if (MCStringFirstIndexOfChar(*t_hostname, '|', 0, kMCCompareExact, t_pos))
             /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
         
-#if defined(TARGET_SUBPLATFORM_IPHONE)
-            // MM-2015-06-04: [[ MobileSockets ]] On iOS we verify the certificate ourselves rather than using OpenSSL
+#if defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID)
+            // MM-2015-06-04: [[ MobileSockets ]] On the mobile platforms we verify the certificate ourselves rather than using OpenSSL
             if (!MCSSLVerifyCertificate(_ssl_conn, *t_hostname, sslerror))
             {
                 errno = EPIPE;
@@ -2131,8 +2131,8 @@ Boolean MCSocket::sslaccept()
             else if (MCStringFirstIndexOfChar(*t_hostname, '|', 0, kMCCompareExact, t_pos))
                 /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
 			
-#if defined(TARGET_SUBPLATFORM_IPHONE)
-            // MM-2015-06-04: [[ MobileSockets ]] On iOS we verify the certificate ourselves rather than using OpenSSL
+#if defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID)
+            // MM-2015-06-04: [[ MobileSockets ]] On the mobile platforms we verify the certificate ourselves rather than using OpenSSL
             if (!MCSSLVerifyCertificate(_ssl_conn, *t_hostname, sslerror))
             {
                 errno = EPIPE;

@@ -476,6 +476,10 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		// IM-2014-03-06: [[ revBrowserCEF ]] Call additional runloop callbacks
 		DoRunloopActions();
 
+        // MM-2015-06-05: [[ MobileSockets ]] Dispatch any waiting notifications.
+        if (MCNotifyDispatch(dispatch == True) && anyevent)
+            break;
+
 		real8 eventtime = exittime;
 		if (handlepending(curtime, eventtime, dispatch))
 		{
@@ -518,6 +522,14 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 			done = True;
 		else if (!done && eventtime > curtime)
 			t_sleep = MCMin(eventtime - curtime, exittime - curtime);
+
+        // MM-2015-06-05: [[ MobileSockets ]] Poll sockets.
+        if (MCS_poll(0.0, 0.0))
+        {
+            if (anyevent)
+                done = True;
+            t_sleep = 0.0;
+        }
 
 		// At this point we yield to android, requesting that we get control back
 		// within the specified time.
@@ -1403,7 +1415,8 @@ static void co_yield_to_android(void)
 static bool co_yield_to_android_and_wait(double p_sleep, bool p_wake_on_event)
 {
 	s_schedule_wakeup = true;
-	s_schedule_wakeup_timeout = (uint32_t)(p_sleep * 1000.0);
+    // MM-2015-06-08: [[ MobileSockets ]] The duration is passed in in milliseconds, not seconds.
+	s_schedule_wakeup_timeout = (uint32_t)(p_sleep);
 	s_schedule_wakeup_breakable = p_wake_on_event;
 	co_yield_to_android();
 	s_schedule_wakeup = false;
@@ -1423,8 +1436,9 @@ static void co_yield_to_android_and_call(co_yield_callback_t callback, void *con
 
 void MCAndroidBreakWait(void)
 {
-	s_schedule_wakeup_was_broken = true;
-	co_yield_to_engine();
+    // MM-2015-06-08: [[ MobileSockets ]] Make sure we execute on the UI thread.
+    //   Calling scheduleWakeUp indirectly has this effect.
+    s_android_ui_env -> CallVoidMethod(s_android_view, s_schedule_wakeup_method, 0, s_schedule_wakeup_breakable);
 }
 
 struct MCAndroidEngineCallThreadContext

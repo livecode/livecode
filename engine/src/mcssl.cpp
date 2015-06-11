@@ -1072,8 +1072,8 @@ static SecCertificateRef x509_to_SecCertificateRef(X509 *p_cert)
     bool t_success;
     t_success = true;
     
-    size_t t_cert_size;;
-    unsigned char *t_cert_data;
+    size_t t_cert_size;
+    byte_t *t_cert_data;
     t_cert_data = NULL;
     if (t_success)
     {
@@ -1269,6 +1269,81 @@ bool MCSSLVerifyCertificate(SSL *ssl, MCStringRef p_host_name, MCStringRef &r_er
     return false;
 #endif /* MCSSL */
 }
-#endif /* defined(TARGET_SUBPLATFORM_IPHONE) */
+
+#endif /* TARGET_SUBPLATFORM_IPHONE */
+
+#if defined(TARGET_SUBPLATFORM_ANDROID)
+
+#include "mblandroidutil.h"
+
+// MM-2015-06-11: [[ MobileSockets ]] Return true if we should trust the
+//   certificates in the given SSL connection, false otherwise.
+//
+// Similar to iOS, on Android we must use the OS routines to verify SSL certs.
+// Extract the certs from the connection and check they can be trusted.
+// Most of the work here is done on the Java side of things.
+//
+bool MCSSLVerifyCertificate(SSL *ssl, MCStringRef p_host_name, MCStringRef &r_error)
+{
+#ifdef MCSSL
+    bool t_success;
+    t_success = true;
+    
+    STACK_OF(X509) *t_cert_stack;
+    t_cert_stack = NULL;
+    if (t_success)
+    {
+        t_cert_stack = SSL_get_peer_cert_chain(ssl);
+        t_success = t_cert_stack != NULL;
+    }
+
+    MCAutoArrayRef t_cert_array;
+    if (t_success)
+        t_success = MCArrayCreateMutable(&t_cert_array);
+    
+    if (t_success)
+    {
+        for (uint32_t i = 0; i < sk_X509_num(t_cert_stack) && t_success; i++)
+        {
+            X509 *t_cert;
+            t_cert = NULL;
+            if (t_success)
+            {
+                t_cert = sk_X509_value(t_cert_stack, i);
+                t_success = t_cert != NULL;
+            }
+            
+            size_t t_cert_size;
+            byte_t *t_cert_data;
+            t_cert_data = NULL;
+            if (t_success)
+            {
+                t_cert_size = i2d_X509(t_cert, &t_cert_data);
+                t_success = t_cert_size > 0;
+            }
+            
+            MCAutoDataRef t_cert_data_ref;
+            if (t_success)
+                t_success = MCDataCreateWithBytesAndRelease(t_cert_data, t_cert_size, &t_cert_data_ref);
+            
+            if (t_success)
+                t_success = MCArrayStoreValueAtIndex(*t_cert_array, i + 1, &t_cert_data_ref);
+        }
+    }
+
+    if (t_success)
+    {
+        MCAndroidEngineCall("verifyCertificateChainIsTrusted", "b@@", &t_success, &t_cert_array, p_host_name);
+        if (!t_success)
+            MCAndroidEngineCall("getLastCertificateVerificationError", "x", &r_error);
+    }
+    
+    return t_success;
+#else
+    return false;
+#endif /* MCSSL */
+}
+
+#endif /* TARGET_SUBPLATFORM_ANDROID */
 
 ////////////////////////////////////////////////////////////////////////////////

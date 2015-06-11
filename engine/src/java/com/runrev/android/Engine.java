@@ -60,6 +60,15 @@ import java.lang.reflect.*;
 import java.util.*;
 import java.text.Collator;
 
+import java.security.KeyStore;
+import java.security.cert.CertificateFactory;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import java.security.cert.CertificateException;
+
 // This is the main class that interacts with the engine. Although only one
 // instance of the engine is allowed, we still need an object on which we can
 // invoke methods from the native code so we wrap all this up into a single
@@ -111,6 +120,10 @@ public class Engine extends View implements EngineApi
     
     // AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
     private Collator m_collator;
+    
+    // MM-2015-06-11: [[ MobileSockets ]] Trust manager and last verification error, used for verifying ssl certificates.
+    private X509TrustManager m_trust_manager;
+    private String m_last_certificate_verification_error;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -192,6 +205,10 @@ public class Engine extends View implements EngineApi
         // AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
         m_collator = Collator.getInstance(Locale.getDefault());
 		
+        // MM-2015-06-11: [[ MobileSockets ]] Trust manager and last verification error, used for verifying ssl certificates.
+        m_trust_manager = null;
+        m_last_certificate_verification_error = null;
+        
 		// MW-2013-10-09: [[ Bug 11266 ]] Turn off keep-alive connections to
 		//   work-around a general bug in android:
 		// https://code.google.com/p/google-http-java-client/issues/detail?id=116
@@ -255,7 +272,8 @@ public class Engine extends View implements EngineApi
 		}
 	}
 
-	public void scheduleWakeUp(int p_in_time, boolean p_any_event)
+    // MM-2015-06-08: [[ MobileSockets ]]
+	public synchronized void scheduleWakeUp(int p_in_time, boolean p_any_event)
 	{
 		if (m_wake_scheduled)
 		{
@@ -2872,6 +2890,190 @@ public class Engine extends View implements EngineApi
     }
     
     ////////////////////////////////////////////////////////////////////////////////
+    
+    private X509TrustManager getTrustManager()
+    {
+        if (m_trust_manager != null)
+            return m_trust_manager;
+        
+        try
+        {
+            TrustManagerFactory t_trust_manager_factory;
+            t_trust_manager_factory = TrustManagerFactory . getInstance("X509");
+            t_trust_manager_factory . init((KeyStore) null);
+            
+            TrustManager[] t_trust_managers;
+            t_trust_managers = t_trust_manager_factory . getTrustManagers();
+            
+            if (t_trust_managers != null)
+            {
+                for (TrustManager t_trust_manager : t_trust_managers)
+                {
+                    if (t_trust_manager instanceof X509TrustManager)
+                    {
+                        m_trust_manager = (X509TrustManager) t_trust_manager;
+                        break;
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            m_trust_manager = null;
+        }
+        
+        return m_trust_manager;
+    }
+    
+    private X509Certificate[] certDataToX509CertChain(Object[] p_cert_chain)
+    {
+        X509Certificate[] t_cert_chain;
+        try
+        {
+            t_cert_chain = new X509Certificate[p_cert_chain . length];
+            
+            CertificateFactory t_cert_factory;
+            t_cert_factory = CertificateFactory . getInstance("X.509");
+
+            for (int i = 0; i < p_cert_chain . length; i++)
+            {
+                byte[] t_cert_data;
+                t_cert_data = (byte[]) p_cert_chain[i];
+                
+                InputStream t_input_stream;
+                t_input_stream = new ByteArrayInputStream(t_cert_data);
+                
+                Certificate t_cert;
+                t_cert = t_cert_factory . generateCertificate(t_input_stream);
+                
+                t_cert_chain[i] = (X509Certificate) t_cert;
+            }
+        }
+        catch (Exception e)
+        {
+            t_cert_chain = null;
+        }
+
+        return t_cert_chain;
+    }
+    
+    private boolean hostNameMatchesCertificateDNSName(String p_host_name, String p_cert_host_name)
+    {
+        if (p_host_name == null || p_host_name . isEmpty() || p_cert_host_name == null || p_cert_host_name . isEmpty())
+            return false;
+
+        p_host_name = p_host_name . toLowerCase();
+        p_cert_host_name = p_cert_host_name . toLowerCase();
+        
+        if (!p_cert_host_name . contains("*"))
+            return p_host_name . equals(p_cert_host_name);
+
+        if (p_cert_host_name . startsWith("*.") && p_host_name . regionMatches(0, p_cert_host_name, 2, p_cert_host_name . length() - 2))
+            return true;
+        
+        String t_cert_host_name_prefix;
+        t_cert_host_name_prefix = p_cert_host_name . substring(0, p_cert_host_name . indexOf('*'));
+        if (t_cert_host_name_prefix != null && !t_cert_host_name_prefix . isEmpty() && !p_host_name . startsWith(t_cert_host_name_prefix))
+            return false;
+            
+        String t_cert_host_name_suffix;
+        t_cert_host_name_suffix = p_cert_host_name . substring(p_cert_host_name . indexOf('*'));
+        if (t_cert_host_name_suffix != null && !t_cert_host_name_suffix . isEmpty() && !p_host_name . endsWith(t_cert_host_name_suffix))
+            return false;
+        
+        return true;
+    }
+    
+    private boolean hostNameIsValidForCertificate(String p_host_name, X509Certificate p_certificate)
+    {
+        Collection t_subject_alt_names;
+        try
+        {
+            t_subject_alt_names = p_certificate . getSubjectAlternativeNames();
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
+        
+        if (t_subject_alt_names != null)
+        {
+            for (Object t_subject_alt_name : t_subject_alt_names)
+            {
+                List t_entry;
+                t_entry = (List) t_subject_alt_name;
+                if (t_entry == null || t_entry . size() < 2)
+                    continue;
+                
+                Integer t_alt_name_type;
+                t_alt_name_type = (Integer) t_entry . get(0);
+                if (t_alt_name_type == null || t_alt_name_type != 2 /* DNS NAME */)
+                    continue;
+                
+                String t_alt_name;
+                t_alt_name = (String) t_entry . get(1);
+                if (t_alt_name == null)
+                    continue;
+                
+                if (hostNameMatchesCertificateDNSName(p_host_name, t_alt_name))
+                    return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    // MM-2015-06-11: [[ MobileSockets ]] Return true if the given certifcate chain should be trusted and matches the passed domain name.
+    public boolean verifyCertificateChainIsTrusted(Object[] p_cert_data, String p_host_name)
+    {
+        boolean t_success;
+        t_success = true;
+        
+        X509Certificate[] t_cert_chain;
+        t_cert_chain = null;
+        if (t_success)
+        {
+            t_cert_chain = certDataToX509CertChain(p_cert_data);
+            t_success = t_cert_chain != null;
+        }
+        
+        X509TrustManager t_trust_manager;
+        t_trust_manager = null;
+        if (t_success)
+        {
+            t_trust_manager = getTrustManager();
+            t_success = t_trust_manager != null;
+        }
+        
+        if (t_success)
+        {
+            try
+            {
+                t_trust_manager . checkServerTrusted(t_cert_chain, "RSA");
+            }
+            catch (CertificateException t_exception)
+            {
+                m_last_certificate_verification_error = t_exception . toString();
+                t_success = false;
+            }
+        }
+        
+        if (t_success)
+            t_success = hostNameIsValidForCertificate(p_host_name, t_cert_chain[0]);
+        
+        return t_success;
+    }
+    
+    // MM-2015-06-11: [[ MobileSockets ]] Return the last certificate verifcation error (if any) and reset the error to null.
+    public String getLastCertificateVerificationError()
+    {
+        String t_error;
+        t_error = m_last_certificate_verification_error;
+        m_last_certificate_verification_error = null;
+        return t_error;
+    }
+    
+    ////////////////////////////////////////////////////////////////////////////////
 
 	// EngineApi implementation
 	
@@ -2939,7 +3141,7 @@ public class Engine extends View implements EngineApi
 		if (m_wake_on_event)
 			doProcess(false);
 	}
-	
+
     ////////////////////////////////////////////////////////////////////////////////
 
     // url launch callback
