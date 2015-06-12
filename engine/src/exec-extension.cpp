@@ -95,7 +95,7 @@ static void __rebuild_library_handler_list(void)
         }
 }
 
-bool MCEngineAddExtensionFromModule(MCStringRef p_filename, MCScriptModuleRef p_module)
+bool MCEngineAddExtensionFromModule(MCScriptModuleRef p_module)
 {
     if (!MCScriptEnsureModuleIsUsable(p_module))
     {
@@ -166,20 +166,10 @@ bool MCEngineLookupResourcePathForModule(MCScriptModuleRef p_module, MCStringRef
 	return false;
 }
 
-void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename, MCStringRef p_resource_path)
+void MCEngineLoadExtensionFromData(MCExecContext& ctxt, MCDataRef p_extension_data, MCStringRef p_resource_path)
 {
-    ctxt . SetTheResultToEmpty();
-    
-    MCAutoStringRef t_resolved_filename;
-    if (!MCS_resolvepath(p_filename, &t_resolved_filename))
-        return;
-    
-    MCAutoDataRef t_data;
-    if (!MCS_loadbinaryfile(*t_resolved_filename, &t_data))
-        return;
-    
     MCStreamRef t_stream;
-    /* UNCHECKED */ MCMemoryInputStreamCreate(MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), t_stream);
+    /* UNCHECKED */ MCMemoryInputStreamCreate(MCDataGetBytePtr(p_extension_data), MCDataGetLength(p_extension_data), t_stream);
     
     MCScriptModuleRef t_module;
     if (!MCScriptCreateModuleFromStream(t_stream, t_module))
@@ -195,14 +185,29 @@ void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename, MCSt
     
     MCValueRelease(t_stream);
     
-    MCEngineAddExtensionFromModule(*t_resolved_filename, t_module);
-	if (p_resource_path != nil)
-		MCEngineAddResourcePathForModule(t_module, p_resource_path);
+    MCEngineAddExtensionFromModule(t_module);
+    if (p_resource_path != nil)
+        MCEngineAddResourcePathForModule(t_module, p_resource_path);
     
     MCScriptReleaseModule(t_module);
     
     return;
 }
+
+void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename, MCStringRef p_resource_path)
+{
+    ctxt . SetTheResultToEmpty();
+    
+    MCAutoStringRef t_resolved_filename;
+    if (!MCS_resolvepath(p_filename, &t_resolved_filename))
+        return;
+    
+    MCAutoDataRef t_data;
+    if (!MCS_loadbinaryfile(*t_resolved_filename, &t_data))
+        return;
+    
+    MCEngineLoadExtensionFromData(ctxt, *t_data, p_resource_path);
+ }
 
 void MCEngineExecUnloadExtension(MCExecContext& ctxt, MCStringRef p_module_name)
 {

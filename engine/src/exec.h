@@ -3830,6 +3830,8 @@ void MCEngineExecReturnValue(MCExecContext& ctxt, MCValueRef value);
 void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef filename, MCStringRef resource_path);
 void MCEngineExecUnloadExtension(MCExecContext& ctxt, MCStringRef filename);
 
+void MCEngineLoadExtensionFromData(MCExecContext& ctxt, MCDataRef p_extension_data, MCStringRef p_resource_path);
+
 void MCEngineSetCaseSensitive(MCExecContext& ctxt, bool p_value);
 void MCEngineGetCaseSensitive(MCExecContext& ctxt, bool& r_value);
 void MCEngineSetFormSensitive(MCExecContext& ctxt, bool p_value);
