@@ -5042,6 +5042,27 @@ bool MCStringConvertToSysString(MCStringRef p_string, char *& r_system_string, s
     r_byte_count = t_byte_count;
     return true;
 }
+
+bool
+MCStringCreateWithSysString(const char *p_sys_string,
+                            MCStringRef & r_string)
+{
+	/* Count the number of chars */
+	size_t p_byte_count;
+	for (p_byte_count = 0; p_sys_string[p_byte_count] != '\0'; ++p_byte_count);
+
+	if (0 == p_byte_count)
+	{
+		r_string = MCValueRetain(kMCEmptyString);
+		return true;
+	}
+
+	return MCStringCreateWithBytes((const byte_t *) p_sys_string,
+	                               p_byte_count,
+	                               kMCStringEncodingUTF8,
+	                               false, /* is_external_rep */
+	                               r_string);
+}
 #endif
 
 bool MCStringNormalizedCopyNFC(MCStringRef self, MCStringRef &r_string)

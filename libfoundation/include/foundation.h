@@ -1468,7 +1468,7 @@ bool MCStringCreateWithCFString(CFStringRef cf_string, MCStringRef& r_string);
 bool MCStringCreateWithCFStringAndRelease(CFStringRef cf_string, MCStringRef& r_string);
 #endif
 
-#ifdef __LINUX__
+#if !defined(__WINDOWS__)
 // Create a string from a C string in the system encoding
 bool MCStringCreateWithSysString(const char *sys_string, MCStringRef &r_string);
 #endif
