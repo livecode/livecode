@@ -344,9 +344,6 @@ bool MCNotifyPush(void (*p_callback)(void *), void *p_state, bool p_block, bool 
 		t_notification -> state = p_state;
 		t_notification -> notify = NULL;
 
-		// Enter the critical region
-		MCNotifyLock();
-
 		// If we are shutting down, then we have failed.
 		if (s_shutting_down)
 			t_success = false;
@@ -354,16 +351,26 @@ bool MCNotifyPush(void (*p_callback)(void *), void *p_state, bool p_block, bool 
 		{
 			// Assign a sync event if we want to block
 			if (p_block)
+            {
+                MCNotifyLock();
 				t_notification -> notify = MCNotifySyncEventCreate();
+                MCNotifyUnlock();
+            }
 
 			if (!p_block || t_notification -> notify != NULL)
 			{
+                // Enter the critical region
+                MCNotifyLock();
+                
 				// Add the notification to the queue
 				if (p_safe)
 					MCListPushBack(s_safe_notifications, t_notification);
 				else
 					MCListPushBack(s_notifications, t_notification);
 
+                // MM-2015-06-12: [[ Bug ]] Make sure we unlock before calling ping. Not doing so can cause deadlock.
+                MCNotifyUnlock();
+                
 				// MW-2013-06-25: [[ DesktopPingWait ]] Moved to MCNotifyPing().
 				// Ping the main thread to make sure it knows to check for a shiny new
 				// thing.
@@ -372,9 +379,6 @@ bool MCNotifyPush(void (*p_callback)(void *), void *p_state, bool p_block, bool 
 			else
 				t_success = false;
 		}
-
-		// Unlock
-		MCNotifyUnlock();
 	}
 
 	if (t_success)
@@ -457,6 +461,7 @@ bool MCNotifyDispatch(bool p_safe)
 }
 
 // MW-2013-06-25: [[ DesktopPingWait ]] Wake up the event loop.
+// MM-2015-06-12: [[ Bug ]] Make sure we lock around s_notify_sent.
 void MCNotifyPing(bool p_high_priority)
 {
 #if defined(_WINDOWS)
@@ -464,22 +469,58 @@ void MCNotifyPing(bool p_high_priority)
 #elif defined(_MACOSX)
 	if (!s_notify_sent)
 	{
-		s_notify_sent = true;
-		extern void MCMacBreakWait(void);
-		MCMacBreakWait();
+        MCNotifyLock();
+        if (!s_notify_sent)
+        {
+            s_notify_sent = true;
+            MCNotifyUnlock();
+            extern void MCMacBreakWait(void);
+            MCMacBreakWait();
+        }
+        else
+            MCNotifyUnlock();
 	}
 #elif defined(_LINUX)
-	if (!s_notify_sent)
-	{
-		s_notify_sent = true;
-		char t_notify_char = 1;
-		write(g_notify_pipe[1], &t_notify_char, 1);
-	}
+    if (!s_notify_sent)
+    {
+        MCNotifyLock();
+        if (!s_notify_sent)
+        {
+            s_notify_sent = true;
+            MCNotifyUnlock();
+            char t_notify_char = 1;
+            write(g_notify_pipe[1], &t_notify_char, 1);
+        }
+        else
+            MCNotifyUnlock();
+    }
 #elif defined(_IOS_MOBILE)
-	extern void MCIPhoneBreakWait(void);
-	MCIPhoneBreakWait();
+    if (!s_notify_sent)
+    {
+        MCNotifyLock();
+        if (!s_notify_sent)
+        {
+            s_notify_sent = true;
+            MCNotifyUnlock();
+            extern void MCIPhoneBreakWait(void);
+            MCIPhoneBreakWait();
+        }
+        else
+            MCNotifyUnlock();
+    }
 #elif defined(_ANDROID_MOBILE)
-	extern void MCAndroidBreakWait(void);
-	MCAndroidBreakWait();
+    if (!s_notify_sent)
+    {
+        MCNotifyLock();
+        if (!s_notify_sent)
+        {
+            s_notify_sent = true;
+            MCNotifyUnlock();
+            extern void MCAndroidBreakWait(void);
+            MCAndroidBreakWait();
+        }
+        else
+            MCNotifyUnlock();
+    }
 #endif
 }
