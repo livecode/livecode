@@ -438,7 +438,10 @@ char *MCS_resolvepath(const char *path)
 		MCU_path2native(tpath);
 		return tpath;
 	}
-	char *cstr = strclone(path);
+    // SN-2015-06-05: [[ Bug 15432 ]] The function resolving / fixing paths to
+    //  an absolute one is MCS_get_canonical_path on Windows. We then use it
+    //  here as well.
+    char *cstr = MCS_get_canonical_path(path);
 	MCU_path2native(cstr);
 	return cstr;
 }
