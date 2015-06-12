@@ -42,6 +42,7 @@ static GtkWidget* s_widgets[kMCPlatformControlTypeMessageBox+1];
 // Container for widgets
 static GtkWidget* s_widget_container = NULL;
 
+extern "C" int initialise_weak_link_gtk(void);
 
 // Creates a GtkWidget corresponding to the requested control type
 static GtkWidget* getWidgetForControlType(MCPlatformControlType p_type, MCPlatformControlPart p_part)
@@ -49,6 +50,9 @@ static GtkWidget* getWidgetForControlType(MCPlatformControlType p_type, MCPlatfo
     // Ensure that our container widget exists
     if (s_widget_container == NULL)
     {
+        if (!initialise_weak_link_gtk())
+            return NULL;
+        
         gtk_init(NULL, NULL);
         
         // Create a new window
