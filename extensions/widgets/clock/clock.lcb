@@ -309,6 +309,7 @@ end handler
 
 public handler setTimeZone(in pTimeZone as Number) as undefined
 	put pTimeZone into mTimeZone
+	put getTimeComponents() into mCurrentTime
 	redraw all
 end handler
 
