@@ -48,6 +48,15 @@
 						},
 					},
 				],
+				[
+					'OS == "win"',
+					{
+						'libraries':
+						[
+							'-lshell32',
+						],
+					},
+				],
 			],
 			
 			'actions':
