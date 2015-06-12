@@ -1,5 +1,14 @@
 #!/bin/bash
 
+
+for arg in "$@" ; do
+	if [[ "$arg" == -* ]] ; then
+		cmd=$cmd "$arg"
+	else
+		cmd=$cmd $(winepath --unix "$arg")
+	fi
+done
+
 # Just run the command given
-$(winepath --unix $@)
+$cmd
 exit $?
