@@ -133,6 +133,15 @@ private:
 	bool OpenCaptureGraph();
 	void CloseCaptureGraph();
 
+	bool OpenVideoCodec();
+	void CloseVideoCodec();
+
+	bool OpenAudioCodec();
+	void CloseAudioCodec();
+
+	bool StartVideoFileCapture(MCStringRef p_string);
+	void StopVideoFileCapture();
+
 	void StartPreview();
 	void StopPreview();
 
@@ -144,6 +153,7 @@ private:
 
 	bool m_visible;
 	bool m_previewing;
+	bool m_recording;
 	uint32_t m_snapshot_width;
 	uint32_t m_snapshot_height;
 
@@ -166,6 +176,11 @@ private:
 	CComPtr<IMediaControl> m_media_control;
 	CComPtr<IVideoWindow> m_video_window;
 
+	CComPtr<IBaseFilter> m_video_codec;
+	CComPtr<IBaseFilter> m_audio_codec;
+	CComPtr<IBaseFilter> m_video_muxer;
+	CComPtr<IFileSinkFilter> m_video_output;
+
 	HWND m_preview_window;
 };
 
@@ -176,6 +191,7 @@ MCDSCamera::MCDSCamera()
 	m_device = kMCPlatformCameraDeviceDefault;
 	m_capture_video = false;
 	m_previewing = false;
+	m_recording = false;
 	m_visible = false;
 
 	m_rect = MCRectangleMake(0,0,0,0);
@@ -262,6 +278,9 @@ bool MCDSCamera::OpenAudioInput()
 
 	if (!MCDSCameraFetchDefaultDeviceMoniker(CLSID_AudioInputDeviceCategory, &t_device))
 		return false;
+
+	if (t_device == nil)
+		return false;
 	
 	if (!SUCCEEDED(t_device->BindToObject(NULL, NULL, IID_IBaseFilter, (void**)&t_input)))
 		return false;
@@ -346,9 +365,6 @@ bool MCDSCamera::OpenFilterGraph()
 
 	if (t_success)
 		t_success = SUCCEEDED(t_builder->AddFilter(m_video_input, L"VideoInput"));
-
-	if (t_success && m_capture_video)
-		t_success = SUCCEEDED(t_builder->AddFilter(m_audio_input, L"AudioInput"));
 
 	if (t_success)
 		t_success = SUCCEEDED(t_builder->AddFilter(m_sample_grabber_output, L"Grabber"));
@@ -443,33 +459,25 @@ bool MCDSCamera::OpenCaptureGraph()
 
 	CComPtr<IAMStreamConfig> t_stream_config;
 	if (t_success)
-		t_success =
-			SUCCEEDED(t_capture_graph->FindInterface(NULL, &MEDIATYPE_Interleaved, m_video_input, IID_IAMStreamConfig, (void**)&t_stream_config)) ||
-			SUCCEEDED(t_capture_graph->FindInterface(NULL, &MEDIATYPE_Video, m_video_input, IID_IAMStreamConfig, (void**)&t_stream_config));
+	{
+		HRESULT t_result;
+		t_result = t_capture_graph->FindInterface(&PIN_CATEGORY_PREVIEW, NULL, m_video_input, IID_IAMStreamConfig, (void**)&t_stream_config);
+		if (FAILED(t_result))
+			t_result = t_capture_graph->FindInterface(&PIN_CATEGORY_CAPTURE, NULL, m_video_input, IID_IAMStreamConfig, (void**)&t_stream_config);
+		t_success = SUCCEEDED(t_result);
+	}
 
 	if (t_success)
 		t_success = ConfigureVideoInput(t_stream_config);
 
 	if (t_success)
-		t_success = 
-			SUCCEEDED(t_capture_graph->RenderStream(
-				&PIN_CATEGORY_PREVIEW,
-				&MEDIATYPE_Interleaved,
-				m_video_input,
-				m_sample_grabber_output,
-				t_null_renderer)) ||
-			SUCCEEDED(t_capture_graph->RenderStream(
-				&PIN_CATEGORY_PREVIEW,
-				&MEDIATYPE_Video,
-				m_video_input,
-				m_sample_grabber_output,
-				t_null_renderer)) ||
-			SUCCEEDED(t_capture_graph->RenderStream(
-				&PIN_CATEGORY_CAPTURE,
-				&MEDIATYPE_Video,
-				m_video_input,
-				m_sample_grabber_output,
-				t_null_renderer));
+	{
+		HRESULT t_result;
+		t_result = t_capture_graph->RenderStream(&PIN_CATEGORY_PREVIEW, &MEDIATYPE_Interleaved, m_video_input, m_sample_grabber_output, t_null_renderer);
+		if (FAILED(t_result))
+			t_result = t_capture_graph->RenderStream(&PIN_CATEGORY_PREVIEW, &MEDIATYPE_Video, m_video_input, m_sample_grabber_output, t_null_renderer);
+		t_success = SUCCEEDED(t_result);
+	}
 
 	AM_MEDIA_TYPE t_media_type;
 	if (t_success)
@@ -494,6 +502,32 @@ bool MCDSCamera::OpenCaptureGraph()
 void MCDSCamera::CloseCaptureGraph()
 {
 	m_capture_graph.Release();
+}
+
+bool MCDSCamera::OpenVideoCodec()
+{
+	bool t_success;
+	t_success = true;
+
+	return t_success;
+}
+
+void MCDSCamera::CloseVideoCodec()
+{
+	m_video_codec.Release();
+}
+
+bool MCDSCamera::OpenAudioCodec()
+{
+	bool t_success;
+	t_success = true;
+
+	return t_success;
+}
+
+void MCDSCamera::CloseAudioCodec()
+{
+	m_audio_codec.Release();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -567,6 +601,117 @@ void MCDSCamera::StopPreview()
 	CloseFilterGraph();
 
 	m_previewing = false;
+}
+
+//////////
+
+bool MCDSCamera::StartVideoFileCapture(MCStringRef p_filename)
+{
+	if (!m_previewing)
+		return false;
+
+	if (m_recording)
+		return false;
+
+	bool t_success;
+	t_success = true;
+
+	HRESULT t_result;
+	t_result = S_OK;
+
+	bool t_have_audio;
+	t_have_audio = false;
+
+	if (t_success)
+		t_success = OpenVideoCodec();
+
+	if (t_success)
+		t_have_audio = OpenAudioInput();
+
+	if (t_success && t_have_audio)
+		t_success = OpenAudioCodec();
+
+
+	if (t_success)
+		t_success = SUCCEEDED(m_media_control->Stop());
+
+
+	if (t_success && m_video_codec != nil)
+		t_success = SUCCEEDED(m_filter_graph->AddFilter(m_video_codec, L"VideoCodec"));
+
+	if (t_success && t_have_audio)
+		t_success = SUCCEEDED(m_filter_graph->AddFilter(m_audio_input, L"AudioInput"));
+
+	if (t_success && t_have_audio && m_audio_codec != nil)
+		t_success = SUCCEEDED(m_filter_graph->AddFilter(m_audio_codec, L"AudioCodec"));
+
+	wchar_t *t_filename;
+	t_filename = nil;
+
+	if (t_success)
+		t_success = MCStringConvertToWString(p_filename, t_filename);
+
+	CComPtr<IBaseFilter> t_mux;
+	CComPtr<IFileSinkFilter> t_sink;
+
+	if (t_success)
+		t_success = SUCCEEDED(m_capture_graph->SetOutputFileName(&MEDIASUBTYPE_Avi, t_filename, &t_mux, &t_sink));
+
+	if (t_filename != nil)
+		MCMemoryDeallocate(t_filename);
+
+	if (t_success)
+		t_success = SUCCEEDED(m_capture_graph->RenderStream(&PIN_CATEGORY_CAPTURE, &MEDIATYPE_Video, m_video_input, m_video_codec, t_mux));
+
+	if (t_success && t_have_audio)
+		t_success = SUCCEEDED(m_capture_graph->RenderStream(&PIN_CATEGORY_CAPTURE, &MEDIATYPE_Audio, m_audio_input, m_audio_codec, t_mux));
+
+
+	if (t_success)
+		t_success = SUCCEEDED(t_result = m_media_control->Run());
+
+
+	if (t_success)
+	{
+		m_video_output = t_sink;
+		m_video_muxer = t_mux;
+	}
+
+	return t_success;
+}
+
+void MCDSCamera::StopVideoFileCapture()
+{
+	if (!m_recording)
+		return;
+
+	/* UNCHECKED */ m_media_control->Stop();
+
+	if (m_video_output != nil)
+	{
+		// Need to pass the IBaseFilter interface to RemoveFilter
+		CComPtr<IBaseFilter> t_base_filter;
+		/* UNCHECKED */ m_video_output->QueryInterface(&t_base_filter);
+		/* UNCHECKED */ m_filter_graph->RemoveFilter(t_base_filter);
+		m_video_output.Release();
+	}
+
+	if (m_video_muxer != nil)
+	{
+		m_filter_graph->RemoveFilter(m_video_muxer);
+		m_video_muxer.Release();
+	}
+
+	if (m_video_codec != nil)
+		m_filter_graph->RemoveFilter(m_video_codec);
+	if (m_audio_codec != nil)
+		m_filter_graph->RemoveFilter(m_audio_codec);
+	if (m_audio_input != nil)
+		m_filter_graph->RemoveFilter(m_audio_input);
+
+	/* UNCHECKED */ m_media_control->Run();
+
+	m_recording = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -862,12 +1007,31 @@ bool MCDSCamera::GetProperty(MCPlatformCameraProperty p_property, MCPlatformProp
 
 bool MCDSCamera::StartRecording(MCStringRef p_filename)
 {
-	return false;
+	if (m_recording)
+		return false;
+
+	if (!m_previewing)
+		return false;
+
+	bool t_success;
+	t_success = true;
+
+	if (t_success)
+		t_success = StartVideoFileCapture(p_filename);
+
+	if (t_success)
+		m_recording = true;
+
+	return t_success;
 }
 
 bool MCDSCamera::StopRecording()
 {
-	return false;
+	if (!m_recording)
+		return false;
+
+	StopVideoFileCapture();
+	return true;
 }
 
 bool MCDSCamera::TakePicture(MCDataRef &r_data)
@@ -893,7 +1057,6 @@ bool MCDSCamera::TakePicture(MCDataRef &r_data)
 	if (t_success)
 		t_success = SUCCEEDED(m_sample_grabber->GetCurrentBuffer(&t_buffer_size, t_buffer));
 
-	//if (t_success)
 	MCImageBitmap *t_bitmap;
 	t_bitmap = nil;
 
