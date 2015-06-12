@@ -2,10 +2,14 @@
 
 
 for arg in "$@" ; do
-	if [[ "$arg" == -* ]] ; then
-		cmd=$cmd "$arg"
+	if [[ "$cmd" == "" ]] ; then
+		cmd="$arg"
 	else
-		cmd=$cmd $(winepath --unix "$arg")
+		if [[ "$arg" == -* ]] ; then
+			cmd="$cmd"\ "$arg"
+		else
+			cmd="$cmd"\ $(winepath --unix "$arg")
+		fi
 	fi
 done
 
