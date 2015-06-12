@@ -272,7 +272,7 @@ public class Engine extends View implements EngineApi
 		}
 	}
 
-    // MM-2015-06-08: [[ MobileSockets ]]
+    // MM-2015-06-08: [[ MobileSockets ]] This can now potentially be called from several threads so make method synchronized.
 	public synchronized void scheduleWakeUp(int p_in_time, boolean p_any_event)
 	{
 		if (m_wake_scheduled)
@@ -2977,7 +2977,7 @@ public class Engine extends View implements EngineApi
             return false;
             
         String t_cert_host_name_suffix;
-        t_cert_host_name_suffix = p_cert_host_name . substring(p_cert_host_name . indexOf('*'));
+        t_cert_host_name_suffix = p_cert_host_name . substring(p_cert_host_name . indexOf('*') + 1);
         if (t_cert_host_name_suffix != null && !t_cert_host_name_suffix . isEmpty() && !p_host_name . endsWith(t_cert_host_name_suffix))
             return false;
         
