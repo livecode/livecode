@@ -2131,7 +2131,9 @@ public:
             MCS_getcurdir(&t_curdir);
 
             if (!MCStringFormat(&t_tilde_path, "%@/%@", *t_curdir, p_path))
+            {
                 return false;
+            }
         }
         else
             t_tilde_path = p_path;
@@ -2159,7 +2161,7 @@ public:
         if (t_resolved_path != NULL)
             t_success = MCStringCreateWithSysString(t_resolved_path, r_resolved_path);
         else
-            t_success = false;
+            t_success = MCStringCopy(*t_tilde_path, r_resolved_path);
 
         MCMemoryDelete(t_resolved_path);
 

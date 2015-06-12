@@ -1227,10 +1227,7 @@ int X_close(void)
 	while (MCcur_effects != NULL)
 	{
 		MCEffectList *veptr = MCcur_effects;
-		MCcur_effects = MCcur_effects->getnext();
-        // AL-2014-08-14: [[ Bug 13176 ]] Release visual effect strings
-        MCValueRelease(veptr -> name);
-        MCValueRelease(veptr -> sound);
+        MCcur_effects = MCcur_effects->getnext();
 		delete veptr;
 	}
 
