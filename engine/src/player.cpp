@@ -71,9 +71,9 @@ MCPropertyInfo MCPlayer::kProperties[] =
     // SN-2014-08-06: [[ Bug 13115 ]] Missing formatted (width|height) in the property table
     DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_HEIGHT, Int32, MCPlayer, FormattedHeight)
     DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_WIDTH, Int32, MCPlayer, FormattedWidth)
+    DEFINE_RW_OBJ_PROPERTY(P_DONT_USE_QT, Bool, MCPlayer, DontUseQT)
 #ifdef FEATURE_PLATFORM_PLAYER
     DEFINE_RO_OBJ_ENUM_PROPERTY(P_STATUS, InterfacePlayerStatus, MCPlayer, Status)
-    DEFINE_RW_OBJ_PROPERTY(P_DONT_USE_QT, Bool, MCPlayer, DontUseQT)
 #endif
 };
 

@@ -1,3 +1,4 @@
+
 /* Copyright (C) 2003-2013 Runtime Revolution Ltd.
 
 This file is part of LiveCode.
@@ -91,7 +92,7 @@ void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 			MCresult->clear(False);
 		}
 		CloseHandle(hf);
-	}
+    }
 }
 #endif /* MCS_loadfile_dsk_w32 */
 
