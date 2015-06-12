@@ -1116,14 +1116,15 @@ bool MCJavaArrayFromArrayRef(JNIEnv *p_env, MCArrayRef p_value, jobjectArray& r_
     {
         for (uint32_t i = 0; i < MCArrayGetCount(p_value) && t_success; i++)
         {
-            MCAutoValueRef t_value;
+            MCValueRef t_value;
+            t_value = NULL;
             if (t_success)
-                t_success = MCArrayFetchValueAtIndex(p_value, i + 1, &t_value);
+                t_success = MCArrayFetchValueAtIndex(p_value, i + 1, t_value);
             
             jobject t_j_value;
             t_j_value = NULL;
             if (t_success)
-                t_success = MCJavaObjectFromValueRef(p_env, *t_value, t_j_value);
+                t_success = MCJavaObjectFromValueRef(p_env, t_value, t_j_value);
             
             if (t_success)
                 p_env -> SetObjectArrayElement(t_array, i, t_j_value);

@@ -1313,7 +1313,7 @@ bool MCSSLVerifyCertificate(SSL *ssl, MCStringRef p_host_name, MCStringRef &r_er
                 t_success = t_cert != NULL;
             }
             
-            size_t t_cert_size;
+            uindex_t t_cert_size;
             byte_t *t_cert_data;
             t_cert_data = NULL;
             if (t_success)
@@ -1327,13 +1327,13 @@ bool MCSSLVerifyCertificate(SSL *ssl, MCStringRef p_host_name, MCStringRef &r_er
                 t_success = MCDataCreateWithBytesAndRelease(t_cert_data, t_cert_size, &t_cert_data_ref);
             
             if (t_success)
-                t_success = MCArrayStoreValueAtIndex(*t_cert_array, i + 1, &t_cert_data_ref);
+                t_success = MCArrayStoreValueAtIndex(*t_cert_array, i + 1, *t_cert_data_ref);
         }
     }
 
     if (t_success)
     {
-        MCAndroidEngineCall("verifyCertificateChainIsTrusted", "b@@", &t_success, &t_cert_array, p_host_name);
+        MCAndroidEngineCall("verifyCertificateChainIsTrusted", "b@@", &t_success, *t_cert_array, p_host_name);
         if (!t_success)
             MCAndroidEngineCall("getLastCertificateVerificationError", "x", &r_error);
     }
