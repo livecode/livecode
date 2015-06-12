@@ -35,7 +35,7 @@ struct MCPlayerOffscreenBuffer;
 // SN-2014-07-23: [[ Bug 12893 ]] MCControl must be the first class inherited
 //  since we use &MCControl::kPropertyTable
 class MCPlayer : public MCControl, public MCPlayerInterface
-{	
+{
 #ifdef FEATURE_MPLAYER
 	char *command;
 	Atom atom;
@@ -281,6 +281,11 @@ public:
 		return (m_offscreen != NULL);
 	}
 	
+	Boolean usingQT()
+	{
+		return usingqt;
+	}
+
 #ifdef _WINDOWS_DESKTOP
 	void changewindow(MCSysWindowHandle p_old_window);
     
@@ -480,6 +485,9 @@ public:
     virtual void GetForeColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
     virtual void SetHiliteColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color);
     virtual void GetHiliteColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+    
+    virtual void GetDontUseQT(MCExecContext& ctxt, bool &p_dont_use_qt);
+    virtual void SetDontUseQT(MCExecContext& ctxt, bool r_dont_use_qt);
 };
 #endif // FEATURE_PLATFORM_PLAYER
 
