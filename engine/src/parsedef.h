@@ -1904,6 +1904,9 @@ enum Sugar_constants {
     SG_EXTENSION,
 	SG_RESOURCE,
 	SG_PATH,
+    
+    // AL-2015-06-11: [[ Load Extension From Var ]] Add 'data' syntactic sugar
+    SG_DATA,
 };
 
 enum Statements {

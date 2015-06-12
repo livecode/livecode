@@ -2078,6 +2078,7 @@ static LT sugar_table[] =
         {"callback", TT_CHUNK, CT_UNDEFINED},
 		{"caller", TT_UNDEFINED, SG_CALLER},
 		{"closed", TT_UNDEFINED, SG_CLOSED},
+        {"data", TT_UNDEFINED, SG_DATA},
 		{"effects", TT_UNDEFINED, SG_EFFECTS},
 		{"elevated", TT_UNDEFINED, SG_ELEVATED},
         {"empty", TT_CHUNK, CT_UNDEFINED},
