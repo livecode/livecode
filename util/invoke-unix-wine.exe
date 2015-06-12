@@ -3,7 +3,11 @@
 
 for arg in "$@" ; do
 	if [[ "$cmd" == "" ]] ; then
-		cmd="$arg"
+		if [[ "$arg" == /* ]] ; then
+			cmd="$arg"
+		else
+			cmd=$(winepath --unix "$arg")
+		fi
 	else
 		if [[ "$arg" == -* ]] ; then
 			cmd="$cmd"\ "$arg"
