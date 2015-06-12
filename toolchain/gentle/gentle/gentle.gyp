@@ -45,6 +45,11 @@
 				'VCLinkerTool':
 				{
 					'SubSystem': '1',	# /SUBSYSTEM:CONSOLE
+					
+					# On Windows, gentle can run out of stack space in certain
+					# builds (it needs more than the 1MB default provided).
+					# Increase the number to 64MB to be on the safe side
+					'AdditionalOptions': '/STACK0x04000000',
 				},
 			},
 		},
