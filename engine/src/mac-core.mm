@@ -25,7 +25,7 @@
 
 #include "graphics_util.h"
 
-#include "script.h"
+#include "libscript/script.h"
 
 #include <objc/objc-runtime.h>
 

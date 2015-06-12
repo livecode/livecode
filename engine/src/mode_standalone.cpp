@@ -64,7 +64,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 #include "resolution.h"
-#include "script.h"
+#include "libscript/script.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //

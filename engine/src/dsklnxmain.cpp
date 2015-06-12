@@ -29,7 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "util.h"
 #include "variable.h"
-#include "script.h"
+#include "libscript/script.h"
 
 #include <locale.h>
 #include <langinfo.h>

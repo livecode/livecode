@@ -17,7 +17,7 @@
 #include "prefix.h"
 
 #include "module-resources.h"
-#include "script.h"
+#include "libscript/script.h"
 
 #include "filepath.h"
 #include "foundation-auto.h"

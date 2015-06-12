@@ -48,7 +48,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "uuid.h"
 
-#include "script.h"
+#include "libscript/script.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 

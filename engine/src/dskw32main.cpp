@@ -28,7 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcerror.h"
 #include "globals.h"
 #include "util.h"
-#include "script.h"
+#include "libscript/script.h"
 
 #include <msctf.h>
 

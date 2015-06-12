@@ -16,7 +16,7 @@
 
 #include <foundation.h>
 
-#include "script.h"
+#include "libscript/script.h"
 #include "script-private.h"
 
 ////////////////////////////////////////////////////////////////////////////////

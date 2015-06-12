@@ -18,8 +18,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <foundation.h>
 #include <foundation-system.h>
 #include <foundation-auto.h>
-#include <script.h>
-#include <script-auto.h>
+#include <libscript/script.h>
+#include <libscript/script-auto.h>
 
 #if defined(__WINDOWS__)
 #	include <windows.h>

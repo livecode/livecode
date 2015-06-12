@@ -9,8 +9,8 @@
 	{
 		'libscript_public_headers':
 		[
-			'include/script.h',
-			'include/script-auto.h',
+			'include/libscript/script.h',
+			'include/libscript/script-auto.h',
 		],
 		
 		'libscript_private_headers':
