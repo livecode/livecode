@@ -66,6 +66,7 @@ metadata timeZone.default is "0"
 -- property declarations
 property day 			get mIsDay
 property timeZone		get mTimeZone		set setTimeZone
+metadata timeZone.editor is "com.livecode.pi.timezone"
 --
 
 -- private instance variables
