@@ -172,10 +172,85 @@ static void socketCallback (CFSocketRef cfsockref, CFSocketCallBackType type, CF
 }
 #endif
 
-#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
+#if defined(_MACOSX)
 Boolean MCS_handle_sockets()
 {
-	return MCS_poll(0.0, 0.0);
+    return MCS_poll(0.0,0);
+}
+#elif defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID)
+// MM-2015-06-11: [[ MobileSockets ]] Centralise the socket polling code for mobile platforms.
+//   The polling code is a modified version of that used on the desktop platforms.
+Boolean MCS_handle_sockets()
+{
+    real8 t_delay = 0.0;
+    Boolean handled = False;
+    fd_set rmaskfd, wmaskfd, emaskfd;
+    FD_ZERO(&rmaskfd);
+    FD_ZERO(&wmaskfd);
+    FD_ZERO(&emaskfd);
+    int4 maxfd = 0;
+    
+    uint2 i;
+    for (i = 0 ; i < MCnsockets ; i++)
+    {
+        int fd = MCsockets[i]->fd;
+        if (!fd || MCsockets[i]->resolve_state == kMCSocketStateResolving ||
+            MCsockets[i]->resolve_state == kMCSocketStateError)
+            continue;
+        if (MCsockets[i]->connected && !MCsockets[i]->closing
+            && !MCsockets[i]->shared || MCsockets[i]->accepting)
+            FD_SET(fd, &rmaskfd);
+        if (!MCsockets[i]->connected || MCsockets[i]->wevents != NULL)
+            FD_SET(fd, &wmaskfd);
+        FD_SET(fd, &emaskfd);
+        if (fd > maxfd)
+            maxfd = fd;
+        if (MCsockets[i]->added)
+        {
+            t_delay = 0.0;
+            MCsockets[i]->added = False;
+            handled = True;
+        }
+    }
+    
+    struct timeval timeoutval;
+    timeoutval.tv_sec = (long)t_delay;
+    timeoutval.tv_usec = (long)((t_delay - floor(t_delay)) * 1000000.0);
+    int n = 0;
+    
+    n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
+    
+    if (n <= 0)
+        return handled;
+    
+    for (i = 0 ; i < MCnsockets ; i++)
+    {
+        int fd = MCsockets[i]->fd;
+        if (FD_ISSET(fd, &emaskfd) && fd != 0)
+        {
+            
+            if (!MCsockets[i]->waiting)
+            {
+                MCsockets[i]->error = strclone("select error");
+                MCsockets[i]->doclose();
+            }
+            
+        }
+        else
+        {
+            if (FD_ISSET(fd, &rmaskfd) && !MCsockets[i]->shared)
+            {
+                MCsockets[i]->readsome();
+            }
+            if (FD_ISSET(fd, &wmaskfd))
+            {
+                MCsockets[i]->writesome();
+            }
+        }
+        MCsockets[i]->setselect();
+    }
+    
+    return True;
 }
 #else
 Boolean MCS_handle_sockets()
