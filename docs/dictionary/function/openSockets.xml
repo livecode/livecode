@@ -25,11 +25,14 @@
     <mac/>
     <windows/>
     <linux/>
+    <ios/>
+    <android/>
   </platforms>
   <classes>
     <desktop/>
     <server/>
     <web/>
+    <mobile/>
   </classes>
   <security>
     <network/>
