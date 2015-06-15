@@ -145,21 +145,29 @@ metadata title is "Navigation Bar"
 property selectedItem	get mSelectedItem 	set setNavSelectedItem
 metadata selectedItem.editor is "com.livecode.pi.number"
 metadata selectedItem.default is "1"
+metadata selectedItem.label is "Selected Item Index"
 
 property editMode get mEditMode set setEditMode
+metadata editMode.user_visible is "false"
 
 property itemStyle	get mItemStyle	set setItemStyle
 metadata itemStyle.editor is "com.livecode.pi.enum"
 metadata itemStyle.options is "icons,names,icons and names"
 metadata itemStyle.default is "icons and names"
+metadata itemStyle.label is "Display Style"
 
 property navData get getNavData set setNavData
 metadata navData.editor is "com.livecode.pi.navbar"
+metadata navData.label is "Navigation Data"
 
 property navNames		get getNavNames			set setNavNames
+metadata navNames.user_visible is "false"
 property navIcons		get getNavIcons			set setNavIcons
+metadata navIcons.user_visible is "false"
 property navSelectedIcons		get getNavSelectedIcons			set setNavSelectedIcons
+metadata navSelectedIcons.user_visible is "false"
 property navLabels		get getNavLabels		set setNavLabels
+metadata navLabels.user_visible is "false"
 --
 
 -- private instance variables
@@ -622,6 +630,7 @@ end handler
 public handler setNavSelectedItem(in pSelectedItem as Integer) returns nothing
 	if pSelectedItem > 0 and pSelectedItem <= the number of elements in mNavData then
 		put pSelectedItem into mSelectedItem
+		post "navigate" with [mNavData[mSelectedItem]["label"]]
 		redraw all
 	end if
 end handler
