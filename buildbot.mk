@@ -162,7 +162,7 @@ dist-upload: dist-upload-files.txt dist-upload-mkdir
 	false; \
 	while [ $$? -ne 0 -a $$i -lt $(UPLOAD_MAX_RETRIES) ] ; do \
 	  i=$$(($$i+1)); \
-	  rsync -v --progress --partial --protect-args --chmod=ugo=rwX --executability \
+	  rsync -v --progress --partial --chmod=ugo=rwX --executability \
 	    --files-from=dist-upload-files.txt . $(UPLOAD_SERVER):"\"$(UPLOAD_PATH)\""; \
 	done; \
 	rc=$$?; \
