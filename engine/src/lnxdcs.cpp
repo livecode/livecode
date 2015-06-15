@@ -1231,7 +1231,7 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
         }
         
         // Release the grabs and other resources that were acquired
-        gdk_pointer_ungrab(GDK_CURRENT_TIME);
+        gdk_display_pointer_ungrab(dpy, GDK_CURRENT_TIME);
         gdk_cursor_unref(t_cursor);
         g_object_unref(t_gc);
         gdk_display_flush(t_display);
