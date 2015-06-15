@@ -65,7 +65,10 @@ metadata timeZone.default is "0"
 
 -- property declarations
 property day 			get mIsDay
+metadata day.user_visible is "false"
 property timeZone		get mTimeZone		set setTimeZone
+metadata timeZone.editor is "com.livecode.pi.timezone"
+metadata timeZone.label is "Timezone"
 --
 
 -- private instance variables
@@ -85,9 +88,9 @@ constant kRed is [1,0,0]
 
 public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
-	
+
 	put mTimeZone into rProperties["timeZone"]
-	
+
 	return rProperties
 end handler
 
@@ -105,86 +108,86 @@ end handler
 
 -- called whenever LiveCode needs to redraw the widget
 public handler OnPaint()
-	
+
 	-- draw the face of the clock
     set the paint of this canvas to getPaint("clock face")
     fill getPath("clock face") on this canvas
     --
-    
+
     -- draw the outer circle nub in the middle to cover the ends of the hands
     set the paint of this canvas to getPaint("outer nub")
     fill getPath("outer nub") on this canvas
     --
-    
+
     -- draw the numbers
     set the paint of this canvas to getPaint("numbers")
    	set the font of this canvas to font "Helvetica-Light" at size mFontSize
-   	
+
    	variable tX as Integer
    	variable tX_string as String
    	variable tLabel as String
-   	
+
    	repeat with tX from 1 up to 12
    		put tX formatted as string into tX_string
-   		if tX < 10 then 
+   		if tX < 10 then
    			put the first char of tX_string into tLabel
-   		else 
+   		else
    			put char 1 to 2 of tX_string into tLabel
    		end if
    		fill text tLabel at getPoint(tLabel) on this canvas
    	end repeat
     --
-    
+
     -- draw the minute hand
     -- rotate canvas so that minute hand is assumed to be pointing up
-    save state of this canvas 
+    save state of this canvas
     set the stroke width of this canvas to getStrokeWidth("minute hand")
     set the paint of this canvas to getPaint("minute hand")
-    
+
     variable tMinuteHand as Path
     put getPath("minute hand") into tMinuteHand
-    
+
     translate this canvas by [(my width)/2, (my height)/2]
     rotate this canvas by 6*(element 2 of mCurrentTime)
-    stroke tMinuteHand on this canvas	
+    stroke tMinuteHand on this canvas
     restore state of this canvas
     --
-    
+
     -- draw the hour hand
     -- rotate canvas so that hour hand is assumed to be pointing up
     save state of this canvas
     set the stroke width of this canvas to getStrokeWidth("hour hand")
     set the paint of this canvas to getPaint("hour hand")
-    
+
     variable tHourHand as Path
     put getPath("hour hand") into tHourHand
-    
+
     translate this canvas by [(my width)/2, (my height)/2]
     rotate this canvas by 30*(element 1 of mCurrentTime)
     stroke tHourHand on this canvas
     restore state of this canvas
     --
-       
+
     -- draw the second hand in red
     -- rotate canvas so that second hand is assumed to be pointing up
     save state of this canvas
     set the stroke width of this canvas to getStrokeWidth("second hand")
     set the paint of this canvas to getPaint("second hand")
-    
+
     variable tSecondHand as Path
     put getPath("second hand") into tSecondHand
-    
+
     translate this canvas by [(my width)/2, (my height)/2]
     rotate this canvas by 6*(element 3 of mCurrentTime)
   	stroke tSecondHand on this canvas
     restore state of this canvas
     --
-    
+
     -- draw the inner circle nub in the middle to cover the ends of the second hand
     set the paint of this canvas to getPaint("inner nub")
     fill getPath ("inner nub") on this canvas
     --
-    
+
 end handler
 
 handler getTimeComponents() as List
@@ -192,7 +195,7 @@ handler getTimeComponents() as List
     -- This a list in the form [day, month, year, hours,minutes,seconds]
     variable tDate as List
     put the local date into tDate
-	
+
     -- We only want the time, so delete the first 3 elements.
     delete element 1 to 3 of tDate
 
@@ -200,7 +203,7 @@ handler getTimeComponents() as List
 	variable tHour as Number
     put element 1 of tDate into tHour
     put (tHour + mTimeZone) mod 24 into tHour
-	
+
     -- Compute whether it is 'day' or 'night'
 	if tHour > kStartDay and tHour < kEndDay then
 		put true into mIsDay
@@ -230,20 +233,20 @@ private handler getPaint(in pObject as String) as Paint
 	if pObject is "clock face" then
 		if mIsDay is true then
 			return solid paint with color [224/255, 224/255, 224/255, 0.25]
-		else 
+		else
 			return solid paint with color kBlack
 		end if
-		
+
 	else if pObject is "second hand" or pObject is "inner nub" then
 		return solid paint with color kRed
-		
+
 	else
 		if mIsDay is true then
 			return solid paint with color kBlack
-		else 
+		else
 			return solid paint with color kWhite
 		end if
-		
+
 	end if
 end handler
 
@@ -252,19 +255,19 @@ private handler getPath(in pString as String) as Path
 	if pString is "clock face" then
 		put (my width)/10 into mFontSize
 		return circle path centered at point [(my width)/2, (my height)/2] with radius (my width)/2
-		
+
 	else if pString is "second hand" or pString is "minute hand" then
 		return line path from point [0, 0] to point [0, -0.7*(my width)/2]
-		
+
 	else if pString is "hour hand" then
 		return line path from point [0,0] to point [0, -0.45*(my width/2)]
-	
+
 	else if pString is "outer nub" then
 		return circle path centered at point [(my width)/2, (my height)/2] with radius 0.06*(my width/2)
-		
+
 	else if pString is "inner nub" then
 		return circle path centered at point [(my width)/2, (my height)/2] with radius 0.02*(my width/2)
-	
+
 	end if
 end handler
 
@@ -299,15 +302,16 @@ end handler
 private handler getStrokeWidth(in pHand as String) as Real
 	if pHand is "minute hand" or pHand is "hour hand" then
 		return (my width/2)*0.03
-		
+
 	else if pHand is "second hand" then
 		return (my width/2)*0.015
-		
+
 	end if
 end handler
 
 public handler setTimeZone(in pTimeZone as Number) as undefined
 	put pTimeZone into mTimeZone
+	put getTimeComponents() into mCurrentTime
 	redraw all
 end handler
 
