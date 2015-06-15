@@ -2388,6 +2388,10 @@ MCRectangle MCPlayer::getpreferredrect()
 	if (m_platform_player != nil)
     {
 		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMovieRect, kMCPlatformPropertyTypeRectangle, &t_bounds);
+        // PM-2015-06-09: [[ Bug 5209 ]] formattedHeight should take into account the controller
+        if (flags & F_SHOW_CONTROLLER)
+            t_bounds.height += CONTROLLER_HEIGHT;
+        
         // PM-2014-04-28: [[Bug 12299]] Make sure the correct MCRectangle is returned
         return t_bounds;
     }
