@@ -43,14 +43,19 @@ static GtkWidget* s_widgets[kMCPlatformControlTypeMessageBox+1];
 static GtkWidget* s_widget_container = NULL;
 
 extern "C" int initialise_weak_link_gtk(void);
+extern "C" int initialise_weak_link_X11(void);
 
 // Creates a GtkWidget corresponding to the requested control type
 static GtkWidget* getWidgetForControlType(MCPlatformControlType p_type, MCPlatformControlPart p_part)
 {
+    // Do nothing if running in no-UI mode
+    if (MCnoui)
+        return NULL;
+    
     // Ensure that our container widget exists
     if (s_widget_container == NULL)
     {
-        if (!initialise_weak_link_gtk())
+        if (!initialise_weak_link_X11() || !initialise_weak_link_gtk())
             return NULL;
         
         gtk_init(NULL, NULL);
