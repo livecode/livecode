@@ -1393,17 +1393,14 @@ bool MCStringsMerge(MCExecContext& ctxt, MCStringRef p_format, MCStringRef& r_st
 				MCerrorlock++;
 				if (t_is_expression)
 				{
-					if (ctxt . GetHandler() != nil)
-						ctxt.GetHandler()->eval(t_ctxt, *t_expression, &t_value);
-					else
-						ctxt.GetHandlerList()->eval(t_ctxt, *t_expression, &t_value);
+                    // SN-2015-06-03: [[ Bug 11277 ]] MCHandler::eval refactored
+                    ctxt.eval(t_ctxt, *t_expression, &t_value);
 				}
 				else
-				{
-					if (ctxt . GetHandler() != nil)
-						ctxt.GetHandler()->doscript(t_ctxt, *t_expression);
-					else
-						ctxt.GetHandlerList()->doscript(t_ctxt, *t_expression);
+                {
+                    // SN-2015-06-03: [[ Bug 11277 ]] MCHandler::doscript refactored
+                    ctxt.doscript(t_ctxt, *t_expression, 0, 0);
+
 					t_value = MCresult->getvalueref();
                     // SN-2014-08-11: [[ Bug 13139 ]] The result must be emptied after a doscript()
                     ctxt . SetTheResultToEmpty();

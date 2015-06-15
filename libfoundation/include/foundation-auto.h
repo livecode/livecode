@@ -372,7 +372,8 @@ public:
         if (m_bytes != nil)
         {
             free(m_bytes);
-            m_byte_count = nil;
+            m_bytes = nil;
+            m_byte_count = 0;
         }
     }
 

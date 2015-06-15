@@ -279,14 +279,19 @@ bool MCPlayer::resolveplayerfilename(MCStringRef p_filename, MCStringRef &r_file
         return true;
     }
 
-    MCAutoStringRef t_filename;
-    bool t_relative_to_stack = getstack()->resolve_relative_path(p_filename, &t_filename);
-    if (t_relative_to_stack && MCS_exists(*t_filename, True))
-        return MCStringCopy(*t_filename, r_filename);
+	{
+		MCAutoStringRef t_filename;
+		bool t_relative_to_stack = getstack()->resolve_relative_path(p_filename, &t_filename);
+		if (t_relative_to_stack && MCS_exists(*t_filename, True))
+			return MCStringCopy(*t_filename, r_filename);
+	}
 
-    bool t_relative_to_default_folder = getstack()->resolve_relative_path_to_default_folder(p_filename, &t_filename);
-    if (t_relative_to_default_folder && MCS_exists(*t_filename, True))
-        return MCStringCopy(*t_filename, r_filename);
+	{
+		MCAutoStringRef t_filename;
+		bool t_relative_to_default_folder = getstack()->resolve_relative_path_to_default_folder(p_filename, &t_filename);
+		if (t_relative_to_default_folder && MCS_exists(*t_filename, True))
+			return MCStringCopy(*t_filename, r_filename);
+	}
 
     return false;
 }
@@ -774,3 +779,13 @@ void MCPlayer::GetStatus(MCExecContext& ctxt, intenum_t& r_status)
     
 }
 #endif
+
+void MCPlayer::SetDontUseQT(MCExecContext &ctxt, bool p_dont_use_qt)
+{
+    setdontuseqt(p_dont_use_qt);
+}
+
+void MCPlayer::GetDontUseQT(MCExecContext &ctxt, bool &r_dont_use_qt)
+{
+    getdontuseqt(r_dont_use_qt);
+}

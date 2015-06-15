@@ -78,7 +78,7 @@ void MCDebuggingExecDebugDo(MCExecContext& ctxt, MCStringRef p_script, uinteger_
 	MCExecContext *t_ctxt_ptr;
 	t_ctxt_ptr = MCexecutioncontexts[MCdebugcontext];
 
-	t_ctxt_ptr->GetHandler()->doscript(*t_ctxt_ptr, p_script, p_line, p_pos);
+    t_ctxt_ptr->doscript(*t_ctxt_ptr, p_script, p_line, p_pos);
     
     // AL-2014-03-21: [[ Bug 11940 ]] Ensure the debug context is not permanently in a state of error.
     t_ctxt_ptr -> IgnoreLastError();
@@ -417,7 +417,9 @@ void MCDebuggingExecAssert(MCExecContext& ctxt, int type, bool p_eval_success, b
 	
 	// Dispatch 'assertError <handler>, <line>, <pos>, <object>'
 	MCParameter t_handler, t_line, t_pos, t_object;
-	t_handler.setvalueref_argument(ctxt .GetHandler() -> getname());
+	if (ctxt . GetHandler() != NULL) {
+		t_handler.setvalueref_argument(ctxt . GetHandler() -> getname());
+	}
 	t_handler.setnext(&t_line);
 	t_line.setn_argument((real8)ctxt . GetLine());
 	t_line.setnext(&t_pos);

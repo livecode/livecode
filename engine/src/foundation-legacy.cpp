@@ -1673,11 +1673,15 @@ static bool save_array_to_handle(void *p_context, MCArrayRef p_array, MCNameRef 
 		
         // SN-2015-04-23: [[ Bug 15258 ]] We don't want to nativise the string,
         //  but rather to get a C-String copy of it.
-        MCAutoPointer<char> t_c_string;
-        if (!MCStringConvertToCString(*t_string, &t_c_string))
+        MCAutoPointer<char_t> t_c_string;
+        uindex_t t_length;
+        
+        // SN-2015-06-03: [[ Bug 15455 ]] The length can be different from a
+        //  C-string length, as image for instance can be stored as custom props
+        if (!MCStringConvertToNative(*t_string, &t_c_string, t_length))
             return false;
         
-		t_stat = IO_write_string_legacy_full(MCString(*t_c_string), t_stream, t_size, false);
+		t_stat = IO_write_string_legacy_full(MCString((const char*)*t_c_string, (uint4)t_length), t_stream, t_size, false);
 	}
 	
 	return t_stat == IO_NORMAL;

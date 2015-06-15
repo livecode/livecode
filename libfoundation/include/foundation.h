@@ -123,11 +123,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __32_BIT__ 1 
 #define __LITTLE_ENDIAN__ 1
 #define __I386__ 1
+#define __LP32__ 1
 #define __SMALL__ 1
 #elif defined(_M_X64)
 #define __64_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __X86_64__ 1
+#define __LLP64__ 1
 #define __HUGE__ 1
 #else
 #error Unknown target architecture
@@ -159,16 +161,19 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __32_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __I386__ 1
+#define __LP32__ 1
 #define __SMALL__ 1
 #elif defined(__ppc__)
 #define __32_BIT__ 1 
 #define __BIG_ENDIAN__ 1 
 #define __PPC__ 1
+#define __LP32__ 1
 #define __SMALL__ 1
 #elif defined(__x86_64__)
 #define __64_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __X86_64__ 1
+#define __LP64__ 1
 #define __HUGE__ 1
 #endif
 
@@ -201,16 +206,19 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __32_BIT__
 #define __LITTLE_ENDIAN__
 #define __I386__
+#define __LP32__ 1
 #define __SMALL__
 #elif defined(__x86_64__)
 #define __64_BIT__
 #define __LITTLE_ENDIAN__
 #define __X86_64__
+#define __LP64__ 1
 #define __HUGE__
 #elif defined(__arm__)
 #define __32_BIT__
 #define __LITTLE_ENDIAN__
 #define __ARM__
+#define __LP32__ 1
 #define __SMALL__
 #endif
 
@@ -240,26 +248,31 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __32_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __I386__ 1
+#define __LP32__ 1
 #define __SMALL__ 1
 #elif defined(__ppc__)
 #define __32_BIT__ 1 
 #define __BIG_ENDIAN__ 1 
 #define __PPC__ 1
+#define __LP32__ 1
 #define __SMALL__ 1
 #elif defined(__x86_64__)
 #define __64_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __X86_64__ 1
+#define __LP64__ 1
 #define __HUGE__ 1
 #elif defined(__arm__)
 #define __32_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __ARM__ 1
+#define __LP32__ 1
 #define __SMALL__ 1 
 #elif defined(__arm64__)
 #define __64_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __ARM64__
+#define __LP64__ 1
 #define __HUGE__ 1
 #endif
 
@@ -292,16 +305,19 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __32_BIT__
 #define __LITTLE_ENDIAN__
 #define __I386__
+#define __LP32__ 1
 #define __SMALL__
 #elif defined(__x86_64__)
 #define __64_BIT__
 #define __LITTLE_ENDIAN__
 #define __X86_64__
+#define __LP64__ 1
 #define __HUGE__
 #elif defined(__arm__)
 #define __32_BIT__
 #define __LITTLE_ENDIAN__
 #define __ARM__
+#define __LP32__ 1
 #define __SMALL__
 #endif
 
