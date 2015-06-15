@@ -2520,7 +2520,7 @@ void MCPlayer::getenabledtracks(MCExecPoint &ep)
 }
 #endif
 
-Boolean MCPlayer::setenabledtracks(MCStringRef s)
+void MCPlayer::setenabledtracks(uindex_t p_count, uint32_t *p_tracks_id)
 {
 	if (getstate(CS_PREPARED))
 		if (m_platform_player != nil)
@@ -2534,34 +2534,16 @@ Boolean MCPlayer::setenabledtracks(MCStringRef s)
 				MCPlatformSetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
 			}
 			
-            uindex_t t_si, t_ei;
-            t_si = t_ei = 0;
-            
-            while (t_ei < MCStringGetLength(s))
+            for (uindex_t i = 0; i < t_track_count; i++)
             {
-                MCAutoStringRef t_track;
+                uindex_t t_index;
+                if (!MCPlatformFindPlayerTrackWithId(m_platform_player, p_tracks_id[i], t_index))
+                    return;
                 
-                if (!MCStringFirstIndexOfChar(s, '\n', t_si, kMCStringOptionCompareExact, t_ei))
-                    t_ei = MCStringGetLength(s);
-                
-                /* UNCHECKED */ MCStringCopySubstring(s, MCRangeMake(t_si, t_ei - t_si), &t_track);
-				
-                if (!MCStringIsEmpty(*t_track))
-				{
-					uindex_t t_index;
-					MCAutoNumberRef t_id;
-                    
-                    if (!MCNumberParse(*t_track, &t_id) ||
-                        !MCPlatformFindPlayerTrackWithId(m_platform_player, MCNumberFetchAsUnsignedInteger(*t_id), t_index))
-						return False;
-					
-					bool t_enabled;
-					t_enabled = true;
-					MCPlatformSetPlayerTrackProperty(m_platform_player, t_index, kMCPlatformPlayerTrackPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
-				}
-				t_ei++;
-				t_si = t_ei;
-			}
+                bool t_enabled;
+                t_enabled = true;
+                MCPlatformSetPlayerTrackProperty(m_platform_player, t_index, kMCPlatformPlayerTrackPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
+            }
             
 			MCRectangle t_movie_rect;
 			MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMovieRect, kMCPlatformPropertyTypeRectangle, &t_movie_rect);
@@ -2570,8 +2552,6 @@ Boolean MCPlayer::setenabledtracks(MCStringRef s)
 				trect = MCU_reduce_rect(trect, -borderwidth);
 			setrect(trect);
 		}
-    
-	return True;
 }
 
 MCRectangle MCPlayer::resize(MCRectangle movieRect)
@@ -2794,7 +2774,7 @@ void MCPlayer::getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id)
         for(uindex_t i = 0; i < t_track_count; i++)
         {
             uint32_t t_id;
-            uint32_t t_enabled;
+            bool t_enabled;
             MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyId, kMCPlatformPropertyTypeUInt32, &t_id);
             MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
             if (t_enabled)
