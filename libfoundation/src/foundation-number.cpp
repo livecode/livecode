@@ -132,6 +132,8 @@ bool __MCNumberParseNativeString(const char *p_string, uindex_t p_length, bool p
 		p_string[0] == '0' &&
 		(p_string[1] == 'x' || p_string[1] == 'X'))
 	{
+        errno = 0;
+        
 		uinteger_t t_uinteger;
 		t_uinteger = strtoul(p_string + 2, &t_end, 16);
 		
@@ -142,6 +144,8 @@ bool __MCNumberParseNativeString(const char *p_string, uindex_t p_length, bool p
 	}
 	else
 	{
+        errno = 0;
+        
 		// SN-2014-10-06: [[ Bug 13594 ]] We want an unsigned integer if possible
 		uinteger_t t_uinteger;
 		t_uinteger = strtoul(p_string, &t_end, 10);
@@ -152,6 +156,8 @@ bool __MCNumberParseNativeString(const char *p_string, uindex_t p_length, bool p
 			t_success = MCNumberCreateWithUnsignedInteger(t_uinteger, t_number);
 		else
 		{
+            errno = 0;
+            
 			real64_t t_real;
 			t_real = strtod(p_string, &t_end);
 			
