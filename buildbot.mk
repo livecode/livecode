@@ -155,7 +155,7 @@ dist-upload-files.txt:
 # We need to do the actual transfer in a loop to deal with possible
 # connection drops
 dist-upload-mkdir:
-	ssh $(UPLOAD_SERVER) "mkdir -p $(UPLOAD_PATH)"
+	ssh $(UPLOAD_SERVER) "mkdir -p \"$(UPLOAD_PATH)\""
 dist-upload: dist-upload-files.txt dist-upload-mkdir
 	trap "echo Interrupted; exit;" SIGINT SIGTERM; \
 	i=0; \
@@ -163,7 +163,7 @@ dist-upload: dist-upload-files.txt dist-upload-mkdir
 	while [ $$? -ne 0 -a $$i -lt $(UPLOAD_MAX_RETRIES) ] ; do \
 	  i=$$(($$i+1)); \
 	  rsync -v --progress --partial --chmod=ugo=rwX --executability \
-	    --files-from=dist-upload-files.txt . $(UPLOAD_SERVER):$(UPLOAD_PATH); \
+	    --files-from=dist-upload-files.txt . $(UPLOAD_SERVER):"$(UPLOAD_PATH)"; \
 	done; \
 	rc=$$?; \
 	if [ $$i -eq $(UPLOAD_MAX_RETRIES) ]; then \
