@@ -212,11 +212,6 @@ public:
     
     virtual void updatevisibility();
     virtual void updatetraversal();
-    
-    virtual void setforegroundcolor(const MCInterfaceNamedColor& p_color);
-    virtual void getforegrouncolor(MCInterfaceNamedColor& r_color);
-    virtual void sethilitecolor(const MCInterfaceNamedColor& p_color);
-    virtual void gethilitecolor(MCInterfaceNamedColor& r_color);
 
     // SN-2015-01-06: [[ Merge-6.7.2-rc-1 ]]
     virtual bool resolveplayerfilename(MCStringRef p_filename, MCStringRef &r_filename);
@@ -481,11 +476,6 @@ public:
     
     virtual void GetEnabledTracks(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tracks);
     virtual void SetEnabledTracks(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_tracks);
-    
-    virtual void SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color);
-    virtual void GetForeColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
-    virtual void SetHiliteColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color);
-    virtual void GetHiliteColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
     
     virtual void GetDontUseQT(MCExecContext& ctxt, bool &p_dont_use_qt);
     virtual void SetDontUseQT(MCExecContext& ctxt, bool r_dont_use_qt);
