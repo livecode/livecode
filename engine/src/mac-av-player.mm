@@ -512,7 +512,17 @@ CVReturn MCAVFoundationPlayer::MyDisplayLinkCallback (CVDisplayLinkRef displayLi
                                 void *displayLinkContext)
 {
     MCAVFoundationPlayer *t_self = (MCAVFoundationPlayer *)displayLinkContext;
-        
+    
+    // PM-2015-06-12: [[ Bug 15495 ]] If the file has no video component, then just update the currentTime (no need to updateCurrentFrame, since there are no frames)
+    bool t_has_video;
+    t_has_video = ( [[[[t_self -> m_player currentItem] asset] tracksWithMediaType:AVMediaTypeVideo] count] != 0);
+    
+    if (!t_has_video)
+    {
+        t_self -> HandleCurrentTimeChanged();
+        return kCVReturnSuccess;
+    }
+    
     CMTime t_output_item_time = [t_self -> m_player_item_video_output itemTimeForCVTimeStamp:*inOutputTime];
     
     if (![t_self -> m_player_item_video_output hasNewPixelBufferForItemTime:t_output_item_time])
