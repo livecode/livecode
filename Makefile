@@ -262,6 +262,7 @@ server-install: server-all
 .PHONY: all bootstrap thirdparty clean
 .DEFAULT_GOAL := all
 
+all: bootstrap
 all: revzip
 all: revxml
 all: revdb dbodbc dbsqlite dbmysql dbpostgresql
