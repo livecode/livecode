@@ -820,7 +820,6 @@ public:
         return m_is_parent_script;
     }
     
-<<<<<<< HEAD
     MCRectangle measuretext(MCStringRef p_text, bool p_is_unicode);
     
     // Currently non-functional: always returns false
