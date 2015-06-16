@@ -8,6 +8,6 @@ event handling loop it won't be flushed until control returns to the original ev
 loop.
 
 The upshot is that in tight loops, creating and deleting objects will result in objects being
-flushed immediately, reducing memory usage and making it easier to right object processing
+flushed immediately, reducing memory usage and making it easier to write object processing
 code which creates and deleted many objects.
 
