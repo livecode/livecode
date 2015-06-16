@@ -61,7 +61,7 @@ typedef struct _PropList
 }
 PropList;
 
-static PropList stackprops[] =
+static const PropList stackprops[] =
     {
         {"altId", P_ALT_ID},
         {"alwaysBuffer", P_ALWAYS_BUFFER},
@@ -131,7 +131,7 @@ static PropList stackprops[] =
         {"windowShape", P_WINDOW_SHAPE}
     };
 
-static PropList cardprops[] =
+static const PropList cardprops[] =
     {
         {"altId", P_ALT_ID},
         {"backColor", P_BACK_COLOR},
@@ -169,7 +169,7 @@ static PropList cardprops[] =
         {"topPattern", P_TOP_PATTERN}
     };
 
-static PropList groupprops[] =
+static const PropList groupprops[] =
     {
         {"altId", P_ALT_ID},
         {"backColor", P_BACK_COLOR},
@@ -239,7 +239,7 @@ static PropList groupprops[] =
         {"vScrollbar", P_VSCROLLBAR}
     };
 
-static PropList buttonprops[] =
+static const PropList buttonprops[] =
     {
         {"accelKey", P_ACCELERATOR_KEY},
         {"accelMods", P_ACCELERATOR_MODIFIERS},
@@ -327,7 +327,7 @@ static PropList buttonprops[] =
         {"visitedIcon", P_VISITED_ICON}
     };
 
-static PropList fieldprops[] =
+static const PropList fieldprops[] =
     {
         {"altId", P_ALT_ID},
         {"autoHilite", P_AUTO_HILITE},
@@ -407,7 +407,7 @@ static PropList fieldprops[] =
         {"vScrollbar", P_VSCROLLBAR}
     };
 
-static PropList imageprops[] =
+static const PropList imageprops[] =
     {
         {"altId", P_ALT_ID},
         {"angle", P_ANGLE},
@@ -468,7 +468,7 @@ static PropList imageprops[] =
         {"yHot", P_YHOT}
     };
 
-static PropList graphicprops[] =
+static const PropList graphicprops[] =
     {
         {"altId", P_ALT_ID},
         {"angle", P_ANGLE},
@@ -547,7 +547,7 @@ static PropList graphicprops[] =
         {"miterLimit", P_MITER_LIMIT},
     };
 
-static PropList scrollbarprops[] =
+static const PropList scrollbarprops[] =
     {
         {"altId", P_ALT_ID},
         {"backColor", P_BACK_COLOR},
@@ -605,7 +605,7 @@ static PropList scrollbarprops[] =
         {"thumbSize", P_THUMB_SIZE}
     };
 
-static PropList playerprops[] =
+static const PropList playerprops[] =
     {
         {"altId", P_ALT_ID},
         {"alwaysBuffer", P_ALWAYS_BUFFER},
@@ -666,7 +666,7 @@ static PropList playerprops[] =
         {"visible", P_VISIBLE},
     };
 
-static PropList epsprops[] =
+static const PropList epsprops[] =
     {
         {"altId", P_ALT_ID},
         {"backColor", P_BACK_COLOR},
@@ -721,7 +721,7 @@ static PropList epsprops[] =
         {"yScale", P_Y_SCALE}
     };
 
-static PropList colorpaletteprops[] =
+static const PropList colorpaletteprops[] =
     {
         {"name", P_SHORT_NAME},
         {"id", P_ID},
@@ -729,7 +729,7 @@ static PropList colorpaletteprops[] =
         {"rect", P_RECTANGLE}
     };
 
-static PropList audioclipprops[] =
+static const PropList audioclipprops[] =
     {
         {"altID", P_ALT_ID},
         {"id", P_ID},
@@ -737,7 +737,7 @@ static PropList audioclipprops[] =
         {"playLoudness", P_PLAY_LOUDNESS},
     };
 
-static PropList videoclipprops[] =
+static const PropList videoclipprops[] =
     {
         {"altID", P_ALT_ID},
         {"dontRefresh", P_DONT_REFRESH},
@@ -3294,7 +3294,7 @@ void MCObject::GetLongOwner(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef
 
 void MCObject::DoGetProperties(MCExecContext& ctxt, uint32_t part, bool p_effective, MCArrayRef& r_props)
 {
-	PropList *table;
+	const PropList *table;
 	uint2 tablesize;
 
 	switch (gettype())

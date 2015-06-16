@@ -258,8 +258,8 @@ private:
 	static Boolean contiguous;
 	static int2 narrowmargin;
 	static int2 widemargin;
-	static Keytranslations emacs_keys[];
-	static Keytranslations std_keys[];
+	static const Keytranslations emacs_keys[];
+	static const Keytranslations std_keys[];
 	static MCRectangle linkrect;
 	static MCBlock *linkstart;
 	static MCBlock *linkend;
@@ -342,7 +342,7 @@ public:
 	virtual void unlink(MCControl *p_control);
 
 	// MCField functions in fieldf.cc
-	static Field_translations trans_lookup(Keytranslations table[], KeySym key, uint2 modifiers);
+	static Field_translations trans_lookup(const Keytranslations table[], KeySym key, uint2 modifiers);
 	static Field_translations lookup_mac_keybinding(KeySym key, uint32_t modifiers);
 	
     void do_recompute(bool p_force_layout);

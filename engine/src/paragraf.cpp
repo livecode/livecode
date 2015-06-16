@@ -42,44 +42,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "stackfileformat.h"
 
-const char *ER_reverse[256] =
-    {
-        "&#0;", "&#1;", "&#2;", "&#3;", "&#4;",
-        "&#5;", "&#6;", "&#7;", "&#8;", "&#9;", "&#10;", "&#11;", "&#12;",
-        "&#13;", "&#14;", "&#15;", "&#16;", "&#17;", "&#18;", "&#19;",
-        "&#20;", "&#21;", "&#22;", "&#23;", "&#24;", "&#25;", "&#26;",
-        "&#27;", "&#28;", "&#29;", "&#30;", "&#31;", NULL, NULL, "&quot;", NULL,
-        NULL, NULL, "&amp;", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        NULL, NULL, "&lt;", NULL, "&gt;", NULL, NULL, NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, "&#127;", "&#128;", "&#129;", "&#130;", "&#131;",
-        "&#132;", "&#133;", "&#134;", "&#135;", "&#136;", "&#137;", "&#138;",
-        "&#139;", "&#140;", "&#141;", "&#142;", "&#143;", "&#144;", "&#145;",
-        "&#146;", "&#147;", "&#148;", "&#149;", "&#150;", "&#151;", "&#152;",
-        "&#153;", "&#154;", "&#155;", "&#156;", "&#157;", "&#158;", "&#159;",
-        "&nbsp;", "&iexcl;", "&cent;", "&pound;", "&curren;", "&yen;",
-        "&brvbar;", "&sect;", "&uml;", "&copy;", "&ordf;", "&laquo;", "&not;",
-        "&shy;", "&reg;", "&macr;", "&deg;", "&plusmn;", "&sup2;", "&sup3;",
-        "&acute;", "&micro;", "&para;", "&middot;", "&cedil;", "&sup1;",
-        "&ordm;", "&raquo;", "&frac14;", "&frac12;", "&frac34;", "&iquest;",
-        "&Agrave;", "&Aacute;", "&Acirc;", "&Atilde;", "&Auml;", "&Aring;",
-        "&AElig;", "&Ccedil;", "&Egrave;", "&Eacute;", "&Ecirc;", "&Euml;",
-        "&Igrave;", "&Iacute;", "&Icirc;", "&Iuml;", "&ETH;", "&Ntilde;",
-        "&Ograve;", "&Oacute;", "&Ocirc;", "&Otilde;", "&Ouml;", "&times;",
-        "&Oslash;", "&Ugrave;", "&Uacute;", "&Ucirc;", "&Uuml;", "&Yacute;",
-        "&THORN;", "&szlig;", "&agrave;", "&aacute;", "&acirc;", "&atilde;",
-        "&auml;", "&aring;", "&aelig;", "&ccedil;", "&egrave;", "&eacute;",
-        "&ecirc;", "&euml;", "&igrave;", "&iacute;", "&icirc;", "&iuml;",
-        "&eth;", "&ntilde;", "&ograve;", "&oacute;", "&ocirc;", "&otilde;",
-        "&ouml;", "&divide;", "&oslash;", "&ugrave;", "&uacute;", "&ucirc;",
-        "&uuml;", "&yacute;", "&thorn;", "&yuml;"
-    };
-
 const char *CHARSET_HTML[] =
     {
         "en",

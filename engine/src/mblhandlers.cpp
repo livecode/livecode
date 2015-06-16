@@ -4283,7 +4283,7 @@ struct MCPlatformMessageSpec
 	void *context;
 };
 
-static MCPlatformMessageSpec s_platform_messages[] =
+static const MCPlatformMessageSpec s_platform_messages[] =
 {
     // MM-2012-02-22: Added support for ad management
     {false, "mobileAdRegister", MCHandleAdRegister, nil},
