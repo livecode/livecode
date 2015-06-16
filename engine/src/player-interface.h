@@ -68,6 +68,7 @@ class MCPlayerInterface
 {
 protected:
 	MCStringRef filename;
+    MCStringRef resolved_filename;
 	uint2 framerate;
 	Boolean disposable;
 	Boolean istmpfile;
@@ -79,7 +80,9 @@ protected:
 	uint2 formattedwidth;
 	uint2 formattedheight;
 	uint2 loudness;
-	int4 lasttime;
+    int4 lasttime;
+    Boolean dontuseqt;
+    Boolean usingqt;
     
 public:
     MCPlayerInterface(){};
@@ -123,6 +126,9 @@ public:
 	{
 		scale = s;
 	}
+    
+    void setdontuseqt(bool p_dont_use_qt) { dontuseqt = p_dont_use_qt; }
+    void getdontuseqt(bool &r_dont_use_qt) { r_dont_use_qt = dontuseqt; }
     
 	virtual Boolean prepare(MCStringRef options) = 0;
 	virtual Boolean playstart(MCStringRef options) = 0;
@@ -265,6 +271,9 @@ public:
     virtual void GetForeColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color) = 0;
     virtual void SetHiliteColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color) = 0;
     virtual void GetHiliteColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color) = 0;
+    
+    virtual void GetDontUseQT(MCExecContext& ctxt, bool &p_dont_use_qt) = 0;
+    virtual void SetDontUseQT(MCExecContext& ctxt, bool r_dont_use_qt) = 0;
 };
 
 

@@ -532,6 +532,12 @@ struct MCFontStruct
 
 #endif
 
+// SN-2015-04-17: [[ Bug 15187 ]] Needed to know whether we are compiling for
+//  iOS Device or iOS Simulator
+#if defined TARGET_SUBPLATFORM_IPHONE
+#include <TargetConditionals.h>
+#endif
+
 //////////////////////////////////////////////////////////////////////
 //
 //  NEW / DELETE REDEFINTIONS
@@ -545,7 +551,9 @@ inline void *operator new (size_t size, void *p)
 #endif
 
 // MW-2014-08-14: [[ Bug 13154 ]] Make sure we use the nothrow variants of new / delete.
-#ifndef __VISUALC__
+// SN-2015-04-17: [[ Bug 15187 ]] Don't use the nothrow variant on iOS Simulator
+//  as they won't let iOS Simulator 6.3 engine compile.
+#if (!defined __VISUALC__) && (!TARGET_IPHONE_SIMULATOR)
 void *operator new (size_t size) throw();
 void *operator new[] (size_t size) throw();
 #endif
@@ -1408,10 +1416,6 @@ struct MCObjectChunkIndexPtr
 	MCMarkedText mark;
     MCNameRef index;
 };
-
-// MM-2014-07-31: [[ ThreadedRendering ]]
-typedef struct __MCThreadCondition *MCThreadConditionRef;
-typedef struct __MCThreadMutex *MCThreadMutexRef;
 
 //////////////////////////////////////////////////////////////////////
 

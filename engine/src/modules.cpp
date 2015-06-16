@@ -73,6 +73,7 @@ extern "C"
         &__com_livecode_sort_module_info,
         &__com_livecode_stream_module_info,
         &__com_livecode_string_module_info,
+        &__com_livecode_system_module_info,
         &__com_livecode_type_module_info,
         &__com_livecode_typeconvert_module_info,
         &__com_livecode_mathfoundation_module_info,
@@ -98,6 +99,7 @@ extern "C"
     extern void (*MCSortExecSortListAscendingText)();
     extern void (*MCStreamExecWriteToStream)();
     extern void (*MCStringEvalConcatenate)();
+	extern void (*MCSystemExecGetOperatingSystem)();
     extern void (*MCTypeEvalIsDefined)();
     extern void (*MCTypeConvertExecSplitStringByDelimiter)();
     extern void (*MCMathFoundationEvalFloorNumber)();
@@ -123,6 +125,7 @@ extern "C"
         &MCSortExecSortListAscendingText,
         &MCStreamExecWriteToStream,
         &MCStringEvalConcatenate,
+        &MCSystemExecGetOperatingSystem,
         &MCTypeEvalIsDefined,
         &MCTypeConvertExecSplitStringByDelimiter,
         &MCMathFoundationEvalFloorNumber,

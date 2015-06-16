@@ -60,7 +60,7 @@ SOURCES=\
 	srvmain.cpp dsklnx.cpp srvspec.cpp srvsession.cpp srvstack.cpp srvdebug.cpp \
 	srvscript.cpp srvoutput.cpp srvtheme.cpp \
     eventqueue.cpp encodederrors.cpp redraw.cpp tilecache.cpp tilecachesw.cpp \
-	fonttable.cpp fieldrtf.cpp fieldhtml.cpp fieldstyledtext.cpp paragrafattr.cpp \
+        fonttable.cpp fieldrtf.cpp fieldhtml.cpp fieldstyledtext.cpp paragrafattr.cpp \
     graphicscontext.cpp lnxflst.cpp lnxflstold.cpp lnxelevate.cpp \
 	linux-theme.cpp \
 	linuxstubs.cpp \
@@ -81,7 +81,6 @@ SOURCES=\
 	foundation-legacy.cpp legacy_spec.cpp \
 	srvposix.cpp \
     srvcgi.cpp srvmultipart.cpp \
-	sysunxthreads.cpp, stacktile.cpp \
 	widget.cpp \
 	widget-events.cpp
 

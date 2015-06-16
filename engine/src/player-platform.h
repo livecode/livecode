@@ -63,8 +63,7 @@ struct MCPlayerCallback
 //  since we use &MCControl::kPropertyTable
 class MCPlayer : public MCControl, public MCPlayerInterface
 {
-	MCPlayer *nextplayer;
-    
+    MCPlayer *nextplayer;
     MCColor controllerbackcolor;
     MCColor controllermaincolor;
     MCColor selectedareacolor;
@@ -83,10 +82,12 @@ class MCPlayer : public MCControl, public MCPlayerInterface
 
     bool m_is_attached : 1;
     bool m_should_attach : 1;
-    
+
+    bool m_should_recreate : 1;
+
 	static MCPropertyInfo kProperties[];
     static MCObjectPropertyTable kPropertyTable;
-	
+
 public:
 	MCPlayer();
 	MCPlayer(const MCPlayer &sref);
@@ -347,6 +348,9 @@ public:
     virtual void GetForeColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
     virtual void SetHiliteColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color);
     virtual void GetHiliteColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+    
+    virtual void GetDontUseQT(MCExecContext& ctxt, bool &p_dont_use_qt);
+    virtual void SetDontUseQT(MCExecContext& ctxt, bool r_dont_use_qt);
     
     void GetStatus(MCExecContext& ctxt, intenum_t& r_status);
     

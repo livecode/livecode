@@ -820,7 +820,8 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 
 	if (t_success)
 		t_success = MCStringCopyAndRelease(t_buffer, r_string);
-	else
+    
+    if (!t_success)
 		MCValueRelease (t_buffer);
 	
 	return t_success;
@@ -4047,15 +4048,16 @@ bool MCStringFindAndReplaceNative(MCStringRef self, MCStringRef p_pattern, MCStr
 			// we update the offset, and need just room up to it.
 			uindex_t t_space_needed;
 			if (t_found)
-				t_space_needed = t_next_offset + p_replacement -> char_count;
+				t_space_needed = (t_next_offset - t_offset) + p_replacement -> char_count;
 			else
 			{
 				t_next_offset = self -> char_count;
-				t_space_needed = t_next_offset;
+				t_space_needed = t_next_offset - t_offset;
 			}
             
 			// Expand the buffer as necessary.
-			if (t_output_length + t_space_needed > t_output_capacity)
+            // MW-2015-05-26: [[ Bug 15352 ]] Allocate more memory
+			if (t_output_length + t_space_needed + 1 > t_output_capacity)
 			{
 				if (t_output_capacity == 0)
 					t_output_capacity = 4096;
@@ -4510,15 +4512,16 @@ bool MCStringFindAndReplace(MCStringRef self, MCStringRef p_pattern, MCStringRef
 			// we update the offset, and need just room up to it.
 			uindex_t t_space_needed;
 			if (t_found)
-				t_space_needed = t_next_offset + p_replacement -> char_count;
+				t_space_needed = (t_next_offset - t_offset) + p_replacement -> char_count;
 			else
 			{
 				t_next_offset = self -> char_count;
-				t_space_needed = t_next_offset;
+				t_space_needed = t_next_offset - t_offset;
 			}
 
 			// Expand the buffer as necessary.
-			if (t_output_length + t_space_needed > t_output_capacity)
+            // MW-2015-05-26: [[ Bug 15352 ]] Allocate more memory
+			if (t_output_length + t_space_needed + 1 > t_output_capacity)
 			{
 				if (t_output_capacity == 0)
 					t_output_capacity = 4096;
@@ -5209,7 +5212,7 @@ bool MCStringConvertToSysString(MCStringRef p_string, char *& r_system_string, s
     t_codepage = GetConsoleOutputCP();
     
     int t_needed;
-    t_needed = WideCharToMultibyte(t_codepage,
+    t_needed = WideCharToMultiByte(t_codepage,
                                    WC_COMPOSITECHECK | WC_NO_BEST_FIT_CHARS,
                                    MCStringGetCharPtr(p_string),
                                    -1,
@@ -5222,7 +5225,7 @@ bool MCStringConvertToSysString(MCStringRef p_string, char *& r_system_string, s
     if (!t_bytes . New(t_needed))
         return false;
     
-    if (WideCharToMultibyte(t_codepage,
+    if (WideCharToMultiByte(t_codepage,
                             WC_COMPOSITECHECK | WC_NO_BEST_FIT_CHARS,
                             MCStringGetCharPtr(p_string),
                             -1,
@@ -5234,7 +5237,7 @@ bool MCStringConvertToSysString(MCStringRef p_string, char *& r_system_string, s
     
     uindex_t t_size;
     char *t_ptr;
-    t_bytes . Take(t_size, t_ptr);
+    t_bytes . Take(t_ptr, t_size);
     
     r_system_string = t_ptr;
     

@@ -2351,6 +2351,23 @@ Parse_stat MCLoad::parse(MCScriptPoint &sp)
 	{
         is_extension = true;
 		
+        if (sp.skip_token(SP_FACTOR, TT_FROM) != PS_NORMAL)
+        {
+            MCperror->add(PE_LOAD_NOFROM, sp);
+            return PS_ERROR;
+        }
+        
+        // AL-2015-11-06: [[ Load Extension From Var ]] Allow loading an extension from data in a variable
+        if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_DATA) == PS_NORMAL)
+        {
+            from_data = true;
+        }
+        else if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_FILE) != PS_NORMAL)
+        {
+            MCperror->add(PE_LOAD_NOFILE, sp);
+            return PS_ERROR;
+        }
+        
 		if (sp.parseexp(False, True, &url) != PS_NORMAL)
 		{
 			MCperror->add(PE_LOAD_BADEXTENSION, sp);
@@ -2434,15 +2451,29 @@ void MCLoad::exec_ctxt(MCExecContext& ctxt)
     
 	if (is_extension)
 	{
-		MCAutoStringRef t_filename;
 		MCAutoStringRef t_resource_path;
-		if (!ctxt . EvalExprAsStringRef(url, EE_LOAD_BADEXTENSION, &t_filename))
-			return;
+        if (has_resource_path && !ctxt . EvalExprAsStringRef(message, EE_LOAD_BADRESOURCEPATH, &t_resource_path))
+            return;
+        
+        // AL-2015-11-06: [[ Load Extension From Var ]] Allow loading an extension from data in a variable
+        if (from_data)
+        {
+            MCAutoDataRef t_data;
+            
+            if (!ctxt . EvalExprAsDataRef(url, EE_LOAD_BADEXTENSION, &t_data))
+                return;
 		
-		if (has_resource_path && !ctxt . EvalExprAsStringRef(message, EE_LOAD_BADRESOURCEPATH, &t_resource_path))
-			return;
+            MCEngineLoadExtensionFromData(ctxt, *t_data, *t_resource_path);
+        }
+        else
+        {
+            MCAutoStringRef t_filename;
+            
+            if (!ctxt . EvalExprAsStringRef(url, EE_LOAD_BADEXTENSION, &t_filename))
+                return; 
 		
-        MCEngineExecLoadExtension(ctxt, *t_filename, *t_resource_path);
+            MCEngineExecLoadExtension(ctxt, *t_filename, *t_resource_path);
+        }
 	}
 	else
     {

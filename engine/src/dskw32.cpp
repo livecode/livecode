@@ -2708,7 +2708,10 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		//}
         //}
         // SN-2014-08-08: [[ Bug 13026 ]] Fix ported from 6.7
-        else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless))
+        else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless)
+                 // SN-2015-04-20: [[ Bug 14295 ]] If we are here, we are a standalone
+                 // so the resources folder is the engine folder.
+                 || MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless))
         {
             uindex_t t_last_slash;
             
@@ -3068,6 +3071,9 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 
 		bool t_device = false;
 		bool t_serial_device = false;
+        // SN-2015-04-13: [[ Bug 14696 ]] Close the file handler in case our
+        //  MCStdioFileHandler could not be created.
+        bool t_close_file_handler = false;
 
 		// SN-2015-02-26: [[ Bug 14612 ]] Also process the device path
 		//  translation when using <open file>
@@ -3169,24 +3175,45 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 				char *t_buffer = (char*)MapViewOfFile(t_file_mapped_handle,
 													  FILE_MAP_READ, 0, 0, 0);
 				
+				// SN-2015-03-02: [[ Bug 14696 ]] If the file is too large,
+				//  the file mapping won't work, and a normal file handler
+				//  should be used.
 				if (t_buffer == NULL)
 				{
 					CloseHandle(t_file_mapped_handle);
+					t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
+                    t_close_file_handler = t_handle == NULL;
 				}
 				else
 				{
 					t_handle = new MCMemoryMappedFileHandle(t_file_mapped_handle, t_buffer, t_len);
-					CloseHandle(t_file_handle);
+                    // SN-2015-04-13: [[ Bug 14696 ]] We don't want to leave a
+                    //  file handler open in case the memory mapped file could
+                    //  not be allocated. We always close the normal file handle
+                    if (t_handle == NULL)
+                        CloseHandle(t_file_mapped_handle);
+                    t_close_file_handler = true;
 				}
 			}
 			// SN-2014-11-27: [[ Bug 14110 ]] A StdioFileHandle should be created if the file mapping failed
 			// (for empty files for instance).
 			else
+            {
 				t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
+                t_close_file_handler = t_handle == NULL;
+            }
 		}
 		else
+        {
 			t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
+            t_close_file_handler = t_handle == NULL;
+        }
 
+        // SN-2015-04-13: [[ Bug 14696 ]] We close the Windows file handle in
+        //  case we did not successfully create an MCStdioFileHandle.
+        if (t_close_file_handler)
+            CloseHandle(t_file_handle);
+        
 		return t_handle;
     }
     

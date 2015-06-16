@@ -1079,7 +1079,7 @@ MCExternalError MCExternalVariable::GetInteger(MCExternalValueOptions p_options,
 	MCAutoStringRef t_string_value;
 	t_error = GetString(p_options, &t_string_value);
 	if (t_error != kMCExternalErrorNone)
-		return t_error;
+        return t_error;
 	
 	return string_to_integer(*t_string_value, p_options, &r_value);
 }
@@ -1094,7 +1094,7 @@ MCExternalError MCExternalVariable::GetReal(MCExternalValueOptions p_options, re
 	MCValueRef t_value;
 	t_value = GetValueRef();
 	if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeNumber)
-		return number_to_real(p_options, MCNumberFetchAsReal((MCNumberRef)t_value), &r_value);
+		return number_to_real(MCNumberFetchAsReal((MCNumberRef)t_value), p_options, &r_value);
 	
 	MCExternalError t_error;
 	MCAutoStringRef t_string_value;
@@ -1470,7 +1470,8 @@ Exec_stat MCExternalV1::Handle(MCObject *p_context, Handler_type p_type, uint32_
 		for(uint32_t i = 0; i < t_parameter_count; i++)
 			delete t_parameter_vars[i];
 
-		delete t_parameter_vars;
+        // SN-2015-03-25: [[ CID 15424 ]] Delete an array: use delete []
+		delete[] t_parameter_vars;
 
 		return t_stat;
 	}
@@ -1736,7 +1737,8 @@ MCExternalError MCExternalContextEvaluate(const char *p_expression, unsigned int
 		return kMCExternalErrorOutOfMemory;
 	
 	MCAutoValueRef t_value;
-	MCECptr -> GetHandler() -> eval(*MCECptr, *t_expr, &t_value);
+    // SN-2015-06-03: [[ Bug 11277 ]] MCHandler::eval refactored
+    MCECptr -> eval(*MCECptr, *t_expr, &t_value);
 	if (MCECptr -> HasError())
 	{	
 		if (MCECptr -> GetExecStat() == ES_ERROR)
@@ -1760,7 +1762,7 @@ MCExternalError MCExternalContextExecute(const char *p_commands, unsigned int p_
 		return kMCExternalErrorOutOfMemory;
 	
 	Exec_stat t_stat;
-	MCECptr -> GetHandler() -> doscript(*MCECptr, *t_expr, 0, 0);
+    MCECptr -> doscript(*MCECptr, *t_expr, 0, 0);
 	if (MCECptr -> HasError())
 	{	
 		if (MCECptr -> GetExecStat() == ES_ERROR)
@@ -1777,8 +1779,13 @@ MCExternalError MCExternalContextExecute(const char *p_commands, unsigned int p_
 
 static MCExternalError MCExternalVariableCreate(MCExternalVariableRef* r_var)
 {
+    // SN-2015-03-25: [[ CID 16536 ]] Check that we have a variable.
+    if (r_var == NULL)
+        return kMCExternalErrorNoVariable;
+
 	*r_var = new MCTemporaryExternalVariable(kMCEmptyString);
-	if (r_var == nil)
+    // SN-2015-06-02: [[ CID 90609 ]] Check that the pointed value has been allocated
+	if (*r_var == nil)
 		return kMCExternalErrorOutOfMemory;
 
 	return kMCExternalErrorNone;
@@ -2349,6 +2356,8 @@ static MCExternalError MCExternalVariableAppend(MCExternalVariableRef var, MCExt
     {
         MCAutoStringRef t_stringref;
         MCString* t_string;
+
+        // SN-2015-03-25: [[ External Fix ]] Actually set t_string to the param
         t_string = (MCString*)p_value;
         if (!MCStringCreateWithBytes((byte_t*)t_string->getstring(), 2 * t_string->getlength(), kMCStringEncodingUTF16, false, &t_stringref))
             return kMCExternalErrorOutOfMemory;

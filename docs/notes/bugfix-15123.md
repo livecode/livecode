@@ -1,0 +1,1 @@
+# Crash when deleting a control in edit group mode 

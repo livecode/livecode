@@ -529,9 +529,11 @@ Boolean MCObject::kdown(MCStringRef p_string, KeySym key)
 		// Special keys as their number converted to a string, the rest by value
         // SN-2014-12-08: [[ Bug 12681 ]] Avoid to print the keycode in case we have a
         // numeric keypad keycode.
-        if (key > 0x7F && (key & XK_Class_mask) == XK_Class_compat && (key < XK_KP_Space || key > XK_KP_Equal))
-			/* UNCHECKED */ MCStringFormat(&t_string, "%ld", key);
-            else if (MCmodifierstate & MS_CONTROL)
+        // SN-2015-05-05: [[ Bug 15305 ]] Ensure that the keys are not printing
+        //  their numeric value, if not wanted.
+        if (key > 0xFF && (key & XK_Class_mask) == XK_Class_compat && (key < XK_KP_Space || key > XK_KP_Equal))
+            /* UNCHECKED */ MCStringFormat(&t_string, "%ld", key);
+        else if (MCmodifierstate & MS_CONTROL)
             /* UNCHECKED */ MCStringFormat(&t_string, "%c", (char)key);
 		else
 			t_string = p_string;
@@ -827,7 +829,24 @@ Boolean MCObject::del()
 	{
 		MCParentScript::FlushObject(this);
         m_is_parent_script = false;
-	}
+    }
+    
+    // SN-2015-06-04: [[ Bug 14642 ]] These two blocks have been moved from
+    //  MCObject::scheduledelete, since a deleted object is no longer something
+    //  we want to listen to. In case we undo the deletion, it will be added
+    //  back to the list of listened objects; in case we revert the stack to its
+    //  saved state, we will now be left with a list of listened-to objects with
+    //  no dangling pointers.
+    if (m_weak_handle != nil)
+    {
+        m_weak_handle -> Clear();
+        m_weak_handle = nil;
+    }
+    
+    // MW-2012-10-10: [[ IdCache ]] Remove the object from the stack's id cache
+    //   (if it is in it!).
+    if (m_in_id_cache)
+        getstack() -> uncacheobjectbyid(this);
     
 	return True;
 }
@@ -4972,19 +4991,10 @@ void MCObject::relayercontrol_insert(MCControl *p_control, MCControl *p_target)
 {
 }
 
-void MCObject::scheduledelete(void)
+void MCObject::scheduledelete(bool p_is_child)
 {
-	appendto(MCtodelete);
-	if (m_weak_handle != nil)
-	{
-		m_weak_handle -> Clear();
-		m_weak_handle = nil;
-	}
-	
-	// MW-2012-10-10: [[ IdCache ]] Remove the object from the stack's id cache
-	//   (if it is in it!).
-	if (m_in_id_cache)
-		getstack() -> uncacheobjectbyid(this);
+    if (!p_is_child)
+        appendto(MCtodelete);
 }
 
 MCRectangle MCObject::measuretext(MCStringRef p_text, bool p_is_unicode)

@@ -970,7 +970,7 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 
 IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
 {
-	IO_handle stream;
+    IO_handle stream;
 	MCAutoStringRef t_open_path;
 
 	bool t_found;
@@ -978,20 +978,10 @@ IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
 	if (!t_found)
 	{
 		if ((stream = MCS_open(p_name, kMCOpenFileModeRead, True, False, 0)) != NULL)
-		{
-			// This should probably use resolvepath().
-			if (MCStringGetCharAtIndex(p_name, 0) != PATH_SEPARATOR 
-				&& MCStringGetCharAtIndex(p_name, 1) != ':')
-			{
-				MCAutoStringRef t_curpath;
-				
-				/* UNCHECKED */ MCS_getcurdir(&t_curpath);
-				/* UNCHECKED */ MCStringFormat(&t_open_path, "%@/%@", *t_curpath, p_name); 
-			}
-			else
-				t_open_path = p_name;
-
-			t_found = true;
+        {
+            // This should probably use resolvepath().
+            // SN-2015-06-03: [[ Bug 15432 ]] Use resolvepath
+            t_found = MCS_resolvepath(p_name, &t_open_path);
 		}
 	}
     
@@ -1006,7 +996,7 @@ IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
 		else
 			t_leaf_name = p_name;
 		if ((stream = MCS_open(*t_leaf_name, kMCOpenFileModeRead, True, False, 0)) != NULL)
-		{
+        {
 			MCAutoStringRef t_curpath;
 			/* UNCHECKED */ MCS_getcurdir(&t_curpath);
 			/* UNCHECKED */ MCStringFormat(&t_open_path, "%@/%@", *t_curpath, p_name); 
@@ -2570,12 +2560,13 @@ void MCDispatch::addlibrarymapping(MCStringRef p_mapping)
     MCArrayStoreValue(m_library_mapping, false, *t_name_as_nameRef, *t_target);
 }
 
-bool MCDispatch::fetchlibrarymapping(const char* p_name, MCStringRef& r_path)
+// SN-2015-04-07: [[ Bug 15164 ]] Change p_name to be a StringRef.
+bool MCDispatch::fetchlibrarymapping(MCStringRef p_name, MCStringRef& r_path)
 {
     MCNewAutoNameRef t_name;
     MCStringRef t_value;
 
-    if (!MCNameCreateWithCString(p_name, &t_name))
+    if (!MCNameCreate(p_name, &t_name))
         return false;
 
     // m_library_mapping only stores strings (function above)

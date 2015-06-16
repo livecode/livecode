@@ -5653,14 +5653,29 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         
         // SN-2014-08-08: [[ Bug 13026 ]] Fix ported from 6.7
-        if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless))
+        if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless)
+                // SN-2015-04-20: [[ Bug 14295 ]] If we are here, we are a standalone
+                // so the resources folder is the redirected engine folder
+                || MCNameIsEqualTo(p_type, MCN_resources, kMCCompareCaseless))
         {
+            MCAutoStringRef t_engine_folder;
             uindex_t t_last_slash;
             
             if (!MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash))
                 t_last_slash = MCStringGetLength(MCcmd);
-            
-            return MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), r_folder) ? True : False;
+
+            if (!MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), &t_engine_folder))
+                return False;
+
+            if (MCNameIsEqualTo(p_type, MCN_resources, kMCCompareCaseless))
+            {
+                if (!MCS_apply_redirect(*t_engine_folder, false, r_folder))
+                    return False;
+            }
+            else
+                r_folder = MCValueRetain(*t_engine_folder);
+
+            return True;
         }
         
         if (MCS_mac_specialfolder_to_mac_folder(MCNameGetString(p_type), t_mac_folder, t_domain))
@@ -8164,7 +8179,13 @@ MCSystemInterface *MCDesktopCreateMacSystem(void)
 static bool fetch_ae_as_fsref_list(MCListRef &r_list)
 {
 	AEDescList docList; //get a list of alias records for the documents
-	long count;
+    long count;
+    // SN-2015-04-14: [[ Bug 15105 ]] We want to return at least an empty list
+    //  in any case where we return true
+    // SN-2014-10-07: [[ Bug 13587 ]] We store the paths in a list
+    MCAutoListRef t_list;
+    /* UNCHECKED */ MCListCreateMutable('\n', &t_list);
+    
 	if (AEGetParamDesc(aePtr, keyDirectObject,
 					   typeAEList, &docList) == noErr
 		&& AECountItems(&docList, &count) == noErr && count > 0)
@@ -8177,9 +8198,6 @@ static bool fetch_ae_as_fsref_list(MCListRef &r_list)
 		Size rSize;      //returned size, atual size of the docName
 		long item;
 		// get a FSSpec record, starts from count==1
-        // SN-2014-10-07: [[ Bug 13587 ]] We store the paths in a list
-        MCAutoListRef t_list;
-        /* UNCHECKED */ MCListCreateMutable('\n', &t_list);
         
 		for (item = 1; item <= count; item++)
 		{
@@ -8196,10 +8214,8 @@ static bool fetch_ae_as_fsref_list(MCListRef &r_list)
                 MCListAppend(*t_list, *t_fullpathname);
 		}
 		AEDisposeDesc(&docList);
-        
-        return MCListCopy(*t_list, r_list);
 	}
-	return true;
+    return MCListCopy(*t_list, r_list);
 }
 
 OSErr MCS_fsspec_to_fsref(const FSSpec *p_fsspec, FSRef *r_fsref)

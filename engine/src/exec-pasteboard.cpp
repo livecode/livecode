@@ -98,9 +98,9 @@ static MCExecEnumTypeInfo _kMCPasteboardDragActionTypeInfo =
 
 static MCExecSetTypeElementInfo _kMCPasteboardAllowableDragActionsElementInfo[] =
 {
-	{ "move", DRAG_ACTION_MOVE },
-	{ "copy", DRAG_ACTION_COPY },
-	{ "link", DRAG_ACTION_LINK },
+	{ "move", DRAG_ACTION_MOVE_BIT },
+	{ "copy", DRAG_ACTION_COPY_BIT },
+	{ "link", DRAG_ACTION_LINK_BIT },
 };
 
 static MCExecSetTypeInfo _kMCPasteboardAllowableDragActionsTypeInfo =
@@ -639,28 +639,80 @@ void MCPasteboardSetClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_index, 
 	
 	MCTransferType t_type;
 	if (p_index == nil)
-        t_type = TRANSFER_TYPE_UNICODE_TEXT;
+        t_type = TRANSFER_TYPE_TEXT;
 	else
 		t_type = MCTransferData::StringToType(MCNameGetString(p_index));
 
 	if (t_type != TRANSFER_TYPE_NULL && p_data != nil)
 	{    
-        MCAutoValueRef t_data;
+        MCAutoValueRef t_value;
         bool t_success;
         t_success = true;
-        // MW-2014-03-12: [[ ClipboardStyledText ]] If styledText is being requested, then
-        //   convert the array to a styles pickle and store that.
-        if (t_type == TRANSFER_TYPE_STYLED_TEXT_ARRAY)
-        {
-            t_type =  TRANSFER_TYPE_STYLED_TEXT;
-            t_success = MCConvertStyledTextArrayToStyledText((MCArrayRef)p_data, (MCDataRef&)&(t_data));
-        }
-        else
-            t_data = p_data;
-        
+		
+		switch (t_type)
+		{
+			case TRANSFER_TYPE_TEXT:
+			case TRANSFER_TYPE_FILES:
+			{
+				// convert to MCStringRef
+				MCAutoStringRef t_string;
+				t_success = ctxt.ConvertToString(p_data, &t_string);
+				if (t_success)
+					t_value = *t_string;
+				
+				break;
+			}
+				
+			case TRANSFER_TYPE_UNICODE_TEXT:
+			case TRANSFER_TYPE_STYLED_TEXT:
+			case TRANSFER_TYPE_RTF_TEXT:
+			case TRANSFER_TYPE_IMAGE:
+			case TRANSFER_TYPE_PRIVATE:
+			case TRANSFER_TYPE_OBJECTS:
+			{
+				// convert to MCDataRef
+				MCAutoDataRef t_data;
+				t_success = ctxt.ConvertToData(p_data, &t_data);
+				if (t_success)
+					t_value = *t_data;
+				
+				break;
+			}
+				
+			case TRANSFER_TYPE_HTML_TEXT:
+			{
+				// convert to MCStringRef or MCDataRef
+				if (MCValueGetTypeCode(p_data) == kMCValueTypeCodeData)
+					t_value = p_data;
+				else
+				{
+					MCAutoStringRef t_string;
+					t_success = ctxt.ConvertToString(p_data, &t_string);
+					if (t_success)
+						t_value = *t_string;
+				}
+				
+				break;
+			}
+				
+			case TRANSFER_TYPE_STYLED_TEXT_ARRAY:
+			{
+				// convert to MCArrayRef
+				if (MCValueGetTypeCode(p_data) == kMCValueTypeCodeArray)
+					t_value = p_data;
+				else
+					t_value = kMCEmptyArray;
+				
+				break;
+			}
+				
+			case TRANSFER_TYPE_NULL:
+				MCUnreachable();
+		}
+		
         if (t_success)
         {
-            if (t_pasteboard -> Store(t_type, *t_data))
+            if (t_pasteboard -> Store(t_type, *t_value))
                 return;
         }
 	}

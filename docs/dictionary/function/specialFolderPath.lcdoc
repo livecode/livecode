@@ -45,7 +45,8 @@ Android >*Note:* An Android application is installed on the phone in the form of
 - "Fonts": The Fonts folder inside the System Folder.
 - "Preferences": The Preferences folder inside the System Folder.
 - "Temporary": For storage of temporary files.
-- "Engine": The folder containing the engine.
+- "Engine": The folder containing the engine and the executable files copied in the standalone application.
+- "Resources": In development mode, the current stack folder. In a standalone, the resources folder where non-executable files, or folders specified from the Standalone Builder, are copied.
 - "Home": The current user's home directory (e.g. "/Users/Fred").
 - "Desktop": The user's Desktop folder.
 - "System": The Apple Menu Items folder inside the System Folder.
@@ -55,7 +56,8 @@ Android >*Note:* An Android application is installed on the phone in the form of
 - "Temporary": For storage of temporary files.
 - "Documents": For user documents.
 - "Support": For application data.
-- "Engine": The folder containing the engine.
+- "Engine": The folder containing the engine and the executable files copied in the standalone application.
+- "Resources": In development mode, the current stack folder. In a standalone, the resources folder where non-executable files, or folders specified from the Standalone Builder, are copied.
 - "Home": The current user's home directory (e.g. "C:/Documents and Settings/Fred").
 - "Desktop": The user's desktop folder.
 - "System": For system components.
@@ -65,6 +67,7 @@ Android >*Note:* An Android application is installed on the phone in the form of
 - "Temporary": For storage of temporary files.
 - "Support": For CSIDL 0x1a (appdata folder) data.
 - "Engine": The folder containing the engine.
+- "Resources": In development mode, the current stack folder. In a standalone, the resources folder where files or folders specified from the Standalone Builder are copied.
 - "0x001a": The user application data folder (e.g. "C:/Documents and settings/Fred/Application Data").
 - "0x0023": The "all users" application data folder (e.g. "C:/Documents and settings/all users/Application Data").
 - "0x000d": The "My Music" folder.
@@ -72,20 +75,24 @@ Android >*Note:* An Android application is installed on the phone in the form of
 - "0x0027": The "My Pictures" folder.
 - "0x000a": The recycle bin.
 - "Engine": The folder containing the engine.
+- "Resources": In development mode, the current stack folder. In a standalone, the resources folder where files or folders specified from the Standalone Builder are copied.
 - "Home": The current user's home directory (e.g. "/home/fred").
 - "Desktop": The current user's desktop (e.g. "/home/fred/Desktop").
 - "Temporary": For storage of temporary files (typically "/tmp").
 - "0x000e": The "My Videos" folder.
 - "Engine": The folder containing the engine.
+- "Resources": In development mode, the current stack folder. In a standalone, the resources folder where files or folders specified from the Standalone Builder are copied.
 - "home": The (unique) folder containing the application bundle and its associated data and folders.
 - "documents": The folder in which the application should store any document data (this folder is backed up by iTunes on sync).
 - "cache": The folder in which the application should store any transient data that needs to be preserved between launches (this folder is not backed up by iTunes on sync).
 - "library": The folder in which the application can store data of various types. In particular, data private to the application should be stored in a folder named with the app's bundle identifier inside library (this folder is backed up by iTunes on sync).
 - "temporary": The folder in which the application should store any temporary data that is not needed between launches (this folder is not backed up by iTunes on sync).
 - "engine": The folder containing the built standalone engine (i.e. the bundle). This is useful for constructing paths to resources that have been copied into the bundle at build time.
+- "resources": The path to the folder where the files and folders are copied in the standalone application (same as the engine folder).
 - "engine": The (virtual) path to the engine and its assets.
 - "documents": The path to a folder that can be used for per-application data files.
 - "cache": The path to a folder that can be used for transient per-application data files.
+- "resources": The path to the folder where files and folders are copied in the standalone application (same as the engine folder).
 
 The result: If the <folderIdentifier> is either not supported on the current platform or doesn't exist on the current system, the result is set to "folder not found".
 

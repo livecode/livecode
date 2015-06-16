@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globdefs.h"
 #include "filedefs.h"
 #include "parsedef.h"
+#include "exec.h"
 
 //#include "execpt.h"
 
@@ -439,12 +440,28 @@ bool MCJavaStringFromStringRef(JNIEnv *env, MCStringRef p_string, jstring &r_jav
     
     bool t_success = true;
     jstring t_java_string = nil;
-    
-    t_success = nil != (t_java_string = env -> NewString((const jchar*)MCStringGetCharPtr(p_string), MCStringGetLength(p_string)));
+
+    // SN-2015-04-28: [[ Bug 15151 ]] If the string is native, we don't want to
+    //  unnativise it - that's how we end up with a CantBeNative empty string!
+    if (MCStringIsNative(p_string))
+    {
+        unichar_t *t_string;
+        uindex_t t_string_length;
+        t_string = nil;
+        t_success = MCStringConvertToUnicode(p_string, t_string, t_string_length);
+        
+        if (t_success)
+            t_success = nil != (t_java_string = env -> NewString((const jchar*)t_string, t_string_length));
+        
+        if (t_string != nil)
+            MCMemoryDeleteArray(t_string);
+    }
+    else
+        t_success = nil != (t_java_string = env -> NewString((const jchar*)MCStringGetCharPtr(p_string), MCStringGetLength(p_string)));
     
     if (t_success)
         r_java_string = t_java_string;
-    
+
     return t_success;
 
 }
@@ -826,7 +843,13 @@ bool MCJavaMapFromArray(JNIEnv *p_env, MCArrayRef p_array, jobject &r_object)
 		{
 			jstring t_jstring = nil;
 			if (t_success)
-				t_success = MCJavaStringFromStringRef(p_env, (MCStringRef)t_element, t_jstring);
+            {
+                // PM-2015-05-25: [[ Bug 15403 ]] Make sure we pass a stringref to MCJavaStringFromStringRef
+                MCExecContext ctxt(nil,nil,nil);
+                MCAutoStringRef t_element_string;
+                /* UNCHECKED */ ctxt.ConvertToString(t_element, &t_element_string);
+				t_success = MCJavaStringFromStringRef(p_env, *t_element_string, t_jstring);
+            }
 			if (t_success)
 				t_jobj = t_jstring;
 		}
@@ -937,6 +960,11 @@ static bool s_map_to_array_callback(JNIEnv *p_env, MCNameRef p_key, jobject p_va
 			t_new_context.array = *t_array;
             if (t_success)
                 t_success = MCJavaIterateMap(p_env, p_value, s_map_to_array_callback, &t_new_context);
+            
+            // SN-2015-04-22: [[ Bug 14438 ]] We want to store the array in the
+            //  output array.
+            if (t_success)
+                t_success = MCArrayStoreValue(t_context->array, false, p_key, *t_array);
 		}
 		else
 			t_success = false;

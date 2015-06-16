@@ -283,6 +283,7 @@ MCNameRef MCN_desktop;
 MCNameRef MCN_documents;
 MCNameRef MCN_engine;
 MCNameRef MCN_fonts;
+MCNameRef MCN_resources;
 MCNameRef MCN_home;
 MCNameRef MCN_start;
 //MCNameRef MCN_system;
@@ -721,6 +722,7 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("desktop", MCN_desktop);
 	/* UNCHECKED */ MCNameCreateWithCString("documents", MCN_documents);
 	/* UNCHECKED */ MCNameCreateWithCString("engine", MCN_engine);
+    /* UNCHECKED */ MCNameCreateWithCString("resources", MCN_resources);
 	/* UNCHECKED */ MCNameCreateWithCString("fonts", MCN_fonts);
 	/* UNCHECKED */ MCNameCreateWithCString("home", MCN_home);
 	/* UNCHECKED */ MCNameCreateWithCString("start", MCN_start);
@@ -1158,6 +1160,7 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCN_desktop);
 	MCNameDelete(MCN_documents);
 	MCNameDelete(MCN_engine);
+    MCNameDelete(MCN_resources);
 	MCNameDelete(MCN_fonts);
 	MCNameDelete(MCN_home);
 	MCNameDelete(MCN_start);
