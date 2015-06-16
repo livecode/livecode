@@ -1056,7 +1056,6 @@ void MCWidget::OnVisibilityChanged(bool p_visible)
 
 void MCWidget::OnHitTest(const MCRectangle& p_intersect, bool& r_hit)
 {
-    fprintf(stderr, "MCWidget::OnHitTest\n");
     r_hit = maskrect(p_intersect);
     
     // In theory this handler shouldn't allow script access.
@@ -1064,7 +1063,6 @@ void MCWidget::OnHitTest(const MCRectangle& p_intersect, bool& r_hit)
 
 void MCWidget::OnBoundsTest(const MCRectangle& p_intersect, bool& r_hit)
 {
-    fprintf(stderr, "MCWidget::OnBoundsTest\n");
     r_hit = maskrect(p_intersect);
     
     // In theory this handler shouldn't allow script access.
@@ -1072,8 +1070,6 @@ void MCWidget::OnBoundsTest(const MCRectangle& p_intersect, bool& r_hit)
 
 void MCWidget::OnSave(MCValueRef& r_array)
 {
-    fprintf(stderr, "MCWidget::OnSave\n");
-    
     MCAutoValueRefArray t_params;
     t_params.New(1);
     t_params[0] = nil;
@@ -1090,8 +1086,6 @@ void MCWidget::OnSave(MCValueRef& r_array)
 
 void MCWidget::OnLoad(MCValueRef p_array)
 {
-    fprintf(stderr, "MCWidget::OnLoad\n");
-    
     MCAutoValueRefArray t_params;
     t_params.New(1);
     t_params[0] = MCValueRetain(p_array);
@@ -1145,8 +1139,6 @@ void MCWidget::OnToolChanged(Tool p_new_tool)
         m_timer_deferred = false;
         MCscreen -> addtimer(this, MCM_internal, 0);
     }
-    
-    fprintf(stderr, "MCWidget::OnToolChanged\n");
 }
 
 void MCWidget::OnLayerChanged()
