@@ -1186,13 +1186,39 @@
 'token' END_OF_UNIT
 'token' NEXT_UNIT
 
+'action' DefineCustomInvokeList(INT, INVOKELIST)
+'action' LookupCustomInvokeList(INT -> INVOKELIST)
+
+'action' CustomInvokeLists(INT -> INVOKELIST)
+    'rule' CustomInvokeLists(Index -> List):
+        LookupCustomInvokeList(Index -> List)
+
+'action' MakeCustomInvokeMethodArgs1(MODE, INT -> INVOKESIGNATURE)
+    'rule' MakeCustomInvokeMethodArgs1(Mode, Index -> invokesignature(Mode, Index, nil)):
+    
+'action' MakeCustomInvokeMethodArgs2(MODE, INT, MODE, INT -> INVOKESIGNATURE)
+    'rule' MakeCustomInvokeMethodArgs2(Mode1, Index1, Mode2, Index2 -> invokesignature(Mode1, Index1, invokesignature(Mode2, Index2, nil))):
+
+'action' MakeCustomInvokeMethodArgs3(MODE, INT, MODE, INT, MODE, INT, -> INVOKESIGNATURE)
+    'rule' MakeCustomInvokeMethodArgs3(Mode1, Index1, Mode2, Index2, Mode3, Index3 -> invokesignature(Mode1, Index1, invokesignature(Mode2, Index2, invokesignature(Mode3, Index3, nil)))):
+
+'action' MakeCustomInvokeMethodList(STRING, INVOKEMETHODTYPE, INVOKESIGNATURE, INVOKEMETHODLIST -> INVOKEMETHODLIST)
+    'rule' MakeCustomInvokeMethodList(Name, Type, Signature, Previous -> methodlist(Name, Type, Signature, Previous))
+
+'action' MakeCustomInvokeList(STRING, STRING, INVOKEMETHODLIST, INVOKELIST -> INVOKELIST)
+    'rule' MakeCustomInvokeList(Name, ModuleName, Methods, Previous -> List)
+        Info::INVOKEINFO
+        Info'Index <- -1
+        Info'ModuleIndex <- -1
+        Info'Name <- Name
+        Info'ModuleName <- ModuleName
+        Info'Methods <- Methods
+        where(invokelist(Info, Previous) -> List)
+
 --*--*--*--*--*--*--*--
 
 'action' InitializeCustomInvokeLists()
     'rule' InitializeCustomInvokeLists():
-        -- nothing
-'action' CustomInvokeLists(INT -> INVOKELIST)
-    'rule' CustomInvokeLists(_ -> nil):
         -- nothing
 'nonterm' CustomStatements(-> STATEMENT)
     'rule' CustomStatements(-> nil):
