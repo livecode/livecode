@@ -57,7 +57,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="winmm.lib imm32.lib ws2_32.lib rpcrt4.lib uuid.lib msimg32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Usp10.lib mscms.lib crypt32.lib iphlpapi.lib QTMLClient.lib QTVR.lib shlwapi.lib sicudt.lib sicuin.lib sicuio.lib sicule.lib siculx.lib sicuuc.lib strmiids.lib"
+				AdditionalDependencies="winmm.lib imm32.lib ws2_32.lib rpcrt4.lib uuid.lib msimg32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Usp10.lib mscms.lib crypt32.lib iphlpapi.lib QTMLClient.lib QTVR.lib shlwapi.lib sicudt.lib sicuin.lib sicuio.lib sicule.lib siculx.lib sicuuc.lib strmiids.lib wmvcore.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(ProgramFiles)\QuickTime SDK\Libraries&quot;;&quot;$(SolutionDir)prebuilt\lib\win32\i386&quot;"
 				ModuleDefinitionFile=""
@@ -132,7 +132,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="winmm.lib imm32.lib ws2_32.lib rpcrt4.lib uuid.lib msimg32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Usp10.lib mscms.lib crypt32.lib iphlpapi.lib QTMLClient.lib QTVR.lib shlwapi.lib sicudt.lib sicuin.lib sicuio.lib sicule.lib siculx.lib sicuuc.lib strmiids.lib"
+				AdditionalDependencies="winmm.lib imm32.lib ws2_32.lib rpcrt4.lib uuid.lib msimg32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Usp10.lib mscms.lib crypt32.lib iphlpapi.lib QTMLClient.lib QTVR.lib shlwapi.lib sicudt.lib sicuin.lib sicuio.lib sicule.lib siculx.lib sicuuc.lib strmiids.lib wmvcore.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(ProgramFiles)\QuickTime SDK\Libraries&quot;;&quot;$(SolutionDir)prebuilt\lib\win32\i386&quot;"
 				GenerateDebugInformation="true"

@@ -15,6 +15,7 @@
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
+#include "wmsdk.h"
 
 //#include "w32prefix.h"
 
@@ -23,6 +24,7 @@
 #include "platform-camera-internal.h"
 
 #include <dshow.h>
+#include <dshowasf.h>
 
 #include "atlsubset.h"
 #include "qedit.h"
@@ -139,7 +141,9 @@ private:
 	bool OpenAudioCodec();
 	void CloseAudioCodec();
 
-	bool StartVideoFileCapture(MCStringRef p_string);
+	bool OpenAVIOutput(const wchar_t *p_filename);
+	bool OpenWMVOutput(const wchar_t *p_filename);
+	bool StartVideoFileCapture(const wchar_t *p_filename);
 	void StopVideoFileCapture();
 
 	void StartPreview();
@@ -605,7 +609,266 @@ void MCDSCamera::StopPreview()
 
 //////////
 
-bool MCDSCamera::StartVideoFileCapture(MCStringRef p_filename)
+bool MCDSCameraGetCodecName(IWMCodecInfo3 *p_codec_info, const GUID &p_type, DWORD p_index, wchar_t *&r_name)
+{
+	bool t_success;
+	t_success = true;
+
+	HRESULT t_result;
+
+	DWORD t_name_size;
+	t_name_size = 0;
+	if (t_success)
+		t_success = SUCCEEDED(t_result = p_codec_info->GetCodecName(p_type, p_index, NULL, &t_name_size));
+
+	DWORD t_err;
+	t_err = GetLastError();
+
+	wchar_t *t_name;
+	t_name = nil;
+
+	if (t_success)
+		t_success = MCMemoryAllocate(t_name_size * sizeof(wchar_t), t_name);
+
+	if (t_success)
+		t_success = SUCCEEDED(p_codec_info->GetCodecName(p_type, p_index, t_name, &t_name_size));
+
+	if (t_success)
+		r_name = t_name;
+	else if (t_name != nil)
+		MCMemoryDeallocate(t_name);
+
+	return t_success;
+}
+
+bool MCDSCameraFindCodec(IWMCodecInfo3* p_codec_info, const GUID &p_type, const wchar_t *p_name, DWORD &r_codec_index)
+{
+	bool t_success;
+	t_success = true;
+
+	DWORD t_codec_count;
+	if (t_success)
+		t_success = SUCCEEDED(p_codec_info->GetCodecInfoCount(WMMEDIATYPE_Video, &t_codec_count));
+
+	for (uint32_t i = 0; i < t_codec_count; i++)
+	{
+		MCAutoCustomPointer<wchar_t*, (void(*)(const void*))MCMemoryDeallocate> t_name;
+
+		t_success = MCDSCameraGetCodecName(p_codec_info, p_type, i, &t_name);
+
+		if (t_success)
+			MCLog("codec name: %S", *t_name);
+
+		if (t_success && wcscmp(*t_name, p_name) == 0)
+		{
+			r_codec_index = i;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool MCDSCameraGetMWMediaProps(IWMMediaProps *p_props, WM_MEDIA_TYPE *&r_media_type)
+{
+	bool t_success;
+	t_success = true;
+
+	DWORD t_size;
+	t_size = 0;
+
+	void *t_buffer;
+	t_buffer = nil;
+
+	if (t_success)
+		t_success = SUCCEEDED(p_props->GetMediaType(NULL, &t_size));
+
+	if (t_success)
+		t_success = MCMemoryAllocate(t_size, t_buffer);
+
+	if (t_success)
+		t_success = SUCCEEDED(p_props->GetMediaType((WM_MEDIA_TYPE*)t_buffer, &t_size));
+
+	if (t_success)
+		r_media_type = (WM_MEDIA_TYPE*)t_buffer;
+	else if (t_buffer != nil)
+		MCMemoryDeallocate(t_buffer);
+
+	return t_success;
+}
+
+#define WMVIDEO9CODEC L"Windows Media Video 9"
+#define WMAUDIO9CODEC L"Windows Media Audio 9.2"
+
+bool MCDSCameraGetWMV9Profile(uint32_t p_width, uint32_t p_height, uint32_t p_video_bitrate, real64_t p_framerate, bool p_enable_audio, IWMProfile **r_profile)
+{
+	bool t_success;
+	t_success = true;
+
+	CComPtr<IWMProfileManager> t_manager;
+	if (t_success)
+		t_success = SUCCEEDED(WMCreateProfileManager(&t_manager));
+
+	CComPtr<IWMCodecInfo3> t_codec_info;
+	if (t_success)
+		t_success = SUCCEEDED(t_manager->QueryInterface(&t_codec_info));
+
+	DWORD t_codec_index;
+	if (t_success)
+		t_success = MCDSCameraFindCodec(t_codec_info, WMMEDIATYPE_Video, WMVIDEO9CODEC, t_codec_index);
+
+	CComPtr<IWMProfile> t_profile;
+	if (t_success)
+		t_success = SUCCEEDED(t_manager->CreateEmptyProfile(WMT_VER_9_0, &t_profile));
+
+	CComPtr<IWMStreamConfig> t_stream_config;
+	if (t_success)
+		t_success = SUCCEEDED(t_codec_info->GetCodecFormat(WMMEDIATYPE_Video, t_codec_index, 0, &t_stream_config));
+
+	if (t_success)
+		t_success = SUCCEEDED(t_stream_config->SetStreamName(L"VideoStream"));
+
+	if (t_success)
+		t_success = SUCCEEDED(t_stream_config->SetConnectionName(L"VideoConnection"));
+
+	if (t_success)
+		t_success = SUCCEEDED(t_stream_config->SetStreamNumber(1));
+
+	// Video stream configuration
+	if (t_success)
+		t_success = SUCCEEDED(t_stream_config->SetBitrate(p_video_bitrate));
+
+	if (t_success)
+		t_success = SUCCEEDED(t_stream_config->SetBufferWindow(1000));
+
+	CComPtr<IWMMediaProps> t_props;
+	if (t_success)
+		t_success = SUCCEEDED(t_stream_config->QueryInterface(&t_props));
+
+	MCAutoCustomPointer<WM_MEDIA_TYPE*, (void(*)(const void*))MCMemoryDeallocate> t_type;
+
+	if (t_success)
+		t_success = MCDSCameraGetMWMediaProps(t_props, &t_type);
+
+	WMVIDEOINFOHEADER *t_videoinfo;
+	if (t_success)
+	{
+		t_videoinfo = (WMVIDEOINFOHEADER*)(*t_type)->pbFormat;
+		SetRect(&t_videoinfo->rcSource, 0, 0, p_width, p_height);
+		SetRect(&t_videoinfo->rcTarget, 0, 0, p_width, p_height);
+		t_videoinfo->dwBitRate = p_video_bitrate;
+		t_videoinfo->AvgTimePerFrame = 1 / p_framerate;
+		t_videoinfo->bmiHeader.biWidth = p_width;
+		t_videoinfo->bmiHeader.biHeight = p_height;
+
+		t_success = SUCCEEDED(t_props->SetMediaType(*t_type));
+	}
+
+	if (t_success)
+		t_success = SUCCEEDED(t_profile->AddStream(t_stream_config));
+
+	if (t_success && p_enable_audio)
+	{
+		DWORD t_codec_index;
+		if (t_success)
+			t_success = MCDSCameraFindCodec(t_codec_info, WMMEDIATYPE_Audio, WMAUDIO9CODEC, t_codec_index);
+
+		CComPtr<IWMStreamConfig> t_stream_config;
+		if (t_success)
+			t_success = SUCCEEDED(t_codec_info->GetCodecFormat(WMMEDIATYPE_Audio, t_codec_index, 0, &t_stream_config));
+
+		if (t_success)
+			t_success = SUCCEEDED(t_stream_config->SetStreamName(L"AudioStream"));
+
+		if (t_success)
+			t_success = SUCCEEDED(t_stream_config->SetConnectionName(L"AudioConnection"));
+
+		if (t_success)
+			t_success = SUCCEEDED(t_stream_config->SetStreamNumber(2));
+
+		if (t_success)
+			t_success = SUCCEEDED(t_profile->AddStream(t_stream_config));
+	}
+
+	if (t_success)
+		*r_profile = t_profile.Detach();
+
+	return t_success;
+}
+
+bool MCDSCamera::OpenWMVOutput(const wchar_t *p_filename)
+{
+	bool t_success;
+	t_success = true;
+
+	HRESULT t_result;
+	t_result = S_OK;
+
+	CComPtr<IBaseFilter> t_mux;
+	CComPtr<IFileSinkFilter> t_sink;
+
+	if (t_success)
+		t_success = SUCCEEDED(m_capture_graph->SetOutputFileName(&MEDIASUBTYPE_Asf, p_filename, &t_mux, &t_sink));
+
+	CComPtr<IWMProfile> t_profile;
+	if (t_success)
+		t_success = MCDSCameraGetWMV9Profile(m_snapshot_width, m_snapshot_height, 1024 * 1000, 20.0, m_audio_device != nil, &t_profile);
+
+	CComPtr<IConfigAsfWriter> t_config;
+	if (t_success)
+		t_success = SUCCEEDED(t_sink->QueryInterface(&t_config));
+
+	if (t_success)
+		t_success = SUCCEEDED(t_result = t_config->ConfigureFilterUsingProfile(t_profile));
+
+	if (t_success)
+	{
+		m_video_muxer = t_mux;
+		m_video_output = t_sink;
+	}
+
+	return t_success;
+}
+
+bool MCDSCamera::OpenAVIOutput(const wchar_t *p_filename)
+{
+	bool t_success;
+	t_success = true;
+
+	bool t_have_audio;
+	t_have_audio = false;
+
+	if (t_success)
+		t_have_audio = m_audio_device != nil;
+
+	if (t_success)
+		t_success = OpenVideoCodec();
+
+	if (t_success && t_have_audio)
+		t_success = OpenAudioCodec();
+
+	if (t_success && m_video_codec != nil)
+		t_success = SUCCEEDED(m_filter_graph->AddFilter(m_video_codec, L"VideoCodec"));
+
+	if (t_success && t_have_audio && m_audio_codec != nil)
+		t_success = SUCCEEDED(m_filter_graph->AddFilter(m_audio_codec, L"AudioCodec"));
+
+	CComPtr<IBaseFilter> t_mux;
+	CComPtr<IFileSinkFilter> t_sink;
+
+	if (t_success)
+		t_success = SUCCEEDED(m_capture_graph->SetOutputFileName(&MEDIASUBTYPE_Avi, p_filename, &t_mux, &t_sink));
+
+	if (t_success)
+	{
+		m_video_muxer = t_mux;
+		m_video_output = t_sink;
+	}
+
+	return t_success;
+}
+
+bool MCDSCamera::StartVideoFileCapture(const wchar_t *p_filename)
 {
 	if (!m_previewing)
 		return false;
@@ -616,55 +879,35 @@ bool MCDSCamera::StartVideoFileCapture(MCStringRef p_filename)
 	bool t_success;
 	t_success = true;
 
-	HRESULT t_result;
-	t_result = S_OK;
-
 	bool t_have_audio;
 	t_have_audio = false;
 
-	if (t_success)
-		t_success = OpenVideoCodec();
-
-	if (t_success)
-		t_have_audio = OpenAudioInput();
-
-	if (t_success && t_have_audio)
-		t_success = OpenAudioCodec();
+	HRESULT t_result;
+	t_result = S_OK;
 
 
 	if (t_success)
 		t_success = SUCCEEDED(m_media_control->Stop());
 
 
-	if (t_success && m_video_codec != nil)
-		t_success = SUCCEEDED(m_filter_graph->AddFilter(m_video_codec, L"VideoCodec"));
+	if (t_success)
+		t_have_audio = OpenAudioInput();
 
 	if (t_success && t_have_audio)
 		t_success = SUCCEEDED(m_filter_graph->AddFilter(m_audio_input, L"AudioInput"));
 
-	if (t_success && t_have_audio && m_audio_codec != nil)
-		t_success = SUCCEEDED(m_filter_graph->AddFilter(m_audio_codec, L"AudioCodec"));
-
-	wchar_t *t_filename;
-	t_filename = nil;
+	if (t_success)
+	{
+		DeleteFile(p_filename);
+		t_success = OpenWMVOutput(p_filename);
+		//t_success = OpenAVIOutput(p_filename);
+	}
 
 	if (t_success)
-		t_success = MCStringConvertToWString(p_filename, t_filename);
-
-	CComPtr<IBaseFilter> t_mux;
-	CComPtr<IFileSinkFilter> t_sink;
-
-	if (t_success)
-		t_success = SUCCEEDED(m_capture_graph->SetOutputFileName(&MEDIASUBTYPE_Avi, t_filename, &t_mux, &t_sink));
-
-	if (t_filename != nil)
-		MCMemoryDeallocate(t_filename);
-
-	if (t_success)
-		t_success = SUCCEEDED(m_capture_graph->RenderStream(&PIN_CATEGORY_CAPTURE, &MEDIATYPE_Video, m_video_input, m_video_codec, t_mux));
+		t_success = SUCCEEDED(m_capture_graph->RenderStream(&PIN_CATEGORY_CAPTURE, &MEDIATYPE_Video, m_video_input, m_video_codec, m_video_muxer));
 
 	if (t_success && t_have_audio)
-		t_success = SUCCEEDED(m_capture_graph->RenderStream(&PIN_CATEGORY_CAPTURE, &MEDIATYPE_Audio, m_audio_input, m_audio_codec, t_mux));
+		t_success = SUCCEEDED(m_capture_graph->RenderStream(&PIN_CATEGORY_CAPTURE, &MEDIATYPE_Audio, m_audio_input, m_audio_codec, m_video_muxer));
 
 
 	if (t_success)
@@ -673,8 +916,11 @@ bool MCDSCamera::StartVideoFileCapture(MCStringRef p_filename)
 
 	if (t_success)
 	{
-		m_video_output = t_sink;
-		m_video_muxer = t_mux;
+	}
+	else
+	{
+		DWORD t_error = GetLastError();
+		MCLog("Win32 Error: %d", t_error);
 	}
 
 	return t_success;
@@ -1016,8 +1262,12 @@ bool MCDSCamera::StartRecording(MCStringRef p_filename)
 	bool t_success;
 	t_success = true;
 
+	MCAutoCustomPointer<wchar_t*, (void(*)(const void*))MCMemoryDeallocate> t_filename;
 	if (t_success)
-		t_success = StartVideoFileCapture(p_filename);
+		t_success = MCStringConvertToWString(p_filename, &t_filename);
+
+	if (t_success)
+		t_success = StartVideoFileCapture(*t_filename);
 
 	if (t_success)
 		m_recording = true;
