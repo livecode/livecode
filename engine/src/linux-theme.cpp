@@ -49,6 +49,9 @@ static GtkWidget* getWidgetForControlType(MCPlatformControlType p_type, MCPlatfo
     // Ensure that our container widget exists
     if (s_widget_container == NULL)
     {
+        if (!MCscreen -> hasfeature(PLATFORM_FEATURE_NATIVE_THEMES))
+            return NULL;
+        
         gtk_init(NULL, NULL);
         
         // Create a new window
@@ -330,7 +333,7 @@ bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformC
     GtkStyle* t_style;
     t_style = getStyleForControlType(p_type, p_part);
     if (t_style == NULL)
-        return false;
+        return MCFontCreate(MCNAME("Helvetica"), 0, 12, r_font);
     
     bool t_found;
     t_found = false;

@@ -88,6 +88,11 @@ MCScreenDC::MCScreenDC()
 	backdrop_active = false;
     
     m_im_context = NULL;
+    
+    m_has_native_theme = false;
+    m_has_native_color_dialogs = false;
+    m_has_native_file_dialogs = false;
+    m_has_native_print_dialogs = false;
 
 	MCNotifyInitialize();
 }
