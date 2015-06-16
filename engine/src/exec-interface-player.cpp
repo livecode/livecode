@@ -263,14 +263,19 @@ bool MCPlayer::resolveplayerfilename(MCStringRef p_filename, MCStringRef &r_file
         return true;
     }
 
-    MCAutoStringRef t_filename;
-    bool t_relative_to_stack = getstack()->resolve_relative_path(p_filename, &t_filename);
-    if (t_relative_to_stack && MCS_exists(*t_filename, True))
-        return MCStringCopy(*t_filename, r_filename);
+	{
+		MCAutoStringRef t_filename;
+		bool t_relative_to_stack = getstack()->resolve_relative_path(p_filename, &t_filename);
+		if (t_relative_to_stack && MCS_exists(*t_filename, True))
+			return MCStringCopy(*t_filename, r_filename);
+	}
 
-    bool t_relative_to_default_folder = getstack()->resolve_relative_path_to_default_folder(p_filename, &t_filename);
-    if (t_relative_to_default_folder && MCS_exists(*t_filename, True))
-        return MCStringCopy(*t_filename, r_filename);
+	{
+		MCAutoStringRef t_filename;
+		bool t_relative_to_default_folder = getstack()->resolve_relative_path_to_default_folder(p_filename, &t_filename);
+		if (t_relative_to_default_folder && MCS_exists(*t_filename, True))
+			return MCStringCopy(*t_filename, r_filename);
+	}
 
     return false;
 }
@@ -722,26 +727,11 @@ void MCPlayer::GetEnabledTracks(MCExecContext& ctxt, uindex_t& r_count, uinteger
     getenabledtracks(r_count, r_tracks);
 }
 
-void MCPlayer::GetForeColor(MCExecContext &ctxt, MCInterfaceNamedColor &r_color)
+void MCPlayer::SetEnabledTracks(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_tracks)
 {
-    getforegrouncolor(r_color);
-}
-
-void MCPlayer::SetForeColor(MCExecContext &ctxt, const MCInterfaceNamedColor &p_color)
-{
-    setforegroundcolor(p_color);
-    Redraw();
-}
-
-void MCPlayer::GetHiliteColor(MCExecContext &ctxt, MCInterfaceNamedColor &r_color)
-{
-    gethilitecolor(r_color);
-}
-
-void MCPlayer::SetHiliteColor(MCExecContext &ctxt, const MCInterfaceNamedColor &p_color)
-{
-    sethilitecolor(p_color);
-    Redraw();
+    // PM-2015-06-01: [[ PlatformPlayer ]]
+    // P_ENABLED_TRACKS setter refactored to the MCPlayer implementations
+    setenabledtracks(p_count, p_tracks);
 }
 
 #ifdef FEATURE_PLATFORM_PLAYER
@@ -758,3 +748,13 @@ void MCPlayer::GetStatus(MCExecContext& ctxt, intenum_t& r_status)
     
 }
 #endif
+
+void MCPlayer::SetDontUseQT(MCExecContext &ctxt, bool p_dont_use_qt)
+{
+    setdontuseqt(p_dont_use_qt);
+}
+
+void MCPlayer::GetDontUseQT(MCExecContext &ctxt, bool &r_dont_use_qt)
+{
+    getdontuseqt(r_dont_use_qt);
+}

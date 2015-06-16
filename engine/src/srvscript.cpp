@@ -66,8 +66,6 @@ MCServerScript::~MCServerScript(void)
         else
             delete t_file -> script;
 
-        MCValueRelease(filename);
-
 		delete t_file;
 	}
 	

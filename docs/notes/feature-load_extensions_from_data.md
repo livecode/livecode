@@ -1,0 +1,1 @@
+# Extensions can be loaded from raw data using 'load extension from data <data>' syntax

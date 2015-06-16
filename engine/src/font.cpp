@@ -257,7 +257,8 @@ coord_t MCFontGetDescent(MCFontRef self)
 
 coord_t MCFontGetLeading(MCFontRef self)
 {
-    if (self -> fontstruct == nil)
+    // PM-2015-06-02: [[ Bug 14244 ]] If the font is nil, do nothing
+    if (self == nil || self -> fontstruct == nil)
         return 0;
     
     return self -> fontstruct -> m_leading;
@@ -265,7 +266,8 @@ coord_t MCFontGetLeading(MCFontRef self)
 
 coord_t MCFontGetXHeight(MCFontRef self)
 {
-    if (self -> fontstruct == nil)
+    // PM-2015-06-02: [[ Bug 14244 ]] If the font is nil, do nothing
+    if (self == nil || self -> fontstruct == nil)
         return 0;
     
     return self -> fontstruct -> m_xheight;

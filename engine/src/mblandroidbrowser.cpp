@@ -196,7 +196,8 @@ void MCAndroidBrowserControl::GetUrl(MCExecContext& ctxt, MCStringRef& r_url)
     MCAutoStringRef t_url;
     if (t_view != nil)
     {
-        MCAndroidObjectRemoteCall(t_view, "getUrl", "x", &t_url);
+        // PM-2015-06-12: [[ Bug 15494 ]] return type is stringref
+        MCAndroidObjectRemoteCall(t_view, "getUrl", "x", &(&t_url));
         r_url = MCValueRetain(*t_url);
     }
 }

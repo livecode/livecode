@@ -970,7 +970,7 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 
 IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
 {
-	IO_handle stream;
+    IO_handle stream;
 	MCAutoStringRef t_open_path;
 
 	bool t_found;
@@ -978,20 +978,13 @@ IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
 	if (!t_found)
 	{
 		if ((stream = MCS_open(p_name, kMCOpenFileModeRead, True, False, 0)) != NULL)
-		{
-			// This should probably use resolvepath().
-			if (MCStringGetCharAtIndex(p_name, 0) != PATH_SEPARATOR 
-				&& MCStringGetCharAtIndex(p_name, 1) != ':')
-			{
-				MCAutoStringRef t_curpath;
-				
-				/* UNCHECKED */ MCS_getcurdir(&t_curpath);
-				/* UNCHECKED */ MCStringFormat(&t_open_path, "%@/%@", *t_curpath, p_name); 
-			}
-			else
-				t_open_path = p_name;
-
-			t_found = true;
+        {
+            // SN-20015-06-01: [[ Bug 15432 ]] We want to use MCS_resolvepath to
+            //  keep consistency and let '~' be resolved as it is in MCS_open
+            //  MCS_resolve_path leaves a backslash-delimited path on Windows,
+            //  and MCS_get_canonical_path is made to cope with this.
+            //  In 7.0, MCS_resolvepath does not return a native path.
+            t_found = MCS_resolvepath(p_name, &t_open_path);
 		}
 	}
     
@@ -1006,11 +999,8 @@ IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
 		else
 			t_leaf_name = p_name;
 		if ((stream = MCS_open(*t_leaf_name, kMCOpenFileModeRead, True, False, 0)) != NULL)
-		{
-			MCAutoStringRef t_curpath;
-			/* UNCHECKED */ MCS_getcurdir(&t_curpath);
-			/* UNCHECKED */ MCStringFormat(&t_open_path, "%@/%@", *t_curpath, p_name); 
-			t_found = true;
+        {
+            t_found = MCS_resolvepath(*t_leaf_name, &t_open_path);
 		}
 
         if (!t_found)

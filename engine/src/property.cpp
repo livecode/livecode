@@ -721,7 +721,6 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	case P_RAISE_PALETTES:
 	case P_RAISE_WINDOWS:
 	case P_DONT_USE_NS:
-	case P_DONT_USE_QT:
 	case P_DONT_USE_QT_EFFECTS:
 	case P_PROPORTIONAL_THUMBS:
 	case P_SHARED_MEMORY:
@@ -944,6 +943,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 			break;
 		}
 	case P_BRUSH_COLOR:
+	case P_DONT_USE_QT:
 	case P_BRUSH_BACK_COLOR:
 	case P_BRUSH_PATTERN:
 	case P_PEN_COLOR:
@@ -2572,8 +2572,7 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 		return ep.getboolean(MChidebackdrop, line, pos, EE_PROPERTY_NAB);
 	case P_DONT_USE_NS:
 		return ep.getboolean(MCdontuseNS, line, pos, EE_PROPERTY_NAB);
-	case P_DONT_USE_QT:
-		return ep.getboolean(MCdontuseQT, line, pos, EE_PROPERTY_NAB);
+	
 	case P_DONT_USE_QT_EFFECTS:
 		return ep.getboolean(MCdontuseQTeffects, line, pos, EE_PROPERTY_NAB);
 	case P_PROPORTIONAL_THUMBS:
@@ -2940,6 +2939,7 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 		return ES_NORMAL;
 
 	case P_BRUSH_COLOR:
+	case P_DONT_USE_QT:
 	case P_BRUSH_BACK_COLOR:
 	case P_BRUSH_PATTERN:
 	case P_PEN_COLOR:
@@ -2999,6 +2999,8 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 					MCbrushpattern = t_new_pattern;
 				}
 				break;
+			case P_DONT_USE_QT:
+				return ep.getboolean(MCdontuseQT, line, pos, EE_PROPERTY_NAB);
 			case P_PEN_PATTERN:
 				{
 					if (ep.getuint4(MCpenpmid, line, pos, EE_PROPERTY_PENPATNAN) != ES_NORMAL)

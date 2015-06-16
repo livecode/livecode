@@ -1687,6 +1687,12 @@ public:
     void GiveCStringToResult(char *p_cstring);
     void SetTheResultToCString(const char *p_string);
     void SetTheResultToBool(bool p_bool);
+
+    // SN-2015-06-03: [[ Bug 11277 ]] Refactor MCExecPoint update
+    void deletestatements(MCStatement* p_statements);
+    void eval_ctxt(MCExecContext &ctxt, MCStringRef p_expression, MCExecValue &r_value);
+    void eval(MCExecContext &ctxt, MCStringRef p_expression, MCValueRef &r_value);
+    void doscript(MCExecContext &ctxt, MCStringRef p_script, uinteger_t p_line, uinteger_t p_pos);
     
 	//////////
 	
@@ -3823,6 +3829,8 @@ void MCEngineExecReturnValue(MCExecContext& ctxt, MCValueRef value);
 
 void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef filename, MCStringRef resource_path);
 void MCEngineExecUnloadExtension(MCExecContext& ctxt, MCStringRef filename);
+
+void MCEngineLoadExtensionFromData(MCExecContext& ctxt, MCDataRef p_extension_data, MCStringRef p_resource_path);
 
 void MCEngineSetCaseSensitive(MCExecContext& ctxt, bool p_value);
 void MCEngineGetCaseSensitive(MCExecContext& ctxt, bool& r_value);

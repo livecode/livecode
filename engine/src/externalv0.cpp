@@ -549,18 +549,18 @@ static char *eval_expr(const char *arg1, const char *arg2,
 	MCAutoStringRef t_string;
 	MCAutoValueRef t_result;
 	/* UNCHECKED */ MCStringCreateWithCString(arg1, &t_string);
-	MCECptr->GetHandler()->eval(*MCECptr, *t_string, &t_result);
+    MCECptr->eval(*MCECptr, *t_string, &t_result);
 	
 	if (MCECptr->HasError())
 	{
 		*retval = xresFail;
 		return NULL;
-	}
+    }
 	
 	MCAutoStringRef t_return;
 	/* UNCHECKED */ MCECptr->ConvertToString(*t_result, &t_return);
 	*retval = xresSucc;
-	return MCStringGetOldString(*t_return).clone();
+    return MCStringGetOldString(*t_return).clone();
 }
 
 static char *get_global(const char *arg1, const char *arg2,
@@ -1080,7 +1080,7 @@ static char *eval_expr_utf8(const char *arg1, const char *arg2,
 	MCAutoStringRef t_string;
 	MCAutoValueRef t_result;
 	/* UNCHECKED */ MCStringCreateWithBytes((byte_t*)arg1, strlen(arg1), kMCStringEncodingUTF8, false, &t_string);
-	MCECptr->GetHandler()->eval(*MCECptr, *t_string, &t_result);
+    MCECptr->eval(*MCECptr, *t_string, &t_result);
 	
 	if (MCECptr->HasError())
 	{
