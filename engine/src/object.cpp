@@ -4793,8 +4793,8 @@ struct MCDeletedObjectPool
     bool defunct : 1;
 };
 
-MCDeletedObjectPool *MCsparedeletedobjectpool = nil;
-MCDeletedObjectPool *MCdeletedobjectpool = nil;
+static MCDeletedObjectPool *MCsparedeletedobjectpool = nil;
+static MCDeletedObjectPool *MCdeletedobjectpool = nil;
 
 static bool MCDeletedObjectPoolCreate(MCDeletedObjectPool*& r_pool)
 {
