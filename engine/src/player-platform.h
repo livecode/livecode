@@ -75,6 +75,7 @@ class MCPlayer : public MCControl
 	uint2 formattedheight;
 	uint2 loudness;
 	int4 lasttime;
+    Boolean dontuseqt;
     
 	MCPlatformPlayerRef m_platform_player;
     MCPlayerCallback *m_callbacks;
@@ -148,6 +149,7 @@ public:
 	void setselection(bool notify);                  //set movie selection
 	void setlooping(Boolean loop);        //to loop or not to loop a movie
 	void setplayrate();                   //set the movie playing rate
+    void setdontuseqt(Boolean noqt);
     real8 getplayrate();
     void updateplayrate(real8 p_rate);
 	Boolean setInterestingTimeCB();       //True, if set, False, if not

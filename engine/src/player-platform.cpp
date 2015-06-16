@@ -854,6 +854,7 @@ MCPlayer::MCPlayer()
 	userCallbackStr = NULL;
 	formattedwidth = formattedheight = 0;
 	loudness = 100;
+    dontuseqt = True;
     
     // PM-2014-05-29: [[ Bugfix 12501 ]] Initialize m_callbacks/m_callback_count to prevent a crash when setting callbacks
     m_callback_count = 0;
@@ -897,6 +898,7 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	userCallbackStr = strclone(sref.userCallbackStr);
 	formattedwidth = formattedheight = 0;
 	loudness = sref.loudness;
+    dontuseqt = True;
     
     // PM-2014-05-29: [[ Bugfix 12501 ]] Initialize m_callbacks/m_callback_count to prevent a crash when setting callbacks
     m_callback_count = 0;
@@ -1250,6 +1252,9 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
         case P_PAUSED:
             ep.setboolean(ispaused());
             break;
+        case P_DONT_USE_QT:
+            ep.setboolean(dontuseqt);
+            break;
         case P_ALWAYS_BUFFER:
             ep.setboolean(getflag(F_ALWAYS_BUFFER));
             break;
@@ -1560,6 +1565,9 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
             }
             if (dirty)
                 setlooping((flags & F_LOOPING) != 0); //set/unset movie looping
+            break;
+        case P_DONT_USE_QT:
+            setdontuseqt(data == MCtruemcstring); //set/unset dontuseqt
             break;
         case P_PAUSED:
             playpause(data == MCtruemcstring); //pause or unpause the player
@@ -2019,6 +2027,12 @@ void MCPlayer::setlooping(Boolean loop)
 	}
 }
 
+// PM-2015-06-16: [[ Bug 13820 ]] Extend dontuseqt to be (also) a player property 
+void MCPlayer::setdontuseqt(Boolean noqt)
+{
+	dontuseqt = noqt;
+}
+
 real8 MCPlayer::getplayrate()
 {
     if (rate < MIN_RATE)
@@ -2149,11 +2163,11 @@ Boolean MCPlayer::prepare(const char *options)
    	if (!opened)
 		return False;
     
-	if (m_platform_player == nil || m_should_recreate)
+	if (m_platform_player == nil || m_should_recreate || !dontuseqt)
     {
         if (m_platform_player != nil)
             MCPlatformPlayerRelease(m_platform_player);
-        MCPlatformCreatePlayer(m_platform_player);
+        MCPlatformCreatePlayer(dontuseqt, m_platform_player);
     }
 		
     
