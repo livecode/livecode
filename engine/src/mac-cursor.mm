@@ -185,9 +185,15 @@ void MCPlatformReleaseCursor(MCPlatformCursorRef p_cursor)
 void MCPlatformShowCursor(MCPlatformCursorRef p_cursor)
 {
 	if (p_cursor -> is_standard)
-	{
+    {
+        // By default, we want the cursor to be visible.
+        [NSCursor unhide];
 		switch(p_cursor -> standard)
 		{
+        // SN-2015-06-16: [[ Bug 14056 ]] Hidden cursor is part of the cursors
+        case kMCPlatformStandardCursorNone:
+            [NSCursor hide];
+            break;
 		case kMCPlatformStandardCursorArrow:
             [[NSCursor arrowCursor] set];
 			break;

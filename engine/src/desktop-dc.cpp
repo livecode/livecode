@@ -316,9 +316,10 @@ void MCScreenDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mod
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// SN-2015-06-16: [[ Bug 14056 ]] PI_NONE should be a valid cursor type
 static MCPlatformStandardCursor theme_cursorlist[PI_NCURSORS] =
 {
-	kMCPlatformStandardCursorArrow, kMCPlatformStandardCursorArrow,
+	kMCPlatformStandardCursorNone, kMCPlatformStandardCursorArrow,
 	kMCPlatformStandardCursorArrow, kMCPlatformStandardCursorArrow, kMCPlatformStandardCursorArrow, kMCPlatformStandardCursorWatch, kMCPlatformStandardCursorWatch,
 	kMCPlatformStandardCursorCross, kMCPlatformStandardCursorArrow, kMCPlatformStandardCursorIBeam, kMCPlatformStandardCursorArrow, kMCPlatformStandardCursorArrow,
 	kMCPlatformStandardCursorArrow, kMCPlatformStandardCursorCross, kMCPlatformStandardCursorWatch, kMCPlatformStandardCursorArrow   
@@ -356,10 +357,9 @@ void MCScreenDC::resetcursors()
 		freecursor(MCcursors[i]);
 		MCcursors[i] = nil;
 		
+        // SN-2015-06-16: [[ Bug 14056 ]] PI_NONE should be a valid cursor type
 		MCImage *im;
-		if (i == PI_NONE)
-			MCcursors[i] = nil;
-		else if ((im = (MCImage *)MCdispatcher->getobjid(CT_IMAGE, i)) != NULL)
+		if ((im = (MCImage *)MCdispatcher->getobjid(CT_IMAGE, i)) != NULL)
 			MCcursors[i] = im -> createcursor();
 		else if (i < PI_BUSY1)
 			MCPlatformCreateStandardCursor(theme_cursorlist[i], MCcursors[i]);
