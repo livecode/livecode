@@ -134,6 +134,8 @@ bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_t char_co
 
     const char* t_chars = (const char*)MCStringGetNativeCharPtr(p_string) + offset;
     
+    errno = 0;
+    
     if (char_count > 2 &&
             t_chars[0] == '0' &&
             (t_chars[1] == 'x' || t_chars[1] == 'X'))
@@ -141,8 +143,6 @@ bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_t char_co
     else
     {
         char *t_end;
-        
-        errno = 0;
         
         // SN-2014-10-06: [[ Bug 13594 ]] We want an unsigned integer if possible
         uinteger_t t_uinteger;
