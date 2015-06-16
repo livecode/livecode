@@ -870,7 +870,7 @@ void MCPlatformCameraCreate(MCPlatformCameraRef& r_camera)
 {
 #ifdef _MACOSX
     if (MCmajorosversion >= 0x1070)
-        r_camera = new MCAVCamera;
+        r_camera = (MCPlatformCameraRef)new MCAVCamera;
     else
         r_camera = nil;
 #else

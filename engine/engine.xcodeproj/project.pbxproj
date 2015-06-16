@@ -638,6 +638,7 @@
 		E8189EB615D17E8000194F25 /* exec-logic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8189EB515D17E8000194F25 /* exec-logic.cpp */; };
 		E82206E1184F810A00117D10 /* resolution.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E82206E0184F810A00117D10 /* resolution.cpp */; };
 		E82206E2184F810A00117D10 /* resolution.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E82206E0184F810A00117D10 /* resolution.cpp */; };
+		E853D55F1B2EE797009984C6 /* platform-camera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E853D55E1B2EE797009984C6 /* platform-camera.cpp */; };
 		E864B42115BDAB5200F5361C /* legacy_spec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E864B41F15BDAB3F00F5361C /* legacy_spec.cpp */; };
 		E8AF7D2319F7E3BF000F68E9 /* graphics_util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8AF7D2219F7E3BF000F68E9 /* graphics_util.cpp */; };
 		E8DDE5E016C2B1A7007367E4 /* image_rep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8DDE5DE16C2B1A7007367E4 /* image_rep.cpp */; };
@@ -1792,6 +1793,8 @@
 		BEFE81D317B2B32800C9D14F /* dskmac.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dskmac.cpp; path = src/dskmac.cpp; sourceTree = "<group>"; };
 		E8189EB515D17E8000194F25 /* exec-logic.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-logic.cpp"; path = "src/exec-logic.cpp"; sourceTree = "<group>"; };
 		E82206E0184F810A00117D10 /* resolution.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = resolution.cpp; path = src/resolution.cpp; sourceTree = "<group>"; };
+		E853D55D1B2EE797009984C6 /* platform-camera-internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "platform-camera-internal.h"; path = "src/platform-camera-internal.h"; sourceTree = "<group>"; };
+		E853D55E1B2EE797009984C6 /* platform-camera.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "platform-camera.cpp"; path = "src/platform-camera.cpp"; sourceTree = "<group>"; };
 		E864B41F15BDAB3F00F5361C /* legacy_spec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = legacy_spec.cpp; path = src/legacy_spec.cpp; sourceTree = "<group>"; };
 		E8687A921987F24A0093C756 /* imageloader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = imageloader.h; path = src/imageloader.h; sourceTree = "<group>"; };
 		E8687A931987F5A80093C756 /* imageloader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = imageloader.cpp; path = src/imageloader.cpp; sourceTree = "<group>"; };
@@ -2892,12 +2895,14 @@
 		BEBC51EA195350DE00215C85 /* Platform */ = {
 			isa = PBXGroup;
 			children = (
+				4D076F311B04D4EB0010F699 /* platform-av-camera.mm */,
+				E853D55D1B2EE797009984C6 /* platform-camera-internal.h */,
+				E853D55E1B2EE797009984C6 /* platform-camera.cpp */,
 				BEBC51EB195350F700215C85 /* platform-internal.h */,
 				BEBC51EC195350F700215C85 /* platform-surface.cpp */,
 				BEBC51ED195350F700215C85 /* platform-window.cpp */,
 				BEBC51EE195350F700215C85 /* platform.cpp */,
 				BEBC51EF195350F700215C85 /* platform.h */,
-				4D076F311B04D4EB0010F699 /* platform-av-camera.mm */,
 			);
 			name = Platform;
 			sourceTree = "<group>";
@@ -4306,6 +4311,7 @@
 				4DE3B10F15888AB9008EB6B5 /* exec-text.cpp in Sources */,
 				4DE3B11015888AB9008EB6B5 /* exec.cpp in Sources */,
 				4D7FA7C71594E17500EEF440 /* exec-datetime.cpp in Sources */,
+				E853D55F1B2EE797009984C6 /* platform-camera.cpp in Sources */,
 				E864B42115BDAB5200F5361C /* legacy_spec.cpp in Sources */,
 				E8189EB615D17E8000194F25 /* exec-logic.cpp in Sources */,
 				4D6C27FD1647D942007C96B7 /* exec-graphics.cpp in Sources */,
