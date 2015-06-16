@@ -241,7 +241,7 @@ static void exportToSoundFile(MCStringRef sourcefile, MCStringRef destfile)
     MCAutoStringRef t_src_resolved;
 	MCAutoStringRef t_dst_resolved;
     
-    // PM-2015-06-16: [[ Bug 15321 ]] Make sure t_dst_resolved get the correct value
+    // PM-2015-06-16: [[ Bug 15321 ]] Make sure t_dst_resolved gets the correct value
     t_success = MCS_resolvepath(sourcefile, &t_src_resolved)
                 && MCS_resolvepath(destfile, &t_dst_resolved);
     
