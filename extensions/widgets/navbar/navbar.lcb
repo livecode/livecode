@@ -422,19 +422,23 @@ private handler calculateEditModeIconRects() returns nothing
 	variable tX as Integer
 	variable tIconPath as Path
 	variable tIconRect as Rectangle
+	variable tLineHeight as Real
+	put mHeight / mNavItemCount into tLineHeight
 
 	repeat with tX from 1 up to mNavItemCount
+		put rectangle [0, tLineHeight * (tX - 1), mWidth / 2, tLineHeight * tX] into mNavData[tX]["label_rect"]
+		setEditableTextRect("label", tX, mNavData[tX]["label_rect"])
+
+
 		if mNavData[tX]["icon_name"] is not empty then
 			put iconSVGPathFromName(mNavData[tX]["icon_name"]) into mNavData[tX]["icon"]
 		end if
 		put path mNavData[tX]["icon"] into tIconPath
-
-		put rectangle [2 * (tX - 1) * mBoxWidth, mHeight * kIconRatio, 2 * tX * mBoxWidth, mHeight] into mNavData[tX]["label_rect"]
-
-		put rectangle [((4*(tX - 1) + 1) * mBoxWidth - mHeight * kIconRatio) / 2, mHeight * 0.05, ((4*(tX - 1) + 1) * mBoxWidth + mHeight * kIconRatio) / 2, mHeight * kIconRatio] into tIconRect
+		put rectangle [mWidth / 2, (tX - 1) * tLineHeight, mWidth / 2 + tLineHeight , tX * tLineHeight] into tIconRect
 		setIconPath(tIconRect, tIconPath)
 		put tIconPath into mNavData[tX]["icon_path"]
 		put tIconRect into mNavData[tX]["icon_rect"]
+
 		if mNavData[tX]["selected_icon_name"] is not empty then
 			put iconSVGPathFromName(mNavData[tX]["selected_icon_name"]) into mNavData[tX]["selected_icon"]
 		end if
@@ -443,7 +447,7 @@ private handler calculateEditModeIconRects() returns nothing
 			put path mNavData[tX]["selected_icon"] into tIconPath
 		end if
 
-		put rectangle [((4*(tX - 1) + 3) * mBoxWidth - mHeight * kIconRatio) / 2, mHeight * 0.05, ((4*(tX - 1) + 3) * mBoxWidth + mHeight * kIconRatio) / 2, mHeight * kIconRatio] into tIconRect
+		put rectangle [3 * mWidth / 4, (tX - 1) * tLineHeight, 3 * mWidth / 4 + tLineHeight , tX * tLineHeight] into tIconRect
 		setIconPath(tIconRect, tIconPath)
 		put tIconPath into mNavData[tX]["selected_icon_path"]
 		put tIconRect into mNavData[tX]["selected_icon_rect"]
@@ -871,6 +875,17 @@ public handler setEditableRect(in pComponent as String, in pNumber as Number, in
 	put pNumber into mEditData[tComponentID]["number"]
 end handler
 
+public handler setEditableTextRect(in pComponent as String, in pNumber as Number, in pRect as Rectangle)
+	variable tComponentID as String
+	put pComponent && pNumber formatted as string into tComponentID
+
+	put the empty array into mEditData[tComponentID]
+
+	put pRect into mEditData[tComponentID]["rect"]
+	put pComponent into mEditData[tComponentID]["type"]
+	put pNumber into mEditData[tComponentID]["number"]
+end handler
+
 public handler drawEditableRects(in pCanvas as Canvas)
 	variable tElement as Array
 	repeat for each element tElement in mEditData
@@ -883,7 +898,11 @@ public handler widgetClicked(in pClickPosition as Point)
 	variable tElement as Array
 	repeat for each element tElement in mEditData
 		if pClickPosition is within tElement["rect"] then
-			doPopup(pClickPosition, tElement)
+			if "popup" is among the keys of tElement then
+				doPopup(pClickPosition, tElement)
+			else
+				addEditableField(tElement)
+			end if
 		end if
 	end repeat
 end handler
@@ -896,6 +915,20 @@ private handler doPopup(in pClickPos as Point, in pArray as Array)
 	variable tCallback as PopupCallback
 	put pArray["callback"] into tCallback
 	tCallback(tResult, pArray["type"], pArray["number"])
+end handler
+
+private handler formatRectAsString(in pRect as Rectangle)
+	variable tResult as String
+	put (the left of pRect) formatted as string into tResult
+	put "," & (the top of pRect) formatted as string after tResult
+	put "," & (the right of pRect) formatted as string after tResult
+	put "," & (the bottom of pRect) formatted as string after tResult
+	return tResult
+end handler
+
+private handler addEditableField(in pElement as Array)
+	-- Work around the fact that LCB currently doesn't have editable text fields
+	post "editField" with [formatRectAsString(pElement["rect"]), pElement["number"]]
 end handler
 
 end widget
