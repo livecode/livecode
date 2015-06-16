@@ -44,6 +44,7 @@
 #include "globals.h"
 #include "context.h"
 
+#include "widgetimp.h"
 #include "widget-events.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -89,14 +90,14 @@ MCWidgetEventManager::MCWidgetEventManager() :
 
 void MCWidgetEventManager::event_open(MCWidget* p_widget)
 {
-    TriggerEvent(p_widget -> getwidget(), kMCWidgetEventTriggerTargetFirst, MCNAME("OnOpen"));
+    MCWidgetGetPtr(p_widget -> getwidget()) -> Open();
     if (MCcurtool != T_BROWSE)
         event_toolchanged(p_widget, MCcurtool);
 }
 
 void MCWidgetEventManager::event_close(MCWidget* p_widget)
 {
-    TriggerEvent(p_widget -> getwidget(), kMCWidgetEventTriggerTargetLast, MCNAME("OnClose"));
+    MCWidgetGetPtr(p_widget -> getwidget()) -> Close();
 }
 
 void MCWidgetEventManager::event_kfocus(MCWidget* p_widget)
@@ -228,47 +229,17 @@ Boolean MCWidgetEventManager::event_mfocus(MCWidget* p_widget, int2 p_x, int2 p_
     }
     else
     {
-        // If there is no active mouse press then we sync the focused widget.
-        syncMouseFocus(t_focused_widget);
-    }
-    
-    // Synchronize the current focused widget - after this m_mouse_focus will
-    // be t_focused_widget.
-    synchronizeMouseFocus(t_focused_widget);
-    
-    
-    
-    // If the hit test was failed, the widget doesn't get a move event
-    if (t_focused_widget)
-    {
-        // If this was previously the focused widget, send a leave message
-        if (p_widget == m_mouse_focus)
+        if (t_focused_changed)
         {
-            m_mouse_focus = nil;
-            mouseLeave(p_widget);
+            mouseLeave(m_mouse_focus);
+        
+            MCValueAssign(m_mouse_focus, t_focused_widget);
+            
+            mouseEnter(m_mouse_focus);
         }
         
-        if (m_mouse_grab == p_widget)
-        {
-            mouseMove(p_widget, p_x, p_y);
-            return true;
-        }
-            
-        // This is not the widget you were looking for
-        return false;
-    }
-    
-    // Has the focus state for this widget changed?
-    if (p_widget != m_mouse_focus)
-    {
-        // Mouse has entered this widget
-        m_mouse_focus = p_widget;
-        mouseEnter(p_widget);
-    }
-    else if (t_pos_changed)
-    {
-        // Mouse has moved within this widget
-        mouseMove(p_widget, p_x, p_y);
+        if (t_pos_changed)
+            mouseMove(m_mouse_focus);
     }
     
     // This event was handled
@@ -277,13 +248,23 @@ Boolean MCWidgetEventManager::event_mfocus(MCWidget* p_widget, int2 p_x, int2 p_
 
 void MCWidgetEventManager::event_munfocus(MCWidget* p_widget)
 {
-    // Widget has lost focus iff there are no mouse buttons held
-    if (m_mouse_buttons == 0)
+    // If a widget is currently grabbed, do nothing.
+    if (m_mouse_grab != nil)
+        return;
+    
+    // If the unfocused widget is the currently focused widget, then
+    // leave it.
+    if (p_widget -> getwidget() == m_mouse_focus)
+    {
+        mouseLeave(m_mouse_focus);
+        MCValueRelease(m_mouse_focus);
         m_mouse_focus = nil;
+    }
 }
 
 void MCWidgetEventManager::event_mdrag(MCWidget* p_widget)
 {
+#if 0
     // If this widget is not a drag source, reject the drag attempt
     bool t_drag_accepted;
     t_drag_accepted = p_widget->isDragSource();
@@ -294,6 +275,7 @@ void MCWidgetEventManager::event_mdrag(MCWidget* p_widget)
         MCdragtargetptr = p_widget;
     else
         MCdragtargetptr = nil;
+#endif
 }
 
 Boolean MCWidgetEventManager::event_doubledown(MCWidget* p_widget, uint2 p_which)
@@ -323,28 +305,19 @@ void MCWidgetEventManager::event_timer(MCWidget* p_widget, MCNameRef p_message, 
 
 void MCWidgetEventManager::event_setrect(MCWidget* p_widget, const MCRectangle& p_rectangle)
 {
-    p_widget->OnGeometryChanged(p_rectangle);
+    MCWidgetGetPtr(p_widget -> getwidget()) -> GeometryChanged();
 }
 
 void MCWidgetEventManager::event_recompute(MCWidget* p_widget)
 {
     // This gets called whenever certain parent (group, card, stack) properties
     // are changed. Unfortunately, we have no information as to *what* changed.
-    p_widget->OnParentPropChanged();
+    MCWidgetGetPtr(p_widget -> getwidget()) -> ParentPropertyChanged();
 }
 
-void MCWidgetEventManager::event_draw(MCWidget* p_widget, MCDC* p_dc, const MCRectangle& p_dirty, bool p_isolated, bool p_sprite)
+void MCWidgetEventManager::event_paint(MCWidget *p_widget, MCGContextRef p_gcontext)
 {
-    // Ignored parameter: p_isolated
-    // Ignored parameter: p_sprite
-    
-    if (p_dc -> gettype() == CONTEXT_TYPE_PRINTER)
-        return;
-    
-    MCGContextRef t_gcontext;
-    t_gcontext = ((MCGraphicsContext *)p_dc) -> getgcontextref();
-    
-    p_widget->OnPaint(t_gcontext, p_dirty);
+    MCWidgetGetPtr(p_widget -> getwidget()) -> Paint(p_gcontext);
 }
 
 void MCWidgetEventManager::event_touch(MCWidget* p_widget, uint32_t p_id, MCEventTouchPhase p_phase, int2 p_x, int2 p_y)
@@ -396,24 +369,19 @@ void MCWidgetEventManager::event_gesture_swipe(MCWidget* p_widget, real32_t p_de
 
 void MCWidgetEventManager::event_dnd_drop(MCWidget* p_widget)
 {
-    p_widget->OnDragDrop();
+    //p_widget->OnDragDrop();
 }
 
 void MCWidgetEventManager::event_dnd_end(MCWidget* p_widget)
 {
-    p_widget->OnDragFinish();
+    //p_widget->OnDragFinish();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-uinteger_t MCWidgetEventManager::GetMouseButtonState() const
+MCWidgetRef MCWidgetEventManager::GetGrabbedWidget() const
 {
-    return m_mouse_buttons;
-}
-
-MCWidget* MCWidgetEventManager::GetMouseWidget() const
-{
-    return m_mouse_focus;
+    return m_mouse_grab;
 }
 
 void MCWidgetEventManager::GetSynchronousMousePosition(coord_t& r_x, coord_t& r_y) const
@@ -452,8 +420,9 @@ void MCWidgetEventManager::GetAsynchronousClickPosition(coord_t& r_x, coord_t& r
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCWidgetEventManager::mouseMove(MCWidget* p_widget, coord_t p_x, coord_t p_y)
+void MCWidgetEventManager::mouseMove(MCWidgetRef p_widget)
 {
+#if 0
     // Update the mouse coordinates
     m_mouse_x = p_x;
     m_mouse_y = p_y;
@@ -462,10 +431,14 @@ void MCWidgetEventManager::mouseMove(MCWidget* p_widget, coord_t p_x, coord_t p_
         p_widget->OnDragMove(p_x, p_y);
     else
         p_widget->OnMouseMove(p_x, p_y);
+#endif
+    
+    MCWidgetGetPtr(p_widget) -> MouseMove();
 }
 
-void MCWidgetEventManager::mouseEnter(MCWidget* p_widget)
+void MCWidgetEventManager::mouseEnter(MCWidgetRef p_widget)
 {
+#if 0
     if (MCdispatcher->isdragtarget())
     {
         // Set this widget as the drag target if it would accept the drop
@@ -479,10 +452,14 @@ void MCWidgetEventManager::mouseEnter(MCWidget* p_widget)
     }
     else
         p_widget->OnMouseEnter();
+#endif
+    
+    MCWidgetGetPtr(p_widget) -> MouseEnter();
 }
 
-void MCWidgetEventManager::mouseLeave(MCWidget* p_widget)
+void MCWidgetEventManager::mouseLeave(MCWidgetRef p_widget)
 {
+#if 0
     if (MCdispatcher->isdragtarget())
     {
         p_widget->OnDragLeave();
@@ -491,12 +468,15 @@ void MCWidgetEventManager::mouseLeave(MCWidget* p_widget)
     }
     else
         p_widget->OnMouseLeave();
+#endif
+    
+    MCWidgetGetPtr(p_widget) -> MouseLeave();
 }
 
-bool MCWidgetEventManager::mouseDown(MCWidget* p_widget, uinteger_t p_which)
+bool MCWidgetEventManager::mouseDown(MCWidgetRef p_widget, uinteger_t p_which)
 {
     if (m_mouse_buttons == 0)
-        m_mouse_grab = p_widget;
+        MCValueAssign(m_mouse_grab, p_widget);
     
     // Mouse button is down
     m_mouse_buttons |= (1 << p_which);
@@ -528,54 +508,55 @@ bool MCWidgetEventManager::mouseDown(MCWidget* p_widget, uinteger_t p_which)
     // If the widget handles clicks or mouse down events, accept the event
     bool t_accepted;
     t_accepted = false;
-    if (p_widget->wantsClicks())
-    {
+    if (MCWidgetGetPtr(p_widget) -> HandlesClick())
         t_accepted = true;
-    }
     
     // Independent "if" because a widget could conceivably want both
-    if (p_widget->handlesMouseDown())
+    if (MCWidgetGetPtr(p_widget) -> HandlesMouseDown())
     {
         t_accepted = true;
-        p_widget->OnMouseDown(m_mouse_x, m_mouse_y, p_which);
+        MCWidgetGetPtr(p_widget) -> MouseDown();
     }
     
     return t_accepted;
 }
 
-bool MCWidgetEventManager::mouseUp(MCWidget* p_widget, uinteger_t p_which)
+bool MCWidgetEventManager::mouseUp(MCWidgetRef p_widget, uinteger_t p_which)
 {
     // Mouse button is no longer down
     m_mouse_buttons &= ~(1 << p_which);
     
     if (m_mouse_buttons == 0)
+    {
+        MCValueRelease(m_mouse_grab);
         m_mouse_grab = nil;
-    
+    }
+        
     if (!widgetIsInRunMode(p_widget))
         return false;
     
     // If the widget wants click gestures, process it as such
     bool t_accepted;
     t_accepted = false;
-    if (p_widget->wantsClicks())
+    if (MCWidgetGetPtr(p_widget) -> HandlesClick())
     {
         mouseClick(p_widget, p_which);
         t_accepted = true;
     }
     // If the widget handles mouse up, send it the event
-    else if (p_widget->handlesMouseUp())
+    else if (MCWidgetGetPtr(p_widget) -> HandlesMouseUp())
     {
-        p_widget->OnMouseUp(m_mouse_x, m_mouse_y, p_which);
+        MCWidgetGetPtr(p_widget) -> MouseUp();
         t_accepted = true;
     }
     
     return t_accepted;
 }
 
-void MCWidgetEventManager::mouseClick(MCWidget* p_widget, uinteger_t p_which)
+void MCWidgetEventManager::mouseClick(MCWidgetRef p_widget, uinteger_t p_which)
 {
     // Send the mouse up event before the click recognition
-    p_widget->OnMouseUp(m_mouse_x, m_mouse_y, p_which);
+    MCWidgetGetPtr(p_widget) -> MouseUp();
     
     // Basic gesture processing: we currently only look for double- (or other
     // multi-) click events. More can be added later if desired.
@@ -583,31 +564,32 @@ void MCWidgetEventManager::mouseClick(MCWidget* p_widget, uinteger_t p_which)
     // We only detect double-click events for button 1
     if (p_which == 1 && m_click_button == 1)
     {
-        
         // Send a double click event to the widget, if appropriate. If the user
         // clicks multiple times in rapid sequence, the widget should receive
         // multiple double-clicks (one per two clicks) rather than only the one.
         if ((m_click_count & 1) == 0            // Click count is even
-            && p_widget->wantsDoubleClicks())
+            && MCWidgetGetPtr(p_widget) -> HandlesDoubleClick())
         {
-            p_widget->OnDoubleClick(m_mouse_x, m_mouse_y, p_which);
+            MCWidgetGetPtr(p_widget) -> DoubleClick();
         }
+#if 0
         // If this is the first click in a sequence and the widget is happy to
         // wait for gesture processing, suppress the first click.
         else if (m_click_count == 1 && p_widget->waitForDoubleClick())
         {
             // TODO: set up a timer that expires after the double click interval
         }
+#endif
         else
         {
             // Single or multiple click event
-            p_widget->OnClick(m_mouse_x, m_mouse_y, p_which, m_click_count);
+            MCWidgetGetPtr(p_widget) -> Click();
         }
     }
     else
     {
         // Not a double-click gesture; just send the click event
-        p_widget->OnClick(m_mouse_x, m_mouse_y, p_which, m_click_count);
+        MCWidgetGetPtr(p_widget) -> Click();
     }
     
 }
@@ -617,8 +599,11 @@ bool MCWidgetEventManager::mouseRelease(MCWidget* p_widget, uinteger_t p_which)
     // Mouse button is no longer down
     m_mouse_buttons &= ~(1 << p_which);
     
-	if (m_mouse_buttons == 0)
-		m_mouse_grab = nil;
+    if (m_mouse_buttons == 0)
+    {
+        MCValueRelease(m_mouse_grab);
+        m_mouse_grab = nil;
+    }
 	
     if (!widgetIsInRunMode(p_widget))
         return false;
@@ -626,7 +611,7 @@ bool MCWidgetEventManager::mouseRelease(MCWidget* p_widget, uinteger_t p_which)
     // Send a mouse release event if the widget handles it
     bool t_accepted;
     t_accepted = false;
-    if (p_widget->handlesMouseCancel())
+    if (p_widget->HandlesMouseCancel())
     {
         p_widget->OnMouseCancel(p_which);
         t_accepted = true;
@@ -901,7 +886,7 @@ void MCWidgetEventManager::freeTouchSlot(uinteger_t p_which)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCWidgetEventManager::widgetIsInRunMode(MCWidget* p_widget)
+bool MCWidgetEventManager::widgetIsInRunMode(MCWidgetRef p_widget)
 {
     Tool t_tool = p_widget->getstack()->gettool(p_widget);
     return t_tool == T_BROWSE || t_tool == T_HELP;

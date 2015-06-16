@@ -63,21 +63,17 @@ public:
     void event_touch(MCWidget*, uint32_t p_id, MCEventTouchPhase, int2 p_x, int2 p_y);
     
     // Non-MCControl events called by platform-specific gesture recognition
-    void event_gesture_begin(MCWidgetRef);    // Suppress touch events until end
-    void event_gesture_end(MCWidgetRef);      // Unlock touch events
-    void event_gesture_magnify(MCWidgetRef, real32_t p_factor);
-    void event_gesture_swipe(MCWidgetRef, real32_t p_delta_x, real32_t p_delta_y);
-    void event_gesture_rotate(MCWidgetRef, real32_t p_radians);
+    void event_gesture_begin(MCWidget*);    // Suppress touch events until end
+    void event_gesture_end(MCWidget*);      // Unlock touch events
+    void event_gesture_magnify(MCWidget*, real32_t p_factor);
+    void event_gesture_swipe(MCWidget*, real32_t p_delta_x, real32_t p_delta_y);
+    void event_gesture_rotate(MCWidget*, real32_t p_radians);
     
     // Non-MCControl events for drag-and-drop handling
-    void event_dnd_end(MCWidgetRef);
-    void event_dnd_drop(MCWidgetRef);
+    void event_dnd_end(MCWidget*);
+    void event_dnd_drop(MCWidget*);
     
-    // Returns a bitmask of the mouse buttons that are pressed
-    uinteger_t GetMouseButtonState() const;
-    
-    // Returns the widget that the mouse is currently focused on
-    MCWidget* GetMouseWidget() const;
+    MCWidgetRef GetGrabbedWidget(void) const;
     
     // Returns the synchronous mouse/click coordinates
     void GetSynchronousMousePosition(coord_t& r_x, coord_t& r_y) const;
@@ -116,7 +112,8 @@ private:
     
     
     // Common functions for mouse gesture processing
-    void mouseMove(MCWidgetRef, coord_t p_x, coord_t p_y);
+    MCWidgetRef hitTest(MCWidgetRef, coord_t x, coord_t y);
+    void mouseMove(MCWidgetRef);
     void mouseEnter(MCWidgetRef);
     void mouseLeave(MCWidgetRef);
     bool mouseDown(MCWidgetRef, uinteger_t p_which);
@@ -143,7 +140,7 @@ private:
     void freeTouchSlot(uinteger_t p_which);
     
     // Indicates whether the given widget is in run mode or not
-    bool widgetIsInRunMode(MCWidget*);
+    bool widgetIsInRunMode(MCWidgetRef);
 };
 
 #endif // ifndef __MC_WIDGET_EVENTS__

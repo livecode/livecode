@@ -285,8 +285,7 @@ Boolean MCWidget::mfocus(int2 p_x, int2 p_y)
 void MCWidget::munfocus(void)
 {
 	if (getstack() -> gettool(this) != T_BROWSE ||
-		(MCwidgeteventmanager->GetMouseWidget() != this
-         && MCwidgeteventmanager->GetMouseButtonState() == 0))
+		(MCWidgetGetPtr(MCwidgeteventmanager->GetGrabbedWidget()) -> GetHost() != this))
 	{
 		MCControl::munfocus();
 		return;

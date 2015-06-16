@@ -44,8 +44,29 @@ public:
     
     bool ToolChanged(Tool p_tool);
     bool LayerChanged(void);
+    void GeometryChanged(void);
+    void ParentPropertyChanged(void);
     
     //// Event interactions
+    
+    bool MouseEnter(void);
+    bool MouseMove(void);
+    bool MouseLeave(void);
+    
+    bool MouseDown(void);
+    bool MouseUp(void);
+    bool MouseCancel(void);
+    
+    bool Click(void);
+    bool DoubleClick(void);
+    
+    // Event checks
+    
+    bool HandlesClick(void);
+    bool HandlesDoubleClick(void);
+    bool HandlesMouseDown(void);
+    bool HandlesMouseUp(void);
+    bool HandlesMouseCancel(void);
     
     //// Universal syntax bindings
     bool GetProperty(MCNameRef p_prop_name, MCValueRef& r_value);
