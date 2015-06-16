@@ -108,7 +108,6 @@ public:
 	virtual MCRectangle getpreferredrect() = 0;
 	virtual uint2 getloudness() = 0;
 	virtual void setloudness() = 0;
-	virtual Boolean setenabledtracks(MCStringRef s) = 0;
     
 #ifdef LEGACY_EXEC
 	void gettracks(MCExecPoint &ep);
@@ -184,15 +183,10 @@ public:
     virtual void gethotspots(MCStringRef &r_nodes) = 0;
     virtual void getconstraints(MCMultimediaQTVRConstraints &r_constraints) = 0;
     virtual void getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id) = 0;
+    virtual void setenabledtracks(uindex_t p_count, uint32_t *p_tracks_id) = 0;
+    
     virtual void updatevisibility() = 0;
     virtual void updatetraversal() = 0;
-    
-    // SN-2014-07-03: [[ PlatformPlayer ]]
-    // New properties P_FORE_COLOR and P_HILITE_COLOR added for the player
-    virtual void setforegroundcolor(const MCInterfaceNamedColor& p_color) = 0;
-    virtual void getforegrouncolor(MCInterfaceNamedColor& r_color) = 0;
-    virtual void sethilitecolor(const MCInterfaceNamedColor& p_color) = 0;
-    virtual void gethilitecolor(MCInterfaceNamedColor& r_color) = 0;    
 
     // SN-2015-01-06: [[ Merge-6.7.2-rc-1 ]] Update to MCStringRef
     virtual bool resolveplayerfilename(MCStringRef p_filename, MCStringRef &r_filename) = 0;
@@ -266,11 +260,7 @@ public:
     virtual void SetTraversalOn(MCExecContext& ctxt, bool setting) = 0;
     
     virtual void GetEnabledTracks(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tracks) = 0;
-    
-    virtual void SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color) = 0;
-    virtual void GetForeColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color) = 0;
-    virtual void SetHiliteColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color) = 0;
-    virtual void GetHiliteColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color) = 0;
+    virtual void SetEnabledTracks(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_tracks) = 0;
     
     virtual void GetDontUseQT(MCExecContext& ctxt, bool &p_dont_use_qt) = 0;
     virtual void SetDontUseQT(MCExecContext& ctxt, bool r_dont_use_qt) = 0;

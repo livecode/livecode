@@ -140,6 +140,8 @@ bool __MCNumberParseNativeString(const char *p_string, uindex_t p_length, bool p
         t_string += 2;
     }
     
+    errno = 0;
+
     char *t_end;
     t_end  = nil;
     // SN-2014-10-06: [[ Bug 13594 ]] We want an unsigned integer if possible
@@ -153,7 +155,7 @@ bool __MCNumberParseNativeString(const char *p_string, uindex_t p_length, bool p
 #elif __LP32__ || __LLP64__
     t_uinteger = strtoul(t_string, &t_end, t_base);
 #endif
-
+    
     // SN-2014-10-06: [[ Bug 13594 ]] check that no error was encountered
     t_success = (errno != ERANGE) && (p_full_string ? (t_end - p_string == p_length) : (t_end != t_string));
     if (t_success)
@@ -161,6 +163,8 @@ bool __MCNumberParseNativeString(const char *p_string, uindex_t p_length, bool p
     // If parsing as base 10 unsigned integer failed, try to parse as real.
     else if (t_base == 10)
     {
+        errno = 0;
+
         real64_t t_real;
         t_real = strtod(p_string, &t_end);
         
@@ -190,10 +194,10 @@ bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_t char_co
     
     if (!MCStringIsNative(p_string))
         return MCNumberParseUnicodeChars(MCStringGetCharPtr(p_string) + offset, char_count, r_number);
-
+    
     bool t_success;
     t_success = false;
-
+    
 	uindex_t t_length_used;
 	t_length_used = 0;
 	
@@ -212,10 +216,10 @@ bool MCNumberParseUnicodeChars(const unichar_t *p_chars, uindex_t p_char_count, 
 	char *t_native_chars;
 	if (!MCMemoryNewArray(p_char_count + 1, t_native_chars))
 		return false;
-
+    
 	uindex_t t_native_char_count;
 	MCUnicodeCharsMapToNative(p_chars, p_char_count, (char_t *)t_native_chars, t_native_char_count, '?');
-
+    
 	bool t_success;
 	t_success = false;
 	
@@ -223,9 +227,9 @@ bool MCNumberParseUnicodeChars(const unichar_t *p_chars, uindex_t p_char_count, 
 	t_length_used = 0;
 	
 	t_success = __MCNumberParseNativeString(t_native_chars, p_char_count, true, t_length_used, r_number);
-
+    
 	MCMemoryDeleteArray(t_native_chars);
-
+    
 	return t_success;
 }
 
