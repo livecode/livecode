@@ -1713,8 +1713,6 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 		if (window == NULL && !MCModeMakeLocalWindows() && (wm != WM_MODAL && wm != WM_SHEET || wm == mode))
 			return ES_NORMAL;
 
-		if (window == NULL && wm == mode)
-			fprintf(stderr, "*** ASSERTION FAILURE: MCStack::openrect() - window == NULL\n");
 		if (wm == mode && parentptr == NULL)
 		{
 			bool t_topped;
