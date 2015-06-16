@@ -122,44 +122,53 @@ bool __MCNumberParseNativeString(const char *p_string, uindex_t p_length, bool p
 	bool t_success;
 	t_success = true;
 	
-	char *t_end;
-	t_end = nil;
-	
 	MCNumberRef t_number;
 	t_number = nil;
 	
+    uinteger_t t_base;
+    t_base = 10;
+    
+    const char *t_string;
+    t_string = p_string;
+    
 	if (p_length > 2 &&
 		p_string[0] == '0' &&
 		(p_string[1] == 'x' || p_string[1] == 'X'))
 	{
-		uinteger_t t_uinteger;
-		t_uinteger = strtoul(p_string + 2, &t_end, 16);
-		
-		// SN-2014-10-06: [[ Bug 13594 ]] check that no error was encountered
-		t_success = (errno != ERANGE) && (p_full_string ? (t_end - p_string == p_length) : (t_end != p_string + 2));
-		if (t_success)
-			t_success = MCNumberCreateWithUnsignedInteger(t_uinteger, t_number);
-	}
-	else
-	{
-		// SN-2014-10-06: [[ Bug 13594 ]] We want an unsigned integer if possible
-		uinteger_t t_uinteger;
-		t_uinteger = strtoul(p_string, &t_end, 10);
-		
-		// SN-2014-10-06: [[ Bug 13594 ]] check that no error was encountered
-		t_success = (errno != ERANGE) && (p_full_string ? (t_end - p_string == p_length) : (t_end != p_string));
-		if (t_success)
-			t_success = MCNumberCreateWithUnsignedInteger(t_uinteger, t_number);
-		else
-		{
-			real64_t t_real;
-			t_real = strtod(p_string, &t_end);
-			
-			t_success = (errno != ERANGE) && (t_end != p_string);
-			if (t_success)
-				t_success = MCNumberCreateWithReal(t_real, t_number);
-		}
-	}
+        // If the string begins with 0x then parse as hex, and discard first two chars
+        t_base = 16;
+        t_string += 2;
+    }
+    
+    char *t_end;
+    t_end  = nil;
+    // SN-2014-10-06: [[ Bug 13594 ]] We want an unsigned integer if possible
+    uinteger_t t_uinteger;
+#ifdef __LP64__
+    unsigned long t_ulong;
+    t_ulong = strtoul(t_string, &t_end, t_base);
+    if (t_ulong > UINTEGER_MAX)
+        errno = ERANGE;
+    t_uinteger = (uinteger_t) t_ulong;
+#elif __LP32__ || __LLP64__
+    t_uinteger = strtoul(t_string, &t_end, t_base);
+#endif
+
+    // SN-2014-10-06: [[ Bug 13594 ]] check that no error was encountered
+    t_success = (errno != ERANGE) && (p_full_string ? (t_end - p_string == p_length) : (t_end != t_string));
+    if (t_success)
+        t_success = MCNumberCreateWithUnsignedInteger(t_uinteger, t_number);
+    // If parsing as base 10 unsigned integer failed, try to parse as real.
+    else if (t_base == 10)
+    {
+        real64_t t_real;
+        t_real = strtod(p_string, &t_end);
+        
+        // SN-2014-10-06: [[ Bug 13594 ]] check that no error was encountered
+        t_success = (errno != ERANGE) && (p_full_string ? (t_end - p_string == p_length) : (t_end != t_string));
+        if (t_success)
+            t_success = MCNumberCreateWithReal(t_real, t_number);
+    }
 	
 	if (t_success)
 	{
