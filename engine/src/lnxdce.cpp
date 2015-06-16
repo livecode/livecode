@@ -369,6 +369,8 @@ Boolean MCScreenDC::getmouseclick(uint2 button, Boolean& r_abort)
 
 Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 {
+    MCDeletedObjectsEnterWait(dispatch);
+    
 	MCwaitdepth++;
 	real8 curtime = MCS_time();
 	if (duration < 0.0)
@@ -422,6 +424,8 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 	//   any engine event handling methods need us to.
 	MCRedrawUpdateScreen();
 
+    MCDeletedObjectsLeaveWait(dispatch);
+    
 	return abort;
 }
 

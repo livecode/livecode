@@ -655,6 +655,8 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
 
 Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 {
+    MCDeletedObjectsEnterWait(dispatch);
+    
 	real8 curtime = MCS_time();
 	
 	if (duration < 0.0)
@@ -674,8 +676,11 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		DoRunloopActions();
 		
 		// MW-2013-08-18: [[ XPlatNotify ]] Handle any pending notifications
-		if (MCNotifyDispatch(dispatch == True) && anyevent)
-			break;
+		if (MCNotifyDispatch(dispatch == True))
+        {
+            if (anyevent)
+                break;
+        }
 		
 		real8 eventtime = exittime;
 		if (handlepending(curtime, eventtime, dispatch))
@@ -736,8 +741,10 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 	// MW-2012-09-19: [[ Bug 10218 ]] Make sure we update the screen in case
 	//   any engine event handling methods need us to.
 	MCRedrawUpdateScreen();
-
-	return abort;
+    
+    MCDeletedObjectsLeaveWait(dispatch);
+	
+    return abort;
 }
 
 // MW-2011-08-16: [[ Wait ]] Break the OS event loop, causing a switch back to

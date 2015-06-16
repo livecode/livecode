@@ -146,16 +146,6 @@ bool X_main_loop_iteration(void)
 	// MW-2011-08-26: [[ Redraw ]] Make sure we flush any updates.
 	MCRedrawUpdateScreen();
 	MCabortscript = False;
-	if (!MCtodestroy->isempty() || MCtodelete != NULL)
-	{
-		MCtooltip->cleartip();
-		while (MCtodelete != NULL)
-		{
-			MCObject *optr = MCtodelete->remove(MCtodelete);
-			delete optr;
-		}
-		MCtodestroy->destroy();
-	}
 	MCU_cleaninserted();
 	MCscreen->siguser();
 	MCdefaultstackptr = MCstaticdefaultstackptr;

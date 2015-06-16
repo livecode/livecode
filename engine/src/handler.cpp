@@ -670,8 +670,7 @@ Exec_stat MCHandler::exec(MCExecPoint &ep, MCParameter *plist)
 
 		stat = tspr->exec(ep);
 
-		// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
-		MCRedrawUpdateScreen();
+        MCActionsRunAll();
 
 		switch(stat)
 		{
