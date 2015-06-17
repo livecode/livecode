@@ -572,26 +572,28 @@ private handler calculateEditModeIconRects() returns nothing
 		setEditableRect("icon", tX, mNavData[tX]["icon_rect"], "com.livecode.widget.iconPicker", iconSelected)
 		setEditableRect("selectedIcon", tX, mNavData[tX]["selected_icon_rect"], "com.livecode.widget.iconPicker", iconSelected)
 
+		variable tActionFraction
+		put 1/4 into tActionFraction
+
 		put mAddIcon into tIconPath
 		add tLineHeight + kEditModePaddingUnit to tLeft
-		put rectangle [tLeft, tLineTop, tLeft + tLineHeight / 4, tLineBottom] into tIconRect
+		put rectangle [tLeft, tLineTop + tLineHeight * (1 - tActionFraction) / 2, tLeft + tLineHeight * tActionFraction, tLineBottom - tLineHeight * (1 - tActionFraction) / 2] into tIconRect
 		setIconPath(tIconRect, tIconPath)
 		put tIconPath into mNavData[tX]["add_icon_path"]
 		setActionRect("add_icon", tX, tIconRect, addItem, true)
 
 		put mReorderIcon into tIconPath
-		add tLineHeight / 4 + kEditModePaddingUnit to tLeft
-		put rectangle [tLeft, tLineTop, tLeft + tLineHeight / 4, tLineBottom] into tIconRect
+		add tLineHeight * tActionFraction + kEditModePaddingUnit to tLeft
+		put rectangle [tLeft, tLineTop + tLineHeight * (1 - tActionFraction) / 2, tLeft + tLineHeight * tActionFraction, tLineBottom - tLineHeight * (1 - tActionFraction) / 2] into tIconRect
 		setIconPath(tIconRect, tIconPath)
 		put tIconPath into mNavData[tX]["reorder_icon_path"]
 		setActionRect("reorder_icon", tX, tIconRect, reorderItem, false)
 
 		put mDeleteIcon into tIconPath
-		put rectangle [kEditModePaddingUnit, tLineTop, kEditModePaddingUnit + tLineHeight / 4, tLineBottom] into tIconRect
+		put rectangle [kEditModePaddingUnit, tLineTop + tLineHeight * (1 - tActionFraction) / 2, kEditModePaddingUnit + tLineHeight * tActionFraction, tLineBottom - tLineHeight * (1 - tActionFraction) / 2] into tIconRect
 		setIconPath(tIconRect, tIconPath)
 		put tIconPath into mNavData[tX]["delete_icon_path"]
 		setActionRect("delete_icon", tX, tIconRect, deleteItem, true)
-
 	end repeat
 end handler
 
@@ -639,23 +641,6 @@ private handler calculateDragRow(in pY as Real) returns nothing
 		put rectangle [tLeft + kEditModePaddingUnit, tLineTop + kEditModePaddingUnit, tLeft + tLineHeight - kEditModePaddingUnit, tLineBottom - kEditModePaddingUnit] into tIconRect
 		setIconPath(tIconRect, tIconPath)
 		put tIconPath into mDragData["selected_icon_path"]
-
-		put mAddIcon into tIconPath
-		add tLineHeight + kEditModePaddingUnit to tLeft
-		put rectangle [tLeft, tLineTop, tLeft + tLineHeight / 4, tLineBottom] into tIconRect
-		setIconPath(tIconRect, tIconPath)
-		put tIconPath into mDragData["add_icon_path"]
-
-		put mReorderIcon into tIconPath
-		add tLineHeight / 4 + kEditModePaddingUnit to tLeft
-		put rectangle [tLeft, tLineTop, tLeft + tLineHeight / 4, tLineBottom] into tIconRect
-		setIconPath(tIconRect, tIconPath)
-		put tIconPath into mDragData["reorder_icon_path"]
-
-		put mDeleteIcon into tIconPath
-		put rectangle [kEditModePaddingUnit, tLineTop, kEditModePaddingUnit + tLineHeight / 4, tLineBottom] into tIconRect
-		setIconPath(tIconRect, tIconPath)
-		put tIconPath into mDragData["delete_icon_path"]
 end handler
 
 private handler calculateIconRects() returns nothing
