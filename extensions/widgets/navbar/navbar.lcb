@@ -375,8 +375,17 @@ end handler
 
 private handler drawDragData()
 	variable tTargetPath as Path
-	put line path from point [0, mDragData["target"] * kEditModeLineHeight] to point [mWidth, mDragData["target"] * kEditModeLineHeight] into tTargetPath
+	if "target" is among the keys of mDragData then
+		if mDragData["target"] is 0 then
+			put line path from point [0, mDragData["target"] * kEditModeLineHeight + 2] to point [mWidth, mDragData["target"] * kEditModeLineHeight + 2] into tTargetPath
+		else if mDragData["target"] is mNavItemCount then
+			put line path from point [0, mDragData["target"] * kEditModeLineHeight - 2] to point [mWidth, mDragData["target"] * kEditModeLineHeight - 2] into tTargetPath
+		else
+			put line path from point [0, mDragData["target"] * kEditModeLineHeight] to point [mWidth, mDragData["target"] * kEditModeLineHeight] into tTargetPath
+		end if
+	end if
 	set the paint of this canvas to getPaint("text", "selected-fill")
+	set the stroke width of this canvas to 3
 	stroke tTargetPath on this canvas
 
 	set the opacity of this canvas to 0.4
@@ -1118,7 +1127,7 @@ private handler reorderItem(in pItem as Number)
 end handler
 
 private handler dragDrop() returns nothing
-	if "item" is among the keys of mDragData then
+	if "target" is among the keys of mDragData then
 		if mDragData["item"] > mDragData["target"] then
 			moveItem(mDragData["item"], mDragData["target"] + 1)
 		else if mDragData["target"] > mDragData["item"] then
