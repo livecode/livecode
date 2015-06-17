@@ -250,7 +250,7 @@ public handler OnCreate() returns nothing
 	put "contacts" into tArray["name"]
 	put "Contacts" into tArray["label"]
 	put "user" into tArray["icon_name"]
-	put "user" into tArray["selected_icon_name"]
+	put "" into tArray["selected_icon_name"]
 	put "" into tArray["icon"]
 	put "" into tArray["selected_icon"]
 	push tArray onto tNavItems
@@ -258,7 +258,7 @@ public handler OnCreate() returns nothing
 	put "favourites" into tArray["name"]
 	put "Favourites" into tArray["label"]
 	put "star empty" into tArray["icon_name"]
-	put "star" into tArray["selected_icon_name"]
+	put "" into tArray["selected_icon_name"]
 	put "" into tArray["icon"]
 	put "" into tArray["selected_icon"]
 	push tArray onto tNavItems
@@ -266,7 +266,7 @@ public handler OnCreate() returns nothing
 	put "music" into tArray["name"]
 	put "Music" into tArray["label"]
 	put "music" into tArray["icon_name"]
-	put "music" into tArray["selected_icon_name"]
+	put "" into tArray["selected_icon_name"]
 	put "" into tArray["icon"]
 	put "" into tArray["selected_icon"]
 	push tArray onto tNavItems
@@ -274,7 +274,7 @@ public handler OnCreate() returns nothing
 	put "search" into tArray["name"]
 	put "Search" into tArray["label"]
 	put "search" into tArray["icon_name"]
-	put "search" into tArray["selected_icon_name"]
+	put "" into tArray["selected_icon_name"]
 	put "" into tArray["icon"]
 	put "" into tArray["selected_icon"]
 	push tArray onto tNavItems
@@ -662,7 +662,7 @@ private handler calculateIconRects() returns nothing
 
 		if mItemStyle contains "icons" then
 			-- Ensure the icon name has been resolved into a path
-			if mNavData[tX]["icon_name"] is not empty then
+			if mNavData[tX]["icon_name"] is not "" then
 				put iconSVGPathFromName(mNavData[tX]["icon_name"]) into mNavData[tX]["icon"]
 			end if
 			put path mNavData[tX]["icon"] into tIconPath
