@@ -419,6 +419,7 @@ end handler
 
 private handler drawEditModeLabel(in pLabel as String, in pRect as Rectangle)
 	set the paint of this canvas to getPaint("text","editmode-fill")
+	set the font of this canvas to getFont("editmode-label")
 	fill text pLabel at left of pRect on this canvas
 end handler
 
@@ -826,11 +827,16 @@ public handler getPaint(pLocation, pType) returns Paint
 end handler
 
 private handler getFont(in pType as String) returns Font
+	variable tFont as Font
+	put the font of this canvas into tFont
+
 	if pType is "label" then
-		return the font of this canvas
-	else if pType is "icon" then
-		return font "fontawesome" at size 20
+		set the size of tFont to 10
+	else if pType is "editmode-label" then
+		set the size of tFont to 12
 	end if
+
+	return tFont
 end handler
 
 public handler setNavSelectedItem(in pSelectedItem as Integer) returns nothing
