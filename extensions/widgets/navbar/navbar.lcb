@@ -712,6 +712,12 @@ public handler iconSelected(in pSelectedIcon as optional any, in pType as String
 			put "" into mNavData[pNumber]["icon"]
 		end if
 
+		-- If the selected icon is the same as the icon, just put empty into the selected icon name
+		-- that way, when the icon is changed, the selected icon will change too.
+		if mNavData[pNumber]["selected_icon_name"] is mNavData[pNumber]["icon_name"] then
+			put "" into mNavData[pNumber]["selected_icon_name"]
+			put "" into mNavData[pNumber]["selected_icon"]
+		end if
 		post "navDataChanged"
 		put true into mRecalculate
 		redraw all
@@ -919,6 +925,11 @@ private handler setData(in pArray as Array, in pKeys as List, out rList as List)
 		if tElement["label"] is "" then
 			put "New Item" into tElement["label"]
 		end if
+		-- If the selected icon is the same as the icon, just put empty into the selected icon name
+		-- that way, when the icon is changed, the selected icon will change too.
+		if tElement["selected_icon_name"] is tElement["icon_name"] then
+			put "" into tElement["selected_icon_name"]
+		end if
 		push tElement onto tList
 	end repeat
 
@@ -1013,7 +1024,7 @@ private handler defaultNavArray() returns Array
 	put kDefaultNavName into tArray["name"]
 	put kDefaultNavLabel into tArray["label"]
 	put kDefaultNavIconName into tArray["icon_name"]
-	put kDefaultNavIconName into tArray["selected_icon_name"]
+	put "" into tArray["selected_icon_name"]
 	put "" into tArray["icon"]
 	put "" into tArray["selected_icon"]
 	return tArray
