@@ -217,6 +217,7 @@ constant kLabelHeightRatio is 0.165
 constant kEditModePaddingUnit is 10
 constant kEditModeLineHeight is 50
 
+constant kIconOnlyPaddingRatio is 0.2
 
 constant kDefaultNavName is "new item"
 constant kDefaultNavLabel is "New Item"
@@ -670,7 +671,9 @@ private handler calculateIconRects() returns nothing
 			if mItemStyle is "icons and names" then
 				put rectangle [((2 * tX - 1) * mBoxWidth - mHeight * (1 - kIconPaddingRatio)) / 2, mHeight * kIconPaddingRatio, ((2 * tX - 1) * mBoxWidth + mHeight * (1 - kIconPaddingRatio)) / 2, mHeight * (1 - (kIconPaddingRatio + kLabelHeightRatio + kLabelPaddingRatio))] into tIconRect
 			else if mItemStyle is "icons" then
-				put rectangle [((2 * tX - 1) * mBoxWidth - mHeight) / 2 + mHeight * 0.05, mHeight * 0.05, ((2 * tX - 1) * mBoxWidth + mHeight) / 2 - mHeight * 0.05, mHeight * 0.95] into tIconRect
+				variable tIconSpacing
+				put (mWidth - 2 * mHeight) / (mNavItemCount - 1) into tIconSpacing
+				put rectangle [(1- kIconOnlyPaddingRatio) * mHeight + (tX - 1) * tIconSpacing, kIconOnlyPaddingRatio * mHeight, (1+ kIconOnlyPaddingRatio) * mHeight + (tX - 1) * tIconSpacing, (1 - kIconOnlyPaddingRatio) * mHeight] into tIconRect
 			end if
 
 			setIconPath(tIconRect, tIconPath)
