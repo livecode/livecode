@@ -334,7 +334,7 @@ private handler drawNavBarEditMode() returns nothing
 	set the paint of this canvas to getPaint("background","editmode-fill")
 	fill getPath("bounding box") on this canvas
 
-	set the paint of this canvas to getPaint("background","stroke")
+	set the paint of this canvas to getPaint("background","editmode-stroke")
 	stroke getPath("bounding box") on this canvas
 
 	variable tX as Integer
@@ -688,6 +688,8 @@ public handler getPaint(pLocation, pType) returns Paint
 			return solid paint with color [246/255, 246/255, 247/255]
 		else if pType is "stroke" then
 			return solid paint with color [178/255, 178/255, 178/255]
+		else if pType is "editmode-stroke" then
+			return solid paint with color [140/255, 140/255, 140/255]
 		else if pType is "additem" then
 			return solid paint with color [0, 122/255 ,1]
 		else if pType is "deleteitem" then
