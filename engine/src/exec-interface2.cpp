@@ -1488,15 +1488,15 @@ void MCInterfaceSetDefaultCursor(MCExecContext& ctxt, uinteger_t p_value)
 {
 	MCCursorRef t_cursor;
 	MCInterfaceSetCursor(ctxt, p_value, true, t_cursor);
-	if (t_cursor != nil)
-	{
-		MCdefaultcursor = t_cursor;
-		MCdefaultcursorid = p_value;
-		if (MCmousestackptr != NULL)
-			MCmousestackptr->resetcursor(True);
-		else
-			MCdefaultstackptr->resetcursor(True);
-	}
+	
+    // PM-2015-06-17: [[ Bug 15200 ]] Default cursor should reset when set to empty, thus t_cursor *can* be nil
+    MCdefaultcursor = t_cursor;
+    MCdefaultcursorid = p_value;
+    if (MCmousestackptr != NULL)
+        MCmousestackptr->resetcursor(True);
+    else
+        MCdefaultstackptr->resetcursor(True);
+
 }
 void MCInterfaceGetDefaultStack(MCExecContext& ctxt, MCStringRef& r_value)
 {
