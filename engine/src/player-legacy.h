@@ -164,7 +164,6 @@ public:
 	virtual MCRectangle getpreferredrect();
     virtual uint2 getloudness();
 	virtual void setloudness();
-	virtual Boolean setenabledtracks(MCStringRef s);
 
 	virtual Boolean prepare(MCStringRef options);
 	virtual Boolean playstart(MCStringRef options);
@@ -209,14 +208,11 @@ public:
     virtual void gethotspots(MCStringRef &r_nodes);
     virtual void getconstraints(MCMultimediaQTVRConstraints &r_constraints);
     virtual void getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id);
+    virtual void setenabledtracks(uindex_t p_count, uint32_t *p_tracks_id);
+    
     
     virtual void updatevisibility();
     virtual void updatetraversal();
-    
-    virtual void setforegroundcolor(const MCInterfaceNamedColor& p_color);
-    virtual void getforegrouncolor(MCInterfaceNamedColor& r_color);
-    virtual void sethilitecolor(const MCInterfaceNamedColor& p_color);
-    virtual void gethilitecolor(MCInterfaceNamedColor& r_color);
 
     // SN-2015-01-06: [[ Merge-6.7.2-rc-1 ]]
     virtual bool resolveplayerfilename(MCStringRef p_filename, MCStringRef &r_filename);
@@ -332,7 +328,7 @@ public:
 #endif
     void qt_gettracks(MCStringRef &r_tracks);
     void qt_getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id);
-    Boolean qt_setenabledtracks(MCStringRef s);
+    void qt_setenabledtracks(uindex_t p_count, uint32_t* p_tracks);
 	void qt_draw(MCDC *dc, const MCRectangle& dirty);
 	void qt_move(int2 x, int2 y);
 	void qt_click(bool p_state, uint4 p_button);
@@ -368,7 +364,7 @@ public:
 #endif
     void avi_gettracks(MCStringRef &r_tracks);
     void avi_getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id);
-    Boolean avi_setenabledtracks(MCStringRef s);
+    void avi_setenabledtracks(uindex_t p_count, uint32_t* p_tracks);
 	void avi_draw(MCDC *dc, const MCRectangle& dirty);
 
 	bool mode_avi_closewindowonplaystop();
@@ -405,7 +401,7 @@ public:
 #endif
     void x11_gettracks(MCStringRef &r_tracks) { r_tracks = MCValueRetain(kMCEmptyString); }
     void x11_getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id) { r_count = 0; }
-    Boolean x11_setenabledtracks(MCStringRef & s) { return False;}
+    void x11_setenabledtracks(uindex_t p_count, uint32_t *p_tracks_id) {}
 	void x11_draw(MCDC *dc, const MCRectangle& dirty) {}
 	
 	pid_t getpid(void);
@@ -480,11 +476,7 @@ public:
     virtual void SetTraversalOn(MCExecContext& ctxt, bool setting);
     
     virtual void GetEnabledTracks(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tracks);
-    
-    virtual void SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color);
-    virtual void GetForeColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
-    virtual void SetHiliteColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color);
-    virtual void GetHiliteColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+    virtual void SetEnabledTracks(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_tracks);
     
     virtual void GetDontUseQT(MCExecContext& ctxt, bool &p_dont_use_qt);
     virtual void SetDontUseQT(MCExecContext& ctxt, bool r_dont_use_qt);

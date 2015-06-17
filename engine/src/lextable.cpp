@@ -1524,7 +1524,6 @@ LT factor_table[] =
         {"segmentoffset", TT_FUNCTION, F_WORD_OFFSET},
         {"segments", TT_CLASS, CT_WORD},
         {"selected", TT_PROPERTY, P_SELECTED},
-        //{"selectedareacolor", TT_PROPERTY, P_SELECTED_AREA_COLOR},
         {"selectedbutton", TT_FUNCTION, F_SELECTED_BUTTON},
         {"selectedchunk", TT_FUNCTION, F_SELECTED_CHUNK},
         {"selectedcolor", TT_PROPERTY, P_SELECTED_COLOR},

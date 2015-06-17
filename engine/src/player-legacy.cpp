@@ -1789,23 +1789,21 @@ void MCPlayer::getenabledtracks(MCExecPoint &ep)
 }
 #endif
 
-Boolean MCPlayer::setenabledtracks(MCStringRef s)
+void MCPlayer::setenabledtracks(uindex_t p_count, uint32_t *p_tracks_id)
 {
 	if (getstate(CS_PREPARED))
 #ifdef FEATURE_QUICKTIME
     if (usingQT())
-        return qt_setenabledtracks(s);
+        qt_setenabledtracks(p_count, p_tracks_id);
 #ifdef TARGET_PLATFORM_WINDOWS
     else
-        return avi_setenabledtracks(s);
+        avi_setenabledtracks(p_count, p_tracks_id);
 #endif
 #elif defined(X11)
-    return x11_setenabledtracks(s);
+    x11_setenabledtracks(p_count, p_tracks_id);
 #else
     0 == 0;
 #endif
-    
-	return True;
 }
 
 #ifdef LEGACY_EXEC
@@ -2149,24 +2147,6 @@ void MCPlayer::setcallbacks(MCStringRef p_callbacks)
         installUserCallbacks(); //install all callbacks for this player
 #endif
     }
-}
-
-void MCPlayer::setforegroundcolor(const MCInterfaceNamedColor& p_color)
-{
-}
-
-void MCPlayer::getforegrouncolor(MCInterfaceNamedColor& r_color)
-{
-    r_color . name = nil;
-}
-
-void MCPlayer::sethilitecolor(const MCInterfaceNamedColor& p_color)
-{
-}
-
-void MCPlayer::gethilitecolor(MCInterfaceNamedColor &r_color)
-{
-    r_color . name = nil;
 }
 
 // End of property setters/getters
@@ -3410,7 +3390,11 @@ MCRectangle MCPlayer::qt_getpreferredrect(void)
 	trect . x = trect . y = 0;
 	trect . height = naturalbounds.bottom - naturalbounds.top;
 	trect . width = naturalbounds.right - naturalbounds.left;
-    
+
+    // PM-2015-06-09: [[ Bug 5209 ]] formattedHeight should take into account the controller
+    if (flags & F_SHOW_CONTROLLER)
+        trect . height += 16; // default height of native QuickTime controller is 16
+
 	return trect;
 }
 
@@ -3524,7 +3508,7 @@ void MCPlayer::qt_getenabledtracks(uindex_t& r_count, uinteger_t*& r_tracks)
     t_tracks . Take(r_tracks, r_count);
 }
 
-Boolean MCPlayer::qt_setenabledtracks(MCStringRef s)
+void MCPlayer::qt_setenabledtracks(uindex_t p_count, uinteger_t* p_tracks)
 {
 	uint2 trackcount = (uint2)GetMovieTrackCount((Movie)theMovie);
 	uint2 i;
@@ -3533,35 +3517,16 @@ Boolean MCPlayer::qt_setenabledtracks(MCStringRef s)
 		Track trak = GetMovieIndTrack((Movie)theMovie,i);
 		SetTrackEnabled(trak, False);
 	}
-	uindex_t t_start, t_end;
-    t_start = 0;
-    t_end = t_start;
-	uint2 offset = 0;
-	while (t_start != MCStringGetLength(s))
+	
+    for (uindex_t j = 0; j < trackcount; j++)
     {
-        MCAutoStringRef t_substring;
-        if (!MCStringFirstIndexOfChar(s, '\n', t_start, kMCCompareExact, t_end))
-        {
-            MCStringCopySubstring(s, MCRangeMake(t_start, MCStringGetLength(s) - t_start), &t_substring);
-            t_start = MCStringGetLength(s);
-        }
-        else
-        {
-            /* UNCHECKED */ MCStringCopySubstring(s, MCRangeMake(t_start, t_end - t_start), &t_substring);
-            t_start = t_end + 1;
-        }
-        
-        integer_t t_integer;
-        /* UNCHECKED */ MCStringToInteger(*t_substring, t_integer);
-        Track trak = GetMovieTrack((Movie)theMovie, t_integer);
+        Track trak = GetMovieTrack((Movie)theMovie, p_tracks[j]);
         if (trak == NULL)
-        {
-            return False;
-        }
+            return;
+        
         SetTrackEnabled(trak, True);
-		if (++offset >= trackcount)
-			break;
-	}
+    }
+
 	MCMovieChanged((MovieController)theMC, (Movie)theMovie);
 	Rect movieRect;
 	GetMovieBox((Movie)theMovie, &movieRect);
@@ -3569,8 +3534,6 @@ Boolean MCPlayer::qt_setenabledtracks(MCStringRef s)
 	if (flags & F_SHOW_BORDER)
 		trect = MCU_reduce_rect(trect, -borderwidth);
 	setrect(trect);
-    
-	return True;
 }
 
 #if defined(TARGET_PLATFORM_MACOS_X)
@@ -4103,14 +4066,13 @@ void MCPlayer::avi_gettracks(MCStringRef &r_tracks)
 	r_tracks = MCValueRetain(kMCEmptyString);
 }
 
-void MCPlayer::avi_getenabledtracks(uindex_t& r_count, uinteger_t*& r_tracks)
+void MCPlayer::avi_getenabledtracks(uindex_t& r_count, uint32_t*& r_tracks)
 {
 	r_count = 0;
 }
 
-Boolean MCPlayer::avi_setenabledtracks(MCStringRef s)
+void MCPlayer::avi_setenabledtracks(uindex_t p_count, uint32_t* p_tracks)
 {
-	return True;
 }
 
 void MCPlayer::avi_draw(MCDC *dc, const MCRectangle& dirty)
