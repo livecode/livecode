@@ -55,6 +55,10 @@ private variable mIconRects as List
 private variable mSelectedElement as optional String
 
 property preferredSize		get getPreferredSize
+metadata preferredSize.user_visible is "false"
+
+property selectedIcon get mSelectedElement set setSelectedElement
+
 property showFrameBorder	get mFrameBorder	set setFrameBorder
 
 constant kIconColor is [0,0,0]
@@ -509,6 +513,21 @@ public handler setFrameBorder(in pValue as Boolean)
 	redraw all
 end handler
 
+private handler setSelectedElement(in pIcon as String)
+   variable tIndex as Number
+   variable tIconIndex as optional Number
+   repeat with tIndex from 1 up to mDataCount
+      if mDataList[tIndex] is pIcon then
+         put tIndex into tIconIndex
+         exit repeat
+      end if
+   end repeat
+
+   if tIconIndex is not nothing then
+      put pIcon into mSelectedElement
+      scrollToIndex(tIconIndex)
+   end if
+end handler
 
 private handler scrollToIndex(in pIndex as Number)
    put the floor of ((pIndex - 1) / mNumCols) * mRowHeight into mViewTopPosition
