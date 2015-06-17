@@ -955,6 +955,9 @@ end handler
 
 private handler deleteItem(in pItem as Number)
 	delete element pItem of mNavData
+	if mNavData is the empty list then
+		put [defaultNavArray()] into mNavData
+	end if
 	put true into mRecalculate
 	post "navDataChanged"
 	redraw all
