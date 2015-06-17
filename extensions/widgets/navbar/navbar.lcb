@@ -420,6 +420,8 @@ public handler OnClick() returns nothing
 	put the click position into tClickPos
 
 	if mEditMode then
+		-- Dismiss the transient fields when the widget is clicked
+		post "dismissTransient"
 		widgetClicked(tClickPos)
 	else
 		variable tSelected as Number
