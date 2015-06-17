@@ -206,6 +206,8 @@ private variable mAddIcon as Path
 private variable mDeleteIcon as Path
 private variable mReorderIcon as Path
 
+private variable mDragData as Array
+
 --
 
 constant kIconPaddingRatio is 0.1225
@@ -281,6 +283,7 @@ public handler OnCreate() returns nothing
 	put tNavItems into mNavData
 
 	put 1 into mSelectedItem
+	put the empty array into mDragData
 	put "icons and names" into mItemStyle
 
 	put 0 into mBoxWidth
@@ -318,12 +321,17 @@ private handler drawNavBar() returns nothing
 	repeat with tX from 1 up to mNavItemCount
 			-- Draw the text of the nav bar
 			if mItemStyle contains "names" then
-				drawLabel(tX, tX is mSelectedItem)
+				drawLabel(mNavData[tX]["label"], mNavData[tX]["label_rect"], tX is mSelectedItem)
 			end if
 
 			if mItemStyle contains "icons" then
 				-- Draw the icon
-				drawIcon(tX, tX is mSelectedItem)
+				if tX is mSelectedItem then
+					drawIcon(mNavData[tX]["selected_icon_path"], true)
+				else
+					drawIcon(mNavData[tX]["icon_path"], false)
+				end if
+
 			end if
 	end repeat
 	-- Draw the top line
@@ -332,7 +340,8 @@ private handler drawNavBar() returns nothing
 end handler
 
 private handler drawNavBarEditMode() returns nothing
-
+	// Make sure the subsequent drawing operations are opaque
+	set the opacity of this canvas to 1
 	// background
 	set the paint of this canvas to getPaint("background","editmode-fill")
 	fill getPath("bounding box") on this canvas
@@ -343,11 +352,11 @@ private handler drawNavBarEditMode() returns nothing
 	variable tX as Integer
 	repeat with tX from 1 up to mNavItemCount
 			-- Draw the text of the nav bar
-			drawEditModeLabel(tX)
+			drawEditModeLabel(mNavData[tX]["label"], mNavData[tX]["label_rect"])
 			-- Draw the icon
-			drawIcon(tX, false)
+			drawIcon(mNavData[tX]["icon_path"], false)
 			-- Draw the selectedIcon
-			drawIcon(tX, true)
+			drawIcon(mNavData[tX]["selected_icon_path"], true)
 			-- Draw the 'add item' item
 			drawActionItems()
 			-- Draw the rects round the editable elements
@@ -355,6 +364,27 @@ private handler drawNavBarEditMode() returns nothing
 			-- Draw the line between items
 			drawEditModeDivide(tX)
 	end repeat
+	log the keys of mDragData
+	if "item" is among the keys of mDragData then
+		drawDragData()
+	end if
+end handler
+
+private handler drawDragData()
+	variable tTargetPath as Path
+	put line path from point [0, mDragData["target"] * kEditModeLineHeight] to point [mWidth, mDragData["target"] * kEditModeLineHeight] into tTargetPath
+	set the paint of this canvas to getPaint("text", "selected-fill")
+	stroke tTargetPath on this canvas
+
+	set the opacity of this canvas to 0.4
+	set the paint of this canvas to getPaint("background","drag-fill")
+	fill rectangle path of mDragData["rect"] on this canvas
+	-- Draw the text of the nav bar
+	drawEditModeLabel(mDragData["label"], mDragData["label_rect"])
+	-- Draw the icon
+	drawIcon(mDragData["icon_path"], false)
+	-- Draw the selectedIcon
+	drawIcon(mDragData["selected_icon_path"], true)
 end handler
 
 private handler drawEditModeDivide(in pNumber as Number) returns nothing
@@ -367,20 +397,16 @@ private handler drawEditModeDivide(in pNumber as Number) returns nothing
 	fill tPath on this canvas
 end handler
 
-private handler drawIcon(in pNumber as Number, in pSelected as Boolean)
-	variable tIconPath as Path
+private handler drawIcon(in pIconPath as Path, in pSelected as Boolean)
 	if pSelected then
 		set the paint of this canvas to getPaint("text","selected-fill")
-		put mNavData[pNumber]["selected_icon_path"] into tIconPath
 	else
 		set the paint of this canvas to getPaint("text","fill")
-		put mNavData[pNumber]["icon_path"] into tIconPath
 	end if
-
-	fill tIconPath on this canvas
+	fill pIconPath on this canvas
 end handler
 
-private handler drawLabel(in pNumber as Number, in pSelected as Boolean)
+private handler drawLabel(in pLabel as String, in pRect as Rectangle, in pSelected as Boolean)
 	if pSelected then
 		set the paint of this canvas to getPaint("text","selected-fill")
 	else
@@ -388,12 +414,12 @@ private handler drawLabel(in pNumber as Number, in pSelected as Boolean)
 	end if
 
 	set the font of this canvas to getFont("label")
-	fill text mNavData[pNumber]["label"] at center of mNavData[pNumber]["label_rect"] on this canvas
+	fill text pLabel at center of pRect on this canvas
 end handler
 
-private handler drawEditModeLabel(in pNumber as Number)
+private handler drawEditModeLabel(in pLabel as String, in pRect as Rectangle)
 	set the paint of this canvas to getPaint("text","editmode-fill")
-	fill text mNavData[pNumber]["label"] at left of mNavData[pNumber]["label_rect"] on this canvas
+	fill text pLabel at left of pRect on this canvas
 end handler
 
 private handler drawActionItems()
@@ -424,19 +450,20 @@ private handler drawActionItems()
 end handler
 
 public handler OnMouseUp() returns nothing
-	if not mEditMode then
-
-	end if
-end handler
-
-public handler OnClick() returns nothing
 	variable tClickPos as Point
 	put the click position into tClickPos
-
 	if mEditMode then
 		-- Dismiss the transient fields when the widget is clicked
 		post "dismissTransient"
-		widgetClicked(tClickPos)
+		widgetClicked(tClickPos, true)
+	end if
+end handler
+
+public handler OnMouseDown() returns nothing
+	variable tClickPos as Point
+	put the click position into tClickPos
+	if mEditMode then
+		widgetClicked(tClickPos, false)
 	else
 		variable tSelected as Number
 		put locToNavItem(tClickPos) into tSelected
@@ -450,6 +477,13 @@ public handler OnClick() returns nothing
 			post "navigate" with [tItemLabel]
 		end if
 	end if
+end handler
+
+public handler OnMouseMove() returns nothing
+		if "item" is among the keys of mDragData then
+			calculateDragRow(the y of the mouse position)
+			redraw all
+		end if
 end handler
 
 private handler updateParameters()
@@ -529,22 +563,85 @@ private handler calculateEditModeIconRects() returns nothing
 		put rectangle [tLeft, tLineTop, tLeft + tLineHeight / 4, tLineBottom] into tIconRect
 		setIconPath(tIconRect, tIconPath)
 		put tIconPath into mNavData[tX]["add_icon_path"]
-		setActionRect("add_icon", tX, tIconRect, addItem)
+		setActionRect("add_icon", tX, tIconRect, addItem, true)
 
 		put mReorderIcon into tIconPath
 		add tLineHeight / 4 + kEditModePaddingUnit to tLeft
 		put rectangle [tLeft, tLineTop, tLeft + tLineHeight / 4, tLineBottom] into tIconRect
 		setIconPath(tIconRect, tIconPath)
 		put tIconPath into mNavData[tX]["reorder_icon_path"]
-		setActionRect("reorder_icon", tX, tIconRect, reorderItem)
+		setActionRect("reorder_icon", tX, tIconRect, reorderItem, false)
 
 		put mDeleteIcon into tIconPath
 		put rectangle [kEditModePaddingUnit, tLineTop, kEditModePaddingUnit + tLineHeight / 4, tLineBottom] into tIconRect
 		setIconPath(tIconRect, tIconPath)
 		put tIconPath into mNavData[tX]["delete_icon_path"]
-		setActionRect("delete_icon", tX, tIconRect, deleteItem)
+		setActionRect("delete_icon", tX, tIconRect, deleteItem, true)
 
 	end repeat
+end handler
+
+private handler calculateDragRow(in pY as Real) returns nothing
+	variable tLineHeight as Real
+	put kEditModeLineHeight into tLineHeight
+
+	-- calculate the drag destination
+	put the floor of ((pY + tLineHeight / 2) / tLineHeight) into mDragData["target"]
+
+	variable tLabelLeft as Real
+	variable tLabelRight as Real
+
+	variable tLineTop as Real
+	variable tLineBottom as Real
+	put pY - mDragData["offset"] into tLineTop
+	put tLineTop + tLineHeight  into tLineBottom
+
+	-- calculate the drawing rects
+	put rectangle [0, tLineTop, mWidth, tLineBottom] into mDragData["rect"]
+
+	-- One 1/2 line height icon + 2 lots of padding gives width of data to left of label
+	put 2 * kEditModePaddingUnit + tLineHeight / 4 into tLabelLeft
+	-- Two 1/4 line height icons + two line height icons + 4 lots of padding gives width of data to right of label
+	put mWidth - (4 * kEditModePaddingUnit + 5 * tLineHeight / 2) into tLabelRight
+
+	put rectangle [tLabelLeft, tLineTop + kEditModePaddingUnit, tLabelRight, tLineBottom - kEditModePaddingUnit] into mDragData["label_rect"]
+
+	variable tIconPath as Path
+	variable tIconRect as Rectangle
+	put path mNavData[mDragData["item"]]["icon"] into tIconPath
+
+		variable tLeft as Real
+		put tLabelRight + kEditModePaddingUnit into tLeft
+
+		put rectangle [tLeft + kEditModePaddingUnit, tLineTop + kEditModePaddingUnit, tLeft + tLineHeight - kEditModePaddingUnit, tLineBottom - kEditModePaddingUnit] into tIconRect
+		setIconPath(tIconRect, tIconPath)
+		put tIconPath into mDragData["icon_path"]
+
+		if mNavData[mDragData["item"]]["selected_icon"] is not "" then
+			put path mNavData[mDragData["item"]]["icon"] into tIconPath
+		end if
+
+		add tLineHeight to tLeft
+		put rectangle [tLeft + kEditModePaddingUnit, tLineTop + kEditModePaddingUnit, tLeft + tLineHeight - kEditModePaddingUnit, tLineBottom - kEditModePaddingUnit] into tIconRect
+		setIconPath(tIconRect, tIconPath)
+		put tIconPath into mDragData["selected_icon_path"]
+
+		put mAddIcon into tIconPath
+		add tLineHeight + kEditModePaddingUnit to tLeft
+		put rectangle [tLeft, tLineTop, tLeft + tLineHeight / 4, tLineBottom] into tIconRect
+		setIconPath(tIconRect, tIconPath)
+		put tIconPath into mDragData["add_icon_path"]
+
+		put mReorderIcon into tIconPath
+		add tLineHeight / 4 + kEditModePaddingUnit to tLeft
+		put rectangle [tLeft, tLineTop, tLeft + tLineHeight / 4, tLineBottom] into tIconRect
+		setIconPath(tIconRect, tIconPath)
+		put tIconPath into mDragData["reorder_icon_path"]
+
+		put mDeleteIcon into tIconPath
+		put rectangle [kEditModePaddingUnit, tLineTop, kEditModePaddingUnit + tLineHeight / 4, tLineBottom] into tIconRect
+		setIconPath(tIconRect, tIconPath)
+		put tIconPath into mDragData["delete_icon_path"]
 end handler
 
 private handler calculateIconRects() returns nothing
@@ -587,10 +684,11 @@ private handler calculateIconRects() returns nothing
 			-- If there is no selected icon then just use the non-selected icon
 			if mNavData[tX]["selected_icon"] is not "" then
 				put path mNavData[tX]["selected_icon"] into tIconPath
-				setIconPath(tIconRect, tIconPath)
-				put tIconPath into mNavData[tX]["selected_icon_path"]
-				put tIconRect into mNavData[tX]["selected_icon_rect"]
 			end if
+
+			setIconPath(tIconRect, tIconPath)
+			put tIconPath into mNavData[tX]["selected_icon_path"]
+			put tIconRect into mNavData[tX]["selected_icon_rect"]
 		end if
 	end repeat
 end handler
@@ -699,8 +797,10 @@ public handler getPaint(pLocation, pType) returns Paint
 	if pLocation is "background" then
 		if pType is "fill" then
 			return solid paint with color [246/255, 246/255, 247/255]
+		else if pType is "drag-fill" then
+			return solid paint with color [200/255, 200/255, 200/255]
 		else if pType is "stroke" then
-			return solid paint with color [178/255, 178/255, 178/255]
+			return solid paint with color [0, 0, 0, 0.2]
 		else if pType is "editmode-stroke" then
 			return solid paint with color [140/255, 140/255, 140/255]
 		else if pType is "additem" then
@@ -978,8 +1078,41 @@ private handler deleteItem(in pItem as Number)
 	redraw all
 end handler
 
+private handler moveItem(in pFrom as Number, in pTo as Number) returns nothing
+	-- Do nothing if this isn't really a move.
+	if pFrom is pTo then
+		return
+	end if
+
+	variable tItem as Array
+	put mNavData[pFrom] into tItem
+	delete element pFrom of mNavData
+	if pTo is 1 then
+		splice [tItem] before element 1 of mNavData
+	else
+		splice [tItem] after element (pTo - 1) of mNavData
+	end if
+	post "navDataChanged"
+	put true into mRecalculate
+end handler
+
 private handler reorderItem(in pItem as Number)
-	-- Unimplemented
+	put the y of the mouse position - ((pItem - 1) * kEditModeLineHeight) into mDragData["offset"]
+	put pItem into mDragData["item"]
+	put mNavData[pItem]["label"] into mDragData["label"]
+	redraw all
+end handler
+
+private handler dragDrop() returns nothing
+	if "item" is among the keys of mDragData then
+		if mDragData["item"] > mDragData["target"] then
+			moveItem(mDragData["item"], mDragData["target"] + 1)
+		else if mDragData["target"] > mDragData["item"] then
+			moveItem(mDragData["item"], mDragData["target"])
+		end if
+		put the empty array into mDragData
+		redraw all
+	end if
 end handler
 
 private handler getDesiredHeight() as Number
@@ -1016,6 +1149,7 @@ public handler setEditableRect(in pComponent as String, in pNumber as Number, in
 	put pCallback into mEditData[tComponentID]["callback"]
 	put pComponent into mEditData[tComponentID]["type"]
 	put pNumber into mEditData[tComponentID]["number"]
+	put true into mEditData[tComponentID]["mouseup"]
 end handler
 
 public handler setEditableTextRect(in pComponent as String, in pNumber as Number, in pRect as Rectangle)
@@ -1027,9 +1161,10 @@ public handler setEditableTextRect(in pComponent as String, in pNumber as Number
 	put pRect into mEditData[tComponentID]["rect"]
 	put pComponent into mEditData[tComponentID]["type"]
 	put pNumber into mEditData[tComponentID]["number"]
+	put true into mEditData[tComponentID]["mouseup"]
 end handler
 
-public handler setActionRect(in pComponent as String, in pNumber as Number, in pRect as Rectangle, in pAction as ActionCallback)
+public handler setActionRect(in pComponent as String, in pNumber as Number, in pRect as Rectangle, in pAction as ActionCallback, in pMouseUp as boolean)
 	variable tComponentID as String
 	put pComponent && pNumber formatted as string into tComponentID
 
@@ -1039,6 +1174,7 @@ public handler setActionRect(in pComponent as String, in pNumber as Number, in p
 	put pComponent into mEditData[tComponentID]["type"]
 	put pNumber into mEditData[tComponentID]["number"]
 	put pAction into mEditData[tComponentID]["action"]
+	put pMouseUp into mEditData[tComponentID]["mouseup"]
 end handler
 
 public handler drawEditableRects(in pCanvas as Canvas)
@@ -1049,10 +1185,14 @@ public handler drawEditableRects(in pCanvas as Canvas)
 	end repeat
 end handler
 
-public handler widgetClicked(in pClickPosition as Point)
+private handler widgetClicked(in pClickPosition as Point, in pMouseUp as Boolean)
+	if pMouseUp then
+		dragDrop()
+	end if
+
 	variable tElement as Array
 	repeat for each element tElement in mEditData
-		if pClickPosition is within tElement["rect"] then
+		if tElement["mouseup"] is pMouseUp and pClickPosition is within tElement["rect"] then
 			if "popup" is among the keys of tElement then
 				doPopup(pClickPosition, tElement)
 			else if "action" is among the keys of tElement then
