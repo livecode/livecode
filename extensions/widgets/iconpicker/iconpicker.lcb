@@ -277,9 +277,6 @@ private handler indexToSectorRect(in pIndex as Integer) as Rectangle
 	variable tCol as Integer
 	put the floor of ((pIndex - 1) / mNumRows) + 1 into tRow
 	put pIndex wrap mNumCols into tCol
-	
-	log tRow
-	log tCol
 
 	put (tCol - 1) * mViewWidth / mNumCols into tLeft
 	put tCol * mViewWidth / mNumCols into tRight
