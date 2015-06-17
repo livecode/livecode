@@ -349,7 +349,19 @@ private handler drawNavBarEditMode() returns nothing
 			drawActionItems()
 			-- Draw the rects round the editable elements
 			--drawEditableRects(this canvas)
+			-- Draw the line between items
+			drawEditModeDivide(tX)
 	end repeat
+end handler
+
+private handler drawEditModeDivide(in pNumber as Number) returns nothing
+	if pNumber is mNavItemCount then
+		return
+	end if
+	variable tPath as Path
+	put rectangle path of rectangle [0, kEditModeLineHeight * pNumber, mWidth, kEditModeLineHeight * pNumber + 1] into tPath
+	set the paint of this canvas to getPaint("background", "stroke")
+	fill tPath on this canvas
 end handler
 
 private handler drawIcon(in pNumber as Number, in pSelected as Boolean)
