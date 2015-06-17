@@ -1225,7 +1225,17 @@ end handler
 
 private handler doPopup(in pClickPos as Point, in pArray as Array)
 	variable tResult
-	popup widget pArray["popup"] at pClickPos
+
+	-- Popup the icon picker with the currently selected icon as the initial selection
+	variable tProperties as Array
+	put the empty array into tProperties
+	if pArray["type"] is "selectedIcon" and mNavData[pArray["number"]]["selected_icon_name"] is not "" then
+		put mNavData[pArray["number"]]["selected_icon_name"] into tProperties["selectedIcon"]
+	else
+		put mNavData[pArray["number"]]["icon_name"] into tProperties["selectedIcon"]
+	end if
+
+	popup widget pArray["popup"] at pClickPos with properties tProperties
 	put the result into tResult
 
 	variable tCallback as PopupCallback
