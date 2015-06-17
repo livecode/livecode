@@ -1637,7 +1637,10 @@ MC_DLLEXPORT MCHandlerTypeFieldMode MCHandlerTypeInfoGetParameterMode(MCTypeInfo
 
 // Return the type of the index'th parameter.
 MC_DLLEXPORT MCTypeInfoRef MCHandlerTypeInfoGetParameterType(MCTypeInfoRef typeinfo, uindex_t index);
-
+    
+// Returns the 'native' layout ptr (an ffi_cif) for the handler type
+MC_DLLEXPORT bool MCHandlerTypeInfoGetLayoutType(MCTypeInfoRef typeinfo, int abi, void*& r_cif);
+    
 //////////
 
 MC_DLLEXPORT bool MCErrorTypeInfoCreate(MCNameRef domain, MCStringRef message, MCTypeInfoRef& r_typeinfo);
@@ -2605,6 +2608,8 @@ MC_DLLEXPORT const MCHandlerCallbacks *MCHandlerGetCallbacks(MCHandlerRef handle
     
 MC_DLLEXPORT bool MCHandlerInvoke(MCHandlerRef handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
 MC_DLLEXPORT /*copy*/ MCErrorRef MCHandlerTryToInvokeWithList(MCHandlerRef handler, MCProperListRef& x_arguments, MCValueRef& r_value);
+    
+MC_DLLEXPORT bool MCHandlerGetFunctionPtr(MCHandlerRef handler, void*& r_func_ptr);
 
 ////////////////////////////////////////////////////////////////////////////////
 //

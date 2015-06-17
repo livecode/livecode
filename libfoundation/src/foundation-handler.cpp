@@ -17,6 +17,8 @@
 #include <foundation.h>
 #include <foundation-auto.h>
 
+#include <ffi.h>
+
 #include "foundation-private.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -33,6 +35,7 @@ bool MCHandlerCreate(MCTypeInfoRef p_typeinfo, const MCHandlerCallbacks *p_callb
     MCMemoryCopy(MCHandlerGetContext(self), p_context, p_callbacks -> size);
     
     self -> typeinfo = MCValueRetain(p_typeinfo);
+    self -> function_ptr = nil;
     self -> callbacks = p_callbacks;
     
     r_handler = self;
@@ -90,10 +93,141 @@ const MCHandlerCallbacks *MCHandlerGetCallbacks(MCHandlerRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static void __exec_closure(ffi_cif *cif, void *ret, void **args, void *user_data)
+{
+    MCHandlerRef t_handler;
+    t_handler = (MCHandlerRef)user_data;
+    
+    MCTypeInfoRef t_signature;
+    t_signature = t_handler -> typeinfo;
+    
+    uindex_t t_arity;
+    t_arity = MCHandlerTypeInfoGetParameterCount(t_signature);
+    
+    MCValueRef t_value_result;
+    MCValueRef t_value_args[16];
+    uindex_t t_arg_index;
+    t_arg_index = 0;
+    t_value_result = nil;
+    for(t_arg_index = 0; t_arg_index < t_arity; t_arg_index++)
+    {
+        MCHandlerTypeFieldMode t_mode;
+        t_mode = MCHandlerTypeInfoGetParameterMode(t_signature, t_arg_index);
+        
+        MCTypeInfoRef t_type;
+        t_type = MCHandlerTypeInfoGetParameterType(t_signature, t_arg_index);
+        
+        if (t_mode != kMCHandlerTypeFieldModeIn)
+            abort();
+        
+        MCResolvedTypeInfo t_resolved_type;
+        if (!MCTypeInfoResolve(t_type, t_resolved_type))
+        {
+            MCErrorThrowGeneric(nil);
+            goto error_exit;
+        }
+        
+        if (MCTypeInfoIsForeign(t_resolved_type . type))
+        {
+            const MCForeignTypeDescriptor *t_descriptor;
+            t_descriptor = MCForeignTypeInfoGetDescriptor(t_resolved_type . type);
+            if (t_descriptor -> defined != nil &&
+                !t_descriptor -> defined(args[t_arg_index]))
+                t_value_args[t_arg_index] = MCValueRetain(kMCNull);
+            else
+            {
+                if (t_descriptor -> bridgetype != kMCNullTypeInfo)
+                {
+                    if (!t_descriptor -> doimport(args[t_arg_index], false, t_value_args[t_arg_index]))
+                        goto error_exit;
+                }
+                else
+                {
+                    if (!MCForeignValueCreateAndRelease(t_resolved_type . named_type, args[t_arg_index], (MCForeignValueRef&)t_value_args[t_arg_index]))
+                        goto error_exit;
+                }
+            }
+        }
+        else
+        {
+            t_value_args[t_arg_index] = MCValueRetain((MCValueRef)args[t_arg_index]);
+        }
+    }
+    
+    if (!MCHandlerInvoke(t_handler, t_value_args, t_arity, t_value_result))
+        goto error_exit;
+    
+    MCTypeInfoRef t_return_type;
+    t_return_type = MCHandlerTypeInfoGetReturnType(t_signature);
+    
+    MCResolvedTypeInfo t_resolved_return_type;
+    t_return_type = MCHandlerTypeInfoGetReturnType(t_signature);
+    if (!MCTypeInfoResolve(t_return_type, t_resolved_return_type))
+    {
+        MCErrorThrowGeneric(nil);
+        goto error_exit;
+    }
+    
+    if (t_resolved_return_type . named_type != kMCNullTypeInfo)
+    {
+        if (MCTypeInfoIsForeign(t_resolved_return_type . type))
+        {
+            const MCForeignTypeDescriptor *t_descriptor;
+            t_descriptor = MCForeignTypeInfoGetDescriptor(t_resolved_return_type . type);
+            if (!t_descriptor -> doexport(t_value_result, true, ret))
+                goto error_exit;
+        }
+        else
+        {
+            *(MCValueRef *)ret = t_value_result;
+            t_value_result = nil;
+        }
+    }
+    
+    return;
+    
+error_exit:
+    if (t_value_result != nil)
+        MCValueRelease(t_value_result);
+    for(uindex_t i = 0; i < t_arg_index; i++)
+        MCValueRelease(t_value_args[i]);
+}
+
+bool MCHandlerGetFunctionPtr(MCHandlerRef self, void*& r_function_ptr)
+{
+    if (self -> function_ptr != nil)
+    {
+        r_function_ptr = self -> function_ptr;
+        return true;
+    }
+    
+    ffi_cif *t_cif;
+    if (!MCHandlerTypeInfoGetLayoutType(self -> typeinfo, (int)FFI_DEFAULT_ABI, (void*&)t_cif))
+        return false;
+    
+    self -> closure = ffi_closure_alloc(sizeof(ffi_closure), &self -> function_ptr);
+    if (self -> closure == nil)
+        return MCErrorThrowOutOfMemory();
+    
+    if (ffi_prep_closure_loc((ffi_closure *)self -> closure, t_cif, __exec_closure, self, self -> function_ptr) != FFI_OK)
+    {
+        ffi_closure_free(self -> closure);
+        self -> closure = nil;
+        return MCErrorThrowGeneric(nil);
+    }
+    
+    r_function_ptr = self -> function_ptr;
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void __MCHandlerDestroy(__MCHandler *self)
 {
     if (self -> callbacks -> release != nil)
         self -> callbacks -> release(MCHandlerGetContext(self));
+    if (self -> function_ptr != nil)
+        ffi_closure_free(self -> function_ptr);
 }
 
 hash_t __MCHandlerHash(__MCHandler *self)

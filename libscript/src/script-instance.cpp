@@ -1091,75 +1091,8 @@ static bool MCScriptPrepareForeignFunction(MCScriptFrame *p_frame, MCScriptInsta
     MCTypeInfoRef t_signature;
     t_signature = p_instance -> module -> types[p_handler -> type] -> typeinfo;
     
-    MCTypeInfoRef t_return_type;
-    t_return_type = MCHandlerTypeInfoGetReturnType(t_signature);
-    
-    MCResolvedTypeInfo t_resolved_return_type;
-    if (!MCTypeInfoResolve(t_return_type, t_resolved_return_type))
-        return MCScriptThrowUnableToResolveTypeError(t_return_type);
-    
-    ffi_type *t_ffi_return_type;
-    if (t_return_type != kMCNullTypeInfo)
-    {
-        if (MCTypeInfoIsForeign(t_resolved_return_type . type))
-            t_ffi_return_type = (ffi_type *)MCForeignTypeInfoGetLayoutType(t_resolved_return_type . type);
-        else
-            t_ffi_return_type = &ffi_type_pointer;
-    }
-    else
-        t_ffi_return_type = &ffi_type_void;
-    
-    uindex_t t_arity;
-    t_arity = MCHandlerTypeInfoGetParameterCount(t_signature);
-    
-    ffi_type **t_ffi_arg_types;
-    if (!MCMemoryNewArray(t_arity, t_ffi_arg_types))
-        return false;
-    
-    ffi_cif *t_cif;
-    if (!MCMemoryNew(t_cif))
-    {
-        MCMemoryDeleteArray(t_ffi_arg_types);
-        return false;
-    }
-    
-    bool t_success;
-    t_success = true;
-    for(uindex_t i = 0; t_success && i < t_arity; i++)
-    {
-        MCTypeInfoRef t_type;
-        MCHandlerTypeFieldMode t_mode;
-        t_type = MCHandlerTypeInfoGetParameterType(t_signature, i);
-        t_mode = MCHandlerTypeInfoGetParameterMode(t_signature, i);
-        
-        MCResolvedTypeInfo t_resolved_type;
-        if (!MCTypeInfoResolve(t_type, t_resolved_type))
-        {
-            t_success = false;
-            break;
-        }
-    
-        if (t_mode == kMCHandlerTypeFieldModeIn)
-        {
-            if (MCTypeInfoIsForeign(t_resolved_type . type))
-                t_ffi_arg_types[i] = (ffi_type *)MCForeignTypeInfoGetLayoutType(t_resolved_type . type);
-            else
-                t_ffi_arg_types[i] = &ffi_type_pointer;
-        }
-        else
-            t_ffi_arg_types[i] = &ffi_type_pointer;
-    }
-    
-    if (!t_success ||
-        ffi_prep_cif(t_cif, t_abi, t_arity, t_ffi_return_type, t_ffi_arg_types) != FFI_OK)
-    {
-        MCMemoryDeleteArray(t_ffi_arg_types);
-        MCMemoryDelete(t_cif);
+    if (!MCHandlerTypeInfoGetLayoutType(t_signature, t_abi, p_handler -> function_cif))
         return MCErrorThrowGeneric(nil);
-    }
-    
-    p_handler -> function_argtypes = t_ffi_arg_types;
-    p_handler -> function_cif = t_cif;
     
     if (!p_throw)
         r_bound = true;

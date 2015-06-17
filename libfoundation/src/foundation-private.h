@@ -65,6 +65,13 @@ enum
     kMCTypeInfoTypeIsForeign = 251,
 };
 
+struct MCHandlerTypeLayout
+{
+    MCHandlerTypeLayout *next;
+    int abi;
+    char cif[1];
+};
+
 struct __MCTypeInfo: public __MCValue
 {
     union
@@ -89,6 +96,8 @@ struct __MCTypeInfo: public __MCValue
             MCHandlerTypeFieldInfo *fields;
             uindex_t field_count;
             MCTypeInfoRef return_type;
+            void **layout_args;
+            MCHandlerTypeLayout *layouts;
         } handler;
         struct
         {
@@ -421,6 +430,8 @@ struct __MCHandler: public __MCValue
 {
     MCTypeInfoRef typeinfo;
     const MCHandlerCallbacks *callbacks;
+    void *closure;
+    void *function_ptr;
     char context[1];
 };
 
