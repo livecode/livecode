@@ -244,8 +244,6 @@ void MCScriptDestroyModule(MCScriptModuleRef self)
         {
             MCScriptForeignHandlerDefinition *t_def;
             t_def = static_cast<MCScriptForeignHandlerDefinition *>(self -> definitions[i]);
-            MCMemoryDeleteArray(t_def -> function_argtypes);
-            MCMemoryDelete(t_def -> function_cif);
         }
     
     // Remove ourselves from the context slot owners list.

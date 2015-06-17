@@ -721,6 +721,9 @@ bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *p_fields, index_t p_f
     
     self -> handler . return_type = MCValueRetain(p_return_type);
     
+    self -> handler . layout_args= nil;
+    self -> handler . layouts = nil;
+    
     if (MCValueInterAndRelease(self, r_typeinfo))
         return true;
     
@@ -769,6 +772,103 @@ MCTypeInfoRef MCHandlerTypeInfoGetParameterType(MCTypeInfoRef unresolved_self, u
     MCAssert(self -> handler . field_count > p_index);
     
     return self -> handler . fields[p_index] . type;
+}
+
+bool MCHandlerTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self, int p_abi, void*& r_cif)
+{
+    MCTypeInfoRef self;
+    self = __MCTypeInfoResolve(unresolved_self);
+    
+    MCAssert((self -> flags & kMCTypeInfoTypeCodeMask) == kMCValueTypeCodeHandler);
+    
+    // If a layout for the given ABI already exists, then return it.
+    for(MCHandlerTypeLayout *t_layout = self -> handler . layouts; t_layout != nil; t_layout = t_layout -> next)
+        if (t_layout -> abi == p_abi)
+        {
+            r_cif = &t_layout -> cif;
+            return true;
+        }
+    
+    // If we haven't computed the layout args yet, do so.
+    if (self -> handler . layout_args == nil)
+    {
+        MCTypeInfoRef t_return_type;
+        t_return_type = self -> handler . return_type;
+        
+        MCResolvedTypeInfo t_resolved_return_type;
+        if (!MCTypeInfoResolve(t_return_type, t_resolved_return_type))
+            return MCErrorThrowGeneric(nil);
+        
+        ffi_type *t_ffi_return_type;
+        if (t_return_type != kMCNullTypeInfo)
+        {
+            if (MCTypeInfoIsForeign(t_resolved_return_type . type))
+                t_ffi_return_type = (ffi_type *)MCForeignTypeInfoGetLayoutType(t_resolved_return_type . type);
+            else
+                t_ffi_return_type = &ffi_type_pointer;
+        }
+        else
+            t_ffi_return_type = &ffi_type_void;
+
+        uindex_t t_arity;
+        t_arity = self -> handler . field_count;
+        
+        ffi_type **t_ffi_arg_types;
+        if (!MCMemoryNewArray(t_arity + 1, t_ffi_arg_types))
+            return false;
+        
+        t_ffi_arg_types[0] = t_ffi_return_type;
+        
+        bool t_success;
+        t_success = true;
+        for(uindex_t i = 0; t_success && i < t_arity; i++)
+        {
+            MCTypeInfoRef t_type;
+            MCHandlerTypeFieldMode t_mode;
+            t_type = self -> handler . fields[i] . type;
+            t_mode = self -> handler . fields[i] . mode;
+            
+            MCResolvedTypeInfo t_resolved_type;
+            if (!MCTypeInfoResolve(t_type, t_resolved_type))
+            {
+                t_success = false;
+                break;
+            }
+            
+            if (t_mode == kMCHandlerTypeFieldModeIn)
+            {
+                if (MCTypeInfoIsForeign(t_resolved_type . type))
+                    t_ffi_arg_types[i + 1] = (ffi_type *)MCForeignTypeInfoGetLayoutType(t_resolved_type . type);
+                else
+                    t_ffi_arg_types[i + 1] = &ffi_type_pointer;
+            }
+            else
+                t_ffi_arg_types[i + 1] = &ffi_type_pointer;
+        }
+
+        if (!t_success)
+            return MCErrorThrowGeneric(nil);
+        
+        self -> handler . layout_args = (void **)t_ffi_arg_types;
+    }
+    
+    // Now we must create a new layout object.
+    MCHandlerTypeLayout *t_layout;
+    if (!MCMemoryAllocate(sizeof(MCHandlerTypeLayout) + sizeof(ffi_cif), t_layout))
+        return false;
+    
+    if (ffi_prep_cif((ffi_cif *)&t_layout -> cif, (ffi_abi)p_abi, self -> handler . field_count, (ffi_type *)self -> handler . layout_args[0], (ffi_type **)(self -> handler . layout_args + 1)) != FFI_OK)
+    {
+        MCMemoryDeallocate(t_layout);
+        return MCErrorThrowGeneric(nil);
+    }
+    
+    t_layout -> next = self -> handler . layouts;
+    self -> handler . layouts = t_layout;
+    
+    r_cif = &t_layout -> cif;
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -954,6 +1054,14 @@ void __MCTypeInfoDestroy(__MCTypeInfo *self)
         }
         MCValueRelease(self -> handler . return_type);
         MCMemoryDeleteArray(self -> handler . fields);
+        MCMemoryDeleteArray(self -> handler . layout_args);
+        while(self -> handler . layouts != nil)
+        {
+            MCHandlerTypeLayout *t_layout;
+            t_layout = self -> handler . layouts;
+            self -> handler . layouts = self -> handler . layouts -> next;
+            MCMemoryDeallocate(t_layout);
+        }
     }
     else if (t_ext_typecode == kMCValueTypeCodeError)
     {
