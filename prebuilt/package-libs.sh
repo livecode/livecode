@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Versions
-OPENSSL_VERSION="1.0.1g"
+OPENSSL_VERSION="1.0.1m"
 CURL_VERSION="7.21.1"
 ICU_VERSION="52.1"
 
@@ -39,7 +39,7 @@ function doPackage {
 	if [ -f "${LIBPATH}/libcustomcrypto.a" ] ; then
 		tar -cf "${OPENSSL_TAR}" "${LIBPATH}/libcustomcrypto.a" "${LIBPATH}/libcustomssl.a"
 	elif [ -f "${LIBPATH}/revsecurity.dll" ] ; then
-		tar -cf "${OPENSSL_TAR}" "${LIBPATH}/libcurl_a.lib" "${LIBPATH}/libeay32.lib" "${LIBPATH}/ssleay32.lib" "${LIBPATH}/revsecurity.dll"
+		tar -cf "${OPENSSL_TAR}" "${LIBPATH}/libeay32.lib" "${LIBPATH}/ssleay32.lib" "${LIBPATH}/revsecurity.dll" "${LIBPATH}/revsecurity.def"
 	fi
 
 	# Package up Curl

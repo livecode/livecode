@@ -43,6 +43,9 @@
 
         -- Check that suitable identifiers are used in definitions
         CheckIdentifiers(Module)
+        
+        -- Check that repeat-specific commands are appropriate
+        CheckRepeats(Module, 0)
 
 --------------------------------------------------------------------------------
 
@@ -434,15 +437,42 @@
 'condition' IsExpressionSimpleConstant(EXPRESSION)
 
     'rule' IsExpressionSimpleConstant(undefined(_)):
+
     'rule' IsExpressionSimpleConstant(true(_)):
+
     'rule' IsExpressionSimpleConstant(false(_)):
+
     'rule' IsExpressionSimpleConstant(unsignedinteger(_, _)):
+
     'rule' IsExpressionSimpleConstant(integer(_, _)):
+
     'rule' IsExpressionSimpleConstant(real(_, _)):
+
     'rule' IsExpressionSimpleConstant(string(_, _)):
+
     'rule' IsExpressionSimpleConstant(list(_, List)):
         IsExpressionListSimpleConstant(List)
-        
+
+    'rule' IsExpressionSimpleConstant(invoke(Position, invokelist(Info, nil), expressionlist(Operand, nil))):
+        Info'Name -> SyntaxName
+        (|
+            eq(SyntaxName, "PlusUnaryOperator")
+        ||
+            eq(SyntaxName, "MinusUnaryOperator")
+        |)
+        (|
+            where(Operand -> integer(_, _))
+        ||
+            where(Operand -> unsignedinteger(_, UIntValue))
+            (|
+                ge(UIntValue, 0)
+            ||
+                Error_IntegerLiteralOutOfRange(Position)
+            |)
+        ||
+            where(Operand -> real(_, _))
+        |)
+
 'condition' IsExpressionListSimpleConstant(EXPRESSIONLIST)
 
     'rule' IsExpressionListSimpleConstant(expressionlist(Head, Tail)):
@@ -1257,15 +1287,15 @@
 
 'var' IgnoredModulesList : NAMELIST
 
-'condition' ImportContainsCanvas(IMPORT)
+'condition' ImportContainsCanvas(DEFINITION)
 
 'sweep' CheckInvokes(ANY)
 
-    'rule' CheckInvokes(MODULE'module(_, Kind, Name, Imports, Definitions)):
+    'rule' CheckInvokes(MODULE'module(_, Kind, Name, Definitions)):
         (|
             ne(Kind, widget)
             (|
-                ImportContainsCanvas(Imports)
+                ImportContainsCanvas(Definitions)
                 MakeNameLiteral("com.livecode.widget" -> WidgetModuleName)
                 IgnoredModulesList <- namelist(WidgetModuleName, nil)
             ||
@@ -1639,9 +1669,8 @@
 
 'sweep' CheckIdentifiers(ANY)
 
-    'rule' CheckIdentifiers(MODULE'module(_, _, Id, Imports, Definitions)):
+    'rule' CheckIdentifiers(MODULE'module(_, _, Id, Definitions)):
         CheckIdIsSuitableForDefinition(Id)
-        CheckIdentifiers(Imports)
         CheckIdentifiers(Definitions)
 
     --
@@ -1700,6 +1729,45 @@
             IsNameSuitableForDefinition(Name)
         ||
             Warning_UnsuitableNameForDefinition(Position, Name)
+        |)
+
+--------------------------------------------------------------------------------
+
+'sweep' CheckRepeats(ANY, INT)
+
+    'rule' CheckRepeats(repeatforever(_, Body), Depth):
+        CheckRepeats(Body, Depth + 1)
+
+    'rule' CheckRepeats(repeatcounted(_, _, Body), Depth):
+        CheckRepeats(Body, Depth + 1)
+
+    'rule' CheckRepeats(repeatwhile(_, _, Body), Depth):
+        CheckRepeats(Body, Depth + 1)
+        
+    'rule' CheckRepeats(repeatuntil(_, _, Body), Depth):
+        CheckRepeats(Body, Depth + 1)
+
+    'rule' CheckRepeats(repeatupto(_, _, _, _, _, Body), Depth):
+        CheckRepeats(Body, Depth + 1)
+
+    'rule' CheckRepeats(repeatdownto(_, _, _, _, _, Body), Depth):
+        CheckRepeats(Body, Depth + 1)
+
+    'rule' CheckRepeats(repeatforeach(_, _, _, Body), Depth):
+        CheckRepeats(Body, Depth + 1)
+        
+    'rule' CheckRepeats(nextrepeat(Position), Depth):
+        (|
+            gt(Depth, 0)
+        ||
+            Error_NextRepeatOutOfContext(Position)
+        |)
+
+    'rule' CheckRepeats(exitrepeat(Position), Depth):
+        (|
+            gt(Depth, 0)
+        ||
+            Error_ExitRepeatOutOfContext(Position)
         |)
 
 --------------------------------------------------------------------------------

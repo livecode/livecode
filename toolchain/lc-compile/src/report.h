@@ -21,6 +21,8 @@
 extern "C" {
 #endif
 
+extern int s_verbose_level;
+
 void InitializeReports(void);
 void FinalizeReports(void);
 
@@ -42,7 +44,9 @@ void Warning_EmptyUnicodeEscape(long position);
 void Warning_UnicodeEscapeTooBig(long position);
 
 void Error_Bootstrap(const char *format, ...);
-    
+
+void Debug_Emit(const char *p_format, ...);
+
 #ifdef __cplusplus
 }
 #endif

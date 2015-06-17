@@ -989,9 +989,12 @@ public:
     #endif
     #endif
 
-
+#ifndef _SERVER
+		// ST-2015-04-20: [[ Bug 15257 ]] Stdin shouldn't be set to
+		// non-blocking in server.
         if (!IsInteractiveConsole(0))
             MCS_lnx_nodelay(0);
+#endif
 
         // MW-2013-10-01: [[ Bug 11160 ]] At the moment NBSP is not considered a space.
         MCctypetable[160] &= ~(1 << 4);
@@ -1465,7 +1468,10 @@ public:
         else if (MCNameIsEqualTo(p_type, MCN_temporary, kMCCompareCaseless))
             return MCStringCreateWithCString("/tmp", r_folder);
         // SN-2014-08-08: [[ Bug 13026 ]] Fix ported from 6.7
-        else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless))
+        else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless)
+                 // SN-2015-04-20: [[ Bug 14295 ]] If we are here, we are a standalone
+                 // so the resources folder is the engine folder.
+                 || MCNameIsEqualTo(p_type, MCN_resources, kMCCompareCaseless))
         {
             uindex_t t_last_slash;
             
@@ -2050,36 +2056,35 @@ public:
             }
             delete tpath;
         }
+        else if (path[0] != '/')
+        {
+            // SN-2015-06-05: [[ Bug 15432 ]] Fix resolvepath on Linux: we want an
+            //  absolute path.
+            char *t_curfolder;
+            t_curfolder = MCS_getcurdir();
+            tildepath = new char[strlen(t_curfolder) + strlen(path) + 2];
+            /* UNCHECKED */ sprintf(tildepath, "%s/%s", t_curfolder, path);
+
+            delete t_curfolder;
+        }
         else
             tildepath = strclone(path);
 
         struct stat64 buf;
         if (lstat64(tildepath, &buf) != 0 || !S_ISLNK(buf.st_mode))
             return tildepath;
-        int4 size;
+
         char *newname = new char[PATH_MAX + 2];
-        if ((size = readlink(tildepath, newname, PATH_MAX)) < 0)
+
+        // SN-2015-06-05: [[ Bug 15432 ]] Use realpath to solve the symlink.
+        if (realpath(tildepath, newname) == NULL)
         {
-            delete tildepath;
+            // Clear the memory in case of failure
             delete newname;
-            return NULL;
+            newname = NULL;
         }
+
         delete tildepath;
-        newname[size] = '\0';
-        if (newname[0] != '/')
-        {
-            char *fullpath = new char[strlen(path) + strlen(newname) + 2];
-            strcpy(fullpath, path);
-            char *sptr = strrchr(fullpath, '/');
-            if (sptr == NULL)
-                sptr = fullpath;
-            else
-                sptr++;
-            strcpy(sptr, newname);
-            delete newname;
-            newname = MCS_resolvepath(fullpath);
-            delete fullpath;
-        }
         return newname;
 #endif /* MCS_resolvepath_dsk_lnx */
         if (MCStringGetLength(p_path) == 0)
@@ -2124,12 +2129,30 @@ public:
             else
                 t_tilde_path = p_path;
         }
+        else if (MCStringGetNativeCharAtIndex(p_path, 0) != '/')
+        {
+            // SN-2015-06-05: [[ Bug 15432 ]] Fix resolvepath on Linux: we want an
+            //  absolute path.
+            MCAutoStringRef t_curdir;
+            MCS_getcurdir(&t_curdir);
+
+            if (!MCStringFormat(&t_tilde_path, "%@/%@", *t_curdir, p_path))
+            {
+                return false;
+            }
+        }
         else
             t_tilde_path = p_path;
 
         // SN-2014-12-18: [[ Bug 14001 ]] Update the server file resolution to use realpath
         //  so that we get the absolute path (needed for MCcmd for instance).
-#ifdef _SERVER
+        // SN-2015-06-08: Use realpath on desktop as well.
+#ifndef _SERVER
+        // IM-2012-07-23
+        // Keep (somewhat odd) semantics of the original function for now
+        if (!MCS_lnx_is_link(*t_tilde_path))
+            return MCStringCopy(*t_tilde_path, r_resolved_path);
+#endif
         MCAutoStringRefAsSysString t_tilde_path_sys;
         t_tilde_path_sys . Lock(*t_tilde_path);
 
@@ -2149,40 +2172,6 @@ public:
         MCMemoryDelete(t_resolved_path);
 
         return t_success;
-#else
-
-        // IM-2012-07-23
-        // Keep (somewhat odd) semantics of the original function for now
-        if (!MCS_lnx_is_link(*t_tilde_path))
-            return MCStringCopy(*t_tilde_path, r_resolved_path);
-
-        MCAutoStringRef t_newname;
-        if (!MCS_lnx_readlink(*t_tilde_path, &t_newname))
-            return false;
-
-        if (MCStringGetCharAtIndex(*t_newname, 0) != '/')
-        {
-            MCAutoStringRef t_resolved;
-
-            uindex_t t_last_component;
-            uindex_t t_path_length;
-
-            t_path_length = MCStringGetLength(p_path);
-
-            if (MCStringLastIndexOfChar(p_path, '/', t_path_length, kMCStringOptionCompareExact, t_last_component))
-                t_last_component++;
-            else
-                t_last_component = 0;
-
-            if (!MCStringMutableCopySubstring(p_path, MCRangeMake(0, t_last_component), &t_resolved) ||
-                !MCStringAppend(*t_resolved, *t_newname))
-                return false;
-
-            return MCStringCopy(*t_resolved, r_resolved_path);
-        }
-        else
-            return MCStringCopy(*t_newname, r_resolved_path);
-#endif
     }
 
     virtual bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path)
@@ -2345,6 +2334,20 @@ public:
                     execl(*t_shellcmd_sys, *t_shellcmd_sys, "-s", NULL);
                     _exit(-1);
                 }
+                if (MCprocesses[index].pid == -1)
+                {
+					MCeerror->add(EE_SYSTEM_FUNCTION, 0, 0, "fork");
+					MCeerror->add(EE_SYSTEM_CODE, 0, 0, errno);
+					MCeerror->add(EE_SYSTEM_MESSAGE, 0, 0, strerror(errno));
+					close(tochild[0]);
+					close(tochild[1]);
+					close(toparent[0]);
+					close(toparent[1]);
+
+                    MCprocesses[index].pid = 0;
+                    // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
+                    return false;
+                }
                 CheckProcesses();
                 close(tochild[0]);
 
@@ -2356,32 +2359,23 @@ public:
                 close(tochild[1]);
                 close(toparent[1]);
                 MCS_lnx_nodelay(toparent[0]);
-                if (MCprocesses[index].pid == -1)
-                {
-                    if (MCprocesses[index].pid > 0)
-                        Kill(MCprocesses[index].pid, SIGKILL);
-
-                    MCprocesses[index].pid = 0;
-                    MCeerror->add
-                    (EE_SHELL_BADCOMMAND, 0, 0, p_filename);
-                    // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
-                    return false;
-                }
             }
             else
             {
+                MCeerror->add(EE_SYSTEM_FUNCTION, 0, 0, "pipe");
+                MCeerror->add(EE_SYSTEM_CODE, 0, 0, errno);
+                MCeerror->add(EE_SYSTEM_MESSAGE, 0, 0, strerror(errno));
                 close(tochild[0]);
                 close(tochild[1]);
-                MCeerror->add
-                (EE_SHELL_BADCOMMAND, 0, 0, p_filename);
                 // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
                 return false;
             }
         }
         else
         {
-            MCeerror->add
-            (EE_SHELL_BADCOMMAND, 0, 0, p_filename);
+            MCeerror->add(EE_SYSTEM_FUNCTION, 0, 0, "pipe");
+            MCeerror->add(EE_SYSTEM_CODE, 0, 0, errno);
+            MCeerror->add(EE_SYSTEM_MESSAGE, 0, 0, strerror(errno));
             // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
             return false;
         }

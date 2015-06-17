@@ -4740,7 +4740,7 @@ Example:
 	move to point [25, 50] on this canvas
 
 	// Continue path with a curve through 25,100 to 50,100
-	curve through [25,100] to [50,100] on this canvas
+	curve through point [25,100] to point [50,100] on this canvas
 
 	// Close the path
 	close path on this canvas

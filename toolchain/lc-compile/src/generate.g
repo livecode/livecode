@@ -31,7 +31,7 @@
 
 'action' Generate(MODULE)
 
-    'rule' Generate(Module:module(_, Kind, Id, Imports, Definitions)):
+    'rule' Generate(Module:module(_, Kind, Id, Definitions)):
         ModuleDependencyList <- nil
         
         QueryModuleId(Id -> Info)
@@ -52,7 +52,7 @@
         (|
             ne(Kind, widget)
             (|
-                ImportContainsCanvas(Imports)
+                ImportContainsCanvas(Definitions)
                 MakeNameLiteral("com.livecode.widget" -> WidgetModuleName)
                 IgnoredModuleList <- namelist(WidgetModuleName, nil)
             ||
@@ -81,7 +81,7 @@
         
         GenerateManifest(Module)
 
-'condition' ImportContainsCanvas(IMPORT)
+'condition' ImportContainsCanvas(DEFINITION)
 
     'rule' ImportContainsCanvas(sequence(Left, _)):
         ImportContainsCanvas(Left)
@@ -98,7 +98,7 @@
 
 'action' GenerateManifest(MODULE)
 
-    'rule' GenerateManifest(module(_, Kind, Id, Imports, Definitions)):
+    'rule' GenerateManifest(module(_, Kind, Id, Definitions)):
         OutputBeginManifest()
         Id'Name -> Name
         OutputWrite("<package version=\"0.0\">\n")
@@ -710,6 +710,9 @@
     'rule' GenerateDefinitions(metadata(_, _, _)):
         -- do nothing
 
+    'rule' GenerateDefinitions(import(_, _)):
+        -- do nothing
+
     'rule' GenerateDefinitions(nil):
         -- nothing
 
@@ -1141,6 +1144,7 @@
         Info'Index -> VarIndex
         IsVariableInRegister(Kind)
         --
+        EmitPosition(Position)
         GenerateDefinitionGroupForInvokes(Invokes, execute, Arguments -> Index, Signature)
         GenerateInvoke_EvaluateArguments(Result, Context, Signature, Arguments)
         EmitBeginInvoke(Index, Context, VarIndex)
@@ -1733,6 +1737,27 @@
         EmitBeginListConstant()
         EmitListConstant(Indicies)
         EmitEndListConstant(-> Index)
+
+    'rule' EmitConstant(invoke(_, invokelist(Info, nil), expressionlist(Operand, nil)) -> Index)
+        Info'Name -> SyntaxName
+        (|
+            eq(SyntaxName, "PlusUnaryOperator")
+            EmitConstant(Operand -> Index)
+        ||
+            eq(SyntaxName, "MinusUnaryOperator")
+            (|
+                where(Operand -> integer(_, IntValue))
+                EmitIntegerConstant(-IntValue -> Index)
+            ||
+                where(Operand -> unsignedinteger(_, UIntValue))
+                EmitIntegerConstant(-UIntValue -> Index)
+            ||
+                where(Operand -> real(_, RealValue))
+                NegateReal(RealValue -> MinusRealValue)
+                EmitRealConstant(MinusRealValue -> Index)
+            |)
+        |)
+
 
 'action' EmitListConstantElements(EXPRESSIONLIST -> INTLIST)
 

@@ -86,7 +86,6 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	exec-interface-vclip.cpp exec-legacy.cpp exec-dialog.cpp exec-keywords.cpp \
 	syntax.cpp \
 	foundation-legacy.cpp legacy_spec.cpp \
-	stacktile.cpp sysunxthreads.cpp \
 	widget.cpp widget-events.cpp native-layer.cpp native-layer-android.cpp \
 	module-canvas.cpp module-engine.cpp module-resources.cpp modules.cpp \
 	exec-extension.cpp exec-keywords.cpp filepath.cpp) \

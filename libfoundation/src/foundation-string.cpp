@@ -28,6 +28,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <locale.h>
 #endif
 
+#ifdef __WINDOWS__
+#include <windows.h>
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // CAVEAT!
@@ -816,7 +820,8 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 
 	if (t_success)
 		t_success = MCStringCopyAndRelease(t_buffer, r_string);
-	else
+    
+    if (!t_success)
 		MCValueRelease (t_buffer);
 	
 	return t_success;
@@ -4043,15 +4048,16 @@ bool MCStringFindAndReplaceNative(MCStringRef self, MCStringRef p_pattern, MCStr
 			// we update the offset, and need just room up to it.
 			uindex_t t_space_needed;
 			if (t_found)
-				t_space_needed = t_next_offset + p_replacement -> char_count;
+				t_space_needed = (t_next_offset - t_offset) + p_replacement -> char_count;
 			else
 			{
 				t_next_offset = self -> char_count;
-				t_space_needed = t_next_offset;
+				t_space_needed = t_next_offset - t_offset;
 			}
             
 			// Expand the buffer as necessary.
-			if (t_output_length + t_space_needed > t_output_capacity)
+            // MW-2015-05-26: [[ Bug 15352 ]] Allocate more memory
+			if (t_output_length + t_space_needed + 1 > t_output_capacity)
 			{
 				if (t_output_capacity == 0)
 					t_output_capacity = 4096;
@@ -4506,15 +4512,16 @@ bool MCStringFindAndReplace(MCStringRef self, MCStringRef p_pattern, MCStringRef
 			// we update the offset, and need just room up to it.
 			uindex_t t_space_needed;
 			if (t_found)
-				t_space_needed = t_next_offset + p_replacement -> char_count;
+				t_space_needed = (t_next_offset - t_offset) + p_replacement -> char_count;
 			else
 			{
 				t_next_offset = self -> char_count;
-				t_space_needed = t_next_offset;
+				t_space_needed = t_next_offset - t_offset;
 			}
 
 			// Expand the buffer as necessary.
-			if (t_output_length + t_space_needed > t_output_capacity)
+            // MW-2015-05-26: [[ Bug 15352 ]] Allocate more memory
+			if (t_output_length + t_space_needed + 1 > t_output_capacity)
 			{
 				if (t_output_capacity == 0)
 					t_output_capacity = 4096;
@@ -5134,7 +5141,7 @@ bool MCStringCreateWithSysString(const char *p_system_string, MCStringRef &r_str
 	return true;
 }
 
-bool MCStringConvertToSysString(MCStringRef p_string, const char * &r_system_string)
+bool MCStringConvertToSysString(MCStringRef p_string, char *& r_system_string, size_t& r_byte_count)
 {
     // Create the pseudo-FD that iconv uses for character conversion. For
     // efficiency, convert straight from the internal format.
@@ -5194,9 +5201,61 @@ bool MCStringConvertToSysString(MCStringRef p_string, const char * &r_system_str
     t_sys_string[t_sys_len] = '\0';
 
 	r_system_string = t_sys_string;
+    r_byte_count = t_sys_len;
+    
 	return true;
 }
-
+#elif defined(__WINDOWS__)
+bool MCStringConvertToSysString(MCStringRef p_string, char *& r_system_string, size_t& r_byte_count)
+{
+    UINT t_codepage;
+    t_codepage = GetConsoleOutputCP();
+    
+    int t_needed;
+    t_needed = WideCharToMultiByte(t_codepage,
+                                   WC_COMPOSITECHECK | WC_NO_BEST_FIT_CHARS,
+                                   MCStringGetCharPtr(p_string),
+                                   -1,
+                                   NULL,
+                                   0,
+                                   NULL,
+                                   NULL);
+    
+    MCAutoArray<char> t_bytes;
+    if (!t_bytes . New(t_needed))
+        return false;
+    
+    if (WideCharToMultiByte(t_codepage,
+                            WC_COMPOSITECHECK | WC_NO_BEST_FIT_CHARS,
+                            MCStringGetCharPtr(p_string),
+                            -1,
+                            t_bytes . Ptr(),
+                            t_needed,
+                            NULL,
+                            NULL) == 0)
+        return false;
+    
+    uindex_t t_size;
+    char *t_ptr;
+    t_bytes . Take(t_ptr, t_size);
+    
+    r_system_string = t_ptr;
+    
+    // Account for the fact that array size includes the NUL byte.
+    r_byte_count = t_size - 1;
+    
+    return true;
+}
+#else
+bool MCStringConvertToSysString(MCStringRef p_string, char *& r_system_string, size_t& r_byte_count)
+{
+    bool t_success;
+    uindex_t t_byte_count;
+    if (!MCStringConvertToUTF8(p_string, r_system_string, t_byte_count))
+        return false;
+    r_byte_count = t_byte_count;
+    return true;
+}
 #endif
 
 bool MCStringNormalizedCopyNFC(MCStringRef self, MCStringRef &r_string)

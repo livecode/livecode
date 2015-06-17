@@ -135,6 +135,14 @@ void MCStringsGetExtentsByOrdinalInRange(MCExecContext& ctxt, Chunk_term p_chunk
                     MCStringsCountChunks(ctxt, p_chunk_type, (MCStringRef)p_string, t_count);
             }
             
+            // AL-2015-04-09: [[ Bug 15156 ]] Prevent underflow of r_first
+            if (t_count == 0)
+            {
+                r_first = 0;
+                r_chunk_count = 0;
+                return;
+            }
+            
             if (p_ordinal_type == CT_ANY)
                 r_first = MCU_any(t_count);
             else if (p_ordinal_type == CT_LAST)
@@ -161,15 +169,8 @@ void MCStringsGetExtentsByOrdinalInRange(MCExecContext& ctxt, Chunk_term p_chunk
             ctxt . LegacyThrow(EE_CHUNK_BADEXTENTS);
             return;
 	}
-    
-    if (r_first < 0)
-    {
-        r_chunk_count = 0;
-        r_first = 0;
-        return;
-    }
-    else
-        r_chunk_count = 1;
+
+    r_chunk_count = 1;
 }
 
 // AL-2015-02-10: [[ Bug 14532 ]] Allow chunk extents to be counted in a given range, to prevent substring copying in text chunk resolution.
@@ -451,11 +452,13 @@ void MCStringsMarkTextChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MC
             while (p_first-- && ps != PS_ERROR && ps != PS_EOF)
                 ps = sp.nexttoken();
 
-            r_start = sp . getindex();
+            // AL-2015-05-01: [[ Bug 15309 ]] r_start and r_end are absolute indices, so they
+            //  need to be corrected by the initial string offset.
+            r_start = sp . getindex() + t_offset;
             while (--p_count && ps != PS_ERROR && ps != PS_EOF)
                 ps = sp.nexttoken();
             
-            r_end = sp . getindex() + MCStringGetLength(sp.gettoken_stringref());
+            r_end = sp . getindex() + MCStringGetLength(sp.gettoken_stringref()) + t_offset;
             MCerrorlock--;
         }
             break;
@@ -899,7 +902,10 @@ void MCStringsAddChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, uindex_t p
     
     // the text has changed
     // SN-2014-09-03: [[ Bug 13314 ]] MCMarkedText::changed updated to store the number of chars appended
-    x_text . changed = p_to_add * MCStringGetLength(t_delimiter);
+    // SN-2015-05-05: [[ Bug 15315 ]] put "hello" into item 2 of line 4 of ...
+    //  will add twice chunk delimiters, and we want to keep the count
+    //  (see note for bug 15315 in MCInterfaceExecPutIntoField).
+    x_text . changed += p_to_add * MCStringGetLength(t_delimiter);
 }
 
 void MCStringsEvalTextChunk(MCExecContext& ctxt, MCMarkedText p_source, MCStringRef& r_string)

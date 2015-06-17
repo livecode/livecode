@@ -2052,7 +2052,8 @@ Exec_stat MCHandleUpdateContact(void *context, MCParameter *p_parameters) // ABU
 	MCAutoStringRef t_message;
 	MCAutoStringRef t_alternate_name;
 
-	if (MCParseParameters(p_parameters, "axxx", &(&t_contact), &(&t_title), &(&t_message), &(&t_alternate_name)))
+    // PM-2015-05-21: [[ Bug 14792 ]] Make sure params are parsed properly
+	if (MCParseParameters(p_parameters, "a|xxx", &(&t_contact), &(&t_title), &(&t_message), &(&t_alternate_name)))
 	    MCAddressBookExecUpdateContact(ctxt, *t_contact, *t_title, *t_message, *t_alternate_name);
     
 	if (!ctxt . HasError())

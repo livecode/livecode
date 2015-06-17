@@ -1,0 +1,1 @@
+# Putting value into item of empty variable hangs LiveCode

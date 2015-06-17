@@ -1,0 +1,1 @@
+# Putting string data into complex byte chunk crashes LiveCode

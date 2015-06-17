@@ -123,11 +123,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __32_BIT__ 1 
 #define __LITTLE_ENDIAN__ 1
 #define __I386__ 1
+#define __LP32__ 1
 #define __SMALL__ 1
 #elif defined(_M_X64)
 #define __64_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __X86_64__ 1
+#define __LLP64__ 1
 #define __HUGE__ 1
 #else
 #error Unknown target architecture
@@ -159,16 +161,19 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __32_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __I386__ 1
+#define __LP32__ 1
 #define __SMALL__ 1
 #elif defined(__ppc__)
 #define __32_BIT__ 1 
 #define __BIG_ENDIAN__ 1 
 #define __PPC__ 1
+#define __LP32__ 1
 #define __SMALL__ 1
 #elif defined(__x86_64__)
 #define __64_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __X86_64__ 1
+#define __LP64__ 1
 #define __HUGE__ 1
 #endif
 
@@ -201,16 +206,19 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __32_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __I386__ 1
-#define __SMALL__ 1
+#define __LP32__ 1
+#define __SMALL__
 #elif defined(__x86_64__)
 #define __64_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __X86_64__ 1
+#define __LP64__ 1
 #define __MEDIUM__ 1
 #elif defined(__arm__)
 #define __32_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __ARM__ 1
+#define __LP32__ 1
 #define __SMALL__ 1
 #endif
 
@@ -240,26 +248,31 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __32_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __I386__ 1
+#define __LP32__ 1
 #define __SMALL__ 1
 #elif defined(__ppc__)
 #define __32_BIT__ 1 
 #define __BIG_ENDIAN__ 1 
 #define __PPC__ 1
+#define __LP32__ 1
 #define __SMALL__ 1
 #elif defined(__x86_64__)
 #define __64_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __X86_64__ 1
+#define __LP64__ 1
 #define __MEDIUM__ 1
 #elif defined(__arm__)
 #define __32_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __ARM__ 1
+#define __LP32__ 1
 #define __SMALL__ 1 
 #elif defined(__arm64__)
 #define __64_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __ARM64__
+#define __LP64__ 1
 #define __HUGE__ 1
 #endif
 
@@ -292,16 +305,19 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __32_BIT__
 #define __LITTLE_ENDIAN__
 #define __I386__
+#define __LP32__ 1
 #define __SMALL__
 #elif defined(__x86_64__)
 #define __64_BIT__
 #define __LITTLE_ENDIAN__
 #define __X86_64__
-#define __MEDIUM__
+#define __LP64__ 1
+#define __MEDIUM__ 1
 #elif defined(__arm__)
 #define __32_BIT__
 #define __LITTLE_ENDIAN__
 #define __ARM__
+#define __LP32__ 1
 #define __SMALL__
 #endif
 
@@ -2074,9 +2090,12 @@ MC_DLLEXPORT bool MCStringConvertToCFStringRef(MCStringRef string, CFStringRef& 
 MC_DLLEXPORT bool MCStringConvertToBSTR(MCStringRef string, BSTR& r_bstr);
 #endif
 
-#ifdef __LINUX__
-MC_DLLEXPORT bool MCStringConvertToSysString(MCStringRef string, const char *&sys_string);
-#endif
+// Converts the given string ref to a string in the system encoding.
+// Note that the 'bytes' ptr is typed as 'char', however it should be considered
+// as an opaque sequence of bytes with an 'unknowable' encoding.
+// Note that the output string is allocated with an implicit NUL byte, but this
+// is not included in the byte_count.
+MC_DLLEXPORT bool MCStringConvertToSysString(MCStringRef string, char*& r_bytes, size_t& r_byte_count);
 
 /////////
 

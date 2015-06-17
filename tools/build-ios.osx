@@ -10,5 +10,7 @@ sdks/Xcode_6_1/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration
 ./sdks/Xcode_5_1/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator6.1 ARCHS=i386
 ./sdks/Xcode_5_1/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator7.1 ARCHS="i386"
 ./sdks/Xcode_6_2/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator8.2 ARCHS="i386 x86_64"
+./sdks/Xcode_6_3/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator8.3 ARCHS="i386 x86_64"
 
 ./sdks/Xcode_6_2/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphoneos8.2 ARCHS="armv7 arm64"
+./sdks/Xcode_6_3/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphoneos8.3 ARCHS="armv7 arm64"

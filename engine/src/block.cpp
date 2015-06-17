@@ -758,27 +758,41 @@ bool MCBlock::fit(coord_t x, coord_t maxwidth, findex_t& r_break_index, bool& r_
 		codepoint_t t_this_char;
         bool t_end_of_block;
         t_end_of_block = false;
-		while(i < m_index + m_size)
-		{
-			t_this_char = t_next_char;
-			
-			i = parent->IncrementIndex(i);
-		
-			if (i < m_index + m_size)
-				t_next_char = parent->GetCodepointAtIndex(i);
-			else
+        
+        // If this is the first block of a segment that was created by a tab,
+        // we can use the first position in the block as a break position,
+        // unless this is the first segment on a line.
+        if (!t_can_fit
+            && this == segment->GetFirstBlock()
+            && i == m_index
+            && segment->GetParent()->GetFirstSegment() != segment
+            && parent->GetCodepointAtIndex(i - 1) == '\t')
+        {
+            t_can_fit = t_can_break = true;
+        }
+        else
+        {
+            while(i < m_index + m_size)
             {
-                t_next_char = t_next_block_char;
-                t_end_of_block = true;
+                t_this_char = t_next_char;
+                
+                i = parent->IncrementIndex(i);
+            
+                if (i < m_index + m_size)
+                    t_next_char = parent->GetCodepointAtIndex(i);
+                else
+                {
+                    t_next_char = t_next_block_char;
+                    t_end_of_block = true;
+                }
+                
+                if (t_next_char == -1 ||
+                    MCUnicodeCanBreakBetween(t_this_char, t_next_char))
+                {
+                    t_can_break = true;
+                    break;
+                }
             }
-			
-			if (t_this_char == '\t' ||
-				t_next_char == CODEPOINT_NONE ||
-				MCUnicodeCanBreakBetween(t_this_char, t_next_char))
-			{
-				t_can_break = true;
-				break;
-			}
 		}
 
 		// MW-2013-11-07: [[ Bug 11393 ]] Previous per-platform implementations all fold into the optimized

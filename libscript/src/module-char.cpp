@@ -58,7 +58,8 @@ extern "C" MC_DLLEXPORT void MCCharEvalIsAmongTheCharsOf(MCStringRef p_needle, M
 {
     // Error if there is more than one char in needle.
     MCRange t_range;
-    MCStringUnmapGraphemeIndices(p_needle, kMCLocaleBasic, MCRangeMake(0, UINDEX_MAX), t_range);
+    // AL_2015-05-07: [[ Bug 15331 ]] Pass in correct code unit range as MCStringUnmapGraphemeIndices doesn't clamp.
+    MCStringUnmapGraphemeIndices(p_needle, kMCLocaleBasic, MCRangeMake(0, MCStringGetLength(p_needle)), t_range);
     if (t_range . length != 1)
     {
         MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("needle must be a single char"), nil);

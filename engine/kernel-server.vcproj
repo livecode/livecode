@@ -610,6 +610,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\filepath.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\filepath.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\fonttable.cpp"
 				>
 			</File>
@@ -847,10 +855,6 @@
 			</File>
 			<File
 				RelativePath=".\src\socket_resolve.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\stacktile.cpp"
 				>
 			</File>
 			<File
@@ -1427,10 +1431,6 @@
 			</File>
 			<File
 				RelativePath=".\src\sysw32registry.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\sysw32threads.cpp"
 				>
 			</File>
 			<File
@@ -2047,6 +2047,10 @@
 			</File>
 			<File
 				RelativePath=".\src\module-engine.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\module-resources.cpp"
 				>
 			</File>
 			<File
