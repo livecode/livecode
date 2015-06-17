@@ -76,6 +76,19 @@ void set_dnd_cursor(GdkWindow *w, bool p_okay, MCImage *p_image)
 }
 
 
+struct dnd_modal_loop_context
+{
+    GdkDragContext* drag_context;
+    GdkDisplay* display;
+};
+
+static void break_dnd_modal_loop(void* context)
+{
+    dnd_modal_loop_context* t_context = (dnd_modal_loop_context*)context;
+    gdk_drag_abort(t_context->drag_context, GDK_CURRENT_TIME);
+    gdk_display_pointer_ungrab(t_context->display, GDK_CURRENT_TIME);
+}
+
 // SN-2014-07-11: [[ Bug 12769 ]] Update the signature - the non-implemented UIDC dodragdrop was called otherwise
 MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset)
 {
@@ -141,10 +154,22 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
     // Whether the target accepted the drop or not
     bool t_accepted = true;
     
+    // Context for breaking out of the modal loop, if required
+    dnd_modal_loop_context t_loop_context;
+    modal_loop t_modal_loop;
+    t_loop_context.drag_context = t_context;
+    t_loop_context.display = dpy;
+    t_modal_loop.break_function = break_dnd_modal_loop;
+    t_modal_loop.context = &t_loop_context;
+    modalLoopStart(t_modal_loop);
+    
     // The drag-and-drop loop
     bool t_dnd_done = false;
     while (!t_dnd_done)
     {
+        if (t_modal_loop.broken)
+            break;
+        
         // Run the GLib event loop to exhaustion
         while (g_main_context_iteration(NULL, FALSE))
             ;
@@ -349,6 +374,8 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
         MCRedrawUpdateScreen();
         siguser();
     }
+    
+    modalLoopEnd();
     
     // Other people can now use the pointer
     g_object_unref(t_context);

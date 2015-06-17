@@ -239,6 +239,7 @@ gdk libgdk-x11-2.0.so.0
 	gdk_drag_context_list_targets: (pointer) -> (pointer)
 	gdk_drag_status: (pointer, integer, integer) -> ()
 	gdk_drop_finish: (pointer, integer, integer) -> ()
+	gdk_drag_abort: (pointer, integer) -> ()
 	gdk_window_set_cursor: (pointer, pointer) -> ()
 	gdk_drag_find_window_for_screen: (pointer, pointer, pointer, integer, integer, pointer, pointer) -> ()
 	gdk_drag_motion: (pointer, pointer, integer, integer, integer, integer, integer, integer) -> (integer)
