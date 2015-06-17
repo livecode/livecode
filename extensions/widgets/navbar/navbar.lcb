@@ -208,7 +208,10 @@ private variable mReorderIcon as Path
 
 --
 
-constant kIconRatio is 0.65
+constant kIconPaddingRatio is 0.1225
+constant kLabelPaddingRatio is 0.06
+constant kLabelHeightRatio is 0.165
+
 constant kEditModePaddingUnit is 10
 constant kEditModeLineHeight is 50
 
@@ -556,7 +559,7 @@ private handler calculateIconRects() returns nothing
 			put rectangle [((2 * tX - 1) * mBoxWidth - mHeight) / 2, 0, ((2 * tX - 1) * mBoxWidth + mHeight) / 2, mHeight] into mNavData[tX]["label_rect"]
 		else if mItemStyle is "icons and names" then
 			-- If we show icons and names then offset the label so its rect is below the icon
-			put rectangle [(tX - 1) * mBoxWidth, mHeight * kIconRatio, tX * mBoxWidth, mHeight] into mNavData[tX]["label_rect"]
+			put rectangle [(tX - 1) * mBoxWidth, mHeight * (1 - (kLabelPaddingRatio + kLabelHeightRatio)), tX * mBoxWidth, mHeight * (1 - kLabelPaddingRatio)] into mNavData[tX]["label_rect"]
 		end if
 
 		if mItemStyle contains "icons" then
@@ -567,7 +570,7 @@ private handler calculateIconRects() returns nothing
 			put path mNavData[tX]["icon"] into tIconPath
 
 			if mItemStyle is "icons and names" then
-				put rectangle [((2 * tX - 1) * mBoxWidth - mHeight * kIconRatio) / 2, mHeight * 0.05, ((2 * tX - 1) * mBoxWidth + mHeight * kIconRatio) / 2, mHeight * kIconRatio] into tIconRect
+				put rectangle [((2 * tX - 1) * mBoxWidth - mHeight * (1 - kIconPaddingRatio)) / 2, mHeight * kIconPaddingRatio, ((2 * tX - 1) * mBoxWidth + mHeight * (1 - kIconPaddingRatio)) / 2, mHeight * (1 - (kIconPaddingRatio + kLabelHeightRatio + kLabelPaddingRatio))] into tIconRect
 			else if mItemStyle is "icons" then
 				put rectangle [((2 * tX - 1) * mBoxWidth - mHeight) / 2 + mHeight * 0.05, mHeight * 0.05, ((2 * tX - 1) * mBoxWidth + mHeight) / 2 - mHeight * 0.05, mHeight * 0.95] into tIconRect
 			end if
@@ -711,7 +714,7 @@ public handler getPaint(pLocation, pType) returns Paint
 		if pType is "fill" then
 			return solid paint with color [146/255, 146/255, 146/255]
 		else if pType is "selected-fill" then
-			return solid paint with color [0, 122/255 ,1]
+			return solid paint with color [0, 121/255 ,1]
 		else if pType is "additem" or pType is "deleteitem" then
 			return solid paint with color [1, 1, 1]
 		else if pType is "editmode-fill" then
