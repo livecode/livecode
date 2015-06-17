@@ -292,7 +292,7 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
 			return MCStringCreateWithChars(t_buffer.Ptr(), t_out_offset, r_string);
 		}
             break;
-#if !defined(__LINUX__) && !defined(__ANDROID__)
+#if !defined(__ISO_8859_1__)
         case kMCStringEncodingISO8859_1:
             break;
 #endif
@@ -1836,7 +1836,7 @@ bool MCStringConvertToBytes(MCStringRef self, MCStringEncoding p_encoding, bool 
             }
         }
         break;
-#if !defined(__LINUX__) && !defined(__ANDROID__)
+#if !defined(__ISO_8859_1__)
     case kMCStringEncodingISO8859_1:
         break;
 #endif
