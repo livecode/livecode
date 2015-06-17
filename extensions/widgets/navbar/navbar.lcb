@@ -764,21 +764,38 @@ private handler listToArray(in pList as List) returns Array
 end handler
 
 private handler setData(in pArray as Array, in pKeys as List, out rList as List)
+	-- Excessive hoop-jumping to work around the fact that keys of numerically keyed LCS array
+	-- comes into LCB as strings, and therefore must be parsed as number to sort, then formatted back
+	-- to be used as keys again. Because parse/format of integer doesn't currently roundtrip, we need to
+	-- create a lookup from the original strings.
+	variable tKey
 	variable tOrder as List
-	put the keys of pArray into tOrder
-	sort tOrder in ascending order
+	put the empty list into tOrder
+	variable tLookup as Array
+	put the empty array into tLookup
+	variable tNumericKey as Number
+	repeat for each key tKey in pArray
+		put tKey parsed as number into tNumericKey
+		push tNumericKey onto tOrder
+		put tKey into tLookup[tNumericKey formatted as string]
+	end repeat
+	sort tOrder in ascending numeric order
 
 	variable tOrderKey
-	variable tKey
 	variable tElement as Array
 	variable tList as List
 	put the empty list into tList
 
+	variable tOriginalKey as String
 	repeat for each element tOrderKey in tOrder
 		put the empty array into tElement
 		repeat for each element tKey in pKeys
-			put pArray[tOrderKey][tKey] into tElement[tKey]
+			put tLookup[tOrderKey formatted as string] into tOriginalKey
+			put pArray[tOriginalKey][tKey] into tElement[tKey]
 		end repeat
+		if tElement["label"] is "" then
+			put "New Item" into tElement["label"]
+		end if
 		push tElement onto tList
 	end repeat
 
