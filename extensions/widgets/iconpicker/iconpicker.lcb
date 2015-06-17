@@ -288,17 +288,20 @@ end handler
 private handler mousePosToIconNumber(in pMouse as Point) returns Integer
 	variable tRow as Integer
 	put the floor of ((the y of pMouse - mRowHeight) / mRowHeight) + 1 into tRow
-	
+
 	variable tCol as Integer
 	put the floor of (the x of pMouse / mColWidth) + 1 into tCol
-	
+
 	return (tRow - 1) * mNumCols + tCol + mFirstDataItem - 1
 end handler
 
 public handler OnGeometryChanged()
 	// Only resizing necessitates a recalculation
 	if my height is not mViewHeight + mRowHeight or my width is not mViewWidth then
-		put true into mRecalculate
+      variable tFirstDataItem as Number
+      put mFirstDataItem into tFirstDataItem
+      updateParameters()
+      scrollToIndex(tFirstDataItem)
 	end if
 end handler
 
@@ -504,6 +507,15 @@ end handler
 public handler setFrameBorder(in pValue as Boolean)
 	put pValue into mFrameBorder
 	redraw all
+end handler
+
+
+private handler scrollToIndex(in pIndex as Number)
+   put the floor of ((pIndex - 1) / mNumCols) * mRowHeight into mViewTopPosition
+   updateFirstDataItem()
+   updateScrollbar(mViewWidth, mViewHeight, mDataHeight, mViewTopPosition, mRowHeight)
+   put true into mRecalculate
+   redraw all
 end handler
 
 --------------------------------------------------------------------------------
