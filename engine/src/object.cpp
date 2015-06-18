@@ -4819,6 +4819,8 @@ static bool MCDeletedObjectPoolCreate(MCDeletedObjectPool*& r_pool)
 
 static void MCDeletedObjectPoolDestroy(MCDeletedObjectPool *p_pool)
 {
+    p_pool -> parent -> references -= 1;
+
     if (MCsparedeletedobjectpool == nil)
     {
         MCsparedeletedobjectpool = p_pool;
@@ -4948,8 +4950,7 @@ void MCDeletedObjectsOnObjectDeleted(MCObject *p_object)
         
         if (t_this_pool -> references == 0)
         {
-            t_this_pool -> parent -> references -= 1;
-            MCDeletedObjectPoolDestroy(t_pool);
+            MCDeletedObjectPoolDestroy(t_this_pool);
         }
     }
     
@@ -4972,8 +4973,6 @@ void MCDeletedObjectsOnObjectDestroyed(MCObject *p_object)
     t_pool -> references -= 1;
     while(t_pool -> defunct && t_pool -> references == 0)
     {
-        t_pool -> parent -> references -= 1;
-
         MCDeletedObjectPool *t_this_pool;
         t_this_pool = t_pool;
         t_pool = t_pool -> parent;
