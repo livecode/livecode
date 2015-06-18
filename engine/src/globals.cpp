@@ -1314,7 +1314,7 @@ int X_close(void)
 
 // MW-2013-10-08: [[ Bug 11259 ]] Make sure the Linux specific case tables are
 //   in a global place so it works for server and desktop.
-#if defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER)
+#if defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER) || defined(__EMSCRIPTEN__)
 // MW-2013-10-01: [[ Bug 11160 ]] Use our own lowercasing table (ISO8859-1)
 uint1 MClowercasingtable[] =
 {
