@@ -185,6 +185,11 @@ metadata navLabels.user_visible is "false"
 property desiredHeight	get getDesiredHeight
 metadata desiredHeight.user_visible is "false"
 
+property navHiliteColor	get getHiliteColor set setHiliteColor
+metadata navHiliteColor.editor is "com.livecode.pi.color"
+metadata navHiliteColor.label is "Selected Item Color"
+metadata navHiliteColor.default is "0,121,255"
+
 --
 
 -- private instance variables
@@ -208,6 +213,8 @@ private variable mReorderIcon as Path
 
 private variable mDragData as Array
 
+private variable mHiliteColor as Color
+
 --
 
 constant kIconPaddingRatio is 0.1225
@@ -229,6 +236,7 @@ public handler OnSave(out rProperties as Array)
 	put getNavData() into rProperties["items"]
 	put mSelectedItem into rProperties["selected"]
 	put mItemStyle into rProperties["itemStyle"]
+	put mHiliteColor into rProperties["hiliteColor"]
 
 	return rProperties
 end handler
@@ -237,6 +245,7 @@ public handler OnLoad(in pProperties as Array)
 	setNavData(pProperties["items"])
 	put pProperties["selected"] into mSelectedItem
 	put pProperties["itemStyle"] into mItemStyle
+	put pProperties["hiliteColor"] into mHiliteColor
 end handler
 
 public handler OnCreate() returns nothing
@@ -298,6 +307,7 @@ public handler OnCreate() returns nothing
 	put path iconSVGPathFromName("minus sign") into mDeleteIcon
 	put path iconSVGPathFromName("reorder") into mReorderIcon
 
+	put color [0, 121/255,1] into mHiliteColor
 end handler
 
 public handler OnPaint() returns nothing
@@ -792,9 +802,18 @@ private handler setIconPath(in pTargetRect as Rectangle, inout xPath as Path)
 	translate xPath by [tXTranslate + tXDiff, tYTranslate + tYDiff]
 end handler
 
+public handler setHiliteColor(in pColor as String) returns nothing
+	put stringToColor(pColor) into mHiliteColor
+	redraw all
+end handler
+
+public handler getHiliteColor() returns String
+	return colorToString(mHiliteColor)
+end handler
+
 public handler getPath(in pObject as String) returns Path
 	variable tRect
-	put my bounds into tRect	
+	put my bounds into tRect
 	if pObject is "bounding box" then
 		return rectangle path of rectangle [the left of tRect + 0.5, the top of tRect + 0.5, the right of tRect - 0.5, the bottom of tRect - 0.5]
 	else if pObject is "line" then
@@ -826,7 +845,7 @@ public handler getPaint(pLocation, pType) returns Paint
 		if pType is "fill" then
 			return solid paint with color [146/255, 146/255, 146/255]
 		else if pType is "selected-fill" then
-			return solid paint with color [0, 121/255 ,1]
+			return solid paint with mHiliteColor
 		else if pType is "additem" or pType is "deleteitem" then
 			return solid paint with color [1, 1, 1]
 		else if pType is "editmode-fill" then
@@ -1265,5 +1284,59 @@ private handler addEditableField(in pElement as Array)
 	-- Work around the fact that LCB currently doesn't have editable text fields
 	post "editField" with [formatRectAsString(pElement["rect"]), pElement["number"]]
 end handler
+
+-- this handler converts a string of numbers to an RGBA color
+private handler stringToColor(in pString as String) returns Color
+	variable tRed as Real
+	variable tGreen as Real
+	variable tBlue as Real
+	variable tAlpha as Real
+
+	variable tComponentList as List
+	split pString by "," into tComponentList
+
+	variable tComponentCount
+	put the number of elements in tComponentList into tComponentCount
+	if tComponentCount is not 3 and tComponentCount is not 4 then
+		// Invalid number of components detected
+		throw "Invalid color"
+	end if
+
+	put (element 1 of tComponentList) parsed as number into tRed
+	put (element 2 of tComponentList) parsed as number into tGreen
+	put (element 3 of tComponentList) parsed as number into tBlue
+
+	if tComponentCount is 4 then
+		put (element 4 of tComponentList) parsed as number into tAlpha
+	else
+		put 255 into tAlpha
+	end if
+
+	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha/255 ]
+end handler
+----------
+
+-- this handler converts an RGBA color to a string
+private handler colorToString(in pColor as Color) returns String
+	return stripZeros((the rounded of ((the red of pColor) * 255)) formatted as string) & "," & stripZeros((the rounded of (the green of pColor) * 255) formatted as string) & "," & stripZeros((the rounded of (the blue of pColor) * 255) formatted as string) & "," & stripZeros((the rounded of (the alpha of pColor) * 255) formatted as string)
+end handler
+----------
+
+-- this handler strips the zeros when a integer is formatted as a string
+private handler stripZeros(in tString as String) returns String
+	if tString contains "." then
+		variable tCount as Integer
+		repeat while ((the last char of tString) is in ".0")
+			if the last char of tString is "." then
+				delete the last char of tString
+				exit repeat
+			else
+				delete the last char of tString
+			end if
+		end repeat
+	end if
+	return tString
+end handler
+----------
 
 end widget
