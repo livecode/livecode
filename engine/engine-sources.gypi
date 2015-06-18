@@ -682,6 +682,8 @@
 			'src/em-system.cpp',
 			'src/em-theme.cpp',
 			'src/em-util.h',
+			'src/em-view.h',
+			'src/em-view.cpp',
 		],
 		
 		# Sources that need to be compiled separately for each mode
