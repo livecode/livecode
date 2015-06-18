@@ -130,7 +130,7 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
     // Take ownership of the mouse so that nothing interferes with the drag
     GdkScreen *t_screen;
     t_screen = gdk_display_get_default_screen(dpy);
-    gdk_pointer_grab(gdk_screen_get_root_window(t_screen), TRUE,
+    gdk_pointer_grab(gdk_screen_get_root_window(t_screen), FALSE,
                      GdkEventMask(GDK_POINTER_MOTION_MASK|GDK_BUTTON_PRESS_MASK|GDK_BUTTON_RELEASE_MASK),
                      NULL, NULL, MCeventtime);
     
@@ -321,7 +321,7 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
             case GDK_DROP_START:
                 // This is a D&D client event. Note the need to ungrab the
                 // pointer, however (just in case the stack needs it)
-                gdk_pointer_ungrab(t_event->dnd.time);
+                gdk_display_pointer_ungrab(dpy, t_event->dnd.time);
                 DnDClientEvent(t_event);
                 break;
                 
@@ -352,16 +352,7 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
     
     // Other people can now use the pointer
     g_object_unref(t_context);
-    gdk_pointer_ungrab(GDK_CURRENT_TIME);
-    
-    // FG-2014-06-27: [[ LinuxGDK ]] I really hate this but GDK seems to refuse
-    // to actually ungrab the pointer so we have to force the issue and call
-    // X11 directly to get it done.
-    x11::XUngrabPointer(x11::gdk_x11_display_get_xdisplay(dpy), 0);
-
-    // Clean up allocated memory
-    //if (t_pasteboard != NULL)
-    //    t_pasteboard->Release();
+    gdk_display_pointer_ungrab(dpy, GDK_CURRENT_TIME);
     
     // Restore the original modifier key state
     MCmodifierstate = t_old_modstate;
