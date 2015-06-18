@@ -249,12 +249,13 @@ public handler OnClick() returns nothing
 	if tIconNumber is 0 then
 		return
 	end if
-	
-	// If this widget is being used as a popup then we close the popup and return a value to the caller
-	if currently popped up and the click count is 2 then
-			// Dismiss the popup - the result will be the name of the selected icon
+
+	--If this widget is being used as a popup then we close the popup and return a value to the caller
+	if currently popped up then
+			--Dismiss the popup - the result will be the name of the selected icon
 		close popup returning mDataList[tIconNumber]
 	else
+      -- If the selected icon was clicked, unselect it
 		if mSelectedElement is defined and mSelectedElement is mDataList[tIconNumber] then
 			put undefined into mSelectedElement
 		else
@@ -293,7 +294,15 @@ private handler mousePosToIconNumber(in pMouse as Point) returns Integer
 	variable tCol as Integer
 	put the floor of (the x of pMouse / mColWidth) + 1 into tCol
 
-	return (tRow - 1) * mNumCols + tCol + mFirstDataItem - 1
+   variable tNumber as Integer
+   put (tRow - 1) * mNumCols + tCol + mFirstDataItem - 1 into tNumber
+
+   -- Ignore clicks in above the first displayed icon
+   if tNumber < mFirstDataItem then
+      put 0 into tNumber
+   end if
+
+	return tNumber
 end handler
 
 public handler OnGeometryChanged()
