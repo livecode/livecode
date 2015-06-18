@@ -99,10 +99,10 @@ void MCBrowser::SetJavaScriptHandler(MCBrowserJavaScriptHandler *p_handler)
 	m_javascript_handler = p_handler;
 }
 
-void MCBrowser::OnJavaScriptCall(const char *p_handler, uint32_t p_arg_count, const char **p_args)
+void MCBrowser::OnJavaScriptCall(const char *p_handler, MCBrowserListRef p_params)
 {
 	if (m_javascript_handler)
-		m_javascript_handler->OnJavaScriptCall(this, p_handler, p_arg_count, p_args);
+		m_javascript_handler->OnJavaScriptCall(this, p_handler, p_params);
 }
 
 // Init functions
@@ -334,10 +334,10 @@ public:
 		m_context = p_context;
 	}
 	
-	virtual void OnJavaScriptCall(MCBrowser *p_browser, const char *p_handler, uint32_t p_arg_count, const char **p_args) override
+	virtual void OnJavaScriptCall(MCBrowser *p_browser, const char *p_handler, MCBrowserListRef p_params) override
 	{
 		if (m_callback)
-			m_callback(m_context, (MCBrowserRef)p_browser, p_handler, p_arg_count, p_args);
+			m_callback(m_context, (MCBrowserRef)p_browser, p_handler, p_params);
 	}
 	
 private:

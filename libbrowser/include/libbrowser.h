@@ -37,6 +37,7 @@ private:
 };
 
 class MCBrowser;
+typedef struct __MCBrowserList *MCBrowserListRef;
 
 // Event handler interface
 class MCBrowserEventHandler : public MCBrowserRefCounted
@@ -54,7 +55,7 @@ public:
 class MCBrowserJavaScriptHandler : public MCBrowserRefCounted
 {
 public:
-	virtual void OnJavaScriptCall(MCBrowser *p_browser, const char *p_handler, uint32_t p_arg_count, const char **p_args) = 0;
+	virtual void OnJavaScriptCall(MCBrowser *p_browser, const char *p_handler, MCBrowserListRef p_params) = 0;
 };
 
 // Properties
@@ -118,7 +119,7 @@ protected:
 	void OnDocumentLoadComplete(bool p_in_frame, const char *p_url);
 	void OnDocumentLoadFailed(bool p_in_frame, const char *p_url, const char *p_error);
 	
-	void OnJavaScriptCall(const char *p_handler, uint32_t p_arg_count, const char **p_args);
+	void OnJavaScriptCall(const char *p_handler, MCBrowserListRef p_params);
 	
 private:
 	MCBrowserEventHandler *m_event_handler;
@@ -149,6 +150,42 @@ void MCBrowserLibraryFinalize();
 	void MCBrowserLibrarySetAllocator(MCBrowserAllocator p_alloc);
 	void MCBrowserSetDeallocator(MCBrowserDeallocator p_dealloc);
 
+typedef struct __MCBrowserList *MCBrowserListRef;
+enum MCBrowserValueType
+{
+	kMCBrowserValueTypeNone,
+	kMCBrowserValueTypeBoolean,
+	kMCBrowserValueTypeInteger,
+	kMCBrowserValueTypeDouble,
+	kMCBrowserValueTypeUTF8String,
+	kMCBrowserValueTypeList,
+};
+	
+bool MCBrowserListCreate(MCBrowserListRef &r_browser, uint32_t p_size = 0);
+MCBrowserListRef MCBrowserListRetain(MCBrowserListRef p_list);
+void MCBrowserListRelease(MCBrowserListRef p_list);
+	
+bool MCBrowserListGetSize(MCBrowserListRef p_list, uint32_t &r_size);
+bool MCBrowserListGetType(MCBrowserListRef p_list, uint32_t p_index, MCBrowserValueType &r_type);
+	
+bool MCBrowserListSetBoolean(MCBrowserListRef p_list, uint32_t p_index, bool p_value);
+bool MCBrowserListSetInteger(MCBrowserListRef p_list, uint32_t p_index, int32_t p_value);
+bool MCBrowserListSetDouble(MCBrowserListRef p_list, uint32_t p_index, double_t p_value);
+bool MCBrowserListSetUTF8String(MCBrowserListRef p_list, uint32_t p_index, const char *p_value);
+bool MCBrowserListSetList(MCBrowserListRef p_list, uint32_t p_index, MCBrowserListRef p_value);
+	
+bool MCBrowserListAppendBoolean(MCBrowserListRef p_list, bool p_value);
+bool MCBrowserListAppendInteger(MCBrowserListRef p_list, int32_t p_value);
+bool MCBrowserListAppendDouble(MCBrowserListRef p_list, double_t p_value);
+bool MCBrowserListAppendUTF8String(MCBrowserListRef p_list, const char *p_value);
+bool MCBrowserListAppendList(MCBrowserListRef p_list, MCBrowserListRef p_value);
+	
+bool MCBrowserListGetBoolean(MCBrowserListRef p_list, uint32_t p_index, bool &r_value);
+bool MCBrowserListGetInteger(MCBrowserListRef p_list, uint32_t p_index, int32_t &r_value);
+bool MCBrowserListGetDouble(MCBrowserListRef p_list, uint32_t p_index, double_t &r_value);
+bool MCBrowserListGetString(MCBrowserListRef p_list, uint32_t p_index, char *&r_value);
+bool MCBrowserListGetList(MCBrowserListRef p_list, uint32_t p_index, MCBrowserListRef &r_value);
+	
 typedef struct __MCBrowser *MCBrowserRef;
 typedef struct __MCBrowserFactory *MCBrowserFactoryRef;
 
@@ -185,7 +222,7 @@ enum MCBrowserRequestState
 };
 
 typedef void (*MCBrowserRequestCallback)(void *p_context, MCBrowserRef p_browser, MCBrowserRequestType p_type, MCBrowserRequestState p_state, bool p_in_frame, const char *p_url, const char *p_error);
-typedef void (*MCBrowserJavaScriptCallback)(void *p_context, MCBrowserRef p_browser, const char *p_handler, uint32_t p_arg_count,const char **p_args);
+typedef void (*MCBrowserJavaScriptCallback)(void *p_context, MCBrowserRef p_browser, const char *p_handler, MCBrowserListRef p_params);
 
 bool MCBrowserSetRequestHandler(MCBrowserRef p_browser, MCBrowserRequestCallback p_callback, void *p_context);
 bool MCBrowserSetJavaScriptHandler(MCBrowserRef p_browser, MCBrowserJavaScriptCallback p_callback, void *p_context);

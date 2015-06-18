@@ -491,9 +491,6 @@ public:
 			char *t_handler;
 			t_handler = nil;
 			
-			char **t_arg_strings;
-			t_arg_strings = nil;
-			
 			bool t_success;
 			t_success = true;
 			
@@ -507,30 +504,38 @@ public:
 			uint32_t t_arg_count;
 			t_arg_count = 0;
 			
+			MCBrowserListRef t_list;
+			t_list = nil;
+			
 			// Convert message args to strings and pass to handler parameters
 			if (t_success)
 			{
 				t_arg_count = t_args->GetSize() - 1;
-				t_success = MCMemoryNewArray(t_arg_count, t_arg_strings);
+				t_success = MCBrowserListCreate(t_list, t_arg_count);
 			}
 			
 			for (uint32_t i = 0; i < t_arg_count; i++)
-				t_success = MCCefStringToUtf8String(t_args->GetString(i + 1), t_arg_strings[i]);
+			{
+				char *t_tuf8_string;
+				t_tuf8_string = nil;
+				
+				t_success = MCCefStringToUtf8String(t_args->GetString(i + 1), t_tuf8_string);
+				
+				if (t_success)
+					t_success = MCBrowserListSetUTF8String(t_list, i, t_tuf8_string);
+				
+				if (t_tuf8_string != nil)
+					MCCStringFree(t_tuf8_string);
+			}
 			
-			bool t_cancel;
 			if (t_success)
-				m_owner->OnJavaScriptCall(t_handler, t_arg_count, (const char**)t_arg_strings);
+				m_owner->OnJavaScriptCall(t_handler, t_list);
 			
 			if (t_handler)
 				MCCStringFree(t_handler);
 			
-			if (t_arg_strings != nil)
-			{
-				for (uint32_t i = 0; i < t_arg_count; i++)
-					if (t_arg_strings[i] != nil)
-						MCCStringFree(t_arg_strings[i]);
-				MCMemoryDeleteArray(t_arg_strings);
-			}
+			if (t_list != nil)
+				MCBrowserListRelease(t_list);
 			
 			return true;
 		}

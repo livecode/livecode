@@ -14,6 +14,7 @@
 		E865FAE21AF8E5D70015B20F /* libbrowser_cef_osx.mm in Sources */ = {isa = PBXBuildFile; fileRef = E865FAE11AF8E5D70015B20F /* libbrowser_cef_osx.mm */; };
 		E865FAE41AF8E6FA0015B20F /* WebAuthenticationPanel.h in Headers */ = {isa = PBXBuildFile; fileRef = E865FAE31AF8E6FA0015B20F /* WebAuthenticationPanel.h */; };
 		E865FAE71AF919F10015B20F /* WebAuthenticationPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = E865FAE61AF919F10015B20F /* WebAuthenticationPanel.m */; };
+		E8B668141B32CEF500F2B1DA /* libbrowser_value.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8B668131B32CEF500F2B1DA /* libbrowser_value.cpp */; };
 		E8E8DE471AF12C4C00BAA78C /* libbrowser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8E8DE241AF1274300BAA78C /* libbrowser.cpp */; };
 		E8E8DE481AF12C4F00BAA78C /* libbrowser.h in Headers */ = {isa = PBXBuildFile; fileRef = E8E8DE271AF127B400BAA78C /* libbrowser.h */; };
 		E8EA2FEA1AF385EA004D27CA /* libbrowser_cefprocess.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8EA2FC41AF383E4004D27CA /* libbrowser_cefprocess.cpp */; };
@@ -44,6 +45,7 @@
 		E865FAE31AF8E6FA0015B20F /* WebAuthenticationPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WebAuthenticationPanel.h; sourceTree = "<group>"; };
 		E865FAE51AF919F10015B20F /* com_runrev_livecode_WebAuthenticationPanel.nib */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; path = com_runrev_livecode_WebAuthenticationPanel.nib; sourceTree = "<group>"; };
 		E865FAE61AF919F10015B20F /* WebAuthenticationPanel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WebAuthenticationPanel.m; sourceTree = "<group>"; };
+		E8B668131B32CEF500F2B1DA /* libbrowser_value.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = libbrowser_value.cpp; sourceTree = "<group>"; };
 		E8E8DE201AF126B000BAA78C /* Global.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Global.xcconfig; path = ../rules/Global.xcconfig; sourceTree = "<group>"; };
 		E8E8DE211AF126B000BAA78C /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ../rules/Release.xcconfig; sourceTree = "<group>"; };
 		E8E8DE221AF126B000BAA78C /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = ../rules/Debug.xcconfig; sourceTree = "<group>"; };
@@ -114,15 +116,16 @@
 			isa = PBXGroup;
 			children = (
 				E865FAE51AF919F10015B20F /* com_runrev_livecode_WebAuthenticationPanel.nib */,
-				E865FAE61AF919F10015B20F /* WebAuthenticationPanel.m */,
-				E8E8DE241AF1274300BAA78C /* libbrowser.cpp */,
+				E865FAE11AF8E5D70015B20F /* libbrowser_cef_osx.mm */,
 				E82CC8681AF2412800E9B8B8 /* libbrowser_cef.cpp */,
 				E82CC86A1AF2413E00E9B8B8 /* libbrowser_cef.h */,
-				E865FAE11AF8E5D70015B20F /* libbrowser_cef_osx.mm */,
-				E8EA2FC41AF383E4004D27CA /* libbrowser_cefprocess.cpp */,
 				E8EA2FFA1AF3D91C004D27CA /* libbrowser_cefprocess_osx.mm */,
+				E8EA2FC41AF383E4004D27CA /* libbrowser_cefprocess.cpp */,
 				E8EA2FF51AF3D865004D27CA /* libbrowser_cefshared_osx.cpp */,
+				E8E8DE241AF1274300BAA78C /* libbrowser.cpp */,
 				E865FAE31AF8E6FA0015B20F /* WebAuthenticationPanel.h */,
+				E865FAE61AF919F10015B20F /* WebAuthenticationPanel.m */,
+				E8B668131B32CEF500F2B1DA /* libbrowser_value.cpp */,
 			);
 			name = Source;
 			path = src;
@@ -247,6 +250,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E8B668141B32CEF500F2B1DA /* libbrowser_value.cpp in Sources */,
 				E865FAE21AF8E5D70015B20F /* libbrowser_cef_osx.mm in Sources */,
 				E8E8DE471AF12C4C00BAA78C /* libbrowser.cpp in Sources */,
 				E865FAE71AF919F10015B20F /* WebAuthenticationPanel.m in Sources */,
