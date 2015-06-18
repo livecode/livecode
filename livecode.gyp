@@ -16,14 +16,14 @@
 				'engine/engine.gyp:standalone',
 
 				# The revsecurity library is an output and not an intermediate product
-				'thirdparty/libopenssl/libopenssl.gyp:revsecurity',
+				#'thirdparty/libopenssl/libopenssl.gyp:revsecurity',
 				
 				# Externals
-				'revdb/revdb.gyp:external-revdb',
-				'revdb/revdb.gyp:dbmysql',
-				'revdb/revdb.gyp:dbsqlite',
-				'revxml/revxml.gyp:external-revxml',
-				'revzip/revzip.gyp:external-revzip',
+				#'revdb/revdb.gyp:external-revdb',
+				#'revdb/revdb.gyp:dbmysql',
+				#'revdb/revdb.gyp:dbsqlite',
+				#'revxml/revxml.gyp:external-revxml',
+				#'revzip/revzip.gyp:external-revzip',
 			],
 			
 			'conditions':
