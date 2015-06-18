@@ -662,6 +662,8 @@
 			'src/w32transfer.cpp',
 
 			# Group "Desktop - Emscripten"
+			'src/em-async.h',
+			'src/em-async.js',
 			'src/em-osspec-misc.cpp',
 			'src/em-util.h',
 		],
