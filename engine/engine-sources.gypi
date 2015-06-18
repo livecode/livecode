@@ -664,6 +664,8 @@
 			# Group "Desktop - Emscripten"
 			'src/em-async.h',
 			'src/em-async.js',
+			'src/em-dc-mainloop.h',
+			'src/em-dc-mainloop.cpp',
 			'src/em-dc.h',
 			'src/em-dc.cpp',
 			'src/em-filehandle.h',
