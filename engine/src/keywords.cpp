@@ -627,14 +627,29 @@ Parse_stat MCRepeat::parse(MCScriptPoint &sp)
 							return PS_ERROR;
 						}
 					}
+
+                    // SN-2015-06-17: [[ Bug 15509 ]] This is separate from
+                    //  the RF_UNTIL / RF_WHILE behaviour
+                    if (sp.parseexp(False, True, &endcond) != PS_NORMAL)
+                    {
+                        MCperror->add
+                        (PE_REPEAT_BADCOND, sp);
+                        return PS_ERROR;
+                    }
+                    break;
 				case RF_UNTIL:
-				case RF_WHILE:
-					if (sp.parseexp(False, True, &endcond) != PS_NORMAL)
-					{
-						MCperror->add
-						(PE_REPEAT_BADCOND, sp);
-						return PS_ERROR;
-					}
+                case RF_WHILE:
+                    // SN-2015-06-17: [[ Bug 15509 ]] We should reach the end
+                    //  of the line after having parsed the expression.
+                    //  That mimics the behaviour of MCIf::parse, where a <then>
+                    //  is compulsary after the expression parsed (here, an EOL)
+                    if (sp.parseexp(False, True, &endcond) != PS_NORMAL
+                            || sp.next(type) != PS_EOL)
+                    {
+                        MCperror->add
+                        (PE_REPEAT_BADCOND, sp);
+                        return PS_ERROR;
+                    }
 					break;
 				case RF_WITH:
 					if ((stat = sp.next(type)) != PS_NORMAL)
@@ -1526,7 +1541,12 @@ Parse_stat MCSwitch::parse(MCScriptPoint &sp)
 				case TT_CASE:
 					MCU_realloc((char **)&cases, ncases, ncases + 1,
 					            sizeof(MCExpression *));
-					if (sp.parseexp(False, True, &cases[ncases]) != PS_NORMAL)
+                    // SN-2015-06-16: [[ Bug 15509 ]] We should reach the end
+                    //  of the line after having parsed the <case> expression.
+                    //  That mimics the behaviour of MCIf::parse, where a <then>
+                    //  is compulsary after the expression parsed (here, an EOL)
+                    if (sp.parseexp(False, True, &cases[ncases]) != PS_NORMAL
+                            || sp.next(type) != PS_EOL)
 					{
 						MCperror->add
 						(PE_SWITCH_BADCASECONDITION, sp);
