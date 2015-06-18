@@ -676,6 +676,7 @@
 			'src/em-osspec-misc.cpp',
 			'src/em-osspec-network.cpp',
 			'src/em-stack.h',
+			'src/em-resolution.cpp',
 			'src/em-stack.cpp',
 			'src/em-system.h',
 			'src/em-system.cpp',
