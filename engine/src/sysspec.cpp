@@ -70,6 +70,7 @@ extern MCSystemInterface *MCDesktopCreateWindowsSystem(void);
 extern MCSystemInterface *MCDesktopCreateLinuxSystem(void);
 extern MCSystemInterface *MCMobileCreateIPhoneSystem(void);
 extern MCSystemInterface *MCMobileCreateAndroidSystem(void);
+extern MCSystemInterface *MCDesktopCreateEmscriptenSystem(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -248,6 +249,8 @@ void MCS_init(void)
     MCsystem = MCMobileCreateIPhoneSystem();
 #elif defined (_ANDROID_MOBILE)
     MCsystem = MCMobileCreateAndroidSystem();
+#elif defined (__EMSCRIPTEN__)
+    MCsystem = MCDesktopCreateEmscriptenSystem();
 #else
 #error Unknown server platform.
 #endif

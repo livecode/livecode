@@ -669,6 +669,8 @@
 			'src/em-fontlist.h',
 			'src/em-fontlist.cpp',
 			'src/em-osspec-misc.cpp',
+			'src/em-system.h',
+			'src/em-system.cpp',
 			'src/em-util.h',
 		],
 		
