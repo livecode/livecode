@@ -249,12 +249,13 @@ public handler OnClick() returns nothing
 	if tIconNumber is 0 then
 		return
 	end if
-	
-	// If this widget is being used as a popup then we close the popup and return a value to the caller
-	if currently popped up and the click count is 2 then
-			// Dismiss the popup - the result will be the name of the selected icon
+
+	--If this widget is being used as a popup then we close the popup and return a value to the caller
+	if currently popped up then
+			--Dismiss the popup - the result will be the name of the selected icon
 		close popup returning mDataList[tIconNumber]
 	else
+      -- If the selected icon was clicked, unselect it
 		if mSelectedElement is defined and mSelectedElement is mDataList[tIconNumber] then
 			put undefined into mSelectedElement
 		else
