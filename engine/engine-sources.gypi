@@ -660,6 +660,9 @@
 			'src/w32textlayout.cpp',
 			'src/w32theme.cpp',
 			'src/w32transfer.cpp',
+
+			# Group "Desktop - Emscripten"
+			'src/em-util.h',
 		],
 		
 		# Sources that need to be compiled separately for each mode
