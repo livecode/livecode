@@ -294,7 +294,15 @@ private handler mousePosToIconNumber(in pMouse as Point) returns Integer
 	variable tCol as Integer
 	put the floor of (the x of pMouse / mColWidth) + 1 into tCol
 
-	return (tRow - 1) * mNumCols + tCol + mFirstDataItem - 1
+   variable tNumber as Integer
+   put (tRow - 1) * mNumCols + tCol + mFirstDataItem - 1 into tNumber
+
+   -- Ignore clicks in above the first displayed icon
+   if tNumber < mFirstDataItem then
+      put 0 into tNumber
+   end if
+
+	return tNumber
 end handler
 
 public handler OnGeometryChanged()
