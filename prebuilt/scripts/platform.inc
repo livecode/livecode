@@ -31,6 +31,11 @@ case "${PLATFORM}" in
 		export CC_BASE="clang"
 		export CXX_BASE="clang++"
 		;;
+	emscripten)
+		export ARCHS="js"
+		export EMMAKE="emmake"
+		export EMCONFIGURE="emconfigure"
+		;;
 esac
 
 # Allow the arch to be set manually
