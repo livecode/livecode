@@ -679,6 +679,7 @@
 			'src/em-stack.cpp',
 			'src/em-system.h',
 			'src/em-system.cpp',
+			'src/em-theme.cpp',
 			'src/em-util.h',
 		],
 		
