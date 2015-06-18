@@ -672,6 +672,7 @@
 			'src/em-filehandle.cpp',
 			'src/em-fontlist.h',
 			'src/em-fontlist.cpp',
+			'src/em-main.cpp',
 			'src/em-osspec-misc.cpp',
 			'src/em-system.h',
 			'src/em-system.cpp',
