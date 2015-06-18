@@ -1715,7 +1715,9 @@ enum Repeat_form {
     RF_STEP,
     RF_UNTIL,
     RF_WHILE,
-    RF_WITH
+    RF_WITH,
+    // SN-2015-06-18: [[ Bug 15509 ]] Parse 'times' in 'repeat for x times'
+    RF_TIMES
 };
 
 enum Reset_type {
