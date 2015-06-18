@@ -110,7 +110,6 @@ private:
     struct MCWidgetTouchEvent;
     MCAutoArray<MCWidgetTouchEvent> m_touches;
     
-    
     // Common functions for mouse gesture processing
     MCWidgetRef hitTest(MCWidgetRef, coord_t x, coord_t y);
     void mouseMove(MCWidgetRef);

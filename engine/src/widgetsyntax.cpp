@@ -70,10 +70,18 @@ bool MCWidgetThrowNotSupportedInChildWidgetError(void)
 bool MCWidgetEnsureCurrentWidget(void)
 {
     if (MCcurrentwidget == nil)
-    {
-        MCWidgetThrowNoCurrentWidgetError();
+        return MCWidgetThrowNoCurrentWidgetError();
+    
+    return true;
+}
+
+bool MCWidgetEnsureCurrentWidgetIsRoot(void)
+{
+    if (!MCWidgetEnsureCurrentWidget())
         return false;
-    }
+    
+    if (!MCWidgetIsRoot(MCcurrentwidget))
+        return MCWidgetThrowNotSupportedInChildWidgetError;
     
     return true;
 }
@@ -85,7 +93,7 @@ extern "C" MC_DLLEXPORT void MCWidgetExecRedrawAll(void)
     if (!MCWidgetEnsureCurrentWidget())
         return;
     
-    MCWidgetGetPtr(MCcurrentwidget) -> RedrawAll();
+    MCWidgetRedrawAll(MCcurrentwidget);
 }
 
 extern "C" MC_DLLEXPORT void MCWidgetExecScheduleTimerIn(double p_after)
@@ -93,7 +101,7 @@ extern "C" MC_DLLEXPORT void MCWidgetExecScheduleTimerIn(double p_after)
     if (!MCWidgetEnsureCurrentWidget())
         return;
     
-    MCWidgetGetPtr(MCcurrentwidget) -> ScheduleTimerIn(p_after);
+    MCWidgetScheduleTimerIn(MCcurrentwidget, p_after);
 }
 
 extern "C" MC_DLLEXPORT void MCWidgetExecCancelTimer(void)
@@ -101,7 +109,7 @@ extern "C" MC_DLLEXPORT void MCWidgetExecCancelTimer(void)
     if (!MCWidgetEnsureCurrentWidget())
         return;
     
-    MCWidgetGetPtr(MCcurrentwidget) -> CancelTimer();
+    MCWidgetCancelTimer(MCcurrentwidget);
 }
 
 extern "C" MC_DLLEXPORT void MCWidgetEvalInEditMode(bool& r_in_edit_mode)
@@ -111,36 +119,29 @@ extern "C" MC_DLLEXPORT void MCWidgetEvalInEditMode(bool& r_in_edit_mode)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern MCValueRef MCEngineDoSendToObjectWithArguments(bool p_is_function, MCStringRef p_message, MCObject *p_object, MCProperListRef p_arguments);
+extern void MCEngineDoPostToObjectWithArguments(MCStringRef p_message, MCObject *p_object, MCProperListRef p_arguments);
+
 extern "C" MC_DLLEXPORT void MCWidgetGetScriptObject(MCScriptObjectRef& r_script_object)
 {
-    if (!MCWidgetEnsureCurrentWidget())
+    if (!MCWidgetEnsureCurrentWidgetIsRoot())
         return;
     
-    MCWidgetGetPtr(MCcurrentwidget) -> CopyScriptObject(r_script_object);
-}
-
-extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecSend(bool p_is_function, MCStringRef p_message)
-{
-    if (!MCWidgetEnsureCurrentWidget())
-        return nil;
-    
-    return MCWidgetGetPtr(MCcurrentwidget) -> Send(p_is_function, p_message, kMCEmptyProperList);
+    if (!MCEngineScriptObjectCreate(MCWidgetGetHost(MCcurrentwidget), 0, r_script_object))
+        return;
 }
 
 extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecSendWithArguments(bool p_is_function, MCStringRef p_message, MCProperListRef p_arguments)
 {
-    if (!MCWidgetEnsureCurrentWidget())
+    if (!MCWidgetEnsureCurrentWidgetIsRoot())
         return nil;
     
-    return MCWidgetGetPtr(MCcurrentwidget) -> Send(p_is_function, p_message, p_arguments);
+    return MCEngineDoSendToObjectWithArguments(p_is_function, p_message, MCWidgetGetHost(MCcurrentwidget), p_arguments);
 }
 
-extern "C" MC_DLLEXPORT void MCWidgetExecPost(MCStringRef p_message)
+extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecSend(bool p_is_function, MCStringRef p_message)
 {
-    if (!MCWidgetEnsureCurrentWidget())
-        return;
-    
-    MCWidgetGetPtr(MCcurrentwidget) -> Post(p_message, kMCEmptyProperList);
+    return MCWidgetExecSendWithArguments(p_is_function, p_message, kMCEmptyProperList);
 }
 
 extern "C" MC_DLLEXPORT void MCWidgetExecPostWithArguments(MCStringRef p_message, MCProperListRef p_arguments)
@@ -148,27 +149,27 @@ extern "C" MC_DLLEXPORT void MCWidgetExecPostWithArguments(MCStringRef p_message
     if (!MCWidgetEnsureCurrentWidget())
         return;
     
-    MCWidgetGetPtr(MCcurrentwidget) -> Post(p_message, p_arguments);
+    MCEngineDoPostToObjectWithArguments(p_message, MCWidgetGetHost(MCcurrentwidget), p_arguments);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-extern "C" MC_DLLEXPORT void MCWidgetGetMyRectangle(MCCanvasRectangleRef& r_rect)
+extern "C" MC_DLLEXPORT void MCWidgetExecPost(MCStringRef p_message)
 {
     if (!MCWidgetEnsureCurrentWidget())
         return;
     
-    MCCanvasRectangleCreateWithMCGRectangle(MCWidgetGetPtr(MCcurrentwidget) -> GetRectangle(), r_rect);
+    MCWidgetExecPostWithArguments(p_message, kMCEmptyProperList);
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 extern "C" MC_DLLEXPORT void MCWidgetGetBounds(MCCanvasRectangleRef& r_rect)
 {
     if (!MCWidgetEnsureCurrentWidget())
         return;
     
-    MCGRectangle t_rect;
-    t_rect = MCWidgetGetPtr(MCcurrentwidget) -> GetRectangle();
-    MCCanvasRectangleCreateWithMCGRectangle(MCGRectangleMake(0.0f, 0.0f, t_rect . size . width, t_rect . size . height), r_rect);
+    MCGRectangle t_frame;
+    t_frame = MCWidgetGetFrame(MCcurrentwidget);
+    MCCanvasRectangleCreateWithMCGRectangle(MCGRectangleMake(0.0f, 0.0f, t_frame . size . width, t_frame . size . height), r_rect);
 }
 
 extern "C" MC_DLLEXPORT void MCWidgetGetMyWidth(MCNumberRef& r_width)
@@ -176,7 +177,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetMyWidth(MCNumberRef& r_width)
     if (!MCWidgetEnsureCurrentWidget())
         return;
     
-    MCNumberCreateWithReal(MCWidgetGetPtr(MCcurrentwidget)-> GetRectangle() . size . width, r_width);
+    MCNumberCreateWithReal(MCWidgetGetFrame(MCcurrentwidget) . size . width, r_width);
 }
 
 extern "C" MC_DLLEXPORT void MCWidgetGetMyHeight(MCNumberRef& r_height)
@@ -184,7 +185,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetMyHeight(MCNumberRef& r_height)
     if (!MCWidgetEnsureCurrentWidget())
         return;
     
-    MCNumberCreateWithReal(MCWidgetGetPtr(MCcurrentwidget) -> GetRectangle() . size . height, r_height);
+    MCNumberCreateWithReal(MCWidgetGetFrame(MCcurrentwidget) . size . width, r_height);
 }
 
 extern "C" MC_DLLEXPORT void MCWidgetGetMyFont(MCCanvasFontRef& r_canvas_font)
@@ -193,7 +194,8 @@ extern "C" MC_DLLEXPORT void MCWidgetGetMyFont(MCCanvasFontRef& r_canvas_font)
         return;
     
     MCAutoCustomPointer<struct MCFont, MCFontRelease> t_font;
-    MCWidgetGetPtr(MCcurrentwidget) -> CopyFont(&t_font);
+    if (!MCWidgetCopyFont(MCcurrentwidget, &t_font))
+        return;
     
     if (!MCCanvasFontCreateWithMCFont(*t_font, r_canvas_font))
         return;
@@ -204,7 +206,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetMyEnabled(bool& r_enabled)
     if (!MCWidgetEnsureCurrentWidget())
         return;
     
-    r_enabled = !MCWidgetGetPtr(MCcurrentwidget) -> GetDisabled();
+    r_enabled = !MCWidgetGetDisabled(MCcurrentwidget);
 }
 
 extern "C" MC_DLLEXPORT void MCWidgetGetDisabled(bool& r_disabled)
@@ -212,7 +214,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetDisabled(bool& r_disabled)
     if (!MCWidgetEnsureCurrentWidget())
         return;
     
-    r_disabled = MCWidgetGetPtr(MCcurrentwidget) -> GetDisabled();
+    r_disabled = MCWidgetGetDisabled(MCcurrentwidget);
 }
 
 extern "C" MC_DLLEXPORT void MCWidgetGetMousePosition(bool p_current, MCCanvasPointRef& r_point)
@@ -230,7 +232,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetMousePosition(bool p_current, MCCanvasPo
     
     MCGPoint t_gpoint;
     t_gpoint = MCGPointMake(t_x, t_y);
-    /* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(MCWidgetGetPtr(MCcurrentwidget) -> MapPointFromGlobal(t_gpoint), r_point);
+    /* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(MCWidgetMapPointFromGlobal(MCcurrentwidget, t_gpoint), r_point);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -250,7 +252,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetClickPosition(bool p_current, MCCanvasPo
     
     MCGPoint t_gpoint;
     t_gpoint = MCGPointMake(t_x, t_y);
-    /* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(MCWidgetGetPtr(MCcurrentwidget) -> MapPointFromGlobal(t_gpoint), r_point);
+    /* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(MCWidgetMapPointFromGlobal(MCcurrentwidget, t_gpoint), r_point);
 }
 
 extern "C" MC_DLLEXPORT void MCWidgetGetClickButton(bool p_current, unsigned int& r_button)
@@ -298,7 +300,7 @@ void MCWidgetEvalMyChildren(MCProperListRef& r_children)
     if (!MCWidgetEnsureCurrentWidget())
         return;
     
-    MCWidgetGetPtr(MCcurrentwidget) -> CopyChildren(r_children);
+    MCWidgetCopyChildren(MCcurrentwidget, r_children);
 }
 
 void MCWidgetEvalANewWidget(MCStringRef p_kind, MCWidgetRef& r_widget)
@@ -311,7 +313,7 @@ void MCWidgetExecPlaceWidget(MCWidgetRef p_widget)
     if (!MCWidgetEnsureCurrentWidget())
         return;
     
-    MCWidgetGetPtr(MCcurrentwidget) -> PlaceWidget(p_widget, nil, false);
+    MCWidgetPlaceWidget(MCcurrentwidget, p_widget, nil, false);
 }
 
 void MCWidgetExecPlaceWidgetAt(MCWidgetRef p_widget, bool p_at_bottom)
@@ -319,7 +321,7 @@ void MCWidgetExecPlaceWidgetAt(MCWidgetRef p_widget, bool p_at_bottom)
     if (!MCWidgetEnsureCurrentWidget())
         return;
     
-    MCWidgetGetPtr(MCcurrentwidget) -> PlaceWidget(p_widget, nil, p_at_bottom);
+    MCWidgetPlaceWidget(MCcurrentwidget, p_widget, nil, p_at_bottom);
 }
 
 void MCWidgetExecPlaceWidgetRelative(MCWidgetRef p_widget, bool p_is_below, MCWidgetRef p_other_widget)
@@ -327,7 +329,7 @@ void MCWidgetExecPlaceWidgetRelative(MCWidgetRef p_widget, bool p_is_below, MCWi
     if (!MCWidgetEnsureCurrentWidget())
         return;
     
-    MCWidgetGetPtr(MCcurrentwidget) -> PlaceWidget(p_widget, p_other_widget, p_is_below);
+    MCWidgetPlaceWidget(MCcurrentwidget, p_widget, p_other_widget, p_is_below);
 }
 
 void MCWidgetExecUnplaceWidget(MCWidgetRef p_widget)
@@ -335,7 +337,7 @@ void MCWidgetExecUnplaceWidget(MCWidgetRef p_widget)
     if (!MCWidgetEnsureCurrentWidget())
         return;
     
-    MCWidgetGetPtr(MCcurrentwidget) -> UnplaceWidget(p_widget);
+    MCWidgetUnplaceWidget(MCcurrentwidget, p_widget);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -362,9 +364,10 @@ extern "C" MC_DLLEXPORT void MCWidgetEvalIsPointNotWithinRect(MCCanvasPointRef p
 
 static void __MCWidgetDestroy(MCValueRef p_value)
 {
-    MCWidgetCommon *t_widget;
-    t_widget = MCWidgetGetPtr((MCWidgetRef)p_value);
-    t_widget -> ~MCWidgetCommon();
+    MCWidgetBase *t_widget;
+    t_widget = (MCWidgetBase *)MCValueGetExtraBytesPtr(p_value);
+    t_widget -> Destroy();
+    t_widget -> ~MCWidgetBase();
 }
 
 static bool __MCWidgetCopy(MCValueRef p_value, bool p_release, MCValueRef& r_new_value)

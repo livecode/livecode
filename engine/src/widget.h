@@ -25,11 +25,53 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCWidgetCommon;
 typedef MCValueRef MCWidgetRef;
 
-bool MCWidgetHostCreate(MCWidgetRef& r_widget);
-MCWidgetCommon *MCWidgetGetPtr(MCWidgetRef p_widget);
+bool MCWidgetCreateRoot(MCWidget *host, MCNameRef kind, MCWidgetRef& r_widget);
+bool MCWidgetCreateChild(MCNameRef kind, MCWidgetRef& r_widget);
+
+bool MCWidgetIsRoot(MCWidgetRef widget);
+MCWidget *MCWidgetGetHost(MCWidgetRef widget);
+
+MCGRectangle MCWidgetGetFrame(MCWidgetRef widget);
+bool MCWidgetGetDisabled(MCWidgetRef widget);
+bool MCWidgetCopyFont(MCWidgetRef widget, MCFontRef& r_font);
+
+bool MCWidgetHasProperty(MCWidgetRef widget, MCNameRef property);
+bool MCWidgetHasHandler(MCWidgetRef widget, MCNameRef handler);
+
+bool MCWidgetSetProperty(MCWidgetRef widget, MCNameRef property, MCValueRef value);
+bool MCWidgetGetProperty(MCWidgetRef widget, MCNameRef property, MCValueRef& r_value);
+
+bool MCWidgetOnLoad(MCWidgetRef widget, MCValueRef rep);
+bool MCWidgetOnSave(MCWidgetRef widget, MCValueRef& r_rep);
+bool MCWidgetOnOpen(MCWidgetRef widget);
+bool MCWidgetOnClose(MCWidgetRef widget);
+bool MCWidgetOnPaint(MCWidgetRef widget, MCGContextRef gcontext);
+bool MCWidgetOnHitTest(MCWidgetRef widget, MCGPoint location, MCWidgetRef& r_target);
+bool MCWidgetOnMouseEnter(MCWidgetRef widget);
+bool MCWidgetOnMouseLeave(MCWidgetRef widget);
+bool MCWidgetOnMouseMove(MCWidgetRef widget);
+bool MCWidgetOnMouseDown(MCWidgetRef widget);
+bool MCWidgetOnMouseUp(MCWidgetRef widget);
+bool MCWidgetOnMouseCancel(MCWidgetRef widget);
+bool MCWidgetOnClick(MCWidgetRef widget);
+bool MCWidgetOnGeometryChanged(MCWidgetRef widget);
+bool MCWidgetOnParentPropertyChanged(MCWidgetRef widget);
+
+void MCWidgetRedrawAll(MCWidgetRef widget);
+void MCWidgetScheduleTimerIn(MCWidgetRef widget, double timeout);
+void MCWidgetCancelTimer(MCWidgetRef widget);
+
+void MCWidgetCopyChildren(MCWidgetRef widget, MCProperListRef& r_children);
+void MCWidgetPlaceWidget(MCWidgetRef widget, MCWidgetRef child, MCWidgetRef relative_to, bool put_below);
+void MCWidgetUnplaceWidget(MCWidgetRef widget,  MCWidgetRef child);
+
+MCGPoint MCWidgetMapPointToGlobal(MCWidgetRef widget, MCGPoint point);
+MCGPoint MCWidgetMapPointFromGlobal(MCWidgetRef widget, MCGPoint point);
+
+MCGRectangle MCWidgetMapRectToGlobal(MCWidgetRef widget, MCGRectangle point);
+MCGRectangle MCWidgetMapRectFromGlobal(MCWidgetRef widget, MCGRectangle point);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -95,9 +137,6 @@ public:
     
     void GetKind(MCExecContext& ctxt, MCNameRef& r_kind);
     
-    // Needed by the native layer code
-    MCNativeLayer* getNativeLayer() const;
-    
     // Bind a widget to a kind and rep.
     void bind(MCNameRef p_kind, MCValueRef p_rep);
     
@@ -109,12 +148,8 @@ protected:
 	static MCObjectPropertyTable kPropertyTable;
     
 private:
-
     void CatchError(MCExecContext& ctxt);
     void SendError(void);
-    
-    // The LCB Widget object.
-    MCWidgetRef m_widget_imp;
     
     // The kind of the widget.
     MCNameRef m_kind;
@@ -123,16 +158,8 @@ private:
     // after loading.
     MCValueRef m_rep;
     
-    // The native layer(s) belonging to this widget
-    MCNativeLayer* m_native_layer;
-    
-    // If this is true then the widget has scheduled a timer message, but it triggered
-    // during edit mode.
-    bool m_timer_deferred : 1;
-    
-    // Implemented by the platform-specific native layers: creates a new layer
-    MCNativeLayer* createNativeLayer();
-    
+    // The LCB Widget object.
+    MCWidgetRef m_widget;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

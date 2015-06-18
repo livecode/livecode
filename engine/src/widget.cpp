@@ -84,11 +84,7 @@ MCWidget::MCWidget(void)
 {
     m_kind = nil;
     m_rep = nil;
-    
-    m_native_layer = nil;
-    m_timer_deferred = false;
-    
-    m_widget_imp = nil;
+    m_widget = nil;
 }
 
 MCWidget::MCWidget(const MCWidget& p_other) :
@@ -96,17 +92,13 @@ MCWidget::MCWidget(const MCWidget& p_other) :
 {
     m_kind = nil;
     m_rep = nil;
-    
-    m_native_layer = nil;
-    m_timer_deferred = false;
-    
-    m_widget_imp = nil;
+    m_widget = nil;
 }
 
 MCWidget::~MCWidget(void)
 {
     // If the imp isn't nil here, then something has gone wrong elsewhere.
-    MCAssert(m_widget_imp == nil);
+    MCAssert(m_widget == nil);
     
     MCValueRelease(m_kind);
     MCValueRelease(m_rep);
@@ -117,17 +109,13 @@ void MCWidget::bind(MCNameRef p_kind, MCValueRef p_rep)
     bool t_success;
     t_success = true;
     
-    // Create a new widget host.
+    // Create a new root widget.
     if (t_success)
-        t_success = MCWidgetHostCreate(m_widget_imp);
+        t_success = MCWidgetCreateRoot(this, p_kind, m_widget);
     
-    // Try to create the implementation.
-    if (t_success)
-        t_success = MCWidgetGetPtr(m_widget_imp) -> Create(m_kind);
-    
-    // Try to load its rep.
+    // Load in a previously saved rep (if any)
     if (t_success && p_rep != nil)
-        t_success = MCWidgetGetPtr(m_widget_imp) -> Load(p_rep);
+        t_success = MCWidgetOnLoad(m_widget, p_rep);
     
     // Make sure it is in sync with the current state of this object.
     if (t_success && opened != 0)
@@ -136,8 +124,8 @@ void MCWidget::bind(MCNameRef p_kind, MCValueRef p_rep)
     // If we failed then store the kind and rep and destroy the imp.
     if (!t_success)
     {
-        MCValueRelease(m_widget_imp);
-        m_widget_imp = nil;
+        MCValueRelease(m_widget);
+        m_widget = nil;
         
         m_kind = MCValueRetain(p_kind);
         if (p_rep != nil)
@@ -215,7 +203,7 @@ Boolean MCWidget::mdown(uint2 p_which)
 	switch(getstack() -> gettool(this))
 	{
 	case T_BROWSE:
-		setstate(True, CS_MFOCUSED);
+		//setstate(True, CS_MFOCUSED);
         MCwidgeteventmanager->event_mdown(this, p_which);
 		break;
 
@@ -246,8 +234,8 @@ Boolean MCWidget::mup(uint2 p_which, bool p_release)
 	{
 	case T_BROWSE:
         MCwidgeteventmanager->event_mup(this, p_which, p_release);
-		if (MCwidgeteventmanager->GetMouseButtonState() == 0)
-			setstate(False, CS_MFOCUSED);
+		//if (MCwidgeteventmanager->GetMouseButtonState() == 0)
+		//	setstate(False, CS_MFOCUSED);
 		break;
 
 	case T_POINTER:
@@ -284,8 +272,7 @@ Boolean MCWidget::mfocus(int2 p_x, int2 p_y)
 
 void MCWidget::munfocus(void)
 {
-	if (getstack() -> gettool(this) != T_BROWSE ||
-		(MCWidgetGetPtr(MCwidgeteventmanager->GetGrabbedWidget()) -> GetHost() != this))
+	if (getstack() -> gettool(this) != T_BROWSE)
 	{
 		MCControl::munfocus();
 		return;
@@ -320,8 +307,6 @@ void MCWidget::timer(MCNameRef p_message, MCParameter *p_parameters)
     {
         if (getstack() -> gettool(this) == T_BROWSE)
             MCwidgeteventmanager->event_timer(this, p_message, p_parameters);
-        else
-            m_timer_deferred = true;
     }
     else
     {
@@ -567,11 +552,11 @@ bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
 bool MCWidget::getcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCExecValue& r_value)
 {
     // Treat as a normal custom property if not a widget property
-    if (m_widget_imp == nil || !MCNameIsEmpty(p_set_name) || !MCWidgetGetPtr(m_widget_imp) -> HasProperty(p_prop_name))
+    if (m_widget == nil || !MCNameIsEmpty(p_set_name) || !MCWidgetHasProperty(m_widget, p_prop_name))
         return MCObject::getcustomprop(ctxt, p_set_name, p_prop_name, r_value);
     
     MCValueRef t_value;
-    if (!MCWidgetGetPtr(m_widget_imp) -> GetProperty(p_prop_name, t_value) ||
+    if (!MCWidgetGetProperty(m_widget, p_prop_name, t_value) ||
         !MCExtensionConvertToScriptType(ctxt, t_value))
     {
         MCValueRelease(t_value);
@@ -588,7 +573,7 @@ bool MCWidget::getcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
 bool MCWidget::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCExecValue p_value)
 {
     // Treat as a normal custom property if not a widget property
-    if (m_widget_imp == nil || !MCNameIsEmpty(p_set_name) || !MCWidgetGetPtr(m_widget_imp) -> HasProperty(p_prop_name))
+    if (m_widget == nil || !MCNameIsEmpty(p_set_name) || !MCWidgetHasProperty(m_widget, p_prop_name))
         return MCObject::setcustomprop(ctxt, p_set_name, p_prop_name, p_value);
     
     MCAutoValueRef t_value;
@@ -602,7 +587,7 @@ bool MCWidget::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
     }
     
     if (!MCExtensionConvertFromScriptType(ctxt, kMCAnyTypeInfo, InOut(t_value)) ||
-        !MCWidgetGetPtr(m_widget_imp) -> SetProperty(p_prop_name, In(t_value)))
+        !MCWidgetSetProperty(m_widget, p_prop_name, In(t_value)))
     {
         CatchError(ctxt);
         return false;
@@ -613,7 +598,7 @@ bool MCWidget::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
 
 void MCWidget::toolchanged(Tool p_new_tool)
 {
-    if (m_widget_imp == nil)
+    if (m_widget == nil)
         return;
     
     MCwidgeteventmanager -> event_toolchanged(this, p_new_tool);
@@ -621,7 +606,7 @@ void MCWidget::toolchanged(Tool p_new_tool)
 
 void MCWidget::layerchanged()
 {
-    if (m_widget_imp == nil)
+    if (m_widget == nil)
         return;
     
     MCwidgeteventmanager -> event_layerchanged(this);
@@ -667,14 +652,14 @@ IO_stat MCWidget::load(IO_handle p_stream, uint32_t p_version)
 IO_stat MCWidget::save(IO_handle p_stream, uint4 p_part, bool p_force_ext)
 {
     // Make the widget generate a rep.
-    MCValueRef t_rep;
+    MCAutoValueRef t_rep;
     t_rep = nil;
-    if (m_widget_imp != nil)
-        MCWidgetGetPtr(m_widget_imp) -> Save(t_rep);
+    if (m_widget != nil)
+        MCWidgetOnSave(m_widget, &t_rep);
     
     // If the rep is nil, then an error must have been thrown, so we still
     // save, but without any state for this widget.
-    if (t_rep == nil)
+    if (*t_rep == nil)
         t_rep = MCValueRetain(kMCNull);
     
     // The state of the IO.
@@ -693,7 +678,7 @@ IO_stat MCWidget::save(IO_handle p_stream, uint4 p_part, bool p_force_ext)
         return t_stat;
     
     // Now the widget's rep.
-    if ((t_stat = IO_write_valueref_new(t_rep, p_stream)) != IO_NORMAL)
+    if ((t_stat = IO_write_valueref_new(*t_rep, p_stream)) != IO_NORMAL)
         return t_stat;
     
     if ((t_stat = savepropsets(p_stream)) != IO_NORMAL)
@@ -711,7 +696,7 @@ MCControl *MCWidget::clone(Boolean p_attach, Object_pos p_position, bool invisib
 		t_new_widget -> attach(p_position, invisible);
     
     MCAutoValueRef t_rep;
-    MCWidgetGetPtr(m_widget_imp) -> Save(&t_rep);
+    MCWidgetOnSave(m_widget, &t_rep);
     if (*t_rep == nil)
         t_rep = kMCNull;
     
@@ -743,7 +728,7 @@ void MCWidget::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		}
 	}
 
-    if (m_widget_imp != nil)
+    if (m_widget != nil)
     {
         if (dc -> gettype() != CONTEXT_TYPE_PRINTER)
         {
@@ -942,7 +927,6 @@ bool MCWidget::isDragSource() const
     
     return MCWidgetGetPtr(m_widget_imp) -> HandlesEvent(MCNAME("OnDragStart"));
 }
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -951,6 +935,7 @@ MCNativeLayer* MCWidget::getNativeLayer() const
     return m_native_layer;
 }
 
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 
 #if 0

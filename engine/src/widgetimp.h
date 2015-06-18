@@ -17,6 +17,126 @@
 #ifndef __MC_WIDGET_IMP__
 #define __MC_WIDGET_IMP__
 
+////////////////////////////////////////////////////////////////////////////////
+
+class MCWidgetBase
+{
+public:
+    MCWidgetBase(void);
+    virtual ~MCWidgetBase(void);
+    
+    bool Create(MCNameRef kind);
+    void Destroy(void);
+    
+    //// NORMAL METHODS
+    
+    bool HasProperty(MCNameRef handler);
+    bool HasHandler(MCNameRef handler);
+    
+    bool SetProperty(MCNameRef property, MCValueRef value);
+    bool GetProperty(MCNameRef property, MCValueRef& r_value);
+
+    bool OnLoad(MCValueRef rep);
+    bool OnSave(MCValueRef& r_rep);
+    
+    bool OnOpen(void);
+    bool OnClose(void);
+    
+    bool OnPaint(MCGContextRef gcontext);
+    bool OnHitTest(MCGPoint location, MCWidgetRef& r_target);
+    
+    bool OnMouseEnter(void);
+    bool OnMouseLeave(void);
+    bool OnMouseMove(void);
+    
+    bool OnMouseDown(void);
+    bool OnMouseUp(void);
+    bool OnMouseCancel(void);
+    
+    bool OnClick(void);
+    
+    bool OnGeometryChanged(void);
+    bool OnParentPropertyChanged(void);
+    
+    void RedrawAll(void);
+    void ScheduleTimerIn(double timeout);
+    void CancelTimer(void);
+    
+    bool CopyChildren(MCProperListRef& r_children);
+    void PlaceWidget(MCWidgetRef child, MCWidgetRef relative_to, bool put_below);
+    void UnplaceWidget(MCWidgetRef child);
+    
+    MCGPoint MapPointToGlobal(MCGPoint point);
+    MCGPoint MapPointFromGlobal(MCGPoint point);
+    
+    MCGRectangle MapRectToGlobal(MCGRectangle rect);
+    MCGRectangle MapRectFromGlobal(MCGRectangle rect);
+    
+    //// VIRTUAL METHODS
+    
+    // Returns true if the widget is a root widget.
+    virtual bool IsRoot(void) const = 0;
+    
+    // Returns the widget's host MCControl.
+    virtual MCWidget *GetHost(void) const = 0;
+    
+    // Returns the frame of the widget in the owner's coord system.
+    virtual MCGRectangle GetFrame(void) const = 0;
+    
+    // Returns the enabled state of the widget.
+    virtual bool GetDisabled(void) const = 0;
+    
+    // Copies the widget's font.
+    virtual bool CopyFont(MCFontRef& r_font) = 0;
+    
+private:
+    bool Dispatch(MCNameRef event);
+    bool DispatchRestricted(MCNameRef event);
+    void DispatchRestrictedNoThrow(MCNameRef event);
+    
+    // The instance of this widget.
+    MCScriptInstanceRef m_instance;
+    
+    // The children of this widget (a mutable list - or nil if no children).
+    MCProperListRef m_children;
+};
+
+class MCWidgetRoot: public MCWidgetBase
+{
+public:
+    MCWidgetRoot(MCWidget *p_host);
+    virtual ~MCWidgetRoot(void);
+    
+    virtual bool IsRoot(void) const;
+    virtual MCWidget *GetHost(void) const;
+    virtual MCGRectangle GetFrame(void) const;
+    virtual bool GetDisabled(void) const;
+    virtual bool CopyFont(MCFontRef& r_font);
+};
+
+class MCWidgetChild: public MCWidgetBase
+{
+public:
+    MCWidgetChild(void);
+    virtual ~MCWidgetChild(void);
+    
+    MCWidgetRef GetOwner(void) const;
+    void SetOwner(MCWidgetRef owner);
+    
+    virtual bool IsRoot(void) const;
+    virtual MCWidget *GetHost(void) const;
+    virtual MCGRectangle GetFrame(void) const;
+    virtual bool GetDisabled(void) const;
+    virtual bool CopyFont(MCFontRef& r_font);
+};
+
+MCWidgetBase *MCWidgetAsBase(MCWidgetRef widget);
+MCWidgetRoot *MCWidgetAsRoot(MCWidgetRef widget);
+MCWidgetChild *MCWidgetAsChild(MCWidgetRef widget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+#if 0
 class MCWidgetCommon
 {
 public:
@@ -154,6 +274,7 @@ public:
     virtual MCGPoint MapPointFromGlobal(MCGPoint point);
     virtual MCGPoint MapPointToGlobal(MCGPoint point);
 };
+#endif
 
 extern MCWidgetRef MCcurrentwidget;
 extern MCTypeInfoRef kMCWidgetTypeInfo;

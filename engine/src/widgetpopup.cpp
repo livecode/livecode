@@ -327,7 +327,7 @@ extern "C" MC_DLLEXPORT MCStringRef MCWidgetExecPopupMenuAtLocation(MCStringRef 
 		MCGPoint t_point;
 		MCCanvasPointGetMCGPoint(p_at, t_point);
 		
-		t_at = MCGPointToMCPoint(MCWidgetGetPtr(MCcurrentwidget) -> MapPointToGlobal(t_point));
+		t_at = MCGPointToMCPoint(MCWidgetMapPointToGlobal(MCcurrentwidget, t_point));
 		t_at_ptr = &t_at;
 	}
 	
@@ -410,12 +410,12 @@ extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecPopupAtLocationWithProperties(MCS
 	MCCanvasPointGetMCGPoint(p_at, t_point);
 	
 	MCPoint t_at;
-	t_at = MCGPointToMCPoint(MCWidgetGetPtr(MCcurrentwidget) -> MapPointToGlobal(t_point));
+	t_at = MCGPointToMCPoint(MCWidgetMapPointToGlobal(MCcurrentwidget, t_point));
 	
 	MCNewAutoNameRef t_kind;
 	/* UNCHECKED */ MCNameCreate(p_kind, &t_kind);
 	
-	t_at = MCWidgetGetPtr(MCcurrentwidget)->GetHost()->getstack()->stacktogloballoc(t_at);
+	t_at = MCWidgetGetHost(MCcurrentwidget)->getstack()->stacktogloballoc(t_at);
 	
 	return MCWidgetPopupAtLocationWithProperties(*t_kind, t_at, p_properties);
 }
@@ -430,7 +430,7 @@ extern "C" MC_DLLEXPORT void MCWidgetEvalIsPopup(bool &r_popup)
     if (!MCWidgetEnsureCurrentWidget())
         return;
 	
-	r_popup = s_widget_popup != nil && MCWidgetGetPtr(MCcurrentwidget) -> GetHost() == s_widget_popup->getpopupwidget();
+	r_popup = s_widget_popup != nil && MCWidgetGetHost(MCcurrentwidget) == s_widget_popup->getpopupwidget();
 }
 
 extern "C" MC_DLLEXPORT void MCWidgetExecClosePopupWithResult(MCValueRef p_result)

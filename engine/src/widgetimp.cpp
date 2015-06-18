@@ -57,98 +57,294 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCWidgetCommon::MCWidgetCommon(void)
+MCWidgetBase::MCWidgetBase(void)
 {
     m_instance = nil;
     m_children = nil;
 }
 
-MCWidgetCommon::~MCWidgetCommon(void)
+MCWidgetBase::~MCWidgetBase(void)
 {
     // Nothing to do here as 'Destroy()' must be called first.
 }
 
-// The Create() method attempts to setup a new instance of the given kind and
-// then trys to call the create method.
-bool MCWidgetCommon::Create(MCNameRef p_kind)
+bool MCWidgetBase::Create(MCNameRef p_kind)
 {
-    MCAssert(m_instance == nil);
-    
-    // Attempt to find the module and build an instance (lookup module is a get
-    // whereas creating an instance is a copy).
     MCScriptModuleRef t_module;
-    MCScriptInstanceRef t_instance;
-    if (!MCScriptLookupModule(p_kind, t_module) ||
-        !MCScriptEnsureModuleIsUsable(t_module) ||
-        !MCScriptCreateInstanceOfModule(t_module, t_instance))
+    if (!MCScriptLookupModule(p_kind, t_module))
         return false;
     
-    // We have an instance, so assign the necessary fields so we can create.
-    m_instance = t_instance;
+    if (!MCScriptEnsureModuleIsUsable(t_module))
+        return false;
     
-    // If creation fails, then we destroy and return false. We assume that if
-    // 'Create()' fails, then 'Destroy()' mustn't be called. This does mean that
-    // a widget developer must be careful to either ensure Create() does not fail,
-    // or if it does there is nothing to free which would be missed by just freeing
-    // the children and the instance.
-    if (!OnCreate())
+    if (!MCScriptCreateInstanceOfModule(t_module, m_instance))
+        return false;
+    
+    if (!DispatchRestricted(MCNAME("OnCreate")))
     {
-        MCValueRelease(m_children);
-        m_children = nil;
-        
         MCScriptReleaseInstance(m_instance);
         m_instance = nil;
-        
         return false;
     }
     
     return true;
 }
 
-// The Destroy() method tears down a previously Created widget.
-void MCWidgetCommon::Destroy(void)
+void MCWidgetBase::Destroy(void)
 {
-    // If there is no instance, there is nothing to do.
     if (m_instance == nil)
         return;
     
-    // Invoke the widget's destroy handler.
-    OnDestroy();
+    for(uindex_t i = 0; i < MCProperListGetLength(m_children); i++)
+    {
+        MCWidgetRef t_child;
+        t_child = (MCWidgetRef)MCProperListFetchElementAtIndex(m_children, i);
+        
+        MCWidgetAsChild(t_child) -> SetOwner(nil);
+    }
     
-    // Now free our fields.
     MCValueRelease(m_children);
     m_children = nil;
     
+    DispatchRestrictedNoThrow(MCNAME("OnDestroy"));
     MCScriptReleaseInstance(m_instance);
     m_instance = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCWidgetCreateHost(MCWidgetRef& r_widget)
+bool MCWidgetCreateRoot(MCWidget *p_host, MCNameRef p_kind, MCWidgetRef& r_widget)
 {
-    if (!MCValueCreateCustom(kMCWidgetTypeInfo, sizeof(MCWidgetHost), r_widget))
+    MCWidgetRef t_widget;
+    if (!MCValueCreateCustom(kMCWidgetTypeInfo, sizeof(MCWidgetRoot), t_widget))
         return false;
     
-    MCWidgetHost *t_widget_host;
-    t_widget_host = (MCWidgetHost *)MCValueGetExtraBytesPtr(r_widget);
+    MCWidgetRoot *t_widget_root;
+    t_widget_root = (MCWidgetRoot *)MCValueGetExtraBytesPtr(t_widget);
     
-    new (t_widget_host) MCWidgetHost;
+    new (t_widget_root) MCWidgetRoot(p_host);
+    
+    if (!t_widget_root -> Create(p_kind))
+    {
+        MCValueRelease(t_widget);
+        return false;
+    }
+    
+    r_widget = t_widget;
     
     return true;
 }
 
-bool MCWidgetCreateChild(MCWidgetRef& r_widget)
+bool MCWidgetCreateChild(MCNameRef p_kind, MCWidgetRef& r_widget)
 {
-    if (!MCValueCreateCustom(kMCWidgetTypeInfo, sizeof(MCWidgetChild), r_widget))
+    MCWidgetRef t_widget;
+    if (!MCValueCreateCustom(kMCWidgetTypeInfo, sizeof(MCWidgetRoot), t_widget))
         return false;
     
-    MCWidgetChild *t_widget_host;
-    t_widget_host = (MCWidgetChild *)MCValueGetExtraBytesPtr(r_widget);
+    MCWidgetChild *t_widget_child;
+    t_widget_child = (MCWidgetChild *)MCValueGetExtraBytesPtr(t_widget);
     
-    new (t_widget_host) MCWidgetChild;
+    new (t_widget_child) MCWidgetChild;
+    
+    if (!t_widget_child -> Create(p_kind))
+    {
+        MCValueRelease(t_widget);
+        return false;
+    }
+    
+    r_widget = t_widget;
     
     return true;
+}
+
+bool MCWidgetIsRoot(MCWidgetRef self)
+{
+    return MCWidgetAsBase(self) -> IsRoot();
+}
+
+MCWidget *MCWidgetGetHost(MCWidgetRef self)
+{
+    return MCWidgetAsBase(self) -> GetHost();
+}
+
+MCGRectangle MCWidgetGetFrame(MCWidgetRef self)
+{
+    return MCWidgetAsBase(self) -> GetFrame();
+}
+
+bool MCWidgetGetDisabled(MCWidgetRef self)
+{
+    return MCWidgetAsBase(self) -> GetDisabled();
+}
+
+bool MCWidgetCopyFont(MCWidgetRef self, MCFontRef& r_font)
+{
+    return MCWidgetAsBase(self) -> CopyFont(r_font);
+}
+
+bool MCWidgetHasProperty(MCWidgetRef self, MCNameRef p_property)
+{
+    return MCWidgetAsBase(self) -> HasProperty(p_property);
+}
+
+bool MCWidgetHasHandler(MCWidgetRef self, MCNameRef p_handler)
+{
+    return MCWidgetAsBase(self) -> HasHandler(p_handler);
+}
+
+bool MCWidgetSetProperty(MCWidgetRef self, MCNameRef p_property, MCValueRef p_value)
+{
+    return MCWidgetAsBase(self) -> SetProperty(p_property, p_value);
+}
+
+bool MCWidgetGetProperty(MCWidgetRef self, MCNameRef p_property, MCValueRef& r_value)
+{
+    return MCWidgetAsBase(self) -> GetProperty(p_property, r_value);
+}
+
+bool MCWidgetOnLoad(MCWidgetRef self, MCValueRef p_rep)
+{
+    return MCWidgetAsBase(self) -> OnLoad(p_rep);
+}
+
+bool MCWidgetOnSave(MCWidgetRef self, MCValueRef& r_rep)
+{
+    return MCWidgetAsBase(self) -> OnSave(r_rep);
+}
+
+bool MCWidgetOnOpen(MCWidgetRef self)
+{
+    return MCWidgetAsBase(self) -> OnOpen();
+}
+
+bool MCWidgetOnClose(MCWidgetRef self)
+{
+    return MCWidgetAsBase(self) -> OnClose();
+}
+
+bool MCWidgetOnPaint(MCWidgetRef self, MCGContextRef p_gcontext)
+{
+    return MCWidgetAsBase(self) -> OnPaint(p_gcontext);
+}
+
+bool MCWidgetOnHitTest(MCWidgetRef self, MCGPoint p_location, MCWidgetRef& r_target)
+{
+    return MCWidgetAsBase(self) -> OnHitTest(p_location, r_target);
+}
+
+bool MCWidgetOnMouseEnter(MCWidgetRef self)
+{
+    return MCWidgetAsBase(self) -> OnMouseEnter();
+}
+
+bool MCWidgetOnMouseLeave(MCWidgetRef self)
+{
+    return MCWidgetAsBase(self) -> OnMouseLeave();
+}
+
+bool MCWidgetOnMouseMove(MCWidgetRef self)
+{
+    return MCWidgetAsBase(self) -> OnMouseMove();
+}
+
+bool MCWidgetOnMouseDown(MCWidgetRef self)
+{
+    return MCWidgetAsBase(self) -> OnMouseDown();
+}
+
+bool MCWidgetOnMouseUp(MCWidgetRef self)
+{
+    return MCWidgetAsBase(self) -> OnMouseUp();
+}
+
+bool MCWidgetOnMouseCancel(MCWidgetRef self)
+{
+    return MCWidgetAsBase(self) -> OnMouseCancel();
+}
+
+bool MCWidgetOnClick(MCWidgetRef self)
+{
+    return MCWidgetAsBase(self) -> OnClick();
+}
+
+bool MCWidgetOnGeometryChanged(MCWidgetRef self)
+{
+    return MCWidgetAsBase(self) -> OnGeometryChanged();
+}
+
+bool MCWidgetOnParentPropertyChanged(MCWidgetRef self)
+{
+    return MCWidgetAsBase(self) -> OnParentPropertyChanged();
+}
+
+void MCWidgetRedrawAll(MCWidgetRef self)
+{
+}
+
+void MCWidgetScheduleTimerIn(MCWidgetRef self, double p_timeout)
+{
+}
+
+void MCWidgetCancelTimer(MCWidgetRef self)
+{
+}
+
+void MCWidgetCopyChildren(MCWidgetRef self, MCProperListRef& r_children)
+{
+    MCWidgetAsBase(self) -> CopyChildren(r_children);
+}
+
+void MCWidgetPlaceWidget(MCWidgetRef self, MCWidgetRef p_child, MCWidgetRef p_relative_to, bool p_put_below)
+{
+    MCWidgetAsBase(self) -> PlaceWidget(p_child, p_relative_to, p_put_below);
+}
+
+void MCWidgetUnplaceWidget(MCWidgetRef self,  MCWidgetRef p_child)
+{
+    MCWidgetAsBase(self) -> UnplaceWidget(p_child);
+}
+
+MCGPoint MCWidgetMapPointToGlobal(MCWidgetRef self, MCGPoint p_point)
+{
+    return MCWidgetAsBase(self) -> MapPointToGlobal(p_point);
+}
+
+MCGPoint MCWidgetMapPointFromGlobal(MCWidgetRef self, MCGPoint p_point)
+{
+    return MCWidgetAsBase(self) -> MapPointFromGlobal(p_point);
+}
+
+MCGRectangle MCWidgetMapRectToGlobal(MCWidgetRef self, MCGRectangle p_rect)
+{
+    return MCWidgetAsBase(self) -> MapRectToGlobal(p_rect);
+}
+
+MCGRectangle MCWidgetMapRectFromGlobal(MCWidgetRef self, MCGRectangle p_rect)
+{
+    return MCWidgetAsBase(self) -> MapRectFromGlobal(p_rect);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCWidgetBase *MCWidgetAsBase(MCWidgetRef self)
+{
+    return (MCWidgetBase *)MCValueGetExtraBytesPtr(self);
+}
+
+MCWidgetChild *MCWidgetAsChild(MCWidgetRef self)
+{
+    MCWidgetBase *t_base;
+    t_base = (MCWidgetBase *)MCValueGetExtraBytesPtr(self);
+    MCAssert(!t_base -> IsRoot());
+    return static_cast<MCWidgetChild *>(t_base);
+}
+
+MCWidgetRoot *MCWidgetAsRoot(MCWidgetRef self)
+{
+    MCWidgetBase *t_base;
+    t_base = (MCWidgetBase *)MCValueGetExtraBytesPtr(self);
+    MCAssert(t_base -> IsRoot());
+    return static_cast<MCWidgetRoot *>(t_base);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
