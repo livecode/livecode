@@ -188,6 +188,7 @@ metadata desiredHeight.user_visible is "false"
 property navHiliteColor	get getHiliteColor set setHiliteColor
 metadata navHiliteColor.editor is "com.livecode.pi.color"
 metadata navHiliteColor.label is "Selected Item Color"
+metadata navHiliteColor.default is "0,121,255"
 
 --
 
