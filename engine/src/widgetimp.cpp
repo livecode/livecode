@@ -111,6 +111,82 @@ void MCWidgetBase::Destroy(void)
     m_instance = nil;
 }
 
+//////////
+
+bool MCWidgetBase::HasProperty(MCNameRef p_property)
+{
+    MCTypeInfoRef t_setter, t_getter;
+    return MCScriptQueryPropertyOfModule(MCScriptGetModuleOfInstance(m_instance), p_property, t_getter, t_setter);
+}
+
+bool MCWidgetBase::HasHandler(MCNameRef p_handler)
+{
+    MCTypeInfoRef t_signature;
+    return MCScriptQueryHandlerOfModule(MCScriptGetModuleOfInstance(m_instance), p_handler, t_signature);
+}
+
+bool MCWidgetBase::SetProperty(MCNameRef p_property, MCValueRef p_value)
+{
+    return MCScriptSetPropertyOfInstance(m_instance, p_property, p_value);
+}
+
+bool MCWidgetBase::GetProperty(MCNameRef p_property, MCValueRef& r_value)
+{
+    return MCScriptGetPropertyOfInstance(m_instance, p_property, r_value);
+}
+
+bool MCWidgetBase::OnLoad(MCValueRef p_rep)
+{
+    MCAutoValueRefArray t_args;
+    if (!t_args . New(1))
+        return false;
+    
+    t_args . Push(p_rep);
+    
+    return DispatchRestricted(MCNAME("OnLoad"), t_args . Ptr(), t_args . Count());
+}
+
+bool MCWidgetBase::OnSave(MCValueRef& r_rep)
+{
+    MCAutoValueRefArray t_args;
+    if (!t_args . New(1))
+        return false;
+    
+    if (!DispatchRestricted(MCNAME("OnSave"), t_args . Ptr(), t_args . Count()))
+        return false;
+    
+    r_rep = t_args[0];
+    t_args[0] = nil;
+    
+    return true;
+}
+
+bool MCWidgetBase::OnOpen(void)
+{
+    return DispatchRecursive(kDispatchOrderBeforeBottomUp, MCNAME("OnOpen"));
+}
+
+bool MCWidgetBase::OnClose(void)
+{
+    return DispatchRecursive(kDispatchOrderTopDownAfter, MCNAME("OnClose"));
+}
+
+bool MCWidgetBase::OnPaint(MCGContextRef p_gcontext)
+{
+#if 0
+    uintptr_t t_cookie;
+    MCCanvasPush(p_gcontext, t_cookie);
+    
+    MCGRectangle t_frame;
+    t_frame = GetFrame();
+    
+    MCGContextSave();
+    
+    return DispatchRestricted(MCNAME("OnPaint"), t_args . Ptr(), t_args . Count());
+#endif
+    return false;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCWidgetCreateRoot(MCWidget *p_host, MCNameRef p_kind, MCWidgetRef& r_widget)

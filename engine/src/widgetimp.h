@@ -90,9 +90,21 @@ public:
     virtual bool CopyFont(MCFontRef& r_font) = 0;
     
 private:
-    bool Dispatch(MCNameRef event);
-    bool DispatchRestricted(MCNameRef event);
-    void DispatchRestrictedNoThrow(MCNameRef event);
+    enum DispatchOrder
+    {
+        kDispatchOrderBeforeBottomUp,
+        kDispatchOrderBottomUpAfter,
+        kDispatchOrderBeforeTopDown,
+        kDispatchOrderTopDownAfter,
+        kDispatchOrderBottomUp,
+        kDispatchOrderTopDown,
+    };
+    
+    bool Dispatch(MCNameRef event, MCValueRef *args = nil, uindex_t arg_count = 0);
+    bool DispatchRestricted(MCNameRef event, MCValueRef *args = nil, uindex_t arg_count = 0);
+    void DispatchRestrictedNoThrow(MCNameRef event, MCValueRef *args = nil, uindex_t arg_count = 0);
+    
+    bool DispatchRecursive(DispatchOrder order, MCNameRef event, MCValueRef *args = nil, uindex_t arg_count = 0);
     
     // The instance of this widget.
     MCScriptInstanceRef m_instance;
