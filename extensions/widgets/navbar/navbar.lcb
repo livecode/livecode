@@ -316,7 +316,7 @@ end handler
 private handler drawNavBar() returns nothing
 	// background
 	set the paint of this canvas to getPaint("background","fill")
-	fill getPath("bounding box") on this canvas
+	fill getPath("background") on this canvas
 
 	variable tX as Integer
 	repeat with tX from 1 up to mNavItemCount
@@ -793,12 +793,15 @@ private handler setIconPath(in pTargetRect as Rectangle, inout xPath as Path)
 end handler
 
 public handler getPath(in pObject as String) returns Path
+	variable tRect
+	put my bounds into tRect	
 	if pObject is "bounding box" then
-		variable tRect
-		put my bounds into tRect
 		return rectangle path of rectangle [the left of tRect + 0.5, the top of tRect + 0.5, the right of tRect - 0.5, the bottom of tRect - 0.5]
 	else if pObject is "line" then
 		return line path from point [0, 0.5] to point [my width, 0.5]
+		-- Offset background by 1 from the top so that line is allowed to be transparent
+	else if pObject is "background" then
+		return rectangle path of rectangle [the left of tRect + 0.5, the top of tRect + 1, the right of tRect - 0.5, the bottom of tRect - 0.5]
 	end if
 end handler
 
