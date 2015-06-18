@@ -1318,7 +1318,7 @@ end handler
 
 -- this handler converts an RGBA color to a string
 private handler colorToString(in pColor as Color) returns String
-	return stripZeros((the rounded of ((the red of pColor) * 255)) formatted as string) & "," & stripZeros((the rounded of (the green of pColor) * 255) formatted as string) & "," & stripZeros((the rounded of (the blue of pColor) * 255) formatted as string) & "," & stripZeros((the rounded of (the alpha of pColor) * 255) formatted as string)
+	return stripZeros((the rounded of ((the red of pColor) * 255)) formatted as string) & "," & stripZeros((the rounded of ((the green of pColor) * 255)) formatted as string) & "," & stripZeros((the rounded of ((the blue of pColor) * 255)) formatted as string) & "," & stripZeros((the rounded of ((the alpha of pColor) * 255)) formatted as string)
 end handler
 ----------
 
