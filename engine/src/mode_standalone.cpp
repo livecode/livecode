@@ -98,6 +98,8 @@ __attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule
 __attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {0};
 #elif defined(TARGET_PLATFORM_MOBILE)
 MCCapsuleInfo MCcapsule = {0};
+#elif defined(__EMSCRIPTEN__)
+MCCapsuleInfo MCcapsule = {0};
 #endif
 
 MCLicenseParameters MClicenseparameters =
@@ -399,6 +401,8 @@ IO_stat MCDispatch::startup(void)
         MCdispatcher -> loadexternal(MCSTR("revxml"));
         MCdispatcher -> loadexternal(MCSTR("dbsqlite"));
         MCdispatcher -> loadexternal(MCSTR("dbmysql"));
+#elif defined(__EMSCRIPTEN__)
+        /* Don't load any externals */
 #else
         MCdispatcher -> loadexternal(MCSTR("revzip.dylib"));
         MCdispatcher -> loadexternal(MCSTR("revdb.dylib"));
