@@ -17,13 +17,15 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "em-dc-mainloop.h"
+#include "em-dc.h"
 #include "em-util.h"
 
-#include "globdefs.h"
-#include "parsedef.h"
 #include "globals.h"
 #include "variable.h"
 #include "osspec.h"
+#include "tooltip.h"
+#include "stacklst.h"
+#include "redraw.h"
 #include "system.h"
 #include "font.h"
 #include "util.h"
@@ -39,7 +41,9 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[]);
 void X_clear_globals(void);
 void MCU_initialize_names(void);
 
-/* ================================================================ */
+/* ================================================================
+ * Platform-specific initialisation
+ * ================================================================ */
 
 /* FIXME these functions are pretty much the same for every X_init()
  * implementation. */
@@ -166,8 +170,52 @@ X_init(int argc,
 	return X_open(argc, argv, envp);
 }
 
+/* ================================================================
+ * Emscripten platform main loop
+ * ================================================================ */
+
 bool
 X_main_loop_iteration()
 {
-	MCEmscriptenNotImplemented();
+	MCLog("Main loop iteration", nil);
+
+	/* Check if the engine is in a runnable state */
+	if (!MCscreen->hasmessages() &&
+	    MCstacks->isempty() &&
+	    0 == MCnsockets)
+	{
+		MCquit = true;
+		return false;
+	}
+
+	/* Process pending events */
+	MCmaxwait = 1; /* FIXME temporary timeout */
+	MCscreen->wait(MCmaxwait, true, true);
+
+	MCU_resetprops(true);
+
+	MCabortscript = false;
+
+	/* Collect garbage */
+	if (!MCtodestroy->isempty() || nil != MCtodelete)
+	{
+		MCtooltip->cleartip();
+		while (nil != MCtodelete)
+		{
+			MCObject *t_obj = MCtodelete->remove(MCtodelete);
+			delete t_obj;
+		}
+
+		MCtodestroy->destroy();
+	}
+
+	MCU_cleaninserted();
+
+	MCscreen->siguser();
+
+	MCdefaultstackptr = MCstaticdefaultstackptr;
+
+	MCS_alarm(0);
+
+	return !MCquit;
 }
