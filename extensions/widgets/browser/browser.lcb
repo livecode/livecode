@@ -86,41 +86,50 @@ variable mBrowser as optional MCBrowserRef
 variable mBrowserType as String
 variable mProperties as optional Array
 
+--------------------------------------------------------------------------------
+
+constant kPropertyScrollbars is 0
+constant kPropertyAllowNewWindows is 1
+constant kPropertyEnableContextMenu is 2
+constant kPropertyUrl is 3
+constant kPropertyHtmlText is 4
+constant kPropertyUserAgent is 5
+constant kPropertyJavaScriptHandlers is 6
+
+constant kPropertyMap is ["scrollbars", "allowNewWindows", "enableContextMenu", "url", "htmlText", "userAgent", "javaScriptHandlers"]
+
 --
 
-variable sPropertyMap as Array
-variable sStringProps as List
-variable sBoolProps as List
+constant kStringProps is ["url", "htmlText", "userAgent", "javaScriptHandlers"]
+constant kBoolProps is ["scrollbars", "allowNewWindows", "enableContextMenu"]
+constant kPersistentProps is ["scrollbars", "allowNewWindows", "enableContextMenu", "userAgent", "javaScriptHandlers"]
 
 --------------------------------------------------------------------------------
 
-public handler OnLoad()
-	put the empty array into sPropertyMap
-	put 0 into sPropertyMap["scrollbars"]
-	put 1 into sPropertyMap["allowNewWindows"]
-	put 2 into sPropertyMap["enableContextMenu"]
-	put 3 into sPropertyMap["url"]
-	put 4 into sPropertyMap["htmlText"]
-	put 5 into sPropertyMap["userAgent"]
-	put 6 into sPropertyMap["javaScriptHandlers"]
-	
-	put ["url", "htmlText", "userAgent", "javaScriptHandlers"] into sStringProps
-	put ["scrollbars", "allowNewWindows", "enableContextMenu"] into sBoolProps
+public handler OnLoad(in pProperties as Array)
+	loadProperties(pProperties)
+end handler
+
+public handler OnSave(out rProperties as Array)
+	if mBrowser is not nothing then
+		put saveProperties() into mProperties
+	end if
+	put mProperties into rProperties
 end handler
 
 ----------
 
 -- called when the widget is created
 public handler OnCreate()
-	OnLoad() -- TODO - placed this here temporarily - need proper module init
 
 	put the empty string into mBrowserType
 	put the empty array into mProperties
+	put the empty string into mContentSource
 end handler
 
 --
 
-public handler OnAttach()
+public handler OnOpen()
 	variable tParent as Pointer
 	// TODO - add widget code to get stack window handler
 	// put my native window into tParent
@@ -139,27 +148,30 @@ public handler OnAttach()
 	// TODO - add widget code to set native layer from view
 	set my native layer to tBrowserView
 	
-	setBrowserProperties(mProperties)
+	loadProperties(mProperties)
 end handler
 
 --
 
-public handler OnDetach()
+public handler OnClose()
 	// Save browser properties
-	put getBrowserProperties() into mProperties
+	put saveProperties() into mProperties
 	
-	// TODO - add widget code to set native layer from view
 	set my native layer to nothing
 	
 	MCBrowserRelease(mBrowser)
-	put nothing into mBrowser -- TODO - check if this is equivalent to mBrowser = nil
+	put nothing into mBrowser
 end handler
 
 ----------
 
 private handler getProperty(in pProperty as String) returns any
 	if mBrowser is nothing then
-		return mProperties[pProperty]
+		if pProperty is among the keys of mProperties then
+			return mProperties[pProperty]
+		else
+			return nothing
+		end if
 	else
 		return getBrowserProperty(pProperty)
 	end if
@@ -180,6 +192,7 @@ public handler getUrl() returns String
 end handler
 
 public handler setUrl(in pUrl as String)
+	put "url" into mContentSource
 	setProperty("url", pUrl)
 end handler
 
@@ -190,6 +203,7 @@ public handler getHtmlText() returns String
 end handler
 
 public handler setHtmlText(in pHtmlText as String)
+	put "htmltext" into mContentSource
 	setProperty("htmlText", pHtmlText)
 end handler
 
@@ -225,55 +239,81 @@ end handler
 
 ----------
 
-private handler propertyEnum(in pProp as String) returns Integer
-	return sPropertyMap[pProp]
+private handler lookupProperty(in pProp as String, out rEnum as Integer) returns Boolean
+	variable tIndex as Integer
+	put the index of pProp in kPropertyMap into tIndex
+	
+	if tIndex is 0 then
+		return false
+	end if
+	
+	put tIndex - 1 into rEnum
+	return true
 end handler
 
 ----------
 
 private handler getBrowserProperty(in pProperty as String) returns any
-	variable tValue as optional any
+	variable tProperty as Integer
+	if not lookupProperty(pProperty, tProperty) then
+		return nothing
+	end if
 	
-	if pProperty is in sStringProps then
+	variable tValue as optional any
+	if pProperty is in kStringProps then
 		/* UNCHECKED */
-		MCBrowserGetStringProperty(mBrowser, propertyEnum(pProperty), tValue)
-	else if pProperty is in sBoolProps then
+		MCBrowserGetStringProperty(mBrowser, tProperty, tValue)
+	else if pProperty is in kBoolProps then
 		/* UNCHECKED */
-		MCBrowserGetBoolProperty(mBrowser, propertyEnum(pProperty), tValue)
+		MCBrowserGetBoolProperty(mBrowser, tProperty, tValue)
 	end if
 	
 	return tValue
 end handler
 
 private handler setBrowserProperty(in pProperty as String, in pValue as any)
-	if pProperty is in sStringProps then
+	variable tProperty as Integer
+	if not lookupProperty(pProperty, tProperty) then
+		return
+	end if
+	
+	if pProperty is in kStringProps then
 		/* UNCHECKED */
-		MCBrowserSetStringProperty(mBrowser, propertyEnum(pProperty), pValue)
-	else if pProperty is in sBoolProps then
+		MCBrowserSetStringProperty(mBrowser, tProperty, pValue)
+	else if pProperty is in kBoolProps then
 		/* UNCHECKED */
-		MCBrowserSetBoolProperty(mBrowser, propertyEnum(pProperty), pValue)
+		MCBrowserSetBoolProperty(mBrowser, tProperty, pValue)
 	end if
 end handler
 
 --
 
-private handler setBrowserProperties(in pProperties as Array)
+private handler loadProperties(in pProperties as Array)
 	variable tKey
-	repeat for each key tKey in pProperties
-		if mProperties[tKey] is not nothing then
-			setBrowserProperty(tKey, pProperties[tKey])
+	repeat for each element tKey in kPersistentProps
+		if tKey is among the keys of pProperties then
+			setProperty(tKey, pProperties[tKey])
 		end if
 	end repeat
+	if "url" is among the keys of pProperties then
+		setUrl(pProperties["url"])
+	else if "htmltext" is among the keys of pProperties then
+		setHtmlText(pProperties["htmltext"])
+	end if
 end handler
 
-private handler getBrowserProperties() returns Array
+private handler saveProperties() returns Array
 	variable tProps
 	put the empty array into tProps
 	
 	variable tKey
-	repeat for each key tKey in sPropertyMap
-		put getBrowserProperty(tKey) into tProps[tKey]
+	repeat for each element tKey in kPersistentProps
+		put getProperty(tKey) into tProps[tKey]
 	end repeat
+	
+	if mContentSource is not nothing then
+		put getProperty(mContentSource) into tProps[mContentSource]
+	end if
 	
 	return tProps
 end handler
