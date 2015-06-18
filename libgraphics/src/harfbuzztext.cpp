@@ -301,8 +301,11 @@ void shape(const unichar_t* p_text, uindex_t p_char_count, MCGPoint p_location, 
         if (t_start != t_end)
         {
             // Need to get a fallback font here.
-            SkTypeface *t_fallback = SkCreateFallbackTypefaceForChar(*(p_text + t_char_index), SkTypeface::kNormal);
-            
+	        SkTypeface *t_fallback = nil;
+#if defined(__ANDROID__)
+	        SkCreateFallbackTypefaceForChar(*(p_text + t_char_index), SkTypeface::kNormal);
+#endif /* __ANDROID__ */
+
             // TODO: This currently seems to return nil all the time.
             if (t_fallback != nil)
             {
