@@ -942,7 +942,12 @@ private handler setData(in pArray as Array, in pKeys as List, out rList as List)
 		put the empty array into tElement
 		repeat for each element tKey in pKeys
 			put tLookup[tOrderKey formatted as string] into tOriginalKey
-			put pArray[tOriginalKey][tKey] into tElement[tKey]
+			-- Use default item if key is not present
+			if tKey is among the keys of pArray[tOriginalKey] then
+				put pArray[tOriginalKey][tKey] into tElement[tKey]
+			else
+				put defaultNavElement(tKey) into tElement[tKey]
+			end if
 		end repeat
 		if tElement["label"] is "" then
 			put "New Item" into tElement["label"]
@@ -1039,6 +1044,23 @@ end handler
 --		Nav data handling
 --
 --------------------------------------------------------------------------------
+
+private handler defaultNavElement(in pKey as String) returns String
+	if pKey is "name" then
+		return kDefaultNavName
+	else if pKey is "label" then
+		return kDefaultNavLabel
+	else if pKey is "icon_name" then
+		return kDefaultNavIconName
+	else if pKey is "selected_icon_name" then
+		return ""
+	else if pKey is "icon" then
+		return ""
+	else if pKey is "selected_icon" then
+		return ""
+	end if
+	return ""
+end handler
 
 private handler defaultNavArray() returns Array
 	variable tArray as Array
