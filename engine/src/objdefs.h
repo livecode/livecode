@@ -762,6 +762,8 @@ enum Lang_charset
 	LCH_LITHUANIAN,
     LCH_UNICODE,
     LCH_UTF8,
+    // SN-2015-06-18: [[ Bug 11803 ]] Added for Android TextEncode
+    LCH_WINDOWS_NATIVE,
 	LCH_DEFAULT = 255
 };
 

@@ -44,6 +44,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mbldc.h"
 #include "mblstore.h"
 
+#include "text.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern int32_t g_android_keyboard_type;
@@ -294,6 +296,8 @@ static charset_to_name_t s_charset_to_name[] = {
 	{ LCH_BULGARIAN, "windows-1251" },
 	{ LCH_UKRAINIAN, "windows-1251" },
 
+    // SN-2015-06-18: [[ Bug 11803 ]] Conversion added
+    { LCH_WINDOWS_NATIVE, "windows-1252" },
 	{ LCH_LITHUANIAN, "windows-1257" },
 	//LCH_DEFAULT = 255
 };
@@ -351,9 +355,75 @@ uint32_t MCAndroidSystem::TextConvert(const void *p_string, uint32_t p_string_le
 	}
 }
 
+// SN-2015-06-18: [[ Bug 11803 ]] Converts the input enum to the Android Engine one.
+static bool MCTextEncodingEnumToAndroidSystemEncodingEnum(uint32_t p_MCTextEncodingEnum, uint32_t &r_androidSystemTextEncoding)
+{
+    switch (p_MCTextEncodingEnum)
+    {
+        case kMCTextEncodingNative:
+            r_androidSystemTextEncoding = LCH_ENGLISH;
+            break;
+
+        case kMCTextEncodingUTF8:
+            r_androidSystemTextEncoding = LCH_UTF8;
+            break;
+
+        case kMCTextEncodingMacNative:
+            r_androidSystemTextEncoding = LCH_ROMAN;
+            break;
+
+        case kMCTextEncodingWindowsNative:
+            r_androidSystemTextEncoding = LCH_WINDOWS_NATIVE;
+            break;
+
+        default:
+            return false;
+    }
+
+    return true;
+}
+
 bool MCAndroidSystem::TextConvertToUnicode(uint32_t p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4 p_output_length, uint4& r_used)
 {
-	return false;
+    // SN-2015-06-18: [[ Bug 11803 ]] Implement the function.
+    uint32_t t_android_encoding;
+    
+    // Converting from UTF-16 to Unicode only requires a memory copy
+    if (p_input_encoding == kMCTextEncodingUTF16)
+    {
+        // We still need to check whether we're only querying the needed size.
+        if (p_output_length == 0)
+        {
+            r_used = p_input_length;
+            return false;
+        }
+        else
+        {
+            uint4 t_length = MCMin(p_input_length, p_output_length);
+            MCMemoryCopy(p_output, p_input, t_length);
+            r_used = t_length;
+            return true;
+        }
+    }
+    
+    if (!MCTextEncodingEnumToAndroidSystemEncodingEnum(p_input_encoding, t_android_encoding))
+        return false;
+    
+    // SN-2015-06-18: [[ Bug 11803 ]] There is no way to know whether TextConvert
+    //  did a conversion or only returned the number of bytes needed
+    if (p_output_length == 0)
+    {
+        // If there is no input length, then no conversion occurred - that's
+        //  what this function returns.
+        // We pass no input to be sure that no conversion is intended.
+        r_used = TextConvert(p_input, p_input_length, NULL, 0, t_android_encoding, LCH_UNICODE);
+        return false;
+    }
+    else
+    {
+        r_used = TextConvert(p_input, p_input_length, p_output, p_output_length, t_android_encoding, LCH_UNICODE);
+        return true;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
