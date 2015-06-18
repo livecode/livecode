@@ -664,6 +664,8 @@
 			# Group "Desktop - Emscripten"
 			'src/em-async.h',
 			'src/em-async.js',
+			'src/em-fontlist.h',
+			'src/em-fontlist.cpp',
 			'src/em-osspec-misc.cpp',
 			'src/em-util.h',
 		],

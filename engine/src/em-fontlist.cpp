@@ -1,0 +1,227 @@
+/*                                                                     -*-c++-*-
+
+Copyright (C) 2003-2015 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+#include "em-fontlist.h"
+#include "em-util.h"
+
+#include "dllst.h"
+
+class MCFontnode : public MCDLlist
+{
+public:
+	MCFontnode(MCNameRef p_name, uint16_t p_size, uint16_t p_style);
+	virtual ~MCFontnode();
+
+	virtual MCFontStruct *getfont(MCNameRef p_name,
+	                              uint16_t p_size,
+	                              uint16_t p_style);
+
+	virtual MCFontStruct *getfontstruct() { return &m_font_info; }
+
+	virtual MCNameRef getname() { return *m_requested_name;  }
+	virtual uint16_t getsize()  { return m_requested_size;  }
+	virtual uint16_t getstyle() { return m_requested_style; }
+
+	virtual MCFontnode *next();
+	virtual void appendto(MCFontnode *& list);
+	virtual MCFontnode *remove(MCFontnode *& list);
+
+protected:
+	MCNewAutoNameRef m_requested_name;
+	uint16_t m_requested_size;
+	uint16_t m_requested_style;
+	MCFontStruct m_font_info;
+};
+
+/* ================================================================
+ * MCFontnode implementation for Emscripten
+ * ================================================================ */
+
+MCFontnode::MCFontnode(MCNameRef p_name,
+                       uint16_t p_size,
+                       uint16_t p_style)
+	: m_requested_name(p_name),
+	  m_requested_size(p_size),
+	  m_requested_style(p_style)
+{
+	/* FIXME Dummy values */
+	m_font_info.size = p_size;
+	m_font_info.ascent = p_size - 1;
+	m_font_info.descent = p_size * 2 / 14 + 1;
+
+	MCLog("Created dummy font: %@ %hi %hi", p_name, p_size, p_style);
+}
+
+MCFontnode::~MCFontnode()
+{
+}
+
+MCFontStruct *
+MCFontnode::getfont(MCNameRef p_name,
+                    uint16_t p_size,
+                    uint16_t p_style)
+{
+	if (!MCNameIsEqualTo(p_name, *m_requested_name))
+	{
+		return NULL;
+	}
+
+	if ((p_size != 0 && p_size != m_requested_size) ||
+	    p_style != m_requested_style)
+	{
+		return NULL;
+	}
+
+	return &m_font_info;
+}
+
+/* ----------------------------------------------------------------
+ * MCDLlist stuff
+ * ---------------------------------------------------------------- */
+
+MCFontnode *
+MCFontnode::next()
+{
+	return static_cast<MCFontnode *>(MCDLlist::next());
+}
+
+void
+MCFontnode::appendto(MCFontnode *& list)
+{
+	MCDLlist::appendto(reinterpret_cast<MCDLlist *&>(list));
+}
+
+MCFontnode *
+MCFontnode::remove(MCFontnode *& list)
+{
+	return static_cast<MCFontnode *>(MCDLlist::remove(reinterpret_cast<MCDLlist *&>(list)));
+}
+
+/* ================================================================
+ * MCFontlist implementation for Emscripten
+ * ================================================================ */
+
+MCFontlist::MCFontlist()
+{
+	m_font_list = NULL;
+}
+
+MCFontlist::~MCFontlist()
+{
+	while (m_font_list != NULL)
+	{
+		MCFontnode *fptr = m_font_list->remove(m_font_list);
+		delete fptr;
+	}
+}
+
+MCFontStruct *
+MCFontlist::getfont(MCNameRef p_name,
+                    uint16_t p_size,
+                    uint16_t p_style,
+                    Boolean p_for_printer) /* ignored */
+{
+	MCFontnode *t_node = m_font_list;
+
+	/* Check if we already know about the requested font */
+	if (t_node != NULL)
+	{
+		do
+		{
+			MCFontStruct *t_font = t_node->getfont(p_name, p_size, p_style);
+
+			if (t_font != NULL)
+				return t_font;
+
+			t_node = t_node->next();
+		}
+		while (t_node != m_font_list);
+	}
+
+	/* No match; create a new font with the requested parameters */
+	t_node = new MCFontnode(p_name, p_size, p_style);
+
+	t_node->appendto(m_font_list);
+
+	return t_node->getfont(p_name, p_size, p_style);
+}
+
+bool
+MCFontlist::getfontnames(MCStringRef p_type,
+                         MCListRef & r_names)
+{
+	MCEmscriptenNotImplemented();
+}
+
+/* All fonts are scalable on Emscripten, so return 0 */
+bool
+MCFontlist::getfontsizes(MCStringRef p_fname,
+                         MCListRef & r_sizes)
+{
+	MCAutoListRef t_list;
+	if (MCListCreateMutable('\n', &t_list))
+		return false;
+
+	if (!MCListAppendInteger(*t_list, 0))
+		return false;
+
+	return MCListCopy(*t_list, r_sizes);
+}
+
+bool
+MCFontlist::getfontstyles(MCStringRef p_name,
+                          uint16_t p_size,
+                          MCListRef & r_styles)
+{
+	MCEmscriptenNotImplemented();
+}
+
+bool
+MCFontlist::getfontstructinfo(MCNameRef & r_name,
+                              uint16_t & r_size,
+                              uint16_t & r_style,
+                              Boolean & r_for_printer,
+                              MCFontStruct *p_font)
+{
+	/* Iterate over the list of fonts, looking for the correct font
+	 * structure */
+	MCFontnode *t_node = m_font_list;
+	if (t_node != NULL)
+	{
+		do
+		{
+			if (t_node->getfontstruct() != p_font)
+			{
+				t_node = t_node->next();
+				continue;
+			}
+
+			/* Found a match */
+			r_name = t_node->getname();
+			r_size = t_node->getsize();
+			r_style = t_node->getstyle();
+
+			/* Don't support printer fonts on Emscripten */
+			r_for_printer = false;
+
+			return true;
+		}
+		while (t_node != m_font_list);
+	}
+	return false;
+}
