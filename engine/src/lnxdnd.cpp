@@ -25,6 +25,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "dispatch.h"
 #include "image.h"
 #include "globals.h"
+#include "resolution.h"
+#include "redraw.h"
+#include "util.h"
 
 #include "lnxdc.h"
 
@@ -72,7 +75,6 @@ void set_dnd_cursor(GdkWindow *w, bool p_okay, MCImage *p_image)
         gdk_window_set_cursor(w, g_dnd_cursor_drop_fail);
 }
 
-void DnDClientEvent(GdkEvent*);
 
 // SN-2014-07-11: [[ Bug 12769 ]] Update the signature - the non-implemented UIDC dodragdrop was called otherwise
 MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset)
@@ -341,6 +343,11 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
         }
         
         gdk_event_free(t_event);
+        
+        // Unlock the screen, perform redraw and other cleanup tasks
+        MCU_resetprops(True);
+        MCRedrawUpdateScreen();
+        siguser();
     }
     
     // Other people can now use the pointer
