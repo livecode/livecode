@@ -24,7 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //#include "execpt.h"
 #include "date.h"
 
-#if defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER) || defined(_DARWIN_SERVER)
+#if defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER) || defined(_DARWIN_SERVER) || defined(__EMSCRIPTEN__)
 #include <time.h>
 #define sys_time_t time_t
 #define sys_localtime localtime
