@@ -146,13 +146,13 @@ bool __MCNumberParseNativeString(const char *p_string, uindex_t p_length, bool p
     t_end  = nil;
     // SN-2014-10-06: [[ Bug 13594 ]] We want an unsigned integer if possible
     uinteger_t t_uinteger;
-#ifdef __LP64__
+#if defined(__LP64__)
     unsigned long t_ulong;
     t_ulong = strtoul(t_string, &t_end, t_base);
     if (t_ulong > UINTEGER_MAX)
         errno = ERANGE;
     t_uinteger = (uinteger_t) t_ulong;
-#elif __LP32__ || __LLP64__
+#elif defined(__LP32__) || defined(__LLP64__)
     t_uinteger = strtoul(t_string, &t_end, t_base);
 #endif
     
