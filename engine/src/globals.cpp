@@ -755,7 +755,7 @@ void X_clear_globals(void)
 
     MClook = LF_MOTIF;
     MCttbgcolor = MCSTR("255,255,207");
-    MCttfont = MCSTR("Helvetica");
+    MCttfont = MCSTR(DEFAULT_TEXT_FONT);
     MCttsize = 12;
 
 	MCtrylock = 0;
