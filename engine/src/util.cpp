@@ -1557,8 +1557,11 @@ Boolean MCU_parsepoints(MCPoint *&points, uindex_t &noldpoints, MCStringRef data
 			MCU_realloc((char **)&points, npoints, npoints + 1, sizeof(MCPoint));
 		points[npoints].x = i1;
 		points[npoints++].y = i2;
-        if (l > 0 && (sptr - *t_data) > 2 && *(sptr - 1) == '\n'
-		        && *(sptr - 2) == '\n')
+        // At this point we have skipped any CRs, so if the previous two chars
+        // are CR (and there is room for two previous CRs) then we append a
+        // 'non-point' to indicate a break in path. This ensures we preserve
+        // a trailing 'non-point'.
+		if (sptr - *t_data >= 2 && *(sptr - 1) == '\n' && *(sptr - 2) == '\n')
 		{
 			if (npoints + 1 > noldpoints)
 				MCU_realloc((char **)&points, npoints, npoints + 1, sizeof(MCPoint));
