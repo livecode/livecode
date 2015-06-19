@@ -961,10 +961,6 @@ private handler setData(in pArray as Array, in pKeys as List, out rList as List)
 	end repeat
 
 	put tList into rList
-
-	put true into mRecalculate
-	post "navDataChanged"
-	redraw all
 end handler
 
 private handler getDataElement(in pElementName as String, in pList as List) returns String
@@ -1074,14 +1070,43 @@ private handler defaultNavArray() returns Array
 	return tArray
 end handler
 
+private handler navDataDifferent(in pLeft as List, in pRight as List) returns Boolean
+	variable tIndex as Number
+	repeat with tIndex from 1 up to the number of elements in pLeft
+			if tIndex > the number of elements in pRight then
+				return true
+			end if
+
+			if pLeft[tIndex]["label"] is not pRight[tIndex]["label"] then
+				return true
+			end if
+
+			if pLeft[tIndex]["icon_name"] is not pRIght[tIndex]["icon_name"] then
+				return true
+			end if
+
+			if pLeft[tIndex]["selected_icon_name"] is not pRight[tIndex]["selected_icon_name"] then
+				if not (pLeft[tIndex]["selected_icon_name"] is "" and pRight[tIndex]["selected_icon_name"] is pRight[tIndex]["icon_name"]) and not (pLeft[tIndex]["selected_icon_name"] is pLeft[tIndex]["icon_name"] and pRight[tIndex]["selected_icon_name"] is "") then
+					return true
+				end if
+			end if
+	end repeat
+	return false
+end handler
+
 private handler getNavData() returns Array
 	return listToArray(mNavData)
 end handler
 
 private handler setNavData(in pNavData as Array)
-	setData(pNavData, the keys of defaultNavArray(), mNavData)
-	put true into mRecalculate
-	redraw all
+	variable tNavData as List
+	setData(pNavData, the keys of defaultNavArray(), tNavData)
+	if navDataDifferent(tNavData, mNavData) then
+		put tNavData into mNavData
+		put true into mRecalculate
+		post "navDataChanged"
+		redraw all
+	end if
 end handler
 
 private handler getNavNames() returns String
