@@ -59,7 +59,11 @@ metadata javascripthandlers.editor is "com.livecode.pi.text"
 type MCBrowserFactoryRef is Pointer
 type MCBrowserRef is Pointer
 
+type MCBrowserListRef is Pointer
+
 type MCBrowserProperty is CInt
+type MCBrowserRequestType is CInt
+type MCBrowserRequestState is CInt
 
 --
 
@@ -85,7 +89,14 @@ foreign handler MCBrowserGoForward(in pBrowser as MCBrowserRef) returns CBool bi
 foreign handler MCBrowserGoToURL(in pBrowser as MCBrowserRef) returns CBool binds to "<builtin>"
 foreign handler MCBrowserEvaluateJavaScript(in pBrowser as MCBrowserRef, in pScript as NativeCString, out rResult as NativeCString) returns CBool binds to "<builtin>"
 
-// TODO - declare functions that accept callbacks (not sure of the format here)
+----------
+
+foreign handler MCBrowserSetRequestHandler(in pBrowser as MCBrowserRef, in pCallback as Pointer, in pContext as optional Pointer) returns CBool binds to "<builtin>"
+foreign handler MCBrowserSetJavaScriptHandler(in pBrowser as MCBrowserRef, in pCallback as Pointer, in pContext as optional Pointer) returns CBool binds to "<builtin>"
+
+----------
+
+foreign handler MCHandlerGetFunctionPtr(in pHandler, out rFuncPtr as Pointer) returns CBool binds to "<builtin>"
 
 --------------------------------------------------------------------------------
 
@@ -94,6 +105,11 @@ variable mBrowserType as String
 variable mProperties as optional Array
 
 variable mContentSource as String
+
+--
+
+variable mRequestHandler
+variable mJavaScriptHandler
 
 --------------------------------------------------------------------------------
 
@@ -106,6 +122,21 @@ constant kPropertyUserAgent is 5
 constant kPropertyJavaScriptHandlers is 6
 
 constant kPropertyMap is ["scrollbars", "allowNewWindows", "enableContextMenu", "url", "htmlText", "userAgent", "javaScriptHandlers"]
+
+--
+
+constant kRequestTypeNavigate is 0
+constant kRequestTypeDocumentLoad is 1
+
+constant kRequestTypeMap is ["navigate", "documentLoad"]
+
+--
+
+constant kRequestStateBegin is 0
+constant kRequestStateComplete is 1
+constant kRequestStateFailed is 2
+
+constant kRequestStateMap is ["begin", "complete", "failed"]
 
 --
 
@@ -136,6 +167,9 @@ end handler
 -- called when the widget is created
 public handler OnCreate()
 	OnModuleLoad()
+	
+	put OnBrowserRequestCallback into mRequestHandler
+	put OnJavaScriptCallback into mJavaScriptHandler
 
 	put the empty string into mBrowserType
 	put the empty array into mProperties
@@ -163,6 +197,15 @@ public handler OnOpen()
 	// TODO - add widget code to set native layer from view
 	set my native layer to tBrowserView
 	
+	variable tRequestCallback as Pointer
+	variable tJavaScriptCallback as Pointer
+	
+	MCHandlerGetFunctionPtr(mRequestHandler, tRequestCallback)
+	MCHandlerGetFunctionPtr(mJavaScriptHandler, tJavaScriptCallback)
+
+	MCBrowserSetRequestHandler(mBrowser, tRequestCallback, nothing)
+	MCBrowserSetJavaScriptHandler(mBrowser, tJavaScriptCallback, nothing)
+	
 	loadProperties(mProperties)
 end handler
 
@@ -176,6 +219,25 @@ public handler OnClose()
 	
 	MCBrowserRelease(mBrowser)
 	put nothing into mBrowser
+end handler
+
+----------
+
+public handler OnBrowserRequestCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pType as MCBrowserRequestType, in pState as MCBrowserRequestState, in pFrame as CBool, in pUrl as NativeCString, in pError as optional NativeCString) returns nothing
+	variable tType as String
+	put element (pType + 1) of kRequestTypeMap into tType
+	
+	variable tState as String
+	put element (pState + 1) of kRequestStateMap into tState
+	
+	log "Request %@ - %@ for url %@" with [tType, tState, pUrl]
+	if pState is kRequestStateFailed then
+		log "Failed: %@" with [pError]
+	end if
+end handler
+
+public handler OnJavaScriptCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pHandler as NativeCString, in pParams as MCBrowserListRef)
+	log "JS Call: %@ (%@)" with [pHandler, pParams]
 end handler
 
 ----------
