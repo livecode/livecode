@@ -91,6 +91,8 @@ variable mBrowser as optional MCBrowserRef
 variable mBrowserType as String
 variable mProperties as optional Array
 
+variable mContentSource as String
+
 --------------------------------------------------------------------------------
 
 constant kPropertyScrollbars is 0
