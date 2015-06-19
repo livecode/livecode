@@ -59,6 +59,11 @@ metadata javascripthandlers.editor is "com.livecode.pi.text"
 type MCBrowserFactoryRef is Pointer
 type MCBrowserRef is Pointer
 
+--
+
+foreign handler MCBrowserLibraryInitialize() returns CBool binds to "<builtin>"
+foreign handler MCBrowserLibraryFinalize() returns nothing binds to "<builtin>"
+
 foreign handler MCBrowserFactoryGet(in pFactoryId as NativeCString, out rFactory as MCBrowserFactoryRef) returns CBool binds to "<builtin>"
 foreign handler MCBrowserFactoryCreateBrowser(in pFactory as MCBrowserFactoryRef, out rBrowser as MCBrowserRef) returns CBool binds to "<builtin>"
 
@@ -106,6 +111,11 @@ constant kPersistentProps is ["scrollbars", "allowNewWindows", "enableContextMen
 
 --------------------------------------------------------------------------------
 
+public handler OnModuleLoad()
+	/* UNCHECKED */
+	MCBrowserLibraryInitialize()
+end handler
+
 public handler OnLoad(in pProperties as Array)
 	loadProperties(pProperties)
 end handler
@@ -121,6 +131,7 @@ end handler
 
 -- called when the widget is created
 public handler OnCreate()
+	OnModuleLoad()
 
 	put the empty string into mBrowserType
 	put the empty array into mProperties
