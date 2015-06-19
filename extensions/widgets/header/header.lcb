@@ -468,7 +468,7 @@ public handler OnMouseUp()
       repeat with tActionCount from 1 up to tNumActions
 
          if tActionCount is tSelectedUp-2 then
-            post "headerAction" with mHeaderActions[tActionCount]["name"]
+            post "headerAction" with [mHeaderActions[tActionCount]["name"]]
          end if
 
       end repeat
