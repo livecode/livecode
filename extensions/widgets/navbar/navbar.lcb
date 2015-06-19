@@ -236,7 +236,7 @@ public handler OnSave(out rProperties as Array)
 	put getNavData() into rProperties["items"]
 	put mSelectedItem into rProperties["selected"]
 	put mItemStyle into rProperties["itemStyle"]
-	put mHiliteColor into rProperties["hiliteColor"]
+	put colorToString(mHiliteColor) into rProperties["hiliteColor"]
 
 	return rProperties
 end handler
@@ -245,7 +245,7 @@ public handler OnLoad(in pProperties as Array)
 	setNavData(pProperties["items"])
 	put pProperties["selected"] into mSelectedItem
 	put pProperties["itemStyle"] into mItemStyle
-	put pProperties["hiliteColor"] into mHiliteColor
+	put stringToColor(pProperties["hiliteColor"]) into mHiliteColor
 end handler
 
 public handler OnCreate() returns nothing
