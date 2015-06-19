@@ -602,7 +602,6 @@ static PropList playerprops[] =
         {"playRate", P_PLAY_RATE},
         {"playSelection", P_PLAY_SELECTION},
         {"rect", P_RECTANGLE},
-        //{"selectedareacolor", P_SELECTED_AREA_COLOR},
         {"shadowColor", P_SHADOW_COLOR},
         {"shadowPattern", P_SHADOW_PATTERN},
         {"shadowOffset", P_SHADOW_OFFSET},

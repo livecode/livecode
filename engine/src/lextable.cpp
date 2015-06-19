@@ -1426,7 +1426,6 @@ LT factor_table[] =
 		{"securitycategories", TT_PROPERTY, P_SECURITY_CATEGORIES},
 		{"securitypermissions", TT_PROPERTY, P_SECURITY_PERMISSIONS},
         {"selected", TT_PROPERTY, P_SELECTED},
-        //{"selectedareacolor", TT_PROPERTY, P_SELECTED_AREA_COLOR},
         {"selectedbutton", TT_FUNCTION, F_SELECTED_BUTTON},
         {"selectedchunk", TT_FUNCTION, F_SELECTED_CHUNK},
         {"selectedcolor", TT_PROPERTY, P_SELECTED_COLOR},
