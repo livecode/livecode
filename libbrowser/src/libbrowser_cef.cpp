@@ -76,6 +76,69 @@ bool MCCefStringToUInt(const CefString &p_string, uint32_t &r_int)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCCefListToBrowserList(CefRefPtr<CefListValue> p_list, MCBrowserListRef &r_list)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCBrowserListRef t_list;
+	t_list = nil;
+	
+	size_t t_size;
+	t_size = p_list->GetSize();
+	
+	if (t_success)
+		t_success = MCBrowserListCreate(t_list, t_size);
+	
+	for (uint32_t i = 0; t_success && i < t_size; i++)
+	{
+		switch (p_list->GetType(i))
+		{
+			case VTYPE_BOOL:
+				t_success = MCBrowserListSetBoolean(t_list, i, p_list->GetBool(i));
+				break;
+			
+			case VTYPE_INT:
+				t_success = MCBrowserListSetInteger(t_list, i, p_list->GetInt(i));
+				break;
+			
+			case VTYPE_DOUBLE:
+				t_success = MCBrowserListSetDouble(t_list, i, p_list->GetDouble(i));
+				break;
+			
+			case VTYPE_STRING:
+			{
+				char *t_string = nil;
+				t_success = MCCefStringToUtf8String(p_list->GetString(i), t_string) && MCBrowserListSetUTF8String(t_list, i, t_string);
+				if (t_string != nil)
+				MCCStringFree(t_string);
+				break;
+			}
+			
+			case VTYPE_LIST:
+			{
+				MCBrowserListRef t_list_val = nil;
+				t_success = MCCefListToBrowserList(p_list->GetList(i), t_list_val) && MCBrowserListSetList(t_list, i, t_list_val);
+				MCBrowserListRelease(t_list_val);
+				break;
+			}
+			
+			default:
+				// unimplemented value type
+				t_success = false;
+		}
+	}
+	
+	if (t_success)
+		r_list = t_list;
+	else
+		MCBrowserListRelease(t_list);
+	
+	return t_success;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 static const char *s_auth_scheme_strings[] =
 {
 	"basic",
@@ -504,38 +567,20 @@ public:
 			uint32_t t_arg_count;
 			t_arg_count = 0;
 			
-			MCBrowserListRef t_list;
-			t_list = nil;
-			
-			// Convert message args to strings and pass to handler parameters
-			if (t_success)
-			{
-				t_arg_count = t_args->GetSize() - 1;
-				t_success = MCBrowserListCreate(t_list, t_arg_count);
-			}
-			
-			for (uint32_t i = 0; t_success && i < t_arg_count; i++)
-			{
-				char *t_utf8_string;
-				t_utf8_string = nil;
-				
-				t_success = MCCefStringToUtf8String(t_args->GetString(i + 1), t_utf8_string);
-				
-				if (t_success)
-					t_success = MCBrowserListSetUTF8String(t_list, i, t_utf8_string);
-				
-				if (t_utf8_string != nil)
-					MCCStringFree(t_utf8_string);
-			}
+			MCBrowserListRef t_param_list;
+			t_param_list = nil;
 			
 			if (t_success)
-				m_owner->OnJavaScriptCall(t_handler, t_list);
+				t_success = MCCefListToBrowserList(t_args->GetList(1), t_param_list);
+			
+			if (t_success)
+				m_owner->OnJavaScriptCall(t_handler, t_param_list);
 			
 			if (t_handler)
 				MCCStringFree(t_handler);
 			
-			if (t_list != nil)
-				MCBrowserListRelease(t_list);
+			if (t_param_list != nil)
+				MCBrowserListRelease(t_param_list);
 			
 			return true;
 		}

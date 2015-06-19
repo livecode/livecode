@@ -140,6 +140,54 @@ bool MCCefListToV8List(CefRefPtr<CefV8Context> p_context, CefRefPtr<CefListValue
 	return t_success;
 }
 
+bool MCCefV8ListToList(CefRefPtr<CefV8Context> p_context, const CefV8ValueList &p_list, CefRefPtr<CefListValue> &r_list)
+{
+	bool t_success;
+	t_success = true;
+	
+	p_context->Enter();
+	
+	CefRefPtr<CefListValue> t_list;
+	if (t_success)
+		t_list = CefListValue::Create();
+	
+	if (t_success)
+		t_success = t_list->SetSize(p_list.size());
+	
+	for (CefV8ValueList::const_iterator i = p_list.begin(); t_success && i != p_list.end(); i++)
+	{
+		CefRefPtr<CefV8Value> t_val;
+		t_val = *i;
+		
+		uint32_t t_index;
+		t_index = i - p_list.begin();
+		
+		if (t_val->IsBool())
+			t_success = t_list->SetBool(t_index, t_val->GetBoolValue());
+		else if (t_val->IsInt())
+			t_success = t_list->SetInt(t_index, t_val->GetIntValue());
+		else if (t_val->IsUInt())
+			t_success = t_list->SetInt(t_index, t_val->GetUIntValue());
+		else if (t_val->IsDouble())
+			t_success = t_list->SetDouble(t_index, t_val->GetDoubleValue());
+		else if (t_val->IsString())
+			t_success = t_list->SetString(t_index, t_val->GetStringValue());
+		else
+		{
+			t_success = MCCefV8ValueConvertToString(p_context, t_val);
+			if (t_success)
+				t_success = t_list->SetString(t_index, t_val->GetStringValue());
+		}
+	}
+	
+	p_context->Exit();
+	
+	if (t_success)
+		r_list = t_list;
+
+	return t_success;
+}
+
 bool MCCefHandleCallScript(CefRefPtr<CefBrowser> p_browser, const CefString &p_function_name, CefRefPtr<CefListValue> p_args, CefString &r_return_value)
 {
 	bool t_success;
@@ -330,15 +378,12 @@ bool MCCefSendHandlerMessage(CefRefPtr<CefBrowser> p_browser, const CefString &p
 		
 		t_success = t_args->SetString(0, p_handler);
 		
-		for (CefV8ValueList::const_iterator i = p_args.begin(); t_success && i != p_args.end(); i++)
-		{
-			CefRefPtr<CefV8Value> t_val;
-			t_val = *i;
-			
-			t_success = MCCefV8ValueConvertToString(CefV8Context::GetCurrentContext(), t_val);
-			if (t_success)
-				t_success = t_args->SetString((i - p_args.begin()) + 1, t_val->GetStringValue());
-		}
+		CefRefPtr<CefListValue> t_params;
+		if (t_success)
+			t_success = MCCefV8ListToList(CefV8Context::GetCurrentContext(), p_args, t_params);
+		
+		if (t_success)
+			t_success = t_args->SetList(1, t_params);
 	}
 	
 	if (t_success)

@@ -53,7 +53,7 @@ void MCBrowserValueClear(MCBrowserValue &p_value)
 bool MCBrowserValueSetBoolean(MCBrowserValue &self, bool p_value)
 {
 	MCBrowserValueClear(self);
-	self.type = kMCBrowserValueTypeInteger;
+	self.type = kMCBrowserValueTypeBoolean;
 	self.boolean = p_value;
 	
 	return true;
