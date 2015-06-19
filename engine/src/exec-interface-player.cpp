@@ -743,26 +743,11 @@ void MCPlayer::GetEnabledTracks(MCExecContext& ctxt, uindex_t& r_count, uinteger
     getenabledtracks(r_count, r_tracks);
 }
 
-void MCPlayer::GetForeColor(MCExecContext &ctxt, MCInterfaceNamedColor &r_color)
+void MCPlayer::SetEnabledTracks(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_tracks)
 {
-    getforegrouncolor(r_color);
-}
-
-void MCPlayer::SetForeColor(MCExecContext &ctxt, const MCInterfaceNamedColor &p_color)
-{
-    setforegroundcolor(p_color);
-    Redraw();
-}
-
-void MCPlayer::GetHiliteColor(MCExecContext &ctxt, MCInterfaceNamedColor &r_color)
-{
-    gethilitecolor(r_color);
-}
-
-void MCPlayer::SetHiliteColor(MCExecContext &ctxt, const MCInterfaceNamedColor &p_color)
-{
-    sethilitecolor(p_color);
-    Redraw();
+    // PM-2015-06-01: [[ PlatformPlayer ]]
+    // P_ENABLED_TRACKS setter refactored to the MCPlayer implementations
+    setenabledtracks(p_count, p_tracks);
 }
 
 #ifdef FEATURE_PLATFORM_PLAYER

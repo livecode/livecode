@@ -348,6 +348,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //
 
 #if !defined(__VISUALC__)
+#	define __HAVE_STDDEF_H__
+#	include <stddef.h>
 #	define __HAVE_STDINT_H__
 #	define __STDC_LIMIT_MACROS
 #	include <stdint.h>
@@ -414,23 +416,29 @@ typedef uint32_t uinteger_t;
 typedef int32_t intenum_t;
 typedef uint32_t intset_t;
 
+#if !defined(__HAVE_STDDEF_H__)
+#	if defined(__WINDOWS__)
+typedef unsigned int size_t;
+#	elif defined(__LINUX__) || defined(__ANDROID__)
+typedef unsigned int size_t;
+#	else
+typedef unsigned long size_t;
+#   endif
+#endif /* !__HAVE_STDDEF_H__ */
+
 #if !defined(__HAVE_STDINT_H__)
 #	if defined(__WINDOWS__)
 typedef signed int intptr_t;
 typedef unsigned int uintptr_t;
-typedef unsigned int size_t;
 #	elif defined(__LINUX__)
 typedef signed int intptr_t;
 typedef unsigned int uintptr_t;
-typedef unsigned int size_t;
 #	elif defined(__ANDROID__)
 typedef signed int intptr_t;
 typedef unsigned int uintptr_t;
-typedef unsigned int size_t;
 #	else
 typedef long signed int intptr_t;
 typedef long unsigned int uintptr_t;
-typedef unsigned long size_t;
 #	endif
 #endif /* !__HAVE_STDINT_H__ */
 
