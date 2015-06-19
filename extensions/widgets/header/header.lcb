@@ -194,15 +194,13 @@ metadata version is "1.0.0"
 -- property declarations
 property headerTitle          get mHeaderTitle           set setHeaderTitle
 property headerSubtitle       get mHeaderSubtitle        set setHeaderSubtitle
-property headerSubtitleIsOn   get mHeaderSubtitleIsOn    set setHeaderSubtitleIsOn
 property headerActions        get getHeaderActions       set setHeaderActions
 property actionNames          get getActionNames         set setActionNames
 property actionLabels         get getActionLabels        set setActionLabels
 property actionIcons          get getActionIcons         set setActionIcons
 property actionStyle          get mActionStyle           set setActionStyle
 property showBackIcon         get mShowBackIcon          set setShowBackIcon
-property showBackLabel        get mShowBackLabel         set setShowBackLabel
-property backButtonLabel      get mBackButtonLabel       set setBackButtonLabel
+property leftLabel            get mLeftLabel             set setLeftLabel
 property actionColor          get getActionColor         set setActionColor
 property selectedActionColor  get getSelectedActionColor set setSelectedActionColor
 property showSearchIcon       get mShowSearchIcon        set setShowSearchIcon
@@ -213,10 +211,6 @@ metadata headerTitle.label is "Title"
 
 metadata headerSubtitle.default is "Subtitle"
 metadata headerSubtitle.label is "Subtitle"
-
-metadata headerSubtitleIsOn.editor is "com.livecode.pi.boolean"
-metadata headerSubtitleIsOn.default is "false"
-metadata headerSubtitleIsOn.label is "Show Subtitle"
 
 metadata headerActions.editor is "com.livecode.pi.navbar"
 metadata headerActions.label is "Header Actions"
@@ -234,12 +228,8 @@ metadata showBackIcon.editor is "com.livecode.pi.boolean"
 metadata showBackIcon.default is "true"
 metadata showBackIcon.label is "Show Back Icon"
 
-metadata showBackLabel.editor is "com.livecode.pi.boolean"
-metadata showBackLabel.default is "true"
-metadata showBackLabel.label is "Show Back Label"
-
-metadata backButtonLabel.default is "Back"
-metadata backButtonLabel.label is "Back Label"
+metadata leftLabel.default is "Back"
+metadata leftLabel.label is "Left Label"
 
 metadata actionColor.editor is "com.livecode.pi.color"
 metadata actionColor.default is "0,121,255"
@@ -256,18 +246,20 @@ metadata showSearchIcon.label is "Show Search Icon"
 -- private instance variables
 private variable mHeaderTitle as String
 private variable mHeaderSubtitle as String
-private variable mHeaderSubtitleIsOn as Boolean
 private variable mHeaderActions as List
 private variable mActionStyle as String
 private variable mShowBackIcon as Boolean
-private variable mShowBackLabel as Boolean
-private variable mBackButtonLabel as String
+private variable mLeftLabel as String
 private variable mActionColor as Color
 private variable mSelectedActionColor as Color
 private variable mShowSearchIcon as Boolean
 
+private variable mShowLeftLabel as Boolean
+private variable mShowSubtitle as Boolean
+
 private variable mIconColor as Color
 private variable mTitleRatio as Real
+private variable mTitleVAdjust as Real
 private variable mIconTop as Real
 private variable mIconBottom as Real
 private variable mIconWidth as Real
@@ -292,12 +284,10 @@ public handler OnSave(out rProperties as Array)
 
    put mHeaderTitle into rProperties["headerTitle"]
    put mHeaderSubtitle into rProperties["headerSubtitle"]
-   put mHeaderSubtitleIsOn into rProperties["headerSubtitleIsOn"]
    put getHeaderActions() into rProperties["headerActions"]
    put mActionStyle into rProperties["actionStyle"]
    put mShowBackIcon into rProperties["showBackIcon"]
-   put mShowBackLabel into rProperties["showBackLabel"]
-   put mBackButtonLabel into rProperties["backButtonLabel"]
+   put mLeftLabel into rProperties["leftLabel"]
    put mActionColor into rProperties["actionColor"]
    put mSelectedActionColor into rProperties["selectedActionColor"]
    put mShowSearchIcon into rProperties["showSearchIcon"]
@@ -308,12 +298,10 @@ end handler
 public handler OnLoad(in pProperties as Array)
    put pProperties["headerTitle"] into mHeaderTitle
    put pProperties["headerSubtitle"] into mHeaderSubtitle
-   put pProperties["headerSubtitleIsOn"] into mHeaderSubtitleIsOn
    setHeaderActions(pProperties["headerActions"])
    put pProperties["actionStyle"] into mActionStyle
    put pProperties["showBackIcon"] into mShowBackIcon
-   put pProperties["showBackLabel"] into mShowBackLabel
-   put pProperties["backButtonLabel"] into mBackButtonLabel
+   put pProperties["leftLabel"] into mLeftLabel
    put pProperties["actionColor"] into mActionColor
    put pProperties["selectedActionColor"] into mSelectedActionColor
    put pProperties["showSearchIcon"] into mShowSearchIcon
@@ -335,28 +323,21 @@ public handler OnCreate()
    put "" into tArray["icon"]
    push tArray onto tHeaderActions
 
-   put "add" into tArray["name"]
-   put "Add" into tArray["label"]
-   put "plus" into tArray["icon_name"]
-   put "" into tArray["selected_icon_name"]
-   put "" into tArray["icon"]
-   push tArray onto tHeaderActions
-
    put tHeaderActions into mHeaderActions
 
    -- properties
    put "Yesterday" into mHeaderTitle
-   put "18:50" into mHeaderSubtitle
-   put true into mHeaderSubtitleIsOn
+   put "" into mHeaderSubtitle
    put "icons" into mActionStyle
    put true into mShowBackIcon
-   put true into mShowBackLabel
-   put "Back" into mBackButtonLabel
+   put "Back" into mLeftLabel
    put color [0, 121/255, 1] into mActionColor
    put color [0, 1, 0] into mSelectedActionColor
    put true into mShowSearchIcon
 
    -- variables
+   put false into mShowLeftLabel
+   put false into mShowSubtitle
    put 0 into mSelectedAction
    put 0 into mRight
    put 0 into mLetterCount
@@ -385,7 +366,7 @@ public handler OnPaint()
    fill text mHeaderTitle at center of fetchRect("title") on this canvas
 
    -- fill in the text of the subtitle
-   if mHeaderSubtitleIsOn is true then
+   if mShowSubtitle is true then
       set the font of this canvas to fetchFont("subtitle")
       set the paint of this canvas to fetchPaint("title")
       fill text mHeaderSubtitle at center of fetchRect("subtitle") on this canvas
@@ -398,9 +379,9 @@ public handler OnPaint()
       fill fetchPath("backIcon") on this canvas
    end if
 
-   if mShowBackLabel is true then
+   if mShowLeftLabel is true then
       set the font of this canvas to fetchFont("label")
-      fill text mBackButtonLabel at left of fetchRect("backLabel") on this canvas
+      fill text mLeftLabel at left of fetchRect("leftLabel") on this canvas
    end if
 
    -- draw the actions
@@ -474,25 +455,38 @@ public handler OnMouseUp()
       end repeat
 
    else if tSelectedUp = 1 then
-      post "backAction"
+      post "leftAction"
 
    else if tSelectedUp = 2 then
-      post "search"
+      post "searchAction"
    end if
 
 end handler
 
 private handler updateVariables() returns nothing
 
-   if mHeaderSubtitleIsOn is false then
+   if mHeaderSubtitle is empty then
+      put false into mShowSubtitle
+   else
+      put true into mShowSubtitle
+   end if
+
+   if mShowSubtitle is false then
       put 17/64 into mTitleRatio
    else
       put 15/64 into mTitleRatio
    end if
 
+   if mLeftLabel is empty then
+      put false into mShowLeftLabel
+   else
+      put true into mShowLeftLabel
+   end if
+
    variable tH
    put my height into tH
 
+   put 2*tH/64 into mTitleVAdjust
    put tH*(30.5/64) into mIconTop
    put tH*(51.5/64) into mIconBottom
    put tH*(13/64) into mIconWidth
@@ -636,8 +630,8 @@ private handler fetchRect(in pObject as String) returns Rectangle
    put tH*kActionRatio/2 into tSize
 
    if pObject is "title" then
-      if mHeaderSubtitleIsOn is false then
-         return rectangle [0, mLabelTop, my width, mLabelBottom]
+      if mShowSubtitle is false then
+         return rectangle [0, mLabelTop-mTitleVAdjust, my width, mLabelBottom-mTitleVAdjust]
       else
          put mSubtitleCenter-tH*mTitleRatio-kMargin/2 into tTop
          put mSubtitleCenter-kMargin/2 into tBottom
@@ -649,7 +643,7 @@ private handler fetchRect(in pObject as String) returns Rectangle
       put kMargin/2 + mSubtitleCenter + tH*kSubtitleRatio into tBottom
       return rectangle [0, tTop, my width, tBottom]
 
-   else if pObject is "backLabel" then
+   else if pObject is "leftLabel" then
       if mShowBackIcon is true then
          put 3*kMargin/2 + mIconWidth into tLeft
       else
@@ -709,11 +703,11 @@ private handler fetchFont(in pType as String) returns Font
 
    if pType is "title" then
       put (my height)*mTitleRatio into tSize
-      put "Helvetica Neue Regular" into tFont
+      put "Helvetica Neue Medium" into tFont
 
    else if pType is "subtitle" then
       put (my height)*kSubtitleRatio into tSize
-      put "Helvetice Neue Regular" into tFont
+      put "Helvetica Neue Regular" into tFont
 
    else if pType is "label" then
       put (my height)*kActionRatio into tSize
@@ -751,23 +745,23 @@ end handler
 private handler fetchBackRect() returns Rectangle
    variable tBackRect as Rectangle
 
-   if mShowBackLabel is true then
+   if mShowLeftLabel is true then
 
       variable tLetterCount as Integer
       variable tSize as Real
       variable tWidth as Real
 
-      put the number of chars in mBackButtonLabel into tLetterCount
+      put the number of chars in mLeftLabel into tLetterCount
       put (my height)*kActionRatio/2 into tSize
       put tLetterCount*tSize into tWidth
 
    end if
 
-   if mShowBackIcon is true and mShowBackLabel is false then
+   if mShowBackIcon is true and mShowLeftLabel is false then
       put rectangle [kMargin, mLabelTop, kMargin + mIconWidth, mLabelBottom] into tBackRect
-   else if mShowBackIcon is false and mShowBackLabel is true then
+   else if mShowBackIcon is false and mShowLeftLabel is true then
       put rectangle [kMargin, mLabelTop, kMargin + tWidth, mLabelBottom] into tBackRect
-   else if mShowBackIcon is true and mShowBackLabel is true then
+   else if mShowBackIcon is true and mShowLeftLabel is true then
       put rectangle [kMargin, mLabelTop, kMargin + mIconWidth + tWidth, mLabelBottom] into tBackRect
    else
       put rectangle [0,0,0,0] into tBackRect
@@ -868,8 +862,6 @@ private handler defaultActionsArray() returns Array
    put "action" into tArray["name"]
    put "Action" into tArray["label"]
    put "circle"into tArray["icon_name"]
-   put "" into tArray["selected_icon_name"]
-   put "" into tArray["icon"]
    return tArray
 end handler
 --
@@ -897,10 +889,6 @@ private handler getActionIcons() returns String
    return getDataElement("icon_name", mHeaderActions)
 end handler
 
-private handler getActionSelectedIcons() returns String
-   return getDataElement("selected_icon_name", mHeaderActions)
-end handler
-
 -- these handlers convert the color properties for output in the PI
 private handler getActionColor() returns String
    return colorToString(mActionColor)
@@ -923,11 +911,6 @@ end handler
 
 private handler setHeaderSubtitle(in pSubtitle as String) returns nothing
    put pSubtitle into mHeaderSubtitle
-   redraw all
-end handler
-
-private handler setHeaderSubtitleIsOn(in pSubtitleIsOn as Boolean) returns nothing
-   put pSubtitleIsOn into mHeaderSubtitleIsOn
    redraw all
 end handler
 
@@ -967,13 +950,8 @@ private handler setShowBackIcon(in pShow as Boolean) returns nothing
    redraw all
 end handler
 
-private handler setShowBackLabel(in pShow as Boolean) returns nothing
-   put pShow into mShowBackLabel
-   redraw all
-end handler
-
-private handler setBackButtonLabel(in pLabel as String) returns nothing
-   put pLabel into mBackButtonLabel
+private handler setLeftLabel(in pLabel as String) returns nothing
+   put pLabel into mLeftLabel
    redraw all
 end handler
 
