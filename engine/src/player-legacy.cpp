@@ -2002,7 +2002,8 @@ void MCPlayer::getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id)
 #elif defined(X11)
         x11_getenabledtracks(t_count, t_tracks_id);
 #else
-        0 == 0;
+    // SN-2015-06-19: [[ CID 100295 ]] Use brackets instead of true assertion
+    {}
 #endif
     
     r_count = t_count;
