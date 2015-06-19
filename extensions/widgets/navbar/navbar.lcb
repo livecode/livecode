@@ -377,7 +377,7 @@ private handler drawNavBarEditMode() returns nothing
 			-- Draw the line between items
 			drawEditModeDivide(tX)
 	end repeat
-	log the keys of mDragData
+
 	if "item" is among the keys of mDragData then
 		drawDragData()
 	end if
