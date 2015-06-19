@@ -328,7 +328,7 @@ public handler OnCreate()
    -- properties
    put "Yesterday" into mHeaderTitle
    put "" into mHeaderSubtitle
-   put "icons" into mActionStyle
+   put "names" into mActionStyle
    put true into mShowBackIcon
    put "Back" into mLeftLabel
    put color [0, 121/255, 1] into mActionColor
@@ -608,7 +608,7 @@ private handler fetchPath(in pObject as String) returns Path
       put tRight - mIconWidth into tLeft
 
       put path iconSVGPathFromName("search") into tIconPath
-      put rectangle [tLeft, mLabelTop, tRight, mLabelBottom] into tIconRect
+      put rectangle [tLeft-mIconWidth/4, mLabelTop-mIconWidth/4, tRight+mIconWidth/4, mLabelBottom+mIconWidth/4] into tIconRect
 
       setIconPath(tIconRect, tIconPath)
       return tIconPath
@@ -652,8 +652,8 @@ private handler fetchRect(in pObject as String) returns Rectangle
       return rectangle [tLeft, mLabelTop, my width, mLabelBottom]
 
    else if pObject is "actionIcon" then
-      put rectangle [mRight - mIconWidth, mLabelTop, mRight, mLabelBottom] into tRect
-      put (mRight - mIconWidth - 2*kMargin) into mRight
+      put rectangle [mRight-5*mIconWidth/4, mLabelTop-mIconWidth/4, mRight+mIconWidth/4, mLabelBottom+mIconWidth/4] into tRect
+      put (mRight - 5*mIconWidth/4 - 2*kMargin) into mRight
       return tRect
 
    else if pObject is "actionLabel" then
