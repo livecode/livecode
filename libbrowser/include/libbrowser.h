@@ -183,7 +183,7 @@ bool MCBrowserListAppendList(MCBrowserListRef p_list, MCBrowserListRef p_value);
 bool MCBrowserListGetBoolean(MCBrowserListRef p_list, uint32_t p_index, bool &r_value);
 bool MCBrowserListGetInteger(MCBrowserListRef p_list, uint32_t p_index, int32_t &r_value);
 bool MCBrowserListGetDouble(MCBrowserListRef p_list, uint32_t p_index, double_t &r_value);
-bool MCBrowserListGetString(MCBrowserListRef p_list, uint32_t p_index, char *&r_value);
+bool MCBrowserListGetUTF8String(MCBrowserListRef p_list, uint32_t p_index, char *&r_value);
 bool MCBrowserListGetList(MCBrowserListRef p_list, uint32_t p_index, MCBrowserListRef &r_value);
 	
 typedef struct __MCBrowser *MCBrowserRef;
