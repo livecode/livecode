@@ -333,7 +333,7 @@ bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformC
     GtkStyle* t_style;
     t_style = getStyleForControlType(p_type, p_part);
     if (t_style == NULL)
-        return MCFontCreate(MCNAME("Helvetica"), 0, 12, r_font);
+        return MCFontCreate(MCNAME(DEFAULT_TEXT_FONT), 0, 12, r_font);
     
     bool t_found;
     t_found = false;
@@ -362,7 +362,7 @@ bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformC
     // We use 12-point Helvetica on Linux, traditionally
     if (p_state & kMCPlatformControlStateCompatibility)
     {
-        MCNameCreateWithCString("Helvetica", t_font_name);
+        MCNameCreateWithCString(DEFAULT_TEXT_FONT, t_font_name);
         t_font_size = 12;
     }
     else
