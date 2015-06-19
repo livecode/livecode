@@ -49,23 +49,17 @@ on builderBuild pWhich, pPlatforms, pEdition, pType
    switch pWhich
       case "Tools"
          repeat for each line tPlatform in pPlatforms
-            # Only one linux target for LiveCode 6.7
-            if (char 1 of tVersion) < 7 and tPlatform begins with "linux" and tPlatform is not "linux" then next repeat
             dispatch "toolsBuilderRun" to stack builderToolsBuilderStack() with tPlatform, pEdition, tVersion
          end repeat
          break
       case "Engine"
          dispatch "engineBuilderRun" to stack builderEngineBuilderStack() with "environment", pEdition, tVersion
          repeat for each line tPlatform in pPlatforms
-            # Only one linux target for LiveCode 6.7
-            if (char 1 of tVersion) < 7 and tPlatform begins with "linux" and tPlatform is not "linux" then next repeat
             dispatch "engineBuilderRun" to stack builderEngineBuilderStack() with tPlatform, pEdition, tVersion
          end repeat
          break
       case "Server"
          repeat for each line tPlatform in pPlatforms
-            # Only one linux target for LiveCode 6.7
-            if (char 1 of tVersion) < 7 and tPlatform begins with "linux" and tPlatform is not "linux" then next repeat
             dispatch "serverBuilderRun" to stack builderServerBuilderStack() with tPlatform, pEdition, tVersion
          end repeat
          break
@@ -95,9 +89,9 @@ command builderFetchEngine pVersion, pPlatform
       switch pPlatform
          case "windows"
             return sEngineDir & slash & "win-x86-bin"
-         case "linux"
+         case "linux-x86"
             return sEngineDir & slash & "linux-x86-bin"
-         case "linux-x64"
+         case "linux-x86_64"
             return sEngineDir & slash & "linux-x86_64-bin"
          case "linux-armv6hf"
             return sEngineDir & slash & "linux-armv6hf-bin"
@@ -118,8 +112,8 @@ command builderFetchEngine pVersion, pPlatform
       case "windows"
          get "windows/release"
          break
-      case "linux"
-      case "linux-x64"
+      case "linux-x86"
+      case "linux-x86_64"
       case "linux-armv6hf"
          get "linux"
          break
@@ -316,9 +310,9 @@ function builderInstallerEngine pPlatform
    switch pPlatform
       case "windows"
          return tEngineFolder & slash & "installer.exe"
-      case "linux"
+      case "linux-x86"
          return tEngineFolder & slash & "installer"
-      case "linux-x64"
+      case "linux-x86_64"
          return tEngineFolder & slash & "installer"
       case "linux-armv6hf"
          return tEngineFolder & slash & "installer"
@@ -400,9 +394,6 @@ command dietAndStrip pArchs, pInput, pOutput
    
    local tActualArchs
    repeat for each item tArch in pArchs
-      if tArch is "x86" then
-         put "i386" into tArch
-      end if
       if tArch is "x86-64" then
          put "x86_64" into tArch
       end if

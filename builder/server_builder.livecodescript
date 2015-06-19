@@ -183,9 +183,9 @@ function getZipFilenameStub pVersion, pPlatform, pEdition
       put "Mac" into pPlatform
    else if pPlatform is "windows" then
       put "Windows" into pPlatform
-   else if pPlatform is "linux" then
+   else if pPlatform is "linux-x86" then
       put "Linux" into pPlatform
-   else if pPlatform is "linux-x64" then
+   else if pPlatform is "linux-x86_64" then
       put "Linux-x86_64" into pPlatform
    else if pPlatform is "linux-armv6hf" then
       put "Linux-armv6hf" into pPlatform
