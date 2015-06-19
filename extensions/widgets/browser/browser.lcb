@@ -62,6 +62,7 @@ type MCBrowserRef is Pointer
 type MCBrowserListRef is Pointer
 
 type MCBrowserProperty is CInt
+type MCBrowserValueType is CInt
 type MCBrowserRequestType is CInt
 type MCBrowserRequestState is CInt
 
@@ -91,6 +92,14 @@ foreign handler MCBrowserEvaluateJavaScript(in pBrowser as MCBrowserRef, in pScr
 
 ----------
 
+foreign handler MCBrowserListGetSize(in pList as MCBrowserListRef, out pSize as CUInt) returns CBool binds to "<builtin>"
+foreign handler MCBrowserListGetType(in pList as MCBrowserListRef, in pIndex as CUInt, out pType as MCBrowserValueType) returns CBool binds to "<builtin>"
+foreign handler MCBrowserListGetBoolean(in pList as MCBrowserListRef, in pIndex as CUInt, out pValue as CBool) returns CBool binds to "<builtin>"
+foreign handler MCBrowserListGetInteger(in pList as MCBrowserListRef, in pIndex as CUInt, out pValue as CInt) returns CBool binds to "<builtin>"
+foreign handler MCBrowserListGetDouble(in pList as MCBrowserListRef, in pIndex as CUInt, out pValue as CDouble) returns CBool binds to "<builtin>"
+foreign handler MCBrowserListGetUTF8String(in pList as MCBrowserListRef, in pIndex as CUInt, out pValue as ZStringNative) returns CBool binds to "<builtin>"
+foreign handler MCBrowserListGetList(in pList as MCBrowserListRef, in pIndex as CUInt, out pValue as MCBrowserListRef) returns CBool binds to "<builtin>"
+
 foreign handler MCBrowserSetRequestHandler(in pBrowser as MCBrowserRef, in pCallback as Pointer, in pContext as optional Pointer) returns CBool binds to "<builtin>"
 foreign handler MCBrowserSetJavaScriptHandler(in pBrowser as MCBrowserRef, in pCallback as Pointer, in pContext as optional Pointer) returns CBool binds to "<builtin>"
 
@@ -112,6 +121,15 @@ variable mRequestHandler
 variable mJavaScriptHandler
 
 --------------------------------------------------------------------------------
+
+constant kValueTypeNone is 0
+constant kValueTypeBoolean is 1
+constant kValueTypeInteger is 2
+constant kValueTypeDouble is 3
+constant kValueTypeUTF8String is 4
+constant kValueTypeList is 5
+
+--
 
 constant kPropertyScrollbars is 0
 constant kPropertyAllowNewWindows is 1
@@ -238,6 +256,81 @@ end handler
 
 public handler OnJavaScriptCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pHandler as NativeCString, in pParams as MCBrowserListRef)
 	log "JS Call: %@ (%@)" with [pHandler, pParams]
+	variable tList
+	if browserListToList(pParams, tList) then
+		log "Params: %@" with [tList]
+	end if
+end handler
+
+--
+
+private handler browserListToList(in pBrowserList as MCBrowserListRef, out rList as List) returns Boolean
+	variable tList as List
+	put the empty list into tList
+	
+	variable tCount as CUInt
+	if not MCBrowserListGetSize(pBrowserList, tCount) then
+		log "couldn't get size"
+		return false
+	end if
+	
+	variable i
+	repeat with i from 0 up to tCount - 1
+		variable tType as MCBrowserValueType
+		if not MCBrowserListGetType(pBrowserList, i, tType) then
+			log "couldn't get type of %@" with [i]
+			return false
+		end if
+		
+		if tType is kValueTypeBoolean then
+			variable tBoolean as CBool
+			if not MCBrowserListGetBoolean(pBrowserList, i, tBoolean) then
+				log "couldn't get boolean %@" with [i]
+				return false
+			end if
+			push tBoolean onto tList
+		else if tType is kValueTypeInteger then
+			variable tInteger as CInt
+			if not MCBrowserListGetInteger(pBrowserList, i, tInteger) then
+				log "couldn't get integer %@" with [i]
+				return false
+			end if
+			push tInteger onto tList
+		else if tType is kValueTypeDouble then
+			variable tDouble as CDouble
+			if not MCBrowserListGetDouble(pBrowserList, i, tDouble) then
+				log "couldn't get double %@" with [i]
+				return false
+			end if
+			push tDouble onto tList
+		else if tType is kValueTypeUTF8String then
+			variable tUTF8String as ZStringNative
+			if not MCBrowserListGetUTF8String(pBrowserList, i, tUTF8String) then
+				log "couldn't get string %@" with [i]
+				return false
+			end if
+			push tUTF8String onto tList
+		else if tType is kValueTypeList then
+			variable tBrowserList as MCBrowserListRef
+			if not MCBrowserListGetList(pBrowserList, i, tBrowserList) then
+				log "couldn't get list %@" with [i]
+				return false
+			end if
+			variable tConvertedList as List
+			if not browserListToList(tBrowserList, tConvertedList) then
+				log "couldn't convert list %@" with [i]
+				return false
+			end if
+			push tConvertedList onto tList
+		else
+			log "unrecognised type %@" with [tType]
+			return false
+		end if
+	end repeat
+	
+	put tList into rList
+	
+	return true
 end handler
 
 ----------
