@@ -162,7 +162,7 @@ extern "C" MC_DLLEXPORT void MCWidgetExecPost(MCStringRef p_message)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" MC_DLLEXPORT void MCWidgetGetBounds(MCCanvasRectangleRef& r_rect)
+extern "C" MC_DLLEXPORT void MCWidgetGetMyBounds(MCCanvasRectangleRef& r_rect)
 {
     if (!MCWidgetEnsureCurrentWidget())
         return;
@@ -185,7 +185,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetMyHeight(MCNumberRef& r_height)
     if (!MCWidgetEnsureCurrentWidget())
         return;
     
-    MCNumberCreateWithReal(MCWidgetGetFrame(MCcurrentwidget) . size . width, r_height);
+    MCNumberCreateWithReal(MCWidgetGetFrame(MCcurrentwidget) . size . height, r_height);
 }
 
 extern "C" MC_DLLEXPORT void MCWidgetGetMyFont(MCCanvasFontRef& r_canvas_font)

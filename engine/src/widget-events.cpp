@@ -61,6 +61,20 @@ struct MCWidgetEventManager::MCWidgetTouchEvent
     coord_t     m_y;
 };
 
+static inline void MCValueAssignOptional(MCValueRef& x_target, MCValueRef p_source)
+{
+    if (x_target == p_source)
+        return;
+    
+    if (x_target != nil)
+        MCValueRelease(x_target);
+    
+    if (p_source != nil)
+        MCValueRetain(p_source);
+    
+    x_target = p_source;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCWidgetEventManager::MCWidgetEventManager() :
@@ -131,16 +145,16 @@ Boolean MCWidgetEventManager::event_kdown(MCWidget* p_widget, MCStringRef p_text
     switch (p_key)
     {
         case XK_WheelUp:
-            return mouseScroll(p_widget, 0.0, +1.0);
+            return mouseScroll(p_widget -> getwidget(), 0.0, +1.0);
             
         case XK_WheelDown:
-            return mouseScroll(p_widget, 0.0, -1.0);
+            return mouseScroll(p_widget -> getwidget(), 0.0, -1.0);
             
         case XK_WheelLeft:
-            return mouseScroll(p_widget, +1.0, 0.0);
+            return mouseScroll(p_widget -> getwidget(), +1.0, 0.0);
             
         case XK_WheelRight:
-            return mouseScroll(p_widget, -1.0, 0.0);
+            return mouseScroll(p_widget -> getwidget(), -1.0, 0.0);
             
         default:
             break;
@@ -218,7 +232,7 @@ Boolean MCWidgetEventManager::event_mfocus(MCWidget* p_widget, int2 p_x, int2 p_
             
             // We want to keep track of the focused widget we computed above,
             // but don't want to send it enter / leave in this case.
-            MCValueAssign(m_mouse_focus, t_focused_widget);
+            MCValueAssignOptional(m_mouse_focus, t_focused_widget);
         }
         else if (m_mouse_focus != m_mouse_grab)
             mouseEnter(m_mouse_grab);
@@ -233,7 +247,7 @@ Boolean MCWidgetEventManager::event_mfocus(MCWidget* p_widget, int2 p_x, int2 p_
         {
             mouseLeave(m_mouse_focus);
         
-            MCValueAssign(m_mouse_focus, t_focused_widget);
+            MCValueAssignOptional(m_mouse_focus, t_focused_widget);
             
             mouseEnter(m_mouse_focus);
         }
@@ -460,7 +474,8 @@ void MCWidgetEventManager::mouseMove(MCWidgetRef p_widget)
         p_widget->OnMouseMove(p_x, p_y);
 #endif
     
-    MCWidgetOnMouseMove(p_widget);
+    if (p_widget != nil)
+        MCWidgetOnMouseMove(p_widget);
 }
 
 void MCWidgetEventManager::mouseEnter(MCWidgetRef p_widget)
@@ -481,7 +496,8 @@ void MCWidgetEventManager::mouseEnter(MCWidgetRef p_widget)
         p_widget->OnMouseEnter();
 #endif
     
-    MCWidgetOnMouseEnter(p_widget);
+    if (p_widget != nil)
+        MCWidgetOnMouseEnter(p_widget);
 }
 
 void MCWidgetEventManager::mouseLeave(MCWidgetRef p_widget)
@@ -497,7 +513,8 @@ void MCWidgetEventManager::mouseLeave(MCWidgetRef p_widget)
         p_widget->OnMouseLeave();
 #endif
     
-    MCWidgetOnMouseLeave(p_widget);
+    if (p_widget != nil)
+        MCWidgetOnMouseLeave(p_widget);
 }
 
 bool MCWidgetEventManager::mouseDown(MCWidgetRef p_widget, uinteger_t p_which)
