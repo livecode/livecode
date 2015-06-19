@@ -514,18 +514,18 @@ public:
 				t_success = MCBrowserListCreate(t_list, t_arg_count);
 			}
 			
-			for (uint32_t i = 0; i < t_arg_count; i++)
+			for (uint32_t i = 0; t_success && i < t_arg_count; i++)
 			{
-				char *t_tuf8_string;
-				t_tuf8_string = nil;
+				char *t_utf8_string;
+				t_utf8_string = nil;
 				
-				t_success = MCCefStringToUtf8String(t_args->GetString(i + 1), t_tuf8_string);
+				t_success = MCCefStringToUtf8String(t_args->GetString(i + 1), t_utf8_string);
 				
 				if (t_success)
-					t_success = MCBrowserListSetUTF8String(t_list, i, t_tuf8_string);
+					t_success = MCBrowserListSetUTF8String(t_list, i, t_utf8_string);
 				
-				if (t_tuf8_string != nil)
-					MCCStringFree(t_tuf8_string);
+				if (t_utf8_string != nil)
+					MCCStringFree(t_utf8_string);
 			}
 			
 			if (t_success)

@@ -112,7 +112,7 @@ const char *MCCefPlatformGetSubProcessName(void)
 		t_bundle = [NSBundle mainBundle];
 		
 		NSString *t_path;
-		t_path = [[t_bundle bundlePath] stringByAppendingPathComponent:@"Contents/Frameworks/revbrowser-cefprocess.app/Contents/MacOS/revbrowser-cefprocess"];
+		t_path = [[t_bundle bundlePath] stringByAppendingPathComponent:@"Contents/Frameworks/libbrowser_cefprocess.app/Contents/MacOS/libbrowser_cefprocess"];
 		
 		/* UNCHECKED */ MCCStringClone([t_path cStringUsingEncoding:NSUTF8StringEncoding], s_exe_path);
 	}

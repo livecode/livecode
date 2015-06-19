@@ -15,6 +15,10 @@
 		E865FAE41AF8E6FA0015B20F /* WebAuthenticationPanel.h in Headers */ = {isa = PBXBuildFile; fileRef = E865FAE31AF8E6FA0015B20F /* WebAuthenticationPanel.h */; };
 		E865FAE71AF919F10015B20F /* WebAuthenticationPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = E865FAE61AF919F10015B20F /* WebAuthenticationPanel.m */; };
 		E8B668141B32CEF500F2B1DA /* libbrowser_value.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8B668131B32CEF500F2B1DA /* libbrowser_value.cpp */; };
+		E8B668171B342DAC00F2B1DA /* libbrowser_cefprocess.app in CopyFiles */ = {isa = PBXBuildFile; fileRef = E8EA2FCA1AF3848B004D27CA /* libbrowser_cefprocess.app */; };
+		E8B668191B342E3000F2B1DA /* Chromium Embedded Framework.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = E8B668181B342E3000F2B1DA /* Chromium Embedded Framework.framework */; };
+		E8B6681C1B34320400F2B1DA /* libbrowser_cefprocess EH.app in CopyFiles */ = {isa = PBXBuildFile; fileRef = E8B6681A1B34320400F2B1DA /* libbrowser_cefprocess EH.app */; };
+		E8B6681D1B34320400F2B1DA /* libbrowser_cefprocess NP.app in CopyFiles */ = {isa = PBXBuildFile; fileRef = E8B6681B1B34320400F2B1DA /* libbrowser_cefprocess NP.app */; };
 		E8E8DE471AF12C4C00BAA78C /* libbrowser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8E8DE241AF1274300BAA78C /* libbrowser.cpp */; };
 		E8E8DE481AF12C4F00BAA78C /* libbrowser.h in Headers */ = {isa = PBXBuildFile; fileRef = E8E8DE271AF127B400BAA78C /* libbrowser.h */; };
 		E8EA2FEA1AF385EA004D27CA /* libbrowser_cefprocess.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8EA2FC41AF383E4004D27CA /* libbrowser_cefprocess.cpp */; };
@@ -38,6 +42,22 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		E8B668161B342D9000F2B1DA /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "LiveCode-Community.app/Contents/Frameworks";
+			dstSubfolderSpec = 16;
+			files = (
+				E8B6681C1B34320400F2B1DA /* libbrowser_cefprocess EH.app in CopyFiles */,
+				E8B6681D1B34320400F2B1DA /* libbrowser_cefprocess NP.app in CopyFiles */,
+				E8B668191B342E3000F2B1DA /* Chromium Embedded Framework.framework in CopyFiles */,
+				E8B668171B342DAC00F2B1DA /* libbrowser_cefprocess.app in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		E82CC8681AF2412800E9B8B8 /* libbrowser_cef.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = libbrowser_cef.cpp; sourceTree = "<group>"; };
 		E82CC86A1AF2413E00E9B8B8 /* libbrowser_cef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = libbrowser_cef.h; sourceTree = "<group>"; };
@@ -46,6 +66,9 @@
 		E865FAE51AF919F10015B20F /* com_runrev_livecode_WebAuthenticationPanel.nib */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; path = com_runrev_livecode_WebAuthenticationPanel.nib; sourceTree = "<group>"; };
 		E865FAE61AF919F10015B20F /* WebAuthenticationPanel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WebAuthenticationPanel.m; sourceTree = "<group>"; };
 		E8B668131B32CEF500F2B1DA /* libbrowser_value.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = libbrowser_value.cpp; sourceTree = "<group>"; };
+		E8B668181B342E3000F2B1DA /* Chromium Embedded Framework.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Chromium Embedded Framework.framework"; path = "../prebuilt/lib/libcef/mac/Chromium Embedded Framework.framework"; sourceTree = "<group>"; };
+		E8B6681A1B34320400F2B1DA /* libbrowser_cefprocess EH.app */ = {isa = PBXFileReference; lastKnownFileType = wrapper.application; name = "libbrowser_cefprocess EH.app"; path = "../_build/mac/Debug/libbrowser_cefprocess EH.app"; sourceTree = "<group>"; };
+		E8B6681B1B34320400F2B1DA /* libbrowser_cefprocess NP.app */ = {isa = PBXFileReference; lastKnownFileType = wrapper.application; name = "libbrowser_cefprocess NP.app"; path = "../_build/mac/Debug/libbrowser_cefprocess NP.app"; sourceTree = "<group>"; };
 		E8E8DE201AF126B000BAA78C /* Global.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Global.xcconfig; path = ../rules/Global.xcconfig; sourceTree = "<group>"; };
 		E8E8DE211AF126B000BAA78C /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ../rules/Release.xcconfig; sourceTree = "<group>"; };
 		E8E8DE221AF126B000BAA78C /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = ../rules/Debug.xcconfig; sourceTree = "<group>"; };
@@ -90,6 +113,9 @@
 		E8E8DE121AF1263800BAA78C = {
 			isa = PBXGroup;
 			children = (
+				E8B6681A1B34320400F2B1DA /* libbrowser_cefprocess EH.app */,
+				E8B6681B1B34320400F2B1DA /* libbrowser_cefprocess NP.app */,
+				E8B668181B342E3000F2B1DA /* Chromium Embedded Framework.framework */,
 				E8EA2FF81AF3D8D9004D27CA /* Foundation.framework */,
 				E8EA2FF31AF3D51D004D27CA /* libcore.a */,
 				E8EA2FF11AF3D518004D27CA /* libcef_stubs.a */,
@@ -190,6 +216,8 @@
 				E8EA2FC61AF3848B004D27CA /* Sources */,
 				E8EA2FC71AF3848B004D27CA /* Frameworks */,
 				E8EA2FC81AF3848B004D27CA /* Resources */,
+				E8B668151B342D1800F2B1DA /* ShellScript */,
+				E8B668161B342D9000F2B1DA /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -244,6 +272,25 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		E8B668151B342D1800F2B1DA /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(CONFIGURATION_BUILD_DIR)/$(EXECUTABLE_PATH)",
+			);
+			outputPaths = (
+				"$(CONFIGURATION_BUILD_DIR)/$(PRODUCT_NAME) EH.$(EXECUTABLE_EXTENSION)",
+				"$(CONFIGURATION_BUILD_DIR)/$(PRODUCT_NAME) NP.$(EXECUTABLE_EXTENSION)",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "exec tools/make_more_helpers.sh";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		E8E8DE3F1AF12B6F00BAA78C /* Sources */ = {

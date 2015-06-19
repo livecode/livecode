@@ -513,9 +513,6 @@ private:
 	{
 		CefString t_obj_name("liveCode");
 		
-		if (!p_context->Enter())
-			return false;
-		
 		bool t_success;
 		t_success = true;
 		
@@ -545,8 +542,6 @@ private:
 		
 		if (t_success)
 			r_global_obj = t_obj;
-		
-		p_context->Exit();
 		
 		return t_success;
 	}

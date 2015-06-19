@@ -223,7 +223,7 @@ public:
 		if (p_index >= m_size)
 			return false;
 		
-		MCBrowserValueSetDouble(m_elements[p_index], p_value);
+		return MCBrowserValueSetDouble(m_elements[p_index], p_value);
 	}
 
 	bool GetDouble(uint32_t p_index, double_t &r_value)
@@ -239,7 +239,7 @@ public:
 		if (p_index >= m_size)
 			return false;
 		
-		MCBrowserValueSetUTF8String(m_elements[p_index], p_value);
+		return MCBrowserValueSetUTF8String(m_elements[p_index], p_value);
 	}
 	
 	bool GetUTF8String(uint32_t p_index, char *&r_value)
@@ -255,7 +255,7 @@ public:
 		if (p_index >= m_size)
 			return false;
 		
-		MCBrowserValueSetList(m_elements[p_index], p_value);
+		return MCBrowserValueSetList(m_elements[p_index], p_value);
 	}
 	
 	bool GetList(uint32_t p_index, MCBrowserListRef &r_value)
