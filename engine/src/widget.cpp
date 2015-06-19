@@ -97,9 +97,7 @@ MCWidget::MCWidget(const MCWidget& p_other) :
 
 MCWidget::~MCWidget(void)
 {
-    // If the imp isn't nil here, then something has gone wrong elsewhere.
-    MCAssert(m_widget == nil);
-    
+    MCValueRelease(m_widget);
     MCValueRelease(m_kind);
     MCValueRelease(m_rep);
 }
@@ -156,12 +154,14 @@ bool MCWidget::visit_self(MCObjectVisitor* p_visitor)
 void MCWidget::open(void)
 {
 	MCControl::open();
-    MCwidgeteventmanager->event_open(this);
+    if (m_widget != nil)
+        MCwidgeteventmanager->event_open(this);
 }
 
 void MCWidget::close(void)
 {
-    MCwidgeteventmanager->event_close(this);
+    if (m_widget != nil)
+        MCwidgeteventmanager->event_close(this);
 	MCControl::close();
 }
 
@@ -169,28 +169,32 @@ void MCWidget::kfocus(void)
 {
 	MCControl::kfocus();
 	if (getstate(CS_KFOCUSED))
-        MCwidgeteventmanager->event_kfocus(this);
+        if (m_widget != nil)
+            MCwidgeteventmanager->event_kfocus(this);
 }
 
 void MCWidget::kunfocus(void)
 {
 	if (getstate(CS_KFOCUSED))
-        MCwidgeteventmanager->event_kunfocus(this);
+        if (m_widget != nil)
+            MCwidgeteventmanager->event_kunfocus(this);
 	MCControl::kunfocus();
 }
 
 Boolean MCWidget::kdown(MCStringRef p_key_string, KeySym p_key)
 {
-	if (MCwidgeteventmanager->event_kdown(this, p_key_string, p_key))
-		return True;
+    if (m_widget != nil)
+        if (MCwidgeteventmanager->event_kdown(this, p_key_string, p_key))
+            return True;
 
 	return MCControl::kdown(p_key_string, p_key);
 }
 
 Boolean MCWidget::kup(MCStringRef p_key_string, KeySym p_key)
 {
-	if (MCwidgeteventmanager->event_kup(this, p_key_string, p_key))
-        return True;
+    if (m_widget != nil)
+        if (MCwidgeteventmanager->event_kup(this, p_key_string, p_key))
+            return True;
     
     return MCControl::kup(p_key_string, p_key);
 }
@@ -204,7 +208,8 @@ Boolean MCWidget::mdown(uint2 p_which)
 	{
 	case T_BROWSE:
 		//setstate(True, CS_MFOCUSED);
-        MCwidgeteventmanager->event_mdown(this, p_which);
+        if (m_widget != nil)
+            MCwidgeteventmanager->event_mdown(this, p_which);
 		break;
 
 	case T_POINTER:
@@ -233,7 +238,8 @@ Boolean MCWidget::mup(uint2 p_which, bool p_release)
 	switch(getstack() -> gettool(this))
 	{
 	case T_BROWSE:
-        MCwidgeteventmanager->event_mup(this, p_which, p_release);
+        if (m_widget != nil)
+            MCwidgeteventmanager->event_mup(this, p_which, p_release);
 		//if (MCwidgeteventmanager->GetMouseButtonState() == 0)
 		//	setstate(False, CS_MFOCUSED);
 		break;
@@ -266,8 +272,11 @@ Boolean MCWidget::mfocus(int2 p_x, int2 p_y)
 	// Update the mouse loc.
 	mx = p_x;
 	my = p_y;
-	
-    return MCwidgeteventmanager->event_mfocus(this, p_x, p_y);
+    
+    if (m_widget != nil)
+        return MCwidgeteventmanager->event_mfocus(this, p_x, p_y);
+    
+    return False;
 }
 
 void MCWidget::munfocus(void)
@@ -278,27 +287,35 @@ void MCWidget::munfocus(void)
 		return;
 	}
 	
-    MCwidgeteventmanager->event_munfocus(this);
+    if (m_widget != nil)
+        MCwidgeteventmanager->event_munfocus(this);
 }
 
 void MCWidget::mdrag(void)
 {
-    MCwidgeteventmanager->event_mdrag(this);
+    if (m_widget != nil)
+        MCwidgeteventmanager->event_mdrag(this);
 }
 
 Boolean MCWidget::doubledown(uint2 p_which)
 {
-    return MCwidgeteventmanager->event_doubledown(this, p_which);
+    if (m_widget != nil)
+        return MCwidgeteventmanager->event_doubledown(this, p_which);
+    return False;
 }
 
 Boolean MCWidget::doubleup(uint2 p_which)
 {
-    return MCwidgeteventmanager->event_doubleup(this, p_which);
+    if (m_widget != nil)
+        return MCwidgeteventmanager->event_doubleup(this, p_which);
+    return False;
 }
 
 MCObject* MCWidget::hittest(int32_t x, int32_t y)
 {
-    return MCwidgeteventmanager->event_hittest(this, x, y);
+    if (m_widget != nil)
+        return MCwidgeteventmanager->event_hittest(this, x, y);
+    return nil;
 }
 
 void MCWidget::timer(MCNameRef p_message, MCParameter *p_parameters)
@@ -306,7 +323,8 @@ void MCWidget::timer(MCNameRef p_message, MCParameter *p_parameters)
     if (p_message == MCM_internal)
     {
         if (getstack() -> gettool(this) == T_BROWSE)
-            MCwidgeteventmanager->event_timer(this, p_message, p_parameters);
+            if (m_widget != nil)
+                MCwidgeteventmanager->event_timer(this, p_message, p_parameters);
     }
     else
     {
@@ -321,12 +339,14 @@ void MCWidget::setrect(const MCRectangle& p_rectangle)
 	
 	rect = p_rectangle;
 	
-    MCwidgeteventmanager->event_setrect(this, t_old_rect);
+    if (m_widget != nil)
+        MCwidgeteventmanager->event_setrect(this, t_old_rect);
 }
 
 void MCWidget::recompute(void)
 {
-    MCwidgeteventmanager->event_recompute(this);
+    if (m_widget != nil)
+        MCwidgeteventmanager->event_recompute(this);
 }
 
 static void lookup_name_for_prop(Properties p_which, MCNameRef& r_name)
@@ -586,8 +606,18 @@ bool MCWidget::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
             return false;
     }
     
-    if (!MCExtensionConvertFromScriptType(ctxt, kMCAnyTypeInfo, InOut(t_value)) ||
-        !MCWidgetSetProperty(m_widget, p_prop_name, In(t_value)))
+    MCTypeInfoRef t_get_type, t_set_type;
+    if (!MCWidgetQueryProperty(m_widget, p_prop_name, t_get_type, t_set_type))
+        return false;
+    
+    if (t_set_type != nil &&
+        !MCExtensionConvertFromScriptType(ctxt, t_set_type, InOut(t_value)))
+    {
+        CatchError(ctxt);
+        return false;
+    }
+    
+    if (!MCWidgetSetProperty(m_widget, p_prop_name, In(t_value)))
     {
         CatchError(ctxt);
         return false;
@@ -611,7 +641,7 @@ void MCWidget::layerchanged()
     
     MCwidgeteventmanager -> event_layerchanged(this);
 }
-	
+
 Exec_stat MCWidget::handle(Handler_type p_type, MCNameRef p_method, MCParameter *p_parameters, MCObject *p_passing_object)
 {
 	return MCControl::handle(p_type, p_method, p_parameters, p_passing_object);
@@ -825,6 +855,25 @@ void MCWidget::SetDisabled(MCExecContext& ctxt, uint32_t p_part_id, bool p_flag)
     
     if (t_is_disabled != getflag(F_DISABLED))
         recompute();
+}
+
+MCWidgetRef MCWidget::getwidget(void) const
+{
+    return m_widget;
+}
+
+void MCWidget::SendError(void)
+{
+    MCExecContext ctxt(this, nil, nil);
+    MCExtensionCatchError(ctxt);
+    if (MCerrorptr == NULL)
+        MCerrorptr = this;
+    senderror();
+}
+
+void MCWidget::CatchError(MCExecContext& ctxt)
+{
+    MCExtensionCatchError(ctxt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -94,13 +94,14 @@ void MCWidgetBase::Destroy(void)
     if (m_instance == nil)
         return;
     
-    for(uindex_t i = 0; i < MCProperListGetLength(m_children); i++)
-    {
-        MCWidgetRef t_child;
-        t_child = (MCWidgetRef)MCProperListFetchElementAtIndex(m_children, i);
-        
-        MCWidgetAsChild(t_child) -> SetOwner(nil);
-    }
+    if (m_children != nil)
+        for(uindex_t i = 0; i < MCProperListGetLength(m_children); i++)
+        {
+            MCWidgetRef t_child;
+            t_child = (MCWidgetRef)MCProperListFetchElementAtIndex(m_children, i);
+            
+            MCWidgetAsChild(t_child) -> SetOwner(nil);
+        }
     
     MCValueRelease(m_children);
     m_children = nil;
@@ -110,7 +111,17 @@ void MCWidgetBase::Destroy(void)
     m_instance = nil;
 }
 
+MCWidgetRef MCWidgetBase::AsWidget(void)
+{
+    return (MCWidgetRef)(((uint8_t *)this) - kMCValueCustomHeaderSize);
+}
+
 //////////
+
+bool MCWidgetBase::QueryProperty(MCNameRef p_property, MCTypeInfoRef& r_getter, MCTypeInfoRef& r_setter)
+{
+    return MCScriptQueryPropertyOfModule(MCScriptGetModuleOfInstance(m_instance), p_property, r_getter, r_setter);
+}
 
 bool MCWidgetBase::HasProperty(MCNameRef p_property)
 {
@@ -126,12 +137,30 @@ bool MCWidgetBase::HasHandler(MCNameRef p_handler)
 
 bool MCWidgetBase::SetProperty(MCNameRef p_property, MCValueRef p_value)
 {
-    return MCScriptSetPropertyOfInstance(m_instance, p_property, p_value);
+    MCWidgetRef t_old_widget;
+    t_old_widget = MCcurrentwidget;
+    MCcurrentwidget = AsWidget();
+    
+    bool t_success;
+    t_success = MCScriptSetPropertyOfInstance(m_instance, p_property, p_value);
+    
+    MCcurrentwidget = t_old_widget;
+    
+    return t_success;
 }
 
 bool MCWidgetBase::GetProperty(MCNameRef p_property, MCValueRef& r_value)
 {
-    return MCScriptGetPropertyOfInstance(m_instance, p_property, r_value);
+    MCWidgetRef t_old_widget;
+    t_old_widget = MCcurrentwidget;
+    MCcurrentwidget = AsWidget();
+    
+    bool t_success;
+    t_success = MCScriptGetPropertyOfInstance(m_instance, p_property, r_value);
+    
+    MCcurrentwidget = t_old_widget;
+    
+    return t_success;
 }
 
 bool MCWidgetBase::OnLoad(MCValueRef p_rep)
@@ -184,8 +213,18 @@ bool MCWidgetBase::OnPaint(MCGContextRef p_gcontext)
     MCGContextSave(p_gcontext);
     MCGContextClipToRect(p_gcontext, t_frame);
     MCGContextTranslateCTM(p_gcontext, t_frame . origin . x, t_frame . origin . y);
-    if (!DispatchRecursive(kDispatchOrderBeforeBottomUp, MCNAME("OnPaint")))
+    if (!Dispatch(MCNAME("OnPaint")))
         t_success = false;
+    if (m_children != nil)
+    {
+        for(uindex_t i = 0; i < MCProperListGetLength(m_children); i++)
+        {
+            MCWidgetRef t_child;
+            t_child = MCProperListFetchElementAtIndex(m_children, i);
+            if (!MCWidgetOnPaint(t_child, p_gcontext))
+                t_success = false;
+        }
+    }
     MCGContextRestore(p_gcontext);
     
     MCCanvasPop(t_cookie);
@@ -281,6 +320,406 @@ bool MCWidgetBase::OnParentPropertyChanged(void)
     return DispatchRecursive(kDispatchOrderBeforeBottomUp, MCNAME("OnParentPropertyChanged"));
 }
 
+bool MCWidgetBase::OnToolChanged(Tool p_tool)
+{
+    bool t_success;
+    t_success = true;
+    if (p_tool == T_BROWSE)
+    {
+        if (!DispatchRecursive(kDispatchOrderBeforeBottomUp, MCNAME("OnStopEditing")))
+            t_success = false;
+    }
+    else if (p_tool != T_BROWSE)
+    {
+        if (!DispatchRecursive(kDispatchOrderBeforeBottomUp, MCNAME("OnStartEditing")))
+            t_success = false;
+    }
+    return t_success;
+}
+
+void MCWidgetBase::ScheduleTimerIn(double timeout)
+{
+}
+
+void MCWidgetBase::CancelTimer(void)
+{
+}
+
+void MCWidgetBase::RedrawRect(MCGRectangle p_area)
+{
+    MCGRectangle t_frame;
+    t_frame = GetFrame();
+    
+    p_area = MCGRectangleTranslate(p_area, t_frame . origin . x, t_frame . origin . y);
+    p_area = MCGRectangleIntersection(p_area, t_frame);
+    
+    if (IsRoot())
+    {
+        GetHost() -> layer_redrawrect(MCGRectangleGetIntegerExterior(p_area));
+        return;
+    }
+    
+    MCWidgetRef t_owner;
+    t_owner = GetOwner();
+    if (t_owner == nil)
+        return;
+    
+    MCWidgetAsBase(t_owner) -> RedrawRect(p_area);
+}
+
+bool MCWidgetBase::CopyChildren(MCProperListRef& r_children)
+{
+    if (m_children == nil)
+    {
+        r_children = MCValueRetain(kMCEmptyProperList);
+        return true;
+    }
+    
+    return MCProperListCopy(m_children, r_children);
+}
+
+void MCWidgetBase::PlaceWidget(MCWidgetRef p_child, MCWidgetRef p_other_widget, bool p_is_below)
+{
+    // Make sure we have a children list (we create on demand).
+    if (m_children == nil &&
+        !MCProperListCreateMutable(m_children))
+        return;
+    
+    // Find out where the widget is going.
+    uindex_t t_target_offset;
+    if (p_other_widget == nil)
+    {
+        if (!p_is_below)
+            t_target_offset = MCProperListGetLength(m_children);
+        else
+            t_target_offset = 0;
+    }
+    else
+    {
+        if (!MCProperListFirstIndexOfElement(m_children, p_other_widget, 0, t_target_offset))
+        {
+            MCErrorThrowGeneric(MCSTR("Relative widget is not a child of this widget"));
+            return;
+        }
+        
+        if (!p_is_below)
+            t_target_offset += 1;
+    }
+    
+    // Remove the widget from its current location if necessary.
+    MCWidgetChild *t_child;
+    t_child = MCWidgetAsChild(p_child);
+    if (t_child -> GetOwner() != nil)
+    {
+        if (t_child -> GetOwner() != AsWidget())
+        {
+            MCErrorThrowGeneric(MCSTR("Widget is already placed inside another widget"));
+            return;
+        }
+        
+        // Nothing to do if we are placing back in the same place.
+        if (p_child == p_other_widget)
+            return;
+        
+        uindex_t t_current_offset;
+        MCProperListFirstIndexOfElement(m_children, p_child, 0, t_current_offset);
+        if (!MCProperListRemoveElement(m_children, t_current_offset))
+            return;
+        
+        if (t_current_offset < t_target_offset)
+            t_target_offset -= 1;
+    }
+    
+    // Put the widget in the child list.
+    if (!MCProperListInsertElement(m_children, p_child, t_target_offset))
+        return;
+    
+    // Reparent the widget if it does not already have a parent.
+    if (t_child -> GetOwner() == nil)
+        t_child -> SetOwner(AsWidget());
+    
+    // Force a redraw.
+    MCWidgetRedrawAll(p_child);
+}
+
+void MCWidgetBase::UnplaceWidget(MCWidgetRef p_child)
+{
+    MCWidgetChild *t_child;
+    t_child = MCWidgetAsChild(p_child);
+    
+    // Find out where the widget is.
+    uindex_t t_current_offset;
+    if (m_children == nil ||
+        !MCProperListFirstIndexOfElement(m_children, p_child, 0, t_current_offset))
+    {
+        MCErrorThrowGeneric(MCSTR("Widget is not a child of this widget"));
+        return;
+    }
+    
+    // Remove the widget.
+    if (!MCProperListRemoveElement(m_children, t_current_offset))
+        return;
+    
+    // Reparent the widget.
+    MCWidgetRedrawAll(p_child);
+    t_child -> SetOwner(nil);
+}
+
+MCGPoint MCWidgetBase::MapPointToGlobal(MCGPoint p_point)
+{
+    MCGRectangle t_frame;
+    t_frame = GetFrame();
+    
+    p_point . x += t_frame . origin . x;
+    p_point . y += t_frame . origin . y;
+    
+    MCWidgetRef t_owner;
+    t_owner = GetOwner();
+    if (t_owner == nil)
+        return p_point;
+    
+    return MCWidgetAsBase(t_owner) -> MapPointToGlobal(p_point);
+}
+
+MCGPoint MCWidgetBase::MapPointFromGlobal(MCGPoint p_point)
+{
+    MCGRectangle t_frame;
+    t_frame = GetFrame();
+    
+    p_point . x -= t_frame . origin . x;
+    p_point . y -= t_frame . origin . y;
+    
+    MCWidgetRef t_owner;
+    t_owner = GetOwner();
+    if (t_owner == nil)
+        return p_point;
+    
+    return MCWidgetAsBase(t_owner) -> MapPointFromGlobal(p_point);
+}
+
+MCGRectangle MCWidgetBase::MapRectToGlobal(MCGRectangle rect)
+{
+    abort();
+}
+
+MCGRectangle MCWidgetBase::MapRectFromGlobal(MCGRectangle rect)
+{
+    abort();
+}
+
+//////////
+
+bool MCWidgetBase::Dispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_arg_count, MCValueRef *r_result)
+{
+	MCWidgetRef t_old_widget_object;
+	t_old_widget_object = MCcurrentwidget;
+	MCcurrentwidget = AsWidget();
+	
+	MCStack *t_old_default_stack, *t_this_stack;
+	t_old_default_stack = MCdefaultstackptr;
+	
+	MCObject *t_old_target;
+	t_old_target = MCtargetptr;
+	
+	MCtargetptr = GetHost();
+	t_this_stack = MCtargetptr->getstack();
+	MCdefaultstackptr = t_this_stack;
+	
+    // Invoke event handler.
+    bool t_success;
+    MCValueRef t_retval;
+    t_success = MCScriptCallHandlerOfInstanceIfFound(m_instance, p_event, x_args, p_arg_count, t_retval);
+    
+    if (t_success)
+    {
+        if (r_result != NULL)
+            *r_result = t_retval;
+        else
+            MCValueRelease(t_retval);
+    }
+    else
+        GetHost() -> SendError();
+    
+	MCcurrentwidget = t_old_widget_object;
+    
+	MCtargetptr = t_old_target;
+	if (MCdefaultstackptr == t_this_stack)
+		MCdefaultstackptr = t_old_default_stack;
+	
+	return t_success;
+}
+
+bool MCWidgetBase::DispatchRestricted(MCNameRef p_event, MCValueRef *x_args, uindex_t p_arg_count, MCValueRef *r_result)
+{
+    return Dispatch(p_event, x_args, p_arg_count, r_result);
+}
+
+void MCWidgetBase::DispatchRestrictedNoThrow(MCNameRef p_event, MCValueRef *x_args, uindex_t p_arg_count, MCValueRef *r_result)
+{
+    Dispatch(p_event, x_args, p_arg_count, r_result);
+}
+
+bool MCWidgetBase::DispatchRecursive(DispatchOrder p_order, MCNameRef p_event, MCValueRef *x_args, uindex_t p_arg_count, MCValueRef *r_result)
+{
+    bool t_success;
+    t_success = true;
+    if (p_order == kDispatchOrderBeforeBottomUp ||
+        p_order == kDispatchOrderBeforeTopDown)
+    {
+        if (!Dispatch(p_event, x_args, p_arg_count, r_result))
+            t_success = false;
+    }
+    
+    if (m_children != nil)
+    {
+        if (p_order == kDispatchOrderBeforeBottomUp ||
+            p_order == kDispatchOrderBottomUpAfter ||
+            p_order == kDispatchOrderBottomUp)
+        {
+            for(uindex_t i = 0; i < MCProperListGetLength(m_children); i++)
+            {
+                MCWidgetRef t_child;
+                t_child = MCProperListFetchElementAtIndex(m_children, i);
+                if (!MCWidgetAsBase(t_child) -> DispatchRecursive(p_order, p_event, x_args, p_arg_count, r_result))
+                    t_success = false;
+            }
+        }
+        else if (p_order == kDispatchOrderBeforeTopDown ||
+                 p_order == kDispatchOrderTopDownAfter ||
+                 p_order == kDispatchOrderTopDown)
+        {
+            for(uindex_t i = MCProperListGetLength(m_children); i > 0; i--)
+            {
+                MCWidgetRef t_child;
+                t_child = MCProperListFetchElementAtIndex(m_children, i - 1);
+                if (!MCWidgetAsBase(t_child) -> DispatchRecursive(p_order, p_event, x_args, p_arg_count, r_result))
+                    t_success = false;
+            }
+        }
+    }
+    
+    if (p_order == kDispatchOrderBottomUpAfter ||
+        p_order == kDispatchOrderTopDownAfter)
+    {
+        if (!Dispatch(p_event, x_args, p_arg_count, r_result))
+            t_success = false;
+    }
+    
+    return t_success;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCWidgetRoot::MCWidgetRoot(MCWidget *p_host)
+{
+    m_host = p_host;
+}
+
+MCWidgetRoot::~MCWidgetRoot(void)
+{
+}
+
+bool MCWidgetRoot::IsRoot(void) const
+{
+    return true;
+}
+
+MCWidget *MCWidgetRoot::GetHost(void) const
+{
+    return m_host;
+}
+
+MCWidgetRef MCWidgetRoot::GetOwner(void) const
+{
+    return nil;
+}
+
+MCGRectangle MCWidgetRoot::GetFrame(void) const
+{
+    return MCRectangleToMCGRectangle(m_host -> getrect());
+}
+
+bool MCWidgetRoot::GetDisabled(void) const
+{
+    return m_host -> isdisabled();
+}
+
+bool MCWidgetRoot::CopyFont(MCFontRef& r_font)
+{
+    MCFontRef t_font;
+    m_host -> copyfont(t_font);
+    if (t_font == nil)
+        return false;
+    r_font = t_font;
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCWidgetChild::MCWidgetChild(void)
+{
+    m_frame = MCGRectangleMake(0.0f, 0.0f, 0.0f, 0.0f);
+    m_owner = nil;
+    m_disabled = false;
+}
+
+MCWidgetChild::~MCWidgetChild(void)
+{
+}
+
+void MCWidgetChild::SetOwner(MCWidgetRef p_owner)
+{
+    if (p_owner == m_owner)
+        return;
+    
+    MCValueRelease(m_owner);
+    m_owner = p_owner;
+    if (m_owner != nil)
+        MCValueRetain(m_owner);
+}
+
+void MCWidgetChild::SetFrame(MCGRectangle p_frame)
+{
+    m_frame = p_frame;
+}
+
+void MCWidgetChild::SetDisabled(bool p_disabled)
+{
+    m_disabled = p_disabled;
+}
+
+bool MCWidgetChild::IsRoot(void) const
+{
+    return false;
+}
+
+MCWidget *MCWidgetChild::GetHost(void) const
+{
+    if (m_owner != nil)
+        return MCWidgetGetHost(m_owner);
+    return nil;
+}
+
+MCWidgetRef MCWidgetChild::GetOwner(void) const
+{
+    return m_owner;
+}
+
+MCGRectangle MCWidgetChild::GetFrame(void) const
+{
+    return m_frame;
+}
+
+bool MCWidgetChild::GetDisabled(void) const
+{
+    return m_disabled;
+}
+
+bool MCWidgetChild::CopyFont(MCFontRef& r_font)
+{
+    return false;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCWidgetCreateRoot(MCWidget *p_host, MCNameRef p_kind, MCWidgetRef& r_widget)
@@ -360,6 +799,11 @@ bool MCWidgetHasProperty(MCWidgetRef self, MCNameRef p_property)
 bool MCWidgetHasHandler(MCWidgetRef self, MCNameRef p_handler)
 {
     return MCWidgetAsBase(self) -> HasHandler(p_handler);
+}
+
+bool MCWidgetQueryProperty(MCWidgetRef self, MCNameRef p_property, MCTypeInfoRef& r_getter, MCTypeInfoRef& r_setter)
+{
+    return MCWidgetAsBase(self) -> QueryProperty(p_property, r_getter, r_setter);
 }
 
 bool MCWidgetSetProperty(MCWidgetRef self, MCNameRef p_property, MCValueRef p_value)
@@ -445,6 +889,11 @@ bool MCWidgetOnGeometryChanged(MCWidgetRef self)
 bool MCWidgetOnParentPropertyChanged(MCWidgetRef self)
 {
     return MCWidgetAsBase(self) -> OnParentPropertyChanged();
+}
+
+bool MCWidgetOnToolChanged(MCWidgetRef self, Tool p_tool)
+{
+    return MCWidgetAsBase(self) -> OnToolChanged(p_tool);
 }
 
 void MCWidgetRedrawAll(MCWidgetRef self)

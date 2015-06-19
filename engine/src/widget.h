@@ -40,6 +40,8 @@ bool MCWidgetCopyFont(MCWidgetRef widget, MCFontRef& r_font);
 bool MCWidgetHasProperty(MCWidgetRef widget, MCNameRef property);
 bool MCWidgetHasHandler(MCWidgetRef widget, MCNameRef handler);
 
+bool MCWidgetQueryProperty(MCWidgetRef widget, MCNameRef property, MCTypeInfoRef& r_get_type, MCTypeInfoRef& r_set_type);
+
 bool MCWidgetSetProperty(MCWidgetRef widget, MCNameRef property, MCValueRef value);
 bool MCWidgetGetProperty(MCWidgetRef widget, MCNameRef property, MCValueRef& r_value);
 
@@ -58,6 +60,7 @@ bool MCWidgetOnMouseCancel(MCWidgetRef widget);
 bool MCWidgetOnClick(MCWidgetRef widget);
 bool MCWidgetOnGeometryChanged(MCWidgetRef widget);
 bool MCWidgetOnParentPropertyChanged(MCWidgetRef widget);
+bool MCWidgetOnToolChanged(MCWidgetRef widget, Tool p_tool);
 
 void MCWidgetRedrawAll(MCWidgetRef widget);
 void MCWidgetScheduleTimerIn(MCWidgetRef widget, double timeout);
@@ -142,15 +145,14 @@ public:
     
     MCWidgetRef getwidget(void) const;
     
-protected:
+    void CatchError(MCExecContext& ctxt);
+    void SendError(void);
     
+protected:
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
     
 private:
-    void CatchError(MCExecContext& ctxt);
-    void SendError(void);
-    
     // The kind of the widget.
     MCNameRef m_kind;
     

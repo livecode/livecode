@@ -975,7 +975,7 @@ end syntax
 
 // annotation <name> of <widget>
 
-public foreign type Widget binds to "kMCWidgetType"
+public foreign type Widget binds to "kMCWidgetTypeInfo"
 
 public foreign handler MCWidgetEvalMyChildren(out rChildWidgets as List) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetEvalANewWidget(in pKind as String, out rWidget as Widget) returns nothing binds to "<builtin>"

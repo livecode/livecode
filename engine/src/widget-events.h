@@ -139,7 +139,7 @@ private:
     void freeTouchSlot(uinteger_t p_which);
     
     // Indicates whether the given widget is in run mode or not
-    bool widgetIsInRunMode(MCWidgetRef);
+    bool widgetIsInRunMode(MCWidget *);
 };
 
 #endif // ifndef __MC_WIDGET_EVENTS__

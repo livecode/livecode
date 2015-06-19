@@ -411,7 +411,7 @@ static MCValueCustomCallbacks kMCWidgetCustomValueCallbacks =
 
 MCTypeInfoRef kMCWidgetNoCurrentWidgetErrorTypeInfo = nil;
 MCTypeInfoRef kMCWidgetSizeFormatErrorTypeInfo = nil;
-MCTypeInfoRef kMCWidgetTypeInfo = nil;
+MC_DLLEXPORT MCTypeInfoRef kMCWidgetTypeInfo = nil;
 
 bool MCWidgetModuleInitialize(void)
 {

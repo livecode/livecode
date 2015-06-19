@@ -32,8 +32,10 @@ public:
     
     //// NORMAL METHODS
     
-    bool HasProperty(MCNameRef handler);
+    bool HasProperty(MCNameRef property);
     bool HasHandler(MCNameRef handler);
+    
+    bool QueryProperty(MCNameRef property, MCTypeInfoRef& r_get_type, MCTypeInfoRef& r_set_type);
     
     bool SetProperty(MCNameRef property, MCValueRef value);
     bool GetProperty(MCNameRef property, MCValueRef& r_value);
@@ -59,10 +61,11 @@ public:
     
     bool OnGeometryChanged(void);
     bool OnParentPropertyChanged(void);
+    bool OnToolChanged(Tool tool);
     
-    void RedrawAll(void);
     void ScheduleTimerIn(double timeout);
     void CancelTimer(void);
+    void RedrawRect(MCGRectangle area);
     
     bool CopyChildren(MCProperListRef& r_children);
     void PlaceWidget(MCWidgetRef child, MCWidgetRef relative_to, bool put_below);
@@ -81,6 +84,9 @@ public:
     
     // Returns the widget's host MCControl.
     virtual MCWidget *GetHost(void) const = 0;
+    
+    // Returns the widget's owning widget (if any).
+    virtual MCWidgetRef GetOwner(void) const = 0;
     
     // Returns the frame of the widget in the owner's coord system.
     virtual MCGRectangle GetFrame(void) const = 0;
@@ -102,11 +108,11 @@ private:
         kDispatchOrderTopDown,
     };
     
-    bool Dispatch(MCNameRef event, MCValueRef *args = nil, uindex_t arg_count = 0);
-    bool DispatchRestricted(MCNameRef event, MCValueRef *args = nil, uindex_t arg_count = 0);
-    void DispatchRestrictedNoThrow(MCNameRef event, MCValueRef *args = nil, uindex_t arg_count = 0);
+    bool Dispatch(MCNameRef event, MCValueRef *x_args = nil, uindex_t arg_count = 0, MCValueRef *r_result = nil);
+    bool DispatchRestricted(MCNameRef event, MCValueRef *args = nil, uindex_t arg_count = 0, MCValueRef *r_result = nil);
+    void DispatchRestrictedNoThrow(MCNameRef event, MCValueRef *args = nil, uindex_t arg_count = 0, MCValueRef *r_result = nil);
     
-    bool DispatchRecursive(DispatchOrder order, MCNameRef event, MCValueRef *args = nil, uindex_t arg_count = 0);
+    bool DispatchRecursive(DispatchOrder order, MCNameRef event, MCValueRef *args = nil, uindex_t arg_count = 0, MCValueRef *r_result = nil);
     
     // The instance of this widget.
     MCScriptInstanceRef m_instance;
@@ -123,9 +129,13 @@ public:
     
     virtual bool IsRoot(void) const;
     virtual MCWidget *GetHost(void) const;
+    virtual MCWidgetRef GetOwner(void) const;
     virtual MCGRectangle GetFrame(void) const;
     virtual bool GetDisabled(void) const;
     virtual bool CopyFont(MCFontRef& r_font);
+    
+private:
+    MCWidget *m_host;
 };
 
 class MCWidgetChild: public MCWidgetBase
@@ -134,14 +144,21 @@ public:
     MCWidgetChild(void);
     virtual ~MCWidgetChild(void);
     
-    MCWidgetRef GetOwner(void) const;
     void SetOwner(MCWidgetRef owner);
+    void SetFrame(MCGRectangle frame);
+    void SetDisabled(bool disabled);
     
     virtual bool IsRoot(void) const;
     virtual MCWidget *GetHost(void) const;
+    virtual MCWidgetRef GetOwner(void) const;
     virtual MCGRectangle GetFrame(void) const;
     virtual bool GetDisabled(void) const;
     virtual bool CopyFont(MCFontRef& r_font);
+    
+private:
+    MCGRectangle m_frame;
+    MCWidgetRef m_owner;
+    bool m_disabled : 1;
 };
 
 MCWidgetBase *MCWidgetAsBase(MCWidgetRef widget);
@@ -291,7 +308,11 @@ public:
 #endif
 
 extern MCWidgetRef MCcurrentwidget;
-extern MCTypeInfoRef kMCWidgetTypeInfo;
+
+extern "C"
+{
+extern MC_DLLEXPORT MCTypeInfoRef kMCWidgetTypeInfo;
+}
 
 bool MCWidgetThrowNoCurrentWidgetError(void);
 bool MCWidgetThrowNotSupportedInChildWidgetError(void);

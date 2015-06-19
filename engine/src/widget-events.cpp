@@ -278,6 +278,24 @@ void MCWidgetEventManager::event_mdrag(MCWidget* p_widget)
 #endif
 }
 
+MCObject *MCWidgetEventManager::event_hittest(MCWidget* p_widget, int32_t x, int32_t y)
+{
+    MCWidgetRef t_target;
+    if (!MCWidgetOnHitTest(p_widget -> getwidget(), MCGPointMake(x, y), t_target))
+        t_target = p_widget -> getwidget();
+    
+    return MCWidgetGetHost(t_target);
+}
+
+void MCWidgetEventManager::event_toolchanged(MCWidget* p_widget, Tool p_tool)
+{
+    MCWidgetOnToolChanged(p_widget -> getwidget(), p_tool);
+}
+
+void MCWidgetEventManager::event_layerchanged(MCWidget* p_widget)
+{
+}
+
 Boolean MCWidgetEventManager::event_doubledown(MCWidget* p_widget, uint2 p_which)
 {
     // Prevent the IDE from breaking
@@ -490,7 +508,7 @@ bool MCWidgetEventManager::mouseDown(MCWidgetRef p_widget, uinteger_t p_which)
     // Mouse button is down
     m_mouse_buttons |= (1 << p_which);
     
-    if (!widgetIsInRunMode(p_widget))
+    if (!widgetIsInRunMode(MCWidgetGetHost(p_widget)))
         return false;
     
     // Do the position change and time since the last click make this a double
@@ -530,7 +548,7 @@ bool MCWidgetEventManager::mouseUp(MCWidgetRef p_widget, uinteger_t p_which)
         m_mouse_grab = nil;
     }
         
-    if (!widgetIsInRunMode(p_widget))
+    if (!widgetIsInRunMode(MCWidgetGetHost(p_widget)))
         return false;
     
     mouseClick(p_widget, p_which);
@@ -557,7 +575,7 @@ bool MCWidgetEventManager::mouseCancel(MCWidgetRef p_widget, uinteger_t p_which)
         m_mouse_grab = nil;
     }
 	
-    if (!widgetIsInRunMode(p_widget))
+    if (!widgetIsInRunMode(MCWidgetGetHost(p_widget)))
         return false;
     
     // Send a mouse release event if the widget handles it
@@ -572,7 +590,7 @@ bool MCWidgetEventManager::mouseCancel(MCWidgetRef p_widget, uinteger_t p_which)
 
 bool MCWidgetEventManager::mouseScroll(MCWidgetRef p_widget, real32_t p_delta_x, real32_t p_delta_y)
 {
-    if (!widgetIsInRunMode(p_widget))
+    if (!widgetIsInRunMode(MCWidgetGetHost(p_widget)))
         return false;
     
 #if 0
@@ -855,10 +873,8 @@ void MCWidgetEventManager::freeTouchSlot(uinteger_t p_which)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCWidgetEventManager::widgetIsInRunMode(MCWidgetRef p_widget)
+bool MCWidgetEventManager::widgetIsInRunMode(MCWidget *p_widget)
 {
-    MCWidget *t_host;
-    t_host = MCWidgetGetHost(p_widget);
-    Tool t_tool = t_host -> getstack() -> gettool(t_host);
+    Tool t_tool = p_widget -> getstack() -> gettool(p_widget);
     return t_tool == T_BROWSE || t_tool == T_HELP;
 }
