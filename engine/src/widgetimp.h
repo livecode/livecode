@@ -28,6 +28,8 @@ public:
     bool Create(MCNameRef kind);
     void Destroy(void);
     
+    MCWidgetRef AsWidget(void);
+    
     //// NORMAL METHODS
     
     bool HasProperty(MCNameRef handler);

@@ -637,6 +637,14 @@ inline MCGPoint MCGPointScale(const MCGPoint &p_point, MCGFloat p_scale)
 	return MCGPointScale(p_point, p_scale, p_scale);
 }
 
+inline bool MCGPointInRectangle(MCGPoint p, MCGRectangle r)
+{
+    return p . x >= r . origin . x &&
+            p . y >= r . origin . y &&
+             p . x < (r . origin . x + r . size . width) &&
+              p . y < (r . origin . y + r . size . height);
+}
+
 inline MCGSize MCGSizeMake(MCGFloat p_w, MCGFloat p_h)
 {
 	MCGSize t_size;

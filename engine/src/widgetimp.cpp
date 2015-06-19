@@ -49,7 +49,6 @@
 #include "widget-events.h"
 
 #include "module-canvas.h"
-
 #include "module-engine.h"
 
 #include "dispatch.h"
@@ -173,18 +172,113 @@ bool MCWidgetBase::OnClose(void)
 
 bool MCWidgetBase::OnPaint(MCGContextRef p_gcontext)
 {
-#if 0
+    bool t_success;
+    t_success = true;
+    
     uintptr_t t_cookie;
     MCCanvasPush(p_gcontext, t_cookie);
     
     MCGRectangle t_frame;
     t_frame = GetFrame();
     
-    MCGContextSave();
+    MCGContextSave(p_gcontext);
+    MCGContextClipToRect(p_gcontext, t_frame);
+    MCGContextTranslateCTM(p_gcontext, t_frame . origin . x, t_frame . origin . y);
+    if (!DispatchRecursive(kDispatchOrderBeforeBottomUp, MCNAME("OnPaint")))
+        t_success = false;
+    MCGContextRestore(p_gcontext);
     
-    return DispatchRestricted(MCNAME("OnPaint"), t_args . Ptr(), t_args . Count());
-#endif
-    return false;
+    MCCanvasPop(t_cookie);
+    
+    return t_success;
+}
+
+bool MCWidgetBase::OnHitTest(MCGPoint p_location, MCWidgetRef& r_target)
+{
+    bool t_success;
+    t_success = true;
+    
+    MCGRectangle t_frame;
+    t_frame = GetFrame();
+    
+    if (!MCGPointInRectangle(p_location, t_frame))
+    {
+        r_target = nil;
+        return true;
+    }
+    
+    MCWidgetRef t_target;
+    t_target = nil;
+    if (m_children != nil)
+    {
+        p_location . x -= t_frame . origin . x;
+        p_location . y -= t_frame . origin . y;
+        for(uindex_t i = 0; i < MCProperListGetLength(m_children); i++)
+        {
+            MCWidgetRef t_child;
+            t_child = MCProperListFetchElementAtIndex(m_children, i);
+            if (!MCWidgetOnHitTest(t_child, p_location, t_target))
+            {
+                t_success = false;
+                t_target = nil;
+            }
+            
+            if (t_target != nil)
+                break;
+        }
+    }
+    
+    if (t_target == nil)
+        t_target = AsWidget();
+    
+    r_target = t_target;
+    
+    return t_success;
+}
+
+bool MCWidgetBase::OnMouseEnter(void)
+{
+    return Dispatch(MCNAME("OnMouseEnter"));
+}
+
+bool MCWidgetBase::OnMouseLeave(void)
+{
+    return Dispatch(MCNAME("OnMouseLeave"));
+}
+
+bool MCWidgetBase::OnMouseMove(void)
+{
+    return Dispatch(MCNAME("OnMouseLeave"));
+}
+
+bool MCWidgetBase::OnMouseDown(void)
+{
+    return Dispatch(MCNAME("OnMouseDown"));
+}
+
+bool MCWidgetBase::OnMouseUp(void)
+{
+    return Dispatch(MCNAME("OnMouseUp"));
+}
+
+bool MCWidgetBase::OnMouseCancel(void)
+{
+    return Dispatch(MCNAME("OnMouseCancel"));
+}
+
+bool MCWidgetBase::OnClick(void)
+{
+    return Dispatch(MCNAME("OnClick"));
+}
+
+bool MCWidgetBase::OnGeometryChanged(void)
+{
+    return Dispatch(MCNAME("OnGeometryChanged"));
+}
+
+bool MCWidgetBase::OnParentPropertyChanged(void)
+{
+    return DispatchRecursive(kDispatchOrderBeforeBottomUp, MCNAME("OnParentPropertyChanged"));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

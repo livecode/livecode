@@ -422,8 +422,10 @@ void MCWidgetEventManager::GetAsynchronousClickPosition(coord_t& r_x, coord_t& r
 
 MCWidgetRef MCWidgetEventManager::hitTest(MCWidgetRef p_widget, coord_t x, coord_t y)
 {
+    // If an error is thrown whilst hit-testing, then we ignore the widget.
     MCWidgetRef t_target;
-    MCWidgetOnHitTest(p_widget, MCGPointMake(x, y), t_target);
+    if (!MCWidgetOnHitTest(p_widget, MCGPointMake(x, y), t_target))
+        t_target = nil;
     return t_target;
 }
 
