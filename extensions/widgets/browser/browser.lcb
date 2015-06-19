@@ -59,6 +59,8 @@ metadata javascripthandlers.editor is "com.livecode.pi.text"
 type MCBrowserFactoryRef is Pointer
 type MCBrowserRef is Pointer
 
+type MCBrowserProperty is CInt
+
 --
 
 foreign handler MCBrowserLibraryInitialize() returns CBool binds to "<builtin>"
@@ -72,11 +74,11 @@ foreign handler MCBrowserRelease(in pBrowser as MCBrowserRef) returns nothing bi
 
 foreign handler MCBrowserGetNativeLayer(in pBrowser as MCBrowserRef) returns Pointer binds to "<builtin>"
 
-foreign handler MCBrowserGetBoolProperty(in pBrowser as MCBrowserRef, in pProperty as CInt, out rValue as CBool) returns CBool binds to "<builtin>"
-foreign handler MCBrowserSetBoolProperty(in pBrowser as MCBrowserRef, in pProperty as CInt, in pValue as CBool) returns CBool binds to "<builtin>"
+foreign handler MCBrowserGetBoolProperty(in pBrowser as MCBrowserRef, in pProperty as MCBrowserProperty, out rValue as CBool) returns CBool binds to "<builtin>"
+foreign handler MCBrowserSetBoolProperty(in pBrowser as MCBrowserRef, in pProperty as MCBrowserProperty, in pValue as CBool) returns CBool binds to "<builtin>"
 
-foreign handler MCBrowserGetStringProperty(in pBrowser as MCBrowserRef, in pProperty as CInt, out rValue as NativeCString) returns CBool binds to "<builtin>"
-foreign handler MCBrowserSetStringProperty(in pBrowser as MCBrowserRef, in pProperty as CInt, in pValue as NativeCString) returns CBool binds to "<builtin>"
+foreign handler MCBrowserGetStringProperty(in pBrowser as MCBrowserRef, in pProperty as MCBrowserProperty, out rValue as NativeCString) returns CBool binds to "<builtin>"
+foreign handler MCBrowserSetStringProperty(in pBrowser as MCBrowserRef, in pProperty as MCBrowserProperty, in pValue as NativeCString) returns CBool binds to "<builtin>"
 
 foreign handler MCBrowserGoBack(in pBrowser as MCBrowserRef) returns CBool binds to "<builtin>"
 foreign handler MCBrowserGoForward(in pBrowser as MCBrowserRef) returns CBool binds to "<builtin>"
