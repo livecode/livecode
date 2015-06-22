@@ -14,11 +14,8 @@
 command toolsBuilderRun pPlatform, pEdition, pVersion
    -- If on windows or linux, we can't do anything macosxy due to lack of lipo/strip :o(
    local tEngineFolders
-   if the platform is not "macos" then
-      get "windows linux linux-x64 linux-armv6hf"
-   else
-      get "windows linux linux-x64 linux-armv6hf macosx ios android"
-   end if
+
+   get "windows linux-x86 linux-x86_64 linux-armv6hf macosx ios android"
       
    repeat for each word tPlatform in it
       builderFetchEngine pVersion, tPlatform
@@ -27,13 +24,11 @@ command toolsBuilderRun pPlatform, pEdition, pVersion
    
    -- Next make sure our IDE is up to date
    local tIdeFolder
-   toolsBuilderFetchIde pVersion
-   put the result into tIdeFolder
+   put builderIdeRepoFolder() into tIdeFolder
    
    -- Fetch the documentation
    local tDocsFolder
-   toolsBuilderFetchDocs  tIdeFolder
-   put the result into tDocsFolder
+   put builderBuiltDocsFolder() into tDocsFolder
    
    -- Now build the package
    local tPackageFile
@@ -42,23 +37,30 @@ command toolsBuilderRun pPlatform, pEdition, pVersion
    
    -- Compute the private folder
    local tPrivateFolder
-   put builderRepoFolder() & slash & ".." & slash & "livecode-commercial" into tPrivateFolder
+   put builderPrivateRepoFolder() into tPrivateFolder
    
-   -- Finally build an installer
+   -- Now build the installer
    toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, tIdeFolder, tPrivateFolder, tPackageFile
 end toolsBuilderRun
 
-////////////////////////////////////////////////////////////////////////////////
-
-private command toolsBuilderFetchIde pVersion
-   return builderIDEFolder()
-end toolsBuilderFetchIde
-
-////////////////////////////////////////////////////////////////////////////////
-
-private command toolsBuilderFetchDocs pIdeFolder
-   return builderBuiltDocsFolder()
-end toolsBuilderFetchDocs
+command toolsBuilderRunDisk pPlatform, pEdition, pVersion
+   if pPlatform is not "macosx" then
+      exit toolsBuilderRunDisk
+   end if
+   
+   if the platform is not "macos" then
+      builderLog "error", "Cannot sign and build disk image for Mac on this platform"
+      exit toolsBuilderRunDisk
+   end if
+   
+   local tInputFolder
+   put builderInputFolder() into tInputFolder
+   
+   local tInputFile
+   put tInputFolder & slash & "installer-mac.zip" into tInputFile
+   
+   toolsBuilderMakeDisk pVersion, pEdition, pPlatform, tInputFile
+end toolsBuilderRunDisk
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -68,23 +70,24 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    local tEditionType
    put pEdition into tEditionType
    
-   -- Remove any edition suffix from mac standalones
-   builderLog "report", "Removing edition suffixes from mac standalone '" & pEngineFolders["macosx"] & "/Standalone-" &  pEdition & ".app" & "'"
-   removeStandaloneEdiitonSuffix pEngineFolders["macosx"] & "/Standalone-" &  pEdition & ".app", pEdition
-   
    -- Compute the package temp folder
    local tTempFolder
-   put builderWorkspaceFolder() & "/temp/tools-" & pPlatform & "-" & pVersion into tTempFolder
+   put builderWorkFolder() & slash & "tools-" & pPlatform & "-" & pVersion & ".tmp" into tTempFolder
    builderEnsureFolder tTempFolder
    
    -- Compute the package output file
-   put builderWorkspaceFolder() & slash & "package/tools-" & pPlatform & "-" & pVersion & ".zip" into tPackageFile
+   put builderWorkFolder() & slash & "tools-" & pPlatform & "-" & pVersion & ".zip" into tPackageFile
    builderEnsureFolderForFile tPackageFile
+   
+   --return tPackageFile
    
    -- Configure the package compiler appropriately
    local tPackager
    packageCompilerCreate tPackager
    packageCompilerSetReportCallback tPackager, the long id of me, "toolsBuilderPackageReport"
+   
+   -- Setup the temporary dir
+   packageCompilerConfigure tPackager, "temporary", tTempFolder
    
    -- Configure the sources: ide, docs, macosx, windows, linux
    packageCompilerConfigureSource tPackager, "ide", pIdeFolder
@@ -92,13 +95,15 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    packageCompilerConfigureSource tPackager, "docs", pDocsFolder
    packageCompilerConfigureSource tPackager, "engine", pEngineFolders[pPlatform]
    packageCompilerConfigureSource tPackager, "macosx", pEngineFolders["macosx"]
-   packageCompilerConfigureSource tPackager, "linux", pEngineFolders["linux"]
+   packageCompilerConfigureSource tPackager, "linux-x86", pEngineFolders["linux-x86"]
+   packageCompilerConfigureSource tPackager, "linux-x86_64", pEngineFolders["linux-x86_64"]
+   packageCompilerConfigureSource tPackager, "linux-armv6-hf", pEngineFolders["linux-armv6hf"]
    packageCompilerConfigureSource tPackager, "windows", pEngineFolders["windows"]
    packageCompilerConfigureSource tPackager, "ios", pEngineFolders["ios"]
    packageCompilerConfigureSource tPackager, "android", pEngineFolders["android"]
    packageCompilerConfigureSource tPackager, "prebuilt", builderRepoFolder() & slash & "prebuilt"
    if tEditionType is "Commercial" then
-      packageCompilerConfigureSource tPackager, "private", builderRepoFolder() & slash & ".." & slash & "livecode-commercial"
+      packageCompilerConfigureSource tPackager, "private", builderPrivateRepoFolder()
    end if
    
    -- Now set up variables used by the description: TargetFolder, SupportFolder, ToolsFolder, TargetPlatform, TargetEdition
@@ -111,18 +116,18 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
       packageCompilerConfigureVariable tPackager, "SupportFolder", "[[installFolder]]"
       packageCompilerConfigureVariable tPackager, "ToolsFolder", "[[installFolder]]"
    end if
-   if pPlatform is "linux-x64" or pPlatform is "linux-armv6hf" or pPlatform is "linux" then
+   if pPlatform begins with "linux" then
       packageCompilerConfigureVariable tPackager, "TargetPlatform", "linux"
    else
       packageCompilerConfigureVariable tPackager, "TargetPlatform", pPlatform
    end if
    packageCompilerConfigureVariable tPackager, "TodaysDate", "[[todaysDate]]"
    packageCompilerConfigureVariable tPackager, "VersionTag", pVersion
-   --packageCompilerConfigureVariable tPackager, "TargetArchitectures", "i386,ppc"
+   packageCompilerConfigureVariable tPackager, "ProductBranch", char 1 to 3 of pVersion
    packageCompilerConfigureVariable tPackager, "TargetArchitectures", "i386"
-   if pPlatform is "linux" then
-      packageCompilerConfigureVariable tPackager, "TargetArchitecture", "i386"
-   else if pPlatform is "linux-x64" then
+   if pPlatform is "linux-x86" then
+      packageCompilerConfigureVariable tPackager, "TargetArchitecture", "x86"
+   else if pPlatform is "linux-x86_64" then
       packageCompilerConfigureVariable tPackager, "TargetArchitecture", "x86_64"
    else if pPlatform is "linux-armv6hf" then
       packageCompilerConfigureVariable tPackager, "TargetArchitecture", "armv6-hf"
@@ -132,7 +137,7 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    if pEdition is "Community" then
       packageCompilerConfigureVariable tPackager, "ProductTitle", "LiveCode Community" && getReadableVersion(pVersion)
       packageCompilerConfigureVariable tPackager, "ProductTag", "livecodecommunity_" & getTaggedVersion(pVersion)
-      if pPlatform is "Linux" or pPlatform is "Linux-x64" or pPlatform is "Linux-armv6hf" then
+      if pPlatform is "Linux" or pPlatform is "Linux-x86_64" or pPlatform is "Linux-armv6hf" then
          packageCompilerConfigureVariable tPackager, "ProductName", "livecodecommunity"
       else
          packageCompilerConfigureVariable tPackager, "ProductName", "LiveCode Community"
@@ -140,7 +145,7 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    else
       packageCompilerConfigureVariable tPackager, "ProductTitle", "LiveCode" && getReadableVersion(pVersion)
       packageCompilerConfigureVariable tPackager, "ProductTag", "livecode_" & getTaggedVersion(pVersion)
-      if pPlatform is "Linux" or pPlatform is "Linux-x64" or pPlatform is "Linux-armv6hf" then
+      if pPlatform is "Linux" or pPlatform is "Linux-x86_64" or pPlatform is "Linux-armv6hf" then
          packageCompilerConfigureVariable tPackager, "ProductName", "livecode"
       else
          packageCompilerConfigureVariable tPackager, "ProductName", "LiveCode"
@@ -159,9 +164,9 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    builderLog "message", "Parsing description file '" & tDescFile & "'"
    packageCompilerParse tPackager, url ("file:" & tDescFile)
    if the result is empty then
-      builderLog "report", "Parsed description file '" & tDescFile & "'"
+      toolsBuilderPackageReport "report", "Parsed description file '" & tDescFile & "'"
    else
-      builderLog "error", the result
+      toolsBuilderPackageReport "error", item 2 to -1 of the result, item 1 of the result
       put false into tSuccess
    end if
    
@@ -175,7 +180,7 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
       if the result is empty then
          builderLog "report", "Built package '" & tPackageFile & "'"
       else
-         builderLog "error", the result
+         toolsBuilderPackageReport "error", item 2 to -1 of the result, item 1 of the result
          put false into tSuccess
       end if
    end if
@@ -189,8 +194,11 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    return tPackageFile
 end toolsBuilderMakePackage
 
-on toolsBuilderPackageReport pType, pMessage
-   builderLog "message", pMessage
+on toolsBuilderPackageReport pType, pMessage, pLine
+   if pLine is not empty then
+      put "Line" && pLine && ":" && pMessage into pMessage
+   end if
+   builderLog pType, pMessage
 end toolsBuilderPackageReport
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -201,13 +209,13 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    
    -- Compute the deploy temp folder
    local tTempFolder
-   put builderWorkspaceFolder() & "/temp/tools-" & pPlatform & "-" & pVersion into tTempFolder
+   put builderWorkFolder() & slash & "tools-" & pPlatform & "-" & pVersion & ".tmp" into tTempFolder
    builderEnsureFolder tTempFolder
    
    -- Compute the output file
    local tOutputFileStub, tOutputFileFolder
-   put builderWorkspaceFolder() & "/deploy" into tOutputFileFolder
-   put builderWorkspaceFolder() & "/deploy/" & getInstallerFilenameStub(pVersion, pPlatform, pEdition) into tOutputFileStub
+   put builderOutputFolder() into tOutputFileFolder
+   put tOutputFileFolder & slash & getInstallerFilenameStub(pVersion, pPlatform, pEdition) into tOutputFileStub
    builderEnsureFolderForFile tOutputFileStub
    
    local tInstaller
@@ -218,6 +226,7 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    if pEdition is "Community" then
       put the short name of stack (builderSystemFolder() & "/tools_installer_resources.rev") into tResources
    else
+      builderLog "report", "Commercial installer resources:" && builderCommercialResourceFolder() & "/tools_installer_resources.rev"
       put the short name of stack (builderCommercialResourceFolder() & "/tools_installer_resources.rev") into tResources
    end if
    set the mainStack of stack tResources to tInstaller
@@ -271,16 +280,16 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    # AL-2015-03-14: Use deploy parameters to include libURL scriptified stack in installer standalone
    local tAuxStackfiles
    if there is a stack "revLibUrl" then
-   		put the effective filename of stack "revLibUrl" into tAuxStackfiles
+      put the effective filename of stack "revLibUrl" into tAuxStackfiles
    else
-	   put builderRepoFolder() & slash & "ide-support" & slash & "revliburl.livecodescript" into tAuxStackfiles
+      put builderRepoFolder() & slash & "ide-support" & slash & "revliburl.livecodescript" into tAuxStackfiles
    end if	
    put return & builderSystemFolder() & slash & "installer_utilities.livecodescript" after tAuxStackfiles
    
-   start using stack "revSBLibrary"
+   start using stack (builderRepoFolder() & slash & "ide-support" & slash & "revsblibrary.livecodescript")
    repeat for each line tStackFile in tAuxStackfiles
       local tTempStackFile
-      put the tempname into tTempStackFile
+      put builderMakeTemporaryFile(tTempFolder, "stack") into tTempStackFile
       revSBResaveScriptOnlyStackAsProperStackFile the short name of stack tStackFile, tStackFile, tTempStackFile
       put tTempStackFile & return after tParams["auxiliary_stackfiles"]
    end repeat
@@ -301,7 +310,7 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
          put tManifestFile into tParams["manifest"]
          
          -- First we deploy the installer unsigned
-         put builderInstallerEngine("windows") into tParams["engine"]
+         put abstractPinFile(builderInstallerEngine("windows")) into tParams["engine"]
          put tInstallerStackfile into tParams["stackfile"] 
          put pPackageFile into tParams["payload"]
          put tOutputFileStub & ".unsigned.exe" into tParams["output"]
@@ -345,16 +354,16 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
          builderLog "report", "Deployed windows installer to '" && tOutputFileStub & ".exe" & "'"
          break
          
-      case "linux"
-      case "linux-x64"
+      case "linux-x86"
+      case "linux-x86_64"
       case "linux-armv6hf"
-         put builderInstallerEngine(pPlatform) into tParams["engine"]
+         put abstractPinFile(builderInstallerEngine(pPlatform)) into tParams["engine"]
          put tInstallerStackFile into tParams["stackfile"]
          put pPackageFile into tParams["payload"]
-         if pPlatform is "linux" then
+         if pPlatform is "linux-x86" then
             put tOutputFileStub & ".x86" into tParams["output"]
-         else if pPlatform is "linux-x64" then
-            put tOutputFileStub & ".x64" into tParams["output"]
+         else if pPlatform is "linux-x86_64" then
+            put tOutputFileStub & ".x86_64" into tParams["output"]
          else -- if pPlatform is "linux-armv6hf"
             put tOutputFileStub & ".rpi" into tParams["output"]
          end if
@@ -383,38 +392,29 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
          if pEdition is "Community" then
             put url ("binfile:" & builderInstallerEngine("macosx") & slash & "Contents/Resources/Installer.icns") into url ("binfile:" & tOutputFileStub & ".app" & slash & "Contents/Resources/Installer.icns")
          else
-            put url ("binfile:" & pPrivateFolder & slash & "rsrc/Installer.icns") into url ("binfile:" & tOutputFileStub & ".app" & slash & "Contents/Resources/Installer.icns")
+            put url ("binfile:" & builderCommercialResourceFolder() & "/Installer.icns") into url ("binfile:" & tOutputFileStub & ".app" & slash & "Contents/Resources/Installer.icns")
          end if
          
          -- Get us an installer by dieting the source installer
-         put builderInstallerEngine("macosx") & slash & "Contents/MacOS/installer" into tDietParams["input"]
-         put tTempFolder & slash & "macosx-installer-x86" into tDietParams["output"]
-         put true into tDietParams["keep_x86"]
-         put false into tDietParams["keep_ppc"]
-         builderLog "message", "Dieting input installer down to x86"
-         --_internal diet macosx tDietParams
-         dietAndStrip "x86", tDietParams["input"], tDietParams["output"]
-         if the result is not empty then
-            builderLog "error", "Dieting input installer to x86 failed -" && the result
-            throw "failure"
+         if false then
+            put abstractPinFile(builderInstallerEngine("macosx") & slash & "Contents/MacOS/Installer") into tDietParams["input"]
+            put tTempFolder & slash & "macosx-installer-x86" into tDietParams["output"]
+            put true into tDietParams["keep_x86"]
+            put false into tDietParams["keep_ppc"]
+            builderLog "message", "Dieting input installer down to x86"
+            --_internal diet macosx tDietParams
+            dietAndStrip "x86", tDietParams["input"], tDietParams["output"]
+            if the result is not empty then
+               builderLog "error", "Dieting input installer to x86 failed -" && the result
+               throw "failure"
+            end if
+            
+            put tTempFolder & slash & "macosx-installer-x86" into tParams["engine_x86"]
          end if
          
-         --         put builderInstallerEngine("macosx") & slash & "Contents/MacOS/installer" into tDietParams["input"]
-         --         put tTempFolder & slash & "macosx-installer-ppc" into tDietParams["output"]
-         --         put false into tDietParams["keep_x86"]
-         --         put true into tDietParams["keep_ppc"]
-         --         builderLog "message", "Dieting input installer down to ppc"
-         --         --_internal diet macosx tDietParams
-         --         dietAndStrip "ppc", tDietParams["input"], tDietParams["output"]
-         --         if the result is not empty then
-         --            builderLog "error", "Dieting input installer to ppc failed -" && the result
-         --            throw "failure"
-         --         end if
-         
-         put tTempFolder & slash & "macosx-installer-x86" into tParams["engine_x86"]
-         --put tTempFolder & slash & "macosx-installer-ppc" into tParams["engine_ppc"]
+         put abstractPinFile(builderInstallerEngine("macosx") & slash & "Contents/MacOS/Installer") into tParams["engine_x86"]
          put tInstallerStackFile into tParams["stackfile"]
-         put tOutputFileStub & ".app" & slash & "Contents/MacOS/installer" into tParams["output"]
+         put tOutputFileStub & ".app" & slash & "Contents/MacOS/Installer" into tParams["output"]
          
          put url ("binfile:" & pPackageFile) into url ("binfile:" & tOutputFileStub & ".app" & slash & "Contents/Resources/payload")
          
@@ -426,57 +426,67 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
          end if
          
          builderLog "report", "Deployed macosx installer to '" && tOutputFileStub & ".app" & "'"
-         
-         get shell("/usr/bin/security -q find-identity -v")
-         filter it with "*Developer ID Application: Runtime Revolution Ltd*"
-         if it is not empty then
-            builderLog "message", "Signing macosx installer'" && tOutputFileStub & ".app" & "'"
-            wait 1 second
-            get shell("/usr/bin/codesign -s" && word 2 of it && "'" & tOutputFileStub & ".app'")
-            if it is not empty then
-               builderLog "error", "Could not macosx sign installer:" && it
-               throw "failure"
-            end if
-            builderLog "report", "Successfully signed macosx installer'" && tOutputFileStub & ".app" & "'"
-         end if
-         
-         local tDmgFile, tDmgName, tDmgAppFolder
-         put tOutputFileStub & ".dmg" into tDmgFile
-         if pEdition is "Community" then
-            put "LiveCode Community" && getReadableVersion(pVersion) && "Installer" into tDmgName
-            put (tOutputFileFolder & slash & "Install LiveCode Community" && getReadableVersion(pVersion) & ".app") into tDmgAppFolder
-         else
-            put "LiveCode" && getReadableVersion(pVersion) && "Installer" into tDmgName
-            put (tOutputFileFolder & slash & "Install LiveCode" && getReadableVersion(pVersion) & ".app") into tDmgAppFolder
-         end if
-         builderLog "message", "Building Mac DMG to '" & tDmgFile & "'"
-         if there is a file tDmgFile then
-            delete file tDmgFile
-            if there is a file tDmgFile then
-               builderLog "error", "Could not remove existing dmg - make sure it is not mounted"
-               throw "failure"
-            end if
-         end if
-         
-         local tTrashFile
-         put builderWorkspaceFolder() & "/deploy/.Trash" into tTrashFile
-         put empty into URL ("file:" & tTrashFile)
-         
-         -- Do the DMG build
-         rename (tOutputFileStub & ".app") to tDmgAppFolder
-         -- SN-2015-03-09: [[ DMG creation failure ]] Ensure that hdiutil will allocate enough
-         --  memory if the installer end up being over a gigabyte large.
-         get shell("hdiutil create -fs HFS+ -size 1G -volname" && quote & tDmgName & quote && "-srcfolder" && quote & tDmgAppFolder & quote && "-srcfolder" && quote & tTrashFile & quote && quote & tDmgFile & quote)
-         rename tDmgAppFolder to (tOutputFileStub & ".app")
-         if "created:" is not in it then
-            builderLog "error", "Dmg creation failed -" && the last line of it
-            throw "failure"
-         end if
-         
-         builderLog "report", "Deployed macosx dmg to '" & tDmgFile & "'"
          break
    end switch
 end toolsBuilderMakeInstaller
+
+command toolsBuilderMakeDisk pVersion, pEdition, pPlatform, tInputZip
+   -- Compute the output file
+   local tOutputFileStub, tOutputFileFolder
+   put builderOutputFolder() into tOutputFileFolder
+   put tOutputFileFolder & slash & getInstallerFilenameStub(pVersion, pPlatform, pEdition) into tOutputFileStub
+   builderEnsureFolderForFile tOutputFileStub
+   
+   get shell("/usr/bin/security -q find-identity -v")
+   filter it with "*Developer ID Application: Runtime Revolution Ltd*"
+   if it is not empty then
+      builderLog "message", "Signing macosx installer'" && tOutputFileStub & ".app" & "'"
+      wait 1 second
+      get shell("/usr/bin/codesign -s" && word 2 of it && "'" & tOutputFileStub & ".app'")
+      if it is not empty then
+         builderLog "error", "Could not macosx sign installer:" && it
+         throw "failure"
+      end if
+      builderLog "report", "Successfully signed macosx installer'" && tOutputFileStub & ".app" & "'"
+   else
+      builderLog "warning", "No valid identity found for signing OSX installer"
+   end if
+   
+   local tDmgFile, tDmgName, tDmgAppFolder
+   put tOutputFileStub & ".dmg" into tDmgFile
+   if pEdition is "Community" then
+      put "LiveCode Community" && getReadableVersion(pVersion) && "Installer" into tDmgName
+      put (tOutputFileFolder & slash & "Install LiveCode Community" && getReadableVersion(pVersion) & ".app") into tDmgAppFolder
+   else
+      put "LiveCode" && getReadableVersion(pVersion) && "Installer" into tDmgName
+      put (tOutputFileFolder & slash & "Install LiveCode" && getReadableVersion(pVersion) & ".app") into tDmgAppFolder
+   end if
+   builderLog "message", "Building Mac DMG to '" & tDmgFile & "'"
+   if there is a file tDmgFile then
+      delete file tDmgFile
+      if there is a file tDmgFile then
+         builderLog "error", "Could not remove existing dmg - make sure it is not mounted"
+         throw "failure"
+      end if
+   end if
+   
+   --local tTrashFile
+   --put builderWorkspaceFolder() & "/deploy/.Trash" into tTrashFile
+   --put empty into URL ("file:" & tTrashFile)
+   
+   -- Do the DMG build
+   rename (tOutputFileStub & ".app") to tDmgAppFolder
+   -- SN-2015-03-09: [[ DMG creation failure ]] Ensure that hdiutil will allocate enough
+   --  memory if the installer end up being over a gigabyte large.
+   get shell("hdiutil create -fs HFS+ -size 1G -volname" && quote & tDmgName & quote && "-srcfolder" && quote & tDmgAppFolder & quote && quote & tDmgFile & quote)
+   rename tDmgAppFolder to (tOutputFileStub & ".app")
+   if "created:" is not in it then
+      builderLog "error", "Dmg creation failed -" && the last line of it
+      throw "failure"
+   end if
+   
+   builderLog "report", "Deployed macosx dmg to '" & tDmgFile & "'"
+end toolsBuilderMakeDisk
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -523,7 +533,7 @@ function getInstallerFilenameStub pVersion, pPlatform, pEdition
       put "Mac" into pPlatform
    else if pPlatform is "windows" then
       put "Windows" into pPlatform
-   else if pPlatform is "linux" or pPlatform is "linux-x64" or pPlatform is "linux-armv6hf" then
+   else if pPlatform begins with "linux" then
       put "Linux" into pPlatform
    end if
    if pEdition is "Community" then
@@ -540,13 +550,3 @@ function loadTextFile pFile
    return it
 end loadTextFile
 
-private command removeStandaloneEdiitonSuffix pStandalone, pEdition
-   local tOldStandalone, tNewStandalone
-   put pStandalone & "/Contents/MacOS/Standalone-" & pEdition into tOldStandalone
-   put pStandalone & "/Contents/MacOS/Standalone" into tNewStandalone   
-   if there is a file tNewStandalone and there is a file tOldStandalone then
-      delete file tNewStandalone
-   end if
-   rename tOldStandalone to tNewStandalone
-   return the result
-end removeStandaloneEdiitonSuffix

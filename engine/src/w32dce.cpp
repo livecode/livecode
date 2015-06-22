@@ -658,7 +658,7 @@ uint1 MCScreenDC::fontnametocharset(MCStringRef p_font)
 	MCAutoStringRefAsWString t_font_wstr;
 	/* UNCHECKED */ t_font_wstr.Lock(p_font);
 
-	/* UNCHECKED */ StringCchCopy(logfont.lfFaceName, LF_FACESIZE, *t_font_wstr);
+	/* UNCHECKED */ StringCchCopyW(logfont.lfFaceName, LF_FACESIZE, *t_font_wstr);
 
 	//parse font and encoding
 	logfont.lfCharSet = DEFAULT_CHARSET;

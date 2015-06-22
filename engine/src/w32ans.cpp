@@ -914,7 +914,7 @@ int MCA_folder(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial,
 			MCValueRelease(s_last_folder);
 
 		size_t t_length;
-		/* UNCHECKED */ StringCchLength(t_buffer.Ptr(), t_buffer.Size(), &t_length);
+		/* UNCHECKED */ StringCchLengthW(t_buffer.Ptr(), t_buffer.Size(), &t_length);
 		/* UNCHECKED */ MCStringCreateWithChars(t_buffer.Ptr(), t_length, s_last_folder);
 
 		MCAutoStringRef t_std_path;

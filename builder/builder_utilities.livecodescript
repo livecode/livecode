@@ -1,9 +1,14 @@
 ﻿script "BuilderUtilities"
+local sEngineDir
+local sWorkDir
+local sOutputDir
+local sPrivateDir
+
 ////////////////////////////////////////////////////////////////////////////////
 
 command builderLog  pType, pMessage
    if there is a stack "Builder" then
-      send "__builderLog pType, pMessage" to stack "Builder"
+      dispatch "__builderLog" to stack "Builder" with  pType, pMessage
    end if
 end builderLog
 
@@ -17,6 +22,22 @@ command builderFinalize
    stop using stack (builderSystemFolder() & slash & "package_compiler.livecodescript")
 end builderFinalize
 
+command builderSetEngineDir pDir
+   put pDir into sEngineDir
+end builderSetEngineDir
+
+command builderSetPrivateDir pDir
+   put pDir into sPrivateDir
+end builderSetPrivateDir
+
+command builderSetWorkDir pDir
+   put pDir into sWorkDir
+end builderSetWorkDir
+
+command builderSetOutputDir pDir
+   put pDir into sOutputDir
+end builderSetOutputDir
+
 ////////////////////////////////////////////////////////////////////////////////
 
 on builderBuild pWhich, pPlatforms, pEdition, pType
@@ -28,23 +49,17 @@ on builderBuild pWhich, pPlatforms, pEdition, pType
    switch pWhich
       case "Tools"
          repeat for each line tPlatform in pPlatforms
-            # Only one linux target for LiveCode 6.7
-            if (char 1 of tVersion) < 7 and tPlatform begins with "linux" and tPlatform is not "linux" then next repeat
             dispatch "toolsBuilderRun" to stack builderToolsBuilderStack() with tPlatform, pEdition, tVersion
          end repeat
          break
       case "Engine"
          dispatch "engineBuilderRun" to stack builderEngineBuilderStack() with "environment", pEdition, tVersion
          repeat for each line tPlatform in pPlatforms
-            # Only one linux target for LiveCode 6.7
-            if (char 1 of tVersion) < 7 and tPlatform begins with "linux" and tPlatform is not "linux" then next repeat
             dispatch "engineBuilderRun" to stack builderEngineBuilderStack() with tPlatform, pEdition, tVersion
          end repeat
          break
       case "Server"
          repeat for each line tPlatform in pPlatforms
-            # Only one linux target for LiveCode 6.7
-            if (char 1 of tVersion) < 7 and tPlatform begins with "linux" and tPlatform is not "linux" then next repeat
             dispatch "serverBuilderRun" to stack builderServerBuilderStack() with tPlatform, pEdition, tVersion
          end repeat
          break
@@ -53,6 +68,11 @@ on builderBuild pWhich, pPlatforms, pEdition, pType
          break
       case "Docs"
          dispatch "docsBuilderRun" to stack builderDocsBuilderStack() with pEdition, tVersion
+         break
+      case "Disk"
+         repeat for each line tPlatform in pPlatforms
+            dispatch "toolsBuilderRunDisk" to stack builderToolsBuilderStack() with tPlatform, pEdition, tVersion
+         end repeat
          break
       case "Archive"
          local tBuildNumber
@@ -65,13 +85,35 @@ on builderBuild pWhich, pPlatforms, pEdition, pType
 end builderBuild
 
 command builderFetchEngine pVersion, pPlatform
+   if sEngineDir is not empty then
+      switch pPlatform
+         case "windows"
+            return sEngineDir & slash & "win-x86-bin"
+         case "linux-x86"
+            return sEngineDir & slash & "linux-x86-bin"
+         case "linux-x86_64"
+            return sEngineDir & slash & "linux-x86_64-bin"
+         case "linux-armv6hf"
+            return sEngineDir & slash & "linux-armv6hf-bin"
+         case "macosx"
+            return sEngineDir & slash & "mac-bin"
+         case "ios"
+            return sEngineDir & slash & "ios-bin"
+         case "android"
+            return sEngineDir & slash & "android-armv6-bin"
+         default
+            write the executionContexts to stderr
+            builderLog "error", "Unknown platform '" & pPlatform & "'"
+      end switch
+      return empty
+   end if
    local tPlatform
    switch pPlatform
       case "windows"
          get "windows/release"
          break
-      case "linux"
-      case "linux-x64"
+      case "linux-x86"
+      case "linux-x86_64"
       case "linux-armv6hf"
          get "linux"
          break
@@ -137,10 +179,18 @@ function builderRepoFolder
    return item 1 to -3 of the filename of me
 end builderRepoFolder
 
-function builderIDEFolder
-   set the itemDelimiter to slash
-   return (item 1 to -3 of the filename of me & slash & "ide")
-end builderIDEFolder
+-- Returns the folder of the private repository
+function builderPrivateRepoFolder
+   if sPrivateDir is not empty then
+      return sPrivateDir
+   end if
+   return builderRepoFolder() & slash & ".."
+end builderPrivateRepoFolder
+
+-- Returns the folder of the IDE repository
+function builderIdeRepoFolder
+   return builderRepoFolder() & slash & "ide"
+end builderIdeRepoFolder
 
 -- Returns the folder of the builder system
 function builderSystemFolder
@@ -148,14 +198,34 @@ function builderSystemFolder
    return item 1 to -2 of the filename of me
 end builderSystemFolder
 
+-- Returns the folder where intermediate products should be placed
+function builderWorkFolder
+   if sWorkDir is not empty then
+      return sWorkDir
+   end if
+   return builderRepoFolder() & slash & "_build/final/work"
+end builderWorkFolder
+
+-- Returns the folder where input products are placed
+function builderInputFolder
+   return sEngineDir
+end builderInputFolder
+
+-- Returns the folder where output products should be placed
+function builderOutputFolder
+   if sOutputDir is not empty then
+      return sOutputDir
+   end if
+   return builderRepoFolder() & slash & "_build/final/output"
+end builderOutputFolder
+
 -- Returns the folder where all the work should be done
 function builderWorkspaceFolder
    return builderRepoFolder() & slash & "_build/final"
-   --return specialFolderPath("Desktop") & slash & "BuilderWorkspace"
 end builderWorkspaceFolder
 
 function builderIDEFolder
-   return builderRepoFolder() & slash & "ide"
+   return builderIdeRepoFolder()
 end builderIDEFolder
 
 function builderIDEDocsFolder
@@ -180,13 +250,17 @@ function builderBuiltDocsFolder
    return builderRepoFolder() & slash & "_build/docs"
 end builderBuiltDocsFolder
 
+function builderBuiltNotesFolder
+   return builderRepoFolder() & slash & "_build/notes"
+end builderBuiltNotesFolder
+
 function builderCommercialFolder
    set the itemDel to slash
-   return item 1 to -4 of the filename of me & "/livecode-commercial"
+   return item 1 to -4 of the filename of me
 end builderCommercialFolder
 
 function builderCommercialResourceFolder
-   return builderCommercialFolder() & "/rsrc"
+   return builderCommercialFolder() & "/engine/rsrc"
 end builderCommercialResourceFolder
 
 function builderBuildsFolder
@@ -230,23 +304,32 @@ end builderModuleInterfaceFolder
 -- Returns the engine that should be used to build the installer
 function builderInstallerEngine pPlatform
    local tEngineFolder
-   --put builderWorkspaceFolder() & slash & "engine" & slash & pPlatform & "-" & item 1 of field "Version" of card 1 of me into tEngineFolder
    builderFetchEngine empty, pPlatform
    put the result into tEngineFolder
    
    switch pPlatform
       case "windows"
          return tEngineFolder & slash & "installer.exe"
-      case "linux"
-         return tEngineFolder & slash & "i386/release/installer"
-      case "linux-x64"
-         return tEngineFolder & slash & "x86_64/release/installer"
+      case "linux-x86"
+         return tEngineFolder & slash & "installer"
+      case "linux-x86_64"
+         return tEngineFolder & slash & "installer"
       case "linux-armv6hf"
-         return tEngineFolder & slash & "armv6-hf/release/installer"
+         return tEngineFolder & slash & "installer"
       case "macosx"
-         return tEngineFolder & slash & "installer.app"
+         return tEngineFolder & slash & "Installer.app"
    end switch
 end builderInstallerEngine
+
+function builderMakeTemporaryFile pTempFolder, pTag
+   local tIndex
+   put 1 into tIndex
+   repeat while there is a file (pTempFolder & slash & pTag & "-" & tIndex)
+      add 1 to tIndex
+   end repeat
+   
+   return pTempFolder & slash & pTag & "-" & tIndex
+end builderMakeTemporaryFile
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -311,9 +394,6 @@ command dietAndStrip pArchs, pInput, pOutput
    
    local tActualArchs
    repeat for each item tArch in pArchs
-      if tArch is "x86" then
-         put "i386" into tArch
-      end if
       if tArch is "x86-64" then
          put "x86_64" into tArch
       end if

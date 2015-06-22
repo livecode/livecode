@@ -1,7 +1,0 @@
-library externalv1
-	support-ppc 10.3.9
-	support-386 10.4.0
-	define _MACOSX
-	include ./include
-	compile-c src/external.c
-	output externalv1

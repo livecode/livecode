@@ -76,5 +76,5 @@ make_helper() {
   chmod a+r "${feature_info_plist}"
 }
 
-make_helper "${CONFIGURATION_BUILD_DIR}" "${PRODUCT_NAME}" "EH" "--executable-heap"
-make_helper "${CONFIGURATION_BUILD_DIR}" "${PRODUCT_NAME}" "NP" "--no-pie"
+make_helper "${1}" "${2}" "EH" "--executable-heap"
+make_helper "${1}" "${2}" "NP" "--no-pie"

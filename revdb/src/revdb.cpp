@@ -23,9 +23,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #if defined(_WINDOWS) || defined(_WINDOWS_SERVER)
 #include "w32support.h"
-#elif defined(_LINUX) || defined(TARGET_SUBPLATFORM_ANDROID)
+#elif defined(_LINUX) || defined(_LINUX_SERVER) || defined(TARGET_SUBPLATFORM_ANDROID)
 #include "unxsupport.h"
-#elif defined(_MACOSX)
+#elif defined(_MACOSX) || defined (_MAC_SERVER)
 #include "osxsupport.h"
 #elif defined(TARGET_SUBPLATFORM_IPHONE)
 #include "iossupport.h"
@@ -2423,6 +2423,6 @@ EXTERNAL_END_DECLARATIONS
 extern "C"
 {
 	extern struct LibInfo __libinfo;
-	__attribute((section("__DATA,__libs"))) volatile struct LibInfo *__libinfoptr_revdb = &__libinfo;
+	__attribute((section("__DATA,__libs"))) volatile struct LibInfo *__libinfoptr_revdb __attribute__((__visibility__("default"))) = &__libinfo;
 }
 #endif

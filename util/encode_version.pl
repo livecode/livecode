@@ -9,14 +9,17 @@ sub trim
 	return $trimmed;
 }
 
+my $inputDir = $ARGV[0];
+my $outputDir = $ARGV[1];
+
 # Open the file containing the variables
-open VARIABLES, "<../version"
+open VARIABLES, "<" . $inputDir . "/../version"
 	or die "Could not open version information: $!";
 my @variables = <VARIABLES>;
 close VARIABLES;
 
 # Open the template header
-open TEMPLATE, "<include/revbuild.h.in"
+open TEMPLATE, "<" . $inputDir . "/include/revbuild.h.in"
 	or die "Could not open template header: $!";
 my @template = <TEMPLATE>;
 close TEMPLATE;
@@ -34,7 +37,7 @@ foreach $variable (@variables)
 }
 
 # Create the output file
-open OUTPUT, ">include/revbuild.h"
+open OUTPUT, ">" . $outputDir . "/include/revbuild.h"
 	or die "Could not open output file: $!";
 print OUTPUT $output;
 close OUTPUT;

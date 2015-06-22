@@ -190,7 +190,7 @@ extern void copy_custom_list_as_string_and_release(MCExecContext& ctxt, MCExecCu
 #define XANIM_COMMAND 1024
 
 MCPlayer::MCPlayer()
-{
+{	
 	flags |= F_TRAVERSAL_ON;
 	nextplayer = NULL;
 	rect.width = rect.height = 128;
@@ -204,6 +204,8 @@ MCPlayer::MCPlayer()
 	userCallbackStr = MCValueRetain(kMCEmptyString);
 	formattedwidth = formattedheight = 0;
 	loudness = 100;
+	dontuseqt = False;
+	usingqt = False;
 	
 #ifdef FEATURE_MPLAYER
 	command = NULL;
@@ -244,6 +246,8 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	userCallbackStr = MCValueRetain(sref.userCallbackStr);
 	formattedwidth = formattedheight = 0;
 	loudness = sref.loudness;
+	dontuseqt = False;
+	usingqt = False;
 	
 #ifdef FEATURE_MPLAYER
 	command = NULL;
@@ -279,7 +283,7 @@ MCPlayer::~MCPlayer()
 	playstop();
 	
 #ifdef FEATURE_QUICKTIME
-	if (this == MCtemplateplayer && qtstate == QT_INITTED && MCplayers == NULL)
+	if (this == MCtemplateplayer && usingQT() && MCplayers == NULL)
 	{
 		extern void MCQTStopRecording(void);
 		MCQTStopRecording();
@@ -350,7 +354,7 @@ Boolean MCPlayer::kdown(MCStringRef p_string, KeySym key)
 			return True;
     
 #ifdef FEATURE_QUICKTIME
-	if (qtstate == QT_INITTED && state & CS_PREPARED)
+	if (usingQT() && state & CS_PREPARED)
 	{
 		checktimes();
 		qt_key(true, key);
@@ -363,7 +367,7 @@ Boolean MCPlayer::kdown(MCStringRef p_string, KeySym key)
 Boolean MCPlayer::kup(MCStringRef p_string, KeySym key)
 {
 #ifdef FEATURE_QUICKTIME
-	if (qtstate == QT_INITTED)
+	if (usingQT())
 	{
 		qt_key(false, key);
 	}
@@ -379,7 +383,7 @@ Boolean MCPlayer::mfocus(int2 x, int2 y)
 		return False;
     
 #ifdef FEATURE_QUICKTIME
-	if (qtstate == QT_INITTED)
+	if (usingQT())
 		qt_move(x, y);
 #endif
     
@@ -408,7 +412,7 @@ Boolean MCPlayer::mdown(uint2 which)
 		{
             case T_BROWSE:
 #ifdef FEATURE_QUICKTIME
-                if (qtstate == QT_INITTED)
+                if (usingQT())
                     qt_click(true, 1);
 #endif
                 if (message_with_valueref_args(MCM_mouse_down, MCSTR("1")) == ES_NORMAL)
@@ -427,7 +431,7 @@ Boolean MCPlayer::mdown(uint2 which)
             break;
 		case Button2:
 #ifdef FEATURE_QUICKTIME
-            if (qtstate == QT_INITTED)
+            if (usingQT())
                 qt_click(true, 2);
 #endif
             if (message_with_valueref_args(MCM_mouse_down, MCSTR("2")) == ES_NORMAL)
@@ -435,7 +439,7 @@ Boolean MCPlayer::mdown(uint2 which)
             break;
 		case Button3:
 #ifdef FEATURE_QUICKTIME
-            if (qtstate == QT_INITTED)
+            if (usingQT())
                 qt_click(true, 3);
 #endif
             message_with_valueref_args(MCM_mouse_down, MCSTR("3"));
@@ -473,7 +477,7 @@ Boolean MCPlayer::mup(uint2 which, bool p_release) //mouse up
 #endif
                 
 #ifdef FEATURE_QUICKTIME
-                if (qtstate == QT_INITTED)
+                if (usingQT())
                     qt_click(false, 1);
 #endif
                 
@@ -497,7 +501,7 @@ Boolean MCPlayer::mup(uint2 which, bool p_release) //mouse up
         case Button2:
         case Button3:
 #ifdef FEATURE_QUICKTIME
-            if (qtstate == QT_INITTED)
+            if (usingQT())
                 qt_click(false, which == Button2 ? 2 : 3);
 #endif
             if (!p_release && MCU_point_in_rect(rect, mx, my))
@@ -522,7 +526,7 @@ Boolean MCPlayer::doubleup(uint2 which)
 void MCPlayer::setrect(const MCRectangle &nrect)
 {
 #ifdef FEATURE_QUICKTIME
-	if (qtstate == QT_INITTED)
+	if (usingQT())
 		qt_setrect(nrect);
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -609,7 +613,7 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
         }
     }
 #ifdef FEATURE_QUICKTIME
-    else if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless) && qtstate == QT_INITTED && state & CS_PREPARED)
+    else if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless) && usingQT() && state & CS_PREPARED)
     {
         checktimes();
         return;
@@ -700,7 +704,7 @@ Exec_stat MCPlayer::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
             break;
         case P_TRACK_COUNT:
 #ifdef FEATURE_QUICKTIME
-            if (qtstate == QT_INITTED && state & CS_PREPARED)
+            if (usingQT() && state & CS_PREPARED)
                 i = (uint2)GetMovieTrackCount((Movie)theMovie);
 #endif
             ep.setint(i);
@@ -714,7 +718,7 @@ Exec_stat MCPlayer::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
         case P_MEDIA_TYPES:
             ep.clear();
 #ifdef FEATURE_QUICKTIME
-            if (qtstate == QT_INITTED && state & CS_PREPARED)
+            if (usingQT() && state & CS_PREPARED)
             {
                 uint2 i;
                 bool first = true;
@@ -931,7 +935,7 @@ Exec_stat MCPlayer::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
             if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
                 return ES_ERROR;
 #ifdef FEATURE_QUICKTIME
-            if (qtstate == QT_INITTED && getstate(CS_PREPARED))
+            if (usingQT() && getstate(CS_PREPARED))
                 MCDoAction((MovieController)theMC, mcActionSetKeysEnabled, (void*)((flags & F_TRAVERSAL_ON) != 0));
 #endif
             break;
@@ -1265,7 +1269,7 @@ bool MCPlayer::getversion(MCStringRef& r_string)
 #elif defined(_MACOSX)
 	bool t_success = true;
 	initqt();
-	if (qtstate == QT_INITTED)
+	if (usingQT())
 	{//for QT
 		long attrs;
 		if (Gestalt(gestaltQuickTimeVersion, &attrs) == noErr)
@@ -1295,7 +1299,7 @@ void MCPlayer::freetmp()
 uint4 MCPlayer::getduration() //get movie duration/length
 {
 #ifdef FEATURE_QUICKTIME
-	if (qtstate == QT_INITTED)
+	if (usingQT())
 		return qt_getduration();
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1311,7 +1315,7 @@ uint4 MCPlayer::getduration() //get movie duration/length
 uint4 MCPlayer::gettimescale() //get moive time scale
 {
 #ifdef FEATURE_QUICKTIME
-	if (qtstate == QT_INITTED)
+	if (usingQT())
 		return qt_gettimescale();
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1327,7 +1331,7 @@ uint4 MCPlayer::gettimescale() //get moive time scale
 uint4 MCPlayer::getmoviecurtime()
 {
 #ifdef FEATURE_QUICKTIME
-	if (qtstate == QT_INITTED)
+	if (usingQT())
 		return qt_getmoviecurtime();
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1344,7 +1348,7 @@ void MCPlayer::setcurtime(uint4 newtime, bool notify)
 {
 	lasttime = newtime;
 #ifdef FEATURE_QUICKTIME
-	if (qtstate == QT_INITTED)
+	if (usingQT())
 		qt_setcurtime(newtime);
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1358,7 +1362,7 @@ void MCPlayer::setcurtime(uint4 newtime, bool notify)
 void MCPlayer::setselection(bool notify)
 {
 #ifdef FEATURE_QUICKTIME
-	if (qtstate == QT_INITTED)
+	if (usingQT())
 		qt_setselection();
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1372,7 +1376,7 @@ void MCPlayer::setselection(bool notify)
 void MCPlayer::setlooping(Boolean loop)
 {
 #ifdef FEATURE_QUICKTIME
-	if (qtstate == QT_INITTED) // loop or unloop QT movie
+	if (usingQT()) // loop or unloop QT movie
 		qt_setlooping(loop);
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1386,7 +1390,7 @@ void MCPlayer::setlooping(Boolean loop)
 void MCPlayer::setplayrate()
 {
 #ifdef FEATURE_QUICKTIME //MAC or WIN
-	if (qtstate == QT_INITTED)
+	if (usingQT())
 		qt_setplayrate();
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1405,7 +1409,7 @@ void MCPlayer::setplayrate()
 void MCPlayer::showbadge(Boolean show)
 {
 #ifdef FEATURE_QUICKTIME
-	if (qtstate == QT_INITTED)// set QT movie's play rate, for QT movie only
+	if (usingQT())// set QT movie's play rate, for QT movie only
 		qt_showbadge(show);
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1419,7 +1423,7 @@ void MCPlayer::showbadge(Boolean show)
 void MCPlayer::editmovie(Boolean edit)
 {
 #ifdef FEATURE_QUICKTIME
-	if (qtstate == QT_INITTED)//on & off the ability to set selection
+	if (usingQT())//on & off the ability to set selection
 		qt_editmovie(edit);
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1433,7 +1437,7 @@ void MCPlayer::editmovie(Boolean edit)
 void MCPlayer::playselection(Boolean play)
 {
 #ifdef FEATURE_QUICKTIME
-	if (qtstate == QT_INITTED)
+	if (usingQT())
 		qt_playselection(play);
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1448,7 +1452,7 @@ Boolean MCPlayer::ispaused()
 {
 
 #ifdef FEATURE_QUICKTIME
-	if (qtstate == QT_INITTED)
+	if (usingQT())
 		return qt_ispaused();
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1464,7 +1468,7 @@ Boolean MCPlayer::ispaused()
 void MCPlayer::showcontroller(Boolean show)
 {
 #ifdef FEATURE_QUICKTIME
-	if (qtstate == QT_INITTED)
+	if (usingQT())
 		qt_showcontroller(show);
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1489,11 +1493,17 @@ Boolean MCPlayer::prepare(MCStringRef options)
 	ok = x11_prepare();
 #elif defined FEATURE_QUICKTIME
 	initqt();
-	if (qtstate == QT_INITTED)
+	if (!dontuseqt && !MCdontuseQT && qtstate == QT_INITTED)
+	{
 		ok = qt_prepare();
+		usingqt = True;
+	}
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
+	{
 		ok = avi_prepare();
+		usingqt = False;
+	}
 #endif
 #endif
     
@@ -1554,7 +1564,7 @@ Boolean MCPlayer::playpause(Boolean on)
     
     
 #ifdef FEATURE_QUICKTIME
-	if (qtstate == QT_INITTED)
+	if (usingQT())
 		ok = qt_playpause(on);
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1576,7 +1586,7 @@ void MCPlayer::playstepforward()
 		return;
     
 #ifdef FEATURE_QUICKTIME
-	if (qtstate == QT_INITTED)
+	if (usingQT())
 		qt_playstepforward();
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1593,7 +1603,7 @@ void MCPlayer::playstepback()
 		return;
 	
 #ifdef FEATURE_QUICKTIME
-	if (qtstate == QT_INITTED)
+	if (usingQT())
 		qt_playstepback();
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1616,7 +1626,7 @@ Boolean MCPlayer::playstop()
 	lasttime = 0;
 		
 #ifdef FEATURE_QUICKTIME
-	if (qtstate == QT_INITTED)
+	if (usingQT())
 		needmessage = qt_playstop();
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1687,7 +1697,7 @@ MCRectangle MCPlayer::getpreferredrect()
 	}
     
 #ifdef FEATURE_QUICKTIME
-	if (qtstate == QT_INITTED)
+	if (usingQT())
 		return qt_getpreferredrect();
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -1706,7 +1716,7 @@ uint2 MCPlayer::getloudness()
 {
 	if (getstate(CS_PREPARED))
 #ifdef FEATURE_QUICKTIME
-    if (qtstate == QT_INITTED)
+    if (usingQT())
         loudness = qt_getloudness();
 #ifdef TARGET_PLATFORM_WINDOWS
     else
@@ -1724,7 +1734,7 @@ void MCPlayer::setloudness()
 {
 	if (state & CS_PREPARED)
 #ifdef FEATURE_QUICKTIME
-    if (qtstate == QT_INITTED)
+    if (usingQT())
         qt_setloudness(loudness);
 #ifdef TARGET_PLATFORM_WINDOWS
     else
@@ -1744,7 +1754,7 @@ void MCPlayer::gettracks(MCExecPoint &ep)
     
 	if (getstate(CS_PREPARED))
 #ifdef FEATURE_QUICKTIME
-    if (qtstate == QT_INITTED)
+    if (usingQT())
         qt_gettracks(ep);
 #ifdef TARGET_PLATFORM_WINDOWS
     else
@@ -1765,7 +1775,7 @@ void MCPlayer::getenabledtracks(MCExecPoint &ep)
     
 	if (getstate(CS_PREPARED))
 #ifdef FEATURE_QUICKTIME
-    if (qtstate == QT_INITTED)
+    if (usingQT())
         qt_getenabledtracks(ep);
 #ifdef TARGET_PLATFORM_WINDOWS
     else
@@ -1779,23 +1789,21 @@ void MCPlayer::getenabledtracks(MCExecPoint &ep)
 }
 #endif
 
-Boolean MCPlayer::setenabledtracks(MCStringRef s)
+void MCPlayer::setenabledtracks(uindex_t p_count, uint32_t *p_tracks_id)
 {
 	if (getstate(CS_PREPARED))
 #ifdef FEATURE_QUICKTIME
-    if (qtstate == QT_INITTED)
-        return qt_setenabledtracks(s);
+    if (usingQT())
+        qt_setenabledtracks(p_count, p_tracks_id);
 #ifdef TARGET_PLATFORM_WINDOWS
     else
-        return avi_setenabledtracks(s);
+        avi_setenabledtracks(p_count, p_tracks_id);
 #endif
 #elif defined(X11)
-    return x11_setenabledtracks(s);
+    x11_setenabledtracks(p_count, p_tracks_id);
 #else
     0 == 0;
 #endif
-    
-	return True;
 }
 
 #ifdef LEGACY_EXEC
@@ -1883,7 +1891,7 @@ integer_t MCPlayer::getmediatypes()
 {
     MCPlayerMediaTypeSet types = 0;
 #ifdef FEATURE_QUICKTIME
-    if (qtstate == QT_INITTED && state & CS_PREPARED)
+    if (usingQT() && state & CS_PREPARED)
     {
         for (uint2 i = 0 ; i < QTMFORMATS ; i++)
             if (QTMovieHasType((Movie)theMovie, qtmediatypes[i]))
@@ -1985,7 +1993,7 @@ void MCPlayer::getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id)
     
     if (getstate(CS_PREPARED))
 #ifdef FEATURE_QUICKTIME
-        if (qtstate == QT_INITTED)
+        if (usingQT())
             qt_getenabledtracks(t_count, t_tracks_id);
 #ifdef TARGET_PLATFORM_WINDOWS
         else
@@ -2005,7 +2013,7 @@ void MCPlayer::gettracks(MCStringRef &r_tracks)
 {
     if (getstate(CS_PREPARED))
 #ifdef FEATURE_QUICKTIME
-        if (qtstate == QT_INITTED)
+        if (usingQT())
             qt_gettracks(r_tracks);
 #ifdef TARGET_PLATFORM_WINDOWS
         else
@@ -2093,7 +2101,7 @@ void MCPlayer::updatevisibility()
 void MCPlayer::updatetraversal()
 {
 #ifdef FEATURE_QUICKTIME
-    if (qtstate == QT_INITTED && getstate(CS_PREPARED))
+    if (usingQT() && getstate(CS_PREPARED))
         qt_enablekeys((flags & F_TRAVERSAL_ON) != 0);
 #endif
 }
@@ -2120,7 +2128,7 @@ uinteger_t MCPlayer::gettrackcount()
 {
     uint2 i = 0;
 #ifdef FEATURE_QUICKTIME
-    if (qtstate == QT_INITTED && state & CS_PREPARED)
+    if (usingQT() && state & CS_PREPARED)
         i = (uint2)GetMovieTrackCount((Movie)theMovie);
 #endif
     return i;
@@ -2139,24 +2147,6 @@ void MCPlayer::setcallbacks(MCStringRef p_callbacks)
         installUserCallbacks(); //install all callbacks for this player
 #endif
     }
-}
-
-void MCPlayer::setforegroundcolor(const MCInterfaceNamedColor& p_color)
-{
-}
-
-void MCPlayer::getforegrouncolor(MCInterfaceNamedColor& r_color)
-{
-    r_color . name = nil;
-}
-
-void MCPlayer::sethilitecolor(const MCInterfaceNamedColor& p_color)
-{
-}
-
-void MCPlayer::gethilitecolor(MCInterfaceNamedColor &r_color)
-{
-    r_color . name = nil;
 }
 
 // End of property setters/getters
@@ -2234,7 +2224,7 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 	if (!(state & CS_CLOSING))
 		prepare(kMCEmptyString);
     
-	if (qtstate == QT_INITTED)
+	if (usingQT())
 		qt_draw(dc, dirty);
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
@@ -2868,7 +2858,7 @@ MCRegionRef MCPlayer::makewindowregion()
 	RgnHandle myRegion = NULL;
 	MatrixRecord myMatrix;
 	OSErr myErr = noErr;
-	if (qtstate == QT_INITTED && state & CS_PREPARED)
+	if (usingQT() && state & CS_PREPARED)
 	{
 		myTrack = GetMovieIndTrackType(theMovie, 1, FOUR_CHAR_CODE('skin'),
 		                               movieTrackCharacteristic);
@@ -3398,7 +3388,11 @@ MCRectangle MCPlayer::qt_getpreferredrect(void)
 	trect . x = trect . y = 0;
 	trect . height = naturalbounds.bottom - naturalbounds.top;
 	trect . width = naturalbounds.right - naturalbounds.left;
-    
+
+    // PM-2015-06-09: [[ Bug 5209 ]] formattedHeight should take into account the controller
+    if (flags & F_SHOW_CONTROLLER)
+        trect . height += 16; // default height of native QuickTime controller is 16
+
 	return trect;
 }
 
@@ -3512,7 +3506,7 @@ void MCPlayer::qt_getenabledtracks(uindex_t& r_count, uinteger_t*& r_tracks)
     t_tracks . Take(r_tracks, r_count);
 }
 
-Boolean MCPlayer::qt_setenabledtracks(MCStringRef s)
+void MCPlayer::qt_setenabledtracks(uindex_t p_count, uinteger_t* p_tracks)
 {
 	uint2 trackcount = (uint2)GetMovieTrackCount((Movie)theMovie);
 	uint2 i;
@@ -3521,35 +3515,16 @@ Boolean MCPlayer::qt_setenabledtracks(MCStringRef s)
 		Track trak = GetMovieIndTrack((Movie)theMovie,i);
 		SetTrackEnabled(trak, False);
 	}
-	uindex_t t_start, t_end;
-    t_start = 0;
-    t_end = t_start;
-	uint2 offset = 0;
-	while (t_start != MCStringGetLength(s))
+	
+    for (uindex_t j = 0; j < trackcount; j++)
     {
-        MCAutoStringRef t_substring;
-        if (!MCStringFirstIndexOfChar(s, '\n', t_start, kMCCompareExact, t_end))
-        {
-            MCStringCopySubstring(s, MCRangeMake(t_start, MCStringGetLength(s) - t_start), &t_substring);
-            t_start = MCStringGetLength(s);
-        }
-        else
-        {
-            /* UNCHECKED */ MCStringCopySubstring(s, MCRangeMake(t_start, t_end - t_start), &t_substring);
-            t_start = t_end + 1;
-        }
-        
-        integer_t t_integer;
-        /* UNCHECKED */ MCStringToInteger(*t_substring, t_integer);
-        Track trak = GetMovieTrack((Movie)theMovie, t_integer);
+        Track trak = GetMovieTrack((Movie)theMovie, p_tracks[j]);
         if (trak == NULL)
-        {
-            return False;
-        }
+            return;
+        
         SetTrackEnabled(trak, True);
-		if (++offset >= trackcount)
-			break;
-	}
+    }
+
 	MCMovieChanged((MovieController)theMC, (Movie)theMovie);
 	Rect movieRect;
 	GetMovieBox((Movie)theMovie, &movieRect);
@@ -3557,8 +3532,6 @@ Boolean MCPlayer::qt_setenabledtracks(MCStringRef s)
 	if (flags & F_SHOW_BORDER)
 		trect = MCU_reduce_rect(trect, -borderwidth);
 	setrect(trect);
-    
-	return True;
 }
 
 #if defined(TARGET_PLATFORM_MACOS_X)
@@ -4091,14 +4064,13 @@ void MCPlayer::avi_gettracks(MCStringRef &r_tracks)
 	r_tracks = MCValueRetain(kMCEmptyString);
 }
 
-void MCPlayer::avi_getenabledtracks(uindex_t& r_count, uinteger_t*& r_tracks)
+void MCPlayer::avi_getenabledtracks(uindex_t& r_count, uint32_t*& r_tracks)
 {
 	r_count = 0;
 }
 
-Boolean MCPlayer::avi_setenabledtracks(MCStringRef s)
+void MCPlayer::avi_setenabledtracks(uindex_t p_count, uint32_t* p_tracks)
 {
-	return True;
 }
 
 void MCPlayer::avi_draw(MCDC *dc, const MCRectangle& dirty)
