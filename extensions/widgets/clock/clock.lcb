@@ -101,8 +101,13 @@ end handler
 -- called when widget is created
 public handler OnCreate()
 	put 0 into mTimeZone
-	put getTimeComponents() into mCurrentTime
+	put false into mIsDay
+	put [0,0,0] into mCurrentTime
 	put 12 into mFontSize
+end handler
+
+public handler OnOpen()
+	put getTimeComponents() into mCurrentTime
 	schedule timer in computeNextTimer() seconds
 end handler
 
