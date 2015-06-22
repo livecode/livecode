@@ -446,6 +446,7 @@
 			'src/mbliphonebusyindicator.mm',
 			'src/mbliphonecalendar.mm',
 			'src/mbliphonecamera.mm',
+			'src/mbliphonecapture.mm',
 			'src/mbliphonecontact.mm',
 			'src/mbliphonecontrol.mm',
 			'src/mbliphonedc.mm',
@@ -529,6 +530,7 @@
 			'src/desktop-dc.h',
 			'src/dsklnxmain.cpp',
 			'src/dskmain.cpp',
+			'src/dskmessage.cpp',
 			'src/dskw32main.cpp',
 			'src/dskspec.cpp',
 			'src/desktop.cpp',
@@ -543,6 +545,11 @@
 			# Group "Platform"
 			'src/platform.h',
 			'src/platform.cpp',
+			'src/platform-camera.cpp',
+			'src/platform-camera-internal.h',
+			'src/platform-av-camera.mm',
+			'src/platform-ds-camera.cpp',
+			'src/platform-lnx-camera.cpp',
 			'src/platform-internal.h',
 			'src/platform-recorder.cpp',
 			'src/platform-surface.cpp',
@@ -727,6 +734,7 @@
 			'src/srvdebug.h',
 			'src/srvflst.h',
 			'src/srvmain.h',
+			'src/srvmessage.cpp',
 			'src/srvmultipart.h',
 			'src/srvscript.h',
 			'src/srvsession.h',
@@ -862,6 +870,11 @@
 						['exclude', '(^|/)dsklnx.*\\.cpp$'],
 						['exclude', '(^|/)syslnx.*\\.cpp$'],
 					],
+					
+					'sources!':
+					[
+						'src/platform-lnx-camera.cpp',
+					],
 				},
 			],
 			[
@@ -876,6 +889,7 @@
 					'sources!':
 					[
 						'src/srvwindows.cpp',
+						'src/platform-ds-camera.cpp',
 					],
 				},
 			],
@@ -937,6 +951,7 @@
 						'src/coretextfonts.cpp',
 						'src/syscfdate.cpp',
 						'src/tilecachecg.cpp',
+						'src/platform-av-camera.mm',
 					],
 				},
 			],

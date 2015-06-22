@@ -874,7 +874,7 @@ void MCPlatformCameraCreate(MCPlatformCameraRef& r_camera)
     else
         r_camera = nil;
 #else
-	r_camera = new MCAVCamera();
+	r_camera = (MCPlatformCameraRef)new MCAVCamera();
 #endif
 }
 
