@@ -209,7 +209,33 @@ public handler onMouseLeave() returns nothing
 end handler
 
 public handler OnMouseUp() returns nothing
-	scrollbarMouseUp()
+   if mDragging then
+      scrollbarMouseUp()
+      return
+   end if
+
+   variable tIconNumber as Integer
+   put mousePosToIconNumber(the click position) into tIconNumber
+
+   // Just return if the click was outside the icon rects
+   if tIconNumber is 0 then
+      return
+   end if
+
+   --If this widget is being used as a popup then we close the popup and return a value to the caller
+   if currently popped up then
+         --Dismiss the popup - the result will be the name of the selected icon
+      close popup returning mDataList[tIconNumber]
+   else
+      -- If the selected icon was clicked, unselect it
+      if mSelectedElement is defined and mSelectedElement is mDataList[tIconNumber] then
+         put undefined into mSelectedElement
+      else
+         put mDataList[tIconNumber] into mSelectedElement
+      end if
+   end if
+
+   redraw all
 end handler
 
 public handler OnMouseCancel() returns nothing
@@ -239,31 +265,6 @@ public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real) returns not
 		
 		redraw all
     end if
-end handler
-
-public handler OnClick() returns nothing
-	variable tIconNumber as Integer
-	put mousePosToIconNumber(the click position) into tIconNumber
-	
-	// Just return if the click was outside the icon rects
-	if tIconNumber is 0 then
-		return
-	end if
-
-	--If this widget is being used as a popup then we close the popup and return a value to the caller
-	if currently popped up then
-			--Dismiss the popup - the result will be the name of the selected icon
-		close popup returning mDataList[tIconNumber]
-	else
-      -- If the selected icon was clicked, unselect it
-		if mSelectedElement is defined and mSelectedElement is mDataList[tIconNumber] then
-			put undefined into mSelectedElement
-		else
-			put mDataList[tIconNumber] into mSelectedElement
-		end if
-	end if
-	
-	redraw all
 end handler
 
 private handler indexToSectorRect(in pIndex as Integer) as Rectangle
