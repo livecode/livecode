@@ -109,6 +109,18 @@ extern "C" MC_DLLEXPORT void MCNothingEvalIsNotEqualToNothing(MCValueRef p_left,
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+extern "C" bool com_livecode_type_Initialize (void)
+{
+	return true;
+}
+
+extern "C" void com_livecode_type_Finalize (void)
+{
+	;
+}
+
+////////////////////////////////////////////////////////////////
+
 #ifdef _TEST
 extern void log(const char *module, const char *test, bool result);
 #define log_result(test, result) log("TYPE MODULE", test, result)

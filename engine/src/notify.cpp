@@ -30,6 +30,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <pthread.h>
 #endif
 
+extern Boolean MCnoui;
+
 struct MCNotifySyncEvent
 {
 	MCNotifySyncEvent *next;
@@ -79,6 +81,7 @@ static DWORD s_main_thread_id = 0;
 static bool s_notify_sent = false;
 static pthread_mutex_t s_notify_lock;
 static pthread_t s_main_thread;
+int g_notify_pipe[2] = {-1, -1};
 #elif defined(_LINUX)
 static bool s_notify_sent = false;
 int g_notify_pipe[2] = {-1, -1};
@@ -224,6 +227,8 @@ bool MCNotifyInitialize(void)
 #elif defined(_MACOSX)
 	pthread_mutex_init(&s_notify_lock, NULL);
 	s_main_thread = pthread_self();
+    if (MCnoui)
+        pipe(g_notify_pipe);
 #elif defined(_LINUX)
 	pthread_mutex_init(&s_notify_lock, NULL);
 	pipe(g_notify_pipe);
@@ -293,7 +298,14 @@ void MCNotifyFinalize(void)
 #if defined(_WINDOWS)
 	DeleteCriticalSection(&s_notify_lock);
 	CloseHandle(g_notify_wakeup);
-#elif defined(_MACOSX) || defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
+#elif defined(_MACOSX)
+    if (MCnoui)
+    {
+        close(g_notify_pipe[0]);
+        close(g_notify_pipe[1]);
+    }
+	pthread_mutex_destroy(&s_notify_lock);
+#elif defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
 	pthread_mutex_destroy(&s_notify_lock);
 #elif defined(_LINUX)
 	pthread_mutex_destroy(&s_notify_lock);
@@ -465,8 +477,16 @@ void MCNotifyPing(bool p_high_priority)
 	if (!s_notify_sent)
 	{
 		s_notify_sent = true;
-		extern void MCMacBreakWait(void);
-		MCMacBreakWait();
+		if (!MCnoui)
+        {
+            extern void MCMacBreakWait(void);
+            MCMacBreakWait();
+        }
+        else
+        {
+            char t_notify_char = 1;
+            write(g_notify_pipe[1], &t_notify_char, 1);
+        }
 	}
 #elif defined(_LINUX)
 	if (!s_notify_sent)

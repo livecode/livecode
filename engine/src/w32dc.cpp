@@ -88,14 +88,10 @@ MCScreenDC::MCScreenDC()
 	m_printer_dc_changed = false;
 
 	m_clipboard = NULL;
-
-	MCNotifyInitialize();
 }
 
 MCScreenDC::~MCScreenDC()
 {
-	MCNotifyFinalize();
-
 	showtaskbar();
 	while (opened)
 		close(True);

@@ -281,7 +281,7 @@ __MCSFileSetContents (MCStringRef p_native_path,
 
 	/* ---------- 3) Move the temporary file into place */
 
-	if (!MoveFileEx (t_temp_path_w32, *t_path_w32, MOVEFILE_REPLACE_EXISTING))
+	if (!MoveFileExW(t_temp_path_w32, *t_path_w32, MOVEFILE_REPLACE_EXISTING))
 	{
 		/* Report rename error */
 		DWORD t_error = GetLastError();
@@ -747,7 +747,7 @@ __MCSFileGetDirectoryEntries (MCStringRef p_native_path,
 
 		t_entries[t_num_entries - 1] = t_entry_name;
 	}
-	while (0 != FindNextFile (t_find_handle, &t_find_data));
+	while (0 != FindNextFileW(t_find_handle, &t_find_data));
 
 	/* Clean up and return the list of directory entries */
 	FindClose (t_find_handle);

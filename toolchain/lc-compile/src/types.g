@@ -302,8 +302,8 @@
 
 'table' ID(Position: POS, Name: NAME, Meaning: MEANING)
 
-'table' MODULEINFO(Index: INT)
-'table' SYMBOLINFO(Index: INT, Parent: ID, Access: ACCESS, Kind: SYMBOLKIND, Type: TYPE)
+'table' MODULEINFO(Index: INT, Generator: INT)
+'table' SYMBOLINFO(Index: INT, Generator: INT, Parent: ID, Access: ACCESS, Kind: SYMBOLKIND, Type: TYPE)
 'table' SYNTAXINFO(Index: INT, Parent: ID, Class: SYNTAXCLASS, Syntax: SYNTAX, Methods: SYNTAXMETHODLIST, Prefix: SYNTAXTERM, Suffix: SYNTAXTERM)
 'table' SYNTAXMARKINFO(Index: INT, RMode: MODE, LMode: MODE, Type: SYNTAXMARKTYPE)
 'table' INVOKEINFO(Index: INT, ModuleIndex: INT, Name: STRING, ModuleName: STRING, Methods: INVOKEMETHODLIST)

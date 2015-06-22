@@ -78,7 +78,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define HOLD_SIZE2 16384
 
 #ifdef TARGET_PLATFORM_MACOS_X
-#include <Foundation/NSAutoreleasePool.h>
+//#include <Foundation/NSAutoreleasePool.h>
 #endif
 
 #ifdef _ANDROID_MOBILE
@@ -755,7 +755,7 @@ void X_clear_globals(void)
 
     MClook = LF_MOTIF;
     MCttbgcolor = MCSTR("255,255,207");
-    MCttfont = MCSTR("Helvetica");
+    MCttfont = MCSTR(DEFAULT_TEXT_FONT);
     MCttsize = 12;
 
 	MCtrylock = 0;

@@ -52,9 +52,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <GLES/gl.h>
 #include <unistd.h>
 
-#include "script.h"
+#include "libscript/script.h"
 
-extern bool MCModulesInitialize();
+extern "C" bool MCModulesInitialize();
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -55,6 +55,10 @@ private variable mIconRects as List
 private variable mSelectedElement as optional String
 
 property preferredSize		get getPreferredSize
+metadata preferredSize.user_visible is "false"
+
+property selectedIcon get mSelectedElement set setSelectedElement
+
 property showFrameBorder	get mFrameBorder	set setFrameBorder
 
 constant kIconColor is [0,0,0]
@@ -245,12 +249,13 @@ public handler OnClick() returns nothing
 	if tIconNumber is 0 then
 		return
 	end if
-	
-	// If this widget is being used as a popup then we close the popup and return a value to the caller
-	if currently popped up and the click count is 2 then
-			// Dismiss the popup - the result will be the name of the selected icon
+
+	--If this widget is being used as a popup then we close the popup and return a value to the caller
+	if currently popped up then
+			--Dismiss the popup - the result will be the name of the selected icon
 		close popup returning mDataList[tIconNumber]
 	else
+      -- If the selected icon was clicked, unselect it
 		if mSelectedElement is defined and mSelectedElement is mDataList[tIconNumber] then
 			put undefined into mSelectedElement
 		else
@@ -273,9 +278,6 @@ private handler indexToSectorRect(in pIndex as Integer) as Rectangle
 	variable tCol as Integer
 	put the floor of ((pIndex - 1) / mNumRows) + 1 into tRow
 	put pIndex wrap mNumCols into tCol
-	
-	log tRow
-	log tCol
 
 	put (tCol - 1) * mViewWidth / mNumCols into tLeft
 	put tCol * mViewWidth / mNumCols into tRight
@@ -288,17 +290,28 @@ end handler
 private handler mousePosToIconNumber(in pMouse as Point) returns Integer
 	variable tRow as Integer
 	put the floor of ((the y of pMouse - mRowHeight) / mRowHeight) + 1 into tRow
-	
+
 	variable tCol as Integer
 	put the floor of (the x of pMouse / mColWidth) + 1 into tCol
-	
-	return (tRow - 1) * mNumCols + tCol + mFirstDataItem - 1
+
+   variable tNumber as Integer
+   put (tRow - 1) * mNumCols + tCol + mFirstDataItem - 1 into tNumber
+
+   -- Ignore clicks in above the first displayed icon
+   if tNumber < mFirstDataItem then
+      put 0 into tNumber
+   end if
+
+	return tNumber
 end handler
 
 public handler OnGeometryChanged()
 	// Only resizing necessitates a recalculation
 	if my height is not mViewHeight + mRowHeight or my width is not mViewWidth then
-		put true into mRecalculate
+      variable tFirstDataItem as Number
+      put mFirstDataItem into tFirstDataItem
+      updateParameters()
+      scrollToIndex(tFirstDataItem)
 	end if
 end handler
 
@@ -504,6 +517,30 @@ end handler
 public handler setFrameBorder(in pValue as Boolean)
 	put pValue into mFrameBorder
 	redraw all
+end handler
+
+private handler setSelectedElement(in pIcon as String)
+   variable tIndex as Number
+   variable tIconIndex as optional Number
+   repeat with tIndex from 1 up to mDataCount
+      if mDataList[tIndex] is pIcon then
+         put tIndex into tIconIndex
+         exit repeat
+      end if
+   end repeat
+
+   if tIconIndex is not nothing then
+      put pIcon into mSelectedElement
+      scrollToIndex(tIconIndex)
+   end if
+end handler
+
+private handler scrollToIndex(in pIndex as Number)
+   put the floor of ((pIndex - 1) / mNumCols) * mRowHeight into mViewTopPosition
+   updateFirstDataItem()
+   updateScrollbar(mViewWidth, mViewHeight, mDataHeight, mViewTopPosition, mRowHeight)
+   put true into mRecalculate
+   redraw all
 end handler
 
 --------------------------------------------------------------------------------

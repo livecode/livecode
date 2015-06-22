@@ -61,10 +61,11 @@ void Fatal_InternalInconsistency(const char *p_message)
 void
 Debug_Emit(const char *p_format, ...)
 {
+	va_list t_args;
+	
 	if (s_verbose_level < 1)
 		return;
 
-	va_list t_args;
 	va_start(t_args, p_format);
 
 	fprintf(stderr, "debug: [Emit] ");
@@ -266,6 +267,9 @@ DEFINE_ERROR(ConstantsMustBeSimple, "Constant definitions must be a literal expr
 DEFINE_ERROR_I(HandlerNotSuitableForPropertyGetter, "'%s' has inappropriate signature to be a property getter")
 DEFINE_ERROR_I(HandlerNotSuitableForPropertySetter, "'%s' has inappropriate signature to be a property setter")
 
+DEFINE_ERROR_I(DependentModuleNotIncludedWithInputs, "Module '%s' not found in input list")
+DEFINE_ERROR_I(InterfaceFileNameMismatch, "Module '%s' has mismatched name in interface file")
+               
 DEFINE_ERROR_S(UnsuitableStringForKeyword, "Keyword '%s' is ambiguous with identifiers")
 
 DEFINE_ERROR(NextRepeatOutOfContext, "'next repeat' must appear within a repeat")

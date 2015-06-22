@@ -1,3 +1,10 @@
+#!/bin/bash
+
+set -e
+
+SYMBOLS=$1
+SYMBOLS_FILE=$2
+
 DEPS=`cat "$SRCROOT/$PRODUCT_NAME.ios"`
 DEPS=${DEPS//library /-l}
 DEPS=${DEPS//framework /-framework }
@@ -40,7 +47,7 @@ else
 fi
 
 # SN-2015-02-19: [[ Bug 14625 ]] Xcode only create FAT headers from iOS SDK 7.0
-FAT_INFO=$(otool -fv "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" | grep "Fat headers")
+FAT_INFO=$(otool -fv "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" | grep "Fat headers" || true)
 
 if [ -z "$FAT_INFO" -o $BUILD_DYLIB -eq 1 ]; then
 	# We set the minimum iOS or simulator version
@@ -64,58 +71,63 @@ if [ -z "$FAT_INFO" -o $BUILD_DYLIB -eq 1 ]; then
 
 	if [ $? -ne 0 ]; then
 		exit $?
-	else
-		# Success
-		exit 0
 	fi
-fi
+else
 
-# Only executed if the binaries have a FAT header, and we need an architecture-specific
-# linking
-LCEXT_FILE_LIST=""
-DYLIB_FILE_LIST=""
+	# Only executed if the binaries have a FAT header, and we need an architecture-specific
+	# linking
+	LCEXT_FILE_LIST=""
+	DYLIB_FILE_LIST=""
 
-# Link architecture-specifically the libraries
-for ARCH in $(echo $ARCHS | tr " " "\n")
-do
-    LCEXT_FILE="$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext_${ARCH}"
-    DYLIB_FILE="$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib_${ARCH}"
+	# Link architecture-specifically the libraries
+	for ARCH in $(echo $ARCHS | tr " " "\n")
+	do
+	    LCEXT_FILE="$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext_${ARCH}"
+	    DYLIB_FILE="$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib_${ARCH}"
 
-    # arm64 is only from iOS 7.0.0
-    if [ ${ARCH} = "arm64" -o ${ARCH} = "x86_64" ]; then
-		MIN_VERSION="7.0.0"
-    else
-		MIN_VERSION="5.1.1"
-    fi
+	    # arm64 is only from iOS 7.0.0
+	    if [ ${ARCH} = "arm64" -o ${ARCH} = "x86_64" ]; then
+			MIN_VERSION="7.0.0"
+	    else
+			MIN_VERSION="5.1.1"
+	    fi
 
-	if [ $BUILD_DYLIB -eq 1 ]; then
-		OUTPUT=$($BIN_DIR/g++ -stdlib=libc++ -dynamiclib -arch ${ARCH} -miphoneos-version-min=${MIN_VERSION} -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "${DYLIB_FILE}" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -dead_strip -Wl,-x $SYMBOLS $DEPS)
+		if [ $BUILD_DYLIB -eq 1 ]; then
+			OUTPUT=$($BIN_DIR/g++ -stdlib=libc++ -dynamiclib -arch ${ARCH} -miphoneos-version-min=${MIN_VERSION} -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "${DYLIB_FILE}" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -dead_strip -Wl,-x $SYMBOLS $DEPS)
+			if [ $? -ne 0 ]; then
+				echo "Linking ""${DYLIB_FILE}""failed:"
+				echo $OUTPUT
+				exit $?
+			fi
+		fi
+
+	    OUTPUT=$($BIN_DIR/g++ -stdlib=libc++ -nodefaultlibs $STRIP_OPTIONS -arch ${ARCH} -miphoneos-version-min=${MIN_VERSION} -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "${LCEXT_FILE}" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,"$SRCROOT/$PRODUCT_NAME.ios" -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME $STATIC_DEPS)
+
 		if [ $? -ne 0 ]; then
-			echo "Linking ""${DYLIB_FILE}""failed:"
+			echo "Linking ""${LCEXT_FILE}""failed:"
 			echo $OUTPUT
 			exit $?
 		fi
+
+	    LCEXT_FILE_LIST+=" ${LCEXT_FILE}"
+	    DYLIB_FILE_LIST+=" ${DYLIB_FILE}"
+	done
+
+	# Lipo the generated libs
+	lipo -create ${LCEXT_FILE_LIST} -output "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext"
+
+	# Cleanup the lcext_$ARCH files generated
+	rm ${LCEXT_FILE_LIST}
+
+	if [ $BUILD_DYLIB -eq 1 ]; then
+		lipo -create ${DYLIB_FILE_LIST} -output "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib"
+		rm ${DYLIB_FILE_LIST}
 	fi
-
-    OUTPUT=$($BIN_DIR/g++ -stdlib=libc++ -nodefaultlibs $STRIP_OPTIONS -arch ${ARCH} -miphoneos-version-min=${MIN_VERSION} -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "${LCEXT_FILE}" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,"$SRCROOT/$PRODUCT_NAME.ios" -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME $STATIC_DEPS)
-
-	if [ $? -ne 0 ]; then
-		echo "Linking ""${LCEXT_FILE}""failed:"
-		echo $OUTPUT
-		exit $?
-	fi
-
-    LCEXT_FILE_LIST+=" ${LCEXT_FILE}"
-    DYLIB_FILE_LIST+=" ${DYLIB_FILE}"
-done
-
-# Lipo the generated libs
-lipo -create ${LCEXT_FILE_LIST} -output "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext"
-
-# Cleanup the lcext_$ARCH files generated
-rm ${LCEXT_FILE_LIST}
+fi
 
 if [ $BUILD_DYLIB -eq 1 ]; then
-	lipo -create ${DYLIB_FILE_LIST} -output "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib"
-	rm ${DYLIB_FILE_LIST}
+	ln -sf "$PRODUCT_NAME.dylib" "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.ios-extension"
+else
+	ln -sf "$PRODUCT_NAME.lcext" "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.ios-extension"
 fi
+

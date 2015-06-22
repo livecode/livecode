@@ -57,3 +57,16 @@ extern "C" MC_DLLEXPORT void MCLogicEvalStringParsedAsBool(MCStringRef p_operand
 {
     r_output = MCLogicExecParseStringAsBool(p_operand);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+extern "C" bool com_livecode_logic_Initialize(void)
+{
+    return true;
+}
+
+extern "C" void com_livecode_logic_Finalize(void)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -39,7 +39,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 #include "uidc.h"
 #include "font.h"
-#include "script.h"
+#include "libscript/script.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -608,8 +608,8 @@ void X_main_loop(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern bool MCModulesInitialize();
-extern void MCModulesFinalize();
+extern "C" bool MCModulesInitialize();
+extern "C" void MCModulesFinalize();
 
 int main(int argc, char *argv[], char *envp[])
 {

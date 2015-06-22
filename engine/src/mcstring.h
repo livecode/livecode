@@ -153,6 +153,7 @@ extern MCNameRef MCN_html;
 extern MCNameRef MCN_browser;
 extern MCNameRef MCN_command_line;
 extern MCNameRef MCN_development;
+extern MCNameRef MCN_development_cmdline;
 extern MCNameRef MCN_helper_application;
 extern MCNameRef MCN_installer;
 extern MCNameRef MCN_mobile;
