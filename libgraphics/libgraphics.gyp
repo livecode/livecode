@@ -85,8 +85,17 @@
 			{
 				'conditions':
 				[
+                    [
+                        'OS == "mac"',
+                        {
+                            'libraries':
+                            [
+                                '$(SDKROOT)/System/Library/Frameworks/ApplicationServices.framework',
+                            ],
+                        },
+                    ],
 					[
-						'OS == "mac" or OS == "ios"',
+						'OS == "ios"',
 						{
 							'libraries':
 							[

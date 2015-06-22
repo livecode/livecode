@@ -96,6 +96,8 @@ class MCMacPlatformSurface;
 - (void)becomePseudoModalFor: (NSWindow*)window;
 - (NSWindow*)pseudoModalFor;
 
+- (OSErr)preDispatchAppleEvent: (const AppleEvent *)p_event withReply: (AppleEvent *)p_reply;
+
 @end
 
 @interface com_runrev_livecode_MCWindow: NSWindow
