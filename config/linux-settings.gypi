@@ -9,6 +9,8 @@
 		'debug_info_suffix': '.dbg',
 		
 		'c++_std': '<!(echo ${CXX_STD:-gnu++03})',
+		
+		'silence_warnings': 0,
 	},
 	
 	'defines':
@@ -64,6 +66,29 @@
 					'_LINUX',
 					'_SERVER',
 					'_LINUX_SERVER',
+				],
+			},
+		],
+		[
+			'silence_warnings == 0',
+			{
+				'cflags':
+				[
+					'-Wall',
+					'-Wextra',
+					'-Wno-unused-parameter',	# Just contributes build noise
+				],
+			},
+			{
+				'cflags':
+				[
+					'-w',						# Disable warnings
+					'-fpermissive',				# Be more lax with old code
+				],
+				
+				'cflags_c':
+				[
+					'-Werror=declaration-after-statement',	# Ensure compliance with C89
 				],
 			},
 		],
