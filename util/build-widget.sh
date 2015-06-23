@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Utility script called by the build system to compile extensions
+
 set -e
 
 function build_widget {
