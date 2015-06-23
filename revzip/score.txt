@@ -1,20 +1,0 @@
-bundle revzip
-	import ../libexternal
-	import ../libz	import ../libzip	support-ppc 10.3.9	support-386 10.4.0	define _MACOSX	enable c++-exceptions
-	include ../libexternal/include
-	include ../libz/include
-	include ../libzip/include	compile-c++ src/revzip.cpp	compile-plist rsrc/revzip-Info.plist
-	link-library external	link-library zip
-	link-library z
-	link-framework CoreServices	output revzip
-
--- Note that we use _MACOSX here as there is no desktop-specific code.dylib server-revzip
-	import ../libexternal
-	import ../libz	import ../libzip	support-ppc 10.3.9	support-386 10.4.0
-	define _MACOSX	enable c++-exceptions
-	include ../libexternal/include
-	include ../libz/include
-	include ../libzip/include	compile-c++ src/revzip.cpp
-	link-library external	link-library zip
-	link-library z
-	link-framework CoreServices	output server-revzip

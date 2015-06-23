@@ -84,3 +84,16 @@ extern "C" MC_DLLEXPORT void MCMathFoundationEvalPi(double& r_output)
 {
     r_output = 3.141592653589793238462643;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+extern "C" bool com_livecode_mathfoundation_Initialize(void)
+{
+    return true;
+}
+
+extern "C" void com_livecode_mathfoundation_Finalize(void)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////

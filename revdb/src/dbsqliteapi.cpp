@@ -80,7 +80,7 @@ extern "C" {
 		__libexports
 	};
 	
-	__attribute((section("__DATA,__libs"))) __attribute__((visibility("default"))) volatile struct LibInfo *__libinfoptr_dbsqlite = &__libinfo;
+	__attribute((section("__DATA,__libs"))) volatile struct LibInfo *__libinfoptr_dbsqlite __attribute__((__visibility__("default"))) = &__libinfo;
 }
 #endif
 

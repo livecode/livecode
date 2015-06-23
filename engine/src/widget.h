@@ -20,7 +20,7 @@
 #include "control.h"
 #include "native-layer.h"
 
-#include "script.h"
+#include "libscript/script.h"
 #include "module-engine.h"
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1543,9 +1543,9 @@
 'condition' ComputeInvokeSignature(INVOKEMETHODTYPE, INVOKELIST, EXPRESSIONLIST -> INVOKESIGNATURE)
 
     'rule' ComputeInvokeSignature(Type, invokelist(Head, Tail), Arguments -> Signature)
-        IsInvokeModuleAllowed(Head)
-        Head'Methods -> Methods
         (|
+            IsInvokeModuleAllowed(Head)
+            Head'Methods -> Methods
             ComputeInvokeSignatureForMethods(Type, Methods, Arguments -> Signature)
         ||
             ComputeInvokeSignature(Type, Tail, Arguments -> Signature)

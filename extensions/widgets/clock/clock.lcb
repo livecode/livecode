@@ -59,6 +59,7 @@ use com.livecode.engine
 metadata title is "Clock"
 metadata author is "LiveCode"
 metadata version is "1.0.3"
+metadata preferredSize is "76,76"
 
 metadata timeZone.default is "0"
 --
@@ -101,11 +102,13 @@ end handler
 -- called when widget is created
 public handler OnCreate()
 	put 0 into mTimeZone
-	put getTimeComponents() into mCurrentTime
+	put false into mIsDay
+	put [0,0,0] into mCurrentTime
 	put 12 into mFontSize
 end handler
 
 public handler OnOpen()
+	put getTimeComponents() into mCurrentTime
 	schedule timer in computeNextTimer() seconds
 end handler
 

@@ -669,7 +669,11 @@ bool __MCArrayCopyDescription(__MCArray *self, MCStringRef& r_string)
 	MCValueRef t_value;
 	while (MCArrayIterate (self, t_iter, t_key, t_value))
 	{
-		if (!MCListAppendFormat (*t_contents_list, "%@: %@", t_key, t_value))
+        // AL-2015-06-19:[[ Bug 15529 ]] Call MCValueCopyDescription to convert arbitrary array values to string
+        MCAutoStringRef t_value_string;
+        if (!MCValueCopyDescription(t_value, &t_value_string))
+            return false;
+		if (!MCListAppendFormat (*t_contents_list, "%@: %@", t_key, *t_value_string))
 			return false;
 	}
 

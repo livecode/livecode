@@ -255,6 +255,17 @@ MCByteEvalCodeOfByte (MCDataRef p_data,
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+extern "C" bool com_livecode_byte_Initialize(void)
+{
+    return true;
+}
+
+extern "C" void com_livecode_byte_Finalize(void)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #ifdef _TEST
 extern void log(const char *module, const char *test, bool result);
 #define log_result(test, result) log("BYTE MODULE", test, result)

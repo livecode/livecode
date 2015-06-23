@@ -619,7 +619,7 @@ MCTypeInfoRef kMCWidgetNoCurrentWidgetErrorTypeInfo = nil;
 MCTypeInfoRef kMCWidgetSizeFormatErrorTypeInfo = nil;
 MC_DLLEXPORT MCTypeInfoRef kMCWidgetTypeInfo = nil;
 
-bool MCWidgetModuleInitialize(void)
+extern "C" bool com_livecode_widget_Initialize(void)
 {
 	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.widget.NoCurrentWidgetError"), MCNAME("widget"), MCSTR("No current widget."), kMCWidgetNoCurrentWidgetErrorTypeInfo))
 		return false;
@@ -633,7 +633,7 @@ bool MCWidgetModuleInitialize(void)
 	return true;
 }
 
-void MCWidgetModuleFinalize(void)
+extern "C" void com_livecode_widget_Finalize(void)
 {
     MCValueRelease(kMCWidgetTypeInfo);
     kMCWidgetTypeInfo = nil;

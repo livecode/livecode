@@ -1,5 +1,9 @@
 on startup
-   generate $1, $2, $3
+   try
+      generate $1, $2, $3
+   catch tError
+      write tError to stderr
+   end try
 end startup
 
 on generate pSource, pTarget, pPerfect
@@ -50,15 +54,18 @@ on generate pSource, pTarget, pPerfect
       put the keys of tTokens into url ("file:" & tTokensFile)
    end if
    
-   local tPerfectCmd
+   /*local tPerfectCmd
    set the itemDelimiter to ":"
    get item 2 to -1 of the address
    set the itemDelimiter to slash
-   put (item 1 to -2 of it) & "/perfect" into tPerfectCmd
+   
+   local tOldFolder
+   put the folder into tOldFolder
+   set the folder to (item 1 to -2 of it)
+   put "perfect" into tPerfectCmd
    switch the platform
       case "win32"
-		 put quote & item 1 to -2 of it & quote & ";" before $PATH
-         put "perfect" & ".exe" into tPerfectCmd
+         put tPerfectCmd & ".exe" into tPerfectCmd
       break
       case "macos"
          put pPerfect into tPerfectCmd
@@ -67,12 +74,13 @@ on generate pSource, pTarget, pPerfect
       default
          put quote & pPerfect & quote into tPerfectCmd
       break
-   end switch
+   end switch*/
 
-   get shell(tPerfectCmd && "<" & quote & tTokensFile & quote)
+   get shell(pPerfect && "<" & quote & tTokensFile & quote)
    if char 1 of it is not "#" then
       delete line 1 of it
    end if
+   set the folder to tOldFolder
 
    put it into url ("binfile:" & pTarget)
    
