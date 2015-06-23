@@ -898,7 +898,7 @@ bool MCDSCamera::StartVideoFileCapture(const wchar_t *p_filename)
 
 	if (t_success)
 	{
-		DeleteFile(p_filename);
+		DeleteFileW(p_filename);
 		t_success = OpenWMVOutput(p_filename);
 		//t_success = OpenAVIOutput(p_filename);
 	}
@@ -980,7 +980,7 @@ void MCDSCamera::Open()
 
 	if (s_class_atom == nil)
 	{
-		WNDCLASS t_class;
+		WNDCLASSW t_class;
 		t_class.style = CS_DBLCLKS | CS_VREDRAW | CS_HREDRAW | CS_OWNDC;
 		t_class.cbClsExtra = 0;
 		t_class.cbWndExtra = 4;
@@ -992,7 +992,7 @@ void MCDSCamera::Open()
 		t_class.lpfnWndProc = MCDSCameraPreviewProc;
 		t_class.lpszClassName = PREVIEW_WINDOW_CLASS;
 
-		s_class_atom = RegisterClass(&t_class);
+		s_class_atom = RegisterClassW(&t_class);
 
 		if (s_class_atom == nil)
 			return;
@@ -1006,7 +1006,7 @@ void MCDSCamera::Open()
 	
 	DWORD t_flags;
 	t_flags = SS_WHITERECT | (m_visible ? WS_VISIBLE : 0) | (m_parent != nil ? WS_CHILD : 0);
-	t_window = CreateWindow(PREVIEW_WINDOW_CLASS, L"Preview", t_flags, m_rect.x, m_rect.y, m_rect.width, m_rect.height, m_parent, nil, nil, nil);
+	t_window = CreateWindowW(PREVIEW_WINDOW_CLASS, L"Preview", t_flags, m_rect.x, m_rect.y, m_rect.width, m_rect.height, m_parent, nil, nil, nil);
 	t_success = t_window != nil;
 
 	DWORD t_error;
