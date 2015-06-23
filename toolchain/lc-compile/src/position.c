@@ -369,10 +369,16 @@ FILE *OpenOutputGrammarFile(const char **r_filename)
 {
     if (s_output_grammar_file == NULL)
         return NULL;
-    
+
 	if (NULL != r_filename)
 	{
 		*r_filename = s_output_grammar_file;
+	}
+
+	if (s_output_grammar_file[0] == '-' &&
+	    s_output_grammar_file[1] == '\0')
+	{
+		return stdout;
 	}
     
     return fopen(s_output_grammar_file, "w");
