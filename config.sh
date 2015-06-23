@@ -258,6 +258,9 @@ if test -z "$TARGET_ARCH"; then
   esac
 fi
 
+# Location of Perl when running Windows builds
+WIN32_PERL=${WIN32_PERL:-"C:/perl/bin/perl.exe"}
+
 # Android default settings and tools
 ANDROID_BUILD_TOOLS=${ANDROID_BUILD_TOOLS:-22.0.1}
 ANDROID_JAVA_SDK=${ANDROID_JAVA_SDK:-${JAVA_SDK:-/usr/lib/jvm/java-7-openjdk-amd64}}
@@ -310,7 +313,8 @@ case ${OS} in
                            "-Gandroid_ndk_version=${ANDROID_NDK_VERSION}" "$@"
     ;;
   win)
-    invoke_gyp $basic_args "-Gmsvs_version=${WIN_MSVS_VERSION}" "$@"
+    invoke_gyp $basic_args "-Gmsvs_version=${WIN_MSVS_VERSION}" \
+                           "-Dperl=${WIN32_PERL}" "$@"
     ;;
   mac|ios)
     invoke_gyp $basic_args "-DOS=${OS}" \
