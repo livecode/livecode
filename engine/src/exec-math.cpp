@@ -752,6 +752,9 @@ void MCMathArrayApplyOperationWithNumber(MCExecContext& ctxt, MCArrayRef p_array
 		case O_OVER:
 			MCMathEvalOver(ctxt, t_number, p_number, t_number);
 			break;
+		default:
+			MCUnreachable();
+			break;
 		}
 		if (ctxt.HasError())
 			return;
@@ -828,6 +831,9 @@ void MCMathArrayApplyOperationWithArray(MCExecContext& ctxt,
 			break;
 		case O_OVER:
 			MCMathEvalOver(ctxt, t_double_left, t_double_right, t_double_left);
+			break;
+		default:
+			MCUnreachable();
 			break;
 		}
 		if (ctxt.HasError())

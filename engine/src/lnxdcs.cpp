@@ -1220,6 +1220,10 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
                 case GDK_GRAB_BROKEN:
                     t_done = true;
                     break;
+
+				default:
+					/* Ignore this event */
+					break;
             }
             
             // The event needs to be released

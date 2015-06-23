@@ -1720,6 +1720,8 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 							}
 						}
 						break;
+					default:
+						break;
 					}
 				}
 			}
@@ -1789,6 +1791,8 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 			break;
 		case kImportHtmlTagThreeDBox:
 			import_html_add_textstyle_to_style(t_style, FA_3D_BOX);
+			break;
+		default:
 			break;
 	}
 	
@@ -1930,6 +1934,8 @@ static void import_html_parse_paragraph_attrs(import_html_tag_t& p_tag, MCFieldP
 			case kImportHtmlAttrHidden:
 				r_style . hidden = true;
 			break;
+			default:
+				break;
 		}
 	}
 }
@@ -2206,6 +2212,9 @@ MCParagraph *MCField::importhtmltext(MCValueRef p_text)
                                 case kImportHtmlTagH6:
                                     t_font_size = 10, t_font_style = FA_BOLD;
                                     break;
+								default:
+									MCUnreachable();
+									break;
                             }
                             
                             if (t_font_style != 0)
@@ -2270,6 +2279,8 @@ MCParagraph *MCField::importhtmltext(MCValueRef p_text)
                         else
                             import_html_change_style(ctxt, t_tag);
                         break;
+					default:
+						break;
 				}
                 
 				t_saw_start_tag = !t_tag . is_terminator;

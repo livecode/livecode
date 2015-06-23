@@ -2390,6 +2390,9 @@ void MCInterfaceExecSelectTextOfField(MCExecContext& ctxt, Preposition_type p_ty
 	case PT_AFTER:
 		t_start = t_finish;
 		break;
+	default:
+		MCUnreachable();
+		break;
 	}
     
 	static_cast<MCField *>(p_target . object) -> seltext(t_start, t_finish, True);
