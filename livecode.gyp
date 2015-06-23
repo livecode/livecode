@@ -27,6 +27,9 @@
 				'revdb/revdb.gyp:dbsqlite',
 				'revxml/revxml.gyp:external-revxml',
 				'revzip/revzip.gyp:external-revzip',
+				
+				# Widgets and libraries
+				'extensions/extensions.gyp:extensions',
 			],
 			
 			'conditions':
