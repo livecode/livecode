@@ -157,9 +157,11 @@ metadata preferredSize is "320,49"
 -- property declarations
 
 property selectedItem	get mSelectedItem 	set setNavSelectedItem
-metadata selectedItem.editor is "com.livecode.pi.number"
+metadata selectedItem.editor is "com.livecode.pi.integer"
 metadata selectedItem.default is "1"
 metadata selectedItem.label is "Selected Item Index"
+metadata selectedItem.step is "1"
+metadata selectedItem.min is "1"
 
 property editMode get mEditMode set setEditMode
 metadata editMode.user_visible is "false"
