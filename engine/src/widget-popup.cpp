@@ -45,7 +45,7 @@
 #include "globals.h"
 #include "context.h"
 
-#include "widgetimp.h"
+#include "widget-ref.h"
 #include "widget-events.h"
 
 #include "module-canvas.h"
