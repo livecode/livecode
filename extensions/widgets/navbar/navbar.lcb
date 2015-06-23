@@ -156,6 +156,21 @@ metadata preferredSize is "320,49"
 
 -- property declarations
 
+property navData get getNavData set setNavData
+metadata navData.editor is "com.livecode.pi.navbar"
+metadata navData.label is "Navigation Data"
+
+property itemStyle	get mItemStyle	set setItemStyle
+metadata itemStyle.editor is "com.livecode.pi.enum"
+metadata itemStyle.options is "icons,names,icons and names"
+metadata itemStyle.default is "icons and names"
+metadata itemStyle.label is "Display Style"
+
+property navHiliteColor	get getHiliteColor set setHiliteColor
+metadata navHiliteColor.editor is "com.livecode.pi.color"
+metadata navHiliteColor.label is "Selected Item Color"
+metadata navHiliteColor.default is "0,121,255"
+
 property selectedItem	get mSelectedItem 	set setNavSelectedItem
 metadata selectedItem.editor is "com.livecode.pi.integer"
 metadata selectedItem.default is "1"
@@ -165,16 +180,6 @@ metadata selectedItem.min is "1"
 
 property editMode get mEditMode set setEditMode
 metadata editMode.user_visible is "false"
-
-property itemStyle	get mItemStyle	set setItemStyle
-metadata itemStyle.editor is "com.livecode.pi.enum"
-metadata itemStyle.options is "icons,names,icons and names"
-metadata itemStyle.default is "icons and names"
-metadata itemStyle.label is "Display Style"
-
-property navData get getNavData set setNavData
-metadata navData.editor is "com.livecode.pi.navbar"
-metadata navData.label is "Navigation Data"
 
 property navNames		get getNavNames			set setNavNames
 metadata navNames.user_visible is "false"
@@ -187,11 +192,6 @@ metadata navLabels.user_visible is "false"
 
 property desiredHeight	get getDesiredHeight
 metadata desiredHeight.user_visible is "false"
-
-property navHiliteColor	get getHiliteColor set setHiliteColor
-metadata navHiliteColor.editor is "com.livecode.pi.color"
-metadata navHiliteColor.label is "Selected Item Color"
-metadata navHiliteColor.default is "0,121,255"
 
 --
 
