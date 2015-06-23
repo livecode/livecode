@@ -57,6 +57,13 @@
 						],
 					},
 				],
+				[
+				'OS == "linux" or OS == "android"',
+				{
+					# Ensure that the symbols LCB binds to are exported
+					'ldflags': [ '-rdynamic' ],
+				},
+			],
 			],
 			
 			'actions':
