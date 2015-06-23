@@ -259,7 +259,7 @@ if test -z "$TARGET_ARCH"; then
 fi
 
 # Location of Perl when running Windows builds
-WIN32_PERL=${WIN32_PERL:-"C:/perl/bin/perl.exe"}
+WIN_PERL=${WIN_PERL:-"C:/perl/bin/perl.exe"}
 
 # Android default settings and tools
 ANDROID_BUILD_TOOLS=${ANDROID_BUILD_TOOLS:-22.0.1}
@@ -314,7 +314,7 @@ case ${OS} in
     ;;
   win)
     invoke_gyp $basic_args "-Gmsvs_version=${WIN_MSVS_VERSION}" \
-                           "-Dperl=${WIN32_PERL}" "$@"
+                           "-Dperl=${WIN_PERL}" "$@"
     ;;
   mac|ios)
     invoke_gyp $basic_args "-DOS=${OS}" \
