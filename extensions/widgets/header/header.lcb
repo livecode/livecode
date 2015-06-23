@@ -148,20 +148,6 @@ pColor (color): The color of the actions and back button
 Description:
 Sets the color of the actions and the back button.
 
-Name: selectedActionColor
-Type: property
-Summary: Sets the color of the actions and the back button when they are selected.
-
-Syntax:
-set the selectedActionColor of <widget> to <pSelectedColor>
-get the selectedActionColor of <widget>
-
-Parameters:
-pSelectedColor (color): The selected color of the actions and back button
-
-Description:
-Sets the color of the actions and the back button when they are selected.
-
 Name: showSearchIcon
 Type: property
 Summary: Sets whether there is a search icon in the header bar.
@@ -190,20 +176,20 @@ use com.livecode.library.iconSVG
 metadata title is "Header"
 metadata author is "LiveCode"
 metadata version is "1.0.0"
+metadata preferredSize is "320,64"
 
 -- property declarations
 property headerTitle          get mHeaderTitle           set setHeaderTitle
 property headerSubtitle       get mHeaderSubtitle        set setHeaderSubtitle
+property leftLabel            get mLeftLabel             set setLeftLabel
 property headerActions        get getHeaderActions       set setHeaderActions
 property actionNames          get getActionNames         set setActionNames
 property actionLabels         get getActionLabels        set setActionLabels
 property actionIcons          get getActionIcons         set setActionIcons
 property actionStyle          get mActionStyle           set setActionStyle
 property showBackIcon         get mShowBackIcon          set setShowBackIcon
-property leftLabel            get mLeftLabel             set setLeftLabel
-property actionColor          get getActionColor         set setActionColor
-property selectedActionColor  get getSelectedActionColor set setSelectedActionColor
 property showSearchIcon       get mShowSearchIcon        set setShowSearchIcon
+property actionColor          get getActionColor         set setActionColor
 
 -- property metadata
 metadata headerTitle.default is "Title"
@@ -235,10 +221,6 @@ metadata actionColor.editor is "com.livecode.pi.color"
 metadata actionColor.default is "0,121,255"
 metadata actionColor.label is "Action Color"
 
-metadata selectedActionColor.editor is "com.livecode.pi.color"
-metadata selectedActionColor.default is "51,153,255"
-metadata selectedActionColor.label is "Selected Action Color"
-
 metadata showSearchIcon.editor is "com.livecode.pi.boolean"
 metadata showSearchIcon.default is "false"
 metadata showSearchIcon.label is "Show Search Icon"
@@ -251,7 +233,6 @@ private variable mActionStyle as String
 private variable mShowBackIcon as Boolean
 private variable mLeftLabel as String
 private variable mActionColor as Color
-private variable mSelectedActionColor as Color
 private variable mShowSearchIcon as Boolean
 
 private variable mShowLeftLabel as Boolean
@@ -289,7 +270,6 @@ public handler OnSave(out rProperties as Array)
    put mShowBackIcon into rProperties["showBackIcon"]
    put mLeftLabel into rProperties["leftLabel"]
    put mActionColor into rProperties["actionColor"]
-   put mSelectedActionColor into rProperties["selectedActionColor"]
    put mShowSearchIcon into rProperties["showSearchIcon"]
 
    return rProperties
@@ -303,7 +283,6 @@ public handler OnLoad(in pProperties as Array)
    put pProperties["showBackIcon"] into mShowBackIcon
    put pProperties["leftLabel"] into mLeftLabel
    put pProperties["actionColor"] into mActionColor
-   put pProperties["selectedActionColor"] into mSelectedActionColor
    put pProperties["showSearchIcon"] into mShowSearchIcon
 end handler
 
@@ -316,9 +295,9 @@ public handler OnCreate()
    variable tArray as Array
    put the empty array into tArray
 
-   put "edit" into tArray["name"]
-   put "Edit" into tArray["label"]
-   put "edit" into tArray["icon_name"]
+   put "add" into tArray["name"]
+   put "Add" into tArray["label"]
+   put "plus" into tArray["icon_name"]
    put "" into tArray["selected_icon_name"]
    put "" into tArray["icon"]
    push tArray onto tHeaderActions
@@ -328,11 +307,10 @@ public handler OnCreate()
    -- properties
    put "Yesterday" into mHeaderTitle
    put "" into mHeaderSubtitle
-   put "names" into mActionStyle
+   put "icons" into mActionStyle
    put true into mShowBackIcon
    put "Back" into mLeftLabel
    put color [0, 121/255, 1] into mActionColor
-   put color [0, 1, 0] into mSelectedActionColor
    put true into mShowSearchIcon
 
    -- variables
@@ -395,7 +373,7 @@ public handler OnPaint()
       repeat with tX from 1 up to tActionsCount
 
          if tX+2 is mSelectedAction then
-            set the paint of this canvas to solid paint with mSelectedActionColor
+            set the paint of this canvas to solid paint with color [the red of mActionColor, the green of mActionColor, the blue of mActionColor, 0.5]
          else
             set the paint of this canvas to solid paint with mActionColor
          end if
@@ -679,14 +657,14 @@ private handler fetchPaint(in pObject as String) returns Paint
 
    else if pObject is "backButton" then
       if mSelectedAction is 1 then
-         put solid paint with mSelectedActionColor into tPaint
+         put solid paint with color [the red of mActionColor, the green of mActionColor, the blue of mActionColor, 0.5] into tPaint
       else
          put solid paint with mActionColor into tPaint
       end if
 
    else if pObject is "searchIcon" then
       if mSelectedAction is 2 then
-         put solid paint with mSelectedActionColor into tPaint
+         put solid paint with color [the red of mActionColor, the green of mActionColor, the blue of mActionColor, 0.5] into tPaint
       else
          put solid paint with mActionColor into tPaint
       end if
@@ -894,10 +872,6 @@ private handler getActionColor() returns String
    return colorToString(mActionColor)
 end handler
 
-private handler getSelectedActionColor() returns String
-   return colorToString(mSelectedActionColor)
-end handler
-
 --------------------------------------------------------------------------------
 --
 -- Set Handlers
@@ -957,11 +931,6 @@ end handler
 
 private handler setActionColor(in pColor as String) returns nothing
    put stringToColor(pColor) into mActionColor
-   redraw all
-end handler
-
-private handler setSelectedActionColor(in pColor as String) returns nothing
-   put stringToColor(pColor) into mSelectedActionColor
    redraw all
 end handler
 

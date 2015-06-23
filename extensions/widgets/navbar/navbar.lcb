@@ -151,6 +151,7 @@ use com.livecode.library.iconSVG
 metadata author is "LiveCode"
 metadata version is "1.0.2"
 metadata title is "Navigation Bar"
+metadata preferredSize is "320,49"
 --
 
 -- property declarations

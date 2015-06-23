@@ -59,6 +59,7 @@ use com.livecode.engine
 metadata title is "Clock"
 metadata author is "LiveCode"
 metadata version is "1.0.3"
+metadata preferredSize is "76,76"
 
 metadata timeZone.default is "0"
 --

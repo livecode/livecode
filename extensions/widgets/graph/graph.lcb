@@ -111,6 +111,7 @@ use com.livecode.engine
 metadata author is "LiveCode"
 metadata version is "1.0.1"
 metadata title is "Line Graph"
+metadata preferredSize is "300,175"
 --
 
 -- property declarations
