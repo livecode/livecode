@@ -60,7 +60,7 @@ static struct {const char *name; Properties prop; } kMCParagraphAttrsProps[] =
 	{"dontWrap", P_DONT_WRAP},
 	{"padding", P_PADDING},
     {"listIndex", P_LIST_INDEX},
-	{nil},
+	{nil, P_UNDEFINED},
 };
 
 bool MCParagraph::hasattrs(void)
