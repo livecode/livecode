@@ -29,7 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 #ifdef __WINDOWS__
-#include <windows.h>
+#include <Windows.h>
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////

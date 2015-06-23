@@ -257,8 +257,6 @@ extern "C"
 void gtk_main_do_event(GdkEvent*);
 }
 
-void DnDClientEvent(GdkEvent* p_event);
-
 static bool motion_event_filter_fn(GdkEvent *p_event, void*)
 {
     return p_event->type == GDK_MOTION_NOTIFY;
@@ -516,6 +514,19 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                 
                 MCStack *t_mousestack;
                 t_mousestack = MCdispatcher->findstackd(t_event->motion.window);
+                
+                // In certain types of modal loops (e.g. drag-and-drop) we may
+                // be receiving events from other windows - in that case, the
+                // window won't be found and some massaging is required
+                if (t_mousestack == NULL && MCmousestackptr != NULL)
+                {
+                    // Retain the current mouse stack and adjust the coordinates
+                    // to be relative to it
+                    t_mousestack = MCmousestackptr;
+                    gint ox, oy;
+                    gdk_window_get_origin(MCmousestackptr->getwindow(), &ox, &oy);
+                    t_mouseloc = MCPointMake((t_event->motion.x_root - ox) / t_scale, (t_event->motion.y_root - oy) / t_scale);
+                }
                 
                 // IM-2013-10-09: [[ FullscreenMode ]] Update mouseloc with MCscreen getters & setters
                 MCscreen->setmouseloc(t_mousestack, t_mouseloc);
@@ -1123,10 +1134,21 @@ void init_xDnD()
         MCtransferstore = new MCGdkTransferStore(((MCScreenDC*)MCscreen)->dpy);
 }
 
-void DnDClientEvent(GdkEvent* p_event)
+void MCScreenDC::DnDClientEvent(GdkEvent* p_event)
 {
     switch (p_event->type)
     {
+        case GDK_EXPOSE:
+        case GDK_DAMAGE:
+        {
+            // Handled separately
+            //fprintf(stderr, "GDK_EXPOSE (window %p)\n", t_event->expose.window);
+            MCEventnode *t_node = new MCEventnode(gdk_event_copy(p_event));
+            t_node->appendto(pendingevents);
+            expose();
+            break;
+        }
+        
         case GDK_DRAG_ENTER:
         {
             //fprintf(stderr, "DND: drag enter\n");
