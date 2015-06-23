@@ -32,6 +32,8 @@ WHERE /Q python 1>NUL 2>NUL
 IF %ERRORLEVEL% NEQ 0 (
   IF EXIST C:\Python27\python.exe (
     SET python=C:\Python27\python.exe
+  ) ELSE IF EXIST C:\Python26\python.exe (
+    SET python=C:\Python26\python.exe
   ) ELSE (
     ECHO >&2 Error: could not locate a copy of python
     PAUSE
