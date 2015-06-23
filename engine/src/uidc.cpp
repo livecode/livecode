@@ -1107,7 +1107,22 @@ void MCUIDC::addtimer(MCObject *optr, MCNameRef mptr, uint4 delay)
     // Remove existing message from the queue.
     cancelmessageobject(optr, mptr);
     
-    doaddmessage(optr, mptr, MCS_time() + delay / 1000.0, 0, NULL);
+    doaddmessage(optr, mptr, MCS_time() + delay / 1000.0, 0);
+}
+
+void MCUIDC::addsubtimer(MCObject *optr, MCValueRef suboptr, MCNameRef mptr, uint4 delay)
+{
+    cancelmessageobject(optr, mptr, suboptr);
+    
+    MCParameter *t_param;
+    t_param = new MCParameter;
+    t_param -> setvalueref_argument(suboptr);
+    doaddmessage(optr, mptr, MCS_time() + delay / 1000.0, 0, t_param);
+}
+
+void MCUIDC::cancelsubtimer(MCObject *optr, MCNameRef mptr, MCValueRef suboptr)
+{
+    cancelmessageobject(optr, mptr, suboptr);
 }
 
 void MCUIDC::cancelmessageindex(uint2 i, Boolean dodelete)
@@ -1139,12 +1154,14 @@ void MCUIDC::cancelmessageid(uint4 id)
 		}
 }
 
-void MCUIDC::cancelmessageobject(MCObject *optr, MCNameRef mptr)
+void MCUIDC::cancelmessageobject(MCObject *optr, MCNameRef mptr, MCValueRef subobject)
 {
     // MW-2014-05-14: [[ Bug 12294 ]] Cancel list in reverse order to minimize movement.
 	for (uindex_t i = nmessages ; i > 0 ; i--)
 		if (messages[i - 1].object == optr
-		        && (mptr == NULL || MCNameIsEqualTo(messages[i - 1].message, mptr, kMCCompareCaseless)))
+		        && (mptr == NULL || MCNameIsEqualTo(messages[i - 1].message, mptr, kMCCompareCaseless))
+                && (subobject == NULL || (messages[i - 1] . params != nil &&
+                                          messages[i - 1] . params -> getvalueref_argument() == subobject)))
 			cancelmessageindex(i - 1, True);
 }
 

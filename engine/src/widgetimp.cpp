@@ -60,6 +60,9 @@ MCWidgetBase::MCWidgetBase(void)
 {
     m_instance = nil;
     m_children = nil;
+    m_annotations = nil;
+    m_has_timer = false;
+    m_timer_deferred = false;
 }
 
 MCWidgetBase::~MCWidgetBase(void)
@@ -71,7 +74,7 @@ bool MCWidgetBase::Create(MCNameRef p_kind)
 {
     MCScriptModuleRef t_module;
     if (!MCScriptLookupModule(p_kind, t_module))
-        return false;
+        return MCErrorThrowGenericWithMessage(MCSTR("unknown module '%{module}'"), "module", p_kind, nil);
     
     if (!MCScriptEnsureModuleIsUsable(t_module))
         return false;
@@ -94,6 +97,9 @@ void MCWidgetBase::Destroy(void)
     if (m_instance == nil)
         return;
     
+    if (m_has_timer)
+        CancelTimer();
+    
     if (m_children != nil)
         for(uindex_t i = 0; i < MCProperListGetLength(m_children); i++)
         {
@@ -109,11 +115,19 @@ void MCWidgetBase::Destroy(void)
     DispatchRestrictedNoThrow(MCNAME("OnDestroy"));
     MCScriptReleaseInstance(m_instance);
     m_instance = nil;
+    
+    MCValueRelease(m_annotations);
+    m_annotations = nil;
 }
 
 MCWidgetRef MCWidgetBase::AsWidget(void)
 {
     return (MCWidgetRef)(((uint8_t *)this) - kMCValueCustomHeaderSize);
+}
+
+MCNameRef MCWidgetBase::GetKind(void) const
+{
+    return MCScriptGetNameOfModule(MCScriptGetModuleOfInstance(m_instance));
 }
 
 //////////
@@ -169,7 +183,7 @@ bool MCWidgetBase::OnLoad(MCValueRef p_rep)
     if (!t_args . New(1))
         return false;
     
-    t_args . Push(p_rep);
+    t_args[0] = MCValueRetain(p_rep);
     
     return DispatchRestricted(MCNAME("OnLoad"), t_args . Ptr(), t_args . Count());
 }
@@ -196,7 +210,43 @@ bool MCWidgetBase::OnOpen(void)
 
 bool MCWidgetBase::OnClose(void)
 {
-    return DispatchRecursive(kDispatchOrderTopDownAfter, MCNAME("OnClose"));
+    bool t_success;
+    t_success = true;
+    
+    if (m_children != nil)
+    {
+        for(uindex_t i = MCProperListGetLength(m_children); i > 0; i--)
+        {
+            MCWidgetRef t_child;
+            t_child = MCProperListFetchElementAtIndex(m_children, i - 1);
+            if (!MCWidgetOnClose(t_child))
+                t_success = false;
+        }
+    }
+    
+    if (!Dispatch(MCNAME("OnClose")))
+        t_success = false;
+    
+    if (m_has_timer)
+        CancelTimer();
+    
+    return t_success;
+}
+
+bool MCWidgetBase::OnTimer(void)
+{
+    // We no longer have a timer.
+    m_has_timer = false;
+    
+    // If we aren't in run mode, then defer the timer.
+    if (GetHost() -> getstack() -> gettool(GetHost()) != T_BROWSE)
+    {
+        m_timer_deferred = true;
+        return true;
+    }
+    
+    // Dispatch the event.
+    return Dispatch(MCNAME("OnTimer"));
 }
 
 bool MCWidgetBase::OnPaint(MCGContextRef p_gcontext)
@@ -252,10 +302,10 @@ bool MCWidgetBase::OnHitTest(MCGPoint p_location, MCWidgetRef& r_target)
     {
         p_location . x -= t_frame . origin . x;
         p_location . y -= t_frame . origin . y;
-        for(uindex_t i = 0; i < MCProperListGetLength(m_children); i++)
+        for(uindex_t i = MCProperListGetLength(m_children); i > 0; i--)
         {
             MCWidgetRef t_child;
-            t_child = MCProperListFetchElementAtIndex(m_children, i);
+            t_child = MCProperListFetchElementAtIndex(m_children, i - 1);
             if (!MCWidgetOnHitTest(t_child, p_location, t_target))
             {
                 t_success = false;
@@ -275,39 +325,39 @@ bool MCWidgetBase::OnHitTest(MCGPoint p_location, MCWidgetRef& r_target)
     return t_success;
 }
 
-bool MCWidgetBase::OnMouseEnter(void)
+bool MCWidgetBase::OnMouseEnter(bool& r_bubble)
 {
-    return Dispatch(MCNAME("OnMouseEnter"));
+    return DispatchBubbly(MCNAME("OnMouseEnter"), r_bubble);
 }
 
-bool MCWidgetBase::OnMouseLeave(void)
+bool MCWidgetBase::OnMouseLeave(bool& r_bubble)
 {
-    return Dispatch(MCNAME("OnMouseLeave"));
+    return DispatchBubbly(MCNAME("OnMouseLeave"), r_bubble);
 }
 
-bool MCWidgetBase::OnMouseMove(void)
+bool MCWidgetBase::OnMouseMove(bool& r_bubble)
 {
-    return Dispatch(MCNAME("OnMouseLeave"));
+    return DispatchBubbly(MCNAME("OnMouseMove"), r_bubble);
 }
 
-bool MCWidgetBase::OnMouseDown(void)
+bool MCWidgetBase::OnMouseDown(bool& r_bubble)
 {
-    return Dispatch(MCNAME("OnMouseDown"));
+    return DispatchBubbly(MCNAME("OnMouseDown"), r_bubble);
 }
 
-bool MCWidgetBase::OnMouseUp(void)
+bool MCWidgetBase::OnMouseUp(bool& r_bubble)
 {
-    return Dispatch(MCNAME("OnMouseUp"));
+    return DispatchBubbly(MCNAME("OnMouseUp"), r_bubble);
 }
 
-bool MCWidgetBase::OnMouseCancel(void)
+bool MCWidgetBase::OnMouseCancel(bool& r_bubble)
 {
-    return Dispatch(MCNAME("OnMouseCancel"));
+    return DispatchBubbly(MCNAME("OnMouseCancel"), r_bubble);
 }
 
-bool MCWidgetBase::OnClick(void)
+bool MCWidgetBase::OnClick(bool& r_bubble)
 {
-    return Dispatch(MCNAME("OnClick"));
+    return DispatchBubbly(MCNAME("OnClick"), r_bubble);
 }
 
 bool MCWidgetBase::OnGeometryChanged(void)
@@ -326,36 +376,130 @@ bool MCWidgetBase::OnToolChanged(Tool p_tool)
     t_success = true;
     if (p_tool == T_BROWSE)
     {
-        if (!DispatchRecursive(kDispatchOrderBeforeBottomUp, MCNAME("OnStopEditing")))
-            t_success = false;
+        if (m_timer_deferred)
+        {
+            m_timer_deferred = false;
+            MCscreen -> addsubtimer(GetHost(), AsWidget(), MCM_internal, 0);
+        }
+        
+        if (m_children != nil)
+        {
+            for(uindex_t i = 0; i < MCProperListGetLength(m_children); i++)
+            {
+                MCWidgetRef t_child;
+                t_child = MCProperListFetchElementAtIndex(m_children, i);
+                if (!MCWidgetOnToolChanged(t_child, p_tool))
+                    t_success = false;
+            }
+        }
     }
     else if (p_tool != T_BROWSE)
     {
         if (!DispatchRecursive(kDispatchOrderBeforeBottomUp, MCNAME("OnStartEditing")))
             t_success = false;
     }
+    
     return t_success;
 }
 
-void MCWidgetBase::ScheduleTimerIn(double timeout)
+bool MCWidgetBase::CopyAnnotation(MCNameRef p_annotation, MCValueRef& r_value)
 {
+    MCValueRef t_value;
+    if (m_annotations == nil ||
+        !MCArrayFetchValue(m_annotations, true, p_annotation, t_value))
+    {
+        r_value = MCValueRetain(kMCNull);
+        return true;
+    }
+    
+    r_value = MCValueRetain(t_value);
+    
+    return true;
+}
+
+bool MCWidgetBase::SetAnnotation(MCNameRef p_annotation, MCValueRef p_value)
+{
+    if (m_annotations == nil &&
+        !MCArrayCreateMutable(m_annotations))
+        return false;
+    
+    if (!MCArrayStoreValue(m_annotations, true, p_annotation, p_value))
+        return false;
+    
+    return true;
+}
+
+bool MCWidgetBase::Post(MCNameRef p_event, MCProperListRef p_args)
+{
+    MCAutoValueRefArray t_args;
+    if (!t_args . New(MCProperListGetLength(p_args)))
+        return false;
+    
+    for(uindex_t i = 0; i < MCProperListGetLength(p_args); i++)
+        t_args[i] = MCValueRetain(MCProperListFetchElementAtIndex(p_args, i));
+    
+    return Dispatch(p_event, t_args . Ptr(), t_args . Count(), nil);
+}
+
+void MCWidgetBase::ScheduleTimerIn(double p_timeout)
+{
+    MCWidget *t_host;
+    t_host = GetHost();
+    
+    // Do nothing if we aren't embedded.
+    if (t_host == nil)
+        return;
+    
+    // Do nothing if the host isn't open.
+    if (t_host -> getopened() == 0)
+        return;
+    
+    MCscreen -> addsubtimer(GetHost(), AsWidget(), MCM_internal, (uint4)(p_timeout * 1000));
+    
+    m_has_timer = true;
+    m_timer_deferred = false;
 }
 
 void MCWidgetBase::CancelTimer(void)
 {
+    MCWidget *t_host;
+    t_host = GetHost();
+    
+    // Do nothing if we aren't embedded.
+    if (t_host == nil)
+        return;
+    
+    // Do nothing if the host isn't open.
+    if (t_host -> getopened() == 0)
+        return;
+    
+    // Do nothing if we don't have a timer.
+    if (!m_has_timer)
+        return;
+    
+    MCscreen -> cancelsubtimer(GetHost(), MCM_internal, AsWidget());
+    
+    m_has_timer = false;
+    m_timer_deferred = false;
 }
 
-void MCWidgetBase::RedrawRect(MCGRectangle p_area)
+void MCWidgetBase::RedrawRect(MCGRectangle *p_area)
 {
     MCGRectangle t_frame;
     t_frame = GetFrame();
     
-    p_area = MCGRectangleTranslate(p_area, t_frame . origin . x, t_frame . origin . y);
-    p_area = MCGRectangleIntersection(p_area, t_frame);
+    MCGRectangle t_area;
+    if (p_area == nil)
+        t_area = t_frame;
+    else
+    {
+        t_area = MCGRectangleTranslate(*p_area, t_frame . origin . x, t_frame . origin . y);
+        t_area = MCGRectangleIntersection(*p_area, t_frame);
+    }
     
     if (IsRoot())
     {
-        GetHost() -> layer_redrawrect(MCGRectangleGetIntegerExterior(p_area));
+        GetHost() -> layer_redrawrect(MCGRectangleGetIntegerExterior(t_area));
         return;
     }
     
@@ -518,12 +662,18 @@ bool MCWidgetBase::Dispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_ar
 	MCStack *t_old_default_stack, *t_this_stack;
 	t_old_default_stack = MCdefaultstackptr;
 	
-	MCObject *t_old_target;
-	t_old_target = MCtargetptr;
-	
-	MCtargetptr = GetHost();
-	t_this_stack = MCtargetptr->getstack();
-	MCdefaultstackptr = t_this_stack;
+    MCObject *t_old_target;
+    if (GetHost() != nil)
+    {
+        t_old_target = MCtargetptr;
+        
+        MCtargetptr = GetHost();
+        t_this_stack = MCtargetptr->getstack();
+        MCdefaultstackptr = t_this_stack;
+    }
+    else
+        MCEngineScriptObjectPreventAccess();
+        
 	
     // Invoke event handler.
     bool t_success;
@@ -537,26 +687,54 @@ bool MCWidgetBase::Dispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_ar
         else
             MCValueRelease(t_retval);
     }
-    else
+    else if (GetHost() != nil)
         GetHost() -> SendError();
     
-	MCcurrentwidget = t_old_widget_object;
+    if (GetHost() != nil)
+    {
+        MCtargetptr = t_old_target;
+        if (MCdefaultstackptr == t_this_stack)
+            MCdefaultstackptr = t_old_default_stack;
+    }
+    else
+        MCEngineScriptObjectAllowAccess();
     
-	MCtargetptr = t_old_target;
-	if (MCdefaultstackptr == t_this_stack)
-		MCdefaultstackptr = t_old_default_stack;
+	MCcurrentwidget = t_old_widget_object;
 	
 	return t_success;
 }
 
 bool MCWidgetBase::DispatchRestricted(MCNameRef p_event, MCValueRef *x_args, uindex_t p_arg_count, MCValueRef *r_result)
 {
-    return Dispatch(p_event, x_args, p_arg_count, r_result);
+	MCWidgetRef t_old_widget_object;
+	t_old_widget_object = MCcurrentwidget;
+	MCcurrentwidget = AsWidget();
+	
+    MCEngineScriptObjectPreventAccess();
+    
+    // Invoke event handler.
+    bool t_success;
+    MCValueRef t_retval;
+    t_success = MCScriptCallHandlerOfInstanceIfFound(m_instance, p_event, x_args, p_arg_count, t_retval);
+    
+    MCEngineScriptObjectAllowAccess();
+    
+    if (t_success)
+    {
+        if (r_result != NULL)
+            *r_result = t_retval;
+        else
+            MCValueRelease(t_retval);
+    }
+    
+	MCcurrentwidget = t_old_widget_object;
+	
+	return t_success;
 }
 
 void MCWidgetBase::DispatchRestrictedNoThrow(MCNameRef p_event, MCValueRef *x_args, uindex_t p_arg_count, MCValueRef *r_result)
 {
-    Dispatch(p_event, x_args, p_arg_count, r_result);
+    DispatchRestricted(p_event, x_args, p_arg_count, r_result);
 }
 
 bool MCWidgetBase::DispatchRecursive(DispatchOrder p_order, MCNameRef p_event, MCValueRef *x_args, uindex_t p_arg_count, MCValueRef *r_result)
@@ -606,6 +784,23 @@ bool MCWidgetBase::DispatchRecursive(DispatchOrder p_order, MCNameRef p_event, M
     }
     
     return t_success;
+}
+
+bool MCWidgetBase::DispatchBubbly(MCNameRef p_event, bool& r_bubble)
+{
+    if (!HasHandler(p_event))
+    {
+        r_bubble = true;
+        return true;
+    }
+    
+    MCAutoValueRef t_result;
+    if (!Dispatch(p_event, nil, 0, &(&t_result)))
+        return false;
+    
+    r_bubble = (*t_result != kMCTrue);
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -678,14 +873,22 @@ void MCWidgetChild::SetOwner(MCWidgetRef p_owner)
         MCValueRetain(m_owner);
 }
 
-void MCWidgetChild::SetFrame(MCGRectangle p_frame)
+bool MCWidgetChild::SetFrame(MCGRectangle p_frame)
 {
+    if (MCGRectangleIsEqual(p_frame, m_frame))
+        return true;
+    
     m_frame = p_frame;
+    return OnGeometryChanged();
 }
 
-void MCWidgetChild::SetDisabled(bool p_disabled)
+bool MCWidgetChild::SetDisabled(bool p_disabled)
 {
+    if (m_disabled == p_disabled)
+        return true;
+    
     m_disabled = p_disabled;
+    return OnParentPropertyChanged();
 }
 
 bool MCWidgetChild::IsRoot(void) const
@@ -747,7 +950,7 @@ bool MCWidgetCreateRoot(MCWidget *p_host, MCNameRef p_kind, MCWidgetRef& r_widge
 bool MCWidgetCreateChild(MCNameRef p_kind, MCWidgetRef& r_widget)
 {
     MCWidgetRef t_widget;
-    if (!MCValueCreateCustom(kMCWidgetTypeInfo, sizeof(MCWidgetRoot), t_widget))
+    if (!MCValueCreateCustom(kMCWidgetTypeInfo, sizeof(MCWidgetChild), t_widget))
         return false;
     
     MCWidgetChild *t_widget_child;
@@ -766,6 +969,11 @@ bool MCWidgetCreateChild(MCNameRef p_kind, MCWidgetRef& r_widget)
     return true;
 }
 
+MCNameRef MCWidgetGetKind(MCWidgetRef self)
+{
+    return MCWidgetAsBase(self) -> GetKind();
+}
+
 bool MCWidgetIsRoot(MCWidgetRef self)
 {
     return MCWidgetAsBase(self) -> IsRoot();
@@ -774,6 +982,11 @@ bool MCWidgetIsRoot(MCWidgetRef self)
 MCWidget *MCWidgetGetHost(MCWidgetRef self)
 {
     return MCWidgetAsBase(self) -> GetHost();
+}
+
+MCWidgetRef MCWidgetGetOwner(MCWidgetRef self)
+{
+    return MCWidgetAsBase(self) -> GetOwner();
 }
 
 MCGRectangle MCWidgetGetFrame(MCWidgetRef self)
@@ -836,6 +1049,11 @@ bool MCWidgetOnClose(MCWidgetRef self)
     return MCWidgetAsBase(self) -> OnClose();
 }
 
+bool MCWidgetOnTimer(MCWidgetRef self)
+{
+    return MCWidgetAsBase(self) -> OnTimer();
+}
+
 bool MCWidgetOnPaint(MCWidgetRef self, MCGContextRef p_gcontext)
 {
     return MCWidgetAsBase(self) -> OnPaint(p_gcontext);
@@ -846,39 +1064,46 @@ bool MCWidgetOnHitTest(MCWidgetRef self, MCGPoint p_location, MCWidgetRef& r_tar
     return MCWidgetAsBase(self) -> OnHitTest(p_location, r_target);
 }
 
-bool MCWidgetOnMouseEnter(MCWidgetRef self)
+bool MCWidgetOnMouseEnter(MCWidgetRef self, bool& r_bubble)
 {
-    return MCWidgetAsBase(self) -> OnMouseEnter();
+    MCLog("Widget::MouseEnter(%p)", self);
+    return MCWidgetAsBase(self) -> OnMouseEnter(r_bubble);
 }
 
-bool MCWidgetOnMouseLeave(MCWidgetRef self)
+bool MCWidgetOnMouseLeave(MCWidgetRef self, bool& r_bubble)
 {
-    return MCWidgetAsBase(self) -> OnMouseLeave();
+    MCLog("Widget::MouseLeave(%p)", self);
+    return MCWidgetAsBase(self) -> OnMouseLeave(r_bubble);
 }
 
-bool MCWidgetOnMouseMove(MCWidgetRef self)
+bool MCWidgetOnMouseMove(MCWidgetRef self, bool& r_bubble)
 {
-    return MCWidgetAsBase(self) -> OnMouseMove();
+    MCLog("Widget::MouseMove(%p)", self);
+    return MCWidgetAsBase(self) -> OnMouseMove(r_bubble);
 }
 
-bool MCWidgetOnMouseDown(MCWidgetRef self)
+bool MCWidgetOnMouseDown(MCWidgetRef self, bool& r_bubble)
 {
-    return MCWidgetAsBase(self) -> OnMouseDown();
+    MCLog("Widget::MouseDown(%p)", self);
+    return MCWidgetAsBase(self) -> OnMouseDown(r_bubble);
 }
 
-bool MCWidgetOnMouseUp(MCWidgetRef self)
+bool MCWidgetOnMouseUp(MCWidgetRef self, bool& r_bubble)
 {
-    return MCWidgetAsBase(self) -> OnMouseUp();
+    MCLog("Widget::MouseUp(%p)", self);
+    return MCWidgetAsBase(self) -> OnMouseUp(r_bubble);
 }
 
-bool MCWidgetOnMouseCancel(MCWidgetRef self)
+bool MCWidgetOnMouseCancel(MCWidgetRef self, bool& r_bubble)
 {
-    return MCWidgetAsBase(self) -> OnMouseCancel();
+    MCLog("Widget::MouseCancel(%p)", self);
+    return MCWidgetAsBase(self) -> OnMouseCancel(r_bubble);
 }
 
-bool MCWidgetOnClick(MCWidgetRef self)
+bool MCWidgetOnClick(MCWidgetRef self, bool& r_bubble)
 {
-    return MCWidgetAsBase(self) -> OnClick();
+    MCLog("Widget::Click(%p)", self);
+    return MCWidgetAsBase(self) -> OnClick(r_bubble);
 }
 
 bool MCWidgetOnGeometryChanged(MCWidgetRef self)
@@ -896,16 +1121,34 @@ bool MCWidgetOnToolChanged(MCWidgetRef self, Tool p_tool)
     return MCWidgetAsBase(self) -> OnToolChanged(p_tool);
 }
 
+bool MCWidgetCopyAnnotation(MCWidgetRef self, MCNameRef p_annotation, MCValueRef& r_value)
+{
+    return MCWidgetAsBase(self) -> CopyAnnotation(p_annotation, r_value);
+}
+
+bool MCWidgetSetAnnotation(MCWidgetRef self, MCNameRef p_annotation, MCValueRef p_value)
+{
+    return MCWidgetAsBase(self) -> SetAnnotation(p_annotation, p_value);
+}
+
 void MCWidgetRedrawAll(MCWidgetRef self)
 {
+    return MCWidgetAsBase(self) -> RedrawRect(nil);
+}
+
+bool MCWidgetPost(MCWidgetRef self, MCNameRef p_event, MCProperListRef p_args)
+{
+    return MCWidgetAsBase(self) -> Post(p_event, p_args);
 }
 
 void MCWidgetScheduleTimerIn(MCWidgetRef self, double p_timeout)
 {
+    MCWidgetAsBase(self) -> ScheduleTimerIn(p_timeout);
 }
 
 void MCWidgetCancelTimer(MCWidgetRef self)
 {
+    MCWidgetAsBase(self) -> CancelTimer();
 }
 
 void MCWidgetCopyChildren(MCWidgetRef self, MCProperListRef& r_children)
@@ -941,6 +1184,18 @@ MCGRectangle MCWidgetMapRectToGlobal(MCWidgetRef self, MCGRectangle p_rect)
 MCGRectangle MCWidgetMapRectFromGlobal(MCWidgetRef self, MCGRectangle p_rect)
 {
     return MCWidgetAsBase(self) -> MapRectFromGlobal(p_rect);
+}
+
+//////////
+
+bool MCChildWidgetSetFrame(MCWidgetRef p_widget, MCGRectangle p_frame)
+{
+    return MCWidgetAsChild(p_widget) -> SetFrame(p_frame);
+}
+
+bool MCChildWidgetSetDisabled(MCWidgetRef p_widget, bool p_disabled)
+{
+    return MCWidgetAsChild(p_widget) -> SetDisabled(p_disabled);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -74,6 +74,7 @@ public:
     void event_dnd_drop(MCWidget*);
     
     MCWidgetRef GetGrabbedWidget(void) const;
+    MCWidgetRef GetTargetWidget(void) const;
     
     // Returns the synchronous mouse/click coordinates
     void GetSynchronousMousePosition(coord_t& r_x, coord_t& r_y) const;
@@ -105,6 +106,8 @@ private:
     // Parameters for controlling double-click time and position deltas
     uint32_t    m_doubleclick_time;
     coord_t     m_doubleclick_distance;
+    
+    MCWidgetRef m_target;
     
     // State for touch events
     struct MCWidgetTouchEvent;
@@ -140,6 +143,9 @@ private:
     
     // Indicates whether the given widget is in run mode or not
     bool widgetIsInRunMode(MCWidget *);
+    
+    // Bubble the given event appropriately.
+    bool bubbleEvent(MCWidgetRef target, bool (*action)(MCWidgetRef, bool&));
 };
 
 #endif // ifndef __MC_WIDGET_EVENTS__

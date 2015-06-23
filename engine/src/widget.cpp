@@ -119,15 +119,19 @@ void MCWidget::bind(MCNameRef p_kind, MCValueRef p_rep)
     if (t_success && opened != 0)
         MCwidgeteventmanager -> event_open(this);
     
-    // If we failed then store the kind and rep and destroy the imp.
+    // We always record the kind.
+    m_kind = MCValueRetain(p_kind);
+    
+    // If we failed then store the rep and destroy the imp.
     if (!t_success)
     {
         MCValueRelease(m_widget);
         m_widget = nil;
         
-        m_kind = MCValueRetain(p_kind);
         if (p_rep != nil)
             m_rep = MCValueRetain(p_rep);
+        
+        SendError();
     }
 }
 
@@ -322,9 +326,8 @@ void MCWidget::timer(MCNameRef p_message, MCParameter *p_parameters)
 {
     if (p_message == MCM_internal)
     {
-        if (getstack() -> gettool(this) == T_BROWSE)
-            if (m_widget != nil)
-                MCwidgeteventmanager->event_timer(this, p_message, p_parameters);
+        if (m_widget != nil)
+            MCwidgeteventmanager->event_timer(this, p_message, p_parameters);
     }
     else
     {
@@ -683,7 +686,6 @@ IO_stat MCWidget::save(IO_handle p_stream, uint4 p_part, bool p_force_ext)
 {
     // Make the widget generate a rep.
     MCAutoValueRef t_rep;
-    t_rep = nil;
     if (m_widget != nil)
         MCWidgetOnSave(m_widget, &t_rep);
     

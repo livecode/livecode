@@ -103,7 +103,14 @@ public handler OnCreate()
 	put 0 into mTimeZone
 	put getTimeComponents() into mCurrentTime
 	put 12 into mFontSize
+end handler
+
+public handler OnOpen()
 	schedule timer in computeNextTimer() seconds
+end handler
+
+public handler OnClose()
+    cancel timer
 end handler
 
 -- called whenever LiveCode needs to redraw the widget

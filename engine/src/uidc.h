@@ -619,11 +619,14 @@ public:
 	void addtimer(MCObject *optr, MCNameRef name, uint4 delay);
 	void cancelmessageindex(uint2 i, Boolean dodelete);
 	void cancelmessageid(uint4 id);
-	void cancelmessageobject(MCObject *optr, MCNameRef name);
+	void cancelmessageobject(MCObject *optr, MCNameRef name, MCValueRef param = nil);
     bool listmessages(MCExecContext& ctxt, MCListRef& r_list);
-    void doaddmessage(MCObject *optr, MCNameRef name, real8 time, uint4 id, MCParameter *params);
+    void doaddmessage(MCObject *optr, MCNameRef name, real8 time, uint4 id, MCParameter *params = nil);
     int doshiftmessage(int index, real8 newtime);
     
+    void addsubtimer(MCObject *target, MCValueRef subtarget, MCNameRef name, uint4 delay);
+    void cancelsubtimer(MCObject *target, MCNameRef name, MCValueRef subtarget);
+
     // MW-2014-05-28: [[ Bug 12463 ]] This is used by 'send in time' - separating user sent messages from
     //   engine sent messages. The former are subject to a limit to stop pending message queue overflow.
     bool addusermessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params);

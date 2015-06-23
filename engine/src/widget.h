@@ -30,8 +30,11 @@ typedef MCValueRef MCWidgetRef;
 bool MCWidgetCreateRoot(MCWidget *host, MCNameRef kind, MCWidgetRef& r_widget);
 bool MCWidgetCreateChild(MCNameRef kind, MCWidgetRef& r_widget);
 
+MCNameRef MCWidgetGetKind(MCWidgetRef widget);
+
 bool MCWidgetIsRoot(MCWidgetRef widget);
 MCWidget *MCWidgetGetHost(MCWidgetRef widget);
+MCWidgetRef MCWidgetGetOwner(MCWidgetRef widget);
 
 MCGRectangle MCWidgetGetFrame(MCWidgetRef widget);
 bool MCWidgetGetDisabled(MCWidgetRef widget);
@@ -49,18 +52,26 @@ bool MCWidgetOnLoad(MCWidgetRef widget, MCValueRef rep);
 bool MCWidgetOnSave(MCWidgetRef widget, MCValueRef& r_rep);
 bool MCWidgetOnOpen(MCWidgetRef widget);
 bool MCWidgetOnClose(MCWidgetRef widget);
+bool MCWidgetOnTimer(MCWidgetRef widget);
 bool MCWidgetOnPaint(MCWidgetRef widget, MCGContextRef gcontext);
 bool MCWidgetOnHitTest(MCWidgetRef widget, MCGPoint location, MCWidgetRef& r_target);
-bool MCWidgetOnMouseEnter(MCWidgetRef widget);
-bool MCWidgetOnMouseLeave(MCWidgetRef widget);
-bool MCWidgetOnMouseMove(MCWidgetRef widget);
-bool MCWidgetOnMouseDown(MCWidgetRef widget);
-bool MCWidgetOnMouseUp(MCWidgetRef widget);
-bool MCWidgetOnMouseCancel(MCWidgetRef widget);
-bool MCWidgetOnClick(MCWidgetRef widget);
+
+bool MCWidgetOnMouseEnter(MCWidgetRef widget, bool& r_bubble);
+bool MCWidgetOnMouseLeave(MCWidgetRef widget, bool& r_bubble);
+bool MCWidgetOnMouseMove(MCWidgetRef widget, bool& r_bubble);
+bool MCWidgetOnMouseDown(MCWidgetRef widget, bool& r_bubble);
+bool MCWidgetOnMouseUp(MCWidgetRef widget, bool& r_bubble);
+bool MCWidgetOnMouseCancel(MCWidgetRef widget, bool& r_bubble);
+bool MCWidgetOnClick(MCWidgetRef widget, bool& r_bubble);
+
 bool MCWidgetOnGeometryChanged(MCWidgetRef widget);
 bool MCWidgetOnParentPropertyChanged(MCWidgetRef widget);
 bool MCWidgetOnToolChanged(MCWidgetRef widget, Tool p_tool);
+
+bool MCWidgetCopyAnnotation(MCWidgetRef widget, MCNameRef annotation, MCValueRef& r_value);
+bool MCWidgetSetAnnotation(MCWidgetRef widget, MCNameRef annotation, MCValueRef value);
+
+bool MCWidgetPost(MCWidgetRef widget, MCNameRef event, MCProperListRef args);
 
 void MCWidgetRedrawAll(MCWidgetRef widget);
 void MCWidgetScheduleTimerIn(MCWidgetRef widget, double timeout);
@@ -75,6 +86,11 @@ MCGPoint MCWidgetMapPointFromGlobal(MCWidgetRef widget, MCGPoint point);
 
 MCGRectangle MCWidgetMapRectToGlobal(MCWidgetRef widget, MCGRectangle point);
 MCGRectangle MCWidgetMapRectFromGlobal(MCWidgetRef widget, MCGRectangle point);
+
+////
+
+bool MCChildWidgetSetFrame(MCWidgetRef widget, MCGRectangle frame);
+bool MCChildWidgetSetDisabled(MCWidgetRef widget, bool disabled);
 
 ////////////////////////////////////////////////////////////////////////////////
 

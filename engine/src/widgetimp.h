@@ -30,6 +30,8 @@ public:
     
     MCWidgetRef AsWidget(void);
     
+    MCNameRef GetKind(void) const;
+    
     //// NORMAL METHODS
     
     bool HasProperty(MCNameRef property);
@@ -46,26 +48,33 @@ public:
     bool OnOpen(void);
     bool OnClose(void);
     
+    bool OnTimer(void);
+    
     bool OnPaint(MCGContextRef gcontext);
     bool OnHitTest(MCGPoint location, MCWidgetRef& r_target);
     
-    bool OnMouseEnter(void);
-    bool OnMouseLeave(void);
-    bool OnMouseMove(void);
+    bool OnMouseEnter(bool& r_bubble);
+    bool OnMouseLeave(bool& r_bubble);
+    bool OnMouseMove(bool& r_bubble);
     
-    bool OnMouseDown(void);
-    bool OnMouseUp(void);
-    bool OnMouseCancel(void);
+    bool OnMouseDown(bool& r_bubble);
+    bool OnMouseUp(bool& r_bubble);
+    bool OnMouseCancel(bool& r_bubble);
     
-    bool OnClick(void);
+    bool OnClick(bool& r_bubble);
     
     bool OnGeometryChanged(void);
     bool OnParentPropertyChanged(void);
     bool OnToolChanged(Tool tool);
     
+    bool CopyAnnotation(MCNameRef annotation, MCValueRef& r_value);
+    bool SetAnnotation(MCNameRef annotation, MCValueRef value);
+    
+    bool Post(MCNameRef event, MCProperListRef args);
+    
     void ScheduleTimerIn(double timeout);
     void CancelTimer(void);
-    void RedrawRect(MCGRectangle area);
+    void RedrawRect(MCGRectangle *area);
     
     bool CopyChildren(MCProperListRef& r_children);
     void PlaceWidget(MCWidgetRef child, MCWidgetRef relative_to, bool put_below);
@@ -108,17 +117,38 @@ private:
         kDispatchOrderTopDown,
     };
     
+    // Dispatch an event to the widget.
     bool Dispatch(MCNameRef event, MCValueRef *x_args = nil, uindex_t arg_count = 0, MCValueRef *r_result = nil);
+    
+    // Dispatch an event to the widget but don't allow script access.
     bool DispatchRestricted(MCNameRef event, MCValueRef *args = nil, uindex_t arg_count = 0, MCValueRef *r_result = nil);
+    
+    // Dispatch an event to the widget, don't allow script access and swallow
+    // any errors.
     void DispatchRestrictedNoThrow(MCNameRef event, MCValueRef *args = nil, uindex_t arg_count = 0, MCValueRef *r_result = nil);
     
+    // Disatpch to the widget and/or its children in the given order.
     bool DispatchRecursive(DispatchOrder order, MCNameRef event, MCValueRef *args = nil, uindex_t arg_count = 0, MCValueRef *r_result = nil);
+    
+    // Dispatch a potential bubbling event to the widget. Bubbling events can return
+    // a boolean value to indicate whether the event should be passed up the owner
+    // chain.
+    bool DispatchBubbly(MCNameRef event, bool& r_bubble);
     
     // The instance of this widget.
     MCScriptInstanceRef m_instance;
     
     // The children of this widget (a mutable list - or nil if no children).
     MCProperListRef m_children;
+    
+    // The annotations of this widget (a mutable array - or nil if none).
+    MCArrayRef m_annotations;
+    
+    // If true, then the widget has an active timer that should be cancelled.
+    bool m_has_timer : 1;
+    
+    // If true, then the widget has deferred a timer until browse mode is entered.
+    bool m_timer_deferred : 1;
 };
 
 class MCWidgetRoot: public MCWidgetBase
@@ -145,8 +175,8 @@ public:
     virtual ~MCWidgetChild(void);
     
     void SetOwner(MCWidgetRef owner);
-    void SetFrame(MCGRectangle frame);
-    void SetDisabled(bool disabled);
+    bool SetFrame(MCGRectangle frame);
+    bool SetDisabled(bool disabled);
     
     virtual bool IsRoot(void) const;
     virtual MCWidget *GetHost(void) const;
@@ -167,146 +197,6 @@ MCWidgetChild *MCWidgetAsChild(MCWidgetRef widget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if 0
-class MCWidgetCommon
-{
-public:
-    MCWidgetCommon(void);
-    virtual ~MCWidgetCommon(void);
-    
-    ////
-    
-    bool HasProperty(MCNameRef p_name);
-    
-    bool HandlesEvent(MCNameRef p_name);
-    
-    //// Non-event interactions
-    
-    bool Create(MCNameRef kind);
-    void Destroy(void);
-    
-    bool Load(MCValueRef rep);
-    bool Save(MCValueRef& r_rep);
-    
-    bool Open(void);
-    bool Close(void);
-    
-    bool Paint(MCGContextRef gcontext);
-    
-    bool ToolChanged(Tool p_tool);
-    bool LayerChanged(void);
-    void GeometryChanged(void);
-    void ParentPropertyChanged(void);
-    
-    //// Event interactions
-    
-    bool MouseEnter(void);
-    bool MouseMove(void);
-    bool MouseLeave(void);
-    
-    bool MouseDown(void);
-    bool MouseUp(void);
-    bool MouseCancel(void);
-    
-    bool Click(void);
-    bool DoubleClick(void);
-    
-    // Event checks
-    
-    bool HandlesClick(void);
-    bool HandlesDoubleClick(void);
-    bool HandlesMouseDown(void);
-    bool HandlesMouseUp(void);
-    bool HandlesMouseCancel(void);
-    
-    //// Universal syntax bindings
-    bool GetProperty(MCNameRef p_prop_name, MCValueRef& r_value);
-    bool SetProperty(MCNameRef p_prop_name, MCValueRef p_value);
-    
-    bool CopyChildren(MCProperListRef& r_children);
-    void PlaceWidget(MCWidgetRef p_widget, MCWidgetRef p_other_widget, bool p_is_below);
-    void UnplaceWidget(MCWidgetRef p_widget);
-    
-    //// Overridable syntax bindings
-    
-    virtual void RedrawAll(void) = 0;
-    virtual void RedrawRect(const MCGRectangle& area) = 0;
-    virtual MCGRectangle GetRectangle(void) = 0;
-    virtual void SetRectangle(const MCGRectangle& rectangle) = 0;
-    virtual bool GetDisabled(void) = 0;
-    virtual void SetDisabled(bool disabled) = 0;
-    virtual void CopyFont(MCFontRef& r_font) = 0;
-    virtual void SetFont(MCFontRef font) = 0;
-    virtual void ScheduleTimerIn(double after) = 0;
-    virtual void CancelTimer(void) = 0;
-    virtual void CopyScriptObject(MCScriptObjectRef& r_script_object) = 0;
-    virtual MCValueRef Send(bool p_is_function, MCStringRef message, MCProperListRef arguments) = 0;
-    virtual void Post(MCStringRef message, MCProperListRef arguments) = 0;
-    
-    //// Overridable utilities
-    
-    virtual MCWidget *GetHost(void) = 0;
-    virtual MCGPoint MapPointFromGlobal(MCGPoint point) = 0;
-    virtual MCGPoint MapPointToGlobal(MCGPoint point) = 0;
-    
-    ////
-    
-private:
-    bool OnCreate(void);
-    bool OnDestroy(void);
-    
-    // The instance of this widget.
-    MCScriptInstanceRef m_instance;
-    
-    // The children of this widget (a mutable list - or nil if no children).
-    MCProperListRef m_children;
-};
-
-class MCWidgetHost: public MCWidgetCommon
-{
-public:
-    virtual void RedrawAll(void);
-    virtual void RedrawRect(const MCGRectangle& area);
-    virtual MCGRectangle GetRectangle(void);
-    virtual void SetRectangle(const MCGRectangle& rectangle);
-    virtual bool GetDisabled(void);
-    virtual void SetDisabled(bool disabled);
-    virtual void CopyFont(MCFontRef& r_font);
-    virtual void SetFont(MCFontRef font);
-    virtual void ScheduleTimerIn(double after);
-    virtual void CancelTimer(void);
-    virtual void CopyScriptObject(MCScriptObjectRef& r_script_object);
-    virtual MCValueRef Send(bool p_is_function, MCStringRef message, MCProperListRef arguments);
-    virtual void Post(MCStringRef message, MCProperListRef arguments);
-    
-    virtual MCWidget *GetHost(void);
-    virtual MCGPoint MapPointFromGlobal(MCGPoint point);
-    virtual MCGPoint MapPointToGlobal(MCGPoint point);
-};
-
-class MCWidgetChild: public MCWidgetCommon
-{
-public:
-    virtual void RedrawAll(void);
-    virtual void RedrawRect(const MCGRectangle& area);
-    virtual MCGRectangle GetRectangle(void);
-    virtual void SetRectangle(const MCGRectangle& rectangle);
-    virtual bool GetDisabled(void);
-    virtual void SetDisabled(bool disabled);
-    virtual void CopyFont(MCFontRef& r_font);
-    virtual void SetFont(MCFontRef font);
-    virtual void ScheduleTimerIn(double after);
-    virtual void CancelTimer(void);
-    virtual void CopyScriptObject(MCScriptObjectRef& r_script_object);
-    virtual MCValueRef Send(bool p_is_function, MCStringRef message, MCProperListRef arguments);
-    virtual void Post(MCStringRef message, MCProperListRef arguments);
-    
-    virtual MCWidget *GetHost(void);
-    virtual MCGPoint MapPointFromGlobal(MCGPoint point);
-    virtual MCGPoint MapPointToGlobal(MCGPoint point);
-};
-#endif
-
 extern MCWidgetRef MCcurrentwidget;
 
 extern "C"
@@ -316,6 +206,7 @@ extern MC_DLLEXPORT MCTypeInfoRef kMCWidgetTypeInfo;
 
 bool MCWidgetThrowNoCurrentWidgetError(void);
 bool MCWidgetThrowNotSupportedInChildWidgetError(void);
+bool MCWidgetThrowNotAChildOfThisWidgetError(void);
 bool MCWidgetEnsureCurrentWidget(void);
 
 #endif
