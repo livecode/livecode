@@ -1,17 +1,26 @@
 {
 	'type': 'executable',
-	'mac_bundle': 1,
 	
-	'mac_bundle_resources':
+	'conditions':
 	[
-		'rsrc/LiveCode-Community.rsrc',
-		'rsrc/English.lproj/Localisation.strings',
-		'rsrc/LiveCodeDoc.icns',
-		'rsrc/LiveCode.icns',
-	],
+		[
+			'OS == "mac" or OS == "ios"',
+			{
+				'mac_bundle': 1,
 	
-	'xcode_settings':
-	{
-		'INFOPLIST_FILE': '<(app_plist)',	
-	},
+				'mac_bundle_resources':
+				[
+					'rsrc/LiveCode-Community.rsrc',
+					'rsrc/English.lproj/Localisation.strings',
+					'rsrc/LiveCodeDoc.icns',
+					'rsrc/LiveCode.icns',
+				],
+	
+				'xcode_settings':
+				{
+					'INFOPLIST_FILE': '<(app_plist)',	
+				},
+			}
+		],
+	],
 }
