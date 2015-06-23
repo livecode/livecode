@@ -1028,9 +1028,9 @@ static void copysingleattr_int32(MCParagraphAttrs *other_attrs, MCParagraphAttrs
 
 void MCParagraph::copysingleattr(Properties which, MCParagraph *other)
 {
+#ifdef OLD_EXEC
 	switch(which)
 	{
-#ifdef OLD_EXEC
 	case P_TEXT_ALIGN:
 		if (other -> attrs == nil || (other -> attrs -> flags & PA_HAS_TEXT_ALIGN) == 0)
 		{
@@ -1219,8 +1219,8 @@ void MCParagraph::copysingleattr(Properties which, MCParagraph *other)
 			attrs -> flags |= PA_HAS_METADATA;
 		}
 		break;
-#endif
 	}
+#endif
 
 	if (attrs == nil)
 		return;
