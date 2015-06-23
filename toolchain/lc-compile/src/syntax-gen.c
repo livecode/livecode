@@ -1793,7 +1793,7 @@ void GenerateSyntaxRules(void)
     if (t_output != NULL)
         s_output = t_output;
     else
-        s_output = t_output = stderr;
+	    return;
     
     t_template = OpenTemplateFile();
     if (t_template != NULL)
