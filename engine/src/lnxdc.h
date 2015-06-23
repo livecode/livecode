@@ -368,5 +368,9 @@ public:
     virtual void configureIME(int32_t x, int32_t y);
 	virtual void activateIME(Boolean activate);
 	//virtual void closeIME();
+    
+private:
+    
+    void DnDClientEvent(GdkEvent*);
 };
 #endif
