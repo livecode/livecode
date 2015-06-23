@@ -789,6 +789,14 @@
 			'src/java/com/runrev/android/billing/google/Security.java',
 			'src/java/com/runrev/android/billing/google/GoogleBillingProvider.java',
 			'src/java/com/runrev/android/billing/samsung/SamsungBillingProvider.java',
+			'src/java/com/runrev/android/nativecontrol/BrowserControl.java',
+			'src/java/com/runrev/android/nativecontrol/ExtVideoView.java',
+			'src/java/com/runrev/android/nativecontrol/InputControl.java',
+			'src/java/com/runrev/android/nativecontrol/InputView.java',
+			'src/java/com/runrev/android/nativecontrol/NativeControl.java',
+			'src/java/com/runrev/android/nativecontrol/NativeControlModule.java',
+			'src/java/com/runrev/android/nativecontrol/ScrollerControl.java',
+			'src/java/com/runrev/android/nativecontrol/VideoControl.java',
 		],
 		
 		# AIDL sources for Android

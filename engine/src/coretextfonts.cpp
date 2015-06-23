@@ -49,7 +49,7 @@ void add_ios_fontmap(const char* p_mapping)
 
     MCAutoStringRef t_mapping;
     if (!MCStringCreateWithCString(p_mapping, &t_mapping))
-        return false;
+        return;
 
     uindex_t t_separator;
     if (!MCStringFirstIndexOfChar(*t_mapping, '=', 0, kMCStringOptionCompareExact, t_separator))
