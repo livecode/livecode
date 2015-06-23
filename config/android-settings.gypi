@@ -4,6 +4,7 @@
 		'-Wall',
 		'-Wextra',
 		'-fstrict-aliasing',
+		'-fvisibility=hidden',
 	],
 	
 	'cflags_c':
