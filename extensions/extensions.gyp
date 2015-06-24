@@ -56,23 +56,23 @@
 				},
 			},
 			
-			'rules':
+			'actions':
 			[
 				{
-					'rule_name': 'build_extension',
-					'extension': 'lcb',
+					'action_name': 'build_extensions',
 					
 					'inputs': 
 					[
-						'../util/build-widget.sh',
+						'../util/build-extensions.sh',
+						'<@(_sources)',
 					],
 					
 					'outputs':
 					[
-						'<(PRODUCT_DIR)/packaged_extensions/com.livecode.extensions.livecode.<(RULE_INPUT_ROOT)/module.lcb',
+						'<(PRODUCT_DIR)/packaged_extensions',
 					],
 					
-					'message': 'Building extension <(RULE_INPUT_ROOT)',
+					'message': 'Building extensions',
 					
 					'conditions':
 					[
@@ -81,13 +81,13 @@
 							{
 								'variables':
 								{
-									'build_command': [ '$(ProjectDir)../../../util/invoke-unix.bat', '$(ProjectDir)../../../util/build-widget.sh' ],
+									'build_command': [ '$(ProjectDir)../../../util/invoke-unix.bat', '$(ProjectDir)../../../util/build-extensions.sh' ],
 								},
 							},
 							{
 								'variables':
 								{
-									'build_command': [ '../util/build-widget.sh' ],
+									'build_command': [ '../util/build-extensions.sh' ],
 								},
 							},
 						],
@@ -96,10 +96,10 @@
 					'action':
 					[
 						'<@(build_command)',
-						'<(RULE_INPUT_DIRNAME)',
-						'<(PRODUCT_DIR)',
+						'<(PRODUCT_DIR)/packaged_extensions',
 						'<(PRODUCT_DIR)/modules/lci',
 						'>(lc-compile_host)',
+						'<@(_sources)',
 					],
 				},
 			],
