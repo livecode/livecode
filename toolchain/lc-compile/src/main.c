@@ -40,7 +40,7 @@ int IsBootstrapCompile(void)
 
 int IsDependencyCompile(void)
 {
-    return DependencyMode != 0;
+    return DependencyMode != kDependencyModeNone;
 }
 
 void bootstrap_main(int argc, char *argv[])

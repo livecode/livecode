@@ -131,7 +131,7 @@ int AddImportedModuleFile(const char *p_name)
 		int i;
         for(i = 0; i < ImportedModuleDirCount; i++)
         {
-            sprintf(t_path, "%s/%s.lci", ImportedModuleDir[i], p_name);
+            /* OVERFLOW */ sprintf(t_path, "%s/%s.lci", ImportedModuleDir[i], p_name);
             t_file = fopen(t_path, "r");
             if (t_file != NULL)
                 break;
@@ -139,7 +139,7 @@ int AddImportedModuleFile(const char *p_name)
     }
     else
     {
-        sprintf(t_path, "%s.lci", p_name);
+        /* OVERFLOW */ sprintf(t_path, "%s.lci", p_name);
         t_file = fopen(t_path, "r");
     }
     
@@ -164,7 +164,7 @@ void FindImportedModuleFile(const char *p_name, char** r_module_file)
 		int i;
         for(i = 0; i < ImportedModuleDirCount; i++)
         {
-            sprintf(t_path, "%s/%s.lci", ImportedModuleDir[i], p_name);
+            /* OVERFLOW */ sprintf(t_path, "%s/%s.lci", ImportedModuleDir[i], p_name);
             t_file = fopen(t_path, "r");
             if (t_file != NULL)
                 break;
@@ -172,14 +172,14 @@ void FindImportedModuleFile(const char *p_name, char** r_module_file)
     }
     else
     {
-        sprintf(t_path, "%s.lci", p_name);
+        /* OVERFLOW */ sprintf(t_path, "%s.lci", p_name);
         t_file = fopen(t_path, "r");
     }
     
     if (t_file == NULL)
     {
         if (ImportedModuleDirCount > 0)
-            sprintf(t_path, "%s/%s.lci", ImportedModuleDir[0], p_name);
+            /* OVERFLOW */ sprintf(t_path, "%s/%s.lci", ImportedModuleDir[0], p_name);
     }
     else
         fclose(t_file);
@@ -198,7 +198,7 @@ OpenImportedModuleFile (const char *p_name,
         return NULL;
 
     // Use the first modulepath to write the interface file into.
-    sprintf(t_path, "%s/%s.lci", ImportedModuleDir[0], p_name);
+    /* OVERFLOW */ sprintf(t_path, "%s/%s.lci", ImportedModuleDir[0], p_name);
 
 	if (NULL != r_filename)
 	{
