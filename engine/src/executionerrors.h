@@ -2472,6 +2472,10 @@ enum Exec_errors
     // SN-2014-12-15: [[ Bug 14211 ]] put ... into the next line of ... should return an error
     // {EE-0810} Chunk: bad extents provided
     EE_CHUNK_BADEXTENTS,
+    
+    // SN-2015-06-24: [[ Bug 15539 ]] delete <chunk> of <function> should return an error
+    // {EE-0811} Chunk: cannot delete chunk of a function
+    EE_CHUNK_DELETEFUNCTIONCHUNK,
 };
 
 extern const char *MCexecutionerrors;
