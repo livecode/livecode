@@ -7,7 +7,7 @@ lc-compile(1) -- compile LiveCode Builder source code
 
 **lc-compile** [_OPTION_ ...] --outputc _OUTFILE_ [--] _LCBFILE_
 
-**lc-compile** [_OPTION_ ...] --deps [DEPKIND] [--] _LCBFILE_ ... _LCBFILE_...
+**lc-compile** [_OPTION_ ...] --deps [make|order|changed-order] [--] _LCBFILE_ ... _LCBFILE_...
 
 ## DESCRIPTION
 
