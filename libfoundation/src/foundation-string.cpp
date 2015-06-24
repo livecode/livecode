@@ -29,7 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 #ifdef __WINDOWS__
-#include <windows.h>
+#include <Windows.h>
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -292,7 +292,7 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
 			return MCStringCreateWithChars(t_buffer.Ptr(), t_out_offset, r_string);
 		}
             break;
-#if !defined(__LINUX__) && !defined(__ANDROID__)
+#if !defined(__ISO_8859_1__)
         case kMCStringEncodingISO8859_1:
             break;
 #endif
@@ -1836,7 +1836,7 @@ bool MCStringConvertToBytes(MCStringRef self, MCStringEncoding p_encoding, bool 
             }
         }
         break;
-#if !defined(__LINUX__) && !defined(__ANDROID__)
+#if !defined(__ISO_8859_1__)
     case kMCStringEncodingISO8859_1:
         break;
 #endif
@@ -5041,6 +5041,27 @@ bool MCStringConvertToSysString(MCStringRef p_string, char *& r_system_string, s
         return false;
     r_byte_count = t_byte_count;
     return true;
+}
+
+bool
+MCStringCreateWithSysString(const char *p_sys_string,
+                            MCStringRef & r_string)
+{
+	/* Count the number of chars */
+	size_t p_byte_count;
+	for (p_byte_count = 0; p_sys_string[p_byte_count] != '\0'; ++p_byte_count);
+
+	if (0 == p_byte_count)
+	{
+		r_string = MCValueRetain(kMCEmptyString);
+		return true;
+	}
+
+	return MCStringCreateWithBytes((const byte_t *) p_sys_string,
+	                               p_byte_count,
+	                               kMCStringEncodingUTF8,
+	                               false, /* is_external_rep */
+	                               r_string);
 }
 #endif
 

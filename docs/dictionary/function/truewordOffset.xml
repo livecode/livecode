@@ -71,7 +71,7 @@
 		<function tag="codeunitOffset">codeunitOffset function</function>
 		<function tag="byteOffset">byteOffset function</function>
 		<property tag="wholeMatches">wholeMatches property</property>
-		<keyword tag="trueword">trueword keyword</keyword>
+		<keyword tag="trueWord">trueword keyword</keyword>
 	</references>
 
 	<description>

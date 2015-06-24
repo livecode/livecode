@@ -1557,8 +1557,11 @@ Boolean MCU_parsepoints(MCPoint *&points, uindex_t &noldpoints, MCStringRef data
 			MCU_realloc((char **)&points, npoints, npoints + 1, sizeof(MCPoint));
 		points[npoints].x = i1;
 		points[npoints++].y = i2;
-        if (l > 0 && (sptr - *t_data) > 2 && *(sptr - 1) == '\n'
-		        && *(sptr - 2) == '\n')
+        // At this point we have skipped any CRs, so if the previous two chars
+        // are CR (and there is room for two previous CRs) then we append a
+        // 'non-point' to indicate a break in path. This ensures we preserve
+        // a trailing 'non-point'.
+		if (sptr - *t_data >= 2 && *(sptr - 1) == '\n' && *(sptr - 2) == '\n')
 		{
 			if (npoints + 1 > noldpoints)
 				MCU_realloc((char **)&points, npoints, npoints + 1, sizeof(MCPoint));
@@ -2306,14 +2309,30 @@ void MCU_fix_path(MCStringRef in, MCStringRef& r_out)
 				{ //search backword for '/'
 					if (*bptr == '/')
 					{
-						/* Delete "/xxx/.." component */
-						t_length -= strmove(bptr, fptr + 3, true);
-						fptr = bptr;
+                        // Leave "/../.." unchanged
+                        if (fptr-bptr == 3 && bptr[1] == '.' && bptr[2] == '.')
+                        {
+                            // Ignore this "/../" sequence and move to next component
+                            fptr += 3;
+                            break;
+                        }
+                        
+                        /* Delete "/xxx/.." component */
+                        t_length -= strmove(bptr, fptr + 3, true);
+                        fptr = bptr;
 						break;
 					}
 					else if (bptr == t_unicode_str)
 					{
-						/* Delete "xxx/../" component */
+                        // Leave "../../" unchanged
+                        if (fptr-bptr == 2 && bptr[0] == '.' && bptr[1] == '.')
+                        {
+                            // Ignore this "/../" sequence and move to next component
+                            fptr += 3;
+                            break;
+                        }
+                        
+                        /* Delete "xxx/../" component */
 						t_length -= strmove (bptr, fptr + 4, true);
 						fptr = bptr;
 						break;

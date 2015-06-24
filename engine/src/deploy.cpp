@@ -619,7 +619,9 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 	// Now, if we are not licensed for a target, then its an error.
 	bool t_is_licensed;
 	t_is_licensed = false;
-	if (m_platform == PLATFORM_WINDOWS)
+    if (MCnoui && MClicenseparameters . license_class == kMCLicenseClassCommunity)
+        t_is_licensed = true;
+	else if (m_platform == PLATFORM_WINDOWS)
 		t_is_licensed = (MClicenseparameters . deploy_targets & kMCLicenseDeployToWindows) != 0;
 	else if (m_platform == PLATFORM_MACOSX)
 		t_is_licensed = (MClicenseparameters . deploy_targets & kMCLicenseDeployToMacOSX) != 0;
@@ -1015,13 +1017,10 @@ void MCIdeDmgBuild::exec_ctxt(MCExecContext& ctxt)
 
 	/////////
 
+    // SN-2015-06-19: [[ CID 100294 ]] Check the return value.
     MCAutoStringRef t_string;
-	if (!ctxt . HasError())
-    {
-        /* UNCHECKED */ ctxt . EvalExprAsStringRef(m_filename, EE_UNDEFINED, &t_string);
-    }
-
-	if (!ctxt . HasError())
+	if (!ctxt . HasError()
+            && ctxt . EvalExprAsStringRef(m_filename, EE_UNDEFINED, &t_string))
 	{
         MCAutoPointer<char> temp;
         if (!MCStringConvertToCString(*t_string, &temp))

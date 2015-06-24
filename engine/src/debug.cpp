@@ -299,14 +299,20 @@ void MCB_trace(MCExecContext &ctxt, uint2 line, uint2 pos)
 
 void MCB_break(MCExecContext &ctxt, uint2 line, uint2 pos)
 {
-	MCB_prepmessage(ctxt, MCM_trace_break, line, pos, 0);
+    // We hit a breakpoint - end all modal loops
+    MCscreen->breakModalLoops();
+    
+    MCB_prepmessage(ctxt, MCM_trace_break, line, pos, 0);
 }
 
 bool s_in_trace_error = false;
 
 bool MCB_error(MCExecContext &ctxt, uint2 line, uint2 pos, uint2 id)
 {
-	// OK-2009-03-25: [[Bug 7517]] - The crash described in this bug report is probably caused by a stack overflow. This overflow is due to
+    // An unhandled error has been thrown - end all modal loops
+    MCscreen->breakModalLoops();
+    
+    // OK-2009-03-25: [[Bug 7517]] - The crash described in this bug report is probably caused by a stack overflow. This overflow is due to
 	// errors being thrown in the IDE (or in this case GLX2) component of the debugger. This should prevent traceError from recursing.
 	if (s_in_trace_error)
 		return false;

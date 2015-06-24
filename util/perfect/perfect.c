@@ -303,7 +303,7 @@ char   *purpose;
   {
     fprintf(stderr, "malloc of %d failed for %s\n", 
 	    len, purpose);
-    exit(SUCCESS);
+    exit(1);
   }
   return x;
 }
@@ -606,26 +606,26 @@ hashform *form;
     if ((key1->len_k == key2->len_k) &&
 	!memcmp(key1->name_k, key2->name_k, (size_t)key1->len_k))
     {
-      fprintf(stderr, "perfect.c: Duplicates keys!  %.*s\n",
+      fprintf(stderr, "perfect.c: Duplicate keys!  %.*s\n",
 	      key1->len_k, key1->name_k);
-      exit(SUCCESS);
+      exit(1);
     }
     break;
   case INT_HT:
     if (key1->hash_k == key2->hash_k)
     {
       fprintf(stderr, "perfect.c: Duplicate keys!  %.8lx\n", key1->hash_k);
-      exit(SUCCESS);
+      exit(2);
     }
     break;
   case AB_HT:
     fprintf(stderr, "perfect.c: Duplicate keys!  %.8lx %.8lx\n",
 	    key1->a_k, key1->b_k);
-    exit(SUCCESS);
+    exit(3);
     break;
   default:
     fprintf(stderr, "perfect.c: Illegal hash type %ld\n", (ub4)form->hashtype);
-    exit(SUCCESS);
+    exit(4);
     break;
   }
 }
@@ -1098,7 +1098,7 @@ hashform *form;                                           /* user directives */
       "perfect.c: Can't deal with (A,B) having A bigger than twice \n");
     fprintf(stderr,
       "  the smallest power of two greater or equal to any legal hash.\n");
-    exit(SUCCESS);
+    exit(1);
   }
 
   /* allocate working memory */
@@ -1117,7 +1117,7 @@ hashform *form;                                           /* user directives */
     if (form->perfect == MINIMAL_HP)
     {
       printf("fatal error: Cannot find perfect hash for user (A,B) pairs\n");
-      exit(SUCCESS);
+      exit(1);
     }
     else
     {
@@ -1131,7 +1131,7 @@ hashform *form;                                           /* user directives */
       if (!perfect(*tabb, tabh, tabq, *blen, *smax, scramble, nkeys, form))
       {
 	printf("fatal error: Cannot find perfect hash for user (A,B) pairs\n");
-	exit(SUCCESS);
+	exit(1);
       }
     }
   }
@@ -1870,7 +1870,7 @@ gencode *final;
   if (a == b)
   {
     printf("fatal error: duplicate keys\n");
-    exit(SUCCESS);
+    exit(1);
   }
 
   final->used = 1;
@@ -1934,7 +1934,7 @@ hashform *form;
   if (a == b || a == c || b == c)
   {
     printf("fatal error: duplicate keys\n");
-    exit(SUCCESS);
+    exit(1);
   }
   
   /* one instruction */
@@ -2062,7 +2062,7 @@ hashform *form;
   }
 
   printf("fatal error: hexthree\n");
-  exit(SUCCESS);
+  exit(1);
 }
 
 
@@ -2101,7 +2101,7 @@ gencode *final;
   if (a==b || a==c || a==d || b==c || b==d || c==d)
   {
     printf("fatal error: Duplicate keys\n");
-    exit(SUCCESS);
+    exit(1);
   }
 
   final->used = 1;
@@ -2435,7 +2435,7 @@ gencode *final;
   if (i==UB4BITS || j==UB4BITS || k==UB4BITS)
   {
     printf("Fatal error: hexfour(), i %ld j %ld k %ld\n", i,j,k);
-    exit(SUCCESS);
+    exit(1);
   }
 
   /* now try the four cases */
@@ -2625,7 +2625,7 @@ gencode *final;
   }
 
   printf("fatal error: bug in hexfour!\n");
-  exit(SUCCESS);
+  exit(1);
   return;
 }
 

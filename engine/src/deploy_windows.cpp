@@ -52,7 +52,7 @@ typedef unsigned short WORD;
 // FG-2014-09-17: [[ Bugfix 13463 ]] "long" is 64 bits on Linux x86_64
 typedef uint32_t DWORD;
 typedef int32_t LONG;
-
+typedef uintptr_t LONG_PTR;
 
 #define IMAGE_DOS_SIGNATURE                 0x5A4D      // MZ
 #define IMAGE_OS2_SIGNATURE                 0x454E      // NE

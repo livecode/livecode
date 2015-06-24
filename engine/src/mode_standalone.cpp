@@ -504,23 +504,22 @@ IO_stat MCDispatch::startup(void)
     MCAutoStringRef t_env;
     if (MCS_getenv(MCSTR("TEST_STACK"), &t_env) && !MCStringIsEmpty(*t_env))
     {
-        MCStack *t_stack;
-        IO_handle t_stream;
-        t_stream = MCS_open(*t_env, kMCOpenFileModeRead, False, False, 0);
+	    MCStack *t_stack;
+	    if (MCdispatcher->loadfile(*t_env, t_stack) != IO_NORMAL)
+	    {
+		    MCresult->sets("failed to read TEST_STACK stackfile");
+		    return IO_ERROR;
+	    }
 
-		if (t_stream == nil || MCdispatcher -> readstartupstack(t_stream, t_stack) != IO_NORMAL)
-		{
-			MCresult -> sets("failed to read standalone stack");
-			return IO_ERROR;
-		}
-		MCS_close(t_stream);
-		
 		MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
-		
-		t_stack -> extraopen(false);
-		
+
 		MCModeResetCursors();
 		MCImage::init();
+
+		MCallowinterrupts = False;
+
+		t_stack -> extraopen(false);
+
 		send_startup_message();
 		if (!MCquit)
 			t_stack -> open();
