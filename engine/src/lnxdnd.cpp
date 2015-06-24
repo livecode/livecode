@@ -338,6 +338,10 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
                 t_dnd_done = true;
                 break;
             }
+
+		default:
+			/* Ignore this event */
+			break;
         }
         
         gdk_event_free(t_event);

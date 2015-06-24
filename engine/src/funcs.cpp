@@ -1455,6 +1455,9 @@ void MCChunkOffset::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     case CT_CODEUNIT:
         MCStringsEvalCodeunitOffset(ctxt, *t_chunk, *t_string, t_start, r_value . uint_value);
         break;
+	default:
+		MCUnreachable();
+		break;
 	}
     
     r_value . type = kMCExecValueTypeUInt;

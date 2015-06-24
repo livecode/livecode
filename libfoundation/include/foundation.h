@@ -3038,7 +3038,7 @@ struct MCPickleVariantInfo
     MCPickleRecordInfo *k##Type##PickleInfo = &__##Type##_PickleImp::__info; \
     MCPickleRecordFieldInfo __##Type##_PickleImp::__fields[] = {
 #define MC_PICKLE_END_RECORD() \
-        { kMCPickleFieldTypeNone, nil, 0 } \
+	{ kMCPickleFieldTypeNone, nil, 0, 0, nil } \
     };
 
 #define MC_PICKLE_BEGIN_VARIANT(Type, Kind) \

@@ -3812,6 +3812,9 @@ void MCObject::SetRectPoint(MCExecContext& ctxt, bool effective, Properties whic
 	case P_TOP_RIGHT:
 		point . x -= t_rect . width;
 		break;
+	default:
+		MCUnreachable();
+		break;
 	}
 
 	t_rect . x = point . x;
@@ -3878,6 +3881,9 @@ void MCObject::SetRectValue(MCExecContext& ctxt, bool effective, Properties whic
 		if (!getflag(F_LOCK_LOCATION))
 			t_rect . y += (t_rect . height - value) >> 1;
 		t_rect . height = MCU_max(value, 1);
+		break;
+	default:
+		MCUnreachable();
 		break;
 	}
 
