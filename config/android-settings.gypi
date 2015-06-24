@@ -20,6 +20,33 @@
 		'-fno-rtti',
 	],
 	
+	'target_conditions':
+	[
+		[
+			'silence_warnings == 0',
+			{
+				'cflags':
+				[
+					'-Wall',
+					'-Wextra',
+					'-Wno-unused-parameter',	# Just contributes build noise
+				],
+				
+				'cflags_c':
+				[
+					'-Werror=declaration-after-statement',	# Ensure compliance with C89
+				],
+			},
+			{
+				'cflags':
+				[
+					'-w',						# Disable warnings
+					'-fpermissive',				# Be more lax with old code
+				],
+			},
+		],
+	],
+	
 	'configurations':
 	{
 		'Debug':
