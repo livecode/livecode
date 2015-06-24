@@ -115,7 +115,7 @@ bool MCPDFPrintingDevice::get_filename(const char* p_utf8_path, char *& r_system
 	if (t_success)
 	{
 		t_shortpath = (LPWSTR)calloc(t_shortpath_length + 1, sizeof(WCHAR));
-		GetShortPathName(t_wstring, t_shortpath, t_shortpath_length);
+		GetShortPathNameW(t_wstring, t_shortpath, t_shortpath_length);
 	}
 
 	if (t_success)

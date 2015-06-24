@@ -5653,14 +5653,29 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         
         // SN-2014-08-08: [[ Bug 13026 ]] Fix ported from 6.7
-        if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless))
+        if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless)
+                // SN-2015-04-20: [[ Bug 14295 ]] If we are here, we are a standalone
+                // so the resources folder is the redirected engine folder
+                || MCNameIsEqualTo(p_type, MCN_resources, kMCCompareCaseless))
         {
+            MCAutoStringRef t_engine_folder;
             uindex_t t_last_slash;
             
             if (!MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash))
                 t_last_slash = MCStringGetLength(MCcmd);
-            
-            return MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), r_folder) ? True : False;
+
+            if (!MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), &t_engine_folder))
+                return False;
+
+            if (MCNameIsEqualTo(p_type, MCN_resources, kMCCompareCaseless))
+            {
+                if (!MCS_apply_redirect(*t_engine_folder, false, r_folder))
+                    return False;
+            }
+            else
+                r_folder = MCValueRetain(*t_engine_folder);
+
+            return True;
         }
         
         if (MCS_mac_specialfolder_to_mac_folder(MCNameGetString(p_type), t_mac_folder, t_domain))
@@ -6365,30 +6380,17 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         struct stat buf;
         if (lstat(tildepath, &buf) != 0 || !S_ISLNK(buf.st_mode))
             return tildepath;
-        int4 size;
         char *newname = new char[PATH_MAX + 2];
-        if ((size = readlink(tildepath, newname, PATH_MAX)) < 0)
+
+        // SN-2015-06-05: [[ Bug 15432 ]] Use realpath to solve the symlink.
+        if (realpath(tildepath, newname) == NULL)
         {
-            delete tildepath;
+            // Clear the memory in case of failure
             delete newname;
-            return NULL;
+            newname = NULL;
         }
+
         delete tildepath;
-        newname[size] = '\0';
-        if (newname[0] != '/')
-        {
-            char *fullpath = new char[strlen(path) + strlen(newname) + 2];
-            strcpy(fullpath, path);
-            char *sptr = strrchr(fullpath, '/');
-            if (sptr == NULL)
-                sptr = fullpath;
-            else
-                sptr++;
-            strcpy(sptr, newname);
-            delete newname;
-            newname = MCS_resolvepath(fullpath);
-            delete fullpath;
-        }
         return newname;
 #endif /* MCS_resolvepath_dsk_mac */
         if (MCStringGetLength(p_path) == 0)
@@ -6446,32 +6448,29 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (!MCS_mac_is_link(*t_fullpath))
             return MCStringCopy(*t_fullpath, r_resolved_path);
         
-        MCAutoStringRef t_newname;
-        if (!MCS_mac_readlink(*t_fullpath, &t_newname))
-            return false;
-        
-        // IM - Should we really be using the original p_path parameter here?
-        // seems like we should use the computed t_fullpath value.
-        if (MCStringGetCharAtIndex(*t_newname, 0) != '/')
-        {
-            MCAutoStringRef t_resolved;
-            
-            uindex_t t_last_component;
-            uindex_t t_path_length;
-            
-            if (MCStringLastIndexOfChar(p_path, '/', MCStringGetLength(p_path), kMCStringOptionCompareExact, t_last_component))
-                t_last_component++;
-            else
-                t_last_component = 0;
-            
-            if (!MCStringMutableCopySubstring(p_path, MCRangeMake(0, t_last_component), &t_resolved) ||
-                !MCStringAppend(*t_resolved, *t_newname))
-                return false;
-            
-            return MCStringCopy(*t_resolved, r_resolved_path);
-        }
+        // SN-2015-06-08: [[ Bug 15432 ]] Use realpath to solve the symlink
+        MCAutoStringRefAsUTF8String t_utf8_path;
+        bool t_success;
+        t_success = true;
+
+        if (t_success)
+            t_success = t_utf8_path . Lock(*t_fullpath);
+
+        char *t_resolved_path;
+
+        t_resolved_path = realpath(*t_utf8_path, NULL);
+
+        // If the does not exist, then realpath will fail: we want to
+        // return something though, so we keep the input path (as it
+        // is done for desktop).
+        if (t_resolved_path != NULL)
+            t_success = MCStringCreateWithBytes((const byte_t*)t_resolved_path, strlen(t_resolved_path), kMCStringEncodingUTF8, false, r_resolved_path);
         else
-            return MCStringCopy(*t_newname, r_resolved_path);
+            t_success = false;
+
+        MCMemoryDelete(t_resolved_path);
+
+        return t_success;
     }
 	
     virtual IO_handle DeployOpen(MCStringRef p_path, intenum_t p_mode)
@@ -8164,7 +8163,13 @@ MCSystemInterface *MCDesktopCreateMacSystem(void)
 static bool fetch_ae_as_fsref_list(MCListRef &r_list)
 {
 	AEDescList docList; //get a list of alias records for the documents
-	long count;
+    long count;
+    // SN-2015-04-14: [[ Bug 15105 ]] We want to return at least an empty list
+    //  in any case where we return true
+    // SN-2014-10-07: [[ Bug 13587 ]] We store the paths in a list
+    MCAutoListRef t_list;
+    /* UNCHECKED */ MCListCreateMutable('\n', &t_list);
+    
 	if (AEGetParamDesc(aePtr, keyDirectObject,
 					   typeAEList, &docList) == noErr
 		&& AECountItems(&docList, &count) == noErr && count > 0)
@@ -8177,9 +8182,6 @@ static bool fetch_ae_as_fsref_list(MCListRef &r_list)
 		Size rSize;      //returned size, atual size of the docName
 		long item;
 		// get a FSSpec record, starts from count==1
-        // SN-2014-10-07: [[ Bug 13587 ]] We store the paths in a list
-        MCAutoListRef t_list;
-        /* UNCHECKED */ MCListCreateMutable('\n', &t_list);
         
 		for (item = 1; item <= count; item++)
 		{
@@ -8196,10 +8198,8 @@ static bool fetch_ae_as_fsref_list(MCListRef &r_list)
                 MCListAppend(*t_list, *t_fullpathname);
 		}
 		AEDisposeDesc(&docList);
-        
-        return MCListCopy(*t_list, r_list);
 	}
-	return true;
+    return MCListCopy(*t_list, r_list);
 }
 
 OSErr MCS_fsspec_to_fsref(const FSSpec *p_fsspec, FSRef *r_fsref)

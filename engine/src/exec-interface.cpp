@@ -514,8 +514,17 @@ void MCInterfaceEvalScreenLoc(MCExecContext& ctxt, MCStringRef& r_string)
     MCDisplay const *t_displays;
     MCscreen->getdisplays(t_displays, false);
     integer_t x, y;
-    x = t_displays->viewport.x + (t_displays->viewport.width >> 1);
-    y = t_displays->viewport.y + (t_displays->viewport.height >> 1);
+    
+    if (t_displays)
+    {
+        x = t_displays->viewport.x + (t_displays->viewport.width >> 1);
+        y = t_displays->viewport.y + (t_displays->viewport.height >> 1);
+    }
+    else
+    {
+        // No-UI mode
+        x = y = 0;
+    }
     
     if (MCStringFormat(r_string, "%d,%d", x, y))
         return;
@@ -2789,7 +2798,14 @@ void MCInterfaceExecSubwindow(MCExecContext& ctxt, MCStack *p_target, MCStack *p
 	MCtrace = False;
 	if (p_mode >= WM_MODELESS)
 		MCRedrawForceUnlockScreen();
-
+    
+	Boolean added = False;
+	if (MCnexecutioncontexts < MAX_CONTEXTS)
+	{
+		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
+		added = True;
+	}
+    
 	p_target->openrect(p_rect, (Window_mode)p_mode, p_parent, (Window_position)p_at, (Object_pos)p_aligned);
 
 	if (MCwatchcursor)
@@ -2799,7 +2815,12 @@ void MCInterfaceExecSubwindow(MCExecContext& ctxt, MCStack *p_target, MCStack *p
 		if (MCmousestackptr != NULL && MCmousestackptr != p_target)
 			MCmousestackptr->resetcursor(True);
 	}
+    
+	if (added)
+		MCnexecutioncontexts--;
+    
 	MCtrace = oldtrace;
+    
 	if (p_mode > WM_TOP_LEVEL)
 		MCdefaultstackptr = olddefault;
 }
@@ -3263,14 +3284,15 @@ void MCInterfaceExecPutIntoField(MCExecContext& ctxt, MCStringRef p_string, int 
     if (p_chunk . mark . changed != 0)
     {
         MCAutoStringRef t_string;
-        if (!MCStringMutableCopy((MCStringRef)p_chunk . mark . text, &t_string))
+        // SN-2015-05-05: [[ Bug 15315 ]] Changing the whole text of a field
+        //  will delete all the settings of the field, so we only append the
+        //  chars which were added (similar to MCExecResolveCharsOfField).
+        if (!MCStringCopySubstring((MCStringRef)p_chunk . mark . text, MCRangeMake(p_chunk.mark.start - p_chunk.mark.changed, p_chunk.mark.changed), &t_string))
             return;
         
-        // in this case the chunk indices will be correct whatever the preposition
-        /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_chunk . mark . start, p_chunk . mark . finish - p_chunk . mark . start), p_string);
-        
-        p_chunk . object -> setstringprop(ctxt, p_chunk . part_id, P_TEXT, False, *t_string);
-        return;
+        //  The insertion position of the added chunk delimiters is right before
+        //  the insertion position for the string.
+        t_field -> settextindex(p_chunk .part_id, p_chunk.mark.start - 1, p_chunk.mark.start - 1, *t_string, False);
     }
      
     integer_t t_start, t_finish;

@@ -1142,6 +1142,11 @@ static Exec_stat MCHandleClearTouches(void *context, MCParameter *p_parameters)
 	MCscreen -> wait(1/25.0, False, False);
 	static_cast<MCScreenDC *>(MCscreen) -> clear_touches();
 	MCEventQueueClearTouches();
+
+    // PM-2015-03-16: [[ Bug 14333 ]] Make sure the object that triggered a mouse down msg is not focused, as this stops later mouse downs from working
+    if (MCtargetptr != nil)
+        MCtargetptr -> munfocus();
+
 	return ES_NORMAL;
 }
 #endif /* MCHandleClearTouchesAndroid */

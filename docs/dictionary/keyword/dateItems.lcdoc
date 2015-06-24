@@ -28,7 +28,7 @@ The <dateItems> format is a comma-separated list of numbers:
         * the hour in 24-hour time
         * the minute
         * the second
-        * the numeric day of the week where Sunday is day 1, Monday is day 2, and so forth
+        * the numeric day of the week where Monday is day 1, Tuesday is day 2, and so forth
 
 The <dateItems> does not change depending on the user's settings, so you can use it (or  the <seconds> <format>) to store a date and time with a <stack>, in an invariant form that won't change.
 

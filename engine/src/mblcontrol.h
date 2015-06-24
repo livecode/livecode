@@ -320,7 +320,7 @@ enum MCNativeControlInputContentType
 
 enum MCNativeControlInputDataDetectorType
 {
-    kMCNativeControlInputDataDetectorTypeNone = 0,
+    kMCNativeControlInputDataDetectorTypeNoneBit = 0,
     kMCNativeControlInputDataDetectorTypeWebUrlBit,
     kMCNativeControlInputDataDetectorTypeEmailAddressBit,
     kMCNativeControlInputDataDetectorTypePhoneNumberBit,
@@ -328,6 +328,7 @@ enum MCNativeControlInputDataDetectorType
     kMCNativeControlInputDataDetectorTypeCalendarEventBit,
     kMCNativeControlInputDataDetectorTypeAllBit,
 	
+	kMCNativeControlInputDataDetectorTypeNone = 1 << kMCNativeControlInputDataDetectorTypeNoneBit,
     kMCNativeControlInputDataDetectorTypeWebUrl = 1 << kMCNativeControlInputDataDetectorTypeWebUrlBit,
     kMCNativeControlInputDataDetectorTypeEmailAddress = 1 << kMCNativeControlInputDataDetectorTypeEmailAddressBit,
     kMCNativeControlInputDataDetectorTypePhoneNumber = 1 << kMCNativeControlInputDataDetectorTypePhoneNumberBit,

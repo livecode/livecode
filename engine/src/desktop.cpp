@@ -392,7 +392,11 @@ void MCPlatformHandleMouseUp(MCPlatformWindowRef p_window, uint32_t p_button, ui
 		MCbuttonstate &= ~(1 << p_button);
 		
 		MCeventtime = MCPlatformGetEventTime();
-		
+    
+        // PM-2015-03-30: [[ Bug 15091 ]] When we "go to card X" on mouseDown, MCclickstackptr becomes nil because of MCStack::close().  
+        if (MCclickstackptr == nil)
+            MCclickstackptr = MCmousestackptr;
+        
 		MCObject *t_target;
 		t_target = t_menu != nil ? t_menu : MCclickstackptr;
 		
@@ -874,11 +878,14 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 
                     map_key_to_engine(s_pending_key_down -> key_code, s_pending_key_down -> mapped_codepoint, s_pending_key_down -> unmapped_codepoint, t_mapped_key_code, &t_mapped_char);
                     
+                    // SN-2014-11-03: [[ Bug 13832 ]] Enqueue the event, instead of firing it now (we are still in the NSApplication's keyDown).
+                    // PM-2015-05-15: [[ Bug 15372]] call MCKeyMessageAppend before wkdown to prevent a crash if 'wait with messages' is used (since s_pending_key_down might become nil after wkdown
+                    MCKeyMessageAppend(s_pending_key_up, s_pending_key_down -> key_code, s_pending_key_down -> mapped_codepoint, s_pending_key_down -> unmapped_codepoint);
+                    
                     MCdispatcher -> wkdown(p_window, *t_mapped_char, t_mapped_key_code);
                     
-                    // SN-2014-11-03: [[ Bug 13832 ]] Enqueue the event, instead of firing it now (we are still in the NSApplication's keyDown).
-                    MCKeyMessageAppend(s_pending_key_up, s_pending_key_down -> key_code, s_pending_key_down -> mapped_codepoint, s_pending_key_down -> unmapped_codepoint);
                     MCKeyMessageNext(s_pending_key_down);
+                
                 }
 				return;
 			}
@@ -909,11 +916,17 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
     //    this wrong key is replaced by this new 'combined' char
     // if the key pressed fails to generate a char:
     //    this wrong key is replaced by the dead-key char
-    if (t_was_compositing)
+    // SN-2015-04-10: [[ Bug 14205 ]] When using the dictation, there is no
+    //  pending key down, but the composition was still on though.
+    if (t_was_compositing && s_pending_key_down)
     {
         s_pending_key_down -> key_code = (uint1)*p_chars;
         s_pending_key_down -> mapped_codepoint = (uint1)*p_chars;
         s_pending_key_down -> unmapped_codepoint = (uint1)*p_chars;
+        
+        // SN-2015-05-18: [[ Bug 15385 ]] Enqueue the first char in the sequence
+        //  here - that will be the same as keyDown.
+        MCKeyMessageAppend(s_pending_key_up, (uint1)*p_chars, (uint1)*p_chars, (uint1)*p_chars);
     }
     
 	// Set the text.	
@@ -933,13 +946,12 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
     // SN-2015-01-20: [[ Bug 14406 ]] If we have a series of pending keys, we have two possibilities:
     //   - typing IME characters: the characters are native, so we use the finsertnew
     //   - typing dead characters: the character, if we arrive here, is > 127
-    if (*p_chars > 127 && s_pending_key_down -> next && MCUnicodeMapToNative(p_chars, 1, t_char[0]))
+    // SN-2015-04-13: [[ Bug 14205 ]] Ensure that s_pending_key_down is not nil
+    if (*p_chars > 127 && s_pending_key_down && s_pending_key_down -> next
+            && MCUnicodeMapToNative(p_chars, 1, t_char[0]))
     {
         MCStringCreateWithNativeChars((const char_t *)t_char, 1, &t_string);
         MCdispatcher -> wkdown(p_window, *t_string, *t_char);
-        // SN-2014-11-03: [[ Bug 13832 ]] Enqueue the event, instead of firing it now (we are still in NSApplication's keyDown).
-        //  We use the mapped codepoint of the message to send, instead of t_char.
-        MCKeyMessageAppend(s_pending_key_up, (MCPlatformKeyCode)*t_char, s_pending_key_down -> next -> mapped_codepoint, (codepoint_t)*t_char);
         
         MCKeyMessageNext(s_pending_key_down);
     }
@@ -952,11 +964,11 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
         uint32_t t_codepoint;
         t_codepoint = MCStringGetCodepointAtIndex(*t_string, 0);
         
-        // SN-2015-01-20: [[ Bug 14406 ]] Same as above: *p_chars > 127 means that we are in IME.
-        //  Use UnicodeMapToNative as well, as it may cause issues with Hiragana, when parts
-        //  of the whole word are individual Kanji as well, and Unicode valid alphanum.
-        //  (they would be appended to the in-process IME string).
-        if (*p_chars > 127 && p_char_count == 1 && MCUnicodeMapToNative(p_chars, 1, t_char[0]))
+        // SN-2015-05-18: [[ Bug 3537 ]] Use p_mark to determine whether we are
+        //  in an IME state
+        // SN-2015-05-05: [[ Bug 15305 ]] Check that s_pending_key_down is not
+        //  nil before trying to use it, and use IME only if p_mark says so.
+        if (s_pending_key_down && !p_mark)
         {
             MCAutoStringRef t_mapped_char;
             MCPlatformKeyCode t_mapped_key_code;
@@ -965,7 +977,14 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 
             MCdispatcher -> wkdown(p_window, *t_string, *p_chars);
 
-            MCKeyMessageAppend(s_pending_key_up, *p_chars, s_pending_key_down -> mapped_codepoint, s_pending_key_down -> unmapped_codepoint);
+            // SN-2015-05-18: [[ Bug 3537 ]] If we were compositing, then we want
+            //  to send the same message for keyUp and keyDown - which might be
+            //  seeveral character-long
+            if (t_was_compositing)
+                MCdispatcher -> wkup(p_window, *t_string, *p_chars);
+            else
+                MCKeyMessageAppend(s_pending_key_up, *p_chars, s_pending_key_down -> mapped_codepoint, s_pending_key_down -> unmapped_codepoint);
+            
             MCKeyMessageNext(s_pending_key_down);
         }
         else

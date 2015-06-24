@@ -10,7 +10,7 @@ SET _ROOT_DIR=C:\Builds\libraries
 SET _INSTALL_DIR=%_ROOT_DIR%\prefix
 SET _WINSDK_ROOT=c:\program files\microsoft sdks\windows\v6.1
 
-SET OPENSSL_VERSION=1.0.1e
+SET OPENSSL_VERSION=1.0.1m
 SET CURL_VERSION=7.21.7
 
 echo "Will build into %_ROOT_DIR%"
@@ -63,6 +63,8 @@ IF EXIST revsecurity.manifest mt -nologo -manifest revsecurity.dll.manifest -out
 
 IF NOT EXIST "%_INSTALL_DIR%\include" mkdir "%_INSTALL_DIR%\include"
 IF NOT EXIST "%_INSTALL_DIR%\lib" mkdir "%_INSTALL_DIR%\lib"
+IF NOT EXIST "%_INSTALL_DIR%\lib\win32" mkdir "%_INSTALL_DIR%\lib\win32"
+IF NOT EXIST "%_INSTALL_DIR%\lib\win32\i386" mkdir "%_INSTALL_DIR%\lib\win32\i386"
 
 XCOPY /E /Y inc32\* "%_INSTALL_DIR%\include"
 COPY /Y revsecurity.dll "%_INSTALL_DIR%\lib\win32\i386"
@@ -70,6 +72,7 @@ COPY /Y revsecurity.lib "%_INSTALL_DIR%\lib\win32\i386"
 COPY /Y revsecurity.exp "%_INSTALL_DIR%\lib\win32\i386"
 COPY /Y out32\libeay32.lib "%_INSTALL_DIR%\lib\win32\i386"
 COPY /Y out32\ssleay32.lib "%_INSTALL_DIR%\lib\win32\i386"
+COPY /Y revsecurity.def "%_INSTALL_DIR%\lib\win32\i386"
 
 REM ############################################################################
 REM #

@@ -2412,4 +2412,14 @@ void MCWidgetModuleFinalize(void)
 	kMCWidgetSizeFormatErrorTypeInfo = nil;
 }
 
+extern "C" bool com_livecode_widget_Initialize(void)
+{
+    return true;
+}
+
+extern "C" void com_livecode_widget_Finalize(void)
+{
+	;
+}
+
 ////////////////////////////////////////////////////////////////////////////////

@@ -328,6 +328,35 @@ Boolean MCS_getspecialfolder(MCNameRef p_type, MCStringRef& r_path)
     return MCS_pathfromnative(*t_path, r_path);
 }
 
+// SN-2015-01-16: [[ Bug 14295 ]] Will return an error on Server
+void MCS_getresourcesfolder(bool p_standalone, MCStringRef &r_resources_folder)
+{
+#ifdef _SERVER
+    r_resources_folder = MCValueRetain(kMCEmptyString);
+#else
+    // Add a check, in case MCS_getspecialfolder failed.
+    if (p_standalone)
+    {
+        if (!MCS_getspecialfolder(MCN_resources, r_resources_folder))
+            r_resources_folder = MCValueRetain(kMCEmptyString);
+    }
+    else
+    {
+        // If we are not in a standalone, we return the folder in which sits 'this stack'
+        uindex_t t_slash_index;
+        MCStringRef t_stack_filename;
+        t_stack_filename = MCdefaultstackptr -> getfilename();
+
+        if (!MCStringLastIndexOfChar(t_stack_filename, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_slash_index))
+            t_slash_index = MCStringGetLength(t_stack_filename);
+
+        // If we can't copy the name, then we assign an empty string.
+        if (!MCStringCopySubstring(t_stack_filename, MCRangeMake(0, t_slash_index), r_resources_folder))
+            r_resources_folder = MCValueRetain(kMCEmptyString);
+    }
+#endif
+}
+
 void MCS_doalternatelanguage(MCStringRef p_script, MCStringRef p_language)
 {
     MCsystem -> DoAlternateLanguage(p_script, p_language);
@@ -1770,11 +1799,25 @@ MCSysModuleHandle MCS_loadmodule(MCStringRef p_filename)
 {
     MCAutoStringRef t_resolved_path;
     MCAutoStringRef t_native_path;
-    
-    if (!(MCS_resolvepath(p_filename, &t_resolved_path) && MCS_pathtonative(*t_resolved_path, &t_native_path)))
+
+    // SN-2015-06-08: [[ ResolvePath ]] Loading system libraries (such as
+    //  libpango-1.0.so.6, from linuxstubs.cpp) will fail if we turn the library
+    //  name into an invalid absolute name constructed from the current folder.
+    //  We consider any leaf path as a system library.
+    if (MCStringContains(p_filename, MCSTR("/"), kMCStringOptionCompareExact))
+    {
+        if (!MCS_resolvepath(p_filename, &t_resolved_path))
+            return NULL;
+    }
+    else
+    {
+        t_resolved_path = p_filename;
+    }
+
+    if (!MCS_pathtonative(*t_resolved_path, &t_native_path))
         return NULL;
-    
-	return MCsystem -> LoadModule(*t_native_path);
+
+    return MCsystem -> LoadModule(*t_native_path);
 }
 
 MCSysModuleHandle MCS_resolvemodulesymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)

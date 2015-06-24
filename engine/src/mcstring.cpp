@@ -206,6 +206,7 @@ MCNameRef MCN_html;
 MCNameRef MCN_browser;
 MCNameRef MCN_command_line;
 MCNameRef MCN_development;
+MCNameRef MCN_development_cmdline;
 MCNameRef MCN_helper_application;
 MCNameRef MCN_installer;
 MCNameRef MCN_mobile;
@@ -283,6 +284,7 @@ MCNameRef MCN_desktop;
 MCNameRef MCN_documents;
 MCNameRef MCN_engine;
 MCNameRef MCN_fonts;
+MCNameRef MCN_resources;
 MCNameRef MCN_home;
 MCNameRef MCN_start;
 //MCNameRef MCN_system;
@@ -645,6 +647,7 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("browser", MCN_browser);
 	/* UNCHECKED */ MCNameCreateWithCString("command line", MCN_command_line);
 	/* UNCHECKED */ MCNameCreateWithCString("development", MCN_development);
+    /* UNCHECKED */ MCNameCreateWithCString("development command line", MCN_development_cmdline);
 	/* UNCHECKED */ MCNameCreateWithCString("helper application", MCN_helper_application);
 	/* UNCHECKED */ MCNameCreateWithCString("installer", MCN_installer);
 	/* UNCHECKED */ MCNameCreateWithCString("mobile", MCN_mobile);
@@ -721,6 +724,7 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("desktop", MCN_desktop);
 	/* UNCHECKED */ MCNameCreateWithCString("documents", MCN_documents);
 	/* UNCHECKED */ MCNameCreateWithCString("engine", MCN_engine);
+    /* UNCHECKED */ MCNameCreateWithCString("resources", MCN_resources);
 	/* UNCHECKED */ MCNameCreateWithCString("fonts", MCN_fonts);
 	/* UNCHECKED */ MCNameCreateWithCString("home", MCN_home);
 	/* UNCHECKED */ MCNameCreateWithCString("start", MCN_start);
@@ -1082,6 +1086,7 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCN_browser);
 	MCNameDelete(MCN_command_line);
 	MCNameDelete(MCN_development);
+    MCNameDelete(MCN_development_cmdline);
 	MCNameDelete(MCN_helper_application);
 	MCNameDelete(MCN_installer);
 	MCNameDelete(MCN_mobile);
@@ -1158,6 +1163,7 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCN_desktop);
 	MCNameDelete(MCN_documents);
 	MCNameDelete(MCN_engine);
+    MCNameDelete(MCN_resources);
 	MCNameDelete(MCN_fonts);
 	MCNameDelete(MCN_home);
 	MCNameDelete(MCN_start);

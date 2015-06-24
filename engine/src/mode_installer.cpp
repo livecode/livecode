@@ -1214,6 +1214,10 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 			MCresult -> sets("failed to read project stack");
 			return false;
 		}
+            
+        // MW-2012-10-25: [[ Bug ]] Make sure we set these to the main stack so that
+        //   the startup script and such work.
+        MCstaticdefaultstackptr = MCdefaultstackptr = self -> stack;
 	break;
 
 	case kMCCapsuleSectionTypeDigest:
@@ -1229,6 +1233,37 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 			return false;
 		}
 		break;
+            
+    case kMCCapsuleSectionTypeStartupScript:
+    {
+        char *t_script;
+        t_script = new char[p_length];
+        if (IO_read(t_script, p_length, p_stream) != IO_NORMAL)
+        {
+            MCresult -> sets("failed to read startup script");
+            return false;
+        }
+            
+        // Execute the startup script at this point since we have loaded
+        // all stacks.
+        MCAutoStringRef t_script_str;
+        /* UNCHECKED */ MCStringCreateWithCString(t_script, &t_script_str);
+        self -> stack -> domess(*t_script_str);
+
+        delete[] t_script;
+        }
+        break;
+			
+    case kMCCapsuleSectionTypeAuxiliaryStack:
+    {
+        MCStack *t_aux_stack;
+        if (MCdispatcher -> readfile(NULL, NULL, p_stream, t_aux_stack) != IO_NORMAL)
+        {
+            MCresult -> sets("failed to read auxillary stack");
+            return false;
+        }
+    }
+        break;
 
 	default:
 		MCresult -> sets("unrecognized section encountered");
@@ -1501,6 +1536,12 @@ MCNameRef MCModeGetEnvironment(void)
 uint32_t MCModeGetEnvironmentType(void)
 {
 	return kMCModeEnvironmentTypeInstaller;
+}
+
+// SN-2015-01-16: [[ Bug 14295 ]] Installer-mode is standalone
+void MCModeGetResourcesFolder(MCStringRef &r_resources_folder)
+{
+    MCS_getresourcesfolder(true, r_resources_folder);
 }
 
 // In standalone mode, we are never licensed.

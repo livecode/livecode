@@ -479,14 +479,13 @@ static MCExecEnumTypeInfo _kMCNativeControlInputContentTypeTypeInfo =
 
 static MCExecSetTypeElementInfo _kMCNativeControlInputDataDetectorTypeElementInfo[] =
 {
-    { "", kMCNativeControlInputDataDetectorTypeNone },
-    { "none", kMCNativeControlInputDataDetectorTypeNone },
-    { "link", kMCNativeControlInputDataDetectorTypeWebUrl },
-    { "address", kMCNativeControlInputDataDetectorTypeMapAddress },
-    { "phone number", kMCNativeControlInputDataDetectorTypePhoneNumber },
-    { "email", kMCNativeControlInputDataDetectorTypeEmailAddress },
-    { "calendar event", kMCNativeControlInputDataDetectorTypeCalendarEvent },
-    { "all", kMCNativeControlInputDataDetectorTypeAll },
+    { "none", kMCNativeControlInputDataDetectorTypeNoneBit },
+    { "link", kMCNativeControlInputDataDetectorTypeWebUrlBit },
+    { "address", kMCNativeControlInputDataDetectorTypeMapAddressBit },
+    { "phone number", kMCNativeControlInputDataDetectorTypePhoneNumberBit },
+    { "email", kMCNativeControlInputDataDetectorTypeEmailAddressBit },
+    { "calendar event", kMCNativeControlInputDataDetectorTypeCalendarEventBit },
+    { "all", kMCNativeControlInputDataDetectorTypeAllBit },
 };
 
 static MCExecSetTypeInfo _kMCNativeControlInputDataDetectorTypeTypeInfo =

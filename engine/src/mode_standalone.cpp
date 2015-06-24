@@ -64,7 +64,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 #include "resolution.h"
-#include "script.h"
+#include "libscript/script.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -147,6 +147,7 @@ extern IO_stat readheader(IO_handle& stream, char *version);
 extern void send_startup_message(bool p_do_relaunch = true);
 
 extern void add_simulator_redirect(const char *);
+extern void add_ios_fontmap(const char *);
 
 // This structure contains the information we collect from reading in the
 // project.
@@ -204,7 +205,26 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 		delete t_redirect;
 	}
 	break;
-			
+            
+    case kMCCapsuleSectionTypeFontmap:
+    {
+        char *t_fontmap;
+        t_fontmap = new char[p_length];
+        if (IO_read(t_fontmap, p_length, p_stream) != IO_NORMAL)
+        {
+            MCresult -> sets("failed to read fontmap");
+            return false;
+        }
+        
+#ifdef TARGET_SUBPLATFORM_IPHONE
+        // The font mapping is only viable (and needed) on iOS
+        add_ios_fontmap(t_fontmap);
+#endif
+        
+        delete[] t_fontmap;
+    }
+    break;
+        
 	case kMCCapsuleSectionTypeStack:
 		if (MCdispatcher -> readstartupstack(p_stream, self -> stack) != IO_NORMAL)
 		{
@@ -321,8 +341,8 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
             return false;
         }
         
-        extern bool MCEngineAddExtensionFromModule(MCStringRef name, MCScriptModuleRef module);
-        if (!MCEngineAddExtensionFromModule(MCNameGetString(MCScriptGetNameOfModule(t_module)), t_module))
+        extern bool MCEngineAddExtensionFromModule(MCScriptModuleRef module);
+        if (!MCEngineAddExtensionFromModule(t_module))
         {
             MCScriptReleaseModule(t_module);
             return false;
@@ -526,23 +546,22 @@ IO_stat MCDispatch::startup(void)
     MCAutoStringRef t_env;
     if (MCS_getenv(MCSTR("TEST_STACK"), &t_env) && !MCStringIsEmpty(*t_env))
     {
-        MCStack *t_stack;
-        IO_handle t_stream;
-        t_stream = MCS_open(*t_env, kMCOpenFileModeRead, False, False, 0);
+	    MCStack *t_stack;
+	    if (MCdispatcher->loadfile(*t_env, t_stack) != IO_NORMAL)
+	    {
+		    MCresult->sets("failed to read TEST_STACK stackfile");
+		    return IO_ERROR;
+	    }
 
-		if (t_stream == nil || MCdispatcher -> readstartupstack(t_stream, t_stack) != IO_NORMAL)
-		{
-			MCresult -> sets("failed to read standalone stack");
-			return IO_ERROR;
-		}
-		MCS_close(t_stream);
-		
 		MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
-		
-		t_stack -> extraopen(false);
-		
+
 		MCModeResetCursors();
 		MCImage::init();
+
+		MCallowinterrupts = False;
+
+		t_stack -> extraopen(false);
+
 		send_startup_message();
 		if (!MCquit)
 			t_stack -> open();
@@ -792,6 +811,12 @@ uint32_t MCModeGetEnvironmentType(void)
 	if (MCnofiles)
 		return kMCModeEnvironmentTypeHelper;
 	return kMCModeEnvironmentTypeDesktop;
+}
+
+// SN-2015-01-16: [[ Bug 14295 ]] Get the standalone, redirected resources folder.
+void MCModeGetResourcesFolder(MCStringRef &r_resources_folder)
+{
+    MCS_getresourcesfolder(true, r_resources_folder);
 }
 
 // In standalone mode, we are never licensed.

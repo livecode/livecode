@@ -167,24 +167,26 @@ bool MCStringsSplit(MCStringRef p_string, MCStringRef p_separator, MCStringRef*&
 
 void MCStringsEvalToLower(MCExecContext& ctxt, MCStringRef p_string, MCStringRef& r_lower)
 {
-	MCAutoStringRef t_string;
-	if (MCStringMutableCopy(p_string, &t_string) &&
-		MCStringLowercase(*t_string, kMCSystemLocale) &&
-		MCStringCopy(*t_string, r_lower))
-		return;
-
-	ctxt.Throw();
+	MCStringRef t_string = nil;
+	if (!MCStringMutableCopy(p_string, t_string) ||
+		!MCStringLowercase(t_string, kMCSystemLocale) ||
+		!MCStringCopyAndRelease(t_string, r_lower))
+	{
+		MCValueRelease(t_string);
+		ctxt.Throw();
+	}
 }
 
 void MCStringsEvalToUpper(MCExecContext& ctxt, MCStringRef p_string, MCStringRef& r_upper)
 {
-	MCAutoStringRef t_string;
-	if (MCStringMutableCopy(p_string, &t_string) &&
-		MCStringUppercase(*t_string, kMCSystemLocale) &&
-		MCStringCopy(*t_string, r_upper))
-		return;
-
-	ctxt.Throw();
+	MCStringRef t_string = nil;
+	if (!MCStringMutableCopy(p_string, t_string) ||
+		!MCStringUppercase(t_string, kMCSystemLocale) ||
+		!MCStringCopyAndRelease(t_string, r_upper))
+	{
+		MCValueRelease(t_string);
+		ctxt.Throw();
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1393,17 +1395,14 @@ bool MCStringsMerge(MCExecContext& ctxt, MCStringRef p_format, MCStringRef& r_st
 				MCerrorlock++;
 				if (t_is_expression)
 				{
-					if (ctxt . GetHandler() != nil)
-						ctxt.GetHandler()->eval(t_ctxt, *t_expression, &t_value);
-					else
-						ctxt.GetHandlerList()->eval(t_ctxt, *t_expression, &t_value);
+                    // SN-2015-06-03: [[ Bug 11277 ]] MCHandler::eval refactored
+                    ctxt.eval(t_ctxt, *t_expression, &t_value);
 				}
 				else
-				{
-					if (ctxt . GetHandler() != nil)
-						ctxt.GetHandler()->doscript(t_ctxt, *t_expression);
-					else
-						ctxt.GetHandlerList()->doscript(t_ctxt, *t_expression);
+                {
+                    // SN-2015-06-03: [[ Bug 11277 ]] MCHandler::doscript refactored
+                    ctxt.doscript(t_ctxt, *t_expression, 0, 0);
+
 					t_value = MCresult->getvalueref();
                     // SN-2014-08-11: [[ Bug 13139 ]] The result must be emptied after a doscript()
                     ctxt . SetTheResultToEmpty();
@@ -1447,19 +1446,29 @@ void MCStringsEvalMerge(MCExecContext& ctxt, MCStringRef p_format, MCStringRef& 
 
 bool MCStringsConcatenate(MCStringRef p_left, MCStringRef p_right, MCStringRef& r_result)
 {
-	MCAutoStringRef t_string;
-	return MCStringMutableCopy(p_left, &t_string) &&
-		MCStringAppend(*t_string, p_right) &&
-		MCStringCopy(*t_string, r_result);
+	MCStringRef t_string = nil;
+	if (!MCStringMutableCopy(p_left, t_string) ||
+		!MCStringAppend(t_string, p_right) ||
+		!MCStringCopyAndRelease(t_string, r_result))
+	{
+		MCValueRelease(t_string);
+		return false;
+	}
+	return true;
 }
 
 bool MCStringsConcatenateWithChar(MCStringRef p_left, MCStringRef p_right, unichar_t p_char, MCStringRef& r_result)
 {
-	MCAutoStringRef t_string;
-	return MCStringMutableCopy(p_left, &t_string) &&
-		MCStringAppendChar(*t_string, p_char) &&
-		MCStringAppend(*t_string, p_right) &&
-		MCStringCopy(*t_string, r_result);
+	MCStringRef t_string = nil;
+	if (!MCStringMutableCopy(p_left, t_string) ||
+		!MCStringAppendChar(t_string, p_char) ||
+		!MCStringAppend(t_string, p_right) ||
+		!MCStringCopyAndRelease(t_string, r_result))
+	{
+		MCValueRelease(t_string);
+		return false;
+	}
+	return true;
 }
 
 void MCStringsEvalConcatenate(MCExecContext& ctxt, MCStringRef p_left, MCStringRef p_right, MCStringRef& r_result)
@@ -1475,10 +1484,15 @@ void MCStringsEvalConcatenate(MCExecContext& ctxt, MCStringRef p_left, MCStringR
 
 bool MCDataConcatenate(MCDataRef p_left, MCDataRef p_right, MCDataRef& r_result)
 {
-	MCAutoDataRef t_string;
-	return MCDataMutableCopy(p_left, &t_string) &&
-    MCDataAppend(*t_string, p_right) &&
-    MCDataCopy(*t_string, r_result);
+	MCDataRef t_string = nil;
+	if (!MCDataMutableCopy(p_left, t_string) ||
+		!MCDataAppend(t_string, p_right) ||
+		!MCDataCopyAndRelease(t_string, r_result))
+	{
+		MCValueRelease(t_string);
+		return false;
+	}
+	return true;
 }
 
 void MCStringsEvalConcatenate(MCExecContext& ctxt, MCDataRef p_left, MCDataRef p_right, MCDataRef& r_result)
@@ -1822,13 +1836,15 @@ void MCStringsEvalOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p
 {
 	MCStringOptions t_options = ctxt.GetStringComparisonType();
     uindex_t t_offset;
+    MCRange t_char_range, t_cu_range;
+    // AL-2015-05-07: [[ Bug 15327 ]] Start offset is grapheme offset not codeunit, so map to grapheme offset first.
+    MCStringMapIndices(p_string, kMCCharChunkTypeGrapheme, MCRangeMake(0, p_start_offset), t_cu_range);
     // AL-2014-05-27: [[ Bug 12517 ]] Offset should be 0 for an empty input string
 	if (MCStringIsEmpty(p_chunk) || !MCStringFirstIndexOf(p_string, p_chunk, p_start_offset, t_options, t_offset))
 		r_result = 0;
 	else
     {
         // We want to get the grapheme length, not the codeunit one
-        MCRange t_cu_range, t_char_range;
         t_cu_range . offset = 0;
         t_cu_range . length = t_offset;
         MCStringUnmapIndices(p_string, kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);

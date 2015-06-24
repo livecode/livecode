@@ -293,6 +293,37 @@ IO_stat MCParagraph::loadattrs(IO_handle stream, uint32_t version)
 
 		if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_LIST_INDEX) != 0)
 			t_stat = IO_read_uint2(&attrs -> list_index, stream);
+        
+        // SN-2015-05-01: [[ Bug 15175 ]] Load the paragraph's tab alignments
+        if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_TAB_ALIGNMENTS) != 0)
+        {
+            intenum_t *t_alignments;
+            uint16_t t_nalignments;
+            t_alignments = NULL;
+            
+            t_stat = IO_read_uint2(&t_nalignments, stream);
+            
+            if (t_stat == IO_NORMAL)
+            {
+                if (!MCMemoryAllocate(sizeof(intenum_t) * t_nalignments, t_alignments))
+                    t_stat = IO_ERROR;
+                
+                for (uint16_t i = 0; i < t_nalignments && t_stat == IO_NORMAL; ++i)
+                {
+                    int1 t_alignment;
+                    if ((t_stat = IO_read_int1(&t_alignment, stream)) == IO_NORMAL)
+                        t_alignments[i] = t_alignment;
+                }
+                
+                if (t_stat == IO_NORMAL)
+                {
+                    attrs -> alignments_count = t_nalignments;
+                    attrs -> alignments = t_alignments;
+                }
+                else
+                    MCMemoryDeallocate(t_alignments);
+            }
+        }
 	}
 	
 	// Finally skip to the end of the record for future modifications.
@@ -356,7 +387,8 @@ IO_stat MCParagraph::saveattrs(IO_handle stream)
 	//   add any more data.
 	// MW-2012-11-13: [[ ParaMetadata ]] Write out the extended flags word if we have metadata.
 	// MW-2012-11-13: [[ ParaListIndex ]] Write out the extended flags word if we have list index.
-	if (t_stat == IO_NORMAL && (attrs -> flags & (PA_HAS_HIDDEN | PA_HAS_METADATA | PA_HAS_LIST_INDEX)) != 0)
+    // SN-2015-05-01: [[ Bug 15175 ]] AdUse refactored function
+	if (t_stat == IO_NORMAL && hasextraflag())
 		t_stat = IO_write_uint2(attrs -> flags >> 16, stream);
 
 	// MW-2012-11-13: [[ ParaMetadata ]] Write out the metadata, if any.
@@ -367,8 +399,24 @@ IO_stat MCParagraph::saveattrs(IO_handle stream)
 	// MW-2012-11-13: [[ ParaListIndex ]] Write out the list index, if any.
 	if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_LIST_INDEX) != 0)
 		t_stat = IO_write_uint2(attrs -> list_index, stream);
+    
+    // SN-2015-05-01: [[ Bug 15175 ]] Save the paragraph tabAlign property
+    if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_TAB_ALIGNMENTS) != 0)
+    {
+        t_stat = IO_write_uint2(attrs -> alignments_count, stream);
+        for (uint2 i = 0; i < attrs -> alignments_count && t_stat == IO_NORMAL; ++i)
+            t_stat = IO_write_int1((int1)attrs->alignments[i], stream);
+    }
 	
 	return t_stat;
+}
+
+bool MCParagraph::hasextraflag(void)
+{
+    if (attrs == NULL)
+        return false;
+    
+    return (attrs -> flags > UINT16_MAX);
 }
 
 uint32_t MCParagraph::measureattrs(void)
@@ -418,7 +466,7 @@ uint32_t MCParagraph::measureattrs(void)
 	
 	// MW-2012-03-19: [[ HiddenText ]] If the hidden prop is set, then we need a second flags
 	//   word.
-	if ((attrs -> flags & (PA_HAS_HIDDEN | PA_HAS_METADATA | PA_HAS_LIST_INDEX)) != 0)
+	if (hasextraflag())
 		t_size += 2;
 	
 	// MW-2012-11-13: [[ ParaMetadata ]] If the paragraph has metadata then add that on.
@@ -429,6 +477,11 @@ uint32_t MCParagraph::measureattrs(void)
 	// MW-2012-11-13: [[ ParaListIndex ]] If the paragraph has a list index, then add that on.
 	if ((attrs -> flags & PA_HAS_LIST_INDEX) != 0)
 		t_size += 2;
+    
+    // SN-2015-05-01: [[ Bug 15175 ]] Need 2 bytes for the uint16_t size, and 1
+    //  byte per alignment.
+    if ((attrs -> flags & PA_HAS_TAB_ALIGNMENTS) != 0)
+        t_size += 2 + attrs->alignments_count;
 
 	return t_size;
 }

@@ -39,7 +39,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 #include "exec-interface.h"
-#include "systhreads.h"
 
 
 #define GRAPHIC_EXTRA_MITERLIMIT		(1UL << 0)
@@ -89,14 +88,14 @@ MCPropertyInfo MCGraphic::kProperties[] =
     DEFINE_RW_OBJ_RECORD_PROPERTY(P_GRADIENT_FILL, MCGraphic, GradientFill)
     DEFINE_RW_OBJ_RECORD_PROPERTY(P_GRADIENT_STROKE, MCGraphic, GradientStroke)
     
-    DEFINE_RW_OBJ_LIST_PROPERTY(P_MARKER_POINTS, LinesOfPoint, MCGraphic, MarkerPoints)
+    DEFINE_RW_OBJ_LIST_PROPERTY(P_MARKER_POINTS, LegacyPoints, MCGraphic, MarkerPoints)
     DEFINE_RW_OBJ_LIST_PROPERTY(P_DASHES, ItemsOfUInt, MCGraphic, Dashes)
     // AL-2014-09-23: [[ Bug 13521 ]] Mark non-effective versions of properties as such
-    DEFINE_RW_OBJ_NON_EFFECTIVE_LIST_PROPERTY(P_POINTS, LinesOfPoint, MCGraphic, Points)
-    DEFINE_RW_OBJ_NON_EFFECTIVE_LIST_PROPERTY(P_RELATIVE_POINTS, LinesOfPoint, MCGraphic, RelativePoints)
+    DEFINE_RW_OBJ_NON_EFFECTIVE_LIST_PROPERTY(P_POINTS, LegacyPoints, MCGraphic, Points)
+    DEFINE_RW_OBJ_NON_EFFECTIVE_LIST_PROPERTY(P_RELATIVE_POINTS, LegacyPoints, MCGraphic, RelativePoints)
     // SN-2014-06-24: [[ rect_point ]] allow effective [relative] points as read-only
-    DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(P_POINTS, LinesOfPoint, MCGraphic, Points)
-    DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(P_RELATIVE_POINTS, LinesOfPoint, MCGraphic, RelativePoints)
+    DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(P_POINTS, LegacyPoints, MCGraphic, Points)
+    DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(P_RELATIVE_POINTS, LegacyPoints, MCGraphic, RelativePoints)
 };
 
 MCObjectPropertyTable MCGraphic::kPropertyTable =
@@ -2162,7 +2161,6 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
         
         // MM-2014-08-20: [[ Bug 13230 ]] Marker points are offset as they are drawn which causes issues with multi-threading.
         //  Could be refactored so that the offsetting happens in a separate buffer, but for the moment just put locks around it.
-        MCThreadMutexLock(MCgraphicmutex);
 		for (i = 0 ; i < nrealpoints ; i++)
 		{
 			if (realpoints[i].x != MININT2)
@@ -2190,7 +2188,6 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		if (last != MAXUINT2)
 			MCU_offset_points(markerpoints, nmarkerpoints,
 			                  -realpoints[last].x, -realpoints[last].y);
-        MCThreadMutexUnlock(MCgraphicmutex);
 	}
 	MCStringRef slabel = getlabeltext();
 	if (flags & F_G_SHOW_NAME &&  !MCStringIsEmpty(slabel))

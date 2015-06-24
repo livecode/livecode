@@ -25,7 +25,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define UNLICENSED_USING_LIMIT 50
 #define UNLICENSED_INSERT_LIMIT 10
 
-#define DEFAULT_TEXT_FONT "helvetica"
+// SN-2015-05-14: [[ Bug 14116 ]] Make the default font a correct PostScript font
+#define DEFAULT_TEXT_FONT "Helvetica"
 #define DEFAULT_TEXT_SIZE 14
 #define DEFAULT_TAB_SPACING 8
 #define DEFAULT_BORDER 2

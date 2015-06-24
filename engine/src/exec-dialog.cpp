@@ -439,8 +439,18 @@ void MCDialogExecCustomAnswerDialog(MCExecContext &ctxt, MCNameRef p_stack, MCNa
 			t_parent_stack = MCdefaultstackptr;
 		else
 			t_parent_stack = MCtopstackptr;
-
+        
+        Boolean added = False;
+        if (MCnexecutioncontexts < MAX_CONTEXTS)
+        {
+            MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
+            added = True;
+        }
+        
 		t_success = ES_NORMAL == t_stack->openrect(t_parent_stack->getrect(), p_sheet ? WM_SHEET : WM_MODAL, p_sheet ? t_parent_stack : nil, WP_DEFAULT, OP_NONE);
+        
+        if (added)
+            MCnexecutioncontexts--;
 	}
 
 	MCtrace = t_old_trace;
@@ -700,7 +710,17 @@ void MCDialogExecCustomAskDialog(MCExecContext& ctxt, MCNameRef p_stack, MCNameR
 		else
 			t_parent_stack = MCtopstackptr;
 		
+        Boolean added = False;
+        if (MCnexecutioncontexts < MAX_CONTEXTS)
+        {
+            MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
+            added = True;
+        }
+        
 		t_success = ES_NORMAL == t_stack->openrect(t_parent_stack->getrect(), p_as_sheet ? WM_SHEET : WM_MODAL, p_as_sheet ? t_parent_stack : nil, WP_DEFAULT, OP_NONE);
+        
+        if (added)
+            MCnexecutioncontexts--;
 	}
 	
 	MCtrace = t_old_trace;

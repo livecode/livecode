@@ -69,6 +69,10 @@ extern void setup_simulator_hooks(void);
 extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
 extern bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace);
 
+// SN-2015-02-16: [[ iOS Font mapping ]] We want to clean the generated font map
+//   when closing the engine.
+extern void ios_clear_font_mapping(void);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 Boolean tripleclick = False;
@@ -224,6 +228,8 @@ Boolean MCScreenDC::open(void)
 
 Boolean MCScreenDC::close(Boolean p_force)
 {
+    // SN-2015-02-16: [[ iOS Font Name ]] Clear the font mapping array.
+    ios_clear_font_mapping();
 	return True;
 }
 
@@ -408,8 +414,6 @@ static void MCScreenDCDoSetBeepSound(void *p_env)
 		s_system_sound = t_new_sound;
 		s_system_sound_name = MCValueRetain(*t_sound_path);
 	}
-	else
-		MCValueRelease(*t_sound_path);
 	
 	env -> result = t_status == noErr;
 }

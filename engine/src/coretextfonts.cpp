@@ -32,6 +32,49 @@
 #import <ApplicationServices/ApplicationServices.h>
 #endif
 
+#ifdef TARGET_SUBPLATFORM_IPHONE
+// Stored as a global variable
+static MCArrayRef s_font_map = nil;
+
+// Populate the VariableArray s_font_map
+// from the input mapping list (<mapped name>=<PostScript name>).
+// Each <PostScript name> is storred keyed as <mapped name>
+void add_ios_fontmap(const char* p_mapping)
+{
+    if (s_font_map == nil)
+    {
+        if (!MCArrayCreateMutable(s_font_map))
+            return;
+    }
+
+    MCAutoStringRef t_mapping;
+    if (!MCStringCreateWithCString(p_mapping, &t_mapping))
+        return false;
+
+    uindex_t t_separator;
+    if (!MCStringFirstIndexOfChar(*t_mapping, '=', 0, kMCStringOptionCompareExact, t_separator))
+        return;
+    
+    MCAutoStringRef t_from, t_to;
+    MCNewAutoNameRef t_from_as_name;
+    if (!MCStringCopySubstring(*t_mapping, MCRangeMake(0, t_separator), &t_from)
+            || !MCNameCreate(*t_from, &t_from_as_name)
+            || !MCStringCopySubstring(*t_mapping, MCRangeMake(t_separator + 1, UINDEX_MAX), &t_to))
+        return;
+
+    MCArrayStoreValue(s_font_map, false, *t_from_as_name, *t_to);
+}
+
+void ios_clear_font_mapping(void)
+{
+    if (s_font_map != nil)
+    {
+        MCValueRelease(s_font_map);
+        s_font_map = nil;
+    }
+}
+#endif
+
 static void *coretext_font_create_with_name_and_size(MCStringRef p_name, uint32_t p_size)
 {
 	/*CFStringRef t_name;
@@ -50,9 +93,33 @@ static void *coretext_font_create_with_name_and_size(MCStringRef p_name, uint32_
     
     bool t_success;
     t_success = true;
+
+    // SN-2015-02-16: [[ iOS Font mapping ]] On iOS, try to fetch the mapped
+    //  if one exists.
+    //  Defaults to the given name if no one matches, or on MacOS
+    MCAutoStringRef t_mapped_name;
+    
+#ifdef TARGET_SUBPLATFORM_IPHONE
+    if (t_success && s_font_map != nil)
+    {
+        MCValueRef t_entry;
+        MCNewAutoNameRef t_mapped_name_as_name;
+        
+        // SN-2015-04-29: [[ iOS Fontmap ]] Use the given name, if we can't
+        //  fetch it from the font mappings.
+        if (MCNameCreate(p_name, &t_mapped_name_as_name)
+                && MCArrayFetchValue(s_font_map, false, *t_mapped_name_as_name, t_entry))
+            // We only store strings in s_font_map
+            t_mapped_name = (MCStringRef)t_entry;
+        else
+            t_mapped_name = p_name;
+    }
+    else
+#endif
+        t_mapped_name = p_name;
     
     MCAutoStringRefAsCFString t_cf_name;
-    t_success = t_cf_name . Lock(p_name);
+    t_success = t_cf_name . Lock(*t_mapped_name);
     
     CFDictionaryRef t_attributes;
     t_attributes = NULL;
@@ -72,9 +139,9 @@ static void *coretext_font_create_with_name_and_size(MCStringRef p_name, uint32_
 //            kCTFontFamilyNameAttribute,
         };
         CFTypeRef t_values[] = {
+            //*t_cf_name,
             *t_cf_name,
-            *t_cf_name,
-            *t_cf_name,
+            //*t_cf_name,
         };
         t_attributes = CFDictionaryCreate(NULL,
                                           (const void **)&t_keys, (const void **)&t_values,
@@ -90,14 +157,12 @@ static void *coretext_font_create_with_name_and_size(MCStringRef p_name, uint32_
         t_descriptor = CTFontDescriptorCreateWithAttributes(t_attributes);
         t_success = t_descriptor != NULL;
     }
-    
+
     CTFontRef t_font;
     t_font = NULL;
     if (t_success)
         t_font = CTFontCreateWithFontDescriptor(t_descriptor, p_size, NULL);
-    
-    CFStringRef t_font_name = CTFontCopyFullName(t_font);
-    
+
     if (t_descriptor != NULL)
         CFRelease(t_descriptor);
     if (t_attributes != NULL)

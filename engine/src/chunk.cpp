@@ -3054,7 +3054,6 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
             MCMarkedText t_new_mark;
             t_new_mark . text = nil;
             t_new_mark . start = 0;
-            t_new_mark . finish = MAXUINT4;
             
             bool t_success = true;
             
@@ -3077,6 +3076,8 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
                     return;
                 }
                 t_new_mark . text = MCValueRetain(*t_text_str);
+                // AL-2015-04-23: [[ Bug 15267 ]] Set the correct finish for the mark.
+                t_new_mark . finish = MCStringGetLength(*t_text_str);
             }
             else
             {
@@ -3096,6 +3097,8 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
                     return;
                 }
                 t_new_mark . text = MCValueRetain(*t_data);
+                // AL-2015-04-23: [[ Bug 15267 ]] Set the correct finish for the mark. 
+                t_new_mark . finish = MCDataGetLength(*t_data);
             }
             
             mark(ctxt, false, false, t_new_mark);
@@ -4214,7 +4217,9 @@ static MCPropertyInfo *lookup_object_property(const MCObjectPropertyTable *p_tab
 bool MCChunk::getsetprop(MCExecContext &ctxt, Properties which, MCNameRef index, Boolean effective, bool p_is_get_operation, MCExecValue &r_value)
 {
     MCObjectChunkPtr t_obj_chunk;
-    if (evalobjectchunk(ctxt, false, false, t_obj_chunk) != ES_NORMAL)
+    // SN-2015-05-05: [[ Bug 13314 Reopen ]] We force the chunk delimiter
+    //  existence when setting a string value.
+    if (evalobjectchunk(ctxt, false, !p_is_get_operation, t_obj_chunk) != ES_NORMAL)
         return false;
     
     MCPropertyInfo *t_info;

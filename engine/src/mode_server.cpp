@@ -261,6 +261,13 @@ uint32_t MCModeGetEnvironmentType(void)
 	return kMCModeEnvironmentTypeServer;
 }
 
+// SN-2015-01-16: [[ Bug 14295 ]] Not implemented for server
+void MCModeGetResourcesFolder(MCStringRef &r_resources_folder)
+{
+    // Not implemented on server
+    r_resources_folder = MCValueRetain(kMCEmptyString);
+}
+
 // In standalone mode, we are never licensed.
 bool MCModeGetLicensed(void)
 {
