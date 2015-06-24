@@ -132,16 +132,6 @@ static void full_main(int argc, char *argv[])
         const char *optarg = (argi + 1 < argc) && 0 != strncmp(argv[argi+1], "--", 2) ? argv[argi+1] : NULL;
         if (!end_of_args)
         {
-            if (0 == strcmp(opt, "--order"))
-            {
-                DependencyMode = 1;
-                continue;
-            }
-            if (0 == strcmp(opt, "--changed-order"))
-            {
-                DependencyMode = 2;
-                continue;
-            }
             if (0 == strcmp(opt, "--deps"))
             {
                 const char *t_option;
