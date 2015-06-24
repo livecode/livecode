@@ -1750,7 +1750,10 @@ struct DependDependency
     NameRef dependency;
 };
 
-DependencyModeType DependencyMode = kDependencyModeNone;
+extern "C"
+{
+    DependencyModeType DependencyMode = kDependencyModeNone;
+}
 
 static DependMapping *s_depend_mappings;
 static int s_depend_mapping_count;
