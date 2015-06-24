@@ -202,6 +202,8 @@
 								'-lwinmm',
 								'-lwinspool',
 								'-lws2_32',
+								'-lstrmiids',
+								'-lwmvcore',
 								
 								'-lQTMLClient',
 								'-lQTVR',
