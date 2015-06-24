@@ -321,6 +321,7 @@ ANDROID_CC=${CC:-${ANDROID_TOOLCHAIN}clang -target arm-linux-androideabi -march=
 ANDROID_CXX=${CXX:-${ANDROID_TOOLCHAIN}clang -target arm-linux-androideabi -march=armv6 -integrated-as}
 ANDROID_LINK=${LINK:-${ANDROID_TOOLCHAIN}clang -target arm-linux-androideabi -march=armv6 -integrated-as}
 ANDROID_OBJCOPY=${OBJCOPY:-${ANDROID_TOOLCHAIN}objcopy}
+ANDROID_OBJDUMP=${OBJDUMP:-${ANDROID_TOOLCHAIN}objdump}
 ANDROID_STRIP=${STRIP:-${ANDROID_TOOLCHAIN}strip}
 
 if [ -z "${JAVA_SDK}" ] ; then
@@ -370,6 +371,7 @@ case ${OS} in
     export CXX="${ANDROID_CXX}"
     export LINK="${ANDROID_LINK}"
     export OBJCOPY="${ANDROID_OBJCOPY}"
+    export OBJDUMP="${ANDROID_OBJDUMP}"
     export STRIP="${ANDROID_STRIP}"
     invoke_gyp $basic_args "-DOS=${OS}" "-Dtarget_arch=${TARGET_ARCH}" \
                            -Dcross_compile=1 \
