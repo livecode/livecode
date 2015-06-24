@@ -63,8 +63,8 @@ private:
 	char m_strLastError[256];
 
 	// Internal Error Message
-	void Error( TCHAR* pText ){wcscpy((WCHAR *)m_strLastError, pText); };
-	void Error( TCHAR* pText, HRESULT hr){ sprintf(m_strLastError,"%s Error Code:0x%x", pText, hr); };
+	void Error( WCHAR* pText ){wcscpy((WCHAR *)m_strLastError, pText); };
+	void Error( WCHAR* pText, HRESULT hr){ sprintf(m_strLastError,"%s Error Code:0x%x", pText, hr); };
 
 	// Pointer to our tts voice	
 	CComPtr<ISpVoice> m_cpVoice;		

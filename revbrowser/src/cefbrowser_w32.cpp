@@ -16,7 +16,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "core.h"
 
-#include "external.h"
+#include <revolution/external.h>
 
 #include "cefbrowser.h"
 

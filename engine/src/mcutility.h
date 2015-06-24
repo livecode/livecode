@@ -21,6 +21,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <string.h>
 #endif
 
+#include <ctype.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void *memdup(const void *p_src, unsigned int p_src_length);
