@@ -1835,7 +1835,7 @@ static bool DependProcess(NameRef p_module)
         }
     }
     
-    if (DependencyMode == 1)
+    if (DependencyMode == kDependencyModeOrder)
         t_changed = true;
     
     // If we have changed, then emit the source file.
