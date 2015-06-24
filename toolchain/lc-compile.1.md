@@ -7,7 +7,7 @@ lc-compile(1) -- compile LiveCode Builder source code
 
 **lc-compile** [_OPTION_ ...] --outputc _OUTFILE_ [--] _LCBFILE_
 
-**lc-compile** [_OPTION_ ...] --deps [ DEPKIND ] [--] _LCBFILE_ ... _LCBFILE...
+**lc-compile** [_OPTION_ ...] --deps [DEPKIND] [--] _LCBFILE_ ... _LCBFILE_...
 
 ## DESCRIPTION
 
@@ -34,7 +34,7 @@ specified.
   _OUTFILE_, which should be the path to a `.c` file.  If _OUTFILE_ already
   exists, it will be overwritten.
   
-* --deps make:
+* --deps [make]:
   Generate lci file dependencies in make format for the input source files.
 
 * --deps order:
