@@ -29,7 +29,7 @@ extern void InitializeCustomInvokeLists(void);
 
 static int s_is_bootstrap = 0;
 
-extern int DependencyMode;
+extern enum DependencyModeType DependencyMode;
 extern int OutputFileAsC;
 extern int OutputFileAsBytecode;
 
@@ -151,11 +151,11 @@ static void full_main(int argc, char *argv[])
                     t_option = "make";
                 
                 if (0 == strcmp(t_option, "make"))
-                    DependencyMode = 3;
+                    DependencyMode = kDependencyModeMake;
                 else if (0 == strcmp(t_option, "order"))
-                    DependencyMode = 1;
+                    DependencyMode = kDependencyModeOrder;
                 else if (0 == strcmp(t_option, "changed-order"))
-                    DependencyMode = 2;
+                    DependencyMode = kDependencyModeChangedOrder;
                 else
                 {
                     fprintf(stderr, "ERROR: Invalid --deps option '%s'.\n\n",

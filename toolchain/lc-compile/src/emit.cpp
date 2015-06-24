@@ -1750,7 +1750,7 @@ struct DependDependency
     NameRef dependency;
 };
 
-int DependencyMode = 0;
+DependencyModeType DependencyMode = kDependencyModeNone;
 
 static DependMapping *s_depend_mappings;
 static int s_depend_mapping_count;
@@ -1853,33 +1853,13 @@ void DependStart(void)
 
 void DependFinish(void)
 {
-#if 0
-    for(int i = 0; i < s_depend_mapping_count; i++)
-    {
-        const char *t_module_name_string;
-        GetStringOfNameLiteral(s_depend_mappings[i] . module, &t_module_name_string);
-        fprintf(stdout, "%s>%s\n", t_module_name_string, s_depend_mappings[i] . source);
-        fprintf(stdout, "  is_interface = %d\n", s_depend_mappings[i] . is_interface);
-        fprintf(stdout, "  source_time = %ld\n", s_depend_mappings[i] . source_time);
-        fprintf(stdout, "  interface_time = %ld\n", s_depend_mappings[i] . interface_time);
-    }
-    
-    for(int i = 0; i < s_depend_dep_count; i++)
-    {
-        const char *t_module_name_string;
-        const char *t_dependency_name_string;
-        GetStringOfNameLiteral(s_depend_deps[i] . module, &t_module_name_string);
-        GetStringOfNameLiteral(s_depend_deps[i] . dependency, &t_dependency_name_string);
-        fprintf(stdout, "%s:%s\n", t_module_name_string, t_dependency_name_string);
-    }
-#endif
-    
-    if (DependencyMode < 3)
+    if (DependencyMode == kDependencyModeOrder ||
+        DependencyMode == kDependencyModeChangedOrder)
     {
         for(int i = 0; i < s_depend_mapping_count; i++)
             DependProcess(s_depend_mappings[i] . module);
     }
-    else if (DependencyMode == 3)
+    else if (DependencyMode == kDependencyModeMake)
     {
         const char *t_output_file;
         GetOutputFile(&t_output_file);

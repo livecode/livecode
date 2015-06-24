@@ -26,6 +26,14 @@ extern "C" {
 typedef long PositionRef;
 typedef struct File *FileRef;
 
+enum DependencyModeType
+{
+    kDependencyModeNone,
+    kDependencyModeOrder,
+    kDependencyModeChangedOrder,
+    kDependencyModeMake
+};
+    
 void InitializePosition(void);
 void FinalizePosition(void);
 
