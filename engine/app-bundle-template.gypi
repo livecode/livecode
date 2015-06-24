@@ -6,7 +6,15 @@
 		[
 			'OS == "mac" or OS == "ios"',
 			{
-				'mac_bundle': 1,
+				'target_conditions':
+				[
+					[
+						'_type != "none"',
+						{
+							'mac_bundle': 1,
+						},
+					],
+				],
 	
 				'mac_bundle_resources':
 				[
