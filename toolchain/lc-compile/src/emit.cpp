@@ -1814,20 +1814,24 @@ static bool DependProcess(NameRef p_module)
     }
     
     // If any dependent module interfaces are more recent than our interface then
-    // we must recompile.
-    for(int i = 0; i < s_depend_dep_count; i++)
+    // we must recompile. However, if we already know this module needs recompiled,
+    // then we don't need to check.
+    if (!t_changed)
     {
-        if (s_depend_deps[i] . module == p_module)
+        for(int i = 0; i < s_depend_dep_count; i++)
         {
-            DependMapping *t_depend_mapping;
-            if (DependFindMapping(s_depend_deps[i] . dependency, &t_depend_mapping))
-                if (t_depend_mapping -> interface_time > t_mapping -> interface_time)
-                {
-                    const char *t_depend_name;
-                    GetStringOfNameLiteral(s_depend_deps[i] . dependency, &t_depend_name);
-                    Debug_Depend("Recompiling '%s' as dependency '%s' interface newer", t_module_name, t_depend_name);
-                    t_changed = true;
-                }
+            if (s_depend_deps[i] . module == p_module)
+            {
+                DependMapping *t_depend_mapping;
+                if (DependFindMapping(s_depend_deps[i] . dependency, &t_depend_mapping))
+                    if (t_depend_mapping -> interface_time > t_mapping -> interface_time)
+                    {
+                        const char *t_depend_name;
+                        GetStringOfNameLiteral(s_depend_deps[i] . dependency, &t_depend_name);
+                        Debug_Depend("Recompiling '%s' as dependency '%s' interface newer", t_module_name, t_depend_name);
+                        t_changed = true;
+                    }
+            }
         }
     }
     
