@@ -83,6 +83,13 @@ void GetFileOfPosition(long p_position, FileRef *r_file)
         Fatal_InternalInconsistency("Position encoded with invalid file index");
 }
 
+void GetFilenameOfPosition(long p_position, const char **r_filename)
+{
+    FileRef t_file;
+    GetFileOfPosition(p_position, &t_file);
+    GetFilePath(t_file, r_filename);
+}
+
 void GetCurrentPosition(long *r_result)
 {
     *r_result = s_current_position;
@@ -142,6 +149,40 @@ int AddImportedModuleFile(const char *p_name)
     AddFile(t_path);
     
     return 1;
+}
+
+void FindImportedModuleFile(const char *p_name, char** r_module_file)
+{
+    char t_path[4096];
+	FILE *t_file;
+    
+    t_file = NULL;
+    if (ImportedModuleDirCount > 0)
+    {
+		int i;
+        for(i = 0; i < ImportedModuleDirCount; i++)
+        {
+            sprintf(t_path, "%s/%s.lci", ImportedModuleDir[i], p_name);
+            t_file = fopen(t_path, "r");
+            if (t_file != NULL)
+                break;
+        }
+    }
+    else
+    {
+        sprintf(t_path, "%s.lci", p_name);
+        t_file = fopen(t_path, "r");
+    }
+    
+    if (t_file == NULL)
+    {
+        if (ImportedModuleDirCount > 0)
+            sprintf(t_path, "%s/%s.lci", ImportedModuleDir[0], p_name);
+    }
+    else
+        fclose(t_file);
+    
+    *r_module_file = strdup(t_path);
 }
 
 FILE *
@@ -209,7 +250,7 @@ int FileAlreadyAdded(const char *p_filename)
 }
 
 void AddFile(const char *p_filename)
-{	
+{
 	FileRef t_new_file;
 	FileRef *t_last_file_ptr;
 	const char *t_name;
@@ -337,6 +378,14 @@ void SetManifestOutputFile(const char *p_output)
 void SetTemplateFile(const char *p_output)
 {
     s_template_file = p_output;
+}
+
+void GetOutputFile(const char **r_output)
+{
+    if (s_output_bytecode_file != NULL)
+        *r_output = s_output_bytecode_file;
+    else
+        *r_output = s_output_code_file;
 }
 
 FILE *OpenOutputBytecodeFile(const char **r_filename)

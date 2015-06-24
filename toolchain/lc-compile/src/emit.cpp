@@ -24,6 +24,11 @@
 #include "position.h"
 
 #include <stdio.h>
+#include <sys/stat.h>
+
+#ifndef WIN32
+#include <unistd.h>
+#endif
 
 extern "C" int OutputFileAsC;
 int OutputFileAsC = 0;
@@ -158,6 +163,11 @@ extern "C" void OutputWriteI(const char *left, NameRef name, const char *right);
 extern "C" void OutputWriteS(const char *left, const char *string, const char *right);
 
 extern "C" int IsBootstrapCompile(void);
+
+extern "C" void DependStart(void);
+extern "C" void DependFinish(void);
+extern "C" void DependDefineMapping(NameRef module_name, const char *source_file);
+extern "C" void DependDefineDependency(NameRef module_name, NameRef dependency_name);
 
 //////////
 
@@ -1719,3 +1729,253 @@ void OutputEnd(void)
     
     fclose(s_output);
 }
+
+//////////
+
+struct DependMapping
+{
+    NameRef module;
+    const char *source;
+    char *interface;
+    time_t source_time;
+    time_t interface_time;
+    bool is_interface;
+    bool processed;
+    bool changed;
+};
+
+struct DependDependency
+{
+    NameRef module;
+    NameRef dependency;
+};
+
+int DependencyMode = 0;
+
+static DependMapping *s_depend_mappings;
+static int s_depend_mapping_count;
+
+static DependDependency *s_depend_deps;
+static int s_depend_dep_count;
+
+static bool DependFindMapping(NameRef p_module, DependMapping **r_mapping)
+{
+    for(int i = 0; i < s_depend_mapping_count; i++)
+        if (p_module == s_depend_mappings[i] . module)
+        {
+            if (r_mapping != NULL)
+                *r_mapping = &s_depend_mappings[i];
+            return true;
+        }
+    
+    return false;
+}
+
+static bool DependProcess(NameRef p_module)
+{
+    DependMapping *t_mapping;
+    if (!DependFindMapping(p_module, &t_mapping))
+        return false;
+    
+    const char *t_module_name;
+    GetStringOfNameLiteral(p_module, &t_module_name);
+    
+    if (t_mapping -> processed)
+        return t_mapping -> changed;
+    
+    // Mark this module as being processed.
+    t_mapping -> processed = true;
+    
+    // If this module is an interface, then we can't do anything with the info
+    // we've got so skip.
+    if (t_mapping -> is_interface)
+        return false;
+    
+    // If our source is more recent than our interface then we must recompile.
+    bool t_changed;
+    t_changed = t_mapping -> source_time > t_mapping -> interface_time;
+    if (t_changed)
+        Debug_Depend("Recompiling '%s' as source newer than interface", t_module_name);
+    
+    // If any dependent modules need recompiling, we must recompile after.
+    for(int i = 0; i < s_depend_dep_count; i++)
+    {
+        if (s_depend_deps[i] . module == p_module)
+        {
+            // If a dependency has changed, then we must be recompiled.
+            if (DependProcess(s_depend_deps[i] . dependency))
+            {
+                const char *t_depend_name;
+                GetStringOfNameLiteral(s_depend_deps[i] . dependency, &t_depend_name);
+                Debug_Depend("Recompiling '%s' as dependency '%s' changed", t_module_name, t_depend_name);
+                t_changed = true;
+            }
+        }
+    }
+    
+    // If any dependent module interfaces are more recent than our interface then
+    // we must recompile.
+    for(int i = 0; i < s_depend_dep_count; i++)
+    {
+        if (s_depend_deps[i] . module == p_module)
+        {
+            DependMapping *t_depend_mapping;
+            if (DependFindMapping(s_depend_deps[i] . dependency, &t_depend_mapping))
+                if (t_depend_mapping -> interface_time > t_mapping -> interface_time)
+                {
+                    const char *t_depend_name;
+                    GetStringOfNameLiteral(s_depend_deps[i] . dependency, &t_depend_name);
+                    Debug_Depend("Recompiling '%s' as dependency '%s' interface newer", t_module_name, t_depend_name);
+                    t_changed = true;
+                }
+        }
+    }
+    
+    if (DependencyMode == 1)
+        t_changed = true;
+    
+    // If we have changed, then emit the source file.
+    if (t_changed)
+        fprintf(stdout, "%s\n", t_mapping -> source);
+    
+    t_mapping -> changed = t_changed;
+    
+    return t_changed;
+}
+
+void DependStart(void)
+{
+    s_depend_mappings = NULL;
+    s_depend_mapping_count = 0;
+    s_depend_deps = NULL;
+    s_depend_dep_count = 0;
+}
+
+void DependFinish(void)
+{
+#if 0
+    for(int i = 0; i < s_depend_mapping_count; i++)
+    {
+        const char *t_module_name_string;
+        GetStringOfNameLiteral(s_depend_mappings[i] . module, &t_module_name_string);
+        fprintf(stdout, "%s>%s\n", t_module_name_string, s_depend_mappings[i] . source);
+        fprintf(stdout, "  is_interface = %d\n", s_depend_mappings[i] . is_interface);
+        fprintf(stdout, "  source_time = %ld\n", s_depend_mappings[i] . source_time);
+        fprintf(stdout, "  interface_time = %ld\n", s_depend_mappings[i] . interface_time);
+    }
+    
+    for(int i = 0; i < s_depend_dep_count; i++)
+    {
+        const char *t_module_name_string;
+        const char *t_dependency_name_string;
+        GetStringOfNameLiteral(s_depend_deps[i] . module, &t_module_name_string);
+        GetStringOfNameLiteral(s_depend_deps[i] . dependency, &t_dependency_name_string);
+        fprintf(stdout, "%s:%s\n", t_module_name_string, t_dependency_name_string);
+    }
+#endif
+    
+    if (DependencyMode < 3)
+    {
+        for(int i = 0; i < s_depend_mapping_count; i++)
+            DependProcess(s_depend_mappings[i] . module);
+    }
+    else if (DependencyMode == 3)
+    {
+        const char *t_output_file;
+        GetOutputFile(&t_output_file);
+        if (t_output_file == NULL)
+        {
+            for(int i = 0; i < s_depend_mapping_count; i++)
+            {
+                DependMapping *t_module;
+                t_module = &s_depend_mappings[i];
+                
+                fprintf(stdout, "%s:", t_module -> interface);
+                for(int j = 0; j < s_depend_dep_count; j++)
+                {
+                    if (s_depend_deps[j] . module != t_module -> module)
+                        continue;
+                    
+                    DependMapping *t_dependency;
+                    if (!DependFindMapping(s_depend_deps[j] . dependency, &t_dependency))
+                        continue;
+                    
+                    fprintf(stdout, " %s", t_dependency -> interface);
+                }
+                
+                if (!t_module -> is_interface)
+                    fprintf(stdout, " %s", t_module -> source);
+                
+                fprintf(stdout, "\n");
+            }
+        }
+        else
+        {
+            // If we have an output code file we just process the first module
+            // and generate an appropriate make-style depedency list.
+            
+            DependMapping *t_module;
+            t_module = &s_depend_mappings[0];
+            
+            fprintf(stdout, "%s: %s\n", t_module -> interface, t_output_file);
+            for(int j = 0; j < s_depend_dep_count; j++)
+            {
+                if (s_depend_deps[j] . module != t_module -> module)
+                    continue;
+                
+                DependMapping *t_dependency;
+                if (!DependFindMapping(s_depend_deps[j] . dependency, &t_dependency))
+                    continue;
+                
+                fprintf(stdout, "%s: %s\n", t_output_file, t_dependency -> interface);
+            }
+        }
+    }
+}
+
+static time_t time_of_file(const char *p_filename)
+{
+    struct stat t_stat;
+    if (stat(p_filename, &t_stat) == -1)
+        return 0;
+    return t_stat . st_mtime;
+}
+
+void DependDefineMapping(NameRef p_module_name, const char *p_source_file)
+{
+    // Don't add a mapping if already there.
+    if (DependFindMapping(p_module_name, NULL))
+        return;
+    
+    s_depend_mapping_count += 1;
+    s_depend_mappings = (DependMapping *)Reallocate(s_depend_mappings, s_depend_mapping_count * sizeof(DependMapping));
+    
+    const char *t_module_name_string;
+    GetStringOfNameLiteral(p_module_name, &t_module_name_string);
+    
+    char *t_module_interface;
+    FindImportedModuleFile(t_module_name_string, &t_module_interface);
+    
+    time_t t_source_time, t_interface_time;
+    t_source_time = time_of_file(p_source_file);
+    t_interface_time = time_of_file(t_module_interface);
+    
+    s_depend_mappings[s_depend_mapping_count - 1] . module = p_module_name;
+    s_depend_mappings[s_depend_mapping_count - 1] . source = p_source_file;
+    s_depend_mappings[s_depend_mapping_count - 1] . interface = t_module_interface;
+    s_depend_mappings[s_depend_mapping_count - 1] . source_time = t_source_time;
+    s_depend_mappings[s_depend_mapping_count - 1] . interface_time = t_interface_time;
+    s_depend_mappings[s_depend_mapping_count - 1] . is_interface = strcmp(t_module_interface, p_source_file) == 0;
+    s_depend_mappings[s_depend_mapping_count - 1] . processed = false;
+    s_depend_mappings[s_depend_mapping_count - 1] . changed = false;
+}
+
+void DependDefineDependency(NameRef p_module_name, NameRef p_dependency_name)
+{
+    s_depend_dep_count += 1;
+    s_depend_deps = (DependDependency *)Reallocate(s_depend_deps, s_depend_dep_count * sizeof(DependDependency));
+    
+    s_depend_deps[s_depend_dep_count - 1] . module = p_module_name;
+    s_depend_deps[s_depend_dep_count - 1] . dependency = p_dependency_name;
+}
+
