@@ -75,6 +75,23 @@ Debug_Emit(const char *p_format, ...)
 	va_end(t_args);
 }
 
+void
+Debug_Depend(const char *p_format, ...)
+{
+	va_list t_args;
+	
+	if (s_verbose_level < 1)
+		return;
+    
+	va_start(t_args, p_format);
+    
+	fprintf(stderr, "debug: [Depend] ");
+	vfprintf(stderr, p_format, t_args);
+	fprintf(stderr, "\n");
+    
+	va_end(t_args);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void Error_Bootstrap(const char *p_format, ...)
@@ -141,6 +158,9 @@ static void _Error(long p_position, const char *p_message)
 
 static void _Warning(long p_position, const char *p_message)
 {
+    if (IsDependencyCompile())
+        return;
+    
     _PrintPosition(p_position);
     fprintf(stderr, "warning: %s\n", p_message);
 }
@@ -159,6 +179,10 @@ static void _ErrorS(long p_position, const char *p_message, const char *p_string
 static void _WarningS(long p_position, const char *p_message, const char *p_string)
 {
     long t_row, t_column;
+    
+    if (IsDependencyCompile())
+        return;
+    
     GetColumnOfPosition(p_position, &t_column);
     GetRowOfPosition(p_position, &t_row);
     _PrintPosition(p_position);
