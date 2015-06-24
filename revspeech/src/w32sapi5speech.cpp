@@ -97,7 +97,7 @@ bool WindowsSAPI5Narrator::Initialize(void)
 	if(IsInited())
 		return true;
 
-	Error(TEXT(""));	
+	Error(L"");	
 	
 	//sapi init
 	HRESULT hr = S_OK;		

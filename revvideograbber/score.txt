@@ -1,10 +1,0 @@
-bundle revvideograbber	import ../libexternal	support-ppc 10.4.0	support-386 10.4.0	define _MACOSX
-	include ../libexternal/include	compile-c++ src/revvideograbber.cpp	compile-c++ src/qtvideograbber.cpp	compile-objc++ src/qtxvideograbber.mm
-	compile-objc src/rrecapture.m
-	compile-objc++ src/revcapture.mm	compile-plist rsrc/revvideograbber-Info.plist	link-framework Carbon
-	link-framework Cocoa
-	link-framework QuickTime
-	link-framework QTKit
-	link-framework Quartz
-	link-framework CoreVideo
-	link-library external	output revvideograbber

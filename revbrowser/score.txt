@@ -1,2 +1,0 @@
-bundle revbrowser	import ../libexternal	support-ppc 10.2.0	support-386 10.4.0	define _MACOSX	enable c++-exceptions
-	include ../libexternal/include	compile-objc++ src/revbrowser.cpp	compile-objc++ src/osxbrowser.cpp	compile-plist rsrc/revbrowser-Info.plist	link-library external	link-framework Foundation	link-framework Carbon	link-framework Cocoa	link-framework WebKit	output revbrowser

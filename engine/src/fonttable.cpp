@@ -23,7 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 
 #include "object.h"
-#include "block.h"
+#include "MCBlock.h"
 #include "button.h"
 #include "graphic.h"
 #include "group.h"
