@@ -27,6 +27,8 @@
 #define ROWS_PER_FILE 10000
 #define COLUMNS_PER_FILE (COLUMNS_PER_ROW * ROWS_PER_FILE)
 
+#define MAXPATHLEN 4096
+
 static long s_current_position;
 
 void InitializePosition(void)
@@ -120,7 +122,7 @@ void AddImportedModuleDir(const char *p_dir)
 
 int AddImportedModuleFile(const char *p_name)
 {
-    char t_path[4096];
+    char t_path[MAXPATHLEN];
 	FILE *t_file;
     
     t_file = NULL;
@@ -153,7 +155,7 @@ int AddImportedModuleFile(const char *p_name)
 
 void FindImportedModuleFile(const char *p_name, char** r_module_file)
 {
-    char t_path[4096];
+    char t_path[MAXPATHLEN];
 	FILE *t_file;
     
     t_file = NULL;
@@ -189,7 +191,7 @@ FILE *
 OpenImportedModuleFile (const char *p_name,
                         char **r_filename)
 {
-    char t_path[4096];
+    char t_path[MAXPATHLEN];
     FILE *t_file;
 
     if (ImportedModuleDirCount == 0)
