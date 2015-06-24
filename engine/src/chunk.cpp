@@ -2881,7 +2881,15 @@ Exec_stat MCChunk::del(MCExecPoint &ep)
 			}
 			else
 				if (objptr->gettype() == CT_FIELD)
-				{
+                {
+                    // SN-2015-06-24: [[ Bug 15539 ]] It should not be possible to
+                    //  delete char <x> of <function>
+                    if (desttype == DT_FUNCTION && !nochunks())
+                    {
+                        MCeerror->add(EE_CHUNK_DELETEFUNCTIONCHUNK, line, pos);
+                        return ES_ERROR;
+                    }
+
 					MCField *fptr = (MCField *)objptr;
 					if (fieldmark(ep, fptr, parid, start, end, True, False) != ES_NORMAL)
 						return ES_ERROR;
