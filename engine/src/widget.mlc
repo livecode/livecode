@@ -691,7 +691,7 @@ Example:
         // do double click action
     end if
 */
-syntax TheClickCOunt is expression
+syntax TheClickCount is expression
     "the" ( "current" <IsCurrent=true> | <IsCurrent=false> ) "click" "count"
 begin
     MCWidgetGetClickCount(IsCurrent, output)

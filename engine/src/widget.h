@@ -64,6 +64,8 @@ bool MCWidgetOnMouseUp(MCWidgetRef widget, bool& r_bubble);
 bool MCWidgetOnMouseCancel(MCWidgetRef widget, bool& r_bubble);
 bool MCWidgetOnClick(MCWidgetRef widget, bool& r_bubble);
 
+bool MCWidgetOnMouseScroll(MCWidgetRef widget, real32_t delta_x, real32_t delta_y, bool& r_bubble);
+
 bool MCWidgetOnGeometryChanged(MCWidgetRef widget);
 bool MCWidgetOnParentPropertyChanged(MCWidgetRef widget);
 bool MCWidgetOnToolChanged(MCWidgetRef widget, Tool p_tool);

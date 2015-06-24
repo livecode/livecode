@@ -96,18 +96,21 @@ private:
     uinteger_t  m_click_count;
     uinteger_t  m_click_button;
     uinteger_t  m_mouse_buttons;
+    MCWidgetRef m_mouse_focus;
+    MCWidgetRef m_mouse_grab;
+    
     uinteger_t  m_keycode;
     uinteger_t  m_modifiers;
     MCStringRef m_keystring;
-    MCWidgetRef m_mouse_focus;
-    MCWidgetRef m_mouse_grab;
     MCWidgetRef  m_keyboard_focus;
+    
+    MCWidgetRef m_drag_target;
+    
+    MCWidgetRef m_target;
     
     // Parameters for controlling double-click time and position deltas
     uint32_t    m_doubleclick_time;
     coord_t     m_doubleclick_distance;
-    
-    MCWidgetRef m_target;
     
     // State for touch events
     struct MCWidgetTouchEvent;
@@ -144,8 +147,18 @@ private:
     // Indicates whether the given widget is in run mode or not
     bool widgetIsInRunMode(MCWidget *);
     
-    // Bubble the given event appropriately.
+    // Bubble an event up from the target. This is used for things such as mouse
+    // button presses and key presses. Each target has the ability to allow the
+    // message to be bubbled by returning true in their event handlers.
     bool bubbleEvent(MCWidgetRef target, bool (*action)(MCWidgetRef, bool&));
+    
+    // Always bubble an event up from the target. This is used for things such as
+    // mouseEnter/Leave events. Each target is called with the event and they do
+    // not have a chance to block the bubbling.
+    bool alwaysBubbleEvent(MCWidgetRef target, bool (*action)(MCWidgetRef, bool&));
+    
+    // The common implementation of event bubbling.
+    bool doBubbleEvent(bool always_bubble, MCWidgetRef target, bool (*action)(void *context, MCWidgetRef widget, bool&), void *context);
 };
 
 #endif // ifndef __MC_WIDGET_EVENTS__

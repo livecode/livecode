@@ -211,7 +211,6 @@ Boolean MCWidget::mdown(uint2 p_which)
 	switch(getstack() -> gettool(this))
 	{
 	case T_BROWSE:
-		//setstate(True, CS_MFOCUSED);
         if (m_widget != nil)
             MCwidgeteventmanager->event_mdown(this, p_which);
 		break;
@@ -244,8 +243,6 @@ Boolean MCWidget::mup(uint2 p_which, bool p_release)
 	case T_BROWSE:
         if (m_widget != nil)
             MCwidgeteventmanager->event_mup(this, p_which, p_release);
-		//if (MCwidgeteventmanager->GetMouseButtonState() == 0)
-		//	setstate(False, CS_MFOCUSED);
 		break;
 
 	case T_POINTER:

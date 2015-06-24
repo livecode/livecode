@@ -38,6 +38,7 @@ public:
     bool HasHandler(MCNameRef handler);
     
     bool QueryProperty(MCNameRef property, MCTypeInfoRef& r_get_type, MCTypeInfoRef& r_set_type);
+    bool QueryHandler(MCNameRef handler, MCTypeInfoRef& r_signature);
     
     bool SetProperty(MCNameRef property, MCValueRef value);
     bool GetProperty(MCNameRef property, MCValueRef& r_value);
@@ -60,6 +61,8 @@ public:
     bool OnMouseDown(bool& r_bubble);
     bool OnMouseUp(bool& r_bubble);
     bool OnMouseCancel(bool& r_bubble);
+    
+    bool OnMouseScroll(coord_t delta_x, coord_t delta_y, bool& r_bubble);
     
     bool OnClick(bool& r_bubble);
     
@@ -133,7 +136,7 @@ private:
     // Dispatch a potential bubbling event to the widget. Bubbling events can return
     // a boolean value to indicate whether the event should be passed up the owner
     // chain.
-    bool DispatchBubbly(MCNameRef event, bool& r_bubble);
+    bool DispatchBubbly(MCNameRef event, MCValueRef *args, uindex_t arg_count, bool& r_bubble);
     
     // The instance of this widget.
     MCScriptInstanceRef m_instance;

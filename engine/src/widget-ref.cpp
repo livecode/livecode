@@ -327,37 +327,52 @@ bool MCWidgetBase::OnHitTest(MCGPoint p_location, MCWidgetRef& r_target)
 
 bool MCWidgetBase::OnMouseEnter(bool& r_bubble)
 {
-    return DispatchBubbly(MCNAME("OnMouseEnter"), r_bubble);
+    return DispatchBubbly(MCNAME("OnMouseEnter"), nil, 0, r_bubble);
 }
 
 bool MCWidgetBase::OnMouseLeave(bool& r_bubble)
 {
-    return DispatchBubbly(MCNAME("OnMouseLeave"), r_bubble);
+    return DispatchBubbly(MCNAME("OnMouseLeave"), nil, 0, r_bubble);
 }
 
 bool MCWidgetBase::OnMouseMove(bool& r_bubble)
 {
-    return DispatchBubbly(MCNAME("OnMouseMove"), r_bubble);
+    return DispatchBubbly(MCNAME("OnMouseMove"), nil, 0, r_bubble);
 }
 
 bool MCWidgetBase::OnMouseDown(bool& r_bubble)
 {
-    return DispatchBubbly(MCNAME("OnMouseDown"), r_bubble);
+    return DispatchBubbly(MCNAME("OnMouseDown"), nil, 0, r_bubble);
 }
 
 bool MCWidgetBase::OnMouseUp(bool& r_bubble)
 {
-    return DispatchBubbly(MCNAME("OnMouseUp"), r_bubble);
+    return DispatchBubbly(MCNAME("OnMouseUp"), nil, 0, r_bubble);
 }
 
 bool MCWidgetBase::OnMouseCancel(bool& r_bubble)
 {
-    return DispatchBubbly(MCNAME("OnMouseCancel"), r_bubble);
+    return DispatchBubbly(MCNAME("OnMouseCancel"), nil, 0, r_bubble);
 }
 
 bool MCWidgetBase::OnClick(bool& r_bubble)
 {
-    return DispatchBubbly(MCNAME("OnClick"), r_bubble);
+    return DispatchBubbly(MCNAME("OnClick"), nil, 0, r_bubble);
+}
+
+bool MCWidgetBase::OnMouseScroll(coord_t p_delta_x, coord_t p_delta_y, bool& r_bubble)
+{
+    MCAutoValueRefArray t_args;
+    if (!t_args . New(2))
+        return false;
+    
+    if (!MCNumberCreateWithReal(p_delta_x, (MCNumberRef&)t_args[0]))
+        return false;
+    
+    if (!MCNumberCreateWithReal(p_delta_y, (MCNumberRef&)t_args[1]))
+        return false;
+    
+    return DispatchBubbly(MCNAME("OnMouseScroll"), t_args . Ptr(), t_args . Count(), r_bubble);
 }
 
 bool MCWidgetBase::OnGeometryChanged(void)
@@ -786,7 +801,7 @@ bool MCWidgetBase::DispatchRecursive(DispatchOrder p_order, MCNameRef p_event, M
     return t_success;
 }
 
-bool MCWidgetBase::DispatchBubbly(MCNameRef p_event, bool& r_bubble)
+bool MCWidgetBase::DispatchBubbly(MCNameRef p_event, MCValueRef *x_args, uindex_t p_arg_count, bool& r_bubble)
 {
     if (!HasHandler(p_event))
     {
@@ -795,10 +810,10 @@ bool MCWidgetBase::DispatchBubbly(MCNameRef p_event, bool& r_bubble)
     }
     
     MCAutoValueRef t_result;
-    if (!Dispatch(p_event, nil, 0, &(&t_result)))
+    if (!Dispatch(p_event, x_args, p_arg_count, &(&t_result)))
         return false;
     
-    r_bubble = (*t_result != kMCTrue);
+    r_bubble = (*t_result == kMCTrue);
     
     return true;
 }
@@ -1104,6 +1119,11 @@ bool MCWidgetOnClick(MCWidgetRef self, bool& r_bubble)
 {
     MCLog("Widget::Click(%p)", self);
     return MCWidgetAsBase(self) -> OnClick(r_bubble);
+}
+
+bool MCWidgetOnMouseScroll(MCWidgetRef self, real32_t p_delta_x, real32_t p_delta_y, bool& r_bubble)
+{
+    return MCWidgetAsBase(self) -> OnMouseScroll(p_delta_x, p_delta_y, r_bubble);
 }
 
 bool MCWidgetOnGeometryChanged(MCWidgetRef self)
