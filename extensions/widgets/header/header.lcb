@@ -16,151 +16,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 /*
-
 This widget is a header bar.
-
-Name: headerTitle
-Type: property
-Summary: Sets the title of the header bar
-
-Syntax:
-set the headerTitle of <widget> to <pTitle>
-get the headerTitle of <widget>
-
-Parameters:
-pTitle (string): The text of the title of the header bar.
-
-Description:
-Sets the title of the header bar to any string.
-
-Name: headerSubtitle
-Type: property
-Summary: Sets the subtitle of the header bar
-
-Syntax:
-set the headerSubtitle of <widget> to <pSubtitle>
-get the headerSubtitle of <widget>
-
-Parameters:
-pSubtitle (string): The text of the subtitle of the header bar.
-
-Description:
-Sets the subtitle of the header bar to any string.
-
-Name: headerSubtitleIsOn
-Type: property
-Summary: Sets whether there is a subtitle in the header bar
-
-Syntax:
-set the headerSubtitleIsOn of <widget> to <pSubtitleIsOn>
-get the headerSubtitleIsOn of <widget>
-
-Parameters:
-pSubtitleIsOn (boolean): True or false
-
-Description:
-Controls whether there is a subtitle or not.
-
-Name: headerActions
-Type: property
-Summary: Sets the actions of the header bar
-
-Syntax:
-set the headerActions of <widget> to <pActions>
-get the headerActions of <widget>
-
-Parameters:
-pActions (list): The list of actions.
-
-Description:
-Sets the actions of the header bar from pActions, where pActions is a line delimited list of the actions, where each line is a comma delimited list
-of the different components of the action: name, label, icon
-
-Name: actionStyle
-Type: property
-Summary: Sets the header actions display style.
-
-Syntax:
-set the actionStyle of <widget> to <pActionStyle>
-get the actionStyle of <widget>
-
-Parameters:
-pActionStyle (enum): The style of the header actions display.
--"icons": Show the icons
--"names": Show the names
-
-Description:
-Sets the header actions display style of the control.
-
-Name: enableBackButton
-Type: property
-Summary: Controls whether the back button is enabled or not.
-
-Syntax:
-set the enableBackButton of <widget> to <pEnable>
-get the enableBackButton of <widget>
-
-Parameters:
-pEnable (boolean): True or false
-
-Description:
-Controls whether the back button is enabled or not.
-
-Name: showBackIcon
-Type: property
-Summary: Controls whether the back icon is displayed.
-
-Syntax:
-set the showBackIcon of <widget> to <pShow>
-get the showBackIcon of <widget>
-
-Parameters:
-pShow (boolean): True or false
-
-Description:
-Sets whether the back icon is showing or not.
-
-Name: backButtonLabel
-Type: property
-Summary: Sets the label of the back button.
-
-Syntax:
-set the backButtonLabel of <widget> to <pLabel>
-get the backButtonLabel of <widget>
-
-Parameters:
-pLabel (string): the label of the back button
-
-Description:
-Sets the label of the back button.
-
-Name: actionColor
-Type: property
-Summary: Sets the color of the actions and the back button.
-
-Syntax:
-set the actionColor of <widget> to <pColor>
-get the actionColor of <widget>
-
-Parameters:
-pColor (color): The color of the actions and back button
-
-Description:
-Sets the color of the actions and the back button.
-
-Name: showSearchIcon
-Type: property
-Summary: Sets whether there is a search icon in the header bar.
-
-Syntax:
-set the showSearchIcon of <widget> to <pShow>
-get the showSearchIcon of <widget>
-
-Parameters:
-pShow (boolean): True or false
-
-Description:
-Controls whether the search icon is displayed in the header bar.
 */
 
 -- declaring the extension as a widget, followed by identifier
@@ -179,51 +35,187 @@ metadata version is "1.0.0"
 metadata preferredSize is "320,64"
 
 -- property declarations
-property headerTitle          get mHeaderTitle           set setHeaderTitle
-property headerSubtitle       get mHeaderSubtitle        set setHeaderSubtitle
-property leftLabel            get mLeftLabel             set setLeftLabel
-property headerActions        get getHeaderActions       set setHeaderActions
-property actionNames          get getActionNames         set setActionNames
-property actionLabels         get getActionLabels        set setActionLabels
-property actionIcons          get getActionIcons         set setActionIcons
-property actionStyle          get mActionStyle           set setActionStyle
-property showBackIcon         get mShowBackIcon          set setShowBackIcon
-property showSearchIcon       get mShowSearchIcon        set setShowSearchIcon
-property actionColor          get getActionColor         set setActionColor
+/*
+Summary: Sets the title of the header bar
 
--- property metadata
+Syntax: set the headerTitle of <widget> to <pTitle>
+Syntax: get the headerTitle of <widget>
+
+Parameters:
+pTitle (string): The text of the title of the header bar.
+
+Description:
+Sets the title of the header bar to any string.
+*/
+property headerTitle          get mHeaderTitle           set setHeaderTitle
 metadata headerTitle.default is "Title"
 metadata headerTitle.label is "Title"
 
+/*
+Summary: Sets the subtitle of the header bar
+
+Syntax: set the headerSubtitle of <widget> to <pSubtitle>
+Syntax: get the headerSubtitle of <widget>
+
+Parameters:
+pSubtitle (string): The text of the subtitle of the header bar.
+
+Description:
+Sets the subtitle of the header bar to any string.
+*/
+property headerSubtitle       get mHeaderSubtitle        set setHeaderSubtitle
 metadata headerSubtitle.default is "Subtitle"
 metadata headerSubtitle.label is "Subtitle"
 
+/*
+Summary: Sets the label at the left hand side of the header
+
+Syntax: set the leftLabel of <widget> to <pLabel>
+Syntax: get the leftLabel of <widget>
+
+Parameters:
+pLabel (string): the label at the left hand side of the header
+
+Description:
+Sets the label at the left hand side of the header.
+*/
+property leftLabel            get mLeftLabel             set setLeftLabel
+metadata leftLabel.default is "Back"
+metadata leftLabel.label is "Left Label"
+
+/*
+Summary: Sets the actions of the header bar
+
+Syntax: set the headerActions of <widget> to <pActions>
+Syntax: get the headerActions of <widget>
+
+Parameters:
+pActions (list): The list of actions.
+
+Description:
+Sets the actions of the header bar from pActions, where pActions is a line delimited list of the actions, where each line is a comma delimited list
+of the different components of the action: name, label, icon
+*/
+property headerActions        get getHeaderActions       set setHeaderActions
 metadata headerActions.editor is "com.livecode.pi.navbar"
 metadata headerActions.label is "Header Actions"
 
+/*
+Summary: Sets the action names of the header bar
+
+Syntax: set the actionNames of <widget> to <pNames>
+Syntax: get the actionNames of <widget>
+
+Parameters:
+pNames (list): The list of names.
+
+Description:
+Sets the names of the header bar actions, where <pNames> is a comma delimited list of the names.
+*/
+property actionNames          get getActionNames         set setActionNames
 metadata actionNames.user_visible is "false"
+
+/*
+Summary: Sets the action labels of the header bar
+
+Syntax: set the actionLabels of <widget> to <pLabels>
+Syntax: get the actionLabels of <widget>
+
+Parameters:
+pLabels (list): The list of labels.
+
+Description:
+Sets the labels of the header bar actions, where <pLabels> is a comma delimited list of the labels.
+*/
+property actionLabels         get getActionLabels        set setActionLabels
 metadata actionLabels.user_visible is "false"
+
+/*
+Summary: Sets the action icons of the header bar
+
+Syntax: set the actionIcons of <widget> to <pIcons>
+Syntax: get the actionIcons of <widget>
+
+Parameters:
+pIcons (list): The list of icons.
+
+Description:
+Sets the icons of the header bar actions, where <pIcons> is a comma delimited list of the icon names.
+*/
+property actionIcons          get getActionIcons         set setActionIcons
 metadata actionIcons.user_visible is "false"
 
+/*
+Summary: Sets the header actions display style.
+
+Syntax: set the actionStyle of <widget> to <pActionStyle>
+Syntax: get the actionStyle of <widget>
+
+Parameters:
+pActionStyle (enum): The style of the header actions display.
+-"icons": Show the icons
+-"names": Show the names
+
+Description:
+Sets the header actions display style of the control.
+*/
+property actionStyle          get mActionStyle           set setActionStyle
 metadata actionStyle.editor is "com.livecode.pi.enum"
 metadata actionStyle.options is "icons,names"
 metadata actionStyle.default is "icons"
 metadata actionStyle.label is "Action Display Style"
 
+/*
+Summary: Controls whether the back icon is displayed.
+
+Syntax: set the showBackIcon of <widget> to <pShow>
+Syntax: get the showBackIcon of <widget>
+
+Parameters:
+pShow (boolean): True or false
+
+Description:
+Sets whether the back icon is showing or not.
+*/
+property showBackIcon         get mShowBackIcon          set setShowBackIcon
 metadata showBackIcon.editor is "com.livecode.pi.boolean"
 metadata showBackIcon.default is "true"
 metadata showBackIcon.label is "Show Back Icon"
 
-metadata leftLabel.default is "Back"
-metadata leftLabel.label is "Left Label"
+/*
+Summary: Sets whether there is a search icon in the header bar.
 
+Syntax: set the showSearchIcon of <widget> to <pShow>
+Syntax: get the showSearchIcon of <widget>
+
+Parameters:
+pShow (boolean): True or false
+
+Description:
+Controls whether the search icon is displayed in the header bar.
+*/
+property showSearchIcon       get mShowSearchIcon        set setShowSearchIcon
+metadata showSearchIcon.editor is "com.livecode.pi.boolean"
+metadata showSearchIcon.default is "false"
+metadata showSearchIcon.label is "Show Search Icon"
+
+/*
+Summary: Sets the color of the actions and the back button.
+
+Syntax: set the actionColor of <widget> to <pColor>
+Syntax: get the actionColor of <widget>
+
+Parameters:
+pColor (color): The color of the actions and back button
+
+Description:
+Sets the color of the actions and the back button.
+*/
+property actionColor          get getActionColor         set setActionColor
 metadata actionColor.editor is "com.livecode.pi.color"
 metadata actionColor.default is "0,121,255"
 metadata actionColor.label is "Action Color"
 
-metadata showSearchIcon.editor is "com.livecode.pi.boolean"
-metadata showSearchIcon.default is "false"
-metadata showSearchIcon.label is "Show Search Icon"
 
 -- private instance variables
 private variable mHeaderTitle as String
