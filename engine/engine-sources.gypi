@@ -253,6 +253,7 @@
 			'src/image_rep.cpp',
 			'src/image_rep_densitymapped.cpp',
 			'src/image_rep_encoded.cpp',
+			'src/image_rep_gimage.cpp',
 			'src/image_rep_mutable.cpp',
 			'src/image_rep_resampled.cpp',
 			'src/imagebitmap.cpp',
