@@ -12,6 +12,11 @@
 					],
 					
 					'extract-debug-symbols_path': '../tools/extract-debug-symbols.sh',
+					
+					# These tools are only used for Linux and Android targets
+					'objcopy%': '',
+					'objdump%': '',
+					'strip%': '',
 				},
 
 				'actions':
@@ -33,6 +38,10 @@
 			
 						'action':
 						[
+							'env',
+							'OBJCOPY=<(objcopy)',
+							'OBJDUMP=<(objdump)',
+							'STRIP=<(strip)',
 							'<(extract-debug-symbols_path)',
 							'<(OS)',
 							'>(debug_info_suffix)',

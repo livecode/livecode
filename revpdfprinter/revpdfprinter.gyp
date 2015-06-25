@@ -55,6 +55,18 @@
 						],
 					},
 				],
+				[
+					'OS == "linux"',
+					{
+						'libraries':
+						[
+							'-lfontconfig',
+							'-lfreetype',
+							'-lgobject-2.0',
+							'-lpangoft2-1.0',
+						],
+					},
+				],
 			],
 			
 			'xcode_settings':
