@@ -25,6 +25,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "dispatch.h"
 #include "image.h"
 #include "globals.h"
+#include "resolution.h"
+#include "redraw.h"
+#include "util.h"
 
 #include "lnxdc.h"
 
@@ -72,7 +75,19 @@ void set_dnd_cursor(GdkWindow *w, bool p_okay, MCImage *p_image)
         gdk_window_set_cursor(w, g_dnd_cursor_drop_fail);
 }
 
-void DnDClientEvent(GdkEvent*);
+
+struct dnd_modal_loop_context
+{
+    GdkDragContext* drag_context;
+    GdkDisplay* display;
+};
+
+static void break_dnd_modal_loop(void* context)
+{
+    dnd_modal_loop_context* t_context = (dnd_modal_loop_context*)context;
+    gdk_drag_abort(t_context->drag_context, GDK_CURRENT_TIME);
+    gdk_display_pointer_ungrab(t_context->display, GDK_CURRENT_TIME);
+}
 
 // SN-2014-07-11: [[ Bug 12769 ]] Update the signature - the non-implemented UIDC dodragdrop was called otherwise
 MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset)
@@ -128,7 +143,7 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
     // Take ownership of the mouse so that nothing interferes with the drag
     GdkScreen *t_screen;
     t_screen = gdk_display_get_default_screen(dpy);
-    gdk_pointer_grab(gdk_screen_get_root_window(t_screen), TRUE,
+    gdk_pointer_grab(gdk_screen_get_root_window(t_screen), FALSE,
                      GdkEventMask(GDK_POINTER_MOTION_MASK|GDK_BUTTON_PRESS_MASK|GDK_BUTTON_RELEASE_MASK),
                      NULL, NULL, MCeventtime);
     
@@ -139,10 +154,22 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
     // Whether the target accepted the drop or not
     bool t_accepted = true;
     
+    // Context for breaking out of the modal loop, if required
+    dnd_modal_loop_context t_loop_context;
+    modal_loop t_modal_loop;
+    t_loop_context.drag_context = t_context;
+    t_loop_context.display = dpy;
+    t_modal_loop.break_function = break_dnd_modal_loop;
+    t_modal_loop.context = &t_loop_context;
+    modalLoopStart(t_modal_loop);
+    
     // The drag-and-drop loop
     bool t_dnd_done = false;
     while (!t_dnd_done)
     {
+        if (t_modal_loop.broken)
+            break;
+        
         // Run the GLib event loop to exhaustion
         while (g_main_context_iteration(NULL, FALSE))
             ;
@@ -319,7 +346,7 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
             case GDK_DROP_START:
                 // This is a D&D client event. Note the need to ungrab the
                 // pointer, however (just in case the stack needs it)
-                gdk_pointer_ungrab(t_event->dnd.time);
+                gdk_display_pointer_ungrab(dpy, t_event->dnd.time);
                 DnDClientEvent(t_event);
                 break;
                 
@@ -345,20 +372,18 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
         }
         
         gdk_event_free(t_event);
+        
+        // Unlock the screen, perform redraw and other cleanup tasks
+        MCU_resetprops(True);
+        MCRedrawUpdateScreen();
+        siguser();
     }
+    
+    modalLoopEnd();
     
     // Other people can now use the pointer
     g_object_unref(t_context);
-    gdk_pointer_ungrab(GDK_CURRENT_TIME);
-    
-    // FG-2014-06-27: [[ LinuxGDK ]] I really hate this but GDK seems to refuse
-    // to actually ungrab the pointer so we have to force the issue and call
-    // X11 directly to get it done.
-    x11::XUngrabPointer(x11::gdk_x11_display_get_xdisplay(dpy), 0);
-
-    // Clean up allocated memory
-    //if (t_pasteboard != NULL)
-    //    t_pasteboard->Release();
+    gdk_display_pointer_ungrab(dpy, GDK_CURRENT_TIME);
     
     // Restore the original modifier key state
     MCmodifierstate = t_old_modstate;
