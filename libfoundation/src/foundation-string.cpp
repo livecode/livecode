@@ -128,10 +128,48 @@ static bool __MCStringCanBeNative(MCStringRef self)
     return (self -> flags & kMCStringFlagIsNotNative) == 0 || (self -> flags & kMCStringFlagCanBeNative) != 0;
 }
 
-static bool __MCStringCantBeNative(MCStringRef self, MCStringOptions p_options)
+static bool __MCStringCantBeEqualToNative(MCStringRef self, MCStringOptions p_options)
 {
-    return ((!__MCStringCanBeNative(self) && (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareFolded))
-            || (__MCStringIsChecked(self) && __MCStringIsUncombined(self)));
+    // If self can be native, then we could be equal to a native string regardless
+    // of comparison options.
+    if (__MCStringCanBeNative(self))
+        return true;
+    
+    // At this point self must contain unicode characters which don't directly
+    // map to native. Thus the only way we could be equal to a native string is
+    // if we contain combining sequences which compose to a native char.
+    switch(p_options)
+    {
+        case kMCStringOptionCompareExact:
+        case kMCStringOptionCompareFolded:
+            // If no normalization is taking place, then no composition can occur
+            // so we can't be equal to native.
+            return true;
+            
+        case kMCStringOptionCompareNonliteral:
+        case kMCStringOptionCompareCaseless:
+            // If the string hasn't been checked, then it could be equal to native.
+            if (!__MCStringIsChecked(self))
+                return false;
+            
+            // Since normalization is taking place, we definitely can't be equal
+            // to native if we contain no combining chars.
+            if (__MCStringIsUncombined(self))
+                return true;
+            
+            // Finally if the string contains combining chars, then we definitely
+            // can be equal to native if we are not simple.
+            if (!__MCStringIsSimple(self))
+                return true;
+            
+            break;
+        
+        default:
+            MCUnreachable();
+            break;
+    }
+    
+    return false;
 }
 
 static uindex_t __MCStringGetLength(MCStringRef self)
@@ -1071,6 +1109,9 @@ const unichar_t *MCStringGetCharPtr(MCStringRef self)
     if (__MCStringIsIndirect(self))
         __MCStringResolveIndirect(self);
     
+    if (self -> char_count == 0)
+        return (unichar_t *)"\0\0";
+    
     __MCStringUnnativize(self);
 	return self -> chars;
 }
@@ -1085,6 +1126,9 @@ const char_t *MCStringGetNativeCharPtr(MCStringRef self)
         
         return self -> native_chars;
     }
+    
+    if (self -> char_count == 0)
+        return (char_t *)"";
     
     return nil;
 }
@@ -1229,12 +1273,12 @@ bool MCStringIsNative(MCStringRef self)
     return __MCStringIsNative(self);
 }
 
-bool MCStringCantBeNative(MCStringRef self, MCStringOptions p_options)
+bool MCStringCantBeEqualToNative(MCStringRef self, MCStringOptions p_options)
 {
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
-    return __MCStringCantBeNative(self, p_options);
+    return __MCStringCantBeEqualToNative(self, p_options);
 }
 
 bool MCStringCanBeNative(MCStringRef self)
@@ -2131,7 +2175,7 @@ bool MCStringIsEqualTo(MCStringRef self, MCStringRef p_other, MCStringOptions p_
     self_native = __MCStringIsNative(self);
     other_native = __MCStringIsNative(p_other);
     
-    if ((self_native && __MCStringCantBeNative(p_other, p_options)) || (other_native && __MCStringCantBeNative(self, p_options)))
+    if ((self_native && __MCStringCantBeEqualToNative(p_other, p_options)) || (other_native && __MCStringCantBeEqualToNative(self, p_options)))
         return false;
     
     if (self_native && other_native)
@@ -2174,7 +2218,7 @@ bool MCStringSubstringIsEqualTo(MCStringRef self, MCRange p_sub, MCStringRef p_o
                 return MCNativeCharsEqualCaseless(self -> native_chars + p_sub . offset, p_sub . length, p_other -> native_chars, p_other -> char_count);
         }
         
-        if (__MCStringCantBeNative(p_other, p_options))
+        if (__MCStringCantBeEqualToNative(p_other, p_options))
             return false;
     }
     const void *self_chars;
@@ -2233,7 +2277,7 @@ bool MCStringIsEqualToNativeChars(MCStringRef self, const char_t *p_chars, uinde
         return MCNativeCharsEqualCaseless(self -> native_chars, self -> char_count, p_chars, p_char_count);
     }
     
-    if (MCStringCantBeNative(self, p_options))
+    if (__MCStringCantBeEqualToNative(self, p_options))
         return false;
     
 	MCAutoStringRef t_string;
@@ -2273,7 +2317,7 @@ bool MCStringBeginsWith(MCStringRef self, MCStringRef p_prefix, MCStringOptions 
             return t_prefix_length == p_prefix -> char_count;
         }
         
-        if (__MCStringCantBeNative(p_prefix, p_options))
+        if (__MCStringCantBeEqualToNative(p_prefix, p_options))
             return false;
     }
 
@@ -2303,7 +2347,7 @@ bool MCStringSharedPrefix(MCStringRef self, MCRange p_range, MCStringRef p_prefi
             return r_self_match_length == p_prefix -> char_count;
         }
         
-        if (__MCStringCantBeNative(p_prefix, p_options))
+        if (__MCStringCantBeEqualToNative(p_prefix, p_options))
             return false;
     }
 
@@ -2362,7 +2406,7 @@ bool MCStringEndsWith(MCStringRef self, MCStringRef p_suffix, MCStringOptions p_
             return t_prefix_length == p_suffix -> char_count;
         }
         
-        if (__MCStringCantBeNative(p_suffix, p_options))
+        if (__MCStringCantBeEqualToNative(p_suffix, p_options))
             return false;
     }
 
@@ -2392,7 +2436,7 @@ bool MCStringSharedSuffix(MCStringRef self, MCRange p_range, MCStringRef p_suffi
             return r_self_match_length == p_suffix -> char_count;
         }
         
-        if (__MCStringCantBeNative(p_suffix, p_options))
+        if (__MCStringCantBeEqualToNative(p_suffix, p_options))
             return false;
     }
 
@@ -2461,7 +2505,7 @@ bool MCStringContains(MCStringRef self, MCStringRef p_needle, MCStringOptions p_
             return false;
         }
         
-        if (__MCStringCantBeNative(p_needle, p_options))
+        if (__MCStringCantBeEqualToNative(p_needle, p_options))
             return false;
     }
 
@@ -2505,7 +2549,7 @@ bool MCStringSubstringContains(MCStringRef self, MCRange p_range, MCStringRef p_
             return false;
         }
 
-        if (__MCStringCantBeNative(p_needle, p_options))
+        if (__MCStringCantBeEqualToNative(p_needle, p_options))
             return false;
     }
     
@@ -2555,7 +2599,7 @@ bool MCStringFirstIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_aft
             return false;
         }
         
-        if (__MCStringCantBeNative(p_needle, p_options))
+        if (__MCStringCantBeEqualToNative(p_needle, p_options))
             return false;
     }
 
@@ -2659,7 +2703,7 @@ bool MCStringLastIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_befo
             return false;
         }
         
-        if (__MCStringCantBeNative(p_needle, p_options))
+        if (__MCStringCantBeEqualToNative(p_needle, p_options))
             return false;
     }
 
@@ -2781,7 +2825,7 @@ bool MCStringFind(MCStringRef self, MCRange p_range, MCStringRef p_needle, MCStr
         if (__MCStringIsNative(p_needle))
             return MCStringFindNative(self, p_range, p_needle, p_options, r_result);
         
-        if (MCStringCantBeNative(p_needle, p_options))
+        if (MCStringCantBeEqualToNative(p_needle, p_options))
             return false;
     }
 
@@ -2896,7 +2940,7 @@ uindex_t MCStringCount(MCStringRef self, MCRange p_range, MCStringRef p_needle, 
         if (__MCStringIsNative(p_needle))
             return MCStringCountNativeChars(self, p_range, p_needle -> native_chars, p_needle -> char_count, p_options);
         
-        if (__MCStringCantBeNative(p_needle, p_options))
+        if (__MCStringCantBeEqualToNative(p_needle, p_options))
             return 0;
     }
     
@@ -4269,7 +4313,7 @@ bool MCStringFindAndReplace(MCStringRef self, MCStringRef p_pattern, MCStringRef
             else
                 return MCStringFindAndReplaceNative(self, p_pattern, p_replacement, p_options);
         }
-        else if (MCStringCantBeNative(p_pattern, p_options))
+        else if (MCStringCantBeEqualToNative(p_pattern, p_options))
             return false;
     }
     
