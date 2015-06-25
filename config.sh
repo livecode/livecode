@@ -204,7 +204,9 @@ fi
 # If no output type specified, guess from platform:
 if test -z "$FORMATS"; then
   case ${OS} in
-    linux|android) FORMATS="make" ;;
+    # Always use Linux-style makefiles for Android as the Android toolchain
+    # is more Linux-y than Darwin-y
+    linux|android) FORMATS="make-linux" ;;
     mac|ios)       FORMATS="xcode" ;;
     win)           FORMATS="msvs" ;;
   esac
@@ -262,21 +264,86 @@ fi
 WIN_PERL=${WIN_PERL:-"C:/perl/bin/perl.exe"}
 
 # Android default settings and tools
-ANDROID_BUILD_TOOLS=${ANDROID_BUILD_TOOLS:-22.0.1}
-ANDROID_JAVA_SDK=${ANDROID_JAVA_SDK:-${JAVA_SDK:-/usr/lib/jvm/java-7-openjdk-amd64}}
 ANDROID_NDK_VERSION=${ANDROID_NDK_VERSION:-r10d}
-ANDROID_NDK=${ANDROID_NDK:-${HOME}/Workspace/android-ndk-${ANDROID_NDK_VERSION}}
 ANDROID_PLATFORM=${ANDROID_PLATFORM:-android-8}
-ANDROID_SDK=${ANDROID_SDK:-${HOME}/Workspace/android-sdk-linux}
 
-ANDROID_TOOLCHAIN=${ANDROID_TOOLCHAIN:-${HOME}/android-armv6-standalone/bin/arm-linux-androideabi-}
+# Attempt to locate an Android NDK
+if [ -z "${ANDROID_NDK}" ] ; then
+	# Try the symlink we suggest in INSTALL-android.md
+	if [ -d "${HOME}/android/toolchain/android-ndk" ] ; then
+		ANDROID_NDK="${HOME}/android/toolchain/android-ndk"
+	else
+		if [ "${OS}" = "android" ] ; then
+			echo >&2 "Error: Android NDK not found (set \$ANDROID_NDK)"
+			exit 1
+		fi
+	fi
+fi
+
+# Attempt to locate an Android SDK
+if [ -z "${ANDROID_SDK}" ] ; then
+	# Try the symlink we suggest in INSTALL-android.md
+	if [ -d "${HOME}/android/toolchain/android-sdk" ] ; then
+		ANDROID_SDK="${HOME}/android/toolchain/android-sdk"
+	else
+		if [ "${OS}" = "android" ] ; then
+			echo >&2 "Error: Android SDK not found (set \$ANDROID_SDK)"
+			exit 1
+		fi
+	fi
+fi
+
+# Attempt to guess the Android build tools version
+if [ -z "${ANDROID_BUILD_TOOLS}" ] ; then
+	# Check for a sub-folder in the appropriate place
+	# Possibly fragile - are there ever multiple sub-folders?
+	if [ ! "$(echo \"${ANDROID_SDK}/build-tools/\"*)" = "${ANDROID_SDK}/build-tools/*" ] ; then
+		ANDROID_BUILD_TOOLS=$(basename $(echo "${ANDROID_SDK}/build-tools/"*))
+	else
+		if [ "${OS}" = "android" ] ; then
+			echo >&2 "Error: Android build tools not found (set \$ANDROID_BUILD_TOOLS)"
+			exit 1
+		fi
+	fi
+fi
+
+if [ -z "${ANDROID_TOOLCHAIN}" ] ; then
+	# Try the folder we suggest in INSTALL-android.md
+	if [ -d "${HOME}/android/toolchain/standalone" ] ; then
+		ANDROID_TOOLCHAIN="${HOME}/android/toolchain/standalone/bin/arm-linux-androideabi-"
+	else
+		if [ "${OS}" = "android" ] ; then
+			echo >&2 "Error: Android toolchain not found (set \$ANDROID_TOOLCHAIN)"
+			exit 1
+		fi
+	fi
+fi
 
 ANDROID_AR=${AR:-${ANDROID_TOOLCHAIN}ar}
 ANDROID_CC=${CC:-${ANDROID_TOOLCHAIN}clang -target arm-linux-androideabi -march=armv6 -integrated-as}
 ANDROID_CXX=${CXX:-${ANDROID_TOOLCHAIN}clang -target arm-linux-androideabi -march=armv6 -integrated-as}
 ANDROID_LINK=${LINK:-${ANDROID_TOOLCHAIN}clang -target arm-linux-androideabi -march=armv6 -integrated-as}
 ANDROID_OBJCOPY=${OBJCOPY:-${ANDROID_TOOLCHAIN}objcopy}
+ANDROID_OBJDUMP=${OBJDUMP:-${ANDROID_TOOLCHAIN}objdump}
 ANDROID_STRIP=${STRIP:-${ANDROID_TOOLCHAIN}strip}
+
+if [ -z "${JAVA_SDK}" ] ; then
+	# Utility used to locate Java on OSX systems
+	if [ -x /usr/libexec/java_home ] ; then
+		ANDROID_JAVA_SDK="$(/usr/libexec/java_home)"
+	elif [ -d /usr/lib/jvm/default ] ; then
+		ANDROID_JAVA_SDK=/usr/lib/jvm/default
+	elif [ -d /usr/lib/jvm/default-jvm ] ; then
+		ANDROID_JAVA_SDK=/usr/lib/jvm/default-jvm
+	else
+		if [ "${OS}" = "android" ] ; then
+			echo >&2 "Error: no Java SDK found - set \$JAVA_SDK"
+			exit 1
+		fi
+	fi
+else
+	ANDROID_JAVA_SDK="${JAVA_SDK}"
+fi
 
 
 ################################################################
@@ -307,6 +374,7 @@ case ${OS} in
     export CXX="${ANDROID_CXX}"
     export LINK="${ANDROID_LINK}"
     export OBJCOPY="${ANDROID_OBJCOPY}"
+    export OBJDUMP="${ANDROID_OBJDUMP}"
     export STRIP="${ANDROID_STRIP}"
     invoke_gyp $basic_args "-DOS=${OS}" "-Dtarget_arch=${TARGET_ARCH}" \
                            -Dcross_compile=1 \
