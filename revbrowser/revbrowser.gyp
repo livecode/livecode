@@ -35,16 +35,21 @@
 				'src/osxbrowser.h',
 				'src/revbrowser.h',
 				'src/revbrowser.rc.h',
+				'src/signal_restore_posix.h',
 				'src/w32browser.h',
 				'src/WebAuthenticationPanel.h',
 				
 				'src/cefbrowser.cpp',
+				'src/cefbrowser_lnx.cpp',
 				'src/cefbrowser_osx.mm',
 				'src/cefbrowser_w32.cpp',
+				'src/cefshared_lnx.cpp',
 				'src/cefshared_osx.cpp',
 				'src/cefshared_w32.cpp',
+				'src/lnxbrowser.cpp',
 				'src/osxbrowser.mm',
 				'src/revbrowser.cpp',
+				'src/signal_restore_posix.cpp',
 				'src/w32browser.cpp',
 				'src/revbrowser.rc',
 				'src/WebAuthenticationPanel.m',
@@ -52,9 +57,9 @@
 			
 			'conditions':
 			[
-				# Only supported on OSX and Windows
+				# Only supported on OSX, Windows and Linux
 				[
-					'OS != "mac" and OS != "win"',
+					'OS != "mac" and OS != "win" and OS != "linux"',
 					{
 						'type': 'none',
 					},
@@ -116,6 +121,30 @@
 						},
 					},
 				],
+				[
+					'OS == "linux"',
+					{
+						'libraries':
+						[
+							'-ldl',
+							'-lX11',
+						],
+		
+						'all_dependent_settings':
+						{
+							'variables':
+							{
+								'dist_files': [ '<(PRODUCT_DIR)/<(_product_name).so' ],
+							},
+						},
+					},
+				],
+			],
+			
+			'cflags_cc!':
+			[
+				'-fno-rtti',
+				'-fno-exceptions',
 			],
 			
 			'msvs_settings':
@@ -144,24 +173,24 @@
 			'mac_bundle': 1,
 			'product_name': 'revbrowser-cefprocess',
 			
-			# Windows and OSX only
+			# OSX, Windows and Linux only
 			'conditions':
 			[
 				[
-					'OS != "mac" and OS != "win"',
+					'OS != "mac" and OS != "win" and OS != "linux"',
 					{
 						'type': 'none',
 					},
 				],
 				[
-					'OS == "win"',
+					'OS == "win" or OS == "linux"',
 					{
 						# Distributing the OSX version is done separately
 						'all_dependent_settings':
 						{
 							'variables':
 							{
-								'dist_files': [ '<(PRODUCT_DIR)/<(_product_name).exe' ],
+								'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(exe_suffix)' ],
 							},
 						},
 					},
@@ -179,8 +208,10 @@
 			'sources':
 			[
 				'src/cefprocess.cpp',
+				'src/cefprocess_lnx.cpp',
 				'src/cefprocess_osx.mm',
 				'src/cefprocess_w32.cpp',
+				'src/cefshared_lnx.cpp',
 				'src/cefshared_osx.cpp',
 				'src/cefshared_w32.cpp',
 			],
