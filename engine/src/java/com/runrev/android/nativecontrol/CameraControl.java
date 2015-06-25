@@ -455,10 +455,6 @@ class CameraControl extends NativeControl
 		}
 		catch (Exception e)
 		{
-			StringWriter t_out = new StringWriter();
-			e.printStackTrace(new PrintWriter(t_out));
-			Log.i(TAG, e.toString());
-			Log.i(TAG, t_out.toString());
 			return null;
 		}
 		
