@@ -43,7 +43,6 @@
 							'revbrowser/revbrowser.gyp:revbrowser-cefprocess',
 							'revdb/revdb.gyp:dbodbc',
 							'revdb/revdb.gyp:dbpostgresql',
-							'revfont/revfont.gyp:external-revfont',
 							'revmobile/revmobile.gyp:external-revandroid',
 							'revmobile/revmobile.gyp:external-reviphone',
 							'revspeech/revspeech.gyp:external-revspeech',
@@ -51,6 +50,16 @@
 							
 							# Server externals
 							'revdb/revdb.gyp:external-revdb-server',
+						],
+					},
+				],
+				[
+					'OS == "mac" or OS == "win"',
+					{
+						'dependencies':
+						[
+							# Externals
+							'revfont/revfont.gyp:external-revfont',
 						],
 					},
 				],
