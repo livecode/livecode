@@ -2841,7 +2841,7 @@ uint1 MCParagraph::fmovefocus(Field_translations type, bool p_force_logical)
             break;
 
 		default:
-			MCUnreachable();
+			/* Field translations that don't require RTL fix-ups */
 			break;
     }
 
