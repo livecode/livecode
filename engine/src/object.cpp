@@ -1928,16 +1928,8 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 
 	if (stat == ES_ERROR && MCerrorlock == 0 && !MCtrylock)
 	{
-		if (MCnoui)
-		{
-			uint2 line, pos;
-			MCeerror->geterrorloc(line, pos);
-			fprintf(stderr, "%s: Script execution error at line %d, column %d\n",
-			        MCcmd, line, pos);
-		}
-		else
-			if (!send)
-				senderror();
+        if (!send)
+            senderror();
 		return ES_ERROR;
 	}
 	if (!send)

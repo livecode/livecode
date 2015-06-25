@@ -2750,7 +2750,7 @@ void MCPlayer::SynchronizeUserCallbacks(void)
 	delete cblist;
     
     if (!hasfilename())
-        return True;
+        return;
     
     // Now set the markers in the player so that we get notified.
     array_t<uint32_t> t_markers;
@@ -2761,7 +2761,7 @@ void MCPlayer::SynchronizeUserCallbacks(void)
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMarkers, kMCPlatformPropertyTypeUInt32Array, &t_markers);
     MCMemoryDeleteArray(t_markers . ptr);
     
-	return True;
+	return;
 }
 
 Boolean MCPlayer::isbuffering(void)
