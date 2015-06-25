@@ -89,6 +89,10 @@ static bool __MCStringResolveIndirect(__MCString *self);
 // Makes direct mutable string indirect, referencing r_new_string.
 static bool __MCStringCopyMutable(__MCString *self, __MCString*& r_new_string);
 
+// Copy the given unicode chars into the target unicode buffer and return true
+// if all the chars being copied in could be native.
+static bool __MCStringCopyChars(unichar_t *target, const unichar_t *source, uindex_t count, bool target_can_be_native);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // AL-2015-02-06: [[ Bug 14504 ]] Add wrappers for string flag and length checking,
@@ -170,6 +174,35 @@ static bool __MCStringCantBeEqualToNative(MCStringRef self, MCStringOptions p_op
     }
     
     return false;
+}
+
+static bool __MCStringCopyChars(unichar_t *p_dst, const unichar_t *p_src, uindex_t p_count, bool p_dst_can_be_native)
+{
+    // If the dst cannot be native, then there's no point checking if the src can be.
+    if (!p_dst_can_be_native)
+    {
+        MCMemoryCopy(p_dst, p_src, p_count * sizeof(unichar_t));
+        return false;
+    }
+    
+    // Copy the unicode chars to our dst checking if we can nativize as we go.
+    for(uindex_t i = 0; i < p_count; i++)
+    {
+        // If we fail to convert the char to native, then we can't be native so
+        // finish up with a direct copy.
+        char_t t_nchar;
+        if (!MCUnicodeCharMapToNative(p_src[i], t_nchar))
+        {
+            MCMemoryCopy(p_dst + i, p_src + i, (p_count - i) * sizeof(unichar_t));
+            return false;
+        }
+
+        // We still copy across unicode char.
+        p_dst[i] = p_src[i];
+    }
+    
+    // If we get here, then both src and dst can be native.
+    return true;
 }
 
 static uindex_t __MCStringGetLength(MCStringRef self)
@@ -3250,6 +3283,7 @@ bool MCStringAppendChars(MCStringRef self, const unichar_t *p_chars, uindex_t p_
     if (!__MCStringExpandAt(self, self -> char_count, p_char_count))
         return false;
     
+    // If we are native, attempt a native copy of the input chars.
     if (__MCStringIsNative(self))
     {
         bool t_not_native;
@@ -3274,13 +3308,15 @@ bool MCStringAppendChars(MCStringRef self, const unichar_t *p_chars, uindex_t p_
         return MCStringAppendChars(self, p_chars, p_char_count);
     }
     
-	// Now copy the chars across.
-	MCMemoryCopy(self -> chars + self -> char_count - p_char_count, p_chars, p_char_count * sizeof(unichar_t));
+    // Copy the chars across recomputing whether the string can be native at
+    // the same time.
+    bool t_can_be_native;
+    t_can_be_native = __MCStringCopyChars(self -> chars + self -> char_count - p_char_count, p_chars, p_char_count, __MCStringCanBeNative(self));
 	
 	// Set the NULL
 	self -> chars[self -> char_count] = '\0';
 	
-	__MCStringChanged(self, false, false, false);
+	__MCStringChanged(self, false, false, t_can_be_native);
 	
 	// We succeeded.
 	return true;
@@ -3386,6 +3422,7 @@ bool MCStringPrependChars(MCStringRef self, const unichar_t *p_chars, uindex_t p
     if (!__MCStringExpandAt(self, 0, p_char_count))
         return false;
     
+    // If we are native, attempt a native copy of the input chars.
     if (__MCStringIsNative(self))
     {
         bool t_not_native;
@@ -3412,10 +3449,12 @@ bool MCStringPrependChars(MCStringRef self, const unichar_t *p_chars, uindex_t p
         return MCStringPrependChars(self, p_chars, p_char_count);
     }
     
-	// Now copy the chars across.
-	MCMemoryCopy(self -> chars, p_chars, p_char_count * sizeof(unichar_t));
+    // Copy the chars across recomputing whether the string can be native at
+    // the same time.
+    bool t_can_be_native;
+    t_can_be_native = __MCStringCopyChars(self -> chars, p_chars, p_char_count, __MCStringCanBeNative(self));
 	
-	__MCStringChanged(self, false, false, false);
+	__MCStringChanged(self, false, false, t_can_be_native);
 	
 	// We succeeded.
 	return true;
@@ -3549,10 +3588,12 @@ bool MCStringInsertChars(MCStringRef self, uindex_t p_at, const unichar_t *p_cha
     // Need to clamp p_at again in case number of codeunits has decreased.
     p_at = MCMin(p_at, self -> char_count);
     
-	// Now copy the chars across.
-	MCMemoryCopy(self -> chars + p_at, p_chars, p_char_count * sizeof(unichar_t));
+    // Copy the chars across recomputing whether the string can be native at
+    // the same time.
+	bool t_can_be_native;
+    t_can_be_native = __MCStringCopyChars(self -> chars + p_at, p_chars, p_char_count * sizeof(unichar_t), __MCStringCanBeNative(self));
 	
-	__MCStringChanged(self, false, false, false);
+	__MCStringChanged(self, false, false, t_can_be_native);
 	
 	// We succeeded.
 	return true;
@@ -3728,10 +3769,12 @@ bool MCStringReplaceChars(MCStringRef self, MCRange p_range, const unichar_t *p_
     // Need to clamp range again in case the number of codeunits has decreased.
     __MCStringClampRange(self, p_range);
     
-    // Copy across the replacement chars.
-    MCMemoryCopy(self -> chars + p_range . offset, p_chars, p_char_count * sizeof(unichar_t));
+    // Copy the chars across recomputing whether the string can be native at
+    // the same time.
+    bool t_can_be_native;
+    t_can_be_native = __MCStringCopyChars(self -> chars + p_range . offset, p_chars, p_char_count, __MCStringCanBeNative(self));
     
-    __MCStringChanged(self, false, false, false);
+    __MCStringChanged(self, false, false, t_can_be_native);
     
     // We succeeded.
     return true;
@@ -4389,7 +4432,7 @@ bool MCStringFindAndReplace(MCStringRef self, MCStringRef p_pattern, MCStringRef
 		self -> char_count = t_output_length;
 		self -> capacity = t_output_capacity;
 		
-		__MCStringChanged(self, false, false, false);
+		__MCStringChanged(self, false, false, __MCStringCanBeNative(self) && MCStringCanBeNative(p_replacement));
 	}
 	return true;
 }
