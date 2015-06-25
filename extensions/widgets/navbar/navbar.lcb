@@ -192,6 +192,45 @@ metadata navLabels.user_visible is "false"
 property desiredHeight	get getDesiredHeight
 metadata desiredHeight.user_visible is "false"
 
+/*
+Syntax: set the <opaqueBackground> of <widget> to {true | false}
+Syntax: get the <opaqueBackground> of <widget>
+
+Summary: Whether the background of the navbar is drawn opaque or not
+
+Description:
+Use the <opaqueBackground> property to determine whether objects underneath the navbar are visible or not.
+
+*/
+property opaqueBackground get mOpaque set setOpaque
+metadata opaqueBackground.default is "true"
+metadata opaqueBackground.label is "Opaque Background"
+
+/*
+Syntax: set the <showDivide> of <widget> to {true | false}
+Syntax: get the <showDivide> of <widget>
+
+Summary: Whether the dividing line at the top of the navbar is drawn or not
+
+Description:
+Use the <showDivide> property to determine whether the dividing line at the top of the navbar is drawn or not.
+
+*/
+property showDivide get mShowDivide set setShowDivide
+metadata showDivide.default is "true"
+metadata showDivide.label is "Show Divide"
+
+/*
+Syntax: set the editMode of <widget> to (true | false)
+Syntax: get the editMode of <widget>
+
+Summary: Whether the widget is in edit mode or not
+
+Description:
+This is currently an experimental feature of the navigation bar, and allows the icons to
+be changed by clicking on the outlined regions, and new items to be added with the add button.
+*/
+
 --
 
 -- private instance variables
@@ -216,6 +255,9 @@ private variable mReorderIcon as Path
 private variable mDragData as Array
 
 private variable mHiliteColor as Color
+
+private variable mOpaque as Boolean
+private variable mShowDivide as Boolean
 
 --
 
@@ -310,6 +352,9 @@ public handler OnCreate() returns nothing
 	put path iconSVGPathFromName("reorder") into mReorderIcon
 
 	put color [0, 121/255,1] into mHiliteColor
+
+	put true into mOpaque
+	put true into mShowDivide
 end handler
 
 public handler OnPaint() returns nothing
@@ -327,8 +372,10 @@ end handler
 
 private handler drawNavBar() returns nothing
 	// background
-	set the paint of this canvas to getPaint("background","fill")
-	fill getPath("background") on this canvas
+	if mOpaque then
+		set the paint of this canvas to getPaint("background","fill")
+		fill getPath("background") on this canvas
+	end if
 
 	variable tX as Integer
 	repeat with tX from 1 up to mNavItemCount
@@ -347,10 +394,13 @@ private handler drawNavBar() returns nothing
 
 			end if
 	end repeat
+
 	-- Draw the top line
-	set the paint of this canvas to getPaint("background","stroke")
-	set the stroke width of this canvas to 0
-	stroke getPath("line") on this canvas
+	if mShowDivide then
+		set the paint of this canvas to getPaint("background","stroke")
+		set the stroke width of this canvas to 0
+		stroke getPath("line") on this canvas
+	end if
 end handler
 
 private handler drawNavBarEditMode() returns nothing
@@ -1213,6 +1263,23 @@ private handler getDesiredHeight() as Number
 	end if
 end handler
 
+private handler setOpaque(in pOpaque as Boolean) returns nothing
+	if pOpaque is mOpaque then
+		return
+	end if
+
+	put pOpaque into mOpaque
+	redraw all
+end handler
+
+private handler setShowDivide(in pShowDivide as Boolean) returns nothing
+	if pShowDivide is mShowDivide then
+		return
+	end if
+
+	put pShowDivide into mShowDivide
+	redraw all
+end handler
 --------------------------------------------------------------------------------
 --
 --		Editable rect things

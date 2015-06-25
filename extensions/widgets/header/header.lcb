@@ -225,6 +225,34 @@ metadata showSearchIcon.editor is "com.livecode.pi.boolean"
 metadata showSearchIcon.default is "false"
 metadata showSearchIcon.label is "Show Search Icon"
 
+/*
+Syntax: set the <opaqueBackground> of <widget> to {true | false}
+Syntax: get the <opaqueBackground> of <widget>
+
+Summary: Whether the background of the header bar is drawn opaque or not
+
+Description:
+Use the <opaqueBackground> property to determine whether objects underneath the header bar are visible or not.
+
+*/
+property opaqueBackground get mOpaque set setOpaque
+metadata opaqueBackground.default is "true"
+metadata opaqueBackground.label is "Opaque Background"
+
+/*
+Syntax: set the <showDivide> of <widget> to {true | false}
+Syntax: get the <showDivide> of <widget>
+
+Summary: Whether the dividing line at the top of the header bar is drawn or not
+
+Description:
+Use the <showDivide> property to determine whether the dividing line at the top of the header bar is drawn or not.
+
+*/
+property showDivide get mShowDivide set setShowDivide
+metadata showDivide.default is "true"
+metadata showDivide.label is "Show Divide"
+
 -- private instance variables
 private variable mHeaderTitle as String
 private variable mHeaderSubtitle as String
@@ -251,6 +279,9 @@ private variable mSelectedAction as Integer
 private variable mRight as Real
 private variable mLetterCount as Integer
 private variable mActionRects as List
+
+private variable mOpaque as Boolean
+private variable mShowDivide as Boolean
 
 -- constants (some defined as varibales)
 private variable kBackgroundColor as List
@@ -324,6 +355,8 @@ public handler OnCreate()
    put [247/255,247/255,247/255] into kBackgroundColor
    put [0,0,0] into kBlackColor
 
+   put true into mOpaque
+	put true into mShowDivide
 end handler
 
 public handler OnPaint()
@@ -331,12 +364,16 @@ public handler OnPaint()
    updateVariables()
 
    -- draw the background rectangle
-   set the paint of this canvas to fetchPaint("background")
-   fill fetchPath("background") on this canvas
+   if mOpaque then
+      set the paint of this canvas to fetchPaint("background")
+      fill fetchPath("background") on this canvas
+   end if
 
    -- draw the bottom line
-   set the paint of this canvas to fetchPaint("line")
-   fill fetchPath("line") on this canvas
+   if mShowDivide then
+      set the paint of this canvas to fetchPaint("line")
+      fill fetchPath("line") on this canvas
+   end if
 
    -- filling in the text of the title
    set the font of this canvas to fetchFont("title")
@@ -937,6 +974,24 @@ end handler
 private handler setShowSearchIcon(in pShow as Boolean) returns nothing
    put pShow into mShowSearchIcon
    redraw all
+end handler
+
+private handler setOpaque(in pOpaque as Boolean) returns nothing
+	if pOpaque is mOpaque then
+		return
+	end if
+
+	put pOpaque into mOpaque
+	redraw all
+end handler
+
+private handler setShowDivide(in pShowDivide as Boolean) returns nothing
+	if pShowDivide is mShowDivide then
+		return
+	end if
+
+	put pShowDivide into mShowDivide
+	redraw all
 end handler
 
 --------------------------------------------------------------------------------
