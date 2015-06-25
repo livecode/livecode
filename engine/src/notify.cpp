@@ -466,58 +466,29 @@ void MCNotifyPing(bool p_high_priority)
 {
 #if defined(_WINDOWS)
 	SetEvent(g_notify_wakeup);
-#elif defined(_MACOSX)
-	if (!s_notify_sent)
-	{
+#else
+    if (!s_notify_sent)
+    {
         MCNotifyLock();
         if (!s_notify_sent)
         {
             s_notify_sent = true;
             MCNotifyUnlock();
+            
+#if defined(_MACOSX)
             extern void MCMacBreakWait(void);
             MCMacBreakWait();
-        }
-        else
-            MCNotifyUnlock();
-	}
 #elif defined(_LINUX)
-    if (!s_notify_sent)
-    {
-        MCNotifyLock();
-        if (!s_notify_sent)
-        {
-            s_notify_sent = true;
-            MCNotifyUnlock();
             char t_notify_char = 1;
             write(g_notify_pipe[1], &t_notify_char, 1);
-        }
-        else
-            MCNotifyUnlock();
-    }
 #elif defined(_IOS_MOBILE)
-    if (!s_notify_sent)
-    {
-        MCNotifyLock();
-        if (!s_notify_sent)
-        {
-            s_notify_sent = true;
-            MCNotifyUnlock();
             extern void MCIPhoneBreakWait(void);
             MCIPhoneBreakWait();
-        }
-        else
-            MCNotifyUnlock();
-    }
 #elif defined(_ANDROID_MOBILE)
-    if (!s_notify_sent)
-    {
-        MCNotifyLock();
-        if (!s_notify_sent)
-        {
-            s_notify_sent = true;
-            MCNotifyUnlock();
             extern void MCAndroidBreakWait(void);
             MCAndroidBreakWait();
+#endif
+            
         }
         else
             MCNotifyUnlock();
