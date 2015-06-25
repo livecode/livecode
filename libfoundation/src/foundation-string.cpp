@@ -1109,9 +1109,6 @@ const unichar_t *MCStringGetCharPtr(MCStringRef self)
     if (__MCStringIsIndirect(self))
         __MCStringResolveIndirect(self);
     
-    if (self -> char_count == 0)
-        return (unichar_t *)"\0\0";
-    
     __MCStringUnnativize(self);
 	return self -> chars;
 }
@@ -1126,9 +1123,6 @@ const char_t *MCStringGetNativeCharPtr(MCStringRef self)
         
         return self -> native_chars;
     }
-    
-    if (self -> char_count == 0)
-        return (char_t *)"";
     
     return nil;
 }
