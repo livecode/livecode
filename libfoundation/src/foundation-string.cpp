@@ -130,43 +130,43 @@ static bool __MCStringCanBeNative(MCStringRef self)
 
 static bool __MCStringCantBeEqualToNative(MCStringRef self, MCStringOptions p_options)
 {
-    // If self can be native, then we could be equal to a native string regardless
-    // of comparison options.
-    if (__MCStringCanBeNative(self))
-        return true;
-    
-    // At this point self must contain unicode characters which don't directly
-    // map to native. Thus the only way we could be equal to a native string is
-    // if we contain combining sequences which compose to a native char.
-    switch(p_options)
+    // If self can't be native, then we check the comparison options to see if
+    // it could still be native after normalization.
+    if (!__MCStringCanBeNative(self))
     {
-        case kMCStringOptionCompareExact:
-        case kMCStringOptionCompareFolded:
-            // If no normalization is taking place, then no composition can occur
-            // so we can't be equal to native.
-            return true;
-            
-        case kMCStringOptionCompareNonliteral:
-        case kMCStringOptionCompareCaseless:
-            // If the string hasn't been checked, then it could be equal to native.
-            if (!__MCStringIsChecked(self))
-                return false;
-            
-            // Since normalization is taking place, we definitely can't be equal
-            // to native if we contain no combining chars.
-            if (__MCStringIsUncombined(self))
+        // At this point self must contain unicode characters which don't directly
+        // map to native. Thus the only way we could be equal to a native string is
+        // if we contain combining sequences which compose to a native char.
+        switch(p_options)
+        {
+            case kMCStringOptionCompareExact:
+            case kMCStringOptionCompareFolded:
+                // If no normalization is taking place, then no composition can occur
+                // so we can't be equal to native.
                 return true;
+                
+            case kMCStringOptionCompareNonliteral:
+            case kMCStringOptionCompareCaseless:
+                // If the string has been checked then we have more information.
+                if (__MCStringIsChecked(self))
+                {
+                    // If there are no combining chars, then normalization is not
+                    // going to make a difference - there's no way this string
+                    // can be native.
+                    if (__MCStringIsUncombined(self))
+                        return true;
+                
+                    // If the string is not simple, then even though it contains
+                    // combining chars it can't be native.
+                    if (!__MCStringIsSimple(self))
+                        return true;
+                }
+                break;
             
-            // Finally if the string contains combining chars, then we definitely
-            // can be equal to native if we are not simple.
-            if (!__MCStringIsSimple(self))
-                return true;
-            
-            break;
-        
-        default:
-            MCUnreachable();
-            break;
+            default:
+                MCUnreachable();
+                break;
+        }
     }
     
     return false;
@@ -2271,7 +2271,7 @@ bool MCStringIsEqualToNativeChars(MCStringRef self, const char_t *p_chars, uinde
         return MCNativeCharsEqualCaseless(self -> native_chars, self -> char_count, p_chars, p_char_count);
     }
     
-    if (__MCStringCantBeEqualToNative(self, p_options))
+    if (MCStringCantBeEqualToNative(self, p_options))
         return false;
     
 	MCAutoStringRef t_string;
