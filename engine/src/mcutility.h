@@ -291,7 +291,7 @@ inline int2 swap_int2(uint2 x)
 {
 	if (MCswapbytes)
         return int2(MCSwapInt16(x));
-	return x;
+	return int2(x);
 }
 
 inline char *MC_strchr(const char *s, int c) // HACK for bug in GCC 2.5.x
