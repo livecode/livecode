@@ -20,7 +20,7 @@ REM Is Cygwin already in the path?
 REM If not, look in a couple of likely locations for it
 WHERE /Q cygpath.exe 1>NUL 2>NUL
 IF %ERRORLEVEL% EQU 0 (
-  SET cygwin_path=""
+  SET cygwin_path=
 ) ELSE IF DEFINED CYGPATH (
   SET cygwin_path=%CYGPATH%\bin\
 ) ELSE IF EXIST C:\Cygwin64\bin (
