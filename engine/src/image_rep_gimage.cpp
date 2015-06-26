@@ -70,6 +70,8 @@ MCGImageImageRep::MCGImageImageRep(MCGImageRef p_image)
 
 MCGImageImageRep::~MCGImageImageRep()
 {
+	ReleaseBitmap();
+	
 	MCGImageRelease(m_frame.image);
 	m_frame.image = nil;
 }
