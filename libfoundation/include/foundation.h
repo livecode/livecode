@@ -1544,7 +1544,7 @@ bool MCStringIsEmpty(MCStringRef string);
 bool MCStringCanBeNative(MCStringRef string);
 
 // Returns true if under the given comparison conditions, string cannot be represented natively.
-bool MCStringCantBeNative(MCStringRef string, MCStringOptions p_options);
+bool MCStringCantBeEqualToNative(MCStringRef string, MCStringOptions p_options);
 
 // Returns true if the string is stored as native chars.
 bool MCStringIsNative(MCStringRef string);
