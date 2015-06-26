@@ -2696,6 +2696,9 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
             MCUnicodeCollateOption t_options;
             t_options = MCUnicodeCollateOptionFromCompareOption((MCUnicodeCompareOption)ctxt . GetStringComparisonType());
             
+            MCUnicodeCollatorRef t_collator;
+            /* UNCHECKED */ MCUnicodeCreateCollator(kMCSystemLocale, t_options, t_collator);
+            
             MCDataRef *t_datas;
             t_datas = new MCDataRef[p_count];
             for(uindex_t i = 0; i < p_count; i++)
@@ -2709,7 +2712,7 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
                 
                 byte_t *t_key;
                 uindex_t t_key_length;
-                if (!MCUnicodeCreateSortKey(kMCSystemLocale, t_options, MCStringGetCharPtr(*t_string), MCStringGetLength(*t_string), t_key, t_key_length))
+                if (!MCUnicodeCreateSortKeyWithCollator(t_collator, MCStringGetCharPtr(*t_string), MCStringGetLength(*t_string), t_key, t_key_length))
                 {
                     t_datas[i] = MCValueRetain(kMCEmptyData);
                     continue;
@@ -2722,6 +2725,8 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
                     continue;
                 }
             }
+            
+            MCUnicodeDestroyCollator(t_collator);
             
             t_sort_keys = t_datas;
             t_sort_compare = data_comparator;
