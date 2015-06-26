@@ -986,6 +986,8 @@ public foreign handler MCWidgetExecPlaceWidget(in pChild as Widget) returns noth
 public foreign handler MCWidgetExecPlaceWidgetAt(in pChild as Widget, in pAtBottom as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetExecPlaceWidgetRelative(in pChild as Widget, in pIsBelow as CBool, in pOtherChild as Widget) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetExecUnplaceWidget(in pChild as Widget) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetSnapshotWidget(in pChild as Widget) returns Image binds to "<builtin>"
+public foreign handler MCWidgetSnapshotWidgetAtSizeAsList(in pChild as Widget, in pSize as List) returns Image binds to "<builtin>"
 
 public foreign handler MCWidgetGetPropertyOfWidget(in pName as String, in pWidget as Widget, out rValue as optional any) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetSetPropertyOfWidget(in pValue as optional any, in pName as String, in pWidget as Widget) returns nothing binds to "<builtin>"
@@ -1051,6 +1053,15 @@ syntax UnplaceWidget is statement
     "unplace" <mWidget: Expression>
 begin
     MCWidgetExecUnplaceWidget(mWidget)
+end syntax
+
+//
+
+syntax SnapshotWidget is statement
+    "snapshot" <mWidget: Expression> [ "at" "size" <mSize: Expression> ]
+begin
+    MCWidgetSnapshotWidget(mWidget)
+    MCWidgetSnapshotWidgetAtSizeAsList(mWidget, mSize)
 end syntax
 
 //

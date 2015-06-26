@@ -25,6 +25,16 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// The MCWidgetRef type encapsulates an LCB widget and its state.
+//
+// There are two variants - a root MCWidgetRef which takes its embedding state
+// from the host MCWidget*, and a child MCWidgetRef which contains its own
+// embedding state.
+//
+// The embedding state are properties such as frame, disabled and font and should
+// encompass anything which the widget should be given from outside, and not be
+// able to directly set itself.
+
 typedef MCValueRef MCWidgetRef;
 
 bool MCWidgetCreateRoot(MCWidget *host, MCNameRef kind, MCWidgetRef& r_widget);
@@ -95,6 +105,10 @@ bool MCChildWidgetSetFrame(MCWidgetRef widget, MCGRectangle frame);
 bool MCChildWidgetSetDisabled(MCWidgetRef widget, bool disabled);
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// The MCWidget control now wraps a (root) MCWidgetRef and passes all events
+// through MCWidgetEventManager which modulates them to appropriate calls on
+// the appropriate (nested) MCWidgetRef.
 
 class MCWidget: public MCControl
 {

@@ -385,6 +385,63 @@ extern "C" MC_DLLEXPORT void MCWidgetExecUnplaceWidget(MCWidgetRef p_widget)
     MCWidgetUnplaceWidget(MCcurrentwidget, p_widget);
 }
 
+//////////
+
+#if 0
+extern "C" bool MCProperListFetchAsArrayOfFloat(MCProperListRef p_list, uindex_t p_size, float32_t *x_floats);
+
+static MCCanvasImageRef MCWidgetExecSnapshotWidgetAtSize(MCWidgetRef p_widget, MCGSize p_size)
+{
+    MCGContextRef t_gcontext;
+    if (!MCGContextCreate(ceilf(p_size . width), ceilf(p_size . height), true, t_gcontext))
+        return nil;
+    
+    MCGRectangle t_frame;
+    t_frame = MCWidgetGetFrame(p_widget);
+    
+    MCGContextScaleCTM(t_gcontext, p_size . width / t_frame . size . width, p_size . height / t_frame . size . height);
+    MCGContextTranslateCTM(t_gcontext, -t_frame . origin . x, -t_frame . origin . y);
+    
+    MCGImageRef t_gimage;
+    MCImageRep *t_imagerep;
+    MCCanvasImageRef t_image;
+    t_gimage = nil;
+    t_imagerep = nil;
+    if (!MCWidgetOnPaint(p_widget, t_gcontext) ||
+        !MCGContextCopyImage(t_gcontext, t_gimage) ||
+        !MCImageRepCreateWithGImage(t_gimage, t_imagerep) ||
+        !MCCanvasImageCreateWithImageRep(t_imagerep, t_image))
+        t_image = nil;
+    
+    MCGContextRelease(t_gcontext);
+    if (t_imagerep != nil)
+        t_imagerep -> Release();
+    if (t_gimage != nil)
+        MCGImageRelease(t_gimage);
+
+    return t_image;
+}
+
+extern "C" MC_DLLEXPORT MCCanvasImageRef MCWidgetExecSnapshotWidgetAtSizeAsList(MCWidgetRef p_widget, MCProperListRef p_size)
+{
+    float32_t t_size[2];
+    if (!MCProperListFetchAsArrayOfFloat(p_size, 2, t_size))
+	{
+		MCCanvasThrowError(kMCCanvasImageSizeListFormatErrorTypeInfo);
+		return nil;
+	}
+    
+    return MCWidgetExecSnapshotWidgetAtSize(p_widget, MCGSizeMake(t_size[0], t_size[1]));
+}
+
+extern "C" MC_DLLEXPORT MCCanvasImageRef MCWidgetExecSnapshotWidget(MCWidgetRef p_widget)
+{
+    return MCWidgetExecSnapshotWidgetAtSize(p_widget, MCWidgetGetFrame(p_widget) . size);
+}
+#endif
+
+//////////
+
 extern "C" MC_DLLEXPORT void MCWidgetGetPropertyOfWidget(MCStringRef p_property, MCWidgetRef p_widget, MCValueRef& r_value)
 {
     if (!MCWidgetEnsureCanManipulateWidget(p_widget))

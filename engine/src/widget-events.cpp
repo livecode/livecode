@@ -159,7 +159,7 @@ void MCWidgetEventManager::event_close(MCWidget* p_widget)
 
 void MCWidgetEventManager::event_kfocus(MCWidget* p_widget)
 {
-    // TODO: Keyboard events
+    // WIDGET-TODO: Reinstate FocusEnter
     
 #if 0
     // Keyboard focus has changed
@@ -171,7 +171,7 @@ void MCWidgetEventManager::event_kfocus(MCWidget* p_widget)
 
 void MCWidgetEventManager::event_kunfocus(MCWidget* p_widget)
 {
-    // TODO: Keyboard events
+    // WIDGET-TODO: Reinstate FocusLeave
     
 #if 0
     // Keyboard focus has changed
@@ -203,7 +203,7 @@ Boolean MCWidgetEventManager::event_kdown(MCWidget* p_widget, MCStringRef p_text
             break;
     }
     
-    // TODO: Keyboard events
+    // WIDGET-TODO: Reinstate keyDown
 #if 0
     return keyDown(p_widget, p_text, p_key);
 #else
@@ -213,6 +213,7 @@ Boolean MCWidgetEventManager::event_kdown(MCWidget* p_widget, MCStringRef p_text
 
 Boolean MCWidgetEventManager::event_kup(MCWidget* p_widget, MCStringRef p_text, KeySym p_key)
 {
+    // WIDGET-TODO: Reinstate keyUp
 #if 0
     return keyUp(p_widget, p_text, p_key);
 #else
@@ -347,6 +348,7 @@ void MCWidgetEventManager::event_munfocus(MCWidget* p_widget)
 
 void MCWidgetEventManager::event_mdrag(MCWidget* p_widget)
 {
+    // WIDGET-TODO: Reinstate DragStart
 #if 0
     // If this widget is not a drag source, reject the drag attempt
     bool t_drag_accepted;
@@ -543,6 +545,7 @@ MCWidgetRef MCWidgetEventManager::hitTest(MCWidgetRef p_widget, coord_t x, coord
 
 void MCWidgetEventManager::mouseMove(MCWidgetRef p_widget)
 {
+    // WIDGET-TODO: Reinstate DragMove
 #if 0
     // Update the mouse coordinates
     m_mouse_x = p_x;
@@ -560,6 +563,7 @@ void MCWidgetEventManager::mouseMove(MCWidgetRef p_widget)
 
 void MCWidgetEventManager::mouseEnter(MCWidgetRef p_widget)
 {
+    // WIDGET-TODO: Reinstate DragEnter
 #if 0
     if (MCdispatcher->isdragtarget())
     {
@@ -582,6 +586,7 @@ void MCWidgetEventManager::mouseEnter(MCWidgetRef p_widget)
 
 void MCWidgetEventManager::mouseLeave(MCWidgetRef p_widget)
 {
+    // WIDGET-TODO: Reinstate DragLeave
 #if 0
     if (MCdispatcher->isdragtarget())
     {
@@ -717,6 +722,7 @@ bool MCWidgetEventManager::mouseScroll(MCWidgetRef p_widget, real32_t p_delta_x,
 
 bool MCWidgetEventManager::keyDown(MCWidgetRef p_widget, MCStringRef p_string, KeySym p_key)
 {
+    // WIDGET-TODO: Reinstate keyDown
 #if 0
     // Todo: key gesture (shortcuts, accelerators, etc) processing
 
@@ -750,6 +756,7 @@ bool MCWidgetEventManager::keyDown(MCWidgetRef p_widget, MCStringRef p_string, K
 
 bool MCWidgetEventManager::keyUp(MCWidgetRef p_widget, MCStringRef p_string, KeySym p_key)
 {
+    // WIDGET-TODO: Reinstate keyUp
 #if 0
     // Todo: key gesture (shortcuts, accelerators, etc) processing
     
@@ -779,6 +786,7 @@ bool MCWidgetEventManager::keyUp(MCWidgetRef p_widget, MCStringRef p_string, Key
 
 void MCWidgetEventManager::touchBegin(MCWidgetRef p_widget, uinteger_t p_id, coord_t p_x, coord_t p_y)
 {
+    // WIDGET-TODO: Reinstate touchBegin
 #if 0
     // Check whether this touch already exists within our touch event list
     uinteger_t t_slot;
@@ -811,6 +819,7 @@ void MCWidgetEventManager::touchBegin(MCWidgetRef p_widget, uinteger_t p_id, coo
 
 void MCWidgetEventManager::touchMove(MCWidgetRef p_widget, uinteger_t p_id, coord_t p_x, coord_t p_y)
 {
+    // WIDGET-TODO: Reinstate touchMove
 #if 0
     // Does this touch event exist in the list yet? If not, create it. (This
     // might happen if a touch starts on a non-widget MCControl and later moves
@@ -851,6 +860,7 @@ void MCWidgetEventManager::touchMove(MCWidgetRef p_widget, uinteger_t p_id, coor
 
 void MCWidgetEventManager::touchEnd(MCWidgetRef p_widget, uinteger_t p_id, coord_t p_x, coord_t p_y)
 {
+    // WIDGET-TODO: Reinstate touchEnd
 #if 0
     // Ignore the event if this touch has not been registered
     uinteger_t t_slot;
@@ -880,6 +890,7 @@ void MCWidgetEventManager::touchEnd(MCWidgetRef p_widget, uinteger_t p_id, coord
 
 void MCWidgetEventManager::touchCancel(MCWidgetRef p_widget, uinteger_t p_id, coord_t p_x, coord_t p_y)
 {
+    // WIDGET-TODO: Reinstate touchCancel
 #if 0
     // Ignore the event if this touch has not been registered
     uinteger_t t_slot;
@@ -909,6 +920,7 @@ void MCWidgetEventManager::touchCancel(MCWidgetRef p_widget, uinteger_t p_id, co
 
 void MCWidgetEventManager::touchEnter(MCWidgetRef p_widget, uinteger_t p_id)
 {
+    // WIDGET-TODO: Reinstate touchEnter
 #if 0
     if (!widgetIsInRunMode(p_widget))
         return;
@@ -924,6 +936,7 @@ void MCWidgetEventManager::touchEnter(MCWidgetRef p_widget, uinteger_t p_id)
 
 void MCWidgetEventManager::touchLeave(MCWidgetRef p_widget, uinteger_t p_id)
 {
+    // WIDGET-TODO: Reinstate touchLeave
 #if 0
     if (!widgetIsInRunMode(p_widget))
         return;
