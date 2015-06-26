@@ -52,7 +52,11 @@ public:
 	virtual bool GetMetadata(MCImageMetadata& r_metadata);
 	
 private:
+	bool EnsureBitmap();
+	void ReleaseBitmap();
+	
 	MCGImageFrame m_frame;
+	MCImageBitmap *m_bitmap;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -96,13 +100,25 @@ bool MCGImageImageRep::GetFrameDuration(uindex_t p_index, uint32_t &r_duration)
 
 bool MCGImageImageRep::LockBitmap(uindex_t p_index, MCGFloat p_density, MCImageBitmap *&r_bitmap)
 {
-	// TODO - implement (unpremultiplied) bitmap locking
-	return false;
+	if (p_index > 0)
+		return false;
+	
+	if (!EnsureBitmap())
+		return false;
+
+	Retain();
+	
+	r_bitmap = m_bitmap;
+	
+	return true;
 }
 
 void MCGImageImageRep::UnlockBitmap(uindex_t p_index, MCImageBitmap *p_bitmap)
 {
-	// TODO - implement (unpremultiplied) bitmap locking
+	if (p_index > 0)
+		return;
+	
+	Release();
 }
 
 bool MCGImageImageRep::LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame &r_frame)
@@ -135,6 +151,49 @@ bool MCGImageImageRep::GetMetadata(MCImageMetadata &r_metadata)
 {
 	MCMemoryClear(&r_metadata, sizeof(MCImageMetadata));
 	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern bool MCImageBitmapCreateWithPixels(void *p_pixels, uint32_t p_stride, uint32_t p_width, uint32_t p_height, MCImageBitmap *&r_bitmap);
+
+bool MCGImageImageRep::EnsureBitmap()
+{
+	if (m_bitmap != nil)
+		return true;
+	
+	bool t_success;
+	t_success = true;
+	
+	MCGRaster t_raster;
+	if (t_success)
+		t_success = MCGImageGetRaster(m_frame.image, t_raster);
+	
+	MCImageBitmap *t_bitmap;
+	t_bitmap = nil;
+	
+	if (t_success)
+		t_success = MCImageBitmapCreateWithPixels(t_raster.pixels, t_raster.stride, t_raster.width, t_raster.height, t_bitmap);
+	
+	if (t_success)
+	{
+		t_bitmap->has_alpha = t_bitmap->has_transparency = t_raster.format == kMCGRasterFormat_ARGB;
+		
+		if (t_bitmap->has_transparency)
+			MCImageBitmapUnpremultiply(t_bitmap);
+	}
+	
+	if (t_success)
+		m_bitmap = t_bitmap;
+	
+	return t_success;
+}
+
+void MCGImageImageRep::ReleaseBitmap()
+{
+	if (m_bitmap != nil)
+		MCImageFreeBitmap(m_bitmap);
+	m_bitmap = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
