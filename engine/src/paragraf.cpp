@@ -2839,6 +2839,10 @@ uint1 MCParagraph::fmovefocus(Field_translations type, bool p_force_logical)
             moving_left = bptr -> is_rtl();
             type = FT_FORWARDWORD;
             break;
+
+		default:
+			/* Field translations that don't require RTL fix-ups */
+			break;
     }
 
     findex_t oldfocused = focusedindex;

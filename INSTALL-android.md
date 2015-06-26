@@ -23,37 +23,44 @@ mkdir -p ~/android/toolchain
 cd ~/android/toolchain
 
 tar -xf ~/Downloads/android-sdk_r24.1.2-linux.tgz
-7z x ~/Downloads/android-ndk-r10d-linux-x86_64.bin
+7z x ~/Downloads/android-ndk-r10e-linux-x86_64.bin
 ````
 
 Update the SDK:
 
-    android-sdk-linuxl/tools/android update sdk --no-ui
+    android-sdk-linux/tools/android update sdk --no-ui
 
 ### Setting up the ARM toolchain
 
 Create a standalone toolchain (this simplifies setting up the build environment):
 
 ````bash
-android-ndk-r10d/build/tools/make-standalone-toolchain.sh \
-    --toolchain=arm-linux-androideabi-clang3.4 \
+android-ndk-r10e/build/tools/make-standalone-toolchain.sh \
+    --toolchain=arm-linux-androideabi-clang3.5 \
     --platform=android-8 \
-    --install-dir=~/android/toolchain/standalone
+    --install-dir=${HOME}/android/toolchain/standalone
 ````
 
 By default, the Android toolchain uses the `gold` linker.  However, this doesn't work for compiling LiveCode, so it's necessary to change the default linker to `ld.bfd` by replacing the `ld` symlink:
 
 ````bash
 rm standalone/bin/arm-linux-androideabi-ld
-ln -s standalone/bin/arm-linux-androideabi-ld.bfd \
+ln -s arm-linux-androideabi-ld.bfd \
     standalone/bin/arm-linux-androideabi-ld
+````
+
+Add a couple of symlinks to allow the engine configuration script to find the Android toolchain:
+
+````bash
+ln -s android-ndk-r10e android-ndk
+ln -s android-sdk-linux android-sdk
 ````
 
 ## Configuring LiveCode
 
 ### Build environment
 
-The Android build expects a large number of environment variables to be set.  If the environment variables aren't set, the build process will attempt to guess sensible defaults.
+The Android build expects a large number of environment variables to be set.  If the environment variables aren't set, the build process will attempt to guess sensible defaults. If you've set up the directory structure as described above, the make command should detect everything automatically and these variables shouldn't be necessary.
 
 The following script will set up the environment variables correctly.  You may need to edit it depending on where your JDK and ARM toolchain are installed:
 

@@ -298,6 +298,8 @@ static MCValueCustomCallbacks kMCStreamCustomValueCallbacks =
 	__MCStreamEqual,
 	__MCStreamHash,
 	__MCStreamDescribe,
+	nil,
+	nil,
 };
 
 bool MCStreamCreate(const MCStreamCallbacks *p_callbacks, size_t p_extra_bytes, MCStreamRef& r_stream)

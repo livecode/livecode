@@ -4,7 +4,7 @@
 OPENSSL_VERSION="1.0.1m"
 CURL_VERSION="7.21.1"
 ICU_VERSION="52.1"
-CEF_VERSION="3.2062.1796"
+CEF_VERSION="39.0.2171.95"
 
 # Package directory
 PACKAGE_DIR="`pwd`/packaged"
@@ -73,7 +73,7 @@ function doPackage {
 	fi
 
 	# Package up CEF
-	if [ "$PLATFORM" = "win32" ] ; then
+	if [ "$PLATFORM" = "win32" -o "$PLATFORM" = "linux" ] ; then
 		tar -cf "${CEF_TAR}" "${LIBPATH}/CEF"
 	elif [ "$PLATFORM" = "mac" ] ; then
 		tar -cf "${CEF_TAR}" "${LIBPATH}/Chromium Embedded Framework.framework"

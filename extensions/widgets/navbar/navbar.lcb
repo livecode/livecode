@@ -151,17 +151,13 @@ use com.livecode.library.iconSVG
 metadata author is "LiveCode"
 metadata version is "1.0.2"
 metadata title is "Navigation Bar"
+metadata preferredSize is "320,49"
 --
 
 -- property declarations
-
-property selectedItem	get mSelectedItem 	set setNavSelectedItem
-metadata selectedItem.editor is "com.livecode.pi.number"
-metadata selectedItem.default is "1"
-metadata selectedItem.label is "Selected Item Index"
-
-property editMode get mEditMode set setEditMode
-metadata editMode.user_visible is "false"
+property navData get getNavData set setNavData
+metadata navData.editor is "com.livecode.pi.navbar"
+metadata navData.label is "Navigation Data"
 
 property itemStyle	get mItemStyle	set setItemStyle
 metadata itemStyle.editor is "com.livecode.pi.enum"
@@ -169,9 +165,20 @@ metadata itemStyle.options is "icons,names,icons and names"
 metadata itemStyle.default is "icons and names"
 metadata itemStyle.label is "Display Style"
 
-property navData get getNavData set setNavData
-metadata navData.editor is "com.livecode.pi.navbar"
-metadata navData.label is "Navigation Data"
+property navHiliteColor	get getHiliteColor set setHiliteColor
+metadata navHiliteColor.editor is "com.livecode.pi.color"
+metadata navHiliteColor.label is "Selected Item Color"
+metadata navHiliteColor.default is "0,121,255"
+
+property selectedItem	get mSelectedItem 	set setNavSelectedItem
+metadata selectedItem.editor is "com.livecode.pi.integer"
+metadata selectedItem.default is "1"
+metadata selectedItem.label is "Selected Item Index"
+metadata selectedItem.step is "1"
+metadata selectedItem.min is "1"
+
+property editMode get mEditMode set setEditMode
+metadata editMode.user_visible is "false"
 
 property navNames		get getNavNames			set setNavNames
 metadata navNames.user_visible is "false"
@@ -184,11 +191,6 @@ metadata navLabels.user_visible is "false"
 
 property desiredHeight	get getDesiredHeight
 metadata desiredHeight.user_visible is "false"
-
-property navHiliteColor	get getHiliteColor set setHiliteColor
-metadata navHiliteColor.editor is "com.livecode.pi.color"
-metadata navHiliteColor.label is "Selected Item Color"
-metadata navHiliteColor.default is "0,121,255"
 
 --
 
@@ -961,10 +963,6 @@ private handler setData(in pArray as Array, in pKeys as List, out rList as List)
 	end repeat
 
 	put tList into rList
-
-	put true into mRecalculate
-	post "navDataChanged"
-	redraw all
 end handler
 
 private handler getDataElement(in pElementName as String, in pList as List) returns String
@@ -1074,14 +1072,43 @@ private handler defaultNavArray() returns Array
 	return tArray
 end handler
 
+private handler navDataDifferent(in pLeft as List, in pRight as List) returns Boolean
+	variable tIndex as Number
+	repeat with tIndex from 1 up to the number of elements in pLeft
+			if tIndex > the number of elements in pRight then
+				return true
+			end if
+
+			if pLeft[tIndex]["label"] is not pRight[tIndex]["label"] then
+				return true
+			end if
+
+			if pLeft[tIndex]["icon_name"] is not pRIght[tIndex]["icon_name"] then
+				return true
+			end if
+
+			if pLeft[tIndex]["selected_icon_name"] is not pRight[tIndex]["selected_icon_name"] then
+				if not (pLeft[tIndex]["selected_icon_name"] is "" and pRight[tIndex]["selected_icon_name"] is pRight[tIndex]["icon_name"]) and not (pLeft[tIndex]["selected_icon_name"] is pLeft[tIndex]["icon_name"] and pRight[tIndex]["selected_icon_name"] is "") then
+					return true
+				end if
+			end if
+	end repeat
+	return false
+end handler
+
 private handler getNavData() returns Array
 	return listToArray(mNavData)
 end handler
 
 private handler setNavData(in pNavData as Array)
-	setData(pNavData, the keys of defaultNavArray(), mNavData)
-	put true into mRecalculate
-	redraw all
+	variable tNavData as List
+	setData(pNavData, the keys of defaultNavArray(), tNavData)
+	if navDataDifferent(tNavData, mNavData) then
+		put tNavData into mNavData
+		put true into mRecalculate
+		post "navDataChanged"
+		redraw all
+	end if
 end handler
 
 private handler getNavNames() returns String

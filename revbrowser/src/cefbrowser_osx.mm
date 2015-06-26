@@ -240,7 +240,7 @@ void MCCefBrowserOSX::PlatformConfigureWindow(CefWindowInfo &r_info)
     
 	NSView *t_handle;
 	if (!GetWindowHandle(t_handle))
-		return false;
+		return;
     
     t_handle = t_handle;
 }

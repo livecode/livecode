@@ -9,6 +9,8 @@
 		'debug_info_suffix': '.dbg',
 		
 		'c++_std': '<!(echo ${CXX_STD:-gnu++03})',
+		
+		'silence_warnings': 0,
 	},
 	
 	'defines':
@@ -23,13 +25,6 @@
 		'../thirdparty/headers/linux/include',
 		'../thirdparty/libcairo/src',			# Required by the GDK headers
 		'../thirdparty/libfreetype/include',	# Required by the Pango headers
-	],
-	
-	# Disable exceptions and RTTI, except where needed
-	'cflags_cc':
-	[
-		'-fno-exceptions',
-		'-fno-rtti',
 	],
 	
 	# Static libraries that are to be included into dynamic libraries
@@ -67,6 +62,29 @@
 				],
 			},
 		],
+		[
+			'silence_warnings == 0',
+			{
+				'cflags':
+				[
+					'-Wall',
+					'-Wextra',
+					'-Wno-unused-parameter',	# Just contributes build noise
+				],
+			},
+			{
+				'cflags':
+				[
+					'-w',						# Disable warnings
+					'-fpermissive',				# Be more lax with old code
+				],
+				
+				'cflags_c':
+				[
+					'-Werror=declaration-after-statement',	# Ensure compliance with C89
+				],
+			},
+		],
 	],
 	
 	'cflags':
@@ -74,6 +92,7 @@
 		'-Wall',
 		'-Wextra',
 		'-fstrict-aliasing',
+		'-fvisibility=hidden',
 	],
 	
 	'cflags_c':
@@ -95,7 +114,7 @@
 		{
 			'cflags':
 			[
-				'-Og',
+				'-O0',
 				'-g3',
 			],
 			

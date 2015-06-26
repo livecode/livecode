@@ -1873,7 +1873,7 @@ MC_DLLEXPORT bool MCStringCreateWithCFString(CFStringRef cf_string, MCStringRef&
 MC_DLLEXPORT bool MCStringCreateWithCFStringAndRelease(CFStringRef cf_string, MCStringRef& r_string);
 #endif
 
-#ifdef __LINUX__
+#if !defined(__WINDOWS__)
 // Create a string from a C string in the system encoding
 MC_DLLEXPORT bool MCStringCreateWithSysString(const char *sys_string, MCStringRef &r_string);
 #endif
@@ -3043,7 +3043,7 @@ struct MCPickleVariantInfo
     MCPickleRecordInfo *k##Type##PickleInfo = &__##Type##_PickleImp::__info; \
     MCPickleRecordFieldInfo __##Type##_PickleImp::__fields[] = {
 #define MC_PICKLE_END_RECORD() \
-        { kMCPickleFieldTypeNone, nil, 0 } \
+	{ kMCPickleFieldTypeNone, nil, 0, 0, nil } \
     };
 
 #define MC_PICKLE_BEGIN_VARIANT(Type, Kind) \

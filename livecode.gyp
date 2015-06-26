@@ -27,6 +27,9 @@
 				'revdb/revdb.gyp:dbsqlite',
 				'revxml/revxml.gyp:external-revxml',
 				'revzip/revzip.gyp:external-revzip',
+				
+				# Widgets and libraries
+				'extensions/extensions.gyp:extensions',
 			],
 			
 			'conditions':
@@ -46,7 +49,6 @@
 							'revbrowser/revbrowser.gyp:revbrowser-cefprocess',
 							'revdb/revdb.gyp:dbodbc',
 							'revdb/revdb.gyp:dbpostgresql',
-							'revfont/revfont.gyp:external-revfont',
 							'revmobile/revmobile.gyp:external-revandroid',
 							'revmobile/revmobile.gyp:external-reviphone',
 							'revspeech/revspeech.gyp:external-revspeech',
@@ -54,6 +56,16 @@
 							
 							# Server externals
 							'revdb/revdb.gyp:external-revdb-server',
+						],
+					},
+				],
+				[
+					'OS == "mac" or OS == "win"',
+					{
+						'dependencies':
+						[
+							# Externals
+							'revfont/revfont.gyp:external-revfont',
 						],
 					},
 				],
