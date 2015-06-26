@@ -333,8 +333,8 @@ if [ -z "${JAVA_SDK}" ] ; then
 		ANDROID_JAVA_SDK="$(/usr/libexec/java_home)"
 	elif [ -d /usr/lib/jvm/default ] ; then
 		ANDROID_JAVA_SDK=/usr/lib/jvm/default
-	elif [ -d /usr/lib/jvm/default-jvm ] ; then
-		ANDROID_JAVA_SDK=/usr/lib/jvm/default-jvm
+	elif [ -d /usr/lib/jvm/default-java ] ; then
+		ANDROID_JAVA_SDK=/usr/lib/jvm/default-java
 	else
 		if [ "${OS}" = "android" ] ; then
 			echo >&2 "Error: no Java SDK found - set \$JAVA_SDK"
