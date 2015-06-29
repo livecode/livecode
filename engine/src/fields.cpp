@@ -601,6 +601,13 @@ Exec_stat MCField::settext(uint4 parid, const MCString &s, Boolean formatted, Bo
 		pgptr->setparent(this);
 	}
 	setparagraphs(pgptr, parid);
+    
+    // PM-2015-06-29: [[ Bug 15552 ]] Allow the textChanged msg to be send to the field in *any* case the text is updated:
+    // 1. set the text of fld 1 to "foo"
+    // 2. put "foo" into fld 1"
+    // 3. ... etc
+    // regardless of the focus of the fld
+    textchanged();
 	return ES_NORMAL;
 }
 
