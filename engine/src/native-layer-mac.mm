@@ -55,7 +55,7 @@
 #include "platform-internal.h"
 #include "mac-internal.h"
 
-
+#if 0
 MCNativeLayerMac::MCNativeLayerMac(MCWidget* p_widget) :
   m_widget(p_widget),
   m_view(nil),
@@ -254,3 +254,4 @@ MCNativeLayer* MCWidget::createNativeLayer()
 {
     return new MCNativeLayerMac(this);
 }
+#endif
