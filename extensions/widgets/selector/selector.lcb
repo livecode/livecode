@@ -104,11 +104,11 @@ public handler OnPaint()
 	
 end handler
 
-public handler OnMouseUp()
+public handler OnClick()
 	put getSelected() into mSelected
 	redraw all
     
-	post "mouseUp" with [mSelected]
+	post "optionChanged" with [mSelected]
 end handler
 
 private handler getLabel(in pSelection as Integer) as String

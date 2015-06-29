@@ -112,6 +112,10 @@ public handler OnOpen()
 	schedule timer in computeNextTimer() seconds
 end handler
 
+public handler OnClose()
+    cancel timer
+end handler
+
 -- called whenever LiveCode needs to redraw the widget
 public handler OnPaint()
 

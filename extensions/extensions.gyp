@@ -39,6 +39,7 @@
 				'widgets/segmented/segmented.lcb',
 				#'widgets/segmented-popup/segmented-popup.lcb',
 				'widgets/selector/selector.lcb',
+                'widgets/simplecomposed/simplecomposed.lcb',
 				#'widgets/svgicon/svgicon.lcb',
 				'widgets/svgpath/svgpath.lcb',
 				'widgets/switchbutton/switchbutton.lcb',

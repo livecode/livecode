@@ -23,6 +23,13 @@
 class MCWidgetEventManager;
 extern MCWidgetEventManager* MCwidgeteventmanager;
 
+enum MCWidgetEventTriggerType
+{
+    kMCWidgetEventTriggerTargetOnly,
+    kMCWidgetEventTriggerTargetFirst,
+    kMCWidgetEventTriggerTargetLast,
+};
+
 class MCWidgetEventManager
 {
 public:
@@ -45,8 +52,12 @@ public:
     void event_timer(MCWidget*, MCNameRef p_message, MCParameter *p_parameters);
     void event_setrect(MCWidget*, const MCRectangle& p_rectangle);
     void event_recompute(MCWidget*);
-    void event_draw(MCWidget*, MCDC *p_dc, const MCRectangle& p_dirty, bool p_isolated, bool p_sprite);
+    void event_paint(MCWidget*, MCGContextRef);
     void event_mdrag(MCWidget*);
+    
+    MCObject *event_hittest(MCWidget*, int32_t x, int32_t y);
+    void event_toolchanged(MCWidget*, Tool);
+    void event_layerchanged(MCWidget*);
     
     // Non-MCControl event for handling touches
     void event_touch(MCWidget*, uint32_t p_id, MCEventTouchPhase, int2 p_x, int2 p_y);
@@ -62,11 +73,8 @@ public:
     void event_dnd_end(MCWidget*);
     void event_dnd_drop(MCWidget*);
     
-    // Returns a bitmask of the mouse buttons that are pressed
-    uinteger_t GetMouseButtonState() const;
-    
-    // Returns the widget that the mouse is currently focused on
-    MCWidget* GetMouseWidget() const;
+    MCWidgetRef GetGrabbedWidget(void) const;
+    MCWidgetRef GetTargetWidget(void) const;
     
     // Returns the synchronous mouse/click coordinates
     void GetSynchronousMousePosition(coord_t& r_x, coord_t& r_y) const;
@@ -79,6 +87,7 @@ public:
     void GetAsynchronousClickPosition(coord_t& r_x, coord_t& r_y) const;
     
 private:
+    void TriggerEvent(MCWidgetRef widget, MCWidgetEventTriggerType type, MCNameRef event);
     
     // State of the input devices at the last point an event was received
     coord_t     m_mouse_x, m_mouse_y;
@@ -87,12 +96,17 @@ private:
     uinteger_t  m_click_count;
     uinteger_t  m_click_button;
     uinteger_t  m_mouse_buttons;
+    MCWidgetRef m_mouse_focus;
+    MCWidgetRef m_mouse_grab;
+    
     uinteger_t  m_keycode;
     uinteger_t  m_modifiers;
     MCStringRef m_keystring;
-    MCWidget*   m_mouse_focus;
-    MCWidget*   m_mouse_grab;
-    MCWidget*   m_keyboard_focus;
+    MCWidgetRef  m_keyboard_focus;
+    
+    MCWidgetRef m_drag_target;
+    
+    MCWidgetRef m_target;
     
     // Parameters for controlling double-click time and position deltas
     uint32_t    m_doubleclick_time;
@@ -102,28 +116,28 @@ private:
     struct MCWidgetTouchEvent;
     MCAutoArray<MCWidgetTouchEvent> m_touches;
     
-    
     // Common functions for mouse gesture processing
-    void mouseMove(MCWidget*, coord_t p_x, coord_t p_y);
-    void mouseEnter(MCWidget*);
-    void mouseLeave(MCWidget*);
-    bool mouseDown(MCWidget*, uinteger_t p_which);
-    bool mouseUp(MCWidget*, uinteger_t p_which);
-    void mouseClick(MCWidget*, uinteger_t p_which);
-    bool mouseRelease(MCWidget*, uinteger_t p_which);
-    bool mouseScroll(MCWidget*, real32_t p_delta_x, real32_t p_delta_y);
+    MCWidgetRef hitTest(MCWidgetRef, coord_t x, coord_t y);
+    void mouseMove(MCWidgetRef);
+    void mouseEnter(MCWidgetRef);
+    void mouseLeave(MCWidgetRef);
+    bool mouseDown(MCWidgetRef, uinteger_t p_which);
+    bool mouseUp(MCWidgetRef, uinteger_t p_which);
+    void mouseClick(MCWidgetRef, uinteger_t p_which);
+    bool mouseCancel(MCWidgetRef, uinteger_t p_which);
+    bool mouseScroll(MCWidgetRef, real32_t p_delta_x, real32_t p_delta_y);
     
     // Common functions for keyboard gesture processing
-    bool keyDown(MCWidget*, MCStringRef, KeySym);
-    bool keyUp(MCWidget*, MCStringRef, KeySym);
+    bool keyDown(MCWidgetRef, MCStringRef, KeySym);
+    bool keyUp(MCWidgetRef, MCStringRef, KeySym);
     
     // Common functions for touch gesture processing
-    void touchBegin(MCWidget*, uinteger_t p_id, coord_t p_x, coord_t p_y);
-    void touchMove(MCWidget*, uinteger_t p_id, coord_t p_x, coord_t p_y);
-    void touchEnd(MCWidget*, uinteger_t p_id, coord_t p_x, coord_t p_y);
-    void touchCancel(MCWidget*, uinteger_t p_id, coord_t p_x, coord_t p_y);
-    void touchEnter(MCWidget*, uinteger_t p_id);
-    void touchLeave(MCWidget*, uinteger_t p_id);
+    void touchBegin(MCWidgetRef, uinteger_t p_id, coord_t p_x, coord_t p_y);
+    void touchMove(MCWidgetRef, uinteger_t p_id, coord_t p_x, coord_t p_y);
+    void touchEnd(MCWidgetRef, uinteger_t p_id, coord_t p_x, coord_t p_y);
+    void touchCancel(MCWidgetRef, uinteger_t p_id, coord_t p_x, coord_t p_y);
+    void touchEnter(MCWidgetRef, uinteger_t p_id);
+    void touchLeave(MCWidgetRef, uinteger_t p_id);
     
     // Utility functions for managing touch events
     uinteger_t allocateTouchSlot();
@@ -131,7 +145,20 @@ private:
     void freeTouchSlot(uinteger_t p_which);
     
     // Indicates whether the given widget is in run mode or not
-    bool widgetIsInRunMode(MCWidget*);
+    bool widgetIsInRunMode(MCWidget *);
+    
+    // Bubble an event up from the target. This is used for things such as mouse
+    // button presses and key presses. Each target has the ability to allow the
+    // message to be bubbled by returning true in their event handlers.
+    bool bubbleEvent(MCWidgetRef target, bool (*action)(MCWidgetRef, bool&));
+    
+    // Always bubble an event up from the target. This is used for things such as
+    // mouseEnter/Leave events. Each target is called with the event and they do
+    // not have a chance to block the bubbling.
+    bool alwaysBubbleEvent(MCWidgetRef target, bool (*action)(MCWidgetRef, bool&));
+    
+    // The common implementation of event bubbling.
+    bool doBubbleEvent(bool always_bubble, MCWidgetRef target, bool (*action)(void *context, MCWidgetRef widget, bool&), void *context);
 };
 
 #endif // ifndef __MC_WIDGET_EVENTS__
