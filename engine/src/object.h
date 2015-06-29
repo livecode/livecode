@@ -854,7 +854,7 @@ public:
     
     // Copy the font which should be used for this object. This will map/unmap
     // as appropriate.
-    bool copyfont(MCFontRef& r_font);
+    void copyfont(MCFontRef& r_font);
     
     // MW-2014-12-17: [[ Widgets ]] Returns true if the object is a widget or contains
     //   a widget.

@@ -220,6 +220,7 @@
 			'src/vclip.h',
 			'src/widget.h',
 			'src/widget-events.h',
+            'src/widget-ref.h',
 			'src/aclip.cpp',
 			'src/block.cpp',
 			'src/button.cpp',
@@ -297,6 +298,9 @@
 			'src/vclip.cpp',
 			'src/widget.cpp',
 			'src/widget-events.cpp',
+            'src/widget-ref.cpp',
+            'src/widget-syntax.cpp',
+            'src/widget-popup.cpp',
 			
 			# Group "Desktop"
 			'src/dskmac.cpp',

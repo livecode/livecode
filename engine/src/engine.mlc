@@ -42,7 +42,7 @@ public foreign type ScriptObject binds to "kMCEngineScriptObjectTypeInfo"
 public foreign handler MCEngineExecResolveScriptObject(in pObjectId) returns ScriptObject binds to "<builtin>"
 public foreign handler MCEngineEvalScriptObjectExists(in pObject as ScriptObject, out rExists as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCEngineEvalScriptObjectDoesNotExists(in pObject as ScriptObject, out rExists as CBool) returns nothing binds to "<builtin>"
-public foreign handler MCEngineExecGetPropertyOfScriptObject(in pProperty as String, in pObject as ScriptObject) returns any binds to "<builtin>"
+public foreign handler MCEngineExecGetPropertyOfScriptObject(in pProperty as String, in pObject as ScriptObject, out rValue as any) returns nothing binds to "<builtin>"
 public foreign handler MCEngineExecSetPropertyOfScriptObject(in pProperty as String, in pObject as ScriptObject, in pValue as any) returns nothing binds to "<builtin>"
 public foreign handler MCEngineEvalOwnerOfScriptObject(in pObject as ScriptObject, out rParent as ScriptObject) returns nothing binds to "<builtin>"
 public foreign handler MCEngineEvalChildrenOfScriptObject(in pObject as ScriptObject, out rChildren as List) returns nothing binds to "<builtin>"
@@ -141,38 +141,9 @@ begin
 end syntax
 
 /*
-Summary:	Get a property of a script object.
-Property: 	The name of the property to set.
+Summary:	The property of a script object.
+Property: 	The name of the property to manipulate
 Object:		An expression that evaluates to a <ScriptObject>.
-
-The result:	The value of the property.
-
-Example:
-	public handler myScript() as String
-		get property "script" of my script object
-		return the result
-	end handler
-	
-Description:
-Use to fetch properties of a script object. 
-
->*Note:* An error is thrown if the script object does not exist.
-
->*Note:* An error is thrown if this syntax is used in a context where access
-to script objects is not allowed.
-*/
-
-syntax GetPropertyOfScriptObject is statement
-    "get" "property" <Property: Expression> "of" <Object: Expression>
-begin
-    MCEngineExecGetPropertyOfScriptObject(Property, Object)
-end syntax
-
-/*
-Summary:	Set a property of a script object.
-Property: 	The name of the property to set.
-Object:		An expression that evaluates to a <ScriptObject>.
-Value: 		The value to set the property to.
 
 Example:
 	public handler OnMouseUp() returns nothing
@@ -182,9 +153,10 @@ Example:
 Example:
 	resolve script object "this stack"
 	set property "invisible" of the result to true
+    get property "script" of my script object
 	
 Description:
-Use to set properties of a script object. 
+Use to manipulate properties of a script object.
 
 >*Note:* An error is thrown if the script object does not exist.
 
@@ -192,10 +164,11 @@ Use to set properties of a script object.
 to script objects is not allowed.
 */
 
-syntax SetPropertyOfScriptObject is statement
-    "set" "property" <Property: Expression> "of" <Object: Expression> "to" <Value: Expression>
+syntax PropertyOfScriptObject is prefix operator with precedence 3
+    "property" <Property: Expression> "of" <Object: Expression>
 begin
-    MCEngineExecSetPropertyOfScriptObject(Property, Object, Value)
+    MCEngineExecGetPropertyOfScriptObject(Property, Object, output)
+    MCEngineExecSetPropertyOfScriptObject(input, Property, Object)
 end syntax
 
 /*
