@@ -139,7 +139,7 @@ extern "C" MC_DLLEXPORT void MCWidgetEvalInEditMode(bool& r_in_edit_mode)
 extern MCValueRef MCEngineDoSendToObjectWithArguments(bool p_is_function, MCStringRef p_message, MCObject *p_object, MCProperListRef p_arguments);
 extern void MCEngineDoPostToObjectWithArguments(MCStringRef p_message, MCObject *p_object, MCProperListRef p_arguments);
 
-extern "C" MC_DLLEXPORT void MCWidgetGetScriptObject(MCScriptObjectRef& r_script_object)
+extern "C" MC_DLLEXPORT void MCWidgetGetMyScriptObject(MCScriptObjectRef& r_script_object)
 {
     if (!MCWidgetEnsureCurrentWidgetIsRoot())
         return;
@@ -239,7 +239,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetMyEnabled(bool& r_enabled)
     r_enabled = !MCWidgetGetDisabled(MCcurrentwidget);
 }
 
-extern "C" MC_DLLEXPORT void MCWidgetGetDisabled(bool& r_disabled)
+extern "C" MC_DLLEXPORT void MCWidgetGetMyDisabled(bool& r_disabled)
 {
     if (!MCWidgetEnsureCurrentWidget())
         return;
