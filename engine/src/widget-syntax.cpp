@@ -676,6 +676,9 @@ MCTypeInfoRef kMCWidgetNoCurrentWidgetErrorTypeInfo = nil;
 MCTypeInfoRef kMCWidgetSizeFormatErrorTypeInfo = nil;
 MC_DLLEXPORT MCTypeInfoRef kMCWidgetTypeInfo = nil;
 
+bool com_livecode_widget_InitializePopups(void);
+void com_livecode_widget_FinalizePopups(void);
+
 extern "C" bool com_livecode_widget_Initialize(void)
 {
 	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.widget.NoCurrentWidgetError"), MCNAME("widget"), MCSTR("No current widget."), kMCWidgetNoCurrentWidgetErrorTypeInfo))
@@ -686,6 +689,8 @@ extern "C" bool com_livecode_widget_Initialize(void)
 	
     if (!MCNamedCustomTypeInfoCreate(MCNAME("com.livecode.widget.Widget"), kMCNullTypeInfo, &kMCWidgetCustomValueCallbacks, kMCWidgetTypeInfo))
         return false;
+
+    com_livecode_widget_InitializePopups();
     
 	return true;
 }
@@ -700,6 +705,8 @@ extern "C" void com_livecode_widget_Finalize(void)
 	
 	MCValueRelease(kMCWidgetSizeFormatErrorTypeInfo);
 	kMCWidgetSizeFormatErrorTypeInfo = nil;
+    
+    com_livecode_widget_FinalizePopups();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

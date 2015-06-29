@@ -154,6 +154,24 @@ void MCWidgetEventManager::event_open(MCWidget* p_widget)
 
 void MCWidgetEventManager::event_close(MCWidget* p_widget)
 {
+    if (m_mouse_grab != nil)
+    {
+        if (MCWidgetGetHost(m_mouse_grab) == p_widget)
+        {
+            mouseCancel(m_mouse_grab, 0);
+        }
+    }
+    
+    if (m_mouse_focus != nil)
+    {
+        
+        if (MCWidgetGetHost(m_mouse_focus) == p_widget)
+        {
+            mouseLeave(m_mouse_focus);
+            MCValueAssignOptional(m_mouse_focus, nil);
+        }
+    }
+    
     MCWidgetOnClose(p_widget -> getwidget());
 }
 
@@ -188,16 +206,16 @@ Boolean MCWidgetEventManager::event_kdown(MCWidget* p_widget, MCStringRef p_text
     switch (p_key)
     {
         case XK_WheelUp:
-            return mouseScroll(p_widget -> getwidget(), 0.0, +1.0);
+            return mouseScroll(m_mouse_focus, 0.0, +1.0);
             
         case XK_WheelDown:
-            return mouseScroll(p_widget -> getwidget(), 0.0, -1.0);
+            return mouseScroll(m_mouse_focus, 0.0, -1.0);
             
         case XK_WheelLeft:
-            return mouseScroll(p_widget -> getwidget(), +1.0, 0.0);
+            return mouseScroll(m_mouse_focus, +1.0, 0.0);
             
         case XK_WheelRight:
-            return mouseScroll(p_widget -> getwidget(), -1.0, 0.0);
+            return mouseScroll(m_mouse_focus, -1.0, 0.0);
             
         default:
             break;
@@ -686,10 +704,6 @@ bool MCWidgetEventManager::mouseCancel(MCWidgetRef p_widget, uinteger_t p_which)
     
     // Send a mouse release event if the widget handles it
     bubbleEvent(p_widget, MCWidgetOnMouseCancel);
-    
-    // Release implies loss of mouse focus
-    MCValueRelease(m_mouse_focus);
-    m_mouse_focus = nil;
     
     return True;
 }
