@@ -148,7 +148,7 @@ public:
 
 	virtual void setrect(const MCRectangle& p_rectangle);
 	virtual void recompute(void);
-
+    
 	virtual Exec_stat handle(Handler_type, MCNameRef, MCParameter *, MCObject *pass_from);
 
 	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);

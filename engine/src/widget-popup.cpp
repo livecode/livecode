@@ -392,7 +392,7 @@ MCValueRef MCWidgetPopupAtLocationWithProperties(MCNameRef p_kind, const MCPoint
 	
 	MCValueRef t_result;
 	t_result = MCValueRetain(s_widget_popup->getpopupresult());
-	
+
 	s_widget_popup->del();
 	s_widget_popup->scheduledelete();
 	
@@ -454,6 +454,18 @@ extern "C" MC_DLLEXPORT void MCWidgetExecClosePopupWithResult(MCValueRef p_resul
 extern "C" MC_DLLEXPORT void MCWidgetExecClosePopup(MCValueRef p_result)
 {
 	MCWidgetExecClosePopupWithResult(kMCNull);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool com_livecode_widget_InitializePopups(void)
+{
+    return true;
+}
+
+void com_livecode_widget_FinalizePopups(void)
+{
+    
 }
 
 ////////////////////////////////////////////////////////////////////////////////
