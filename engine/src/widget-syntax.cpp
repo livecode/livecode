@@ -451,7 +451,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetPropertyOfWidget(MCStringRef p_property,
     if (!MCNameCreate(p_property, &t_property))
         return;
     
-    MCWidgetGetProperty(p_widget, &t_property, r_value);
+    MCWidgetGetProperty(p_widget, *t_property, r_value);
 }
 
 extern "C" MC_DLLEXPORT void MCWidgetSetPropertyOfWidget(MCValueRef p_value, MCStringRef p_property, MCWidgetRef p_widget)
