@@ -6581,7 +6581,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         // Using a memory mapped file now also possible for Mac
         if (p_map && MCmmap && p_mode == kMCOpenFileModeRead)
         {
-            int t_fd = open(*t_path_sys, O_RDONLY);
+            int t_fd = open(*t_path_utf, O_RDONLY);
             struct stat64 t_buf;
             if (t_fd != -1 && !fstat64(t_fd, &t_buf))
             {
