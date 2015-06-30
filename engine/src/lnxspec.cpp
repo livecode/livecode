@@ -888,6 +888,9 @@ IO_handle MCS_open(const char *path, const char *mode,
 		struct stat64 buf;
 		if (fd != -1 && !fstat64(fd, &buf))
 		{
+			// The length of a file could be > 32-bit, so we have to check that
+			// the file size fits into a 32-bit integer as that is what the
+			// IO_header form we use supports.
 			off_t len = buf.st_size - offset;
 			if (len != 0 && len < UINT32_MAX)
 			{
