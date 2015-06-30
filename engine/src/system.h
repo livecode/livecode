@@ -198,7 +198,7 @@ public:
 
 		memcpy(m_buffer + m_pointer, p_buffer, p_length);
 		m_pointer += p_length;
-		m_length = MCU_max(m_pointer, m_length);
+		m_length = MCMax(m_pointer, m_length);
         // SN-2015-02-11: [[ Bug 14531 ]] We are no longer at
         //  the EOF position once we have written.
         m_is_eof = false;
