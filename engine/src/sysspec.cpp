@@ -1799,11 +1799,25 @@ MCSysModuleHandle MCS_loadmodule(MCStringRef p_filename)
 {
     MCAutoStringRef t_resolved_path;
     MCAutoStringRef t_native_path;
-    
-    if (!(MCS_resolvepath(p_filename, &t_resolved_path) && MCS_pathtonative(*t_resolved_path, &t_native_path)))
+
+    // SN-2015-06-08: [[ ResolvePath ]] Loading system libraries (such as
+    //  libpango-1.0.so.6, from linuxstubs.cpp) will fail if we turn the library
+    //  name into an invalid absolute name constructed from the current folder.
+    //  We consider any leaf path as a system library.
+    if (MCStringContains(p_filename, MCSTR("/"), kMCStringOptionCompareExact))
+    {
+        if (!MCS_resolvepath(p_filename, &t_resolved_path))
+            return NULL;
+    }
+    else
+    {
+        t_resolved_path = p_filename;
+    }
+
+    if (!MCS_pathtonative(*t_resolved_path, &t_native_path))
         return NULL;
-    
-	return MCsystem -> LoadModule(*t_native_path);
+
+    return MCsystem -> LoadModule(*t_native_path);
 }
 
 MCSysModuleHandle MCS_resolvemodulesymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)

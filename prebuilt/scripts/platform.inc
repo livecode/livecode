@@ -4,15 +4,6 @@ SDK="MacOSX10.5.sdk"
 OSXGCCVERSION=4.2
 OSXMIN="10.5"
 
-# Linux options
-LINUXGCCPATH=/usr/local/gcc_4-2-4/bin
-LINUXGCCVERSION=4.2.4
-
-# Android options
-ANDROID_NDK="$HOME/Workspace/livecode/sdks/android-ndk"
-ANDROID_TOOLCHAIN="${ANDROID_NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/darwin-x86/bin/arm-linux-androideabi"
-ANDROID_PLATFORM="${ANDROID_NDK}/platforms/android-8"
-
 # Generic options
 export MAKEFLAGS="-j1"
 
@@ -36,19 +27,10 @@ case "${PLATFORM}" in
 		export CXX_BASE="${DEVELOPER}/usr/bin/g++-${OSXGCCVERSION} --sysroot=${DEVELOPER}/SDKs/${SDK} -isysroot ${DEVELOPER}/SDKs/${SDK} -mmacosx-version-min=${OSXMIN}"
 		;;
 	linux)
-		export ARCHS="i386"
-		export CC_BASE="${LINUXGCCPATH}/gcc-${LINUXGCCVERSION}"
-		export CXX_BASE="${LINUXGCCPATH}/g++-${LINUXGCCVERSION}"
+		export ARCHS="i386 x86_64"
+		export CC_BASE="clang"
+		export CXX_BASE="clang"
 		;;
-	android)
-		export ARCHS="armv6 armv7-a"
-		export CC_BASE="${ANDROID_TOOLCHAIN}-gcc --sysroot ${ANDROID_PLATFORM}/arch-arm -fpic -ffunction-sections -funwind-tables -fno-strict-aliasing -finline-limit=64"
-		export CXX_BASE="${ANDROID_TOOLCHAIN}-g++ --sysroot ${ANDROID_PLATFORM}/arch-arm -fpic -ffunction-sections -funwind-tables -fno-strict-aliasing -finline-limit=64 -frtti -fexceptions"
-		export LD="${ANDROID_TOOLCHAIN}-ld"
-		export AR="${ANDROID_TOOLCHAIN}-ar"
-		export RANLIB="${ANDROID_TOOLCHAIN}-ranlib"
-		export STRIP="${ANDROID_TOOLCHAIN}-strip"
-		export ANDROID_DEV="${ANDROID_PLATFORM}/arch-arm/usr"
 esac
 
 # Allow the arch to be set manually
@@ -58,6 +40,10 @@ fi
 
 if [ "${PLATFORM}" == "ios" ] ; then
 	source "${BASEDIR}/scripts/ios.inc"
+fi
+
+if [ "${PLATFORM}" == "android" ] ; then
+	source "${BASEDIR}/scripts/android.inc"
 fi
 
 function setArchs {
@@ -71,7 +57,7 @@ function setCCForArch {
 	local SUBPLATFORM_INDEX=$2
 	
 	# Use the custom CC and CXX, if set
-	if [ ! -z "${CUSTOM_CC}" ] ; then
+	if [ ! -z "${CUSTOM_CC}" -a "${PLATFORM}" != "android" ] ; then
 		export CC="${CUSTOM_CC}"
 		export CXX="${CUSTOM_CXX}"
 		return
@@ -92,16 +78,16 @@ function setCCForArch {
 			fi
 			;;
 		android)
-			if [ "$1" == "armv6 " ] ; then
-				export CC="${CC_BASE} -mthumb ${ANDROID_CFLAGS}"
-				export CXX="${CXX_BASE} -mthumb ${ANDROID_CFLAGS}"
-				export LDFLAGS="${ANDROID_LDFLAGS}"
+			if [ "$1" == "armv6" ] ; then
+				export CC="${ANDROID_CC} ${ANDROID_CFLAGS}"
+				export CXX="${ANDROID_CXX} ${ANDROID_CXXFLAGS}"
 			else
-				export CC="${CC_BASE} -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 ${ANDROID_CFLAGS}"
-				export CXX="${CXX_BASE} -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 ${ANDROID_CFLAGS}"
-				export LDFLAGS="-march=armv7-a -Wl,--fix-cortex-a8 ${ANDROID_LDFLAGS}"
+				export CC="${ANDROID_CC} -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 ${ANDROID_CFLAGS}"
+				export CXX="${ANDROID_CXX} -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 ${ANDROID_CXXFLAGS}"
+				EXTRA_LDFLAGS="-march=armv7-a -Wl,--fix-cortex-a8"
 			fi
-			export LINK="${CXX}"
+			export LINK="${ANDROID_LINK} ${EXTRA_LDFLAGS} ${ANDROID_LDFLAGS}"
+			export LD="${LINK}"
 			;;
 		ios)
 			XCODE=${IOS_XCODE[$SUBPLATFORM_INDEX]}

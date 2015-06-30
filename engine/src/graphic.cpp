@@ -1910,9 +1910,21 @@ void MCGraphic::closepolygon(MCPoint *&pts, uint2 &npts)
 {
 	if (getstyleint(flags) == F_POLYGON && npts > 1)
 	{
+        // The points of a graphic can only have at most one trailing break.
+        // If it has one crop it from the pts list for processing.
+        bool t_has_trailing_break;
+        t_has_trailing_break = false;
+        if (npts >= 1 &&
+            pts[npts - 1] . x == MININT2)
+        {
+            t_has_trailing_break = true;
+            npts -= 1;
+        }
+            
 		uint2 i ;
 		uint2 t_count = 0 ;
 		MCPoint *startpt = pts ;
+        
 		for (i=1; i<=npts; i++)
 		{
 			if ((i==npts) || (pts[i].x == MININT2))
@@ -1924,7 +1936,12 @@ void MCGraphic::closepolygon(MCPoint *&pts, uint2 &npts)
 				startpt = pts+i+1 ;
 			}
 		}
-		if (t_count)
+        
+        // Make sure we allocate enough room for any trailing break.
+        if (t_has_trailing_break)
+            t_count++;
+		
+        if (t_count)
 		{
 			MCPoint *newpts = new MCPoint[npts+t_count] ;
 			startpt = pts ;
@@ -1946,7 +1963,11 @@ void MCGraphic::closepolygon(MCPoint *&pts, uint2 &npts)
 			{
 				*(currentpt++) = *startpt ;
 			}
-			
+            
+            // If we had a trailing break, then re-add it.
+			if (t_has_trailing_break)
+                currentpt -> x = currentpt -> y = MININT2;
+            
 			delete pts;
 			pts = newpts;
 			npts += t_count ;

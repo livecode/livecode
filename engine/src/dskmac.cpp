@@ -6380,30 +6380,17 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         struct stat buf;
         if (lstat(tildepath, &buf) != 0 || !S_ISLNK(buf.st_mode))
             return tildepath;
-        int4 size;
         char *newname = new char[PATH_MAX + 2];
-        if ((size = readlink(tildepath, newname, PATH_MAX)) < 0)
+
+        // SN-2015-06-05: [[ Bug 15432 ]] Use realpath to solve the symlink.
+        if (realpath(tildepath, newname) == NULL)
         {
-            delete tildepath;
+            // Clear the memory in case of failure
             delete newname;
-            return NULL;
+            newname = NULL;
         }
+
         delete tildepath;
-        newname[size] = '\0';
-        if (newname[0] != '/')
-        {
-            char *fullpath = new char[strlen(path) + strlen(newname) + 2];
-            strcpy(fullpath, path);
-            char *sptr = strrchr(fullpath, '/');
-            if (sptr == NULL)
-                sptr = fullpath;
-            else
-                sptr++;
-            strcpy(sptr, newname);
-            delete newname;
-            newname = MCS_resolvepath(fullpath);
-            delete fullpath;
-        }
         return newname;
 #endif /* MCS_resolvepath_dsk_mac */
         if (MCStringGetLength(p_path) == 0)
@@ -6461,32 +6448,29 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (!MCS_mac_is_link(*t_fullpath))
             return MCStringCopy(*t_fullpath, r_resolved_path);
         
-        MCAutoStringRef t_newname;
-        if (!MCS_mac_readlink(*t_fullpath, &t_newname))
-            return false;
-        
-        // IM - Should we really be using the original p_path parameter here?
-        // seems like we should use the computed t_fullpath value.
-        if (MCStringGetCharAtIndex(*t_newname, 0) != '/')
-        {
-            MCAutoStringRef t_resolved;
-            
-            uindex_t t_last_component;
-            uindex_t t_path_length;
-            
-            if (MCStringLastIndexOfChar(p_path, '/', MCStringGetLength(p_path), kMCStringOptionCompareExact, t_last_component))
-                t_last_component++;
-            else
-                t_last_component = 0;
-            
-            if (!MCStringMutableCopySubstring(p_path, MCRangeMake(0, t_last_component), &t_resolved) ||
-                !MCStringAppend(*t_resolved, *t_newname))
-                return false;
-            
-            return MCStringCopy(*t_resolved, r_resolved_path);
-        }
+        // SN-2015-06-08: [[ Bug 15432 ]] Use realpath to solve the symlink
+        MCAutoStringRefAsUTF8String t_utf8_path;
+        bool t_success;
+        t_success = true;
+
+        if (t_success)
+            t_success = t_utf8_path . Lock(*t_fullpath);
+
+        char *t_resolved_path;
+
+        t_resolved_path = realpath(*t_utf8_path, NULL);
+
+        // If the does not exist, then realpath will fail: we want to
+        // return something though, so we keep the input path (as it
+        // is done for desktop).
+        if (t_resolved_path != NULL)
+            t_success = MCStringCreateWithBytes((const byte_t*)t_resolved_path, strlen(t_resolved_path), kMCStringEncodingUTF8, false, r_resolved_path);
         else
-            return MCStringCopy(*t_newname, r_resolved_path);
+            t_success = false;
+
+        MCMemoryDelete(t_resolved_path);
+
+        return t_success;
     }
 	
     virtual IO_handle DeployOpen(MCStringRef p_path, intenum_t p_mode)

@@ -3234,7 +3234,6 @@ Parse_stat MCLocals::parse(MCScriptPoint &sp, Boolean the)
 	return MCFunction::parse(sp, the);
 }
 
-
 #ifdef /* MCLocals */ LEGACY_EXEC
 	// MW-2013-11-15: [[ Bug 11277 ]] Server mode may call this outwith a handler.
 	
@@ -3246,7 +3245,6 @@ Parse_stat MCLocals::parse(MCScriptPoint &sp, Boolean the)
 	
 	return ES_NORMAL;
 #endif /* MCLocals */
-
 
 
 #ifdef /* MCMachine */ LEGACY_EXEC
@@ -3594,10 +3592,8 @@ Parse_stat MCMe::parse(MCScriptPoint &sp, Boolean the)
 			if (isexpression)
 			{
 				Exec_stat t_stat;
-				if (ep.gethandler() != nil)
-					t_stat = ep . gethandler()->eval(ep2);
-				else
-					t_stat = ep . gethlist()-> eval(ep2);
+                t_stat = ep . eval(ep2);
+                
 				if (t_stat != ES_ERROR)
 				{
 					ep.insert(ep2.getsvalue(), si, ei);
@@ -3606,11 +3602,11 @@ Parse_stat MCMe::parse(MCScriptPoint &sp, Boolean the)
 			}
 			else
 			{
+                // SN-2015-06-03: [[ Bug 11277 ]] Refactor doscript (same for both
+                //  MCHandler and MCHandlerlist)
 				Exec_stat t_stat;
-				if (ep.gethandler() != nil)
-					t_stat = ep . gethandler() -> doscript(ep2, line, pos);
-				else
-					t_stat = ep . gethlist() -> doscript(ep2, line, pos);
+                t_stat = ep . doscript(ep2, line, pos);
+                
 				if (t_stat != ES_ERROR)
 				{
 					MCresult->fetch(ep2);
@@ -4027,17 +4023,20 @@ Parse_stat MCParamCount::parse(MCScriptPoint &sp, Boolean the)
 	return MCFunction::parse(sp, the);
 }
 
-
 #ifdef /* MCParamCount */ LEGACY_EXEC
-	uint2 count;
-    // PM-2014-04-14: [[Bug 12105]] Do this check to prevent crash in LC server
-    if (h == NULL)
-    {
-        MCeerror->add(EE_PARAMCOUNT_NOHANDLER, line, pos);
-        return ES_ERROR;
-    }
-	h->getnparams(count);
-	ep.setnvalue(count);
+	// MW-2013-11-15: [[ Bug 11277 ]] If we don't have a handler then 'the param'
+	//   makes no sense so just return 0.
+	if (ep.gethandler() != nil)
+	{
+		uint2 count;
+		ep.gethandler()->getnparams(count);
+		ep.setnvalue(count);
+	}
+	else
+	{
+		ep.setnvalue(0);
+	}
+
 	return ES_NORMAL;
 #endif /* MCParamCount */
 
@@ -4046,7 +4045,6 @@ Parse_stat MCParams::parse(MCScriptPoint &sp, Boolean the)
 {
 	return MCFunction::parse(sp, the);
 }
-
 
 #ifdef /* MCParams */ LEGACY_EXEC
 	// MW-2013-11-15: [[ Bug 11277 ]] If we don't have a handler then 'the param'
@@ -5742,10 +5740,7 @@ void MCValue::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 	else
 	{
 		Exec_stat t_stat;
-		if (ep . gethandler() != nil)
-			t_stat = ep . gethandler() -> eval(ep);
-		else
-			t_stat = ep . gethlist() -> eval(ep);
+        t_stat = ep . eval(ep);
 		
 		if (t_stat != ES_NORMAL)
 		{
@@ -5807,7 +5802,6 @@ Parse_stat MCVariables::parse(MCScriptPoint &sp, Boolean the)
 {
 	return MCFunction::parse(sp, the);
 }
-
 
 #ifdef /* MCVariables */ LEGACY_EXEC
 	// MW-2013-11-15: [[ Bug 11277 ]] If no handler, then process the handler list

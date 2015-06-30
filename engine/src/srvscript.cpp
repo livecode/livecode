@@ -66,8 +66,6 @@ MCServerScript::~MCServerScript(void)
         else
             delete t_file -> script;
 
-        MCValueRelease(filename);
-
 		delete t_file;
 	}
 	
@@ -364,7 +362,11 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 	// Look for the file
 	File *t_file;
 	t_file = FindFile(p_filename, true);
-	
+	if (t_file -> index == 1)
+	{
+		setfilename(t_file -> filename);
+	}
+
 	// Set back the old default folder
 	MCsystem->SetCurrentFolder(*t_old_folder);
 

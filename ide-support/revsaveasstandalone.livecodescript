@@ -915,6 +915,11 @@ private command revCopyResources pStack, pStackFileList
       put "revCompatibilityBrushes1" & return after tCopyFiles
    end if
    
+   -- PM-2015-06-24: [[ Bug 15535 ]] Make possible to use magnify palette in standalones
+   if sStandaloneSettingsA["Magnify"] then
+      put "Magnify" & return after tCopyFiles
+   end if
+   
    if sStandaloneSettingsA["revolutionPrintDialogs"] then
       put "Print Dialog" & return after tCopyFiles
       put "Page Setup Dialog" & return after tCopyFiles
@@ -2469,6 +2474,7 @@ private command revSmartChecking pStackFilesList, pSearchForInclusions
       put false into sStandaloneSettingsA["answerDialog"]
       put false into sStandaloneSettingsA["askDialog"]
       put false into sStandaloneSettingsA["brushes"]   --LG-2007-12-13: Bug 4370
+      put false into sStandaloneSettingsA["Magnify"]  -- PM-2015-06-24: [[ Bug 15535 ]] Make possible to include magnify palette in standalones
       put false into sStandaloneSettingsA["pdfPrinter"]
       
       # OK-2007-11-13 : Support for revolution print dialogs

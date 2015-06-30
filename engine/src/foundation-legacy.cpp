@@ -1178,6 +1178,14 @@ bool MCNameGetAsIndex(MCNameRef p_name, index_t& r_index)
     if (MCStringGetLength(t_key) != 1 && MCStringGetCodepointAtIndex(t_key, 0) == '0')
         return false;
     
+    // SN-2015-05-15: [[ Bug 15457 ]] Store the string-to-number conversion.
+    double t_double_index;
+    if (MCStringGetNumericValue(t_key, t_double_index))
+    {
+        r_index = (index_t)t_double_index;
+        return true;
+    }
+    
 	char *t_end;
 	index_t t_index;
     
@@ -1189,6 +1197,9 @@ bool MCNameGetAsIndex(MCNameRef p_name, index_t& r_index)
 	t_index = strtol(*t_cstring, &t_end, 10);
 	if (*t_end == '\0')
 	{
+        // SN-2015-06-15: [[ Bug 15457 ]] Store the converted value - improve
+        //  speed if repeating several times over the elements of a array.
+        MCStringSetNumericValue(t_key, t_index);
 		r_index = t_index;
 		return true;
 	}
@@ -1272,12 +1283,26 @@ static bool get_array_extent(void *context, MCArrayRef p_array, MCNameRef p_key,
 
 bool MCArrayIsSequence(MCArrayRef self)
 {
-	get_array_extent_context_t ctxt;
-	ctxt . minimum = INDEX_MAX;
-	ctxt . maximum = INDEX_MIN;
-	return MCArrayApply(self, get_array_extent, &ctxt) &&
-			ctxt . minimum == 1 &&
-			(ctxt . maximum - ctxt . minimum + 1) == MCArrayGetCount(self);
+    int32_t t_start_index;
+    
+    // IsSequence returns true if the sequence starts with 1 only
+    return MCArrayIsNumericSequence(self, t_start_index) && t_start_index == 1;
+}
+
+bool MCArrayIsNumericSequence(MCArrayRef self, int32_t &r_start_index)
+{
+    get_array_extent_context_t ctxt;
+    ctxt . minimum = INDEX_MAX;
+    ctxt . maximum = INDEX_MIN;
+    
+    if (MCArrayApply(self, get_array_extent, &ctxt) &&
+            (ctxt . maximum - ctxt . minimum + 1) == MCArrayGetCount(self))
+    {
+        r_start_index = ctxt . minimum;
+        return true;
+    }
+    
+    return false;
 }
 
 static bool list_keys(void *p_context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)

@@ -38,6 +38,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "debug.h"
 #include "param.h"
 
+#include "statemnt.h"
+#include "license.h"
+#include "scriptpt.h"
+#include "newobj.h"
+
 // SN-2014-09-05: [[ Bug 13378 ]] Include the definition of MCServerScript
 #ifdef _SERVER
 #include "srvscript.h"
@@ -1220,6 +1225,168 @@ void MCExecContext::SetTheResultToCString(const char *p_string)
 void MCExecContext::SetTheResultToBool(bool p_bool)
 {
     MCresult -> sets(MCU_btos(p_bool));
+}
+
+// SN-2015-06-03: [[ Bug 11277 ]] Refactor MCExecPoint update
+void MCExecContext::deletestatements(MCStatement* p_statements)
+{
+    while (p_statements != NULL)
+    {
+        MCStatement *tsptr = p_statements;
+        p_statements = p_statements->getnext();
+        delete tsptr;
+    }
+}
+
+void MCExecContext::eval(MCExecContext &ctxt, MCStringRef p_expression, MCValueRef &r_value)
+{
+    MCScriptPoint sp(ctxt, p_expression);
+    // SN-2015-06-03: [[ Bug 11277 ]] When we are out of handler, then it simply
+    //  sets the ScriptPoint handler to NULL (same as post-constructor state).
+    sp.sethandler(ctxt . GetHandler());
+    MCExpression *exp = NULL;
+    Symbol_type type;
+
+    if (sp.parseexp(False, True, &exp) == PS_NORMAL && sp.next(type) == PS_EOF)
+        ctxt . EvalExprAsValueRef(exp, EE_HANDLER_BADEXP, r_value);
+    else
+        ctxt . Throw();
+
+    delete exp;
+}
+
+void MCExecContext::eval_ctxt(MCExecContext &ctxt, MCStringRef p_expression, MCExecValue& r_value)
+{
+    MCScriptPoint sp(ctxt, p_expression);
+    // SN-2015-06-03: [[ Bug 11277 ]] When we are out of handler, then it simply
+    //  sets the ScriptPoint handler to NULL (same as post-constructor state).
+    sp.sethandler(ctxt . GetHandler());
+    MCExpression *exp = NULL;
+    Symbol_type type;
+
+    if (sp.parseexp(False, True, &exp) == PS_NORMAL && sp.next(type) == PS_EOF)
+        ctxt . EvaluateExpression(exp, EE_HANDLER_BADEXP, r_value);
+    else
+        ctxt . Throw();
+
+    delete exp;
+}
+
+void MCExecContext::doscript(MCExecContext &ctxt, MCStringRef p_script, uinteger_t p_line, uinteger_t p_pos)
+{
+    MCScriptPoint sp(ctxt, p_script);
+    MCStatement *curstatement = NULL;
+    MCStatement *statements = NULL;
+    MCStatement *newstatement = NULL;
+    Symbol_type type;
+    const LT *te;
+    Exec_stat stat = ES_NORMAL;
+    Boolean oldexplicit = MCexplicitvariables;
+    MCexplicitvariables = False;
+    uint4 count = 0;
+    sp.setline(p_line - 1);
+    while (stat == ES_NORMAL)
+    {
+        switch (sp.next(type))
+        {
+        case PS_NORMAL:
+            if (type == ST_ID)
+                if (sp.lookup(SP_COMMAND, te) != PS_NORMAL)
+                    newstatement = new MCComref(sp.gettoken_nameref());
+                else
+                {
+                    if (te->type != TT_STATEMENT)
+                    {
+                        MCeerror->add(EE_DO_NOTCOMMAND, p_line, p_pos, sp.gettoken_stringref());
+                        stat = ES_ERROR;
+                    }
+                    else
+                        newstatement = MCN_new_statement(te->which);
+                }
+            else
+            {
+                MCeerror->add(EE_DO_NOCOMMAND, p_line, p_pos, sp.gettoken_stringref());
+                stat = ES_ERROR;
+            }
+            if (stat == ES_NORMAL)
+            {
+                if (curstatement == NULL)
+                    statements = curstatement = newstatement;
+                else
+                {
+                    curstatement->setnext(newstatement);
+                    curstatement = newstatement;
+                }
+                if (curstatement->parse(sp) != PS_NORMAL)
+                {
+                    MCeerror->add(EE_DO_BADCOMMAND, p_line, p_pos, p_script);
+                    stat = ES_ERROR;
+                }
+                count += curstatement->linecount();
+            }
+            break;
+        case PS_EOL:
+            if (sp.skip_eol() != PS_NORMAL)
+            {
+                MCeerror->add(EE_DO_BADLINE, p_line, p_pos, p_script);
+                stat = ES_ERROR;
+            }
+            break;
+        case PS_EOF:
+            stat = ES_PASS;
+            break;
+        default:
+            stat = ES_ERROR;
+        }
+    }
+    MCexplicitvariables = oldexplicit;
+
+    if (MClicenseparameters . do_limit > 0 && count >= MClicenseparameters . do_limit)
+    {
+        MCeerror -> add(EE_DO_NOTLICENSED, p_line, p_pos, p_script);
+        stat = ES_ERROR;
+    }
+
+    if (stat == ES_ERROR)
+    {
+        deletestatements(statements);
+        ctxt.Throw();
+        return;
+    }
+
+    MCExecContext ctxt2(ctxt);
+    while (statements != NULL)
+    {
+        statements->exec_ctxt(ctxt2);
+        Exec_stat stat = ctxt2 . GetExecStat();
+        if (stat == ES_ERROR)
+        {
+            deletestatements(statements);
+            MCeerror->add(EE_DO_BADEXEC, p_line, p_pos, p_script);
+            ctxt.Throw();
+            return;
+        }
+        if (MCexitall || stat != ES_NORMAL)
+        {
+            deletestatements(statements);
+            if (stat == ES_ERROR)
+                ctxt.Throw();
+            return;
+        }
+        else
+        {
+            MCStatement *tsptr = statements;
+            statements = statements->getnext();
+            delete tsptr;
+        }
+    }
+    if (MCscreen->abortkey())
+    {
+        MCeerror->add(EE_DO_ABORT, p_line, p_pos);
+        ctxt.Throw();
+        return;
+    }
+    return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

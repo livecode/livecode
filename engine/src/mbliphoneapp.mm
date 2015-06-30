@@ -2024,7 +2024,7 @@ static char *my_strndup(const char * p, int n)
 	return s;
 }
 
-int main(int argc, char *argv[], char *envp[])
+int main(int argc, char *argv[], char *envp[]) __attribute__((__visibility__("default")))
 {
 #if defined(_DEBUG) && defined(_VALGRIND)
 	if (argc < 2 ||  (argc >= 2 && strcmp(argv[1], "-valgrind") != 0))
