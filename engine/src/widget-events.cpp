@@ -184,6 +184,10 @@ void MCWidgetEventManager::event_kunfocus(MCWidget* p_widget)
 
 Boolean MCWidgetEventManager::event_kdown(MCWidget* p_widget, MCStringRef p_text, KeySym p_key)
 {
+    // Prevent the IDE from breaking
+    if (!widgetIsInRunMode(p_widget))
+        return p_widget->MCControl::kdown(p_text, p_key);
+    
     // Mouse scroll events are sent as key events
     switch (p_key)
     {

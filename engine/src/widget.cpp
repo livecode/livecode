@@ -187,7 +187,8 @@ void MCWidget::kunfocus(void)
 
 Boolean MCWidget::kdown(MCStringRef p_key_string, KeySym p_key)
 {
-    if (m_widget != nil)
+    // Only send the key down event to the widget if in browse mode
+    if (m_widget != nil && getstack() -> gettool(this) == T_BROWSE)
         if (MCwidgeteventmanager->event_kdown(this, p_key_string, p_key))
             return True;
 
@@ -196,7 +197,8 @@ Boolean MCWidget::kdown(MCStringRef p_key_string, KeySym p_key)
 
 Boolean MCWidget::kup(MCStringRef p_key_string, KeySym p_key)
 {
-    if (m_widget != nil)
+    // Only send the key up event to the widget if in browse mode
+    if (m_widget != nil && getstack() -> gettool(this) == T_BROWSE)
         if (MCwidgeteventmanager->event_kup(this, p_key_string, p_key))
             return True;
     
