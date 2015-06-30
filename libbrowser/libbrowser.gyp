@@ -31,6 +31,8 @@
 				'src/libbrowser_cef_osx.mm',
 				'src/libbrowser_cefshared_osx.cpp',
 				'src/libbrowser_value.cpp',
+				
+				'src/WebAuthenticationPanel.m',
 			],
 			
 			'conditions':
@@ -54,6 +56,7 @@
 						[
 							'src/libbrowser_cef_osx.mm',
 							'src/libbrowser_cefshared_osx.cpp',
+							'src/WebAuthenticationPanel.m',
 						],
 					},
 				],
@@ -117,7 +120,7 @@
 			
 			'mac_bundle_resources':
 			[
-				'/src/com_runrev_livecode_WebAuthenticationPanel.nib',
+				'/src/com_livecode_libbrowser_WebAuthenticationPanel.nib',
 			],
 			
 			'xcode_settings':

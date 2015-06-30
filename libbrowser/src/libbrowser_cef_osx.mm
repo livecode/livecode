@@ -525,8 +525,8 @@ bool MCCefBrowserOSX::PlatformGetAuthCredentials(bool p_is_proxy, const CefStrin
 	
 	if (t_success)
 	{
-		com_runrev_livecode_WebAuthenticationPanel *t_panel;
-		t_panel = [[com_runrev_livecode_WebAuthenticationPanel alloc] initWithCallback: t_callback selector: @selector(authenticationDoneWithChallenge:result:)];
+		com_livecode_libbrowser_WebAuthenticationPanel *t_panel;
+		t_panel = [[com_livecode_libbrowser_WebAuthenticationPanel alloc] initWithCallback: t_callback selector: @selector(authenticationDoneWithChallenge:result:)];
 		[t_panel /*runAsSheetOnWindow: [self window]*/ runAsModalDialogWithChallenge: t_challenge];
 		[t_panel release];
 	}

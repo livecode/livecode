@@ -30,7 +30,7 @@
 		</object>
 		<array class="NSMutableArray" key="IBDocument.RootObjects" id="563121920">
 			<object class="NSCustomObject" id="238662661">
-				<string key="NSClassName">com_runrev_livecode_WebAuthenticationPanel</string>
+				<string key="NSClassName">com_livecode_libbrowser_WebAuthenticationPanel</string>
 			</object>
 			<object class="NSCustomObject" id="729335755">
 				<string key="NSClassName">FirstResponder</string>
@@ -760,7 +760,7 @@
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">
-					<string key="className">com_runrev_livecode_WebAuthenticationPanel</string>
+					<string key="className">com_livecode_libbrowser_WebAuthenticationPanel</string>
 					<string key="superclassName">NSObject</string>
 					<dictionary class="NSMutableDictionary" key="actions">
 						<string key="cancel:">id</string>
@@ -822,7 +822,7 @@
 					</dictionary>
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/com_runrev_livecode_WebAuthenticationPanel.h</string>
+						<string key="minorKey">./Classes/com_livecode_libbrowser_WebAuthenticationPanel.h</string>
 					</object>
 				</object>
 			</array>

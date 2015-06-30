@@ -32,7 +32,7 @@
 #import <Foundation/NSURLProtectionSpace.h>
 #import <Foundation/NSURLCredential.h>
 
-#define WebAuthenticationPanelNibName @"com_runrev_livecode_WebAuthenticationPanel"
+#define WebAuthenticationPanelNibName @"com_livecode_libbrowser_WebAuthenticationPanel"
 
 //////////
 
@@ -74,7 +74,7 @@ typedef float CGFloat;
 
 //////////
 
-@implementation com_runrev_livecode_WebAuthenticationPanel
+@implementation com_livecode_libbrowser_WebAuthenticationPanel
 
 -(id)initWithCallback:(id)cb selector:(SEL)sel
 {
