@@ -46,7 +46,7 @@
 
 #include "native-layer.h"
 
-#if 0
+
 MCNativeLayer::MCNativeLayer() :
   m_attached(false)
 {
@@ -108,5 +108,4 @@ MCWidget* MCNativeLayer::findNextLayerBelow(MCWidget* p_widget)
     
     return t_after;
 }
-#endif
 

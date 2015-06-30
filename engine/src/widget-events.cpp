@@ -401,6 +401,7 @@ void MCWidgetEventManager::event_toolchanged(MCWidget* p_widget, Tool p_tool)
 
 void MCWidgetEventManager::event_layerchanged(MCWidget* p_widget)
 {
+    MCWidgetOnLayerChanged(p_widget -> getwidget());
 }
 
 Boolean MCWidgetEventManager::event_doubledown(MCWidget* p_widget, uint2 p_which)
@@ -1022,8 +1023,7 @@ static bool call_void_bubble_method(void *context, MCWidgetRef p_widget, bool& r
 
 bool MCWidgetEventManager::widgetIsInRunMode(MCWidget *p_widget)
 {
-    Tool t_tool = p_widget -> getstack() -> gettool(p_widget);
-    return t_tool == T_BROWSE || t_tool == T_HELP;
+    return p_widget->isInRunMode();
 }
 
 bool MCWidgetEventManager::bubbleEvent(MCWidgetRef p_target, bool (*p_action)(MCWidgetRef, bool&))

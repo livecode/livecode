@@ -28,13 +28,13 @@ public:
     virtual void OnClose();
     virtual void OnAttach();
     virtual void OnDetach();
-    virtual void OnPaint(MCDC* p_dc, const MCRectangle& p_dirty);
+    virtual void OnPaint(MCGContextRef);
     virtual void OnGeometryChanged(const MCRectangle& p_old_rect);
     virtual void OnVisibilityChanged(bool p_visible);
     virtual void OnToolChanged(Tool p_new_tool);
     virtual void OnLayerChanged();
     
-    MCNativeLayerAndroid(MCWidget*);
+    MCNativeLayerAndroid(MCWidgetRef);
     ~MCNativeLayerAndroid();
     
 private:
@@ -42,7 +42,7 @@ private:
     // Wrapper class for android.view.View
     class AndroidView;
     
-    MCWidget* m_widget;
+    MCWidgetRef m_widget;
     AndroidView *m_view;
     
     // Returns the NSWindow* for the stack containing this widget
