@@ -85,6 +85,7 @@ MCWidget::MCWidget(void)
     m_kind = nil;
     m_rep = nil;
     m_widget = nil;
+    m_native_layer = nil;
 }
 
 MCWidget::MCWidget(const MCWidget& p_other) :
@@ -93,6 +94,7 @@ MCWidget::MCWidget(const MCWidget& p_other) :
     m_kind = nil;
     m_rep = nil;
     m_widget = nil;
+    m_native_layer = nil;
 }
 
 MCWidget::~MCWidget(void)
@@ -100,6 +102,7 @@ MCWidget::~MCWidget(void)
     MCValueRelease(m_widget);
     MCValueRelease(m_kind);
     MCValueRelease(m_rep);
+    delete m_native_layer;
 }
 
 void MCWidget::bind(MCNameRef p_kind, MCValueRef p_rep)
@@ -235,7 +238,13 @@ Boolean MCWidget::mdown(uint2 p_which)
 
 Boolean MCWidget::mup(uint2 p_which, bool p_release)
 {
-	if (state & CS_MENU_ATTACHED)
+	if (!m_native_layer)
+    {
+        m_native_layer = createNativeLayer();
+        m_native_layer->OnAttach();
+    }
+    
+    if (state & CS_MENU_ATTACHED)
 		return MCObject::mup(p_which, p_release);
 	
 	switch(getstack() -> gettool(this))
@@ -883,3 +892,9 @@ void MCWidget::GetKind(MCExecContext& ctxt, MCNameRef& r_kind)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool MCWidget::isInRunMode()
+{
+    Tool t_tool = getstack() -> gettool(this);
+    return t_tool == T_BROWSE || t_tool == T_HELP;
+}

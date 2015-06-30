@@ -205,11 +205,17 @@ bool MCWidgetBase::OnSave(MCValueRef& r_rep)
 
 bool MCWidgetBase::OnOpen(void)
 {
+    if (GetHost()->getNativeLayer())
+        GetHost()->getNativeLayer()->OnOpen();
+    
     return DispatchRecursive(kDispatchOrderBeforeBottomUp, MCNAME("OnOpen"));
 }
 
 bool MCWidgetBase::OnClose(void)
 {
+    if (GetHost()->getNativeLayer())
+        GetHost()->getNativeLayer()->OnClose();
+    
     bool t_success;
     t_success = true;
     
@@ -231,6 +237,22 @@ bool MCWidgetBase::OnClose(void)
         CancelTimer();
     
     return t_success;
+}
+
+bool MCWidgetBase::OnAttach()
+{
+    if (GetHost()->getNativeLayer())
+        GetHost()->getNativeLayer()->OnAttach();
+    
+    return Dispatch(MCNAME("OnAttach"));
+}
+
+bool MCWidgetBase::OnDetach()
+{
+    if (GetHost()->getNativeLayer())
+        GetHost()->getNativeLayer()->OnDetach();
+    
+    return Dispatch(MCNAME("OnDetach"));
 }
 
 bool MCWidgetBase::OnTimer(void)
@@ -263,6 +285,10 @@ bool MCWidgetBase::OnPaint(MCGContextRef p_gcontext)
     MCGContextSave(p_gcontext);
     MCGContextClipToRect(p_gcontext, t_frame);
     MCGContextTranslateCTM(p_gcontext, t_frame . origin . x, t_frame . origin . y);
+    
+    if (GetHost()->getNativeLayer())
+        GetHost()->getNativeLayer()->OnPaint(p_gcontext);
+    
     if (!Dispatch(MCNAME("OnPaint")))
         t_success = false;
     if (m_children != nil)
@@ -377,7 +403,18 @@ bool MCWidgetBase::OnMouseScroll(coord_t p_delta_x, coord_t p_delta_y, bool& r_b
 
 bool MCWidgetBase::OnGeometryChanged(void)
 {
+    if (GetHost()->getNativeLayer())
+        GetHost()->getNativeLayer()->OnGeometryChanged(GetHost()->getrect());
+    
     return Dispatch(MCNAME("OnGeometryChanged"));
+}
+
+bool MCWidgetBase::OnLayerChanged()
+{
+    if (GetHost()->getNativeLayer())
+        GetHost()->getNativeLayer()->OnLayerChanged();
+    
+    return Dispatch(MCNAME("OnLayerChanged"));
 }
 
 bool MCWidgetBase::OnParentPropertyChanged(void)
@@ -387,6 +424,9 @@ bool MCWidgetBase::OnParentPropertyChanged(void)
 
 bool MCWidgetBase::OnToolChanged(Tool p_tool)
 {
+    if (GetHost()->getNativeLayer())
+        GetHost()->getNativeLayer()->OnToolChanged(p_tool);
+    
     bool t_success;
     t_success = true;
     if (p_tool == T_BROWSE)
@@ -659,11 +699,13 @@ MCGPoint MCWidgetBase::MapPointFromGlobal(MCGPoint p_point)
 MCGRectangle MCWidgetBase::MapRectToGlobal(MCGRectangle rect)
 {
     abort();
+    return MCGRectangle();
 }
 
 MCGRectangle MCWidgetBase::MapRectFromGlobal(MCGRectangle rect)
 {
     abort();
+    return MCGRectangle();
 }
 
 //////////
@@ -1129,6 +1171,11 @@ bool MCWidgetOnMouseScroll(MCWidgetRef self, real32_t p_delta_x, real32_t p_delt
 bool MCWidgetOnGeometryChanged(MCWidgetRef self)
 {
     return MCWidgetAsBase(self) -> OnGeometryChanged();
+}
+
+bool MCWidgetOnLayerChanged(MCWidgetRef self)
+{
+    return MCWidgetAsBase(self) -> OnLayerChanged();
 }
 
 bool MCWidgetOnParentPropertyChanged(MCWidgetRef self)

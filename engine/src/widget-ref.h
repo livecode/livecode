@@ -49,6 +49,9 @@ public:
     bool OnOpen(void);
     bool OnClose(void);
     
+    bool OnAttach();
+    bool OnDetach();
+    
     bool OnTimer(void);
     
     bool OnPaint(MCGContextRef gcontext);
@@ -67,6 +70,7 @@ public:
     bool OnClick(bool& r_bubble);
     
     bool OnGeometryChanged(void);
+    bool OnLayerChanged();
     bool OnParentPropertyChanged(void);
     bool OnToolChanged(Tool tool);
     

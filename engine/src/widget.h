@@ -77,6 +77,7 @@ bool MCWidgetOnClick(MCWidgetRef widget, bool& r_bubble);
 bool MCWidgetOnMouseScroll(MCWidgetRef widget, real32_t delta_x, real32_t delta_y, bool& r_bubble);
 
 bool MCWidgetOnGeometryChanged(MCWidgetRef widget);
+bool MCWidgetOnLayerChanged(MCWidgetRef widget);
 bool MCWidgetOnParentPropertyChanged(MCWidgetRef widget);
 bool MCWidgetOnToolChanged(MCWidgetRef widget, Tool p_tool);
 
@@ -180,6 +181,17 @@ public:
     void CatchError(MCExecContext& ctxt);
     void SendError(void);
     
+    bool isInRunMode();
+    
+    // Gets the current native layer (if any) associated with this widget
+    MCNativeLayer* getNativeLayer() const
+    {
+        return m_native_layer;
+    }
+    
+    // Creates a native layer for this widget
+    MCNativeLayer* createNativeLayer();
+    
 protected:
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
@@ -194,6 +206,9 @@ private:
     
     // The LCB Widget object.
     MCWidgetRef m_widget;
+    
+    // The native layer associated with this widget
+    MCNativeLayer* m_native_layer;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

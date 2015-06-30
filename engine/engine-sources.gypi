@@ -563,6 +563,20 @@
 			
 			# Other files
 			'src/socket_resolve.cpp',
+			
+			# Native layers
+			'src/native-layer.h',
+			'src/native-layer-android.h',
+			'src/native-layer-ios.h',
+			'src/native-layer-mac.h',
+			'src/native-layer-win32.h',
+			'src/native-layer-x11.h',
+			'src/native-layer.cpp',
+			'src/native-layer-android.cpp',
+			'src/native-layer-ios.mm',
+			'src/native-layer-mac.mm',
+			'src/native-layer-win32.cpp',
+			'src/native-layer-x11.cpp',
 		],
 		
 		# Sources that are only for desktop mode
@@ -925,6 +939,7 @@
 						['exclude', '(^|/)sysosx.*\\.(cpp|mm)$'],
 						['exclude', '\\.mac\\.'],
 						['exclude', '(^|/)mac-'],
+						['exclude', '-mac\.(mm|cpp)$'],
 					],
 					
 					'sources!':
@@ -941,6 +956,7 @@
 						['exclude', '(^|/)dsklnx.*\\.cpp$'],
 						['exclude', '(^|/)syslnx.*\\.cpp$'],
 						['exclude', '(^|/)linux-'],
+						['exclude', '-x11\.cpp$'],
 					],
 				},
 			],
@@ -952,11 +968,30 @@
 						['exclude', '(^|/)sysw32.*\\.cpp$'],
 						['exclude', '(^|/)dskw32.*\\.cpp$'],
 						['exclude', '(^|/)win(dows|32)?-'],
+						['exclude', '-win32\.cpp$'],
 					],
 					
 					'sources!':
 					[
 						'src/srvwindows.cpp',
+					],
+				},
+			],
+			[
+				'OS != "android"',
+				{
+					'sources/':
+					[
+						['exclude', '-android\.cpp$'],
+					],
+				},
+			],
+			[
+				'OS != "ios"',
+				{
+					'sources/':
+					[
+						['exclude', '-ios\.(mm|cpp)$'],
 					],
 				},
 			],
