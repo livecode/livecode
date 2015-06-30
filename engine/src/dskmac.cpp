@@ -6581,20 +6581,20 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         // Using a memory mapped file now also possible for Mac
         if (p_map && MCmmap && p_mode == kMCOpenFileModeRead)
         {
-            int t_fd = open(*t_path_utf, O_RDONLY);
+            int t_fd = open(*t_path_sys, O_RDONLY);
             struct stat64 t_buf;
             if (t_fd != -1 && !fstat64(t_fd, &t_buf))
             {
                 off_t t_len = t_buf.st_size;
-                if (t_len != 0 && t_len < UINT32_MAX)
+                if (t_len != 0)
                 {
-                    char *t_buffer = (char *)mmap(NULL, (uint32_t)t_len, PROT_READ, MAP_SHARED,
+                    char *t_buffer = (char *)mmap(NULL, t_len, PROT_READ, MAP_SHARED,
                                                   t_fd, 0);
                     // MW-2013-05-02: [[ x64 ]] Make sure we use the MAP_FAILED constant
                     //   rather than '-1'.
                     if (t_buffer != MAP_FAILED)
                     {
-                        t_handle = new MCMemoryMappedFileHandle(t_fd, t_buffer, (uint32_t)t_len);
+                        t_handle = new MCMemoryMappedFileHandle(t_fd, t_buffer, t_len);
                         return t_handle;
                     }
                 }
