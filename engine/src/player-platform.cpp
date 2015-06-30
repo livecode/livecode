@@ -1384,7 +1384,9 @@ static bool MCPathIsRemoteURL(const char *p_path)
 {
 	return MCCStringBeginsWith(p_path, "http://") ||
 	MCCStringBeginsWith(p_path, "https://") ||
-	MCCStringBeginsWith(p_path, "ftp://");
+	MCCStringBeginsWith(p_path, "ftp://") ||
+    // PM-2015-06-30: [[ Bug 14418 ]] Allow URLs of the form file://
+    MCCStringBeginsWith(p_path, "file://");
 }
 
 // PM-2014-12-19: [[ Bug 14245 ]] Make possible to set the filename using a relative path to the stack folder
@@ -1393,7 +1395,7 @@ bool MCPlayer::resolveplayerfilename(const char *p_filename, char *&r_filename)
 {
     if (p_filename == nil)
         return false;
-        
+    
     if (MCPathIsAbsolute(p_filename) || MCPathIsRemoteURL(p_filename))
     {
         r_filename = strdup(p_filename);
