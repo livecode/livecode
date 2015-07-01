@@ -678,6 +678,8 @@
 			'src/em-stack.h',
 			'src/em-resolution.cpp',
 			'src/em-stack.cpp',
+			'src/em-surface.h',
+			'src/em-surface.cpp',
 			'src/em-system.h',
 			'src/em-system.cpp',
 			'src/em-theme.cpp',

@@ -21,6 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "em-stack.h"
 #include "em-dc.h"
 #include "em-view.h"
+#include "em-surface.h"
 #include "em-util.h"
 
 #include "resolution.h"
@@ -115,7 +116,8 @@ MCStack::view_platform_updatewindow(MCRegionRef p_dirty_region)
 
 	MCGRegionIntersectRect(t_region, MCRectangleToMCGIntegerRectangle(t_valid));
 
-	
+	MCSdlStackSurface t_surface;
+	view_surface_redrawwindow(&t_surface, t_region);
 }
 
 /* ================================================================
