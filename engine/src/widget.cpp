@@ -240,12 +240,6 @@ Boolean MCWidget::mdown(uint2 p_which)
 
 Boolean MCWidget::mup(uint2 p_which, bool p_release)
 {
-	if (!m_native_layer)
-    {
-        m_native_layer = createNativeLayer();
-        m_native_layer->OnAttach();
-    }
-    
     if (state & CS_MENU_ATTACHED)
 		return MCObject::mup(p_which, p_release);
 	
