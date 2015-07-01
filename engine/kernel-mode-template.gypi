@@ -11,7 +11,7 @@
 	[
 		[
 			# Only the Linux and Android builds support proper cross-compilation
-			'OS == "linux" or OS == "android"',
+			'OS == "linux" or OS == "android" or OS == "emscripten"',
 			{
 				'dependencies':
 				[

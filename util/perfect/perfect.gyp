@@ -13,7 +13,7 @@
 			'conditions':
 			[
 				[
-					'OS == "linux" or OS == "android"',
+					'OS == "linux" or OS == "android" or OS == "emscripten"',
 					{
 						'toolsets': ['host'],
 					},

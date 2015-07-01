@@ -27,6 +27,13 @@
 					},
 				],
 				[
+					# Emscripten builds are always cross-compiled
+					'OS == "emscripten"',
+					{
+						'cross_compile': 1,
+					}
+				],
+				[
 					# Linux may or may not be cross-compiled
 					'OS == "linux"',
 					{

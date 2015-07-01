@@ -888,6 +888,15 @@
 				},
 			],
 			[
+				'OS != "emscripten"',
+				{
+					'sources/':
+					[
+						['exclude', '(^|/)em-.*\\.cpp$'],
+					],
+				},
+			],
+			[
 				'OS == "win"',
 				{
 					'sources/':
@@ -987,6 +996,15 @@
 					'sources!':
 					[
 						'src/srvposix.cpp',
+					],
+				},
+			],
+			[
+				'OS == "emscripten"',
+				{
+					'sources!':
+					[
+						'src/mcssl.cpp',
 					],
 				},
 			],

@@ -21,6 +21,7 @@
 # Tools that Make calls
 XCODEBUILD ?= xcodebuild
 WINE ?= wine
+EMMAKE ?= emmake
 
 # Some magic to control which versions of iOS we try to build.  N.b. you may
 # also need to modify the buildbot configuration
@@ -166,3 +167,16 @@ all-win-%:
 
 $(addsuffix -win,all config compile): %: %-x86
 
+################################################################
+# Emscripten rules
+################################################################
+
+config-emscripten:
+	$(EMMAKE) ./config.sh --platform emscripten
+
+compile-emscripten:
+	$(EMMAKE) $(MAKE) -C build-emscripten/livecode
+
+all-emscripten:
+	$(MAKE) config-emscripten
+	$(MAKE) compile-emscripten
