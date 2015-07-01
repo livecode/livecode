@@ -41,6 +41,8 @@ public:
 
 	/* ---------- Window management */
 	virtual void openwindow(Window p_window, Boolean override);
+	virtual void closewindow(Window p_window);
+	virtual void destroywindow(Window & x_window);
 	virtual bool platform_getwindowgeometry(Window p_window,
 	                                        MCRectangle & r_rect);
 

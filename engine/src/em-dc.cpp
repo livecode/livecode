@@ -69,6 +69,8 @@ MCScreenDC::openwindow(Window p_window,
 		}
 	}
 
+	MCEmscriptenViewInitialize();
+
 	m_main_window = p_window;
 
 	MCStack *t_stack = MCEmscriptenGetStackForWindow(p_window);
@@ -83,6 +85,27 @@ MCScreenDC::openwindow(Window p_window,
 
 	/* Fit window to view */
 	FitWindow();
+}
+
+void
+MCScreenDC::closewindow(Window p_window)
+{
+	/* FIXME Implement multiple windows */
+
+	MCAssert(p_window);
+
+	if (p_window != m_main_window)
+	{
+		return;
+	}
+
+	m_main_window = nil;
+}
+
+void
+MCScreenDC::destroywindow(Window & x_window)
+{
+	x_window = nil;
 }
 
 bool

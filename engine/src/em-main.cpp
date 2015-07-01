@@ -50,6 +50,11 @@ main(int argc, char *argv[])
 		MCEmscriptenBootError("Core initialisation");
 	}
 
+	if (0 != SDL_Init(0))
+	{
+		MCEmscriptenBootError("SDL initialisation");
+	}
+
 	/* ---------- Process command-line arguments.
 	 * Emscripten usually passes fairly meaningless values here. */
 
@@ -146,11 +151,9 @@ main(int argc, char *argv[])
 	/* ---------- Shutdown */
 	MCLog("Shutdown", nil);
 
-	/* FIXME move this somewhere else */
-	SDL_Quit();
-
 	int t_exit_code = X_close();
 
+	SDL_Quit();
 	MCFinalize();
 
 	exit(t_exit_code);
