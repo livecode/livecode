@@ -869,8 +869,10 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	MCGraphicsInitialize();
 	
 	// MM-2014-02-14: [[ LibOpenSSL 1.0.1e ]] Initialise the openlSSL module.
+#ifdef MCSSL
 	InitialiseSSL();
-    
+#endif
+
     ////
     
 #ifdef _MACOSX
@@ -1213,15 +1215,18 @@ int X_close(void)
 	delete MCsslcertificates;
 	delete MCdefaultnetworkinterface;
 	
-#ifndef _MOBILE
+#if defined(MCSSL) && !defined(_MOBILE)
 	ShutdownSSL();
-#else
+#endif
+
+#if defined(_MOBILE)
     // SN-2015-02-24: [[ Merge 6.7.4-rc-1 ]] Need to clean-up the completed
     //  purchase list
     extern void MCPurchaseClearPurchaseList();
     
     MCPurchaseClearPurchaseList();
 #endif
+
 	MCS_shutdown();
 	delete MCundos;
 	while (MCcur_effects != NULL)
