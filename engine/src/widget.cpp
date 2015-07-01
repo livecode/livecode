@@ -587,8 +587,13 @@ bool MCWidget::getcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
         return MCObject::getcustomprop(ctxt, p_set_name, p_prop_name, r_value);
     
     MCValueRef t_value;
-    if (!MCWidgetGetProperty(m_widget, p_prop_name, t_value) ||
-        !MCExtensionConvertToScriptType(ctxt, t_value))
+    if (!MCWidgetGetProperty(m_widget, p_prop_name, t_value))
+    {
+        CatchError(ctxt);
+        return false;
+    }
+    
+    if (!MCExtensionConvertToScriptType(ctxt, t_value))
     {
         MCValueRelease(t_value);
         CatchError(ctxt);
