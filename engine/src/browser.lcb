@@ -150,35 +150,35 @@ public handler browserListToLCBList(in pBrowserList as MCBrowserListRef, out rLi
 			return false
 		end if
 		
-		if tType is kValueTypeBoolean then
+		if tType is kMCBrowserValueTypeBoolean then
 			variable tBoolean as CBool
 			if not MCBrowserListGetBoolean(pBrowserList, i, tBoolean) then
 				log "couldn't get boolean %@" with [i]
 				return false
 			end if
 			push tBoolean onto tList
-		else if tType is kValueTypeInteger then
+		else if tType is kMCBrowserValueTypeInteger then
 			variable tInteger as CInt
 			if not MCBrowserListGetInteger(pBrowserList, i, tInteger) then
 				log "couldn't get integer %@" with [i]
 				return false
 			end if
 			push tInteger onto tList
-		else if tType is kValueTypeDouble then
+		else if tType is kMCBrowserValueTypeDouble then
 			variable tDouble as CDouble
 			if not MCBrowserListGetDouble(pBrowserList, i, tDouble) then
 				log "couldn't get double %@" with [i]
 				return false
 			end if
 			push tDouble onto tList
-		else if tType is kValueTypeUTF8String then
+		else if tType is kMCBrowserValueTypeUTF8String then
 			variable tUTF8String as ZStringNative
 			if not MCBrowserListGetUTF8String(pBrowserList, i, tUTF8String) then
 				log "couldn't get string %@" with [i]
 				return false
 			end if
 			push tUTF8String onto tList
-		else if tType is kValueTypeList then
+		else if tType is kMCBrowserValueTypeList then
 			variable tBrowserList as MCBrowserListRef
 			if not MCBrowserListGetList(pBrowserList, i, tBrowserList) then
 				log "couldn't get list %@" with [i]
@@ -205,7 +205,7 @@ end handler
 
 private handler browserLookupProperty(in pProp as String, out rProp as MCBrowserProperty) returns Boolean
 	variable tIndex as Integer
-	put the index of pProp in kPropertyMap into tIndex
+	put the index of pProp in kMCBrowserPropertyMap into tIndex
 	
 	if tIndex is 0 then
 		return false
