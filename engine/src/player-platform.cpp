@@ -1380,7 +1380,7 @@ static bool MCPathIsAbsolute(const char *p_path)
 	return p_path[0] == '/' || p_path[0] == ':';
 }
 
-static bool MCPathIsRemoteURL(const char *p_path)
+static bool MCPathIsURL(const char *p_path)
 {
 	return MCCStringBeginsWith(p_path, "http://") ||
 	MCCStringBeginsWith(p_path, "https://") ||
@@ -1396,7 +1396,7 @@ bool MCPlayer::resolveplayerfilename(const char *p_filename, char *&r_filename)
     if (p_filename == nil)
         return false;
     
-    if (MCPathIsAbsolute(p_filename) || MCPathIsRemoteURL(p_filename))
+    if (MCPathIsAbsolute(p_filename) || MCPathIsURL(p_filename))
     {
         r_filename = strdup(p_filename);
         return true;
