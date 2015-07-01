@@ -4850,6 +4850,54 @@ MCRectangle MCObject::measuretext(MCStringRef p_text, bool p_is_unicode)
     return t_bounds;
 }
 
+// AL-2015-06-30: [[ Bug 15556 ]] Refactored function to sync mouse focus
+void MCObject::sync_mfocus(void)
+{
+    bool needmfocus;
+    needmfocus = false;
+    
+    if (opened && getstack() == MCmousestackptr)
+    {
+        if (!(flags & F_VISIBLE))
+        {
+            MCObject *mfocused = MCmousestackptr->getcard()->getmfocused();
+            // MW-2012-02-22: [[ Bug 10018 ]] If the target is a group then check
+            //   to see if it is the ancestor of the mfocused control; otherwise
+            //   just compare directly.
+            if (mfocused != nil && gettype() == CT_GROUP)
+            {
+                while(mfocused -> gettype() != CT_CARD)
+                {
+                    if (mfocused == this)
+                    {
+                        needmfocus = True;
+                        break;
+                    }
+                    mfocused = mfocused -> getparent();
+                }
+            }
+            else if (this == mfocused)
+                needmfocus = true;
+        }
+        else if (MCU_point_in_rect(rect, MCmousex, MCmousey))
+            needmfocus = true;
+    }
+    
+    if (state & CS_KFOCUSED)
+        getcard(0)->kunfocus();
+    
+    // MW-2008-08-04: [[ Bug 7094 ]] If we change the visibility of the control
+    //   while its grabbed, we should ungrab it - otherwise it sticks to the
+    //   cursor.
+    if (gettype() >= CT_GROUP && getstate(CS_GRAB))
+        state &= ~CS_GRAB;
+    
+    resizeparent();
+    
+    if (needmfocus)
+        MCmousestackptr->getcard()->mfocus(MCmousex, MCmousey);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 bool MCObject::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor)
