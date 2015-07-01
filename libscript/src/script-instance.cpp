@@ -294,6 +294,16 @@ bool MCScriptThrowCannotCallContextHandlerError(MCScriptModuleRef p_module, MCSc
     return MCErrorCreateAndThrow(kMCScriptCannotCallContextHandlerErrorTypeInfo, "module", p_module -> name, "handler", MCScriptGetNameOfDefinitionInModule(p_module, p_handler), nil);
 }
 
+bool MCScriptThrowHandlerNotFoundError(MCScriptModuleRef p_module, MCNameRef p_handler)
+{
+    return MCErrorCreateAndThrow(kMCScriptHandlerNotFoundErrorTypeInfo, "module", p_module -> name, "handler", p_handler, nil);
+}
+
+bool MCScriptThrowPropertyNotFoundError(MCScriptModuleRef p_module, MCNameRef p_property)
+{
+    return MCErrorCreateAndThrow(kMCScriptPropertyNotFoundErrorTypeInfo, "module", p_module -> name, "property", p_property, nil);
+}
+
 ///////////
 
 MCScriptVariableDefinition *MCScriptDefinitionAsVariable(MCScriptDefinition *self)
@@ -333,7 +343,7 @@ bool MCScriptGetPropertyOfInstance(MCScriptInstanceRef self, MCNameRef p_propert
     // Lookup the definition (throws if not found).
     MCScriptPropertyDefinition *t_definition;
     if (!MCScriptLookupPropertyDefinitionInModule(self -> module, p_property, t_definition))
-        return false;
+        return MCScriptThrowPropertyNotFoundError(self -> module, p_property);
     
     MCScriptDefinition *t_getter;
     t_getter = t_definition -> getter != 0 ? self -> module -> definitions[t_definition -> getter - 1] : nil;
@@ -386,10 +396,10 @@ bool MCScriptSetPropertyOfInstance(MCScriptInstanceRef self, MCNameRef p_propert
 {
     __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindInstance);
     
-    // Lookup the definition (throws if not found).
+    // Lookup the definition.
     MCScriptPropertyDefinition *t_definition;
     if (!MCScriptLookupPropertyDefinitionInModule(self -> module, p_property, t_definition))
-        return false;
+        return MCScriptThrowPropertyNotFoundError(self -> module, p_property);
     
     MCScriptDefinition *t_setter;
     t_setter = t_definition -> setter != 0 ? self -> module -> definitions[t_definition -> setter - 1] : nil;
@@ -517,7 +527,7 @@ bool MCScriptCallHandlerOfInstance(MCScriptInstanceRef self, MCNameRef p_handler
     // Lookup the definition (throws if not found).
     MCScriptHandlerDefinition *t_definition;
     if (!MCScriptLookupHandlerDefinitionInModule(self -> module, p_handler, t_definition))
-        return MCErrorThrowGeneric(MCSTR("handler not found"));
+        return MCScriptThrowHandlerNotFoundError(self -> module, p_handler);
     
     return MCScriptCallHandlerOfInstanceDirect(self, t_definition, p_arguments, p_argument_count, r_value);
 }
