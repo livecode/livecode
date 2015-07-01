@@ -121,6 +121,10 @@ X_init(int argc,
 	MCtruemcstring = MCtruestring;
 	MCfalsemcstring = MCfalsestring;
 
+	/* On Emscripten, we let the engine sleep indefinitely in the
+	 * absence on incoming events. */
+	MCmaxwait = INFINITY;
+
 	/* ---------- Initialise all the things */
 	MCS_init();
 	MCU_initialize_names();
@@ -177,8 +181,6 @@ X_init(int argc,
 bool
 X_main_loop_iteration()
 {
-	MCLog("Main loop iteration", nil);
-
 	/* Check if the engine is in a runnable state */
 	if (!MCscreen->hasmessages() &&
 	    MCstacks->isempty() &&
@@ -189,7 +191,6 @@ X_main_loop_iteration()
 	}
 
 	/* Process pending events */
-	MCmaxwait = 1; /* FIXME temporary timeout */
 	MCscreen->wait(MCmaxwait, true, true);
 
 	MCU_resetprops(true);

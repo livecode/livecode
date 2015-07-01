@@ -29,6 +29,13 @@ mergeInto(LibraryManager.library, {
 		// loop.
 		_continuation: null,
 
+		// List of callbacks to be run just before resuming the main
+		// loop.
+		_preResume: [],
+
+		// True if currently running pre-resume callbacks
+		_inPreResume: false,
+
 		// The handle for the setTimeout() handler for the current
 		// yield state.
 		_timeoutHandle: null,
@@ -44,15 +51,18 @@ mergeInto(LibraryManager.library, {
 			LiveCodeAsync._initialised = true;
 		},
 
-		_resumeMainLoopTimeout: function() {
+		_resumeTimeout: function() {
 			LiveCodeAsync._fromTimeout = true;
-			LiveCodeAsync._resumeMainLoop();
+			LiveCodeAsync.resume();
 		},
 
-		_resumeMainLoop: function() {
+		// Resume the main loop
+		resume: function() {
+			LiveCodeAsync._ensureInit();
 
-			// Make sure we're actually yielding
+			// Make sure we're actually currently in a yield state.
 			assert(LiveCodeAsync._continuation);
+			assert(!LiveCodeAsync._inPreResume);
 
 			// Cancel the timeout for this yield state
 			if (LiveCodeAsync._timeoutHandle) {
@@ -73,14 +83,15 @@ mergeInto(LibraryManager.library, {
 		// the browser sends the engine an event.
 		//
 		// If no event has occurred by the time <timeout> milliseconds
-		// elapse, yieldMainLoop() returns false.  Otherwise,
-		// yieldMainLoop() returns true.
-		yieldMainLoop: function(timeout) {
+		// elapse, pause() returns false.  Otherwise,
+		// pause() returns true.
+		pause: function(timeout) {
 			LiveCodeAsync._ensureInit();
 
 			// Can't yield recursively
 			assert(!LiveCodeAsync._continuation);
 			assert(!LiveCodeAsync._timeoutHandle);
+			assert(!LiveCodeAsync._inPreResume);
 
 			// Suspend execution
 			EmterpreterAsync.handle(function(resume) {
@@ -90,18 +101,35 @@ mergeInto(LibraryManager.library, {
 				// timout is negative, never timeout
 				LiveCodeAsync._fromTimeout = false;
 				if (timeout >= 0) {
-					var event = setTimeout(LiveCodeAsync._resumeMainLoopTimeout,
+					var event = setTimeout(LiveCodeAsync._resumeTimeout,
 										   timeout);
 					LiveCodeAsync._timeoutHandle = event;
 				}
 			});
 
+			// Run pre-resume callbacks
+			LiveCodeAsync._inPreResume = true;
+			var queueLength = LiveCodeAsync._preResume.length;
+			for (var i = 0; i < queueLength; i++) {
+				LiveCodeAsync._preResume[i]();
+			}
+			LiveCodeAsync._preResume = []; // Reset pre-resume callback list
+			LiveCodeAsync._inPreResume = false;
+
 			return LiveCodeAsync._fromTimeout;
 		},
 
+		// Test whether the engine is currently being resumed from a
+		// timeout.  Returns false if the resume is due to an event.
 		isTimedOut: function() {
 			LiveCodeAsync._ensureInit()
 			return LiveCodeAsync._fromTimeout
+		},
+
+		// Add a closure to be run before the engine next resumes
+		delay: function(delayed) {
+			LiveCodeAsync._ensureInit();
+			LiveCodeAsync._preResume.push(delayed);
 		},
 	},
 
@@ -111,9 +139,21 @@ mergeInto(LibraryManager.library, {
 		if (!isFinite(timeout)) {
 			timeout = -1;
 		}
-		return LiveCodeAsync.yieldMainLoop(timeout*1000);
+		return LiveCodeAsync.pause(timeout*1000);
 	},
-})
+
+	// Resume the engine on event
+	MCEmscriptenAsyncResume__deps: ['$LiveCodeAsync'],
+	MCEmscriptenAsyncResume: function() {
+		LiveCodeAsync.resume();
+	},
+
+	// Delay a closure until the next time the engine resumes
+	MCEmscriptenAsyncDelay__deps: ['$LiveCodeAsync'],
+	MCEmscriptenAsyncDelay: function(delayed) {
+		LiveCodeAsync.delay(delayed);
+	},
+});
 
 /*
  * Local Variables:
