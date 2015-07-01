@@ -30,6 +30,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 MCUIDC *MCCreateScreenDC(void);
 
+extern "C" MCStack *MCEmscriptenGetCurrentStack(void);
+
 /* ---------------------------------------------------------------- */
 
 class MCScreenDC: public MCUIDC
@@ -38,6 +40,8 @@ public:
 	/* ---------- Construction/destruction */
 	MCScreenDC();
 	virtual ~MCScreenDC();
+	Boolean open();
+	Boolean close(Boolean force);
 
 	/* ---------- Window management */
 	virtual void openwindow(Window p_window, Boolean override);
@@ -50,8 +54,13 @@ public:
 	virtual Boolean wait(real64_t p_duration,
 	                     Boolean p_allow_dispatch,
 	                     Boolean p_allow_anyevent);
-protected:
+
+	/* ---------- Extra stuff */
+
+	/* Get the stack being shown in the default canvas. */
 	MCStack *GetCurrentStack();
+
+protected:
 	void UpdateFocus();
 	void FitWindow();
 

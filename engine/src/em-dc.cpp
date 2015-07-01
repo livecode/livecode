@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "em-stack.h"
 #include "em-view.h"
 #include "em-async.h"
+#include "em-event.h"
 #include "em-util.h"
 
 #include "osspec.h"
@@ -38,6 +39,16 @@ MCCreateScreenDC()
 	return new MCScreenDC;
 }
 
+MCStack *
+MCEmscriptenGetCurrentStack()
+{
+	if (MCnoui) return nil;
+
+	MCScreenDC *t_dc = static_cast<MCScreenDC *>(MCscreen);
+
+	return t_dc->GetCurrentStack();
+}
+
 MCScreenDC::MCScreenDC()
 	: m_main_window(nil)
 {
@@ -47,6 +58,20 @@ MCScreenDC::~MCScreenDC()
 {
 }
 
+Boolean
+MCScreenDC::open()
+{
+	return MCEmscriptenEventInitialize();
+}
+
+
+Boolean
+MCScreenDC::close(Boolean force)
+{
+	MCEmscriptenEventFinalize();
+
+	return true;
+}
 
 /* ================================================================
  * Window management
