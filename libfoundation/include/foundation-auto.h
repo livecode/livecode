@@ -28,8 +28,13 @@ template<typename T> class MCAutoValueRefBase
 public:
 
 	MCAutoValueRefBase(void)
+		: m_value(nil)
 	{
-		m_value = nil;
+	}
+
+	MCAutoValueRefBase(T p_value)
+		: m_value(MCValueRetain(p_value))
+	{
 	}
 
 	~MCAutoValueRefBase(void)
