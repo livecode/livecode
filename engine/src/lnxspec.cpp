@@ -888,8 +888,11 @@ IO_handle MCS_open(const char *path, const char *mode,
 		struct stat64 buf;
 		if (fd != -1 && !fstat64(fd, &buf))
 		{
-			uint4 len = buf.st_size - offset;
-			if (len != 0)
+			// The length of a file could be > 32-bit, so we have to check that
+			// the file size fits into a 32-bit integer as that is what the
+			// IO_header form we use supports.
+			off_t len = buf.st_size - offset;
+			if (len != 0 && len < UINT32_MAX)
 			{
 				char *buffer = (char *)mmap(NULL, len, PROT_READ, MAP_SHARED,
 				                            fd, offset);
@@ -899,7 +902,7 @@ IO_handle MCS_open(const char *path, const char *mode,
 				if (buffer != MAP_FAILED)
 				{
 					delete newpath;
-					handle = new IO_header(NULL, buffer, len, fd, 0);
+					handle = new IO_header(NULL, buffer, (uint4)len, fd, 0);
 					return handle;
 				}
 			}
