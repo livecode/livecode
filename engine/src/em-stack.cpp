@@ -70,6 +70,9 @@ MCStack::platform_openwindow(Boolean override)
 {
 	MCAssert(window != nil);
 
+	/* Make sure to reset the geometry on the window before mapping it. */
+	setgeom();
+
 	MCscreen->openwindow(window, override);
 }
 

@@ -61,13 +61,16 @@ MCScreenDC::~MCScreenDC()
 Boolean
 MCScreenDC::open()
 {
-	return MCEmscriptenEventInitialize();
+	return
+		MCEmscriptenEventInitialize() &&
+		MCEmscriptenViewInitialize();
 }
 
 
 Boolean
 MCScreenDC::close(Boolean force)
 {
+	MCEmscriptenViewFinalize();
 	MCEmscriptenEventFinalize();
 
 	return true;
@@ -94,8 +97,6 @@ MCScreenDC::openwindow(Window p_window,
 		}
 	}
 
-	MCEmscriptenViewInitialize();
-
 	m_main_window = p_window;
 
 	MCStack *t_stack = MCdispatcher->findstackd(p_window);
@@ -108,8 +109,13 @@ MCScreenDC::openwindow(Window p_window,
 	/* Set mouse & keyboard focus */
 	UpdateFocus();
 
-	/* Fit window to view */
-	FitWindow();
+	/* Set up view to match window, as far as possible */
+	/* FIXME Implement HiDPI support */
+
+	MCEmscriptenViewSetBounds(t_stack->view_getrect());
+
+	t_stack->view_configure(true);
+	t_stack->view_dirty_all();
 }
 
 void
@@ -158,18 +164,6 @@ MCStack *
 MCScreenDC::GetCurrentStack()
 {
 	return MCdispatcher->findstackd(m_main_window);
-}
-
-void
-MCScreenDC::FitWindow()
-{
-	/* FIXME Implement HiDPI support */
-
-	MCAssert(nil != m_main_window);
-
-	MCStack * t_stack = GetCurrentStack();
-	t_stack->view_configure(true);
-	t_stack->view_dirty_all();
 }
 
 /* ================================================================
