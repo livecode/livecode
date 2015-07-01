@@ -24,7 +24,8 @@ end errorShow
 
 command docsBuilderRun pEdition, pVersion
    set the itemdelimiter to "."
-   if item 1 of pVersion > 7 then
+   if item 1 of pVersion > 7 then   
+      start using stack (builderRepoFolder() & slash & "ide-support/revdocsparser.livecodescript")
       docsBuilderGenerateDocsNew
       exit docsBuilderRun
    end if
