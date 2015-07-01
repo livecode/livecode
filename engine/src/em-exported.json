@@ -1,0 +1,9 @@
+[
+    '_main',
+    '_MCEmscriptenGetCurrentStack',
+    '_MCEmscriptenEventEncodeModifiers',
+
+    '_MCEventQueuePostMouseFocus',
+    '_MCEventQueuePostMousePosition',
+    '_MCEventQueuePostMousePress'
+]
