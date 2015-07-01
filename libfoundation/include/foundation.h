@@ -195,7 +195,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //  CONFIGURE DEFINITIONS FOR LINUX
 //
 
-#if defined(__GNUC__) && !defined(__APPLE__) && !defined(__PLATFORM_IS_ANDROID__)
+#if defined(__GNUC__) && !defined(__APPLE__) && !defined(__PLATFORM_IS_ANDROID__) && !defined(__EMSCRIPTEN__)
 
 // Compiler
 #define __GCC__
