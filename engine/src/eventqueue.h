@@ -17,6 +17,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_EVENT_QUEUE__
 #define __MC_EVENT_QUEUE__
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 enum MCMousePressState
 {
 	kMCMousePressStateUp,
@@ -78,6 +82,14 @@ bool MCEventQueuePostLocationError(void);
 bool MCEventQueuePostHeadingChanged(void);
 bool MCEventQueuePostHeadingError(void);
 
+void MCEventQueueClearTouches(void);
+
+#if defined(__cplusplus)
+}
+#endif
+
+#if defined(__cplusplus)
+
 class MCCustomEvent
 {
 public:
@@ -88,6 +100,7 @@ public:
 bool MCEventQueuePostCustom(MCCustomEvent *event);
 bool MCEventQueuePostCustomAtFront(MCCustomEvent *event);
 
-void MCEventQueueClearTouches(void);
+#endif /* __cplusplus */
+
 
 #endif
