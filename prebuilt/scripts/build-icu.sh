@@ -3,8 +3,8 @@
 source "${BASEDIR}/scripts/platform.inc"
 
 # Version and configuration flags
-ICU_VERSION=52.1
-ICU_VERSION_MAJOR=52
+ICU_VERSION=55.1
+ICU_VERSION_MAJOR=55
 ICU_CONFIG="--disable-shared --enable-static --prefix=/ --with-data-packaging=static --disable-samples --disable-tests --disable-extras"
 ICU_CFLAGS="-DU_USING_ICU_NAMESPACE=0 -DUNISTR_FROM_CHAR_EXPLICIT=explicit -DUNISTR_FROM_STRING_EXPLICIT=explicit"
 
