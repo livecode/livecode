@@ -41,7 +41,7 @@ SET commands=%commands%
 REM Obscure way to get the cmd.exe equivalent to `...` substitution
 FOR /F "usebackq tokens=*" %%x IN (`%cygwin_path%cygpath.exe %CD%`) DO SET cygwin_cd=%%x
 FOR %%x IN (!commands!) DO (
-  FOR /F "usebackq tokens=*" %%y IN (`%cygwin_path%bash.exe -c 'if [[ \'%%x\' ^=^= -* ]] ^; then echo \'%%x\' ^; else cygpath \'%%x\' ^; fi'`) DO SET cygwin_cmd=!cygwin_cmd! %%y
+  FOR /F "usebackq tokens=*" %%y IN (`%cygwin_path%bash.exe -c 'if [[ \'%%x\' ^=^= -* ]] ^; then echo \'%%x\' ^; else /bin/cygpath \'%%x\' ^; fi'`) DO SET cygwin_cmd=!cygwin_cmd! %%y
 )
 
 REM All the parameters have been Unix-ified; run the command
