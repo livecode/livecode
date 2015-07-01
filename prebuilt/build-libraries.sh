@@ -32,8 +32,8 @@ fi
 
 # Build all of the libraries that we depend on (OpenSSL, CURL and ICU) if not specified
 if [ -z "${TARGET_LIB}" ] ; then
-	$BASEDIR/scripts/build-curl.sh 
-	$BASEDIR/scripts/build-openssl.sh
+	$BASEDIR/scripts/build-openssl.sh 
+	$BASEDIR/scripts/build-curl.sh
 	$BASEDIR/scripts/build-icu.sh
 else
 	case "${TARGET_LIB}" in
