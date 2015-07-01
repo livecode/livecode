@@ -34,6 +34,14 @@ done
 
 }
 
+function extract_emscripten {
+
+for input in $@ ; do
+	touch "${input}${suffix}"
+done
+
+}
+
 function extract_mac_or_ios {
 
 for input in $@ ; do
@@ -69,6 +77,9 @@ case $os in
 	mac|ios)
 		extract_mac_or_ios ${inputs}
 		;;
+	emscripten)
+		extract_emscripten ${inputs}
+		;;	
 	*)
 		echo OS "$os" not supported by this script
 		exit 1
