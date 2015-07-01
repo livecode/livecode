@@ -227,6 +227,15 @@ MCHarfbuzzSkiaFace *MCHarfbuzzGetFaceForSkiaTypeface(SkTypeface *p_typeface, uin
 void shape(const unichar_t* p_text, uindex_t p_char_count, MCGPoint p_location, bool p_rtl, const MCGFont &p_font, MCGlyphRun*& r_runs, uindex_t& r_run_count)
 {
     MCAutoArray<MCGlyphRun> t_runs;
+
+	if (p_font . fid == nil)
+	{
+		MCLog("%s: Found null font!", __FUNCTION__);
+		r_run_count = 0;
+		r_runs = nil;
+		return;
+	}
+
     SkTypeface *t_typeface = (SkTypeface *)p_font . fid;
  
     //MCLog("typeface name %d", t_typeface -> uniqueID());
