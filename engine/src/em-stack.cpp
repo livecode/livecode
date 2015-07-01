@@ -18,20 +18,18 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "em-stack.h"
 #include "em-dc.h"
 #include "em-view.h"
 #include "em-surface.h"
 #include "em-util.h"
 
+#include "globdefs.h"
+#include "objdefs.h"
+#include "parsedef.h"
+#include "sysdefs.h"
+#include "stack.h"
 #include "resolution.h"
 #include "graphics_util.h"
-
-MCStack *
-MCEmscriptenGetStackForWindow(Window p_window)
-{
-	return reinterpret_cast<MCStack *>(p_window);
-}
 
 /* ================================================================
  * Stack initialisation

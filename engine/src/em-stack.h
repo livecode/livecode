@@ -19,12 +19,4 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_EMSCRIPTEN_STACK_H__
 #define __MC_EMSCRIPTEN_STACK_H__
 
-#include "globdefs.h"
-#include "objdefs.h"
-#include "parsedef.h"
-#include "sysdefs.h"
-#include "stack.h"
-
-MCStack *MCEmscriptenGetStackForWindow(Window p_window);
-
 #endif /* !__MC_EMSCRIPTEN_STACK_H__ */

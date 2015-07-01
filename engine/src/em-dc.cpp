@@ -19,7 +19,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "prefix.h"
 
 #include "em-dc.h"
-#include "em-stack.h"
 #include "em-view.h"
 #include "em-async.h"
 #include "em-event.h"
@@ -28,6 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "eventqueue.h"
 #include "redraw.h"
+#include "dispatch.h"
 
 /* ================================================================
  * Construction/Destruction
@@ -98,7 +98,7 @@ MCScreenDC::openwindow(Window p_window,
 
 	m_main_window = p_window;
 
-	MCStack *t_stack = MCEmscriptenGetStackForWindow(p_window);
+	MCStack *t_stack = MCdispatcher->findstackd(p_window);
 
 	/* Enable drawing */
 	t_stack->view_activatetilecache();
@@ -157,7 +157,7 @@ MCScreenDC::UpdateFocus()
 MCStack *
 MCScreenDC::GetCurrentStack()
 {
-	return MCEmscriptenGetStackForWindow(m_main_window);
+	return MCdispatcher->findstackd(m_main_window);
 }
 
 void
