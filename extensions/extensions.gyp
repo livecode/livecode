@@ -21,6 +21,7 @@
 				'libraries/canvas/canvas.lcb',
 				'libraries/iconsvg/iconsvg.lcb',
 				
+				'widgets/browser/browser.lcb',
 				'widgets/button/button.lcb',
 				#'widgets/button-popup/button-popup.lcb',
 				'widgets/chart/chart.lcb',
