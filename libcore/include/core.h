@@ -122,9 +122,15 @@ typedef char *va_list;
 typedef __builtin_va_list va_list;
 #elif defined(_LINUX)
 typedef __builtin_va_list va_list;
+#elif defined(__EMSCRIPTEN__)
+typedef __builtin_va_list va_list;
 #endif
 
 #if defined(_MOBILE) && defined(TARGET_SUBPLATFORM_ANDROID)
+typedef uint32_t size_t;
+#endif
+
+#if defined(__EMSCRIPTEN__)
 typedef uint32_t size_t;
 #endif
 
