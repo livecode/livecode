@@ -73,7 +73,11 @@ struct MCSystemFileHandle
     // Returns true if an attempt has been made to read past the end of the
     // stream.
     virtual bool IsExhausted(void) = 0;
-    
+
+	/* Attempt to read p_length bytes from the file handle.  Returns
+	 * true iff p_length bytes are successfully read.  Partial reads
+	 * may modify p_buffer, r_read and the file handle state, but
+	 * should still return false. */
     virtual bool Read(void *p_buffer, uint32_t p_length, uint32_t& r_read) = 0;
     
 	virtual bool Write(const void *p_buffer, uint32_t p_length) = 0;
