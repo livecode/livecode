@@ -53,6 +53,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #undef __WINDOWS_MOBILE__
 // __LINUX_MOBILE__ will be defined if the Linux mobile platform is the target.
 #undef __LINUX_MOBILE__
+// __EMSCRIPTEN__ will be defined if Emscripten JavaScript is the target
+//#undef __EMSCRIPTEN__ // It will be defined by the compiler
 
 // __32_BIT__ will be defined if the target processor is 32-bit.
 #undef __32_BIT__
@@ -320,6 +322,28 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __LP32__ 1
 #define __SMALL__
 #endif
+
+// Native char set
+#define __ISO_8859_1__
+
+// Native line endings
+#define __LF__
+
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  CONFIGURE DEFINITIONS FOR EMSCRIPTEN JS
+
+#if defined(__EMSCRIPTEN__)
+
+// Compiler
+#define __GCC__
+
+// Architecture
+#define __32_BIT__
+#define __LP32__
+#define __SMALL__
 
 // Native char set
 #define __ISO_8859_1__
