@@ -36,8 +36,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "context.h"
 
-#include "systhreads.h"
-
 static MCWidgetScrollBarInfo themesbinfo;
 
 // MW-2011-09-06: [[ Redraw ]] Added 'sprite' option - if true, ink and opacity are not set.
@@ -86,13 +84,11 @@ void MCScrollbar::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bo
             // MM-2014-07-31: [[ ThreadedRendering ]] Make sure only a single thread posts the timer message (i.e. the first that gets here)
             if (!m_animate_posted)
             {
-                MCThreadMutexLock(MCanimationmutex);
                 if (!m_animate_posted)
                 {
                     m_animate_posted = true;
                     MCscreen -> addtimer(this, MCM_internal3, 1000 / 30);
                 }
-                MCThreadMutexUnlock(MCanimationmutex);
             }
         }
 #endif

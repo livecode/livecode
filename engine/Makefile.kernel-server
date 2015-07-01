@@ -58,8 +58,7 @@ SOURCES=\
 	srvscript.cpp srvcgi.cpp srvoutput.cpp srvmultipart.cpp srvtheme.cpp \
 	eventqueue.cpp encodederrors.cpp name.cpp redraw.cpp tilecache.cpp tilecachesw.cpp \
 	fonttable.cpp fieldrtf.cpp fieldhtml.cpp fieldstyledtext.cpp paragrafattr.cpp \
-	graphicscontext.cpp lnxflst.cpp lnxflstold.cpp quicktime.cpp \
-	sysunxthreads.cpp, stacktile.cpp
+	graphicscontext.cpp lnxflst.cpp lnxflstold.cpp quicktime.cpp
 	
 SOURCE_DIRS=
 

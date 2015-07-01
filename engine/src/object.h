@@ -688,7 +688,7 @@ public:
 		return kMCPropertyChangedMessageTypeNone;
 	}	
 
-	void scheduledelete(void);
+	virtual void scheduledelete(bool p_is_child = false);
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	void setinidcache(bool p_value)

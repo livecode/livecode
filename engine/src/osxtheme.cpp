@@ -31,7 +31,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osxtheme.h"
 
 #include "graphics_util.h"
-#include "systhreads.h"
 
 #ifndef _IOS_MOBILE
 #define CGFloat float
@@ -212,10 +211,7 @@ void MCNativeTheme::getwidgetrect(const MCWidgetInfo &winfo, Widget_Metric wmetr
 			{
 				HIShapeRef t_shape;
                 
-                // MM-2014-08-21: [[ Bug 13250 ]] HIThemeGetTrackThumbShape is not thread safe.
-                MCThreadMutexLock(MCthememutex);
 				HIThemeGetTrackThumbShape(&drawInfo, &t_shape);
-                MCThreadMutexUnlock(MCthememutex);
                 
 				CGRect t_rect;
                 HIShapeGetBounds(t_shape, &t_rect);
@@ -227,10 +223,7 @@ void MCNativeTheme::getwidgetrect(const MCWidgetInfo &winfo, Widget_Metric wmetr
 			{
 				CGRect t_rect;
                 
-                // MM-2014-08-21: [[ Bug 13250 ]] HIThemeGetTrackBounds is not thread safe.
-                MCThreadMutexLock(MCthememutex);
 				HIThemeGetTrackBounds(&drawInfo, &t_rect);
-                MCThreadMutexUnlock(MCthememutex);
                 
 				convertcgtomcrect(t_rect,drect);
 				return;
@@ -251,10 +244,7 @@ void MCNativeTheme::getwidgetrect(const MCWidgetInfo &winfo, Widget_Metric wmetr
 					Rect macR,maccontentbounds;
 					ThemeButtonKind themebuttonkind = getthemebuttonpartandstate(winfo, bNewInfo,srect,macR);
                     
-                    // MM-2014-08-21: [[ Bug 13250 ]] GetThemeButtonBackgroundBounds is not thread safe.
-                    MCThreadMutexLock(MCthememutex);
 					GetThemeButtonBackgroundBounds (&macR,themebuttonkind,&bNewInfo,&maccontentbounds);
-                    MCThreadMutexUnlock(MCthememutex);
                     
 					drect = srect;
 					drect.height = maccontentbounds.bottom - maccontentbounds.top - 1;
@@ -897,9 +887,7 @@ void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRe
 			if (MCmajorosversion >= 0x1050)
 				t_info . bounds . origin . y += 1;
             
-            MCThreadMutexLock(MCthememutex);
 			HIThemeDrawTrack(&t_info, NULL, t_context, kHIThemeOrientationNormal);
-            MCThreadMutexUnlock(MCthememutex);
 		}
 			break;
 			
@@ -928,9 +916,7 @@ void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRe
                 t_info . trackInfo . scrollbar . viewsize = 18;
             }
             
-            MCThreadMutexLock(MCthememutex);
 			HIThemeDrawTrack(&t_info, NULL, t_context, kHIThemeOrientationNormal);
-            MCThreadMutexUnlock(MCthememutex);
 		}
 			break;
 			
@@ -950,9 +936,7 @@ void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRe
 			t_info . filler1 = 0;
 			t_info . trackInfo . progress . phase = p_info . progress . info . trackInfo . progress . phase;
             
-            MCThreadMutexLock(MCthememutex);
 			HIThemeDrawTrack(&t_info, NULL, t_context, kHIThemeOrientationNormal);
-            MCThreadMutexUnlock(MCthememutex);
 		}
 			break;
 			
@@ -971,9 +955,7 @@ void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRe
 			t_info . animation . time . start = p_info . button . animation_start;
 			t_info . animation . time . current = p_info . button . animation_current;
             
-            MCThreadMutexLock(MCthememutex);
 			HIThemeDrawButton(&t_bounds, &t_info, t_context, kHIThemeOrientationNormal, NULL);
-            MCThreadMutexUnlock(MCthememutex);
 		}
 			break;
 			
@@ -988,9 +970,7 @@ void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRe
 			t_info . state = p_info . group . state;
 			t_info . kind = p_info . group . is_secondary ? kHIThemeGroupBoxKindSecondary : kHIThemeGroupBoxKindPrimary;
             
-            MCThreadMutexLock(MCthememutex);
 			HIThemeDrawGroupBox(&t_rect, &t_info, t_context, kHIThemeOrientationNormal);
-            MCThreadMutexUnlock(MCthememutex);
 		}
 			break;
 			
@@ -1006,9 +986,7 @@ void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRe
 			t_info . state = p_info . frame . state;
 			t_info . isFocused = false;
             
-            MCThreadMutexLock(MCthememutex);
 			HIThemeDrawFrame(&t_bounds, &t_info, t_context, kHIThemeOrientationNormal);
-            MCThreadMutexUnlock(MCthememutex);
 		}
 			break;
 			
@@ -1045,9 +1023,7 @@ void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRe
 				t_info . position = kHIThemeTabPositionMiddle;
 			}
             
-            MCThreadMutexLock(MCthememutex);
 			HIThemeDrawTab(&t_bounds, &t_info, t_context, kHIThemeOrientationNormal, NULL);
-            MCThreadMutexUnlock(MCthememutex);
 		}
 			break;
 			
@@ -1069,9 +1045,7 @@ void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRe
 			t_info . kind = kHIThemeTabKindNormal;
 			t_info . adornment = kHIThemeTabPaneAdornmentNormal;
             
-            MCThreadMutexLock(MCthememutex);
 			HIThemeDrawTabPane(&t_bounds, &t_info, t_context, kHIThemeOrientationNormal);
-            MCThreadMutexUnlock(MCthememutex);
 		}
 			break;
 			
@@ -1086,9 +1060,7 @@ void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRe
 			t_info . state = p_info . background . state;
 			t_info . kind = kThemeBackgroundMetal;
             
-            MCThreadMutexLock(MCthememutex);
 			HIThemeDrawBackground(&t_bounds, &t_info, t_context, kHIThemeOrientationNormal);
-            MCThreadMutexUnlock(MCthememutex);
 		}
 			break;
 			
@@ -1097,9 +1069,7 @@ void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRe
 			HIRect t_bounds;
 			assign(t_bounds, p_info . focus_rect . bounds);
 			
-            MCThreadMutexLock(MCthememutex);
 			HIThemeDrawFocusRect(&t_bounds, p_info . focus_rect . focused, t_context, kHIThemeOrientationNormal);
-            MCThreadMutexUnlock(MCthememutex);
 		}
 			break;
 	}

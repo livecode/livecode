@@ -38,8 +38,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objectstream.h"
 #include "font.h"
 
-#include "systhreads.h"
-
 #define GRAPHIC_EXTRA_MITERLIMIT		(1UL << 0)
 #define GRAPHIC_EXTRA_FILLGRADIENT		(1UL << 1)
 #define GRAPHIC_EXTRA_STROKEGRADIENT	(1UL << 2)
@@ -1860,9 +1858,21 @@ void MCGraphic::closepolygon(MCPoint *&pts, uint2 &npts)
 {
 	if (getstyleint(flags) == F_POLYGON && npts > 1)
 	{
+        // The points of a graphic can only have at most one trailing break.
+        // If it has one crop it from the pts list for processing.
+        bool t_has_trailing_break;
+        t_has_trailing_break = false;
+        if (npts >= 1 &&
+            pts[npts - 1] . x == MININT2)
+        {
+            t_has_trailing_break = true;
+            npts -= 1;
+        }
+            
 		uint2 i ;
 		uint2 t_count = 0 ;
 		MCPoint *startpt = pts ;
+        
 		for (i=1; i<=npts; i++)
 		{
 			if ((i==npts) || (pts[i].x == MININT2))
@@ -1874,7 +1884,12 @@ void MCGraphic::closepolygon(MCPoint *&pts, uint2 &npts)
 				startpt = pts+i+1 ;
 			}
 		}
-		if (t_count)
+        
+        // Make sure we allocate enough room for any trailing break.
+        if (t_has_trailing_break)
+            t_count++;
+		
+        if (t_count)
 		{
 			MCPoint *newpts = new MCPoint[npts+t_count] ;
 			startpt = pts ;
@@ -1896,7 +1911,11 @@ void MCGraphic::closepolygon(MCPoint *&pts, uint2 &npts)
 			{
 				*(currentpt++) = *startpt ;
 			}
-			
+            
+            // If we had a trailing break, then re-add it.
+			if (t_has_trailing_break)
+                currentpt -> x = currentpt -> y = MININT2;
+            
 			delete pts;
 			pts = newpts;
 			npts += t_count ;
@@ -2123,7 +2142,6 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
         
         // MM-2014-08-20: [[ Bug 13230 ]] Marker points are offset as they are drawn which causes issues with multi-threading.
         //  Could be refactored so that the offsetting happens in a separate buffer, but for the moment just put locks around it.
-        MCThreadMutexLock(MCgraphicmutex);
 		for (i = 0 ; i < nrealpoints ; i++)
 		{
 			if (realpoints[i].x != MININT2)
@@ -2151,7 +2169,6 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		if (last != MAXUINT2)
 			MCU_offset_points(markerpoints, nmarkerpoints,
 			                  -realpoints[last].x, -realpoints[last].y);
-        MCThreadMutexUnlock(MCgraphicmutex);
 	}
 	MCString slabel;
 	bool isunicode;

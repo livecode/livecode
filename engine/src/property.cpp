@@ -356,7 +356,6 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	case P_RAISE_PALETTES:
 	case P_RAISE_WINDOWS:
 	case P_DONT_USE_NS:
-	case P_DONT_USE_QT:
 	case P_DONT_USE_QT_EFFECTS:
 	case P_PROPORTIONAL_THUMBS:
 	case P_SHARED_MEMORY:
@@ -576,6 +575,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 			break;
 		}
 	case P_BRUSH_COLOR:
+	case P_DONT_USE_QT:
 	case P_BRUSH_BACK_COLOR:
 	case P_BRUSH_PATTERN:
 	case P_PEN_COLOR:
@@ -2133,8 +2133,7 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		return ep.getboolean(MChidebackdrop, line, pos, EE_PROPERTY_NAB);
 	case P_DONT_USE_NS:
 		return ep.getboolean(MCdontuseNS, line, pos, EE_PROPERTY_NAB);
-	case P_DONT_USE_QT:
-		return ep.getboolean(MCdontuseQT, line, pos, EE_PROPERTY_NAB);
+	
 	case P_DONT_USE_QT_EFFECTS:
 		return ep.getboolean(MCdontuseQTeffects, line, pos, EE_PROPERTY_NAB);
 	case P_PROPORTIONAL_THUMBS:
@@ -2501,6 +2500,7 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		return ES_NORMAL;
 
 	case P_BRUSH_COLOR:
+	case P_DONT_USE_QT:
 	case P_BRUSH_BACK_COLOR:
 	case P_BRUSH_PATTERN:
 	case P_PEN_COLOR:
@@ -2560,6 +2560,8 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 					MCbrushpattern = t_new_pattern;
 				}
 				break;
+			case P_DONT_USE_QT:
+				return ep.getboolean(MCdontuseQT, line, pos, EE_PROPERTY_NAB);
 			case P_PEN_PATTERN:
 				{
 					if (ep.getuint4(MCpenpmid, line, pos, EE_PROPERTY_PENPATNAN) != ES_NORMAL)
@@ -3739,9 +3741,6 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 	case P_HIDE_BACKDROP:
 		ep.setboolean(MChidebackdrop);
 		break;
-	case P_DONT_USE_QT:
-		ep.setboolean(MCdontuseQT);
-		break;
 	case P_DONT_USE_QT_EFFECTS:
 		ep.setboolean(MCdontuseQTeffects);
 		break;
@@ -4059,6 +4058,7 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 	case P_BRUSH_BACK_COLOR:
 	case P_PEN_BACK_COLOR:
 	case P_BRUSH_COLOR:
+	case P_DONT_USE_QT:
 	case P_BRUSH_PATTERN:
 	case P_PEN_COLOR:
 	case P_PEN_PATTERN:
@@ -4117,6 +4117,9 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 				break;
 			case P_BRUSH_COLOR:
 				ep.setcolor(MCbrushcolor, MCbrushcolorname);
+				break;
+			case P_DONT_USE_QT:
+				ep.setboolean(MCdontuseQT);
 				break;
 			case P_BRUSH_PATTERN:
 				if (MCbrushpmid < PI_END && MCbrushpmid > PI_PATTERNS)

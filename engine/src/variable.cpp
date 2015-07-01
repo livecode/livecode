@@ -251,7 +251,7 @@ void MCVariable::synchronize(MCExecPoint& ep, Boolean notify)
 					MCExecPoint ep2(ep);
 					ep2.setsvalue(MCwatchedvars[i].expression);
 					Boolean d;
-					if (ep.gethandler()->eval(ep2) == ES_NORMAL && MCU_stob(ep2.getsvalue(), d) && d)
+					if (ep . eval(ep2) == ES_NORMAL && MCU_stob(ep2.getsvalue(), d) && d)
 						MCB_setvar(ep, name);
 				}
 				else

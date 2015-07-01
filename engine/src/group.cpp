@@ -3356,3 +3356,19 @@ void MCGroup::relayercontrol_insert(MCControl *p_control, MCControl *p_target)
 	if (!computeminrect(False))
 		p_control -> layer_redrawall();
 }
+
+void MCGroup::scheduledelete(bool p_is_child)
+{
+    MCControl::scheduledelete(p_is_child);
+    
+	if (controls != NULL)
+	{
+		MCControl *t_control;
+		t_control = controls;
+		do
+		{   t_control -> scheduledelete(true);
+			t_control = t_control -> next();
+		}
+		while(t_control != controls);
+	}
+}
