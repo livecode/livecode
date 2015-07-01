@@ -23,6 +23,9 @@ case $(uname) in
 	Darwin*)
 		HOST_ICU_DIR="${BUILDDIR}/icu-${ICU_VERSION}-mac-i386"
 		;;
+	CYGWIN*)
+		HOST_ICU_DIR="${BUILDDIR}/icu-${ICU_VERSION}-win32-i386"
+		;;
 esac
 
 if [ ! -d "$ICU_SRC" ] ; then
@@ -77,6 +80,9 @@ function buildICU {
 			ios)
 				CONFIG_TYPE=
 				CONFIG_FLAGS="--host=arm-apple-darwin --with-cross-build=${HOST_ICU_DIR} --disable-tools"
+				;;
+			win32)
+				CONFIG_TYPE="Cygwin/MSVC"
 				;;
 		esac
 	
