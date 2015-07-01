@@ -1937,7 +1937,10 @@ command docsBuilderGenerateDistributedGuide
       if it is not empty then
          get textDecode(it, "utf-8")
          replace "[toc]" with empty in it
-         put tab & "{" & CR & tab & escape("guide") & ":" & escape(tGuideName) & comma & CR & tab & escape("data") & ":" & escape(it, true) & CR & tab & "}," after tGuideData
+         put tab & "{" & CR after tGuideData
+         put tab & escape("name") & ":" & escape(revDocsModifyForURL(tGuideName)) & comma & CR after tGuideData 
+         put tab & escape("display name") & ":" & escape(tGuideName) & comma & CR after tGuideData 
+         put tab & escape("data") & ":" & escape(it, true) & CR & tab & "}," after tGuideData
       end if
    end repeat
    delete the last char of tGuideData
