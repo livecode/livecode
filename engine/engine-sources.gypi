@@ -887,6 +887,8 @@
 			'src/module-canvas.cpp',
 			'src/module-engine.cpp',
 			'src/module-resources.cpp',
+			
+			'src/module-browser.cpp',
 		],
 		
 		# Engine LCB files containing syntax
@@ -900,7 +902,7 @@
 		# Other engine LCB files
 		'engine_other_lcb_files':
 		[
-		
+			'src/browser.lcb',
 		],
 	},
 	

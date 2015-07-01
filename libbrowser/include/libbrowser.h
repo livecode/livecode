@@ -17,8 +17,6 @@
 #ifndef __LIBBROWSER_H__
 #define __LIBBROWSER_H__
 
-#include "core.h"
-
 // C++ Implementation Class API
 
 class MCBrowserRefCounted

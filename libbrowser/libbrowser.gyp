@@ -13,7 +13,6 @@
 			'dependencies':
 			[
 				'../libcore/libcore.gyp:libCore',
-				'../prebuilt/libcef.gyp:libcef',
 				'../thirdparty/libcef/libcef.gyp:libcef_library_wrapper',
 				'../thirdparty/libcef/libcef.gyp:libcef_stubs',
 			],
@@ -25,6 +24,8 @@
 			
 			'sources':
 			[
+				'include/libbrowser.h',
+				
 				'src/libbrowser.cpp',
 				'src/libbrowser_cef.cpp',
 				'src/libbrowser_cef.h',

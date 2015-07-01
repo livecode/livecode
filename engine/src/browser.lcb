@@ -1,0 +1,252 @@
+/*
+Copyright (C) 2015 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+Module: com.livecode.extensions.libbrowser
+
+Type: library
+
+Description: Provide access to native C browser API from LCB.
+*/
+
+--
+module com.livecode.extensions.libbrowser
+--
+
+-- dependancy declarations
+use com.livecode.foreign
+use com.livecode.widget
+use com.livecode.engine
+--
+
+-- metadata
+metadata title is "libBrowser"
+metadata author is "Ian Macphail"
+metadata version is "1.0.0"
+--
+
+--------------------------------------------------------------------------------
+
+-- foreign types
+public type MCBrowserFactoryRef is Pointer
+public type MCBrowserRef is Pointer
+
+public type MCBrowserListRef is Pointer
+
+public type MCBrowserProperty is CInt
+public type MCBrowserValueType is CInt
+public type MCBrowserRequestType is CInt
+public type MCBrowserRequestState is CInt
+
+--
+
+public foreign handler MCBrowserLibraryInitialize() returns CBool binds to "<builtin>"
+public foreign handler MCBrowserLibraryFinalize() returns nothing binds to "<builtin>"
+
+public foreign handler MCBrowserFactoryGet(in pFactoryId as NativeCString, out rFactory as MCBrowserFactoryRef) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserFactoryCreateBrowser(in pFactory as MCBrowserFactoryRef, out rBrowser as MCBrowserRef) returns CBool binds to "<builtin>"
+
+public foreign handler MCBrowserRetain(in pBrowser as MCBrowserRef) returns MCBrowserRef binds to "<builtin>"
+public foreign handler MCBrowserRelease(in pBrowser as MCBrowserRef) returns nothing binds to "<builtin>"
+
+public foreign handler MCBrowserGetNativeLayer(in pBrowser as MCBrowserRef) returns Pointer binds to "<builtin>"
+
+public foreign handler MCBrowserGetBoolProperty(in pBrowser as MCBrowserRef, in pProperty as MCBrowserProperty, out rValue as CBool) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserSetBoolProperty(in pBrowser as MCBrowserRef, in pProperty as MCBrowserProperty, in pValue as CBool) returns CBool binds to "<builtin>"
+
+public foreign handler MCBrowserGetStringProperty(in pBrowser as MCBrowserRef, in pProperty as MCBrowserProperty, out rValue as NativeCString) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserSetStringProperty(in pBrowser as MCBrowserRef, in pProperty as MCBrowserProperty, in pValue as NativeCString) returns CBool binds to "<builtin>"
+
+public foreign handler MCBrowserGoBack(in pBrowser as MCBrowserRef) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserGoForward(in pBrowser as MCBrowserRef) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserGoToURL(in pBrowser as MCBrowserRef) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserEvaluateJavaScript(in pBrowser as MCBrowserRef, in pScript as NativeCString, out rResult as NativeCString) returns CBool binds to "<builtin>"
+
+----------
+
+public foreign handler MCBrowserListGetSize(in pList as MCBrowserListRef, out pSize as CUInt) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserListGetType(in pList as MCBrowserListRef, in pIndex as CUInt, out pType as MCBrowserValueType) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserListGetBoolean(in pList as MCBrowserListRef, in pIndex as CUInt, out pValue as CBool) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserListGetInteger(in pList as MCBrowserListRef, in pIndex as CUInt, out pValue as CInt) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserListGetDouble(in pList as MCBrowserListRef, in pIndex as CUInt, out pValue as CDouble) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserListGetUTF8String(in pList as MCBrowserListRef, in pIndex as CUInt, out pValue as ZStringNative) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserListGetList(in pList as MCBrowserListRef, in pIndex as CUInt, out pValue as MCBrowserListRef) returns CBool binds to "<builtin>"
+
+public foreign handler MCBrowserSetRequestHandler(in pBrowser as MCBrowserRef, in pCallback as Pointer, in pContext as optional Pointer) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserSetJavaScriptHandler(in pBrowser as MCBrowserRef, in pCallback as Pointer, in pContext as optional Pointer) returns CBool binds to "<builtin>"
+
+--------------------------------------------------------------------------------
+
+public constant kMCBrowserValueTypeNone is 0
+public constant kMCBrowserValueTypeBoolean is 1
+public constant kMCBrowserValueTypeInteger is 2
+public constant kMCBrowserValueTypeDouble is 3
+public constant kMCBrowserValueTypeUTF8String is 4
+public constant kMCBrowserValueTypeList is 5
+
+--
+
+public constant kMCBrowserPropertyScrollbars is 0
+public constant kMCBrowserPropertyAllowNewWindows is 1
+public constant kMCBrowserPropertyEnableContextMenu is 2
+public constant kMCBrowserPropertyUrl is 3
+public constant kMCBrowserPropertyHtmlText is 4
+public constant kMCBrowserPropertyUserAgent is 5
+public constant kMCBrowserPropertyJavaScriptHandlers is 6
+
+public constant kMCBrowserPropertyMap is ["scrollbars", "allowNewWindows", "enableContextMenu", "url", "htmlText", "userAgent", "javaScriptHandlers"]
+
+--
+
+public constant kMCBrowserRequestTypeNavigate is 0
+public constant kMCBrowserRequestTypeDocumentLoad is 1
+
+public constant kMCBrowserRequestTypeMap is ["navigate", "documentLoad"]
+
+--
+
+public constant kMCBrowserRequestStateBegin is 0
+public constant kMCBrowserRequestStateComplete is 1
+public constant kMCBrowserRequestStateFailed is 2
+
+public constant kMCBrowserRequestStateMap is ["begin", "complete", "failed"]
+
+--
+
+constant kStringProps is ["url", "htmlText", "userAgent", "javaScriptHandlers"]
+constant kBoolProps is ["scrollbars", "allowNewWindows", "enableContextMenu"]
+
+--------------------------------------------------------------------------------
+
+public handler browserListToLCBList(in pBrowserList as MCBrowserListRef, out rList as List) returns Boolean
+	variable tList as List
+	put the empty list into tList
+	
+	variable tCount as CUInt
+	if not MCBrowserListGetSize(pBrowserList, tCount) then
+		log "couldn't get size"
+		return false
+	end if
+	
+	variable i
+	repeat with i from 0 up to tCount - 1
+		variable tType as MCBrowserValueType
+		if not MCBrowserListGetType(pBrowserList, i, tType) then
+			log "couldn't get type of %@" with [i]
+			return false
+		end if
+		
+		if tType is kValueTypeBoolean then
+			variable tBoolean as CBool
+			if not MCBrowserListGetBoolean(pBrowserList, i, tBoolean) then
+				log "couldn't get boolean %@" with [i]
+				return false
+			end if
+			push tBoolean onto tList
+		else if tType is kValueTypeInteger then
+			variable tInteger as CInt
+			if not MCBrowserListGetInteger(pBrowserList, i, tInteger) then
+				log "couldn't get integer %@" with [i]
+				return false
+			end if
+			push tInteger onto tList
+		else if tType is kValueTypeDouble then
+			variable tDouble as CDouble
+			if not MCBrowserListGetDouble(pBrowserList, i, tDouble) then
+				log "couldn't get double %@" with [i]
+				return false
+			end if
+			push tDouble onto tList
+		else if tType is kValueTypeUTF8String then
+			variable tUTF8String as ZStringNative
+			if not MCBrowserListGetUTF8String(pBrowserList, i, tUTF8String) then
+				log "couldn't get string %@" with [i]
+				return false
+			end if
+			push tUTF8String onto tList
+		else if tType is kValueTypeList then
+			variable tBrowserList as MCBrowserListRef
+			if not MCBrowserListGetList(pBrowserList, i, tBrowserList) then
+				log "couldn't get list %@" with [i]
+				return false
+			end if
+			variable tConvertedList as List
+			if not browserListToLCBList(tBrowserList, tConvertedList) then
+				log "couldn't convert list %@" with [i]
+				return false
+			end if
+			push tConvertedList onto tList
+		else
+			log "unrecognised type %@" with [tType]
+			return false
+		end if
+	end repeat
+	
+	put tList into rList
+	
+	return true
+end handler
+
+----------
+
+private handler browserLookupProperty(in pProp as String, out rProp as MCBrowserProperty) returns Boolean
+	variable tIndex as Integer
+	put the index of pProp in kPropertyMap into tIndex
+	
+	if tIndex is 0 then
+		return false
+	end if
+	
+	put tIndex - 1 into rProp
+	return true
+end handler
+
+----------
+
+public handler browserGetProperty(in pBrowser as MCBrowserRef, in pProperty as String, out rValue as optional any) returns Boolean
+	variable tProperty as MCBrowserProperty
+	if not browserLookupProperty(pProperty, tProperty) then
+		return false
+	end if
+	
+	if pProperty is in kStringProps then
+		return MCBrowserGetStringProperty(pBrowser, tProperty, rValue)
+	else if pProperty is in kBoolProps then
+		return MCBrowserGetBoolProperty(pBrowser, tProperty, rValue)
+	end if
+	
+	return false
+end handler
+
+public handler browserSetProperty(in pBrowser as MCBrowserRef, in pProperty as String, in pValue as any) returns Boolean
+	variable tProperty as MCBrowserProperty
+	if not browserLookupProperty(pProperty, tProperty) then
+		return false
+	end if
+	
+	if pProperty is in kStringProps then
+		return MCBrowserSetStringProperty(pBrowser, tProperty, pValue)
+	else if pProperty is in kBoolProps then
+		return MCBrowserSetBoolProperty(pBrowser, tProperty, pValue)
+	end if
+	
+	return false
+end handler
+
+----------
+
+end module

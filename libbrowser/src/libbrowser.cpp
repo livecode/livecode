@@ -14,7 +14,9 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "libbrowser.h"
+#include <core.h>
+
+#include <libbrowser.h>
 
 // Browser base implementation
 
@@ -109,11 +111,9 @@ void MCBrowser::OnJavaScriptCall(const char *p_handler, MCBrowserListRef p_param
 
 static MCBrowserFactoryRef s_browser_factory = nil;
 
-extern bool MCCefBrowserFactoryCreate(MCBrowserFactoryRef &r_factory);
 bool MCBrowserLibraryInitialize()
 {
-	s_browser_factory = nil;
-	return MCCefBrowserFactoryCreate(s_browser_factory);
+	return true;
 }
 
 void MCBrowserLibraryFinalize()
@@ -124,10 +124,10 @@ void MCBrowserLibraryFinalize()
 
 // Factory
 
+extern bool MCCefBrowserFactoryCreate(MCBrowserFactoryRef &r_factory);
 bool MCBrowserFactoryGet(const char *p_factory, MCBrowserFactoryRef &r_factory)
 {
-	// TODO - platform specific implementation
-	if (s_browser_factory == nil)
+	if (s_browser_factory == nil && !MCCefBrowserFactoryCreate(s_browser_factory))
 		return false;
 	
 	r_factory = s_browser_factory;
@@ -365,3 +365,4 @@ bool MCBrowserSetJavaScriptHandler(MCBrowserRef p_browser, MCBrowserJavaScriptCa
 	((MCBrowser*)p_browser)->SetJavaScriptHandler(t_wrapper);
 	return true;
 }
+

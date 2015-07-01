@@ -14,13 +14,9 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include <core.h>
+
 #include "libbrowser_cef.h"
-
-#include "core.h"
-
-//#include "cefbrowser.h"
-//#include "cefbrowser_msg.h"
-//#include "cefshared.h"
 
 #include <include/cef_app.h>
 

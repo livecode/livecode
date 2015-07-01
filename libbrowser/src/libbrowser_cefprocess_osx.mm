@@ -17,8 +17,9 @@
 #include <include/cef_app.h>
 #include <AppKit/AppKit.h>
 
+#include <core.h>
+
 #include "libbrowser_cef.h"
-#include "core.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
