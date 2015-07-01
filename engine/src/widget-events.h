@@ -75,6 +75,7 @@ public:
     
     MCWidgetRef GetGrabbedWidget(void) const;
     MCWidgetRef GetTargetWidget(void) const;
+    MCWidgetRef SetTargetWidget(MCWidgetRef target);
     
     // Returns the synchronous mouse/click coordinates
     void GetSynchronousMousePosition(coord_t& r_x, coord_t& r_y) const;

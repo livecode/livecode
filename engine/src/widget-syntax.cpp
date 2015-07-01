@@ -178,7 +178,12 @@ extern "C" MC_DLLEXPORT void MCWidgetExecPostWithArguments(MCStringRef p_message
         if (!MCNameCreate(*t_modified_name, &t_message))
             return;
         
+        // Note: At the moment 'post' isn't really a post in this case - it calls
+        //   the handler immediately.
+        MCWidgetRef t_old_target;
+        t_old_target = MCwidgeteventmanager -> SetTargetWidget(MCcurrentwidget);
         MCWidgetPost(MCWidgetGetOwner(MCcurrentwidget), *t_message, p_arguments);
+        MCwidgeteventmanager -> SetTargetWidget(t_old_target);
     }
 }
 

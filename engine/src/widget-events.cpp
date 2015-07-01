@@ -521,6 +521,14 @@ MCWidgetRef MCWidgetEventManager::GetTargetWidget(void) const
     return m_target;
 }
 
+MCWidgetRef MCWidgetEventManager::SetTargetWidget(MCWidgetRef p_widget)
+{
+    MCWidgetRef t_old_target;
+    t_old_target = m_target;
+    m_target = p_widget;
+    return t_old_target;
+}
+
 void MCWidgetEventManager::GetSynchronousMousePosition(coord_t& r_x, coord_t& r_y) const
 {
     r_x = m_mouse_x;
