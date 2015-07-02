@@ -356,14 +356,11 @@ uint32_t MCAndroidSystem::TextConvert(const void *p_string, uint32_t p_string_le
 }
 
 // SN-2015-06-18: [[ Bug 11803 ]] Converts the input enum to the Android Engine one.
-static bool MCTextEncodingEnumToAndroidSystemEncodingEnum(uint32_t p_MCTextEncodingEnum, uint32_t &r_androidSystemTextEncoding)
+//  Defaults to LCH_WINDOWS_NATIVE (as does RTFReader)
+static void MCTextEncodingEnumToAndroidSystemEncodingEnum(uint32_t p_MCTextEncodingEnum, uint32_t &r_androidSystemTextEncoding)
 {
     switch (p_MCTextEncodingEnum)
     {
-        case kMCTextEncodingNative:
-            r_androidSystemTextEncoding = LCH_ENGLISH;
-            break;
-
         case kMCTextEncodingUTF8:
             r_androidSystemTextEncoding = LCH_UTF8;
             break;
@@ -372,16 +369,15 @@ static bool MCTextEncodingEnumToAndroidSystemEncodingEnum(uint32_t p_MCTextEncod
             r_androidSystemTextEncoding = LCH_ROMAN;
             break;
 
+        case kMCTextEncodingNative:
+            r_androidSystemTextEncoding = LCH_ENGLISH;
+
         case kMCTextEncodingWindowsNative:
         case kMCTextEncodingWindows1252:
+        default:
             r_androidSystemTextEncoding = LCH_WINDOWS_NATIVE;
             break;
-
-        default:
-            return false;
     }
-
-    return true;
 }
 
 bool MCAndroidSystem::TextConvertToUnicode(uint32_t p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4 p_output_length, uint4& r_used)
@@ -407,8 +403,7 @@ bool MCAndroidSystem::TextConvertToUnicode(uint32_t p_input_encoding, const void
         }
     }
     
-    if (!MCTextEncodingEnumToAndroidSystemEncodingEnum(p_input_encoding, t_android_encoding))
-        return false;
+    MCTextEncodingEnumToAndroidSystemEncodingEnum(p_input_encoding, t_android_encoding);
     
     // SN-2015-06-18: [[ Bug 11803 ]] There is no way to know whether TextConvert
     //  did a conversion or only returned the number of bytes needed
