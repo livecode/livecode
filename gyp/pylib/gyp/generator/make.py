@@ -138,12 +138,14 @@ cmd_alink = rm -f $@ && $(AR.$(TOOLSET)) crs $@ $(filter %.o,$^)
 quiet_cmd_alink_thin = AR($(TOOLSET)) $@
 cmd_alink_thin = rm -f $@ && $(AR.$(TOOLSET)) crsT $@ $(filter %.o,$^)
 
+# Commas need to be escaped in some circumstances
+COMMA := ,
+
 # Figure out the correct --start-group and --end-group commands (not needed for
 # the MacOS linker)
-ifeq ($(shell uname),Linux)
-  opt_start_group := -Wl,--start-group
-  opt_end_group   := -Wl,--end-group
-endif
+opt_start_group = $(if $(or $(filter $(shell uname),Linux),$(filter $(TOOLSET),target)),-Wl$(COMMA)--start-group)
+opt_end_group   = $(if $(or $(filter $(shell uname),Linux),$(filter $(TOOLSET),target)),-Wl$(COMMA)--end-group)
+
 
 # Due to circular dependencies between libraries :(, we wrap the
 # special "figure out circular dependencies" flags around the entire
