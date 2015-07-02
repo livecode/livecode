@@ -1032,6 +1032,7 @@
 				{
 					'sources!':
 					[
+						'src/tilecachegl.cpp',
 						'src/mcssl.cpp',
 					],
 				},

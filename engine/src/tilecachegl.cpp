@@ -36,7 +36,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #import <OpenGLES/ES1/glext.h>
 extern void MCIPhoneSwitchToUIKit(void);
 extern void MCIPhoneSwitchToOpenGL(void);
-#elif defined(TARGET_SUBPLATFORM_ANDROID) || defined(__EMSCRIPTEN__)
+#elif defined(TARGET_SUBPLATFORM_ANDROID)
 #define GL_GLEXT_PROTOTYPES
 #include <GLES/gl.h>
 #include <GLES/glext.h>

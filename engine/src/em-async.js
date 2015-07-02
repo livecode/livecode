@@ -83,7 +83,6 @@ mergeInto(LibraryManager.library, {
 			// EmterpreterAsync.handle().
 			resume(function (){
 				// Run pre-resume callbacks
-				console.error('running resume callbacks');
 				LiveCodeAsync._inPreResume = true;
 				var queueLength = LiveCodeAsync._preResume.length;
 				for (var i = 0; i < queueLength; i++) {
@@ -112,7 +111,6 @@ mergeInto(LibraryManager.library, {
 			// only be called once.  This means that all the work
 			// needs to be done in the closure.
 			return EmterpreterAsync.handle(function(resume) {
-				console.error('pause ' + timeout);
 
 				// Can't yield recursively
 				assert(!LiveCodeAsync._continuation);

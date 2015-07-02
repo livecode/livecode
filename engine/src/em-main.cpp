@@ -45,6 +45,13 @@ MCEmscriptenBootError(const char *p_message)
 int
 main(int argc, char *argv[])
 {
+	/* ---------- Core initialisation */
+	/* Record the address of the bottom of the stack */
+	{
+		char magic_stack_base = 0;
+		MCstackbottom = &magic_stack_base;
+	}
+
 	if (!MCInitialize())
 	{
 		MCEmscriptenBootError("Core initialisation");

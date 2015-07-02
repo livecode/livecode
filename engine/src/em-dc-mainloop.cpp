@@ -193,7 +193,11 @@ X_main_loop_iteration()
 	/* Process pending events */
 	MCscreen->wait(MCmaxwait, true, true);
 
+	/* Since the main loop returned to the top level, make sure to
+	 * reset any locks and perform any pending redraws.  This can only
+	 * be handled here, not in MCScreenDC::wait(). */
 	MCU_resetprops(true);
+	MCRedrawUpdateScreen();
 
 	MCabortscript = false;
 
