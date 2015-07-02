@@ -75,7 +75,25 @@ mergeInto(LibraryManager.library, {
 			LiveCodeAsync._timeoutHandle = null;
 			LiveCodeAsync._continuation = null;
 
-			resume();
+			// Resume the state, calling the resume callbacks.  The
+			// closure passed to the resume() continuation runs after
+			// the emterpreter stack has been restored, but before
+			// EmterpreterAsync.handle() "returns".  The return value
+			// of the closure determines the apparent return value of
+			// EmterpreterAsync.handle().
+			resume(function (){
+				// Run pre-resume callbacks
+				console.error('running resume callbacks');
+				LiveCodeAsync._inPreResume = true;
+				var queueLength = LiveCodeAsync._preResume.length;
+				for (var i = 0; i < queueLength; i++) {
+					LiveCodeAsync._preResume[i]();
+				}
+				LiveCodeAsync._preResume = []; // Reset pre-resume callback list
+				LiveCodeAsync._inPreResume = false;
+
+				return !LiveCodeAsync.isTimedOut();
+			});
 		},
 
 		// Yield the main loop; save the execution state and return to
@@ -88,13 +106,19 @@ mergeInto(LibraryManager.library, {
 		pause: function(timeout) {
 			LiveCodeAsync._ensureInit();
 
-			// Can't yield recursively
-			assert(!LiveCodeAsync._continuation);
-			assert(!LiveCodeAsync._timeoutHandle);
-			assert(!LiveCodeAsync._inPreResume);
+			// Suspend execution.  Note that pause() might be called
+			// multiple times for a single yield from the engine, but
+			// the closure passed to EmterpreterAsync.handle() will
+			// only be called once.  This means that all the work
+			// needs to be done in the closure.
+			return EmterpreterAsync.handle(function(resume) {
+				console.error('pause ' + timeout);
 
-			// Suspend execution
-			EmterpreterAsync.handle(function(resume) {
+				// Can't yield recursively
+				assert(!LiveCodeAsync._continuation);
+				assert(!LiveCodeAsync._timeoutHandle);
+				assert(!LiveCodeAsync._inPreResume);
+
 				LiveCodeAsync._continuation = resume;
 
 				// Make sure that we get restarted in time; if the
@@ -106,17 +130,6 @@ mergeInto(LibraryManager.library, {
 					LiveCodeAsync._timeoutHandle = event;
 				}
 			});
-
-			// Run pre-resume callbacks
-			LiveCodeAsync._inPreResume = true;
-			var queueLength = LiveCodeAsync._preResume.length;
-			for (var i = 0; i < queueLength; i++) {
-				LiveCodeAsync._preResume[i]();
-			}
-			LiveCodeAsync._preResume = []; // Reset pre-resume callback list
-			LiveCodeAsync._inPreResume = false;
-
-			return LiveCodeAsync._fromTimeout;
 		},
 
 		// Test whether the engine is currently being resumed from a
