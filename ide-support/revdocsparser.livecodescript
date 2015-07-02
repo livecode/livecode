@@ -1190,6 +1190,8 @@ function revDocsParseDocText pText
          case "Type"
             // Add top-level tags to all library entries
          case "Tags"
+            // Library entries can have examples
+         case "Example"
             put tElementsA[tStartNum]["content"] into tParsedA[it]
             add 1 to tStartNum
             break
@@ -1271,7 +1273,7 @@ function revDocsParseDocText pText
    local tCount
    put 1 into tCount
    add 1 to tEntryCount
-   repeat for each item tItem in "name,description,author,type"
+   repeat for each item tItem in "name,description,author,type,example"
       if tParsedA[tItem] is not empty then
          put tItem into tEntriesA[tEntryCount]["elements"][tCount]["name"]
          put tParsedA[tItem] into tEntriesA[tEntryCount]["elements"][tCount]["content"]
