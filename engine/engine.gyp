@@ -367,6 +367,12 @@
 						},
 					},
 				],
+				[
+					'OS == "emscripten"',
+					{
+						'product_name': 'standalone-community.bc',
+					},
+				],
 			],
 			
 			'all_dependent_settings':
@@ -651,6 +657,57 @@
 					},
 				],
 			}
+		],
+		[
+			'OS == "emscripten"',
+			{
+				'targets':
+				[
+					{
+						'target_name': 'javascriptify',
+						'type': 'none',
+
+						'dependencies':
+						[
+							'standalone',
+						],
+
+						'actions':
+						[
+							{
+								'action_name': 'javascriptify',
+								'message': 'Javascript-ifying the Emscripten engine',
+
+								'inputs':
+								[
+									'<(PRODUCT_DIR)/standalone-community.bc',
+									'src/em-exported.json',
+									'src/em-whitelist.json',
+									'src/em-async.js',
+									'src/em-event.js',
+									'boot',
+								],
+
+								'outputs':
+								[
+									'<(PRODUCT_DIR)/standalone-community.html',
+								],
+
+								'action':
+								[
+									'./emscripten-javascriptify.sh',
+									'<(PRODUCT_DIR)/standalone-community.bc',
+									'<(PRODUCT_DIR)/standalone-community.html',
+									'src/em-exported.json',
+									'src/em-whitelist.json',
+									'src/em-async.js',
+									'src/em-event.js',
+								],
+							},
+						],
+					},
+				],
+			},
 		],
 	],
 }

@@ -88,11 +88,20 @@
 					},
 				],
 				[
-					'OS != "android"',
+					'OS != "android" and OS != "emscripten"',
 					{
 						'dependencies':
 						[
 							'revpdfprinter/revpdfprinter.gyp:external-revpdfprinter',
+						],
+					},
+				],
+				[
+					'OS == "emscripten"',
+					{
+						'dependencies':
+						[
+							'engine/engine.gyp:javascriptify',
 						],
 					},
 				],
