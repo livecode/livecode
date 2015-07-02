@@ -144,9 +144,8 @@ unsigned long SSLError(MCStringRef& errbuf)
 {
 	if (!InitSSLCrypt())
 	{
-        // SN-2015-07-02: [[ Bug 15568 ]] StringRef as a return param must be
-        //  retained (will overrelease otherwise).
-		errbuf = MCSTR("ssl library not found");
+        // SN-2015-07-02: [[ Bug 15568 ]] Create a StringRef - avoid over-release
+        /* UNCHECKED */ MCStringCreateWithCString("ssl library not found", errbuf);
 		return 0;
 	}
 #ifdef MCSSL
