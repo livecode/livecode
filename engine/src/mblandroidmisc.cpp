@@ -373,6 +373,7 @@ static bool MCTextEncodingEnumToAndroidSystemEncodingEnum(uint32_t p_MCTextEncod
             break;
 
         case kMCTextEncodingWindowsNative:
+        case kMCTextEncodingWindows1252:
             r_androidSystemTextEncoding = LCH_WINDOWS_NATIVE;
             break;
 
