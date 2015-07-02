@@ -220,6 +220,9 @@ MCScreenDC::wait(real64_t p_duration,
 			{
 				t_done = p_accept_any_event;
 			}
+
+			/* Update the times based on the result of the yield */
+			t_current_time = MCS_time();
 		}
 
 		if (!t_done)
@@ -228,6 +231,8 @@ MCScreenDC::wait(real64_t p_duration,
 		}
 
 		/* Dispatch pending engine messages */
+		t_event_time = t_exit_time;
+
 		if (!t_done &&
 		    handlepending(t_current_time, t_event_time, p_allow_dispatch))
 		{
