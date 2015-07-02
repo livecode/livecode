@@ -19,7 +19,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "prefix.h"
 
 #include "em-dc.h"
-#include "em-stack.h"
 #include "em-view.h"
 #include "em-async.h"
 #include "em-event.h"
@@ -28,6 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "eventqueue.h"
 #include "redraw.h"
+#include "dispatch.h"
 
 /* ================================================================
  * Construction/Destruction
@@ -61,13 +61,16 @@ MCScreenDC::~MCScreenDC()
 Boolean
 MCScreenDC::open()
 {
-	return MCEmscriptenEventInitialize();
+	return
+		MCEmscriptenEventInitialize() &&
+		MCEmscriptenViewInitialize();
 }
 
 
 Boolean
 MCScreenDC::close(Boolean force)
 {
+	MCEmscriptenViewFinalize();
 	MCEmscriptenEventFinalize();
 
 	return true;
@@ -94,11 +97,9 @@ MCScreenDC::openwindow(Window p_window,
 		}
 	}
 
-	MCEmscriptenViewInitialize();
-
 	m_main_window = p_window;
 
-	MCStack *t_stack = MCEmscriptenGetStackForWindow(p_window);
+	MCStack *t_stack = MCdispatcher->findstackd(p_window);
 
 	/* Enable drawing */
 	t_stack->view_activatetilecache();
@@ -108,8 +109,13 @@ MCScreenDC::openwindow(Window p_window,
 	/* Set mouse & keyboard focus */
 	UpdateFocus();
 
-	/* Fit window to view */
-	FitWindow();
+	/* Set up view to match window, as far as possible */
+	/* FIXME Implement HiDPI support */
+
+	MCEmscriptenViewSetBounds(t_stack->view_getrect());
+
+	t_stack->view_configure(true);
+	t_stack->view_dirty_all();
 }
 
 void
@@ -157,19 +163,7 @@ MCScreenDC::UpdateFocus()
 MCStack *
 MCScreenDC::GetCurrentStack()
 {
-	return MCEmscriptenGetStackForWindow(m_main_window);
-}
-
-void
-MCScreenDC::FitWindow()
-{
-	/* FIXME Implement HiDPI support */
-
-	MCAssert(nil != m_main_window);
-
-	MCStack * t_stack = GetCurrentStack();
-	t_stack->view_configure(true);
-	t_stack->view_dirty_all();
+	return MCdispatcher->findstackd(m_main_window);
 }
 
 /* ================================================================

@@ -40,8 +40,31 @@ MCEmscriptenViewInitialize()
 		}
 	}
 
-	/* Set the SDL video mode */
-	int t_canvas_width, t_canvas_height, t_is_fullscreen;
+	return true;
+}
+
+/* Clean up the SDL video state */
+void
+MCEmscriptenViewFinalize()
+{
+	if (SDL_WasInit(SDL_INIT_VIDEO) != 0)
+	{
+		SDL_QuitSubSystem(SDL_INIT_VIDEO);
+	}
+}
+
+/* Resize the canvas and update the SDL video mode */
+bool
+MCEmscriptenViewSetBounds(const MCRectangle & p_rect)
+{
+	int t_canvas_width = p_rect.width;
+	int t_canvas_height = p_rect.height;
+	int t_is_fullscreen;
+
+	/* Attempt to resize the canvas */
+	emscripten_set_canvas_size(t_canvas_width, t_canvas_height);
+
+	/* Set the SDL video mode to the size that the canvas actually ended up */
 	emscripten_get_canvas_size(&t_canvas_width,
 	                           &t_canvas_height,
 	                           &t_is_fullscreen);
@@ -51,7 +74,7 @@ MCEmscriptenViewInitialize()
 	                                          32, /* bits per pixel */
 	                                          SDL_SWSURFACE);
 
-	return (nil != t_surface);
+	return nil != t_surface;
 }
 
 /* Return the size of the Emscripten view as a rectangle. */

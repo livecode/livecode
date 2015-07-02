@@ -4,9 +4,8 @@ EMSDK_ENV = /home/pbrett/opt/emsdk_portable/emsdk_env.sh
 
 all: generate-js
 
-# This is expected to fail...
 normal-compile:
-	-. $(EMSDK_ENV); $(MAKE) -k all-emscripten V=1
+	. $(EMSDK_ENV); $(MAKE) -k all-emscripten V=1
 
 generate-js: normal-compile
 	cd build-emscripten/livecode/out/Debug && \
