@@ -144,25 +144,30 @@ unsigned long SSLError(MCStringRef& errbuf)
 {
 	if (!InitSSLCrypt())
 	{
+        // SN-2015-07-02: [[ Bug 15568 ]] StringRef as a return param must be
+        //  retained (will overrelease otherwise).
 		errbuf = MCSTR("ssl library not found");
 		return 0;
 	}
 #ifdef MCSSL
 	unsigned long ecode = ERR_get_error();
-	if (!MCStringIsEmpty(errbuf))
-	{
-		if (ecode)
-        {
-            MCAutoPointer<char> t_errbuf;
-            t_errbuf = new char[256];
-            ERR_error_string_n(ecode,&t_errbuf,255);
-            /* UNCHECKED */ MCStringCreateWithCString(*t_errbuf, errbuf);
-        }
-		else
-			errbuf = MCValueRetain(kMCEmptyString);
-	}
+
+    // SN-2015-07-02: [[ Bug 15568 ]] Mis-translation to StringRef from 6.7:
+    //  errbuf won't be nil, but will always be empty though.
+    if (ecode)
+    {
+        MCAutoPointer<char> t_errbuf;
+        t_errbuf = new char[256];
+        ERR_error_string_n(ecode,&t_errbuf,255);
+        /* UNCHECKED */ MCStringCreateWithCString(*t_errbuf, errbuf);
+    }
+    else
+        errbuf = MCValueRetain(kMCEmptyString);
+
 	return ecode;
 #else
+    // SN-2015-07-02: [[ Bug 15568 ]] We don't let errbuf unset.
+    errbuf = MCValueRetain(kMCEmptyString);
 	return 0;
 #endif
 }
