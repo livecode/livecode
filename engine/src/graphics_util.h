@@ -386,7 +386,7 @@ MCFontStructToMCGFont(MCFontStruct *p_font)
 	t_font . size = p_font -> size;
 	t_font . ascent = p_font -> ascent;
 	t_font . descent = p_font -> descent;
-	t_font . fid = nil;
+    t_font . fid = p_font -> fid;
 	t_font . ideal = false;
 
 	return t_font;

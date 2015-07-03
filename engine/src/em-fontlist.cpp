@@ -16,6 +16,8 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include <SkTypeface.h>
+
 #include "em-fontlist.h"
 #include "em-util.h"
 
@@ -48,6 +50,12 @@ protected:
 	MCFontStruct m_font_info;
 };
 
+
+// Forward declarations
+static MCSysFontHandle emscripten_get_font_by_name(MCNameRef p_name);
+static MCSysFontHandle emscripten_get_font_from_file(MCStringRef p_file);
+
+
 /* ================================================================
  * MCFontnode implementation for Emscripten
  * ================================================================ */
@@ -59,12 +67,15 @@ MCFontnode::MCFontnode(MCNameRef p_name,
 	  m_requested_size(p_size),
 	  m_requested_style(p_style)
 {
-	/* FIXME Dummy values */
+    // Load the font as requested
+    m_font_info.fid = emscripten_get_font_by_name(p_name);
+
+    /* FIXME Dummy values */
 	m_font_info.size = p_size;
 	m_font_info.ascent = p_size - 1;
 	m_font_info.descent = p_size * 2 / 14 + 1;
 
-	MCLog("Created dummy font: %@ %hi %hi", p_name, p_size, p_style);
+    //MCLog("Created dummy font: %@ %hi %hi", p_name, p_size, p_style);
 }
 
 MCFontnode::~MCFontnode()
@@ -224,4 +235,21 @@ MCFontlist::getfontstructinfo(MCNameRef & r_name,
 		while (t_node != m_font_list);
 	}
 	return false;
+}
+
+
+MCSysFontHandle emscripten_get_font_by_name(MCNameRef p_name)
+{
+    // TODO
+    return emscripten_get_font_from_file(MCSTR("/boot/fonts/basefont.ttf"));
+}
+
+MCSysFontHandle emscripten_get_font_from_file(MCStringRef p_file)
+{
+    MCAutoStringRefAsSysString t_sys_path;
+    /* UNCHECKED */ t_sys_path.Lock(p_file);
+
+    MCSysFontHandle t_handle = (MCSysFontHandle)SkTypeface::CreateFromFile(*t_sys_path);
+    MCAssert(t_handle != nil);
+    return t_handle;
 }

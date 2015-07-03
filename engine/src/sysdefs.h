@@ -396,7 +396,8 @@ extern uint2 MCctypetable[];
 
 struct MCFontStruct
 {
-	uint16_t size;
+    MCSysFontHandle fid;
+    uint16_t size;
 	uint2 ascent;
 	uint2 descent;
 };
@@ -509,12 +510,7 @@ struct MCFontStruct
 //  NEW / DELETE REDEFINTIONS
 //
 
-#ifndef PLACEMENT_NEW_DEFINED
-inline void *operator new (size_t size, void *p)
-{
-	return p;
-}
-#endif
+#include <new>
 
 // MW-2014-08-14: [[ Bug 13154 ]] Make sure we use the nothrow variants of new / delete.
 // SN-2015-04-17: [[ Bug 15187 ]] Don't use the nothrow variant on iOS Simulator

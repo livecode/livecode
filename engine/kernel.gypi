@@ -80,6 +80,15 @@
 						],
 					},
 				],
+				[
+					'OS == "emscripten"',
+					{
+						'dependencies':
+						[
+							'../thirdparty/libskia/libskia.gyp:libskia',
+						],
+					},
+				],
 			],
 			
 			'link_settings':
