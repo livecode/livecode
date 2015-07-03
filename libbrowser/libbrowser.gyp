@@ -12,7 +12,7 @@
 			
 			'dependencies':
 			[
-				'../libcore/libcore.gyp:libCore',
+				# '../libcore/libcore.gyp:libCore',
 				'../thirdparty/libcef/libcef.gyp:libcef_library_wrapper',
 				'../thirdparty/libcef/libcef.gyp:libcef_stubs',
 			],
@@ -20,6 +20,7 @@
 			'include_dirs':
 			[
 				'include',
+				'../libcore/include',
 			],
 			
 			'sources':

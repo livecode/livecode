@@ -41,7 +41,7 @@ bool MCCefStringFromNSString(NSString *p_string, CefString &r_string)
 	CefString t_string;
 	
 	// create array to store unicode chars
-	t_success = MCMemoryNewArray([p_string length], t_chars);
+	t_success = MCBrowserMemoryNewArray([p_string length], t_chars);
 	
 	if (t_success)
 	{
@@ -56,7 +56,7 @@ bool MCCefStringFromNSString(NSString *p_string, CefString &r_string)
 		r_string = t_string;
 	
 	if (t_chars != nil)
-		MCMemoryDeleteArray(t_chars);
+		MCBrowserMemoryDeleteArray(t_chars);
 	
 	return t_success;
 }

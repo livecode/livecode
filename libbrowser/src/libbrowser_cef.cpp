@@ -58,8 +58,14 @@ bool MCCefStringToUInt(const CefString &p_string, uint32_t &r_int)
 	
 	bool t_success;
 	t_success = MCCefStringToUtf8String(p_string, t_tmp_string);
+	
 	if (t_success)
-		t_success = MCCStringToCardinal(t_tmp_string, t_int);
+	{
+		char *t_end;
+		t_int = strtoul(t_tmp_string, &t_end, 10);
+		
+		t_success = t_end == t_tmp_string + MCCStringLength(t_tmp_string);
+	}
 	
 	if (t_tmp_string != nil)
 		MCCStringFree(t_tmp_string);
@@ -170,7 +176,6 @@ static bool s_cef_initialised = false;
 static bool s_cefbrowser_initialised = false;
 
 static uint32_t s_instance_count = 0;
-static MCRunloopActionRef s_runloop_action = nil;
 
 void MCCefBrowserExternalInit(void)
 {
@@ -178,7 +183,6 @@ void MCCefBrowserExternalInit(void)
 	s_cef_initialised = false;
 	s_cefbrowser_initialised = false;
 	s_instance_count = 0;
-	s_runloop_action = nil;
 }
 
 void MCCefBrowserRunloopAction(void *p_context)
@@ -271,7 +275,7 @@ bool MCCefBrowserInitialise(void)
 		t_success = MCCefInitialise();
 	
 	if (t_success)
-		t_success = MCEngineAddRunloopAction(MCCefBrowserRunloopAction, nil, s_runloop_action);
+		t_success = MCBrowserAddRunloopAction(MCCefBrowserRunloopAction, nil);
 	
 	s_cefbrowser_initialised = t_success;
 	
@@ -298,8 +302,7 @@ void MCCefBrowserFinalise(void)
 	// IM-2014-03-13: [[ revBrowserCEF ]] CEF library can't be cleanly shutdown and restarted - don't call finalise
 	// MCCefFinalise();
 	
-	MCEngineRemoveRunloopAction(s_runloop_action);
-	s_runloop_action = nil;
+	MCBrowserRemoveRunloopAction(MCCefBrowserRunloopAction, nil);
 	
 	s_cefbrowser_initialised = false;
 }
@@ -971,7 +974,7 @@ void MCCefBrowserBase::WaitOnResult()
 	t_success = true;
 	
 	while (t_success && !t_result.HaveResult())
-		t_success = MCEngineRunloopWait();
+		t_success = MCBrowserRunloopWait();
 }
 
 bool MCCefBrowserBase::WaitOnResultString(CefString &r_result)

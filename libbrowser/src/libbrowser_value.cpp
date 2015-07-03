@@ -17,6 +17,7 @@
 #include <core.h>
 
 #include "libbrowser.h"
+#include "libbrowser_internal.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -163,7 +164,7 @@ public:
 	{
 		for (uint32_t i = 0; i < m_size; i++)
 			MCBrowserValueClear(m_elements[i]);
-		MCMemoryDeleteArray(m_elements);
+		MCBrowserMemoryDeleteArray(m_elements);
 	}
 	
 	uint32_t GetSize()
@@ -176,7 +177,7 @@ public:
 		if (p_size <= m_size)
 			return true;
 		
-		return MCMemoryResizeArray(p_size, m_elements, m_size);
+		return MCBrowserMemoryResizeArray(p_size, m_elements, m_size);
 	}
 	
 	bool GetType(uint32_t p_index, MCBrowserValueType &r_type)

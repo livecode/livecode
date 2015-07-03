@@ -17,6 +17,7 @@
 #ifndef __LIBBROWSER_H__
 #define __LIBBROWSER_H__
 
+////////////////////////////////////////////////////////////////////////////////
 // C++ Implementation Class API
 
 class MCBrowserRefCounted
@@ -82,16 +83,8 @@ struct MCBrowserRect
 class MCBrowser : public MCBrowserRefCounted
 {
 public:
-	MCBrowser() : m_event_handler(nil), m_javascript_handler(nil)
-	{
-	}
-	
-	virtual ~MCBrowser()
-	{
-	}
-	
-	void SetEventHandler(MCBrowserEventHandler *p_handler);
-	void SetJavaScriptHandler(MCBrowserJavaScriptHandler *p_handler);
+	virtual void SetEventHandler(MCBrowserEventHandler *p_handler) = 0;
+	virtual void SetJavaScriptHandler(MCBrowserJavaScriptHandler *p_handler) = 0;
 	
 	virtual void *GetNativeLayer() = 0;
 	
@@ -108,29 +101,12 @@ public:
 	virtual bool GoForward() = 0;
 	virtual bool GoToURL(const char *p_url) = 0;
 	virtual bool EvaluateJavaScript(const char *p_script, char *&r_result) = 0;
-	
-protected:
-	void OnNavigationBegin(bool p_in_frame, const char *p_url);
-	void OnNavigationComplete(bool p_in_frame, const char *p_url);
-	void OnNavigationFailed(bool p_in_frame, const char *p_url, const char *p_error);
-	void OnDocumentLoadBegin(bool p_in_frame, const char *p_url);
-	void OnDocumentLoadComplete(bool p_in_frame, const char *p_url);
-	void OnDocumentLoadFailed(bool p_in_frame, const char *p_url, const char *p_error);
-	
-	void OnJavaScriptCall(const char *p_handler, MCBrowserListRef p_params);
-	
-private:
-	MCBrowserEventHandler *m_event_handler;
-	MCBrowserJavaScriptHandler *m_javascript_handler;
 };
 
 // Browser factory interface
 class MCBrowserFactory : public MCBrowserRefCounted
 {
 public:
-	MCBrowserFactory() {}
-	virtual ~MCBrowserFactory() {}
-	
 	virtual bool CreateBrowser(MCBrowser *&r_browser) = 0;
 };
 
@@ -148,6 +124,7 @@ public:
 #  define MC_DLLEXPORT __attribute__((__visibility__("default")))
 #endif
 
+////////////////////////////////////////////////////////////////////////////////
 // C API
 
 extern "C"
@@ -156,12 +133,20 @@ extern "C"
 MC_DLLEXPORT bool MCBrowserLibraryInitialize();
 MC_DLLEXPORT void MCBrowserLibraryFinalize();
 	
-typedef void *(MCBrowserAllocator)(size_t p_size);
-typedef void (MCBrowserDeallocator)(void *p_mem);
+typedef bool (*MCBrowserAllocator)(size_t p_size, void *&r_mem);
+typedef void (*MCBrowserDeallocator)(void *p_mem);
+typedef bool (*MCBrowserReallocator)(void *p_mem, size_t p_new_size, void *&r_new_mem);
+typedef bool (*MCBrowserWaitFunction)(void);
 	
 MC_DLLEXPORT void MCBrowserLibrarySetAllocator(MCBrowserAllocator p_alloc);
 MC_DLLEXPORT void MCBrowserLibrarySetDeallocator(MCBrowserDeallocator p_dealloc);
+MC_DLLEXPORT void MCBrowserLibrarySetReallocator(MCBrowserReallocator p_dealloc);
+MC_DLLEXPORT void MCBrowserLibrarySetWaitFunction(MCBrowserWaitFunction p_wait);
 
+typedef void (*MCBrowserRunloopCallback)(void *p_context);
+	
+MC_DLLEXPORT bool MCBrowserLibraryGetRunloopCallback(MCBrowserRunloopCallback &r_callback, void *&r_context);
+	
 typedef struct __MCBrowserList *MCBrowserListRef;
 enum MCBrowserValueType
 {
@@ -240,5 +225,7 @@ MC_DLLEXPORT bool MCBrowserSetRequestHandler(MCBrowserRef p_browser, MCBrowserRe
 MC_DLLEXPORT bool MCBrowserSetJavaScriptHandler(MCBrowserRef p_browser, MCBrowserJavaScriptCallback p_callback, void *p_context);
 
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 #endif//__LIBBROWSER_H__

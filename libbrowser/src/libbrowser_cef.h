@@ -17,7 +17,8 @@
 #ifndef __LIBBROWSER_CEF_H__
 #define __LIBBROWSER_CEF_H__
 
-#include "libbrowser.h"
+#include <libbrowser.h>
+#include "libbrowser_internal.h"
 
 #include <include/cef_browser.h>
 #include <include/cef_client.h>
@@ -34,7 +35,7 @@ enum MCCefAuthScheme
 	kMCCefAuthSPDYProxy,
 };
 
-class MCCefBrowserBase : public MCBrowser
+class MCCefBrowserBase : public MCBrowserBase
 {
 public:
 	virtual void *GetNativeLayer();
@@ -185,13 +186,7 @@ extern "C" void *MCU_loadmodule(const char *p_source);
 extern "C" void MCU_unloadmodule(void *p_module);
 extern "C" void *MCU_resolvemodulesymbol(void *p_module, const char *p_symbol);
 
-// Engine wait loop hooks
-
-typedef struct __MCRunloopAction *MCRunloopActionRef;
-typedef void (MCRunloopActionCallback)(void *p_context);
-extern "C" bool MCEngineAddRunloopAction(MCRunloopActionCallback p_callback, void *p_context, MCRunloopActionRef &r_action);
-extern "C" void MCEngineRemoveRunloopAction(MCRunloopActionRef p_action);
-extern "C" bool MCEngineRunloopWait();
+// Engine hooks
 
 extern "C" void MCWidgetEvalStackNativeView(void *&r_native_view);
 

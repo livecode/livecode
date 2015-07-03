@@ -16,8 +16,13 @@
 
 #include <core.h>
 
-#include <libbrowser.h>
+#include <stdlib.h>
+#include <memory.h>
 
+#include <libbrowser.h>
+#include "libbrowser_internal.h"
+
+////////////////////////////////////////////////////////////////////////////////
 // Browser base implementation
 
 MCBrowserRefCounted::MCBrowserRefCounted()
@@ -43,7 +48,9 @@ void MCBrowserRefCounted::Destroy()
 	delete this;
 }
 
-void MCBrowser::SetEventHandler(MCBrowserEventHandler *p_handler)
+////////////////////////////////////////////////////////////////////////////////
+
+void MCBrowserBase::SetEventHandler(MCBrowserEventHandler *p_handler)
 {
 	if (p_handler)
 		p_handler->Retain();
@@ -54,43 +61,43 @@ void MCBrowser::SetEventHandler(MCBrowserEventHandler *p_handler)
 	m_event_handler = p_handler;
 }
 
-void MCBrowser::OnNavigationBegin(bool p_in_frame, const char *p_url)
+void MCBrowserBase::OnNavigationBegin(bool p_in_frame, const char *p_url)
 {
 	if (m_event_handler)
 		m_event_handler->OnNavigationBegin(this, p_in_frame, p_url);
 }
 
-void MCBrowser::OnNavigationComplete(bool p_in_frame, const char *p_url)
+void MCBrowserBase::OnNavigationComplete(bool p_in_frame, const char *p_url)
 {
 	if (m_event_handler)
 		m_event_handler->OnNavigationComplete(this, p_in_frame, p_url);
 }
 
-void MCBrowser::OnNavigationFailed(bool p_in_frame, const char *p_url, const char *p_error)
+void MCBrowserBase::OnNavigationFailed(bool p_in_frame, const char *p_url, const char *p_error)
 {
 	if (m_event_handler)
 		m_event_handler->OnNavigationFailed(this, p_in_frame, p_url, p_error);
 }
 
-void MCBrowser::OnDocumentLoadBegin(bool p_in_frame, const char *p_url)
+void MCBrowserBase::OnDocumentLoadBegin(bool p_in_frame, const char *p_url)
 {
 	if (m_event_handler)
 		m_event_handler->OnDocumentLoadBegin(this, p_in_frame, p_url);
 }
 
-void MCBrowser::OnDocumentLoadComplete(bool p_in_frame, const char *p_url)
+void MCBrowserBase::OnDocumentLoadComplete(bool p_in_frame, const char *p_url)
 {
 	if (m_event_handler)
 		m_event_handler->OnDocumentLoadComplete(this, p_in_frame, p_url);
 }
 
-void MCBrowser::OnDocumentLoadFailed(bool p_in_frame, const char *p_url, const char *p_error)
+void MCBrowserBase::OnDocumentLoadFailed(bool p_in_frame, const char *p_url, const char *p_error)
 {
 	if (m_event_handler)
 		m_event_handler->OnDocumentLoadFailed(this, p_in_frame, p_url, p_error);
 }
 
-void MCBrowser::SetJavaScriptHandler(MCBrowserJavaScriptHandler *p_handler)
+void MCBrowserBase::SetJavaScriptHandler(MCBrowserJavaScriptHandler *p_handler)
 {
 	if (p_handler)
 		p_handler->Retain();
@@ -101,11 +108,13 @@ void MCBrowser::SetJavaScriptHandler(MCBrowserJavaScriptHandler *p_handler)
 	m_javascript_handler = p_handler;
 }
 
-void MCBrowser::OnJavaScriptCall(const char *p_handler, MCBrowserListRef p_params)
+void MCBrowserBase::OnJavaScriptCall(const char *p_handler, MCBrowserListRef p_params)
 {
 	if (m_javascript_handler)
 		m_javascript_handler->OnJavaScriptCall(this, p_handler, p_params);
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 // Init functions
 
@@ -121,6 +130,8 @@ void MCBrowserLibraryFinalize()
 	if (s_browser_factory)
 		delete (MCBrowserFactory*)s_browser_factory;
 }
+
+//////////
 
 // Factory
 
@@ -147,6 +158,8 @@ bool MCBrowserFactoryCreateBrowser(MCBrowserFactoryRef p_factory, MCBrowserRef &
 	return true;
 }
 
+//////////
+
 MCBrowserRef MCBrowserRetain(MCBrowserRef p_browser)
 {
 	if (p_browser == nil)
@@ -163,6 +176,8 @@ void MCBrowserRelease(MCBrowserRef p_browser)
 	
 	((MCBrowser*)p_browser)->Release();
 }
+
+//////////
 
 void *MCBrowserGetNativeLayer(MCBrowserRef p_browser)
 {
@@ -252,6 +267,8 @@ bool MCBrowserEvaluateJavaScript(MCBrowserRef p_browser, const char *p_script, c
 	return ((MCBrowser*)p_browser)->EvaluateJavaScript(p_script, r_result);
 }
 
+//////////
+
 // Event handler c++ wrapper
 class MCBrowserEventHandlerWrapper : public MCBrowserEventHandler
 {
@@ -324,6 +341,8 @@ bool MCBrowserSetRequestHandler(MCBrowserRef p_browser, MCBrowserRequestCallback
 	return true;
 }
 
+//////////
+
 // JavaScript handler c++ wrapper
 class MCBrowserJavaScriptHandlerWrapper : public MCBrowserJavaScriptHandler
 {
@@ -366,3 +385,165 @@ bool MCBrowserSetJavaScriptHandler(MCBrowserRef p_browser, MCBrowserJavaScriptCa
 	return true;
 }
 
+//////////
+
+static MCBrowserWaitFunction s_browser_wait_func = nil;
+
+extern "C" void MCBrowserLibrarySetWaitFunction(MCBrowserWaitFunction p_wait)
+{
+	s_browser_wait_func = p_wait;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct MCBrowserRunloopAction
+{
+	MCBrowserRunloopCallback callback;
+	void *context;
+	
+	uint32_t references;
+	
+	MCBrowserRunloopAction *next;
+};
+
+static MCBrowserRunloopAction *s_runloop_actions = nil;
+static uint32_t s_runloop_action_count = 0;
+
+//////////
+
+void MCBrowserLibraryRunloopCallback(void *p_context)
+{
+	for (MCBrowserRunloopAction *t_action = s_runloop_actions; t_action != nil; t_action = t_action->next)
+		t_action->callback(t_action->context);
+}
+
+extern "C" bool MCBrowserLibraryGetRunloopCallback(MCBrowserRunloopCallback &r_callback, void *&r_context)
+{
+	r_callback = MCBrowserLibraryRunloopCallback;
+	r_context = nil;
+	
+	return true;
+}
+
+//////////
+
+bool MCBrowserFindRunloopAction(MCBrowserRunloopCallback p_callback, void *p_context, MCBrowserRunloopAction *&r_action)
+{
+	for (MCBrowserRunloopAction *t_action = s_runloop_actions; t_action != nil; t_action = t_action->next)
+		if (t_action->callback == p_callback && t_action->context == p_context)
+		{
+			r_action = t_action;
+			return true;
+		}
+	
+	return false;
+}
+
+bool MCBrowserAddRunloopAction(MCBrowserRunloopCallback p_callback, void *p_context)
+{
+	MCBrowserRunloopAction *t_action = nil;
+	if (MCBrowserFindRunloopAction(p_callback, p_context, t_action))
+	{
+		t_action->references++;
+		return true;
+	}
+	
+	if (!MCBrowserMemoryNew(t_action))
+		return false;
+	
+	t_action->callback = p_callback;
+	t_action->context = p_context;
+	t_action->references = 1;
+	
+	t_action->next = s_runloop_actions;
+	s_runloop_actions = t_action;
+	
+	return true;
+}
+
+void MCBrowserRemoveRunloopAction(MCBrowserRunloopCallback p_callback, void *p_context)
+{
+	MCBrowserRunloopAction *t_action = nil;
+	if (!MCBrowserFindRunloopAction(p_callback, p_context, t_action))
+		return;
+	
+	if (t_action->references-- > 1)
+		return;
+	
+	if (t_action == s_runloop_actions)
+		s_runloop_actions = t_action->next;
+	else
+	{
+		for (MCBrowserRunloopAction *t_prev = s_runloop_actions; t_prev != nil; t_prev = t_prev->next)
+		{
+			if (t_prev->next == t_action)
+			{
+				t_prev->next = t_action->next;
+				break;
+			}
+		}
+	}
+	
+	MCBrowserMemoryDelete(t_action);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCBrowserRunloopWait()
+{
+	if (s_browser_wait_func)
+		return s_browser_wait_func();
+	
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static bool MCBrowserMallocWrapper(size_t p_size, void *&r_mem)
+{
+	void *t_mem;
+	t_mem = malloc(p_size);
+	if (t_mem == nil)
+		return false;
+	r_mem = t_mem;
+	return true;
+}
+
+static bool MCBrowserReallocWrapper(void *p_mem, size_t p_new_size, void *&r_new_mem)
+{
+	void *t_mem;
+	t_mem = realloc(p_mem, p_new_size);
+	if (t_mem == nil)
+		return false;
+	
+	r_new_mem = t_mem;
+	return true;
+}
+
+static MCBrowserAllocator s_mem_allocate = MCBrowserMallocWrapper;
+static MCBrowserReallocator s_mem_reallocate = MCBrowserReallocWrapper;
+static MCBrowserDeallocator s_mem_deallocate = free;
+
+//////////
+
+bool MCBrowserMemoryAllocate(size_t p_size, void *&r_mem)
+{
+	return s_mem_allocate(p_size, r_mem);
+}
+
+bool MCBrowserMemoryReallocate(void *p_mem, size_t p_new_size, void *&r_new_mem)
+{
+	return s_mem_reallocate(p_mem, p_new_size, r_new_mem);
+}
+
+void MCBrowserMemoryDeallocate(void *p_mem)
+{
+	s_mem_deallocate(p_mem);
+}
+
+void MCBrowserMemoryClear(void *p_mem, size_t p_size)
+{
+	memset(p_mem, 0, p_size);
+}
+
+////////////////////////////////////////////////////////////////////////////////
