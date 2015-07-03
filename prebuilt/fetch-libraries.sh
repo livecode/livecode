@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Library versions
-VERSION_OpenSSL="1.0.1m"
-VERSION_Curl="7.21.1"
-VERSION_ICU="52.1"
+VERSION_OpenSSL="1.0.1o"
+VERSION_Curl="7.43.0"
+VERSION_ICU="55.1"
 VERSION_CEF="3.2062.1796"
 
 # Libraries to fetch
