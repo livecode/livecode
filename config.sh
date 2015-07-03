@@ -226,7 +226,7 @@ fi
 if test -z "$XCODE_TARGET_SDK"; then
  case ${OS} in
    mac) XCODE_TARGET_SDK="macosx10.8" ;;
-   ios) XCODE_TARGET_SDK="iphoneos8.3" ;;
+   ios) XCODE_TARGET_SDK="iphoneos" ;;
  esac
 fi
 
@@ -366,7 +366,7 @@ case ${OS} in
     export ANDROID_NDK
     export ANDROID_PLATFORM
     export ANDROID_SDK
-    
+
     export JAVA_SDK="${ANDROID_JAVA_SDK}"
 
     export AR="${ANDROID_AR}"

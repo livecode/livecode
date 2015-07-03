@@ -3,7 +3,7 @@
 source "${BASEDIR}/scripts/platform.inc"
 
 # Version and configuration flags
-OPENSSL_VERSION=1.0.1m
+OPENSSL_VERSION=1.0.1o
 
 # Grab the source for the library
 OPENSSL_TGZ="openssl-${OPENSSL_VERSION}.tar.gz"

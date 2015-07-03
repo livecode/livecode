@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Versions
-OPENSSL_VERSION="1.0.1m"
-CURL_VERSION="7.21.1"
-ICU_VERSION="52.1"
+OPENSSL_VERSION="1.0.1o"
+CURL_VERSION="7.43.0"
+ICU_VERSION="55.1"
 CEF_VERSION="3.2062.1796"
 
 # Package directory
