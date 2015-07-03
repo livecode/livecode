@@ -83,8 +83,8 @@ protected:
 class MCSdlStackSurface : public MCAbstractRasterStackSurface
 {
 public:
-	MCSdlStackSurface();
-	virtual ~MCSdlStackSurface();
+    MCSdlStackSurface(uint32_t width, uint32_t height);
+    virtual ~MCSdlStackSurface();
 
 	/* Lock and unlock the surface. */
 	virtual bool Lock();

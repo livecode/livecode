@@ -172,9 +172,9 @@ MCAbstractRasterStackSurface::Composite(MCGRectangle p_dest_rect,
  * SDL canvas surface
  * ================================================================ */
 
-MCSdlStackSurface::MCSdlStackSurface()
-	: m_surface(SDL_GetVideoSurface()),
-	  m_free_surface(false),
+MCSdlStackSurface::MCSdlStackSurface(uint32_t width, uint32_t height)
+    : m_surface(SDL_CreateRGBSurface(SDL_SWSURFACE, width, height, 32, 0x00000FF, 0x0000FF00, 0x00FF0000, 0xFF000000)),
+      m_free_surface(true),
 	  m_region(nil)
 {
 	MCAssert(m_surface);
@@ -212,10 +212,17 @@ MCSdlStackSurface::Unlock()
 {
 	MCAssert(nil != m_surface);
 
+    SDL_Rect t_srcrect = {0, 0, m_surface->w, m_surface->h};
+    SDL_Rect t_dstrect = {0, 0, m_surface->w, m_surface->h};
+
 	if (SDL_MUSTLOCK(m_surface))
 	{
 		SDL_UnlockSurface(m_surface);
 	}
+
+    SDL_Surface* t_screen = SDL_GetVideoSurface();
+    SDL_BlitSurface(m_surface, &t_srcrect, t_screen, &t_dstrect);
+    SDL_Flip(t_screen);
 }
 
 MCGRegionRef

@@ -69,12 +69,12 @@ MCEmscriptenViewSetBounds(const MCRectangle & p_rect)
 	                           &t_canvas_height,
 	                           &t_is_fullscreen);
 
-	SDL_Surface *t_surface = SDL_SetVideoMode(t_canvas_width,
+    SDL_Surface *t_surface = SDL_SetVideoMode(t_canvas_width,
 	                                          t_canvas_height,
 	                                          32, /* bits per pixel */
-	                                          SDL_SWSURFACE);
+                                              SDL_HWSURFACE|SDL_DOUBLEBUF);
 
-	return nil != t_surface;
+    return nil != t_surface;
 }
 
 /* Return the size of the Emscripten view as a rectangle. */
