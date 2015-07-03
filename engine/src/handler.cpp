@@ -452,7 +452,7 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 		stat = ctxt . GetExecStat();
         
 		// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
-		MCRedrawUpdateScreen();
+        //MCRedrawUpdateScreen();
         
 		switch(stat)
 		{
