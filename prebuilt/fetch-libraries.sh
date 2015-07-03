@@ -18,7 +18,7 @@ LIBS_mac=( OpenSSL ICU CEF )
 LIBS_ios=( OpenSSL ICU )
 LIBS_win32=( OpenSSL Curl ICU CEF )
 LIBS_linux=( OpenSSL Curl ICU )
-SUBPLATFORMS_ios=( iPhoneSimulator5.1 iPhoneSimulator6.1 iPhoneSimulator7.1 iPhoneSimulator8.2 iPhoneSimulator8.3 iPhoneOS8.2 iPhoneOS8.3 )
+SUBPLATFORMS_ios=( iPhoneSimulator5.1 iPhoneSimulator6.1 iPhoneSimulator7.1 iPhoneSimulator8.2 iPhoneSimulator8.3 iPhoneSimulator8.4 iPhoneOS8.2 iPhoneOS8.3 iPhoneOS8.4 )
 
 # Fetch settings
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
