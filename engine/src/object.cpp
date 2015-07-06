@@ -1071,7 +1071,7 @@ Exec_stat MCObject::handleself(Handler_type p_handler_type, MCNameRef p_message,
 				t_main_stat = exechandler(t_handler, p_parameters);
 
 				// If there was an error we are done.
-				if (t_stat == ES_ERROR)
+				if (t_main_stat == ES_ERROR)
 					return t_main_stat;
 			}
 		}
