@@ -234,7 +234,7 @@ public handler getHtmlText() returns String
 end handler
 
 public handler setHtmlText(in pHtmlText as String)
-	put "htmltext" into mContentSource
+	put "htmlText" into mContentSource
 	setProperty("htmlText", pHtmlText)
 end handler
 
@@ -279,7 +279,7 @@ private handler loadProperties(in pProperties as Array)
 	end repeat
 	if "url" is among the keys of pProperties then
 		setUrl(pProperties["url"])
-	else if "htmltext" is among the keys of pProperties then
+	else if "htmlText" is among the keys of pProperties then
 		setHtmlText(pProperties["htmltext"])
 	end if
 end handler
@@ -293,7 +293,7 @@ private handler saveProperties() returns Array
 		put getProperty(tKey) into tProps[tKey]
 	end repeat
 	
-	if mContentSource is not nothing then
+	if mContentSource is not empty then
 		put getProperty(mContentSource) into tProps[mContentSource]
 	end if
 	
