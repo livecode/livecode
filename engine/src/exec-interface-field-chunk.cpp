@@ -1775,7 +1775,7 @@ void MCField::SetImageSourceOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id,
 void MCField::GetVisitedOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_value)
 {
     bool t_mixed;
-    GetCharPropOfCharChunk< PodFieldPropType<bool> >(ctxt, this, p_part_id, si, si, &MCBlock::GetVisited, false, false, t_mixed, r_value);
+    GetCharPropOfCharChunk< PodFieldPropType<bool> >(ctxt, this, p_part_id, si, ei, &MCBlock::GetVisited, false, false, t_mixed, r_value);
 }
 
 // PM-2015-07-06: [[ Bug 15577 ]] Allow setting of the "visible" property of field obj
