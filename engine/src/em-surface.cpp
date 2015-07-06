@@ -172,10 +172,11 @@ MCAbstractRasterStackSurface::Composite(MCGRectangle p_dest_rect,
  * SDL canvas surface
  * ================================================================ */
 
-MCSdlStackSurface::MCSdlStackSurface(uint32_t width, uint32_t height)
-    : m_surface(SDL_CreateRGBSurface(SDL_SWSURFACE, width, height, 32, 0x00000FF, 0x0000FF00, 0x00FF0000, 0xFF000000)),
+MCSdlStackSurface::MCSdlStackSurface(const MCGIntegerRectangle& p_rect)
+    : m_surface(SDL_CreateRGBSurface(SDL_SWSURFACE, p_rect.size.width, p_rect.size.height, 32, 0x00000FF, 0x0000FF00, 0x00FF0000, 0xFF000000)),
       m_free_surface(true),
-	  m_region(nil)
+      m_region(nil),
+      m_rect(p_rect)
 {
 	MCAssert(m_surface);
 }
@@ -212,8 +213,8 @@ MCSdlStackSurface::Unlock()
 {
 	MCAssert(nil != m_surface);
 
-    SDL_Rect t_srcrect = {0, 0, m_surface->w, m_surface->h};
-    SDL_Rect t_dstrect = {0, 0, m_surface->w, m_surface->h};
+    SDL_Rect t_srcrect = {0, 0, m_rect.size.width, m_rect.size.height};
+    SDL_Rect t_dstrect = {m_rect.origin.x, m_rect.origin.y, m_rect.size.width, m_rect.size.height};
 
 	if (SDL_MUSTLOCK(m_surface))
 	{
@@ -237,9 +238,7 @@ MCSdlStackSurface::GetRegion()
 
 	/* Compute the region from the surface */
 	MCGRegionCreate(m_region);
-	MCGRegionSetRect(m_region,
-	                 MCGIntegerRectangleMake(0, 0,
-	                                         m_surface->w, m_surface->h));
+    MCGRegionSetRect(m_region, m_rect);
 
 	return m_region;
 }
@@ -266,8 +265,8 @@ MCSdlStackSurface::GetPixelBuffer(MCGIntegerRectangle p_area)
 	byte_t *surface_buf = reinterpret_cast<byte_t *>(m_surface->pixels);
 
 	byte_t *pix_buf = (surface_buf +
-	                   p_area.origin.y * GetStride() +
-	                   p_area.origin.x * sizeof(uint32_t));
+                       (p_area.origin.y-m_rect.origin.y) * GetStride() +
+                       (p_area.origin.x-m_rect.origin.x) * sizeof(uint32_t));
 
 	return reinterpret_cast<void *>(pix_buf);
 }

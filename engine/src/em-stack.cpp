@@ -117,7 +117,9 @@ MCStack::view_platform_updatewindow(MCRegionRef p_dirty_region)
 
 	MCGRegionIntersectRect(t_region, MCRectangleToMCGIntegerRectangle(t_valid));
 
-    MCSdlStackSurface t_surface(rect.width, rect.height);
+    MCGIntegerRectangle t_rect = MCGRegionGetBounds(t_region);
+
+    MCSdlStackSurface t_surface(t_rect);
 	view_surface_redrawwindow(&t_surface, t_region);
 }
 

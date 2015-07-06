@@ -24,6 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 //#include "sysdefs.h"
 #include "stack.h"
+#include "graphics.h"
 
 #include <SDL.h>
 
@@ -83,7 +84,7 @@ protected:
 class MCSdlStackSurface : public MCAbstractRasterStackSurface
 {
 public:
-    MCSdlStackSurface(uint32_t width, uint32_t height);
+    MCSdlStackSurface(const MCGIntegerRectangle& p_rect);
     virtual ~MCSdlStackSurface();
 
 	/* Lock and unlock the surface. */
@@ -99,6 +100,7 @@ protected:
 	SDL_Surface *m_surface;
 	bool m_free_surface;
 	MCGRegionRef m_region;
+    MCGIntegerRectangle m_rect;
 };
 
 #endif /* !__MC_EMSCRIPTEN_STACK_SURFACE_H__ */
