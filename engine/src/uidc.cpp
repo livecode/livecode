@@ -912,19 +912,43 @@ void MCUIDC::pingwait(void)
 #endif
 }
 
+bool MCUIDC::FindRunloopAction(MCRunloopActionCallback p_callback, void *p_context, MCRunloopActionRef &r_action)
+{
+	for (MCRunloopAction *t_action = m_runloop_actions; t_action != nil; t_action = t_action->next)
+	{
+		if (t_action->callback == p_callback && t_action->context == p_context)
+		{
+			r_action = t_action;
+			return true;
+		}
+	}
+	
+	return false;
+}
+
 // IM-2014-03-06: [[ revBrowserCEF ]] Add callback & context to runloop action list
 bool MCUIDC::AddRunloopAction(MCRunloopActionCallback p_callback, void *p_context, MCRunloopActionRef &r_action)
 {
 	MCRunloopAction *t_action;
 	t_action = nil;
 
+	if (FindRunloopAction(p_callback, p_context, r_action))
+	{
+		r_action = t_action;
+		r_action->references++;
+		
+		return true;
+	}
+	
 	if (!MCMemoryNew(t_action))
 		return false;
 
 	t_action->callback = p_callback;
 	t_action->context = p_context;
 
+	t_action->references = 1;
 	t_action->next = m_runloop_actions;
+	
 	m_runloop_actions = t_action;
 
 	r_action = t_action;
@@ -938,6 +962,12 @@ void MCUIDC::RemoveRunloopAction(MCRunloopActionRef p_action)
 	if (p_action == nil)
 		return;
 
+	if (p_action->references > 1)
+	{
+		p_action->references--;
+		return;
+	}
+	
 	MCRunloopAction *t_remove_action;
 	t_remove_action = nil;
 

@@ -218,6 +218,8 @@ typedef struct _MCRunloopAction
 {
 	MCRunloopActionCallback callback;
 	void *context;
+	
+	uint32_t references;
 
 	_MCRunloopAction *next;
 } MCRunloopAction, *MCRunloopActionRef;
@@ -500,6 +502,7 @@ public:
 	// then it will cause termination of the wait.
 	virtual void pingwait(void);
 
+	bool FindRunloopAction(MCRunloopActionCallback p_callback, void *p_context, MCRunloopActionRef &r_action);
 	// IM-2014-03-06: [[ revBrowserCEF ]] Add action to runloop
 	bool AddRunloopAction(MCRunloopActionCallback p_callback, void *p_context, MCRunloopActionRef &r_action);
 	// IM-2014-03-06: [[ revBrowserCEF ]] Remove action from runloop
