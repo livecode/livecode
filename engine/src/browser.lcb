@@ -57,6 +57,9 @@ public type MCBrowserRequestState is CInt
 public foreign handler MCBrowserLibraryInitialize() returns CBool binds to "<builtin>"
 public foreign handler MCBrowserLibraryFinalize() returns nothing binds to "<builtin>"
 
+public foreign handler MCBrowserLibrarySetWaitFunction(in pWait as Pointer) returns nothing binds to "<builtin>"
+public foreign handler MCBrowserLibraryGetRunloopCallback(out pCallback as Pointer, out pContext as Pointer) returns CBool binds to "<builtin>"
+
 public foreign handler MCBrowserFactoryGet(in pFactoryId as NativeCString, out rFactory as MCBrowserFactoryRef) returns CBool binds to "<builtin>"
 public foreign handler MCBrowserFactoryCreateBrowser(in pFactory as MCBrowserFactoryRef, out rBrowser as MCBrowserRef) returns CBool binds to "<builtin>"
 
