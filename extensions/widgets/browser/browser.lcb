@@ -78,9 +78,27 @@ constant kPersistentProps is ["scrollbars", "allowNewWindows", "enableContextMen
 
 --------------------------------------------------------------------------------
 
+/* TODO - need to provide wrapper handler here as we can't (yet) get a pointer to a foreign native handler */
+variable mWaitHandler
+public handler doWait()
+	MCEngineRunloopWait()
+end handler
+
+variable mRunloopAction as MCRunloopActionRef
 public handler OnModuleLoad()
-	/* UNCHECKED */
-	MCBrowserLibraryInitialize()
+	/* UNCHECKED */ MCBrowserLibraryInitialize()
+
+	put doWait into mWaitHandler
+
+	variable tWait as Pointer
+	MCHandlerGetFunctionPtr(mWaitHandler, tWait)
+	MCBrowserLibrarySetWaitFunction(tWait)
+
+	variable tCallback as MCRunloopActionCallback
+	variable tContext as Pointer
+	if MCBrowserLibraryGetRunloopCallback(tCallback, tContext) then
+		MCEngineAddRunloopAction(tCallback, tContext, mRunloopAction)
+	end if
 end handler
 
 public handler OnLoad(in pProperties as Array)
