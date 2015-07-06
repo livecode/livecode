@@ -635,7 +635,11 @@ private:
 		
 		for (uint32_t i = 0; i < t_size; i++)
 		{
-			if (p_list->GetType(i) != VTYPE_STRING || !AddHandler(p_container, p_list->GetString(i)))
+			if (p_list->GetType(i) != VTYPE_STRING)
+				return false;
+			if (p_list->GetString(i).empty())
+				return false;
+			if (!AddHandler(p_container, p_list->GetString(i)))
 				return false;
 		}
 		

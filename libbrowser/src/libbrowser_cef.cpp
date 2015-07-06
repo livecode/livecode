@@ -1355,23 +1355,26 @@ bool MCCefBrowserBase::SetJavaScriptHandlers(const char *p_handlers)
 	uint32_t t_handler_count;
 	t_handler_count = 0;
 	
-	if (t_success)
-		t_success = MCCStringSplit(t_new_handlers, ',', t_handlers, t_handler_count);
-	
 	CefRefPtr<CefListValue> t_handler_list;
 	
 	if (t_success)
-	{
-		t_handler_list = CefListValue::Create();
-		t_success = t_handler_list != nil && t_handler_list->SetSize(t_handler_count);
-	}
+		t_success = nil != (t_handler_list = CefListValue::Create());
 	
-	for (uint32_t i = 0; t_success && i < t_handler_count; i++)
+	if (!MCCStringIsEmpty(t_new_handlers))
 	{
-		CefString t_string;
-		t_success = MCCefStringFromUtf8String(t_handlers[i], t_string);
 		if (t_success)
-			t_success = t_handler_list->SetString(i, t_string);
+			t_success = MCCStringSplit(t_new_handlers, ',', t_handlers, t_handler_count);
+		
+		if (t_success)
+			t_success = t_handler_list->SetSize(t_handler_count);
+		
+		for (uint32_t i = 0; t_success && i < t_handler_count; i++)
+		{
+			CefString t_string;
+			t_success = MCCefStringFromUtf8String(t_handlers[i], t_string);
+			if (t_success)
+				t_success = t_handler_list->SetString(i, t_string);
+		}
 	}
 	
 	if (t_success)
