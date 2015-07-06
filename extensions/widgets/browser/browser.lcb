@@ -183,15 +183,10 @@ private handler getProperty(in pProperty as String) returns any
 		if pProperty is among the keys of mProperties then
 			return mProperties[pProperty]
 		else
-			return nothing
+			throw "can't access property: " & pProperty
 		end if
 	else
-		variable tValue as optional any
-		if browserGetProperty(mBrowser, pProperty, tValue) then
-			return tValue
-		else
-			return nothing
-		end if
+		return browserGetProperty(mBrowser, pProperty)
 	end if
 end handler
 

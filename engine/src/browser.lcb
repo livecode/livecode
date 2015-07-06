@@ -127,8 +127,13 @@ public constant kMCBrowserRequestStateMap is ["begin", "complete", "failed"]
 
 --
 
-constant kStringProps is ["url", "htmlText", "userAgent", "javaScriptHandlers"]
-constant kBoolProps is ["scrollbars", "allowNewWindows", "enableContextMenu"]
+-- constant kStringProps is ["url", "htmlText", "userAgent", "javaScriptHandlers"]
+-- TODO - replace literal values with constants when possible
+constant kStringProps is [3, 4, 5, 6]
+
+-- constant kBoolProps is ["scrollbars", "allowNewWindows", "enableContextMenu"]
+-- TODO - replace literal values with constants when possible
+constant kBoolProps is [0, 1, 2]
 
 --------------------------------------------------------------------------------
 
@@ -203,48 +208,53 @@ end handler
 
 ----------
 
-private handler browserLookupProperty(in pProp as String, out rProp as MCBrowserProperty) returns Boolean
-	variable tIndex as Integer
+private handler browserLookupProperty(in pProp as String) returns MCBrowserProperty
+	variable tIndex as optional Integer
 	put the index of pProp in kMCBrowserPropertyMap into tIndex
 	
 	if tIndex is 0 then
-		return false
+		throw "Unknown property: " & pProp
 	end if
 	
-	put tIndex - 1 into rProp
-	return true
+	return tIndex - 1
 end handler
 
 ----------
 
-public handler browserGetProperty(in pBrowser as MCBrowserRef, in pProperty as String, out rValue as optional any) returns Boolean
-	variable tProperty as MCBrowserProperty
-	if not browserLookupProperty(pProperty, tProperty) then
-		return false
-	end if
-	
+public handler browserGetEnumProperty(in pBrowser as MCBrowserRef, in pProperty as MCBrowserProperty, out rValue as optional any) returns Boolean
 	if pProperty is in kStringProps then
-		return MCBrowserGetStringProperty(pBrowser, tProperty, rValue)
+		return MCBrowserGetStringProperty(pBrowser, pProperty, rValue)
 	else if pProperty is in kBoolProps then
-		return MCBrowserGetBoolProperty(pBrowser, tProperty, rValue)
+		return MCBrowserGetBoolProperty(pBrowser, pProperty, rValue)
 	end if
 	
 	return false
 end handler
 
-public handler browserSetProperty(in pBrowser as MCBrowserRef, in pProperty as String, in pValue as any) returns Boolean
-	variable tProperty as MCBrowserProperty
-	if not browserLookupProperty(pProperty, tProperty) then
-		return false
+public handler browserGetProperty(in pBrowser as MCBrowserRef, in pProperty as String) returns any
+	variable tValue as any
+	if not browserGetEnumProperty(pBrowser, browserLookupProperty(pProperty), tValue) then
+		throw "Error retrieving browser property: " & pProperty
 	end if
 	
+	return tValue
+end handler
+
+public handler browserSetEnumProperty(in pBrowser as MCBrowserRef, in pProperty as MCBrowserProperty, in pValue as any) returns Boolean
 	if pProperty is in kStringProps then
-		return MCBrowserSetStringProperty(pBrowser, tProperty, pValue)
+		return MCBrowserSetStringProperty(pBrowser, pProperty, pValue)
 	else if pProperty is in kBoolProps then
-		return MCBrowserSetBoolProperty(pBrowser, tProperty, pValue)
+		return MCBrowserSetBoolProperty(pBrowser, pProperty, pValue)
 	end if
 	
 	return false
+end handler
+	
+public handler browserSetProperty(in pBrowser as MCBrowserRef, in pProperty as String, in pValue as any)
+	variable tValue as any
+	if not browserSetEnumProperty(pBrowser, browserLookupProperty(pProperty), pValue) then
+		throw "Error setting browser property: " & pProperty
+	end if
 end handler
 
 ----------
