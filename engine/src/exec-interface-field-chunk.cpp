@@ -1778,6 +1778,12 @@ void MCField::GetVisitedOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int
     GetCharPropOfCharChunk< PodFieldPropType<bool> >(ctxt, this, p_part_id, si, si, &MCBlock::GetVisited, false, false, t_mixed, r_value);
 }
 
+// PM-2015-07-06: [[ Bug 15577 ]] Allow setting of the "visible" property of field obj
+void MCField::SetVisitedOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool p_value)
+{
+    SetCharPropOfCharChunk< PodFieldPropType<bool> >(ctxt, this, false, p_part_id, si, ei, &MCBlock::SetVisited,p_value);
+}
+
 void MCField::GetEncodingOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, intenum_t &r_encoding)
 {
     intenum_t t_encoding;
@@ -3198,6 +3204,14 @@ void MCBlock::SetImageSource(MCExecContext& ctxt, MCStringRef p_image_source)
 void MCBlock::GetVisited(MCExecContext& ctxt, bool& r_value)
 {
     r_value = getvisited() == True;
+}
+
+void MCBlock::SetVisited(MCExecContext& ctxt, bool p_value)
+{
+    if (p_value)
+		setvisited();
+	else
+		clearvisited();
 }
 
 void MCBlock::GetFlagged(MCExecContext& ctxt, bool &r_value)
