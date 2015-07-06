@@ -30,7 +30,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 bool
 MCEmscriptenViewInitialize()
 {
-	/* Make sure SDL video subsystem has been initialised at some
+    EM_ASM
+    (
+        SDL.defaults.opaqueFrontBuffer = false;
+        SDL.defaults.copyOnLock = false;
+        SDL.defaults.discardOnLock = true;
+    );
+
+    /* Make sure SDL video subsystem has been initialised at some
 	 * point. */
 	if (SDL_WasInit(SDL_INIT_VIDEO) == 0)
 	{
