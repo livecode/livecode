@@ -36,6 +36,9 @@ mergeInto(LibraryManager.library, {
 
 			// Master mapping from event types to handler functions.
 			var mapping = [
+				['focus', LiveCodeEvents._handleFocusEvent],
+				['blur', LiveCodeEvents._handleFocusEvent],
+
 				['mousemove', LiveCodeEvents._handleMouseEvent],
 				['mousedown', LiveCodeEvents._handleMouseEvent],
 				['mouseup', LiveCodeEvents._handleMouseEvent],
@@ -43,9 +46,7 @@ mergeInto(LibraryManager.library, {
 				['mouseleave', LiveCodeEvents._handleMouseEvent],
 
 				// FIXME "keypress" events are deprecated
-				['keyup', LiveCodeEvents._handleKeyboardEvent],
 				['keypress', LiveCodeEvents._handleKeyboardEvent],
-				['keydown', LiveCodeEvents._handleKeyboardEvent],
 
 				['input', LiveCodeEvents._handleKeyboardEvent],
 			];
@@ -64,14 +65,16 @@ mergeInto(LibraryManager.library, {
 
 			console.log('LiveCodeEvents.initialize()');
 
-			// Attach handlers to the default canvas
-			var target = Module['canvas'];
+			var target = LiveCodeEvents._getTarget();
 
 			// Add all of the event handlers
 			LiveCodeEvents._eventForEach(function (type, handler) {
 				console.log('    - ' + type);
-				target.addEventListener(type, handler, false);
+				target.addEventListener(type, handler, true);
 			});
+
+			// Make sure the canvas is treated as focusable...
+			target.tabIndex = 0;
 
 			LiveCodeEvents._initialised = false;
 		},
@@ -83,8 +86,7 @@ mergeInto(LibraryManager.library, {
 
 			console.log('LiveCodeEvents.finalize()');
 
-			// Handlers are attached to the default canvas
-			var target = Module['canvas'];
+			var target = LiveCodeEvents._getTarget();
 
 			// Remove all of the event handlers
 			LiveCodeEvents._eventForEach(function (type, handler) {
@@ -95,14 +97,57 @@ mergeInto(LibraryManager.library, {
 			LiveCodeEvents._initialised = false;;
 		},
 
+		_getTarget: function() {
+			// Handlers are attached to the default canvas
+			return Module['canvas'];
+		},
+
 		_getStack: function() {
 			return Module.ccall('MCEmscriptenGetCurrentStack', 'number', [], []);
 		},
 
-		_encodeModifiers: function(shift, alt, ctrl) {
+		_encodeModifiers: function(uiEvent) {
 			return Module.ccall('MCEmscriptenEventEncodeModifiers', 'number',
-								['number', 'number', 'number'],
-								[shift, alt, ctrl]);
+								['number', 'number', 'number', 'number'],
+								[uiEvent.shiftKey, uiEvent.altKey,
+								 uiEvent.ctrlKey, uiEvent.metaKey]);
+		},
+
+		// ----------------------------------------------------------------
+		// Focus events
+		// ----------------------------------------------------------------
+
+		// Wrapper for MCEventQueuePostKeyFocus()
+		_postKeyFocus: function(stack, owner) {
+			Module.ccall('MCEventQueuePostKeyFocus',
+						 'number', // bool
+						 ['number',  // MCStack *stack
+						  'number'], // bool owner
+						 [stack, owner]);
+		},
+
+		_handleFocusEvent: function(e) {
+			LiveCodeAsync.delay(function() {
+				var stack = LiveCodeEvents._getStack();
+
+				switch (e.type) {
+				case 'focus':
+				case 'focusin':
+					LiveCodeEvents._postKeyFocus(stack, true);
+					break;
+				case 'blur':
+				case 'focusout':
+					LiveCodeEvents._postKeyFocus(stack, false);
+					break;
+				default:
+					console.debug('Unexpected focus event type: ' + e.type);
+					return;
+				}
+			});
+			LiveCodeAsync.resume();
+
+			// Prevent event from propagating
+			return false;
 		},
 
 		// ----------------------------------------------------------------
@@ -114,8 +159,8 @@ mergeInto(LibraryManager.library, {
 		// KeyboardEvent.key.
 		_encodeKeyboardCharCode: function(keyboardEvent) {
 			var key = keyboardEvent.key;
-			var high = str.charCodeAt(0); // High surrogate
-			var low = str.charCodeAt(1); // Low surrogate
+			var high = key.charCodeAt(0); // High surrogate
+			var low = key.charCodeAt(1); // Low surrogate
 
 			// Check if there's actually a key code at all
 			if (isNaN(high)) {
@@ -144,8 +189,11 @@ mergeInto(LibraryManager.library, {
 					console.debug('High surrogate not followed by low surrogate');
 					return 0;
 				}
-
-				return ((high - 0xD800) * 0x400) + (low - 0xDC00) + 0x10000;
+				if (key.length == 2) {
+					return ((high - 0xD800) * 0x400) + (low - 0xDC00) + 0x10000;
+				} else {
+					return 0;
+				}
 			}
 
 			return 0;
@@ -155,7 +203,22 @@ mergeInto(LibraryManager.library, {
 		// MCEventQueuePostKeyPress() from JavaScript's
 		// KeyboardEvent.key.
 		_encodeKeyboardKeyCode: function(keyboardEvent) {
-			// FIXME make this work
+			// Synthesize a keycode from the char code, if the key event has a
+			// corresponding char code.
+			// FIXME Maybe this should be done in the engine?
+			var char_code = LiveCodeEvents._encodeKeyboardCharCode(keyboardEvent);
+
+			// Unicode codepoints in the ISO/IEC 8859-1 range
+			// U+0020..U+00FF are passed directly as keycodes.
+			// Otherwise, the codepoint is returned with bit 21 set.
+			if (char_code > 0) {
+				if (char_code >= 0x20 && char_code <= 0xff) {
+					return char_code;
+				} else {
+					return char_code & 0x1000000;
+				}
+			}
+
 			console.debug('Don\'t know how to decode key: ' + keyboardEvent.key);
 			return 0;
 		},
@@ -172,14 +235,10 @@ mergeInto(LibraryManager.library, {
 		},
 
 		_handleKeyboardEvent: function(e) {
-			console.debug(e.type);
-
 			LiveCodeAsync.delay(function() {
 
 				var stack = LiveCodeEvents._getStack();
-				var mods = LiveCodeEvents._encodeModifiers(e.shiftKey,
-														   e.altKey,
-														   e.ctrlKey);
+				var mods = LiveCodeEvents._encodeModifiers(e);
 
 				switch (e.type) {
 				case 'keypress':
@@ -195,6 +254,10 @@ mergeInto(LibraryManager.library, {
 				}
 			});
 			LiveCodeAsync.resume();
+
+			// Prevent event from propagating
+			e.preventDefault();
+			return false;
 		},
 
 		// ----------------------------------------------------------------
@@ -266,9 +329,7 @@ mergeInto(LibraryManager.library, {
 			LiveCodeAsync.delay(function () {
 
 				var stack = LiveCodeEvents._getStack();
-				var mods = LiveCodeEvents._encodeModifiers(e.shiftKey,
-														   e.altKey,
-														   e.ctrlKey);
+				var mods = LiveCodeEvents._encodeModifiers(e);
 				var pos = LiveCodeEvents._encodeMouseCoordinates(e);
 
 				// Always post the mouse position
@@ -280,6 +341,11 @@ mergeInto(LibraryManager.library, {
 					return;
 
 				case 'mousedown':
+					// In the case of mouse down, specifically request
+					// keyboard focus
+					LiveCodeEvents._getTarget().focus();
+
+					// Intentionally fall through to 'mouseup' case.
 				case 'mouseup':
 					var state = LiveCodeEvents._encodeMouseState(e.type);
 					LiveCodeEvents._postMousePress(stack, e.timestamp, mods,
@@ -301,6 +367,10 @@ mergeInto(LibraryManager.library, {
 
 			});
 			LiveCodeAsync.resume();
+
+			// Prevent event from propagating
+			e.preventDefault();
+			return false;
 		},
 	},
 

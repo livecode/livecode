@@ -29,7 +29,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "dispatch.h"
 
 #include <unistd.h>
-#include <SDL.h>
 
 /* ================================================================
  * Emscripten engine start-up
@@ -55,11 +54,6 @@ main(int argc, char *argv[])
 	if (!MCInitialize())
 	{
 		MCEmscriptenBootError("Core initialisation");
-	}
-
-	if (0 != SDL_Init(0))
-	{
-		MCEmscriptenBootError("SDL initialisation");
 	}
 
 	/* ---------- Process command-line arguments.
@@ -149,9 +143,6 @@ main(int argc, char *argv[])
 		MCdispatcher->gethome()->open();
 	}
 
-	/* FIXME move this somewhere else */
-	SDL_Init(SDL_INIT_VIDEO);
-
 	/* ---------- Main loop */
 	while (X_main_loop_iteration());
 
@@ -160,7 +151,6 @@ main(int argc, char *argv[])
 
 	int t_exit_code = X_close();
 
-	SDL_Quit();
 	MCFinalize();
 
 	exit(t_exit_code);

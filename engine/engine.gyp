@@ -685,6 +685,7 @@
 									'src/em-whitelist.json',
 									'src/em-async.js',
 									'src/em-event.js',
+									'src/em-surface.js',
 									'boot',
 								],
 
@@ -702,6 +703,7 @@
 									'src/em-whitelist.json',
 									'src/em-async.js',
 									'src/em-event.js',
+									'src/em-surface.js',
 								],
 							},
 						],
