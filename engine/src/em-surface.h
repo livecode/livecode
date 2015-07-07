@@ -26,7 +26,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "graphics.h"
 
-#include <SDL.h>
 
 /* ================================================================
  * Abstract raster surface
@@ -81,11 +80,11 @@ protected:
  * SDL canvas surface
  * ================================================================ */
 
-class MCSdlStackSurface : public MCAbstractRasterStackSurface
+class MCHtmlCanvasStackSurface : public MCAbstractRasterStackSurface
 {
 public:
-    MCSdlStackSurface(const MCGIntegerRectangle& p_rect);
-    virtual ~MCSdlStackSurface();
+    MCHtmlCanvasStackSurface(const MCGIntegerRectangle& p_rect);
+    virtual ~MCHtmlCanvasStackSurface();
 
 	/* Lock and unlock the surface. */
 	virtual bool Lock();
@@ -97,8 +96,7 @@ protected:
 	virtual MCGRasterFormat GetFormat();
 	virtual void *GetPixelBuffer(MCGIntegerRectangle p_area);
 
-	SDL_Surface *m_surface;
-	bool m_free_surface;
+    uint8_t *m_surface;
 	MCGRegionRef m_region;
     MCGIntegerRectangle m_rect;
 };

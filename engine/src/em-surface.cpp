@@ -22,6 +22,18 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "em-util.h"
 
 /* ================================================================
+ * Functions implemented in em-surface.js
+ * ================================================================ */
+
+
+extern "C" void MCEmscriptenBlitToMainCanvas(const uint8_t* p_rgba_buffer,
+                                             uint32_t p_dest_x,
+                                             uint32_t p_dest_y,
+                                             uint32_t p_width,
+                                             uint32_t p_height);
+
+
+/* ================================================================
  * Abstract raster surface
  * ================================================================ */
 
@@ -169,25 +181,21 @@ MCAbstractRasterStackSurface::Composite(MCGRectangle p_dest_rect,
 }
 
 /* ================================================================
- * SDL canvas surface
+ * HTML canvas surface
  * ================================================================ */
 
-MCSdlStackSurface::MCSdlStackSurface(const MCGIntegerRectangle& p_rect)
-    : m_surface(SDL_CreateRGBSurface(SDL_SWSURFACE, p_rect.size.width, p_rect.size.height, 32, 0x00000FF, 0x0000FF00, 0x00FF0000, 0xFF000000)),
-      m_free_surface(true),
+MCHtmlCanvasStackSurface::MCHtmlCanvasStackSurface(const MCGIntegerRectangle& p_rect)
+    : m_surface(nil),
       m_region(nil),
       m_rect(p_rect)
 {
-	MCAssert(m_surface);
+    ;
 }
 
-MCSdlStackSurface::~MCSdlStackSurface()
+MCHtmlCanvasStackSurface::~MCHtmlCanvasStackSurface()
 {
-	/* m_surface is owned by libsdl */
-	if (nil != m_surface && m_free_surface)
-	{
-		SDL_FreeSurface(m_surface);
-	}
+    delete[] m_surface;
+
 	if (nil != m_region)
 	{
 		MCGRegionDestroy(m_region);
@@ -195,39 +203,26 @@ MCSdlStackSurface::~MCSdlStackSurface()
 }
 
 bool
-MCSdlStackSurface::Lock()
+MCHtmlCanvasStackSurface::Lock()
 {
-	MCAssert(nil != m_surface);
+    // Allocate a buffer for us to use, if not already done
+    if (m_surface == nil)
+    {
+        m_surface = new uint8_t[m_rect.size.width * m_rect.size.height * sizeof(uint32_t)];
+    }
 
-	if (SDL_MUSTLOCK(m_surface) &&
-	    0 != SDL_LockSurface(m_surface))
-	{
-		return false;
-	}
-
-	return true;
+    return m_surface != nil;
 }
 
 void
-MCSdlStackSurface::Unlock()
+MCHtmlCanvasStackSurface::Unlock()
 {
-	MCAssert(nil != m_surface);
-
-    SDL_Rect t_srcrect = {0, 0, m_rect.size.width, m_rect.size.height};
-    SDL_Rect t_dstrect = {m_rect.origin.x, m_rect.origin.y, m_rect.size.width, m_rect.size.height};
-
-	if (SDL_MUSTLOCK(m_surface))
-	{
-		SDL_UnlockSurface(m_surface);
-	}
-
-    SDL_Surface* t_screen = SDL_GetVideoSurface();
-    SDL_BlitSurface(m_surface, &t_srcrect, t_screen, &t_dstrect);
-    SDL_Flip(t_screen);
+    // This is implemented in JavaScript
+    MCEmscriptenBlitToMainCanvas(m_surface, m_rect.origin.x, m_rect.origin.y, m_rect.size.width, m_rect.size.height);
 }
 
 MCGRegionRef
-MCSdlStackSurface::GetRegion()
+MCHtmlCanvasStackSurface::GetRegion()
 {
 	if (nil != m_region)
 	{
@@ -244,29 +239,27 @@ MCSdlStackSurface::GetRegion()
 }
 
 uint32_t
-MCSdlStackSurface::GetStride()
+MCHtmlCanvasStackSurface::GetStride()
 {
 	MCAssert(nil != m_surface);
 
-	return m_surface->pitch;
+    return m_rect.size.width * sizeof(uint32_t);
 }
 
 MCGRasterFormat
-MCSdlStackSurface::GetFormat()
+MCHtmlCanvasStackSurface::GetFormat()
 {
 	return kMCGRasterFormat_ARGB;
 }
 
 void *
-MCSdlStackSurface::GetPixelBuffer(MCGIntegerRectangle p_area)
+MCHtmlCanvasStackSurface::GetPixelBuffer(MCGIntegerRectangle p_area)
 {
 	MCAssert(nil != m_surface);
 
-	byte_t *surface_buf = reinterpret_cast<byte_t *>(m_surface->pixels);
-
-	byte_t *pix_buf = (surface_buf +
+    uint8_t *pix_buf = (m_surface +
                        (p_area.origin.y-m_rect.origin.y) * GetStride() +
                        (p_area.origin.x-m_rect.origin.x) * sizeof(uint32_t));
 
-	return reinterpret_cast<void *>(pix_buf);
+    return static_cast<void *>(pix_buf);
 }

@@ -30,34 +30,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 bool
 MCEmscriptenViewInitialize()
 {
-    EM_ASM
-    (
-        SDL.defaults.opaqueFrontBuffer = false;
-        SDL.defaults.copyOnLock = false;
-        SDL.defaults.discardOnLock = true;
-    );
-
-    /* Make sure SDL video subsystem has been initialised at some
-	 * point. */
-	if (SDL_WasInit(SDL_INIT_VIDEO) == 0)
-	{
-		if (0 != SDL_InitSubSystem(SDL_INIT_VIDEO))
-		{
-			return false;
-		}
-	}
-
-	return true;
+    return true;
 }
 
 /* Clean up the SDL video state */
 void
 MCEmscriptenViewFinalize()
 {
-	if (SDL_WasInit(SDL_INIT_VIDEO) != 0)
-	{
-		SDL_QuitSubSystem(SDL_INIT_VIDEO);
-	}
+
 }
 
 /* Resize the canvas and update the SDL video mode */
@@ -71,17 +51,7 @@ MCEmscriptenViewSetBounds(const MCRectangle & p_rect)
 	/* Attempt to resize the canvas */
 	emscripten_set_canvas_size(t_canvas_width, t_canvas_height);
 
-	/* Set the SDL video mode to the size that the canvas actually ended up */
-	emscripten_get_canvas_size(&t_canvas_width,
-	                           &t_canvas_height,
-	                           &t_is_fullscreen);
-
-    SDL_Surface *t_surface = SDL_SetVideoMode(t_canvas_width,
-	                                          t_canvas_height,
-	                                          32, /* bits per pixel */
-                                              SDL_HWSURFACE|SDL_DOUBLEBUF);
-
-    return nil != t_surface;
+    return true;
 }
 
 /* Return the size of the Emscripten view as a rectangle. */
