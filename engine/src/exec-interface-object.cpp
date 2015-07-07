@@ -3083,60 +3083,19 @@ void MCObject::SetVisibility(MCExecContext& ctxt, uint32_t part, bool setting, b
 	if (dirty && opened && gettype() >= CT_GROUP)
 		t_old_effective_rect = static_cast<MCControl *>(this) -> geteffectiverect();
 	
-	bool needmfocus;
-	needmfocus = false;
+    if (dirty)
+        signallisteners(P_VISIBLE);
+    
+    if (dirty && opened)
+    {
+        // MW-2011-08-18: [[ Layers ]] Take note of the change in visibility.
+        if (gettype() >= CT_GROUP)
+            static_cast<MCControl *>(this) -> layer_visibilitychanged(t_old_effective_rect);
+    }
+    
 	if (dirty)
-	{
-		if (opened && getstack() == MCmousestackptr)
-			if (!(flags & F_VISIBLE))
-			{
-				MCObject *mfocused = MCmousestackptr->getcard()->getmfocused();
-				// MW-2012-02-22: [[ Bug 10018 ]] If the target is a group then check
-				//   to see if it is the ancestor of the mfocused control; otherwise
-				//   just compare directly.
-				if (mfocused != nil && gettype() == CT_GROUP)
-				{
-					while(mfocused -> gettype() != CT_CARD)
-					{
-						if (mfocused == this)
-						{
-							needmfocus = True;
-							break;
-						}
-						mfocused = mfocused -> getparent();
-					}
-				}
-				else if (this == mfocused)
-					needmfocus = true;
-			}
-			else if (MCU_point_in_rect(rect, MCmousex, MCmousey))
-				needmfocus = true;
-
-		if (state & CS_KFOCUSED)
-			getcard(part)->kunfocus();
-
-		// MW-2008-08-04: [[ Bug 7094 ]] If we change the visibility of the control
-		//   while its grabbed, we should ungrab it - otherwise it sticks to the
-		//   cursor.
-		if (gettype() >= CT_GROUP && getstate(CS_GRAB))
-			state &= ~CS_GRAB;
-
-		if (resizeparent())
-			dirty = false;
-	}
-
-	if (dirty)
-		signallisteners(P_VISIBLE);
-	
-	if (dirty && opened)
-	{
-		// MW-2011-08-18: [[ Layers ]] Take note of the change in visibility.
-		if (gettype() >= CT_GROUP)
-			static_cast<MCControl *>(this) -> layer_visibilitychanged(t_old_effective_rect);
-	}
-
-	if (needmfocus)
-		MCmousestackptr->getcard()->mfocus(MCmousex, MCmousey);
+        // AL-2015-06-30: [[ Bug 15556 ]] Use refactored function to sync mouse focus
+        sync_mfocus();
 }
 
 void MCObject::GetVisible(MCExecContext& ctxt, uint32_t part, bool& r_setting)

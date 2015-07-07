@@ -11,20 +11,7 @@ if [ ! -z "${OBJCOPY}" ] ; then
 else
 	# Attempt to set up the toolchain automatically
 	if [ -z "${ANDROID_TOOLCHAIN}" ] ; then
-		case $(uname) in
-			Darwin*)
-				ANDROID_TOOLCHAIN="${ANDROID_NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/darwin-x86/bin/arm-linux-androideabi"
-				ANDROID_CC_NAME=gcc
-				ANDROID_CXX_NAME=g++
-				;;
-			Linux*)
-				ANDROID_TOOLCHAIN="${HOME}/android-armv6-standalone/bin/arm-linux-androideabi"
-				;;
-			*)
-				echo >&2 "Error: ANDROID_TOOLCHAIN must be set"
-				exit 1
-				;;
-		esac
+		ANDROID_TOOLCHAIN="${HOME}/android/toolchain/standalone/bin/arm-linux-androideabi"
 	fi
 
 	ANDROID_CC_NAME=${ANDROID_CC_NAME:-clang}

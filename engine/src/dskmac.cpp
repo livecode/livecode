@@ -6585,7 +6585,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             struct stat64 t_buf;
             if (t_fd != -1 && !fstat64(t_fd, &t_buf))
             {
-                uint4 t_len = t_buf.st_size;
+                off_t t_len = t_buf.st_size;
                 if (t_len != 0)
                 {
                     char *t_buffer = (char *)mmap(NULL, t_len, PROT_READ, MAP_SHARED,

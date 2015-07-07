@@ -262,18 +262,20 @@ static bool MCPathIsAbsolute(MCStringRef p_path)
             || MCStringGetCharAtIndex(p_path, 0) == ':';
 }
 
-static bool MCPathIsRemoteURL(MCStringRef p_path)
+static bool MCPathIsURL(MCStringRef p_path)
 {
     return MCStringBeginsWithCString(p_path, (char_t*)"http://", kMCStringOptionCompareCaseless) ||
             MCStringBeginsWithCString(p_path, (char_t*)"https://", kMCStringOptionCompareCaseless) ||
-            MCStringBeginsWithCString(p_path, (char_t*)"ftp://", kMCStringOptionCompareCaseless);
+            MCStringBeginsWithCString(p_path, (char_t*)"ftp://", kMCStringOptionCompareCaseless)||
+            // PM-2015-06-30: [[ Bug 14418 ]] Allow URLs of the form file://
+            MCStringBeginsWithCString(p_path, (char_t*)"file://", kMCStringOptionCompareCaseless);
 }
 
 // PM-2014-12-19: [[ Bug 14245 ]] Make possible to set the filename using a relative path to the stack folder
 // PM-2015-01-26: [[ Bug 14435 ]] Make possible to set the filename using a relative path to the default folder
 bool MCPlayer::resolveplayerfilename(MCStringRef p_filename, MCStringRef &r_filename)
 {
-    if (MCPathIsAbsolute(p_filename) || MCPathIsRemoteURL(p_filename))
+    if (MCPathIsAbsolute(p_filename) || MCPathIsURL(p_filename))
     {
         r_filename = MCValueRetain(p_filename);
         return true;
