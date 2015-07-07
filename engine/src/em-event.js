@@ -36,6 +36,9 @@ mergeInto(LibraryManager.library, {
 
 			// Master mapping from event types to handler functions.
 			var mapping = [
+				['focus', LiveCodeEvents._handleFocusEvent],
+				['blur', LiveCodeEvents._handleFocusEvent],
+
 				['mousemove', LiveCodeEvents._handleMouseEvent],
 				['mousedown', LiveCodeEvents._handleMouseEvent],
 				['mouseup', LiveCodeEvents._handleMouseEvent],
@@ -73,6 +76,9 @@ mergeInto(LibraryManager.library, {
 				target.addEventListener(type, handler, false);
 			});
 
+			// Make sure the canvas is treated as focusable...
+			target.tabIndex = 0;
+
 			LiveCodeEvents._initialised = false;
 		},
 
@@ -104,6 +110,43 @@ mergeInto(LibraryManager.library, {
 								['number', 'number', 'number', 'number'],
 								[uiEvent.shiftKey, uiEvent.altKey,
 								 uiEvent.ctrlKey, uiEvent.metaKey]);
+		},
+
+		// ----------------------------------------------------------------
+		// Focus events
+		// ----------------------------------------------------------------
+
+		// Wrapper for MCEventQueuePostKeyFocus()
+		_postKeyFocus: function(stack, owner) {
+			Module.ccall('MCEventQueuePostKeyFocus',
+						 'number', // bool
+						 ['number',  // MCStack *stack
+						  'number'], // bool owner
+						 [stack, owner]);
+		},
+
+		_handleFocusEvent: function(e) {
+			LiveCodeAsync.delay(function() {
+				var stack = LiveCodeEvents._getStack();
+
+				switch (e.type) {
+				case 'focus':
+				case 'focusin':
+					LiveCodeEvents._postKeyFocus(stack, true);
+					break;
+				case 'blur':
+				case 'focusout':
+					LiveCodeEvents._postKeyFocus(stack, false);
+					break;
+				default:
+					console.debug('Unexpected focus event type: ' + e.type);
+					return;
+				}
+			});
+			LiveCodeAsync.resume();
+
+			// Prevent event from propagating
+			return false;
 		},
 
 		// ----------------------------------------------------------------
@@ -277,6 +320,11 @@ mergeInto(LibraryManager.library, {
 					return;
 
 				case 'mousedown':
+					// In the case of mouse down, specifically request
+					// keyboard focus
+					LiveCodeEvents._getTarget().focus();
+
+					// Intentionally fall through to 'mouseup' case.
 				case 'mouseup':
 					var state = LiveCodeEvents._encodeMouseState(e.type);
 					LiveCodeEvents._postMousePress(stack, e.timestamp, mods,
@@ -298,6 +346,10 @@ mergeInto(LibraryManager.library, {
 
 			});
 			LiveCodeAsync.resume();
+
+			// Prevent event from propagating
+			e.preventDefault();
+			return false;
 		},
 	},
 
