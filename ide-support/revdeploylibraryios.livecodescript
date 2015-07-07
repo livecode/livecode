@@ -19,7 +19,7 @@ local sDeviceSDKs
 --  SDKs and device relying on the engines we provide in the shipped version
 -- SN-2015-05-01: [[ Xcode 6.4 ]] Add iOS 8.4 amongst the uable iOS SDK
 function deployUsableIosSdk
-   return "5.1,6.1,7.1,8.2,8.4"
+   return "6.1,7.1,8.2,8.4"
 end deployUsableIosSdk
 
 // SN-2015-05-01: [[ Xcode 6.4 ]] Return the pair iOS SDK / Xcode for the current MacOS version
