@@ -3162,6 +3162,9 @@ void MCInterfaceExecCreateWidget(MCExecContext& ctxt, MCStringRef p_new_name, MC
     if (p_new_name != nil)
         t_widget->setstringprop(ctxt, 0, P_NAME, False, p_new_name);
     
+    // AL-2015-06-30: [[ Bug 15556 ]] Ensure mouse focus is synced after creating object
+    t_widget -> sync_mfocus();
+    
     MCAutoValueRef t_id;
     t_widget->names(P_LONG_ID, &t_id);
     ctxt . SetItToValue(*t_id);
