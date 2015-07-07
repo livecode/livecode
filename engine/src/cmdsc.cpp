@@ -591,10 +591,8 @@ Exec_errors MCClipboardCmd::processtoclipboard(MCObjectRef *p_objects, uint4 p_o
 		{
 			for(uint4 i = 0; i < p_object_count; ++i)
 			{
-				p_objects[i] . object -> del();
-				if (p_objects[i] . object -> gettype() == CT_STACK)
-					MCtodestroy -> remove(static_cast<MCStack *>(p_objects[i] . object));
-				p_objects[i] . object -> scheduledelete();
+				if (p_objects[i] . object -> del())
+                    p_objects[i] . object -> scheduledelete();
 			}
 		}
 	}
@@ -2427,11 +2425,10 @@ Exec_stat MCRevert::exec(MCExecPoint &ep)
 		Boolean oldlock = MClockmessages;
 		MClockmessages = True;
 		MCerrorlock++;
-		sptr->del();
+		if (sptr->del())
+            sptr -> scheduledelete();
 		MCerrorlock--;
 		MClockmessages = oldlock;
-		MCtodestroy->add
-		(sptr);
 		sptr = MCdispatcher->findstackname(ep.getsvalue());
 		if (sptr != NULL)
 			sptr->openrect(oldrect, oldmode, NULL, WP_DEFAULT, OP_NONE);

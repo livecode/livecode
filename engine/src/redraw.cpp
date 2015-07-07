@@ -1217,7 +1217,6 @@ void MCCard::render(void)
 
 static bool s_screen_is_dirty = false;
 static bool s_screen_updates_disabled = false;
-bool MCredrawupdatescreenneeded = false;
 
 bool MCRedrawIsScreenLocked(void)
 {
@@ -1233,14 +1232,16 @@ void MCRedrawRestoreLockScreen(uint2 p_lock)
 {
 	MClockscreen = p_lock;
 	
-	MCredrawupdatescreenneeded = MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled;
+	if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+        MCActionsSchedule(kMCActionsUpdateScreen);
 }
 
 void MCRedrawLockScreen(void)
 {
 	MClockscreen++;
 	
-	MCredrawupdatescreenneeded = MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled;
+	if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+        MCActionsSchedule(kMCActionsUpdateScreen);
 }
 
 void MCRedrawUnlockScreen(void)
@@ -1250,7 +1251,8 @@ void MCRedrawUnlockScreen(void)
 
 	MClockscreen--;
 	
-	MCredrawupdatescreenneeded = MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled;
+	if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+        MCActionsSchedule(kMCActionsUpdateScreen);
 }
 
 void MCRedrawUnlockScreenWithEffects(void)
@@ -1268,14 +1270,16 @@ void MCRedrawUnlockScreenWithEffects(void)
 		MCdefaultstackptr -> effectrect(MCcur_effects_rect, t_abort);
 	}
 	
-	MCredrawupdatescreenneeded = MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled;
+	if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+        MCActionsSchedule(kMCActionsUpdateScreen);
 }
 
 void MCRedrawForceUnlockScreen(void)
 {
 	MClockscreen = 0;
 	
-	MCredrawupdatescreenneeded = MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled;
+	if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+        MCActionsSchedule(kMCActionsUpdateScreen);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1308,7 +1312,8 @@ void MCRedrawScheduleUpdateForStack(MCStack *stack)
 {
 	s_screen_is_dirty = true;
 	
-	MCredrawupdatescreenneeded = MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled;
+	if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+        MCActionsSchedule(kMCActionsUpdateScreen);
 }
 
 bool MCRedrawIsScreenUpdateEnabled(void)
@@ -1320,14 +1325,16 @@ void MCRedrawDisableScreenUpdates(void)
 {
 	s_screen_updates_disabled = true;
 	
-	MCredrawupdatescreenneeded = MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled;
+	if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+        MCActionsSchedule(kMCActionsUpdateScreen);
 }
 
 void MCRedrawEnableScreenUpdates(void)
 {
 	s_screen_updates_disabled = false;
 	
-	MCredrawupdatescreenneeded = MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled;
+	if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+        MCActionsSchedule(kMCActionsUpdateScreen);
 }
 
 void MCRedrawDoUpdateScreen(void)
@@ -1367,7 +1374,8 @@ void MCRedrawDoUpdateScreen(void)
 
 	s_screen_is_dirty = false;
 	
-	MCredrawupdatescreenneeded = MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled;
+	if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+        MCActionsSchedule(kMCActionsUpdateScreen);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
