@@ -60,9 +60,13 @@ mergeInto(LibraryManager.library, {
 		resume: function() {
 			LiveCodeAsync._ensureInit();
 
+			// Don't allow recursive calls to resume()
+			if (LiveCodeAsync._inPreResume) {
+				return;
+			}
+
 			// Make sure we're actually currently in a yield state.
 			assert(LiveCodeAsync._continuation);
-			assert(!LiveCodeAsync._inPreResume);
 
 			// Cancel the timeout for this yield state
 			if (LiveCodeAsync._timeoutHandle) {
