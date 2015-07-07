@@ -67,8 +67,7 @@ mergeInto(LibraryManager.library, {
 
 			console.log('LiveCodeEvents.initialize()');
 
-			// Attach handlers to the default canvas
-			var target = Module['canvas'];
+			var target = LiveCodeEvents._getTarget();
 
 			// Add all of the event handlers
 			LiveCodeEvents._eventForEach(function (type, handler) {
@@ -89,8 +88,7 @@ mergeInto(LibraryManager.library, {
 
 			console.log('LiveCodeEvents.finalize()');
 
-			// Handlers are attached to the default canvas
-			var target = Module['canvas'];
+			var target = LiveCodeEvents._getTarget();
 
 			// Remove all of the event handlers
 			LiveCodeEvents._eventForEach(function (type, handler) {
@@ -99,6 +97,11 @@ mergeInto(LibraryManager.library, {
 			});
 
 			LiveCodeEvents._initialised = false;;
+		},
+
+		_getTarget: function() {
+			// Handlers are attached to the default canvas
+			return Module['canvas'];
 		},
 
 		_getStack: function() {
