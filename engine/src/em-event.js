@@ -219,6 +219,173 @@ mergeInto(LibraryManager.library, {
 				}
 			}
 
+			// Otherwise, decode to an X11 keycode
+			// See also DOM Level 3 KeyboardEvent key Values
+			// <https://w3c.github.io/DOM-Level-3-Events-key/#key-value-tables>
+			//
+			// Conforms to W3C Editor's Draft 27 April 2015
+			//
+			// Not all of these keycodes are actually understood by
+			// the engine, but they're all included for completeness.
+			switch (keyboardEvent.key) {
+
+				// Special Key Values
+			case 'Unidentified': return 0;
+
+				// Whitespace Keys
+			case 'Enter':     return 0xff0d; // XK_Return
+			case 'Separator': return 0xffac; // XK_KP_Separator
+			case 'Tab':       return 0xff09; // XK_Tab
+
+				// Navigation Keys
+			case 'ArrowDown':  return 0xff54; // XK_Down
+			case 'ArrowLeft':  return 0xff51; // XK_Left
+			case 'ArrowRight': return 0xff53; // XK_Right
+			case 'ArrowUp':    return 0xff52; // XK_Up
+			case 'End':        return 0xff57; // XK_End
+			case 'Home':       return 0xff50; // XK_Home
+			case 'PageDown':   return 0xff56; // XK_Page_Down
+			case 'PageUp':     return 0xff55; // XK_Page_Up
+
+				// Editing Keys
+			case 'Backspace': return 0xff08; // XK_BackSpace
+			case 'Clear':     return 0xff0b; // XK_Clear
+			case 'Copy':      return 0x1008ff57; // GDK_KEY_Copy
+			case 'CrSel':     break;
+			case 'Cut':       return 0x1008ff58; // GDK_KEY_Cut
+			case 'Delete':    return 0xffff; // XK_Delete
+			case 'EraseEof':  break;
+			case 'ExSel':     break;
+			case 'Insert':    return 0xff63; // XK_Insert
+			case 'Paste':     return 0x1008ff6d; // GDK_KEY_Paste
+			case 'Redo':      return 0xff66; // XK_Redo
+			case 'Undo':      return 0xff65; // XK_Undo
+
+				// UI Keys
+			case 'Accept':      break;
+			case 'Again':       return 0xff66; // XK_Redo
+			case 'Attn':        break;
+			case 'Cancel':      return 0xff69; // XK_Cancel
+			case 'ContextMenu': return 0xff67; // XK_Menu
+			case 'Escape':      return 0xff1b; // XK_Escape
+			case 'Execute':     return 0xff62; // XK_Execute
+			case 'Find':        return 0xff68; // XK_Find
+			case 'Help':        return 0xff6a; // XK_Help
+			case 'Pause':       return 0xff13; // XK_Pause
+			case 'Play':        break;
+			case 'Props':       break;
+			case 'Select':      return 0xff60; // XK_Select
+			case 'ZoomIn':      return 0x1008ff8b; // GDK_KEY_ZoomIn
+			case 'ZoomOut':     return 0x1008ff8c; // GDK_KEY_ZoomOut
+
+				// Device Keys
+			case 'BrightnessDown': return 0x1008ff03; // GDK_KEY_MonBrightnessDown
+			case 'BrightnessUp':   return 0x1008ff02; // GDK_KEY_MonBrightnessUp
+			case 'Camera':         break;
+			case 'Eject':          return 0x1008ff2c; // GDK_KEY_Eject
+			case 'LogOff':         return 0x1008ff61; // GDK_KEY_LogOff
+			case 'Power':          break;
+			case 'PowerOff':       return 0x1008ff2a; // GDK_KEY_PowerOff
+			case 'PrintScreen':    return 0xff15; // XK_Sys_Req
+			case 'Hibernate':      return 0x1008ffa8; // GDK_KEY_Hibernate
+			case 'Standby':        return 0x1008ff10; // GDK_KEY_Standby
+			case 'WakeUp':         return 0x1008ff2b; // GDK_KEY_WakeUp
+
+				// IME and Composition Keys
+			case 'AllCandidates':     return 0xff3d; // XK_MultipleCandidate
+			case 'Alphanumeric':      return 0xff2f; // ?? XK_Eisu_Shift
+			case 'CodeInput':         return 0xff37; // XK_Codeinput
+			case 'Compose':           return 0xff20; // XK_Multi_key
+			case 'Convert':           return 0xff23; // ?? XK_Henkan
+			case 'Dead':              break;
+			case 'FinalMode':         break;
+			case 'GroupFirst':        return 0xfe0c; // XK_ISO_First_Group
+			case 'GroupLast':         return 0xfe0e; // XK_ISO_Last_Group
+			case 'GroupNext':         return 0xfe08; // XK_ISO_Next_Group
+			case 'GroupPrevious':     return 0xfe0a; // XK_ISO_Prev_Group
+			case 'ModeChange':        break;
+			case 'NextCandidate':     break;
+			case 'PreviousCandidate': return 0xff3c; // XK_PreviousCandidate
+			case 'Process':           break;
+			case 'SingleCandidate':   return 0xff3c; // XK_SingleCandidate
+
+			case 'HangulMode':        return 0xff31; // XK_Hangul
+			case 'HanjaMode':         break;
+			case 'JunjaMode':         break;
+
+			case 'Eisu':             return 0xff2f; // XK_Eisu_toggle
+			case 'Hankaku':          return 0xff29; // XK_Hankaku
+			case 'Hiragana':         return 0xff25; // XK_Hiragana
+			case 'HiraganaKatakana': return 0xff27; // XK_Hiragana_Katakana
+			case 'KanaMode':         return 0xff2d; // XK_Kana_Lock
+			case 'KanjiMode':        return 0xff21; // XK_Kanji
+			case 'Katakana':         return 0xff26; // XK_Katakana
+			case 'Romaji':           return 0xff24; // XK_Romaji
+			case 'Zenkaku':          return 0xff28; // XK_Zenkaku
+			case 'ZenkakuHankaku':   return 0xff2a; // XK_Zenkaku_Hankaku
+
+				// General-Purpose Function Keys
+				//
+				// F1..F12 etc. are handled separately, after this
+				// switch statement.
+
+				// Multimedia Keys
+			case 'Close':              return 0x1008ff56; // GDK_KEY_Close
+			case 'MailForward':        return 0x1008ff90; // GDK_KEY_MailForward
+			case 'MailReply':          return 0x1008ff72; // GDK_KEY_Reply
+			case 'MailSend':           return 0x1008ff7b; // GDK_KEY_Send
+			case 'MediaPlayPause':     return 0x1008ff31; // GDK_KEY_AudioPause
+			case 'MediaSelect':        return 0x1008ff32; // GDK_KEY_AudioMedia
+			case 'MediaStop':          return 0x1008ff15; // GDK_KEY_AudioStop
+			case 'MediaTrackNext':     return 0x1008ff17; // GDK_KEY_AudioNext
+			case 'MediaTrackPrevious': return 0x1008ff16; // GDK_KEY_AudioPrev
+			case 'New':                return 0x1008ff68; // GDK_KEY_New
+			case 'Open':               return 0x1008ff6b; // GDK_KEY_Open
+			case 'Print':              break;
+			case 'Save':               return 0x1008ff77; // GDK_KEY_Save
+			case 'SpellCheck':         return 0x1008ff7c; // GDK_KEY_Spell
+			case 'VolumeDown':         return 0x1008ff13; // GDK_KEY_AudioRaiseVolume
+			case 'VolumeUp':            return 0x1008ff11; // GDK_KEY_AudioLowerVolume
+			case 'VolumeMute':          return 0x1008ff12; // GDK_KEY_AudioMute
+
+				// Application Keys
+			case 'LaunchCalculator':    return 0x1008ff1d; // GDK_KEY_Calculator
+			case 'LaunchCalendar':      return 0x1008ff20; // GDK_KEY_Calendar
+			case 'LaunchMail':          return 0x1008ff19; // GDK_KEY_Mail
+			case 'LaunchMediaPlayer':   return 0x1008ff53; // GDK_KEY_CD
+			case 'LaunchMusicPlayer':   return 0x1008ff92; // GDK_KEY_Music
+			case 'LaunchMyComputer':    return 0x1008ff33; // GDK_KEY_MyComputer
+			case 'LaunchScreenSaver':   return 0x1008ff2d; // GDK_KEY_ScreenSaver
+			case 'LaunchSpreadsheet':   return 0x1008ff5c; // GDK_KEY_Excel
+			case 'LaunchWebBrowser':    return 0x1008ff2e; // GDK_KEY_WWW
+			case 'LaunchWebCam':        return 0x1008ff8f; // GDK_KEY_WebCam
+			case 'LaunchWordProcessor': return 0x1008ff89; // GDK_KEY_Word
+
+				// Browser Keys
+			case 'BrowserBack':      return 0x1008ff26; // GDK_KEY_Back
+			case 'BrowserFavorites': return 0x1008ff30; // GDK_KEY_Favorites
+			case 'BrowserForward':   return 0x1008ff27; // GDK_KEY_Forward
+			case 'BrowserHome':      return 0x1008ff18; // GDK_KEY_HomePage
+			case 'BrowserRefresh':   return 0x1008ff29; // GDK_KEY_Refresh
+			case 'BrowserSearch':    return 0x1008ff1b; // GDK_KEY_Search
+			case 'BrowserStop':      return 0x1008ff28; // GDK_KEY_Stop
+
+				// Media Controller keys
+				//
+				// FIXME not supported
+
+			default: break;
+			}
+
+			// General-Purpose Function keys
+			var functionKey = keyboardEvent.key.match(/^F(\d+)$/);
+			if (functionKey) {
+				var functionNum = parseInt(functionKey[1]);
+				if (functionNum >= 1 && functionNum <= 35) {
+					return 0xffbd + functionNum; // XK_F...
+				}
+			}
+
 			console.debug('Don\'t know how to decode key: ' + keyboardEvent.key);
 			return 0;
 		},
