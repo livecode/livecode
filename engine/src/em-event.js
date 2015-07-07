@@ -46,9 +46,7 @@ mergeInto(LibraryManager.library, {
 				['mouseleave', LiveCodeEvents._handleMouseEvent],
 
 				// FIXME "keypress" events are deprecated
-				['keyup', LiveCodeEvents._handleKeyboardEvent],
 				['keypress', LiveCodeEvents._handleKeyboardEvent],
-				['keydown', LiveCodeEvents._handleKeyboardEvent],
 
 				['input', LiveCodeEvents._handleKeyboardEvent],
 			];
@@ -237,8 +235,6 @@ mergeInto(LibraryManager.library, {
 		},
 
 		_handleKeyboardEvent: function(e) {
-			console.debug(e.type);
-
 			LiveCodeAsync.delay(function() {
 
 				var stack = LiveCodeEvents._getStack();
