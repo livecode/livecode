@@ -523,14 +523,6 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		else if (!done && eventtime > curtime)
 			t_sleep = MCMin(eventtime - curtime, exittime - curtime);
 
-        // MM-2015-06-05: [[ MobileSockets ]] Poll sockets.
-        if (MCS_poll(0.0, 0.0))
-        {
-            if (anyevent)
-                done = True;
-            t_sleep = 0.0;
-        }
-
 		// At this point we yield to android, requesting that we get control back
 		// within the specified time.
 		bool t_broken;
@@ -1415,8 +1407,7 @@ static void co_yield_to_android(void)
 static bool co_yield_to_android_and_wait(double p_sleep, bool p_wake_on_event)
 {
 	s_schedule_wakeup = true;
-    // MM-2015-06-08: [[ MobileSockets ]] The duration is passed in in milliseconds, not seconds.
-	s_schedule_wakeup_timeout = (uint32_t)(p_sleep);
+	s_schedule_wakeup_timeout = (uint32_t)(p_sleep * 1000.0);
 	s_schedule_wakeup_breakable = p_wake_on_event;
 	co_yield_to_android();
 	s_schedule_wakeup = false;
@@ -1438,7 +1429,13 @@ void MCAndroidBreakWait(void)
 {
     // MM-2015-06-08: [[ MobileSockets ]] Make sure we execute on the UI thread.
     //   Calling scheduleWakeUp indirectly has this effect.
-    s_android_ui_env -> CallVoidMethod(s_android_view, s_schedule_wakeup_method, 0, s_schedule_wakeup_breakable);
+    s_schedule_wakeup_was_broken = true;
+    JNIEnv *t_env;
+    t_env = MCJavaGetThreadEnv();
+    if (t_env != nil)
+        t_env -> CallVoidMethod(s_android_view, s_schedule_wakeup_method, 0, s_schedule_wakeup_breakable);
+    else
+        s_android_ui_env -> CallVoidMethod(s_android_view, s_schedule_wakeup_method, 0, s_schedule_wakeup_breakable);
 }
 
 struct MCAndroidEngineCallThreadContext
@@ -1977,7 +1974,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doProcess(JNIEnv *env, job
 	if (!s_engine_running)
 		return;
 
-	s_schedule_wakeup_was_broken = !timedout;
+	s_schedule_wakeup_was_broken = !timedout || s_schedule_wakeup_was_broken;
 	co_yield_to_engine();
 }
 
@@ -2847,6 +2844,21 @@ JNIEnv *MCJavaGetThreadEnv()
     s_java_vm->GetEnv((void**)&t_env, JNI_VERSION_1_2);
     return t_env;
 }
+
+JNIEnv *MCJavaAttachCurrentThread()
+{
+    JNIEnv *t_env;
+    t_env = nil;
+    if (s_java_vm -> AttachCurrentThread(&t_env, nil) < 0)
+        return nil;
+    return t_env;
+}
+
+void MCJavaDetachCurrentThread()
+{
+    s_java_vm -> DetachCurrentThread();
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

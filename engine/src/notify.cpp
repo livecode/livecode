@@ -478,7 +478,7 @@ void MCNotifyPing(bool p_high_priority)
 {
 #if defined(_WINDOWS)
 	SetEvent(g_notify_wakeup);
-#else
+#elif defined(_MACOSX) || defined(_LINUX) || defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
     if (!s_notify_sent)
     {
         MCNotifyLock();

@@ -149,10 +149,9 @@ void MCAndroidSystem::KillAll(void)
     return;
 }
 
-// MM-2015-06-08: [[ MobileSockets ]] Poll sockets.
 Boolean MCAndroidSystem::Poll(real8 p_delay, int p_fd)
 {
-    return MCS_handle_sockets();
+    return False;
 }
 
 Boolean MCAndroidSystem::IsInteractiveConsole(int p_fd)

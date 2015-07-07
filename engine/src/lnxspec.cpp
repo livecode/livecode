@@ -1712,27 +1712,9 @@ Boolean MCS_poll(real8 delay, int fd)
 		if (MCinputfd > maxfd)
 			maxfd = MCinputfd;
 	}
-	for (i = 0 ; i < MCnsockets ; i++)
-	{
-		if (MCsockets[i]->resolve_state != kMCSocketStateResolving &&
-		   MCsockets[i]->resolve_state != kMCSocketStateError)
-		{
-			if (MCsockets[i]->connected && !MCsockets[i]->closing
-				&& !MCsockets[i]->shared || MCsockets[i]->accepting)
-				FD_SET(MCsockets[i]->fd, &rmaskfd);
-			if (!MCsockets[i]->connected || MCsockets[i]->wevents != NULL)
-				FD_SET(MCsockets[i]->fd, &wmaskfd);
-			FD_SET(MCsockets[i]->fd, &emaskfd);
-			if (MCsockets[i]->fd > maxfd)
-				maxfd = MCsockets[i]->fd;
-			if (MCsockets[i]->added)
-			{
-				delay = 0.0;
-				MCsockets[i]->added = False;
-				handled = True;
-			}
-		}
-	}
+    handled = MCSocketsAddToFileDescriptorSets(maxfd, rmaskfd, wmaskfd, emaskfd);
+    if (handled)
+        delay = 0.0;
 
 	if (g_notify_pipe[0] != -1)
 	{
@@ -1754,29 +1736,8 @@ Boolean MCS_poll(real8 delay, int fd)
 		return True;
 	if (MCinputfd != -1 && FD_ISSET(MCinputfd, &rmaskfd))
 		readinput = True;
-	for (i = 0 ; i < MCnsockets ; i++)
-	{
-		if (FD_ISSET(MCsockets[i]->fd, &emaskfd))
-		{
-			if (!MCsockets[i]->waiting)
-			{
-				MCsockets[i]->error = strclone("select error");
-				MCsockets[i]->doclose();
-			}
-		}
-		else
-		{
-			/* read first here, otherwise a situation can arise when select indicates
-			 * read & write on the socket as part of the sslconnect handshaking
-			 * and so consumed during writesome() leaving no data to read
-			 */
-			if (FD_ISSET(MCsockets[i]->fd, &rmaskfd) && !MCsockets[i]->shared)
-				MCsockets[i]->readsome();
-			if (FD_ISSET(MCsockets[i]->fd, &wmaskfd))
-				MCsockets[i]->writesome();
-		}
-	}
-	
+    MCSocketsHandleFileDescriptorSets(rmaskfd, wmaskfd, emaskfd);
+    
 	if (g_notify_pipe[0] != -1 && FD_ISSET(g_notify_pipe[0], &rmaskfd))
 	{
 		char t_notify_char;

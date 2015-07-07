@@ -67,6 +67,8 @@ typedef struct
 } MCJavaMethodParams;
 
 JNIEnv *MCJavaGetThreadEnv();
+JNIEnv *MCJavaAttachCurrentThread();
+void MCJavaDetachCurrentThread();
 
 bool MCJavaStringFromNative(JNIEnv *env, const MCString *p_string, jstring &r_java_string);
 bool MCJavaStringFromUnicode(JNIEnv *env, const MCString *p_string, jstring &r_java_string);

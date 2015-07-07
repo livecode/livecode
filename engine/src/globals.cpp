@@ -828,6 +828,8 @@ void X_clear_globals(void)
 	// MW-2013-03-20: [[ MainStacksChanged ]]
 	MCmainstackschanged = False;
 
+    MCSocketsInitialize();
+    
 #ifdef _ANDROID_MOBILE
     extern void MCAndroidMediaPickInitialize();
     // MM-2012-02-22: Initialize up any static variables as Android static vars are preserved between sessions
@@ -1276,6 +1278,8 @@ int X_close(void)
 	
 	// MM-2013-09-03: [[ RefactorGraphics ]] Initialize graphics library.
 	MCGraphicsFinalize();
+    
+    MCSocketsFinalize();
     
 #ifdef _ANDROID_MOBILE
     // MM-2012-02-22: Clean up any static variables as Android static vars are preserved between sessions
