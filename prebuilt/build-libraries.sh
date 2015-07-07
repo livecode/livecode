@@ -15,7 +15,7 @@ mkdir -p "${OUTPUT_DIR}"
 # Target platform and architecture
 export PLATFORM=$1
 export CUSTOM_ARCH=$2
-LIB=$3
+TARGET_LIB=$3
 
 # Capture the existing CC and CXX variables, if any
 export CUSTOM_CC="${CC}"
@@ -31,12 +31,12 @@ if [ "${PLATFORM}" == "all" ] ; then
 fi
 
 # Build all of the libraries that we depend on (OpenSSL, CURL and ICU) if not specified
-if [ -z "${LIB}" ] ; then
-	$BASEDIR/scripts/build-curl.sh 
-	$BASEDIR/scripts/build-openssl.sh
+if [ -z "${TARGET_LIB}" ] ; then
+	$BASEDIR/scripts/build-openssl.sh 
+	$BASEDIR/scripts/build-curl.sh
 	$BASEDIR/scripts/build-icu.sh
 else
-	case "${LIB}" in
+	case "${TARGET_LIB}" in
 		openssl)
 			$BASEDIR/scripts/build-openssl.sh
 			;;

@@ -1938,7 +1938,8 @@ MC_DLLEXPORT bool MCStringIsEmpty(MCStringRef string);
 MC_DLLEXPORT bool MCStringCanBeNative(MCStringRef string);
 
 // Returns true if under the given comparison conditions, string cannot be represented natively.
-MC_DLLEXPORT bool MCStringCantBeNative(MCStringRef string, MCStringOptions p_options);
+MC_DLLEXPORT bool MCStringCantBeEqualToNative(MCStringRef string, MCStringOptions p_options);
+
 
 // Returns true if the string is stored as native chars.
 MC_DLLEXPORT bool MCStringIsNative(MCStringRef string);
