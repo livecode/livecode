@@ -161,8 +161,8 @@ mergeInto(LibraryManager.library, {
 		// KeyboardEvent.key.
 		_encodeKeyboardCharCode: function(keyboardEvent) {
 			var key = keyboardEvent.key;
-			var high = str.charCodeAt(0); // High surrogate
-			var low = str.charCodeAt(1); // Low surrogate
+			var high = key.charCodeAt(0); // High surrogate
+			var low = key.charCodeAt(1); // Low surrogate
 
 			// Check if there's actually a key code at all
 			if (isNaN(high)) {
@@ -191,8 +191,11 @@ mergeInto(LibraryManager.library, {
 					console.debug('High surrogate not followed by low surrogate');
 					return 0;
 				}
-
-				return ((high - 0xD800) * 0x400) + (low - 0xDC00) + 0x10000;
+				if (key.length == 2) {
+					return ((high - 0xD800) * 0x400) + (low - 0xDC00) + 0x10000;
+				} else {
+					return 0;
+				}
 			}
 
 			return 0;
@@ -202,7 +205,22 @@ mergeInto(LibraryManager.library, {
 		// MCEventQueuePostKeyPress() from JavaScript's
 		// KeyboardEvent.key.
 		_encodeKeyboardKeyCode: function(keyboardEvent) {
-			// FIXME make this work
+			// Synthesize a keycode from the char code, if the key event has a
+			// corresponding char code.
+			// FIXME Maybe this should be done in the engine?
+			var char_code = LiveCodeEvents._encodeKeyboardCharCode(keyboardEvent);
+
+			// Unicode codepoints in the ISO/IEC 8859-1 range
+			// U+0020..U+00FF are passed directly as keycodes.
+			// Otherwise, the codepoint is returned with bit 21 set.
+			if (char_code > 0) {
+				if (char_code >= 0x20 && char_code <= 0xff) {
+					return char_code;
+				} else {
+					return char_code & 0x1000000;
+				}
+			}
+
 			console.debug('Don\'t know how to decode key: ' + keyboardEvent.key);
 			return 0;
 		},

@@ -6,5 +6,6 @@
     '_MCEventQueuePostMouseFocus',
     '_MCEventQueuePostMousePosition',
     '_MCEventQueuePostMousePress',
-    '_MCEventQueuePostKeyFocus'
+    '_MCEventQueuePostKeyFocus',
+    '_MCEventQueuePostKeyPress'
 ]
