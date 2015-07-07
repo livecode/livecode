@@ -99,10 +99,11 @@ mergeInto(LibraryManager.library, {
 			return Module.ccall('MCEmscriptenGetCurrentStack', 'number', [], []);
 		},
 
-		_encodeModifiers: function(shift, alt, ctrl) {
+		_encodeModifiers: function(uiEvent) {
 			return Module.ccall('MCEmscriptenEventEncodeModifiers', 'number',
-								['number', 'number', 'number'],
-								[shift, alt, ctrl]);
+								['number', 'number', 'number', 'number'],
+								[uiEvent.shiftKey, uiEvent.altKey,
+								 uiEvent.ctrlKey, uiEvent.metaKey]);
 		},
 
 		// ----------------------------------------------------------------
@@ -177,9 +178,7 @@ mergeInto(LibraryManager.library, {
 			LiveCodeAsync.delay(function() {
 
 				var stack = LiveCodeEvents._getStack();
-				var mods = LiveCodeEvents._encodeModifiers(e.shiftKey,
-														   e.altKey,
-														   e.ctrlKey);
+				var mods = LiveCodeEvents._encodeModifiers(e);
 
 				switch (e.type) {
 				case 'keypress':
@@ -266,9 +265,7 @@ mergeInto(LibraryManager.library, {
 			LiveCodeAsync.delay(function () {
 
 				var stack = LiveCodeEvents._getStack();
-				var mods = LiveCodeEvents._encodeModifiers(e.shiftKey,
-														   e.altKey,
-														   e.ctrlKey);
+				var mods = LiveCodeEvents._encodeModifiers(e);
 				var pos = LiveCodeEvents._encodeMouseCoordinates(e);
 
 				// Always post the mouse position
