@@ -329,7 +329,9 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
 			
             // Convert the string to UTF-16 first.
 			MCAutoArray<unichar_t> t_buffer;
-			t_buffer.Extend(p_byte_count / sizeof(uint32_t));
+			if (!t_buffer.Extend(p_byte_count / sizeof(uint32_t)))
+                return false;
+            
 			uindex_t t_in_offset;
 			uindex_t t_out_offset = 0;
 			for (t_in_offset = 0; t_in_offset < p_byte_count; t_in_offset += sizeof(uint32_t))
@@ -353,7 +355,8 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
                     // Split to surrogate pairs
                     // SN-2015-07-03: [[ Bug 15571 ]] Creating a surrogate pair
                     //  makes the UTF-16 string longer.
-                    t_buffer . Extend(t_buffer . Size() + 1);
+                    if (!t_buffer . Extend(t_buffer . Size() + 1))
+                        return false;
 					unichar_t t_lead, t_trail;
 					t_lead =  unichar_t((t_codepoint - 0x10000) >> 10) + 0xD800;
 					t_trail = unichar_t((t_codepoint - 0x10000) & 0x3FF) + 0xDC00;
