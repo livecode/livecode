@@ -30,16 +30,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 bool
 MCEmscriptenViewInitialize()
 {
-	/* Make sure SDL video subsystem has been initialised at some
-	 * point. */
-	if (SDL_WasInit(SDL_INIT_VIDEO) == 0)
-	{
-		if (0 != SDL_InitSubSystem(SDL_INIT_VIDEO))
-		{
-			return false;
-		}
-	}
-
 	return true;
 }
 
@@ -47,10 +37,6 @@ MCEmscriptenViewInitialize()
 void
 MCEmscriptenViewFinalize()
 {
-	if (SDL_WasInit(SDL_INIT_VIDEO) != 0)
-	{
-		SDL_QuitSubSystem(SDL_INIT_VIDEO);
-	}
 }
 
 /* Resize the canvas and update the SDL video mode */
