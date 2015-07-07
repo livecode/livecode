@@ -72,7 +72,7 @@ mergeInto(LibraryManager.library, {
 			// Add all of the event handlers
 			LiveCodeEvents._eventForEach(function (type, handler) {
 				console.log('    - ' + type);
-				target.addEventListener(type, handler, false);
+				target.addEventListener(type, handler, true);
 			});
 
 			// Make sure the canvas is treated as focusable...
@@ -240,6 +240,10 @@ mergeInto(LibraryManager.library, {
 				}
 			});
 			LiveCodeAsync.resume();
+
+			// Prevent event from propagating
+			e.preventDefault();
+			return false;
 		},
 
 		// ----------------------------------------------------------------
