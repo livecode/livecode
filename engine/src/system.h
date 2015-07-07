@@ -163,7 +163,7 @@ public:
         //  are asked more than what we have.
         if (p_length > m_length - m_pointer)
         {
-            r_read = m_length - m_pointer;
+            r_read = (uint32_t)(m_length - m_pointer);
             m_is_eof = true;
         }
         else
@@ -202,7 +202,7 @@ public:
 
 		memcpy(m_buffer + m_pointer, p_buffer, p_length);
 		m_pointer += p_length;
-		m_length = MCU_max(m_pointer, m_length);
+		m_length = MCMax(m_pointer, m_length);
         // SN-2015-02-11: [[ Bug 14531 ]] We are no longer at
         //  the EOF position once we have written.
         m_is_eof = false;
@@ -282,9 +282,9 @@ public:
 	
 protected:
 	char *m_buffer;
-	uint32_t m_pointer;
-	uint32_t m_length;
-	uint32_t m_capacity;
+	size_t m_pointer;
+	size_t m_length;
+	size_t m_capacity;
     // SN-2015-02-11: [[ Bug 14531 ]] Added a bool.
     //  We don't want m_pointer to go over m_length,
     //  but we need to know when we tried to read
@@ -298,7 +298,7 @@ protected:
 class MCMemoryMappedFileHandle: public MCMemoryFileHandle
 {
 public:
-    MCMemoryMappedFileHandle(int p_fd, void *p_buffer, uint32_t p_length)
+    MCMemoryMappedFileHandle(int p_fd, void *p_buffer, size_t p_length)
     : MCMemoryFileHandle(p_buffer, p_length)
     {
         m_fd = p_fd;
@@ -316,7 +316,7 @@ public:
 private:
     int m_fd;
     void *m_buffer;
-    uint32_t m_length;
+    size_t m_length;
 };
 #endif
 
