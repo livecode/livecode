@@ -144,7 +144,12 @@ mergeInto(LibraryManager.library, {
 		// Add a closure to be run before the engine next resumes
 		delay: function(delayed) {
 			LiveCodeAsync._ensureInit();
-			LiveCodeAsync._preResume.push(delayed);
+
+			if (LiveCodeAsync._inPreResume) {
+				delayed()
+			} else {
+				LiveCodeAsync._preResume.push(delayed);
+			}
 		},
 	},
 
