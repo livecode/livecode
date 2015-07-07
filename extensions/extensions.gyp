@@ -43,6 +43,7 @@
 				'widgets/svgpath/svgpath.lcb',
 				'widgets/switchbutton/switchbutton.lcb',
 				'widgets/treeview/treeview.lcb',
+				'widgets/colorswatch/colorswatch.lcb',
 			],
 			
 			'all_dependent_settings':
