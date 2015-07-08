@@ -7764,28 +7764,9 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 maxfd = MCshellfd;
         }
         
-        uint2 i;
-        for (i = 0 ; i < MCnsockets ; i++)
-        {
-            int fd = MCsockets[i]->fd;
-            if (!fd || MCsockets[i]->resolve_state == kMCSocketStateResolving ||
-				MCsockets[i]->resolve_state == kMCSocketStateError)
-                continue;
-            if (MCsockets[i]->connected && !MCsockets[i]->closing
-		        && !MCsockets[i]->shared || MCsockets[i]->accepting)
-                FD_SET(fd, &rmaskfd);
-            if (!MCsockets[i]->connected || MCsockets[i]->wevents != NULL)
-                FD_SET(fd, &wmaskfd);
-            FD_SET(fd, &emaskfd);
-            if (fd > maxfd)
-                maxfd = fd;
-            if (MCsockets[i]->added)
-            {
-                p_delay = 0.0;
-                MCsockets[i]->added = False;
-                handled = True;
-            }
-        }
+        handled = MCSocketsAddToFileDescriptorSets(maxfd, rmaskfd, wmaskfd, emaskfd);
+        if (handled)
+            p_delay = 0.0;
         
         struct timeval timeoutval;
         timeoutval.tv_sec = (long)p_delay;
@@ -7800,32 +7781,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (MCshellfd != -1 && FD_ISSET(MCshellfd, &rmaskfd))
             return True;
         
-        for (i = 0 ; i < MCnsockets ; i++)
-        {
-            int fd = MCsockets[i]->fd;
-            if (FD_ISSET(fd, &emaskfd) && fd != 0)
-            {
-                
-                if (!MCsockets[i]->waiting)
-                {
-                    MCsockets[i]->error = strclone("select error");
-                    MCsockets[i]->doclose();
-                }
-                
-            }
-            else
-            {
-                if (FD_ISSET(fd, &rmaskfd) && !MCsockets[i]->shared)
-                {
-                    MCsockets[i]->readsome();
-                }
-                if (FD_ISSET(fd, &wmaskfd))
-                {
-                    MCsockets[i]->writesome();
-                }
-            }
-            MCsockets[i]->setselect();
-        }
+        MCSocketsHandleFileDescriptorSets(rmaskfd, wmaskfd, emaskfd);
         
         return True;
     }

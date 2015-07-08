@@ -392,6 +392,8 @@ public:
     void GetImageSource(MCExecContext& ctxt, MCStringRef &r_image_source);
     void SetImageSource(MCExecContext& ctxt, MCStringRef p_image_source);
     void GetVisited(MCExecContext& ctxt, bool& r_value);
+	// PM-2015-07-06: [[ Bug 15577 ]] "visited" property should be RW
+	void SetVisited(MCExecContext& ctxt, bool p_value);
     void GetFlagged(MCExecContext& ctxt, bool &r_value);
     void SetFlagged(MCExecContext& ctxt, bool p_value);
 

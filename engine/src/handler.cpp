@@ -451,8 +451,7 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
         tspr->exec_ctxt(ctxt);
 		stat = ctxt . GetExecStat();
         
-		// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
-		MCRedrawUpdateScreen();
+        MCActionsRunAll();
         
 		switch(stat)
 		{
@@ -670,8 +669,7 @@ Exec_stat MCHandler::exec(MCExecPoint &ep, MCParameter *plist)
 
 		stat = tspr->exec(ep);
 
-		// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
-		MCRedrawUpdateScreen();
+        MCActionsRunAll();
 
 		switch(stat)
 		{

@@ -1079,45 +1079,14 @@ Boolean MCS_poll(real8 delay, int fd)
 			i = 0;
 		}
 	}
-	for (i = 0 ; i < MCnsockets ; i++)
-	{
-		if (MCsockets[i]->connected && !MCsockets[i]->closing
-		        && !MCsockets[i]->shared || MCsockets[i]->accepting)
-			FD_SET(MCsockets[i]->fd, &rmaskfd);
-		if (!MCsockets[i]->connected || MCsockets[i]->wevents != NULL)
-			FD_SET(MCsockets[i]->fd, &wmaskfd);
-		FD_SET(MCsockets[i]->fd, &emaskfd);
-		if (MCsockets[i]->fd > maxfd)
-			maxfd = MCsockets[i]->fd;
-		if (MCsockets[i]->added)
-		{
-			delay = 0.0;
-			MCsockets[i]->added = False;
-			handled = True;
-		}
-	}
+    handled = MCSocketsAddToFileDescriptorSets(maxfd, rmaskfd, wmaskfd, emaskfd);
+    if (handled)
+        delay = 0.0;
 	struct timeval timeoutval = {0, 0};
 	n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
 	if (n <= 0)
 		return handled;
-	for (i = 0 ; i < MCnsockets ; i++)
-	{
-		if (FD_ISSET(MCsockets[i]->fd, &emaskfd))
-		{
-			if (!MCsockets[i]->waiting)
-			{
-				MCsockets[i]->error = strclone("select error");
-				MCsockets[i]->doclose();
-			}
-		}
-		else
-		{
-			if (FD_ISSET(MCsockets[i]->fd, &wmaskfd))
-				MCsockets[i]->writesome();
-			if (FD_ISSET(MCsockets[i]->fd, &rmaskfd) && !MCsockets[i]->shared)
-				MCsockets[i]->readsome();
-		}
-	}
+    MCSocketsHandleFileDescriptorSets(rmaskfd, wmaskfd, emaskfd);
 	return n != 0;
 }
 

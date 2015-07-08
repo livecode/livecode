@@ -41,6 +41,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec-interface.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCGroup::SetChildDisabled(MCExecContext& ctxt, uint32_t part, bool setting)
@@ -795,4 +796,14 @@ void MCGroup::SetClipsToRect(MCExecContext& ctxt, bool p_clips_to_rect)
 void MCGroup::GetClipsToRect(MCExecContext& ctxt, bool& r_clips_to_rect)
 {
     r_clips_to_rect = m_clips_to_rect;
+}
+
+void MCGroup::SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting)
+{
+    SetVisibility(ctxt, part, setting, true);
+}
+
+void MCGroup::SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting)
+{
+    SetVisibility(ctxt, part, setting, false);
 }
