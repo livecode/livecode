@@ -682,6 +682,14 @@ static Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
+bool MCSystemGetLaunchData(MCArrayRef &r_data)
+{
+	// Not implemented on iOS
+	return false;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
 // We do not need this in iOS, as beep is already implemented and handled.
 bool MCSystemBeep (int32_t p_number_of_beeps)
 {

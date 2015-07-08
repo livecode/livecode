@@ -43,6 +43,8 @@
 MC_EXEC_DEFINE_GET_METHOD(Misc, DeviceToken, 0)
 MC_EXEC_DEFINE_GET_METHOD(Misc, LaunchUrl, 0)
 
+MC_EXEC_DEFINE_GET_METHOD(Misc, LaunchData, 0);
+
 MC_EXEC_DEFINE_EXEC_METHOD(Misc, Beep, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Misc, Vibrate, 1)
 
@@ -191,6 +193,14 @@ void MCMiscGetLaunchUrl(MCExecContext& ctxt, MCStringRef& r_url)
         return;
     
     ctxt.Throw();
+}
+
+void MCMiscGetLaunchData(MCExecContext &ctxt, MCArrayRef &r_launch_data)
+{
+	if (MCSystemGetLaunchData(r_launch_data))
+		return;
+	
+	ctxt.Throw();
 }
 
 void MCMiscExecBeep(MCExecContext& ctxt, int32_t* p_number_of_times)
