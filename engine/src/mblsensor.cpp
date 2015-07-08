@@ -836,7 +836,7 @@ Exec_stat MCHandleHeadingCalibrationTimeout(void *p_context, MCParameter *p_para
     MCSensorGetLocationCalibration(t_ctxt, t_timeout);
     MCresult->setnvalue(t_timeout);
     
-    t_ctxt . SetTheResultToEmpty();
+    // PM-2015-07-08: [[ Bug 11866 ]] Don't empty the result before return
     return t_ctxt.GetStat();
 #endif /* MCHandleHeadingCalibrationTimeout */
 }
