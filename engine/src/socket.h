@@ -19,7 +19,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "dllst.h"
 #include "object.h"
+
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
+#include <winsock2.h>
+#else
 #include <sys/select.h>
+#endif
 
 enum MCSocketType {
     MCSOCK_TCP,
