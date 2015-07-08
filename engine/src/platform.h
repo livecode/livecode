@@ -653,8 +653,7 @@ void MCPlatformCreateCustomCursor(MCImageBitmap *image, MCPoint hot_spot, MCPlat
 void MCPlatformRetainCursor(MCPlatformCursorRef cursor);
 void MCPlatformReleaseCursor(MCPlatformCursorRef cursor);
 
-void MCPlatformShowCursor(MCPlatformCursorRef cursor);
-void MCPlatformHideCursor(void);
+void MCPlatformSetCursor(MCPlatformCursorRef cursor);
 void MCPlatformHideCursorUntilMouseMoves(void);
 
 ////////////////////////////////////////////////////////////////////////////////
