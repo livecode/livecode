@@ -4282,6 +4282,24 @@ Exec_stat MCHandleGetLaunchUrl (void *context, MCParameter *p_parameters)
     return ES_ERROR;
 }
 
+Exec_stat MCHandleGetLaunchData(void *context, MCParameter *p_parameters)
+{
+	MCExecContext ctxt(nil, nil, nil);
+	
+	MCAutoArrayRef t_data;
+	
+	MCMiscGetLaunchData(ctxt, &t_data);
+	
+	if (!ctxt.HasError())
+	{
+		ctxt.SetTheResultToValue(*t_data);
+		return ES_NORMAL;
+	}
+	
+	ctxt.SetTheResultToEmpty();
+	return ES_ERROR;
+}
+
 Exec_stat MCHandleBeep(void *p_context, MCParameter *p_parameters)
 {
 #ifdef /* MCHandleBeep */ LEGACY_EXEC
@@ -6867,6 +6885,8 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {false, "mobileGetLaunchUrl", MCHandleGetLaunchUrl, nil},
     {false, "iphoneGetDeviceToken", MCHandleGetDeviceToken, nil},
     {false, "iphoneGetLaunchUrl", MCHandleGetLaunchUrl, nil},
+	
+	{false, "mobileGetLaunchData", MCHandleGetLaunchData, nil},
 	
 	{false, "iphoneSetStatusBarStyle", MCHandleSetStatusBarStyle, nil},
 	{false, "iphoneShowStatusBar", MCHandleShowStatusBar, nil},

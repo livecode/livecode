@@ -2641,6 +2641,57 @@ public class Engine extends View implements EngineApi
         return getLaunchUri(t_intent);
     }
 
+//////////
+
+	// IM-2015-07-08: [[ LaunchData ]] Retreive info from launch Intent and return as a Map object.
+	public Map<String, Object> getLaunchData()
+	{
+		Intent t_intent = ((Activity)getContext()).getIntent();
+		
+		// For now we're just storing strings, though this could change if we include the 'extra' data
+		Map<String, Object> t_data;
+		t_data = new HashMap<String, Object>();
+		
+		String t_value;
+		
+		if (t_intent != null)
+		{
+			t_value = t_intent.getAction();
+			if (t_value != null)
+				t_data.put("action", t_value);
+			
+			t_value = t_intent.getDataString();
+			if (t_value != null)
+				t_data.put("data", t_value);
+			
+			t_value = t_intent.getType();
+			if (t_value != null)
+				t_data.put("type", t_value);
+			
+			Set<String> t_categories;
+			t_categories = t_intent.getCategories();
+			
+			if (t_categories != null && !t_categories.isEmpty())
+			{
+				// Store categories as a string of comma-separated values
+				StringBuilder t_category_list;
+				t_category_list = new StringBuilder();
+				boolean t_first = true;
+				for (String t_category : t_categories)
+				{
+					if (!t_first)
+						t_category_list.append(',');
+					t_category_list.append(t_category);
+					t_first = false;
+				}
+				
+				t_data.put("categories", t_category_list.toString());
+			}
+		}
+		
+		return t_data;
+	}
+	
 ////////////////////////////////////////////////////////////////////////////////
 
     // called from the engine to signal that the engine has launched

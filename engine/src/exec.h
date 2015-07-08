@@ -5319,6 +5319,7 @@ extern MCExecEnumTypeInfo* kMCMiscStatusBarStyleTypeInfo;
 
 extern MCExecMethodInfo* kMCMiscGetDeviceTokenMethodInfo;
 extern MCExecMethodInfo* kMCMiscGetLaunchUrlMethodInfo;
+extern MCExecMethodInfo* kMCMiscGetLaunchDataMethodInfo;
 extern MCExecMethodInfo* kMCMiscExecBeepMethodInfo;
 extern MCExecMethodInfo* kMCMiscExecVibrateMethodInfo;
 extern MCExecMethodInfo* kMCMiscGetDeviceResolutionMethodInfo;
@@ -5350,6 +5351,8 @@ extern MCExecMethodInfo* kMCMiscGetBuildInfoMethodInfo;
 
 void MCMiscGetDeviceToken(MCExecContext& ctxt, MCStringRef& r_token);
 void MCMiscGetLaunchUrl(MCExecContext& ctxt, MCStringRef& r_url);
+
+void MCMiscGetLaunchData(MCExecContext &ctxt, MCArrayRef &r_data);
 
 void MCMiscExecBeep(MCExecContext& ctxt, int32_t* p_number_of_times);
 void MCMiscExecVibrate(MCExecContext& ctxt, int32_t* p_number_of_times);
