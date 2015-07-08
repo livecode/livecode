@@ -872,7 +872,7 @@ bool MCIPhoneSystem::ListFolderEntries(MCStringRef p_folder, MCSystemListFolderE
 		/* Truncate the directory entry path buffer to the path
 		 * separator. */
 		t_entry_path[t_path_len] = 0;
-		strcat (t_entry_path, direntp->d_name);
+		strcat (t_entry_path, t_dir_entry->d_name);
 
 		struct stat t_stat;
 		stat(t_entry_path, &t_stat);
