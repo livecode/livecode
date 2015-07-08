@@ -1297,8 +1297,7 @@ Exec_stat MCHandleStartTrackingSensor(void *p_context, MCParameter *p_parameters
     }
     
     MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
-    
+
     if (t_sensor != kMCSensorTypeUnknown)
     {
         MCSensorExecStartTrackingSensor(t_ctxt, t_sensor, t_loosely);
