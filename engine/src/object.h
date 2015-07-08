@@ -863,6 +863,9 @@ public:
     // Currently non-functional: always returns false
     bool is_rtl() const { return false; }
     
+    // AL-2015-06-30: [[ Bug 15556 ]] Refactored function to sync mouse focus
+    void sync_mfocus(void);
+    
 	////////// PROPERTY SUPPORT METHODS
 
 	void Redraw(void);

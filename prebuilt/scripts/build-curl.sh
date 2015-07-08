@@ -9,7 +9,7 @@ if [ "${PLATFORM}" == "ios" -o "${PLATFORM}" == "android" ] ; then
 fi
 
 # Version and configuration flags
-CURL_VERSION=7.21.1
+CURL_VERSION=7.43.0
 CURL_CONFIG="--disable-debug \
             --enable-http --enable-ftp --disable-file --disable-ldap --disable-ldaps --disable-rtsp --disable-dict --disable-telnet \
             --disable-tftp --disable-pop3 --disable-imap --disable-smtp \

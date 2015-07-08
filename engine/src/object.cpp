@@ -1075,7 +1075,7 @@ Exec_stat MCObject::handleself(Handler_type p_handler_type, MCNameRef p_message,
 				t_main_stat = exechandler(t_handler, p_parameters);
 
 				// If there was an error we are done.
-				if (t_stat == ES_ERROR)
+				if (t_main_stat == ES_ERROR)
 					return t_main_stat;
 			}
 		}
@@ -5042,6 +5042,54 @@ bool MCObject::haswidgets(void)
     t_visitor . found_widget = false;
     visit(VISIT_STYLE_DEPTH_FIRST, 0, &t_visitor);
     return t_visitor . found_widget;
+}
+
+// AL-2015-06-30: [[ Bug 15556 ]] Refactored function to sync mouse focus
+void MCObject::sync_mfocus(void)
+{
+    bool needmfocus;
+    needmfocus = false;
+    
+    if (opened && getstack() == MCmousestackptr)
+    {
+        if (!(flags & F_VISIBLE))
+        {
+            MCObject *mfocused = MCmousestackptr->getcard()->getmfocused();
+            // MW-2012-02-22: [[ Bug 10018 ]] If the target is a group then check
+            //   to see if it is the ancestor of the mfocused control; otherwise
+            //   just compare directly.
+            if (mfocused != nil && gettype() == CT_GROUP)
+            {
+                while(mfocused -> gettype() != CT_CARD)
+                {
+                    if (mfocused == this)
+                    {
+                        needmfocus = True;
+                        break;
+                    }
+                    mfocused = mfocused -> getparent();
+                }
+            }
+            else if (this == mfocused)
+                needmfocus = true;
+        }
+        else if (MCU_point_in_rect(rect, MCmousex, MCmousey))
+            needmfocus = true;
+    }
+    
+    if (state & CS_KFOCUSED)
+        getcard(0)->kunfocus();
+    
+    // MW-2008-08-04: [[ Bug 7094 ]] If we change the visibility of the control
+    //   while its grabbed, we should ungrab it - otherwise it sticks to the
+    //   cursor.
+    if (gettype() >= CT_GROUP && getstate(CS_GRAB))
+        state &= ~CS_GRAB;
+    
+    resizeparent();
+    
+    if (needmfocus)
+        MCmousestackptr->getcard()->mfocus(MCmousex, MCmousey);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
