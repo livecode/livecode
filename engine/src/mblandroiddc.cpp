@@ -478,6 +478,10 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		// IM-2014-03-06: [[ revBrowserCEF ]] Call additional runloop callbacks
 		DoRunloopActions();
 
+        // MM-2015-06-05: [[ MobileSockets ]] Dispatch any waiting notifications.
+        if (MCNotifyDispatch(dispatch == True) && anyevent)
+            break;
+
 		real8 eventtime = exittime;
 		if (handlepending(curtime, eventtime, dispatch))
 		{
@@ -1427,8 +1431,15 @@ static void co_yield_to_android_and_call(co_yield_callback_t callback, void *con
 
 void MCAndroidBreakWait(void)
 {
-	s_schedule_wakeup_was_broken = true;
-	co_yield_to_engine();
+    // MM-2015-06-08: [[ MobileSockets ]] Make sure we execute on the UI thread.
+    //   Calling scheduleWakeUp indirectly has this effect.
+    s_schedule_wakeup_was_broken = true;
+    JNIEnv *t_env;
+    t_env = MCJavaGetThreadEnv();
+    if (t_env != nil)
+        t_env -> CallVoidMethod(s_android_view, s_schedule_wakeup_method, 0, s_schedule_wakeup_breakable);
+    else
+        s_android_ui_env -> CallVoidMethod(s_android_view, s_schedule_wakeup_method, 0, s_schedule_wakeup_breakable);
 }
 
 struct MCAndroidEngineCallThreadContext
@@ -1620,6 +1631,25 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
 				t_env -> DeleteLocalRef(t_byte_array);
 			}
 			break;
+        case kMCJavaTypeMCValueRef:
+            {
+                jobject t_object;
+                t_object = t_env -> CallObjectMethodA(context->object, t_method_id, t_params->params);
+                if (t_cleanup_java_refs && t_env -> ExceptionCheck())
+                {
+                    t_exception_thrown = true;
+                    t_success = false;
+                }
+                
+                MCValueRef t_value;
+                if (t_success)
+                    t_success = MCJavaObjectToValueRef(t_env, t_object, t_value);
+                if (t_success)
+                    *((MCValueRef *)context -> return_value) = t_value;
+                
+                t_env -> DeleteLocalRef(t_object);
+            }
+            break;
         case kMCJavaTypeObject:
 		case kMCJavaTypeMap:
             {
@@ -1948,7 +1978,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doProcess(JNIEnv *env, job
 	if (!s_engine_running)
 		return;
 
-	s_schedule_wakeup_was_broken = !timedout;
+	s_schedule_wakeup_was_broken = !timedout || s_schedule_wakeup_was_broken;
 	co_yield_to_engine();
 }
 
@@ -2818,6 +2848,21 @@ JNIEnv *MCJavaGetThreadEnv()
     s_java_vm->GetEnv((void**)&t_env, JNI_VERSION_1_2);
     return t_env;
 }
+
+JNIEnv *MCJavaAttachCurrentThread()
+{
+    JNIEnv *t_env;
+    t_env = nil;
+    if (s_java_vm -> AttachCurrentThread(&t_env, nil) < 0)
+        return nil;
+    return t_env;
+}
+
+void MCJavaDetachCurrentThread()
+{
+    s_java_vm -> DetachCurrentThread();
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
