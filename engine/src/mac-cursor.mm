@@ -42,8 +42,7 @@ public:
 	};
 };
 
-static MCPlatformCursor *s_hidden_cursor = nil;
-static MCPlatformCursor *s_current_cursor = nil;
+static bool s_cursor_is_hidden = false;
 static NSCursor *s_watch_cursor = nil;
 
 static unsigned char s_watch_cursor_bits[] =
@@ -187,12 +186,17 @@ void MCPlatformSetCursor(MCPlatformCursorRef p_cursor)
 	if (p_cursor -> is_standard)
     {
         // By default, we want the cursor to be visible.
-        [NSCursor unhide];
+        if (s_cursor_is_hidden)
+        {
+            [NSCursor unhide];
+            s_cursor_is_hidden = false;
+        }
 		switch(p_cursor -> standard)
 		{
         // SN-2015-06-16: [[ Bug 14056 ]] Hidden cursor is part of the cursors
         case kMCPlatformStandardCursorNone:
             [NSCursor hide];
+            s_cursor_is_hidden = true;
             break;
 		case kMCPlatformStandardCursorArrow:
             [[NSCursor arrowCursor] set];
