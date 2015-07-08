@@ -4911,7 +4911,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		FD_ZERO(&rmaskfd);
 		FD_ZERO(&wmaskfd);
 		FD_ZERO(&emaskfd);
-		uint4 maxfd = 0;
+		int4 maxfd = 0;
 		if (!MCnoui)
 		{
 			FD_SET(p_fd, &rmaskfd);
