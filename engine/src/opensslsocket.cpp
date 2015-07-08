@@ -97,6 +97,16 @@ extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release, bool 
 
 #include "mcssl.h"
 
+#if defined(TARGET_SUBPLATFORM_ANDROID)
+#include <pthread.h>
+#include "mblandroidjava.h"
+
+static pthread_t s_socket_poll_thread = NULL;
+static pthread_mutex_t s_socket_list_mutex;
+static bool s_socket_poll_run = false;
+static int s_socket_poll_signal_pipe[2];
+#endif
+
 #if !defined(X11) && (!defined(_MACOSX)) && (!defined(TARGET_SUBPLATFORM_IPHONE)) && !defined(_LINUX_SERVER) && !defined(_MAC_SERVER)
 #define socklen_t int
 #endif
@@ -124,7 +134,7 @@ extern HANDLE g_socket_wakeup;
 
 Boolean MCSocket::sslinited = False;
 
-#ifdef _MACOSX
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
 static void socketCallback (CFSocketRef cfsockref, CFSocketCallBackType type, CFDataRef address, const void *pData, void *pInfo)
 {
 	uint2 i;
@@ -161,16 +171,22 @@ static void socketCallback (CFSocketRef cfsockref, CFSocketCallBackType type, CF
 			MCsockets[i]->readsome();
 			break;
 		}
+#ifdef _MACOSX
         MCPlatformBreakWait();
+#else
+        extern void MCIPhoneBreakWait(void);
+        MCIPhoneBreakWait();
+#endif
+
 	}
 	MCS_poll(0.0,0);//quick poll of other sockets
 }
 #endif
 
-#if defined(_MACOSX)
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
 Boolean MCS_handle_sockets()
 {
-	return MCS_poll(0.0, 0.0);
+    return MCS_poll(0.0,0);
 }
 #else
 Boolean MCS_handle_sockets()
@@ -178,6 +194,235 @@ Boolean MCS_handle_sockets()
     return True;
 }
 #endif
+
+
+static void MCSocketsLockSocketList(void)
+{
+#if defined(TARGET_SUBPLATFORM_ANDROID)
+    if (s_socket_poll_thread != NULL)
+        pthread_mutex_lock(&s_socket_list_mutex);
+#endif
+}
+
+static void MCSocketsUnlockSocketList(void)
+{
+#if defined(TARGET_SUBPLATFORM_ANDROID)
+    if (s_socket_poll_thread != NULL)
+        pthread_mutex_unlock(&s_socket_list_mutex);
+#endif
+}
+
+#if defined(TARGET_SUBPLATFORM_ANDROID)
+// MM-2015-07-07: [[ MobileSockets ]] Since on Android we can't hook into system
+//  calls to monitor sockets, we instead have an auxiliary thread that polls the
+//  sockets checking for any activity. If any sockets are pending, a notification
+//  is pushed onto the main thread which will complete the read/write.
+
+struct MCSocketsHandleFileDescriptorsCallbackContext
+{
+    fd_set *rmaskfd;
+    fd_set *wmaskfd;
+    fd_set *emaskfd;
+};
+
+static void MCSocketsHandleFileDescriptorsCallback(void *p_context)
+{
+    struct MCSocketsHandleFileDescriptorsCallbackContext *t_context;
+    t_context = (MCSocketsHandleFileDescriptorsCallbackContext *) p_context;
+    MCSocketsHandleFileDescriptorSets(*t_context -> rmaskfd, *t_context -> wmaskfd, *t_context -> emaskfd);
+}
+
+static void *MCSocketsPoll(void *p_arg)
+{
+    MCJavaAttachCurrentThread();
+    
+    fd_set rmaskfd, wmaskfd, emaskfd;
+    int4 maxfd;
+    
+    while (s_socket_poll_run)
+    {
+        FD_ZERO(&rmaskfd);
+        FD_ZERO(&wmaskfd);
+        FD_ZERO(&emaskfd);
+        maxfd = 0;
+        
+        // Add signal pipe to the set of file descriptors to make sure we wake up on any external interrupts.
+        // Prevents the select call blocking indefinitely.
+        FD_SET(s_socket_poll_signal_pipe[0], &rmaskfd);
+        maxfd = s_socket_poll_signal_pipe[0];
+        
+        // As we're running on an auxiliarry thread, lock to make sure the list of sockets
+        // is not mutated by the main thread during our parsing.
+        MCSocketsLockSocketList();
+        MCSocketsAddToFileDescriptorSets(maxfd, rmaskfd, wmaskfd, emaskfd);
+        MCSocketsUnlockSocketList();
+        
+        int n;
+        n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, NULL);
+        if (n > 0)
+        {
+            if (FD_ISSET(s_socket_poll_signal_pipe[0], &rmaskfd))
+            {
+                char t_signal_char;
+                read(s_socket_poll_signal_pipe[0], &t_signal_char, 1);
+            }
+            else
+            {
+                // Make sure the handling of active sockets takes place on the main thread by posting a notification.
+                struct MCSocketsHandleFileDescriptorsCallbackContext t_context;
+                t_context . rmaskfd = &rmaskfd;
+                t_context . wmaskfd = &wmaskfd;
+                t_context . emaskfd = &emaskfd;
+                MCNotifyPush(MCSocketsHandleFileDescriptorsCallback, &t_context, true, false);
+            }
+        }
+    }
+    
+    MCJavaDetachCurrentThread();
+    return NULL;
+}
+#endif
+
+static bool MCSocketsPollInterrupt(void)
+{
+    bool t_success;
+    t_success = true;
+    
+#if defined(TARGET_SUBPLATFORM_ANDROID)
+    if (t_success)
+    {
+        if (s_socket_poll_thread == NULL)
+        {
+            if (t_success)
+                t_success = pthread_mutex_init(&s_socket_list_mutex, NULL) == 0;
+            if (t_success)
+                t_success = pipe(s_socket_poll_signal_pipe) == 0;
+            if (t_success)
+            {
+                s_socket_poll_run = true;
+                t_success = pthread_create(&s_socket_poll_thread, NULL, MCSocketsPoll, NULL) == 0;
+            }
+        }
+        else
+            t_success = write(s_socket_poll_signal_pipe[1], "1", 1) == 1;
+    }
+#endif
+    
+    return t_success;
+}
+
+bool MCSocketsInitialize(void)
+{
+#if defined(TARGET_SUBPLATFORM_ANDROID)
+    s_socket_poll_thread = NULL;
+    s_socket_poll_run = false;
+#endif
+    return true;
+}
+
+void MCSocketsFinalize(void)
+{
+#if defined(TARGET_SUBPLATFORM_ANDROID)
+    if (s_socket_poll_thread != NULL)
+    {
+        s_socket_poll_run = false;
+        MCSocketsPollInterrupt();
+        
+        void *t_result;
+        pthread_join(s_socket_poll_thread, &t_result);
+        s_socket_poll_thread = NULL;
+        
+        pthread_mutex_destroy(&s_socket_list_mutex);
+    }
+#endif
+}
+
+void MCSocketsAppendToSocketList(MCSocket *p_socket)
+{
+    MCSocketsLockSocketList();
+    
+    MCU_realloc((char **)&MCsockets, MCnsockets, MCnsockets + 1, sizeof(MCSocket *));
+    MCsockets[MCnsockets++] = p_socket;
+    
+    MCSocketsUnlockSocketList();
+    MCSocketsPollInterrupt();
+}
+
+void MCSocketsRemoveFromSocketList(uint32_t p_socket_no)
+{
+    MCSocketsLockSocketList();
+    
+    delete MCsockets[p_socket_no];
+    uint32_t i;
+    i = p_socket_no;
+    while (++i < MCnsockets)
+        MCsockets[i - 1] = MCsockets[i];
+    MCnsockets--;
+    
+    MCSocketsUnlockSocketList();
+    MCSocketsPollInterrupt();
+}
+
+// MM-2015-07-07: [[ MobileSockets ]] Refactored socket polling code that was common accross all the platforms into 2 function calls.
+// MCSocketsAddToFileDescriptorSets adds the required socket file decriptors to the given sets.
+// MCSocketsHandleFileDescriptorSets deals with any pending sockets in the given file descriptor sets.
+
+bool MCSocketsAddToFileDescriptorSets(int4 &r_maxfd, fd_set &r_rmaskfd, fd_set &r_wmaskfd, fd_set &r_emaskfd)
+{
+    bool t_handled;
+    t_handled = false;
+    
+    uint2 i;
+    for (i = 0 ; i < MCnsockets ; i++)
+    {
+        int fd = MCsockets[i]->fd;
+        if (!fd || MCsockets[i]->resolve_state == kMCSocketStateResolving ||
+            MCsockets[i]->resolve_state == kMCSocketStateError)
+            continue;
+        if (MCsockets[i]->connected && !MCsockets[i]->closing
+            && !MCsockets[i]->shared || MCsockets[i]->accepting)
+            FD_SET(fd, &r_rmaskfd);
+        if (!MCsockets[i]->connected || MCsockets[i]->wevents != NULL)
+            FD_SET(fd, &r_wmaskfd);
+        FD_SET(fd, &r_emaskfd);
+        if (fd > r_maxfd)
+            r_maxfd = fd;
+        if (MCsockets[i]->added)
+        {
+            MCsockets[i]->added = False;
+            t_handled = true;
+        }
+    }
+
+    return t_handled;
+}
+
+void MCSocketsHandleFileDescriptorSets(fd_set &p_rmaskfd, fd_set &p_wmaskfd, fd_set &p_emaskfd)
+{
+    uint2 i;
+    for (i = 0 ; i < MCnsockets ; i++)
+    {
+        if (FD_ISSET(MCsockets[i]->fd, &p_emaskfd))
+        {
+            if (!MCsockets[i]->waiting)
+            {
+                MCsockets[i]->error = strclone("select error");
+                MCsockets[i]->doclose();
+            }
+        }
+        else
+        {
+            /* read first here, otherwise a situation can arise when select indicates
+             * read & write on the socket as part of the sslconnect handshaking
+             * and so consumed during writesome() leaving no data to read
+             */
+            if (FD_ISSET(MCsockets[i]->fd, &p_rmaskfd) && !MCsockets[i]->shared)
+                MCsockets[i]->readsome();
+            if (FD_ISSET(MCsockets[i]->fd, &p_wmaskfd))
+                MCsockets[i]->writesome();
+        }
+    }
+}
 
 #if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 typedef SOCKADDR_IN mc_sockaddr_in_t;
@@ -509,7 +754,7 @@ bool MCS_connect_socket(MCSocket *p_socket, struct sockaddr_in *p_addr)
 #endif
 
 	}
-	return true;
+	return MCSocketsPollInterrupt();
 }
 
 typedef struct _mc_open_socket_callback_info
@@ -760,6 +1005,7 @@ MCDataRef MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const 
             return t_data;
 		}
 	}
+    MCSocketsPollInterrupt();
     
     // SN-2015-01-29: [[ Bug 14409 ]] The function must return something
     return t_data;
@@ -861,6 +1107,8 @@ void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRe
 			if (s->connected)
 				s->writesome();
 	}
+    
+    MCSocketsPollInterrupt();
 }
 
 MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean datagram,Boolean secure,Boolean sslverify, MCStringRef sslcertfile)
@@ -1262,14 +1510,16 @@ void MCSocket::acceptone()
 		char *t = inet_ntoa(addr.sin_addr);
 		MCAutoStringRef n;
 		MCStringFormat(&n, "%s:%d", t, newfd);
-		MCU_realloc((char **)&MCsockets, MCnsockets,
-		            MCnsockets + 1, sizeof(MCSocket *));
 		MCNameRef t_name;
 		MCNameCreate(*n, t_name);
-		MCsockets[MCnsockets] = new MCSocket(t_name, object, NULL,
-		                                     False, newfd, False, False,False);
-		MCsockets[MCnsockets]->connected = True;
-		MCsockets[MCnsockets++]->setselect();
+        MCSocket *t_socket;
+        t_socket = new MCSocket(t_name, object, NULL, False, newfd, False, False,False);
+        if (t_socket != NULL)
+        {
+            MCSocketsAppendToSocketList(t_socket);
+            t_socket -> connected = True;
+            t_socket -> setselect();
+        }
 		MCscreen->delaymessage(object, message, *n, MCNameGetString(name));
 		added = True;
 	}
@@ -1327,10 +1577,10 @@ void MCSocket::readsome()
 				uindex_t index;
 				if (accepting && !IO_findsocket(*t_name, index))
 				{
-					MCU_realloc((char **)&MCsockets, MCnsockets,
-					            MCnsockets + 1, sizeof(MCSocket *));
-					MCsockets[MCnsockets++] = new MCSocket(*t_name, object, NULL,
-					                                       True, fd, False, True,False);
+                    MCSocket *t_socket;
+                    t_socket = new MCSocket(*t_name, object, NULL, True, fd, False, True,False);
+                    if (t_socket != NULL)
+                        MCSocketsAppendToSocketList(t_socket);
 				}
 				
 				MCAutoDataRef t_data;
@@ -1369,15 +1619,16 @@ void MCSocket::readsome()
                 // Was creating a string with the data length, and then appending instead of putting data inside
 				/* UNCHECKED */ MCStringFormat(&n, "%s:%d", t, MCSwapInt16NetworkToHost(addr.sin_port));
 				/* UNCHECKED */ MCNameCreate(*n, &t_name);
-				uindex_t index;
-				MCU_realloc((char **)&MCsockets, MCnsockets,
-							MCnsockets + 1, sizeof(MCSocket *));
-				MCsockets[MCnsockets] = new MCSocket(*t_name, object, NULL,
-													 False, newfd, False, False,secure);
-				MCsockets[MCnsockets]->connected = True;
-				if (secure)
-					MCsockets[MCnsockets]->sslaccept();
-				MCsockets[MCnsockets++]->setselect();
+                MCSocket *t_socket;
+                t_socket = new MCSocket(*t_name, object, NULL, False, newfd, False, False,secure);
+                if (t_socket != NULL)
+                {
+                    MCSocketsAppendToSocketList(t_socket);
+                    t_socket -> connected = True;
+                    if (secure)
+                        t_socket -> sslaccept();
+                    t_socket -> setselect();
+                }
 				MCscreen->delaymessage(object, message, MCNameGetString(*t_name), MCNameGetString(name));
 				added = True;
 			}
@@ -1635,7 +1886,7 @@ void MCSocket::setselect(uint2 sflags)
 		WSAEventSelect(fd, g_socket_wakeup, event);
 	}
 #endif
-#ifdef _MACOSX
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
 	if (sflags & BIONB_TESTWRITE)
 		CFSocketEnableCallBacks(cfsockref,kCFSocketWriteCallBack);
 	if (sflags & BIONB_TESTREAD)
@@ -1646,7 +1897,7 @@ void MCSocket::setselect(uint2 sflags)
 Boolean MCSocket::init(MCSocketHandle newfd)
 {
 	fd = newfd;
-#ifdef _MACOSX
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
 
 	cfsockref = NULL;
 	rlref = NULL;
@@ -1655,7 +1906,8 @@ Boolean MCSocket::init(MCSocketHandle newfd)
 	if (cfsockref)
 	{
 		rlref = CFSocketCreateRunLoopSource(kCFAllocatorDefault, cfsockref, 0);
-		CFRunLoopAddSource((CFRunLoopRef)CFRunLoopGetCurrent(), rlref, kCFRunLoopCommonModes);
+        // MM-2015-06-04: [[ MobileSockets ]] Make sure we post the callbacks to the main thread (since we run a twin thread set up on iOS)
+		CFRunLoopAddSource((CFRunLoopRef) CFRunLoopGetMain(), rlref, kCFRunLoopCommonModes);
 		CFOptionFlags socketOptions = 0 ;
 		CFSocketSetSocketFlags( cfsockref, socketOptions );
 	}
@@ -1670,7 +1922,7 @@ void MCSocket::close()
 	{
 		if (secure)
 			sslclose();
-#ifdef _MACOSX
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
 
 		if (rlref != NULL)
 		{
@@ -1687,7 +1939,7 @@ void MCSocket::close()
 #endif
 
 		fd = 0;
-#ifdef _MACOSX
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
 
 		if (cfsockref != NULL)
 		{
@@ -1889,8 +2141,14 @@ Boolean MCSocket::initsslcontext()
 	
 	if (t_success)
 	{
-		SSL_CTX_set_verify(_ssl_context, sslverify? SSL_VERIFY_PEER: SSL_VERIFY_NONE,verify_callback);
-		SSL_CTX_set_verify_depth(_ssl_context, 9);
+#if defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID)
+        // MM-2015-06-04: [[ MobileSockets ]] Since iOS and Android don't expose the root certificates directly, we can't use OpenSSL's verification routines.
+        //   Instead we'll do it ourselves using the OS APIs.
+        SSL_CTX_set_verify(_ssl_context, SSL_VERIFY_NONE, NULL);
+#else
+        SSL_CTX_set_verify(_ssl_context, sslverify? SSL_VERIFY_PEER: SSL_VERIFY_NONE,verify_callback);
+        SSL_CTX_set_verify_depth(_ssl_context, 9);
+#endif
 	}
 	return t_success;
 }
@@ -1934,20 +2192,29 @@ Boolean MCSocket::sslconnect()
             /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
             else if (MCStringFirstIndexOfChar(*t_hostname, '|', 0, kMCCompareExact, t_pos))
             /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
-			
+        
+#if defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID)
+            // MM-2015-06-04: [[ MobileSockets ]] On the mobile platforms we verify the certificate ourselves rather than using OpenSSL
+            if (!MCSSLVerifyCertificate(_ssl_conn, *t_hostname, sslerror))
+            {
+                errno = EPIPE;
+                return False;
+            }
+#else
             MCAutoPointer<char> t_host;
             /* UNCHECKED */ MCStringConvertToCString(*t_hostname, &t_host);
-			
+
             rc = post_connection_check(_ssl_conn, *t_host);
             
-			if (rc != X509_V_OK)
-			{
-				MCAutoStringRef t_message;
-				/* UNCHECKED */ MCStringCreateWithCString(X509_verify_cert_error_string(rc), &t_message);
-				sslerror = MCValueRetain(*t_message);
-				errno = EPIPE;
-				return False;
-			}
+            if (rc != X509_V_OK)
+            {
+                MCAutoStringRef t_message;
+                /* UNCHECKED */ MCStringCreateWithCString(X509_verify_cert_error_string(rc), &t_message);
+                sslerror = MCValueRetain(*t_message);
+                errno = EPIPE;
+                return False;
+            }
+#endif
 		}
 
 		sslstate |= SSTATE_CONNECTED;
@@ -2118,12 +2385,21 @@ Boolean MCSocket::sslaccept()
             else if (MCStringFirstIndexOfChar(*t_hostname, '|', 0, kMCCompareExact, t_pos))
                 /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
 			
+#if defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID)
+            // MM-2015-06-04: [[ MobileSockets ]] On the mobile platforms we verify the certificate ourselves rather than using OpenSSL
+            if (!MCSSLVerifyCertificate(_ssl_conn, *t_hostname, sslerror))
+            {
+                errno = EPIPE;
+                return False;
+            }
+#else
             MCAutoPointer<char> t_host;
             /* UNCHECKED */ MCStringConvertToCString(*t_hostname, &t_host);
 			rc = post_connection_check(_ssl_conn, *t_host);
 
 			if (rc != X509_V_OK)
 				return False;
+#endif
 		}
 
 		sslstate |= SSTATE_CONNECTED;

@@ -63,8 +63,8 @@ static Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p
         tspr->exec_ctxt(ctxt);
         stat = ctxt . GetExecStat();
         ctxt . IgnoreLastError();
-        // MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
-        MCRedrawUpdateScreen();
+        
+        MCActionsRunAll();
         
         switch(stat)
         {
@@ -725,8 +725,7 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
         stat = ctxt . GetExecStat();
         ctxt . IgnoreLastError();
         
-		// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
-		MCRedrawUpdateScreen();
+        MCActionsRunAll();
         
 		switch(stat)
 		{

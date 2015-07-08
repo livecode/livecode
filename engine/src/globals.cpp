@@ -68,6 +68,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcssl.h"
 #include "stacksecurity.h"
 #include "resolution.h"
+#include "redraw.h"
 
 #include "date.h"
 #include "stacktile.h"
@@ -254,8 +255,6 @@ uint2 MCdragdelta = 4;
 MCUndolist *MCundos;
 MCSellist *MCselected;
 MCStacklist *MCstacks;
-MCStacklist *MCtodestroy;
-MCObject *MCtodelete;
 MCCardlist *MCrecent;
 MCCardlist *MCcstack;
 MCDispatch *MCdispatcher;
@@ -490,6 +489,9 @@ char *MCsysencoding = nil;
 
 MCLocaleRef kMCBasicLocale = nil;
 MCLocaleRef kMCSystemLocale = nil;
+
+uint32_t MCactionsrequired = 0;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern MCUIDC *MCCreateScreenDC(void);
@@ -633,8 +635,6 @@ void X_clear_globals(void)
 	MCundos = nil;
 	MCselected = nil;
 	MCstacks = nil;
-	MCtodestroy = nil;
-	MCtodelete = nil;
 	MCrecent = nil;
 	MCcstack = nil;
 	MCdispatcher = nil;
@@ -827,7 +827,11 @@ void X_clear_globals(void)
     
 	// MW-2013-03-20: [[ MainStacksChanged ]]
 	MCmainstackschanged = False;
+    
+    MCactionsrequired = 0;
 
+    MCSocketsInitialize();
+    
 #ifdef _ANDROID_MOBILE
     extern void MCAndroidMediaPickInitialize();
     // MM-2012-02-22: Initialize up any static variables as Android static vars are preserved between sessions
@@ -926,6 +930,8 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 			}
 		}
 #endif // _SERVER
+    
+    MCDeletedObjectsSetup();
 
 	/* UNCHECKED */ MCStackSecurityCreateStack(MCtemplatestack);
 	MCtemplateaudio = new MCAudioClip;
@@ -949,7 +955,6 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	MCundos = new MCUndolist;
 	MCselected = new MCSellist;
 	MCstacks = new MCStacklist;
-	MCtodestroy = new MCStacklist;
 	MCrecent = new MCCardlist;
 	MCcstack = new MCCardlist;
 
@@ -1100,12 +1105,6 @@ int X_close(void)
 
 	MCscreen -> flushclipboard();
 
-	while (MCtodelete != NULL)
-	{
-		MCObject *optr = MCtodelete->remove(MCtodelete);
-		delete optr;
-	}
-
     MCdispatcher -> remove_transient_stack(MCtooltip);
 	delete MCtooltip;
 	MCtooltip = NULL;
@@ -1159,11 +1158,12 @@ int X_close(void)
 	delete MCtemplateimage;
 	delete MCtemplatefield;
 	delete MCselected;
-	delete MCtodestroy;
 	delete MCstacks;
 	delete MCcstack;
 	delete MCrecent;
-
+    
+    MCDeletedObjectsTeardown();
+    
 	// Temporary workaround for a crash
     //MCS_close(IO_stdin);
 	//MCS_close(IO_stdout);
@@ -1277,6 +1277,8 @@ int X_close(void)
 	// MM-2013-09-03: [[ RefactorGraphics ]] Initialize graphics library.
 	MCGraphicsFinalize();
     
+    MCSocketsFinalize();
+    
 #ifdef _ANDROID_MOBILE
     // MM-2012-02-22: Clean up any static variables as Android static vars are preserved between sessions
     MCAdFinalize();
@@ -1305,6 +1307,24 @@ int X_close(void)
         MCLocaleRelease(kMCBasicLocale);
     
 	return MCretcode;
+}
+
+void MCActionsDoRunSome(uint32_t p_mask)
+{
+    uint32_t t_actions;
+    t_actions = MCactionsrequired & p_mask;
+    
+    if ((t_actions & kMCActionsDrainDeletedObjects) != 0)
+    {
+        MCactionsrequired &= ~kMCActionsDrainDeletedObjects;
+        MCDeletedObjectsDoDrain();
+    }
+    
+    if ((t_actions & kMCActionsUpdateScreen) != 0)
+    {
+        MCactionsrequired &= ~kMCActionsUpdateScreen;
+        MCRedrawDoUpdateScreen();
+    }
 }
 
 // MW-2013-10-08: [[ Bug 11259 ]] Make sure the Linux specific case tables are
