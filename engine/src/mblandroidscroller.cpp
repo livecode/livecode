@@ -156,13 +156,29 @@ MCNativeControlType MCAndroidScrollerControl::GetType(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// SN-2014-11-27: [[ Bug 14046 ]] Add declarations for the MCScrollView* functions
+bool MCScrollViewGetHScroll(jobject p_view, int32_t &r_hscroll);
+bool MCScrollViewGetVScroll(jobject p_view, int32_t &r_vscroll);
+bool MCScrollViewSetHScroll(jobject p_view, int32_t p_hscroll);
+bool MCScrollViewSetVScroll(jobject p_view, int32_t p_vscroll);
+
 void MCAndroidScrollerControl::SetContentRect(MCExecContext& ctxt, integer_t p_rect[4])
 {
     jobject t_view;
     t_view = GetView();
     
+    // SN-2014-11-27: [[ Bug 14046 ]] Apply the fix for the bug 11485.
+    MCGRectangle t_rect;
+    t_rect = MCNativeControlUserRectToDeviceRect(MCGRectangleMake(p_rect[0], p_rect[1], p_rect[2], p_rect[3]));
+    
+    // SN-2014-11-27: [[ Bug 14046 ]] m_content_rect stores user-pixel values
+    m_content_rect . x = p_rect[0];
+    m_content_rect . y = p_rect[1];
+    m_content_rect . width = p_rect[2];
+    m_content_rect . height = p_rect[3];
+    
     if (t_view != nil)
-        MCAndroidObjectRemoteCall(t_view, "setContentSize", "vii", nil, p_rect[2] - p_rect[0], p_rect[3] - p_rect[1]);
+        MCAndroidObjectRemoteCall(t_view, "setContentSize", "vii", nil, (integer_t)(t_rect.size.width - t_rect.origin.x), (integer_t)(t_rect.size.height - t_rect.origin.y));
 }
 
 void MCAndroidScrollerControl::GetContentRect(MCExecContext& ctxt, integer_t r_rect[4])
@@ -172,6 +188,7 @@ void MCAndroidScrollerControl::GetContentRect(MCExecContext& ctxt, integer_t r_r
     
     if (t_view != nil)
     {
+        // SN-2014-11-27: [[ Bug 14046 ]] m_content_rect stores user-pixel values
         r_rect[0] = m_content_rect . x;
         r_rect[1] = m_content_rect . y;
         r_rect[2] = m_content_rect . x + m_content_rect . width;
@@ -184,8 +201,9 @@ void MCAndroidScrollerControl::SetHScroll(MCExecContext& ctxt, integer_t p_scrol
     jobject t_view;
     t_view = GetView();
     
+    // SN-2014-11-27: [[ Bug 14046 ]] Apply the fix for the bug 11485.
     if (t_view)
-        MCAndroidObjectRemoteCall(t_view, "setHScroll", "vi", nil, p_scroll);
+        MCScrollViewSetHScroll(t_view, p_scroll);
 }
 
 void MCAndroidScrollerControl::GetHScroll(MCExecContext& ctxt, integer_t& r_scroll)
@@ -193,8 +211,9 @@ void MCAndroidScrollerControl::GetHScroll(MCExecContext& ctxt, integer_t& r_scro
     jobject t_view;
     t_view = GetView();
     
+    // SN-2014-11-27: [[ Bug 14046 ]] Apply the fix for the bug 11485.
     if (t_view)
-        MCAndroidObjectRemoteCall(t_view, "getHScroll", "i", &r_scroll);
+        MCScrollViewGetHScroll(t_view, r_scroll);
     else
         r_scroll = 0;
 }
@@ -204,8 +223,9 @@ void MCAndroidScrollerControl::SetVScroll(MCExecContext& ctxt, integer_t p_scrol
     jobject t_view;
     t_view = GetView();
     
+    // SN-2014-11-27: [[ Bug 14046 ]] Apply the fix for the bug 11485.
     if (t_view)
-        MCAndroidObjectRemoteCall(t_view, "setVScroll", "vi", nil, p_scroll);
+        MCScrollViewSetVScroll(t_view, p_scroll);
 }
 
 void MCAndroidScrollerControl::GetVScroll(MCExecContext& ctxt, integer_t& r_scroll)
@@ -213,8 +233,9 @@ void MCAndroidScrollerControl::GetVScroll(MCExecContext& ctxt, integer_t& r_scro
     jobject t_view;
     t_view = GetView();
     
+    // SN-2014-11-27: [[ Bug 14046 ]] Apply the fix for the bug 11485.
     if (t_view)
-        MCAndroidObjectRemoteCall(t_view, "getVScroll", "i", &r_scroll);
+        MCScrollViewGetVScroll(t_view, r_scroll);
     else
         r_scroll = 0;
 }

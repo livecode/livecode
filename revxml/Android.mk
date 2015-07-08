@@ -23,6 +23,8 @@ LOCAL_STATIC_LIBRARIES := libexternal libxslt libxml
 LOCAL_LDLIBS += -lz \
 	$(call host-path,$(ANDROID_NDK)/sources/cxx-stl/gnu-libstdc++/libs/$(TARGET_ARCH_ABI)/libstdc++.a)
 
-LOCAL_LDFLAGS += -Wl,-u,getXtable
+# SN-2015-03-25: [[ Bug 14326 ]] Add the symbol to allow the mobile externals to access
+#  the external interface version setting function
+LOCAL_LDFLAGS += -Wl,-u,getXtable -Wl,-u,setExternalInterfaceVersion -Wl,-u,configureSecurity
 
 include $(BUILD_SHARED_LIBRARY)

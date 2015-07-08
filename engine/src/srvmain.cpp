@@ -39,6 +39,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 #include "uidc.h"
 #include "font.h"
+#include "libscript/script.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -52,7 +53,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define HOME_FOLDER "/opt/livecode/" MC_BUILD_ENGINE_SHORT_VERSION
 #else
 #define HOME_ENV_VAR "LIVECODE_SERVER_HOME"
-#define HOME_FOLDER "/opt/runrev/livecode-server"
+#define HOME_FOLDER "/opt/livecode/server"
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -386,10 +387,10 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
         return false;
     
     ////
-
-	MCAutoStringRef t_native_command_string;
-	MCsystem -> ResolvePath(argv[0], &t_native_command_string);
-	MCsystem -> PathFromNative(*t_native_command_string, MCcmd);
+    
+    // ST-2014-12-18: [[ Bug 14259 ]] Update to get the executable file from the system
+    // since ResolvePath must behave differently on Linux
+	MCsystem -> GetExecutablePath(MCcmd);
 	
 	// Fetch the home folder (for resources and such) - this is either that which
 	// is specified by REV_HOME environment variable, or the folder containing the
@@ -405,14 +406,14 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 	else if (MCsystem -> FolderExists(MCSTR(HOME_FOLDER)))
 		s_server_home = MCSTR(HOME_FOLDER);
 	else
-	{
-		s_server_home = MCValueRetain(MCcmd);
-
+    {
+        // SN-2014-12-16: [[ Bug 14001 ]] We can use MCcmd, no need to copy it into s_server_home
 		uindex_t t_last_separator;
-		MCStringLastIndexOfChar(s_server_home, PATH_SEPARATOR, UINDEX_MAX, kMCStringOptionCompareExact, t_last_separator);
+        MCStringLastIndexOfChar(MCcmd, PATH_SEPARATOR, UINDEX_MAX, kMCStringOptionCompareExact, t_last_separator);
 
 		MCAutoStringRef tmp_s_server_home;
-		/* UNCHECKED */ MCStringCopySubstring(s_server_home, MCRangeMake(0, t_last_separator - 1), &tmp_s_server_home);
+        // SN-2014-12-08: [[ Bug 14001 ]] The path to the externals goes up to the last separator, not one character before.
+        /* UNCHECKED */ MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_separator), &tmp_s_server_home);
 		s_server_home = MCValueRetain(*tmp_s_server_home);
 	}
 
@@ -422,7 +423,7 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 	if (MCS_getenv(MCSTR("GATEWAY_INTERFACE"), &t_env))
 		s_server_cgi = true;
 	else
-		s_server_cgi = false;
+        s_server_cgi = false;
 	
 	if (!X_open(argc, argv, envp))
 		return False;
@@ -460,12 +461,15 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 	
 static void IO_printf(IO_handle stream, const char *format, ...)
 {
-	char t_buffer[4096];
+    MCAutoStringRef t_string;
 	va_list args;
 	va_start(args, format);
-	vsprintf(t_buffer, format, args);
+    MCStringFormatV(&t_string, format, args);
 	va_end(args);
-	MCS_write(t_buffer, 1, strlen(t_buffer), stream);
+    
+    MCAutoStringRefAsSysString t_sys_string;
+    t_sys_string . Lock(*t_string);
+	MCS_write(*t_sys_string, 1, t_sys_string . Size(), stream);
 }
 
 static bool load_extension_callback(void *p_context, const MCSystemFolderEntry *p_entry)
@@ -604,11 +608,15 @@ void X_main_loop(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern "C" bool MCModulesInitialize();
+extern "C" void MCModulesFinalize();
+
 int main(int argc, char *argv[], char *envp[])
 {
-	if (!MCInitialize())
+	if (!MCInitialize() || !MCSInitialize() ||
+	    !MCModulesInitialize() || !MCScriptInitialize())
 		exit(-1);
-
+    
 // THIS IS MAC SPECIFIC AT THE MOMENT BUT SHOULD WORK ON LINUX
 
 	// On OSX, argv and envp are encoded as UTF8
@@ -647,8 +655,22 @@ int main(int argc, char *argv[], char *envp[])
 	int t_exit_code;
 	t_exit_code = X_close();
 
+    MCScriptFinalize();
+    MCModulesFinalize();
 	MCFinalize();
-	
+
+	for (int i = 0; i < argc; i++)
+	{
+		MCValueRelease(t_new_argv[i]);
+	}
+	MCMemoryDeleteArray(t_new_argv);
+
+	for (int i = 0; i < t_envp_count; i++)
+	{
+		MCValueRelease(t_new_envp[i]);
+	}
+	MCMemoryDeleteArray(t_new_envp);
+
 	exit(t_exit_code);
 }
 

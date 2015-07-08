@@ -246,13 +246,15 @@ const char *MCDeployErrorToString(MCDeployError p_error)
 		case kMCDeployErrorNoStackfile:
 			return "could not open stackfile";
 		case kMCDeployErrorNoAuxStackfile:
-			return "could not open auxillary stackfile";
+			return "could not open auxiliary stackfile";
 		case kMCDeployErrorNoOutput:
 			return "could not open output file";
 		case kMCDeployErrorNoSpill:
 			return "could not open spill file";
 		case kMCDeployErrorNoPayload:
 			return "could not open payload file";
+        case kMCDeployErrorNoModule:
+            return "could not open module file";
 		case kMCDeployErrorBadFile:
 		case kMCDeployErrorBadRead:
 		case kMCDeployErrorBadWrite:

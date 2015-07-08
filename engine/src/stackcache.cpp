@@ -23,8 +23,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "stack.h"
 
-#include "systhreads.h"
-
 ////////////////////////////////////////////////////////////////////////////////
 
 #define UINDEX_MAX UINT32_MAX
@@ -42,7 +40,7 @@ public:
 	void UncacheObject(MCObject *object);
 	MCObject *FindObject(uint32_t id);
 	
-	bool RehashBuckets(uindex_t p_new_count);
+	bool RehashBuckets(index_t p_new_count_delta);
 
 private:
 	static hash_t HashId(uint32_t id);
@@ -94,6 +92,8 @@ const uindex_t __kMCValueHashTableCapacities[] = {
 #endif
 #endif
 };
+
+#define __kMCValueHashTableCapacityCount (sizeof(__kMCValueHashTableCapacities) / sizeof(__kMCValueHashTableCapacities[0]))
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -299,23 +299,27 @@ uindex_t MCStackIdCache::FindBucketAfterRehash(uint32_t p_id, hash_t p_hash)
 	return UINDEX_MAX;
 }
 
-bool MCStackIdCache::RehashBuckets(uindex_t p_new_item_count)
+bool MCStackIdCache::RehashBuckets(index_t p_new_item_count_delta)
 {
 	uindex_t t_new_capacity_idx;
 	t_new_capacity_idx = m_capacity_idx;
-	if (p_new_item_count != 0)
+	if (p_new_item_count_delta != 0)
 	{
 		// If we are shrinking we just shrink down to the level needed by the currently
 		// used buckets.
-		if (p_new_item_count < 0)
-			p_new_item_count = 0;
+		if (p_new_item_count_delta < 0)
+			p_new_item_count_delta = 0;
 
 		// Work out the smallest possible capacity greater than the requested capacity.
 		uindex_t t_new_capacity_req;
-		t_new_capacity_req = m_count + p_new_item_count;
-		for(t_new_capacity_idx = 0; t_new_capacity_idx < 64; t_new_capacity_idx++)
+		t_new_capacity_req = m_count + p_new_item_count_delta;
+		for(t_new_capacity_idx = 0; t_new_capacity_idx < __kMCValueHashTableCapacityCount; t_new_capacity_idx++)
 			if (t_new_capacity_req <= __kMCValueHashTableCapacities[t_new_capacity_idx])
 				break;
+        
+        // If we are exceeding the maximum capacity then we can do no more.
+        if (t_new_capacity_idx == __kMCValueHashTableCapacityCount)
+            return false;
 	}
 
 	// Fetch the old capacity and table.
@@ -368,7 +372,6 @@ bool MCStackIdCache::RehashBuckets(uindex_t p_new_item_count)
 
 void MCStack::cacheobjectbyid(MCObject *p_object)
 {
-    MCThreadMutexLock(m_id_cache_lock);
 	if (m_id_cache == nil)
 	{
 		m_id_cache = new MCStackIdCache;
@@ -381,7 +384,6 @@ void MCStack::cacheobjectbyid(MCObject *p_object)
 		
 	if (m_id_cache != nil)
 		m_id_cache -> CacheObject(p_object);
-    MCThreadMutexUnlock(m_id_cache_lock);
 }
 
 void MCStack::uncacheobjectbyid(MCObject *p_object)
@@ -389,9 +391,7 @@ void MCStack::uncacheobjectbyid(MCObject *p_object)
 	if (m_id_cache == nil)
 		return;
 		
-    MCThreadMutexLock(m_id_cache_lock);
 	m_id_cache -> UncacheObject(p_object);
-    MCThreadMutexUnlock(m_id_cache_lock);
 }
 
 MCObject *MCStack::findobjectbyid(uint32_t p_id)
@@ -399,19 +399,15 @@ MCObject *MCStack::findobjectbyid(uint32_t p_id)
 	if (m_id_cache == nil)
 		return nil;
 		
-    MCThreadMutexLock(m_id_cache_lock);
     MCObject *t_object;
     t_object = m_id_cache -> FindObject(p_id);
-    MCThreadMutexUnlock(m_id_cache_lock);
     
     return t_object;
 }
 
 void MCStack::freeobjectidcache(void)
 {
-    MCThreadMutexLock(m_id_cache_lock);
 	delete m_id_cache;
-    MCThreadMutexUnlock(m_id_cache_lock);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

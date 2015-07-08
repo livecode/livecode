@@ -48,6 +48,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "uuid.h"
 
+#include "libscript/script.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_EXEC_DEFINE_EVAL_METHOD(Engine, Version, 1)
@@ -84,6 +86,7 @@ MC_EXEC_DEFINE_EXEC_METHOD(Engine, Get, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, PutIntoVariable, 3)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, PutOutput, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, Do, 3)
+MC_EXEC_DEFINE_EXEC_METHOD(Engine, DoInCaller, 3)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, InsertScriptOfObjectInto, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, Quit, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, CancelMessage, 1)
@@ -443,12 +446,11 @@ void MCEngineEvalParam(MCExecContext& ctxt, integer_t p_index, MCValueRef& r_val
 void MCEngineEvalParamCount(MCExecContext& ctxt, integer_t& r_count)
 {
 	// MW-2013-11-15: [[ Bug 11277 ]] If we don't have a handler then 'the param'
-	//   makes no sense so just return 0.
-    // PM-2014-04-14: [[Bug 12105]] Do this check to prevent crash in LC server
+    //   makes no sense so just return 0.
 	if (ctxt.GetHandler() != nil)
 		r_count = ctxt.GetHandler()->getnparams();
 	else
-        ctxt . LegacyThrow(EE_PARAMCOUNT_NOHANDLER);
+        r_count = 0;
 }
 
 void MCEngineEvalParams(MCExecContext& ctxt, MCStringRef& r_string)
@@ -649,10 +651,9 @@ void MCEngineEvalValue(MCExecContext& ctxt, MCStringRef p_script, MCValueRef& r_
 		return;
 	}
 
-	if (ctxt.GetHandler() != nil)
-		ctxt.GetHandler()->eval(ctxt, p_script, r_value);
-	else
-		ctxt.GetHandlerList()->eval(ctxt, p_script, r_value);
+    // SN-2015-06-03: [[ Bug 11277 ]] MCHandler::eval refactored
+    ctxt.eval(ctxt, p_script, r_value);
+
 	if (ctxt.HasError())
 		ctxt.LegacyThrow(EE_VALUE_ERROR, p_script);
 }
@@ -740,14 +741,20 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
             if (p_var . mark . changed != 0)
             {
                 MCAutoDataRef t_data;
-                if (!MCDataMutableCopy((MCDataRef)p_var . mark . text, &t_data))
+                if (!MCDataMutableCopyAndRelease((MCDataRef)p_var . mark . text, &t_data))
                     return;
                 
                 /* UNCHECKED */ MCDataReplace(*t_data, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), (MCDataRef)p_value);
                 p_var . variable -> set(ctxt, *t_data, kMCVariableSetInto);
             }
             else
+            {
+                // AL-2014-11-12: [[ Bug 13987 ]] Release the mark here, so that eg 'put x into byte y of z'
+                //  can take advantage of the fact that z has only one reference. Otherwise it requires a copy
+                MCValueRelease(p_var . mark . text);
+                
                 p_var . variable -> replace(ctxt, (MCDataRef)p_value, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start));
+            }
         }
         else
         {
@@ -758,20 +765,34 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
                 return;
             }
             
+            // AL-2015-04-01: [[ Bug 15139 ]] Make sure the mark text is the correct value type.
+            MCValueRef t_mark_text;
+            if (!ctxt . ConvertToString(p_var . mark . text, (MCStringRef &)t_mark_text))
+            {
+                ctxt . Throw();
+                return;
+            }
+            MCValueAssign(p_var . mark . text, t_mark_text);
+            
             // SN-2014-09-03: [[ Bug 13314 ]] MCMarkedText::changed updated to store the number of chars appended
             if (p_var . mark . changed != 0)
             {
                 MCAutoStringRef t_string;
-                if (!MCStringMutableCopy((MCStringRef)p_var . mark . text, &t_string))
+                if (!MCStringMutableCopyAndRelease((MCStringRef)p_var . mark . text, &t_string))
                     return;
             
                 /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), *t_value_string);
                 p_var . variable -> set(ctxt, *t_string, kMCVariableSetInto);
             }
             else
+            {
+                // AL-2014-11-12: [[ Bug 13987 ]] Release the mark here, so that eg 'put x into char y of z'
+                //  can take advantage of the fact that z has only one reference. Otherwise it requires a copy
+                MCValueRelease(p_var . mark . text);
+                
                 p_var . variable -> replace(ctxt, *t_value_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start));
+            }
         }
-        MCValueRelease(p_var . mark . text);
 	}
 }
 
@@ -794,7 +815,13 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCExecValue p_value, int p
         if (MCValueGetTypeCode(p_var . mark . text) == kMCValueTypeCodeData &&
             p_value . type == kMCExecValueTypeDataRef)
         {
-            MCEngineExecPutIntoVariable(ctxt, p_value . dataref_value, p_where, p_var);
+            // AL-2014-11-20: Make sure the incoming exec value is released.
+            MCAutoDataRef t_value_data;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeDataRef, &(&t_value_data));
+            if (ctxt . HasError())
+                return;
+            
+            MCEngineExecPutIntoVariable(ctxt, *t_value_data, p_where, p_var);
             return;
         }
         
@@ -824,13 +851,38 @@ void MCEngineExecDo(MCExecContext& ctxt, MCStringRef p_script, int p_line, int p
 		added = True;
 	}
 
-	if (ctxt.GetHandler() != nil)
-		ctxt.GetHandler() -> doscript(ctxt, p_script, p_line, p_pos);
-	else
-		ctxt.GetHandlerList() -> doscript(ctxt, p_script, p_line, p_pos);
+    // SN-2015-06-03: [[ Bug 11277 ]] MCHandler::doscript refactored
+    ctxt.doscript(ctxt, p_script, p_line, p_pos);
 
 	if (added)
 		MCnexecutioncontexts--;
+}
+
+void MCEngineExecDoInCaller(MCExecContext& ctxt, MCStringRef p_script, int p_line, int p_pos)
+{
+    Boolean added = False;
+    if (MCnexecutioncontexts < MAX_CONTEXTS)
+    {
+        ctxt.SetLineAndPos(p_line, p_pos);
+        MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
+        added = True;
+    }
+    
+    if (MCnexecutioncontexts < 2)
+    {
+        if (added)
+            MCnexecutioncontexts--;
+        ctxt . LegacyThrow(EE_DO_NOCALLER);
+        return;
+    }
+    
+    MCExecContext *caller = MCexecutioncontexts[MCnexecutioncontexts - 2];
+    
+    // SN-2015-06-03: [[ Bug 11277 ]] MCHandler::doscript refactored
+    caller -> doscript(*caller, p_script, p_line, p_pos);
+    
+    if (added)
+        MCnexecutioncontexts--;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1249,8 +1301,9 @@ static void MCEngineSplitScriptIntoMessageAndParameters(MCExecContext& ctxt, MCS
             
             // MW-2011-08-11: [[ Bug 9668 ]] Make sure we copy 'pdata' if we use it, since
             //   mptr (into which it points) only lasts as long as this method call.
+            // SN-2015-06-03: [[ Bug 11277 ]] MCHandler::eval_ctxt refactored
             MCExecValue t_value;
-            ctxt . GetHandler() -> eval_ctxt(ctxt, *t_expression, t_value);
+            ctxt . eval_ctxt(ctxt, *t_expression, t_value);
             if (!ctxt.HasError())
                 newparam->set_exec_argument(ctxt, t_value);
             else
@@ -1724,7 +1777,8 @@ void MCEngineEvalOwnerAsObject(MCExecContext& ctxt, MCObjectPtr p_object, MCObje
     if (!(p_object . object -> gettype() == CT_STACK && MCdispatcher -> ismainstack(static_cast<MCStack *>(p_object . object))))
     {
         r_owner . object = p_object . object -> getparent();
-        r_owner . part_id  = 0;
+        // SN-2015-01-13: [[ Bug 14376 ]] Let's get the parid of the owner, as in pre-7.0
+        r_owner . part_id  = p_object . part_id;
         return;
     }
     
@@ -1939,3 +1993,6 @@ void MCEngineGetEditionType(MCExecContext& ctxt, MCStringRef& r_edition)
     
     ctxt . Throw();
 }
+
+////////////////////////////////////////////////////////////////////////////////
+

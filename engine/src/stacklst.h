@@ -18,7 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // List of windows in their stacking order
 //
 #ifndef	STACKLIST_H
-#define	STACKTLIST_H
+#define	STACKLIST_H
 
 #include "dllst.h"
 

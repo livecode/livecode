@@ -6,8 +6,15 @@ export TRUNK=`cd $TOOLS/..; pwd`
 if [ "$MODE" == "" ]; then
 	export MODE=debug
 fi
-export DEBUGGABLE_FLAG=false
-export DEBUG_FLAG=0
+
+if [ "$MODE" == "debug" ]; then
+	export DEBUGGABLE_FLAG=true
+	export DEBUG_FLAG=1
+else
+	export DEBUGGABLE_FLAG=false
+	export DEBUG_FLAG=0
+fi
+
 export ANDROID_NDK=$TRUNK/sdks/android-ndk
 export ANDROID_SDK=$TRUNK/sdks/android-sdk
 
@@ -28,12 +35,27 @@ export RAWROOT=$SRCROOT/_build/android/$MODE/assets
 
 export JAVAC=$JAVA_SDK/bin/javac
 export JAR=$JAVA_SDK/bin/jar
-export DX=$BUILD_TOOLS/dx
-export AAPT=$BUILD_TOOLS/aapt
-export APKBUILDER="$ANDROID_SDK/tools/lib/sdklib.jar"
-export ZIPALIGN=$BUILD_TOOLS/zipalign
 export ADB=$ANDROID_SDK/platform-tools/adb
-export AIDL=$BUILD_TOOLS/aidl
+
+# Android SDK changed a bit from the version 20 and part of the tools can't be found in
+# the platform-tools anymore
+if [ -f "$ANDROID_SDK/platform-tools/aidl" ]; then
+	export DX=$ANDROID_SDK/platforms/android-8/tools/dx
+	export AAPT=$ANDROID_SDK/platforms/android-8/tools/aapt
+	export APKBUILDER=$ANDROID_SDK/tools/apkbuilder
+	export ZIPALIGN=$ANDROID_SDK/tools/zipalign
+	export AIDL=$ANDROID_SDK/platform-tools/aidl
+else
+	# Android SDK 20+ has been installed
+	# Find the appropriate folder for the platform-tools, now located in the build-tools
+	BUILD_TOOLS=${ANDROID_SDK}/build-tools/$(ls $ANDROID_SDK/build-tools | tail -n 1)
+
+	export DX=$BUILD_TOOLS/dx
+	export AAPT=$BUILD_TOOLS/aapt
+	export APKBUILDER="$ANDROID_SDK/tools/lib/sdklib.jar"
+	export ZIPALIGN=$BUILD_TOOLS/zipalign
+	export AIDL=$BUILD_TOOLS/aidl
+fi
 
 ##########
 

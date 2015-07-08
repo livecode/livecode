@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <foundation.h>
+#include <foundation-auto.h>
 
 #include "foundation-private.h"
 
@@ -224,6 +225,7 @@ void __MCListFinalize(void)
 
 void __MCListDestroy(__MCList *self)
 {
+    MCValueRelease(self -> delimiter);
 	MCValueRelease(self -> buffer);
 }
 
@@ -241,7 +243,10 @@ bool __MCListIsEqualTo(__MCList *list, __MCList *other_list)
 
 bool __MCListCopyDescription(__MCList *self, MCStringRef& r_string)
 {
-	return false;
+	MCAutoStringRef t_self_string;
+	if (!MCListCopyAsString (self, &t_self_string))
+		return false;
+	return MCValueCopyDescription(*t_self_string, r_string);
 }
 
 bool __MCListImmutableCopy(__MCList *self, bool p_release, __MCList*& r_immutable_value)
@@ -251,71 +256,5 @@ bool __MCListImmutableCopy(__MCList *self, bool p_release, __MCList*& r_immutabl
     
     return MCListCopyAndRelease(self, r_immutable_value);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-#if 0
-bool MCListCreateMutable(char p_delimiter, MCListRef& r_list)
-{
-	MCListRef self;
-	if (!MCMemoryNew(self))
-		return false;
-
-	if (!MCStringCreateMutable(0, self -> buffer))
-	{
-		MCMemoryDelete(self);
-		return false;
-	}
-
-	self -> delimiter = p_delimiter;
-
-	r_list = self;
-	return true;
-}
-
-void MCListDestroy(MCListRef self)
-{
-	MCValueRelease(self -> buffer);
-	MCMemoryDelete(self);
-}
-
-bool MCListCopyAsStringAndRelease(MCListRef self, MCStringRef& r_string)
-{
-	if (!MCStringCopyAndRelease(self -> buffer, r_string))
-		return false;
-
-	MCMemoryDelete(self);
-
-	return true;
-}
-
-bool MCListAppend(MCListRef self, MCStringRef p_string)
-{
-	if (MCStringGetLength(self -> buffer) != 0 &&
-		!MCStringAppendNativeChars(self -> buffer, &self -> delimiter, 1))
-		return false;
-
-	return MCStringAppend(self -> buffer, p_string);
-}
-
-bool MCListAppendCString(MCListRef self, const char *p_cstring)
-{
-	return MCListAppendNativeChars(self, p_cstring, MCCStringLength(p_cstring));
-}
-
-bool MCListAppendOldString(MCListRef self, const MCString& p_oldstring)
-{
-	return MCListAppendNativeChars(self, p_oldstring . getstring(), p_oldstring . getlength());
-}
-
-bool MCListAppendNativeChars(MCListRef self, const char *p_chars, uindex_t p_char_count)
-{
-	if (MCStringGetLength(self -> buffer) != 0 &&
-		!MCStringAppendNativeChars(self -> buffer, &self -> delimiter, 1))
-		return false;
-
-	return MCStringAppendNativeChars(self -> buffer, p_chars, p_char_count);
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////

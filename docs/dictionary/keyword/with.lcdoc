@@ -1,0 +1,48 @@
+Name: with
+
+Type: keyword
+
+Syntax: with
+
+Summary: Used with several <command|commands>, usually to specify a <default> setting or send a <callback|callback message> when the operation of the <command> is complete.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+open socket to "www.example.net" with message "mySocketOpened"
+
+Example:
+ask file "Please name the file:" with the short name of me
+
+Example:
+click at 100,100 with shiftKey
+
+Description:
+Use the <with> <keyword> to complete a <command> that requires it.
+
+The <with> <keyword> is used with the following <command|commands>:
+
+* <accept,> <load>, <open socket>, <read from socket>, <write to socket>: specifies a <callback|callback message>.
+* <answer> : specifies names of <button|buttons>.
+* <answer color>, <answer file>, <answer folder>, <ask>, <ask file>, <ask password>: specifies a <default> setting.
+* <click>, <drag>, <type> : specifies keys to be pressed.
+* <export>, <import> : specifies a <mask> file to use.
+* <hide>, <show>, <unlock screen>, <visual effect>: specifies a visual effect or sound effect.
+* <combine>, <split> : specifies <delimiter|delimiters> to use for <array> entries.
+* <create stack>: specifies a <group> name to include in the new stack.
+* <filter> : specifies the <wildcard|wildcard expression>.
+* <intersect>, <union> : specifies which <array> to use.
+* <launch> : specifies the application to use when opening a document with an application.
+* <open printing>: specifies whether to show the Print <dialog box>.
+* <replace> : specifies the replacement <string>.
+* <reply>, <request> : includes an <AppleEvent> keyword.
+* <send to program>: specifies whether to wait for a response.
+* <wait> : allows <message|messages> to be sent during the wait.
+
+When used with the <combine> or <split> <command>, the <with> <keyword> is a synonym for <using>.
+
+References: default (keyword), without (keyword), using (keyword), string (keyword), appleEvent (message), combine (command), click (command), answer color (command), unlock screen (command), open printing (command), answer (command), type (command), show (command), visual effect (command), replace (command), wait (command), ask file (command), hide (command), accept, (command), import (command), answer folder (command), answer file (command), group (command), open socket (command), split (command), drag (command), ask (command), load (command), send to program (command), create stack (command), reply (command), union (command), request (command), export (command), write to socket (command), filter (command), launch (command), read from socket (command), intersect (command), ask password (command), button (object), delimiter (glossary), mask (glossary), callback (glossary), wildcard (glossary), message (glossary), keyword (glossary), array (glossary), command (glossary), dialog box (glossary)

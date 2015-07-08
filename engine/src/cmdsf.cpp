@@ -1407,8 +1407,6 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
     // MERG-2014-07-11: metadata array
     MCAutoArrayRef t_metadata_array;
     MCImageMetadata t_metadata;
-    MCImageMetadata *t_metadata_ptr;
-    t_metadata_ptr = NULL;
     if (!ctxt . EvalOptionalExprAsArrayRef(metadata, kMCEmptyArray , EE_EXPORT_NOSELECTED, &t_metadata_array))
         return;
 
@@ -2808,7 +2806,7 @@ int4 MCKill::lookup(MCStringRef s)
 {
 	uint2 size = ELEMENTS(signal_table);
 	while(size--)
-		if (MCStringIsEqualToCString(s, signal_table[size].token, kMCCompareCaseless));
+		if (MCStringIsEqualToCString(s, signal_table[size].token, kMCCompareCaseless))
 			return signal_table[size].which;
 	return SIGTERM;
 }
@@ -3131,11 +3129,12 @@ Parse_stat MCOpen::parse(MCScriptPoint &sp)
 	}
 
 	if (sp.skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT) == PS_NORMAL)
+	{
 		if (sp.skip_token(SP_SSL, TT_UNDEFINED, SSL_VERIFICATION) == PS_NORMAL)
 			secureverify = False;
 		else
-			MCperror->add
-			(PE_OPEN_BADMESSAGE, sp);
+			MCperror->add (PE_OPEN_BADMESSAGE, sp);
+	}
 	return PS_NORMAL;
 }
 
@@ -5404,8 +5403,9 @@ void MCSecure::exec_ctxt(MCExecContext& ctxt)
         return;
 	
 	// MM-2014-06-13: [[ Bug 12567 ]] Added passing through the host name to verify against.
+    // SN-2015-05-05: [[ Bug 15314 ]] The host name should be initialised.
 	MCNewAutoNameRef t_host_name;
-    if (!ctxt . EvalOptionalExprAsNullableNameRef(m_verify_host_name, EE_SECURE_BADHOST, &t_host_name))
+    if (!ctxt . EvalOptionalExprAsNameRef(m_verify_host_name, kMCEmptyName, EE_SECURE_BADHOST, &t_host_name))
         return;
 
     MCSecurityExecSecureSocket(ctxt, *t_name, secureverify == True, *t_host_name);

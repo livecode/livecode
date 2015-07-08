@@ -40,9 +40,9 @@ MCObjptr::~MCObjptr()
 {
 }
 
-bool MCObjptr::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor)
+bool MCObjptr::visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor)
 {
-	return getref() -> visit(p_style, p_part, p_visitor);
+	return getref() -> visit(p_options, p_part, p_visitor);
 }
 
 IO_stat MCObjptr::load(IO_handle stream)

@@ -1,0 +1,29 @@
+Name: playPaused
+
+Type: message
+
+Syntax: playPaused
+
+Summary: Sent to a <player> when the user pauses it.
+
+Associations: player
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+on playPaused -- start a "paused" animation
+  set the repeatCount of image "Pause Animated Icon" to -1
+end playPaused
+
+Description:
+Handle the <playPaused> <message> if you want to perform an update when a player is paused.
+
+A <playPaused> <message> is also sent when the user clicks within a <player(object)|player's> rectangle and the <player> is already paused.
+
+References: currentTime (property), player (keyword), playStarted (message), currentTimeChanged (message), player (object), message (glossary), player (glossary)
+
+Tags: multimedia

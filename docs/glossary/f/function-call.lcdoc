@@ -1,0 +1,12 @@
+Name: function call
+
+Synonyms: function call
+
+Type: glossary
+
+Description:
+A <statement> containing a <function> name (and any needed <parameter|parameters>). 
+ 
+Also, the act of getting the <value> of a <function>; the use of a <function>.
+
+References: parameter (glossary), statement (glossary), value (glossary), function (glossary)

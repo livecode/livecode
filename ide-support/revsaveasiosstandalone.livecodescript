@@ -1,4 +1,4 @@
-﻿script "revSaveAsIOSStandalone"
+script "revSaveAsIOSStandalone"
 -- Each stackfile has:
 --   moveSubstacks
 --   renameGeneric
@@ -47,12 +47,28 @@ command revSaveAsMobileStandalone pStack, pAppBundle, pTarget
    end if
 end revSaveAsMobileStandalone
 
+private function getIosSdkInfo pSDKVersion, @rInfo
+   local tSDKPath, tSettings
+   put merge("/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS[[pSDKVersion]].sdk") into tSDKPath
+   get revIDEDeployIOSGetDeviceSDK(pSDKVersion)
+   if there is no folder (it & tSDKPath) then
+      return false
+   end if
+   put it into tSettings["root path"]
+   put (it & tSDKPath) into tSettings["sdk path"]
+   replace "." with "_" in pSDKVersion
+   put pSDKVersion into tSettings["suffix"]
+   put revMobileRuntimeFolder("Device", tSettings["suffix"]) into tSettings["runtime path"]
+   put tSettings into rInfo
+   return true
+end getIosSdkInfo
+
 private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    if the platform is not "macos" then
       throw "not supported on this platform"
    end if
    
-   start using stack "revSBLibrary" of stack "revStandaloneSettings"
+   start using stack "revSBLibrary"
    revStandaloneResetWarnings
    
    local tSettings
@@ -69,141 +85,47 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    --   root path - root locaiton of the Developer tools (the XCode bundle)
    --
    
-   -- MM-2013-10-08: We now only build for Arm v7 devices for 2 reasons:
-   --   1) Codesigning universal builds broke when using the iOS 7 SDK.
-   --   2) We only support iOS 4.3 or later which only runs on > Arm V7 devices.
-   -- Code for building universal/Arm v6 is still present. Since we're overriding the build type here, it will never be called.
-   put "Arm v7" into tSettings["ios,build type"]
-   
-   local tSDKs
+   local tSDKs, tSDKInfo
    if pTarget is "Device" then      
-      if revIDEDeployIOSSanatizeSystemVersion() < 100700 then   
-         
-         -- MM-2012-09-18: For Snow Leopard, all device builds (both armv6 and armv6 components) are built using the iOS 5.0 SDK.
-         --
-         get revIDEDeployIOSGetDeviceSDK("5.0")
-         if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk") then
-            throw "performing iOS device builds requires the iOS 5.0 SDK platform to be installed (available with XCode 4.2)"
-         end if                  
-         if tSettings["ios,build type"] is among the items of ",Universal,Arm v6" then
-            put it into tSDKs["armv6"]["root path"]
-            put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk") into tSDKs["armv6"]["sdk path"]
-            put "5_0" into tSDKs["armv6"]["suffix"]
-            put revMobileRuntimeFolder(pTarget, tSDKs["armv6"]["suffix"]) into tSDKs["armv6"]["runtime path"]                  
-         end if         
-         if tSettings["ios,build type"] is among the items of ",Universal,Arm v7" then
-            put it into tSDKs["armv7"]["root path"]
-            put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk") into tSDKs["armv7"]["sdk path"]
-            put "5_0" into tSDKs["armv7"]["suffix"] 
-            put revMobileRuntimeFolder(pTarget, tSDKs["armv7"]["suffix"]) into tSDKs["armv7"]["runtime path"]                                             
-         end if  
-         
-      else if revIDEDeployIOSSanatizeSystemVersion() < 100800 then
-         
-         -- MM-2012-09-18: For Lion and later, armv6 device builds are built using the iOS 5.1 SDK (armv7 builds are no longer supported in the 6.0 SDK).
-         --
-         if tSettings["ios,build type"] is among the items of ",Universal,Arm v6" then
-            get revIDEDeployIOSGetDeviceSDK("5.1")           
-            if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk") then
-               throw "performing iOS arvm v6 (or universal) device builds requires the iOS 5.1 SDK platform to be installed (available with XCode 4.4)"
-            end if                  
-            put it into tSDKs["armv6"]["root path"]
-            put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk") into tSDKs["armv6"]["sdk path"]
-            put "5_1" into tSDKs["armv6"]["suffix"]
-            put revMobileRuntimeFolder(pTarget, tSDKs["armv6"]["suffix"]) into tSDKs["armv6"]["runtime path"]                  
-         end if
+      -- PM-2015-02-06: [[ Bug 14422 ]] Drop support for OSX 10.6 and iOS 5.0 
+      if revIDEDeployIOSSanatizeSystemVersion() < 100800 then
          
          -- MM-2012-09-18: Armv7 builds are created with the iOS 6.0 SDK.
          --  
-         if tSettings["ios,build type"] is among the items of ",Universal,Arm v7" then
-            get revIDEDeployIOSGetDeviceSDK("6.1")           
-            if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.1.sdk") then
-               throw "performing iOS device builds requires the iOS 6.1 SDK platform to be installed (available with XCode 4.6)"
-            end if                  
-            put it into tSDKs["armv7"]["root path"]
-            put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.1.sdk") into tSDKs["armv7"]["sdk path"]
-            put "6_1" into tSDKs["armv7"]["suffix"]
-            put revMobileRuntimeFolder(pTarget, tSDKs["armv7"]["suffix"]) into tSDKs["armv7"]["runtime path"]
+         if not getIosSdkInfo("6.1", tSDKInfo) then
+            throw revIDEDeployIOSGetInvalidityMessage("6.1", "4.6")
          end if
-         
       else if revIDEDeployIOSSanatizeSystemVersion() < 100900 then
          
-         -- MM-2013-09-23: [[ iOS7 Support ]] Use iOS 7 SDK for armv7 builds on 10.8.
-         --
-         if tSettings["ios,build type"] is among the items of ",Universal,Arm v6" then
-            get revIDEDeployIOSGetDeviceSDK("5.1")           
-            if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk") then
-               throw "performing iOS arvm v6 (or universal) device builds requires the iOS 5.1 SDK platform to be installed (available with XCode 4.4)"
-            end if                  
-            put it into tSDKs["armv6"]["root path"]
-            put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk") into tSDKs["armv6"]["sdk path"]
-            put "5_1" into tSDKs["armv6"]["suffix"]
-            put revMobileRuntimeFolder(pTarget, tSDKs["armv6"]["suffix"]) into tSDKs["armv6"]["runtime path"]                  
-         end if         
-         if tSettings["ios,build type"] is among the items of ",Universal,Arm v7" then
-            get revIDEDeployIOSGetDeviceSDK("7.1")           
-            if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.1.sdk") then
-               throw "performing iOS device builds requires the iOS 7.1 SDK platform to be installed (available with XCode 5.1)"
-            end if                  
-            put it into tSDKs["armv7"]["root path"]
-            put it & "/usr/bin" into tSDKs["armv7"]["tools path"]
-            put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.1.sdk") into tSDKs["armv7"]["sdk path"]
-            put "7_1" into tSDKs["armv7"]["suffix"]
-            put revMobileRuntimeFolder(pTarget, tSDKs["armv7"]["suffix"]) into tSDKs["armv7"]["runtime path"]
+         if not getIosSdkInfo("7.1", tSDKInfo) then
+            throw revIDEDeployIOSGetInvalidityMessage("7.1", "5.1")
          end if
+      else if revIDEDeployIOSSanatizeSystemVersion() < 101000 then
          
+         if not getIosSdkInfo("8.2", tSDKInfo) then
+            throw revIDEDeployIOSGetInvalidityMessage("8.2", "6.2")
+         end if
       else
-         
-         -- MM-2014-10-21: [[ iOS 8.1 Support ]] Use iOS 8.1 SDK for armv7 builds on 10.9.
-         --
-         if tSettings["ios,build type"] is among the items of ",Universal,Arm v6" then
-            get revIDEDeployIOSGetDeviceSDK("5.1")           
-            if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk") then
-               throw "performing iOS arvm v6 (or universal) device builds requires the iOS 5.1 SDK platform to be installed (available with XCode 4.4)"
-            end if                  
-            put it into tSDKs["armv6"]["root path"]
-            put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk") into tSDKs["armv6"]["sdk path"]
-            put "5_1" into tSDKs["armv6"]["suffix"]
-            put revMobileRuntimeFolder(pTarget, tSDKs["armv6"]["suffix"]) into tSDKs["armv6"]["runtime path"]                  
-         end if         
-         if tSettings["ios,build type"] is among the items of ",Universal,Arm v7" then
-            get revIDEDeployIOSGetDeviceSDK("8.1")           
-            if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.1.sdk") then
-               throw "performing iOS device builds requires the iOS 8.1 SDK platform to be installed (available with XCode 6.1)"
-            end if                  
-            put it into tSDKs["armv7"]["root path"]
-            put it & "/usr/bin" into tSDKs["armv7"]["tools path"]
-            put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.1.sdk") into tSDKs["armv7"]["sdk path"]
-            put "8_1" into tSDKs["armv7"]["suffix"]
-            put revMobileRuntimeFolder(pTarget, tSDKs["armv7"]["suffix"]) into tSDKs["armv7"]["runtime path"]
+         -- SN-2015-04-14: [[ Bug 15187 ]] From Mac OS 10.10, the default iOS SDK version is 8.3
+         --  and 8.2 will be fetched 
+         // We want to catch the exception for Xcode 6.3
+         if not getIosSdkInfo("8.3", tSDKInfo) and not \
+              getIosSdkInfo("8.2", tSDKInfo) then
+            throw revIDEDeployIOSGetInvalidityMessage("8.2 / 8.3", "6.2 / 6.3")
          end if
-         
-         
       end if
+      put tSDKInfo into tSDKs["arm"]
    else
       
       -- MM-2012-09-18: We now only support the 4.3 simulators or later.
       -- For sim builds we just need the suffix (so we can extract the correct external) and where to look for the engines (runtime folder).
+      -- SN-2015-02-05: [[ Bug 14422 ]] We only support 5.1 simulator or later.
       --
-      if pTarget contains "4.3" then
-         put "4_3" into tSDKs["sim"]["suffix"]
-      else if pTarget contains "5.0" then
-         put "5_0" into tSDKs["sim"]["suffix"]
-      else if pTarget contains "5.1" then
-         put "5_1" into tSDKs["sim"]["suffix"]
-      else if pTarget contains "6.0" then
-         put "6_0" into tSDKs["sim"]["suffix"]
-      else if pTarget contains "6.1" then
-         put "6_1" into tSDKs["sim"]["suffix"]
-      else if pTarget contains "7.0" then
-         put "7_0" into tSDKs["sim"]["suffix"]
-      else if pTarget contains "7.1" then
-         put "7_1" into tSDKs["sim"]["suffix"]
-      else if pTarget contains "8.0" then
-         put "8_0" into tSDKs["sim"]["suffix"]         
-      else if pTarget contains "8.1" then
-         put "8_1" into tSDKs["sim"]["suffix"]
-      end if
+      local tSuffix
+      // SN-2015-05-08: We only want the simulator version, not the whole string 'Simulator X.Y'
+      put last word of pTarget into tSuffix
+      replace "." with "_" in tSuffix
+      put tSuffix into tSDKS["sim"]["suffix"]
       put revMobileRuntimeFolder(pTarget, tSDKs["sim"]["suffix"]) into tSDKs["sim"]["runtime path"]
       
    end if
@@ -310,7 +232,8 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       revCopyMobileNewSplash tSettings, tBaseFolder, pAppBundle
    end if
    
-   revCopyMobileFiles tFiles, tBaseFolder, pAppBundle, pTarget, tSDKs, tRedirects, tCopiedExternals, tCopiedFonts
+   local tPlist
+   revCopyMobileFiles tFiles, tBaseFolder, pAppBundle, pTarget, tSDKs, tRedirects, tCopiedExternals, tCopiedFonts, tPlist
    revCopyMobileStackFiles tStackFiles, tBaseFolder, pAppBundle
    
    -- Copy in the appropriate externals and drivers
@@ -318,7 +241,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    revCopyMobileDrivers tDrivers, pAppBundle, pTarget, tSDKs, tCopiedExternals
    
    -- Generate the plist
-   revCreateMobilePlist tSettings, pAppBundle, pTarget, tCopiedFonts
+   revCreateMobilePlist tSettings, pAppBundle, pTarget, tCopiedFonts, tPlist
    
    -- Generate the PkgInfo file
    put "APPL????" into url ("binfile:" & pAppBundle & slash & "PkgInfo")
@@ -348,9 +271,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    if pTarget is "Device" then
       revStandaloneProgress "Linking engine..."      
       
-      -- MM-2012-09-18: We now build the armv6 and armv7 engines using separate SDKs.
-      --
-      repeat for each word tInstSet in "armv6 armv7"
+      repeat for each word tInstSet in "arm"
          if tSDKs[tInstSet]["suffix"] is empty then
             next repeat
          end if
@@ -405,26 +326,27 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          
          -- MW-2013-06-26: [[ CloneAndRun ]] Only strip global symbols if an installed env.
          if revEnvironmentIsInstalled() then
+            -- FG-2015-01-21: [[ Widgets ]] We need to keep all exported symbols
             -- Make sure the only exported symbol is "main"
-            put "-Wl,-x -Wl,-exported_symbol -Wl,_main" & return after tLinkCommand
+            --put "-Wl,-x -Wl,-exported_symbol -Wl,_main" & return after tLinkCommand
          end if
          
          -- MW-2013-06-25: [[ PIE ]] Make sure we make the minversion 4.3 so we can make
          --   ARMv7+ PIE builds.
          -- Make the minimum run version of the engine 4.3
-         put "-miphoneos-version-min=4.3" & return after tLinkCommand
+         -- SN-2015-02-05: [[ Bug 14422 ]] The linker minimum iphoneOS version
+         --   should be relevant with the desired minimum version.
+         -- SN-2015-02-19: [[ Bug 14625 ]] Minimum version is architecture-specific
+         --put revGetMinimumOSByArch(tSettings["ios,minimum version"]) into tVersion
+         --put "-miphoneos-version-min=" & tVersion["armv7"] & return after tLinkCommand
+         
+         -- SN-2015-02-23: [[ Bug 14625 ]] Use a iOS 5.1/iOS 7.0 consistent stdlib
+         put "-stdlib=libc++" & return after tLinkCommand
          
          -- MW-2013-06-26: [[ CloneAndRun ]] Only dead strip if an installed env.
          if revEnvironmentIsInstalled() then
             -- Strip any dead code and data from the engine
             put "-dead_strip" & return after tLinkCommand
-         end if
-         
-         -- MW-2013-06-25: [[ PIE ]] Add the flag for 'PIE' executables, but only if not on ARMv6
-         -- MM-2013-09-23: [[ iOS7 Support ]] This causes warnings whn using XCode 5. Further investigation needed.
-         --
-         if tInstSet is not "armv6" then
-            --put "-pie" & return after tLinkCommand
          end if
          
          -- Add reference to the partially linked standalone engine
@@ -449,24 +371,59 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
             end if
          end repeat
          
-         -- Make a temporary file for link options and execute it
-         local tLinkOptionsFile
-         put tempName() into tLinkOptionsFile        
+         -- Compute the list of archs in the fat binary
+         local tRawArchs
+         put shell("otool -fv" && quote & mapFilePath(tSDKs[tInstSet]["runtime path"] & slash & "Standalone") & quote) into tRawArchs
+         if tRawArchs is empty then
+            put shell("otool -hv" && quote & mapFilePath(tSDKs[tInstSet]["runtime path"] & slash & "Standalone") & quote) into tRawArchs
+         end if
+         
+         local tArchs
+         -- SN-2015-03-30: [[ Bug 14794 ]] If the user specifies a 32-bit only build,
+         --  then we do not do the 64-bit build.
+         if tRawArchs contains "ARM64" and not tSettings["ios,32-bit only"] then
+            put "arm64 " after tArchs
+         end if
+         if tRawArchs contains "V7" then
+            put "armv7 " after tArchs
+         end if
+         
+         
+         -- SN-2015-02-19: [[ Bug 14625 ]] Build each binary separately according
+         -- to their architecture.
+         put empty into tArchSpecificEngineList
+         repeat for each word tArch in tArchs
+            -- Make a temporary file for link options and execute it
+            local tLinkOptionsFile
+            put tempName() into tLinkOptionsFile
+            
+            put tempName() into tArchSpecificEngineFile
+            put tLinkCommand & "-o" && quote & tArchSpecificEngineFile & quote & return into url ("binfile:" & tLinkOptionsFile)
+            
+            local tiPhoneMinVersion
+            put revGetMinimumOSByArch(tSettings["ios,minimum version"]) into tiPhoneMinVersion
+            
+            -- MM-2013-09-23: [[ iOS7 Support ]] Use g++ instead of llvm-g++-4.2. XCode 5.0 uses llvm 5.0.
+            -- g++ appears to be sym-linked to the appropriate compiler in all SDKS.
+            -- SN-2015-02-19: [[ Bug 14625 ]] The minimum iOS version is bound to the architecture
+            get shell("g++ -arch " & tArch && "-miphoneos-version-min=" & tiPhoneMinVersion[tArch] && quote & "@" & tLinkOptionsFile & quote)
+            
+            put tArchSpecificEngineFile & space after tArchSpecificEngineList
+            delete file tLinkOptionsFile
+            if it is not empty or there is no file tArchSpecificEngineFile then
+               throw "linking for" && tInstSet && " (" & tArch & ") failed with " & it
+            end if
+         end repeat
          
          -- MM-2011-09-28: Create the engine for the instruction set specified in the build type setting.
          --
          put tempName() into tSDKs[tInstSet]["engine file"]
-         put tLinkCommand & "-o" && quote & tSDKs[tInstSet]["engine file"] & quote & return into url ("binfile:" & tLinkOptionsFile)
+         -- SN-2015-02-19: [[ Bug 14625 ]] Make the fat binary with the architecture-specific engines
+         get shell("lipo -create " & tArchSpecificEngineList & " -output " & quote & tSDKs[tInstSet]["engine file"] & quote)
          
-         -- MM-2013-09-23: [[ iOS7 Support ]] Use g++ instead of llvm-g++-4.2. XCode 5.0 uses llvm 5.0.
-         -- g++ appears to be sym-linked to the appropriate compiler in all SDKS.
-         --
-         get shell("g++ -arch" && tInstSet && quote & "@" & tLinkOptionsFile & quote)
-         
-         delete file tLinkOptionsFile
          if it is not empty or there is no file tSDKs[tInstSet]["engine file"] then
             throw "linking for" && tInstSet && "failed with " & it
-         end if         
+         end if
          
          -- Put the path back the way it was
          put tOldPath into $PATH
@@ -475,24 +432,8 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       
       -- MM-2012-09-18: We now should have the required engines linked.  If we are building a universal binary,
       -- create from the two separate linkede engines.
-      --
-      switch tSettings["ios,build type"]
-         case "Arm v6"
-            put tSDKs["armv6"]["engine file"] into tLinkEngineFile
-            break
-         case "Arm v7"
-            put tSDKs["armv7"]["engine file"] into tLinkEngineFile
-            break
-         case "Universal"
-         default
-            put tempName() into tLinkEngineFile
-            get shell("lipo -create" && quote & tSDKs["armv6"]["engine file"] & quote && quote & tSDKs["armv7"]["engine file"] & quote && "-output" && quote & tLinkEngineFile & quote)
-            delete file tSDKs["armv6"]["engine file"]
-            delete file tSDKs["armv7"]["engine file"]
-            if it is not empty  then
-               throw "creating universal arm engine failed with" && it
-            end if
-      end switch      
+      --=
+      put tSDKs["arm"]["engine file"] into tLinkEngineFile
       
       if there is no file tLinkEngineFile then
          throw "creating engine failed"
@@ -511,7 +452,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    
    -- If the datagrid is used, then include the library as an aux stack
    if "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
-      put the effective filename of stack "revDataGridLibrary" into tDeploy["auxillary_stackfiles"]
+      put the effective filename of stack "revDataGridLibrary" into tDeploy["auxiliary_stackfiles"]
    end if
    
    -- Externals to reference
@@ -564,6 +505,53 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          put tBaseFolder & slash before tDeploy["splash"]
       end if
    end if
+   
+   -- SN-2015-03-16: [[ iOS Font Mapping ]] Fontmapping deploy command added
+   --  We have our fontmapping list (the default fonts), and the custom ones the user
+   --  may have added
+   local tFontmapFiles,tStandardFontmapRoot
+   
+   -- We want the repo version to be able to build iOS standalones with the fontmap
+   if revEnvironmentIsInstalled() then
+      put mapFilePath(revMobileRuntimeFolder(pTarget)) into tStandardFontmapRoot
+   else
+      local tOldDel
+      put the itemdelimiter into tOldDel
+      set the itemdelimiter to slash
+      put item 1 to -4 of revEnvironmentBinariesPath() into tStandardFontmapRoot
+      put "/engine/rsrc" after tStandardFontmapRoot
+      set the itemdelimiter to tOldDel
+   end if
+   
+   -- We add our fontmapping, and the user one if not empty
+   put tStandardFontmapRoot & slash & "fontmap" into tFontMapFiles
+   local tUserFontMappings
+   put tSettings["ios,fontmappings"] into tUserFontMappings
+   if tUserFontMappings is not empty then
+      // Make sure to use the right absolute filepath
+      if not (tUserFontMappings begins with slash) then
+         put tBaseFolder & slash before tUserFontMappings
+      end if
+      put tUserFontMappings into item 2 of tFontMapFiles
+   end if
+   
+   repeat for each item tFontmapFile in tFontMapFiles
+      -- Alert the user if their font map has not been found on the disk
+      if there is no file tFontmapFile then
+         revStandaloneAddWarning "Could not find font mapping file" && tFontmapFile
+      else
+         local tFontMappings
+         put URL("file:" & tFontmapFile) into tFontMappings
+         -- Ensure that the list ends with a linefeed
+         if the last char of tFontMappings is not LF then
+            put LF after tFontMappings
+         end if
+         put tFontMappings after tDeploy["fontmappings"]
+      end if
+   end repeat
+   
+   -- delete the last LF
+   delete last char of tDeploy["fontmappings"]
    
    try
       _internal deploy ios tDeploy
@@ -723,10 +711,11 @@ private command revCopyMobileNewSplash pSettings, pBaseFolder, pAppBundle
    
    revStandaloneProgress "Copying launch images..."
    
+   -- PM-2015-03-19: [[ Bug 13969 ]] Make sure we use the correct names for the splash images in iphone6/6+
    repeat for each line tType in ("iphone splash" & return & "retina splash,@2x" & return & "ipad portrait splash,-Portrait" & \
          return & "ipad landscape splash,-Landscape" & return & "ipad retina portrait splash,-Portrait@2x" & return & "ipad retina landscape splash,-Landscape@2x" & \
-         return & "iphone 4inch splash,-568h@2x" & return & "iphone 6 splash,-iPhone6" & \
-         return & "iphone 6 plus portrait splash,-iPhone6PlusPortrait" & return & "iphone 6 plus landscape splash,-iPhone6PlusLandsacpe")
+         return & "iphone 4inch splash,-568h@2x" & return & "iphone 6 splash,-667h@2x" & \
+         return & "iphone 6 plus portrait splash,-736h@3x" & return & "iphone 6 plus landscape splash,-414h@3x")
       get pSettings["ios," & item 1 of tType]
       if not (it begins with "/") then
          put pBaseFolder & slash before it
@@ -868,7 +857,7 @@ end revModifyMobileImageFile
 --   foobar/baz -> <base>/foobar/baz
 --   C:/foobar/baz -> <base>/baz
 --
-private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, pSDKs, @rRedirects, @rExternals, @rFonts
+private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, pSDKs, @rRedirects, @rExternals, @rFonts, @rPlist
    revStandaloneProgress "Copying files..."
    
    -- Only use redirects in simulator 4.x
@@ -986,7 +975,7 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
             end if
          else
             put "external-tmp" into rExternals[it]["type"]        
-            repeat for each word tInstSet in "armv6 armv7"
+            repeat for each word tInstSet in "armv6 armv7 arm64 arm"
                if pSDKs[tInstSet]["suffix"] is not empty then
                   put the tempName into tTarget
                   if lcextExtractExternal(tSource, "Device-" & pSDKs[tInstSet]["suffix"], tTarget) then
@@ -1004,6 +993,11 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
       --
       if tSource ends with ".lcext" or tSource ends with ".dylib" then         
          next repeat
+      end if
+	  
+      -- MERG-2015-04-24: [[ TemplateAppMetadata ]] If a template plist is found then we use it instead of the default template.
+      if tSource ends with "Info.plist" then
+         put url ("binfile:" & tSource) into rPlist
       end if
       
       -- Otherwise its just a file
@@ -1072,7 +1066,7 @@ end lcextExtractExternal
 -- where we extract the appropraite external for the instruciton set(s) we are building for.
 --
 private command revCopyMobileExternals pExternals, pAppBundle, pTarget, pSDKs, @rExternals 
-   repeat for each word tInstSet in "sim armv6 armv7"
+   repeat for each word tInstSet in "sim armv6 armv7 arm64 arm"
       if pSDKs[tInstSet]["suffix"] is not empty then
          repeat for each line tLine in pExternals      
             local tFile
@@ -1096,7 +1090,7 @@ end revCopyMobileExternals
 -- where we extract the appropraite external for the instruciton set(s) we are building for.
 --
 private command revCopyMobileDrivers pDrivers, pAppBundle, pTarget, pSDKs, @rExternals
-   repeat for each word tInstSet in "sim armv6 armv7"
+   repeat for each word tInstSet in "sim armv6 armv7 arm64 arm"
       if pSDKs[tInstSet]["suffix"] is not empty then
          repeat for each line tLine in pDrivers
             local tFile
@@ -1123,16 +1117,42 @@ end revCopyMobileStackFiles
 
 ################################################################################
 
-private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
+private function revGetMinimumOSByArch pMinimumOS 
+   local tMinimumOSByArch  
+   -- MM-2013-09-23: We only support iOS 4.3 and later
+   -- SN-2015-02-02: [[ Bug 14422 ]] Minimum OS version is the
+   --  same for all archs, and we only support version >= 5.1.1
+   --
+   if pMinimumOS is empty or pMinimumOS <= "5.1" then
+      put "5.1.1" into tMinimumOSByArch["i386"]
+   else
+      put pMinimumOS & ".0" after tMinimumOSByArch["i386"]
+   end if
+   
+   -- Assign the same value to the other architectures.
+   -- Possible architectures:
+   --   i386, x86-64, armv6, armv7, armv7s, arm64, ppc, ppc64
+   put tMinimumOSByArch["i386"] into tMinimumOSByArch["armv6"]
+   put tMinimumOSByArch["i386"] into tMinimumOSByArch["armv7"]
+   put tMinimumOSByArch["i386"] into tMinimumOSByArch["armv7s"]
+   put tMinimumOSByArch["i386"] into tMinimumOSByArch["arm64"]
+   put tMinimumOSByArch["i386"] into tMinimumOSByArch["x86-64"]
+   return tMinimumOSByArch
+end revGetMinimumOSByArch
+
+private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPlist
    local tTemplateFile
-   put mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Settings.plist") into tTemplateFile
-   if there is no file tTemplateFile then
-      throw "could not find plist template for" && tolower(pTarget) && "target"
+   
+   if pPlist is empty then
+      put mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Settings.plist") into tTemplateFile
+      if there is no file tTemplateFile then
+         throw "could not find plist template for" && tolower(pTarget) && "target"
+      end if
    end if
    
    ----------
    
-   local tExeName, tBundleId, tBundleVersion
+   local tExeName, tBundleId, tBundleVersion,tMinimumOSByArch
    put pSettings["name"] into tExeName
    put pSettings["ios,bundle id"] into tBundleId
    put pSettings["ios,bundle version"] into tBundleVersion
@@ -1160,11 +1180,8 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    if tDisplayName is empty then
       put tExeName into tDisplayName
    end if
-   -- MM-2013-09-23: We only support iOS 4.3 and later
-   --
-   if tMinimumOS is empty or tMinimumOS < "4.3" then
-      put "4.3" into tMinimumOS
-   end if
+   
+   put revGetMinimumOSByArch(tMinimumOS) into tMinimumOSByArch
    if tDeviceFamily is empty then
       put "1" into tDeviceFamily
    end if
@@ -1182,8 +1199,8 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    end if
    
    ----------
-   
-   local tStatusBarHidden, tStatusBarStyle, tIPadStatusBarHidden
+   -- PM-2015-02-17: [[ Bug 14482 ]] Added a new "solid" statusbarstyle
+   local tStatusBarHidden, tStatusBarStyle, tIPadStatusBarHidden, tStatusBarSolid
    put pSettings["ios,status bar hidden"] into tStatusBarHidden
    put pSettings["ios,status bar style"] into tStatusBarStyle
    put pSettings["ios,ipad status bar hidden"] into tIPadStatusBarHidden
@@ -1231,6 +1248,12 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    if tStatusBarStyle is empty then
       put "Default" into tStatusBarStyle
    end if
+   -- PM-2015-02-17: [[ Bug 14482 ]] Added a new "solid" statusbarstyle, 
+   -- which is opaque and automatically shifts down the app view by 20 pixels
+   if tStatusBarStyle is "solid" then
+      put "BlackOpaque" into tStatusBarStyle
+      put true into tStatusBarSolid
+   end if
    
    ----------
    
@@ -1243,22 +1266,24 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    end repeat
    
    ----------
-   
-   local tPlist
-   put url ("file:" & tTemplateFile) into tPlist
+
+   if pPlist is empty then
+      put url ("binfile:" & tTemplateFile) into pPlist
+   end if
    // SN-2014-10-27: [[ Bug 13827 ]] Strings in a Plist file should be UTF-8 encoded
-   replace "${EXECUTABLE_NAME}" with textEncode(tExeName, "utf-8") in tPlist
-   replace "${BUNDLE_IDENTIFIER}" with textEncode(tBundleId, "utf-8") in tPlist
-   replace "${BUNDLE_VERSION}" with tBundleVersion in tPlist
-   replace "${BUNDLE_DISPLAY_NAME_SUPPORT}" with "<string>" & tDisplayName & "</string>" in tPlist
-   replace "${MINIMUM_OS_SUPPORT}" with "<string>" & tMinimumOS & "</string>" in tPlist
-   replace "${CUSTOM_FONTS}" with tCustomFonts in tPlist
+   replace "${EXECUTABLE_NAME}" with textEncode(tExeName, "utf-8") in pPlist
+   replace "${BUNDLE_IDENTIFIER}" with textEncode(tBundleId, "utf-8") in pPlist
+   replace "${BUNDLE_VERSION}" with tBundleVersion in pPlist
+   replace "${BUNDLE_DISPLAY_NAME_SUPPORT}" with "<string>" & tDisplayName & "</string>" in pPlist
+   -- SN-2015-02-02: [[ Bug 14422 ]] We now have minimum version depending on the arch.
+   replace "${MINIMUM_OS_SUPPORT}" with "<string>" & tMinimumOSByArch["i386"] & "</string>" in pPlist
+   replace "${CUSTOM_FONTS}" with tCustomFonts in pPlist
    
    get empty
    repeat for each item tItem in tDeviceFamily
       put "<integer>" & tItem & "</integer>" after it
    end repeat
-   replace "${DEVICE_SUPPORT}" with it in tPlist
+   replace "${DEVICE_SUPPORT}" with it in pPlist
    
    get empty
    repeat for each key tKey in tRequiredCapabilities
@@ -1275,30 +1300,37 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
       put "<key>armv7</key><true/>" after it
    end if
    
-   replace "${DEVICE_CAPABILITY}" with it in tPlist
+   replace "${DEVICE_CAPABILITY}" with it in pPlist
    
-   replace "${PERSISTENT_WIFI}" with "<" & tPersistentWifi & "/>" in tPlist
-   replace "${APPLICATION_EXITS_ON_SUSPEND}" with "<" & tExitsOnSuspend & "/>" in tPlist
-   replace "${FILE_SHARING}" with "<" & tFileSharing & "/>" in tPlist
-   replace "${PRE_RENDERED_ICON}" with "<" & tPrerenderedIcon & "/>" in tPlist
+   replace "${PERSISTENT_WIFI}" with "<" & tPersistentWifi & "/>" in pPlist
+   replace "${APPLICATION_EXITS_ON_SUSPEND}" with "<" & tExitsOnSuspend & "/>" in pPlist
+   replace "${FILE_SHARING}" with "<" & tFileSharing & "/>" in pPlist
+   replace "${PRE_RENDERED_ICON}" with "<" & tPrerenderedIcon & "/>" in pPlist
    
    -- MW-2010-11-30: We need to make sure the first item in the list is the
    --     initial orientation as otherwise we get odd behavior (in the simulator
    --     at least!)
    -- MM-2011-09-28: Updated oreintation handling to generate new plist values.
    --   
-   replace "${IPHONE_INITIAL_ORIENTATION}" with "<string>UIInterfaceOrientation" & tIPhoneOrientation & "</string>" in tPlist
-   replace "${IPHONE_SUPPORTED_ORIENTATIONS}" with "<string>UIInterfaceOrientation" & tIPhoneOrientation & "</string>" in tPlist
-   replace "${IPAD_INITIAL_ORIENTATION}" with "<string>UIInterfaceOrientation" & item 1 of  tIPadOrientations & "</string>" in tPlist
+   replace "${IPHONE_INITIAL_ORIENTATION}" with "<string>UIInterfaceOrientation" & tIPhoneOrientation & "</string>" in pPlist
+   replace "${IPHONE_SUPPORTED_ORIENTATIONS}" with "<string>UIInterfaceOrientation" & tIPhoneOrientation & "</string>" in pPlist
+   replace "${IPAD_INITIAL_ORIENTATION}" with "<string>UIInterfaceOrientation" & item 1 of  tIPadOrientations & "</string>" in pPlist
    get empty
    repeat for each item tItem in tIPadOrientations
       put "<string>UIInterfaceOrientation" & tItem & "</string>" after it
    end repeat 
-   replace "${IPAD_SUPPORTED_ORIENTATIONS}" with it in tPlist
+   replace "${IPAD_SUPPORTED_ORIENTATIONS}" with it in pPlist
    
-   replace "${STATUS_BAR_STYLE}" with "<string>UIStatusBarStyle" & tStatusBarStyle & "</string>" in tPlist
-   replace "${STATUS_BAR_HIDDEN}" with "<" & tStatusBarHidden & "/>" in tPlist
-   replace "${IPAD_STATUS_BAR_HIDDEN}" with "<" & tIPadStatusBarHidden & "/>" in tPlist
+   replace "${STATUS_BAR_STYLE}" with "<string>UIStatusBarStyle" & tStatusBarStyle & "</string>" in pPlist
+   replace "${STATUS_BAR_HIDDEN}" with "<" & tStatusBarHidden & "/>" in pPlist
+   replace "${IPAD_STATUS_BAR_HIDDEN}" with "<" & tIPadStatusBarHidden & "/>" in pPlist
+   
+   -- PM-2015-02-17: [[ Bug 14482 ]] Added a new "solid" statusbarstyle
+   if tStatusBarSolid is empty then
+      put false into tStatusBarSolid
+   end if
+   replace "${STATUS_BAR_SOLID}" with "<" & tStatusBarSolid & "/>" in pPlist
+   
    
    -- MM-2013-10-08: [[ Bug 11257 ]] Make sure we include the new iOS 7 icons in the plist.
    get empty
@@ -1307,19 +1339,20 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
          put "<string>" & "Icon" & tItem & ".png</string>" after it
       end if
    end repeat
-   replace "${BUNDLE_ICONS}" with it in tPlist
+   replace "${BUNDLE_ICONS}" with it in pPlist
    
    -- MM-2014-09-30: [[ iOS8 Support ]] Added new iOS 7 style entries for the splash screens
    -- MM-2014-10-06: [[ Bug 13512 ]] Splash screen sizes are in points and should omit the @2x @3x suffix, iOS is smart enough to figure that out.
    local tSplashScreens   
    if 1 is among the items of tDeviceFamily then
       put "Default|Default|{320, 480}|Portrait" & return after tSplashScreens
-      put "Default-568h@2x|Default|{320, 568}|Portrait" & return after tSplashScreens      
-      put "Default-iPhone6|Default-iPhone6|{375, 667}|Portrait" & return after tSplashScreens
+      put "Default-568h@2x|Default-568h|{320, 568}|Portrait" & return after tSplashScreens      
+      -- PM-2015-03-19: [[ Bug 13969 ]] Use the correct name for iPhone 6/6+ splash screens
+      put "Default-667h@2x|Default-667h|{375, 667}|Portrait" & return after tSplashScreens
       if tIPhoneOrientation contains "Portrait" then
-         put "Default-iPhone6PlusPortrait|Default-iPhone6PlusPortrait|{414, 736}|Portrait" & return after tSplashScreens
+         put "Default-736h@3x|Default-736h|{414, 736}|Portrait" & return after tSplashScreens
       else
-         put "Default-iPhone6PlusLandscape|Default-iPhone6PlusLandscape|{414, 736}|Landscape" & return after tSplashScreens
+         put "Default-414h@3x|Default-414h|{414, 736}|Landscape" & return after tSplashScreens
       end if      
    end if   
    if 2 is among the items of tDeviceFamily then      
@@ -1349,30 +1382,39 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    end repeat
    set the itemDel to comma
    
-   replace "${SPLASHSCREENS}" with tSplashData in tPlist
+   replace "${SPLASHSCREENS}" with tSplashData in pPlist
    
    ----------
    -- MM-2012-02-12: Added support for push notificaitons and custom URL schemes
    
    if pSettings["ios,push notifications"] then
-      replace "${REMOTE_NOTIFICATION_TYPES}" with URL ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "RemoteNotificationSettings.plist")) in tPlist      
+      replace "${REMOTE_NOTIFICATION_TYPES}" with URL ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "RemoteNotificationSettings.plist")) in pPlist      
    else
-      replace "${REMOTE_NOTIFICATION_TYPES}" with empty in tPlist
+      replace "${REMOTE_NOTIFICATION_TYPES}" with empty in pPlist
    end if
+   
+   local tUsesLocalNotifications
+   if pSettings["ios,local notifications"] then
+      put "true" into tUsesLocalNotifications   
+   else
+      put "false" into tUsesLocalNotifications 
+   end if
+   
+   replace "${USES_LOCAL_NOTIFICATIONS}" with "<" & tUsesLocalNotifications & "/>" in pPlist
    
    if pSettings["ios,url name"] is not empty then
       get URL ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "URLSchemeSettings.plist"))
       replace "${BUNDLE_IDENTIFIER}" with tBundleId in it
       replace "${URL_NAME}" with pSettings["ios,url name"] in it
-      replace "${URL_TYPES}" with it in tPlist
+      replace "${URL_TYPES}" with it in pPlist
    else
-      replace "${URL_TYPES}" with empty in tPlist
+      replace "${URL_TYPES}" with empty in pPlist
    end if
    
    ----------
    -- PM-2014-10-20: [[ Bug 13590]] Set the location authorization type and description
-   
-   if tRequiredCapabilities["gps"] or tRequiredCapabilities["location-services"] then
+   -- PM-2014-10-20: [[ Bugs 13764 and 14290]] gps and location-services should work even if n/a is selected in standalone settings
+   if tRequiredCapabilities["gps"] is not false or tRequiredCapabilities["location-services"] is not false then
       local tLocationAuthType
       put pSettings["ios,location auth type"] into tLocationAuthType
       if tLocationAuthType is empty then
@@ -1386,11 +1428,11 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    else
       get empty
    end if
-   replace "${LOCATION_AUTH_TYPE}" with it in tPlist
+   replace "${LOCATION_AUTH_TYPE}" with it in pPlist
    
    ----------   
    
-   put tPlist into url ("binfile:" & pAppBundle & slash & "Info.plist")   
+   put pPlist into url ("binfile:" & pAppBundle & slash & "Info.plist")   
 end revCreateMobilePlist
 
 ################################################################################
@@ -1424,6 +1466,8 @@ private function revGetMobileProfileInfo pProfileId
       if tCert contains "Distribution" then
          put true into tIsDist
          get offset("iPhone Distribution:", tCert)
+      else if tCert Contains "iOS Development:" then
+         get offset("iOS Development:", tCert)
       else
          get offset("iPhone Developer:", tCert)
       end if
@@ -1461,7 +1505,13 @@ function revMobileRuntimeFolder pTarget, pVersion
    local tStub
    if pTarget is "Device" then
       if pVersion is empty then
-         put "8_1" into pVersion
+         // SN-2015-04-30: [[ Bug 15175 ]] Take the lastest SDK installed
+         // (can be 8.2 or 8.3 onwards on Yosemite).
+         local tVersion
+         if revIDEDeployIOSGetLatestSDKInstalled(tVersion) then
+            replace "." with "_" in tVersion
+            put tVersion into pVersion
+         end if
       end if
       put "Device-" & pVersion into tStub
    else if pTarget contains "4.2" then
@@ -1484,6 +1534,10 @@ function revMobileRuntimeFolder pTarget, pVersion
       put "Simulator-8_0" into tStub
    else if pTarget contains "8.1" then
       put "Simulator-8_1" into tStub
+   else if pTarget contains "8.2" then
+      put "Simulator-8_2" into tStub
+   else if pTarget contains "8.3" then
+      put "Simulator-8_3" into tStub
    end if
    
    local tUserPath, tOverridePath
@@ -1614,4 +1668,3 @@ private command symlinkRedirect pSource, pTarget
 end symlinkRedirect
 
 ################################################################################
-

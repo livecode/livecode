@@ -1,0 +1,51 @@
+Name: unicodeTooltip
+
+Type: property
+
+Syntax: set the unicodeTooltip of object to <unicodeString> 
+
+Summary: Specifies the explanatory text (UTF-16 string) that pops up in a small box when the user points to an object.
+
+Associations: field,button,graphic,scrollbar,player,image
+
+Introduced: 5.5
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the unicodeTooltip of button 1 to tUnicodeString
+
+Example:
+get the unicodeTooltip of button "myButton"
+
+Example:
+set the unicodeTooltip of button 1 to uniEncode("Click here")
+
+Parameters:
+unicodeString (string): A UTF-16 string.
+
+Value:
+The <unicodeTooltip> of an object is a UTF-16 string.
+By default, the <unicodeTooltip> property of newly created buttons, graphics and groups is set to empty.
+
+Description:
+Use the <unicodeTooltip> property to provide help that explains what a control is for. This property is a variant of the tooltip property and should be used when using unicode text for tooltips.
+
+A tooltip is a small box containing some text, which pops up on the screen when the mouse pointer hovers over a control. The text briefly explains the purpose and use of the control.
+
+The tooltip appears when the mouse pointer is within the control's rectangle and when the mouse has not moved for the time specified by the toolTipDelay property. If the mouse is moving, the tooltip does not appear.
+
+Tooltips should be short and should not attempt to explain the entire action of the control. They are best used as a short reminder or clue about what a control does.
+
+Tooltips appear only when the Browse tool is selected.
+
+Deprecated: In LiveCode 7.0 the language was changed to handle unicode transparently. This means that language functionality which previously aided unicode text manipulation is no longer required. This property should not be used in new code; simply set the tooltip as normal. Assigning values other than those returned from uniEncode to this property will not produce the desired results.The following are now equivalent:
+
+set the unicodeTooltip of button 1 to tText
+set the tooltip of button 1 to textDecode(tText, "UTF16")
+
+References: tooltip (property), encoding (property), label (property)
+
+Tags: ui

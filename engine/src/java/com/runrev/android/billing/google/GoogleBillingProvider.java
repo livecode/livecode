@@ -50,7 +50,7 @@ public class GoogleBillingProvider implements BillingProvider
         mHelper = new IabHelper(getActivity(), t_public_key);
         
         // TODO enable debug logging (for a production application, you should set this to false).
-        mHelper.enableDebugLogging(true);
+        mHelper.enableDebugLogging(false);
         
         // Start setup. This is asynchronous and the specified listener
         // will be called once setup completes.
@@ -90,7 +90,7 @@ public class GoogleBillingProvider implements BillingProvider
     {
         if (mHelper == null)
             return false;
-        
+	
         else
             return mHelper.is_billing_supported;
     }
@@ -396,7 +396,7 @@ public class GoogleBillingProvider implements BillingProvider
     
     void complain(String message)
     {
-        Log.e(TAG, "**** Error: " + message);
+        Log.d(TAG, "**** Error: " + message);
         alert("Error: " + message);
     }
     
@@ -426,7 +426,7 @@ public class GoogleBillingProvider implements BillingProvider
     
             if (result.isFailure())
             {
-                complain("Error purchasing: " + result);
+				// PM-2015-01-27: [[ Bug 14450 ]] [Removed code] No need to display an alert with the error message, since this information is also contained in the purchaseStateUpdate message
                 mPurchaseObserver.onPurchaseStateChanged(pendingPurchaseSku, mapResponseCode(result.getResponse()));
                 pendingPurchaseSku = "";
                 return;
@@ -496,14 +496,26 @@ public class GoogleBillingProvider implements BillingProvider
 
             Log.d(TAG, "Initial inventory query finished; enabling main UI.");
 
+			// PM-2015-02-05: [[ Bug 14402 ]] Handle case when calling mobileStoreRestorePurchases but there are no previous purchases to restore
+			boolean t_did_restore;
+			t_did_restore = false;
+
             List<Purchase> purchaseList = inventory.getallpurchases();
+
             for (Purchase p : purchaseList)
             {
                 addPurchaseToLocalInventory(p);
 				ownedItems.add(p.getSku());
 				// onPurchaseStateChanged to be called with state = 5 (restored)
 				mPurchaseObserver.onPurchaseStateChanged(p.getSku(), 5);
+				t_did_restore = true;
             }
+
+			if(!t_did_restore)
+			{
+				// PM-2015-02-12: [[ Bug 14402 ]] When there are no previous purchases to restore, send a purchaseStateUpdate msg with state=restored and productID=""
+				mPurchaseObserver.onPurchaseStateChanged("",5);
+			}
         }
     };
 

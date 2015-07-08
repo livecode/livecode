@@ -1,0 +1,32 @@
+Name: documents folder
+
+Type: property
+
+Syntax: the documents folder
+
+Summary: Returns the path to the current user's documents folder.
+
+Introduced: 5.0.2
+
+OS: mac,windows,ios,android
+
+Platforms: desktop,mobile
+
+Example:
+get the documents folder
+
+Example:
+put the documents folder & "/music" into tUserMusicFolder
+
+Description:
+Returns the full path to the current user's documents folder.
+
+On Mac OS X and Windows the documents folder property returns the path to the user's documents folder.
+
+On iOS the documents folder property returns the folder in which the application should store any document data (this folder is backed up by iTunes on sync). 
+
+On Android the documents folder property returns the path to a folder that can be used for per-application data files.
+
+This property is read only and is equivalent to the specialFolderPath("documents") function.
+
+References: engine folder (property), desktop folder (property), home folder (property), temporary folder (property), specialFolderPath (function)

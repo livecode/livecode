@@ -1,0 +1,21 @@
+/* Format string such as About %@ */
+"appMenu.about" = "אודות ״%@״";
+
+/* Format string such as Hide %@ */
+"appMenu.hide" = "הסתר את ״%@״";
+
+/* Hide Others */
+"appMenu.hideOthers" = "הסתר אחרים";
+
+/* Preferences */
+"appMenu.preferences" = "העדפות…";
+
+/* Format string such as Quit %@ */
+"appMenu.quit" = "סיים את ״%@״";
+
+/* Services */
+"appMenu.services" = "שירותים";
+
+/* Show All */
+"appMenu.showAll" = "הצג הכל";
+

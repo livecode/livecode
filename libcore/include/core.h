@@ -26,6 +26,10 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifndef _WIN32
+#include <stdint.h>
+#else
+
 typedef unsigned char uint8_t;
 typedef signed char int8_t;
 typedef unsigned short uint16_t;
@@ -48,6 +52,8 @@ typedef signed int int32_t;
 	#else
 		typedef long long int int64_t;
 	#endif
+#endif
+
 #endif
 
 typedef uint32_t uindex_t;
@@ -473,44 +479,6 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-struct MCBinaryEncoder;
-
-bool MCBinaryEncoderCreate(MCBinaryEncoder*& r_encoder);
-void MCBinaryEncoderDestroy(MCBinaryEncoder *encoder);
-
-void MCBinaryEncoderBorrow(MCBinaryEncoder *encoder, void*& r_buffer, uint32_t& r_buffer_length);
-
-bool MCBinaryEncoderWriteBytes(MCBinaryEncoder *encoder, const void *data, uint32_t length);
-bool MCBinaryEncoderWriteInt32(MCBinaryEncoder *encoder, int32_t p_value);
-bool MCBinaryEncoderWriteUInt32(MCBinaryEncoder *encoder, uint32_t p_value);
-bool MCBinaryEncoderWriteCBlob(MCBinaryEncoder *encoder, const void *data, uint32_t length);
-bool MCBinaryEncoderWriteCString(MCBinaryEncoder *encoder, const char *cstring);
-
-#ifdef _MACOSX
-bool MCBinaryEncoderWriteCFData(MCBinaryEncoder *encoder, CFDataRef cfdata);
-bool MCBinaryEncoderWriteCFString(MCBinaryEncoder *encoder, CFStringRef cfstring);
-#endif
-
-/////////
-
-struct MCBinaryDecoder;
-
-bool MCBinaryDecoderCreate(const void *p_buffer, uint32_t p_length, MCBinaryDecoder*& r_decoder);
-void MCBinaryDecoderDestroy(MCBinaryDecoder *p_decoder);
-
-bool MCBinaryDecoderReadBytes(MCBinaryDecoder *decoder, void *data, uint32_t count);
-bool MCBinaryDecoderReadInt32(MCBinaryDecoder *decoder, int32_t& r_value);
-bool MCBinaryDecoderReadUInt32(MCBinaryDecoder *decoder, uint32_t& r_value);
-bool MCBinaryDecoderReadCBlob(MCBinaryDecoder *decoder, void*& r_data, uint32_t& r_length);
-bool MCBinaryDecoderReadCString(MCBinaryDecoder *self, char *&r_cstring);
-
-#ifdef _MACOSX
-bool MCBinaryDecoderReadCFData(MCBinaryDecoder *decoder, CFDataRef& r_value);
-bool MCBinaryDecoderReadCFString(MCBinaryDecoder *decoder, CFStringRef& r_value);
-#endif
-
-////////////////////////////////////////////////////////////////////////////////
-
 inline uint32_t MCMin(uint32_t a, uint32_t b) { return a < b ? a : b; }
 inline uint32_t MCMax(uint32_t a, uint32_t b) { return a > b ? a : b; }
 inline int32_t MCMin(int32_t a, int32_t b) { return a < b ? a : b; }
@@ -523,16 +491,19 @@ inline double MCMin(double a, double b) { return a < b ? a : b; }
 inline double MCMax(double a, double b) { return a > b ? a : b; }
 inline float MCMin(float a, float b) { return a < b ? a : b; }
 inline float MCMax(float a, float b) { return a > b ? a : b; }
+
 inline uint32_t MCAbs(int32_t a) { return a < 0 ? -a : a; }
 inline uint64_t MCAbs(int64_t a) { return a < 0 ? -a : a; }
 inline float MCAbs(float a) { return fabsf(a); }
 inline double MCAbs(double a) { return fabs(a); }
 inline compare_t MCSgn(int32_t a) { return a < 0 ? -1 : (a > 0 ? 1 : 0); }
 inline compare_t MCSgn(int64_t a) { return a < 0 ? -1 : (a > 0 ? 1 : 0); }
-inline compare_t MCCompare(int32_t a, int32_t b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(uint32_t a, uint32_t b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(int64_t a, int64_t b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(uint64_t a, uint64_t b) { return a < b ? -1 : (a > b ? 1 : 0); }
+inline compare_t MCCompare(int a, int b) { return a < b ? -1 : (a > b ? 1 : 0); }
+inline compare_t MCCompare(unsigned int a, unsigned int b) { return a < b ? -1 : (a > b ? 1 : 0); }
+inline compare_t MCCompare(long a, long b) { return a < b ? -1 : (a > b ? 1 : 0); }
+inline compare_t MCCompare(unsigned long a, unsigned long b) { return a < b ? -1 : (a > b ? 1 : 0); }
+inline compare_t MCCompare(long long a, long long b) { return a < b ? -1 : (a > b ? 1 : 0); }
+inline compare_t MCCompare(unsigned long long a, unsigned long long b) { return a < b ? -1 : (a > b ? 1 : 0); }
 
 inline bool MCIsPowerOfTwo(uint32_t x) { return (x & (x - 1)) == 0; }
 

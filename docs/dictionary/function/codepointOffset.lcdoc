@@ -1,0 +1,34 @@
+Name: codepointOffset
+
+Type: function
+
+Syntax: codepointOffset(<stringToFind>, <stringToSearch> [, <codepointsToSkip>])
+
+Summary: Returns the number of codepoints between the beginning of a value and an occurrence of a specified string.
+
+Introduced: 7.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+codepointOffset(tCodePoint,"This is the string to search")
+
+Parameters:
+stringToFind (string): 
+stringToSearch (string): 
+codepointsToSkip: The codepointsToSkip is a non-negative integer. If you don't specify how many codepointsToSkip, the codepointOffset function does not skip any codepoints.
+
+Returns: The <codepointOffset> function returns a non-negative integer.
+
+Description:
+Use the <codepointOffset> function to find which codepoint a string occurs in.
+
+The value returned by the <codepointOffset> function is the number of the codepoint where the <stringToFind> appears in <stringToSearch>. If the <stringToFind> is not in <stringToSearch>, the <codepointOffset> function returns zero. If the <stringToFind> is more than one codepoint, the <codepointOffset> function always returns zero, even if the <stringToFind> appears in the <stringToSearch>.
+
+If you specify how many <codepointsToSkip>, the <codepointOffset> function skips the specified number of sentences in the <stringToSearch>. The value returned is relative to this starting point instead of the beginning of the <stringToSearch>.
+
+References: wholeMatches (property), wordOffset (function), paragraphOffset (function), tokenOffset (function), sentenceOffset (function), byteOffset (function), truewordOffset (function), codeunitOffset (function), offset (function), codepoint (keyword)
+
+Tags: text processing

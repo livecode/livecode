@@ -1,0 +1,1 @@
+# LiveCode server unable to find handlers in script only stack

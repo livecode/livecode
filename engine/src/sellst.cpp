@@ -281,7 +281,7 @@ MCControl *MCSellist::clone(MCObject *target)
 Exec_stat MCSellist::group(uint2 line, uint2 pos)
 {
 	MCresult->clear(False);
-	if (objects != NULL && objects->ref->gettype() <= CT_FIELD
+	if (objects != NULL && objects->ref->gettype() <= CT_LAST_CONTROL
 	        && objects->ref->gettype() >= CT_GROUP)
 	{
 		MCObject *parent = objects->ref->getparent();

@@ -1,0 +1,34 @@
+Name: scrollbarLineInc
+
+Type: message
+
+Syntax: scrollbarLineInc <newPosition> 
+
+Summary: Sent to a <scrollbar> when the user clicks the increase arrow, scrolling forward one <line>.
+
+Associations: scrollbar
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+on scrollbarLineInc theCard -- use a scrollbar to navigate through cards
+  go card theCard -- corresponding to the new postion
+end scrollbarLineInc
+
+Parameters:
+newPosition: The new position of the scrollbar thumb.
+
+Description:
+Handle the <scrollbarLineInc> <message> if you want to respond to the use of the bottom or right scrollbar arrow.
+
+Dragging the scrollbar thumb does not send a <scrollbarLineInc> <message>.
+
+If the <scrollbarLineInc> <message> is not <handle|handled>, a <scrollbarDrag> <message> is sent in addition.
+
+References: lineIncrement (property), endValue (property), repeatRate (property), startValue (property), thumbPosition (property), scrollbar (keyword), line (keyword), scrollbarDrag (message), scrollbarPageInc (message), mouseDown (message), scrollbarLineDec (message), scrollbarEnd (message), handle (glossary), message (glossary)
+
+Tags: ui

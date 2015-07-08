@@ -114,7 +114,8 @@ static bool label_to_name(CFStringRef p_label, MCNameRef &r_name)
 	{
 		if (CFStringCompare(s_label_map[i].label, p_label, 0) == kCFCompareEqualTo)
 		{
-			r_name = *s_label_map[i].name;
+            // SN-201-04-28: [[ Bug 15124 ]] The value must be retained.
+			r_name = MCValueRetain(*s_label_map[i].name);
 			return true;
 		}
 	}
@@ -568,10 +569,14 @@ bool MCCreatePerson(MCArrayRef p_contact, ABRecordRef &r_person)
 		{
 			if (!s_property_map[i].has_labels)
 			{
-				if (MCStringGetLength((MCStringRef)t_value) > 0)
+                // PM-2015-05-25: [[ Bug 15403 ]] Convert the valueref to a stringref
+                MCExecContext ctxt(nil,nil,nil);
+                MCAutoStringRef t_value_string;
+                ctxt.ConvertToString(t_value, &t_value_string);
+				if (MCStringGetLength(*t_value_string) > 0)
 				{
 					t_success = ABRecordSetValue(t_person, *s_property_map[i].property,
-									 [NSString stringWithMCStringRef: (MCStringRef)t_value],
+									 [NSString stringWithMCStringRef: *t_value_string],
 									 nil);
 				}
 			}
@@ -590,18 +595,20 @@ bool MCCreatePerson(MCArrayRef p_contact, ABRecordRef &r_person)
 						{
 							uindex_t t_index = 1;
 							MCValueRef t_index_value;
-							
-							while ((t_success = MCArrayFetchValueAtIndex((MCArrayRef)t_element, t_index++, t_index_value)))
+                            
+                            // PM-2015-05-21: [[ Bug 14792 ]] t_success should not become false if MCArrayFetchValueAtIndex fails
+							while ((MCArrayFetchValueAtIndex((MCArrayRef)t_element, t_index++, t_index_value)))
 							{
-								if (t_index_value == nil)
-									break;
-
 								if (!s_property_map[i].has_keys)
 								{
-									if (MCStringGetLength((MCStringRef)t_index_value) > 0)
+                                    // PM-2015-05-25: [[ Bug 15403 ]] Convert the valueref to a stringref
+                                    MCExecContext ctxt(nil,nil,nil);
+                                    MCAutoStringRef t_index_value_string;
+                                    /* UNCHECKED */ ctxt.ConvertToString(t_index_value, &t_index_value_string);
+									if (MCStringGetLength(*t_index_value_string) > 0)
 									{
 										t_success = ABMultiValueAddValueAndLabel(t_multi_value,
-																				 [NSString stringWithMCStringRef: (MCStringRef)t_value],
+																				 [NSString stringWithMCStringRef: *t_index_value_string],
 																				 s_label_map[j].label,
 																				 nil);
 									}
@@ -795,7 +802,8 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 		}
 	}
 
-	if (t_success)
+    // AL-2015-05-14: [[ Bug 15370 ]] Crash when matching contact not found
+    if (t_success && t_chosen != nil)
 		t_success = MCStringCreateWithCFString((CFStringRef)t_chosen, r_chosen);
 	
     if (t_people != nil)
@@ -940,6 +948,16 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 
 -(bool)showPickContact: (int32_t&) r_chosen
 {
+#ifdef __IPHONE_8_0
+    // PM-2014-11-10: [[ Bug 13979 ]] On iOS 8, we need to request authorization to be able to get a record identifier
+    // The ABAddressBookRef created with ABAddressBookCreateWithOptions will initially not have access to contact data. The app must then call ABAddressBookRequestAccessWithCompletion to request this access.
+    if (MCmajorosversion >= 800)
+    {
+        ABAddressBookRef t_address_book = ABAddressBookCreateWithOptions(NULL, NULL);
+        requestAuthorization(t_address_book);
+    }
+#endif
+
 	MCIPhoneCallSelectorOnMainFiber(self, @selector(doShowPickContact));
 	
     while (m_running)
@@ -1040,7 +1058,23 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 	t_person_id = [personId intValue];
 	
     ABAddressBookRef t_address_book = nil;
-	m_success = nil != (t_address_book = ABAddressBookCreate());
+    
+    // ABAddressBookCreate is deprecated in iOS 6. Use ABAddressBookCreateWithOptions instead
+    if (MCmajorosversion < 600)
+    {
+        // Fetch the address book
+        t_address_book = ABAddressBookCreate();
+    }
+    else
+    {
+#ifdef __IPHONE_6_0
+        // The ABAddressBookRef created with ABAddressBookCreateWithOptions will initially not have access to contact data. The app must then call ABAddressBookRequestAccessWithCompletion to request this access.
+        t_address_book = ABAddressBookCreateWithOptions(NULL, NULL);
+        requestAuthorization(t_address_book);
+#endif
+    }
+    
+    m_success = t_address_book != nil;
 
     ABRecordRef t_person = ABAddressBookGetPersonWithRecordID (t_address_book, t_person_id);
 	if (t_person != nil)
@@ -1057,6 +1091,10 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 			m_success = nil != (m_navigation = [[UINavigationController alloc] initWithRootViewController: m_view_contact]);
 		}
 		
+        // PM-2014-12-10: [[ Bug 13168 ]] Add a Cancel button to allow dismissing mobileShowContact
+        if (m_success)
+            m_success = nil != (m_view_contact.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self action:@selector(handleGetContactCancel)]);
+        
 		if (m_success)
 		{
 			[m_navigation setToolbarHidden: NO];
@@ -1101,6 +1139,13 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 {
 	m_running = false;
 }
+
+// PM-2014-12-10: [[ Bug 13168 ]] If Cancel button is pressed return to the app
+-(void) handleGetContactCancel
+{
+    m_running = false;
+}
+
 
 // Does not allow users to perform default actions such as dialing a phone number, when they select a contact property.
 - (BOOL)personViewController:(ABPersonViewController *)personViewController shouldPerformDefaultActionForPerson:(ABRecordRef)person 
@@ -1264,6 +1309,11 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 		
 		if (m_success)
 			m_success = nil != (t_done_button = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(handleUpdateContactDone)]);
+        
+        // PM-2014-12-10: [[ Bug 13169 ]] Add a Cancel button to allow dismissing mobileUpdateContact
+        if (m_success)
+            m_success = nil != (m_update_contact.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self action:@selector(handleUpdateContactCancel)]);
+        
 		if (m_success)
 			m_success = nil != (t_items = [NSArray arrayWithObject: t_done_button]);
 		
@@ -1299,6 +1349,13 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 {
 	m_running = false;
 }
+
+// PM-2014-12-10: [[ Bug 13169 ]] If Cancel button is pressed return to the app
+-(void) handleUpdateContactCancel
+{
+    m_running = false;
+}
+
 
 // Dismisses the picker when users are done creating a contact or adding the displayed person properties to an existing contact. 
 - (void)unknownPersonViewController:(ABUnknownPersonViewController *)unknownPersonView didResolveToPerson:(ABRecordRef)person

@@ -380,23 +380,27 @@ void MCImage::compute_gravity(MCRectangle &trect, int2 &xorigin, int2 &yorigin)
 	if (rect.width != t_width)
 	{
 		if (state & CS_SIZEL)
+		{
 			if (rect.width > t_width)
 				trect.x = rect.x + rect.width - t_width;
 			else
 				xorigin = t_width - rect.width;
+		}
 		trect.width = MCU_min(t_width, rect.width);
 	}
 	if (rect.height != t_height)
 	{
 		if (state & CS_SIZET)
+		{
 			if (rect.height > t_height)
 				trect.y = rect.y + rect.height - t_height;
 			else
 				yorigin = t_height - rect.height;
+		}
 		trect.height = MCU_min(t_height, rect.height);
 	}
 
-	MCLog("compute gravity: rect(%d,%d,%d,%d) x(%d) y(%d)", trect.x, trect.y, trect.width, trect.height, xorigin, yorigin);
+    //MCLog("compute gravity: rect(%d,%d,%d,%d) x(%d) y(%d)", trect.x, trect.y, trect.width, trect.height, xorigin, yorigin);
 }
 
 void MCImage::compute_offset(MCRectangle &p_rect, int16_t &r_xoffset, int16_t &r_yoffset)
@@ -523,17 +527,17 @@ void MCImage::rotate_transform(int32_t p_angle)
 		MCCalculateRotatedGeometry(t_src_width, t_src_height, p_angle, t_trans_width, t_trans_height);
 
 		MCGAffineTransform t_transform = MCGAffineTransformMakeTranslation(-(int32_t)t_src_width / 2.0, -(int32_t)t_src_height / 2.0);
-		t_transform = MCGAffineTransformRotate(t_transform, -p_angle);
+		t_transform = MCGAffineTransformPreRotate(t_transform, -p_angle);
 		
 		// MW-2013-10-25: [[ Bug 11300 ]] If needed, flip the transform appropriately.
 		if (m_flip_x || m_flip_y)
-			t_transform = MCGAffineTransformScale(t_transform, m_flip_x ? -1.0f : 1.0f, m_flip_y ? -1.0f : 1.0f);
+			t_transform = MCGAffineTransformPreScale(t_transform, m_flip_x ? -1.0f : 1.0f, m_flip_y ? -1.0f : 1.0f);
 		
-		t_transform = MCGAffineTransformTranslate(t_transform, t_trans_width / 2.0, t_trans_height / 2.0);
+		t_transform = MCGAffineTransformPreTranslate(t_transform, t_trans_width / 2.0, t_trans_height / 2.0);
 		
 		if (getflag(F_LOCK_LOCATION))
 		{
-			t_transform = MCGAffineTransformScale(t_transform, rect.width / (MCGFloat)t_trans_width, rect.height / (MCGFloat)t_trans_height);
+			t_transform = MCGAffineTransformPreScale(t_transform, rect.width / (MCGFloat)t_trans_width, rect.height / (MCGFloat)t_trans_height);
 			t_trans_width = rect.width;
 			t_trans_height = rect.height;
 		}
@@ -572,13 +576,13 @@ void MCImage::resize_transform()
 		if (m_flip_x || m_flip_y)
 		{
 			t_transform = MCGAffineTransformMakeTranslation(-(signed)t_src_width / 2.0f, -(signed)t_src_height / 2.0f);
-			t_transform = MCGAffineTransformScale(t_transform, m_flip_x ? -1.0f : 1.0f, m_flip_y ? -1.0f : 1.0f);
-			t_transform = MCGAffineTransformTranslate(t_transform, t_src_width / 2.0, t_src_height / 2.0);
+			t_transform = MCGAffineTransformPreScale(t_transform, m_flip_x ? -1.0f : 1.0f, m_flip_y ? -1.0f : 1.0f);
+			t_transform = MCGAffineTransformPreTranslate(t_transform, t_src_width / 2.0, t_src_height / 2.0);
 		}
 		else
 			t_transform = MCGAffineTransformMakeIdentity();
 		
-		m_transform = MCGAffineTransformScale(t_transform, rect.width / (MCGFloat)t_src_width, rect.height / (MCGFloat)t_src_height);
+		m_transform = MCGAffineTransformPreScale(t_transform, rect.width / (MCGFloat)t_src_width, rect.height / (MCGFloat)t_src_height);
 	}
 }
 
@@ -595,8 +599,8 @@ void MCImage::flip_transform()
 		m_has_transform = true;
 		
 		m_transform = MCGAffineTransformMakeTranslation(-(signed)t_src_width / 2.0, -(signed)t_src_height / 2.0);
-		m_transform = MCGAffineTransformScale(m_transform, m_flip_x ? -1.0f : 1.0f, m_flip_y ? -1.0f : 1.0f);
-		m_transform = MCGAffineTransformTranslate(m_transform, t_src_width / 2.0, t_src_height / 2.0);
+		m_transform = MCGAffineTransformPreScale(m_transform, m_flip_x ? -1.0f : 1.0f, m_flip_y ? -1.0f : 1.0f);
+		m_transform = MCGAffineTransformPreTranslate(m_transform, t_src_width / 2.0, t_src_height / 2.0);
 	}	
 }
 
@@ -734,6 +738,9 @@ MCCursorRef MCImage::createcursor()
 	{
 		MCColor t_palette[2];
 		MCColor *t_colors;
+        // SN-2015-06-02: [[ CID 90611 ]] Initialise t_colors
+        t_colors = NULL;
+        
 		if (!MCcursorbwonly)
 			MCImageGenerateOptimalPaletteWithWeightedPixels(t_cursor_bitmap, 2, t_colors);
 		else
@@ -1236,7 +1243,7 @@ bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCDataRef &r_data)
 	MCImageBitmap *t_bitmap = nil;
 	IO_handle t_stream = nil;
 	
-	char *t_bytes = nil;
+	void *t_bytes = nil;
 	uindex_t t_byte_count = 0;
 	
 	t_success = nil != (t_stream = MCS_fakeopenwrite());
@@ -1244,7 +1251,7 @@ bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCDataRef &r_data)
 	if (t_success)
 		t_success = MCImageEncodePNG(p_bitmap, nil, t_stream, t_byte_count);
 	
-	if (t_stream != nil && IO_NORMAL != MCS_closetakingbuffer(t_stream, reinterpret_cast<void*&>(t_bytes), reinterpret_cast<size_t&>(t_byte_count)))
+	if (t_stream != nil && IO_NORMAL != MCS_closetakingbuffer_uint32(t_stream, t_bytes, t_byte_count))
 		t_success = false;
 	
 	if (t_success)

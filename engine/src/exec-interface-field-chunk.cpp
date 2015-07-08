@@ -190,7 +190,8 @@ struct PodFieldPropType<MCInterfaceNamedColor>
     {
         if (a . name != nil && b . name != nil)
             return MCStringIsEqualTo(a . name, b . name, kMCCompareExact);
-        else if (a . name == nil || b . name == nil)
+        // SN-2014-11-03: [[ Bug 13925 ]] It's false if one has a name, and not the other.
+        else if (a . name != nil || b . name != nil)
             return false;
         else
             return (a . color . blue == b . color . blue
@@ -784,48 +785,71 @@ template<typename T> void GetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCFie
         T::output(t_default_value, r_value);
 }
 
-template<typename T> void SetParagraphPropOfCharChunk(MCExecContext& ctxt, MCField *p_field, bool all, uint32_t p_part_id, findex_t si, findex_t ei, void (MCParagraph::*p_setter)(MCExecContext&, typename T::arg_type), typename T::arg_type p_value)
+
+// SN-2014-11-04: [[ Bug 13934 ]] Laying out a field refactored
+struct MCFieldLayoutSettings
 {
-    // AL-2014-09-01: [[ Bug 13316 ]] Setting of line chunk props should cycle through paragraphs
-    MCParagraph *t_paragraph;
-    t_paragraph = p_field -> resolveparagraphs(p_part_id);
-    
+    uint32_t savex;
+    uint32_t savey;
+    findex_t ssi;
+    findex_t sei;
+    MCRectangle drect;
+    bool redraw_field;
+
+    bool need_layout;
+    bool all;
+    MCField* field;
+};
+
+typedef struct MCFieldLayoutSettings MCFieldLayoutSettings;
+
+// SN-2014-11-04: [[ Bug 13934 ]] Stores all the needed settings and data and return
+//  the first paragraph to be used.
+//  This should be called before any change is brought to the field.
+MCParagraph* PrepareLayoutSettings(bool all, MCField *p_field, uint32_t p_part_id, findex_t &si, findex_t &ei, MCFieldLayoutSettings &r_layout_settings)
+{
+    MCFieldLayoutSettings t_layout_settings;
+
+    t_layout_settings . savex = p_field -> textx;
+    t_layout_settings . savey = p_field -> texty;
+    t_layout_settings . ssi = 0;
+    t_layout_settings . sei = 0;
+    t_layout_settings . drect = p_field -> getrect();
+    t_layout_settings . redraw_field = false;
+    t_layout_settings . all = all;
+    t_layout_settings . field = p_field;
+
+    MCParagraph *t_top_paragraph;
+
+    t_top_paragraph = p_field -> resolveparagraphs(p_part_id);
+
+    p_field -> verifyindex(t_top_paragraph, si, false);
+    p_field -> verifyindex(t_top_paragraph, ei, true);
+
     // MW-2013-03-20: [[ Bug 10764 ]] We only need to layout if the paragraphs
     //   are attached to the current card.
-    bool t_need_layout;
     if (p_field -> getopened())
-        t_need_layout = t_paragraph == p_field -> getparagraphs();
+        t_layout_settings . need_layout = t_top_paragraph == p_field -> getparagraphs();
     else
-        t_need_layout = false;
-    
-    p_field -> verifyindex(t_paragraph, si, false);
-    p_field -> verifyindex(t_paragraph, ei, true);
-    
-    findex_t t_line_index;
-    MCParagraph *sptr = p_field -> indextoparagraph(t_paragraph, si, ei, &t_line_index);
-    
-    MCRectangle drect = p_field -> getrect();
-    findex_t ssi, sei;
-    p_field -> selectedmark(false, ssi, sei, false);
-    int4 savex = p_field -> textx;
-    int4 savey = p_field -> texty;
-    
-    bool t_redraw_field;
-    t_redraw_field = false;
-    
+        t_layout_settings . need_layout = false;
+
+    // Get the first paragraph having the indices.
+    MCParagraph* t_pgptr;
+    t_pgptr = p_field -> indextoparagraph(t_top_paragraph, si, ei);
+
     // MW-2008-07-09: [[ Bug 6353 ]] Improvements in 2.9 meant that the field was
     //   more careful about not doing anything if it wasn't the MCactivefield.
     //   However, the unselection/reselection code here breaks text input if the
     //   active field sets text properties of another field. Therefore we only
     //   get and then reset the selection if we are the active field.
-    if (t_need_layout)
+    if (t_layout_settings . need_layout)
     {
         if (all)
         {
             // Same as this?
             if (MCactivefield == p_field)
             {
-                p_field -> selectedmark(False, ssi, sei, False);
+                p_field -> selectedmark(False, t_layout_settings . ssi, t_layout_settings . sei, False);
                 p_field -> unselect(False, True);
             }
             p_field -> curparagraph = p_field -> focusedparagraph = p_field -> paragraphs;
@@ -838,11 +862,70 @@ template<typename T> void SetParagraphPropOfCharChunk(MCExecContext& ctxt, MCFie
         {
             // MW-2012-02-27: [[ Bug ]] Update rect slightly off, shows itself when
             //   setting the box style of the top line of a field.
-            drect = p_field -> getfrect();
-            drect.y = p_field -> getcontenty() + p_field -> paragraphtoy(t_paragraph);
-            drect.height = 0;
+            t_layout_settings . drect = p_field -> getfrect();
+            t_layout_settings . drect.y = p_field -> getcontenty() + p_field -> paragraphtoy(t_pgptr);
+            t_layout_settings . drect.height = 0;
         }
     }
+
+    r_layout_settings = t_layout_settings;
+    return t_pgptr;
+}
+
+// SN-2014-11-04: [[ Bug 13934 ]] Update the area of the field to redraw,
+//  depending on the paragraph settings.
+// SN-2014-12-18: [[ Bug 14161 ]] Add a parameter to force the re-layout of a paragraph
+void LayoutParagraph(MCParagraph* p_paragraph, MCFieldLayoutSettings &x_layout_settings, bool p_force)
+{
+    // AL-2014-07-14: [[ Bug 12789 ]] Defragging can cause paragraph to need layout, do make sure we relayout
+    //  if it did. Otherwise setting properties that avoid relayout can cause crashes.
+    // SN-2014-12-18: [[ Bug 14161 ]] The relayout can be forced
+    if (p_force || (p_paragraph -> getneedslayout() && !x_layout_settings . all && p_paragraph->getopened()))
+    {
+        // MW-2012-01-25: [[ ParaStyles ]] Ask the paragraph to reflow itself.
+        // AL-2014-09-22: [[ Bug 11817 ]] If we changed the amount of lines of this paragraph
+        //  then redraw the whole field.
+        if (p_paragraph -> layout(x_layout_settings . all, true))
+            x_layout_settings . redraw_field = true;
+        else
+            x_layout_settings.drect.height += p_paragraph->getheight(x_layout_settings . field -> fixedheight);
+    }
+}
+
+// SN-2014-11-04: [[ Bug 13934 ]] Called once the field has been updated,
+//  to ask for the appropriate area of the field to be redrawn.
+void FinishLayout(MCFieldLayoutSettings &x_layout_settings)
+{
+    if (x_layout_settings . need_layout)
+    {
+        if (x_layout_settings . all)
+        {
+            x_layout_settings . field -> Relayout(false, x_layout_settings .savex - x_layout_settings . field -> textx, x_layout_settings . savey - x_layout_settings . field -> texty);
+            if (MCactivefield == x_layout_settings . field)
+                x_layout_settings . field -> seltext(x_layout_settings . ssi, x_layout_settings . sei, False);
+        }
+        else
+        {
+            x_layout_settings . field -> removecursor();
+            // AL-2014-09-22: [[ Bug 11817 ]] If we are redrawing, then the dirty rect is the whole rect.
+            if (x_layout_settings . redraw_field)
+                x_layout_settings . drect = x_layout_settings . field -> getrect();
+        }
+        // MW-2011-08-18: [[ Layers ]] Invalidate the dirty rect.
+        x_layout_settings . field -> layer_redrawrect(x_layout_settings . drect);
+        if (!x_layout_settings . all)
+            x_layout_settings . field -> replacecursor(False, True);
+    }
+}
+
+template<typename T> void SetParagraphPropOfCharChunk(MCExecContext& ctxt, MCField *p_field, bool all, uint32_t p_part_id, findex_t si, findex_t ei, void (MCParagraph::*p_setter)(MCExecContext&, typename T::arg_type), typename T::arg_type p_value)
+{
+    // AL-2014-09-01: [[ Bug 13316 ]] Setting of line chunk props should cycle through paragraphs
+    // SN-2014-11-04: [[ Bug 13934 ]] Laying out a field refactored.
+    MCFieldLayoutSettings t_layout_settings;
+    MCParagraph *sptr;
+
+    sptr = PrepareLayoutSettings(all, p_field, p_part_id, si, ei, t_layout_settings);
     
     do
     {
@@ -855,46 +938,20 @@ template<typename T> void SetParagraphPropOfCharChunk(MCExecContext& ctxt, MCFie
             return;
         
         sptr -> cleanattrs();
-        
-        // SN-2014-06-02 [[ Bug 12562 ]] Changing the back color of a line which contains a tab makes LC crash
-        // Make sure that the segments and the lines are recomputed in case defrag() changed them.
-        if (sptr -> getneedslayout() && !all && sptr->getopened())
-        {
-            // MW-2012-01-25: [[ ParaStyles ]] Ask the paragraph to reflow itself.
-            sptr -> layout(false);
-            drect.height += sptr->getheight(p_field -> fixedheight);
-        }
+
+        // SN-2014-11-04: [[ Bug 13934 ]] Laying out a field refactored.
+        // SN-2014-12-18: [[ Bug 14161 ]] Forces the re-layout of this paragraph which has been changed
+        // SN-2015-01-22: [[ Bug 14428 ]] Ensure that the field is open, before forcing a re-layout
+        //  (MCParagraph::lines is NULL otherwise, and crashes in MCParagraph::countlines).
+        LayoutParagraph(sptr, t_layout_settings, sptr -> getopened());
         
         ei -= sptr->gettextlengthcr();
         sptr = sptr->next();
     }
     while(ei > 0);
 
-    if (t_need_layout)
-    {        
-        if (all)
-        {
-            // AL-2014-09-24: [[ Bug 13529 ] Force recompute if 'all' is true
-            p_field -> do_recompute(true);
-            p_field -> hscroll(savex - p_field -> textx, False);
-            p_field -> vscroll(savey - p_field -> texty, False);
-            p_field -> resetscrollbars(True);
-            if (MCactivefield == p_field)
-                p_field -> seltext(ssi, sei, False);
-        }
-        else
-        {
-            p_field -> removecursor();
-            // AL-2014-09-22: [[ Bug 11817 ]] If we are redrawing, then the dirty rect is the whole rect.
-            if (t_redraw_field)
-                drect = p_field -> getrect();
-        }
-        
-        // MW-2011-08-18: [[ Layers ]] Invalidate the dirty rect.
-        p_field -> layer_redrawrect(drect);
-        if (!all)
-            p_field -> replacecursor(False, True);
-    }
+    // SN-2014-11-04: [[ Bug 13934 ]] Laying out a field refactored.
+    FinishLayout(t_layout_settings);
 }
 
 // SN-28-11-13: Added specific function for the IDE which needs
@@ -907,11 +964,11 @@ template<typename T> void SetCharPropOfCharChunkOfParagraph(MCExecContext& ctxt,
     // Sanity check for lengths
     uindex_t t_para_len;
     t_para_len = p_paragraph->gettextlength();
-    if (si > t_para_len)
+    if (si > 0 && (uindex_t) si > t_para_len)
     {
         si = ei = t_para_len;
     }
-    else if (ei > t_para_len)
+    else if (ei > 0 && (uindex_t) ei > t_para_len)
     {
         ei = t_para_len;
     }
@@ -973,65 +1030,14 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
     if (p_field -> getflag(F_SHARED_TEXT))
         p_part_id = 0;
 
-    // MW-2013-08-27: [[ Bug 11129 ]] Use 'resolveparagraphs()' so we get the same behavior
-    //   as elsewhere.
-    MCParagraph *pgptr = p_field -> resolveparagraphs(p_part_id);
+    // SN-2014-11-04: [[ Bug 13934 ]] Laying out a field refactored.
+    MCFieldLayoutSettings t_layout_settings;
+    MCParagraph *pgptr;
 
-    // MW-2013-03-20: [[ Bug 10764 ]] We only need to layout if the paragraphs
-    //   are attached to the current card.
-    bool t_need_layout;
-    if (p_field -> getopened())
-        t_need_layout = pgptr == p_field -> getparagraphs();
-    else
-        t_need_layout = false;
-
-    p_field -> verifyindex(pgptr, si, false);
-    p_field -> verifyindex(pgptr, ei, true);
-
-    pgptr = p_field -> indextoparagraph(pgptr, si, ei);
-
-    MCRectangle drect = p_field -> getrect();
-    findex_t ssi = 0;
-    findex_t sei = 0;
-    int4 savex = p_field -> textx;
-    int4 savey = p_field -> texty;
-
-    // MW-2008-07-09: [[ Bug 6353 ]] Improvements in 2.9 meant that the field was
-    //   more careful about not doing anything if it wasn't the MCactivefield.
-    //   However, the unselection/reselection code here breaks text input if the
-    //   active field sets text properties of another field. Therefore we only
-    //   get and then reset the selection if we are the active field.
-    if (t_need_layout)
-    {
-        if (all)
-        {
-            // Same as this?
-            if (MCactivefield == p_field)
-            {
-                p_field -> selectedmark(False, ssi, sei, False);
-                p_field -> unselect(False, True);
-            }
-            p_field -> curparagraph = p_field -> focusedparagraph = p_field -> paragraphs;
-            p_field -> firstparagraph = p_field -> lastparagraph = NULL;
-            p_field -> cury = p_field -> focusedy = p_field -> topmargin;
-            p_field -> textx = p_field -> texty = 0;
-//            p_field -> resetparagraphs();
-        }
-        else
-        {
-            // MW-2012-02-27: [[ Bug ]] Update rect slightly off, shows itself when
-            //   setting the box style of the top line of a field.
-            drect = p_field -> getfrect();
-            drect.y = p_field -> getcontenty() + p_field -> paragraphtoy(pgptr);
-            drect.height = 0;
-        }
-    }
+    pgptr = PrepareLayoutSettings(all, p_field, p_part_id, si, ei, t_layout_settings);
 
     MCParagraph *t_first_pgptr;
     t_first_pgptr = pgptr;
-
-    bool t_redraw_field;
-    t_redraw_field = false;
     
     do
     {
@@ -1042,9 +1048,10 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
 
             // MCParagraph scope
             {
-                uindex_t t_ei;
+                findex_t t_ei;
                 t_ei = MCU_min(ei, pgptr -> gettextlength());
                 bool t_blocks_changed;
+                bool t_need_layout;
                 t_blocks_changed = false;
 
                 pgptr -> defrag();
@@ -1105,18 +1112,9 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
             }
             // end of MCParagraph scope
 
-            // AL-2014-07-14: [[ Bug 12789 ]] Defragging can cause paragraph to need layout, do make sure we relayout
-            //  if it did. Otherwise setting properties that avoid relayout can cause crashes.
-            if (pgptr -> getneedslayout() && !all && pgptr->getopened())
-            {
-                // MW-2012-01-25: [[ ParaStyles ]] Ask the paragraph to reflow itself.
-                // AL-2014-09-22: [[ Bug 11817 ]] If we changed the amount of lines of this paragraph
-                //  then redraw the whole field.
-				if (pgptr -> layout(all, true))
-                    t_redraw_field = true;
-                else
-                    drect.height += pgptr->getheight(p_field -> fixedheight);
-            }
+            // SN-2014-11-04: [[ Bug 13934 ]] Laying out a field refactored.
+            // SN-2014-12-18: [[ Bug 14161 ]] Add a parameter to force the re-layout of a paragraph
+            LayoutParagraph(pgptr, t_layout_settings, false);
         }
 
         si = MCU_max(0, si - t_pg_length);
@@ -1134,92 +1132,23 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
     }
     while(ei > 0);
 
-    if (t_need_layout)
-    {
-        if (all)
-        {
-            p_field -> Relayout(false, savex - p_field -> textx, savey - p_field -> texty);
-            if (MCactivefield == p_field)
-                p_field -> seltext(ssi, sei, False);
-        }
-        else
-        {
-            p_field -> removecursor();
-            // AL-2014-09-22: [[ Bug 11817 ]] If we are redrawing, then the dirty rect is the whole rect.
-            if (t_redraw_field)
-                drect = p_field -> getrect();
-        }
-        // MW-2011-08-18: [[ Layers ]] Invalidate the dirty rect.
-        p_field -> layer_redrawrect(drect);
-        if (!all)
-            p_field -> replacecursor(False, True);
-    }
+    // SN-2014-11-04: [[ Bug 13934 ]] Laying out a field refactored.
+    FinishLayout(t_layout_settings);
 }
 
 template<typename T> void SetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCField *p_field, bool all, uint32_t p_part_id, findex_t si, findex_t ei, MCNameRef p_index, void (MCBlock::*p_setter)(MCExecContext&, MCNameRef, typename T::arg_type), typename T::arg_type p_value)
 {
     if (p_field -> getflag(F_SHARED_TEXT))
         p_part_id = 0;
-    
-    // MW-2013-08-27: [[ Bug 11129 ]] Use 'resolveparagraphs()' so we get the same behavior
-    //   as elsewhere.
-    MCParagraph *pgptr = p_field -> resolveparagraphs(p_part_id);
-    
-    // MW-2013-03-20: [[ Bug 10764 ]] We only need to layout if the paragraphs
-    //   are attached to the current card.
-    bool t_need_layout;
-    if (p_field -> getopened())
-        t_need_layout = pgptr == p_field -> getparagraphs();
-    else
-        t_need_layout = false;
-    
-    p_field -> verifyindex(pgptr, si, false);
-    p_field -> verifyindex(pgptr, ei, true);
-    
-    pgptr = p_field -> indextoparagraph(pgptr, si, ei);
-    
-    MCRectangle drect = p_field -> getrect();
-    findex_t ssi = 0;
-    findex_t sei = 0;
-    int4 savex = p_field -> textx;
-    int4 savey = p_field -> texty;
-    
-    // MW-2008-07-09: [[ Bug 6353 ]] Improvements in 2.9 meant that the field was
-    //   more careful about not doing anything if it wasn't the MCactivefield.
-    //   However, the unselection/reselection code here breaks text input if the
-    //   active field sets text properties of another field. Therefore we only
-    //   get and then reset the selection if we are the active field.
-    if (t_need_layout)
-    {
-        if (all)
-        {
-            // Same as this?
-            if (MCactivefield == p_field)
-            {
-                p_field -> selectedmark(False, ssi, sei, False);
-                p_field -> unselect(False, True);
-            }
-            p_field -> curparagraph = p_field -> focusedparagraph = p_field -> paragraphs;
-            p_field -> firstparagraph = p_field -> lastparagraph = NULL;
-            p_field -> cury = p_field -> focusedy = p_field -> topmargin;
-            p_field -> textx = p_field -> texty = 0;
-            //            p_field -> resetparagraphs();
-        }
-        else
-        {
-            // MW-2012-02-27: [[ Bug ]] Update rect slightly off, shows itself when
-            //   setting the box style of the top line of a field.
-            drect = p_field -> getfrect();
-            drect.y = p_field -> getcontenty() + p_field -> paragraphtoy(pgptr);
-            drect.height = 0;
-        }
-    }
+
+    // SN-2014-11-04: [[ Bug 13934 ]] Laying out a field refactored.
+    MCFieldLayoutSettings t_layout_settings;
+    MCParagraph *pgptr;
+
+    pgptr = PrepareLayoutSettings(all, p_field, p_part_id, si, ei, t_layout_settings);
     
     MCParagraph *t_first_pgptr;
     t_first_pgptr = pgptr;
-    
-    bool t_redraw_field;
-    t_redraw_field = false;
     
     do
     {
@@ -1230,9 +1159,10 @@ template<typename T> void SetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCFie
             
             // MCParagraph scope
             {
-                uindex_t t_ei;
+                findex_t t_ei;
                 t_ei = MCU_min(ei, pgptr -> gettextlength());
                 bool t_blocks_changed;
+                bool t_need_layout;
                 t_blocks_changed = false;
                 
                 pgptr -> defrag();
@@ -1292,19 +1222,10 @@ template<typename T> void SetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCFie
                     pgptr -> layoutchanged();
             }
             // end of MCParagraph scope
-            
-            // AL-2014-07-14: [[ Bug 12789 ]] Defragging can cause paragraph to need layout, do make sure we relayout
-            //  if it did. Otherwise setting properties that avoid relayout can cause crashes.
-            if (pgptr -> getneedslayout() && !all && pgptr->getopened())
-            {
-                // MW-2012-01-25: [[ ParaStyles ]] Ask the paragraph to reflow itself.
-                // AL-2014-09-22: [[ Bug 11817 ]] If we changed the amount of lines of this paragraph
-                //  then redraw the whole field.
-				if (pgptr -> layout(all, true))
-                    t_redraw_field = true;
-                else
-                    drect.height += pgptr->getheight(p_field -> fixedheight);
-            }
+
+            // SN-2014-11-04: [[ Bug 13934 ]] Laying out a field refactored.
+            // SN-2014-12-18: [[ Bug 14161 ]] Add a parameter to force the re-layout of a paragraph
+            LayoutParagraph(pgptr, t_layout_settings, false);
         }
         
         si = MCU_max(0, si - t_pg_length);
@@ -1321,27 +1242,9 @@ template<typename T> void SetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCFie
             ei = 0;
     }
     while(ei > 0);
-    
-    if (t_need_layout)
-    {
-        if (all)
-        {
-            p_field -> Relayout(false, savex - p_field -> textx, savey - p_field -> texty);
-            if (MCactivefield == p_field)
-                p_field -> seltext(ssi, sei, False);
-        }
-        else
-        {
-            p_field -> removecursor();
-            // AL-2014-09-22: [[ Bug 11817 ]] If we are redrawing, then the dirty rect is the whole rect.
-            if (t_redraw_field)
-                drect = p_field -> getrect();
-        }
-        // MW-2011-08-18: [[ Layers ]] Invalidate the dirty rect.
-        p_field -> layer_redrawrect(drect);
-        if (!all)
-            p_field -> replacecursor(False, True);
-    }
+
+    // SN-2014-11-04: [[ Bug 13934 ]] Laying out a field refactored.
+    FinishLayout(t_layout_settings);
 }
 
 //////////
@@ -1683,7 +1586,6 @@ void MCField::GetFormattedLeftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
         MCParagraph *pgptr = resolveparagraphs(p_part_id);
         MCParagraph *sptr = indextoparagraph(pgptr, si, ei, nil);
         coord_t minx, maxx;
-        findex_t t_si, t_ei; // needed to call MCParagraph::getextents
 
         // MW-2008-07-08: [[ Bug 6331 ]] the formattedWidth can return gibberish for empty lines.
         //   This is because minx/maxx are uninitialized and it seems that they have to be for
@@ -1693,7 +1595,8 @@ void MCField::GetFormattedLeftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
 
         do
         {
-            sptr->getxextents(t_si, t_ei, minx, maxx);
+            // AL-2014-10-31: [[ Bug 13897 ]] Pass in correct values to getextents
+            sptr->getxextents(si, ei, minx, maxx);
             sptr = sptr->next();
         }
         while (ei > 0 && sptr != pgptr);
@@ -1755,8 +1658,9 @@ void MCField::GetFormattedHeightOfCharChunk(MCExecContext& ctxt, uint32_t p_part
         int4 maxy = 0;
         do
         {
-            if (maxy != 0)
-                maxy += sptr -> prev() -> computebottommargin() + sptr -> computetopmargin();
+            // FG-2014-12-03: [[ Bug 11688 ]] The margins get counted twice...
+            //if (maxy != 0)
+            //    maxy += sptr -> prev() -> computebottommargin() + sptr -> computetopmargin();
             maxy += sptr->getyextent(ei, fixedheight);
             ei -= sptr->gettextlengthcr();
             sptr = sptr->next();
@@ -1994,11 +1898,11 @@ void MCField::SetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
 
     // Loop while there is a range to flag and and we haven't gone further than ei
     while (t_range_index < value . count
-           && t_next_range . start < ei
+           && (findex_t) t_next_range . start < ei
            && t_paragraph_offset < ei)
     {
         // if the next range doesn't cover this paragraph, we skip the paragraph
-        if (t_next_range . start > t_paragraph_offset + sptr -> gettextlengthcr())
+        if ((findex_t) t_next_range . start > t_paragraph_offset + sptr -> gettextlengthcr())
         {
             t_paragraph_offset += sptr -> gettextlengthcr();
             sptr = sptr -> next();
@@ -2017,7 +1921,7 @@ void MCField::SetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
                && t_block_offset < ei)
         {
             // skip block if it's not covered by the next range
-            if (t_next_range . start > t_block_offset + bptr -> GetLength())
+            if ((findex_t) t_next_range . start > t_block_offset + bptr -> GetLength())
             {
                 t_block_offset += bptr -> GetLength();
                 bptr = bptr -> next();
@@ -2026,7 +1930,7 @@ void MCField::SetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
 
             // if the range doesn't start at the beginning of the block
             // we must split the block and skip the first part
-            if (t_next_range . start > t_block_offset)
+            if ((findex_t) t_next_range . start > t_block_offset)
             {
                 bptr -> split(t_next_range . start);
                 t_block_offset += bptr -> GetLength();
@@ -2035,7 +1939,7 @@ void MCField::SetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
 
             // if the range doesn't cover the block up to its end
             // we must split it
-            if (t_next_range . end < t_block_offset + bptr -> GetLength())
+            if ((findex_t) t_next_range . end < t_block_offset + bptr -> GetLength())
                 bptr -> split(t_next_range . end);
 
             // Flag the block
@@ -2043,7 +1947,7 @@ void MCField::SetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
 
             // if the range went further than the block
             // we must keep track of this and update the next range to be flagged
-            if (t_next_range . end > t_block_offset + bptr -> GetLength())
+            if ((findex_t) t_next_range . end > t_block_offset + bptr -> GetLength())
                 t_next_range . start = t_block_offset + bptr -> GetLength();
             // otherwise we set the next range to the appropriate value
             else if (t_range_index < value . count)
@@ -2201,17 +2105,27 @@ void MCField::GetTabStopsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, in
     vector_t<uinteger_t> t_vector;
     GetParagraphPropOfCharChunk< VectorFieldPropType<uinteger_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetTabStops, r_mixed, t_vector);
 
-    r_count = t_vector . count;
-    r_values = t_vector . elements;
+    // SN-2015-04-22: [[ Bug 15243 ]] Do not use t_vector if the result is mixed
+    //  as it will be uninitialised.
+    if (!r_mixed)
+    {
+        r_count = t_vector . count;
+        r_values = t_vector . elements;
+    }
 }
 
 void MCField::GetEffectiveTabStopsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uindex_t& r_count, uinteger_t*& r_values)
 {
     vector_t<uinteger_t> t_vector;
     GetParagraphPropOfCharChunk< VectorFieldPropType<uinteger_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectiveTabStops, r_mixed, t_vector);
-
-    r_count = t_vector.count;
-    r_values = t_vector.elements;
+    
+    // SN-2015-04-22: [[ Bug 15243 ]] Do not use t_vector if the result is mixed
+    //  as it will be uninitialised.
+    if (!r_mixed)
+    {
+        r_count = t_vector.count;
+        r_values = t_vector.elements;
+    }
 }
 
 void MCField::SetTabStopsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uindex_t count, uinteger_t *values)
@@ -2227,18 +2141,28 @@ void MCField::GetTabWidthsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, i
 {
     vector_t<uinteger_t> t_vector;
     GetParagraphPropOfCharChunk< VectorFieldPropType<uinteger_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetTabWidths, r_mixed, t_vector);
-
-    r_count = t_vector . count;
-    r_values = t_vector . elements;
+    
+    // SN-2015-04-22: [[ Bug 15243 ]] Do not use t_vector if the result is mixed
+    //  as it will be uninitialised.
+    if (!r_mixed)
+    {
+        r_count = t_vector . count;
+        r_values = t_vector . elements;
+    }
 }
 
 void MCField::GetEffectiveTabWidthsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uindex_t& r_count, uinteger_t*& r_values)
 {
     vector_t<uinteger_t> t_vector;
     GetParagraphPropOfCharChunk< VectorFieldPropType<uinteger_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectiveTabWidths, r_mixed, t_vector);
-
-    r_count = t_vector.count;
-    r_values = t_vector.elements;
+    
+    // SN-2015-04-22: [[ Bug 15243 ]] Do not use t_vector if the result is mixed
+    //  as it will be uninitialised.
+    if (!r_mixed)
+    {
+        r_count = t_vector.count;
+        r_values = t_vector.elements;
+    }
 }
 
 void MCField::SetTabWidthsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uindex_t count, uinteger_t *values)
@@ -2301,6 +2225,9 @@ void MCField::GetEffectiveBackColorOfLineChunk(MCExecContext& ctxt, uint32_t p_p
 void MCField::SetBackColorOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, const MCInterfaceNamedColor& p_color)
 {
     SetParagraphPropOfCharChunk< PodFieldPropType<MCInterfaceNamedColor> >(ctxt, this, false, p_part_id, si, ei, &MCParagraph::SetBackColor, p_color);
+
+    // AL-2014-11-18: [[ Bug 14049 ]] Redraw without relayout after changing paragraph color
+    MCObject::Redraw();
 }
 
 void MCField::GetBorderColorOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, MCInterfaceNamedColor& r_color)
@@ -2534,8 +2461,10 @@ void MCField::GetTextStyleElementOfCharChunk(MCExecContext& ctxt, MCNameRef p_in
 
 void MCField::GetEffectiveTextStyleElementOfCharChunk(MCExecContext& ctxt, MCNameRef p_index, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool& r_value)
 {
-    bool t_default;
-    bool *t_value_ptr;
+    // SN-2015-03-25: [[ Bug 15030 ]] Initialise t_value_ptr to a value, since
+    //  it will be dereferenced in MCBlock::GetTextStyleElement
+    bool t_default, t_value;
+    bool *t_value_ptr = &t_value;
     GetTextStyleElement(ctxt, p_index, t_default);
     GetArrayCharPropOfCharChunk< OptionalFieldArrayPropType< PodFieldArrayPropType<bool> > >(ctxt, this, p_part_id, si, ei, p_index, &MCBlock::GetTextStyleElement, true, t_default, r_mixed, t_value_ptr);
     

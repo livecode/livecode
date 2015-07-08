@@ -20,8 +20,12 @@ encryptedstack.cpp
 encryptedstack.h
 stacksecurity_encrypted.cpp
 util/perfect/perfect.linux-*
+extensions/*/*/*.xml
+extensions/*/*/*.lci
+extensions/*/*/*.lcm
+extensions/*/*/*.lce
 
-# Compiled source #
+# Compiled source and intermediates #
 ###################
 *.i
 *.ii
@@ -31,6 +35,10 @@ util/perfect/perfect.linux-*
 *.exe
 *.o
 *.so
+*.a
+*.pyc
+*.d
+*.stamp
 
 # Packages #
 ############
@@ -66,7 +74,7 @@ Thumbs.db
 ####################
 .svn/
 
-# Project setting files #
+# Projects and project setting files #
 #########################
 *.pbxuser
 *.perspectivev3
@@ -79,13 +87,24 @@ xcuserdata/
 *.mode1v3
 *.xcworkspacedata
 *.creator.user
-
+*.Makefile
+*.mk
+*.xcodeproj/*
+*.pbxproj
+*.vcproject
+*.vcxproject
+make-*_*/
+vsprojects/
+xcprojects/
 
 # Build folders #
 #################
 _build/
 _cache/
 build/
+/_tests/
+*-bin/
+build-*/
 
 # SDKs          #
 #################
@@ -98,3 +117,8 @@ prebuilt/lib
 prebuilt/build
 prebuilt/packaged
 prebuilt/fetched
+
+# Stamp files and generated C files
+###################################
+stamp-mlc*
+_mlc

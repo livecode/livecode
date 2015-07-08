@@ -272,7 +272,11 @@ MCExternal *MCExternal::Load(MCStringRef p_filename)
 	t_module = nil;
 	if (t_success)
 	{
-		t_module = MCS_loadmodule(p_filename);
+        // AL-2015-02-10: [[ SB Inclusions ]] Load external using new module loading utility
+        // SN-2015-04-07: [[ Bug 15164 ]] Use StringRef (we might want a Unicode
+        //  path to keep its Unicode chars).
+        t_module = (MCSysModuleHandle)MCU_loadmodule_stringref(p_filename);
+
 		if (t_module == NULL)
 			t_success = false;
 	}

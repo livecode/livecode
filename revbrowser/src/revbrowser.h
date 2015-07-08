@@ -17,6 +17,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __REVBROWSER__
 #define __REVBROWSER__
 
+#include <core.h>
+
 class CWebBrowserBase
 {
 public:
@@ -106,6 +108,9 @@ void CB_NavigateFrameComplete(int p_instance_id, const char *p_url);
 
 void CB_DocumentComplete(int p_instance_id, const char *p_url);
 void CB_DocumentFrameComplete(int p_instance_id, const char *p_url);
+
+void CB_DocumentFailed(int p_instance_id, const char *p_url, const char *p_error);
+void CB_DocumentFrameFailed(int p_instance_id, const char *p_url, const char *p_error);
 
 void CB_CreateInstance(int p_instance_id);
 void CB_DestroyInstance(int p_instance_id);

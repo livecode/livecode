@@ -81,6 +81,8 @@ bool MCImageDecodeNetPBM(IO_handle p_stream, MCImageBitmap *&r_bitmap);
 void MCImageBitmapSetAlphaValue(MCImageBitmap *p_bitmap, uint8_t p_alpha);
 
 bool MCImageParseMetadata(MCExecContext& ctxt, MCArrayRef p_array, MCImageMetadata& r_metadata);
+// MERG-2014-09-18: [[ ImageMetadata ]] Convert image metadata scruct to array
+bool MCImageGetMetadata(MCExecPoint& ep, MCImageMetadata& p_metadata);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -136,7 +138,13 @@ bool MCImageBitmapToPICT(MCImageBitmap *p_bitmap, MCMacSysPictHandle &r_pict);
 #include "image_rep.h"
 
 // IM-2013-10-30: [[ FullscreenMode ]] Factor out image rep creation & preparation
-bool MCImageGetFileRepForStackContext(MCStringRef p_filename, MCStack *p_stack, MCImageRep *&r_rep);
+// Retrieve an image rep for the given file path.
+bool MCImageGetRepForFileWithStackContext(MCStringRef p_path, MCStack *p_stack, MCImageRep *&r_rep);
+// Retrieve an image rep for the given reference, which may be a file path or a url.
+bool MCImageGetRepForReferenceWithStackContext(MCStringRef p_reference, MCStack *p_stack, MCImageRep *&r_rep);
+// Retrieve an image rep for the named resource.
+bool MCImageGetRepForResource(MCStringRef p_resource_file, MCImageRep *&r_rep);
+
 void MCImagePrepareRepForDisplayAtDensity(MCImageRep *p_rep, MCGFloat p_density);
 
 class MCMutableImageRep : public MCImageRep
@@ -149,13 +157,15 @@ public:
 	MCImageRepType GetType() { return kMCImageRepMutable; }
 	uindex_t GetFrameCount();
 	
-	bool LockBitmapFrame(uindex_t p_index, MCGFloat p_density, MCBitmapFrame *&r_frame);
-	void UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame);
+	bool LockBitmap(uindex_t p_index, MCGFloat p_density, MCImageBitmap *&r_bitmap);
+	void UnlockBitmap(uindex_t p_index, MCImageBitmap *p_bitmap);
 	
 	bool LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame& r_frame);
 	void UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_frame);
 	
 	bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
+	// IM-2014-11-25: [[ ImageRep ]] Added ImageRep method to get frame duration.
+	bool GetFrameDuration(uindex_t p_index, uint32_t &r_duration);
 	
 	uint32_t GetDataCompression();
 
@@ -240,11 +250,14 @@ public:
 
 	static void init();
 	static void shutdown();
+    
+    // MERG-2014-09-16: [[ ImageMetadata ]] Support for image metadata property
+    bool GetMetadata(MCImageMetadata& r_metadata);
 
 private:
 	MCImage *m_owner;
 	MCGImageFrame m_gframe;
-	MCBitmapFrame m_frame;
+	MCImageBitmap *m_locked_bitmap;
 
 	MCImageBitmap *m_bitmap;
 	MCImageBitmap *m_unpre_bitmap;
@@ -301,7 +314,6 @@ class MCImage : public MCControl
 
 	// IM-2014-05-12: [[ ImageRepUpdate ]] The possible sources of the currently locked bitmap
 	MCImageRep *m_locked_rep;
-	MCBitmapFrame *m_locked_bitmap_frame;
 	MCGImageRef m_locked_image;
 	MCImageBitmap *m_locked_bitmap;
 
@@ -395,10 +407,12 @@ public:
 	virtual Boolean doubleup(uint2 which);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 	virtual void setrect(const MCRectangle &nrect);
+
 #ifdef LEGACY_EXEC
-    virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+    virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
     virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 #endif
+
 	virtual void select();
 	virtual void deselect();
 	virtual void undo(Ustruct *us);
@@ -563,7 +577,11 @@ public:
 	void set_gif(uint1 *data, uint4 length);
 
 	//MCString getrawdata(void);
-	void getrawdata(MCDataRef& r_data);
+    void getrawdata(MCDataRef& r_data);
+    
+    // PM-2014-12-12: [[ Bug 13860 ]] Allow exporting referenced images to album
+    void getimagefilename(MCStringRef &r_filename);
+    bool isReferencedImage(void);
     
 	MCImage *next()
 	{
@@ -659,6 +677,7 @@ public:
     // SN-2014-06-23: [[ IconGravity ]] Getters and setters added
     void SetCenterRectangle(MCExecContext& ctxt, MCRectangle *p_rectangle);
     void GetCenterRectangle(MCExecContext& ctxt, MCRectangle *&r_rectangle);
+    void GetMetadataProperty(MCExecContext& ctxt, MCNameRef p_prop, MCExecValue& r_value);
     
     virtual void SetBlendLevel(MCExecContext& ctxt, uinteger_t level);
 	virtual void SetInk(MCExecContext& ctxt, intenum_t ink);

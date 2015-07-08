@@ -1,0 +1,28 @@
+Name: string
+
+Type: keyword
+
+Syntax: string
+
+Summary: Used with the <find> <command> to search for a <string> of <characters> without regard to whether they occur at the start of a <word>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+find string "Help"
+
+Example:
+find string "run" -- finds "run", "grunt", or "running"
+
+Description:
+Use the <string> <keyword> to find a <string>.
+
+When used with the <find> <command>, the <string> <keyword> finds <card|cards> that contain the specified <string>, whether each word in it is found as an entire word or not.
+
+References: whole (keyword), characters (keyword), word (keyword), string (keyword), find (command), card (object), command (glossary), keyword (glossary)
+
+Tags: database

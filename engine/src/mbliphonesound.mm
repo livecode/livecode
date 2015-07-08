@@ -62,10 +62,7 @@ public:
         m_media = MCValueRetain(p_media);
 	}
     
-    ~MCFinishedPlayingSound()
-    {
-        MCValueRelease(m_media);
-    }
+    // PM-2015-01-29 [[ Bug 14463 ]] Removed ~MCFinishedPlayingSound() code, since it caused over-releasing of m_media and crash
     
 	void Destroy(void)
 	{

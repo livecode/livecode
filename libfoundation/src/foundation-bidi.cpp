@@ -540,6 +540,10 @@ void MCBidiResolveTextDirection(MCStringRef p_string, intenum_t p_base_level, ui
     uint8_t *t_levels;
     MCMemoryAllocate(t_length, t_levels);
     
+    // AL-2014-11-13: [[ Bug 13948 ]] Set the array of levels to zero, since there are some 'default' characters
+    //  whose levels are not set by any of the explicit direction rules of the BiDi algorithm
+    MCMemoryClear(t_levels, t_length);
+    
     // Directional status stack
     MCAutoArray<bidi_stack_entry> t_stack;
     /* UNCHECKED */ t_stack.New(256);

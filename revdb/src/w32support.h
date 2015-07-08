@@ -36,6 +36,7 @@ struct DATABASEREC
 	idcounterrefptr idcounterptr;
 	new_connectionrefptr  newconnectionptr;
 	release_connectionrefptr releaseconnectionptr;
+    set_callbacksrefptr setcallbacksptr;
 	HINSTANCE driverref;
 };
 

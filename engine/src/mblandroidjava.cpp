@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globdefs.h"
 #include "filedefs.h"
 #include "parsedef.h"
+#include "exec.h"
 
 //#include "execpt.h"
 
@@ -34,8 +35,10 @@ static jmethodID s_integer_constructor = nil;
 
 static bool init_integer_class(JNIEnv *env)
 {
-    if (s_integer_class == nil)
-        s_integer_class = env->FindClass("java/lang/Integer");
+    // PM-2014-02-16: Bug [[ 14489 ]] Use global refs for statics
+    jclass t_integer_class = env->FindClass("java/lang/Integer");
+    s_integer_class = (jclass)env->NewGlobalRef(t_integer_class);
+    
     if (s_integer_class == nil)
 		return false;
 
@@ -51,8 +54,10 @@ static jclass s_string_class = nil;
 
 static bool init_string_class(JNIEnv *env)
 {
-	if (s_string_class == nil)
-		s_string_class = env->FindClass("java/lang/String");
+    // PM-2014-02-16: Bug [[ 14489 ]] Use global refs for statics
+    jclass t_string_class = env->FindClass("java/lang/String");
+    s_string_class = (jclass)env->NewGlobalRef(t_string_class);
+    
 	if (s_string_class == nil)
 		return false;
 
@@ -65,8 +70,10 @@ static jmethodID s_array_list_append = nil;
 
 bool init_arraylist_class(JNIEnv *env)
 {
-    if (s_array_list_class == nil)
-        s_array_list_class = env->FindClass("java/util/ArrayList");
+    // PM-2014-02-16: Bug [[ 14489 ]] Use global ref for s_array_list_class to ensure it will be valid next time we use it
+    jclass t_array_list_class = env->FindClass("java/util/ArrayList");
+    s_array_list_class = (jclass)env->NewGlobalRef(t_array_list_class);
+    
     if (s_array_list_class == nil)
 		return false;
 
@@ -94,8 +101,10 @@ static jmethodID s_map_entry_get_value = nil;
 
 static bool init_hashmap_class(JNIEnv *env)
 {
-	if (s_hash_map_class == nil)
-		s_hash_map_class = env->FindClass("java/util/HashMap");
+    // PM-2014-02-16: Bug [[ 14489 ]] Use global refs for statics
+    jclass t_hash_map_class = env->FindClass("java/util/HashMap");
+    s_hash_map_class = (jclass)env->NewGlobalRef(t_hash_map_class);
+    
 	if (s_hash_map_class == nil)
 		return false;
 	
@@ -116,7 +125,11 @@ static bool init_hashmap_class(JNIEnv *env)
 	
 	
 	if (s_map_entry_class == nil)
-		s_map_entry_class = env->FindClass("java/util/Map$Entry");
+    {
+        // PM-2014-02-16: Bug [[ 14489 ]] Use global refs for statics
+        jclass t_map_entry_class = env->FindClass("java/util/Map$Entry");
+        s_map_entry_class = (jclass)env->NewGlobalRef(t_map_entry_class);
+    }
 	if (s_map_entry_class == nil)
 		return false;
 	
@@ -139,8 +152,10 @@ static jmethodID s_iterator_next = nil;
 
 static bool init_iterator_class(JNIEnv *env)
 {
-	if (s_iterator_class == nil)
-		s_iterator_class = env->FindClass("java/util/Iterator");
+    // PM-2014-02-16: Bug [[ 14489 ]] Use global refs for statics
+    jclass t_iterator_class = env->FindClass("java/util/Iterator");
+    s_iterator_class = (jclass)env->NewGlobalRef(t_iterator_class);
+    
 	if (s_iterator_class == nil)
 		return false;
 	
@@ -162,8 +177,10 @@ static jmethodID s_set_iterator = nil;
 
 static bool init_set_class(JNIEnv *env)
 {
-	if (s_set_class == nil)
-		s_set_class = env->FindClass("java/util/Set");
+    // PM-2014-02-16: Bug [[ 14489 ]] Use global refs for statics
+    jclass t_set_class = env->FindClass("java/util/Set");
+    s_set_class = (jclass)env->NewGlobalRef(t_set_class);
+
 	if (s_set_class == nil)
 		return false;
 	
@@ -173,6 +190,72 @@ static bool init_set_class(JNIEnv *env)
 		return false;
 	
 	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// PM-2015-02-16: [[ Bug 14489 ]] Delete global ref
+void free_arraylist_class(JNIEnv *env)
+{
+    if (s_array_list_class != nil)
+    {
+        env->DeleteGlobalRef(s_array_list_class);
+        s_array_list_class = nil;
+    }
+}
+
+void free_integer_class(JNIEnv *env)
+{
+    if (s_integer_class != nil)
+    {
+        env->DeleteGlobalRef(s_integer_class);
+        s_integer_class = nil;
+    }
+}
+
+void free_string_class(JNIEnv *env)
+{
+    if (s_string_class != nil)
+    {
+        env->DeleteGlobalRef(s_string_class);
+        s_string_class = nil;
+    }
+}
+
+void free_hashmap_class(JNIEnv *env)
+{
+    if (s_hash_map_class != nil)
+    {
+        env->DeleteGlobalRef(s_hash_map_class);
+        s_hash_map_class = nil;
+    }
+}
+
+void free_map_entry_class(JNIEnv *env)
+{
+    if (s_map_entry_class != nil)
+    {
+        env->DeleteGlobalRef(s_map_entry_class);
+        s_map_entry_class = nil;
+    }
+}
+
+void free_iterator_class(JNIEnv *env)
+{
+    if (s_iterator_class != nil)
+    {
+        env->DeleteGlobalRef(s_iterator_class);
+        s_iterator_class = nil;
+    }
+}
+
+void free_set_class(JNIEnv *env)
+{
+    if (s_set_class != nil)
+    {
+        env->DeleteGlobalRef(s_set_class);
+        s_set_class = nil;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -357,12 +440,28 @@ bool MCJavaStringFromStringRef(JNIEnv *env, MCStringRef p_string, jstring &r_jav
     
     bool t_success = true;
     jstring t_java_string = nil;
-    
-    t_success = nil != (t_java_string = env -> NewString((const jchar*)MCStringGetCharPtr(p_string), MCStringGetLength(p_string)));
+
+    // SN-2015-04-28: [[ Bug 15151 ]] If the string is native, we don't want to
+    //  unnativise it - that's how we end up with a CantBeNative empty string!
+    if (MCStringIsNative(p_string))
+    {
+        unichar_t *t_string;
+        uindex_t t_string_length;
+        t_string = nil;
+        t_success = MCStringConvertToUnicode(p_string, t_string, t_string_length);
+        
+        if (t_success)
+            t_success = nil != (t_java_string = env -> NewString((const jchar*)t_string, t_string_length));
+        
+        if (t_string != nil)
+            MCMemoryDeleteArray(t_string);
+    }
+    else
+        t_success = nil != (t_java_string = env -> NewString((const jchar*)MCStringGetCharPtr(p_string), MCStringGetLength(p_string)));
     
     if (t_success)
         r_java_string = t_java_string;
-    
+
     return t_success;
 
 }
@@ -426,9 +525,6 @@ bool MCJavaIntegerFromInt(JNIEnv *env, jint p_int, jobject &r_integer)
 {
     bool t_success = true;
     
-	if (!init_integer_class(env))
-		return false;
-    
     jobject t_integer = nil;
     t_integer = env->NewObject(s_integer_class, s_integer_constructor, p_int);
     t_success = nil != t_integer;
@@ -441,12 +537,45 @@ bool MCJavaIntegerFromInt(JNIEnv *env, jint p_int, jobject &r_integer)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCJavaInitialize(JNIEnv *env)
+{
+    if (!init_integer_class(env))
+        return false;
+    
+    if (!init_string_class(env))
+        return false;
+    
+    if (!init_arraylist_class(env))
+        return false;
+    
+    if (!init_hashmap_class(env))
+        return false;
+    
+    if (!init_iterator_class(env))
+        return false;
+    
+    if (!init_set_class(env))
+        return false;
+    
+    return true;
+}
+
+void MCJavaFinalize(JNIEnv *env)
+{
+    free_arraylist_class(env);
+    free_integer_class(env);
+    free_string_class(env);
+    free_hashmap_class(env);
+    free_map_entry_class(env);
+    free_iterator_class(env);
+    free_set_class(env);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCJavaInitList(JNIEnv *env, jobject &r_list)
 {
     bool t_success = true;
-    
-	if (!init_arraylist_class(env))
-		return false;
 	
     jobject t_list = nil;
     t_list = env->NewObject(s_array_list_class, s_array_list_constructor);
@@ -530,9 +659,6 @@ bool MCJavaListAppendInt(JNIEnv *env, jobject p_list, jint p_int)
 
 bool MCJavaInitMap(JNIEnv *env, jobject &r_map)
 {
-	if (!init_hashmap_class(env))
-		return false;
-    
     jobject t_map = nil;
     t_map = env->NewObject(s_hash_map_class, s_hash_map_constructor);
     if (nil == t_map)
@@ -596,9 +722,6 @@ bool MCJavaMapPutStringToString(JNIEnv *env, jobject p_map, MCStringRef p_key, M
 
 bool MCJavaIterateMap(JNIEnv *env, jobject p_map, MCJavaMapCallback p_callback, void *p_context)
 {
-	if (!init_hashmap_class(env) || !init_set_class(env) || !init_iterator_class(env))
-		return false;
-	
 	bool t_success = true;
 	jobject t_set = nil, t_iterator = nil;
 	// get set of entries from map
@@ -655,9 +778,6 @@ bool MCJavaIterateMap(JNIEnv *env, jobject p_map, MCJavaMapCallback p_callback, 
 /*
 bool MCJavaMapFromArray(JNIEnv *p_env, MCExecPoint &p_ep, MCVariableValue *p_array, jobject &r_object)
 {
-	if (!init_hashmap_class(p_env))
-		return false;
-	
 	bool t_success = true;
 	
 	MCExecPoint ep(p_ep);
@@ -723,7 +843,13 @@ bool MCJavaMapFromArray(JNIEnv *p_env, MCArrayRef p_array, jobject &r_object)
 		{
 			jstring t_jstring = nil;
 			if (t_success)
-				t_success = MCJavaStringFromStringRef(p_env, (MCStringRef)t_element, t_jstring);
+            {
+                // PM-2015-05-25: [[ Bug 15403 ]] Make sure we pass a stringref to MCJavaStringFromStringRef
+                MCExecContext ctxt(nil,nil,nil);
+                MCAutoStringRef t_element_string;
+                /* UNCHECKED */ ctxt.ConvertToString(t_element, &t_element_string);
+				t_success = MCJavaStringFromStringRef(p_env, *t_element_string, t_jstring);
+            }
 			if (t_success)
 				t_jobj = t_jstring;
 		}
@@ -785,9 +911,6 @@ static bool s_map_to_array_callback(JNIEnv *p_env, const char *p_key, jobject p_
 
 bool MCJavaMapToArray(JNIEnv *p_env, MCExecPoint &p_ep, jobject p_map, MCVariableValue *&r_array)
 {
-	if (!init_string_class(p_env) || !init_hashmap_class(p_env))
-		return false;
-	
 	bool t_success = true;
 	
 	MCVariableValue *t_array = nil;
@@ -837,6 +960,11 @@ static bool s_map_to_array_callback(JNIEnv *p_env, MCNameRef p_key, jobject p_va
 			t_new_context.array = *t_array;
             if (t_success)
                 t_success = MCJavaIterateMap(p_env, p_value, s_map_to_array_callback, &t_new_context);
+            
+            // SN-2015-04-22: [[ Bug 14438 ]] We want to store the array in the
+            //  output array.
+            if (t_success)
+                t_success = MCArrayStoreValue(t_context->array, false, p_key, *t_array);
 		}
 		else
 			t_success = false;

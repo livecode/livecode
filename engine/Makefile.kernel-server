@@ -9,6 +9,7 @@ SOURCES=\
 	cmdsm.cpp cmdsp.cpp cmdss.cpp constant.cpp control.cpp cpalette.cpp \
 	date.cpp debug.cpp dispatch.cpp dllst.cpp \
 	express.cpp field.cpp fieldf.cpp fieldh.cpp fields.cpp \
+	filepath.cpp \
 	font.cpp funcs.cpp funcsm.cpp globals.cpp graphic.cpp group.cpp \
 	handler.cpp hc.cpp hndlrlst.cpp ibmp.cpp idraw.cpp ifile.cpp \
 	igif.cpp iimport.cpp ijpg.cpp \
@@ -55,16 +56,23 @@ SOURCES=\
 	bitmapeffect.cpp bitmapeffectblur.cpp md5.cpp sha1.cpp capsule.cpp \
 	externalv0.cpp externalv1.cpp lextable.cpp uuid.cpp \
 	objectprops.cpp objectpropsets.cpp mcutility.cpp notify.cpp customprinter.cpp \
-	sysspec.cpp mode_server.cpp sysunxdate.cpp sysunxnetwork.cpp sysunxrandom.cpp \
+	sysspec.cpp mode_server.cpp sysunxdate.cpp sysunxnetwork.cpp \
 	srvmain.cpp dsklnx.cpp srvspec.cpp srvsession.cpp srvstack.cpp srvdebug.cpp \
 	srvscript.cpp srvoutput.cpp srvtheme.cpp \
     eventqueue.cpp encodederrors.cpp redraw.cpp tilecache.cpp tilecachesw.cpp \
-	fonttable.cpp fieldrtf.cpp fieldhtml.cpp fieldstyledtext.cpp paragrafattr.cpp \
+        fonttable.cpp fieldrtf.cpp fieldhtml.cpp fieldstyledtext.cpp paragrafattr.cpp \
     graphicscontext.cpp lnxflst.cpp lnxflstold.cpp lnxelevate.cpp \
+	linux-theme.cpp \
+	linuxstubs.cpp \
+	modules.cpp \
+	module-canvas.cpp \
+	module-engine.cpp \
+	module-resources.cpp \
 	exec-array.cpp exec-datetime.cpp exec-engine.cpp exec-files.cpp exec-filters.cpp exec-interface.cpp \
 	exec-logic exec-math.cpp exec-multimedia.cpp exec-network.cpp exec-pasteboard.cpp exec-scripting \
 	exec-strings.cpp exec-strings-chunk.cpp exec-text.cpp exec-graphics.cpp exec-security.cpp exec-printing.cpp exec-debugging.cpp \
 	exec-ide.cpp exec-server.cpp exec-interface2.cpp exec.cpp \
+	exec-extension.cpp \
 	exec-interface-aclip.cpp exec-interface-button.cpp exec-interface-card.cpp exec-interface-control.cpp \
 	exec-interface-field.cpp exec-interface-graphic.cpp exec-interface-group.cpp exec-interface-image.cpp \
 	exec-interface-object.cpp exec-interface-field-chunk.cpp exec-interface-player.cpp exec-interface-scrollbar.cpp exec-interface-stack.cpp \
@@ -73,7 +81,10 @@ SOURCES=\
 	foundation-legacy.cpp legacy_spec.cpp \
 	srvposix.cpp \
     srvcgi.cpp srvmultipart.cpp \
-	sysunxthreads.cpp, stacktile.cpp
+	widget.cpp \
+	widget-events.cpp
+
+MLC_LIST = libkernel-modules.list
 	
 SOURCE_DIRS=
 
@@ -104,5 +115,7 @@ encodederrors.cpp: src/executionerrors.h src/parseerrors.h
 	../util/encode_errors.pl ./src ./src/encodederrors.cpp
 
 $(CACHE_DIR)/mcstring.o: include/revbuild.h
+
+include ../rules/mlc.linux.makefile
 
 include ../rules/archive.linux.makefile

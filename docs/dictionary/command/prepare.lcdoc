@@ -1,0 +1,35 @@
+Name: prepare
+
+Type: command
+
+Syntax: prepare videoClip <filePath> [looping] [at <startPoint>]
+
+Summary: Preloads a movie into memory.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+prepare videoClip "/Disk/Folder/Movie" at 100,100
+
+Example:
+prepare videoClip ID 17 looping
+
+Parameters:
+filePath: The location and name of the file you want to play. If you specify a name but not a location, LiveCode assumes the file is in the defaultFolder.
+startPoint: 
+point: The point specifies the center of the movie to be played, relative to the current stack window. If the point is not specified, the movie is positioned at the center of the card.
+
+Description:
+Use the <prepare> <command> to speed up <execute|execution> of the <play> <command>.
+
+Use the <prepare> <command> to preload the movie at some time before it is needed. Then use the <play> <command> with identical <parameter|parameters> to actually play the movie. Since the movie is already <loaded into memory>, it starts up instantly when the <play> <command> <execute|executes>.
+
+The parameters of the <prepare> <command> must be identical to those of the corresponding <play> <command>.
+
+References: frameRate (property), play (command), movie (function), parameter (glossary), command (glossary), loaded into memory (glossary), execute (glossary)
+
+Tags: multimedia

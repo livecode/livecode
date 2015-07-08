@@ -272,7 +272,7 @@ static bool convert_hcbitmap_data(uint1 *sptr, uint2 width, uint2 height, uint8_
 					while (hrepcount--)
 						*dptr++ = patbytes[patindex];
 					hrepcount = bpl;
-					patindex = patindex + 1 & 0x7;
+					patindex = (patindex + 1) & 0x7;
 				}
 				break;
 			case 0x5:
@@ -1480,7 +1480,7 @@ IO_stat MCHccard::parse(char *sptr)
 			else
 				offset += 3;
 		else
-			offset += (uint2ptr[(offset >> 1) + 1] + 1 & ~0x01) + 4;
+			offset += ((uint2ptr[(offset >> 1) + 1] + 1) & ~0x01) + 4;
 	}
 
 	if (sptr[offset])
@@ -1694,7 +1694,7 @@ IO_stat MCHcbkgd::parse(char *sptr)
 			else
 				offset += 3;
 		else
-			offset += (uint2ptr[(offset >> 1) + 1] + 1 & ~0x01) + 4;
+			offset += ((uint2ptr[(offset >> 1) + 1] + 1) & ~0x01) + 4;
 	}
 
 	if (sptr[offset])
@@ -2068,7 +2068,7 @@ IO_stat MCHcstak::read(IO_handle stream)
 
 				toffset += 10;
 				roffset = uint1ptr[toffset] << 24 | uint1ptr[toffset + 1] << 16
-				          | uint1ptr[toffset + 2] << 8 | uint1ptr[toffset + 3] + 2;
+					| uint1ptr[toffset + 2] << 8 | (uint1ptr[toffset + 3] + 2);
 				toffset += 4;
 				rsize = uint1ptr[toffset] << 24 | uint1ptr[toffset + 1] << 16
 				        | uint1ptr[toffset + 2] << 8 | uint1ptr[toffset + 3];

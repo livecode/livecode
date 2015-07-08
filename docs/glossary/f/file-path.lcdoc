@@ -1,0 +1,12 @@
+Name: file path
+
+Synonyms: pathname,file pathname,path,file path,name and location,names and locations,file's path,files' path,file's pathname,files' pathname
+
+Type: glossary
+
+Description:
+The name and location of a <file>, ending with the file name. A file path may be absolute (starting from the disk the <file> is on) or relative (starting from the current <folder> and going up, down, or sideways in the <folder> hierarchy as necessary).
+
+References: file (glossary), folder (glossary)
+
+Tags: file system

@@ -39,6 +39,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "mctheme.h"
 #include "redraw.h"
+#include "line.h"
 
 #include "context.h"
 
@@ -521,7 +522,7 @@ uint2 MCField::getfwidth() const
 		width -= shadowoffset;
 	if (flags & F_VSCROLLBAR)
 		width -= vscrollbar->getrect().width;
-	if (width > 0 && width < MAXUINT2)
+	if (width > 0 && width < (int4) MAXUINT2)
 		return (uint2)width;
 	else
 		return 0;
@@ -536,7 +537,7 @@ uint2 MCField::getfheight() const
 		height -= shadowoffset;
 	if (flags & F_HSCROLLBAR)
 		height -= hscrollbar->getrect().height;
-	if (height > 0 && height < MAXUINT2)
+	if (height > 0 && height < (int4) MAXUINT2)
 		return (uint2)height;
 	else
 		return 0;
@@ -770,7 +771,7 @@ void MCField::positioncursor(Boolean force, Boolean goal, MCRectangle &drect, in
 	// MW-2006-02-26: Even if the screen is locked we still want to set the cursor
 	//   position, otherwise the repositioning gets deferred too much.
 	if (!(state & (CS_KFOCUSED | CS_DRAG_TEXT))
-	        || !(flags & F_LIST_BEHAVIOR) && flags & F_LOCK_TEXT)
+	    || (!(flags & F_LIST_BEHAVIOR) && flags & F_LOCK_TEXT))
 		return;
 
 	// OK-2008-07-22 : Crash fix.
@@ -882,28 +883,60 @@ void MCField::adjustpixmapoffset(MCContext *dc, uint2 index, int4 dy)
 	int2 t_current_x;
 	int2 t_current_y;
 	dc -> getfillstyle(t_current_style, t_current_pixmap, t_current_x, t_current_y);
-	
+
 	int4 t_offset_x, t_offset_y;
 	t_offset_x = t_current_x - textx;
 	t_offset_y = t_current_y - texty + dy;
+
+    // SN-2014-12-19: [[ Bug 14238 ]] Split the update for x and y offsets, as one of them
+    // being out of [INT16_MIN; INT16_MAX] shouldn't have the other one affected.
+
+    // IM-2014-05-13: [[ HiResPatterns ]] Update to use pattern geometry function
+    uint32_t t_width, t_height;
+    /* UNCHECKED */ MCPatternGetGeometry(t_current_pixmap, t_width, t_height);
 	
 	// MW-2009-01-22: [[ Bug 3869 ]] We need to use the actual width/height of the
 	//   pixmap tile in this case to ensure the offset falls within 32767.
-	if (MCU_abs(t_offset_y) > 32767 || MCU_abs(t_offset_x) > 32767)
-	{
-		// IM-2014-05-13: [[ HiResPatterns ]] Update to use pattern geometry function
-		uint32_t t_width, t_height;
-		/* UNCHECKED */ MCPatternGetGeometry(t_current_pixmap, t_width, t_height);
-
-		t_offset_x %= t_width;
-		if (t_offset_x < 0)
-			t_offset_x += t_width;
+	if (MCU_abs(t_offset_y) > INT16_MAX)
+    {
+        // SN-2014-12-19: [[ Bug 14238 ]] Ensure that overflowing offsets are recomputed.
+        if (t_offset_y > INT16_MAX)
+            t_offset_y %= INT16_MAX;
+        else
+        {
+            // SN-2015-01-06: [[ Bug 14238 ]] Don't use % with negative numbers, as the result sign
+            //  is implementation-defined.
+            int4 t_positive_offset;
+            t_positive_offset = -t_offset_y;
+            t_positive_offset %= INT16_MAX;
+            t_offset_y = -t_positive_offset;
+        }
 		
 		t_offset_y %= t_height;
 		if (t_offset_y < 0)
 			t_offset_y += t_height;
 	}
-	
+
+    if (MCU_abs(t_offset_x) > INT16_MAX)
+    {
+        // SN-2014-12-19: [[ Bug 14238 ]] Ensure that overflowing offsets are recomputed.
+        if (t_offset_x > INT16_MAX)
+            t_offset_x %= INT16_MAX;
+        else
+        {
+            // SN-2015-01-06: [[ Bug 14238 ]] Don't use % with negative numbers, as the result sign
+            //  is implementation-defined.
+            int4 t_positive_offset;
+            t_positive_offset = -t_offset_x;
+            t_positive_offset %= INT16_MAX;
+            t_offset_x = -t_positive_offset;
+        }
+        
+        t_offset_x %= t_width;
+        if (t_offset_x < 0)
+            t_offset_x += t_width;
+    }
+
 	dc -> setfillstyle(t_current_style, t_current_pixmap, t_offset_x, t_offset_y);
 }
 
@@ -1024,10 +1057,46 @@ void MCField::drawrect(MCDC *dc, const MCRectangle &dirty)
 			d = fixedd;
 		}
 
+        // Calculate the total heights of all paragraphs for vertical centring
+        // purposes (this is currently only for combo box entry fields)
+        if (parent && parent->gettype() == CT_BUTTON)
+        {
+            coord_t t_totalpgheight;
+            t_totalpgheight = 0.0f;
+            MCParagraph* t_pg = pgptr;
+            do
+            {
+                t_totalpgheight += pgptr->getheight(fixedheight);
+                t_pg = t_pg->next();
+            }
+            while (t_pg != paragraphs);
+            
+            // Single-line fields look better when centred slightly differently
+            bool t_single_line;
+            t_single_line = paragraphs->next() == paragraphs && t_pg->getlines()->next() == t_pg->getlines();
+            if (t_single_line)
+            {
+                t_totalpgheight -= paragraphs->getlines()->GetLeading();
+            }
+            
+            // Adjust the drawing y coordinate to account for centring
+            if (t_totalpgheight < getfheight())
+            {
+                // Amount of unused space in the field
+                coord_t t_spare;
+                t_spare = getfheight() - t_totalpgheight;
+
+                if (t_single_line)
+                    y += t_spare/2 + (paragraphs->getlines()->GetAscent() - paragraphs->getlines()->GetDescent())/4;
+                else
+                    y += t_spare/2;
+            }
+        }
+        
 		int32_t pgheight;
 		do
 		{
-			pgheight = pgptr->getheight(fixedheight);
+            pgheight = pgptr->getheight(fixedheight);
 			
 			// MW-2012-03-15: [[ Bug 10069 ]] A paragraph might render a grid line above or below
 			//   so make sure we render paragraphs above and below the apparant limits.
@@ -1365,7 +1434,7 @@ void MCField::startselection(int2 x, int2 y, Boolean words)
 	else
 	{
 		if (flags & F_LIST_BEHAVIOR)
-			if (MCmodifierstate & MS_CONTROL && flags & F_NONCONTIGUOUS_HILITES
+			if ((MCmodifierstate & MS_CONTROL && flags & F_NONCONTIGUOUS_HILITES)
 			        || flags & F_TOGGLE_HILITE)
 				contiguous = False;
 			else
@@ -1407,7 +1476,10 @@ void MCField::startselection(int2 x, int2 y, Boolean words)
 		firstparagraph = lastparagraph = focusedparagraph;
 		firsty = focusedy;
 	}
-	MCactivefield = this;
+    // SN-2014-12-08: [[ Bug 12784 ]] Only make this field the selectedfield
+    //  if it is Focusable
+    if (flags & F_TRAVERSAL_ON)
+        MCactivefield = this;
 	if (!(flags & F_LOCK_TEXT))
 	{
 		replacecursor(True, True);
@@ -1469,8 +1541,11 @@ void MCField::endselection()
 			MCAutoDataRef t_data;
             MCStringEncode(*t_string, kMCStringEncodingNative, false, &t_data);
 			if (*t_data != nil)
-			{
-				if (MCselectiondata -> Store(TRANSFER_TYPE_TEXT, *t_data))
+            {
+                // SN-2014-12-08: [[ Bug 12784 ]] Only make this field the selectedfield
+                //  if it is Focusable
+                if (MCselectiondata -> Store(TRANSFER_TYPE_TEXT, *t_data)
+                        && flags & F_TRAVERSAL_ON)
 					MCactivefield = this;
 			}
 		}
@@ -1770,7 +1845,10 @@ void MCField::finsertnew(Field_translations function, MCStringRef p_string, KeyS
 		
 		// MW-UNDO-FIX: Make sure we only append to a previous record if it
 		//   is immediately after the last one.
-		if (us != NULL && (us->type == UT_DELETE_TEXT || us->type == UT_TYPE_TEXT) && MCundos->getobject() == this && us->ud.text.index+us->ud.text.newchars == si)
+		if (us != NULL &&
+		    (us->type == UT_DELETE_TEXT || us->type == UT_TYPE_TEXT) &&
+		    MCundos->getobject() == this &&
+		    (findex_t) (us->ud.text.index+us->ud.text.newchars) == si)
 		{
 			if (us->type == UT_DELETE_TEXT)
 			{
@@ -2089,6 +2167,9 @@ void MCField::fscroll(Field_translations function, MCStringRef p_string, KeySym 
 		vscroll(getfheight() - fheight, True);
 		newval = texty;
 	break;
+    default:
+        // If no scroll action is given, then scroll hasn't changed so do nothing.
+        return;
 	}
 	resetscrollbars(True);
 	message_with_args(MCM_scrollbar_drag, newval);

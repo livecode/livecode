@@ -57,6 +57,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <pwd.h>
 #include <fcntl.h>
 
+// SN-2014-12-17: [[ Bug 14220 ]] Server should not wait put rather poll
+#include <poll.h>
+
 #include <libgnome/gnome-url.h>
 #include <libgnome/gnome-program.h>
 #include <libgnome/gnome-init.h>
@@ -72,6 +75,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // This is in here so we do not need GLIBC2.4
 extern "C" void __attribute__ ((noreturn)) __stack_chk_fail (void)
 {
+	abort();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -193,17 +197,18 @@ static void configureSerialPort(int sRefNum)
     {
         *each = '\0';
         each++;
-        if (str != NULL)
-            parseSerialControlStr(str, &theTermios);
+        parseSerialControlStr(str, &theTermios);
         str = each;
     }
-    delete controlptr;
+
     //configure the serial output device
     parseSerialControlStr(str,&theTermios);
     if (tcsetattr(sRefNum, TCSANOW, &theTermios) < 0)
     {
         MCLog("Error setting terminous attributes", nil);
     }
+
+    delete[] controlptr;
     return;
 }
 
@@ -231,11 +236,33 @@ static IO_stat MCS_lnx_shellread(int fd, char *&buffer, uint4 &buffersize, uint4
             if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
                 break;
             MCU_play();
+
+            // SN-2014-12-17: [[ Bug 14220 ]] The server wasn't waiting pre-7.0
+#ifdef _SERVER
+            pollfd t_poll_fd;
+            t_poll_fd . fd = fd;
+            t_poll_fd . events = POLLIN;
+            t_poll_fd . revents = 0;
+
+            // SN-2015-02-12: [[ Bug 14441 ]] poll might as well get signal interrupted
+            //  and we don't want to miss the reading for that only reason.
+            int t_result;
+            do
+            {
+                t_result = poll(&t_poll_fd, 1, -1);
+            }
+            while (t_result != 1 ||
+                   (errno != EAGAIN && errno != EINTR && errno != EWOULDBLOCK));
+
+            // SN-2015-02-26: [[ CID 37859 ]] Dead code removed (t_result is
+            //  always different from -1 here
+#else
             if (MCscreen->wait(READ_INTERVAL, False, True))
             {
                 MCshellfd = -1;
                 return IO_ERROR;
             }
+#endif
         }
         else
             size += amount;
@@ -248,7 +275,7 @@ static IO_stat MCS_lnx_shellread(int fd, char *&buffer, uint4 &buffersize, uint4
 
 static Boolean MCS_lnx_nodelay(int4 fd)
 {
-    return fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) & O_APPEND | O_NONBLOCK)
+	return fcntl(fd, F_SETFL, (fcntl(fd, F_GETFL, 0) & O_APPEND) | O_NONBLOCK)
            >= 0;
 }
 
@@ -962,9 +989,12 @@ public:
     #endif
     #endif
 
-
+#ifndef _SERVER
+		// ST-2015-04-20: [[ Bug 15257 ]] Stdin shouldn't be set to
+		// non-blocking in server.
         if (!IsInteractiveConsole(0))
             MCS_lnx_nodelay(0);
+#endif
 
         // MW-2013-10-01: [[ Bug 11160 ]] At the moment NBSP is not considered a space.
         MCctypetable[160] &= ~(1 << 4);
@@ -1438,7 +1468,10 @@ public:
         else if (MCNameIsEqualTo(p_type, MCN_temporary, kMCCompareCaseless))
             return MCStringCreateWithCString("/tmp", r_folder);
         // SN-2014-08-08: [[ Bug 13026 ]] Fix ported from 6.7
-        else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless))
+        else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless)
+                 // SN-2015-04-20: [[ Bug 14295 ]] If we are here, we are a standalone
+                 // so the resources folder is the engine folder.
+                 || MCNameIsEqualTo(p_type, MCN_resources, kMCCompareCaseless))
         {
             uindex_t t_last_slash;
             
@@ -1721,6 +1754,8 @@ public:
             t_mode = IO_UPDATE_MODE;
         else if (p_mode == kMCOpenFileModeAppend)
             t_mode = IO_APPEND_MODE;
+		else /* No access requested */
+			return NULL;
 
         t_fptr = fopen(*t_path_sys, t_mode);
 
@@ -1756,6 +1791,12 @@ public:
             break;
         }
 
+        // SN-2015-02-11: [[ Bug 14587 ]] Do not buffer if the
+        //  targetted fd is a TTY
+        //  see srvposix.cpp, former MCStdioFileHandle::OpenFd
+        if (t_fptr && isatty(p_fd))
+            setbuf(t_fptr, NULL);
+
         if (t_fptr != NULL)
             t_handle = new MCStdioFileHandle(t_fptr);
 
@@ -1782,10 +1823,12 @@ public:
         if (t_fptr == NULL && p_mode != kMCOpenFileModeRead)
             t_fptr = fopen(*t_path_sys, IO_CREATE_MODE);
 
-        configureSerialPort((short)fileno(t_fptr));
-
         if (t_fptr != NULL)
+        {
+            configureSerialPort((short)fileno(t_fptr));
+
             t_handle = new MCStdioFileHandle(t_fptr);
+        }
 
         return t_handle;
     }
@@ -1981,6 +2024,19 @@ public:
 
         return t_success;
     }
+    
+    // ST-2014-12-18: [[ Bug 14259 ]] Returns the executable from the system tools, not from argv[0]
+    virtual bool GetExecutablePath(MCStringRef &r_executable)
+    {
+        char t_executable[PATH_MAX];
+		ssize_t t_size;
+        t_size = readlink("/proc/self/exe", t_executable, PATH_MAX);
+		if (t_size >= PATH_MAX || t_size < 0)
+            return false;
+        
+        t_executable[t_size] = 0;
+        return MCStringCreateWithSysString(t_executable, r_executable);
+    }
 
     virtual bool PathToNative(MCStringRef p_path, MCStringRef& r_native)
     {
@@ -2026,36 +2082,35 @@ public:
             }
             delete tpath;
         }
+        else if (path[0] != '/')
+        {
+            // SN-2015-06-05: [[ Bug 15432 ]] Fix resolvepath on Linux: we want an
+            //  absolute path.
+            char *t_curfolder;
+            t_curfolder = MCS_getcurdir();
+            tildepath = new char[strlen(t_curfolder) + strlen(path) + 2];
+            /* UNCHECKED */ sprintf(tildepath, "%s/%s", t_curfolder, path);
+
+            delete t_curfolder;
+        }
         else
             tildepath = strclone(path);
 
         struct stat64 buf;
         if (lstat64(tildepath, &buf) != 0 || !S_ISLNK(buf.st_mode))
             return tildepath;
-        int4 size;
+
         char *newname = new char[PATH_MAX + 2];
-        if ((size = readlink(tildepath, newname, PATH_MAX)) < 0)
+
+        // SN-2015-06-05: [[ Bug 15432 ]] Use realpath to solve the symlink.
+        if (realpath(tildepath, newname) == NULL)
         {
-            delete tildepath;
+            // Clear the memory in case of failure
             delete newname;
-            return NULL;
+            newname = NULL;
         }
+
         delete tildepath;
-        newname[size] = '\0';
-        if (newname[0] != '/')
-        {
-            char *fullpath = new char[strlen(path) + strlen(newname) + 2];
-            strcpy(fullpath, path);
-            char *sptr = strrchr(fullpath, '/');
-            if (sptr == NULL)
-                sptr = fullpath;
-            else
-                sptr++;
-            strcpy(sptr, newname);
-            delete newname;
-            newname = MCS_resolvepath(fullpath);
-            delete fullpath;
-        }
         return newname;
 #endif /* MCS_resolvepath_dsk_lnx */
         if (MCStringGetLength(p_path) == 0)
@@ -2100,40 +2155,49 @@ public:
             else
                 t_tilde_path = p_path;
         }
+        else if (MCStringGetNativeCharAtIndex(p_path, 0) != '/')
+        {
+            // SN-2015-06-05: [[ Bug 15432 ]] Fix resolvepath on Linux: we want an
+            //  absolute path.
+            MCAutoStringRef t_curdir;
+            MCS_getcurdir(&t_curdir);
+
+            if (!MCStringFormat(&t_tilde_path, "%@/%@", *t_curdir, p_path))
+            {
+                return false;
+            }
+        }
         else
             t_tilde_path = p_path;
 
+        // SN-2014-12-18: [[ Bug 14001 ]] Update the server file resolution to use realpath
+        //  so that we get the absolute path (needed for MCcmd for instance).
+        // SN-2015-06-08: Use realpath on desktop as well.
+#ifndef _SERVER
         // IM-2012-07-23
         // Keep (somewhat odd) semantics of the original function for now
         if (!MCS_lnx_is_link(*t_tilde_path))
             return MCStringCopy(*t_tilde_path, r_resolved_path);
+#endif
+        MCAutoStringRefAsSysString t_tilde_path_sys;
+        t_tilde_path_sys . Lock(*t_tilde_path);
 
-        MCAutoStringRef t_newname;
-        if (!MCS_lnx_readlink(*t_tilde_path, &t_newname))
-            return false;
+        char *t_resolved_path;
+        bool t_success;
 
-        if (MCStringGetCharAtIndex(*t_newname, 0) != '/')
-        {
-            MCAutoStringRef t_resolved;
+        t_resolved_path = realpath(*t_tilde_path_sys, NULL);
 
-            uindex_t t_last_component;
-            uindex_t t_path_length;
-
-            t_path_length = MCStringGetLength(p_path);
-
-            if (MCStringLastIndexOfChar(p_path, '/', t_path_length, kMCStringOptionCompareExact, t_last_component))
-                t_last_component++;
-            else
-                t_last_component = 0;
-
-            if (!MCStringMutableCopySubstring(p_path, MCRangeMake(0, t_last_component), &t_resolved) ||
-                !MCStringAppend(*t_resolved, *t_newname))
-                return false;
-
-            return MCStringCopy(*t_resolved, r_resolved_path);
-        }
+        // If the does not exist, then realpath will fail: we want to
+        // return something though, so we keep the input path (as it
+        // is done for desktop).
+        if (t_resolved_path != NULL)
+            t_success = MCStringCreateWithSysString(t_resolved_path, r_resolved_path);
         else
-            return MCStringCopy(*t_newname, r_resolved_path);
+            t_success = MCStringCopy(*t_tilde_path, r_resolved_path);
+
+        MCMemoryDelete(t_resolved_path);
+
+        return t_success;
     }
 
     virtual bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path)
@@ -2296,6 +2360,20 @@ public:
                     execl(*t_shellcmd_sys, *t_shellcmd_sys, "-s", NULL);
                     _exit(-1);
                 }
+                if (MCprocesses[index].pid == -1)
+                {
+					MCeerror->add(EE_SYSTEM_FUNCTION, 0, 0, "fork");
+					MCeerror->add(EE_SYSTEM_CODE, 0, 0, errno);
+					MCeerror->add(EE_SYSTEM_MESSAGE, 0, 0, strerror(errno));
+					close(tochild[0]);
+					close(tochild[1]);
+					close(toparent[0]);
+					close(toparent[1]);
+
+                    MCprocesses[index].pid = 0;
+                    // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
+                    return false;
+                }
                 CheckProcesses();
                 close(tochild[0]);
 
@@ -2307,31 +2385,25 @@ public:
                 close(tochild[1]);
                 close(toparent[1]);
                 MCS_lnx_nodelay(toparent[0]);
-                if (MCprocesses[index].pid == -1)
-                {
-                    if (MCprocesses[index].pid > 0)
-                        Kill(MCprocesses[index].pid, SIGKILL);
-
-                    MCprocesses[index].pid = 0;
-                    MCeerror->add
-                    (EE_SHELL_BADCOMMAND, 0, 0, p_filename);
-                    return true;
-                }
             }
             else
             {
+                MCeerror->add(EE_SYSTEM_FUNCTION, 0, 0, "pipe");
+                MCeerror->add(EE_SYSTEM_CODE, 0, 0, errno);
+                MCeerror->add(EE_SYSTEM_MESSAGE, 0, 0, strerror(errno));
                 close(tochild[0]);
                 close(tochild[1]);
-                MCeerror->add
-                (EE_SHELL_BADCOMMAND, 0, 0, p_filename);
-                return true;
+                // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
+                return false;
             }
         }
         else
         {
-            MCeerror->add
-            (EE_SHELL_BADCOMMAND, 0, 0, p_filename);
-            return true;
+            MCeerror->add(EE_SYSTEM_FUNCTION, 0, 0, "pipe");
+            MCeerror->add(EE_SYSTEM_CODE, 0, 0, errno);
+            MCeerror->add(EE_SYSTEM_MESSAGE, 0, 0, strerror(errno));
+            // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
+            return false;
         }
         char *buffer;
         uint4 buffersize;
@@ -2354,6 +2426,25 @@ public:
 
         close(toparent[0]);
         CheckProcesses();
+
+        // SN-2015-02-09: [[ Bug 14441 ]] We want to avoid the waiting time
+        //  that MCScreen->wait can bring, and which was avoided in
+        //  MCPosixSystem::Shell
+#ifdef _SERVER
+        pid_t t_wait_result;
+        int t_wait_stat;
+        t_wait_result = waitpid(MCprocesses[index].pid, &t_wait_stat, WNOHANG);
+        if (t_wait_result == 0)
+        {
+            Kill(MCprocesses[index].pid, SIGKILL);
+            waitpid(MCprocesses[index].pid, &t_wait_stat, 0);
+        }
+        else
+            t_wait_stat = 0;
+
+        MCprocesses[index].retcode = WEXITSTATUS(t_wait_stat);
+#else
+
         if (MCprocesses[index].pid != 0)
         {
             uint2 count = SHELL_COUNT;
@@ -2363,7 +2454,8 @@ public:
                 {
                     if (MCprocesses[index].pid != 0)
                         Kill(MCprocesses[index].pid, SIGKILL);
-                    return true;
+                    // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
+                    return false;
                 }
                 if (MCprocesses[index].pid == 0)
                     break;
@@ -2374,6 +2466,7 @@ public:
                 Kill(MCprocesses[index].pid, SIGKILL);
             }
         }
+#endif
 
         r_retcode = MCprocesses[index].retcode;
         return true;
@@ -3201,8 +3294,8 @@ public:
             if (MCsockets[i]->resolve_state != kMCSocketStateResolving &&
                MCsockets[i]->resolve_state != kMCSocketStateError)
             {
-                if (MCsockets[i]->connected && !MCsockets[i]->closing
-                    && !MCsockets[i]->shared || MCsockets[i]->accepting)
+	            if ((MCsockets[i]->connected && !MCsockets[i]->closing
+	                 && !MCsockets[i]->shared) || MCsockets[i]->accepting)
                     FD_SET(MCsockets[i]->fd, &rmaskfd);
                 if (!MCsockets[i]->connected || MCsockets[i]->wevents != NULL)
                     FD_SET(MCsockets[i]->fd, &wmaskfd);

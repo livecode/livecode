@@ -46,6 +46,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #if defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID)
 #define stricmp strcasecmp
+#include <unistd.h>
 #endif
 
 #define REVZIP_READ_BUFFER_SIZE 8192
@@ -66,14 +67,11 @@ static bool s_operation_cancelled = false;
 // buffer must be freed by the caller.
 char *utilityProcessPath(const char *p_path)
 {
-	char *t_native_path;
-	t_native_path = os_path_to_native(p_path);
-
-	char *t_resolved_path;
-	t_resolved_path = os_path_resolve(t_native_path);
-	free(t_native_path);
-
-	return t_resolved_path;
+    // SN-2014-11-17: [[ Bug 14032 ]] Now gets a UTF-8 encoded string as input
+    char *t_resolved_path;
+    t_resolved_path = os_path_resolve(p_path);
+    
+    return t_resolved_path;
 }
 
 /*
@@ -114,8 +112,9 @@ int zip_progress_callback(void *p_context, struct zip *p_archive, const char *p_
 	char t_message[1024];
 	int t_return_value;
 
-	char *t_path;
-	t_path = os_path_from_native(zip_get_path(p_archive));
+    // SN-2014-11-17: [[ Bug 14032 ]] The path is kept in UTF-8
+    char *t_path;
+	t_path = strdup(zip_get_path(p_archive));
 	
 	sprintf(t_message, "%s \"%s\", \"%s\", \"%s\", %lu, %lu, %lu, %lu",
 			  	s_progress_callback,
@@ -127,7 +126,8 @@ int zip_progress_callback(void *p_context, struct zip *p_archive, const char *p_
 	if (t_path != NULL)
 		free(t_path);
 	
-	SendCardMessage(t_message, &t_return_value);
+    // SN-2014-11-17: [[ Bug 14032 ]] The name of the callback, and the path, are UTF-8 encoded
+	SendCardMessageUTF8(t_message, &t_return_value);
 	
 	if (s_operation_cancelled)
 		return 1;
@@ -148,7 +148,8 @@ void revZipOpenArchive(char *p_arguments[], int p_argument_count, char **r_resul
 
 	if (!t_error)
 	{
-		if (!SecurityCanAccessFile(p_arguments[0]))
+        // SN-2014-11-17: [[ Bug 14032 ]] Update the parameters to UTF-8
+		if (!SecurityCanAccessFileUTF8(p_arguments[0]))
 		{
 			t_result = strdup("ziperr,file access not permitted");
 			t_error = True;
@@ -301,7 +302,8 @@ void revZipOpenArchives(char *p_arguments[], int p_argument_count, char **r_resu
 		for(zipmap_const_iterator_t it = s_zip_container.begin(); it != s_zip_container.end(); ++it)
 		{
 			char* t_line;
-			t_line = os_path_from_native(it->first.c_str());
+            // SN-2014-11-17: [[ Bug 14032 ]] We now keep the UTF-8 encoded string
+			t_line = strdup(it->first.c_str());
 			if( t_line )
 			{
 				t_strlist += std::string(t_line);
@@ -361,7 +363,8 @@ static void revZipAddItemWithDataAndCompression(char *p_arguments[], int p_argum
 
 		ExternalString mcData;
 		int intRetValue;
-		GetVariableEx (p_arguments[2], "", &mcData, &intRetValue);
+        // SN-2014-11-17: [[ Bug 14032 ]] The variable name is UTF-8 encoded - not the data
+		GetVariableExUTF8 (p_arguments[2], "", &mcData, false, &intRetValue);
 		if( intRetValue != EXTERNAL_SUCCESS )
 		{
 			t_result = strdup("ziperr,illegal variable");
@@ -600,7 +603,8 @@ void revZipExtractItemToVariable(char *p_arguments[], int p_argument_count, char
 
 			t_mcData.buffer = t_data;
 			t_mcData.length = t_stat . size;
-			SetVariableEx (p_arguments[2], "", &t_mcData, &t_retval);
+            // SN-2014-11-17: [[ Bug 14032 ]] The variable name is UTF-8 encoded - not the data
+			SetVariableExUTF8 (p_arguments[2], "", &t_mcData, false, &t_retval);
 			if(t_retval != EXTERNAL_SUCCESS)
 			{
 				t_result = strdup("ziperr,illegal variable");
@@ -898,7 +902,8 @@ void revZipReplaceItemWithData(char *p_arguments[], int p_argument_count, char *
 
 			ExternalString mcData;
 			int intRetValue;
-			GetVariableEx (p_arguments[2], "", &mcData, &intRetValue);
+            // SN-2014-11-17: [[ Bug 14032 ]] The variable name is UTF-8 encoded - not the data
+			GetVariableExUTF8 (p_arguments[2], "", &mcData, false, &intRetValue);
 			if( intRetValue != EXTERNAL_SUCCESS )
 			{
 				t_result = strdup("ziperr,illegal variable");
@@ -1262,15 +1267,50 @@ void revZipEnumerateItems(char *p_arguments[], int p_argument_count, char **r_re
 		for( int i = 0; i < t_num_files; ++i )
 		{
 			const char* t_line = NULL;
-			t_line = zip_get_name(t_archive, i, 0);
-			if( t_line )
+			struct zip_stat t_stat;
+
+			// SN-2015-03-11: [[ Bug 14413 ]] We want to get the bitflags
+			//  alongside the name: zip_stat_index provides this.
+			if (zip_stat_index(t_archive, i, 0, &t_stat) != 0)
 			{
-				t_str_names += std::string(t_line);
-				t_str_names += "\n";
+				std::string t_outerr = "ziperr," + std::string((zip_strerror(t_archive)));
+				t_result = strdup(t_outerr.c_str());
+                // SN-2015-06-02: [[ CID 90610 ]] Quit the loop if an error is
+                //  encountered - and set t_error to the right value.
+				t_error = True;
+                break;
+			}
+			else
+			{
+				// SN-2015-03-10: [[ Bug 14413 ]] We convert the string to UTF-8
+				//  in case it was natively encoded, as revZipEnumerateItems is
+				//  meant to return a UTF-8 encoded string.
+				const char *t_converted_name;
+                int t_success;
+
+				if (t_stat.bitflags & ZIP_UTF8_FLAG)
+				{
+                    t_success = EXTERNAL_SUCCESS;
+					t_converted_name = t_stat.name;
+				}
+				else
+					t_converted_name = ConvertCStringFromNativeToUTF8(t_stat.name, &t_success);
+
+                if (t_success == EXTERNAL_SUCCESS)
+				{
+					t_str_names += std::string(t_converted_name);
+					t_str_names += "\n";
+				}
+				else
+				{
+					t_result = strdup("");
+					t_error  = True;
+					break;
+				}
 			}
 		}
 		
-		if( !t_str_names.empty() )
+		if( !t_str_names.empty() && t_error == False)
 		{
 			t_result = strdup(t_str_names.c_str());
 			t_error = False;
@@ -1435,9 +1475,10 @@ void revZipCancel(char *p_arguments[], int p_argument_count, char **r_result, Bo
 		t_result = strdup("ziperr,illegal arguments");
 		t_error = True;
 	}
-
-	if (!s_operation_in_progress)
+	else if (!s_operation_in_progress)
+	{
 		t_result = strdup("ziperr,no current operation");
+	}
 
 	if (t_result == NULL)
 		s_operation_cancelled = true;
@@ -1450,26 +1491,26 @@ void revZipCancel(char *p_arguments[], int p_argument_count, char **r_result, Bo
 	*r_result = t_result;
 }
 
+// SN-2014-11-17: [[ Bug 14032 ]] Update the appropriate functions to get UTF-8 parameters
 EXTERNAL_BEGIN_DECLARATIONS("revZip")
-	EXTERNAL_DECLARE_COMMAND("revZipOpenArchive", revZipOpenArchive)
-	EXTERNAL_DECLARE_COMMAND("revZipOpenArchive", revZipOpenArchive)
-	EXTERNAL_DECLARE_COMMAND("revZipCloseArchive", revZipCloseArchive)
-	EXTERNAL_DECLARE_COMMAND("revZipAddItemWithFile", revZipAddItemWithFile)
-	EXTERNAL_DECLARE_COMMAND("revZipAddUncompressedItemWithFile", revZipAddUncompressedItemWithFile)
-	EXTERNAL_DECLARE_COMMAND("revZipAddItemWithData", revZipAddItemWithData)
-	EXTERNAL_DECLARE_COMMAND("revZipAddUncompressedItemWithData", revZipAddUncompressedItemWithData)
-	EXTERNAL_DECLARE_FUNCTION("revZipOpenArchives", revZipOpenArchives)
-	EXTERNAL_DECLARE_COMMAND("revZipExtractItemToVariable", revZipExtractItemToVariable)
-	EXTERNAL_DECLARE_COMMAND("revZipExtractItemToFile", revZipExtractItemToFile)
-	EXTERNAL_DECLARE_COMMAND("revZipReplaceItemWithFile", revZipReplaceItemWithFile)
-	EXTERNAL_DECLARE_COMMAND("revZipReplaceItemWithData", revZipReplaceItemWithData)
-	EXTERNAL_DECLARE_COMMAND("revZipRenameItem", revZipRenameItem)
-	EXTERNAL_DECLARE_COMMAND("revZipDeleteItem", revZipDeleteItem)
-	EXTERNAL_DECLARE_COMMAND("revZipSetItemAttributes", revZipSetItemAttributes)
-	EXTERNAL_DECLARE_FUNCTION("revZipGetItemAttributes", revZipGetItemAttributes)
-	EXTERNAL_DECLARE_FUNCTION("revZipEnumerateItems", revZipEnumerateItems)
-	EXTERNAL_DECLARE_FUNCTION("revZipDescribeItem", revZipDescribeItem)
-	EXTERNAL_DECLARE_COMMAND("revZipSetProgressCallback", revZipSetProgressCallback)
+	EXTERNAL_DECLARE_COMMAND_UTF8("revZipOpenArchive", revZipOpenArchive)
+	EXTERNAL_DECLARE_COMMAND_UTF8("revZipCloseArchive", revZipCloseArchive)
+	EXTERNAL_DECLARE_COMMAND_UTF8("revZipAddItemWithFile", revZipAddItemWithFile)
+	EXTERNAL_DECLARE_COMMAND_UTF8("revZipAddUncompressedItemWithFile", revZipAddUncompressedItemWithFile)
+	EXTERNAL_DECLARE_COMMAND_UTF8("revZipAddItemWithData", revZipAddItemWithData)
+	EXTERNAL_DECLARE_COMMAND_UTF8("revZipAddUncompressedItemWithData", revZipAddUncompressedItemWithData)
+	EXTERNAL_DECLARE_FUNCTION_UTF8("revZipOpenArchives", revZipOpenArchives)
+	EXTERNAL_DECLARE_COMMAND_UTF8("revZipExtractItemToVariable", revZipExtractItemToVariable)
+	EXTERNAL_DECLARE_COMMAND_UTF8("revZipExtractItemToFile", revZipExtractItemToFile)
+	EXTERNAL_DECLARE_COMMAND_UTF8("revZipReplaceItemWithFile", revZipReplaceItemWithFile)
+	EXTERNAL_DECLARE_COMMAND_UTF8("revZipReplaceItemWithData", revZipReplaceItemWithData)
+	EXTERNAL_DECLARE_COMMAND_UTF8("revZipRenameItem", revZipRenameItem)
+	EXTERNAL_DECLARE_COMMAND_UTF8("revZipDeleteItem", revZipDeleteItem)
+	EXTERNAL_DECLARE_COMMAND_UTF8("revZipSetItemAttributes", revZipSetItemAttributes)
+	EXTERNAL_DECLARE_FUNCTION_UTF8("revZipGetItemAttributes", revZipGetItemAttributes)
+	EXTERNAL_DECLARE_FUNCTION_UTF8("revZipEnumerateItems", revZipEnumerateItems)
+	EXTERNAL_DECLARE_FUNCTION_UTF8("revZipDescribeItem", revZipDescribeItem)
+	EXTERNAL_DECLARE_COMMAND_UTF8("revZipSetProgressCallback", revZipSetProgressCallback)
 	EXTERNAL_DECLARE_COMMAND("revZipCancel", revZipCancel)
 EXTERNAL_END_DECLARATIONS
 
@@ -1498,6 +1539,6 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 extern "C"
 {
 extern struct LibInfo __libinfo;
-__attribute((section("__DATA,__libs"))) volatile struct LibInfo *__libinfoptr_revzip = &__libinfo;
+__attribute((section("__DATA,__libs"))) volatile struct LibInfo *__libinfoptr_revzip __attribute__((__visibility__("default"))) = &__libinfo;
 }
 #endif

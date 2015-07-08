@@ -20,15 +20,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	OBJECT_H
 #define	OBJECT_H
 
-#ifndef DLLIST_H
 #include "dllst.h"
-#endif
-
-#ifndef __MC_IMAGE_BITMAP_H__
-#include "imagebitmap.h"
-#endif
-
+#include "parsedef.h"
+#include "objdefs.h"
 #include "globals.h"
+#include "imagebitmap.h"
+#include "platform.h"
 
 enum {
     MAC_SHADOW,
@@ -44,10 +41,43 @@ enum {
 typedef bool (*MCObjectListFontsCallback)(void *p_context, unsigned int p_index);
 typedef bool (*MCObjectResetFontsCallback)(void *p_context, unsigned int p_index, unsigned int p_new_index);
 
+// IM-2015-02-12: [[ ScriptObjectProps ]] Add object visitor flags
+// Descend recursively to the children of an object
+#define kMCObjectVisitorRecursive (1 << 0)
+
+// Visit the children of an object before itself
+#define kMCObjectVisitorDepthFirst (1 << 1)
+
+// Only visit children who are direct descendants of an object.
+#define kMCObjectVisitorHeirarchical (1 << 2)
+
+typedef uint32_t MCObjectVisitorOptions;
+
+inline bool MCObjectVisitorIsDepthFirst(MCObjectVisitorOptions p_options)
+{
+	return (p_options & kMCObjectVisitorDepthFirst) != 0;
+}
+
+inline bool MCObjectVisitorIsDepthLast(MCObjectVisitorOptions p_options)
+{
+	return !MCObjectVisitorIsDepthFirst(p_options);
+}
+
+inline bool MCObjectVisitorIsRecursive(MCObjectVisitorOptions p_options)
+{
+	return (p_options & kMCObjectVisitorRecursive) != 0;
+}
+
+inline bool MCObjectVisitorIsHeirarchical(MCObjectVisitorOptions p_options)
+{
+	return (p_options & kMCObjectVisitorHeirarchical) != 0;
+}
+
+/* LEGACY - Set flags for visit styles to perform previously defined behaviour */
 enum MCVisitStyle
 {
-	VISIT_STYLE_DEPTH_FIRST,
-	VISIT_STYLE_DEPTH_LAST
+	VISIT_STYLE_DEPTH_FIRST = (kMCObjectVisitorRecursive | kMCObjectVisitorDepthFirst),
+	VISIT_STYLE_DEPTH_LAST = (kMCObjectVisitorRecursive)
 };
 
 enum MCObjectIntersectType
@@ -123,6 +153,7 @@ struct MCObjectVisitor
 	virtual bool OnParagraph(MCParagraph *p_paragraph);
 	virtual bool OnBlock(MCBlock *p_block);
 	virtual bool OnStyledText(MCStyledText *p_styled_text);
+    virtual bool OnWidget(MCWidget *p_widget);
 };
 
 #define OBJECT_EXTRA_ARRAYPROPS		(1U << 0)
@@ -231,6 +262,9 @@ protected:
 	
 	// IM-2013-04-16: [[ BZ 10848 ]] // flag to record encrypted state of object script
 	bool m_script_encrypted : 1;
+    
+    // If this is true, then this object is in the parentScript resolution table.
+    bool m_is_parent_script : 1;
 	
 	MCStringRef tooltip;
 	
@@ -284,7 +318,9 @@ public:
 	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
     virtual const MCObjectPropertyTable *getmodepropertytable(void) const { return &kModePropertyTable; }
 	
-	virtual bool visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor);
+	virtual bool visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor);
+	virtual bool visit_self(MCObjectVisitor *p_visitor);
+	virtual bool visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor);
 
 	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
 	virtual IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
@@ -315,11 +351,15 @@ public:
 
 	// MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 #ifdef LEGACY_EXEC
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
 	virtual Exec_stat getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint &, MCNameRef key, Boolean effective);
 	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	virtual Exec_stat setarrayprop_legacy(uint4 parid, Properties which, MCExecPoint&, MCNameRef key, Boolean effective);
+
+    // FG-2014-11-07: [[ Better theming ]] Gets a propery according to the native UI theme
+    virtual Exec_stat getsystemthemeprop(Properties which, MCExecPoint&);
 #endif
+
 	virtual void select();
 	virtual void deselect();
 	virtual Boolean del();
@@ -335,6 +375,12 @@ public:
 	virtual void closemenu(Boolean kfocus, Boolean disarm);
 	virtual void recompute();
 	
+    // FG-2014-10-10: [[ Native Widgets ]] Informs the object that the selected tool has changed
+    virtual void toolchanged(Tool p_new_tool);
+    
+    // FG-2014-10-14: [[ Native Widgets ]] Informs the object that its layer has changed
+    virtual void layerchanged();
+    
 	// MW-2011-09-20: [[ Collision ]] Compute the shape of the object's mask.
 	virtual bool lockshape(MCObjectShape& r_shape);
 	virtual void unlockshape(MCObjectShape& shape);
@@ -349,9 +395,14 @@ public:
     Exec_stat getarrayprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, MCNameRef p_index, Boolean p_effective);
     Exec_stat setarrayprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, MCNameRef p_index, Boolean p_effective);
 #endif
-	
-    bool getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, MCNameRef p_index, Boolean p_effective, MCExecValue& r_value);
-	bool setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, MCNameRef p_index, Boolean p_effective, MCExecValue p_value);
+    
+    Exec_stat sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCValueRef& r_value);
+    Exec_stat sendsetprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCValueRef p_value);
+    
+    virtual bool getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, MCNameRef p_index, Boolean p_effective, MCExecValue& r_value);
+	virtual bool setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, MCNameRef p_index, Boolean p_effective, MCExecValue p_value);
+	virtual bool getcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCExecValue& r_value);
+	virtual bool setcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCExecValue p_value);
     
 	// MW-2012-05-28: [[ Value Prop Accessors ]] These methods allow access to object props
 	//   via direct types. Appropriate type coercion will be performed, with errors thrown as
@@ -399,11 +450,6 @@ public:
 	Exec_stat sendsetprop(MCExecPoint& ep, MCNameRef set_name, MCNameRef prop_name);
 	Exec_stat setcustomprop(MCExecPoint& ep, MCNameRef set_name, MCNameRef prop_name);
 #endif
-    
-    Exec_stat sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCValueRef& r_value);
-	bool getcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCExecValue& r_value);
-    Exec_stat sendsetprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCValueRef p_value);
-	bool setcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCExecValue p_value);
     
 #ifdef OLD_EXEC
 	Exec_stat setprops(uint32_t parid, MCExecPoint& ep);
@@ -561,8 +607,8 @@ public:
 	Boolean isvisible();
 	Boolean resizeparent();
 	Boolean getforecolor(uint2 di, Boolean reversed, Boolean hilite, MCColor &c,
-	                     MCPatternRef &r_pattern, int2 &x, int2 &y, MCDC *dc, MCObject *o);
-	void setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite = False);
+	                     MCPatternRef &r_pattern, int2 &x, int2 &y, MCDC *dc, MCObject *o, bool selected = false);
+	void setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite = False, bool selected = false);
 	Boolean setcolor(uint2 index, const MCString &eptr);
 	Boolean setcolors(const MCString &data);
 	Boolean setpattern(uint2 newpixmap, MCStringRef);
@@ -586,7 +632,7 @@ public:
 
 	// MW-2012-02-17: [[ LogFonts ]] Fetch the (effective) font attrs for the
 	//   object.
-	void getfontattsnew(MCNameRef& fname, uint2& fsize, uint2& fstyle);
+	uint32_t getfontattsnew(MCNameRef& fname, uint2& fsize, uint2& fstyle);
 	//void getfontattsnew(MCStringRef& fname, uint2& fsize, uint2& fstyle);
 
 	// MW-2012-02-16: [[ LogFonts ]] Return the (effective) textFont setting. 
@@ -774,14 +820,7 @@ public:
 		return kMCPropertyChangedMessageTypeNone;
 	}	
 
-	void scheduledelete(void);
-	
-	// IM-2013-02-11 image change notification (used by button icons, field images, etc.)
-	// returns true if the referenced image is still in use by this object
-	virtual bool imagechanged(MCImage *p_image, bool p_deleting)
-	{
-		return false;
-	}
+	virtual void scheduledelete(bool p_is_child = false);
 
 	// MW-2012-10-10: [[ IdCache ]]
 	void setinidcache(bool p_value)
@@ -792,9 +831,34 @@ public:
 	bool getinidcache(void)
 	{
 		return m_in_id_cache;
-	}
+    }
+
+	// IM-2013-02-11 image change notification (used by button icons, field images, etc.)
+	// returns true if the referenced image is still in use by this object
+	virtual bool imagechanged(MCImage *p_image, bool p_deleting)
+	{
+        return false;
+    }
+    
+    void setisparentscript(bool p_value)
+    {
+        m_is_parent_script = p_value;
+    }
+    
+    bool getisparentscript(void)
+    {
+        return m_is_parent_script;
+    }
     
     MCRectangle measuretext(MCStringRef p_text, bool p_is_unicode);
+    
+    // Copy the font which should be used for this object. This will map/unmap
+    // as appropriate.
+    bool copyfont(MCFontRef& r_font);
+    
+    // MW-2014-12-17: [[ Widgets ]] Returns true if the object is a widget or contains
+    //   a widget.
+    bool haswidgets(void);
     
     // Currently non-functional: always returns false
     bool is_rtl() const { return false; }
@@ -806,11 +870,11 @@ public:
 	bool GetPixel(MCExecContext& ctxt, Properties which, bool effective, uinteger_t& r_pixel);
 	void SetPixel(MCExecContext& ctxt, Properties which, uinteger_t pixel);
 
-	bool GetColor(MCExecContext& ctxt, Properties which, bool effective, MCInterfaceNamedColor& r_color);
+	bool GetColor(MCExecContext& ctxt, Properties which, bool effective, MCInterfaceNamedColor& r_color, bool recursive = false);
 	void SetColor(MCExecContext& ctxt, int index, const MCInterfaceNamedColor& p_color);
 	bool GetColors(MCExecContext& ctxt, bool effective, MCStringRef& r_colors);
 
-	bool GetPattern(MCExecContext& ctxt, Properties which, bool effective, uint4& r_pattern);
+	bool GetPattern(MCExecContext& ctxt, Properties which, bool effective, uint4*& r_pattern);
 	void SetPattern(MCExecContext& ctxt, uint2 p_new_pixmap, uint4* p_new_id);
 	bool GetPatterns(MCExecContext& ctxt, bool effective, MCStringRef& r_patterns);
 
@@ -917,28 +981,28 @@ public:
 
 	void GetForePattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	virtual void SetForePattern(MCExecContext& ctxt, uinteger_t* pattern);
-	void GetEffectiveForePattern(MCExecContext& ctxt, uinteger_t& r_pattern);
+	void GetEffectiveForePattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	void GetBackPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	virtual void SetBackPattern(MCExecContext& ctxt, uinteger_t* pattern);
-	void GetEffectiveBackPattern(MCExecContext& ctxt, uinteger_t& r_pattern);
+	void GetEffectiveBackPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	void GetHilitePattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	virtual void SetHilitePattern(MCExecContext& ctxt, uinteger_t* pattern);
-	void GetEffectiveHilitePattern(MCExecContext& ctxt, uinteger_t& r_pattern);
+	void GetEffectiveHilitePattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	void GetBorderPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	virtual void SetBorderPattern(MCExecContext& ctxt, uinteger_t* pattern);
-	void GetEffectiveBorderPattern(MCExecContext& ctxt, uinteger_t& r_pattern);
+	void GetEffectiveBorderPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	void GetTopPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	virtual void SetTopPattern(MCExecContext& ctxt, uinteger_t* pattern);
-	void GetEffectiveTopPattern(MCExecContext& ctxt, uinteger_t& r_pattern);
+	void GetEffectiveTopPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	void GetBottomPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	virtual void SetBottomPattern(MCExecContext& ctxt, uinteger_t* pattern);
-	void GetEffectiveBottomPattern(MCExecContext& ctxt, uinteger_t& r_pattern);
+	void GetEffectiveBottomPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	void GetShadowPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	virtual void SetShadowPattern(MCExecContext& ctxt, uinteger_t* pattern);
-	void GetEffectiveShadowPattern(MCExecContext& ctxt, uinteger_t& r_pattern);
+	void GetEffectiveShadowPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	void GetFocusPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	virtual void SetFocusPattern(MCExecContext& ctxt, uinteger_t* pattern);
-	void GetEffectiveFocusPattern(MCExecContext& ctxt, uinteger_t& r_pattern);
+	void GetEffectiveFocusPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 
 	void GetPatterns(MCExecContext& ctxt, MCStringRef& r_patterns);
 	void SetPatterns(MCExecContext& ctxt, MCStringRef patterns);
@@ -1122,6 +1186,12 @@ protected:
     Exec_stat setscriptprop(MCExecPoint& ep);
 #endif
 
+    // FG-2014-11-11: [[ Better theming ]] Fetch the control type/state for theming purposes
+    virtual MCPlatformControlType getcontroltype();
+    virtual MCPlatformControlPart getcontrolsubpart();
+    virtual MCPlatformControlState getcontrolstate();
+    bool getthemeselectorsforprop(Properties, MCPlatformControlType&, MCPlatformControlPart&, MCPlatformControlState&, MCPlatformThemeProperty&, MCPlatformThemePropertyType&);
+    
 private:
 #ifdef OLD_EXEC
 	Exec_stat setvisibleprop(uint4 parid, Properties which, MCExecPoint& ep);
@@ -1185,7 +1255,7 @@ private:
 	// MW-2012-02-14: [[ FontRefs ]] Called by open/close to map/unmap the concrete font.
 	// MW-2013-08-23: [[ MeasureText ]] Made private as external uses of them can be
 	//   done via measuretext() in a safe way.
-	void mapfont(void);
+	bool mapfont(bool recursive = false);
 	void unmapfont(void);
 
 	friend class MCObjectHandle;

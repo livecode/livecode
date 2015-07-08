@@ -62,6 +62,10 @@
 		${IPAD_STATUS_BAR_HIDDEN}
 	<key>UIStatusBarStyle</key>
 		${STATUS_BAR_STYLE}
+	<key>com_livecode_StatusBarSolid</key>
+		${STATUS_BAR_SOLID}
+	<key>com_livecode_UsesLocalNotifications</key>
+		${USES_LOCAL_NOTIFICATIONS}
 	<key>UIFileSharingEnabled</key>
 		${FILE_SHARING}
 	<key>UIPrerenderedIcon</key>

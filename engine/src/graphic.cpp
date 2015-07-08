@@ -39,7 +39,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 #include "exec-interface.h"
-#include "systhreads.h"
 
 
 #define GRAPHIC_EXTRA_MITERLIMIT		(1UL << 0)
@@ -89,14 +88,14 @@ MCPropertyInfo MCGraphic::kProperties[] =
     DEFINE_RW_OBJ_RECORD_PROPERTY(P_GRADIENT_FILL, MCGraphic, GradientFill)
     DEFINE_RW_OBJ_RECORD_PROPERTY(P_GRADIENT_STROKE, MCGraphic, GradientStroke)
     
-    DEFINE_RW_OBJ_LIST_PROPERTY(P_MARKER_POINTS, LinesOfPoint, MCGraphic, MarkerPoints)
+    DEFINE_RW_OBJ_LIST_PROPERTY(P_MARKER_POINTS, LegacyPoints, MCGraphic, MarkerPoints)
     DEFINE_RW_OBJ_LIST_PROPERTY(P_DASHES, ItemsOfUInt, MCGraphic, Dashes)
     // AL-2014-09-23: [[ Bug 13521 ]] Mark non-effective versions of properties as such
-    DEFINE_RW_OBJ_NON_EFFECTIVE_LIST_PROPERTY(P_POINTS, LinesOfPoint, MCGraphic, Points)
-    DEFINE_RW_OBJ_NON_EFFECTIVE_LIST_PROPERTY(P_RELATIVE_POINTS, LinesOfPoint, MCGraphic, RelativePoints)
+    DEFINE_RW_OBJ_NON_EFFECTIVE_LIST_PROPERTY(P_POINTS, LegacyPoints, MCGraphic, Points)
+    DEFINE_RW_OBJ_NON_EFFECTIVE_LIST_PROPERTY(P_RELATIVE_POINTS, LegacyPoints, MCGraphic, RelativePoints)
     // SN-2014-06-24: [[ rect_point ]] allow effective [relative] points as read-only
-    DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(P_POINTS, LinesOfPoint, MCGraphic, Points)
-    DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(P_RELATIVE_POINTS, LinesOfPoint, MCGraphic, RelativePoints)
+    DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(P_POINTS, LegacyPoints, MCGraphic, Points)
+    DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(P_RELATIVE_POINTS, LegacyPoints, MCGraphic, RelativePoints)
 };
 
 MCObjectPropertyTable MCGraphic::kPropertyTable =
@@ -233,7 +232,7 @@ const char *MCGraphic::gettypestring()
 Boolean MCGraphic::mfocus(int2 x, int2 y)
 {
 	if (!(flags & F_VISIBLE || MCshowinvisibles)
-	        || flags & F_DISABLED && (getstack()->gettool(this) == T_BROWSE))
+	    || (flags & F_DISABLED && (getstack()->gettool(this) == T_BROWSE)))
 		return False;
 	if ((state & CS_SIZE || state & CS_MOVE) && points != NULL
 	        && getstyleint(flags) != F_G_RECTANGLE)
@@ -516,7 +515,7 @@ void MCGraphic::setgradientrect(MCGradientFill *p_gradient, const MCRectangle &n
 }
 
 #ifdef LEGACY_EXEC
-Exec_stat MCGraphic::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+Exec_stat MCGraphic::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
 {
 	uint2 i;
 	int graphic_type;
@@ -829,7 +828,7 @@ Exec_stat MCGraphic::getprop_legacy(uint4 parid, Properties which, MCExecPoint& 
 		break;
 #endif /* MCGraphic::getprop */
 	default:
-		return MCControl::getprop_legacy(parid, which, ep, effective);
+		return MCControl::getprop_legacy(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }
@@ -840,7 +839,7 @@ bool MCGraphic::get_points_for_roundrect(MCPoint*& r_points, uint2& r_point_coun
 {
 	r_points = NULL;
 	r_point_count = 0;
-	MCU_roundrect(r_points, r_point_count, rect, roundradius, 0, 0);
+	MCU_roundrect(r_points, r_point_count, rect, roundradius, 0, 0, flags);
 	return (true);
 }
 
@@ -876,8 +875,11 @@ bool MCGraphic::get_points_for_regular_polygon(MCPoint*& r_points, uint2& r_poin
 		fakepoint.y = cy + (int2)(sin(iangle) * dy);
 		r_points[i] = fakepoint;
 	}
-	r_points[nsides] = fakepoint;
-	r_point_count = nsides;
+    
+    // SN-2014-11-11: [[ Bug 13974 ]] The last side is linked to the first point, for a
+    // regular polygon.
+	r_points[nsides] = r_points[0];
+	r_point_count = nsides + 1;
 	return (true);
 }
 
@@ -893,7 +895,7 @@ bool MCGraphic::get_points_for_oval(MCPoint*& r_points, uint2& r_point_count)
 		tRadius = rect.height;
 	else
 		tRadius = rect.width;
-	MCU_roundrect(r_points, r_point_count, rect, tRadius / 2, startangle, arcangle);
+	MCU_roundrect(r_points, r_point_count, rect, tRadius / 2, startangle, arcangle, flags);
 	return (true);
 }
 
@@ -1617,7 +1619,7 @@ void MCGraphic::draw_arrow(MCDC *dc, MCPoint &p1, MCPoint &p2)
 {
 	real8 dx = p2.x - p1.x;
 	real8 dy = p2.y - p1.y;
-	if (arrowsize == 0 || dx == 0.0 && dy == 0.0)
+	if (arrowsize == 0 || (dx == 0.0 && dy == 0.0))
 		return;
 	MCPoint pts[3];
 	real8 angle = atan2(dy, dx);
@@ -1908,9 +1910,21 @@ void MCGraphic::closepolygon(MCPoint *&pts, uint2 &npts)
 {
 	if (getstyleint(flags) == F_POLYGON && npts > 1)
 	{
+        // The points of a graphic can only have at most one trailing break.
+        // If it has one crop it from the pts list for processing.
+        bool t_has_trailing_break;
+        t_has_trailing_break = false;
+        if (npts >= 1 &&
+            pts[npts - 1] . x == MININT2)
+        {
+            t_has_trailing_break = true;
+            npts -= 1;
+        }
+            
 		uint2 i ;
 		uint2 t_count = 0 ;
 		MCPoint *startpt = pts ;
+        
 		for (i=1; i<=npts; i++)
 		{
 			if ((i==npts) || (pts[i].x == MININT2))
@@ -1922,7 +1936,12 @@ void MCGraphic::closepolygon(MCPoint *&pts, uint2 &npts)
 				startpt = pts+i+1 ;
 			}
 		}
-		if (t_count)
+        
+        // Make sure we allocate enough room for any trailing break.
+        if (t_has_trailing_break)
+            t_count++;
+		
+        if (t_count)
 		{
 			MCPoint *newpts = new MCPoint[npts+t_count] ;
 			startpt = pts ;
@@ -1944,7 +1963,11 @@ void MCGraphic::closepolygon(MCPoint *&pts, uint2 &npts)
 			{
 				*(currentpt++) = *startpt ;
 			}
-			
+            
+            // If we had a trailing break, then re-add it.
+			if (t_has_trailing_break)
+                currentpt -> x = currentpt -> y = MININT2;
+            
 			delete pts;
 			pts = newpts;
 			npts += t_count ;
@@ -1968,7 +1991,7 @@ void MCGraphic::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRecta
 	if (fstyle & FA_UNDERLINE)
 		dc->drawline(sx, sy + 1, sx + twidth, sy + 1);
 	if (fstyle & FA_STRIKEOUT)
-		dc->drawline(sx, sy - (MCFontGetAscent(m_font) >> 1), sx + twidth, sy - (MCFontGetAscent(m_font) >> 1));
+		dc->drawline(sx, sy - (MCFontGetAscent(m_font) / 2), sx + twidth, sy - (MCFontGetAscent(m_font) / 2));
 }
 
 // MW-2011-09-06: [[ Redraw ]] Added 'sprite' option - if true, ink and opacity are not set.
@@ -1990,7 +2013,7 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		
 		// MW-2009-06-10: [[ Bitmap Effects ]]
 		if (m_bitmap_effects == NULL)
-			dc -> begin(dc -> gettype() == CONTEXT_TYPE_PRINTER && (m_fill_gradient != NULL) || (m_stroke_gradient != NULL));
+			dc -> begin((dc -> gettype() == CONTEXT_TYPE_PRINTER && (m_fill_gradient != NULL)) || (m_stroke_gradient != NULL));
 		else
 		{
 			if (!dc -> begin_with_effects(m_bitmap_effects, rect))
@@ -2159,7 +2182,6 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
         
         // MM-2014-08-20: [[ Bug 13230 ]] Marker points are offset as they are drawn which causes issues with multi-threading.
         //  Could be refactored so that the offsetting happens in a separate buffer, but for the moment just put locks around it.
-        MCThreadMutexLock(MCgraphicmutex);
 		for (i = 0 ; i < nrealpoints ; i++)
 		{
 			if (realpoints[i].x != MININT2)
@@ -2187,7 +2209,6 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		if (last != MAXUINT2)
 			MCU_offset_points(markerpoints, nmarkerpoints,
 			                  -realpoints[last].x, -realpoints[last].y);
-        MCThreadMutexUnlock(MCgraphicmutex);
 	}
 	MCStringRef slabel = getlabeltext();
 	if (flags & F_G_SHOW_NAME &&  !MCStringIsEmpty(slabel))
@@ -2198,23 +2219,37 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		MCAutoArrayRef lines;
 		/* UNCHECKED */ MCStringSplit(slabel, MCSTR("\n"), nil, kMCCompareExact, &lines);
 		uindex_t nlines = MCArrayGetCount(*lines);
-		
-		uint2 fheight;
-		fheight = gettextheight();
 
 		uint2 fontstyle;
 		fontstyle = gettextstyle();
 
-		int32_t fascent, fdescent;
+		coord_t fascent, fdescent, fleading;
 		fascent = MCFontGetAscent(m_font);
 		fdescent = MCFontGetDescent(m_font);
-
+        fleading = MCFontGetLeading(m_font);
+        
+        coord_t fheight;
+        fheight = fascent + fdescent + fleading;
+        
 		int2 centerx = trect.x + leftmargin + ((trect.width - leftmargin - rightmargin) >> 1);
 		int2 centery = trect.y + topmargin + ((trect.height - topmargin - bottommargin) >> 1);
-		uint2 theight = nlines == 1 ? fascent : nlines * fheight;
-		int2 sx = trect.x + leftmargin + borderwidth - DEFAULT_BORDER;
-		int2 sy = centery - (theight >> 1) + fascent;
-		
+
+        coord_t sx, sy, theight;
+        if (nlines == 1)
+        {
+            // Centre things on the middle of the ascent
+            sx = trect.x + leftmargin + borderwidth - DEFAULT_BORDER;
+            sy = roundf(centery + (fascent-fdescent)/2);
+            theight = fascent;
+        }
+        else
+        {
+            // Centre things by centring the bounding box of the text
+            sx = trect.x + leftmargin + borderwidth - DEFAULT_BORDER;
+            sy = centery - (nlines * fheight / 2) + fleading/2 + fascent;
+            theight = nlines * fheight;
+        }
+        
 		uint2 i;
 		uint2 twidth = 0;
 		for (i = 0 ; i < nlines ; i++)

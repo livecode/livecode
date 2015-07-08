@@ -236,6 +236,7 @@ MCWidgetTabPaneInfo;
 class MCTheme //base class for all widgets
 {
 public:
+	virtual ~MCTheme(void) {};
 	virtual Boolean load();
 	virtual void unload();
 

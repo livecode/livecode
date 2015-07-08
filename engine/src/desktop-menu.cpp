@@ -421,7 +421,7 @@ void MCButton::macopenmenu(void)
                 t_menupick = s_popup_menupick;
                 s_popup_menupick = nil;
                 
-				Exec_stat es = message_with_valueref_args(MCM_menu_pick, t_menupick);
+				Exec_stat es = handlemenupick(t_menupick, nil);
                 
 				MCValueRelease(t_menupick);
 				
@@ -447,7 +447,7 @@ void MCButton::macopenmenu(void)
                 t_menupick = s_popup_menupick;
                 s_popup_menupick = nil;
                 
-				Exec_stat es = message_with_valueref_args(MCM_menu_pick, t_menupick);
+				Exec_stat es = handlemenupick(t_menupick, nil);
                 
 				MCValueRelease(t_menupick);
 				
@@ -500,6 +500,11 @@ Bool MCButton::macfindmenu(bool p_just_for_accel)
 
 void MCButton::getmacmenuitemtextfromaccelerator(MCPlatformMenuRef menu, KeySym key, uint1 mods, MCStringRef &r_string, bool issubmenu)
 {
+}
+
+bool MCButton::macmenuisopen()
+{
+	return m_system_menu != nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -886,26 +891,36 @@ void MCPlatformHandleMenuUpdate(MCPlatformMenuRef p_menu)
 	uindex_t t_parent_menu_index;
 	MCPlatformGetMenuParent(p_menu, t_parent_menu, t_parent_menu_index);
 	
-	// If the parent menu is not the menubar, we aren't interested.
-	if (t_parent_menu != s_menubar)
-		return;
+    // SN-2014-11-10: [[ Bug 13836 ]] We can also be the menubar's LiveCode item - in which case an
+    //  update is allowed as well
+    bool t_update_menubar;
+    t_update_menubar = p_menu == s_menubar;
+    
+    // If the parent menu is not the menubar, we aren't interested.
+    if (t_parent_menu != s_menubar && !t_update_menubar)
+        return;
 	
 	// If the button it is 'attached' to still exists, dispatch the menu update
 	// message (currently mouseDown("")). We do this whilst the menubar is locked
 	// from updates as we mustn't fiddle about with it too much in this case!
-	if (s_menubar_targets[t_parent_menu_index] -> Exists())
+	if (t_update_menubar || s_menubar_targets[t_parent_menu_index] -> Exists())
 	{
         // MW-2014-06-10: [[ Bug 12590 ]] Make sure we lock screen around the menu update message.
         MCRedrawLockScreen();
-		s_menubar_lock_count += 1;
-		s_menubar_targets[t_parent_menu_index] -> Get() -> message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
+        s_menubar_lock_count += 1;
+        // SN-2014-11-06: [[ Bug 13836 ]] MCmenubar (or MCdefaultmenubar) should get mouseDown, not the target (it gets menuPick)
+        if (MCmenubar != nil)
+            MCmenubar -> message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
+        else if (MCdefaultmenubar != nil)
+            MCdefaultmenubar -> message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
 		s_menubar_lock_count -= 1;
         MCRedrawUnlockScreen();
 	}
 	
+    // SN-2014-11-10: [[ Bug 13836 ]] Make sure that
 	// Now we've got the menu to update, process the new menu spec, but only if the
 	// menu button still exists!
-	if (s_menubar_targets[t_parent_menu_index] -> Exists())
+	if (!t_update_menubar && s_menubar_targets[t_parent_menu_index] -> Exists())
 	{
 		MCButton *t_button;
 		t_button = (MCButton *)s_menubar_targets[t_parent_menu_index] -> Get();
@@ -963,7 +978,7 @@ void MCPlatformHandleMenuSelect(MCPlatformMenuRef p_menu, uindex_t p_item_index)
 		if (s_menubar_targets[t_current_menu_index] -> Exists())
 		{
 			((MCButton *)s_menubar_targets[t_current_menu_index] -> Get()) -> setmenuhistoryprop(t_last_menu_index + 1);
-			s_menubar_targets[t_current_menu_index] -> Get() -> message_with_valueref_args(MCM_menu_pick, *t_result);
+			((MCButton *)s_menubar_targets[t_current_menu_index] -> Get()) -> handlemenupick(*t_result, nil);
 		}
 	}
 	else

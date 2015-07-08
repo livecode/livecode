@@ -789,7 +789,7 @@ void MCBinaryDecode::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     {
         uinteger_t t_skipped;
         t_skipped = 0;
-        for (uindex_t i = 0; i < t_result_count && i < r_value . int_value; i++)
+        for (uindex_t i = 0; i < t_result_count && (integer_t) i < r_value . int_value; i++)
         {
             if (t_results[i] != nil)
             {
@@ -812,7 +812,7 @@ void MCBinaryDecode::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         }
         
         // Account for the skipped ("x") parameters
-        if (t_skipped >= r_value . int_value)
+        if ((integer_t) t_skipped >= r_value . int_value)
             r_value . int_value = 0;
         else
             r_value . int_value -= t_skipped;
@@ -1455,6 +1455,9 @@ void MCChunkOffset::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     case CT_CODEUNIT:
         MCStringsEvalCodeunitOffset(ctxt, *t_chunk, *t_string, t_start, r_value . uint_value);
         break;
+	default:
+		MCUnreachable();
+		break;
 	}
     
     r_value . type = kMCExecValueTypeUInt;
@@ -3234,7 +3237,6 @@ Parse_stat MCLocals::parse(MCScriptPoint &sp, Boolean the)
 	return MCFunction::parse(sp, the);
 }
 
-
 #ifdef /* MCLocals */ LEGACY_EXEC
 	// MW-2013-11-15: [[ Bug 11277 ]] Server mode may call this outwith a handler.
 	
@@ -3246,7 +3248,6 @@ Parse_stat MCLocals::parse(MCScriptPoint &sp, Boolean the)
 	
 	return ES_NORMAL;
 #endif /* MCLocals */
-
 
 
 #ifdef /* MCMachine */ LEGACY_EXEC
@@ -3594,10 +3595,8 @@ Parse_stat MCMe::parse(MCScriptPoint &sp, Boolean the)
 			if (isexpression)
 			{
 				Exec_stat t_stat;
-				if (ep.gethandler() != nil)
-					t_stat = ep . gethandler()->eval(ep2);
-				else
-					t_stat = ep . gethlist()-> eval(ep2);
+                t_stat = ep . eval(ep2);
+                
 				if (t_stat != ES_ERROR)
 				{
 					ep.insert(ep2.getsvalue(), si, ei);
@@ -3606,11 +3605,11 @@ Parse_stat MCMe::parse(MCScriptPoint &sp, Boolean the)
 			}
 			else
 			{
+                // SN-2015-06-03: [[ Bug 11277 ]] Refactor doscript (same for both
+                //  MCHandler and MCHandlerlist)
 				Exec_stat t_stat;
-				if (ep.gethandler() != nil)
-					t_stat = ep . gethandler() -> doscript(ep2, line, pos);
-				else
-					t_stat = ep . gethlist() -> doscript(ep2, line, pos);
+                t_stat = ep . doscript(ep2, line, pos);
+                
 				if (t_stat != ES_ERROR)
 				{
 					MCresult->fetch(ep2);
@@ -4027,17 +4026,20 @@ Parse_stat MCParamCount::parse(MCScriptPoint &sp, Boolean the)
 	return MCFunction::parse(sp, the);
 }
 
-
 #ifdef /* MCParamCount */ LEGACY_EXEC
-	uint2 count;
-    // PM-2014-04-14: [[Bug 12105]] Do this check to prevent crash in LC server
-    if (h == NULL)
-    {
-        MCeerror->add(EE_PARAMCOUNT_NOHANDLER, line, pos);
-        return ES_ERROR;
-    }
-	h->getnparams(count);
-	ep.setnvalue(count);
+	// MW-2013-11-15: [[ Bug 11277 ]] If we don't have a handler then 'the param'
+	//   makes no sense so just return 0.
+	if (ep.gethandler() != nil)
+	{
+		uint2 count;
+		ep.gethandler()->getnparams(count);
+		ep.setnvalue(count);
+	}
+	else
+	{
+		ep.setnvalue(0);
+	}
+
 	return ES_NORMAL;
 #endif /* MCParamCount */
 
@@ -4046,7 +4048,6 @@ Parse_stat MCParams::parse(MCScriptPoint &sp, Boolean the)
 {
 	return MCFunction::parse(sp, the);
 }
-
 
 #ifdef /* MCParams */ LEGACY_EXEC
 	// MW-2013-11-15: [[ Bug 11277 ]] If we don't have a handler then 'the param'
@@ -4152,6 +4153,7 @@ Parse_stat MCReplaceText::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
+#ifdef LEGACY_EXEC
 static void *realloc_range(void *p_block, unsigned int p_minimum, unsigned int p_maximum, unsigned int& p_limit)
 {
 	void *p_result;
@@ -4170,6 +4172,7 @@ static void *realloc_range(void *p_block, unsigned int p_minimum, unsigned int p
 		free(p_block);
 	return p_result;
 }
+#endif /* LEGACY_EXEC */
 
 void MCReplaceText::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
@@ -4947,8 +4950,12 @@ void MCSelectedText::compile(MCSyntaxFactoryRef ctxt)
 		return ES_NORMAL;
 	}
 #endif
-	MCU_play();
-	if (MCacptr != NULL)
+
+// Keep old behaviour if FEATURE_PLATFORM_AUDIO is not defined
+#ifndef FEATURE_PLATFORM_AUDIO
+    MCU_play();
+#endif
+	if (MCacptr != NULL && MCacptr -> isPlaying())
 		return MCacptr->getprop(0, P_NAME, ep, False);
 	ep.setstaticcstring(MCdonestring);
 	return ES_NORMAL;
@@ -4983,6 +4990,7 @@ Parse_stat MCTarget::parse(MCScriptPoint &sp, Boolean the)
 {
 	contents = False;
 	if (!the)
+	{
 		if (sp.skip_token(SP_FACTOR, TT_LPAREN) == PS_NORMAL)
 		{
 			if (sp.skip_token(SP_FACTOR, TT_RPAREN) != PS_NORMAL)
@@ -4992,7 +5000,10 @@ Parse_stat MCTarget::parse(MCScriptPoint &sp, Boolean the)
 			}
 		}
 		else
+		{
 			contents = True;
+		}
+	}
 	initpoint(sp);
 	return PS_NORMAL;
 }
@@ -5738,10 +5749,7 @@ void MCValue::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 	else
 	{
 		Exec_stat t_stat;
-		if (ep . gethandler() != nil)
-			t_stat = ep . gethandler() -> eval(ep);
-		else
-			t_stat = ep . gethlist() -> eval(ep);
+        t_stat = ep . eval(ep);
 		
 		if (t_stat != ES_NORMAL)
 		{
@@ -5803,7 +5811,6 @@ Parse_stat MCVariables::parse(MCScriptPoint &sp, Boolean the)
 {
 	return MCFunction::parse(sp, the);
 }
-
 
 #ifdef /* MCVariables */ LEGACY_EXEC
 	// MW-2013-11-15: [[ Bug 11277 ]] If no handler, then process the handler list
@@ -6730,7 +6737,12 @@ void MCSetResource::compile(MCSyntaxFactoryRef ctxt)
 		MCeerror->add(EE_SPECIALFOLDERPATH_BADPARAM, line, pos);
 		return ES_ERROR;
 	}
-	MCS_getspecialfolder(ep);
+    
+    // SN-2015-01-16: [[ Bug 14295 ]] Added mode-specific way to get the resources folder
+    if (ep . getsvalue() == "resources")
+        MCModeGetResourcesFolder(ep);
+    else
+        MCS_getspecialfolder(ep);
 	return ES_NORMAL;
 #endif /* MCSpecialFolderPath */
 
@@ -6977,40 +6989,6 @@ char *MCHTTPProxyForURL::PACmyIpAddress(const char* const* p_arguments, unsigned
 
 	return t_address;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-
-#ifdef /* MCRandomBytes */ LEGACY_EXEC
-	if (byte_count->eval(ep) != ES_NORMAL && ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_RANDOMBYTES_BADCOUNT, line, pos);
-		return ES_ERROR;
-	}
-	
-	size_t t_count;
-	t_count = ep.getuint4();
-	
-	// MW-2013-05-21: [[ RandomBytes ]] Updated to use system primitive, rather
-	//   than SSL.
-	
-	void *t_bytes;
-	t_bytes = ep . getbuffer(t_count);
-	if (t_bytes == nil)
-	{
-		MCeerror -> add(EE_NO_MEMORY, line, pos);
-		return ES_ERROR;
-	}
-	
-	if (MCU_random_bytes(t_count, t_bytes))
-		ep . setlength(t_count);
-	else
-	{
-		ep . clear();
-		MCresult->copysvalue(MCString("error: could not get random bytes"));
-	}
-	
-	return ES_NORMAL;
-#endif /* MCRandomBytes */
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -7470,3 +7448,15 @@ void MCMeasureText::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         r_value . type = kMCExecValueTypeStringRef;
     }
 }
+
+#ifdef _TEST
+#include "test.h"
+
+static void TestIsOperator(void)
+{
+    MCTestAssertTrue("something is correct", true);
+}
+
+TEST_DEFINE(IsOperator, TestIsOperator)
+
+#endif

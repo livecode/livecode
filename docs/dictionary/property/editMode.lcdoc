@@ -1,0 +1,29 @@
+Name: editMode
+
+Type: property
+
+Syntax: set the editMode of <graphic> to {polygon | strokegradient | fillgradient}
+
+Summary: Determines what editing handles should be made available on the graphic object.
+
+Associations: graphic
+
+Introduced: 3.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the editMode of graphic "poly 2" of this card to "fillgradient"
+
+Description:
+Use the editMode property to add direct editing handles to the graphic object.  Editing handles are independent of the current tool and override any usual messages you may receive.
+
+If set to polygon, handles will be added to the corners of the polygon graphic allowing direct manipulation of the shape.
+
+If set to strokegradient, handles representing the from/to/via properties of the strokeGradient property of the graphic will be displayed, allowing direct manipulation of them.
+
+If set to fillGradient, handles representing the from/to/via properties of the fillGradient property of the graphic will be displayed, allowing direct manipulation of them.
+
+References: relativePoints (property), graphic (object)

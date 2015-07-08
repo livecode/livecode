@@ -16,6 +16,16 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "dbdrivercommon.h"
 
+#if defined(_WINDOWS) || defined(_WINDOWS_SERVER)
+#define LIBRARY_EXPORT __declspec(dllexport)
+#elif defined(_MACOSX) || defined (_MAC_SERVER)
+#define LIBRARY_EXPORT
+#elif defined(_LINUX) || defined (_LINUX_SERVER)
+#define LIBRARY_EXPORT
+#elif defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID)
+#define LIBRARY_EXPORT
+#endif
+
 // Default implementations for DBField
 DBField::DBField()
 {
@@ -332,7 +342,7 @@ Bool CDBCursor::move(int p_record_index)
 		return True;
 
 	// The absolute value of the difference gives us the number of moves needed to reach the required record.
-	for (unsigned int i = 0; i < abs(t_gap); i++)
+	for (int i = 0; i < abs(t_gap); i++)
 	{
 		Bool t_result;
 		if (t_gap > 0)
@@ -452,3 +462,34 @@ void CDBCursor::FreeFields()
 	fields = NULL;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+static DBcallbacks *dbcallbacks = NULL;
+
+extern "C" LIBRARY_EXPORT void setcallbacksref(DBcallbacks *callbacks)
+{
+    dbcallbacks = callbacks;
+}
+
+extern "C" void *MCU_loadmodule(const char *p_path)
+{
+    if (dbcallbacks == NULL)
+        return NULL;
+    return dbcallbacks -> load_module(p_path);
+}
+
+extern "C" void MCU_unloadmodule(void *p_handle)
+{
+    if (dbcallbacks == NULL)
+        return;
+    dbcallbacks -> unload_module(p_handle);
+}
+
+extern "C" void *MCU_resolvemodulesymbol(void *p_handle, const char *p_symbol)
+{
+    if (dbcallbacks == NULL)
+        return NULL;
+    return dbcallbacks -> resolve_symbol_in_module(p_handle, p_symbol);
+}
+
+////////////////////////////////////////////////////////////////////////////////

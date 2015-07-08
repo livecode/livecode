@@ -273,7 +273,11 @@ int MCA_ask_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringR
 	if (t_result == kMCPlatformDialogResultSuccess)
 	{
         r_value = MCValueRetain(*t_file);
-        r_result = MCValueRetain(*t_type);
+        // SN-2014-10-31: [[ Bug 13893 ]] MCPlatformEndFileDialog might return a nil value
+        if (*t_type != nil)
+            r_result = MCValueRetain(*t_type);
+        else
+            r_result = nil;
 	}
 	
 	return 0;

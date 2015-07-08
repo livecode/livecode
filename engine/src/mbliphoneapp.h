@@ -83,6 +83,7 @@ enum MCIPhoneApplicationStatus
 	// the app wants.
 	UIStatusBarStyle m_status_bar_style;
 	BOOL m_status_bar_hidden;
+    BOOL m_status_bar_solid;
 	
 	// The startup controller is that which is displayed on startup. This is
 	// presented as a modal over the main controller until the app starts
@@ -114,6 +115,8 @@ enum MCIPhoneApplicationStatus
 	bool m_orientation_changed_pending : 1;
     
     bool m_keyboard_is_visible : 1;
+
+    bool m_is_remote_notification :1;
 
     // We store the payload from a pending local notification here until the stack has become active and is ready to receive the message with the data.
     NSString *m_pending_local_notification;
@@ -182,6 +185,8 @@ enum MCIPhoneApplicationStatus
 - (void)switchToStatusBarStyle: (UIStatusBarStyle)newStyle;
 // Switch the visibility of the status bar to 'newVisible'.
 - (void)switchToStatusBarVisibility: (BOOL)newVisibile;
+// If statusbarstyle=solid, we move stack down to 20pixels
+- (void)setStatusBarSolid: (BOOL)p_is_solid;
 
 // Returns the current screen bounds in logical units - taking into account the
 // current orientation.

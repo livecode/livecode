@@ -291,7 +291,9 @@ void MCStack::sethints()
     // GDK does not provide an easy way to change the WM class properties after
     // window creation time. As a result, we have to do it manually.
     x11::XClassHint chints;
-	chints.res_name = (char *)getname_cstring();
+
+	const char * t_res_name = getname_cstring();
+	chints.res_name = (char *) t_res_name;
 
     // Build the class name
     MCAutoStringRef t_class_name;
@@ -307,6 +309,8 @@ void MCStack::sethints()
     
 	chints.res_class = (char*)*t_class_name_cstr;
     x11::XSetClassHint(x11::gdk_x11_display_get_xdisplay(MCdpy), x11::gdk_x11_drawable_get_xid(window), &chints);
+
+	delete t_res_name;
 
     // TODO: is this just another way of ensuring on-top-ness?
 	//if (mode >= WM_PALETTE)
@@ -692,10 +696,6 @@ void MCX11PutImage(GdkDisplay *p_dpy, GdkDrawable* d, GdkRegion* p_clip_region, 
 	if (d == nil)
 		return;
 
-	GdkGC *t_gc;
-
-	t_gc = gdk_gc_new(d);
-
     // If we use gdk_draw_pixbuf, the pixbuf gets blended with the existing
     // contents of the window - something that we definitely do not want. We
     // need to use Cairo directly to do the drawing to the window surface.
@@ -783,9 +783,9 @@ public:
 			t_mask = m_stack -> getwindowshape();
 			if (t_mask != nil && !t_mask -> is_sharp)
 			{
-				if (m_area.origin.x + m_area.size.width > t_mask->width)
+				if (m_area.origin.x + (int32_t) m_area.size.width > (int32_t) t_mask->width)
 					MCBitmapClearRegion(m_bitmap, t_mask->width, 0, m_area.origin.x + m_area.size.width - t_mask->width, m_area.size.height);
-				if (m_area.origin.y + m_area.size.height > t_mask->height)
+				if (m_area.origin.y + (int32_t) m_area.size.height > (int32_t) t_mask->height)
 					MCBitmapClearRegion(m_bitmap, 0, t_mask->height, m_area.size.width, m_area.origin.y + m_area.size.height - t_mask->height);
 					
 				uint32_t t_width = 0;
@@ -978,6 +978,17 @@ void MCStack::onexpose(MCRegionRef p_region)
         
         t_surface.Unlock();
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCStack::configure_window_buffer()
+{
+	return true;
+}
+
+void MCStack::release_window_buffer()
+{
 }
 
 ////////////////////////////////////////////////////////////////////////////////

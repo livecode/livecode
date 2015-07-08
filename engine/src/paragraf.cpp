@@ -444,12 +444,12 @@ uint8_t MCParagraph::firststrongisolate(uindex_t p_offset) const
     return t_level;
 }
 
-bool MCParagraph::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_visitor)
+bool MCParagraph::visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor* p_visitor)
 {
 	bool t_continue;
 	t_continue = true;
 
-	if (p_style == VISIT_STYLE_DEPTH_LAST)
+	if (MCObjectVisitorIsDepthLast(p_options))
 		t_continue = p_visitor -> OnParagraph(this);
 	
 	if (t_continue && blocks != NULL)
@@ -457,13 +457,13 @@ bool MCParagraph::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* 
 		MCBlock *bptr = blocks;
 		do
 		{
-			t_continue = bptr -> visit(p_style, p_part, p_visitor);
+			t_continue = bptr -> visit(p_options, p_part, p_visitor);
 			bptr = bptr->next();
 		}
 		while(t_continue && bptr != blocks);
 	}
 
-	if (t_continue && p_style == VISIT_STYLE_DEPTH_FIRST)
+	if (t_continue && MCObjectVisitorIsDepthFirst(p_options))
 		t_continue = p_visitor -> OnParagraph(this);
 
 	return t_continue;
@@ -535,6 +535,11 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 					newblock->GetRange(index, len);
                     t_last_added = index+len;
 
+                    // SN-2014-10-31: [[ Bug 13881 ]] Ensure that the block hasn't been corrupted.
+                    //  (leads to a potential crash, in case the corrupted stack ends up to be valid).
+                    if (index > t_length)
+                        return IO_ERROR;
+                    
                     // Some stacks seem to be saved with invalid blocks that
                     // exceed the length of the paragraph character data
                     // SN-2014-09-29: [[ Bug 13552 ]] Clamp the length appropriately
@@ -1032,8 +1037,14 @@ void MCParagraph::flow(void)
 	// MW-2012-01-25: [[ ParaStyles ]] Compute the normal and first line layout width for
 	//   wrapping purposes.
 	int32_t pwidth, twidth;
-	computelayoutwidths(pwidth, twidth);
+    computelayoutwidths(pwidth, twidth);
 
+    // SN-2015-01-21: [[ Bug 14229 ]] We want to keep the former lines, to be able
+    //  to update the dirtywidth of a newly empty line with the former line length.
+    MCLine *t_old_line;
+    t_old_line = lines;
+    lines = NULL;
+    
     // Delete all existing lines and segments
     deletelines();
     
@@ -1049,7 +1060,21 @@ void MCParagraph::flow(void)
         
         // Do block fitting on this line and get back a line containing the
         // left-overs that would not fit into the line
-        lptr = lptr->Fit(twidth);
+        
+        // SN-2015-01-21: [[ Bug 14229 ]] We update the dirtywidth of the
+        // the new line with the former line.
+        MCLine* t_leftover;
+        t_leftover = lptr->Fit(twidth);
+        
+        if (t_old_line != NULL)
+        {
+            MCLine *t_line_to_remove;
+            t_line_to_remove = t_old_line->remove(t_old_line);
+            lptr -> takewidth(t_line_to_remove);
+            delete t_line_to_remove;
+        }
+        
+        lptr = t_leftover;
         
         // MW-2008-06-12: [[ Bug 6482 ]] Make sure we only take the firstIndent into account
 		//   on the first line of the paragraph.
@@ -1414,9 +1439,10 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 	
 	dc->save();
 
-	uint2 ascent, descent;
+	coord_t ascent, descent, leading, linespace, baseline;
 	ascent = fixeda;
 	descent = fixedd;
+    leading = 0;
 
 	// MW-2012-03-16: [[ Bug 10001 ]] Compute the paragraph offset (from leftmargin) and minimal width.
 	int32_t t_paragraph_offset, t_paragraph_width;
@@ -1480,9 +1506,12 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 	{
 		if (fixeda == 0)
 		{
-			ascent = lptr -> getascent();
-			descent = lptr -> getdescent();
+			ascent = lptr -> GetAscent();
+			descent = lptr -> GetDescent();
+            leading = lptr -> GetLeading();
 		}
+        
+        linespace = ascent + descent + leading;
 
 		if (t_current_y < t_clip . y + t_clip . height && t_current_y + ascent + descent > t_clip . y)
 		{
@@ -1490,7 +1519,7 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 			t_current_x = t_inner_rect . x + computelineinneroffset(t_inner_rect . width, lptr);
 
 			if (startindex != endindex || state & PS_FRONT || state & PS_BACK)
-				fillselect(dc, lptr, t_current_x, t_current_y, ascent + descent, t_select_x, t_select_width);
+				fillselect(dc, lptr, t_current_x, t_current_y, linespace, t_select_x, t_select_width);
 
 			uint32_t t_list_style;
 			t_list_style = getliststyle();
@@ -1558,12 +1587,12 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 
 			lptr->draw(dc, t_current_x, t_current_y + ascent - 1, si, ei, m_text, pstyle);
 			if (fstart != fend)
-				drawfound(dc, lptr, t_current_x, t_current_y, ascent + descent, fstart, fend);
+				drawfound(dc, lptr, t_current_x, t_current_y, linespace, fstart, fend);
 			if (compstart != compend)
-				drawcomposition(dc, lptr, t_current_x, t_current_y, ascent + descent, compstart, compend, compconvstart, compconvend);
+				drawcomposition(dc, lptr, t_current_x, t_current_y, linespace, compstart, compend, compconvstart, compconvend);
 		}
 
-		t_current_y += ascent + descent;
+		t_current_y += linespace;
 
 		lptr = lptr->next();
 	}
@@ -2810,6 +2839,10 @@ uint1 MCParagraph::fmovefocus(Field_translations type, bool p_force_logical)
             moving_left = bptr -> is_rtl();
             type = FT_FORWARDWORD;
             break;
+
+		default:
+			/* Field translations that don't require RTL fix-ups */
+			break;
     }
 
     findex_t oldfocused = focusedindex;
@@ -3629,7 +3662,7 @@ uint2 MCParagraph::getwidth() const
 
 uint2 MCParagraph::getheight(uint2 fixedheight) const
 {
-	uint2 height = 0;
+	coord_t height = 0;
 
 	// MW-2012-03-05: [[ HiddenText ]] If the paragraph is currently hidden, then it
 	//   is of height 0.
@@ -3646,7 +3679,7 @@ uint2 MCParagraph::getheight(uint2 fixedheight) const
 		do
 		{
 			if (fixedheight == 0)
-				height += lptr->getheight();
+				height += lptr->GetHeight();
 			else
 				height += fixedheight;
 			lptr = lptr->next();
@@ -3987,29 +4020,6 @@ void MCParagraph::getclickindex(int2 x, int2 y,
 	}
 }
 
-// MW-2008-07-25: [[ Bug 6830 ]] Make sure we use the block retreat/advance
-//   methods to navigate relatively to an index, otherwise Unicodiness isn't
-//   taken into account.
-static codepoint_t GetCodepointAtRelativeIndex(MCBlock *p_block, findex_t p_index, findex_t p_delta)
-{
-	while(p_block != NULL && p_delta < 0)
-	{
-		p_block = p_block -> RetreatIndex(p_index);
-		p_delta += 1;
-	}
-	
-	while(p_block != NULL && p_delta > 0)
-	{
-		p_block = p_block -> AdvanceIndex(p_index);
-		p_delta -= 1;
-	}
-	
-	if (p_block == NULL)
-		return 0xFFFFFFFF;
-	
-	return p_block -> getparent() -> GetCodepointAtIndex(p_index);
-}
-
 findex_t MCParagraph::findwordbreakbefore(MCBlock *p_block, findex_t p_index)
 {    
 	// Create the word break iterator
@@ -4293,9 +4303,17 @@ Boolean MCParagraph::pageheight(uint2 fixedheight, uint2 &theight,
 	if (lptr == NULL)
 		lptr = lines;
     
+    // FG-2014-12-03: [[ Bug 11688 ]] Hidden paragraphs have a zero height
+    if (gethidden())
+    {
+        lptr = NULL;
+        return True;
+    }
+    
     // SN-2014-09-17: [[ Bug 13462 ]] Added the space above and below each paragraph
+    // FG-2014-11-03: [[ Bug 11688 ]] Take all of the top margin into account
     if (attrs != nil)
-        theight -= attrs -> space_above;
+        theight -= computetopmargin();
     
 	do
 	{
@@ -4310,8 +4328,9 @@ Boolean MCParagraph::pageheight(uint2 fixedheight, uint2 &theight,
     
     // SN-2014-09-17: [[ Bug 13462 ]] Added the space above and below each paragraph.
     // There is no failure for this paragraph if only the space below does not fit in the field
+    // FG-2014-12-03: [[ Bug 11688 ]] Take all of the bottom margin into account
     if (attrs != nil)
-        theight = MCU_max(((int32_t)theight) - attrs -> space_below, 0);
+        theight = MCU_max(((int32_t)theight) - computebottommargin(), 0);
     
 	return True;
 }
@@ -4323,6 +4342,19 @@ Boolean MCParagraph::pagerange(uint2 fixedheight, uint2 &theight,
 {
 	if (lptr == NULL)
 		lptr = lines;
+    
+    // SN-2014-09-17: [[ Bug 13462 ]] Added the space above and below each paragraph
+    // FG-2014-12-03: [[ Bug 11688 ]] Hidden paragraphs have a zero height
+    if (gethidden())
+    {
+        lptr = NULL;
+        return True;
+    }
+    
+    // FG-2014-11-03: [[ Bug 11688 ]] Take all of the top margin into account
+    if (attrs != nil)
+        theight -= computetopmargin();
+    
 	do
 	{
 		uint2 lheight = fixedheight == 0 ? lptr->getheight() : fixedheight;
@@ -4336,6 +4368,13 @@ Boolean MCParagraph::pagerange(uint2 fixedheight, uint2 &theight,
 	}
 	while (lptr != lines);
 	lptr = NULL;
+    
+    // SN-2014-09-17: [[ Bug 13462 ]] Added the space above and below each paragraph.
+    // There is no failure for this paragraph if only the space below does not fit in the field
+    // FG-2014-12-03: [[ Bug 11688 ]] Take all of the bottom margin into account
+    if (attrs != nil)
+        theight = MCU_max(((int32_t)theight) - computebottommargin(), 0);
+    
 	return True;
 }
 

@@ -106,6 +106,7 @@ public class Engine extends View implements EngineApi
     private NativeControlModule m_native_control_module;
     private SoundModule m_sound_module;
     private NotificationModule m_notification_module;
+    private FrameLayout m_view_layout;
 
     private PowerManager.WakeLock m_wake_lock;
     
@@ -154,6 +155,7 @@ public class Engine extends View implements EngineApi
         m_native_control_module = new NativeControlModule(this, ((LiveCodeActivity)getContext()).s_main_layout);
         m_sound_module = new SoundModule(this);
         m_notification_module = new NotificationModule(this);
+        m_view_layout = null;
         
         // MM-2012-08-03: [[ Bug 10316 ]] Initialise the wake lock object.
         PowerManager t_power_manager = (PowerManager) p_context.getSystemService(p_context.POWER_SERVICE);
@@ -926,6 +928,53 @@ public class Engine extends View implements EngineApi
     void removeNativeControl(Object p_control)
     {
         m_native_control_module.removeControl(p_control);
+    }
+
+    void removeNativeView(Object p_view)
+    {
+        View t_view = (View)p_view;
+        
+        if (m_view_layout != null)
+            m_view_layout.removeView(t_view);
+    }
+    
+    void placeNativeViewBelow(Object p_view, Object p_superior)
+    {
+        // Remove from any existing parent
+        removeNativeView(p_view);
+        
+        // The main view
+        FrameLayout t_main_view = ((LiveCodeActivity)getContext()).s_main_layout;
+        
+        // Create the layout for native layers if not already done
+        if (m_view_layout == null)
+        {
+            m_view_layout = new FrameLayout((LiveCodeActivity)getContext());
+            t_main_view.addView(m_view_layout);
+            t_main_view.bringChildToFront(m_view_layout);
+        }
+        
+        View t_view = (View)p_view;
+        int t_index = m_view_layout.getChildCount();
+        
+        if (p_superior != null)
+        {
+            View t_superior = (View)p_superior;
+            t_index = m_view_layout.indexOfChild(t_superior);
+        }
+        
+        m_view_layout.addView(t_view, t_index, new RelativeLayout.LayoutParams(0, 0));
+    }
+    
+    void setNativeViewRect(Object p_view, int left, int top, int width, int height)
+    {
+        FrameLayout.LayoutParams t_layout = new FrameLayout.LayoutParams(width, height);
+        t_layout.leftMargin = left;
+        t_layout.topMargin = top;
+
+        View t_view = (View)p_view;
+        
+        t_view.setLayoutParams(t_layout);
     }
 
     Object createBrowserControl()
@@ -1977,7 +2026,7 @@ public class Engine extends View implements EngineApi
 		if (m_opengl_view == null)
 		{
 			m_opengl_view = new OpenGLView(getContext());
-
+            
 			// Add the view to the hierarchy - we add at the bottom and bring to
 			// the front as soon as we've shown the first frame.
 			((ViewGroup)getParent()).addView(m_opengl_view, 0,
@@ -2014,12 +2063,19 @@ public class Engine extends View implements EngineApi
 		}
 		});
 	}
-
-	public void hideBitmapView()
-	{
-		m_bitmap_view.setVisibility(View.INVISIBLE);
-	}
-
+    
+    // MW-2015-05-06: [[ Bug 15232 ]] Post a runnable to prevent black flash when enabling openGLView
+    public void hideBitmapViewInTime()
+    {
+        post(new Runnable() {
+            public void run() {
+                if (m_opengl_view == null)
+                    return;
+                m_bitmap_view.setVisibility(View.INVISIBLE);
+            }
+        });
+    }
+    
 	public void showBitmapView()
 	{
 		m_bitmap_view.setVisibility(View.VISIBLE);
@@ -2763,30 +2819,49 @@ public class Engine extends View implements EngineApi
 
     public String exportImageToAlbum (byte[] t_image_data, String t_file_name, String t_file_type)
     {
-        Log.i("revandroid", "exportToAlbum called 1" + t_file_name + t_file_type);
+        Log.i("revandroid", String.format("exportToAlbum called: %s %s", t_file_name, t_file_type));
         File t_file = null;
         UUID t_uuid;
         if (t_image_data == null)
             return "export failed";
         else
         {
+            File t_folder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+            String t_filename;
+            
+            // SN-2015-01-05: [[ Bug 11417 ]] Ensure that the folder exists.
+            t_folder.mkdirs();
+            
             // The user did not supply a file name, so create one now
-            if (t_file_name == null)
+            // SN-2015-04-29: [[ Bug 15296 ]] From 7.0 onwards, t_file_name will
+            //   not be nil, but empty
+            if (t_file_name . isEmpty())
             {
                 t_uuid = UUID.randomUUID();
                 Log.i("revandroid", "Generated File Name: " + Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/I" + t_uuid.toString().substring(0,7) + t_file_type);
-                t_file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/I" + t_uuid.toString().substring(0,7) + t_file_type);
+                t_filename = "I" + t_uuid.toString().substring(0,7) + t_file_type;
             }
             else
             {
-                t_file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/" + t_file_name + t_file_type);
+                t_filename = t_file_name + t_file_type;
             }
+            
+            // SN-2015-01-05: [[ Bug 11417 ]] Let File create the file with the File returned
+            //  by getExternalStoragePublicDirectory and t_file_type.
+            t_file = new File(t_folder, t_filename);
+            
             FileOutputStream fs = null;
             try
             {
                 fs = new FileOutputStream(t_file);
                 fs.write(t_image_data,0,t_image_data.length);
+                
                 fs.close();
+                
+                // SN-2015-01-05 [[ Bug 11417 ]] Ask the Media Scanner to scan the newly created file.
+                Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                intent.setData(Uri.fromFile(t_file));
+                getContext().sendBroadcast(intent);
             }
             catch (IOException e)
             {
@@ -2921,7 +2996,6 @@ public class Engine extends View implements EngineApi
 
 	// callbacks from the billing service
 
-	public static native void doBillingSupported(boolean supported);
 	public static native void doPurchaseStateChanged(boolean verified, int purchaseState,
 		String notificationId, String productId, String orderId, long purchaseTime,
 		String developerPayload, String signedData, String signature);

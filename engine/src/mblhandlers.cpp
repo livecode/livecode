@@ -37,6 +37,8 @@
 #include "mblcontrol.h"
 #include "mblstore.h"
 
+#include "foundation-chunk.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -582,13 +584,16 @@ Exec_stat MCHandleMakePurchase(void *context, MCParameter *p_parameters)
     MCAutoStringRef t_quantity;
     MCAutoStringRef t_payload;
     MCPurchase *t_purchase = nil;
+    uint32_t t_id;
     
     if (t_success)
         t_success = MCParseParameters(p_parameters, "xxx", &(&t_prod_id), &(&t_quantity), &(&t_payload));
     
     MCExecContext ctxt(nil, nil, nil);
-    //if (t_success)
-    //t_success = MCStoreMakePurchase(t_purchase);
+    
+    if (t_success)
+        MCStoreExecCreatePurchase(ctxt, *t_prod_id, t_id);
+   
     if (t_success)
         MCStoreExecMakePurchase(ctxt, *t_prod_id, *t_quantity, *t_payload);
     
@@ -865,6 +870,82 @@ Exec_stat MCHandlePurchaseVerify(void *context, MCParameter *p_parameters)
         return ES_NORMAL;
     
     return ES_ERROR;
+}
+
+Exec_stat MCHandleGetPurchaseProperty(void *context, MCParameter *p_parameters)
+{
+#ifdef /* MCHandleGetPurchaseProperty */ LEGACY_EXEC
+    bool t_success = true;
+	
+	char *t_product_id = nil;
+    char *t_prop_name = nil;
+    const char *t_prop_value = nil;
+    
+	if (t_success)
+        t_success = MCParseParameters(p_parameters, "ss", &t_product_id, &t_prop_name);
+	if (t_success)
+        t_prop_value = MCStoreGetPurchaseProperty(t_product_id, t_prop_name);
+    
+    MCCStringFree(t_product_id);
+    MCCStringFree(t_prop_name);
+    
+    MCresult -> sets(t_prop_value);
+    return ES_NORMAL;
+#endif /* MCHandleGetPurchaseProperty */
+
+    bool t_success = true;
+    MCAutoStringRef t_product_id, t_prop_name, t_prop_value;
+    MCExecContext ctxt(nil,nil,nil);
+    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "xx", &(&t_product_id), &(&t_prop_name));
+    
+    if (t_success)
+        MCStoreGetPurchaseProperty(ctxt, *t_product_id, *t_prop_name, &t_prop_value);
+    
+    if (!ctxt.HasError())
+    {
+        ctxt.SetTheResultToValue(*t_prop_value);
+        return ES_NORMAL;
+    }
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleSetPurchaseProperty(void *context, MCParameter *p_parameters)
+{
+#ifdef /* MCHandleSetPurchaseProperty */ LEGACY_EXEC
+    bool t_success = true;
+    char *t_product_id = nil;
+    char *t_prop_name = nil;
+    char *t_prop_value = nil;
+    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "sss", &t_product_id, &t_prop_name, &t_prop_value);
+    if (t_success)
+        t_success = MCStoreSetPurchaseProperty(t_product_id, t_prop_name, t_prop_value);
+    
+    MCCStringFree(t_product_id);
+    MCCStringFree(t_prop_name);
+    MCCStringFree(t_prop_value);
+    
+    return ES_NORMAL;
+#endif /* MCHandleSetPurchaseProperty */
+
+    bool t_success = true;
+    MCAutoStringRef t_product_id, t_prop_name, t_prop_value;
+    MCExecContext ctxt(nil,nil,nil);
+    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "xxx", &(&t_product_id), &(&t_prop_name), &(&t_prop_value));
+    if (t_success)
+        MCStoreSetPurchaseProperty(ctxt, *t_product_id, *t_prop_name, *t_prop_value);
+    
+    if (ctxt.HasError())
+        return ES_ERROR;
+    
+    return ES_NORMAL;
+    
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1245,8 +1326,14 @@ Exec_stat MCHandleStartTrackingSensor(void *p_context, MCParameter *p_parameters
     if (p_parameters)
     {
         MCAutoValueRef t_value;
+        MCAutoBooleanRef t_bool;
         p_parameters->eval(ctxt, &t_value);
-        t_loosely = MCValueIsEqualTo(*t_value, kMCTrue);
+        // PM-2015-03-11: [[ Bug 14855 ]] Evaluate correctly the second param
+        if (ctxt . ConvertToBoolean(*t_value, &t_bool))
+            t_loosely = MCValueIsEqualTo(*t_bool, kMCTrue);
+        // if conversion fails, keep the same behaviour as in LC 6.7
+        else
+            t_loosely = false;
     }
     
 	ctxt . SetTheResultToEmpty();
@@ -1493,8 +1580,14 @@ Exec_stat MCHandleSensorReading(void *p_context, MCParameter *p_parameters)
     if (p_parameters)
     {
         MCAutoValueRef t_value;
+        MCAutoBooleanRef t_bool;
         p_parameters->eval(ctxt, &t_value);
-        t_detailed = MCValueIsEqualTo(*t_value, kMCTrue);
+        // PM-2015-03-11: [[ Bug 14855 ]] Evaluate correctly the second param
+        if(ctxt . ConvertToBoolean(*t_value, &t_bool))
+            t_detailed = MCValueIsEqualTo(*t_bool, kMCTrue);
+        // if conversion fails, keep the same behaviour as in LC 6.7
+        else
+            t_detailed = false;
     }
     
     ctxt . SetTheResultToEmpty();
@@ -1555,6 +1648,28 @@ Exec_stat MCHandleSensorReading(void *p_context, MCParameter *p_parameters)
 		return ES_NORMAL;
 
 	return ES_ERROR;
+}
+
+// SN-2014-12-11: [[ Merge-6.7.1-rc-4 ]]
+// PM-2014-12-08: [[ Bug 13659 ]] New function to detect if Voice Over is turned on (iOS only)
+Exec_stat MCHandleIsVoiceOverRunning(void *context, MCParameter *p_parameters)
+{
+#ifdef /* MCHandleIsVoiceOverRunning */ MLEGACY_EXEC
+    MCresult -> sets(UIAccessibilityIsVoiceOverRunning() ? MCtruestring : MCfalsestring);
+    return ES_NORMAL;
+#endif /* MCHandleIsVoiceOverRunning */
+    MCExecContext ctxt(nil, nil, nil);
+
+    bool t_is_vo_running;
+    MCMiscGetIsVoiceOverRunning(ctxt, t_is_vo_running);
+
+    if (!ctxt . HasError())
+    {
+        ctxt . SetTheResultToBool(t_is_vo_running);
+        return ES_NORMAL;
+    }
+
+    return ES_ERROR;
 }
 
 // MM-2012-02-11: Added support old style sensor syntax (iPhoneGetCurrentLocation etc)
@@ -1937,7 +2052,8 @@ Exec_stat MCHandleUpdateContact(void *context, MCParameter *p_parameters) // ABU
 	MCAutoStringRef t_message;
 	MCAutoStringRef t_alternate_name;
 
-	if (MCParseParameters(p_parameters, "axxx", &(&t_contact), &(&t_title), &(&t_message), &(&t_alternate_name)))
+    // PM-2015-05-21: [[ Bug 14792 ]] Make sure params are parsed properly
+	if (MCParseParameters(p_parameters, "a|xxx", &(&t_contact), &(&t_title), &(&t_message), &(&t_alternate_name)))
 	    MCAddressBookExecUpdateContact(ctxt, *t_contact, *t_title, *t_message, *t_alternate_name);
     
 	if (!ctxt . HasError())
@@ -3190,7 +3306,8 @@ Exec_stat MCHandleStartBusyIndicator(void *p_context, MCParameter *p_parameters)
         t_success = MCParseParameters(p_parameters, "x", &(&t_label));
     
     intenum_t t_indicator;
-    if (t_success)
+    // PM-2014-11-21: [[ Bug 14068 ]] Nil check to prevent a crash
+    if (t_success && p_parameters)
         t_success = MCBusyIndicatorTypeFromString(*t_indicator_string);
     
     int32_t t_opacity = -1;
@@ -4367,17 +4484,32 @@ Exec_stat MCHandleSetStatusBarStyle(void *context, MCParameter *p_parameters)
 #ifdef /* MCHandleSetStatusBarStyle */ LEGACY_EXEC
 	MCExecPoint ep(nil, nil, nil);
 	
-	UIStatusBarStyle t_style;
-	t_style = UIStatusBarStyleDefault;
-	if (p_parameters != nil)
-	{
-		p_parameters -> eval_argument(ep);
-		if (ep . getsvalue() == "default")
-			t_style = UIStatusBarStyleDefault;
-		else if (ep . getsvalue() == "translucent")
-			t_style = UIStatusBarStyleBlackTranslucent;
-		else if (ep . getsvalue() == "opaque")
-			t_style = UIStatusBarStyleBlackOpaque;
+    UIStatusBarStyle t_style;
+    t_style = UIStatusBarStyleDefault;
+    if (p_parameters != nil)
+    {
+        p_parameters -> eval_argument(ep);
+        if (ep . getsvalue() == "default")
+        {
+            t_style = UIStatusBarStyleDefault;
+            [MCIPhoneGetApplication() setStatusBarSolid:NO];
+        }
+        else if (ep . getsvalue() == "translucent")
+        {
+            t_style = UIStatusBarStyleBlackTranslucent;
+            [MCIPhoneGetApplication() setStatusBarSolid:NO];
+        }
+        else if (ep . getsvalue() == "opaque")
+        {
+            t_style = UIStatusBarStyleBlackOpaque;
+            [MCIPhoneGetApplication() setStatusBarSolid:NO];
+        }
+        // PM-2015-02-17: [[ Bug 14482 ]] "solid" status bar style means opaque and automatically shift down the app view by 20 pixels
+        else if (ep . getsvalue() == "solid")
+        {
+            t_style = UIStatusBarStyleBlackOpaque;
+            [MCIPhoneGetApplication() setStatusBarSolid:YES];
+        }
 	}
 	
 	[MCIPhoneGetApplication() switchToStatusBarStyle: t_style];
@@ -5441,7 +5573,7 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
 	}
     
 	// call MCSystemPick to process the pick wheel
-	MCDialogExecPickOptionByIndex(t_ctxt, kMCLines, t_option_list_array, t_initial_index_array, t_use_checkmark, t_use_picker, t_use_cancel, t_use_done, r_picked_options, MCtargetptr->getrect());
+	MCDialogExecPickOptionByIndex(t_ctxt, kMCChunkTypeLine, t_option_list_array, t_initial_index_array, t_use_checkmark, t_use_picker, t_use_cancel, t_use_done, r_picked_options, MCtargetptr->getrect());
     
 	
 	if (t_success)
@@ -5539,7 +5671,7 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
         
 	// call the Exec method to process the pick wheel
     // The function sets the result itself.
-	MCPickExecPickOptionByIndex(ctxt, (int)kMCLines, t_option_lists . Ptr(), t_option_lists . Size(), t_indices . Ptr(), t_indices . Size(),t_use_checkmark, t_use_picker, t_use_cancel, t_use_done, MCtargetptr->getrect());
+	MCPickExecPickOptionByIndex(ctxt, kMCChunkTypeLine, t_option_lists . Ptr(), t_option_lists . Size(), t_indices . Ptr(), t_indices . Size(),t_use_checkmark, t_use_picker, t_use_cancel, t_use_done, MCtargetptr->getrect());
     
     // Free memory
     for (uindex_t i = 0; i < t_option_lists . Size(); i++)
@@ -6454,6 +6586,11 @@ Exec_stat MCHandleControlDo(void *context, MCParameter *p_parameters)
 
 	if (t_success)
 		MCNativeControlExecDo(ctxt, *t_control_name, *t_property, t_params . Ptr(), t_params . Size());
+
+    
+    // SN-2014-11-20: [[ Bug 14062 ]] Cleanup the memory
+    for (uint32_t i = 0; i < t_params . Size(); ++i)
+        MCValueRelease(t_params[i]);\
 	
 	return ES_NORMAL;
 }
@@ -6780,7 +6917,7 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {false, "mobileStoreRestorePurchases", MCHandleRestorePurchases, nil},
     {false, "mobileStoreMakePurchase", MCHandleMakePurchase, nil},
     {false, "mobileStoreConfirmPurchase", MCHandleConfirmPurchase, nil},
-//    {false, "mobileStoreProductProperty", MCHandleGetPurchaseProperty, nil},
+    {false, "mobileStoreProductProperty", MCHandleGetPurchaseProperty, nil},
     {false, "mobileStoreSetProductType", MCHandleProductSetType, nil},
     {false, "mobileStoreRequestProductDetails", MCHandleRequestProductDetails, nil},
     {false, "mobileStoreConsumePurchase", MCHandleConsumePurchase, nil},

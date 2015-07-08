@@ -1,0 +1,25 @@
+Name: iphoneSystemIdentifier
+
+Type: function
+
+Syntax: iphoneSystemIdentifier()
+
+Summary: Returns the device's unique system identifier.
+
+Introduced: 4.6
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+put iphoneSystemIdentifier() into tSystemID
+
+Returns: The iphoneSystemIdentifier function returns a string in the standard UUID/GUID format.
+
+Description:
+Use the iphoneSystemIdentifier function to find the device's unique system identifier.
+
+>*Important:* As of version 6.0 the <iPhoneSystemIdentifier> function has been deprecated and must not be used in new code.
+
+References: iphoneApplicationIdentifier (function)

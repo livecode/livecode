@@ -267,7 +267,7 @@ void MCBreakPoint::compile(MCSyntaxFactoryRef ctxt)
 
 MCCancel::~MCCancel()
 {
-	delete id;
+	delete m_id;
 }
 
 Parse_stat MCCancel::parse(MCScriptPoint &sp)
@@ -275,9 +275,9 @@ Parse_stat MCCancel::parse(MCScriptPoint &sp)
 	initpoint(sp);
 	if (sp . skip_token(SP_RESET, TT_UNDEFINED, RT_PRINTING) == PS_NORMAL)
 	{
-		id = NULL;
+		m_id = NULL;
 	}
-	else if (sp.parseexp(False, True, &id) != PS_NORMAL)
+	else if (sp.parseexp(False, True, &m_id) != PS_NORMAL)
 	{
 		MCperror->add(PE_CANCEL_BADEXP, sp);
 		return PS_ERROR;
@@ -310,13 +310,13 @@ void MCCancel::exec_ctxt(MCExecContext& ctxt)
 	return ES_NORMAL;
 #endif /* MCCancel */
 
-    if (id == NULL)
+    if (m_id == NULL)
 		MCPrintingExecCancelPrinting(ctxt);
 	
 	else
 	{
         integer_t t_id;
-        if (!ctxt . EvalExprAsInt(id, EE_CANCEL_IDNAN, t_id))
+        if (!ctxt . EvalExprAsInt(m_id, EE_CANCEL_IDNAN, t_id))
             return;
         MCEngineExecCancelMessage(ctxt, t_id);
     }
@@ -326,11 +326,11 @@ void MCCancel::compile(MCSyntaxFactoryRef ctxt)
 {
 	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
 
-	if (id == nil)
+	if (m_id == nil)
 		MCSyntaxFactoryExecMethod(ctxt, kMCPrintingExecCancelPrintingMethodInfo);
 	else
 	{
-		id -> compile(ctxt);
+		m_id -> compile(ctxt);
 		
 		MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecCancelMessageMethodInfo);
 	}
@@ -1294,13 +1294,10 @@ void MCMessage::exec_ctxt(MCExecContext &ctxt)
 
 			// MW-2011-08-11: [[ Bug 9668 ]] Make sure we copy 'pdata' if we use it, since
 			//   mptr (into which it points) only lasts as long as this method call.
-			// MW-2013-11-15: [[ Bug 11277 ]] If no handler, evaluate in the context of the
-			//   server script object.
+			// MW-2013-11-15: [[ Bug 11277 ]] Refactor MCHandler::eval
 			Exec_stat t_stat;
-			if (ep.gethandler() != nil)
-				t_stat = ep . gethandler() -> eval(ep);
-			else
-				t_stat = ep . gethlist() -> eval(ep);
+            t_stat = ep . eval(ep);
+            
 			if (t_stat == ES_NORMAL)
 				newparam->set_argument(ep);
 			else
@@ -1912,7 +1909,7 @@ void MCMM::exec_ctxt(MCExecContext &ctxt)
 		MCImageRep *t_rep;
 		t_rep = nil;
 		
-		if (MCImageGetFileRepForStackContext(ep.getcstring(), MCdefaultstackptr, t_rep))
+		if (MCImageGetRepForReferenceWithStackContext(ep.getcstring(), MCdefaultstackptr, t_rep))
 		{
 			MCImagePrepareRepForDisplayAtDensity(t_rep, MCdefaultstackptr->getdevicescale());
 			
@@ -3254,7 +3251,7 @@ void MCStop::exec_ctxt(MCExecContext &ctxt)
 
 	if (target != NULL)
         if (!target->getobj(ctxt, optr, parid, True)
-		        || optr == NULL && mode != SC_EDITING)
+            || (optr == NULL && mode != SC_EDITING))
 		{
             ctxt . LegacyThrow(EE_STOP_BADTARGET);
             return;

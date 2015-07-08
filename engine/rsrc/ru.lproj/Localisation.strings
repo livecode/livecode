@@ -1,0 +1,21 @@
+/* Format string such as About %@" */
+"appMenu.about" = "О программе %@";
+
+/* Format string such as Hide %@ */
+"appMenu.hide" = "Скрыть %@";
+
+/* Hide Others */
+"appMenu.hideOthers" = "Скрыть остальные";
+
+/* Preferences */
+"appMenu.preferences" = "Настройки…";
+
+/* Format string such as Quit %@ */
+"appMenu.quit" = "Завершить %@";
+
+/* Services */
+"appMenu.services" = "Службы";
+
+/* Show All */
+"appMenu.showAll" = "Показать все";
+

@@ -1,0 +1,37 @@
+Name: clickStack
+
+Type: function
+
+Syntax: the clickStack
+
+Syntax: clickStack()
+
+Summary: <return|Returns> the name of the <stack> in which the user most recently clicked the mouse.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,web,mobile
+
+Example:
+the clickStack
+
+Example:
+repeat until (the short name of the clickStack is "Icon Palette")
+
+Example:
+if the name of the clickStack is not the defaultStack then beep
+
+Returns: The <clickStack> <function> <return|returns> the long <name> <property> of the <stack> that was last clicked.
+
+Description:
+Use the <clickStack> <function> to determine which window the user clicked, or, in conjunction with the <clickField>, <clickLine>, or <clickChunk>, to determine which <field> was clicked.
+
+If the user clicks a stack's title bar or border to bring it to the front, the value returned by the <clickStack> does not change. Only clicking in the <stack window|stack window's> content area changes the <clickStack> <value>.
+
+If the user clicks the backdrop, the <clickStack> <return|returns> empty.
+
+References: backdrop (property), name (property), defaultStack (property), field (keyword), function (control_st), mouseStack (function), value (function), clickField (function), clickLoc (function), clickCharChunk (function), clickLine (function), clickChunk (function), property (glossary), return (glossary), stack window (glossary), stack (object)
+
+Tags: ui

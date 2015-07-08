@@ -31,6 +31,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblsyntax.h"
 #include "exec.h"
 
+#include "foundation-chunk.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickDate, 5)
@@ -240,16 +242,20 @@ void MCPickDoPickDateTime(MCExecContext& ctxt, MCStringRef p_current, MCStringRe
     bool t_success;
     MCAutoValueRef t_result_string;
     
+    // SN-2014-12-03: [[ Bug 14120 ]] If the picker has been cancelled, we should not try to convert the uninitialised t_result.
     switch (p_which)
     {
     case kMCPickDate:
-            t_success = (MCSystemPickDate(t_current_ptr, t_start_ptr, t_end_ptr, t_cancel_button, t_done_button, &t_result, t_cancelled, p_button_rect) && MCD_convert_from_datetime(ctxt, t_result, CF_DATE, CF_UNDEFINED, &t_result_string));
+            t_success = (MCSystemPickDate(t_current_ptr, t_start_ptr, t_end_ptr, t_cancel_button, t_done_button, &t_result, t_cancelled, p_button_rect)
+                         && (t_cancelled || MCD_convert_from_datetime(ctxt, t_result, CF_DATE, CF_UNDEFINED, &t_result_string)));
         break;
     case kMCPickTime:
-            t_success = (MCSystemPickTime(t_current_ptr, t_start_ptr, t_end_ptr, t_step, t_cancel_button, t_done_button, &t_result, t_cancelled, p_button_rect) && MCD_convert_from_datetime(ctxt, t_result, CF_TIME, CF_UNDEFINED, &t_result_string));
+            t_success = (MCSystemPickTime(t_current_ptr, t_start_ptr, t_end_ptr, t_step, t_cancel_button, t_done_button, &t_result, t_cancelled, p_button_rect)
+                         && (t_cancelled || MCD_convert_from_datetime(ctxt, t_result, CF_TIME, CF_UNDEFINED, &t_result_string)));
         break;
     case kMCPickDateAndTime:
-            t_success = (MCSystemPickDateAndTime(t_current_ptr, t_start_ptr, t_end_ptr, t_step, t_cancel_button, t_done_button, &t_result, t_cancelled, p_button_rect) && MCD_convert_from_datetime(ctxt, t_result, CF_DATE, CF_TIME, &t_result_string));
+            t_success = (MCSystemPickDateAndTime(t_current_ptr, t_start_ptr, t_end_ptr, t_step, t_cancel_button, t_done_button, &t_result, t_cancelled, p_button_rect)
+                         && (t_cancelled || MCD_convert_from_datetime(ctxt, t_result, CF_DATE, CF_TIME, &t_result_string)));
         break;
     }
     
@@ -387,13 +393,15 @@ void MCPickExecPickOptionByIndex(MCExecContext &ctxt, int p_chunk_type, MCString
     {
         // No access to the line/item delimiter set in the handler from the mobile-specific functions/commands
         // so following the old engine default values for them
-        case kMCItems:
+        case kMCChunkTypeItem:
             t_delimiter = ',';
             break;
-        case kMCWords:
-        case kMCLines:
+        case kMCChunkTypeWord:
+        case kMCChunkTypeLine:
             t_delimiter = '\n';
             break;
+        default:
+            MCUnreachable();
     }
     uindex_t t_old_offset = 0;
     uindex_t t_new_offset = 0;

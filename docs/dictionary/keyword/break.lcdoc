@@ -1,0 +1,25 @@
+Name: break
+
+Type: keyword
+
+Syntax: break
+
+Summary: Used with the <print> <command> to skip to the next page.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+print break
+
+Description:
+Use the <break> <keyword> to start a new page.
+
+The <break> <keyword> is most useful when printing a batch of <card|cards> with the <open printing> <command>, as it can be used to allocate <card|cards> across different pages as desired.
+
+References: formfeed (constant), print (command), open printing (command), card (object), command (glossary), keyword (glossary)
+
+Tags: printing

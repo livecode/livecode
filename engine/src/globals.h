@@ -357,6 +357,7 @@ extern char *MCsslcertificates;
 extern char *MCdefaultnetworkinterface;
 extern uint4 MCstackfileversion;
 extern uint4 MCmajorosversion;
+extern Boolean MCignorevoiceoversensitivity;
 extern uint4 MCqtidlerate;
 
 #ifdef _LINUX_DESKTOP
@@ -409,14 +410,6 @@ extern char *MCsysencoding;
 // Locales
 extern MCLocaleRef kMCBasicLocale;
 extern MCLocaleRef kMCSystemLocale;
-
-// MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single animation message is sent per redraw
-extern MCThreadMutexRef MCanimationmutex;
-extern MCThreadMutexRef MCpatternmutex;
-extern MCThreadMutexRef MCimagerepmutex;
-extern MCThreadMutexRef MCfieldmutex;
-extern MCThreadMutexRef MCthememutex;
-extern MCThreadMutexRef MCgraphicmutex;
 
 ///////////////////////////////////////////////////////////////////////////////
 

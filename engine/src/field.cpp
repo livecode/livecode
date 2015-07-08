@@ -42,7 +42,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "context.h"
 #include "redraw.h"
-#include "systhreads.h"
 #include "objectstream.h"
 
 #include "exec.h"
@@ -385,13 +384,15 @@ const char *MCField::gettypestring()
 	return MCfieldstring;
 }
 
-bool MCField::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor)
+bool MCField::visit_self(MCObjectVisitor *p_visitor)
+{
+	return p_visitor -> OnField(this);
+}
+
+bool MCField::visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor)
 {
 	bool t_continue;
 	t_continue = true;
-
-	if (p_style == VISIT_STYLE_DEPTH_LAST)
-		t_continue = p_visitor -> OnField(this);
 
 	if (t_continue && fdata != NULL)
 	{
@@ -423,7 +424,7 @@ bool MCField::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_vi
 				MCParagraph *tpgptr = pgptr;
 				do
 				{
-					t_continue = tpgptr -> visit(p_style, p_part, p_visitor);
+					t_continue = tpgptr -> visit(p_options, p_part, p_visitor);
 					tpgptr = tpgptr->next();
 				}
 				while(t_continue && tpgptr != pgptr);
@@ -433,9 +434,6 @@ bool MCField::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_vi
 		}
 		while(t_fdata != fdata);
 	}
-
-	if (t_continue && p_style == VISIT_STYLE_DEPTH_FIRST)
-		t_continue = p_visitor -> OnField(this);
 
 	return t_continue;
 }
@@ -574,8 +572,8 @@ void MCField::kfocus()
 		if (flags & F_LIST_BEHAVIOR)
 		{
 			if (!(flags & F_TOGGLE_HILITE))
-                if (!focusedparagraph->isselection()
-                        && !focusedparagraph->IsEmpty()
+				if ((!focusedparagraph->isselection()
+				     && !focusedparagraph->IsEmpty())
 				        || focusedparagraph->next() != focusedparagraph)
 				{
 					focusedparagraph->sethilite(True);
@@ -596,7 +594,7 @@ void MCField::kfocus()
 			// MW-2011-08-18: [[ Layers ]] Invalidate the whole object, noting
 			//   possible change in transient.
 			layer_transientchangedandredrawall(t_old_trans);
-			replacecursor(False, False);
+			
 			MCscreen->addtimer(this, MCM_internal, MCblinkrate);
 			if (!(state & CS_MFOCUSED) && flags & F_AUTO_TAB)
 				seltext(0, getpgsize(paragraphs), True);
@@ -604,6 +602,9 @@ void MCField::kfocus()
 				message(MCM_open_field);
 			else
 				message(MCM_focus_in);
+                
+            // PM-2015-03-05: [[ Bug 14664 ]] Avoid flickering and draw cursor in the correct position after focussing the field
+            replacecursor(False, False);
 		}
 		if (!(flags & F_LOCK_TEXT))
 			MCModeActivateIme(getstack(), true);
@@ -844,7 +845,7 @@ Boolean MCField::mfocus(int2 x, int2 y)
 {
 	Tool tool = getstack()->gettool(this);
 	if (!(flags & F_VISIBLE || MCshowinvisibles)
-            || flags & F_DISABLED && tool == T_BROWSE || state & CS_NO_FILE)
+	    || (flags & F_DISABLED && tool == T_BROWSE) || state & CS_NO_FILE)
 		return False;
 	if (sbfocus(x, y, hscrollbar, vscrollbar))
 	{
@@ -1040,7 +1041,7 @@ Boolean MCField::mdown(uint2 which)
 				}
 			}
 			if (flags & F_TRAVERSAL_ON ||
-                (flags & F_LOCK_TEXT || MCmodifierstate & MS_CONTROL) && flags & F_LIST_BEHAVIOR)
+			    ((flags & F_LOCK_TEXT || MCmodifierstate & MS_CONTROL) && flags & F_LIST_BEHAVIOR))
 			{
 				if (flags & F_TRAVERSAL_ON && !(state & CS_KFOCUSED)
 				        && !(flags & F_NO_AUTO_HILITE))
@@ -1170,8 +1171,8 @@ Boolean MCField::mup(uint2 which, bool p_release)
                     {
                         if (flags & F_LIST_BEHAVIOR
                                 && (my - rect.y > (int4)(textheight + topmargin - texty)
-                                    || paragraphs == paragraphs->next()
-                                    && paragraphs->IsEmpty()))
+                                    || (paragraphs == paragraphs->next()
+                                        && paragraphs->IsEmpty())))
                             message_with_valueref_args(MCM_mouse_release, MCSTR("1"));
 						else
 						{
@@ -1325,6 +1326,7 @@ void MCField::timer(MCNameRef mptr, MCParameter *params)
 	else if (MCNameIsEqualTo(mptr, MCM_internal2, kMCCompareCaseless))
 		{
 			if (opened)
+			{
 				if (state & CS_SELECTING)
 				{
 					// MW-2012-01-25: [[ FieldMetrics ]] Co-ordinates are now card-based.
@@ -1333,12 +1335,15 @@ void MCField::timer(MCNameRef mptr, MCParameter *params)
 					MCscreen->addtimer(this, MCM_internal2, MCsyncrate);
 				}
 				else
+				{
 					if (state & CS_DRAG_TEXT)
 					{
 						if (!MCU_point_in_rect(getfrect(), mx, my))
 							dragtext();
 						MCscreen->addtimer(this, MCM_internal2, MCsyncrate);
 					}
+				}
+			}
 		}
 		else
 			MCControl::timer(mptr, params);
@@ -1383,7 +1388,7 @@ void MCField::setrect(const MCRectangle &nrect)
 }
 
 #ifdef LEGACY_EXEC
-Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
 {
 	switch (which)
 	{
@@ -1641,7 +1646,7 @@ Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 		return gettextatts(parid, P_ENCODING, ep, nil, False, 0, INT32_MAX, false);
 #endif /* MCField::getprop */
 	default:
-		return MCControl::getprop_legacy(parid, which, ep, effective);
+		return MCControl::getprop_legacy(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }
@@ -2612,7 +2617,7 @@ Exec_stat MCField::vscroll(int4 offset, Boolean doredraw)
 			drect.y -= DEFAULT_BORDER;
 			drect.height += flags & F_HSCROLLBAR ? DEFAULT_BORDER : DEFAULT_BORDER * 2;
 			if (state & CS_KFOCUSED && !(extraflags & EF_NO_FOCUS_BORDER)
-			        && (IsMacEmulatedLF() || IsMacLFAM() && !MCaqua))
+			    && (IsMacEmulatedLF() || (IsMacLFAM() && !MCaqua)))
 				drect = MCU_reduce_rect(drect, 1);
 		}
 	//to-do change for drawing xp text fields
@@ -2966,7 +2971,7 @@ void MCField::resolvechars(uint32_t p_part_id, findex_t& x_si, findex_t& x_ei, f
     t_top_para = t_pg = resolveparagraphs(p_part_id);
     
     // Loop through the paragraphs until we've gone x_si code units in
-    uindex_t t_index = 0;
+    findex_t t_index = 0;
     while ((t_index + t_pg->gettextlengthcr()) < x_si)
     {
         t_index += t_pg->gettextlengthcr();
@@ -2983,7 +2988,7 @@ void MCField::resolvechars(uint32_t p_part_id, findex_t& x_si, findex_t& x_ei, f
     p_start += t_char_range.length;
     
     // Loop until we get to the starting paragraph (or reach the end of the field)
-    uindex_t t_pg_char_length = t_pg -> gettextlengthcr(true);
+    findex_t t_pg_char_length = t_pg -> gettextlengthcr(true);
     while (t_pg_char_length <= p_start)
     {
         // Move to the next paragraph
@@ -3097,7 +3102,6 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
     if (m_recompute)
     {
         // MM-2014-08-05: [[ Bug 13012 ]] Put locks around recompute to prevent threading issues.
-        MCThreadMutexLock(MCfieldmutex);
         if (m_recompute)
         {
             if (state & CS_SIZE)
@@ -3112,7 +3116,6 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
             }
             m_recompute = false;
         }
-        MCThreadMutexUnlock(MCfieldmutex);
     }
 
 	MCRectangle frect = getfrect();
@@ -3187,7 +3190,9 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 //  SAVING AND LOADING
 //
 
-#define FIELD_EXTRA_TEXTDIRECTION (1 << 0)
+#define FIELD_EXTRA_TEXTDIRECTION   (1 << 0)
+// SN-2015-04-30: [[ Bug 15175 ]] TabAlignment flag added
+#define FIELD_EXTRA_TABALIGN        (1 << 1)
 
 IO_stat MCField::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 {
@@ -3202,11 +3207,28 @@ IO_stat MCField::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
         t_size += sizeof(uint8_t);
     }
     
+    // SN-2015-04-30: [[ Bug 15175 ]] Save the tabalign property of the field
+    if (ntabs != 0)
+    {
+        t_flags |= FIELD_EXTRA_TABALIGN;
+        // Save number of tab alignments, and then each of them.
+        t_size += sizeof(uint16_t);
+        t_size += sizeof(int8_t) * nalignments;
+    }
+
 	IO_stat t_stat;
 	t_stat = p_stream . WriteTag(t_flags, t_size);
 
     if (t_stat == IO_NORMAL && (t_flags & FIELD_EXTRA_TEXTDIRECTION))
         t_stat = p_stream . WriteU8(text_direction);
+
+    if (t_stat == IO_NORMAL && (t_flags & FIELD_EXTRA_TABALIGN))
+    {
+        t_stat = p_stream . WriteU16(nalignments);
+
+        for (uint2 i = 0; i < nalignments && t_stat == IO_NORMAL; ++i)
+            t_stat = p_stream . WriteS8((int8_t)alignments[i]);
+    }
     
 	if (t_stat == IO_NORMAL)
 		t_stat = MCObject::extendedsave(p_stream, p_part);
@@ -3235,6 +3257,37 @@ IO_stat MCField::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
             if (t_stat == IO_NORMAL)
                 text_direction = (MCTextDirection)t_value;
         }
+
+        // SN-2015-04-30: [[ Bug 15175 ]] Read the tablAlign property, if saved
+        if (t_stat == IO_NORMAL && (t_flags & FIELD_EXTRA_TABALIGN) != 0)
+        {
+            uint16_t t_nalign;
+            intenum_t *t_alignments;
+            t_alignments = NULL;
+
+            t_stat = p_stream . ReadU16(t_nalign);
+
+            if (t_stat == IO_NORMAL && t_nalign != 0)
+            {
+                if (!MCMemoryAllocate(sizeof(intenum_t) * t_nalign, t_alignments))
+                    t_stat = IO_ERROR;
+
+                for (uint2 i = 0; i < t_nalign && t_stat == IO_NORMAL; ++i)
+                {
+                    int8_t t_align;
+                    if ((t_stat = p_stream . ReadS8(t_align)) == IO_NORMAL)
+                        t_alignments[i] = t_align;
+                }
+
+                if (t_stat == IO_NORMAL)
+                {
+                    nalignments = t_nalign;
+                    alignments = t_alignments;
+                }
+                else
+                    MCMemoryDelete(t_alignments);
+            }
+        }
         
         if (t_stat == IO_NORMAL)
             t_stat = p_stream . Skip(t_length);
@@ -3259,8 +3312,9 @@ IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		return stat;
 
     // AL-2014-09-12: [[ Bug 13315 ]] Force an extension if field has explicit textDirection.
+    // SN-2015-04-30: [[ Bug 15175 ]] Force an extension if field has tabalign.
     bool t_has_extension;
-	t_has_extension = text_direction != kMCTextDirectionAuto;
+    t_has_extension = text_direction != kMCTextDirectionAuto || nalignments != 0;
     
 	if ((stat = MCObject::save(stream, p_part, t_has_extension || p_force_ext)) != IO_NORMAL)
 		return stat;
@@ -3488,4 +3542,30 @@ bool MCField::IsCursorMovementVisual()
         return true;
 #endif
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPlatformControlType MCField::getcontroltype()
+{
+    MCPlatformControlType t_type;
+    t_type = kMCPlatformControlTypeInputField;
+    
+    if (flags & F_LIST_BEHAVIOR)
+        t_type = kMCPlatformControlTypeList;
+    
+    return t_type;
+}
+
+MCPlatformControlPart MCField::getcontrolsubpart()
+{
+    return kMCPlatformControlPartNone;
+}
+
+MCPlatformControlState MCField::getcontrolstate()
+{
+    int t_state;
+    t_state = MCControl::getcontrolstate();
+    
+    return MCPlatformControlState(t_state);
 }

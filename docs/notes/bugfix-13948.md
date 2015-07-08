@@ -1,0 +1,1 @@
+# Cursor splits in 2 in text field

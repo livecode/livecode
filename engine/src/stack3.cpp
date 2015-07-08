@@ -54,6 +54,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "redraw.h"
 #include "font.h"
 #include "variable.h"
+#include "widget.h"
 
 #include "globals.h"
 #include "mctheme.h"
@@ -441,6 +442,18 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 				neweps->appendto(controls);
 			}
 			break;
+        case OT_WIDGET:
+            {
+                MCWidget *newwidget = new MCWidget;
+                newwidget->setparent(this);
+                if ((stat = newwidget->load(stream, version)) != IO_NORMAL)
+                {
+                    delete newwidget;
+                    return stat;
+                }
+                newwidget->appendto(controls);
+            }
+            break;
 		case OT_MAGNIFY:
 			{
 				MCMagnify *newmag = new MCMagnify;
@@ -1386,18 +1399,18 @@ MCStack *MCStack::findsubstackid(uint4 fid)
 	return NULL;
 }
 
-MCStack *MCStack::findstackwindowid(uint32_t p_win_id)
+MCStack *MCStack::findstackwindowid(uintptr_t p_win_id)
 {
 	if (p_win_id == 0)
 		return NULL;
-	if (MCscreen->dtouint4((Drawable)window) == p_win_id)
+	if (MCscreen->dtouint((Drawable)window) == p_win_id)
 		return this;
 	if (substacks != NULL)
 	{
 		MCStack *tptr = substacks;
 		do
 		{
-			if (MCscreen->dtouint4((Drawable)tptr->window) == p_win_id)
+			if (MCscreen->dtouint((Drawable)tptr->window) == p_win_id)
 				return tptr;
 			tptr = (MCStack *)tptr->next();
 		}

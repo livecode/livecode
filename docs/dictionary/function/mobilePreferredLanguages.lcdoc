@@ -1,0 +1,33 @@
+Name: mobilePreferredLanguages
+
+Type: function
+
+Syntax: mobilePreferredLanguages()
+
+Summary: Returns a return-delimited list of standard language tags in order of user preference.
+
+Synonyms: iphonePreferredLanguages
+
+Introduced: 5.5
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+put mobilePreferredLanguages() into tLanguages
+answer "The user prefers" && line 1 of tLanguages
+
+Returns:
+The <mobilePreferredLanguages> function returns a list of language tags in order of user preference, highest first, one per line.
+For example:
+EN
+FR
+DE.
+
+Description:
+Use <mobilePreferredLanguages> to get a list of preferred user languages.
+
+>*Note:* On Android, the <mobilePreferredLanguages> function returns one language that is currently in use. This is because Android does not support a list of preferred languages.
+
+References: mobileCurrentLocale (function)

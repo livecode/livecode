@@ -1,13 +1,16 @@
 BASEDIR=$(dirname $0)
 cd $BASEDIR/..
 
-./sdks/Xcode_4_2/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator5.0 ARCHS=i386
-./sdks/Xcode_4_6/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator6.1 ARCHS=i386
-./sdks/Xcode_5_1/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator7.1 ARCHS=i386
-./sdks/Xcode_6_0/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator8.0 ARCHS=i386
-./sdks/Xcode_6_1/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator8.1 ARCHS=i386
+sdks/Xcode_5_1/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator5.1 ARCHS=i386
+sdks/Xcode_5_1/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator6.1 ARCHS=i386
+sdks/Xcode_5_1/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator7.1 ARCHS=i386
+sdks/Xcode_6_1/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator8.1 ARCHS="i386 x86_64"
 
-./sdks/Xcode_4_2/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphoneos5.0 ARCHS=armv7
-./sdks/Xcode_4_6/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphoneos6.1 ARCHS=armv7
-./sdks/Xcode_5_1/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphoneos7.1 ARCHS=armv7
-./sdks/Xcode_6_1/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphoneos8.1 ARCHS=armv7
+./sdks/Xcode_5_1/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator5.1 ARCHS=i386
+./sdks/Xcode_5_1/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator6.1 ARCHS=i386
+./sdks/Xcode_5_1/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator7.1 ARCHS="i386"
+./sdks/Xcode_6_2/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator8.2 ARCHS="i386 x86_64"
+./sdks/Xcode_6_3/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator8.3 ARCHS="i386 x86_64"
+
+./sdks/Xcode_6_2/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphoneos8.2 ARCHS="armv7 arm64"
+./sdks/Xcode_6_3/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphoneos8.3 ARCHS="armv7 arm64"

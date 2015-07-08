@@ -37,7 +37,7 @@ bool load_ssl_library()
 #endif
 
 #ifdef TARGET_SUBPLATFORM_IPHONE
-#ifdef __i386__
+#if defined(__i386__) || defined(__x86_64__)
 #include <dlfcn.h>
 extern "C" void *IOS_LoadModule(const char *mod)
 {

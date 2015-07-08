@@ -1,0 +1,27 @@
+Name: searchKey
+
+Type: message
+
+Syntax: searchKey
+
+Summary: Sent to the current card of the defaultStack when the hardware search button is pressed.
+
+Introduced: 5.0.1
+
+OS: android
+
+Platforms: mobile
+
+Example:
+on searchKey
+  answer "You pressed the search key" with "Okay"
+end searchKey
+
+Description:
+Handle the <searchKey> message to perform an action when the search button is pressed.
+
+The <searchKey> message is sent to the current card of the <default stack> when the hardware search button is pressed.
+
+References: default stack (property), backKey (message), menuKey (message)
+
+Tags: ui

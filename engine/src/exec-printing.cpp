@@ -323,6 +323,9 @@ static void MCPrintingPrinterPageRangeParse(MCExecContext& ctxt, MCStringRef p_i
 		return;
 	}
 	
+    if (t_ranges != nil)
+        MCMemoryDeallocate(t_ranges);
+    
 	ctxt . LegacyThrow(EE_PROPERTY_BADPRINTPROP);
 }
 
@@ -623,8 +626,10 @@ void MCPrintingExecPrintRectOfCard(MCExecContext& ctxt, MCCard *p_card, MCPoint 
 	MCRectangle t_src_rect;
 	t_src_rect . x = p_from . x;
 	t_src_rect . y = p_from . y;
-	t_src_rect . width = p_to . x - p_to . x;
-	t_src_rect . height = p_to . y - p_to . y;
+    // SN-2014-11-03: [[ Bug 13913 ]] Use the correct coordinates
+    // SN-2014-11-13: [[ Bug 13913 ]] Really, the right coordinates should be used...
+    t_src_rect . width = p_to . x - p_from . x;
+    t_src_rect . height = p_to . y - p_from . y;
 	
 	MCprinter -> LayoutCard(p_card, &t_src_rect);
 
@@ -649,8 +654,10 @@ void MCPrintingExecPrintRectOfSomeCards(MCExecContext& ctxt, integer_t p_count, 
 	MCRectangle t_src_rect;
 	t_src_rect . x = p_from . x;
 	t_src_rect . y = p_from . y;
-	t_src_rect . width = p_to . x - p_to . x;
-	t_src_rect . height = p_to . y - p_to . y;
+    // SN-2015-03-10: [[ Bug 14814 ]] Same fix as for
+    //  MCPrintingExecPrintRectOfCardIntoRect
+	t_src_rect . width = p_to . x - p_from . x;
+	t_src_rect . height = p_to . y - p_from . y;
 	
 	MCprinter -> LayoutCardSequence(MCdefaultstackptr, p_count, &t_src_rect);
 
@@ -668,8 +675,10 @@ void MCPrintingExecPrintRectOfCardIntoRect(MCExecContext& ctxt, MCCard *p_card, 
 	MCRectangle t_src_rect;
 	t_src_rect . x = p_src_from . x;
 	t_src_rect . y = p_src_from . y;
-	t_src_rect . width = p_src_to . x - p_src_to . x;
-	t_src_rect . height = p_src_to . y - p_src_to . y;
+    // SN-2015-03-10: [[ Bug 14814 ]] Use p_src_to - p_src_from coordinates
+    //  to compute the width and height (not p_src_to - p_src_to).
+	t_src_rect . width = p_src_to . x - p_src_from . x;
+	t_src_rect . height = p_src_to. y - p_src_from . y;
 	
 	MCprinter -> Render(p_card, t_src_rect, p_dst_rect);
 
@@ -709,8 +718,14 @@ void MCPrintingExecOpenPrintingWithDialog(MCExecContext& ctxt, bool p_as_sheet)
 	MCAutoStringRef t_result;
 	if (MCprinter->ChoosePrinter(p_as_sheet, &t_result))
 	{
-		ctxt.SetTheResultToValue(*t_result);
-		MCPrintingExecOpenPrinting(ctxt);
+        // PM-2014-11-04: [[ Bug 13915 ]] Make sure we do not print if user cancels        
+        if (MCStringGetLength(*t_result) > 0)
+            ctxt.SetTheResultToValue(MCN_cancel);
+        else
+        {
+            ctxt.SetTheResultToEmpty();
+            MCPrintingExecOpenPrinting(ctxt);
+        }
 
 		return;
 	}
@@ -820,7 +835,8 @@ void MCPrintingGetPrintDeviceOutput(MCExecContext& ctxt, MCPrintingPrintDeviceOu
 	
 	if (t_output_type == PRINTER_OUTPUT_FILE)
 	{
-		if (!MCStringCreateWithCString(MCprinter -> GetDeviceOutputLocation(), r_output . location))
+        // SN-2014-12-22: [[ Bug 14278 ]] Output location now stored as a UTF-8 string.
+		if (!MCStringCreateWithBytes((byte_t*)MCprinter -> GetDeviceOutputLocation(), strlen(MCprinter->GetDeviceOutputLocation()), kMCStringEncodingUTF8, false, r_output . location))
 		{
 			ctxt . Throw();
 			return;

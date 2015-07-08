@@ -71,12 +71,18 @@ static bool s_lock_responder_change = false;
 // The default implementation doesn't allow borderless windows to become key.
 - (BOOL)canBecomeKeyWindow
 {
-	return m_can_become_key;
+	if ([NSApp pseudoModalFor] != nil)
+        return NO;
+    
+    return m_can_become_key;
 }
 
 - (BOOL)makeFirstResponder: (NSResponder *)p_responder
 {
-	NSResponder *t_previous;
+	if ([NSApp pseudoModalFor] != nil)
+        return NO;
+    
+    NSResponder *t_previous;
 	t_previous = [self firstResponder];
     
 	if (![super makeFirstResponder: p_responder])
@@ -165,12 +171,18 @@ static bool s_lock_responder_change = false;
 // The default implementation doesn't allow borderless windows to become key.
 - (BOOL)canBecomeKeyWindow
 {
-	return m_can_become_key;
+	if ([NSApp pseudoModalFor] != nil)
+        return NO;
+    
+    return m_can_become_key;
 }
 
 - (BOOL)makeFirstResponder: (NSResponder *)p_responder
 {
-	NSResponder *t_previous;
+	if ([NSApp pseudoModalFor] != nil)
+        return NO;
+    
+    NSResponder *t_previous;
 	t_previous = [self firstResponder];
 
 	if (![super makeFirstResponder: p_responder])
@@ -467,7 +479,7 @@ static bool s_lock_responder_change = false;
 
 - (void)windowDidChangeBackingProperties:(NSNotification *)notification
 {
-    MCLog("didChangeBacking %lf", objc_msgSend_fpret(m_window -> GetHandle(), @selector(backingScaleFactor)));
+    //MCLog("didChangeBacking %lf", objc_msgSend_fpret(m_window -> GetHandle(), @selector(backingScaleFactor)));
 }
 
 - (void)didEndSheet: (NSWindow *)sheet returnCode: (NSInteger)returnCode contextInfo: (void *)info
@@ -556,11 +568,17 @@ static bool s_lock_responder_change = false;
 
 - (BOOL)canBecomeKeyView
 {
-	return YES;
+	if ([NSApp pseudoModalFor] != nil)
+        return NO;
+    
+    return YES;
 }
 
 - (BOOL)acceptsFirstMouse:(NSEvent *)theEvent
 {
+    if ([NSApp pseudoModalFor] != nil)
+        return NO;
+    
     // MW-2014-04-23: [[ CocoaBackdrop ]] This method is called after the window has
     //   been re-ordered but before anything else - an ideal time to sync the backdrop.
     MCMacPlatformSyncBackdrop();
@@ -569,12 +587,18 @@ static bool s_lock_responder_change = false;
 
 - (BOOL)acceptsFirstResponder
 {
-	return YES;
+	if ([NSApp pseudoModalFor] != nil)
+        return NO;
+    
+    return YES;
 }
 
 - (BOOL)becomeFirstResponder
 {
-	//MCPlatformCallbackSendViewFocus([(MCWindowDelegate *)[[self window] delegate] platformWindow]);
+	if ([NSApp pseudoModalFor] != nil)
+        return NO;
+    
+    //MCPlatformCallbackSendViewFocus([(MCWindowDelegate *)[[self window] delegate] platformWindow]);
 	return YES;
 }
 
@@ -600,7 +624,10 @@ static bool s_lock_responder_change = false;
 
 - (void)mouseDown: (NSEvent *)event
 {
-	if ([self useTextInput])
+	if ([NSApp pseudoModalFor] != nil)
+        return;
+    
+    if ([self useTextInput])
 		if ([[self inputContext] handleEvent: event])
 			return;
 	
@@ -609,7 +636,10 @@ static bool s_lock_responder_change = false;
 
 - (void)mouseUp: (NSEvent *)event
 {
-	if ([self useTextInput])
+    if ([NSApp pseudoModalFor] != nil)
+        return;
+    
+    if ([self useTextInput])
 		if ([[self inputContext] handleEvent: event])
 			return;
 	
@@ -618,12 +648,18 @@ static bool s_lock_responder_change = false;
 
 - (void)mouseMoved: (NSEvent *)event
 {
-	[self handleMouseMove: event];
+    if ([NSApp pseudoModalFor] != nil)
+        return;
+    
+    [self handleMouseMove: event];
 }
 
 - (void)mouseDragged: (NSEvent *)event
 {
-	if ([self useTextInput])
+    if ([NSApp pseudoModalFor] != nil)
+        return;
+    
+    if ([self useTextInput])
 		if ([[self inputContext] handleEvent: event])
 			return;
 	
@@ -632,6 +668,9 @@ static bool s_lock_responder_change = false;
 
 - (void)rightMouseDown: (NSEvent *)event
 {
+    if ([NSApp pseudoModalFor] != nil)
+        return;
+    
     // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
     if ([[self window] attachedSheet] != nil)
         return;
@@ -641,6 +680,9 @@ static bool s_lock_responder_change = false;
 
 - (void)rightMouseUp: (NSEvent *)event
 {
+    if ([NSApp pseudoModalFor] != nil)
+    return;
+    
     // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
     if ([[self window] attachedSheet] != nil)
         return;
@@ -650,16 +692,25 @@ static bool s_lock_responder_change = false;
 
 - (void)rightMouseMoved: (NSEvent *)event
 {
-	[self handleMouseMove: event];
+    if ([NSApp pseudoModalFor] != nil)
+        return;
+    
+    [self handleMouseMove: event];
 }
 
 - (void)rightMouseDragged: (NSEvent *)event
 {
-	[self handleMouseMove: event];
+    if ([NSApp pseudoModalFor] != nil)
+        return;
+    
+    [self handleMouseMove: event];
 }
 
 - (void)otherMouseDown: (NSEvent *)event
 {
+    if ([NSApp pseudoModalFor] != nil)
+        return;
+    
     // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
     if ([[self window] attachedSheet] != nil)
         return;
@@ -669,6 +720,9 @@ static bool s_lock_responder_change = false;
 
 - (void)otherMouseUp: (NSEvent *)event
 {
+    if ([NSApp pseudoModalFor] != nil)
+        return;
+    
     // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
     if ([[self window] attachedSheet] != nil)
         return;
@@ -678,12 +732,18 @@ static bool s_lock_responder_change = false;
 
 - (void)otherMouseMoved: (NSEvent *)event
 {
-	[self handleMouseMove: event];
+    if ([NSApp pseudoModalFor] != nil)
+        return;
+    
+    [self handleMouseMove: event];
 }
 
 - (void)otherMouseDragged: (NSEvent *)event
 {
-	[self handleMouseMove: event];
+    if ([NSApp pseudoModalFor] != nil)
+        return;
+    
+    [self handleMouseMove: event];
 }
 
 - (void)mouseEntered: (NSEvent *)event
@@ -696,7 +756,10 @@ static bool s_lock_responder_change = false;
 
 - (void)mouseExited: (NSEvent *)event
 {
-	[self handleMouseMove: event];
+    if ([NSApp pseudoModalFor] != nil)
+        return;
+    
+    [self handleMouseMove: event];
 }
 
 - (void)flagsChanged: (NSEvent *)event
@@ -709,12 +772,19 @@ static bool s_lock_responder_change = false;
 static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoint_t& r_mapped, codepoint_t& r_unmapped)
 {
 	MCMacPlatformMapKeyCode([event keyCode], [event modifierFlags], r_key_code);
-	
-    // MW-2014-06-26: [[ Bug 12681 ]] Special case numeric keypad keys so they are processed
-    //   in the correct way.
-    if (r_key_code > 0xff00 && r_key_code <= 0xffff &&
-        (r_key_code < kMCPlatformKeyCodeKeypadSpace || r_key_code > kMCPlatformKeyCodeKeypadEqual || r_key_code == kMCPlatformKeyCodeKeypadEnter
-         ))
+    
+    // SN-2014-12-08: [[ Bug 14067 ]] If the key pressed was a numpad key, then we
+    // do not produce a mapped char. That will allow a different treatment, as we
+    // do not want to use the numeric value of the native char to get the rawKeyDown
+    // parameter.
+    if (([event modifierFlags] & NSNumericPadKeyMask) != 0)
+    {
+        MCMacMapNSStringToCodepoint([event characters], r_unmapped);
+        r_mapped = r_unmapped;
+        return;
+    }
+    
+    if (r_key_code > 0xff00 && r_key_code <= 0xffff)
     {
         r_mapped = r_unmapped = 0xffffffffU;
         return;
@@ -795,11 +865,8 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 {
 	MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
 	
-	if ([self useTextInput])
-	{
-		//if ([[self inputContext] handleEvent: event])
-		return;
-	}
+    // SN-2014-10-31: [[ Bug 13832 ]] We want the rawKeyUp and keyUp messages to be sent in their due course when
+    //  useTextInput is true, since the key messages have been enqueued appropriately
 	[self handleKeyPress: event isDown: NO];
 }
 
@@ -866,7 +933,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (void)doCommandBySelector:(SEL)aSelector
 {
-	MCLog("doCommandBySelector:", 0);
+    //MCLog("doCommandBySelector:", 0);
 	
 	MCMacPlatformWindow *t_window;
 	t_window = [self platformWindow];
@@ -878,7 +945,9 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	if (m_input_method_event != nil)
 	{
 		[self handleKeyPress: m_input_method_event isDown: YES];
-		[self handleKeyPress: m_input_method_event isDown: NO];
+        // SN-2014-11-03: [[ Bug 13832 ]] keyUp will be called, and the message will have been queued.
+//		[self handleKeyPress: m_input_method_event isDown: NO];
+        
         // PM-2014-09-15: [[ Bug 13442 ]] Set m_input_method_event to nil to prevent rawKeyDown from firing twice when altKey is down
         m_input_method_event = nil;
 	}
@@ -947,7 +1016,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (void)unmarkText
 {
-	MCLog("unmarkText", 0);
+    //MCLog("unmarkText", 0);
 	
 	MCMacPlatformWindow *t_window;
 	t_window = [self platformWindow];
@@ -974,7 +1043,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	
 	MCRange t_marked_range, t_selected_range;
 	MCPlatformCallbackSendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
-	MCLog("selectedRange() = (%d, %d)", t_selected_range . offset, t_selected_range . length);
+    //MCLog("selectedRange() = (%d, %d)", t_selected_range . offset, t_selected_range . length);
 	return NSMakeRange(t_selected_range . offset, t_selected_range . length);
 }
 
@@ -987,7 +1056,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	
 	MCRange t_marked_range, t_selected_range;
 	MCPlatformCallbackSendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
-	MCLog("markedRange() = (%d, %d)", t_marked_range . offset, t_marked_range . length);
+    //MCLog("markedRange() = (%d, %d)", t_marked_range . offset, t_marked_range . length);
 	return NSMakeRange(t_marked_range . offset, t_marked_range . length);
 }
 
@@ -1000,7 +1069,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	
 	MCRange t_marked_range, t_selected_range;
 	MCPlatformCallbackSendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
-	MCLog("hasMarkedText() = %d", t_marked_range . offset != UINDEX_MAX);
+    //MCLog("hasMarkedText() = %d", t_marked_range . offset != UINDEX_MAX);
 	return t_marked_range . offset != UINDEX_MAX;
 }
 
@@ -1033,7 +1102,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (NSArray*)validAttributesForMarkedText
 {
-	MCLog("validAttributesForMarkedText() = []", nil);
+    //MCLog("validAttributesForMarkedText() = []", nil);
 	return [NSArray array];
 }
 
@@ -1057,7 +1126,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	if (actualRange != nil)
 		*actualRange = NSMakeRange(t_actual_range . offset, t_actual_range . length);
 	
-	MCLog("firstRectForCharacterRange(%d, %d -> %d, %d) = [%d, %d, %d, %d]", aRange . location, aRange . length, t_actual_range . offset, t_actual_range . length, t_rect . x, t_rect . y, t_rect . width, t_rect . height);
+    //MCLog("firstRectForCharacterRange(%d, %d -> %d, %d) = [%d, %d, %d, %d]", aRange . location, aRange . length, t_actual_range . offset, t_actual_range . length, t_rect . x, t_rect . y, t_rect . width, t_rect . height);
 	
 	t_ns_rect . origin = [[self window] convertBaseToScreen: t_ns_rect . origin];
 	
@@ -1079,7 +1148,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	uindex_t t_index;
 	MCPlatformCallbackSendTextInputQueryTextIndex(t_window, t_location, t_index);
 	
-	MCLog("characterIndexForPoint(%d, %d) = %d", t_location . x, t_location . y, t_index);
+    //MCLog("characterIndexForPoint(%d, %d) = %d", t_location . x, t_location . y, t_index);
 	
 	return t_index;
 }
@@ -1559,6 +1628,7 @@ MCMacPlatformWindow::MCMacPlatformWindow(void)
 	m_shadow_changed = false;
 	m_synchronizing = false;
 	m_has_sheet = false;
+	m_frame_locked = false;
 	
 	m_parent = nil;
 }
@@ -1622,6 +1692,14 @@ void MCMacPlatformWindow::ProcessDidMove(void)
 	// Don't handle move/resize events when synchronizing properties.
 	if (m_synchronizing)
 		return;
+	
+	// IM-2015-01-30: [[ Bug 14140 ]] Reset any rect changes while the frame is locked.
+	if (m_frame_locked)
+	{
+		m_changes.content_changed = true;
+		DoSynchronize();
+		return;
+	}
 	
 	// Get the window's new content rect.
 	NSRect t_new_cocoa_content;
@@ -1694,6 +1772,13 @@ void MCMacPlatformWindow::ProcessKeyDown(MCPlatformKeyCode p_key_code, codepoint
 void MCMacPlatformWindow::ProcessKeyUp(MCPlatformKeyCode p_key_code, codepoint_t p_mapped_char, codepoint_t p_unmapped_char)
 {
 	HandleKeyUp(p_key_code, p_mapped_char, p_unmapped_char);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCMacPlatformWindow::SetFrameLocked(bool p_locked)
+{
+	m_frame_locked = p_locked;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1778,7 +1863,7 @@ void MCMacPlatformWindow::DoRealize(void)
         [m_panel_handle setFloatingPanel: [NSApp isActive]];
     else
         [m_window_handle setLevel: t_window_level];
-	[m_window_handle setOpaque: m_mask == nil];
+	[m_window_handle setOpaque: m_is_opaque && m_mask == nil];
 	[m_window_handle setHasShadow: m_has_shadow];
 	if (!m_has_zoom_widget)
 		[[m_window_handle standardWindowButton: NSWindowZoomButton] setEnabled: NO];
@@ -1814,12 +1899,12 @@ void MCMacPlatformWindow::DoSynchronize(void)
     if (m_changes . has_shadow_changed)
         [m_window_handle setHasShadow: m_has_shadow];
     
-	if (m_changes . mask_changed)
+	if (m_changes . mask_changed || m_changes . is_opaque_changed)
 	{
         // MW-2014-07-29: [ Bug 12997 ]] Make sure we invalidate the whole window when
         //   the mask changes.
         [[m_window_handle contentView] setNeedsDisplay: YES];
-		[m_window_handle setOpaque: m_mask == nil];
+		[m_window_handle setOpaque: m_is_opaque && m_mask == nil];
 		if (m_has_shadow)
 			m_shadow_changed = true;
 	}
@@ -1982,7 +2067,11 @@ void MCMacPlatformWindow::DoUpdate(void)
 {	
 	// If the shadow has changed (due to the mask changing) we must disable
 	// screen updates otherwise we get a flicker.
-	if (m_shadow_changed && m_has_shadow)
+	// IM-2015-02-23: [[ WidgetPopup ]] Assume shadow changes when redrawing a non-opaque widget
+	bool t_shadow_changed;
+	t_shadow_changed = (m_shadow_changed || !m_is_opaque) && m_has_shadow;
+	
+	if (t_shadow_changed)
 		NSDisableScreenUpdates();
 	
 	// Mark the bounding box of the dirty region for needing display.
@@ -1995,7 +2084,7 @@ void MCMacPlatformWindow::DoUpdate(void)
 	[m_view displayIfNeeded];
 	
 	// Re-enable screen updates if needed.
-	if (m_shadow_changed && m_has_shadow)
+	if (t_shadow_changed)
     {
         // MW-2014-06-11: [[ Bug 12495 ]] Turn the shadow off and on to force recaching.
         [m_window_handle setHasShadow: NO];
@@ -2166,7 +2255,8 @@ void MCPlatformWindowMaskRelease(MCPlatformWindowMaskRef p_mask)
 	
 	if (t_mask->references > 1)
 	{
-		t_mask->references++;
+        // PM-2015-02-13: [[ Bug 14588 ]] Decrease ref count
+		t_mask->references--;
 		return;
 	}
 	

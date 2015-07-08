@@ -294,16 +294,16 @@ MCGAffineTransform view_get_stack_transform(MCStackFullscreenMode p_mode, MCRect
 	case kMCStackFullscreenShowAll:
 		t_scale = MCMin((MCGFloat)p_screen_rect.width / (MCGFloat)p_stack_rect.width, (MCGFloat)p_screen_rect.height / (MCGFloat)p_stack_rect.height);
 		t_transform = MCGAffineTransformMakeTranslation(-(MCGFloat)p_stack_rect.width / 2.0, -(MCGFloat)p_stack_rect.height / 2.0);
-		t_transform = MCGAffineTransformScale(t_transform, t_scale, t_scale);
-		t_transform = MCGAffineTransformTranslate(t_transform, (MCGFloat)p_screen_rect.width / 2.0, (MCGFloat)p_screen_rect.height / 2.0);
+		t_transform = MCGAffineTransformPreScale(t_transform, t_scale, t_scale);
+		t_transform = MCGAffineTransformPreTranslate(t_transform, (MCGFloat)p_screen_rect.width / 2.0, (MCGFloat)p_screen_rect.height / 2.0);
 
 		return t_transform;
 
 	case kMCStackFullscreenNoBorder:
 		t_scale = MCMax((MCGFloat)p_screen_rect.width / (MCGFloat)p_stack_rect.width, (MCGFloat)p_screen_rect.height / (MCGFloat)p_stack_rect.height);
 		t_transform = MCGAffineTransformMakeTranslation(-(MCGFloat)p_stack_rect.width / 2.0, -(MCGFloat)p_stack_rect.height / 2.0);
-		t_transform = MCGAffineTransformScale(t_transform, t_scale, t_scale);
-		t_transform = MCGAffineTransformTranslate(t_transform, (MCGFloat)p_screen_rect.width / 2.0, (MCGFloat)p_screen_rect.height / 2.0);
+		t_transform = MCGAffineTransformPreScale(t_transform, t_scale, t_scale);
+		t_transform = MCGAffineTransformPreTranslate(t_transform, (MCGFloat)p_screen_rect.width / 2.0, (MCGFloat)p_screen_rect.height / 2.0);
 
 		return t_transform;
 
@@ -313,6 +313,9 @@ MCGAffineTransform view_get_stack_transform(MCStackFullscreenMode p_mode, MCRect
 		t_rect = MCU_center_rect(p_screen_rect, p_stack_rect);
 		// IM-2013-12-19: [[ Bug 11590 ]] Adjust for screen rect origins other than 0,0
 		return MCGAffineTransformMakeTranslation(t_rect.x - p_screen_rect.x, t_rect.y - p_screen_rect.y);
+
+	default:
+		MCUnreachable();
 	}
 }
 
@@ -963,7 +966,8 @@ MCRectangle MCStack::view_setgeom(const MCRectangle &p_rect)
 
 void MCStack::view_update_geometry()
 {
-	if (m_view_need_resize)
+	if (m_view_need_resize &&
+        window != NULL)
 		view_platform_setgeom(m_view_rect);
 	
 	m_view_need_resize = false;

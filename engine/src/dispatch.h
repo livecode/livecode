@@ -59,17 +59,24 @@ class MCDispatch : public MCObject
 
     static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
+
+    // AL-2015-02-10: [[ Standalone Inclusions ]] Add resource mapping array to MCDispatch object.
+    MCArrayRef m_library_mapping;
 public:
 	MCDispatch();
 	// virtual functions from MCObject
 	virtual ~MCDispatch();
+#ifdef MODE_TEST
+	virtual void timer(MCNameRef mptr, MCParameter *params);
+#endif
     
     virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
     
 #ifdef LEGACY_EXEC
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective. bool recursive = false);
     virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 #endif
+
 	// dummy cut function for checking licensing
 	virtual Boolean cut(Boolean home);
 	virtual Exec_stat handle(Handler_type, MCNameRef, MCParameter *params, MCObject *pass_from);
@@ -171,6 +178,7 @@ public:
 	void enter(Window w);
     void redraw(Window w, MCRegionRef dirty_region);
 	MCFontStruct *loadfont(MCNameRef fname, uint2 &size, uint2 style, Boolean printer);
+    MCFontStruct *loadfontwithhandle(MCSysFontHandle);
 	
 	// This method iterates through all stacks and ensures none have a reference
 	// to one of the ones in MCcursors.
@@ -202,7 +210,7 @@ public:
 	MCStack *findstackname(MCNameRef);
 	MCStack *findstackid(uint4 fid);
 	// IM-2014-07-09: [[ Bug 12225 ]] Find the stack by window ID
-	MCStack *findstackwindowid(uint32_t p_win_id);
+	MCStack *findstackwindowid(uintptr_t p_win_id);
 	MCStack *findstackd(Window w);
 	
 	// IM-2014-07-23: [[ Bug 12930 ]] Replace findchildstack method with iterating method
@@ -248,6 +256,11 @@ public:
 	void GetDefaultBackColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
     
 	void GetDefaultPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
+    
+    // AL-2015-02-10: [[ Standalone Inclusions ]] Add functions to fetch relative paths present
+    //  in the resource mapping array of MCdispatcher.
+    void addlibrarymapping(MCStringRef p_mapping);
+    bool fetchlibrarymapping(MCStringRef p_name, MCStringRef &r_path);
     
 private:
 	// MW-2012-02-17: [[ LogFonts ]] Actual method which performs a load stack. This

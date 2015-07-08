@@ -190,7 +190,12 @@ static DEVMODEW *WindowsGetPrinterInfo(MCStringRef p_printer_name, DEVMODEW *p_i
 			t_success = false;
 	}
 
+	// SN-2015-03-05: [[ Bug 14160 ]] Ensure that the value returned
+	//  has been initialised (otherwise, we are at the risk a non-nil
+	//  value is returned, and MCWindowsPrinter::DoInitialise will not
+	//  return false.
 	DEVMODEW *t_devmode;
+	t_devmode = NULL;
 	if (t_success)
 	{
 		// NOTE: the memory required for the DEVMODE buffer can be bigger than
@@ -806,7 +811,8 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 			else
 				SetBkMode(t_dc, TRANSPARENT);
 			if (p_mark -> text . unicode_override)
-				TextOutW(t_dc, p_mark -> text . position . x, p_mark -> text . position . y, (LPCWSTR)p_mark -> text . data, p_mark -> text . length >> 1);
+				// SN-2014-10-31: [[ Bug 13866 ]] The length is in characters, so fits the number of wchars
+				TextOutW(t_dc, p_mark -> text . position . x, p_mark -> text . position . y, (LPCWSTR)p_mark -> text . data, p_mark -> text . length);
 			else
 				TextOutA(t_dc, p_mark -> text . position . x, p_mark -> text . position . y, (LPCSTR)p_mark -> text . data, p_mark -> text . length);
 
@@ -1193,16 +1199,18 @@ const char *MCWindowsPrinterDevice::Error(void) const
 	return m_error;
 }
 
-MCPrinterResult MCWindowsPrinterDevice::Start(HDC p_dc, const char *p_document_name, const char *p_output_file)
+// SN-2014-12-22: [[ Bug 14278 ]] Function updated to take wchar params
+MCPrinterResult MCWindowsPrinterDevice::Start(HDC p_dc, const wchar_t *p_document_name, const wchar_t *p_output_file)
 {
-	DOCINFOA t_info;
-	t_info . cbSize = sizeof(DOCINFOA);
+    // SN-2014-12-22: [[ Bug 14278 ]] Document name and output file now encoded as UTF16 chars
+	DOCINFOW t_info;
+	t_info . cbSize = sizeof(DOCINFOW);
 	t_info . lpszDocName = p_document_name;
 	t_info . lpszOutput = p_output_file;
 	t_info . lpszDatatype = NULL;
 	t_info . fwType = 0;
 	
-	if (StartDocA(p_dc, &t_info) <= 0)
+	if (StartDocW(p_dc, &t_info) <= 0)
 	{
 		SetError("unable to start document");
 		return PRINTER_RESULT_ERROR;
@@ -1334,7 +1342,9 @@ MCPrinterResult MCWindowsPrinterDevice::Bookmark(const char *title, double x, do
 void MCWindowsPrinter::DoInitialize(void)
 {
 	m_valid = false;
-	m_name = MCValueRetain(kMCEmptyString);
+	// SN-2015-03-18: [[ Win shutdown crash ]] Avoid memory leak at printer
+	//  initialisation
+	MCValueAssign(m_name, kMCEmptyString);
 	m_devmode = NULL;
 	
 	m_dc = NULL;
@@ -1352,6 +1362,8 @@ void MCWindowsPrinter::DoFinalize(void)
 	m_dc_changed = false;
 
 	MCValueRelease(m_name);
+	// SN-2015-03-18: [[ Win shutdown crash ]] Do not over-release m_name
+	m_name = NULL;
 
 	delete m_devmode;
 	m_valid = false;
@@ -1730,9 +1742,20 @@ MCPrinterResult MCWindowsPrinter::DoBeginPrint(MCStringRef p_document_name, MCPr
 	t_device = new MCWindowsPrinterDevice;
 
 	MCPrinterResult t_result;
-    MCAutoPointer<char> t_doc_name;
-    /* UNCHECKED */ MCStringConvertToCString(p_document_name, &t_doc_name);
-	t_result = t_device -> Start(t_dc, *t_doc_name, GetDeviceOutputLocation());
+    // SN-2014-12-22: [[ Bug 14278 ]] Updated to Unicode name and location
+    MCAutoStringRefAsWString t_doc_name, t_output_file;
+    /* UNCHECKED */ t_doc_name . Lock(p_document_name);
+    
+    MCAutoStringRef t_output_file_stringref;
+	if (GetDeviceOutputLocation() != NULL)
+	{
+		/* UNCHECKED */ MCStringCreateWithBytes((byte_t*)GetDeviceOutputLocation(), strlen(GetDeviceOutputLocation()), kMCStringEncodingUTF8, false, &t_output_file_stringref);
+		/* UNCHECKED */ t_output_file . Lock(*t_output_file_stringref);
+	}
+	else
+		t_output_file . Lock(kMCEmptyString);
+    
+	t_result = t_device -> Start(t_dc, *t_doc_name, *t_output_file);
 
 	r_device = t_device;
 

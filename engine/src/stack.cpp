@@ -271,15 +271,14 @@ MCStack::MCStack()
 	
 	// MW-2011-09-13: [[ Masks ]] The window mask starts off as nil.
 	m_window_shape = nil;
+
+	m_window_buffer = nil;
 	
 	// MW-2011-11-24: [[ UpdateScreen ]] Start off with defer updates false.
 	m_defer_updates = false;
 
 	// MW-2012-10-10: [[ IdCache ]]
 	m_id_cache = nil;
-    
-    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single thread mutates the ID cache at a time.
-    /* UNCHECKED */ MCThreadMutexCreate(m_id_cache_lock);
 
 	// MW-2014-03-12: [[ Bug 11914 ]] Stacks are not engine menus by default.
 	m_is_menu = false;
@@ -357,9 +356,6 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	m_id_cache = nil;
-	
-    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single thread mutates the ID cache at a time.
-    /* UNCHECKED */ MCThreadMutexCreate(m_id_cache_lock);
     
 	mnemonics = NULL;
 	nfuncs = 0;
@@ -476,6 +472,8 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	
 	// MW-2011-09-13: [[ Masks ]] The windowmask starts off as nil.
 	m_window_shape = nil;
+
+	m_window_buffer = nil;
 
 	// MW-2011-11-24: [[ UpdateScreen ]] Start off with defer updates false.
 	m_defer_updates = false;
@@ -617,11 +615,10 @@ MCStack::~MCStack()
 	
 	// MW-2012-10-10: [[ IdCache ]] Free the idcache.
 	freeobjectidcache();
-    
-    // MM-2014-07-31: [[ ThreadedRendering ]] Release cache mutex.
-    MCThreadMutexRelease(m_id_cache_lock);
 	
 	view_destroy();
+
+	release_window_buffer();
 }
 
 Chunk_term MCStack::gettype() const
@@ -634,13 +631,15 @@ const char *MCStack::gettypestring()
 	return MCstackstring;
 }
 
-bool MCStack::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_visitor)
+bool MCStack::visit_self(MCObjectVisitor* p_visitor)
+{
+	return p_visitor -> OnStack(this);
+}
+
+bool MCStack::visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor* p_visitor)
 {
 	bool t_continue;
 	t_continue = true;
-
-	if (p_style == VISIT_STYLE_DEPTH_LAST)
-		t_continue = p_visitor -> OnStack(this);
 
 	if (t_continue && cards != nil)
 	{
@@ -648,7 +647,10 @@ bool MCStack::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_vi
 		t_card = cards;
 		do
 		{
-			t_continue = p_visitor -> OnCard(t_card);
+			if (MCObjectVisitorIsHeirarchical(p_options))
+				t_continue = t_card->visit(p_options, p_part, p_visitor);
+			else
+				t_continue = t_card->visit_self(p_visitor);
 			t_card = t_card -> next();
 		}
 		while(t_continue && t_card != cards);
@@ -660,15 +662,24 @@ bool MCStack::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_vi
 		t_control = controls;
 		do
 		{
-			t_continue = t_control -> visit(p_style, 0, p_visitor);
+			if (!MCObjectVisitorIsHeirarchical(p_options) || t_control->getparent() == this)
+				t_continue = t_control -> visit(p_options, 0, p_visitor);
 			t_control = t_control -> next();
 		}
 		while(t_continue && t_control != controls);
 	}
 
-	if (p_style == VISIT_STYLE_DEPTH_FIRST)
-		t_continue = p_visitor -> OnStack(this);
-
+	if (t_continue && MCObjectVisitorIsHeirarchical(p_options) && substacks != nil)
+	{
+		MCStack *t_stack = substacks;
+		do
+		{
+			t_continue = t_stack->visit(p_options, 0, p_visitor);
+			t_stack = t_stack->next();
+		}
+		while (t_continue && t_stack != substacks);
+	}
+	
 	return true;
 }
 
@@ -1264,7 +1275,7 @@ void MCStack::setrect(const MCRectangle &nrect)
 }
 
 #ifdef LEGACY_EXEC
-Exec_stat MCStack::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+Exec_stat MCStack::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective, bool recursive)
 {
 	uint2 j = 0;
 	uint2 k = 0;
@@ -1611,7 +1622,7 @@ Exec_stat MCStack::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 		ep.setboolean(getflag(F_WM_PLACE));
 		break;
 	case P_WINDOW_ID:
-		ep.setint(MCscreen->dtouint4((Drawable)window));
+		ep.setint(MCscreen->dtouint((Drawable)window));
 		break;
 	case P_PIXMAP_ID:
 		ep.setint(0);
@@ -1773,7 +1784,7 @@ Exec_stat MCStack::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 		Exec_stat t_stat;
 		t_stat = mode_getprop(parid, which, ep, kMCEmptyString, effective);
 		if (t_stat == ES_NOT_HANDLED)
-			return MCObject::getprop_legacy(parid, which, ep, effective);
+			return MCObject::getprop_legacy(parid, which, ep, effective, recursive);
 
 		return t_stat;
 	}
@@ -2919,8 +2930,10 @@ Boolean MCStack::del()
 	//   flag set, flush the parentscripts table.
 	if (getextendedstate(ECS_HAS_PARENTSCRIPTS))
 		MCParentScript::FlushStack(this);
-
-	return True;
+    
+    // MCObject now does things on del(), so we must make sure we finish by
+    // calling its implementation.
+    return MCObject::del();
 }
 
 void MCStack::paste(void)
@@ -3050,6 +3063,12 @@ void MCStack::recompute()
 		curcard->recompute();
 }
 
+void MCStack::toolchanged(Tool p_new_tool)
+{
+    if (curcard != NULL)
+        curcard->toolchanged(p_new_tool);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 void MCStack::loadexternals(void)
@@ -3091,7 +3110,11 @@ void MCStack::unloadexternals(void)
 bool MCStack::resolve_relative_path(MCStringRef p_path, MCStringRef& r_resolved)
 {
     if (MCStringIsEmpty(p_path))
+    {
+        // PM-2015-01-26: [[ Bug 14437 ]] If we clear the player filename in the property inspector or by script, make sure we resolve empty, to prevent a crash
+        r_resolved = MCValueRetain(kMCEmptyString);
 		return false;
+    }
 
 	MCStringRef t_stack_filename;
 	t_stack_filename = getfilename();
@@ -3125,6 +3148,30 @@ bool MCStack::resolve_relative_path(MCStringRef p_path, MCStringRef& r_resolved)
 	}
     
     return false;
+}
+
+// PM-2015-01-26: [[ Bug 14435 ]] Make possible to set the filename using a relative path to the default folder
+bool MCStack::resolve_relative_path_to_default_folder(MCStringRef p_path, MCStringRef &r_resolved)
+{
+    if (MCStringIsEmpty(p_path))
+		return false;
+	
+	// If the relative path begins with "./" or ".\", we must remove this, otherwise
+    // certain system calls will get confused by the path.
+    uindex_t t_start_index;
+    MCAutoStringRef t_cur_dir;
+
+    if (MCStringBeginsWith(p_path, MCSTR("./"), kMCCompareExact)
+            || MCStringBeginsWith(p_path, MCSTR(".\\"), kMCCompareExact))
+        t_start_index = 2;
+    else
+        t_start_index = 0;
+	
+    MCS_getcurdir(&t_cur_dir);
+
+    MCRange t_range;
+    t_range = MCRangeMake(t_start_index, MCStringGetLength(p_path) - t_start_index);
+    return MCStringFormat(r_resolved, "%@/%*@", *t_cur_dir, &t_range, p_path);
 }
 
 // OK-2009-01-09: [[Bug 1161]]
@@ -3367,4 +3414,14 @@ void MCStack::setasscriptonly(MCStringRef p_script)
         curcard = cards = MCtemplatecard->clone(False, False);
         cards->setparent(this);
     }
+}
+
+MCPlatformControlType MCStack::getcontroltype()
+{
+    return kMCPlatformControlTypeWindow;
+}
+
+MCPlatformControlPart MCStack::getcontrolsubpart()
+{
+    return kMCPlatformControlPartNone;
 }

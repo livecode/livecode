@@ -1,0 +1,23 @@
+Name: onto
+
+Type: keyword
+
+Syntax: onto
+
+Summary: Used with the <place> <command> to designate the card where a <group> is to be placed.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+place background 1 onto this card
+
+Description:
+Use the <onto> <keyword> to designate a <group> to be placed on a <card>.
+
+References: group (command), place (command), remove (command), command (glossary), keyword (glossary), card (keyword)
+
+Tags: objects

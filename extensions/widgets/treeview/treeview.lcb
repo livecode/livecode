@@ -1,0 +1,1404 @@
+/*
+Copyright (C) 2015 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+A widget to display array data in a tree view
+
+Name: arrayData
+Type: property
+Syntax: set the arrayData of <widget> to <pArray>
+Syntax: get the arrayData of <widget>
+Summary: The array being displayed by the widget
+
+Parameters:
+pArray (array): The array data.
+
+Description:
+The arrayData is the data currently being displayed by the tree view widget.
+
+Name: alternateRowBackgrounds
+
+Type: property
+Syntax: set the alternateRowBackgrounds of <widget> to (true|false)
+Syntax: get the alternateRowBackgrounds of <widget>
+
+Summary: Whether the alternate rows of the widget have different backgrounds or not. 
+
+Description:
+Use the alternateRowBackgrounds property if you want to more clearly distinguish the rows displayed by the widget.
+
+Name: selectedElement
+Type: property
+Syntax: set the selectedElement of <widget> to <pPath>
+Syntax: get the selectedElement of <widget>
+
+Summary: Select the row corresponding to <pPath>
+
+Parameters:
+pPath: A comma delimited list of array keys.
+
+Description:
+<pPath> is a list of the keys which determine the row to be selected. For example, if tArray is the arrayData 
+of the widget, to select a row corresponding to tArray["key1"]["subkey2"]["subsubkey5"], simply execute
+
+
+``` set the selectedElement of widget "Array Viewer" to "key1,subkey2,subsubkey5" ```
+
+Name: showFrameBorder
+Type: property
+Syntax: set the showFrameBorder of <widget> to {true|false}
+Syntax: get the showFrameBorder of <widget>
+
+Summary: Whether the widget has a border or not. 
+
+Description:
+Use the showFrameBorder property to show the bounds of the widget object.
+
+Name: selectedElementChanged
+Type: message
+Syntax: selectedElementChanged pPath
+
+Summary: Sent when an element is selected
+
+Parameters:
+pPath: The path to the selected element
+
+Description:
+The selectedElementChanged message is sent to the widget's script object when a row of the widget's display is clicked on,
+causing that row to be selected. The <pPath> parameter contains the path to the new <selectedElement>.
+
+References: selectedElement (property)
+
+*/
+
+widget com.livecode.widget.treeView
+
+use com.livecode.canvas
+use com.livecode.widget
+use com.livecode.engine
+
+metadata author is "LiveCode"
+metadata version is "1.0.0"
+metadata title is "Tree View"
+
+metadata selectedRowColor.editor is "com.livecode.pi.color"
+metadata selectedRowColor.default is "10,105,216"
+
+-- property declarations
+property arrayData 					get getArrayData 				set setArrayData
+property alternateRowBackgrounds 	get mAlternateRowBackgrounds 	set setRowBackgrounds
+property selectedElement			get getSelectedElement			set setSelectedElement
+property showFrameBorder			get mFrameBorder				set setFrameBorder
+property selectedRowColor			get mSelectedRowColor			set setSelectedRowColor
+property readOnly					get mReadOnly					set setReadOnly
+
+// The unmodified array data
+private variable mData as Array
+// A flat list representing the array items to be displayed
+private variable mDataList as List
+// The number of lines to be displayed
+private variable mDataCount as Integer
+// The total height of the displayed data
+private variable mDataHeight as Real
+// The height of each row
+private variable mRowHeight as Real
+
+// The height of the view area
+private variable mViewHeight as Real
+// The width of the view area
+private variable mViewWidth as Real
+
+// The first part of the data being displayed
+private variable mViewTopPosition as Real
+// The index in the display list corresponding the the top of the view
+private variable mFirstDataItem as Integer
+
+
+private variable mMargin as Real
+private variable mRecalculate as Boolean
+private variable mAlternateRowBackgrounds as Boolean
+private variable mSelectedRowColor as String
+
+private variable mIndentPixels as Integer
+private variable mHoverRow as Integer
+private variable mHoverIcon as String
+
+private variable mFrameBorder as Boolean
+
+private variable mSelectedElement as optional List
+private variable mFoldState as Array
+
+private variable mFoldedArrowPath as Path
+private variable mUnfoldedArrowPath as Path
+private variable mDeleteItemPath as Path
+private variable mAddItemPath as Path
+
+private variable mIconRect as Rectangle
+private variable mIconWidth as Real
+
+private variable mReadOnly as Boolean
+
+--------------------------------------------------------------------------------
+--
+--		Message handlers
+--
+--------------------------------------------------------------------------------
+
+public handler OnCreate() returns nothing
+	put path "M0,7.421V0.21c0-0.168,0.188-0.268,0.327-0.174l5.351,3.605c0.124,0.083,0.124,0.265,0,0.348L0.327,7.595 C0.188,7.689,0,7.589,0,7.421z" into mFoldedArrowPath
+	put path "M0.221,0l7.565,0c0.177,0,0.281,0.188,0.183,0.327L4.186,5.679c-0.087,0.124-0.278,0.124-0.366,0L0.038,0.327 C-0.061,0.188,0.044,0,0.221,0z" into mUnfoldedArrowPath
+	put path "M512 736L512 1312Q512 1326 503 1335 494 1344 480 1344L416 1344Q402 1344 393 1335 384 1326 384 1312L384 736Q384 722 393 713 402 704 416 704L480 704Q494 704 503 713 512 722 512 736ZM768 736L768 1312Q768 1326 759 1335 750 1344 736 1344L672 1344Q658 1344 649 1335 640 1326 640 1312L640 736Q640 722 649 713 658 704 672 704L736 704Q750 704 759 713 768 722 768 736ZM1024 736L1024 1312Q1024 1326 1015 1335 1006 1344 992 1344L928 1344Q914 1344 905 1335 896 1326 896 1312L896 736Q896 722 905 713 914 704 928 704L992 704Q1006 704 1015 713 1024 722 1024 736ZM1152 1460L1152 512 256 512 256 1460Q256 1482 263 1500.5 270 1519 277.5 1527.5 285 1536 288 1536L1120 1536Q1123 1536 1130.5 1527.5 1138 1519 1145 1500.5 1152 1482 1152 1460ZM480 384L928 384 880 267Q873 258 863 256L546 256Q536 258 529 267ZM1408 416L1408 480Q1408 494 1399 503 1390 512 1376 512L1280 512 1280 1460Q1280 1543 1233 1603.5 1186 1664 1120 1664L288 1664Q222 1664 175 1605.5 128 1547 128 1464L128 512 32 512Q18 512 9 503 0 494 0 480L0 416Q0 402 9 393 18 384 32 384L341 384 411 217Q426 180 465 154 504 128 544 128L864 128Q904 128 943 154 982 180 997 217L1067 384 1376 384Q1390 384 1399 393 1408 402 1408 416Z" into mDeleteItemPath
+	put path "M1408 608L1408 800Q1408 840 1380 868 1352 896 1312 896L896 896 896 1312Q896 1352 868 1380 840 1408 800 1408L608 1408Q568 1408 540 1380 512 1352 512 1312L512 896 96 896Q56 896 28 868 0 840 0 800L0 608Q0 568 28 540 56 512 96 512L512 512 512 96Q512 56 540 28 568 0 608 0L800 0Q840 0 868 28 896 56 896 96L896 512 1312 512Q1352 512 1380 540 1408 568 1408 608Z" into mAddItemPath
+
+	// Make sure all the icons paths are 10 x 10, with centered at the origin
+	put rectangle [-5,-5,5,5] into mIconRect
+	
+	setIconPath(mIconRect, mFoldedArrowPath)
+	setIconPath(mIconRect, mUnfoldedArrowPath)
+	setIconPath(mIconRect, mDeleteItemPath)
+	setIconPath(mIconRect, mAddItemPath)
+
+	variable tWidth as Real
+	put the width of mIconRect into mIconWidth
+
+	put 21 into mRowHeight
+	put true into mAlternateRowBackgrounds
+	put 6 into mMargin
+	put 15 into mIndentPixels
+	
+	put "10,105,216" into mSelectedRowColor
+	
+	put my height into mViewHeight
+	put my width into mViewWidth	
+	
+	put 0 into mHoverRow
+    put "" into mHoverIcon
+	put 0 into mViewTopPosition
+	put true into mFrameBorder	
+	initialiseScrollbar()	
+	
+	put false into mReadOnly
+	put true into mRecalculate
+	
+	put the empty array into mFoldState
+	put the empty array into mData	
+	put convertArrayToList(mData, 0, the empty list) into mDataList
+	
+	push the empty array onto front of mDataList
+
+end handler
+
+public handler OnSave(out rProperties as Array)
+	put the empty array into rProperties
+	put mData into rProperties["array"]
+	put mSelectedRowColor into rProperties["selected row color"]
+	put mReadOnly into rProperties["read only"]
+	return rProperties
+end handler
+
+public handler OnLoad(in pProperties as Array)
+	put pProperties["array"] into mData
+	put pProperties["selected row color"] into mSelectedRowColor
+	put pProperties["read only"] into mReadOnly
+end handler
+
+public handler OnPaint() returns nothing
+
+	// If anything has changed requiring a recalculation, update parameters
+	if mRecalculate then
+		updateParameters()
+	end if
+
+	variable tTop as Real
+	variable tPath as Path
+	
+	put 0 into tTop
+	
+	variable tDataItem as Array
+	put the empty array into tDataItem
+	
+	variable tX as Integer
+	put 1 into tX
+	
+	variable tTopOffset
+	put mViewTopPosition mod mRowHeight into tTopOffset
+	subtract tTopOffset from tTop	
+
+	// Iterate from the first data item drawing each row until the can't display any more items
+	repeat with tX from mFirstDataItem up to the number of elements in mDataList
+		if tX is 1 then
+			paintFirstRow(tTop)
+		else
+			paintDataItem(element tX of mDataList, tTop, tX)		
+		end if
+		if tTop > mViewHeight then
+			exit repeat
+		end if
+		add mRowHeight to tTop
+	end repeat
+    
+    // Paint the scrollbar
+	paintScrollbar(this canvas, getPaint("scrollbar", "fill"))
+	
+	// Draw the frame
+	if mFrameBorder is true then
+		put rectangle path of rectangle [0.5,0.5,mViewWidth-0.5,mViewHeight-0.5] into tPath
+		set the paint of this canvas to getPaint("frame","stroke")
+		stroke tPath on this canvas
+	end if
+end handler
+
+// Utility for painting the first (Add new element) row
+private handler paintFirstRow(in pTop as Real)
+	// Apply any style to this data item
+	variable tStyle as String
+    put "" into tStyle
+	if mHoverRow is 1 then
+		put "_hover" after tStyle
+	end if	
+		
+	variable tPath as Path	
+	put rectangle path of rectangle [0,pTop,mViewWidth,pTop+mRowHeight] into tPath
+	set the paint of this canvas to getPaint("row","fill" & tStyle)
+	fill tPath on this canvas
+		
+	variable tLeft as Real
+	put mMargin into tLeft
+		
+	set the paint of this canvas to getPaint("text","top row" & tStyle)
+	
+	// Draw the plus icon
+	put mAddItemPath into tPath
+	translate tPath by [mMargin + mIconWidth / 2, pTop + mRowHeight / 2]
+	fill tPath on this canvas
+
+	// Draw text
+	fill text "Add new element" at left of rectangle [mIconWidth + 2 * mMargin, pTop, mViewWidth - 3 * mMargin - 2 * mIconWidth, pTop + mRowHeight] on this canvas
+end handler
+
+// Utility for painting a row with top pTop
+private handler paintDataItem(in pDataItem as Array, in pTop as Real, in pRow as Integer)
+	// Apply any style to this data item
+	variable tStyle as String
+	put "" into tStyle
+	if pDataItem["selected"] is true then 
+		put "_selected" after tStyle
+	end if
+		
+	if pRow is mHoverRow then
+		put "_hover" after tStyle
+	end if	
+		
+	variable tPath as Path	
+	// Draw the alternating row backgrounds if applicable
+	if mAlternateRowBackgrounds is true then
+		put rectangle path of rectangle [0,pTop,mViewWidth,pTop+mRowHeight] into tPath
+		if pRow mod 2 is 1 then
+			set the paint of this canvas to getPaint("row","fill" & tStyle)
+		else
+			set the paint of this canvas to getPaint("row","fill_alternate" & tStyle)
+		end if	
+		fill tPath on this canvas
+	end if
+		
+	variable tLeft as Real
+	put mMargin + (pDataItem["indent"] * mIndentPixels) into tLeft
+		
+	// Draw the fold/unfold arrow if applicable
+	if not pDataItem["leaf"] then
+		if pDataItem["folded"] is true then
+			put mFoldedArrowPath into tPath
+		else
+			put mUnfoldedArrowPath into tPath	
+		end if
+		
+		translate tPath by [tLeft + mIconWidth / 2, pTop + mRowHeight / 2]
+		set the paint of this canvas to getPaint("text","fill" & tStyle)
+		fill tPath on this canvas
+	end if
+	
+	add mIconWidth + mMargin to tLeft
+		
+	// Draw the key
+	set the paint of this canvas to getPaint("text","disabled" & tStyle)
+	fill text "[" & pDataItem["key"] & "]" at left of rectangle [tLeft, pTop, mViewWidth - 3 * mMargin - 2 * mIconWidth, pTop + mRowHeight] on this canvas
+		
+	variable tTextBounds as Rectangle
+	measure "[" & pDataItem["key"] & "]" on this canvas
+	put the result into tTextBounds
+	put tTextBounds into pDataItem["keyRect"]
+
+	add the width of tTextBounds + mMargin to tLeft
+		
+	// Draw the value if it is a 'leaf' (i.e. if it does not contain a sub-array
+	if pDataItem["leaf"] then
+		set the paint of this canvas to getPaint("text","fill" & tStyle)
+		fill text pDataItem["string_value"] at left of rectangle [tLeft, pTop, mViewWidth - 3 * mMargin - 2 * mIconWidth, pTop + mRowHeight] on this canvas
+	end if
+	
+	// Draw the action icons 
+	if mReadOnly is false and (pDataItem["selected"] is true or pRow is mHoverRow) then
+		put "fill" into tStyle
+		if pDataItem["selected"] then
+			put "_selected" after tStyle
+		end if
+		
+		variable tRight as Real
+		put mViewWidth - scrollbarWidth() - mMargin into tRight
+		
+		variable tThisIconStyle as String
+		variable tMouseX as Real
+		put the x of the mouse position into tMouseX		
+		put tStyle into tThisIconStyle
+		put mDeleteItemPath into tPath
+		translate tPath by [tRight - mIconWidth / 2, pTop + mRowHeight / 2]
+		if pRow is mHoverRow and mHoverIcon is "delete" then
+            put "_hover" after tThisIconStyle
+		end if
+		set the paint of this canvas to getPaint("icon", tThisIconStyle)
+		fill tPath on this canvas
+		
+		subtract mMargin + mIconWidth from tRight
+		
+		put tStyle into tThisIconStyle
+		put mAddItemPath into tPath
+		translate tPath by [tRight - mIconWidth / 2, pTop + mRowHeight / 2]
+		if pRow is mHoverRow and mHoverIcon is "add" then
+            put "_hover" after tThisIconStyle
+		end if
+		set the paint of this canvas to getPaint("icon", tThisIconStyle)
+		fill tPath on this canvas
+	end if
+end handler
+
+public handler OnMouseDown() returns nothing
+	// Notify the scrollbar of a mouse down
+	checkScrollbarMouseDown()
+end handler
+
+public handler OnMouseMove() returns nothing			
+	if scrollDragging() then
+		variable tScrollPositionRatio as Real
+		scrollbarDrag(mViewHeight)
+		put scrollRatio(mViewHeight) into tScrollPositionRatio
+	
+		// Calculate the new top position of list
+		put (mDataHeight - mViewHeight) * tScrollPositionRatio into mViewTopPosition
+	
+		ensureViewTopPosition()
+		updateFirstDataItem()
+		updateScrollbar(mViewWidth, mViewHeight, mDataHeight, mViewTopPosition)
+		redraw all
+	else
+        variable tRedraw as Boolean
+        put false into tRedraw
+		variable tNewHoverRow as Integer
+		put yPosToRowNumber(the y of the mouse position) into tNewHoverRow
+		if mHoverRow is not tNewHoverRow then
+			put tNewHoverRow into mHoverRow
+            put true into tRedraw
+		end if
+        if mHoverRow is 1 then
+        	put "" into mHoverIcon
+        else
+            variable tHoverIcon as String
+            put xPosToIconString(the x of the mouse position) into tHoverIcon
+            if mHoverIcon is not tHoverIcon then
+                put tHoverIcon into mHoverIcon
+                put true into tRedraw
+            end if
+        end if
+        
+        if tRedraw then
+            redraw all
+        end if
+	end if
+end handler
+
+public handler onMouseLeave() returns nothing
+	put 0 into mHoverRow
+	redraw all
+end handler
+
+public handler OnMouseUp() returns nothing
+	scrollbarMouseUp()
+end handler
+
+public handler OnMouseCancel() returns nothing
+	scrollbarMouseUp()
+end handler
+
+public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real) returns nothing
+	if mViewHeight < mDataHeight then
+		variable tOldTop as Real
+		put mViewTopPosition into tOldTop
+	
+		if pDeltaY < 0 then
+			subtract mRowHeight from mViewTopPosition
+		else
+			add mRowHeight to mViewTopPosition
+		end if
+	
+		ensureViewTopPosition()
+		
+		// If nothing changed, don't update anything
+		if mViewTopPosition is tOldTop then
+			return
+		end if
+		
+		updateFirstDataItem()
+		updateScrollbar(mViewWidth, mViewHeight, mDataHeight, mViewTopPosition)
+		
+		redraw all
+    end if
+end handler
+
+public handler OnClick() returns nothing
+	// If the first row was clicked then add a new element
+	if mHoverRow is 1 then
+		addBaseLevelElement()
+		return
+	end if
+
+	// Click in the scrollbar region does nothing
+	if the x of the click position > mViewWidth - scrollbarWidth() then
+		return
+	end if
+
+	// Just return if the click was below all the data
+	if mHoverRow > the number of elements in mDataList then
+		return
+	end if
+
+	variable tData as Array
+	put the empty array into tData
+	
+	put element mHoverRow of mDataList into tData
+	
+	// Check if the delete icon was clicked
+	if mHoverIcon is "delete" then
+		removePath(tData["path"])
+		return
+	end if
+	
+	// Check if the add icon was clicked
+	if mHoverIcon is "add" then
+		addUnderPath(tData["path"])
+		return
+	end if
+	
+	// Check if the arrow was clicked
+	if not tData["leaf"] then
+		variable tLeft as Real
+		put tData["indent"] * mIndentPixels into tLeft
+		
+		variable tX as Real
+		put the x of the click position into tX
+		
+		if tX > tLeft and tX < tLeft + mIconWidth + 2 * mMargin then
+			if tData["folded"] is true then
+				unfoldPath(tData["path"])
+	   		else
+				foldPath(tData["path"])
+	   		end if
+	   		return
+	   	end if
+	end if
+	
+	if the click count is 1 then
+		if tData["selected"] is true then
+			unselectPath(tData["path"])
+		else
+			selectPath(tData["path"])
+		end if
+		return
+	end if
+
+	if tData["leaf"] is not true then
+	   if the click count > 1 then
+		   if tData["folded"] is true then
+			   unfoldPath(tData["path"])
+		   else
+			   foldPath(tData["path"])
+		   end if
+	   end if
+	end if
+end handler
+
+private handler yPosToRowNumber(in pYPos as Number) returns Integer
+	return the floor of ((mViewTopPosition + pYPos) / mRowHeight + 1)
+end handler
+
+private handler xPosToIconString(in pXPos as Number) returns String
+    variable tLeft as Real
+    variable tRight as Real
+    put mViewWidth - scrollbarWidth() into tRight
+    
+    if pXPos > tRight then
+    	return ""
+    end if
+    
+    put tRight - 2 * mMargin - 2 * mIconWidth into tLeft
+    
+    if pXPos <= tLeft then
+    	return ""
+    end if
+
+    if pXPos > tLeft and pXPos <= tLeft + mIconWidth then
+        return "add"
+    end if
+    
+    return "delete"
+end handler
+
+public handler OnGeometryChanged()
+	// Only resizing necessitates a recalculation
+	if my height is not mViewHeight or my width is not mViewWidth then
+		put true into mRecalculate
+	end if
+end handler
+
+--------------------------------------------------------------------------------
+--
+--		Display calculations
+--
+--------------------------------------------------------------------------------
+
+// Clamp mViewTopPosition
+private handler ensureViewTopPosition()
+	variable tMinTop as Real
+	if mReadOnly then
+		put mRowHeight into tMinTop
+	else
+		put 0 into tMinTop
+	end if
+
+	// Make sure we don't try to scroll above 0
+	if mViewTopPosition < tMinTop then 
+		put tMinTop into mViewTopPosition
+	// Make sure we don't try to scroll past the last displayable item
+	else if mDataHeight > mViewHeight and mViewTopPosition > mDataHeight - mViewHeight then
+		put mDataHeight - mViewHeight into mViewTopPosition
+	else if mDataHeight < mViewHeight then
+		put tMinTop into mViewTopPosition
+	end if	
+end handler
+
+// Calculate mFirstDataItem from the view position
+private handler updateFirstDataItem()
+	put the floor of (mViewTopPosition / mRowHeight) + 1 into mFirstDataItem
+	if mFirstDataItem < 1 then
+		put 1 into mFirstDataItem
+	end if	
+end handler
+
+private handler updateParameters() returns nothing
+	put the number of elements in mDataList into mDataCount
+	if mReadOnly then
+		put mRowHeight * mDataCount into mDataHeight
+	else
+		put mRowHeight * (mDataCount - 1) into mDataHeight
+	end if
+	put my height into mViewHeight
+	put my width into mViewWidth
+
+	ensureViewTopPosition()
+	updateFirstDataItem()
+	
+	// Calculate scrollbar dimensions
+	updateScrollbar(mViewWidth, mViewHeight, mDataHeight, mViewTopPosition)
+	
+	put false into mRecalculate
+end handler
+
+--------------------------------------------------------------------------------
+--
+--		Utilities for widget display
+--
+--------------------------------------------------------------------------------
+
+private handler getPaint(pLocation, pType) returns Paint
+	if pLocation is "background" then
+		if pType is "fill" then
+			return solid paint with stringToColor("178,178,178")
+		end if
+	else if pLocation is "icon" then
+		if pType is "fill" then
+			return solid paint with stringToColor("152,152,152")
+		else if pType is "fill_hover" then
+			return solid paint with stringToColor(mSelectedRowColor)
+		else if pType is "fill_selected" then
+			return solid paint with stringToColor("255,255,255")
+		else if pType is "fill_selected_hover" then
+			return solid paint with stringToColor("0,0,0,150")	
+		end if
+	else if pLocation is "row" then
+		if pType is "fill" then
+			return solid paint with stringToColor("255,255,255")
+		else if pType is "fill_hover" then
+			return solid paint with stringToColor("235,235,235")
+		else if pType is "fill_selected" then
+			return solid paint with stringToColor(mSelectedRowColor)
+		else if pType is "fill_selected_hover" then
+			return solid paint with stringToColor(mSelectedRowColor & ",150")
+		else if pType is "fill_alternate" then
+			return solid paint with stringToColor("245,245,245")
+		else if pType is "fill_alternate_hover" then
+			return solid paint with stringToColor("230,230,230")
+		else if pType is "fill_alternate_selected" then
+			return solid paint with stringToColor(mSelectedRowColor)
+		else if pType is "fill_alternate_selected_hover" then
+			return solid paint with stringToColor(mSelectedRowColor & ",150")
+		end if
+	else if pLocation is "text" then
+		if pType is "disabled" then
+			return solid paint with stringToColor("0,0,0,150")
+		else if pType is "top row" then
+			return solid paint with stringToColor("152,152,152")
+		else if pType is "top row_hover" then
+			return solid paint with stringToColor("0,0,0,150")
+		else if pType is "disabled_hover" then
+			return solid paint with stringToColor("0,0,0,150")
+		else if pType is "disabled_selected" then
+			return solid paint with stringToColor("255,255,255,150")
+		else if pType is "disabled_selected_hover" then
+			return solid paint with stringToColor("255,255,255,150")
+		else if pType is "fill" then
+			return solid paint with stringToColor("0,0,0")
+		else if pType is "fill_hover" then
+			return solid paint with stringToColor("0,0,0")
+		else if pType is "fill_selected" then
+			return solid paint with stringToColor("255,255,255")
+		else if pType is "fill_selected_hover" then
+			return solid paint with stringToColor("255,255,255")
+		else if pType is "fill_alternate" then
+			return solid paint with stringToColor("0,0,0")
+		else if pType is "fill_alternate_hover" then
+			return solid paint with stringToColor("0,0,0")
+		else if pType is "fill_alternate_selected" then
+			return solid paint with stringToColor("255,255,255")
+		else if pType is "fill_alternate_selected_hover" then
+			return solid paint with stringToColor("255,255,255")
+		end if
+	else if pLocation is "scrollbar" then
+		if pType is "fill" then
+			return solid paint with stringToColor("0,0,0,50")
+		end if
+	else if pLocation is "frame" then
+		if pType is "stroke" then
+			return solid paint with stringToColor("188,188,188")
+		end if
+	end if
+	
+	return solid paint with stringToColor("255,100,200")
+end handler
+
+private handler getFontName() returns String
+	return "Helvetica Neue"
+	
+	return the name of the font of this canvas
+end handler
+
+private handler stringToColor(in pString as String) returns Color
+	variable tRed as Real
+	variable tGreen as Real
+	variable tBlue as Real
+	variable tAlpha as Real
+
+	variable tComponentList as List
+	split pString by "," into tComponentList
+
+	variable tComponentCount
+	put the number of elements in tComponentList into tComponentCount
+	if tComponentCount is not 3 and tComponentCount is not 4 then
+		// Invalid number of components detected
+		throw "Invalid color"
+	end if
+
+	put (element 1 of tComponentList) parsed as number into tRed
+	put (element 2 of tComponentList) parsed as number into tGreen
+	put (element 3 of tComponentList) parsed as number into tBlue
+
+	if tComponentCount is 4 then
+		put (element 4 of tComponentList) parsed as number into tAlpha
+	else
+		put 255 into tAlpha
+	end if
+
+	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha/255 ]
+end handler
+
+private handler setIconPath(in pTargetRect as Rectangle, inout xPath as Path)
+
+	// Scale the icon
+	variable tBounds
+	put the bounding box of xPath into tBounds
+	
+	// Scale appropriately
+	variable tXScale as Real
+	variable tYScale as Real
+		
+	put the width of pTargetRect / the width of tBounds into tXScale
+	put the height of pTargetRect / the height of tBounds into tYScale
+		
+	if tXScale > tYScale then
+		put tYScale into tXScale
+	else
+		put tXScale into tYScale
+	end if
+
+    scale xPath by [tXScale, tYScale]
+
+	variable tXTranslate as Real
+	variable tYTranslate as Real
+
+    put the bounding box of xPath into tBounds
+
+	put the left of pTargetRect - the left of tBounds into tXTranslate
+	put the top of pTargetRect - the top of tBounds into tYTranslate
+
+    variable tXDiff as Real
+    variable tYDiff as Real
+
+    put the width of pTargetRect - the width of tBounds into tXDiff
+    put the height of pTargetRect - the height of tBounds into tYDiff
+
+	// align center
+	divide tXDiff by 2
+	divide tYDiff by 2
+
+	translate xPath by [tXTranslate + tXDiff, tYTranslate + tYDiff]
+end handler
+
+--------------------------------------------------------------------------------
+--
+--		Handlers for data management and array/list conversions
+--
+--------------------------------------------------------------------------------
+
+// Given a 'path' of array keys as a list, and a value, modify xArray such that
+// 	the value of xArray[element 1 of pPath][element 2 of pPath]... is pValue
+// 	creating the keys if necessary
+private handler setValueOnPath(in pPath as List, in pValue as any, inout xArray as Array)
+	if the number of elements in pPath is 1 then
+		put pValue into xArray[element 1 of pPath]
+	else
+		if (element 1 of pPath) is not among the keys of xArray then
+			put the empty array into xArray[element 1 of pPath]
+		end if
+		setValueOnPath(element 2 to -1 of pPath, pValue, xArray[element 1 of pPath])
+	end if
+end handler
+
+// Return the whole stored array
+private handler getArrayData() returns Array
+	return mData
+end handler
+
+// Convert an array to a list, as used by this widget. Ignoring the 'folded' ans selected
+//  parameters, mDataList should always be the result of calling this on mData
+private handler convertArrayToList(in pArray as Array, in pLevel as Integer, in pPath as List) returns List
+
+	if pArray is empty then
+		return the empty list
+	end if
+
+	variable tList as List
+	put the empty list into tList
+	
+	variable tKeys as List
+	put the keys of pArray into tKeys
+	sort tKeys in ascending order
+	
+	variable tKey as String
+	variable tElement as Array
+	
+	repeat for each element tKey in tKeys
+		put the empty array into tElement
+		put tKey into tElement["key"]
+		put pLevel into tElement["indent"]
+		put false into tElement["selected"]
+		
+		variable tPath as List
+		put pPath into tPath
+		push tKey onto tPath
+		
+		put tPath into tElement["path"]	
+		if pArray[tKey] is an array then
+			put false into tElement["leaf"]
+			put true into tElement["folded"]
+			push tElement onto tList
+		else
+			put true into tElement["leaf"]
+			put pArray[tKey] into tElement["value"]
+			variable tString as optional String			
+			if pArray[tKey] is not defined then
+				put "" into tString
+			else if pArray[tKey] is a string then
+				put pArray[tKey] into tString
+			else if pArray[tKey] is a boolean then
+				format pArray[tKey] as string into tString
+			else if pArray[tKey] is a number then
+				format pArray[tKey] as string into tString
+			else
+				put "Can't display value" into tString
+			end if	
+			put tString into tElement["string_value"]
+			push tElement onto tList
+		end if	
+	end repeat
+	
+	return tList
+end handler
+
+// A handler type for passing into 'applyToNode'
+handler type NodeApply(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
+
+// A handler of type NodeApply to pass into 'applyToNode' - unselects the key on the given path
+private handler unselectKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
+	put false into xList[pListElt]["selected"]
+	put undefined into mSelectedElement
+end handler
+
+// A handler of type NodeApply to pass into 'applyToNode' - selects the key on the given path
+private handler selectKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
+	put true into xList[pListElt]["selected"]
+	put pPath into mSelectedElement
+end handler
+
+// A handler of type NodeApply to pass into 'applyToNode' - removes the key on the given path
+private handler removeKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
+	if not xList[pListElt]["leaf"] then
+		foldKey(pListElt, pPath, pLevel, xList, xArray)
+	end if
+	delete element pListElt of xList
+	delete xArray[element pLevel + 1 of pPath]
+end handler
+
+private handler createNewKey(inout xArray as Array)
+	variable tNewKey as String
+	variable tNew as Integer
+	put 1 into tNew
+	repeat while (tNew formatted as string) is among the keys of xArray
+		add 1 to tNew
+	end repeat
+	put tNew formatted as string into tNewKey
+	put "" into xArray[tNewKey]
+end handler
+
+private handler addBaseLevelElement()
+	createNewKey(mData)
+	setArrayData(mData)	
+	post "dataChanged"
+end handler
+
+// A handler of type NodeApply to pass into 'applyToNode' - adds a new key below the given path
+private handler addKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
+	if not xList[pListElt]["leaf"] then
+		foldKey(pListElt, pPath, pLevel, xList, xArray)
+	end if
+
+	variable tElement
+	put xArray[pPath[pLevel + 1]] into tElement
+
+	if tElement is an array then
+		createNewKey(xArray[pPath[pLevel + 1]])
+	else
+		variable tArray as Array
+		put the empty array into tArray	
+		put "" into tArray[1 formatted as string]
+		put tArray into xArray[pPath[pLevel + 1]]
+		put false into xList[pListElt]["leaf"]
+	end if
+
+	unfoldKey(pListElt, pPath, pLevel, xList, xArray)
+end handler
+
+// Update the fold state on the given node, and below
+private handler updateFoldState(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, in pArray as Array, in pFold as Boolean)
+	// Update the fold state
+	variable tPath as List
+	put the empty list into tPath
+	variable tKey as String
+	repeat for each element tKey in pPath
+		push tKey onto tPath
+		push "array" onto tPath
+	end repeat
+	put "folded" into element -1 of tPath
+	setValueOnPath(tPath, pFold, mFoldState)
+	
+	variable tArray as Array
+	put mFoldState into tArray
+	repeat for each element tKey in element 1 to -2 of tPath
+		put tArray[tKey] into tArray
+	end repeat
+	
+	applyFoldStateKey(element pLevel + 1 of pPath, pLevel, pListElt - 1, tArray, pArray[element pLevel + 1 of pPath], xList)
+end handler
+
+// A handler of type NodeApply to pass into 'applyToNode' - unfolds the array value on the given path
+private handler unfoldKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
+	updateFoldState(pListElt, pPath, pLevel, xList, xArray, false)
+end handler
+
+// A handler of type NodeApply to pass into 'applyToNode' - folds the array value on the given path
+private handler foldKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
+	updateFoldState(pListElt, pPath, pLevel, xList, xArray, true)
+end handler
+
+// Delete the array key on the given path and update the display list
+private handler removePath(in pPath as List)
+	if applyToNode(removeKey, pPath, 0, 1, mDataList, mData) then
+		post "dataChanged"
+		put true into mRecalculate
+		redraw all
+	end if
+end handler
+
+private handler addUnderPath(in pPath as List)
+	if applyToNode(addkey, pPath, 0, 1, mDataList, mData) then
+		post "dataChanged"
+		put true into mRecalculate
+		redraw all
+	end if
+end handler
+
+// Unfold the key at the target path
+private handler unfoldPath(in pPath as List)
+	if applyToNode(unfoldKey, pPath, 0, 1, mDataList, mData) then
+		// Changing fold state makes a recalculation necessary
+		put true into mRecalculate	
+		redraw all
+	end if
+end handler
+
+// Fold the key at the target path
+private handler foldPath(in pPath as List)
+	if applyToNode(foldKey, pPath, 0, 1, mDataList, mData) then
+		// Changing fold state makes a recalculation necessary
+		put true into mRecalculate
+		redraw all
+	end if
+end handler
+
+// Select the key at the target path
+private handler selectPath(in pPath as List)
+	// Unselect the existing selection if applicable
+	if mSelectedElement is defined and mSelectedElement is not pPath then
+		applyToNode(unselectKey, mSelectedElement, 0, 1, mDataList, mData)
+	end if
+
+	if mSelectedElement is not defined or mSelectedElement is not pPath then
+		if not applyToNode(selectKey, pPath, 0, 1, mDataList, mData) then
+			put undefined into mSelectedElement
+		end if	
+		post "selectedElementChanged"
+		redraw all
+	end if
+end handler
+
+// Unselect the key at the target path
+private handler unselectPath(in pPath as List)
+	if mSelectedElement is defined and mSelectedElement is pPath then
+		applyToNode(unselectKey, pPath, 0, 1, mDataList, mData)
+		post "selectedElementChanged"
+		redraw all
+	end if
+end handler
+
+// Recursive implementation of performing an action to the node at the end of the given path. 
+// Acts on a list (in the format used by this widget) and an array simultaneously.
+// We are quite lax with checking here, since this will only be used internally 
+// 	after a delete action happens, and so the element should exist by definition.
+// If the specified path doesn't exist, this returns false
+private handler applyToNode(in pHandler as NodeApply, in pPathToNode as List, in pLevel as Integer, in pStart as Integer, inout xList as List, inout xArray as Array) as Boolean
+	
+	if pStart >= the number of elements in xList then
+		return false
+	end if	
+
+	variable tKey as String
+	put element pLevel + 1 of pPathToNode into tKey
+
+	variable tCount as Integer
+	variable tElement as Array
+	repeat with tCount from pStart + 1 up to the number of elements in xList
+		put xList[tCount] into tElement
+		if tElement["key"] is tKey and pLevel is tElement["indent"] then
+			if the number of elements in pPathToNode is pLevel + 1 then
+				pHandler(tCount, pPathToNode, pLevel, xList, xArray)
+			else if not tElement["leaf"] then
+				applyToNode(pHandler, pPathToNode, pLevel + 1, tCount, xList, xArray[tKey])			
+			end if
+			return true
+		end if	
+	end repeat
+	return false
+end handler
+
+// Remove all elements below pStart in the list that have a greater indent
+private handler deleteSubElements(in pStart as Integer, in pTopIndent as Integer, inout xList as List)
+	variable tLastSubElement as Integer
+	variable tFirstSubElement as Integer
+	put pStart + 1 into tFirstSubElement
+	// Do if there are no more elements in the list, make sure nothing happens
+	put pStart into tLastSubElement			
+	variable tSubCount
+	repeat with tSubCount from tFirstSubElement up to the number of elements in xList
+		if xList[tSubCount]["indent"] <= pTopIndent then
+			put tSubCount - 1 into tLastSubElement
+			exit repeat
+		end if
+		put tSubCount into tLastSubElement
+	end repeat
+	if tFirstSubElement <= tLastSubElement then
+		delete element tFirstSubElement to tLastSubElement of xList
+	end if
+end handler
+
+private handler applyFoldStateKey(in pKey as String, in pLevel as Integer, in pStart as Integer, in pFoldState as Array, in pArray as Array, inout xList as List) returns Boolean
+
+	if pStart >= the number of elements in xList then
+		return false
+	end if	
+
+	variable tCount as Integer
+	variable tElement as Array
+	variable tPath as List
+	// Find the key
+	repeat with tCount from pStart + 1 up to the number of elements in xList
+		put xList[tCount] into tElement
+		if tElement["key"] is pKey and pLevel is tElement["indent"] then
+			// Either splice in the below elements
+			if pFoldState["folded"] is false then
+				put false into xList[tCount]["folded"] 
+			
+				splice convertArrayToList(pArray, pLevel + 1, tElement["path"]) after element tCount of xList
+		
+				// Apply the fold state on the subelements
+				if "array" is among the keys of pFoldState then
+					applyFoldState(pLevel + 1, tCount, pFoldState["array"], pArray, xList)
+				end if
+			// or delete them
+			else
+				put true into xList[tCount]["folded"] 
+				deleteSubElements(tCount, tElement["indent"], xList)
+			end if	
+			return true
+		end if	
+	end repeat	
+end handler
+
+private handler applyFoldState(in pLevel as Integer, in pStart as Integer, in pFoldState as Array, in pArray as Array, inout xList as List) returns nothing
+
+	// Find the match for each key at the appropriate level, and set folded accordingly
+	variable tKey as String
+	repeat for each key tKey in pFoldState
+		// If this key no longer exists, don't do anything
+		if tKey is not among the keys of pArray then
+			next repeat
+		end if
+		
+		// Don't apply fold if the target is now a leaf node
+		if not (pArray[tKey] is an array) then
+			next repeat
+		end if
+	
+		applyFoldStateKey(tKey, pLevel, pStart, pFoldState[tKey], pArray[tKey], xList)
+	end repeat
+
+end handler
+
+// Given a 'path' of array keys as a list, and a value, adjust the mDataList and mData variables
+// 	to reflect the action of putting pValue into mData[element 1 of pPath][element 2 of pPath]...
+private handler setDataOnPath(in pPath as List) returns nothing
+	
+	// pPath having 1 element is an error, as that means mData is just a string rather than an array
+	if the number of elements in pPath is 1 then
+		return
+	end if
+	
+	// The last element of pPath is the actual value, the rest of it is the keys.
+	variable tActualPath as List
+	put element 1 to -2 of pPath into tActualPath
+	
+	variable tValue as String
+	put element -1 of pPath into tValue
+	
+	// Simultaneously adjust the backing list and array to reflect the added value.
+	setDataListOnPath(tActualPath, tValue, 0, mDataList, mData)
+
+end handler
+
+private handler setRowBackgrounds(in pShowAlternateBackgrounds as Boolean) returns nothing
+	put pShowAlternateBackgrounds into mAlternateRowBackgrounds
+	redraw all
+end handler
+
+// Recursive implementation of setting data on a given path. 
+// Acts on a list (in the format used by this widget) and an array simultaneously.
+private handler setDataListOnPath(in pPath as List, in pValue as any, in pLevel as Integer, inout xList as List, inout xArray as Array) returns nothing
+
+	variable tElement as Array
+	variable tCount as Integer
+	variable tNewElement as Array
+	put the empty array into tNewElement
+	
+	repeat with tCount from 1 up to the number of elements in xList
+		put element tCount of xList into tElement
+		
+		// The easy case - just insert the new element
+		if tElement["key"] > element pLevel + 1 of pPath then
+		
+			// update the backing array
+			setValueOnPath(element pLevel + 1 to -1 of pPath, pValue, tNewElement)
+			put tNewElement[element pLevel + 1 of pPath] into xArray[element pLevel + 1 of pPath] 
+			
+			// update the list
+			splice convertArrayToList(tNewElement, pLevel, pPath) before element tCount of xList
+			return
+			
+		// We already have a key for the start of this path
+		else if tElement["key"] is element pLevel + 1 of pPath then
+			// The new element replaces the old one if the new one is just a string...
+			if the number of elements in pPath is pLevel + 1 then
+				put pValue into xArray[element pLevel + 1 of pPath]
+				put pValue into tElement["value"]
+				
+			// ...or if the old one was just as string.
+			else if tElement["leaf"] then
+				setValueOnPath(element pLevel + 2 to -1 of pPath, pValue, tNewElement)
+				put tNewElement into xArray[element pLevel + 1 of pPath]
+				splice convertArrayToList(tNewElement, pLevel, pPath) after element tCount of xList 
+
+			// Otherwise, go one step further into the path and set
+			else
+				setDataListOnPath(pPath, pValue, pLevel + 1, element tCount + 1 to -1 of xList, xArray[element pLevel + 1 of pPath])
+			end if
+			return
+		end if
+	end repeat
+	
+	// If we reached the end of the list then append this to the end
+	setValueOnPath(element pLevel + 1 to -1 of pPath, pValue, tNewElement)
+	put tNewElement[element pLevel + 1 of pPath] into xArray[element pLevel + 1 of pPath] 
+	splice convertArrayToList(tNewElement, pLevel, pPath) after element tCount of xList
+end handler
+
+--------------------------------------------------------------------------------
+--
+--		Properties
+--
+--------------------------------------------------------------------------------
+
+// Replace the existing data wholesale with a new array pData
+private handler setArrayData(in pData as Array) returns nothing
+	put pData into mData
+	put convertArrayToList(pData, 0, the empty list) into mDataList
+	
+	push the empty array onto front of mDataList
+
+	// Unfold unfolded before reapplying selection
+	if mFoldState is not empty then
+		applyFoldState(0, 1, mFoldState, mData, mDataList)
+	end if	
+		
+	// Force reselection of previously selected path (if possible)
+	if mSelectedElement is defined then
+		if not applyToNode(selectKey, mSelectedElement, 0, 1, mDataList, mData) then
+			put undefined into mSelectedElement
+		end if
+	end if
+	
+	put true into mRecalculate
+	redraw all
+end handler
+
+private handler setFrameBorder(in pFrameBorder as Boolean) returns nothing
+	put pFrameBorder into mFrameBorder
+	redraw all
+end handler
+
+private handler setSelectedElement(in pElement as String)
+	variable tPath as List
+	split pElement by "," into tPath
+	selectPath(tPath)
+end handler
+
+private handler getSelectedElement() returns String
+	variable tElement as String
+	if mSelectedElement is defined then
+		combine mSelectedElement with "," into tElement
+		// Make sure empty path is recognised as a valid path
+		put "," after tElement
+	else
+		put the empty string into tElement
+	end if
+	return tElement
+end handler
+
+private handler setSelectedRowColor(in pColor as String)
+	put pColor into mSelectedRowColor
+	redraw all
+end handler
+
+private handler setReadOnly(in pReadOnly as Boolean)
+    if pReadOnly is not mReadOnly then
+        put pReadOnly into mReadOnly
+        put true into mRecalculate
+        redraw all
+    end if
+end handler
+
+--------------------------------------------------------------------------------
+--
+--		Scrollbar
+--		In the future, a scrollbar will be a widget in its own right 
+--		and included as a component of scrollable widgets.
+--
+--------------------------------------------------------------------------------
+
+private variable mScrollbarHeight as Real
+private variable mScrollbarPath as Path
+private variable mScrollbarY as Real
+
+// Drag related 
+private variable mDragging as Boolean
+private variable mDragStartLoc as Point
+private variable mDragScrollbarOffset as Real
+
+constant kScrollbarWidth is 5
+
+// Will be the scrollbar's OnCreate handler
+public handler initialiseScrollbar()
+	put 0 into mScrollbarHeight
+	put false into mDragging
+end handler
+
+// Will be the scrollbar's OnPaint handler
+public handler paintScrollbar(in pCanvas as Canvas, in pPaint as Paint)
+	// Draw scrollbar if there is any need
+	if mScrollbarHeight > 0 then
+		set the paint of pCanvas to pPaint
+		fill mScrollbarPath on pCanvas	
+	end if
+end handler
+
+// Will be the scrollbar's OnMouseDown handler
+public handler checkScrollbarMouseDown()
+	if mScrollbarHeight > 0 then
+		put the mouse position into mDragStartLoc
+		
+		variable tScrollbarRect as Rectangle
+		put the bounding box of mScrollbarPath into tScrollbarRect
+
+		if mDragStartLoc is within tScrollbarRect then
+			put true into mDragging
+			put the y of mDragStartLoc - the top of tScrollbarRect into mDragScrollbarOffset
+		end if
+	end if
+end handler
+
+public handler scrollbarMouseUp()
+	put false into mDragging
+end handler
+
+private handler scrollbarYFromView(in pViewHeight as Real, in pDataHeight as Real, in pTopPosition as Real) returns Real
+	variable tScrollPositionRatio as Real
+	put pTopPosition / (pDataHeight - pViewHeight) into tScrollPositionRatio
+	return (pViewHeight - mScrollbarHeight) * tScrollPositionRatio
+end handler
+
+private handler updateScrollbar(in pViewWidth as Real, in pViewHeight as Real, in pDataHeight as Real, in pTopPosition as Real)
+
+	variable tScrollbarHeight as Real
+	variable tScrollbarRatio as Real
+	
+	put pViewHeight / pDataHeight into tScrollbarRatio
+	
+	if tScrollbarRatio >= 1 or tScrollbarRatio <= 0 then 
+		put 0 into mScrollbarHeight
+	else
+		put pViewHeight * tScrollbarRatio into tScrollbarHeight
+	
+		if tScrollbarHeight < 25 then
+			put 25 into mScrollbarHeight
+		else
+			put tScrollbarHeight into mScrollbarHeight
+		end if	
+		
+		variable tScrollbarY as Real
+		put scrollbarYFromView(pViewHeight, pDataHeight, pTopPosition) into tScrollbarY
+
+		variable tRect as Rectangle
+		put rectangle [pViewWidth - 10, 0, pViewWidth - 10 + kScrollbarWidth, mScrollbarHeight] into tRect
+		put rounded rectangle path of tRect with radius 3 into mScrollbarPath
+	
+		put 0 into mScrollbarY
+		setScrollbarY(tScrollbarY)
+	end if	
+end handler
+
+private handler setScrollbarY(in pScrollbarY as Real)
+	variable tScrollbarMove as Real
+	put pScrollbarY - mScrollbarY into tScrollbarMove
+	translate mScrollbarPath by [0, tScrollbarMove]
+	put pScrollbarY into mScrollbarY
+end handler
+
+private handler scrollbarDrag(in pViewHeight as Real)
+	// Get the mouse y position
+	variable tMouseY as Real
+	put the y of the mouse position into tMouseY
+		
+	if tMouseY < mDragScrollbarOffset then
+		put mDragScrollbarOffset into tMouseY
+	else if tMouseY > mViewHeight + mDragScrollbarOffset - mScrollbarHeight then
+		put mViewHeight + mDragScrollbarOffset - mScrollbarHeight into tMouseY
+	end if
+		
+	// Set the y of the new middle of the scrollbar
+	variable tScrollbarY as Real
+	put tMouseY - mDragScrollbarOffset into tScrollbarY
+	setScrollbarY(tScrollbarY)
+end handler
+
+public handler scrollbarWidth() returns Real
+	if mScrollbarHeight is 0 then
+		return 0
+	end if
+	return kScrollbarWidth + 10
+end handler
+
+private handler scrollbarY() returns Real
+	return mScrollbarY
+end handler
+
+private handler scrollDragging() returns Boolean
+	return mDragging
+end handler
+
+private handler scrollRatio(in pViewHeight as Real)
+	// Get the scrollbar space
+	variable tScrollbarSpace as Real
+	variable tScrollbarSpaceTop as Real
+	put pViewHeight - mScrollbarHeight into tScrollbarSpace
+	
+	return mScrollbarY / tScrollbarSpace
+end handler
+
+end widget

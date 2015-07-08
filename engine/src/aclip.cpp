@@ -174,11 +174,15 @@ const char *MCAudioClip::gettypestring()
 
 void MCAudioClip::timer(MCNameRef mptr, MCParameter *params)
 {
-	if (play())
-    {
+    // PM-2014-11-11: [[ Bug 13950 ]] Make sure looping audioClip can be stopped
 #ifndef FEATURE_PLATFORM_AUDIO
-		MCscreen->addtimer(this, MCM_internal, looping ? LOOP_RATE: PLAY_RATE);
+    if (play())
+    {
+        MCscreen->addtimer(this, MCM_internal, looping ? LOOP_RATE: PLAY_RATE);
 #else
+    if (MCPlatformSoundIsPlaying(s_current_sound))
+    {
+        // Do nothing
 #endif
     }
 	else
@@ -198,8 +202,9 @@ void MCAudioClip::timer(MCNameRef mptr, MCParameter *params)
 			delete this;
 	}
 }
- #ifdef LEGACY_EXEC
-Exec_stat MCAudioClip::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+
+#ifdef LEGACY_EXEC
+Exec_stat MCAudioClip::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective, bool recursive)
 {
 	switch (which)
     {
@@ -219,7 +224,7 @@ Exec_stat MCAudioClip::getprop_legacy(uint4 parid, Properties which, MCExecPoint
 		break;
 #endif /* MCAudioClip::getprop */ 
 	default:
-		return MCObject::getprop_legacy(parid, which, ep, effective);
+		return MCObject::getprop_legacy(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }
@@ -264,7 +269,10 @@ Exec_stat MCAudioClip::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep
 Boolean MCAudioClip::del()
 {
 	getstack()->removeaclip(this);
-	return True;
+    
+    // MCObject now does things on del(), so we must make sure we finish by
+    // calling its implementation.
+	return MCObject::del();
 }
 
 void MCAudioClip::paste(void)
@@ -890,6 +898,14 @@ void MCAudioClip::stop(Boolean abort)
 	}
 #elif defined(_LINUX)
 #endif
+}
+
+bool MCAudioClip::isPlaying()
+{
+#if defined FEATURE_PLATFORM_AUDIO
+    return MCPlatformSoundIsPlaying(s_current_sound);
+#endif
+    return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

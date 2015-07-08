@@ -873,7 +873,13 @@ bool MCField::exportasrtftext(uint32_t p_part_id, int32_t p_start_index, int32_t
 	/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\n}");
 
 	// Return the buffer.
-	return MCStringCopyAndRelease(ctxt.m_text, r_string);
+	if (!MCStringCopyAndRelease(ctxt.m_text, r_string))
+    {
+        MCValueRelease(ctxt . m_text);
+        return false;
+    }
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

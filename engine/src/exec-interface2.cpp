@@ -560,7 +560,8 @@ void MCInterfaceStackFileVersionParse(MCExecContext& ctxt, MCStringRef p_input, 
 	
 	// MW-2012-03-04: [[ StackFile5500 ]] Allow versions up to 5500 to be set.
 	// MW-2013-12-05: [[ UnicodeFileFormat ]] Allow versions up to 7000 to be set.
-	if (count < 2 || version < 2400 || version > 7000)
+    // MW-2014-12-17: [[ Widgets ]] Allow versions up to 8000 to be set.
+	if (count < 2 || version < 2400 || version > 8000)
 	{
 		ctxt . LegacyThrow(EE_PROPERTY_STACKFILEBADVERSION);
 		return;
@@ -783,6 +784,7 @@ void MCInterfaceSetLookAndFeel(MCExecContext& ctxt, intenum_t p_value)
 				if (oldtheme != NULL)
 					oldtheme -> unload();
 				delete oldtheme;
+				oldtheme = NULL;
 				MClook = MCcurtheme->getthemefamilyid();
 			}
 			else
@@ -1427,7 +1429,7 @@ void MCInterfaceSetCursor(MCExecContext& ctxt, uinteger_t& r_id, bool p_is_defau
 		if (!p_is_default && r_id == PI_BUSY)
 		{
 			r_id = PI_BUSY1 + MCbusycount;
-			MCbusycount = MCbusycount + 1 & 0x7;
+			MCbusycount = (MCbusycount + 1) & 0x7;
 		}
 		r_cursor = MCcursors[r_id];
 	}
@@ -1467,7 +1469,8 @@ void MCInterfaceSetCursor(MCExecContext& ctxt, uinteger_t p_value)
 {
 	MCCursorRef t_cursor;
 	MCInterfaceSetCursor(ctxt, p_value, false, t_cursor);
-	if (t_cursor != nil)
+    // PM-2015-03-17: [[ Bug 14965 ]] Error check to prevent a crash if cursor image not found
+	if (t_cursor != nil && !ctxt.HasError())
 	{
 		MCcursor = t_cursor;
 		MCcursorid = p_value;
@@ -1549,8 +1552,16 @@ void MCInterfaceSetDefaultMenubar(MCExecContext& ctxt, MCNameRef p_value)
 																	 
 	if (gptr == NULL)
 	{
-		ctxt . LegacyThrow(EE_PROPERTY_NODEFAULTMENUBAR);
-		return;
+        // AL-2014-10-31: [[ Bug 13884 ]] Resolve chunk properly if the name is not found
+        //  so that setting the defaultMenubar by the long id of a group works.
+        MCObjectPtr t_object;
+        if (!MCInterfaceTryToResolveObject(ctxt, MCNameGetString(p_value), t_object) ||
+            t_object . object -> gettype() != CT_GROUP)
+        {
+            ctxt . LegacyThrow(EE_PROPERTY_NODEFAULTMENUBAR);
+            return;
+        }
+        gptr = (MCGroup *)t_object . object;
 	}
 	
 	MCdefaultmenubar = gptr;
@@ -2134,7 +2145,15 @@ void MCInterfaceGetScreenRect(MCExecContext& ctxt, bool p_working, bool p_effect
 	const MCDisplay *t_displays;
 	MCscreen -> getdisplays(t_displays, p_effective);
 
-	r_value = p_working ? t_displays[0] . workarea : t_displays[0] . viewport;
+    if (t_displays)
+    {
+        r_value = p_working ? t_displays[0] . workarea : t_displays[0] . viewport;
+    }
+    else
+    {
+        // No-UI mode
+        r_value = MCRectangleMake(0, 0, 0, 0);
+    }
 }
 
 void MCInterfaceGetScreenRects(MCExecContext& ctxt, bool p_working, bool p_effective, MCStringRef& r_value)
@@ -3317,12 +3336,7 @@ void MCInterfaceEvalOptionalStackWithBackgroundByName(MCExecContext& ctxt, MCObj
     t_stack = nil;
     
     if (p_stack . object != nil)
-    {
-        MCGroup *t_background;
-        
         t_stack = static_cast<MCStack *>(p_stack . object);
-        t_background = t_stack -> getbackgroundbyname(p_name);
-    }
         
     r_stack . object = t_stack;
     r_stack . part_id = p_stack . part_id;
@@ -3420,6 +3434,7 @@ void MCInterfaceMarkObject(MCExecContext& ctxt, MCObjectPtr p_object, Boolean wh
     }
     // AL-2014-08-04: [[ Bug 13081 ]] Prevent crash when evaluating non-container chunk
     r_mark . text = MCValueRetain(kMCEmptyString);
+    r_mark . start = r_mark . finish = 0;
 }
 
 void MCInterfaceMarkContainer(MCExecContext& ctxt, MCObjectPtr p_container, Boolean wholechunk, MCMarkedText& r_mark)
@@ -3443,6 +3458,7 @@ void MCInterfaceMarkContainer(MCExecContext& ctxt, MCObjectPtr p_container, Bool
     
     // AL-2014-08-04: [[ Bug 13081 ]] Prevent crash when evaluating non-container chunk
     r_mark . text = MCValueRetain(kMCEmptyString);
+    r_mark . start = r_mark . finish = 0;
     ctxt . LegacyThrow(EE_CHUNK_OBJECTNOTCONTAINER);
 }
 
@@ -3720,7 +3736,9 @@ void MCInterfaceDoRelayer(MCExecContext& ctxt, int p_relation, MCObjectPtr p_sou
 		// that that exists and is still a child of new owner.
 		if (t_source_handle -> Exists() &&
 			t_new_owner_handle -> Exists() &&
-			(t_new_target == nil || t_new_target_handle -> Exists() && t_new_target -> getparent() == t_new_owner))
+		    (t_new_target == nil ||
+		     (t_new_target_handle -> Exists() &&
+		      t_new_target -> getparent() == t_new_owner)))
 		{
 			p_source . object -> getparent() -> relayercontrol_remove(static_cast<MCControl *>(p_source . object));
 			t_new_owner -> relayercontrol_insert(static_cast<MCControl *>(p_source . object), t_new_target);

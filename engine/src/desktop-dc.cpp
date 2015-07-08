@@ -45,6 +45,8 @@
 #include "region.h"
 #include "scriptenvironment.h"
 #include "stacklst.h"
+#include "eventqueue.h"
+#include "mode.h"
 
 #include "desktop-dc.h"
 
@@ -458,7 +460,7 @@ void MCScreenDC::setinputfocus(Window window)
 	MCPlatformFocusWindow(window);
 }
 
-uint4 MCScreenDC::dtouint4(Drawable d)
+uintptr_t MCScreenDC::dtouint(Drawable d)
 {
 	if (d == nil)
 		return 0;
@@ -472,7 +474,7 @@ uint4 MCScreenDC::dtouint4(Drawable d)
 	return t_id;
 }
 
-Boolean MCScreenDC::uint4towindow(uint4 p_id, Window &w)
+Boolean MCScreenDC::uinttowindow(uintptr_t p_id, Window &w)
 {
     // MW-2014-07-15: [[ Bug 12800 ]] Map the windowId to a platform window if one exists.
     MCPlatformWindowRef t_window;
@@ -812,9 +814,13 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		if (MCNotifyDispatch(dispatch == True) && anyevent)
 			break;
 		
+        // MW-2015-01-08: [[ EventQueue ]] Reinstate event queue poking.
+		MCModeQueueEvents();
+        
 		// Handle pending events
 		real8 eventtime = exittime;
-		if (handlepending(curtime, eventtime, dispatch))
+		if (handlepending(curtime, eventtime, dispatch) ||
+            dispatch && MCEventQueueDispatch())
 		{
 			if (anyevent)
 				done = True;

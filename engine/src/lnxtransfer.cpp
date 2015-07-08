@@ -121,7 +121,7 @@ void MCGdkTransferStore::cleartypes()
 {
     if (m_entries != NULL)
     {
-        for (int32_t i = 0; i < m_entry_count; i++)
+        for (uint32_t i = 0; i < m_entry_count; i++)
         {
             if (m_entries[i].m_data != nil)
                 MCValueRelease(m_entries[i].m_data);
@@ -306,7 +306,7 @@ void MCGdkTransferStore::GetExternalTypes(GdkAtom p_selection, GdkWindow *p_targ
     if (t_property_type != GDK_SELECTION_TYPE_ATOM || t_property_format != 32)
         return;
     
-    for (gint i = 0; i < t_byte_len/sizeof(GdkAtom); i++)
+    for (gint i = 0; i < t_byte_len / (int) sizeof(GdkAtom); i++)
     {
         addAtom(((GdkAtom*)t_bytes)[i]);
     }
@@ -586,7 +586,7 @@ MCMIMEtype * MCGdkTransferStore::rev_to_MIME_stored(MCTransferType p_type)
 GdkAtom *MCGdkTransferStore::QueryAtoms(size_t &r_count)
 {
     uint32_t t_top = 0;
-    uint32_t t_index;
+    int32_t t_index;
     uint32_t t_count = 0;
     
     if (m_entries != NULL)
@@ -595,6 +595,9 @@ GdkAtom *MCGdkTransferStore::QueryAtoms(size_t &r_count)
         for (uint32_t i = 0; i < m_entry_count; i++)
         {
             t_index = find_table_entry_with_full_types(m_entries[i].m_type, m_entries[i].m_mime);
+			if (0 > t_index)
+				continue;
+
             if (XTransfer_lookup_table[t_index].priority > t_top)
                 t_top = XTransfer_lookup_table[t_index].priority;
         }
@@ -699,7 +702,7 @@ bool MCGdkTransferStore::Query(MCTransferType* &r_types, size_t &r_type_count)
 {
     MCAutoArray<MCTransferType> t_list;
     uint32_t t_top = 0;
-    uint32_t t_index;
+    int32_t t_index;
     uint32_t t_count = 0;
     
     if (m_entries != NULL)
@@ -710,6 +713,9 @@ bool MCGdkTransferStore::Query(MCTransferType* &r_types, size_t &r_type_count)
             for (uint32_t i = 0; i < m_entry_count; i++)
             {
                 t_index = find_table_entry_with_full_types(m_entries[i].m_type, m_entries[i].m_mime);
+				if (0 > t_index)
+					continue;
+
                 if (XTransfer_lookup_table[t_index].priority > t_top)
                     t_top = XTransfer_lookup_table[t_index].priority;
             }
@@ -717,6 +723,9 @@ bool MCGdkTransferStore::Query(MCTransferType* &r_types, size_t &r_type_count)
             for (uint32_t i = 0; i < m_entry_count; i++)
             {
                 t_index = find_table_entry_with_full_types(m_entries[i].m_type, m_entries[i].m_mime);
+				if (0 > t_index)
+					continue;
+
                 if ((XTransfer_lookup_table[t_index].priority == t_top) && should_include(t_list.Ptr(), t_count, m_entries[i].m_type))
                 {
                     t_list.Extend(++t_count);
@@ -1176,7 +1185,7 @@ bool ConvertFile_MIME_to_rev ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef
 	MCAutoStringRef t_input_files_livecode;
 	/* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_input_files, &t_input_files_livecode);
 	MCAutoStringRef t_input_files_livecode_decoded;
-	MCU_urldecode(*t_input_files_livecode, &t_input_files_livecode_decoded);
+	MCU_urldecode(*t_input_files_livecode, true, &t_input_files_livecode_decoded);
 	
 	MCAutoPointer<MCRange> t_ranges;
 	uindex_t t_range_count;
@@ -1197,8 +1206,8 @@ bool ConvertFile_MIME_to_rev ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef
 	MCStringRef t_output_files_string;
 	/* UNCHECKED */ MCListCopyAsStringAndRelease(t_output_files, t_output_files_string);
 
-	// Finally encode as native string and encapsulate in a dataref.
-	/* UNCHECKED */ MCStringEncodeAndRelease(t_output_files_string, kMCStringEncodingNative, false, r_output);
+    // SN-2014-11-13: [[ Bug 13993 ]] MCPasteBoard::Fetch now returns a UTF-16 encoded string for the files
+    /* UNCHECKED */ MCStringEncodeAndRelease(t_output_files_string, kMCStringEncodingUTF16, false, r_output);
 
 	return true;
 }

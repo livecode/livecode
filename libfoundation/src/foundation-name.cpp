@@ -21,6 +21,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 ////////////////////////////////////////////////////////////////////////////////
 
 MCNameRef kMCEmptyName;
+MCNameRef kMCTrueName;
+MCNameRef kMCFalseName;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -171,7 +173,12 @@ bool MCNameCreateWithNativeChars(const char_t *p_chars, uindex_t p_count, MCName
 	MCStringRef t_string;
 	if (!MCStringCreateWithNativeChars(p_chars, p_count, t_string))
 		return false;
-	return MCNameCreateAndRelease(t_string, r_name);
+	if (!MCNameCreateAndRelease(t_string, r_name))
+	{
+		MCValueRelease(t_string);
+		return false;
+	}
+	return true;
 }
 
 bool MCNameCreateWithChars(const unichar_t *p_chars, uindex_t p_count, MCNameRef& r_name)
@@ -245,6 +252,21 @@ bool MCNameIsEqualTo(MCNameRef self, MCNameRef p_other_name)
 {
 	return self == p_other_name ||
 			self -> key == p_other_name -> key;
+}
+
+bool MCNameIsEqualTo(MCNameRef self, MCNameRef p_other_name, bool p_case_sensitive, bool p_form_sensitive)
+{
+    if (self == p_other_name)
+        return true;
+
+    if (p_case_sensitive && p_form_sensitive)
+        return false;
+    else if (!p_case_sensitive && !p_form_sensitive)
+        return self -> key == p_other_name -> key;
+    else if (p_case_sensitive)
+        return MCStringIsEqualTo(self -> string, p_other_name -> string, kMCStringOptionCompareNonliteral);
+    else
+        return MCStringIsEqualTo(self -> string, p_other_name -> string, kMCStringOptionCompareFolded);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -388,6 +410,12 @@ bool __MCNameInitialize(void)
 		return false;
 
 	if (!MCNameCreate(kMCEmptyString, kMCEmptyName))
+		return false;
+
+	if (!MCNameCreate(kMCTrueString, kMCTrueName))
+		return false;
+		
+	if (!MCNameCreate(kMCFalseString, kMCFalseName))
 		return false;
 
 	s_name_table_occupancy = 0;

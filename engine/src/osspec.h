@@ -133,6 +133,8 @@ extern bool MCS_getresources(MCStringRef p_source, MCStringRef p_type, MCListRef
 extern bool MCS_setresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_id, MCStringRef p_name,
 							MCStringRef p_flags, MCStringRef p_value, MCStringRef& r_error);
 extern Boolean MCS_getspecialfolder(MCNameRef p_type, MCStringRef& r_path);
+// SN-2015-01-16: [[ Bug 14295 ]] Added mode-specific way to get the resources folder
+extern void MCS_getresourcesfolder(bool p_standalone, MCStringRef &r_resourcesfolder);
 extern bool MCS_shortfilepath(MCStringRef p_path, MCStringRef& r_short_path);
 extern bool MCS_longfilepath(MCStringRef p_path, MCStringRef& r_long_path);
 extern Boolean MCS_createalias(MCStringRef srcpath, MCStringRef dstpath);
@@ -182,11 +184,6 @@ void MCS_posttourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url);
 void MCS_putintourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url);
 void MCS_geturl(MCObject *p_target, MCStringRef p_url);
 
-// MW-2013-05-21: [[ RandomBytes ]] Attempt to generate a sequence of random
-//   bytes into the provided buffer. The function returns 'false' if there isnt
-//   enough entropy available to generate them.
-bool MCS_random_bytes(size_t p_count, MCDataRef& r_buffer);
-
 extern uint2 MCS_getplayloudness();
 extern void MCS_setplayloudness(uint2 p_loudness);
 
@@ -197,7 +194,7 @@ extern bool MCS_init_sockets();
 extern bool MCS_compare_host_domain(MCStringRef p_host_a, MCStringRef p_host_b);
 extern MCSocket *MCS_open_socket(MCNameRef name, Boolean datagram, MCObject *o, MCNameRef m, Boolean secure, Boolean sslverify, MCStringRef sslcertfile, MCNameRef p_end_hostname);
 extern void MCS_close_socket(MCSocket *s);
-extern void MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const char *until, MCNameRef m, MCDataRef& r_data);
+extern MCDataRef MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const char *until, MCNameRef m);
 extern void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRef m);
 extern MCSocket *MCS_accept(uint2 p, MCObject *o, MCNameRef m, Boolean datagram,Boolean secure,Boolean sslverify, MCStringRef sslcertfile);
 extern bool MCS_ha(MCSocket *s, MCStringRef& r_string);

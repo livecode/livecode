@@ -39,6 +39,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "param.h"
 #include "mbldc.h"
 
+#include "font.h"
+
 #include <objc/runtime.h>
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
@@ -66,6 +68,10 @@ extern void setup_simulator_hooks(void);
 
 extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
 extern bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace);
+
+// SN-2015-02-16: [[ iOS Font mapping ]] We want to clean the generated font map
+//   when closing the engine.
+extern void ios_clear_font_mapping(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -222,6 +228,8 @@ Boolean MCScreenDC::open(void)
 
 Boolean MCScreenDC::close(Boolean p_force)
 {
+    // SN-2015-02-16: [[ iOS Font Name ]] Clear the font mapping array.
+    ios_clear_font_mapping();
 	return True;
 }
 
@@ -352,7 +360,12 @@ void MCScreenDC::beep(void)
 {
 	// MW-2012-08-06: [[ Fibers ]] Execute the system code on the main fiber.
 	MCIPhoneRunBlockOnMainFiber(^(void) {
+    
+    // PM-2015-03-12: [[ Bug 14408 ]] On devices that don't support vibration, use AudioServicesPlaySystemSound, which does not lower the background volume, if audio is playing on the background
+    if([[UIDevice currentDevice].model isEqualToString:@"iPhone"])
 		AudioServicesPlayAlertSound(s_system_sound_name != nil ? s_system_sound : kSystemSoundID_Vibrate);
+    else
+        AudioServicesPlaySystemSound(s_system_sound_name != nil ? s_system_sound : kSystemSoundID_Vibrate);
 	});
 }
 
@@ -401,8 +414,6 @@ static void MCScreenDCDoSetBeepSound(void *p_env)
 		s_system_sound = t_new_sound;
 		s_system_sound_name = MCValueRetain(*t_sound_path);
 	}
-	else
-		MCValueRelease(*t_sound_path);
 	
 	env -> result = t_status == noErr;
 }
@@ -515,54 +526,45 @@ static void MCScreenDCDoSnapshot(void *p_env)
 			CGContextScaleCTM(t_img_context, 1.0 / t_scale, 1.0 / t_scale);
 			
 			bool t_is_rotated;
-			CGSize t_offset;
-			CGFloat t_angle;
-			switch(MCIPhoneGetOrientation())
+			t_is_rotated = UIInterfaceOrientationIsLandscape(MCIPhoneGetOrientation());
+			
+			if (MCmajorosversion >= 800)
 			{
-				case UIInterfaceOrientationPortrait:
-					t_angle = 0.0;
-					t_offset = CGSizeMake(t_screen_rect . width / 2, t_screen_rect . height / 2);
-					t_is_rotated = false;
-					break;
-				case UIInterfaceOrientationPortraitUpsideDown:
-                    // PM-2014-10-09: [[ Bug 13634 ]] No need to rotate the coords on iOS 8
-                    if (MCmajorosversion >=800)
-                        t_angle = 0.0;
-                    else
-                        t_angle = M_PI;
-
-					t_offset = CGSizeMake(t_screen_rect . width / 2, t_screen_rect . height / 2);
-					t_is_rotated = false;
-					break;
-				case UIInterfaceOrientationLandscapeLeft:
-					// MW-2011-10-17: [[ Bug 9816 ]] Angle caused upside-down image so inverted.
-                    // PM-2014-10-09: [[ Bug 13634 ]] No need to rotate the coords on iOS 8
-                    if (MCmajorosversion >=800)
-                        t_angle = 0.0;
-                    else
-                        t_angle = M_PI / 2;
-
-					t_offset = CGSizeMake(t_screen_rect . height / 2, t_screen_rect . width / 2);
-					t_is_rotated = true;
-					break;
-				case UIInterfaceOrientationLandscapeRight:
-					// MW-2011-10-17: [[ Bug 9816 ]] Angle caused upside-down image so inverted.
-                    // PM-2014-10-09: [[ Bug 13634 ]] No need to rotate the coords on iOS 8
-                    if (MCmajorosversion >=800)
-                        t_angle = 0.0;
-                    else
-                        t_angle = -M_PI / 2;
-                    
-                    t_offset = CGSizeMake(t_screen_rect . height / 2, t_screen_rect . width / 2);
-					t_is_rotated = true;
-					break;
+				// PM-2014-10-09: [[ Bug 13634 ]] No need to rotate the coords on iOS 8
+				// IM-2014-11-05: [[ Bug 13949 ]] Avoid rotating entirely as faulty offset was being applied to snapshots in landscape orientation.
+			}
+			else
+			{
+				CGSize t_offset;
+				CGFloat t_angle;
+				
+				switch(MCIPhoneGetOrientation())
+				{
+					case UIInterfaceOrientationPortrait:
+						t_angle = 0.0;
+						t_offset = CGSizeMake(t_screen_rect . width / 2, t_screen_rect . height / 2);
+						break;
+					case UIInterfaceOrientationPortraitUpsideDown:
+						t_angle = M_PI;
+						t_offset = CGSizeMake(t_screen_rect . width / 2, t_screen_rect . height / 2);
+						break;
+					case UIInterfaceOrientationLandscapeLeft:
+						// MW-2011-10-17: [[ Bug 9816 ]] Angle caused upside-down image so inverted.
+						t_angle = M_PI / 2;
+						t_offset = CGSizeMake(t_screen_rect . height / 2, t_screen_rect . width / 2);
+						break;
+					case UIInterfaceOrientationLandscapeRight:
+						// MW-2011-10-17: [[ Bug 9816 ]] Angle caused upside-down image so inverted.
+						t_angle = -M_PI / 2;
+						t_offset = CGSizeMake(t_screen_rect . height / 2, t_screen_rect . width / 2);
+						break;
+				}
+				
+				CGContextTranslateCTM(t_img_context, t_screen_rect . width / 2, t_screen_rect . height / 2);
+				CGContextRotateCTM(t_img_context, t_angle);
+				CGContextTranslateCTM(t_img_context, -t_offset . width, -t_offset . height);
 			}
 			
-			CGContextTranslateCTM(t_img_context, t_screen_rect . width / 2, t_screen_rect . height / 2);
-			CGContextRotateCTM(t_img_context, t_angle);
-			CGContextTranslateCTM(t_img_context, -t_offset . width, -t_offset . height);
-            
-            
 #ifndef USE_UNDOCUMENTED_METHODS
 			NSArray *t_windows;
 			t_windows = [[[UIApplication sharedApplication] windows] retain];
@@ -824,7 +826,7 @@ Window MCScreenDC::get_current_window(void)
 
 extern void *coretext_font_create_with_name_size_and_style(MCStringRef p_name, uint32_t p_size, bool p_bold, bool p_italic);
 extern bool coretext_font_destroy(void *p_font);
-extern bool coretext_font_get_metrics(void *p_font, float& r_ascent, float& r_descent);
+extern bool coretext_font_get_metrics(void *p_font, float& r_ascent, float& r_descent, float& r_leading, float& r_xheight);
 
 struct do_iphone_font_create_env
 {
@@ -863,9 +865,9 @@ void *iphone_font_create(MCStringRef p_name, uint32_t p_size, bool p_bold, bool 
 	return env . result;
 }
 
-void iphone_font_get_metrics(void *p_font, float& r_ascent, float& r_descent)
+void iphone_font_get_metrics(void *p_font, float& r_ascent, float& r_descent, float& r_leading, float& r_xheight)
 {
-    coretext_font_get_metrics(p_font, r_ascent, r_descent);
+    coretext_font_get_metrics(p_font, r_ascent, r_descent, r_leading, r_xheight);
 }
 
 void iphone_font_destroy(void *p_font)
@@ -1306,7 +1308,7 @@ void MCIPhoneHandleDidBecomeActive(void)
 	// Convert the current thread to the main fiber (system owned).
 	MCFiberConvert(s_main_fiber);
 
-	// Create our auxillary script fiber.
+    // Create our auxiliary script fiber.
 	MCFiberCreate(256 * 1024, s_script_fiber);
 	
 	// Transfer control to the engine fiber.
@@ -1680,3 +1682,24 @@ MCGFloat MCScreenDC::logicaltoscreenscale(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// No theming for mobile platforms yet
+bool MCPlatformGetControlThemePropBool(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, bool&)
+{
+    return false;
+}
+
+bool MCPlatformGetControlThemePropInteger(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, int&)
+{
+    return false;
+}
+
+bool MCPlatformGetControlThemePropColor(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCColor&)
+{
+    return false;
+}
+
+bool MCPlatformGetControlThemePropFont(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCFontRef& r_font)
+{
+    return MCFontCreate(MCNAME("Helvetica"), 0, 13, r_font);
+}

@@ -38,7 +38,10 @@ class MCLine : public MCDLlist
 	uint2 ascent;
 	uint2 descent;
 	coord_t dirtywidth;
-    
+    coord_t m_ascent;
+    coord_t m_descent;
+    coord_t m_leading;
+
     // Offset at which to start drawing segments (for whole-line alignment)
     int16_t m_offset;
     
@@ -48,6 +51,8 @@ class MCLine : public MCDLlist
 public:
 	MCLine(MCParagraph *paragraph);
 	~MCLine();
+    // SN-2015-01-21: [[ Bug 14229 ]] Update the dirtywidth with the width of lptr.
+    void takewidth(MCLine *lptr);
 	void takebreaks(MCLine *lptr);
 	MCBlock *fitblocks(MCBlock *p_first, MCBlock *p_sentinal, uint2 maxwidth);
 	void appendall(MCBlock *bptr, bool p_flow);
@@ -62,6 +67,10 @@ public:
 	uint2 getheight();
 	uint2 getascent();
 	uint2 getdescent();
+    coord_t GetAscent() const;
+    coord_t GetDescent() const;
+    coord_t GetLeading() const;
+    coord_t GetHeight() const;
 	void clearzeros(MCBlock*& p_list);
 	// MW-2012-02-10: [[ FixedTable ]] Set the width of the line explicitly.
 	void setwidth(uint2 new_width);

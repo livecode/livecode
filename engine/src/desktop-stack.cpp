@@ -191,6 +191,7 @@ void MCStack::realize(void)
 		
 		if (m_window_shape != nil)
 			MCPlatformSetWindowProperty(t_window, kMCPlatformWindowPropertyMask, kMCPlatformPropertyTypeWindowMask, (MCPlatformWindowMaskRef *)&m_window_shape -> handle);
+		MCPlatformSetWindowBoolProperty(t_window, kMCPlatformWindowPropertyIsOpaque, isopaque());
 		MCPlatformSetWindowProperty(t_window, kMCPlatformWindowPropertyStyle, kMCPlatformPropertyTypeWindowStyle, &t_window_style);
 		MCPlatformSetWindowBoolProperty(t_window, kMCPlatformWindowPropertyHasTitleWidget, t_has_titlebox);
 		MCPlatformSetWindowBoolProperty(t_window, kMCPlatformWindowPropertyHasCloseWidget, t_has_closebox);

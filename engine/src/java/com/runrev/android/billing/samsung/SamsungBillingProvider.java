@@ -79,6 +79,10 @@ public class SamsungBillingProvider implements BillingProvider
     {
         public void OnSucceedGetInboxList(ArrayList<InBoxVO> inboxList)
         {
+            // PM-2015-02-05: [[ Bug 14402 ]] Handle case when calling mobileStoreRestorePurchases but there are no previous purchases to restore
+            boolean t_did_restore;
+            t_did_restore = false;
+
             for (InBoxVO inboxItem : inboxList)
             {
                 final String tItemId = inboxItem.getItemId();
@@ -92,9 +96,15 @@ public class SamsungBillingProvider implements BillingProvider
                     Log.d(TAG, "Item restored :" + tItemId);
                     // onPurchaseStateChanged to be called with state = 5 (restored)
                     mPurchaseObserver.onPurchaseStateChanged(tItemId, 5);
-
+                    t_did_restore = true;
                 }
 
+            }
+
+            if(!t_did_restore)
+            {
+                // PM-2015-02-12: [[ Bug 14402 ]] When there are no previous purchases to restore, send a purchaseStateUpdate msg with state=restored and productID=""
+                mPurchaseObserver.onPurchaseStateChanged("",5);
             }
 
             if (pendingPurchaseItemId != null)

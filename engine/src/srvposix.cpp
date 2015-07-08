@@ -459,7 +459,14 @@ struct MCPosixSystem: public MCSystemInterface
 	}
 	
 	////
-	
+
+	virtual bool GetExecutablePath(MCStringRef& r_path)
+	{
+		MCAutoStringRef t_proc_path;
+		MCStringCreateWithCString("/proc/self/exe", &t_proc_path);
+		return ResolvePath(*t_proc_path, r_path);
+	}
+
 	bool PathToNative(MCStringRef p_path, MCStringRef& r_native)
 	{
 		return MCStringCopy(p_path, r_native);
@@ -509,6 +516,17 @@ struct MCPosixSystem: public MCSystemInterface
 			else
 				t_tilde_path = p_path;
 		}
+        else if (p_path[0] != '/')
+        {
+            // SN-2015-06-05: [[ Bug 15432 ]] Fix resolvepath on Linux: we want an
+            //  absolute path.
+            char *t_curfolder;
+            t_curfolder = MCS_getcurdir();
+            t_tilde_path = new char[strlen(t_curfolder) + strlen(p_path) + 2];
+            /* UNCHECKED */ sprintf(t_tilde_path, "%s/%s", t_curfolder, p_path);
+
+            delete t_curfolder;
+        }
 		else
 			t_tilde_path = p_path;
 		
@@ -775,13 +793,25 @@ struct MCPosixSystem: public MCSystemInterface
 	
 	bool HostNameToAddress(MCStringRef p_hostname, MCSystemHostResolveCallback p_callback, void *p_context)
 	{
-		struct hostent *he;
-		he = gethostbyname(MCStringGetCString(p_hostname));
-		if (he == NULL)
-			return false;
-		
+		/* Use inet_aton(3) to check whether p_hostname is already an
+		 * IP address.  If not, use gethostbyname(3) to look it up. */
+		struct in_addr t_addr;
+		struct in_addr *t_addr_lst[] = { &t_addr, NULL };
 		struct in_addr **ptr;
-		ptr = (struct in_addr **)he -> h_addr_list;
+		struct hostent *he;
+
+		if (inet_aton (MCStringGetCString(p_hostname), &t_addr))
+		{
+			ptr = t_inaddr_lst;
+		}
+		else
+		{
+			he = gethostbyname(MCStringGetCString(p_hostname));
+			if (he == NULL)
+				return false;
+
+			ptr = (struct in_addr **)he -> h_addr_list;
+		}
 		
 		for(uint32_t i = 0; ptr[i] != NULL; i++)
 		{

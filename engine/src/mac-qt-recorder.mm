@@ -215,8 +215,9 @@ static void exportToSoundFile(MCStringRef sourcefile, MCStringRef destfile)
     MCAutoStringRef t_src_resolved;
 	MCAutoStringRef t_dst_resolved;
     
+    // AL-2015-01-05: [[ Bug 14302 ]] Assign resolved path strings correctly
     t_success = MCS_resolvepath(sourcefile, &t_src_resolved)
-    && MCS_resolvepath(destfile, &t_src_resolved);
+    && MCS_resolvepath(destfile, &t_dst_resolved);
     
 	t_success = (*t_src_resolved != NULL && *t_dst_resolved != NULL);
 	

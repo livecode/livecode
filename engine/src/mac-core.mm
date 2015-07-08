@@ -25,6 +25,8 @@
 
 #include "graphics_util.h"
 
+#include "libscript/script.h"
+
 #include <objc/objc-runtime.h>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -48,15 +50,18 @@ enum
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// MW-2014-04-22: [[ Bug 12259 ]] Override sendEvent so that we always get a chance
-//   at the MouseSync event.
-@interface com_runrev_livecode_MCApplication: NSApplication
-
-- (void)sendEvent:(NSEvent *)event;
-
-@end
-
 @implementation com_runrev_livecode_MCApplication
+
+-(id)init
+{
+    self = [super init];
+    if (self)
+    {
+        m_pseudo_modal_for = nil;
+    }
+    
+    return self;
+}
 
 - (void)sendEvent:(NSEvent *)event
 {
@@ -102,6 +107,16 @@ enum
 
     MCPlatformReleaseWindow(s_moving_window);
     s_moving_window = nil;
+}
+
+- (void)becomePseudoModalFor: (NSWindow*)window
+{
+    m_pseudo_modal_for = window;
+}
+
+- (NSWindow*)pseudoModalFor
+{
+    return m_pseudo_modal_for;
 }
 
 @end
@@ -766,7 +781,10 @@ void MCMacPlatformBeginModalSession(MCMacPlatformWindow *p_window)
 	s_modal_sessions[s_modal_session_count - 1] . is_done = false;
 	s_modal_sessions[s_modal_session_count - 1] . window = p_window;
 	p_window -> Retain();
+	// IM-2015-01-30: [[ Bug 14140 ]] lock the window frame to prevent it from being centered on the screen.
+	p_window->SetFrameLocked(true);
 	s_modal_sessions[s_modal_session_count - 1] . session = [NSApp beginModalSessionForWindow: (NSWindow *)(p_window -> GetHandle())];
+	p_window->SetFrameLocked(false);
 }
 
 void MCMacPlatformEndModalSession(MCMacPlatformWindow *p_window)
@@ -1833,8 +1851,13 @@ void MCMacPlatformSyncMouseBeforeDragging(void)
 			MCPlatformCallbackSendMouseRelease(s_mouse_window, t_button_to_release, false);
 		MCPlatformCallbackSendMouseLeave(s_mouse_window);
 		
-		MCPlatformReleaseWindow(s_mouse_window);
-		s_mouse_window = nil;
+        // SN-2015-01-13: [[ Bug 14350 ]] The user can close the stack in
+        //  a mouseLeave handler
+        if (s_mouse_window != nil)
+        {
+            MCPlatformReleaseWindow(s_mouse_window);
+            s_mouse_window = nil;
+        }
 	}
 }
 
@@ -1946,6 +1969,9 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern "C" bool MCModulesInitialize(void);
+extern "C" void MCModulesFinalize(void);
+
 int main(int argc, char *argv[], char *envp[])
 {
 	extern bool MCS_mac_elevation_bootstrap_main(int argc, char* argv[]);
@@ -1965,10 +1991,10 @@ int main(int argc, char *argv[], char *envp[])
 	// Register for reconfigurations.
 	CGDisplayRegisterReconfigurationCallback(display_reconfiguration_callback, nil);
     
-	
-	if (!MCInitialize())
+	if (!MCInitialize() || !MCSInitialize() ||
+	    !MCModulesInitialize() || !MCScriptInitialize())
 		exit(-1);
-	
+    
 	// On OSX, argv and envp are encoded as UTF8
 	MCStringRef *t_new_argv;
 	/* UNCHECKED */ MCMemoryNewArray(argc, t_new_argv);
@@ -2017,6 +2043,8 @@ int main(int argc, char *argv[], char *envp[])
 	// Drain the autorelease pool.
 	[t_pool release];
 	
+    MCScriptFinalize();
+    MCModulesFinalize();
 	MCFinalize();
 	
 	return 0;

@@ -1,0 +1,1 @@
+# Getting centerRect returns incorrect rectangle 

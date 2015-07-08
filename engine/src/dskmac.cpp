@@ -49,10 +49,15 @@
 #include <sys/time.h>
 #include <sys/ioctl.h>
 
+// SN-2014-12-09: [[ Bug 14001 ]] Update the module loading for Mac server
+#include <dlfcn.h>
+
 #include "foundation.h"
 
 #include <Security/Authorization.h>
 #include <Security/AuthorizationTags.h>
+
+#include <mach-o/dyld.h>
 
 
 #define ENTRIES_CHUNK 1024
@@ -1192,13 +1197,18 @@ OSErr MCS_mac_pathtoref(MCStringRef p_path, FSRef& r_ref)
 	return t_error;
 #endif /* MCS_pathtoref_dsk_mac */
     MCAutoStringRef t_auto_path;
+    MCAutoStringRef t_redirected_path;
     MCAutoStringRefAsUTF8String t_path;
     
     if (!MCS_resolvepath(p_path, &t_auto_path))
         // TODO assign relevant error code
         return memFullErr;
+
+    // SN-2015-01-26: [[ Merge-6.7.2-rc-2 ]]
+    if (!MCS_apply_redirect(*t_auto_path, true, &t_redirected_path))
+        t_redirected_path = *t_auto_path;
     
-    if (!t_path.Lock(*t_auto_path))
+    if (!t_path.Lock(*t_redirected_path))
         return memFullErr;
     
 	return FSPathMakeRef((const UInt8 *)(*t_path), &r_ref, NULL);
@@ -1266,16 +1276,22 @@ static OSErr MCS_mac_pathtoref_and_leaf(MCStringRef p_path, FSRef& r_ref, UniCha
 	t_error = noErr;
     
 	MCAutoStringRef t_resolved_path;
+    MCAutoStringRef t_redirected_path;
     
     if (!MCS_resolvepath(p_path, &t_resolved_path))
         // TODO assign relevant error code
         t_error = fnfErr;
+
+    // SN-2015-01-26: [[ Merge-6.7.2-rc-2 ]]
+    if (!MCS_apply_redirect(*t_resolved_path, true, &t_redirected_path))
+        t_redirected_path = *t_resolved_path;
+
     
     MCAutoStringRef t_folder, t_leaf;
     uindex_t t_leaf_index;
-    if (MCStringLastIndexOfChar(*t_resolved_path, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_leaf_index))
+    if (MCStringLastIndexOfChar(*t_redirected_path, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_leaf_index))
     {
-        if (!MCStringDivideAtIndex(*t_resolved_path, t_leaf_index, &t_folder, &t_leaf))
+        if (!MCStringDivideAtIndex(*t_redirected_path, t_leaf_index, &t_folder, &t_leaf))
             t_error = memFullErr;
     }
     else
@@ -3386,10 +3402,11 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                     MCresult->sets("error reading file");
                 else
                 {
-                    /* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease((char_t*)buffer, toread, r_data);
+                    /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)buffer, toread, r_data);
                     MCresult->clear(False);
                 }
             }
+            delete[] buffer;
         }
         
         FSCloseFork(fRefNum);
@@ -3965,7 +3982,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                 {
                     errno = getAddressFromDesc(senderDesc, sender);
                     AEDisposeDesc(&senderDesc);
-                    /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)sender, r_value);
+                    /* UNCHECKED */ MCStringCreateWithCStringAndRelease(sender, r_value);
                     return;
                 }
                 delete[] sender;
@@ -4434,6 +4451,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         sigaction(SIGILL, &action, NULL);
         sigaction(SIGBUS, &action, NULL);
         
+        MCValueAssign(MCshellcmd, MCSTR("/bin/sh"));
+        
 #ifndef _MAC_SERVER
         // MW-2010-05-11: Make sure if stdin is not a tty, then we set non-blocking.
         //   Without this you can't poll read when a slave process.
@@ -4461,10 +4480,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         for(uint4 i = 0; i < 256; ++i)
             MClowercasingtable[i] = (uint1)i;
         LowercaseText((char *)MClowercasingtable, 256, smRoman);
-        
-        // MW-2013-03-22: [[ Bug 10772 ]] Make sure we initialize the shellCommand
-        //   property here (otherwise it is nil in -ui mode).
-        MCValueAssign(MCshellcmd, MCSTR("/bin/sh"));
         
         //
         
@@ -5638,14 +5653,29 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         
         // SN-2014-08-08: [[ Bug 13026 ]] Fix ported from 6.7
-        if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless))
+        if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless)
+                // SN-2015-04-20: [[ Bug 14295 ]] If we are here, we are a standalone
+                // so the resources folder is the redirected engine folder
+                || MCNameIsEqualTo(p_type, MCN_resources, kMCCompareCaseless))
         {
+            MCAutoStringRef t_engine_folder;
             uindex_t t_last_slash;
             
             if (!MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash))
                 t_last_slash = MCStringGetLength(MCcmd);
-            
-            return MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), r_folder) ? True : False;
+
+            if (!MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), &t_engine_folder))
+                return False;
+
+            if (MCNameIsEqualTo(p_type, MCN_resources, kMCCompareCaseless))
+            {
+                if (!MCS_apply_redirect(*t_engine_folder, false, r_folder))
+                    return False;
+            }
+            else
+                r_folder = MCValueRetain(*t_engine_folder);
+
+            return True;
         }
         
         if (MCS_mac_specialfolder_to_mac_folder(MCNameGetString(p_type), t_mac_folder, t_domain))
@@ -5714,8 +5744,13 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (MCStringGetLength(p_path) == 0)
             return False;
         
+        // SN-2015-01-05: [[ Bug 14043 ]] Apply the fix to MCS_exists
+        MCAutoStringRef t_redirected;
+        if (!MCS_apply_redirect(p_path, true, &t_redirected))
+            t_redirected = p_path;
+        
         MCAutoStringRefAsUTF8String t_utf8_path;
-        if (!t_utf8_path.Lock(p_path))
+        if (!t_utf8_path.Lock(*t_redirected))
             return False;
         
         bool t_found;
@@ -6259,6 +6294,34 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         return MCListCopyAsString(*t_list, r_drives) ? True : False;
     }
 	
+    
+    // ST-2014-12-18: [[ Bug 14259 ]] Returns the executable from the system tools, not from argv[0]
+	virtual bool GetExecutablePath(MCStringRef& r_path)
+	{
+		uint32_t bufsize = 0;
+		_NSGetExecutablePath(NULL, &bufsize);
+        // Use MCMemoryNewArray to allocate the buffer, for consistency with
+        //  free() being used in MCStringCreateWithBytesAndRelease
+        char* buf;
+        if (!MCMemoryNewArray(bufsize, buf))
+            return False;
+        
+		if (_NSGetExecutablePath(buf, &bufsize) != 0)
+        {
+			MCMemoryDeleteArray(buf);
+			return False;
+		}
+
+		MCAutoStringRef t_path;
+        // [[ Bug 15062 ]] The path returned by _NSGetExecutablePath is UTF-8
+        //  encoded. We should decode it this way.
+        // We use strlen, as in MCStringCreateWithCString, to avoid the surprise
+        //  of a trailing NULL character.
+        return MCStringCreateWithBytesAndRelease((byte_t*)buf, strlen(buf), kMCStringEncodingUTF8, false, &t_path)
+            && ResolvePath(*t_path, r_path);
+	}
+
+
 	bool PathToNative(MCStringRef p_path, MCStringRef& r_native)
 	{
         return MCStringCopy(p_path, r_native);
@@ -6319,30 +6382,17 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         struct stat buf;
         if (lstat(tildepath, &buf) != 0 || !S_ISLNK(buf.st_mode))
             return tildepath;
-        int4 size;
         char *newname = new char[PATH_MAX + 2];
-        if ((size = readlink(tildepath, newname, PATH_MAX)) < 0)
+
+        // SN-2015-06-05: [[ Bug 15432 ]] Use realpath to solve the symlink.
+        if (realpath(tildepath, newname) == NULL)
         {
-            delete tildepath;
+            // Clear the memory in case of failure
             delete newname;
-            return NULL;
+            newname = NULL;
         }
+
         delete tildepath;
-        newname[size] = '\0';
-        if (newname[0] != '/')
-        {
-            char *fullpath = new char[strlen(path) + strlen(newname) + 2];
-            strcpy(fullpath, path);
-            char *sptr = strrchr(fullpath, '/');
-            if (sptr == NULL)
-                sptr = fullpath;
-            else
-                sptr++;
-            strcpy(sptr, newname);
-            delete newname;
-            newname = MCS_resolvepath(fullpath);
-            delete fullpath;
-        }
         return newname;
 #endif /* MCS_resolvepath_dsk_mac */
         if (MCStringGetLength(p_path) == 0)
@@ -6400,32 +6450,29 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (!MCS_mac_is_link(*t_fullpath))
             return MCStringCopy(*t_fullpath, r_resolved_path);
         
-        MCAutoStringRef t_newname;
-        if (!MCS_mac_readlink(*t_fullpath, &t_newname))
-            return false;
-        
-        // IM - Should we really be using the original p_path parameter here?
-        // seems like we should use the computed t_fullpath value.
-        if (MCStringGetCharAtIndex(*t_newname, 0) != '/')
-        {
-            MCAutoStringRef t_resolved;
-            
-            uindex_t t_last_component;
-            uindex_t t_path_length;
-            
-            if (MCStringLastIndexOfChar(p_path, '/', MCStringGetLength(p_path), kMCStringOptionCompareExact, t_last_component))
-                t_last_component++;
-            else
-                t_last_component = 0;
-            
-            if (!MCStringMutableCopySubstring(p_path, MCRangeMake(0, t_last_component), &t_resolved) ||
-                !MCStringAppend(*t_resolved, *t_newname))
-                return false;
-            
-            return MCStringCopy(*t_resolved, r_resolved_path);
-        }
+        // SN-2015-06-08: [[ Bug 15432 ]] Use realpath to solve the symlink
+        MCAutoStringRefAsUTF8String t_utf8_path;
+        bool t_success;
+        t_success = true;
+
+        if (t_success)
+            t_success = t_utf8_path . Lock(*t_fullpath);
+
+        char *t_resolved_path;
+
+        t_resolved_path = realpath(*t_utf8_path, NULL);
+
+        // If the does not exist, then realpath will fail: we want to
+        // return something though, so we keep the input path (as it
+        // is done for desktop).
+        if (t_resolved_path != NULL)
+            t_success = MCStringCreateWithBytes((const byte_t*)t_resolved_path, strlen(t_resolved_path), kMCStringEncodingUTF8, false, r_resolved_path);
         else
-            return MCStringCopy(*t_newname, r_resolved_path);
+            t_success = false;
+
+        MCMemoryDelete(t_resolved_path);
+
+        return t_success;
     }
 	
     virtual IO_handle DeployOpen(MCStringRef p_path, intenum_t p_mode)
@@ -6729,6 +6776,20 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 	
 	return (MCSysModuleHandle)t_result;
 #endif /* MCS_loadmodule_dsk_mac */
+        
+        // SN-2014-12-09: [[ Bug 14001 ]] Update the module loading for Mac server
+#ifdef _SERVER
+        MCAutoStringRefAsUTF8String t_utf_path;
+        
+        if (!t_utf_path.Lock(p_filename))
+            return NULL;
+        
+        void *t_result;
+        
+        t_result = dlopen(*t_utf_path, RTLD_LAZY);
+        
+        return (MCSysModuleHandle)t_result;
+#else
         MCAutoStringRefAsUTF8String t_utf_path;
         
         if (!t_utf_path.Lock(p_filename))
@@ -6746,6 +6807,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         CFRelease(t_url);
         
         return (MCSysModuleHandle)t_result;
+#endif
     }
     
 	virtual MCSysModuleHandle ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)
@@ -6763,6 +6825,11 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 	
 	return t_symbol_ptr;
 #endif /* MCS_resolvemodulesymbol_dsk_mac */
+        
+        // SN-2014-12-09: [[ Bug 14001 ]] Update the module loading for Mac server
+#ifdef _SERVER
+        return (MCSysModuleHandle)dlsym(p_module, MCStringGetCString(p_symbol));
+#else
         CFStringRef t_cf_symbol;
        
         MCStringConvertToCFStringRef(p_symbol, t_cf_symbol);
@@ -6775,6 +6842,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         CFRelease(t_cf_symbol);
         
         return (MCSysModuleHandle) t_symbol_ptr;
+#endif
     }
     
 	virtual void UnloadModule(MCSysModuleHandle p_module)
@@ -6782,7 +6850,13 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 #ifdef /* MCS_unloadmodule_dsk_mac */ LEGACY_SYSTEM
 	CFRelease((CFBundleRef)p_module);
 #endif /* MCS_unloadmodule_dsk_mac */
-        CFRelease((CFBundleRef)p_module);        
+        
+        // SN-2014-12-09: [[ Bug 14001 ]] Update the module loading for Mac server
+#ifdef _SERVER
+        dlclose(p_module);
+#else
+        CFRelease((CFBundleRef)p_module);
+#endif
     }
 	
 	virtual bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path)
@@ -7362,7 +7436,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 {
                     if (MCprocesses[index].pid != 0)
                         Kill(MCprocesses[index].pid, SIGKILL);
-                    return IO_ERROR;
+                    // SN-2015-01-29: [[ Bug 14462 ]] Should return a boolean
+                    return false;
                 }
                 if (MCprocesses[index].pid == 0)
                     break;
@@ -8090,7 +8165,13 @@ MCSystemInterface *MCDesktopCreateMacSystem(void)
 static bool fetch_ae_as_fsref_list(MCListRef &r_list)
 {
 	AEDescList docList; //get a list of alias records for the documents
-	long count;
+    long count;
+    // SN-2015-04-14: [[ Bug 15105 ]] We want to return at least an empty list
+    //  in any case where we return true
+    // SN-2014-10-07: [[ Bug 13587 ]] We store the paths in a list
+    MCAutoListRef t_list;
+    /* UNCHECKED */ MCListCreateMutable('\n', &t_list);
+    
 	if (AEGetParamDesc(aePtr, keyDirectObject,
 					   typeAEList, &docList) == noErr
 		&& AECountItems(&docList, &count) == noErr && count > 0)
@@ -8103,9 +8184,6 @@ static bool fetch_ae_as_fsref_list(MCListRef &r_list)
 		Size rSize;      //returned size, atual size of the docName
 		long item;
 		// get a FSSpec record, starts from count==1
-        // SN-2014-10-07: [[ Bug 13587 ]] We store the paths in a list
-        MCAutoListRef t_list;
-        /* UNCHECKED */ MCListCreateMutable('\n', &t_list);
         
 		for (item = 1; item <= count; item++)
 		{
@@ -8122,10 +8200,8 @@ static bool fetch_ae_as_fsref_list(MCListRef &r_list)
                 MCListAppend(*t_list, *t_fullpathname);
 		}
 		AEDisposeDesc(&docList);
-        
-        return MCListCopy(*t_list, r_list);
 	}
-	return true;
+    return MCListCopy(*t_list, r_list);
 }
 
 OSErr MCS_fsspec_to_fsref(const FSSpec *p_fsspec, FSRef *r_fsref)
@@ -8235,21 +8311,26 @@ static OSErr getAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef &r
             {
                 byte_t *result = new byte_t[s + 1];
                 AEGetAttributePtr(ae, key, dt, &rType, result, s, &rSize);
-                /* UNCHECKED */ MCStringCreateWithBytesAndRelease(result, s, kMCStringEncodingUTF8, false, r_result);
+                /* UNCHECKED */ MCStringCreateWithBytes(result, s, kMCStringEncodingUTF8, false, r_result);
+                delete[] result;
                 break;
             }
             case typeChar:
             {
                 char_t *result = new char_t[s + 1];
                 AEGetAttributePtr(ae, key, dt, &rType, result, s, &rSize);
-                /* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease(result, s, r_result);
+                /* UNCHECKED */ MCStringCreateWithNativeChars(result, s, r_result);
+                delete[] result;
                 break;
             }
             case typeType:
             {
                 FourCharCode t_type;
                 AEGetAttributePtr(ae, key, dt, &rType, &t_type, s, &rSize);
-                /* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease((char_t*)FourCharCodeToString(t_type), 4, r_result);
+                char *result;
+                result = FourCharCodeToString(t_type);
+                /* UNCHECKED */ MCStringCreateWithNativeChars((char_t*)result, 4, r_result);
+                delete[] result;
 			}
                 break;
             case typeShortInteger:
@@ -8341,14 +8422,18 @@ static OSErr getAEParams(const AppleEvent *ae, AEKeyword key, MCStringRef &r_res
             {
                 char_t *result = new char_t[s + 1];
                 AEGetParamPtr(ae, key, dt, &rType, result, s, &rSize);
-                /* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease(result, s, r_result);
+                /* UNCHECKED */ MCStringCreateWithNativeChars(result, s, r_result);
+                delete[] result;
                 break;
             }
             case typeType:
             {
                 FourCharCode t_type;
                 AEGetParamPtr(ae, key, dt, &rType, &t_type, s, &rSize);
-                /* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease((char_t*)FourCharCodeToString(t_type), 4, r_result);
+                char *result;
+                result = FourCharCodeToString(t_type);
+                /* UNCHECKED */ MCStringCreateWithNativeChars((char_t*)result, 4, r_result);
+                delete[] result;
 			}
                 break;
             case typeShortInteger:

@@ -95,6 +95,12 @@ struct MCInterfaceButtonIcon;
 #define MENUCONTROL_ITEM 1
 #define MENUCONTROL_SEPARATOR 2
 
+class MCButtonMenuHandler
+{
+public:
+	virtual bool OnMenuPick(MCButton *p_button, MCValueRef p_pick, MCValueRef p_old_pick) = 0;
+};
+
 class ButtonMenuCallback;
 
 class MCButton : public MCControl
@@ -121,7 +127,10 @@ class MCButton : public MCControl
 	uint1 accelmods;
 	uint1 mnemonic;
 	uint1 menucontrol;
-    MCGravity m_icon_gravity : 4;
+	// SN-2015-01-06: [[ Bug 14306 ]] The type of an enum is implementation-defined,
+	// and forcing the size to 4 boils down to a 4-bit int, not a 4-byte int on Windows.
+	// A 5-bit signed int is enough though to handle the 12 values of the MCGravity enum.
+	MCGravity m_icon_gravity : 5;
 	bool menuhasitemtags : 1;
 
 	Boolean ishovering;
@@ -141,6 +150,8 @@ class MCButton : public MCControl
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
     
+	MCButtonMenuHandler *m_menu_handler;
+	
     // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure the default button animate message is only posted from a single thread.
     bool m_animate_posted : 1;
 
@@ -158,7 +169,7 @@ public:
 
 	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
 
-	virtual bool visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_visitor);
+	virtual bool visit_self(MCObjectVisitor *p_visitor);
 
 	virtual void open();
 	virtual void close();
@@ -180,10 +191,12 @@ public:
 
 	virtual uint2 gettransient() const;
 	virtual void setrect(const MCRectangle &nrect);
+
 #ifdef LEGACY_EXEC
-    virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+    virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
     virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 #endif
+
 	virtual void closemenu(Boolean kfocus, Boolean disarm);
 	
 	// MW-2011-09-20: [[ Collision ]] Compute shape of button - will use mask of icon if possible.
@@ -282,11 +295,17 @@ public:
 	//   a Mac menu as its assumed its not needed.
 	Boolean findmenu(bool p_just_for_accel = false);
 	
+	void setmenuhandler(MCButtonMenuHandler *p_handler);
+	Exec_stat handlemenupick(MCValueRef p_pick, MCValueRef p_old_pick);
+	
 	void openmenu(Boolean grab);
 	void freemenu(Boolean force);
 	MCRange getmenurange();
 	void docascade(MCStringRef t_pick);
 	void setupmenu();
+	
+	bool menuisopen();
+	
 	bool selectedchunk(MCStringRef& r_string);
 	bool selectedline(MCStringRef& r_string);
 	bool selectedtext(MCStringRef& r_string);
@@ -319,6 +338,8 @@ public:
 	void macopenmenu(void);
 	void macfreemenu(void);
     static void getmacmenuitemtextfromaccelerator(MCPlatformMenuRef menu, KeySym key, uint1 mods, MCStringRef &r_string, bool issubmenu);
+    
+    bool macmenuisopen();
 #endif
 
 	MCCdata *getcdata(void) {return bdata;}
@@ -473,5 +494,12 @@ private:
 	void trytochangetonative(void);
 
 	friend class ButtonMenuCallback;
+    
+protected:
+    
+    // FG-2014-11-11: [[ Better theming ]] Fetch the control type/state for theming purposes
+    virtual MCPlatformControlType getcontroltype();
+    virtual MCPlatformControlPart getcontrolsubpart();
+    virtual MCPlatformControlState getcontrolstate();
 };
 #endif

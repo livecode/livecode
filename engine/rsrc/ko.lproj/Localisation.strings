@@ -1,0 +1,21 @@
+/* Format string such as About %@" */
+"appMenu.about" = "%@ 관하여";
+
+/* Format string such as Hide %@ */
+"appMenu.hide" = "%@ 가리기";
+
+/* Hide Others */
+"appMenu.hideOthers" = "기타 가리기";
+
+/* Preferences */
+"appMenu.preferences" = "환경설정...";
+
+/* Format string such as Quit %@ */
+"appMenu.quit" = "%@ 종료";
+
+/* Services */
+"appMenu.services" = "서비스";
+
+/* Show All */
+"appMenu.showAll" = "모두 보기";
+

@@ -80,10 +80,12 @@ void MCDLlist::splitat(MCDLlist *node)
 MCDLlist *MCDLlist::remove(MCDLlist *&list)
 {
 	if (list == this)
+	{
 		if (list->nptr == this)
 			list = NULL;
 		else
 			list = nptr;
+	}
 	nptr->pptr = pptr;
 	pptr->nptr = nptr;
 	pptr = nptr = this;

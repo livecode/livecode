@@ -110,9 +110,6 @@ MCScreenDC::MCScreenDC(void)
 	
 	// Initialize the list of active touches.
 	m_active_touches = nil;
-	
-	// MW-2013-06-18: [[ XPlatNotify ]] Initialize the notify module.
-	MCNotifyInitialize();
 }
 
 MCScreenDC::~MCScreenDC(void)
@@ -122,9 +119,6 @@ MCScreenDC::~MCScreenDC(void)
 	
 	// Delete the main windows stack.
 	delete m_main_windows;
-	
-	// MW-2013-06-18: [[ XPlatNotify ]] Finalize the notify module.
-	MCNotifyFinalize();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -686,15 +680,15 @@ void MCScreenDC::freecursor(MCCursorRef c)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-uint4 MCScreenDC::dtouint4(Drawable d)
+uintptr_t MCScreenDC::dtouint(Drawable d)
 {
 	if (d == DNULL)
 		return 0;
 	
-	return (uint4)d -> handle . pixmap;
+	return (uintptr_t)d -> handle . pixmap;
 }
 
-Boolean MCScreenDC::uint4towindow(uint4, Window &w)
+Boolean MCScreenDC::uinttowindow(uintptr_t, Window &w)
 {
 	return False;
 }

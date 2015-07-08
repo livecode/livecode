@@ -1,0 +1,1 @@
+# Externals fail to load when livecode server script is started via "#!/usr/bin/env livecode-server"

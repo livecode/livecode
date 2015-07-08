@@ -96,8 +96,8 @@ public:
 	virtual void uniconifywindow(Window window);
 	virtual void setname(Window window, MCStringRef newname);
 	virtual void setinputfocus(Window window);
-	virtual uint4 dtouint4(Drawable d);
-	virtual Boolean uint4towindow(uint4, Window &w);
+	virtual uintptr_t dtouint(Drawable d);
+	virtual Boolean uinttowindow(uintptr_t, Window &w);
 	
 	virtual void enablebackdrop(bool p_hard);
 	virtual void disablebackdrop(bool p_hard);

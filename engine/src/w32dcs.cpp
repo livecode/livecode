@@ -715,18 +715,18 @@ static void fixdata(uint4 *bits, uint2 width, uint2 height)
 		*bits++ |= mask;
 }
 
-uint4 MCScreenDC::dtouint4(Drawable d)
+uintptr_t MCScreenDC::dtouint(Drawable d)
 {
 	if (d == DNULL)
 		return 0;
 	else
 		if (d->type == DC_WINDOW)
-			return (uint4)(d->handle.window);
+			return (uintptr_t)(d->handle.window);
 		else
-			return (uint4)(d->handle.pixmap);
+			return (uintptr_t)(d->handle.pixmap);
 }
 
-Boolean MCScreenDC::uint4towindow(uint4 id, Window &w)
+Boolean MCScreenDC::uinttowindow(uintptr_t id, Window &w)
 {
 	w = new _Drawable;
 	w->type = DC_WINDOW;

@@ -38,6 +38,18 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec-interface.h"
 
+static MCRectangle
+MCBlockMakeRectangle(double x, double y,
+                     double width, double height)
+{
+	MCRectangle p_result;
+	p_result.x = int2(x);
+	p_result.y = int2(y);
+	p_result.width = uint2(width);
+	p_result.height = uint2(height);
+	return p_result;
+}
+
 // Default MCBlock constructor - makes a block with everything initialized
 // to zero.
 MCBlock::MCBlock(void)
@@ -51,6 +63,9 @@ MCBlock::MCBlock(void)
     origin = 0;
     tabpos = 0;
     direction_level = 0;
+
+    // SN-2014-12-16: [[ Bug 14227 ]] Make sure to initialise the segment to nil.
+    segment = nil;
 
 	// MW-2012-02-14: [[ FontRefs ]] The font for the block starts off nil.
 	m_font = nil;
@@ -106,6 +121,9 @@ MCBlock::MCBlock(const MCBlock &bref) : MCDLlist(bref)
     tabpos = 0;
     direction_level = bref.direction_level;
 
+    // SN-2014-12-16: [[ Bug 14227 ]] Make sure to initialise the segment to nil.
+    segment = nil;
+
 	// MW-2012-02-14: [[ FontRefs ]] The font for the block starts off nil.
 	m_font = nil;
 }
@@ -119,7 +137,7 @@ MCBlock::~MCBlock()
 		freeatts();
 }
 
-bool MCBlock::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor)
+bool MCBlock::visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor)
 {
 	return p_visitor -> OnBlock(this);
 }
@@ -360,6 +378,13 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 		t_is_unicode = true;
         flags |= F_HAS_UNICODE;
 	}
+
+    // SN-2014-12-04: [[ Bug 14149 ]] Add the F_HAS_TAB flag, for legacy saving
+    if (MCstackfileversion < 7000)
+    {
+        if (segment && segment != segment -> next())
+            flags |= F_HAS_TAB;
+    }
 	
 	// MW-2012-02-17: [[ SplitTextAttrs ]] If we have unicode, or one of the font attr are
 	//   set then we must serialize a font.
@@ -701,18 +726,11 @@ bool MCBlock::fit(coord_t x, coord_t maxwidth, findex_t& r_break_index, bool& r_
 	// MW-2013-12-19: [[ Bug 11606 ]] Track the width of the text within the block as a float
 	//   but use the integer width to break. This ensures measure(a & b) == measure(a) + measure(b)
 	//   (otherwise you get drift as the accumulated width the block calculates is different
-	//    from the width of the text that is drawn).
+	//    from the width of the text that is drawn). 
 
 	coord_t t_width_float;
 	t_width_float = 0;
 
-	// MW-2009-04-23: [[ Bug ]] For printing, we measure complete runs of text otherwise we get
-	//   positioning issues.
-	coord_t t_last_break_width;
-	t_last_break_width = 0;
-	uint2 t_last_break_i;
-	t_last_break_i = m_index;
-	
 	findex_t i;
 	i = m_index;
 	
@@ -740,27 +758,41 @@ bool MCBlock::fit(coord_t x, coord_t maxwidth, findex_t& r_break_index, bool& r_
 		codepoint_t t_this_char;
         bool t_end_of_block;
         t_end_of_block = false;
-		while(i < m_index + m_size)
-		{
-			t_this_char = t_next_char;
-			
-			i = parent->IncrementIndex(i);
-		
-			if (i < m_index + m_size)
-				t_next_char = parent->GetCodepointAtIndex(i);
-			else
+        
+        // If this is the first block of a segment that was created by a tab,
+        // we can use the first position in the block as a break position,
+        // unless this is the first segment on a line.
+        if (!t_can_fit
+            && this == segment->GetFirstBlock()
+            && i == m_index
+            && segment->GetParent()->GetFirstSegment() != segment
+            && parent->GetCodepointAtIndex(i - 1) == '\t')
+        {
+            t_can_fit = t_can_break = true;
+        }
+        else
+        {
+            while(i < m_index + m_size)
             {
-                t_next_char = t_next_block_char;
-                t_end_of_block = true;
+                t_this_char = t_next_char;
+                
+                i = parent->IncrementIndex(i);
+            
+                if (i < m_index + m_size)
+                    t_next_char = parent->GetCodepointAtIndex(i);
+                else
+                {
+                    t_next_char = t_next_block_char;
+                    t_end_of_block = true;
+                }
+                
+                if (t_next_char == -1 ||
+                    MCUnicodeCanBreakBetween(t_this_char, t_next_char))
+                {
+                    t_can_break = true;
+                    break;
+                }
             }
-			
-			if (t_this_char == '\t' ||
-				t_next_char == -1 ||
-				MCUnicodeCanBreakBetween(t_this_char, t_next_char))
-			{
-				t_can_break = true;
-				break;
-			}
 		}
 
 		// MW-2013-11-07: [[ Bug 11393 ]] Previous per-platform implementations all fold into the optimized
@@ -950,18 +982,19 @@ void MCBlock::split(findex_t p_index)
 void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_left, coord_t p_cell_right, int2 y, findex_t start, findex_t length, Boolean image, uint32_t style)
 {
 	// MW-2012-02-16: [[ FontRefs ]] Fetch the font metrics we need to draw.
-	int32_t t_ascent, t_descent;
+	coord_t t_ascent, t_descent, t_leading, t_xheight;
 	t_ascent = MCFontGetAscent(m_font);
 	t_descent = MCFontGetDescent(m_font);
+    t_leading = MCFontGetLeading(m_font);
+    t_xheight = MCFontGetXHeight(m_font);
+    
+    // Width for strike-through/underline lines. Factor is arbitrary...
+    coord_t t_strikewidth;
+    t_strikewidth = ceilf(MCFontGetAscent(m_font)/16);
 	
 	// MW-2012-01-25: [[ ParaStyles ]] Fetch the vGrid setting from the owning paragraph.
 	if (parent -> getvgrid())
 	{
-		// MW-2012-02-09: [[ ParaStyles ]] Fetch the padding setting from the owning paragraph.
-		// MW-2012-03-19: [[ Bug 10069 ]] Use the horiztonal padding value here.
-		int32_t t_padding;
-		t_padding = parent -> gethpadding();
-
         MCRectangle t_cell_clip;
         t_cell_clip = dc->getclip();
         dc -> save();
@@ -978,10 +1011,10 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_left, coord_t p_cel
 					t_next_tab = -1;
             }
 			else*/
-				t_next_tab = -1;
+				t_next_tab = UINDEX_MAX;
 
 			findex_t t_next_index;
-			if (t_next_tab == -1)
+			if (t_next_tab == UINDEX_MAX)
 				t_next_index = start + length;
 			else
 				t_next_index = t_next_tab;
@@ -1011,21 +1044,29 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_left, coord_t p_cel
 			if (t_next_index - t_index > 0)
 			{
 				if ((style & FA_UNDERLINE) != 0)
-					dc -> drawline(x, y + 1, x + t_width, y + 1);
+                {
+                    MCRectangle t_underlinerect;
+                    t_underlinerect = MCU_make_rect(x, y + t_strikewidth, t_width, t_strikewidth);
+                    dc -> fillrect(t_underlinerect);
+                }
 				if ((style & FA_STRIKEOUT) != 0)
-					dc -> drawline(x, y - (t_ascent >> 1), x + t_width, y - (t_ascent >> 1));
+                {
+                    MCRectangle t_strikerect;
+                    t_strikerect = MCU_make_rect(x, y - (t_xheight / 2) - (t_strikewidth / 2), t_width, t_strikewidth);
+                    dc -> fillrect(t_strikerect);
+                }
 				if ((style & FA_BOX) != 0)
 				{
 					// MW-2012-09-04: [[ Bug 9759 ]] Adjust any pattern origin to scroll with text.
 					parent -> getparent() -> setforeground(dc, DI_BORDER, False, True);
 					parent -> getparent() -> adjustpixmapoffset(dc, DI_BORDER);
-					MCRectangle trect = { x - 1, y - t_ascent, t_width + 3, t_ascent + t_descent };
+					MCRectangle trect = MCBlockMakeRectangle(x - 1, y - t_ascent, t_width + 3, t_ascent + t_descent);
 					dc->drawrect(trect);
 					parent -> getparent() -> setforeground(dc, DI_FORE, False, True);
 				}
 				else if ((style & FA_3D_BOX) != 0)
 				{
-					MCRectangle trect = { x - 1, y - t_ascent, t_width + 2, t_ascent + t_descent };
+					MCRectangle trect = MCBlockMakeRectangle(x - 1, y - t_ascent, t_width + 2, t_ascent + t_descent);
 					parent -> getparent() -> draw3d(dc, trect, ETCH_RAISED, 1);
 					parent -> getparent() -> setforeground(dc, DI_FORE, False, True);
 				}
@@ -1033,7 +1074,7 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_left, coord_t p_cel
 
 			x += t_width;
 
-			if (t_next_tab != -1)
+			if (t_next_tab != UINDEX_MAX)
 			{
 				x = p_cell_right;
 				t_next_index = parent->IncrementIndex(t_next_index);
@@ -1111,9 +1152,17 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_left, coord_t p_cel
 
 		// Apply strike/underline.
 		if ((style & FA_UNDERLINE) != 0)
-			dc -> drawline(t_line_x, y + 1, t_line_x + t_line_width, y + 1);
+        {
+            MCRectangle t_underlinerect;
+            t_underlinerect = MCU_make_rect(t_line_x, y + t_strikewidth, t_line_width, t_strikewidth);
+            dc -> fillrect(t_underlinerect);
+        }
 		if ((style & FA_STRIKEOUT) != 0)
-			dc -> drawline(t_line_x, y - (t_ascent >> 1), t_line_x + t_line_width, y - (t_ascent >> 1));		
+        {
+            MCRectangle t_strikerect;
+            t_strikerect = MCU_make_rect(t_line_x, y - (t_xheight / 2) - (t_strikewidth / 2), t_line_width, t_strikewidth);
+            dc -> fillrect(t_strikerect);
+        }
 	}
 }
 
@@ -1177,8 +1226,7 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t lx, coord_t cx, int2 y, findex_t
 	if (flags & F_HAS_BACK_COLOR)
 		dc->setbackground(*atts->backcolor);
 
-	if (t_foreground_color != NULL)
-		dc -> setforeground(*t_foreground_color);
+    setcolorfornormaltext(dc, t_foreground_color);
 	
 	uint32_t t_style;
 	t_style = 0;
@@ -1292,11 +1340,13 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t lx, coord_t cx, int2 y, findex_t
 				f->getforecolor(DI_HILITE, False, True, hc, t_pattern, x, y, dc, f);
 				if (hc.pixel == fc.pixel)
 					f->setforeground(dc, DI_BACK, False, True);
+                else
+                    setcolorforselectedtext(dc, nil);
 			}
 			else
-				f->setforeground(dc, DI_BACK, False, True);
+                setcolorforselectedtext(dc, t_foreground_color);
 		}
-		
+
 		// Draw the selected text.
         // SN-2014-08-13: [[ Bug 13016 ]] Added a parameter for the left of the cell
 		drawstring(dc, x, lx, cx, y, m_index, m_size, (flags & F_HAS_BACK_COLOR) != 0, t_style);
@@ -1346,7 +1396,7 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t lx, coord_t cx, int2 y, findex_t
 			// MW-2012-09-04: [[ Bug 9759 ]] Adjust any pattern origin to scroll with text.
 			f->setforeground(dc, DI_BORDER, False, True);
 			f->adjustpixmapoffset(dc, DI_BORDER);
-			MCRectangle trect = { x - 1, y - t_ascent, t_width + 2, t_ascent + t_descent };
+			MCRectangle trect = MCBlockMakeRectangle(x - 1, y - t_ascent, t_width + 2, t_ascent + t_descent);
 			
 			// MW-2014-03-11: [[ Bug 11882 ]] Ensure we use miter join for drawing the border.
 			dc->setlineatts(1, LineSolid, CapButt, JoinMiter);
@@ -1357,7 +1407,7 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t lx, coord_t cx, int2 y, findex_t
 		}
 		else if (fontstyle & FA_3D_BOX)
 		{
-			MCRectangle trect = { x - 1, y - t_ascent, t_width + 2, t_ascent + t_descent };
+			MCRectangle trect = MCBlockMakeRectangle(x - 1, y - t_ascent, t_width + 2, t_ascent + t_descent);
 			f->draw3d(dc, trect, ETCH_RAISED, 1);
 			f->setforeground(dc, DI_FORE, False, True);
 		}
@@ -1888,7 +1938,7 @@ uint2 MCBlock::getascent(void)
 	if (flags & F_HAS_IMAGE && atts->image != NULL)
 		return MCU_max(0, atts->image->getrect().height - shift + 2);
 	else
-		return MCU_max(0, heightfromsize(MCFontGetAscent(m_font)) - MCFontGetDescent(m_font) - shift);
+		return MCU_max(0, heightfromsize(ceilf(MCFontGetAscent(m_font))) - uint2(ceilf(MCFontGetDescent(m_font))) - shift);
 }
 
 uint2 MCBlock::getdescent(void)
@@ -1897,7 +1947,35 @@ uint2 MCBlock::getdescent(void)
 	if (flags & F_HAS_IMAGE && atts->image != NULL)
 		return MCU_max(0, shift);
 	else
-		return MCU_max(0, MCFontGetDescent(m_font) + shift);
+		return MCU_max(0, uint2(ceilf(MCFontGetDescent(m_font))) + shift);
+}
+
+coord_t MCBlock::GetAscent() const
+{
+   	int2 shift = flags & F_HAS_SHIFT ? atts->shift : 0;
+    // MW-2007-07-05: [[ Bug 1943 ]] - Images do not have correct ascent height *MIGHT NEED REVERSION*
+    if (flags & F_HAS_IMAGE && atts->image != NULL)
+        return MCU_max(0, atts->image->getrect().height - shift + 2);
+    else
+        return MCU_max(0.0f, MCFontGetAscent(m_font) - shift);
+}
+
+coord_t MCBlock::GetDescent() const
+{
+    int2 shift = flags & F_HAS_SHIFT ? atts->shift : 0;
+    if (flags & F_HAS_IMAGE && atts->image != NULL)
+        return MCU_max(0, shift);
+    else
+        return MCU_max(0.0f, MCFontGetDescent(m_font) + shift);
+}
+
+coord_t MCBlock::GetLeading() const
+{
+    int2 shift = flags & F_HAS_SHIFT ? atts->shift : 0;
+    if (flags & F_HAS_IMAGE && atts->image != NULL)
+        return GetAscent()+GetDescent();
+    else
+        return MCFontGetLeading(m_font);
 }
 
 void MCBlock::freeatts()
@@ -2185,13 +2263,41 @@ void MCBlock::importattrs(const MCFieldCharacterStyle& p_style)
 		setshift(p_style . text_shift);
 }
 
+// SN-2014-10-31: [[ Bug 13879 ]] Update the way the string is measured.
 uint32_t measure_stringref(MCStringRef p_string)
 {
-	if (MCStringIsNative(p_string))
-        return 2 + MCU_min(MCStringGetLength(p_string) + 1, MAXUINT2);
-    else
-        return 2 + MCU_min((MCStringGetLength(p_string) + 1) * sizeof(unichar_t), MAXUINT2);
+    MCStringEncoding t_encoding;
+    uint32_t t_additional_bytes = 0;
+    
 
+    if (MCstackfileversion < 7000)
+        t_encoding = kMCStringEncodingNative;
+    else
+        t_encoding = kMCStringEncodingUTF8;
+   
+    // Encode the string to get the right length
+    MCAutoDataRef t_data;
+    /* UNCHECKED */ MCStringEncode(p_string, t_encoding, false, &t_data);
+    uint32_t t_length;
+    t_length = MCDataGetLength(*t_data);
+    
+    if (MCstackfileversion < 7000)
+    {
+        // Full string is written in 5.5 format:
+        //  - length is written as a uint2
+        //  - NULL char is included
+        t_additional_bytes = 2 + 1;
+    }
+    else
+    {
+        // 7.0 format may write the length as a uint4
+        if (t_length < 16384)
+            t_additional_bytes = 2;
+        else
+            t_additional_bytes = 4;
+    }
+    
+    return t_length + t_additional_bytes;
 }
 
 // MW-2012-03-04: [[ StackFile5500 ]] Utility routine for computing the length of
@@ -2239,9 +2345,6 @@ uint32_t MCBlock::measureattrs(void)
 
 bool MCBlock::GetFirstLineBreak(findex_t& r_index)
 {
-	findex_t t_index;
-	t_index = m_index;
-
 	uindex_t t_offset;
     // AL-2014-08-21: [[ Bug 13247 ]] Don't repeatedly search to the end of the paragraph to find line break.
     //  The search should only be in the range of the block.
@@ -2371,4 +2474,37 @@ MCBlock *MCBlock::GetPrevBlockVisualOrder()
         return segment -> prev() -> GetLastVisualBlock();
     
     return nil;
+}
+
+void MCBlock::setcolorfornormaltext(MCDC* dc, MCColor* p_color)
+{
+    MCField* f = parent->getparent();
+    
+    if (p_color != nil)
+        dc->setforeground(*p_color);
+    else if (flags & F_HAS_COLOR)
+        dc->setforeground(*atts -> color);
+    else
+        f->setforeground(dc, DI_PSEUDO_TEXT_COLOR, False, True);
+}
+
+void MCBlock::setcolorforhilite(MCDC* dc)
+{
+    MCField* f = parent->getparent();
+    
+    f->setforeground(dc, DI_PSEUDO_TEXT_BACKGROUND_SEL, False, True);
+}
+
+void MCBlock::setcolorforselectedtext(MCDC* dc, MCColor* p_color)
+{
+    MCField* f = parent->getparent();
+    
+    if (p_color != nil)
+        dc->setforeground(*p_color);
+    else if (flags & F_HAS_COLOR)
+        dc->setforeground(*atts -> color);
+    else if (!IsMacLF()) // TODO: if platform reverses selected text
+        f->setforeground(dc, DI_PSEUDO_TEXT_COLOR_SEL_BACK, False, True, true);
+    else
+        f->setforeground(dc, DI_PSEUDO_TEXT_COLOR_SEL_FORE, False, True, true);
 }

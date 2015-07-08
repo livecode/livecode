@@ -31,6 +31,10 @@ public class BillingModule
     
     public BillingProvider getBillingProvider()
     {
+        // PM-2015-02-25: [[ Bug 14665 ]] Make sure the "In-app Purchase" checkbox is ticked in standalone settings
+        if (!Engine.doGetCustomPropertyValue("cREVStandaloneSettings", "android,InAppPurchasing").equals("true"))
+            return null;
+        
         Log.d(TAG, "Fetching the billing provider...");
         String t_billing_provider = Engine.doGetCustomPropertyValue("cREVStandaloneSettings", "android,billingProvider");
         Log.d(TAG, "Provider is " + t_billing_provider);

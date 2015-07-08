@@ -1354,6 +1354,35 @@ Parse_stat MCScriptPoint::lookup(Script_point t, const LT *&dlt)
 	return PS_NO_MATCH;
 }
 
+bool MCScriptPoint::lookupconstantvalue(const char *& r_value)
+{
+	uint2 high = constant_table_size;
+	uint2 low = 0;
+	int4 cond;
+    
+    MCAutoStringRefAsCString t_token;
+    t_token . Lock(gettoken_stringref());
+    const char *token_cstring = *t_token;
+	while (low < high)
+	{
+		uint2 mid = low + ((high - low) >> 1);
+		cond = MCU_strncasecmp(token_cstring, constant_table[mid].token, token.getlength());
+		if (cond == 0)
+			cond -= constant_table[mid].token[token.getlength()];
+		if (cond < 0)
+			high = mid;
+		else
+			if (cond > 0)
+				low = mid + 1;
+			else
+			{
+                r_value = constant_table[mid] . svalue;
+				return true;
+			}
+	}
+	return false;
+}
+
 Parse_stat MCScriptPoint::lookupconstant(MCExpression **dest)
 {
 	if (m_type == ST_LIT)
@@ -1508,19 +1537,20 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 	while (True)
 	{
 		if (next(type) != PS_NORMAL)
+		{
 			if (needfact)
 			{
 				MCperror->add(PE_EXPRESSION_NOFACT, *this);
 				return PS_ERROR;
 			}
-			else
-				if (depth == 0)
+			else if (depth == 0)
 					return PS_NORMAL;
 				else
 				{
 					MCperror->add(PE_EXPRESSION_NORPAR, *this);
 					return PS_ERROR;
 				}
+		}
 		if (!needfact && type != ST_OP && type != ST_MIN && type != ST_RP
 		        && !(type == ST_SEP && litems)
 		        && !(type == ST_ID && lookup(SP_FACTOR, te) == PS_NORMAL
@@ -1645,9 +1675,9 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 					break;
 				case TT_BIN_OR_UNOP:
 					if (curfact == NULL
-					        || curfact->getrank() == FR_GROUPING
-					        && curfact->getright() == NULL
-					        || curfact->getright() == NULL && curfact->getleft() != NULL)
+					    || (curfact->getrank() == FR_GROUPING
+					        && curfact->getright() == NULL)
+					    || (curfact->getright() == NULL && curfact->getleft() != NULL))
 					{
 						newfact = MCN_new_operator(te->which);
 						newfact->parse(*this, doingthe);
@@ -1699,6 +1729,12 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 					break;
 				case TT_FUNCTION:
 					newfact = MCN_new_function(te->which);
+                    // SN-2014-11-25: [[ Bug 14088 ]] MCN_new_function returns NULL in case the function doesn't exist
+                    if (newfact == NULL)
+                    {
+                        MCperror->add(PE_EXPRESSION_BADFUNCTION, *this);
+                        return PS_ERROR;
+                    }
 					thesp = *this;
 					thesp.backup();
 					if (newfact->parse(*this, doingthe) != PS_NORMAL)
@@ -1826,6 +1862,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 						else if (type == ST_LP)
 								newfact = new MCFuncref(t_name);
 						if (newfact == NULL)
+						{
 							if (MCexplicitvariables)
 							{
 								MCperror->add(PE_EXPRESSION_NOTLITERAL, *this);
@@ -1843,6 +1880,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 								newvar->parsearray(*this);
 								newfact = newvar;
 							}
+						}
 					}
 					// MW-2007-08-30: [[ Bug 2633 ]] Things such as sum2(1, 2+) don't flag a parse error this is
 					//   because this parse method could fail - we now produce an error in this case.

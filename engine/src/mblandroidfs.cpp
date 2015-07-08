@@ -417,7 +417,10 @@ bool MCAndroidSystem::GetTemporaryFileName(MCStringRef &r_tmp_name)
 
 Boolean MCAndroidSystem::GetStandardFolder(MCNameRef p_folder, MCStringRef &r_folder)
 {
-	if (MCNameIsEqualToCString(p_folder, "engine", kMCCompareExact))
+    // SN-2015-04-16: [[ Bug 14295 ]] The resources folder on Mobile is the same
+    //   as the engine folder.
+    if (MCNameIsEqualToCString(p_folder, "engine", kMCCompareCaseless)
+            || MCNameIsEqualToCString(p_folder, "resources", kMCCompareCaseless))
     {
         MCLog("GetStandardFolder(\"%@\") -> \"%@\"", MCNameGetString(p_folder), MCcmd);
 		return MCStringCopy(MCcmd, r_folder);
@@ -445,6 +448,11 @@ bool MCAndroidSystem::ShortFilePath(MCStringRef p_path, MCStringRef& r_short_pat
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// ST-2014-12-18: [[ Bug 14259 ]] Not implemented / needed on Android
+bool MCAndroidSystem::GetExecutablePath(MCStringRef& r_path)
+{
+    return false;
+}
 
 bool MCAndroidSystem::PathToNative(MCStringRef p_path, MCStringRef& r_native)
 {

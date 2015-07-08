@@ -17,13 +17,6 @@
 #ifndef __GRAPHICS_UTIL_H_
 #define __GRAPHICS_UTIL_H_
 
-#if defined(_WINDOWS) || defined(_WINDOWS_SERVER)
-inline double roundf(float x)
-{
-	return floorf(x + 0.5f);
-}
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 
 inline MCRectangle MCRectangleMake(int16_t x, int16_t y, uint16_t width, uint16_t height)
@@ -348,6 +341,12 @@ static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 {
 	MCGFont t_font;
+	if (p_font == nil)
+	{
+		MCMemoryClear(&t_font, sizeof(t_font));
+		return t_font;
+	}
+
 	t_font . size = p_font -> size;
 	t_font . ascent = p_font -> ascent;
 	t_font . descent = p_font -> descent;

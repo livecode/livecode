@@ -47,12 +47,16 @@ public:
     void SetOpaque(MCExecContext& ctxt, bool p_opaque);
     void SetAlpha(MCExecContext& ctxt, uinteger_t p_alpha);
     void SetBackgroundColor(MCExecContext& ctxt, const MCNativeControlColor& p_color);
+    // SN-2014-12-11: [[ Merge-6.7.1-rc-4 ]] Added functions for the ignoring voice over sensibility
+    void SetIgnoreVoiceOverSensitivity(MCExecContext& ctxt, bool p_ignore_vos);
     
     void GetRect(MCExecContext& ctxt, MCRectangle& r_rect);
     void GetVisible(MCExecContext& ctxt, bool& p_visible);
     void GetOpaque(MCExecContext& ctxt, bool& p_opaque);
     void GetAlpha(MCExecContext& ctxt, uinteger_t& p_alpha);
     void GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor& p_color);
+    // SN-2014-12-11: [[ Merge-6.7.1-rc-4 ]] Added functions for the ignoring voice over sensibility
+    void GetIgnoreVoiceOverSensitivity(MCExecContext& ctxt, bool& r_ignore_vos);
     
 	// Get the native view of the instance.
 	UIView *GetView(void);

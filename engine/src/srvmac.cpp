@@ -50,6 +50,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/utsname.h>
+#include <mach-o/dyld.h>
 
 #include <CoreServices/CoreServices.h>
 #include <ApplicationServices/ApplicationServices.h>
@@ -448,6 +449,21 @@ struct MCMacSystem: public MCSystemInterface
 	
 	//////////
 	
+	virtual bool GetExecutablePath(MCStringRef& r_path)
+	{
+		uint32_t bufsize = 0;
+		_NSGetExecutablePath(NULL, &bufsize);
+		char* buf = new char[bufsize];
+		if (_NSGetExecutablePath(buf, &bufsize) != 0) {
+			delete buf;
+			return False;
+		}
+
+		MCAutoStringRef t_path;
+		MCStringCreateWithCStringAndRelease(buf, *t_path);
+		return ResolvePath(*t_path, r_path);
+	}
+
 	bool PathToNative(MCStringRef p_path, MCStringRef& r_native)
 	{
 		CFStringRef t_cf_path;

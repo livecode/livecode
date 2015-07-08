@@ -359,8 +359,6 @@ Parse_stat MCIdeScriptFlush::parse(MCScriptPoint& p_script)
   Parse_stat t_status;
 	t_status = PS_NORMAL;
 
-	MCChunk *t_target;
-	t_target = NULL;
 	if (t_status == PS_NORMAL)
 		t_status = parse_target(p_script, f_target);
 
@@ -1011,14 +1009,14 @@ static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nes
 	if (t_nesting > 0)
 	{
 		while(t_nesting > 0 && t_index < p_length - 1)
-		{
+        {
 			uindex_t t_new_index = t_index;
-			if (t_char == '/' && next_valid_char(p_text, t_new_index) == '*')
+            /*if (t_char == '/' && next_valid_char(p_text, t_new_index) == '*')
 			{
 				t_nesting += 1;
 				t_index = t_new_index;
-			}
-			else if (t_char == '*' && next_valid_char(p_text, t_new_index) == '/')
+            }
+            else */if (t_char == '*' && next_valid_char(p_text, t_new_index) == '/')
 			{
 				t_nesting -= 1;
 				t_index = t_new_index;
@@ -1776,8 +1774,12 @@ void MCIdeScriptColourize::exec_ctxt(MCExecContext &ctxt)
 	MCField *t_target;
     MCIdeState *t_state;
 
-    if (eval_target_range(ctxt, f_start, f_end, f_target, t_start, t_end, t_target))
-		t_state = MCIdeState::Find(t_target);
+	if (!eval_target_range(ctxt, f_start, f_end, f_target,
+	                       t_start, t_end, t_target))
+		return;
+
+	t_state = MCIdeState::Find(t_target);
+
 
     if (t_target && t_target -> getparagraphs() != NULL)
         TokenizeField(t_target, t_state, f_type, t_start, t_end, colourize_paragraph);
@@ -1786,7 +1788,7 @@ void MCIdeScriptColourize::exec_ctxt(MCExecContext &ctxt)
 ///////////////////////////////////////////////////////////////////////////////
 
 MCIdeScriptReplace::MCIdeScriptReplace(void)
-	: f_target(NULL), f_start(NULL), f_end(NULL), f_text(NULL), f_type(CT_UNDEFINED)
+	: f_type(CT_UNDEFINED), f_start(NULL), f_end(NULL), f_target(NULL), f_text(NULL)
 {
 }
 
@@ -1843,8 +1845,13 @@ void MCIdeScriptReplace::exec_ctxt(MCExecContext & ctxt)
 
         // MW-2014-10-24: [[ Bug 13598 ]] If we are passed (0,0) then treat this as (1,1) - i.e
         //   first char of field.
-        if (t_start_index == 0 && t_end_index == 0)
-            t_start_index = 1, t_end_index = 1;
+        // SN-2014-11-11: [[ Bug 13900 ]] We want to avoid any issue with a 0 start index.
+        //  If we get so, that was given for the first line, and the end index is offset by 1 as well.
+        if (t_start_index == 0)
+        {
+            t_start_index = 1;
+            t_end_index++;
+        }
 
         t_start_index -= 1;
 
@@ -1886,10 +1893,13 @@ void MCIdeScriptReplace::exec_ctxt(MCExecContext & ctxt)
     t_start_index = t_start;
     t_end_index = t_end;
 
-    // MW-2014-10-24: [[ Bug 13598 ]] If we are passed (0,0) then treat this as (1,1) - i.e
-    //   first char of field.
-    if (t_start_index == 0 && t_end_index == 0)
-        t_start_index = 1, t_end_index = 1;
+    // SN-2014-11-11: [[ Bug 13900 ]] We want to avoid any issue with a 0 start index.
+    //  If we get so, that was given for the first line, and the end index is offset by 1 as well.
+    if (t_start_index == 0)
+    {
+        t_start_index = 1;
+        t_end_index++;
+    }
     
     t_start_index -= 1;
 
@@ -2796,6 +2806,7 @@ void MCIdeScriptClassify::exec_ctxt(MCExecContext &ctxt)
     // First try an expression.
     MCAutoStringRef t_expr_error;
     uint2 t_expr_pos;
+    t_expr_pos = 0;
     if (t_success)
     {
         // SP takes a copy of the string in this form.
@@ -2821,6 +2832,7 @@ void MCIdeScriptClassify::exec_ctxt(MCExecContext &ctxt)
     // Now try a command.
     MCAutoStringRef t_cmd_error;
     uint2 t_cmd_pos;
+    t_cmd_pos = 0;
     if (t_success)
     {
         // SP takes a copy of the string in ep in this form.

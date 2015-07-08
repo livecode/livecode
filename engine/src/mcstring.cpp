@@ -153,6 +153,7 @@ const char *MCimagestring = "image";
 const char *MCfieldstring = "field";
 const char *MCcolorstring = "colorPalette";
 const char *MCmagnifierstring = "magnifier";
+const char *MCwidgetstring = "widget";
 
 const char *MCnotfoundstring = "not found";
 const char *MClnfamstring = "Appearance Manager";
@@ -205,6 +206,7 @@ MCNameRef MCN_html;
 MCNameRef MCN_browser;
 MCNameRef MCN_command_line;
 MCNameRef MCN_development;
+MCNameRef MCN_development_cmdline;
 MCNameRef MCN_helper_application;
 MCNameRef MCN_installer;
 MCNameRef MCN_mobile;
@@ -253,6 +255,8 @@ MCNameRef MCN_x86_64;
 MCNameRef MCN_motorola_powerpc;
 MCNameRef MCN_i386;
 MCNameRef MCN_arm;
+// SN-2015-01-07: [[ iOS-64bit ]] ARM64 added
+MCNameRef MCN_arm64;
 
 MCNameRef MCN_local_mac;
 MCNameRef MCN_local_win32;
@@ -280,6 +284,7 @@ MCNameRef MCN_desktop;
 MCNameRef MCN_documents;
 MCNameRef MCN_engine;
 MCNameRef MCN_fonts;
+MCNameRef MCN_resources;
 MCNameRef MCN_home;
 MCNameRef MCN_start;
 //MCNameRef MCN_system;
@@ -642,6 +647,7 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("browser", MCN_browser);
 	/* UNCHECKED */ MCNameCreateWithCString("command line", MCN_command_line);
 	/* UNCHECKED */ MCNameCreateWithCString("development", MCN_development);
+    /* UNCHECKED */ MCNameCreateWithCString("development command line", MCN_development_cmdline);
 	/* UNCHECKED */ MCNameCreateWithCString("helper application", MCN_helper_application);
 	/* UNCHECKED */ MCNameCreateWithCString("installer", MCN_installer);
 	/* UNCHECKED */ MCNameCreateWithCString("mobile", MCN_mobile);
@@ -690,6 +696,8 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("Motorola PowerPC", MCN_motorola_powerpc);
 	/* UNCHECKED */ MCNameCreateWithCString("i386", MCN_i386);
 	/* UNCHECKED */ MCNameCreateWithCString("ARM", MCN_arm);
+    // SN-2015-01-07: [[ iOS-64bit ]] ARM64 added
+    /* UNCHECKED */ MCNameCreateWithCString("arm64", MCN_arm64);
 
 	/* UNCHECKED */ MCNameCreateWithCString("local Mac", MCN_local_mac);
 	/* UNCHECKED */ MCNameCreateWithCString("local Win32", MCN_local_win32);
@@ -716,6 +724,7 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("desktop", MCN_desktop);
 	/* UNCHECKED */ MCNameCreateWithCString("documents", MCN_documents);
 	/* UNCHECKED */ MCNameCreateWithCString("engine", MCN_engine);
+    /* UNCHECKED */ MCNameCreateWithCString("resources", MCN_resources);
 	/* UNCHECKED */ MCNameCreateWithCString("fonts", MCN_fonts);
 	/* UNCHECKED */ MCNameCreateWithCString("home", MCN_home);
 	/* UNCHECKED */ MCNameCreateWithCString("start", MCN_start);
@@ -1036,8 +1045,6 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("playerMovieChanged", MCM_player_movie_changed);
 	/* UNCHECKED */ MCNameCreateWithCString("playerStopped", MCM_player_stopped);
 	/* UNCHECKED */ MCNameCreateWithCString("reachabilityChanged", MCM_reachability_changed);
-    ///* UNCHECKED */ MCNameCreateWithCString("productDetailsReceived", MCM_product_details_received);
-    ///* UNCHECKED */ MCNameCreateWithCString("productRequestError", MCM_product_request_error);
     /* UNCHECKED */ MCNameCreateWithCString("protectedDataDidBecomeAvailable", MCM_protected_data_available);
     /* UNCHECKED */ MCNameCreateWithCString("protectedDataWillBecomeUnavailable", MCM_protected_data_unavailable);
 	
@@ -1079,6 +1086,7 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCN_browser);
 	MCNameDelete(MCN_command_line);
 	MCNameDelete(MCN_development);
+    MCNameDelete(MCN_development_cmdline);
 	MCNameDelete(MCN_helper_application);
 	MCNameDelete(MCN_installer);
 	MCNameDelete(MCN_mobile);
@@ -1127,6 +1135,8 @@ void MCU_finalize_names(void)
     MCNameDelete(MCN_motorola_powerpc);
     MCNameDelete(MCN_i386);
     MCNameDelete(MCN_arm);
+    // SN-2015-01-07: [[ iOS-64bit ]] ARM64 added
+    MCNameDelete(MCN_arm64);
 
 	MCNameDelete(MCN_local_mac);
 	MCNameDelete(MCN_local_win32);
@@ -1153,6 +1163,7 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCN_desktop);
 	MCNameDelete(MCN_documents);
 	MCNameDelete(MCN_engine);
+    MCNameDelete(MCN_resources);
 	MCNameDelete(MCN_fonts);
 	MCNameDelete(MCN_home);
 	MCNameDelete(MCN_start);

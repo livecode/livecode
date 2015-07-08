@@ -196,7 +196,8 @@ bool MCSystemOpenElevatedProcess(MCStringRef p_command, int32_t& r_pid, int32_t&
 	// Convert the command string into the system encoding so that we can pass
 	// Unicode unscathed (hopefully)
 	MCAutoPointer<char> t_command;
-	/* UNCHECKED */ MCStringConvertToSysString(p_command, (const char*&)&t_command);
+    size_t t_command_len;
+	/* UNCHECKED */ MCStringConvertToSysString(p_command, &t_command, t_command_len);
 	
 	// First split the command args into the argc/argv array we need.
 	char **t_argv;
@@ -226,16 +227,13 @@ bool MCSystemOpenElevatedProcess(MCStringRef p_command, int32_t& r_pid, int32_t&
 	if (t_pid == 0)
 	{
 		// We must escape MCcmd to make gksu plays nice.
-        MCAutoPointer<const char> t_unescaped_cmd;
+        MCAutoPointer<char> t_unescaped_cmd;
         MCAutoArray<char> t_escaped_cmd;
-		uindex_t t_unescaped_len;
+		size_t t_unescaped_len;
 		uindex_t t_escaped_len = 0;
 		
 		if (t_success)
-			t_success = MCStringConvertToSysString(MCcmd, &t_unescaped_cmd);
-        
-        if (t_success)
-            t_unescaped_len = strlen(*t_unescaped_cmd);
+			t_success = MCStringConvertToSysString(MCcmd, &t_unescaped_cmd, t_unescaped_len);
 		
 		// The escaping can potentially double the length of the command
 		if (t_success)
@@ -262,14 +260,14 @@ bool MCSystemOpenElevatedProcess(MCStringRef p_command, int32_t& r_pid, int32_t&
 		// We exec to gksu with appropriate parameters.
 		// This causes the child to request password from the user and then
 		// launch the specified command as admin.
-		char *t_argv[4];
+		const char * t_argv[4];
 		t_argv[0] = "gksu";
 		t_argv[1] = "--preserve-env";
 		t_argv[2] = *t_command_line;
 		t_argv[3] = nil;
 
 		// Shouldn't return.
-		execvp(t_argv[0], t_argv);
+		execvp(t_argv[0], (char * const *) t_argv);
 
 		// If we get here an error occured. We just exit with '-1' since the parent
 		// will detect termination of the child.

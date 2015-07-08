@@ -147,6 +147,7 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 	while (True)
 	{
 		if (sp.next(type) != PS_NORMAL)
+		{
 			if (need_target)
 			{
 				if (ct_class(oterm) == CT_ORDINAL)
@@ -165,6 +166,7 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 			}
 			else
 				break;
+		}
 		if (type == ST_ID && (sp.lookup(SP_FACTOR, te) == PS_NORMAL
 		                      || sp.lookup(SP_GO, te) == PS_NORMAL))
 		{
@@ -333,7 +335,7 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 					curref = new MCCRef;
 					if (oterm == CT_UNDEFINED)
 					{
-						if (nterm >= CT_FIELD || nterm == CT_URL)
+						if (nterm >= CT_FIRST_TEXT_CHUNK || nterm == CT_URL)
 						{
 							sp.backup();
 							nterm = CT_CARD;
@@ -545,7 +547,10 @@ MCStack *MCGo::findstack(MCExecContext &ctxt, MCStringRef p_value, Chunk_term et
 	MCObject *objptr;
 	MCChunk *tchunk = new MCChunk(False);
 	MCerrorlock++;
-    MCScriptPoint sp(p_value);
+    // AL-2014-11-10: [[ Bug 13972 ]] Parsing the chunk without passing through the context results
+    //  in a parse error for unquoted stack and card names, since there is then no handler in which to
+    //  create a new unquoted literal variable.
+    MCScriptPoint sp(ctxt, p_value);
 	Parse_stat stat = tchunk->parse(sp, False);
 	if (stat == PS_NORMAL)
 	{
@@ -828,7 +833,7 @@ void MCGo::exec_ctxt(MCExecContext &ctxt)
 				MCeerror->add(EE_GO_BADWINDOWEXP, line, pos);
 				return ES_ERROR;
 			}
-			if (ep.ton() == ES_NORMAL && MCscreen->uint4towindow(ep.getuint4(), w))
+			if (ep.ton() == ES_NORMAL && MCscreen->uinttowindow(ep.getuint4(), w))
 				oldstack = MCdispatcher->findstackd(w);
 			else
 				oldstack = ep.getobj()->getstack()->findstackname(ep.getsvalue());
@@ -2829,7 +2834,7 @@ void MCSubwindow::exec_ctxt(MCExecContext &ctxt)
     // Need to have a second MCExecContext as getobj may throw a non-fatal error
     MCExecContext ctxt2(ctxt);
     if (!target -> getobj(ctxt2, optr, parid, True)
-	        || optr->gettype() != CT_BUTTON && optr->gettype() != CT_STACK)
+        || (optr->gettype() != CT_BUTTON && optr->gettype() != CT_STACK))
 	{
 		MCerrorlock--;
         if (!ctxt . EvalExprAsNameRef(target, EE_SUBWINDOW_BADEXP, &optr_name))

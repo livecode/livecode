@@ -1,0 +1,33 @@
+Name: not
+
+Type: operator
+
+Syntax: not <value> 
+
+Summary: Negates a <logical> <value>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+not true -- evaluates to false
+
+Example:
+set the visible of me to not the visible of me
+
+Parameters:
+value (bool): True or false, or an expression that evaluate to true or false.
+
+Description:
+Use the <not> <operator> to reverse the meaning of a <logical> <expression>.
+
+If the <value> is true, not <value> is false, and if the <value> is false, not <value> is true.
+
+You can combine the logical operators <and>, <or>, and <not> in an <expression>.
+
+References: false (constant), or (operator), and (operator), bitNot (operator), value (function), operator (glossary), expression (glossary), logical (glossary)
+
+Tags: math

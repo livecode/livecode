@@ -1,0 +1,34 @@
+Name: privateColors
+
+Type: property
+
+Syntax: set the privateColors to true
+
+Summary: Specifies whether LiveCode uses its own <color table> or the system <color table> on <Unix|Unix systems>.
+
+Introduced: 1.0
+
+OS: linux
+
+Platforms: desktop,server,web
+
+Example:
+set the privateColors to true
+
+Value (bool):The <privateColors> is true or false.
+By default, the <privateColors> <property> is set to false.
+
+Description:
+Use the <privateColors> <property> to improve display on <Unix|Unix systems> when the <bit depth> of the screen is 8 <bit|bits> (256 colors) or less.
+
+Set the <privateColors> <property> to true for a <stack> that uses colors that aren't in the <default> <color table>. This has the advantage of letting the <stack> display more colors than normally possible on an 8- <bit> display. The disadvantage is that if the <privateColors> is true, the colors of other applications' windows may be distorted while LiveCode is the foreground application.
+
+When the <privateColors> is set to false, the <engine> uses the system <color table>. When it is set to true, the <engine> uses its own custom <color table>.
+
+This property has no effect unless the <screenType> <property> has a value of "PseudoColor"--that is, each <pixel> on the screen is one of a <color table> of colors (usually 256 colors), and the colors in that <color table> can be changed by the <engine>.
+
+>*Important:*  Once the <privateColors> <property> is set to true, it cannot be set back to false. To change it back to true, you must quit and restart the <application>.
+
+The setting of this property has no effect on Mac OS or Windows systems.
+
+References: remapColor (property), default (keyword), screenType (function), property (glossary), bit depth (glossary), engine (glossary), pixel (glossary), color table (glossary), bit (glossary), Unix (glossary), application (glossary), stack (object)

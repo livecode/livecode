@@ -2437,12 +2437,37 @@ public:
 	virtual ~MCTranspose(){}
 };
 
+/*
+class MCMathOperator : public MCUnaryFunctionCtxt<double, double, MCExecValueTraits, Exec_errors, Parse_errors, MCExecMethodInfo>
+{
+public:
+    MCMathOperator(){}
+    virtual ~MCMathOperator(){}
+};
+*/
+
 class MCTrunc : public MCUnaryFunctionCtxt<double, double, MCMathEvalTrunc, EE_TRUNC_BADSOURCE, PE_TRUNC_BADPARAM, kMCMathEvalTruncMethodInfo>
 {
 public:
     MCTrunc(){}
     virtual ~MCTrunc(){}
 };
+
+// MDW-2014-08-23 : [[ feature_floor ]]
+class MCFloor : public MCUnaryFunctionCtxt<double, double, MCMathEvalFloor, EE_FLOOR_BADSOURCE, PE_FLOOR_BADPARAM, kMCMathEvalFloorMethodInfo>
+{
+public:
+	MCFloor(){}
+	virtual ~MCFloor(){}
+};
+
+class MCCeil : public MCUnaryFunctionCtxt<double, double, MCMathEvalCeil, EE_CEIL_BADSOURCE, PE_CEIL_BADPARAM, kMCMathEvalCeilMethodInfo>
+{
+public:
+	MCCeil(){}
+	virtual ~MCCeil(){}
+};
+// MDW-2014-08-23 : [[ feature_floor ]]
 
 class MCHTTPProxyForURL: public MCFunction
 {

@@ -81,7 +81,7 @@ int *g_mainthread_errno;
 
 //////////////////////////////////////////////////////////////////////////////////
 
-extern bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result);
+extern bool MCFiltersUrlEncode(MCStringRef p_source, bool p_use_utf8, MCStringRef& r_result);
 extern bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&r_strings, uindex_t& r_count);
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -167,6 +167,7 @@ static bool get_device_path(MCStringRef p_path, MCStringRef &r_device_path)
 // MW-2005-02-22: Make these global for opensslsocket.cpp
 static Boolean wsainited = False;
 HWND sockethwnd;
+HANDLE g_socket_wakeup;
 
 Boolean wsainit()
 {
@@ -382,6 +383,8 @@ bool MCS_registry_type_to_string(uint32_t p_type, MCStringRef& r_string)
 		}
 	}
 
+    // SN-2014-11-18: [[ Bug 14052 ]] Avoid to return a nil string (the result is not checked anyway).
+    r_string = MCValueRetain(kMCEmptyString);
 	return false;
 }
 
@@ -1528,7 +1531,9 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 				// SN-2014-08-11: [[ Bug 13145 ]] If ReadFile can't read more, but no error is triggered, we should stop here,
 				//  but return true. The new imageLoader reads buffer by buffer, and doesn't expect and error when reading the
 				//  the last buffer (which might ask for more than remaining in the file).
-				if (nread == 0 && GetLastError() == 0)
+				// IM-2015-03-17: [[ Bug 14960 ]] GetLastError is only meaningful if ReadFile fails. A return value of TRUE
+				//  with 0 bytes read is used to indicate EOF for synchronous file handles.
+				if (nread == 0)
 				{
 					r_read = t_offset;
 					m_is_eof = true;
@@ -2532,7 +2537,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 						
 						// What is the length of the path that was retrieved?
 						size_t t_path_len;
-						/* UNCHECKED */ StringCchLength(t_buffer.Ptr(), t_buffer.Size(), &t_path_len);
+						/* UNCHECKED */ StringCchLengthW(t_buffer.Ptr(), t_buffer.Size(), &t_path_len);
 
 						/* UNCHECKED */ MCStringCreateWithChars(t_buffer.Ptr(), t_path_len, &t_retrieved_path);
                     }
@@ -2704,7 +2709,10 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		//}
         //}
         // SN-2014-08-08: [[ Bug 13026 ]] Fix ported from 6.7
-        else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless))
+        else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless)
+                 // SN-2015-04-20: [[ Bug 14295 ]] If we are here, we are a standalone
+                 // so the resources folder is the engine folder.
+                 || MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless))
         {
             uindex_t t_last_slash;
             
@@ -2735,7 +2743,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 				
 				// Get the length of the returned path
 				size_t t_pathlen;
-				if (t_wasfound && StringCchLength(t_buffer.Ptr(), t_buffer.Size(), &t_pathlen) != S_OK)
+				if (t_wasfound && StringCchLengthW(t_buffer.Ptr(), t_buffer.Size(), &t_pathlen) != S_OK)
 					return false;
 
 				// Path was successfully retrieved
@@ -3064,14 +3072,23 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 
 		bool t_device = false;
 		bool t_serial_device = false;
+        // SN-2015-04-13: [[ Bug 14696 ]] Close the file handler in case our
+        //  MCStdioFileHandler could not be created.
+        bool t_close_file_handler = false;
+
+		// SN-2015-02-26: [[ Bug 14612 ]] Also process the device path
+		//  translation when using <open file>
+		MCAutoStringRef t_devicepath;
+		if (!get_device_path(p_path, &t_devicepath))
+			return NULL;
 
 		// Is this a device path?
-		if (MCStringBeginsWithCString(p_path, (const char_t*)"\\\\.\\", kMCStringOptionCompareExact))
+		if (MCStringBeginsWithCString(*t_devicepath, (const char_t*)"\\\\.\\", kMCStringOptionCompareExact))
 		{
 			t_device = true;
 
 			// Is this a path to a serial port?
-			if (MCStringBeginsWithCString(p_path, (const char_t*)"\\\\.\\COM", kMCStringOptionCompareCaseless))
+			if (MCStringBeginsWithCString(*t_devicepath, (const char_t*)"\\\\.\\COM", kMCStringOptionCompareCaseless))
 				t_serial_device = true;
         }
 
@@ -3108,7 +3125,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			sharemode = FILE_SHARE_READ | FILE_SHARE_WRITE;
 
 		MCAutoStringRefAsWString t_path_wstr;
-		/* UNCHECKED */ t_path_wstr.Lock(p_path);
+		/* UNCHECKED */ t_path_wstr.Lock(*t_devicepath);
 
 		t_file_handle = CreateFileW(*t_path_wstr, omode, sharemode, NULL,
 							 createmode, fa, NULL);
@@ -3159,20 +3176,45 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 				char *t_buffer = (char*)MapViewOfFile(t_file_mapped_handle,
 													  FILE_MAP_READ, 0, 0, 0);
 				
+				// SN-2015-03-02: [[ Bug 14696 ]] If the file is too large,
+				//  the file mapping won't work, and a normal file handler
+				//  should be used.
 				if (t_buffer == NULL)
 				{
 					CloseHandle(t_file_mapped_handle);
+					t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
+                    t_close_file_handler = t_handle == NULL;
 				}
 				else
 				{
 					t_handle = new MCMemoryMappedFileHandle(t_file_mapped_handle, t_buffer, t_len);
-					CloseHandle(t_file_handle);
+                    // SN-2015-04-13: [[ Bug 14696 ]] We don't want to leave a
+                    //  file handler open in case the memory mapped file could
+                    //  not be allocated. We always close the normal file handle
+                    if (t_handle == NULL)
+                        CloseHandle(t_file_mapped_handle);
+                    t_close_file_handler = true;
 				}
 			}
+			// SN-2014-11-27: [[ Bug 14110 ]] A StdioFileHandle should be created if the file mapping failed
+			// (for empty files for instance).
+			else
+            {
+				t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
+                t_close_file_handler = t_handle == NULL;
+            }
 		}
 		else
+        {
 			t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
+            t_close_file_handler = t_handle == NULL;
+        }
 
+        // SN-2015-04-13: [[ Bug 14696 ]] We close the Windows file handle in
+        //  case we did not successfully create an MCStdioFileHandle.
+        if (t_close_file_handler)
+            CloseHandle(t_file_handle);
+        
 		return t_handle;
     }
     
@@ -3197,11 +3239,11 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 	virtual IO_handle OpenDevice(MCStringRef p_path, intenum_t p_mode)
 	{
 		// For Windows, the path is used to determine whether a file or a device is being opened
-        MCAutoStringRef t_device_path;        
-		if (get_device_path(p_path, &t_device_path))
-			return OpenFile(*t_device_path, p_mode, True);
-		else
-			return nil;
+		// SN-2015-02-16: [[ Bug 14612 ]] <open file "COM:"> should do the same as
+		//  <open device "COM:">, so no difference in the path
+		//  translation must exist between MCWindowsDesktop::OpenDevice
+		//  and MCWindowsDesktop::OpenFile
+		return OpenFile(p_path, p_mode, True);
 	}
 	
 	// NOTE: 'GetTemporaryFileName' returns a non-native path.
@@ -3438,7 +3480,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		do
 		{
 			// Don't list the current directory
-			if (lstrcmpi(data.cFileName, L".") == 0)
+			if (lstrcmpiW(data.cFileName, L".") == 0)
 				continue;
 
 			// Retrieve as many of the file attributes as Windows supports
@@ -3481,6 +3523,17 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		return true;
     }
     
+    // ST-2014-12-18: [[ Bug 14259 ]] Returns the executable from the system tools, not from argv[0]
+	virtual bool GetExecutablePath(MCStringRef& r_path)
+	{
+		WCHAR* wcFileNameBuf = new WCHAR[MAX_PATH+1];
+		DWORD dwFileNameLen = GetModuleFileNameW(NULL, wcFileNameBuf, MAX_PATH+1);
+		
+		MCAutoStringRef t_path;
+		MCStringCreateWithWStringAndRelease((unichar_t*)wcFileNameBuf, &t_path);
+		return PathFromNative(*t_path, r_path); 
+	}
+
 	virtual bool PathToNative(MCStringRef p_path, MCStringRef& r_native)
 	{
 #ifdef /* MCU_path2native */ LEGACY_SYSTEM
@@ -3600,7 +3653,12 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		if (MCStringGetLength(p_path) == 0)
 			return MCS_getcurdir_native(r_resolved_path);
 
-		MCU_fix_path(p_path, r_resolved_path);
+        MCAutoStringRef t_native;
+        MCAutoStringRef t_native_resolved;
+        
+        MCS_pathtonative(p_path, &t_native);
+		MCU_fix_path(*t_native, &t_native_resolved);
+        MCS_pathfromnative(*t_native_resolved, r_resolved_path);
 		return true;
 	}
 	
@@ -4031,7 +4089,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		uint32_t t_buf_size;
 		bool t_success;
 
-		t_success = MCS_closetakingbuffer(MCprocesses[index].ohandle, t_buffer, t_buf_size) == IO_NORMAL;
+		t_success = MCS_closetakingbuffer_uint32(MCprocesses[index].ohandle, t_buffer, t_buf_size) == IO_NORMAL;
         MCprocesses[index].ohandle = nil;
         
         IO_cleanprocesses();
@@ -4078,8 +4136,12 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			dsize = WideCharToMultiByte( codepage, 0, (LPCWSTR)t_string_ptr, p_string_length >> 1,
 										   (LPSTR)t_buffer_ptr, p_buffer_length, NULL, NULL);
 		else
+		{
 			dsize = MultiByteToWideChar( codepage, 0, (LPCSTR)t_string_ptr, p_string_length, (LPWSTR)t_buffer_ptr,
 										   p_buffer_length >> 1);
+			// SN-2014-12-15: [[ Bug 14203 ]] The required size must be adapted as it was beforehand
+			dsize <<= 1;
+		}
 
 		return dsize;
 	}
@@ -4559,7 +4621,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
                 // If the launched process vanished before (4) it is treated as failure.
                 
                 unichar_t t_parameters[64];
-                wsprintf(t_parameters, L"-elevated-slave%08x", GetCurrentThreadId());
+                wsprintfW(t_parameters, L"-elevated-slave%08x", GetCurrentThreadId());
                 
 				MCAutoStringRefAsWString t_cmd_wstr;
 				/* UNCHECKED */ t_cmd_wstr.Lock(MCcmd);

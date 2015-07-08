@@ -1,0 +1,12 @@
+Name: root node
+
+Synonyms: root node
+
+Type: glossary
+
+Description:
+The topmost <node> in an <XML tree>. Each <XML tree> has one and only one root node.
+
+References: node (glossary), XML tree (glossary)
+
+Tags: text processing

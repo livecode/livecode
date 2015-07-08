@@ -1,0 +1,12 @@
+Name: relative file path
+
+Synonyms: relative file path,relative path
+
+Type: glossary
+
+Description:
+The name and location of a <file>, starting from the <defaultFolder> and going up, down, or sideways in the <folder> hierarchy as necessary to get to the <file|file's> location.
+
+References: defaultFolder (property), file (glossary), folder (glossary)
+
+Tags: file system

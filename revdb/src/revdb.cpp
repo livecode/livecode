@@ -23,9 +23,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #if defined(_WINDOWS) || defined(_WINDOWS_SERVER)
 #include "w32support.h"
-#elif defined(_LINUX) || defined(TARGET_SUBPLATFORM_ANDROID)
+#elif defined(_LINUX) || defined(_LINUX_SERVER) || defined(TARGET_SUBPLATFORM_ANDROID)
 #include "unxsupport.h"
-#elif defined(_MACOSX)
+#elif defined(_MACOSX) || defined (_MAC_SERVER)
 #include "osxsupport.h"
 #elif defined(TARGET_SUBPLATFORM_IPHONE)
 #include "iossupport.h"
@@ -135,40 +135,43 @@ const char *dbtypestrings[] = {
 
 };
 
+static void *DBcallback_loadmodule(const char *p_path)
+{
+    int t_success;
+    void *t_handle;
+    LoadModuleByName(p_path, &t_handle, &t_success);
+    if (t_success == EXTERNAL_FAILURE)
+        return NULL;
+    return t_handle;
+}
+
+static void DBcallback_unloadmodule(void *p_handle)
+{
+    int t_success;
+    UnloadModule(p_handle, &t_success);
+}
+
+static void *DBcallback_resolvesymbol(void *p_handle, const char *p_symbol)
+{
+    int t_success;
+    void *t_address;
+    ResolveSymbolInModule(p_handle, p_symbol, &t_address, &t_success);
+    if (t_success == EXTERNAL_FAILURE)
+        return NULL;
+    return t_address;
+}
+
+static DBcallbacks dbcallbacks = {
+    DBcallbacks_version,
+    DBcallback_loadmodule,
+    DBcallback_unloadmodule,
+    DBcallback_resolvesymbol,
+};
+
 DATABASERECList databaselist;
 DBList connectionlist;
 
-static int computehash(char *keystr)
-{
-	unsigned int value = 0;
-	int length = strlen(keystr);
-	const char *sptr = keystr;
-	while (length--){
-		value += tolower(*sptr++);
-		value = value * 3;
-	}
-	return value & 96000 -1;
-}
-
 #define simpleparse(a,b,c) (((b > a) | (c < a))?True:False)
-
-static char * _strrev(char * str)
-{
-	int SmallIndex = 0;
-	int BigIndex = strlen(str) - 1;
-	
-	while (SmallIndex < BigIndex) {
-		char Temp = str[SmallIndex];
-		
-		str[SmallIndex] = str[BigIndex];
-		str[BigIndex] = Temp;
-		
-		SmallIndex++;
-		BigIndex--;
-	}
-	
-	return str;
-	}
 
 static char *strlwr(char *str)
 {
@@ -183,9 +186,6 @@ static char *strlwr(char *str)
 void REVDB_Init(char *args[], int nargs, char **retstring,
 		   Bool *pass, Bool *error)
 {
-	static Bool littlecheat = False;
-	int passkey = 0;
-
 	*error = False;
 	*pass = False;
 
@@ -232,6 +232,45 @@ DBCursor *findcursor(int cursid)
 	return NULL;
 }
 
+// AL-2015-02-10: [[ SB Inclusions ]] Add function to load database driver using new module loading callbacks
+DATABASEREC *LoadDatabaseDriverFromName(const char *p_type)
+{
+    int t_retvalue;
+    void *t_handle;
+    t_handle = NULL;
+    LoadModuleByName(p_type, &t_handle, &t_retvalue);
+    
+    if (t_handle == NULL)
+        return NULL;
+    
+    DATABASEREC *t_result;
+    t_result = new DATABASEREC;
+#if (defined _MACOSX && !defined _MAC_SERVER)
+    t_result -> driverref = (CFBundleRef)t_handle;
+#elif (defined _WINDOWS) || defined _WINDOWS_SERVER
+    t_result -> driverref = (HINSTANCE)t_handle;
+#else
+	t_result -> driverref = t_handle;
+#endif
+    
+    void *id_counterref_ptr, *new_connectionref_ptr, *release_connectionref_ptr;
+    void *set_callbacksref_ptr;
+    id_counterref_ptr = NULL;
+    new_connectionref_ptr = NULL;
+    release_connectionref_ptr = NULL;
+    set_callbacksref_ptr = NULL;
+    
+    ResolveSymbolInModule(t_handle, "setidcounterref", &id_counterref_ptr, &t_retvalue);
+    ResolveSymbolInModule(t_handle, "newdbconnectionref", &new_connectionref_ptr, &t_retvalue);
+    ResolveSymbolInModule(t_handle, "releasedbconnectionref", &release_connectionref_ptr, &t_retvalue);
+    ResolveSymbolInModule(t_handle, "setcallbacksref", &set_callbacksref_ptr, &t_retvalue);
+    
+    t_result -> idcounterptr = (idcounterrefptr)id_counterref_ptr;
+    t_result -> newconnectionptr = (new_connectionrefptr)new_connectionref_ptr;
+    t_result -> releaseconnectionptr = (release_connectionrefptr)release_connectionref_ptr;
+    t_result -> setcallbacksptr = (set_callbacksrefptr)set_callbacksref_ptr;
+    return t_result;
+}
 
 
 DATABASEREC *LoadDatabaseDriver(const char *p_type)
@@ -239,49 +278,58 @@ DATABASEREC *LoadDatabaseDriver(const char *p_type)
   DATABASEREC *t_database_rec;
 	t_database_rec = NULL;
 	
-	char t_driver_name[32];
-#ifdef TARGET_SUBPLATFORM_ANDROID
-	sprintf(t_driver_name, "libdb%s", p_type);
-	// MW-2011-10-06: [[ Bug 9789 ]] Make sure the driver library name is all lowercase.
-	strlwr(t_driver_name);
-#else
-	if (util_stringcompare(p_type, "VALENTINA", strlen(p_type)) == 0)
-		sprintf(t_driver_name, VXCMD_STRING);
-	else
-	{
-		sprintf(t_driver_name, "db%s", p_type);
-		strlwr(t_driver_name);
-	}
+#ifndef TARGET_SUBPLATFORM_ANDROID
+    // AL-2015-02-10: [[ SB Inclusions ]] Try to load database driver using new module loading callbacks
+    t_database_rec = LoadDatabaseDriverFromName(p_type);
 #endif
-	
-	char t_driver_path[PATH_MAX];
-				
-	if (revdbdriverpaths != NULL)
-	{
-		char *t_path;
-		t_path = revdbdriverpaths;
-		
-		while(t_path != NULL && *t_path != '\0')
-		{
-			char *t_next_path = strchr(t_path, '\n');
-			unsigned int t_length;
-			if (t_next_path == NULL)
-				t_length = strlen(t_path);
-			else
-				t_length = t_next_path - t_path, t_next_path += 1;
-					
-			if (t_length > 0)
-			{
-				sprintf(t_driver_path, "%.*s/%s", t_length, t_path, t_driver_name);
-				t_database_rec = DoLoadDatabaseDriver(t_driver_path);
-				if (t_database_rec != NULL)
-					break;
-			}
-			
-			t_path = t_next_path;
-		}
-	}
-
+    
+    char t_driver_name[32];
+    if (t_database_rec == NULL)
+    {
+#ifdef TARGET_SUBPLATFORM_ANDROID
+        sprintf(t_driver_name, "libdb%s", p_type);
+        // MW-2011-10-06: [[ Bug 9789 ]] Make sure the driver library name is all lowercase.
+        strlwr(t_driver_name);
+#else
+        if (util_stringcompare(p_type, "VALENTINA", strlen(p_type)) == 0)
+            sprintf(t_driver_name, VXCMD_STRING);
+        else
+        {
+            sprintf(t_driver_name, "db%s", p_type);
+            strlwr(t_driver_name);
+        }
+#endif
+    }
+    char t_driver_path[PATH_MAX];
+    
+    if (t_database_rec == NULL)
+    {
+        if (revdbdriverpaths != NULL)
+        {
+            char *t_path;
+            t_path = revdbdriverpaths;
+            
+            while(t_path != NULL && *t_path != '\0')
+            {
+                char *t_next_path = strchr(t_path, '\n');
+                unsigned int t_length;
+                if (t_next_path == NULL)
+                    t_length = strlen(t_path);
+                else
+                    t_length = t_next_path - t_path, t_next_path += 1;
+                
+                if (t_length > 0)
+                {
+                    sprintf(t_driver_path, "%.*s/%s", t_length, t_path, t_driver_name);
+                    t_database_rec = DoLoadDatabaseDriver(t_driver_path);
+                    if (t_database_rec != NULL)
+                        break;
+                }
+                
+                t_path = t_next_path;
+            }
+        }
+    }
 #ifndef _SERVER
 	if (t_database_rec == NULL && GetExternalFolder() != NULL)
 	{
@@ -306,7 +354,7 @@ DATABASEREC *LoadDatabaseDriver(const char *p_type)
 		t_last_component = strrchr(GetExternalFolder(), '/');
 		if (t_last_component != NULL)
 		{
-			sprintf(t_driver_path, "%.*s/drivers/%s", t_last_component - GetExternalFolder(), GetExternalFolder(), t_driver_name);
+			sprintf(t_driver_path, "%.*s/drivers/%s", (int) (t_last_component - GetExternalFolder()), GetExternalFolder(), t_driver_name);
 			t_database_rec = DoLoadDatabaseDriver(t_driver_path);
 		}
 		if (t_database_rec == NULL)
@@ -326,6 +374,8 @@ DATABASEREC *LoadDatabaseDriver(const char *p_type)
 		strcpy(t_database_rec -> dbname, p_type);
 		if (t_database_rec -> idcounterptr)
 			(*t_database_rec -> idcounterptr)(&idcounter);
+        if (t_database_rec -> setcallbacksptr)
+            (*t_database_rec -> setcallbacksptr)(&dbcallbacks);
 	}
 	
 	return t_database_rec;
@@ -359,7 +409,6 @@ void REVDB_QUIT()
 		break;
 	}
 	connlist->clear();
-	DATABASEREC *databaserec = NULL;
 	DATABASERECList::iterator theIterator2;
 	for (theIterator2 = databaselist.begin(); theIterator2 != databaselist.end(); theIterator2++){
 		DATABASEREC *tdatabaserec = (DATABASEREC *)(*theIterator2);
@@ -459,12 +508,6 @@ void processInputArray(char *p_variable_name, char *p_key_name, ExternalString &
 	int t_return_value;
 
 	GetVariableEx(t_adjusted_variable_name, t_adjusted_key_name == NULL ? "" : t_adjusted_key_name, &t_value, &t_return_value);
-
-	char *t_value_data;
-	t_value_data = (char *)t_value . buffer;
-
-	int t_value_length;
-	t_value_length = t_value . length;
 
 	r_value = t_value;
 }
@@ -768,7 +811,7 @@ void REVDB_Connect(char *args[], int nargs, char **retstring, Bool *pass, Bool *
 		}
 
 		// check access permissions of known database types
-		int t_dbtype_index;
+		size_t t_dbtype_index;
 		for (t_dbtype_index = 0; t_dbtype_index < REVDB_DATABASETYPECOUNT; t_dbtype_index++)
 		{
 			if (util_stringcompare(REVDBdatabasetypestrings[t_dbtype_index], dbtype, strlen(dbtype)) == 0)
@@ -844,7 +887,7 @@ void REVDB_Disconnect(char *args[], int nargs, char **retstring, Bool *pass, Boo
 	}
 
 	*error = False;
-	int connectionid = atoi(*args);
+	unsigned int connectionid = strtoul (*args, NULL, 10);
 
 	if (!connectionlist . find(connectionid))
 	{	
@@ -1024,8 +1067,6 @@ void REVDB_ConnectionErr(char *args[], int nargs, char **retstring, Bool *pass, 
 /// Otherwise the number of affected rows is returned. This will be 0 for any query that is not SELECT, INSERT, UPDATE or DELETE.
 void REVDB_Execute(char *p_arguments[], int p_argument_count, char **p_return_string, Bool *p_pass, Bool *p_error)
 {
-	char *result = NULL;
-
 	*p_error = True;
 	*p_pass = False;
 
@@ -2085,7 +2126,7 @@ void REVDB_Connections(char *args[], int nargs, char **retstring,
 	{
 		result = (char *)malloc(connlist->size() * INTSTRSIZE);
 		result[0] = '\0';
-		int numconnections = 0;
+		DBObjectList::size_type numconnections = 0;
 		for (theIterator = connlist->begin(); theIterator != connlist->end(); theIterator++)
 		{
 			DBConnection *curconnection = (DBConnection *)(*theIterator);
@@ -2340,6 +2381,6 @@ EXTERNAL_END_DECLARATIONS
 extern "C"
 {
 	extern struct LibInfo __libinfo;
-	__attribute((section("__DATA,__libs"))) volatile struct LibInfo *__libinfoptr_revdb = &__libinfo;
+	__attribute((section("__DATA,__libs"))) volatile struct LibInfo *__libinfoptr_revdb __attribute__((__visibility__("default"))) = &__libinfo;
 }
 #endif

@@ -3,8 +3,18 @@
 use warnings;
 use Text::ParseWords;
 
-# Read all the data available on stdin
-my @spec = <STDIN>;
+my $inputFile = $ARGV[0];
+my $outputFile = $ARGV[1];
+
+# Read all of the input data
+open INPUT, "<$inputFile"
+	or die "Could not open input file \"$inputFile\": $!";
+my @spec = <INPUT>;
+close INPUT;
+
+# Open the output file
+open OUTPUT, ">$outputFile"
+	or die "Could not open output file \"$outputFile\": $!";
 
 # Modules
 my %moduleSymbols = ();
@@ -69,25 +79,18 @@ output "#include <cstring>";
 output ;
 output "#if defined(_MACOSX) || defined(_MAC_SERVER)";
 output "#include <mach-o/dyld.h>";
-output "typedef const struct mach_header *module_t;";
 output "#define SYMBOL_PREFIX \"_\"";
-output "#elif defined(TARGET_SUBPLATFORM_IPHONE)";
-output "typedef void *module_t;";
-output "extern \"C\" void *IOS_LoadModule(const char *);";
-output "extern \"C\" void *IOS_ResolveSymbol(void *, const char *);";
-output "#define SYMBOL_PREFIX";
-output "#elif defined(_LINUX) || defined(TARGET_SUBPLATFORM_ANDROID)";
-output "#include <dlfcn.h>";
-output "typedef void *module_t;";
-output "#define SYMBOL_PREFIX";
-output "#elif defined(_WINDOWS)";
-output "#include <windows.h>";
-output "typedef HMODULE module_t;";
+output "#else";
 output "#define SYMBOL_PREFIX";
 output "#endif";
 
 output ;
+output "typedef void *module_t;";
 output "typedef void *handler_t;";
+output ;
+output "extern \"C\" void *MCU_loadmodule(const char *);";
+output "extern \"C\" void MCU_unloadmodule(void *);";
+output "extern \"C\" void *MCU_resolvemodulesymbol(void *, const char *);";
 output ;
 
 output "extern \"C\"";
@@ -96,44 +99,7 @@ output ;
 output "static int module_load(const char *p_source, module_t *r_module)";
 output "{";
 output "  module_t t_module;";
-output "#if defined(_MACOSX) || defined(_MAC_SERVER)";
-output "  t_module  = NSAddImage(p_source, NSADDIMAGE_OPTION_RETURN_ON_ERROR | NSADDIMAGE_OPTION_WITH_SEARCHING);";
-# MM-2014-02-06: [[ LipOpenSSL 1.0.1e ]] On Mac, if module cannot be found then look relative to current executable.
-output "  if (t_module == NULL)";
-output "  {";
-output "    uint32_t t_buffer_size;";
-output "    t_buffer_size = 0;";
-output "    _NSGetExecutablePath(NULL, &t_buffer_size);";
-output "    char *t_module_path;";
-output "    t_module_path = (char *) malloc(t_buffer_size + strlen(p_source) + 1);";
-output "    if (t_module_path != NULL)";
-output "    {";
-output "      if (_NSGetExecutablePath(t_module_path, &t_buffer_size) == 0)";
-output "      {";
-output "        char *t_last_slash;";
-output "        t_last_slash = t_module_path + t_buffer_size;";
-output "        for (uint32_t i = 0; i < t_buffer_size; i++)";
-output "        {";
-output "          if (*t_last_slash == '/')";
-output "          {";
-output "            *(t_last_slash + 1) = '\\0';";
-output "            break;";
-output "          }";
-output "          t_last_slash--;";
-output "        }";
-output "        strcat(t_module_path, p_source);";
-output "        t_module = NSAddImage(t_module_path, NSADDIMAGE_OPTION_RETURN_ON_ERROR | NSADDIMAGE_OPTION_WITH_SEARCHING);";
-output "      }";
-output "      free(t_module_path);";
-output "    }";
-output "  }";
-output "#elif defined(TARGET_SUBPLATFORM_IPHONE)";
-output "  t_module = IOS_LoadModule(p_source);";
-output "#elif defined(_LINUX) || defined(TARGET_SUBPLATFORM_ANDROID)";
-output "  t_module = dlopen(p_source, RTLD_LAZY);";
-output "#elif defined(_WINDOWS)";
-output "  t_module = LoadLibraryA(p_source);";
-output "#endif";
+output " 	t_module = (module_t)MCU_loadmodule(p_source);";
 output "  if (t_module == NULL)";
 output "    return 0;";
 output "  *r_module = t_module;";
@@ -144,28 +110,14 @@ output ;
 # MM-2014-02-14: [[ LibOpenSSL 1.0.1e ]] Implemented module_unload for Android.
 output "static int module_unload(module_t p_module)";
 output "{";
-output "#if defined(TARGET_SUBPLATFORM_ANDROID)";
-output "  if (p_module != NULL)";
-output "    dlclose(p_module);";
-output "#endif";
+output "  MCU_unloadmodule(p_module);";
 output "  return 1;";
 output "}";
 output ;
 output "static int module_resolve(module_t p_module, const char *p_name, handler_t *r_handler)";
 output "{";
-output "  handler_t t_handler = NULL;";
-output "#if defined(_MACOSX) || defined(_MAC_SERVER)";
-output "  NSSymbol t_symbol;";
-output "  t_symbol = NSLookupSymbolInImage(p_module, p_name, NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);";
-output "  if (t_symbol != NULL)";
-output "    t_handler = (handler_t)NSAddressOfSymbol(t_symbol);";
-output "#elif defined(TARGET_SUBPLATFORM_IPHONE)";
-output "  t_handler = (handler_t)IOS_ResolveSymbol(p_module, p_name);";
-output "#elif defined(_LINUX) || defined(TARGET_SUBPLATFORM_ANDROID)";
-output "  t_handler = (handler_t)dlsym(p_module, p_name);";
-output "#elif defined(_WINDOWS)";
-output "  t_handler = (handler_t)GetProcAddress(p_module, p_name);";
-output "#endif";
+output "  handler_t t_handler;";
+output "    t_handler = MCU_resolvemodulesymbol(p_module, p_name);";
 output "  if (t_handler == NULL)";
 output "    return 0;";
 output "  *r_handler = t_handler;";
@@ -182,6 +134,7 @@ foreach my $module (keys %moduleDetails)
 
 output "}";
 
+close OUTPUT;
 
 sub generateModule
 {
@@ -491,5 +444,5 @@ sub output
 		$line = "";
 	}
 	
-	print STDOUT "$line\n";
+	print OUTPUT "$line\n";
 }

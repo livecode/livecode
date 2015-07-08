@@ -46,7 +46,7 @@ bool MCCStringClone(const char *p_string, char *& r_new_string)
 		return true;
 	}
 
-	if (!MCMemoryAllocate(p_string == nil ? 1 : strlen(p_string) + 1, r_new_string))
+	if (!MCMemoryAllocate(strlen(p_string) + 1, r_new_string))
 		return false;
 	strcpy(r_new_string, p_string);
 	return true;
@@ -305,11 +305,13 @@ bool MCCStringFromUnicodeSubstring(const unichar_t *p_chars, uint32_t p_char_cou
 
 bool MCCStringFromUnicode(const unichar_t *p_unicode_string, char*& r_string)
 {
+	if (NULL == p_unicode_string)
+		return false;
+
 	uint32_t t_wstring_length;
 	t_wstring_length = 0;
-	if (p_unicode_string != nil)
-		while(p_unicode_string[t_wstring_length] != 0)
-			t_wstring_length++;
+	while(p_unicode_string[t_wstring_length] != 0)
+		t_wstring_length++;
 	
 	return MCCStringFromUnicodeSubstring(p_unicode_string, t_wstring_length, r_string);
 }
@@ -672,7 +674,8 @@ bool MCValueConvertToStringForSave(MCValueRef self, MCStringRef& r_string)
 			uint32_t t_length;
 			t_length = MCU_r8tos(t_buffer, t_buffer_length, MCNumberFetchAsReal((MCNumberRef)self), 8, 6, 0);
 
-			t_success = MCStringCreateWithNativeCharsAndRelease((char_t *)t_buffer, t_length, r_string);
+			t_success = MCStringCreateWithNativeChars((char_t *)t_buffer, t_length, r_string);
+            delete[] t_buffer;
 		}
 		break;
 	case kMCValueTypeCodeString:
@@ -694,9 +697,11 @@ bool MCValueConvertToStringForSave(MCValueRef self, MCStringRef& r_string)
 
 bool MCValueIsEmpty(MCValueRef p_value)
 {
+    // AL-2014-10-31: [[ Bug 13890 ]] An empty array is not necessarily equal to kMCEmptyArray,
+    //  so we need to use MCArrayIsEmpty instead.
     return p_value == kMCNull ||
             p_value == kMCEmptyName ||
-            p_value == kMCEmptyArray ||
+            (MCValueGetTypeCode(p_value) == kMCValueTypeCodeArray && MCArrayIsEmpty((MCArrayRef)p_value)) ||
             (MCValueGetTypeCode(p_value) == kMCValueTypeCodeString && MCStringIsEmpty((MCStringRef)p_value)) ||
             (MCValueGetTypeCode(p_value) == kMCValueTypeCodeName && MCNameIsEmpty((MCNameRef)p_value)) ||
             (MCValueGetTypeCode(p_value) == kMCValueTypeCodeData && MCDataIsEmpty((MCDataRef)p_value)) ||
@@ -1167,17 +1172,36 @@ MCString MCNameGetOldString(MCNameRef p_name)
 
 bool MCNameGetAsIndex(MCNameRef p_name, index_t& r_index)
 {
+    MCStringRef t_key;
+    t_key = MCNameGetString(p_name);
+    
+    // AL-2015-01-05: [[ Bug 14303 ]] Don't treat keys of the form "01" as indices,
+    //  since for example "01" and "1" are distinct array keys.
+    if (MCStringGetLength(t_key) != 1 && MCStringGetCodepointAtIndex(t_key, 0) == '0')
+        return false;
+    
+    // SN-2015-05-15: [[ Bug 15457 ]] Store the string-to-number conversion.
+    double t_double_index;
+    if (MCStringGetNumericValue(t_key, t_double_index))
+    {
+        r_index = (index_t)t_double_index;
+        return true;
+    }
+    
 	char *t_end;
 	index_t t_index;
     
     // AL-2014-05-15: [[ Bug 12203 ]] Don't nativize array name when checking
     //  for a sequential array.
-    
     MCAutoStringRefAsCString t_cstring;
-    t_cstring . Lock(MCNameGetString(p_name));
+    t_cstring . Lock(t_key);
+    
 	t_index = strtol(*t_cstring, &t_end, 10);
 	if (*t_end == '\0')
 	{
+        // SN-2015-06-15: [[ Bug 15457 ]] Store the converted value - improve
+        //  speed if repeating several times over the elements of a array.
+        MCStringSetNumericValue(t_key, t_index);
 		r_index = t_index;
 		return true;
 	}
@@ -1261,12 +1285,26 @@ static bool get_array_extent(void *context, MCArrayRef p_array, MCNameRef p_key,
 
 bool MCArrayIsSequence(MCArrayRef self)
 {
-	get_array_extent_context_t ctxt;
-	ctxt . minimum = INDEX_MAX;
-	ctxt . maximum = INDEX_MIN;
-	return MCArrayApply(self, get_array_extent, &ctxt) &&
-			ctxt . minimum == 1 &&
-			(ctxt . maximum - ctxt . minimum + 1) == MCArrayGetCount(self);
+    int32_t t_start_index;
+    
+    // IsSequence returns true if the sequence starts with 1 only
+    return MCArrayIsNumericSequence(self, t_start_index) && t_start_index == 1;
+}
+
+bool MCArrayIsNumericSequence(MCArrayRef self, int32_t &r_start_index)
+{
+    get_array_extent_context_t ctxt;
+    ctxt . minimum = INDEX_MAX;
+    ctxt . maximum = INDEX_MIN;
+    
+    if (MCArrayApply(self, get_array_extent, &ctxt) &&
+            (ctxt . maximum - ctxt . minimum + 1) == MCArrayGetCount(self))
+    {
+        r_start_index = ctxt . minimum;
+        return true;
+    }
+    
+    return false;
 }
 
 static bool list_keys(void *p_context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)
@@ -1363,9 +1401,6 @@ uint32_t MCArrayMeasureForStreamLegacy(MCArrayRef self, bool p_nested_only)
 
 static bool is_array_nested(void *p_context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)
 {
-	bool *t_nested_ptr;
-	t_nested_ptr = (bool *)p_context;
-	
 	if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeArray)
 		return false;
 
@@ -1624,13 +1659,18 @@ static bool save_array_to_handle(void *p_context, MCArrayRef p_array, MCNameRef 
 
 	if (t_stat == IO_NORMAL)
 	{
-		char *t_key_string;
-		t_key_string = (char *)MCStringGetCString(MCNameGetString(p_key));
+		MCAutoPointer<char> t_key_string;
+        
+        // SN-2015-04-23: [[ Bug 15258 ]] We don't want to nativise the string,
+        //  but rather to get a C-String copy of it.
+        if (!MCStringConvertToCString(MCNameGetString(p_key), &t_key_string))
+            return false;
+        
 		// IM-2013-04-04: [[ BZ 10811 ]] pre 6.0 versions of loadkeys() expect
 		// a null-terminated string of non-zero length (including null),
 		// but IO_write_string() writes a single zero byte for an empty string
 		// so we need a special case here.
-		if (t_key_string == nil || t_key_string[0] == '\0')
+		if (*t_key_string == nil || (*t_key_string)[0] == '\0')
 		{
 			// write length + null
 			t_stat = IO_write_uint1(1, t_stream);
@@ -1639,7 +1679,7 @@ static bool save_array_to_handle(void *p_context, MCArrayRef p_array, MCNameRef 
 				t_stat = IO_write_uint1(0, t_stream);
 		}
 		else
-			t_stat = IO_write_cstring_legacy(t_key_string, t_stream, 1);
+			t_stat = IO_write_cstring_legacy(*t_key_string, t_stream, 1);
 	}
 
 	MCAutoStringRef t_string;
@@ -1655,7 +1695,17 @@ static bool save_array_to_handle(void *p_context, MCArrayRef p_array, MCNameRef 
 		else
 			t_size = 2;
 		
-		t_stat = IO_write_string_legacy_full(MCStringGetOldString(*t_string), t_stream, t_size, false);
+        // SN-2015-04-23: [[ Bug 15258 ]] We don't want to nativise the string,
+        //  but rather to get a C-String copy of it.
+        MCAutoPointer<char_t> t_c_string;
+        uindex_t t_length;
+        
+        // SN-2015-06-03: [[ Bug 15455 ]] The length can be different from a
+        //  C-string length, as image for instance can be stored as custom props
+        if (!MCStringConvertToNative(*t_string, &t_c_string, t_length))
+            return false;
+        
+		t_stat = IO_write_string_legacy_full(MCString((const char*)*t_c_string, (uint4)t_length), t_stream, t_size, false);
 	}
 	
 	return t_stat == IO_NORMAL;
@@ -1897,7 +1947,8 @@ bool deserialize_data(const char *p_stream, uint32_t p_stream_size, uint32_t &r_
 		if (r_data == nil)
 		{
 			t_size = t_data_size;
-			MCMemoryAllocate(t_size, t_data);
+			if (!MCMemoryAllocate(t_size, t_data))
+				return false;
 		}
 		else
 		{

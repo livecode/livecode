@@ -385,6 +385,8 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
 	MCNameRef t_key;
 	MCValueRef t_value;
 	uintptr_t t_iterator;
+    // SN2015-06-15: [[ Bug 15457 ]] The index can be a negative index.
+    index_t t_sequenced_iterator;
     const byte_t *t_data_ptr, *t_data_end;
     Parse_stat ps;
     MCScriptPoint *sp = nil;
@@ -405,12 +407,12 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
             if (!ctxt . ConvertToArray(*t_condition, &t_array))
                 return;
             
-            // If this is a numerical array, do it in order
-            if (each == FU_ELEMENT && MCArrayIsSequence(*t_array))
+            // SN-2015-06-15: [[ Bug 15457 ]] If this is a numerical array, do
+            //  it in order - even if it does not start at 1
+            if (each == FU_ELEMENT && MCArrayIsNumericSequence(*t_array, t_sequenced_iterator))
             {
                 t_sequence_array = true;
-                t_iterator = 1;
-                if (!MCArrayFetchValueAtIndex(*t_array, t_iterator, t_value))
+                if (!MCArrayFetchValueAtIndex(*t_array, t_sequenced_iterator, t_value))
                     return;
             }
             else
@@ -427,7 +429,6 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
             
             t_length = MCDataGetLength(*t_data);
             t_data_ptr = MCDataGetBytePtr(*t_data);
-            t_data_end = t_data_ptr + t_length;
         }
         else
         {
@@ -437,43 +438,48 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
             switch (each)
             {
                 case FU_LINE:
-                    tci = new MCTextChunkIterator(CT_LINE, *t_string);
+                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_LINE);
                     break;
                 case FU_PARAGRAPH:
-                    tci = new MCTextChunkIterator(CT_PARAGRAPH, *t_string);
+                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_PARAGRAPH);
                     break;
                 case FU_SENTENCE:
-                    tci = new MCTextChunkIterator(CT_SENTENCE, *t_string);
+                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_SENTENCE);
                     break;
                 case FU_ITEM:
-                    tci = new MCTextChunkIterator(CT_ITEM, *t_string);
+                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_ITEM);
                     break;
                 case FU_WORD:
-                    tci = new MCTextChunkIterator(CT_WORD, *t_string);
+                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_WORD);
                     break;
                 case FU_TRUEWORD:
-                    tci = new MCTextChunkIterator(CT_TRUEWORD, *t_string);
+                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_TRUEWORD);
                     break;
                 case FU_TOKEN:
-                    tci = new MCTextChunkIterator(CT_TOKEN, *t_string);
+                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_TOKEN);
                     break;
                 case FU_CODEPOINT:
-                    tci = new MCTextChunkIterator(CT_CODEPOINT, *t_string);
+                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_CODEPOINT);
                     break;
                 case FU_CODEUNIT:
-                    tci = new MCTextChunkIterator(CT_CODEUNIT, *t_string);
+                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_CODEUNIT);
                     break;
                 case FU_CHARACTER:
                 default:
-                    tci = new MCTextChunkIterator(CT_CHARACTER, *t_string);
+                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_CHARACTER);
                     break;
             } 
         }
     }
     else
     {
-        if (!ctxt . ConvertToInteger(*t_condition, count))
+        // SN-2015-01-14: [[ Bug 14377 ]] Throw an error as it used to be done
+        if (!ctxt . ConvertToInteger(*t_condition, count) && (MCtrace || MCnbreakpoints)
+                && !MCtrylock && !MClockerrors)
+        {
+            MCB_error(ctxt, line, pos, EE_REPEAT_BADFORCOND);
             return;
+        }
         count = MCU_max(count, 0);
     }
     
@@ -508,9 +514,11 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
                 case FU_ELEMENT:
                 {
                     loopvar -> set(ctxt, t_value);
+                    // SN-2015-06-15: [[ Bug 15457 ]] Sequenced, numeric arrays
+                    //  have their own iterator
                     if (t_sequence_array)
                     {
-                        if (!MCArrayFetchValueAtIndex(*t_array, ++t_iterator, t_value))
+                        if (!MCArrayFetchValueAtIndex(*t_array, ++t_sequenced_iterator, t_value))
                             endnext = true;
                     }
                     else
@@ -537,16 +545,16 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
                     
                 default:
                 {
-                    t_found = tci -> next(ctxt);
-                    endnext = tci -> isexhausted();
-
+                    t_found = MCStringsTextChunkIteratorNext(ctxt, tci);
+                    endnext = tci -> IsExhausted();
+                    
                     if (!t_found)
                     {
                         t_unit = kMCEmptyString;
                         done = true;
                     }
                     else
-                        tci -> copystring(&t_unit);
+                        tci -> CopyString(&t_unit);
                 }
             }
             // MW-2010-12-15: [[ Bug 9218 ]] Added KEY to the type of repeat that already

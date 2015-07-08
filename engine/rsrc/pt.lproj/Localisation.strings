@@ -1,0 +1,21 @@
+/* Format string such as About %@ */
+"appMenu.about" = "Sobre o %@";
+
+/* Format string such as Hide %@ */
+"appMenu.hide" = "Ocultar %@";
+
+/* Hide Others */
+"appMenu.hideOthers" = "Ocultar Outros";
+
+/* Preferences */
+"appMenu.preferences" = "Preferências…";
+
+/* Format string such as Quit %@ */
+"appMenu.quit" = "Encerrar %@";
+
+/* Services */
+"appMenu.services" = "Serviços";
+
+/* Show All */
+"appMenu.showAll" = "Mostrar Tudo";
+

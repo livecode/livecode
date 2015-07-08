@@ -2371,39 +2371,6 @@ enum Exec_errors
 	
 	// {EE-0781} image cache limit: not a number
 	EE_PROPERTY_BADIMAGECACHELIMIT,
-
-	// {EE-0779} Error evaluating expression
-	EE_EXPR_EVALERROR,
-	
-	// {EE-0780} Property: value is not a character
-	EE_PROPERTY_NAC,
-	
-	// {EE-0781} Property: value is not a string
-	EE_PROPERTY_NAS,
-	
-	// {EE-0782} Property: value is not a color
-	EE_PROPERTY_NOTACOLOR,
-	
-	// {EE-0783} Property: value is not a rectangle
-	EE_PROPERTY_NOTARECT,
-	
-	// {EE-0784} Property: value is not a point
-	EE_PROPERTY_NOTAPOINT,
-	
-	// {EE-0785} Property: value is not a pair of integers
-	EE_PROPERTY_NOTAINTPAIR,
-	
-	// {EE-0786} Property: value is not a quadruple of integers
-	EE_PROPERTY_NOTAINTQUAD,
-	
-	// {EE-0787} Property: invalid enumeration value
-	EE_PROPERTY_BADENUMVALUE,
-
-	// {EE-0788} Backdrop: invalid value
-	EE_BACKDROP_INVALIDVALUE,
-
-	// {EE-0789} Property: value is not an array
-    EE_PROPERTY_NOTANARRAY,
     
     // {EE-0782} controls don't have the same owner
 	EE_GROUP_DIFFERENTPARENT,
@@ -2511,12 +2478,6 @@ enum Exec_errors
     // {EE-815} IDE Extract: error in filename expression
     EE_IDE_EXTRACT_BADFILENAME,
     
-    // {EE-816} MCInternalPayloadPatch: error in patch item expression
-    EE_INTERNAL_PATCH_BADITEM,
-    
-    // {EE-817} MCInternalPayloadPatch: error in base item expression
-    EE_INTERNAL_BASE_BADITEM,
-    
     // {EE-816} MCInternalPayloadPatch: error in output filename expression
     EE_OUTPUT_BADFILENAME,
     
@@ -2612,6 +2573,86 @@ enum Exec_errors
     // MW-2014-10-23: Improve the error message you get from 'start using <name>'
     // {EE-0843} start: script of specified stack won't compile
     EE_START_WONTCOMPILE,
+    
+    // MW-2014-12-10: [[ Extensions ]] The error codes used to indicate an extension error.
+    // {EE-0844} extension: error occured with domain
+    EE_EXTENSION_ERROR_DOMAIN,
+    // {EE-0845} extension: error occured with description
+    EE_EXTENSION_ERROR_DESCRIPTION,
+    // {EE-0846} extension: error occured with file
+    EE_EXTENSION_ERROR_FILE,
+    // {EE-0847} extension: error occured with line
+    EE_EXTENSION_ERROR_LINE,
+
+    // SN-2014-12-16: [[ Bug 14181 ]] hostnameToAddress should have no message on server
+    // {EE-0848} hostnameToAddress: callbacks are not allowed on server
+    EE_HOSTNAME_BADMESSAGE,
+
+    // SN-2014-12-15: [[ Bug 14211 ]] Add an error when using a parsed bad extents (such as 'next')
+    // {EE-0849} Chunk: bad extents provided
+    EE_CHUNK_BADEXTENTS,
+
+	// MDW-2014-09-28: [[ feature_floor ]]
+	// {EE-0850} floor: bad parameter
+	EE_FLOOR_BADSOURCE,
+
+	// MDW-2014-09-28: [[ feature_floor ]]
+	// {EE-0851} ceil: bad parameter
+	EE_CEIL_BADSOURCE,
+	
+	// {EE-0852} load: error in extension expression
+	EE_LOAD_BADEXTENSION,
+	
+	// {EE-0853} load: error in resource path expression
+	EE_LOAD_BADRESOURCEPATH,
+    
+    // {EE-0854} Error evaluating expression
+    EE_EXPR_EVALERROR,
+    
+    // {EE-0855} Property: value is not a character
+    EE_PROPERTY_NAC,
+    
+    // {EE-0856} Property: value is not a string
+    EE_PROPERTY_NAS,
+    
+    // {EE-0857} Property: value is not a color
+    EE_PROPERTY_NOTACOLOR,
+    
+    // {EE-0858} Property: value is not a rectangle
+    EE_PROPERTY_NOTARECT,
+    
+    // {EE-0859} Property: value is not a point
+    EE_PROPERTY_NOTAPOINT,
+    
+    // {EE-0860} Property: value is not a pair of integers
+    EE_PROPERTY_NOTAINTPAIR,
+    
+    // {EE-0861} Property: value is not a quadruple of integers
+    EE_PROPERTY_NOTAINTQUAD,
+    
+    // {EE-0862} Property: invalid enumeration value
+    EE_PROPERTY_BADENUMVALUE,
+    
+    // {EE-0863} Backdrop: invalid value
+    EE_BACKDROP_INVALIDVALUE,
+    
+    // {EE-0864} Property: value is not an array
+    EE_PROPERTY_NOTANARRAY,
+    
+    // {EE-0865} MCInternalPayloadPatch: error in patch item expression
+    EE_INTERNAL_PATCH_BADITEM,
+    
+    // {EE-0866} MCInternalPayloadPatch: error in base item expression
+    EE_INTERNAL_BASE_BADITEM,
+
+    // {EE-0867} System error: function
+    EE_SYSTEM_FUNCTION,
+
+    // {EE-0867} System error: code
+    EE_SYSTEM_CODE,
+
+    // {EE-0867} System error: message
+    EE_SYSTEM_MESSAGE,
 };
 
 extern const char *MCexecutionerrors;

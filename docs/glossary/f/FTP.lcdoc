@@ -1,0 +1,12 @@
+Name: FTP
+
+Synonyms: File Transfer Protocol,FTP
+
+Type: glossary
+
+Description:
+File Transfer Protocol. The <protocol> used for transferring files via the Internet to and from  a file <server>.
+
+References: protocol (glossary), server (glossary)
+
+Tags: networking

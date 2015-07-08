@@ -53,7 +53,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <SystemConfiguration/SCDynamicStore.h>
 #include <SystemConfiguration/SCDynamicStoreKey.h>
 #include <SystemConfiguration/SCSchemaDefinitions.h>
-extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release);
+// SN-2014-12-22: [[ Bug 14278 ]] Parameter added to choose a UTF-8 string.
+extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release, bool p_utf8_string);
 #endif
 
 #include <sys/types.h>
@@ -116,6 +117,7 @@ extern bool path2utf(MCStringRef p_path, MCStringRef& r_utf);
 extern Boolean wsainit(void);
 extern HWND sockethwnd;
 extern "C" char *strdup(const char *);
+extern HANDLE g_socket_wakeup;
 #endif
 
 #define READ_SOCKET_SIZE  4096
@@ -637,8 +639,12 @@ void MCS_close_socket(MCSocket *s)
 	s->closing = True;
 }
 
-void MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const char *until, MCNameRef mptr, MCDataRef& r_data)
+// PM-2015-01-20: [[ Bug 14409 ]] Return nil in case of failure
+MCDataRef MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const char *until, MCNameRef mptr)
 {
+    MCDataRef t_data;
+    t_data = nil;
+    
 	if (s->datagram)
 	{
 		MCNameDelete(s->message);
@@ -654,7 +660,7 @@ void MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const char 
 		if (s->accepting)
 		{
 			MCresult->sets("can't read from this socket");
-			return;
+			return t_data;
 		}
 		if (until == NULL)
 		{
@@ -669,7 +675,10 @@ void MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const char 
 		{
 #if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 			if (MCnoui)
+			{
 				s->doread = True;
+				SetEvent(g_socket_wakeup);
+			}
 			else
 				PostMessageA(sockethwnd, WM_USER, s->fd, FD_OOB);
 #else
@@ -679,11 +688,37 @@ void MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const char 
 			ctxt . SetTheResultToEmpty();
 			
 		}
-		
 		else
 		{
 			s->waiting = True;
-			while (True)
+
+			// SN-2015-05-11: [[ Bug 14466 ]] On a native Windows machine,
+			//  the time between the call to WSAAsyncSelect in setselect()
+			//  and the call to s->read_done() below might not be enough
+			//  to let Windows send the message to MCWindowProc.
+            //  If that occurs, with a read until empty, no byte will be
+			//  found by read_done, and the read will always return an
+			//  an empty value the first time.
+			s -> readsome();
+
+			// SN-2015-03-30: [[ Bug 14466 ]] We want a wait to occur
+			//  to avoid any tigh script loop such as
+			//     repeat forever
+			//        read from socket tSocket until empty
+			//        if it is not empty then exit repeat
+			//     end repeat
+			//  to hang: the wait statement, in the following loop, would
+			//  never be reached since s->read_done always returns true
+			//  when reading until empty.
+			bool t_continue;
+			t_continue = true;
+			if (MCscreen->wait(0.0, False, True))
+			{
+				MCresult->sets("interrupted");
+				t_continue = false;
+			}
+
+			while (t_continue)
 			{
 				if (eptr == s->revents && s->read_done())
 				{
@@ -691,7 +726,7 @@ void MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const char 
 					if (until != NULL && *until == '\n' && !*(until + 1)
 					        && size && s->rbuffer[size - 1] == '\r')
 						size--;
-					/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)s->rbuffer, size, r_data);
+					/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)s->rbuffer, size, t_data);
 					s->nread -= eptr->size;
 					// MW-2010-11-19: [[ Bug 9182 ]] This should be a memmove (I think)
 					memmove(s->rbuffer, s->rbuffer + eptr->size, s->nread);
@@ -719,12 +754,15 @@ void MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const char 
 					break;
 				}
 			}
-			eptr->remove
-			(s->revents);
+			eptr->remove(s->revents);
 			delete eptr;
 			s->waiting = False;
+            return t_data;
 		}
 	}
+    
+    // SN-2015-01-29: [[ Bug 14409 ]] The function must return something
+    return t_data;
 }
 
 void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRef mptr)
@@ -857,8 +895,8 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 
 	if (bind(sock, (struct sockaddr *)&addr, sizeof(addr))
 	        || (!datagram && listen(sock, SOMAXCONN))
-	        || !MCnoui && WSAAsyncSelect(sock, sockethwnd, WM_USER,
-	                                     datagram ? FD_READ : FD_ACCEPT))
+	        || (!MCnoui && WSAAsyncSelect(sock, sockethwnd, WM_USER, datagram ? FD_READ : FD_ACCEPT))
+			|| (MCnoui && WSAEventSelect(sock, g_socket_wakeup, datagram ? FD_READ : FD_ACCEPT)))
 	{
 		MCS_seterrno(WSAGetLastError());
 		char buffer[17 + I4L];
@@ -879,10 +917,13 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 #endif
 
 	char *portname = new char[U2L];
-	sprintf(portname, "%d", port);
+    
+    // AL-2015-01-05: [[ Bug 14287 ]] Create name using the number of chars written to the string.
+    uindex_t t_length;
+    t_length = sprintf(portname, "%d", port);
 
 	MCNewAutoNameRef t_portname;
-	MCNameCreateWithNativeChars((char_t*)portname, U2L, &t_portname);
+	MCNameCreateWithNativeChars((char_t*)portname, t_length, &t_portname);
 	return new MCSocket(*t_portname, object, message, datagram, sock, True, False, secure);
 }
 
@@ -1003,7 +1044,7 @@ bool MCS_hostaddress(MCStringRef &r_host_address)
 			CFStringRef t_string;
 			t_string = (CFStringRef)CFArrayGetValueAtIndex(t_addresses, 0);
 			if (t_string != NULL)
-				t_result = osx_cfstring_to_cstring(t_string, false);
+				t_result = osx_cfstring_to_cstring(t_string, false, false);
 		}
 	}
 	
@@ -1190,6 +1231,7 @@ Boolean MCSocket::read_done()
 		if (nread >= revents->size)
 		{
 			if (revents->size == 0)
+			{
 				if (nread == 0)
 					return False;
 				else
@@ -1198,6 +1240,7 @@ Boolean MCSocket::read_done()
 					if (fd == 0)
 						MCresult->sets("eof");
 				}
+			}
 			return True;
 		}
 	}
@@ -1561,10 +1604,10 @@ void MCSocket::setselect()
 	if (fd)
 	{
 #if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
-		if (connected && !closing && (!shared && revents != NULL || accepting || datagram))
+		if (connected && !closing && ((!shared && revents != NULL) || accepting || datagram))
 #else
 
-		if (connected && !closing && (!shared && revents != NULL|| accepting))
+		if (connected && !closing && ((!shared && revents != NULL) || accepting))
 #endif
 
 			bioselectstate |= BIONB_TESTREAD;
@@ -1577,16 +1620,21 @@ void MCSocket::setselect()
 void MCSocket::setselect(uint2 sflags)
 {
 #if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
+	long event = FD_CLOSE;
+	if (!connected)
+		event |= FD_CONNECT;
+	if (sflags & BIONB_TESTWRITE)
+		event |= FD_WRITE;
+	if (sflags & BIONB_TESTREAD)
+		event |= FD_READ;
+
 	if (!MCnoui)
 	{
-		long event = FD_CLOSE;
-		if (!connected)
-			event |= FD_CONNECT;
-		if (sflags & BIONB_TESTWRITE)
-			event |= FD_WRITE;
-		if (sflags & BIONB_TESTREAD)
-			event |= FD_READ;
 		WSAAsyncSelect(fd, sockethwnd, WM_USER, event);
+	}
+	else
+	{
+		WSAEventSelect(fd, g_socket_wakeup, event);
 	}
 #endif
 #ifdef _MACOSX
@@ -1671,6 +1719,7 @@ int4 MCSocket::write(const char *buffer, uint4 towrite, Boolean securewrite)
 		{
 #endif
 			if (sslstate & SSTATE_RETRYCONNECT)
+			{
 				if (!sslconnect())
 				{
 					errno = EPIPE;
@@ -1678,9 +1727,12 @@ int4 MCSocket::write(const char *buffer, uint4 towrite, Boolean securewrite)
 				}
 #ifndef _WINDOWS
 				else if (sslstate & SSTATE_RETRYACCEPT)
+				{
 					if (!sslaccept())
 						return -1;
+				}
 #endif
+			}
 			//for write which requires read...if read is available return and wait for write again
 			errno =  EAGAIN;
 			return -1;
@@ -2106,10 +2158,12 @@ void MCSocket::sslclose()
 	if (_ssl_context)
 	{
 		if (_ssl_conn)
+		{
 			if (sslstate & SSTATE_CONNECTED)
 				SSL_shutdown(_ssl_conn);
 			else
 				SSL_clear(_ssl_conn);
+		}
 		SSL_free(_ssl_conn);
 		SSL_CTX_free(_ssl_context);
 		_ssl_context = NULL;

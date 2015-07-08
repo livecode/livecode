@@ -38,6 +38,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "debug.h"
 #include "param.h"
 
+#include "statemnt.h"
+#include "license.h"
+#include "scriptpt.h"
+#include "newobj.h"
+
 // SN-2014-09-05: [[ Bug 13378 ]] Include the definition of MCServerScript
 #ifdef _SERVER
 #include "srvscript.h"
@@ -93,9 +98,10 @@ bool MCExecContext::ConvertToString(MCValueRef p_value, MCStringRef& r_string)
         t_length = MCU_r8tos(t_buffer, t_buffer_size, MCNumberFetchAsReal((MCNumberRef)p_value), m_nffw, m_nftrailing, m_nfforce);
 
         bool t_success;
-        t_success = MCStringCreateWithNativeCharsAndRelease((char_t *)t_buffer, t_length, r_string) &&
+        t_success = MCStringCreateWithNativeChars((char_t *)t_buffer, t_length, r_string) &&
                 MCStringSetNumericValue(r_string, MCNumberFetchAsReal((MCNumberRef)p_value));
 
+        delete[] t_buffer;
         return t_success;
     }
     break;
@@ -126,7 +132,7 @@ bool MCExecContext::ConvertToNumber(MCValueRef p_value, MCNumberRef& r_number)
             if (MCStringGetLength(MCNameGetString((MCNameRef)p_value)) != 0 &&
                     !MCStringGetNumericValue(MCNameGetString((MCNameRef)p_value), t_number))
             {
-                if (!MCU_stor8(MCNameGetString((MCNameRef)p_value), t_number, m_convertoctals))
+                if (!MCTypeConvertStringToReal(MCNameGetString((MCNameRef)p_value), t_number, m_convertoctals))
                     break;
 
                 // Converting to octals doesn't generate the 10-based number stored in the string
@@ -144,7 +150,7 @@ bool MCExecContext::ConvertToNumber(MCValueRef p_value, MCNumberRef& r_number)
             // Fetches the numeric value in case it exists, or stores the one therefore computed otherwise
             if (MCStringGetLength((MCStringRef)p_value) != 0 && !MCStringGetNumericValue((MCStringRef)p_value, t_number))
             {
-                if (!MCU_stor8((MCStringRef)p_value, t_number, m_convertoctals))
+                if (!MCTypeConvertStringToReal((MCStringRef)p_value, t_number, m_convertoctals))
                     break;
 
                 // Converting to octals doesn't generate the 10-based number stored in the string
@@ -178,7 +184,8 @@ bool MCExecContext::ConvertToReal(MCValueRef p_value, real64_t& r_double)
 	return true;
 }
 
-bool MCExecContext::ConvertToArray(MCValueRef p_value, MCArrayRef &r_array)
+// SN-2014-12-03: [[ Bug 14147 ]] Array conversion is not always permissive, neither always strict
+bool MCExecContext::ConvertToArray(MCValueRef p_value, MCArrayRef &r_array, bool p_strict)
 {
     if (MCValueIsEmpty(p_value))
     {
@@ -193,7 +200,8 @@ bool MCExecContext::ConvertToArray(MCValueRef p_value, MCArrayRef &r_array)
         // array (for example, 'the extents of "foo"' should return empty
         // rather than throwing an error).
         MCAutoStringRef t_ignored;
-        if (ConvertToString(p_value, &t_ignored))
+        // SN-2014-12-03: [[ Bug 14147 ]] Do not try the string conversion if the
+        if (!p_strict && ConvertToString(p_value, &t_ignored))
         {
             r_array = MCValueRetain(kMCEmptyArray);
             return true;
@@ -306,7 +314,9 @@ bool MCExecContext::ConvertToNumberOrArray(MCExecValue& x_value)
         if (!ConvertToReal(x_value . valueref_value, t_real))
         {
             MCAutoArrayRef t_array;
-            if (!ConvertToArray(x_value . valueref_value, &t_array))
+            // SN-2014-12-03: [[ Bug 14147 ]] An array should not be returned if the
+            //  value is neither empty or an array.
+            if (!ConvertToArray(x_value . valueref_value, &t_array, true))
                 return false;
             
             MCValueRelease(x_value . valueref_value);
@@ -357,18 +367,8 @@ bool MCExecContext::ConvertToData(MCValueRef p_value, MCDataRef& r_data)
     if (!ConvertToString(p_value, &t_string))
         return false;
     
-    // Strings always convert to data as native characters
-    uindex_t t_native_length;
-    if (MCStringIsNative(*t_string))
-    {
-        const byte_t *t_data = (const byte_t *)MCStringGetNativeCharPtrAndLength(*t_string, t_native_length);
-        return MCDataCreateWithBytes(t_data, t_native_length, r_data);
-    }
-    
-    char_t *t_native_chars;
-    MCMemoryNewArray(MCStringGetLength(*t_string), t_native_chars);
-    t_native_length = MCStringGetNativeChars(*t_string, MCRangeMake(0, UINDEX_MAX), t_native_chars);
-    return MCDataCreateWithBytesAndRelease((byte_t *)t_native_chars, t_native_length, r_data);
+    // AL-2014-12-12: [[ Bug 14208 ]] Implement a specific function to aid conversion to data
+    return MCDataConvertStringToData(*t_string, r_data);
 }
 
 bool MCExecContext::ConvertToName(MCValueRef p_value, MCNameRef& r_name)
@@ -723,6 +723,7 @@ bool FormatUnsignedInteger(uinteger_t p_integer, MCStringRef& r_output)
 
 
 ////////////////////////////////////////////////////////////////////////////////
+
 bool MCExecContext::EvaluateExpression(MCExpression *p_expr, Exec_errors p_error, MCExecValue& r_result)
 {
 	MCAssert(p_expr != nil);
@@ -760,21 +761,23 @@ bool MCExecContext::TryToEvaluateExpression(MCExpression *p_expr, uint2 line, ui
 {
     MCAssert(p_expr != nil);
 	
-    bool t_success, t_can_debug;
-    t_success = false;
+    bool t_failure, t_can_debug;
+    t_can_debug = true;
     
-    do
+    // AL-2014-11-06: [[ Bug 13930 ]] Make sure all the 'TryTo...' functions do the correct thing
+    p_expr -> eval(*this, r_result);
+    
+    while (t_can_debug && (t_failure = HasError()) &&
+           (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
     {
-        p_expr -> eval(*this, r_result);
-        if (!HasError())
-            t_success = true;
-        else
-            t_can_debug = MCB_error(*this, line, pos, p_error);
+        t_can_debug = MCB_error(*this, line, pos, p_error);
         IgnoreLastError();
+        
+        if (t_can_debug)
+            p_expr -> eval(*this, r_result);
     }
-	while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
     
-	if (t_success)
+	if (!t_failure)
 		return true;
 	
 	LegacyThrow(p_error);
@@ -785,29 +788,41 @@ bool MCExecContext::TryToEvaluateExpressionAsDouble(MCExpression *p_expr, uint2 
 {
     MCAssert(p_expr != nil);
 	
-    bool t_success, t_can_debug;
-    t_success = false;
+    bool t_failure, t_can_debug;
     t_can_debug = true;
     
     // SN-2014-04-08 [[ NumberExpectation ]] Ensure we get a number when it's possible instead of a ValueRef
     Boolean t_old_expectation = m_numberexpected;
     m_numberexpected = True;
-    do
+
+    MCExecValue t_value;
+    double t_result;
+
+    // AL-2014-11-06: [[ Bug 13930 ]] Make sure all the 'TryTo...' functions do the correct thing
+    // SN-2014-12-22: [[ Bug 14277 ]] Check whether the evaluation went well before doing any conversion
+    p_expr -> eval_ctxt(*this, t_value);
+    if (!HasError() && !MCExecTypeIsNumber(t_value . type))
+        MCExecTypeConvertAndReleaseAlways(*this, t_value . type, &t_value, kMCExecValueTypeDouble, &t_result);
+    
+    while (t_can_debug && (t_failure = HasError()) &&
+           (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
     {
-        MCExecValue t_value;        
-        p_expr -> eval_ctxt(*this, t_value);
+        t_can_debug = MCB_error(*this, line, pos, p_error);
+        IgnoreLastError();
         
-        if (!HasError())
-            t_success = true;
-        else
+        if (t_can_debug)
         {
-            t_can_debug = MCB_error(*this, line, pos, p_error);
-            IgnoreLastError();
-            break;
+            p_expr -> eval_ctxt(*this, t_value);
+            // SN-2014-12-22: [[ Bug 14277 ]] Check whether the evaluation went well before doing any conversion
+            if (!HasError() && !MCExecTypeIsNumber(t_value . type))
+                MCExecTypeConvertAndReleaseAlways(*this, t_value . type, &t_value, kMCExecValueTypeDouble, &t_result);
         }
-        
+    }
+    
+	if (!t_failure)
+    {
         if (!MCExecTypeIsNumber(t_value . type))
-            MCExecTypeConvertAndReleaseAlways(*this, t_value . type, &t_value, kMCExecValueTypeDouble, &r_result);
+            r_result = t_result;
         else if (t_value . type == kMCExecValueTypeInt)
             r_result = t_value . int_value;
         else if (t_value . type == kMCExecValueTypeUInt)
@@ -816,12 +831,10 @@ bool MCExecContext::TryToEvaluateExpressionAsDouble(MCExpression *p_expr, uint2 
             r_result = t_value . float_value;
         else
             r_result = t_value . double_value;
-    }
-	while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
-    
-    m_numberexpected = t_old_expectation;
-	if (t_success)
+        
+        m_numberexpected = t_old_expectation;
 		return true;
+    }
 	
 	LegacyThrow(p_error);
 	return false;
@@ -834,9 +847,8 @@ bool MCExecContext::TryToEvaluateParameter(MCParameter *p_param, uint2 line, uin
     bool t_failure, t_can_debug;
     t_can_debug = true;
     
-    // AL-2014-08-22: [[ Bug 13255 ]] Ensure error is thrown when param evaluation fails first time
-    //  and t_can_debug is false.
-    while (t_can_debug && (t_failure = !p_param -> eval_ctxt(*this, r_result)) &&
+    // AL-2014-11-06: [[ Bug 13930 ]] Make sure all the 'TryTo...' functions do the correct thing
+    while (t_can_debug && (t_failure = (!p_param -> eval_ctxt(*this, r_result) || HasError())) &&
            (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
     {
         t_can_debug = MCB_error(*this, line, pos, p_error);
@@ -856,24 +868,18 @@ bool MCExecContext::TryToEvaluateExpressionAsNonStrictBool(MCExpression * p_expr
     MCAssert(p_expr != nil);
     MCExecValue t_value;
     
-    bool t_success, t_can_debug;
-    t_success = false;
+    bool t_failure, t_can_debug;
     t_can_debug = true;
     
-    // AL-2014-10-27: [[ Bug 13824 ]] The loop here should continue to
-    //  try to evaluate as non-strict bool, rather than only trying once.
-    do
+    // AL-2014-11-06: [[ Bug 13930 ]] Make sure all the 'TryTo...' functions do the correct thing
+    while (t_can_debug && (t_failure = !EvalExprAsNonStrictBool(p_expr, p_error, r_value)) &&
+           (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
     {
-        t_success = EvalExprAsNonStrictBool(p_expr, p_error, r_value);
-        if (!t_success)
-        {
-            t_can_debug = MCB_error(*this, line, pos, p_error);
-            IgnoreLastError();
-        }
+        t_can_debug = MCB_error(*this, line, pos, p_error);
+        IgnoreLastError();
     }
-    while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
     
-    if (t_success)
+    if (!t_failure)
 		return true;
 	
 	LegacyThrow(p_error);
@@ -882,21 +888,18 @@ bool MCExecContext::TryToEvaluateExpressionAsNonStrictBool(MCExpression * p_expr
 
 bool MCExecContext::TryToSetVariable(MCVarref *p_var, uint2 line, uint2 pos, Exec_errors p_error, MCExecValue p_value)
 {
-    bool t_success, t_can_debug;
-    t_success = false;
+    bool t_failure, t_can_debug;
+    t_can_debug = true;
     
-    do
+    // AL-2014-11-06: [[ Bug 13930 ]] Make sure all the 'TryTo...' functions do the correct thing
+    while (t_can_debug && (t_failure = (!p_var -> give_value(*this, p_value) || HasError())) &&
+           (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
     {
-        p_var -> give_value(*this, p_value);
-        if (!HasError())
-            t_success = true;
-        else
-            t_can_debug = MCB_error(*this, line, pos, p_error);
+        t_can_debug = MCB_error(*this, line, pos, p_error);
         IgnoreLastError();
     }
-	while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
     
-	if (t_success)
+	if (!t_failure)
 		return true;
 	
 	LegacyThrow(p_error);
@@ -1128,9 +1131,9 @@ MCVarref* MCExecContext::GetIt() const
 
 void MCExecContext::SetItToValue(MCValueRef p_value)
 {
-    MCVariable *t_var;
-    t_var = GetIt() -> evalvar(*this);
-	t_var -> setvalueref(p_value);
+    MCAutoPointer<MCContainer> t_container;
+    GetIt() -> evalcontainer(*this, &t_container);
+	t_container -> set_valueref(p_value);
 }
 
 void MCExecContext::SetItToEmpty(void)
@@ -1222,6 +1225,168 @@ void MCExecContext::SetTheResultToCString(const char *p_string)
 void MCExecContext::SetTheResultToBool(bool p_bool)
 {
     MCresult -> sets(MCU_btos(p_bool));
+}
+
+// SN-2015-06-03: [[ Bug 11277 ]] Refactor MCExecPoint update
+void MCExecContext::deletestatements(MCStatement* p_statements)
+{
+    while (p_statements != NULL)
+    {
+        MCStatement *tsptr = p_statements;
+        p_statements = p_statements->getnext();
+        delete tsptr;
+    }
+}
+
+void MCExecContext::eval(MCExecContext &ctxt, MCStringRef p_expression, MCValueRef &r_value)
+{
+    MCScriptPoint sp(ctxt, p_expression);
+    // SN-2015-06-03: [[ Bug 11277 ]] When we are out of handler, then it simply
+    //  sets the ScriptPoint handler to NULL (same as post-constructor state).
+    sp.sethandler(ctxt . GetHandler());
+    MCExpression *exp = NULL;
+    Symbol_type type;
+
+    if (sp.parseexp(False, True, &exp) == PS_NORMAL && sp.next(type) == PS_EOF)
+        ctxt . EvalExprAsValueRef(exp, EE_HANDLER_BADEXP, r_value);
+    else
+        ctxt . Throw();
+
+    delete exp;
+}
+
+void MCExecContext::eval_ctxt(MCExecContext &ctxt, MCStringRef p_expression, MCExecValue& r_value)
+{
+    MCScriptPoint sp(ctxt, p_expression);
+    // SN-2015-06-03: [[ Bug 11277 ]] When we are out of handler, then it simply
+    //  sets the ScriptPoint handler to NULL (same as post-constructor state).
+    sp.sethandler(ctxt . GetHandler());
+    MCExpression *exp = NULL;
+    Symbol_type type;
+
+    if (sp.parseexp(False, True, &exp) == PS_NORMAL && sp.next(type) == PS_EOF)
+        ctxt . EvaluateExpression(exp, EE_HANDLER_BADEXP, r_value);
+    else
+        ctxt . Throw();
+
+    delete exp;
+}
+
+void MCExecContext::doscript(MCExecContext &ctxt, MCStringRef p_script, uinteger_t p_line, uinteger_t p_pos)
+{
+    MCScriptPoint sp(ctxt, p_script);
+    MCStatement *curstatement = NULL;
+    MCStatement *statements = NULL;
+    MCStatement *newstatement = NULL;
+    Symbol_type type;
+    const LT *te;
+    Exec_stat stat = ES_NORMAL;
+    Boolean oldexplicit = MCexplicitvariables;
+    MCexplicitvariables = False;
+    uint4 count = 0;
+    sp.setline(p_line - 1);
+    while (stat == ES_NORMAL)
+    {
+        switch (sp.next(type))
+        {
+        case PS_NORMAL:
+            if (type == ST_ID)
+                if (sp.lookup(SP_COMMAND, te) != PS_NORMAL)
+                    newstatement = new MCComref(sp.gettoken_nameref());
+                else
+                {
+                    if (te->type != TT_STATEMENT)
+                    {
+                        MCeerror->add(EE_DO_NOTCOMMAND, p_line, p_pos, sp.gettoken_stringref());
+                        stat = ES_ERROR;
+                    }
+                    else
+                        newstatement = MCN_new_statement(te->which);
+                }
+            else
+            {
+                MCeerror->add(EE_DO_NOCOMMAND, p_line, p_pos, sp.gettoken_stringref());
+                stat = ES_ERROR;
+            }
+            if (stat == ES_NORMAL)
+            {
+                if (curstatement == NULL)
+                    statements = curstatement = newstatement;
+                else
+                {
+                    curstatement->setnext(newstatement);
+                    curstatement = newstatement;
+                }
+                if (curstatement->parse(sp) != PS_NORMAL)
+                {
+                    MCeerror->add(EE_DO_BADCOMMAND, p_line, p_pos, p_script);
+                    stat = ES_ERROR;
+                }
+                count += curstatement->linecount();
+            }
+            break;
+        case PS_EOL:
+            if (sp.skip_eol() != PS_NORMAL)
+            {
+                MCeerror->add(EE_DO_BADLINE, p_line, p_pos, p_script);
+                stat = ES_ERROR;
+            }
+            break;
+        case PS_EOF:
+            stat = ES_PASS;
+            break;
+        default:
+            stat = ES_ERROR;
+        }
+    }
+    MCexplicitvariables = oldexplicit;
+
+    if (MClicenseparameters . do_limit > 0 && count >= MClicenseparameters . do_limit)
+    {
+        MCeerror -> add(EE_DO_NOTLICENSED, p_line, p_pos, p_script);
+        stat = ES_ERROR;
+    }
+
+    if (stat == ES_ERROR)
+    {
+        deletestatements(statements);
+        ctxt.Throw();
+        return;
+    }
+
+    MCExecContext ctxt2(ctxt);
+    while (statements != NULL)
+    {
+        statements->exec_ctxt(ctxt2);
+        Exec_stat stat = ctxt2 . GetExecStat();
+        if (stat == ES_ERROR)
+        {
+            deletestatements(statements);
+            MCeerror->add(EE_DO_BADEXEC, p_line, p_pos, p_script);
+            ctxt.Throw();
+            return;
+        }
+        if (MCexitall || stat != ES_NORMAL)
+        {
+            deletestatements(statements);
+            if (stat == ES_ERROR)
+                ctxt.Throw();
+            return;
+        }
+        else
+        {
+            MCStatement *tsptr = statements;
+            statements = statements->getnext();
+            delete tsptr;
+        }
+    }
+    if (MCscreen->abortkey())
+    {
+        MCeerror->add(EE_DO_ABORT, p_line, p_pos);
+        ctxt.Throw();
+        return;
+    }
+    return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1420,7 +1585,7 @@ static bool MCPropertyParseDoubleList(MCStringRef p_input, char_t p_delimiter, u
             t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_double_string);
 		
 		if (t_success)
-			t_success = MCU_stor8(*t_double_string, t_d);
+			t_success = MCTypeConvertStringToReal(*t_double_string, t_d);
 		
 		if (t_success)
 			t_success = t_list . Push(t_d);
@@ -1462,9 +1627,6 @@ static bool MCPropertyParseStringList(MCStringRef p_input, char_t p_delimiter, u
 		
 		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
-		
-        if (t_new_offset <= t_old_offset)
-            break;
         
 		if (t_success)
             t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), t_string);
@@ -1646,7 +1808,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 r_value . type = kMCExecValueTypeNameRef;
             }
         }
-            break;
+        break;
             
         case kMCPropertyTypeColor:
         {
@@ -1961,13 +2123,11 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             ((void(*)(MCExecContext&, void *, uindex_t&, MCStringRef*&))prop -> getter)(ctxt, mark, t_count, t_value);
             if (!ctxt . HasError())
             {
-                char_t t_delimiter;
-                t_delimiter = prop -> type == kMCPropertyTypeLinesOfString ? '\n' : ',';
                 if (MCPropertyFormatStringList(t_value, t_count, '\n', r_value . stringref_value))
                 {
                     r_value . type = kMCExecValueTypeStringRef;
                 }
-                for (int i = 0; i < t_count; ++i)
+                for (uindex_t i = 0; i < t_count; ++i)
                     MCValueRelease(t_value[i]);
                 if (t_count > 0)
                     MCMemoryDeleteArray(t_value);
@@ -2019,6 +2179,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             break;
             
         case kMCPropertyTypeLinesOfPoint:
+        case kMCPropertyTypeLegacyPoints:
         {
             MCPoint* t_value;
             uindex_t t_count;
@@ -2336,6 +2497,27 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             ((void(*)(MCExecContext&, void *, MCExecValue&))prop -> getter)(ctxt, mark, r_value);
         }
             break;
+         
+        case kMCPropertyTypeProperItemsOfString:
+        case kMCPropertyTypeProperLinesOfString:
+        {
+            MCAutoProperListRef t_proper_list;
+            ((void(*)(MCExecContext&, void *, MCProperListRef&))prop -> getter)(ctxt, mark, &t_proper_list);
+            if (!ctxt . HasError())
+            {
+                MCListRef t_list;
+                /* UNCHECKED */ MCListCreateMutable(prop -> type == kMCPropertyTypeProperLinesOfString ? '\n' : ',', t_list);
+                uintptr_t t_iterator;
+                t_iterator = 0;
+                MCValueRef t_element;
+                while(MCProperListIterate(*t_proper_list, t_iterator, t_element))
+                    /* UNCHECKED */ MCListAppend(t_list, t_element);
+                
+                r_value . type = kMCExecValueTypeStringRef;
+                /* UNCHECKED */ MCListCopyAsStringAndRelease(t_list, r_value . stringref_value);
+            }
+        }
+        break;
             
         default:
             ctxt . Unimplemented();
@@ -2868,6 +3050,25 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             ((void(*)(MCExecContext&, void *, MCExecValue))prop -> setter)(ctxt, mark, p_value);
         }
             break;
+            
+        case kMCPropertyTypeLegacyPoints:
+        {
+            MCAutoStringRef t_input;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_input));
+            if (!ctxt . HasError())
+            {
+                MCPoint *t_value;
+                uindex_t t_count;
+                t_value = nil;
+                t_count = 0;
+                MCU_parsepoints(t_value, t_count, *t_input);
+                
+                ((void(*)(MCExecContext&, void *, uindex_t, MCPoint*))prop -> setter)(ctxt, mark, t_count, t_value);
+                
+                MCMemoryDeleteArray(t_value);
+            }
+        }
+        break;
             
         default:
             ctxt . Unimplemented();

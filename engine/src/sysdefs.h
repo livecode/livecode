@@ -125,6 +125,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 //////////////////////////////////////////////////////////////////////
 //
+//  FOUNDATION SYSTEM LIBRARY
+//
+
+#include <foundation-system.h>
+
+//////////////////////////////////////////////////////////////////////
+//
 //  LEGACY INCLUDES AND DEFINES
 //
 
@@ -238,6 +245,7 @@ typedef struct __MCWinSysMetafileHandle *MCWinSysMetafileHandle;
 typedef struct __MCWinSysEnhMetafileHandle *MCWinSysEnhMetafileHandle;
 
 #define PLACEMENT_NEW_DEFINED
+#define __PLACEMENT_NEW_INLINE
 inline void *operator new (size_t size, void *p)
 {
 	return p;
@@ -269,6 +277,9 @@ extern void _dbg_MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize,
 
 #endif
 
+// VS before 2013 doesn't provide this function
+inline float roundf(float f) { return f >= 0.0f ? floorf(f + 0.5f) : ceilf(f - 0.5f); }
+
 // MW-2010-10-14: This constant is the amount of 'extra' stack space ensured to be present
 //   after a recursionlimit check has failed.
 #define MC_UNCHECKED_STACKSIZE 65536U
@@ -280,6 +291,11 @@ struct MCFontStruct
 	int ascent;
 	int descent;
 	Boolean printer;
+    
+    coord_t m_ascent;
+    coord_t m_descent;
+    coord_t m_leading;
+    coord_t m_xheight;
 };
 
 #define SECONDS_MIN 0.0
@@ -337,6 +353,13 @@ struct MCFontStruct
 	uint2 style;
 	int ascent;
 	int descent;
+    
+    coord_t m_ascent;
+    coord_t m_descent;
+    coord_t m_em;
+    coord_t m_xheight;
+    coord_t m_capheight;
+    coord_t m_leading;
 };
 
 #define fixmaskrop(a) (a)
@@ -395,6 +418,11 @@ struct MCFontStruct
 	uint16_t size;
 	uint2 ascent;
 	uint2 descent;
+    
+    coord_t m_ascent;
+    coord_t m_descent;
+    coord_t m_leading;
+    coord_t m_xheight;
 };
 
 #define fixmaskrop(a) (a)
@@ -443,6 +471,11 @@ struct MCFontStruct
 	uint2 style;
 	int ascent;
 	int descent;
+    
+    coord_t m_ascent;
+    coord_t m_descent;
+    coord_t m_leading;
+    coord_t m_xheight;
 };
 
 #define fixmaskrop(a) (a)
@@ -484,6 +517,11 @@ struct MCFontStruct
 	int ascent;
 	int descent;
 	MCSysFontHandle fid;
+    
+    coord_t m_ascent;
+    coord_t m_descent;
+    coord_t m_leading;
+    coord_t m_xheight;
 };
 
 #define fixmaskrop(a) (a)
@@ -492,6 +530,12 @@ struct MCFontStruct
 #define SECONDS_MIN 0.0
 #define SECONDS_MAX 32535244799.0
 
+#endif
+
+// SN-2015-04-17: [[ Bug 15187 ]] Needed to know whether we are compiling for
+//  iOS Device or iOS Simulator
+#if defined TARGET_SUBPLATFORM_IPHONE
+#include <TargetConditionals.h>
 #endif
 
 //////////////////////////////////////////////////////////////////////
@@ -507,7 +551,9 @@ inline void *operator new (size_t size, void *p)
 #endif
 
 // MW-2014-08-14: [[ Bug 13154 ]] Make sure we use the nothrow variants of new / delete.
-#ifndef __VISUALC__
+// SN-2015-04-17: [[ Bug 15187 ]] Don't use the nothrow variant on iOS Simulator
+//  as they won't let iOS Simulator 6.3 engine compile.
+#if (!defined __VISUALC__) && (!TARGET_IPHONE_SIMULATOR)
 void *operator new (size_t size) throw();
 void *operator new[] (size_t size) throw();
 #endif
@@ -1295,8 +1341,10 @@ enum Chunk_term {
     CT_EPS,
     CT_MAGNIFY,
     CT_COLOR_PALETTE,
+    CT_WIDGET,
     CT_FIELD,
 	CT_LAST_CONTROL = CT_FIELD,
+    CT_FIRST_TEXT_CHUNK = CT_FIELD,
     CT_LINE,
     CT_PARAGRAPH,
     CT_SENTENCE,
@@ -1368,10 +1416,6 @@ struct MCObjectChunkIndexPtr
 	MCMarkedText mark;
     MCNameRef index;
 };
-
-// MM-2014-07-31: [[ ThreadedRendering ]]
-typedef struct __MCThreadCondition *MCThreadConditionRef;
-typedef struct __MCThreadMutex *MCThreadMutexRef;
 
 //////////////////////////////////////////////////////////////////////
 

@@ -1,0 +1,14 @@
+Name: pass by value
+
+Synonyms: pass by value,passed by value,passes by value,passing by value,pass-by-value,call by value,called by value,calls by value,calling by value,call-by-value
+
+Type: glossary
+
+Description:
+A way of using <parameter|parameters> where the <value|values> of the <argument|arguments> are passed to the <call|called> <handler>, but changing the <parameter|parameters> within the <call|called> <handler> has no effect on the <call|calling> <handler>. 
+ 
+If you pass a <variable> by value to another <handler>, the other <handler> can't affect the <variable|variable's> <value> in the original <handler>.
+
+References: handler (glossary), parameter (glossary), variable (glossary), argument (glossary), value (glossary), call (glossary)
+
+Tags: properties

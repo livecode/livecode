@@ -1,0 +1,36 @@
+Name: arrayEncode
+
+Type: function
+
+Syntax: arrayEncode(<array>,[<version>])
+
+Summary: Serializes a LiveCode array.
+
+Introduced: 3.5
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+savePreferencesData "displayOptions", arrayEncode(sDisplayOptionsArray)
+
+Example:
+write urlEncode(arrayEncode(tArray)) to socket tSocket
+
+Parameters:
+array (array): The array is a LiveCode array.
+version: If present, and >= "7.0" then the array is encoded in such a way as to preserve unicode in keys and values, as well as NUL chars in keys and values
+
+Returns (string): The <arrayEncode> function returns a string of binary data that represents the data and structure of the specified array.
+
+Description:
+Use the <arrayEncode> function to convert an array into a string so that it can be saved to a file or sent across a network.
+
+The string returned by the arrayEncode function is designed to be used to transfer arrays to remote machines or to save them to a file on disk. It is an opaque, binary encoding of the data contained in the array. The original array can be rebuilt by using the arrayDecode function. Encoded arrays cannot easily be modified, and should always be converted back into real arrays before attemping to access or modify them. 
+
+To send an encoded array to a remote process over TCP/IP, it should be encoded using the URLEncode function, as it may contain characters not suitable for use in URLs.
+
+>*Note:* Arrays in LiveCode are un-ordered. This means in particular that encoding two arrays will not necessarily produce the same result, even if the arrays had the same elements. To compare two arrays, simply use the = operator directly on them rather than encoding them first.
+
+References: write to socket (command), keys (function), arrayDecode (function), [] (keyword)

@@ -1,0 +1,32 @@
+Name: revStopPreviewingVideo
+
+Type: command
+
+Syntax: revStopPreviewingVideo
+
+Summary: Stops showing input from a video camera in the <video grabber|video grabber window>.
+
+Introduced: 2.0
+
+OS: mac,windows
+
+Platforms: desktop,web
+
+Security: disk,privacy
+
+Example:
+revStopPreviewingVideo
+
+Example:
+if isShowingVideo then revStopPreviewingVideo
+
+Description:
+Use the <revStopPreviewingVideo> <command> to stop showing video input.
+
+When you stop previewing video, the video grabber window shows a blank screen.
+
+>*Important:*  The <revStopPreviewingVideo> <command> is part of the <Video library>. To ensure that the <command> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure that "Video Grabber" is selected from the list of script libraries.
+
+References: revInitializeVideoGrabber (command), revPreviewVideo (command), revStopRecordingVideo (command), Standalone Application Settings (glossary), standalone application (glossary), video grabber (glossary), command (glossary), Video library (library), Revolution custom library (library)
+
+Tags: multimedia

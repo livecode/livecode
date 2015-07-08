@@ -94,8 +94,8 @@ real8 curtime;
 
 ////////////////////////////////////////////////////////////////////////
 
-extern "C" void *load_module(const char *);
-extern "C" void *resolve_symbol(void *, const char *);
+MC_DLLEXPORT extern "C" void *load_module(const char *);
+MC_DLLEXPORT extern "C" void *resolve_symbol(void *, const char *);
 
 struct LibExport
 {
@@ -109,7 +109,7 @@ struct LibInfo
 	struct LibExport *exports;
 };
 
-void *load_module(const char *p_path)
+void *load_module(const char *p_path) __attribute__((__visibility__("default")))
 {
 	const char *t_last_component;
 	t_last_component = strrchr(p_path, '/');
@@ -147,7 +147,8 @@ void *load_module(const char *p_path)
 	return NULL;	
 }
 
-void *resolve_symbol(void *p_module, const char *p_symbol)
+void *resolve_symbol(void *p_module, const char *p_symbol) __attribute__((__visibility__("default")))
+
 {
 	LibInfo *t_lib;
 	t_lib = (LibInfo *)((uintptr_t)p_module & ~1);
@@ -383,8 +384,12 @@ bool MCIPhoneSystem::GetMachine(MCStringRef& r_string)
 
 MCNameRef MCIPhoneSystem::GetProcessor(void)
 {
-#ifdef __i386__
-	return MCN_i386;
+#if defined __i386__
+    return MCN_i386;
+#elif defined __amd64__
+    return MCN_x86_64;
+#elif defined __arm64__
+    return MCN_arm64;
 #else
 	return MCN_arm;
 #endif
@@ -687,10 +692,13 @@ Boolean MCIPhoneSystem::GetStandardFolder(MCNameRef p_type, MCStringRef& r_folde
 	else if (MCNameIsEqualToCString(p_type, "cache", kMCCompareCaseless))
 	{
 		NSArray *t_paths;
-		t_paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+        t_paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
 		MCStringCreateWithCFString((CFStringRef)[t_paths objectAtIndex: 0] , &t_path);
 	}
-	else if (MCNameIsEqualToCString(p_type, "engine", kMCCompareCaseless))
+    // SN-2015-04-16: [[ Bug 14295 ]] The resources folder on Mobile is the same
+    //   as the engine folder.
+    else if (MCNameIsEqualToCString(p_type, "engine", kMCCompareCaseless)
+             || MCNameIsEqualToCString(p_type, "resources", kMCCompareCaseless))
 	{
 		extern MCStringRef MCcmd;
         uindex_t t_index;
@@ -759,6 +767,11 @@ bool MCIPhoneSystem::LongFilePath(MCStringRef p_path, MCStringRef& r_long_path)
 bool MCIPhoneSystem::ShortFilePath(MCStringRef p_path, MCStringRef& r_short_path)
 {
 	return MCStringCopy(p_path, r_short_path);
+}
+// ST-2014-12-18: [[ Bug 14259 ]] Not implemented / needed on iOS
+bool MCIPhoneSystem::GetExecutablePath(MCStringRef& r_path)
+{
+    return false;
 }
 
 bool MCIPhoneSystem::PathToNative(MCStringRef p_path, MCStringRef& r_native)
@@ -1175,18 +1188,6 @@ bool MCIPhoneSystem::GetDNSservers(MCListRef &r_list)
 MCSystemInterface *MCMobileCreateIPhoneSystem(void)
 {
 	return new MCIPhoneSystem;
-}
-
-//////////////////
-
-// MW-2013-05-21: [[ RandomBytes ]] System function for random bytes on iOS.
-bool MCS_random_bytes(size_t p_count, MCDataRef& r_buffer)
-{
-    // IM-2014-04-16: [[ Bug 11860 ]] SecRandomCopyBytes returns 0 on success
-    MCAutoByteArray t_bytes;
-    return (t_bytes . New(p_count) &&
-            SecRandomCopyBytes(kSecRandomDefault, p_count, (uint8_t *)t_bytes . Bytes()) == 0 &&
-            t_bytes . CreateData(r_buffer));
 }
 
 //////////////////

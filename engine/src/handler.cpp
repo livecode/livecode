@@ -151,10 +151,6 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 {
 	Parse_stat stat;
 	Symbol_type type;
-
-	// MW-2013-11-08: [[ RefactorIt ]] Make sure 'it' is always defined as the first
-	//   local variable.
-	/* UNCHECKED */ newvar(MCN_it, kMCEmptyName, &m_it);
 	
 	firstline = sp.getline();
 	hlist = sp.gethlist();
@@ -204,6 +200,10 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 				sp.backup();
 		}
 	}
+    
+    bool t_needs_it;
+    t_needs_it = true;
+    
 	while (sp.next(type) == PS_NORMAL)
 	{
 		if (type == ST_SEP)
@@ -220,9 +220,17 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 		}
 
 		if (newparam(sp) != PS_NORMAL)
-				return PS_ERROR;
-			}
+            return PS_ERROR;
+        
+        // AL-2014-11-04: [[ Bug 13902 ]] Check if the param we just created was called 'it'.
+        if (MCNameIsEqualTo(pinfo[npnames - 1] . name, MCN_it))
+            t_needs_it = false;
+    }
 		
+    // AL-2014-11-04: [[ Bug 13902 ]] Only define it as a var if it wasn't one of the parameter names.
+    if (t_needs_it)
+        /* UNCHECKED */ newvar(MCN_it, kMCEmptyName, &m_it);
+    
 	if (sp.skip_eol() != PS_NORMAL)
 	{
 		MCperror->add(PE_HANDLER_BADPARAMEOL, sp);
@@ -350,6 +358,12 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
                 
 				newparams[i]->give_value(ctxt, t_value);
 			}
+            
+            // AL-2014-11-04: [[ Bug 13902 ]] If 'it' was this parameter's name then create the MCVarref as a
+            //  param type, with this handler and param index, so that use of the get command syncs up correctly.
+            if (i < npnames && MCNameIsEqualTo(pinfo[i] . name, MCN_it))
+                m_it = new MCVarref(this, i, True);
+            
 			plist = plist->getnext();
 		}
 		else
@@ -975,36 +989,6 @@ Exec_stat MCHandler::getvarnames(MCExecPoint& ep, Boolean all)
 }
 #endif
 
-void MCHandler::eval(MCExecContext &ctxt, MCStringRef p_expression, MCValueRef &r_value)
-{
-    MCScriptPoint sp(ctxt, p_expression);
-	sp.sethandler(this);
-    MCExpression *exp = NULL;
-    Symbol_type type;
-
-	if (sp.parseexp(False, True, &exp) == PS_NORMAL && sp.next(type) == PS_EOF)
-        ctxt . EvalExprAsValueRef(exp, EE_HANDLER_BADEXP, r_value);
-    else
-        ctxt . Throw();
-
-    delete exp;
-}
-
-void MCHandler::eval_ctxt(MCExecContext &ctxt, MCStringRef p_expression, MCExecValue &r_value)
-{
-    MCScriptPoint sp(ctxt, p_expression);
-	sp.sethandler(this);
-    MCExpression *exp = NULL;
-    Symbol_type type;
-    
-	if (sp.parseexp(False, True, &exp) == PS_NORMAL && sp.next(type) == PS_EOF)
-        ctxt . EvaluateExpression(exp, EE_HANDLER_BADEXP, r_value);
-    else
-        ctxt . Throw();
-    
-    delete exp;
-}
-
 uint4 MCHandler::linecount()
 {
 	uint4 count = 0;
@@ -1015,133 +999,6 @@ uint4 MCHandler::linecount()
 		stmp = stmp->getnext();
 	}
 	return count;
-}
-
-void MCHandler::deletestatements(MCStatement *statements)
-{
-	while (statements != NULL)
-	{
-		MCStatement *tsptr = statements;
-		statements = statements->getnext();
-		delete tsptr;
-	}
-}
-
-void MCHandler::doscript(MCExecContext& ctxt, MCStringRef p_script, uinteger_t p_line, uinteger_t p_pos)
-{
-    MCScriptPoint sp(ctxt, p_script);
-	MCStatement *curstatement = NULL;
-	MCStatement *statements = NULL;
-	MCStatement *newstatement = NULL;
-	Symbol_type type;
-	const LT *te;
-	Exec_stat stat = ES_NORMAL;
-	Boolean oldexplicit = MCexplicitvariables;
-	MCexplicitvariables = False;
-	uint4 count = 0;
-	sp.setline(p_line - 1);
-	while (stat == ES_NORMAL)
-	{
-		switch (sp.next(type))
-		{
-		case PS_NORMAL:
-			if (type == ST_ID)
-				if (sp.lookup(SP_COMMAND, te) != PS_NORMAL)
-					newstatement = new MCComref(sp.gettoken_nameref());
-				else
-				{
-					if (te->type != TT_STATEMENT)
-					{
-						MCeerror->add(EE_DO_NOTCOMMAND, p_line, p_pos, sp.gettoken_stringref());
-						stat = ES_ERROR;
-					}
-					else
-						newstatement = MCN_new_statement(te->which);
-				}
-			else
-			{
-				MCeerror->add(EE_DO_NOCOMMAND, p_line, p_pos, sp.gettoken_stringref());
-				stat = ES_ERROR;
-			}
-			if (stat == ES_NORMAL)
-			{
-				if (curstatement == NULL)
-					statements = curstatement = newstatement;
-				else
-				{
-					curstatement->setnext(newstatement);
-					curstatement = newstatement;
-				}
-				if (curstatement->parse(sp) != PS_NORMAL)
-				{
-					MCeerror->add(EE_DO_BADCOMMAND, p_line, p_pos, p_script);
-					stat = ES_ERROR;
-				}
-				count += curstatement->linecount();
-			}
-			break;
-		case PS_EOL:
-			if (sp.skip_eol() != PS_NORMAL)
-			{
-				MCeerror->add(EE_DO_BADLINE, p_line, p_pos, p_script);
-				stat = ES_ERROR;
-			}
-			break;
-		case PS_EOF:
-			stat = ES_PASS;
-			break;
-		default:
-			stat = ES_ERROR;
-		}
-	}
-	MCexplicitvariables = oldexplicit;
-
-	if (MClicenseparameters . do_limit > 0 && count >= MClicenseparameters . do_limit)
-	{
-		MCeerror -> add(EE_DO_NOTLICENSED, p_line, p_pos, p_script);
-		stat = ES_ERROR;
-	}
-
-	if (stat == ES_ERROR)
-	{
-		deletestatements(statements);
-		ctxt.Throw();
-		return;
-	}
-
-	MCExecContext ctxt2(ctxt);
-	while (statements != NULL)
-	{
-        statements->exec_ctxt(ctxt2);
-		Exec_stat stat = ctxt2 . GetExecStat();
-		if (stat == ES_ERROR)
-		{
-			deletestatements(statements);
-			MCeerror->add(EE_DO_BADEXEC, p_line, p_pos, p_script);
-			ctxt.Throw();
-			return;
-		}
-		if (MCexitall || stat != ES_NORMAL)
-		{
-			deletestatements(statements);
-			if (stat == ES_ERROR)
-				ctxt.Throw();
-			return;
-		}
-		else
-		{
-			MCStatement *tsptr = statements;
-			statements = statements->getnext();
-			delete tsptr;
-		}
-	}
-	if (MCscreen->abortkey())
-	{
-		MCeerror->add(EE_DO_ABORT, p_line, p_pos);
-		ctxt.Throw();
-		return;
-	}
-	return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

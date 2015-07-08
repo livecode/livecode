@@ -52,8 +52,31 @@ private command buildAPK pUnalignedApkFile, pUnsignedParam, pAssetArchive, pClas
    return tResult
 end buildAPK
 
+private function updateMinimumAPI pVersionSet, pLimit
+   local tLimitType
+   if pVersionSet < pLimit then
+      put "lowest" into tLimitType
+   else
+      put "highest" into tLimitType
+   end if
+   
+   answer "The minimum Android API is currently set to" && \
+         pVersionSet && \
+         "but the" & tLimitType & " Android API available from LiveCode" && the version && \
+         "is" && pLimit & "." & LF & \
+         "Do you want to update the minimum Android API to" && pLimit & "?" \
+         with "No" or "Yes" \
+         titled "Minimum Android API error"
+   
+   return (it is "Yes")
+end updateMinimumAPI
+
+private function badAndroidApiMessage
+   return "Not a valid Android API"
+end badAndroidApiMessage
+
 private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
-   start using stack "revSBLibrary" of stack "revStandaloneSettings"
+   start using stack "revSBLibrary"
    
    dispatch "revIDEDeployAndroidInitialize" to stack "revDeployLibrary"
    
@@ -91,13 +114,35 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    if tSettings["android,status bar hidden"] is empty then
       put "false" into tSettings["android,status bar hidden"]
    end if
+   
+   // SN-2015-05-13: [[ AndroidVersions ]] Make sure that the minimum version is
+   // the minimum version that we can use.
+   put item 1 of revIDEDeployAndroidGetApisList() into tMinimumVersion
+   put last item of revIDEDeployAndroidGetApisList() into tMaximumVersion
+   
    if tSettings["android,minimum version"] is empty then
-      put 8 into tSettings["android,minimum version"]
+      put tMinimumVersion into tSettings["android,minimum version"]
+   else if tSettings["android,minimum version"] < tMinimumVersion then
+      // In case the minimum version is still 2.2 (for instance), we warn the user
+      //  that we want to update it, before doing so.
+      if updateMinimumAPI(tSettings["android,minimum version"], tMinimumVersion) then
+         put tMinimumVersion into tSettings["android,minimum version"]
+      else
+         throw badAndroidAPIMessage()
+      end if
+   else if tSettings["android,minimum version"] > tMaximumVersion then
+      if updateMinimumAPI(tSettings["android,minimum version"], tMaximumVersion) then
+         put tMaximumVersion into tSettings["android,minimum version"]
+      else
+         throw badAndroidAPIMessage()
+      end if
    end if
    
    put tSettings["android,statusBarIcon"] into tStatusBarIcon
    if tStatusBarIcon is empty then
       // put default sb icon path into tStatusBarIcon
+      // SN-2015-01-22: [[ Bug 13213 ]] If mapFilePath returns empty, an error will be triggered
+      // line 629.
       put mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "notify_icon.png") into tStatusBarIcon
    end if
    
@@ -196,14 +241,60 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
          put shortFilePath(tBuildFolder) into tBuildFolder
       end if
       
+      -------- Unpack all the files used by the externals
+      // MERG-2014-11-18: [[ TemplateManifest ]] Look for a template manifest provided by the developer in copy files
+      local tManifestFile
+      
+      revStandaloneProgress "Integrating externals..."
+      
+      if tExternals is not empty then
+         put return after tExternals
+      end if
+      set the itemDelimiter to "."
+      repeat for each line tFile in tFiles
+         local tFilePath, tFileName
+         computeAssetLocation tBaseFolder, tFile, tFilePath, tFileName
+         
+         -- Look for manifest template
+         if tFilePath ends with "AndroidManifest.xml" then
+            put url ("binfile:" & tFilePath) into tManifest
+         end if
+         
+         -- Only look for lcext files.
+         if the last item of tFilePath is not "lcext" then
+            next repeat
+         end if
+         
+         -- Only process if the target exists
+         if there is no file tFilePath then
+            throw "could not find referenced external -" && tFile
+         end if
+         
+         -- MERG-2013-09-05: [[ Bug 11152 ]] Only list the external if it was successfully
+         --   extracted.
+         -- Now attempt to process the external
+         if addExternalFromFile(tFilePath, tClassesBuildFolder, tArmLibsBuildFolder) then
+            -- Add the external to the list to load
+            put char 1 to -7 of tFileName & return after tExternals
+         end if
+      end repeat
+      delete the last char of tExternals
+      set the itemDelimiter to comma
+      
       -------- Create the Manifest
       revStandaloneProgress "Writing manifest..."
       
-      local tManifestFile
-      put tBuildFolder & slash & "AndroidManifest.xml" into tManifestFile
+      if tManifestFile is empty then
+         put tBuildFolder & slash & "AndroidManifest.xml" into tManifestFile
+      end if
       
-      local tManifest
-      put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Manifest.xml")) into tManifest
+      if tManifest is empty then
+         put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Manifest.xml")) into tManifest
+      end if
+      // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occured
+      if the result is not empty then
+         throw "Cannot find the template Manifest"
+      end if
       replace "${LABEL}" with tSettings["android,label"] in tManifest
       replace "${NAME}" with ".mblandroid" in tManifest
       replace "${IDENTIFIER}" with tSettings["android,identifier"] in tManifest
@@ -363,38 +454,6 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
          throw "could not create manifest"
       end if
       
-      -------- Unpack all the files used by the externals
-      revStandaloneProgress "Integrating externals..."
-      
-      set the itemDelimiter to "."
-      if tExternals is not empty then
-         put return after tExternals
-      end if
-      repeat for each line tFile in tFiles
-         local tFilePath, tFileName
-         computeAssetLocation tBaseFolder, tFile, tFilePath, tFileName
-         
-         -- Only look for lcext files.
-         if the last item of tFilePath is not "lcext" then
-            next repeat
-         end if
-         
-         -- Only process if the target exists
-         if there is no file tFilePath then
-            throw "could not find referenced external -" && tFile
-         end if
-         
-         -- MERG-2013-09-05: [[ Bug 11152 ]] Only list the external if it was successfully
-         --   extracted.
-         -- Now attempt to process the external
-         if addExternalFromFile(tFilePath, tClassesBuildFolder, tArmLibsBuildFolder) then
-            -- Add the external to the list to load
-            put char 1 to -7 of tFileName & return after tExternals
-         end if
-      end repeat
-      delete the last char of tExternals
-      set the itemDelimiter to comma
-      
       -------- Build the Classes
       revStandaloneProgress "Building classes..."
       
@@ -546,12 +605,16 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       local tDeploy
       -- Engine to use
       put mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Standalone") into tDeploy["engine"]
+      // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occured
+      if there is no file tDeploy["engine"] then
+         throw "Could not find standalone engine"
+      end if
       -- Stackfile to use
       put the effective filename of stack pStack into tDeploy["stackfile"]
       
       -- If the datagrid is used, then include the library as an aux stack
       if "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
-         put the effective filename of stack "revDataGridLibrary" into tDeploy["auxillary_stackfiles"]
+         put the effective filename of stack "revDataGridLibrary" into tDeploy["auxiliary_stackfiles"]
       end if
       
       -- Externals to reference (on Android we include drivers in this list)
@@ -658,6 +721,11 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       -- MM-2014-01-29: [[ OpenSSL ]] Include the revsecurity library.
       if tSettings["android,include revsecurity"] then
          put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "revsecurity")) into url ("binfile:" & tArmLibsBuildFolder & slash & "librevsecurity.so")
+         
+         // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occured
+         if the result is not empty then
+            throw "Could not find revsecurity library"
+         end if
       end if
       
       -- Copy across the externals into the libs folder
@@ -668,6 +736,10 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
             next repeat
          end if
          put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & tEntry)) into url ("binfile:" & tArmLibsBuildFolder & slash & "lib" & tEntry & ".so")
+         // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occured
+         if the result is not empty then
+            throw "Could not find " & tEntry && "library"
+         end if
       end repeat
       
       -- Work out whether to produce an unsigned apk
@@ -821,6 +893,8 @@ private command addAssetsToArchive pFiles, pBaseFolder, pArchive
             put tFile & return after tFonts
          else if tFile ends with ".lcext" or tFile ends with ".dylib" then
             -- MW-2012-07-05: [[ Externals ]] If an 'lcext' file or dylib file is found then we ignore it.
+         else if tFile ends with "AndroidManifest.xml" then
+            -- MW-2015-04-24: [[ TemplateAppMetadata ]] If an template manifest is found then we ignore it.
          else
             revZipAddUncompressedItemWithFile pArchive, "assets/" & tName, tFile
          end if
@@ -1083,6 +1157,25 @@ end pathToJarSigner
 --   files in the build folder.
 function mapFilePath pPath
    if revEnvironmentIsInstalled() then
+      // SN-2015-01-19: [[ Bug 13213 ]] Linux filepaths are case-sensitive.
+      //   so we try to caselessly match the targetted file, with the actual files.
+      set the itemDelimiter to slash
+      
+      // Get the list of files in the targetted directory
+      put the defaultFolder into tOldFolder
+      set the defaultFolder to item 1 to -2 of pPath
+      put the files into tFiles
+      set the defaultFolder to tOldFolder
+      
+      put lineOffset(last item of pPath, tFiles) into tLineOffset
+      
+      // We return empty if we can't find the specified file
+      // That will allow us to throw an error in such a case.
+      if tLineOffset is 0 then
+         return empty
+      else
+         put line tLineOffset of tFiles into item -1 of pPath
+      end if
       return pPath
    end if
    

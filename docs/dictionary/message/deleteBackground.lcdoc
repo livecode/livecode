@@ -1,0 +1,34 @@
+Name: deleteBackground
+
+Type: message
+
+Syntax: deleteBackground
+
+Summary: Sent to a <group> just before it is removed from the <stack>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+on deleteBackground
+  beep 2 -- warn user
+  pass deleteBackground
+end deleteBackground
+
+Description:
+Handle the <deleteBackground> <message> if you want to perform cleanup before a <group> is removed from the <stack>.
+
+The actual deletion is not triggered by the <deleteBackground> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <group> from being removed.
+
+Deleting the last card on which a group appears does not remove the group from the stack, so it does not cause a <deleteBackground> <message> to be sent.
+
+Ungrouping a group does not cause a <deleteBackground> <message> to be sent.
+
+A deleteGroup <message> is sent before the <deleteBackground> <message>. (The <deleteBackground> <message> is included for compatibility with HyperCard.)
+
+References: delete (command), group (command), stack (object), message (glossary), trap (glossary), pass (control_st)
+
+Tags: objects

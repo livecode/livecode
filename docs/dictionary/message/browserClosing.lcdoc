@@ -1,0 +1,36 @@
+Name: browserClosing
+
+Type: message
+
+Syntax: browserClosing <instanceId> 
+
+Syntax: XBrowser_Closing <instanceId> 
+
+Summary: Sent when a browser instance is closing
+
+Synonyms: XBrowser_Closing
+
+Associations: card
+
+Introduced: 2.8.1
+
+OS: mac,windows
+
+Platforms: desktop
+
+Security: network
+
+Example:
+on browserClosing pInstanceId
+  delete line (lineOffset(pInstanceId, sInstances)) of sInstances
+end browserClosing
+
+Parameters:
+instanceId: The integer identifier of the browser object about to close >*Note:* For general information on using the browser library, see the notes in the revBrowserOpen function reference.
+
+Description:
+The <browserClosing> message is sent to the current card of a stack containing a browser object when the browser object is about to close.
+
+>*Note:* For general information on using the browser library, see the notes in the <revBrowserOpen function> reference.
+
+References: revBrowserClose (command), revBrowserOpen function (function)

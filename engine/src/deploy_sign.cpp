@@ -171,8 +171,8 @@ struct SpcString
 
 DECLARE_ASN1_FUNCTIONS(SpcString)
 ASN1_CHOICE(SpcString) = {
-	ASN1_IMP(SpcString, d.unicode, ASN1_BMPSTRING, 0),
-	ASN1_IMP(SpcString, d.ascii, ASN1_IA5STRING, 1)
+	ASN1_IMP_OPT(SpcString, d.unicode, ASN1_BMPSTRING, 0),
+	ASN1_IMP_OPT(SpcString, d.ascii, ASN1_IA5STRING, 1)
 } ASN1_CHOICE_END(SpcString)
 IMPLEMENT_ASN1_FUNCTIONS(SpcString)
 
@@ -219,9 +219,9 @@ struct SpcLink
 
 DECLARE_ASN1_FUNCTIONS(SpcLink)
 ASN1_CHOICE(SpcLink) = {
-	ASN1_IMP(SpcLink, d.url, ASN1_IA5STRING, 0),
-	ASN1_IMP(SpcLink, d.moniker, SpcSerializedObject, 1),
-	ASN1_EXP(SpcLink, d.file, SpcString, 2)
+	ASN1_IMP_OPT(SpcLink, d.url, ASN1_IA5STRING, 0),
+	ASN1_IMP_OPT(SpcLink, d.moniker, SpcSerializedObject, 1),
+	ASN1_EXP_OPT(SpcLink, d.file, SpcString, 2)
 } ASN1_CHOICE_END(SpcLink)
 IMPLEMENT_ASN1_FUNCTIONS(SpcLink)
 
@@ -879,7 +879,9 @@ static bool MCDeploySignWindowsAddTimeStamp(const MCDeploySignParameters& p_para
 	PKCS7_SIGNER_INFO *t_signer_info;
 	t_signer_info = sk_PKCS7_SIGNER_INFO_value(p_signature -> d . sign -> signer_info, 0);
 
-	// Build a request to send to the time-stamp authority
+	// Build a request to send to the time-stamp authority. If there is a 'blob'
+    // field in this request, then we must reset the signature field before freeing
+    // it as that is borrowed from elsewhere.
 	SpcTimeStampRequest *t_request;
 	t_request = nil;
 	if (t_success)
@@ -1034,7 +1036,11 @@ static bool MCDeploySignWindowsAddTimeStamp(const MCDeploySignParameters& p_para
 	// the sig.
 	if (t_request != nil)
 	{
-		t_request -> blob -> signature = nil;
+        // If we have a 'blob' field then we will have potentially borrowed a
+        // signature from another data structure so must unhook that here to
+        // stop it being freed in SpcTimeStampRequest_free.
+        if (t_request -> blob != nil)
+            t_request -> blob -> signature = nil;
 		SpcTimeStampRequest_free(t_request);
 	}
 
@@ -1432,7 +1438,7 @@ bool MCDeploySignLoadPVK(MCStringRef p_filename, MCStringRef p_passphrase, EVP_P
 	// Next we read the salt (if any)
 	uint8_t *t_salt;
 	t_salt = nil;
-	if (t_header . salt_length > 0)
+	if (t_success && t_header . salt_length > 0)
 	{
 		if (t_success)
 			t_success = MCMemoryNewArray(t_header . salt_length, t_salt);

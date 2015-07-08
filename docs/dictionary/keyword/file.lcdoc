@@ -1,0 +1,42 @@
+Name: file
+
+Type: keyword
+
+Syntax: file
+
+Summary: Used as a <URL> type with such <command|commands> as <put> and <get> to designate a <local file>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+put the htmlText of field 1 into URL "file:/Drive/Folder/File"
+
+Example:
+answer URL "file:myPrefs.txt"
+
+Example:
+put URL "file:C:/abc.def" into savedInfo
+
+Example:
+put "Test" into word 3 of URL "file:/Hard Drive/Applications/Test"
+
+Description:
+Use the <file> <keyword> to work with <text file|text files>.
+
+The <file> <URL scheme|scheme> indicates a <text file> which is located on the user's system. The <file> is specified by either a <absolute file path|full path> starting with "/", or a <relative file path|relative path> starting from the <defaultFolder>.
+
+A URL container can be used anywhere another container type is used.
+
+Different operating systems use different characters to mark the end of a line. Mac OS and OS X use a return character (ASCII 13), Unix systems use a linefeed character (ASCII 10), and Windows systems use a return followed by a linefeed. When you use a <file> <URL> as a <container>, LiveCode automatically uses the current system's standard <end-of-line marker> and LiveCode's linefeed character.
+
+>*Tip:*  To put data into, or get data from, a <binary file>, use the <binfile> <keyword> instead.
+
+For technical information about URLs and the <file> <URL> scheme, see RFC 1630 at http://www.ietf.org/rfc/rfc1630.txt.
+
+References: binfile (keyword), URL (keyword), file (keyword), http (keyword), resfile (keyword), fileType (property), defaultFolder (property), close file (command), revCopyFile (command), put (command), get (command), binary file (glossary), text file (glossary), local file (glossary), absolute file path (glossary), URL scheme (glossary), container (glossary), keyword (glossary), relative file path (glossary), end-of-line marker (glossary), command (glossary)
+
+Tags: file system

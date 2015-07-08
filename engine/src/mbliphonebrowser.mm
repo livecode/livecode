@@ -457,7 +457,7 @@ Exec_stat MCiOSBrowserControl::Set(MCNativeControlProperty p_property, MCExecPoi
 			if (t_view != nil)
 				[GetScrollView() setScrollEnabled: ep . getsvalue() == MCtruemcstring ? YES : NO];
 			return ES_NORMAL;
-			
+            
         default:
             break;
 	}
@@ -514,7 +514,7 @@ Exec_stat MCiOSBrowserControl::Get(MCNativeControlProperty p_property, MCExecPoi
 		case kMCNativeControlPropertyScrollingEnabled:
 			ep.setsvalue(MCU_btos(t_view != nil ? [GetScrollView() isScrollEnabled] == YES : NO));
 			return ES_NORMAL;
-            
+                    
         default:
             break;
 	}

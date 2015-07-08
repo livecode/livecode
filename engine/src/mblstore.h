@@ -144,6 +144,7 @@ void MCPurchaseDelete(MCPurchase *p_purchase);
 
 void MCPurchaseRetain(MCPurchase *p_purchase);
 void MCPurchaseRelease(MCPurchase *p_purchase);
+void MCPurchaseCompleteListUpdate(MCPurchase *p_purchase);
 
 bool MCPurchaseSendRequest(MCPurchase *p_purchase);
 bool MCPurchaseConfirmDelivery(MCPurchase *p_purchase);

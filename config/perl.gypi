@@ -1,0 +1,6 @@
+{
+	'variables':
+	{
+		'perl%': [ 'perl' ],
+	},
+}

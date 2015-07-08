@@ -1,0 +1,52 @@
+Name: secure socket
+
+Type: command
+
+Syntax: secure socket <socket> [without verification]
+
+Syntax: secure socket <socket> [with verification [for host <verificationHostName>]]
+
+Summary: Secures an open socket.
+
+Introduced: 6.6
+
+OS: mac,windows,linux
+
+Platforms: desktop
+
+Security: network
+
+Example:
+secure socket "runrev.com:443"
+
+Example:
+open socket to "127.0.0.0:8080"
+write "unencrypted message" to socket "127.0.0.0:8080"
+secure socket "127.0.0.0:8080"
+write "encrypted message" to socket "127.0.0.0:8080"
+
+Example:
+secure socket mySocket with verifcation for host "livecode.com"
+
+Parameters:
+socket: A reference to an open socket.
+verificationHostName: The IP address or domain name of the host you want to verify against.
+
+Description:
+Use the secure socket command to secure an open socket.
+
+If 'with verification' is specified, when connecting to a remote peer, the client verifies the peers certificate during the handshake process. The <sslCertificates property> can be used to specify a list of certificates to verify against. In addition you can place system wide certificates in System/Library/OpenSSL/certs. If a verificationhostname is specified, the socket will be verified against that verificationhostname. An example of this is when you want to create a secure connection with a host while tunnelling through a proxy. Specifying the final host allows LiveCode to verify the socket against that host, rather than the proxy server.
+
+If 'without verification' is specified then peers credentials are not authenticated, and any connection is accepted.
+
+Once secured:
+* All pending and future reads from the socket will be assumed to be encrypted.
+* All pending writes will complete unencrypted. All future writes will be encrypted.
+
+If the socket fails secure, a <socketError message> is sent to the object that opened the socket (not the object that attempted to secure it).
+
+>*Important:*  The secure secure socket command is part of the SSL & Encryption library. To ensure that the command works in a standalone application, you must include this custom library when you create your standalone. In the Inclusions section on the General screen of the Standalone Application Settings window, make sure "SSL & Encryption" is selected in the list of script libraries.
+
+References: open socket (command), sslCertificates property (property), sslCertificates (property), socketError message (message), socketError (message)
+
+Tags: file system

@@ -354,7 +354,7 @@ static const char *export_html_hexcolor(uint32_t p_pixel)
 	static char s_color[8];
 	uint8_t r, g, b, a;
 	MCGPixelUnpackNative(p_pixel, r, g, b, a);
-	sprintf(s_color, "#%02.2X%02.2X%02.2X", r, g, b);
+	sprintf(s_color, "#%2.2X%2.2X%2.2X", r, g, b);
 	
 	return s_color;
 }
@@ -516,7 +516,8 @@ static bool export_html_emit_paragraphs(void *p_context, MCFieldExportEventType 
 			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<p");
 			if (t_style . has_metadata)
 			{
-				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " metadata=`\"");
+                // SN-2014-11-24: [[ Bug 14064 ]] Remove the additionnal '`'
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " metadata=\"");
                 export_html_emit_cstring(ctxt.m_text, t_style.metadata, kExportHtmlEscapeTypeAttribute);
 				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\"");
 			}
@@ -1445,7 +1446,7 @@ static void import_html_append_unicode_char(import_html_t& ctxt, uint32_t p_code
 	
 	// If the text is currently native (and there is some) or if the styling has changed
 	// then flush.
-	if (!ctxt . is_unicode && ctxt . byte_count > 0 ||
+	if ((!ctxt . is_unicode && ctxt . byte_count > 0) ||
 		!import_html_equal_style(ctxt . last_used_style, ctxt . styles[ctxt . style_index] . style))
 		import_html_flush_chars(ctxt);
 	
@@ -1719,6 +1720,8 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 							}
 						}
 						break;
+					default:
+						break;
 					}
 				}
 			}
@@ -1788,6 +1791,8 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 			break;
 		case kImportHtmlTagThreeDBox:
 			import_html_add_textstyle_to_style(t_style, FA_3D_BOX);
+			break;
+		default:
 			break;
 	}
 	
@@ -1929,6 +1934,8 @@ static void import_html_parse_paragraph_attrs(import_html_tag_t& p_tag, MCFieldP
 			case kImportHtmlAttrHidden:
 				r_style . hidden = true;
 			break;
+			default:
+				break;
 		}
 	}
 }
@@ -2205,6 +2212,9 @@ MCParagraph *MCField::importhtmltext(MCValueRef p_text)
                                 case kImportHtmlTagH6:
                                     t_font_size = 10, t_font_style = FA_BOLD;
                                     break;
+								default:
+									MCUnreachable();
+									break;
                             }
                             
                             if (t_font_style != 0)
@@ -2269,6 +2279,8 @@ MCParagraph *MCField::importhtmltext(MCValueRef p_text)
                         else
                             import_html_change_style(ctxt, t_tag);
                         break;
+					default:
+						break;
 				}
                 
 				t_saw_start_tag = !t_tag . is_terminator;

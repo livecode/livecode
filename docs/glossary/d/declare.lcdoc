@@ -1,0 +1,12 @@
+Name: declare
+
+Synonyms: declaration,declaring,declared,declare
+
+Type: glossary
+
+Description:
+To create a new <variable> or <constant>, or to make an existing <variable> available to the current <handler>.
+
+References: constant (glossary), handler (glossary), variable (glossary)
+
+Tags: properties

@@ -328,6 +328,35 @@ Boolean MCS_getspecialfolder(MCNameRef p_type, MCStringRef& r_path)
     return MCS_pathfromnative(*t_path, r_path);
 }
 
+// SN-2015-01-16: [[ Bug 14295 ]] Will return an error on Server
+void MCS_getresourcesfolder(bool p_standalone, MCStringRef &r_resources_folder)
+{
+#ifdef _SERVER
+    r_resources_folder = MCValueRetain(kMCEmptyString);
+#else
+    // Add a check, in case MCS_getspecialfolder failed.
+    if (p_standalone)
+    {
+        if (!MCS_getspecialfolder(MCN_resources, r_resources_folder))
+            r_resources_folder = MCValueRetain(kMCEmptyString);
+    }
+    else
+    {
+        // If we are not in a standalone, we return the folder in which sits 'this stack'
+        uindex_t t_slash_index;
+        MCStringRef t_stack_filename;
+        t_stack_filename = MCdefaultstackptr -> getfilename();
+
+        if (!MCStringLastIndexOfChar(t_stack_filename, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_slash_index))
+            t_slash_index = MCStringGetLength(t_stack_filename);
+
+        // If we can't copy the name, then we assign an empty string.
+        if (!MCStringCopySubstring(t_stack_filename, MCRangeMake(0, t_slash_index), r_resources_folder))
+            r_resources_folder = MCValueRetain(kMCEmptyString);
+    }
+#endif
+}
+
 void MCS_doalternatelanguage(MCStringRef p_script, MCStringRef p_language)
 {
     MCsystem -> DoAlternateLanguage(p_script, p_language);
@@ -467,7 +496,7 @@ bool MCS_delete_registry(MCStringRef p_key, MCStringRef& r_error)
     
     if (t_service != nil)
         return t_service -> DeleteRegistry(p_key, r_error);
-    
+		
 	return MCStringCreateWithCString("not supported", r_error);
 }
 
@@ -478,11 +507,13 @@ bool MCS_list_registry(MCStringRef p_path, MCListRef& r_list, MCStringRef& r_err
     
     if (t_service != nil)
     {
-        MCAutoStringRef t_native_path;
-        if (!MCS_pathtonative(p_path, &t_native_path))
-            return false;
+		// SN-2014-12-15: [[ Bug 14219 ]] The path to keys must have 
+		//  backslashes, not slashes
+        //MCAutoStringRef t_native_path;
+        //if (!MCS_pathtonative(p_path, &t_native_path))
+        //    return false;
         
-        return t_service -> ListRegistry(*t_native_path, r_list, r_error);        
+        return t_service -> ListRegistry(p_path, r_list, r_error);        
     }
     
 	return MCStringCreateWithCString("not supported", r_error);
@@ -870,7 +901,7 @@ struct MCS_getentries_state
 	MCListRef list;
 };
 
-bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result);
+bool MCFiltersUrlEncode(MCStringRef p_source, bool p_use_utf8, MCStringRef& r_result);
 
 static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *p_entry)
 {
@@ -880,18 +911,26 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
 	if (!t_state -> files != p_entry -> is_folder)
 		return true;
     
+#if defined(_MACOSX)
     // Mac doesn't list the '..' folder
     if (p_entry -> is_folder && MCListIsEmpty(t_state -> list)
             && !MCStringIsEqualToCString(p_entry -> name, "..", kMCStringOptionCompareExact))
         MCListAppendCString(t_state -> list, "..");
+#endif
 	
 	if (t_state -> details)
 	{
         MCAutoStringRef t_details;
+        
+        // SN-2015-01-22: [[ Bug 14412 ]] the detailed files should return
+        //   URL-encoded filenames
+        MCAutoStringRef t_url_encoded;
+        MCU_urlencode(p_entry -> name, false, &t_url_encoded);
+        
 #ifdef _WIN32
 		/* UNCHECKED */ MCStringFormat(&t_details,
                                        "%@,%I64d,,%ld,%ld,%ld,,,,%03o,",
-                                       p_entry -> name,
+                                       *t_url_encoded,
                                        p_entry -> data_size,
                                        p_entry -> creation_time,
                                        p_entry -> modification_time,
@@ -900,7 +939,7 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
 #elif defined(_MACOSX)
 		/* UNCHECKED */ MCStringFormat(&t_details,
                                        "%@,%lld,%lld,%u,%u,%u,%u,%d,%d,%03o,%.8s",
-                                       p_entry -> name,
+                                       *t_url_encoded,
                                        p_entry -> data_size,
                                        p_entry -> resource_size,
                                        p_entry -> creation_time,
@@ -914,7 +953,7 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
 #else
 		/* UNCHECKED */ MCStringFormat(&t_details,
                                        "%@,%lld,,,%u,%u,,%d,%d,%03o,",
-                                       p_entry -> name,
+                                       *t_url_encoded,
                                        p_entry -> data_size,
                                        p_entry -> modification_time,
                                        p_entry -> access_time,
@@ -1078,6 +1117,25 @@ IO_stat MCS_closetakingbuffer(IO_handle& p_stream, void*& r_buffer, size_t& r_le
 	
     if (!t_success)
         return IO_ERROR;
+    
+	return IO_NORMAL;
+}
+
+IO_stat MCS_closetakingbuffer_uint32(IO_handle& p_stream, void*& r_buffer, uint32_t& r_length)
+{
+    size_t t_size;
+    void *t_buffer;
+    if (MCS_closetakingbuffer(p_stream, t_buffer, t_size) != IO_NORMAL)
+        return IO_ERROR;
+    
+    if (t_size > UINT32_MAX)
+    {
+        free(t_buffer);
+        return IO_ERROR;
+    }
+    
+    r_buffer = t_buffer;
+    r_length = (uint32_t)t_size;
     
 	return IO_NORMAL;
 }
@@ -1741,11 +1799,25 @@ MCSysModuleHandle MCS_loadmodule(MCStringRef p_filename)
 {
     MCAutoStringRef t_resolved_path;
     MCAutoStringRef t_native_path;
-    
-    if (!(MCS_resolvepath(p_filename, &t_resolved_path) && MCS_pathtonative(*t_resolved_path, &t_native_path)))
+
+    // SN-2015-06-08: [[ ResolvePath ]] Loading system libraries (such as
+    //  libpango-1.0.so.6, from linuxstubs.cpp) will fail if we turn the library
+    //  name into an invalid absolute name constructed from the current folder.
+    //  We consider any leaf path as a system library.
+    if (MCStringContains(p_filename, MCSTR("/"), kMCStringOptionCompareExact))
+    {
+        if (!MCS_resolvepath(p_filename, &t_resolved_path))
+            return NULL;
+    }
+    else
+    {
+        t_resolved_path = p_filename;
+    }
+
+    if (!MCS_pathtonative(*t_resolved_path, &t_native_path))
         return NULL;
-    
-	return MCsystem -> LoadModule(*t_native_path);
+
+    return MCsystem -> LoadModule(*t_native_path);
 }
 
 MCSysModuleHandle MCS_resolvemodulesymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)

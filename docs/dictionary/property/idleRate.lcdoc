@@ -1,0 +1,33 @@
+Name: idleRate
+
+Type: property
+
+Syntax: set the idleRate to <number> 
+
+Summary: Specifies the number of <milliseconds> between <idle>, <mouseStillDown>, and <mouseWithin> <message|messages>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the idleRate to 500 -- one idle message per half second
+
+Value:
+The <idleRate> is an <integer> between zero and 65535.
+By default, the <idleRate> <property> is set to 200 (one-fifth of a second).
+
+Description:
+Adjust the <idleRate> <property> to change the interval between periodically-sent <message|messages>. Increasing the <idleRate> causes these <message|messages> to be sent less frequently, and decreases the amount of CPU time the <application> uses.
+
+The <idleRate> is the time in <milliseconds> between one <idle> <message> and the next, one <mouseStillDown> <message> and the next, and one <mouseWithin> <message> and the next.
+
+>*Important:*  Some <Unix|Unix systems> cannot reliably time an interval less than 200 <milliseconds>. Setting a shorter <idleRate> on those systems may cause <idle> messages to be sent at erratic times.
+
+This property is very similar to the <idleTicks> <property>, and changes when the <idleTicks> changes. The only difference is that the two <properties> are given in different time units:  the <idleRate> is in <milliseconds> and the <idleTicks> is in <ticks>.
+
+References: effectRate (property), properties (property), blinkRate (property), idleTicks (property), integer (keyword), idle (message), mouseStillDown (message), mouseWithin (message), ticks (function), milliseconds (function), property (glossary), application (glossary), message (glossary), Unix (glossary)
+
+Tags: ui

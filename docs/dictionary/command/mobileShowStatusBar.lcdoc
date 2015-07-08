@@ -1,0 +1,25 @@
+Name: mobileShowStatusBar
+
+Type: command
+
+Syntax: mobileShowStatusBar
+
+Summary: Shows the status bar on mobile devices.
+
+Synonyms: iphoneShowStatusBar
+
+Introduced: 4.6.3
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+mobileShowStatusBar
+
+Description:
+Use <mobileShowStatusBar> to show the status bar on mobile devices. The status bar on most mobile devices is used to indicate core device status to the user like signal and battery charge.
+
+<mobileShowStatusBar> does not have any effect on any Android devices with "hardware buttons" embedded in the status bar. For example: "back, home and menu". On these devices, hiding the status bar would remove the buttons and prevent the user from exiting the application.
+
+References: mobileHideStatusBar (command), iphoneSetStatusBarStyle (command)
