@@ -148,7 +148,7 @@ Object:		An expression that evaluates to a <ScriptObject>.
 The result:	The value of the property.
 
 Example:
-	public handler myScript() as String
+	public handler myScript() returns String
 		get property "script" of my script object
 		return the result
 	end handler
@@ -204,7 +204,7 @@ Object:		An expression that evaluates to a <ScriptObject>.
 The result:	The <ScriptObject> that is the owner of <Object>.
 
 Example:
-	public handler MyName() as String
+	public handler MyName() returns String
 		get property "short name" of my script object
 		return the result
 	end handler
@@ -232,7 +232,7 @@ Object:		An expression that evaluates to a <ScriptObject>
 The result:	A list of <ScriptObject>s that are contained within <Object>.
 
 Example:
-	public handler GetSiblings(in pObject as ScriptObject) as List
+	public handler GetSiblings(in pObject as ScriptObject) returns List
 		// Return the sibling objects of an object
 		return the children of the owner of pObject
 	end handler
