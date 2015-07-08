@@ -327,9 +327,11 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
 			// Round the byte count to a multiple of UTF-32 units
 			p_byte_count = ((p_byte_count + sizeof(uint32_t) - 1) & ~(sizeof(uint32_t) - 1));
 			
-			// Convert the string to UTF-16 first. The UTF-16 string cannot be longer than the UTF-32 string
+            // Convert the string to UTF-16 first.
 			MCAutoArray<unichar_t> t_buffer;
-			t_buffer.Extend(p_byte_count / sizeof(uint32_t));
+			if (!t_buffer.Extend(p_byte_count / sizeof(uint32_t)))
+                return false;
+            
 			uindex_t t_in_offset;
 			uindex_t t_out_offset = 0;
 			for (t_in_offset = 0; t_in_offset < p_byte_count; t_in_offset += sizeof(uint32_t))
@@ -350,7 +352,11 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
 				}
 				else
 				{
-					// Split to surrogate pairs
+                    // Split to surrogate pairs
+                    // SN-2015-07-03: [[ Bug 15571 ]] Creating a surrogate pair
+                    //  makes the UTF-16 string longer.
+                    if (!t_buffer . Extend(t_buffer . Size() + 1))
+                        return false;
 					unichar_t t_lead, t_trail;
 					t_lead =  unichar_t((t_codepoint - 0x10000) >> 10) + 0xD800;
 					t_trail = unichar_t((t_codepoint - 0x10000) & 0x3FF) + 0xDC00;
@@ -2060,7 +2066,8 @@ bool MCStringConvertToUTF32(MCStringRef self, uint32_t *&r_codepoints, uinteger_
         
         t_chars = MCStringGetNativeCharPtrAndLength(self, t_char_count);
         
-        if (!MCMemoryAllocate(t_char_count + 1, t_codepoints))
+        // SN-2015-07-03: [[ Bug 15571 ]] Allocate the right size
+        if (!MCMemoryAllocate((t_char_count + 1) * sizeof(uint32_t), t_codepoints))
             return false;
         
         for (uindex_t i = 0 ; i < t_char_count; ++i)
@@ -2096,8 +2103,10 @@ bool MCStringConvertToUTF32(MCStringRef self, uint32_t *&r_codepoints, uinteger_
                 // Surrogate lead found
                 if (t_unichars[i+1] > 0xDBFF && t_unichars[i+1] < 0xE000)
                 {
+                    // SN-2015-07-03: [[ Bug 15571 ]] Codepoint and UTF-16 index will not
+                    //  remain the same if any surrogate pair appears.
                     // Surogate trail found: valid surrogate pair
-                    t_codepoints[i] = MCUnicodeSurrogatesToCodepoint(t_unichars[i], t_unichars[i+1]);
+                    t_codepoints[t_codepoint_count] = MCUnicodeSurrogatesToCodepoint(t_unichars[i], t_unichars[i+1]);
                     ++i;
                 }
                 else
@@ -2105,7 +2114,9 @@ bool MCStringConvertToUTF32(MCStringRef self, uint32_t *&r_codepoints, uinteger_
             }
             else
             {
-                t_codepoints[i] = (uint32_t)t_unichars[i];
+                // SN-2015-07-03: [[ Bug 15571 ]] Codepoint and UTF-16 index will not
+                //  remain the same if any surrogate pair appears.
+                t_codepoints[t_codepoint_count] = (uint32_t)t_unichars[i];
             }
             
             ++t_codepoint_count;
@@ -2117,12 +2128,17 @@ bool MCStringConvertToUTF32(MCStringRef self, uint32_t *&r_codepoints, uinteger_
         // Add the last codeunit
         if (i < t_char_count)
         {
-            t_codepoints[i] = (uint32_t)t_unichars[i];
+            // SN-2015-07-03: [[ Bug 15571 ]] Codepoint and UTF-16 index will not
+            //  remain the same if any surrogate pair appears.
+            t_codepoints[t_codepoint_count] = (uint32_t)t_unichars[i];
             ++t_codepoint_count;
         }
         
         t_codepoints . Shrink(t_codepoint_count + 1);
         t_codepoints . Take(r_codepoints, r_char_count);
+        // SN-2015-07-03: [[ Bug 15571 ]] The NULL codepoint is not amongst the
+        //  char count.
+        r_char_count = t_codepoint_count;
         return true;
     }
     
