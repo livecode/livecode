@@ -3695,18 +3695,17 @@ void MCGroup::scheduledelete(bool p_is_child)
 //  showing/hiding a group that has a player
 void MCGroup::SetVisibility(MCExecContext &ctxt, uinteger_t part, bool flag, bool visible)
 {
+    MCControl::SetVisibility(ctxt, part, flag, visible);
 #ifdef PLATFORM_PLAYER
     for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
     {
         if (t_player -> getparent() == this)
         {
-            if (visible)
+            if (flag && visible || !flag && !visible)
                 t_player -> attachplayer();
             else
                 t_player -> detachplayer();
         }
     }
 #endif
-
-    MCControl::SetVisibility(ctxt, part, flag, visible);
 }
