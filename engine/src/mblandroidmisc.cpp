@@ -770,7 +770,7 @@ bool MCSystemGetLaunchData(MCArrayRef &r_launch_data)
 	if (t_jmap == nil)
 		return false;
 	
-	bool t_success = MCJavaMapToArray(MCJavaGetThreadEnv(), t_jmap, r_launch_data);
+	bool t_success = MCJavaMapToArrayRef(MCJavaGetThreadEnv(), t_jmap, r_launch_data);
 
 	MCJavaGetThreadEnv()->DeleteGlobalRef(t_jmap);
 	
