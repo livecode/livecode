@@ -28,7 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "card.h"
 #include "cdata.h"
 #include "field.h"
-#include "block.h"
+#include "MCBlock.h"
 #include "paragraf.h"
 #include "scrolbar.h"
 #include "mcerror.h"

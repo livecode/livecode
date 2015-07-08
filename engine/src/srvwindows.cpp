@@ -1178,7 +1178,7 @@ bool MCS_get_temporary_folder(char *&r_temp_folder)
 {
 	WCHAR t_tmpdir[MAX_PATH];
 	int32_t t_tmpdir_len = 0;
-	t_tmpdir_len = GetTempPath(MAX_PATH, t_tmpdir);
+	t_tmpdir_len = GetTempPathW(MAX_PATH, t_tmpdir);
 
 	return MCFileSystemPathFromNative(t_tmpdir, r_temp_folder);
 }

@@ -915,6 +915,11 @@ private command revCopyResources pStack, pStackFileList
       put "revCompatibilityBrushes1" & return after tCopyFiles
    end if
    
+   -- PM-2015-06-24: [[ Bug 15535 ]] Make possible to use magnify palette in standalones
+   if sStandaloneSettingsA["Magnify"] then
+      put "Magnify" & return after tCopyFiles
+   end if
+   
    if sStandaloneSettingsA["revolutionPrintDialogs"] then
       put "Print Dialog" & return after tCopyFiles
       put "Page Setup Dialog" & return after tCopyFiles
@@ -1707,7 +1712,11 @@ private function revSaveToFolder pFolder, pStack, pGeneric
       put ".rev" after tFileName
    end if
    lock screen
+   // SN-2015-07-01: [[ Bug 15259 ]] We don't want the saving to be trapped by
+   //  a saveStackRequest handler in the standalone stack
+   lock messages
    save stack pStack as pFolder&tFileName
+   unlock messages
    return tFileName
 end revSaveToFolder
 
@@ -2145,7 +2154,11 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
             break
       end switch
    end if
+   // SN-2015-07-01: [[ Bug 15259 ]] We don't want the saving to be trapped by
+   //  a saveStackRequest handler in the standalone stack
+   lock messages
    save stack pStackFilePath
+   unlock messages
    
    -- MM-2013-04-05: [[ Bug 10756 ]] Make sure we're allowed to delete the stack before deleteing.
    set the cantDelete of stack pStackFilePath to false
@@ -2469,6 +2482,7 @@ private command revSmartChecking pStackFilesList, pSearchForInclusions
       put false into sStandaloneSettingsA["answerDialog"]
       put false into sStandaloneSettingsA["askDialog"]
       put false into sStandaloneSettingsA["brushes"]   --LG-2007-12-13: Bug 4370
+      put false into sStandaloneSettingsA["Magnify"]  -- PM-2015-06-24: [[ Bug 15535 ]] Make possible to include magnify palette in standalones
       put false into sStandaloneSettingsA["pdfPrinter"]
       
       # OK-2007-11-13 : Support for revolution print dialogs

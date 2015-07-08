@@ -166,6 +166,17 @@ struct MCObjectFontAttrs
 	uint2 size;
 };
 
+struct MCDeletedObjectPool;
+void MCDeletedObjectsSetup(void);
+void MCDeletedObjectsTeardown(void);
+void MCDeletedObjectsEnterWait(bool p_dispatching);
+void MCDeletedObjectsLeaveWait(bool p_dispatching);
+void MCDeletedObjectsOnObjectCreated(MCObject *object);
+void MCDeletedObjectsOnObjectDeleted(MCObject *object);
+void MCDeletedObjectsOnObjectDestroyed(MCObject *object);
+
+void MCDeletedObjectsDoDrain(void);
+
 struct MCPatternInfo
 {
 	uint32_t id;
@@ -237,6 +248,8 @@ protected:
 
 	// MW-2012-02-16: [[ LogFonts ]] The object's logical font attrs.
 	MCObjectFontAttrs *m_font_attrs;
+    
+    MCDeletedObjectPool *m_pool;
 
 	static uint1 dashlist[2];
 	static uint1 dotlist[2];
@@ -719,7 +732,11 @@ public:
 	}
     
     MCRectangle measuretext(const MCString& p_text, bool p_is_unicode);
-
+    
+    // Object pool instance variable manipulation
+    MCDeletedObjectPool *getdeletedobjectpool(void) const { return m_pool; }
+    void setdeletedobjectpool(MCDeletedObjectPool *pool) { m_pool = pool; }
+    
 protected:
 	IO_stat defaultextendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
 	IO_stat defaultextendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_remaining);

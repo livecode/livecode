@@ -112,7 +112,8 @@ void MCTooltip::settip(const char *tip)
 
 void MCTooltip::opentip()
 {
-	if (tooltip == NULL || card == NULL)
+	// PM-2015-07-02: [[ Bug 15561 ]] Tooltip should not appear for controls out of the visible window
+	if (tooltip == NULL || card == NULL || !MCU_point_in_rect(card -> getrect(), mx, my))
 		return;
 
 	MCStack *sptr = card->getstack();

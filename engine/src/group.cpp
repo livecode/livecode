@@ -1370,6 +1370,39 @@ Exec_stat MCGroup::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
         return t_stat;
     }
     break;
+
+			// PM-2015-07-02: [[ Bug 13262 ]] Make sure we attach/detach the player when showing/hiding a group that has a player
+#ifdef FEATURE_PLATFORM_PLAYER
+	case P_INVISIBLE:
+	case P_VISIBLE:
+	{
+		Exec_stat t_stat;
+		Boolean t_show;
+		Boolean t_invisible;
+		t_invisible = (p == P_INVISIBLE);
+		
+		t_stat = ep.getboolean(t_show, 0, 0, EE_PROPERTY_NAB);
+		if (t_stat == ES_NORMAL)
+		{
+			for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
+			{
+				if (t_player -> getparent() == this)
+				{
+					if ((t_show && !t_invisible) || (!t_show && t_invisible))
+						t_player -> attachplayer();
+					else
+						t_player -> detachplayer();
+				}
+			}
+			
+			return MCControl::setprop(parid, p, ep, effective);
+		}
+		return t_stat;
+		
+	}
+	break;
+#endif
+			
 #endif /* MCGroup::setprop */
 	default:
 		return MCControl::setprop(parid, p, ep, effective);

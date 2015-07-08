@@ -2688,6 +2688,8 @@ Boolean MCStack::del()
 	if (MCdispatcher->gethome() == this)
 		return False;
 	
+    setstate(CS_DELETE_STACK, True);
+    
 	if (opened)
 	{
 		// MW-2007-04-22: [[ Bug 4203 ]] Coerce the flags to include F_DESTROY_WINDOW to ensure we don't

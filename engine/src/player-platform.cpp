@@ -1380,11 +1380,13 @@ static bool MCPathIsAbsolute(const char *p_path)
 	return p_path[0] == '/' || p_path[0] == ':';
 }
 
-static bool MCPathIsRemoteURL(const char *p_path)
+static bool MCPathIsURL(const char *p_path)
 {
 	return MCCStringBeginsWith(p_path, "http://") ||
 	MCCStringBeginsWith(p_path, "https://") ||
-	MCCStringBeginsWith(p_path, "ftp://");
+	MCCStringBeginsWith(p_path, "ftp://") ||
+    // PM-2015-06-30: [[ Bug 14418 ]] Allow URLs of the form file://
+    MCCStringBeginsWith(p_path, "file://");
 }
 
 // PM-2014-12-19: [[ Bug 14245 ]] Make possible to set the filename using a relative path to the stack folder
@@ -1393,8 +1395,8 @@ bool MCPlayer::resolveplayerfilename(const char *p_filename, char *&r_filename)
 {
     if (p_filename == nil)
         return false;
-        
-    if (MCPathIsAbsolute(p_filename) || MCPathIsRemoteURL(p_filename))
+    
+    if (MCPathIsAbsolute(p_filename) || MCPathIsURL(p_filename))
     {
         r_filename = strdup(p_filename);
         return true;
@@ -2750,7 +2752,7 @@ void MCPlayer::SynchronizeUserCallbacks(void)
 	delete cblist;
     
     if (!hasfilename())
-        return True;
+        return;
     
     // Now set the markers in the player so that we get notified.
     array_t<uint32_t> t_markers;
@@ -2761,7 +2763,7 @@ void MCPlayer::SynchronizeUserCallbacks(void)
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMarkers, kMCPlatformPropertyTypeUInt32Array, &t_markers);
     MCMemoryDeleteArray(t_markers . ptr);
     
-	return True;
+	return;
 }
 
 Boolean MCPlayer::isbuffering(void)

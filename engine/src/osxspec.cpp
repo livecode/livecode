@@ -1599,7 +1599,15 @@ Boolean MCS_poll(real8 delay, int fd)
 			handled = True;
 		}
 	}
-
+    
+	extern int g_notify_pipe[2];
+	if (g_notify_pipe[0] != -1)
+	{
+		FD_SET(g_notify_pipe[0], &rmaskfd);
+		if (g_notify_pipe[0] > maxfd)
+			maxfd = g_notify_pipe[0];
+	}
+    
 	struct timeval timeoutval;
 	timeoutval.tv_sec = (long)delay;
 	timeoutval.tv_usec = (long)((delay - floor(delay)) * 1000000.0);
@@ -1639,7 +1647,13 @@ Boolean MCS_poll(real8 delay, int fd)
 		}
 		MCsockets[i]->setselect();
 	}
-
+    
+	if (g_notify_pipe[0] != -1 && FD_ISSET(g_notify_pipe[0], &rmaskfd))
+	{
+		char t_notify_char;
+		read(g_notify_pipe[0], &t_notify_char, 1);
+	}
+    
 	return True;
 }
 
