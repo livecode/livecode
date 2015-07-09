@@ -12,9 +12,9 @@ Summary: Establishes a <TCP> communications <socket> between your system and ano
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac,windows,linux,iOS,android
 
-Platforms: desktop,server,web
+Platforms: desktop,server,web,mobile
 
 Security: network
 
