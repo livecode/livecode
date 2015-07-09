@@ -427,6 +427,9 @@ function revDocsGenerateDocsFileFromModular pText
             next repeat
          else if it is "handler" then
             put it into tEntryType
+         else if it is "property" then
+            put it into tEntryType
+            put tLine into tNameLine
          else if it is "syntax" then
             put it into tEntryType
             if word 4 of tLine is "phrase" then
@@ -464,7 +467,8 @@ function revDocsGenerateDocsFileFromModular pText
             next repeat
          end if
          // If so, then flush all the data
-         if it is "end" then
+         // Property declarations are one-liners
+         if it is "end" or tEntryType is "property" then
             // Don't add an API entry when there are no docs
             if tIsPhrase then
                put tSyntaxLine into tPhrases[tPhraseName]
@@ -546,7 +550,11 @@ function revDocsGenerateDocsFileFromModular pText
    repeat for each key tKey in tData
       put "Name: " & tKey & CR & CR after tOutput
       put "Type: " & tData[tKey]["type"] & CR & CR after tOutput
-      put "Syntax: " & word 1 to -1 of tData[tKey]["syntax"][1] & CR & CR after tOutput
+      
+      # Allow syntax to be entirely specified in comments
+      if tData[tKey]["syntax"] is not empty then
+         put "Syntax: " & word 1 to -1 of tData[tKey]["syntax"][1] & CR & CR after tOutput
+      end if
       
       put revDocsFormatInlineComments(tData[tKey]) & CR & CR after tOutput
    end repeat
@@ -1502,11 +1510,23 @@ command revDocsUpdateDocBlocks pModular, pType, pLine, pComment, @xDataA
       exit revDocsUpdateDocBlocks
    end if
    
+   local tEntryName
+   if pType is "property" then
+      put word 2 of pLine into tEntryName
+      put tEntryName into xDataA[tEntryName]["name"]
+      put pType into xDataA[tEntryName]["type"]
+      # Output the comments that preceded this property definition
+      put pComment into xDataA[tEntryName]["comments"]
+      # Distinguish from syntax
+      put "property" into xDataA[tEntryName]["kind"]
+      exit revDocsUpdateDocBlocks
+   end if
+   
    if it is "public" then
       put word 2 to -1 of pLine into pLine
    end if
    
-   local tEntryName, tHandlerParams
+   local tHandlerParams
    if pModular then
       get matchText(pLine, "(\w*)\((.*)\)", tEntryName, tHandlerParams)
    else
