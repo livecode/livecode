@@ -339,7 +339,10 @@ bool MCServerScript::Include(MCExecPoint& outer_ep, const char *p_filename, bool
 	t_file = FindFile(p_filename, true);
 	if (t_file -> index == 1)
 	{
-		setfilename(t_file -> filename);
+        // SN-2015-07-09: [[ ServerCrash ]] Make sure that the filename is dup
+        //  as it will be added to MCServerScript::m_files, and deleted in
+        //  ~MCServerScript (as MCServerScript::filename is).
+		setfilename(strdup(t_file -> filename));
 	}
 
 	// Set back the old default folder
