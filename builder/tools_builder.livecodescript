@@ -391,7 +391,7 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
          create folder tOutputFileStub & ".app" & slash & "Contents/Resources"
          put tPlistFile into url ("file:" & tOutputFileStub & ".app" & slash & "Contents/Info.plist")
          if pEdition is "Community" then
-            put url ("binfile:" & builderInstallerEngine("macosx") & slash & "Contents/Resources/Installer.icns") into url ("binfile:" & tOutputFileStub & ".app" & slash & "Contents/Resources/Installer.icns")
+            put url ("binfile:" & builderCommunityResourceFolder() & "/Installer.icns")  into url ("binfile:" & tOutputFileStub & ".app" & slash & "Contents/Resources/Installer.icns")
          else
             put url ("binfile:" & builderCommercialResourceFolder() & "/Installer.icns") into url ("binfile:" & tOutputFileStub & ".app" & slash & "Contents/Resources/Installer.icns")
          end if
