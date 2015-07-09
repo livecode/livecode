@@ -146,6 +146,9 @@ dist-upload-files.txt:
 	find . -maxdepth 1 -name 'LiveCode*Installer-*-Mac.dmg' \
 	                -o -name 'LiveCode*Installer-*-Windows.exe' \
 	                -o -name 'LiveCode*Installer-*-Linux.*' \
+	                -o -name 'LiveCode*Server-*-Linux*.zip' \
+	                -o -name 'LiveCode*Server-*-Mac.zip' \
+	                -o -name 'LiveCode*Server-*-Windows.zip' \
 	  > $@
 
 # Perform the upload.  This is in two steps:
