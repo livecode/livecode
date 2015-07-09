@@ -3,6 +3,12 @@
 
 language: c++
 
+# Skip vulcan CI branches
+branches:
+  only:
+    - /^develop.*$/
+    - /^release.*$/
+
 # Environment variables
 env:
   global:
