@@ -1,0 +1,188 @@
+/*
+Copyright (C) 2015 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+widget com.livecode.extensions.livecode.colorSwatch
+--
+
+-- dependency declarations
+use com.livecode.canvas
+use com.livecode.widget
+use com.livecode.engine
+--
+
+-- adding metadata to ensure the extension displays correctly in LiveCode
+metadata author is "LiveCode"
+metadata version is "0.0.1"
+metadata title is "Color Swatch"
+metadata preferredSize is "24,24"
+--
+
+-- property declarations
+property swatchColor get getColor set setColor
+metadata swatchColor.editor is "com.livecode.pi.color"
+metadata swatchColor.default is "255,100,0"
+metadata swatchColor.label is "Swatch Color"
+--
+
+-- private instance variables
+private variable mColor as optional Color
+private variable mPadding as Number
+--
+
+----------
+-- this handler is called when the widget is created
+public handler OnCreate() returns nothing
+	updateConstants()
+end handler
+----------
+
+public handler updateConstants() returns nothing
+	put the minimum of (my width * 0.15) and (my height * 0.15) into mPadding
+	if mPadding > 10 then
+		put 10 into mPadding
+	else if mPadding < 4 then
+		put 4 into mPadding
+	end if
+end handler
+
+public handler OnMouseUp() returns nothing
+	post "mouseUp" with [the click button]
+end handler
+
+----------
+-- this handler is called whenever LiveCode needs to redraw the widget
+public handler OnPaint() returns nothing
+	variable tPath
+
+	-- Draw the background
+	put rounded rectangle path of rectangle [0.5, 0.5, my width-0.5, my height-0.5] with radius 5 into tPath
+	set the paint of this canvas to getPaint("background")
+	fill tPath on this canvas
+	set the paint of this canvas to getPaint("stroke")
+	set the stroke width of this canvas to 1
+	stroke tPath on this canvas
+
+	-- Draw the pattern for the swatch
+
+	-- Draw the color
+	if mColor is defined then
+		put rectangle path of rectangle [mPadding, mPadding, my width - mPadding, my height - mPadding] into tPath
+		set the paint of this canvas to solid paint with mColor
+		fill tPath on this canvas
+	else
+		put line path from point [mPadding, mPadding] to point [my width - mPadding, my height - mPadding] into tPath
+		set the paint of this canvas to solid paint with stringToColor("255,0,0")
+		set the stroke width of this canvas to 2
+		stroke tPath on this canvas
+
+		put rectangle path of rectangle [mPadding, mPadding, my width - mPadding, my height - mPadding] into tPath
+		set the paint of this canvas to getPaint("stroke")
+		set the stroke width of this canvas to 0
+		stroke tPath on this canvas
+	end if
+end handler
+----------
+
+public handler onGeometryChanged() returns nothing
+	updateConstants()
+end handler
+
+----------
+public handler setColor(in tColor as optional String) returns nothing
+	if tColor is not empty then
+		put stringToColor(tColor) into mColor
+	else
+		put nothing into mColor
+	end if
+	redraw all
+end handler
+
+public handler getColor() returns String
+	return colorToString(mColor)
+end handler
+----------
+
+----------
+-- this handler returns a paint
+public handler getPaint(pType) returns Paint
+	if pType is "background" then
+		return solid paint with stringToColor("255,255,255")
+	else if pType is "stroke" then
+		return solid paint with stringToColor("0,0,0,50")
+	end if
+
+	return solid paint with stringToColor("255,100,200")
+end handler
+----------
+
+
+----------
+-- this handler converts a string of numbers to an RGBA color
+private handler stringToColor(in pString as String) returns Color
+	variable tRed as Real
+	variable tGreen as Real
+	variable tBlue as Real
+	variable tAlpha as Real
+
+	variable tComponentList as List
+	split pString by "," into tComponentList
+
+	variable tComponentCount
+	put the number of elements in tComponentList into tComponentCount
+	if tComponentCount is not 3 and tComponentCount is not 4 then
+		// Invalid number of components detected
+		throw "Invalid color"
+	end if
+
+	put (element 1 of tComponentList) parsed as number into tRed
+	put (element 2 of tComponentList) parsed as number into tGreen
+	put (element 3 of tComponentList) parsed as number into tBlue
+
+	if tComponentCount is 4 then
+		put (element 4 of tComponentList) parsed as number into tAlpha
+	else
+		put 255 into tAlpha
+	end if
+
+	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha/255 ]
+end handler
+----------
+
+----------
+-- this handler converts an RGBA color to a string
+private handler colorToString(in pColor as Color) returns String
+	return stripZeros((the rounded of ((the red of pColor) * 255)) formatted as string) & "," & stripZeros((the rounded of ((the green of pColor) * 255)) formatted as string) & "," & stripZeros((the rounded of ((the blue of pColor) * 255)) formatted as string) & "," & stripZeros((the rounded of ((the alpha of pColor) * 255)) formatted as string)
+end handler
+----------
+
+-- this handler strips the zeros when an integer is formatted as a string
+private handler stripZeros(in pString as String) returns String
+   if pString contains "." then
+      repeat while ((the last char of pString) is in ".0")
+         if the last char of pString is "." then
+            delete the last char of pString
+            exit repeat
+         else
+            delete the last char of pString
+         end if
+      end repeat
+   end if
+   return pString
+end handler
+--
+
+end widget
