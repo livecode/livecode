@@ -192,14 +192,14 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 	void *t_data;
 	t_data = nil;
 	if (t_success)
-		t_success = MCMemoryNew(t_clipped_bounds . width * t_clipped_bounds . height, t_data);
+		t_success = MCMemoryNew(t_text_bounds . width * t_text_bounds . height, t_data);
 	
 	if (t_success)
 	{
 		FT_Bitmap t_ftbitmap;
-		t_ftbitmap . rows = t_clipped_bounds . height;
-		t_ftbitmap . width = t_clipped_bounds . width;
-		t_ftbitmap . pitch = t_clipped_bounds . width;
+		t_ftbitmap . rows = t_text_bounds . height;
+		t_ftbitmap . width = t_text_bounds . width;
+		t_ftbitmap . pitch = t_text_bounds . width;
 		t_ftbitmap . buffer = (unsigned char*) t_data;
 		t_ftbitmap . num_grays = 256;
 		t_ftbitmap . pixel_mode = FT_PIXEL_MODE_GRAY;
@@ -220,7 +220,7 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 			t_blend_mode -> unref();		
 		
 		SkBitmap t_bitmap;
-		t_bitmap . setConfig(SkBitmap::kA8_Config, t_clipped_bounds . width, t_clipped_bounds .  height);
+		t_bitmap . setConfig(SkBitmap::kA8_Config, t_clipped_bounds . width, t_clipped_bounds .  height, t_text_bounds . width);
         t_bitmap . setAlphaType(kPremul_SkAlphaType);
 		t_bitmap . setPixels(t_data);
 		self -> layer -> canvas -> drawSprite(t_bitmap, t_clipped_bounds . x + t_device_location . x, 
