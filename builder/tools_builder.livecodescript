@@ -316,6 +316,9 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
          put pPackageFile into tParams["payload"]
          put tOutputFileStub & ".unsigned.exe" into tParams["output"]
          
+         // libURL is needed in the timestamp processing
+         start using stack (builderRepoFolder() & slash & "ide-support" & slash & "revliburl.livecodescript")
+         
          if pEdition is "Commercial" then
             put builderCommercialResourceFolder() & "/installer.ico" into tParams["appicon"]
          end if
