@@ -22,6 +22,8 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+extern int IsDependencyCompile(void);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static int s_error_count;
