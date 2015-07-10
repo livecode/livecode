@@ -1,0 +1,12 @@
+Name: Internet library
+
+Synonyms: Internet library,Internet libraries
+
+Type: library
+
+Description:
+The <Revolution custom library|LiveCode custom library> that supports use of the <ftp> and <http> <protocol|protocols>.
+
+References: protocol (glossary), FTP (glossary), HTTP (glossary), Revolution custom library (library)
+
+Tags: networking

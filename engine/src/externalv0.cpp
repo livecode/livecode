@@ -1334,11 +1334,11 @@ static char *get_variable_ex_utf8(const char *arg1, const char *arg2,
 	if (MCECptr == NULL)
 	{
 		*retval = xresFail;
-		return false;
+		return NULL;
 	}
 	*retval = trans_stat(getvarptr_utf8(*MCECptr, arg1, &var));
 	if (var == NULL)
-		return false;
+		return NULL;
     
     MCAutoValueRef t_value;
     
@@ -1680,6 +1680,10 @@ static char *window_to_stack_rect(const char *arg1, const char *arg2,
 	return nil;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+// Interface V3
+//
+
 // AL-2015-02-10: [[ SB Inclusions ]] Add module loading callbacks to ExternalV0 interface
 static char *load_module(const char *arg1, const char *arg2,
                          const char *arg3, int *retval)
@@ -1720,6 +1724,29 @@ static char *resolve_symbol_in_module(const char *arg1, const char *arg2,
     return nil;
 }
 
+////////////////////////////////////////////////////////////////////////
+// Interface V4
+//
+
+static char *get_display_handle(const char *arg1, const char *arg2, const char *arg3, int *retval)
+{
+    void *t_display;
+    t_display = nil;
+
+    if (!MCscreen->platform_get_display_handle(t_display))
+    {
+        *retval = xresFail;
+        return nil;
+    }
+    
+    void **t_return;
+    t_return = (void**)arg3;
+    
+    *t_return = t_display;
+    *retval = xresSucc;
+    
+    return nil;
+}
 ////////////////////////////////////////////////////////////////////////////////
 //  V4: UTF-8 <-> Native string conversion
 // arg1 contains the string to convert, for both of the functions.
@@ -1737,8 +1764,8 @@ static char *convert_from_native_to_utf8(const char *arg1, const char *arg2,
     }
     
     *retval = xresSucc;
-	// Return a string owned by the engine, to avoid the release issue
-	MCExternalAddAllocatedString(MCexternalallocpool, t_utf8_string);
+    // Return a string owned by the engine, to avoid the release issue
+    MCExternalAddAllocatedString(MCexternalallocpool, t_utf8_string);
     return t_utf8_string;
 }
 
@@ -1833,6 +1860,10 @@ XCB MCcbs[] =
     /* V3 */ load_module,
     /* V3 */ unload_module,
     /* V3 */ resolve_symbol_in_module,
+	
+    // SN-2015-02-25: [[ Merge 7.0.4-rc-1 ]] get_display_handle is part of
+    //  the interface V4, as load_module and others are the V3.
+    /* V4 */ get_display_handle,
     
     /* V4 */ convert_from_native_to_utf8,
     /* V4 */ convert_to_native_from_utf8,

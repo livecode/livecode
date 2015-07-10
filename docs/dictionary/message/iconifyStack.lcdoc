@@ -1,0 +1,29 @@
+Name: iconifyStack
+
+Type: message
+
+Syntax: iconifyStack
+
+Summary: Sent to the <current card> when a <stack> is <minimize|minimized>.
+
+Associations: card
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+on iconifyStack -- hide auxiliary window when the stack is iconified
+  hide stack "Go Back Palette"
+end iconifyStack
+
+Description:
+Handle the <iconifyStack> <message> if you want to do something special when the user <minimize|minimizes> a <stack window>.
+
+The terminology varies depending on platform. The <iconifyStack> <message> is sent when the user <collapse|collapses> (<Mac OS|Mac OS systems>), <iconify|iconifies> (<Unix|Unix systems>), or <minimize|minimizes> (OS X systems and <Windows|Windows systems>) the <stack window>.
+
+References: icon (property), unIconifyStack (message), suspendStack (message), stack (object), minimize (glossary), current card (glossary), stack window (glossary), Windows (glossary), message (glossary), Mac OS (glossary), collapse (glossary), Unix (glossary), iconify (glossary)
+
+Tags: windowing

@@ -129,6 +129,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 //////////////////////////////////////////////////////////////////////
 //
+//  FOUNDATION SYSTEM LIBRARY
+//
+
+#include <foundation-system.h>
+
+//////////////////////////////////////////////////////////////////////
+//
 //  LEGACY INCLUDES AND DEFINES
 //
 
@@ -242,6 +249,7 @@ typedef struct __MCWinSysMetafileHandle *MCWinSysMetafileHandle;
 typedef struct __MCWinSysEnhMetafileHandle *MCWinSysEnhMetafileHandle;
 
 #define PLACEMENT_NEW_DEFINED
+#define __PLACEMENT_NEW_INLINE
 inline void *operator new (size_t size, void *p)
 {
 	return p;
@@ -273,6 +281,9 @@ extern void _dbg_MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize,
 
 #endif
 
+// VS before 2013 doesn't provide this function
+inline float roundf(float f) { return f >= 0.0f ? floorf(f + 0.5f) : ceilf(f - 0.5f); }
+
 // MW-2010-10-14: This constant is the amount of 'extra' stack space ensured to be present
 //   after a recursionlimit check has failed.
 #define MC_UNCHECKED_STACKSIZE 65536U
@@ -284,6 +295,11 @@ struct MCFontStruct
 	int ascent;
 	int descent;
 	Boolean printer;
+    
+    coord_t m_ascent;
+    coord_t m_descent;
+    coord_t m_leading;
+    coord_t m_xheight;
 };
 
 #define SECONDS_MIN 0.0
@@ -341,6 +357,13 @@ struct MCFontStruct
 	uint2 style;
 	int ascent;
 	int descent;
+    
+    coord_t m_ascent;
+    coord_t m_descent;
+    coord_t m_em;
+    coord_t m_xheight;
+    coord_t m_capheight;
+    coord_t m_leading;
 };
 
 #define fixmaskrop(a) (a)
@@ -381,7 +404,7 @@ inline uint1 MCS_toupper(uint1 p_char)
 }
 
 extern uint2 MCctypetable[];
-#define _ctype(x, y) ((MCctypetable[(x)] & (1 << (y))) != 0)
+#define _ctype(x, y) ((MCctypetable[(uindex_t) (x)] & (1 << (y))) != 0)
 #define isalpha(x) (_ctype(x, 0))
 #define isupper(x) (_ctype(x, 1))
 #define islower(x) (_ctype(x, 2))
@@ -400,6 +423,11 @@ struct MCFontStruct
     uint16_t size;
 	uint2 ascent;
 	uint2 descent;
+    
+    coord_t m_ascent;
+    coord_t m_descent;
+    coord_t m_leading;
+    coord_t m_xheight;
 };
 
 #define fixmaskrop(a) (a)
@@ -448,6 +476,11 @@ struct MCFontStruct
 	uint2 style;
 	int ascent;
 	int descent;
+    
+    coord_t m_ascent;
+    coord_t m_descent;
+    coord_t m_leading;
+    coord_t m_xheight;
 };
 
 #define fixmaskrop(a) (a)
@@ -489,6 +522,11 @@ struct MCFontStruct
 	int ascent;
 	int descent;
 	MCSysFontHandle fid;
+    
+    coord_t m_ascent;
+    coord_t m_descent;
+    coord_t m_leading;
+    coord_t m_xheight;
 };
 
 #define fixmaskrop(a) (a)
@@ -1303,8 +1341,10 @@ enum Chunk_term {
     CT_EPS,
     CT_MAGNIFY,
     CT_COLOR_PALETTE,
+    CT_WIDGET,
     CT_FIELD,
 	CT_LAST_CONTROL = CT_FIELD,
+    CT_FIRST_TEXT_CHUNK = CT_FIELD,
     CT_LINE,
     CT_PARAGRAPH,
     CT_SENTENCE,

@@ -62,7 +62,7 @@ int util_strncmp(const char *one, const char *two, int n)
   return 1;
 }
 
-char *util_strchr(char *sptr, char target, int l)
+const char *util_strchr(const char *sptr, char target, int l)
 {
   if (!l) l = strlen(sptr);
   const char *eptr = sptr + l;
@@ -76,7 +76,7 @@ char *util_strchr(char *sptr, char target, int l)
 }
 
 //utility function used to concat two strings..and reallocate string if neccessary
-void util_concatstring(char *s, int slen, char *&d, int &dlen, int &dalloc)
+void util_concatstring(const char *s, int slen, char *&d, int &dlen, int &dalloc)
 {
 	int newbufsize = dalloc;
 	while (dlen + slen + 1 > newbufsize)
@@ -408,7 +408,7 @@ Bool CXMLDocument::GetElementByPath(CXMLElement *telement, char *tpath)
 		return False;
 
 	if (*sptr == '/') sptr++;
-	char *nameend;
+	const char *nameend;
 	char *nextname = strchr(sptr, '/');
 	if (!nextname) 
 	{
@@ -418,7 +418,7 @@ Bool CXMLDocument::GetElementByPath(CXMLElement *telement, char *tpath)
 		isroot = True;
 		
 	}
-	char *numpointer = util_strchr(sptr,'[',nextname-sptr);
+	const char *numpointer = util_strchr(sptr,'[',nextname-sptr);
 	if (numpointer)
 			nameend = numpointer;
 	else

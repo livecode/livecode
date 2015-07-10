@@ -1,0 +1,35 @@
+Name: revQueryIsAtEnd
+
+Type: function
+
+Syntax: revQueryIsAtEnd(<recordSetID>)
+
+Summary: Returns whether the end of a record set has been reached or not.
+
+Synonyms: revdb_iseof
+
+Introduced: 2.9
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Security: disk,network
+
+Example:
+repeat until revQueryIsAtEnd(tCursor)
+  ...
+  revMoveToNextRecord tCursor
+end repeat
+
+Parameters:
+recordSetID: The number returned by the revQueryDatabase function when the record set was created
+
+Returns: The <revQueryIsAtEnd> function returns true if the <revMoveToNextRecord command> has been called with the cursor pointing to the last record.
+
+Description:
+Use the <revQueryIsAtEnd> function to stop when you reach the end of a record set.
+
+If the operation is not successful, the <revQueryIsAtEnd> function returns an error message that begins with the string "revdberr"
+
+References: revMoveToNextRecord command (command), revMoveToNextRecord (command), revQueryIsAtStart (function)

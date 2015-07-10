@@ -736,8 +736,6 @@ MCPrinterDialogResult MCPSPrinter::DoPageSetup(bool p_window_modal, Window p_own
 
 MCPrinterResult MCPSPrinter::DoBeginPrint(MCStringRef p_document, MCPrinterDevice*& r_device)
 {
-	MCPSPrinterDevice *t_device = new MCPSPrinterDevice ;
-	
 	const char *t_output_file;
 	if (GetDeviceOutputType() == PRINTER_OUTPUT_FILE)
 		t_output_file = GetDeviceOutputLocation();
@@ -776,7 +774,7 @@ MCPrinterResult MCPSPrinter::DoBeginPrint(MCStringRef p_document, MCPrinterDevic
 	for ( int i = 0; i < PS_NFUNCS; i++)
 		PSwrite ( PSfuncs [ i ]  );
 	
-	r_device = t_device ;
+	r_device = new MCPSPrinterDevice;
 	
 	return ( PRINTER_RESULT_SUCCESS ) ;
 }
@@ -1497,7 +1495,7 @@ void MCPSMetaContext::fillpattern(MCPatternRef p_pattern, MCPoint p_origin)
 	
 	// IM-2014-05-14: [[ HiResPatterns ]] Update pattern access to use lock function
 	/* UNCHECKED */ MCPatternLockForContextTransform(p_pattern, MCGAffineTransformMakeIdentity(), t_image, t_transform);
-	t_transform = MCGAffineTransformTranslate(t_transform, p_origin.x, cardheight - p_origin.y);
+	t_transform = MCGAffineTransformPreTranslate(t_transform, p_origin.x, cardheight - p_origin.y);
 	
 	if (!pattern_created(t_image))
 		create_pattern(t_image);

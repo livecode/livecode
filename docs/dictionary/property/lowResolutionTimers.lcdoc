@@ -1,0 +1,32 @@
+Name: lowResolutionTimers
+
+Type: property
+
+Syntax: set the lowResolutionTimers to {true | false}
+
+Summary: Specifies which operating-system mechanism is used to compute times on <Windows|Windows systems>.
+
+Introduced: 1.0
+
+OS: windows
+
+Platforms: desktop,server,web
+
+Example:
+set the lowResolutionTimers to true
+
+Value (bool):The <lowResolutionTimers> is true or false.
+By default, the <lowResolutionTimers> <property> is set to false.
+
+Description:
+Use the <lowResolutionTimers> <property> to improve performance on <Windows|Windows systems>.
+
+If the <lowResolutionTimers> <property> is set to true, timing intervals are measured with the operating system's WM_TIMER <message|messages>. If the <lowResolutionTimers> is false, timing intervals are measured with the high-precision multimedia timers.
+
+The high-precision timers are sometimes unreliable, causing delays in the action of the <move> and <wait> <command|commands>. You can fix these symptoms by setting the <lowResolutionTimers> to true. However, using the WM_TIMER <message|messages> may cause jerkiness in the action of the <move> <command>.
+
+The setting of this property has no effect on Mac OS and Unix systems.
+
+References: wait (command), move (command), MCISendString (function), property (glossary), Windows (glossary), message (glossary), command (glossary)
+
+Tags: multimedia

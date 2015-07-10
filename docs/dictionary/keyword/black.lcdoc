@@ -1,0 +1,31 @@
+Name: black
+
+Type: keyword
+
+Syntax: black
+
+Summary: Used with the <visual effect> <command> to indicate that a blank black screen is shown at the end of the visual effect.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+visual effect push left to black
+
+Description:
+Use the <black> <keyword> to transition to a blank black <background> in a sequence of visual effects.
+
+Visual effects can be stacked in a sequence by using several <visual effect> <command|commands> in succession. If the last transition ends with showing the <card>, and all except the last one shows an intermediate image (such as a solid black color), the effect is enhanced. You show a solid black color at the end of a transition by using the <black> <keyword>.
+
+This example uses the push effect with the <black> <keyword> to emulate an old-fashioned slide projector:
+
+  visual effect push left to black -- from card to solid black
+  visual effect push right to card -- from black to final card
+  go card "Destination"
+
+References: inverse (keyword), gray (keyword), white (keyword), card (keyword), show (command), visual effect (command), hide (command), command (glossary), keyword (glossary), background (glossary)
+
+Tags: multimedia

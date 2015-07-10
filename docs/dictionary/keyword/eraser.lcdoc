@@ -1,0 +1,23 @@
+Name: eraser
+
+Type: keyword
+
+Syntax: eraser
+
+Summary: Designates the <paint tool> used to erase portions of the <image>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+choose eraser tool
+
+Description:
+Use the <eraser> <keyword> to remove paint from an <image>.
+
+When using the Eraser tool, the cursor is the eraser shape (over stack windows) or an arrow (anywhere else). This tool is used to remove paint from an image, making the erased areas transparent.
+
+References: choose (command), image (keyword), keyword (glossary), paint tool (glossary)

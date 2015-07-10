@@ -1,0 +1,22 @@
+Name: screenPixelScale
+
+Type: property
+
+Syntax: get the screenPixelScale
+
+Summary: Returns the pixel scale of the main screen.
+
+Introduced: 6.6
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,mobile
+
+Example:
+get the screenPixelScale
+
+Value: The <screenPixelScale> property returns a non-zero real number.
+
+References: iphoneUseDeviceResolution (command), usePixelScaling (property), pixelScale (property), systemPixelScale (property), screenPixelScales (property)
+
+Tags: windowing

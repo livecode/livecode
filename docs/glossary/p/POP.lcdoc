@@ -1,0 +1,12 @@
+Name: POP
+
+Synonyms: POP
+
+Type: glossary
+
+Description:
+Post Office Protocol. A <protocol> used to retrieve email from a mail server.
+
+References: protocol (glossary)
+
+Tags: networking

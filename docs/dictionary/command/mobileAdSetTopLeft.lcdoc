@@ -1,0 +1,31 @@
+Name: mobileAdSetTopLeft
+
+Type: command
+
+Syntax: mobileAdSetTopLeft <adName>, <topLeft> 
+
+Summary: Sets the topLeft position of an ad.
+
+Associations: stack
+
+Introduced: 5.5
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+mobileAdSetTopLeft "my ad", (10,150) -- the brackets here are to make sure the top left is passed as a single parameter
+
+Parameters:
+adName: The name of ad (as specified in mobileAdCreate).
+topLeft: The coordinates at which the top left corner of the add should be placed. Use parentheses to pass 2 comma separated values as a single parameter.
+
+The result: If the ad does not exist the result will contain "ad not found". Before calling this command, you must have registered you app's id using mobileAdRegister. If not, the result will contain "not registered with service".
+
+Description:
+Use the <mobileAdSetTopLeft> command to set the top left postition of an ad.
+
+The mobileAdSetTopLeft command places the named ad with its top left corner at the specified point.
+
+References: topLeft (property), adLoaded (message), adLoadFailed (message), adClicked (message), mobileAdCreate (command), mobileAdDelete (command), mobileAdSetVisible (command), mobileAdRegister (command), mobileAdGetTopLeft (function), mobileAdGetVisible (function)

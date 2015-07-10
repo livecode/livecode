@@ -99,8 +99,22 @@ void MCU_init()
 		qa_points[i].y = MAXINT2 - (short)(cos(angle) * (real8)MAXINT2);
 		angle += increment;
 	}
-	MCrandomseed = (int4)(intptr_t)&MCdispatcher + MCS_getpid() + (int4)time(NULL);
-	MCU_srand();
+
+    /* Attempt to seed the random number generator using the system entropy
+     * source. If that fails, fall back to constructing using some of the
+     * entropy available from the properties of the current process. */
+    MCAutoDataRef t_seed_data;
+    if (MCSRandomData(sizeof(MCrandomseed), &t_seed_data))
+    {
+        MCMemoryCopy(&MCrandomseed, MCDataGetBytePtr(*t_seed_data),
+                     sizeof(MCrandomseed));
+    }
+    else
+    {
+        MCLog("Warning: Failed to seed random number generator", NULL);
+        MCrandomseed = (int4)(intptr_t)&MCdispatcher + MCS_getpid() + (int4)time(NULL);
+    }
+    MCU_srand();
 }
 
 void MCU_watchcursor(MCStack *sptr, Boolean force)
@@ -1362,7 +1376,8 @@ static const char **nametable[] =
     &MCnullstring, &MCscrollbarstring,
     &MCimagestring, &MCgraphicstring,
     &MCepsstring, &MCmagnifierstring,
-    &MCcolorstring, &MCfieldstring
+    &MCcolorstring, &MCwidgetstring,
+    &MCfieldstring
 };
 
 bool MCU_matchname(MCNameRef test, Chunk_term type, MCNameRef name)
@@ -1410,7 +1425,7 @@ void MCU_roundrect(MCPoint *&points, uint2 &npoints,
 
 	if (points == NULL || npoints != 4 * QA_NPOINTS + 1)
 	{
-		delete points;
+		delete[] points;
 		points = new MCPoint[4 * QA_NPOINTS + 1];
 	}
 
@@ -1581,11 +1596,11 @@ Boolean MCU_parsepoint(MCPoint &point, MCStringRef data)
     if (!MCStringCanBeNative(data))
         return false;
     
-    const char *sptr;
-    uint4 l;
-    l = MCStringGetLength(data);
-    sptr = (const char *)MCStringGetNativeCharPtr(data);
-    
+    MCAutoPointer<char> t_data;
+    /* UNCHECKED */ MCStringConvertToCString(data, &t_data);
+    const char *sptr = *t_data;
+    uint4 l = MCStringGetLength(data);
+
 	Boolean done1, done2;
 	// MDW-2013-06-09: [[ Bug 11041 ]] Round non-integer values to nearest.
 	int2 i1= (int2)(MCU_strtol(sptr, l, ',', done1, True));
@@ -2056,6 +2071,18 @@ void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
 		MCstacks->restartidle();
 	if (MCtopstackptr != NULL)
 		MCtopstackptr->updatemenubar();
+    
+    MCStacknode *t_node, *t_first_node;
+    t_node = t_first_node = MCstacks->topnode();
+    while (t_node)
+    {
+        t_node->getstack()->toolchanged(MCcurtool);
+        
+        if (t_node->next() == t_first_node)
+            t_node = nil;
+        else
+            t_node = t_node->next();
+    }
     
     // MW-2014-04-24: [[ Bug 12249 ]] Prod each player to make sure its buffered correctly for the new tool.
     for(MCPlayer *t_player = MCplayers; t_player != NULL; t_player = t_player -> getnextplayer())
@@ -2788,7 +2815,7 @@ static CharSet2WinCharset charset2wincharsets[] = {
 uint1 MCU_wincharsettocharset(uint2 wincharset)
 {
 	uint2 i;
-	for (i = 0; i < ELEMENTS(langtocharsets); i++)
+	for (i = 0; i < ELEMENTS(charset2wincharsets); i++)
 		if (charset2wincharsets[i].wincharset == wincharset)
 			return charset2wincharsets[i].charset;
 	return 0;
@@ -2797,7 +2824,7 @@ uint1 MCU_wincharsettocharset(uint2 wincharset)
 uint1 MCU_charsettowincharset(uint1 charset)
 {
 	uint2 i;
-	for (i = 0; i < ELEMENTS(langtocharsets); i++)
+	for (i = 0; i < ELEMENTS(charset2wincharsets); i++)
 		if (charset2wincharsets[i].charset == charset)
 			return charset2wincharsets[i].wincharset;
 	return 0;
@@ -3202,15 +3229,6 @@ bool MCU_compare_strings_native(const char *p_a, bool p_a_isunicode, const char 
 	return t_compval;
 }
 #endif
-
-///////////////////////////////////////////////////////////////////////////////
-
-// MW-2013-05-21: [[ RandomBytes ]] Utility function for generating random bytes.
-bool MCU_random_bytes(size_t p_bytecount, MCDataRef& r_bytes)
-{
-	// IM-2014-08-06: [[ Bug 13038 ]] Use system implementation directly instead of SSL
-	return MCS_random_bytes(p_bytecount, r_bytes);
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 

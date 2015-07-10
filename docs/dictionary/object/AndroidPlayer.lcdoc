@@ -1,0 +1,28 @@
+Name: AndroidPlayer
+
+Type: object
+
+Syntax: AndroidPlayer
+
+Summary: A native Android control that displays a movie.
+
+Introduced: 5.5.1
+
+OS: android
+
+Platforms: mobile
+
+Example:
+mobileControlCreate "player"
+
+Example:
+mobileControlCreate "player", "movie"
+put the result into sPlayerID
+mobileControlSet sPlayerID, "filename", tMoviePath
+
+Description:
+An Androind native player control is created using a control type of "player".
+
+References: mobileControlDelete (command), mobileControlDo (command), mobileControlSet (command), mobileControlCreate (command), mobileControlGet (function), mobileControlTarget (function)
+
+Tags: objects

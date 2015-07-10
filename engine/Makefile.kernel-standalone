@@ -5,6 +5,7 @@ include ../rules/environment.linux.makefile
 
 SOURCES= \
 	lextable.cpp mode_standalone.cpp
+MLC_LIST = libkernel-modules.list
 
 KERNEL_DEFINES=\
 	MODE_STANDALONE

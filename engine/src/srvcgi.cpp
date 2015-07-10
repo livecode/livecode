@@ -486,7 +486,7 @@ public:
 	
 	void* GetFilePointer()
 	{
-		return false;
+		return NULL;
 	}
 	
 	int64_t GetFileSize()

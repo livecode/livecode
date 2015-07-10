@@ -1,0 +1,37 @@
+Name: truewordOffset
+
+Type: function
+
+Syntax: truewordOffset(<stringToFind>, <stringToSearch> [, <truewordsToSkip>])
+
+Summary: Returns the number of truewords between the beginning of a value and an occurrence of a specified string.
+
+Introduced: 7.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+truewordOffset("Chile",tListOfCountries) -- returns 48
+
+Example:
+truewordOffset("d'Ãªtre","Ce n'est pas tant d'Ãªtre riche qui fait le bonheur, c'est de le devenir.") -- returns 5
+
+Parameters:
+stringToFind (string): 
+stringToSearch (string): 
+truewordsToSkip: The truewordsToSkip is a non-negative integer. If you don't specify how many truewordsToSkip, the truewordOffset function does not skip any truewords.
+
+Returns: The <truewordOffset> function returns a non-negative integer.
+
+Description:
+Use the <truewordOffset> function to find which sentence a string occurs in.
+
+The value returned by the <truewordOffset> function is the number of the trueword where the <stringToFind> appears in <stringToSearch>. If the <stringToFind> is not in <stringToSearch>, the <truewordOffset> function returns zero. If the <stringToFind> is more than one trueword, the <truewordOffset> function always returns zero, even if the <stringToFind> appears in the <stringToSearch>.
+
+If you specify how many <truewordsToSkip>, the <truewordOffset> function skips the specified number of sentences in the <stringToSearch>. The value returned is relative to this starting point instead of the beginning of the <stringToSearch>.
+
+References: wholeMatches (property), wordOffset (function), paragraphOffset (function), tokenOffset (function), sentenceOffset (function), byteOffset (function), codeunitOffset (function), codepointOffset (function), offset (function), trueword (keyword)
+
+Tags: text processing

@@ -1,0 +1,34 @@
+Name: backScripts
+
+Type: function
+
+Syntax: the backScripts
+
+Syntax: backScripts()
+
+Summary: <return|Returns> a list of <object|objects> that have been inserted into the <message path> after the <stack> the target <object> belongs to.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+the backScripts
+
+Example:
+if the long ID of me is not among the lines of the backScripts then beep
+
+Returns: The <backScripts> function returns a list of the long ID property of all objects that have been inserted into the back, one ID per line.
+
+Description:
+Use the <backScripts> function to find out which scripts receive messages and function calls after the current object, the objects that own the current object, and any stacks in the stacksInUse.
+
+A script inserted into the back with the <insert script> command receives messages after all objects in the message path, just before the application itself receives the message.
+
+If more than one object is in the <backScripts>, their order in the message path is the same as their order in the list. For example, the first object in the <backScripts> receives messages before the second object. This order is the reverse of the order in which the objects were added with the <insert script> command.
+
+References: back (keyword), remove script (command), insert script (command), stack (object), object (object), message path (glossary), return (glossary)
+
+Tags: objects

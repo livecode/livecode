@@ -1,0 +1,10 @@
+Name: execute
+
+Synonyms: execution,executing,executed,execute
+
+Type: glossary
+
+Description:
+To run a <handler> or to perform a <command>.
+
+References: command (glossary), handler (glossary)

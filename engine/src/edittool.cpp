@@ -320,11 +320,11 @@ uint4 MCPolygonEditTool::handle_under_point(int2 x, int2 y)
 	for (uint4 i=0; i<npts; i++)
 		if (MCU_point_in_rect(rects[i], x, y))
 		{
-			delete rects;
+			delete[] rects;
 			return i;
 		}
 
-	delete rects;
+	delete[] rects;
 	return -1;
 }
 
@@ -437,7 +437,7 @@ void MCPolygonEditTool::drawhandles(MCDC *dc)
 				dc->fillarc(rects[i], 0, 360);
 		}
 		dc->setquality(QUALITY_DEFAULT);
-		delete rects;
+		delete[] rects;
 	}
 }
 

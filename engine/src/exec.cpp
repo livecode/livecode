@@ -132,7 +132,7 @@ bool MCExecContext::ConvertToNumber(MCValueRef p_value, MCNumberRef& r_number)
             if (MCStringGetLength(MCNameGetString((MCNameRef)p_value)) != 0 &&
                     !MCStringGetNumericValue(MCNameGetString((MCNameRef)p_value), t_number))
             {
-                if (!MCU_stor8(MCNameGetString((MCNameRef)p_value), t_number, m_convertoctals))
+                if (!MCTypeConvertStringToReal(MCNameGetString((MCNameRef)p_value), t_number, m_convertoctals))
                     break;
 
                 // Converting to octals doesn't generate the 10-based number stored in the string
@@ -150,7 +150,7 @@ bool MCExecContext::ConvertToNumber(MCValueRef p_value, MCNumberRef& r_number)
             // Fetches the numeric value in case it exists, or stores the one therefore computed otherwise
             if (MCStringGetLength((MCStringRef)p_value) != 0 && !MCStringGetNumericValue((MCStringRef)p_value, t_number))
             {
-                if (!MCU_stor8((MCStringRef)p_value, t_number, m_convertoctals))
+                if (!MCTypeConvertStringToReal((MCStringRef)p_value, t_number, m_convertoctals))
                     break;
 
                 // Converting to octals doesn't generate the 10-based number stored in the string
@@ -1585,7 +1585,7 @@ static bool MCPropertyParseDoubleList(MCStringRef p_input, char_t p_delimiter, u
             t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_double_string);
 		
 		if (t_success)
-			t_success = MCU_stor8(*t_double_string, t_d);
+			t_success = MCTypeConvertStringToReal(*t_double_string, t_d);
 		
 		if (t_success)
 			t_success = t_list . Push(t_d);
@@ -1808,7 +1808,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 r_value . type = kMCExecValueTypeNameRef;
             }
         }
-            break;
+        break;
             
         case kMCPropertyTypeColor:
         {
@@ -2123,13 +2123,11 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             ((void(*)(MCExecContext&, void *, uindex_t&, MCStringRef*&))prop -> getter)(ctxt, mark, t_count, t_value);
             if (!ctxt . HasError())
             {
-                char_t t_delimiter;
-                t_delimiter = prop -> type == kMCPropertyTypeLinesOfString ? '\n' : ',';
                 if (MCPropertyFormatStringList(t_value, t_count, '\n', r_value . stringref_value))
                 {
                     r_value . type = kMCExecValueTypeStringRef;
                 }
-                for (int i = 0; i < t_count; ++i)
+                for (uindex_t i = 0; i < t_count; ++i)
                     MCValueRelease(t_value[i]);
                 if (t_count > 0)
                     MCMemoryDeleteArray(t_value);
@@ -2499,6 +2497,27 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             ((void(*)(MCExecContext&, void *, MCExecValue&))prop -> getter)(ctxt, mark, r_value);
         }
             break;
+         
+        case kMCPropertyTypeProperItemsOfString:
+        case kMCPropertyTypeProperLinesOfString:
+        {
+            MCAutoProperListRef t_proper_list;
+            ((void(*)(MCExecContext&, void *, MCProperListRef&))prop -> getter)(ctxt, mark, &t_proper_list);
+            if (!ctxt . HasError())
+            {
+                MCListRef t_list;
+                /* UNCHECKED */ MCListCreateMutable(prop -> type == kMCPropertyTypeProperLinesOfString ? '\n' : ',', t_list);
+                uintptr_t t_iterator;
+                t_iterator = 0;
+                MCValueRef t_element;
+                while(MCProperListIterate(*t_proper_list, t_iterator, t_element))
+                    /* UNCHECKED */ MCListAppend(t_list, t_element);
+                
+                r_value . type = kMCExecValueTypeStringRef;
+                /* UNCHECKED */ MCListCopyAsStringAndRelease(t_list, r_value . stringref_value);
+            }
+        }
+        break;
             
         default:
             ctxt . Unimplemented();

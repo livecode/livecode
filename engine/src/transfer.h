@@ -201,6 +201,9 @@ public:
 	//
 	// virtual bool QuerySystem(const char**& r_system_types, unsigned int& r_system_type_count) = 0;
 	// virtual bool FetchSystem(const char *p_system_type, MCSharedString*& r_data) = 0;
+
+protected:
+	virtual ~MCPasteboard(void) {};
 };
 
 
@@ -248,7 +251,7 @@ public:
 
 private:
 	// Destroy the object.
-	~MCLocalPasteboard(void);
+	virtual ~MCLocalPasteboard(void);
 
 	// Search for the given type on the pasteboard and return the index.
 	// If the type is not found, false is returned.

@@ -1,0 +1,40 @@
+Name: pendingMessages
+
+Type: function
+
+Syntax: the pendingMessages
+
+Syntax: pendingMessages()
+
+Summary: <return|Returns> a list of <message|messages> that have been scheduled with the <send> <command>, but not yet delivered.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+the pendingMessages
+
+Example:
+repeat with x = 1 to the number of lines of the pendingMessages
+
+The result: The message ID is the same as the one placed in the result function when it was scheduled with the <send> command.
+
+Returns (enum): The <pendingMessages> <function> <return|returns> a list of <message|messages>, one per line. Each line consists of four <items>, separated by commas:
+        - the message ID
+        - the time the message is scheduled for
+        - the message name
+        - the long ID <property> of the <object> that the <message> will be sent to
+
+Description:
+Use the <pendingMessages> <function> to check whether a <message> has been sent yet, or to perform some action on each pending <message>.
+
+The time the message is scheduled for is in the same format as the long seconds form of the seconds <function>.
+
+Once scheduled, a message cannot be changed. You can cancel a pending message with the <cancel> <command>, and re-send it with the <send> <command>.
+
+References: items (keyword), cancel (command), send (command), function (control_st), property (glossary), message (glossary), command (glossary), return (glossary), object (object)
+
+Tags: objects

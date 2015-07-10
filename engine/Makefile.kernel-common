@@ -18,4 +18,6 @@ ifeq ($(ARCH),i386)
 	CUSTOM_CCFLAGS:=$(CUSTOM_CCFLAGS) -march=i486
 endif
 
+include ../rules/mlc.linux.makefile
+
 include ../rules/archive.linux.makefile

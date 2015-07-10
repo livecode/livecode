@@ -1,0 +1,36 @@
+Name: printDuplex
+
+Type: property
+
+Syntax: set the printDuplex to {"none" | "short edge" | "long edge"}
+
+Syntax: get the printDuplex
+
+Summary: Reports whether the next print job should print double sided.
+
+Introduced: 2.9
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Security: printing
+
+Example:
+set the printDuplex to "short edge"
+
+Value (enum): The <printDuplex> property is one of the following values.
+  - none: no double-sided printing
+  - short edge: double-sided printing with tumble (flip the non-facing page)
+  - long edge: double-sided printing without tumble
+
+Description:
+Use the <printDuplex> property to print double-sided. If "duplex" is not among the items of the <printerFeatures> then this property has no effect.
+
+Attempting to set the <printDuplex> to an invalid value results in a script execution error.
+
+To have an effect, this property must be set before calling <open printing>.
+
+References: print (command), open printing (command), printCollate (property), printerFeatures (property)
+
+Tags: printing

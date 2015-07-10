@@ -1,6 +1,8 @@
 #ifndef __MC_MAC_PLATFORM__
 #define __MC_MAC_PLATFORM__
 
+#import <AppKit/NSColorPanel.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class MCMacPlatformWindow;
@@ -443,6 +445,8 @@ private:
     MCGRaster m_raster;
 	
 	bool m_cg_context_first_lock;
+	
+	bool m_opaque;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -2563,7 +2563,7 @@ enum Exec_errors
 	// {EE-0840} secure: error in host name expression
 	EE_SECURE_BADHOST,
 	
-    // MM-2014-06-13: [[ Bug 12567 ]] New variant open socket <socket> with verification for host <host>
+	// MM-2014-06-13: [[ Bug 12567 ]] New variant open socket <socket> with verification for host <host>
 	// {EE-0841} open: error in host name expression
 	EE_OPEN_BADHOST,
     
@@ -2574,7 +2574,7 @@ enum Exec_errors
     // MW-2014-10-23: Improve the error message you get from 'start using <name>'
     // {EE-0843} start: script of specified stack won't compile
     EE_START_WONTCOMPILE,
-    
+
     // SN-2014-12-16: [[ Bug 14181 ]] hostnameToAddress should have no message on server
     // {EE-0844} hostnameToAddress: callbacks are not allowed on server
     EE_HOSTNAME_BADMESSAGE,
@@ -2582,7 +2582,7 @@ enum Exec_errors
     // SN-2014-12-15: [[ Bug 14211 ]] Add an error when using a parsed bad extents (such as 'next')
     // {EE-0845} Chunk: bad extents provided
     EE_CHUNK_BADEXTENTS,
-    
+
     // {EE-0846} Error evaluating expression
     EE_EXPR_EVALERROR,
     
@@ -2622,13 +2622,40 @@ enum Exec_errors
     // {EE-0858} MCInternalPayloadPatch: error in base item expression
     EE_INTERNAL_BASE_BADITEM,
 
-	// MDW-2014-09-28: [[ feature_floor ]]
-	// {EE-0859} floor: bad parameter
-	EE_FLOOR_BADSOURCE,
+    // MDW-2014-09-28: [[ feature_floor ]]
+    // {EE-0859} floor: bad parameter
+    EE_FLOOR_BADSOURCE,
+    
+    // MDW-2014-09-28: [[ feature_floor ]]
+    // {EE-0860} ceil: bad parameter
+    EE_CEIL_BADSOURCE,
+    
+    // AL-2015-07-07: The following error codes are 8.0 specific so should have their numbers
+    //  incremented whenever new codes are merged up from below.
+    // MW-2014-12-10: [[ Extensions ]] The error codes used to indicate an extension error.
+    // {EE-0861} extension: error occured with domain
+    EE_EXTENSION_ERROR_DOMAIN,
+    // {EE-0862} extension: error occured with description
+    EE_EXTENSION_ERROR_DESCRIPTION,
+    // {EE-0863} extension: error occured with file
+    EE_EXTENSION_ERROR_FILE,
+    // {EE-0864} extension: error occured with line
+    EE_EXTENSION_ERROR_LINE,
+    
+    // {EE-0865} load: error in extension expression
+    EE_LOAD_BADEXTENSION,
+    
+    // {EE-0866} load: error in resource path expression
+    EE_LOAD_BADRESOURCEPATH,
+    
+    // {EE-0867} System error: function
+    EE_SYSTEM_FUNCTION,
 
-	// MDW-2014-09-28: [[ feature_floor ]]
-	// {EE-0860} ceil: bad parameter
-	EE_CEIL_BADSOURCE,
+    // {EE-0868} System error: code
+    EE_SYSTEM_CODE,
+
+    // {EE-0869} System error: message
+    EE_SYSTEM_MESSAGE,
 };
 
 extern const char *MCexecutionerrors;

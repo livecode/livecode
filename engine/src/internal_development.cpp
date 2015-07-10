@@ -206,7 +206,7 @@ public:
 	{
 #if defined(WIN32) && defined(_DEBUG)
 		_CrtDbgBreak();
-#endif;
+#endif
 	}
 };
 

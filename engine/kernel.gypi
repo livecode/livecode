@@ -10,6 +10,7 @@
 				'../libfoundation/libfoundation.gyp:libFoundation',
 				#'../libexternal/libexternal.gyp:libExternal',
 				'../libgraphics/libgraphics.gyp:libGraphics',
+				'../libscript/libscript.gyp:libScript',
 				
 				'../thirdparty/libgif/libgif.gyp:libgif',
 				'../thirdparty/libjpeg/libjpeg.gyp:libjpeg',
@@ -20,6 +21,8 @@
 				
 				'encode_version',
 				'quicktime_stubs',
+				
+				'lcb-modules.gyp:engine_lcb_modules',
 			],
 			
 			'include_dirs':
@@ -32,6 +35,7 @@
 			[
 				'<@(engine_common_source_files)',
 				'<@(engine_desktop_source_files)',
+				'<@(engine_module_source_files)',
 			],
 			
 			'conditions':

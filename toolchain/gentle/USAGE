@@ -1,0 +1,114 @@
+
+   USAGE
+   -----
+
+   Go to directory `examples/calc' which contains a specification
+   of a simple calculator and a script to process this specification.
+
+   Here is the Gentle specification of the calculator (file `calc.g') :
+
+
+	 'root' expression(-> X) print(X)
+
+	 'nonterm' expression(-> INT)
+
+	    'rule' expression(-> X): expr2(-> X)
+	    'rule' expression(-> X+Y): expression(-> X) "+" expr2(-> Y)
+	    'rule' expression(-> X-Y): expression(-> X) "-" expr2(-> Y)
+
+	 'nonterm' expr2(-> INT)
+
+	    'rule' expr2(-> X): expr3(-> X)
+	    'rule' expr2(-> X*Y): expr2(-> X) "*" expr3(-> Y)
+	    'rule' expr2(-> X/Y): expr2(-> X) "/" expr3(-> Y)
+
+	 'nonterm' expr3(-> INT)
+
+	    'rule' expr3(-> X): Number(-> X)
+	    'rule' expr3(-> - X): "-" expr3(-> X)
+	    'rule' expr3(-> + X): "+" expr3(-> X)
+	    'rule' expr3(-> X): "(" expression(-> X) ")"
+
+	 'token' Number(-> INT)
+
+
+   Here is a script to process this specification (file `build') :
+   
+
+	 GENTLE=../../gentle/gentle
+	 GRTS=../../gentle/grts.o
+	 REFLEX=../../reflex/reflex
+	 LIB=../../lib
+	 LEX=lex
+	 YACC=yacc
+	 CC=cc
+
+	 $GENTLE calc.g
+	 $REFLEX
+	 $LEX gen.l
+	 $YACC gen.y
+
+	 $CC -o calc \
+	    calc.c \
+	    lex.yy.c \
+	    y.tab.c \
+	    $LIB/errmsg.o \
+	    $LIB/main.o \
+	    $GRTS
+
+	 calc testfile
+
+
+   This script creates and invokes the simple desk calculator `calc'.
+
+   Here the command
+
+	 $GENTLE calc.g
+
+   invokes the Gentle compiler, this translates the specification
+   `calc.g' into a C file `calc.c'. In addition it generates some
+   files `gen.*' the user does not have bother about.
+
+   The command
+
+	 $REFLEX
+
+   invokes the program `reflex'. This creates a specification for
+   the scanner generator Lex (out of files created by `gentle' and files
+   provided by the user such as `Number.t'.
+
+   The commands
+
+	 $LEX gen.l
+	 $YACC gen.y
+
+   invoke the scanner generator Lex and the parser generator Yacc
+   respectively.
+
+   Finally the C compiler creates the program `calc':
+
+	 cc -o calc       \
+	    calc.c        \
+	    lex.yy.c      \
+	    y.tab.c       \
+	    $LIB/errmsg.o \
+	    $LIB/main.o   \
+	    $GRTS
+
+   `lex.yy.c' and `y.tab.c' are C files created by Lex and Yacc.
+   `$LIB/errmsg.o' and `$LIB/main.o' are modules from the
+   user library, they provide an error message routine and and
+   main function that invokes the code create by the Gentle compiler 
+   (a user may use these components as they are or may adapt them
+   according to his or her needs).
+
+   If `testfile' contains the line
+
+	 2+3*4
+
+   then the command
+
+	 calc testfile
+
+   emits `14' .
+

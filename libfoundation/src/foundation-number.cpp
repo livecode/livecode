@@ -104,7 +104,7 @@ compare_t MCNumberCompareTo(MCNumberRef self, MCNumberRef p_other_self)
 	// Otherwise fetch both as reals.
 	double x, y;
 	x = t_self_is_integer ? (double)self -> integer : self -> real;
-	y = t_self_is_integer ? (double)p_other_self -> integer : p_other_self -> real;
+	y = t_other_self_is_integer ? (double)p_other_self -> integer : p_other_self -> real;
 
 	// TODO: Handle nan / infinity / etc.
 		
@@ -141,7 +141,7 @@ bool __MCNumberParseNativeString(const char *p_string, uindex_t p_length, bool p
     }
     
     errno = 0;
-    
+
     char *t_end;
     t_end  = nil;
     // SN-2014-10-06: [[ Bug 13594 ]] We want an unsigned integer if possible
@@ -164,7 +164,7 @@ bool __MCNumberParseNativeString(const char *p_string, uindex_t p_length, bool p
     else if (t_base == 10)
     {
         errno = 0;
-        
+
         real64_t t_real;
         t_real = strtod(p_string, &t_end);
         
@@ -233,6 +233,44 @@ bool MCNumberParseUnicodeChars(const unichar_t *p_chars, uindex_t p_char_count, 
 	return t_success;
 }
 
+bool MCNumberParseOffsetPartial(MCStringRef p_string, uindex_t offset, uindex_t &r_chars_used, MCNumberRef &r_number)
+{
+	bool t_success;
+	t_success = true;
+	
+	char *t_buffer;
+	t_buffer = nil;
+	
+	const char *t_native_string;
+	t_native_string = nil;
+	
+	uindex_t t_length;
+	t_length = MCStringGetLength(p_string);
+	
+	if (offset > t_length)
+		offset = t_length;
+	
+	if (MCStringIsNative(p_string))
+		t_native_string = (const char*)MCStringGetNativeCharPtr(p_string) + offset;
+	else
+	{
+		t_success = MCMemoryNewArray(t_length - offset + 1, t_buffer);
+		
+		uindex_t t_native_char_count;
+		if (t_success)
+			t_success = MCUnicodeCharsMapToNative(MCStringGetCharPtr(p_string) + offset, t_length - offset, (char_t*)t_buffer, t_native_char_count, '?');
+
+		t_native_string = t_buffer;
+	}
+	
+	if (t_success)
+		t_success = __MCNumberParseNativeString(t_native_string, t_length - offset, false, r_chars_used, r_number);
+	
+	MCMemoryDeleteArray(t_buffer);
+	
+	return t_success;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool __MCNumberCopyDescription(__MCNumber *self, MCStringRef& r_string)
@@ -252,6 +290,33 @@ hash_t __MCNumberHash(__MCNumber *self)
 bool __MCNumberIsEqualTo(__MCNumber *self, __MCNumber *p_other_self)
 {
 	return MCNumberCompareTo(self, p_other_self) == 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCNumberRef kMCZero;
+MCNumberRef kMCOne;
+MCNumberRef kMCMinusOne;
+
+bool __MCNumberInitialize(void)
+{
+    if (!MCNumberCreateWithInteger(0, kMCZero))
+        return false;
+    
+    if (!MCNumberCreateWithInteger(1, kMCOne))
+        return false;
+		
+    if (!MCNumberCreateWithInteger(-1, kMCMinusOne))
+        return false;
+		
+    return true;
+}
+
+void __MCNumberFinalize(void)
+{
+    MCValueRelease(kMCZero);
+    MCValueRelease(kMCOne);
+    MCValueRelease(kMCMinusOne);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

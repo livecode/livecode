@@ -1,0 +1,32 @@
+Name: startArrow
+
+Type: property
+
+Syntax: set the startArrow of <graphic> to {true | false}
+
+Summary: Specifies whether a line graphic or the first <vertex> in an irregular <polygon> <graphic> has an arrowhead.
+
+Associations: graphic
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the startArrow of graphic "Pointer" to true
+
+Value (bool):The <startArrow> of a <graphic(keyword)> is true or false.
+By default, the <startArrow> <property> of newly created <graphic(object)|graphics> is set to false.
+
+Description:
+Use the <startArrow> <property> to place an arrowhead at the starting <point> of an irregular <polygon> or line <graphic>.
+
+For irregular polygons, the start arrow is placed at the point corresponding to the first line of the graphic's points <property>.
+
+If the style <property> of the <graphic> is not polygon or line, the setting of its <startArrow> <property> has no effect.
+
+References: relativePoints (property), arrowSize (property), point (keyword), polygon (keyword), graphic (keyword), graphic (object), vertex (glossary), property (glossary)
+
+Tags: ui

@@ -1,0 +1,35 @@
+Name: scrollbarPageInc
+
+Type: message
+
+Syntax: scrollbarPageInc <newPosition> 
+
+Summary: Sent to a <scrollbar> when the user clicks below or right of the <scrollbar thumb>, scrolling forward one screenful.
+
+Associations: scrollbar
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+on scrollbarPageInc theMovieNumber
+  set the filename of player "Display" \
+     to line theMovieNumber of field "Movies"
+end scrollbarPageInc
+
+Parameters:
+newPosition: The new position of the scrollbar thumb.
+
+Description:
+Handle the <scrollbarPageInc> <message> if you want to respond to the user clicking in the gray region below or to the right of the <scrollbar thumb>.
+
+Dragging the scrollbar thumb does not send a <scrollbarPageInc> <message>.
+
+If the <scrollbarPageInc> <message> is not <handle|handled>, a <scrollbarDrag> <message> is sent in addition.
+
+References: pageIncrement (property), scrollbar (keyword), scrollbarLineInc (message), scrollbarDrag (message), scrollbar thumb (glossary), message (glossary), handle (glossary)
+
+Tags: ui

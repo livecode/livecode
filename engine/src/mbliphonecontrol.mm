@@ -590,14 +590,14 @@ MCGAffineTransform MCNativeControlUserToDeviceTransform()
 {
     float t_scale;
     t_scale = 1 / MCIPhoneGetNativeControlScale();
-    return MCGAffineTransformScale(MCdefaultstackptr -> getviewtransform(), t_scale, t_scale);
+    return MCGAffineTransformPreScale(MCdefaultstackptr -> getviewtransform(), t_scale, t_scale);
 }
 
 MCGAffineTransform MCNativeControlUserFromDeviceTransform()
 {
     float t_scale;
     t_scale = MCIPhoneGetNativeControlScale();
-    return MCGAffineTransformScale(MCGAffineTransformInvert(MCdefaultstackptr -> getviewtransform()), t_scale, t_scale);
+    return MCGAffineTransformPreScale(MCGAffineTransformInvert(MCdefaultstackptr -> getviewtransform()), t_scale, t_scale);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

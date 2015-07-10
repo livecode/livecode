@@ -6,7 +6,7 @@ include ../rules/environment.linux.makefile
 SOURCES=\
 	stacksecurity.cpp \
 	linuxstubs.cpp
-	
+
 SOURCE_DIRS=
 
 CUSTOM_OVERRIDE_DEFINES=1
@@ -19,7 +19,7 @@ CUSTOM_INCLUDES=\
 
 CUSTOM_DEPS=libkernel-server.a
 
-CUSTOM_LIBS=pcre png jpeg z foundation gif graphics skia kernel-server
+CUSTOM_LIBS=pcre png jpeg z foundation stdscript ffi gif graphics skia kernel-server
 CUSTOM_STATIC_LIBS=curl icudata icui18n icuio icule iculx icuuc customssl customcrypto $(MODE_STATIC_LIBS)
 CUSTOM_DYNAMIC_LIBS=dl m pthread rt
 
@@ -31,4 +31,22 @@ CUSTOM_LDFLAGS_LTO=-export-dynamic -Wl,-x
 
 include ../rules/application.linux.makefile
 
-
+INSTALL_DIR?=/opt/livecode/server
+.PHONY: server-install
+server-install:
+	# Executables
+	install -D $(BUILD_DIR)/server-community $(INSTALL_DIR)/livecode-server
+	install -D $(BUILD_DIR)/lc-compile $(INSTALL_DIR)/lc-compile
+	install -D $(BUILD_DIR)/lc-run $(INSTALL_DIR)/lc-run
+	# Externals
+	install -m 0644 -D $(BUILD_DIR)/server-revdb.so $(INSTALL_DIR)/externals/revdb.so
+	install -m 0644 -D $(BUILD_DIR)/server-revxml.so $(INSTALL_DIR)/externals/revxml.so
+	install -m 0644 -D $(BUILD_DIR)/server-revzip.so $(INSTALL_DIR)/externals/revzip.so
+	# DB drivers
+	install -m 0644 -D $(BUILD_DIR)/server-dbmysql.so $(INSTALL_DIR)/drivers/dbmysql.so
+	install -m 0644 -D $(BUILD_DIR)/server-dbodbc.so $(INSTALL_DIR)/drivers/dbodbc.so
+	install -m 0644 -D $(BUILD_DIR)/server-dbpostgresql.so $(INSTALL_DIR)/drivers/dbpostgresql.so
+	install -m 0644 -D $(BUILD_DIR)/server-dbsqlite.so $(INSTALL_DIR)/drivers/dbsqlite.so
+	# Modules
+	install -d $(INSTALL_DIR)/modules
+	install -m 0644 -t $(INSTALL_DIR)/modules $(MODULE_DIR)/*.lci

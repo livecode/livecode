@@ -1,0 +1,49 @@
+Name: revRotatePoly
+
+Type: command
+
+Syntax: revRotatePoly <graphicReference>, <angleInDegrees> 
+
+Summary: Rotates a <graphic> by a specified angle.
+
+Introduced: 1.1.1
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+revRotatePoly the long ID of graphic "My Curve",45 -- rotates 45 degrees
+
+Example:
+revRotatePoly "graphic" && it, 10 * theStartAngle
+
+Example:
+revRotatePoly the name of graphic 3 of stack "Draw", field "Rotate by"
+
+Parameters:
+graphicReference: Any expression that evaluates to a reference to a graphic whose style property is set to "line", "curve", or "polygon".>*Important:* The revRotatePoly command does not accept direct graphic references. For example, the following statement causes an error message:   revRotatePoly graphic "My Graphic",45 -- CAN'T USE THIS FORM Instead, use a form that evaluates to a graphic reference, like this:
+angleInDegrees: A number, or an expression that evaluates to a number.
+: revRotatePoly the name of graphic "My Graphic",90 -- use this form  revRotatePoly ("field" && quote & "My Field" & quote),22 -- or this
+
+Description:
+Use the <revRotatePoly> <command> to rotate a line, curve, or irregular polygon <graphic>.
+
+>*Important:*  The <revRotatePoly> <command> does not accept direct graphic references. For example, the following <statement> causes an error message:
+
+  revRotatePoly graphic "My Graphic",45 -- CAN'T USE THIS FORM
+
+Instead, use a form that evaluates to a graphic reference, like this:
+
+  revRotatePoly the name of graphic "My Graphic",90 -- use this form
+  revRotatePoly ("field" && quote & "My Field" & quote),22 -- or this
+
+The <angleInDegrees> is a number, or an <expression> that <evaluate|evaluates> to a number.
+
+If the <angleInDegrees> is positive, the image rotates counterclockwise. If the <angleInDegrees> is negative, the image rotates clockwise.
+
+>*Note:* When included in a <standalone application>, the <Common library> is implemented as a hidden <group> and made available when the <group> receives its first <openBackground> message. During the first part of the <application|application's> startup process, before this <message> is sent, the <revRotatePoly> <command> is not yet available. This may affect attempts to use this <command> in <startup>, <preOpenStack>, <openStack>, or <preOpenCard> <handler|handlers> in the <main stack>. Once the <application> has finished starting up, the <library> is available and the <revRotatePoly> <command> can be used in any <handler>.
+
+References: angle (property), select (keyword), graphic (keyword), startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), flip (command), rotate (command), command (glossary), evaluate (glossary), main stack (glossary), handler (glossary), message (glossary), group (glossary), standalone application (glossary), expression (glossary), statement (glossary), graphic (glossary), application (glossary), Common library (library), library (library)
+
+Tags: ui

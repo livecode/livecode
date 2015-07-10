@@ -1,0 +1,14 @@
+Name: file
+
+Synonyms: file
+
+Type: glossary
+
+Description:
+A collection of data stored on disk under a single name and, in graphical user interfaces, a single icon. 
+ 
+Files include text files, programs, <stack file|stack files>, and many other types.
+
+References: stack file (glossary)
+
+Tags: file system

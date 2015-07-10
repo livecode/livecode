@@ -1,0 +1,332 @@
+-- declaring extension as widget, followed by identifier
+widget community.livecode.livecode.svgpath
+--
+
+-- dependency declarations
+use com.livecode.canvas
+use com.livecode.widget
+use com.livecode.engine
+use com.livecode.library.iconSVG
+
+-- adding metadata to ensure the extension displays correctly in livecode
+metadata title is "SVG Icon"
+metadata author is "Trevor DeVore / Benjamin Beaumont"
+metadata version is "1.0.2"
+
+private variable mState        as String
+private variable mColor        as Color
+private variable mHiliteColor  as Color
+private variable  mPath    		as String
+private variable mHilited      as Boolean
+private variable mToggleHilite as Boolean
+private variable mMaintainAspectRatio as Boolean
+private variable mFlipVertically     as Boolean // some SVG Paths need to be flipped (all font awesome SVG paths do, Illustrator SVG does not)
+private variable mAngle     as Real
+variable mPathName as String
+property iconColor            get getColor          set setColor
+metadata iconColor.editor is "com.livecode.pi.color"
+property iconHiliteColor      get getHiliteColor    set setHiliteColor
+metadata iconHiliteColor.editor is "com.livecode.pi.color"
+property iconPathPreset            get getPathPreset           set setPathPreset
+metadata iconPathPreset.editor is "com.livecode.pi.enum"
+metadata iconPathPreset.options is "execute: get iconNames()"
+metadata iconPathPreset.default is "Star"
+property iconPath       get mPath           set setPath
+metadata iconPath.editor is "com.livecode.pi.text"
+property isHilited            get mHilited          set setIsHilited
+property toggleHilite         get mToggleHilite     set mToggleHilite
+property maintainAspectRatio  get mMaintainAspectRatio  set setMaintainAspectRatio
+property flipVertically       get mFlipVertically       set setFlipVertically
+property iconAngle       get mAngle       set setAngle
+--
+
+----------
+-- called when widget is created
+public handler OnCreate()
+	put "up" into mState
+	
+	put color [0,0,0] into mColor
+	put stringToColor("255,0,100") into mHiliteColor
+	put 0 into mAngle
+	
+	put false into mHilited
+	put false into mToggleHilite
+	put true into mMaintainAspectRatio
+	put false into mFlipVertically
+
+	variable tArray as Array
+	put the empty array into tArray
+	setPathPreset("Star")	
+end handler
+----------
+
+----------
+-- this handler is called when the widget is saved
+public handler OnSave(out rProperties as Array)
+	put the empty array into rProperties
+	
+	put mPath into rProperties["svg path"]
+	put colorToString(mColor, true) into rProperties["color"]
+	put colorToString(mHiliteColor, true) into rProperties["hilite color"]
+	put mHilited into rProperties["hilited"]
+	put mToggleHilite into rProperties["toggle hilite"]
+	put mMaintainAspectRatio into rProperties["maintain aspect ratio"]
+	put mFlipVertically into rProperties["flip vertically"]
+	put mAngle into rProperties["angle"]
+	
+	return rProperties
+end handler
+----------
+
+----------
+-- this handler is called when the widget is loaded
+public handler OnLoad(in pProperties as Array)
+	put pProperties["svg path"] into mPath
+	put stringToColor(pProperties["color"]) into mColor
+	put stringToColor(pProperties["hilite color"]) into mHiliteColor
+	put pProperties["hilited"] into mHilited
+	put pProperties["toggle hilite"] into mToggleHilite
+	put pProperties["maintain aspect ratio"] into mMaintainAspectRatio
+	put pProperties["flip vertically"] into mFlipVertically
+	put pProperties["angle"] into mAngle
+end handler
+----------
+
+----------
+-- the following handlers deal with mouse events
+public handler OnMouseUp()		
+  if the current mouse position is within my bounds then
+  	if mToggleHilite then
+	  	put not mHilited into mHilited
+  	end if
+		post "mouseUp" to my script object with [FormatInt(the click button)] -- formatint needed until dp-2
+	end if
+  put "up" into mState
+	redraw all
+end handler
+
+
+public handler OnMouseCancel()
+	put "up" into mState
+	redraw all
+end handler
+
+
+public handler OnMouseDown()
+	put "down" into mState
+	redraw all
+	
+	post "mouseDown" to my script object with [FormatInt(the click button)]
+end handler
+----------
+
+
+public handler setIsHilited(in pBoolean as Boolean)
+	put pBoolean into mHilited
+	redraw all
+end handler
+
+
+public handler setMaintainAspectRatio(in pBoolean as Boolean)
+	put pBoolean into mMaintainAspectRatio
+	redraw all
+end handler
+
+
+public handler setFlipVertically(in pBoolean as Boolean)
+	put pBoolean into mFlipVertically
+	redraw all
+end handler
+
+
+public handler setPath(in pPath as String) as undefined
+	put pPath into mPath
+	redraw all
+end handler
+
+
+public handler setColor(in pColor as String) as undefined
+	put stringToColor(pColor) into mColor
+	redraw all
+end handler
+
+
+public handler getColor() as String
+	return colorToString(mColor, false)
+end handler
+
+
+public handler setHiliteColor(in pColor as String) as undefined
+	put stringToColor(pColor) into mHiliteColor
+	redraw all
+end handler
+
+
+public handler getHiliteColor() as String
+	return colorToString(mHiliteColor, false)
+end handler
+
+public handler setPathPreset(in pPresetName as String) as undefined
+	put iconSVGPathFromName(pPresetName) into mPath
+	put pPresetName into mPathName
+	redraw all
+end handler
+
+public handler getPathPreset() as String
+	return mPathName
+end handler
+
+public handler setAngle(in pAngle as Number) as undefined
+	put pAngle into mAngle
+	redraw all
+end handler
+
+
+----------
+-- called whenever LiveCode needs to redraw the widget
+public handler OnPaint()
+	variable tPath as Path
+	put path mPath into tPath
+	
+	variable tBounds	
+	if mFlipVertically then
+		scale tPath by [1,-1]
+		translate tPath by [0, the height of the bounding box of tPath]
+	end if
+	
+	if mAngle > 0 then
+		rotate tPath by mAngle
+		log the instructions of tPath
+	end if
+		
+	// scale to fit within widget and maintain aspect ratio
+	if mMaintainAspectRatio then
+		transform tPath by scaleAndMaintainAspectRatioTransform(the bounding box of tPath, my bounds)		
+	else
+		scale tPath by [my width / the width of the bounding box of tPath, \
+			my height / the height of the bounding box of tPath]
+	end if
+		
+	if mState is "up" and mHilited is false then
+		set the paint of this canvas to solid paint with mColor
+	else
+		set the paint of this canvas to solid paint with mHiliteColor
+	end if
+	
+	fill tPath on this canvas
+end handler
+
+
+-- Translated from some Skia code
+private handler scaleAndMaintainAspectRatioTransform(in pSrcBounds as Rectangle, in pDestBounds as Rectangle) as Transform
+	// Prepare values for matrix transformation
+	variable isLarger as Boolean
+	variable sx as Number
+	variable sy as Number
+	
+	put false into isLarger
+	put the width of pDestBounds / the width of pSrcBounds into sx
+	put the height of pDestBounds / the height of pSrcBounds into sy
+	
+	if sx > sy then
+		put true into isLarger
+		put sy into sx
+	else
+		put sx into sy
+	end if
+	
+	variable tx as Number
+	variable ty as Number
+	
+	put the left of pDestBounds - (the left of pSrcBounds*sx) into tx
+	put the top of pDestBounds - (the top of pSrcBounds*sy) into ty
+	
+	variable diff as Number
+	
+	if isLarger then
+		put my width - (the width of pSrcBounds*sy) into diff
+	else
+		put my height - (the height of pSrcBounds*sy) into diff
+	end if
+	
+	// align center
+	divide diff by 2
+	
+	if isLarger then
+		add diff to tx
+	else
+		add diff to ty
+	end if
+	
+	// create transformation matrix and apply
+	variable tTransform as Transform
+	put transform with matrix [sx, 0, 0, sy, tx, ty] into tTransform
+	
+	return tTransform
+end handler
+
+
+private handler colorToString(in pColor as Color, in pIncludeAlpha as Boolean) as String
+	variable tColor as String
+	
+	put FormatInt(the rounded of ((the red of pColor) * 255)) into tColor
+	put "," & FormatInt(the rounded of ((the green of pColor) * 255)) after tColor
+	put "," & FormatInt(the rounded of ((the blue of pColor) * 255)) after tColor
+	
+	if pIncludeAlpha then
+		put "," & FormatInt(the rounded of ((the alpha of pColor) * 255)) after tColor
+	end if
+	
+	return tColor
+end handler
+
+private handler stringToColor(in pString as String) as Color
+	if the number of chars in pString is 0 then
+		return ""
+		end if
+
+	variable tRed as Real
+	variable tGreen as Real
+	variable tBlue as Real
+	variable tAlpha as Real
+
+	variable tComponentList as List
+	split pString by "," into tComponentList
+
+	variable tComponentCount
+	put the number of elements in tComponentList into tComponentCount
+	if tComponentCount is not 3 and tComponentCount is not 4 then
+		// Invalid number of components detected
+		throw "Invalid color"
+	end if
+
+	put (element 1 of tComponentList) parsed as number into tRed
+	put (element 2 of tComponentList) parsed as number into tGreen
+	put (element 3 of tComponentList) parsed as number into tBlue
+
+	if tComponentCount is 4 then
+		put (element 4 of tComponentList) parsed as number into tAlpha
+	else
+		put 1.0 into tAlpha
+	end if
+
+	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha ]
+end handler
+
+
+-- Needed until dp-2
+handler FormatInt(in pNumber as Number) as String
+	variable tNumberString as String
+
+	put pNumber formatted as string into tNumberString
+
+	if "." is in tNumberString then
+		variable tDotOffset
+		put the first offset of "." in tNumberString into tDotOffset
+		delete char tDotOffset to (the number of chars in tNumberString) of tNumberString
+	end if
+
+	return tNumberString
+end handler
+
+end widget

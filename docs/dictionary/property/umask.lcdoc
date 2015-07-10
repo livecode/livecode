@@ -1,0 +1,50 @@
+Name: umask
+
+Type: property
+
+Syntax: set the umask to <permissionsString> 
+
+Summary: Specifies the <Unix> access permissions of <files> and <folders> created by the <application>.
+
+Introduced: 1.0
+
+OS: linux,ios,android,mac
+
+Platforms: desktop,server,web,mobile
+
+Security: disk
+
+Example:
+set the convertOctals to true
+set the umask to 0077
+
+Description:
+Use the <umask> command to set the access permissions for
+    <files> and <folders> created by LiveCode.
+    
+The umask is a positive integer, or empty.
+    
+By default, the umask is set to the user's Unix "umask" setting.
+         
+The <umask> blocks specific permissions from being granted for newly created <files> and <folders>.  It affects <files> created with the <open file> <command>, <folders> created with the <create folder> <command>, and <files> and <folders> created on the local system with the <URL> <keyword>.
+
+The <umask> is most easily represented in <octal>.  Each digit of the <octal> representation of the <umask> specifies a set of permissions:
+    <ul> 
+      <li> Read permission (4) lets a user read or copy the file or folder.</li>
+      <li> Write permission (2) lets a user change the contents of the file or folder.</li>
+      <li> Execute permission (1) lets a user run the file (if it is a program file), or work with files in the folder.</li>
+    </ul>
+    
+Each digit is the sum of the permission values that are to be blocked.  For example, to specify that read and execute permission should both be blocked, use the octal digit 4 + 1 = 5.
+
+The first <octal> digit of the umask specifies the permissions to be blocked for the owner of the file or folder; the second digit specifies the permissions to be blocked for members of the group that owns the file or folder; and the third digit specifies permissions to be blocked for all other users.  For example, if the <umask> is 0022 when LiveCode creates a file, the file owner has all the normal permissions, but the group and all other users do not have write permission (even if LiveCode would normally create the file so as to give them write permission).
+    
+On Mac OS Classic and Windows systems, the <umask> <property> has no effect and always reports zero.
+
+>*Tip:* You will almost always want to set the <convertOctals> to true before setting the <umask>.  If you don't, the value you provide will be interpreted as decimal rather than octal.
+
+>*Tip:* For more information on the <Unix> "umask", consult your platform's documentation (e.g. man 2 umask).
+
+>*Tip:* The value of <umask> will be inherited by all <process|processes> created by LiveCode.  This includes processes created using  and <shell>.
+
+References: URL (keyword), convertOctals (property), open file (command),  (command), create folder (command), shell (function), files (function), folders (function), property (glossary), process (glossary), keyword (glossary), Unix (glossary), octal (glossary), command (glossary), application (glossary)

@@ -37,6 +37,7 @@ class MCPDFPrintingDevice: public MCCustomPrintingDevice
 {
 public:
 	MCPDFPrintingDevice();
+	virtual ~MCPDFPrintingDevice() {};
 
 	void Destroy(void);
 

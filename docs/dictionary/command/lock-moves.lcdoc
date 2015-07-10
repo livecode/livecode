@@ -1,0 +1,32 @@
+Name: lock moves
+
+Type: command
+
+Syntax: lock moves
+
+Summary: Sets the <lockMoves> <property> to true, preventing motions caused with the <move> <command> from being immediately visible.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+lock moves
+
+Example:
+if the lockScreen is false then lock moves
+
+The result: When you use the <move> command to move an object around the screen, the movement takes place immediately. If you want to move more than one object simultaneously, first use the <lock moves> command to prevent these motions from being seen. Then issue the necessary move commands to move the objects, appending "without waiting" to each. Finally, use unlock moves to show the result of the move commands.
+
+Description:
+Use the <lock moves> command to synchronize motions made with the move command.
+
+The <lock moves> command sets the lockMoves property to true.
+
+When all pending handlers are finished executing, the <lockMoves> property is set back to false.
+
+References: lock cursor (command), move (command), lock messages (command), unlock moves (command), lockMoves (property), property (glossary), command (glossary)
+
+Tags: multimedia

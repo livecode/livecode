@@ -1,0 +1,30 @@
+Name: revZipExtractItemToVariable
+
+Type: command
+
+Syntax: revZipExtractItemToVariable <archivePath>, <itemName>, <variableName> 
+
+Summary: Extracts the data from an item in a zip archive and places it in a variable
+
+Introduced: 2.7.3
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Security: disk,network
+
+Example:
+revZipExtractItemToVariable tArchive, "myZippedItem", "tItemData"
+
+Parameters:
+archivePath: The absolute path to the zip archive to extract from.
+itemName: The name of the item in the zip archive to extract.
+variableName: The name of a variable in your LiveCode program to place the extracted data. If the revZipExtractItemToVariable command encounters an error, then the result will be set to an error code beginning with "ziperr", otherwise the result will be empty.
+
+Description:
+Use the <revZipExtractItemToVariable> command to load an item from a zip archive into memory as a variable in your LiveCode program. The archive must already have been opened by using the <revZipOpenArchive (command)>command.
+
+References: revZipOpenArchive (command), revZipExtractItemToFile (command), revZipEnumerateItems (function)
+
+Tags: text processing

@@ -1,0 +1,35 @@
+Name: scrollbarLineDec
+
+Type: message
+
+Syntax: scrollbarLineDec <newPosition> 
+
+Summary: Sent to a <scrollbar> when the user clicks the decrease arrow, scrolling backward one <line>.
+
+Associations: scrollbar
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+on scrollbarLineDec newCharNumber
+-- use a scrollbar to scroll through data, one character at a time
+  put char newCharNumber of field "Data" into field "Display"
+end scrollbarLineDec
+
+Parameters:
+newPosition: The new position of the scrollbar thumb.
+
+Description:
+Handle the <scrollbarLineDec> <message> if you want to respond to the use of the top or left scrollbar arrow.
+
+Dragging the scrollbar thumb does not send a <scrollbarLineDec> <message>.
+
+If the <scrollbarLineDec> <message> is not <handle|handled>, a <scrollbarDrag> <message> is sent in addition.
+
+References: lineIncrement (property), scrollbar (keyword), line (keyword), scrollbarDrag (message), scrollbarLineInc (message), scrollbarBeginning (message), handle (glossary), message (glossary)
+
+Tags: ui

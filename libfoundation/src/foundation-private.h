@@ -17,6 +17,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_FOUNDATION_PRIVATE__
 #define __MC_FOUNDATION_PRIVATE__
 
+
+#include <stdio.h>
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef __LINUX__
@@ -43,6 +47,65 @@ struct __MCValue
 {
 	uint32_t references;
 	uint32_t flags;
+};
+
+//////////
+
+enum
+{
+    kMCTypeInfoTypeCodeMask = 0xff,
+    
+    // We use typecodes well above the fixed ones we have to
+    // indicate 'special' typeinfo (i.e. those with no real
+    // valueref type underneath).
+    kMCTypeInfoTypeIsAny = 255,
+    kMCTypeInfoTypeIsNamed = 254,
+    kMCTypeInfoTypeIsAlias = 253,
+    kMCTypeInfoTypeIsOptional = 252,
+    kMCTypeInfoTypeIsForeign = 251,
+};
+
+struct __MCTypeInfo: public __MCValue
+{
+    union
+    {
+        struct
+        {
+            MCNameRef name;
+            MCTypeInfoRef typeinfo;
+        } named, alias;
+        struct
+        {
+            MCTypeInfoRef basetype;
+        } optional;
+        struct
+        {
+            MCRecordTypeFieldInfo *fields;
+            uindex_t field_count;
+            MCTypeInfoRef base;
+        } record;
+        struct
+        {
+            MCHandlerTypeFieldInfo *fields;
+            uindex_t field_count;
+            MCTypeInfoRef return_type;
+        } handler;
+        struct
+        {
+            MCNameRef domain;
+            MCStringRef message;
+        } error;
+        struct
+        {
+            MCValueCustomCallbacks callbacks;
+            MCTypeInfoRef base;
+        } custom;
+        struct
+        {
+            MCForeignTypeDescriptor descriptor;
+            void *ffi_layout_type;
+        } foreign;
+    };
 };
 
 //////////
@@ -231,6 +294,10 @@ enum
 	// If set then the array is indirect (i.e. contents is within another
 	// immutable array).
 	kMCArrayFlagIsIndirect = 1 << 7,
+    // If set then the array keys are case sensitive.
+    kMCArrayFlagIsCaseSensitive = 1 << 8,
+    // If set the the array keys are form sensitive.
+    kMCArrayFlagIsFormSensitive = 1 << 9,
 };
 
 struct __MCArrayKeyValue
@@ -278,11 +345,83 @@ struct __MCSet: public __MCValue
 	uindex_t limb_count;
 };
 
+//////////
+
+enum
+{
+	// If set then the list is mutable.
+	kMCProperListFlagIsMutable = 1 << 0,
+    // If set then the list is indirect (i.e. contents is within another
+	// immutable list).
+	kMCProperListFlagIsIndirect = 1 << 1,
+};
+
+struct __MCProperList: public __MCValue
+{
+	union
+	{
+		MCProperListRef contents;
+        struct
+        {
+            MCValueRef *list;
+            uindex_t length;
+        };
+	};
+};
+
+////////
+
+enum
+{
+    // The data are mutable
+    kMCRecordFlagIsMutable = 1,
+};
+
+struct __MCRecord: public __MCValue
+{
+    MCTypeInfoRef typeinfo;
+    MCValueRef *fields;
+};
+
+////////
+
+struct MCErrorFrame
+{
+    MCErrorFrame *caller;
+    MCValueRef target;
+    uindex_t row;
+    uindex_t column;
+};
+
+struct __MCError: public __MCValue
+{
+    MCTypeInfoRef typeinfo;
+    MCStringRef message;
+    MCArrayRef info;
+    MCErrorFrame *backtrace;
+};
+
 ////////
 
 struct __MCCustomValue: public __MCValue
 {
-	const MCValueCustomCallbacks *callbacks;
+    MCTypeInfoRef typeinfo;
+};
+
+////////
+
+struct __MCForeignValue: public __MCValue
+{
+    MCTypeInfoRef typeinfo;
+};
+
+////////
+
+struct __MCHandler: public __MCValue
+{
+    MCTypeInfoRef typeinfo;
+    const MCHandlerCallbacks *callbacks;
+    char context[1];
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -311,8 +450,9 @@ template<class T> inline bool __MCValueCreate(MCValueTypeCode p_type_code, T*& r
 //////////
 
 bool __MCUnicodeInitialize();
-bool __MCLocaleInitialize();
 void __MCUnicodeFinalize();
+
+bool __MCLocaleInitialize();
 void __MCLocaleFinalize();
 
 bool __MCValueInitialize(void);
@@ -369,6 +509,68 @@ hash_t __MCDataHash(__MCData *self);
 bool __MCDataIsEqualTo(__MCData *self, __MCData *p_other_data);
 bool __MCDataCopyDescription(__MCData *self, MCStringRef &r_description);
 bool __MCDataImmutableCopy(__MCData *self, bool p_release, __MCData *&r_immutable_value);
+
+bool __MCProperListInitialize(void);
+void __MCProperListFinalize(void);
+void __MCProperListDestroy(__MCProperList *list);
+hash_t __MCProperListHash(__MCProperList *list);
+bool __MCProperListIsEqualTo(__MCProperList *list, __MCProperList *other_list);
+bool __MCProperListCopyDescription(__MCProperList *list, MCStringRef& r_string);
+bool __MCProperListImmutableCopy(__MCProperList *list, bool release, __MCProperList*& r_immutable_value);
+
+bool __MCRecordInitialize(void);
+void __MCRecordFinalize(void);
+void __MCRecordDestroy(__MCRecord *data);
+hash_t __MCRecordHash(__MCRecord *self);
+bool __MCRecordIsEqualTo(__MCRecord *self, __MCRecord *p_other_data);
+bool __MCRecordCopyDescription(__MCRecord *self, MCStringRef &r_description);
+bool __MCRecordImmutableCopy(__MCRecord *self, bool p_release, __MCRecord *&r_immutable_value);
+
+bool __MCErrorInitialize();
+void __MCErrorFinalize();
+void __MCErrorDestroy(__MCError *error);
+hash_t __MCErrorHash(__MCError *error);
+bool __MCErrorIsEqualTo(__MCError *error, __MCError *other_error);
+bool __MCErrorCopyDescription(__MCError *error, MCStringRef& r_string);
+
+bool __MCTypeInfoInitialize(void);
+void __MCTypeInfoFinalize(void);
+void __MCTypeInfoDestroy(__MCTypeInfo *self);
+hash_t __MCTypeInfoHash(__MCTypeInfo *self);
+bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self);
+bool __MCTypeInfoCopyDescription(__MCTypeInfo *self, MCStringRef& r_description);
+MCTypeInfoRef __MCTypeInfoResolve(__MCTypeInfo *self);
+
+uindex_t __MCRecordTypeInfoGetFieldCount (__MCTypeInfo *self);
+void __MCRecordTypeInfoGetBaseTypeForField (__MCTypeInfo *self, uindex_t p_index, __MCTypeInfo *& r_base_type, uindex_t & r_base_index);
+
+bool __MCForeignValueInitialize(void);
+void __MCForeignValueFinalize(void);
+void __MCForeignValueDestroy(__MCForeignValue *self);
+hash_t __MCForeignValueHash(__MCForeignValue *self);
+bool __MCForeignValueIsEqualTo(__MCForeignValue *self, __MCForeignValue *other_self);
+bool __MCForeignValueCopyDescription(__MCForeignValue *self, MCStringRef& r_description);
+
+void __MCHandlerDestroy(__MCHandler *self);
+hash_t __MCHandlerHash(__MCHandler *self);
+bool __MCHandlerIsEqualTo(__MCHandler *self, __MCHandler *other_self);
+bool __MCHandlerCopyDescription(__MCHandler *self, MCStringRef& r_description);
+
+bool __MCStreamInitialize(void);
+void __MCStreamFinalize(void);
+
+/* Default implementations of each of the function members of struct &
+ * MCValueCustomCallbacks */
+MCTypeInfoRef __MCCustomValueResolveTypeInfo(__MCValue *p_value);
+bool __MCCustomCopyDescription (MCValueRef self, MCStringRef & r_desc);
+
+void __MCCustomDefaultDestroy(MCValueRef);
+bool __MCCustomDefaultCopy(MCValueRef, bool, MCValueRef &);
+bool __MCCustomDefaultEqual(MCValueRef, MCValueRef);
+hash_t __MCCustomDefaultHash(MCValueRef);
+bool __MCCustomDefaultDescribe(MCValueRef, MCStringRef &);
+bool __MCCustomDefaultIsMutable(MCValueRef);
+bool __MCCustomDefaultMutableCopy(MCValueRef, bool, MCValueRef &);
 
 ////////////////////////////////////////////////////////////////////////////////
 

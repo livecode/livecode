@@ -114,7 +114,6 @@ struct MCCapsule
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool MCCapsuleBucketCreate(uint32_t p_data_length, bool p_finished, bool p_foreign, const void *p_data, IO_handle p_file, MCCapsuleBucket*& r_self);
 static void MCCapsuleBucketDestroy(MCCapsuleBucket *self);
 
 static bool MCCapsuleBucketCreate(uint32_t p_data_length, uint32_t p_data_offset, bool p_finished, bool p_foreign, const void *p_data, IO_handle p_file, MCCapsuleBucket*& r_self)
@@ -761,9 +760,10 @@ bool MCCapsuleProcess(MCCapsuleRef self)
 				break;
 			}
 
-			// Ensure the entire tag length + header size + padding (if any).
+			// Ensure the entire tag length + header size + padding
+			// (if any).  The padding is computed up to the next 4-byte boundary.
 			uint32_t t_required_length;
-			t_required_length = t_header_size + (t_length + 3) & ~3;
+			t_required_length = (t_header_size + t_length + 3) & ~3;
 			t_success = MCCapsuleEnsure(self, t_required_length);
 
 			// If we don't have enough data, break as we can do no more for now.

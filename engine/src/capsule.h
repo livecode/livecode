@@ -78,11 +78,7 @@ enum MCCapsuleSectionType
 	// environment on startup;.
 	kMCCapsuleSectionTypeExternal,
 
-	// A module section contains a file that is required by the engine to launch
-	// (e.g. encryption DLLs on Windows).
-	kMCCapsuleSectionTypeModule,
-
-	// Auxiliary stack sections contain other mainstacks that should be loaded
+    // Auxiliary stack sections contain other mainstacks that should be loaded
 	// alongside the mainstack (but not opened initially).
 	kMCCapsuleSectionTypeAuxiliaryStack,
 	
@@ -93,6 +89,9 @@ enum MCCapsuleSectionType
 	// Startup script to be executed after all stacks have loaded but before
 	// the main stack is opened.
 	kMCCapsuleSectionTypeStartupScript,
+
+	// Module to be loaded on startup.
+    kMCCapsuleSectionTypeModule,
     
     // Font mapping sections contain a mapping from a font name to another font
     // name (usually PostScript name). Whenever a font name is looked up it is

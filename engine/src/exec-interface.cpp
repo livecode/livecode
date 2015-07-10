@@ -46,6 +46,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "player.h"
 #include "aclip.h"
 #include "vclip.h"
+#include "widget.h"
 #include "osspec.h"
 #include "variable.h"
 
@@ -1830,10 +1831,10 @@ void MCInterfaceExecClickCmd(MCExecContext& ctxt, uint2 p_button, MCPoint p_loca
 	MCbuttonstate = oldbstate;
 	MCControl *mfocused = MCdefaultstackptr->getcard()->getmfocused();
 	if (mfocused != NULL
-	        && (mfocused->gettype() == CT_GRAPHIC
-	            && mfocused->getstate(CS_CREATE_POINTS)
-	            || (mfocused->gettype() == CT_IMAGE && mfocused->getstate(CS_DRAW)
-	                && MCdefaultstackptr->gettool(mfocused) == T_POLYGON)))
+	    && ((mfocused->gettype() == CT_GRAPHIC
+	         && mfocused->getstate(CS_CREATE_POINTS))
+	        || (mfocused->gettype() == CT_IMAGE && mfocused->getstate(CS_DRAW)
+	            && MCdefaultstackptr->gettool(mfocused) == T_POLYGON)))
 		mfocused->doubleup(1); // cancel polygon create
 	if (t_old_mousestack == NULL || t_old_mousestack->getmode() != 0)
 	{
@@ -2047,9 +2048,6 @@ void MCInterfaceProcessToContainer(MCExecContext& ctxt, MCObjectPtr *p_objects, 
 			ctxt . SetTheResultToStaticCString("can't cut object (stack is password protected)");
 			continue;
 		}
-		uindex_t t_part;
-		t_part = p_objects[i] . part_id;
-
 		switch(t_object -> gettype())
 		{
 		case CT_AUDIO_CLIP:
@@ -2112,6 +2110,7 @@ void MCInterfaceProcessToContainer(MCExecContext& ctxt, MCObjectPtr *p_objects, 
 		case CT_EPS:
 		case CT_COLOR_PALETTE:
 		case CT_FIELD:
+        case CT_WIDGET:
 		{
 			if (p_dst . object -> gettype() == CT_STACK)
 				p_dst . object = static_cast<MCStack *>(p_dst . object) -> getcurcard();
@@ -2235,9 +2234,8 @@ static void MCInterfaceExecChangeChunkOfButton(MCExecContext& ctxt, MCObjectChun
 
 	/* UNCHECKED */ MCStringMutableCopyAndRelease(t_value, t_value);
 
-	int4 start, end;
+	int4 start;
 	start = p_target . mark . start;
-	end = p_target . mark . finish;
 
 	bool t_changed;
 	t_changed = false;
@@ -2388,10 +2386,10 @@ void MCInterfaceExecSelectTextOfField(MCExecContext& ctxt, Preposition_type p_ty
 	case PT_AFTER:
 		t_start = t_finish;
 		break;
+	default:
+		MCUnreachable();
+		break;
 	}
-    
-    MCField *t_field;
-    t_field = static_cast<MCField *>(p_target . object);
     
 	static_cast<MCField *>(p_target . object) -> seltext(t_start, t_finish, True);
 }
@@ -2767,8 +2765,21 @@ void MCInterfaceExecPopupButton(MCExecContext& ctxt, MCButton *p_target, MCPoint
 	p_target->setmenumode(WM_POPUP);
 	if (p_target->findmenu())
 	{
-		if (MCbuttonstate)
-			MCtargetptr -> mup(0, false);
+		// IM-2015-03-10: [[ Bug 14851 ]] Send mouseup release for each depressed button.
+		uint16_t t_state;
+		t_state = MCbuttonstate;
+		
+		uint16_t t_which;
+		t_which = 1;
+		
+		while (t_state)
+		{
+			if (t_state & 0x1)
+				MCtargetptr -> mup(t_which, true);
+			t_state >>= 1;
+			t_which += 1;
+		}
+		
 		p_target->openmenu(True);
 	}
 }
@@ -3120,6 +3131,41 @@ void MCInterfaceExecCreateControl(MCExecContext& ctxt, MCStringRef p_new_name, i
 	ctxt . SetItToValue(*t_id);
 }
 
+void MCInterfaceExecCreateWidget(MCExecContext& ctxt, MCStringRef p_new_name, MCNameRef p_kind, MCGroup* p_container, bool p_force_invisible)
+{
+    if (MCdefaultstackptr->islocked())
+    {
+        ctxt . LegacyThrow(EE_CREATE_LOCKED);
+        return;
+    }
+    
+    MCWidget* t_widget = new MCWidget();
+    if (t_widget == NULL)
+        return;
+    t_widget -> bind(p_kind, nil);
+    Boolean wasvisible = t_widget->isvisible();
+    if (p_force_invisible)
+        t_widget->setflag(!p_force_invisible, F_VISIBLE);
+    
+    // AL-2015-05-21: [[ Bug 15405 ]] Honour specified parent container when creating widget
+    if (p_container == nil)
+        t_widget->setparent(MCdefaultstackptr->getcard());
+    else
+        t_widget -> setparent(p_container);
+    
+    t_widget->attach(OP_CENTER, false);
+    
+    if (p_new_name != nil)
+        t_widget->setstringprop(ctxt, 0, P_NAME, False, p_new_name);
+    
+    // AL-2015-06-30: [[ Bug 15556 ]] Ensure mouse focus is synced after creating object
+    t_widget -> sync_mfocus();
+    
+    MCAutoValueRef t_id;
+    t_widget->names(P_LONG_ID, &t_id);
+    ctxt . SetItToValue(*t_id);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p_new_name, bool p_force_invisible)
@@ -3192,6 +3238,7 @@ void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p
 	case CT_EPS:
 	case CT_COLOR_PALETTE:
 	case CT_MAGNIFY:
+    case CT_WIDGET:
 		if (p_target -> getstack() -> islocked())
 		{
 			ctxt . LegacyThrow(EE_CLONE_LOCKED);
@@ -3871,7 +3918,6 @@ void MCInterfaceExecExportSnapshotOfObject(MCExecContext& ctxt, MCObject *p_targ
 	t_bitmap = MCInterfaceGetSnapshotOfObjectBitmap(ctxt, p_target, p_region, p_with_effects, p_at_size);
     
 	MCInterfaceExportBitmapAndRelease(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_metadata, r_data);
-
 }
 void MCInterfaceExecExportSnapshotOfObjectToFile(MCExecContext& ctxt, MCObject *p_target, MCRectangle *p_region, bool p_with_effects, MCPoint *p_at_size, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCImageMetadata* p_metadata, MCStringRef p_filename, MCStringRef p_mask_filename)
 {
@@ -3881,7 +3927,6 @@ void MCInterfaceExecExportSnapshotOfObjectToFile(MCExecContext& ctxt, MCObject *
     // AL-2014-03-20: [[ Bug 11948 ]] t_bitmap nil here causes a crash.
     if (t_bitmap != nil)
         MCInterfaceExportBitmapToFileAndRelease(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_metadata, p_filename, p_mask_filename);
-
 }
 
 MCImage* MCInterfaceExecExportSelectImage(MCExecContext& ctxt)
@@ -3907,9 +3952,6 @@ MCImage* MCInterfaceExecExportSelectImage(MCExecContext& ctxt)
 
 void MCInterfaceExecExportImage(MCExecContext& ctxt, MCImage *p_target, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCImageMetadata* p_metadata, MCDataRef &r_data)
 {
-    bool t_image_locked;
-    t_image_locked = false;
-    
 	if (p_target == nil)
 		p_target = MCInterfaceExecExportSelectImage(ctxt);
 	if (p_target != nil)
@@ -3934,9 +3976,6 @@ void MCInterfaceExecExportImage(MCExecContext& ctxt, MCImage *p_target, int p_fo
 }
 void MCInterfaceExecExportImageToFile(MCExecContext& ctxt, MCImage *p_target, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCImageMetadata* p_metadata, MCStringRef p_filename, MCStringRef p_mask_filename)
 {
-    bool t_image_locked;
-    t_image_locked = false;
-    
 	if (p_target == nil)
 		p_target = MCInterfaceExecExportSelectImage(ctxt);
 	if (p_target != nil)

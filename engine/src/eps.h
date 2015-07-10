@@ -51,10 +51,12 @@ public:
 	virtual Boolean mdown(uint2 which);
 	virtual Boolean mup(uint2 which, bool p_release);
 	virtual void setrect(const MCRectangle &nrect);
+
 #ifdef LEGACY_EXEC
-    virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+    virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
     virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 #endif
+
 	// virtual functions from MCControl
 	IO_stat load(IO_handle stream, uint32_t version);
 	IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);

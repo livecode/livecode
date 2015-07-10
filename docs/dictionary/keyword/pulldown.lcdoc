@@ -1,0 +1,25 @@
+Name: pulldown
+
+Type: keyword
+
+Syntax: pulldown
+
+Summary: Specifies one of the <menu> types that can be used with the <menuMode> <property>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the menuMode of button "File" to pulldown
+
+Description:
+Use the <pulldown> <keyword> to create a pulldown menu.
+
+Pulldown menus are normally used in menu bars, and in other menus that contain actions rather than states. A pulldown menu does not have a current state; selecting a menu item normally performs an action, rather than changing the menu's current setting.
+
+References: menu (keyword), popup (keyword), menuMode (property), property (glossary), keyword (glossary)
+
+Tags: menus

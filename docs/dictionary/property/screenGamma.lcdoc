@@ -1,0 +1,34 @@
+Name: screenGamma
+
+Type: property
+
+Syntax: set the screenGamma to <gammaValue> 
+
+Summary: Specifies the <gamma> <value> used for displaying <PNG> <image|images>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+set the screenGamma to 2.2
+
+Value: The <screenGamma> is a number.
+
+Description:
+Use the <screenGamma> <property> to control the color display of <PNG> <image(object)|images>.
+
+PNG images can contain a preferred gamma setting. To display a PNG to best advantage, you may need to adjust the <screenGamma> <property> to match what the <PNG> expects.
+
+Changes in the <screenGamma> do not apply to <PNG> <image(object)|images> that are already displayed. A <PNG> <image(keyword)> uses the <screenGamma> that was in effect when it was being decompressed for display.
+
+>*Tip:*  To force LiveCode to re-decompress a <PNG> <image(keyword)> without leaving the <card>, put the <image(keyword)> into itself:
+
+  set the screenGamma to 2.2
+  put image "Test PNG" into image "Test PNG"
+
+References: dontDither (property), card (keyword), image (keyword), value (function), gamma (glossary), property (glossary), PNG (glossary), image (object)
+
+Tags: multimedia

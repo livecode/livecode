@@ -1,0 +1,49 @@
+Name: multiply
+
+Type: command
+
+Syntax: multiply [<chunk> of] <container> by <number> 
+
+Syntax: multiply <arrayContainer> by {<number> | <array>}
+
+Summary: Multiplies a number by a <container> and places the resulting <value> in the <container>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+multiply field 17 by it
+
+Example:
+multiply yearlyTotals by yearlyPercentages
+
+Example:
+multiply line thisLine of myVariable by theFactor
+
+Parameters:
+chunk: A chunk expression specifying a portion of the container.
+container: A field, button, or variable, or the message box.
+number: Any expression that evaluates to a number.
+arrayContainer (array): An array variable each of whose elements is a number.
+array (array): 
+
+The result: If <container> is a <field> or <button>, the <format> of the result is determined by the <numberFormat> <property>.
+
+Description:
+Use the <multiply> <command> to multiply a <container> or a portion of a <container> by a number, or to multiply two <array|arrays> containing numbers.
+
+The contents of the <container> (or the <chunk> of the <container>) must be a number or an <expression> that <evaluate|evaluates> to a number.
+
+If an <arrayContainer> is multiplied by a <number>, each element is multiplied by the <number>. If an <arrayContainer> is multiplied by an <array>, both <array|arrays> must have the same number of <element(glossary)|elements> and the same dimension, and each <element(keyword)> in the <arrayContainer> is multiplied by the corresponding <element(keyword)> of the <array>.
+
+If the <container> or an <element(keyword)> of the <arrayContainer> is empty, the <multiply> <command> treats its contents as zero.
+
+Changes:
+The multiply arrayContainer form was introduced in version 1.1. In previous versions, only single numbers could be used with the multiply command.
+
+References: numberFormat (property), * (operator), field (keyword), element (keyword), button (keyword), add (command), divide (command), subtract (command), format (function), value (function), matrixMultiply (function), property (glossary), element (glossary), container (glossary), expression (glossary), array (glossary), evaluate (glossary), command (glossary)
+
+Tags: math

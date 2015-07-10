@@ -156,8 +156,6 @@ bool MCDataConvertStringToData(MCStringRef string, MCDataRef& r_data)
     return t_success;
 }
 
-
-
 bool MCDataIsEmpty(MCDataRef p_data)
 {
     if (__MCDataIsIndirect(p_data))
@@ -226,6 +224,10 @@ bool MCDataCreateMutable(uindex_t p_initial_capacity, MCDataRef& r_data)
 	{
         self->flags |= kMCDataFlagIsMutable;
 		r_data = self;
+	}
+	else
+	{
+		MCValueRelease (self);
 	}
     
 	return t_success;
@@ -584,6 +586,125 @@ compare_t MCDataCompareTo(MCDataRef p_left, MCDataRef p_right)
     return p_left -> byte_count - p_right -> byte_count;
 }
 
+bool MCDataContains(MCDataRef p_data, MCDataRef p_needle)
+{
+    uindex_t t_needle_byte_count, t_byte_count;
+    t_needle_byte_count = p_needle -> byte_count;
+    t_byte_count = p_data -> byte_count;
+    
+    if (t_needle_byte_count > t_byte_count)
+        return false;
+    
+    const byte_t *t_bytes;
+    t_bytes = p_data -> bytes;
+    
+    bool t_found = false;
+    for (uindex_t i = 0; i < t_byte_count - t_needle_byte_count + 1; i++)
+        if (MCMemoryCompare(t_bytes++, p_needle -> bytes, sizeof(byte_t) * t_needle_byte_count) == 0)
+        {
+            t_found = true;
+            break;
+        }
+    
+    return t_found;
+}
+
+bool MCDataBeginsWith(MCDataRef p_data, MCDataRef p_needle)
+{
+    uindex_t t_needle_byte_count, t_byte_count;
+    t_needle_byte_count = p_needle -> byte_count;
+    t_byte_count = p_data -> byte_count;
+    
+    if (t_needle_byte_count > t_byte_count)
+        return false;
+    
+    return MCMemoryCompare(p_data -> bytes, p_needle -> bytes, sizeof(byte_t) * t_needle_byte_count) == 0;
+}
+
+bool MCDataEndsWith(MCDataRef p_data, MCDataRef p_needle)
+{
+    uindex_t t_needle_byte_count, t_byte_count;
+    t_needle_byte_count = p_needle -> byte_count;
+    t_byte_count = p_data -> byte_count;
+    
+    if (t_needle_byte_count > t_byte_count)
+        return false;
+    
+    return MCMemoryCompare(p_data -> bytes + t_byte_count - t_needle_byte_count, p_needle -> bytes, sizeof(byte_t) * t_needle_byte_count) == 0;
+}
+
+bool MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range, uindex_t& r_index)
+{
+    __MCDataClampRange(p_data, t_range);
+    
+    uindex_t t_limit, t_chunk_byte_count;
+    t_chunk_byte_count = MCDataGetLength(p_chunk);
+    t_limit = t_range . offset + t_range . length - t_chunk_byte_count + 1;
+    
+    const byte_t *t_bytes = MCDataGetBytePtr(p_data);
+    const byte_t *t_chunk_bytes = MCDataGetBytePtr(p_chunk);
+    
+    uindex_t t_offset, t_result;
+    t_result = 0;
+    
+    bool t_found;
+    t_found = false;
+    
+    for (t_offset = t_range . offset; t_offset < t_limit; t_offset++)
+        if (MCMemoryCompare(t_bytes + t_offset, t_chunk_bytes, sizeof(byte_t) * t_chunk_byte_count) == 0)
+        {
+            t_result = t_offset - t_range . offset;
+            t_found = true;
+            break;
+        }
+    
+    r_index = t_result;
+    return t_found;
+}
+
+bool
+MCDataLastIndexOf (MCDataRef self,
+                   MCDataRef p_needle,
+                   MCRange p_range,
+                   uindex_t & r_offset)
+{
+	const byte_t *t_needle = MCDataGetBytePtr (p_needle);
+	uindex_t t_needle_len = MCDataGetLength (p_needle);
+
+	/* Empty data is never found */
+	if (0 == t_needle_len)
+		return false;
+
+	__MCDataClampRange (self, p_range);
+
+	/* If the range is too short to contain the needle, the needle clearly
+	 * can't be found. */
+	if (p_range.length < t_needle_len)
+		return false;
+
+	const byte_t *t_haystack = MCDataGetBytePtr (self);
+	uindex_t t_haystack_len = MCDataGetLength (self);
+
+	for (uindex_t t_roffset = t_needle_len - 1;
+	     t_roffset < p_range.length;
+	     ++t_roffset)
+	{
+		/* Offset of first byte of match, relative to start of range
+		 * (i.e. t_offset = 0 for the first byte) */
+		uindex_t t_offset = p_range.length - t_roffset - 1;
+
+		uindex_t t_haystack_offset = p_range.offset + t_offset;
+
+		if (0 == MCMemoryCompare (t_haystack + t_haystack_offset, t_needle,
+		                          sizeof(byte_t) * t_needle_len))
+		{
+			r_offset = t_offset;
+			return true;
+		}
+	}
+	return false;
+}
+
 #if defined(__MAC__) || defined (__IOS__)
 bool MCDataConvertToCFDataRef(MCDataRef p_data, CFDataRef& r_cfdata)
 {
@@ -719,7 +840,8 @@ hash_t __MCDataHash(__MCData *self)
 
 bool __MCDataCopyDescription(__MCData *self, MCStringRef &r_description)
 {
-    return false;
+	return MCStringFormat (r_description, "<data: %u B>",
+	                       MCDataGetLength (self));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

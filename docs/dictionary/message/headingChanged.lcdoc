@@ -1,0 +1,30 @@
+Name: headingChanged
+
+Type: message
+
+Syntax: headingChanged <heading> 
+
+Summary: Sent to the current card of the defaultStack when the heading of the device changes.
+
+Introduced: 4.6.1
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+on headingChanged theHeading
+   updateMapPosition theHeading -- update the marker on the map showing the current heading
+end headingChanged
+
+Parameters:
+heading: the heading of the device, in degrees relative to true north if available, otherwise relative to magnetic north
+
+Description:
+Handle the <headingChanged> message if you want to perform tasks when the heading of the device changes.
+
+The <headingChanged> message is sent to the current card of the defaultStack when the heading of the device changes. 
+
+If heading tracking cannot be started (typically due to a lack of calibration) then a trackingError message is sent instead.
+
+References: iphoneSetHeadingCalibrationTimeout (command), mobileCanTrackHeading (function), mobileCanTrackLocation (function), mobileCurrentHeading (function), iphoneHeadingCalibrationTimeout (function), trackingError (message)

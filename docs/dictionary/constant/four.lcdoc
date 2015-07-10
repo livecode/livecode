@@ -1,0 +1,23 @@
+Name: four
+
+Type: constant
+
+Syntax: four
+
+Summary: Equivalent to the number 4.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+divide quarterlyRevenue by four -- same as "...by 4"
+
+Description:
+Use the <four> <constant> when it is easier to read in a <handler> than the numeral 4<a/>.
+
+References: constant (command), fourth (keyword), handler (glossary)
+
+Tags: math

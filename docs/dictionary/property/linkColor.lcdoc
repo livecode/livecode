@@ -1,0 +1,42 @@
+Name: linkColor
+
+Type: property
+
+Syntax: set the linkColor to {<colorName> | <RGBColor>}
+
+Syntax: set the linkColor of <stack> to {empty | <colorName> | <RGBColor>}
+
+Summary: Specifies the color of <grouped text>.
+
+Introduced: 1.1
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the linkColor to "#99CC00"
+
+Example:
+set the linkColor of the mouseStack to the hiliteColor of me
+
+Value:
+The <linkColor> is a <color reference>.
+The <colorName> is any standard color name.
+
+The <RGBColor> consists of three comma-separated <integer|integers> between zero and 255, specifying the level of each of red, green, and blue; or an HTML-style color consisting of a hash mark (#) followed by three <hexadecimal> numbers, one for each of red, green, and blue.
+
+By default, the <linkColor> is set to "0,0,238" (blue). The <linkColor> of a newly created <stack> is set to empty by <default>.
+
+Description:
+Use the <linkColor> <property> to make <grouped text> look and behave like links in a <browser|web browser>.
+
+Visited text is text whose visited <property> is true. This <property> is set to true when the user has clicked a text group during the current session.
+
+If the <linkColor> of a <stack> is empty, <grouped text> in that <stack> is shown with the <global> <linkColor> <property> if the text's <visited> <property> is false.
+
+If the <linkColor> of a <stack> is not empty, unvisited <grouped text> in that <stack> is shown with the <stack|stack's> <linkColor> <property>, regardless of the <global> setting. <property>, regardless of the <global> setting.
+
+References: link (keyword), default (keyword), backgroundColor (property), colors (property), visited (property), foregroundColor (property), global (command), colorNames (function), property (glossary), grouped text (glossary), hexadecimal (glossary), integer (glossary), browser (glossary), color reference (glossary), stack (object)
+
+Tags: ui

@@ -1,0 +1,51 @@
+Name: mainStack
+
+Type: property
+
+Syntax: set the mainStack of <stack> to <mainStack> 
+
+Summary: Specifies which <main stack> a <substack> belongs to.
+
+Associations: stack
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the mainStack of this stack to "Central"
+
+Example:
+go the mainStack of stack "/Disk/Folder/file.rev"
+
+Example:
+set the mainStack of stack "Hello" to "Goodbye"
+
+Value:
+The <mainStack> of a <stack> is a <string>, which is the short <name> of a <stack>.
+By default, the <mainStack> <property> of newly created <stacks> is set to the new <stack> itself.
+
+Description:
+Use the <mainStack> <property> to organize <stacks> in <files>.
+
+Each LiveCode file contains either a single main stack, or a main stack and one or more substacks. You can use this capability to bundle several related stacks into a single file for easy distribution, or to organize the stacks into categories, or to allow several stacks to inherit properties from the same main stack.
+
+The <mainStack> of a <stack file> is the <main stack> in that <file>. (Each <stack file> can have only one <main stack>.)
+
+The <mainStack> of a <main stack> is itself.
+
+The <mainStack> of a <substack> is the <main stack> in that <substack|substack's> file.
+
+Changing a stack's <mainStack> <property> moves it into the same <file> as the specified <main stack>. The <stack> becomes a <substack> of the specified <mainStack>.
+
+Changing a substack's <mainStack> <property> to itself makes the <substack> into an independent <main stack> (and removes it from the original <main stack|main stack's> <substacks> property). The next time you save the <stack>, LiveCode will <prompt> you for a file name and location for the <stack>.
+
+You can set the <mainStack> property of a <stack> to the name of any open <stack>.
+
+>*Note:* The <mainStack> <property> is simply the short <name> of the <main stack>, not a full <object reference|stack reference>.
+
+References: name (property), substacks (property), stackFiles (property), mainStackChanged (message), string (keyword), file (keyword), property (glossary), substack (glossary), stack file (glossary), main stack (glossary), prompt (glossary), object reference (glossary), files (function), stacks (function), mainStacks (function), revert (command), stack (object)
+
+Tags: objects

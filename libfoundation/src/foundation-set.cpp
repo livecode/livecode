@@ -276,7 +276,7 @@ static bool __MCSetClone(MCSetRef self, bool p_as_mutable, MCSetRef& r_new_self)
 
 	if (!MCMemoryNewArray(self -> limb_count, t_new_set -> limbs, t_new_set -> limb_count))
 	{
-		MCValueRelease(self);
+		MCValueRelease(t_new_set);
 		return false;
 	}
 

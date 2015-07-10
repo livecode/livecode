@@ -64,6 +64,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 #include "resolution.h"
+#include "libscript/script.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -309,6 +310,47 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 		}
 	}
 	break;
+            
+    case kMCCapsuleSectionTypeModule:
+    {
+        char *t_module_data;
+        t_module_data = new char[p_length];
+        if (IO_read(t_module_data, p_length, p_stream) != IO_NORMAL)
+        {
+            MCresult -> sets("failed to read module");
+            return false;
+        }
+    
+        bool t_success;
+        t_success = true;
+        
+        MCStreamRef t_stream;
+        t_stream = nil;
+        if (t_success)
+            t_success = MCMemoryInputStreamCreate(t_module_data, p_length, t_stream);
+        
+        MCScriptModuleRef t_module;
+        if (t_success)
+            t_success = MCScriptCreateModuleFromStream(t_stream, t_module);
+        
+        if (t_stream != nil)
+            MCValueRelease(t_stream);
+        free(t_module_data);
+        
+        if (!t_success)
+        {
+            MCresult -> sets("failed to load module");
+            return false;
+        }
+        
+        extern bool MCEngineAddExtensionFromModule(MCScriptModuleRef module);
+        if (!MCEngineAddExtensionFromModule(t_module))
+        {
+            MCScriptReleaseModule(t_module);
+            return false;
+        }
+    }
+    break;
 
 	case kMCCapsuleSectionTypeDigest:
 		uint8_t t_read_digest[16];
@@ -370,7 +412,7 @@ IO_stat MCDispatch::startup(void)
         // temporary fix until ranged formats for stringrefs is working
         MCAutoStringRef t_dir;
         /* UNCHECKED */ MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), &t_dir);
-        /* UNCHECKED */ MCStringFormat(&t_path, "%@/iphone_test.livecode", *t_dir);
+        /* UNCHECKED */ MCStringFormat(&t_path, "%@/iphone_test.rev", *t_dir);
 
         t_stream = MCS_open(*t_path, kMCOpenFileModeRead, False, False, 0);
 #endif

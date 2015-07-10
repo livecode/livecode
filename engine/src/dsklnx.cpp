@@ -75,6 +75,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // This is in here so we do not need GLIBC2.4
 extern "C" void __attribute__ ((noreturn)) __stack_chk_fail (void)
 {
+	abort();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -196,17 +197,18 @@ static void configureSerialPort(int sRefNum)
     {
         *each = '\0';
         each++;
-        if (str != NULL)
-            parseSerialControlStr(str, &theTermios);
+        parseSerialControlStr(str, &theTermios);
         str = each;
     }
-    delete controlptr;
+
     //configure the serial output device
     parseSerialControlStr(str,&theTermios);
     if (tcsetattr(sRefNum, TCSANOW, &theTermios) < 0)
     {
         MCLog("Error setting terminous attributes", nil);
     }
+
+    delete[] controlptr;
     return;
 }
 
@@ -273,7 +275,7 @@ static IO_stat MCS_lnx_shellread(int fd, char *&buffer, uint4 &buffersize, uint4
 
 static Boolean MCS_lnx_nodelay(int4 fd)
 {
-    return fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) & O_APPEND | O_NONBLOCK)
+	return fcntl(fd, F_SETFL, (fcntl(fd, F_GETFL, 0) & O_APPEND) | O_NONBLOCK)
            >= 0;
 }
 
@@ -1752,6 +1754,8 @@ public:
             t_mode = IO_UPDATE_MODE;
         else if (p_mode == kMCOpenFileModeAppend)
             t_mode = IO_APPEND_MODE;
+		else /* No access requested */
+			return NULL;
 
         t_fptr = fopen(*t_path_sys, t_mode);
 
@@ -1819,10 +1823,12 @@ public:
         if (t_fptr == NULL && p_mode != kMCOpenFileModeRead)
             t_fptr = fopen(*t_path_sys, IO_CREATE_MODE);
 
-        configureSerialPort((short)fileno(t_fptr));
-
         if (t_fptr != NULL)
+        {
+            configureSerialPort((short)fileno(t_fptr));
+
             t_handle = new MCStdioFileHandle(t_fptr);
+        }
 
         return t_handle;
     }
@@ -1997,9 +2003,9 @@ public:
     virtual bool GetExecutablePath(MCStringRef &r_executable)
     {
         char t_executable[PATH_MAX];
-        uint32_t t_size;
+		ssize_t t_size;
         t_size = readlink("/proc/self/exe", t_executable, PATH_MAX);
-        if (t_size == PATH_MAX)
+		if (t_size >= PATH_MAX || t_size < 0)
             return false;
         
         t_executable[t_size] = 0;
@@ -2328,6 +2334,20 @@ public:
                     execl(*t_shellcmd_sys, *t_shellcmd_sys, "-s", NULL);
                     _exit(-1);
                 }
+                if (MCprocesses[index].pid == -1)
+                {
+					MCeerror->add(EE_SYSTEM_FUNCTION, 0, 0, "fork");
+					MCeerror->add(EE_SYSTEM_CODE, 0, 0, errno);
+					MCeerror->add(EE_SYSTEM_MESSAGE, 0, 0, strerror(errno));
+					close(tochild[0]);
+					close(tochild[1]);
+					close(toparent[0]);
+					close(toparent[1]);
+
+                    MCprocesses[index].pid = 0;
+                    // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
+                    return false;
+                }
                 CheckProcesses();
                 close(tochild[0]);
 
@@ -2339,32 +2359,23 @@ public:
                 close(tochild[1]);
                 close(toparent[1]);
                 MCS_lnx_nodelay(toparent[0]);
-                if (MCprocesses[index].pid == -1)
-                {
-                    if (MCprocesses[index].pid > 0)
-                        Kill(MCprocesses[index].pid, SIGKILL);
-
-                    MCprocesses[index].pid = 0;
-                    MCeerror->add
-                    (EE_SHELL_BADCOMMAND, 0, 0, p_filename);
-                    // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
-                    return false;
-                }
             }
             else
             {
+                MCeerror->add(EE_SYSTEM_FUNCTION, 0, 0, "pipe");
+                MCeerror->add(EE_SYSTEM_CODE, 0, 0, errno);
+                MCeerror->add(EE_SYSTEM_MESSAGE, 0, 0, strerror(errno));
                 close(tochild[0]);
                 close(tochild[1]);
-                MCeerror->add
-                (EE_SHELL_BADCOMMAND, 0, 0, p_filename);
                 // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
                 return false;
             }
         }
         else
         {
-            MCeerror->add
-            (EE_SHELL_BADCOMMAND, 0, 0, p_filename);
+            MCeerror->add(EE_SYSTEM_FUNCTION, 0, 0, "pipe");
+            MCeerror->add(EE_SYSTEM_CODE, 0, 0, errno);
+            MCeerror->add(EE_SYSTEM_MESSAGE, 0, 0, strerror(errno));
             // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
             return false;
         }
@@ -3252,6 +3263,7 @@ public:
             if (MCinputfd > maxfd)
                 maxfd = MCinputfd;
         }
+
         handled = MCSocketsAddToFileDescriptorSets(maxfd, rmaskfd, wmaskfd, emaskfd);
         if (handled)
             p_delay = 0.0;

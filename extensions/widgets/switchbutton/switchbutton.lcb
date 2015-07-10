@@ -1,0 +1,216 @@
+/*
+Copyright (C) 2015 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+A switch button, consisting of two mutually exclusive choices or states.
+
+Name: checked
+Type: property
+Syntax: set the checked of <widget> to <pIsChecked>
+Syntax: get the checked of <widget>
+Summary: The checked state of the switch button.
+
+pIsChecked (boolean): The state of the button.
+
+Description:
+The checked property determines whether the switch button displays as on (true) or off (false).
+*/
+
+-- declaring extension as widget, followed by identifier
+widget com.livecode.extensions.livecode.switchButton
+--
+
+-- dependancy declarations
+use com.livecode.canvas
+use com.livecode.widget
+use com.livecode.engine
+--
+
+-- metadata
+metadata title is "Switch Button"
+metadata author is "LiveCode"
+metadata version is "1.0.3"
+--
+
+-- property declarations
+property checked			get mIsChecked		set setChecked
+metadata checked.default is "false"
+--
+
+-- private instance variables
+private variable mIsChecked as Boolean
+private variable mState as String
+--
+
+public handler OnSave(out rProperties as Array)
+	put the empty array into rProperties
+
+	put mIsChecked into rProperties["checked"]
+	
+	return rProperties
+end handler
+
+public handler OnLoad(in pProperties as Array)
+	put pProperties["checked"] into mIsChecked
+end handler
+
+public handler OnCreate()
+	put false into mIsChecked
+	put "not animating" into mState
+end handler
+
+public handler OnPaint()
+
+	-- draw the check box when animating and not animating
+	set the stroke width of this canvas to 2
+	set the paint of this canvas to getPaint("border")
+	stroke getPath("box") on this canvas
+	set the paint of this canvas to getPaint("background")
+	fill getPath("box") on this canvas
+	--
+	
+	-- when the state is "not animating"
+	if mState is "not animating" then
+		
+		-- draw the circle 
+		set the paint of this canvas to getPaint("circle")
+		
+		if mIsChecked is true then
+			fill getPath("right circle") on this canvas
+		else
+			fill getPath("left circle") on this canvas
+		end if
+	
+		set the paint of this canvas to solid paint with color [96/255, 96/255, 96/255]
+		set the stroke width of this canvas to 0.5
+
+		if mIsChecked is true then
+			stroke getPath("right circle") on this canvas
+		else
+			stroke getPath("left circle") on this canvas
+		end if
+		--
+	
+	-- when the state is "animating"
+	else if mState is "animating" then
+		set the stroke width of this canvas to (my width/2)*0.01
+		
+		if mIsChecked is false then
+		
+			set the paint of this canvas to solid paint with color [96/255, 96/255, 96/255]
+			stroke getPath("left rect") on this canvas
+			stroke getPath("ellipse") on this canvas
+			stroke getPath("left circle") on this canvas
+			
+			set the paint of this canvas to solid paint with color [1,1,1]
+			fill getPath("left rect") on this canvas
+			fill getPath("ellipse") on this canvas
+			fill getPath("left circle") on this canvas
+	
+		else if mIsChecked is true then
+		
+			set the paint of this canvas to solid paint with color [96/255, 96/255, 96/255]
+			stroke getPath("right rect") on this canvas
+			stroke getPath("ellipse") on this canvas
+			stroke getPath("right circle") on this canvas
+	
+			set the paint of this canvas to solid paint with color [1,1,1]
+			fill getPath("right rect") on this canvas
+			fill getPath("ellipse") on this canvas
+			fill getPath("right circle") on this canvas
+		
+		end if
+		
+	end if
+	--
+	
+end handler
+
+public handler OnMouseDown()
+	if the click position is within getRect("bounding box") then
+		put "animating" into mState
+		redraw all
+	end if
+end handler
+
+public handler OnMouseUp()
+	if the click position is within getRect("bounding box") then
+		setChecked(not(mIsChecked))
+		put "not animating" into mState
+		redraw all
+	end if
+
+	post "mouseUp" with [mIsChecked]
+end handler
+
+private handler getPath(in pShape as String) as Path
+	if pShape is "box" then
+		return rounded rectangle path of rectangle [(my width)/2 - (my height)/2, (my height)/4, (my width)/2 + (my height)/2, 3*(my height)/4] with radius (my height)/4
+	else if pShape is "left circle" then
+		return circle path centered at point [(my width)/2 - (my height)/4, (my height)/2] with radius (my height)/4
+	else if pShape is "right circle" then
+		return circle path centered at point [(my width)/2 + (my height)/4, (my height)/2] with radius (my height)/4
+	else if pShape is "ellipse" then
+		return ellipse path centered at point [(my width)/2, (my height)/2] with radii [(my height)/8, (my height)/4]
+	else if pShape is "left rect" then
+		return rectangle path of rectangle [(my width)/2 - (my height)/4, (my height)/4, (my width)/2, 3*(my height)/4]
+	else if pShape is "right rect" then
+		return rectangle path of rectangle [(my width)/2, (my height)/4, (my width)/2 + (my height)/4, 3*(my height)/4]
+	end if
+end handler
+
+private handler getRect(in pObject as String) as Rectangle
+	if pObject is "bounding box" then
+		return rectangle [(my width)/2 - 3*(my height)/4, (my height)/4, (my width)/2 + 3*(my height)/4, 3*(my height)/4]
+	end if
+end handler
+
+private handler getPaint(in pObject as String) as Paint
+
+	if pObject is "border" then
+		if mIsChecked is false then
+			return solid paint with color [224/255, 224/255, 224/255]
+		else
+			return solid paint with color [0, 204/255, 0]
+		end if
+		
+	else if pObject is "background" then
+		if mIsChecked is true then
+			return solid paint with color [0, 204/255, 0]
+				
+		else if mIsChecked is false then
+			if mState is "not animating" then
+				return solid paint with color [1,1,1]
+			else 
+				return solid paint with color [224/255, 224/255, 224/255]
+			end if
+			
+		end if
+		
+	else if pObject is "circle" then
+		return solid paint with color [1,1,1]
+		
+	end if
+end handler
+
+public handler setChecked(in pIsChecked as Boolean) as undefined
+	put pIsChecked into mIsChecked
+	redraw all
+end handler
+
+
+end widget

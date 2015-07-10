@@ -54,6 +54,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "redraw.h"
 #include "font.h"
 #include "variable.h"
+#include "widget.h"
 
 #include "globals.h"
 #include "mctheme.h"
@@ -441,6 +442,18 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 				neweps->appendto(controls);
 			}
 			break;
+        case OT_WIDGET:
+            {
+                MCWidget *newwidget = new MCWidget;
+                newwidget->setparent(this);
+                if ((stat = newwidget->load(stream, version)) != IO_NORMAL)
+                {
+                    delete newwidget;
+                    return stat;
+                }
+                newwidget->appendto(controls);
+            }
+            break;
 		case OT_MAGNIFY:
 			{
 				MCMagnify *newmag = new MCMagnify;

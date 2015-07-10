@@ -1,0 +1,30 @@
+Name: hide groups
+
+Type: command
+
+Syntax: hide groups
+
+Summary: Removes the underline from <grouped text>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+hide groups
+
+Example:
+if the lookAndFeel is "Motif" then hide groups
+
+Description:
+Use the <hide groups> <command> to remove the underline from grouped text.
+
+Text with its textStyle set to "link" is treated specially by the <clickText>, <clickChunk>, <mouseText>, and <mouseChunk> <function|functions>: a style run of <grouped text> is treated as a single <word>. This makes <grouped text> handy to use for <hypertext> or "clickable text" features.
+
+The <hide groups> <command> sets the <global> <underlineLinks> <property> to false. It does not affect the <stack> <underlineLinks> <property>, so if a <stack|stack's> <underlineLinks> is true, <hide groups> does not remove the underlining in that <stack>.
+
+References: word (keyword), underlineLinks (property), show groups (command), hide menubar (command), global (command), clickChunk (function), mouseChunk (function), clickText (function), mouseText (function), property (glossary), grouped text (glossary), command (glossary), function (glossary), hypertext (glossary), stack (object)
+
+Tags: ui

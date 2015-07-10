@@ -137,8 +137,8 @@ class DBList
 		void add(DBObject *newdbnode);
 		void clear();
 		DBObjectList *getList();
-		Bool erase(const int fid);
-		DBObject *find(const int fid);
+		Bool erase(const unsigned int fid);
+		DBObject *find(const unsigned int fid);
 		int getsize();
 		DBObject *findIndex(const int tindex);
 		void show();

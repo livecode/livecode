@@ -1,0 +1,32 @@
+Name: engine folder
+
+Type: property
+
+Syntax: the engine folder
+
+Summary: Returns the path to the engine folder.
+
+Introduced: 5.0.2
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,mobile
+
+Example:
+get the engine folder
+
+Example:
+put the engine folder & "/assets/sound1.mp3" into tSoundFile
+
+Description:
+Returns the full path to the engine folder.
+
+On iOS the engine folder property returns the path to the folder containing the built standalone engine (i.e. the bundle). This is useful for constructing paths to resources that have been copied into the bundle at build time.
+
+On Android the engine folder property returns the (virtual) path to the engine and its assets.
+
+On Desktop platforms the engine folder property returns the folder of the engine.
+
+This property is read only and is equivalent to the specialFolderPath("engine") function.
+
+References: documents folder (property), home folder (property), desktop folder (property), temporary folder (property), specialFolderPath (function)

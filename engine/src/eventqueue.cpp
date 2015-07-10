@@ -29,6 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "eventqueue.h"
 #include "debug.h"
 #include "group.h"
+#include "widget-events.h"
 
 #include "resolution.h"
 
@@ -232,6 +233,8 @@ void MCEventQueueFinalize(void)
 		{
 		case kMCEventTypeNotify:
 			t_event -> notify . callback(t_event -> notify . state, false);
+			break;
+		default:
 			break;
 		}
 
@@ -519,7 +522,11 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 				MCModeConfigureIme(MCactivefield -> getstack(), true, r . x, r . y + r . height);
 			}
 		}
-		break;
+        break;
+            
+    case kMCEventTypeCustom:
+        t_event -> custom . event -> Dispatch();
+        break;
 		
 #ifdef _MOBILE
 	case kMCEventTypeTouch:
@@ -568,10 +575,6 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 		
 	case kMCEventTypeHeading:
 		MCdefaultstackptr -> getcurcard() -> message(t_event -> location . error == nil ? MCM_heading_changed : MCM_heading_error);
-		break;
-		
-	case kMCEventTypeCustom:
-		t_event -> custom . event -> Dispatch();
 		break;
 #endif
 	}
@@ -723,13 +726,14 @@ bool MCEventQueueGetMouseClick(uint32_t p_button)
 	// Look for the first mouse down event in the queue
 	MCEvent *t_mouse_down, *t_mouse_move;
 	t_mouse_down = nil;
+    t_mouse_move = nil;
 	for(MCEvent *t_event = s_first_event; t_event != nil; t_event = t_event -> next)
 	{
 		if (t_event -> type == kMCEventTypeMousePosition)
 			t_mouse_move = t_event;
 		if (t_event -> type == kMCEventTypeMousePress &&
 			t_event -> mouse . press . state == kMCMousePressStateDown &&
-			(p_button == 0 || t_event -> mouse . press . button == p_button))
+		    (p_button == 0 || (uint32_t) t_event -> mouse . press . button == p_button))
 		{
 			t_mouse_down = t_event;
 			break;
@@ -744,8 +748,8 @@ bool MCEventQueueGetMouseClick(uint32_t p_button)
 	t_mouse_up = nil;
 	for(MCEvent *t_event = t_mouse_down -> next; t_event != nil; t_event = t_event -> next)
 		if (t_event -> type == kMCEventTypeMousePress &&
-			!t_event -> mouse . press . state == kMCMousePressStateUp &&
-			(p_button == 0 || t_event -> mouse . press . button == p_button))
+			t_event -> mouse . press . state == kMCMousePressStateUp &&
+		    (p_button == 0 || (uint32_t) t_event -> mouse . press . button == p_button))
 		{
 			t_mouse_up = t_event;
 			break;
@@ -756,9 +760,25 @@ bool MCEventQueueGetMouseClick(uint32_t p_button)
 	
 	MCmodifierstate = t_mouse_up -> mouse . press . modifiers;
 	MCclickstackptr = MCmousestackptr;
-	MCclicklocx = t_mouse_move -> mouse . position . x;
-	MCclicklocy = t_mouse_move -> mouse . position . y;
-	
+    
+    // If there is a mouse-move event then update the clickloc with that position
+    // otherwise use MCmousex/y.
+    if (t_mouse_move != nil)
+    {
+        // Take into account fullscreenmode.
+        MCPoint t_mouseloc;
+        t_mouseloc = MCPointMake(t_mouse_move->mouse.position.x, t_mouse_move->mouse.position.y);
+        t_mouseloc = MCmousestackptr->windowtostackloc(t_mouseloc);
+        
+        MCclicklocx = t_mouseloc . x;
+        MCclicklocy = t_mouseloc . y;
+	}
+    else
+    {
+        MCclicklocx = MCmousex;
+        MCclicklocy = MCmousey;
+    }
+    
 	// Now remove *all* mouse events from the queue up to and including the
 	// mouse up.
 	MCEvent *t_event;
@@ -1071,6 +1091,38 @@ bool MCEventQueuePostMenuPick(MCObjectHandle *p_target, MCStringRef p_string)
 	return MCStringCopy(p_string, t_event -> menu . pick . string);
 }
 
+bool MCEventQueuePostCustom(MCCustomEvent *p_event)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCEvent *t_event;
+	t_event = nil;
+	if (t_success)
+		t_success = MCEventQueuePost(kMCEventTypeCustom, t_event);
+    
+	if (t_success)
+		t_event -> custom . event = p_event;
+	
+	return t_success;
+}
+
+bool MCEventQueuePostCustomAtFront(MCCustomEvent *p_event)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCEvent *t_event;
+	t_event = nil;
+	if (t_success)
+		t_success = MCEventQueuePostAtFront(kMCEventTypeCustom, t_event);
+	
+	if (t_success)
+		t_event -> custom . event = p_event;
+	
+	return t_success;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef _MOBILE
@@ -1141,21 +1193,30 @@ static void handle_touch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p
 
 	if (t_target != nil)
 	{
-		switch(p_phase)
-		{
-			case kMCEventTouchPhaseBegan:
-				t_target -> message_with_args(MCM_touch_start, p_id);
-				break;
-			case kMCEventTouchPhaseMoved:
-				t_target -> message_with_args(MCM_touch_move, p_id, t_touch_loc.x, t_touch_loc.y);
-				break;
-			case kMCEventTouchPhaseEnded:
-				t_target -> message_with_args(MCM_touch_end, p_id);
-				break;
-			case kMCEventTouchPhaseCancelled:
-				t_target -> message_with_args(MCM_touch_release, p_id);
-				break;
-		}
+        // Touches on widgets are handled differently
+        if (t_target->gettype() == CT_WIDGET)
+        {
+            MCwidgeteventmanager->event_touch(reinterpret_cast<MCWidget*>(t_target),
+                                              p_id, p_phase, t_touch_loc.x, t_touch_loc.y);
+        }
+        else
+        {
+            switch(p_phase)
+            {
+                case kMCEventTouchPhaseBegan:
+                    t_target -> message_with_args(MCM_touch_start, p_id);
+                    break;
+                case kMCEventTouchPhaseMoved:
+                    t_target -> message_with_args(MCM_touch_move, p_id, t_touch_loc.x, t_touch_loc.y);
+                    break;
+                case kMCEventTouchPhaseEnded:
+                    t_target -> message_with_args(MCM_touch_end, p_id);
+                    break;
+                case kMCEventTouchPhaseCancelled:
+                    t_target -> message_with_args(MCM_touch_release, p_id);
+                    break;
+            }
+        }
 	}
 }
 
@@ -1331,38 +1392,6 @@ bool MCEventQueuePostHeadingError(void)
 	t_event -> location . error = "";
 	
 	return true;
-}
-
-bool MCEventQueuePostCustom(MCCustomEvent *p_event)
-{
-	bool t_success;
-	t_success = true;
-	
-	MCEvent *t_event;
-	t_event = nil;
-	if (t_success)
-		t_success = MCEventQueuePost(kMCEventTypeCustom, t_event);
-
-	if (t_success)
-		t_event -> custom . event = p_event;
-	
-	return t_success;
-}
-
-bool MCEventQueuePostCustomAtFront(MCCustomEvent *p_event)
-{
-	bool t_success;
-	t_success = true;
-	
-	MCEvent *t_event;
-	t_event = nil;
-	if (t_success)
-		t_success = MCEventQueuePostAtFront(kMCEventTypeCustom, t_event);
-	
-	if (t_success)
-		t_event -> custom . event = p_event;
-	
-	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

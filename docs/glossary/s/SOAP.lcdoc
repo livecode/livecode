@@ -1,0 +1,12 @@
+Name: SOAP
+
+Synonyms: SOAP,Simple Object Access Protocol
+
+Type: glossary
+
+Description:
+Simple Object Access <Protocol>. An <XML> -based set of rules for applications to access and use web services.
+
+References: protocol (glossary), XML (glossary)
+
+Tags: networking

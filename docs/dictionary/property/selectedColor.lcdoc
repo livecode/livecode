@@ -1,0 +1,15 @@
+Name: selectedColor
+
+Type: property
+
+Syntax: selectedColor
+
+Summary: The <selectedColor> <property> is <reserved word|reserved> for internal use.
+
+Introduced: 1.0
+
+OS: ios,android
+
+Platforms: desktop,server,web,mobile
+
+References: property (glossary), reserved word (glossary)

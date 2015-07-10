@@ -1,0 +1,31 @@
+Name: recentCards
+
+Type: property
+
+Syntax: get the recentCards [of <stack>]
+
+Summary: Reports the long <ID> properties of <recent cards|recently visited cards>.
+
+Associations: stack
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+do "go" && line 2 of the recentCards -- equivalent to "go recent 2"
+
+Value: The <recentCards> is a list of long <ID> properties of <card|cards>, one <ID> per <line>. If a <stack> is specified, the list contains only the <recent cards> in the specified <stack>. If not, all <recent cards> are listed.
+
+Description:
+Use the <recentCards> <property> to find out which <card(object)|cards> the user has visited, or to re-visit a <card(keyword)>.
+
+The <recentCards> are listed in reverse order, with the <current card> at the top of the list, the most <recent cards|recently visited card> next, and so on. Each visit to a <card(keyword)> causes its <ID> to be placed at the top of the list, even if the same <card(keyword)> appears elsewhere in the list. The <recentCards> thus provides a complete track of the visitor's navigation.
+
+Cards visited while the lockRecent <property> is set to true are not added to the list.
+
+References: ID (property), card (keyword), line (keyword), unlock recent (command), card (object), recent cards (glossary), property (glossary), current card (glossary)
+
+Tags: navigation
