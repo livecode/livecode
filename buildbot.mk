@@ -96,10 +96,12 @@ else ifeq ($(BUILD_PLATFORM),linux-x86)
 endif
 
 # FIXME add --warn-as-error
+# We want to have absolute path, not relative ones (when signing, the working
+# directory will not be the same)
 buildtool_command = $(LIVECODE) -ui $(BUILDTOOL_STACK) \
 	--build $(BUILD_STABILITY) \
-	--engine-dir . --output-dir . --work-dir ./_cache/builder_tool \
-	--private-dir ..
+	--engine-dir $(pwd) --output-dir $(pwd) --work-dir $(pwd)/_cache/builder_tool \
+	--private-dir $(pwd)/..
 
 # Settings for upload
 RSYNC ?= rsync
