@@ -315,6 +315,9 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
          put pPackageFile into tParams["payload"]
          put tOutputFileStub & ".unsigned.exe" into tParams["output"]
          
+         // libURL is needed in the timestamp processing
+         start using stack (builderRepoFolder() & slash & "ide-support" & slash & "revliburl.livecodescript")
+         
          if pEdition is "Commercial" then
             put builderCommercialResourceFolder() & "/installer.ico" into tParams["appicon"]
          end if
@@ -327,12 +330,13 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
          end if
          
          -- Next we sign the installer using the certificate (if available)
-         if there is a folder (builderSystemFolder() & slash & "certificates") then
+         put builderPrivateRepoFolder() & slash & "certificates" into tCertificatesFolder
+         if there is a folder (tCertificatesFolder) then
             put tParams["output"] into tSignParams["input"]
             put tOutputFileStub & ".exe" into tSignParams["output"]
-            put builderSystemFolder() & slash & "certificates/runrev_bin.spc" into tSignParams["certificate"]
-            put builderSystemFolder() & slash & "certificates/runrev.pvk" into tSignParams["privatekey"]
-            put word 1 of url ("file:" & builderSystemFolder() & slash & "certificates/runrev_password.txt") into tSignParams["passphrase"]
+            put tCertificatesFolder & "/runrev_bin.spc" into tSignParams["certificate"]
+            put tCertificatesFolder & "/runrev.pvk" into tSignParams["privatekey"]
+            put word 1 of url ("file:" & tCertificatesFolder & "/runrev_password.txt") into tSignParams["passphrase"]
             put "http://timestamp.verisign.com/scripts/timstamp.dll" into tSignParams["timestamper"]
             put "http://www.runrev.com" into tSignParams["url"]
             if pEdition is "Community" then
