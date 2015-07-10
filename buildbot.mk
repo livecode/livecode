@@ -96,12 +96,18 @@ else ifeq ($(BUILD_PLATFORM),linux-x86)
 endif
 
 # FIXME add --warn-as-error
-# We want to have absolute path, not relative ones (when signing, the working
-# directory will not be the same)
+# Those directories are given to the tool builder, and they might get passed
+# (like private-dir) to engine functions, to which a path relative to this file
+# becomes invalid).
+ENGINE_DIR=$(pwd)
+OUTPUT_DIR=$(pwd)
+WORK_DIR=-$(pwd)/_cache/builder_tool
+PRIVATE_DIR=$(pwd)/..
+
 buildtool_command = $(LIVECODE) -ui $(BUILDTOOL_STACK) \
 	--build $(BUILD_STABILITY) \
-	--engine-dir $(pwd) --output-dir $(pwd) --work-dir $(pwd)/_cache/builder_tool \
-	--private-dir $(pwd)/..
+	--engine-dir ${ENGINE_DIR} --output-dir ${OUTPUT_DIR} --work-dir ${WORK_DIR} \
+	--private-dir ${PRIVATE_DIR}
 
 # Settings for upload
 RSYNC ?= rsync
