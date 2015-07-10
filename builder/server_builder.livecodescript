@@ -27,7 +27,7 @@ command serverBuilderRun pPlatform, pEdition
 
    -- Make sure that the output directory exists
    local tOutputDir
-   put builderWorkspaceFolder() & slash & "deploy" into tOutputDir
+   put builderOutputFolder() into tOutputDir
    builderEnsureFolder tOutputDir
 
    local tOutputFile
