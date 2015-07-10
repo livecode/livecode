@@ -413,6 +413,7 @@ function revDocsGenerateDocsFileFromModular pText
    local tNameLine, tSyntaxLine, tBindingLines
    local tModuleDescription, tModuleName, tModuleType
    local tIsPhrase, tPhraseName
+   local tDeprecated
    repeat for each line tLine in pText
       // Check to see if this is the start of a block of code or a block of comments 
       get word 1 of tLine 
@@ -472,7 +473,7 @@ function revDocsGenerateDocsFileFromModular pText
             
             if tComment is not empty then
                if tEntryType is "syntax" then
-                  revDocsUpdateModularSyntaxDocBlocks tEntryType, tNameLine, tSyntaxLine, tBindingLines, tComment, tHandlers, tPhrases, tData
+                  revDocsUpdateModularSyntaxDocBlocks tEntryType, tNameLine, tSyntaxLine, tBindingLines, tComment, tHandlers, tPhrases, tDeprecated, tData
                else
                   revDocsUpdateDocBlocks true, tEntryType, tNameLine, tComment, tData
                end if
@@ -492,6 +493,11 @@ function revDocsGenerateDocsFileFromModular pText
                put tLine into tSyntaxLine
             end if
          else
+            # Deal with deprecated syntax
+            if tLine begins with "deprecate" then
+               put true into tDeprecated
+               next repeat
+            end if
             // For syntax, the order is: name line, syntax line, param lines.
             if tNameLine is empty then
                put tLine into tNameLine
@@ -1425,7 +1431,7 @@ private function formatSyntaxLine pLine, pPhrases
    return pLine
 end formatSyntaxLine
 
-command revDocsUpdateModularSyntaxDocBlocks pType, pNameLine, pSyntaxLine, pBindingLines, pComment, pHandlersA, pPhrases, @xDataA
+command revDocsUpdateModularSyntaxDocBlocks pType, pNameLine, pSyntaxLine, pBindingLines, pComment, pHandlersA, pPhrases, pDeprecated, @xDataA
    local tEntryName
    put word 2 of pNameLine into tEntryName
    
@@ -1490,6 +1496,8 @@ command revDocsUpdateModularSyntaxDocBlocks pType, pNameLine, pSyntaxLine, pBind
    // Output the comments that preceded this function definition
    put pComment into xDataA[tEntryName]["comments"]
    put "syntax" into xDataA[tEntryName]["kind"]
+   
+   put pDeprecated is true into xDataA[tEntryName]["deprecated"]
 end revDocsUpdateModularSyntaxDocBlocks
 
 command revDocsUpdateDocBlocks pModular, pType, pLine, pComment, @xDataA
