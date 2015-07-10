@@ -392,6 +392,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #  else
 #    define MC_DLLEXPORT __attribute__((dllexport))
 #  endif
+#elif defined(__EMSCRIPTEN__)
+#  define MC_DLLEXPORT __attribute__((__visibility__("default"), __used__))
 #else
 #  define MC_DLLEXPORT __attribute__((__visibility__("default")))
 #endif
