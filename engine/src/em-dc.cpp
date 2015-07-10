@@ -182,6 +182,9 @@ MCScreenDC::wait(real64_t p_duration,
 	 * p_accept_any_event is set. */
 	MCAssert(isfinite(p_duration) || p_accept_any_event);
 
+	MCDeletedObjectsEnterWait(p_allow_dispatch);
+	++MCwaitdepth;
+
 	real64_t t_current_time = MCS_time();
 	real64_t t_exit_time = t_current_time + p_duration;
 	real64_t t_event_time = t_exit_time;
@@ -190,7 +193,6 @@ MCScreenDC::wait(real64_t p_duration,
 	bool t_reset = false;
 	bool t_done = false;
 
-	++MCwaitdepth;
 
 	while (!t_done && !MCquit)
 	{
@@ -253,6 +255,7 @@ MCScreenDC::wait(real64_t p_duration,
 	}
 
 	--MCwaitdepth;
+	MCDeletedObjectsLeaveWait(p_allow_dispatch);
 
 	return MCquit;
 }

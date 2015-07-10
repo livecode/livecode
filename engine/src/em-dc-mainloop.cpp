@@ -201,19 +201,6 @@ X_main_loop_iteration()
 
 	MCabortscript = false;
 
-	/* Collect garbage */
-	if (!MCtodestroy->isempty() || nil != MCtodelete)
-	{
-		MCtooltip->cleartip();
-		while (nil != MCtodelete)
-		{
-			MCObject *t_obj = MCtodelete->remove(MCtodelete);
-			delete t_obj;
-		}
-
-		MCtodestroy->destroy();
-	}
-
 	MCU_cleaninserted();
 
 	MCscreen->siguser();
