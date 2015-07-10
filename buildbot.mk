@@ -85,7 +85,15 @@ BUILDTOOL_STACK = builder/builder_tool.livecodescript
 
 WKHTMLTOPDF ?= $(shell which wkhtmltopdf 2>/dev/null)
 
-bin_dir = $(BUILD_PLATFORM)-bin
+# Those directories are given to the tool builder, and they might get passed
+# (like private-dir) to engine functions, to which a path relative to this file
+# becomes invalid).
+top_src_dir=$(pwd)
+engine_dir=${top_src_dir}
+output_dir=${top_src_dir}
+work_dir=${top_src_dir}/_cache/builder_tool
+private_dir=${top_src_dir}/..
+bin_dir = ${top_src_dir}/$(BUILD_PLATFORM)-bin
 
 ifeq ($(BUILD_PLATFORM),mac)
   LIVECODE = $(bin_dir)/LiveCode-Community.app/Contents/MacOS/LiveCode-Community
@@ -101,8 +109,8 @@ endif
 # FIXME add --warn-as-error
 buildtool_command = $(LIVECODE) -ui $(BUILDTOOL_STACK) \
 	--build $(BUILD_STABILITY) \
-	--engine-dir . --output-dir . --work-dir ./_cache/builder_tool \
-	--private-dir ..
+	--engine-dir ${engine_dir} --output-dir ${output_dir} --work-dir ${work_dir} \
+	--private-dir ${private_dir}
 
 # Settings for upload
 RSYNC ?= rsync
@@ -152,6 +160,7 @@ dist-upload-files.txt:
 	                -o -name 'LiveCode*Server-*-Linux*.zip' \
 	                -o -name 'LiveCode*Server-*-Mac.zip' \
 	                -o -name 'LiveCode*Server-*-Windows.zip' \
+	                -o -name '*-bin.tar.xz' \
 	  > $@
 
 # Perform the upload.  This is in two steps:
