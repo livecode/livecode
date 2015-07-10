@@ -25,6 +25,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "variable.h"
 
+#include "socket.h"
+
 #undef isatty
 #include <unistd.h>
 #include <stdio.h>
@@ -1121,9 +1123,31 @@ void MCIPhoneSystem::KillAll()
     return;
 }
 
+// MM-2015-06-08: [[ MobileSockets ]] Poll sockets.
 Boolean MCIPhoneSystem::Poll(real8 p_delay, int p_fd)
 {
-    return False;
+    Boolean handled = False;
+    fd_set rmaskfd, wmaskfd, emaskfd;
+    FD_ZERO(&rmaskfd);
+    FD_ZERO(&wmaskfd);
+    FD_ZERO(&emaskfd);
+    int4 maxfd = 0;
+    
+    handled = MCSocketsAddToFileDescriptorSets(maxfd, rmaskfd, wmaskfd, emaskfd);
+    if (handled)
+        p_delay = 0.0;
+    
+    struct timeval timeoutval;
+    timeoutval.tv_sec = (long)p_delay;
+    timeoutval.tv_usec = (long)((p_delay - floor(p_delay)) * 1000000.0);
+    
+    int n = 0;
+    n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
+    if (n <= 0)
+        return handled;
+    
+    MCSocketsHandleFileDescriptorSets(rmaskfd, wmaskfd, emaskfd);
+    return True;
 }
 
 Boolean MCIPhoneSystem::IsInteractiveConsole(int p_fd)

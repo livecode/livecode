@@ -66,6 +66,8 @@ MCServerScript::~MCServerScript(void)
         else
             delete t_file -> script;
 
+        // SN-2015-07-09: [[ Merge 6.7.7 RC 1 ]] Avoid memory leak
+        MCValueRelease(t_file -> filename);
 		delete t_file;
 	}
 	

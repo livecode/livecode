@@ -1587,8 +1587,16 @@ IO_stat MCS_readall(void *p_ptr, uint32_t p_byte_count, IO_handle p_stream, uint
 	if (MCabortscript || p_ptr == NULL || p_stream == NULL)
 		return IO_ERROR;
     
+    // SN-2015-07-07: [[ Bug 15569 ]] Reading referenced images on Linux was
+    //  always failing, since it was reading a input buffer of 4096 bytes.
+    //  We should return IO_EOF in case the stream is exhausted, not an error.
     if (!p_stream -> Read(p_ptr, p_byte_count, r_bytes_read))
-        return IO_ERROR;
+    {
+        if (p_stream -> IsExhausted())
+            return IO_EOF;
+        else
+            return IO_ERROR;
+    }
     
     if (p_stream -> IsExhausted())
         return IO_EOF;
