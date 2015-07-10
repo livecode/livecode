@@ -149,6 +149,7 @@ dist-upload-files.txt:
 	                -o -name 'LiveCode*Server-*-Linux*.zip' \
 	                -o -name 'LiveCode*Server-*-Mac.zip' \
 	                -o -name 'LiveCode*Server-*-Windows.zip' \
+	                -o -name '*-bin.tar.xz' \
 	  > $@
 
 # Perform the upload.  This is in two steps:
