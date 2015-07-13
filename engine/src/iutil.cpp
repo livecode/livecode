@@ -464,9 +464,6 @@ void MCImage::crop(MCRectangle *newrect)
 	MCImageBitmapCopyRegionToBitmap(t_bitmap, t_cropimage, xorigin, yorigin, trect.x, trect.y, trect.width, trect.height);
 
 	unlockbitmap(t_bitmap);
-	
-	// PM-2015-07-13: [[ Bug 15590 ]] Fix memory leak
-	MCImageFreeBitmap(t_bitmap);
 
 	/* UNCHECKED */ setbitmap(t_cropimage, 1.0);
 	
