@@ -94,6 +94,7 @@ use com.livecode.engine
 metadata author is "LiveCode"
 metadata version is "1.0.0"
 metadata title is "Tree View"
+metadata userVisible is "false"
 
 metadata selectedRowColor.editor is "com.livecode.pi.color"
 metadata selectedRowColor.default is "10,105,216"
