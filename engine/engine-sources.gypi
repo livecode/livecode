@@ -397,7 +397,7 @@
 			'src/mbliphonegfx.mm',
 			'src/mbliphonehooks.cpp',
 			'src/mbliphoneinput.mm',
-			'src/mbliphonelocation.mm',
+			#'src/mbliphonelocation.mm',
 			'src/mbliphonemail.mm',
 			'src/mbliphonemediapick.mm',
 			'src/mbliphonemisc.mm',
@@ -807,6 +807,7 @@
 					
 					'sources!':
 					[
+						'src/coretextlayout.mm',
 						'src/srvmac.cpp',
 					],
 				},
@@ -933,6 +934,7 @@
 					[
 						'src/stacke.cpp',
 						'src/sysunxdate.cpp',
+						'src/sysunxrandom.cpp',
 						
 						'src/mbliphoneembedded.mm',
 						'src/mbliphoneembeddedtest.mm',

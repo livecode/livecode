@@ -9,7 +9,7 @@
 				'target_conditions':
 				[
 					[
-						'_type != "none"',
+						'_type == "executable"',
 						{
 							'mac_bundle': 1,
 						},
