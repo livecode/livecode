@@ -150,12 +150,6 @@
 			'conditions':
 			[
 				[
-					'OS == "mac"',
-					{
-						'product_name': 'Server-Community',
-					},
-				],
-				[
 					'mobile != 0',
 					{
 						'type': 'none',
