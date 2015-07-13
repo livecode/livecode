@@ -302,6 +302,10 @@ public:
     void SetLockUpdates(MCExecContext& ctxt, bool p_locked);
     void SetClipsToRect(MCExecContext& ctxt, bool p_clips_to_rect);
     void GetClipsToRect(MCExecContext& ctxt, bool &r_clips_to_rect);
+
+    void SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting);
+    void SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting);
+    void SetVisibility(MCExecContext& ctxt, uinteger_t part, bool flag, bool visible);
     
 	virtual void SetEnabled(MCExecContext& ctxt, uint32_t part, bool setting);
 	virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool setting);

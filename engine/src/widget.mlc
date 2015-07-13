@@ -815,14 +815,14 @@ Summary:	Displays a popup menu.
 Menu:		An expression that evaluates to a string, which describes the menu items.
 Location:	An expression that evaluates to a <Point> relative to the current widget. The topleft corner of the popup window will be placed here.
 
-The result:	The selected menu item. If the menu is dismissed (by clicking outside the bounds of the menu) this value will be undefined.
+The result:	The selected menu item. If the menu is dismissed (by clicking outside the bounds of the menu) this value will be nothing.
 
 Example:
 	private variable mFont as Font
 
 	public handler OnMouseDown()
 		popup menu "Helvetica\nTimes New Roman\nArial" at the mouse position
-		if the result is defined then
+		if the result is not nothing then
 			put font (the result) at size 20 into mFont
 			redraw all
 		end if
@@ -850,18 +850,18 @@ Kind:		The unique identifier of the widget to use for the popup.
 Location:	An expression that evaluates to a <Point> relative to the current widget. The topleft corner of the popup window will be placed here.
 Properties:	An expression that evaluates to an <array>. For each key of the array, the popup widget will be initialized by setting that property to the value for that key.
 
-The result:	The result returned by the popup. If the popup is dismissed (by clicking outside the bounds of the popup) this value will be undefined.
+The result:	The result returned by the popup. If the popup is dismissed (by clicking outside the bounds of the popup) this value will be nothing.
 
 Example:
 	private variable mColor as Color
 
 	public handler OnClick()
-		variable tProperties as array
+		variable tProperties as Array
 		put the empty array into tProperties
 		put mColor into tProperties["currentColor"]
 
 		popup widget "com.livecode.extensions.livecode.ColorPicker" at the mouse position with properties tProperties
-		if the result is defined then
+		if the result is not nothing then
 			put the result into mColor
 			redraw all
 		end if
@@ -903,7 +903,7 @@ Example:
 			// If this widget is being used as a popup then we close the popup and return a value to the caller
 			if currently popped up then
 				if mSelected is "Cancel" then
-					// Dismiss the popup without returning a value - the result will be undefined
+					// Dismiss the popup without returning a value - the result will be nothing
 					close popup
 				else
 					// Dismiss the popup - the result will be the value of mSelected
@@ -913,7 +913,7 @@ Example:
 		end if
 	end handler
 
-	private handler getOptionAtPosition(in pPosition as Point) as string
+	private handler getOptionAtPosition(in pPosition as Point) returns String
 		// Return the name of the option at the given point
 		...
 	end handler
@@ -947,7 +947,7 @@ Example:
 			// If this widget is being used as a popup then we close the popup and return a value to the caller
 			if currently popped up then
 				if mSelected is "Cancel" then
-					// Dismiss the popup without returning a value - the result will be undefined
+					// Dismiss the popup without returning a value - the result will be nothing
 					close popup
 				else
 					// Dismiss the popup - the result will be the value of mSelected
@@ -957,7 +957,7 @@ Example:
 		end if
 	end handler
 
-	private handler getOptionAtPosition(in pPosition as Point) as string
+	private handler getOptionAtPosition(in pPosition as Point) returns String
 		// Return the name of the option at the given point
 		...
 	end handler

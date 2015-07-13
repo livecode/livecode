@@ -20,7 +20,7 @@ REM Is Cygwin already in the path?
 REM If not, look in a couple of likely locations for it
 WHERE /Q cygpath.exe 1>NUL 2>NUL
 IF %ERRORLEVEL% EQU 0 (
-  SET cygwin_path=""
+  SET cygwin_path=
 ) ELSE IF DEFINED CYGPATH (
   SET cygwin_path=%CYGPATH%\bin\
 ) ELSE IF EXIST C:\Cygwin64\bin (
@@ -41,7 +41,7 @@ SET commands=%commands%
 REM Obscure way to get the cmd.exe equivalent to `...` substitution
 FOR /F "usebackq tokens=*" %%x IN (`%cygwin_path%cygpath.exe %CD%`) DO SET cygwin_cd=%%x
 FOR %%x IN (!commands!) DO (
-  FOR /F "usebackq tokens=*" %%y IN (`%cygwin_path%bash.exe -c 'if [[ \'%%x\' ^=^= -* ]] ^; then echo \'%%x\' ^; else cygpath \'%%x\' ^; fi'`) DO SET cygwin_cmd=!cygwin_cmd! %%y
+  FOR /F "usebackq tokens=*" %%y IN (`%cygwin_path%bash.exe -c 'if [[ \'%%x\' ^=^= -* ]] ^; then echo \'%%x\' ^; else /bin/cygpath \'%%x\' ^; fi'`) DO SET cygwin_cmd=!cygwin_cmd! %%y
 )
 
 REM All the parameters have been Unix-ified; run the command

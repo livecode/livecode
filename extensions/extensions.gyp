@@ -44,6 +44,7 @@
 				'widgets/svgpath/svgpath.lcb',
 				'widgets/switchbutton/switchbutton.lcb',
 				'widgets/treeview/treeview.lcb',
+				'widgets/colorswatch/colorswatch.lcb',
 			],
 			
 			'all_dependent_settings':
@@ -52,7 +53,8 @@
 				{
 					'dist_aux_files':
 					[
-						'<(PRODUCT_DIR)/packaged_extensions',
+						# Gyp will only use a recursive xcopy on Windows if the path ends with '/'
+						'<(PRODUCT_DIR)/packaged_extensions/',
 					],
 				},
 			},

@@ -65,5 +65,6 @@ void MCTextPaneSet(MCTextPaneRef p_pane)
 extern MCDC* g_widget_paint_dc;
 void MCTextPanePaintShim(MCTextPaneRef p_pane)
 {
-    p_pane->draw(g_widget_paint_dc);
+    // AL-2015-07-08: Removed temporarily as it was causing build issues
+    //p_pane->draw(g_widget_paint_dc);
 }

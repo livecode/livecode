@@ -24,7 +24,8 @@
 				{
 					'dist_aux_files':
 					[
-						'<(PRODUCT_DIR)/modules',
+						# Gyp will only use a recursive xcopy on Windows if the path ends with '/'
+						'<(PRODUCT_DIR)/modules/',
 					],
 				},
 			},

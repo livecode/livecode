@@ -521,7 +521,7 @@ end syntax
 Summary:			The new line character
 
 Example:
-	variable tList as list
+	variable tList as List
 	push "line 1" onto tList
 	push "line 2" onto tList
 	push "line 3" onto tList

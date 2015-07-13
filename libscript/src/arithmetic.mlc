@@ -550,7 +550,7 @@ Summary:	Parses a string as an number
 
 Operand:	An expression that evaluates to a string.
 
-Returns:	<Operand> parsed as a number, or undefined.
+Returns:	<Operand> parsed as a number, or nothing.
 
 Example:
 	variable tString as String
@@ -562,14 +562,14 @@ Example:
 	variable tNum as optional Number
 	put "aaaa" parsed as number into tNum
 	
-	if tNum is not defined then
+	if tNum is nothing then
 		put 0 into tNum
 	end if
 	
 	// tNum contains 0
 	
 Description:
-Use <StringParsedAsNumber> when you want to interpret text numerically. undefined is returned if parsing was not possible.
+Use <StringParsedAsNumber> when you want to interpret text numerically. nothing is returned if parsing was not possible.
 */
 
 syntax StringParsedAsNumber is postfix operator with precedence 1
@@ -583,7 +583,7 @@ Summary:	Parses a string as an number
 
 Operand:	An expression that evaluates to a string.
 
-The result:	<Operand> parsed as a number, or undefined.
+The result:	<Operand> parsed as a number, or nothing.
 
 Example:
 	variable tString as String
@@ -595,12 +595,12 @@ Example:
 	variable tNum as optional Number
 	parse "aaaa" as Number
 	
-	if the result is not defined then
+	if the result is nothing then
 		put "unable to parse string" into tResult
 	end if
 
 Description:
-Use <ParseStringAsNumber> when you want to interpret text numerically. The result is not defined if parsing was not possible.
+Use <ParseStringAsNumber> when you want to interpret text numerically. The result is nothing if parsing was not possible.
 */
 
 syntax ParseStringAsNumber is statement
@@ -628,7 +628,7 @@ Example:
 	
 	variable tElt as Number
 	repeat with tElt from 1 up to the number of elements in tList
-		if tList[tElt] is not defined then
+		if tList[tElt] is nothing then
 			put 0 into element tElt of tList
 		end if
 	end repeat
@@ -636,9 +636,9 @@ Example:
 	// tList contains [ 1, 0, 3 ]
 
 Description:
-Use <ListOfStringParsedAsListOfNumber> when you want to interpret pieces of text numerically. If the input list contains elements which cannot be parsed as numbers, the corresponding element will be undefined.
+Use <ListOfStringParsedAsListOfNumber> when you want to interpret pieces of text numerically. If the input list contains elements which cannot be parsed as numbers, the corresponding element will be nothing.
 
-*Note:* It is an error if any element of <Operand> is not as string.
+*Note:* It is an error if any element of <Operand> is not a string.
 */
 
 syntax ListOfStringParsedAsListOfNumber is postfix operator with precedence 1
@@ -661,9 +661,9 @@ Example:
 	parse tListOfString as list of number -- the result contains [ 1, 2, 3, 4 ]
 
 Description:
-Use <ParseListOfStringAsListOfNumber> when you want to interpret pieces of text numerically. If the input list contains elements which cannot be parsed as numbers, the corresponding element will be undefined.
+Use <ParseListOfStringAsListOfNumber> when you want to interpret pieces of text numerically. If the input list contains elements which cannot be parsed as numbers, the corresponding element will be nothing.
 
-*Note:* It is an error if any element of <Operand> is not as string.
+*Note:* It is an error if any element of <Operand> is not a string.
 */
 
 syntax ParseListOfStringAsListOfNumber is statement

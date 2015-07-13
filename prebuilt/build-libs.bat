@@ -10,8 +10,8 @@ SET _ROOT_DIR=C:\Builds\libraries
 SET _INSTALL_DIR=%_ROOT_DIR%\prefix
 SET _WINSDK_ROOT=c:\program files\microsoft sdks\windows\v6.1
 
-SET OPENSSL_VERSION=1.0.1m
-SET CURL_VERSION=7.21.7
+SET OPENSSL_VERSION=1.0.1o
+SET CURL_VERSION=7.43.0
 
 echo "Will build into %_ROOT_DIR%"
 cmd.exe /V:ON /E:ON /C mkdir %_ROOT_DIR%
@@ -62,8 +62,6 @@ link /nologo /subsystem:console /opt:ref /dll /release /out:revsecurity.dll /def
 IF EXIST revsecurity.manifest mt -nologo -manifest revsecurity.dll.manifest -outputresource:revsecurity.dll;2
 
 IF NOT EXIST "%_INSTALL_DIR%\include" mkdir "%_INSTALL_DIR%\include"
-IF NOT EXIST "%_INSTALL_DIR%\lib" mkdir "%_INSTALL_DIR%\lib"
-IF NOT EXIST "%_INSTALL_DIR%\lib\win32" mkdir "%_INSTALL_DIR%\lib\win32"
 IF NOT EXIST "%_INSTALL_DIR%\lib\win32\i386" mkdir "%_INSTALL_DIR%\lib\win32\i386"
 
 XCOPY /E /Y inc32\* "%_INSTALL_DIR%\include"
@@ -74,6 +72,10 @@ COPY /Y out32\libeay32.lib "%_INSTALL_DIR%\lib\win32\i386"
 COPY /Y out32\ssleay32.lib "%_INSTALL_DIR%\lib\win32\i386"
 COPY /Y revsecurity.def "%_INSTALL_DIR%\lib\win32\i386"
 
+REM Additional copy of SSL libs so Curl can find them
+COPY /Y out32\libeay32.lib "%_INSTALL_DIR%\lib"
+COPY /Y out32\ssleay32.lib "%_INSTALL_DIR%\lib"
+
 REM ############################################################################
 REM #
 REM #   BUILD CURL
@@ -81,7 +83,7 @@ REM #
 
 SET CURL_TGZ=%_ROOT_DIR%\curl-%CURL_VERSION%.tar.gz
 SET CURL_SRC=%_ROOT_DIR%\curl-%CURL_VERSION%
-SET CURL_CONFIG=VC=9 WITH_DEVEL="%_INSTALL_DIR%" WITH_SSL=static DEBUG=no GEN_PDB=no RTLIBCFG=static USE_IDN=false
+SET CURL_CONFIG=VC=9 WITH_DEVEL="%_INSTALL_DIR%" WITH_SSL=static DEBUG=no GEN_PDB=no RTLIBCFG=static ENABLE_IDN=no
 
 cd "%_ROOT_DIR%"
 
@@ -103,8 +105,8 @@ cd winbuild
 #   unsatisfied dependencies. For now just execute make in 'ignore errors' (/I) mode.
 nmake /I /f Makefile.vc MODE=static %CURL_CONFIG%
 
-XCOPY /E /Y ..\builds\libcurl-release-static-ssl-dll-ipv6-sspi\include\* "%_INSTALL_DIR%\include"
-COPY /Y ..\builds\libcurl-release-static-ssl-dll-ipv6-sspi\lib\libcurl_a.lib "%_INSTALL_DIR%\lib\win32\i386"
+XCOPY /E /Y ..\builds\libcurl-vc9-x86-release-static-ssl-static-ipv6-sspi\include\* "%_INSTALL_DIR%\include"
+COPY /Y ..\builds\libcurl-vc9-x86-release-static-ssl-static-ipv6-sspi\lib\libcurl_a.lib "%_INSTALL_DIR%\lib\win32\i386"
 
 REM ############################################################################
 REM #

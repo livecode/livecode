@@ -795,6 +795,8 @@ Boolean MCScreenDC::getmouseclick(uint2 p_button, Boolean& r_abort)
 
 Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 {
+    MCDeletedObjectsEnterWait(dispatch);
+    
 	real8 curtime = MCS_time();
 	
 	if (duration < 0.0)
@@ -821,8 +823,11 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		}
 		
 		// Dispatch any notify events.
-		if (MCNotifyDispatch(dispatch == True) && anyevent)
-			break;
+		if (MCNotifyDispatch(dispatch == True))
+        {
+            if (anyevent)
+                break;
+        }
 		
         // MW-2015-01-08: [[ EventQueue ]] Reinstate event queue poking.
 		MCModeQueueEvents();
@@ -886,10 +891,14 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
             t_sleep = 0.0;
         }
         
+        
 		// Wait for t_sleep seconds and collect at most one event. If an event
 		// is collected and anyevent is True, then we are done.
-		if (MCPlatformWaitForEvent(t_sleep, dispatch == False) && anyevent)
-			done = True;
+		if (MCPlatformWaitForEvent(t_sleep, dispatch == False))
+        {
+            if (anyevent)
+                done = True;
+        }
 		
 		s_animation_current_time = CFAbsoluteTimeGetCurrent();
 		
@@ -907,6 +916,8 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 	// MW-2012-09-19: [[ Bug 10218 ]] Make sure we update the screen in case
 	//   any engine event handling methods need us to.
 	MCRedrawUpdateScreen();
+    
+    MCDeletedObjectsLeaveWait(dispatch);
 	
 	return abort;
 }

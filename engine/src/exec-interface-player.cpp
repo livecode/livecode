@@ -253,11 +253,20 @@ void MCPlayer::Redraw(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static bool MCPathIsURL(MCStringRef p_path)
+{
+    return MCStringBeginsWithCString(p_path, (char_t*)"http://", kMCStringOptionCompareCaseless) ||
+            MCStringBeginsWithCString(p_path, (char_t*)"https://", kMCStringOptionCompareCaseless) ||
+            MCStringBeginsWithCString(p_path, (char_t*)"ftp://", kMCStringOptionCompareCaseless)||
+            // PM-2015-06-30: [[ Bug 14418 ]] Allow URLs of the form file://
+            MCStringBeginsWithCString(p_path, (char_t*)"file://", kMCStringOptionCompareCaseless);
+}
+
 // PM-2014-12-19: [[ Bug 14245 ]] Make possible to set the filename using a relative path to the stack folder
 // PM-2015-01-26: [[ Bug 14435 ]] Make possible to set the filename using a relative path to the default folder
 bool MCPlayer::resolveplayerfilename(MCStringRef p_filename, MCStringRef &r_filename)
 {
-    if (MCPathIsAbsolute(p_filename) || MCPathIsRemoteURL(p_filename))
+    if (MCPathIsAbsolute(p_filename) || MCPathIsURL(p_filename))
     {
         r_filename = MCValueRetain(p_filename);
         return true;
@@ -692,6 +701,12 @@ void MCPlayer::SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting,
 {
     uint4 oldflags = flags;
     MCObject::SetVisibility(ctxt, part, setting, visible);
+    
+    // PM-2015-07-01: [[ Bug 15191 ]] Keep the LC 6.7 behaviour in non-platform player, to make the video layer to hide 
+#ifndef FEATURE_PLATFORM_PLAYER
+    if (flags != oldflags && !(flags & F_VISIBLE))
+        playstop();
+#endif
     
     // SN-2014-07-03: [[ PlatformPlayer ]]
     // P_VISIBLE getter refactored to the MCPlayer implementations
