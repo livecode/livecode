@@ -88,7 +88,7 @@ WKHTMLTOPDF ?= $(shell which wkhtmltopdf 2>/dev/null)
 # Those directories are given to the tool builder, and they might get passed
 # (like private-dir) to engine functions, to which a path relative to this file
 # becomes invalid).
-top_src_dir=$(pwd)
+top_src_dir=${PWD}
 engine_dir=${top_src_dir}
 output_dir=${top_src_dir}
 work_dir=${top_src_dir}/_cache/builder_tool
