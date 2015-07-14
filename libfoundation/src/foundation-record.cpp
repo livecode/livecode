@@ -40,6 +40,7 @@ static bool __check_conformance(MCTypeInfoRef p_typeinfo, const MCValueRef *p_va
     return true;
 }
 
+MC_DLLEXPORT
 bool MCRecordCreate(MCTypeInfoRef p_typeinfo, const MCValueRef *p_values, uindex_t p_value_count, MCRecordRef& r_record)
 {
     bool t_success;
@@ -80,6 +81,7 @@ bool MCRecordCreate(MCTypeInfoRef p_typeinfo, const MCValueRef *p_values, uindex
     
 }
 
+MC_DLLEXPORT
 bool MCRecordCreateMutable(MCTypeInfoRef p_typeinfo, MCRecordRef& r_record)
 {
     bool t_success;
@@ -118,6 +120,7 @@ bool MCRecordCreateMutable(MCTypeInfoRef p_typeinfo, MCRecordRef& r_record)
     return t_success;
 }
 
+MC_DLLEXPORT
 bool MCRecordCopy(MCRecordRef self, MCRecordRef& r_new_record)
 {
     if (!MCRecordIsMutable(self))
@@ -133,6 +136,7 @@ bool MCRecordCopy(MCRecordRef self, MCRecordRef& r_new_record)
     return MCRecordCreate(self -> typeinfo, self -> fields, __MCRecordTypeInfoGetFieldCount(t_resolved_typeinfo), r_new_record);
 }
 
+MC_DLLEXPORT
 bool MCRecordCopyAndRelease(MCRecordRef self, MCRecordRef& r_new_record)
 {
     // If the MCRecord is immutable we just pass it through (as we are releasing it).
@@ -161,6 +165,7 @@ bool MCRecordCopyAndRelease(MCRecordRef self, MCRecordRef& r_new_record)
     return t_success;
 }
 
+MC_DLLEXPORT
 bool MCRecordMutableCopy(MCRecordRef self, MCRecordRef& r_new_record)
 {
     MCTypeInfoRef t_resolved_typeinfo;
@@ -177,6 +182,7 @@ bool MCRecordMutableCopy(MCRecordRef self, MCRecordRef& r_new_record)
     return true;
 }
 
+MC_DLLEXPORT
 bool MCRecordMutableCopyAndRelease(MCRecordRef self, MCRecordRef& r_new_record)
 {
     if (MCRecordMutableCopy(self, r_new_record))
@@ -188,6 +194,7 @@ bool MCRecordMutableCopyAndRelease(MCRecordRef self, MCRecordRef& r_new_record)
     return false;
 }
 
+MC_DLLEXPORT
 bool MCRecordIsMutable(MCRecordRef self)
 {
     return (self -> flags & kMCRecordFlagIsMutable) != 0;
@@ -211,6 +218,7 @@ static bool __fetch_value(MCTypeInfoRef p_typeinfo, MCRecordRef self, MCNameRef 
     return false;
 }
 
+MC_DLLEXPORT
 bool MCRecordFetchValue(MCRecordRef self, MCNameRef p_field, MCValueRef& r_value)
 {
     return __fetch_value(self -> typeinfo, self, p_field, r_value);
@@ -237,6 +245,7 @@ static bool __store_value(MCTypeInfoRef p_typeinfo, MCRecordRef self, MCNameRef 
     return false;
 }
 
+MC_DLLEXPORT
 bool MCRecordStoreValue(MCRecordRef self, MCNameRef p_field, MCValueRef p_value)
 {
     return __store_value(self -> typeinfo, self, p_field, p_value);
@@ -244,7 +253,7 @@ bool MCRecordStoreValue(MCRecordRef self, MCNameRef p_field, MCValueRef p_value)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool
+MC_DLLEXPORT bool
 MCRecordCopyAsBaseType(MCRecordRef self,
                        MCTypeInfoRef p_base_typeinfo,
                        MCRecordRef & r_new_record)
@@ -258,7 +267,7 @@ MCRecordCopyAsBaseType(MCRecordRef self,
 	return t_success;
 }
 
-bool
+MC_DLLEXPORT bool
 MCRecordCopyAsBaseTypeAndRelease(MCRecordRef self,
                                  MCTypeInfoRef p_base_typeinfo,
                                  MCRecordRef & r_new_record)
@@ -285,7 +294,7 @@ MCRecordCopyAsBaseTypeAndRelease(MCRecordRef self,
 	return true;
 }
 
-bool
+MC_DLLEXPORT bool
 MCRecordCopyAsDerivedType(MCRecordRef self,
                           MCTypeInfoRef p_derived_typeinfo,
                           MCRecordRef & r_new_record)
@@ -299,7 +308,7 @@ MCRecordCopyAsDerivedType(MCRecordRef self,
 	return t_success;
 }
 
-bool
+MC_DLLEXPORT bool
 MCRecordCopyAsDerivedTypeAndRelease(MCRecordRef self,
                                     MCTypeInfoRef p_derived_typeinfo,
                                     MCRecordRef & r_new_record)
@@ -344,7 +353,7 @@ MCRecordCopyAsDerivedTypeAndRelease(MCRecordRef self,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool
+MC_DLLEXPORT bool
 MCRecordEncodeAsArray(MCRecordRef record,
                       MCArrayRef & r_array)
 {
@@ -377,7 +386,7 @@ MCRecordEncodeAsArray(MCRecordRef record,
 	return MCArrayCopyAndRelease (t_new_array, r_array);
 }
 
-bool
+MC_DLLEXPORT bool
 MCRecordDecodeFromArray(MCArrayRef array,
                         MCTypeInfoRef p_typeinfo,
                         MCRecordRef & r_record)
@@ -409,7 +418,7 @@ MCRecordDecodeFromArray(MCArrayRef array,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool
+MC_DLLEXPORT bool
 MCRecordIterate(MCRecordRef record,
                 uintptr_t& x_iterator,
                 MCNameRef& r_field_name,

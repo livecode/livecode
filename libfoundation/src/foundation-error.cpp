@@ -23,8 +23,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCTypeInfoRef kMCOutOfMemoryErrorTypeInfo;
-MCTypeInfoRef kMCGenericErrorTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef kMCOutOfMemoryErrorTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef kMCGenericErrorTypeInfo;
 
 static MCErrorRef s_last_error = nil;
 
@@ -120,7 +120,7 @@ static bool MCErrorFormatMessage(MCStringRef p_format, MCArrayRef p_info, MCStri
     return true;
 }
 
-bool
+MC_DLLEXPORT bool
 MCErrorCreateWithMessage (MCTypeInfoRef p_typeinfo,
                           MCStringRef p_message,
                           MCArrayRef p_info,
@@ -147,6 +147,7 @@ MCErrorCreateWithMessage (MCTypeInfoRef p_typeinfo,
     return true;
 }
 
+MC_DLLEXPORT
 bool MCErrorCreate(MCTypeInfoRef p_typeinfo, MCArrayRef p_info, MCErrorRef& r_error)
 {
 	return MCErrorCreateWithMessage (p_typeinfo,
@@ -155,6 +156,7 @@ bool MCErrorCreate(MCTypeInfoRef p_typeinfo, MCArrayRef p_info, MCErrorRef& r_er
 	                                 r_error);
 }
 
+MC_DLLEXPORT
 bool MCErrorUnwind(MCErrorRef p_error, MCValueRef p_target, uindex_t p_row, uindex_t p_column)
 {
     MCErrorFrame *t_frame;
@@ -179,21 +181,25 @@ bool MCErrorUnwind(MCErrorRef p_error, MCValueRef p_target, uindex_t p_row, uind
     return true;
 }
 
+MC_DLLEXPORT
 MCNameRef MCErrorGetDomain(MCErrorRef self)
 {
     return MCErrorTypeInfoGetDomain(self -> typeinfo);
 }
 
+MC_DLLEXPORT
 MCArrayRef MCErrorGetInfo(MCErrorRef self)
 {
     return self -> info;
 }
 
+MC_DLLEXPORT
 MCStringRef MCErrorGetMessage(MCErrorRef self)
 {
     return self -> message;
 }
 
+MC_DLLEXPORT
 uindex_t MCErrorGetDepth(MCErrorRef self)
 {
     if (self -> backtrace == nil)
@@ -221,6 +227,7 @@ static MCErrorFrame *__MCErrorGetFrameAtLevel(MCErrorRef self, uindex_t p_level)
     return t_frame;
 }
 
+MC_DLLEXPORT
 MCValueRef MCErrorGetTargetAtLevel(MCErrorRef self, uindex_t p_level)
 {
     MCErrorFrame *t_frame;
@@ -231,6 +238,7 @@ MCValueRef MCErrorGetTargetAtLevel(MCErrorRef self, uindex_t p_level)
     return t_frame -> target;
 }
 
+MC_DLLEXPORT
 uindex_t MCErrorGetRowAtLevel(MCErrorRef self, uindex_t p_level)
 {
     MCErrorFrame *t_frame;
@@ -241,6 +249,7 @@ uindex_t MCErrorGetRowAtLevel(MCErrorRef self, uindex_t p_level)
     return t_frame -> row;
 }
 
+MC_DLLEXPORT
 uindex_t MCErrorGetColumnAtLevel(MCErrorRef self, uindex_t p_level)
 {
     MCErrorFrame *t_frame;
@@ -253,6 +262,7 @@ uindex_t MCErrorGetColumnAtLevel(MCErrorRef self, uindex_t p_level)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT
 bool MCErrorThrow(MCErrorRef p_error)
 {
     if (s_last_error != nil)
@@ -263,6 +273,7 @@ bool MCErrorThrow(MCErrorRef p_error)
     return false;
 }
 
+MC_DLLEXPORT
 bool MCErrorCatch(MCErrorRef& r_error)
 {
     if (s_last_error == nil)
@@ -274,11 +285,13 @@ bool MCErrorCatch(MCErrorRef& r_error)
     return true;
 }
 
+MC_DLLEXPORT
 MCErrorRef MCErrorPeek(void)
 {
     return s_last_error;
 }
 
+MC_DLLEXPORT
 bool MCErrorIsPending(void)
 {
     return s_last_error != nil;
@@ -324,7 +337,7 @@ MCErrorCreateAndThrowWithMessageV (MCTypeInfoRef p_error_type,
     return MCErrorThrow(*t_error);
 }
 
-bool
+MC_DLLEXPORT bool
 MCErrorCreateAndThrowWithMessage (MCTypeInfoRef p_error_type,
                                   MCStringRef p_message,
                                   ...)
@@ -341,7 +354,7 @@ MCErrorCreateAndThrowWithMessage (MCTypeInfoRef p_error_type,
 	return t_result;
 }
 
-bool
+MC_DLLEXPORT bool
 MCErrorCreateAndThrow (MCTypeInfoRef p_error_type, ...)
 {
 	va_list t_args;
@@ -358,6 +371,7 @@ MCErrorCreateAndThrow (MCTypeInfoRef p_error_type, ...)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT
 bool MCErrorThrowOutOfMemory(void)
 {
     if (s_out_of_memory_error == nil &&
@@ -374,11 +388,13 @@ bool MCErrorThrowOutOfMemory(void)
     return false;
 }
 
+MC_DLLEXPORT
 bool MCErrorThrowGeneric(MCStringRef p_reason)
 {
     return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", p_reason, nil);
 }
 
+MC_DLLEXPORT
 bool MCErrorThrowGenericWithMessage(MCStringRef p_message, ...)
 {
     va_list t_args;
