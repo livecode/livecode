@@ -71,6 +71,15 @@
 						],
 					},
 				],
+				[
+					'OS == "ios"',
+					{
+						'sources!':
+						[
+							'src/coretext.cpp',
+						],
+					},
+				],
 			],
 			
 			'direct_dependent_settings':

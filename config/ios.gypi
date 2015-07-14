@@ -14,7 +14,7 @@
 	{
 		'SDKROOT': '<(target_sdk)',
 
-		'SOLUTION_DIR': '<(DEPTH)',
+		'SOLUTION_DIR': '$(SOURCE_ROOT)/<(DEPTH)',
 		'SYMROOT': '$(SOLUTION_DIR)/_build/ios/$(SDK_NAME)',
 		'OBJROOT': '$(SOLUTION_DIR)/_cache/ios/$(SDK_NAME)',
 		'CONFIGURATION_BUILD_DIR': '$(SYMROOT)/$(CONFIGURATION)',

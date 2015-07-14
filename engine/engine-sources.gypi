@@ -857,6 +857,8 @@
 					'sources!':
 					[
 						'src/dskmac.cpp',
+						'src/coretextlayout.mm',
+						'src/srvmac.cpp',
 					],
 				},
 			],
@@ -973,6 +975,7 @@
 					[
 						'src/stacke.cpp',
 						'src/sysunxdate.cpp',
+						'src/sysunxrandom.cpp',
 						
 						'src/mbliphoneembedded.mm',
 						'src/mbliphoneembeddedtest.mm',
