@@ -18,7 +18,7 @@ case "${SDKROOT}" in
 				ln -sf standalone-mobile-lib-community.lcext "$BUILT_PRODUCTS_DIR/standalone-mobile-community.ios-engine"
 				;;
 			*-commercial.lcext)
-				ln -sf tandalone-mobile-lib-commercial.lcext "$BUILT_PRODUCTS_DIR/standalone-mobile-commercial.ios-engine"
+				ln -sf standalone-mobile-lib-commercial.lcext "$BUILT_PRODUCTS_DIR/standalone-mobile-commercial.ios-engine"
 				;;
 			*)
 				echo "Unexpected filename $1" >&2
