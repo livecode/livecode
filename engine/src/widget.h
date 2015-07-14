@@ -239,8 +239,8 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" MC_DLLEXPORT MCTypeInfoRef kMCWidgetNoCurrentWidgetErrorTypeInfo;
-extern "C" MC_DLLEXPORT MCTypeInfoRef kMCWidgetSizeFormatErrorTypeInfo;
+extern "C" MCTypeInfoRef kMCWidgetNoCurrentWidgetErrorTypeInfo;
+extern "C" MCTypeInfoRef kMCWidgetSizeFormatErrorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
