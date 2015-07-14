@@ -81,9 +81,6 @@ extern "C" void getXtable();
 void revSpeechLoad(char *args[], int nargs, char **retstring,
 					Bool *pass, Bool *error)
 {
-	// Force a reference to the getXtable function
-	getXtable();
-	
 	*pass = False;
 	*error = False;
 	char *result = NULL;
