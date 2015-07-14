@@ -298,7 +298,7 @@ end builderArchiveBuilderStack
 
 function builderModuleInterfaceFolder
    builderFetchEngine "", "macosx"
-   return the result & slash & "modules"
+   return the result & slash & "modules" & slash & "lci"
 end builderModuleInterfaceFolder
 
 -- Returns the engine that should be used to build the installer

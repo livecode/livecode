@@ -1190,6 +1190,8 @@ function revDocsParseDocText pText
          case "Type"
             // Add top-level tags to all library entries
          case "Tags"
+            // Library entries can have examples
+         case "Example"
             put tElementsA[tStartNum]["content"] into tParsedA[it]
             add 1 to tStartNum
             break
@@ -1271,7 +1273,7 @@ function revDocsParseDocText pText
    local tCount
    put 1 into tCount
    add 1 to tEntryCount
-   repeat for each item tItem in "name,description,author,type"
+   repeat for each item tItem in "name,description,author,type,example"
       if tParsedA[tItem] is not empty then
          put tItem into tEntriesA[tEntryCount]["elements"][tCount]["name"]
          put tParsedA[tItem] into tEntriesA[tEntryCount]["elements"][tCount]["content"]
@@ -1783,7 +1785,8 @@ end __tabs
 function revDocsFormatLibraryArrayAsJSON pLibraryA
    local tJSON
    put "{" after tJSON
-   put CR & __tabs(2) & keyValue("library",pLibraryA["name"]) & comma after tJSON
+   put CR & __tabs(2) & keyValue("display name",pLibraryA["name"]) & comma after tJSON
+   put CR & __tabs(2) & keyValue("name",revDocsModifyForURL(pLibraryA["name"])) & comma after tJSON
    put CR & __tabs(2) & keyValue("author",pLibraryA["author"]) & comma after tJSON
    put CR & __tabs(2) & escape("doc") & ":[" after tJSON
    
@@ -2016,6 +2019,11 @@ private function escape pString, pConvertLineEndings
    return (quote & pString & quote)
 end escape
 
+function revDocsModifyForURL pName
+   replace " " with "_" in pName
+   return urlencode(toLower(pName))
+end revDocsModifyForURL
+
 function outputArrayElement pElement, pArray, pTabCount, pLower
    if pLower then
       return outputElement(pElement, tolower(pArray[pElement]), pTabCount)
@@ -2092,6 +2100,8 @@ function revDocsFormatLibraryDataAsJSON pID, pLibraryDataA
    else
       logError "Error: no name parsed"
    end if
+   # The 'name' should be urlencoded
+   put revDocsModifyForURL(pLibraryDataA["name"]) into pLibraryDataA["name"]
    
    # ID
    put outputElement("id", pID, 3) after tJSON
