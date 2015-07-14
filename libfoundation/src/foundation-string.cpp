@@ -89,6 +89,10 @@ static bool __MCStringResolveIndirect(__MCString *self);
 // Makes direct mutable string indirect, referencing r_new_string.
 static bool __MCStringCopyMutable(__MCString *self, __MCString*& r_new_string);
 
+// Copy the given unicode chars into the target unicode buffer and return true
+// if all the chars being copied in could be native.
+static bool __MCStringCopyChars(unichar_t *target, const unichar_t *source, uindex_t count, bool target_can_be_native);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // AL-2015-02-06: [[ Bug 14504 ]] Add wrappers for string flag and length checking,
@@ -128,10 +132,77 @@ static bool __MCStringCanBeNative(MCStringRef self)
     return (self -> flags & kMCStringFlagIsNotNative) == 0 || (self -> flags & kMCStringFlagCanBeNative) != 0;
 }
 
-static bool __MCStringCantBeNative(MCStringRef self, MCStringOptions p_options)
+static bool __MCStringCantBeEqualToNative(MCStringRef self, MCStringOptions p_options)
 {
-    return ((!__MCStringCanBeNative(self) && (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareFolded))
-            || (__MCStringIsChecked(self) && __MCStringIsUncombined(self)));
+    // If self can't be native, then we check the comparison options to see if
+    // it could still be native after normalization.
+    if (!__MCStringCanBeNative(self))
+    {
+        // At this point self must contain unicode characters which don't directly
+        // map to native. Thus the only way we could be equal to a native string is
+        // if we contain combining sequences which compose to a native char.
+        switch(p_options)
+        {
+            case kMCStringOptionCompareExact:
+            case kMCStringOptionCompareFolded:
+                // If no normalization is taking place, then no composition can occur
+                // so we can't be equal to native.
+                return true;
+                
+            case kMCStringOptionCompareNonliteral:
+            case kMCStringOptionCompareCaseless:
+                // If the string has been checked then we have more information.
+                if (__MCStringIsChecked(self))
+                {
+                    // If there are no combining chars, then normalization is not
+                    // going to make a difference - there's no way this string
+                    // can be native.
+                    if (__MCStringIsUncombined(self))
+                        return true;
+                
+                    // If the string is not simple, then even though it contains
+                    // combining chars it can't be native.
+                    if (!__MCStringIsSimple(self))
+                        return true;
+                }
+                break;
+            
+            default:
+                MCUnreachable();
+                break;
+        }
+    }
+    
+    return false;
+}
+
+static bool __MCStringCopyChars(unichar_t *p_dst, const unichar_t *p_src, uindex_t p_count, bool p_dst_can_be_native)
+{
+    // If the dst cannot be native, then there's no point checking if the src can be.
+    if (!p_dst_can_be_native)
+    {
+        MCMemoryCopy(p_dst, p_src, p_count * sizeof(unichar_t));
+        return false;
+    }
+    
+    // Copy the unicode chars to our dst checking if we can nativize as we go.
+    for(uindex_t i = 0; i < p_count; i++)
+    {
+        // If we fail to convert the char to native, then we can't be native so
+        // finish up with a direct copy.
+        char_t t_nchar;
+        if (!MCUnicodeCharMapToNative(p_src[i], t_nchar))
+        {
+            MCMemoryCopy(p_dst + i, p_src + i, (p_count - i) * sizeof(unichar_t));
+            return false;
+        }
+
+        // We still copy across unicode char.
+        p_dst[i] = p_src[i];
+    }
+    
+    // If we get here, then both src and dst can be native.
+    return true;
 }
 
 static uindex_t __MCStringGetLength(MCStringRef self)
@@ -256,9 +327,11 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
 			// Round the byte count to a multiple of UTF-32 units
 			p_byte_count = ((p_byte_count + sizeof(uint32_t) - 1) & ~(sizeof(uint32_t) - 1));
 			
-			// Convert the string to UTF-16 first. The UTF-16 string cannot be longer than the UTF-32 string
+            // Convert the string to UTF-16 first.
 			MCAutoArray<unichar_t> t_buffer;
-			t_buffer.Extend(p_byte_count / sizeof(uint32_t));
+			if (!t_buffer.Extend(p_byte_count / sizeof(uint32_t)))
+                return false;
+            
 			uindex_t t_in_offset;
 			uindex_t t_out_offset = 0;
 			for (t_in_offset = 0; t_in_offset < p_byte_count; t_in_offset += sizeof(uint32_t))
@@ -279,7 +352,11 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
 				}
 				else
 				{
-					// Split to surrogate pairs
+                    // Split to surrogate pairs
+                    // SN-2015-07-03: [[ Bug 15571 ]] Creating a surrogate pair
+                    //  makes the UTF-16 string longer.
+                    if (!t_buffer . Extend(t_buffer . Size() + 1))
+                        return false;
 					unichar_t t_lead, t_trail;
 					t_lead =  unichar_t((t_codepoint - 0x10000) >> 10) + 0xD800;
 					t_trail = unichar_t((t_codepoint - 0x10000) & 0x3FF) + 0xDC00;
@@ -1233,12 +1310,12 @@ bool MCStringIsNative(MCStringRef self)
     return __MCStringIsNative(self);
 }
 
-bool MCStringCantBeNative(MCStringRef self, MCStringOptions p_options)
+bool MCStringCantBeEqualToNative(MCStringRef self, MCStringOptions p_options)
 {
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
-    return __MCStringCantBeNative(self, p_options);
+    return __MCStringCantBeEqualToNative(self, p_options);
 }
 
 bool MCStringCanBeNative(MCStringRef self)
@@ -1995,7 +2072,8 @@ bool MCStringConvertToUTF32(MCStringRef self, uint32_t *&r_codepoints, uinteger_
         
         t_chars = MCStringGetNativeCharPtrAndLength(self, t_char_count);
         
-        if (!MCMemoryAllocate(t_char_count + 1, t_codepoints))
+        // SN-2015-07-03: [[ Bug 15571 ]] Allocate the right size
+        if (!MCMemoryAllocate((t_char_count + 1) * sizeof(uint32_t), t_codepoints))
             return false;
         
         for (uindex_t i = 0 ; i < t_char_count; ++i)
@@ -2031,8 +2109,10 @@ bool MCStringConvertToUTF32(MCStringRef self, uint32_t *&r_codepoints, uinteger_
                 // Surrogate lead found
                 if (t_unichars[i+1] > 0xDBFF && t_unichars[i+1] < 0xE000)
                 {
+                    // SN-2015-07-03: [[ Bug 15571 ]] Codepoint and UTF-16 index will not
+                    //  remain the same if any surrogate pair appears.
                     // Surogate trail found: valid surrogate pair
-                    t_codepoints[i] = MCUnicodeSurrogatesToCodepoint(t_unichars[i], t_unichars[i+1]);
+                    t_codepoints[t_codepoint_count] = MCUnicodeSurrogatesToCodepoint(t_unichars[i], t_unichars[i+1]);
                     ++i;
                 }
                 else
@@ -2040,7 +2120,9 @@ bool MCStringConvertToUTF32(MCStringRef self, uint32_t *&r_codepoints, uinteger_
             }
             else
             {
-                t_codepoints[i] = (uint32_t)t_unichars[i];
+                // SN-2015-07-03: [[ Bug 15571 ]] Codepoint and UTF-16 index will not
+                //  remain the same if any surrogate pair appears.
+                t_codepoints[t_codepoint_count] = (uint32_t)t_unichars[i];
             }
             
             ++t_codepoint_count;
@@ -2052,12 +2134,17 @@ bool MCStringConvertToUTF32(MCStringRef self, uint32_t *&r_codepoints, uinteger_
         // Add the last codeunit
         if (i < t_char_count)
         {
-            t_codepoints[i] = (uint32_t)t_unichars[i];
+            // SN-2015-07-03: [[ Bug 15571 ]] Codepoint and UTF-16 index will not
+            //  remain the same if any surrogate pair appears.
+            t_codepoints[t_codepoint_count] = (uint32_t)t_unichars[i];
             ++t_codepoint_count;
         }
         
         t_codepoints . Shrink(t_codepoint_count + 1);
         t_codepoints . Take(r_codepoints, r_char_count);
+        // SN-2015-07-03: [[ Bug 15571 ]] The NULL codepoint is not amongst the
+        //  char count.
+        r_char_count = t_codepoint_count;
         return true;
     }
     
@@ -2137,7 +2224,7 @@ bool MCStringIsEqualTo(MCStringRef self, MCStringRef p_other, MCStringOptions p_
     self_native = __MCStringIsNative(self);
     other_native = __MCStringIsNative(p_other);
     
-    if ((self_native && __MCStringCantBeNative(p_other, p_options)) || (other_native && __MCStringCantBeNative(self, p_options)))
+    if ((self_native && __MCStringCantBeEqualToNative(p_other, p_options)) || (other_native && __MCStringCantBeEqualToNative(self, p_options)))
         return false;
     
     if (self_native && other_native)
@@ -2180,7 +2267,7 @@ bool MCStringSubstringIsEqualTo(MCStringRef self, MCRange p_sub, MCStringRef p_o
                 return MCNativeCharsEqualCaseless(self -> native_chars + p_sub . offset, p_sub . length, p_other -> native_chars, p_other -> char_count);
         }
         
-        if (__MCStringCantBeNative(p_other, p_options))
+        if (__MCStringCantBeEqualToNative(p_other, p_options))
             return false;
     }
     const void *self_chars;
@@ -2239,7 +2326,7 @@ bool MCStringIsEqualToNativeChars(MCStringRef self, const char_t *p_chars, uinde
         return MCNativeCharsEqualCaseless(self -> native_chars, self -> char_count, p_chars, p_char_count);
     }
     
-    if (MCStringCantBeNative(self, p_options))
+    if (MCStringCantBeEqualToNative(self, p_options))
         return false;
     
 	MCAutoStringRef t_string;
@@ -2279,7 +2366,7 @@ bool MCStringBeginsWith(MCStringRef self, MCStringRef p_prefix, MCStringOptions 
             return t_prefix_length == p_prefix -> char_count;
         }
         
-        if (__MCStringCantBeNative(p_prefix, p_options))
+        if (__MCStringCantBeEqualToNative(p_prefix, p_options))
             return false;
     }
 
@@ -2309,7 +2396,7 @@ bool MCStringSharedPrefix(MCStringRef self, MCRange p_range, MCStringRef p_prefi
             return r_self_match_length == p_prefix -> char_count;
         }
         
-        if (__MCStringCantBeNative(p_prefix, p_options))
+        if (__MCStringCantBeEqualToNative(p_prefix, p_options))
             return false;
     }
 
@@ -2368,7 +2455,7 @@ bool MCStringEndsWith(MCStringRef self, MCStringRef p_suffix, MCStringOptions p_
             return t_prefix_length == p_suffix -> char_count;
         }
         
-        if (__MCStringCantBeNative(p_suffix, p_options))
+        if (__MCStringCantBeEqualToNative(p_suffix, p_options))
             return false;
     }
 
@@ -2398,7 +2485,7 @@ bool MCStringSharedSuffix(MCStringRef self, MCRange p_range, MCStringRef p_suffi
             return r_self_match_length == p_suffix -> char_count;
         }
         
-        if (__MCStringCantBeNative(p_suffix, p_options))
+        if (__MCStringCantBeEqualToNative(p_suffix, p_options))
             return false;
     }
 
@@ -2467,7 +2554,7 @@ bool MCStringContains(MCStringRef self, MCStringRef p_needle, MCStringOptions p_
             return false;
         }
         
-        if (__MCStringCantBeNative(p_needle, p_options))
+        if (__MCStringCantBeEqualToNative(p_needle, p_options))
             return false;
     }
 
@@ -2511,7 +2598,7 @@ bool MCStringSubstringContains(MCStringRef self, MCRange p_range, MCStringRef p_
             return false;
         }
 
-        if (__MCStringCantBeNative(p_needle, p_options))
+        if (__MCStringCantBeEqualToNative(p_needle, p_options))
             return false;
     }
     
@@ -2564,7 +2651,7 @@ bool MCStringFirstIndexOfStringInRange(MCStringRef self, MCStringRef p_needle, M
             return false;
         }
         
-        if (__MCStringCantBeNative(p_needle, p_options))
+        if (__MCStringCantBeEqualToNative(p_needle, p_options))
             return false;
     }
     
@@ -2704,7 +2791,7 @@ bool MCStringLastIndexOfStringInRange(MCStringRef self, MCStringRef p_needle, MC
 			return false;
 		}
         
-        if (__MCStringCantBeNative(p_needle, p_options))
+        if (__MCStringCantBeEqualToNative(p_needle, p_options))
             return false;
     }
 
@@ -2826,7 +2913,7 @@ bool MCStringFind(MCStringRef self, MCRange p_range, MCStringRef p_needle, MCStr
         if (__MCStringIsNative(p_needle))
             return MCStringFindNative(self, p_range, p_needle, p_options, r_result);
         
-        if (MCStringCantBeNative(p_needle, p_options))
+        if (MCStringCantBeEqualToNative(p_needle, p_options))
             return false;
     }
 
@@ -2941,7 +3028,7 @@ uindex_t MCStringCount(MCStringRef self, MCRange p_range, MCStringRef p_needle, 
         if (__MCStringIsNative(p_needle))
             return MCStringCountNativeChars(self, p_range, p_needle -> native_chars, p_needle -> char_count, p_options);
         
-        if (__MCStringCantBeNative(p_needle, p_options))
+        if (__MCStringCantBeEqualToNative(p_needle, p_options))
             return 0;
     }
     
@@ -3257,6 +3344,7 @@ bool MCStringAppendChars(MCStringRef self, const unichar_t *p_chars, uindex_t p_
     if (!__MCStringExpandAt(self, self -> char_count, p_char_count))
         return false;
     
+    // If we are native, attempt a native copy of the input chars.
     if (__MCStringIsNative(self))
     {
         bool t_not_native;
@@ -3281,13 +3369,15 @@ bool MCStringAppendChars(MCStringRef self, const unichar_t *p_chars, uindex_t p_
         return MCStringAppendChars(self, p_chars, p_char_count);
     }
     
-	// Now copy the chars across.
-	MCMemoryCopy(self -> chars + self -> char_count - p_char_count, p_chars, p_char_count * sizeof(unichar_t));
+    // Copy the chars across recomputing whether the string can be native at
+    // the same time.
+    bool t_can_be_native;
+    t_can_be_native = __MCStringCopyChars(self -> chars + self -> char_count - p_char_count, p_chars, p_char_count, __MCStringCanBeNative(self));
 	
 	// Set the NULL
 	self -> chars[self -> char_count] = '\0';
 	
-	__MCStringChanged(self, false, false, false);
+	__MCStringChanged(self, false, false, t_can_be_native);
 	
 	// We succeeded.
 	return true;
@@ -3402,6 +3492,7 @@ bool MCStringPrependChars(MCStringRef self, const unichar_t *p_chars, uindex_t p
     if (!__MCStringExpandAt(self, 0, p_char_count))
         return false;
     
+    // If we are native, attempt a native copy of the input chars.
     if (__MCStringIsNative(self))
     {
         bool t_not_native;
@@ -3428,10 +3519,12 @@ bool MCStringPrependChars(MCStringRef self, const unichar_t *p_chars, uindex_t p
         return MCStringPrependChars(self, p_chars, p_char_count);
     }
     
-	// Now copy the chars across.
-	MCMemoryCopy(self -> chars, p_chars, p_char_count * sizeof(unichar_t));
+    // Copy the chars across recomputing whether the string can be native at
+    // the same time.
+    bool t_can_be_native;
+    t_can_be_native = __MCStringCopyChars(self -> chars, p_chars, p_char_count, __MCStringCanBeNative(self));
 	
-	__MCStringChanged(self, false, false, false);
+	__MCStringChanged(self, false, false, t_can_be_native);
 	
 	// We succeeded.
 	return true;
@@ -3574,10 +3667,12 @@ bool MCStringInsertChars(MCStringRef self, uindex_t p_at, const unichar_t *p_cha
     // Need to clamp p_at again in case number of codeunits has decreased.
     p_at = MCMin(p_at, self -> char_count);
     
-	// Now copy the chars across.
-	MCMemoryCopy(self -> chars + p_at, p_chars, p_char_count * sizeof(unichar_t));
+    // Copy the chars across recomputing whether the string can be native at
+    // the same time.
+	bool t_can_be_native;
+    t_can_be_native = __MCStringCopyChars(self -> chars + p_at, p_chars, p_char_count * sizeof(unichar_t), __MCStringCanBeNative(self));
 	
-	__MCStringChanged(self, false, false, false);
+	__MCStringChanged(self, false, false, t_can_be_native);
 	
 	// We succeeded.
 	return true;
@@ -3762,10 +3857,12 @@ bool MCStringReplaceChars(MCStringRef self, MCRange p_range, const unichar_t *p_
     // Need to clamp range again in case the number of codeunits has decreased.
     __MCStringClampRange(self, p_range);
     
-    // Copy across the replacement chars.
-    MCMemoryCopy(self -> chars + p_range . offset, p_chars, p_char_count * sizeof(unichar_t));
+    // Copy the chars across recomputing whether the string can be native at
+    // the same time.
+    bool t_can_be_native;
+    t_can_be_native = __MCStringCopyChars(self -> chars + p_range . offset, p_chars, p_char_count, __MCStringCanBeNative(self));
     
-    __MCStringChanged(self, false, false, false);
+    __MCStringChanged(self, false, false, t_can_be_native);
     
     // We succeeded.
     return true;
@@ -4483,7 +4580,7 @@ bool MCStringFindAndReplace(MCStringRef self, MCStringRef p_pattern, MCStringRef
             else
                 return MCStringFindAndReplaceNative(self, p_pattern, p_replacement, p_options);
         }
-        else if (MCStringCantBeNative(p_pattern, p_options))
+        else if (MCStringCantBeEqualToNative(p_pattern, p_options))
             return false;
     }
     
@@ -4565,7 +4662,7 @@ bool MCStringFindAndReplace(MCStringRef self, MCStringRef p_pattern, MCStringRef
 		self -> char_count = t_output_length;
 		self -> capacity = t_output_capacity;
 		
-		__MCStringChanged(self, false, false, false);
+		__MCStringChanged(self, false, false, __MCStringCanBeNative(self) && MCStringCanBeNative(p_replacement));
 	}
 	return true;
 }

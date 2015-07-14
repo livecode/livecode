@@ -226,7 +226,7 @@ fi
 if test -z "$XCODE_TARGET_SDK"; then
  case ${OS} in
    mac) XCODE_TARGET_SDK="macosx10.8" ;;
-   ios) XCODE_TARGET_SDK="iphoneos8.3" ;;
+   ios) XCODE_TARGET_SDK="iphoneos" ;;
  esac
 fi
 
@@ -264,87 +264,79 @@ fi
 WIN_PERL=${WIN_PERL:-"C:/perl/bin/perl.exe"}
 
 # Android default settings and tools
-ANDROID_NDK_VERSION=${ANDROID_NDK_VERSION:-r10d}
-ANDROID_PLATFORM=${ANDROID_PLATFORM:-android-8}
+if test "${OS}" = "android" ; then
+    ANDROID_NDK_VERSION=${ANDROID_NDK_VERSION:-r10d}
+    ANDROID_PLATFORM=${ANDROID_PLATFORM:-android-8}
 
-# Attempt to locate an Android NDK
-if [ -z "${ANDROID_NDK}" ] ; then
-	# Try the symlink we suggest in INSTALL-android.md
-	if [ -d "${HOME}/android/toolchain/android-ndk" ] ; then
-		ANDROID_NDK="${HOME}/android/toolchain/android-ndk"
-	else
-		if [ "${OS}" = "android" ] ; then
-			echo >&2 "Error: Android NDK not found (set \$ANDROID_NDK)"
-			exit 1
-		fi
-	fi
-fi
+    # Attempt to locate an Android NDK
+    if [ -z "${ANDROID_NDK}" -a "${OS}" = "android" ] ; then
+        # Try the symlink we suggest in INSTALL-android.md
+        if [ -d "${HOME}/android/toolchain/android-ndk" ] ; then
+            ANDROID_NDK="${HOME}/android/toolchain/android-ndk"
+        else
+            echo >&2 "Error: Android NDK not found (set \$ANDROID_NDK)"
+            exit 1
+        fi
+    fi
 
-# Attempt to locate an Android SDK
-if [ -z "${ANDROID_SDK}" ] ; then
-	# Try the symlink we suggest in INSTALL-android.md
-	if [ -d "${HOME}/android/toolchain/android-sdk" ] ; then
-		ANDROID_SDK="${HOME}/android/toolchain/android-sdk"
-	else
-		if [ "${OS}" = "android" ] ; then
-			echo >&2 "Error: Android SDK not found (set \$ANDROID_SDK)"
-			exit 1
-		fi
-	fi
-fi
+    # Attempt to locate an Android SDK
+    if [ -z "${ANDROID_SDK}" ] ; then
+        # Try the symlink we suggest in INSTALL-android.md
+        if [ -d "${HOME}/android/toolchain/android-sdk" ] ; then
+            ANDROID_SDK="${HOME}/android/toolchain/android-sdk"
+        else
+            echo >&2 "Error: Android SDK not found (set \$ANDROID_SDK)"
+            exit 1
+        fi
+    fi
 
-# Attempt to guess the Android build tools version
-if [ -z "${ANDROID_BUILD_TOOLS}" ] ; then
-	# Check for a sub-folder in the appropriate place
-	# Possibly fragile - are there ever multiple sub-folders?
-	if [ ! "$(echo \"${ANDROID_SDK}/build-tools/\"*)" = "${ANDROID_SDK}/build-tools/*" ] ; then
-		ANDROID_BUILD_TOOLS=$(basename $(echo "${ANDROID_SDK}/build-tools/"*))
-	else
-		if [ "${OS}" = "android" ] ; then
-			echo >&2 "Error: Android build tools not found (set \$ANDROID_BUILD_TOOLS)"
-			exit 1
-		fi
-	fi
-fi
+    # Attempt to guess the Android build tools version
+    if [ -z "${ANDROID_BUILD_TOOLS}" ] ; then
+        # Check for a sub-folder in the appropriate place
+        # Possibly fragile - are there ever multiple sub-folders?
+        if [ ! "$(echo \"${ANDROID_SDK}/build-tools/\"*)" = "${ANDROID_SDK}/build-tools/*" ] ; then
+            ANDROID_BUILD_TOOLS=$(basename $(echo "${ANDROID_SDK}/build-tools/"*))
+        else
+            echo >&2 "Error: Android build tools not found (set \$ANDROID_BUILD_TOOLS)"
+            exit 1
+        fi
+    fi
 
-if [ -z "${ANDROID_TOOLCHAIN}" ] ; then
-	# Try the folder we suggest in INSTALL-android.md
-	if [ -d "${HOME}/android/toolchain/standalone" ] ; then
-		ANDROID_TOOLCHAIN="${HOME}/android/toolchain/standalone/bin/arm-linux-androideabi-"
-	else
-		if [ "${OS}" = "android" ] ; then
-			echo >&2 "Error: Android toolchain not found (set \$ANDROID_TOOLCHAIN)"
-			exit 1
-		fi
-	fi
-fi
+    if [ -z "${ANDROID_TOOLCHAIN}" ] ; then
+        # Try the folder we suggest in INSTALL-android.md
+        if [ -d "${HOME}/android/toolchain/standalone" ] ; then
+            ANDROID_TOOLCHAIN="${HOME}/android/toolchain/standalone/bin/arm-linux-androideabi-"
+        else
+            echo >&2 "Error: Android toolchain not found (set \$ANDROID_TOOLCHAIN)"
+            exit 1
+        fi
+    fi
 
-ANDROID_AR=${AR:-${ANDROID_TOOLCHAIN}ar}
-ANDROID_CC=${CC:-${ANDROID_TOOLCHAIN}clang -target arm-linux-androideabi -march=armv6 -integrated-as}
-ANDROID_CXX=${CXX:-${ANDROID_TOOLCHAIN}clang -target arm-linux-androideabi -march=armv6 -integrated-as}
-ANDROID_LINK=${LINK:-${ANDROID_TOOLCHAIN}clang -target arm-linux-androideabi -march=armv6 -integrated-as}
-ANDROID_OBJCOPY=${OBJCOPY:-${ANDROID_TOOLCHAIN}objcopy}
-ANDROID_OBJDUMP=${OBJDUMP:-${ANDROID_TOOLCHAIN}objdump}
-ANDROID_STRIP=${STRIP:-${ANDROID_TOOLCHAIN}strip}
+    ANDROID_AR=${AR:-${ANDROID_TOOLCHAIN}ar}
+    ANDROID_CC=${CC:-${ANDROID_TOOLCHAIN}clang -target arm-linux-androideabi -march=armv6 -integrated-as}
+    ANDROID_CXX=${CXX:-${ANDROID_TOOLCHAIN}clang -target arm-linux-androideabi -march=armv6 -integrated-as}
+    ANDROID_LINK=${LINK:-${ANDROID_TOOLCHAIN}clang -target arm-linux-androideabi -march=armv6 -integrated-as -fuse-ld=bfd}
+    ANDROID_OBJCOPY=${OBJCOPY:-${ANDROID_TOOLCHAIN}objcopy}
+    ANDROID_OBJDUMP=${OBJDUMP:-${ANDROID_TOOLCHAIN}objdump}
+    ANDROID_STRIP=${STRIP:-${ANDROID_TOOLCHAIN}strip}
 
-if [ -z "${JAVA_SDK}" ] ; then
-	# Utility used to locate Java on OSX systems
-	if [ -x /usr/libexec/java_home ] ; then
-		ANDROID_JAVA_SDK="$(/usr/libexec/java_home)"
-	elif [ -d /usr/lib/jvm/default ] ; then
-		ANDROID_JAVA_SDK=/usr/lib/jvm/default
-	elif [ -d /usr/lib/jvm/default-jvm ] ; then
-		ANDROID_JAVA_SDK=/usr/lib/jvm/default-jvm
-	else
-		if [ "${OS}" = "android" ] ; then
-			echo >&2 "Error: no Java SDK found - set \$JAVA_SDK"
-			exit 1
-		fi
-	fi
-else
-	ANDROID_JAVA_SDK="${JAVA_SDK}"
-fi
+    if [ -z "${JAVA_SDK}" ] ; then
+        # Utility used to locate Java on OSX systems
+        if [ -x /usr/libexec/java_home ] ; then
+            ANDROID_JAVA_SDK="$(/usr/libexec/java_home)"
+        elif [ -d /usr/lib/jvm/default ] ; then
+            ANDROID_JAVA_SDK=/usr/lib/jvm/default
+        elif [ -d /usr/lib/jvm/default-java ] ; then
+            ANDROID_JAVA_SDK=/usr/lib/jvm/default-java
+        else
+            echo >&2 "Error: no Java SDK found - set \$JAVA_SDK"
+            exit 1
+        fi
+    else
+        ANDROID_JAVA_SDK="${JAVA_SDK}"
+    fi
 
+fi # End of Android defaults & tools
 
 ################################################################
 # Invoke gyp
@@ -366,7 +358,7 @@ case ${OS} in
     export ANDROID_NDK
     export ANDROID_PLATFORM
     export ANDROID_SDK
-    
+
     export JAVA_SDK="${ANDROID_JAVA_SDK}"
 
     export AR="${ANDROID_AR}"

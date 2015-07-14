@@ -146,7 +146,7 @@ Returns:	"true" or "false"
 
 Example:
 	variable tString as String
-	variable tBool as boolean
+	variable tBool as Boolean
 	put (false is not not true) is false into tBool
 	put tBool formatted as string into tString -- tString contains "true"
 
@@ -198,8 +198,7 @@ Example:
 	
 Example:
 	variable tBool as optional Boolean
-	put "flase" parsed as boolean into tBool -- tBool is not defined
-
+	put "flase" parsed as boolean into tBool -- tBool is nothing
 Description:
 Use <StringParsedAsBoolean> when you want to determine if a string contains "true" or "false"
 
@@ -227,7 +226,7 @@ Example:
 Example:
 	variable tResult as String
 	parse "sdfsdf" as Boolean
-	if the result is not defined then
+	if the result is nothing then
 		put "not a valid boolean" into tResult
 	end if
 

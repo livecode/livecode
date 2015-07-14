@@ -145,6 +145,7 @@ Summary:	The property of a script object.
 Property: 	The name of the property to manipulate
 Object:		An expression that evaluates to a <ScriptObject>.
 
+
 Example:
 	public handler OnMouseUp() returns nothing
 		set property "name" of my script object to "Clicked Widget"
@@ -177,7 +178,7 @@ Object:		An expression that evaluates to a <ScriptObject>.
 The result:	The <ScriptObject> that is the owner of <Object>.
 
 Example:
-	public handler MyName() as String
+	public handler MyName() returns String
 		get property "short name" of my script object
 		return the result
 	end handler
@@ -205,7 +206,7 @@ Object:		An expression that evaluates to a <ScriptObject>
 The result:	A list of <ScriptObject>s that are contained within <Object>.
 
 Example:
-	public handler GetSiblings(in pObject as ScriptObject) as List
+	public handler GetSiblings(in pObject as ScriptObject) returns List
 		// Return the sibling objects of an object
 		return the children of the owner of pObject
 	end handler

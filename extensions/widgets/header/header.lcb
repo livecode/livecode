@@ -300,7 +300,7 @@ public handler OnSave(out rProperties as Array)
    put mActionStyle into rProperties["actionStyle"]
    put mShowBackIcon into rProperties["showBackIcon"]
    put mLeftLabel into rProperties["leftLabel"]
-   put mActionColor into rProperties["actionColor"]
+   put getActionColor() into rProperties["actionColor"]
    put mShowSearchIcon into rProperties["showSearchIcon"]
 
    return rProperties
@@ -313,7 +313,7 @@ public handler OnLoad(in pProperties as Array)
    put pProperties["actionStyle"] into mActionStyle
    put pProperties["showBackIcon"] into mShowBackIcon
    put pProperties["leftLabel"] into mLeftLabel
-   put pProperties["actionColor"] into mActionColor
+   setActionColor(pProperties["actionColor"])
    put pProperties["showSearchIcon"] into mShowSearchIcon
 end handler
 
