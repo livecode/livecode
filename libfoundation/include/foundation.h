@@ -369,7 +369,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #    define MC_DLLEXPORT __attribute__((dllexport))
 #  endif
 #else
-#  define MC_DLLEXPORT __attribute__((__visibility__("default")))
+#  define MC_DLLEXPORT __attribute__((__visibility__("default"), __used__))
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
