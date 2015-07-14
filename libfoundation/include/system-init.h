@@ -24,8 +24,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
  * ================================================================ */
 
 /* Library setup. Call before any other functions in this library. */
-MC_DLLEXPORT bool MCSInitialize(void);
+bool MCSInitialize(void);
 
 /* Call when the library is no longer needed, in order to clear any
  * library state. */
-MC_DLLEXPORT void MCSFinalize(void);
+void MCSFinalize(void);

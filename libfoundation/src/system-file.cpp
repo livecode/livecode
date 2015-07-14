@@ -107,7 +107,7 @@ __MCSFileThrowInvalidPathError (MCStringRef p_path)
  * Whole-file IO
  * ================================================================ */
 
-bool
+MC_DLLEXPORT bool
 MCSFileGetContents (MCStringRef p_path,
                     MCDataRef & r_data)
 {
@@ -115,7 +115,7 @@ MCSFileGetContents (MCStringRef p_path,
 	return __MCSFileGetContents (t_native_path, r_data);
 }
 
-bool
+MC_DLLEXPORT bool
 MCSFileSetContents (MCStringRef p_path,
                     MCDataRef p_data)
 {
@@ -127,7 +127,7 @@ MCSFileSetContents (MCStringRef p_path,
  * File streams
  * ================================================================ */
 
-bool
+MC_DLLEXPORT bool
 MCSFileCreateStream (MCStringRef p_path,
                      intenum_t p_mode,
                      MCStreamRef & r_stream)
@@ -140,21 +140,21 @@ MCSFileCreateStream (MCStringRef p_path,
  * File system operations
  * ================================================================ */
 
-bool
+MC_DLLEXPORT bool
 MCSFileDelete (MCStringRef p_path)
 {
 	MCS_FILE_CONVERT_PATH(p_path, t_native_path);
 	return __MCSFileDelete (p_path);
 }
 
-bool
+MC_DLLEXPORT bool
 MCSFileCreateDirectory (MCStringRef p_path)
 {
 	MCS_FILE_CONVERT_PATH(p_path, t_native_path);
 	return __MCSFileCreateDirectory (t_native_path);
 }
 
-bool
+MC_DLLEXPORT bool
 MCSFileDeleteDirectory (MCStringRef p_path)
 {
 	MCS_FILE_CONVERT_PATH(p_path, t_native_path);
@@ -179,7 +179,7 @@ MCSFileGetDirectoryEntries_MapCallback (void *p_context,
 	return true;
 }
 
-bool
+MC_DLLEXPORT bool
 MCSFileGetDirectoryEntries (MCStringRef p_path,
                             MCProperListRef & r_entries)
 {
@@ -201,9 +201,9 @@ MCSFileGetDirectoryEntries (MCStringRef p_path,
  * Initialization
  * ================================================================ */
 
-MCTypeInfoRef kMCSFileIOErrorTypeInfo;
-MCTypeInfoRef kMCSFileEndOfFileErrorTypeInfo;
-MCTypeInfoRef kMCSFileInvalidPathErrorTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef kMCSFileIOErrorTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef kMCSFileEndOfFileErrorTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef kMCSFileInvalidPathErrorTypeInfo;
 
 bool
 __MCSFileInitialize (void)

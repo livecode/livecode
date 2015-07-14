@@ -24,11 +24,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
  * ================================================================ */
 
 /* Generate p_length bytes of random data. */
-MC_DLLEXPORT bool MCSRandomData (uindex_t p_length, MCDataRef & r_data);
+bool MCSRandomData (uindex_t p_length, MCDataRef & r_data);
 
 /* Generate a random real number on the interval [0,1).  If any random
  * number generation failure occurs, returns a quiet NaN. */
-MC_DLLEXPORT real64_t MCSRandomReal (void);
+real64_t MCSRandomReal (void);
 
 #ifdef __MCS_INTERNAL_API__
 

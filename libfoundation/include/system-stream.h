@@ -26,9 +26,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <stdio.h>
 
 // Standard streams
-MC_DLLEXPORT bool MCSStreamGetStandardOutput(MCStreamRef & r_stdout);
-MC_DLLEXPORT bool MCSStreamGetStandardInput(MCStreamRef & r_stdin);
-MC_DLLEXPORT bool MCSStreamGetStandardError(MCStreamRef & r_stderr);
+bool MCSStreamGetStandardOutput(MCStreamRef & r_stdout);
+bool MCSStreamGetStandardInput(MCStreamRef & r_stdin);
+bool MCSStreamGetStandardError(MCStreamRef & r_stderr);
 
 #ifdef __MCS_INTERNAL_API__
 
