@@ -39,7 +39,7 @@ MCCreateScreenDC()
 	return new MCScreenDC;
 }
 
-MCStack *
+MC_DLLEXPORT_DEF MCStack *
 MCEmscriptenGetCurrentStack()
 {
 	if (MCnoui) return nil;

@@ -924,6 +924,7 @@ static bool MCEventQueuePostMouse(MCEventType p_type, MCStack *p_stack, uint32_t
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCEventQueuePostMouseFocus(MCStack *p_stack, uint32_t p_time, bool p_inside)
 {
 	MCEvent *t_event;
@@ -937,6 +938,7 @@ bool MCEventQueuePostMouseFocus(MCStack *p_stack, uint32_t p_time, bool p_inside
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCEventQueuePostMousePress(MCStack *p_stack, uint32_t p_time, uint32_t p_modifiers, MCMousePressState p_state, int32_t p_button)
 {
 	MCEvent *t_event;
@@ -965,6 +967,7 @@ bool MCEventQueuePostMouseWheel(MCStack *p_stack, uint32_t p_time, uint32_t p_mo
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCEventQueuePostMousePosition(MCStack *p_stack, uint32_t p_time, uint32_t p_modifiers, int32_t p_x, int32_t p_y)
 {
 	// We look through the current event queue, looking for the last mouse
@@ -1002,6 +1005,7 @@ bool MCEventQueuePostMousePosition(MCStack *p_stack, uint32_t p_time, uint32_t p
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCEventQueuePostKeyFocus(MCStack *p_stack, bool p_owner)
 {
 	MCEvent *t_event;
@@ -1014,6 +1018,7 @@ bool MCEventQueuePostKeyFocus(MCStack *p_stack, bool p_owner)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCEventQueuePostKeyPress(MCStack *p_stack, uint32_t p_modifiers, uint32_t p_char_code, uint32_t p_key_code)
 {
 	MCEvent *t_event;

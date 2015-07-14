@@ -41,7 +41,7 @@ MCEmscriptenBootError(const char *p_message)
 	exit(99);
 }
 
-int
+MC_DLLEXPORT_DEF int
 main(int argc, char *argv[])
 {
 	/* ---------- Core initialisation */

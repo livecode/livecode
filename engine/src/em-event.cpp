@@ -45,11 +45,11 @@ MCEmscriptenEventFinalize()
 
 /* ---------------------------------------------------------------- */
 
-extern "C"
-uint32_t MCEmscriptenEventEncodeModifiers(bool p_shift,
-                                          bool p_alt,
-                                          bool p_ctrl,
-                                          bool p_meta)
+extern "C" MC_DLLEXPORT_DEF uint32_t
+MCEmscriptenEventEncodeModifiers(bool p_shift,
+                                 bool p_alt,
+                                 bool p_ctrl,
+                                 bool p_meta)
 {
 	uint32_t t_result = 0;
 
