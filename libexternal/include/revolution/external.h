@@ -527,8 +527,6 @@ extern const char *ConvertCStringToNativeFromUTF8(const char *p_utf8, int *r_suc
 // External declaration macros
 //
 
-#ifdef _MACOSX
-
 #ifdef __cplusplus
 
 #define EXTERNAL_REFERENCE_LIBRARY \
@@ -548,13 +546,6 @@ extern const char *ConvertCStringToNativeFromUTF8(const char *p_utf8, int *r_suc
 	}
 	
 #endif
-
-#else
-
-#define EXTERNAL_REFERENCE_LIBRARY
-
-#endif
-
 
 #ifdef __cplusplus
 
