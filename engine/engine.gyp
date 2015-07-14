@@ -217,6 +217,7 @@
 						'product_extension': 'lcext',
 						'app_plist': 'rsrc/standalone-mobile-Info.plist',
 						
+						# Forces all dependencies to be linked properly
 						'type': 'shared_library',
 						
 						'variables':
@@ -601,7 +602,7 @@
 			
 			'dependencies':
 			[
-				'kernel-standalone',
+				'standalone',
 			],
 			
 			'conditions':
