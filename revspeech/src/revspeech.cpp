@@ -76,13 +76,13 @@ static bool NarratorUnload(void)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-extern "C" void* getXtable();
+extern "C" void getXtable();
 
 void revSpeechLoad(char *args[], int nargs, char **retstring,
 					Bool *pass, Bool *error)
 {
 	// Force a reference to the getXtable function
-	(void)getXtable();
+	getXtable();
 	
 	*pass = False;
 	*error = False;
