@@ -857,7 +857,6 @@
 					'sources!':
 					[
 						'src/dskmac.cpp',
-						'src/coretextlayout.mm',
 						'src/srvmac.cpp',
 					],
 				},
