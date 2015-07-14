@@ -470,8 +470,6 @@ extern Bool SecurityCanAccessLibrary(const char *p_library);
 // External declaration macros
 //
 
-#ifdef _MACOSX
-
 #ifdef __cplusplus
 
 #define EXTERNAL_REFERENCE_LIBRARY \
@@ -491,13 +489,6 @@ extern Bool SecurityCanAccessLibrary(const char *p_library);
 	}
 	
 #endif
-
-#else
-
-#define EXTERNAL_REFERENCE_LIBRARY
-
-#endif
-
 
 #ifdef __cplusplus
 
