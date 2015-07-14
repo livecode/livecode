@@ -16,12 +16,40 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "sysdefs.h"
+#include "prefix.h"
 
+#include "platform.h"
 #include "mctheme.h"
 
 MCTheme *
 MCThemeCreateNative()
 {
 	return nil;
+}
+
+
+/* ================================================================
+ * Platform theming
+ * ================================================================ */
+
+/* FIXME not yet implemented */
+
+bool
+MCPlatformGetControlThemePropColor(MCPlatformControlType p_type,
+                                   MCPlatformControlPart p_part,
+                                   MCPlatformControlState p_state,
+                                   MCPlatformThemeProperty p_prop,
+                                   MCColor& r_color)
+{
+	return false;
+}
+
+bool
+MCPlatformGetControlThemePropFont(MCPlatformControlType p_type,
+                                  MCPlatformControlPart p_part,
+                                  MCPlatformControlState p_state,
+                                  MCPlatformThemeProperty p_prop,
+                                  MCFontRef& r_font)
+{
+	return false;
 }
