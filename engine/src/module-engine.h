@@ -25,10 +25,10 @@ typedef struct __MCScriptObject *MCScriptObjectRef;
 
 extern "C"
 {
-    extern MC_DLLEXPORT MCTypeInfoRef kMCEngineScriptObjectTypeInfo;
+    extern MCTypeInfoRef kMCEngineScriptObjectTypeInfo;
 
-	extern MC_DLLEXPORT MCTypeInfoRef kMCEngineScriptObjectDoesNotExistErrorTypeInfo;
-	extern MC_DLLEXPORT MCTypeInfoRef kMCEngineScriptObjectNoContextErrorTypeInfo;
+	extern MCTypeInfoRef kMCEngineScriptObjectDoesNotExistErrorTypeInfo;
+	extern MCTypeInfoRef kMCEngineScriptObjectNoContextErrorTypeInfo;
 }
 
 bool MCEngineScriptObjectCreate(MCObject *p_object, uint32_t p_part_id, MCScriptObjectRef& r_object);

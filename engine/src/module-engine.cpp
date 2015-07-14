@@ -50,7 +50,7 @@ struct __MCScriptObjectImpl
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCTypeInfoRef kMCEngineScriptObjectTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef kMCEngineScriptObjectTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -724,8 +724,8 @@ extern "C" MC_DLLEXPORT void MCEngineExecLogWithValues(MCStringRef p_message, MC
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCTypeInfoRef kMCEngineScriptObjectDoesNotExistErrorTypeInfo = nil;
-MCTypeInfoRef kMCEngineScriptObjectNoContextErrorTypeInfo = nil;
+MC_DLLEXPORT MCTypeInfoRef kMCEngineScriptObjectDoesNotExistErrorTypeInfo = nil;
+MC_DLLEXPORT MCTypeInfoRef kMCEngineScriptObjectNoContextErrorTypeInfo = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
 
