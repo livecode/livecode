@@ -145,13 +145,13 @@ bool MCBrowserFactoryGet(const char *p_factory, MCBrowserFactoryRef &r_factory)
 	return true;
 }
 
-bool MCBrowserFactoryCreateBrowser(MCBrowserFactoryRef p_factory, MCBrowserRef &r_browser)
+bool MCBrowserFactoryCreateBrowser(MCBrowserFactoryRef p_factory, void *p_display, void *p_parent_window, MCBrowserRef &r_browser)
 {
 	if (p_factory == nil)
 		return false;
 	
 	MCBrowser *t_browser;
-	if (!((MCBrowserFactory*)p_factory)->CreateBrowser(t_browser))
+	if (!((MCBrowserFactory*)p_factory)->CreateBrowser(p_display, p_parent_window, t_browser))
 		return false;
 	
 	r_browser = (MCBrowserRef)t_browser;

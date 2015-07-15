@@ -130,6 +130,9 @@ end handler
 
 public handler OnOpen()
 	variable tParent as Pointer
+	/* UNCHECKED */
+	MCWidgetEvalStackNativeView(tParent)
+	
 	// TODO - add widget code to get stack window handler
 	// put my native window into tParent
 
@@ -137,8 +140,12 @@ public handler OnOpen()
 	/* UNCHECKED */
 	MCBrowserFactoryGet(mBrowserType, tFactory)
 	
+	variable tDisplay as Pointer
 	/* UNCHECKED */
-	MCBrowserFactoryCreateBrowser(tFactory, mBrowser)
+	MCWidgetEvalStackNativeDisplay(tDisplay)
+	
+	/* UNCHECKED */
+	MCBrowserFactoryCreateBrowser(tFactory, tDisplay, tParent, mBrowser)
 	
 	variable tBrowserView as Pointer
 	/* UNCHECKED */

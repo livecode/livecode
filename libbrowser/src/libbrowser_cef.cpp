@@ -609,7 +609,8 @@ public:
 		if (p_browser->GetIdentifier() == m_browser_id)
 		{
 			// Close the browser window
-			MCCefPlatformCloseBrowserWindow(p_browser);
+			if (m_owner != nil)
+				m_owner->PlatformCloseBrowserWindow(p_browser);
 			
 			// return true to prevent default handling
 			return true;
@@ -915,14 +916,14 @@ MCCefBrowserBase::~MCCefBrowserBase(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCBrowser *MCCefBrowserInstantiate(void *p_parent_window)
+MCBrowser *MCCefBrowserInstantiate(void *p_display, void *p_parent_window)
 {
 	// IM-2014-03-18: [[ revBrowserCEF ]] Make sure cef library is loaded before trying to create browser
 	if (!MCCefBrowserInitialise())
 		return nil;
 	
 	MCCefBrowserBase *t_browser;
-	if (!MCCefPlatformCreateBrowser(p_parent_window, t_browser))
+	if (!MCCefPlatformCreateBrowser(p_display, p_parent_window, t_browser))
 		return nil;
 	
 	if (!t_browser->Initialize())
@@ -1527,18 +1528,13 @@ bool MCCefBrowserFactory::Initialize()
 	return MCCefBrowserInitialise();
 }
 
-bool MCCefBrowserFactory::CreateBrowser(MCBrowser *&r_browser)
+bool MCCefBrowserFactory::CreateBrowser(void *p_display, void *p_parent_view, MCBrowser *&r_browser)
 {
-	void *t_parent_view;
-	t_parent_view = nil;
-	
-	MCWidgetEvalStackNativeView(t_parent_view);
-	
-	if (t_parent_view == nil)
+	if (p_parent_view == nil)
 		return false;
 	
 	MCBrowser *t_browser;
-	t_browser = MCCefBrowserInstantiate(t_parent_view);
+	t_browser = MCCefBrowserInstantiate(p_display, p_parent_view);
 	
 	if (t_browser == nil)
 		return false;

@@ -119,6 +119,7 @@ public:
 	// Platform-specific methods
 	
 	virtual void PlatformConfigureWindow(CefWindowInfo &r_info) = 0;
+	virtual void PlatformCloseBrowserWindow(CefRefPtr<CefBrowser> p_browser) = 0;
 	
 	virtual bool PlatformGetRect(MCBrowserRect &r_rect) = 0;
 	virtual bool PlatformSetRect(const MCBrowserRect &p_rect) = 0;
@@ -144,7 +145,7 @@ public:
 	MCCefBrowserFactory();
 	virtual ~MCCefBrowserFactory();
 	
-	bool CreateBrowser(MCBrowser *&r_browser) override;
+	bool CreateBrowser(void *p_display, void *p_parent_view, MCBrowser *&r_browser) override;
 	
 	//////////
 	
@@ -153,8 +154,7 @@ public:
 
 bool MCCefBrowserFactoryCreate(MCBrowserFactoryRef &r_factory);
 
-bool MCCefPlatformCreateBrowser(void *p_parent_window, MCCefBrowserBase *&r_browser);
-void MCCefPlatformCloseBrowserWindow(CefRefPtr<CefBrowser> p_browser);
+bool MCCefPlatformCreateBrowser(void *p_display, void *p_parent_window, MCCefBrowserBase *&r_browser);
 
 const char *MCCefPlatformGetSubProcessName(void);
 
@@ -185,9 +185,5 @@ const char *MCCefPlatformGetLocalePath(void);
 extern "C" void *MCU_loadmodule(const char *p_source);
 extern "C" void MCU_unloadmodule(void *p_module);
 extern "C" void *MCU_resolvemodulesymbol(void *p_module, const char *p_symbol);
-
-// Engine hooks
-
-extern "C" void MCWidgetEvalStackNativeView(void *&r_native_view);
 
 #endif /* __LIBBROWSER_CEF_H__ */

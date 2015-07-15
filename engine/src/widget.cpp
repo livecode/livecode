@@ -2456,6 +2456,21 @@ extern "C" MC_DLLEXPORT void MCWidgetEvalStackNativeView(void *&r_native_view)
 	r_native_view = MCscreen->GetNativeWindowHandle(MCwidgetobject->getw());
 }
 
+extern "C" MC_DLLEXPORT void MCWidgetEvalStackNativeDisplay(void *&r_display)
+{
+	if (MCwidgetobject == nil)
+	{
+		MCWidgetThrowNoCurrentWidgetError();
+		return;
+	}
+	
+	if (!MCscreen->platform_get_display_handle(r_display))
+	{
+		// TODO - throw error
+		return;
+	}
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCErrorCreateNamedTypeInfo(MCNameRef p_domain, MCNameRef p_name, MCStringRef p_message, MCTypeInfoRef &r_error_type)

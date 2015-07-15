@@ -978,6 +978,9 @@ end syntax
 
 public foreign handler MCWidgetExecGetNativeLayer(out rNativeLayer as Pointer) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetExecSetNativeLayer(in pNativeLayer as optional Pointer) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetEvalStackNativeView(out rNativeView as Pointer) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetEvalStackNativeDisplay(out rDisplay as Pointer) returns nothing binds to "<builtin>"
+
 /*
 TODO - docs
 */

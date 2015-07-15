@@ -107,7 +107,7 @@ public:
 class MCBrowserFactory : public MCBrowserRefCounted
 {
 public:
-	virtual bool CreateBrowser(MCBrowser *&r_browser) = 0;
+	virtual bool CreateBrowser(void *p_display, void *p_parent_view, MCBrowser *&r_browser) = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -187,7 +187,7 @@ typedef struct __MCBrowser *MCBrowserRef;
 typedef struct __MCBrowserFactory *MCBrowserFactoryRef;
 
 MC_DLLEXPORT bool MCBrowserFactoryGet(const char *p_factory_id, MCBrowserFactoryRef &r_factory);
-MC_DLLEXPORT bool MCBrowserFactoryCreateBrowser(MCBrowserFactoryRef p_factory, MCBrowserRef &r_browser);
+MC_DLLEXPORT bool MCBrowserFactoryCreateBrowser(MCBrowserFactoryRef p_factory, void *p_display, void *p_parent_view, MCBrowserRef &r_browser);
 
 MC_DLLEXPORT MCBrowserRef MCBrowserRetain(MCBrowserRef p_browser);
 MC_DLLEXPORT void MCBrowserRelease(MCBrowserRef p_browser);
