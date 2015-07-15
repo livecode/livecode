@@ -46,6 +46,7 @@
 
 #include "lnxdc.h"
 #include "graphicscontext.h"
+#include "graphics_util.h"
 
 #include "native-layer-x11.h"
 
@@ -82,7 +83,7 @@ MCNativeLayerX11::~MCNativeLayerX11()
 void MCNativeLayerX11::OnToolChanged(Tool p_new_tool)
 {
     updateInputShape();
-    updateVisibility();
+    OnVisibilityChanged(ShouldShowWidget(MCWidgetGetHost(m_widget)));
 }
 
 void MCNativeLayerX11::updateInputShape()
@@ -159,7 +160,7 @@ void MCNativeLayerX11::doAttach()
     // Act as if there were a re-layer to put the widget in the right place
     doRelayer();
     
-    updateVisibility();
+    OnVisibilityChanged(ShouldShowWidget(t_widget));
 }
 
 void MCNativeLayerX11::OnDetach()
@@ -179,7 +180,7 @@ void MCNativeLayerX11::OnPaint(MCGContextRef)
     // Do nothing. Painting is handled entirely by X11.
 }
 
-void MCNativeLayerX11::updateGeometry()
+void MCNativeLayerX11::OnGeometryChanged(const MCRectangle& p_old_rect)
 {
     MCWidget* t_widget = MCWidgetGetHost(m_widget);
     
@@ -210,24 +211,15 @@ void MCNativeLayerX11::updateGeometry()
         gdk_window_move_resize(t_remote, 0, 0, t_rect.width, t_rect.height);
 }
 
-void MCNativeLayerX11::OnGeometryChanged(const MCRectangle& p_old_rect)
-{
-	updateGeometry();
-}
-
 void MCNativeLayerX11::OnVisibilityChanged(bool p_visible)
 {
-	updateVisibility();
-}
-
-void MCNativeLayerX11::updateVisibility()
-{
-    if (isAttached() && (m_widget->getflags() & F_VISIBLE) && !m_widget->inEditMode())
+    if (p_visible)
         gtk_widget_show(GTK_WIDGET(m_child_window));
     else
         gtk_widget_hide(GTK_WIDGET(m_child_window));
 
-	updateGeometry();
+	if (p_visible)
+		OnGeometryChanged(MCRectangleMake(0,0,0,0));
 }
 
 void MCNativeLayerX11::OnLayerChanged()
@@ -266,7 +258,7 @@ void MCNativeLayerX11::doRelayer()
     }
     
     // Make the widget visible, if appropriate
-    updateVisibility();
+    OnVisibilityChanged(ShouldShowWidget(t_widget));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -69,12 +69,6 @@ private:
     
     // Updates the input mask for the widget (used to implement edit mode)
     void updateInputShape();
-    
-    // Show / hide the widget view in response to visibility changes
-    void updateVisibility();
-    
-    // Size & reposition the container window
-    void updateGeometry();
 };
 
 #endif // ifndef __MC_NATIVE_LAYER_X11__
