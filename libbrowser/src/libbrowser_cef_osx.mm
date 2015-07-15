@@ -87,6 +87,7 @@ public:
 	bool GetWindowHandle(CefWindowHandle &r_hwnd);
 	
 	virtual void PlatformConfigureWindow(CefWindowInfo &r_info);
+	virtual void PlatformCloseBrowserWindow(CefRefPtr<CefBrowser> p_browser);
 	
 	virtual bool PlatformGetRect(MCBrowserRect &r_rect);
 	virtual bool PlatformSetRect(const MCBrowserRect &p_rect);
@@ -205,7 +206,7 @@ void MCCefInitNSApplication()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCCefPlatformCreateBrowser(void *p_parent_window, MCCefBrowserBase *&r_browser)
+bool MCCefPlatformCreateBrowser(void *p_display, void *p_parent_window, MCCefBrowserBase *&r_browser)
 {
 	MCCefInitNSApplication();
 	
@@ -241,7 +242,7 @@ void MCCefBrowserOSX::PlatformConfigureWindow(CefWindowInfo &r_info)
 	t_handle = t_handle;
 }
 
-void MCCefPlatformCloseBrowserWindow(CefRefPtr<CefBrowser> p_browser)
+void MCCefBrowserOSX::PlatformCloseBrowserWindow(CefRefPtr<CefBrowser> p_browser)
 {
 	NSView *t_handle;
 	t_handle = p_browser->GetHost()->GetWindowHandle();
