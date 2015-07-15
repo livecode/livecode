@@ -231,7 +231,7 @@ end handler
 
 public handler setUrl(in pUrl as String)
 	put "url" into mContentSource
-	setProperty("url", pUrl)
+	MCBrowserGoToURL(mBrowser, pUrl)
 end handler
 
 --

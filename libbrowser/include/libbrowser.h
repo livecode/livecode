@@ -202,7 +202,7 @@ MC_DLLEXPORT bool MCBrowserSetStringProperty(MCBrowserRef p_browser, MCBrowserPr
 
 MC_DLLEXPORT bool MCBrowserGoBack(MCBrowserRef p_browser);
 MC_DLLEXPORT bool MCBrowserGoForward(MCBrowserRef p_browser);
-MC_DLLEXPORT bool MCBrowserGoToURL(MCBrowserRef p_browser);
+MC_DLLEXPORT bool MCBrowserGoToURL(MCBrowserRef p_browser, const char *p_url);
 MC_DLLEXPORT bool MCBrowserEvaluateJavaScript(MCBrowserRef p_browser, const char *p_script, char *&r_result);
 
 enum MCBrowserRequestType
