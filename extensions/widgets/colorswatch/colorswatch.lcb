@@ -33,7 +33,7 @@ metadata preferredSize is "24,24"
 
 -- property declarations
 property swatchColor get getColor set setColor
-metadata swatchColor.editor is "com.livecode.pi.color"
+metadata swatchColor.editor is "com.livecode.pi.colorwithalpha"
 metadata swatchColor.default is "255,100,0"
 metadata swatchColor.label is "Swatch Color"
 --
