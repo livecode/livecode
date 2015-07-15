@@ -337,6 +337,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #if defined(__EMSCRIPTEN__)
 
+// Nasty, evil hack -- remove me
+#define __LITTLE_ENDIAN__ 1
+
 // Compiler
 #define __GCC__
 
