@@ -742,11 +742,11 @@ void MCIdeSign::exec_ctxt(MCExecContext &ctxt)
 			ctxt . Throw();
 	
 	if (!ctxt . HasError())
-		if (t_params . certstore != NULL && (t_params . certificate != NULL || t_params . privatekey != NULL))
+		if (!MCValueIsEmpty(t_params . certstore) && (!MCValueIsEmpty(t_params . certificate) || !MCValueIsEmpty(t_params . privatekey)))
 			ctxt . Throw();
 
 	if (!ctxt . HasError())
-		if (t_params . certstore == NULL && (t_params . certificate == NULL || t_params . privatekey == NULL))
+		if (MCValueIsEmpty(t_params . certstore) && (MCValueIsEmpty(t_params . certificate) || MCValueIsEmpty(t_params . privatekey)))
 			ctxt . Throw();
 
 	bool t_can_sign;
