@@ -566,6 +566,8 @@ void MCMutableImageRep::continuedraw()
 
 			stroke_path(t_path);
 
+            MCGPathRelease(t_path);
+            
 			brect = MCU_compute_rect(points[polypoints-1].x,
 			                         points[polypoints-1].y, mx, my);
 			brect = MCU_reduce_rect(brect, -((MClinesize >> 1) + 1));
@@ -689,12 +691,13 @@ void MCMutableImageRep::enddraw()
 		{
 			MCU_offset_points(points, polypoints, -rect.x, -rect.y);
 
-			/* OVERHAUL - REVISIT: for now convert points to MCGPathRef,
-			 * but we should be able to build the path directly */
-			MCGPathRef t_path = nil;
-			/* UNCHECKED */ MCGPathCreateMutable(t_path);
 			if (polypoints > 0)
 			{
+                /* OVERHAUL - REVISIT: for now convert points to MCGPathRef,
+                 * but we should be able to build the path directly */
+                MCGPathRef t_path = nil;
+                /* UNCHECKED */ MCGPathCreateMutable(t_path);
+                
 				MCGPathMoveTo(t_path, MCGPointMake(points[0].x, points[0].y));
 				for (uint32_t i = 0; i < polypoints; i++)
 					MCGPathLineTo(t_path, MCGPointMake(points[i].x, points[i].y));
@@ -705,7 +708,9 @@ void MCMutableImageRep::enddraw()
 					fill_path(t_path);
 				}
 				stroke_path(t_path);
-			}
+                
+                MCGPathRelease(t_path);
+            }
 
 			delete points;
 			points = NULL;
@@ -1350,7 +1355,9 @@ MCRectangle MCMutableImageRep::drawline(Boolean cancenter)
 	/* UNCHECKED */ MCGPathCreateMutable(t_path);
 	MCGPathAddLine(t_path, MCGPointMake(oldx - rect.x, oldy - rect.y), MCGPointMake(mx - rect.x, my - rect.y));
 	stroke_path(t_path);
-
+    
+    MCGPathRelease(t_path);
+    
 	return brect;
 }
 

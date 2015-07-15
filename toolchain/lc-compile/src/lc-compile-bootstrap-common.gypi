@@ -14,7 +14,8 @@
 	
 	'sources':
 	[
-		'>@(lc-compile_source_files)',
+		# Some build systems require at least one input file
+		'dummy.cpp',
 	],
 	
 	'actions':
