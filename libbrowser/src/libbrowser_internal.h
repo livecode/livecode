@@ -85,6 +85,12 @@ inline void MCBrowserMemoryDelete(T* p_obj)
 	MCBrowserMemoryDeallocate(p_obj);
 }
 
+template<typename T>
+inline bool MCBrowserMemoryReallocate(T *p_block, size_t p_new_size, T*& r_new_block)
+{
+	return MCBrowserMemoryReallocate((void*)p_block, p_new_size, (void*&)r_new_block);
+}
+
 template <class T>
 inline bool MCBrowserMemoryNewArray(uindex_t p_count, T*&r_array)
 {
@@ -94,7 +100,7 @@ inline bool MCBrowserMemoryNewArray(uindex_t p_count, T*&r_array)
 template <class T>
 inline bool MCBrowserMemoryResizeArray(uindex_t p_new_count, T*& x_array, uindex_t& x_count)
 {
-	if (MCBrowserMemoryReallocate((void*)x_array, p_new_count * sizeof(T), (void*&)x_array))
+	if (MCBrowserMemoryReallocate(x_array, p_new_count * sizeof(T), x_array))
 	{
 		if (p_new_count > x_count)
 			MCBrowserMemoryClear((uint8_t *)(x_array) + x_count * sizeof(T), (p_new_count - x_count) * sizeof(T));

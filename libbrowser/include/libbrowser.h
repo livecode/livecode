@@ -140,7 +140,7 @@ typedef bool (*MCBrowserWaitFunction)(void);
 	
 MC_DLLEXPORT void MCBrowserLibrarySetAllocator(MCBrowserAllocator p_alloc);
 MC_DLLEXPORT void MCBrowserLibrarySetDeallocator(MCBrowserDeallocator p_dealloc);
-MC_DLLEXPORT void MCBrowserLibrarySetReallocator(MCBrowserReallocator p_dealloc);
+MC_DLLEXPORT void MCBrowserLibrarySetReallocator(MCBrowserReallocator p_realloc);
 MC_DLLEXPORT void MCBrowserLibrarySetWaitFunction(MCBrowserWaitFunction p_wait);
 
 typedef void (*MCBrowserRunloopCallback)(void *p_context);

@@ -27,13 +27,17 @@
 			[
 				'include/libbrowser.h',
 				
+				'src/libbrowser_memory.cpp',
 				'src/libbrowser.cpp',
 				'src/libbrowser_cef.cpp',
 				'src/libbrowser_cef.h',
+				'src/libbrowser_cef_lnx.cpp',
 				'src/libbrowser_cef_osx.mm',
 				'src/libbrowser_cefshared_osx.cpp',
+				'src/libbrowser_cefshared_lnx.cpp',
 				'src/libbrowser_value.cpp',
 				
+				'src/signal_restore_posix.cpp',
 				'src/WebAuthenticationPanel.m',
 			],
 			
@@ -59,6 +63,18 @@
 							'src/libbrowser_cef_osx.mm',
 							'src/libbrowser_cefshared_osx.cpp',
 							'src/WebAuthenticationPanel.m',
+						],
+					},
+				],
+				
+				[
+					'OS != "linux"',
+					{
+						'sources!':
+						[
+							'src/libbrowser_cef_lnx.cpp',
+							'src/libbrowser_cefshared_lnx.cpp',
+							'src/signal_restore_posix.cpp',
 						],
 					},
 				],
@@ -94,6 +110,16 @@
 								'dist_aux_files': [ '<(PRODUCT_DIR)/Frameworks' ],
 							},
 						},
+					},
+				],
+				
+				[
+					'OS == "mac" or OS == "win" or OS == "linux"',
+					{
+						'dependencies':
+						[
+							'libbrowser-cefprocess',
+						],
 					},
 				],
 			],
@@ -138,30 +164,6 @@
 			'mac_bundle': 1,
 			'product_name': 'libbrowser-cefprocess',
 			
-			# OSX, Windows, and Linux only
-			'conditions':
-			[
-				[
-					'OS != "mac" and OS != "win" and OS != "linux"',
-					{
-						'type': 'none',
-					},
-				],
-				[
-					'OS == "win" or OS == "linux"',
-					{
-						# Distributing the OSX version is done separately
-						'all_dependent_settings':
-						{
-							'variables':
-							{
-								'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(exe_suffix)' ],
-							},
-						},
-					},
-				],
-			],
-			
 			'dependencies':
 			[
 				'../libcore/libcore.gyp:libCore',
@@ -177,9 +179,60 @@
 			
 			'sources':
 			[
+				'src/libbrowser_memory.cpp',
 				'src/libbrowser_cefprocess.cpp',
+				'src/libbrowser_cefprocess_lnx.cpp',
 				'src/libbrowser_cefprocess_osx.mm',
+				'src/libbrowser_cefshared_lnx.cpp',
 				'src/libbrowser_cefshared_osx.cpp',
+			],
+			
+			'conditions':
+			[
+				# OSX, Windows, and Linux only
+				[
+					'OS != "mac" and OS != "win" and OS != "linux"',
+					{
+						'type': 'none',
+					},
+				],
+				
+				## Exclusions
+				[
+					'OS != "mac"',
+					{
+						'sources!':
+						[
+							'src/libbrowser_cefprocess_osx.mm',
+							'src/libbrowser_cefshared_osx.cpp',
+						],
+					},
+				],
+				
+				[
+					'OS != "linux"',
+					{
+						'sources!':
+						[
+							'src/libbrowser_cefprocess_lnx.cpp',
+							'src/libbrowser_cefshared_lnx.cpp',
+						],
+					},
+				],
+				
+				[
+					'OS == "win" or OS == "linux"',
+					{
+						# Distributing the OSX version is done separately
+						'all_dependent_settings':
+						{
+							'variables':
+							{
+								'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(exe_suffix)' ],
+							},
+						},
+					},
+				],
 			],
 			
 			'xcode_settings':
