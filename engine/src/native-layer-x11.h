@@ -40,7 +40,9 @@ public:
     virtual void OnToolChanged(Tool p_new_tool);
     virtual void OnLayerChanged();
     
-    MCNativeLayerX11(MCWidget*);
+    virtual bool GetNativeView(void *&r_view);
+    
+    MCNativeLayerX11(MCWidget *p_widget, x11::Window p_view);
     ~MCNativeLayerX11();
     
 private:
@@ -67,6 +69,12 @@ private:
     
     // Updates the input mask for the widget (used to implement edit mode)
     void updateInputShape();
+    
+    // Show / hide the widget view in response to visibility changes
+    void updateVisibility();
+    
+    // Size & reposition the container window
+    void updateGeometry();
 };
 
 #endif // ifndef __MC_NATIVE_LAYER_X11__
