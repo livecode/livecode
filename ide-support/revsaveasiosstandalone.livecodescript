@@ -1506,7 +1506,8 @@ function revMobileRuntimeFolder pTarget, pVersion
       // SN-2015-05-01: [[ Refactor iOS SDK version ]] Build the simulator location
       //  stub on the fly.
       replace "." with "_" in pTarget
-      put "Simulator-" & pTarget into tStub
+      replace space with "-" in pTarget
+      put pTarget into tStub
    end if
    
    local tUserPath, tOverridePath
