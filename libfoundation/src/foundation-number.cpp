@@ -23,6 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCNumberCreateWithInteger(integer_t p_value, MCNumberRef& r_number)
 {
 	__MCNumber *self;
@@ -36,6 +37,7 @@ bool MCNumberCreateWithInteger(integer_t p_value, MCNumberRef& r_number)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCNumberCreateWithReal(real64_t p_value, MCNumberRef& r_number)
 {
 	__MCNumber *self;
@@ -50,7 +52,7 @@ bool MCNumberCreateWithReal(real64_t p_value, MCNumberRef& r_number)
 	return true;
 }
 
-
+MC_DLLEXPORT_DEF
 bool MCNumberCreateWithUnsignedInteger(uinteger_t p_value, MCNumberRef& r_number)
 {
     if (p_value <= INTEGER_MAX)
@@ -59,16 +61,19 @@ bool MCNumberCreateWithUnsignedInteger(uinteger_t p_value, MCNumberRef& r_number
     return MCNumberCreateWithReal((real64_t)p_value, r_number);
 }
 
+MC_DLLEXPORT_DEF
 bool MCNumberIsInteger(MCNumberRef self)
 {
 	return (self -> flags & kMCNumberFlagIsReal) == 0;
 }
 
+MC_DLLEXPORT_DEF
 bool MCNumberIsReal(MCNumberRef self)
 {
 	return (self -> flags & kMCNumberFlagIsReal) != 0;
 }
 
+MC_DLLEXPORT_DEF
 real64_t MCNumberFetchAsReal(MCNumberRef self)
 {
 	if (MCNumberIsReal(self))
@@ -76,6 +81,7 @@ real64_t MCNumberFetchAsReal(MCNumberRef self)
 	return (real64_t)self -> integer;
 }
 
+MC_DLLEXPORT_DEF
 integer_t MCNumberFetchAsInteger(MCNumberRef self)
 {
 	if (MCNumberIsInteger(self))
@@ -83,6 +89,7 @@ integer_t MCNumberFetchAsInteger(MCNumberRef self)
 	return self -> real < 0.0 ? (integer_t)(self -> real - 0.5) : (integer_t)(self -> real + 0.5);
 }
 
+MC_DLLEXPORT_DEF
 uinteger_t MCNumberFetchAsUnsignedInteger(MCNumberRef self)
 {
 	if (MCNumberIsInteger(self))
@@ -183,6 +190,7 @@ bool __MCNumberParseNativeString(const char *p_string, uindex_t p_length, bool p
 	return t_success;
 }
 
+MC_DLLEXPORT_DEF
 bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_t char_count, MCNumberRef &r_number)
 {
     uindex_t length = MCStringGetLength(p_string);
@@ -206,11 +214,13 @@ bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_t char_co
 	return t_success;
 }
 
+MC_DLLEXPORT_DEF
 bool MCNumberParse(MCStringRef p_string, MCNumberRef &r_number)
 {
     return MCNumberParseOffset(p_string, 0, MCStringGetLength(p_string), r_number);
 }
 
+MC_DLLEXPORT_DEF
 bool MCNumberParseUnicodeChars(const unichar_t *p_chars, uindex_t p_char_count, MCNumberRef& r_number)
 {
 	char *t_native_chars;
@@ -233,6 +243,7 @@ bool MCNumberParseUnicodeChars(const unichar_t *p_chars, uindex_t p_char_count, 
 	return t_success;
 }
 
+MC_DLLEXPORT_DEF
 bool MCNumberParseOffsetPartial(MCStringRef p_string, uindex_t offset, uindex_t &r_chars_used, MCNumberRef &r_number)
 {
 	bool t_success;
@@ -294,9 +305,9 @@ bool __MCNumberIsEqualTo(__MCNumber *self, __MCNumber *p_other_self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNumberRef kMCZero;
-MCNumberRef kMCOne;
-MCNumberRef kMCMinusOne;
+MC_DLLEXPORT_DEF MCNumberRef kMCZero;
+MC_DLLEXPORT_DEF MCNumberRef kMCOne;
+MC_DLLEXPORT_DEF MCNumberRef kMCMinusOne;
 
 bool __MCNumberInitialize(void)
 {

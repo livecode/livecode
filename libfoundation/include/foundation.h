@@ -362,14 +362,26 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //
 //  SYMBOL EXPORTS
 //
+
+/* MC_DLLEXPORT should be applied to declarations.  MC_DLLEXPORT_DEF
+ * should be applied to definitions. */
 #ifdef _WIN32
+/* On Windows, declaring something as having "dllexport" storage
+ * modifies the naming of the corresponding symbol, so the export
+ * attribute must be attached to declarations (and possibly to the
+ * definition *as well* if no separate declaration appears) */
 #  ifdef _MSC_VER
 #    define MC_DLLEXPORT __declspec(dllexport)
 #  else
 #    define MC_DLLEXPORT __attribute__((dllexport))
 #  endif
+#  define MC_DLLEXPORT_DEF MC_DLLEXPORT
 #else
-#  define MC_DLLEXPORT __attribute__((__visibility__("default")))
+/* On non-Windows platforms, the external visibility of a symbol is
+ * simply a property of its definition (i.e. whether or not it should
+ * appear in the list of exported symbols). */
+#  define MC_DLLEXPORT
+#  define MC_DLLEXPORT_DEF __attribute__((__visibility__("default"), __used__))
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
