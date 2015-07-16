@@ -46,6 +46,7 @@
 		'cflags':
 		[
 			'-fstrict-aliasing',
+			'-fvisibility=hidden',
 		],
 		
 		'cflags_c':
