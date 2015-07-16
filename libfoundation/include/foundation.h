@@ -2916,7 +2916,7 @@ MC_DLLEXPORT bool MCProperListMutableCopyAndRelease(MCProperListRef list, MCProp
 MC_DLLEXPORT bool MCProperListIsMutable(MCProperListRef list);
 
 // Returns the number of elements in the list.
-uindex_t MCProperListGetLength(MCProperListRef list);
+MC_DLLEXPORT uindex_t MCProperListGetLength(MCProperListRef list);
 
 // Returns true if the given list is the empty list.
 MC_DLLEXPORT bool MCProperListIsEmpty(MCProperListRef list);
