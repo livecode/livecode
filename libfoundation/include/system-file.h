@@ -23,9 +23,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
  * Errors
  * ================================================================ */
 
-MC_DLLEXPORT extern MCTypeInfoRef kMCSFileIOErrorTypeInfo;
-MC_DLLEXPORT extern MCTypeInfoRef kMCSFileEndOfFileErrorTypeInfo;
-MC_DLLEXPORT extern MCTypeInfoRef kMCSFileInvalidPathErrorTypeInfo;
+extern MCTypeInfoRef kMCSFileIOErrorTypeInfo;
+extern MCTypeInfoRef kMCSFileEndOfFileErrorTypeInfo;
+extern MCTypeInfoRef kMCSFileInvalidPathErrorTypeInfo;
 
 #ifdef __MCS_INTERNAL_API__
 
@@ -53,7 +53,7 @@ bool __MCSFilePathFromNative (MCStringRef p_native_path, MCStringRef & r_path);
  * ================================================================ */
 
 /* Read an entire file into allocated memory, with good error checking. */
-MC_DLLEXPORT bool MCSFileGetContents(MCStringRef p_filename, MCDataRef & r_data);
+bool MCSFileGetContents(MCStringRef p_filename, MCDataRef & r_data);
 
 /* Write all of p_data to a file called p_filename, with good error
  * checking.  If a file called p_filename already exists it will be
@@ -77,7 +77,7 @@ MC_DLLEXPORT bool MCSFileGetContents(MCStringRef p_filename, MCDataRef & r_data)
  * 3) On Windows, this function will fail if p_filename already exists
  *    and is open.
  */
-MC_DLLEXPORT bool MCSFileSetContents(MCStringRef p_filename, MCDataRef p_data);
+bool MCSFileSetContents(MCStringRef p_filename, MCDataRef p_data);
 
 #ifdef __MCS_INTERNAL_API__
 
@@ -100,7 +100,7 @@ enum MCSFileOpenMode
 	kMCSFileOpenModeUpdate = (kMCSFileOpenModeRead | kMCSFileOpenModeWrite),
 };
 
-MC_DLLEXPORT bool MCSFileCreateStream(MCStringRef p_filename, intenum_t p_mode, MCStreamRef& r_stream);
+bool MCSFileCreateStream(MCStringRef p_filename, intenum_t p_mode, MCStreamRef& r_stream);
 
 #ifdef __MCS_INTERNAL_API__
 
@@ -113,18 +113,18 @@ bool __MCSFileCreateStream (MCStringRef p_native_path, intenum_t p_mode, MCStrea
  * ================================================================ */
 
 /* Delete the file at path. */
-MC_DLLEXPORT bool MCSFileDelete (MCStringRef p_path);
+bool MCSFileDelete (MCStringRef p_path);
 
 /* Create a directory at p_path.  Does not recursively create
  * directories. */
-MC_DLLEXPORT bool MCSFileCreateDirectory (MCStringRef p_path);
+bool MCSFileCreateDirectory (MCStringRef p_path);
 
 /* Delete a directory at p_path.  The directory must be empty. */
-MC_DLLEXPORT bool MCSFileDeleteDirectory (MCStringRef p_path);
+bool MCSFileDeleteDirectory (MCStringRef p_path);
 
 /* Return a list of the entries in the directory at p_path.  The
  * returned list never includes "." and "..". */
-MC_DLLEXPORT bool MCSFileGetDirectoryEntries (MCStringRef p_path, MCProperListRef & r_entries);
+bool MCSFileGetDirectoryEntries (MCStringRef p_path, MCProperListRef & r_entries);
 
 #ifdef __MCS_INTERNAL_API__
 

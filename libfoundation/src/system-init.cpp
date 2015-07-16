@@ -17,7 +17,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "system-private.h"
 
-bool
+MC_DLLEXPORT bool
 MCSInitialize(void)
 {
 	return
@@ -26,7 +26,7 @@ MCSInitialize(void)
 		__MCSStreamInitialize();
 }
 
-void
+MC_DLLEXPORT void
 MCSFinalize(void)
 {
 	__MCSStreamFinalize();

@@ -2389,8 +2389,8 @@ bool MCErrorCreateNamedTypeInfo(MCNameRef p_domain, MCNameRef p_name, MCStringRe
 	return true;
 }
 
-MCTypeInfoRef kMCWidgetNoCurrentWidgetErrorTypeInfo = nil;
-MCTypeInfoRef kMCWidgetSizeFormatErrorTypeInfo = nil;
+MC_DLLEXPORT MCTypeInfoRef kMCWidgetNoCurrentWidgetErrorTypeInfo = nil;
+MC_DLLEXPORT MCTypeInfoRef kMCWidgetSizeFormatErrorTypeInfo = nil;
 
 bool MCWidgetModuleInitialize(void)
 {

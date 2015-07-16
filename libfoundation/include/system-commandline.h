@@ -86,7 +86,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
  * ---------------------------------------------------------------- */
 
 /* Capture a C-style argument list. */
-MC_DLLEXPORT bool MCSCommandLineCapture (uindex_t p_arg_count, const char* p_arg_array[]);
+bool MCSCommandLineCapture (uindex_t p_arg_count, const char* p_arg_array[]);
 
 #if defined(__WINDOWS__)
 /* Capture an argument list using the Windows API.  You should use
@@ -94,7 +94,7 @@ MC_DLLEXPORT bool MCSCommandLineCapture (uindex_t p_arg_count, const char* p_arg
  * command line is passed to the C main() function using the system
  * codepage, which means that Unicode characters may be converted to
  * '?' by Windows. */
-MC_DLLEXPORT bool MCSCommandLineCaptureWindows (void);
+bool MCSCommandLineCaptureWindows (void);
 #endif /* __WINDOWS__ */
 
 /* ----------------------------------------------------------------
@@ -102,30 +102,30 @@ MC_DLLEXPORT bool MCSCommandLineCaptureWindows (void);
  * ---------------------------------------------------------------- */
 
 /* Set the argument list directly */
-MC_DLLEXPORT bool MCSCommandLineSetArguments (MCProperListRef p_arg_list);
+bool MCSCommandLineSetArguments (MCProperListRef p_arg_list);
 
 /* Get the argument list */
-MC_DLLEXPORT bool MCSCommandLineGetArguments (MCProperListRef & r_arg_list);
+bool MCSCommandLineGetArguments (MCProperListRef & r_arg_list);
 
 /* ----------------------------------------------------------------
  * Name
  * ---------------------------------------------------------------- */
 
 /* Set the command name directly */
-MC_DLLEXPORT bool MCSCommandLineSetName (MCStringRef p_name);
+bool MCSCommandLineSetName (MCStringRef p_name);
 
 /* Get the command name */
-MC_DLLEXPORT bool MCSCommandLineGetName (MCStringRef & r_name);
+bool MCSCommandLineGetName (MCStringRef & r_name);
 
 /* ----------------------------------------------------------------
  * Filename
  * ---------------------------------------------------------------- */
 
 /* Set the command filename directly */
-MC_DLLEXPORT bool MCSCommandLineSetFilename (MCStringRef p_filename);
+bool MCSCommandLineSetFilename (MCStringRef p_filename);
 
 /* Get the command filename */
-MC_DLLEXPORT bool MCSCommandLineGetFilename (MCStringRef & r_filename);
+bool MCSCommandLineGetFilename (MCStringRef & r_filename);
 
 /* ----------------------------------------------------------------
  * Initialization
