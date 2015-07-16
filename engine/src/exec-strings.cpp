@@ -36,6 +36,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "chunk.h"
 #include "date.h"
 
+#include "foundation-chunk.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, ToLower, 2)
@@ -1266,7 +1268,7 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
                         MCStringUnmapGraphemeIndices(*t_string, kMCBasicLocale, t_range, t_range);
                         
                         // If the width sub-specifier is greater than the grapheme length of the string, then pad appropriately
-                        if (width > t_range . length)
+                        if (width > (integer_t) t_range . length)
                         {
                             // AL-2014-11-19: [[ Bug 14059 ]] Pad with zeroes if the appropriate specifier flag was used
                             if (t_zero_pad)
@@ -1616,12 +1618,18 @@ void MCStringsEvalEndsWith(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef
 
 bool MCStringsEvalIsAmongTheChunksOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_text, Chunk_term p_chunk_type)
 {
+    MCChunkType t_type;
+    t_type = MCChunkTypeFromChunkTerm(p_chunk_type);
+    
     MCTextChunkIterator *tci;
-    tci = new MCTextChunkIterator(p_chunk_type, p_text);
+    tci = MCStringsTextChunkIteratorCreate(ctxt, p_text, p_chunk_type);
+
     bool t_result;
-    t_result = tci -> isamong(ctxt, p_chunk);
+    t_result = tci -> IsAmong(p_chunk);
+    
     delete tci;
     return t_result;
+
 }
 
 void MCStringsEvalIsAmongTheLinesOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
@@ -1736,21 +1744,12 @@ void MCStringsEvalIsNotAmongTheCodeunitsOf(MCExecContext& ctxt, MCStringRef p_ch
 
 void MCStringsEvalIsAmongTheBytesOf(MCExecContext& ctxt, MCDataRef p_chunk, MCDataRef p_string, bool& r_result)
 {
-    uindex_t t_byte_count = MCDataGetLength(p_string);
-    uindex_t t_chunk_byte_count = MCDataGetLength(p_chunk);
-    
-    const byte_t *t_bytes = MCDataGetBytePtr(p_string);
-    const byte_t *t_chunk_bytes = MCDataGetBytePtr(p_chunk);
-    
-    bool t_found = false;
-    for (uindex_t i = 0; i < t_byte_count - t_chunk_byte_count + 1; i++)
-        if (MCMemoryCompare(t_bytes++, t_chunk_bytes, sizeof(byte_t) * t_chunk_byte_count) == 0)
-        {
-            t_found = true;
-            break;
-        }
-    
-    r_result = t_found;
+    if (MCDataIsEmpty(p_chunk))
+    {
+        r_result = false;
+        return;
+    }
+    r_result = MCDataContains(p_string, p_chunk);
 }
 
 void MCStringsEvalIsNotAmongTheBytesOf(MCExecContext& ctxt, MCDataRef p_chunk, MCDataRef p_string, bool& r_result)
@@ -1763,9 +1762,14 @@ void MCStringsEvalIsNotAmongTheBytesOf(MCExecContext& ctxt, MCDataRef p_chunk, M
 
 uindex_t MCStringsChunkOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, Chunk_term p_chunk_type)
 {
+    MCChunkType t_type;
+    t_type = MCChunkTypeFromChunkTerm(p_chunk_type);
+    
     MCTextChunkIterator *tci;
-    tci = new MCTextChunkIterator(p_chunk_type, p_string);
-    uindex_t t_offset = tci -> chunkoffset(ctxt, p_chunk, p_start_offset);
+    tci = MCStringsTextChunkIteratorCreate(ctxt, p_string, p_chunk_type);
+    
+    uindex_t t_offset = tci -> ChunkOffset(p_chunk, p_start_offset, nil, ctxt . GetWholeMatches());
+    
     delete tci;
     return t_offset;
 }
@@ -1817,26 +1821,15 @@ void MCStringsEvalCodeunitOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStr
 
 void MCStringsEvalByteOffset(MCExecContext& ctxt, MCDataRef p_chunk, MCDataRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
-    uindex_t t_byte_count = MCDataGetLength(p_string);
-    uindex_t t_chunk_byte_count = MCDataGetLength(p_chunk);
-    
-    const byte_t *t_bytes = MCDataGetBytePtr(p_string);
-    const byte_t *t_chunk_bytes = MCDataGetBytePtr(p_chunk);
-    
-    uindex_t t_offset;
-    r_result = 0;
-    
+    uindex_t t_result;
+    t_result = 0;
     // SN-2014-09-05: [[ Bug 13346 ]] byteOffset is 0 if the byte is not found, and 'empty'
     // is by definition not found; getting in the loop ensures at least 1 is returned.
-    if (t_chunk_byte_count == 0)
-        return;
     
-    for (t_offset = p_start_offset; t_offset < t_byte_count - t_chunk_byte_count + 1; t_offset++)
-        if (MCMemoryCompare(t_bytes + t_offset, t_chunk_bytes, sizeof(byte_t) * t_chunk_byte_count) == 0)
-        {
-            r_result = t_offset - p_start_offset + 1;
-            break;
-        }
+    if (!MCDataIsEmpty(p_chunk) && MCDataFirstIndexOf(p_string, p_chunk, MCRangeMake(p_start_offset, UINDEX_MAX), t_result))
+        t_result++;
+    
+    r_result = t_result;
 }
 
 void MCStringsEvalOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)

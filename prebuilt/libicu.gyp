@@ -10,6 +10,8 @@
 			'target_name': 'libicu',
 			'type': 'none',
 
+			'toolsets': ['host','target'],
+
 			'dependencies':
 			[
 				'fetch.gyp:fetch',
@@ -25,11 +27,11 @@
 			},
 			
 			'link_settings':
-			{
-				'conditions':
+			{	
+				'target_conditions':
 				[
 					[
-						'OS == "mac"',
+						'toolset_os == "mac"',
 						{
 							'libraries':
 							[
@@ -58,12 +60,12 @@
 						},
 					],
 					[
-						'OS == "linux"',
+						'toolset_os == "linux"',
 						{
 							# Gyp doesn't seem to handle non-absolute paths here properly...
 							'library_dirs':
 							[
-								'<(src_top_dir_abs)/prebuilt/lib/linux/<(target_arch)',
+								'<(src_top_dir_abs)/prebuilt/lib/linux/>(toolset_arch)',
 							],
 							
 							'libraries':
@@ -75,6 +77,7 @@
 								'-licutu',
 								'-licuuc',
 								'-licudata',
+								'-ldl',
 							],
 						},
 					],
@@ -96,6 +99,7 @@
 								'-licuuc',
 								'-licudata',
 								'-lstdc++',
+								'-lm',
 							],
 						},
 					],
@@ -116,6 +120,9 @@
 								'-lsicutu',
 								'-lsicuuc',
 								'-lsicudt',
+								
+								# ICU dependencies
+								'-ladvapi32',
 							],
 						},
 					],

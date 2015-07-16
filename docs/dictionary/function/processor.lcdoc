@@ -1,0 +1,34 @@
+Name: processor
+
+Type: function
+
+Syntax: the processor
+
+Syntax: processor()
+
+Summary: <return|Returns> a <string> describing the system's CPU chip.
+
+Introduced: 1.0
+
+OS: mac,windows,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+the processor
+
+Example:
+if the processor is "ARM" then ...
+
+Returns (enum): The processor function returns one of the following strings:
+- Motorola PowerPC : Mac OS system with a PowerPC processor.
+- Motorola MC68000 : Mac OS system with a 68000:family chip (older Macs).
+- unknown : Unix systems.
+- x86 : Windows systems and Mac OS X systems with an Intel processor.
+- i386 : iOS Simulator.
+- ARM : iOS and Android Devices and the Android simulator
+
+Description:
+Use the <processor> function to determine which microprocessor the device has.
+
+References: string (keyword), machine (function), platform (function), return (glossary)

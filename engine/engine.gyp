@@ -10,6 +10,20 @@
 		'kernel-server.gypi',
 	],
 	
+	'target_defaults':
+	{
+		'conditions':
+		[
+			[
+				'OS == "linux" or OS == "android"',
+				{
+					# Ensure that the symbols LCB binds to are exported from the engine
+					'ldflags': [ '-rdynamic' ],
+				},
+			],
+		],
+	},
+	
 	'targets':
 	[
 		{

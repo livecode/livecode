@@ -1,0 +1,14 @@
+Name: bit
+
+Synonyms: bit
+
+Type: glossary
+
+Description:
+Binary digit: one digit of a <binary|binary number>, a one or zero. The smallest unit of information. 
+ 
+The number of bits in a <binary|binary number> specifies how large the number can be. For example, an 8-bit <binary|binary number> can equal any of 256 (2^8) <value|values>.
+
+References: binary (glossary), value (glossary)
+
+Tags: math

@@ -1,0 +1,32 @@
+Name: mobileSoundChannels
+
+Type: function
+
+Syntax: mobileSoundChannels()
+
+Summary: Returns a list of the sound channels that currently exist.
+
+Synonyms: iphoneSoundChannels
+
+Introduced: 4.6
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+get mobileSoundChannels()
+
+Example:
+put mobileSoundChannels() into tSoundChannelList
+
+Returns: The <mobileSoundChannels> function returns a list of the currently existing channel names, one per line.
+
+Description:
+Use the <mobileSoundChannels> function to get a list of the sound channels that currently exist.
+
+Sound channels persist after any sounds have finished playing on them, retaining the last volume setting. To remove a channel from memory completely use the <mobileDeleteSoundChannel> command.
+
+Sound channels only consume system resources when they are playing sounds, this means you don't need to be concerned about having many around at once (assuming most are inactive).
+
+References: mobileDeleteSoundChannel (command), mobilePlaySoundOnChannel (command), mobileSetSoundChannelVolume (command), mobilePausePlayingOnChannel (command), mobileStopPlayingOnChannel (command), mobileResumePlayingOnChannel (command), mobileSoundChannelVolume (function), mobileSoundOnChannel (function), mobileNextSoundOnChannel (function), mobileSoundChannelStatus (function), soundFinishedOnChannel (message)

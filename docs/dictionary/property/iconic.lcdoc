@@ -1,0 +1,40 @@
+Name: iconic
+
+Type: property
+
+Syntax: set the iconic of <stack> to {true | false}
+
+Summary: Specifies whether a <stack window> is <minimize|minimized>.
+
+Associations: stack
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+set the iconic of this stack to true
+
+Value (bool):The <iconic> of a <stack> is true or false.
+By default, the <iconic> <property> of newly created <stacks> is set to false.
+
+Description:
+Use the <iconic> <property> to change a <stack|stack's> appearance in order to make it take up less screen space.
+
+Set a stack's <iconic> <property> to true to make the <stack window> take up less space. The way in which this is done depends on the <platform> :
+
+        * On Mac OS systems, the window is collapsed to its title bar
+        * On OS X systems, the window is collapsed to an icon in the Dock
+        * On Unix systems, the window is iconified into a desktop icon
+        * On Windows systems, the window is minimized to an icon in the task bar
+
+If the user has collapsed, iconified, or minimized the stack, its <iconic> <property> reports true.
+
+Changes:
+Support for setting the iconic of a stack on OS X systems was added in version 2.0.
+
+References: windowShape (property), fullscreen (property), unIconifyStack (message), stack (object), property (glossary), minimize (glossary), stack window (glossary), stacks (function), platform (function)
+
+Tags: windowing

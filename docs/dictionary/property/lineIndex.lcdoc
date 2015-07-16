@@ -1,0 +1,31 @@
+Name: lineIndex
+
+Type: property
+
+Syntax: get the lineIndex of <fieldChunk> 
+
+Summary: The <lineIndex> of a field chunk returns the line offset in the field of the start of the chunk.
+
+Associations: field
+
+Introduced: 5.5
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+-- Example: 2 lines of text in a field
+-- Hello World
+-- Goodbye World
+
+the lineIndex of char 7 of field 1 -- 1
+-- char 7 is on line 1
+
+Example:
+the lineIndex of word 4 of field 1 -- 2
+-- word 4 is on line 2
+
+References: charIndex (property)
+
+Tags: text processing

@@ -12,9 +12,9 @@ CUSTOM_INCLUDES=\
 	./src \
  	$(MODE_INCLUDES)
 
-CUSTOM_DEPS= libkernel.a libfoundation.a libpng.a libpcre.a libjpeg.a libopenssl.a libgraphics.a libskia.a $(MODE_DEPS) 
+CUSTOM_DEPS= libkernel.a libfoundation.a libstdscript.a libpng.a libpcre.a libjpeg.a libopenssl.a libgraphics.a libskia.a libffi.a $(MODE_DEPS) 
 
-CUSTOM_LIBS=$(MODE_LIBS) kernel foundation z gif png pcre jpeg graphics skia openssl
+CUSTOM_LIBS=$(MODE_LIBS) kernel foundation stdscript ffi z gif png pcre jpeg graphics skia openssl
 # Removed: icuio icule iculx 
 CUSTOM_STATIC_LIBS=icudata icuuc icui18n $(MODE_STATIC_LIBS)
 CUSTOM_DYNAMIC_LIBS=dl m pthread $(MODE_DYNAMIC_LIBS)

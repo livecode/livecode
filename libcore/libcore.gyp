@@ -24,14 +24,16 @@
 			
 			'sources':
 			[
-				'src/binary.cpp',
+				'include/atlsubset.h',
+				'include/core.h',
+				'include/filesystem.h',
+				'include/module.h',
+				'include/thread.h',
+				'include/thunk.h',
+				
 				'src/core.cpp',
 				'src/filesystem.cpp',
 				'src/module.cpp',
-				'src/sserialize.cpp',
-				'src/sserialize_lnx.cpp',
-				'src/sserialize_osx.cpp',
-				'src/sserialize_w32.cpp',
 				'src/thread.cpp',
 				'src/thunk.cpp',
 			],

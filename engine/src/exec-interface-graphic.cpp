@@ -898,7 +898,7 @@ void MCGraphic::GetEffectivePoints(MCExecContext &ctxt, uindex_t &r_count, MCPoi
             get_points_for_roundrect(fakepoints, nfakepoints);
             DoCopyPoints(ctxt, nfakepoints, fakepoints, r_count, r_points);
             
-            delete fakepoints;
+            delete[] fakepoints;
             break;
         }
         case F_G_RECTANGLE:
@@ -907,7 +907,7 @@ void MCGraphic::GetEffectivePoints(MCExecContext &ctxt, uindex_t &r_count, MCPoi
             fakepoints = new MCPoint[nfakepoints];
             get_points_for_rect(fakepoints, nfakepoints);
             DoCopyPoints(ctxt, nfakepoints, fakepoints, r_count, r_points);
-            delete fakepoints;
+            delete[] fakepoints;
             break;
         }
         case F_REGULAR:
@@ -916,7 +916,7 @@ void MCGraphic::GetEffectivePoints(MCExecContext &ctxt, uindex_t &r_count, MCPoi
             fakepoints = new MCPoint[nsides];
             get_points_for_regular_polygon(fakepoints, nfakepoints);
             DoCopyPoints(ctxt, nfakepoints, fakepoints, r_count, r_points);
-            delete fakepoints;
+            delete[] fakepoints;
             break;
         }
         // MDW-2014-06-21: [[ oval_points ]] allow effective points for ovals
@@ -926,7 +926,7 @@ void MCGraphic::GetEffectivePoints(MCExecContext &ctxt, uindex_t &r_count, MCPoi
             nfakepoints = 0;
             get_points_for_oval(fakepoints, nfakepoints);
             DoCopyPoints(ctxt, nfakepoints, fakepoints, r_count, r_points);
-            delete fakepoints;
+            delete[] fakepoints;
             break;
         }
         default:
@@ -954,7 +954,7 @@ void MCGraphic::GetEffectiveRelativePoints(MCExecContext &ctxt, uindex_t &r_coun
             get_points_for_roundrect(fakepoints, nfakepoints);
             MCU_offset_points(fakepoints, nfakepoints, -trect.x, -trect.y);
             DoCopyPoints(ctxt, nfakepoints, fakepoints, r_count, r_points);
-            delete fakepoints;
+            delete[] fakepoints;
             break;
         }
         case F_G_RECTANGLE:
@@ -964,7 +964,7 @@ void MCGraphic::GetEffectiveRelativePoints(MCExecContext &ctxt, uindex_t &r_coun
             get_points_for_rect(fakepoints, nfakepoints);
             MCU_offset_points(fakepoints, nfakepoints, -trect.x, -trect.y);
             DoCopyPoints(ctxt, nfakepoints, fakepoints, r_count, r_points);
-            delete fakepoints;
+            delete[] fakepoints;
             break;
         }
         case F_REGULAR:
@@ -974,7 +974,7 @@ void MCGraphic::GetEffectiveRelativePoints(MCExecContext &ctxt, uindex_t &r_coun
             get_points_for_regular_polygon(fakepoints, nfakepoints);
             MCU_offset_points(fakepoints, nfakepoints, -trect.x, -trect.y);
             DoCopyPoints(ctxt, nfakepoints, fakepoints, r_count, r_points);
-            delete fakepoints;
+            delete[] fakepoints;
             break;
         }
         // MDW-2014-06-21: [[ oval_points ]] allow effective points for ovals
@@ -985,7 +985,7 @@ void MCGraphic::GetEffectiveRelativePoints(MCExecContext &ctxt, uindex_t &r_coun
             get_points_for_oval(fakepoints, nfakepoints);
             MCU_offset_points(fakepoints, nfakepoints, -trect.x, -trect.y);
             DoCopyPoints(ctxt, nfakepoints, fakepoints, r_count, r_points);
-            delete fakepoints;
+            delete[] fakepoints;
             break;
         }
         default:

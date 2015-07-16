@@ -1,0 +1,14 @@
+Name: numeric
+
+Synonyms: numerical,numeric
+
+Type: glossary
+
+Description:
+A type of <operator> whose resulting <value> is a number. 
+ 
+Also, a <value> consisting of numbers.
+
+References: operator (glossary), value (glossary)
+
+Tags: math

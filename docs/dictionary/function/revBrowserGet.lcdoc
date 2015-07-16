@@ -1,0 +1,59 @@
+Name: revBrowserGet
+
+Type: function
+
+Syntax: revBrowserGet(<instanceId>, <propertyName>)
+
+Syntax: XBrowser_Get(<propertyName> [, <instanceId>])
+
+Summary: Retrieves a property from the specified browser object.
+
+Synonyms: XBrowser_Get
+
+Introduced: 2.8.1
+
+OS: mac,windows
+
+Platforms: desktop
+
+Security: network
+
+Example:
+put revBrowserGet(tBrowserId, "rect") into tBrowserRect
+
+Parameters:
+instanceId: The integer identifier of a browser object.
+propertyName (enum): The name of the property to retrieve, see below for a full list.
+- "busy": Returns true if the browser is in the middle of an operation, false otherwise.
+- "rect": Returns the rect of the browser relative to the parent window. The default rect is 0,0,0,0.
+- "url": The url that the browser is currently displaying. The default url is empty.
+- "htmltext": The html source of the current page being displayed. The default htmltext is empty.
+- "messages": Whether the browser should send "advanced" callback messages. Please see the note below for more details. The default is false.
+- "offline": Returns true if the browser is in offline mode, ie set not to retrieve information from the internet, otherwise false. The default is false.
+- "contextmenu": Returns true if the browser will display a right-click context menu, false otherwise. The default is false.
+- "visible": Returns true if the browser is visible, false otherwise. The default is true.
+- "scrollbars": Returns true if the browser has scrollbars showing, false otherwise. The default is true.
+- "title": The title of current page being displayed in the browser. On Mac OS X, this is a UTF-8 string and can be decoded using the uniDecode function. On Windows systems the title is plain text.
+- "newwindow": Returns if the browser will allow new windows to be opened by web pages. The default is false.
+- "selected": The currently selected text. The default is empty.
+- "formattedwidth": The width of current document in pixels. This will be greater than or equal to the width of the browser object.
+- "formattedHeight": The height of the current document in pixels.
+- "formattedRect": The rectangle of the current document as if it were not clipped to the boundaries of the browser object. This value will change when the document is scrolled, as it is effectively moving. All values are in pixels. For more information about rectangles see the rectangle property.
+- "vscroll": The number of pixels down that the browser is scrolled. This is zero by default.
+- "hscroll": The number of pixels to the right that the browser is scrolled. This is zero by default.
+- "instances": The list of created browser instances, one per line. If propertyName is set to "instances" then the instanceId is ignored. This property is deprecated and is only available when using the XBrowser_Get synonym. To get a list of the browser instances you should use the revBrowserInstances function.
+- "instance": The instance id of the active browser instance. If propertyName is set to "instance" then the instanceId is ignored. This property is deprecated and is only available when using the XBrowser_Get synonym. The instance id of a browser object is returned by the revBrowserOpen function used to to create the object.
+- "version": The version of the browser external. If propertyName is set to "version" then the instanceId is ignored. This property is deprecated and is only available when using the XBrowser_Get synonym. The browser external is now part of LiveCode and its version is the same as LiveCode's version.
+- "htmlimage": The image data of what is being displayed in the browser. This property is deprecated and is only available when using the XBrowser_Get synonym. To get a snapshot from the browser use the revBrowserSnapshot command.
+- "useragent": MAC ONLY. The custom user agent string used in the User-Agent header transmitted to the web server. If a custom user agent string has not been set empty is returned.
+
+Returns: The <revBrowserGet> command returns the value of the specified property if it was successful.
+
+Description:
+Use the <revBrowserGet> function to obtain information about the browser object specified by the <instanceId> by returning the value of one of the browser properties.
+
+>*Note:* The "advanced" callback messages are: <revBrowserClick>, <revBrowserOver> and <revBrowserOut>. These messages are only sent when the "messages" property is set to true. Other callback messages are always sent.
+
+>*Note:* For general information on using the browser library, see the notes in the <revBrowserOpen function> reference.
+
+References: revBrowserSet (command), revBrowserOver (message), revBrowserOut (message), revBrowserClick (message), revBrowserOpen function (function)

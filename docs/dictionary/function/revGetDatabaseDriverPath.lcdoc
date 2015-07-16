@@ -1,0 +1,27 @@
+Name: revGetDatabaseDriverPath
+
+Type: function
+
+Syntax: revGetDatabaseDriverPath()
+
+Summary: Returns the folder where the Database library looks for database drivers
+
+Introduced: 2.9
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Security: disk,network
+
+Example:
+if revGetDatabaseDriverPath is not tCustomDriverFolder then
+  revSetDatabaseDriverPath tCustomDriverFolder
+end if
+
+Description:
+Use the revGetDatabaseDriverPath command if you need to know where the Database Library is currently loading drivers from. This is useful if you are using custom database drivers or if you want to obtain a list of available drivers.
+
+>*Important:*  The <revGetDatabaseDriverPath> function is part of the <Database library>. To ensure that the <command> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the General screen of the <Standalone Application Settings> window, make sure the "Database Support" checkbox is checked and the database drivers you are using are selected in the list of database drivers.
+
+References: revSetDatabaseDriverPath (command), Standalone Application Settings (glossary), standalone application (glossary), command (glossary), Database library (library), Revolution custom library (library)

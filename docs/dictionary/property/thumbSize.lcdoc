@@ -1,0 +1,35 @@
+Name: thumbSize
+
+Type: property
+
+Syntax: set the thumbSize of <scrollbar> to <number> 
+
+Summary: Specifies how large a <scrollbar|scrollbar's> draggable <scrollbar thumb|thumb> is.
+
+Associations: scrollbar
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the thumbSize of scrollbar "Contents Group" to 500
+
+Example:
+set the thumbSize of scrollbar 1 to \
+   (the height of group "Main"/the formattedHeight of group "Main")
+
+Value: The <number> is a number between the <scrollbar|scrollbar's> <startValue> and <endValue>.
+
+Description:
+Use the <thumbSize> <property> to specify the size of a <scrollbar|scrollbar's> draggable <scrollbar thumb|thumb>.
+
+Normally, the <thumbSize> is proportional to the proportion of content visible on the screen. For example, if a third of the content can be seen and the rest is always scrolled off, the <scrollbar thumb> should cover a third of the scrollbar area, so the <number> should be one-third of the difference between the <scrollbar|scrollbar's> <startValue> and its <endValue>.
+
+If the <proportionalThumbs> <property> is set to false, this <property> has no effect.
+
+References: thumbPosition (property), endValue (property), formattedHeight (property), proportionalThumbs (property), startValue (property), formattedWidth (property), scrollbar (object), scrollbar thumb (glossary), property (glossary)
+
+Tags: ui

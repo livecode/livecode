@@ -396,7 +396,7 @@ public class GoogleBillingProvider implements BillingProvider
     
     void complain(String message)
     {
-        Log.e(TAG, "**** Error: " + message);
+        Log.d(TAG, "**** Error: " + message);
         alert("Error: " + message);
     }
     

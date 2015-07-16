@@ -1,0 +1,30 @@
+Name: mobileAds
+
+Type: function
+
+Syntax: mobileAds()
+
+Summary: Return a list of all mobile ads that have been created.
+
+Associations: stack
+
+Introduced: 5.5
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+get mobileAds()
+
+Example:
+if "bannerAd" is among the lines of mobileAds() then
+   mobileAdDelete "bannerAd"
+end if
+
+Returns: The <mobileAds> function returns a return delimited list of names of adverts created using the <mobileAdCreate> command.
+
+Description:
+Use the <mobileAds> function to get a list of all the ads that have been created using the <mobileAdCreate> command.
+
+References: mobileAdCreate (command), mobileAdRegister (command), mobileAdSetVisible (command), mobileAdSetTopLeft (command), mobileAdGetTopLeft (function), mobileAdGetVisible (function), adLoaded (message), adLoadFailed (message), adClicked (message)

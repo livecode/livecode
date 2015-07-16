@@ -1,0 +1,34 @@
+Name: showBadge
+
+Type: property
+
+Syntax: set the showBadge of <player> to {true | false}
+
+Summary: Specifies whether a <player|player's> badge icon is visible.
+
+Associations: player
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+set the showBadge of player "Example" to true
+
+Value (bool):The <showBadge> of a <player(keyword)> is true or false.
+By default, the <showBadge> <property> of newly created <player(object)|players> is set to false.
+
+Description:
+Use the <showBadge> <property> to let users show or hide the <player(keyword)> <controller bar>.
+
+If the <showBadge> is true, a small icon appears in the lower left corner of the <player(keyword)> when its <showController> <property> is false. Clicking the badge displays the <controller bar>. If the <showBadge> is false, the badge icon does not appear.
+
+Set the <showBadge> <property> to true if you are setting the <player(object)|player's> <showController> <property> to false, but want to display the <controller bar> if desired.
+
+If the player's showController <property> is true, the setting of the <showBadge> <property> has no effect.
+
+References: showSelection (property), showController (property), player (keyword), player (object), property (glossary), controller bar (glossary)
+
+Tags: multimedia

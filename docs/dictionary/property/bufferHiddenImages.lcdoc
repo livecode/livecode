@@ -1,0 +1,32 @@
+Name: bufferHiddenImages
+
+Type: property
+
+Syntax: set the bufferHiddenImages to {true | false}
+
+Summary: Specifies whether <image|images> that are not visible are decompressed into an offscreen <buffer>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the bufferHiddenImages to true
+
+Value (bool):The <bufferHiddenImages> is true or false.
+By default, the <bufferHiddenImages> is set to false.
+
+Description:
+Use the <bufferHiddenImages> <property> to eliminate delays when hidden <image(object)|images> are shown.
+
+If the <bufferHiddenImages> <property> is set to true, hidden <image(object)|images> are decompressed (along with visible <image(object)|images>) when the user goes to a <card>. This means the <image(keyword)> is shown immediately when its <visible> <property> is set to true, without waiting for decompression, but it uses more memory.
+
+If the <bufferHiddenImages> is false, hidden <image(object)|images> are not decompressed until they are made visible.
+
+If the alwaysBuffer <property> of an <image(keyword)> is true, the setting of the <bufferHiddenImages> <property> has no effect on that <image(keyword)>, and it is always decompressed immediately.
+
+References: screenSharedMemory (property), visible (property), dontDither (property), card (keyword), image (keyword), image (object), property (glossary), buffer (glossary)
+
+Tags: multimedia

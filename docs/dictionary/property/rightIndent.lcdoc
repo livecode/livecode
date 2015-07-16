@@ -1,0 +1,30 @@
+Name: rightIndent
+
+Type: property
+
+Syntax: set the rightIndent of <line> of <field> to <pixels> 
+
+Summary: Determines the indentation of a paragraph in a <field>.
+
+Associations: field
+
+Introduced: 5.5
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the rightIndent of line 1 of field 1 to 15
+
+Parameters:
+pixels (integer): The number of pixels to indent the right of a paragraph of text.
+
+Value: The <rightIndent> of a line of text in a field returns an integer.
+
+Description:
+Use the <rightIndent> property to indent the right side of whole paragraphs of text in a field.
+
+References: textAlign (property), formattedWidth (property), formattedText (property), listStyle (property), listDepth (property), listBehavior (property), listIndent (property), hScrollbar (property), textSize (property), field (keyword)
+
+Tags: ui

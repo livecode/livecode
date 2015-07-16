@@ -1,0 +1,25 @@
+Name: cascade
+
+Type: keyword
+
+Syntax: cascade
+
+Summary: Specifies one of the <menu> types that can be used with the <menuMode> <property>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the menuMode of button "Font" to cascade
+
+Description:
+Use the <cascade> <keyword> to create a <cascading menu|hierarchical menu> in a <stack menu>.
+
+A button whose style <property> is set to menu and whose <menuMode> <property> is set to cascade becomes a cascading menu. Each <line> of the <button|button's> contents is displayed as a <menu item> in the <cascading menu|submenu>.
+
+References: line (keyword), menu (keyword), popup (keyword), menuMode (property), button (object), property (glossary), keyword (glossary), stack menu (glossary), menu item (glossary), cascading menu (glossary)
+
+Tags: menus

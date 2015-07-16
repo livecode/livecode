@@ -1,0 +1,31 @@
+Name: revZipCancel
+
+Type: command
+
+Syntax: revZipCancel
+
+Summary: Cancels the current zip operation from within the revZip progress callback.
+
+Introduced: 2.7.4
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Security: disk,network
+
+Example:
+on myZipProgressCallback
+   if sZipCancelled is true then
+        revZipCancel
+   end if
+   -- In order to give the user the opportunity to cancel, and the variable
+   -- sZipCancelled to be set:
+   wait 1 millisecond with messages
+end myZipProgressCallback
+
+Description:
+Called from within an invocation of the revZip progress callback, this will cause the current zip operation to be cancelled.
+This has an effect during operation of revZipClose, revZipExtractToFile and revZipExtractToVariable - which will return "cancelled" if revZipCancel has been executed.
+
+If user interaction is required to cancel a zip operation (such as the use of a "cancel" button), you will need to force the engine to check the OS message queue (for example for the pushing of the "cancel" button). You can do this by adding the line "wait 1 millesecond with messages" to the zip progress callback handler (as can be seen in the above example).

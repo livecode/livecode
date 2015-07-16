@@ -1,0 +1,20 @@
+Name: menus
+
+Type: function
+
+Syntax: the menus
+
+Syntax: menus()
+
+Summary: Does not <return> a meaningful <value> and is included in <Revolution|LiveCode> for compatibility with imported <HyperCard> stacks.
+
+Introduced: 1.0
+
+Platforms: desktop,server,web
+
+Description:
+In HyperCard, the <menus> <function> <return|returns> a list of <menus> in the <menubar>.
+
+In LiveCode, the <menus> <function> always <return|returns> empty.
+
+References: defaultMenubar (property), menubar (property), menu (keyword), return (constant), value (function), menus (function), return (glossary), Revolution (glossary), HyperCard (glossary), function (control_st)

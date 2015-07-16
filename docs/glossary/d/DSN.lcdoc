@@ -1,0 +1,14 @@
+Name: DSN
+
+Synonyms: DSN,data source name,ODBC DSN
+
+Type: glossary
+
+Description:
+Data Source Name. A specification that identifies a particular <database>, set up in the <ODBC manager> on your system. 
+ 
+A DSN contains the name of the <database>, its <host>, the user name and password, and other information. You can specify a DSN instead of specifying the identifying information directly when connecting to a <database> via <Open Database Connectivity (ODBC)|ODBC>.
+
+References: Open Database Connectivity (ODBC) (glossary), host (glossary), database (glossary), ODBC manager (glossary)
+
+Tags: database

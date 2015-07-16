@@ -1967,6 +1967,15 @@ void MCUIDC::hidecursoruntilmousemoves(void)
     // appropriate function.
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCUIDC::platform_get_display_handle(void *&r_display)
+{
+	return nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCUIDC::breakModalLoops()
 {
     modal_loop* loop = m_modal_loops;
@@ -1989,3 +1998,4 @@ void MCUIDC::modalLoopEnd()
 {
     m_modal_loops = m_modal_loops->chain;
 }
+

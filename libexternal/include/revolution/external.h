@@ -518,6 +518,10 @@ extern Bool SecurityCanAccessLibraryUTF8(const char *p_library);
 extern const char *ConvertCStringFromNativeToUTF8(const char *p_native, int *r_success);
 extern const char *ConvertCStringToNativeFromUTF8(const char *p_utf8, int *r_success);
 	
+// IM-2014-09-23: [[ RevBrowserCEF ]] Retrieve the Xserver connection info
+extern void GetXDisplayHandle(void **r_display, int *r_success);
+extern void GetXScreenHandle(void **r_screen, int *r_success);
+
 #ifdef __cplusplus
 }
 #endif
@@ -681,10 +685,10 @@ template<ExternalHandler u_handler> void ExternalWrapperObjC(char *p_arguments[]
 #define EXTERNAL_DECLARE_FUNCTION_OBJC(m_name, m_function) \
 		{ m_name, "F", 0, ExternalWrapperObjC<m_function>, NULL },
 
-#define EXTERNAL_DECLARE_COMMAND_OBJC(m_name, m_function) \
+#define EXTERNAL_DECLARE_COMMAND_OBJC_UTF8(m_name, m_function) \
         { m_name, "c", 0, ExternalWrapperObjC<m_function>, NULL },
 
-#define EXTERNAL_DECLARE_FUNCTION_OBJC(m_name, m_function) \
+#define EXTERNAL_DECLARE_FUNCTION_OBJC_UTF8(m_name, m_function) \
         { m_name, "f", 0, ExternalWrapperObjC<m_function>, NULL },
 
 #else

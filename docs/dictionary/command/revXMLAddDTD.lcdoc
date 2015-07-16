@@ -1,0 +1,36 @@
+Name: revXMLAddDTD
+
+Type: command
+
+Syntax: revXMLAddDTD <treeID>, <DTDText> 
+
+Summary: Adds an internal <DTD> to an existing <XML tree>.
+
+Introduced: 2.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Security: disk
+
+Example:
+revXMLAddDTD 12,URL "file:ExampleDTD.txt"
+
+Example:
+revXMLAddDTD theCurrTree,the templateDTD of me
+
+Parameters:
+treeID: The numbe returned by the revXMLCreateTree or revXMLCreateTreeFromFile function when you created the XML tree.
+DTDText (string): A string that makes up a valid Document Type Definition.
+
+The result: If the <revXMLAddDTD> <command> encounters an error, the <result> is set to an error message beginning with "xmlerr".
+
+Description:
+Use the <revXMLAddDTD> <command> to specify the format of an <XML tree>.
+
+>*Important:*  The <revXMLAddDTD> <command> is part of the <XML library>. To ensure that the <command> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
+
+References: revXMLAppend (command), revXMLValidateDTD (function), result (function), Standalone Application Settings (glossary), standalone application (glossary), DTD (glossary), XML tree (glossary), command (glossary), XML library (library), Revolution custom library (library)
+
+Tags: text processing

@@ -1,0 +1,27 @@
+Name: hoverIcon
+
+Type: property
+
+Syntax: set the hoverIcon of <button> to {<imageID> | <imageName>}
+
+Summary: Specifies an image to display in a button when the mouse pointer enters the button.
+
+Associations: button
+
+Introduced: 2.7.4
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the hoverIcon of button "Play" to 210095
+
+Value:
+The <hoverIcon> property is the ID or name of an image to use for an icon. LiveCode looks for the specified image first in the current stack, then in other open stacks.
+By default the <hoverIcon> property is set to 0 for newly created buttons.
+
+Description:
+Use the <hoverIcon> property to change the buttons appearance when the mouse is hovered over the button. The <hoverIcon> is displayed when the mouse pointer is over the button, but the button is not hilited. Use this property instead of the armedIcon property.
+
+References: armedIcon (property)

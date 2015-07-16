@@ -81,9 +81,9 @@ MPlayer::MPlayer(void)
 	m_playing = true ;
 	m_cpid = -1 ;
 	
-	m_duration = -1 ;
-	m_timescale = -1 ;
-	m_loudness = -1;
+	m_duration = UINT32_MAX;
+	m_timescale = UINT32_MAX;
+	m_loudness = UINT32_MAX;
 
 }
 
@@ -288,7 +288,7 @@ void MPlayer::resize( MCRectangle p_rect)
 
 
 
-void MPlayer::write_command ( char * p_cmd )
+void MPlayer::write_command (const char * p_cmd )
 {
 	if ( m_window == DNULL)
 		return ;
@@ -299,7 +299,7 @@ void MPlayer::write_command ( char * p_cmd )
 	free(t_buffer);
 }
 
-char * MPlayer::read_command( char * p_ans )
+char * MPlayer::read_command(const char * p_ans )
 {
 	const char * cmd_failed = "Failed to get value of property" ;
 	
@@ -428,7 +428,7 @@ void MPlayer::quit(void)
 } 
 
 
-void MPlayer::set_property ( char * p_prop, char * p_value ) 
+void MPlayer::set_property (const char * p_prop, const char * p_value ) 
 {
 	char t_buffer[1024] ;
 	sprintf(t_buffer, "pausing_keep set_property %s %s", p_prop, p_value ) ;
@@ -436,10 +436,10 @@ void MPlayer::set_property ( char * p_prop, char * p_value )
 }
 
 
-char * MPlayer::get_property ( char * p_prop ) 
+char * MPlayer::get_property (const char * p_prop ) 
 {
 	if ( m_window == DNULL ) 
-		return "-1";
+		return NULL;
 		
 	char t_response[1024] ;
 	char t_question[1024];
@@ -452,12 +452,15 @@ char * MPlayer::get_property ( char * p_prop )
 
 uint4 MPlayer::getduration(void)
 {
-	if ( m_duration == -1 )
+	if (m_duration == UINT32_MAX)
 	{
 		char * t_ret ;
 		t_ret = get_property("stream_length") ;
 		if ( t_ret != NULL )
+		{
  			m_duration = atoi(t_ret);
+			free (t_ret);
+		}
 		else 
 			m_duration = 0 ;
 	}
@@ -468,18 +471,22 @@ uint4 MPlayer::getduration(void)
 uint4 MPlayer::getcurrenttime(void)
 {
 	char * t_ret ;
+	uint4 t_time;
 	t_ret = get_property("stream_pos") ;
 	if ( t_ret != NULL )
- 		return atoi(t_ret);
+	{
+ 		t_time = atoi(t_ret);
+		free (t_ret);
+	}
 	else 
-		return 0 ;
-	
+		t_time = 0;
+	return t_time;
 }
 
 
 uint4 MPlayer::gettimescale(void)
 {
-	if ( m_timescale == -1 )
+	if (m_timescale == UINT32_MAX)
 	{
 		double t_length ;
 		char * t_ret ;
@@ -488,6 +495,7 @@ uint4 MPlayer::gettimescale(void)
 		{
 			t_length = atof(t_ret);
 			m_timescale = floor(getduration() / t_length) ;
+			free (t_ret);
 		}
 		else 
 			m_timescale = 1 ;
@@ -517,7 +525,7 @@ void MPlayer::setloudness(uint4 p_volume )
 
 uint4 MPlayer::getloudness(void)
 {
-	if ( m_loudness == -1 )
+	if (m_loudness == UINT32_MAX)
 	{
 		char * t_ret ;
 		t_ret = get_property("volume") ;

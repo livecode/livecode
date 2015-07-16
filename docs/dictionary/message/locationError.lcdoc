@@ -1,0 +1,15 @@
+Name: locationError (deprecated 5.5)
+
+Type: message
+
+Syntax: locationError
+
+Summary: Deprecated, use the trackingError message instead.
+
+Introduced: 4.5.2
+
+OS: ios
+
+Platforms: desktop
+
+References: trackingError (message)

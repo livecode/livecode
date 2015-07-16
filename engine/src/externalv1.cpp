@@ -368,18 +368,6 @@ static MCExternalError number_to_real(double p_number, MCExternalValueOptions p_
 	return kMCExternalErrorNone;
 }
 
-static MCExternalError convert_stringref_to_mcstring(MCStringRef p_string, MCString& r_mcstring)
-{
-	char_t *t_chars;
-	uindex_t t_char_count;
-	if (!MCStringNormalizeAndConvertToNative(p_string, t_chars, t_char_count))
-		return kMCExternalErrorOutOfMemory;
-	
-	r_mcstring . set((char *)t_chars, t_char_count);
-	
-	return kMCExternalErrorNone;
-}
-
 #ifdef __HAS_CORE_FOUNDATION__
 
 #include <CoreFoundation/CoreFoundation.h>
@@ -531,7 +519,7 @@ MCExternalError MCExternalVariable::AppendInteger(MCExternalValueOptions p_optio
 {
     MCAutoStringRef t_string;
     
-    if (!MCStringFormat(&t_string, "%d", *(int32_t *)p_value))
+    if (!MCStringFormat(&t_string, "%d", p_value))
         return kMCExternalErrorOutOfMemory;
     
 	return AppendString(p_options, *t_string);
@@ -540,7 +528,7 @@ MCExternalError MCExternalVariable::AppendInteger(MCExternalValueOptions p_optio
 MCExternalError MCExternalVariable::AppendCardinal(MCExternalValueOptions p_options, uint32_t p_value)
 {
     MCAutoStringRef t_string;
-	if (!MCStringFormat(&t_string, "%u", *(uint32_t *)p_value))
+	if (!MCStringFormat(&t_string, "%u", p_value))
         return kMCExternalErrorOutOfMemory;
     
 	return AppendString(p_options, *t_string);
@@ -1886,6 +1874,7 @@ static MCExternalError MCExternalVariableAppend(MCExternalVariableRef var, MCExt
     {
         MCAutoStringRef t_stringref;
         MCString* t_string;
+
         // SN-2015-03-25: [[ External Fix ]] Actually set t_string to the param
         t_string = (MCString*)p_value;
         if (!MCStringCreateWithBytes((byte_t*)t_string->getstring(), 2 * t_string->getlength(), kMCStringEncodingUTF16, false, &t_stringref))

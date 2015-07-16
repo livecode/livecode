@@ -1,0 +1,12 @@
+Name: timestamp
+
+Synonyms: timestamp
+
+Type: glossary
+
+Description:
+A date and time attached to an <object> or <file>.
+
+References: file (glossary), object (object)
+
+Tags: file system

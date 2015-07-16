@@ -1,0 +1,37 @@
+Name: exp10
+
+Type: function
+
+Syntax: the exp10 of <number> 
+
+Syntax: exp10(<number>)
+
+Summary: <return|Returns> the <decimal> exponential of a number.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+exp10(2) -- returns 100
+
+Example:
+exp10(-3) -- returns 0.001
+
+Parameters:
+number: A real number, or an expression that evaluates to a number.
+
+Returns: The <exp10> function <return|returns> a positive number.
+
+Description:
+Use the <exp10> function to obtain a power of 10.
+
+The expression exp10(number) is equal to 10^number.
+
+If <number> is a positive <integer>, exp10(number) is a 1 followed by <number> zeros. If <number> is a <negative> <integer>, exp10(number) is a decimal point followed by <number> -1  zeros and a one.
+
+References: integer (keyword), exp (function), negative (glossary), return (glossary), decimal (glossary)
+
+Tags: math

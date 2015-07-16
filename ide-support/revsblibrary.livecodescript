@@ -948,5 +948,6 @@ function revSBLibraryList
    if "Browser" is among the keys of tLibrariesA then
       put empty into tLibrariesA["Browser (CEF)"]
    end if
+
    return the keys of tLibrariesA
 end revSBLibraryList

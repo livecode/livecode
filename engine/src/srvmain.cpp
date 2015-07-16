@@ -39,6 +39,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 #include "uidc.h"
 #include "font.h"
+#include "libscript/script.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -52,7 +53,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define HOME_FOLDER "/opt/livecode/" MC_BUILD_ENGINE_SHORT_VERSION
 #else
 #define HOME_ENV_VAR "LIVECODE_SERVER_HOME"
-#define HOME_FOLDER "/opt/runrev/livecode-server"
+#define HOME_FOLDER "/opt/livecode/server"
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -607,11 +608,15 @@ void X_main_loop(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern "C" bool MCModulesInitialize();
+extern "C" void MCModulesFinalize();
+
 int main(int argc, char *argv[], char *envp[])
 {
-	if (!MCInitialize())
+	if (!MCInitialize() || !MCSInitialize() ||
+	    !MCModulesInitialize() || !MCScriptInitialize())
 		exit(-1);
-
+    
 // THIS IS MAC SPECIFIC AT THE MOMENT BUT SHOULD WORK ON LINUX
 
 	// On OSX, argv and envp are encoded as UTF8
@@ -650,6 +655,8 @@ int main(int argc, char *argv[], char *envp[])
 	int t_exit_code;
 	t_exit_code = X_close();
 
+    MCScriptFinalize();
+    MCModulesFinalize();
 	MCFinalize();
 
 	for (int i = 0; i < argc; i++)

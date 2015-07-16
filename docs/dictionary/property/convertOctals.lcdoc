@@ -1,0 +1,30 @@
+Name: convertOctals
+
+Type: property
+
+Syntax: set the convertOctals to {true | false}
+
+Summary: Specifies whether numbers with a leading zero are assumed to be <octal> numbers.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the convertOctals to true
+
+Value (bool):The <convertOctals> is true or false.
+By default, the <convertOctals> <property> is set to false.
+
+Description:
+Use the <convertOctals> <property> to make it easier to work with <octal> numbers.
+
+If the <convertOctals> <property> is set to true, numbers that start with a zero are treated as <octal> (base 8) numbers, instead of <decimal> (base 10). If the <convertOctals> is false, all numbers (except <hexadecimal> numbers, which start with 0x) are treated as <decimal>.
+
+Since the <convertOctals> is a <local property>, its value is <reset> to false when the current <handler> finishes <execute|executing>. It retains its value only for the current <handler>, and setting it in one <handler> does not affect its value in other <handler|handlers> it <call|calls>.
+
+References: reset (command), baseConvert (function), property (glossary), call (glossary), handler (glossary), execute (glossary), octal (glossary), local property (glossary), hexadecimal (glossary), decimal (glossary)
+
+Tags: math

@@ -1,0 +1,17 @@
+Name: pixels
+
+Type: property
+
+Syntax: pixels
+
+Summary: The <pixels> <property> is not implemented and is <reserved word|reserved>.
+
+Associations: image
+
+Introduced: 1.0
+
+OS: ios,android
+
+Platforms: desktop,server,web,mobile
+
+References: borderPixel (property), backgroundPixel (property), property (glossary), reserved word (glossary)

@@ -1,0 +1,23 @@
+module __VMTEST.dynamic_call
+
+handler type Thunk()
+
+handler Yes()
+	return true
+end handler
+
+handler InvokeArgument(in pFunc as Thunk)
+	return pFunc()
+end handler
+
+public handler TestDynamicInvokeVariable()
+	variable pFunc as Thunk
+	put Yes into pFunc
+	test "dynamic invoke (variable)" when pFunc()
+end handler
+
+public handler TestDynamicInvokeArgument()
+	test "dynamic invoke (argument)" when InvokeArgument(Yes)
+end handler
+
+end module

@@ -1,0 +1,47 @@
+Name: urlProgress
+
+Type: message
+
+Syntax: urlProgress <url>, <status>, [<message>, [<bytesTotal>]]
+
+Summary: Sent when updates on ongoing url requests are communicated.
+
+Introduced: 4.6.1
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+on urlProgress pUrl, pStatus
+   if pStatus is "downloaded" then
+      answer "Finished downloading" with "Okay"
+   end if
+end urlProgress
+
+Example:
+on urlProgress pUrl, pStatus, pMessage
+   if pStatus is "error" then
+      answer "Encountered Error:" && pMessage with "Okay"
+   end if
+end urlProgress
+
+Parameters:
+url: The name of the url for which a message is being sent.
+status (enum): The type of update message being sent. One of:
+- "contacted": The server has been contacted.
+- "requested": A request was made to the URL.
+- "loading": Data is being downloaded.
+- "uploading": Data is being uploaded to the server.
+- "downloaded": Data has finished downloading.
+- "uploaded": Data has finished uploading.
+- "error": An error occurred.
+message (enum): A message sent with some of the status parameters. One of:
+- "bytesReceived": Sent when the status parameter is either 'loading' or 'uploading'.
+- "erroMessage": Sent when the status parameter is 'error'.
+bytesTotal: Empty if the web server does not send the total data size.
+
+Description:
+Sent when updates on ongoing url requests are communicated. This message is periodically sent to the object whose script initiated the operation.
+
+References: put (command), post (command), load (command)

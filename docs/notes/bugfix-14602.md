@@ -1,0 +1,1 @@
+# URLEncode crashes LiveCode

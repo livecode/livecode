@@ -259,6 +259,8 @@ public:
 	virtual void platform_querymouse(int16_t &r_x, int16_t &r_y);
 	virtual void platform_setmouse(int16_t p_x, int16_t p_y);
 	
+	virtual bool platform_get_display_handle(void *&r_display);
+	
 	// IM-2014-01-29: [[ HiDPI ]] Convenience methods to convert logical to screen coords and back
 	MCPoint logicaltoscreenpoint(const MCPoint &p_point);
 	MCPoint screentologicalpoint(const MCPoint &p_point);
@@ -369,6 +371,9 @@ public:
 	virtual void activateIME(Boolean activate);
 	//virtual void closeIME();
     
+    virtual bool loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_font_handle);
+    virtual bool unloadfont(MCStringRef p_path, bool p_globally, void *r_loaded_font_handle);
+
 private:
     
     void DnDClientEvent(GdkEvent*);

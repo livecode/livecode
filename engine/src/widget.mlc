@@ -1,0 +1,978 @@
+/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+This library consists of the operations on widgets provided by LiveCode Builder.
+
+Tags: Widget
+
+Name: OnOpen
+Type: message
+Syntax: OnOpen
+Summary: Sent when the card containing the widget becomes the current card.
+Example:
+	public handler OnOpen()
+  		-- Schedule a timer to perform an action every 5 seconds
+ 		 schedule timer in 5 seconds
+	end handler
+Description:
+Handle the OnOpen message to have the widget perform an action when the card containing the widget becomes the current card.
+
+
+Name: OnClose
+Type: message
+Syntax: OnClose
+Summary: Sent when card containing the widget is navigated away from.
+Example:
+	public handler OnCreate()
+  		-- Schedule a timer to perform an action every 5 seconds
+ 		 cancel timer
+	end handler
+Description:
+Handle the <OnOpen> message to have the widget perform an action when it is opened in LiveCode, for example setting default values of instance variables.
+
+Name: OnAttach
+Type: message
+Syntax: OnAttach
+Summary: Sent when the widget is attached.
+
+
+Name: OnDetach
+Type: message
+Syntax: OnDetach
+Summary: Sent when the widget is detached.
+
+
+Name: OnPaint
+Type: message
+Syntax: OnPaint
+Summary: Sent when the widget is to be drawn.
+Example:
+	public handler OnPaint()
+		variable tCirclePath as Path
+   		put circle path centered at point [the width of my bounds/2,the height of my bounds/2] with radius (the width of my bounds/2) into tFacePath
+		set the paint of this canvas to solid paint with color [1, 0, 1]
+		fill tFacePath on this canvas
+	end handler
+Description:
+Handle the <OnPaint> message to draw the widget when it needs updated.
+>*Note:* Access to most script object operations is not allowed whilst an OnPaint
+handler is running.
+References: RedrawAll(statement)
+
+
+Name: OnGeometryChanged
+Type: message
+Syntax: OnGeometryChanged
+Summary: Sent when the widget geometry changed.
+Example:
+
+	private variable mLabel as String
+	
+	public handler OnGeometryChanged()
+		if my width is not my height then
+			put "Rectangle" into mLabel
+		else
+			put "Square" into mLabel
+		end if
+		redraw all	
+	end handler
+Description:
+Handle the <OnGeometryChanged> message to perform specific actions that depend on the geometry of the widget, for example the locations on the canvas where parts of the widget are drawn.
+
+
+Name: OnVisibilityChanged
+Type: message
+Syntax: OnVisibilityChanged <isVisible>
+Summary: Sent when the widget visibility changed.
+Parameters:
+isVisible(bool): Whether the widget is now visible or not.
+Example:
+	private variable mAnimate as Boolean
+	
+	public handler OnVisibilityChanged(in pVisible as Boolean)
+		put pVisible into mAnimate
+	end handler
+	
+Description:
+Handle the OnVisibilityChanged message to execute code when the widget becomes visible or invisible.
+
+
+Name: OnSave
+Type: message
+Syntax: OnSave
+Summary: Sent when the widget is saved.
+Description:
+Handler the OnSave message to execute code when a stack containing the widget is saved.
+>*Note:* Access to most script object operations is not allowed whilst an OnPaint
+handler is running.
+
+Name: OnLoad
+Type: message
+Syntax: OnLoad
+Summary: Sent when the widget is loaded.	
+Description:
+Handler the OnSave message to execute code when a stack containing the widget is loaded, for example setting default values of instance variables.
+>*Note:* Access to most script object operations is not allowed whilst an OnPaint
+handler is running.
+
+Name: OnCreate
+Type: message
+Syntax: OnCreate
+Summary: Sent when the widget is created.
+Example:
+	private variable mPrimaryColor as Color
+	private variable mSecondaryColor as Color
+	
+	public handler OnCreate()
+		put color [ 0.5, 0.5, 1.0 ] into mPrimaryColor
+		put color [ 0.0, 0.0, 1.0 ] into mSecondaryColor
+	end handler
+Description:
+Handle the OnCreate message to have the widget perform an action when it is created, for example setting default values of instance variables.
+>*Note:* Access to most script object operations is not allowed whilst an OnPaint
+handler is running.
+
+Name: OnDestroy
+Type: message
+Syntax: OnDestroy
+Summary: Sent when the widget is deleted.
+Description:
+Handle the OnDestroy message to have the widget perform an action when it is deleted.
+
+Name: OnParentPropertyChanged
+Type: message
+Syntax: OnParentPropertyChanged
+Summary: Sent when a property of the widget parent is changed.
+Description:
+Handle the <OnParentPropertyChanged> message when a widget property depends on the properties of a parent object.
+>*Note:* Access to most script object operations is not allowed whilst an OnPaint
+handler is running.
+
+Name: OnStopEditing
+Type: message
+Syntax: OnStopEditing
+Summary: Sent when the browse tool is selected.
+Description:
+Handle the <OnStopEditing> message to perform an action when the browse tool is selected.
+>*Note:* Access to most script object operations is not allowed whilst an OnPaint
+handler is running.
+
+Name: OnStartEditing
+Type: message
+Syntax: OnStartEditing
+Summary: Sent when the pointer tool is selected.
+Description:
+Handle the <OnStartEditing> message to perform an action when the edit tool is selected.
+>*Note:* Access to most script object operations is not allowed whilst an OnPaint
+handler is running.
+
+Name: OnLayerChanged
+Type: message
+Syntax: OnLayerChanged
+Summary: Sent when the widget layer is changed.
+
+Name: OnTimer
+Type: message
+Syntax: OnTimer
+Summary: Sent when a timer message has been scheduled.
+Example:
+	// Create a timer loop
+	public handler OnTimer()
+		...
+		schedule timer in 1 second
+	end handler
+Description:
+Handle the <OnTimer> message to perform an action at a scheduled time.
+>*Note:* OnTimer messages are only sent whilst in browse tool mode. If a timer is
+delivered whilst in pointer tool mode it will be deferred until browser tool mode is
+re-entered.
+References: ScheduleTimerIn(statement)
+
+Name: OnMouseEnter
+Type: message
+Syntax: OnMouseEnter
+Summary: Sent when the mouse pointer enters the widget's rect.
+
+
+Name: OnMouseLeave
+Type: message
+Syntax: OnMouseLeave
+Summary: Sent when the mouse pointer leaves the widget's rect.
+
+
+Name: OnMouseMove
+Type: message
+Syntax: OnMouseMove
+Summary: Sent when the mouse pointer moves within the widget's rect.
+
+
+Name: OnMouseCancel
+Type: message
+Syntax: OnMouseCancel
+Summary: Sent when something happens which should cause the previous mouse down
+action to be considered cancelled. For example, opening a popup during OnMouseDown.
+
+
+Name: OnMouseDown
+Type: message
+Syntax: OnMouseDown
+Summary: Sent when the mouse button is pushed within the widget's rect.
+
+
+Name: OnMouseUp
+Type: message
+Syntax: OnMouseUp
+Summary: Sent when the mouse button is released regardless of whether the pointer
+is within the widget's rect or not.
+
+
+Name: OnMouseScroll
+Type: message
+Syntax: OnMouseScroll
+Summary: Sent when the mouse wheel is scrolled within the widget's rect.
+
+
+Name: OnMouseStillDown
+Type: message
+Syntax: OnMouseStillDown
+Summary: Sent when the mouse button is held down within the widget's rect.
+
+
+Name: OnMouseHover
+Type: message
+Syntax: OnMouseHover
+Summary: Sent when the mouse pointer hovers over the widget's rect.
+
+
+Name: OnMouseStillHover
+Type: message
+Syntax: OnMouseStillHover
+Summary: Sent when the mouse pointer continues to hover over the widget's rect.
+
+
+Name: OnMouseCancelHover
+Type: message
+Syntax: OnMouseCancelHover
+Summary: Sent when the mouse pointer continues to hover outside of the widget's rect.
+
+
+Name: OnTouchStart
+Type: message
+Syntax: OnTouchStart
+Summary: Sent when a touch event begins within the widget's rect.
+
+Name: OnFocusEnter
+Type: message
+Syntax: OnFocusEnter
+Summary: Sent when the widget gains focus.
+
+
+Name: OnFocusLeave
+Type: message
+Syntax: OnFocusLeave
+Summary: Sent when the widget loses focus.
+
+
+Name: OnKeyPress
+Type: message
+Syntax: OnKeyPress <keyText>
+Summary: Sent when a key is pressed while the widget has focus.
+Parameters:
+keyText(string): The key pressed
+
+
+Name: OnModifiersChanged
+Type: message
+Syntax: OnModifiersChanged
+Summary: Sent when the keyboard modifiers are changed.
+
+
+Name: OnActionKeyPress
+Type: message
+Syntax: OnActionKeyPress <keyText>
+Summary: Sent when an action key is pressed while the widget has focus.
+Parameters:
+keyText(string): The key pressed
+
+
+Name: OnDragEnter
+Type: message
+Syntax: OnDragEnter
+Summary: Sent when an object is dragged onto the widget rect.
+
+
+Name: OnDragLeave
+Type: message
+Syntax: OnDragLeave
+Summary: Sent when an object is dragged outside of the widget rect.
+
+
+Name: OnDragMove
+Type: message
+Syntax: OnDragMove
+Summary: Sent when a dragged object is moved within the widget rect.
+
+
+Name: OnDragDrop
+Type: message
+Syntax: OnDragDrop
+Summary: Sent when a dragged object is released within the widget rect.
+
+
+Name: OnDragStart
+Type: message
+Syntax: OnDragStart
+Summary: Sent when the widget begins to be dragged
+
+
+Name: OnDragFinish
+Type: message
+Syntax: OnDragFinish
+Summary: Sent when the widget finishes being dragged
+
+
+Name: OnClick
+Type: message
+Syntax: OnClick
+Summary: Sent when the widget is clicked.
+
+
+Name: OnDoubleClick
+Type: message
+Syntax: OnDoubleClick
+Summary: Sent when the widget is double-clicked.
+
+*/
+
+module com.livecode.widget
+
+use com.livecode.foreign
+
+use com.livecode.canvas
+use com.livecode.engine
+
+// ---------- Widget commands ---------- //
+
+public foreign handler MCWidgetExecRedrawAll() returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecScheduleTimerIn(in pTime as CDouble) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecCancelTimer() returns nothing binds to "<builtin>"
+public foreign handler MCWidgetEvalInEditMode(out rInEditMode as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecSend(in pIsFunction as CBool, in pMessage as String) returns any binds to "<builtin>"
+public foreign handler MCWidgetExecSendWithArguments(in pIsFunction as CBool, in pMessage as String, in pArguments as optional List) returns any binds to "<builtin>"
+public foreign handler MCWidgetExecPost(in pMessage as String) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecPostWithArguments(in pMessage as String, in pArguments as optional List) returns nothing binds to "<builtin>"
+
+/* 
+Summary:	Redraws the widget.
+
+Example:
+	private variable mColor as Color
+	
+	public handler OnClick()
+		put color [ any number, any number, any number ] into mColor
+		redraw all
+	end handler
+	
+	public handler OnPaint()
+		...
+		set the paint of this canvas to solid paint with color mColor
+		...
+	end handler
+
+Description:
+Use redraw all to redraw the widget, for example after setting a property which should trigger a change in appearance.
+
+References: OnPaint(message)
+*/	
+
+syntax RedrawAll is statement
+  "redraw" "all"
+begin
+  MCWidgetExecRedrawAll()
+end syntax
+
+/* 
+Summary:	Schedules a timer.
+Time:		An expression which evaluates to a number.
+
+Example:
+	// Create a timer loop
+	public handler OnTimer()
+		...
+		schedule timer in 1 second
+	end handler
+
+Description:
+Scheduling a timer causes an <OnTimer> message to be sent to the widget in <Time> seconds.
+
+References: OnTimer(message)
+*/	
+
+syntax ScheduleTimerIn is statement
+  "schedule" "timer" "in" <Time: Expression> "seconds"
+begin
+  MCWidgetExecScheduleTimerIn(Time)
+end syntax
+
+/* 
+Summary:	Cancels a timer.
+
+Example:
+	// Cancel the timer when the widget is no longer on the current card.
+	public handler OnClose()
+		cancel timer
+	end handler
+
+Description:
+Use to cancel a timer scheduled by the <ScheduleTimerIn|schedule> statement.
+
+References: OnTimer(message), ScheduleTimerIn(statement)
+*/	
+
+syntax CancelTimer is statement
+  "cancel" "timer"
+begin
+  MCWidgetExecCancelTimer()
+end syntax
+
+/* 
+Summary:	Determines whether the IDE is in edit mode.
+*/	
+
+
+syntax IsEditMode is expression
+  "in" "edit" "mode"
+begin
+  MCWidgetEvalInEditMode(output)
+end syntax
+
+/* 
+Summary:	Sends a message to the widget script object.
+*/	
+
+syntax Send is statement
+    "send" ( "function" <IsFunction=true> | "command" <IsFunction=false> | <IsFunction=false> ) <Message: Expression> [ "with" <Arguments: Expression> ]
+begin
+    MCWidgetExecSend(IsFunction, Message)
+    MCWidgetExecSendWithArguments(IsFunction, Message, Arguments)
+end syntax
+
+/* 
+Summary:	Posts a message to the widget script object.
+*/	
+
+syntax Post is statement
+    "post"<Message: Expression> [ "with" <Arguments: Expression> ]
+begin
+    MCWidgetExecPost(Message)
+    MCWidgetExecPostWithArguments(Message, Arguments)
+end syntax
+
+// ---------- External properties of widgets ---------- //
+
+public foreign handler MCWidgetGetScriptObject(out rObject as ScriptObject) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetRectangle(out rRect as Rectangle) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetFrame(out rRect as Rectangle) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetBounds(out rRect as Rectangle) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetWidth(out rWidth as Real) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetSetWidth(in pWidth as Real) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetHeight(out rHeight as Real) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetSetHeight(in pHeight as Real) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetFont(out rFont as Font) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetEnabled(out rEnabled as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetDisabled(out rDisabled as CBool) returns nothing binds to "<builtin>"
+
+/* 
+Summary:	Returns the widget script object.
+
+Returns:	The widget script object.
+*/	
+
+syntax MyScriptObject is expression
+  "my" "script" "object"
+begin
+    MCWidgetGetScriptObject(output)
+end syntax
+
+/* 
+Summary:	Returns the rectangle of the widget script object.
+
+Returns:	The rectangle of the widget script object.
+*/	
+
+syntax MyRectangle is expression
+  "my" "rectangle"
+begin
+    MCWidgetGetRectangle(output)
+end syntax
+
+/* 
+Summary:	Returns the frame of the widget script object.
+
+Returns:	The frame of the widget script object.
+*/	
+
+syntax MyFrame is expression
+  "my" "frame"
+begin
+    MCWidgetGetFrame(output)
+end syntax
+
+/* 
+Summary:	Returns the bounds of the widget script object.
+
+Returns:	The bounds of the widget script object.
+*/	
+
+syntax MyBounds is expression
+  "my" "bounds"
+begin
+    MCWidgetGetBounds(output)
+end syntax
+
+/*
+Summary:	Returns the height of the widget.
+
+Returns:	The height of the widget.
+*/
+
+syntax MyWidth is expression
+  "my" "width"
+begin
+    MCWidgetGetWidth(output)
+    MCWidgetSetWidth(input)
+end syntax
+
+/*
+Summary:	Returns the height of the widget.
+
+Returns:	The height of the widget.
+*/
+
+syntax MyHeight is expression
+  "my" "height"
+begin
+    MCWidgetGetHeight(output)
+    MCWidgetSetHeight(input)
+end syntax
+
+/*
+Summary:    Returns the font of the widget.
+
+Returns:    The font of the widget
+
+Description:
+Use to return a font which reflects the current (effective) settings of the
+widget's textFont, textSize and textStyle properties.
+*/
+syntax MyFont is expression
+    "my" "font"
+begin
+    MCWidgetGetFont(output)
+end syntax
+
+/*
+Summary:    Returns the enabled state of the widget.
+
+Returns:    The enabled state of the widget.
+*/
+syntax MyEnabled is expression
+    "my" "enabled"
+begin
+    MCWidgetGetEnabled(output)
+end syntax
+
+/*
+Summary:    Returns the disabled state of the widget.
+
+Returns:    The disabled state of the widget.
+*/
+syntax MyDisabled is expression
+    "my" "disabled"
+begin
+    MCWidgetGetDisabled(output)
+end syntax
+
+
+// ---------- Synchronous and asynchronous ("current") event information ---------- //
+
+//foreign type PressedState binds to "kMCPressedState"
+
+public foreign handler MCWidgetGetMousePosition(in pCurrent as CBool, out rLocation as Point) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetClickPosition(in pCurrent as CBool, out rLocation as Point) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetClickButton(in pCurrent as CBool, out rButton as CUInt) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetClickCount(in pCurrent as CBool, out rCount as CUInt) returns nothing binds to "<builtin>"
+
+public foreign handler MCWidgetGetMouseButtonState(in pIndex as LCUInt, out rPressed /*as PressedState*/) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetModifierKeys(in pCurrent as CBool, out rKeys as List) returns nothing binds to "<builtin>"
+
+/* 
+Summary:		Determines the location of the mouse pointer.
+
+Returns:		The location of the mouse pointer.
+
+Example:
+	variable tClick as Point
+	put the click position into tClick
+	
+	variable tRect as Rectangle
+	put my bounds into tRect
+	
+	if tClick is within tRect then
+		// click was within widget bounds
+	end if
+	
+Description:
+Use the 'current' form to obtain the asynchronous mouse position.
+*/
+
+syntax TheMouseLocation is expression
+  "the" ( "current" <IsCurrent=true> | <IsCurrent=false> ) "mouse" "position"
+begin
+    MCWidgetGetMousePosition(IsCurrent, output)
+end syntax
+
+/*
+Summary:		Determines the location of a mouse click.
+
+Returns:		The location of the mouse pointer when it was clicked.
+
+Example:
+	variable tClick as Point
+	put the click position into tClick
+	
+	variable tRect as Rectangle
+	put my bounds into tRect
+	
+	if tClick is within tRect then
+		// click was within widget bounds
+	end if
+	
+Description:
+Use the mouse location to obtain the location of the mouse pointer when it was last clicked. Use the 'current' form to obtain the asynchronous click position.
+*/
+
+syntax TheClickLocation is expression
+  "the" ( "current" <IsCurrent=true> | <IsCurrent=false> ) "click" "position"
+begin
+    MCWidgetGetClickPosition(IsCurrent, output)
+end syntax
+
+/*
+Summary:        Determines the mouse button which started the mouse click.
+
+Returns:        The index of the mouse button which started the mouse click.
+
+Example:
+    variable tButton as integer
+    put the click button into tButton
+    
+    if tButton is 1 then
+        // do primary button action
+    else
+        // do secondary button action
+    end if
+*/
+syntax TheClickButton is expression
+    "the" ( "current" <IsCurrent=true> | <IsCurrent=false> ) "click" "button"
+begin
+    MCWidgetGetClickButton(IsCurrent, output)
+end syntax
+
+/*
+Summary:        Determines the number of successive clicks within the click distance.
+
+Returns:        The number of clicks which have occured since the initial click within the standard 'click distance' from the original point.
+
+Example:
+    variable tClickCount as integer
+    put the click count into tClickCount
+    
+    if tClickCount is 1 then
+        // do single click action
+    else if tClickCount is 2 then
+        // do double click action
+    end if
+*/
+syntax TheClickCOunt is expression
+    "the" ( "current" <IsCurrent=true> | <IsCurrent=false> ) "click" "count"
+begin
+    MCWidgetGetClickCount(IsCurrent, output)
+end syntax
+
+syntax MouseButtonName is phrase
+    ( "primary" <Index=1> | "secondary" <Index=2> | "left" <Index=1> | "right" <Index=2> | "middle" <Index=3> )
+begin
+end syntax
+
+syntax TheMouseButtonState is expression
+  "the" <Index: MouseButtonName> "mouse" "button"
+begin
+    MCWidgetGetMouseButtonState(Index, output)
+end syntax
+
+syntax TheModifierKeys is expression
+  "the" ( "current" <IsCurrent=true> | <IsCurrent=false> ) "modifier" "keys"
+begin
+    MCWidgetGetModifierKeys(IsCurrent, output)
+end syntax
+
+
+// ---------- Syntactic sugar for "is [not] [currently] pressed" ---------- //
+
+public foreign handler MCWidgetEvalStateIsPressed(in pState /*as PressedState*/, in pCurrently as CBool, out rPressed as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetEvalStateIsNotPressed(in pState /*as PressedState*/, in pCurrently as CBool, out rNotPressed as CBool) returns nothing binds to "<builtin>"
+
+syntax IsPressed is postfix operator with precedence 5
+  <mState: Expression> "is" ( "currently" <Currently=true> | <Currently=false> ) "pressed"
+begin
+    MCWidgetEvalStateIsPressed(mState, Currently, output)
+end syntax
+
+syntax IsNotPressed is postfix operator with precedence 5
+  <mState: Expression> "is not" ( "currently" <Currently=true> | <Currently=false> ) "pressed"
+begin
+    MCWidgetEvalStateIsNotPressed(mState, Currently, output)
+end syntax
+
+
+// ---------- Syntactic sugar for points and rects ---------- //
+
+public foreign handler MCWidgetEvalIsPointWithinRect(in pPoint as Point, in pRect as Rectangle, out rWithin as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetEvalIsPointNotWithinRect(in pPoint as Point, in pRect as Rectangle, out rNotWithin as CBool) returns nothing binds to "<builtin>"
+
+/* 
+Summary:	Determines whether a point is within a rectangle.
+Point:		An expression that evaluates to a Point.
+Rect: 		An expression that evaluates to a Rectangle.
+
+Example:
+	variable tClick as Point
+	put the click position into tClick
+	
+	variable tRect as Rectangle
+	put my bounds into tRect
+	
+	if tClick is within tRect then
+		// click was within widget bounds
+	end if
+*/
+	
+syntax IsPointWithinRect is neutral binary operator with precedence 5
+  <mPoint: Expression> "is" "within" <mRect: Expression>
+begin
+    MCWidgetEvalIsPointWithinRect(mPoint, mRect, output)
+end syntax
+
+/* 
+Summary:	Determines whether a point is within a rectangle.
+Point:		An expression that evaluates to a Point.
+Rect: 		An expression that evaluates to a Rectangle.
+
+Example:
+	variable tClick as Point
+	put the click position into tClick
+	
+	variable tRect as Rectangle
+	put my bounds into tRect
+	
+	if tClick is not within tRect then
+		// click was outside of widget bounds
+	end if
+*/
+	
+syntax IsPointNotWithinRect is neutral binary operator with precedence 5
+  <Point: Expression> "is not" "within" <Rect: Expression>
+begin
+    MCWidgetEvalIsPointNotWithinRect(Point, Rect, output)
+end syntax
+
+// ---------- popups ---------- //
+public foreign handler MCWidgetExecPopupMenuAtLocation(in pMenu as String, in pAt as Point) returns optional String binds to "<builtin>"
+public foreign handler MCWidgetExecPopupAtLocation(in pKind as String, in pAt as Point) returns any binds to "<builtin>"
+public foreign handler MCWidgetExecPopupAtLocationWithProperties(in pKind as String, in pAt as Point, in pProperties as Array) returns any binds to "<builtin>"
+public foreign handler MCWidgetEvalIsPopup(out rPopup as bool) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecClosePopup() returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecClosePopupWithResult(in pResult as any) returns nothing binds to "<builtin>"
+
+
+/*
+Summary:	Displays a popup menu.
+Menu:		An expression that evaluates to a string, which describes the menu items.
+Location:	An expression that evaluates to a <Point> relative to the current widget. The topleft corner of the popup window will be placed here.
+
+The result:	The selected menu item. If the menu is dismissed (by clicking outside the bounds of the menu) this value will be nothing.
+
+Example:
+	private variable mFont as Font
+
+	public handler OnMouseDown()
+		popup menu "Helvetica\nTimes New Roman\nArial" at the mouse position
+		if the result is not nothing then
+			put font (the result) at size 20 into mFont
+			redraw all
+		end if
+	end handler
+
+	public handler OnPaint()
+		...
+		set the font of this canvas to mFont
+		...
+	end handler
+
+Description:
+	Use to popup a menu at the specified location.
+*/
+syntax PopupMenu is statement
+	"popup" "menu" <mMenu: Expression> "at" <mAt: Expression>
+begin
+	MCWidgetExecPopupMenuAtLocation(mMenu, mAt)
+end syntax
+
+
+/*
+Summary:	Opens a widget within a popup window.
+Kind:		The unique identifier of the widget to use for the popup.
+Location:	An expression that evaluates to a <Point> relative to the current widget. The topleft corner of the popup window will be placed here.
+Properties:	An expression that evaluates to an <array>. For each key of the array, the popup widget will be initialized by setting that property to the value for that key.
+
+The result:	The result returned by the popup. If the popup is dismissed (by clicking outside the bounds of the popup) this value will be nothing.
+
+Example:
+	private variable mColor as Color
+
+	public handler OnClick()
+		variable tProperties as Array
+		put the empty array into tProperties
+		put mColor into tProperties["currentColor"]
+
+		popup widget "com.livecode.extensions.livecode.ColorPicker" at the mouse position with properties tProperties
+		if the result is not nothing then
+			put the result into mColor
+			redraw all
+		end if
+	end handler
+
+	public handler OnPaint()
+		...
+		set the paint of this canvas to solid paint with color mColor
+		...
+	end handler
+
+Description:
+	Use to display a widget within a popup window, for example as a tooltip or picker dialog.
+
+References: IsPoppedUp(expression), ClosePopupWithResult(statement), IsDefined(operator)
+*/
+
+syntax PopupWidget is statement
+	"popup" "widget" <Kind: Expression> "at" <Location: Expression> [ "with" "properties" <Properties: Expression> ]
+begin
+	MCWidgetExecPopupAtLocation(Kind, Location)
+	MCWidgetExecPopupAtLocationWithProperties(Kind, Location, Properties)
+end syntax
+
+
+/*
+Summary:	Tests if the current widget is in a popup window.
+Resturns:	True if the current widget is in a popup window, False otherwise.
+
+Example:
+	variable mSelected
+
+	public handler OnClick()
+		variable tOption
+		put getOptionAtPosition(the click position) into tOption
+		if tOption is not empty then
+			put tOption into mSelected
+
+			// If this widget is being used as a popup then we close the popup and return a value to the caller
+			if currently popped up then
+				if mSelected is "Cancel" then
+					// Dismiss the popup without returning a value - the result will be nothing
+					close popup
+				else
+					// Dismiss the popup - the result will be the value of mSelected
+					close popup returning mSelected
+				end if
+			end if
+		end if
+	end handler
+
+	private handler getOptionAtPosition(in pPosition as Point) returns String
+		// Return the name of the option at the given point
+		...
+	end handler
+
+Description:
+	Use to determine if this widget is being displayed within a popup window.
+
+	References: PopupWidget(statement), ClosePopupWithResult(statement)
+*/
+
+syntax IsPoppedUp is expression
+	"currently" "popped" "up"
+begin
+	MCWidgetEvalIsPopup(output)
+end syntax
+
+
+/*
+Summary:	Closes the current widget popup.
+Result:		An expression that evaluates to any type. The result of popping up this widget.
+
+Example:
+	variable mSelected
+
+	public handler OnClick()
+		variable tOption
+		put getOptionAtPosition(the click position) into tOption
+		if tOption is not empty then
+			put tOption into mSelected
+
+			// If this widget is being used as a popup then we close the popup and return a value to the caller
+			if currently popped up then
+				if mSelected is "Cancel" then
+					// Dismiss the popup without returning a value - the result will be nothing
+					close popup
+				else
+					// Dismiss the popup - the result will be the value of mSelected
+					close popup returning mSelected
+				end if
+			end if
+		end if
+	end handler
+
+	private handler getOptionAtPosition(in pPosition as Point) returns String
+		// Return the name of the option at the given point
+		...
+	end handler
+
+Description:
+	Use to close the current popup, and optionally set a return value for the <PopupWidget> statement that launched it.
+
+References: PopupWidget(statement), IsPoppedUp(expression)
+*/
+
+syntax ClosePopupWithResult is statement
+	"close" "popup" [ "returning" <Result: Expression> ]
+begin
+	MCWidgetExecClosePopup()
+	MCWidgetExecClosePopupWithResult(Result)
+end syntax
+
+end module

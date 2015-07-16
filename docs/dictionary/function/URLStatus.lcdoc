@@ -1,0 +1,61 @@
+Name: URLStatus
+
+Type: function
+
+Syntax: the URLStatus of <url> 
+
+Syntax: URLStatus(<url>)
+
+Summary: <return|Returns> the status of <upload|uploads> and <download|downloads> that were started with the <load>, <libURLDownloadToFile>, <libURLftpUpload>, and <libURLftpUploadFile> <command|commands>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Security: network
+
+Example:
+the URLStatus of "http://www.example.com/test.html"
+
+Example:
+wait until URLStatus(field "URL") is "cached"
+
+Example:
+if URLStatus(myFile) is "error" then get libURLErrorData(myFile)
+
+Parameters:
+url: A URL, or an expression that evaluates to a URL.
+
+Returns (enum): The <URLStatus> <function> <return|returns> one of the following values:
+-"queued"  : on hold until a previous request to the same site is completed
+-"contacted"  : the site has been contacted but no data has been sent or received yet
+-"requested"  : the URL has been requested
+-"loading,bytesReceived,bytesTotal"  : the <URL> data is being received
+-"uploading,bytesReceived,bytesTotal"  : the file is being <upload|uploaded> to the URL
+-"cached"  : the URL is in the <cache> and the <download> is complete
+-"uploaded"  : the application has finished uploading the file to the URL
+-"error"  : an error occurred and the URL was not transferred
+-"timeout"  : the application timed out when attempting to transfer the URL
+-empty  : the URL was not loaded, or has been unloaded
+
+Description:
+Use the <URLStatus> <function> to check the progress of an <upload> or <download>.
+
+You can check the cachedURLs <function> to determine whether a <URL> has already been <download|downloaded>. The <URL> is not placed in the <cachedURLs> until the <download> is complete, however, so you must use the <URLStatus> <function> to check a pending <download> or one that has been started but not finished.
+
+>*Tip:*  To update a progress indicator or perform other tasks during uploads and downloads, use the <libURLSetStatusCallback> <command> to automatically send a <callback|callback message> every time the <URLStatus> <function> is updated. You can then write a <handler> for this <message> that performs whatever tasks are needed.
+
+The third item (bytesTotal) in the "loading" or "uploading" status report is empty if it is not possible to determine the total file size. (For example, if an <FTP> <server> does not support the SIZE command, it's not possible to determine the file size when <download|downloading> a file from that <server>.)
+
+If an error occurs during downloading, the <URLStatus> <function> returns "error". You can get the error message using the <libURLErrorData> <function>.
+
+>*Important:*  The <URLStatus> <function> is part of the <Internet library>. To ensure that the <function> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the <Standalone Application Settings> window, make sure "Internet Library" is selected in the list of script libraries.
+
+Changes:
+The URLStatus function became part of the Internet library in version 1.1. In previous versions, it was not a library function.
+
+References: URL (keyword), function (control_st), post (command), libURLftpUploadFile (command), libURLftpUpload (command), libURLDownloadToFile (command), load (command), libURLSetStatusCallback (command), libURLLastRHHeaders (function), libURLErrorData (function), URLStatus (function), cachedURLs (function), FTP (glossary), return (glossary), standalone application (glossary), cache (glossary), command (glossary), callback (glossary), Standalone Application Settings (glossary), upload (glossary), download (glossary), message (glossary), server (glossary), handler (glossary), Internet library (library), Revolution custom library (library)
+
+Tags: networking

@@ -1,0 +1,27 @@
+Name: mobilePickContact
+
+Type: command
+
+Syntax: mobilePickContact
+
+Summary: Allows the user to select a contact from the contacts list.
+
+Introduced: 5.5.1
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+mobilePickContact
+
+The result:
+The ID of the selected contact is returned as the result.
+If no item is selected or the contacts are empty, then empty is returned.
+
+Description:
+Allows the user to select a contact list contact and returns an identifier for the contact.
+
+Use the <mobilePickContact> command to display a native iOS or Android contact picker that allows the user to select a contact list contact.
+
+References: mobilePickDate (command), mobileRemoveContact (command), mobilePickMedia (command), mobileShowContact (command), mobilePick (command), mobileAddContact (command), mobileFindContact (command), mobileCreateContact (command), mobileUpdateContact (command), mobileGetContactData (function)

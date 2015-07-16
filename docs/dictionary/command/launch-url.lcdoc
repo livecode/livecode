@@ -1,0 +1,42 @@
+Name: launch url
+
+Type: command
+
+Syntax: launch url <urlToLaunch> 
+
+Summary: Launches a url in the appropriate manner for the current system.
+
+Introduced: 2.9
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,mobile
+
+Security: process
+
+Example:
+launch url "http://www.runrev.com"
+
+Example:
+launch url "file:/Users/ben/Desktop/test.pdf"
+
+Example:
+launch url "tel:44 7818 8822"
+
+Parameters:
+urlToLaunch: 
+urlToOpen (enum): The url to launch. Can be in the following forms:
+- "http: url": will launch in the default browser application if available.
+- "file: path": open the file in the associated application
+- "tel: url": open the dialer with a given phone number
+
+The result: When <launch url> is called, LiveCode checks to see if an application is available to handle the URL. If no such application exists, the command returns "no association" in the result.
+
+Description:
+Use the <launch url> command to open a url using the default action for the current system. The command performs an action appropriate to the protocol and address provided in the given URL. 
+
+>*Note:* The urlToLaunch must be a standards-compliant URL, in particular file urls must be of the form file://&lt;absolute path&gt;.
+
+>*Important:* Mobile: Successfully launching a url  will cause another application to open and the requesting application to be quit. The application will receive a shutdown message before this happens.
+
+References: revGoURL (command), launch (command), launch document (command), URL (keyword)

@@ -233,6 +233,8 @@ public:
 private:
 	enum
 	{
+        PLATFORM_NONE,
+        
 		PLATFORM_WINDOWS,
 		PLATFORM_LINUX,
 		PLATFORM_MACOSX,
@@ -264,6 +266,7 @@ public:
 private:
 	enum
 	{
+        PLATFORM_NONE,
 		PLATFORM_WINDOWS,
 		PLATFORM_LINUX,
 		PLATFORM_MACOSX
@@ -285,6 +288,7 @@ public:
 private:
 	enum
 	{
+        PLATFORM_NONE,
 		PLATFORM_WINDOWS,
 		PLATFORM_LINUX,
 		PLATFORM_MACOSX

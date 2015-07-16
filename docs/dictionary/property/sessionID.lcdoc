@@ -1,0 +1,37 @@
+Name: sessionID
+
+Type: property
+
+Syntax: set the sessionID to <sessionID> 
+
+Summary: Specifies the identifier of the session to be started.
+
+Introduced: 5.0
+
+OS: mac,windows,linux
+
+Platforms: server
+
+Example:
+set the sessionID to tMySessionID
+
+Example:
+set the sessionID to "SessionIdentifier"
+
+Parameters:
+sessionID: the string used as the session identifier
+
+Description:
+Use the <sessionID> property to set the identifier of the session to be started.
+
+Use the <sessionID> property to set the identifier of the session to be started. 
+
+If the <sessionID> property is not set before starting a session, and the session cookie does not contain a session id, then a session id is automatically created. 
+
+If the current session has an automatically assigned id you can retrive it by getting the <sessionID> property.
+
+>*Note:* You do not need to alter any of the session properties in order to start and use sessions. They provide a way for advanced users to configure the way session work.
+
+>*Note:* The sessionID property is only available when running in CGI mode (Server).
+
+References: sessionSavePath (property), sessionLifetime (property), sessionName (property)

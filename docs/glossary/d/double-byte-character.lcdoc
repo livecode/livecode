@@ -1,0 +1,14 @@
+Name: double-byte character
+
+Synonyms: double-byte character,double-byte,two-byte character,2-byte character
+
+Type: glossary
+
+Description:
+A <character> from a character set that supports more than 256 characters; a <Unicode> <character>. 
+ 
+The numeric equivalent of Unicode characters is between zero and 65,535, for 65,536 total characters. 65,536 is 2^16, so it takes 16 <bit|bits> (two <byte|bytes>) to store a <Unicode> <character>.
+
+References: character (glossary), bit (glossary), Unicode (glossary), byte (glossary)
+
+Tags: text processing

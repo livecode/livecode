@@ -1,0 +1,12 @@
+Name: Apple Event
+
+Synonyms: AppleEvent,Apple Event
+
+Type: glossary
+
+Description:
+A <protocol> for interapplication communication on <Mac OS> and <OS X|OS X systems>. 
+ 
+An application can send an Apple Event to another application to make it do something such as print, open a <file>, run a script, etc.
+
+References: file (glossary), protocol (glossary), Mac OS (glossary), OS X (glossary)

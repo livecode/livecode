@@ -1,0 +1,37 @@
+Name: iosPlayer
+
+Type: object
+
+Syntax: iosPlayer
+
+Summary: A native iOS control, MPMoviePlayerController, that displays a movie.
+
+Introduced: 4.6
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+mobileControlCreate "player"
+
+Example:
+mobileControlCreate "player", "movie"
+put the result into sPlayerID
+mobileControlSet sPlayerID, "filename", tMoviePath
+mobileControlSet sPlayerID, "fullscreen", "true"
+
+Description:
+An iosPlayer(MPMoviePlayerController) control is created using a control type of "player". 
+
+On iOS versions prior to 4.2 you can only have a single iosPlayer in existence. Therefore on these iOS versions you can only create a single native player control at any one time, and while one is present you cannot use the <play video> command to play full screen videos.
+
+On iOS versions 4.2 and later, while you can have multiple iosPlayer instances (and this multiple native player controls) simultaneously, only a single one can be playing at any one time. 
+
+>*Note:* The iosPlayer control is only available on iOS 4.0 and later.
+
+>*Note:* For full details of what the MPMoviePlayerController is capable of, and background about it see the iOS reference document.
+
+References: mobileControlDelete (command), mobileControlDo (command), mobileControlSet (command), play video (command), mobileControlCreate (command), mobileControlGet (function), mobileControlTarget (function)
+
+Tags: objects

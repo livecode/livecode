@@ -1,0 +1,30 @@
+Name: $_GET_BINARY
+
+Type: keyword
+
+Syntax: $_GET_BINARY
+
+Summary: <$_GET_BINARY> is an array variable, translated from the QUERY_STRING. It is identical to $_GET except that it does not perform any character set translation.
+
+Introduced: 4.6.3
+
+OS: mac,windows,linux
+
+Platforms: server
+
+Example:
+put $_GET_BINARY into tGetArray
+
+Example:
+put uniEncode($_GET_BINARY["cat"], "UTF8") into tUnicodeCategory
+
+Description:
+Use the <$_GET_BINARY> keyword to access the array generated from the QUERY_STRING component of a URL. 
+
+For example: http://www.website.com?variable1=value1&variable2=value2
+
+$_GET_BINARY is only available when running in CGI mode (Server).
+
+>*Note:* The data is not converted to the native character of the current platform. For example, if the query string contains unicode characters <$_GET_BINARY> returns the untranslated binary characters.
+
+References: $_POST_RAW (keyword), $_GET_RAW (keyword), $_POST (keyword), $_POST_BINARY (keyword), $_SERVER (keyword), $_GET (keyword)

@@ -546,7 +546,7 @@ inline uinteger_t MCUnicodeCodepointAdvanceSurrogate(const unichar_t* p_input, u
 	{
         // FG-2014-10-23: [[ Bugfix 13761 ]] Codepoint was calculated incorrectly
         uinteger_t t_codepoint;
-		t_codepoint = 0x10000 + ((p_input[x_index] - 0xD800) << 10) | (p_input[x_index + 1] - 0xDC00);
+		t_codepoint = (0x10000 + ((p_input[x_index] - 0xD800) << 10)) | (p_input[x_index + 1] - 0xDC00);
 		x_index += 2;
 		return t_codepoint;
 	}

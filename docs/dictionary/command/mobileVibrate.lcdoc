@@ -1,0 +1,27 @@
+Name: mobileVibrate
+
+Type: command
+
+Syntax: mobileVibrate [<numberOfTimes>]
+
+Summary: Causes the iOS or Android device to vibrate.
+
+Introduced: 5.5
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+mobileVibrate
+
+Example:
+mobileVibrate 7
+
+Parameters:
+numberOfTimes (integer): An integer (or an expression that evaluates to an integer) and specifies how many times to vibrate. If the <numberOfTimes> is not specified, the device is vibrated once.
+
+Description:
+Use the <mobileVibrate> command to cause the iOS or Android device to vibrate.
+
+References: beep (command)

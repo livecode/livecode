@@ -48,6 +48,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "uuid.h"
 
+#include "libscript/script.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_EXEC_DEFINE_EVAL_METHOD(Engine, Version, 1)
@@ -1991,3 +1993,6 @@ void MCEngineGetEditionType(MCExecContext& ctxt, MCStringRef& r_edition)
     
     ctxt . Throw();
 }
+
+////////////////////////////////////////////////////////////////////////////////
+

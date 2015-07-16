@@ -1,0 +1,25 @@
+Name: dropper
+
+Type: keyword
+
+Syntax: dropper
+
+Summary: Designates the <paint tool> used to pick up a color in an <image> and make it the paint color.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+choose dropper tool
+
+Description:
+Use the <dropper> <keyword> to change the <penColor>.
+
+When using the Dropper tool, the cursor is an eyedropper shape. This tool is used to pick up a color from the screen to use in further painting. The penColor is changed to the color of the <pixel> you clicked.
+
+You can click anywhere in a stack window to pick up a color.
+
+References: image (keyword), penColor (property), choose (command), keyword (glossary), pixel (glossary), paint tool (glossary)

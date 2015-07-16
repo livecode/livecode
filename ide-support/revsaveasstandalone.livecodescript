@@ -22,7 +22,7 @@
 
 private function revListFolders pPath
    local tOldFolder, tFolders
-  
+   
    put the folder into tOldFolder
    
    set the folder to pPath
@@ -35,7 +35,7 @@ end revListFolders
 
 private function revListFiles pPath
    local tOldFolder, tFiles
-  
+   
    put the folder into tOldFolder
    
    set the folder to pPath
@@ -372,6 +372,7 @@ end folderNameMakeLegal
 
 private function revStandalonePlatformDetails pPlatform
    local tDetailsA
+
    -- SN-2015-03-04: [[ IDE Restructure ]] Externals folder contains the externals,
    --  and Support contains support libraries (revpdfprinter and revsecurity):
    --  they should have their own keys in the details array.
@@ -667,6 +668,13 @@ private command revCreateStandalone pStack, pFolder
       -- copy externals
       revCopyExternals tPlatform, tStackSourceFile[tPlatform], tEngineSourceFile[tPlatform], tStandalonePath[tPlatform]
       
+      // AL-2015-02-27: Include fontawesome in every standalone
+      if there is a file (revIDESpecialFolderPath("fonts") & slash & "fontawesome.ttf") then
+         local tCurrentLocation
+         set the itemDel to "/"
+         put item 1 to -2 of tStandalonePath[tPlatform] into tCurrentLocation
+         revCopyFile (revIDESpecialFolderPath("fonts") & slash & "fontawesome.ttf"), tCurrentLocation & slash & "fontawesome.ttf", "revStandaloneProgressCallback", the long id of me
+      end if
       revBuildStandaloneDeploy tPlatform, tStackSourceFile[tPlatform], tEngineSourceFile[tPlatform], tStandalonePath[tPlatform]
       
       add 1 to tCount
@@ -1598,7 +1606,7 @@ end revEnumerateIcons
 
 private command revCopyReferencedFiles pStack, pFutureFilePath, pReferencedFilesDestination
    local tControl, tCard, tChars, tOldFilePath, tFileName, tFutureFileName, tFutureFilePath, tIcon, \
-          tCardNum, tControlNum
+         tCardNum, tControlNum
    lock screen
    
    revStandaloneProgress "Copying referenced media..."
@@ -2243,6 +2251,22 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
       end if
    end if   
    
+   // AL-2015-02-27: Include fontawesome in every standalone
+   local  tTargetFontPath
+   if tPlatformDetailsA["platform"] begins with "MacOS" then
+      put "specialfolderpath(" & quote & "engine" & quote & ") & slash & " & quote & ".." & quote & " & slash & Resources & slash & _MacOS & slash & fontawesome.ttf" into tTargetFontPath
+   else
+      put "specialfolderpath(" & quote & "engine" & quote & ") & slash & fontawesome.ttf" into tTargetFontPath
+   end if
+   
+   if there is a file (revIDESpecialFolderPath("fonts") & slash & "fontawesome.ttf") then
+      if sStandaloneSettingsA["startup_script"] is not empty then
+         put "start using font file " & tTargetFontPath into sStandaloneSettingsA["startup_script"]
+      else
+         put return & "start using font file " & tTargetFontPath after sStandaloneSettingsA["startup_script"]
+      end if
+   end if
+   
    # AL-2015-01-29: [[ Scriptify IDE ]] Add the startup script to the deploy parameters
    if sStandaloneSettingsA["startup_script"] is not empty then
       put sStandaloneSettingsA["startup_script"] into tDeployInfo["startup_script"]
@@ -2255,6 +2279,17 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
    if sStandaloneSettingsA[tPlatformDetailsA["platform"] & ",library"] is not empty then
       put sStandaloneSettingsA[tPlatformDetailsA["platform"] & ",library"] into tDeployInfo["library"]
    end if
+   
+   # AL-2015-04-12: [[ Standalone Extensions ]] Add chosen extensions to the standalone inclusions
+   repeat for each line tExtension in sStandaloneSettingsA["extensions"]
+      local tExtensionFile
+      put revIDEExtensionModuleFile(tExtension) into tExtensionFile
+      if tDeployInfo["modules"] is empty then
+         put tExtensionFile into tDeployInfo["modules"]
+      else
+         put return & tExtensionFile after tDeployInfo["modules"]
+      end if
+   end repeat
    
    if tPlatformDetailsA["platform"] is "MacOSX" then
       -- MW-2013-06-13: [[ CloneAndRun ]] If installed do things in the usual way, otherwise pass

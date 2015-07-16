@@ -1680,6 +1680,10 @@ enum Properties {
     P_LOCALIZED_TITLE,
     P_LOCALIZED_DESCRIPTION,
     P_LOCALIZED_PRICE,
+    P_KIND,
+
+    // MW-2014-12-10: [[ Extensions ]] 'loadedExtensions' global property
+    P_LOADED_EXTENSIONS,
 };
 
 enum Look_and_feel {
@@ -1896,6 +1900,13 @@ enum Sugar_constants {
 	
     // MM-2014-06-13: [[ Bug 12567 ]] Added host. Used in 'with verification for host <host>'
 	SG_HOST,
+    
+    SG_EXTENSION,
+	SG_RESOURCE,
+	SG_PATH,
+    
+    // AL-2015-06-11: [[ Load Extension From Var ]] Add 'data' syntactic sugar
+    SG_DATA,
 };
 
 enum Statements {

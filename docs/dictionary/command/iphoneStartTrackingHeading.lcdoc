@@ -1,0 +1,32 @@
+Name: iphoneStartTrackingHeading
+
+Type: command
+
+Syntax: iphoneStartTrackingHeading
+
+Summary: Starts tracking the heading of the device.
+
+Introduced: 4.6.1
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+iphoneStartTrackingHeading
+
+Example:
+if tTrackingOn is "true" then
+   iphoneStartTrackingHeading
+end if
+
+Description:
+Use the <iphoneStartTrackingHeading> command to start tracking the current heading of the device.
+
+The <iphoneStartTrackingHeading> command starts tracking the heading of the device using the digital compass.
+
+Starting to track the heading may request the user to calibrate the magnetometer.
+
+>*Note:* The digital compass is only supported in iOS 4.0 and later.
+
+References: iphoneStopTrackingHeading (command), iphoneSetHeadingCalibrationTimeout (command), mobileCanTrackHeading (function), mobileCanTrackLocation (function), mobileCurrentHeading (function), iphoneHeadingCalibrationTimeout (function), trackingError (message), headingChanged (message)

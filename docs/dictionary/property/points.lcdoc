@@ -1,0 +1,42 @@
+Name: points
+
+Type: property
+
+Syntax: set the [effective] points of <graphic> to <vertexList> 
+
+Summary: Specifies where the <vertex|vertexes> of a <graphic> are located.
+
+Associations: graphic
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the points of the selectedObject to myVertexes
+
+Value: The <points> of a graphic is a list of points (two integers separated by a comma), one per line.
+
+Description:
+Use the <points> property to find the shape of a line, curve, or irregular polygon graphic, or to reshape the graphic.
+
+Each point consists of the horizontal distance in pixels from the left edge of the stack window to the vertex, a comma, and the vertical distance in pixels from the top edge of the stack window to the vertex. (The relativePoints property is the same list, but measured from the top left of the graphic rather than the top left of the stack window.)
+
+The first line in the list is the location of the graphic's starting point. A line is drawn from the starting point to the next vertex, which is the next line in the list. If two successive lines are identical, a dot is drawn at the specified point.
+
+A blank line in the points indicates that the previous and next vertexes are not connected by a line--that is, the line, curve, or polygon is broken into two (or more) pieces. If the last line of the points of a polygon is blank, the polygon is not closed. A closed polygon's start point (the first line of its points property) is the same as its end point (the last line of its points property).
+
+>*Tip:*  When setting the points property, you can separate the individual points with a comma instead of a return. The points property is always reported with the points on separate lines, however.
+
+If the style property of the graphic is not "line", "polygon" or "curve", the setting of its points property has no effect.
+
+>*Note:*  The rectangle of a graphic is drawn around all its points without touching them. (Usually, this makes no difference, but in some circumstances where you need to place a graphic's vertex precisely with respect to another object's rectangle, you may need to take this into account.)
+
+Changes:
+6.7: The effective points and effective relativePoints of a graphic return a polygonal representation of the shape even for shapes not defined by points. In particular, you can get the effective points of rectangle, round-rectangle, oval and regular polygon graphics.
+
+References: relativePoints (property), dontResize (property), graphic (keyword), vertex (glossary)
+
+Tags: ui

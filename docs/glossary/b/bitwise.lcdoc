@@ -1,0 +1,12 @@
+Name: bitwise
+
+Synonyms: bitwise,bit-wise
+
+Type: glossary
+
+Description:
+An <operation> done on each individual <bit> in a number's <binary> representation, rather than on the entire number.
+
+References: operation (glossary), binary (glossary), bit (glossary)
+
+Tags: math

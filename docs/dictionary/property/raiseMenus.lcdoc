@@ -1,0 +1,30 @@
+Name: raiseMenus
+
+Type: property
+
+Syntax: set the raiseMenus to {true | false}
+
+Summary: Specifies whether the window with the <menu bar> comes to the front when the user opens a menu.
+
+Introduced: 1.0
+
+OS: windows,linux
+
+Platforms: desktop,server
+
+Example:
+set the raiseMenus to true
+
+Value (bool):The <raiseMenus> is true or false.
+By default, the <raiseMenus> <property> is set to false.
+
+Description:
+Use the <raiseMenus> <property> to control the <behavior> of windows.
+
+On some Unix systems, setting this property to true may cause menus to appear under the window.
+
+The setting of this property has no effect on Mac OS systems.
+
+References: raisePalettes (property), pointerFocus (property), menubar (property), property (glossary), behavior (glossary), menu bar (glossary)
+
+Tags: menus

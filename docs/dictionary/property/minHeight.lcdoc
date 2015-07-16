@@ -1,0 +1,39 @@
+Name: minHeight
+
+Type: property
+
+Syntax: set the minHeight of <stack> to <pixels> 
+
+Summary: Specifies how short a <stack window> can be made when it's resized.
+
+Associations: stack
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the minHeight of this stack to the height of this stack
+
+Value:
+The <minHeight> of a <stack> is a positive <integer>.
+By default, the <minHeight> <property> of newly created <stacks> is set to 32.
+
+Description:
+Use the <minHeight> <property> if you want the user to be able to resize the <stack window>, but no smaller than a height you choose. For example, you might want to let the user make the <stack> smaller, but not so small that the <stack|stack's> navigation buttons can't be displayed.
+
+The <minHeight> is the minimum height in <pixels>. The height does not include the window's <title bar> or borders.
+
+The <minHeight> <property> does not prevent a <handler> from changing the <stack|stack's> <height> <property> (or related <properties> such as the <rectangle>). It affects only user actions. If you set the <stack|stack's> height to a value less than the <minHeight>, it is <reset> to the <minHeight> when you close and reopen the <stack>.
+
+If the stack's <resizable> <property> is false, the setting of this <property> has no effect.
+
+>*Cross-platform note:*  On <Mac OS> and <OS X|OS X systems>, if the <current card> has a <menu bar> and the <editMenus> <property> is false (that is, if the <stack window> is scrolled up so the menubar buttons are not visible in the window), the <minHeight> does not include the height of the <menu bar>. However, on <Windows> and <Unix|Unix systems>, the <minHeight> includes the height of the <menu bar>, since on these platforms the <menu bar> is in the <stack window>. This means that if you set a <minHeight> for a <stack> that contains a <menu bar>, you may need to adjust it depending on <platform> so that the <minHeight> on <Unix> and <Windows|Windows systems> includes the height of the <menu bar>, while the <minHeight> on <Mac OS> and <OS X|OS X systems> does not. (The standard height of <menu bar|menu bars> created with the <Menu Builder> is 21 pixels.)
+
+>*Note:* The current architecture uses 16-bit signed integers for all co-ordinates, which means that the value range is -32768 to 32767.
+
+References: pixels (property), minWidth (property), height (property), editMenus (property), maxHeight (property), resizable (property), properties (property), resizeStack (message), rectangle (keyword), integer (keyword), stack (object), property (glossary), menu bar (glossary), stack window (glossary), platform (glossary), Windows (glossary), Menu Builder (glossary), OS X (glossary), title bar (glossary), Mac OS (glossary), current card (glossary), Unix (glossary), handler (glossary), reset (command), stacks (function)
+
+Tags: windowing

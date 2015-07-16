@@ -1,0 +1,10 @@
+Name: script debug mode
+
+Synonyms: script debug mode,script debugging mode,script debugger mode
+
+Type: glossary
+
+Description:
+Mode of the LiveCode <development environment> in which the Script Debug window is open. When in script debug mode, <execute|executing> the <breakpoint> <command> halts the current <handler>.
+
+References: breakpoint (glossary), handler (glossary), command (glossary), execute (glossary), development environment (glossary)

@@ -1,0 +1,12 @@
+Name: XWD
+
+Synonyms: .xwd,XWD
+
+Type: glossary
+
+Description:
+X Windows Dump. A <bitmap|bitmapped> color picture <format> used for screenshots on some <Unix|Unix systems>.
+
+References: format (glossary), Unix (glossary), bitmap (glossary)
+
+Tags: multimedia

@@ -1,0 +1,50 @@
+Name: URL
+
+Type: keyword
+
+Syntax: URL
+
+Summary: Designates a <container> consisting of an Internet <resource> or local <file> in the form of a <URL>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Security: network
+
+Example:
+get URL "http://www.xworlds.com/index.html"
+
+Example:
+put URL "binfile:/Mac HD/Files/example.gif" into image "Example Logo"
+
+Example:
+post field "Results" to URL "http://www.example.org/current.txt"
+
+Example:
+get URL "http://www.xworlds.com/index.html"
+
+Description:
+Use the <URL> <keyword> to access the contents of a local <file> or a <file> accessible on the Web.
+
+A <URL> is a method of designating a file or other resource. You can use a <URL> like any other container. You can get the contents of a <URL> or use its contents in any expression. LiveCode supports the following <URL> schemes:
+
+http: a page from a web server
+ftp: a directory or file on an FTP server
+<file> : a text file on the local disk (not on a server)
+binfile: a binary file
+resfile: on Mac OS and OS X systems, the resource fork of a file
+
+All actions that refer to a <URL> container are blocking: that is, the handler pauses until LiveCode is finished accessing the <URL>. Since fetching a web page may take some time due to network lag, accessing URLs may take long enough to be noticeable to the user. To avoid this delay, use the load command (which is non-blocking) to cache web pages before you need them.
+
+For technical information about URLs and URL schemes, see RFC 1630 at http://www.ietf.org/rfc/rfc1630.txt.
+
+>*Important:*  The http and ftp keywords are part of the Internet library on desktop platforms. To ensure that these <URL> types work in a desktop standalone application, you must include this custom library when you create your standalone. In the Inclusions section of the Standalone Application Settings window, make sure Internet Library is selected in the list of script libraries. The iOS and Android engines do not support 'libUrl' but allow you to use <URL>. When specifying URLs for iOS and Android, you must use the appropriate form that confirms to the RFC standards. Ensure that you urlEncode any username and password fields appropriately for FTP urls.
+
+>*Important:*  The space character is not valid in URLs, however libURL (Desktop platforms) replaces this character with the required '%20'. This is something that the mobile and server platforms do not do. Be careful to construct valid URLs when working an fully cross platform applications.
+
+References: HTMLText (property), URL (keyword), file (keyword), libURLSetAuthCallback (command), launch url (command), libURLSetExpect100 (command), load (command), container (glossary), keyword (glossary), resource (glossary)
+
+Tags: networking

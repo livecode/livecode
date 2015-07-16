@@ -1,0 +1,37 @@
+Name: mobileBusyIndicatorStart
+
+Type: command
+
+Syntax: mobileBusyIndicatorStart [<type>], <message>, [<opacity>]
+
+Summary: Displays an animated activity indicator on the screen
+
+Introduced: 5.5
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+mobileBusyIndicatorStart
+
+Example:
+mobileBusyIndicatorStart "square", "This is a message"
+
+Example:
+mobileBusyIndicatorStart "square", "My message", 50
+
+Parameters:
+type (enum): Specifies the type of animation that is to be displayed. The default is "square".  Supported options:
+- "square": Displays a standard, native busy indicator in the center of the screen.
+message: Specifies the message that is to appear on the busy indicator dialog.
+opacity: Specifies the opacity of the busy indicator, which can lie in the range 0 - 100. The default value is 42. This option is only available for iOS.
+
+Description:
+Use the <mobileBusyIndicatorStart> command to show a native busy indicator on iOS and Android.
+
+Use the <mobileBusyIndicatorStart> command to display a native busy indicator on the top of the LiveCode stack that is running.
+
+You can turn the busy indicator off by calling <mobileBusyIndicatorStop>.
+
+References: mobileBusyIndicatorStop (command)

@@ -96,8 +96,8 @@ real8 curtime;
 
 ////////////////////////////////////////////////////////////////////////
 
-extern "C" void *load_module(const char *);
-extern "C" void *resolve_symbol(void *, const char *);
+MC_DLLEXPORT extern "C" void *load_module(const char *);
+MC_DLLEXPORT extern "C" void *resolve_symbol(void *, const char *);
 
 struct LibExport
 {
@@ -1187,18 +1187,6 @@ bool MCIPhoneSystem::GetDNSservers(MCListRef &r_list)
 MCSystemInterface *MCMobileCreateIPhoneSystem(void)
 {
 	return new MCIPhoneSystem;
-}
-
-//////////////////
-
-// MW-2013-05-21: [[ RandomBytes ]] System function for random bytes on iOS.
-bool MCS_random_bytes(size_t p_count, MCDataRef& r_buffer)
-{
-    // IM-2014-04-16: [[ Bug 11860 ]] SecRandomCopyBytes returns 0 on success
-    MCAutoByteArray t_bytes;
-    return (t_bytes . New(p_count) &&
-            SecRandomCopyBytes(kSecRandomDefault, p_count, (uint8_t *)t_bytes . Bytes()) == 0 &&
-            t_bytes . CreateData(r_buffer));
 }
 
 //////////////////

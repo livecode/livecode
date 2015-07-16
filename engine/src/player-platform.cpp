@@ -93,11 +93,6 @@ static MCColor controllercolors[] = {
             {0, 0xFFFF, 0xFFFF, 0xFFFF, 0, 0},         /* white */
 };
 
-inline MCGColor MCGColorMakeRGBA(MCGFloat p_red, MCGFloat p_green, MCGFloat p_blue, MCGFloat p_alpha)
-{
-	return ((uint8_t)(p_red * 255) << 16) | ((uint8_t)(p_green * 255) << 8) | ((uint8_t)(p_blue * 255) << 0) | ((uint8_t)(p_alpha * 255) << 24);
-}
-
 inline void MCGraphicsContextAngleAndDistanceToXYOffset(int p_angle, int p_distance, MCGFloat &r_x_offset, MCGFloat &r_y_offset)
 {
 	r_x_offset = floor(0.5f + p_distance * cos(p_angle * M_PI / 180.0));
@@ -1203,7 +1198,7 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
 }
 
 #ifdef LEGACY_EXEC
-Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective, bool recursive)
 {
 	uint2 i = 0;
 	switch (which)
@@ -1375,7 +1370,7 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
             break;
 #endif /* MCPlayer::getprop */
         default:
-            return MCControl::getprop(parid, which, ep, effective);
+            return MCControl::getprop(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }

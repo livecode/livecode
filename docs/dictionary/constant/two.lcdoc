@@ -1,0 +1,23 @@
+Name: two
+
+Type: constant
+
+Syntax: two
+
+Summary: Equivalent to the number 2.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+go to card two -- same as "go to card 2"
+
+Description:
+Use the <two> <constant> when it is easier to read than the numeral 2.
+
+References: constant (command), second (keyword), home (keyword)
+
+Tags: math

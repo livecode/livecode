@@ -142,6 +142,7 @@ struct const_cstring_array_t
     uint32_t length;
 };
 
+#ifdef LEGACY_EXEC
 typedef uint32_t MCChunkType;
 enum
 {
@@ -149,6 +150,7 @@ enum
     kMCLines,
     kMCItems,    
 };
+#endif
 
 typedef uint32_t MCMediaType;
 enum

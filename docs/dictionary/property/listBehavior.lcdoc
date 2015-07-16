@@ -1,0 +1,43 @@
+Name: listBehavior
+
+Type: property
+
+Syntax: set the listBehavior of <field> to {true | false}
+
+Summary: Specifies whether a <lock|locked> <field> behaves as a <list field|clickable list>.
+
+Synonyms: autoSelect
+
+Associations: field
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the listBehavior of field "Items List" to true
+
+Example:
+if the listBehavior of me then mouseUp
+
+Value (bool):The <listBehavior> of a <field(keyword)> is true or false.
+By default, the <listBehavior> <property> of newly created <field(object)|fields> is set to false.
+
+Description:
+Use the <listBehavior> <property> to create a list box.
+
+If a field's <listBehavior> <property> is set to true, and the user clicks a line, the entire line is <highlight|highlighted>. The Up and Down arrow keys move the <selection> up or down.
+
+Normally, the mouseUp and <mouseDown> <message|messages> are sent to the <field> as usual. However, if the user clicks below the last line of text in the <field>, a <mouseRelease> <message> is sent instead of <mouseUp>.
+
+You use the <hilitedLine> <property> to determine which <line> the user clicked. The <field(object)|field's> <hilitedLine> is set to the new <line> before the <mouseDown> message is sent, so there is no way to determine the previously-selected <line>.
+
+If the field's <autoHilite> <property> is set to false, a clicked line does not <highlight>, regardless of the <listBehavior> setting; the <field> does not behave like a <list field|clickable list> in this case. However, you can set the <hilitedLine> of the field even if the <field(object)|field's> <autoHilite> is false.
+
+>*Note:* Setting the <listBehavior> of a field to true will automatically set the field's <dontWrap property> to true, as a list field cannot have text wrapping. Setting the <dontWrap> of a list field to false has no effect.
+
+References: noncontiguousHilites (property), dontWrap (property), autoHilite (property), lockText (property), multipleLines (property), threeDHilite (property), toggleHilites (property), hilitedLine (property), field (keyword), selection (keyword), mouseDown (message), mouseRelease (message), mouseUp (message), field (object), property (glossary), highlight (glossary), dontWrap property (glossary), lock (glossary), message (glossary), autoHilite (glossary), listBehavior (glossary), line (glossary), list field (glossary), field (glossary)
+
+Tags: ui
