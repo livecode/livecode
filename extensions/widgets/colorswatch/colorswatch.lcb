@@ -33,7 +33,7 @@ metadata preferredSize is "24,24"
 
 -- property declarations
 property swatchColor get getColor set setColor
-metadata swatchColor.editor is "com.livecode.pi.color"
+metadata swatchColor.editor is "com.livecode.pi.colorwithalpha"
 metadata swatchColor.default is "255,100,0"
 metadata swatchColor.label is "Swatch Color"
 --
@@ -46,6 +46,7 @@ private variable mPadding as Number
 ----------
 -- this handler is called when the widget is created
 public handler OnCreate() returns nothing
+	put stringToColor("100,255,168,150") into mColor
 	updateConstants()
 end handler
 ----------
@@ -79,17 +80,70 @@ public handler OnPaint() returns nothing
 	-- Draw the pattern for the swatch
 
 	-- Draw the color
-	if mColor is defined then
-		put rectangle path of rectangle [mPadding, mPadding, my width - mPadding, my height - mPadding] into tPath
-		set the paint of this canvas to solid paint with mColor
-		fill tPath on this canvas
+	if mColor is not nothing then
+		if the alpha of mColor is not 1 then
+			variable tCudeSize as Number
+			variable tCudeCount as Integer
+			variable tSpace as Number
+			put my width - (mPadding * 2) into tSpace
+			put the rounded of (tSpace / 8) into tCudeCount
+			put tSpace / tCudeCount into tCudeSize
+			
+			variable tTop as Number
+			variable tLeft as Number
+			variable tX as Integer
+			variable tCount as Integer
+			variable tSpaceBottom as Number
+			put my height - mPadding into tSpaceBottom
+			put mPadding into tTop
+			put 1 into tCount
+			
+			set the paint of this canvas to solid paint with stringToColor("220,220,220")   
+			
+			repeat while tTop < my height - mPadding
+				put mPadding into tLeft
+				put 1 into tX
+				variable tBottom as Number
+				put tTop+tCudeSize into tBottom
+				if tBottom > tSpaceBottom then
+					put tSpaceBottom into tBottom
+				end if
+				repeat with tX from 1 up to tCudeCount
+					if (tCount is 1 and (tX mod 2) is 1) or (tCount is 0 and (tX mod 2) is 0) then
+						add rectangle path of rectangle [tLeft, tTop, tLeft+tCudeSize, tBottom] to this canvas
+					end if
+					add tCudeSize to tLeft
+				end repeat
+				add tCudeSize to tTop
+				
+				if tCount is 1 then 
+					put 0 into tCount
+				else
+					put 1 into tCount
+				end if
+			end repeat
+			fill this canvas
+			
+			put rectangle path of rectangle [mPadding, mPadding, my width - mPadding, tSpaceBottom] into tPath
+			set the paint of this canvas to getPaint("stroke")
+			set the stroke width of this canvas to 0
+			stroke tPath on this canvas
+			
+			put rectangle path of rectangle [mPadding, mPadding, my width - mPadding, tSpaceBottom] into tPath
+			set the paint of this canvas to solid paint with mColor
+			fill tPath on this canvas
+		else
+			put rectangle path of rectangle [mPadding, mPadding, my width - mPadding, tSpaceBottom] into tPath
+			set the paint of this canvas to solid paint with mColor
+			fill tPath on this canvas
+		end if
 	else
-		put line path from point [mPadding, mPadding] to point [my width - mPadding, my height - mPadding] into tPath
+		put line path from point [mPadding, mPadding] to point [my width - mPadding, tSpaceBottom] into tPath
 		set the paint of this canvas to solid paint with stringToColor("255,0,0")
 		set the stroke width of this canvas to 2
 		stroke tPath on this canvas
 
-		put rectangle path of rectangle [mPadding, mPadding, my width - mPadding, my height - mPadding] into tPath
+		put rectangle path of rectangle [mPadding, mPadding, my width - mPadding, tSpaceBottom] into tPath
 		set the paint of this canvas to getPaint("stroke")
 		set the stroke width of this canvas to 0
 		stroke tPath on this canvas
