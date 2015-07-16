@@ -1,1 +1,1 @@
-# French application menu is not converted.
+# French application menu is not translated.
