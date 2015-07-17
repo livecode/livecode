@@ -182,6 +182,8 @@ void MCUrlProgressEvent::Dispatch(void)
 			case kMCSystemUrlStatusError:
 				t_object -> message_with_valueref_args(MCM_url_progress, m_url, MCSTR("error"), m_error);
 				break;
+			case kMCSystemUrlStatusNone: /* Do nothing */
+				break;
 		}
 	}
 }
