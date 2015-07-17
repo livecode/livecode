@@ -190,9 +190,7 @@ MCScreenDC::wait(real64_t p_duration,
 	real64_t t_event_time = t_exit_time;
 
 	bool t_first = true;
-	bool t_reset = false;
 	bool t_done = false;
-
 
 	while (!t_done && !MCquit)
 	{
