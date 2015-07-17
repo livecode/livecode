@@ -5649,7 +5649,6 @@ void MCCanvasFillText(MCStringRef p_text, MCCanvasPointRef p_point, MCCanvasRef 
 	MCFontDrawText(t_context, t_point.x, t_point.y, p_text, t_font, false, false);
 }
 
-MC_DLLEXPORT_DEF
 void MCCanvasFillTextAligned(MCStringRef p_text, integer_t p_halign, integer_t p_valign, MCCanvasRectangleRef p_rect, MCCanvasRef p_canvas)
 {
 	MCFontRef t_font;
@@ -5715,6 +5714,7 @@ void MCCanvasAlignmentSplit(integer_t p_align, integer_t &r_h_align, integer_t &
 	r_v_align = (0x3 & (p_align >> 2)) - 1;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasFillTextAligned(MCStringRef p_text, integer_t p_align, MCCanvasRectangleRef p_rect, MCCanvasRef p_canvas)
 {
 	integer_t t_h_aligh, t_v_align;
