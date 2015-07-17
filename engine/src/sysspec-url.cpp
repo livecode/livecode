@@ -396,7 +396,8 @@ void MCUrlLoadEvent::Dispatch(void)
 			case kMCSystemUrlStatusError:
 				t_object -> message_with_valueref_args(m_message, m_url, MCSTR("error"), m_error);
 				break;
-            
+		default: /* Do nothing */
+				break;
 		}
 	}
 }
