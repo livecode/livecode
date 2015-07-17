@@ -620,7 +620,7 @@ void MCS_putintourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 		t_success = MCSystemPutUrl(*t_processed, p_data, MCDataGetLength(p_data), MCS_puturl_callback, &t_state);
 	}
 	
-	if (t_success);
+	if (t_success)
 	{
 		MCurlresult->clear();
 		
