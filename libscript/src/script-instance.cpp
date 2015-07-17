@@ -2482,7 +2482,7 @@ __MCScriptHandlerDescribe (void *p_context,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" bool MC_DLLEXPORT MCScriptBuiltinRepeatCounted(uinteger_t *x_count)
+extern "C" bool MC_DLLEXPORT_DEF MCScriptBuiltinRepeatCounted(uinteger_t *x_count)
 {
     if (*x_count == 0)
         return false;
@@ -2491,27 +2491,27 @@ extern "C" bool MC_DLLEXPORT MCScriptBuiltinRepeatCounted(uinteger_t *x_count)
     return true;
 }
 
-extern "C" bool MC_DLLEXPORT MCScriptBuiltinRepeatUpToCondition(double p_counter, double p_limit)
+extern "C" bool MC_DLLEXPORT_DEF MCScriptBuiltinRepeatUpToCondition(double p_counter, double p_limit)
 {
     return p_counter <= p_limit;
 }
 
-extern "C" double MC_DLLEXPORT MCScriptBuiltinRepeatUpToIterate(double p_counter, double p_step)
+extern "C" double MC_DLLEXPORT_DEF MCScriptBuiltinRepeatUpToIterate(double p_counter, double p_step)
 {
     return p_counter + p_step;
 }
 
-extern "C" bool MC_DLLEXPORT MCScriptBuiltinRepeatDownToCondition(double p_counter, double p_limit)
+extern "C" bool MC_DLLEXPORT_DEF MCScriptBuiltinRepeatDownToCondition(double p_counter, double p_limit)
 {
     return p_counter >= p_limit;
 }
 
-extern "C" double MC_DLLEXPORT MCScriptBuiltinRepeatDownToIterate(double p_counter, double p_step)
+extern "C" double MC_DLLEXPORT_DEF MCScriptBuiltinRepeatDownToIterate(double p_counter, double p_step)
 {
     return p_counter + p_step;
 }
 
-extern "C" void MC_DLLEXPORT MCScriptBuiltinThrow(MCStringRef p_reason)
+extern "C" void MC_DLLEXPORT_DEF MCScriptBuiltinThrow(MCStringRef p_reason)
 {
     MCErrorThrowGeneric(p_reason);
 }

@@ -32,7 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #  define localtime_r(s,t) (localtime_s(t,s))
 #endif
 
-extern "C" MC_DLLEXPORT void
+extern "C" MC_DLLEXPORT_DEF void
 MCDateExecGetLocalDate (MCProperListRef & r_datetime)
 {
 	struct tm t_timeinfo;
@@ -58,7 +58,7 @@ MCDateExecGetLocalDate (MCProperListRef & r_datetime)
         return;
 }
 
-extern "C" MC_DLLEXPORT void
+extern "C" MC_DLLEXPORT_DEF void
 MCDateExecGetUniversalTime (double& r_time)
 {
 #ifndef _WINDOWS

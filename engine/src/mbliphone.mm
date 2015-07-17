@@ -96,8 +96,8 @@ real8 curtime;
 
 ////////////////////////////////////////////////////////////////////////
 
-MC_DLLEXPORT extern "C" void *load_module(const char *);
-MC_DLLEXPORT extern "C" void *resolve_symbol(void *, const char *);
+extern "C" MC_DLLEXPORT_DEF void *load_module(const char *);
+extern "C" MC_DLLEXPORT_DEF void *resolve_symbol(void *, const char *);
 
 struct LibExport
 {
@@ -111,7 +111,8 @@ struct LibInfo
 	struct LibExport *exports;
 };
 
-void *load_module(const char *p_path) __attribute__((__visibility__("default")))
+MC_DLLEXPORT_DEF
+void *load_module(const char *p_path)
 {
 	const char *t_last_component;
 	t_last_component = strrchr(p_path, '/');

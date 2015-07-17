@@ -24,8 +24,8 @@
 
 extern "C"
 {
-    MC_DLLEXPORT MCTypeInfoRef kMCNativeCStringTypeInfo;
-	MC_DLLEXPORT MCTypeInfoRef kMCWStringTypeInfo;
+    MC_DLLEXPORT_DEF MCTypeInfoRef kMCNativeCStringTypeInfo;
+	MC_DLLEXPORT_DEF MCTypeInfoRef kMCWStringTypeInfo;
 }
 
 MCTypeInfoRef kMCForeignZStringNullErrorTypeInfo;

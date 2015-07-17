@@ -47,7 +47,7 @@ static void __MCSWindowsCommandLineFree (uindex_t &, unichar_t **& );
  * Setters and getters
  * ================================================================ */
 
-bool
+MC_DLLEXPORT_DEF bool
 MCSCommandLineGetArguments (MCProperListRef & r_arg_list)
 {
 	if (NULL != s_arguments)
@@ -57,7 +57,7 @@ MCSCommandLineGetArguments (MCProperListRef & r_arg_list)
 	return true;
 }
 
-bool
+MC_DLLEXPORT_DEF bool
 MCSCommandLineSetArguments (MCProperListRef p_arg_list)
 {
 	MCAssert (NULL != p_arg_list);
@@ -66,7 +66,7 @@ MCSCommandLineSetArguments (MCProperListRef p_arg_list)
 	return true;
 }
 
-bool
+MC_DLLEXPORT_DEF bool
 MCSCommandLineGetName (MCStringRef & r_name)
 {
 	if (NULL != s_name)
@@ -76,7 +76,7 @@ MCSCommandLineGetName (MCStringRef & r_name)
 	return true;
 }
 
-bool
+MC_DLLEXPORT_DEF bool
 MCSCommandLineSetName (MCStringRef p_name)
 {
 	MCAssert (NULL != p_name);
@@ -85,7 +85,7 @@ MCSCommandLineSetName (MCStringRef p_name)
 	return true;
 }
 
-bool
+MC_DLLEXPORT_DEF bool
 MCSCommandLineGetFilename (MCStringRef & r_filename)
 {
 	if (NULL != s_filename)
@@ -95,7 +95,7 @@ MCSCommandLineGetFilename (MCStringRef & r_filename)
 	return true;
 }
 
-bool
+MC_DLLEXPORT_DEF bool
 MCSCommandLineSetFilename (MCStringRef p_filename)
 {
 	MCAssert (NULL != p_filename);
@@ -194,7 +194,7 @@ __MCSCommandLineCaptureNameAndArguments (uindex_t p_arg_count,
  * Capture command information using C argument array
  * ---------------------------------------------------------------- */
 
-bool
+MC_DLLEXPORT_DEF bool
 MCSCommandLineCapture (uindex_t p_arg_count, const char *p_arg_array[])
 {
 	return
@@ -233,7 +233,7 @@ __MCSCommandLineFinalize (void)
  * Windows-specific functions
  * ================================================================ */
 
-bool
+MC_DLLEXPORT_DEF bool
 MCSCommandLineCaptureWindows (void)
 {
 	bool t_success = true;

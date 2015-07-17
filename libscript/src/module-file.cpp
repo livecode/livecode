@@ -21,13 +21,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" MC_DLLEXPORT void
+extern "C" MC_DLLEXPORT_DEF void
 MCFileExecGetContents (MCStringRef p_path, MCDataRef & r_data)
 {
 	/* UNCHECKED */ MCSFileGetContents (p_path, r_data);
 }
 
-extern "C" MC_DLLEXPORT void
+extern "C" MC_DLLEXPORT_DEF void
 MCFileExecSetContents (MCDataRef p_contents, MCStringRef p_path)
 {
 	/* UNCHECKED */ MCSFileSetContents (p_path, p_contents);
@@ -35,25 +35,25 @@ MCFileExecSetContents (MCDataRef p_contents, MCStringRef p_path)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" MC_DLLEXPORT void
+extern "C" MC_DLLEXPORT_DEF void
 MCFileExecDeleteFile (MCStringRef p_path)
 {
 	/* UNCHECKED */ MCSFileDelete (p_path);
 }
 
-extern "C" MC_DLLEXPORT void
+extern "C" MC_DLLEXPORT_DEF void
 MCFileExecCreateDirectory (MCStringRef p_path)
 {
 	/* UNCHECKED */ MCSFileCreateDirectory (p_path);
 }
 
-extern "C" MC_DLLEXPORT void
+extern "C" MC_DLLEXPORT_DEF void
 MCFileExecDeleteDirectory (MCStringRef p_path)
 {
 	/* UNCHECKED */ MCSFileDeleteDirectory (p_path);
 }
 
-extern "C" MC_DLLEXPORT void
+extern "C" MC_DLLEXPORT_DEF void
 MCFileExecGetDirectoryEntries (MCStringRef p_path,
                                MCProperListRef & r_entries)
 {
