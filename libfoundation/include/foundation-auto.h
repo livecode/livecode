@@ -458,7 +458,7 @@ public:
 		}
 	}
 
-	bool Unlock(void)
+	void Unlock(void)
 	{
 		if (nil != m_string)
 		{
