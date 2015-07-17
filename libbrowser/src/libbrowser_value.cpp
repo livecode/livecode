@@ -28,7 +28,7 @@ struct MCBrowserValue
 	{
 		bool boolean;
 		int32_t integer;
-		double_t double_val;
+		double double_val;
 		char *utf8_string;
 		MCBrowserListRef array;
 	};
@@ -89,7 +89,7 @@ bool MCBrowserValueGetInteger(MCBrowserValue &self, int32_t &r_value)
 	return true;
 }
 
-bool MCBrowserValueSetDouble(MCBrowserValue &self, double_t p_value)
+bool MCBrowserValueSetDouble(MCBrowserValue &self, double p_value)
 {
 	MCBrowserValueClear(self);
 	self.type = kMCBrowserValueTypeDouble;
@@ -98,7 +98,7 @@ bool MCBrowserValueSetDouble(MCBrowserValue &self, double_t p_value)
 	return true;
 }
 
-bool MCBrowserValueGetDouble(MCBrowserValue &self, double_t &r_value)
+bool MCBrowserValueGetDouble(MCBrowserValue &self, double &r_value)
 {
 	if (self.type != kMCBrowserValueTypeDouble)
 		return false;
@@ -138,6 +138,8 @@ bool MCBrowserValueSetList(MCBrowserValue &self, MCBrowserListRef p_value)
 	MCBrowserValueClear(self);
 	self.type = kMCBrowserValueTypeList;
 	self.array = t_array;
+
+	return true;
 }
 
 bool MCBrowserValueGetList(MCBrowserValue &self, MCBrowserListRef &r_value)
@@ -221,7 +223,7 @@ public:
 		return MCBrowserValueGetInteger(m_elements[p_index], r_value);
 	}
 	
-	bool SetDouble(uint32_t p_index, double_t p_value)
+	bool SetDouble(uint32_t p_index, double p_value)
 	{
 		if (p_index >= m_size)
 			return false;
@@ -229,7 +231,7 @@ public:
 		return MCBrowserValueSetDouble(m_elements[p_index], p_value);
 	}
 
-	bool GetDouble(uint32_t p_index, double_t &r_value)
+	bool GetDouble(uint32_t p_index, double &r_value)
 	{
 		if (p_index >= m_size)
 			return false;
@@ -285,7 +287,7 @@ public:
 		return Expand(m_size + 1) && SetInteger(t_index, p_value);
 	}
 	
-	bool AppendDouble(double_t p_value)
+	bool AppendDouble(double p_value)
 	{
 		uint32_t t_index;
 		t_index = m_size;
@@ -380,7 +382,7 @@ bool MCBrowserListSetInteger(MCBrowserListRef p_list, uint32_t p_index, int32_t 
 	return ((MCBrowserList*)p_list)->SetInteger(p_index, p_value);
 }
 
-bool MCBrowserListSetDouble(MCBrowserListRef p_list, uint32_t p_index, double_t p_value)
+bool MCBrowserListSetDouble(MCBrowserListRef p_list, uint32_t p_index, double p_value)
 {
 	if (p_list == nil)
 		return false;
@@ -420,7 +422,7 @@ bool MCBrowserListAppendInteger(MCBrowserListRef p_list, int32_t p_value)
 	return ((MCBrowserList*)p_list)->AppendInteger(p_value);
 }
 
-bool MCBrowserListAppendDouble(MCBrowserListRef p_list, double_t p_value)
+bool MCBrowserListAppendDouble(MCBrowserListRef p_list, double p_value)
 {
 	if (p_list == nil)
 		return false;
@@ -460,7 +462,7 @@ bool MCBrowserListGetInteger(MCBrowserListRef p_list, uint32_t p_index, int32_t 
 	return ((MCBrowserList*)p_list)->GetInteger(p_index, r_value);
 }
 
-bool MCBrowserListGetDouble(MCBrowserListRef p_list, uint32_t p_index, double_t &r_value)
+bool MCBrowserListGetDouble(MCBrowserListRef p_list, uint32_t p_index, double &r_value)
 {
 	if (p_list == nil)
 		return false;
