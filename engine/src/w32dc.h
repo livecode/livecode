@@ -227,6 +227,8 @@ public:
 	MCRectangle logicaltoscreenrect(const MCRectangle &p_rect);
 	MCRectangle screentologicalrect(const MCRectangle &p_rect);
 
+	virtual void *GetNativeWindowHandle(Window p_window);
+
 	virtual void openwindow(Window w, Boolean override);
 	virtual void closewindow(Window window);
 	virtual void destroywindow(Window &window);

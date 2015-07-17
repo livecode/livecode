@@ -33,9 +33,13 @@
 				'src/libbrowser_cef.h',
 				'src/libbrowser_cef_lnx.cpp',
 				'src/libbrowser_cef_osx.mm',
+				'src/libbrowser_cef_win.cpp',
 				'src/libbrowser_cefshared_osx.cpp',
 				'src/libbrowser_cefshared_lnx.cpp',
 				'src/libbrowser_value.cpp',
+				
+				'src/libbrowser_win.rc.h',
+				'src/libbrowser_win.rc',
 				
 				'src/signal_restore_posix.cpp',
 				'src/WebAuthenticationPanel.m',
@@ -63,6 +67,18 @@
 							'src/libbrowser_cef_osx.mm',
 							'src/libbrowser_cefshared_osx.cpp',
 							'src/WebAuthenticationPanel.m',
+						],
+					},
+				],
+				
+				[
+					'OS != "win"',
+					{
+						'sources!':
+						[
+							'src/libbrowser_cef_win.cpp',
+							'src/libbrowser_win.rc.h',
+							'src/libbrowser_win.rc',
 						],
 					},
 				],
@@ -183,6 +199,7 @@
 				'src/libbrowser_cefprocess.cpp',
 				'src/libbrowser_cefprocess_lnx.cpp',
 				'src/libbrowser_cefprocess_osx.mm',
+				'src/libbrowser_cefprocess_win.cpp',
 				'src/libbrowser_cefshared_lnx.cpp',
 				'src/libbrowser_cefshared_osx.cpp',
 			],
@@ -205,6 +222,16 @@
 						[
 							'src/libbrowser_cefprocess_osx.mm',
 							'src/libbrowser_cefshared_osx.cpp',
+						],
+					},
+				],
+				
+				[
+					'OS != "win"',
+					{
+						'sources!':
+						[
+							'src/libbrowser_cefprocess_win.cpp',
 						],
 					},
 				],

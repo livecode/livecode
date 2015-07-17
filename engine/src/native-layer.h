@@ -48,6 +48,9 @@ protected:
     
     MCNativeLayer();
     
+	// Returns true if the widget should be currently visible
+	virtual bool ShouldShowWidget(MCWidget *p_widget);
+
     // Utility function for subclasses: given a widget, finds the native layer
     // immediately below or above it. If none exist, returns nil.
     static MCWidget* findNextLayerBelow(MCWidget*);

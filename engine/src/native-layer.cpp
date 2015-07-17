@@ -62,6 +62,11 @@ bool MCNativeLayer::isAttached() const
     return m_attached;
 }
 
+bool MCNativeLayer::ShouldShowWidget(MCWidget *p_widget)
+{
+	return p_widget->getflag(F_VISIBLE) && !p_widget->inEditMode();
+}
+
 MCWidget* MCNativeLayer::findNextLayerAbove(MCWidget* p_widget)
 {
     MCWidget *t_before;
