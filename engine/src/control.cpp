@@ -1621,10 +1621,9 @@ Boolean MCControl::sbfocus(int2 x, int2 y, MCScrollbar *hsb, MCScrollbar *vsb)
 {
 	if (state & (CS_HSCROLL | CS_VSCROLL))
 	{
-		// PM-2015-07-16: [[ Bug 11569 ]] Make sure hscrollbar and vscrollbar actually exist 
-		if (hsb != nil && state & CS_HSCROLL)
+		if (state & CS_HSCROLL)
 			hsb->mfocus(x, y);
-		else if (vsb != nil)
+		else
 			vsb->mfocus(x, y);
 		readscrollbars();
 		MCscreen->sync(getw());
@@ -1816,6 +1815,8 @@ Exec_stat MCControl::setsbprop(Properties which, const MCString &data,
 			}
 			else
 			{
+				// PM-2015-07-16: [[ Bug 11569 ]] Unset CS_HSCROLL when the hscrollBar of a control is set to false
+			    state &= ~CS_HSCROLL;
 				delete hsb;
 				hsb = NULL;
 				if (opened)
@@ -1856,6 +1857,8 @@ Exec_stat MCControl::setsbprop(Properties which, const MCString &data,
 			}
 			else
 			{
+				// PM-2015-07-16: [[ Bug 11569 ]] Unset CS_VSCROLL when the vscrollBar of a control is set to false
+				state &= ~CS_VSCROLL;
 				delete vsb;
 				vsb = NULL;
 				if (opened)
