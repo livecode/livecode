@@ -392,8 +392,6 @@ MCEmscriptenSystem::OpenFile(MCStringRef p_path,
                              intenum_t p_mode,
                              Boolean p_map)
 {
-	IO_handle t_handle = NULL;
-
 	MCAutoStringRefAsUTF8String t_path_sys;
 	if (!t_path_sys.Lock(p_path))
 	{
