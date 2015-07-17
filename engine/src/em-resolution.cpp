@@ -58,12 +58,14 @@ MCGFloat
 MCResPlatformGetDefaultPixelScale()
 {
 	MCEmscriptenNotImplemented();
+	return NAN;
 }
 
 MCGFloat
 MCResPlatformGetUIDeviceScale()
 {
 	MCEmscriptenNotImplemented();
+	return NAN;
 }
 
 void

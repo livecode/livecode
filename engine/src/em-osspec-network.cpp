@@ -35,6 +35,7 @@ MCS_accept(uint16_t p_port,
            MCStringRef p_sslcertfile)
 {
 	MCEmscriptenNotImplemented();
+	return nil;
 }
 
 bool
@@ -42,4 +43,5 @@ MCS_ha(MCSocket *p_socket,
        MCStringRef & r_address)
 {
 	MCEmscriptenNotImplemented();
+	return false;
 }

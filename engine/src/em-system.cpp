@@ -129,24 +129,28 @@ bool
 MCEmscriptenSystem::GetVersion(MCStringRef & r_string)
 {
 	MCEmscriptenNotImplemented();
+	return false;
 }
 
 bool
 MCEmscriptenSystem::GetMachine(MCStringRef & r_string)
 {
 	MCEmscriptenNotImplemented();
+	return false;
 }
 
 MCNameRef
 MCEmscriptenSystem::GetProcessor()
 {
 	MCEmscriptenNotImplemented();
+	return kMCEmptyName;
 }
 
 bool
 MCEmscriptenSystem::GetAddress(MCStringRef & r_address)
 {
 	MCEmscriptenNotImplemented();
+	return false;
 }
 
 /* ----------------------------------------------------------------
@@ -165,6 +169,7 @@ bool
 MCEmscriptenSystem::GetExecutablePath(MCStringRef & r_path)
 {
 	MCEmscriptenNotImplemented();
+	return false;
 }
 
 /* ----------------------------------------------------------------
@@ -357,6 +362,7 @@ MCEmscriptenSystem::FileExists(MCStringRef p_path)
 {
 	/* FIXME Implement FileExists() -- using stat(2) */
 	MCEmscriptenNotImplemented();
+	return false;
 }
 
 Boolean
@@ -364,6 +370,7 @@ MCEmscriptenSystem::FolderExists(MCStringRef p_path)
 {
 	/* FIXME Implement FolderExists() -- using stat(2) */
 	MCEmscriptenNotImplemented();
+	return false;
 }
 
 Boolean
@@ -371,6 +378,7 @@ MCEmscriptenSystem::FileNotAccessible(MCStringRef p_path)
 {
 	/* FIXME Implement FileNotAccessible -- maybe using access(2) */
 	MCEmscriptenNotImplemented();
+	return false;
 }
 
 Boolean
@@ -378,6 +386,7 @@ MCEmscriptenSystem::ChangePermissions(MCStringRef p_path, uint16_t p_mask)
 {
 	/* FIXME Implement ChangePermissions -- using chmod(2) */
 	MCEmscriptenNotImplemented();
+	return false;
 }
 
 uint16_t
@@ -385,6 +394,7 @@ MCEmscriptenSystem::UMask(uint16_t p_mask)
 {
 	/* FIXME Implement UMask() -- using umask(2) */
 	MCEmscriptenNotImplemented();
+	return 0;
 }
 
 IO_handle
@@ -431,6 +441,7 @@ MCEmscriptenSystem::OpenFd(uint32_t p_fd,
 {
 	/* FIXME Implement OpenFd() */
 	MCEmscriptenNotImplemented();
+	return NULL;
 }
 
 IO_handle
@@ -439,6 +450,7 @@ MCEmscriptenSystem::OpenDevice(MCStringRef p_path,
 {
 	/* FIXME Implement OpenDevice() */
 	MCEmscriptenNotImplemented();
+	return NULL;
 }
 
 bool
@@ -581,6 +593,7 @@ MCEmscriptenSystem::TextConvert(const void *p_string,
                                 uint32_t p_to_charset)
 {
 	MCEmscriptenNotImplemented();
+	return 0;
 }
 
 bool
@@ -592,6 +605,7 @@ MCEmscriptenSystem::TextConvertToUnicode(uint32_t p_input_encoding,
                                          uint32_t & r_used)
 {
 	MCEmscriptenNotImplemented();
+	return false;
 }
 
 /* ----------------------------------------------------------------
@@ -604,6 +618,7 @@ MCSysModuleHandle
 MCEmscriptenSystem::LoadModule(MCStringRef p_path)
 {
 	MCEmscriptenNotImplemented();
+	return NULL;
 }
 
 MCSysModuleHandle
@@ -611,6 +626,7 @@ MCEmscriptenSystem::ResolveModuleSymbol(MCSysModuleHandle p_module,
                                         MCStringRef p_symbol)
 {
 	MCEmscriptenNotImplemented();
+	return NULL;
 }
 
 void

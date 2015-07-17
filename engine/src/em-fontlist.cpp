@@ -177,6 +177,7 @@ MCFontlist::getfontnames(MCStringRef p_type,
                          MCListRef & r_names)
 {
 	MCEmscriptenNotImplemented();
+	return false;
 }
 
 /* All fonts are scalable on Emscripten, so return 0 */
@@ -200,6 +201,7 @@ MCFontlist::getfontstyles(MCStringRef p_name,
                           MCListRef & r_styles)
 {
 	MCEmscriptenNotImplemented();
+	return false;
 }
 
 bool
