@@ -412,7 +412,7 @@ MCEmscriptenSystem::OpenFile(MCStringRef p_path,
 	case kMCOpenFileModeUpdate:
 	case kMCOpenFileModeAppend:
 		MCEmscriptenNotImplemented();
-		break;
+		return NULL;
 	default:
 		MCUnreachable();
 	}
