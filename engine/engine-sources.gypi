@@ -493,6 +493,7 @@
 			'src/syslnxregion.cpp',
 			'src/sysosxregion.cpp',
 			'src/sysspec.cpp',
+			'src/sysspec-url.cpp',
 			'src/sysunxdate.cpp',
 			'src/sysunxnetwork.cpp',
 			'src/sysw32fs.cpp',

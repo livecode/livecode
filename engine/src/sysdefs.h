@@ -79,12 +79,16 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __LF__
 #define PLATFORM_STRING "iphone"
 
+#define FEATURE_PLATFORM_URL 1
+
 #elif defined(_ANDROID_MOBILE)
 
 #define MCSSL
 #define __ISO_8859_1__
 #define __LF__
 #define PLATFORM_STRING "android"
+
+#define FEATURE_PLATFORM_URL 1
 
 #endif
 

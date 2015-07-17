@@ -507,6 +507,10 @@ MCNameRef MCM_unload_url;
 MCNameRef MCM_update_screen;
 MCNameRef MCM_update_var;
 
+#ifdef FEATURE_PLATFORM_URL
+MCNameRef MCM_url_progress;
+#endif
+
 #ifdef _MOBILE
 MCNameRef MCN_firstname;
 MCNameRef MCN_lastname;
@@ -550,7 +554,6 @@ MCNameRef MCM_touch_release;
 MCNameRef MCM_motion_start;
 MCNameRef MCM_motion_end;
 MCNameRef MCM_motion_release;
-MCNameRef MCM_url_progress;
 MCNameRef MCM_acceleration_changed;
 MCNameRef MCM_orientation_changed;
 MCNameRef MCM_location_changed;
@@ -946,6 +949,10 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("updateScreen", MCM_update_screen);
 	/* UNCHECKED */ MCNameCreateWithCString("updateVariable", MCM_update_var);
 
+#ifdef FEATURE_PLATFORM_URL
+	/* UNCHECKED */ MCNameCreateWithCString("urlProgress", MCM_url_progress);
+#endif
+
 #ifdef _MOBILE
 	/* UNCHECKED */ MCNameCreateWithCString("firstname", MCN_firstname);
 	/* UNCHECKED */ MCNameCreateWithCString("lastname", MCN_lastname);
@@ -992,7 +999,6 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("motionStart", MCM_motion_start);
 	/* UNCHECKED */ MCNameCreateWithCString("motionEnd", MCM_motion_end);
 	/* UNCHECKED */ MCNameCreateWithCString("motionRelease", MCM_motion_release);
-	/* UNCHECKED */ MCNameCreateWithCString("urlProgress", MCM_url_progress);
 	/* UNCHECKED */ MCNameCreateWithCString("accelerationChanged", MCM_acceleration_changed);
 	/* UNCHECKED */ MCNameCreateWithCString("orientationChanged", MCM_orientation_changed);
 	/* UNCHECKED */ MCNameCreateWithCString("locationChanged", MCM_location_changed);
@@ -1382,6 +1388,10 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCM_update_screen);
 	MCNameDelete(MCM_update_var);
 
+#ifdef FEATURE_PLATFORM_URL
+	MCNameDelete(MCM_url_progress);
+#endif
+
 #ifdef _MOBILE
 	MCNameDelete(MCN_firstname);
 	MCNameDelete(MCN_lastname);
@@ -1426,7 +1436,6 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCM_motion_start);
 	MCNameDelete(MCM_motion_end);
 	MCNameDelete(MCM_motion_release);
-	MCNameDelete(MCM_url_progress);
 	MCNameDelete(MCM_acceleration_changed);
 	MCNameDelete(MCM_orientation_changed);
 	MCNameDelete(MCM_location_changed);
