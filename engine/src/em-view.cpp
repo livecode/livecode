@@ -44,7 +44,6 @@ MCEmscriptenViewSetBounds(const MCRectangle & p_rect)
 {
 	int t_canvas_width = p_rect.width;
 	int t_canvas_height = p_rect.height;
-	int t_is_fullscreen;
 
 	/* Attempt to resize the canvas */
 	emscripten_set_canvas_size(t_canvas_width, t_canvas_height);
