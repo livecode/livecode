@@ -164,12 +164,6 @@
 			'conditions':
 			[
 				[
-					'OS == "mac"',
-					{
-						'product_name': 'Server-Community',
-					},
-				],
-				[
 					'mobile != 0',
 					{
 						'type': 'none',
@@ -232,8 +226,34 @@
 				[
 					'OS == "ios"',
 					{
-						'product_name': 'standalone-mobile-community',
+						'product_name': 'standalone-mobile-lib-community',
+						'product_prefix': '',
+						'product_extension': 'lcext',
 						'app_plist': 'rsrc/standalone-mobile-Info.plist',
+						
+						# Forces all dependencies to be linked properly
+						'type': 'shared_library',
+						
+						'variables':
+						{
+							'deps_file': '${SRCROOT}/standalone.ios',
+						},
+
+						'xcode_settings':
+						{
+							'DEAD_CODE_STRIPPING': 'NO',
+							'DYLIB_COMPATIBILITY_VERSION': '',
+							'DYLIB_CURRENT_VERSION': '',
+							'MACH_O_TYPE': 'mh_object',
+							'OTHER_LDFLAGS':
+							[
+								'-Wl,-sectcreate,__MISC,__deps,<(deps_file)',
+								'-Wl,-exported_symbol,_main',
+								'-Wl,-exported_symbol,_load_module',
+								'-Wl,-exported_symbol,_resolve_symbol',
+								#'-all_load',		# Dead stripping later will remove un-needed symbols
+							],
+						},
 					},
 				],
 				[
@@ -403,7 +423,13 @@
 							},
 						],
 						[
-							'OS != "android"',
+							'OS == "ios"',
+							{
+								'dist_files': [ '<(PRODUCT_DIR)/standalone-mobile-community.ios-engine' ],
+							},
+						],
+						[
+							'OS != "android" and OS != "ios"',
 							{
 								'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(app_bundle_suffix)' ],
 							}
@@ -591,12 +617,12 @@
 		},
 		
 		{
-			'target_name': 'standalone-mobile-lib-community',
+			'target_name': 'ios-standalone-executable',
 			'type': 'none',
 			
 			'dependencies':
 			[
-				'kernel-standalone',
+				'standalone',
 			],
 			
 			'conditions':
@@ -612,20 +638,19 @@
 								
 								'inputs':
 								[
-									'<(PRODUCT_DIR)/libkernel.a',
-									'<(PRODUCT_DIR)/libkernel-standalone.a',
+									'<(PRODUCT_DIR)/standalone-mobile-lib-community.lcext',
 								],
 								
 								'outputs':
 								[
-									'<(PRODUCT_DIR)/standalone-mobile-lib-community.lcext',
+									'<(PRODUCT_DIR)/standalone-mobile-community.ios-engine',
 								],
 								
 								'action':
 								[
 									'./bind-ios-standalone.sh',
-									'<@(_outputs)',
 									'<@(_inputs)',
+									'<@(_outputs)',
 								],
 							},
 						],

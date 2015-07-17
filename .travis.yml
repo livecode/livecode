@@ -8,6 +8,7 @@ branches:
   only:
     - /^develop.*$/
     - /^release.*$/
+    - coverity_scan
 
 # Environment variables
 env:

@@ -1056,7 +1056,6 @@ void MCWidget::OnVisibilityChanged(bool p_visible)
 
 void MCWidget::OnHitTest(const MCRectangle& p_intersect, bool& r_hit)
 {
-    fprintf(stderr, "MCWidget::OnHitTest\n");
     r_hit = maskrect(p_intersect);
     
     // In theory this handler shouldn't allow script access.
@@ -1064,7 +1063,6 @@ void MCWidget::OnHitTest(const MCRectangle& p_intersect, bool& r_hit)
 
 void MCWidget::OnBoundsTest(const MCRectangle& p_intersect, bool& r_hit)
 {
-    fprintf(stderr, "MCWidget::OnBoundsTest\n");
     r_hit = maskrect(p_intersect);
     
     // In theory this handler shouldn't allow script access.
@@ -1072,8 +1070,6 @@ void MCWidget::OnBoundsTest(const MCRectangle& p_intersect, bool& r_hit)
 
 void MCWidget::OnSave(MCValueRef& r_array)
 {
-    fprintf(stderr, "MCWidget::OnSave\n");
-    
     MCAutoValueRefArray t_params;
     t_params.New(1);
     t_params[0] = nil;
@@ -1090,8 +1086,6 @@ void MCWidget::OnSave(MCValueRef& r_array)
 
 void MCWidget::OnLoad(MCValueRef p_array)
 {
-    fprintf(stderr, "MCWidget::OnLoad\n");
-    
     MCAutoValueRefArray t_params;
     t_params.New(1);
     t_params[0] = MCValueRetain(p_array);
@@ -1145,8 +1139,6 @@ void MCWidget::OnToolChanged(Tool p_new_tool)
         m_timer_deferred = false;
         MCscreen -> addtimer(this, MCM_internal, 0);
     }
-    
-    fprintf(stderr, "MCWidget::OnToolChanged\n");
 }
 
 void MCWidget::OnLayerChanged()
@@ -1792,7 +1784,7 @@ static bool MCWidgetThrowNoCurrentWidgetError(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" MC_DLLEXPORT void MCWidgetExecRedrawAll(void)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetExecRedrawAll(void)
 {
     if (MCwidgetobject == nil)
     {
@@ -1803,7 +1795,7 @@ extern "C" MC_DLLEXPORT void MCWidgetExecRedrawAll(void)
     MCwidgetobject -> layer_redrawall();
 }
 
-extern "C" MC_DLLEXPORT void MCWidgetExecScheduleTimerIn(double p_after)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetExecScheduleTimerIn(double p_after)
 {
     if (MCwidgetobject == nil)
     {
@@ -1815,7 +1807,7 @@ extern "C" MC_DLLEXPORT void MCWidgetExecScheduleTimerIn(double p_after)
     MCscreen -> addtimer(MCwidgetobject, MCM_internal, (uint4)(p_after * 1000));
 }
 
-extern "C" MC_DLLEXPORT void MCWidgetExecCancelTimer(void)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetExecCancelTimer(void)
 {
     if (MCwidgetobject == nil)
     {
@@ -1826,7 +1818,7 @@ extern "C" MC_DLLEXPORT void MCWidgetExecCancelTimer(void)
     MCscreen -> cancelmessageobject(MCwidgetobject, MCM_internal);
 }
 
-extern "C" MC_DLLEXPORT void MCWidgetEvalInEditMode(bool& r_in_edit_mode)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetEvalInEditMode(bool& r_in_edit_mode)
 {
     r_in_edit_mode = MCcurtool != T_BROWSE;
 }
@@ -1836,7 +1828,7 @@ extern "C" MC_DLLEXPORT void MCWidgetEvalInEditMode(bool& r_in_edit_mode)
 extern MCValueRef MCEngineDoSendToObjectWithArguments(bool p_is_function, MCStringRef p_message, MCObject *p_object, MCProperListRef p_arguments);
 extern void MCEngineDoPostToObjectWithArguments(MCStringRef p_message, MCObject *p_object, MCProperListRef p_arguments);
 
-extern "C" MC_DLLEXPORT void MCWidgetGetScriptObject(MCScriptObjectRef& r_script_object)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetScriptObject(MCScriptObjectRef& r_script_object)
 {
     if (MCwidgetobject == nil)
     {
@@ -1848,7 +1840,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetScriptObject(MCScriptObjectRef& r_script
         return;
 }
 
-extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecSend(bool p_is_function, MCStringRef p_message)
+extern "C" MC_DLLEXPORT_DEF MCValueRef MCWidgetExecSend(bool p_is_function, MCStringRef p_message)
 {
     if (MCwidgetobject == nil)
     {
@@ -1859,7 +1851,7 @@ extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecSend(bool p_is_function, MCString
     return MCEngineDoSendToObjectWithArguments(p_is_function, p_message, MCwidgetobject, kMCEmptyProperList);
 }
 
-extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecSendWithArguments(bool p_is_function, MCStringRef p_message, MCProperListRef p_arguments)
+extern "C" MC_DLLEXPORT_DEF MCValueRef MCWidgetExecSendWithArguments(bool p_is_function, MCStringRef p_message, MCProperListRef p_arguments)
 {
     if (MCwidgetobject == nil)
     {
@@ -1870,7 +1862,7 @@ extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecSendWithArguments(bool p_is_funct
     return MCEngineDoSendToObjectWithArguments(p_is_function, p_message, MCwidgetobject, p_arguments);
 }
 
-extern "C" MC_DLLEXPORT void MCWidgetExecPost(MCStringRef p_message)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetExecPost(MCStringRef p_message)
 {
     if (MCwidgetobject == nil)
     {
@@ -1881,7 +1873,7 @@ extern "C" MC_DLLEXPORT void MCWidgetExecPost(MCStringRef p_message)
     MCEngineDoPostToObjectWithArguments(p_message, MCwidgetobject, kMCEmptyProperList);
 }
 
-extern "C" MC_DLLEXPORT void MCWidgetExecPostWithArguments(MCStringRef p_message, MCProperListRef p_arguments)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetExecPostWithArguments(MCStringRef p_message, MCProperListRef p_arguments)
 {
     if (MCwidgetobject == nil)
     {
@@ -1894,7 +1886,7 @@ extern "C" MC_DLLEXPORT void MCWidgetExecPostWithArguments(MCStringRef p_message
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" MC_DLLEXPORT void MCWidgetGetRectangle(MCCanvasRectangleRef& r_rect)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetRectangle(MCCanvasRectangleRef& r_rect)
 {
     if (MCwidgetobject == nil)
     {
@@ -1911,7 +1903,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetRectangle(MCCanvasRectangleRef& r_rect)
     MCCanvasRectangleCreateWithMCGRectangle(t_grect, r_rect);
 }
 
-extern "C" MC_DLLEXPORT void MCWidgetGetFrame(MCCanvasRectangleRef& r_rect)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetFrame(MCCanvasRectangleRef& r_rect)
 {
     if (MCwidgetobject == nil)
     {
@@ -1933,7 +1925,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetFrame(MCCanvasRectangleRef& r_rect)
     MCCanvasRectangleCreateWithMCGRectangle(t_grect, r_rect);
 }
 
-extern "C" MC_DLLEXPORT void MCWidgetGetBounds(MCCanvasRectangleRef& r_rect)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetBounds(MCCanvasRectangleRef& r_rect)
 {
     if (MCwidgetobject == nil)
     {
@@ -1950,7 +1942,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetBounds(MCCanvasRectangleRef& r_rect)
     MCCanvasRectangleCreateWithMCGRectangle(t_grect, r_rect);
 }
 
-extern "C" MC_DLLEXPORT void MCWidgetGetWidth(MCNumberRef& r_width)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetWidth(MCNumberRef& r_width)
 {
     if (MCwidgetobject == nil)
     {
@@ -1961,7 +1953,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetWidth(MCNumberRef& r_width)
     MCNumberCreateWithReal(MCwidgetobject->getrect().width, r_width);
 }
 
-extern "C" MC_DLLEXPORT void MCWidgetGetHeight(MCNumberRef& r_height)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetHeight(MCNumberRef& r_height)
 {
     if (MCwidgetobject == nil)
     {
@@ -1972,7 +1964,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetHeight(MCNumberRef& r_height)
     MCNumberCreateWithReal(MCwidgetobject->getrect().height, r_height);
 }
 
-extern "C" MC_DLLEXPORT void MCWidgetSetWidth(MCNumberRef p_width)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetSetWidth(MCNumberRef p_width)
 {
     if (MCwidgetobject == nil)
     {
@@ -1985,7 +1977,7 @@ extern "C" MC_DLLEXPORT void MCWidgetSetWidth(MCNumberRef p_width)
     MCwidgetobject->setrect(t_rect);
 }
 
-extern "C" MC_DLLEXPORT void MCWidgetSetHeight(MCNumberRef p_height)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetSetHeight(MCNumberRef p_height)
 {
     if (MCwidgetobject == nil)
     {
@@ -1998,7 +1990,7 @@ extern "C" MC_DLLEXPORT void MCWidgetSetHeight(MCNumberRef p_height)
     MCwidgetobject->setrect(t_rect);
 }
 
-extern "C" MC_DLLEXPORT void MCWidgetGetFont(MCCanvasFontRef& r_canvas_font)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetFont(MCCanvasFontRef& r_canvas_font)
 {
     if (MCwidgetobject == nil)
     {
@@ -2014,7 +2006,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetFont(MCCanvasFontRef& r_canvas_font)
         return;
 }
 
-extern "C" MC_DLLEXPORT void MCWidgetGetEnabled(bool& r_enabled)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetEnabled(bool& r_enabled)
 {
     if (MCwidgetobject == nil)
     {
@@ -2025,7 +2017,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetEnabled(bool& r_enabled)
     r_enabled = !MCwidgetobject -> getflag(F_DISABLED);
 }
 
-extern "C" MC_DLLEXPORT void MCWidgetGetDisabled(bool& r_disabled)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetDisabled(bool& r_disabled)
 {
     if (MCwidgetobject == nil)
     {
@@ -2036,7 +2028,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetDisabled(bool& r_disabled)
     r_disabled = MCwidgetobject -> getflag(F_DISABLED);
 }
 
-extern "C" MC_DLLEXPORT void MCWidgetGetMousePosition(bool p_current, MCCanvasPointRef& r_point)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMousePosition(bool p_current, MCCanvasPointRef& r_point)
 {
     if (MCwidgetobject == nil)
     {
@@ -2063,7 +2055,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetMousePosition(bool p_current, MCCanvasPo
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" MC_DLLEXPORT void MCWidgetGetClickPosition(bool p_current, MCCanvasPointRef& r_point)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetClickPosition(bool p_current, MCCanvasPointRef& r_point)
 {
     if (MCwidgetobject == nil)
     {
@@ -2088,7 +2080,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetClickPosition(bool p_current, MCCanvasPo
     /* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(t_gpoint, r_point);
 }
 
-extern "C" MC_DLLEXPORT void MCWidgetGetClickButton(bool p_current, unsigned int& r_button)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetClickButton(bool p_current, unsigned int& r_button)
 {
     if (MCwidgetobject == nil)
     {
@@ -2103,7 +2095,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetClickButton(bool p_current, unsigned int
         MCErrorThrowGeneric(MCSTR("'the current click button' is not implemented yet"));
 }
 
-extern "C" MC_DLLEXPORT void MCWidgetGetClickCount(bool p_current, unsigned int& r_count)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetClickCount(bool p_current, unsigned int& r_count)
 {
     if (MCwidgetobject == nil)
     {
@@ -2123,7 +2115,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetClickCount(bool p_current, unsigned int&
 typedef struct __MCPressedState* MCPressedStateRef;
 MCTypeInfoRef kMCPressedState;
 
-extern "C" MC_DLLEXPORT void MCWidgetGetMouseButtonState(uinteger_t p_index, MCPressedStateRef r_state)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMouseButtonState(uinteger_t p_index, MCPressedStateRef r_state)
 {
     if (MCwidgetobject == nil)
     {
@@ -2137,7 +2129,7 @@ extern "C" MC_DLLEXPORT void MCWidgetGetMouseButtonState(uinteger_t p_index, MCP
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" MC_DLLEXPORT void MCWidgetEvalIsPointWithinRect(MCCanvasPointRef p_point, MCCanvasRectangleRef p_rect, bool& r_within)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetEvalIsPointWithinRect(MCCanvasPointRef p_point, MCCanvasRectangleRef p_rect, bool& r_within)
 {
     MCGPoint t_p;
     MCGRectangle t_r;
@@ -2148,7 +2140,7 @@ extern "C" MC_DLLEXPORT void MCWidgetEvalIsPointWithinRect(MCCanvasPointRef p_po
         && (t_r.origin.y <= t_p.y && t_p.y < t_r.origin.y+t_r.size.height);
 }
 
-extern "C" MC_DLLEXPORT void MCWidgetEvalIsPointNotWithinRect(MCCanvasPointRef p_point, MCCanvasRectangleRef p_rect, bool& r_not_within)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetEvalIsPointNotWithinRect(MCCanvasPointRef p_point, MCCanvasRectangleRef p_rect, bool& r_not_within)
 {
     bool t_within;
     MCWidgetEvalIsPointWithinRect(p_point, p_rect, t_within);
@@ -2192,7 +2184,7 @@ private:
 	MCValueRef m_pick;
 };
 
-extern "C" MC_DLLEXPORT MCStringRef MCWidgetExecPopupMenuAtLocation(MCStringRef p_menu, MCCanvasPointRef p_at)
+extern "C" MC_DLLEXPORT_DEF MCStringRef MCWidgetExecPopupMenuAtLocation(MCStringRef p_menu, MCCanvasPointRef p_at)
 {
 	if (MCwidgetobject == nil)
 	{
@@ -2303,7 +2295,7 @@ MCValueRef MCWidgetPopupAtLocationWithProperties(MCNameRef p_kind, const MCPoint
 	return t_result;
 }
 
-extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecPopupAtLocationWithProperties(MCStringRef p_kind, MCCanvasPointRef p_at, MCArrayRef p_properties)
+extern "C" MC_DLLEXPORT_DEF MCValueRef MCWidgetExecPopupAtLocationWithProperties(MCStringRef p_kind, MCCanvasPointRef p_at, MCArrayRef p_properties)
 {
 	if (MCwidgetobject == nil)
 	{
@@ -2326,14 +2318,14 @@ extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecPopupAtLocationWithProperties(MCS
 	return MCWidgetPopupAtLocationWithProperties(*t_kind, t_at, p_properties);
 }
 
-extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecPopupAtLocation(MCStringRef p_kind, MCCanvasPointRef p_at)
+extern "C" MC_DLLEXPORT_DEF MCValueRef MCWidgetExecPopupAtLocation(MCStringRef p_kind, MCCanvasPointRef p_at)
 {
 	return MCWidgetExecPopupAtLocationWithProperties(p_kind, p_at, kMCEmptyArray);
 }
 
 
 
-extern "C" MC_DLLEXPORT void MCWidgetEvalIsPopup(bool &r_popup)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetEvalIsPopup(bool &r_popup)
 {
 	if (MCwidgetobject == nil)
 	{
@@ -2344,7 +2336,7 @@ extern "C" MC_DLLEXPORT void MCWidgetEvalIsPopup(bool &r_popup)
 	r_popup = s_widget_popup != nil && MCwidgetobject == s_widget_popup->getpopupwidget();
 }
 
-extern "C" MC_DLLEXPORT void MCWidgetExecClosePopupWithResult(MCValueRef p_result)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetExecClosePopupWithResult(MCValueRef p_result)
 {
 	if (MCwidgetobject == nil)
 	{
@@ -2365,7 +2357,7 @@ extern "C" MC_DLLEXPORT void MCWidgetExecClosePopupWithResult(MCValueRef p_resul
 	s_widget_popup->close();
 }
 
-extern "C" MC_DLLEXPORT void MCWidgetExecClosePopup(MCValueRef p_result)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetExecClosePopup(MCValueRef p_result)
 {
 	MCWidgetExecClosePopupWithResult(kMCNull);
 }
@@ -2389,8 +2381,8 @@ bool MCErrorCreateNamedTypeInfo(MCNameRef p_domain, MCNameRef p_name, MCStringRe
 	return true;
 }
 
-MCTypeInfoRef kMCWidgetNoCurrentWidgetErrorTypeInfo = nil;
-MCTypeInfoRef kMCWidgetSizeFormatErrorTypeInfo = nil;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCWidgetNoCurrentWidgetErrorTypeInfo = nil;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCWidgetSizeFormatErrorTypeInfo = nil;
 
 bool MCWidgetModuleInitialize(void)
 {

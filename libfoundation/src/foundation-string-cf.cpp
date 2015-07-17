@@ -25,6 +25,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCStringCreateWithCFString(CFStringRef p_cf_string, MCStringRef& r_string)
 {
 	bool t_success;

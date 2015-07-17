@@ -89,7 +89,7 @@
 					{
 						'dependencies':
 						[
-							'engine/engine.gyp:standalone-mobile-lib-community',
+							'engine/engine.gyp:ios-standalone-executable',
 						],
 					},
 				],

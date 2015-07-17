@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
  * System identification
  * ================================================================ */
 
-extern "C" MC_DLLEXPORT void
+extern "C" MC_DLLEXPORT_DEF void
 MCSystemExecGetOperatingSystem (MCStringRef & r_string)
 {
 	const char t_os[] =
@@ -50,13 +50,13 @@ MCSystemExecGetOperatingSystem (MCStringRef & r_string)
  * Command-line information
  * ================================================================ */
 
-extern "C" MC_DLLEXPORT void
+extern "C" MC_DLLEXPORT_DEF void
 MCSystemExecGetCommandName (MCStringRef & r_string)
 {
 	/* UNCHECKED */ MCSCommandLineGetName (r_string);
 }
 
-extern "C" MC_DLLEXPORT void
+extern "C" MC_DLLEXPORT_DEF void
 MCSystemExecGetCommandArguments (MCProperListRef & r_list)
 {
 	/* UNCHECKED */ MCSCommandLineGetArguments (r_list);
