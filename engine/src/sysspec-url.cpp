@@ -420,11 +420,6 @@ static bool MCS_loadurl_callback(void *p_context, MCSystemUrlStatus p_status, co
 	if (p_status == kMCSystemUrlStatusLoading)
         /* UNCHECKED */ MCDataAppend(context -> data, (MCDataRef)p_data);
 
-    MCStringRef t_string;
-    t_string = nil;
-    if (p_status == kMCSystemUrlStatusError)
-        t_string = (MCStringRef)p_data;
-    
     send_url_progress(context -> object, p_status, context -> url, MCDataGetLength(context -> data), context -> total, p_data);
 	
 	if (p_status == kMCSystemUrlStatusError || p_status == kMCSystemUrlStatusFinished)
