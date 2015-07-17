@@ -423,6 +423,92 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class MCAutoStringRefAsUTF16String
+{
+public:
+	MCAutoStringRefAsUTF16String(void)
+		: m_string(nil), m_buf(nil), m_length(0)
+	{
+	}
+
+	~MCAutoStringRefAsUTF16String(void)
+	{
+		Unlock();
+	}
+
+	bool Lock(MCStringRef p_string)
+	{
+		if (nil == p_string)
+		{
+			return false;
+		}
+
+		m_length = MCStringGetLength(p_string);
+
+		if (MCStringIsNative(p_string))
+		{
+			m_string = nil;
+			return MCStringConvertToWString(p_string, m_buf);
+		}
+		else
+		{
+			m_string = MCValueRetain(p_string);
+			m_buf = nil;
+			return true;
+		}
+	}
+
+	void Unlock(void)
+	{
+		if (nil != m_string)
+		{
+			MCValueRelease(m_string);
+		}
+		else
+		{
+			MCMemoryDeleteArray(m_buf);
+		}
+
+		m_string = nil;
+		m_buf = nil;
+		m_length = 0;
+	}
+
+	const unichar_t *Ptr(void)
+	{
+		if (nil != m_buf)
+		{
+			return m_buf;
+		}
+		else if (nil != m_string)
+		{
+			return MCStringGetCharPtr(m_string);
+		}
+		else
+		{
+			MCUnreachable();
+			return nil;
+		}
+	}
+
+	uindex_t Size(void)
+	{
+		return m_length;
+	}
+
+	const unichar_t *operator * (void)
+	{
+		return Ptr();
+	}
+
+private:
+	MCStringRef m_string;
+	unichar_t *m_buf;
+	uindex_t m_length;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 #if defined(__MAC__) || defined(__IOS__)
 #include <CoreFoundation/CoreFoundation.h>
 class MCAutoStringRefAsCFString
