@@ -51,7 +51,7 @@ uint32_t MCEmscriptenEventEncodeModifiers(bool p_shift,
                                           bool p_ctrl,
                                           bool p_meta)
 {
-	uint32_t t_result;
+	uint32_t t_result = 0;
 
 	if (p_shift) t_result |= MS_SHIFT;
 	if (p_alt)   t_result |= MS_ALT;
