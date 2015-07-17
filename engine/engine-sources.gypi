@@ -742,6 +742,7 @@
 			'src/em-system.cpp',
 			'src/em-theme.cpp',
 			'src/em-util.h',
+			'src/em-util.js',
 			'src/em-view.h',
 			'src/em-view.cpp',
 		],
