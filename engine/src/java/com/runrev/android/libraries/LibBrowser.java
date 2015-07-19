@@ -16,6 +16,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 package com.runrev.android.libraries;
 
+import com.runrev.android.Engine;
+import com.runrev.android.nativecontrol.NativeControlModule;
+
 import android.content.*;
 import android.content.pm.*;
 import android.graphics.*;
@@ -66,21 +69,24 @@ public class LibBrowser
 				public void onPageStarted(WebView view, String url, Bitmap favicon)
 				{
 					//Log.i(TAG, "onPageStarted() - " + url);
-					doStartedLoading(toAPKPath(url));
-					m_module.getEngine().wakeEngineThread();
+					//doStartedLoading(toAPKPath(url));
+					doStartedLoading(url);
+					wakeEngineThread();
 				}
 			
 				public void onPageFinished(WebView view, String url)
 				{
 					//Log.i(TAG, "onPageFinished() - " + url);
-					doFinishedLoading(toAPKPath(url));
-					m_module.getEngine().wakeEngineThread();
+					//doFinishedLoading(toAPKPath(url));
+					doFinishedLoading(url);
+					wakeEngineThread();
 				}
 			
 				public void onReceivedError(WebView view, int errorCode, String description, String failingUrl)
 				{
-					doLoadingError(toAPKPath(failingUrl), description);
-					m_module.getEngine().wakeEngineThread();
+					//doLoadingError(toAPKPath(failingUrl), description);
+					doLoadingError(failingUrl, description);
+					wakeEngineThread();
 				}
 			});
 		
@@ -195,7 +201,7 @@ public class LibBrowser
 			getSettings().setJavaScriptEnabled(true);
 			getSettings().setPluginState(WebSettings.PluginState.ON);
 			getSettings().setBuiltInZoomControls(true);
-			addJavascriptInterface(new JSInterface(), "revjs");
+			addJavascriptInterface(new JSInterface(), "liveCode");
 		}
 		
 		private static Method mWebView_getOverScrollMode;
@@ -214,24 +220,132 @@ public class LibBrowser
 			}
 		}
 	
+		class JSInterface
+		{
+			private String[] m_js_handlers = new String[0];
+			
+			private void setJSHandlers(String[] p_handlers)
+			{
+				m_js_handlers = p_handlers;
+			}
+			
+			@JavascriptInterface
+			public void invokeHandler(String p_handler, String[] p_args)
+			{
+				if (Arrays.asList(m_js_handlers).contains(p_handler))
+				{
+					doCallJSHandler(p_handler, p_args);
+					wakeEngineThread();
+				}
+			}
+
+			@JavascriptInterface
+			public void storeExecuteJavaScriptResult(String p_tag, String p_result)
+			{
+				doJSExecutionResult(p_tag, p_result);
+				wakeEngineThread();
+			}
+		}
+		
+		/* PROPERTIES */
+
+		public void setUrl(String p_url)
+		{
+			//p_url = fromAPKPath(p_url);
+			
+			//loadUrl(p_url);
+			loadUrl(p_url);
+		}
+		
+		//public String getUrl()
+		//{
+		//	return toAPKPath(super.getUrl());
+		//}
+
+		public boolean getScrollingEnabled()
+		{
+			return m_scrolling_enabled;
+		}
+		
+		public void setScrollingEnabled(boolean p_enabled)
+		{
+			if (m_scrolling_enabled == p_enabled)
+				return;
+			m_scrolling_enabled = p_enabled;
+			setHorizontalScrollBarEnabled(p_enabled);
+			setVerticalScrollBarEnabled(p_enabled);
+			getSettings().setBuiltInZoomControls(p_enabled);
+			if (!m_scrolling_enabled)
+			{
+				setOnTouchListener(new View.OnTouchListener() {
+					@Override
+					public boolean onTouch(View v, MotionEvent event) {
+						return (event.getAction() == MotionEvent.ACTION_MOVE);
+					}
+				});
+			}
+			else
+				setOnTouchListener(null);
+		}
+		
+		/* ACTIONS */
+
+		public void goBack(int p_steps)
+		{
+			goBackOrForward(-p_steps);
+		}
+		
+		public void goForward(int p_steps)
+		{
+			goBackOrForward(p_steps);
+		}
+		
+		/*
+		public void reload()
+		{
+			super.reload();
+		}
+		*/
+		
+		public void stop()
+		{
+			stopLoading();
+		}
+		
+		public void loadHtml(String p_base_url, String p_html)
+		{       
+			//loadDataWithBaseURL(fromAPKPath(p_base_url), p_html, "text/html", "utf-8", null);
+			loadDataWithBaseURL(p_base_url, p_html, "text/html", "utf-8", null);
+		}
+
+		public String executeJavaScript(String p_javascript)
+		{
+			SecureRandom t_random = new SecureRandom();
+			long t_tag = 0;
+			while (t_tag == 0)
+				t_tag = t_random.nextLong();
+			
+			//        Log.i(TAG, "generated tag: " + t_tag);
+			String t_js = String.format("javascript:window.liveCode.storeExecuteJavaScriptResult('%d', eval('%s'))", t_tag, escapeJSString(p_javascript));
+			//        Log.i(TAG, t_js);
+			loadUrl(t_js);
+			
+			return Long.toString(t_tag);
+		}
+		
+		/* NATIVE METHODS */
+		
+		public native void doJSExecutionResult(String tag, String result);
+		public native void doStartedLoading(String url);
+		public native void doFinishedLoading(String url);
+		public native void doLoadingError(String url, String error);
 	}
 
-    
-    public BrowserControl(NativeControlModule p_module)
+    private static void wakeEngineThread()
     {
-        super(p_module);
-		m_scrolling_enabled = true;
-    }
-    
-    class JSInterface
-    {
-        public void storeResult(String p_tag, String p_result)
-        {
-            doJSExecutionResult(p_tag, p_result);
-            m_module.getEngine().wakeEngineThread();
-        }
-    }
-    
+		Engine.getEngine().wakeEngineThread();
+	}
+	
     static final Pattern ACCEPTED_URI_SCHEMA = Pattern.compile(
 															   "(?i)" + // switch on case insensitive matching
 															   "(" +    // begin group for schema
@@ -276,16 +390,16 @@ public class LibBrowser
 		return false;
 	}
 	
-	public boolean handleBackPressed()
-	{
-		if (m_custom_view_container != null && m_chrome_client != null)
-		{
-			m_chrome_client.onHideCustomView();
-			return true;
-		}
-		
-		return false;
-	}
+	//public boolean handleBackPressed()
+	//{
+	//	if (m_custom_view_container != null && m_chrome_client != null)
+	//	{
+	//		m_chrome_client.onHideCustomView();
+	//		return true;
+	//	}
+	//	
+	//	return false;
+	//}
 	
 	public static String stripExtraSlashes(String p_path)
 	{
@@ -302,7 +416,7 @@ public class LibBrowser
 	private static final String s_file_url_prefix = "file://";
 	private static final String s_livecode_file_url_prefix = "file:";
     
-	public String toAPKPath(String p_url)
+	public static String toAPKPath(String p_url)
 	{
 		if (!p_url.startsWith(s_file_url_prefix))
 			return p_url;
@@ -312,16 +426,16 @@ public class LibBrowser
 		if (!t_url.startsWith(s_asset_path))
 			return p_url;
 		
-		String t_package_path = m_module.getEngine().getPackagePath();
+		String t_package_path = Engine.getEngine().getPackagePath();
 		return s_livecode_file_url_prefix + t_package_path + t_url.substring(s_asset_path.length());
 	}
 	
-	public String fromAPKPath(String p_url)
+	public static String fromAPKPath(String p_url)
 	{
 		if (!p_url.startsWith(s_livecode_file_url_prefix))
 			return p_url;
 		
-		String t_package_path = m_module.getEngine().getPackagePath();
+		String t_package_path = Engine.getEngine().getPackagePath();
 		String t_url = stripExtraSlashes(p_url.substring(s_livecode_file_url_prefix.length()));
 		
 		if (!t_url.startsWith(t_package_path))
@@ -330,18 +444,7 @@ public class LibBrowser
 		return s_file_url_prefix + s_asset_path + t_url.substring(t_package_path.length());
 	}
 	
-    public void setUrl(String p_url)
-    {
-		p_url = fromAPKPath(p_url);
-		
-        ((WebView)m_control_view).loadUrl(p_url);
-    }
-    
-    public String getUrl()
-    {
-		return toAPKPath(((WebView)m_control_view).getUrl());
-    }
-    
+	/*
     public boolean canGoBack()
     {
         return ((WebView)m_control_view).canGoBack();
@@ -381,58 +484,8 @@ public class LibBrowser
 		{
 		}
 	}
+	*/
 	
-	public boolean getScrollingEnabled()
-	{
-		return m_scrolling_enabled;
-	}
-    
-	public void setScrollingEnabled(boolean p_enabled)
-	{
-		if (m_scrolling_enabled == p_enabled)
-			return;
-		m_scrolling_enabled = p_enabled;
-		((WebView)m_control_view).setHorizontalScrollBarEnabled(p_enabled);
-		((WebView)m_control_view).setVerticalScrollBarEnabled(p_enabled);
-        ((WebView)m_control_view).getSettings().setBuiltInZoomControls(p_enabled);
-		if (!m_scrolling_enabled)
-		{
-			m_control_view.setOnTouchListener(new View.OnTouchListener() {
-				@Override
-				public boolean onTouch(View v, MotionEvent event) {
-					return (event.getAction() == MotionEvent.ACTION_MOVE);
-				}
-			});
-		}
-		else
-			m_control_view.setOnTouchListener(null);
-	}
-	
-    public void goBack(int p_steps)
-    {
-        ((WebView)m_control_view).goBackOrForward(-p_steps);
-    }
-    
-    public void goForward(int p_steps)
-    {
-        ((WebView)m_control_view).goBackOrForward(p_steps);
-    }
-    
-    public void reload()
-    {
-        ((WebView)m_control_view).reload();
-    }
-    
-    public void stop()
-    {
-        ((WebView)m_control_view).stopLoading();
-    }
-    
-    public void loadData(String p_base_url, String p_html)
-    {       
-        ((WebView)m_control_view).loadDataWithBaseURL(fromAPKPath(p_base_url), p_html, "text/html", "utf-8", null);
-    }
-    
     public static String escapeJSString(String p_string)
     {
         String t_result = "";
@@ -475,23 +528,10 @@ public class LibBrowser
         return t_result;
     }
     
-    public String executeJavaScript(String p_javascript)
-    {
-        SecureRandom t_random = new SecureRandom();
-        long t_tag = 0;
-        while (t_tag == 0)
-            t_tag = t_random.nextLong();
-        
-		//        Log.i(TAG, "generated tag: " + t_tag);
-        String t_js = String.format("javascript:window.revjs.storeResult('%d', eval('%s'))", t_tag, escapeJSString(p_javascript));
-		//        Log.i(TAG, t_js);
-        ((WebView)m_control_view).loadUrl(t_js);
-        
-        return Long.toString(t_tag);
-    }
-    
-    public static native void doJSExecutionResult(String tag, String result);
-    public native void doStartedLoading(String url);
-    public native void doFinishedLoading(String url);
-    public native void doLoadingError(String url, String error);
+//////////
+
+	public static Object createBrowserView()
+	{
+		return new LibBrowserWebView(Engine.getContext());
+	}
 }

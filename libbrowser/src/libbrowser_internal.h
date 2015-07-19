@@ -46,7 +46,20 @@ public:
 	
 	void OnJavaScriptCall(const char *p_handler, MCBrowserListRef p_params);
 	
+	static bool BrowserListAdd(MCBrowser *p_browser);
+	static void BrowserListRemove(MCBrowser *p_browser);
+	static bool BrowserListFindWithView(void *p_view, MCBrowser *&r_browser);
+
 private:
+	struct MCBrowserListEntry
+	{
+		MCBrowser *browser;
+		
+		MCBrowserListEntry *next;
+	};
+	
+	static MCBrowserListEntry *s_browser_list;
+	
 	MCBrowserEventHandler *m_event_handler;
 	MCBrowserJavaScriptHandler *m_javascript_handler;
 };

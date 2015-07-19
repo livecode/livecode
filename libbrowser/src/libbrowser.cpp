@@ -114,6 +114,61 @@ void MCBrowserBase::OnJavaScriptCall(const char *p_handler, MCBrowserListRef p_p
 		m_javascript_handler->OnJavaScriptCall(this, p_handler, p_params);
 }
 
+//////////
+
+MCBrowserBase::MCBrowserListEntry *MCBrowserBase::s_browser_list = nil;
+
+bool MCBrowserBase::BrowserListAdd(MCBrowser *p_browser)
+{
+	MCBrowserListEntry *t_entry;
+	if (!MCBrowserMemoryNew(t_entry))
+		return false;
+	
+	t_entry->browser = p_browser;
+	t_entry->next = s_browser_list;
+	
+	s_browser_list = t_entry;
+	
+	return true;
+}
+
+void MCBrowserBase::BrowserListRemove(MCBrowser *p_browser)
+{
+	MCBrowserListEntry *t_entry;
+	MCBrowserListEntry *t_previous = nil;
+
+	for (t_entry = s_browser_list; t_entry != nil; t_entry = t_entry->next)
+	{
+		if (t_entry->browser == p_browser)
+			break;
+		t_previous = t_entry;
+	}
+	
+	if (t_entry == nil)
+		return;
+
+	if (t_entry == s_browser_list)
+		s_browser_list = t_entry->next;
+	else
+		t_previous->next = t_entry->next;
+	
+	MCBrowserMemoryDelete(t_entry);
+}
+
+bool MCBrowserBase::BrowserListFindWithView(void *p_view, MCBrowser *&r_browser)
+{
+	for (MCBrowserListEntry *t_entry = s_browser_list; t_entry != nil; t_entry = t_entry->next)
+	{
+		if (t_entry->browser->GetNativeLayer() == p_view)
+		{
+			r_browser = t_entry->browser;
+			return true;
+		}
+	}
+	
+	return false;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Init functions
