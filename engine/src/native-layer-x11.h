@@ -34,7 +34,7 @@ public:
     virtual void OnClose();
     virtual void OnAttach();
     virtual void OnDetach();
-    virtual void OnPaint(MCDC* p_dc, const MCRectangle& p_dirty);
+    virtual void OnPaint(MCGContextRef);
     virtual void OnGeometryChanged(const MCRectangle& p_old_rect);
     virtual void OnVisibilityChanged(bool p_visible);
     virtual void OnToolChanged(Tool p_new_tool);
@@ -42,12 +42,12 @@ public:
     
     virtual bool GetNativeView(void *&r_view);
     
-    MCNativeLayerX11(MCWidget *p_widget, x11::Window p_view);
+    MCNativeLayerX11(MCWidgetRef p_widget, x11::Window p_view);
     ~MCNativeLayerX11();
     
 private:
     
-    MCWidget* m_widget;
+    MCWidgetRef m_widget;
     GtkWindow* m_child_window;
     GdkRegion* m_input_shape;
     GtkSocket* m_socket;

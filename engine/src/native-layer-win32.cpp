@@ -48,7 +48,7 @@
 #include "native-layer-win32.h"
 
 
-MCNativeLayerWin32::MCNativeLayerWin32(MCWidget *p_widget, HWND p_view) :
+MCNativeLayerWin32::MCNativeLayerWin32(MCWidgetRef p_widget, HWND p_view) :
   m_widget(p_widget),
   m_hwnd(p_view),
   m_cached(NULL)
@@ -66,29 +66,35 @@ MCNativeLayerWin32::~MCNativeLayerWin32()
 
 void MCNativeLayerWin32::OnToolChanged(Tool p_new_tool)
 {
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
     if (p_new_tool == T_BROWSE || p_new_tool == T_HELP)
     {
-		OnVisibilityChanged(ShouldShowWidget(m_widget));
-        m_widget->Redraw();
+		OnVisibilityChanged(ShouldShowWidget(t_widget));
+        t_widget->Redraw();
     }
     else
     {
         // In edit mode
         ShowWindow(m_hwnd, SW_HIDE);
-        m_widget->Redraw();
+        t_widget->Redraw();
     }
 }
 
 void MCNativeLayerWin32::OnOpen()
 {
-	// Unhide the widget, if required
-	if (isAttached() && m_widget->getopened() == 1)
+	MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
+    // Unhide the widget, if required
+	if (isAttached() && t_widget->getopened() == 1)
         doAttach();
 }
 
 void MCNativeLayerWin32::OnClose()
 {
-	if (isAttached() && m_widget->getopened() == 0)
+	MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
+    if (isAttached() && t_widget->getopened() == 0)
         doDetach();
 }
 
@@ -100,13 +106,15 @@ void MCNativeLayerWin32::OnAttach()
 
 void MCNativeLayerWin32::doAttach()
 {
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
 	// Set the parent to the stack
 	SetParent(m_hwnd, getStackWindow());
 
 	// Restore the visibility state of the widget (in case it changed due to a
 	// tool change while on another card - we don't get a message then)
 	OnGeometryChanged(MCRectangleMake(0,0,0,0));
-	OnVisibilityChanged(ShouldShowWidget(m_widget));
+	OnVisibilityChanged(ShouldShowWidget(t_widget));
 }
 
 void MCNativeLayerWin32::OnDetach()
@@ -122,11 +130,13 @@ void MCNativeLayerWin32::doDetach()
 	SetParent(m_hwnd, NULL);
 }
 
-void MCNativeLayerWin32::OnPaint(MCDC* p_dc, const MCRectangle& p_dirty)
+void MCNativeLayerWin32::OnPaint(MCGContextRef p_context)
 {
-	// If the widget is not in edit mode, we trust it to paint itself
-	if (!m_widget->inEditMode())
-		return;
+	MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
+    // If the widget is not in edit mode, we trust it to paint itself
+	if (t_widget->isInRunMode())
+        return;
 
 	// Create a DC to use for the drawing operation. We create a new DC
 	// compatible to the one that would normally be used for a paint operation.
@@ -140,7 +150,7 @@ void MCNativeLayerWin32::OnPaint(MCDC* p_dc, const MCRectangle& p_dirty)
 		// Note: this *must* be the original DC because the compatible DC originally
 		// has a monochrome (1BPP) bitmap selected into it and we don't want that.
 		MCRectangle t_rect;
-		t_rect = m_widget->getrect();
+		t_rect = t_widget->getrect();
 		m_cached = CreateCompatibleBitmap(t_hwindowdc, t_rect.width, t_rect.height);
 	}
 
@@ -198,12 +208,10 @@ void MCNativeLayerWin32::OnPaint(MCDC* p_dc, const MCRectangle& p_dirty)
 	t_raster.stride = 4*t_bitmap.bmWidth;
 	t_raster.pixels = t_bits;
 	/* UNCHECKED */ MCGImageCreateWithRasterNoCopy(t_raster, t_gimage);
-	memset(&t_descriptor, 0, sizeof(MCImageDescriptor));
-	t_descriptor.image = t_gimage;
-	t_descriptor.x_scale = t_descriptor.y_scale = 1.0;
 
 	// At last - we can draw it!
-	p_dc->drawimage(t_descriptor, 0, 0, t_raster.width, t_raster.height, 0, 0);
+    MCGRectangle rect = {{0, 0}, {t_raster.width, t_raster.height}};
+    MCGContextDrawImage(p_context, t_gimage, rect, kMCGImageFilterNone);
 	MCGImageRelease(t_gimage);
 
 	// Clean up the drawing resources that we allocated
@@ -215,10 +223,12 @@ void MCNativeLayerWin32::OnPaint(MCDC* p_dc, const MCRectangle& p_dirty)
 
 void MCNativeLayerWin32::OnGeometryChanged(const MCRectangle& p_old_rect)
 {
-	// Move the window. Only trigger a repaint if not in edit mode
+	MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
+    // Move the window. Only trigger a repaint if not in edit mode
 	MCRectangle t_rect;
-	t_rect = m_widget->getrect();
-	MoveWindow(m_hwnd, t_rect.x, t_rect.y, t_rect.width, t_rect.height, !m_widget->inEditMode());
+	t_rect = t_widget->getrect();
+	MoveWindow(m_hwnd, t_rect.x, t_rect.y, t_rect.width, t_rect.height, t_widget->isInRunMode());
 
 	// We need to delete the bitmap that we've been caching
 	DeleteObject(m_cached);
@@ -237,12 +247,14 @@ void MCNativeLayerWin32::OnLayerChanged()
 
 void MCNativeLayerWin32::doRelayer()
 {
-	// Find which native layer this should be inserted after
+	MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
+    // Find which native layer this should be inserted after
 	MCWidget* t_before;
-	t_before = findNextLayerBelow(m_widget);
+	t_before = findNextLayerBelow(t_widget);
 
 	// Insert the widget in the correct place (but only if the card is current)
-	if (isAttached() && m_widget->getstack()->getcard() == m_widget->getstack()->getcurcard())
+	if (isAttached() && t_widget->getstack()->getcard() == t_widget->getstack()->getcurcard())
 	{
 		HWND t_insert_after;
 		if (t_before != NULL)
@@ -263,7 +275,8 @@ void MCNativeLayerWin32::doRelayer()
 
 HWND MCNativeLayerWin32::getStackWindow()
 {
-	return (HWND)m_widget->getstack()->getrealwindow();
+	MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    return (HWND)t_widget->getstack()->getrealwindow();
 }
 
 bool MCNativeLayerWin32::GetNativeView(void *&r_view)
@@ -274,7 +287,7 @@ bool MCNativeLayerWin32::GetNativeView(void *&r_view)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCWidget *p_widget, void *p_view)
+MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCWidgetRef p_widget, void *p_view)
 {
 	return new MCNativeLayerWin32(p_widget, (HWND)p_view);
 }

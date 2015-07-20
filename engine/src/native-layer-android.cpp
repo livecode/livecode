@@ -121,7 +121,7 @@ void MCNativeLayerAndroid::AndroidView::removeFromMainView()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeLayerAndroid::MCNativeLayerAndroid(MCWidget* p_widget) :
+MCNativeLayerAndroid::MCNativeLayerAndroid(MCWidgetRef p_widget) :
   m_widget(p_widget),
   m_view(NULL)
 {
@@ -135,34 +135,40 @@ MCNativeLayerAndroid::~MCNativeLayerAndroid()
 
 void MCNativeLayerAndroid::OnToolChanged(Tool p_new_tool)
 {
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
     if (m_view == NULL)
         return;
     
     if (p_new_tool == T_BROWSE || p_new_tool == T_HELP)
     {
         // In run mode. Make visible if requested
-        if (m_widget->getflags() & F_VISIBLE)
+        if (t_widget->getflags() & F_VISIBLE)
             addToMainView();
-        m_widget->Redraw();
+        t_widget->Redraw();
     }
     else
     {
         // In edit mode
         m_view->removeFromMainView();
-        m_widget->Redraw();
+        t_widget->Redraw();
     }
 }
 
 void MCNativeLayerAndroid::OnOpen()
 {
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
     // Unhide the widget, if required
-    if (isAttached() && m_widget->getopened() == 1)
+    if (isAttached() && t_widget->getopened() == 1)
         doAttach();
 }
 
 void MCNativeLayerAndroid::OnClose()
 {
-    if (isAttached() && m_widget->getopened() == 0)
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
+    if (isAttached() && t_widget->getopened() == 0)
         doDetach();
 }
 
@@ -174,12 +180,14 @@ void MCNativeLayerAndroid::OnAttach()
 
 void MCNativeLayerAndroid::doAttach()
 {
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
     if (m_view == nil)
         return;
     
     // Restore the visibility state of the widget (in case it changed due to a
     // tool change while on another card - we don't get a message then)
-    if ((m_widget->getflags() & F_VISIBLE) && !m_widget->inEditMode())
+    if ((t_widget->getflags() & F_VISIBLE) && t_widget->isInRunMode())
         addToMainView();
     else
         m_view->removeFromMainView();
@@ -200,13 +208,15 @@ void MCNativeLayerAndroid::doDetach()
     m_view->removeFromMainView();
 }
 
-void MCNativeLayerAndroid::OnPaint(MCDC* p_dc, const MCRectangle& p_dirty)
+void MCNativeLayerAndroid::OnPaint(MCGContextRef)
 {
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
     if (m_view == NULL)
         return;
     
     // If the widget is not in edit mode, we trust it to paint itself
-    if (!m_widget->inEditMode())
+    if (t_widget->isInRunMode())
         return;
     
     // Android does not support edit mode
@@ -215,11 +225,13 @@ void MCNativeLayerAndroid::OnPaint(MCDC* p_dc, const MCRectangle& p_dirty)
 
 void MCNativeLayerAndroid::OnGeometryChanged(const MCRectangle& p_old_rect)
 {
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
     if (m_view == NULL)
         return;
     
     MCRectangle t_rect, t_cardrect;
-    t_rect = m_widget->getrect();
+    t_rect = t_widget->getrect();
     m_view->setRect(t_rect);
 }
 
@@ -241,15 +253,17 @@ void MCNativeLayerAndroid::OnLayerChanged()
 
 void MCNativeLayerAndroid::doRelayer()
 {
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
     if (m_view == NULL)
         return;
     
     // Find which native layer this should be inserted below
     MCWidget* t_before;
-    t_before = findNextLayerAbove(m_widget);
+    t_before = findNextLayerAbove(t_widget);
     
     // Insert the widget in the correct place (but only if the card is current)
-    if (isAttached() && m_widget->getstack()->getcard() == m_widget->getstack()->getcurcard())
+    if (isAttached() && t_widget->getstack()->getcard() == t_widget->getstack()->getcurcard())
     {
         if (t_before != NULL)
         {
@@ -259,7 +273,7 @@ void MCNativeLayerAndroid::doRelayer()
         }
         else
             m_view->placeViewBelow(NULL);
-        m_view->setRect(m_widget->getrect());
+        m_view->setRect(t_widget->getrect());
     }
 }
 
@@ -272,5 +286,5 @@ void MCNativeLayerAndroid::addToMainView()
 
 MCNativeLayer* MCWidget::createNativeLayer()
 {
-    return new MCNativeLayerAndroid(this);
+    return new MCNativeLayerAndroid(getwidget());
 }

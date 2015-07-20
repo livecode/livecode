@@ -311,7 +311,7 @@ void MCEngineSetPropertyOfObject(MCExecContext &ctxt, MCStringRef p_property, MC
     }
 }
 
-extern "C" MC_DLLEXPORT_DEF void MCEngineExecSetPropertyOfScriptObject(MCStringRef p_property, MCScriptObjectRef p_object, MCValueRef p_value)
+extern "C" MC_DLLEXPORT_DEF void MCEngineExecSetPropertyOfScriptObject(MCValueRef p_value, MCStringRef p_property, MCScriptObjectRef p_object)
 {
 	MCObject *t_object;
 	uint32_t t_part_id;

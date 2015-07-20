@@ -53,7 +53,7 @@
 #include <gtk/gtk.h>
 
 
-MCNativeLayerX11::MCNativeLayerX11(MCWidget *p_widget, x11::Window p_view) :
+MCNativeLayerX11::MCNativeLayerX11(MCWidgetRef p_widget, x11::Window p_view) :
   m_widget(p_widget),
   m_child_window(NULL),
   m_input_shape(NULL),
@@ -87,7 +87,9 @@ void MCNativeLayerX11::OnToolChanged(Tool p_new_tool)
 
 void MCNativeLayerX11::updateInputShape()
 {
-    if (m_widget->inEditMode())
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
+    if (!t_widget->isInRunMode())
         // In edit mode. Mask out all input events
         gdk_window_input_shape_combine_region(gtk_widget_get_window(GTK_WIDGET(m_child_window)), m_input_shape, 0, 0);
     else
@@ -97,14 +99,18 @@ void MCNativeLayerX11::updateInputShape()
 
 void MCNativeLayerX11::OnOpen()
 {
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
     // Unhide the widget, if required
-    if (isAttached() && m_widget->getopened() == 1)
+    if (isAttached() && t_widget->getopened() == 1)
         doAttach();
 }
 
 void MCNativeLayerX11::OnClose()
 {
-    if (isAttached() && m_widget->getopened() == 0)
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
+    if (isAttached() && t_widget->getopened() == 0)
         doDetach();
 }
 
@@ -116,6 +122,8 @@ void MCNativeLayerX11::OnAttach()
 
 void MCNativeLayerX11::doAttach()
 {
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
     if (m_socket == NULL)
     {
         // Create a new GTK socket to deal with the XEMBED protocol
@@ -123,7 +131,7 @@ void MCNativeLayerX11::doAttach()
         
         // Create a new GTK window to hold the socket
         MCRectangle t_rect;
-        t_rect = m_widget->getrect();
+        t_rect = t_widget->getrect();
         m_child_window = GTK_WINDOW(gtk_window_new(GTK_WINDOW_POPUP));
         gtk_widget_set_parent_window(GTK_WIDGET(m_child_window), getStackGdkWindow());
         gtk_widget_realize(GTK_WIDGET(m_child_window));
@@ -166,16 +174,18 @@ void MCNativeLayerX11::doDetach()
     gtk_widget_hide(GTK_WIDGET(m_child_window));
 }
 
-void MCNativeLayerX11::OnPaint(MCDC* p_dc, const MCRectangle& p_dirty)
+void MCNativeLayerX11::OnPaint(MCGContextRef)
 {
     // Do nothing. Painting is handled entirely by X11.
 }
 
 void MCNativeLayerX11::updateGeometry()
 {
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
     // Move the overlay window first, to ensure events don't get stolen
     MCRectangle t_rect;
-    t_rect = m_widget->getrect();
+    t_rect = t_widget->getrect();
 
     // Clear any minimum size parameters for the GTK widgets
     gtk_widget_set_size_request(GTK_WIDGET(m_socket), -1, -1);
@@ -227,15 +237,17 @@ void MCNativeLayerX11::OnLayerChanged()
 
 void MCNativeLayerX11::doRelayer()
 {
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
     // Ensure that the input mask for the widget is up to date
     updateInputShape();
     
     // Find which native layer this should be inserted below
     MCWidget* t_before;
-    t_before = findNextLayerAbove(m_widget);
+    t_before = findNextLayerAbove(t_widget);
     
     // Insert the widget in the correct place (but only if the card is current)
-    if (isAttached() && m_widget->getstack()->getcard() == m_widget->getstack()->getcurcard())
+    if (isAttached() && t_widget->getstack()->getcard() == t_widget->getstack()->getcurcard())
     {
         // If t_before_window == NULL, this will put the widget on the bottom layer
         MCNativeLayerX11 *t_before_layer;
@@ -274,12 +286,13 @@ x11::Window MCNativeLayerX11::getStackX11Window()
 
 GdkWindow* MCNativeLayerX11::getStackGdkWindow()
 {
-    return m_widget->getstack()->getwindow();
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    return t_widget->getstack()->getwindow();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCWidget *p_widget, void *p_native_view)
+MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCWidgetRef p_widget, void *p_native_view)
 {
     return new MCNativeLayerX11(p_widget, (x11::Window)p_native_view);
 }

@@ -29,7 +29,7 @@ public:
     virtual void OnClose();
     virtual void OnAttach();
     virtual void OnDetach();
-    virtual void OnPaint(MCDC* p_dc, const MCRectangle& p_dirty);
+    virtual void OnPaint(MCGContextRef);
     virtual void OnGeometryChanged(const MCRectangle& p_old_rect);
     virtual void OnVisibilityChanged(bool p_visible);
 	virtual void OnToolChanged(Tool p_new_tool);
@@ -37,12 +37,12 @@ public:
     
 	virtual bool GetNativeView(void *&r_view);
 	
-    MCNativeLayerWin32(MCWidget*, HWND p_view);
+    MCNativeLayerWin32(MCWidgetRef, HWND p_view);
     ~MCNativeLayerWin32();
     
 private:
     
-    MCWidget* m_widget;
+    MCWidgetRef m_widget;
     HWND m_hwnd;
     HBITMAP m_cached;
     

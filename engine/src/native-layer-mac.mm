@@ -56,7 +56,7 @@
 #include "mac-internal.h"
 
 
-MCNativeLayerMac::MCNativeLayerMac(MCWidget* p_widget, NSView *p_view) :
+MCNativeLayerMac::MCNativeLayerMac(MCWidgetRef p_widget, NSView *p_view) :
   m_widget(p_widget),
   m_view(p_view),
   m_cached(nil)
@@ -79,31 +79,37 @@ MCNativeLayerMac::~MCNativeLayerMac()
 
 void MCNativeLayerMac::OnToolChanged(Tool p_new_tool)
 {
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
     if (p_new_tool == T_BROWSE || p_new_tool == T_HELP)
     {
         // In run mode. Make visible if requested
-        if (m_widget->getflags() & F_VISIBLE)
+        if (t_widget->getflags() & F_VISIBLE)
             [m_view setHidden:NO];
-        m_widget->Redraw();
+        t_widget->Redraw();
     }
     else
     {
         // In edit mode
         [m_view setHidden:YES];
-        m_widget->Redraw();
+        t_widget->Redraw();
     }
 }
 
 void MCNativeLayerMac::OnOpen()
 {
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
     // Unhide the widget, if required
-    if (isAttached() && m_widget->getopened() == 1)
+    if (isAttached() && t_widget->getopened() == 1)
         doAttach();
 }
 
 void MCNativeLayerMac::OnClose()
 {
-    if (isAttached() && m_widget->getopened() == 0)
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
+    if (isAttached() && t_widget->getopened() == 1)
         doDetach();
 }
 
@@ -117,13 +123,15 @@ void MCNativeLayerMac::OnAttach()
 
 void MCNativeLayerMac::doAttach()
 {
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
     // Act as if there was a re-layer to put the widget in the right place
     // *** Can we assume open happens in back-to-front order? ***
     doRelayer();
     
     // Restore the visibility state of the widget (in case it changed due to a
     // tool change while on another card - we don't get a message then)
-    if ((m_widget->getflags() & F_VISIBLE) && !m_widget->inEditMode())
+    if ((t_widget->getflags() & F_VISIBLE) && t_widget->isInRunMode())
         [m_view setHidden:NO];
     else
         [m_view setHidden:YES];
@@ -141,10 +149,12 @@ void MCNativeLayerMac::doDetach()
     [m_view removeFromSuperview];
 }
 
-void MCNativeLayerMac::OnPaint(MCDC* p_dc, const MCRectangle& p_dirty)
+void MCNativeLayerMac::OnPaint(MCGContextRef p_context)
 {
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
     // If the widget is not in edit mode, we trust it to paint itself
-    if (!m_widget->inEditMode())
+    if (t_widget->isInRunMode())
         return;
 
     // Get an image rep suitable for storing the cached bitmap
@@ -160,29 +170,28 @@ void MCNativeLayerMac::OnPaint(MCDC* p_dc, const MCRectangle& p_dirty)
     // Turn the NSBitmapImageRep into something we can actually draw
     MCGRaster t_raster;
     MCGImageRef t_gimage;
-    MCImageDescriptor t_descriptor;
     t_raster.format = kMCGRasterFormat_ARGB;
     t_raster.width = [m_cached pixelsWide];
     t_raster.height = [m_cached pixelsHigh];
     t_raster.stride = [m_cached bytesPerRow];
     t_raster.pixels = [m_cached bitmapData];
     /* UNCHECKED */ MCGImageCreateWithRasterNoCopy(t_raster, t_gimage);
-    memset(&t_descriptor, 0, sizeof(MCImageDescriptor));
-    t_descriptor.image = t_gimage;
-    t_descriptor.x_scale = t_descriptor.y_scale = 1.0;
     
     // Draw the image
     // FG-2014-10-10: a y offset of 1 is needed to keep things lined up, for some reason...
-    p_dc->drawimage(t_descriptor, 0, 0, t_raster.width, t_raster.height, 0, 1);
+    MCGRectangle rect = {{0, 1}, {t_raster.width, t_raster.height}};
+    MCGContextDrawImage(p_context, t_gimage, rect, kMCGImageFilterNone);
     MCGImageRelease(t_gimage);
 }
 
 void MCNativeLayerMac::OnGeometryChanged(const MCRectangle& p_old_rect)
 {
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
     NSRect t_nsrect;
     MCRectangle t_rect, t_cardrect;
-    t_rect = m_widget->getrect();
-    t_cardrect = m_widget->getcard()->getrect();
+    t_rect = t_widget->getrect();
+    t_cardrect = t_widget->getcard()->getrect();
     t_nsrect = NSMakeRect(t_rect.x, t_cardrect.height-t_rect.y-t_rect.height-1, t_rect.width, t_rect.height);
     [m_view setFrame:t_nsrect];
     [m_view setNeedsDisplay:YES];
@@ -202,12 +211,14 @@ void MCNativeLayerMac::OnLayerChanged()
 
 void MCNativeLayerMac::doRelayer()
 {
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
     // Find which native layer this should be inserted below
     MCWidget* t_before;
-    t_before = findNextLayerAbove(m_widget);
+    t_before = findNextLayerAbove(t_widget);
     
     // Insert the widget in the correct place (but only if the card is current)
-    if (isAttached() && m_widget->getstack()->getcard() == m_widget->getstack()->getcurcard())
+    if (isAttached() && t_widget->getstack()->getcard() == t_widget->getstack()->getcurcard())
     {
         [m_view removeFromSuperview];
         if (t_before != nil)
@@ -228,7 +239,8 @@ void MCNativeLayerMac::doRelayer()
 
 NSWindow* MCNativeLayerMac::getStackWindow()
 {
-    return ((MCMacPlatformWindow*)(m_widget->getstack()->getwindow()))->GetHandle();
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    return ((MCMacPlatformWindow*)(t_widget->getstack()->getwindow()))->GetHandle();
 }
 
 bool MCNativeLayerMac::GetNativeView(void *&r_view)
@@ -239,10 +251,11 @@ bool MCNativeLayerMac::GetNativeView(void *&r_view)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCWidget *p_widget, void *p_view)
+MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCWidgetRef p_widget, void *p_view)
 {
 	if (p_view == nil)
 		return nil;
 	
     return new MCNativeLayerMac(p_widget, (NSView*)p_view);
 }
+
