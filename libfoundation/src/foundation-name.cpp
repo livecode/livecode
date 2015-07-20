@@ -20,9 +20,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNameRef kMCEmptyName;
-MCNameRef kMCTrueName;
-MCNameRef kMCFalseName;
+MC_DLLEXPORT_DEF MCNameRef kMCEmptyName;
+MC_DLLEXPORT_DEF MCNameRef kMCTrueName;
+MC_DLLEXPORT_DEF MCNameRef kMCFalseName;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -37,6 +37,7 @@ static void __MCNameShrinkTable(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 MCNameRef MCNAME(const char *p_string)
 {
 	MCStringRef t_string;
@@ -55,6 +56,7 @@ MCNameRef MCNAME(const char *p_string)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCNameCreate(MCStringRef p_string, MCNameRef& r_name)
 {
 	MCAssert(p_string != nil);
@@ -168,6 +170,7 @@ bool MCNameCreate(MCStringRef p_string, MCNameRef& r_name)
 	return t_success;
 }
 
+MC_DLLEXPORT_DEF
 bool MCNameCreateWithNativeChars(const char_t *p_chars, uindex_t p_count, MCNameRef& r_name)
 {
 	MCStringRef t_string;
@@ -181,6 +184,7 @@ bool MCNameCreateWithNativeChars(const char_t *p_chars, uindex_t p_count, MCName
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCNameCreateWithChars(const unichar_t *p_chars, uindex_t p_count, MCNameRef& r_name)
 {
 	MCStringRef t_string;
@@ -189,6 +193,7 @@ bool MCNameCreateWithChars(const unichar_t *p_chars, uindex_t p_count, MCNameRef
 	return MCNameCreateAndRelease(t_string, r_name);
 }
 
+MC_DLLEXPORT_DEF
 bool MCNameCreateAndRelease(MCStringRef p_string, MCNameRef& r_name)
 {
 	if (MCNameCreate(p_string, r_name))
@@ -200,6 +205,7 @@ bool MCNameCreateAndRelease(MCStringRef p_string, MCNameRef& r_name)
 	return false;
 }
 
+MC_DLLEXPORT_DEF
 MCNameRef MCNameLookup(MCStringRef p_string)
 {
 	// Compute the hash of the characters, up to case.
@@ -233,16 +239,19 @@ MCNameRef MCNameLookup(MCStringRef p_string)
 	return t_key_name;
 }
 
+MC_DLLEXPORT_DEF
 uintptr_t MCNameGetCaselessSearchKey(MCNameRef self)
 {
 	return (uintptr_t)self -> key;
 }
 
+MC_DLLEXPORT_DEF
 MCStringRef MCNameGetString(MCNameRef self)
 {
 	return self -> string;
 }
 
+MC_DLLEXPORT_DEF
 bool MCNameIsEmpty(MCNameRef self)
 {
 	return self == kMCEmptyName;

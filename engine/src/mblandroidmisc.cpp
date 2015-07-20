@@ -48,6 +48,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "text.h"
 
+#include "mblandroidjava.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern int32_t g_android_keyboard_type;
@@ -760,6 +762,22 @@ bool MCSystemHideStatusBar()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCSystemGetLaunchData(MCArrayRef &r_launch_data)
+{
+	jobject t_jmap = nil;
+	MCAndroidEngineRemoteCall("getLaunchData", "m", &t_jmap);
+	
+	if (t_jmap == nil)
+		return false;
+	
+	bool t_success = MCJavaMapToArrayRef(MCJavaGetThreadEnv(), t_jmap, r_launch_data);
+
+	MCJavaGetThreadEnv()->DeleteGlobalRef(t_jmap);
+	
+	return t_success;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 bool MCSystemBeep (int32_t p_number_of_beeps)
 {
 #ifdef /* MCSystemBeepAndroid */ LEGACY_EXEC

@@ -57,6 +57,7 @@ static bool __MCArrayFindKeyValueSlot(__MCArray *self, bool case_sensitive, MCNa
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCArrayCreate(bool p_case_sensitive, const MCNameRef *p_keys, const MCValueRef *p_values, uindex_t p_length, MCArrayRef& r_array)
 {
 	bool t_success;
@@ -78,6 +79,7 @@ bool MCArrayCreate(bool p_case_sensitive, const MCNameRef *p_keys, const MCValue
 	return false;
 }
 
+MC_DLLEXPORT_DEF
 bool MCArrayCreateWithOptions(bool p_case_sensitive, bool p_form_sensitive, const MCNameRef *p_keys, const MCValueRef *p_values, uindex_t p_length, MCArrayRef& r_array)
 {
 	bool t_success;
@@ -99,6 +101,7 @@ bool MCArrayCreateWithOptions(bool p_case_sensitive, bool p_form_sensitive, cons
 	return false;
 }
 
+MC_DLLEXPORT_DEF
 bool MCArrayCreateMutable(MCArrayRef& r_array)
 {
 	if (!__MCValueCreate(kMCValueTypeCodeArray, r_array))
@@ -109,6 +112,7 @@ bool MCArrayCreateMutable(MCArrayRef& r_array)
 	return true;
 }	
 
+MC_DLLEXPORT_DEF
 bool MCArrayCreateMutableWithOptions(MCArrayRef& r_array, bool p_case_sensitive, bool p_form_sensitive)
 {
 	if (!__MCValueCreate(kMCValueTypeCodeArray, r_array))
@@ -125,6 +129,7 @@ bool MCArrayCreateMutableWithOptions(MCArrayRef& r_array, bool p_case_sensitive,
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCArrayCopy(MCArrayRef self, MCArrayRef& r_new_array)
 {
 	// If we aren't mutable, then we can just copy directly.
@@ -154,6 +159,7 @@ bool MCArrayCopy(MCArrayRef self, MCArrayRef& r_new_array)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCArrayCopyAndRelease(MCArrayRef self, MCArrayRef& r_new_array)
 {
 	// If we aren't mutable, then new array is just us.
@@ -199,6 +205,7 @@ bool MCArrayCopyAndRelease(MCArrayRef self, MCArrayRef& r_new_array)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCArrayMutableCopy(MCArrayRef self, MCArrayRef& r_new_array)
 {
 	// If the array is immutable, then the new mutable array will be indirect
@@ -225,6 +232,7 @@ bool MCArrayMutableCopy(MCArrayRef self, MCArrayRef& r_new_array)
 	return __MCArrayCreateIndirect(self -> contents, r_new_array);
 }
 
+MC_DLLEXPORT_DEF
 bool MCArrayMutableCopyAndRelease(MCArrayRef self, MCArrayRef& r_new_array)
 {
 	if (self -> references == 1)
@@ -243,6 +251,7 @@ bool MCArrayMutableCopyAndRelease(MCArrayRef self, MCArrayRef& r_new_array)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCArrayApply(MCArrayRef self, MCArrayApplyCallback p_callback, void *p_context)
 {
 	// Make sure we are iterating over the correct contents.
@@ -271,6 +280,7 @@ bool MCArrayApply(MCArrayRef self, MCArrayApplyCallback p_callback, void *p_cont
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCArrayIterate(MCArrayRef self, uintptr_t& x_iterator, MCNameRef& r_key, MCValueRef& r_value)
 {
 	// Make sure we are iterating over the correct contents.
@@ -301,11 +311,13 @@ bool MCArrayIterate(MCArrayRef self, uintptr_t& x_iterator, MCNameRef& r_key, MC
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCArrayIsMutable(MCArrayRef self)
 {
 	return (self -> flags & kMCArrayFlagIsMutable) != 0;
 }
 
+MC_DLLEXPORT_DEF
 uindex_t MCArrayGetCount(MCArrayRef self)
 {
 	if (!__MCArrayIsIndirect(self))
@@ -313,11 +325,13 @@ uindex_t MCArrayGetCount(MCArrayRef self)
 	return self -> contents -> key_value_count;
 }
 
+MC_DLLEXPORT_DEF
 bool MCArrayIsCaseSensitive(MCArrayRef self)
 {
     return (self -> flags & kMCArrayFlagIsCaseSensitive) != 0;
 }
 
+MC_DLLEXPORT_DEF
 bool MCArrayIsFormSensitive(MCArrayRef self)
 {
     return (self -> flags & kMCArrayFlagIsFormSensitive) != 0;
@@ -325,11 +339,13 @@ bool MCArrayIsFormSensitive(MCArrayRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCArrayFetchValue(MCArrayRef self, bool p_case_sensitive, MCNameRef p_key, MCValueRef& r_value)
 {
 	return MCArrayFetchValueOnPath(self, p_case_sensitive, &p_key, 1, r_value);
 }
 
+MC_DLLEXPORT_DEF
 bool MCArrayFetchValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNameRef *p_path, uindex_t p_path_length, MCValueRef& r_value)
 {
 	// If the array is indirect, get the contents.
@@ -365,11 +381,13 @@ bool MCArrayFetchValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNam
 
 //////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCArrayStoreValue(MCArrayRef self, bool p_case_sensitive, MCNameRef p_key, MCValueRef p_value)
 {
 	return MCArrayStoreValueOnPath(self, p_case_sensitive, &p_key, 1, p_value);
 }
 
+MC_DLLEXPORT_DEF
 bool MCArrayStoreValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNameRef *p_path, uindex_t p_path_length, MCValueRef p_new_value)
 {
 	// The array must be mutable.
@@ -464,11 +482,13 @@ bool MCArrayStoreValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNam
 
 //////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCArrayRemoveValue(MCArrayRef self, bool p_case_sensitive, MCNameRef p_key)
 {
 	return MCArrayRemoveValueOnPath(self, p_case_sensitive, &p_key, 1);
 }
 
+MC_DLLEXPORT_DEF
 bool MCArrayRemoveValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNameRef *p_path, uindex_t p_path_length)
 {
 	// The array must be mutable.
@@ -528,6 +548,7 @@ bool MCArrayRemoveValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNa
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCArrayFetchValueAtIndex(MCArrayRef self, index_t p_index, MCValueRef& r_value)
 {
 	char t_index_str[16];
@@ -540,6 +561,7 @@ bool MCArrayFetchValueAtIndex(MCArrayRef self, index_t p_index, MCValueRef& r_va
 	return MCArrayFetchValue(self, true, *t_key, r_value);
 }
 
+MC_DLLEXPORT_DEF
 bool MCArrayStoreValueAtIndex(MCArrayRef self, index_t p_index, MCValueRef p_value)
 {
 	char t_index_str[16];
@@ -567,6 +589,7 @@ MCArrayRemoveValueAtIndex(MCArrayRef self, index_t p_index)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCArrayIsEmpty(MCArrayRef self)
 {
 	return MCArrayGetCount(self) == 0;
@@ -952,7 +975,7 @@ static bool __MCArrayRehash(__MCArray *self, index_t p_by)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCArrayRef kMCEmptyArray;
+MC_DLLEXPORT_DEF MCArrayRef kMCEmptyArray;
 
 bool __MCArrayInitialize(void)
 {

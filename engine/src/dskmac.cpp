@@ -7419,10 +7419,19 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             close(toparent[0]);
             if (MCprocesses[index].pid != 0)
                 Kill(MCprocesses[index].pid, SIGKILL);
-            /* UNCHECKED */ MCDataCreateWithBytes((char_t*)buffer, size, r_data);
+            
+            // SN-2015-07-15: [[ Bug 15592 ]] Do not copy the buffer as we want
+            //  to take ownership of it - and ensure to free it in any case.
+            if (!MCDataCreateWithBytesAndRelease((char_t*)buffer, size, r_data))
+                free(buffer);
+
             return false;
         }
-        /* UNCHECKED */ MCDataCreateWithBytes((char_t*)buffer, size, r_data);
+        // SN-2015-07-15: [[ Bug 15592 ]] Do not copy the buffer as we want
+        //  to take ownership of it - and ensure to free it in any case.
+        if (!MCDataCreateWithBytesAndRelease((char_t*)buffer, size, r_data))
+            free(buffer);
+
         close(toparent[0]);
         CheckProcesses();
         if (MCprocesses[index].pid != 0)

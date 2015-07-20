@@ -899,3 +899,5 @@ bool MCWidget::isInRunMode()
     Tool t_tool = getstack() -> gettool(this);
     return t_tool == T_BROWSE || t_tool == T_HELP;
 }
+
+////////////////////////////////////////////////////////////////////////////////
