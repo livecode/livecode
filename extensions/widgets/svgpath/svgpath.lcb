@@ -140,13 +140,13 @@ public handler setFlipVertically(in pBoolean as Boolean)
 end handler
 
 
-public handler setPath(in pPath as String) as undefined
+public handler setPath(in pPath as String) returns nothing
 	put pPath into mPath
 	redraw all
 end handler
 
 
-public handler setColor(in pColor as String) as undefined
+public handler setColor(in pColor as String) returns nothing
 	put stringToColor(pColor) into mColor
 	redraw all
 end handler
@@ -157,17 +157,17 @@ public handler getColor() as String
 end handler
 
 
-public handler setHiliteColor(in pColor as String) as undefined
+public handler setHiliteColor(in pColor as String) returns nothing
 	put stringToColor(pColor) into mHiliteColor
 	redraw all
 end handler
 
 
-public handler getHiliteColor() as String
+public handler getHiliteColor() returns String
 	return colorToString(mHiliteColor, false)
 end handler
 
-public handler setPathPreset(in pPresetName as String) as undefined
+public handler setPathPreset(in pPresetName as String) returns nothing
 	put iconSVGPathFromName(pPresetName) into mPath
 	put pPresetName into mPathName
 	redraw all
@@ -177,7 +177,7 @@ public handler getPathPreset() as String
 	return mPathName
 end handler
 
-public handler setAngle(in pAngle as Number) as undefined
+public handler setAngle(in pAngle as Number) returns nothing
 	put pAngle into mAngle
 	redraw all
 end handler
@@ -219,7 +219,7 @@ end handler
 
 
 -- Translated from some Skia code
-private handler scaleAndMaintainAspectRatioTransform(in pSrcBounds as Rectangle, in pDestBounds as Rectangle) as Transform
+private handler scaleAndMaintainAspectRatioTransform(in pSrcBounds as Rectangle, in pDestBounds as Rectangle) returns Transform
 	// Prepare values for matrix transformation
 	variable isLarger as Boolean
 	variable sx as Number
@@ -267,7 +267,7 @@ private handler scaleAndMaintainAspectRatioTransform(in pSrcBounds as Rectangle,
 end handler
 
 
-private handler colorToString(in pColor as Color, in pIncludeAlpha as Boolean) as String
+private handler colorToString(in pColor as Color, in pIncludeAlpha as Boolean) returns String
 	variable tColor as String
 	
 	put FormatInt(the rounded of ((the red of pColor) * 255)) into tColor
@@ -281,7 +281,7 @@ private handler colorToString(in pColor as Color, in pIncludeAlpha as Boolean) a
 	return tColor
 end handler
 
-private handler stringToColor(in pString as String) as Color
+private handler stringToColor(in pString as String) returns Color
 	if the number of chars in pString is 0 then
 		return ""
 		end if
@@ -315,8 +315,8 @@ private handler stringToColor(in pString as String) as Color
 end handler
 
 
--- Needed until dp-2
-handler FormatInt(in pNumber as Number) as String
+-- Needed until dp-4
+handler FormatInt(in pNumber as Number) returns String
 	variable tNumberString as String
 
 	put pNumber formatted as string into tNumberString

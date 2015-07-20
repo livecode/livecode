@@ -268,7 +268,7 @@ public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real) returns not
     end if
 end handler
 
-private handler indexToSectorRect(in pIndex as Integer) as Rectangle
+private handler indexToSectorRect(in pIndex as Integer) returns Rectangle
 	log pIndex
 
 	variable tLeft as Real

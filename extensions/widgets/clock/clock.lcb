@@ -197,7 +197,7 @@ public handler OnPaint()
 
 end handler
 
-handler getTimeComponents() as List
+handler getTimeComponents() returns List
 	-- Fetch the local date.
     -- This a list in the form [day, month, year, hours,minutes,seconds]
     variable tDate as List
@@ -223,7 +223,7 @@ handler getTimeComponents() as List
 	return tDate
 end handler
 
-handler computeNextTimer() as Number
+handler computeNextTimer() returns Number
     get the universal time
     return 1 - (the result - the floor of the result)
 end handler
@@ -235,7 +235,7 @@ public handler OnTimer()
 	schedule timer in computeNextTimer() seconds
 end handler
 
-private handler getPaint(in pObject as String) as Paint
+private handler getPaint(in pObject as String) returns Paint
 
 	if pObject is "clock face" then
 		if mIsDay is true then
@@ -257,7 +257,7 @@ private handler getPaint(in pObject as String) as Paint
 	end if
 end handler
 
-private handler getPath(in pString as String) as Path
+private handler getPath(in pString as String) returns Path
 
 	if pString is "clock face" then
 		put (my width)/10 into mFontSize
@@ -278,7 +278,7 @@ private handler getPath(in pString as String) as Path
 	end if
 end handler
 
-private handler getPoint(in pString as String) as Point
+private handler getPoint(in pString as String) returns Point
 	if pString is "1" then
 		return point [(my width)/2+0.35*(my width)/2, (my height)/2-0.65*(my width)/2]
 	else if pString is "2" then
@@ -306,7 +306,7 @@ private handler getPoint(in pString as String) as Point
 	end if
 end handler
 
-private handler getStrokeWidth(in pHand as String) as Real
+private handler getStrokeWidth(in pHand as String) returns Real
 	if pHand is "minute hand" or pHand is "hour hand" then
 		return (my width/2)*0.03
 
@@ -316,7 +316,7 @@ private handler getStrokeWidth(in pHand as String) as Real
 	end if
 end handler
 
-public handler setTimeZone(in pTimeZone as Number) as undefined
+public handler setTimeZone(in pTimeZone as Number) returns nothing
 	put pTimeZone into mTimeZone
 	put getTimeComponents() into mCurrentTime
 	redraw all

@@ -133,7 +133,7 @@ public handler OnMouseUp()
 	post "mouseUp" with [mLabel]
 end handler
 
-private handler getPath(in pString as String) as Path
+private handler getPath(in pString as String) returns Path
 	if pString is "checkbox" then
 		if mTheme contains "macos" then
 			return rounded rectangle path of rectangle [kPadding, my height/2 - kWidth/2, kPadding+kWidth, my height/2 + kWidth/2] with radius 2
@@ -143,7 +143,7 @@ private handler getPath(in pString as String) as Path
 	end if
 end handler
 
-private handler getRect(in pObject as String) as Rectangle
+private handler getRect(in pObject as String) returns Rectangle
 	if pObject is "checkbox" then
 		return rectangle [kPadding, my height/2 - kWidth/2, kPadding+kWidth, my height/2 + kWidth/2]
 
@@ -152,7 +152,7 @@ private handler getRect(in pObject as String) as Rectangle
 	end if
 end handler
 
-private handler getPaint(in pObject as String) as Paint
+private handler getPaint(in pObject as String) returns Paint
 
 	if pObject is "border" then
 		if mTheme is "macos-yosemite" and mIsChecked is true then
@@ -239,7 +239,7 @@ private handler getPaint(in pObject as String) as Paint
 	return solid paint with color [0, 0, 0]
 end handler
 
-private handler getFont(in pObject as String) as Font
+private handler getFont(in pObject as String) returns Font
 	if pObject is "icon" then
 		return font "fontawesome" at size kIconSize
 		
@@ -256,17 +256,17 @@ private handler getFont(in pObject as String) as Font
 	return font (the name of the font of this canvas)
 end handler
 
-public handler setTheme(in pTheme as String) as undefined
+public handler setTheme(in pTheme as String) returns nothing
 	put pTheme into mTheme
 	redraw all
 end handler
 
-public handler setLabel(in pLabel as String) as undefined
+public handler setLabel(in pLabel as String) returns nothing
 	put pLabel into mLabel
 	redraw all
 end handler
 
-public handler setChecked(in pIsChecked as Boolean) as undefined
+public handler setChecked(in pIsChecked as Boolean) returns nothing
 	put pIsChecked into mIsChecked
 	redraw all
 end handler

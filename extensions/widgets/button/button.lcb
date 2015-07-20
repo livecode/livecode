@@ -71,14 +71,14 @@ public handler OnLoad(in pProperties as Array)
 	put pProperties["label"] into mLabel
 end handler
 
-public handler OnCreate() as undefined
+public handler OnCreate() returns nothing
 	put "ios-8" into mTheme
 	put "Button" into mLabel
 	put "default" into mStyle
 	put "none" into mState
 end handler
 
-public handler OnPaint() as undefined
+public handler OnPaint() returns nothing
 	
 	// Draw the shadow
 	// To implement. Waiting for the ability to draw outside the bounds of a control
@@ -100,37 +100,37 @@ public handler OnPaint() as undefined
 	fill text mLabel at center of my bounds on this canvas
 end handler
 
-public handler OnMouseDown() as undefined
+public handler OnMouseDown() returns nothing
 	put "pressed" into mState
 	redraw all
 
 	post "mouseDown"
 end handler
 --
-public handler OnMouseUp() as undefined
+public handler OnMouseUp() returns nothing
 	put "none" into mState
 	redraw all
     
     post "mouseUp"
 end handler
 --
-public handler OnMouseEnter() as undefined
+public handler OnMouseEnter() returns nothing
 	put "over" into mState
 	redraw all
 end handler
 --
-public handler OnMouseLeave() as undefined
+public handler OnMouseLeave() returns nothing
 	if mState is not "pressed" then
 		put "none" into mState
 		redraw all
 	end if
 end handler
 
-private handler getStrokeWidth() as Integer
+private handler getStrokeWidth() returns Integer
 	return 1
 end handler
 
-private handler getCornerRadius() as Integer
+private handler getCornerRadius() returns Integer
 	if mTheme is "ios-8" then
 		return 9
 	else if mTheme is "macos-10.10" then
@@ -140,7 +140,7 @@ private handler getCornerRadius() as Integer
 	return 10
 end handler
 
-private handler getFontName() as String
+private handler getFontName() returns String
 	if mTheme is "ios-8" then
 		return "Helvetica Neue"
 	end if	
@@ -148,7 +148,7 @@ private handler getFontName() as String
 	return the name of the font of this canvas
 end handler
 
-private handler getFontSize() as Integer
+private handler getFontSize() returns Integer
 	if mTheme is "ios-8" then
 	 	if my height >= kMaxHeight then
 			return 42 
@@ -162,7 +162,7 @@ private handler getFontSize() as Integer
 	return 11
 end handler
 
-private handler getPaint_BackgroundFill() as Paint
+private handler getPaint_BackgroundFill() returns Paint
 	if mTheme is "ios-8" then
 		if mState is "pressed" then	
 			return solid paint with color [246/255, 246/255, 247/255]
@@ -195,7 +195,7 @@ private handler getPaint_BackgroundFill() as Paint
 	return solid paint with color kWhite
 end handler
 
-private handler getPaint_BackgroundStrokeFill() as Paint
+private handler getPaint_BackgroundStrokeFill() returns Paint
 	if mTheme is "ios-8" then
 		return solid paint with color kWhite
 	else if mTheme is "macos-10.10" then
@@ -223,7 +223,7 @@ private handler getPaint_BackgroundStrokeFill() as Paint
 	return solid paint with color kWhite
 end handler
 
-private handler getPaint_TextFill() as Paint
+private handler getPaint_TextFill() returns Paint
 	if mTheme is "ios-8" then
 		return solid paint with color [51/255,153/255,1]
 		
@@ -240,17 +240,17 @@ private handler getPaint_TextFill() as Paint
 	return solid paint with color kBlack
 end handler
 
-public handler setTheme(in pThemeName as String) as undefined
+public handler setTheme(in pThemeName as String) returns nothing
 	put pThemeName into mTheme
 	redraw all
 end handler
 
-private handler setLabel(in pLabel as String) as undefined
+private handler setLabel(in pLabel as String) returns nothing
 	put pLabel into mLabel
 	redraw all
 end handler
 
-private handler setStyle(in pStyle as String) as undefined
+private handler setStyle(in pStyle as String) returns nothing
 	if pStyle is in ["standard","default"] then
 		put pStyle into mStyle
 		redraw all

@@ -121,7 +121,7 @@ public handler OnMouseUp()
 	post "buttonChecked" with [mLabelText]
 end handler
 
-private handler getPath(in pObject as String) as Path
+private handler getPath(in pObject as String) returns Path
 	if pObject is "outer circle" then
 		return circle path centered at point [10, my height/2] with radius 7.5
 		
@@ -143,7 +143,7 @@ private handler getPath(in pObject as String) as Path
 	end if
 end handler
 
-private handler getStroke() as Number
+private handler getStroke() returns Number
 	if mTheme contains "macos" then
 		return 1.0
 	else if mTheme is "windows-8" then
@@ -151,7 +151,7 @@ private handler getStroke() as Number
 	end if
 end handler
 
-private handler getPaint(in pObject as String) as Paint
+private handler getPaint(in pObject as String) returns Paint
 	if pObject is "outer circle" then
 		variable tStop1
 		variable tStop2
@@ -248,7 +248,7 @@ private handler getPaint(in pObject as String) as Paint
 	end if
 end handler
 
-private handler getFont() as Font
+private handler getFont() returns Font
 	if mTheme is "macos-yosemite" then
 		return font "Helvetica Neue" at size 12
 	else if mTheme is "macos-10.0" then
@@ -265,19 +265,17 @@ private handler getLabelRect() as Rectangle
 	return tLabelRect
 end handler
 
-private handler setChecked(in pIsChecked as Boolean) as undefined
-	-- once a radio button is checked, can only be unchecked if another radio button is checked
-	if pIsChecked is true then 
-		put true into mIsChecked
-	end if
+private handler setChecked(in pIsChecked as Boolean) returns nothing
+    put pIsChecked into mIsChecked
+    redraw all
 end handler
 
-public handler setTheme(in pTheme as String) as undefined
+public handler setTheme(in pTheme as String) returns nothing
 	put pTheme into mTheme
 	redraw all
 end handler
 
-public handler setLabelText(in pLabel as String) as undefined
+public handler setLabelText(in pLabel as String) returns nothing
 	put pLabel into mLabelText
 	redraw all
 end handler

@@ -1264,7 +1264,7 @@ public handler iconListMatching(in pSearch as String) returns List
 	return tMatches
 end handler
 
-public handler iconData() as Array
+public handler iconData() returns Array
 	return sFontArray
 end handler
 

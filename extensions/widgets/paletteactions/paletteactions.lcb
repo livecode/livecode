@@ -353,7 +353,7 @@ private handler recalculate()
 	put false into mRecalculate
 end handler
 
-private handler calculateRects(in pTabs as Boolean, in pFromLeft as Boolean, in pIcons as Boolean, in pData as List) as List
+private handler calculateRects(in pTabs as Boolean, in pFromLeft as Boolean, in pIcons as Boolean, in pData as List) returns List
 	variable tPadding as Real
 	if pTabs then
 		put my height * kPaddingRatio * (1 - kTabPaddingRatio) into tPadding

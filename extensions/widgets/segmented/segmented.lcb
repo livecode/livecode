@@ -390,8 +390,8 @@ public handler OnClick()
 	redraw all
 end handler
 
-private handler drawSegments() as undefined
-	
+private handler drawSegments() returns nothing
+
 	variable tX as Integer
 	variable tLabel as String
 	variable tWidth as Real
@@ -519,7 +519,7 @@ private handler updateLines() as undefined
 	end repeat
 end handler
 
-private handler updatePerimeter() as undefined
+private handler updatePerimeter() returns nothing
 	variable tRight as Real
 	variable tX as Integer
 	
@@ -531,7 +531,7 @@ private handler updatePerimeter() as undefined
 	put rounded rectangle path of rectangle [0.5, 0.5, (the trunc of tRight) + 0.5, (the trunc of my height) - 0.5] with radius mRadius into mPerimeter
 end handler
 
-private handler updateProperties() as undefined
+private handler updateProperties() returns nothing
 	variable tX as Integer
 	
 	if (the number of elements in mSegmentLabels) < mNumSegments then
@@ -576,7 +576,7 @@ private handler updateProperties() as undefined
 	
 end handler
 
-private handler fetchPath(in pObject as String, in pInt as Integer) as Path
+private handler fetchPath(in pObject as String, in pInt as Integer) returns Path
 	
 	if pObject is "border" then
 		return rounded rectangle path of rectangle [0.5, 0.5, (the trunc of my width)-0.5, (the trunc of my height)-0.5] with radius 2
@@ -584,7 +584,7 @@ private handler fetchPath(in pObject as String, in pInt as Integer) as Path
 	
 end handler
 
-private handler fetchPaint(in pObject as String, in pPlatform as String) as Paint
+private handler fetchPaint(in pObject as String, in pPlatform as String) returns Paint
 	
 	if pObject is "lines" then
 		if pPlatform is "yosemite" then
@@ -632,19 +632,19 @@ private handler fetchPaint(in pObject as String, in pPlatform as String) as Pain
 	return solid paint with color [1,0,0]
 end handler
 
-private handler fetchFont() as Font
+private handler fetchFont() returns Font
 	variable tFont as Font
 	put the font of this canvas into tFont
 	set the size of tFont to kTextSize
 	return tFont
 end handler
 
-private handler fetchLabelRect(in pWidth as Real) as Rectangle
+private handler fetchLabelRect(in pWidth as Real) returns Rectangle
 	return rectangle [mLeft, 0, mLeft + pWidth, my height]
 	
 end handler
 
-private handler fetchWidth(in pSegment as Integer) as Real
+private handler fetchWidth(in pSegment as Integer) returns Real
 	if pSegment is 0 then
 		return 0
 	end if
@@ -658,7 +658,7 @@ private handler fetchWidth(in pSegment as Integer) as Real
 	return tWidth
 end handler
 
-private handler fetchBounds(in pSegment as Integer) as Rectangle
+private handler fetchBounds(in pSegment as Integer) returns Rectangle
 	
 	variable tLeft as Real
 	put 0 into tLeft
@@ -674,7 +674,7 @@ private handler fetchBounds(in pSegment as Integer) as Rectangle
 	return rectangle [tLeft, 0, tLeft + tWidth, my height]
 end handler
 
-private handler getSegmentNames() as String
+private handler getSegmentNames() returns String
 
 	variable tSegmentNames as String
 	combine mSegmentNames with "," into tSegmentNames
@@ -682,7 +682,7 @@ private handler getSegmentNames() as String
 	
 end handler
 
-private handler getSegmentLabels() as String
+private handler getSegmentLabels() returns String
 	
 	variable tSegmentLabels as String
 	combine mSegmentLabels with "," into tSegmentLabels
@@ -690,7 +690,7 @@ private handler getSegmentLabels() as String
 
 end handler
 
-private handler getSegmentIcons() as String
+private handler getSegmentIcons() returns String
 	
 	variable tSegmentIcons as String
 	combine mSegmentIcons with "," into tSegmentIcons
@@ -698,7 +698,7 @@ private handler getSegmentIcons() as String
 	
 end handler
 
-private handler getSelectedIcons() as String
+private handler getSelectedIcons() returns String
 
 	variable tSelectedIcons as String
 	combine mSelectedIcons with "," into tSelectedIcons
@@ -706,7 +706,7 @@ private handler getSelectedIcons() as String
 	
 end handler
 
-private handler getSelectedSegment() as String 
+private handler getSelectedSegment() returns String
 	
 	variable tSelected
 	variable tSelectedString as String
@@ -725,7 +725,7 @@ private handler getSelectedSegment() as String
 	
 end handler
 
-private handler getSegmentMinWidth() as String
+private handler getSegmentMinWidth() returns String
 		
 	variable tMinWidth
 	variable tMinWidthString as String
