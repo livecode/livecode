@@ -188,6 +188,7 @@
 							'-Wall', 
 							'-Wextra', 
 							'-Werror=declaration-after-statement',
+							'-Werror=overloaded-virtual',
 							'-Wno-unused-parameter',
 						],
 					},
