@@ -736,8 +736,8 @@ template <class T, class U> inline T MCMax(T a, U b) { return a > b ? a : b; }
 //  ABSOLUTE VALUE FUNCTIONS
 //
 
-inline uint32_t MCAbs(int32_t a) { return a < 0 ? -a : a; }
-inline uint64_t MCAbs(int64_t a) { return a < 0 ? -a : a; }
+inline uint32_t MCAbs(int32_t a) { return uint32_t(a < 0 ? -a : a); }
+inline uint64_t MCAbs(int64_t a) { return uint64_t(a < 0 ? -a : a); }
 inline float MCAbs(float a) { return fabsf(a); }
 inline double MCAbs(double a) { return fabs(a); }
 
@@ -796,7 +796,7 @@ inline MCByteOrder MCByteOrderGetCurrent(void)
 
 inline uint16_t MCSwapInt16(uint16_t x)
 {
-	return (x >> 8) | (x << 8);
+	return (uint16_t)(x >> 8) | (uint16_t)(x << 8);
 }
 
 inline uint32_t MCSwapInt32(uint32_t x)
