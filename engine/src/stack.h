@@ -719,6 +719,7 @@ public:
 	void getstackfile(MCStringRef p_name, MCStringRef &r_name);
 	void setfilename(MCStringRef f);
 
+	virtual IO_stat load(IO_handle stream, uint32_t version);
 	virtual IO_stat load(IO_handle stream, uint32_t version, uint1 type);
 	IO_stat load_stack(IO_handle stream, uint32_t version);
 	IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);
@@ -1222,6 +1223,9 @@ public:
 #endif
     
 private:
+    /* Explicitly forbid use of the base class's load() method */
+	using MCObject::load;
+
 	void loadexternals(void);
 	void unloadexternals(void);
 
