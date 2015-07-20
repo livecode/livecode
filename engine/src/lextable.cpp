@@ -724,6 +724,7 @@ LT factor_table[] =
         // MERG-2013-08-12: [[ ClipsToRect ]] If true group clips to the set rect rather than the rect of children
         {"clipstorect", TT_PROPERTY, P_CLIPS_TO_RECT},
         {"closebox", TT_PROPERTY, P_CLOSE_BOX},
+        {"cmdargs", TT_FUNCTION, F_COMMAND_ARGUMENTS},
         {"cmdkey", TT_FUNCTION, F_COMMAND_KEY},
         {"codepoint", TT_CHUNK, CT_CODEPOINT},
         {"codepointoffset", TT_FUNCTION, F_CODEPOINT_OFFSET},
@@ -732,7 +733,8 @@ LT factor_table[] =
         {"codepointtonum", TT_FUNCTION, F_UNICODE_CHAR_TO_NUM},
         {"codeunit", TT_CHUNK, CT_CODEUNIT},
         {"codeunitoffset", TT_FUNCTION, F_CODEUNIT_OFFSET},
-		{"codeunits", TT_CLASS, CT_CODEUNIT},
+        {"codeunits", TT_CLASS, CT_CODEUNIT},
+        {"cmdname", TT_FUNCTION, F_COMMAND_NAME},
         {"collapsebox", TT_PROPERTY, P_COLLAPSE_BOX},
 		// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog
 		{"colordialogcolors", TT_PROPERTY, P_COLOR_DIALOG_COLORS},
@@ -744,8 +746,12 @@ LT factor_table[] =
         {"colorworld", TT_PROPERTY, P_COLOR_WORLD},
         {"columndel", TT_PROPERTY, P_COLUMN_DELIMITER},
         {"columndelimiter", TT_PROPERTY, P_COLUMN_DELIMITER},
+        // SN-2015-07-18: [[ CommandFunctions ]] Added keywords for
+        //  commandName and commandArguments
+        {"commandarguments", TT_FUNCTION, F_COMMAND_ARGUMENTS},
         {"commandchar", TT_PROPERTY, P_COMMAND_CHAR},
         {"commandkey", TT_FUNCTION, F_COMMAND_KEY},
+        {"commandname", TT_FUNCTION, F_COMMAND_NAME},
         {"commandnames", TT_FUNCTION, F_COMMAND_NAMES},
 		// MW-2011-09-10: [[ TileCache ]] The maximum number of bytes to use for the tile cache
 		{"compositorcachelimit", TT_PROPERTY, P_COMPOSITOR_CACHE_LIMIT},

@@ -1224,6 +1224,12 @@ bool MCModeIsExecutableFirstArgument(void)
 	return false;
 }
 
+// In development mode, we don't have command line arguments / name
+bool MCModeHasCommandLineArguments(void)
+{
+    return false;
+}
+
 // In development mode, we always automatically open stacks.
 bool MCModeShouldLoadStacksOnStartup(void)
 {
