@@ -1123,43 +1123,36 @@ bool MCWidgetOnHitTest(MCWidgetRef self, MCGPoint p_location, MCWidgetRef& r_tar
 
 bool MCWidgetOnMouseEnter(MCWidgetRef self, bool& r_bubble)
 {
-    MCLog("Widget::MouseEnter(%p)", self);
     return MCWidgetAsBase(self) -> OnMouseEnter(r_bubble);
 }
 
 bool MCWidgetOnMouseLeave(MCWidgetRef self, bool& r_bubble)
 {
-    MCLog("Widget::MouseLeave(%p)", self);
     return MCWidgetAsBase(self) -> OnMouseLeave(r_bubble);
 }
 
 bool MCWidgetOnMouseMove(MCWidgetRef self, bool& r_bubble)
 {
-    MCLog("Widget::MouseMove(%p)", self);
     return MCWidgetAsBase(self) -> OnMouseMove(r_bubble);
 }
 
 bool MCWidgetOnMouseDown(MCWidgetRef self, bool& r_bubble)
 {
-    MCLog("Widget::MouseDown(%p)", self);
     return MCWidgetAsBase(self) -> OnMouseDown(r_bubble);
 }
 
 bool MCWidgetOnMouseUp(MCWidgetRef self, bool& r_bubble)
 {
-    MCLog("Widget::MouseUp(%p)", self);
     return MCWidgetAsBase(self) -> OnMouseUp(r_bubble);
 }
 
 bool MCWidgetOnMouseCancel(MCWidgetRef self, bool& r_bubble)
 {
-    MCLog("Widget::MouseCancel(%p)", self);
     return MCWidgetAsBase(self) -> OnMouseCancel(r_bubble);
 }
 
 bool MCWidgetOnClick(MCWidgetRef self, bool& r_bubble)
 {
-    MCLog("Widget::Click(%p)", self);
     return MCWidgetAsBase(self) -> OnClick(r_bubble);
 }
 
