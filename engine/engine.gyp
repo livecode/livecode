@@ -221,6 +221,11 @@
 					'OS == "mac"',
 					{
 						'product_name': 'Standalone-Community',
+						'mac_bundle_resources':
+						[
+							'rsrc/Standalone.icns',
+							'rsrc/StandaloneDoc.icns',
+						],
 					},
 				],
 				[
@@ -465,6 +470,10 @@
 					'OS == "mac"',
 					{
 						'product_name': 'Installer',
+						'mac_bundle_resources':
+						[
+							'rsrc/Installer.icns',
+						],
 					},
 				],
 				[
@@ -566,6 +575,11 @@
 					'OS == "mac"',
 					{
 						'product_name': 'LiveCode-Community',
+						'mac_bundle_resources':
+						[
+							'rsrc/LiveCode.icns',
+							'rsrc/LiveCodeDoc.icns',
+						],
 					},
 				],
 				[
