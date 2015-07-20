@@ -1084,7 +1084,9 @@ public:
 	void SetSystemWindow(MCExecContext& ctxt, bool setting);
 	void GetMetal(MCExecContext& ctxt, bool& r_setting);
 	void SetMetal(MCExecContext& ctxt, bool setting);
+	using MCObject::GetShadow;
 	void GetShadow(MCExecContext& ctxt, bool& r_setting);
+	using MCObject::SetShadow;
 	void SetShadow(MCExecContext& ctxt, bool setting);
 	void GetResizable(MCExecContext& ctxt, bool& r_setting);
 	void SetResizable(MCExecContext& ctxt, bool setting);
@@ -1223,9 +1225,6 @@ public:
 #endif
     
 private:
-    /* Explicitly forbid use of the base class's load() method */
-	using MCObject::load;
-
 	void loadexternals(void);
 	void unloadexternals(void);
 
