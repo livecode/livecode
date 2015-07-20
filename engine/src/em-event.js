@@ -47,8 +47,15 @@ mergeInto(LibraryManager.library, {
 
 				// FIXME "keypress" events are deprecated
 				['keypress', LiveCodeEvents._handleKeyboardEvent],
+				['keyup', LiveCodeEvents._handleKeyboardEvent],
+				['keydown', LiveCodeEvents._handleKeyboardEvent],
 
-				['input', LiveCodeEvents._handleKeyboardEvent],
+				['input', LiveCodeEvents._handleInput],
+				['beforeinput', LiveCodeEvents._handleInput],
+
+				['compositionstart', LiveCodeEvents._handleComposition],
+				['compositionupdate', LiveCodeEvents._handleComposition],
+				['compositionend', LiveCodeEvents._handleComposition],
 			];
 
 			var mapLength = mapping.length;
@@ -75,6 +82,9 @@ mergeInto(LibraryManager.library, {
 
 			// Make sure the canvas is treated as focusable...
 			target.tabIndex = 0;
+
+			// Make it a target for text input events
+			target.setAttribute('contentEditable', 'true');
 
 			LiveCodeEvents._initialised = false;
 		},
@@ -154,13 +164,61 @@ mergeInto(LibraryManager.library, {
 		// Keyboard events
 		// ----------------------------------------------------------------
 
+		// Converts a string in the form 'U+xxxx' into a codepoint number
+		_parseCodepointString: function(string) {
+			var codepointString = string.match(/^U\+([0-9a-fA-F]+)$/);
+			if (codepointString) {
+				var codepointNum = parseInt(codepointString[1], 16);
+				if (codepointNum > 0xff) {
+					return 0x01000000 | codepointNum;
+				} else if (codepointNum === 0x08 || codepointNum === 0x09 || codepointNum < 0x80) {
+					return codepointNum;
+				} else {
+					// Values outside the range HT,BS,0x20-0x7f tend to depend
+					// on the browser and aren't reliable
+					return 0;
+				}
+			}
+			return 0;
+		},
+
+		// Converts ASCII control characters to their X11 key equivalents
+		// or returns zero if not a control
+		_controlToX11Key: function(codepoint) {
+			switch (codepoint) {
+				case 0x0008:	// Horizontal tab
+				case 0x0009:	// Backspace
+					return 0xff00 + codepoint;
+
+				case 0x007f:	// Delete
+					return 0xffff;
+
+				default:		// Unrecognised
+					return 0;
+			}
+		},
+
 		// Generate the char_code argument needed by
 		// MCEventQueuePostKeyPress() from JavaScript's
 		// KeyboardEvent.key.
 		_encodeKeyboardCharCode: function(keyboardEvent) {
-			var key = keyboardEvent.key;
-			var high = key.charCodeAt(0); // High surrogate
-			var low = key.charCodeAt(1); // Low surrogate
+			// Not all browsers implement the KeyboardEvent interface fully;
+			// we may have to fall back to an older interface if not defined
+			var key, high, low;
+			if ('key' in keyboardEvent) {
+				key = keyboardEvent.key;
+				high = key.charCodeAt(0);
+				low = key.charCodeAt(1);
+			} else {
+				// Browser uses the old-style key events. Just take whatever
+				// charCode it has supplied (if any!)
+				if (keyboardEvent.charCode !== 0) {
+					return keyboardEvent.charCode;
+				} else {
+					// Try parsing the keyIdentifier
+					return LiveCodeEvents._parseCodepointString(keyboardEvent.keyIdentifier);
+				}
+			}
 
 			// Check if there's actually a key code at all
 			if (isNaN(high)) {
@@ -208,15 +266,33 @@ mergeInto(LibraryManager.library, {
 			// FIXME Maybe this should be done in the engine?
 			var char_code = LiveCodeEvents._encodeKeyboardCharCode(keyboardEvent);
 
-			// Unicode codepoints in the ISO/IEC 8859-1 range
+			// Non-control Unicode codepoints in the ISO/IEC 8859-1 range
 			// U+0020..U+00FF are passed directly as keycodes.
 			// Otherwise, the codepoint is returned with bit 21 set.
-			if (char_code > 0) {
-				if (char_code >= 0x20 && char_code <= 0xff) {
+			if (char_code >= 0x20) {
+				if ((char_code >= 0x20 && char_code < 0x7f) || (char_code >= 0xa0 && char_code <= 0xff)) {
 					return char_code;
+				} else if (char_code > 0xff) {
+					return char_code | 0x1000000;
 				} else {
-					return char_code & 0x1000000;
+					// Control character -- handled below
 				}
+			}
+
+			// If the 'key' property isn't defined, the old-style keyboard events
+			// are being used and we need to convert any ASCII control characters
+			// into the corresponding XK_ code
+			if (!('key' in keyboardEvent) && char_code !== 0) {
+				return LiveCodeEvents._controlToX11Key(char_code);
+			}
+
+			// String describing the key. This is stored in the 'key' property for
+			// new-style key events and 'keyIdentifier' for old-style events.
+			var keyName;
+			if ('key' in keyboardEvent) {
+				keyName = keyboardEvent.key;
+			} else {
+				keyName = keyboardEvent.keyIdentifier;
 			}
 
 			// Otherwise, decode to an X11 keycode
@@ -227,10 +303,11 @@ mergeInto(LibraryManager.library, {
 			//
 			// Not all of these keycodes are actually understood by
 			// the engine, but they're all included for completeness.
-			switch (keyboardEvent.key) {
+			switch (keyName) {
 
 				// Special Key Values
-			case 'Unidentified': return 0;
+			case 'Unidentified':	return 0;
+			case 'Dead':			return 0; // Dead keys for IME composition
 
 				// Whitespace Keys
 			case 'Enter':     return 0xff0d; // XK_Return
@@ -238,9 +315,13 @@ mergeInto(LibraryManager.library, {
 			case 'Tab':       return 0xff09; // XK_Tab
 
 				// Navigation Keys
+			case 'Down':
 			case 'ArrowDown':  return 0xff54; // XK_Down
+			case 'Left':
 			case 'ArrowLeft':  return 0xff51; // XK_Left
+			case 'Right':
 			case 'ArrowRight': return 0xff53; // XK_Right
+			case 'Up':
 			case 'ArrowUp':    return 0xff52; // XK_Up
 			case 'End':        return 0xff57; // XK_End
 			case 'Home':       return 0xff50; // XK_Home
@@ -378,11 +459,22 @@ mergeInto(LibraryManager.library, {
 			}
 
 			// General-Purpose Function keys
-			var functionKey = keyboardEvent.key.match(/^F(\d+)$/);
+			var functionKey = keyName.match(/^F(\d+)$/);
 			if (functionKey) {
 				var functionNum = parseInt(functionKey[1]);
 				if (functionNum >= 1 && functionNum <= 35) {
 					return 0xffbd + functionNum; // XK_F...
+				}
+			}
+
+			// Keys with Unicode codepoint names (U+xxxx)
+			var codepoint = LiveCodeEvents._parseCodepointString(keyName);
+			if (codepoint !== 0) {
+				// Is this a control character?
+				if (codepoint < 0x20 || codepoint === 0x7f) {
+					return LiveCodeEvents._controlToX11Key(codepoint);
+				} else {
+					return codepoint;
 				}
 			}
 
@@ -409,10 +501,26 @@ mergeInto(LibraryManager.library, {
 
 				switch (e.type) {
 				case 'keypress':
-				case 'keyup':
 					var char_code = LiveCodeEvents._encodeKeyboardCharCode(e);
 					var key_code = LiveCodeEvents._encodeKeyboardKeyCode(e);
 					LiveCodeEvents._postKeyPress(stack, mods, char_code, key_code);
+					console.debug(e.type + ' ' + e.key + ': ' + char_code + '/' + key_code);
+					break;
+				case 'keyup':
+				case 'keydown':
+					char_code = LiveCodeEvents._encodeKeyboardCharCode(e);
+					key_code = LiveCodeEvents._encodeKeyboardKeyCode(e);
+
+					// If this is a browser using old-style keyboard events, we won't get
+					// a 'keypress' message for special keys
+					if (!('key' in e) && e.type === 'keydown' && 0xFE00 <= key_code && key_code <= 0xFFFF) {
+						// Dispatch the keypress to the engine
+						LiveCodeEvents._postKeyPress(stack, mods, char_code, key_code);
+
+						// Suppress the default behaviour for this key
+						e.preventDefault();
+					}
+
 					console.debug(e.type + ' ' + e.key + ': ' + char_code + '/' + key_code);
 					break;
 				default:
@@ -422,8 +530,67 @@ mergeInto(LibraryManager.library, {
 			});
 			LiveCodeAsync.resume();
 
-			// Prevent event from propagating
-			e.preventDefault();
+			return false;
+		},
+
+		// ----------------------------------------------------------------
+		// Input events
+		// ----------------------------------------------------------------
+
+		_postImeCompose: function(stack, enabled, offset, chars, length) {
+			Module.ccall('MCEventQueuePostImeCompose',
+						 'number',	/* bool */
+						 ['number',	/* MCStack* stack */
+						 'number',	/* bool enabled */
+						 'number',	/* uindex_t offset */
+						 'number',	/* unichar_t* chars */
+						 'number'],	/* uindex_t char_count */
+						 [stack, enabled, offset, chars, length]);
+		},
+
+		_handleInput: function(inputEvent) {
+			console.debug('Input event: ' + inputEvent.type + ' ' + inputEvent.data);
+		},
+
+		_stringToUTF16: function(string) {
+			var buffer = _malloc(2 * string.length + 2);
+			Module.stringToUTF16(string, buffer, 2*string.length + 2);
+			return [buffer, string.length];
+		},
+
+		_handleComposition: function(compositionEvent) {
+			LiveCodeAsync.delay(function() {
+				// Stack that we're targeting
+				var stack = LiveCodeEvents._getStack();
+
+				var encodedString;
+				var chars, length;
+				switch (compositionEvent.type) {
+					case 'compositionstart':
+					case 'compositionupdate':
+						encodedString = LiveCodeEvents._stringToUTF16(compositionEvent.data);
+						chars = encodedString[0];
+						length = encodedString[1];
+						console.debug('Composition event: ' + compositionEvent.type + ' ' + Module.UTF16ToString(chars));
+						LiveCodeEvents._postImeCompose(stack, true, 0, chars, length);
+						_free(chars);
+						break;
+					case 'compositionend':
+						encodedString = LiveCodeEvents._stringToUTF16(compositionEvent.data);
+						chars = encodedString[0];
+						length = encodedString[1];
+						console.debug('Composition event: ' + compositionEvent.type + ' ' + Module.UTF16ToString(chars));
+						LiveCodeEvents._postImeCompose(stack, false, 0, chars, length);
+						_free(chars);
+						break;
+					default:
+						console.debug('Unexpected composition event type: ' + compositionEvent.type)
+						return;
+				}
+			});
+			LiveCodeAsync.resume();
+
+			// Preventing the IME event from propogating cancels the IME, so don't do that
 			return false;
 		},
 

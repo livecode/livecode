@@ -3,6 +3,7 @@
     '_MCEmscriptenGetCurrentStack',
     '_MCEmscriptenEventEncodeModifiers',
 
+    '_MCEventQueuePostImeCompose',
     '_MCEventQueuePostMouseFocus',
     '_MCEventQueuePostMousePosition',
     '_MCEventQueuePostMousePress',
