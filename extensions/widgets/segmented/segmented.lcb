@@ -498,7 +498,7 @@ private handler setIconPath(in pTargetRect as Rectangle, inout xPath as Path)
 	translate xPath by [tXTranslate + tXDiff, tYTranslate + tYDiff]
 end handler
 
-private handler updateLines() as undefined
+private handler updateLines() returns nothing
 	
 	variable tX as Integer
 	variable tWidth as Real

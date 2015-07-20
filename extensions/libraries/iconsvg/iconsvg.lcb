@@ -32,13 +32,13 @@ private variable sNamesList as List
 private variable sInitialised as optional Boolean
 
 private handler ensureInitialised()
-	if sInitialised is not defined then
-		initialise()
+	if sInitialised is nothing then
+		initialiseIcons()
 		put true into sInitialised
 	end if	
 end handler
 
-private handler initialise()
+private handler initialiseIcons()
 	put the empty array into sFontArray
 	put the empty array into sFontArray["adjust"]
 	put "M768 1440L768 352Q620 352 495 425 370 498 297 623 224 748 224 896 224 1044 297 1169 370 1294 495 1367 620 1440 768 1440ZM1536 896Q1536 1105 1433 1281.5 1330 1458 1153.5 1561 977 1664 768 1664 559 1664 382.5 1561 206 1458 103 1281.5 0 1105 0 896 0 687 103 510.5 206 334 382.5 231 559 128 768 128 977 128 1153.5 231 1330 334 1433 510.5 1536 687 1536 896Z" into sFontArray["adjust"]["svg"]
@@ -1265,6 +1265,8 @@ public handler iconListMatching(in pSearch as String) returns List
 end handler
 
 public handler iconData() returns Array
+    ensureInitialised()
+
 	return sFontArray
 end handler
 

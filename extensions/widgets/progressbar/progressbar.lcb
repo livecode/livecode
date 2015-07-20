@@ -32,9 +32,9 @@ use com.livecode.widget
 --
 
 -- property declarations
-property theme					get mTheme				set setTheme
+property progressTheme					get mTheme				set setTheme
 property thumbPosition			get mThumbPosition		set setThumbPosition
-property progress				get mProgress			set setProgress
+property progressAmount				get mProgress			set setProgress
 --
 
 -- private instance variables

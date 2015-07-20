@@ -31,9 +31,9 @@ metadata version is "1.0.2"
 metadata svgicon is "M15.8,0C7.1,0,0,7.1,0,15.8s7.1,15.8,15.8,15.8s15.8-7.1,15.8-15.8S24.4,0,15.8,0z M16.2,27.5v-3c4.7-0.2,8.5-4.1,8.5-8.9c0-4.9-4-8.9-8.9-8.9c-3.8,0-7.1,2.4-8.4,5.8c0.1-0.1,0.2-0.3,0.4-0.4c3.9-3.9,10.2-3.9,14,0c-3.1-3.1-9.5-1.7-12.6,1.4C8,14.7,7.3,16,7,17.5c0.8,4,4.3,6.9,8.5,7.1v3C9.1,27.4,4,22.2,4,15.8C4,9.3,9.3,4,15.8,4s11.8,5.3,11.8,11.8C27.5,22.1,22.5,27.2,16.2,27.5z"
 
 -- property declarations
-property checked			get mIsChecked				set setChecked
-property theme				get mTheme					set setTheme
-property label				get mLabelText				set setLabelText
+property isChecked			get mIsChecked				set setChecked
+property buttonTheme				get mTheme					set setTheme
+property buttonLabel				get mLabelText				set setLabelText
 ---
 
 -- private instance variables
@@ -258,7 +258,7 @@ private handler getFont() returns Font
 	end if
 end handler
 
-private handler getLabelRect() as Rectangle
+private handler getLabelRect() returns Rectangle
 	variable tLabelRect as Rectangle
 	put my bounds into tLabelRect
 	add 22 to the x of tLabelRect

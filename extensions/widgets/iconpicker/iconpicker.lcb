@@ -142,7 +142,7 @@ private handler drawTitleBar()
     set the bold of tFont to true
 	set the font of this canvas to tFont
 
-	if mSelectedElement is undefined then
+	if mSelectedElement is nothing then
 		put rectangle [0,0,mViewWidth,mRowHeight] into tTextRect
 		fill text "No icon selected" at center of tTextRect on this canvas
 	else
@@ -175,7 +175,7 @@ private handler drawIcon(in pIcon as Integer)
 		
 	setIconPath(mIconRects[pIcon], tPath)
 	
-	if mSelectedElement is defined and tIconName is mSelectedElement then
+	if mSelectedElement is not nothing and tIconName is mSelectedElement then
 		set the paint of this canvas to getPaint("icon", "selected")
 		fill rectangle path of indexToSectorRect(pIcon) on this canvas
 	end if
@@ -229,8 +229,8 @@ public handler OnMouseUp() returns nothing
       close popup returning mDataList[tIconNumber]
    else
       -- If the selected icon was clicked, unselect it
-      if mSelectedElement is defined and mSelectedElement is mDataList[tIconNumber] then
-         put undefined into mSelectedElement
+      if mSelectedElement is not nothing and mSelectedElement is mDataList[tIconNumber] then
+         put nothing into mSelectedElement
       else
          put mDataList[tIconNumber] into mSelectedElement
       end if

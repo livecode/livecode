@@ -152,7 +152,7 @@ public handler setColor(in pColor as String) returns nothing
 end handler
 
 
-public handler getColor() as String
+public handler getColor() returns String
 	return colorToString(mColor, false)
 end handler
 
@@ -173,7 +173,7 @@ public handler setPathPreset(in pPresetName as String) returns nothing
 	redraw all
 end handler
 
-public handler getPathPreset() as String
+public handler getPathPreset() returns String
 	return mPathName
 end handler
 
@@ -222,46 +222,46 @@ end handler
 private handler scaleAndMaintainAspectRatioTransform(in pSrcBounds as Rectangle, in pDestBounds as Rectangle) returns Transform
 	// Prepare values for matrix transformation
 	variable isLarger as Boolean
-	variable sx as Number
-	variable sy as Number
+	variable tXScale as Number
+	variable tYScale as Number
 	
 	put false into isLarger
-	put the width of pDestBounds / the width of pSrcBounds into sx
-	put the height of pDestBounds / the height of pSrcBounds into sy
+	put the width of pDestBounds / the width of pSrcBounds into tXScale
+	put the height of pDestBounds / the height of pSrcBounds into tYScale
 	
-	if sx > sy then
+	if tXScale > tYScale then
 		put true into isLarger
-		put sy into sx
+		put tYScale into tXScale
 	else
-		put sx into sy
+		put tXScale into tYScale
 	end if
 	
-	variable tx as Number
-	variable ty as Number
+	variable tXTranslate as Number
+	variable tYTranslate as Number
 	
-	put the left of pDestBounds - (the left of pSrcBounds*sx) into tx
-	put the top of pDestBounds - (the top of pSrcBounds*sy) into ty
+	put the left of pDestBounds - (the left of pSrcBounds*tXScale) into tXTranslate
+	put the top of pDestBounds - (the top of pSrcBounds*tYScale) into tYTranslate
 	
-	variable diff as Number
+	variable tDiff as Number
 	
 	if isLarger then
-		put my width - (the width of pSrcBounds*sy) into diff
+		put my width - (the width of pSrcBounds*tYScale) into tDiff
 	else
-		put my height - (the height of pSrcBounds*sy) into diff
+		put my height - (the height of pSrcBounds*tYScale) into tDiff
 	end if
 	
 	// align center
-	divide diff by 2
+	divide tDiff by 2
 	
 	if isLarger then
-		add diff to tx
+		add tDiff to tXTranslate
 	else
-		add diff to ty
+		add tDiff to tYTranslate
 	end if
 	
 	// create transformation matrix and apply
 	variable tTransform as Transform
-	put transform with matrix [sx, 0, 0, sy, tx, ty] into tTransform
+	put transform with matrix [tXScale, 0, 0, tYScale, tXTranslate, tYTranslate] into tTransform
 	
 	return tTransform
 end handler

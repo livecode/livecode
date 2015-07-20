@@ -68,11 +68,11 @@ end handler
 Summary: Destroys the canvas 
 
 Description:
-Destroys the canvas by simply assigning undefined to the canvas variable.
+Destroys the canvas by simply assigning nothing to the canvas variable.
 */
 
 public handler canvasDestroy() returns nothing
-  put undefined into sCanvas
+  put nothing into sCanvas
 end handler
 
 /*
