@@ -53,7 +53,7 @@
 #include <gtk/gtk.h>
 
 
-MCNativeLayerX11::MCNativeLayerX11(MCWidget* p_widget) :
+MCNativeLayerX11::MCNativeLayerX11(MCWidgetRef p_widget) :
   m_widget(p_widget),
   m_child_window(NULL),
   m_input_shape(NULL),
@@ -86,7 +86,9 @@ void MCNativeLayerX11::OnToolChanged(Tool p_new_tool)
 
 void MCNativeLayerX11::updateInputShape()
 {
-    if (m_widget->inEditMode())
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
+    if (!t_widget->isInRunMode())
         // In edit mode. Mask out all input events
         gdk_window_input_shape_combine_region(gtk_widget_get_window(GTK_WIDGET(m_child_window)), m_input_shape, 0, 0);
     else
@@ -96,14 +98,18 @@ void MCNativeLayerX11::updateInputShape()
 
 void MCNativeLayerX11::OnOpen()
 {
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
     // Unhide the widget, if required
-    if (isAttached() && m_widget->getopened() == 1)
+    if (isAttached() && t_widget->getopened() == 1)
         doAttach();
 }
 
 void MCNativeLayerX11::OnClose()
 {
-    if (isAttached() && m_widget->getopened() == 0)
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
+    if (isAttached() && t_widget->getopened() == 0)
         doDetach();
 }
 
@@ -115,6 +121,8 @@ void MCNativeLayerX11::OnAttach()
 
 void MCNativeLayerX11::doAttach()
 {
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
     if (m_socket == NULL)
     {
         // Create a new GTK socket to deal with the XEMBED protocol
@@ -122,7 +130,7 @@ void MCNativeLayerX11::doAttach()
         
         // Create a new GTK window to hold the socket
         MCRectangle t_rect;
-        t_rect = m_widget->getrect();
+        t_rect = t_widget->getrect();
         m_child_window = GTK_WINDOW(gtk_window_new(GTK_WINDOW_POPUP));
         gtk_widget_set_parent_window(GTK_WIDGET(m_child_window), getStackGdkWindow());
         gtk_widget_realize(GTK_WIDGET(m_child_window));
@@ -142,14 +150,15 @@ void MCNativeLayerX11::doAttach()
         m_input_shape = gdk_region_new();
         
         // TESTING
-        
-        /*GtkPlug *t_plug = GTK_PLUG(gtk_plug_new(0));
+        /*
+        GtkPlug *t_plug = GTK_PLUG(gtk_plug_new(0));
         gtk_widget_realize(GTK_WIDGET(t_plug));
         m_widget_xid = gtk_plug_get_id(t_plug);
         GtkButton* t_button = GTK_BUTTON(gtk_button_new_with_label("Native Button"));
         gtk_container_add(GTK_CONTAINER(t_plug), GTK_WIDGET(t_button));
         gtk_widget_show(GTK_WIDGET(t_button));
-        gtk_widget_show(GTK_WIDGET(t_plug));*/
+        gtk_widget_show(GTK_WIDGET(t_plug));
+        */
     }
     
     // Attach the X11 window to this socket
@@ -162,7 +171,7 @@ void MCNativeLayerX11::doAttach()
     
     // Restore the visibility state of the widget (in case it changed due to a
     // tool change while on another card - we don't get a message then)
-    if ((m_widget->getflags() & F_VISIBLE) && !m_widget->inEditMode())
+    if ((t_widget->getflags() & F_VISIBLE) && t_widget->isInRunMode())
         gtk_widget_hide(GTK_WIDGET(m_child_window));
     else
         gtk_widget_show(GTK_WIDGET(m_child_window));
@@ -180,16 +189,18 @@ void MCNativeLayerX11::doDetach()
     gtk_widget_hide(GTK_WIDGET(m_child_window));
 }
 
-void MCNativeLayerX11::OnPaint(MCDC* p_dc, const MCRectangle& p_dirty)
+void MCNativeLayerX11::OnPaint(MCGContextRef)
 {
     // Do nothing. Painting is handled entirely by X11.
 }
 
 void MCNativeLayerX11::OnGeometryChanged(const MCRectangle& p_old_rect)
 {
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
     // Move the overlay window first, to ensure events don't get stolen
     MCRectangle t_rect;
-    t_rect = m_widget->getrect();
+    t_rect = t_widget->getrect();
 
     // Clear any minimum size parameters for the GTK widgets
     gtk_widget_set_size_request(GTK_WIDGET(m_socket), -1, -1);
@@ -229,15 +240,17 @@ void MCNativeLayerX11::OnLayerChanged()
 
 void MCNativeLayerX11::doRelayer()
 {
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
     // Ensure that the input mask for the widget is up to date
     updateInputShape();
     
     // Find which native layer this should be inserted below
     MCWidget* t_before;
-    t_before = findNextLayerAbove(m_widget);
+    t_before = findNextLayerAbove(t_widget);
     
     // Insert the widget in the correct place (but only if the card is current)
-    if (isAttached() && m_widget->getstack()->getcard() == m_widget->getstack()->getcurcard())
+    if (isAttached() && t_widget->getstack()->getcard() == t_widget->getstack()->getcurcard())
     {
         // If t_before_window == NULL, this will put the widget on the bottom layer
         MCNativeLayerX11 *t_before_layer;
@@ -256,7 +269,7 @@ void MCNativeLayerX11::doRelayer()
     }
     
     // Make the widget visible, if appropriate
-    if ((m_widget->getflags() & F_VISIBLE) && m_widget->getstack()->getcurcard() != m_widget->getstack()->getcard())
+    if ((t_widget->getflags() & F_VISIBLE) && t_widget->getstack()->getcurcard() != t_widget->getstack()->getcard())
         gdk_window_show_unraised(gtk_widget_get_window(GTK_WIDGET(m_child_window)));
 }
 
@@ -269,12 +282,13 @@ x11::Window MCNativeLayerX11::getStackX11Window()
 
 GdkWindow* MCNativeLayerX11::getStackGdkWindow()
 {
-    return m_widget->getstack()->getwindow();
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    return t_widget->getstack()->getwindow();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 MCNativeLayer* MCWidget::createNativeLayer()
 {
-    return new MCNativeLayerX11(this);
+    return new MCNativeLayerX11(getwidget());
 }

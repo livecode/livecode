@@ -30,18 +30,18 @@ public:
     virtual void OnClose();
     virtual void OnAttach();
     virtual void OnDetach();
-    virtual void OnPaint(MCDC* p_dc, const MCRectangle& p_dirty);
+    virtual void OnPaint(MCGContextRef);
     virtual void OnGeometryChanged(const MCRectangle& p_old_rect);
     virtual void OnVisibilityChanged(bool p_visible);
     virtual void OnToolChanged(Tool p_new_tool);
     virtual void OnLayerChanged();
     
-    MCNativeLayerIOS(MCWidget*);
+    MCNativeLayerIOS(MCWidgetRef);
     ~MCNativeLayerIOS();
     
 private:
     
-    MCWidget* m_widget;
+    MCWidgetRef m_widget;
     UIView* m_view;
     //NSBitmapImageRep *m_cached;
     
