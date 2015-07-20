@@ -214,7 +214,7 @@ Boolean MCselectgrouped;
 Boolean MCselectintersect = True;
 MCRectangle MCwbr;
 uint2 MCjpegquality = 100;
-uint2 MCpaintcompression = EX_PBM;
+Export_format MCpaintcompression = EX_PBM;
 uint2 MCrecordformat = EX_AIFF;
 uint2 MCrecordchannels = 1;
 uint2 MCrecordsamplesize = 8;

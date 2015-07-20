@@ -44,6 +44,7 @@
 				'widgets/switchbutton/switchbutton.lcb',
 				'widgets/treeview/treeview.lcb',
 				'widgets/colorswatch/colorswatch.lcb',
+				'widgets/gradientrampeditor/gradientrampeditor.lcb',
 			],
 			
 			'all_dependent_settings':
