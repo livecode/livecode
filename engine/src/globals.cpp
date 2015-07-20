@@ -924,15 +924,20 @@ bool X_open(int argc, char *argv[], char *envp[])
 
     // SN-2015-07-17: [[ CommandArguments ]] Initialise the commandName and
     //  commandArguments properties.
-    MCcommandname = strdup(argv[0]);
+    MCcommandname = nil;
     MCcommandargumentcount = 0;
-    if (MCModeHasCommandLineArguments() && argc > 1)
+    if (MCModeHasCommandLineArguments())
     {
-        if (!MCMemoryNewArray(argc - 1, MCcommandarguments))
-            return false;
+        MCcommandname = strdup(argv[0]);
 
-        for (int i = 1; i < argc; i++)
-            MCcommandarguments[MCcommandargumentcount++] = strdup(argv[i]);
+        if (argc > 1)
+        {
+            if (!MCMemoryNewArray(argc - 1, MCcommandarguments))
+                return false;
+
+            for (int i = 1; i < argc; i++)
+                MCcommandarguments[MCcommandargumentcount++] = strdup(argv[i]);
+        }
     }
     
     MCDeletedObjectsSetup();
