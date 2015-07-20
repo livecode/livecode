@@ -362,14 +362,26 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //
 //  SYMBOL EXPORTS
 //
+
+/* MC_DLLEXPORT should be applied to declarations.  MC_DLLEXPORT_DEF
+ * should be applied to definitions. */
 #ifdef _WIN32
+/* On Windows, declaring something as having "dllexport" storage
+ * modifies the naming of the corresponding symbol, so the export
+ * attribute must be attached to declarations (and possibly to the
+ * definition *as well* if no separate declaration appears) */
 #  ifdef _MSC_VER
 #    define MC_DLLEXPORT __declspec(dllexport)
 #  else
 #    define MC_DLLEXPORT __attribute__((dllexport))
 #  endif
+#  define MC_DLLEXPORT_DEF MC_DLLEXPORT
 #else
-#  define MC_DLLEXPORT __attribute__((__visibility__("default")))
+/* On non-Windows platforms, the external visibility of a symbol is
+ * simply a property of its definition (i.e. whether or not it should
+ * appear in the list of exported symbols). */
+#  define MC_DLLEXPORT
+#  define MC_DLLEXPORT_DEF __attribute__((__visibility__("default"), __used__))
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -724,8 +736,8 @@ template <class T, class U> inline T MCMax(T a, U b) { return a > b ? a : b; }
 //  ABSOLUTE VALUE FUNCTIONS
 //
 
-inline uint32_t MCAbs(int32_t a) { return a < 0 ? -a : a; }
-inline uint64_t MCAbs(int64_t a) { return a < 0 ? -a : a; }
+inline uint32_t MCAbs(int32_t a) { return uint32_t(a < 0 ? -a : a); }
+inline uint64_t MCAbs(int64_t a) { return uint64_t(a < 0 ? -a : a); }
 inline float MCAbs(float a) { return fabsf(a); }
 inline double MCAbs(double a) { return fabs(a); }
 
@@ -784,7 +796,7 @@ inline MCByteOrder MCByteOrderGetCurrent(void)
 
 inline uint16_t MCSwapInt16(uint16_t x)
 {
-	return (x >> 8) | (x << 8);
+	return (uint16_t)(x >> 8) | (uint16_t)(x << 8);
 }
 
 inline uint32_t MCSwapInt32(uint32_t x)
@@ -2909,7 +2921,7 @@ MC_DLLEXPORT bool MCProperListMutableCopyAndRelease(MCProperListRef list, MCProp
 MC_DLLEXPORT bool MCProperListIsMutable(MCProperListRef list);
 
 // Returns the number of elements in the list.
-uindex_t MCProperListGetLength(MCProperListRef list);
+MC_DLLEXPORT uindex_t MCProperListGetLength(MCProperListRef list);
 
 // Returns true if the given list is the empty list.
 MC_DLLEXPORT bool MCProperListIsEmpty(MCProperListRef list);

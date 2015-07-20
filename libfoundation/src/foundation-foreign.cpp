@@ -21,19 +21,20 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCTypeInfoRef kMCBoolTypeInfo;
-MCTypeInfoRef kMCUIntTypeInfo;
-MCTypeInfoRef kMCIntTypeInfo;
-MCTypeInfoRef kMCFloatTypeInfo;
-MCTypeInfoRef kMCDoubleTypeInfo;
-MCTypeInfoRef kMCPointerTypeInfo;
-MCTypeInfoRef kMCSizeTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCBoolTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCUIntTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCIntTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCFloatTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCDoubleTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCPointerTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCSizeTypeInfo;
 
 MCTypeInfoRef kMCForeignImportErrorTypeInfo;
 MCTypeInfoRef kMCForeignExportErrorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCForeignValueCreate(MCTypeInfoRef p_typeinfo, void *p_contents, MCForeignValueRef& r_value)
 {
     bool t_success;
@@ -59,6 +60,7 @@ bool MCForeignValueCreate(MCTypeInfoRef p_typeinfo, void *p_contents, MCForeignV
     return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCForeignValueCreateAndRelease(MCTypeInfoRef p_typeinfo, void *p_contents, MCForeignValueRef& r_value)
 {
     bool t_success;
@@ -84,6 +86,7 @@ bool MCForeignValueCreateAndRelease(MCTypeInfoRef p_typeinfo, void *p_contents, 
     return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCForeignValueExport(MCTypeInfoRef p_typeinfo, MCValueRef p_value, MCForeignValueRef& r_value)
 {
     bool t_success;
@@ -109,6 +112,7 @@ bool MCForeignValueExport(MCTypeInfoRef p_typeinfo, MCValueRef p_value, MCForeig
     return true;
 }
 
+MC_DLLEXPORT_DEF
 void *MCForeignValueGetContentsPtr(MCValueRef self)
 {
     return ((__MCForeignValue *)self) + 1;

@@ -29,6 +29,7 @@ metadata author is "LiveCode"
 metadata version is "0.0.1"
 metadata title is "Color Swatch"
 metadata preferredSize is "24,24"
+metadata svgicon is "M86.6,0H7.9C3.5,0,0,3.5,0,7.9v78.8c0,4.3,3.5,7.9,7.9,7.9h78.8c4.3,0,7.9-3.5,7.9-7.9V7.9C94.5,3.5,91,0,86.6,0z M23.3,81l-11-16.4h21.9L23.3,81z M81.5,81.5H47.2l0.1-34.1H13.1L13,13h68.5V81.5z"
 --
 
 -- property declarations
@@ -79,6 +80,9 @@ public handler OnPaint() returns nothing
 
 	-- Draw the pattern for the swatch
 
+
+    variable tSpaceBottom as Number
+    put my height - mPadding into tSpaceBottom
 	-- Draw the color
 	if mColor is not nothing then
 		if the alpha of mColor is not 1 then
@@ -93,8 +97,6 @@ public handler OnPaint() returns nothing
 			variable tLeft as Number
 			variable tX as Integer
 			variable tCount as Integer
-			variable tSpaceBottom as Number
-			put my height - mPadding into tSpaceBottom
 			put mPadding into tTop
 			put 1 into tCount
 			

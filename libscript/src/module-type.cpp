@@ -13,12 +13,12 @@ static bool MCTypeValueIsEmpty(MCValueRef p_value)
     (MCValueGetTypeCode(p_value) == kMCValueTypeCodeProperList && MCProperListIsEmpty((MCProperListRef)p_value)));
 }
 
-extern "C" MC_DLLEXPORT void MCTypeEvalIsEmpty(MCValueRef p_target, bool& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCTypeEvalIsEmpty(MCValueRef p_target, bool& r_output)
 {
     r_output = MCTypeValueIsEmpty(p_target);
 }
 
-extern "C" MC_DLLEXPORT void MCTypeEvalIsNotEmpty(MCValueRef p_target, bool& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCTypeEvalIsNotEmpty(MCValueRef p_target, bool& r_output)
 {
     bool t_empty;
     MCTypeEvalIsEmpty(p_target, t_empty);
@@ -26,12 +26,12 @@ extern "C" MC_DLLEXPORT void MCTypeEvalIsNotEmpty(MCValueRef p_target, bool& r_o
     r_output = !t_empty;
 }
 
-extern "C" MC_DLLEXPORT void MCTypeEvalIsDefined(MCValueRef *p_target, bool& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCTypeEvalIsDefined(MCValueRef *p_target, bool& r_output)
 {
     r_output = (p_target != nil && *p_target != kMCNull);
 }
 
-extern "C" MC_DLLEXPORT void MCTypeEvalIsNotDefined(MCValueRef *p_target, bool& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCTypeEvalIsNotDefined(MCValueRef *p_target, bool& r_output)
 {
     bool t_defined;
     MCTypeEvalIsDefined(p_target, t_defined);
@@ -39,7 +39,7 @@ extern "C" MC_DLLEXPORT void MCTypeEvalIsNotDefined(MCValueRef *p_target, bool& 
     r_output = !t_defined;
 }
 
-extern "C" MC_DLLEXPORT void MCTypeEvalIsABoolean(MCValueRef p_value, bool& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCTypeEvalIsABoolean(MCValueRef p_value, bool& r_output)
 {
     if (p_value != nil)
         r_output = MCValueGetTypeCode(p_value) == kMCValueTypeCodeBoolean;
@@ -47,7 +47,7 @@ extern "C" MC_DLLEXPORT void MCTypeEvalIsABoolean(MCValueRef p_value, bool& r_ou
         r_output = false;
 }
 
-extern "C" MC_DLLEXPORT void MCTypeEvalIsANumber(MCValueRef p_value, bool& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCTypeEvalIsANumber(MCValueRef p_value, bool& r_output)
 {
     if (p_value != nil)
         r_output = MCValueGetTypeCode(p_value) == kMCValueTypeCodeNumber;
@@ -55,7 +55,7 @@ extern "C" MC_DLLEXPORT void MCTypeEvalIsANumber(MCValueRef p_value, bool& r_out
         r_output = false;
 }
 
-extern "C" MC_DLLEXPORT void MCTypeEvalIsAString(MCValueRef p_value, bool& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCTypeEvalIsAString(MCValueRef p_value, bool& r_output)
 {
     if (p_value != nil)
         r_output = MCValueGetTypeCode(p_value) == kMCValueTypeCodeString;
@@ -63,7 +63,7 @@ extern "C" MC_DLLEXPORT void MCTypeEvalIsAString(MCValueRef p_value, bool& r_out
         r_output = false;
 }
 
-extern "C" MC_DLLEXPORT void MCTypeEvalIsAData(MCValueRef p_value, bool& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCTypeEvalIsAData(MCValueRef p_value, bool& r_output)
 {
     if (p_value != nil)
         r_output = MCValueGetTypeCode(p_value) == kMCValueTypeCodeData;
@@ -71,7 +71,7 @@ extern "C" MC_DLLEXPORT void MCTypeEvalIsAData(MCValueRef p_value, bool& r_outpu
         r_output = false;
 }
 
-extern "C" MC_DLLEXPORT void MCTypeEvalIsAnArray(MCValueRef p_value, bool& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCTypeEvalIsAnArray(MCValueRef p_value, bool& r_output)
 {
     if (p_value != nil)
         r_output = MCValueGetTypeCode(p_value) == kMCValueTypeCodeArray;
@@ -79,7 +79,7 @@ extern "C" MC_DLLEXPORT void MCTypeEvalIsAnArray(MCValueRef p_value, bool& r_out
         r_output = false;
 }
 
-extern "C" MC_DLLEXPORT void MCTypeEvalIsAList(MCValueRef p_value, bool& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCTypeEvalIsAList(MCValueRef p_value, bool& r_output)
 {
     if (p_value != nil)
         r_output = MCValueGetTypeCode(p_value) == kMCValueTypeCodeProperList;
@@ -87,22 +87,22 @@ extern "C" MC_DLLEXPORT void MCTypeEvalIsAList(MCValueRef p_value, bool& r_outpu
         r_output = false;
 }
 
-extern "C" MC_DLLEXPORT void MCNothingEvalIsNothingEqualTo(MCNullRef p_left, MCValueRef p_right, bool& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCNothingEvalIsNothingEqualTo(MCNullRef p_left, MCValueRef p_right, bool& r_output)
 {
     r_output = p_right == nil;
 }
 
-extern "C" MC_DLLEXPORT void MCNothingEvalIsEqualToNothing(MCValueRef p_left, MCNullRef p_right, bool& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCNothingEvalIsEqualToNothing(MCValueRef p_left, MCNullRef p_right, bool& r_output)
 {
     r_output = p_left == nil;
 }
 
-extern "C" MC_DLLEXPORT void MCNothingEvalIsNothingNotEqualTo(MCNullRef p_left, MCValueRef p_right, bool& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCNothingEvalIsNothingNotEqualTo(MCNullRef p_left, MCValueRef p_right, bool& r_output)
 {
     r_output = p_right != nil;
 }
 
-extern "C" MC_DLLEXPORT void MCNothingEvalIsNotEqualToNothing(MCValueRef p_left, MCNullRef p_right, bool& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCNothingEvalIsNotEqualToNothing(MCValueRef p_left, MCNullRef p_right, bool& r_output)
 {
     r_output = p_left != nil;
 }

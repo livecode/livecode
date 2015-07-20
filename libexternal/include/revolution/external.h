@@ -531,8 +531,6 @@ extern void GetXScreenHandle(void **r_screen, int *r_success);
 // External declaration macros
 //
 
-#ifdef _MACOSX
-
 #ifdef __cplusplus
 
 #define EXTERNAL_REFERENCE_LIBRARY \
@@ -552,13 +550,6 @@ extern void GetXScreenHandle(void **r_screen, int *r_success);
 	}
 	
 #endif
-
-#else
-
-#define EXTERNAL_REFERENCE_LIBRARY
-
-#endif
-
 
 #ifdef __cplusplus
 

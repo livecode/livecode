@@ -23,6 +23,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCHandlerCreate(MCTypeInfoRef p_typeinfo, const MCHandlerCallbacks *p_callbacks, void *p_context, MCHandlerRef& r_handler)
 {
     // The context data for an MCHandler is stored after the common elements. The
@@ -43,11 +44,13 @@ bool MCHandlerCreate(MCTypeInfoRef p_typeinfo, const MCHandlerCallbacks *p_callb
     return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCHandlerInvoke(MCHandlerRef self, MCValueRef *p_arguments, uindex_t p_argument_count, MCValueRef& r_value)
 {
     return self -> callbacks -> invoke(MCHandlerGetContext(self), p_arguments, p_argument_count, r_value);
 }
 
+MC_DLLEXPORT_DEF
 MCErrorRef MCHandlerTryToInvokeWithList(MCHandlerRef self, MCProperListRef& x_arguments, MCValueRef& r_value)
 {
     MCAutoValueRefArray t_args;
@@ -81,11 +84,13 @@ error_exit:
     return t_error;
 }
 
+MC_DLLEXPORT_DEF
 void *MCHandlerGetContext(MCHandlerRef self)
 {
     return (void *)self -> context;
 }
 
+MC_DLLEXPORT_DEF
 const MCHandlerCallbacks *MCHandlerGetCallbacks(MCHandlerRef self)
 {
     return self -> callbacks;

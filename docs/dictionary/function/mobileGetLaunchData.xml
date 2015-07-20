@@ -1,0 +1,89 @@
+<doc>
+	<legacy_id></legacy_id>
+	<name>mobileGetLaunchData</name>
+	<type>function</type>
+
+	<syntax>
+		<example>get mobileGetLaunchData()</example>
+	</syntax>
+
+	<synonyms>
+	</synonyms>
+
+	<summary>Returns an array containing information set by the launcher of the application.</summary>
+
+	<examples>
+<example>put mobileGetLaunchData() into tLaunchData</example>
+<example>
+	<p>constant kActionView = "android.intent.action.VIEW"</p>
+	<p></p>
+	<p>put mobileGetLaunchData() into tLaunchData</p>
+	<p>if tLaunchData is an array and tLaunchData["action"] is kActionView then</p>
+	<p>   -- view content specified in tLaunchData["data"]</p>
+	<p>else</p>
+	<p>   -- launched as main application</p>
+	<p>end if</p></example>
+	</examples>
+
+	<history>
+		<introduced version="7.0">Added.</introduced>
+		<deprecated version=""></deprecated>
+		<removed version=""></removed>
+		
+	</history>
+
+	<objects>
+	</objects>
+
+	<platforms>
+		<android/>
+	</platforms>
+
+	<classes>
+		<mobile/>
+	</classes>
+
+	<security>
+	</security>
+
+
+	<classification>
+	</classification>
+
+	<references>
+	</references>
+
+	<description>
+	<overview>>Returns an array containing information set by the launcher of the application.</overview>
+
+		<parameters>
+			<parameter>
+				 <name/>
+				<description/>
+				<options title="Launch Data - The application launch data is stored as an array and has the following keys:">
+				  <option>
+					<item>action</item>
+					<description>The general action the app was launched to perform.</description>
+				  </option>
+				  <option>
+					<item>data</item>
+					<description>The data to operate on.</description>
+				  </option>
+				  <option>
+					<item>type</item>
+					<description>The MIME type of the data provided.</description>
+				  </option>
+				  <option>
+					<item>categories</item>
+					<description>Additional information about the action to perform.</description>
+				  </option>
+				</options>
+			  </parameter>
+		</parameters>
+
+	<value>Use the <b>mobileGetLaunchData</b> function to get the application launch parameters.<p></p><p>The returned array will contain the information that is set by the launching application</p></value>
+	<comments>The <b>mobileGetLaunchData</b> function returns the information that was set by the launching application. This can be used to perform specific actions supported by an application on the provided data. <p></p>
+	<p></p>
+	<note> On Android, custom Intent filters can be specified in the manifest to allow an application to perform actions for other applications</note><p></p>When the application is launched to handle one of these actions, its launch Intent can be queried to determine what action was requested, and the data to use to fulfil that request.</comments>
+	</description>
+</doc>

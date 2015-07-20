@@ -20,7 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" MC_DLLEXPORT void
+extern "C" MC_DLLEXPORT_DEF void
 MCStreamExecWriteToStream(MCDataRef p_data,
                         MCStreamRef p_stream)
 {
@@ -40,13 +40,13 @@ MCStreamExecWriteToStream(MCDataRef p_data,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" MC_DLLEXPORT void
+extern "C" MC_DLLEXPORT_DEF void
 MCStreamExecGetStandardOutput (MCStreamRef & r_stream)
 {
 	MCSStreamGetStandardOutput (r_stream);
 }
 
-extern "C" MC_DLLEXPORT void
+extern "C" MC_DLLEXPORT_DEF void
 MCStreamExecGetStandardError (MCStreamRef & r_stream)
 {
 	MCSStreamGetStandardError (r_stream);
