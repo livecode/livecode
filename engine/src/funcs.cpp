@@ -1621,7 +1621,7 @@ Exec_stat MCCommandArguments::eval(MCExecPoint &ep)
 #ifdef /* MCCommandArguments */ LEGACY_EXEC
     ep.clear();
     for (uint32_t i = 0; i < MCcommandargumentcount; ++i)
-        ep . concatcstring(MCcommandarguments[i], EC_RETURN, i == 1);
+        ep . concatcstring(MCcommandarguments[i], EC_RETURN, i == 0);
 
     return ES_NORMAL;
 #endif /* MCCommandArguments */
