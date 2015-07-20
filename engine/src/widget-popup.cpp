@@ -293,7 +293,7 @@ private:
 	MCValueRef m_pick;
 };
 
-extern "C" MC_DLLEXPORT MCStringRef MCWidgetExecPopupMenuAtLocation(MCStringRef p_menu, MCCanvasPointRef p_at)
+extern "C" MC_DLLEXPORT_DEF MCStringRef MCWidgetExecPopupMenuAtLocation(MCStringRef p_menu, MCCanvasPointRef p_at)
 {
     if (!MCWidgetEnsureCurrentWidget())
         return nil;
@@ -401,7 +401,7 @@ MCValueRef MCWidgetPopupAtLocationWithProperties(MCNameRef p_kind, const MCPoint
 	return t_result;
 }
 
-extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecPopupAtLocationWithProperties(MCStringRef p_kind, MCCanvasPointRef p_at, MCArrayRef p_properties)
+extern "C" MC_DLLEXPORT_DEF MCValueRef MCWidgetExecPopupAtLocationWithProperties(MCStringRef p_kind, MCCanvasPointRef p_at, MCArrayRef p_properties)
 {
     if (!MCWidgetEnsureCurrentWidget())
         return nil;
@@ -420,12 +420,12 @@ extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecPopupAtLocationWithProperties(MCS
 	return MCWidgetPopupAtLocationWithProperties(*t_kind, t_at, p_properties);
 }
 
-extern "C" MC_DLLEXPORT MCValueRef MCWidgetExecPopupAtLocation(MCStringRef p_kind, MCCanvasPointRef p_at)
+extern "C" MC_DLLEXPORT_DEF MCValueRef MCWidgetExecPopupAtLocation(MCStringRef p_kind, MCCanvasPointRef p_at)
 {
 	return MCWidgetExecPopupAtLocationWithProperties(p_kind, p_at, kMCEmptyArray);
 }
 
-extern "C" MC_DLLEXPORT void MCWidgetEvalIsPopup(bool &r_popup)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetEvalIsPopup(bool &r_popup)
 {
     if (!MCWidgetEnsureCurrentWidget())
         return;
@@ -433,7 +433,7 @@ extern "C" MC_DLLEXPORT void MCWidgetEvalIsPopup(bool &r_popup)
 	r_popup = s_widget_popup != nil && MCWidgetGetHost(MCcurrentwidget) == s_widget_popup->getpopupwidget();
 }
 
-extern "C" MC_DLLEXPORT void MCWidgetExecClosePopupWithResult(MCValueRef p_result)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetExecClosePopupWithResult(MCValueRef p_result)
 {
     if (!MCWidgetEnsureCurrentWidget())
         return;
@@ -451,7 +451,7 @@ extern "C" MC_DLLEXPORT void MCWidgetExecClosePopupWithResult(MCValueRef p_resul
 	s_widget_popup->close();
 }
 
-extern "C" MC_DLLEXPORT void MCWidgetExecClosePopup(MCValueRef p_result)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetExecClosePopup(MCValueRef p_result)
 {
 	MCWidgetExecClosePopupWithResult(kMCNull);
 }
