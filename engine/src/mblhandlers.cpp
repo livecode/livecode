@@ -1789,8 +1789,7 @@ Exec_stat MCHandleHeadingCalibrationTimeout(void *p_context, MCParameter *p_para
     int t_timeout;
     MCSensorGetLocationCalibrationTimeout(ctxt, t_timeout);
     MCresult->setnvalue(t_timeout);
-    
-    ctxt . SetTheResultToEmpty();
+
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 

@@ -212,7 +212,7 @@ public:
     virtual uindex_t CountChunks();
     virtual bool Next();
     virtual bool IsAmong(MCStringRef p_needle);
-    virtual uindex_t ChunkOffset(MCStringRef p_needle, uindex_t p_start_offset, bool p_whole_matches);
+    virtual uindex_t ChunkOffset(MCStringRef p_needle, uindex_t p_start_offset, uindex_t *p_end_offset, bool p_whole_matches);
 };
 
 class MCTextChunkIterator_Delimited : public MCTextChunkIterator
@@ -235,7 +235,7 @@ public:
     
     virtual bool Next();
     virtual bool IsAmong(MCStringRef p_needle);
-    virtual uindex_t ChunkOffset(MCStringRef p_needle, uindex_t p_start_offset, bool p_whole_matches);
+    virtual uindex_t ChunkOffset(MCStringRef p_needle, uindex_t p_start_offset, uindex_t *p_end_offset, bool p_whole_matches);
 };
 
 class MCTextChunkIterator_Word : public MCTextChunkIterator

@@ -53,7 +53,7 @@
 #include "mblcontrol.h"
 
 
-MCNativeLayerIOS::MCNativeLayerIOS(MCWidget* p_widget) :
+MCNativeLayerIOS::MCNativeLayerIOS(MCWidgetRef p_widget) :
   m_widget(p_widget),
   m_view(nil)
 {
@@ -72,31 +72,37 @@ MCNativeLayerIOS::~MCNativeLayerIOS()
 
 void MCNativeLayerIOS::OnToolChanged(Tool p_new_tool)
 {
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
     if (p_new_tool == T_BROWSE || p_new_tool == T_HELP)
     {
         // In run mode. Make visible if requested
-        if (m_widget->getflags() & F_VISIBLE)
+        if (t_widget->getflags() & F_VISIBLE)
             MCIPhoneRunBlockOnMainFiber(^{[m_view setHidden:NO];});
-        m_widget->Redraw();
+        t_widget->Redraw();
     }
     else
     {
         // In edit mode
         MCIPhoneRunBlockOnMainFiber(^{[m_view setHidden:YES];});
-        m_widget->Redraw();
+        t_widget->Redraw();
     }
 }
 
 void MCNativeLayerIOS::OnOpen()
 {
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
     // Unhide the widget, if required
-    if (isAttached() && m_widget->getopened() == 1)
+    if (isAttached() && t_widget->getopened() == 1)
         doAttach();
 }
 
 void MCNativeLayerIOS::OnClose()
 {
-    if (isAttached() && m_widget->getopened() == 1)
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
+    if (isAttached() && t_widget->getopened() == 1)
         doDetach();
 }
 
@@ -110,14 +116,19 @@ void MCNativeLayerIOS::OnAttach()
 
 void MCNativeLayerIOS::doAttach()
 {
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
     if (m_view == nil)
     {
+        // TESTING
+        /*
         UIButton *t_button;
         t_button = [[UIButton buttonWithType:UIButtonTypeRoundedRect] retain];
         [t_button setTitle:@"Native button" forState:UIControlStateNormal];
         [t_button setHidden:YES];
         m_view = t_button;
         doSetRect(m_widget->getrect());
+        */
     }
     
     // Act as if there was a re-layer to put the widget in the right place
@@ -125,7 +136,7 @@ void MCNativeLayerIOS::doAttach()
     
     // Restore the visibility state of the widget (in case it changed due to a
     // tool change while on another card - we don't get a message then)
-    if ((m_widget->getflags() & F_VISIBLE) && !m_widget->inEditMode())
+    if ((t_widget->getflags() & F_VISIBLE) && t_widget->isInRunMode())
         MCIPhoneRunBlockOnMainFiber(^{[m_view setHidden:NO];});
     else
         MCIPhoneRunBlockOnMainFiber(^{[m_view setHidden:YES];});
@@ -145,10 +156,12 @@ void MCNativeLayerIOS::doDetach()
     });
 }
 
-void MCNativeLayerIOS::OnPaint(MCDC* p_dc, const MCRectangle& p_dirty)
+void MCNativeLayerIOS::OnPaint(MCGContextRef)
 {
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
     // If the widget is not in edit mode, we trust it to paint itself
-    if (!m_widget->inEditMode())
+    if (t_widget->isInRunMode())
         return;
     
     // Edit mode is not supported on iOS
@@ -157,7 +170,9 @@ void MCNativeLayerIOS::OnPaint(MCDC* p_dc, const MCRectangle& p_dirty)
 
 void MCNativeLayerIOS::OnGeometryChanged(const MCRectangle& p_old_rect)
 {
-    doSetRect(m_widget->getrect());
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
+    doSetRect(t_widget->getrect());
 }
 
 void MCNativeLayerIOS::doSetRect(const MCRectangle& p_rect)
@@ -187,10 +202,12 @@ void MCNativeLayerIOS::OnLayerChanged()
 
 void MCNativeLayerIOS::doRelayer()
 {
+    MCWidget* t_widget = MCWidgetGetHost(m_widget);
+    
     // Find which native layer this should be inserted below
     MCWidget* t_before;
     MCNativeLayerIOS *t_before_layer = nil;
-    t_before = findNextLayerAbove(m_widget);
+    t_before = findNextLayerAbove(t_widget);
     if (t_before != nil)
     {
         t_before_layer = reinterpret_cast<MCNativeLayerIOS*>(t_before->getNativeLayer());
@@ -200,7 +217,7 @@ void MCNativeLayerIOS::doRelayer()
     t_view = getMainView();
     
     // Insert the widget in the correct place (but only if the card is current)
-    if (isAttached() && m_widget->getstack()->getcard() == m_widget->getstack()->getcurcard())
+    if (isAttached() && t_widget->getstack()->getcard() == t_widget->getstack()->getcurcard())
     {
         MCIPhoneRunBlockOnMainFiber(^{
             [m_view removeFromSuperview];
@@ -228,5 +245,5 @@ UIView* MCNativeLayerIOS::getMainView()
 
 MCNativeLayer* MCWidget::createNativeLayer()
 {
-    return new MCNativeLayerIOS(this);
+    return new MCNativeLayerIOS(getwidget());
 }
