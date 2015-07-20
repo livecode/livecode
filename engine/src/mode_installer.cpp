@@ -1552,6 +1552,12 @@ bool MCModeIsExecutableFirstArgument(void)
 	return true;
 }
 
+// In installer mode, we have command line name / arguments
+bool MCModeHasCommandLineArguments(void)
+{
+    return true;
+}
+
 // In standalone mode, we only automatically open stacks if there isn't an
 // embedded stack.
 bool MCModeShouldLoadStacksOnStartup(void)

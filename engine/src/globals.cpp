@@ -926,7 +926,7 @@ bool X_open(int argc, char *argv[], char *envp[])
     //  commandArguments properties.
     MCcommandname = strdup(argv[0]);
     MCcommandargumentcount = 0;
-    if (argc > 1)
+    if (MCModeHasCommandLineArguments() && argc > 1)
     {
         if (!MCMemoryNewArray(argc - 1, MCcommandarguments))
             return false;
