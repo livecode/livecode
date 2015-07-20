@@ -558,7 +558,7 @@ void MCPlatformWindowMaskRelease(MCPlatformWindowMaskRef mask);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef struct MCPlatformMenu *MCPlatformMenuRef;
+typedef class MCPlatformMenu *MCPlatformMenuRef;
 
 enum MCPlatformMenuItemProperty
 {
