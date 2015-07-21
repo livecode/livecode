@@ -347,6 +347,10 @@ basic_args="${format_args} --depth ${DEPTH} --generator-output ${GENERATOR_OUTPU
 
 if [ "${BUILD_EDITION}" == "commercial" ] ; then
   basic_args="${basic_args} ../livecode-commercial.gyp"
+elif [ "${BUILD_EDITION}" == "server" ] ; then
+  basic_args="${basic_args} livecode-server.gyp -G default_target=binzip-copy"
+else
+  basic_args="${basic_args} livecode.gyp"
 fi
 
 case ${OS} in
