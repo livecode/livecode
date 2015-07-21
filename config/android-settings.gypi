@@ -1,8 +1,6 @@
 {
 	'cflags':
 	[
-		'-Wall',
-		'-Wextra',
 		'-fstrict-aliasing',
 		'-fvisibility=hidden',
 	],
@@ -42,6 +40,7 @@
 				[
 					'-w',						# Disable warnings
 					'-fpermissive',				# Be more lax with old code
+					'-Wno-return-type',
 				],
 			},
 		],
