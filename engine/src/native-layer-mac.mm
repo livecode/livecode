@@ -56,6 +56,8 @@
 #include "platform-internal.h"
 #include "mac-internal.h"
 
+#include "graphics_util.h"
+
 
 MCNativeLayerMac::MCNativeLayerMac(MCWidgetRef p_widget, NSView *p_view) :
   m_widget(p_widget),
@@ -81,20 +83,9 @@ MCNativeLayerMac::~MCNativeLayerMac()
 void MCNativeLayerMac::OnToolChanged(Tool p_new_tool)
 {
     MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
-    if (p_new_tool == T_BROWSE || p_new_tool == T_HELP)
-    {
-        // In run mode. Make visible if requested
-        if (t_widget->getflags() & F_VISIBLE)
-            [m_view setHidden:NO];
-        t_widget->Redraw();
-    }
-    else
-    {
-        // In edit mode
-        [m_view setHidden:YES];
-        t_widget->Redraw();
-    }
+	
+	OnVisibilityChanged(ShouldShowWidget(t_widget));
+	t_widget->Redraw();
 }
 
 void MCNativeLayerMac::OnOpen()
@@ -132,10 +123,8 @@ void MCNativeLayerMac::doAttach()
     
     // Restore the visibility state of the widget (in case it changed due to a
     // tool change while on another card - we don't get a message then)
-    if ((t_widget->getflags() & F_VISIBLE) && t_widget->isInRunMode())
-        [m_view setHidden:NO];
-    else
-        [m_view setHidden:YES];
+	
+	OnVisibilityChanged(ShouldShowWidget(t_widget));
 }
 
 void MCNativeLayerMac::OnDetach()
@@ -202,6 +191,8 @@ void MCNativeLayerMac::OnGeometryChanged(const MCRectangle& p_old_rect)
 
 void MCNativeLayerMac::OnVisibilityChanged(bool p_visible)
 {
+	if (p_visible)
+		OnGeometryChanged(MCRectangleMake(0,0,0,0));
     [m_view setHidden:!p_visible];
 }
 
@@ -219,7 +210,7 @@ void MCNativeLayerMac::doRelayer()
     t_before = findNextLayerAbove(t_widget);
     
     // Insert the widget in the correct place (but only if the card is current)
-    if (isAttached() && t_widget->getstack()->getcard() == t_widget->getstack()->getcurcard())
+    if (isAttached() && t_widget->getcard() == t_widget->getstack()->getcurcard())
     {
         [m_view removeFromSuperview];
         if (t_before != nil)
