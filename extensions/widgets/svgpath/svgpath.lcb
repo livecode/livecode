@@ -1,5 +1,5 @@
 -- declaring extension as widget, followed by identifier
-widget community.livecode.livecode.svgpath
+widget com.livecode.widget.svgpath
 --
 
 -- dependency declarations
