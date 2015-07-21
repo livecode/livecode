@@ -2854,6 +2854,8 @@ Exec_stat MCChunk::del(MCExecPoint &ep)
 				MCeerror->add(EE_CHUNK_CANTDELETEOBJECT, line, pos);
 				return ES_ERROR;
 			}
+            if (objptr->gettype() == CT_STACK)
+                MCtodestroy->remove((MCStack *)objptr);
 			objptr->scheduledelete();
 		}
 		else
