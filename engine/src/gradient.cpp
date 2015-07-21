@@ -969,7 +969,10 @@ bool MCGradientFillSetProperties(MCExecContext& ctxt, MCGradientFill*& x_gradien
         MCAutoArrayRef t_array;
         MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value , kMCExecValueTypeArrayRef, &(&t_array));
         if (ctxt . HasError())
+        {
+            delete t_gradient;
             return false;
+        }
         
         if (MCArrayIsEmpty(*t_array))
         {
