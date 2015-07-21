@@ -836,17 +836,8 @@ void X_clear_globals(void)
 
     MCSocketsInitialize();
     
-    if (MCcommandarguments != NULL)
-    {
-        MCValueRelease(MCcommandarguments);
-        MCcommandarguments = NULL;
-    }
-
-    if (MCcommandname != NULL)
-    {
-        MCValueRelease(MCcommandname);
-        MCcommandname = NULL;
-    }
+    MCcommandarguments = NULL;
+    MCcommandname = NULL;
 
 #ifdef _ANDROID_MOBILE
     extern void MCAndroidMediaPickInitialize();
