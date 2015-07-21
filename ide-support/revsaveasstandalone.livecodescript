@@ -2265,7 +2265,8 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
    end if
    
    # AL-2015-04-12: [[ Standalone Extensions ]] Add chosen extensions to the standalone inclusions
-   repeat for each line tExtension in sStandaloneSettingsA["extensions"]
+   # AL-2015-07-21: [[ Standalone Extensions ]] Automatically include dependecies, and load in order
+   repeat for each line tExtension in revIDEExtensionsOrderByDependency(sStandaloneSettingsA["extensions"])
       local tExtensionFile
       put revIDEExtensionModuleFile(tExtension) into tExtensionFile
       if tDeployInfo["modules"] is empty then
