@@ -2866,6 +2866,7 @@ void MCButton::activate(Boolean notify, KeySym p_key)
 	if (findmenu(true))
 	{
 		bool t_disabled;
+        t_disabled = false;
 		MCAutoStringRef t_pick;
 		
 		if (menu != NULL)
