@@ -14,7 +14,7 @@
 	
 	'sources':
 	[
-		'>@(lc-compile_source_files)',
+		'dummy.cpp',
 	],
 	
 	'actions':

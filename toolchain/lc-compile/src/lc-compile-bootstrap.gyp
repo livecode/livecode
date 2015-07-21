@@ -13,9 +13,8 @@
 
 		'dependencies':
 		[
-			'../../../libfoundation/libfoundation.gyp:libFoundation',
-			'../../../libscript/libscript.gyp:libScript',
 			'../../gentle/gentle/grts.gyp:grts',
+			'lc-compile-lib.gyp:lc-compile-lib',
 		],
 		
 		'include_dirs':
@@ -192,7 +191,7 @@
 			
 			'sources':
 			[
-				'>@(lc-compile_source_files)',
+				'dummy.cpp',
 			],
 			
 			'actions':
