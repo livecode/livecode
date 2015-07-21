@@ -21,6 +21,8 @@
 			'ext_suffix': '.dll',
 			'exe_suffix': '.exe',
 			'debug_info_suffix': '',
+
+			'silence_warnings': 0,
 		},
 		
 		# Don't assume a Cygwin environment when invoking actions
@@ -143,6 +145,27 @@
 					],
 				},
 			],
+			[
+				'silence_warnings == 0',
+				{
+					'msvs_settings':
+					{
+						'VCCLCompilerTool':
+						{
+							'WarningLevel': '3',
+						},
+					},
+				},
+				{
+					'msvs_setings':
+					{
+						'VCCLCompilerTool':
+						{
+							'WarningLevel': '0',
+						},
+					},
+				},
+			],
 		],
 		
 		'msvs_settings':
@@ -152,7 +175,6 @@
 				'ExceptionHandling': '0',
 				'BufferSecurityCheck': 'false',
 				'RuntimeTypeInfo': 'false',
-				'WarningLevel': '3',
 				'Detect64BitPortabilityProblems': 'false',
 			},
 			
