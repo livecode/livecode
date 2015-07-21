@@ -565,17 +565,7 @@
 			
 			# Native layers
 			'src/native-layer.h',
-			'src/native-layer-android.h',
-			'src/native-layer-ios.h',
-			'src/native-layer-mac.h',
-			'src/native-layer-win32.h',
-			'src/native-layer-x11.h',
 			'src/native-layer.cpp',
-			'src/native-layer-android.cpp',
-			'src/native-layer-ios.mm',
-			'src/native-layer-mac.mm',
-			'src/native-layer-win32.cpp',
-			'src/native-layer-x11.cpp',
 		],
 		
 		# Sources that are only for desktop mode
@@ -609,6 +599,8 @@
 			'src/native-layer.h',
 			'src/native-layer-android.cpp',
 			'src/native-layer-android.h',
+			'src/native-layer-ios.h',
+			'src/native-layer-ios.mm',
 			'src/native-layer-mac.h',
 			'src/native-layer-mac.mm',
 			'src/native-layer-win32.cpp',
@@ -1002,18 +994,14 @@
 			[
 				'OS != "android"',
 				{
-					'sources!':
-					[
-						'src/native-layer-android.cpp',
-					],
-				},
-			],
-			[
-				'OS != "android"',
-				{
 					'sources/':
 					[
 						['exclude', '-android\.cpp$'],
+					],
+
+					'sources!':
+					[
+						'src/native-layer-android.cpp',
 					],
 				},
 			],
@@ -1023,6 +1011,11 @@
 					'sources/':
 					[
 						['exclude', '-ios\.(mm|cpp)$'],
+					],
+
+					'sources!':
+					[
+						'src/native-layer-ios.mm',
 					],
 				},
 			],

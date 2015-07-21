@@ -724,17 +724,17 @@ extern "C" MC_DLLEXPORT_DEF void MCEngineExecLogWithValues(MCStringRef p_message
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" MC_DLLEXPORT bool MCEngineAddRunloopAction(MCRunloopActionCallback p_callback, void *p_context, MCRunloopActionRef &r_action)
+extern "C" MC_DLLEXPORT_DEF bool MCEngineAddRunloopAction(MCRunloopActionCallback p_callback, void *p_context, MCRunloopActionRef &r_action)
 {
 	return MCscreen->AddRunloopAction(p_callback, p_context, r_action);
 }
 
-extern "C" MC_DLLEXPORT void MCEngineRemoveRunloopAction(MCRunloopActionRef p_action)
+extern "C" MC_DLLEXPORT_DEF void MCEngineRemoveRunloopAction(MCRunloopActionRef p_action)
 {
 	MCscreen->RemoveRunloopAction(p_action);
 }
 
-extern "C" MC_DLLEXPORT bool MCEngineRunloopWait()
+extern "C" MC_DLLEXPORT_DEF bool MCEngineRunloopWait()
 {
 	MCscreen->wait(60.0, True, True);
 	return true;

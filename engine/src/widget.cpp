@@ -55,6 +55,8 @@
 #include "dispatch.h"
 #include "graphics_util.h"
 
+#include "native-layer.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCCanvasPush(MCGContextRef gcontext, uintptr_t& r_cookie);
@@ -883,7 +885,7 @@ bool MCWidget::SetNativeView(void *p_view)
 	t_layer = nil;
 	
 	if (p_view != nil)
-		t_success = nil != (t_layer = MCNativeLayer::CreateNativeLayer(this, p_view));
+		t_success = nil != (t_layer = MCNativeLayer::CreateNativeLayer(getwidget(), p_view));
 	
 	if (t_success)
 	{
@@ -917,40 +919,6 @@ void MCWidget::CatchError(MCExecContext& ctxt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCWidget::OnOpen()
-{
-	CallHandler(MCNAME("OnOpen"), nil, 0);
-	
-	if (m_native_layer)
-		m_native_layer->OnOpen();
-	
-	OnAttach();
-}
-
-void MCWidget::OnClose()
-{
-	OnDetach();
-	
-    if (m_native_layer)
-        m_native_layer->OnClose();
-    
-    CallHandler(MCNAME("OnClose"), nil, 0);
-}
-
-void MCWidget::OnAttach()
-{
-    // OnAttach handlers mustn't mutate the world, or cause re-entrancy so no
-    // script access is allowed.
-    MCEngineScriptObjectPreventAccess();
-    CallHandler(MCNAME("OnAttach"), nil, 0);
-    MCEngineScriptObjectAllowAccess();
-
-	if (m_native_layer)
-		m_native_layer->OnAttach();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 void MCWidget::GetKind(MCExecContext& ctxt, MCNameRef& r_kind)
 {
     r_kind = MCValueRetain(m_kind);
@@ -960,57 +928,8 @@ void MCWidget::GetKind(MCExecContext& ctxt, MCNameRef& r_kind)
 
 bool MCWidget::isInRunMode()
 {
+    Tool t_tool = getstack() -> gettool(this);
+    return t_tool == T_BROWSE || t_tool == T_HELP;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-extern "C" MC_DLLEXPORT void MCWidgetExecGetNativeLayer(void *&r_native_layer)
-{
-	if (MCwidgetobject == nil)
-	{
-		MCWidgetThrowNoCurrentWidgetError();
-		return;
-	}
-	
-	MCwidgetobject->GetNativeView(r_native_layer);
-}
-
-extern "C" MC_DLLEXPORT void MCWidgetExecSetNativeLayer(void *p_native_layer)
-{
-	if (MCwidgetobject == nil)
-	{
-		MCWidgetThrowNoCurrentWidgetError();
-		return;
-	}
-	
-	MCwidgetobject->SetNativeView(p_native_layer);
-}
-
-extern "C" MC_DLLEXPORT void MCWidgetEvalStackNativeView(void *&r_native_view)
-{
-	if (MCwidgetobject == nil)
-	{
-		MCWidgetThrowNoCurrentWidgetError();
-		return;
-	}
-	
-	r_native_view = MCscreen->GetNativeWindowHandle(MCwidgetobject->getw());
-}
-
-extern "C" MC_DLLEXPORT void MCWidgetEvalStackNativeDisplay(void *&r_display)
-{
-	if (MCwidgetobject == nil)
-	{
-		MCWidgetThrowNoCurrentWidgetError();
-		return;
-	}
-	
-	if (!MCscreen->platform_get_display_handle(r_display))
-	{
-		// TODO - throw error
-		return;
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-

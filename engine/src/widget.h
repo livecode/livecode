@@ -18,7 +18,6 @@
 #define __MC_WIDGET__
 
 #include "control.h"
-#include "native-layer.h"
 
 #include "libscript/script.h"
 #include "module-engine.h"
@@ -110,6 +109,8 @@ bool MCChildWidgetSetDisabled(MCWidgetRef widget, bool disabled);
 // The MCWidget control now wraps a (root) MCWidgetRef and passes all events
 // through MCWidgetEventManager which modulates them to appropriate calls on
 // the appropriate (nested) MCWidgetRef.
+
+class MCNativeLayer;
 
 class MCWidget: public MCControl
 {

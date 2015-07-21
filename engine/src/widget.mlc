@@ -1485,19 +1485,31 @@ begin
 end syntax
 
 
-public foreign handler MCWidgetExecGetNativeLayer(out rNativeLayer as Pointer) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetExecSetNativeLayer(in pNativeLayer as optional Pointer) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetEvalStackNativeView(out rNativeView as Pointer) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetEvalStackNativeDisplay(out rDisplay as Pointer) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetNativeLayerOfWidget(in pWidget as Widget, out rNativeLayer as Pointer) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetSetNativeLayerOfWidget(in pNativeLayer as optional Pointer, in pWidget as Widget) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetStackNativeViewOfWidget(in pWidget as Widget, out rNativeView as Pointer) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetStackNativeDisplayOfWidget(in pWidget as Widget, out rDisplay as Pointer) returns nothing binds to "<builtin>"
 
 /*
 TODO - docs
 */
+syntax NativeLayerOfWidget is prefix operator with precedence 3
+	"native" "layer" "of" <mWidget: Expression>
+begin
+	MCWidgetGetNativeLayerOfWidget(mWidget, output)
+	MCWidgetSetNativeLayerOfWidget(input, mWidget)
+end syntax
+
+public foreign handler MCWidgetGetMyNativeLayer(out rNativeLayer as Pointer) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetSetMyNativeLayer(in pNativeLayer as optional Pointer) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetMyStackNativeView(out rNativeView as Pointer) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetMyStackNativeDisplay(out rDisplay as Pointer) returns nothing binds to "<builtin>"
+
 syntax MyNativeLayer is expression
 	"my" "native" "layer"
 begin
-	MCWidgetExecGetNativeLayer(output)
-	MCWidgetExecSetNativeLayer(input)
+	MCWidgetGetMyNativeLayer(output)
+	MCWidgetSetMyNativeLayer(input)
 end syntax
 
 end module

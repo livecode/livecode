@@ -18,12 +18,13 @@
 #include "parsedef.h"
 #include "uidc.h"
 
+#include "widget.h"
 #include "native-layer.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // Stub method for server platforms
-MCNativeLayer *MCNativeLayer::CreateNativeLayer(MCWidget *p_widget, void *p_native_view)
+MCNativeLayer *MCNativeLayer::CreateNativeLayer(MCWidgetRef p_widget, void *p_native_view)
 {
 	return nil;
 }

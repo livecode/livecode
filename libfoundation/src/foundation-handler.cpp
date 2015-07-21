@@ -198,6 +198,7 @@ error_exit:
         MCValueRelease(t_value_args[i]);
 }
 
+MC_DLLEXPORT_DEF
 bool MCHandlerGetFunctionPtr(MCHandlerRef self, void*& r_function_ptr)
 {
     if (self -> function_ptr != nil)

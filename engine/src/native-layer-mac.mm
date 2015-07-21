@@ -44,6 +44,7 @@
 #include "globals.h"
 #include "context.h"
 
+#include "widget.h"
 #include "native-layer-mac.h"
 
 #import <AppKit/NSWindow.h>

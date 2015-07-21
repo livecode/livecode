@@ -41,7 +41,7 @@ public:
 	virtual bool GetNativeView(void *&r_view) = 0;
 	
 	// Implemented by the platform-specific native layers: creates a new layer
-	static MCNativeLayer* CreateNativeLayer(MCWidget *p_widget, void *p_native_view);
+	static MCNativeLayer* CreateNativeLayer(MCWidgetRef p_widget, void *p_native_view);
 protected:
     
     bool m_attached;

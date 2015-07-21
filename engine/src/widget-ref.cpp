@@ -54,6 +54,8 @@
 #include "dispatch.h"
 #include "graphics_util.h"
 
+#include "native-layer.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCWidgetBase::MCWidgetBase(void)
@@ -205,14 +207,20 @@ bool MCWidgetBase::OnSave(MCValueRef& r_rep)
 
 bool MCWidgetBase::OnOpen(void)
 {
-    if (GetHost()->getNativeLayer())
-        GetHost()->getNativeLayer()->OnOpen();
-    
-    return DispatchRecursive(kDispatchOrderBeforeBottomUp, MCNAME("OnOpen"));
+    if (!DispatchRecursive(kDispatchOrderBeforeBottomUp, MCNAME("OnOpen")))
+		return false;
+
+	if (GetHost()->getNativeLayer())
+		GetHost()->getNativeLayer()->OnOpen();
+	
+	return OnAttach();
 }
 
 bool MCWidgetBase::OnClose(void)
 {
+	if (!OnDetach())
+		return false;
+	
     if (GetHost()->getNativeLayer())
         GetHost()->getNativeLayer()->OnClose();
     
@@ -241,10 +249,13 @@ bool MCWidgetBase::OnClose(void)
 
 bool MCWidgetBase::OnAttach()
 {
-    if (GetHost()->getNativeLayer())
-        GetHost()->getNativeLayer()->OnAttach();
-    
-    return Dispatch(MCNAME("OnAttach"));
+    if (!Dispatch(MCNAME("OnAttach")))
+		return false;
+
+	if (GetHost()->getNativeLayer())
+		GetHost()->getNativeLayer()->OnAttach();
+	
+	return true;
 }
 
 bool MCWidgetBase::OnDetach()
