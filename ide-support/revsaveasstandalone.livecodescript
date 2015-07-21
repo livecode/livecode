@@ -675,13 +675,6 @@ private command revCreateStandalone pStack, pFolder
       -- copy externals
       revCopyExternals tPlatform, tStackSourceFile[tPlatform], tEngineSourceFile[tPlatform], tStandalonePath[tPlatform]
       
-      // AL-2015-02-27: Include fontawesome in every standalone
-      if there is a file (revIDESpecialFolderPath("fonts") & slash & "fontawesome.ttf") then
-         local tCurrentLocation
-         set the itemDel to "/"
-         put item 1 to -2 of tStandalonePath[tPlatform] into tCurrentLocation
-         revCopyFile (revIDESpecialFolderPath("fonts") & slash & "fontawesome.ttf"), tCurrentLocation & slash & "fontawesome.ttf", "revStandaloneProgressCallback", the long id of me
-      end if
       revBuildStandaloneDeploy tPlatform, tStackSourceFile[tPlatform], tEngineSourceFile[tPlatform], tStandalonePath[tPlatform]
       
       add 1 to tCount
@@ -2257,22 +2250,6 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
          put return & "revInternal__SetSmallAppIcon" && sStandaloneSettingsA["OSX,smallappicon"] after sStandaloneSettingsA["startup_script"]
       end if
    end if   
-   
-   // AL-2015-02-27: Include fontawesome in every standalone
-   local  tTargetFontPath
-   if tPlatformDetailsA["platform"] begins with "MacOS" then
-      put "specialfolderpath(" & quote & "engine" & quote & ") & slash & " & quote & ".." & quote & " & slash & Resources & slash & _MacOS & slash & fontawesome.ttf" into tTargetFontPath
-   else
-      put "specialfolderpath(" & quote & "engine" & quote & ") & slash & fontawesome.ttf" into tTargetFontPath
-   end if
-   
-   if there is a file (revIDESpecialFolderPath("fonts") & slash & "fontawesome.ttf") then
-      if sStandaloneSettingsA["startup_script"] is not empty then
-         put "start using font file " & tTargetFontPath into sStandaloneSettingsA["startup_script"]
-      else
-         put return & "start using font file " & tTargetFontPath after sStandaloneSettingsA["startup_script"]
-      end if
-   end if
    
    # AL-2015-01-29: [[ Scriptify IDE ]] Add the startup script to the deploy parameters
    if sStandaloneSettingsA["startup_script"] is not empty then
