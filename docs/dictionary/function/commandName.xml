@@ -19,7 +19,7 @@
 	</examples>
 
 	<history>
-		<introduced version="6.7.8">Added.</introduced>
+		<introduced version="7.1.0">Added.</introduced>
 		<deprecated version=""></deprecated>
 		<removed version=""></removed>
 		<changed version=""></changed>
@@ -49,8 +49,8 @@
 	<classification>
 	</classification>
 
-	<references>
-		<function tag="$">$ Function</function>
+    <references>
+		<keyword tag="$">$ Keyword</keyword>
 	</references>
 
 	<description>

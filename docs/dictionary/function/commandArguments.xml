@@ -5,21 +5,24 @@
 
 	<syntax>
 		<example>the commandArguments</example>
+		<example>commandArguments(<i>index</i>)</example>
+		<example>the cmdArgs of <i>index</i></example>
 	</syntax>
 
 	<synonyms>
 		<synonym>cmdArgs</synonym>
 	</synonyms>
 
-	<summary>Returns a return-separated list of the commandline arguments</summary>
+	<summary>If no index is given, returns a 1-based, numeric array containing all the parameters given to the command.<p>If an index is given, returns the parameter corresponding to the index (1 being the first parameter).</p></summary>
 
 	<examples>
-<example>put the commandArguments</example>
-<example><p>if "-v" is among the lines of the cmdArgs then</p><p>    put true into tVerbose</p><p>end if</p></example>
+<example>put the keys of the cmdArgs</example>
+<example><p>repeat for each element tArgument in the commandArguments</p><p>    if tArgument is "-v" then</p><p>       put true into tVerbose</p><p>    end if</p><p>end repeat</p></example>
+<example><p>put commandArguments(1)</p></example>
 	</examples>
 
 	<history>
-		<introduced version="6.7.8">Added.</introduced>
+		<introduced version="7.1.0">Added.</introduced>
 		<deprecated version=""></deprecated>
 		<removed version=""></removed>
 		<changed version=""></changed>
@@ -42,6 +45,7 @@
 	</classes>
 
 	<security>
+      <none required/>
 	</security>
 
 
@@ -49,16 +53,22 @@
 	</classification>
 
 	<references>
-		<function tag="$">$ Function</function>
+		<keyword tag="$">$ Keyword</keyword>
 	</references>
 
 	<description>
-	<overview>Returns a return-separated list of the commandline arguments</overview>
+	<overview>Returns a 1-based numeric array containing the commandline arguments</overview>
 
-		<parameters>
-		</parameters>
+    <parameters>
+  <parameter>
+    <name>index</name>
+    <description>An integer greater than 0.
+        <p>If the index is greater than the number of parameters, then commandArguments returns empty.</p>
+    .</description>
+    </parameter>
+    </parameters>
 
-	<value></value>
-	<comments>The <b>commandArguments</b> function returns the list of the parameters given at the launch of the application.<p>The list only exists on desktop standalones applications and server scripts. On mobile platform or in the IDE, the <b>commandArguments</b> returns empty.</p></comments>
+    <value>Returns either a numeric array with all the commandline parameters if no <i>index</i> is given, or the parameter at the <i>index</i> specified </value>
+	<comments>With no index given, the <b>commandArguments</b> function returns an 1-based, numeric array containing parameters given at the launch of the application.<p>With an index given, it returns the commandline parameter at this index</p><p>The list only exists on desktop standalones applications and server scripts. On mobile platform or in the IDE, the <b>commandArguments</b> returns empty.</p></comments>
 	</description>
 </doc>
