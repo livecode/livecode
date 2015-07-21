@@ -94,7 +94,11 @@ inline MCGRectangle MCRectangleToMCGRectangle(const MCRectangle &p_rect)
 
 inline MCGRectangle MCRectangle32ToMCGRectangle(const MCRectangle32 &p_rect)
 {
-	return MCGRectangleMake(p_rect.x, p_rect.y, p_rect.width, p_rect.height);
+	/* Possible loss of precision */
+	return MCGRectangleMake(MCGFloat(p_rect.x),
+	                        MCGFloat(p_rect.y),
+	                        MCGFloat(p_rect.width),
+	                        MCGFloat(p_rect.height));
 }
 
 inline MCRectangle32 MCRectangle32FromMCGIntegerRectangle(const MCGIntegerRectangle &p_rect)
