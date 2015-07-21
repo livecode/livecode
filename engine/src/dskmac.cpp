@@ -4719,7 +4719,9 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 
 		if (t_len)
 		{
-			char *t_model = (char *)malloc(t_len * sizeof(char));
+			char *t_model;
+			if (!MCMemoryNewArray(t_len, t_model))
+				return false;
 			sysctlbyname("hw.model", t_model, &t_len, NULL, 0);
 
 			if (!MCStringCreateWithCStringAndRelease(t_model, r_string))
