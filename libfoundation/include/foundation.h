@@ -771,7 +771,8 @@ inline compare_t MCCompare(unsigned long long a, unsigned long long b) { return 
 
 inline bool MCIsPowerOfTwo(uint32_t x) { return (x & (x - 1)) == 0; }
 
-inline float MCClamp(float value, float min, float max) {return MCMax(min, MCMin(max, value));}
+template <typename T>
+inline T MCClamp(T value, T min, T max) {return MCMax(min, MCMin(max, value));}
 
 ////////////////////////////////////////////////////////////////////////////////
 //
