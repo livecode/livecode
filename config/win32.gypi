@@ -55,7 +55,7 @@
 				'target_conditions':
 				[
 					[
-						'_suppress_warnings == 0',
+						'silence_warnings == 0',
 						{
 							'msvs_settings':
 							{
