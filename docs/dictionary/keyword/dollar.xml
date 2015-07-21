@@ -18,7 +18,7 @@
 
 	<history>
 		<introduced version="1.0">Added.</introduced>
-		<deprecated version=""></deprecated>
+        <deprecated version="7.1.0">Deprecated</deprecated>
 		<removed version=""></removed>
 		
 	</history>

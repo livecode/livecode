@@ -7,8 +7,7 @@
 		<example>the commandName</example>
 	</syntax>
 
-	<synonyms>
-		<synonym>cmdName</synonym>
+    <synonyms>
 	</synonyms>
 
 	<summary>Returns the command name used to start the execution of the application</summary>
