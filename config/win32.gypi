@@ -157,7 +157,7 @@
 					},
 				},
 				{
-					'msvs_setings':
+					'msvs_settings':
 					{
 						'VCCLCompilerTool':
 						{
