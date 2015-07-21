@@ -209,7 +209,8 @@ static inline MCPoint MCPointMake(int16_t x, int16_t y)
 
 static inline MCPoint MCGPointToMCPoint(const MCGPoint &p_point)
 {
-	return MCPointMake(p_point.x, p_point.y);
+	return MCPointMake(int16_t(MCClamp(p_point.x, INT16_MIN, INT16_MAX)),
+	                   int16_t(MCClamp(p_point.y, INT16_MIN, INT16_MAX)));
 }
 
 inline MCGPoint MCPointToMCGPoint(MCPoint p_point, MCGFloat p_adjustment = 0.0f)
