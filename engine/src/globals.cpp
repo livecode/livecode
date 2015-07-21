@@ -958,8 +958,9 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
         bool t_success;
         t_success = MCArrayCreateMutable(MCcommandarguments);
 
+        // We build a 1-based numeric array.
         for (int i = 1; t_success && i < argc; i++)
-            t_success = MCArrayStoreValueAtIndex(MCcommandarguments, i - 1, argv[i]);
+            t_success = MCArrayStoreValueAtIndex(MCcommandarguments, i, argv[i]);
 
         if (!t_success)
             return false;
