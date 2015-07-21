@@ -94,7 +94,11 @@ inline MCGRectangle MCRectangleToMCGRectangle(const MCRectangle &p_rect)
 
 inline MCGRectangle MCRectangle32ToMCGRectangle(const MCRectangle32 &p_rect)
 {
-	return MCGRectangleMake(p_rect.x, p_rect.y, p_rect.width, p_rect.height);
+	/* Possible loss of precision */
+	return MCGRectangleMake(MCGFloat(p_rect.x),
+	                        MCGFloat(p_rect.y),
+	                        MCGFloat(p_rect.width),
+	                        MCGFloat(p_rect.height));
 }
 
 inline MCRectangle32 MCRectangle32FromMCGIntegerRectangle(const MCGIntegerRectangle &p_rect)
@@ -131,65 +135,71 @@ inline MCRectangle MCGRectangleGetIntegerBounds(MCGRectangle p_rect)
 	return MCRectangleFromMCGIntegerRectangle(MCGRectangleGetBounds(p_rect));
 }
 
+/* There are a number of "correct" ways to convert a rectangle on the
+ * real plane to a rectangle on the integer plane, and this template
+ * function enables them to be performed correctly.
+ *
+ * The UpperAdjust() function is used to move upper left coordinates
+ * onto the integer grid, and the LowerAdjust() function is used to
+ * move lower right coordinates onto the integer grid.
+ *
+ * If AdjustPerimeter is true, then LowerAdjust is applied to the
+ * right and bottom coordinates; otherwise, LowerAdjust is applied to
+ * the width and height.
+ *
+ * Finally, the resulting rectangle is clamped to the extents of the
+ * target integer plane.
+ */
+template<MCGFloat (UpperAdjust)(MCGFloat),
+         MCGFloat (LowerAdjust)(MCGFloat),
+         bool AdjustPerimeter>
+inline MCRectangle
+MCGRectangleGetIntegerRect(const MCGRectangle &p_rect)
+{
+	MCGFloat t_left, t_top, t_width, t_height;
+	t_left = UpperAdjust(p_rect.origin.x);
+	t_top = UpperAdjust(p_rect.origin.y);
+
+	if (AdjustPerimeter)
+	{
+		t_width = LowerAdjust(p_rect.origin.x + p_rect.size.width) - t_left;
+		t_height = LowerAdjust(p_rect.origin.y + p_rect.size.height) - t_top;
+	}
+	else
+	{
+		t_width = LowerAdjust(p_rect.size.width);
+		t_height = LowerAdjust(p_rect.size.height);
+	}
+
+	return MCRectangleMake( int16_t(MCClamp(t_left,   INT16_MIN,  INT16_MAX)),
+	                        int16_t(MCClamp(t_top,    INT16_MIN,  INT16_MAX)),
+	                       uint16_t(MCClamp(t_width,  0,         UINT16_MAX)),
+	                       uint16_t(MCClamp(t_height, 0,         UINT16_MAX)));
+}
+
 inline MCRectangle MCGRectangleGetIntegerInterior(MCGRectangle p_rect)
 {
-	int32_t t_left, t_right, t_top, t_bottom;
-	t_left = ceil(p_rect.origin.x);
-	t_top = ceil(p_rect.origin.y);
-	t_right = floor(p_rect.origin.x + p_rect.size.width);
-	t_bottom = floor(p_rect.origin.y + p_rect.size.height);
-	
-	MCRectangle t_rect;
-	t_rect = MCRectangleMake(t_left, t_top, t_right - t_left, t_bottom - t_top);
-	
-	return t_rect;
+	return MCGRectangleGetIntegerRect<ceilf, floorf, true>(p_rect);
 }
 
 inline MCRectangle MCGRectangleGetIntegerExterior(const MCGRectangle& p_rect)
 {
-	int32_t t_left, t_right, t_top, t_bottom;
-	t_left = floorf(p_rect.origin.x);
-	t_top = floorf(p_rect.origin.y);
-	t_right = ceilf(p_rect.origin.x + p_rect.size.width);
-	t_bottom = ceilf(p_rect.origin.y + p_rect.size.height);
-	
-	MCRectangle t_rect;
-	t_rect = MCRectangleMake(t_left, t_top, t_right - t_left, t_bottom - t_top);
-	
-	return t_rect;
+	return MCGRectangleGetIntegerRect<floorf, ceilf, true>(p_rect);
 }
 
 inline MCRectangle MCGRectangleGetIntegerRect(const MCGRectangle &p_rect)
 {
-	int32_t t_left, t_right, t_top, t_bottom;
-	t_left = roundf(p_rect.origin.x);
-	t_top = roundf(p_rect.origin.y);
-	t_right = roundf(p_rect.origin.x + p_rect.size.width);
-	t_bottom = roundf(p_rect.origin.y + p_rect.size.height);
-	
-	return MCRectangleMake(t_left, t_top, t_right - t_left, t_bottom - t_top);
+	return MCGRectangleGetIntegerRect<roundf, roundf, true>(p_rect);
 }
 
 inline MCRectangle MCGRectangleGetIntegerFloorRect(const MCGRectangle &p_rect)
 {
-	int32_t t_left, t_top, t_width, t_height;
-	t_left = floorf(p_rect.origin.x);
-	t_top = floorf(p_rect.origin.y);
-	t_width = floorf(p_rect.size.width);
-	t_height = floorf(p_rect.size.height);
-	
-	return MCRectangleMake(t_left, t_top, t_width, t_height);
+	return MCGRectangleGetIntegerRect<floorf, floorf, false>(p_rect);
 }
 
 inline MCRectangle MCGRectangleGetIntegerCeilingRect(const MCGRectangle &p_rect)
 {
-	int32_t t_left, t_top, t_width, t_height;
-	t_left = ceilf(p_rect.origin.x);
-	t_top = ceilf(p_rect.origin.y);
-	t_width = ceilf(p_rect.size.width);
-	t_height = ceilf(p_rect.size.height);
-	
-	return MCRectangleMake(t_left, t_top, t_width, t_height);
+	return MCGRectangleGetIntegerRect<ceilf, ceilf, false>(p_rect);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -205,7 +215,8 @@ static inline MCPoint MCPointMake(int16_t x, int16_t y)
 
 static inline MCPoint MCGPointToMCPoint(const MCGPoint &p_point)
 {
-	return MCPointMake(p_point.x, p_point.y);
+	return MCPointMake(int16_t(MCClamp(p_point.x, INT16_MIN, INT16_MAX)),
+	                   int16_t(MCClamp(p_point.y, INT16_MIN, INT16_MAX)));
 }
 
 inline MCGPoint MCPointToMCGPoint(MCPoint p_point, MCGFloat p_adjustment = 0.0f)

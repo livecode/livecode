@@ -697,7 +697,11 @@ MCGIntegerRectangle MCGIntegerRectangleIntersection(const MCGIntegerRectangle &r
 
 inline MCGRectangle MCGIntegerRectangleToMCGRectangle(const MCGIntegerRectangle &p_rect)
 {
-	return MCGRectangleMake(p_rect.origin.x, p_rect.origin.y, p_rect.size.width, p_rect.size.height);
+	/* Possible loss of precision */
+	return MCGRectangleMake(MCGFloat(p_rect.origin.x),
+	                        MCGFloat(p_rect.origin.y),
+	                        MCGFloat(p_rect.size.width),
+	                        MCGFloat(p_rect.size.height));
 }
 
 MCGIntegerRectangle MCGRectangleGetBounds(const MCGRectangle &p_rect);
