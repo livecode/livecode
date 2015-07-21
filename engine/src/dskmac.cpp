@@ -4722,7 +4722,12 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 			char *t_model = (char *)malloc(t_len * sizeof(char));
 			sysctlbyname("hw.model", t_model, &t_len, NULL, 0);
 
-			return MCStringCreateWithCStringAndRelease(t_model, r_string);
+			if (!MCStringCreateWithCStringAndRelease(t_model, r_string))
+			{
+				free(t_model);
+				return false;
+			}
+			return true;
 		}
 
 		return MCStringCopy(MCNameGetString(MCN_unknown), r_string); //in case model name can't be read
