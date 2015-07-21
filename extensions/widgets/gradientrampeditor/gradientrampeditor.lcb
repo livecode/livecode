@@ -49,6 +49,8 @@ private variable mGradientRamp as List
 private variable mCheckerBoardSquareSize as Integer
 private variable mCheckerBoardColor as Color
 
+private variable mShowNumbers as Boolean
+
 private handler configureDimensions() returns nothing
    put 10 into mMarginLeft
    put 10 into mMarginRight
@@ -56,9 +58,28 @@ private handler configureDimensions() returns nothing
    put 10 into mMarginBottom
 
    put (my width - (mMarginLeft + mMarginRight)) / 100 into mRulerSpacing
-   put 1 into mRulerLineIncrement
-   put 12 into mRulerLineHeight
-   put 5 into mRulerTextIncrement
+   
+   put true into mShowNumbers
+   if my width < 50 then
+      put false into mShowNumbers
+   else if my width < 100 then
+      put 10 into mRulerLineIncrement
+      put 50 into mRulerTextIncrement
+      put 4 into mRulerLineHeight
+   else if my width < 200 then
+      put 5 into mRulerLineIncrement
+      put 20 into mRulerTextIncrement
+      put 6 into mRulerLineHeight
+   else if my width < 300 then
+      put 2 into mRulerLineIncrement
+      put 10 into mRulerTextIncrement
+      put 8 into mRulerLineHeight
+   else
+      put 1 into mRulerLineIncrement
+      put 5 into mRulerTextIncrement
+      put 10 into mRulerLineHeight
+   end if
+   
    put 10 into mRulerTextSize
    put color [0.5, 0.5, 0.5] into mRulerColor
 
@@ -66,8 +87,8 @@ private handler configureDimensions() returns nothing
    put 10 into mGradientHandleSize
    put color [0, 0, 0] into mGradientHandleBorderColor
 
-   put 7 into mCheckerBoardSquareSize
-   put color [0.5, 0.5, 0.5] into mCheckerBoardColor
+   put 8 into mCheckerBoardSquareSize
+   put color [0.8, 0.8, 0.8] into mCheckerBoardColor
 end handler
 
 ----------------------------------------------------------------------------------------------------
@@ -86,7 +107,7 @@ public handler getGradientStops() returns String
          put newline after tStops
       end if
 
-      put numberToString((the offset of tStop) * 255) & "," after tStops
+      put (the offset of tStop) formatted as string & "," after tStops
       put numberToString((the red of the color of tStop) * 255) & "," after tStops
       put numberToString((the green of the color of tStop) * 255) & "," after tStops
       put numberToString((the blue of the color of tStop) * 255) & "," after tStops
@@ -109,7 +130,12 @@ public handler setGradientStops(in pStops as String) returns nothing
       split tStop by ","
       put the result into tStopItems
 
-      push gradient stop at (tStopItems[1] parsed as number  / 255) with color [(tStopItems[2] parsed as number / 255), (tStopItems[3] parsed as number / 255), (tStopItems[4] parsed as number / 255),(tStopItems[5] parsed as number / 255)] onto mGradientRamp
+      -- Add ramp stop with 4 (RGB) or 5 (RGBA) elements, otherwise ignore
+      if the number of elements in tStopItems is 5 then
+         push gradient stop at (tStopItems[1] parsed as number) with color [(tStopItems[2] parsed as number / 255), (tStopItems[3] parsed as number / 255), (tStopItems[4] parsed as number / 255),(tStopItems[5] parsed as number / 255)] onto mGradientRamp
+      else if the number of elements in tStopItems is 4 then
+         push gradient stop at (tStopItems[1] parsed as number) with color [(tStopItems[2] parsed as number / 255), (tStopItems[3] parsed as number / 255), (tStopItems[4] parsed as number / 255),1] onto mGradientRamp
+      end if
    end repeat
 
    reorderGradientRamp()
@@ -162,6 +188,7 @@ public handler OnMouseUp() returns nothing
       put false into mIsDraggingStop
       put xCoordToStopNumber(the x of the mouse position) into mCurrentlySelectedStopIndex
       redraw all
+      gradientStopsChanged()
    end if
 end handler
 
@@ -213,6 +240,7 @@ public handler OnMouseDoubleUp() returns nothing
    end if
 
    redraw all
+   gradientStopsChanged()
 end handler
 
 public handler OnKeyPress(in pKey as String) returns nothing
@@ -224,13 +252,11 @@ public handler OnKeyPress(in pKey as String) returns nothing
    end if
 end handler
 
-public handler OnPaint() returns nothing
+private handler onPaintCheckerboard() returns nothing
+   -- Fill the entire widget canvas with the checkerboard then clip to the gradient region.
    variable tY as Real
    variable tX as Real
-
-   -- Draw the checker board that we place behind the gradient.
-   -- Fill the entire widget canvas with the checkerboard then clip to the gradient region.
-   --
+   
    begin layer on this canvas
       variable tStartAtZero as Boolean
       put true into tStartAtZero
@@ -256,9 +282,9 @@ public handler OnPaint() returns nothing
       clip to mGradientRectangle on this canvas
       fill this canvas
    end layer on this canvas
+end handler
 
-   -- Draw the gradient on top of the checkerboard.
-   --
+private handler onParintGradient() returns nothing
    variable tGradient as Gradient
    put linear gradient with ramp mGradientRamp into tGradient
    set the from of tGradient to point [the left of mGradientRectangle, (the top of mGradientRectangle + the bottom of mGradientRectangle) / 2]
@@ -267,9 +293,12 @@ public handler OnPaint() returns nothing
    add rectangle path of mGradientRectangle to this canvas
    set the paint of this canvas to tGradient
    fill this canvas
+end handler
 
-   -- Draw the ruler above and below the gradient.
-   --
+private handler onPaintRulerBottom() returns nothing
+   variable tY as Real
+   variable tX as Real
+
    set the font of this canvas to font (the name of my font) at size mRulerTextSize
    set the paint of this canvas to solid paint with mRulerColor
    put mMarginLeft into tX
@@ -306,9 +335,11 @@ public handler OnPaint() returns nothing
       add mRulerLineIncrement to tRulerPos
       add mRulerSpacing * mRulerLineIncrement to tX
    end repeat
+end handler
 
-   -- Draw the ramp points on top of the ruler.
-   --
+private handler onPaintRampEditors() returns nothing
+   variable tY as Real
+   variable tX as Real
    variable tStopIndex as Integer
    put 1 into tStopIndex
 
@@ -384,9 +415,27 @@ public handler OnPaint() returns nothing
    end repeat
 end handler
 
+public handler OnPaint() returns nothing
+   -- Draw the checker board that we place behind the gradient.
+   onPaintCheckerboard()
+   
+   -- Draw the gradient on top of the checkerboard.
+   onParintGradient()
+
+   -- Draw the ruler above and below the gradient.
+   onPaintRulerBottom()
+   
+   -- Draw the ramp points on top of the ruler.
+   onPaintRampEditors()
+end handler
+
 ----------------------------------------------------------------------------------------------------
 -- Private handlers
 ----------------------------------------------------------------------------------------------------
+
+private handler gradientStopsChanged() returns nothing
+   post "gradientStopsChanged" to my script object
+end handler
 
 private handler reorderGradientRamp() returns nothing
    variable tRampIsInOrder as Boolean
