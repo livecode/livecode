@@ -1855,9 +1855,6 @@ void GenerateSyntaxRules(void)
     
     GenerateInvokeLists();
     GenerateTokenList();
-
-    DumpSyntaxRules();
-    DumpSyntaxMethods();
 }
 
 void DumpSyntaxRules(void)
