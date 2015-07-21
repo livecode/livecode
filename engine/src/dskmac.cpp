@@ -48,6 +48,7 @@
 #include <sys/utsname.h>
 #include <sys/time.h>
 #include <sys/ioctl.h>
+#include <sys/sysctl.h>
 
 // SN-2014-12-09: [[ Bug 14001 ]] Update the module loading for Mac server
 #include <dlfcn.h>
@@ -4711,18 +4712,20 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         }
         return "unknown";
 #endif /* MCS_getmachine_dsk_mac */
-        static Str255 machineName;
-        long response;
-        if ((errno = Gestalt(gestaltMachineType, &response)) == noErr)
-        {
-            GetIndString(machineName, kMachineNameStrID, response);
-            if (machineName != nil)
-            {
-                p2cstr(machineName);
-                return MCStringCreateWithNativeChars((const char_t *)machineName, MCCStringLength((const char *)machineName), r_string);
-            }
-        }
-        return MCStringCopy(MCNameGetString(MCN_unknown), r_string);
+
+		// PM-2015-07-21: [[ Bug 15623 ]] machine() returns "unknown" in OSX because of Gestalt being deprecated
+		size_t t_len = 0;
+		sysctlbyname("hw.model", NULL, &t_len, NULL, 0);
+
+		if (t_len)
+		{
+			char *t_model = (char *)malloc(t_len * sizeof(char));
+			sysctlbyname("hw.model", t_model, &t_len, NULL, 0);
+
+			return MCStringCreateWithCStringAndRelease(t_model, r_string);
+		}
+
+		return MCStringCopy(MCNameGetString(MCN_unknown), r_string); //in case model name can't be read
     }
 	virtual MCNameRef GetProcessor(void)
     {
