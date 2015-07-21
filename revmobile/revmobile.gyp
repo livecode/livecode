@@ -138,6 +138,11 @@
 					'OS == "mac"',
 					{
 						'type': 'executable',
+
+						'xcode_settings':
+						{
+							'ARCHS': 'x86_64',
+						},
 					},
 				],
 			],

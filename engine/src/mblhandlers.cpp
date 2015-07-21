@@ -1299,8 +1299,7 @@ Exec_stat MCHandleStartTrackingSensor(void *p_context, MCParameter *p_parameters
     }
     
     MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
-    
+
     if (t_sensor != kMCSensorTypeUnknown)
     {
         MCSensorExecStartTrackingSensor(t_ctxt, t_sensor, t_loosely);
@@ -1790,8 +1789,7 @@ Exec_stat MCHandleHeadingCalibrationTimeout(void *p_context, MCParameter *p_para
     int t_timeout;
     MCSensorGetLocationCalibrationTimeout(ctxt, t_timeout);
     MCresult->setnvalue(t_timeout);
-    
-    ctxt . SetTheResultToEmpty();
+
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 
@@ -4282,6 +4280,24 @@ Exec_stat MCHandleGetLaunchUrl (void *context, MCParameter *p_parameters)
     
     ctxt.SetTheResultToEmpty();
     return ES_ERROR;
+}
+
+Exec_stat MCHandleGetLaunchData(void *context, MCParameter *p_parameters)
+{
+	MCExecContext ctxt(nil, nil, nil);
+	
+	MCAutoArrayRef t_data;
+	
+	MCMiscGetLaunchData(ctxt, &t_data);
+	
+	if (!ctxt.HasError())
+	{
+		ctxt.SetTheResultToValue(*t_data);
+		return ES_NORMAL;
+	}
+	
+	ctxt.SetTheResultToEmpty();
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleBeep(void *p_context, MCParameter *p_parameters)
@@ -6869,6 +6885,8 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {false, "mobileGetLaunchUrl", MCHandleGetLaunchUrl, nil},
     {false, "iphoneGetDeviceToken", MCHandleGetDeviceToken, nil},
     {false, "iphoneGetLaunchUrl", MCHandleGetLaunchUrl, nil},
+	
+	{false, "mobileGetLaunchData", MCHandleGetLaunchData, nil},
 	
 	{false, "iphoneSetStatusBarStyle", MCHandleSetStatusBarStyle, nil},
 	{false, "iphoneShowStatusBar", MCHandleShowStatusBar, nil},

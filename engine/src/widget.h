@@ -21,7 +21,95 @@
 #include "native-layer.h"
 
 #include "libscript/script.h"
+#include "module-engine.h"
 
+////////////////////////////////////////////////////////////////////////////////
+
+// The MCWidgetRef type encapsulates an LCB widget and its state.
+//
+// There are two variants - a root MCWidgetRef which takes its embedding state
+// from the host MCWidget*, and a child MCWidgetRef which contains its own
+// embedding state.
+//
+// The embedding state are properties such as frame, disabled and font and should
+// encompass anything which the widget should be given from outside, and not be
+// able to directly set itself.
+
+typedef MCValueRef MCWidgetRef;
+
+bool MCWidgetCreateRoot(MCWidget *host, MCNameRef kind, MCWidgetRef& r_widget);
+bool MCWidgetCreateChild(MCNameRef kind, MCWidgetRef& r_widget);
+
+MCNameRef MCWidgetGetKind(MCWidgetRef widget);
+
+bool MCWidgetIsRoot(MCWidgetRef widget);
+MCWidget *MCWidgetGetHost(MCWidgetRef widget);
+MCWidgetRef MCWidgetGetOwner(MCWidgetRef widget);
+
+MCGRectangle MCWidgetGetFrame(MCWidgetRef widget);
+bool MCWidgetGetDisabled(MCWidgetRef widget);
+bool MCWidgetCopyFont(MCWidgetRef widget, MCFontRef& r_font);
+
+bool MCWidgetHasProperty(MCWidgetRef widget, MCNameRef property);
+bool MCWidgetHasHandler(MCWidgetRef widget, MCNameRef handler);
+
+bool MCWidgetQueryProperty(MCWidgetRef widget, MCNameRef property, MCTypeInfoRef& r_get_type, MCTypeInfoRef& r_set_type);
+
+bool MCWidgetSetProperty(MCWidgetRef widget, MCNameRef property, MCValueRef value);
+bool MCWidgetGetProperty(MCWidgetRef widget, MCNameRef property, MCValueRef& r_value);
+
+bool MCWidgetOnLoad(MCWidgetRef widget, MCValueRef rep);
+bool MCWidgetOnSave(MCWidgetRef widget, MCValueRef& r_rep);
+bool MCWidgetOnOpen(MCWidgetRef widget);
+bool MCWidgetOnClose(MCWidgetRef widget);
+bool MCWidgetOnTimer(MCWidgetRef widget);
+bool MCWidgetOnPaint(MCWidgetRef widget, MCGContextRef gcontext);
+bool MCWidgetOnHitTest(MCWidgetRef widget, MCGPoint location, MCWidgetRef& r_target);
+
+bool MCWidgetOnMouseEnter(MCWidgetRef widget, bool& r_bubble);
+bool MCWidgetOnMouseLeave(MCWidgetRef widget, bool& r_bubble);
+bool MCWidgetOnMouseMove(MCWidgetRef widget, bool& r_bubble);
+bool MCWidgetOnMouseDown(MCWidgetRef widget, bool& r_bubble);
+bool MCWidgetOnMouseUp(MCWidgetRef widget, bool& r_bubble);
+bool MCWidgetOnMouseCancel(MCWidgetRef widget, bool& r_bubble);
+bool MCWidgetOnClick(MCWidgetRef widget, bool& r_bubble);
+
+bool MCWidgetOnMouseScroll(MCWidgetRef widget, real32_t delta_x, real32_t delta_y, bool& r_bubble);
+
+bool MCWidgetOnGeometryChanged(MCWidgetRef widget);
+bool MCWidgetOnLayerChanged(MCWidgetRef widget);
+bool MCWidgetOnParentPropertyChanged(MCWidgetRef widget);
+bool MCWidgetOnToolChanged(MCWidgetRef widget, Tool p_tool);
+
+bool MCWidgetCopyAnnotation(MCWidgetRef widget, MCNameRef annotation, MCValueRef& r_value);
+bool MCWidgetSetAnnotation(MCWidgetRef widget, MCNameRef annotation, MCValueRef value);
+
+bool MCWidgetPost(MCWidgetRef widget, MCNameRef event, MCProperListRef args);
+
+void MCWidgetRedrawAll(MCWidgetRef widget);
+void MCWidgetScheduleTimerIn(MCWidgetRef widget, double timeout);
+void MCWidgetCancelTimer(MCWidgetRef widget);
+
+void MCWidgetCopyChildren(MCWidgetRef widget, MCProperListRef& r_children);
+void MCWidgetPlaceWidget(MCWidgetRef widget, MCWidgetRef child, MCWidgetRef relative_to, bool put_below);
+void MCWidgetUnplaceWidget(MCWidgetRef widget,  MCWidgetRef child);
+
+MCGPoint MCWidgetMapPointToGlobal(MCWidgetRef widget, MCGPoint point);
+MCGPoint MCWidgetMapPointFromGlobal(MCWidgetRef widget, MCGPoint point);
+
+MCGRectangle MCWidgetMapRectToGlobal(MCWidgetRef widget, MCGRectangle point);
+MCGRectangle MCWidgetMapRectFromGlobal(MCWidgetRef widget, MCGRectangle point);
+
+////
+
+bool MCChildWidgetSetFrame(MCWidgetRef widget, MCGRectangle frame);
+bool MCChildWidgetSetDisabled(MCWidgetRef widget, bool disabled);
+
+////////////////////////////////////////////////////////////////////////////////
+
+// The MCWidget control now wraps a (root) MCWidgetRef and passes all events
+// through MCWidgetEventManager which modulates them to appropriate calls on
+// the appropriate (nested) MCWidgetRef.
 
 class MCWidget: public MCControl
 {
@@ -61,7 +149,7 @@ public:
 
 	virtual void setrect(const MCRectangle& p_rectangle);
 	virtual void recompute(void);
-
+    
 	virtual Exec_stat handle(Handler_type, MCNameRef, MCParameter *, MCObject *pass_from);
 
 	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
@@ -85,156 +173,42 @@ public:
     
     void GetKind(MCExecContext& ctxt, MCNameRef& r_kind);
     
-    // Returns true if the widget is in edit mode
-    bool inEditMode();
-    
-    ////////// Functions used by the event manager for event processing
-    bool handlesMouseDown() const;
-    bool handlesMouseUp() const;
-    bool handlesMouseCancel() const;
-    bool handlesMouseScroll() const;
-    bool handlesKeyPress() const;
-    bool handlesActionKeyPress() const;
-    bool handlesTouches() const;
-    
-    ////////// Functions used by the event manager for gesture processing
-    bool wantsClicks() const;       // Does this widget want click events?
-    bool wantsTouches() const;      // Does this widget want touch events?
-    bool wantsDoubleClicks() const; // Does this widget want double-clicks?
-    bool waitForDoubleClick() const;// Don't send click straight away
-    bool isDragSource() const;      // Widget is source for drag-drop operations
-    
-    // Needed by the native layer code
-    MCNativeLayer* getNativeLayer() const;
-    
     // Bind a widget to a kind and rep.
     void bind(MCNameRef p_kind, MCValueRef p_rep);
     
-protected:
+    MCWidgetRef getwidget(void) const;
     
+    void CatchError(MCExecContext& ctxt);
+    void SendError(void);
+    
+    bool isInRunMode();
+    
+    // Gets the current native layer (if any) associated with this widget
+    MCNativeLayer* getNativeLayer() const
+    {
+        return m_native_layer;
+    }
+    
+    // Creates a native layer for this widget
+    MCNativeLayer* createNativeLayer();
+    
+protected:
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
     
 private:
-
-    //////////
-    ////////// Widget messages
-    //////////
-    friend class MCWidgetEventManager;
-
-    ////////// Lifecycle events
-    
-    void OnOpen();
-    void OnClose();
-    void OnAttach();
-    void OnDetach();
-    void OnPaint(MCGContextRef p_gcontext, const MCRectangle& p_dirty);
-    void OnGeometryChanged(const MCRectangle& p_old_rect);
-    void OnVisibilityChanged(bool p_visible);
-    void OnHitTest(const MCRectangle& p_intersect, bool& r_inside);
-    void OnBoundsTest(const MCRectangle& r_bounds_rect, bool& r_inside);
-    void OnSave(MCValueRef& r_array);
-    void OnLoad(MCValueRef array);
-    void OnCreate();
-    void OnDestroy();
-    void OnParentPropChanged();
-    void OnToolChanged(Tool p_new_tool);
-    void OnLayerChanged();
-    
-    ////////// Simple timer events
-    
-    void OnTimer();
-    
-    ////////// Basic mouse events
-    
-    void OnMouseEnter();
-    void OnMouseLeave();
-    void OnMouseMove(coord_t p_x, coord_t p_y);
-    void OnMouseCancel(uinteger_t p_button);
-    void OnMouseDown(coord_t p_x, coord_t p_y, uinteger_t p_button);
-    void OnMouseUp(coord_t p_x, coord_t p_y, uinteger_t p_button);
-    void OnMouseScroll(coord_t p_delta_x, coord_t p_delta_y);
-    
-    ////////// Derived mouse events
-    
-    void OnMouseStillDown(uinteger_t p_button, real32_t p_duration);
-    void OnMouseHover(coord_t p_x, coord_t p_y, real32_t p_duration);
-    void OnMouseStillHover(coord_t p_x, coord_t p_y, real32_t p_duration);
-    void OnMouseCancelHover(real32_t p_duration);
-    
-    ////////// Touch events
-    
-    void OnTouchStart(uinteger_t p_id, coord_t p_x, coord_t p_y, real32_t p_pressure, real32_t p_radius);
-    void OnTouchMove(uinteger_t p_id, coord_t p_x, coord_t p_y, real32_t p_pressure, real32_t p_radius);
-    void OnTouchEnter(uinteger_t p_id);
-    void OnTouchLeave(uinteger_t p_id);
-    void OnTouchFinish(uinteger_t p_id, coord_t p_x, coord_t p_y);
-    void OnTouchCancel(uinteger_t p_id);
-    
-    ////////// Keyboard events
-    
-    void OnFocusEnter();
-    void OnFocusLeave();
-    void OnKeyPress(MCStringRef p_keytext);
-    void OnModifiersChanged(uinteger_t p_modifier_mask);
-    void OnActionKeyPress(MCStringRef p_keyname);
-    
-    ////////// Raw input events
-    
-    void OnRawKeyDown(uinteger_t p_keycode);
-    void OnRawKeyUp(uinteger_t p_keycode);
-    void OnRawMouseDown(uinteger_t p_button);
-    void OnRawMouseUp(uinteger_t p_button);
-    
-    ////////// Drag-drop events
-    
-    // These take a drag context because touch controls can cause multiple drag
-    // operations to be in effect simultaneously.
-    //
-    // Note: widget script should also have a way of triggering a drag and drop
-    // operation itself, if desired; e.g. startDrag(in pTouchID as integer)
-    void OnDragEnter(bool& r_accept);
-    void OnDragLeave();
-    void OnDragMove(coord_t p_x, coord_t p_y);
-    void OnDragDrop();
-    void OnDragStart(bool& r_accept);
-    void OnDragFinish();
-    
-    ////////// Gestures
-    
-    // Mouse may have moved during/after the click so position is important
-    void OnClick(coord_t p_x, coord_t p_y, uinteger_t p_button, uinteger_t p_count);
-    void OnDoubleClick(coord_t p_x, coord_t p_y, uinteger_t p_button);
-
-    ////////// IME
-    
-    // ????
-    
-    //////////
-	//////////
-    //////////
-	
-	bool CallHandler(MCNameRef p_name, MCValueRef* x_parameters, uindex_t p_param_count, MCValueRef* r_retval = NULL);
-	bool CallGetProp(MCExecContext& ctxt, MCNameRef p_property_name, MCNameRef p_key, MCValueRef& r_value);
-	bool CallSetProp(MCExecContext& ctxt, MCNameRef p_property_name, MCNameRef p_key, MCValueRef value);
-    
-    // The kind and script instance for this widget
+    // The kind of the widget.
     MCNameRef m_kind;
-    MCScriptInstanceRef m_instance;
     
     // The rep of the widget - this is non-nil if the widget kind is unresolved
     // after loading.
     MCValueRef m_rep;
     
-    // The native layer(s) belonging to this widget
+    // The LCB Widget object.
+    MCWidgetRef m_widget;
+    
+    // The native layer associated with this widget
     MCNativeLayer* m_native_layer;
-    
-    // If this is true then the widget has scheduled a timer message, but it triggered
-    // during edit mode.
-    bool m_timer_deferred : 1;
-    
-    // Implemented by the platform-specific native layers: creates a new layer
-    MCNativeLayer* createNativeLayer();
 };
 
 ////////////////////////////////////////////////////////////////////////////////

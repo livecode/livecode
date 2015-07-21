@@ -290,6 +290,7 @@ on revSaveAsStandalone pStack, pFolder, pPreview
       
       put the mainStack of stack pStack into pStack
       set the defaultStack to pStack
+      put the destroyStack of stack pStack into tOldDestroy
       try
          if sStandaloneSettingsA["ios"] or sStandaloneSettingsA["android"] then
             local tOutputMobileFolder
@@ -326,6 +327,7 @@ on revSaveAsStandalone pStack, pFolder, pPreview
          end if
       catch tError
          revAbort
+         set the destroyStack of stack pStack to tOldDestroy
          if word 1 of tError = "Standalone:" then 
             if revTestEnvironment() then
                return word 2 to -1 of tError
@@ -343,6 +345,7 @@ on revSaveAsStandalone pStack, pFolder, pPreview
       end try
       
       revReset
+      set the destroyStack of stack pStack to tOldDestroy
       
       if revStandaloneGetWarnings() is not empty then
          set the cWarnings of stack "revBuildResults" to revStandaloneGetWarnings()
@@ -547,6 +550,10 @@ private command revCreateStandalone pStack, pFolder
       dispatch "savingStandalone" to stack tStackFileName
    end try
    
+   // SN-2015-07-16: [[ ObjectDeletion ]] Make sure that the stack won't get removed from
+   //  memory (now it would get deleted sooner after that it used to do)
+   set the destroyStack of stack pStack to false
+   
    --build a list of output directories
    if last char of pFolder is not slash then 
       put slash after pFolder
@@ -575,7 +582,9 @@ private command revCreateStandalone pStack, pFolder
             case "MacOSX"
             case "MacOSX PowerPC-32"
             case "MacOSX x86-32"
-               put it & "/Mac OS X/x86-32/Standalone.app/Contents/MacOS/Standalone" into line 1 of tEngineSourceFile[tPlatform]
+               // SN-2015-07-09: [[ StandaloneDeployment ]] Gypified Standalone-<edition>.app building does not
+               //  allow to create broken applications, so that the executable file in it bears the edition.
+               put it & "/Mac OS X/x86-32/Standalone.app/Contents/MacOS/Standalone-" & the editionType into line 1 of tEngineSourceFile[tPlatform]
                break
             case "Windows"
                put it & "/Windows/x86-32/Standalone" into tEngineSourceFile[tPlatform]
