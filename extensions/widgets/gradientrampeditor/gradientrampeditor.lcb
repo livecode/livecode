@@ -284,7 +284,7 @@ private handler onPaintCheckerboard() returns nothing
    end layer on this canvas
 end handler
 
-private handler onParintGradient() returns nothing
+private handler onPaintGradient() returns nothing
    variable tGradient as Gradient
    put linear gradient with ramp mGradientRamp into tGradient
    set the from of tGradient to point [the left of mGradientRectangle, (the top of mGradientRectangle + the bottom of mGradientRectangle) / 2]
@@ -420,7 +420,7 @@ public handler OnPaint() returns nothing
    onPaintCheckerboard()
    
    -- Draw the gradient on top of the checkerboard.
-   onParintGradient()
+   onPaintGradient()
 
    -- Draw the ruler above and below the gradient.
    onPaintRulerBottom()
