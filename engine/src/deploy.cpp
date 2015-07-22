@@ -197,7 +197,7 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
 		MCValueRelease(t_temp_string);
 	}
 	
-	if (!ctxt.CopyElementAsFilepath(p_array, MCNAME("stackfile"), false, t_temp_string))
+	if (!ctxt.CopyOptElementAsFilepath(p_array, MCNAME("stackfile"), false, t_temp_string))
 		return false;
 	MCValueAssign(stackfile, t_temp_string);
 	MCValueRelease(t_temp_string);
