@@ -337,6 +337,8 @@ void MCNotifyFinalize(void)
     }
 #endif
 	pthread_mutex_destroy(&s_notify_lock);
+#else
+#error Threading API not specified
 #endif
 }
 
@@ -461,6 +463,8 @@ static bool MCNotifyDispatchList(MCNotification*& p_list)
 			ResetEvent(g_notify_wakeup);
 #elif defined(USE_PTHREADS)
 			s_notify_sent = false;
+#else
+#error Threading API not specified
 #endif
 			t_notify = MCListPopFront(p_list);
 			MCNotifyUnlock();
@@ -535,5 +539,7 @@ void MCNotifyPing(bool p_high_priority)
         else
             MCNotifyUnlock();
     }
+#else
+#error Threading API not specified
 #endif
 }
