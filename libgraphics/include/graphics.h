@@ -61,9 +61,9 @@ typedef uint32_t MCGPixelFormat;
 static inline uint32_t __MCGPixelPackComponents(uint8_t p_1, uint8_t p_2, uint8_t p_3, uint8_t p_4)
 {
 #ifdef __LITTLE_ENDIAN__
-	return p_1 | (p_2 << 8) | (p_3 << 16) | (p_4 << 24);
+	return p_1 | (uint32_t(p_2) << 8) | (uint32_t(p_3) << 16) | (uint32_t(p_4) << 24);
 #else
-	return (p_1 << 24) | (p_2 << 16) | (p_3 << 8) | p_4;
+	return (uint32_t(p_1) << 24) | (uint32_t(p_2) << 16) | (uint32_t(p_3) << 8) | uint32_t(p_4);
 #endif
 }
 
@@ -158,12 +158,12 @@ static inline uint32_t MCGPixelSetAlpha(MCGPixelFormat p_format, uint32_t p_pixe
 	if (p_format & kMCGPixelAlphaPositionFirst)
 		return (p_pixel & 0xFFFFFF00) | p_new_alpha;
 	else
-		return (p_pixel & 0x00FFFFFF) | (p_new_alpha << 24);
+		return (p_pixel & 0x00FFFFFF) | (uint32_t(p_new_alpha) << 24);
 #else
 	if ((p_format & kMCGPixelAlphaPositionFirst) == 0)
 		return (p_pixel & 0xFFFFFF00) | p_new_alpha;
 	else
-		return (p_pixel & 0x00FFFFFF) | (p_new_alpha << 24);
+		return (p_pixel & 0x00FFFFFF) | (uint32_t(p_new_alpha) << 24);
 #endif
 }
 
@@ -191,13 +191,13 @@ static inline uint32_t MCGPixelSetNativeAlpha(uint32_t p_pixel, uint8_t p_new_al
 	#if kMCGPixelFormatNative & kMCGPixelAlphaPositionFirst
 		return (p_pixel & 0xFFFFFF00) | p_new_alpha;
 	#else
-		return (p_pixel & 0x00FFFFFF) | (p_new_alpha << 24);
+		return (p_pixel & 0x00FFFFFF) | (uint32_t(p_new_alpha) << 24);
 	#endif
 #else
 	#if (kMCGPixelFormatNative & kMCGPixelAlphaPositionFirst) == 0
 		return (p_pixel & 0xFFFFFF00) | p_new_alpha;
 	#else
-		return (p_pixel & 0x00FFFFFF) | (p_new_alpha << 24);
+		return (p_pixel & 0x00FFFFFF) | (uint32_t(p_new_alpha) << 24);
 	#endif
 #endif
 }
@@ -533,25 +533,34 @@ inline bool MCGSizeIsEqual(const MCGSize &p_a, const MCGSize &p_b)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-inline MCGColor MCGColorMakeRGBA(MCGFloat p_red, MCGFloat p_green, MCGFloat p_blue, MCGFloat p_alpha)
-{
-	return ((uint8_t)(p_red * 255) << 16) | ((uint8_t)(p_green * 255) << 8) | ((uint8_t)(p_blue * 255) << 0) | ((uint8_t)(p_alpha * 255) << 24);
-}
-
 inline void MCGColorSetRed(MCGColor& x_color, MCGFloat p_red) {
-	x_color = (x_color & 0xFF00FFFF) | ((uint8_t)(p_red * 255) << 16);
+    x_color = (x_color & 0xFF00FFFF) |
+              (MCGColor(MCClamp(p_red * 0xFF, 0, UINT8_MAX)) << 16);
 }
 
 inline void MCGColorSetGreen(MCGColor& x_color, MCGFloat p_green) {
-	x_color = (x_color & 0xFFFF00FF) | ((uint8_t)(p_green * 255) << 8);
+	x_color = (x_color & 0xFFFF00FF) |
+              (MCGColor(MCClamp(p_green * 0xFF, 0, UINT8_MAX)) << 8);
 }
 
 inline void MCGColorSetBlue(MCGColor& x_color, MCGFloat p_blue) {
-	x_color = (x_color & 0xFFFFFF00) | ((uint8_t)(p_blue * 255) << 0);
+	x_color = (x_color & 0xFFFFFF00) |
+              (MCGColor(MCClamp(p_blue * 0xFF, 0, UINT8_MAX)) << 0);
 }
 
 inline void MCGColorSetAlpha(MCGColor& x_color, MCGFloat p_alpha) {
-	x_color = (x_color & 0x00FFFFFF) | ((uint8_t)(p_alpha * 255) << 24);
+	x_color = (x_color & 0x00FFFFFF) |
+              (MCGColor(MCClamp(p_alpha * 0xFF, 0, UINT8_MAX)) << 24);
+}
+
+inline MCGColor MCGColorMakeRGBA(MCGFloat p_red, MCGFloat p_green, MCGFloat p_blue, MCGFloat p_alpha)
+{
+    MCGColor result = 0;
+    MCGColorSetRed  (result, p_red  );
+    MCGColorSetGreen(result, p_green);
+    MCGColorSetBlue (result, p_blue );
+    MCGColorSetAlpha(result, p_alpha);
+    return result;
 }
 
 inline MCGFloat MCGColorGetRed(MCGColor p_color) {
@@ -685,7 +694,7 @@ inline MCGIntegerRectangle MCGIntegerRectangleMake(int32_t x, int32_t y, uint32_
 // IM-2014-10-22: [[ Bug 13746 ]] Add convenience function to construct rectangle from left, top, right, bottom coords
 inline MCGIntegerRectangle MCGIntegerRectangleMakeLTRB(int32_t l, int32_t t, int32_t r, int32_t b)
 {
-	return MCGIntegerRectangleMake(l, t, r - l, b - t);
+	return MCGIntegerRectangleMake(l, t, uint32_t(r - l), uint32_t(b - t));
 }
 
 inline bool MCGIntegerRectangleIsEmpty(const MCGIntegerRectangle &p_rect)
