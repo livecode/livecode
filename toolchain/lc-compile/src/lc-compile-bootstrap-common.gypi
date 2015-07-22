@@ -14,6 +14,7 @@
 	
 	'sources':
 	[
+		# Some build systems require at least one input file
 		'dummy.cpp',
 	],
 	
