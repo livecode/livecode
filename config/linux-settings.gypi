@@ -8,9 +8,7 @@
 		'exe_suffix': '',
 		'debug_info_suffix': '.dbg',
 		
-		'c++_std': '<!(echo ${CXX_STD:-gnu++03})',
-		
-		'silence_warnings': 0,
+		'c++_std': '<!(echo ${CXX_STD:-c++03})',
 	},
 	
 	'defines':
@@ -77,6 +75,7 @@
 				[
 					'-w',						# Disable warnings
 					'-fpermissive',				# Be more lax with old code
+					'-Wno-return-type',
 				],
 				
 				'cflags_c':
@@ -89,8 +88,6 @@
 	
 	'cflags':
 	[
-		'-Wall',
-		'-Wextra',
 		'-fstrict-aliasing',
 		'-fvisibility=hidden',
 	],

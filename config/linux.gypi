@@ -11,6 +11,11 @@
 	
 	'target_defaults':
 	{
+		'variables':
+		{
+			'silence_warnings': 0,
+		},
+
 		'includes':
 		[
 			'linux-settings.gypi',

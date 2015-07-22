@@ -196,6 +196,11 @@
 					'xcode_settings':
 					{
 						'GCC_INHIBIT_ALL_WARNINGS': 'YES',
+
+						'WARNING_CFLAGS':
+						[
+							'-Wno-return-type',
+						],
 					},
 				},
 			],
