@@ -207,6 +207,12 @@
 					'OS == "mac"',
 					{
 						'product_name': 'Standalone-Community',
+
+						'mac_bundle_resources':
+						[
+							'rsrc/Standalone.icns',
+							'rsrc/StandaloneDoc.icns',
+						],
 					},
 				],
 				[
