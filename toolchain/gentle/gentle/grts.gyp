@@ -12,10 +12,13 @@
 			
 			'toolsets': ['host','target'],
 			
-			'suppress_warnings': 1,
-			
 			'product_name': 'grts',
-			
+		
+			'variables':
+			{
+				'silence_warnings': 1,
+			},
+	
 			'sources':
 			[
 				'grts.c',

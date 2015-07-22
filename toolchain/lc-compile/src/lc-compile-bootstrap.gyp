@@ -169,13 +169,12 @@
 			
 			'toolsets': ['host','target'],
 
-			'suppress_warnings': 1,
-
 			'product_name': 'lc-bootstrap-compile-<(_toolset)',
-			
+		
 			'variables':
 			{
 				'stage': 'stage1',
+				'silence_warnings': 1,
 			},
 			
 			'direct_dependent_settings':

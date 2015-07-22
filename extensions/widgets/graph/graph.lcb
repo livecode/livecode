@@ -363,7 +363,7 @@ public handler getData() returns String
 				//log (the number of elements in tData) formatted as string
 			else
 				if the number of elements in tLineData >= tCount2 then
-					if element tCount2 of tLineData is defined then
+					if element tCount2 of tLineData is not nothing then
 						//log (element tCount2 of tLineData) formatted as string
 						variable tString as String
 						put stripZeros((element tCount2 of tLineData) formatted as string) into tString
@@ -629,7 +629,7 @@ private handler drawGraph() returns nothing
 		end if
 		set the paint of this canvas to solid paint with tColour
 		repeat with tCount2 from 1 up to the number of elements in tDataPoints
-			if element tCount2 of tDataPoints is defined then
+			if element tCount2 of tDataPoints is not nothing then
 				if tCount2 is 1 then
 					put point [the left of mGridRect + ((tCount2-1) * mGridHWidth),the top of mGridRect + (tHeight - (tHeight * (element tCount2 of tDataPoints / mMax)))] into tPoint
 					move to tPoint on tPath
@@ -783,7 +783,7 @@ private handler listMax(in tList as List) returns Number
 end handler
 
 private handler listMin(in tList as List) returns Number
-	variable tMin as optional number
+	variable tMin as optional Number
 	put nothing into tMin
 
 	variable tElement as optional any

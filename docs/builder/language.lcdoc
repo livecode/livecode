@@ -209,7 +209,7 @@ Use the repeat with <Counter> structure to execute a set of statements until the
 Name: NextRepeat
 Type: control structure
 Summary: Begin the next iteration of a repeat loop.
-Syntax: exit repeat
+Syntax: next repeat
 Example:
 	variable tList as list
 	variable tElement
