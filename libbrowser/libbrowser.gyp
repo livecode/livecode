@@ -27,8 +27,11 @@
 			[
 				'include/libbrowser.h',
 				
-				'src/libbrowser_memory.cpp',
 				'src/libbrowser.cpp',
+				'src/libbrowser_internal.h',
+				'src/libbrowser_memory.cpp',
+				'src/libbrowser_value.cpp',
+
 				'src/libbrowser_cef.cpp',
 				'src/libbrowser_cef.h',
 				'src/libbrowser_cef_lnx.cpp',
@@ -36,13 +39,18 @@
 				'src/libbrowser_cef_win.cpp',
 				'src/libbrowser_cefshared_osx.cpp',
 				'src/libbrowser_cefshared_lnx.cpp',
-				'src/libbrowser_value.cpp',
 				
 				'src/libbrowser_win.rc.h',
 				'src/libbrowser_win.rc',
 				
 				'src/signal_restore_posix.cpp',
 				'src/WebAuthenticationPanel.m',
+
+				'src/libbrowser_uiwebview.h',
+				'src/libbrowser_uiwebview.mm',
+				
+				'src/libbrowser_desktop_factories.cpp',
+				'src/libbrowser_ios_factories.cpp',
 			],
 			
 			'conditions':
@@ -55,6 +63,7 @@
 						'sources!':
 						[
 							'src/libbrowser_cef.cpp',
+							'src/libbrowser_desktop_factories.cpp',
 						],
 					},
 				],
@@ -91,6 +100,17 @@
 							'src/libbrowser_cef_lnx.cpp',
 							'src/libbrowser_cefshared_lnx.cpp',
 							'src/signal_restore_posix.cpp',
+						],
+					},
+				],
+				
+				[
+					'OS != "ios"',
+					{
+						'sources!':
+						[
+							'src/libbrowser_uiwebview.mm',
+							'src/libbrowser_ios_factories.cpp',
 						],
 					},
 				],
@@ -211,6 +231,7 @@
 					'OS != "mac" and OS != "win" and OS != "linux"',
 					{
 						'type': 'none',
+						'mac_bundle': 0,
 					},
 				],
 				

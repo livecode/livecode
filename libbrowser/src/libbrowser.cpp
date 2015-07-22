@@ -134,15 +134,44 @@ void MCBrowserLibraryFinalize()
 //////////
 
 // Factory
-
-extern bool MCCefBrowserFactoryCreate(MCBrowserFactoryRef &r_factory);
-bool MCBrowserFactoryGet(const char *p_factory, MCBrowserFactoryRef &r_factory)
+bool MCBrowserFactoryEnsureAvailable(MCBrowserFactoryMap &p_map, MCBrowserFactoryRef &r_instance)
 {
-	if (s_browser_factory == nil && !MCCefBrowserFactoryCreate(s_browser_factory))
+	if (p_map.instance != nil)
+	{
+		r_instance = p_map.instance;
+		return true;
+	}
+	
+	if (p_map.constructor == nil)
 		return false;
 	
-	r_factory = s_browser_factory;
+	if (!p_map.constructor(p_map.instance))
+		return false;
+	
+	r_instance = p_map.instance;
 	return true;
+}
+
+bool MCBrowserFactoryGet(const char *p_factory, MCBrowserFactoryRef &r_factory)
+{
+	if (s_factory_list == nil)
+		return false; // no browser factories available;
+	
+	if (p_factory == nil || MCCStringIsEmpty(p_factory) || MCCStringEqualCaseless(p_factory, "default"))
+	{
+		// use first available browser factory
+		for (uint32_t i = 0; s_factory_list[i].factory_id != nil; i++)
+		{
+			if (MCBrowserFactoryEnsureAvailable(s_factory_list[i], r_factory))
+				return true;
+		}
+	}
+	
+	for (uint32_t i = 0; s_factory_list[i].factory_id != nil; i++)
+		if (MCCStringEqualCaseless(p_factory, s_factory_list[i].factory_id))
+			return MCBrowserFactoryEnsureAvailable(s_factory_list[i], r_factory);
+
+	return false;
 }
 
 bool MCBrowserFactoryCreateBrowser(MCBrowserFactoryRef p_factory, void *p_display, void *p_parent_window, MCBrowserRef &r_browser)

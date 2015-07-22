@@ -37,7 +37,6 @@ public:
 	void SetEventHandler(MCBrowserEventHandler *p_handler);
 	void SetJavaScriptHandler(MCBrowserJavaScriptHandler *p_handler);
 	
-protected:
 	void OnNavigationBegin(bool p_in_frame, const char *p_url);
 	void OnNavigationComplete(bool p_in_frame, const char *p_url);
 	void OnNavigationFailed(bool p_in_frame, const char *p_url, const char *p_error);
@@ -51,6 +50,19 @@ private:
 	MCBrowserEventHandler *m_event_handler;
 	MCBrowserJavaScriptHandler *m_javascript_handler;
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+typedef bool (*MCBrowserFactoryCreationFunc)(MCBrowserFactoryRef &r_factory);
+struct MCBrowserFactoryMap
+{
+	const char *factory_id;
+	MCBrowserFactoryRef instance;
+	
+	MCBrowserFactoryCreationFunc constructor;
+};
+
+extern MCBrowserFactoryMap s_factory_list[];
 
 ////////////////////////////////////////////////////////////////////////////////
 

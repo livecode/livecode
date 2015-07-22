@@ -53,9 +53,9 @@
 #include "mblcontrol.h"
 
 
-MCNativeLayerIOS::MCNativeLayerIOS(MCWidgetRef p_widget) :
+MCNativeLayerIOS::MCNativeLayerIOS(MCWidgetRef p_widget, void *p_native_view) :
   m_widget(p_widget),
-  m_view(nil)
+  m_view([(UIView*)p_native_view retain])
 {
     ;
 }
@@ -66,7 +66,6 @@ MCNativeLayerIOS::~MCNativeLayerIOS()
     {
         doDetach();
         MCIPhoneRunBlockOnMainFiber(^{[m_view release];});
-        [m_view release];
     }
 }
 
@@ -117,19 +116,6 @@ void MCNativeLayerIOS::OnAttach()
 void MCNativeLayerIOS::doAttach()
 {
     MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
-    if (m_view == nil)
-    {
-        // TESTING
-        /*
-        UIButton *t_button;
-        t_button = [[UIButton buttonWithType:UIButtonTypeRoundedRect] retain];
-        [t_button setTitle:@"Native button" forState:UIControlStateNormal];
-        [t_button setHidden:YES];
-        m_view = t_button;
-        doSetRect(m_widget->getrect());
-        */
-    }
     
     // Act as if there was a re-layer to put the widget in the right place
     doRelayer();
@@ -241,9 +227,20 @@ UIView* MCNativeLayerIOS::getMainView()
     return MCIPhoneGetView();
 }
 
+bool MCNativeLayerIOS::GetNativeView(void *&r_view)
+{
+	if (m_view == nil)
+		return false;
+	
+	r_view = m_view;
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeLayer* MCWidget::createNativeLayer()
+MCNativeLayer *MCNativeLayer::CreateNativeLayer(MCWidgetRef p_widget, void *p_native_view)
 {
-    return new MCNativeLayerIOS(getwidget());
+	return new MCNativeLayerIOS(p_widget, p_native_view);
 }
+
+////////////////////////////////////////////////////////////////////////////////
