@@ -533,50 +533,54 @@ inline bool MCGSizeIsEqual(const MCGSize &p_a, const MCGSize &p_b)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-inline void MCGColorSetRed(MCGColor& x_color, MCGFloat p_red) {
-    x_color = (x_color & 0xFF00FFFF) |
-              (MCGColor(MCClamp(p_red * 0xFF, 0, UINT8_MAX)) << 16);
+inline MCGColor MCGColorComponentFromFloat(MCGFloat p_component)
+{
+    return MCGColor(MCClamp(p_component, 0, UINT8_MAX));
 }
 
-inline void MCGColorSetGreen(MCGColor& x_color, MCGFloat p_green) {
-	x_color = (x_color & 0xFFFF00FF) |
-              (MCGColor(MCClamp(p_green * 0xFF, 0, UINT8_MAX)) << 8);
-}
-
-inline void MCGColorSetBlue(MCGColor& x_color, MCGFloat p_blue) {
-	x_color = (x_color & 0xFFFFFF00) |
-              (MCGColor(MCClamp(p_blue * 0xFF, 0, UINT8_MAX)) << 0);
-}
-
-inline void MCGColorSetAlpha(MCGColor& x_color, MCGFloat p_alpha) {
-	x_color = (x_color & 0x00FFFFFF) |
-              (MCGColor(MCClamp(p_alpha * 0xFF, 0, UINT8_MAX)) << 24);
+inline MCGFloat MCGColorComponentToFloat(MCGColor p_component)
+{
+    return (p_component & UINT8_MAX) / MCGFloat(UINT8_MAX);
 }
 
 inline MCGColor MCGColorMakeRGBA(MCGFloat p_red, MCGFloat p_green, MCGFloat p_blue, MCGFloat p_alpha)
 {
-    MCGColor result = 0;
-    MCGColorSetRed  (result, p_red  );
-    MCGColorSetGreen(result, p_green);
-    MCGColorSetBlue (result, p_blue );
-    MCGColorSetAlpha(result, p_alpha);
-    return result;
+    return ((MCGColorComponentFromFloat(p_alpha) << 24) |
+            (MCGColorComponentFromFloat(p_red)   << 16) |
+            (MCGColorComponentFromFloat(p_green) <<  8) |
+            (MCGColorComponentFromFloat(p_blue)  <<  0));
+}
+
+inline void MCGColorSetRed(MCGColor& x_color, MCGFloat p_red) {
+    x_color = (x_color & 0xFF00FFFF) | (MCGColorComponentFromFloat(p_red) << 16);
+}
+
+inline void MCGColorSetGreen(MCGColor& x_color, MCGFloat p_green) {
+    x_color = (x_color & 0xFFFF00FF) | (MCGColorComponentFromFloat(p_green) << 8);
+}
+
+inline void MCGColorSetBlue(MCGColor& x_color, MCGFloat p_blue) {
+    x_color = (x_color & 0xFFFFFF00) | (MCGColorComponentFromFloat(p_blue) << 0);
+}
+
+inline void MCGColorSetAlpha(MCGColor& x_color, MCGFloat p_alpha) {
+    x_color = (x_color & 0x00FFFFFF) | (MCGColorComponentFromFloat(p_alpha) << 24);
 }
 
 inline MCGFloat MCGColorGetRed(MCGColor p_color) {
-	return ((p_color >> 16) & 0xFF) / 255.0f;
+    return MCGColorComponentToFloat(p_color >> 16);
 }
 
 inline MCGFloat MCGColorGetGreen(MCGColor p_color) {
-	return ((p_color >> 8) & 0xFF) / 255.0f;
+    return MCGColorComponentToFloat(p_color >> 8);
 }
 
 inline MCGFloat MCGColorGetBlue(MCGColor p_color) {
-	return ((p_color >> 0) & 0xFF) / 255.0f;
+    return MCGColorComponentToFloat(p_color >> 0);
 }
 
 inline MCGFloat MCGColorGetAlpha(MCGColor p_color) {
-	return ((p_color >> 24) & 0xFF) / 255.0f;
+    return MCGColorComponentToFloat(p_color >> 24);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
