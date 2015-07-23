@@ -9,6 +9,7 @@
 	</syntax>
 
 	<synonyms>
+		</synonym>ceiling</synonym>
 	</synonyms>
 
 	<summary><glossary tag="return">Returns</glossary> the smallest integer greater than or equal to number.</summary>
