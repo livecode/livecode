@@ -47,7 +47,7 @@ on startup
          put tArgs[tArgIndex + 1] into tStage
          add 1 to tArgIndex
       else if tArgs[tArgIndex] is "--edition" then
-         if tArgs[tArgIndex + 1] is not among the items of "community,commercial" then
+         if tArgs[tArgIndex + 1] is not among the items of "community,indy,business" then
             __builderLog "error", "Unknown edition '" & tArgs[tArgIndex + 1] & "'"
          end if
          put tArgs[tArgIndex + 1] into tEdition

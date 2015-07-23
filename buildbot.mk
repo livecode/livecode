@@ -150,7 +150,8 @@ distmac-disk: distmac-disk-community
 dist-tools-community:
 	$(buildtool_command) --platform linux --platform mac --platform win --stage tools --edition community
 dist-tools-commercial:
-	$(buildtool_command) --platform linux --platform mac --platform win --stage tools --edition commercial
+	$(buildtool_command) --platform linux --platform mac --platform win --stage tools --edition indy
+	$(buildtool_command) --platform linux --platform mac --platform win --stage tools --edition business
 
 # Make a list of installers to be uploaded to the distribution server
 dist-upload-files.txt:
