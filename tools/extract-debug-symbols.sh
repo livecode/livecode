@@ -16,16 +16,23 @@ function extract_linux_or_android {
 for input in $@ ; do
 	output="${input}${suffix}"	
 
+  # The --preserver-dates flag for strip and objcopy only has whole
+  # second resolution, so copy the timestamps to a separate file instead
+  cp --attributes-only --preserve=timestamps "$input" "$input.timestamps"
+
 	# Extract a copy of the debugging information
 	$OBJCOPY --only-keep-debug "$input" "$output" 
 	
 	# Because we export symbols from the engine, only debug symbols
 	# should be stripped.
-	$STRIP -x --preserve-dates --strip-debug "$input"
+	$STRIP -x --strip-debug "$input"
 	
 	# Add a hint for the debugger so it can find the debug info
-	$OBJCOPY --preserve-dates --remove-section=.gnu_debuglink "$input"
-	$OBJCOPY --preserve-dates --add-gnu-debuglink="$output" "$input"
+	$OBJCOPY --remove-section=.gnu_debuglink "$input"
+	$OBJCOPY --add-gnu-debuglink="$output" "$input"
+
+  cp --attributes-only --preserve=timestamps "$input.timestamps" "$input"
+  rm "$input.attributes"
 done
 
 }
