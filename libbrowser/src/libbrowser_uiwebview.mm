@@ -99,6 +99,18 @@ bool MCUIWebViewBrowser::GetScrollingEnabled(bool& r_value)
 	return true;
 }
 
+bool MCUIWebViewBrowser::GetHTMLText(char *&r_htmltext)
+{
+	return EvaluateJavaScript("document.documentElement.outerHTML", r_htmltext);
+}
+
+bool MCUIWebViewBrowser::SetHTMLText(const char *p_htmltext)
+{
+	return ExecLoad("http://libbrowser_dummy_url", p_htmltext);
+}
+
+//////////
+
 bool MCUIWebViewBrowser::SetBoolProperty(MCBrowserProperty p_property, bool p_value)
 {
 	switch (p_property)
@@ -158,6 +170,34 @@ bool MCUIWebViewBrowser::GetStringProperty(MCBrowserProperty p_property, char *&
 	return true;
 }
 
+bool MCUIWebViewBrowser::GetRect(MCBrowserRect &r_rect)
+{
+	UIWebView *t_view;
+	if (!GetView(t_view))
+		return false;
+	
+	CGRect t_frame = [t_view frame];
+	r_rect.left = t_frame.origin.x;
+	r_rect.top = t_frame.origin.y;
+	r_rect.right = t_frame.origin.x + t_frame.size.width;
+	r_rect.bottom = t_frame.origin.y + t_frame.size.height;
+	
+	return true;
+}
+
+bool MCUIWebViewBrowser::SetRect(const MCBrowserRect &p_rect)
+{
+	UIWebView *t_view;
+	if (!GetView(t_view))
+		return false;
+	
+	CGRect t_rect;
+	t_rect = CGRectMake(p_rect.left, p_rect.top, p_rect.right - p_rect.left, p_rect.bottom - p_rect.top);
+	
+	[t_view setFrame:t_rect];
+	return true;
+}
+
 // Browser-specific actions
 bool MCUIWebViewBrowser::ExecStop()
 {
@@ -169,7 +209,7 @@ bool MCUIWebViewBrowser::ExecStop()
 	return true;
 }
 
-bool MCUIWebViewBrowser::ExecAdvance()
+bool MCUIWebViewBrowser::GoForward()
 {
 	UIWebView *t_view;
 	if (!GetView(t_view))
@@ -179,7 +219,7 @@ bool MCUIWebViewBrowser::ExecAdvance()
 	return true;
 }
 
-bool MCUIWebViewBrowser::ExecRetreat()
+bool MCUIWebViewBrowser::GoBack()
 {
 	UIWebView *t_view;
 	if (!GetView(t_view))
@@ -199,7 +239,7 @@ bool MCUIWebViewBrowser::ExecReload()
 	return true;
 }
 
-bool MCUIWebViewBrowser::ExecExecute(const char *p_script)
+bool MCUIWebViewBrowser::EvaluateJavaScript(const char *p_script, char *&r_result)
 {
 	UIWebView *t_view;
 	if (!GetView(t_view))
@@ -211,9 +251,7 @@ bool MCUIWebViewBrowser::ExecExecute(const char *p_script)
 	if (t_result == nil)
 		return false;
 
-//	/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_result, &t_result_string);
-	
-	return true;
+	return MCCStringClone([t_result cStringUsingEncoding:NSUTF8StringEncoding], r_result);
 }
 
 bool MCUIWebViewBrowser::ExecLoad(const char *p_url, const char *p_html)
@@ -323,6 +361,24 @@ UIScrollView *MCUIWebViewBrowser::GetScrollView(void)
 		return nil;
 	
 	return [t_view scrollView];
+}
+
+bool MCUIWebViewBrowser::GetView(UIWebView *&r_view)
+{
+	if (m_view == nil)
+		return false;
+	
+	r_view = m_view;
+	return true;
+}
+
+void *MCUIWebViewBrowser::GetNativeLayer()
+{
+	UIWebView *t_view;
+	if (!GetView(t_view))
+		return nil;
+	
+	return t_view;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

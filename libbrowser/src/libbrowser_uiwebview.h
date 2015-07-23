@@ -55,11 +55,9 @@ protected:
 	bool SetScrollingEnabled(bool p_value);
 	
 	// Browser-specific actions
-	bool ExecAdvance();
-	bool ExecRetreat();
 	bool ExecReload();
 	bool ExecStop();
-	bool ExecExecute(const char * p_script);
+	bool ExecExecute(const char * p_script, char *&r_result);
 	bool ExecLoad(const char *p_url, const char *p_html);
 	
 	UIScrollView *GetScrollView(void);
