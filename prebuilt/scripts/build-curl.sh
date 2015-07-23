@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source "${BASEDIR}/scripts/platform.inc"
+source "${BASEDIR}/scripts/lib_versions.inc"
 
 # Only for desktop platforms
 if [ "${PLATFORM}" == "ios" -o "${PLATFORM}" == "android" ] ; then
@@ -8,8 +9,7 @@ if [ "${PLATFORM}" == "ios" -o "${PLATFORM}" == "android" ] ; then
 	exit 0
 fi
 
-# Version and configuration flags
-CURL_VERSION=7.43.0
+# Configuration flags
 CURL_CONFIG="--disable-debug \
             --enable-http --enable-ftp --disable-file --disable-ldap --disable-ldaps --disable-rtsp --disable-dict --disable-telnet \
             --disable-tftp --disable-pop3 --disable-imap --disable-smtp \

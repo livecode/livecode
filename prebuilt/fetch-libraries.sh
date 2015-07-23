@@ -1,10 +1,6 @@
 #!/bin/bash
 
-# Library versions
-VERSION_OpenSSL="1.0.1o"
-VERSION_Curl="7.43.0"
-VERSION_ICU="55.1"
-VERSION_CEF="3.2062.1796"
+source "${BASEDIR}/scripts/lib_versions.inc"
 
 # Libraries to fetch
 PLATFORMS=( mac linux win32 android ios )
@@ -40,7 +36,7 @@ function fetchLibrary {
 	local ARCH=$3
 	local SUBPLATFORM=$4
 
-	eval "local VERSION=\${VERSION_${LIB}}"
+	eval "local VERSION=\${${LIB}_VERSION}"
 
 	local NAME="${LIB}-${VERSION}-${PLATFORM}-${ARCH}"
 

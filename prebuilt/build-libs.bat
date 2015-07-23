@@ -10,7 +10,7 @@ SET _ROOT_DIR=C:\Builds\libraries
 SET _INSTALL_DIR=%_ROOT_DIR%\prefix
 SET _WINSDK_ROOT=c:\program files\microsoft sdks\windows\v6.1
 
-SET OPENSSL_VERSION=1.0.1o
+SET OPENSSL_VERSION=1.0.1p
 SET CURL_VERSION=7.43.0
 
 echo "Will build into %_ROOT_DIR%"
