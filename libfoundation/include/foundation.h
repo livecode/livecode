@@ -746,14 +746,7 @@ template <class T> inline compare_t MCSgn(T a) { return a < 0 ? -1 : (a > 0 ? 1 
 //  COMPARE FUNCTIONS
 //
 
-// SN-2015-01-07: [[ iOS-64bit ]] Update the MCCompare functions
-inline compare_t MCCompare(int a, int b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(unsigned int a, unsigned int b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(long a, long b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(unsigned long a, unsigned long b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(long long a, long long b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(unsigned long long a, unsigned long long b) { return a < b ? -1 : (a > b ? 1 : 0); }
-
+template <typename T> inline compare_t MCCompare(T a, T b) { return ((a < b) ? -1 : ((a > b) ? 1 : 0)); }
 
 ////////////////////////////////////////////////////////////////////////////////
 //
