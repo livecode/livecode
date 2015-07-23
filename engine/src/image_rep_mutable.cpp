@@ -1350,7 +1350,9 @@ MCRectangle MCMutableImageRep::drawline(Boolean cancenter)
 	/* UNCHECKED */ MCGPathCreateMutable(t_path);
 	MCGPathAddLine(t_path, MCGPointMake(oldx - rect.x, oldy - rect.y), MCGPointMake(mx - rect.x, my - rect.y));
 	stroke_path(t_path);
-
+    
+    MCGPathRelease(t_path);
+    
 	return brect;
 }
 
