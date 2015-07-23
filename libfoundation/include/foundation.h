@@ -753,7 +753,7 @@ template <typename T> inline compare_t MCCompare(T a, T b) { return ((a < b) ? -
 //  COMPARE FUNCTIONS
 //
 
-inline bool MCIsPowerOfTwo(uint32_t x) { return (x & (x - 1)) == 0; }
+template <typename T> inline bool MCIsPowerOfTwo(T x) { return (x & (x - 1)) == 0; }
 
 template <typename T, typename U, typename V>
 inline T MCClamp(T value, U min, V max) {
