@@ -705,6 +705,11 @@ typedef struct __MCLocale* MCLocaleRef;
 #include <foundation-stdlib.h>
 #include <math.h>
 
+// Ensure MCMin(), MCMax(), etc. can't return incorrect results due to
+// signed/unsigned comparisons.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic error "-Wsign-compare"
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  MINIMUM FUNCTIONS
@@ -775,6 +780,9 @@ template <typename T, typename U, typename V>
 inline T MCClamp(T value, U min, V max) {
 	return MCMax(MCMin(value, max), min);
 }
+
+// Stop emitting -Wsign-compare errors
+#pragma GCC diagnostic pop
 
 ////////////////////////////////////////////////////////////////////////////////
 //
