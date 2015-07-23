@@ -221,6 +221,9 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    -- Make sure no stack messages trigger
    lock messages
    
+   -- Ensure the correct capitalisation of the edition name
+   put toUpper(char 1 of pEdition) & toLower(char 2 to -1 of pEdition) into pEdition
+   
    -- Compute the deploy temp folder
    local tTempFolder
    put builderWorkFolder() & slash & "tools-" & pPlatform & "-" & pVersion & ".tmp" into tTempFolder
