@@ -47,7 +47,7 @@ on startup
          put tArgs[tArgIndex + 1] into tStage
          add 1 to tArgIndex
       else if tArgs[tArgIndex] is "--edition" then
-         if tArgs[tArgIndex + 1] is not among the items of "community,indy,business" then
+         if tArgs[tArgIndex + 1] is not among the items of "community,indy,business,commercial" then
             __builderLog "error", "Unknown edition '" & tArgs[tArgIndex + 1] & "'"
          end if
          put tArgs[tArgIndex + 1] into tEdition
@@ -90,6 +90,10 @@ on startup
    
    if the keys of tPlatforms is empty and tStage is "tools" then
       __builderLog "error", "No platforms specified"
+   end if
+   
+   if tEdition is "commercial" and tStage is not "server" then
+      __builerLog "error", "Commercial is only a valid edition for server packages"
    end if
    
    if tStage is "environment" then
