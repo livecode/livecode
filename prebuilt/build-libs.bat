@@ -23,6 +23,8 @@ REM # get the drive & path of the folder this script lives in
 REM # (note: ends with \ path delimiter)
 FOR /F "delims=" %%A IN ("%0") DO SET _TOOLS_DIR=%%~dpA
 
+REM Get the libraries version variable set from scripts/lib_versions.inc
+FOR /f %%B IN ('%_TOOLS_DIR%\scripts\lib_versions.inc') DO %%B
 CALL "%_WINSDK_ROOT%\bin\setenv.cmd" /x86 /release /xp
 
 REM ############################################################################
