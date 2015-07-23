@@ -1589,7 +1589,8 @@ function mapFilePath pPath
          if tIsDevice then
             put tRepo & merge("/_build/ios/[[tBuild]]/standalone-mobile-lib-[[tSuffix]].lcext") into tPath
          else
-            put tRepo & merge("/_build/ios/[[tBuild]]/standalone-mobile-[[tSuffix]].app/standalone-mobile-[[tSuffix]]") into tPath
+            # AL-2015-07-23: [[ Clone and Run ]] Ensure engine path matches gyp-generated one 
+            put tRepo & merge("/_build/ios/[[tBuild]]/standalone-mobile-[[tSuffix]].ios-engine") into tPath
          end if
          break
       case "revzip"
