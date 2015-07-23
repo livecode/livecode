@@ -527,8 +527,8 @@
 
 		{
 			'target_name': 'development',
-			'product_name': 'livecode-community',
-			
+			'product_name': 'LiveCode-Community',
+
 			'includes':
 			[
 				'app-bundle-template.gypi',
@@ -554,18 +554,6 @@
 
 			'conditions':
 			[
-				[
-					'OS == "mac"',
-					{
-						'product_name': 'LiveCode-Community',
-					},
-				],
-				[
-					'OS == "win"',
-					{
-						'product_name': 'engine-community',
-					},
-				],
 				[
 					'mobile != 0',
 					{

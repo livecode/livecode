@@ -99,10 +99,10 @@ ifeq ($(BUILD_PLATFORM),mac)
   LIVECODE = $(bin_dir)/LiveCode-Community.app/Contents/MacOS/LiveCode-Community
   buildtool_platform = mac
 else ifeq ($(BUILD_PLATFORM),linux-x86)
-  LIVECODE = $(bin_dir)/livecode-community
+  LIVECODE = $(bin_dir)/LiveCode-Community
   buildtool_platform = linux
 else ifeq ($(BUILD_PLATFORM),linux-x86_64)
-  LIVECODE = $(bin_dir)/livecode-community
+  LIVECODE = $(bin_dir)/LiveCode-Community
   buildtool_platform = linux
 endif
 
