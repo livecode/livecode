@@ -1,0 +1,64 @@
+<doc>
+	<legacy_id></legacy_id>
+	<name>commandName</name>
+	<type>function</type>
+
+	<syntax>
+		<example>the commandName</example>
+	</syntax>
+
+    <synonyms>
+	</synonyms>
+
+	<summary>Returns the command name used to start the execution of the application</summary>
+
+	<examples>
+<example>put the commandName</example>
+<example><p>set the itemdelimiter to slash</p><p>put the last item of the commandName into field "log"</p></example>
+	</examples>
+
+	<history>
+		<introduced version="7.1.0">Added.</introduced>
+		<deprecated version=""></deprecated>
+		<removed version=""></removed>
+		<changed version=""></changed>
+		<experimental version=""></experimental>
+		<nonexperimental version=""></nonexperimental>
+	</history>
+
+	<objects>
+	</objects>
+
+	<platforms>
+		<mac/>
+		<windows/>
+		<linux/>
+	</platforms>
+
+	<classes>
+		<desktop/>
+		<server/>
+	</classes>
+
+	<security>
+		<none required/>
+	</security>
+
+
+	<classification>
+	</classification>
+
+    <references>
+		<keyword tag="$">$ Keyword</keyword>
+	</references>
+
+	<description>
+	<overview>Returns the full command name that has been used to start the executable.</overview>
+
+		<parameters>
+		</parameters>
+
+	<value></value>
+	<comments>The <b>commandName</b> is only available for standalone applications and server scripts. It returns empty for mobile platforms and in the IDE.</comments>
+	</description>
+</doc>

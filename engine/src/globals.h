@@ -358,6 +358,9 @@ extern uint4 MCmajorosversion;
 extern Boolean MCignorevoiceoversensitivity;
 extern uint4 MCqtidlerate;
 
+extern MCStringRef MCcommandname;
+extern MCArrayRef MCcommandarguments;
+
 #ifdef _LINUX_DESKTOP
 extern Window MCgtkthemewindow;
 #endif

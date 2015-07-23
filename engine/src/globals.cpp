@@ -492,6 +492,10 @@ MCLocaleRef kMCSystemLocale = nil;
 
 uint32_t MCactionsrequired = 0;
 
+// SN-2015-07-17: [[ CommandArguments ]] Add global array for the arguments.
+MCStringRef MCcommandname;
+MCArrayRef MCcommandarguments;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern MCUIDC *MCCreateScreenDC(void);
@@ -832,6 +836,9 @@ void X_clear_globals(void)
 
     MCSocketsInitialize();
     
+    MCcommandarguments = NULL;
+    MCcommandname = NULL;
+
 #ifdef _ANDROID_MOBILE
     extern void MCAndroidMediaPickInitialize();
     // MM-2012-02-22: Initialize up any static variables as Android static vars are preserved between sessions
@@ -928,8 +935,27 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 				
 				tvar->setvalueref(*t_value);
 			}
-		}
+        }
 #endif // _SERVER
+
+    // SN-2015-07-17: [[ CommandArguments ]] Initialise the commandName and
+    //  commandArguments properties.
+    MCcommandname = NULL;
+    MCcommandarguments = NULL;
+    if (MCModeHasCommandLineArguments())
+    {
+        MCcommandname = MCValueRetain(argv[0]);
+
+        bool t_success;
+        t_success = MCArrayCreateMutable(MCcommandarguments);
+
+        // We build a 1-based numeric array.
+        for (index_t i = 1; t_success && i < argc; i++)
+            t_success = MCArrayStoreValueAtIndex(MCcommandarguments, i, argv[i]);
+
+        if (!t_success)
+            return false;
+    }
     
     MCDeletedObjectsSetup();
 
@@ -1234,6 +1260,12 @@ int X_close(void)
 	if (MCcurtheme != NULL)
 		MCcurtheme -> unload();
 	delete MCcurtheme;
+
+    // SN-2015-07-17: [[ CommandArguments ]] Clean up the memory
+    MCValueRelease(MCcommandname);
+    MCcommandname = NULL;
+    MCValueRelease(MCcommandarguments);
+    MCcommandarguments = NULL;
 
 	// Cleanup the cursors array - *before* we close the screen!!
 	if (MCModeMakeLocalWindows())
