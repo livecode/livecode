@@ -1,7 +1,5 @@
 #!/bin/bash
 
-source "${BASEDIR}/scripts/lib_versions.inc"
-
 # Libraries to fetch
 PLATFORMS=( mac linux win32 android ios )
 ARCHS_android=( armv6 )
@@ -21,6 +19,9 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 FETCH_DIR="${SCRIPT_DIR}/fetched"
 EXTRACT_DIR="${SCRIPT_DIR}"
 URL="http://downloads.livecode.com/prebuilts"
+
+# Versions
+source "${SCRIPT_DIR}/scripts/lib_versions.inc"
 
 mkdir -p "${FETCH_DIR}"
 mkdir -p "${EXTRACT_DIR}"
