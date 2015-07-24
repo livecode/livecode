@@ -3,6 +3,9 @@
 
 language: c++
 
+# Use container-based infrastructure
+sudo: false
+
 # Skip vulcan CI branches
 branches:
   only:
@@ -18,11 +21,6 @@ env:
    - secure: "R/JfoBMrkhCGWhfWM1m3gPHuLtMBlp2SIK1R9BaPbRsbGBUJmAg9V0g0YXSaw8SVxoyuiL/jsLtHPfDeub9oTxrYydew+6/4KaoQdG7EGXQJfBhH2f0ag/hTKJfXnmZX9jMMnTxPf5Axjq+w4E6sKkU2+d1oAJRhrqzYNwDhVlc="
    - CXX_STD: "gnu++98"
 
-# Before setting up the source tree, install necessary development
-# headers
-before_install:
-- sudo apt-get update && sudo apt-get install -y libx11-dev libxext-dev libxrender-dev libxft-dev libxinerama-dev libxv-dev libxcursor-dev libfreetype6-dev libgtk2.0-dev libpopt-dev libesd0-dev liblcms-dev
-
 # Set up the source tree by fetching Linux-specific prebuilt objects
 install: (cd prebuilt && ./fetch-libraries.sh linux)
 
@@ -33,12 +31,11 @@ script: >
       make all-linux
   fi
 
-# Configuration for Coverity Scan integration
-#
-# In order to trigger a scan with Coverity, push to the
-# 'coverity_scan' branch.
-#
 addons:
+  # Configuration for Coverity Scan integration
+  #
+  # In order to trigger a scan with Coverity, push to the
+  # 'coverity_scan' branch.
   coverity_scan:
     project:
       name: "runrev/livecode"
@@ -46,3 +43,19 @@ addons:
     notification_email: engineteam@livecode.com
     build_command: "make all-linux"
     branch_pattern: coverity_scan
+
+  # Packages needed for building LiveCode
+  apt:
+    packages:
+      - libx11-dev
+      - libxext-dev
+      - libxrender-dev
+      - libxft-dev
+      - libxinerama-dev
+      - libxv-dev
+      - libxcursor-dev
+      - libfreetype6-dev
+      - libgtk2.0-dev
+      - libpopt-dev
+      - libesd0-dev
+      - liblcms-dev
