@@ -35,12 +35,6 @@ else
 	BIN_DIR="${DEVELOPER_BIN_DIR}"
 fi
 
-if [ "${CONFIGURATION}" = "Debug" ] ; then
-	STRIP_FLAG=""
-else
-	STRIP_FLAG="-Wl,-x"
-fi
-
 # Process the list of imports into a linker command line
 while read dep; do
 	read type name <<< "${dep}"
@@ -58,4 +52,4 @@ while read dep; do
 	esac
 done <"${DEPS_FILE}"
 
-"${BIN_DIR}/g++" -rdynamic -ObjC ${libs} ${STRIP_FLAG} -arch ${ARCHS//\ /\ -arch\ } --sysroot "${SDKROOT}" -o $2 $1 -mios-simulator-version-min=${IPHONEOS_DEPLOYMENT_TARGET}
+"${BIN_DIR}/g++" -rdynamic -ObjC ${libs} -arch ${ARCHS//\ /\ -arch\ } --sysroot "${SDKROOT}" -o $2 $1 -mios-simulator-version-min=${IPHONEOS_DEPLOYMENT_TARGET}
