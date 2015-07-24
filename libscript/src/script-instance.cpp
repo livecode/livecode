@@ -616,6 +616,7 @@ static bool MCScriptCreateFrame(MCScriptFrame *p_caller, MCScriptInstanceRef p_i
     self -> instance = MCScriptRetainInstance(p_instance);
     self -> handler = p_handler;
     self -> address = p_handler -> start_address;
+    self -> mapping = nil;
     
     r_frame = self;
     
