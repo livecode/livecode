@@ -58,5 +58,4 @@ while read dep; do
 	esac
 done <"${DEPS_FILE}"
 
-"${BIN_DIR}/g++" -ObjC ${libs} ${STRIP_FLAG} -arch ${ARCHS//\ /\ -arch\ } --sysroot "${SDKROOT}" -o $2 $1 -mios-simulator-version-min=${IPHONEOS_DEPLOYMENT_TARGET}
-
+"${BIN_DIR}/g++" -rdynamic -ObjC ${libs} ${STRIP_FLAG} -arch ${ARCHS//\ /\ -arch\ } --sysroot "${SDKROOT}" -o $2 $1 -mios-simulator-version-min=${IPHONEOS_DEPLOYMENT_TARGET}
