@@ -9,7 +9,6 @@
 		'exe_suffix': '.js',
 		'debug_info_suffix': '.dbg',
 
-		'silence_warnings': 0,
 		'c++_std': '<!(echo ${CXX_STD:-c++03})',
 	},
 
@@ -33,12 +32,14 @@
 	[
 		'-std=gnu99',
 		'-Wstrict-prototypes',
+		'-Werror=declaration-after-statement',	# Ensure C89 compliance
 	],
 
 	'cflags_cc':
 	[
 		'-fno-exceptions',
 		'-fno-rtti',
+		'-std=<(c++_std)',
 	],
 
 	'target_conditions':
