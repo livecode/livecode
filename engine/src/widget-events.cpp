@@ -132,6 +132,7 @@ MCWidgetEventManager::MCWidgetEventManager() :
   m_mouse_focus(nil),
   m_mouse_grab(nil),
   m_keyboard_focus(nil),
+  m_drag_target(nil),
   m_target(nil),
   m_doubleclick_time(MCdoubletime),
   m_doubleclick_distance(MCdoubledelta),

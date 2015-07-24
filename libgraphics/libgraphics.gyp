@@ -24,6 +24,8 @@
 			
 			'sources':
 			[
+				'include/graphics.h',
+
 				'src/graphics-internal.h',
 				
 				'src/blur.cpp',

@@ -540,7 +540,7 @@ struct MCSystemInterface
 	virtual MCSysModuleHandle ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol) = 0;
 	virtual void UnloadModule(MCSysModuleHandle p_module) = 0;
 	
-	virtual bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *x_context) = 0;
+	virtual bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *x_context) = 0;
     
     // ST-2014-12-18: [[ Bug 14259 ]] Returns the executable from the system tools, not from argv[0]
 	virtual bool GetExecutablePath(MCStringRef& r_path) = 0;

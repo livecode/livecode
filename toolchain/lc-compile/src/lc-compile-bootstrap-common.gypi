@@ -1,6 +1,9 @@
 {
-	'suppress_warnings': 1,
-	
+	'variables':
+	{
+		'silence_warnings': 1,
+	},
+
 	'direct_dependent_settings':
 	{
 		'variables':
@@ -11,7 +14,8 @@
 	
 	'sources':
 	[
-		'>@(lc-compile_source_files)',
+		# Some build systems require at least one input file
+		'dummy.cpp',
 	],
 	
 	'actions':

@@ -112,7 +112,7 @@ public handler OnMouseUp()
 	post "mouseUp" with [mSelected]
 end handler
 
-private handler getLabel(in pSelection as Integer) as String
+private handler getLabel(in pSelection as Integer) returns String
 
 	variable tLabel
 	put pSelection formatted as string into tLabel
@@ -126,7 +126,7 @@ private handler getLabel(in pSelection as Integer) as String
 	--return tLabel
 end handler
 
-private handler getPaint(in pObject as String, in pSelection as Integer) as Paint
+private handler getPaint(in pObject as String, in pSelection as Integer) returns Paint
 	
 	if pObject is "background" then
 		if pSelection is mSelected then
@@ -141,7 +141,7 @@ private handler getPaint(in pObject as String, in pSelection as Integer) as Pain
 	
 end handler
 
-private handler getPath(in pShape as String, in pSelection as Integer) as Path
+private handler getPath(in pShape as String, in pSelection as Integer) returns Path
 	variable tCenterX as Number
 	put (my width)/(2*mNumSelections) + (pSelection-1)*(my width)/mNumSelections into tCenterX
 	
@@ -151,7 +151,7 @@ private handler getPath(in pShape as String, in pSelection as Integer) as Path
 
 end handler
 
-private handler getRect(in pType as String, in pSelection as Integer) as Rectangle
+private handler getRect(in pType as String, in pSelection as Integer) returns Rectangle
 	variable tCenterX as Number
 	put (my width)/(2*mNumSelections) + (pSelection-1)*(my width)/mNumSelections into tCenterX
 	
@@ -161,11 +161,11 @@ private handler getRect(in pType as String, in pSelection as Integer) as Rectang
 	
 end handler
 
-private handler getFontName() as String
+private handler getFontName() returns String
 	return the name of the font of this canvas
 end handler
 
-private handler getSelected() as Number
+private handler getSelected() returns Number
 
 	variable tZ as Integer
 	variable tCenter as Real
@@ -185,12 +185,12 @@ private handler getSelected() as Number
 	return mSelected
 end handler
 
-public handler setNumSelections(in pSelections as Integer) as undefined
+public handler setNumSelections(in pSelections as Integer) returns nothing
 	put pSelections into mNumSelections
 	redraw all
 end handler
 
-public handler setSelected(in pSelected as Integer) as undefined
+public handler setSelected(in pSelected as Integer) returns nothing
 	put pSelected into mSelected
 	redraw all
 end handler

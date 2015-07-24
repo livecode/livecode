@@ -1306,7 +1306,7 @@ private handler dragDrop() returns nothing
 	end if
 end handler
 
-private handler getDesiredHeight() as Number
+private handler getDesiredHeight() returns Number
 	if mEditMode then
 		return kEditModeLineHeight * mNavItemCount
 	else
@@ -1372,7 +1372,7 @@ public handler setEditableTextRect(in pComponent as String, in pNumber as Number
 	put true into mEditData[tComponentID]["mouseup"]
 end handler
 
-public handler setActionRect(in pComponent as String, in pNumber as Number, in pRect as Rectangle, in pAction as ActionCallback, in pMouseUp as boolean)
+public handler setActionRect(in pComponent as String, in pNumber as Number, in pRect as Rectangle, in pAction as ActionCallback, in pMouseUp as Boolean)
 	variable tComponentID as String
 	put pComponent && pNumber formatted as string into tComponentID
 

@@ -87,7 +87,8 @@ public:
 
 	virtual bool GetCurrentFolder(MCStringRef & r_path);
 	virtual Boolean SetCurrentFolder(MCStringRef p_path);
-	virtual bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback,
+	virtual bool ListFolderEntries(MCStringRef p_folder,
+	                               MCSystemListFolderEntriesCallback p_callback,
 	                               void *x_context);
 	virtual Boolean GetStandardFolder(MCNameRef p_type, MCStringRef & r_folder);
 

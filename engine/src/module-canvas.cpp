@@ -4112,11 +4112,13 @@ void MCCanvasEffectMakeWithPropertyArray(integer_t p_type, MCArrayRef p_properti
 			// spread
 			if (t_success)
 				t_success = MCArrayFetchReal(p_properties, s_effect_property_map[kMCCanvasEffectPropertySpread], t_spread);
-			
-			t_effect.distance = t_distance;
-			t_effect.angle = t_angle;
-			t_effect.size = t_size;
-			t_effect.spread = t_spread;
+			if (t_success)
+            {
+                t_effect.distance = t_distance;
+                t_effect.angle = t_angle;
+                t_effect.size = t_size;
+                t_effect.spread = t_spread;
+            }
 			
 			break;
 		}
@@ -4132,8 +4134,11 @@ void MCCanvasEffectMakeWithPropertyArray(integer_t p_type, MCArrayRef p_properti
 			if (t_success)
 				t_success = MCArrayFetchReal(p_properties, s_effect_property_map[kMCCanvasEffectPropertySpread], t_spread);
 			
-			t_effect.size = t_size;
-			t_effect.spread = t_spread;
+            if (t_success)
+            {
+                t_effect.size = t_size;
+                t_effect.spread = t_spread;
+            }
 			
 			break;
 		}

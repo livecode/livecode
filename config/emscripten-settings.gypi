@@ -9,7 +9,8 @@
 		'exe_suffix': '.js',
 		'debug_info_suffix': '.dbg',
 
-		'c++_std': 'gnu++03',
+		'silence_warnings': 0,
+		'c++_std': '<!(echo ${CXX_STD:-c++03})',
 	},
 
 	'defines':
@@ -58,6 +59,7 @@
 				[
 					'-w',
 					'-fpermissive',
+					'-Wno-return-type',
 				],
 			},
 		],

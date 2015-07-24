@@ -2183,6 +2183,8 @@ void XML_FindElementByAttributeValue(char *args[], int nargs, char **retstring, 
 							result = curelement -> GetPath();
 							break;
 						}
+                        
+                        delete tvalue;
 					}
 
 				}

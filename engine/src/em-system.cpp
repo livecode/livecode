@@ -314,7 +314,8 @@ MCEmscriptenSystem::SetCurrentFolder(MCStringRef p_path)
 }
 
 bool
-MCEmscriptenSystem::ListFolderEntries(MCSystemListFolderEntriesCallback p_callback,
+MCEmscriptenSystem::ListFolderEntries(MCStringRef p_folder,
+                                      MCSystemListFolderEntriesCallback p_callback,
                                       void *x_context)
 {
 	/* FIXME Implement ListFolderEntries() */
