@@ -3449,11 +3449,29 @@ void MCMatch::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     
     MCAutoValueRef t_source_valueref;
     MCAutoStringRef t_source;
-    if (!params->eval(ctxt, &t_source_valueref) || !ctxt . ConvertToString(*t_source_valueref, &t_source))
-	{
-		ctxt . LegacyThrow(EE_MATCH_BADSOURCE);
-		return;
-	}
+    if (!params->eval(ctxt, &t_source_valueref))
+    {
+        ctxt . LegacyThrow(EE_MATCH_BADPARAM);
+        return;
+    }
+    
+    // SN-2015-07-27: [[ Bug 15379 ]] PCRE takes UTF-16 as input parameters, but
+    //  if that input parameter is a DataRef, then we want to copy byte-to-unichar_t
+    //  its contents. Otherwise, ConvertToString makes a native StringRef out of
+    //  it, which will then be unnativised before being passed to MCR_exec; any
+    //  byte in the range [0x80;0xFF] will be converted from the OS-specific
+    //  extended ASCII table to the corresponding Unicode char.
+    bool t_success;
+    if (MCValueGetTypeCode(*t_source_valueref) == kMCValueTypeCodeData)
+        t_success = MCStringCreateUnicodeStringFromData((MCDataRef)*t_source_valueref, false, &t_source);
+    else
+        t_success = ctxt . ConvertToString(*t_source_valueref, &t_source);
+    
+    if (!t_success)
+    {
+        ctxt . LegacyThrow(EE_MATCH_BADPARAM);
+        return;
+    }
 
     MCAutoValueRef t_pattern_valueref;
     MCAutoStringRef t_pattern;
