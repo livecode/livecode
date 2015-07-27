@@ -32,7 +32,7 @@ for input in $@ ; do
 	$OBJCOPY --add-gnu-debuglink="$output" "$input"
 
   cp --attributes-only --preserve=timestamps "$input.timestamps" "$input"
-  rm "$input.attributes"
+  rm "$input.timestamps"
 done
 
 }
