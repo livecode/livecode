@@ -459,7 +459,7 @@ void MCPasteboardProcessToClipboard(MCExecContext& ctxt, MCObjectPtr *p_targets,
 				if (p_targets[i] . object -> del())
                 {
                     if (p_targets[i] . object -> gettype() == CT_STACK)
-                        MCtodestroy -> remove(static_cast<MCStack *>(_targets[i] . object));
+                        MCtodestroy -> remove(static_cast<MCStack *>(p_targets[i] . object));
                     p_targets[i] . object -> scheduledelete();
                 }
 			}
