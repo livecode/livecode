@@ -554,6 +554,7 @@
 			[
 				'../libcore/libcore.gyp:libCore',
 				'../libexternal/libexternal.gyp:libExternal',
+				'../libexternal/libexternal.gyp:libExternal-symbol-exports',
 			],
 			
 			'include_dirs':
@@ -569,11 +570,6 @@
 			'xcode_settings':
 			{
 				'INFOPLIST_FILE': 'rsrc/revdb-Info.plist',
-			},
-			
-			'variables':
-			{
-				'ios_external_symbols': [ '_getXtable' ],
 			},
 			
 			'all_dependent_settings':

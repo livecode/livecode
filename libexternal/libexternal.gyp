@@ -69,5 +69,22 @@
 				],
 			}
 		},
+		{
+			'target_name': 'libExternal-symbol-exports',
+			'type': 'none',
+			
+			'direct_dependent_settings':
+			{				
+				'variables':
+				{
+					'ios_external_symbols': 
+					[ 
+						'_getXtable', 
+						'_setExternalInterfaceVersion', 
+						'_configureSecurity',
+					],
+				},
+			},
+		},
 	],
 }
