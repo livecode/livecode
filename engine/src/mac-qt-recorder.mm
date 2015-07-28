@@ -723,8 +723,17 @@ void MCQTSoundRecorder::StopRecording(void)
     [m_observer stopTimer];
     SGStop(m_seq_grab);
     
+	// PM-2015-07-22: [[ Bug 15625 ]] Make sure we properly recreate the exported file, if it already exists
+	MCS_unlink(m_filename);
     exportToSoundFile(m_temp_file, m_filename);
-    
+	MCS_unlink(m_temp_file);
+
+	if (m_filename != nil)
+		MCCStringFree(m_filename);
+
+	if (m_temp_file != nil)
+		MCCStringFree(m_temp_file);
+
     if (m_channel != NULL)
     {
         SGDisposeChannel(m_seq_grab, m_channel);
