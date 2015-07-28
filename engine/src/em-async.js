@@ -57,8 +57,13 @@ mergeInto(LibraryManager.library, {
 		},
 
 		// Resume the main loop
-		resume: function() {
+		resume: function(delayed) {
 			LiveCodeAsync._ensureInit();
+
+			// For convenience, simplify delay+resume
+			if (delayed) {
+				LiveCodeAsync.delay(delayed);
+			}
 
 			// Don't allow recursive calls to resume()
 			if (LiveCodeAsync._inPreResume) {
