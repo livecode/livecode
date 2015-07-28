@@ -1815,6 +1815,8 @@ Exec_stat MCControl::setsbprop(Properties which, const MCString &data,
 			}
 			else
 			{
+				// PM-2015-07-16: [[ Bug 11569 ]] Unset CS_HSCROLL when the hscrollBar of a control is set to false
+			    state &= ~CS_HSCROLL;
 				delete hsb;
 				hsb = NULL;
 				if (opened)
@@ -1855,6 +1857,8 @@ Exec_stat MCControl::setsbprop(Properties which, const MCString &data,
 			}
 			else
 			{
+				// PM-2015-07-16: [[ Bug 11569 ]] Unset CS_VSCROLL when the vscrollBar of a control is set to false
+				state &= ~CS_VSCROLL;
 				delete vsb;
 				vsb = NULL;
 				if (opened)
