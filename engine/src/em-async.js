@@ -33,9 +33,6 @@ mergeInto(LibraryManager.library, {
 		// loop.
 		_preResume: [],
 
-		// True if currently running pre-resume callbacks
-		_inPreResume: false,
-
 		// The handle for the setTimeout() handler for the current
 		// yield state.
 		_timeoutHandle: null,
@@ -65,13 +62,10 @@ mergeInto(LibraryManager.library, {
 				LiveCodeAsync.delay(delayed);
 			}
 
-			// Don't allow recursive calls to resume()
-			if (LiveCodeAsync._inPreResume) {
+			// Don't allow calls to resume() when not actually paused.
+			if (!LiveCodeAsync.isPaused()) {
 				return;
 			}
-
-			// Make sure we're actually currently in a yield state.
-			assert(LiveCodeAsync._continuation);
 
 			// Cancel the timeout for this yield state
 			if (LiveCodeAsync._timeoutHandle) {
@@ -92,13 +86,11 @@ mergeInto(LibraryManager.library, {
 			// EmterpreterAsync.handle().
 			resume(function (){
 				// Run pre-resume callbacks
-				LiveCodeAsync._inPreResume = true;
 				var queueLength = LiveCodeAsync._preResume.length;
 				for (var i = 0; i < queueLength; i++) {
 					LiveCodeAsync._preResume[i]();
 				}
 				LiveCodeAsync._preResume = []; // Reset pre-resume callback list
-				LiveCodeAsync._inPreResume = false;
 
 				return !LiveCodeAsync.isTimedOut();
 			});
@@ -139,6 +131,11 @@ mergeInto(LibraryManager.library, {
 			});
 		},
 
+		// Test whether the engine is currently paused
+		isPaused: function() {
+			return (!!LiveCodeAsync._continuation);
+		},
+
 		// Test whether the engine is currently being resumed from a
 		// timeout.  Returns false if the resume is due to an event.
 		isTimedOut: function() {
@@ -150,8 +147,9 @@ mergeInto(LibraryManager.library, {
 		delay: function(delayed) {
 			LiveCodeAsync._ensureInit();
 
-			if (LiveCodeAsync._inPreResume) {
-				delayed()
+			if (!LiveCodeAsync.isPaused()) {
+				// Engine is live, just run the closure
+				delayed();
 			} else {
 				LiveCodeAsync._preResume.push(delayed);
 			}
