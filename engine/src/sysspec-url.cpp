@@ -168,6 +168,7 @@ void MCUrlProgressEvent::Dispatch(void)
 				t_object -> message_with_valueref_args(MCM_url_progress, m_url, MCSTR("uploaded"));
 				break;
 			case kMCSystemUrlStatusLoading:
+			case kMCSystemUrlStatusLoadingProgress:
 			{
 				MCAutoStringRef t_amount, t_total;
 				/* UNCHECKED */ MCStringFormat(&t_amount, "%u", m_transferred.amount);
@@ -281,6 +282,12 @@ MCS_geturl_callback(void *p_context,
 			/* Update the total amount loaded */
 			context->loaded_size = MCMax(context->loaded_size,
 			                             MCDataGetLength(context->data));
+			break;
+
+		case kMCSystemUrlStatusLoadingProgress:
+			/* The data is the total amount loaded so far */
+			context->loaded_size = MCMax(context->loaded_size,
+			                             *(uint32_t *) p_data);
 			break;
 
 		default:
