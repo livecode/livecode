@@ -253,6 +253,16 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    end if
    
    local tDeploy
+   # AL-2015-07-24: [[ Standalone Extensions ]] Include selected extensions in iOS standalone
+   repeat for each line tExtension in revIDEExtensionsOrderByDependency(tSettings["extensions"])
+      local tExtensionFile
+      put revIDEExtensionModuleFile(tExtension) into tExtensionFile
+      if tDeploy["modules"] is empty then
+         put tExtensionFile into tDeploy["modules"]
+      else
+         put return & tExtensionFile after tDeploy["modules"]
+      end if
+   end repeat
    
    -- Link the engine if a device build
    local tLinkEngineFile

@@ -310,6 +310,11 @@ function builderModuleInterfaceFolder
    return the result & slash & "modules" & slash & "lci"
 end builderModuleInterfaceFolder
 
+function builderPackagedExtensionsFolder
+   builderFetchEngine "", "macosx"
+   return the result & slash & "packaged_extensions"
+end builderPackagedExtensionsFolder
+
 -- Returns the engine that should be used to build the installer
 function builderInstallerEngine pPlatform
    local tEngineFolder
