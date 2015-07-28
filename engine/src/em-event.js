@@ -70,13 +70,10 @@ mergeInto(LibraryManager.library, {
 				return;
 			}
 
-			console.log('LiveCodeEvents.initialize()');
-
 			var target = LiveCodeEvents._getTarget();
 
 			// Add all of the event handlers
 			LiveCodeEvents._eventForEach(function (type, handler) {
-				console.log('    - ' + type);
 				target.addEventListener(type, handler, true);
 			});
 
@@ -94,13 +91,10 @@ mergeInto(LibraryManager.library, {
 				return;
 			}
 
-			console.log('LiveCodeEvents.finalize()');
-
 			var target = LiveCodeEvents._getTarget();
 
 			// Remove all of the event handlers
 			LiveCodeEvents._eventForEach(function (type, handler) {
-				console.log('    - ' + type);
 				target.removeEventListener(type, handler, true);
 			});
 
@@ -504,7 +498,6 @@ mergeInto(LibraryManager.library, {
 					var char_code = LiveCodeEvents._encodeKeyboardCharCode(e);
 					var key_code = LiveCodeEvents._encodeKeyboardKeyCode(e);
 					LiveCodeEvents._postKeyPress(stack, mods, char_code, key_code);
-					console.debug(e.type + ' ' + e.key + ': ' + char_code + '/' + key_code);
 					break;
 				case 'keyup':
 				case 'keydown':
