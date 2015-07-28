@@ -163,6 +163,7 @@ extern Boolean MCownselection;
 extern MCUndolist *MCundos;
 extern MCSellist *MCselected;
 extern MCStacklist *MCstacks;
+extern MCStacklist *MCtodestroy;
 extern MCCardlist *MCrecent;
 extern MCCardlist *MCcstack;
 extern MCDispatch *MCdispatcher;

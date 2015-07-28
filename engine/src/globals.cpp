@@ -255,6 +255,7 @@ uint2 MCdragdelta = 4;
 MCUndolist *MCundos;
 MCSellist *MCselected;
 MCStacklist *MCstacks;
+MCStacklist *MCtodestroy;
 MCCardlist *MCrecent;
 MCCardlist *MCcstack;
 MCDispatch *MCdispatcher;
@@ -639,6 +640,7 @@ void X_clear_globals(void)
 	MCundos = nil;
 	MCselected = nil;
 	MCstacks = nil;
+    MCtodestroy = nil;
 	MCrecent = nil;
 	MCcstack = nil;
 	MCdispatcher = nil;
@@ -981,6 +983,7 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	MCundos = new MCUndolist;
 	MCselected = new MCSellist;
 	MCstacks = new MCStacklist;
+    MCtodestroy = new MCStacklist;
 	MCrecent = new MCCardlist;
 	MCcstack = new MCCardlist;
 
@@ -1184,6 +1187,7 @@ int X_close(void)
 	delete MCtemplateimage;
 	delete MCtemplatefield;
 	delete MCselected;
+    delete MCtodestroy;
 	delete MCstacks;
 	delete MCcstack;
 	delete MCrecent;
