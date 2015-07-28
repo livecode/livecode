@@ -741,6 +741,7 @@
 									'src/em-async.js',
 									'src/em-event.js',
 									'src/em-surface.js',
+									'src/em-url.js',
 									'boot',
 								],
 
@@ -760,6 +761,7 @@
 									'src/em-async.js',
 									'src/em-event.js',
 									'src/em-surface.js',
+									'src/em-url.js',
 								],
 							},
 						],

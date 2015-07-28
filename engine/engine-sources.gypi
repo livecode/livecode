@@ -741,6 +741,8 @@
 			'src/em-system.h',
 			'src/em-system.cpp',
 			'src/em-theme.cpp',
+			'src/em-url.cpp',
+			'src/em-url.js',
 			'src/em-util.h',
 			'src/em-util.js',
 			'src/em-view.h',
