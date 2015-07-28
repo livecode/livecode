@@ -9,6 +9,7 @@
 		'revdb_sources':
 		[
 			'src/revdb.cpp',
+			'src/iossupport.cpp',
 			'src/osxsupport.cpp',
 			'src/unxsupport.cpp',
 			'src/w32support.cpp',
@@ -592,6 +593,24 @@
 						'product_extension': '',
 					},
 				],
+				[
+					'OS == "mac" or OS == "ios"',
+					{
+						'sources!': 
+						[
+							'src/unxsupport.cpp',
+						],
+					},
+				],
+				[
+					'OS != "ios"',
+					{
+						'sources!':
+						[
+							'src/iossupport.cpp',
+						],
+					},
+				],
 			],
 		},
 		{
@@ -620,6 +639,11 @@
 			'sources':
 			[
 				'<@(revdb_sources)',
+			],
+			
+			'sources!':
+			[
+				'src/iossupport.cpp',
 			],
 			
 			'all_dependent_settings':
