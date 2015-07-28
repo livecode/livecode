@@ -307,8 +307,8 @@ MCQTSoundRecorder::MCQTSoundRecorder(void)
     m_dialog_result = kMCPlatformDialogResultContinue;
     m_seq_grab = nil;
     m_channel = nil;
-    m_temp_file = MCValueRetain(kMCEmptyString);
-    m_filename = MCValueRetain(kMCEmptyString);
+    m_temp_file = nil;
+    m_filename = nil;
     m_has_magic_cookie = false;
     
     m_observer = [[com_runrev_livecode_MCQTSoundRecorderObserver alloc] initWithRecorder: this];
@@ -657,7 +657,8 @@ bool MCQTSoundRecorder::StartRecording(MCStringRef p_filename)
     if (t_success)
         t_success = MCS_tmpnam(m_temp_file);
     
-    m_filename = MCValueRetain(p_filename);
+    if (t_success)
+        m_filename = MCValueRetain(p_filename);
     
     if (t_success)
     {
@@ -711,6 +712,18 @@ bool MCQTSoundRecorder::StartRecording(MCStringRef p_filename)
 			SGDisposeChannel(m_seq_grab, m_channel);
             m_channel = nil;
 		}
+        
+        if (m_filename != nil)
+        {
+            MCValueRelease(m_filename);
+            m_filename = nil;
+        }
+        
+        if (m_temp_file != nil)
+        {
+            MCValueRelease(m_temp_file);
+            m_temp_file = nil;
+        }
     }
     return t_success;
 }
@@ -729,10 +742,16 @@ void MCQTSoundRecorder::StopRecording(void)
 	MCS_unlink(m_temp_file);
 
 	if (m_filename != nil)
-		MCCStringFree(m_filename);
+    {
+		MCValueRelease(m_filename);
+        m_filename = nil;
+    }
 
 	if (m_temp_file != nil)
-		MCCStringFree(m_temp_file);
+    {
+		MCValueRelease(m_temp_file);
+        m_temp_file = nil;
+    }
 
     if (m_channel != NULL)
     {
