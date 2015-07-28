@@ -35,7 +35,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define USE_PIPE
 #elif defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 #include "w32prefix.h"
-#undef USE_PTHREADS
+#define USE_WINTHREADS
 #elif defined(_IOS_MOBILE)
 #include <pthread.h>
 #define USE_PTHREADS
