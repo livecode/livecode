@@ -404,151 +404,180 @@ function revDocsGenerateDocsFileFromModular pText
    local tEntryType
    put empty into tEntryType
    
-   local tInComment
+   local tInComment, tInEntry, tEntryEnded
    put false into tInComment
+   put false into tInEntry
    
-   local tComment, tEntryName, tParams
-   local tHandlers, tPhrases, tTypes
-   local tData
-   local tNameLine, tSyntaxLine, tBindingLines
-   local tModuleDescription, tModuleName, tModuleType
-   local tIsPhrase, tPhraseName
+   local tFirstWord, tEntryData
+   local tComment, tData
+   local tHandlerData, tPhraseData
+   
+   local tLibraryData, tAPIData
+   
    repeat for each line tLine in pText
-      // Check to see if this is the start of a block of code or a block of comments 
-      get word 1 of tLine 
-      if not tInComment and tEntryType is empty then
-         if it is "module" or it is "widget" or it is "library" then
-            put word 2 to -1 of tLine into tModuleName
-            put it into tModuleType
-            if tComment is not empty then
-               put tComment into tModuleDescription
-               put empty into tComment
-            end if
-            next repeat
-         else if it is "handler" then
-            put it into tEntryType
-         else if it is "syntax" then
-            put it into tEntryType
-            if word 4 of tLine is "phrase" then
-               put true into tIsPhrase
-               put word 2 of tLine into tPhraseName
-            end if
-         else if it is "public" then
-            if word 2 of tLine is "handler" then
-               put "handler" into tEntryType
-               put tLine into tHandlers[token 3 of tLine]
-            else if word 2 of tLine is "foreign" then
-               if word 3 of tLine is "handler" then
-                  put tLine into tHandlers[token 4 of tLine]
-               else if word 3 of tLine is "type" then
-                  put tLine into tTypes[token 4 of tLine]
+      # Check to see if this is the start of a handler / syntax or a block of comments 
+      put word 1 of tLine into tFirstWord
+      
+      # By default, the entry doesn't end on this line
+      put false into tEntryEnded
+      
+      # If we are neither in a comment block or in handler / syntax then 
+      if not tInComment and not tInEntry then
+         # In almost all cases, we will be in a new entry
+         put true into tInEntry
+         
+         switch tFirstWord
+            case "module"
+            case "library"
+               put "library" into tEntryData["type"]
+               put word 2 to -1 of tLine into tEntryData["name"]
+               put true into tEntryEnded
+               break
+            case "widget"
+               put "widget" into tEntryData["type"]
+               put word 2 to -1 of tLine into tEntryData["name"]
+               put true into tEntryEnded
+               break
+            case "handler"
+               put "handler" into tEntryData["type"]
+               # Handler is private by defaullt, so don't document
+               put true into tEntryData["private"]
+               break
+            case "private"
+               if word 2 of tLine is "handler" then
+                  # Don't document private handler
+                  put true into tEntryData["private"]
+                  # eat the word 'private'
+                  put word 2 to -1 of tLine into tLine
+               else
+                  put false into tInEntry
                end if
-            end if
-         end if
-         if it begins with "/*" then
-            // if we have a new comment block, discard the previous one
-            put empty into tComment
-            local tCommentOffset
-            put true into tInComment
-            put offset("/*", tLine) into tCommentOffset
-            put char tCommentOffset + 2 to -1 of tLine into tLine
-            // If there's nothing else on this line, don't add it.
-            if word 1 of tLine is empty then next repeat
-         end if
+               break
+            case "public"
+               if word 2 of tLine is "handler" then
+                  put "handler" into tEntryData["type"]
+                  # eat the word 'public'
+                  put word 2 to -1 of tLine into tLine
+               else 
+                  if word 2 of tLine is "foreign" then
+                     if word 3 of tLine is "handler" then
+                        put "handler" into tEntryData["type"]
+                     else if word 3 of tLine is "type" then
+                        put "type" into tEntryData["type"]
+                     end if
+                     # eat the words 'public foreign'
+                     put word 3 to -1 of tLine into tLine
+                     put true into tEntryEnded
+                  end if
+               end if
+               break
+            case "syntax"
+               put word 2 of tLine into tEntryData["name"]
+               if word 4 of tLine is "phrase" then
+                  put "phrase" into tEntryData["type"]
+               else
+                  put "syntax" into tEntryData["type"]
+               end if
+               break
+            case "property"
+               put "property" into tEntryData["type"]
+               # Properties are one-liners
+               put true into tEntryEnded
+               break
+            default
+               # This is not a new entry
+               put false into tInEntry
+               # Check if this is a new comment block
+               if tFirstWord begins with "/*" then
+                  # Discard any previous comments
+                  put empty into tComment
+                  local tCommentOffset
+                  put true into tInComment
+                  put offset("/*", tLine) into tCommentOffset
+                  put char tCommentOffset + 2 to -1 of tLine into tLine
+                  # If there's nothing else on this line, don't add it.
+                  if word 1 of tLine is empty then next repeat
+               end if
+               break
+         end switch
       end if
       
-      // If we're in a handler, check to see if this is the end of a block of code.
-      if tEntryType is not empty  then
-         // ignore empty lines
-         if word 1 of tLine is empty then
-            next repeat
-         end if
-         // If so, then flush all the data
-         if it is "end" then
-            // Don't add an API entry when there are no docs
-            if tIsPhrase then
-               put tSyntaxLine into tPhrases[tPhraseName]
-            end if
-            
-            if tComment is not empty then
-               if tEntryType is "syntax" then
-                  revDocsUpdateModularSyntaxDocBlocks tEntryType, tNameLine, tSyntaxLine, tBindingLines, tComment, tHandlers, tPhrases, tData
-               else
-                  revDocsUpdateDocBlocks true, tEntryType, tNameLine, tComment, tData
-               end if
-            end if
-            put empty into tComment
-            put empty into tNameLine
-            put empty into tEntryType
-            put empty into tSyntaxLine
-            put empty into tBindingLines
-            put false into tIsPhrase
-            put empty into tPhraseName
-            // Otherwise gather the data from this line
-         else if tEntryType is not "syntax" then
-            // Name, Syntax & Params all on the same line for non-syntax
-            if tNameLine is empty then
-               put tLine into tNameLine
-               put tLine into tSyntaxLine
-            end if
-         else
-            // For syntax, the order is: name line, syntax line, param lines.
-            if tNameLine is empty then
-               put tLine into tNameLine
-            else if tSyntaxLine is empty then
-               put tLine into tSyntaxLine
-            else if it is "begin" then 
-               next repeat
-            else
-               put tLine & CR after tBindingLines
-            end if
-         end if
-      end if
-      // If we're in comments check to see if this is the end of a block of comments
+      # If we're in comments check to see if this is the end of a block of comments
       if tInComment then
          if word -1 of tLine ends with "*/" then
             put false into tInComment
             put offset("*/", tLine) into tCommentOffset
             put char 1 to tCommentOffset - 1 of tLine into tLine
-            // If there's nothing else on this line, don't add it.
+            # If there's nothing else on this line, don't add it.
             if word 1 of tLine is empty then
                next repeat
             end if
-         else if tComment is empty and word 1 of tLine is empty then
+         else if tComment is empty and tFirstWord is empty then
             next repeat
          end if
          put tLine & CR after tComment
+         next repeat
+      end if
+      
+      # If we are in an entry, add the line to the current data
+      if tInEntry then         
+         # ignore empty lines
+         if tFirstWord is empty then 
+            next repeat
+         else if tFirstWord is "end" then
+            put true into tEntryEnded
+         end if
+         put tLine & CR after tData
+      end if
+      
+      # If the entry is ended, convert all the collected data to a structured array
+      if tEntryEnded then
+         # Extract data from the syntax / handler if comments are not empty
+         if tComment is not empty then
+            switch tEntryData["type"]
+               case "library"
+               case "widget"
+                  put tComment into tEntryData["comments"]
+                  put tEntryData into tLibraryData
+                  break
+               case "handler"
+                  revDocsParseHandler line 1 of tData, tHandlerData
+                  revDocsUpdateDocBlocks true, "handler", line 1 of tData, tComment, tAPIData
+                  break
+               case "type"
+                  break
+               case "phrase"
+                  put tData into tPhraseData[word 2 of tData]
+                  break
+               case "syntax"
+                  revDocsUpdateModularSyntaxDocBlocks tData, tComment, tHandlerData, tPhraseData, tAPIData
+                  break
+               case "property"
+                  revDocsUpdateDocBlocksForProperty tData, tComment, tAPIData
+                  break
+            end switch
+         end if
+         put empty into tEntryData
+         put empty into tComment
+         put empty into tData
+         put false into tInEntry
       end if
    end repeat
    
    # Allow inline module description as valid docs
-   if tModuleDescription is empty and tData is empty then
+   if tLibraryData["comments"] is empty and tAPIData is empty then
       logError "No documentation included"
       return empty
    end if
    
-   if tModuleName is empty then
+   if tLibraryData["name"] is empty then
       logError "No extension name found"
    end if
    
    local tOutput
-   local tStart, tEnd
-   put "Library: " & tModuleName & CR & CR into tOutput
-   if tModuleType is "module" then
-      put "Type: library" & CR & CR after tOutput
-   else
-      put "Type: widget" & CR & CR after tOutput
-   end if
-   local tTmpArray
-   put "Description:" & CR & tModuleDescription after tOutput
-   put tOutput into tTmpArray["comments"]
-   put revDocsFormatInlineComments(tTmpArray) into tOutput
-   repeat for each key tKey in tData
-      put "Name: " & tKey & CR & CR after tOutput
-      put "Type: " & tData[tKey]["type"] & CR & CR after tOutput
-      put "Syntax: " & word 1 to -1 of tData[tKey]["syntax"][1] & CR & CR after tOutput
-      
-      put revDocsFormatInlineComments(tData[tKey]) & CR & CR after tOutput
+   put revDocsFormatInlineComments(tLibraryData, true) into tOutput
+   repeat for each key tKey in tAPIData
+      put revDocsFormatInlineComments(tAPIData[tKey], false) & CR & CR after tOutput
    end repeat
    return tOutput
 end revDocsGenerateDocsFileFromModular
@@ -612,31 +641,61 @@ private function __revDocsParseDirectoryToLibraryArray pType, pRootDir, pRecursi
    return tLibraryA
 end __revDocsParseDirectoryToLibraryArray
 
-function revDocsFormatInlineComments pDataA
+function revDocsFormatInlineComments pDataA, pIsLibrary
+   local tComment
+   if pIsLibrary then
+      put "Description:" & CR & pDataA["comments"] after tComment
+   else
+      put pDataA["comments"] into tComment
+   end if
    
    local tElementsA
-   put revDocsExtractElements(pDataA["comments"]) into tElementsA
+   put revDocsExtractElements(tComment) into tElementsA
    
    local tEntriesA
    put revDocsGroupElements(tElementsA) into tEntriesA
    
    local tEntryA, tElementA, tElement
    
-   local tHasReferences
+   local tHasA
    
    local tParamsFound
    put false into tParamsFound
    
    local tDocData
-   repeat with x = 0 to the number of elements in tEntriesA - 1
-      put false into tHasReferences
+   
+   local tStart, tEnd
+   put 1 into tStart
+   put the number of elements in tEntriesA into tEnd
+   if tEntriesA[0] is not empty then 
+      subtract 1 from tStart
+      subtract 1 from tEnd
+   end if
+   
+   local tName, tType, tSyntax, tEntryDoc
+   repeat with x = tStart to tEnd
+      put empty into tHasA
+      put empty into tEntryDoc
       put tEntriesA[x] into tEntryA
       repeat with y = 1 to the number of elements in tEntryA["elements"]
          put tEntryA["elements"][y] into tElementA
          
          put tElementA["name"] into tElement
+         
+         put true into tHasA[tElement]
+         
+         if tElement is "Name" then
+            put tElementA["content"] into tName
+            next repeat
+         else if tElement is "Type" then
+            put tElementA["content"] into tType
+            next repeat
+         else if tElement is "Syntax" then
+            put tElementA["content"] into tSyntax
+            next repeat
+         end if
+         
          if tElement is "References" then
-            put true into tHasReferences
             repeat for each element tPhrase in pDataA["phrases"]
                put comma & tPhrase & "(phrase)" after tElementA["content"]
             end repeat
@@ -663,11 +722,11 @@ function revDocsFormatInlineComments pDataA
                repeat for each element tParam in tVariant
                   if tParam["name"] is tElement then
                      if not tParamsFound then
-                        put "Parameters:" & CR after tDocData
+                        put "Parameters:" & CR after tEntryDoc
                         put true into tParamsFound
                      end if
                      if tElementA["type"] is empty then
-                       # add the param details if they were not included
+                        # add the param details if they were not included
                         if pDataA["phrases"][tElement] is not empty then
                            put "<" & word 1 to -1 of pDataA["phrases"][tElement] & ">" into tElementA["type"]
                         else if tParam["type"] is not empty then
@@ -683,13 +742,15 @@ function revDocsFormatInlineComments pDataA
          end if
          
          # Now output back to the doc data
+         put tElementA["name"] into tElement
+         
          if tElementA["type"] is not empty then
-            put tElement & "(" & tElementA["type"] & "):" && tElementA["content"] & CR after tDocData
+            put tElement & "(" & tElementA["type"] & "):" && tElementA["content"] & CR after tEntryDoc
          else
             if the number of lines in tElementA["content"] > 1 then              
                local tDeleteTab
                put false into tDeleteTab
-               put tElement & ":" & CR after tDocData
+               put tElement & ":" & CR after tEntryDoc
                repeat for each line tLine in tElementA["content"]
                   if line 1 of tElementA["content"] begins with tab then
                      put true into tDeleteTab
@@ -697,25 +758,49 @@ function revDocsFormatInlineComments pDataA
                   if tDeleteTab and tLine begins with tab then
                      delete char 1 of tLine
                   end if
-                  put tLine & CR after tDocData
+                  put tLine & CR after tEntryDoc
                end repeat
             else
-               put tElement & ":" && tElementA["content"] & CR after tDocData
+               put tElement & ":" && tElementA["content"] & CR after tEntryDoc
             end if
          end if
-         put CR after tDocData
+         put CR after tEntryDoc
       end repeat
-      if tHasReferences is false then
+      if tHasA["Syntax"] is not true then
+         repeat with x = 1 to the number of elements in pDataA["syntax"]
+            put "Syntax:" && pDataA["syntax"][x] & CR & CR before tEntryDoc
+         end repeat
+      else
+         put "Syntax:" && tSyntax & CR & CR before tEntryDoc
+      end if
+      
+      if tHasA["Type"] is not true then
+         put pDataA["type"] into tType
+      end if
+      put "Type:" && tType & CR & CR before tEntryDoc
+      
+      if tHasA["Name"] is not true then
+         put pDataA["name"] into tName
+      end if
+      if pIsLibrary and x = 0 then
+         put "Library:" && tName & CR & CR before tEntryDoc
+      else
+         put "Name:" && tName & CR & CR before tEntryDoc
+      end if
+      
+      if tHasA["References"] is not true then
          if pDataA["phrases"] is not empty then
-            put "References: " after tDocData
+            put "References: " after tEntryDoc
             repeat for each element tElement in pDataA["phrases"]
-               put tElement & "(phrase)" & comma after tDocData
+               put tElement & "(phrase)" & comma after tEntryDoc
             end repeat
-            delete the last char of tDocData
-            put CR & CR after tDocData
+            delete the last char of tEntryDoc
+            put CR & CR after tEntryDoc
          end if
       end if
+      put tEntryDoc after tDocData
    end repeat
+   
    return tDocData
 end revDocsFormatInlineComments
 
@@ -1401,7 +1486,7 @@ private function formatSyntaxLine pLine, pPhrases
       put empty into tType
       put empty into tParam
       if matchText(pLine, "< *(\w*) *: *(\w*) *>", tParam, tType) and tType is not "Expression" and tType is among the keys of pPhrases then
-         put replaceText(pLine, "< *" & tParam & " *: *" & tType & " *>", formatSyntaxLine(pPhrases[tType], pPhrases)) into pLine
+         put replaceText(pLine, "< *" & tParam & " *: *" & tType & " *>", formatSyntaxLine(line 2 of pPhrases[tType], pPhrases)) into pLine
       else
          delete char tStart to tEnd of pLine
       end if
@@ -1427,11 +1512,65 @@ private function formatSyntaxLine pLine, pPhrases
    return pLine
 end formatSyntaxLine
 
-command revDocsUpdateModularSyntaxDocBlocks pType, pNameLine, pSyntaxLine, pBindingLines, pComment, pHandlersA, pPhrases, @xDataA
-   local tEntryName
-   put word 2 of pNameLine into tEntryName
+command revDocsParseHandler pHandler, @xHandlers
+   local tHandlerParams, tHandlerResult, tHandlerResult2
+   get matchText(pHandler, "\((.*)\)(?: as (\w*)(?: (\w*))?)?", tHandlerParams, tHandlerResult, tHandlerResult2)
    
-   put formatSyntaxLine(pSyntaxLine, pPhrases) into xDataA[tEntryName]["syntax"][1]
+   local tHandlerName
+   put token 2 of pHandler into tHandlerName
+   
+   local tData, tParamData
+   repeat for each item tItem in tHandlerParams
+      put empty into tParamData
+      put word 2 of tItem into tParamData["name"]
+      put word 4 to -1 of tItem into tParamData["type"]
+      put word 1 of tItem into tParamData["mode"]
+      put tParamData into tData[the number of elements of tData + 1]
+   end repeat   
+   put tData into xHandlers[tHandlerName]["params"]
+   
+   if tHandlerResult is not "undefined" then
+      if tHandlerResult is "optional" then
+         put " " & tHandlerResult2 after tHandlerResult
+      end if
+      put tHandlerResult into xHandlers[tHandlerName]["the result"]["type"]
+   end if
+end revDocsParseHandler
+
+on revDocsUpdateDocBlocksForProperty pData, pComment, @xDataA
+   local tName
+   put word 2 of pData into tName
+   put pComment into xDataA[tName]["comments"]
+   put "property" into xDataA[tName]["type"]
+   put tName into xDataA[tName]["name"]
+end revDocsUpdateDocBlocksForProperty
+
+command revDocsUpdateModularSyntaxDocBlocks pData, pComment, pHandlersA, pPhrasesA, @xDataA
+   local tNameLine, tSyntaxLine, tBindingLines, tDeprecated
+   local tCurrentLine
+   put 1 into tCurrentLine
+   put line tCurrentLine of pData into tNameLine
+   add 1 to tCurrentLine
+   if line tCurrentLine of pData begins with "deprecate" then
+      add 1 to tCurrentLine
+      put true into tDeprecated
+   end if
+   
+   put line tCurrentLine of pData into tSyntaxLine
+   add 1 to tCurrentLine
+   
+   repeat with x = tCurrentLine to the number of lines in pData
+      get line x of pData
+      if it begins with "end" then
+         exit repeat
+      end if
+      put it into tBindingLines[the number of elements of tBindingLines + 1]
+   end repeat
+   
+   local tEntryName
+   put word 2 of tNameLine into tEntryName
+   
+   put formatSyntaxLine(tSyntaxLine, pPhrasesA) into xDataA[tEntryName]["syntax"][1]
    
    local tParam, tParams
    // Parse parameters from syntax line
@@ -1451,47 +1590,42 @@ command revDocsUpdateModularSyntaxDocBlocks pType, pNameLine, pSyntaxLine, pBind
    local tParamTypes, tHandler, tCount
    put 1 into tCount
    // determine the param types from the handler bindings
-   repeat for each line tLine in pBindingLines
+   repeat for each element tLine in tBindingLines
       put pHandlersA[token 1 of tLine] into tHandler
       if tHandler is empty then 
          next repeat
       end if
       // extract from brackets
-      local tHandlerParams, tBindingParams
-      local tHandlerResult, tHandlerResult2
-      get matchText(tHandler, "\((.*)\)(?: as (\w*)(?: (\w*))?)?", tHandlerParams, tHandlerResult, tHandlerResult2)
+      local tBindingParams
       get matchText(tLine, "\((.*)\)", tBindingParams)
       // get types
       local tItemNum, tParamName
-
-      repeat with tItemNum = 1 to the number of items in tHandlerParams
-         put item tItemNum of tHandlerParams into tItem
+      
+      repeat with tItemNum = 1 to the number of elements in tHandler["params"]
+         put tHandler["params"][tItemNum] into tItem
          put word 1 of item tItemNum of tBindingParams into tParamName
          if tParamName is "output" then
-            put word 4 to -1 of tItem into tParamTypes["return value"]["type"]
+            put tItem["type"] into tParamTypes["return value"]["type"]
          else
             get the number of elements of tParamTypes + 1
             put tParamName into tParamTypes[it]["name"]
-            put word 4 to -1 of tItem into tParamTypes[it]["type"]
-            put word 1 of tItem into tParamTypes[it]["mode"]
+            put tItem["type"] into tParamTypes[it]["type"]
+            put tItem["mode"] into tParamTypes[it]["mode"]
          end if
       end repeat   
-      if tHandlerResult is not "undefined" then
-         if tHandlerResult is "optional" then
-            put " " & tHandlerResult2 after tHandlerResult
-         end if
-         put tHandlerResult into tParamTypes["the result"]["type"]
+      if tHandler["the result"] is not empty then
+         put tHandler["the result"]["type"] into tParamTypes["the result"]["type"]
       end if
       put tParamTypes into xDataA[tEntryName]["variants"][tCount]
       add 1 to tCount
    end repeat
    
-   put char 1 to offset(" with precedence", word 4 to -1 of pNameLine) -1 of word 4 to -1 of pNameLine into xDataA[tEntryName]["type"]
+   put char 1 to offset(" with precedence", word 4 to -1 of tNameLine) -1 of word 4 to -1 of tNameLine into xDataA[tEntryName]["type"]
    put word -1 of xDataA[tEntryName]["type"] into xDataA[tEntryName]["type"]
-   
-   // Output the comments that preceded this function definition
-   put pComment into xDataA[tEntryName]["comments"]
    put "syntax" into xDataA[tEntryName]["kind"]
+   put pComment into xDataA[tEntryName]["comments"]
+   put tDeprecated is true into xDataA[tEntryName]["deprecated"]
+   put tEntryName into xDataA[tEntryName]["name"]
 end revDocsUpdateModularSyntaxDocBlocks
 
 command revDocsUpdateDocBlocks pModular, pType, pLine, pComment, @xDataA

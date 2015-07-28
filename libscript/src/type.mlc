@@ -149,6 +149,7 @@ end syntax
 /*
 Name: IsNothing
 Type: operator
+Syntax: <Target> is nothing
 Summary:	Determines whether <Target> is nothing or not.
 Target:	Any expression
 output:	Returns true if the given expression <Target> is nothing, and false otherwise.
@@ -168,6 +169,7 @@ end syntax
 /*
 Name: IsNotNothing
 Type: operator
+Syntax: <Target> is not nothing
 Summary:	Determines whether <Target> is nothing or not.
 Target:	Any expression
 output:	Returns false if the given expression <Target> is nothing, and true otherwise.
