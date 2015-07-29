@@ -1,19 +1,17 @@
 #!/bin/bash
 
 source "${BASEDIR}/scripts/platform.inc"
-
-# Version and configuration flags
-OPENSSL_VERSION=1.0.1o
+source "${BASEDIR}/scripts/lib_versions.inc"
 
 # Grab the source for the library
-OPENSSL_TGZ="openssl-${OPENSSL_VERSION}.tar.gz"
-OPENSSL_SRC="openssl-${OPENSSL_VERSION}"
+OPENSSL_TGZ="openssl-${OpenSSL_VERSION}.tar.gz"
+OPENSSL_SRC="openssl-${OpenSSL_VERSION}"
 cd "${BUILDDIR}"
 
 if [ ! -d "$OPENSSL_SRC" ] ; then
 	if [ ! -e "$OPENSSL_TGZ" ] ; then
 		echo "Fetching OpenSSL source"
-		curl http://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz -o "${OPENSSL_TGZ}"
+		curl http://www.openssl.org/source/openssl-${OpenSSL_VERSION}.tar.gz -o "${OPENSSL_TGZ}"
 		if [ $? != 0 ] ; then
 			echo "    failed"
 			if [ -e "${OPENSSL_TGZ}" ] ; then 

@@ -115,7 +115,7 @@ static ExternalDeleteCallback s_delete = NULL;
 
 static ExternalSecurityHandler *s_security_handlers = NULL;
 
-#if defined(_LINUX) || defined(__MACOSX) || defined(TARGET_SUBPLATFORM_ANDROID)
+#if !defined(_WIN32)
 void getXtable(ExternalOperationCallback p_operations[], ExternalDeleteCallback p_delete, const char **r_name, ExternalDeclaration **r_table, ExternalDeleteCallback *r_external_delete) __attribute__((visibility("default")));
 void configureSecurity(ExternalSecurityHandler *p_handlers) __attribute__((visibility("default")));
 void setExternalInterfaceVersion(unsigned int p_version) __attribute__((visibility("default")));

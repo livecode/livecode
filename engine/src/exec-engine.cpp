@@ -772,7 +772,13 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
                 ctxt . Throw();
                 return;
             }
-            MCValueAssign(p_var . mark . text, t_mark_text);
+
+            // SN-2015-07-27: [[ Bug 15646 ]] MCExecContext::ConvertToString
+            //  already makes a copy. We want to make sure that p_var.mark.text
+            //  has 0 reference when exiting this function, so p_var.mark.text
+            //  must become t_mark_text, not get a copy of it.
+            MCValueRelease(p_var . mark . text);
+            p_var . mark . text = t_mark_text;
             
             // SN-2014-09-03: [[ Bug 13314 ]] MCMarkedText::changed updated to store the number of chars appended
             if (p_var . mark . changed != 0)
