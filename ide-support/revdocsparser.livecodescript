@@ -589,7 +589,7 @@ end revDocsGenerateDocsFileFromModular
 ##################################################
 
 private command logError pError
-   put pError & CR after url ("file:" & specialfolderpath("Desktop") & slash & "log.txt")
+   --put pError & CR after url ("file:" & specialfolderpath("Desktop") & slash & "log.txt")
 end logError
 
 private function extensionsFromType pType
