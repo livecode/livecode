@@ -312,7 +312,8 @@ void MCLoadableImageRep::UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_fr
 	if (m_frames == nil)
 		ConvertToMCGFrames(m_locked_frames, m_frame_count, false);
 	
-	MCImageFreeFrames(m_locked_frames, m_lock_count);
+	// PM-2015-07-13: [[ Bug 15590 ]] Free the correct number of frames
+	MCImageFreeFrames(m_locked_frames, m_frame_count);
 	m_locked_frames = nil;
 	
 	Release();

@@ -103,7 +103,9 @@ command serverBuilderRun pPlatform, pEdition
          end if
       end repeat
       
-      repeat for each word tDriver in "dbsqlite dbmysql dbpostgresql dbodbc dboracle"
+      // SN-2015-06-25: [[ ServerBuilder ]] DBoracle has never been in the Server zip.
+      //  Removed to suppress the builder warning
+      repeat for each word tDriver in "dbsqlite dbmysql dbpostgresql dbodbc"
          get tEngineFolder & slash & "server-" & tDriver & tLibExtension
          if there is a file it then
             builderLog "message", "Adding driver '" & tDriver & "'"
