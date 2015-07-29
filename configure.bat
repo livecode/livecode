@@ -71,10 +71,15 @@ IF EXIST "%programfiles(x86)%\Microsoft Speech SDK\*" (
 REM Pause so any warnings can be seen
 IF %warnings% NEQ 0 PAUSE
 
+REM Community or commercial?
+IF /I %BUILD_EDITION% == commercial (
+  SET gypfile="../livecode-commercial.gyp"
+)
+
 REM Run the configure step
-%python% gyp\gyp_main.py --format msvs --depth . --generator-output build-win-x86/livecode -Gmsvs_version=2010 %extra_options%
+%python% gyp\gyp_main.py --format msvs --depth . --generator-output build-win-x86/livecode -Gmsvs_version=2010 %extra_options% %gypfile%
+PAUSE
 
 REM Pause if there was an error so that the user gets a chance to see it
 IF %ERRORLEVEL% NEQ 0 PAUSE
 EXIT %ERRORLEVEL%
-
