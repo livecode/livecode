@@ -1582,7 +1582,8 @@ void MCControl::enter()
 			MCscreen->addtimer(this, MCM_internal2, MCsyncrate);
 		}
 	}
-	else
+	// PM-2015-07-29: [[ Bug 3178 ]] Make sure the Browse tool is active before sending a mouseEnter msg
+	else if (getstack()->gettool(this) == T_BROWSE)
 		message(MCM_mouse_enter);
     // AL-2013-01-14: [[ Bug 11343 ]] Add timer if the object handles mouseWithin in the behavior chain.
 	if (handlesmessage(MCM_mouse_within) && !(hashandlers & HH_IDLE))
@@ -1612,7 +1613,8 @@ void MCControl::leave()
 		MCdragaction = DRAG_ACTION_NONE;
 		MCdragdest = NULL;
 	}
-	else
+	// PM-2015-07-29: [[ Bug 3178 ]] Make sure the Browse tool is active before sending a mouseLeave msg
+	else if (getstack()->gettool(this) == T_BROWSE)
 		oldfocused->message(MCM_mouse_leave);
 	focused = NULL;
 }

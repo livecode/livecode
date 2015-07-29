@@ -1163,7 +1163,8 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
  
             if (wasfocused)
 				curcard->kfocus();
-			if (MCmousestackptr == this && !mfocus(MCmousex, MCmousey))
+			// PM-2015-07-29: [[ Bug 3178 ]] Make sure the Browse tool is active before sending a mouseEnter msg
+			if (MCmousestackptr == this && !mfocus(MCmousex, MCmousey) && getstack()->gettool(this) == T_BROWSE)
 				curcard->message(MCM_mouse_enter);
 		}
 		return ES_NORMAL;
@@ -1191,7 +1192,8 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
    		
 		if (wasfocused)
 			kfocus();
-		if (MCmousestackptr == this && !mfocus(MCmousex, MCmousey))
+		// PM-2015-07-29: [[ Bug 3178 ]] Make sure the Browse tool is active before sending a mouseEnter msg
+		if (MCmousestackptr == this && !mfocus(MCmousex, MCmousey) && getstack()->gettool(this) == T_BROWSE)
 			curcard->message(MCM_mouse_enter);
 	}
     
@@ -1744,7 +1746,9 @@ void MCStack::raise()
 void MCStack::enter()
 {
 	setcursor(getcursor(), False);
-	curcard->message(MCM_mouse_enter);
+	// PM-2015-07-29: [[ Bug 3178 ]] Make sure the Browse tool is active before sending a mouseEnter msg
+	if (getstack()->gettool(this) == T_BROWSE)
+		curcard->message(MCM_mouse_enter);
 }
 
 void MCStack::flip(uint2 count)
