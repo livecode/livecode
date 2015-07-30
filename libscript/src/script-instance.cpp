@@ -973,6 +973,8 @@ static bool MCScriptPlatformLoadSharedLibraryFunction(void *p_module, MCStringRe
     t_pointer = dlsym(p_module, *t_function_name);
 #endif
     
+    r_pointer = t_pointer;
+    
     return true;
 }
 
