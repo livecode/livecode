@@ -2056,7 +2056,7 @@ end __revDocsFormatParamArrayAsJSON
 function __revDocsFormatValuesArrayAsJSON pParamA
    local tOutput
    put "[" into tOutput 
-   put pParamA
+
    local tReturnTypes
    put "return,value,it,the result" into tReturnTypes
    repeat for each item tReturn in tReturnTypes
