@@ -23,5 +23,6 @@ extern bool MCCefBrowserFactoryCreate(MCBrowserFactoryRef &r_factory);
 MCBrowserFactoryMap s_factory_list[] =
 {
 	{ "cef", nil, MCCefBrowserFactoryCreate },
+	{ nil, nil, nil },
 };
 

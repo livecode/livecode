@@ -43,6 +43,21 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef TARGET_SUBPLATFORM_IPHONE
+extern void MCIPhoneRunBlockOnMainFiber(void (^block)(void));
+inline void MCBrowserRunBlockOnMainFiber(void (^p_block)(void))
+{
+	MCIPhoneRunBlockOnMainFiber(p_block);
+}
+#else
+inline void MCBrowserRunBlockOnMainFiber(void (^p_block)(void))
+{
+	p_block();
+}
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+
 MCUIWebViewBrowser::MCUIWebViewBrowser(void)
 {
 	m_view = nil;
@@ -51,10 +66,16 @@ MCUIWebViewBrowser::MCUIWebViewBrowser(void)
 
 MCUIWebViewBrowser::~MCUIWebViewBrowser(void)
 {
-	[(UIWebView *)m_view setDelegate: nil];
-	[m_view release];
-	
-	[m_delegate release];
+	MCBrowserRunBlockOnMainFiber(^{
+		if (m_view != nil)
+		{
+			[m_view setDelegate: nil];
+			[m_view release];
+		}
+		
+		if (m_delegate != nil)
+			[m_delegate release];
+	});
 }
 
 bool MCUIWebViewBrowser::GoToURL(const char *p_url)
@@ -64,7 +85,9 @@ bool MCUIWebViewBrowser::GoToURL(const char *p_url)
 		return false;
 	
 	//[m_delegate setPendingRequest: true];
-	[t_view loadRequest: [NSURLRequest requestWithURL: [NSURL URLWithString: [NSString stringWithCString: p_url encoding:NSUTF8StringEncoding]]]];
+	MCBrowserRunBlockOnMainFiber(^{
+		[t_view loadRequest: [NSURLRequest requestWithURL: [NSURL URLWithString: [NSString stringWithCString: p_url encoding:NSUTF8StringEncoding]]]];
+	});
 	
 	return true;
 }
@@ -75,7 +98,9 @@ bool MCUIWebViewBrowser::SetScrollingEnabled(bool p_value)
 	if (!GetView(t_view))
 		return false;
 	
-	[GetScrollView() setScrollEnabled: p_value ? YES : NO];
+	MCBrowserRunBlockOnMainFiber(^{
+		[GetScrollView() setScrollEnabled: p_value ? YES : NO];
+	});
 	
 	return true;
 }
@@ -86,7 +111,12 @@ bool MCUIWebViewBrowser::GetUrl(char *&r_url)
 	if (!GetView(t_view))
 		return false;
 	
-	return MCCStringClone([[[[t_view request] URL] absoluteString] cStringUsingEncoding: NSMacOSRomanStringEncoding], r_url);
+	__block bool t_success;
+	MCBrowserRunBlockOnMainFiber(^{
+		t_success = MCCStringClone([[[[t_view request] URL] absoluteString] cStringUsingEncoding: NSMacOSRomanStringEncoding], r_url);
+	});
+
+	return t_success;
 }
 
 bool MCUIWebViewBrowser::GetScrollingEnabled(bool& r_value)
@@ -95,7 +125,10 @@ bool MCUIWebViewBrowser::GetScrollingEnabled(bool& r_value)
 	if (!GetView(t_view))
 		return false;
 	
-	r_value = [GetScrollView() isScrollEnabled];
+	MCBrowserRunBlockOnMainFiber(^{
+		r_value = [GetScrollView() isScrollEnabled];
+	});
+	
 	return true;
 }
 
@@ -176,11 +209,13 @@ bool MCUIWebViewBrowser::GetRect(MCBrowserRect &r_rect)
 	if (!GetView(t_view))
 		return false;
 	
-	CGRect t_frame = [t_view frame];
-	r_rect.left = t_frame.origin.x;
-	r_rect.top = t_frame.origin.y;
-	r_rect.right = t_frame.origin.x + t_frame.size.width;
-	r_rect.bottom = t_frame.origin.y + t_frame.size.height;
+	MCBrowserRunBlockOnMainFiber(^{
+		CGRect t_frame = [t_view frame];
+		r_rect.left = t_frame.origin.x;
+		r_rect.top = t_frame.origin.y;
+		r_rect.right = t_frame.origin.x + t_frame.size.width;
+		r_rect.bottom = t_frame.origin.y + t_frame.size.height;
+	});
 	
 	return true;
 }
@@ -194,7 +229,10 @@ bool MCUIWebViewBrowser::SetRect(const MCBrowserRect &p_rect)
 	CGRect t_rect;
 	t_rect = CGRectMake(p_rect.left, p_rect.top, p_rect.right - p_rect.left, p_rect.bottom - p_rect.top);
 	
-	[t_view setFrame:t_rect];
+	MCBrowserRunBlockOnMainFiber(^{
+		[t_view setFrame:t_rect];
+	});
+
 	return true;
 }
 
@@ -205,7 +243,10 @@ bool MCUIWebViewBrowser::ExecStop()
 	if (!GetView(t_view))
 		return false;
 	
-	[t_view stopLoading];
+	MCBrowserRunBlockOnMainFiber(^{
+		[t_view stopLoading];
+	});
+	
 	return true;
 }
 
@@ -215,7 +256,10 @@ bool MCUIWebViewBrowser::GoForward()
 	if (!GetView(t_view))
 		return false;
 	
-	[t_view goForward];
+	MCBrowserRunBlockOnMainFiber(^{
+		[t_view goForward];
+	});
+	
 	return true;
 }
 
@@ -225,7 +269,10 @@ bool MCUIWebViewBrowser::GoBack()
 	if (!GetView(t_view))
 		return false;
 	
-	[t_view goBack];
+	MCBrowserRunBlockOnMainFiber(^{
+		[t_view goBack];
+	});
+	
 	return true;
 }
 
@@ -235,7 +282,10 @@ bool MCUIWebViewBrowser::ExecReload()
 	if (!GetView(t_view))
 		return false;
 	
-	[t_view reload];
+	MCBrowserRunBlockOnMainFiber(^{
+		[t_view reload];
+	});
+	
 	return true;
 }
 
@@ -245,8 +295,10 @@ bool MCUIWebViewBrowser::EvaluateJavaScript(const char *p_script, char *&r_resul
 	if (!GetView(t_view))
 		return false;
 	
-	NSString *t_result;
-	t_result = [t_view stringByEvaluatingJavaScriptFromString: [NSString stringWithCString: p_script encoding:NSUTF8StringEncoding]];
+	__block NSString *t_result;
+	MCBrowserRunBlockOnMainFiber(^{
+		t_result = [t_view stringByEvaluatingJavaScriptFromString: [NSString stringWithCString: p_script encoding:NSUTF8StringEncoding]];
+	});
 	
 	if (t_result == nil)
 		return false;
@@ -262,8 +314,12 @@ bool MCUIWebViewBrowser::ExecLoad(const char *p_url, const char *p_html)
 	
 	// MW-2012-10-01: [[ Bug 10422 ]] Make sure we mark a pending request so the
 	//   HTML loading doesn't divert through a loadRequested message.
-	[m_delegate setPendingRequest: true];
-	[t_view loadHTMLString: [NSString stringWithCString: p_html encoding:NSUTF8StringEncoding] baseURL: [NSURL URLWithString: [NSString stringWithCString: p_url encoding:NSUTF8StringEncoding]]];
+
+	MCBrowserRunBlockOnMainFiber(^{
+		[m_delegate setPendingRequest: true];
+		[t_view loadHTMLString: [NSString stringWithCString: p_html encoding:NSUTF8StringEncoding] baseURL: [NSURL URLWithString: [NSString stringWithCString: p_url encoding:NSUTF8StringEncoding]]];
+	});
+	
 	return true;
 }
 
@@ -360,7 +416,13 @@ UIScrollView *MCUIWebViewBrowser::GetScrollView(void)
 	if (!GetView(t_view))
 		return nil;
 	
-	return [t_view scrollView];
+	__block UIScrollView *t_scroll;
+
+	MCBrowserRunBlockOnMainFiber(^{
+		t_scroll = [t_view scrollView];
+	});
+	
+	return t_scroll;
 }
 
 bool MCUIWebViewBrowser::GetView(UIWebView *&r_view)
@@ -385,18 +447,32 @@ void *MCUIWebViewBrowser::GetNativeLayer()
 
 bool MCUIWebViewBrowser::Init(void)
 {
-	UIWebView *t_view;
-	t_view = [[UIWebView alloc] initWithFrame: CGRectMake(0, 0, 0, 0)];
-	if (t_view == nil)
-		return false;
+	__block bool t_success;
+	t_success = true;
 	
-	[t_view setHidden: YES];
+	MCBrowserRunBlockOnMainFiber(^{
+		UIWebView *t_view;
+		t_view = [[UIWebView alloc] initWithFrame: CGRectMake(0, 0, 0, 0)];
+		t_success = t_view != nil;
+		
+		if (t_success)
+		{
+			[t_view setHidden: YES];
+			
+			m_delegate = [[MCUIWebViewBrowserDelegate alloc] initWithInstance: this];
+			t_success = m_delegate != nil;
+		}
+		
+		if (t_success)
+		{
+			[t_view setDelegate: m_delegate];
+			m_view = t_view;
+		}
+		else if (t_view != nil)
+			[t_view release];
+	});
 	
-	m_delegate = [[MCUIWebViewBrowserDelegate alloc] initWithInstance: this];
-	[t_view setDelegate: m_delegate];
-	
-	m_view = t_view;
-	return true;
+	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
