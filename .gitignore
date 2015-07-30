@@ -96,6 +96,9 @@ xcuserdata/
 make-*_*/
 vsprojects/
 xcprojects/
+GPATH
+GRTAGS
+GTAGS
 
 # Build folders #
 #################
