@@ -253,9 +253,9 @@
 							'OTHER_LDFLAGS':
 							[
 								'-Wl,-sectcreate,__MISC,__deps,<(deps_file)',
-								'-Wl,-exported_symbol,_main',
-								'-Wl,-exported_symbol,_load_module',
-								'-Wl,-exported_symbol,_resolve_symbol',
+								'-Wl,-u,_main',
+								'-Wl,-u,_load_module',
+								'-Wl,-u,_resolve_symbol',
 								#'-all_load',		# Dead stripping later will remove un-needed symbols
 							],
 						},

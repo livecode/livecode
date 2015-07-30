@@ -303,14 +303,16 @@ private handler paintCheckerboard() returns nothing
 end handler
 
 private handler paintGradient() returns nothing
-   variable tGradient as Gradient
-   put linear gradient with ramp mGradientRamp into tGradient
-   set the from of tGradient to point [the left of mGradientRectangle, (the top of mGradientRectangle + the bottom of mGradientRectangle) / 2]
-   set the to of tGradient to point [the right of mGradientRectangle, (the top of mGradientRectangle + the bottom of mGradientRectangle) / 2]
-   set the via of tGradient to point [the left of mGradientRectangle, the bottom of mGradientRectangle]
-   add rectangle path of mGradientRectangle to this canvas
-   set the paint of this canvas to tGradient
-   fill this canvas
+   if mGradientRamp is not empty then
+      variable tGradient as Gradient
+      put linear gradient with ramp mGradientRamp into tGradient
+      set the from of tGradient to point [the left of mGradientRectangle, (the top of mGradientRectangle + the bottom of mGradientRectangle) / 2]
+      set the to of tGradient to point [the right of mGradientRectangle, (the top of mGradientRectangle + the bottom of mGradientRectangle) / 2]
+      set the via of tGradient to point [the left of mGradientRectangle, the bottom of mGradientRectangle]
+      add rectangle path of mGradientRectangle to this canvas
+      set the paint of this canvas to tGradient
+      fill this canvas
+   end if
 end handler
 
 private handler paintRulerBottom() returns nothing

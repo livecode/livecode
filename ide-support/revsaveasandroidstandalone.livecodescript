@@ -603,6 +603,17 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       revStandaloneProgress "Building executable..."
       
       local tDeploy
+      # AL-2015-07-24: [[ Standalone Extensions ]] Include selected extensions in android standalone
+      repeat for each line tExtension in revIDEExtensionsOrderByDependency(tSettings["extensions"])
+         local tExtensionFile
+         put revIDEExtensionModuleFile(tExtension) into tExtensionFile
+         if tDeploy["modules"] is empty then
+            put tExtensionFile into tDeploy["modules"]
+         else
+            put return & tExtensionFile after tDeploy["modules"]
+         end if
+      end repeat
+      
       -- Engine to use
       put mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Standalone") into tDeploy["engine"]
       // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occured

@@ -107,8 +107,8 @@ inline MCGRectangle MCRectangle32ToMCGRectangle(const MCRectangle32 &p_rect)
 inline MCRectangle32 MCRectangle32FromMCGIntegerRectangle(const MCGIntegerRectangle &p_rect)
 {
 	return MCRectangle32Make(p_rect.origin.x, p_rect.origin.y,
-                             int32_t(MCMin(p_rect.size.width, INT32_MAX)),
-                             int32_t(MCMin(p_rect.size.height, INT32_MAX)));
+	                         int32_t(MCMin(p_rect.size.width, uint32_t(INT32_MAX))),
+	                         int32_t(MCMin(p_rect.size.height, uint32_t(INT32_MAX))));
 }
 
 inline MCGIntegerRectangle MCRectangle32ToMCGIntegerRectangle(const MCRectangle32 &p_rect)
@@ -129,8 +129,8 @@ inline MCRectangle MCRectangleFromMCGIntegerRectangle(const MCGIntegerRectangle 
 {
 	return MCRectangleMake(int16_t(MCClamp(p_rect.origin.x,     INT16_MIN, INT16_MAX)),
                            int16_t(MCClamp(p_rect.origin.y,     INT16_MIN, INT16_MAX)),
-                           uint16_t(MCClamp(p_rect.size.width,  0, UINT16_MAX)),
-                           uint16_t(MCClamp(p_rect.size.height, 0, UINT16_MAX)));
+	                       uint16_t(MCClamp(p_rect.size.width,  0U, uint32_t(UINT16_MAX))),
+	                       uint16_t(MCClamp(p_rect.size.height, 0U, uint32_t(UINT16_MAX))));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
