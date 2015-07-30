@@ -153,6 +153,13 @@ MCEmscriptenSystem::GetAddress(MCStringRef & r_address)
 	return false;
 }
 
+MCServiceInterface *
+MCEmscriptenSystem::QueryService(MCServiceType type)
+{
+	/* No Emscripten-specific services */
+	return NULL;
+}
+
 /* ----------------------------------------------------------------
  * Engine process information
  * ---------------------------------------------------------------- */
@@ -238,6 +245,15 @@ Boolean
 MCEmscriptenSystem::DeleteFolder(MCStringRef p_path)
 {
 	/* FIXME Implement Deletefolder() -- using rmdir(2) */
+	/* p_path does not exist */
+	SetErrno(ENOENT);
+	return false;
+}
+
+Boolean
+MCEmscriptenSystem::DeleteFile(MCStringRef p_path)
+{
+	/* FIXME Implement DeleteFile() -- using unlink(2) */
 	/* p_path does not exist */
 	SetErrno(ENOENT);
 	return false;
@@ -702,19 +718,19 @@ MCEmscriptenSystem::IsInteractiveConsole(int p_fd)
  * ---------------------------------------------------------------- */
 
 void
-LaunchDocument(MCStringRef p_document)
+MCEmscriptenSystem::LaunchDocument(MCStringRef p_document)
 {
 	/* Successfully do nothing */
 }
 
 void
-LaunchUrl(MCStringRef p_document)
+MCEmscriptenSystem::LaunchUrl(MCStringRef p_document)
 {
 	/* Successfully do nothing */
 }
 
 void
-DoAlternateLanguage(MCStringRef p_script,
+MCEmscriptenSystem::DoAlternateLanguage(MCStringRef p_script,
                     MCStringRef p_language)
 {
 	/* Successfully do nothing */
