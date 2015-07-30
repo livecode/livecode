@@ -354,6 +354,14 @@ bool MCScreenDC::platform_getwindowgeometry(Window p_window, MCRectangle& r_rect
 	return true;
 }
 
+void *MCScreenDC::GetNativeWindowHandle(Window p_window)
+{
+	if (p_window == nil)
+		return nil;
+	
+	return MCIPhoneGetView();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCScreenDC::beep(void)
