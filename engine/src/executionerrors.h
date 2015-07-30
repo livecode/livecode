@@ -2630,28 +2630,31 @@ enum Exec_errors
     // {EE-0860} ceil: bad parameter
     EE_CEIL_BADSOURCE,
     
+    // {EE-861} commandArguments: bad parameter
+    EE_COMMANDARGUMENTS_BADPARAM,
+    
     // AL-2015-07-07: The following error codes are 8.0 specific so should have their numbers
     //  incremented whenever new codes are merged up from below.
     // MW-2014-12-10: [[ Extensions ]] The error codes used to indicate an extension error.
-    // {EE-0861} extension: error occured with domain
+    // {EE-0862} extension: error occured with domain
     EE_EXTENSION_ERROR_DOMAIN,
-    // {EE-0862} extension: error occured with description
+    // {EE-0863} extension: error occured with description
     EE_EXTENSION_ERROR_DESCRIPTION,
-    // {EE-0863} extension: error occured with file
+    // {EE-0864} extension: error occured with file
     EE_EXTENSION_ERROR_FILE,
-    // {EE-0864} extension: error occured with line
+    // {EE-0865} extension: error occured with line
     EE_EXTENSION_ERROR_LINE,
     
-    // {EE-0865} load: error in extension expression
+    // {EE-0866} load: error in extension expression
     EE_LOAD_BADEXTENSION,
     
-    // {EE-0866} load: error in resource path expression
+    // {EE-0867} load: error in resource path expression
     EE_LOAD_BADRESOURCEPATH,
     
-    // {EE-0867} System error: function
+    // {EE-0868} System error: function
     EE_SYSTEM_FUNCTION,
 
-    // {EE-0868} System error: code
+    // {EE-0869} System error: code
     EE_SYSTEM_CODE,
 
     // {EE-0869} System error: message
