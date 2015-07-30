@@ -515,27 +515,65 @@ MCEmscriptenSystem::ResolvePath(MCStringRef p_path,
 	/* ---------- 1. Expand user prefix */
 	MCAutoStringRef t_user_expand;
 
-	/* At the moment, no user exists other than the current user,
-	 * whose home directory is "/" */
+	/* Check for a user prefix */
+	if (MCStringBeginsWithCString(p_path, (const char_t *) "~",
+	                              kMCStringOptionCompareExact))
+	{
+		/* Split into user part and rest of path */
+		MCAutoStringRef t_user_part;
+		MCAutoStringRef t_rel_part;
+		uindex_t t_sep_offset;
+		bool t_have_rel_part;
 
-	if (MCStringIsEqualToCString(p_path, "~", kMCStringOptionCompareExact))
-	{
-		return MCStringCreateWithCString("/", r_resolved_path);
-	}
-	else if (MCStringBeginsWithCString(p_path, (const char_t *) "~/",
-	                                   kMCStringOptionCompareExact))
-	{
-		if (!MCStringCopySubstring(p_path, MCRangeMake(1, UINDEX_MAX), &t_user_expand))
+		if (MCStringFirstIndexOfChar(p_path, '/', 0,
+		                             kMCStringOptionCompareExact,
+		                             t_sep_offset))
 		{
-			return false;
+			t_have_rel_part = true;
+
+			if (!MCStringDivideAtIndex(p_path, t_sep_offset,
+			                           &t_user_part, &t_rel_part))
+			{
+				return false;
+			}
+		}
+		else
+		{
+			t_have_rel_part = false;
+			t_user_part = p_path;
+			t_rel_part = kMCEmptyString;
+		}
+
+		/* At the moment, no user exists other than the current user,
+		 * whose home directory is "/livecode" */
+		if (MCStringIsEqualToCString(*t_user_part, "~",
+		                             kMCStringOptionCompareExact) ||
+		    MCStringIsEqualToCString(*t_user_part, "~livecode",
+		                             kMCStringOptionCompareExact))
+		{
+			if (t_have_rel_part)
+			{
+				if (!MCStringFormat(&t_user_expand, "%@/%@",
+				                    MCSTR("/livecode"), *t_rel_part))
+				{
+					return false;
+				}
+			}
+			else
+			{
+				t_user_expand = MCSTR("/livecode");
+			}
+		}
+		else
+		{
+			/* User prefix doesn't correspond to an actual username */
+			t_user_expand = p_path;
 		}
 	}
 	else
 	{
-		if (!MCStringCopy(p_path, &t_user_expand))
-		{
-			return false;
-		}
+		/* No user prefix */
+		t_user_expand = p_path;
 	}
 
 	/* ---------- 2. Make absolute */
@@ -557,7 +595,8 @@ MCEmscriptenSystem::ResolvePath(MCStringRef p_path,
 		MCAutoStringRef t_cwd;
 		if (!GetCurrentFolder(&t_cwd))
 		{
-			return false;
+			/* System error -> return "best" expansion */
+			return MCStringCopy(*t_user_expand, r_resolved_path);
 		}
 
 		const char *t_fmt;
@@ -578,9 +617,35 @@ MCEmscriptenSystem::ResolvePath(MCStringRef p_path,
 	}
 
 	/* ---------- 3. Follow all symlinks */
-	/* No symlinks! */
 
-	return MCStringCopy(*t_absolute, r_resolved_path);
+	MCAutoStringRefAsSysString t_absolute_sys;
+	if (!t_absolute_sys.Lock(*t_absolute))
+	{
+		return false;
+	}
+
+	/* Use realpath(3) to recursively resolve symlinks */
+	errno = 0;
+	char *t_realpath_buf = realpath(*t_absolute_sys, NULL);
+	if (NULL == t_realpath_buf)
+	{
+		/* System error -> return "best" expansion */
+		return MCStringCopy(*t_absolute, r_resolved_path);
+	}
+
+	MCAutoStringRef t_realpath;
+	bool t_realpath_ok = MCStringCreateWithSysString(t_realpath_buf,
+	                                                 &t_realpath);
+
+	free(t_realpath_buf);
+
+	if (!t_realpath_ok)
+	{
+		return false;
+	}
+
+
+	return MCStringCopy(*t_realpath, r_resolved_path);
 }
 
 bool
