@@ -1970,6 +1970,9 @@ private function builderGetDocsAPIData pExtensions
       local tLcdoc
       put revDocsGenerateDocsFileFromModularFile(tFolder & slash & tSource) into tLcdoc
       
+      # Output the lcdoc file
+      put textEncode(tLcdoc, "utf-8") into url ("binfile:" & tFolder & slash & "api.lcdoc")
+      
       # Convert to JSON
       put revDocsFormatDocTextAsJSON(tLcdoc,"", "LiveCode") into tExtensionAPI
       
