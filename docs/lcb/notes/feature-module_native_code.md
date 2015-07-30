@@ -14,15 +14,18 @@ archive. The engine derives the appropriate path from the requested library name
 current platform. The structure is as follows:
 
     <extension>/
-      code/
-        mac/
-          <library>.dylib
-        linux-x86/
-          <library>.so
-        linux-x86_64/
-          <library>.so
-        win-x86/
-          <library>.dll
+      resources/
+        code/
+          mac/
+            <library>.dylib
+          linux-x86/
+            <library>.so
+          linux-x86_64/
+            <library>.so
+          win-x86/
+            <library>.dll
 
 *Note:* At present, only the desktop platforms are supported.
 
+*Note:* The above structure is likely to change in a future release, in particular the 'code'
+folder will sit at the same level as resources rather than within it.
