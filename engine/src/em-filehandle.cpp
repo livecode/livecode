@@ -48,6 +48,14 @@ MCEmscriptenFileHandle::~MCEmscriptenFileHandle()
 	}
 }
 
+void *
+MCEmscriptenFileHandle::GetFilePointer()
+{
+	/* MCEmscriptenFileHandle doesn't actually encapsulate a file
+	 * pointer, only a file handle. */
+	return NULL;
+}
+
 /* ----------------------------------------------------------------
  * Basic operations
  * ---------------------------------------------------------------- */
@@ -73,14 +81,10 @@ MCEmscriptenFileHandle::Read(void *x_buffer,
                              uint32_t p_length,
                              uint32_t & r_read)
 {
+	MCAssert(NULL != x_buffer);
 
 	/* FIXME Figure out why this is needed */
 	if (MCabortscript)
-	{
-		return false;
-	}
-
-	if (NULL == x_buffer)
 	{
 		return false;
 	}
@@ -132,6 +136,58 @@ MCEmscriptenFileHandle::Read(void *x_buffer,
 	}
 
 	r_read = t_total;
+	return true;
+}
+
+bool
+MCEmscriptenFileHandle::Write(const void *p_buffer,
+                              uint32_t p_length)
+{
+	MCAssert(NULL != p_buffer);
+
+	/* Write in a loop until the whole requested length has been
+	 * written, or EOF is reached, or an unrecoverable error
+	 * occurs. */
+	const char *t_write_ptr = reinterpret_cast<const char *>(p_buffer);
+	size_t t_total = 0;
+	ssize_t t_written = 0;
+
+	while (t_total < p_length)
+	{
+		errno = 0;
+		t_written = write(m_fd,
+		                  t_write_ptr + t_total,
+		                  p_length - t_total);
+
+		if (-1 == t_written)
+		{
+			/* An error occurred before any data was written */
+
+			if (errno == EAGAIN)
+			{
+				/* FIXME figure out why this is a success */
+				return true;
+			}
+
+			if (errno == EINTR)
+			{
+				/* On a signal interruption, just try again */
+				continue;
+			}
+
+			return false;
+		}
+
+		if (0 == t_written)
+		{
+			/* successfully writing but making no progress is weird --
+			 * treat it as an error */
+			return false;
+		}
+
+		t_total += t_written;
+	}
+
 	return true;
 }
 
@@ -193,4 +249,55 @@ MCEmscriptenFileHandle::GetFileSize()
 	}
 
 	return t_stat.st_size;
+}
+
+/* ----------------------------------------------------------------
+ * Filesystem-related operations
+ * ---------------------------------------------------------------- */
+
+bool
+MCEmscriptenFileHandle::Truncate()
+{
+	errno = 0;
+
+	/* Check the current file position */
+	int64_t t_length = Tell();
+	if (0 != errno)
+	{
+		return false;
+	}
+
+	/* Truncate to the current file position */
+	return (0 == ftruncate(m_fd, t_length));
+}
+
+bool
+MCEmscriptenFileHandle::Sync()
+{
+	errno = 0;
+	return (0 == fsync(m_fd));
+}
+
+bool
+MCEmscriptenFileHandle::Flush()
+{
+	/* All MCEmscriptenFileHandle instances are unbuffered. */
+	return true;
+}
+
+/* ----------------------------------------------------------------
+ * Buffer-based operations
+ * ---------------------------------------------------------------- */
+
+bool
+MCEmscriptenFileHandle::PutBack(char p_char)
+{
+	return false;
+}
+
+bool
+MCEmscriptenFileHandle::TakeBuffer(void *& r_buffer,
+                                   size_t & r_length)
+{
+	return false;
 }
