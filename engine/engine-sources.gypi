@@ -1146,9 +1146,6 @@
 					[
 						'src/tilecachegl.cpp',
 						'src/mcssl.cpp',
-						'src/path.cpp',
-						'src/pathgray.cpp',
-						'src/pathprocess.cpp',
 					],
 				},
 			],
