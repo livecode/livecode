@@ -593,7 +593,8 @@ enum MCSystemUrlStatus
 	kMCSystemUrlStatusUploading,
 	kMCSystemUrlStatusUploaded,
 	kMCSystemUrlStatusLoading,
-	kMCSystemUrlStatusFinished
+	kMCSystemUrlStatusFinished,
+	kMCSystemUrlStatusLoadingProgress,
 };
 
 typedef bool (*MCSystemUrlCallback)(void *context, MCSystemUrlStatus status, const void *param);
