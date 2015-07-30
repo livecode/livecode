@@ -600,7 +600,7 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\ilvl%d", MCMin(p_event_data.paragraph_style.list_depth, 8U));
 			
 			// Emit the tag prefix and styling.
-			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\listtext\\tab");
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "{\\listtext\\tab");
 			export_rtf_emit_char_style_changes(ctxt.m_text, ctxt . styles[ctxt . style_index], ctxt . parent_style);
 			
 			// Now fetch the list style of the current paragraph and output the
