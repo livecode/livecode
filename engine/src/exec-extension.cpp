@@ -194,6 +194,40 @@ void MCEngineLoadExtensionFromData(MCExecContext& ctxt, MCDataRef p_extension_da
     return;
 }
 
+// This is the callback given to libscript so that it can resolve the absolute
+// path of native code libraries used by foreign handlers in the module. At
+// the moment we use the resources path of the module, however it will need to be
+// changed to a separate location at some point with explicit declaration so that
+// iOS linkage and Android placement issues can be resolved.
+//
+// Currently it expects:
+//   <resources>
+//     code/
+//       mac/<name>.dylib
+//       linux-x86/<name>.so
+//       linux-x86_64/<name>.so
+//       win-x86/<name>.dll
+//
+static bool MCEngineResolveSharedLibrary(MCScriptModuleRef p_module, MCStringRef p_name, MCStringRef& r_path)
+{
+    // If the module has no resource path, then it has no code.
+    MCAutoStringRef t_resource_path;
+    if (!MCEngineLookupResourcePathForModule(p_module, Out(t_resource_path)))
+        return false;
+    
+#if defined(_MACOSX)
+    return MCStringFormat(r_path, "%@/code/mac/%@.dylib", *t_resource_path, p_name);
+#elif defined(_LINUX) && defined(__32_BIT__)
+    return MCStringFormat(r_path, "%@/code/linux-x86/%@.so", *t_resource_path, p_name);
+#elif defined(_LINUX) && defined(__64_BIT__)
+    return MCStringFormat(r_path, "%@/code/linux-x86_64/%@.so", *t_resource_path, p_name);
+#elif defined(_WINDOWS)
+    return MCStringFormat(r_path, "%@/code/win-x86/%@.dll", *t_resource_path, p_name);
+#else
+    return false;
+#endif
+}
+
 void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename, MCStringRef p_resource_path)
 {
     ctxt . SetTheResultToEmpty();
@@ -205,6 +239,10 @@ void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename, MCSt
     MCAutoDataRef t_data;
     if (!MCS_loadbinaryfile(*t_resolved_filename, &t_data))
         return;
+    
+    // Make sure we set the shared library callback - this should be done in
+    // module init for 'extension' when we have such a mechanism.
+    MCScriptSetResolveSharedLibraryCallback(MCEngineResolveSharedLibrary);
     
     MCEngineLoadExtensionFromData(ctxt, *t_data, p_resource_path);
  }
