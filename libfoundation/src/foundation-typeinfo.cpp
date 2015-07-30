@@ -557,14 +557,18 @@ bool MCForeignTypeInfoCreate(const MCForeignTypeDescriptor *p_descriptor, MCType
 }
 
 MC_DLLEXPORT_DEF
-const MCForeignTypeDescriptor *MCForeignTypeInfoGetDescriptor(MCTypeInfoRef self)
+const MCForeignTypeDescriptor *MCForeignTypeInfoGetDescriptor(MCTypeInfoRef unresolved_self)
 {
+	MCTypeInfoRef self;
+	self = __MCTypeInfoResolve(unresolved_self);
     return &self -> foreign . descriptor;
 }
 
 MC_DLLEXPORT_DEF
-void *MCForeignTypeInfoGetLayoutType(MCTypeInfoRef self)
+void *MCForeignTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self)
 {
+	MCTypeInfoRef self;
+	self = __MCTypeInfoResolve(unresolved_self);
     return self -> foreign . ffi_layout_type;
 }
 
