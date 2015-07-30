@@ -331,7 +331,8 @@ Exec_stat MCEngineHandleLibraryMessage(MCNameRef p_message, MCParameter *p_param
     
     MCValueRef t_result;
     t_result = nil;
-    if (MCScriptCallHandlerOfInstance(t_ext -> instance, p_message, t_arguments . Ptr(), t_arguments . Size(), t_result))
+    if (t_success &&
+        MCScriptCallHandlerOfInstance(t_ext -> instance, p_message, t_arguments . Ptr(), t_arguments . Size(), t_result))
     {
         MCParameter *t_param;
         t_param = p_parameters;
@@ -644,12 +645,12 @@ bool MCExtensionTryToConvertFromScriptType(MCExecContext& ctxt, MCTypeInfoRef p_
         if (!__script_try_to_convert_to_list(ctxt, x_value, r_converted))
             return false;
     }
-    else if (MCTypeInfoIsRecord(t_resolved_type . named_type))
+    else if (MCTypeInfoIsRecord(t_resolved_type . type))
     {
         if (!__script_try_to_convert_to_record(ctxt, t_resolved_type . named_type, x_value, r_converted))
             return false;
     }
-    else if (MCTypeInfoIsForeign(t_resolved_type . named_type))
+    else if (MCTypeInfoIsForeign(t_resolved_type . type))
     {
         if (!__script_try_to_convert_to_foreign(ctxt, t_resolved_type . named_type, x_value, r_converted))
             return false;
