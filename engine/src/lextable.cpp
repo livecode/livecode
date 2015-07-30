@@ -1978,6 +1978,8 @@ static LT repeat_table[] =
         {"for", TT_UNDEFINED, RF_FOR},
         {"forever", TT_UNDEFINED, RF_FOREVER},
         {"step", TT_UNDEFINED, RF_STEP},
+        // SN-2015-06-18: [[ Bug 15509 ]] Parse 'times' in 'repeat for x times'
+        {"times", TT_UNDEFINED, RF_TIMES},
         {"until", TT_UNDEFINED, RF_UNTIL},
         {"while", TT_UNDEFINED, RF_WHILE},
         {"with", TT_UNDEFINED, RF_WITH}

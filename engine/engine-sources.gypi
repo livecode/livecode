@@ -220,6 +220,7 @@
 			'src/vclip.h',
 			'src/widget.h',
 			'src/widget-events.h',
+            'src/widget-ref.h',
 			'src/aclip.cpp',
 			'src/block.cpp',
 			'src/button.cpp',
@@ -297,6 +298,9 @@
 			'src/vclip.cpp',
 			'src/widget.cpp',
 			'src/widget-events.cpp',
+            'src/widget-ref.cpp',
+            'src/widget-syntax.cpp',
+            'src/widget-popup.cpp',
 			
 			# Group "Desktop"
 			'src/dskmac.cpp',
@@ -381,7 +385,6 @@
 			'src/mblstore.h',
 			'src/mblsyntax.h',
 			'src/mblad.cpp',
-			'src/mblalert.cpp',
 			'src/mblcalendar.cpp',
 			'src/mblcamera.cpp',
 			'src/mblcontact.cpp',
@@ -391,7 +394,6 @@
 			'src/mblflst.cpp',
 			'src/mblhandlers.cpp',
 			'src/mblmain.cpp',
-			'src/mblnetwork.cpp',
 			'src/mblnotification.cpp',
 			'src/mblsensor.cpp',
 			'src/mblspec.cpp',
@@ -495,6 +497,7 @@
 			'src/syslnxregion.cpp',
 			'src/sysosxregion.cpp',
 			'src/sysspec.cpp',
+			'src/sysspec-url.cpp',
 			'src/sysunxdate.cpp',
 			'src/sysunxnetwork.cpp',
 			'src/sysw32fs.cpp',
@@ -559,6 +562,20 @@
 			
 			# Other files
 			'src/socket_resolve.cpp',
+			
+			# Native layers
+			'src/native-layer.h',
+			'src/native-layer-android.h',
+			'src/native-layer-ios.h',
+			'src/native-layer-mac.h',
+			'src/native-layer-win32.h',
+			'src/native-layer-x11.h',
+			'src/native-layer.cpp',
+			'src/native-layer-android.cpp',
+			'src/native-layer-ios.mm',
+			'src/native-layer-mac.mm',
+			'src/native-layer-win32.cpp',
+			'src/native-layer-x11.cpp',
 		],
 		
 		# Sources that are only for desktop mode
@@ -828,6 +845,14 @@
 			'src/java/com/runrev/android/billing/google/Security.java',
 			'src/java/com/runrev/android/billing/google/GoogleBillingProvider.java',
 			'src/java/com/runrev/android/billing/samsung/SamsungBillingProvider.java',
+			'src/java/com/runrev/android/nativecontrol/BrowserControl.java',
+			'src/java/com/runrev/android/nativecontrol/ExtVideoView.java',
+			'src/java/com/runrev/android/nativecontrol/InputControl.java',
+			'src/java/com/runrev/android/nativecontrol/InputView.java',
+			'src/java/com/runrev/android/nativecontrol/NativeControl.java',
+			'src/java/com/runrev/android/nativecontrol/NativeControlModule.java',
+			'src/java/com/runrev/android/nativecontrol/ScrollerControl.java',
+			'src/java/com/runrev/android/nativecontrol/VideoControl.java',
 		],
 		
 		# AIDL sources for Android
@@ -913,11 +938,13 @@
 						['exclude', '(^|/)sysosx.*\\.(cpp|mm)$'],
 						['exclude', '\\.mac\\.'],
 						['exclude', '(^|/)mac-'],
+						['exclude', '-mac\.(mm|cpp)$'],
 					],
 					
 					'sources!':
 					[
 						'src/dskmac.cpp',
+						'src/srvmac.cpp',
 					],
 				},
 			],
@@ -929,6 +956,7 @@
 						['exclude', '(^|/)dsklnx.*\\.cpp$'],
 						['exclude', '(^|/)syslnx.*\\.cpp$'],
 						['exclude', '(^|/)linux-'],
+						['exclude', '-x11\.cpp$'],
 					],
 				},
 			],
@@ -940,11 +968,30 @@
 						['exclude', '(^|/)sysw32.*\\.cpp$'],
 						['exclude', '(^|/)dskw32.*\\.cpp$'],
 						['exclude', '(^|/)win(dows|32)?-'],
+						['exclude', '-win32\.cpp$'],
 					],
 					
 					'sources!':
 					[
 						'src/srvwindows.cpp',
+					],
+				},
+			],
+			[
+				'OS != "android"',
+				{
+					'sources/':
+					[
+						['exclude', '-android\.cpp$'],
+					],
+				},
+			],
+			[
+				'OS != "ios"',
+				{
+					'sources/':
+					[
+						['exclude', '-ios\.(mm|cpp)$'],
 					],
 				},
 			],
@@ -1036,6 +1083,7 @@
 					[
 						'src/stacke.cpp',
 						'src/sysunxdate.cpp',
+						'src/sysunxrandom.cpp',
 						
 						'src/mbliphoneembedded.mm',
 						'src/mbliphoneembeddedtest.mm',

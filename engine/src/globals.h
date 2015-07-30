@@ -128,7 +128,7 @@ extern Boolean MCselectgrouped;
 extern Boolean MCselectintersect;
 extern MCRectangle MCwbr;
 extern uint2 MCjpegquality;
-extern uint2 MCpaintcompression;
+extern Export_format MCpaintcompression;
 extern uint2 MCrecordformat;
 extern uint2 MCsoundchannel;
 extern uint2 MCrecordsamplesize;
@@ -163,8 +163,6 @@ extern Boolean MCownselection;
 extern MCUndolist *MCundos;
 extern MCSellist *MCselected;
 extern MCStacklist *MCstacks;
-extern MCStacklist *MCtodestroy;
-extern MCObject *MCtodelete;
 extern MCCardlist *MCrecent;
 extern MCCardlist *MCcstack;
 extern MCDispatch *MCdispatcher;
@@ -410,6 +408,42 @@ extern char *MCsysencoding;
 // Locales
 extern MCLocaleRef kMCBasicLocale;
 extern MCLocaleRef kMCSystemLocale;
+
+enum
+{
+    kMCActionsUpdateScreen = 1 << 0,
+    kMCActionsDrainDeletedObjects = 1 << 2,
+};
+
+extern uint32_t MCactionsrequired;
+extern void MCActionsDoRunSome(uint32_t mask);
+
+inline void MCActionsSchedule(uint32_t mask)
+{
+    MCactionsrequired |= mask;
+}
+
+inline void MCActionsRunAll(void)
+{
+    if (MCactionsrequired != 0)
+        MCActionsDoRunSome(UINT32_MAX);
+}
+
+inline void MCActionsRunSome(uint32_t mask)
+{
+    if ((MCactionsrequired & mask) != 0)
+        MCActionsDoRunSome(mask);
+}
+
+inline void MCRedrawUpdateScreen(void)
+{
+    MCActionsRunSome(kMCActionsUpdateScreen);
+}
+
+inline void MCDeletedObjectsDrain(void)
+{
+    MCActionsRunSome(kMCActionsDrainDeletedObjects);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 

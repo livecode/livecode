@@ -234,6 +234,8 @@ void MCEventQueueFinalize(void)
 		case kMCEventTypeNotify:
 			t_event -> notify . callback(t_event -> notify . state, false);
 			break;
+		default:
+			break;
 		}
 
 		if (t_event -> type == kMCEventTypeImeCompose)

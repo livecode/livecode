@@ -44,11 +44,12 @@ use com.livecode.engine
 metadata title is "Switch Button"
 metadata author is "LiveCode"
 metadata version is "1.0.3"
+metadata svgicon is "M47.3,0H18.5C8.3,0,0,8.3,0,18.5v0C0,28.7,8.3,37,18.5,37h28.8c10.2,0,18.5-8.3,18.5-18.5v0C65.8,8.3,57.5,0,47.3,0zM19.8,33.5c-8.3,0-15-6.7-15-15c0-8.3,6.7-15,15-15s15,6.7,15,15C34.8,26.8,28,33.5,19.8,33.5z"
 --
 
 -- property declarations
-property checked			get mIsChecked		set setChecked
-metadata checked.default is "false"
+property isChecked			get mIsChecked		set setChecked
+metadata isChecked.default is "false"
 --
 
 -- private instance variables
@@ -157,7 +158,7 @@ public handler OnMouseUp()
 	post "mouseUp" with [mIsChecked]
 end handler
 
-private handler getPath(in pShape as String) as Path
+private handler getPath(in pShape as String) returns Path
 	if pShape is "box" then
 		return rounded rectangle path of rectangle [(my width)/2 - (my height)/2, (my height)/4, (my width)/2 + (my height)/2, 3*(my height)/4] with radius (my height)/4
 	else if pShape is "left circle" then
@@ -173,13 +174,13 @@ private handler getPath(in pShape as String) as Path
 	end if
 end handler
 
-private handler getRect(in pObject as String) as Rectangle
+private handler getRect(in pObject as String) returns Rectangle
 	if pObject is "bounding box" then
 		return rectangle [(my width)/2 - 3*(my height)/4, (my height)/4, (my width)/2 + 3*(my height)/4, 3*(my height)/4]
 	end if
 end handler
 
-private handler getPaint(in pObject as String) as Paint
+private handler getPaint(in pObject as String) returns Paint
 
 	if pObject is "border" then
 		if mIsChecked is false then
@@ -207,7 +208,7 @@ private handler getPaint(in pObject as String) as Paint
 	end if
 end handler
 
-public handler setChecked(in pIsChecked as Boolean) as undefined
+public handler setChecked(in pIsChecked as Boolean) returns nothing
 	put pIsChecked into mIsChecked
 	redraw all
 end handler

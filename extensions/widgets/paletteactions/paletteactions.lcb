@@ -29,6 +29,7 @@ use com.livecode.library.iconSVG
 metadata title is "Palette Actions"
 metadata author is "LiveCode"
 metadata version is "1.0.0"
+metadata userVisible is "false"
 
 property navNames		get getNavNames			set setNavNames
 property navIcons		get getNavIcons			set setNavIcons
@@ -159,7 +160,7 @@ end handler
 public handler OnPaint()
 
 	if mRecalculate is true then
-		recalculate()
+		recalculateRects()
 	end if
 
 	-- draw the line above / below
@@ -199,7 +200,7 @@ public handler OnClick()
 				
 				popup menu tMenuString at the mouse position
 				put the result into tResult
-				if tResult is defined then
+				if tResult is not nothing then
 					post "menuPick" with [tResult]
 				end if
 			else
@@ -345,14 +346,14 @@ private handler drawAction(in pIndex as Integer)
 	end if
 end handler
 
-private handler recalculate()
+private handler recalculateRects()
 	calculateTabRects()
 	calculateActionRects()
 
 	put false into mRecalculate
 end handler
 
-private handler calculateRects(in pTabs as Boolean, in pFromLeft as Boolean, in pIcons as Boolean, in pData as List) as List
+private handler calculateRects(in pTabs as Boolean, in pFromLeft as Boolean, in pIcons as Boolean, in pData as List) returns List
 	variable tPadding as Real
 	if pTabs then
 		put my height * kPaddingRatio * (1 - kTabPaddingRatio) into tPadding

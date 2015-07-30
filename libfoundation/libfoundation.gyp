@@ -155,10 +155,11 @@
 						},
 					],
 					[
-						'OS == "android"',
+						'OS == "android" and _toolset == "target"',
 						{
 							'libraries':
 							[
+								'-llog',
 								'-lm',
 							],
 						},

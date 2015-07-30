@@ -22,22 +22,30 @@
 					'USING_CEF_SHARED=1',
 				],
 			},
-			
+						
 			'conditions':
 			[
 				[
-					'OS == "mac"',
+					'OS == "win"',
 					{
-						'link_settings':
+						'all_dependent_settings':
 						{
-							'libraries':
-							[
-								'lib/libcef/mac/Chromium Embedded Framework.framework',
-							],
-							
-							'xcode_settings':
+							'variables':
 							{
-								'FRAMEWORK_SEARCH_PATHS': '$(SOLUTION_DIR)/prebuilt/lib/mac',
+								# Gyp will only use a recursive xcopy if the path ends with '/'
+								'dist_aux_files': [ 'lib/win32/x86/CEF/', ],
+							},
+						},
+					},
+				],
+				[
+					'OS == "linux"',
+					{
+						'all_dependent_settings':
+						{
+							'variables':
+							{
+								'dist_aux_files': [ 'lib/linux/<(target_arch)/CEF/', ],
 							},
 						},
 					},

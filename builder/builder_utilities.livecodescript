@@ -263,6 +263,15 @@ function builderCommercialResourceFolder
    return builderCommercialFolder() & "/engine/rsrc"
 end builderCommercialResourceFolder
 
+function builderCommunityFolder
+   set the itemDel to slash
+   return item 1 to -3 of the filename of me
+end builderCommunityFolder
+
+function builderCommunityResourceFolder
+   return builderCommunityFolder() & "/engine/rsrc"
+end builderCommunityResourceFolder
+
 function builderBuildsFolder
    set the itemDelimiter to slash
    return item 1 to -4 of the filename of me
@@ -298,8 +307,13 @@ end builderArchiveBuilderStack
 
 function builderModuleInterfaceFolder
    builderFetchEngine "", "macosx"
-   return the result & slash & "modules"
+   return the result & slash & "modules" & slash & "lci"
 end builderModuleInterfaceFolder
+
+function builderPackagedExtensionsFolder
+   builderFetchEngine "", "macosx"
+   return the result & slash & "packaged_extensions"
+end builderPackagedExtensionsFolder
 
 -- Returns the engine that should be used to build the installer
 function builderInstallerEngine pPlatform

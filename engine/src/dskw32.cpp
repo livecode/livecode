@@ -3387,7 +3387,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		return uint32_t(u64);
 	}
 
-	virtual bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *x_context)
+	virtual bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *x_context)
     {
 #ifdef /* MCS_getentries_dsk_w32 */ LEGACY_SYSTEM
         p_context . clear();
@@ -3452,20 +3452,23 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         WIN32_FIND_DATAW data;
         HANDLE ffh;            //find file handle
 
-        MCAutoStringRef t_curdir_native;
+        MCAutoStringRef t_dir_native;
         MCAutoStringRef t_search_path;
         
 		// The search is done in the current directory
-		MCS_getcurdir_native(&t_curdir_native);
+		if (p_folder == nil)
+			MCS_getcurdir_native(&t_dir_native);
+		else
+			&t_dir_native = MCValueRetain (p_folder);
 
 		// Search strings need to have a wild-card added
-		if (MCStringGetCharAtIndex(*t_curdir_native, MCStringGetLength(*t_curdir_native) - 1) == '\\')
+		if (MCStringGetCharAtIndex(*t_dir_native, MCStringGetLength(*t_dir_native) - 1) == '\\')
 		{
-			/* UNCHECKED */ MCStringFormat(&t_search_path, "%@*", *t_curdir_native);
+			/* UNCHECKED */ MCStringFormat(&t_search_path, "%@*", *t_dir_native);
 		}
 		else
 		{
-			/* UNCHECKED */ MCStringFormat(&t_search_path, "%@\\*", *t_curdir_native);
+			/* UNCHECKED */ MCStringFormat(&t_search_path, "%@\\*", *t_dir_native);
 		}
 
 		// Iterate through the contents of the directory
@@ -4911,7 +4914,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		FD_ZERO(&rmaskfd);
 		FD_ZERO(&wmaskfd);
 		FD_ZERO(&emaskfd);
-		uint4 maxfd = 0;
+		int4 maxfd = 0;
 		if (!MCnoui)
 		{
 			FD_SET(p_fd, &rmaskfd);
@@ -4925,47 +4928,16 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 				i = 0;
 			}
 		}
-		for (i = 0 ; i < MCnsockets ; i++)
-		{
-			if (MCsockets[i]->connected && !MCsockets[i]->closing
-					&& !MCsockets[i]->shared || MCsockets[i]->accepting)
-				FD_SET(MCsockets[i]->fd, &rmaskfd);
-			if (!MCsockets[i]->connected || MCsockets[i]->wevents != NULL)
-				FD_SET(MCsockets[i]->fd, &wmaskfd);
-			FD_SET(MCsockets[i]->fd, &emaskfd);
-			if (MCsockets[i]->fd > maxfd)
-				maxfd = MCsockets[i]->fd;
-			if (MCsockets[i]->added)
-			{
-				p_delay = 0.0;
-				MCsockets[i]->added = False;
-				handled = True;
-			}
-		}
+        handled = MCSocketsAddToFileDescriptorSets(maxfd, rmaskfd, wmaskfd, emaskfd);
+        if (handled)
+            p_delay = 0.0;
 		struct timeval timeoutval;
 		timeoutval.tv_sec = (long)p_delay;
 		timeoutval.tv_usec = (long)((p_delay - floor(p_delay)) * 1000000.0);
 		n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
 		if (n <= 0)
 			return handled;
-		for (i = 0 ; i < MCnsockets ; i++)
-		{
-			if (FD_ISSET(MCsockets[i]->fd, &emaskfd))
-			{
-				if (!MCsockets[i]->waiting)
-				{
-					MCsockets[i]->error = strclone("select error");
-					MCsockets[i]->doclose();
-				}
-			}
-			else
-			{
-				if (FD_ISSET(MCsockets[i]->fd, &wmaskfd))
-					MCsockets[i]->writesome();
-				if (FD_ISSET(MCsockets[i]->fd, &rmaskfd) && !MCsockets[i]->shared)
-					MCsockets[i]->readsome();
-			}
-		}
+        MCSocketsHandleFileDescriptorSets(rmaskfd, wmaskfd, emaskfd);
 		return n != 0;
 	}
     

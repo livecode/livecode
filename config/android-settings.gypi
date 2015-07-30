@@ -1,8 +1,6 @@
 {
 	'cflags':
 	[
-		'-Wall',
-		'-Wextra',
 		'-fstrict-aliasing',
 		'-fvisibility=hidden',
 	],
@@ -20,13 +18,41 @@
 		'-fno-rtti',
 	],
 	
+	'target_conditions':
+	[
+		[
+			'silence_warnings == 0',
+			{
+				'cflags':
+				[
+					'-Wall',
+					'-Wextra',
+					'-Wno-unused-parameter',	# Just contributes build noise
+				],
+				
+				'cflags_c':
+				[
+					'-Werror=declaration-after-statement',	# Ensure compliance with C89
+				],
+			},
+			{
+				'cflags':
+				[
+					'-w',						# Disable warnings
+					'-fpermissive',				# Be more lax with old code
+					'-Wno-return-type',
+				],
+			},
+		],
+	],
+	
 	'configurations':
 	{
 		'Debug':
 		{
 			'cflags':
 			[
-				'-Og',
+				'-O0',
 				'-g3',
 			],
 			

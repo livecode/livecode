@@ -31,6 +31,7 @@
     GetColumnOfCurrentPosition
     GetUndefinedPosition
     AddImportedModuleFile
+    GetFilenameOfPosition
 
     InitializeLiterals
     FinalizeLiterals
@@ -121,6 +122,12 @@
     PushInMarkArgumentSyntaxMapping
     PushOutMarkArgumentSyntaxMapping
     PushInOutMarkArgumentSyntaxMapping
+
+    IsDependencyCompile
+    DependStart
+    DependFinish
+    DependDefineMapping
+    DependDefineDependency
 
     EmitStart
     EmitFinish
@@ -339,6 +346,8 @@
 
 'condition' AddImportedModuleFile(Name: STRING)
 
+'action' GetFilenameOfPosition(Position: POS -> Filename: STRING)
+
 --------------------------------------------------------------------------------
 
 'action' InitializeLiterals()
@@ -460,6 +469,14 @@
 'action' PushRealArgumentSyntaxMapping(Value: DOUBLE)
 'action' PushStringArgumentSyntaxMapping(Value: STRING)
 'action' PushIndexedMarkArgumentSyntaxMapping(MarkIndex: INT, Index: INT)
+
+--------------------------------------------------------------------------------
+
+'condition' IsDependencyCompile()
+'action' DependStart()
+'action' DependFinish()
+'action' DependDefineMapping(ModuleName: NAME, SourceFile: STRING)
+'action' DependDefineDependency(ModuleName: NAME, RequiredModuleName: NAME)
 
 --------------------------------------------------------------------------------
 

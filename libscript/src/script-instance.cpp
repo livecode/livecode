@@ -294,6 +294,16 @@ bool MCScriptThrowCannotCallContextHandlerError(MCScriptModuleRef p_module, MCSc
     return MCErrorCreateAndThrow(kMCScriptCannotCallContextHandlerErrorTypeInfo, "module", p_module -> name, "handler", MCScriptGetNameOfDefinitionInModule(p_module, p_handler), nil);
 }
 
+bool MCScriptThrowHandlerNotFoundError(MCScriptModuleRef p_module, MCNameRef p_handler)
+{
+    return MCErrorCreateAndThrow(kMCScriptHandlerNotFoundErrorTypeInfo, "module", p_module -> name, "handler", p_handler, nil);
+}
+
+bool MCScriptThrowPropertyNotFoundError(MCScriptModuleRef p_module, MCNameRef p_property)
+{
+    return MCErrorCreateAndThrow(kMCScriptPropertyNotFoundErrorTypeInfo, "module", p_module -> name, "property", p_property, nil);
+}
+
 ///////////
 
 MCScriptVariableDefinition *MCScriptDefinitionAsVariable(MCScriptDefinition *self)
@@ -333,7 +343,7 @@ bool MCScriptGetPropertyOfInstance(MCScriptInstanceRef self, MCNameRef p_propert
     // Lookup the definition (throws if not found).
     MCScriptPropertyDefinition *t_definition;
     if (!MCScriptLookupPropertyDefinitionInModule(self -> module, p_property, t_definition))
-        return false;
+        return MCScriptThrowPropertyNotFoundError(self -> module, p_property);
     
     MCScriptDefinition *t_getter;
     t_getter = t_definition -> getter != 0 ? self -> module -> definitions[t_definition -> getter - 1] : nil;
@@ -386,10 +396,10 @@ bool MCScriptSetPropertyOfInstance(MCScriptInstanceRef self, MCNameRef p_propert
 {
     __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindInstance);
     
-    // Lookup the definition (throws if not found).
+    // Lookup the definition.
     MCScriptPropertyDefinition *t_definition;
     if (!MCScriptLookupPropertyDefinitionInModule(self -> module, p_property, t_definition))
-        return false;
+        return MCScriptThrowPropertyNotFoundError(self -> module, p_property);
     
     MCScriptDefinition *t_setter;
     t_setter = t_definition -> setter != 0 ? self -> module -> definitions[t_definition -> setter - 1] : nil;
@@ -517,7 +527,7 @@ bool MCScriptCallHandlerOfInstance(MCScriptInstanceRef self, MCNameRef p_handler
     // Lookup the definition (throws if not found).
     MCScriptHandlerDefinition *t_definition;
     if (!MCScriptLookupHandlerDefinitionInModule(self -> module, p_handler, t_definition))
-        return MCErrorThrowGeneric(MCSTR("handler not found"));
+        return MCScriptThrowHandlerNotFoundError(self -> module, p_handler);
     
     return MCScriptCallHandlerOfInstanceDirect(self, t_definition, p_arguments, p_argument_count, r_value);
 }
@@ -606,6 +616,7 @@ static bool MCScriptCreateFrame(MCScriptFrame *p_caller, MCScriptInstanceRef p_i
     self -> instance = MCScriptRetainInstance(p_instance);
     self -> handler = p_handler;
     self -> address = p_handler -> start_address;
+    self -> mapping = nil;
     
     r_frame = self;
     
@@ -2482,7 +2493,7 @@ __MCScriptHandlerDescribe (void *p_context,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" bool MC_DLLEXPORT MCScriptBuiltinRepeatCounted(uinteger_t *x_count)
+extern "C" bool MC_DLLEXPORT_DEF MCScriptBuiltinRepeatCounted(uinteger_t *x_count)
 {
     if (*x_count == 0)
         return false;
@@ -2491,27 +2502,27 @@ extern "C" bool MC_DLLEXPORT MCScriptBuiltinRepeatCounted(uinteger_t *x_count)
     return true;
 }
 
-extern "C" bool MC_DLLEXPORT MCScriptBuiltinRepeatUpToCondition(double p_counter, double p_limit)
+extern "C" bool MC_DLLEXPORT_DEF MCScriptBuiltinRepeatUpToCondition(double p_counter, double p_limit)
 {
     return p_counter <= p_limit;
 }
 
-extern "C" double MC_DLLEXPORT MCScriptBuiltinRepeatUpToIterate(double p_counter, double p_step)
+extern "C" double MC_DLLEXPORT_DEF MCScriptBuiltinRepeatUpToIterate(double p_counter, double p_step)
 {
     return p_counter + p_step;
 }
 
-extern "C" bool MC_DLLEXPORT MCScriptBuiltinRepeatDownToCondition(double p_counter, double p_limit)
+extern "C" bool MC_DLLEXPORT_DEF MCScriptBuiltinRepeatDownToCondition(double p_counter, double p_limit)
 {
     return p_counter >= p_limit;
 }
 
-extern "C" double MC_DLLEXPORT MCScriptBuiltinRepeatDownToIterate(double p_counter, double p_step)
+extern "C" double MC_DLLEXPORT_DEF MCScriptBuiltinRepeatDownToIterate(double p_counter, double p_step)
 {
     return p_counter + p_step;
 }
 
-extern "C" void MC_DLLEXPORT MCScriptBuiltinThrow(MCStringRef p_reason)
+extern "C" void MC_DLLEXPORT_DEF MCScriptBuiltinThrow(MCStringRef p_reason)
 {
     MCErrorThrowGeneric(p_reason);
 }

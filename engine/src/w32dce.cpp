@@ -499,6 +499,8 @@ void MCScreenDC::addmessage(MCObject *optr, MCNameRef name, real8 time, MCParame
 
 Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 {
+    MCDeletedObjectsEnterWait(dispatch);
+    
 	MCwaitdepth++;
 	real8 curtime = MCS_time();
 	if (duration < 0.0)
@@ -515,8 +517,11 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		// Always handle notifications first.
 
 		// MW-2009-08-26: Handle any pending notifications
-		if (MCNotifyDispatch(dispatch == True) && anyevent)
-			break;
+		if (MCNotifyDispatch(dispatch == True))
+        {
+            if (anyevent)
+                break;
+        }
 
 		// MW-2014-04-16: [[ Bug 11690 ]] Work out the next pending message time.
 		real8 t_pending_eventtime;
@@ -603,6 +608,8 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 	//   any engine event handling methods need us to.
 	MCRedrawUpdateScreen();
 
+    MCDeletedObjectsLeaveWait(dispatch);
+    
 	return abort;
 }
 

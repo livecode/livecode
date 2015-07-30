@@ -27,7 +27,7 @@ public:
     virtual void OnClose() = 0;
     virtual void OnAttach() = 0;
     virtual void OnDetach() = 0;
-    virtual void OnPaint(MCDC* p_dc, const MCRectangle& p_dirty) = 0;
+    virtual void OnPaint(MCGContextRef) = 0;
     virtual void OnGeometryChanged(const MCRectangle& p_old_rect) = 0;
     virtual void OnVisibilityChanged(bool p_visible) = 0;
     virtual void OnToolChanged(Tool p_new_tool) = 0;

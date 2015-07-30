@@ -472,6 +472,10 @@ extern MCNameRef MCM_uniconify_stack;
 extern MCNameRef MCM_unload_url;
 extern MCNameRef MCM_update_var;
 
+#ifdef FEATURE_PLATFORM_URL
+extern MCNameRef MCM_url_progress;
+#endif
+
 #ifdef _MOBILE
 extern MCNameRef MCN_firstname;
 extern MCNameRef MCN_lastname;
@@ -517,8 +521,6 @@ extern MCNameRef MCM_touch_release;
 extern MCNameRef MCM_motion_start;
 extern MCNameRef MCM_motion_end;
 extern MCNameRef MCM_motion_release;
-
-extern MCNameRef MCM_url_progress;
 
 extern MCNameRef MCM_acceleration_changed;
 

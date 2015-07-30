@@ -74,6 +74,10 @@ Summary:    Determines whether <Target> is defined or not.
 Target:     Any expression
 output:     Returns true if the given expression <Target> is defined, and false if not.
 
+Description:
+>*Note:* The <IsDefined> operator is deprecated. Please use <IsNotNothing|is not nothing> instead.
+
+References: IsNotNothing (operator)
 */
 
 syntax IsDefined is postfix operator with precedence 7
@@ -89,6 +93,11 @@ Summary:    Determines whether <Target> is defined or not.
 Target:     Any expression
 output:     Returns false if the given expression <Target> is defined, and true if not.
 
+Description:
+>*Note:* The <IsNotDefined> operator is deprecated. Please use <IsNothing|is nothing> instead.
+
+References: IsNothing (operator)
+
 */
 
 syntax IsNotDefined is postfix operator with precedence 7
@@ -103,6 +112,12 @@ Summary:	Determines whether <Target> is defined or not.
 
 Target:	Any expression
 Output:	Returns false if the given expression <Target> is defined, and true otherwise
+
+Description:
+>*Note:* The <IsUndefined> operator is deprecated. Please use <IsNothing|is nothing> instead.
+
+References: IsNothing (operator)
+
 */
 syntax IsUndefined is postfix operator with precedence 7
     deprecate with message "Use 'is nothing' instead"
@@ -115,6 +130,12 @@ end syntax
 Summary:	Determines whether <Target> is defined or not.
 Target:	Any expression
 Output:	Returns true if the given expression <Target> is defined, and false otherwise.
+
+Description:
+>*Note:* The <IsNotUndefined> operator is deprecated. Please use <IsNotNothing|is not nothing> instead.
+
+References: IsNotNothing (operator)
+
 */
 syntax IsNotUndefined is postfix operator with precedence 7
     deprecate with message "Use 'is not nothing' instead"
@@ -125,12 +146,44 @@ end syntax
 
 --
 
+/*
+Name: IsNothing
+Type: operator
+Syntax: <Target> is nothing
+Summary:	Determines whether <Target> is nothing or not.
+Target:	Any expression
+output:	Returns true if the given expression <Target> is nothing, and false otherwise.
+
+Description:
+Use the <IsNothing> operator to test if operators or handlers have returned anything.
+
+*/
+
 syntax NothingIsNothing is neutral binary operator with precedence 7
     <Left: Expression> "is" <Right: Expression>
 begin
     MCNothingEvalIsEqualToNothing(Left, Right, output)
     MCNothingEvalIsNothingEqualTo(Left, Right, output)
 end syntax
+
+/*
+Name: IsNotNothing
+Type: operator
+Syntax: <Target> is not nothing
+Summary:	Determines whether <Target> is nothing or not.
+Target:	Any expression
+output:	Returns false if the given expression <Target> is nothing, and true otherwise.
+
+Example:
+public handler CanBeNumber(in pString as String) returns Boolean
+    variable tNum as optional Number
+    put pString parsed as number into tNum
+    return tNum is not nothing
+end handler
+
+Description:
+Use the <IsNotNothing> operator to test if operators or handlers have returned anything.
+*/
 
 syntax NothingIsNotNothing is neutral binary operator with precedence 7
     <Left: Expression> "is not" <Right: Expression>

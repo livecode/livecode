@@ -31,8 +31,56 @@
     (|
         ErrorsDidOccur()
     ||
+        IsDependencyCompile()
+        
+        DependStart()
+
+        -- First generate the mapping between module name and source-file(s)
+        Depend_GenerateMapping(Modules)
+        
+        -- Now generate the direct dependencies for each module
+        Depend_GenerateDependencies(Modules)
+        
+        DependFinish()
+    ||
         Compile(Modules)
     |)
+
+---------
+
+'action' Depend_GenerateMapping(MODULELIST)
+
+    'rule' Depend_GenerateMapping(modulelist(module(Position, Kind, Name, _), Rest)):
+        Name'Name -> ModuleName
+        GetFilenameOfPosition(Position -> Filename)
+        DependDefineMapping(ModuleName, Filename)
+        Depend_GenerateMapping(Rest)
+        
+    'rule' Depend_GenerateMapping(nil):
+        -- do nothing
+        
+'action' Depend_GenerateDependencies(MODULELIST)
+
+    'rule' Depend_GenerateDependencies(modulelist(module(_, _, Name, Definitions), Rest)):
+        Name'Name -> ModuleName
+        Depend_GenerateDependenciesForModule(ModuleName, Definitions)
+        Depend_GenerateDependencies(Rest)
+
+    'rule' Depend_GenerateDependencies(nil):
+        -- do nothing
+
+'action' Depend_GenerateDependenciesForModule(NAME, DEFINITION)
+
+    'rule' Depend_GenerateDependenciesForModule(ModuleName, sequence(Left, Right)):
+        Depend_GenerateDependenciesForModule(ModuleName, Left)
+        Depend_GenerateDependenciesForModule(ModuleName, Right)
+
+    'rule' Depend_GenerateDependenciesForModule(ModuleName, import(_, Name)):
+        Name'Name -> DependencyName
+        DependDefineDependency(ModuleName, DependencyName)
+
+    'rule' Depend_GenerateDependenciesForModule(ModuleName, _):
+        -- do nothing
 
 ---------
 
@@ -222,7 +270,11 @@
                 AddImportedModuleFile(NameString)
             |)
         ||
-            Error_UnableToFindImportedModule(Position, Name)
+            (|
+                IsDependencyCompile()
+            ||
+                Error_UnableToFindImportedModule(Position, Name)
+            |)
         |)
 
     'rule' ExpandImports(Position, idlist(Id, Tail) -> sequence(import(Position, Id), ExpandedTail)):

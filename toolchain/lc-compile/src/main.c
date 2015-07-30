@@ -29,12 +29,18 @@ extern void InitializeCustomInvokeLists(void);
 
 static int s_is_bootstrap = 0;
 
+extern enum DependencyModeType DependencyMode;
 extern int OutputFileAsC;
 extern int OutputFileAsBytecode;
 
 int IsBootstrapCompile(void)
 {
     return s_is_bootstrap;
+}
+
+int IsDependencyCompile(void)
+{
+    return DependencyMode != kDependencyModeNone;
 }
 
 void bootstrap_main(int argc, char *argv[])
@@ -83,6 +89,7 @@ usage(int status)
     fprintf(stderr,
 "Usage: lc-compile [OPTION ...] --output OUTFILE [--] LCBFILE\n"
 "       lc-compile [OPTION ...] --outputc OUTFILE [--] LCBFILE\n"
+"       lc-compile [OPTION ...] --deps DEPTYPE [--] LCBFILE ... LCBFILE\n"
 "\n"
 "Compile a LiveCode Builder source file.\n"
 "\n"
@@ -90,6 +97,12 @@ usage(int status)
 "      --modulepath PATH    Search PATH for module interface files.\n"
 "      --output OUTFILE     Filename for bytecode output.\n"
 "      --outputc OUTFILE    Filename for C source code output.\n"
+"      --deps make          Generate lci file dependencies in make format for\n"
+"                           the input source files.\n"
+"      --deps order         Generate the order the input source files should be\n"
+"                           compiled in.\n"
+"      --deps changed-order Generate the order the input source files should be\n"
+"                           compiled in, but only if they need recompiling.\n"
 "      --manifest MANIFEST  Filename for generated manifest.\n"
 "  -v, --verbose            Output extra debugging information.\n"
 "  -h, --help               Print this message.\n"
@@ -108,6 +121,7 @@ static void full_main(int argc, char *argv[])
 {
     /* Process options. */
     int have_input_file = 0;
+    int have_output_file = 0;
     int end_of_args = 0;
     int argi;
 
@@ -115,9 +129,31 @@ static void full_main(int argc, char *argv[])
     for (argi = 0; argi < argc; ++argi)
     {
         const char *opt = argv[argi];
-        const char *optarg = (argi + 1 < argc) ? argv[argi+1] : NULL;
+        const char *optarg = (argi + 1 < argc) && 0 != strncmp(argv[argi+1], "--", 2) ? argv[argi+1] : NULL;
         if (!end_of_args)
         {
+            if (0 == strcmp(opt, "--deps"))
+            {
+                const char *t_option;
+                if (optarg)
+                    t_option = argv[++argi];
+                else
+                    t_option = "make";
+                
+                if (0 == strcmp(t_option, "make"))
+                    DependencyMode = kDependencyModeMake;
+                else if (0 == strcmp(t_option, "order"))
+                    DependencyMode = kDependencyModeOrder;
+                else if (0 == strcmp(t_option, "changed-order"))
+                    DependencyMode = kDependencyModeChangedOrder;
+                else
+                {
+                    fprintf(stderr, "ERROR: Invalid --deps option '%s'.\n\n",
+                            t_option);
+                    usage(1);
+                }
+                continue;
+            }
             if (0 == strcmp(opt, "--modulepath") && optarg)
             {
                 AddImportedModuleDir(argv[++argi]);
@@ -128,6 +164,7 @@ static void full_main(int argc, char *argv[])
                 SetOutputBytecodeFile(argv[++argi]);
                 OutputFileAsBytecode = 1;
                 OutputFileAsC = 0;
+                have_output_file = 1;
                 continue;
             }
             if (0 == strcmp(opt, "--outputc") && optarg)
@@ -135,6 +172,7 @@ static void full_main(int argc, char *argv[])
                 SetOutputCodeFile(argv[++argi]);
                 OutputFileAsC = 1;
                 OutputFileAsBytecode = 0;
+                have_output_file = 1;
                 continue;
             }
             if (0 == strcmp(opt, "--manifest") && optarg)
@@ -168,19 +206,27 @@ static void full_main(int argc, char *argv[])
         }
 
         /* Accept only one input file */
-        if (!have_input_file)
+        if (DependencyMode == 0 || have_output_file)
         {
-            AddFile(opt);
-            have_input_file = 1;
-            continue;
+            if (!have_input_file)
+            {
+                AddFile(opt);
+                have_input_file = 1;
+                continue;
+            }
+            else
+            {
+                fprintf(stderr, "WARNING: Ignoring multiple input filenames.\n");
+                continue;
+            }
+            
+            break; /* Doesn't match any option */
         }
         else
         {
-            fprintf(stderr, "WARNING: Ignoring multiple input filenames.\n");
-            continue;
+            AddFile(opt);
+            have_input_file = 1;
         }
-
-        break; /* Doesn't match any option */
     }
 
 	// If there is no filename, error.

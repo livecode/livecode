@@ -10,9 +10,9 @@ Associations: stack,card,field,button,graphic,scrollbar,player,image
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac,windows,linux,iOS,android
 
-Platforms: desktop,server,web
+Platforms: desktop,server,web,mobile
 
 Example:
 on socketError theID, theError

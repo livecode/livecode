@@ -362,14 +362,26 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //
 //  SYMBOL EXPORTS
 //
+
+/* MC_DLLEXPORT should be applied to declarations.  MC_DLLEXPORT_DEF
+ * should be applied to definitions. */
 #ifdef _WIN32
+/* On Windows, declaring something as having "dllexport" storage
+ * modifies the naming of the corresponding symbol, so the export
+ * attribute must be attached to declarations (and possibly to the
+ * definition *as well* if no separate declaration appears) */
 #  ifdef _MSC_VER
 #    define MC_DLLEXPORT __declspec(dllexport)
 #  else
 #    define MC_DLLEXPORT __attribute__((dllexport))
 #  endif
+#  define MC_DLLEXPORT_DEF MC_DLLEXPORT
 #else
-#  define MC_DLLEXPORT __attribute__((__visibility__("default")))
+/* On non-Windows platforms, the external visibility of a symbol is
+ * simply a property of its definition (i.e. whether or not it should
+ * appear in the list of exported symbols). */
+#  define MC_DLLEXPORT
+#  define MC_DLLEXPORT_DEF __attribute__((__visibility__("default"), __used__))
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -698,12 +710,6 @@ typedef struct __MCLocale* MCLocaleRef;
 //  MINIMUM FUNCTIONS
 //
 
-//inline uint32_t MCMin(uint32_t a, uint32_t b) { return a < b ? a : b; }
-//inline int32_t MCMin(int32_t a, int32_t b) { return a < b ? a : b; }
-//inline uint64_t MCMin(uint64_t a, uint64_t b) { return a < b ? a : b; }
-//inline int64_t MCMin(int64_t a, int64_t b) { return a < b ? a : b; }
-//inline double MCMin(double a, double b) { return a < b ? a : b; }
-//inline float MCMin(float a, float b) { return a < b ? a : b; }
 template <class T, class U> inline T MCMin(T a, U b) { return a < b ? a : b; }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -711,12 +717,6 @@ template <class T, class U> inline T MCMin(T a, U b) { return a < b ? a : b; }
 //  MAXIMUM FUNCTIONS
 //
 
-//inline uint32_t MCMax(uint32_t a, uint32_t b) { return a > b ? a : b; }
-//inline int32_t MCMax(int32_t a, int32_t b) { return a > b ? a : b; }
-//inline uint64_t MCMax(uint64_t a, uint64_t b) { return a > b ? a : b; }
-//inline int64_t MCMax(int64_t a, int64_t b) { return a > b ? a : b; }
-//inline double MCMax(double a, double b) { return a > b ? a : b; }
-//inline float MCMax(float a, float b) { return a > b ? a : b; }
 template <class T, class U> inline T MCMax(T a, U b) { return a > b ? a : b; }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -724,8 +724,8 @@ template <class T, class U> inline T MCMax(T a, U b) { return a > b ? a : b; }
 //  ABSOLUTE VALUE FUNCTIONS
 //
 
-inline uint32_t MCAbs(int32_t a) { return a < 0 ? -a : a; }
-inline uint64_t MCAbs(int64_t a) { return a < 0 ? -a : a; }
+inline uint32_t MCAbs(int32_t a) { return uint32_t(a < 0 ? -a : a); }
+inline uint64_t MCAbs(int64_t a) { return uint64_t(a < 0 ? -a : a); }
 inline float MCAbs(float a) { return fabsf(a); }
 inline double MCAbs(double a) { return fabs(a); }
 
@@ -734,8 +734,6 @@ inline double MCAbs(double a) { return fabs(a); }
 //  SIGN FUNCTIONS
 //
 
-//inline compare_t MCSgn(int32_t a) { return a < 0 ? -1 : (a > 0 ? 1 : 0); }
-//inline compare_t MCSgn(int64_t a) { return a < 0 ? -1 : (a > 0 ? 1 : 0); }
 template <class T> inline compare_t MCSgn(T a) { return a < 0 ? -1 : (a > 0 ? 1 : 0); }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -743,23 +741,19 @@ template <class T> inline compare_t MCSgn(T a) { return a < 0 ? -1 : (a > 0 ? 1 
 //  COMPARE FUNCTIONS
 //
 
-// SN-2015-01-07: [[ iOS-64bit ]] Update the MCCompare functions
-inline compare_t MCCompare(int a, int b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(unsigned int a, unsigned int b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(long a, long b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(unsigned long a, unsigned long b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(long long a, long long b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(unsigned long long a, unsigned long long b) { return a < b ? -1 : (a > b ? 1 : 0); }
-
+template <typename T> inline compare_t MCCompare(T a, T b) { return ((a < b) ? -1 : ((a > b) ? 1 : 0)); }
 
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  COMPARE FUNCTIONS
 //
 
-inline bool MCIsPowerOfTwo(uint32_t x) { return (x & (x - 1)) == 0; }
+template <typename T> inline bool MCIsPowerOfTwo(T x) { return (x & (x - 1)) == 0; }
 
-inline float MCClamp(float value, float min, float max) {return MCMax(min, MCMin(max, value));}
+template <typename T, typename U, typename V>
+inline T MCClamp(T value, U min, V max) {
+	return MCMax(MCMin(value, max), min);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -784,7 +778,7 @@ inline MCByteOrder MCByteOrderGetCurrent(void)
 
 inline uint16_t MCSwapInt16(uint16_t x)
 {
-	return (x >> 8) | (x << 8);
+	return (uint16_t)(x >> 8) | (uint16_t)(x << 8);
 }
 
 inline uint32_t MCSwapInt32(uint32_t x)
@@ -1870,7 +1864,7 @@ MC_DLLEXPORT bool MCStringCreateWithCFString(CFStringRef cf_string, MCStringRef&
 MC_DLLEXPORT bool MCStringCreateWithCFStringAndRelease(CFStringRef cf_string, MCStringRef& r_string);
 #endif
 
-#ifdef __LINUX__
+#if !defined(__WINDOWS__)
 // Create a string from a C string in the system encoding
 MC_DLLEXPORT bool MCStringCreateWithSysString(const char *sys_string, MCStringRef &r_string);
 #endif
@@ -1938,7 +1932,8 @@ MC_DLLEXPORT bool MCStringIsEmpty(MCStringRef string);
 MC_DLLEXPORT bool MCStringCanBeNative(MCStringRef string);
 
 // Returns true if under the given comparison conditions, string cannot be represented natively.
-MC_DLLEXPORT bool MCStringCantBeNative(MCStringRef string, MCStringOptions p_options);
+MC_DLLEXPORT bool MCStringCantBeEqualToNative(MCStringRef string, MCStringOptions p_options);
+
 
 // Returns true if the string is stored as native chars.
 MC_DLLEXPORT bool MCStringIsNative(MCStringRef string);
@@ -2903,7 +2898,7 @@ MC_DLLEXPORT bool MCProperListMutableCopyAndRelease(MCProperListRef list, MCProp
 MC_DLLEXPORT bool MCProperListIsMutable(MCProperListRef list);
 
 // Returns the number of elements in the list.
-uindex_t MCProperListGetLength(MCProperListRef list);
+MC_DLLEXPORT uindex_t MCProperListGetLength(MCProperListRef list);
 
 // Returns true if the given list is the empty list.
 MC_DLLEXPORT bool MCProperListIsEmpty(MCProperListRef list);
@@ -3038,7 +3033,7 @@ struct MCPickleVariantInfo
     MCPickleRecordInfo *k##Type##PickleInfo = &__##Type##_PickleImp::__info; \
     MCPickleRecordFieldInfo __##Type##_PickleImp::__fields[] = {
 #define MC_PICKLE_END_RECORD() \
-        { kMCPickleFieldTypeNone, nil, 0 } \
+	{ kMCPickleFieldTypeNone, nil, 0, 0, nil } \
     };
 
 #define MC_PICKLE_BEGIN_VARIANT(Type, Kind) \

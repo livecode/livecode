@@ -4,21 +4,21 @@ set -e
 
 case "$1" in
 	*-community.lcext)
-		SECTIONS="${SRCROOT}/standalone.ios"
+		DEPS_FILE="${SRCROOT}/standalone.ios"
 		;;
 	*-commercial.lcext)
-		SECTIONS="${SRCROOT}/../livecode/engine/standalone.ios"
+		DEPS_FILE="${SRCROOT}/../livecode/engine/standalone.ios"
 		;;
 esac
 
 case "${SDKROOT}" in
-	iphonesimulator*)
+	*iPhoneOS*)
 		case "$1" in
 			*-community.lcext)
-				ln -sf standalone-mobile-community.app/standalone-mobile-community "$BUILT_PRODUCTS_DIR/standalone-mobile-community.ios-engine"
+				ln -sf standalone-mobile-lib-community.lcext "$BUILT_PRODUCTS_DIR/standalone-mobile-community.ios-engine"
 				;;
 			*-commercial.lcext)
-				ln -sf standalone-mobile-commercial.app/standalone-mobile-commercial "$BUILT_PRODUCTS_DIR/standalone-mobile-commercial.ios-engine"
+				ln -sf standalone-mobile-lib-commercial.lcext "$BUILT_PRODUCTS_DIR/standalone-mobile-commercial.ios-engine"
 				;;
 			*)
 				echo "Unexpected filename $1" >&2
@@ -35,24 +35,21 @@ else
 	BIN_DIR="${DEVELOPER_BIN_DIR}"
 fi
 
-if [ "${CONFIGURATION}" = "Debug" ] ; then
-	STRIP_FLAG="-Wl,-x"
-else
-	STRIP_FLAG=""
-fi
+# Process the list of imports into a linker command line
+while read dep; do
+	read type name <<< "${dep}"
+	case "${type}" in
+		library)
+			libs+=\ -l"${name}"
+			;;
+		framework)
+			libs+=\ -framework\ "${name}"
+			;;
+		*)
+			echo "Unknown dependency type ${type}" >&2
+			exit 1
+			;;
+	esac
+done <"${DEPS_FILE}"
 
-"${BIN_DIR}/g++" -nodefaultlibs -Wl,-r ${STRIP_FLAG} -arch ${ARCHS//\ /\ -arch\ } -isysroot "${SDKROOT}" -o $@ -Wl,-sectcreate -Wl,-__MISC -Wl,__deps -Wl,"${SECTIONS}" -Wl,-exported_symbol -Wl,_main -Wl,-exported_symbol -Wl,_load_module -Wl,-exported_symbol -Wl,_resolve_symbol
-
-case "$1" in
-	*-community.lcext)
-		ln -sf "$1" "$BUILT_PRODUCTS_DIR/standalone-mobile-community.ios-engine"
-		;;
-	*-commercial.lcext)
-		ln -sf "$1" "$BUILT_PRODUCTS_DIR/standalone-mobile-commercial.ios-engine"
-		;;
-	*)
-		echo "Unexpected filename $1" >&2
-		exit 1
-		;;
-esac
-
+"${BIN_DIR}/g++" -rdynamic -ObjC ${libs} -arch ${ARCHS//\ /\ -arch\ } --sysroot "${SDKROOT}" -o $2 $1 -mios-simulator-version-min=${IPHONEOS_DEPLOYMENT_TARGET}

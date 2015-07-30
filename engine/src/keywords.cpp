@@ -34,6 +34,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "cmds.h"
 #include "redraw.h"
 #include "variable.h"
+#include "object.h"
 
 #include "globals.h"
 
@@ -490,8 +491,7 @@ Exec_stat MCIf::exec(MCExecPoint &ep)
 		
 		stat = tspr->exec(ep);
 		
-		// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
-		MCRedrawUpdateScreen();
+        MCActionsRunAll();
 
 		switch(stat)
 		{
@@ -604,6 +604,16 @@ Parse_stat MCRepeat::parse(MCScriptPoint &sp)
 				case RF_FOREVER:
 					break;
 				case RF_FOR:
+                {
+                    // SN-2015-06-18: [[ Bug 15509 ]] repeat for <n> times
+                    //  should get the whole line parsed, not only the <n> expr
+                    //  Otherwise,
+                    //      repeat for 4 garbage words that are not parsed
+                    //          put "a"
+                    //      end repeat
+                    //  is parsed with no issue
+                    bool t_is_for_each;
+                    t_is_for_each = false;
 					if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_EACH) == PS_NORMAL)
 					{
 						if (sp.next(type) != PS_NORMAL
@@ -625,16 +635,51 @@ Parse_stat MCRepeat::parse(MCScriptPoint &sp)
 						{
 							MCperror->add(PE_REPEAT_NOOF, sp);
 							return PS_ERROR;
-						}
+                        }
+                        
+                        t_is_for_each = true;
 					}
+                    
+                    // SN-2015-06-18: [[ Bug 15509 ]] Both 'repeat for each' and
+                    //  'repeat for <expr> times' need an expression
+                    if (sp.parseexp(False, True, &endcond) != PS_NORMAL)
+                    {
+                        MCperror->add
+                        (PE_REPEAT_BADCOND, sp);
+                        return PS_ERROR;
+                    }
+                    
+                    //  SN-2015-06-18: [[ Bug 15509 ]] In case we have not
+                    //  reached the end of the line after parsing the expression
+                    //  we have two possibilies:
+                    //    - in a 'repeat for each' loop, error
+                    //    - in a 'repeat for x times', error only if the line
+                    //      does not finish with 'times'
+                    if (sp.next(type) != PS_EOL
+                            && !(!t_is_for_each
+                                 && sp.lookup(SP_REPEAT, te) == PS_NORMAL
+                                 && te -> which == RF_TIMES
+                                 && sp.next(type) == PS_EOL))
+                    {
+                        MCperror->add
+                        (PE_REPEAT_BADCOND, sp);
+                        return PS_ERROR;
+                    }
+                }
+                    break;
 				case RF_UNTIL:
-				case RF_WHILE:
-					if (sp.parseexp(False, True, &endcond) != PS_NORMAL)
-					{
-						MCperror->add
-						(PE_REPEAT_BADCOND, sp);
-						return PS_ERROR;
-					}
+                case RF_WHILE:
+                    // SN-2015-06-17: [[ Bug 15509 ]] We should reach the end
+                    //  of the line after having parsed the expression.
+                    //  That mimics the behaviour of MCIf::parse, where a <then>
+                    //  is compulsary after the expression parsed (here, an EOL)
+                    if (sp.parseexp(False, True, &endcond) != PS_NORMAL
+                            || sp.next(type) != PS_EOL)
+                    {
+                        MCperror->add
+                        (PE_REPEAT_BADCOND, sp);
+                        return PS_ERROR;
+                    }
 					break;
 				case RF_WITH:
 					if ((stat = sp.next(type)) != PS_NORMAL)
@@ -1143,9 +1188,8 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 			ep.setline(tspr->getline());
 
 			stat = tspr->exec(ep);
-
-			// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
-			MCRedrawUpdateScreen();
+            
+            MCActionsRunAll();
 			
 			switch(stat)
 			{
@@ -1526,7 +1570,12 @@ Parse_stat MCSwitch::parse(MCScriptPoint &sp)
 				case TT_CASE:
 					MCU_realloc((char **)&cases, ncases, ncases + 1,
 					            sizeof(MCExpression *));
-					if (sp.parseexp(False, True, &cases[ncases]) != PS_NORMAL)
+                    // SN-2015-06-16: [[ Bug 15509 ]] We should reach the end
+                    //  of the line after having parsed the <case> expression.
+                    //  That mimics the behaviour of MCIf::parse, where a <then>
+                    //  is compulsary after the expression parsed (here, an EOL)
+                    if (sp.parseexp(False, True, &cases[ncases]) != PS_NORMAL
+                            || sp.next(type) != PS_EOL)
 					{
 						MCperror->add
 						(PE_SWITCH_BADCASECONDITION, sp);
@@ -1655,8 +1704,7 @@ Exec_stat MCSwitch::exec(MCExecPoint &ep)
 			
 			stat = tspr->exec(ep);
 			
-			// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
-			MCRedrawUpdateScreen();
+            MCActionsRunAll();
 
 			switch(stat)
 			{
@@ -1902,9 +1950,8 @@ Exec_stat MCTry::exec(MCExecPoint &ep)
 		ep.setline(tspr->getline());
 
 		stat = tspr->exec(ep);
-
-		// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
-		MCRedrawUpdateScreen();
+        
+        MCActionsRunAll();
 
 		switch(stat)
 		{

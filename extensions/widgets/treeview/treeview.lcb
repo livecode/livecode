@@ -94,6 +94,7 @@ use com.livecode.engine
 metadata author is "LiveCode"
 metadata version is "1.0.0"
 metadata title is "Tree View"
+metadata userVisible is "false"
 
 metadata selectedRowColor.editor is "com.livecode.pi.color"
 metadata selectedRowColor.default is "10,105,216"
@@ -846,7 +847,7 @@ private handler convertArrayToList(in pArray as Array, in pLevel as Integer, in 
 			put true into tElement["leaf"]
 			put pArray[tKey] into tElement["value"]
 			variable tString as optional String			
-			if pArray[tKey] is not defined then
+			if pArray[tKey] is nothing then
 				put "" into tString
 			else if pArray[tKey] is a string then
 				put pArray[tKey] into tString
@@ -871,7 +872,7 @@ handler type NodeApply(in pListElt as Integer, in pPath as List, in pLevel as In
 // A handler of type NodeApply to pass into 'applyToNode' - unselects the key on the given path
 private handler unselectKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
 	put false into xList[pListElt]["selected"]
-	put undefined into mSelectedElement
+	put nothing into mSelectedElement
 end handler
 
 // A handler of type NodeApply to pass into 'applyToNode' - selects the key on the given path
@@ -998,13 +999,13 @@ end handler
 // Select the key at the target path
 private handler selectPath(in pPath as List)
 	// Unselect the existing selection if applicable
-	if mSelectedElement is defined and mSelectedElement is not pPath then
+	if mSelectedElement is not nothing and mSelectedElement is not pPath then
 		applyToNode(unselectKey, mSelectedElement, 0, 1, mDataList, mData)
 	end if
 
-	if mSelectedElement is not defined or mSelectedElement is not pPath then
+	if mSelectedElement is nothing or mSelectedElement is not pPath then
 		if not applyToNode(selectKey, pPath, 0, 1, mDataList, mData) then
-			put undefined into mSelectedElement
+			put nothing into mSelectedElement
 		end if	
 		post "selectedElementChanged"
 		redraw all
@@ -1013,7 +1014,7 @@ end handler
 
 // Unselect the key at the target path
 private handler unselectPath(in pPath as List)
-	if mSelectedElement is defined and mSelectedElement is pPath then
+	if mSelectedElement is not nothing and mSelectedElement is pPath then
 		applyToNode(unselectKey, pPath, 0, 1, mDataList, mData)
 		post "selectedElementChanged"
 		redraw all
@@ -1025,7 +1026,7 @@ end handler
 // We are quite lax with checking here, since this will only be used internally 
 // 	after a delete action happens, and so the element should exist by definition.
 // If the specified path doesn't exist, this returns false
-private handler applyToNode(in pHandler as NodeApply, in pPathToNode as List, in pLevel as Integer, in pStart as Integer, inout xList as List, inout xArray as Array) as Boolean
+private handler applyToNode(in pHandler as NodeApply, in pPathToNode as List, in pLevel as Integer, in pStart as Integer, inout xList as List, inout xArray as Array) returns Boolean
 	
 	if pStart >= the number of elements in xList then
 		return false
@@ -1218,9 +1219,9 @@ private handler setArrayData(in pData as Array) returns nothing
 	end if	
 		
 	// Force reselection of previously selected path (if possible)
-	if mSelectedElement is defined then
+	if mSelectedElement is not nothing then
 		if not applyToNode(selectKey, mSelectedElement, 0, 1, mDataList, mData) then
-			put undefined into mSelectedElement
+			put nothing into mSelectedElement
 		end if
 	end if
 	
@@ -1241,7 +1242,7 @@ end handler
 
 private handler getSelectedElement() returns String
 	variable tElement as String
-	if mSelectedElement is defined then
+	if mSelectedElement is not nothing then
 		combine mSelectedElement with "," into tElement
 		// Make sure empty path is recognised as a valid path
 		put "," after tElement

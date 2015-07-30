@@ -551,10 +551,14 @@ bool MCTextChunkIterator_Codeunit::IsAmong(MCStringRef p_needle)
     return MCStringFind(m_text, MCRangeMake(0, m_length), p_needle, m_options, nil);
 }
 
-uindex_t MCTextChunkIterator_Codeunit::ChunkOffset(MCStringRef p_needle, uindex_t p_start_offset, bool p_whole_matches)
+uindex_t MCTextChunkIterator_Codeunit::ChunkOffset(MCStringRef p_needle, uindex_t p_start_offset, uindex_t *p_end_offset, bool p_whole_matches)
 {
+    // AL-2015-07-20: [[ Bug 15618 ]] Search for the codeunit within the specified range
+    MCRange t_in_range;
+    t_in_range = MCRangeMake(p_start_offset, p_end_offset != nil ? *p_end_offset : m_length);
+    
     MCRange t_range;
-    if (MCStringFind(m_text, MCRangeMake(0, m_length), p_needle, m_options, &t_range))
+    if (MCStringFind(m_text, t_in_range, p_needle, m_options, &t_range))
     {
         if (!p_whole_matches || t_range . length == 1)
             return t_range . offset;
@@ -644,7 +648,7 @@ bool MCTextChunkIterator_Delimited::IsAmong(MCStringRef p_needle)
     return false;
 }
 
-uindex_t MCTextChunkIterator_Delimited::ChunkOffset(MCStringRef p_needle, uindex_t p_start_offset, bool p_whole_matches)
+uindex_t MCTextChunkIterator_Delimited::ChunkOffset(MCStringRef p_needle, uindex_t p_start_offset, uindex_t *p_end_offset, bool p_whole_matches)
 {
     // Ensure that when no item is skipped, the offset starts from the first item - without skipping it
     uindex_t t_chunk_offset;
@@ -680,12 +684,21 @@ uindex_t MCTextChunkIterator_Delimited::ChunkOffset(MCStringRef p_needle, uindex
         // Count the number of delimiters between the start of the first chunk
         // and the start of the found string.
         t_chunk_offset += MCStringCount(m_text, MCRangeMake(m_range . offset, t_found_offset - m_range . offset), m_delimiter, m_options);
+        
+        // AL-2015-07-20: [[ Bug 15618 ]] If the chunk found is outside the specified range, return 0 (not found)
+        if (p_end_offset != nil && t_chunk_offset > *p_end_offset)
+            return 0;
+        
         return t_chunk_offset;
     }
     
     // Otherwise, just iterate through the chunks.
     do
     {
+        // AL-2015-07-20: [[ Bug 15618 ]] If there is an end offset, don't exceed it.
+        if (p_end_offset != nil && t_chunk_offset > *p_end_offset)
+            break;
+        
         if (p_whole_matches)
         {
             if (MCStringSubstringIsEqualTo(m_text, MCRangeMake(m_range . offset, m_length - m_range . offset), p_needle, m_options))

@@ -12,10 +12,13 @@
 			
 			'toolsets': ['host','target'],
 			
-			'suppress_warnings': 1,
-			
 			'product_name': 'reflex-<(_toolset)',
-			
+		
+			'variables':
+			{
+				'silence_warnings': 1,
+			},
+	
 			'direct_dependent_settings':
 			{
 				'variables':

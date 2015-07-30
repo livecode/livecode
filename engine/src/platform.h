@@ -636,10 +636,12 @@ void MCPlatformGetMenubar(MCPlatformMenuRef menu);
 
 typedef class MCPlatformCursor *MCPlatformCursorRef;
 
+// SN-2015-06-16: [[ Bug 14056 ]] Add hidden cursor as part of the standard ones
 enum MCPlatformStandardCursor
 {
 	kMCPlatformStandardCursorUnknown,
-	
+    
+    kMCPlatformStandardCursorNone,
 	kMCPlatformStandardCursorArrow,
 	kMCPlatformStandardCursorWatch,
 	kMCPlatformStandardCursorCross,
@@ -651,8 +653,7 @@ void MCPlatformCreateCustomCursor(MCImageBitmap *image, MCPoint hot_spot, MCPlat
 void MCPlatformRetainCursor(MCPlatformCursorRef cursor);
 void MCPlatformReleaseCursor(MCPlatformCursorRef cursor);
 
-void MCPlatformShowCursor(MCPlatformCursorRef cursor);
-void MCPlatformHideCursor(void);
+void MCPlatformSetCursor(MCPlatformCursorRef cursor);
 void MCPlatformHideCursorUntilMouseMoves(void);
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -290,6 +290,7 @@ on revSaveAsStandalone pStack, pFolder, pPreview
       
       put the mainStack of stack pStack into pStack
       set the defaultStack to pStack
+      put the destroyStack of stack pStack into tOldDestroy
       try
          if sStandaloneSettingsA["ios"] or sStandaloneSettingsA["android"] then
             local tOutputMobileFolder
@@ -326,6 +327,7 @@ on revSaveAsStandalone pStack, pFolder, pPreview
          end if
       catch tError
          revAbort
+         set the destroyStack of stack pStack to tOldDestroy
          if word 1 of tError = "Standalone:" then 
             if revTestEnvironment() then
                return word 2 to -1 of tError
@@ -343,6 +345,7 @@ on revSaveAsStandalone pStack, pFolder, pPreview
       end try
       
       revReset
+      set the destroyStack of stack pStack to tOldDestroy
       
       if revStandaloneGetWarnings() is not empty then
          set the cWarnings of stack "revBuildResults" to revStandaloneGetWarnings()
@@ -547,6 +550,10 @@ private command revCreateStandalone pStack, pFolder
       dispatch "savingStandalone" to stack tStackFileName
    end try
    
+   // SN-2015-07-16: [[ ObjectDeletion ]] Make sure that the stack won't get removed from
+   //  memory (now it would get deleted sooner after that it used to do)
+   set the destroyStack of stack pStack to false
+   
    --build a list of output directories
    if last char of pFolder is not slash then 
       put slash after pFolder
@@ -575,7 +582,9 @@ private command revCreateStandalone pStack, pFolder
             case "MacOSX"
             case "MacOSX PowerPC-32"
             case "MacOSX x86-32"
-               put it & "/Mac OS X/x86-32/Standalone.app/Contents/MacOS/Standalone" into line 1 of tEngineSourceFile[tPlatform]
+               // SN-2015-07-09: [[ StandaloneDeployment ]] Gypified Standalone-<edition>.app building does not
+               //  allow to create broken applications, so that the executable file in it bears the edition.
+               put it & "/Mac OS X/x86-32/Standalone.app/Contents/MacOS/Standalone-" & the editionType into line 1 of tEngineSourceFile[tPlatform]
                break
             case "Windows"
                put it & "/Windows/x86-32/Standalone" into tEngineSourceFile[tPlatform]
@@ -666,13 +675,6 @@ private command revCreateStandalone pStack, pFolder
       -- copy externals
       revCopyExternals tPlatform, tStackSourceFile[tPlatform], tEngineSourceFile[tPlatform], tStandalonePath[tPlatform]
       
-      // AL-2015-02-27: Include fontawesome in every standalone
-      if there is a file (revIDESpecialFolderPath("fonts") & slash & "fontawesome.ttf") then
-         local tCurrentLocation
-         set the itemDel to "/"
-         put item 1 to -2 of tStandalonePath[tPlatform] into tCurrentLocation
-         revCopyFile (revIDESpecialFolderPath("fonts") & slash & "fontawesome.ttf"), tCurrentLocation & slash & "fontawesome.ttf", "revStandaloneProgressCallback", the long id of me
-      end if
       revBuildStandaloneDeploy tPlatform, tStackSourceFile[tPlatform], tEngineSourceFile[tPlatform], tStandalonePath[tPlatform]
       
       add 1 to tCount
@@ -921,6 +923,11 @@ private command revCopyResources pStack, pStackFileList
    
    if sStandaloneSettingsA["brushes"] then
       put "revCompatibilityBrushes1" & return after tCopyFiles
+   end if
+   
+   -- PM-2015-06-24: [[ Bug 15535 ]] Make possible to use magnify palette in standalones
+   if sStandaloneSettingsA["Magnify"] then
+      put "Magnify" & return after tCopyFiles
    end if
    
    if sStandaloneSettingsA["revolutionPrintDialogs"] then
@@ -1715,7 +1722,11 @@ private function revSaveToFolder pFolder, pStack, pGeneric
       put ".rev" after tFileName
    end if
    lock screen
+   // SN-2015-07-01: [[ Bug 15259 ]] We don't want the saving to be trapped by
+   //  a saveStackRequest handler in the standalone stack
+   lock messages
    save stack pStack as pFolder&tFileName
+   unlock messages
    return tFileName
 end revSaveToFolder
 
@@ -2153,7 +2164,11 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
             break
       end switch
    end if
+   // SN-2015-07-01: [[ Bug 15259 ]] We don't want the saving to be trapped by
+   //  a saveStackRequest handler in the standalone stack
+   lock messages
    save stack pStackFilePath
+   unlock messages
    
    -- MM-2013-04-05: [[ Bug 10756 ]] Make sure we're allowed to delete the stack before deleteing.
    set the cantDelete of stack pStackFilePath to false
@@ -2236,22 +2251,6 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
       end if
    end if   
    
-   // AL-2015-02-27: Include fontawesome in every standalone
-   local  tTargetFontPath
-   if tPlatformDetailsA["platform"] begins with "MacOS" then
-      put "specialfolderpath(" & quote & "engine" & quote & ") & slash & " & quote & ".." & quote & " & slash & Resources & slash & _MacOS & slash & fontawesome.ttf" into tTargetFontPath
-   else
-      put "specialfolderpath(" & quote & "engine" & quote & ") & slash & fontawesome.ttf" into tTargetFontPath
-   end if
-   
-   if there is a file (revIDESpecialFolderPath("fonts") & slash & "fontawesome.ttf") then
-      if sStandaloneSettingsA["startup_script"] is not empty then
-         put "start using font file " & tTargetFontPath into sStandaloneSettingsA["startup_script"]
-      else
-         put return & "start using font file " & tTargetFontPath after sStandaloneSettingsA["startup_script"]
-      end if
-   end if
-   
    # AL-2015-01-29: [[ Scriptify IDE ]] Add the startup script to the deploy parameters
    if sStandaloneSettingsA["startup_script"] is not empty then
       put sStandaloneSettingsA["startup_script"] into tDeployInfo["startup_script"]
@@ -2266,7 +2265,8 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
    end if
    
    # AL-2015-04-12: [[ Standalone Extensions ]] Add chosen extensions to the standalone inclusions
-   repeat for each line tExtension in sStandaloneSettingsA["extensions"]
+   # AL-2015-07-21: [[ Standalone Extensions ]] Automatically include dependecies, and load in order
+   repeat for each line tExtension in revIDEExtensionsOrderByDependency(sStandaloneSettingsA["extensions"])
       local tExtensionFile
       put revIDEExtensionModuleFile(tExtension) into tExtensionFile
       if tDeployInfo["modules"] is empty then
@@ -2504,6 +2504,7 @@ private command revSmartChecking pStackFilesList, pSearchForInclusions
       put false into sStandaloneSettingsA["answerDialog"]
       put false into sStandaloneSettingsA["askDialog"]
       put false into sStandaloneSettingsA["brushes"]   --LG-2007-12-13: Bug 4370
+      put false into sStandaloneSettingsA["Magnify"]  -- PM-2015-06-24: [[ Bug 15535 ]] Make possible to include magnify palette in standalones
       put false into sStandaloneSettingsA["pdfPrinter"]
       
       # OK-2007-11-13 : Support for revolution print dialogs

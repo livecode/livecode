@@ -47,6 +47,17 @@
 									[
 										'src/lc-compile-bootstrap.gyp:lc-compile-stage4#target',
 									],
+
+									'direct_dependent_settings':
+									{
+										'variables':
+										{
+											'dist_files':
+											[
+												'<(lc-compile_target)',
+											],
+										},
+									},
 								},
 							],
 							[
@@ -75,17 +86,6 @@
 					},
 				],
 			],
-			
-			'direct_dependent_settings':
-			{
-				'variables':
-				{
-					'dist_files':
-					[
-						'<(lc-compile_target)',
-					],
-				},
-			},
 		},
 	],
 }

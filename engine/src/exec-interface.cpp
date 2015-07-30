@@ -1946,11 +1946,10 @@ void MCInterfaceExecRevert(MCExecContext& ctxt)
 	Boolean oldlock = MClockmessages;
 	MClockmessages = True;
 	MCerrorlock++;
-	t_sptr->del();
+    if (t_sptr->del())
+        t_sptr -> scheduledelete();
 	MCerrorlock--;
 	MClockmessages = oldlock;
-	MCtodestroy->add
-	(t_sptr);
 	MCNewAutoNameRef t_name;
 	/* UNCHECKED */ MCNameCreate(*t_filename, &t_name);
 	t_sptr = MCdispatcher->findstackname(*t_name);
@@ -2197,9 +2196,6 @@ void MCInterfaceExecDeleteObjects(MCExecContext& ctxt, MCObjectPtr *p_objects, u
 			ctxt . LegacyThrow(EE_CHUNK_CANTDELETEOBJECT);
 			return;
 		}
-
-		if (p_objects[i] . object -> gettype() == CT_STACK)
-			MCtodestroy -> remove((MCStack *)p_objects[i] . object);
 		p_objects[i] . object -> scheduledelete();
 	}
 }
@@ -2389,6 +2385,9 @@ void MCInterfaceExecSelectTextOfField(MCExecContext& ctxt, Preposition_type p_ty
 		break;
 	case PT_AFTER:
 		t_start = t_finish;
+		break;
+	default:
+		MCUnreachable();
 		break;
 	}
     
@@ -3124,6 +3123,9 @@ void MCInterfaceExecCreateControl(MCExecContext& ctxt, MCStringRef p_new_name, i
 	if (p_new_name != nil)
 		t_object->setstringprop(ctxt, 0, P_NAME, False, p_new_name);
 
+    // AL-2015-06-30: [[ Bug 15556 ]] Ensure mouse focus is synced after creating object
+    t_object -> sync_mfocus();
+    
 	MCAutoValueRef t_id;
 	t_object->names(P_LONG_ID, &t_id);
 	ctxt . SetItToValue(*t_id);
@@ -3155,6 +3157,9 @@ void MCInterfaceExecCreateWidget(MCExecContext& ctxt, MCStringRef p_new_name, MC
     
     if (p_new_name != nil)
         t_widget->setstringprop(ctxt, 0, P_NAME, False, p_new_name);
+    
+    // AL-2015-06-30: [[ Bug 15556 ]] Ensure mouse focus is synced after creating object
+    t_widget -> sync_mfocus();
     
     MCAutoValueRef t_id;
     t_widget->names(P_LONG_ID, &t_id);

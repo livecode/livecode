@@ -770,11 +770,11 @@ void MCIdeSign::exec_ctxt(MCExecContext &ctxt)
 			ctxt . Throw();
 	
 	if (!ctxt . HasError())
-		if (t_params . certstore != NULL && (t_params . certificate != NULL || t_params . privatekey != NULL))
+		if (!MCValueIsEmpty(t_params . certstore) && (!MCValueIsEmpty(t_params . certificate) || !MCValueIsEmpty(t_params . privatekey)))
 			ctxt . Throw();
 
 	if (!ctxt . HasError())
-		if (t_params . certstore == NULL && (t_params . certificate == NULL || t_params . privatekey == NULL))
+		if (MCValueIsEmpty(t_params . certstore) && (MCValueIsEmpty(t_params . certificate) || MCValueIsEmpty(t_params . privatekey)))
 			ctxt . Throw();
 
 	bool t_can_sign;
@@ -1044,13 +1044,10 @@ void MCIdeDmgBuild::exec_ctxt(MCExecContext& ctxt)
 
 	/////////
 
+    // SN-2015-06-19: [[ CID 100294 ]] Check the return value.
     MCAutoStringRef t_string;
-	if (!ctxt . HasError())
-    {
-        /* UNCHECKED */ ctxt . EvalExprAsStringRef(m_filename, EE_UNDEFINED, &t_string);
-    }
-
-	if (!ctxt . HasError())
+	if (!ctxt . HasError()
+            && ctxt . EvalExprAsStringRef(m_filename, EE_UNDEFINED, &t_string))
 	{
         MCAutoPointer<char> temp;
         if (!MCStringConvertToCString(*t_string, &temp))

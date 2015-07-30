@@ -2,11 +2,11 @@
 	'variables':
 	{
 		# Path to the Windows SDK for Apple QuickTime
-		'quicktime_sdk': '$(foo)C:/Program Files/QuickTime SDK',
+		'quicktime_sdk%': '$(foo)C:/Program Files/QuickTime SDK',
 		
 		# Path to versions 4 and 5 of the Microsoft Speech SDK
-		'ms_speech_sdk4': '$(foo)C:/Program Files/Microsoft Speech SDK',
-		'ms_speech_sdk5': '$(foo)C:/Program Files/Microsoft Speech SDK 5.1',
+		'ms_speech_sdk4%': '$(foo)C:/Program Files/Microsoft Speech SDK',
+		'ms_speech_sdk5%': '$(foo)C:/Program Files/Microsoft Speech SDK 5.1',
 		
 		'output_dir': '../win-<(target_arch)-bin',
 	},
@@ -21,6 +21,8 @@
 			'ext_suffix': '.dll',
 			'exe_suffix': '.exe',
 			'debug_info_suffix': '',
+
+			'silence_warnings': 0,
 		},
 		
 		# Don't assume a Cygwin environment when invoking actions
@@ -53,7 +55,7 @@
 				'target_conditions':
 				[
 					[
-						'_suppress_warnings == 0',
+						'silence_warnings == 0',
 						{
 							'msvs_settings':
 							{
@@ -143,6 +145,27 @@
 					],
 				},
 			],
+			[
+				'silence_warnings == 0',
+				{
+					'msvs_settings':
+					{
+						'VCCLCompilerTool':
+						{
+							'WarningLevel': '3',
+						},
+					},
+				},
+				{
+					'msvs_settings':
+					{
+						'VCCLCompilerTool':
+						{
+							'WarningLevel': '0',
+						},
+					},
+				},
+			],
 		],
 		
 		'msvs_settings':
@@ -152,7 +175,6 @@
 				'ExceptionHandling': '0',
 				'BufferSecurityCheck': 'false',
 				'RuntimeTypeInfo': 'false',
-				'WarningLevel': '3',
 				'Detect64BitPortabilityProblems': 'false',
 			},
 			
