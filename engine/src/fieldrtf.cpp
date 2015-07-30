@@ -753,7 +753,7 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 			}
 			else if (ctxt . styles[ctxt . style_index] . background_color_index == -1)
 			{
-				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}");
+                /* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "{");
 				ctxt . styles[ctxt . style_index + 1] = ctxt . styles[ctxt . style_index];
 				ctxt . style_index += 1;
 			}
