@@ -174,7 +174,7 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    put true into tSuccess
    
    local tDescFile
-   put pIdeFolder & slash & "Installer/package.txt" into tDescFile
+   put builderRepoFolder() & slash & "Installer/package.txt" into tDescFile
    builderLog "message", "Parsing description file '" & tDescFile & "'"
    packageCompilerParse tPackager, url ("file:" & tDescFile)
    if the result is empty then
