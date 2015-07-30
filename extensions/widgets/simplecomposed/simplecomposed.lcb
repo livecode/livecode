@@ -35,7 +35,7 @@ public handler onCreate()
     put the empty string into mInsideChild
 
     put a new widget "com.livecode.extensions.livecode.selector" into mSelector
-    set property "numSelections" of mSelector to 6
+    set property "totalOptions" of mSelector to 6
     set annotation "Name" of mSelector to "Selector"
 
     put a new widget "com.livecode.extensions.livecode.clock" into mClock
