@@ -291,7 +291,7 @@ static bool
 __size_hash (void *value,
              hash_t & r_hash)
 {
-	r_hash = MCHashUSize(*(size_t *)value);
+	r_hash = MCHashUSize(*reinterpret_cast<size_t *>(value));
 	return true;
 }
 
@@ -299,7 +299,7 @@ static bool
 __ssize_hash (void *value,
              hash_t & r_hash)
 {
-	r_hash = MCHashSize(*(size_t *)value);
+	r_hash = MCHashSize(*reinterpret_cast<ssize_t *>(value));
 	return true;
 }
 
@@ -653,9 +653,9 @@ bool __MCForeignValueInitialize(void)
 	d . size = sizeof(ssize_t);
 	d . basetype = kMCNullTypeInfo;
 	d . bridgetype = kMCNumberTypeInfo;
-#if SIZE_MAX == UINT64_MAX
+#if SSIZE_MAX == INT64_MAX
 	p = kMCForeignPrimitiveTypeUInt64;
-#elif SIZE_MAX == UINT32_MAX
+#elif SSIZE_MAX == INT32_MAX
 	p = kMCForeignPrimitiveTypeUInt32;
 #else
 #	error "Unsupported storage layout for ssize_t"

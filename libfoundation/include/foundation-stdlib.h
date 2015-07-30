@@ -41,6 +41,18 @@ extern "C" void __cdecl qsort(void *, size_t, size_t, int(__cdecl*)(const void *
 extern "C" double __cdecl floor(double x);
 extern "C" double __cdecl fmod(double x, double y);
 
+// The MSVC CRT doesn't have ssize_t - this is an adaptation of its definition
+// of size_t, but with signed rather than unsigned annotations.
+#ifdef  _WIN64
+typedef signed __int64 ssize_t;
+#define SSIZE_MIN _I64_MIN
+#define SSIZE_MAX _I64_MAX
+#else
+typedef _W64 signed int ssize_t;
+#define SSIZE_MIN INT_MIN
+#define SSIZE_MAX INT_MAX
+#endif
+
 #else
 
 #include <stdarg.h>
