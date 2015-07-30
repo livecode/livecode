@@ -99,6 +99,7 @@
     data(Position: POS)
     array(Position: POS)
     list(Position: POS, Element: TYPE)
+    unspecified
     nil
 
 'type' FIELDLIST

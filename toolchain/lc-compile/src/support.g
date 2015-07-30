@@ -315,6 +315,8 @@
     Error_ExitRepeatOutOfContext
     Error_DependentModuleNotIncludedWithInputs
     Error_InterfaceFileNameMismatch
+    Error_NoReturnTypeSpecifiedForForeignHandler
+    Error_NoTypeSpecifiedForForeignHandlerParameter
     Warning_MetadataClausesShouldComeAfterUseClauses
     Warning_DeprecatedTypeName
     Warning_UnsuitableNameForDefinition
@@ -696,6 +698,9 @@
 
 'action' Error_DependentModuleNotIncludedWithInputs(Position: POS, Module: NAME)
 'action' Error_InterfaceFileNameMismatch(Position: POS, Module: NAME)
+
+'action' Error_NoReturnTypeSpecifiedForForeignHandler(Position: POS)
+'action' Error_NoTypeSpecifiedForForeignHandlerParameter(Position: POS)
 
 'action' Warning_MetadataClausesShouldComeAfterUseClauses(Position: POS)
 'action' Warning_DeprecatedTypeName(Position: POS, NewType: STRING)

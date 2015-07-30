@@ -319,6 +319,9 @@
     'rule' GenerateManifestTypeBody(list(_, _)):
         OutputWrite("list")
 
+    'rule' GenerateManifestTypeBody(unspecified):
+        OutputWrite("any")
+
     'rule' GenerateManifestTypeBody(Type):
         print(Type)
         Fatal_InternalInconsistency("attempt to generate uncoded type for manifest")
@@ -1572,7 +1575,7 @@
         ||
             where(-1 -> HandlerReg)
         |)
-        
+
         GenerateInvoke_EvaluateArguments(Result, Context, InvokeSig, Arguments)
         
         (|
@@ -1971,6 +1974,10 @@
         EmitArrayType(-> Index)
     'rule' GenerateBaseType(list(_, _) -> Index):
         EmitListType(-> Index)
+
+    'rule' GenerateBaseType(unspecified -> Index):
+        EmitAnyType(-> AnyIndex)
+        EmitOptionalType(AnyIndex -> Index)
 
     'rule' GenerateBaseType(Type -> 0):
         print(Type)
