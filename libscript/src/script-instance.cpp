@@ -893,7 +893,7 @@ static bool MCScriptPerformScriptInvoke(MCScriptFrame*& x_frame, byte_t*& x_next
 }
 
 // This method resolves the binding string in the foreign function. The format is:
-//   [lang:][library@][class.]function[!calling]
+//   [lang:][library>][class.]function[!calling]
 //
 // lang - one of c, cpp, objc or java. If not present, it is taken to be c.
 // library - the library to load the symbol from. If not present, it is taken to be the

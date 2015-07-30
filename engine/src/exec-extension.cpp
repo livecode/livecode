@@ -215,6 +215,9 @@ static bool MCEngineResolveSharedLibrary(MCScriptModuleRef p_module, MCStringRef
     if (!MCEngineLookupResourcePathForModule(p_module, Out(t_resource_path)))
         return false;
     
+    if (MCStringIsEmpty(*t_resource_path))
+        return false;
+    
 #if defined(_MACOSX)
     return MCStringFormat(r_path, "%@/code/mac/%@.dylib", *t_resource_path, p_name);
 #elif defined(_LINUX) && defined(__32_BIT__)
