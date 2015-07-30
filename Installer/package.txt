@@ -75,6 +75,12 @@ installer LiveCode
 		desktop application "ide:Installer/application.desktop" as "runrev-[[ProductTag]]"
 		desktop icon "ide:Installer/application.png" as "runrev-[[ProductTag]]"
 	include Uninstaller
+	if BaseEdition is Commercial then
+		additional manifest "../Installer/commercial-package.txt"
+	if TargetEdition is Indy then
+		include Commercial.IndyComponents
+	if TargetEdition is Business then
+		include Commercial.BusinessComponents
 
 component Runtime
 	include Runtime.[[TargetPlatform]]
