@@ -52,10 +52,11 @@
 #include "mbliphoneapp.h"
 #include "mblcontrol.h"
 
+#include "graphics_util.h"
 
-MCNativeLayerIOS::MCNativeLayerIOS(MCWidgetRef p_widget, void *p_native_view) :
+MCNativeLayerIOS::MCNativeLayerIOS(MCWidgetRef p_widget, UIView *p_native_view) :
   m_widget(p_widget),
-  m_view([(UIView*)p_native_view retain])
+  m_view([p_native_view retain])
 {
     ;
 }
@@ -72,20 +73,9 @@ MCNativeLayerIOS::~MCNativeLayerIOS()
 void MCNativeLayerIOS::OnToolChanged(Tool p_new_tool)
 {
     MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
-    if (p_new_tool == T_BROWSE || p_new_tool == T_HELP)
-    {
-        // In run mode. Make visible if requested
-        if (t_widget->getflags() & F_VISIBLE)
-            MCIPhoneRunBlockOnMainFiber(^{[m_view setHidden:NO];});
-        t_widget->Redraw();
-    }
-    else
-    {
-        // In edit mode
-        MCIPhoneRunBlockOnMainFiber(^{[m_view setHidden:YES];});
-        t_widget->Redraw();
-    }
+	
+	OnVisibilityChanged(ShouldShowWidget(t_widget));
+	t_widget->Redraw();
 }
 
 void MCNativeLayerIOS::OnOpen()
@@ -120,12 +110,7 @@ void MCNativeLayerIOS::doAttach()
     // Act as if there was a re-layer to put the widget in the right place
     doRelayer();
     
-    // Restore the visibility state of the widget (in case it changed due to a
-    // tool change while on another card - we don't get a message then)
-    if ((t_widget->getflags() & F_VISIBLE) && t_widget->isInRunMode())
-        MCIPhoneRunBlockOnMainFiber(^{[m_view setHidden:NO];});
-    else
-        MCIPhoneRunBlockOnMainFiber(^{[m_view setHidden:YES];});
+	OnVisibilityChanged(ShouldShowWidget(t_widget));
 }
 
 void MCNativeLayerIOS::OnDetach()
@@ -179,6 +164,8 @@ void MCNativeLayerIOS::OnVisibilityChanged(bool p_visible)
     MCIPhoneRunBlockOnMainFiber(^{
         [m_view setHidden:p_visible ? NO : YES];
     });
+	if (p_visible)
+		OnGeometryChanged(MCRectangleMake(0,0,0,0));
 }
 
 void MCNativeLayerIOS::OnLayerChanged()
@@ -240,7 +227,7 @@ bool MCNativeLayerIOS::GetNativeView(void *&r_view)
 
 MCNativeLayer *MCNativeLayer::CreateNativeLayer(MCWidgetRef p_widget, void *p_native_view)
 {
-	return new MCNativeLayerIOS(p_widget, p_native_view);
+	return new MCNativeLayerIOS(p_widget, (UIView*)p_native_view);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -36,7 +36,7 @@ public:
     virtual void OnToolChanged(Tool p_new_tool);
     virtual void OnLayerChanged();
     
-    MCNativeLayerIOS(MCWidgetRef, void *p_native_view);
+    MCNativeLayerIOS(MCWidgetRef, UIView *p_native_view);
     ~MCNativeLayerIOS();
     
 	virtual bool GetNativeView(void *&r_view);
