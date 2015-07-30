@@ -936,7 +936,7 @@ bool MCUIDC::AddRunloopAction(MCRunloopActionCallback p_callback, void *p_contex
 	MCRunloopAction *t_action;
 	t_action = nil;
 
-	if (FindRunloopAction(p_callback, p_context, r_action))
+	if (FindRunloopAction(p_callback, p_context, t_action))
 	{
 		r_action = t_action;
 		r_action->references++;
