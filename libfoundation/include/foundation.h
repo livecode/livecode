@@ -1176,6 +1176,7 @@ extern "C" {
 // Return a hash for the given integer.
 MC_DLLEXPORT hash_t MCHashInteger(integer_t);
 MC_DLLEXPORT hash_t MCHashUInteger(uinteger_t);
+MC_DLLEXPORT hash_t MCHashSize(ssize_t);
 MC_DLLEXPORT hash_t MCHashUSize(size_t);
 
 // Return a hash value for the given double - note that (hopefully!) hashing
@@ -1414,7 +1415,9 @@ MC_DLLEXPORT extern MCTypeInfoRef kMCUIntTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCFloatTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCDoubleTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCPointerTypeInfo;
+
 MC_DLLEXPORT extern MCTypeInfoRef kMCSizeTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCSSizeTypeInfo;
 
 //////////
 

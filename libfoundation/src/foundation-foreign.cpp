@@ -28,6 +28,7 @@ MC_DLLEXPORT_DEF MCTypeInfoRef kMCFloatTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCDoubleTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCPointerTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCSizeTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCSSizeTypeInfo;
 
 MCTypeInfoRef kMCForeignImportErrorTypeInfo;
 MCTypeInfoRef kMCForeignExportErrorTypeInfo;
@@ -294,6 +295,14 @@ __size_hash (void *value,
 	return true;
 }
 
+static bool
+__ssize_hash (void *value,
+             hash_t & r_hash)
+{
+	r_hash = MCHashSize(*(size_t *)value);
+	return true;
+}
+
 static bool __int_import(void *contents, bool release, MCValueRef& r_value)
 {
     return MCNumberCreateWithInteger(*(integer_t *)contents, (MCNumberRef&)r_value);
@@ -322,6 +331,26 @@ __size_import (void *contents,
 
 	return MCNumberCreateWithUnsignedInteger((uinteger_t) t_value,
 	                                         (MCNumberRef &) r_value);
+}
+
+static bool
+__ssize_import (void *contents,
+               bool release,
+               MCValueRef & r_value)
+{
+	ssize_t t_value = *(ssize_t *) contents;
+    
+	if (t_value < INTEGER_MIN || t_value > INTEGER_MAX)
+	{
+		MCErrorCreateAndThrow (kMCForeignImportErrorTypeInfo,
+		                       "type", kMCSizeTypeInfo,
+		                       "reason", MCSTR("too large for Number representation"),
+		                       nil);
+		return false;
+	}
+    
+	return MCNumberCreateWithInteger((integer_t) t_value,
+                                     (MCNumberRef &) r_value);
 }
 
 static bool __float_import(void *contents, bool release, MCValueRef& r_value)
@@ -395,6 +424,12 @@ __size_export(MCValueRef value, bool release, void *contents)
 }
 
 static bool
+__ssize_export(MCValueRef value, bool release, void *contents)
+{
+	return __uint_export<ssize_t>(value, release, contents, kMCSSizeTypeInfo);
+}
+
+static bool
 __bool_describe (void *contents,
                  MCStringRef & r_string)
 {
@@ -447,6 +482,14 @@ __size_describe (void *contents,
 {
 	return MCStringFormat (r_string, "<foreign size %zu>",
 	                       *((size_t *) contents));
+}
+
+static bool
+__ssize_describe (void *contents,
+                 MCStringRef & r_string)
+{
+	return MCStringFormat (r_string, "<foreign ssize %zd>",
+	                       *((ssize_t *) contents));
 }
 
 static bool __build_typeinfo(const char *p_name, MCForeignTypeDescriptor *p_desc, MCTypeInfoRef& r_typeinfo)
@@ -606,7 +649,32 @@ bool __MCForeignValueInitialize(void)
 	d . describe = __size_describe;
 	if (!__build_typeinfo("__builtin__.size", &d, kMCSizeTypeInfo))
 		return false;
-
+    
+	d . size = sizeof(ssize_t);
+	d . basetype = kMCNullTypeInfo;
+	d . bridgetype = kMCNumberTypeInfo;
+#if SIZE_MAX == UINT64_MAX
+	p = kMCForeignPrimitiveTypeUInt64;
+#elif SIZE_MAX == UINT32_MAX
+	p = kMCForeignPrimitiveTypeUInt32;
+#else
+#	error "Unsupported storage layout for ssize_t"
+#endif
+	d . layout = &p;
+	d . layout_size = 1;
+	d . initialize = nil;
+	d . finalize = __numeric_finalize<ssize_t>;
+	d . defined = nil;
+	d . move = __numeric_copy<ssize_t>;
+	d . copy = __numeric_copy<ssize_t>;
+	d . equal = __numeric_equal<ssize_t>;
+	d . hash = __ssize_hash;
+	d . doimport = __ssize_import;
+	d . doexport = __ssize_export;
+	d . describe = __ssize_describe;
+	if (!__build_typeinfo("__builtin__.ssize", &d, kMCSSizeTypeInfo))
+		return false;
+    
 	/* ---------- */
 
 	if (!MCNamedErrorTypeInfoCreate (MCNAME("livecode.lang.ForeignTypeImportError"), MCNAME("runtime"), MCSTR("error importing foreign '%{type}' value: %{reason}"), kMCForeignImportErrorTypeInfo))
