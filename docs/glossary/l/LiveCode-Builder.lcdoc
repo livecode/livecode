@@ -11,7 +11,7 @@ Unlike most languages, <LiveCode Builder> has been designed around the idea of e
 
 The syntax will be familiar to anyone who has coded with <LiveCode|LiveCode Script>, however <LiveCode Builder> is a great deal more strict - the reason being it is intended that it will eventually be compilable to machine code with the performance and efficiency you'd expect from any 'traditional' programming language. Indeed, over time we hope to move the majority of implementation of the whole LiveCode system over to being written in <LiveCode Builder>.
 
-There are two types of extensions which can be written in <LCB>: <widgets> and <library extension|libraries>. All installed <LiveCode Builder extension|extensions> appear in the new Extension Manager stack, which can be opened from the Tools menu. 
+There are two types of extensions which can be written in <LCB>: <widget|widgets> and <library extension|libraries>. All installed <LiveCode Builder extension|extensions> appear in the new Extension Manager stack, which can be opened from the Tools menu. 
 
 An <library extension|LCB library> is a new way of adding functions to the <LiveCode> <message path>. Public handlers in loaded <library extension|LCB libraries> are available to call from <LiveCode Script>. 
 
