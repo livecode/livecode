@@ -257,6 +257,7 @@ uint2 MCdragdelta = 4;
 MCUndolist *MCundos;
 MCSellist *MCselected;
 MCStacklist *MCstacks;
+MCStacklist *MCtodestroy;
 MCCardlist *MCrecent;
 MCCardlist *MCcstack;
 MCDispatch *MCdispatcher;
@@ -494,6 +495,10 @@ MCLocaleRef kMCSystemLocale = nil;
 
 uint32_t MCactionsrequired = 0;
 
+// SN-2015-07-17: [[ CommandArguments ]] Add global array for the arguments.
+MCStringRef MCcommandname;
+MCArrayRef MCcommandarguments;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern MCUIDC *MCCreateScreenDC(void);
@@ -637,6 +642,7 @@ void X_clear_globals(void)
 	MCundos = nil;
 	MCselected = nil;
 	MCstacks = nil;
+    MCtodestroy = nil;
 	MCrecent = nil;
 	MCcstack = nil;
 	MCdispatcher = nil;
@@ -835,6 +841,9 @@ void X_clear_globals(void)
 #if defined(MCSSL)
     MCSocketsInitialize();
 #endif
+    
+    MCcommandarguments = NULL;
+    MCcommandname = NULL;
 
 #ifdef _ANDROID_MOBILE
     extern void MCAndroidMediaPickInitialize();
@@ -934,8 +943,27 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 				
 				tvar->setvalueref(*t_value);
 			}
-		}
+        }
 #endif // _SERVER
+
+    // SN-2015-07-17: [[ CommandArguments ]] Initialise the commandName and
+    //  commandArguments properties.
+    MCcommandname = NULL;
+    MCcommandarguments = NULL;
+    if (MCModeHasCommandLineArguments())
+    {
+        MCcommandname = MCValueRetain(argv[0]);
+
+        bool t_success;
+        t_success = MCArrayCreateMutable(MCcommandarguments);
+
+        // We build a 1-based numeric array.
+        for (index_t i = 1; t_success && i < argc; i++)
+            t_success = MCArrayStoreValueAtIndex(MCcommandarguments, i, argv[i]);
+
+        if (!t_success)
+            return false;
+    }
     
     MCDeletedObjectsSetup();
 
@@ -961,6 +989,7 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	MCundos = new MCUndolist;
 	MCselected = new MCSellist;
 	MCstacks = new MCStacklist;
+    MCtodestroy = new MCStacklist;
 	MCrecent = new MCCardlist;
 	MCcstack = new MCCardlist;
 
@@ -1166,6 +1195,7 @@ int X_close(void)
 	delete MCtemplateimage;
 	delete MCtemplatefield;
 	delete MCselected;
+    delete MCtodestroy;
 	delete MCstacks;
 	delete MCcstack;
 	delete MCrecent;
@@ -1247,6 +1277,12 @@ int X_close(void)
 	if (MCcurtheme != NULL)
 		MCcurtheme -> unload();
 	delete MCcurtheme;
+
+    // SN-2015-07-17: [[ CommandArguments ]] Clean up the memory
+    MCValueRelease(MCcommandname);
+    MCcommandname = NULL;
+    MCValueRelease(MCcommandarguments);
+    MCcommandarguments = NULL;
 
 	// Cleanup the cursors array - *before* we close the screen!!
 	if (MCModeMakeLocalWindows())

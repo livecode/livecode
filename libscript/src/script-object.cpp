@@ -52,6 +52,9 @@ struct MCBuiltinModule
 static MCScriptModuleRef s_builtin_module = nil;
 static MCScriptModuleRef *s_builtin_modules = nil;
 static uindex_t s_builtin_module_count = 0;
+
+static MCScriptResolveSharedLibraryCallback s_resolve_shared_library_callback = nil;
+
 static bool MCFetchBuiltinModuleSection(MCBuiltinModule**& r_modules, unsigned int& r_count);
 
 bool MCScriptInitialize(void)
@@ -277,6 +280,8 @@ bool MCScriptInitialize(void)
 			return false;
     }
 
+    s_resolve_shared_library_callback = nil;
+    
     return true;
 }
 
@@ -286,6 +291,19 @@ void MCScriptFinalize(void)
         MCScriptReleaseModule(s_builtin_modules[i]);
     MCMemoryDeleteArray(s_builtin_modules);
     MCValueRelease(s_builtin_module);
+}
+
+void MCScriptSetResolveSharedLibraryCallback(MCScriptResolveSharedLibraryCallback p_callback)
+{
+    s_resolve_shared_library_callback = p_callback;
+}
+
+bool MCScriptResolveSharedLibrary(MCScriptModuleRef p_module, MCStringRef p_name, MCStringRef& r_path)
+{
+    if (s_resolve_shared_library_callback == nil)
+        return false;
+    
+    return s_resolve_shared_library_callback(p_module, p_name, r_path);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -723,6 +723,61 @@ bool MCStringDecodeAndRelease(MCDataRef p_data, MCStringEncoding p_encoding, boo
     return true;
 }
 
+// SN-2015-07-27: [[ Bug 15379 ]] This function is only used for internal
+//  purposes, when a LiveCode function parameter can be data - in which case
+//  no char translation must occur between the bytes in the DataRef and the
+//  Unicode string that the engine function takes (in MCR_exec for instance)
+bool MCStringCreateUnicodeStringFromData(MCDataRef p_data, bool p_is_external_rep, MCStringRef& r_string)
+{
+    MCAssert(!p_is_external_rep);
+    
+    if (MCDataIsEmpty(p_data))
+    {
+        r_string = MCValueRetain(kMCEmptyString);
+        return true;
+    }
+    
+    bool t_success;
+    t_success = true;
+    
+    __MCString *self;
+    self = nil;
+    if (t_success)
+        t_success = __MCValueCreate(kMCValueTypeCodeString, self);
+    
+    uint32_t t_byte_count;
+    t_byte_count = MCDataGetLength(p_data);
+    
+    const byte_t* t_bytes = MCDataGetBytePtr(p_data);
+    
+    if (t_success)
+        t_success = MCMemoryNewArray(t_byte_count + 1, self -> chars);
+    
+    if (t_success)
+    {
+        uindex_t i;
+        for(i = 0; i < t_byte_count; i++)
+            self -> chars[i] = t_bytes[i];
+    }
+    
+    if (t_success)
+    {
+        self -> flags |= kMCStringFlagIsNotNative;
+        self -> char_count = t_byte_count;
+        
+        r_string = self;
+    }
+    else
+    {
+        if (self != nil)
+            MCMemoryDeleteArray(self -> chars);
+        
+        MCMemoryDelete(self);
+    }
+    
+    return t_success;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static bool __MCStringFormatSupportedForUnicode(const char *p_format)

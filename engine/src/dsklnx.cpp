@@ -3253,10 +3253,6 @@ public:
         return True;
 #endif /* MCS_poll_dsk_lnx */
 
-#ifdef _LINUX_SERVER
-        Sleep(p_delay);
-        return False;
-#else
         Boolean readinput = False;
         int4 n;
         uint2 i;
@@ -3340,7 +3336,6 @@ public:
         if (wasalarm)
             Alarm(CHECK_INTERVAL);
         return True;
-#endif
     }
 
     virtual Boolean IsInteractiveConsole(int p_fd)

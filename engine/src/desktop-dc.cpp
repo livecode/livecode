@@ -65,7 +65,6 @@ static CFAbsoluteTime s_animation_current_time = 0;
 
 MCScreenDC::MCScreenDC(void)
 {
-	MCNotifyInitialize();
 }
 
 MCScreenDC::~MCScreenDC(void)

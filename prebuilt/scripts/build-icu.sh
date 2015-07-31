@@ -1,10 +1,9 @@
 #!/bin/bash
 
 source "${BASEDIR}/scripts/platform.inc"
+source "${BASEDIR}/scripts/lib_versions.inc"
 
-# Version and configuration flags
-ICU_VERSION=55.1
-ICU_VERSION_MAJOR=55
+# Configuration flags
 ICU_CONFIG="--disable-shared --enable-static --prefix=/ --with-data-packaging=static --disable-samples --disable-tests --disable-extras"
 ICU_CFLAGS="-DU_USING_ICU_NAMESPACE=0 -DUNISTR_FROM_CHAR_EXPLICIT=explicit -DUNISTR_FROM_STRING_EXPLICIT=explicit"
 

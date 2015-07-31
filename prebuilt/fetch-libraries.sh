@@ -1,11 +1,5 @@
 #!/bin/bash
 
-# Library versions
-VERSION_OpenSSL="1.0.1o"
-VERSION_Curl="7.43.0"
-VERSION_ICU="55.1"
-VERSION_CEF="39.0.2171.95"
-
 # Libraries to fetch
 PLATFORMS=( mac linux win32 android ios )
 ARCHS_android=( armv6 )
@@ -26,6 +20,9 @@ FETCH_DIR="${SCRIPT_DIR}/fetched"
 EXTRACT_DIR="${SCRIPT_DIR}"
 URL="http://downloads.livecode.com/prebuilts"
 
+# Versions
+source "${SCRIPT_DIR}/scripts/lib_versions.inc"
+
 mkdir -p "${FETCH_DIR}"
 mkdir -p "${EXTRACT_DIR}"
 
@@ -40,7 +37,7 @@ function fetchLibrary {
 	local ARCH=$3
 	local SUBPLATFORM=$4
 
-	eval "local VERSION=\${VERSION_${LIB}}"
+	eval "local VERSION=\${${LIB}_VERSION}"
 
 	local NAME="${LIB}-${VERSION}-${PLATFORM}-${ARCH}"
 

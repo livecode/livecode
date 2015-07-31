@@ -497,6 +497,21 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalClickLineMethodInfo; }
 };
 
+class MCCommandArguments : public MCFunction
+{
+    MCExpression* argument_index;
+public:
+    MCCommandArguments() { argument_index = NULL; }
+    virtual Parse_stat parse(MCScriptPoint &sp, Boolean the);
+    virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
+};
+
+class MCCommandName : public MCFunction
+{
+public:
+    virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
+};
+
 class MCClickLoc : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalClickLoc>
 {
 public:
