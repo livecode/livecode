@@ -73,7 +73,12 @@ installer LiveCode
 		include Mobile.Linux
 		include Runtime.Android
 		desktop application "ide:Installer/application.desktop" as "runrev-[[ProductTag]]"
-		desktop icon "ide:Installer/application.png" as "runrev-[[ProductTag]]"
+		if TargetEdition is Community then
+			desktop icon "ide:Installer/application.png" as "runrev-[[ProductTag]]"
+		if TargetEdition is Indy then
+			desktop icon "private:engine/rsrc/Indy/android-notify-icon.png" as "runrev-[[ProductTag]]"
+		if TargetEdition is Business then
+			desktop icon "private:engine/rsrc/Business/android-notify-icon.png" as "runrev-[[ProductTag]]"
 	include Uninstaller
 	if BaseEdition is Commercial then
 		additional manifest "../Installer/commercial-package.txt"
