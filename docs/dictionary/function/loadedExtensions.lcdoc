@@ -30,6 +30,6 @@ or (for <widget|widgets>) if it is available to create with the <create widget> 
 
 Each line of the list returned by the <loadedExtensions> <function> is the <kind> of the corresponding <LiveCode Builder extension|extension>.
 
-References: create widget (command), load extension (command), unload extension (command), function (glossary), return (glossary), LiveCode Builder extension (glossary), widget (object), library LiveCode Builder extension (glossary)
+References: create widget (command), load extension (command), unload extension (command), function (glossary), return (glossary), LiveCode Builder extension (glossary), widget (object), library LiveCode Builder extension (glossary), line (keyword), kind (property)
 
 Tags: extensions

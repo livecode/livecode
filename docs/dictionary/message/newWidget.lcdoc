@@ -24,7 +24,7 @@ Handle the <newWidget> <message> if you want to create additional <object|object
 
 Normally, the <newWidget> <message> is handled at a higher level of the <message path>, since the newly created <widget> does not yet have a <script>.
 
-The actual creation is not triggered by the <newWidget> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <widget> from being created.
+The <newWidget> <message> is sent after the <widget> is created, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <widget> from being created.
 
 References: script (property), copy (command), clone (command), paste (command), object (object), trap (glossary), widget (object), message (glossary), tool (glossary), message path (glossary), pass (control_st)
 
