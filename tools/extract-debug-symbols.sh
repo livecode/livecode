@@ -18,7 +18,7 @@ for input in $@ ; do
 
   # The --preserver-dates flag for strip and objcopy only has whole
   # second resolution, so copy the timestamps to a separate file instead
-  cp --attributes-only --preserve=timestamps "$input" "$input.timestamps"
+  cp --attributes-only --preserve=timestamps "$input" "$input.timestamps" 2>&1 || true
 
 	# Extract a copy of the debugging information
 	$OBJCOPY --only-keep-debug "$input" "$output" 
@@ -31,8 +31,8 @@ for input in $@ ; do
 	$OBJCOPY --remove-section=.gnu_debuglink "$input"
 	$OBJCOPY --add-gnu-debuglink="$output" "$input"
 
-  cp --attributes-only --preserve=timestamps "$input.timestamps" "$input"
-  rm "$input.timestamps"
+  cp --attributes-only --preserve=timestamps "$input.timestamps" "$input" 2>&1 || true
+  rm "$input.timestamps" 2>&1 || true
 done
 
 }
