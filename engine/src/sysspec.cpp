@@ -221,12 +221,13 @@ static MCHookGlobalHandlersDescriptor s_global_handlers_desc =
     MCHandlePlatformMessage,
 };
 
+extern bool MCNativeControlCreate(MCNativeControlType type, MCNativeControl*& r_control);
 static MCHookNativeControlsDescriptor s_native_control_desc =
 {
     (bool(*)(MCStringRef,intenum_t&))MCNativeControl::LookupType,
     (bool(*)(MCStringRef,intenum_t&))MCNativeControl::LookupProperty,
     (bool(*)(MCStringRef,intenum_t&))MCNativeControl::LookupAction,
-    (bool(*)(intenum_t,void*&))MCNativeControl::CreateWithType,
+    (bool(*)(intenum_t,void*&))MCNativeControlCreate,
     nil,
 };
 #endif

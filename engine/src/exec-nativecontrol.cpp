@@ -618,7 +618,7 @@ void MCNativeControlExecCreateControl(MCExecContext& ctxt, MCStringRef p_type_na
     
     MCNativeControl *t_new_control;
     t_new_control = nil;
-    if (MCCreateNativeControl((intenum_t)t_type, (void*&)t_new_control))
+    if (MCNativeControl::CreateWithType(t_type, t_new_control))
     {
         extern MCExecContext *MCECptr;
         t_new_control -> SetOwner(MCECptr -> GetObject());
