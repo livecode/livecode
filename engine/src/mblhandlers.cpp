@@ -7099,7 +7099,7 @@ static void invoke_platform(void *p_context)
 
 extern void MCIPhoneCallOnMainFiber(void (*)(void *), void *);
 
-Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters)
+bool MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters, Exec_stat& r_result)
 {
 	for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
 		if (MCNameIsEqualToCString(p_message, s_platform_messages[i] . message, kMCCompareCaseless))
@@ -7113,25 +7113,32 @@ Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters
 				ctxt . context = s_platform_messages[i] . context;
 				ctxt . parameters = p_parameters;
 				MCIPhoneCallOnMainFiber(invoke_platform, &ctxt);
-				return ctxt . result;
+				r_result = ctxt . result;
+                return true;
 			}
 			
 			// Execute the method as normal, in this case the method will have to jump
 			// to the main fiber to do any system stuff.
-			return s_platform_messages[i] . handler(s_platform_messages[i] . context, p_parameters);
+			r_result = s_platform_messages[i] . handler(s_platform_messages[i] . context, p_parameters);
+            return true;
 		}
 	
-	return ES_NOT_HANDLED;
+    r_result = ES_NOT_HANDLED;
+	return false;
 }
 #else // Android
-Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters)
+bool MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters, Exec_stat& r_result)
 {
 	for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
     {
 		if (MCNameIsEqualToCString(p_message, s_platform_messages[i] . message, kMCCompareCaseless))
-			return s_platform_messages[i] . handler(s_platform_messages[i] . context, p_parameters);
+        {
+            r_result = s_platform_messages[i] . handler(s_platform_messages[i] . context, p_parameters);
+            return true;
+        }
     }
 	
-	return ES_NOT_HANDLED;
+	r_result = ES_NOT_HANDLED;
+    return false;
 }
 #endif

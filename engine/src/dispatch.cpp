@@ -275,7 +275,6 @@ Boolean MCDispatch::cut(Boolean home)
 	return MCnoui || (flags & F_WAS_LICENSED) != 0;
 }
 
-//extern Exec_stat MCHandlePlatformMessage(Handler_type htype, const MCString& mess, MCParameter *params);
 Exec_stat MCDispatch::handle(Handler_type htype, MCNameRef mess, MCParameter *params, MCObject *pass_from)
 {
 	Exec_stat stat = ES_NOT_HANDLED;
@@ -341,29 +340,6 @@ Exec_stat MCDispatch::handle(Handler_type htype, MCNameRef mess, MCParameter *pa
 		if (oldstat == ES_PASS && stat == ES_NOT_HANDLED)
 			stat = ES_PASS;
 	}
-
-//#ifdef TARGET_SUBPLATFORM_IPHONE
-//	extern Exec_stat MCIPhoneHandleMessage(MCNameRef message, MCParameter *params);
-//	if (stat == ES_NOT_HANDLED || stat == ES_PASS)
-//	{
-//		stat = MCIPhoneHandleMessage(mess, params);
-//		
-//		if (stat != ES_NOT_HANDLED && stat != ES_PASS)
-//			return stat;
-//	}
-//#endif
-//
-//#ifdef _MOBILE
-//	if (stat == ES_NOT_HANDLED || stat == ES_PASS)
-//	{
-//		stat = MCHandlePlatformMessage(htype, MCNameGetOldString(mess), params);
-//
-//		// MW-2011-08-22: [[ Bug 9686 ]] Make sure we exit as soon as the
-//		//   message is handled.
-//		if (stat != ES_NOT_HANDLED && stat != ES_PASS)
-//			return stat;
-//	}
-//#endif
 
 	if (MCmessagemessages && stat != ES_PASS)
 		MCtargetptr->sendmessage(htype, mess, False);

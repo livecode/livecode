@@ -613,12 +613,12 @@ void MCNativeControlExecCreateControl(MCExecContext& ctxt, MCStringRef p_type_na
     }
     
     MCNativeControlType t_type;
-    if (!MCNativeControl::LookupType(p_type_name, t_type))
+    if (!MCLookupNativeControlType(p_type_name, (intenum_t&)t_type))
         return;
     
     MCNativeControl *t_new_control;
     t_new_control = nil;
-    if (MCNativeControl::CreateWithType(t_type, t_new_control))
+    if (MCCreateNativeControl((intenum_t)t_type, (void*&)t_new_control))
     {
         extern MCExecContext *MCECptr;
         t_new_control -> SetOwner(MCECptr -> GetObject());
@@ -701,7 +701,7 @@ void MCNativeControlExecGet(MCExecContext& ctxt, MCStringRef p_control_name, MCS
         return;
     
     Properties t_property;
-    if (!MCNativeControl::LookupProperty(p_property_name, t_property))
+    if (!MCLookupNativeControlProperty(p_property_name, (intenum_t&)t_property))
         return;
 
     MCPropertyInfo *t_info;
@@ -731,7 +731,7 @@ void MCNativeControlExecSet(MCExecContext& ctxt, MCStringRef p_control_name, MCS
         return;
     
     Properties t_property;
-    if (!MCNativeControl::LookupProperty(p_property_name, t_property))
+    if (!MCLookupNativeControlProperty(p_property_name, (intenum_t&)t_property))
         return;
     
     MCPropertyInfo *t_info;
@@ -775,7 +775,7 @@ void MCNativeControlExecDo(MCExecContext& ctxt, MCStringRef p_control_name, MCSt
         return;
 
 	MCNativeControlAction t_action;
-    if (!MCNativeControl::LookupAction(p_action_name, t_action))
+    if (!MCLookupNativeControlAction(p_action_name, (intenum_t&)t_action))
         return;
     
     MCNativeControlActionInfo *t_info;
@@ -881,6 +881,8 @@ void MCNativeControlExecDo(MCExecContext& ctxt, MCStringRef p_control_name, MCSt
     
             case kMCNativeControlActionUnknown:
             default:
+                if (MCPerformNativeControlAction((intenum_t)t_info -> action, &t_control, p_arguments, p_argument_count))
+                    return;
                 break;
         }
         ctxt . Throw();
