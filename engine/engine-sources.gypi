@@ -1151,6 +1151,7 @@
 					[
 						'src/tilecachegl.cpp',
 						'src/mcssl.cpp',
+						'src/notify.cpp',
 					],
 				},
 			],
