@@ -968,7 +968,7 @@ static bool MCScriptPlatformLoadSharedLibraryFunction(void *p_module, MCStringRe
     
     void *t_pointer;
 #if defined(_WIN32)
-    t_pointer = GetProcAddress(p_module, *t_function_name);
+    t_pointer = GetProcAddress((HMODULE)p_module, *t_function_name);
 #else
     t_pointer = dlsym(p_module, *t_function_name);
 #endif
