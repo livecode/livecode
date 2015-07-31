@@ -369,6 +369,7 @@ enum MCNativeControlInputVerticalAlign
 
 struct MCNativeControlActionInfo
 {
+	bool waitable;
     MCNativeControlAction action;
     void *exec_method;
 };
