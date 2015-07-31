@@ -6604,7 +6604,7 @@ Exec_stat MCHandleControlDo(void *context, MCParameter *p_parameters)
     
     // SN-2014-11-20: [[ Bug 14062 ]] Cleanup the memory
     for (uint32_t i = 0; i < t_params . Size(); ++i)
-        MCValueRelease(t_params[i]);\
+        MCValueRelease(t_params[i]);
 	
 	return ES_NORMAL;
 }
@@ -6945,14 +6945,14 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	{false, "iphoneControlDelete", MCHandleControlDelete, nil},
 	{false, "iphoneControlSet", MCHandleControlSet, nil},
 	{false, "iphoneControlGet", MCHandleControlGet, nil},
-	{false, "iphoneControlDo", MCHandleControlDo, nil},
+	{true, "iphoneControlDo", MCHandleControlDo, nil},
 	{false, "iphoneControlTarget", MCHandleControlTarget, nil},
 	{false, "iphoneControls", MCHandleControlList, nil},
 	{false, "mobileControlCreate", MCHandleControlCreate, nil},
 	{false, "mobileControlDelete", MCHandleControlDelete, nil},
 	{false, "mobileControlSet", MCHandleControlSet, nil},
 	{false, "mobileControlGet", MCHandleControlGet, nil},
-	{false, "mobileControlDo", MCHandleControlDo, nil},
+	{true, "mobileControlDo", MCHandleControlDo, nil},
 	{false, "mobileControlTarget", MCHandleControlTarget, nil},
 	{false, "mobileControls", MCHandleControlList, nil},
 	
