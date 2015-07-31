@@ -1682,6 +1682,8 @@ enum Properties {
     P_LOCALIZED_TITLE,
     P_LOCALIZED_DESCRIPTION,
     P_LOCALIZED_PRICE,
+    
+    __P_LAST,
 };
 
 enum Look_and_feel {

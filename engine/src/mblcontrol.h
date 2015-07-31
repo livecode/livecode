@@ -27,6 +27,7 @@ enum MCNativeControlType
 	kMCNativeControlTypePlayer,
 	kMCNativeControlTypeInput,
 	kMCNativeControlTypeMultiLineInput,
+    kMCNativeControlType_Last,
 };
 
 enum MCNativeControlProperty
@@ -132,6 +133,8 @@ enum MCNativeControlProperty
     
     // Android specific properties
     kMCNativeControlPropertyMultiLine,
+    
+    kMCNativeControlProperty_Last,
 };
 
  
@@ -167,6 +170,8 @@ enum MCNativeControlAction
 	
 	// TextView-specific actions
 	kMCNativeControlActionScrollRangeToVisible,
+    
+    kMCNativeControlAction_Last,
 };
 
 class MCNativeControl;
