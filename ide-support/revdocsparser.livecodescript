@@ -135,7 +135,7 @@ function revDocsGenerateDocsFilesFromBuiltIn pModuleInterfacePath, pRepoPath
          put "com.livecode." & tFile into tInterfaceFile
          put "lci" into item -1 of tInterfaceFile
          if replaceText(tInterfaceFile, "-", "") is not among the lines of tInstalled then next repeat
-         get revDocsGenerateDocsFileFromModular(url ("file:" & tFile))
+         get revDocsGenerateDocsFileFromModularFile(tFile)
          if it is not empty then
             put it into tDocsA[tCount]
             add 1 to tCount
@@ -365,7 +365,7 @@ function revDocsGenerateDocsFilesFromModularDirectory pDir
    
    put 1 into tCount
    repeat for each line tFile in tFiles
-      get revDocsGenerateDocsFileFromModular(url ("file:" & tFile))
+      get revDocsGenerateDocsFileFromModularFile(tFile)
       if it is not empty then
          put it into tDocsA[tCount]
          add 1 to tCount
@@ -393,14 +393,14 @@ Tags: Package building
 */
 
 function revDocsGenerateDocsFileFromModularFile pFile
-   return revDocsGenerateDocsFileFromModular(url ("file:" & pFile))
+   return revDocsGenerateDocsFileFromModular(url ("file:" & pFile), pFile)
 end revDocsGenerateDocsFileFromModularFile
 
 /*
 Convert inline docs to the standard format (that can be parsed without code blocks)
 */
 
-function revDocsGenerateDocsFileFromModular pText
+function revDocsGenerateDocsFileFromModular pText, pFilename
    local tEntryType
    put empty into tEntryType
    
@@ -566,18 +566,29 @@ function revDocsGenerateDocsFileFromModular pText
    
    # Allow inline module description as valid docs
    if tLibraryData["comments"] is empty and tAPIData is empty then
-      logError "No documentation included"
+      logError "No documentation included in" && pFilename
       return empty
    end if
    
    if tLibraryData["name"] is empty then
-      logError "No extension name found"
+      logError "No extension name found in" && pFilename
    end if
    
    local tOutput
    put revDocsFormatInlineComments(tLibraryData, true) into tOutput
+   
+   if tOutput is empty then
+      logError "No library-level docs for" && pFilename
+   end if
+   
    repeat for each key tKey in tAPIData
-      put revDocsFormatInlineComments(tAPIData[tKey], false) & CR & CR after tOutput
+      local tFormatted
+      put revDocsFormatInlineComments(tAPIData[tKey], false) into tFormatted
+      if tFormatted is empty then
+         logError "No docs for element" && tKey && "in" && pFilename
+      else
+         put tFormatted & CR & CR after tOutput
+      end if
    end repeat
    return tOutput
 end revDocsGenerateDocsFileFromModular
@@ -589,7 +600,7 @@ end revDocsGenerateDocsFileFromModular
 ##################################################
 
 private command logError pError
-   --put pError & CR after url ("file:" & specialfolderpath("Desktop") & slash & "log.txt")
+   write pError & CR to stdout
 end logError
 
 private function extensionsFromType pType
@@ -654,6 +665,11 @@ function revDocsFormatInlineComments pDataA, pIsLibrary
    
    local tEntriesA
    put revDocsGroupElements(tElementsA) into tEntriesA
+   
+   # If tEntries is empty, there was an error (docs empty, or no Name element)
+   if tEntriesA is empty then
+      return empty
+   end if
    
    local tEntryA, tElementA, tElement
    
@@ -1216,6 +1232,7 @@ function revDocsGroupElements pElementsA
       get tElementsA[tStartNum]["name"]
       switch it
          case "Name"
+         case ""
             exit repeat
          default
             put tElementsA[tStartNum]["content"] into tEntriesA[tEntryCount]["elements"][tEntryElementCount]["content"]
@@ -1223,12 +1240,6 @@ function revDocsGroupElements pElementsA
             add 1 to tStartNum
             add 1 to tEntryElementCount
             break
-         case ""
-            logError "Error: docs may be empty"
-            exit repeat
-         default
-            logError "Error:" && it && "is invalid library-level element"
-            exit repeat
       end switch
    end repeat
    
@@ -1281,7 +1292,7 @@ function revDocsParseDocText pText
             add 1 to tStartNum
             break
          case ""
-            logError "Error: docs may be empty"
+            logError "No API documented in" && tParsedA["name"]
             exit repeat
          default
             logError "Error:" && it && "is invalid library-level element"
