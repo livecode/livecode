@@ -75,6 +75,18 @@ public class NativeControlModule
 		
 		m_controls.remove(t_control);
     }
+	
+	public void onPause()
+	{
+		for (NativeControl t_control : m_controls)
+			t_control.onPause();
+	}
+	
+	public void onResume()
+	{
+		for (NativeControl t_control : m_controls)
+			t_control.onResume();
+	}
     
     public Object createBrowser()
     {
