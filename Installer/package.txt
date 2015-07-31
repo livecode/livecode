@@ -72,7 +72,7 @@ installer LiveCode
 	if TargetPlatform is Linux then
 		include Mobile.Linux
 		include Runtime.Android
-		desktop application "ide:Installer/application.desktop" as "runrev-[[ProductTag]]"
+		desktop application "repo:Installer/application.desktop" as "runrev-[[ProductTag]]"
 		if TargetEdition is Community then
 			desktop icon "ide:Installer/application.png" as "runrev-[[ProductTag]]"
 		if TargetEdition is Indy then

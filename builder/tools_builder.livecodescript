@@ -113,6 +113,7 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    packageCompilerConfigureSource tPackager, "ios", pEngineFolders["ios"]
    packageCompilerConfigureSource tPackager, "android", pEngineFolders["android"]
    packageCompilerConfigureSource tPackager, "prebuilt", builderRepoFolder() & slash & "prebuilt"
+   packageCompilerConfigureSource tPackager, "repo", builderRepoFolder()
    if tEditionType is among the items of "indy,business" then
       packageCompilerConfigureSource tPackager, "private", builderPrivateRepoFolder()
    end if
