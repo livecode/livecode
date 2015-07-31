@@ -163,6 +163,7 @@ extern Boolean MCownselection;
 extern MCUndolist *MCundos;
 extern MCSellist *MCselected;
 extern MCStacklist *MCstacks;
+extern MCStacklist *MCtodestroy;
 extern MCCardlist *MCrecent;
 extern MCCardlist *MCcstack;
 extern MCDispatch *MCdispatcher;
@@ -357,6 +358,9 @@ extern uint4 MCstackfileversion;
 extern uint4 MCmajorosversion;
 extern Boolean MCignorevoiceoversensitivity;
 extern uint4 MCqtidlerate;
+
+extern MCStringRef MCcommandname;
+extern MCArrayRef MCcommandarguments;
 
 #ifdef _LINUX_DESKTOP
 extern Window MCgtkthemewindow;

@@ -1,0 +1,73 @@
+<doc>
+	<legacy_id></legacy_id>
+	<name>commandArguments</name>
+	<type>function</type>
+
+	<syntax>
+		<example>the commandArguments</example>
+		<example>commandArguments(<i>index</i>)</example>
+        <example>the commandArguments of <i>index</i></example>
+	</syntax>
+
+    <synonyms>
+	</synonyms>
+
+    <summary>If no index is given, returns a 1-based, numeric array containing all the arguments given to the command.<p>If an index is given, returns the argument corresponding to the index (1 being the first argument).</p></summary>
+
+	<examples>
+<example>put the keys of the commandArguments</example>
+<example><p>repeat for each element tArgument in the commandArguments</p><p>    if tArgument is "-v" then</p><p>       put true into tVerbose</p><p>    end if</p><p>end repeat</p></example>
+<example><p>put commandArguments(1)</p></example>
+	</examples>
+
+	<history>
+		<introduced version="7.1.0">Added.</introduced>
+		<deprecated version=""></deprecated>
+		<removed version=""></removed>
+		<changed version=""></changed>
+		<experimental version=""></experimental>
+		<nonexperimental version=""></nonexperimental>
+	</history>
+
+	<objects>
+	</objects>
+
+	<platforms>
+		<mac/>
+		<windows/>
+		<linux/>
+	</platforms>
+
+	<classes>
+		<desktop/>
+		<server/>
+	</classes>
+
+	<security>
+      <none required/>
+	</security>
+
+
+	<classification>
+	</classification>
+
+	<references>
+		<keyword tag="$">$ Keyword</keyword>
+	</references>
+
+	<description>
+	<overview>Returns a 1-based numeric array containing the commandline arguments</overview>
+
+    <parameters>
+  <parameter>
+    <name>index</name>
+    <description>An integer greater than 0.
+        <p>If the index is greater than the number of arguments, then commandArguments returns empty.</p>
+    .</description>
+    </parameter>
+    </parameters>
+
+    <value>Returns either a numeric array with all the commandline arguments if no <i>index</i> is given, or the argument at the <i>index</i> specified </value>
+    <comments>With no index given, the <b>commandArguments</b> function returns an 1-based, numeric array containing the arguments given at the launch of the application.<p>With an index given, it returns the commandline argument at this index</p><p>The list only exists on desktop standalones applications and server scripts. On mobile platform or in the IDE, the <b>commandArguments</b> returns empty.</p></comments>
+	</description>
+</doc>

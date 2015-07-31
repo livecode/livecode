@@ -48,6 +48,7 @@
 #include <sys/utsname.h>
 #include <sys/time.h>
 #include <sys/ioctl.h>
+#include <sys/sysctl.h>
 
 // SN-2014-12-09: [[ Bug 14001 ]] Update the module loading for Mac server
 #include <dlfcn.h>
@@ -4711,18 +4712,27 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         }
         return "unknown";
 #endif /* MCS_getmachine_dsk_mac */
-        static Str255 machineName;
-        long response;
-        if ((errno = Gestalt(gestaltMachineType, &response)) == noErr)
-        {
-            GetIndString(machineName, kMachineNameStrID, response);
-            if (machineName != nil)
-            {
-                p2cstr(machineName);
-                return MCStringCreateWithNativeChars((const char_t *)machineName, MCCStringLength((const char *)machineName), r_string);
-            }
-        }
-        return MCStringCopy(MCNameGetString(MCN_unknown), r_string);
+
+		// PM-2015-07-21: [[ Bug 15623 ]] machine() returns "unknown" in OSX because of Gestalt being deprecated
+		size_t t_len = 0;
+		sysctlbyname("hw.model", NULL, &t_len, NULL, 0);
+
+		if (t_len)
+		{
+			char *t_model;
+			if (!MCMemoryNewArray(t_len, t_model))
+				return false;
+			sysctlbyname("hw.model", t_model, &t_len, NULL, 0);
+
+			if (!MCStringCreateWithCStringAndRelease(t_model, r_string))
+			{
+				free(t_model);
+				return false;
+			}
+			return true;
+		}
+
+		return MCStringCopy(MCNameGetString(MCN_unknown), r_string); //in case model name can't be read
     }
 	virtual MCNameRef GetProcessor(void)
     {
@@ -7419,10 +7429,19 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             close(toparent[0]);
             if (MCprocesses[index].pid != 0)
                 Kill(MCprocesses[index].pid, SIGKILL);
-            /* UNCHECKED */ MCDataCreateWithBytes((char_t*)buffer, size, r_data);
+            
+            // SN-2015-07-15: [[ Bug 15592 ]] Do not copy the buffer as we want
+            //  to take ownership of it - and ensure to free it in any case.
+            if (!MCDataCreateWithBytesAndRelease((char_t*)buffer, size, r_data))
+                free(buffer);
+
             return false;
         }
-        /* UNCHECKED */ MCDataCreateWithBytes((char_t*)buffer, size, r_data);
+        // SN-2015-07-15: [[ Bug 15592 ]] Do not copy the buffer as we want
+        //  to take ownership of it - and ensure to free it in any case.
+        if (!MCDataCreateWithBytesAndRelease((char_t*)buffer, size, r_data))
+            free(buffer);
+
         close(toparent[0]);
         CheckProcesses();
         if (MCprocesses[index].pid != 0)
