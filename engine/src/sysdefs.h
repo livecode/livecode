@@ -35,6 +35,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define FEATURE_RELAUNCH_SUPPORT
 #define FEATURE_QUICKTIME
 #define FEATURE_QUICKTIME_EFFECTS
+#define FEATURE_NOTIFY 1
 
 #elif defined(_MAC_DESKTOP)
 
@@ -46,6 +47,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define FEATURE_PLATFORM_PLAYER
 #define FEATURE_PLATFORM_RECORDER
 #define FEATURE_PLATFORM_AUDIO
+#define FEATURE_NOTIFY 1
 
 #elif defined(_LINUX_DESKTOP)
 
@@ -53,6 +55,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define MCSSL
 #define FEATURE_MPLAYER
+#define FEATURE_NOTIFY 1
 
 #elif defined(_WINDOWS_SERVER)
 
@@ -65,12 +68,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define PLATFORM_STRING "MacOS"
 
 #define MCSSL
+#define FEATURE_NOTIFY 1
 
 #elif defined(_LINUX_SERVER) || defined(_DARWIN_SERVER)
 
 #define PLATFORM_STRING "Linux"
 
 #define MCSSL
+#define FEATURE_NOTIFY 1
 
 #elif defined(_IOS_MOBILE)
 
@@ -80,6 +85,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define PLATFORM_STRING "iphone"
 
 #define FEATURE_PLATFORM_URL 1
+#define FEATURE_NOTIFY 1
 
 #elif defined(_ANDROID_MOBILE)
 
@@ -89,6 +95,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define PLATFORM_STRING "android"
 
 #define FEATURE_PLATFORM_URL 1
+#define FEATURE_NOTIFY 1
 
 #endif
 
