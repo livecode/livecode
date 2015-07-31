@@ -3,13 +3,13 @@
 ## Composed widgets
 
 The ability to compose widget objects has been added. Widgets can either be 'host' widgets, 
-created when a widget is directly embedded in a stack, or 'child' widgets which is created 
+created when a widget is directly embedded in a stack, or 'child' widgets which are created 
 when a widget is used as a child widget within another widget.
 
 ### Syntax
 
-A Widget type has been added, so that variables can contain references to child widget objects.
-A variable to hold a widget reference can be defined in the usual way, eg
+A `Widget` type has been added, so that variables can contain references to child widget objects.
+A variable to hold a widget reference can be defined in the usual way, e.g.
 ```variable tWidget as Widget```
 
 New widget syntax has been added to create, place, unplace and manipulate child widgets.	
@@ -31,14 +31,14 @@ New widget syntax has been added to create, place, unplace and manipulate child 
 ### Events
 
 Events triggered on child widgets (such as OnMouseUp) are automatically passed up to the 
-parent provided the child's event handler returns nothing. If any event handler returns 
+parent, as long as the child's event handler returns nothing. If any event handler returns 
 something, the event is considered handled and is not passed to the parent.
 
 ### Messages
 
-Messages posted by the child widget can be handled by the parent in an On<message name> handler. 
+Messages posted by the child widget can be handled by the parent in an `On<message name>` handler. 
 For example, if the child has the code
-``` post "dataChanged" with [mDataArray]```, 
+```post "dataChanged" with [mDataArray]```, 
 this can be handled in the parent by adding 
 ```public handler OnDataChanged(in pArray as Array)```.
 Posted messages can only be handled by a direct parent, and a widget's script object will 
