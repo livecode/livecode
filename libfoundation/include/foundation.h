@@ -396,6 +396,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #	define __STDC_LIMIT_MACROS
 #	include <stdint.h>
 #   include <stddef.h>
+#   include <limits.h>
 #endif
 
 #if !defined(__HAVE_STDINT_H__)
