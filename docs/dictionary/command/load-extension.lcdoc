@@ -29,7 +29,7 @@ moduleData: Binary data that constitutes a valid compiled <LiveCode Builder exte
 resourcePath: The path to use for any operations in the <LiveCode Builder extension|extensions> that use resource files (eg 'image from resource file').
 
 The result:
-If the <load extension> <command> succeeds, <the result> is empty. Otherwise <the result> contains an error message describing why the extension could not be loaded.
+If the <load extension> <command> succeeds, the <result> is empty. Otherwise the <result> contains an error message describing why the extension could not be loaded.
 
 Description:
 Use the <load extension> <command> to load a <LiveCode Builder extension>. 
