@@ -35,8 +35,14 @@ typedef MCScriptInstance *MCScriptInstanceRef;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+typedef bool (*MCScriptResolveSharedLibraryCallback)(MCScriptModuleRef module, MCStringRef name, MCStringRef& r_path);
+
 bool MCScriptInitialize(void);
 void MCScriptFinalize(void);
+
+void MCScriptSetResolveSharedLibraryCallback(MCScriptResolveSharedLibraryCallback callback);
+
+bool MCScriptResolveSharedLibrary(MCScriptModuleRef module, MCStringRef name, MCStringRef& r_path);
 
 ////////////////////////////////////////////////////////////////////////////////
 
