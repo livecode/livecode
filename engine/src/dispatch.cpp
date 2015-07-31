@@ -1703,6 +1703,28 @@ MCStack *MCDispatch::findstackid(uint4 fid)
 	return NULL;
 }
 
+bool MCDispatch::foreachstack(MCStackForEachCallback p_callback, void *p_context)
+{
+	bool t_continue;
+	t_continue = true;
+	
+	if (stacks)
+	{
+		MCStack *t_stack;
+		t_stack = stacks;
+		
+		do
+		{
+			t_continue = t_stack->foreachstack(p_callback, p_context);
+			
+			t_stack = (MCStack*)t_stack->next();
+		}
+		while (t_continue && t_stack != stacks);
+	}
+	
+	return t_continue;
+}
+
 bool MCDispatch::foreachchildstack(MCStack *p_stack, MCStackForEachCallback p_callback, void *p_context)
 {
 	bool t_continue;

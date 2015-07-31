@@ -210,6 +210,8 @@ public:
 	
 	// IM-2014-07-23: [[ Bug 12930 ]] Replace findchildstack method with iterating method
 	bool foreachchildstack(MCStack *p_stack, MCStackForEachCallback p_callback, void *p_context);
+    
+	bool foreachstack(MCStackForEachCallback p_callback, void *p_context);
 	
 	MCObject *getobjid(Chunk_term type, uint4 inid);
 	MCObject *getobjname(Chunk_term type, MCNameRef);
