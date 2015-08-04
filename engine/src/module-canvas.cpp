@@ -6482,6 +6482,9 @@ bool MCSVGTryToParseRangeAsReal(const char *p_string, const MCRange &p_range, MC
 	char *t_end;
 	t_end = nil;
 	
+	// IM-2015-08-04: [[ Bug 15681 ]] clear errno to avoid spurious ERANGE error.
+	errno = 0;
+	
 	real64_t t_real;
 	t_real = strtod(t_start, &t_end);
 	
