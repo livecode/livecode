@@ -141,7 +141,7 @@ dist-server-commercial:
 
 ifeq ($(BUILD_EDITION),commercial)
 dist-tools: dist-tools-commercial
-distmac-disk: distmac-disk-commercial
+distmac-disk: distmac-disk-indy distmac-disk-business
 endif
 
 dist-tools: dist-tools-community
