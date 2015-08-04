@@ -62,6 +62,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define PLATFORM_STRING "Win32"
 
 #define MCSSL
+#define FEATURE_NOTIFY 1
 
 #elif defined(_MAC_SERVER)
 
