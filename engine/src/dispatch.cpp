@@ -158,7 +158,12 @@ Exec_stat MCDispatch::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bo
 	case P_FOCUS_PIXEL:
 		ep.setint(MCscreen->black_pixel.pixel & 0xFFFFFF);
 		return ES_NORMAL;
+    // PM-2014-03-28: [[Bug 3570]] On Windows the background color for controls/cards is rather light gray
 	case P_BACK_COLOR:
+#if defined(_WINDOWS)
+        ep.setstaticcstring("light gray");
+        return ES_NORMAL;
+#endif
 	case P_HILITE_COLOR:
 		ep.setstaticcstring("white");
 		return ES_NORMAL;
