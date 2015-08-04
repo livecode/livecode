@@ -189,7 +189,7 @@
 			'src/card.h',
 			'src/cardlst.h',
 			'src/cdata.h',
-			'src/control.h',
+			'src/mccontrol.h',
 			'src/cpalette.h',
 			'src/dispatch.h',
 			'src/edittool.h',

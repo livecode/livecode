@@ -20,7 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	IMAGE_H
 #define	IMAGE_H
 
-#include "control.h"
+#include "mccontrol.h"
 #include "imagebitmap.h"
 #include "graphics.h"
 

@@ -20,7 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	GROUP_H
 #define	GROUP_H
 
-#include "control.h"
+#include "mccontrol.h"
 
 class MCScrollbar;
 
