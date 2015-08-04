@@ -31,7 +31,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "undolst.h"
 #include "chunk.h"
 #include "object.h"
-#include "control.h"
+#include "mccontrol.h"
 #include "mcerror.h"
 #include "dispatch.h"
 #include "stack.h"

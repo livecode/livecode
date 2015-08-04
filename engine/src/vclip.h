@@ -20,7 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	VIDEOCLIP_H
 #define	VIDEOCLIP_H
 
-#include "control.h"
+#include "mccontrol.h"
 
 class MCVideoClip : public MCObject
 {

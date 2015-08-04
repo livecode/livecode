@@ -23,7 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcio.h"
 
 #include "object.h"
-#include "control.h"
+#include "mccontrol.h"
 #include "stack.h"
 #include "objptr.h"
 

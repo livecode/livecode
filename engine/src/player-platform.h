@@ -20,7 +20,7 @@
 #ifndef	PLAYER_PLATFORM_H
 #define	PLAYER_PLATFORM_H
 
-#include "control.h"
+#include "mccontrol.h"
 #include "platform.h"
 
 enum

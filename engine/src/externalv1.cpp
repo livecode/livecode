@@ -33,7 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "globals.h"
 #include "object.h"
-#include "control.h"
+#include "mccontrol.h"
 #include "notify.h"
 #include "stack.h"
 #include "card.h"

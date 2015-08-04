@@ -381,7 +381,7 @@ void MCScrollbar::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bo
 	}
 }
 
-/*the color enum is defined in control.h as:
+/*the color enum is defined in mccontrol.h as:
   5 colors: MAC_THUMB_TOP,MAC_THUMB_BACK,MAC_THUMB_BOTTOM,
   MAC_THUMB_GRIP,MAC_THUMB_HILITE, from light blue to darkest blue */
 #define MAC_THUMBCOLORS 5
