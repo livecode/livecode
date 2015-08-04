@@ -442,20 +442,6 @@ typedef signed long int int64_t;
 #define INT64_MAX (9223372036854775807LL)
 #endif /* !__HAVE_STDINT_H__ */
 
-// The MSVC CRT doesn't have ssize_t - this is an adaptation of its definition
-// of size_t, but with signed rather than unsigned annotations.
-#if defined(__VISUALC__)
-#ifdef  _WIN64
-typedef __int64 ssize_t;
-#define SSIZE_MIN _I64_MIN
-#define SSIZE_MAX _I64_MAX
-#else
-typedef int ssize_t;
-#define SSIZE_MIN INT_MIN
-#define SSIZE_MAX INT_MAX
-#endif
-#endif
-
 #define UINT8_MIN (0U)
 #define UINT16_MIN (0U)
 #define UINT32_MIN (0U)
@@ -584,11 +570,14 @@ typedef int64_t compare_t;
 
 #if !defined(__HAVE_STDINT_H__)
 typedef uintptr_t size_t;
+typedef intptr_t ssize_t;
 
 #	define SIZE_MAX UINTPTR_MAX
+#	define SSIZE_MAX INTPTR_MAX
 #endif /* !__HAVE_STDINT_H__ */
 
 #define SIZE_MIN UINTPTR_MIN
+#define SSIZE_MIN INTPTR_MIN
 
 typedef int64_t filepos_t;
 
