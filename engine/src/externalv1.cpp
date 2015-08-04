@@ -2181,7 +2181,7 @@ static MCExternalError MCExternalVariableIterateKeys(MCExternalVariableRef var, 
 
 static bool MCExternalIsCaseSensitive(MCExternalValueOptions p_options)
 {
-    switch(p_options & kMCExternalValueOptionCaseSensitiveMask)
+	switch(intenum_t(p_options) & kMCExternalValueOptionCaseSensitiveMask)
     {
         case kMCExternalValueOptionDefaultCaseSensitive:
             return MCECptr -> GetCaseSensitive();

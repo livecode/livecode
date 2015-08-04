@@ -18,6 +18,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "notify.h"
 
+#if !defined(FEATURE_NOTIFY)
+#	error MCNotify API not supported on this platform
+#endif
+
 #if defined(_MAC_DESKTOP)
 #include "osxprefix.h"
 #include <pthread.h>

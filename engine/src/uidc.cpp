@@ -16,6 +16,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
+#include "sysdefs.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -204,7 +205,9 @@ MCMovingList::~MCMovingList()
 
 MCUIDC::MCUIDC()
 {
+#if defined(FEATURE_NOTIFY)
 	MCNotifyInitialize();
+#endif
     
 	messageid = 0;
 	nmessages = maxmessages = 0;
