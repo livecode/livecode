@@ -23,7 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #ifndef FEATURE_PLATFORM_PLAYER
 
-#include "control.h"
+#include "mccontrol.h"
 #include "player-interface.h"
 #include "exec-interface.h"
 

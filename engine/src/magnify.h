@@ -20,7 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	MAGNIFY_H
 #define	MAGNIFY_H
 
-#include "control.h"
+#include "mccontrol.h"
 
 class MCMagnify : public MCControl
 {
