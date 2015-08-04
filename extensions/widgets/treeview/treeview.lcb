@@ -606,11 +606,7 @@ end handler
 // Clamp mViewTopPosition
 private handler ensureViewTopPosition()
 	variable tMinTop as Real
-	if mReadOnly then
-		put mRowHeight into tMinTop
-	else
-		put 0 into tMinTop
-	end if
+    put 0 into tMinTop
 
 	// Make sure we don't try to scroll above 0
 	if mViewTopPosition < tMinTop then 
