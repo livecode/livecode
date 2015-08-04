@@ -159,8 +159,15 @@ Exec_stat MCDispatch::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bo
 		ep.setint(MCscreen->black_pixel.pixel & 0xFFFFFF);
 		return ES_NORMAL;
 	case P_BACK_COLOR:
+        ep.setstaticcstring("white");
+        return ES_NORMAL;
+    // PM-2014-03-27 [[Bug 7709 ]] The "effective hiliteColor" should not return "white" for OSX
 	case P_HILITE_COLOR:
+#if defined(_MACOSX)
+        ep.setstaticcstring("light blue");
+#else
 		ep.setstaticcstring("white");
+#endif
 		return ES_NORMAL;
 	case P_FORE_COLOR:
 	case P_BORDER_COLOR:
