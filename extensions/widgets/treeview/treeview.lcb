@@ -565,7 +565,13 @@ public handler OnClick() returns nothing
 end handler
 
 private handler yPosToRowNumber(in pYPos as Number) returns Integer
-	return the floor of ((mViewTopPosition + pYPos) / mRowHeight + 1)
+    variable tRow as Number
+    put the floor of ((mViewTopPosition + pYPos) / mRowHeight + 1) into tRow
+    if mReadOnly then
+        add 1 to tRow
+    end if
+
+    return tRow
 end handler
 
 private handler xPosToIconString(in pXPos as Number) returns String
