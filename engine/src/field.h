@@ -20,7 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	FIELD_H
 #define	FIELD_H
 
-#include "control.h"
+#include "mccontrol.h"
 #include "exec.h"
 
 #define SCROLL_RATE 100

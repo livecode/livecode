@@ -25,7 +25,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "aclip.h"
 #include "card.h"
-#include "control.h"
+#include "mccontrol.h"
 #include "player.h"
 #include "sellst.h"
 #include "visual.h"

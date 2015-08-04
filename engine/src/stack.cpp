@@ -31,7 +31,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "card.h"
 #include "aclip.h"
 #include "vclip.h"
-#include "control.h"
+#include "mccontrol.h"
 #include "image.h"
 #include "button.h"
 #include "mcerror.h"
