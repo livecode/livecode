@@ -628,15 +628,18 @@ private handler updateFirstDataItem()
 	put the floor of (mViewTopPosition / mRowHeight) + 1 into mFirstDataItem
 	if mFirstDataItem < 1 then
 		put 1 into mFirstDataItem
-	end if	
+	end if
+    if mReadOnly then
+        add 1 to mFirstDataItem
+    end if  
 end handler
 
 private handler updateParameters() returns nothing
 	put the number of elements in mDataList into mDataCount
 	if mReadOnly then
-		put mRowHeight * mDataCount into mDataHeight
-	else
 		put mRowHeight * (mDataCount - 1) into mDataHeight
+	else
+		put mRowHeight * mDataCount into mDataHeight
 	end if
 	put my height into mViewHeight
 	put my width into mViewWidth
