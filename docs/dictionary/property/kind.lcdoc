@@ -1,0 +1,29 @@
+Name: kind
+
+Type: property
+
+Associations: widget
+
+Syntax: get the kind of <widget>
+
+Summary: The unique identifier of a <widget> type.
+
+Introduced: 8.0
+
+OS: mac,windows,linux,iOS,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+if the kind of widget 1 is "com.livecode.widget.colorswatch" then
+	set the swatchColor of widget 1 to "200,100,5,50"
+end if
+
+Value: The <kind> of a <widget> is a string.
+
+Description:
+Use the <kind> <property> to identify the type of an arbitrary <widget> object.
+
+References: widget (object), property (glossary)
+
+Tags: extensions

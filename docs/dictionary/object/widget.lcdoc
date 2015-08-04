@@ -1,0 +1,31 @@
+Name: widget
+
+Type: object
+
+Syntax: widget
+
+Summary: A custom <control> written in LiveCode Builder
+
+Introduced: 8.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the visible of widget 1 to false
+
+Example:
+on newWidget
+	if the kind of the target is "com.livecode.widget.colorswatch" then
+		set the swatchColor of the target to "0,0,0,255"
+	end if 
+end newWidget
+
+Description:
+Use the <widget> <object type> to create a <widget> control. <widget|Widgets> are created from <LiveCode Builder extension|LiveCode Builder extensions> that have previously been loaded into memory using the <load extension> <command>. 
+For more details on how to create widgets, please consult the *Extending Livecode* guide.
+
+References: load extension (command), control (keyword), object type (glossary), LiveCode Builder extension (glossary), command (glossary)
+
+Tags: objects, extensions
