@@ -244,6 +244,12 @@ MCHashUInteger (uinteger_t i)
 
 MC_DLLEXPORT_DEF
 hash_t
+MCHashSize (ssize_t i)
+{
+	return MCHashInt (i);
+}
+
+hash_t
 MCHashUSize (size_t i)
 {
 	return MCHashUInt (i);

@@ -396,6 +396,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #	define __STDC_LIMIT_MACROS
 #	include <stdint.h>
 #   include <stddef.h>
+#   include <limits.h>
 #endif
 
 #if !defined(__HAVE_STDINT_H__)
@@ -569,11 +570,14 @@ typedef int64_t compare_t;
 
 #if !defined(__HAVE_STDINT_H__)
 typedef uintptr_t size_t;
+typedef intptr_t ssize_t;
 
 #	define SIZE_MAX UINTPTR_MAX
+#	define SSIZE_MAX INTPTR_MAX
 #endif /* !__HAVE_STDINT_H__ */
 
 #define SIZE_MIN UINTPTR_MIN
+#define SSIZE_MIN INTPTR_MIN
 
 typedef int64_t filepos_t;
 
@@ -1176,6 +1180,7 @@ extern "C" {
 // Return a hash for the given integer.
 MC_DLLEXPORT hash_t MCHashInteger(integer_t);
 MC_DLLEXPORT hash_t MCHashUInteger(uinteger_t);
+MC_DLLEXPORT hash_t MCHashSize(ssize_t);
 MC_DLLEXPORT hash_t MCHashUSize(size_t);
 
 // Return a hash value for the given double - note that (hopefully!) hashing
@@ -1414,7 +1419,9 @@ MC_DLLEXPORT extern MCTypeInfoRef kMCUIntTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCFloatTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCDoubleTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCPointerTypeInfo;
+
 MC_DLLEXPORT extern MCTypeInfoRef kMCSizeTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCSSizeTypeInfo;
 
 //////////
 
