@@ -198,7 +198,6 @@ struct _thread_notify_info
 	void * m_context;
 };
 
-
 void notify_thread(void *p_context)
 {
 #ifdef TARGET_SUBPLATFORM_ANDROID
