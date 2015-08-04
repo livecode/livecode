@@ -74,7 +74,7 @@ installer LiveCode
 		include Runtime.Android
 		desktop application "repo:Installer/application.desktop" as "runrev-[[ProductTag]]"
 		if TargetEdition is Community then
-			desktop icon "ide:Installer/application.png" as "runrev-[[ProductTag]]"
+			desktop icon "repo:Installer/application.png" as "runrev-[[ProductTag]]"
 		if TargetEdition is Indy then
 			desktop icon "private:engine/rsrc/Indy/android-notify-icon.png" as "runrev-[[ProductTag]]"
 		if TargetEdition is Business then
