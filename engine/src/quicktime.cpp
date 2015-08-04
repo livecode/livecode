@@ -224,7 +224,8 @@ static bool path_to_dataref(MCStringRef p_path, DataReferenceRecord& r_rec)
 	if (t_success)
 	{
 		OSErr t_error;
-		t_error = QTNewDataReferenceFromFullPathCFString(t_cf_path, kQTNativeDefaultPathStyle, 0, &r_rec . dataRef, &r_rec . dataRefType);
+		// PM-2015-08-04: [[ Bug 15321 ]] Use kQTPOSIXPathStyle, since filename is of the form C:/dir1/dir2/filename.wav
+		t_error = QTNewDataReferenceFromFullPathCFString(t_cf_path, kQTPOSIXPathStyle, 0, &r_rec . dataRef, &r_rec . dataRefType);
 		t_success = noErr == t_error;
 	}
 	CFRelease(t_cf_path);
