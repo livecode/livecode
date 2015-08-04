@@ -20,7 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	MCEPS_H
 #define	MCEPS_H
 
-#include "control.h"
+#include "mccontrol.h"
 
 class MCEPS : public MCControl
 {

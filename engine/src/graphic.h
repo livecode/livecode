@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __GRAPHIC_H
 
 #ifndef __CONTROL_H
-#include "control.h"
+#include "mccontrol.h"
 #endif
 
 #include "gradient.h"
