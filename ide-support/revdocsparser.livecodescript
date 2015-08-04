@@ -135,7 +135,7 @@ function revDocsGenerateDocsFilesFromBuiltIn pModuleInterfacePath, pRepoPath
          put "com.livecode." & tFile into tInterfaceFile
          put "lci" into item -1 of tInterfaceFile
          if replaceText(tInterfaceFile, "-", "") is not among the lines of tInstalled then next repeat
-         get revDocsGenerateDocsFileFromModular(url ("file:" & tFile))
+         get revDocsGenerateDocsFileFromModularFile(tFile)
          if it is not empty then
             put it into tDocsA[tCount]
             add 1 to tCount
@@ -296,7 +296,7 @@ function revDocsParseDictionaryToLibraryArray pRootDir
          repeat for each line tFile in it
             wait 0 with messages
             put textDecode(url ("binfile:" & tRoot & slash & tLine & slash & tFile), "utf-8") into tText
-            put revDocsParseDocText(tText) into tParsedA
+            put revDocsParseDocText(tText, tRoot & slash & tLine & slash & tFile) into tParsedA
             put tParsedA["doc"][1] into tLibraryA[tCount]
             add 1 to tCount
          end repeat
@@ -315,7 +315,7 @@ function revDocsFormatAPIAsJSON pLibraryName, pAuthor, pAPIFile
    put url ("binfile:" & pAPIFile) into tData
    put textDecode(tData, "utf-8") into tText
    
-   return revDocsFormatDocTextAsJSON(tText, pLibraryName, pAuthor)
+   return revDocsFormatDocTextAsJSON(pAPIFile, tText, pLibraryName, pAuthor)
 end revDocsFormatAPIAsJSON
 
 /*
@@ -327,20 +327,20 @@ function revDocsParseFileToArray pFile, pType, @xCount, @xLibraryA
    put url ("binfile:" & pFile) into tData
    put textDecode(tData, "utf-8") into tText
    
-   return revDocsParseFileContentsToArray(tText, pType, xCount, xLibraryA)
+   return revDocsParseFileContentsToArray(pFile, tText, pType, xCount, xLibraryA)
 end revDocsParseFileToArray
 
-function revDocsParseFileContentsToArray pText, pType, @xCount, @xLibraryA
+function revDocsParseFileContentsToArray pFile, pText, pType, @xCount, @xLibraryA
    # Extract and parse the comment blocks
    local tParsedA
    switch pType
       case "modular"
-         put revDocsParseDocText(pText) into tParsedA
+         put revDocsParseDocText(pText, pFile) into tParsedA
          break
       case "script"
          local tBlocksA
          put revDocsParseScriptDocs(pText) into tBlocksA
-         put revDocsParseDocBlocks(tBlocksA) into tParsedA
+         put revDocsParseDocBlocks(tBlocksA, pFIle) into tParsedA
          break
    end switch
    
@@ -365,7 +365,7 @@ function revDocsGenerateDocsFilesFromModularDirectory pDir
    
    put 1 into tCount
    repeat for each line tFile in tFiles
-      get revDocsGenerateDocsFileFromModular(url ("file:" & tFile))
+      get revDocsGenerateDocsFileFromModularFile(tFile)
       if it is not empty then
          put it into tDocsA[tCount]
          add 1 to tCount
@@ -393,14 +393,14 @@ Tags: Package building
 */
 
 function revDocsGenerateDocsFileFromModularFile pFile
-   return revDocsGenerateDocsFileFromModular(url ("file:" & pFile))
+   return revDocsGenerateDocsFileFromModular(url ("file:" & pFile), pFile)
 end revDocsGenerateDocsFileFromModularFile
 
 /*
 Convert inline docs to the standard format (that can be parsed without code blocks)
 */
 
-function revDocsGenerateDocsFileFromModular pText
+function revDocsGenerateDocsFileFromModular pText, pFilename
    local tEntryType
    put empty into tEntryType
    
@@ -432,15 +432,17 @@ function revDocsGenerateDocsFileFromModular pText
                put "library" into tEntryData["type"]
                put word 2 to -1 of tLine into tEntryData["name"]
                put true into tEntryEnded
+               put true into tEntryData["need_docs"]
                break
             case "widget"
                put "widget" into tEntryData["type"]
                put word 2 to -1 of tLine into tEntryData["name"]
                put true into tEntryEnded
+               put true into tEntryData["need_docs"]
                break
             case "handler"
                put "handler" into tEntryData["type"]
-               # Handler is private by defaullt, so don't document
+               # Handler is private by default, so don't document
                put true into tEntryData["private"]
                break
             case "private"
@@ -458,7 +460,10 @@ function revDocsGenerateDocsFileFromModular pText
                   put "handler" into tEntryData["type"]
                   # eat the word 'public'
                   put word 2 to -1 of tLine into tLine
+                  put token 2 of tLine into tEntryData["name"]
+                  put true into tEntryData["need_docs"]
                else 
+                  put true into tEntryData["private"]
                   if word 2 of tLine is "foreign" then
                      if word 3 of tLine is "handler" then
                         put "handler" into tEntryData["type"]
@@ -477,12 +482,15 @@ function revDocsGenerateDocsFileFromModular pText
                   put "phrase" into tEntryData["type"]
                else
                   put "syntax" into tEntryData["type"]
+                  put true into tEntryData["need_docs"]
                end if
                break
             case "property"
+               put word 2 of tLine into tEntryData["name"]
                put "property" into tEntryData["type"]
                # Properties are one-liners
                put true into tEntryEnded
+               put true into tEntryData["need_docs"]
                break
             default
                # This is not a new entry
@@ -515,7 +523,7 @@ function revDocsGenerateDocsFileFromModular pText
          else if tComment is empty and tFirstWord is empty then
             next repeat
          end if
-         put tLine & CR after tComment
+         put tLine & return after tComment
          next repeat
       end if
       
@@ -527,7 +535,7 @@ function revDocsGenerateDocsFileFromModular pText
          else if tFirstWord is "end" then
             put true into tEntryEnded
          end if
-         put tLine & CR after tData
+         put tLine & return after tData
       end if
       
       # If the entry is ended, convert all the collected data to a structured array
@@ -556,6 +564,10 @@ function revDocsGenerateDocsFileFromModular pText
                   revDocsUpdateDocBlocksForProperty tData, tComment, tAPIData
                   break
             end switch
+         else
+            if tEntryData["need_docs"] then
+               logError "Required documentation not found for" && tEntryData["type"] && tEntryData["name"], pFilename
+            end if
          end if
          put empty into tEntryData
          put empty into tComment
@@ -565,19 +577,29 @@ function revDocsGenerateDocsFileFromModular pText
    end repeat
    
    # Allow inline module description as valid docs
-   if tLibraryData["comments"] is empty and tAPIData is empty then
-      logError "No documentation included"
-      return empty
+   if tAPIData is empty then
+      logWarning "No handlers documented", pFilename
    end if
    
    if tLibraryData["name"] is empty then
-      logError "No extension name found"
+      logError "No extension name found", pFilename
    end if
    
    local tOutput
    put revDocsFormatInlineComments(tLibraryData, true) into tOutput
+   
+   if tOutput is empty then
+      logWarning "Invalid library-level docs", pFilename
+   end if
+   
    repeat for each key tKey in tAPIData
-      put revDocsFormatInlineComments(tAPIData[tKey], false) & CR & CR after tOutput
+      local tFormatted
+      put revDocsFormatInlineComments(tAPIData[tKey], false) into tFormatted
+      if tFormatted is empty then
+         logWarning "No docs for element" && tKey, pFilename
+      else
+         put tFormatted & return & return after tOutput
+      end if
    end repeat
    return tOutput
 end revDocsGenerateDocsFileFromModular
@@ -588,9 +610,17 @@ end revDocsGenerateDocsFileFromModular
 #
 ##################################################
 
-private command logError pError
-   --put pError & CR after url ("file:" & specialfolderpath("Desktop") & slash & "log.txt")
+private command log pOutput
+      write pOutput & return to stdout
+end log
+
+private command logError pError, pFilename
+   log pFilename & ":" && "error:" && pError
 end logError
+
+private command logWarning pWarning, pFilename
+   log pFilename & ":" && "warning:" && pWarning
+end logWarning
 
 private function extensionsFromType pType
    switch pType
@@ -644,7 +674,7 @@ end __revDocsParseDirectoryToLibraryArray
 function revDocsFormatInlineComments pDataA, pIsLibrary
    local tComment
    if pIsLibrary then
-      put "Description:" & CR & pDataA["comments"] after tComment
+      put "Description:" & return & pDataA["comments"] after tComment
    else
       put pDataA["comments"] into tComment
    end if
@@ -654,6 +684,11 @@ function revDocsFormatInlineComments pDataA, pIsLibrary
    
    local tEntriesA
    put revDocsGroupElements(tElementsA) into tEntriesA
+   
+   # If tEntries is empty, there was an error (docs empty, or no Name element)
+   if tEntriesA is empty then
+      return empty
+   end if
    
    local tEntryA, tElementA, tElement
    
@@ -722,7 +757,7 @@ function revDocsFormatInlineComments pDataA, pIsLibrary
                repeat for each element tParam in tVariant
                   if tParam["name"] is tElement then
                      if not tParamsFound then
-                        put "Parameters:" & CR after tEntryDoc
+                        put "Parameters:" & return after tEntryDoc
                         put true into tParamsFound
                      end if
                      if tElementA["type"] is empty then
@@ -745,12 +780,12 @@ function revDocsFormatInlineComments pDataA, pIsLibrary
          put tElementA["name"] into tElement
          
          if tElementA["type"] is not empty then
-            put tElement & "(" & tElementA["type"] & "):" && tElementA["content"] & CR after tEntryDoc
+            put tElement & "(" & tElementA["type"] & "):" && tElementA["content"] & return after tEntryDoc
          else
             if the number of lines in tElementA["content"] > 1 then              
                local tDeleteTab
                put false into tDeleteTab
-               put tElement & ":" & CR after tEntryDoc
+               put tElement & ":" & return after tEntryDoc
                repeat for each line tLine in tElementA["content"]
                   if line 1 of tElementA["content"] begins with tab then
                      put true into tDeleteTab
@@ -758,34 +793,34 @@ function revDocsFormatInlineComments pDataA, pIsLibrary
                   if tDeleteTab and tLine begins with tab then
                      delete char 1 of tLine
                   end if
-                  put tLine & CR after tEntryDoc
+                  put tLine & return after tEntryDoc
                end repeat
             else
-               put tElement & ":" && tElementA["content"] & CR after tEntryDoc
+               put tElement & ":" && tElementA["content"] & return after tEntryDoc
             end if
          end if
-         put CR after tEntryDoc
+         put return after tEntryDoc
       end repeat
       if tHasA["Syntax"] is not true then
          repeat with x = 1 to the number of elements in pDataA["syntax"]
-            put "Syntax:" && pDataA["syntax"][x] & CR & CR before tEntryDoc
+            put "Syntax:" && pDataA["syntax"][x] & return & return before tEntryDoc
          end repeat
       else
-         put "Syntax:" && tSyntax & CR & CR before tEntryDoc
+         put "Syntax:" && tSyntax & return & return before tEntryDoc
       end if
       
       if tHasA["Type"] is not true then
          put pDataA["type"] into tType
       end if
-      put "Type:" && tType & CR & CR before tEntryDoc
+      put "Type:" && tType & return & return before tEntryDoc
       
       if tHasA["Name"] is not true then
          put pDataA["name"] into tName
       end if
       if pIsLibrary and x = 0 then
-         put "Library:" && tName & CR & CR before tEntryDoc
+         put "Library:" && tName & return & return before tEntryDoc
       else
-         put "Name:" && tName & CR & CR before tEntryDoc
+         put "Name:" && tName & return & return before tEntryDoc
       end if
       
       if tHasA["References"] is not true then
@@ -795,7 +830,7 @@ function revDocsFormatInlineComments pDataA, pIsLibrary
                put tElement & "(phrase)" & comma after tEntryDoc
             end repeat
             delete the last char of tEntryDoc
-            put CR & CR after tEntryDoc
+            put return & return after tEntryDoc
          end if
       end if
       put tEntryDoc after tDocData
@@ -884,12 +919,12 @@ function revDocsExtractElements pText
          # Keep track of array depth
          if it begins with "{" then
             add 1 to tArrayDepth
-            put tLine & CR after tAccumulatedContent
+            put tLine & return after tAccumulatedContent
             next repeat
          end if
          if word -1 of tLine ends with "}" then
             subtract 1 from tArrayDepth
-            put tLine & CR after tAccumulatedContent
+            put tLine & return after tAccumulatedContent
             if tArrayDepth <= 0 then
                put false into tInArrayDescription
             end if
@@ -897,7 +932,7 @@ function revDocsExtractElements pText
          end if
       end if
       if tArrayDepth > 0 then
-         put tLine & CR after tAccumulatedContent
+         put tLine & return after tAccumulatedContent
          next repeat
       end if
       
@@ -928,10 +963,10 @@ function revDocsExtractElements pText
          put empty into tParamType
          
          if word 1 of tAfterElement is not empty then
-            put word 1 to -1 of tAfterElement & CR into tAccumulatedContent
+            put word 1 to -1 of tAfterElement & return into tAccumulatedContent
          end if
       else
-         put tLine & CR after tAccumulatedContent
+         put tLine & return after tAccumulatedContent
       end if
    end repeat
    
@@ -1015,7 +1050,7 @@ value (string): a comma-delimited list of the parameters associated with this el
 Returns (array): An array consisting of a key for each docs element, containing its corresponding value
 */
 
-function revDocsParseDocBlocks pBlocksA
+function revDocsParseDocBlocks pBlocksA, pFilename
    local tParsedBlocksA
    repeat for each key tHandler in pBlocksA
       
@@ -1029,7 +1064,7 @@ function revDocsParseDocBlocks pBlocksA
       
       # Then parse them
       local tParsedA
-      put revDocsParseElements(tExtractedA, pBlocksA[tHandler]) into tParsedA
+      put revDocsParseElements(tExtractedA, pBlocksA[tHandler], pFilename) into tParsedA
       
       put tParsedA into tParsedBlocksA[tHandler]
    end repeat
@@ -1037,7 +1072,7 @@ function revDocsParseDocBlocks pBlocksA
    return tParsedBlocksA
 end revDocsParseDocBlocks
 
-function revDocsParseElements pExtractedA, pBlocksA
+function revDocsParseElements pExtractedA, pBlocksA, pFilename
    local tParsedA
    
    local tParams
@@ -1104,10 +1139,10 @@ function revDocsParseElements pExtractedA, pBlocksA
                   # If there was no explicit 'Parameters' declaration, and there is no match, append to previous
                   # Otherwise, warn and output anyway
                   if tDoingParams then
-                     logError "Warning:" && tKey && "in" && pExtractedA[1]["content"] && "is not an element type, and does not match a param name."
+                     logWarning tKey && "in" && pExtractedA[1]["content"] && "is not an element type, and does not match a param name.", pFilename
                   else
                      # 'unparse' the element
-                     put CR & tKey & ":" & tElementA["content"] after tExtraA[tLastKey]
+                     put return & tKey & ":" & tElementA["content"] after tExtraA[tLastKey]
                      break
                   end if
                end if
@@ -1128,7 +1163,7 @@ function revDocsParseElements pExtractedA, pBlocksA
             put true into tDoingParams
             break
          default
-            logError "Invalid type returned from nameToKeyAndType"
+            logWarning "Invalid type returned from nameToKeyAndType", pFilename
             break
       end switch
       if tType is "standard" then
@@ -1161,29 +1196,29 @@ end __updateParamsFromSyntaxLine
 function revDocsFormatDocFileAsJSON pFile, pLibraryName, pAuthor
    local tFileContents
    put url("binfile:" & pFile) into tFileContents
-   return revDocsFormatDocTextAsJSON(tFileContents, pLibraryName, pAuthor)
+   return revDocsFormatDocTextAsJSON(pFile, tFileContents, pLibraryName, pAuthor)
 end revDocsFormatDocFileAsJSON
 
-function revDocsFormatDocTextAsJSON pText, pLibraryName, pAuthor
+function revDocsFormatDocTextAsJSON pFile, pText, pLibraryName, pAuthor
    if pText is empty then
       return empty
    end if
    
    # Parse the doc text into a library array
    local tLIbraryA
-   put revDocsParseDocTextToLibraryArray(pText, pLibraryName, pAuthor) into tLibraryA
+   put revDocsParseDocTextToLibraryArray(pFile, pText, pLibraryName, pAuthor) into tLibraryA
    return revDocsFormatLibraryArrayAsJSON(tLibraryA)
 end revDocsFormatDocTextAsJSON
 
 function revDocsParseDocFileToLibraryArray pFile, pLibraryName, pAuthor
    local tFileContents
    put url("binfile:" & pFile) into tFileContents
-   return revDocsParseDocTextToLibraryArray(tFileContents, pLibraryName, pAuthor)
+   return revDocsParseDocTextToLibraryArray(pFile, tFileContents, pLibraryName, pAuthor)
 end revDocsParseDocFileToLibraryArray
 
-function revDocsParseDocTextToLibraryArray pText, pLibraryName, pAuthor
+function revDocsParseDocTextToLibraryArray pFile, pText, pLibraryName, pAuthor
    local tLibraryA
-   put revDocsParseDocText(pText) into tLibraryA
+   put revDocsParseDocText(pText, pFile) into tLibraryA
    if pLibraryName is not empty then
       put pLibraryName into tLibraryA["name"]
    end if
@@ -1194,7 +1229,7 @@ end revDocsParseDocTextToLibraryArray
 function revDocsParseDocFile pFile
    local tFileContents
    put url("binfile:" & pFile) into tFileContents
-   return revDocsParseDocText(tFileContents)
+   return revDocsParseDocText(pFile, tFileContents)
 end revDocsParseDocFile
 
 function revDocsGroupElements pElementsA
@@ -1216,6 +1251,7 @@ function revDocsGroupElements pElementsA
       get tElementsA[tStartNum]["name"]
       switch it
          case "Name"
+         case ""
             exit repeat
          default
             put tElementsA[tStartNum]["content"] into tEntriesA[tEntryCount]["elements"][tEntryElementCount]["content"]
@@ -1223,12 +1259,6 @@ function revDocsGroupElements pElementsA
             add 1 to tStartNum
             add 1 to tEntryElementCount
             break
-         case ""
-            logError "Error: docs may be empty"
-            exit repeat
-         default
-            logError "Error:" && it && "is invalid library-level element"
-            exit repeat
       end switch
    end repeat
    
@@ -1249,7 +1279,7 @@ function revDocsGroupElements pElementsA
    
 end revDocsGroupElements
 
-function revDocsParseDocText pText
+function revDocsParseDocText pText, pFilename
    local tElementsA
    put revDocsExtractElements(pText) into tElementsA
    
@@ -1265,6 +1295,7 @@ function revDocsParseDocText pText
       get tElementsA[tStartNum]["name"]
       switch it
          case "Name"
+         case empty
             exit repeat
          case "Library"
             put tElementsA[tStartNum]["content"] into tParsedA["name"]
@@ -1280,11 +1311,8 @@ function revDocsParseDocText pText
             put tElementsA[tStartNum]["content"] into tParsedA[it]
             add 1 to tStartNum
             break
-         case ""
-            logError "Error: docs may be empty"
-            exit repeat
          default
-            logError "Error:" && it && "is invalid library-level element"
+            logError "Error:" && it && "is invalid library-level element", pFilename
             exit repeat
       end switch
    end repeat
@@ -1367,7 +1395,7 @@ function revDocsParseDocText pText
    end repeat
    
    repeat for each key tKey in tEntriesA
-      put revDocsParseElements(tEntriesA[tKey]["elements"], tEntriesA[tKey]) into tParsedA["doc"][tKey]
+      put revDocsParseElements(tEntriesA[tKey]["elements"], tEntriesA[tKey], pFilename) into tParsedA["doc"][tKey]
    end repeat
    
    return tParsedA
@@ -1446,7 +1474,7 @@ function revDocsExtractDocBlocksFromScript pScript, pObjId
          else if tComment is empty and word 1 of tLine is empty then
             next repeat
          end if
-         put tLine & CR after tComment
+         put tLine & return after tComment
       end if
       
    end repeat
@@ -1465,7 +1493,7 @@ function revDocsParseDocsFromScript pScript, pObjId
    local tLibraryA
    put revDocsExtractDocBlocksFromScript(pScript, pObjId) into tLibraryA
    
-   return revDocsParseDocBlocks(tLibraryA["data"])
+   return revDocsParseDocBlocks(tLibraryA["data"], the filename of revIDEStackOfObject(pObjID))
 end revDocsParseDocsFromScript
 
 function revDocsParseDocsFromID pObjId
@@ -1843,7 +1871,7 @@ function revDocsParseDescriptionOfArray pDescription
    
    // Find extent of array definition
    get offset("{", pDescription)
-   put word 1 to -1 of (char 1 to it - 1 of pDescription) & CR into tOutput
+   put word 1 to -1 of (char 1 to it - 1 of pDescription) & return into tOutput
    
    local tIndex, tArrayDef
    put "-1" into tIndex
@@ -1893,7 +1921,7 @@ function revDocsParseDescriptionOfEnum pDescription
          put word 1 to -1 of tDescription into tArray["enum"][tCount]["description"]
          add 1 to tCount
       else
-         put tLine & CR after tOutput
+         put tLine & return after tOutput
       end if
    end repeat
    
@@ -1919,10 +1947,10 @@ end __tabs
 function revDocsFormatLibraryArrayAsJSON pLibraryA
    local tJSON
    put "{" after tJSON
-   put CR & __tabs(2) & keyValue("display name",pLibraryA["name"]) & comma after tJSON
-   put CR & __tabs(2) & keyValue("name",revDocsModifyForURL(pLibraryA["name"])) & comma after tJSON
-   put CR & __tabs(2) & keyValue("author",pLibraryA["author"]) & comma after tJSON
-   put CR & __tabs(2) & escape("doc") & ":[" after tJSON
+   put return & __tabs(2) & keyValue("display name",pLibraryA["name"]) & comma after tJSON
+   put return & __tabs(2) & keyValue("name",revDocsModifyForURL(pLibraryA["name"])) & comma after tJSON
+   put return & __tabs(2) & keyValue("author",pLibraryA["author"]) & comma after tJSON
+   put return & __tabs(2) & escape("doc") & ":[" after tJSON
    
    local tCount
    put the number of elements in pLibraryA["doc"] into tCount
@@ -1934,7 +1962,7 @@ function revDocsFormatLibraryArrayAsJSON pLibraryA
       delete the last char of tJSON
    end if
    put "]" after tJSON
-   put CR & tab & "}" after tJSON
+   put return & tab & "}" after tJSON
    return tJSON
 end revDocsFormatLibraryArrayAsJSON
 
@@ -1973,7 +2001,7 @@ function revDocsArrayParamToJSON pParamA, pDepth
       return empty
    end if
    local tOutput, tPrefix
-   put CR & __tabs(pDepth) after tPrefix
+   put return & __tabs(pDepth) after tPrefix
    put escape("array") & ":[" after tOutput
    repeat for each element tKeyValue in pParamA
       put "{" after tOutput
@@ -1994,7 +2022,7 @@ function revDocsEnumParamToJSON pParamA
       return empty
    end if
    local tOutput, tPrefix
-   put CR & __tabs(4) into tPrefix
+   put return & __tabs(4) into tPrefix
    put tPrefix & escape("enum") & ":[" after tOutput
    repeat for each element tKeyValue in pParamA
       put tPrefix & tab & "{" & keyValue("value", tKeyValue["value"]) & comma after tOutput
@@ -2010,7 +2038,7 @@ function revDocsTypedParamToJSON pParamA, pDepth, pRef
       return empty
    end if
    local tOutput, tPrefix
-   put CR & __tabs(pDepth) after tPrefix
+   put return & __tabs(pDepth) after tPrefix
    put tPrefix & keyValue("name", pParamA["name"]) & comma into tOutput
    put tPrefix & keyValue("type", pParamA["type"]) & comma after tOutput
    if pRef is not false then
@@ -2046,7 +2074,7 @@ function __revDocsFormatParamArrayAsJSON pParamA
    repeat with x = 1 to the number of elements in pParamA
       put "{" after tOutput
       put revDocsTypedParamToJSON(pParamA[x], 4, true) after tOutput
-      put CR & __tabs(3) & "}" & comma after tOutput
+      put return & __tabs(3) & "}" & comma after tOutput
    end repeat
    delete the last char of tOutput
    put "]" after tOutput
@@ -2066,7 +2094,7 @@ function __revDocsFormatValuesArrayAsJSON pParamA
       put "{" after tOutput
       put tReturn into pParamA[tReturn]["name"]
       put revDocsTypedParamToJSON(pParamA[tReturn], 4, false) after tOutput
-      put CR & __tabs(3) & "}" & comma after tOutput
+      put return & __tabs(3) & "}" & comma after tOutput
    end repeat
    delete the last char of tOutput
    put "]" after tOutput
@@ -2077,8 +2105,8 @@ function __revDocsFormatExamplesArrayAsJSON pExampleA
    local tOutput
    put "[" into tOutput 
    repeat for each element tExample in pExampleA
-      put "{" & CR & __tabs(4) & keyValue("script", tExample) after tOutput
-      put CR & __tabs(3) & "}" & comma after tOutput
+      put "{" & return & __tabs(4) & keyValue("script", tExample) after tOutput
+      put return & __tabs(3) & "}" & comma after tOutput
    end repeat
    delete the last char of tOutput
    put "]" after tOutput
@@ -2100,7 +2128,7 @@ function revDocsItemListToJSONArray pArray, pKey, pTabs
       put 3 into pTabs
    end if
    
-   return __tabs(pTabs) & escape(pKey) & ":[" & tTagList & "]" & comma & CR
+   return __tabs(pTabs) & escape(pKey) & ":[" & tTagList & "]" & comma & return
 end revDocsItemListToJSONArray
 
 function __formatParamsAsItalic pText
@@ -2116,10 +2144,10 @@ function __revDocsFormatDisplaySyntaxArrayAsJSON pSyntaxA
    local tOutput
    put "[" into tOutput 
    repeat for each element tExample in pSyntaxA
-      put CR & __tabs(4) & escape(__formatParamsAsItalic(tExample)) & comma after tOutput
+      put return & __tabs(4) & escape(__formatParamsAsItalic(tExample)) & comma after tOutput
    end repeat
    delete the last char of tOutput
-   put CR & __tabs(3) & "]" after tOutput
+   put return & __tabs(3) & "]" after tOutput
    return tOutput
 end __revDocsFormatDisplaySyntaxArrayAsJSON
 
@@ -2127,10 +2155,10 @@ function __revDocsFormatSyntaxArrayAsJSON pSyntaxA
    local tOutput
    put "[" into tOutput 
    repeat for each element tExample in pSyntaxA
-      put CR & __tabs(4) & escape(tExample) & comma after tOutput
+      put return & __tabs(4) & escape(tExample) & comma after tOutput
    end repeat
    delete the last char of tOutput
-   put CR & __tabs(3) & "]" after tOutput
+   put return & __tabs(3) & "]" after tOutput
    return tOutput
 end __revDocsFormatSyntaxArrayAsJSON
 
@@ -2171,7 +2199,7 @@ function outputElement pElement, pValue, pTabCount
    repeat pTabCount
       put tab after tOutput
    end repeat
-   put keyValue(pElement, pValue) & comma & CR after tOutput
+   put keyValue(pElement, pValue) & comma & return after tOutput
    return tOutput
 end outputElement
 
@@ -2188,13 +2216,13 @@ function __revDocsFormatReferencesArrayAsJSON pReferencesA
    end if
    
    local tOutput
-   put tab & tab & tab & escape("references") & ":{" & CR into tOutput
+   put tab & tab & tab & escape("references") & ":{" & return into tOutput
    repeat for each key tKey in pReferencesA
       get revDocsItemListToJSONArray(pReferencesA, tKey, 4)
       put it after tOutput
    end repeat
    delete char -2 to -1 of tOutput
-   put CR & tab & tab & tab & "}," & CR after tOutput
+   put return & tab & tab & tab & "}," & return after tOutput
    return tOutput
 end __revDocsFormatReferencesArrayAsJSON
 
@@ -2204,17 +2232,17 @@ function __revDocsFormatCustomArrayAsJSON pKey, pArray
    end if
    switch pKey
       case "syntax"
-         return tab & tab & tab & escape("syntax") & ":" & __revDocsFormatSyntaxArrayAsJSON(pArray["syntax"]) & comma & CR
+         return tab & tab & tab & escape("syntax") & ":" & __revDocsFormatSyntaxArrayAsJSON(pArray["syntax"]) & comma & return
       case "display syntax"
-         return tab & tab & tab & escape("display syntax") & ":" & __revDocsFormatDisplaySyntaxArrayAsJSON(pArray["display syntax"]) & comma & CR
+         return tab & tab & tab & escape("display syntax") & ":" & __revDocsFormatDisplaySyntaxArrayAsJSON(pArray["display syntax"]) & comma & return
       case "params"
-         return tab & tab & tab & escape("parameters") & ":" & __revDocsFormatParamArrayAsJSON(pArray["params"]) & comma & CR
+         return tab & tab & tab & escape("parameters") & ":" & __revDocsFormatParamArrayAsJSON(pArray["params"]) & comma & return
       case "example"
-         return tab & tab & tab & escape("examples") & ":" & __revDocsFormatExamplesArrayAsJSON(pArray["example"]) & comma & CR 
+         return tab & tab & tab & escape("examples") & ":" & __revDocsFormatExamplesArrayAsJSON(pArray["example"]) & comma & return 
       case "value"
-         return tab & tab & tab & escape("value") & ":" & __revDocsFormatValuesArrayAsJSON(pArray["value"]) & comma & CR
+         return tab & tab & tab & escape("value") & ":" & __revDocsFormatValuesArrayAsJSON(pArray["value"]) & comma & return
       default
-         logError "invalid value " & pKey & "passed to __revDocsFormatCustomArrayAsJSON"
+         throw "invalid value " & pKey & "passed to __revDocsFormatCustomArrayAsJSON"
          return empty
    end switch
 end __revDocsFormatCustomArrayAsJSON
@@ -2225,14 +2253,14 @@ Format the library array data as a JSON array as needed by the docs viewer
 
 function revDocsFormatLibraryDataAsJSON pID, pLibraryDataA
    local tJSON
-   put "{" & CR into tJSON
+   put "{" & return into tJSON
    
    if pLibraryDataA["display name"] is empty then
       put pLibraryDataA["name"] into pLibraryDataA["display name"]
    else if pLibraryDataA["name"] is empty then
       put pLibraryDataA["display name"] into pLibraryDataA["name"]
    else
-      logError "Error: no name parsed"
+      throw "No name parsed"
    end if
    # The 'name' should be urlencoded
    put revDocsModifyForURL(pLibraryDataA["name"]) into pLibraryDataA["name"]
@@ -2303,7 +2331,7 @@ function revDocsFormatLibraryDataAsJSON pID, pLibraryDataA
    put outputElementIfExists("changes", pLibraryDataA, 3) after tJSON
    
    delete char -2 to -1 of tJSON
-   put CR & tab & tab & "}" after tJSON
+   put return & tab & tab & "}" after tJSON
    return tJSON
    
 end revDocsFormatLibraryDataAsJSON
