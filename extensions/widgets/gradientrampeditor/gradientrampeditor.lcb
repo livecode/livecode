@@ -15,6 +15,22 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+/*
+This widget is displays a gradient according to the value of its *gradientStops* property.
+
+Name: gradientStopsChanged
+Type: message
+Syntax: on gradientStopsChanged
+
+Example:
+    on gradientStopsChanged
+        set the fillGradient["ramp"] of graphic 1 to the gradientStops of the target
+    end gradientStopsChanged
+
+Description:
+Handle the <gradientStopsChanged> message to perform an operation when the gradientStops property of a gradient ramp editor widget changes.
+*/
+
 widget com.livecode.widget.gradientRampEditor
 
 metadata title is "Gradient Ramp Editor"
@@ -96,6 +112,31 @@ end handler
 -- Property getting and setting
 ----------------------------------------------------------------------------------------------------
 
+/*
+Syntax: set the gradientStops of <widget> to <pGradientStops>
+Syntax: get the gradientStops of <widget>
+
+Summary: The <gradientStops> property controls the offset and color of each division of the gradient.
+
+pGradientStops: A list, one per line, of comma-delimited strings consisting of the offset of the gradient stop, followed by the color and alpha.
+
+Example:
+    -- Create 10 equally spaced stops with random color values
+    local tGradientStops, tStop
+    repeat with x = 1 to 10
+        put x/10 & comma & random(255) & comma & random(255) & comma & random(255) & comma & random(255) into tStop
+        if tGradientStops is empty then
+            put tStop into tGradientStops
+        else
+            put return & tStop after tGradientStops
+        end if
+    end repeat
+    set the gradientStops of widget "Gradient Ramp Editor" to tGradientStops
+
+Description:
+Color gradients are smooth transitions between the colors defined at consecutive offsets. The <gradientStops> property represents the offset and color of each of these stops.
+
+*/
 property gradientStops get getGradientStops set setGradientStops
 
 public handler getGradientStops() returns String

@@ -359,7 +359,7 @@ public:
         
         m_is_eof = false;
         
-		if (!t_stat == IO_NORMAL)
+		if (t_stat != IO_NORMAL)
             return false;
         
         return true;
