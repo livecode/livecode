@@ -78,8 +78,8 @@ public:
     void GetCanRetreat(MCExecContext& ctxt, bool& r_value);
     
 	// Browser-specific actions
-	void ExecAdvance(MCExecContext& ctxt, integer_t p_steps);
-	void ExecRetreat(MCExecContext& ctxt, integer_t p_steps);
+	void ExecAdvance(MCExecContext& ctxt, integer_t *p_steps);
+	void ExecRetreat(MCExecContext& ctxt, integer_t *p_steps);
 	void ExecReload(MCExecContext& ctxt);
     void ExecStop(MCExecContext& ctxt);
 	void ExecExecute(MCExecContext& ctxt, MCStringRef p_script);
@@ -446,7 +446,7 @@ Exec_stat MCAndroidBrowserControl::Do(MCNativeControlAction p_action, MCParamete
 #endif /* MCAndroidBrowserControl::Do */
 
 // Browser-specific actions
-void MCAndroidBrowserControl::ExecAdvance(MCExecContext& ctxt, integer_t p_steps)
+void MCAndroidBrowserControl::ExecAdvance(MCExecContext& ctxt, integer_t *p_steps)
 {
     jobject t_view;
     t_view = GetView();
@@ -454,10 +454,10 @@ void MCAndroidBrowserControl::ExecAdvance(MCExecContext& ctxt, integer_t p_steps
     if (t_view == nil)
         return;
 
-    MCAndroidObjectRemoteCall(t_view, "goForward", "vi", nil, p_steps);
+    MCAndroidObjectRemoteCall(t_view, "goForward", "vi", nil, p_steps != nil ? *p_steps : 1);
 }
 
-void MCAndroidBrowserControl::ExecRetreat(MCExecContext& ctxt, integer_t p_steps)
+void MCAndroidBrowserControl::ExecRetreat(MCExecContext& ctxt, integer_t *p_steps)
 {
     jobject t_view;
     t_view = GetView();
@@ -465,7 +465,7 @@ void MCAndroidBrowserControl::ExecRetreat(MCExecContext& ctxt, integer_t p_steps
     if (t_view == nil)
         return;
     
-    MCAndroidObjectRemoteCall(t_view, "goBack", "vi", nil, p_steps);
+    MCAndroidObjectRemoteCall(t_view, "goBack", "vi", nil, p_steps != nil ? *p_steps : 1);
 }
 
 void MCAndroidBrowserControl::ExecReload(MCExecContext& ctxt)
