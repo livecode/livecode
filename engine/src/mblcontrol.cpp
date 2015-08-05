@@ -493,7 +493,7 @@ bool MCNativeControl::CreateWithType(MCNativeControlType p_type, MCNativeControl
     MCNativeControl *t_control = nil;
     
     if (t_success)
-        t_success = MCCreateNativeControl(p_type, (void*&)r_control);
+        t_success = MCCreateNativeControl(p_type, (void*&)t_control);
     
     if (t_success)
         t_success = t_control->Create();
