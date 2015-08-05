@@ -122,12 +122,12 @@ MCObjectPropertyTable MCAndroidBrowserControl::kPropertyTable =
 
 MCNativeControlActionInfo MCAndroidBrowserControl::kActions[] =
 {
-    DEFINE_CTRL_EXEC_UNARY_METHOD(Advance, MCAndroidBrowserControl, Int32, Advance)
-    DEFINE_CTRL_EXEC_UNARY_METHOD(Retreat, MCAndroidBrowserControl, Int32, Retreat)
-    DEFINE_CTRL_EXEC_METHOD(Reload, MCAndroidBrowserControl, Reload)
-    DEFINE_CTRL_EXEC_METHOD(Stop, MCAndroidBrowserControl, Stop)
-    DEFINE_CTRL_EXEC_BINARY_METHOD(Load, MCAndroidBrowserControl, String, String, Load)
-    DEFINE_CTRL_EXEC_UNARY_METHOD(Execute, MCAndroidBrowserControl, String, Execute)
+    DEFINE_CTRL_EXEC_UNARY_METHOD(Advance, OptInteger, MCAndroidBrowserControl, OptionalInt32, Advance)
+    DEFINE_CTRL_EXEC_UNARY_METHOD(Retreat, OptInteger, MCAndroidBrowserControl, OptionalInt32, Retreat)
+    DEFINE_CTRL_EXEC_METHOD(Reload, Void, MCAndroidBrowserControl, Reload)
+    DEFINE_CTRL_EXEC_METHOD(Stop, Void, MCAndroidBrowserControl, Stop)
+    DEFINE_CTRL_EXEC_BINARY_METHOD(Load, String_String, MCAndroidBrowserControl, String, String, Load)
+    DEFINE_CTRL_EXEC_UNARY_METHOD(Execute, String, MCAndroidBrowserControl, String, Execute)
 };
 
 MCNativeControlActionTable MCAndroidBrowserControl::kActionTable =

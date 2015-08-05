@@ -770,28 +770,17 @@ static MCNativeControlActionInfo *lookup_control_action(const MCNativeControlAct
 
 void _MCNativeControlDo(MCExecContext &ctxt, MCNativeControlPtr *p_control, MCNativeControlActionInfo *p_info, MCValueRef *p_arguments, uindex_t p_argument_count)
 {
-	switch (p_info -> action)
+	switch (p_info -> signature)
 	{
 		// no params
-		case kMCNativeControlActionAdvance:
-		case kMCNativeControlActionRetreat:
-		case kMCNativeControlActionReload:
-		case kMCNativeControlActionStop:
-		case kMCNativeControlActionFlashScrollIndicators:
-		case kMCNativeControlActionPlay:
-		case kMCNativeControlActionPause:
-		case kMCNativeControlActionPrepareToPlay:
-		case kMCNativeControlActionBeginSeekingForward:
-		case kMCNativeControlActionBeginSeekingBackward:
-		case kMCNativeControlActionEndSeeking:
-		case kMCNativeControlActionFocus:
+		case kMCNativeControlActionSignature_Void:
 		{
 			((void(*)(MCExecContext&, MCNativeControlPtr*))p_info -> exec_method)(ctxt, p_control);
 			return;
 		}
 		
 		// single string param
-		case kMCNativeControlActionExecute:
+		case kMCNativeControlActionSignature_String:
 		if (p_argument_count == 1)
 		{
 			// SN-2014-11-20: [[ Bug 14062 ]] Convert the argument (that could for example be a NameRef
@@ -803,9 +792,29 @@ void _MCNativeControlDo(MCExecContext &ctxt, MCNativeControlPtr *p_control, MCNa
 			return;
 		}
 		break;
+            
+        // optional integer param
+		case kMCNativeControlActionSignature_OptInteger:
+        {
+            integer_t *t_value_ptr;
+            integer_t t_value;
+            if (p_argument_count == 1)
+            {
+                if (!ctxt . ConvertToInteger(p_arguments[0], t_value))
+                    break;
+                t_value_ptr = &t_value;
+            }
+            else
+                t_value_ptr = nil;
+                
+            ((void(*)(MCExecContext&, MCNativeControlPtr*, integer_t *))p_info -> exec_method)(ctxt, p_control, t_value_ptr);
+            return;
+        }
+        break;
+            
 		
 		// double string param
-		case kMCNativeControlActionLoad:
+		case kMCNativeControlActionSignature_String_String:
 		if (p_argument_count == 2)
 		{
 			MCAutoStringRef t_url;
@@ -822,14 +831,14 @@ void _MCNativeControlDo(MCExecContext &ctxt, MCNativeControlPtr *p_control, MCNa
 		break;
 		
 		// double integer param
-		case kMCNativeControlActionScrollRangeToVisible:
+		case kMCNativeControlActionSignature_Integer_Integer:
 		if (p_argument_count == 2)
 		{
 			integer_t t_start;
 			integer_t t_end;
 			// SN-2014-11-20: [[ Bug 14062 ]] Convert the argument (that could for example be a NameRef)
 			if (!ctxt . ConvertToInteger(p_arguments[0], t_start)
-				|| ctxt . ConvertToInteger(p_arguments[1], t_end))
+				|| !ctxt . ConvertToInteger(p_arguments[1], t_end))
 			break;
 			
 			((void(*)(MCExecContext&, MCNativeControlPtr*, integer_t, integer_t))p_info -> exec_method)(ctxt, p_control, t_start, t_end);
@@ -837,8 +846,7 @@ void _MCNativeControlDo(MCExecContext &ctxt, MCNativeControlPtr *p_control, MCNa
 		}
 		break;
 		//other
-		case kMCNativeControlActionSnapshot:
-		case kMCNativeControlActionSnapshotExactly:
+		case kMCNativeControlActionSignature_Integer_OptInteger_OptInteger:
 		{
 			integer_t t_time;
 			// SN-2014-11-20: [[ Bug 14062 ]] Convert the argument (that could for example be a NameRef)
@@ -863,8 +871,7 @@ void _MCNativeControlDo(MCExecContext &ctxt, MCNativeControlPtr *p_control, MCNa
 			}
 		}
 		break;
-            
-        case kMCNativeControlActionUnknown:
+
         default:
             if (MCPerformNativeControlAction((intenum_t)p_info -> action, p_control, p_arguments, p_argument_count))
                 return;

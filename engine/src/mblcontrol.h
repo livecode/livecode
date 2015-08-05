@@ -372,10 +372,21 @@ enum MCNativeControlInputVerticalAlign
     kMCNativeControlInputVerticalAlignBottom,
 };
 
+enum MCNativeControlActionSignature
+{
+    kMCNativeControlActionSignature_Void,
+    kMCNativeControlActionSignature_String,
+    kMCNativeControlActionSignature_OptInteger,
+    kMCNativeControlActionSignature_String_String,
+    kMCNativeControlActionSignature_Integer_Integer,
+    kMCNativeControlActionSignature_Integer_OptInteger_OptInteger,
+};
+
 struct MCNativeControlActionInfo
 {
 	bool waitable;
     MCNativeControlAction action;
+    MCNativeControlActionSignature signature;
     void *exec_method;
 };
 
