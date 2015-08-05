@@ -7073,7 +7073,6 @@ bool MCIsPlatformMessage(MCNameRef handler_name)
     
     for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
     {
-        const char* t_message = s_platform_messages[i].message;
 		if (MCNameIsEqualToCString(handler_name, s_platform_messages[i].message, kMCCompareCaseless))
 			found = true;
     }
@@ -7099,46 +7098,43 @@ static void invoke_platform(void *p_context)
 
 extern void MCIPhoneCallOnMainFiber(void (*)(void *), void *);
 
+bool MCDoHandlePlatformMessage(bool p_waitable, MCPlatformMessageHandler p_handler, void *p_context, MCParameter *p_parameters, Exec_stat& r_result)
+{
+    // MW-2012-07-31: [[ Fibers ]] If the method doesn't need script / wait, then
+    //   jump to the main fiber for it.
+    if (!p_waitable)
+    {
+        handle_context_t ctxt;
+        ctxt . handler = p_handler;
+        ctxt . context = p_context;
+        ctxt . parameters = p_parameters;
+        MCIPhoneCallOnMainFiber(invoke_platform, &ctxt);
+        r_result = ctxt . result;
+        return true;
+    }
+    
+    // Execute the method as normal, in this case the method will have to jump
+    // to the main fiber to do any system stuff.
+    r_result = p_handler(p_context, p_parameters);
+    return true;
+    
+}
+#else // Android
+bool MCDoHandlePlatformMessage(bool p_waitable, MCPlatformMessageHandler p_handler, void *p_context, MCParameter *p_parameters, Exec_stat& r_result)
+{
+    r_result = p_handler(p_context, p_parameters);
+    return true;
+}
+#endif
+
 bool MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters, Exec_stat& r_result)
 {
 	for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
 		if (MCNameIsEqualToCString(p_message, s_platform_messages[i] . message, kMCCompareCaseless))
 		{
-			// MW-2012-07-31: [[ Fibers ]] If the method doesn't need script / wait, then
-			//   jump to the main fiber for it.
-			if (!s_platform_messages[i] . waitable)
-			{
-				handle_context_t ctxt;
-				ctxt . handler = s_platform_messages[i] . handler;
-				ctxt . context = s_platform_messages[i] . context;
-				ctxt . parameters = p_parameters;
-				MCIPhoneCallOnMainFiber(invoke_platform, &ctxt);
-				r_result = ctxt . result;
-                return true;
-			}
-			
-			// Execute the method as normal, in this case the method will have to jump
-			// to the main fiber to do any system stuff.
-			r_result = s_platform_messages[i] . handler(s_platform_messages[i] . context, p_parameters);
-            return true;
+            return MCDoHandlePlatformMessage(s_platform_messages[i] . waitable, s_platform_messages[i] . handler, s_platform_messages[i] . context, p_parameters, r_result);
 		}
 	
     r_result = ES_NOT_HANDLED;
 	return false;
 }
-#else // Android
-bool MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters, Exec_stat& r_result)
-{
-	for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
-    {
-		if (MCNameIsEqualToCString(p_message, s_platform_messages[i] . message, kMCCompareCaseless))
-        {
-            r_result = s_platform_messages[i] . handler(s_platform_messages[i] . context, p_parameters);
-            return true;
-        }
-    }
-	
-	r_result = ES_NOT_HANDLED;
-    return false;
-}
-#endif
