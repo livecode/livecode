@@ -3976,7 +3976,8 @@ bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p
 	else
 		t_delimiter = ctxt . GetLineDelimiter();
 
-	if (t_delimiter == '\0')
+	if (MCStringIsEqualToCString(t_delimiter, "\0",
+	                             kMCStringOptionCompareExact))
 		return false;
 
     MCAutoStringRefArray t_chunks;
