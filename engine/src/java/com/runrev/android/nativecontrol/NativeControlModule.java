@@ -112,7 +112,7 @@ public class NativeControlModule
         Constructor<NativeControl> t_constructor;
         try
         {
-            t_constructor = t_class.getDeclaredConstructor(new Class[] { NativeControl.class });
+            t_constructor = t_class.getDeclaredConstructor(new Class[] { NativeControlModule.class });
         }
         catch(Exception e)
         {
