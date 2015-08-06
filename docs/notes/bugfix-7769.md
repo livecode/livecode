@@ -1,1 +1,1 @@
-#  "last" specifier not honored for images with "rotate" command (
+#  "last" specifier not honored for images with "rotate" command 
