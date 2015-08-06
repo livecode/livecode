@@ -2449,8 +2449,13 @@ MCRotate::~MCRotate()
 
 Parse_stat MCRotate::parse(MCScriptPoint &sp)
 {
+	Symbol_type type;
 	initpoint(sp);
-	if (sp.skip_token(SP_FACTOR, TT_CHUNK, CT_IMAGE) == PS_NORMAL)
+	
+	// PM-2015-08-06: [[ Bug 7769 ]] Allow use of 'rotate [the] last/first img by angle' form
+	sp.skip_token(SP_FACTOR, TT_THE);
+	
+	if (sp.next(type) == PS_NORMAL && (sp.gettoken() == "first" || sp.gettoken() == "last"))
 	{
 		sp.backup();
 		image = new MCChunk(False);
@@ -2459,6 +2464,21 @@ Parse_stat MCRotate::parse(MCScriptPoint &sp)
 			MCperror->add
 			(PE_ROTATE_BADIMAGE, sp);
 			return PS_ERROR;
+		}
+	}
+	else
+	{
+		sp.backup();
+		if (sp.skip_token(SP_FACTOR, TT_CHUNK, CT_IMAGE) == PS_NORMAL)
+		{
+			sp.backup();
+			image = new MCChunk(False);
+			if (image->parse(sp, False) != PS_NORMAL)
+			{
+				MCperror->add
+				(PE_ROTATE_BADIMAGE, sp);
+				return PS_ERROR;
+			}
 		}
 	}
 	sp.skip_token(SP_FACTOR, TT_PREP, PT_BY);
