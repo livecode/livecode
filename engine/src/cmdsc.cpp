@@ -2450,13 +2450,8 @@ MCRotate::~MCRotate()
 Parse_stat MCRotate::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
+	
 	// PM-2015-08-06: [[ Bug 7769 ]] Allow use of 'rotate [the] last/first img by angle' form
-	if (sp.skip_token(SP_FACTOR, TT_THE) != PS_NORMAL)
-		sp.backup();
-		
-	// parse an arbitrary chunk. If it does not resolve as an image, a runtime error will occur in MCRotate::exec
-	sp.skip_token(SP_FACTOR, TT_CHUNK, CT_IMAGE);
-	sp.backup();
 	image = new MCChunk(False);
 	if (image->parse(sp, False) != PS_NORMAL)
 	{
