@@ -34,7 +34,6 @@ emcc -O2 -g ${CFLAGS} \
 	-s EMTERPRETIFY_ASYNC=1 \
 	-s ALLOW_MEMORY_GROWTH=1 \
 	-s TOTAL_MEMORY=67108864 \
-	--preload-file boot \
 	--pre-js "${preamble}" \
 	${libs}
 
