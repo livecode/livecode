@@ -16,7 +16,8 @@ input=$1
 output=$2
 exports=$3
 whitelist=$4
-shift 4
+preamble=$5
+shift 5
 
 for lib in $@ ; do
   libs+=\ --js-library\ "${lib}"
@@ -34,5 +35,6 @@ emcc -O2 -g ${CFLAGS} \
 	-s ALLOW_MEMORY_GROWTH=1 \
 	-s TOTAL_MEMORY=67108864 \
 	--preload-file boot \
+	--pre-js "${preamble}" \
 	${libs}
 

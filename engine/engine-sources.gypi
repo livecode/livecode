@@ -734,6 +734,7 @@
 			'src/em-main.cpp',
 			'src/em-osspec-misc.cpp',
 			'src/em-osspec-network.cpp',
+			'src/em-preamble.js',
 			'src/em-resolution.cpp',
 			'src/em-stack.cpp',
 			'src/em-surface.h',
