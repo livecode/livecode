@@ -56,7 +56,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "redraw.h"
 #include "objptr.h"
 #include "stacksecurity.h"
-#include "express.h"
 
 MCClone::~MCClone()
 {
