@@ -23,7 +23,7 @@
 
 #ifdef FEATURE_PLATFORM_PLAYER
 
-#include "control.h"
+#include "mccontrol.h"
 #include "platform.h"
 #include "player-interface.h"
 

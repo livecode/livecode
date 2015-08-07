@@ -30,7 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "vclip.h"
 #include "card.h"
 #include "objptr.h"
-#include "control.h"
+#include "mccontrol.h"
 #include "image.h"
 #include "player.h"
 #include "field.h"

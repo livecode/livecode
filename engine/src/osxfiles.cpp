@@ -34,7 +34,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "card.h"
 #include "group.h"
 #include "button.h"
-#include "control.h"
+#include "mccontrol.h"
 #include "param.h"
 #include "securemode.h"
 #include "osspec.h"

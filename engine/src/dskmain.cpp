@@ -331,7 +331,7 @@ void X_main_loop_iteration()
 	}
     if (!MCtodestroy -> isempty())
     {
-        MCtooltip -> settip(NULL);
+        MCtooltip -> cleartip();
         MCtodestroy -> destroy();
     }
 	MCU_cleaninserted();

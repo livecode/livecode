@@ -20,7 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	COLORS_H
 #define	COLORS_H
 
-#include "control.h"
+#include "mccontrol.h"
 
 class MCColors : public MCControl
 {
