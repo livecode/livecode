@@ -1331,6 +1331,18 @@ Parse_stat MCFlip::parse(MCScriptPoint &sp)
 	const LT *te;
 	initpoint(sp);
 	
+	// Allow flipping the portion currently selected with the Select paint tool
+	// In this case an image is not specified, i.e. "flip vertical"
+	if (sp.next(type) == PS_NORMAL && sp.lookup(SP_FLIP, te) == PS_NORMAL)
+	{
+		direction = (Flip_dir)te->which;
+		return PS_NORMAL;
+	}
+	
+	else
+		sp.backup();
+	
+	
 	// PM-2015-08-07: [[ Bug 1751 ]] Allow more flexible parsing: 'flip the selobj ..', 'flip last img..' etc
 	
 	// Parse an arbitrary chunk. If it does not resolve as an image, a runtime error will occur in MCFlip::exec
@@ -1340,6 +1352,7 @@ Parse_stat MCFlip::parse(MCScriptPoint &sp)
 		MCperror->add(PE_FLIP_BADIMAGE, sp);
 		return PS_ERROR;
 	}
+	
 	
 	if (sp.next(type) != PS_NORMAL || sp.lookup(SP_FLIP, te) != PS_NORMAL)
 	{
