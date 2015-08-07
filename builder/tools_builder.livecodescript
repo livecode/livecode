@@ -254,19 +254,19 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
       set the uProduct of stack tInstaller to "LiveCode Community"
       set the uProductTitle of stack tInstaller to "LiveCode Community" && getReadableVersion(pVersion)
       set the uProductTag of stack tInstaller to "livecodecommunity-" & pVersion
-      set the uProductDetails of stack tInstaller to loadTextFile(pIdeFolder & slash & "Installer/description.txt")
+      set the uProductDetails of stack tInstaller to loadTextFile(builderSystemFolder() & "/../Installer/description.txt")
       set the uProductLicense of stack tInstaller to loadTextFile(pIdeFolder & slash & "License Agreement.txt")
    else if pEdition is "Indy" then
       set the uProduct of stack tInstaller to "LiveCode Indy"
       set the uProductTitle of stack tInstaller to "LiveCode Indy" && getReadableVersion(pVersion)
       set the uProductTag of stack tInstaller to "livecodeindy-" & pVersion
-      set the uProductDetails of stack tInstaller to loadTextFile(pIdeFolder & slash & "Installer/description.txt")
+      set the uProductDetails of stack tInstaller to loadTextFile(builderSystemFolder() & "/../Installer/description.txt")
       set the uProductLicense of stack tInstaller to loadTextFile(pPrivateFolder & slash & "License Agreement.txt")
    else if pEdition is "Business" then
       set the uProduct of stack tInstaller to "LiveCode Business"
       set the uProductTitle of stack tInstaller to "LiveCode Business" && getReadableVersion(pVersion)
       set the uProductTag of stack tInstaller to "livecodebusiness-" & pVersion
-      set the uProductDetails of stack tInstaller to loadTextFile(pIdeFolder & slash & "Installer/description.txt")
+      set the uProductDetails of stack tInstaller to loadTextFile(builderSystemFolder() & "/../Installer/description.txt")
       set the uProductLicense of stack tInstaller to loadTextFile(pPrivateFolder & slash & "License Agreement.txt")
    end if
    
