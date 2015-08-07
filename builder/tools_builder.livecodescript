@@ -244,8 +244,8 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    if pEdition is "Community" then
       put the short name of stack (builderSystemFolder() & "/tools_installer_resources.rev") into tResources
    else
-      builderLog "report", "Commercial installer resources:" && builderCommercialResourceFolder() & "/tools_installer_resources.rev"
-      put the short name of stack (builderCommercialResourceFolder() & "/tools_installer_resources.rev") into tResources
+      builderLog "report", "Commercial installer resources:" && builderCommercialResourceFolder() & slash & pEdition & "/tools_installer_resources.rev"
+      put the short name of stack (builderCommercialResourceFolder() & slash & pEdition & "/tools_installer_resources.rev") into tResources
    end if
    set the mainStack of stack tResources to tInstaller
    
