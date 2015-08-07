@@ -1339,9 +1339,7 @@ Parse_stat MCFlip::parse(MCScriptPoint &sp)
 		return PS_NORMAL;
 	}
 	
-	else
-		sp.backup();
-	
+	sp.backup();
 	
 	// PM-2015-08-07: [[ Bug 1751 ]] Allow more flexible parsing: 'flip the selobj ..', 'flip last img..' etc
 	
