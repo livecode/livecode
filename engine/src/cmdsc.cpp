@@ -56,6 +56,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "redraw.h"
 #include "objptr.h"
 #include "stacksecurity.h"
+#include "express.h"
 
 MCClone::~MCClone()
 {
@@ -2449,8 +2450,22 @@ MCRotate::~MCRotate()
 
 Parse_stat MCRotate::parse(MCScriptPoint &sp)
 {
+	// Allow rotating the portion currently selected with the Select paint tool
+	// In this case an image is not specified, i.e. "rotate [by] 90"
+	Symbol_type type;
 	initpoint(sp);
 	
+	// Make sure both "rotate 90" and "rotate by 90" are parsed correctly
+	sp.skip_token(SP_FACTOR, TT_PREP, PT_BY);
+	sp.next(type);
+	
+	const char *t_angle = sp.gettoken().getstring();
+	bool t_is_number = isdigit((uint1)*t_angle);
+	sp.backup();
+	// Parse the angle expression only if it is a number
+	if  (t_is_number && sp.parseexp(False, True, &angle) == PS_NORMAL)
+		return PS_NORMAL;
+		
 	// PM-2015-08-06: [[ Bug 7769 ]] Allow use of 'rotate [the] last/first img by angle' form
 	
 	// Parse an arbitrary chunk. If it does not resolve as an image, a runtime error will occur in MCRotate::exec
