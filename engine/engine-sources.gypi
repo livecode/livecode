@@ -756,14 +756,19 @@
 			'src/internal_development.cpp',
 			'src/mode_development.cpp',
 		],
-		
+
+		# Sources for minizip
+		'engine_minizip_source_files':
+		[
+			'src/minizip.h',
+			'src/minizip.cpp',
+		],
+
 		# Sources for the installer engine
 		'engine_installer_mode_source_files':
 		[
-			'src/minizip.h',
 			'src/bsdiff_apply.cpp',
 			'src/internal.cpp',
-			'src/minizip.cpp',
 			'src/mode_installer.cpp',
 			'src/mode_installer_lnx.cpp',
 			'src/mode_installer_osx.cpp',
