@@ -779,6 +779,7 @@
 									'src/em-surface.js',
 									'src/em-url.js',
 									'boot',
+									'src/em-standalone.js',
 								],
 
 								'outputs':
@@ -799,6 +800,7 @@
 									'src/em-event.js',
 									'src/em-surface.js',
 									'src/em-url.js',
+									'src/em-standalone.js',
 								],
 							},
 						],
