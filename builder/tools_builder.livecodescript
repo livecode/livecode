@@ -483,13 +483,8 @@ command toolsBuilderMakeDisk pVersion, pEdition, pPlatform, tInputZip
    
    local tDmgFile, tDmgName, tDmgAppFolder
    put tOutputFileStub & ".dmg" into tDmgFile
-   if pEdition is "Community" then
-      put "LiveCode Community" && getReadableVersion(pVersion) && "Installer" into tDmgName
-      put (tOutputFileFolder & slash & "Install LiveCode Community" && getReadableVersion(pVersion) & ".app") into tDmgAppFolder
-   else
-      put "LiveCode" && getReadableVersion(pVersion) && "Installer" into tDmgName
-      put (tOutputFileFolder & slash & "Install LiveCode" && getReadableVersion(pVersion) & ".app") into tDmgAppFolder
-   end if
+    put "LiveCode" && pEdition && getReadableVersion(pVersion) && "Installer" into tDmgName
+    put (tOutputFileFolder & slash & "Install LiveCode" && pEdition && getReadableVersion(pVersion) & ".app") into tDmgAppFolder
    builderLog "message", "Building Mac DMG to '" & tDmgFile & "'"
    if there is a file tDmgFile then
       delete file tDmgFile
