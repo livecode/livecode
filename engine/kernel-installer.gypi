@@ -24,6 +24,7 @@
 			
 			'sources':
 			[
+				'<@(engine_minizip_source_files)',
 				'<@(engine_installer_mode_source_files)',
 			],
 			
