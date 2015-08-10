@@ -210,15 +210,15 @@ MCObjectPropertyTable MCiOSPlayerControl::kPropertyTable =
 
 MCNativeControlActionInfo MCiOSPlayerControl::kActions[] =
 {
-    DEFINE_CTRL_EXEC_METHOD(Play, MCiOSPlayerControl, Play)
-    DEFINE_CTRL_EXEC_METHOD(Pause, MCiOSPlayerControl, Pause)
-    DEFINE_CTRL_EXEC_METHOD(Stop, MCiOSPlayerControl, Stop)
-    DEFINE_CTRL_EXEC_METHOD(PrepareToPlay, MCiOSPlayerControl, PrepareToPlay)
-    DEFINE_CTRL_EXEC_METHOD(BeginSeekingForward, MCiOSPlayerControl, BeginSeekingForward)
-    DEFINE_CTRL_EXEC_METHOD(BeginSeekingBackward, MCiOSPlayerControl, BeginSeekingBackward)
-    DEFINE_CTRL_EXEC_METHOD(EndSeeking, MCiOSPlayerControl, EndSeeking)
-    DEFINE_CTRL_EXEC_TERNARY_METHOD(Snapshot, MCiOSPlayerControl, Int32, OptionalInt32, OptionalInt32, Snapshot)
-    DEFINE_CTRL_EXEC_TERNARY_METHOD(SnapshotExactly, MCiOSPlayerControl, Int32, OptionalInt32, OptionalInt32, SnapshotExactly)
+    DEFINE_CTRL_EXEC_METHOD(Play, Void, MCiOSPlayerControl, Play)
+    DEFINE_CTRL_EXEC_METHOD(Pause, Void, MCiOSPlayerControl, Pause)
+    DEFINE_CTRL_EXEC_METHOD(Stop, Void, MCiOSPlayerControl, Stop)
+    DEFINE_CTRL_EXEC_METHOD(PrepareToPlay, Void, MCiOSPlayerControl, PrepareToPlay)
+    DEFINE_CTRL_EXEC_METHOD(BeginSeekingForward, Void, MCiOSPlayerControl, BeginSeekingForward)
+    DEFINE_CTRL_EXEC_METHOD(BeginSeekingBackward, Void, MCiOSPlayerControl, BeginSeekingBackward)
+    DEFINE_CTRL_EXEC_METHOD(EndSeeking, Void, MCiOSPlayerControl, EndSeeking)
+    DEFINE_CTRL_EXEC_TERNARY_METHOD(Snapshot, Integer_OptInteger_OptInteger, MCiOSPlayerControl, Int32, OptionalInt32, OptionalInt32, Snapshot)
+    DEFINE_CTRL_EXEC_TERNARY_METHOD(SnapshotExactly, Integer_OptInteger_OptInteger, MCiOSPlayerControl, Int32, OptionalInt32, OptionalInt32, SnapshotExactly)
 };
 
 MCNativeControlActionTable MCiOSPlayerControl::kActionTable =
