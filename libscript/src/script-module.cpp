@@ -907,8 +907,7 @@ bool MCScriptCopyHandlersOfModule(MCScriptModuleRef self, /* copy */ MCProperLis
         return false;
     
     for(uindex_t i = 0; i < self -> exported_definition_count; i++)
-        if (self -> definitions[self -> exported_definitions[i] . index] -> kind == kMCScriptDefinitionKindHandler ||
-            self -> definitions[self -> exported_definitions[i] . index] -> kind == kMCScriptDefinitionKindForeignHandler)
+        if (self -> definitions[self -> exported_definitions[i] . index] -> kind == kMCScriptDefinitionKindHandler)
             if (!MCProperListPushElementOntoBack(*t_handlers, self -> exported_definitions[i] . name))
                 return false;
     
@@ -996,7 +995,8 @@ bool MCScriptLookupHandlerDefinitionInModule(MCScriptModuleRef self, MCNameRef p
     
     for(uindex_t i = 0; i < self -> exported_definition_count; i++)
     {
-        if (self -> definitions[self -> exported_definitions[i] . index] -> kind != kMCScriptDefinitionKindHandler)
+        if (self -> definitions[self -> exported_definitions[i] . index] -> kind != kMCScriptDefinitionKindHandler &&
+            self -> definitions[self -> exported_definitions[i] . index] -> kind != kMCScriptDefinitionKindForeignHandler)
             continue;
         
         if (!MCNameIsEqualTo(p_handler, self -> exported_definitions[i] . name))

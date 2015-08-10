@@ -254,20 +254,26 @@ MCValueRef MCEngineGetPropertyOfObject(MCExecContext &ctxt, MCStringRef p_proper
 	return t_value_ref;
 }
 
-extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecGetPropertyOfScriptObject(MCStringRef p_property, MCScriptObjectRef p_object)
+extern "C" MC_DLLEXPORT_DEF void MCEngineExecGetPropertyOfScriptObject(MCStringRef p_property, MCScriptObjectRef p_object, MCValueRef& r_value)
 {
     if (!MCEngineScriptObjectAccessIsAllowed())
-        return nil;
+    {
+        r_value = MCValueRetain(kMCNull);
+        return;
+    }
     
 	MCObject *t_object;
 	uint32_t t_part_id;
 	if (!MCEngineEvalObjectOfScriptObject(p_object, t_object, t_part_id))
-		return nil;
+    {
+        r_value = MCValueRetain(kMCNull);
+        return;
+    }
 	
     MCExecContext ctxt(MCdefaultstackptr, nil, nil);
-	
-	MCValueRef t_value;
-	return MCEngineGetPropertyOfObject(ctxt, p_property, t_object, t_part_id);
+
+    // AL-2015-07-24: [[ Bug 15630 ]] Syntax binding dictates value returned as out parameter rather than directly
+	r_value = MCEngineGetPropertyOfObject(ctxt, p_property, t_object, t_part_id);
 }
 
 // IM-2015-02-23: [[ WidgetPopup ]] Factored-out function for setting the named property of an object to a value.

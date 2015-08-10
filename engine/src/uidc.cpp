@@ -16,6 +16,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
+#include "sysdefs.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -204,7 +205,9 @@ MCMovingList::~MCMovingList()
 
 MCUIDC::MCUIDC()
 {
+#if defined(FEATURE_NOTIFY)
 	MCNotifyInitialize();
+#endif
     
 	messageid = 0;
 	nmessages = maxmessages = 0;
@@ -261,8 +264,10 @@ MCUIDC::~MCUIDC()
 	while (nmessages != 0)
 		cancelmessageindex(0, True);
 	delete messages;
-    
+
+#if defined(FEATURE_NOTIFY)
 	MCNotifyFinalize();
+#endif
 }
 
 
@@ -881,12 +886,13 @@ Boolean MCUIDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		siguser();
         
 		MCModeQueueEvents();
-        
-        if ((MCNotifyDispatch(dispatch == True) ||
-             donepending) && anyevent ||
-            abort)
-            break;
-        
+
+#if defined(FEATURE_NOTIFY)
+		if ((MCNotifyDispatch(dispatch == True) || donepending) && anyevent)
+			break;
+#endif
+		if (abort)
+			break;
 		if (MCquit)
             break;
         
@@ -909,7 +915,7 @@ Boolean MCUIDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 
 void MCUIDC::pingwait(void)
 {
-#ifdef _DESKTOP
+#if defined(_DESKTOP) && defined(FEATURE_NOTIFY)
 	// MW-2013-06-14: [[ DesktopPingWait ]] Use the notify mechanism to wake up
 	//   any running wait.
 	MCNotifyPing(false);

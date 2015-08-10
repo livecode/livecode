@@ -32,7 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "globals.h"
 #include "object.h"
-#include "control.h"
+#include "mccontrol.h"
 #include "notify.h"
 #include "stack.h"
 #include "card.h"
@@ -2181,7 +2181,7 @@ static MCExternalError MCExternalVariableIterateKeys(MCExternalVariableRef var, 
 
 static bool MCExternalIsCaseSensitive(MCExternalValueOptions p_options)
 {
-    switch(p_options & kMCExternalValueOptionCaseSensitiveMask)
+	switch(intenum_t(p_options) & kMCExternalValueOptionCaseSensitiveMask)
     {
         case kMCExternalValueOptionDefaultCaseSensitive:
             return MCECptr -> GetCaseSensitive();

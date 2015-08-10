@@ -29,7 +29,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 /* Windows doesn't have localtime_r(), but it does have an equivalent
  * function with the arguments in the opposite order! */
 #if defined(__WINDOWS__)
-#  define localtime_r(s,t) (localtime_s(t,s))
+// AL-2015-0728: [[ Bug 15410 ]] Windows localtime_s returns an errno_t
+//  so do a bit of gymnastics to make the signature correct.
+inline struct tm *localtime_r(const time_t *p_time, struct tm *r_timeinfo)
+{
+    if (localtime_s(r_timeinfo, p_time) != 0)
+        return r_timeinfo;
+    
+    return NULL;
+}
 #endif
 
 extern "C" MC_DLLEXPORT_DEF void

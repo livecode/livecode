@@ -1970,6 +1970,9 @@ private function builderGetDocsAPIData pExtensions
       local tLcdoc
       put revDocsGenerateDocsFileFromModularFile(tFolder & slash & tSource) into tLcdoc
       
+      # Output the lcdoc file
+      put textEncode(tLcdoc, "utf-8") into url ("binfile:" & tFolder & slash & "api.lcdoc")
+      
       # Convert to JSON
       put revDocsFormatDocTextAsJSON(tLcdoc,"", "LiveCode") into tExtensionAPI
       
@@ -2011,11 +2014,6 @@ end builderGetDocsGuideData
 
 on docsBuilderGenerateBuiltGuide pExtensions
    local tData
-   
-   # Get the location of the distributed guide
-   local tGuidePath
-   put revIDESpecialFolderPath("guide") into tGuidePath
-   
    put "var tUserGuideData =" & CR & "{" & CR & tab & quote & "guides" & quote & ":[" into tData
    
    # Add the guide data from each of the packaged extensions
@@ -2028,11 +2026,6 @@ end docsBuilderGenerateBuiltGuide
 
 on docsBuilderGenerateBuiltAPI pExtensions
    local tData
-   
-   # Get the location of the distributed API
-   local tAPIPath
-   put revIDESpecialFolderPath("API") into tAPIPath
-   
    put "var dictionary_data =" & CR & "{" & CR & tab & quote & "docs" & quote & ":[" after tData
    
    # Add the api data from each of the packaged extensions

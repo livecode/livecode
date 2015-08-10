@@ -396,6 +396,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #	define __STDC_LIMIT_MACROS
 #	include <stdint.h>
 #   include <stddef.h>
+#   include <limits.h>
 #endif
 
 #if !defined(__HAVE_STDINT_H__)
@@ -569,11 +570,14 @@ typedef int64_t compare_t;
 
 #if !defined(__HAVE_STDINT_H__)
 typedef uintptr_t size_t;
+typedef intptr_t ssize_t;
 
 #	define SIZE_MAX UINTPTR_MAX
+#	define SSIZE_MAX INTPTR_MAX
 #endif /* !__HAVE_STDINT_H__ */
 
 #define SIZE_MIN UINTPTR_MIN
+#define SSIZE_MIN INTPTR_MIN
 
 typedef int64_t filepos_t;
 
@@ -710,12 +714,6 @@ typedef struct __MCLocale* MCLocaleRef;
 //  MINIMUM FUNCTIONS
 //
 
-//inline uint32_t MCMin(uint32_t a, uint32_t b) { return a < b ? a : b; }
-//inline int32_t MCMin(int32_t a, int32_t b) { return a < b ? a : b; }
-//inline uint64_t MCMin(uint64_t a, uint64_t b) { return a < b ? a : b; }
-//inline int64_t MCMin(int64_t a, int64_t b) { return a < b ? a : b; }
-//inline double MCMin(double a, double b) { return a < b ? a : b; }
-//inline float MCMin(float a, float b) { return a < b ? a : b; }
 template <class T, class U> inline T MCMin(T a, U b) { return a < b ? a : b; }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -723,12 +721,6 @@ template <class T, class U> inline T MCMin(T a, U b) { return a < b ? a : b; }
 //  MAXIMUM FUNCTIONS
 //
 
-//inline uint32_t MCMax(uint32_t a, uint32_t b) { return a > b ? a : b; }
-//inline int32_t MCMax(int32_t a, int32_t b) { return a > b ? a : b; }
-//inline uint64_t MCMax(uint64_t a, uint64_t b) { return a > b ? a : b; }
-//inline int64_t MCMax(int64_t a, int64_t b) { return a > b ? a : b; }
-//inline double MCMax(double a, double b) { return a > b ? a : b; }
-//inline float MCMax(float a, float b) { return a > b ? a : b; }
 template <class T, class U> inline T MCMax(T a, U b) { return a > b ? a : b; }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -746,8 +738,6 @@ inline double MCAbs(double a) { return fabs(a); }
 //  SIGN FUNCTIONS
 //
 
-//inline compare_t MCSgn(int32_t a) { return a < 0 ? -1 : (a > 0 ? 1 : 0); }
-//inline compare_t MCSgn(int64_t a) { return a < 0 ? -1 : (a > 0 ? 1 : 0); }
 template <class T> inline compare_t MCSgn(T a) { return a < 0 ? -1 : (a > 0 ? 1 : 0); }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -755,21 +745,14 @@ template <class T> inline compare_t MCSgn(T a) { return a < 0 ? -1 : (a > 0 ? 1 
 //  COMPARE FUNCTIONS
 //
 
-// SN-2015-01-07: [[ iOS-64bit ]] Update the MCCompare functions
-inline compare_t MCCompare(int a, int b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(unsigned int a, unsigned int b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(long a, long b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(unsigned long a, unsigned long b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(long long a, long long b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(unsigned long long a, unsigned long long b) { return a < b ? -1 : (a > b ? 1 : 0); }
-
+template <typename T> inline compare_t MCCompare(T a, T b) { return ((a < b) ? -1 : ((a > b) ? 1 : 0)); }
 
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  COMPARE FUNCTIONS
 //
 
-inline bool MCIsPowerOfTwo(uint32_t x) { return (x & (x - 1)) == 0; }
+template <typename T> inline bool MCIsPowerOfTwo(T x) { return (x & (x - 1)) == 0; }
 
 template <typename T, typename U, typename V>
 inline T MCClamp(T value, U min, V max) {
@@ -1197,6 +1180,7 @@ extern "C" {
 // Return a hash for the given integer.
 MC_DLLEXPORT hash_t MCHashInteger(integer_t);
 MC_DLLEXPORT hash_t MCHashUInteger(uinteger_t);
+MC_DLLEXPORT hash_t MCHashSize(ssize_t);
 MC_DLLEXPORT hash_t MCHashUSize(size_t);
 
 // Return a hash value for the given double - note that (hopefully!) hashing
@@ -1435,7 +1419,9 @@ MC_DLLEXPORT extern MCTypeInfoRef kMCUIntTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCFloatTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCDoubleTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCPointerTypeInfo;
+
 MC_DLLEXPORT extern MCTypeInfoRef kMCSizeTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCSSizeTypeInfo;
 
 //////////
 
@@ -1908,6 +1894,10 @@ MC_DLLEXPORT bool MCStringEncodeAndRelease(MCStringRef string, MCStringEncoding 
 // Decode the given data, intepreting in the given encoding.
 MC_DLLEXPORT bool MCStringDecode(MCDataRef data, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
 MC_DLLEXPORT bool MCStringDecodeAndRelease(MCDataRef data, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
+
+// SN-2015-07-27: [[ Bug 15379 ]] We can need to build a string from data,
+//  without any ASCII value conversion.
+bool MCStringCreateUnicodeStringFromData(MCDataRef p_data, bool p_is_external_rep, MCStringRef& r_string);
 
 /////////
 

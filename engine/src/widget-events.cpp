@@ -391,8 +391,12 @@ MCObject *MCWidgetEventManager::event_hittest(MCWidget* p_widget, int32_t x, int
     MCWidgetRef t_target;
     if (!MCWidgetOnHitTest(p_widget -> getwidget(), MCGPointMake(x, y), t_target))
         t_target = p_widget -> getwidget();
+ 
+    // AL-2015-07-29: [[ Bug ]] Ensure nil is returned if there is no hit.
+    if (t_target != nil)
+        return MCWidgetGetHost(t_target);
     
-    return MCWidgetGetHost(t_target);
+    return nil;
 }
 
 void MCWidgetEventManager::event_toolchanged(MCWidget* p_widget, Tool p_tool)

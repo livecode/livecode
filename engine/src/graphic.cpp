@@ -297,6 +297,9 @@ Boolean MCGraphic::mfocus(int2 x, int2 y)
 		// MW-2011-08-18: [[ Layers ]] Notify of a changed rect and invalidate.
 		layer_rectchanged(drect, true);
 		message_with_args(MCM_mouse_move, x, y);
+        
+        // AL-2015-07-15: [[ Bug 15605 ]] Notify property listener of the change in points property
+        signallisteners(P_POINTS);
 		return True;
 	}
 	else if (m_edit_tool != NULL && m_edit_tool->mfocus(x, y))
@@ -324,6 +327,9 @@ Boolean MCGraphic::mdown(uint2 which)
 			nrealpoints++;
 		startx = mx;
 		starty = my;
+        
+        // AL-2015-07-15: [[ Bug 15605 ]] Notify property listener of the change in points property
+        signallisteners(P_POINTS);
 		return True;
 	}
 	if (state & CS_MFOCUSED)

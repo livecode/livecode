@@ -1239,10 +1239,10 @@ void MCScriptEndHandlerInModule(MCScriptModuleBuilderRef self)
         
         __emit_position(self, t_pos_address_offset + t_address, self -> instructions[i] . file, self -> instructions[i] . line);
         
-        __emit_bytecode_byte(self, t_op | (MCMin(t_arity, 15) << 4));
+        __emit_bytecode_byte(self, t_op | (MCMin(t_arity, 15U) << 4));
         
-        if (t_arity >= 15)
-            __emit_bytecode_byte(self, t_arity - 15);
+        if (t_arity >= 15U)
+            __emit_bytecode_byte(self, t_arity - 15U);
         
         for(uindex_t j = 0; j < t_arity; j++)
             __emit_bytecode_uint(self, t_operands[j]);

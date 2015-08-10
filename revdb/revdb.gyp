@@ -9,6 +9,7 @@
 		'revdb_sources':
 		[
 			'src/revdb.cpp',
+			'src/iossupport.cpp',
 			'src/osxsupport.cpp',
 			'src/unxsupport.cpp',
 			'src/w32support.cpp',
@@ -553,6 +554,7 @@
 			[
 				'../libcore/libcore.gyp:libCore',
 				'../libexternal/libexternal.gyp:libExternal',
+				'../libexternal/libexternal.gyp:libExternal-symbol-exports',
 			],
 			
 			'include_dirs':
@@ -570,11 +572,6 @@
 				'INFOPLIST_FILE': 'rsrc/revdb-Info.plist',
 			},
 			
-			'variables':
-			{
-				'ios_external_symbols': [ '_getXtable' ],
-			},
-			
 			'all_dependent_settings':
 			{
 				'variables':
@@ -590,6 +587,24 @@
 					{
 						'product_name': 'RevDb',
 						'product_extension': '',
+					},
+				],
+				[
+					'OS == "mac" or OS == "ios"',
+					{
+						'sources!': 
+						[
+							'src/unxsupport.cpp',
+						],
+					},
+				],
+				[
+					'OS != "ios"',
+					{
+						'sources!':
+						[
+							'src/iossupport.cpp',
+						],
 					},
 				],
 			],
@@ -620,6 +635,11 @@
 			'sources':
 			[
 				'<@(revdb_sources)',
+			],
+			
+			'sources!':
+			[
+				'src/iossupport.cpp',
 			],
 			
 			'all_dependent_settings':

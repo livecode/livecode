@@ -33,7 +33,7 @@
 #include "card.h"
 #include "debug.h"
 #include "dispatch.h"
-#include "control.h"
+#include "mccontrol.h"
 #include "field.h"
 #include "graphics_util.h"
 #include "redraw.h"

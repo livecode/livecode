@@ -17,7 +17,7 @@
 #ifndef __MC_WIDGET__
 #define __MC_WIDGET__
 
-#include "control.h"
+#include "mccontrol.h"
 
 #include "libscript/script.h"
 #include "module-engine.h"

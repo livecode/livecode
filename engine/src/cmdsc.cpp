@@ -30,7 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "undolst.h"
 #include "chunk.h"
 #include "object.h"
-#include "control.h"
+#include "mccontrol.h"
 #include "mcerror.h"
 #include "dispatch.h"
 #include "stack.h"
@@ -777,7 +777,11 @@ Exec_errors MCClipboardCmd::processtoclipboard(MCExecPoint& ep, MCObjectRef *p_o
 			for(uint4 i = 0; i < p_object_count; ++i)
 			{
 				if (p_objects[i] . object -> del())
+                {
+                    if (p_objects[i] . object -> gettype() == CT_STACK)
+                        MCtodestroy -> remove(static_cast<MCStack *>(p_objects[i] . object));
                     p_objects[i] . object -> scheduledelete();
+                }
 			}
 		}
 	}

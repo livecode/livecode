@@ -58,6 +58,11 @@ done
 
 }
 
+# If the OS is iOS and this is a debug build, do nothing
+if [ "$os" == "ios" -a "$BUILDTYPE" == "Debug" ] ; then
+	exit 0
+fi
+
 case $os in
 	linux|android)
 		extract_linux_or_android ${inputs}
