@@ -497,6 +497,8 @@ uint32_t MCactionsrequired = 0;
 MCStringRef MCcommandname;
 MCArrayRef MCcommandarguments;
 
+MCHook *MChooks = nil;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern MCUIDC *MCCreateScreenDC(void);
@@ -835,6 +837,8 @@ void X_clear_globals(void)
 	MCmainstackschanged = False;
     
     MCactionsrequired = 0;
+    
+    MChooks = nil;
 
     MCSocketsInitialize();
     
@@ -1345,6 +1349,8 @@ int X_close(void)
 	return MCretcode;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 void MCActionsDoRunSome(uint32_t p_mask)
 {
     uint32_t t_actions;
@@ -1362,6 +1368,245 @@ void MCActionsDoRunSome(uint32_t p_mask)
         MCRedrawDoUpdateScreen();
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct MCHook
+{
+    MCHook *next;
+    MCHookType type;
+    void *descriptor;
+};
+
+bool MCHookRegister(MCHookType p_type, void *p_descriptor)
+{
+    MCHook *t_hook;
+    if (!MCMemoryNew(t_hook))
+        return false;
+    
+    t_hook -> next = MChooks;
+    t_hook -> type = p_type;
+    t_hook -> descriptor = p_descriptor;
+    
+    MChooks = t_hook;
+    
+    return true;
+}
+
+void MCHookUnregister(MCHookType p_type, void *p_descriptor)
+{
+    MCHook *t_hook, *t_previous;
+    for(t_previous = nil, t_hook = MChooks; t_hook != nil; t_previous = t_hook, t_hook = t_hook -> next)
+        if (t_hook -> type == p_type &&
+            t_hook -> descriptor == p_descriptor)
+            break;
+    
+    if (t_hook != nil)
+    {
+        if (t_previous != nil)
+            t_previous -> next = t_hook -> next;
+        else
+            MChooks = t_hook -> next;
+        
+        MCMemoryDelete(t_hook);
+    }
+}
+
+bool MCHookForEach(MCHookType p_type, MCHookForEachCallback p_callback, void *p_context)
+{
+    for(MCHook *t_hook = MChooks; t_hook != nil; t_hook = t_hook -> next)
+        if (t_hook -> type == p_type)
+            if (p_callback(p_context, t_hook -> descriptor))
+                return true;
+    
+    return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct __MCIsGlobalHandlerContext
+{
+    MCNameRef name;
+};
+
+static bool __MCIsGlobalHandlerCallback(void *p_context, void *p_descriptor)
+{
+    __MCIsGlobalHandlerContext *ctxt;
+    ctxt = (__MCIsGlobalHandlerContext *)p_context;
+    
+    MCHookGlobalHandlersDescriptor *t_desc;
+    t_desc = (MCHookGlobalHandlersDescriptor *)p_descriptor;
+    
+    return t_desc -> can_handle(ctxt -> name);
+}
+
+bool MCIsGlobalHandler(MCNameRef message)
+{
+    __MCIsGlobalHandlerContext ctxt;
+    ctxt . name = message;
+    return MCHookForEach(kMCHookGlobalHandlers, __MCIsGlobalHandlerCallback, &ctxt);
+}
+
+//////////
+
+struct __MCRunGlobalHandlerContext
+{
+    MCNameRef name;
+    MCParameter *parameters;
+    Exec_stat *result;
+};
+
+static bool __MCRunGlobalHandlerCallback(void *p_context, void *p_descriptor)
+{
+    __MCRunGlobalHandlerContext *ctxt;
+    ctxt = (__MCRunGlobalHandlerContext *)p_context;
+    
+    MCHookGlobalHandlersDescriptor *t_desc;
+    t_desc = (MCHookGlobalHandlersDescriptor *)p_descriptor;
+ 
+    return t_desc -> handle(ctxt -> name, ctxt -> parameters, *(ctxt -> result));
+}
+
+bool MCRunGlobalHandler(MCNameRef message, MCParameter *parameters, Exec_stat& r_result)
+{
+    __MCRunGlobalHandlerContext ctxt;
+    ctxt . name = message;
+    ctxt . parameters = parameters;
+    ctxt . result = &r_result;
+    return MCHookForEach(kMCHookGlobalHandlers, __MCRunGlobalHandlerCallback, &ctxt);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct __MCLookupNativeControlContext
+{
+    MCStringRef name;
+    intenum_t *type;
+};
+
+static bool __MCLookupNativeControlTypeCallback(void *p_context, void *p_descriptor)
+{
+    __MCLookupNativeControlContext *ctxt;
+    ctxt = (__MCLookupNativeControlContext *)p_context;
+    
+    MCHookNativeControlsDescriptor *t_desc;
+    t_desc = (MCHookNativeControlsDescriptor *)p_descriptor;
+    
+    return t_desc -> lookup_type(ctxt -> name, *(ctxt -> type));
+}
+
+bool MCLookupNativeControlType(MCStringRef p_name, intenum_t& r_type)
+{
+    __MCLookupNativeControlContext ctxt;
+    ctxt . name = p_name;
+    ctxt . type = &r_type;
+    return MCHookForEach(kMCHookNativeControls, __MCLookupNativeControlTypeCallback, &ctxt);
+}
+
+////
+
+static bool __MCLookupNativeControlPropertyCallback(void *p_context, void *p_descriptor)
+{
+    __MCLookupNativeControlContext *ctxt;
+    ctxt = (__MCLookupNativeControlContext *)p_context;
+    
+    MCHookNativeControlsDescriptor *t_desc;
+    t_desc = (MCHookNativeControlsDescriptor *)p_descriptor;
+    
+    return t_desc -> lookup_property(ctxt -> name, *(ctxt -> type));
+}
+
+bool MCLookupNativeControlProperty(MCStringRef p_name, intenum_t& r_type)
+{
+    __MCLookupNativeControlContext ctxt;
+    ctxt . name = p_name;
+    ctxt . type = &r_type;
+    return MCHookForEach(kMCHookNativeControls, __MCLookupNativeControlPropertyCallback, &ctxt);
+}
+
+////
+
+static bool __MCLookupNativeControlActionCallback(void *p_context, void *p_descriptor)
+{
+    __MCLookupNativeControlContext *ctxt;
+    ctxt = (__MCLookupNativeControlContext *)p_context;
+    
+    MCHookNativeControlsDescriptor *t_desc;
+    t_desc = (MCHookNativeControlsDescriptor *)p_descriptor;
+    
+    return t_desc -> lookup_action(ctxt -> name, *(ctxt -> type));
+}
+
+bool MCLookupNativeControlAction(MCStringRef p_name, intenum_t& r_type)
+{
+    __MCLookupNativeControlContext ctxt;
+    ctxt . name = p_name;
+    ctxt . type = &r_type;
+    return MCHookForEach(kMCHookNativeControls, __MCLookupNativeControlActionCallback, &ctxt);
+}
+
+////
+
+struct __MCCreateNativeControlContext
+{
+    intenum_t type;
+    void **control;
+};
+
+static bool __MCCreateNativeControlCallback(void *p_context, void *p_descriptor)
+{
+    __MCCreateNativeControlContext *ctxt;
+    ctxt = (__MCCreateNativeControlContext *)p_context;
+    
+    MCHookNativeControlsDescriptor *t_desc;
+    t_desc = (MCHookNativeControlsDescriptor *)p_descriptor;
+    
+    return t_desc -> create(ctxt -> type, *(ctxt -> control));
+}
+
+bool MCCreateNativeControl(intenum_t p_type, void *& r_control)
+{
+    __MCCreateNativeControlContext ctxt;
+    ctxt . type = p_type;
+    ctxt . control = &r_control;
+    return MCHookForEach(kMCHookNativeControls, __MCCreateNativeControlCallback, &ctxt);
+}
+
+////
+
+struct __MCPerformNativeControlActionContext
+{
+    intenum_t action;
+    void *control;
+    MCValueRef *arguments;
+    uindex_t argument_count;
+};
+
+static bool __MCPerformNativeControlActionCallback(void *p_context, void *p_descriptor)
+{
+    __MCPerformNativeControlActionContext *ctxt;
+    ctxt = (__MCPerformNativeControlActionContext *)p_context;
+    
+    MCHookNativeControlsDescriptor *t_desc;
+    t_desc = (MCHookNativeControlsDescriptor *)p_descriptor;
+    
+    if (t_desc -> action == nil)
+        return false;
+    
+    return t_desc -> action(ctxt -> action, ctxt -> control, ctxt -> arguments, ctxt -> argument_count);
+}
+
+bool MCPerformNativeControlAction(intenum_t p_action, void *p_control, MCValueRef *p_arguments, uindex_t p_argument_count)
+{
+    __MCPerformNativeControlActionContext ctxt;
+    ctxt . action = p_action;
+    ctxt . control = p_control;
+    ctxt . arguments = p_arguments;
+    ctxt . argument_count = p_argument_count;
+    return MCHookForEach(kMCHookNativeControls, __MCPerformNativeControlActionCallback, &ctxt);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 // MW-2013-10-08: [[ Bug 11259 ]] Make sure the Linux specific case tables are
 //   in a global place so it works for server and desktop.
@@ -1429,3 +1674,5 @@ uint2 MCctypetable[] =
 	0x0385, 0x0385, 0x0385, 0x0385, 0x0385, 0x0385, 0x0385, 0x0340, 0x0385, 0x0385, 0x0385, 0x0385, 0x0385, 0x0385, 0x0385, 0x0385, 
 };
 #endif
+
+////////////////////////////////////////////////////////////////////////////////

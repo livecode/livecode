@@ -374,11 +374,17 @@ IO_stat MCDispatch::startup(void)
 #endif
 		
 		if (t_stream == NULL)
+        {
+		    MCresult->sets("unable to open startup stack");
 			return IO_ERROR;
+        }
 		
 		MCStack *t_stack;
 		if (readstartupstack(t_stream, t_stack) != IO_NORMAL)
+        {
+		    MCresult->sets("unable to read startup stack");
 			return IO_ERROR;
+        }
 		
 		MCS_close(t_stream);
 		

@@ -439,7 +439,7 @@ MCObjectPropertyTable MCiOSInputControl::kPropertyTable =
 
 MCNativeControlActionInfo MCiOSInputControl::kActions[] =
 {
-    DEFINE_CTRL_EXEC_METHOD(Focus, MCiOSInputControl, Focus)
+    DEFINE_CTRL_EXEC_METHOD(Focus, Void, MCiOSInputControl, Focus)
 };
 
 MCNativeControlActionTable MCiOSInputControl::kActionTable =
@@ -519,7 +519,7 @@ MCObjectPropertyTable MCiOSMultiLineControl::kPropertyTable =
 
 MCNativeControlActionInfo MCiOSMultiLineControl::kActions[] =
 {
-    DEFINE_CTRL_EXEC_BINARY_METHOD(ScrollRangeToVisible, MCiOSMultiLineControl, Int32, Int32, ScrollRangeToVisible)
+    DEFINE_CTRL_EXEC_BINARY_METHOD(ScrollRangeToVisible, Integer_Integer, MCiOSMultiLineControl, Int32, Int32, ScrollRangeToVisible)
 };
 
 MCNativeControlActionTable MCiOSMultiLineControl::kActionTable =
