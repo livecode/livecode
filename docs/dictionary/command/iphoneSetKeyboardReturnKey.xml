@@ -13,8 +13,8 @@
 	<summary>Configures the type of return key displayed on the keyboard.</summary>
 
 	<examples>
-<example>iphoneSetKeyboardReturnKey &quot;alphabet&quot;</example>
-<example>iphoneSetKeyboardReturnKey &quot;numeric&quot;</example>
+<example>iphoneSetKeyboardReturnKey &quot;next&quot;</example>
+<example>iphoneSetKeyboardReturnKey &quot;default&quot;</example>
 	</examples>
 
 	<history>
