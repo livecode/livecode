@@ -722,6 +722,7 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		else if (!done && eventtime > curtime)
 			t_sleep = MCMin(eventtime - curtime, exittime - curtime);
 		
+        // MM-2015-08-11: [[ Bug 15700 ]] Poll the sockets. Code pulled over from OS X wait.
         extern Boolean MCS_handle_sockets();
         if (MCS_handle_sockets())
         {
