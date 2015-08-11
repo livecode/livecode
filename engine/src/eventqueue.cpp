@@ -1033,6 +1033,7 @@ bool MCEventQueuePostKeyPress(MCStack *p_stack, uint32_t p_modifiers, uint32_t p
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCEventQueuePostImeCompose(MCStack *p_stack, bool p_enabled, uint32_t p_offset, const uint16_t *p_chars, uint32_t p_char_count)
 {
 	uint16_t *t_new_chars;
