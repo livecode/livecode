@@ -20,7 +20,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "em-filehandle.h"
 #include "em-util.h"
 
+#include "osspec.h"
+
 #include <fcntl.h>
+#include <dirent.h>
+#include <sys/stat.h>
 #include <sys/time.h>
 #include <emscripten.h>
 
@@ -39,10 +43,34 @@ MCDesktopCreateEmscriptenSystem(void)
 	return new MCEmscriptenSystem;
 }
 
-static bool
-IsRootFolder(MCStringRef p_path)
+/* Helper for resolving a path and converting to a system string in
+ * one go, since this is needed very often. */
+class MCEmscriptenAutoStringRefAsSysPath
+	: public MCAutoStringRefAsSysString
 {
-	return MCStringIsEqualToCString(p_path, "/", kMCStringOptionCompareExact);
+public:
+	bool LockPath(MCStringRef p_path)
+	{
+		MCAutoStringRef t_resolved;
+		if (!MCS_resolvepath(p_path, &t_resolved)) {
+			return false;
+		}
+
+		return Lock(*t_resolved);
+	}
+};
+
+/* Helper for stat()-ing a file */
+static inline bool
+MCEmscriptenStatPath(MCStringRef p_path, struct stat & x_stat_buf)
+{
+	MCEmscriptenAutoStringRefAsSysPath t_path_sys;
+	if (!t_path_sys.LockPath(p_path))
+	{
+		return false;
+	}
+
+	return (0 == stat(*t_path_sys, &x_stat_buf));
 }
 
 /* ----------------------------------------------------------------
@@ -234,39 +262,58 @@ MCEmscriptenSystem::GetEnv(MCStringRef p_name,
 Boolean
 MCEmscriptenSystem::CreateFolder(MCStringRef p_path)
 {
-	/* FIXME Implement CreateFolder() -- using mkdir(2) */
-	/* The filesystem containing p_path does not support the creation
-	 * of directories. */
-	SetErrno(EPERM);
-	return false;
+	MCEmscriptenAutoStringRefAsSysPath t_path_sys;
+	if (!t_path_sys.LockPath(p_path))
+	{
+		return false;
+	}
+
+	errno = 0;
+	return (0 == mkdir(*t_path_sys, 0777));
 }
 
 Boolean
 MCEmscriptenSystem::DeleteFolder(MCStringRef p_path)
 {
-	/* FIXME Implement Deletefolder() -- using rmdir(2) */
-	/* p_path does not exist */
-	SetErrno(ENOENT);
-	return false;
+	MCEmscriptenAutoStringRefAsSysPath t_path_sys;
+	if (!t_path_sys.LockPath(p_path))
+	{
+		return false;
+	}
+
+	errno = 0;
+	return (0 == rmdir(*t_path_sys));
 }
 
 Boolean
 MCEmscriptenSystem::DeleteFile(MCStringRef p_path)
 {
-	/* FIXME Implement DeleteFile() -- using unlink(2) */
-	/* p_path does not exist */
-	SetErrno(ENOENT);
-	return false;
+	MCEmscriptenAutoStringRefAsSysPath t_path_sys;
+	if (!t_path_sys.LockPath(p_path))
+	{
+		return false;
+	}
+
+	errno = 0;
+	return (0 == unlink(*t_path_sys));
 }
 
 Boolean
 MCEmscriptenSystem::RenameFileOrFolder(MCStringRef p_old_name,
                                        MCStringRef p_new_name)
 {
-	/* FIXME Implement RenameFileOrFolder() -- using rename(2) */
-	/* p_old_name does not exist */
-	SetErrno(ENOENT);
-	return false;
+	MCEmscriptenAutoStringRefAsSysPath t_path_old, t_path_new;
+	if (!t_path_old.LockPath(p_old_name))
+	{
+		return false;
+	}
+	if (!t_path_new.LockPath(p_new_name))
+	{
+		return false;
+	}
+
+	errno = 0;
+	return (0 == rename(*t_path_old, *t_path_new));
 }
 
 Boolean
@@ -274,8 +321,8 @@ MCEmscriptenSystem::BackupFile(MCStringRef p_old_name,
                                MCStringRef p_new_name)
 {
 	/* FIXME Implement BackupFile */
-	/* p_old_name does not exist */
-	SetErrno(ENOENT);
+	/* function not implemented */
+	SetErrno(ENOSYS);
 	return false;
 }
 
@@ -284,8 +331,8 @@ MCEmscriptenSystem::UnbackupFile(MCStringRef p_old_name,
                                  MCStringRef p_new_name)
 {
 	/* FIXME Implement UnbackupFile() */
-	/* p_old_name does not exist */
-	SetErrno(ENOENT);
+	/* function not implemented */
+	SetErrno(ENOSYS);
 	return false;
 }
 
@@ -296,7 +343,7 @@ MCEmscriptenSystem::CreateAlias(MCStringRef p_target,
 	/* FIXME Implement CreateAlias() using symlink(2) */
 	/* The filesystem containing p_alias does not support the creation
 	 * of aliases */
-	SetErrno(EPERM);
+	SetErrno(ENOSYS);
 	return false;
 }
 
@@ -312,21 +359,77 @@ MCEmscriptenSystem::ResolveAlias(MCStringRef p_target,
 bool
 MCEmscriptenSystem::GetCurrentFolder(MCStringRef & r_path)
 {
-	/* FIXME Implement GetCurrentFolder() */
-	/* For now, always treat the root directory as current */
-	return MCStringCreateWithCString("/", r_path);
+	/* FIXME use get_current_dir_name() once it's available in Emscripten's
+	 * libc. */
+
+	/* We have to call getcwd() in a loop, expanding the output buffer
+	 * if necessary.  Starting off with a PATH_MAX-sized buffer means
+	 * that expanding is unlikely. */
+	MCAutoArray<char> t_cwd_sys;
+
+	/* Allocate initial buffer */
+	if (!t_cwd_sys.New(PATH_MAX))
+	{
+		return false;
+	}
+
+	bool t_got_cwd = false;
+	while (!t_got_cwd)
+	{
+		errno = 0;
+		if (t_cwd_sys.Ptr() == getcwd(t_cwd_sys.Ptr(), t_cwd_sys.Size()))
+		{
+			t_got_cwd = true;
+		}
+		else if (errno == ERANGE)
+		{
+			/* The buffer wasn't large enough! */
+
+			uindex_t t_new_size;
+			/* Check that the buffer can actually be expanded */
+			if (t_cwd_sys.Size() == UINDEX_MAX)
+			{
+				/* Buffer is already maximum size */
+				return false;
+			}
+			else if (UINDEX_MAX / 2 < t_cwd_sys.Size())
+			{
+				t_new_size = UINDEX_MAX;
+			}
+			else
+			{
+				t_new_size = t_cwd_sys.Size() * 2;
+			}
+
+			/* Resize the buffer */
+			if (!t_cwd_sys.Resize(t_new_size))
+			{
+				return false;
+			}
+
+			errno = 0;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	/* Convert to engine string */
+	return MCStringCreateWithSysString(t_cwd_sys.Ptr(), r_path);
 }
 
 Boolean
 MCEmscriptenSystem::SetCurrentFolder(MCStringRef p_path)
 {
-	/* FIXME Implement SetCurrentFolder() */
-	/* For now, can only chdir to the root directory */
-	if (IsRootFolder(p_path))
-		return true;
+	MCEmscriptenAutoStringRefAsSysPath t_path_sys;
+	if (!t_path_sys.LockPath(p_path))
+	{
+		return false;
+	}
 
-	SetErrno(ENOTDIR);
-	return false;
+	errno = 0;
+	return (0 == chdir(*t_path_sys));
 }
 
 bool
@@ -334,8 +437,147 @@ MCEmscriptenSystem::ListFolderEntries(MCStringRef p_folder,
                                       MCSystemListFolderEntriesCallback p_callback,
                                       void *x_context)
 {
-	/* FIXME Implement ListFolderEntries() */
-	return false;
+	/* Cope with legacy usage of ListFolderEntries() without a
+	 * specific target directory path. */
+	if (NULL == p_folder)
+	{
+		return ListFolderEntries(MCSTR("."), p_callback, x_context);
+	}
+
+	MCEmscriptenAutoStringRefAsSysPath t_path_sys;
+	if (!t_path_sys.LockPath(p_folder))
+	{
+		return false;
+	}
+
+	bool t_success = true;
+
+	/* Get a list of all the directory entries.  Using scandir() means
+	 * we get reentrancy without having to fuss around figuring out
+	 * how much memory to allocate. */
+	/* FIXME use scandirat() once it's available in emscripten's libc */
+	struct dirent **t_entries = NULL;
+	int t_num_entries = -1;
+	if (t_success)
+	{
+		errno = 0;
+		t_num_entries = scandir(*t_path_sys, &t_entries, NULL, alphasort);
+		t_success = (t_num_entries >= 0);
+	}
+
+	/* Create a buffer in which to build the full path to each entry in the
+	 * directory.  It'll be expanded as we go. */
+	size_t t_folder_len = strlen(*t_path_sys);
+
+	/* May need an extra separator to ensure that the folder's path ends with
+	 * a separator. */
+	bool t_need_sep = ((*t_path_sys)[t_folder_len - 1] != '/');
+	size_t t_base_len = t_folder_len + (t_need_sep ? 1 : 0);
+
+	MCAutoArray<char> t_entry_path_sys;
+	if (t_success)
+	{
+		/* Overflow check (allowing space for trailing null) */
+		t_success = (t_base_len < UINDEX_MAX - 1);
+	}
+	if (t_success)
+	{
+		/* Allocate buffer */
+		t_success = t_entry_path_sys.New(t_base_len + 1);
+	}
+	if (t_success)
+	{
+		/* Copy in base path */
+		MCMemoryCopy(t_entry_path_sys.Ptr(), *t_path_sys, t_folder_len);
+		/* Ensure trailing separator */
+		t_entry_path_sys[t_folder_len] = '/';
+		/* Ensure nul termination */
+		t_entry_path_sys[t_base_len] = '\0';
+	}
+
+
+	/* Check the properties of each entry in the directory */
+	for (int i = 0; i < t_num_entries && t_success; ++i)
+	{
+		const char *t_entry_name = t_entries[i]->d_name;
+
+		/* Skip directory entries with null names */
+		if (NULL == t_entry_name)
+		{
+			continue;
+		}
+
+		/* Skip the current directory itself */
+		if (MCCStringEqual(t_entry_name, "."))
+		{
+			continue;
+		}
+
+		/* Build the full path to each entry.  We may need to expand the buffer. */
+		size_t t_entry_name_len = strlen(t_entry_name);
+		if (t_entry_name_len > t_entry_path_sys.Size() - t_base_len - 1)
+		{
+			/* Overflow check */
+			if (t_entry_name_len > UINDEX_MAX - t_base_len - 1)
+			{
+				t_success = false;
+				continue;
+			}
+
+			/* Expand buffer */
+			if (!t_entry_path_sys.Extend(t_base_len + t_entry_name_len + 1))
+			{
+				t_success = false;
+				continue;
+			}
+		}
+		/* Copy in entry name after base path */
+		MCMemoryCopy(t_entry_path_sys.Ptr() + t_base_len,
+		             t_entry_name, t_entry_name_len);
+		/* Ensure nul termination */
+		t_entry_path_sys[t_base_len + t_entry_name_len] = '\0';
+
+		struct stat t_stat_buf;
+
+		/* This is sort of racy because the directory being scanned
+		 * could move between scandir() and fstat(). */
+		errno = 0;
+		if (0 != stat(t_entry_path_sys.Ptr(), &t_stat_buf))
+		{
+			/* If the directory entry has gone away (e.g. because it's
+			 * been deleted) just skip it. */
+			t_success = (errno == ENOENT);
+			continue;
+		}
+
+		MCSystemFolderEntry t_engine_entry;
+		if (!MCStringCreateWithSysString(t_entry_name, t_engine_entry.name))
+		{
+			t_success = false;
+			continue;
+		}
+
+		t_engine_entry.data_size = t_stat_buf.st_size;
+		t_engine_entry.modification_time = uint32_t(t_stat_buf.st_mtime);
+		t_engine_entry.access_time = uint32_t(t_stat_buf.st_atime);
+		t_engine_entry.group_id = t_stat_buf.st_gid;
+		t_engine_entry.user_id = t_stat_buf.st_uid;
+		t_engine_entry.permissions = t_stat_buf.st_mode & 0777;
+		t_engine_entry.is_folder = S_ISDIR(t_stat_buf.st_mode);
+
+		/* Run callback */
+		t_success = p_callback(x_context, &t_engine_entry);
+
+		MCValueRelease (t_engine_entry.name);
+	}
+
+	/* Clean up the buffer allocated by scandir() */
+	if (NULL != t_entries)
+	{
+		free(t_entries);
+	}
+
+	return t_success;
 }
 
 Boolean
@@ -377,41 +619,66 @@ MCEmscriptenSystem::GetDrives(MCStringRef & r_drives)
 Boolean
 MCEmscriptenSystem::FileExists(MCStringRef p_path)
 {
-	/* FIXME Implement FileExists() -- using stat(2) */
-	MCEmscriptenNotImplemented();
-	return false;
+	struct stat t_stat_buf;
+	errno = 0;
+	if (!MCEmscriptenStatPath(p_path, t_stat_buf))
+	{
+		/* If the error is ENOENT, then consume the error; we've
+		 * successfully detected that the file does not exist. */
+		if (errno == ENOENT)
+		{
+			errno = 0;
+		}
+		return false;
+	}
+
+	return S_ISREG(t_stat_buf.st_mode);
 }
 
 Boolean
 MCEmscriptenSystem::FolderExists(MCStringRef p_path)
 {
-	/* FIXME Implement FolderExists() -- using stat(2) */
-	MCEmscriptenNotImplemented();
-	return false;
+	struct stat t_stat_buf;
+	errno = 0;
+	if (!MCEmscriptenStatPath(p_path, t_stat_buf))
+	{
+		/* If the error is ENOENT, then consume the error; we've
+		 * successfully detected that the file does not exist. */
+		if (errno == ENOENT)
+		{
+			errno = 0;
+		}
+		return false;
+	}
+
+	return S_ISDIR(t_stat_buf.st_mode);
 }
 
 Boolean
 MCEmscriptenSystem::FileNotAccessible(MCStringRef p_path)
 {
-	/* FIXME Implement FileNotAccessible -- maybe using access(2) */
-	MCEmscriptenNotImplemented();
+	/* This is only ever used to introduce TOCTTOU errors, so just
+	 * pretend that files are always present/accessible. */
 	return false;
 }
 
 Boolean
 MCEmscriptenSystem::ChangePermissions(MCStringRef p_path, uint16_t p_mask)
 {
-	/* FIXME Implement ChangePermissions -- using chmod(2) */
-	MCEmscriptenNotImplemented();
-	return false;
+	MCEmscriptenAutoStringRefAsSysPath t_path_sys;
+	if (!t_path_sys.LockPath(p_path))
+	{
+		return false;
+	}
+
+	errno = 0;
+	return (0 == chmod(*t_path_sys, p_mask));
 }
 
 uint16_t
 MCEmscriptenSystem::UMask(uint16_t p_mask)
 {
-	/* FIXME Implement UMask() -- using umask(2) */
-	MCEmscriptenNotImplemented();
-	return 0;
+	return umask(p_mask);
 }
 
 IO_handle
@@ -434,12 +701,17 @@ MCEmscriptenSystem::OpenFile(MCStringRef p_path,
 		t_open_flags = O_RDONLY;
 		break;
 	case kMCOpenFileModeWrite:
+		t_open_flags = O_WRONLY | O_TRUNC | O_CREAT;
+		break;
 	case kMCOpenFileModeUpdate:
+		t_open_flags = O_RDWR | O_CREAT;
+		break;
 	case kMCOpenFileModeAppend:
-		MCEmscriptenNotImplemented();
-		return NULL;
+		t_open_flags = O_RDWR | O_APPEND | O_CREAT;
+		break;
 	default:
 		MCUnreachable();
+		return NULL;
 	}
 
 	errno = 0;
@@ -456,9 +728,7 @@ IO_handle
 MCEmscriptenSystem::OpenFd(uint32_t p_fd,
                            intenum_t p_mode)
 {
-	/* FIXME Implement OpenFd() */
-	MCEmscriptenNotImplemented();
-	return NULL;
+	return new MCEmscriptenFileHandle(p_fd);
 }
 
 IO_handle
@@ -515,27 +785,65 @@ MCEmscriptenSystem::ResolvePath(MCStringRef p_path,
 	/* ---------- 1. Expand user prefix */
 	MCAutoStringRef t_user_expand;
 
-	/* At the moment, no user exists other than the current user,
-	 * whose home directory is "/" */
+	/* Check for a user prefix */
+	if (MCStringBeginsWithCString(p_path, (const char_t *) "~",
+	                              kMCStringOptionCompareExact))
+	{
+		/* Split into user part and rest of path */
+		MCAutoStringRef t_user_part;
+		MCAutoStringRef t_rel_part;
+		uindex_t t_sep_offset;
+		bool t_have_rel_part;
 
-	if (MCStringIsEqualToCString(p_path, "~", kMCStringOptionCompareExact))
-	{
-		return MCStringCreateWithCString("/", r_resolved_path);
-	}
-	else if (MCStringBeginsWithCString(p_path, (const char_t *) "~/",
-	                                   kMCStringOptionCompareExact))
-	{
-		if (!MCStringCopySubstring(p_path, MCRangeMake(1, UINDEX_MAX), &t_user_expand))
+		if (MCStringFirstIndexOfChar(p_path, '/', 0,
+		                             kMCStringOptionCompareExact,
+		                             t_sep_offset))
 		{
-			return false;
+			t_have_rel_part = true;
+
+			if (!MCStringDivideAtIndex(p_path, t_sep_offset,
+			                           &t_user_part, &t_rel_part))
+			{
+				return false;
+			}
+		}
+		else
+		{
+			t_have_rel_part = false;
+			t_user_part = p_path;
+			t_rel_part = kMCEmptyString;
+		}
+
+		/* At the moment, no user exists other than the current user,
+		 * whose home directory is "/livecode" */
+		if (MCStringIsEqualToCString(*t_user_part, "~",
+		                             kMCStringOptionCompareExact) ||
+		    MCStringIsEqualToCString(*t_user_part, "~livecode",
+		                             kMCStringOptionCompareExact))
+		{
+			if (t_have_rel_part)
+			{
+				if (!MCStringFormat(&t_user_expand, "%@/%@",
+				                    MCSTR("/livecode"), *t_rel_part))
+				{
+					return false;
+				}
+			}
+			else
+			{
+				t_user_expand = MCSTR("/livecode");
+			}
+		}
+		else
+		{
+			/* User prefix doesn't correspond to an actual username */
+			t_user_expand = p_path;
 		}
 	}
 	else
 	{
-		if (!MCStringCopy(p_path, &t_user_expand))
-		{
-			return false;
-		}
+		/* No user prefix */
+		t_user_expand = p_path;
 	}
 
 	/* ---------- 2. Make absolute */
@@ -557,7 +865,8 @@ MCEmscriptenSystem::ResolvePath(MCStringRef p_path,
 		MCAutoStringRef t_cwd;
 		if (!GetCurrentFolder(&t_cwd))
 		{
-			return false;
+			/* System error -> return "best" expansion */
+			return MCStringCopy(*t_user_expand, r_resolved_path);
 		}
 
 		const char *t_fmt;
@@ -578,9 +887,35 @@ MCEmscriptenSystem::ResolvePath(MCStringRef p_path,
 	}
 
 	/* ---------- 3. Follow all symlinks */
-	/* No symlinks! */
 
-	return MCStringCopy(*t_absolute, r_resolved_path);
+	MCAutoStringRefAsSysString t_absolute_sys;
+	if (!t_absolute_sys.Lock(*t_absolute))
+	{
+		return false;
+	}
+
+	/* Use realpath(3) to recursively resolve symlinks */
+	errno = 0;
+	char *t_realpath_buf = realpath(*t_absolute_sys, NULL);
+	if (NULL == t_realpath_buf)
+	{
+		/* System error -> return "best" expansion */
+		return MCStringCopy(*t_absolute, r_resolved_path);
+	}
+
+	MCAutoStringRef t_realpath;
+	bool t_realpath_ok = MCStringCreateWithSysString(t_realpath_buf,
+	                                                 &t_realpath);
+
+	free(t_realpath_buf);
+
+	if (!t_realpath_ok)
+	{
+		return false;
+	}
+
+
+	return MCStringCopy(*t_realpath, r_resolved_path);
 }
 
 bool
