@@ -18,6 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "em-dc-mainloop.h"
 #include "em-dc.h"
+#include "em-standalone.h"
 #include "em-util.h"
 
 #include "globals.h"
@@ -169,6 +170,16 @@ X_init(int argc,
 		}
 	}
 	MCEmscriptenCreateArgCountVar(argc);
+
+	/* ---------- Initialise the filesystem */
+
+	/* We have to unpack the standalone data here rather than in
+	 * MCDispatch::startup() because we have to have font data
+	 * available in the VFS before calling X_open(). */
+	if (!MCEmscriptenStandaloneUnpack())
+	{
+		return false;
+	}
 
 	/* ---------- Continue booting... */
 	return X_open(argc, argv, envp);

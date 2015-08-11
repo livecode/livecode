@@ -242,14 +242,6 @@ bool
 MCEmscriptenSystem::GetEnv(MCStringRef p_name,
                            MCStringRef & r_value)
 {
-	/* FIXME Force test stack loading */
-	if (MCStringIsEqualToCString(p_name,
-	                             "TEST_STACK",
-	                             kMCStringOptionCompareExact))
-	{
-		return MCStringCreateWithCString("/boot/boot.livecode", r_value);
-	}
-
 	/* No environment variables */
 	r_value = MCValueRetain(kMCEmptyString);
 	return true;
