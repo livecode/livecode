@@ -2,7 +2,7 @@
 	'variables':
 	{
 		'mobile': 1,
-		'output_dir': '../emscripten-js-bin',
+		'output_dir': '../emscripten-bin',
 	},
 
 	'target_defaults':
