@@ -518,6 +518,43 @@ IO_stat MCDispatch::startup(void)
 	return IO_NORMAL;
 }
 
+#elif defined(__EMSCRIPTEN__)
+
+#define kMCEmscriptenBootStackFilename "/boot/__boot.livecode"
+
+IO_stat
+MCDispatch::startup()
+{
+	/* The standalone data should already have been unpacked by now */
+
+	/* FIXME Hardcoded boot stack path*/
+	MCStack *t_stack;
+	if (IO_NORMAL != MCdispatcher->loadfile(MCSTR(kMCEmscriptenBootStackFilename),
+	                                        t_stack))
+	{
+		MCresult->sets("failed to read initial stackfile");
+		return IO_ERROR;
+	}
+
+	MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
+
+	MCModeResetCursors();
+	MCImage::init();
+
+	MCallowinterrupts = false;
+
+	t_stack->extraopen(false);
+
+	send_startup_message();
+
+	if (!MCquit)
+	{
+		t_stack->open();
+	}
+
+	return IO_NORMAL;
+}
+
 #else
 
 IO_stat MCDispatch::startup(void)
