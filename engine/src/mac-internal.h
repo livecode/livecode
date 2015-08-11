@@ -150,17 +150,20 @@ class MCMacPlatformSurface;
     
     MCPlatformDialogResult mResult;
     MCColor mColorPicked;
+	id eventMonitor;
 }
 
 -(id)   initWithColorPanel: (NSColorPanel*)p_panel
                contentView: (NSView*) p_view;
 -(void) dealloc;
+-(void) windowDidBecomeKey:(NSNotification *)notification;
 -(void) windowWillClose: (NSNotification *)notification;
 -(void) windowDidResize:(NSNotification *)notification;
 -(void) getColor;
 //-(void) changeColor:(id)sender;
 -(void) pickerCancelClicked;
 -(void) pickerOkClicked;
+-(void) processEscKeyDown;
 -(void) relayout;
 
 @end
