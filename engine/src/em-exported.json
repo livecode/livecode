@@ -1,12 +1,2 @@
 [
-    '_main',
-    '_MCEmscriptenGetCurrentStack',
-    '_MCEmscriptenEventEncodeModifiers',
-
-    '_MCEventQueuePostImeCompose',
-    '_MCEventQueuePostMouseFocus',
-    '_MCEventQueuePostMousePosition',
-    '_MCEventQueuePostMousePress',
-    '_MCEventQueuePostKeyFocus',
-    '_MCEventQueuePostKeyPress'
 ]
