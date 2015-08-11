@@ -171,12 +171,12 @@ dist-tools: dist-tools-community
 distmac-disk: distmac-disk-community
 
 dist-tools-community:
-	$(buildtool_command) --platform mac --stage tools --edition community \
+	$(buildtool_command) --platform mac --platform win --platform linux --stage tools --edition community \
 	  --built-docs-dir $(docs_build_dir)/cooked-community
 dist-tools-commercial:
-	$(buildtool_command) --platform mac --stage tools --edition indy \
+	$(buildtool_command) --platform mac --platform win --platform linux --stage tools --edition indy \
 	  --built-docs-dir $(docs_build_dir)/cooked-commercial
-	$(buildtool_command) --platform mac --stage tools --edition business \
+	$(buildtool_command) --platform mac --platform win --platform linux --stage tools --edition business \
 	  --built-docs-dir $(docs_build_dir)/cooked-commercial
 
 # Make a list of installers to be uploaded to the distribution server
