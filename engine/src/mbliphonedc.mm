@@ -722,6 +722,14 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		else if (!done && eventtime > curtime)
 			t_sleep = MCMin(eventtime - curtime, exittime - curtime);
 		
+        extern Boolean MCS_handle_sockets();
+        if (MCS_handle_sockets())
+        {
+            if (anyevent)
+                done = True;
+            t_sleep = 0.0;
+        }
+        
 		// Switch to the main fiber and wait for at most t_sleep seconds. This
 		// returns 'true' if the wait was broken rather than timed out.
 		if (MCIPhoneWait(t_sleep) && anyevent)
