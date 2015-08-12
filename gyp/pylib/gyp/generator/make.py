@@ -287,7 +287,7 @@ CXX.target ?= %(CXX.target)s
 CXXFLAGS.target ?= $(CXXFLAGS)
 LINK.target ?= %(LINK.target)s
 LDFLAGS.target ?= $(LDFLAGS)
-AR.target ?= $(AR)
+AR.target ?= %(AR.target)s
 
 # C++ apps need to be linked with g++.
 LINK ?= $(CXX.target)
