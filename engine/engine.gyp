@@ -281,12 +281,17 @@
 						'product_dir': '<(PRODUCT_DIR)',	# Shared libraries are not placed in PRODUCT_DIR by default
 						'type': 'shared_library',
 						
+						'sources':
+						[
+							'engine/linux.link',
+						],
+						
 						'ldflags':
 						[
 							# Helpful for catching build problems
 							'-Wl,-no-undefined',
 							
-							'-Wl,-T,<(src_top_dir_abs)/engine/linux.link',
+							'-Wl,-T,$(abs_srcdir)/engine/linux.link',
 						],
 						
 						'actions':
