@@ -49,6 +49,8 @@
 				'src/libbrowser_uiwebview.h',
 				'src/libbrowser_uiwebview.mm',
 				
+				'src/libbrowser_android.cpp',
+				
 				'src/libbrowser_desktop_factories.cpp',
 				'src/libbrowser_ios_factories.cpp',
 			],
@@ -111,6 +113,16 @@
 						[
 							'src/libbrowser_uiwebview.mm',
 							'src/libbrowser_ios_factories.cpp',
+						],
+					},
+				],
+				
+				[
+					'OS != "android"',
+					{
+						'sources!':
+						[
+							'src/libbrowser_android.cpp',
 						],
 					},
 				],

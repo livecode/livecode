@@ -57,7 +57,7 @@ metadata javascripthandlers.editor is "com.livecode.pi.text"
 
 --------------------------------------------------------------------------------
 
-foreign handler MCHandlerGetFunctionPtr(in pHandler, out rFuncPtr as Pointer) returns CBool binds to "<builtin>"
+foreign handler MCHandlerGetFunctionPtr(in pHandler as any, out rFuncPtr as Pointer) returns CBool binds to "<builtin>"
 
 --------------------------------------------------------------------------------
 

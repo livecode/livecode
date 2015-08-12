@@ -65,6 +65,8 @@ public:
     void setRect(const MCRectangle& p_rect);
     void placeViewBelow(AndroidView* p_other_view);
     void removeFromMainView();
+	
+	jobject getView();
     
 private:
     
@@ -87,6 +89,11 @@ MCNativeLayerAndroid::AndroidView::AndroidView(jobject p_java_object) :
 MCNativeLayerAndroid::AndroidView::~AndroidView()
 {
     MCJavaGetThreadEnv()->DeleteGlobalRef(m_java_object);
+}
+
+jobject MCNativeLayerAndroid::AndroidView::getView()
+{
+	return m_java_object;
 }
 
 void MCNativeLayerAndroid::AndroidView::setRect(const MCRectangle& p_rect)
@@ -121,11 +128,11 @@ void MCNativeLayerAndroid::AndroidView::removeFromMainView()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeLayerAndroid::MCNativeLayerAndroid(MCWidgetRef p_widget) :
+MCNativeLayerAndroid::MCNativeLayerAndroid(MCWidgetRef p_widget, jobject p_view) :
   m_widget(p_widget),
   m_view(NULL)
 {
-    ;
+	m_view = new AndroidView(p_view);
 }
 
 MCNativeLayerAndroid::~MCNativeLayerAndroid()
@@ -184,13 +191,8 @@ void MCNativeLayerAndroid::doAttach()
     
     if (m_view == nil)
         return;
-    
-    // Restore the visibility state of the widget (in case it changed due to a
-    // tool change while on another card - we don't get a message then)
-    if ((t_widget->getflags() & F_VISIBLE) && t_widget->isInRunMode())
-        addToMainView();
-    else
-        m_view->removeFromMainView();
+	
+	OnVisibilityChanged(ShouldShowWidget(t_widget));
 }
 
 void MCNativeLayerAndroid::OnDetach()
@@ -241,7 +243,10 @@ void MCNativeLayerAndroid::OnVisibilityChanged(bool p_visible)
         return;
     
     if (p_visible)
+	{
         addToMainView();
+		OnGeometryChanged(MCRectangleMake(0,0,0,0));
+	}
     else
         m_view->removeFromMainView();
 }
@@ -282,9 +287,19 @@ void MCNativeLayerAndroid::addToMainView()
     doRelayer();
 }
 
+bool MCNativeLayerAndroid::GetNativeView(void *&r_view)
+{
+	if (m_view == nil)
+		return false;
+	
+	r_view = m_view->getView();
+	
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeLayer* MCWidget::createNativeLayer()
+MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCWidgetRef p_widget, void *p_view)
 {
-    return new MCNativeLayerAndroid(getwidget());
+    return new MCNativeLayerAndroid(p_widget, (jobject)p_view);
 }

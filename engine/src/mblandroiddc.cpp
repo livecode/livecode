@@ -426,6 +426,14 @@ bool MCScreenDC::device_getwindowgeometry(Window w, MCRectangle &drect)
 	return true;
 }
 
+void *MCScreenDC::GetNativeWindowHandle(Window p_window)
+{
+	if (p_window == nil)
+		return nil;
+	
+	return s_android_container;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCScreenDC::beep(void)
