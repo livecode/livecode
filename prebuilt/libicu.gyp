@@ -46,7 +46,7 @@
 						},
 					],
 					[
-						'OS == "ios"',
+						'toolset_os == "ios"',
 						{
 							'libraries':
 							[
@@ -82,7 +82,7 @@
 						},
 					],
 					[
-						'OS == "android"',
+						'toolset_os == "android"',
 						{
 							# Gyp doesn't seem to handle non-absolute paths here properly...
 							'library_dirs':
@@ -104,7 +104,7 @@
 						},
 					],
 					[
-						'OS == "win"',
+						'toolset_os == "win"',
 						{
 							'library_dirs':
 							[
