@@ -33,15 +33,40 @@
 					[
 						'toolset_os == "mac"',
 						{
-							'libraries':
+							'conditions':
 							[
-								'lib/mac/libicui18n.a',
-								'lib/mac/libicuio.a',
-								'lib/mac/libicule.a',
-								'lib/mac/libiculx.a',
-								'lib/mac/libicutu.a',
-								'lib/mac/libicuuc.a',
-								'lib/mac/libicudata.a',
+								[
+									'GENERATOR == "xcode"',
+									{
+										'libraries':
+										[
+											'lib/mac/libicui18n.a',
+											'lib/mac/libicuio.a',
+											'lib/mac/libicule.a',
+											'lib/mac/libiculx.a',
+											'lib/mac/libicutu.a',
+											'lib/mac/libicuuc.a',
+											'lib/mac/libicudata.a',
+										],
+									},
+									{
+										'library_dirs':
+										[
+											'lib/mac',
+										],
+										
+										'libraries':
+										[
+											'-licui18n',
+											'-licuio',
+											'-licule',
+											'-liculx',
+											'-licutu',
+											'-licuuc',
+											'-licudata',
+										],
+									},
+								],
 							],
 						},
 					],
