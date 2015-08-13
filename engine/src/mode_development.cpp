@@ -1230,6 +1230,13 @@ bool MCModeHasCommandLineArguments(void)
     return false;
 }
 
+// In development mode, we process environment variables
+bool
+MCModeHasEnvironmentVariables()
+{
+	return true;
+}
+
 // In development mode, we always automatically open stacks.
 bool MCModeShouldLoadStacksOnStartup(void)
 {

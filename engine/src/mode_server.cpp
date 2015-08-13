@@ -286,6 +286,13 @@ bool MCModeHasCommandLineArguments(void)
     return true;
 }
 
+// In server mode, we have environment variables
+bool
+MCModeHasEnvironmentVariables()
+{
+	return true;
+}
+
 // In standalone mode, we only automatically open stacks if there isn't an
 // embedded stack.
 bool MCModeShouldLoadStacksOnStartup(void)
