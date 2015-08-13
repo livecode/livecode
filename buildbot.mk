@@ -126,7 +126,7 @@ UPLOAD_MAX_RETRIES = 50
 dist-docs: dist-docs-community
 
 ifeq ($(BUILD_EDITION),commercial)
-dist-dics: dist-docs-commercial
+dist-docs: dist-docs-commercial
 endif
 
 dist-docs-community:
