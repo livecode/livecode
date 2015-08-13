@@ -911,8 +911,10 @@ X_open_environment_variables_store(MCArrayRef x_array,
 	/* Create a global variable for the environment variable, but
 	 * only if the variable name is a valid token beginning with a
 	 * capital letter. */
+	unichar_t t_first = MCStringGetCharAtIndex(p_name_str, 0);
 	if (p_make_global &&
-	    isupper(MCStringGetCharAtIndex(p_name_str, 0)) &&
+	    '#' != t_first &&
+	    !isdigit(t_first) &&
 	    MCU_is_token(p_name_str))
 	{
 		MCAutoStringRef t_global_str;
