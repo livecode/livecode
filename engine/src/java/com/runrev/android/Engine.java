@@ -995,24 +995,29 @@ public class Engine extends View implements EngineApi
         t_view.setLayoutParams(t_layout);
     }
 
+	Object createNativeControl(String p_class_name)
+	{
+		return m_native_control_module.createControl(p_class_name);
+	}
+    
     Object createBrowserControl()
     {
-        return m_native_control_module.createBrowser();
+        return m_native_control_module.createControl("com.runrev.android.nativecontrol.BrowserControl");
     }
 
     Object createScrollerControl()
     {
-        return m_native_control_module.createScroller();
+        return m_native_control_module.createControl("com.runrev.android.nativecontrol.ScrollerControl");
     }
     
     Object createPlayerControl()
     {
-        return m_native_control_module.createPlayer();
+        return m_native_control_module.createControl("com.runrev.android.nativecontrol.PlayerControl");
     }
     
     Object createInputControl()
     {
-        return m_native_control_module.createInput();
+        return m_native_control_module.createControl("com.runrev.android.nativecontrol.InputControl");
     }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1653,7 +1658,7 @@ public class Engine extends View implements EngineApi
         
         boolean t_success = true;
 
-        m_video_control = (VideoControl)m_native_control_module.createPlayer();
+        m_video_control = (VideoControl)m_native_control_module.createControl("com.runrev.android.nativecontrol.VideoControl");
         m_native_control_module.addControl(m_video_control);
 
 		Rect t_workarea = getWorkarea();
@@ -2796,6 +2801,9 @@ public class Engine extends View implements EngineApi
         if (m_sound_module != null)
             m_sound_module.onPause();
 
+		if (m_native_control_module != null)
+			m_native_control_module.onPause();
+		
 		if (m_video_is_playing)
 			m_video_control . suspend();
 
@@ -2815,6 +2823,9 @@ public class Engine extends View implements EngineApi
 
         if (m_sound_module != null)
             m_sound_module.onResume();
+		
+		if (m_native_control_module != null)
+			m_native_control_module.onResume();
 
 		if (m_video_is_playing)
 			m_video_control . resume();

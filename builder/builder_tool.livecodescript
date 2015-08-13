@@ -22,7 +22,7 @@ on startup
    put "community" into tEdition
    put "stable" into tBuild
    
-   local tEngineDir, tPrivateDir, tOutputDir, tWorkDir
+   local tEngineDir, tPrivateDir, tOutputDir, tWorkDir, tDocsDir, tBuiltDocsDir
    
    put 1 into tArgIndex
    repeat while tArgIndex is among the keys of tArgs
@@ -47,7 +47,7 @@ on startup
          put tArgs[tArgIndex + 1] into tStage
          add 1 to tArgIndex
       else if tArgs[tArgIndex] is "--edition" then
-         if tArgs[tArgIndex + 1] is not among the items of "community,commercial" then
+         if tArgs[tArgIndex + 1] is not among the items of "community,indy,business,commercial" then
             __builderLog "error", "Unknown edition '" & tArgs[tArgIndex + 1] & "'"
          end if
          put tArgs[tArgIndex + 1] into tEdition
@@ -82,6 +82,18 @@ on startup
          end if
          put tArgs[tArgIndex + 1] into tWorkDir
          add 1 to tArgIndex
+      else if tArgs[tArgIndex] is "--docs-dir" then
+         if tArgs[tArgIndex + 1] is empty then
+            __builderLog "error", "No path specified for --docs-dir argument"
+         end if
+         put tArgs[tArgIndex + 1] into tDocsDir
+         add 1 to tArgIndex
+      else if tArgs[tArgIndex] is "--built-docs-dir" then
+         if tArgs[tArgIndex + 1] is empty then
+            __builderLog "error", "No path specified for --built-docs-dir argument"
+         end if
+         put tArgs[tArgIndex + 1] into tBuiltDocsDir
+         add 1 to tArgIndex
       else if tArgs[tArgIndex] is "--warn-as-error" then
          put true into sWarnAsError
       end if
@@ -90,6 +102,10 @@ on startup
    
    if the keys of tPlatforms is empty and tStage is "tools" then
       __builderLog "error", "No platforms specified"
+   end if
+   
+   if tEdition is "commercial" and tStage is not "server" then
+      __builerLog "error", "Commercial is only a valid edition for server packages"
    end if
    
    if tStage is "environment" then
@@ -114,6 +130,14 @@ on startup
    
    if tWorkDir is not empty then
       builderSetWorkDir tWorkDir
+   end if
+   
+   if tDocsDir is not empty then
+      builderSetDocsDir tDocsDir
+   end if
+   
+   if tBuiltDocsDir is not empty then
+      builderSetBuiltDocsDir tBuiltDocsDir
    end if
    
    builderBuild tStage, the keys of tPlatforms, tEdition, tBuild

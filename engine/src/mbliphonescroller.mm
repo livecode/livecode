@@ -186,7 +186,7 @@ MCObjectPropertyTable MCiOSScrollerControl::kPropertyTable =
 
 MCNativeControlActionInfo MCiOSScrollerControl::kActions[] =
 {
-    DEFINE_CTRL_EXEC_METHOD(FlashScrollIndicators, MCiOSScrollerControl, FlashScrollIndicators)
+    DEFINE_CTRL_EXEC_METHOD(FlashScrollIndicators, Void, MCiOSScrollerControl, FlashScrollIndicators)
 };
 
 MCNativeControlActionTable MCiOSScrollerControl::kActionTable =

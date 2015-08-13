@@ -992,6 +992,14 @@ inline bool MCMemoryEqual(const void *left, const void *right, size_t size) { re
 // compared using byte-wise lexicographic ordering.
 inline compare_t MCMemoryCompare(const void *left, const void *right, size_t size) { return memcmp(left, right, size); }
 
+//////////
+
+// Clear the memory of the given structure to all 0's
+template <typename T> void inline MCMemoryClear(T&p_struct)
+{
+	MCMemoryClear(&p_struct, sizeof(T));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  RESIZABLE BLOCK ALLOCATION (UNINITIALIZED)
