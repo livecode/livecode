@@ -481,10 +481,13 @@ command toolsBuilderMakeDisk pVersion, pEdition, pPlatform, tInputZip
       builderLog "warning", "No valid identity found for signing OSX installer"
    end if
    
+   local tEdition
+   put toUpper(char 1 of pEdition) & toLower(char 2 to -1 of pEdition) into tEdition
+   
    local tDmgFile, tDmgName, tDmgAppFolder
    put tOutputFileStub & ".dmg" into tDmgFile
-    put "LiveCode" && pEdition && getReadableVersion(pVersion) && "Installer" into tDmgName
-    put (tOutputFileFolder & slash & "Install LiveCode" && pEdition && getReadableVersion(pVersion) & ".app") into tDmgAppFolder
+    put "LiveCode" && tEdition && getReadableVersion(pVersion) && "Installer" into tDmgName
+    put (tOutputFileFolder & slash & "Install LiveCode" && tEdition && getReadableVersion(pVersion) & ".app") into tDmgAppFolder
    builderLog "message", "Building Mac DMG to '" & tDmgFile & "'"
    if there is a file tDmgFile then
       delete file tDmgFile
