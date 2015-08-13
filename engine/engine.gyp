@@ -411,6 +411,18 @@
 					'OS == "emscripten"',
 					{
 						'product_name': 'standalone-community.bc',
+						'all_dependent_settings':
+						{
+							'variables':
+							{
+								'dist_aux_files':
+								[
+									'<(PRODUCT_DIR)/standalone-community.js',
+									'<(PRODUCT_DIR)/standalone-community.html',
+									'<(PRODUCT_DIR)/standalone-community.html.mem',
+								],
+							},
+						},
 					},
 				],
 			],
@@ -434,7 +446,13 @@
 							},
 						],
 						[
-							'OS != "android" and OS != "ios"',
+							'OS == "emscripten"',
+							{
+								'dist_files': [],
+							}
+						],
+						[
+							'OS != "android" and OS != "ios" and OS != "emscripten"',
 							{
 								'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(app_bundle_suffix)' ],
 							}
@@ -783,7 +801,9 @@
 
 								'outputs':
 								[
+									'<(PRODUCT_DIR)/standalone-community.js',
 									'<(PRODUCT_DIR)/standalone-community.html',
+									'<(PRODUCT_DIR)/standalone-community.html.mem',
 								],
 
 								'action':
