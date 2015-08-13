@@ -288,4 +288,7 @@ inline MCRectangle MCU_make_rect(int2 x, int2 y, uint2 w, uint2 h)
 	return r;
 }
 
+// Test whether p_string is a valid LiveCode script token
+extern bool MCU_is_token(MCStringRef p_string);
+
 #endif
