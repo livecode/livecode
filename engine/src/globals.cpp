@@ -989,7 +989,7 @@ X_open_environment_variables(MCStringRef envp[])
 			}
 
 			if (!MCStringCopySubstring(t_env_var,
-			                           MCRangeMake(t_equal + 1, UINT32_MAX),
+			                           MCRangeMake(t_equal + 1, UINDEX_MAX),
 			                           &t_env_value))
 			{
 				return false;
