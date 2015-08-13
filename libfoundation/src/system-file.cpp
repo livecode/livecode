@@ -197,6 +197,15 @@ MCSFileGetDirectoryEntries (MCStringRef p_path,
 	                        NULL);
 }
 
+MC_DLLEXPORT_DEF bool
+MCSFileGetType (MCStringRef p_path,
+                bool p_follow_links,
+                MCSFileType & r_type)
+{
+	MCS_FILE_CONVERT_PATH(p_path, t_native_path);
+	return __MCSFileGetType(t_native_path, p_follow_links, r_type);
+}
+
 /* ================================================================
  * Initialization
  * ================================================================ */

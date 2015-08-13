@@ -700,3 +700,43 @@ __MCSFileGetDirectoryEntries (MCStringRef p_native_path,
 	free (t_raw_entries);
 	return false;
 }
+
+bool
+__MCSFileGetType (MCStringRef p_native_path,
+                  bool p_follow_links,
+                  MCSFileType & r_type)
+{
+	/* Get a system path */
+	MCAutoStringRefAsSysString t_path_sys;
+	if (!t_path_sys.Lock (p_native_path))
+		return false;
+
+	struct stat t_stat_buf;
+	int t_stat_result;
+
+	if (p_follow_links)
+	{
+		t_stat_result = stat (*t_path_sys, &t_stat_buf);
+	}
+	else
+	{
+		t_stat_result = lstat (*t_path_sys, &t_stat_buf);
+	}
+
+	if (0 != t_stat_result)
+	{
+		return __MCSFileThrowIOErrorWithErrno (p_native_path, MCSTR("Failed to stat %{path}: %{description}"), errno);
+	}
+
+	switch (t_stat_buf.st_mode & S_IFMT)
+	{
+	case S_IFREG: r_type = kMCSFileTypeRegular; break;
+	case S_IFDIR: r_type = kMCSFileTypeDirectory; break;
+	case S_IFLNK: r_type = kMCSFileTypeSymbolicLink; break;
+
+	default:
+		return __MCSFileThrowIOErrorWithErrno (p_native_path, MCSTR("Unsupported file type for %{path}"), EIO);
+	}
+
+	return true;
+}
