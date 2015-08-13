@@ -3354,9 +3354,11 @@ MCU_is_token(MCStringRef p_string)
 {
 	MCScriptPoint sp(p_string);
 
-	MCerrorlock++;
+	++MCerrorlock;
 
 	Parse_stat ps = sp.nexttoken();
+
+	--MCerrorlock;
 
 	if (ps == PS_ERROR || ps == PS_EOF)
 	{
