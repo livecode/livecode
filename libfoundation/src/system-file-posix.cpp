@@ -344,7 +344,6 @@ __MCSFileSetContents (MCStringRef p_native_path,
 	if (!t_path_sys.Lock(p_native_path))
 		return false;
 
-	bool t_target_exists;
 	struct stat t_target_statbuf;
 	if (0 == lstat (*t_path_sys, &t_target_statbuf) &&
 	    t_target_statbuf.st_size > 0)
