@@ -912,7 +912,8 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 		for (uint32_t i = 0 ; envp[i] != nil ; i++)
 		{
 			MCStringRef t_env_var = envp[i];
-			if (isupper(MCStringGetCharAtIndex(t_env_var, 0)))
+			if (isupper(MCStringGetCharAtIndex(t_env_var, 0)) &&
+			    MCU_is_token(t_env_var))
 			{
 				uindex_t t_equal;
 				/* UNCHECKED */ MCStringFirstIndexOfChar(t_env_var, '=', 0, kMCStringOptionCompareExact, t_equal);
