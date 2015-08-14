@@ -1760,37 +1760,42 @@ void MCAndroidObjectCallWithArgs(jobject p_object, const char *p_method, const c
 {
     bool t_success = true;
 
+	JNIEnv *t_env = MCJavaGetThreadEnv();
+	
     MCJavaMethodParams *t_params = nil;
-    jclass t_class = s_java_env->GetObjectClass(p_object);
+    jclass t_class = t_env->GetObjectClass(p_object);
 
-    t_success = MCJavaConvertParameters(s_java_env, p_signature, p_args, t_params);
+    t_success = MCJavaConvertParameters(t_env, p_signature, p_args, t_params);
 
     if (t_success)
         MCAndroidJavaMethodCall(t_class, p_object, p_method, p_return_value, t_params, p_on_engine_thread);
 
-    MCJavaMethodParamsFree(s_java_env, t_params);
-    s_java_env->DeleteLocalRef(t_class);
+    MCJavaMethodParamsFree(t_env, t_params);
+    if (t_class != nil)
+		t_env->DeleteLocalRef(t_class);
 }
 
 void MCAndroidStaticCallWithArgs(const char *p_class, const char *p_method, const char *p_signature, void *p_return_value, bool p_on_engine_thread, va_list p_args)
 {
     bool t_success = true;
 
+	JNIEnv *t_env = MCJavaGetThreadEnv();
+	
     MCJavaMethodParams *t_params = nil;
     jclass t_class = nil;
 
 	if (t_success)
-		t_success = nil != (t_class = s_java_env->FindClass(p_class));
+		t_success = nil != (t_class = t_env->FindClass(p_class));
 		
 	if (t_success)
-		t_success = MCJavaConvertParameters(s_java_env, p_signature, p_args, t_params);
+		t_success = MCJavaConvertParameters(t_env, p_signature, p_args, t_params);
 
     if (t_success)
         MCAndroidJavaMethodCall(t_class, nil, p_method, p_return_value, t_params, p_on_engine_thread);
 
-    MCJavaMethodParamsFree(s_java_env, t_params);
+    MCJavaMethodParamsFree(t_env, t_params);
     if (t_class != nil)
-		s_java_env->DeleteLocalRef(t_class);
+		t_env->DeleteLocalRef(t_class);
 }
 
 void MCAndroidObjectCall(jobject p_object, const char *p_method, const char *p_signature, void *p_return_value, ...)
