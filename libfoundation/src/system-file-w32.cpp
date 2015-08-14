@@ -772,7 +772,7 @@ __MCSFileGetType (MCStringRef p_native_path,
 
 	if (INVALID_FILE_ATTRIBUTES == t_attributes)
 	{
-		return __MCSFileThrowIOErrorWithErrorCode (p_native_path, MCSTR("Failed to get attributes from file '%{path}': %{description}"), p_error_code);
+		return __MCSFileThrowIOErrorWithErrorCode (p_native_path, MCSTR("Failed to get attributes from file '%{path}': %{description}"), GetLastError());
 	}
 
 	/* Symbolic links are indicated by the reparse point flag.  But the other
