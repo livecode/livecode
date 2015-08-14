@@ -730,12 +730,10 @@ __MCSFileGetType (MCStringRef p_native_path,
 
 	switch (t_stat_buf.st_mode & S_IFMT)
 	{
-	case S_IFREG: r_type = kMCSFileTypeRegular; break;
-	case S_IFDIR: r_type = kMCSFileTypeDirectory; break;
+	case S_IFREG: r_type = kMCSFileTypeRegular;      break;
+	case S_IFDIR: r_type = kMCSFileTypeDirectory;    break;
 	case S_IFLNK: r_type = kMCSFileTypeSymbolicLink; break;
-
-	default:
-		return __MCSFileThrowIOErrorWithErrno (p_native_path, MCSTR("Unsupported file type for %{path}"), EIO);
+	default:      r_type = kMCSFileTypeUnsupported;  break;
 	}
 
 	return true;

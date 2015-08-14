@@ -117,6 +117,9 @@ enum MCSFileType
 	kMCSFileTypeRegular = (1 << 0),
 	kMCSFileTypeDirectory = (1 << 1),
 	kMCSFileTypeSymbolicLink = (1 << 5),
+
+	/* File type known, but cannot be expressed with MCSFileType */
+	kMCSFileTypeUnsupported = (1 << 31),
 };
 
 /* Delete the file at path. */
