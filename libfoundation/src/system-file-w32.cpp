@@ -92,7 +92,7 @@ static bool
 __MCSFileThrowReadErrorWithErrorCode (MCStringRef p_native_path,
                                       DWORD p_error_code)
 {
-	return __MCSFileThrowIOErrorWithErrorCode (p_native_path, MCSTR("Failed to read from file '%{path}': %{description"), p_error_code);
+	return __MCSFileThrowIOErrorWithErrorCode (p_native_path, MCSTR("Failed to read from file '%{path}': %{description}"), p_error_code);
 }
 
 static bool
