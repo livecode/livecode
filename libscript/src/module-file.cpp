@@ -62,6 +62,21 @@ MCFileExecGetDirectoryEntries (MCStringRef p_path,
 
 ////////////////////////////////////////////////////////////////
 
+extern "C" MC_DLLEXPORT_DEF void
+MCFileEvalPathIsDirectory (MCStringRef p_path, bool & r_is_directory)
+{
+	MCSFileType t_type;
+
+	if (!MCSFileGetType(p_path, true, t_type))
+	{
+		return;
+	}
+
+	r_is_directory = (t_type == kMCSFileTypeDirectory);
+}
+
+////////////////////////////////////////////////////////////////
+
 extern "C" bool com_livecode_file_Initialize (void)
 {
 	return true;
