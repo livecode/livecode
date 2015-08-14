@@ -908,9 +908,10 @@ X_open_environment_variables_store(MCArrayRef x_array,
 	// the environment variables on server, as they have been copied
 	// to $_SERVER
 #ifndef _SERVER
-	/* Create a global variable for the environment variable, but
-	 * only if the variable name is a valid token beginning with a
-	 * capital letter. */
+	/* Create a global variable for the environment variable, but only
+	 * if the variable name is a valid token that doesn't start with
+	 * "#" or "0".  These rules are to match the way MCVariable
+	 * detects whether a variable proxies an environment variable. */
 	unichar_t t_first = MCStringGetCharAtIndex(p_name_str, 0);
 	if (p_make_global &&
 	    '#' != t_first &&
@@ -939,8 +940,7 @@ X_open_environment_variables_store(MCArrayRef x_array,
 /* Parse environment variables.  All environment variables are placed
  * into the MCenvironmentvariables global array.  Some environment
  * variables are turned into special "$<name>" global LiveCode
- * variables, but only if they begin with a capital letter, and are
- * valid LiveCode language tokens, and are well-formed (i.e. in the
+ * variables, but only if they are well-formed (i.e. in the
  * format "name=value"). */
 static bool
 X_open_environment_variables(MCStringRef envp[])
