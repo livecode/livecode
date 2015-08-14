@@ -757,3 +757,38 @@ __MCSFileGetDirectoryEntries (MCStringRef p_native_path,
 	FindClose (t_find_handle);
 	return false;
 }
+
+bool
+__MCSFileGetType (MCStringRef p_native_path,
+                  bool p_follow_links,
+                  MCSFileType & r_type)
+{
+	/* Get a system path */
+	MCAutoStringRefAsWString t_path_w32;
+	if (!t_path_w32.Lock (p_native_path))
+		return false;
+
+	DWORD t_attributes = GetFileAttributesW(*t_path_w32);
+
+	if (INVALID_FILE_ATTRIBUTES == t_attributes)
+	{
+		return __MCSFileThrowIOErrorWithErrorCode (p_native_path, MCSTR("Failed to get attributes from file '%{path}': %{description}"), GetLastError());
+	}
+
+	/* Symbolic links are indicated by the reparse point flag.  But the other
+	 * relevant attributes are still present. */
+	if ((t_attributes & FILE_ATTRIBUTE_REPARSE_POINT) && !p_follow_links)
+	{
+		r_type = kMCSFileTypeSymbolicLink;
+	}
+	else if (t_attributes & FILE_ATTRIBUTE_DIRECTORY)
+	{
+		r_type = kMCSFileTypeDirectory;
+	}
+	else
+	{
+		r_type = kMCSFileTypeRegular;
+	}
+
+	return true;
+}
