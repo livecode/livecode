@@ -863,6 +863,8 @@
 			'src/java/com/runrev/android/nativecontrol/NativeControlModule.java',
 			'src/java/com/runrev/android/nativecontrol/ScrollerControl.java',
 			'src/java/com/runrev/android/nativecontrol/VideoControl.java',
+			
+			'src/java/com/runrev/android/libraries/LibBrowser.java',
 		],
 		
 		# AIDL sources for Android

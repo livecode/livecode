@@ -103,7 +103,7 @@ public:
 		jobject t_view;
 		t_view = nil;
 		
-		MCAndroidStaticRemoteCall("com/runrev/android/libraries/LibBrowser", "createWebView", "o", &t_view);
+		MCAndroidStaticRemoteCall("com/runrev/android/libraries/LibBrowser", "createBrowserView", "o", &t_view);
 		
 		if (t_view == nil)
 			return false;
@@ -261,8 +261,8 @@ private:
 
 //////////
 
-extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowser_LibBrowserWebView_doJSExecutionResult(JNIEnv *env, jobject object, jstring tag, jstring result) __attribute__((visibility("default")));
-JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowser_LibBrowserWebView_doJSExecutionResult(JNIEnv *env, jobject object, jstring tag, jstring result)
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doJSExecutionResult(JNIEnv *env, jobject object, jstring tag, jstring result) __attribute__((visibility("default")));
+JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doJSExecutionResult(JNIEnv *env, jobject object, jstring tag, jstring result)
 {
     char *t_tag = nil;
     /* UNCHECKED */ MCBrowserJavaStringToUtf8String(env, tag, t_tag);
@@ -278,8 +278,8 @@ JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowser_LibBrowserWe
     MCCStringFree(t_result);
 }
 
-extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowser_LibBrowserWebView_doStartedLoading(JNIEnv *env, jobject object, jstring url) __attribute__((visibility("default")));
-JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowser_LibBrowserWebView_doStartedLoading(JNIEnv *env, jobject object, jstring url)
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doStartedLoading(JNIEnv *env, jobject object, jstring url) __attribute__((visibility("default")));
+JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doStartedLoading(JNIEnv *env, jobject object, jstring url)
 {
     char *t_url;
     t_url = nil;
@@ -292,8 +292,8 @@ JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowser_LibBrowserWe
 	MCCStringFree(t_url);
 }
 
-extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowser_LibBrowserWebView_doFinishedLoading(JNIEnv *env, jobject object, jstring url) __attribute__((visibility("default")));
-JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowser_LibBrowserWebView_doFinishedLoading(JNIEnv *env, jobject object, jstring url)
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doFinishedLoading(JNIEnv *env, jobject object, jstring url) __attribute__((visibility("default")));
+JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doFinishedLoading(JNIEnv *env, jobject object, jstring url)
 {
     char *t_url;
     t_url = nil;
@@ -306,8 +306,8 @@ JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowser_LibBrowserWe
 	MCCStringFree(t_url);
 }
 
-extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowser_LibBrowserWebView_doLoadingError(JNIEnv *env, jobject object, jstring url, jstring error) __attribute__((visibility("default")));
-JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowser_LibBrowserWebView_doLoadingError(JNIEnv *env, jobject object, jstring url, jstring error)
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doLoadingError(JNIEnv *env, jobject object, jstring url, jstring error) __attribute__((visibility("default")));
+JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doLoadingError(JNIEnv *env, jobject object, jstring url, jstring error)
 {
     char *t_url;
     t_url = nil;
