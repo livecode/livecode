@@ -46,6 +46,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 #include "system.h"
 #include "dispatch.h"
+#include "scriptpt.h"
 
 #if defined(_MACOSX)
 #include <mach-o/dyld.h>
@@ -3362,6 +3363,39 @@ void *MCU_resolvemodulesymbol(void* p_module, const char *p_symbol)
         return nil;
 
     return MCS_resolvemodulesymbol((MCSysModuleHandle)p_module, *t_symbol_str);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+bool
+MCU_is_token(MCStringRef p_string)
+{
+	MCScriptPoint sp(p_string);
+
+	++MCerrorlock;
+
+	Parse_stat ps = sp.nexttoken();
+
+	--MCerrorlock;
+
+	if (ps == PS_ERROR || ps == PS_EOF)
+	{
+		return false;
+	}
+
+	/* Check that token is located at start of query string */
+	if (sp.getindex() != 0)
+	{
+		return false;
+	}
+
+	/* Check that token spans full length of query string */
+	if (MCStringGetLength(p_string) != MCStringGetLength(sp.gettoken_stringref()))
+	{
+		return false;
+	}
+
+	return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

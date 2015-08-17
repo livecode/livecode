@@ -366,6 +366,8 @@ extern uint4 MCqtidlerate;
 extern MCStringRef MCcommandname;
 extern MCArrayRef MCcommandarguments;
 
+extern MCArrayRef MCenvironmentvariables;
+
 #ifdef _LINUX_DESKTOP
 extern Window MCgtkthemewindow;
 #endif
