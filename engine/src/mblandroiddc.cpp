@@ -1460,7 +1460,8 @@ struct MCAndroidEngineCallThreadContext
 	const char *method;
 	void *return_value;
 
-	jclass java_class;
+	const char *java_class;
+	
     jobject object;
     bool is_static;
     MCJavaMethodParams *params;
@@ -1487,12 +1488,23 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
     jmethodID t_method_id;
 	t_method_id = 0;
 
+    jclass t_class = nil;
+
+	if (t_success)
+	{
+		if (context->is_static)
+			t_class = t_env->FindClass(context->java_class);
+		else
+			t_class = t_env->GetObjectClass(context->object);
+		t_success = t_class != nil;
+	}
+	
     if (t_success)
 	{
 		if (context->is_static)
-			t_method_id = t_env->GetStaticMethodID(context->java_class, context->method, t_params->signature);
+			t_method_id = t_env->GetStaticMethodID(t_class, context->method, t_params->signature);
 		else
-			t_method_id = t_env -> GetMethodID(context->java_class, context -> method, t_params->signature);
+			t_method_id = t_env -> GetMethodID(t_class, context -> method, t_params->signature);
 		if (t_method_id == 0)
 			t_success = false;
 	}
@@ -1503,7 +1515,7 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
 		{
 		case kMCJavaTypeVoid:
 			if (context->is_static)
-				t_env->CallStaticVoidMethodA(context->java_class, t_method_id, t_params->params);
+				t_env->CallStaticVoidMethodA(t_class, t_method_id, t_params->params);
 			else
 				t_env -> CallVoidMethodA(context->object, t_method_id, t_params->params);
 			if (t_cleanup_java_refs && t_env -> ExceptionCheck())
@@ -1514,7 +1526,7 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
 			break;
 		case kMCJavaTypeInt:
 			if (context->is_static)
-				*((int32_t *)(context->return_value)) = t_env->CallStaticIntMethodA(context->java_class, t_method_id, t_params->params);
+				*((int32_t *)(context->return_value)) = t_env->CallStaticIntMethodA(t_class, t_method_id, t_params->params);
 			else
 				*((int32_t *)(context -> return_value)) = t_env -> CallIntMethodA(context->object, t_method_id, t_params->params);
 			if (t_cleanup_java_refs && t_env -> ExceptionCheck())
@@ -1525,7 +1537,7 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
 			break;
         case kMCJavaTypeLong:
 			if (context->is_static)
-				*((int64_t *)(context -> return_value)) = t_env -> CallStaticLongMethodA(context->java_class, t_method_id, t_params->params);
+				*((int64_t *)(context -> return_value)) = t_env -> CallStaticLongMethodA(t_class, t_method_id, t_params->params);
 			else
 				*((int64_t *)(context -> return_value)) = t_env -> CallLongMethodA(context->object, t_method_id, t_params->params);
             if (t_cleanup_java_refs && t_env -> ExceptionCheck())
@@ -1536,7 +1548,7 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
             break;
         case kMCJavaTypeFloat:
 			if (context->is_static)
-				*((float*)(context -> return_value)) = t_env -> CallStaticFloatMethodA(context->java_class, t_method_id, t_params->params);
+				*((float*)(context -> return_value)) = t_env -> CallStaticFloatMethodA(t_class, t_method_id, t_params->params);
 			else
 				*((float*)(context -> return_value)) = t_env -> CallFloatMethodA(context->object, t_method_id, t_params->params);
             if (t_cleanup_java_refs && t_env -> ExceptionCheck())
@@ -1547,7 +1559,7 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
             break;
         case kMCJavaTypeDouble:
 			if (context->is_static)
-				*((double *)(context -> return_value)) = t_env -> CallStaticDoubleMethodA(context->java_class, t_method_id, t_params->params);
+				*((double *)(context -> return_value)) = t_env -> CallStaticDoubleMethodA(t_class, t_method_id, t_params->params);
 			else
 				*((double *)(context -> return_value)) = t_env -> CallDoubleMethodA(context->object, t_method_id, t_params->params);
             if (t_cleanup_java_refs && t_env -> ExceptionCheck())
@@ -1558,7 +1570,7 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
             break;
 		case kMCJavaTypeBoolean:
 			if (context->is_static)
-				*((bool *)(context -> return_value)) = JNI_TRUE == t_env -> CallStaticBooleanMethodA(context->java_class, t_method_id, t_params->params);
+				*((bool *)(context -> return_value)) = JNI_TRUE == t_env -> CallStaticBooleanMethodA(t_class, t_method_id, t_params->params);
 			else
 				*((bool *)(context -> return_value)) = JNI_TRUE == t_env -> CallBooleanMethodA(context->object, t_method_id, t_params->params);
 			if (t_cleanup_java_refs && t_env -> ExceptionCheck())
@@ -1571,7 +1583,7 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
 		{
 			jstring t_java_string;
 			if (context->is_static)
-				t_java_string = (jstring)t_env -> CallStaticObjectMethodA(context->java_class, t_method_id, t_params->params);
+				t_java_string = (jstring)t_env -> CallStaticObjectMethodA(t_class, t_method_id, t_params->params);
 			else
 				t_java_string = (jstring)t_env -> CallObjectMethodA(context->object, t_method_id, t_params->params);
 			if (t_cleanup_java_refs && t_env -> ExceptionCheck())
@@ -1593,7 +1605,7 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
 			{
 				jstring t_java_string;
 				if (context->is_static)
-					t_java_string = (jstring)t_env -> CallStaticObjectMethodA(context->java_class, t_method_id, t_params->params);
+					t_java_string = (jstring)t_env -> CallStaticObjectMethodA(t_class, t_method_id, t_params->params);
 				else
 					t_java_string = (jstring)t_env -> CallObjectMethodA(context->object, t_method_id, t_params->params);
 				if (t_cleanup_java_refs && t_env -> ExceptionCheck())
@@ -1615,7 +1627,7 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
 			{
 				jstring t_java_string;
 				if (context->is_static)
-					t_java_string = (jstring)t_env -> CallStaticObjectMethodA(context->java_class, t_method_id, t_params->params);
+					t_java_string = (jstring)t_env -> CallStaticObjectMethodA(t_class, t_method_id, t_params->params);
 				else
 					t_java_string = (jstring)t_env -> CallObjectMethodA(context->object, t_method_id, t_params->params);
 				if (t_cleanup_java_refs && t_env -> ExceptionCheck())
@@ -1638,7 +1650,7 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
 			{
 				jstring t_java_string;
 				if (context->is_static)
-					t_java_string = (jstring)t_env -> CallStaticObjectMethodA(context->java_class, t_method_id, t_params->params);
+					t_java_string = (jstring)t_env -> CallStaticObjectMethodA(t_class, t_method_id, t_params->params);
 				else
 					t_java_string = (jstring)t_env -> CallObjectMethodA(context->object, t_method_id, t_params->params);
 				if (t_cleanup_java_refs && t_env -> ExceptionCheck())
@@ -1661,7 +1673,7 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
 			{
 				jbyteArray t_byte_array;
 				if (context->is_static)
-					t_byte_array = (jbyteArray)t_env -> CallStaticObjectMethodA(context->java_class, t_method_id, t_params->params);
+					t_byte_array = (jbyteArray)t_env -> CallStaticObjectMethodA(t_class, t_method_id, t_params->params);
 				else
 					t_byte_array = (jbyteArray)t_env -> CallObjectMethodA(context->object, t_method_id, t_params->params);
 				if (t_cleanup_java_refs && t_env -> ExceptionCheck())
@@ -1683,7 +1695,7 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
             {
                 jobject t_object;
 				if (context->is_static)
-					t_object = t_env -> CallStaticObjectMethodA(context->java_class, t_method_id, t_params->params);
+					t_object = t_env -> CallStaticObjectMethodA(t_class, t_method_id, t_params->params);
 				else
 					t_object = t_env -> CallObjectMethodA(context->object, t_method_id, t_params->params);
                 if (t_cleanup_java_refs && t_env -> ExceptionCheck())
@@ -1706,7 +1718,7 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
             {
                 jobject t_object;
 				if (context->is_static)
-					t_object = t_env -> CallStaticObjectMethodA(context->java_class, t_method_id, t_params->params);
+					t_object = t_env -> CallStaticObjectMethodA(t_class, t_method_id, t_params->params);
 				else
 					t_object = t_env -> CallObjectMethodA(context->object, t_method_id, t_params->params);
                 if (t_cleanup_java_refs && t_env->ExceptionCheck())
@@ -1724,6 +1736,9 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
             }
 		}
 	}
+	
+	if (t_class != nil)
+		t_env->DeleteLocalRef(t_class);
 
 	if (t_exception_thrown)
 	{
@@ -1736,7 +1751,7 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
 }
 
 // If object is nil then call class static method
-void MCAndroidJavaMethodCall(jclass p_class, jobject p_object, const char *p_method, void *p_return_value, MCJavaMethodParams *p_params, bool p_on_engine_thread)
+void MCAndroidJavaMethodCall(const char *p_class, jobject p_object, const char *p_method, void *p_return_value, MCJavaMethodParams *p_params, bool p_on_engine_thread)
 {
 	MCAndroidEngineCallThreadContext t_context;
 	t_context . java_class = p_class;
@@ -1763,16 +1778,13 @@ void MCAndroidObjectCallWithArgs(jobject p_object, const char *p_method, const c
 	JNIEnv *t_env = MCJavaGetThreadEnv();
 	
     MCJavaMethodParams *t_params = nil;
-    jclass t_class = t_env->GetObjectClass(p_object);
 
-    t_success = MCJavaConvertParameters(t_env, p_signature, p_args, t_params);
+    t_success = MCJavaConvertParameters(t_env, p_signature, p_args, t_params, !p_on_engine_thread);
 
     if (t_success)
-        MCAndroidJavaMethodCall(t_class, p_object, p_method, p_return_value, t_params, p_on_engine_thread);
+        MCAndroidJavaMethodCall(nil, p_object, p_method, p_return_value, t_params, p_on_engine_thread);
 
     MCJavaMethodParamsFree(t_env, t_params);
-    if (t_class != nil)
-		t_env->DeleteLocalRef(t_class);
 }
 
 void MCAndroidStaticCallWithArgs(const char *p_class, const char *p_method, const char *p_signature, void *p_return_value, bool p_on_engine_thread, va_list p_args)
@@ -1782,20 +1794,14 @@ void MCAndroidStaticCallWithArgs(const char *p_class, const char *p_method, cons
 	JNIEnv *t_env = MCJavaGetThreadEnv();
 	
     MCJavaMethodParams *t_params = nil;
-    jclass t_class = nil;
 
 	if (t_success)
-		t_success = nil != (t_class = t_env->FindClass(p_class));
-		
-	if (t_success)
-		t_success = MCJavaConvertParameters(t_env, p_signature, p_args, t_params);
+		t_success = MCJavaConvertParameters(t_env, p_signature, p_args, t_params, !p_on_engine_thread);
 
     if (t_success)
-        MCAndroidJavaMethodCall(t_class, nil, p_method, p_return_value, t_params, p_on_engine_thread);
+        MCAndroidJavaMethodCall(p_class, nil, p_method, p_return_value, t_params, p_on_engine_thread);
 
     MCJavaMethodParamsFree(t_env, t_params);
-    if (t_class != nil)
-		t_env->DeleteLocalRef(t_class);
 }
 
 void MCAndroidObjectCall(jobject p_object, const char *p_method, const char *p_signature, void *p_return_value, ...)
