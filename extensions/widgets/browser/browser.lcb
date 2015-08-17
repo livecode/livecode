@@ -151,8 +151,9 @@ public handler OnOpen()
 	/* UNCHECKED */
 	put MCBrowserGetNativeLayer(mBrowser) into tBrowserView
 	
-	// TODO - add widget code to set native layer from view
-	set my native layer to tBrowserView
+	//set my native layer to tBrowserView
+	/* UNCHECKED */
+	MCWidgetSetMyNativeLayer(tBrowserView)
 	
 	variable tRequestCallback as Pointer
 	variable tJavaScriptCallback as Pointer
@@ -172,7 +173,8 @@ public handler OnClose()
 	// Save browser properties
 	put saveProperties() into mProperties
 	
-	set my native layer to nothing
+	//set my native layer to nothing
+	MCWidgetSetMyNativeLayer(nothing)
 	
 	MCBrowserRelease(mBrowser)
 	put nothing into mBrowser
