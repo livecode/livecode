@@ -55,30 +55,96 @@ __MCEmscriptenStandaloneUnpackWrite(void *context,
 }
 
 static bool
+__MCEmscriptenStandaloneUnpackMkdirs(MCStringRef p_name)
+{
+	/* If p_name doesn't contain a "/", do nothing. If p_name doesn't end
+	 * with "/", truncate to the last "/", and recurse. */
+	uindex_t t_sep_index;
+	if (!MCStringLastIndexOfChar(p_name, '/', UINDEX_MAX,
+	                             kMCStringOptionCompareExact, t_sep_index))
+	{
+		return true; /* No directory part */
+	}
+	if (t_sep_index != MCStringGetLength(p_name) - 1)
+	{
+		/* Doesn't end with "/" */
+		MCAutoStringRef t_dirname;
+		if (!MCStringCopySubstring (p_name, MCRangeMake(0, t_sep_index + 1),
+		                            &t_dirname))
+		{
+			return false;
+		}
+
+		return __MCEmscriptenStandaloneUnpackMkdirs(*t_dirname);
+	}
+
+	/* If the directory already exists, we're done! */
+	if (MCS_exists(p_name, false))
+	{
+		return true;
+	}
+
+	/* Make sure the parent directories have been created.  If
+	 * possible, truncate the path by one element and recurse. */
+	if (MCStringLastIndexOfChar(p_name, '/', t_sep_index,
+	                            kMCStringOptionCompareExact, t_sep_index))
+	{
+		MCAutoStringRef t_dirname;
+		if (!MCStringCopySubstring (p_name, MCRangeMake(0, t_sep_index + 1),
+		                            &t_dirname))
+		{
+			return false;
+		}
+
+		if (!__MCEmscriptenStandaloneUnpackMkdirs(*t_dirname))
+		{
+			return false;
+		}
+	}
+
+	/* Create the directory */
+	MCLog("zip: %@", p_name);
+	if (!MCS_mkdir(p_name) && !MCS_exists(p_name, false))
+	{
+		return false;
+	}
+
+	return true;
+}
+
+static bool
 __MCEmscriptenStandaloneUnpackExtract(void *context,
                                       MCStringRef p_name)
 {
 	bool t_success = true;
 
-	MCLog("  %@", p_name);
-
 	MCMiniZipRef t_zip = static_cast<MCMiniZipRef>(context);
 
-	/* If the zip file item is a directory, create it */
+	/* Create the directory for the entry */
+	if (!__MCEmscriptenStandaloneUnpackMkdirs(p_name))
+	{
+		return false;
+	}
+
+	/* If the zip file item is a directory, we're done */
 	if (MCStringEndsWithCString(p_name, (const char_t *) "/",
 	                            kMCStringOptionCompareExact))
 	{
-		t_success = (MCS_mkdir(p_name) ||
-		             MCS_exists(p_name, false));
+		return true;
 	}
 	else
 	{
+		MCLog("zip: %@", p_name);
+
 		/* Otherwise, extract it to file */
 		IO_handle t_handle = NULL;
 		if (t_success)
 		{
 			t_handle = MCS_open(p_name, kMCOpenFileModeWrite, false, false, 0);
-			t_success = (NULL != t_handle);
+			if (t_handle == NULL)
+			{
+				t_success = 0;
+			}
 		}
 
 		if (t_success)
