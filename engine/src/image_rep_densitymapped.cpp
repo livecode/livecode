@@ -575,7 +575,6 @@ bool MCImageRepGetDensityMapped(MCStringRef p_filename, MCImageRep *&r_rep)
 		
 		if (MCCachedImageRep::FindWithKey(p_filename, t_cached_rep))
 		{
-			MCLog("image rep cache hit for file %@", p_filename);
 			t_rep = t_cached_rep->Retain();
 		}
 		else
