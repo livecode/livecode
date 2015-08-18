@@ -520,7 +520,7 @@ IO_stat MCDispatch::startup(void)
 
 #elif defined(__EMSCRIPTEN__)
 
-#define kMCEmscriptenBootStackFilename "/boot/__boot.livecode"
+#define kMCEmscriptenBootStackFilename "/boot/standalone/__boot.livecode"
 
 IO_stat
 MCDispatch::startup()

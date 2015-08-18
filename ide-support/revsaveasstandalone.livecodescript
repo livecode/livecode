@@ -227,6 +227,7 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    end repeat
    put tCanBuild or sStandaloneSettingsA["ios"] into tCanBuild
    put tCanBuild or sStandaloneSettingsA["android"] into tCanBuild
+   put tCanBuild or sStandaloneSettingsA["emscripten"] into tCanBuild
    if not tCanBuild then
       if revTestEnvironment() then
          return tError
@@ -291,7 +292,7 @@ on revSaveAsStandalone pStack, pFolder, pPreview
       put the mainStack of stack pStack into pStack
       set the defaultStack to pStack
       try
-         if sStandaloneSettingsA["ios"] or sStandaloneSettingsA["android"] then
+         if sStandaloneSettingsA["ios"] or sStandaloneSettingsA["android"] or sStandaloneSettingsA["emscripten"] then
             local tOutputMobileFolder
             revOutputDirectories tFolder & slash
             put the result into tOutputMobileFolder
@@ -320,6 +321,11 @@ on revSaveAsStandalone pStack, pFolder, pPreview
                --revIDEDeployBuild "android", pStack, tOutputMobileFolder
                dispatch "revSaveAsMobileStandalone" to stack "revSaveAsAndroidStandalone" with \
                      pStack, tOutputMobileFolder & slash & sStandaloneSettingsA["name"] & ".apk", "Build"
+            end if
+            
+            if sStandaloneSettingsA["emscripten"] then
+               dispatch "revSaveAsEmscriptenStandalone" to stack "revSaveAsEmscriptenStandalone" with \
+                     pStack, tOutputMobileFolder, "Build"
             end if
          else
             revCreateStandalone pStack,pFolder

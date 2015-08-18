@@ -708,7 +708,7 @@ MCEmscriptenSystem::OpenFile(MCStringRef p_path,
 
 	errno = 0;
 	t_fd = open(*t_path_sys, t_open_flags);
-	if (-1 == t_fd)
+	if (0 > t_fd)
 	{
 		return NULL;
 	}
