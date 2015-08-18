@@ -417,6 +417,7 @@
 							{
 								'dist_aux_files':
 								[
+									'rsrc/emscripten-standalone-template/',
 									'<(PRODUCT_DIR)/standalone-community.js',
 									'<(PRODUCT_DIR)/standalone-community.html',
 									'<(PRODUCT_DIR)/standalone-community.html.mem',
