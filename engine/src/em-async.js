@@ -49,6 +49,13 @@ mergeInto(LibraryManager.library, {
 				return;
 			}
 			LiveCodeAsync._initialised = true;
+
+			LiveCodeAsync.addResumeHook(function () {
+				// Run pre-resume callbacks
+				LiveCodeAsync._preResume.forEach(function (c) { c(); });
+				// Reset pre-resume callback list
+				LiveCodeAsync._preResume = [];
+			});
 		},
 
 		_resumeTimeout: function() {
@@ -90,13 +97,6 @@ mergeInto(LibraryManager.library, {
 			resume(function (){
 				// Run pre-resume hooks
 				LiveCodeAsync._runHooks()
-
-				// Run pre-resume callbacks
-				var queueLength = LiveCodeAsync._preResume.length;
-				for (var i = 0; i < queueLength; i++) {
-					LiveCodeAsync._preResume[i]();
-				}
-				LiveCodeAsync._preResume = []; // Reset pre-resume callback list
 
 				return !LiveCodeAsync.isTimedOut();
 			});
