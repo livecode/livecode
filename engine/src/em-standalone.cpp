@@ -106,6 +106,10 @@ __MCEmscriptenStandaloneUnpackMkdirs(MCStringRef p_name)
 	MCLog("zip: %@", p_name);
 	if (!MCS_mkdir(p_name) && !MCS_exists(p_name, false))
 	{
+		/* FIXME If you remove this log statement, the emscripten
+		 * compiler compiles the engine incorrectly, causing
+		 * standalone building to break. */
+		MCLog("zip: Failed to create %@: %s", strerror(errno));
 		return false;
 	}
 
@@ -144,6 +148,10 @@ __MCEmscriptenStandaloneUnpackExtract(void *context,
 			if (t_handle == NULL)
 			{
 				t_success = 0;
+				/* FIXME If you remove this log statement, the emscripten
+				 * compiler compiles the engine incorrectly, causing
+				 * standalone building to break. */
+				MCLog("zip: Failed to open %@: %s", p_name, strerror(errno));
 			}
 		}
 
