@@ -40,20 +40,20 @@ metadata author is "Ian Macphail"
 metadata version is "1.0.0"
 --
 
-property uri get getUrl set setUrl
-metadata uri.editor is "com.livecode.pi.text"
+property browserUrl get getUrl set setUrl
+metadata browserUrl.editor is "com.livecode.pi.text"
 
-property htmltext get getHtmlText set setHtmlText
-metadata htmltext.editor is "com.livecode.pi.text"
+property browserHtmltext get getHtmlText set setHtmlText
+metadata browserHtmltext.editor is "com.livecode.pi.text"
 
-property scrollbars get getScrollbars set setScrollbars
-metadata scrollbars.editor is "com.livecode.pi.boolean"
+property browserScrollbars get getScrollbars set setScrollbars
+metadata browserScrollbars.editor is "com.livecode.pi.boolean"
 
-property useragent get getUserAgent set setUserAgent
-metadata useragent.editor is "com.livecode.pi.text"
+property browserUseragent get getUserAgent set setUserAgent
+metadata browserUseragent.editor is "com.livecode.pi.text"
 
-property javascripthandlers get getJavaScriptHandlers set setJavaScriptHandlers
-metadata javascripthandlers.editor is "com.livecode.pi.text"
+property browserJavascripthandlers get getJavaScriptHandlers set setJavaScriptHandlers
+metadata browserJavascripthandlers.editor is "com.livecode.pi.text"
 
 --------------------------------------------------------------------------------
 
