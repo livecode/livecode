@@ -1,6 +1,6 @@
 /*                                                              -*-Javascript-*-
 
-Copyright (C) 2003-2013 Runtime Revolution Ltd.
+Copyright (C) 2015 Runtime Revolution Ltd.
 
 This file is part of LiveCode.
 
@@ -29,6 +29,9 @@ mergeInto(LibraryManager.library, {
 		// loop.
 		_continuation: null,
 
+		// List of hooks to be run before every resume
+		_hooks: [],
+
 		// List of callbacks to be run just before resuming the main
 		// loop.
 		_preResume: [],
@@ -46,6 +49,13 @@ mergeInto(LibraryManager.library, {
 				return;
 			}
 			LiveCodeAsync._initialised = true;
+
+			LiveCodeAsync.addResumeHook(function () {
+				// Run pre-resume callbacks
+				LiveCodeAsync._preResume.forEach(function (c) { c(); });
+				// Reset pre-resume callback list
+				LiveCodeAsync._preResume = [];
+			});
 		},
 
 		_resumeTimeout: function() {
@@ -85,12 +95,8 @@ mergeInto(LibraryManager.library, {
 			// of the closure determines the apparent return value of
 			// EmterpreterAsync.handle().
 			resume(function (){
-				// Run pre-resume callbacks
-				var queueLength = LiveCodeAsync._preResume.length;
-				for (var i = 0; i < queueLength; i++) {
-					LiveCodeAsync._preResume[i]();
-				}
-				LiveCodeAsync._preResume = []; // Reset pre-resume callback list
+				// Run pre-resume hooks
+				LiveCodeAsync._runHooks()
 
 				return !LiveCodeAsync.isTimedOut();
 			});
@@ -152,6 +158,44 @@ mergeInto(LibraryManager.library, {
 				delayed();
 			} else {
 				LiveCodeAsync._preResume.push(delayed);
+			}
+		},
+
+		// Run pre-resume hooks.
+		_runHooks: function() {
+			LiveCodeAsync._hooks.forEach(function (h) { h(); });
+		},
+
+		// Register a closure to be run before every resume.  If
+		// <callback> is already in the list of hooks, does nothing.
+		//
+		// callback: closure taking no arguments.
+		addResumeHook: function(callback) {
+			LiveCodeAsync._ensureInit();
+
+			console.log('addResumeHook');
+
+			// Make sure the same hook doesn't get registered twice
+			if (LiveCodeAsync._hooks.some(function (h) {
+				return (h === callback);
+			})) {
+				return;
+			}
+
+			LiveCodeAsync._hooks.push(callback);
+		},
+
+		// Remove a closure from the list of pre-resume hooks.  If
+		// <callback> is not in the list of hooks, does nothing.
+		removeResumeHook: function(callback) {
+			LiveCodeAsync._ensureInit();
+
+			// Find and remove the specified hook
+			var numHooks = LiveCodeAsync._hooks.length;
+			for (var i = 0; i < numHooks; i++) {
+				if (LiveCodeAsync._hooks[i] === callback) {
+					LiveCodeAsync._hooks.splice(i, 1);
+				}
 			}
 		},
 	},
