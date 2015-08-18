@@ -394,6 +394,16 @@ class LibBrowserWebView extends WebView
 			setOnTouchListener(null);
 	}
 	
+	public String getUserAgent()
+	{
+		return getSettings().getUserAgentString();
+	}
+	
+	public void setUserAgent(String p_useragent)
+	{
+		getSettings().setUserAgentString(p_useragent);
+	}
+	
 	/* ACTIONS */
 
 	public void goBack(int p_steps)

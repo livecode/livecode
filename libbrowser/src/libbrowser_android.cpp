@@ -120,13 +120,13 @@ public:
 	
 	virtual bool GetRect(MCBrowserRect &r_rect)
 	{
-		// TODO - implement
+		// TODO - implement (not needed when used with native layers)
 		return false;
 	}
 	
 	virtual bool SetRect(const MCBrowserRect &p_rect)
 	{
-		// TODO - implement
+		// TODO - implement (not needed when used with native layers)
 		return false;
 	}
 	
@@ -165,6 +165,9 @@ public:
 			case kMCBrowserURL:
 				return GetUrl(r_utf8_string);
 			
+			case kMCBrowserUserAgent:
+				return GetUserAgent(r_utf8_string);
+				
 			default:
 				break;
 		}
@@ -174,7 +177,15 @@ public:
 	
 	virtual bool SetStringProperty(MCBrowserProperty p_property, const char *p_utf8_string)
 	{
-		// TODO - implement
+		switch (p_property)
+		{
+			case kMCBrowserUserAgent:
+				return SetUserAgent(p_utf8_string);
+			
+			default:
+				break;
+		}
+		
 		return false;
 	}
 	
@@ -242,20 +253,46 @@ public:
 private:
 	bool GetScrollbarsEnabled(bool &r_value)
 	{
-		// TODO - implement
-		return false;
+		MCAndroidObjectRemoteCall(m_view, "getScrollingEnabled", "b", &r_value);
+		return true;
 	}
 	
 	bool SetScrollbarsEnabled(bool p_value)
 	{
-		// TODO - implement
-		return false;
+		MCAndroidObjectRemoteCall(m_view, "setScrollingEnabled", "vb", nil, p_value);
+		return true;
 	}
 	
 	bool GetUrl(char *&r_utf8_string)
 	{
-		// TODO - implement
-		return false;
+		char *t_url;
+		t_url = nil;
+		
+		MCAndroidObjectRemoteCall(m_view, "getUrl", "s", &t_url);
+		if (t_url == nil)
+			return false;
+			
+		r_utf8_string = t_url;
+		return true;
+	}
+	
+	bool GetUserAgent(char *&r_useragent)
+	{
+		char *t_useragent;
+		t_useragent = nil;
+		MCAndroidObjectRemoteCall(m_view, "getUserAgent", "s", &t_useragent);
+
+		if (t_useragent == nil)
+			return false;
+			
+		r_useragent = t_useragent;
+		return true;
+	}
+	
+	bool SetUserAgent(const char *p_useragent)
+	{
+		MCAndroidObjectRemoteCall(m_view, "setUserAgent", "vs", nil, p_useragent);
+		return true;
 	}
 };
 
