@@ -173,8 +173,6 @@ mergeInto(LibraryManager.library, {
 		addResumeHook: function(callback) {
 			LiveCodeAsync._ensureInit();
 
-			console.log('addResumeHook');
-
 			// Make sure the same hook doesn't get registered twice
 			if (LiveCodeAsync._hooks.some(function (h) {
 				return (h === callback);
