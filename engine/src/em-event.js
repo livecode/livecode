@@ -514,7 +514,6 @@ mergeInto(LibraryManager.library, {
 						e.preventDefault();
 					}
 
-					console.debug(e.type + ' ' + e.key + ': ' + char_code + '/' + key_code);
 					break;
 				default:
 					console.debug('Unexpected keyboard event type: ' + e.type);
