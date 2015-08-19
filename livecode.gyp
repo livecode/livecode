@@ -98,60 +98,64 @@
 				],
 			],
 		},
-	],
-	
-	'configurations':
-	{
-		'Debug':
+		
 		{
-			'targets':
-			[
-				{
-					'target_name': 'binzip-copy',
-					'type': 'none',
+			'target_name': 'debug-symbols',
+			'type': 'none',
 			
+			'dependencies':
+			[
+				'LiveCode-all',
+			],
+			
+			'variables':
+			{
+				'debug_syms_inputs%': [ '<@(debug_syms_inputs)' ],
+				'variables':
+				{
+					'debug_syms_inputs': [ '>@(dist_files)' ],
+				},
+			},
+			
+			'includes':
+			[
+				'config/debug_syms.gypi',
+			],
+			
+			'all_dependent_settings':
+			{
+				'variables':
+				{
+					'dist_aux_files': [ '<@(debug_syms_outputs)' ],
 					'variables':
 					{
-						'dist_files': [],
-						'dist_aux_files': [],
+						'debug_syms_inputs%': [ '<@(debug_syms_inputs)' ],
 					},
-			
-					'dependencies':
-					[
-						'LiveCode-all',
-					],
-			
-					'copies':
-					[{
-						'destination': '<(output_dir)',
-						'files': [ '>@(dist_files)', '>@(dist_aux_files)', ],
-					}],
 				},
-			],
+			},
 		},
-		'Release':
+		
 		{
-			'targets':
+			'target_name': 'binzip-copy',
+			'type': 'none',
+			
+			'variables':
+			{
+				'dist_files': [],
+				'dist_aux_files': [],
+			},
+			
+			'dependencies':
 			[
-				{
-					'includes':
-					[
-						'config/debug_syms.gypi',
-					],
-				},
+				'LiveCode-all',
+				'debug-symbols',
 			],
+			
+			'copies':
+			[{
+				'destination': '<(output_dir)',
+				'files': [ '>@(dist_files)', '>@(dist_aux_files)', ],
+			}],
 		},
-		'Fast':
-		{
-			'targets':
-			[
-				{
-					'includes':
-					[
-						'config/debug_syms.gypi',
-					],
-				},
-			],
-		},
-	}
+	],
 }
