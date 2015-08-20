@@ -38,10 +38,14 @@ MCStringRef s_filename = NULL;
  * File-local declarations
  * ================================================================ */
 
+#if defined(__WINDOWS__)
+
 /* Windows-specific functions for getting the command line arguments
  * encoded as UTF-16 rather than using the system codepage. */
 static bool __MCSWindowsCommandLineGet (uindex_t &, unichar_t **&);
 static void __MCSWindowsCommandLineFree (uindex_t &, unichar_t **& );
+
+#endif /* __WINDOWS__ */
 
 /* ================================================================
  * Setters and getters
