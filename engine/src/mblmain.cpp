@@ -148,7 +148,7 @@ bool X_main_loop_iteration(void)
 	MCabortscript = False;
     if (!MCtodestroy -> isempty())
     {
-        MCtooltip -> settip(NULL);
+        MCtooltip -> cleartip();
         MCtodestroy -> destroy();
     }
 	MCU_cleaninserted();

@@ -118,9 +118,9 @@ MCObjectPropertyTable MCAndroidPlayerControl::kPropertyTable =
 
 MCNativeControlActionInfo MCAndroidPlayerControl::kActions[] =
 {
-    DEFINE_CTRL_EXEC_METHOD(Play, MCAndroidPlayerControl, Play)
-    DEFINE_CTRL_EXEC_METHOD(Pause, MCAndroidPlayerControl, Pause)
-    DEFINE_CTRL_EXEC_METHOD(Stop, MCAndroidPlayerControl, Stop)
+    DEFINE_CTRL_EXEC_METHOD(Play, Void, MCAndroidPlayerControl, Play)
+    DEFINE_CTRL_EXEC_METHOD(Pause, Void, MCAndroidPlayerControl, Pause)
+    DEFINE_CTRL_EXEC_METHOD(Stop, Void, MCAndroidPlayerControl, Stop)
 };
 
 MCNativeControlActionTable MCAndroidPlayerControl::kActionTable =

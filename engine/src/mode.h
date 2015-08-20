@@ -84,6 +84,13 @@ bool MCModeIsExecutableFirstArgument(void);
 //
 bool MCModeHasCommandLineArguments(void);
 
+// This hook is used to determine if we populate the environment
+// variables at startup.
+//
+// This hook is called by X_open.
+//
+bool MCModeHasEnvironmentVariables(void);
+
 // This hook is used to determine if any stacks on the command-line
 // should be opened on startup.
 //
