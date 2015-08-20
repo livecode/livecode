@@ -668,8 +668,6 @@ public:
 		t_url_str = nil;
 		/* UNCHECKED */ MCCefStringToUtf8String(t_url, t_url_str);
 		
-		m_owner->OnNavigationBegin(!p_frame->IsMain(), t_url_str);
-		
 		if (t_url_str != nil)
 			MCCStringFree(t_url_str);
 		
@@ -791,7 +789,13 @@ public:
 		t_url_str = nil;
 		/* UNCHECKED */ MCCefStringToUtf8String(t_url, t_url_str);
 		
-		m_owner->OnNavigationComplete(!p_frame->IsMain(), t_url_str);
+		bool t_frame;
+		t_frame = !p_frame->IsMain();
+		
+		if (!t_frame)
+			m_owner->OnNavigationBegin(t_frame, t_url_str);
+
+		m_owner->OnDocumentLoadBegin(t_frame, t_url_str);
 		
 		if (t_url_str != nil)
 			MCCStringFree(t_url_str);
@@ -808,8 +812,6 @@ public:
 		bool t_is_error;
 		t_is_error = RemoveLoadErrorFrame(p_frame->GetIdentifier(), t_url, t_error);
 		
-		/* TODO - Load error handling */
-		// For now we don't send a browser load error message - instead make sure documentComplete is sent with the correct url
 		if (!t_is_error)
 			t_url = p_frame->GetURL();
 		
@@ -820,19 +822,30 @@ public:
 		t_url_str = nil;
 		/* UNCHECKED */ MCCefStringToUtf8String(t_url, t_url_str);
 		
+		bool t_frame;
+		t_frame = !p_frame->IsMain();
+		
 		if (t_is_error)
 		{
 			char *t_err_str;
 			t_err_str = nil;
 			/* UNCHECKED */ MCCefStringToUtf8String(t_error, t_err_str);
 			
-			m_owner->OnDocumentLoadFailed(!p_frame->IsMain(), t_url_str, t_err_str);
+			m_owner->OnDocumentLoadFailed(t_frame, t_url_str, t_err_str);
+			
+			if (!t_frame)
+				m_owner->OnNavigationFailed(t_frame, t_url_str, t_err_str);
 			
 			if (t_err_str != nil)
 				MCCStringFree(t_err_str);
 		}
 		else
-			m_owner->OnDocumentLoadComplete(!p_frame->IsMain(), t_url_str);
+		{
+			m_owner->OnDocumentLoadComplete(t_frame, t_url_str);
+			
+			if (!t_frame)
+				m_owner->OnNavigationComplete(t_frame, t_url_str);
+		}
 		
 		if (t_url_str != nil)
 			MCCStringFree(t_url_str);
@@ -840,9 +853,6 @@ public:
 	
 	virtual void OnLoadError(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefFrame> p_frame, CefLoadHandler::ErrorCode p_error_code, const CefString &p_error_text, const CefString &p_failed_url) OVERRIDE
 	{
-		if (IgnoreUrl(p_failed_url))
-			return;
-		
 		AddLoadErrorFrame(p_frame->GetIdentifier(), p_failed_url, p_error_text);
 	}
 	

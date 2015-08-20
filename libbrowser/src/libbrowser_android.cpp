@@ -361,7 +361,10 @@ JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doSta
     
 	MCBrowser *t_browser;
 	if (MCBrowserFindWithJavaView(env, object, t_browser))
+	{
+		((MCAndroidWebViewBrowser*)t_browser)->OnNavigationBegin(false, t_url);
 		((MCAndroidWebViewBrowser*)t_browser)->OnDocumentLoadBegin(false, t_url);
+	}
 
 	MCCStringFree(t_url);
 }
@@ -375,7 +378,10 @@ JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doFin
     
 	MCBrowser *t_browser;
 	if (MCBrowserFindWithJavaView(env, object, t_browser))
+	{
 		((MCAndroidWebViewBrowser*)t_browser)->OnDocumentLoadComplete(false, t_url);
+		((MCAndroidWebViewBrowser*)t_browser)->OnNavigationComplete(false, t_url);
+	}
 
 	MCCStringFree(t_url);
 }
@@ -393,7 +399,10 @@ JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doLoa
     
 	MCBrowser *t_browser;
 	if (MCBrowserFindWithJavaView(env, object, t_browser))
+	{
 		((MCAndroidWebViewBrowser*)t_browser)->OnDocumentLoadFailed(false, t_url, t_error);
+		((MCAndroidWebViewBrowser*)t_browser)->OnNavigationFailed(false, t_url, t_error);
+	}
 
 	MCCStringFree(t_url);
 	MCCStringFree(t_error);
