@@ -101,26 +101,28 @@ main(int argc, char *argv[])
 	t_envp[t_envc] = nil; /* null-terminated */
 
 	/* ---------- Engine boot */
+	MCresult = nil;
 	if (!X_init(argc, t_argv, t_envc, t_envp))
 	{
+		MCStringRef t_string = nil;
 		if (MCresult != nil)
 		{
 			MCExecContext ctxt(nil, nil, nil);
 			MCAutoValueRef t_result;
-			MCAutoStringRef t_string;
-			MCAutoStringRefAsSysString t_message;
 
 			MCresult->eval(ctxt, &t_result);
-			ctxt.ConvertToString(*t_result, &t_string);
+			ctxt.ConvertToString(*t_result, t_string);
+		}
 
-			if (t_message . Lock(*t_string))
-			{
-				MCEmscriptenBootError(*t_message);
-			}
-			else
-			{
-				MCEmscriptenBootError("unknown boot failure");
-			}
+		MCAutoStringRefAsSysString t_message;
+		if (nil != t_string &&
+		    t_message.Lock(t_string))
+		{
+			MCEmscriptenBootError(*t_message);
+		}
+		else
+		{
+			MCEmscriptenBootError("unknown boot failure");
 		}
 	}
 
