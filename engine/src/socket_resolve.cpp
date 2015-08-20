@@ -51,6 +51,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <sys/param.h>
 #endif
 
+#ifdef TARGET_SUBPLATFORM_ANDROID
+#include "mblandroidjava.h"
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 uint32_t g_name_resolution_count = 0;
@@ -196,6 +200,12 @@ struct _thread_notify_info
 
 void notify_thread(void *p_context)
 {
+#ifdef TARGET_SUBPLATFORM_ANDROID
+    // MM-2015-08-04: [[ Bug 15679 ]] Pushing the callback notification will call BreakWait which accesses the JNI.
+    //   Make sure we attach this thread to the JVM so that we have a JNI interface pointer.
+    MCJavaAttachCurrentThread();
+#endif
+    
 	_thread_notify_info *t_info;
 	t_info = (_thread_notify_info*)p_context;
 
@@ -205,6 +215,10 @@ void notify_thread(void *p_context)
 	// during unsafe wait.  fixes broken hostnametoaddress call
 	MCNotifyPush(t_info->m_callback, t_info->m_context, false, false);
 	MCMemoryDelete(t_info);
+    
+#ifdef TARGET_SUBPLATFORM_ANDROID
+    MCJavaDetachCurrentThread();
+#endif
 }
 
 bool launch_thread_with_notify(_thread_function p_thread, _notify_callback p_callback, void *p_context)

@@ -144,7 +144,7 @@ MC_DLLEXPORT_DEF bool
 MCSFileDelete (MCStringRef p_path)
 {
 	MCS_FILE_CONVERT_PATH(p_path, t_native_path);
-	return __MCSFileDelete (p_path);
+	return __MCSFileDelete (t_native_path);
 }
 
 MC_DLLEXPORT_DEF bool

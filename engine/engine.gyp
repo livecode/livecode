@@ -569,8 +569,8 @@
 
 		{
 			'target_name': 'development',
-			'product_name': 'livecode-community',
-			
+			'product_name': 'LiveCode-Community',
+
 			'includes':
 			[
 				'app-bundle-template.gypi',
@@ -599,18 +599,11 @@
 				[
 					'OS == "mac"',
 					{
-						'product_name': 'LiveCode-Community',
 						'mac_bundle_resources':
 						[
 							'rsrc/LiveCode.icns',
 							'rsrc/LiveCodeDoc.icns',
 						],
-					},
-				],
-				[
-					'OS == "win"',
-					{
-						'product_name': 'engine-community',
 					},
 				],
 				[
@@ -747,7 +740,7 @@
 			
 						'variables':
 						{
-							'app_plist': 'rsrc/Standalone-Info.plist',
+							'app_plist': 'rsrc/standalone-mobile-Info.plist',
 						},
 			
 						'dependencies':
@@ -760,8 +753,6 @@
 						[
 							'src/dummy.cpp',
 						],
-
-						'app_plist': 'rsrc/standalone-mobile-Info.plist',
 					},
 				],
 			},

@@ -295,6 +295,8 @@ MCStack::MCStack()
 	cursoroverride = false ;
 	old_rect.x = old_rect.y = old_rect.width = old_rect.height = 0 ;
 
+    m_attachments = nil;
+    
 	view_init();
 }
 
@@ -493,6 +495,8 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	m_view_need_redraw = sref.m_view_need_redraw;
 	m_view_need_resize = sref.m_view_need_resize;
 
+    m_attachments = nil;
+    
 	view_copy(sref);
 }
 
@@ -2910,6 +2914,8 @@ Boolean MCStack::del()
 		if (cards != NULL)
 			cards->message(MCM_delete_stack);
 	
+    notifyattachments(kMCStackAttachmentEventDeleting);
+    
 	if (MCdispatcher->ismainstack(this))
 	{
 		MCdispatcher->removestack(this);
@@ -3075,6 +3081,8 @@ void MCStack::toolchanged(Tool p_new_tool)
 
 void MCStack::loadexternals(void)
 {
+    notifyattachments(kMCStackAttachmentEventRealizing);
+    
 	if (MCStringIsEmpty(externalfiles) || m_externals != NULL || !MCSecureModeCanAccessExternal())
 		return;
 
@@ -3102,6 +3110,8 @@ void MCStack::loadexternals(void)
 
 void MCStack::unloadexternals(void)
 {
+    notifyattachments(kMCStackAttachmentEventUnrealizing);
+    
 	if (m_externals == NULL)
 		return;
 
@@ -3426,4 +3436,55 @@ MCPlatformControlType MCStack::getcontroltype()
 MCPlatformControlPart MCStack::getcontrolsubpart()
 {
     return kMCPlatformControlPartNone;
+}
+
+//////////
+
+bool MCStack::attach(void *p_context, MCStackAttachmentCallback p_callback)
+{
+    MCStackAttachment *t_attachment;
+    for(t_attachment = m_attachments; t_attachment != nil; t_attachment = t_attachment -> next)
+        if (t_attachment -> context == p_context && t_attachment -> callback == p_callback)
+            return true;
+    
+    if (!MCMemoryNew(t_attachment))
+        return false;
+    
+    t_attachment -> next = m_attachments;
+    t_attachment -> context = p_context;
+    t_attachment -> callback = p_callback;
+    m_attachments = t_attachment;
+    
+    // If we are already realized, then notify.
+    if (window != nil)
+        p_callback(p_context, this, kMCStackAttachmentEventRealizing);
+    
+    return true;
+}
+
+void MCStack::detach(void *p_context, MCStackAttachmentCallback p_callback)
+{
+    MCStackAttachment *t_attachment, *t_previous;
+    for(t_previous = nil, t_attachment = m_attachments; t_attachment != nil; t_attachment = t_attachment -> next)
+    {
+        if (t_attachment -> context == p_context && t_attachment -> callback == p_callback)
+            break;
+        t_previous = t_attachment;
+    }
+    
+    if (t_attachment == nil)
+        return;
+    
+    if (t_previous != nil)
+        t_previous -> next = t_attachment -> next;
+    else
+        m_attachments = t_attachment -> next;
+    
+    MCMemoryDelete(t_attachment);
+}
+
+void MCStack::notifyattachments(MCStackAttachmentEvent p_event)
+{
+    for(MCStackAttachment *t_attachment = m_attachments; t_attachment != nil; t_attachment = t_attachment -> next)
+        t_attachment -> callback(t_attachment -> context, this, p_event);
 }
