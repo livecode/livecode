@@ -141,7 +141,7 @@ public:
 				break;
 		}
 		
-		return false;
+		return true;
 	}
 	
 	virtual bool SetBoolProperty(MCBrowserProperty p_property, bool p_value)
@@ -155,7 +155,7 @@ public:
 				break;
 		}
 		
-		return false;
+		return true;
 	}
 	
 	virtual bool GetStringProperty(MCBrowserProperty p_property, char *&r_utf8_string)
@@ -172,7 +172,7 @@ public:
 				break;
 		}
 		
-		return false;
+		return true;
 	}
 	
 	virtual bool SetStringProperty(MCBrowserProperty p_property, const char *p_utf8_string)
@@ -186,7 +186,7 @@ public:
 				break;
 		}
 		
-		return false;
+		return true;
 	}
 	
 	virtual bool GoBack()

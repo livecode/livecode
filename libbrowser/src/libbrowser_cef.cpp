@@ -1437,7 +1437,7 @@ bool MCCefBrowserBase::GetBoolProperty(MCBrowserProperty p_property, bool &r_val
 			break;
 	}
 	
-	return false;
+	return true;
 }
 
 bool MCCefBrowserBase::SetBoolProperty(MCBrowserProperty p_property, bool p_value)
@@ -1460,7 +1460,7 @@ bool MCCefBrowserBase::SetBoolProperty(MCBrowserProperty p_property, bool p_valu
 			break;
 	}
 	
-	return false;
+	return true;
 }
 
 bool MCCefBrowserBase::SetStringProperty(MCBrowserProperty p_property, const char *p_value)
@@ -1482,7 +1482,7 @@ bool MCCefBrowserBase::SetStringProperty(MCBrowserProperty p_property, const cha
 			break;
 	}
 	
-	return false;
+	return true;
 }
 
 bool MCCefBrowserBase::GetStringProperty(MCBrowserProperty p_property, char *&r_value)
@@ -1508,7 +1508,7 @@ bool MCCefBrowserBase::GetStringProperty(MCBrowserProperty p_property, char *&r_
 			break;
 	}
 	
-	return false;
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
