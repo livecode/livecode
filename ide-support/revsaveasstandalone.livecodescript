@@ -576,7 +576,10 @@ private command revCreateStandalone pStack, pFolder
             case "MacOSX x86-32"
                // SN-2015-07-09: [[ StandaloneDeployment ]] Gypified Standalone-<edition>.app building does not
                //  allow to create broken applications, so that the executable file in it bears the edition.
-               put it & "/Mac OS X/x86-32/Standalone.app/Contents/MacOS/Standalone-" & the editionType into line 1 of tEngineSourceFile[tPlatform]
+               local tEdition
+               put the editionType into tEdition
+               put the upper of char 1 of tEdition into char 1 of tEdition
+               put it & "/Mac OS X/x86-32/Standalone.app/Contents/MacOS/Standalone-" & tEdition into line 1 of tEngineSourceFile[tPlatform]
                break
             case "Windows"
                put it & "/Windows/x86-32/Standalone" into tEngineSourceFile[tPlatform]
