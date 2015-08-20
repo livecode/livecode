@@ -20,6 +20,10 @@
 #include <libbrowser.h>
 
 ////////////////////////////////////////////////////////////////////////////////
+
+typedef bool (*MCBrowserIterateCallback)(MCBrowser *p_browser, void *p_context);
+
+////////////////////////////////////////////////////////////////////////////////
 // C++ Implementation Class
 
 // Browser implementation base class
@@ -48,7 +52,7 @@ public:
 	
 	static bool BrowserListAdd(MCBrowser *p_browser);
 	static void BrowserListRemove(MCBrowser *p_browser);
-	static bool BrowserListFindWithView(void *p_view, MCBrowser *&r_browser);
+	static bool BrowserListIterate(MCBrowserIterateCallback p_callback, void *p_context);
 
 private:
 	struct MCBrowserListEntry

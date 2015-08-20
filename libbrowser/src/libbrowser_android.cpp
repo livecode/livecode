@@ -298,6 +298,43 @@ private:
 
 //////////
 
+struct __browser_find_with_java_view_context
+{
+	JNIEnv* env;
+	jobject view;
+	MCBrowser *browser;
+};
+
+static bool __browser_find_with_java_view_callback(MCBrowser *p_browser, void *p_context)
+{
+	__browser_find_with_java_view_context *context;
+	context = (__browser_find_with_java_view_context*)p_context;
+	
+	if (context->env->IsSameObject(context->view, (jobject)p_browser->GetNativeLayer()))
+	{
+		context->browser = p_browser;
+		return false; // End iterator once browser found
+	}
+	
+	return true;
+}
+
+bool MCBrowserFindWithJavaView(JNIEnv *env, jobject p_view, MCBrowser *&r_browser)
+{
+	__browser_find_with_java_view_context context;
+	context.env = env;
+	context.view = p_view;
+	context.browser = nil;
+	
+	MCBrowserBase::BrowserListIterate(__browser_find_with_java_view_callback, &context);
+	
+	if (context.browser == nil)
+		return false;
+		
+	r_browser = context.browser;
+	return true;
+}
+
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doJSExecutionResult(JNIEnv *env, jobject object, jstring tag, jstring result) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doJSExecutionResult(JNIEnv *env, jobject object, jstring tag, jstring result)
 {
@@ -308,7 +345,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doJSE
 	/* UNCHECKED */ MCBrowserJavaStringToUtf8String(env, result, t_result);
 	
 	MCBrowser *t_browser;
-	if (MCBrowserBase::BrowserListFindWithView(object, t_browser))
+	if (MCBrowserFindWithJavaView(env, object, t_browser))
 		((MCAndroidWebViewBrowser*)t_browser)->SetJavaScriptResult(t_tag, t_result);
     
     MCCStringFree(t_tag);
@@ -323,7 +360,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doSta
     /* UNCHECKED */ MCBrowserJavaStringToUtf8String(env, url, t_url);
     
 	MCBrowser *t_browser;
-	if (MCBrowserBase::BrowserListFindWithView(object, t_browser))
+	if (MCBrowserFindWithJavaView(env, object, t_browser))
 		((MCAndroidWebViewBrowser*)t_browser)->OnDocumentLoadBegin(false, t_url);
 
 	MCCStringFree(t_url);
@@ -337,7 +374,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doFin
     /* UNCHECKED */ MCBrowserJavaStringToUtf8String(env, url, t_url);
     
 	MCBrowser *t_browser;
-	if (MCBrowserBase::BrowserListFindWithView(object, t_browser))
+	if (MCBrowserFindWithJavaView(env, object, t_browser))
 		((MCAndroidWebViewBrowser*)t_browser)->OnDocumentLoadComplete(false, t_url);
 
 	MCCStringFree(t_url);
@@ -355,7 +392,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doLoa
     /* UNCHECKED */ MCBrowserJavaStringToUtf8String(env, error, t_error);
     
 	MCBrowser *t_browser;
-	if (MCBrowserBase::BrowserListFindWithView(object, t_browser))
+	if (MCBrowserFindWithJavaView(env, object, t_browser))
 		((MCAndroidWebViewBrowser*)t_browser)->OnDocumentLoadFailed(false, t_url, t_error);
 
 	MCCStringFree(t_url);

@@ -155,18 +155,15 @@ void MCBrowserBase::BrowserListRemove(MCBrowser *p_browser)
 	MCBrowserMemoryDelete(t_entry);
 }
 
-bool MCBrowserBase::BrowserListFindWithView(void *p_view, MCBrowser *&r_browser)
+bool MCBrowserBase::BrowserListIterate(MCBrowserIterateCallback p_callback, void *p_context)
 {
 	for (MCBrowserListEntry *t_entry = s_browser_list; t_entry != nil; t_entry = t_entry->next)
 	{
-		if (t_entry->browser->GetNativeLayer() == p_view)
-		{
-			r_browser = t_entry->browser;
-			return true;
-		}
+		if (!p_callback(t_entry->browser, p_context))
+			return false;
 	}
 	
-	return false;
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
