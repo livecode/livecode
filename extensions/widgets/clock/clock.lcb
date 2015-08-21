@@ -46,7 +46,7 @@ the universal time (UTC).
 */
 
 -- declaring extension as widget, followed by identifier
-widget com.livecode.extensions.livecode.clock
+widget com.livecode.widget.clock
 --
 
 -- dependency declarations
