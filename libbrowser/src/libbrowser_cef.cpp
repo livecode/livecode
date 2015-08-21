@@ -29,6 +29,10 @@
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
+
+#define CEF_DUMMY_URL "http://libbrowser_dummy_url/"
+
+////////////////////////////////////////////////////////////////////////////////
 // String conversion
 
 bool MCCefStringToUtf8String(const CefString &p_cef_string, char *&r_u8_string)
@@ -883,7 +887,7 @@ bool MCCefBrowserBase::Initialize()
 	
 	// IM-2014-05-06: [[ Bug 12384 ]] Browser must be created with non-empty URL or setting
 	// htmltext will not work
-	CefString t_url("dummy:");
+	CefString t_url(CEF_DUMMY_URL);
 	
 	// IM-2014-05-06: [[ Bug 12384 ]] Prevent callback messages for dummy URL
 	m_client->AddIgnoreUrl(t_url);
@@ -1169,8 +1173,7 @@ void MCCefBrowserBase::SetSource(const char *p_source)
 	/* UNCHECKED */ MCCefStringFromUtf8String(p_source, t_source);
 	
 	// LoadString requires a valid url
-	CefString t_url;
-	t_url = "http://revbrowser_dummy_url";
+	CefString t_url(CEF_DUMMY_URL);
 	
 	m_browser->GetMainFrame()->LoadString(t_source, t_url);
 }
