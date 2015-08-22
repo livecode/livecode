@@ -78,9 +78,11 @@ bool MCListAppend(MCListRef self, MCValueRef p_value)
 		break;
 
 	default:
-		// value type conversion not implemented
-		MCAssert(false);
-		return false;
+		if (!MCValueCopyDescription(p_value, t_string))
+		{
+			return false;
+		}
+		break;
 	}
 	if (!t_first && !MCStringAppend(self -> buffer, self -> delimiter))
 		return false;
