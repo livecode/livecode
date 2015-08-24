@@ -33,10 +33,6 @@ __MCEmscriptenNotImplemented(const char *p_file,
 	__MCLog(p_file, p_line, "not implemented: %s", p_function);
 }
 
-#if defined(_DEBUG)
-#	define MCEmscriptenNotImplemented() __MCEmscriptenNotImplemented(__FILE__, __LINE__, __PRETTY_FUNCTION__)
-#else
-#   define MCEmscriptenNotImplemented()
-#endif /* _DEBUG */
+#define MCEmscriptenNotImplemented() __MCEmscriptenNotImplemented(__FILE__, __LINE__, __PRETTY_FUNCTION__)
 
 #endif /* ! __MC_EMSCRIPTEN_UTIL_H__ */
