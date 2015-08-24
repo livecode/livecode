@@ -1974,7 +1974,7 @@ private function builderGetDocsAPIData pExtensions
       put textEncode(tLcdoc, "utf-8") into url ("binfile:" & tFolder & slash & "api.lcdoc")
       
       # Convert to JSON
-      put revDocsFormatDocTextAsJSON(tLcdoc,"", "LiveCode") into tExtensionAPI
+      put revDocsFormatDocTextAsJSON(tFolder & slash & "api.lcdoc", tLcdoc,"", "LiveCode") into tExtensionAPI
       
       # add to the data
       if tExtensionAPI is not empty then
