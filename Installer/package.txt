@@ -356,7 +356,7 @@ component Documentation
 	into [[ToolsFolder]]/Documentation/guides place
 		file "ide:Documentation/guides/Extending LiveCode.md"
 		file "ide:Documentation/guides/LiveCode Script.md"
-		file "ide:Documentation/guides/LiveCode Builder Style Guide.md
+		file "ide:Documentation/guides/LiveCode Builder Style Guide.md"
 	into [[ToolsFolder]]/Documentation/html_viewer place
 		file ide:Documentation/html_viewer/css/bootstrap.min.css as css/bootstrap.min.css
 		file ide:Documentation/html_viewer/css/codestyle.css as css/codestyle.css
