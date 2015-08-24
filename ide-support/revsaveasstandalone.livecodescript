@@ -578,7 +578,11 @@ private command revCreateStandalone pStack, pFolder
                //  allow to create broken applications, so that the executable file in it bears the edition.
                local tEdition
                put the editionType into tEdition
-               put the upper of char 1 of tEdition into char 1 of tEdition
+               if tEdition is "professional" then
+                  put "Commercial" into tEdition
+               else
+                  put the upper of char 1 of tEdition into char 1 of tEdition
+               end if
                put it & "/Mac OS X/x86-32/Standalone.app/Contents/MacOS/Standalone-" & tEdition into line 1 of tEngineSourceFile[tPlatform]
                break
             case "Windows"
