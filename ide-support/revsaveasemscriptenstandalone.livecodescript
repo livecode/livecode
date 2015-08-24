@@ -183,10 +183,10 @@ private function getEngineFiles
    local tFiles
    
    -- Engine JavaScript
-   put mapPath("standalone-" & revLicenseType() & ".js") into tFiles[1]
+   put mapPath("standalone-" & revLicenseType() & "-" & the version & ".js") into tFiles[1]
    
    -- Memory initialisation file
-   put mapPath("standalone-" & revLicenseType() & ".html.mem") into tFiles[2]
+   put mapPath("standalone-" & revLicenseType() & "-" & the version & ".html.mem") into tFiles[2]
    
    return tFiles
 end getEngineFiles
