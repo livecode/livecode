@@ -45,7 +45,7 @@ Sets the number of options available in the selector.
 */
 
 -- declaring extension as widget, followed by identifier
-widget com.livecode.extensions.livecode.selector
+widget com.livecode.widget.selector
 --
 
 -- dependancy declarations

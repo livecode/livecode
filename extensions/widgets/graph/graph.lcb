@@ -98,7 +98,7 @@ Controls whether the vertical lines on the graph are shown.
 
 */
 
-widget com.livecode.extensions.livecode.linegraph
+widget com.livecode.widget.lineGraph
 --
 
 -- dependency declarations
