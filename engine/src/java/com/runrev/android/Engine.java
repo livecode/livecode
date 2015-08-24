@@ -963,7 +963,7 @@ public class Engine extends View implements EngineApi
     
     Object createPlayerControl()
     {
-        return m_native_control_module.createControl("com.runrev.android.nativecontrol.PlayerControl");
+        return m_native_control_module.createControl("com.runrev.android.nativecontrol.VideoControl");
     }
     
     Object createInputControl()
