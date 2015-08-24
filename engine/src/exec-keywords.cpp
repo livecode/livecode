@@ -178,10 +178,15 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
     
     if (global_handler)
     {
-        // AL-2014-03-14: Currently no mobile handler's execution is halted when ES_ERROR
-        //  is returned. Error info is returned via the result. 
         if (!MCRunGlobalHandler(name, params, stat))
             stat = ES_NOT_HANDLED;
+		
+		// AL-2014-03-14: Currently no mobile handler's execution is halted when ES_ERROR
+		//  is returned. Error info is returned via the result.
+#ifdef _MOBILE
+		if (stat != ES_NOT_HANDLED)
+			stat = ES_NORMAL;
+#endif
     }
 	else if (handler != nil)
 	{
