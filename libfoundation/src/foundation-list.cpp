@@ -78,9 +78,11 @@ bool MCListAppend(MCListRef self, MCValueRef p_value)
 		break;
 
 	default:
-		// value type conversion not implemented
-		MCAssert(false);
-		return false;
+		if (!MCStringFormat(t_string, "%@", p_value))
+		{
+			return false;
+		}
+		break;
 	}
 	if (!t_first && !MCStringAppend(self -> buffer, self -> delimiter))
 		return false;
