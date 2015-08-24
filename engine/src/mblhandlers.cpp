@@ -1271,6 +1271,8 @@ Exec_stat MCHandleCanSendMail(void *context, MCParameter *p_parameters)
         ctxt . SetTheResultToValue(kMCTrue);
     else
         ctxt . SetTheResultToValue(kMCFalse);
+    
+    return ES_NORMAL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6619,6 +6621,8 @@ Exec_stat MCHandleControlTarget(void *context, MCParameter *p_parameters)
     MCNativeControlIdentifierFree(ctxt, t_identifier);
     if (*t_string != nil)
         ctxt . SetTheResultToValue(*t_string);
+    
+    return ES_NORMAL;
 }
 
 bool list_native_controls(void *context, MCNativeControl* p_control)
@@ -6742,6 +6746,11 @@ Exec_stat MCHandleSetRemoteControlDisplay(void *context, MCParameter *p_paramete
     
     if (t_success)
         MCMiscSetRemoteControlDisplayProperties(ctxt, *t_props);
+    
+    if (t_success)
+        return ES_NORMAL;
+    else
+        return ES_ERROR;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

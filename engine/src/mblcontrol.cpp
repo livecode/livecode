@@ -441,7 +441,10 @@ bool MCNativeControl::GetControlList(MCStringRef& r_list)
             t_success = MCListAppend(*t_list, *t_control_string);
     }
     
-    MCListCopyAsString(*t_list, r_list);
+    if (t_success)
+        t_success = MCListCopyAsString(*t_list, r_list);
+    
+    return t_success;
 }
 
 
