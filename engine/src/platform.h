@@ -125,6 +125,8 @@ enum MCPlatformPropertyType
     kMCPlatformPropertyTypeUInt32Array,
 	
 	kMCPlatformPropertyTypePointer,
+    
+    kMCPlatformPropertyType_Last,
 };
 
 // The lower 21-bits hold a codepoint, the upper bits hold modifiers. Some
