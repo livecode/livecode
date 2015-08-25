@@ -23,8 +23,9 @@ for lib in $@ ; do
   libs+=\ --js-library\ "${lib}"
 done
 
+EMCC=${EMCC:-emcc}
 
-emcc -O2 -g ${CFLAGS} \
+${EMCC} -O2 -g ${CFLAGS} \
 	"${input}" \
 	-o "${output}" \
 	-s EXPORTED_FUNCTIONS=@"${exports}" \

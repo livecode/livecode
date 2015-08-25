@@ -43,15 +43,15 @@ bool MCEventQueuePostNotify(MCEventQueueNotifyCallback callback, void *state);
 // IM-2014-02-14: [[ HiDPI ]] Post backing scale changes with window reshape message
 bool MCEventQueuePostWindowReshape(MCStack *stack, MCGFloat backing_scale);
 
-bool MCEventQueuePostMouseFocus(MCStack *stack, uint32_t time, bool inside);
-bool MCEventQueuePostMousePress(MCStack *stack, uint32_t time, uint32_t modifiers, MCMousePressState state, int32_t button);
+MC_DLLEXPORT bool MCEventQueuePostMouseFocus(MCStack *stack, uint32_t time, bool inside);
+MC_DLLEXPORT bool MCEventQueuePostMousePress(MCStack *stack, uint32_t time, uint32_t modifiers, MCMousePressState state, int32_t button);
 bool MCEventQueuePostMouseWheel(MCStack *stack, uint32_t time, uint32_t modifiers, int32_t dh, int32_t dv);
-bool MCEventQueuePostMousePosition(MCStack *stack, uint32_t time, uint32_t modifiers, int32_t x, int32_t y);
+MC_DLLEXPORT bool MCEventQueuePostMousePosition(MCStack *stack, uint32_t time, uint32_t modifiers, int32_t x, int32_t y);
 
-bool MCEventQueuePostKeyFocus(MCStack *stack, bool owner);
-bool MCEventQueuePostKeyPress(MCStack *stack, uint32_t modifiers, uint32_t char_code, uint32_t key_code);
+MC_DLLEXPORT bool MCEventQueuePostKeyFocus(MCStack *stack, bool owner);
+MC_DLLEXPORT bool MCEventQueuePostKeyPress(MCStack *stack, uint32_t modifiers, uint32_t char_code, uint32_t key_code);
 
-bool MCEventQueuePostImeCompose(MCStack *stack, bool enabled, uint32_t offset, const uint16_t *chars, uint32_t char_count);
+MC_DLLEXPORT bool MCEventQueuePostImeCompose(MCStack *stack, bool enabled, uint32_t offset, const uint16_t *chars, uint32_t char_count);
 
 enum MCEventTouchPhase
 {
