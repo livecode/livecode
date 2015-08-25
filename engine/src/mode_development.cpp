@@ -2029,6 +2029,7 @@ void MCModeSetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef p_settings)
             { "server", kMCLicenseDeployToServer },
             { "ios-embedded", kMCLicenseDeployToIOSEmbedded },
             { "android-embedded", kMCLicenseDeployToIOSEmbedded },
+            { "html5", kMCLicenseDeployToHTML5 },
         };
         
         MClicenseparameters . deploy_targets = 0;
@@ -2183,6 +2184,7 @@ void MCModeGetRevLicenseInfo(MCExecContext& ctxt, MCStringRef& r_info)
         "Server",
         "iOS Embedded",
         "Android Embedded",
+        "HTML5",
     };
     
     bool t_success;
@@ -2197,7 +2199,7 @@ void MCModeGetRevLicenseInfo(MCExecContext& ctxt, MCStringRef& r_info)
     {
         bool t_first;
         t_first = true;
-        for(uint32_t i = 0; t_success && i < 9; i++)
+        for(uint32_t i = 0; t_success && i < sizeof(s_deploy_targets) / sizeof(s_deploy_targets[0]); i++)
         {
             if ((MClicenseparameters . deploy_targets & (1 << i)) != 0)
             {
