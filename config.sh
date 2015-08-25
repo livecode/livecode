@@ -57,6 +57,7 @@ The currently-supported PLATFORMs are:
   linux-x86_64
   android-armv6
   win-x86
+  emscripten
 
 EOF
   exit $1
@@ -176,6 +177,7 @@ case ${PLATFORM} in
   mac) ;;
   ios) ;;
   win-x86) ;;
+  emscripten) ;;
   *)
     echo "ERROR: Unrecognised platform: '${PLATFORM}'" >&2
     exit 1;;
@@ -198,6 +200,7 @@ if test -z "$OS"; then
     mac*) OS="mac" ;;
     ios*) OS="ios" ;;
     win*) OS="win" ;;
+    emscripten*) OS="emscripten" ;;
   esac
 fi
 
@@ -206,7 +209,7 @@ if test -z "$FORMATS"; then
   case ${OS} in
     # Always use Linux-style makefiles for Android as the Android toolchain
     # is more Linux-y than Darwin-y
-    linux|android) FORMATS="make-linux" ;;
+    linux|android|emscripten) FORMATS="make-linux" ;;
     mac|ios)       FORMATS="xcode" ;;
     win)           FORMATS="msvs" ;;
   esac
@@ -244,6 +247,7 @@ if test -z "$TARGET_ARCH"; then
     *-x86)     TARGET_ARCH="x86" ;;
     *-x86_64)  TARGET_ARCH="x86_64" ;;
     *-armv6)   TARGET_ARCH="armv6" ;;
+    emscripten) TARGET_ARCH="js" ;;
 
     mac*|ios*)
       case ${XCODE_TARGET_SDK} in
@@ -350,7 +354,7 @@ if [ "${BUILD_EDITION}" == "commercial" ] ; then
 fi
 
 case ${OS} in
-  linux)
+  linux|emscripten)
     invoke_gyp $basic_args "-DOS=${OS}" "-Dtarget_arch=${TARGET_ARCH}" "$@"
     ;;
   android)

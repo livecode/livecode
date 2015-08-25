@@ -85,6 +85,19 @@
 						],
 					},
 				],
+				[
+					'OS == "emscripten"',
+					{
+						'dependencies':
+						[
+							'../thirdparty/libskia/libskia.gyp:libskia',
+						],
+						'sources':
+						[
+							'<@(engine_minizip_source_files)',
+						],
+					},
+				],
 			],
 			
 			'link_settings':

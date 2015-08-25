@@ -214,7 +214,7 @@ MCHarfbuzzSkiaFace *MCHarfbuzzGetFaceForSkiaTypeface(SkTypeface *p_typeface, uin
         t_hb_sk_face -> skia_face = t_face;
         p_typeface -> ref();
         
-		MCGCacheTableSet(s_hb_face_cache, t_key, sizeof(t_id), t_hb_sk_face, sizeof(MCHarfbuzzSkiaFace));
+        //MCGCacheTableSet(s_hb_face_cache, t_key, sizeof(t_id), &t_hb_sk_face, sizeof(MCHarfbuzzSkiaFace*));
         return t_hb_sk_face;
 	}
 	
@@ -227,6 +227,15 @@ MCHarfbuzzSkiaFace *MCHarfbuzzGetFaceForSkiaTypeface(SkTypeface *p_typeface, uin
 void shape(const unichar_t* p_text, uindex_t p_char_count, MCGPoint p_location, bool p_rtl, const MCGFont &p_font, MCGlyphRun*& r_runs, uindex_t& r_run_count)
 {
     MCAutoArray<MCGlyphRun> t_runs;
+
+	if (p_font . fid == nil)
+	{
+		MCLog("%s: Found null font!", __FUNCTION__);
+		r_run_count = 0;
+		r_runs = nil;
+		return;
+	}
+
     SkTypeface *t_typeface = (SkTypeface *)p_font . fid;
  
     //MCLog("typeface name %d", t_typeface -> uniqueID());
@@ -292,8 +301,11 @@ void shape(const unichar_t* p_text, uindex_t p_char_count, MCGPoint p_location, 
         if (t_start != t_end)
         {
             // Need to get a fallback font here.
-            SkTypeface *t_fallback = SkCreateFallbackTypefaceForChar(*(p_text + t_char_index), SkTypeface::kNormal);
-            
+	        SkTypeface *t_fallback = nil;
+#if defined(__ANDROID__)
+	        SkCreateFallbackTypefaceForChar(*(p_text + t_char_index), SkTypeface::kNormal);
+#endif /* __ANDROID__ */
+
             // TODO: This currently seems to return nil all the time.
             if (t_fallback != nil)
             {

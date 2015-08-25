@@ -19,14 +19,14 @@
 				'toolchain/toolchain.gyp:toolchain-all',
 
 				# The revsecurity library is an output and not an intermediate product
-				'thirdparty/libopenssl/libopenssl.gyp:revsecurity',
+				#'thirdparty/libopenssl/libopenssl.gyp:revsecurity',
 				
 				# Externals
-				'revdb/revdb.gyp:external-revdb',
-				'revdb/revdb.gyp:dbmysql',
-				'revdb/revdb.gyp:dbsqlite',
-				'revxml/revxml.gyp:external-revxml',
-				'revzip/revzip.gyp:external-revzip',
+				#'revdb/revdb.gyp:external-revdb',
+				#'revdb/revdb.gyp:dbmysql',
+				#'revdb/revdb.gyp:dbsqlite',
+				#'revxml/revxml.gyp:external-revxml',
+				#'revzip/revzip.gyp:external-revzip',
 				
 				# Widgets and libraries
 				'extensions/extensions.gyp:extensions',
@@ -94,11 +94,20 @@
 					},
 				],
 				[
-					'OS != "android"',
+					'OS != "android" and OS != "emscripten"',
 					{
 						'dependencies':
 						[
 							'revpdfprinter/revpdfprinter.gyp:external-revpdfprinter',
+						],
+					},
+				],
+				[
+					'OS == "emscripten"',
+					{
+						'dependencies':
+						[
+							'engine/engine.gyp:javascriptify',
 						],
 					},
 				],
