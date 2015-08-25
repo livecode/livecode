@@ -1,7 +1,7 @@
 ﻿script "InstallerUtilities"
 # This is the back-end installer, updater and uninstaller code. 
 # This code doesn't know anything about the product it is installing, and should be capable
-# of being re-used for products other than Revolution. It reads a "manifest" file, which contains
+# of being re-used for products other than LiveCode. It reads a "manifest" file, which contains
 # a list of files to be installed and some metadata. The files are then installed according to command
 # line options. Uninstallation uses a "record" file, which is created by the installer. This is basically the same
 # as the manifest file, but with a little less information.
@@ -1438,14 +1438,14 @@ command log pMessage
       local tFile
       switch the platform
          case "linux"
-            put $HOME & "/.runrev/logs/" & toLower(the uProduct of stack "Installer") & "_installer_log.txt" into tFile
+            put $HOME & "/.livecode/logs/" & toLower(the uProduct of stack "Installer") & "_installer_log.txt" into tFile
             break
          case "macos"
-            put specialFolderPath("cusr") & "/Library/Logs/RunRev/" & the uProduct of stack "Installer" & "InstallerLog.txt"  into tFile
+            put specialFolderPath("cusr") & "/Library/Logs/LiveCode/" & the uProduct of stack "Installer" & "InstallerLog.txt"  into tFile
             break
          case "win32"
             -- Make sure we put logs in the 'Local' AppData section.
-            put specialFolderPath(0x001c) & "/RunRev/Logs/" & the uProduct of stack "Installer" & "InstallerLog.txt" into tFile
+            put specialFolderPath(0x001c) & "/LiveCode/Logs/" & the uProduct of stack "Installer" & "InstallerLog.txt" into tFile
             break
       end switch
       

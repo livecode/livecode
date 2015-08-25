@@ -266,12 +266,12 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    
    -- Next build up the deploy info
    local tDietParams, tSignParams, tParams
-   put "RunRev Ltd" into tParams["version"]["CompanyName"]
+   put "LiveCode Ltd" into tParams["version"]["CompanyName"]
    if pEdition is "Community" then
-      put "RunRev LiveCode Community Installer" into tParams["version"]["FileDescription"]
+      put "LiveCode Community Installer" into tParams["version"]["FileDescription"]
       put "LiveCode Community Installer" into tParams["version"]["ProductName"]
    else
-      put "RunRev LiveCode Installer" into tParams["version"]["FileDescription"]
+      put "LiveCode Installer" into tParams["version"]["FileDescription"]
       put "LiveCode Installer" into tParams["version"]["ProductName"]
    end if
    put "©" && word -1 of the long date & ". All rights reserved worldwide." into tParams["version"]["LegalCopyright"]
@@ -339,11 +339,11 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
             put tCertificatesFolder & "/runrev.pvk" into tSignParams["privatekey"]
             put word 1 of url ("file:" & tCertificatesFolder & "/runrev_password.txt") into tSignParams["passphrase"]
             put "http://timestamp.verisign.com/scripts/timstamp.dll" into tSignParams["timestamper"]
-            put "http://www.runrev.com" into tSignParams["url"]
+            put "http://www.livecode.com" into tSignParams["url"]
             if pEdition is "Community" then
-               put "RunRev LiveCode Community Installer" into tSignParams["description"]
+               put "LiveCode Community Installer" into tSignParams["description"]
             else
-               put "RunRev LiveCode Installer" into tSignParams["description"]
+               put "LiveCode Installer" into tSignParams["description"]
             end if
             
             builderLog "message", "Signing windows installer to '" && tSignParams["output"] & "'"
@@ -387,7 +387,7 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
          local tPlistFile
          put macPList() into tPlistFile
          replace "[[BundleId]]" with "com.runrev.installer" in tPlistFile
-         replace "[[BundleName]]" with "runrevinstaller" in tPlistFile
+         replace "[[BundleName]]" with "livecodeinstaller" in tPlistFile
          
          create folder tOutputFileStub & ".app"
          create folder tOutputFileStub & ".app" & slash & "Contents"
