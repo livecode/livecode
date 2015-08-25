@@ -2,12 +2,12 @@
 ## Installation
 Each distinct version has its own complete folder – multiple versions will no longer install side-by-side: on Windows (and Linux), each distinct version will gain its own start menu (application menu) entry; on Mac, each distinct version will have its own app bundle.
 The default location for the install on the different platforms when installing for 'all users' are:
-*Windows: <x86 program files folder>/RunRev/ LiveCode <version>
-*Linux: /opt/runrev/livecode-<version>
+*Windows: <x86 program files folder>/LiveCode/LiveCode <version>
+*Linux: /opt/livecode/livecode-<version>
 *Mac: /Applications/ LiveCode <version>.app
 The default location for the install on the different platforms when installing for 'this user' are:
-*Windows: <user roaming app data folder>/RunRev/Components/LiveCode <version>
-*Linux: ~/.runrev/components/livecode-<version>
+*Windows: <user roaming app data folder>/LiveCode/Components/LiveCode <version>
+*Linux: ~/.livecode/components/livecode-<version>
 *Mac: ~/Applications/ LiveCode <version>.app
 * **Note:** If your linux distribution does not have the necessary support for authentication (gksu) then the installer will run without admin privileges so you will have to manually run it from an admin account to install into a privileged location.*
 ## Uninstallation
@@ -15,22 +15,22 @@ On Windows, the installer hooks into the standard Windows uninstall mechanism. T
 On Mac, simply drag the app bundle to the Trash.
 On Linux, the situation is currently less than ideal:
 *open a terminal
-**cd* to the folder containing your rev install. e.g.
-	`cd /opt/runrev/livecode-<version>`
+**cd* to the folder containing your LiveCode install. e.g.
+	`cd /opt/livecode/livecode-<version>`
 *execute the *.setup.x86* file. i.e.
 	`./.setup.x86`
 *follow the on-screen instructions.
 # Reporting installer issues
-If you find that the installer fails to work for you then please file a bug report in the RQCC or email support@runrev.com so we can look into the problem.
+If you find that the installer fails to work for you then please file a bug report in the RQCC or email support@livecode.com so we can look into the problem.
 In the case of failed install it is vitally important that you include the following information:
 *Your platform and operating system version
 *The location of your home/user folder
 *The type of user account you are using (guest, restricted, admin etc.)
 *The installer log file located as follows:
 * **Windows 2000/XP:** <documents and settings folder>/<user>/Local Settings/
-* **Windows Vista/7:** <users folder>/<user>/AppData/Local/RunRev/Logs
-* **Linux:** <home>/.runrev/logs
-* **Mac:** <home>/Library/Application Support/Logs/RunRev
+* **Windows Vista/7:** <users folder>/<user>/AppData/Local/LiveCode/Logs
+* **Linux:** <home>/.livecode/logs
+* **Mac:** <home>/Library/Application Support/Logs/LiveCode
 # Activation
 The licensing system ties your product licenses to a customer account system, meaning that you no longer have to worry about finding a license key after installing a new copy of LiveCode. Instead, you simply have to enter your email address and password that has been registered with our customer account system and your license key will be retrieved automatically. 
 Alternatively it is possible to activate the product via the use of a specially encrypted license file. These will be available for download from the customer center after logging into your account. This method will allow the product to be installed on machines that do not have access to the internet.
@@ -60,7 +60,7 @@ On both platforms, the result of the installation will be written to the console
 In a similar vein to installation, it is possible to activate an installation of LiveCode for all-users of that machine by using the command-line. When invoked in this fashion, no GUI will be displayed, activation being controlled by any arguments passed.
 On both platforms, the command is of the form:
 	<exe> activate -file *license* -passphrase *phrase*
-This command will load the manual activation file from *license*, decrypt it using the given *passphrase* and then install a license file for all users of the computer. Manual activation files can be downloaded from the 'My Products' section of the RunRev customer accounts area.
+This command will load the manual activation file from *license*, decrypt it using the given *passphrase* and then install a license file for all users of the computer. Manual activation files can be downloaded from the 'My Products' section of the LiveCode customer accounts area.
 This action can be undone using the following command:
 	<exe> deactivate
 Again, as the LiveCode executable is actually a GUI application it needs to be run slightly differently from other command-line programs.
