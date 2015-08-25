@@ -37,7 +37,7 @@
   </security>
   <summary>Sets the host and optionally the port of an XML-RPC document structure.</summary>
   <examples>
-    <example>revXMLRPC_SetHost theRequest,"www.runrev.com"</example>
+    <example>revXMLRPC_SetHost theRequest,"www.livecode.com"</example>
     <example>revXMLRPC_SetHost myRequest,"example.com",10000</example>
   </examples>
   <description>
