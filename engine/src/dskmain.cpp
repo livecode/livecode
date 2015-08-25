@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -271,7 +271,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 		if (strnequal(argv[i], "-h", 2) && strlen(argv[i]) == 2
 		        && MCglobals == NULL)
 		{
-			fprintf(stderr, "Revolution %s Copyright 2003-2008 Runtime Revolution Ltd\n\
+			fprintf(stderr, "Revolution %s Copyright 2003-2015 LiveCode Ltd.n\
 			        Usage: %s [-d[isplay] displayname] \n\
 			        [-f[iles] (disable access to files and processes)\n\
 			        [-g[eometry] ={+-}<xoffset>{+-}<yoffset>]\n\
