@@ -33,7 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //  so do a bit of gymnastics to make the signature correct.
 inline struct tm *localtime_r(const time_t *p_time, struct tm *r_timeinfo)
 {
-    if (localtime_s(r_timeinfo, p_time) != 0)
+    if (localtime_s(r_timeinfo, p_time) == 0)
         return r_timeinfo;
     
     return NULL;
