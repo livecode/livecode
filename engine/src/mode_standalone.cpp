@@ -99,6 +99,8 @@ __attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule
 __attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {0};
 #elif defined(TARGET_PLATFORM_MOBILE)
 MCCapsuleInfo MCcapsule = {0};
+#elif defined(__EMSCRIPTEN__)
+MCCapsuleInfo MCcapsule = {0};
 #endif
 
 MCLicenseParameters MClicenseparameters =
@@ -447,6 +449,8 @@ IO_stat MCDispatch::startup(void)
         MCdispatcher -> loadexternal(MCSTR("revxml"));
         MCdispatcher -> loadexternal(MCSTR("dbsqlite"));
         MCdispatcher -> loadexternal(MCSTR("dbmysql"));
+#elif defined(__EMSCRIPTEN__)
+        /* Don't load any externals */
 #else
         MCdispatcher -> loadexternal(MCSTR("revzip.dylib"));
         MCdispatcher -> loadexternal(MCSTR("revdb.dylib"));
@@ -517,6 +521,43 @@ IO_stat MCDispatch::startup(void)
 	
 	// MW-2010-12-18: Startup message / stack init now down in 'main'
     
+	return IO_NORMAL;
+}
+
+#elif defined(__EMSCRIPTEN__)
+
+#define kMCEmscriptenBootStackFilename "/boot/standalone/__boot.livecode"
+
+IO_stat
+MCDispatch::startup()
+{
+	/* The standalone data should already have been unpacked by now */
+
+	/* FIXME Hardcoded boot stack path*/
+	MCStack *t_stack;
+	if (IO_NORMAL != MCdispatcher->loadfile(MCSTR(kMCEmscriptenBootStackFilename),
+	                                        t_stack))
+	{
+		MCresult->sets("failed to read initial stackfile");
+		return IO_ERROR;
+	}
+
+	MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
+
+	MCModeResetCursors();
+	MCImage::init();
+
+	MCallowinterrupts = false;
+
+	t_stack->extraopen(false);
+
+	send_startup_message();
+
+	if (!MCquit)
+	{
+		t_stack->open();
+	}
+
 	return IO_NORMAL;
 }
 

@@ -43,9 +43,15 @@ template<typename T> inline T& InOut(MCAutoValueRefBase<T>& p_auto)
 template<typename T> class MCAutoValueRefBase
 {
 public:
+
 	inline MCAutoValueRefBase(void)
+		: m_value(nil)
 	{
-		m_value = nil;
+	}
+
+	inline MCAutoValueRefBase(T p_value)
+		: m_value(MCValueRetain(p_value))
+	{
 	}
 
 	inline ~MCAutoValueRefBase(void)

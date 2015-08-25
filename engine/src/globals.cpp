@@ -845,8 +845,10 @@ void X_clear_globals(void)
     
     MChooks = nil;
 
+#if defined(MCSSL)
     MCSocketsInitialize();
-
+#endif
+    
     MCenvironmentvariables = nil;
 
     MCcommandarguments = NULL;
@@ -1061,8 +1063,10 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	MCGraphicsInitialize();
 	
 	// MM-2014-02-14: [[ LibOpenSSL 1.0.1e ]] Initialise the openlSSL module.
+#ifdef MCSSL
 	InitialiseSSL();
-    
+#endif
+
     ////
     
 #ifdef _MACOSX
@@ -1405,15 +1409,18 @@ int X_close(void)
 	delete MCsslcertificates;
 	delete MCdefaultnetworkinterface;
 	
-#ifndef _MOBILE
+#if defined(MCSSL) && !defined(_MOBILE)
 	ShutdownSSL();
-#else
+#endif
+
+#if defined(_MOBILE)
     // SN-2015-02-24: [[ Merge 6.7.4-rc-1 ]] Need to clean-up the completed
     //  purchase list
     extern void MCPurchaseClearPurchaseList();
     
     MCPurchaseClearPurchaseList();
 #endif
+
 	MCS_shutdown();
 	delete MCundos;
 	while (MCcur_effects != NULL)
@@ -1771,7 +1778,7 @@ bool MCPerformNativeControlAction(intenum_t p_action, void *p_control, MCValueRe
 
 // MW-2013-10-08: [[ Bug 11259 ]] Make sure the Linux specific case tables are
 //   in a global place so it works for server and desktop.
-#if defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER)
+#if defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER) || defined(__EMSCRIPTEN__)
 // MW-2013-10-01: [[ Bug 11160 ]] Use our own lowercasing table (ISO8859-1)
 uint1 MClowercasingtable[] =
 {

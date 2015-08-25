@@ -115,13 +115,15 @@ MCUrlProgressEvent *MCUrlProgressEvent::CreateUrlProgressEvent(MCObjectHandle *p
 	t_event->m_error = nil;
     t_event -> m_url = MCValueRetain(p_url);
 		
-	if (p_status == kMCSystemUrlStatusError)
-        t_event -> m_error = MCValueRetain(p_error);
-
     t_event->m_status = p_status;
     t_event->m_object = p_object;
     t_event->m_object->Retain();
-    if (t_event->m_status == kMCSystemUrlStatusUploading || t_event->m_status == kMCSystemUrlStatusLoading)
+
+    if (p_status == kMCSystemUrlStatusError)
+    {
+        t_event -> m_error = MCValueRetain(p_error);
+    }
+    else
     {
         t_event->m_transferred.amount = p_amount;
         t_event->m_transferred.total = p_total;
@@ -166,6 +168,7 @@ void MCUrlProgressEvent::Dispatch(void)
 				t_object -> message_with_valueref_args(MCM_url_progress, m_url, MCSTR("uploaded"));
 				break;
 			case kMCSystemUrlStatusLoading:
+			case kMCSystemUrlStatusLoadingProgress:
 			{
 				MCAutoStringRef t_amount, t_total;
 				/* UNCHECKED */ MCStringFormat(&t_amount, "%u", m_transferred.amount);
@@ -207,7 +210,9 @@ static void send_url_progress(MCObjectHandle *p_object, MCSystemUrlStatus p_stat
 		MCEventQueuePostCustom(t_event);
 }
 
-//////////
+/* ================================================================
+ * MCS_geturl() and supporting functions
+ * ================================================================ */
 
 struct MCSGetUrlState
 {
@@ -215,91 +220,172 @@ struct MCSGetUrlState
 	MCSystemUrlStatus status;
 	MCDataRef data;
 	MCObjectHandle *object;
-	int32_t total;
+	uindex_t loaded_size;
+	index_t total_size;
     MCStringRef error;
 };
 
-// AL-2014-07-15: [[ Bug 12478 ]] Rewritten to take downloaded data as a DataRef
-static bool MCS_geturl_callback(void *p_context, MCSystemUrlStatus p_status, const void *p_data)
+static bool
+MCS_geturl_callback(void *p_context,
+                    MCSystemUrlStatus p_status,
+                    const void *p_data)
 {
-	MCSGetUrlState *context;
-	context = static_cast<MCSGetUrlState *>(p_context);
-	
-	context -> status = p_status;
-	
-    if (p_data == nil || (p_status != kMCSystemUrlStatusError && p_status != kMCSystemUrlStatusLoading))
-    {
-        send_url_progress(context -> object, p_status, context -> url, MCDataGetLength(context -> data), context -> total, p_data);
-        return true;
-    }
-	
-    if (p_status == kMCSystemUrlStatusError)
-    {
-        MCValueAssign(context -> error, (MCStringRef)p_data);
-        send_url_progress(context -> object, p_status, context -> url, MCStringGetLength(context -> error), context -> total, context -> error);
-    }
-	else
-    {
-        MCAutoDataRef t_new_data;
-        if (context -> data != nil)
-        {
-            /* UNCHECKED */ MCDataMutableCopy(context -> data, &t_new_data);
-            MCValueRelease(context -> data);
-        }
-        else
-        /* UNCHECKED */ MCDataCreateMutable(0, &t_new_data);
-        
-        /* UNCHECKED */ MCDataAppend(*t_new_data, (MCDataRef)p_data);
-        /* UNCHECKED */ MCDataCopy(*t_new_data, context -> data);
-        send_url_progress(context -> object, p_status, context -> url, MCDataGetLength(context -> data), context -> total, p_data);
-    }
-	return true;
+	MCSGetUrlState *context = static_cast<MCSGetUrlState *>(p_context);
 
+	/* Update request status */
+	context->status = p_status;
+
+	/* Handle the different possible interpretations of the data
+	 * argument. */
+	if (p_data != nil)
+	{
+		switch(p_status)
+		{
+		case kMCSystemUrlStatusError:
+			/* The data is an error message */
+			MCValueAssign(context->error, (MCStringRef) p_data);
+			break;
+
+		case kMCSystemUrlStatusNegotiated:
+			/* The data is the total download size */
+			context->total_size = *(int32_t *) p_data;
+			break;
+
+		case kMCSystemUrlStatusLoading:
+			/* The data is a chunk of the URL's content.  Append it to
+			 * the current download buffer */
+			if (context->data == nil)
+			{
+				if (!MCDataCopy((MCDataRef) p_data, context->data))
+				{
+					return false;
+				}
+			}
+			else if (!MCDataIsEmpty((MCDataRef) p_data))
+			{
+				if (!MCDataMutableCopyAndRelease(context->data, context->data))
+				{
+					return false;
+				}
+
+				if (!MCDataAppend(context->data, (MCDataRef) p_data))
+				{
+					return false;
+				}
+
+				if (!MCDataCopyAndRelease(context->data, context->data))
+				{
+					return false;
+				}
+			}
+
+			/* Update the total amount loaded */
+			context->loaded_size = MCMax(context->loaded_size,
+			                             MCDataGetLength(context->data));
+			break;
+
+		case kMCSystemUrlStatusLoadingProgress:
+			/* The data is the total amount loaded so far */
+			context->loaded_size = MCMax(context->loaded_size,
+			                             *(uint32_t *) p_data);
+			break;
+
+		default:
+			/* Ignore any attached data */
+			break;
+		}
+	}
+
+	/* Send an message with the latest loading progress */
+	MCUrlProgressEvent *t_event;
+	t_event = MCUrlProgressEvent::CreateUrlProgressEvent(
+	            context->object, context->url, context->status,
+	            context->loaded_size, context->total_size,
+	            context->error);
+	if (t_event == nil)
+	{
+		return false;
+	}
+
+	MCEventQueuePostCustom(t_event);
+	return true;
 }
 
-void MCS_geturl(MCObject *p_target, MCStringRef p_url)
+void
+MCS_geturl(MCObject *p_target,
+           MCStringRef p_url)
 {
+	// Preprocess the URL by removing leading and trailing whitespace
 	MCAutoStringRef t_processed_url;
-	
-	// IM-2013-07-30: [[ Bug 10800 ]] strip whitespace chars from url before attempting to fetch
-	if (!MCSystemProcessUrl(p_url, kMCSystemUrlOperationStrip, &t_processed_url))
+	if (!MCSystemProcessUrl(p_url, kMCSystemUrlOperationStrip,
+	                        &t_processed_url))
+	{
 		return;
-	
+	}
+
+	// State structure used as callback context
 	MCSGetUrlState t_state;
 	t_state . url = *t_processed_url;
 	t_state . status = kMCSystemUrlStatusNone;
+	t_state . data = MCValueRetain(kMCEmptyData);
 	t_state . object = p_target -> gethandle();
-    t_state . error = MCValueRetain(kMCEmptyString);
-    t_state . data = MCValueRetain(kMCEmptyData);
-	
-	if (!MCSystemLoadUrl(*t_processed_url, MCS_geturl_callback, &t_state))
-	{
-		t_state . object -> Release();
-		return;
-	}
-	
-	MCurlresult -> clear();
-	
-	while(t_state . status != kMCSystemUrlStatusFinished && t_state . status != kMCSystemUrlStatusError)
-		MCscreen -> wait(60.0, True, True);
-	
-    if (t_state . data != nil)
-    {
-        MCurlresult -> setvalueref(t_state . data);
-        MCValueRelease(t_state . data);
-    }
-    else
-        MCurlresult -> clear();
-    
-	if (t_state . status == kMCSystemUrlStatusFinished || t_state . error == nil)
-		MCresult -> clear();
-	else
-        MCresult -> setvalueref(t_state . error);
+	t_state . loaded_size = 0;
+	t_state . total_size = -1;
+	t_state . error = MCValueRetain(kMCEmptyString);
 
-    if (t_state . error != nil)
-        MCValueRelease(t_state . error);
-	
-	t_state . object -> Release();
+	bool t_success = true;
+
+	/* Start loading the URL */
+	if (t_success)
+	{
+		t_success = MCSystemLoadUrl(*t_processed_url,
+		                            MCS_geturl_callback, &t_state);
+	}
+
+	/* Wait until the URL has finished loading */
+	if (t_success)
+	{
+		while (t_success &&
+		       t_state.status != kMCSystemUrlStatusFinished &&
+		       t_state.status != kMCSystemUrlStatusError)
+		{
+			/* FIXME if wait() returns non-zero, cancel the URL
+			 * operation! */
+			MCscreen->wait(MCmaxwait,true,true);
+		}
+	}
+
+	/* Process the results */
+	if (t_success)
+	{
+		/* Save the data */
+		MCurlresult->clear();
+		if (t_state.data != nil)
+		{
+			MCurlresult->setvalueref(t_state.data);
+		}
+
+		/* Save the error (if necessary) */
+		MCresult->clear();
+		if (t_state.status != kMCSystemUrlStatusFinished &&
+		    t_state.error != nil)
+		{
+			MCresult->setvalueref(t_state.error);
+		}
+	}
+
+	/* Cleanup state structure */
+	t_state.object->Release();
+
+	if (t_state.data != nil)
+	{
+		MCValueRelease(t_state.data);
+	}
+
+	if (t_state.error != nil)
+	{
+		MCValueRelease(t_state.error);
+	}
 }
 
 //////////

@@ -98,6 +98,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define FEATURE_PLATFORM_URL 1
 #define FEATURE_NOTIFY 1
 
+#elif defined(__EMSCRIPTEN__)
+
+#define PLATFORM_STRING "HTML"
+
+#define FEATURE_PLATFORM_URL 1
+
 #endif
 
 //////////////////////////////////////////////////////////////////////
@@ -108,7 +114,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #if defined(_MSC_VER)
 #define _HAS_VSCPRINTF
 #define _HAS_QSORT_S
-#elif defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER)
+#elif defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER) || defined(__EMSCRIPTEN__)
 #define _HAS_VSNPRINTF
 #undef _HAS_QSORT_R
 #elif defined(_MAC_DESKTOP) || defined(_MAC_SERVER) || defined(_DARWIN_SERVER) || defined(_IOS_MOBILE)
@@ -380,7 +386,7 @@ struct MCFontStruct
 #define SECONDS_MIN -32535244799.0
 #define SECONDS_MAX 32535244799.0
 
-#elif defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER)
+#elif defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER) || defined(__EMSCRIPTEN__)
 
 #include <stdarg.h>
 #include <errno.h>
@@ -427,7 +433,8 @@ extern uint2 MCctypetable[];
 
 struct MCFontStruct
 {
-	uint16_t size;
+    MCSysFontHandle fid;
+    uint16_t size;
 	uint2 ascent;
 	uint2 descent;
     
@@ -555,12 +562,7 @@ struct MCFontStruct
 //  NEW / DELETE REDEFINTIONS
 //
 
-#ifndef PLACEMENT_NEW_DEFINED
-inline void *operator new (size_t size, void *p)
-{
-	return p;
-}
-#endif
+#include <new>
 
 // MW-2014-08-14: [[ Bug 13154 ]] Make sure we use the nothrow variants of new / delete.
 // SN-2015-04-17: [[ Bug 15187 ]] Don't use the nothrow variant on iOS Simulator
