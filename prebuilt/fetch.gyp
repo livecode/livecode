@@ -211,6 +211,7 @@
 				'fetch-mac',
 				'fetch-win',
 				'fetch-ios',
+				'fetch-emscripten',
 			],
 		},
 		{
@@ -281,6 +282,15 @@
 							'fetch-ios#target',
 						],
 					},
+				],
+				[
+					'fetch_os == "emscripten"',
+					{
+						'dependencies':
+						[
+							'fetch-emscripten#target',
+						],
+					}
 				],
 			],
 		},
@@ -422,6 +432,34 @@
 					[
 						'./fetch-libraries.sh',
 						'ios',
+					],
+				},
+			],
+		},
+		{
+			'target_name': 'fetch-emscripten',
+			'type': 'none',
+
+			'actions':
+			[
+				{
+					'action_name': 'fetch',
+					'message': 'Fetching prebuilt libraries for Emscripten',
+
+					'inputs':
+					[
+						'fetch-libraries.sh',
+					],
+
+					'outputs':
+					[
+						'lib/emscripten/js',
+					],
+
+					'action':
+					[
+						'./fetch-libraries.sh',
+						'emscripten',
 					],
 				},
 			],

@@ -225,10 +225,8 @@ struct MCSGetUrlState
     MCStringRef error;
 };
 
-static bool
-MCS_geturl_callback(void *p_context,
-                    MCSystemUrlStatus p_status,
-                    const void *p_data)
+// AL-2014-07-15: [[ Bug 12478 ]] Rewritten to take downloaded data as a DataRef
+static bool MCS_geturl_callback(void *p_context, MCSystemUrlStatus p_status, const void *p_data)
 {
 	MCSGetUrlState *context = static_cast<MCSGetUrlState *>(p_context);
 
@@ -309,19 +307,17 @@ MCS_geturl_callback(void *p_context,
 
 	MCEventQueuePostCustom(t_event);
 	return true;
+
 }
 
-void
-MCS_geturl(MCObject *p_target,
-           MCStringRef p_url)
+void MCS_geturl(MCObject *p_target, MCStringRef p_url)
 {
 	// Preprocess the URL by removing leading and trailing whitespace
 	MCAutoStringRef t_processed_url;
-	if (!MCSystemProcessUrl(p_url, kMCSystemUrlOperationStrip,
-	                        &t_processed_url))
-	{
+	
+	// IM-2013-07-30: [[ Bug 10800 ]] strip whitespace chars from url before attempting to fetch
+	if (!MCSystemProcessUrl(p_url, kMCSystemUrlOperationStrip, &t_processed_url))
 		return;
-	}
 
 	// State structure used as callback context
 	MCSGetUrlState t_state;

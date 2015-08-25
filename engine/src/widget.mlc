@@ -836,7 +836,7 @@ Example:
 		put the empty array into tProperties
 		put mColor into tProperties["currentColor"]
 
-		popup widget "com.livecode.extensions.livecode.ColorPicker" at the mouse position with properties tProperties
+		popup widget "com.livecode.widget.ColorPicker" at the mouse position with properties tProperties
 		if the result is not nothing then
 			put the result into mColor
 			redraw all

@@ -15,7 +15,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-widget com.livecode.extensions.example.simplecomposed
+widget com.livecode.widget.simplecomposed
 
 use com.livecode.canvas
 use com.livecode.widget
@@ -34,11 +34,11 @@ public handler onCreate()
     put false into mInside
     put the empty string into mInsideChild
 
-    put a new widget "com.livecode.extensions.livecode.selector" into mSelector
+    put a new widget "com.livecode.widget.selector" into mSelector
     set property "totalOptions" of mSelector to 6
     set annotation "Name" of mSelector to "Selector"
 
-    put a new widget "com.livecode.extensions.livecode.clock" into mClock
+    put a new widget "com.livecode.widget.clock" into mClock
     set annotation "Name" of mClock to "Clock"
 
     place mSelector
