@@ -58,7 +58,7 @@ local sUserScriptLibraries
 -- MW-2013-11-06: [[ LinuxX64 ]] Add Linux x64 to the list of supported platforms.
 -- MM-2014-03-21: [[ PPC Support Dropped ]] Remove Mac PPC and Mac Universal from supported platforms.
 -- FG-2014-08-19: [[ RPi ]] Add Linux ARMv6-HF to the list of supported platforms
-constant kPlatforms = "Windows,MacOSX x86-32,Linux,Linux x64,Linux armv6-hf"
+constant kPlatforms = "Windows,MacOSX x86-32,Linux,Linux x64,Linux armv6-hf,Emscripten"
 
 -- list of info fields for the windows engine
 constant kVersionFlds = "Comments,CompanyName,FileDescription,FileVersion,InternalName,LegalCopyright,LegalTrademarks,OriginalFilename,PrivateBuild,ProductName,ProductVersion,SpecialBuild"

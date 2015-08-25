@@ -795,6 +795,11 @@ function revEngineCheck pEngine
                return true
             end if
             break
+         case "HTML5"
+            if there is a folder (tPath & "/Emscripten/js") then
+               return true
+            end if
+            break
       end switch
    end repeat
    return false
