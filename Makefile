@@ -165,3 +165,17 @@ all-win-%:
 	$(MAKE) compile-win-$*
 
 $(addsuffix -win,all config compile): %: %-x86
+
+################################################################
+# Emscripten rules
+################################################################
+
+config-emscripten:
+	mkdir -p build-emscripten
+
+compile-emscripten:
+	mkdir -p emscripten-bin
+
+all-emscripten:
+	$(MAKE) config-emscripten
+	$(MAKE) compile-emscripten
