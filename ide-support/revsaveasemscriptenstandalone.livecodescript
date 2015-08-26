@@ -256,7 +256,7 @@ end getStandaloneTemplateFiles_Impl
 -- This has some standalone-dependent JavaScript substituted into it
 -- to instantiate the engine.
 private function getHtmlTemplateFile
-   return mapPath("standalone-" & revLicenseType() & ".html")
+   return mapPath("standalone-" & revLicenseType() & "-" & the version & ".html")
 end getHtmlTemplateFile
 
 -- Get the directory containing the Emscripten runtime
