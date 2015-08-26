@@ -418,9 +418,9 @@
 								'dist_aux_files':
 								[
 									'rsrc/emscripten-standalone-template/',
-									'<(PRODUCT_DIR)/standalone-community.js',
-									'<(PRODUCT_DIR)/standalone-community.html',
-									'<(PRODUCT_DIR)/standalone-community.html.mem',
+									'<(PRODUCT_DIR)/standalone-community-<(version_string).js',
+									'<(PRODUCT_DIR)/standalone-community-<(version_string).html',
+									'<(PRODUCT_DIR)/standalone-community-<(version_string).html.mem',
 								],
 							},
 						},
