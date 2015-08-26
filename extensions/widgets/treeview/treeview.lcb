@@ -135,6 +135,22 @@ appear at the right to enable the removal of that element, or the addition of a 
 
 property readOnly					get mReadOnly					set setReadOnly
 
+/*
+Syntax: set the arrayStyle of <widget> to {true|false}
+Syntax: get the arrayStyle of <widget>
+
+Summary: Whether the tree view should display its contents in array style or as a standard tree view.
+
+Description:
+The <arrayStyle> property controls whether the keys of the <arrayData> of the widget are displayed with
+square brackets around them or not.
+
+References: arrayData (property)
+*/
+
+property arrayStyle                 get mArrayStyle                 set setArrayStyle
+
+
 // The unmodified array data
 private variable mData as Array
 // A flat list representing the array items to be displayed
@@ -180,6 +196,7 @@ private variable mIconRect as Rectangle
 private variable mIconWidth as Real
 
 private variable mReadOnly as Boolean
+private variable mArrayStyle as Boolean
 
 constant kMaxKeyDisplayChars is 50
 constant kMaxValueDisplayChars is 200
@@ -224,6 +241,7 @@ public handler OnCreate() returns nothing
 	initialiseScrollbar()	
 	
 	put false into mReadOnly
+    put false into mArrayStyle
 	put true into mRecalculate
 	
 	put the empty array into mFoldState
@@ -239,6 +257,7 @@ public handler OnSave(out rProperties as Array)
 	put mData into rProperties["array"]
 	put mSelectedRowColor into rProperties["selected row color"]
 	put mReadOnly into rProperties["read only"]
+    put mArrayStyle into rProperties["array style"]
 	return rProperties
 end handler
 
@@ -246,6 +265,10 @@ public handler OnLoad(in pProperties as Array)
 	put pProperties["array"] into mData
 	put pProperties["selected row color"] into mSelectedRowColor
 	put pProperties["read only"] into mReadOnly
+
+    if ["array style"] is in the keys of pProperties then
+        put pProperties["array style"] into mArrayStyle
+    end if
 end handler
 
 public handler OnPaint() returns nothing
@@ -378,10 +401,14 @@ private handler paintDataItem(in pDataItem as Array, in pTop as Real, in pRow as
         put (char 1 to kMaxKeyDisplayChars of pDataItem["key"]) & "..." into tKeyDisplay
     end if
 
-	fill text "[" & tKeyDisplay & "]" at left of rectangle [tLeft, pTop, mViewWidth - 3 * mMargin - 2 * mIconWidth, pTop + mRowHeight] on this canvas
+    if mArrayStyle then
+        put "[" & tKeyDisplay & "]" into tKeyDisplay
+    end if
+
+	fill text tKeyDisplay at left of rectangle [tLeft, pTop, mViewWidth - 3 * mMargin - 2 * mIconWidth, pTop + mRowHeight] on this canvas
 		
 	variable tTextBounds as Rectangle
-	measure "[" & tKeyDisplay & "]" on this canvas
+	measure tKeyDisplay on this canvas
 	put the result into tTextBounds
 	put tTextBounds into pDataItem["keyRect"]
 
@@ -1312,6 +1339,14 @@ end handler
 private handler setReadOnly(in pReadOnly as Boolean)
     if pReadOnly is not mReadOnly then
         put pReadOnly into mReadOnly
+        put true into mRecalculate
+        redraw all
+    end if
+end handler
+
+private handler setArrayStyle(in pArrayStyle as Boolean)
+    if pArrayStyle is not mArrayStyle then
+        put pArrayStyle into mArrayStyle
         put true into mRecalculate
         redraw all
     end if
