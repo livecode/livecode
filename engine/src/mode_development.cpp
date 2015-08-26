@@ -137,7 +137,7 @@ public:
 
 static char *s_command_path = NULL;
 
-static void restart_revolution(void)
+static void restart_livecode(void)
 {
 #if defined(TARGET_PLATFORM_WINDOWS)
 	_spawnl(_P_NOWAIT, s_command_path, s_command_path, NULL);
@@ -204,7 +204,7 @@ Exec_stat MCRevRelicense::exec(MCExecPoint& ep)
 	
 	s_command_path = MCS_resolvepath(MCcmd);
 
-	atexit(restart_revolution);
+	atexit(restart_livecode);
 	
 	return ES_NORMAL;
 }

@@ -36,8 +36,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define MC_MENU_WIN_CLASS_NAME		"MCMenuWinClass"
 #define MC_SNAPSHOT_WIN_CLASS_NAME	"MCSnapshotWinClass"
 #define MC_BACKDROP_WIN_CLASS_NAME      "MCBackdropWinClass"
-#define MC_APP_NAME			"Revolution"
-#define MC_APP_NAME_W		L"Revolution"
+#define MC_APP_NAME			"LiveCode"
+#define MC_APP_NAME_W		L"LiveCode"
 
 #define REFRESH_RATE			10.0
 #define SELECTION_WAIT			5000

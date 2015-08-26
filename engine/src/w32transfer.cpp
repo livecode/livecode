@@ -36,19 +36,19 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// These are the Windows standard extended clipboard formats Revolution uses.
+// These are the Windows standard extended clipboard formats LiveCode uses.
 #define CFSTR_RTF "Rich Text Format"
 #define CFSTR_PNG "PNG"
 #define CFSTR_GIF "GIF"
 #define CFSTR_JFIF "JFIF"
 
-// These are the private clipboard formats Revolution uses to publish data to
-// other Revolution instances.
+// These are the private clipboard formats LiveCode uses to publish data to
+// other LiveCode instances.
 
-// The Revolution Objects format is a sequence of object pickles.
+// The LiveCode Objects format is a sequence of object pickles.
 #define CFSTR_REVOLUTION_OBJECTS "com.runrev.revolution.objects/1"
 
-// The Revolution Styled Text format a styled text pickle.
+// The LiveCode Styled Text format a styled text pickle.
 #define CFSTR_REVOLUTION_STYLED_TEXT "com.runrev.revolution.text/styled/1"
 
 // This macro defines a 'once' function for registering the clipboard formats
@@ -403,7 +403,7 @@ bool TransferData::Publish(MCTransferType p_type, MCSharedString *p_data)
 			t_success = Publish(CF_UNICODETEXT, TYMED_HGLOBAL, p_data, MCConvertUnicodeToWindowsWide);
 	break;
 	case TRANSFER_TYPE_STYLED_TEXT:
-		// MW-2008-03-11: Disabling this clipboard format - I don't want Revolution Text stream being
+		// MW-2008-03-11: Disabling this clipboard format - I don't want LiveCode Text stream being
 		//   published publically at the present time.
 		//if (t_success)
 		//	t_success = Publish(CF_REVOLUTION_STYLED_TEXT(), TYMED_HGLOBAL, p_data, NULL);
@@ -836,10 +836,10 @@ void MCWindowsPasteboard::Release(void)
 }
 
 // This function determines the primary types of the given data object. The
-// primary types are that which is presented to the Revolution application as
+// primary types are that which is presented to the LiveCode application as
 // 'the' types of the clipboard/drag-and-drop data.
 //
-// The clipboard formats that are understood by Revolution are:
+// The clipboard formats that are understood by LiveCode are:
 //   - CF_TEXT/CF_LOCALE (class text)
 //   - CF_UNICODETEXT (class text)
 //   - CF_RTF (class text)

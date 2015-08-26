@@ -271,7 +271,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 		if (strnequal(argv[i], "-h", 2) && strlen(argv[i]) == 2
 		        && MCglobals == NULL)
 		{
-			fprintf(stderr, "Revolution %s Copyright 2003-2015 LiveCode Ltd.n\
+			fprintf(stderr, "LiveCode %s Copyright 2003-2015 LiveCode Ltd.n\
 			        Usage: %s [-d[isplay] displayname] \n\
 			        [-f[iles] (disable access to files and processes)\n\
 			        [-g[eometry] ={+-}<xoffset>{+-}<yoffset>]\n\

@@ -1653,7 +1653,7 @@ Exec_stat MCSort::sort_container(MCExecPoint &p_exec_point, Chunk_term p_type, S
 	}
 
 	// OK-2008-12-11: [[Bug 7503]] - If there are 0 items in the string, don't carry out the search,
-	// this keeps the behavior consistent with previous versions of Revolution.
+	// this keeps the behavior consistent with previous versions of LiveCode.
 	if (t_item_count < 1)
 	{
 		delete t_item_text;

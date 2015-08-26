@@ -106,7 +106,7 @@ extern Time LastPositionTime ;
 //
 // Class MCMIMEtype:
 // 		Encapsulates a MIME type. Stored as an Atom you can use this class
-//		to convert between an Atom, a String, the Revolution transfer type
+//		to convert between an Atom, a String, the LiveCode transfer type
 // 		and the Rev transfer type string.
 
 class MCMIMEtype
@@ -169,7 +169,7 @@ public:
 		void	internal ( bool i ) { m_internal_dnd = i ; } ;
 
 	
-		// Convertsion between MIME and Revolution type descriptors
+		// Convertsion between MIME and LiveCode type descriptors
 		MCMIMEtype * 	rev_to_MIME_stored ( MCTransferType p_type ) ;
 
 	

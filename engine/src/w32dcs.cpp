@@ -265,7 +265,7 @@ Boolean MCScreenDC::open()
 
 	// The System and Input codepages are used to translate input characters.
 	// A keyboard layout will present characters via WM_CHAR in the
-	// input_codepage, while Revolution is running in the system_codepage.
+	// input_codepage, while LiveCode is running in the system_codepage.
 	//
 	system_codepage = GetACP();
 

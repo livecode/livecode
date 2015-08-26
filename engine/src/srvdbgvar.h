@@ -19,7 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
  *  engine
  *
  *  Created by Mark Waddingham on 08/04/2009.
- *  Copyright 2009 Runtime Revolution. All rights reserved.
+ *  Copyright 2009-2015 LiveCode Ltd. All rights reserved.
  *
  */
 

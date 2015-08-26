@@ -39,10 +39,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //     MCA_OPTION_PLURAL - allow multiple files to be selected (not ASK)
 //
 // On exit:
-//   ep should be a return-delimited list of revolution paths to the selected files
+//   ep should be a return-delimited list of LiveCode paths to the selected files
 //   or empty if the dialog was cancelled
 //
-// The Revolution sytax that uses this call is deprecated.
+// The LiveCode syntax that uses this call is deprecated.
 //
 extern int MCA_file(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_filter, const char *p_initial, unsigned int p_options);
 extern int MCA_ask_file(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_filter, const char *p_initial, unsigned int p_options); //const char *prompt, char *fn, MCExecPoint& ep, Boolean sheet);
@@ -62,7 +62,7 @@ extern int MCA_ask_file(MCExecPoint& ep, const char *p_title, const char *p_prom
 //     MCA_OPTION_RETURN_FILTER - return the label of the type selected in MCresult
 //
 // On exit:
-//   ep should be a return-delimited list of revolution paths to the selected files
+//   ep should be a return-delimited list of LiveCode paths to the selected files
 //   or empty if the dialog was cancelled
 //   If MCA_OPTION_RETURN_FILTER is specified MCresult should contain the label of the
 //   filetype in effect when the dialog was closed (but not cancelled).
@@ -79,7 +79,7 @@ extern int MCA_ask_file_with_types(MCExecPoint& ep, const char *p_title, const c
 //     MCA_OPTION_SHEET (Mac OS X only) - display the dialog as a sheet
 //
 // On exit:
-//   ep should contain the revolution path of the folder selected, or empty if the
+//   ep should contain the LiveCode path of the folder selected, or empty if the
 //   dialog was cancelled.
 //
 extern int MCA_folder(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_initial, unsigned int p_options);
