@@ -1863,7 +1863,7 @@ Input: [0]=xml document id
 [2]= attribute name
 [3]= attribute value
 Output: error message on bad attribute or bad element 
-Example: XML_SetAttributeValue docid,elementpath,"product","revolution"
+Example: XML_SetAttributeValue docid,elementpath,"product","livecode"
 */
 void XML_SetAttributeValue(char *args[], int nargs, char **retstring,
 						   Bool *pass, Bool *error)
