@@ -140,7 +140,7 @@ Sets the selected segments of the control.
 
 
 -- declaring extension as widget, followed by identifier
-widget com.livecode.extensions.livecode.segmented
+widget com.livecode.widget.segmented
 --
 
 -- dependency declarations

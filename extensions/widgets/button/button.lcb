@@ -21,7 +21,7 @@ This widget has three properties that can be set: theme; buttonStyle and label.
 */
 
 -- declaring the extension as a widget, followed by the identifier
-widget com.livecode.extensions.livecode.button
+widget com.livecode.widget.button
 --
 
 -- dependancy declarations

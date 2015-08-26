@@ -31,7 +31,7 @@ The checked property determines whether the switch button displays as on (true) 
 */
 
 -- declaring extension as widget, followed by identifier
-widget com.livecode.extensions.livecode.switchButton
+widget com.livecode.widget.switchButton
 --
 
 -- dependancy declarations

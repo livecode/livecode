@@ -390,7 +390,7 @@ static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 	return t_font;
 }
 
-#else
+#elif defined(_MAC_DESKTOP) || defined(_MAC_SERVER) || defined(TARGET_SUBPLATFORM_IPHONE)
 
 static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 {
@@ -402,6 +402,27 @@ static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 	t_font . ideal = false;
 	return t_font;
 }
+
+#elif defined(__EMSCRIPTEN__)
+
+static inline MCGFont
+MCFontStructToMCGFont(MCFontStruct *p_font)
+{
+	MCGFont t_font;
+	MCMemoryClear(&t_font, sizeof(t_font));
+
+	t_font . size = p_font -> size;
+	t_font . ascent = p_font -> ascent;
+	t_font . descent = p_font -> descent;
+    t_font . fid = p_font -> fid;
+	t_font . ideal = false;
+
+	return t_font;
+}
+
+#else
+
+#error "Platform doesn't support fonts"
 
 #endif
 

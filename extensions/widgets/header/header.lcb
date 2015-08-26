@@ -20,7 +20,7 @@ This widget is a header bar.
 */
 
 -- declaring the extension as a widget, followed by identifier
-widget com.livecode.extensions.livecode.header
+widget com.livecode.widget.headerBar
 
 -- dependency declarations
 use com.livecode.canvas

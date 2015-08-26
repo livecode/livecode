@@ -53,6 +53,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #undef __WINDOWS_MOBILE__
 // __LINUX_MOBILE__ will be defined if the Linux mobile platform is the target.
 #undef __LINUX_MOBILE__
+// __EMSCRIPTEN__ will be defined if Emscripten JavaScript is the target
+//#undef __EMSCRIPTEN__ // It will be defined by the compiler
 
 // __32_BIT__ will be defined if the target processor is 32-bit.
 #undef __32_BIT__
@@ -193,7 +195,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //  CONFIGURE DEFINITIONS FOR LINUX
 //
 
-#if defined(__GNUC__) && !defined(__APPLE__) && !defined(__PLATFORM_IS_ANDROID__)
+#if defined(__GNUC__) && !defined(__APPLE__) && !defined(__PLATFORM_IS_ANDROID__) && !defined(__EMSCRIPTEN__)
 
 // Compiler
 #define __GCC__ 1
@@ -320,6 +322,31 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __LP32__ 1
 #define __SMALL__
 #endif
+
+// Native char set
+#define __ISO_8859_1__
+
+// Native line endings
+#define __LF__
+
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  CONFIGURE DEFINITIONS FOR EMSCRIPTEN JS
+
+#if defined(__EMSCRIPTEN__)
+
+// Nasty, evil hack -- remove me
+#define __LITTLE_ENDIAN__ 1
+
+// Compiler
+#define __GCC__
+
+// Architecture
+#define __32_BIT__
+#define __LP32__
+#define __SMALL__
 
 // Native char set
 #define __ISO_8859_1__
@@ -929,10 +956,10 @@ extern void __MCAssert(const char *file, uint32_t line, const char *message) ATT
 #define MCAssert(m_expr) (void)( (!!(m_expr)) || (__MCAssert(__FILE__, __LINE__, #m_expr), 0) )
 
 extern void __MCLog(const char *file, uint32_t line, const char *format, ...);
-#define MCLog(m_format, ...) __MCLog(__FILE__, __LINE__, m_format, __VA_ARGS__)
+#define MCLog(...) __MCLog(__FILE__, __LINE__, __VA_ARGS__)
 
 extern void __MCLogWithTrace(const char *file, uint32_t line, const char *format, ...);
-#define MCLogWithTrace(m_format, ...) __MCLogWithTrace(__FILE__, __LINE__, m_format, __VA_ARGS__)
+#define MCLogWithTrace(...) __MCLogWithTrace(__FILE__, __LINE__, __VA_ARGS__)
 
 extern void __MCUnreachable(void) ATTRIBUTE_NORETURN;
 #define MCUnreachable() __MCUnreachable();
