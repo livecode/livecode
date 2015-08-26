@@ -90,6 +90,7 @@ class MCDo : public MCStatement
 {
 	MCExpression *source;
 	MCExpression *alternatelang;
+	MCChunk *widget;
 protected:
 	bool browser : 1;
 	Boolean debug : 1;
@@ -102,6 +103,7 @@ public:
 		browser = false;
 		debug = False;
 		caller = false;
+		widget = nil;
 	}
 	virtual ~MCDo();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -688,6 +690,7 @@ class MCLaunch : public MCStatement
 {
 	MCExpression *doc;
 	MCExpression *app;
+	MCChunk *widget;
 	bool as_url;
 
 public:
@@ -695,6 +698,7 @@ public:
 	{
 		doc = app = NULL;
 		as_url = false;
+		widget = nil;
 	}
 	virtual ~MCLaunch();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -1817,6 +1821,9 @@ class MCGo : public MCStatement
 	Boolean marked;
 	Boolean visible;
 	Boolean thisstack;
+	
+	MCChunk *widget;
+	Chunk_term direction;
 public:
 	MCGo()
 	{
@@ -1825,6 +1832,7 @@ public:
 		window = NULL;
 		marked = thisstack = False;
 		visible = True;
+		widget = nil;
 	}
 	virtual ~MCGo();
 	virtual Parse_stat parse(MCScriptPoint &);

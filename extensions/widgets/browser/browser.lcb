@@ -232,6 +232,7 @@ public handler OnJavaScriptCallback(in pContext as optional Pointer, in pBrowser
 	if browserListToLCBList(pParams, tList) then
 		log "Params: %@" with [tList]
 	end if
+	post pHandler to mScriptObject with tList
 end handler
 
 ----------
@@ -343,5 +344,41 @@ private handler saveProperties() returns Array
 	
 	return tProps
 end handler
+
+----------
+
+public handler OnLaunchUrl(in pUrl as String)
+	if mBrowser is not nothing then
+		/* UNCHECKED */ MCBrowserGoToURL(mBrowser, pUrl)
+	end if
+end handler
+
+public handler OnGoBack()
+	if mBrowser is not nothing then
+		/* UNCHECKED */ MCBrowserGoBack(mBrowser)
+	end if
+end handler
+
+public handler OnGoForward()
+	if mBrowser is not nothing then
+		/* UNCHECKED */ MCBrowserGoForward(mBrowser)
+	end if
+end handler
+
+public handler OnDo(in pScript as String)
+	browserEvaluateJavaScript(pScript)
+end handler
+
+public handler browserEvaluateJavaScript(in pScript as String) returns String
+	if mBrowser is not nothing then
+		variable tResult as String
+		/* UNCHECKED */ MCBrowserEvaluateJavaScript(mBrowser, pScript, tResult)
+		return tResult
+	end if
+	
+	return the empty string
+end handler
+
+----------
 
 end widget

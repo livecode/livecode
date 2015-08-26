@@ -2659,6 +2659,15 @@ enum Exec_errors
 
     // {EE-0869} System error: message
     EE_SYSTEM_MESSAGE,
+	
+	// {EE-0870} go: error in widget expression
+	EE_GO_BADWIDGETEXP,
+	
+	// {EE-0871} launch: error in widget expression
+	EE_LAUNCH_BADWIDGETEXP,
+
+	// {EE-0872} do: error in widget expression
+	EE_DO_BADWIDGETEXP,
 };
 
 extern const char *MCexecutionerrors;

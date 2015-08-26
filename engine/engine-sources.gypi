@@ -343,6 +343,7 @@
 			'src/exec-interface-scrollbar.cpp',
 			'src/exec-interface-stack.cpp',
 			'src/exec-interface-vclip.cpp',
+			'src/exec-interface-widget.cpp',
 			'src/exec-keywords.cpp',
 			'src/exec-legacy.cpp',
 			'src/exec-logic.cpp',

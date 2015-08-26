@@ -1724,6 +1724,12 @@ enum Parse_errors
     
     // {PE-0560} load: missing 'from'
     PE_LOAD_NOFROM,
+	
+	// {PE-0561} go: error in widget expression
+	PE_GO_BADWIDGETEXP,
+	
+	// {PE-0562} launch: error in widget expression
+	PE_LAUNCH_BADWIDGETEXP,
 };
 
 extern const char *MCparsingerrors;

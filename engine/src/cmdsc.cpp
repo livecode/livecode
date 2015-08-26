@@ -2155,6 +2155,7 @@ MCLaunch::~MCLaunch()
 {
 	delete doc;
 	delete app;
+	delete widget;
 }
 
 // Syntax should be:
@@ -2204,6 +2205,15 @@ Parse_stat MCLaunch::parse(MCScriptPoint &sp)
 		as_url = t_is_url;
 	}
 
+	if (t_is_url && sp.skip_token(SP_FACTOR, TT_IN) == PS_NORMAL)
+	{
+		widget = new MCChunk(False);
+		if (widget->parse(sp, False) != PS_NORMAL)
+		{
+			MCperror->add(PE_LAUNCH_BADWIDGETEXP, sp);
+			return PS_ERROR;
+		}
+	}
 	return PS_NORMAL;
 }
 
@@ -2309,7 +2319,23 @@ void MCLaunch::exec_ctxt(MCExecContext& ctxt)
 	else if (doc != NULL)
 	{
 		if (as_url)
-			MCFilesExecLaunchUrl(ctxt, *t_document);
+		{
+			if (widget != nil)
+			{
+				MCObject *t_object;
+				uint32_t t_parid;
+				
+				if (!widget->getobj(ctxt, t_object, t_parid, True) || t_object->gettype() != CT_WIDGET)
+				{
+					ctxt.LegacyThrow(EE_LAUNCH_BADWIDGETEXP);
+					return;
+				}
+				
+				MCInterfaceExecLaunchUrlInWidget(ctxt, *t_document, (MCWidget*)t_object);
+			}
+			else
+				MCFilesExecLaunchUrl(ctxt, *t_document);
+		}
 		else
 			MCFilesExecLaunchDocument(ctxt, *t_document);
 	}
@@ -2331,7 +2357,15 @@ void MCLaunch::compile(MCSyntaxFactoryRef ctxt)
 		doc -> compile(ctxt);
 
 		if (as_url)
-			MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecLaunchUrlMethodInfo);
+		{
+			if (widget)
+			{
+				widget->compile(ctxt);
+				MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecLaunchUrlInWidgetMethodInfo);
+			}
+			else
+				MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecLaunchUrlMethodInfo);
+		}
 		else
 			MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecLaunchDocumentMethodInfo);
 	}
