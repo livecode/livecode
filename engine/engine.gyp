@@ -776,6 +776,11 @@
 							'standalone',
 						],
 
+						'variables':
+						{
+							'version_suffix': '<(version_string)',
+						},
+
 						'actions':
 						[
 							{
@@ -798,16 +803,16 @@
 
 								'outputs':
 								[
-									'<(PRODUCT_DIR)/standalone-community.js',
-									'<(PRODUCT_DIR)/standalone-community.html',
-									'<(PRODUCT_DIR)/standalone-community.html.mem',
+									'<(PRODUCT_DIR)/standalone-community-<(version_suffix).js',
+									'<(PRODUCT_DIR)/standalone-community-<(version_suffix).html',
+									'<(PRODUCT_DIR)/standalone-community-<(version_suffix).html.mem',
 								],
 
 								'action':
 								[
 									'./emscripten-javascriptify.sh',
 									'<(PRODUCT_DIR)/standalone-community.bc',
-									'<(PRODUCT_DIR)/standalone-community.html',
+									'<(PRODUCT_DIR)/standalone-community-<(version_suffix).html',
 									'src/em-exported.json',
 									'src/em-whitelist.json',
 									'src/em-preamble.js',
