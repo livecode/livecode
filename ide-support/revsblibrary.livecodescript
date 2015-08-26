@@ -795,7 +795,7 @@ function revEngineCheck pEngine
                return true
             end if
             break
-         case "HTML5"
+         case "Emscripten"
             if there is a folder (tPath & "/Emscripten/js") then
                return true
             end if
