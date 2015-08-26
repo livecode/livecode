@@ -507,7 +507,7 @@ void MCDo::exec_ctxt(MCExecContext& ctxt)
 	{
 		MCObject *t_object;
 		uint32_t t_parid;
-		if (!widget->getobj(ctxt, t_object, t_parid, True))
+		if (!widget->getobj(ctxt, t_object, t_parid, True) || t_object->gettype() != CT_WIDGET)
 		{
 			ctxt.LegacyThrow(EE_DO_BADWIDGETEXP);
 			return;
