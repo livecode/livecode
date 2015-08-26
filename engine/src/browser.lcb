@@ -60,7 +60,7 @@ public foreign handler MCBrowserLibraryInitialize() returns CBool binds to "<bui
 public foreign handler MCBrowserLibraryFinalize() returns nothing binds to "<builtin>"
 
 public foreign handler MCBrowserLibrarySetWaitFunction(in pWait as Pointer) returns nothing binds to "<builtin>"
-public foreign handler MCBrowserLibraryGetRunloopCallback(out pCallback as Pointer, out pContext as Pointer) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserLibraryGetRunloopCallback(out rCallback as Pointer, out rContext as Pointer) returns CBool binds to "<builtin>"
 
 public foreign handler MCBrowserFactoryGet(in pFactoryId as NativeCString, out rFactory as MCBrowserFactoryRef) returns CBool binds to "<builtin>"
 public foreign handler MCBrowserFactoryCreateBrowser(in pFactory as MCBrowserFactoryRef, in pDisplay as Pointer, in pParentView as Pointer, out rBrowser as MCBrowserRef) returns CBool binds to "<builtin>"
@@ -83,13 +83,13 @@ public foreign handler MCBrowserEvaluateJavaScript(in pBrowser as MCBrowserRef, 
 
 ----------
 
-public foreign handler MCBrowserListGetSize(in pList as MCBrowserListRef, out pSize as CUInt) returns CBool binds to "<builtin>"
-public foreign handler MCBrowserListGetType(in pList as MCBrowserListRef, in pIndex as CUInt, out pType as MCBrowserValueType) returns CBool binds to "<builtin>"
-public foreign handler MCBrowserListGetBoolean(in pList as MCBrowserListRef, in pIndex as CUInt, out pValue as CBool) returns CBool binds to "<builtin>"
-public foreign handler MCBrowserListGetInteger(in pList as MCBrowserListRef, in pIndex as CUInt, out pValue as CInt) returns CBool binds to "<builtin>"
-public foreign handler MCBrowserListGetDouble(in pList as MCBrowserListRef, in pIndex as CUInt, out pValue as CDouble) returns CBool binds to "<builtin>"
-public foreign handler MCBrowserListGetUTF8String(in pList as MCBrowserListRef, in pIndex as CUInt, out pValue as ZStringNative) returns CBool binds to "<builtin>"
-public foreign handler MCBrowserListGetList(in pList as MCBrowserListRef, in pIndex as CUInt, out pValue as MCBrowserListRef) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserListGetSize(in pList as MCBrowserListRef, out rSize as CUInt) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserListGetType(in pList as MCBrowserListRef, in pIndex as CUInt, out rType as MCBrowserValueType) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserListGetBoolean(in pList as MCBrowserListRef, in pIndex as CUInt, out rValue as CBool) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserListGetInteger(in pList as MCBrowserListRef, in pIndex as CUInt, out rValue as CInt) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserListGetDouble(in pList as MCBrowserListRef, in pIndex as CUInt, out rValue as CDouble) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserListGetUTF8String(in pList as MCBrowserListRef, in pIndex as CUInt, out rValue as ZStringNative) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserListGetList(in pList as MCBrowserListRef, in pIndex as CUInt, out rValue as MCBrowserListRef) returns CBool binds to "<builtin>"
 
 public foreign handler MCBrowserSetRequestHandler(in pBrowser as MCBrowserRef, in pCallback as Pointer, in pContext as optional Pointer) returns CBool binds to "<builtin>"
 public foreign handler MCBrowserSetJavaScriptHandler(in pBrowser as MCBrowserRef, in pCallback as Pointer, in pContext as optional Pointer) returns CBool binds to "<builtin>"
