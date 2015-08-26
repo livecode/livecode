@@ -2,13 +2,13 @@
 ## Installation
 Each distinct version has its own complete folder – multiple versions will no longer install side-by-side: on Windows (and Linux), each distinct version will gain its own start menu (application menu) entry; on Mac, each distinct version will have its own app bundle.
 The default location for the install on the different platforms when installing for 'all users' are:
-*Windows: <x86 program files folder>/LiveCode/LiveCode <version>
-*Linux: /opt/livecode/livecode-<version>
-*Mac: /Applications/ LiveCode <version>.app
+*Windows: <x86 program files folder>/RunRev/LiveCode <version>
+*Linux: /opt/runrev/livecode-<version>
+*Mac: /Applications/LiveCode <version>.app
 The default location for the install on the different platforms when installing for 'this user' are:
-*Windows: <user roaming app data folder>/LiveCode/Components/LiveCode <version>
-*Linux: ~/.livecode/components/livecode-<version>
-*Mac: ~/Applications/ LiveCode <version>.app
+*Windows: <user roaming app data folder>/RunRev/Components/LiveCode <version>
+*Linux: ~/.runrev/components/livecode-<version>
+*Mac: ~/Applications/LiveCode <version>.app
 * **Note:** If your linux distribution does not have the necessary support for authentication (gksu) then the installer will run without admin privileges so you will have to manually run it from an admin account to install into a privileged location.*
 ## Uninstallation
 On Windows, the installer hooks into the standard Windows uninstall mechanism. This is accessible from the appropriate pane in the control panel.
@@ -16,7 +16,7 @@ On Mac, simply drag the app bundle to the Trash.
 On Linux, the situation is currently less than ideal:
 *open a terminal
 **cd* to the folder containing your LiveCode install. e.g.
-	`cd /opt/livecode/livecode-<version>`
+	`cd /opt/runrev/livecode-<version>`
 *execute the *.setup.x86* file. i.e.
 	`./.setup.x86`
 *follow the on-screen instructions.
@@ -28,9 +28,9 @@ In the case of failed install it is vitally important that you include the follo
 *The type of user account you are using (guest, restricted, admin etc.)
 *The installer log file located as follows:
 * **Windows 2000/XP:** <documents and settings folder>/<user>/Local Settings/
-* **Windows Vista/7:** <users folder>/<user>/AppData/Local/LiveCode/Logs
-* **Linux:** <home>/.livecode/logs
-* **Mac:** <home>/Library/Application Support/Logs/LiveCode
+* **Windows Vista/7:** <users folder>/<user>/AppData/Local/RunRev/Logs
+* **Linux:** <home>/.runrev/logs
+* **Mac:** <home>/Library/Application Support/Logs/RunRev
 # Activation
 The licensing system ties your product licenses to a customer account system, meaning that you no longer have to worry about finding a license key after installing a new copy of LiveCode. Instead, you simply have to enter your email address and password that has been registered with our customer account system and your license key will be retrieved automatically. 
 Alternatively it is possible to activate the product via the use of a specially encrypted license file. These will be available for download from the customer center after logging into your account. This method will allow the product to be installed on machines that do not have access to the internet.
