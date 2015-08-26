@@ -4,7 +4,7 @@
 
 Copyright © 2015 LiveCode Ltd., Edinburgh, UK
 
-**Warning**: Emscripten (HTML5) platform support for LiveCode is still under development.  This document is almost certainly already out of date.
+**Warning**: Emscripten (HTML5) platform support for LiveCode is experimental and not recommended for production use.
 
 ## Dependencies
 
@@ -55,6 +55,10 @@ This will generate outputs in the `emscripten-bin` directory.
 
 ## Running LiveCode
 
+**Note**: See also the "HTML5 Deployment" guide, available in the in-IDE dictionary.
+
+Use the desktop build of the LiveCode IDE to run the standalone builder and create an "HTML5" standalone.
+
 Once you've created a standalone, you can open the HTML file in a web browser to try out the engine.
 
 Some web browsers (including Google Chrome) have JavaScript security policies that won't allow you to run the engine from a local filesystem.  For these browsers, you will need to run a local web server.  You can use the following steps to launch a local-only webserver listening on port 8080:
@@ -63,3 +67,4 @@ Some web browsers (including Google Chrome) have JavaScript security policies th
     python -m SimpleHTTPServer 8080
 
 You can then load http://localhost:8080/ in a web browser to view your standalone HTML5 engine.
+
