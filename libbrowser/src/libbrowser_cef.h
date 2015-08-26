@@ -61,12 +61,14 @@ private:
 	CefString m_user_agent;
 	char *m_javascript_handlers;
 	
+	CefRefPtr<CefListValue> m_js_handler_list;
+	
 	bool m_show_context_menu;
 	bool m_allow_new_window;
 	bool m_send_advanced_messages;
 	int m_instance_id;
 	
-	bool SetJavaScriptHandlers(CefRefPtr<CefListValue> p_handlers);
+	bool SyncJavaScriptHandlers();
 	
 	void WaitOnResult(void);
 	bool GetMessageResult(CefProcessId p_target, CefRefPtr<CefProcessMessage> p_message, const MCCefMessageResult *&r_result);

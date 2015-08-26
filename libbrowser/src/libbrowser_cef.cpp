@@ -783,6 +783,9 @@ public:
 		if (nil == m_owner)
 			return;
 		
+		// render process may have restarted so resend js handler list
+		m_owner->SyncJavaScriptHandlers();
+		
 		CefString t_url;
 		t_url = p_frame->GetURL();
 		
@@ -911,6 +914,7 @@ MCCefBrowserBase::MCCefBrowserBase()
 	m_allow_new_window = false;
 	
 	m_javascript_handlers = nil;
+	m_js_handler_list = CefListValue::Create();
 }
 
 MCCefBrowserBase::~MCCefBrowserBase(void)
@@ -1337,7 +1341,7 @@ bool MCCefBrowserBase::GoForward(void)
 	return true;
 }
 
-bool MCCefBrowserBase::SetJavaScriptHandlers(CefRefPtr<CefListValue> p_handlers)
+bool MCCefBrowserBase::SyncJavaScriptHandlers()
 {
 	CefRefPtr<CefProcessMessage> t_message;
 	t_message = CefProcessMessage::Create(MC_CEFMSG_SET_JS_HANDLER_LIST);
@@ -1345,7 +1349,7 @@ bool MCCefBrowserBase::SetJavaScriptHandlers(CefRefPtr<CefListValue> p_handlers)
 	CefRefPtr<CefListValue> t_args;
 	t_args = t_message->GetArgumentList();
 	
-	t_args->SetList(0, p_handlers);
+	t_args->SetList(0, m_js_handler_list->Copy());
 	
 	m_browser->SendProcessMessage(PID_RENDERER, t_message);
 	
@@ -1392,7 +1396,10 @@ bool MCCefBrowserBase::SetJavaScriptHandlers(const char *p_handlers)
 	}
 	
 	if (t_success)
-		t_success = SetJavaScriptHandlers(t_handler_list);
+	{
+		m_js_handler_list = t_handler_list;
+		/* UNCHECKED */ SyncJavaScriptHandlers();
+	}
 	
 	if (t_success)
 	{

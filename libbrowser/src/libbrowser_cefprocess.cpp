@@ -495,10 +495,7 @@ public:
 		{
 			bool t_success;
 			
-			CefRefPtr<CefListValue> t_handler_list;
-			t_handler_list = p_message->GetArgumentList()->GetList(0);
-			
-			t_success = SetLiveCodeHandlers(p_browser, t_handler_list);
+			t_success = SetLiveCodeHandlers(p_browser, p_message->GetArgumentList()->GetList(0));
 			
 			/* UNCHECKED */
 			
@@ -506,34 +503,6 @@ public:
 		}
 		else
 			return CefRenderProcessHandler::OnProcessMessageReceived(p_browser, p_source_process, p_message);
-	}
-	
-	virtual void OnContextCreated(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefFrame> p_frame, CefRefPtr<CefV8Context> p_context)
-	{
-		if (m_handler_list != nil)
-		{
-			bool t_success;
-			t_success = true;
-			
-			bool t_entered;
-			t_entered = false;
-			
-			if (t_success)
-				t_success = t_entered = p_context->Enter();
-			
-			CefRefPtr<CefV8Value> t_livecode_obj;
-			if (t_success)
-				t_success = GetLiveCodeGlobalObj(p_context, t_livecode_obj);
-			
-			// Add handlers
-			if (t_success)
-				t_success = AddHandlerList(t_livecode_obj, m_handler_list);
-			
-			if (t_entered)
-				p_context->Exit();
-			
-			/* UNCHECKED */
-		}
 	}
 	
 private:
@@ -593,6 +562,27 @@ private:
 		return t_success;
 	}
 	
+	bool DeleteLiveCodeGlobalObj(CefRefPtr<CefV8Context> p_context)
+	{
+		CefString t_obj_name("liveCode");
+		
+		bool t_success;
+		t_success = true;
+		
+		CefRefPtr<CefV8Value> t_global;
+		t_global = p_context->GetGlobal();
+		
+		t_success = t_global != nil;
+		
+		if (t_success)
+		{
+			if (t_global->HasValue(t_obj_name))
+				t_success = t_global->DeleteValue(t_obj_name);
+		}
+		
+		return t_success;
+	}
+	
 	bool AddHandler(CefRefPtr<CefV8Value> p_container, const CefString &p_name)
 	{
 		bool t_success;
@@ -614,18 +604,7 @@ private:
 		return t_success;
 	}
 	
-	bool RemoveHandler(CefRefPtr<CefV8Value> p_container, const CefString &p_name)
-	{
-		bool t_success;
-		t_success = true;
-		
-		if (p_container->HasValue(p_name))
-			t_success = p_container->DeleteValue(p_name);
-		
-		return t_success;
-	}
-	
-	bool AddHandlerList(CefRefPtr<CefV8Value> p_container, CefRefPtr<CefListValue> p_list)
+	bool AddHandlerList(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefV8Value> p_container, CefRefPtr<CefListValue> p_list)
 	{
 		if (p_list == nil)
 			return true;
@@ -646,23 +625,6 @@ private:
 		return true;
 	}
 	
-	bool RemoveHandlerList(CefRefPtr<CefV8Value> p_container, CefRefPtr<CefListValue> p_list)
-	{
-		if (p_list == nil)
-			return true;
-		
-		size_t t_size;
-		t_size = p_list->GetSize();
-		
-		for (uint32_t i = 0; i < t_size; i++)
-		{
-			if (p_list->GetType(i) != VTYPE_STRING || !RemoveHandler(p_container, p_list->GetString(i)))
-				return false;
-		}
-		
-		return true;
-	}
-	
 	bool SetLiveCodeHandlers(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefListValue> p_handlers)
 	{
 		bool t_success;
@@ -677,21 +639,17 @@ private:
 		if (t_success)
 			t_success = t_entered = t_context->Enter();
 		
+		if (t_success)
+			t_success = DeleteLiveCodeGlobalObj(t_context);
+		
 		CefRefPtr<CefV8Value> t_livecode_obj;
 		if (t_success)
 			t_success = GetLiveCodeGlobalObj(t_context, t_livecode_obj);
 		
-		// Remove old handlers
-		if (t_success)
-			t_success = RemoveHandlerList(t_livecode_obj, m_handler_list);
-		
 		// Add new handlers
 		if (t_success)
-			t_success = AddHandlerList(t_livecode_obj, p_handlers);
-		
-		if (t_success)
-			m_handler_list = p_handlers;
-		
+			if (p_handlers != nil && p_handlers->GetSize() > 0)
+				t_success = AddHandlerList(p_browser, t_livecode_obj, p_handlers);
 		
 		if (t_entered)
 			t_context->Exit();
@@ -699,7 +657,6 @@ private:
 		return t_success;
 	}
 	
-	CefRefPtr<CefListValue> m_handler_list;
 	
 	IMPLEMENT_REFCOUNTING(MCCefRenderApp)
 };
