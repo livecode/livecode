@@ -33,6 +33,10 @@ endif
 
 # Buildbot must set the variables PLATFORM and SUBPLATFORM
 
+ifeq ($(BUILD_PLATFORM),linux-x86)
+BUILD_PLATFORM = linux-x86_64
+endif
+
 ifeq ($(BUILD_SUBPLATFORM),)
 CONFIG_TARGET = config-$(BUILD_PLATFORM)
 else
