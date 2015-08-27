@@ -245,8 +245,61 @@ end syntax
 
 --
 
-public handler type SortHandler(in pLeft as any, in pRight as any) returns integer
-public foreign handler MCSortExecSortListUsingHandler(inout Target as List, in Handler as SortHandler) returns nothing binds to "<builtin>"
+/*
+Summary: A handler type that can be used in the <SortListUsingHandler> command.
+
+Parameters:
+pLeft: The left hand value to compare.
+pRight: The right hand value to compare.
+
+Returns: 
+An integer less than 0 if pLeft is less than pRight with respect to the intended ordering,
+an integer greater than 0 if pLeft is greater than pRight with respect to the intended ordering,
+or 0 if pLeft is equal to pRight.
+
+Description:
+Any handler of type <SortCompare> can be passed to <SortListUsingHandler> to sort a list. 
+It takes two arguments, and returns an integer based on the comparison.
+
+Tags: Sorting
+*/
+public handler type SortCompare(in pLeft as any, in pRight as any) returns Integer
+
+public foreign handler MCSortExecSortListUsingHandler(inout Target as List, in Handler as SortCompare) returns nothing binds to "<builtin>"
+
+/*
+Summary:        Sorts <Target> using <Handler> as a comparison function.
+Target:         An expression that evaluates to a list.
+Handler: 		A handler of type <SortCompare>
+
+Example:
+ handler RandomSort(in pLeft as any, in pRight as any) returns Integer
+ 	if any number > 0.5 then
+ 		return 1
+ 	else
+ 		return -1
+ 	end if
+ end handler
+ 
+ public handler RandomlySorted() returns List
+	 variable tList as List
+	 put [] into tList
+ 
+	 variable tCount as Number
+	 repeat with tCount from 1 up to 1000
+ 		push tCount onto tList
+	 end repeat
+	 
+	 sort tList using handler RandomSort
+	 return tList
+ end handler
+ 
+Description:
+<SortListUsingHandler> sorts a list by comparing the elements of a list according to the 
+comparison implemented by the <Handler> argument.
+
+Tags: Sorting
+*/
 
 syntax SortListUsingHandler is statement
     "sort" <Target: Expression> "using" <Handler: Expression>
