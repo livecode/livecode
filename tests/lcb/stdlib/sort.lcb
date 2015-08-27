@@ -68,6 +68,28 @@ handler RandomStringList() returns List
 	return tList
 end handler
 
+-- Create a list containing 100 random strings of 1-10 characters, or numbers from 1 to 100
+handler RandomMixedList() returns List
+	variable tStringList as List
+	variable tNumericList as List
+	put RandomStringList() into tStringList
+	put RandomNumericList() into tNumericList
+	
+	variable tList
+	put [] into tList
+	
+	variable tCount
+	repeat with tCount from 1 up to 100
+		if any number > 0.5 then
+			push tStringList[tCount] onto tList
+		else
+			push tNumericList[tCount] onto tList
+		end if
+	end repeat	
+	
+	return tList
+end handler
+
 handler IsSorted(in pList as List, in pDescending as Boolean) returns Boolean
 	if pList is empty then
 		return true
@@ -82,6 +104,76 @@ handler IsSorted(in pList as List, in pDescending as Boolean) returns Boolean
 	variable tIter
 	repeat for each element tIter in pList
 		if (pDescending and tIter > tLast) or (not pDescending and tIter < tLast) then
+			put false into tSorted
+			exit repeat
+		end if
+		put tIter into tLast
+	end repeat
+	return tSorted
+end handler
+
+handler CompareNumericAscending(in pLeft as any, in pRight as any) returns Integer
+	return CompareNumeric(pLeft, pRight, false)	
+end handler
+
+handler CompareNumericDescending(in pLeft as any, in pRight as any) returns Integer
+	return CompareNumeric(pLeft, pRight, true)	
+end handler
+
+-- Sorts numerically, converting strings to numbers where possible
+handler CompareNumeric(in pLeft as any, in pRight as any, in pDescending as Boolean) returns Integer
+	variable tLeft as optional Number
+	variable tRight as optional Number
+	
+	if pLeft is a number then
+		put pLeft into tLeft
+	else
+		put pLeft parsed as number into tLeft
+	end if
+	
+	if pRight is a number then
+		put pRight into tRight
+	else
+		put pRight parsed as number into tRight
+	end if
+		
+	if tRight is nothing then
+		return -1
+	end if
+	
+	if tLeft is nothing then
+		return 1
+	end if
+	
+	if tLeft <= tRight then
+		if pDescending then
+			return 1
+		else
+			return -1
+		end if
+	end if
+	
+	if pDescending then
+		return -1
+	else
+		return 1
+	end if
+end handler
+
+handler IsSortedUsingHandler(in pList as List, in pHandler as SortCompare) returns Boolean
+	if pList is empty then
+		return true
+	end if
+
+	variable tLast
+	pop front of pList into tLast
+
+	variable tSorted
+	put true into tSorted
+
+	variable tIter
+	repeat for each element tIter in pList
+		if pHandler(tLast, tIter) > 0 then
 			put false into tSorted
 			exit repeat
 		end if
@@ -200,6 +292,52 @@ public handler TestDescendingText() -- RANDOMIZED
 	put tList into tStable
 	sort tList in descending text order
 	test "sort descending text is stable" when tList is tStable
+end handler
+
+public handler TestAscendingNumericMixed() -- RANDOMIZED
+	variable tRandom
+	repeat forever
+		put RandomMixedList() into tRandom
+		if not IsSortedUsingHandler(tRandom, CompareNumericAscending) then
+			exit repeat
+		end if
+	end repeat
+
+	variable tList
+
+	-- Test sorting
+	put tRandom into tList	
+	sort tList using CompareNumericAscending
+	test "sort using handler ascending numeric" when IsSortedUsingHandler(tList, CompareNumericAscending)
+	
+	-- Test sorting stability
+	variable tStable
+	put tList into tStable
+	sort tList using CompareNumericAscending
+	test "sort using handler ascending numeric is stable" when tList is tStable
+end handler
+
+public handler TestDescendingNumericMixed() -- RANDOMIZED
+	variable tRandom
+	repeat forever
+		put RandomMixedList() into tRandom
+		if not IsSortedUsingHandler(tRandom, CompareNumericDescending) then
+			exit repeat
+		end if
+	end repeat
+
+	variable tList
+
+	-- Test sorting
+	put tRandom into tList	
+	sort tList using CompareNumericDescending
+	test "sort using handler descending numeric" when IsSortedUsingHandler(tList, CompareNumericDescending)
+	
+	-- Test sorting stability
+	variable tStable
+	put tList into tStable
+	sort tList using CompareNumericDescending
+	test "sort using handler descending numeric is stable" when tList is tStable
 end handler
 
 end module
