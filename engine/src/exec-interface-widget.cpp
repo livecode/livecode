@@ -42,7 +42,9 @@ void MCInterfaceExecLaunchUrlInWidget(MCExecContext& ctxt, MCStringRef p_url, MC
 {
 	MCAutoProperListRef t_list;
 	
-	/* UNCHECKED */ MCProperListCreate((MCValueRef*)&p_url, 1, &t_list);
+	if (!MCProperListCreate((MCValueRef*)&p_url, 1, &t_list))
+		return;
+	
 	MCWidgetPost(p_widget->getwidget(), MCNAME("OnLaunchUrl"), *t_list);
 }
 
@@ -50,6 +52,8 @@ void MCInterfaceExecDoInWidget(MCExecContext& ctxt, MCStringRef p_script, MCWidg
 {
 	MCAutoProperListRef t_list;
 	
-	/* UNCHECKED */ MCProperListCreate((MCValueRef*)&p_script, 1, &t_list);
+	if (!MCProperListCreate((MCValueRef*)&p_script, 1, &t_list))
+		return;
+	
 	MCWidgetPost(p_widget->getwidget(), MCNAME("OnDo"), *t_list);
 }

@@ -132,36 +132,42 @@ end handler
 
 public handler OnOpen()
 	variable tParent as Pointer
-	/* UNCHECKED */
-	MCWidgetGetMyStackNativeView(tParent)
 	
-	// TODO - add widget code to get stack window handler
 	// put my native window into tParent
-
+	if not MCWidgetGetMyStackNativeView(tParent) then
+		throw "error getting stack native view"
+	end if
+	
 	variable tFactory as MCBrowserFactoryRef
-	/* UNCHECKED */
-	MCBrowserFactoryGet(mBrowserType, tFactory)
+	if not MCBrowserFactoryGet(mBrowserType, tFactory) then
+		throw "error getting browser factory for type: " & mBrowserType
+	end if
 	
 	variable tDisplay as Pointer
-	/* UNCHECKED */
-	MCWidgetGetMyStackNativeDisplay(tDisplay)
+	if not MCWidgetGetMyStackNativeDisplay(tDisplay) then
+		throw "error getting native display handle"
+	end if
 	
-	/* UNCHECKED */
-	MCBrowserFactoryCreateBrowser(tFactory, tDisplay, tParent, mBrowser)
+	if not MCBrowserFactoryCreateBrowser(tFactory, tDisplay, tParent, mBrowser) then
+		throw "error creating browser"
+	end if
 	
 	variable tBrowserView as Pointer
-	/* UNCHECKED */
 	put MCBrowserGetNativeLayer(mBrowser) into tBrowserView
 	
 	//set my native layer to tBrowserView
-	/* UNCHECKED */
 	MCWidgetSetMyNativeLayer(tBrowserView)
 	
 	variable tRequestCallback as Pointer
 	variable tJavaScriptCallback as Pointer
 	
-	MCHandlerGetFunctionPtr(mRequestHandler, tRequestCallback)
-	MCHandlerGetFunctionPtr(mJavaScriptHandler, tJavaScriptCallback)
+	if not MCHandlerGetFunctionPtr(mRequestHandler, tRequestCallback) then
+		throw "error getting request handler function pointer"
+	end if
+	
+	if not MCHandlerGetFunctionPtr(mJavaScriptHandler, tJavaScriptCallback) then
+		throw "error getting javascript handler function pointer"
+	end if
 
 	MCBrowserSetRequestHandler(mBrowser, tRequestCallback, nothing)
 	MCBrowserSetJavaScriptHandler(mBrowser, tJavaScriptCallback, nothing)
@@ -227,10 +233,9 @@ public handler OnBrowserRequestCallback(in pContext as optional Pointer, in pBro
 end handler
 
 public handler OnJavaScriptCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pHandler as ZStringUTF8, in pParams as MCBrowserListRef)
-	log "JS Call: %@ (%@)" with [pHandler, pParams]
 	variable tList
-	if browserListToLCBList(pParams, tList) then
-		log "Params: %@" with [tList]
+	if not browserListToLCBList(pParams, tList) then
+		throw "error converting javascript callback parameters"
 	end if
 	post pHandler to mScriptObject with tList
 end handler
@@ -349,19 +354,25 @@ end handler
 
 public handler OnLaunchUrl(in pUrl as String)
 	if mBrowser is not nothing then
-		/* UNCHECKED */ MCBrowserGoToURL(mBrowser, pUrl)
+		if not MCBrowserGoToURL(mBrowser, pUrl) then
+			throw "error launching url " & pUrl
+		end if
 	end if
 end handler
 
 public handler OnGoBack()
 	if mBrowser is not nothing then
-		/* UNCHECKED */ MCBrowserGoBack(mBrowser)
+		if not MCBrowserGoBack(mBrowser) then
+			throw "error going back"
+		end if
 	end if
 end handler
 
 public handler OnGoForward()
 	if mBrowser is not nothing then
-		/* UNCHECKED */ MCBrowserGoForward(mBrowser)
+		if not MCBrowserGoForward(mBrowser) then
+			throw "error going forward"
+		end if
 	end if
 end handler
 
@@ -372,7 +383,10 @@ end handler
 public handler browserEvaluateJavaScript(in pScript as String) returns String
 	if mBrowser is not nothing then
 		variable tResult as String
-		/* UNCHECKED */ MCBrowserEvaluateJavaScript(mBrowser, pScript, tResult)
+		if not MCBrowserEvaluateJavaScript(mBrowser, pScript, tResult) then
+			throw "error evaluating javascript"
+		end if
+		
 		return tResult
 	end if
 	

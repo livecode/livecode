@@ -884,8 +884,11 @@ bool MCWidget::SetNativeView(void *p_view)
 	MCNativeLayer *t_layer;
 	t_layer = nil;
 	
-	if (p_view != nil)
-		t_success = nil != (t_layer = MCNativeLayer::CreateNativeLayer(getwidget(), p_view));
+	if (t_success && p_view != nil)
+	{
+		t_layer = MCNativeLayer::CreateNativeLayer(getwidget(), p_view);
+		t_success = t_layer != nil;
+	}
 	
 	if (t_success)
 	{
