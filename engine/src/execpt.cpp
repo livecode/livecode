@@ -1172,4 +1172,3 @@ Exec_stat MCExecPoint::doscript(MCExecPoint& ep, uint2 line, uint2 pos)
     }
     return ES_NORMAL;
 }
-        

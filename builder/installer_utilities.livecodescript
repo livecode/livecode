@@ -1438,14 +1438,14 @@ command log pMessage
       local tFile
       switch the platform
          case "linux"
-            put $HOME & "/.livecode/logs/" & toLower(the uProduct of stack "Installer") & "_installer_log.txt" into tFile
+            put $HOME & "/.runrev/logs/" & toLower(the uProduct of stack "Installer") & "_installer_log.txt" into tFile
             break
          case "macos"
-            put specialFolderPath("cusr") & "/Library/Logs/LiveCode/" & the uProduct of stack "Installer" & "InstallerLog.txt"  into tFile
+            put specialFolderPath("cusr") & "/Library/Logs/RunRev/" & the uProduct of stack "Installer" & "InstallerLog.txt"  into tFile
             break
          case "win32"
             -- Make sure we put logs in the 'Local' AppData section.
-            put specialFolderPath(0x001c) & "/LiveCode/Logs/" & the uProduct of stack "Installer" & "InstallerLog.txt" into tFile
+            put specialFolderPath(0x001c) & "/RunRev/Logs/" & the uProduct of stack "Installer" & "InstallerLog.txt" into tFile
             break
       end switch
       
