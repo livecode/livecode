@@ -14,21 +14,31 @@ set -e
 #
 input=$1
 output=$2
-exports=$3
-whitelist=$4
-preamble=$5
-shift 5
+whitelist=$3
+preamble=$4
+shift 4
+
 
 for lib in $@ ; do
   libs+=\ --js-library\ "${lib}"
 done
 
 EMCC=${EMCC:-emcc}
+BUILDTYPE=${BUILDTYPE:-Debug}
 
-${EMCC} -O2 -g ${CFLAGS} \
+# Optimisation flags for the Emscripten bitcode-to-javascript step:
+#
+#	-Os	Optimise for a balance of size and speed
+#
+if [ "${BUILDTYPE}" = "Release" ] ; then
+  optimisation_flags="-Os -g0"
+else
+  optimisation_flags="-O2 -g3"
+fi
+
+${EMCC} ${optimisation_flags} ${CFLAGS} \
 	"${input}" \
 	-o "${output}" \
-	-s EXPORTED_FUNCTIONS=@"${exports}" \
 	-s EMTERPRETIFY_WHITELIST=@"${whitelist}" \
 	-s ASSERTIONS=1 \
 	-s EMTERPRETIFY=1 \
