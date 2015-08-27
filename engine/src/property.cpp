@@ -1248,7 +1248,7 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
             MCStringLastIndexOfChar(*t_string, ']', UINDEX_MAX, kMCStringOptionCompareExact, t_end_offset) &&
             t_end_offset == MCStringGetLength(*t_string) - 1)
         {
-            MCStringCopySubstring(*t_string, MCRangeMake(0, t_offset), &t_property_name);
+            /* UNCHECKED */ MCStringCopySubstring(*t_string, MCRangeMake(0, t_offset), &t_property_name);
             
             // AL-2015-08-27: [[ Bug 15798 ]] If the index is quoted, we don't want to include the
             //  quotes in the index name.
@@ -1259,7 +1259,7 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
                 t_end_offset--;
             }
             
-            MCStringCopySubstring(*t_string, MCRangeMake(t_offset + 1, t_end_offset - t_offset - 1), &t_icarray);
+            /* UNCHECKED */ MCStringCopySubstring(*t_string, MCRangeMake(t_offset + 1, t_end_offset - t_offset - 1), &t_icarray);
         }
         else
             t_property_name = *t_string;
