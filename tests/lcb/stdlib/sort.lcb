@@ -18,6 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 module com.livecode.sort.tests
 
 use com.livecode.sort
+use com.livecode.__INTERNAL._testlib
 
 ----------------------------------------------------------------
 -- Utilities
@@ -338,6 +339,42 @@ public handler TestDescendingNumericMixed() -- RANDOMIZED
 	put tList into tStable
 	sort tList using CompareNumericDescending
 	test "sort using handler descending numeric is stable" when tList is tStable
+end handler
+
+handler InvalidSortHandler_Args(in pValue as any) returns Integer
+	return 1
+end handler
+
+handler InvalidSortHandler_ReturnType(in pLeft as any, in pRight as any) returns String
+	return ""
+end handler
+
+handler InvalidSortHandler_MissingReturn(in pLeft as any, in pRight as any) returns Integer
+
+end handler
+
+handler TestSortUsingHandler_InvalidArgs()
+	variable tList as List
+	put [1,2,3,4] into tList
+	sort tList using InvalidSortHandler_Args
+end handler
+
+handler TestSortUsingHandler_InvalidReturnType()
+	variable tList as List
+	put [1,2,3,4] into tList
+	sort tList using InvalidSortHandler_ReturnType
+end handler
+
+handler TestSortUsingHandler_MissingReturn()
+	variable tList as List
+	put [1,2,3,4] into tList
+	sort tList using InvalidSortHandler_MissingReturn
+end handler
+
+public handler TestUsingHandlerErrors()
+	MCUnitTestHandlerThrows(TestSortUsingHandler_InvalidArgs, "handler invalid number of args")
+	MCUnitTestHandlerThrows(TestSortUsingHandler_InvalidReturnType, "handler invalid return type")
+	MCUnitTestHandlerThrows(TestSortUsingHandler_MissingReturn, "handler missing return")
 end handler
 
 end module
