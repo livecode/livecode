@@ -784,8 +784,8 @@
 
 								'inputs':
 								[
+									'emscripten-javascriptify.sh',
 									'<(PRODUCT_DIR)/standalone-community.bc',
-									'src/em-exported.json',
 									'src/em-whitelist.json',
 									'src/em-preamble.js',
 									'src/em-util.js',
@@ -808,7 +808,6 @@
 									'./emscripten-javascriptify.sh',
 									'<(PRODUCT_DIR)/standalone-community.bc',
 									'<(PRODUCT_DIR)/standalone-community.html',
-									'src/em-exported.json',
 									'src/em-whitelist.json',
 									'src/em-preamble.js',
 									'src/em-util.js',
