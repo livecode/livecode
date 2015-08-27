@@ -245,4 +245,13 @@ end syntax
 
 --
 
+public handler type SortHandler(in pLeft as any, in pRight as any) returns integer
+public foreign handler MCSortExecSortListUsingHandler(inout Target as List, in Handler as SortHandler) returns nothing binds to "<builtin>"
+
+syntax SortListUsingHandler is statement
+    "sort" <Target: Expression> "using" <Handler: Expression>
+begin 
+    MCSortExecSortListUsingHandler(Target, Handler)
+end syntax
+
 end module
