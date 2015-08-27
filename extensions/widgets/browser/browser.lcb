@@ -197,7 +197,7 @@ private handler capitalize(in pString as String) returns String
 	return pString
 end handler
 
-public handler OnBrowserRequestCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pType as MCBrowserRequestType, in pState as MCBrowserRequestState, in pFrame as CBool, in pUrl as NativeCString, in pError as optional NativeCString) returns nothing
+public handler OnBrowserRequestCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pType as MCBrowserRequestType, in pState as MCBrowserRequestState, in pFrame as CBool, in pUrl as ZStringUTF8, in pError as optional ZStringUTF8) returns nothing
 	variable tType as String
 	put element (pType + 1) of kMCBrowserRequestTypeMap into tType
 	
@@ -226,7 +226,7 @@ public handler OnBrowserRequestCallback(in pContext as optional Pointer, in pBro
 	post tMessage to mScriptObject with tArgs
 end handler
 
-public handler OnJavaScriptCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pHandler as NativeCString, in pParams as MCBrowserListRef)
+public handler OnJavaScriptCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pHandler as ZStringUTF8, in pParams as MCBrowserListRef)
 	log "JS Call: %@ (%@)" with [pHandler, pParams]
 	variable tList
 	if browserListToLCBList(pParams, tList) then
