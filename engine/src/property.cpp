@@ -1237,33 +1237,48 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
         if (!ctxt  . EvalExprAsStringRef(destvar, EE_PROPERTY_BADEXPRESSION, &t_string))
             return false;
 
-        MCScriptPoint sp(*t_string);
+        // AL-2015-08-27: [[ Bug 15798 ]] Parse into index and property name before determining
+        //  if this is a custom property or not (otherwise things like textStyle["bold"] are
+        //  interpreted as custom properties).
+        MCAutoStringRef t_icarray, t_property_name;
+        uindex_t t_offset, t_end_offset;
+        // SN-2014-08-08: [[ Bug 13135 ]] Targetting a custom var should resolve the index AND suppress
+        //  it from the initial name
+        if (MCStringFirstIndexOfChar(*t_string, '[', 0, kMCStringOptionCompareExact, t_offset) &&
+            MCStringLastIndexOfChar(*t_string, ']', UINDEX_MAX, kMCStringOptionCompareExact, t_end_offset) &&
+            t_end_offset == MCStringGetLength(*t_string) - 1)
+        {
+            MCStringCopySubstring(*t_string, MCRangeMake(0, t_offset), &t_property_name);
+            
+            // AL-2015-08-27: [[ Bug 15798 ]] If the index is quoted, we don't want to include the
+            //  quotes in the index name.
+            if (MCStringGetCodepointAtIndex(*t_string, t_offset + 1) == '"' &&
+                MCStringGetCodepointAtIndex(*t_string, t_end_offset - 1) == '"')
+            {
+                t_offset++;
+                t_end_offset--;
+            }
+            
+            MCStringCopySubstring(*t_string, MCRangeMake(t_offset + 1, t_end_offset - t_offset - 1), &t_icarray);
+        }
+        else
+            t_property_name = *t_string;
+        
+        if (*t_icarray != nil)
+        /* UNCHECKED */ MCNameCreate(*t_icarray, t_index_name);
+        
+        MCScriptPoint sp(*t_property_name);
 		Symbol_type type;
 		const LT *te;
 		if (sp.next(type) && sp.lookup(SP_FACTOR, te) == PS_NORMAL && te->type == TT_PROPERTY && sp.next(type) == PS_EOF)
 			t_prop = (Properties)te -> which;
 		else
-		{
-            MCAutoStringRef t_icarray, t_property_name;
-			uindex_t t_offset;
-            // SN-2014-08-08: [[ Bug 13135 ]] Targetting a custom var should resolve the index AND suppress
-            //  it from the initial name
-            if (MCStringFirstIndexOfChar(*t_string, '[', 0, kMCStringOptionCompareExact, t_offset))
-            {
-                MCStringCopySubstring(*t_string, MCRangeMake(t_offset + 1, MCStringGetLength(*t_string) - t_offset - 2), &t_icarray);
-                MCStringCopySubstring(*t_string, MCRangeMake(0, t_offset), &t_property_name);
-            }
-            else
-                t_property_name = *t_string;
-            
+        {
 			// MW-2011-09-02: [[ Bug 9698 ]] Always create a name for the property, otherwise
 			//   if the var contains empty, this function returns a nil name which causes
 			//   customprop to be used incorrectly.
             //            
             /* UNCHECKED */ MCNameCreate(*t_property_name, t_prop_name);
-            
-			if (*t_icarray != nil)
-            /* UNCHECKED */ MCNameCreate(*t_icarray, t_index_name);
             
 			t_prop = P_CUSTOM;
 		}
