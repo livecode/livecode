@@ -296,9 +296,3 @@ private function getRepoBinariesFolder
 	return revEnvironmentRepositoryPath() & slash & "emscripten-bin"
 end getRepoBinariesFolder
 
----------------------------------------
--- FIXME REMOVE THESE
-
-function revEmscriptenGetRepoBinariesFolder
-   return getRepoBinariesFolder()
-end revEmscriptenGetRepoBinariesFolder
