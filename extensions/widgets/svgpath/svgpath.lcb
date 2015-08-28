@@ -308,10 +308,10 @@ private handler stringToColor(in pString as String) returns Color
 	if tComponentCount is 4 then
 		put (element 4 of tComponentList) parsed as number into tAlpha
 	else
-		put 1.0 into tAlpha
+		put 255 into tAlpha
 	end if
 
-	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha ]
+	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha/255 ]
 end handler
 
 
