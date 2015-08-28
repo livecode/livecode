@@ -971,6 +971,7 @@ component Toolset
 		stack ide-support:revdeploylibraryios.livecodescript
 		stack ide-support:revliburl.livecodescript
 		stack ide-support:revsaveasandroidstandalone.livecodescript
+		stack ide-support:revsaveasemscriptenstandalone.livecodescript
 		stack ide-support:revsaveasiosstandalone.livecodescript
 		stack ide-support:revsaveasstandalone.livecodescript
 		stack ide-support:revsblibrary.livecodescript
