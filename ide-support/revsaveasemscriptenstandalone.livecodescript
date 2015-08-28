@@ -132,7 +132,7 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder
       put tBuildFolder & slash & tName & ".html" into tHtmlFile
       logDebug "html", "Creating" && tHtmlFile
       logDebug "html", "Copying" && getHtmlTemplateFile()
-      revSBCopyFileToFile mapPath(getHtmlTemplateFile()), tHtmlFile, \
+      revSBCopyFileToFile mapBinPath(getHtmlTemplateFile()), tHtmlFile, \
             "revStandaloneProgressCallback", the long id of me
       
    catch tError
@@ -161,9 +161,9 @@ end revSaveAsEmscriptenStandalone
 -- File & path helper functions
 ----------------------------------------------------------------
 
--- Map a file path into an absolute filesystem path.  This is used to
--- cope with running from a git repository working tree.
-private function mapPath pPath
+-- Map a compiled file's path into an absolute filesystem path.  This
+-- is used to cope with running from a git repository working tree.
+private function mapBinPath pPath
    if there is a file pPath then
       return pPath
    end if
@@ -175,7 +175,21 @@ private function mapPath pPath
       -- We're running from a git checkout
       return getRepoBinariesFolder() & slash & pPath
    end if
-end mapPath
+end mapBinPath
+
+-- Map a resource file's path into an absolute filesystem path.  This
+-- is used to cope with running from a git repository working tree.
+private function mapResPath pPath
+   if there is a file pPath then
+      return pPath
+   end if
+
+   if revEnvironmentIsInstalled() then
+      return getRuntimeFolder() & slash & pPath
+   else
+      return getRepoResourceFolder() & slash & pPath
+   end if
+end mapResPath
 
 -- Return a number-indexed array of engine files that need to be
 -- copied into the standalone output folder.
@@ -183,10 +197,10 @@ private function getEngineFiles
    local tFiles
    
    -- Engine JavaScript
-   put mapPath("standalone-" & revLicenseType() & "-" & the version & ".js") into tFiles[1]
+   put mapBinPath("standalone-" & revLicenseType() & "-" & the version & ".js") into tFiles[1]
    
    -- Memory initialisation file
-   put mapPath("standalone-" & revLicenseType() & "-" & the version & ".html.mem") into tFiles[2]
+   put mapBinPath("standalone-" & revLicenseType() & "-" & the version & ".html.mem") into tFiles[2]
    
    return tFiles
 end getEngineFiles
@@ -196,7 +210,7 @@ end getEngineFiles
 -- initialisation data that's automatically included in all
 -- standalones (especially fonts).
 private function getStandaloneTemplateFolder
-   return mapPath("emscripten-standalone-template")
+   return mapResPath("emscripten-standalone-template")
 end getStandaloneTemplateFolder
 
 -- Return a number-indexed array of files in the Emscripten standalone
@@ -261,7 +275,7 @@ end getStandaloneTemplateFiles_Impl
 -- This has some standalone-dependent JavaScript substituted into it
 -- to instantiate the engine.
 private function getHtmlTemplateFile
-   return mapPath("standalone-" & revLicenseType() & "-" & the version & ".html")
+   return mapBinPath("standalone-" & revLicenseType() & "-" & the version & ".html")
 end getHtmlTemplateFile
 
 -- Get the directory containing the Emscripten runtime
@@ -296,3 +310,7 @@ private function getRepoBinariesFolder
 	return revEnvironmentRepositoryPath() & slash & "emscripten-bin"
 end getRepoBinariesFolder
 
+-- Get the directory where Emscripten resources are kept
+private function getRepoResourceFolder
+   return revEnvironmentRepositoryPath() & slash & "engine" & slash & "rsrc"
+end getRepoResourceFolder
