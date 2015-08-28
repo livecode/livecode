@@ -273,30 +273,36 @@ Target:         An expression that evaluates to a list.
 Handler: 		A handler of type <SortCompare>
 
 Example:
- handler RandomSort(in pLeft as any, in pRight as any) returns Integer
- 	if any number > 0.5 then
- 		return 1
- 	else
- 		return -1
- 	end if
- end handler
- 
- public handler RandomlySorted() returns List
-	 variable tList as List
-	 put [] into tList
- 
-	 variable tCount as Number
-	 repeat with tCount from 1 up to 1000
- 		push tCount onto tList
-	 end repeat
-	 
-	 sort tList using handler RandomSort
-	 return tList
- end handler
+variable sKeyIndex as Number
+
+private handler CompareListsByElement(in pLeft as any, in pRight as any) returns Integer
+   variable tLeft as Number
+   variable tRight as Number
+   put pLeft[sKeyIndex] into tLeft
+   put pRight[sKeyIndex] into tRight
+
+   if tLeft > tRight then
+      return 1
+   else if tLeft < tRight then
+      return -1
+   else
+      return 0
+   end if
+end handler
+
+-- Sort lists according to value at specified index of each list
+public handler TestSortListOfLists(in pList as List, in pKeyIndex as Number) returns List
+   put pKeyIndex into sKeyIndex
+   sort pList using handler CompareListsByElement
+   return pList
+end handler
  
 Description:
 <SortListUsingHandler> sorts a list by comparing the elements of a list according to the 
 comparison implemented by the <Handler> argument.
+
+>*Note:* Supplying an inconsistent comparison operator to <SortListUsingHandler> causes 
+undefined behavior.
 
 Tags: Sorting
 */
