@@ -230,6 +230,11 @@ private command getStandaloneTemplateFiles_Impl @xCount, @xFiles, pRelPath
    
    -- List files
    repeat for each line tFile in the files
+      -- Skip dotfiles
+      if tFile begins with "." then
+         next repeat
+      end if
+
       add 1 to xCount
       put pRelPath & slash & tFile into tFilePath
       put tFilePath into xFiles[xCount]
