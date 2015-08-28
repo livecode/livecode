@@ -264,7 +264,7 @@ private function getRuntimeFolder
    
    local tRelFolder, tOverridePath, tUserPath
    
-   put slash & "Emscripten" into tRelFolder
+   put slash & "Emscripten" & slash & "js" into tRelFolder
    
    put revOverrideRuntimePath() into tOverridePath
    if tOverridePath is not empty then
