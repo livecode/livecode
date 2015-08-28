@@ -257,3 +257,62 @@ MCScreenDC::wait(real64_t p_duration,
 
 	return MCquit;
 }
+
+/* ================================================================
+ * Ask/answer
+ * ================================================================ */
+
+// These functions are implemented in javascript
+extern "C" int32_t MCEmscriptenDialogShowAlert(const unichar_t* p_message, size_t p_message_length);
+extern "C" int32_t MCEmscriptenDialogShowConfirm(const unichar_t* p_message, size_t p_message_length);
+extern "C" int32_t MCEmscriptenDialogShowPrompt(const unichar_t* p_message, size_t p_message_length, const unichar_t* p_default, size_t p_default_length, unichar_t** r_result, size_t* r_result_length);
+
+int32_t
+MCScreenDC::popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message)
+{
+    // Default to returning an unsuccessful result
+    int32_t t_result = -1;
+    
+    // We need to have a UTF-16 string pointer for the message string. The other
+    // parameters are not supported by the JavaScript built-in dialogues.
+    MCAutoStringRefAsUTF16String t_message_u16;
+    t_message_u16.Lock(p_message);
+    
+    switch (p_button_count)
+    {
+        case 1:
+            // Only one button - treat it as an "OK" button
+            t_result = MCEmscriptenDialogShowAlert(t_message_u16.Ptr(), t_message_u16.Size());
+            break;
+            
+        case 2:
+            // Two buttons - treat it as an "OK"/"Cancel" button pair
+            t_result = MCEmscriptenDialogShowConfirm(t_message_u16.Ptr(), t_message_u16.Size());
+            break;
+            
+        default:
+            // Not supported
+            break;
+    }
+    
+    return t_result;
+}
+
+bool
+MCScreenDC::popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial, bool p_hint, MCStringRef& r_result)
+{
+    MCAutoStringRefAsUTF16String t_message_u16;
+    MCAutoStringRefAsUTF16String t_default_u16;
+    t_message_u16.Lock(p_message);
+    t_default_u16.Lock(p_initial);
+    
+    unichar_t* t_result;
+    size_t t_result_length;
+    if (!MCEmscriptenDialogShowPrompt(t_message_u16.Ptr(), t_message_u16.Size(), t_default_u16.Ptr(), t_default_u16.Size(), &t_result, &t_result_length))
+    {
+        return false;
+    }
+    
+    MCStringCreateWithBytesAndRelease((byte_t*)t_result, t_result_length, kMCStringEncodingUTF16, false, r_result);
+    return true;
+}
