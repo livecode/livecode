@@ -449,8 +449,6 @@ IO_stat MCDispatch::startup(void)
         MCdispatcher -> loadexternal(MCSTR("revxml"));
         MCdispatcher -> loadexternal(MCSTR("dbsqlite"));
         MCdispatcher -> loadexternal(MCSTR("dbmysql"));
-#elif defined(__EMSCRIPTEN__)
-        /* Don't load any externals */
 #else
         MCdispatcher -> loadexternal(MCSTR("revzip.dylib"));
         MCdispatcher -> loadexternal(MCSTR("revdb.dylib"));
