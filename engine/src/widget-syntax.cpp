@@ -223,6 +223,15 @@ extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMyHeight(MCNumberRef& r_height)
     MCNumberCreateWithReal(MCWidgetGetFrame(MCcurrentwidget) . size . height, r_height);
 }
 
+// AL-2015-08-27: [[ Bug 15773 ]] Reinstate MCWidgetGetMyRectangle
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMyRectangle(MCCanvasRectangleRef& r_rect)
+{
+    if (!MCWidgetEnsureCurrentWidget())
+        return;
+    
+    MCCanvasRectangleCreateWithMCGRectangle(MCWidgetGetFrame(MCcurrentwidget), r_rect);
+}
+
 extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMyFont(MCCanvasFontRef& r_canvas_font)
 {
     if (!MCWidgetEnsureCurrentWidget())

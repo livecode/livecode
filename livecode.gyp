@@ -18,22 +18,27 @@
 				# LCB toolchain
 				'toolchain/toolchain.gyp:toolchain-all',
 
-				# The revsecurity library is an output and not an intermediate product
-				#'thirdparty/libopenssl/libopenssl.gyp:revsecurity',
-				
-				# Externals
-				#'revdb/revdb.gyp:external-revdb',
-				#'revdb/revdb.gyp:dbmysql',
-				#'revdb/revdb.gyp:dbsqlite',
-				#'revxml/revxml.gyp:external-revxml',
-				#'revzip/revzip.gyp:external-revzip',
-				
 				# Widgets and libraries
 				'extensions/extensions.gyp:extensions',
 			],
 			
 			'conditions':
 			[
+				
+				[
+					'OS != "emscripten"',
+					{
+						'dependencies':
+						[
+							'thirdparty/libopenssl/libopenssl.gyp:revsecurity',
+							'revdb/revdb.gyp:external-revdb',
+							'revdb/revdb.gyp:dbmysql',
+							'revdb/revdb.gyp:dbsqlite',
+							'revxml/revxml.gyp:external-revxml',
+							'revzip/revzip.gyp:external-revzip',
+						],
+					},
+				],
 				[
 					'mobile == 0',
 					{
