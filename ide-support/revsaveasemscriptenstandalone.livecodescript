@@ -52,10 +52,16 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder
    set the itemDelimiter to comma
    
    -- Other parameters
-   local tName, tFiles
+   local tName, tFiles, tAuxStackFiles
    put tSettings["name"] into tName
    put tSettings["files"] into tFiles
-   
+   put tSettings["auxiliary_stackfiles"] into tAuxStackFiles
+
+   -- If the datagrid is used, then include the library as an aux stack
+   if "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
+      put the effective filename of stack "revDataGridLibrary" & return after tAuxStackFiles
+   end if
+
    local tError
    try
       ---------- Create a working directory
@@ -92,10 +98,11 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder
       end repeat
       
       -- Define some paths within the zip archive
-      local tBootPath, tStandalonePath, tBootStackPath
+      local tBootPath, tStandalonePath, tBootStackPath, tAuxStackPath
       put "boot" into tBootPath
       put tBootPath & slash & "standalone" into tStandalonePath
       put tStandalonePath & slash & "__boot.livecode" into tBootStackPath
+      put tBootPath & slash & "auxiliary_stackfiles" into tAuxStackPath
       
       -- Store the initial stack
       logDebug "boot-stack", "Storing" && tStackFile
@@ -103,6 +110,20 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder
       if the result is not empty then
          throw "could not store initial stack in standalone archive"
       end if
+
+      -- Store auxiliary stacks
+      local tZipAuxPath
+      repeat for each line tStackFile in tAuxStackFiles
+         set the itemdelimiter to slash
+         put item -1 of tStackFile into tZipAuxPath
+         put tAuxStackPath & slash before tZipAuxPath
+
+         logDebug "aux-stack", "Storing" && tStackFile
+         revZipAddUncompressedItemWithFile tBuildZip, tAuxStackPath, tStackFile
+         if the result is not empty then
+            throw "could not store auxiliar stack in standalone archive"
+         end if
+      end repeat
       
       -- Close zip file
       revZipCloseArchive tBuildZip

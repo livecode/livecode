@@ -525,12 +525,14 @@ IO_stat MCDispatch::startup(void)
 #elif defined(__EMSCRIPTEN__)
 
 #define kMCEmscriptenBootStackFilename "/boot/standalone/__boot.livecode"
+#define kMCEmscriptenStartupScriptFilename "/boot/__startup"
 
 IO_stat
 MCDispatch::startup()
 {
 	/* The standalone data should already have been unpacked by now */
 
+	/* Load the initial stack */
 	/* FIXME Hardcoded boot stack path*/
 	MCStack *t_stack;
 	if (IO_NORMAL != MCdispatcher->loadfile(MCSTR(kMCEmscriptenBootStackFilename),
@@ -541,6 +543,23 @@ MCDispatch::startup()
 	}
 
 	MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
+
+	/* Load & run the startup script */
+	MCAutoStringRef t_startup_script;
+	if (!MCS_loadtextfile(MCSTR(kMCEmscriptenStartupScriptFilename),
+	                      &t_startup_script))
+	{
+		MCresult->sets("failed to read startup script");
+		return IO_ERROR;
+	}
+
+	if (ES_NORMAL != t_stack->domess(*t_startup_script))
+	{
+		MCresult->sets("failed to execute startup script");
+		return IO_ERROR;
+	}
+
+	/* Complete startup tasks and send the startup message */
 
 	MCModeResetCursors();
 	MCImage::init();
