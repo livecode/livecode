@@ -137,6 +137,10 @@ handler CompareNumeric(in pLeft as any, in pRight as any, in pDescending as Bool
 	else
 		put pRight parsed as number into tRight
 	end if
+
+	if tRight is tLeft then
+		return 0
+	end if
 		
 	if tRight is nothing then
 		return -1
@@ -146,7 +150,7 @@ handler CompareNumeric(in pLeft as any, in pRight as any, in pDescending as Bool
 		return 1
 	end if
 	
-	if tLeft <= tRight then
+	if tLeft < tRight then
 		if pDescending then
 			return 1
 		else
