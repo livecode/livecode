@@ -134,19 +134,15 @@ public handler OnOpen()
 	variable tParent as Pointer
 	
 	// put my native window into tParent
-	if not MCWidgetGetMyStackNativeView(tParent) then
-		throw "error getting stack native view"
-	end if
-	
+	MCWidgetGetMyStackNativeView(tParent)
+		
 	variable tFactory as MCBrowserFactoryRef
 	if not MCBrowserFactoryGet(mBrowserType, tFactory) then
 		throw "error getting browser factory for type: " & mBrowserType
 	end if
 	
 	variable tDisplay as Pointer
-	if not MCWidgetGetMyStackNativeDisplay(tDisplay) then
-		throw "error getting native display handle"
-	end if
+	MCWidgetGetMyStackNativeDisplay(tDisplay)
 	
 	if not MCBrowserFactoryCreateBrowser(tFactory, tDisplay, tParent, mBrowser) then
 		throw "error creating browser"
