@@ -308,13 +308,13 @@ public handler TestAscendingNumericMixed() -- RANDOMIZED
 
 	-- Test sorting
 	put tRandom into tList	
-	sort tList using CompareNumericAscending
+	sort tList using handler CompareNumericAscending
 	test "sort using handler ascending numeric" when IsSortedUsingHandler(tList, CompareNumericAscending)
 	
 	-- Test sorting stability
 	variable tStable
 	put tList into tStable
-	sort tList using CompareNumericAscending
+	sort tList using handler CompareNumericAscending
 	test "sort using handler ascending numeric is stable" when tList is tStable
 end handler
 
@@ -331,13 +331,13 @@ public handler TestDescendingNumericMixed() -- RANDOMIZED
 
 	-- Test sorting
 	put tRandom into tList	
-	sort tList using CompareNumericDescending
+	sort tList using handler CompareNumericDescending
 	test "sort using handler descending numeric" when IsSortedUsingHandler(tList, CompareNumericDescending)
 	
 	-- Test sorting stability
 	variable tStable
 	put tList into tStable
-	sort tList using CompareNumericDescending
+	sort tList using handler CompareNumericDescending
 	test "sort using handler descending numeric is stable" when tList is tStable
 end handler
 
@@ -356,19 +356,19 @@ end handler
 handler TestSortUsingHandler_InvalidArgs()
 	variable tList as List
 	put [1,2,3,4] into tList
-	sort tList using InvalidSortHandler_Args
+	sort tList using handler InvalidSortHandler_Args
 end handler
 
 handler TestSortUsingHandler_InvalidReturnType()
 	variable tList as List
 	put [1,2,3,4] into tList
-	sort tList using InvalidSortHandler_ReturnType
+	sort tList using handler InvalidSortHandler_ReturnType
 end handler
 
 handler TestSortUsingHandler_MissingReturn()
 	variable tList as List
 	put [1,2,3,4] into tList
-	sort tList using InvalidSortHandler_MissingReturn
+	sort tList using handler InvalidSortHandler_MissingReturn
 end handler
 
 public handler TestUsingHandlerErrors()

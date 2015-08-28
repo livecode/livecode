@@ -308,7 +308,7 @@ Tags: Sorting
 */
 
 syntax SortListUsingHandler is statement
-    "sort" <Target: Expression> "using" <Handler: Expression>
+    "sort" <Target: Expression> "using" "handler" <Handler: Expression>
 begin 
     MCSortExecSortListUsingHandler(Target, Handler)
 end syntax
