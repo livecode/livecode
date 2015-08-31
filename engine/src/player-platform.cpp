@@ -2917,7 +2917,7 @@ void MCPlayer::SynchronizeUserCallbacks(void)
         }
         
         MCAutoStringRef t_message;
-        /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMake(t_callback_index, t_space_index - t_callback_index), &t_message);
+        /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMake(t_callback_index, t_space_index - 1 - t_callback_index), &t_message);
         /* UNCHECKED */ MCNameCreate(*t_message, m_callbacks[m_callback_count - 1] . message);
         
         // If no parameter is specified, use the time.
