@@ -1457,21 +1457,31 @@ void MCInterfaceSetCursor(MCExecContext& ctxt, uinteger_t& r_id, bool p_is_defau
 	}
 }
 
-
-void MCInterfaceGetCursor(MCExecContext& ctxt, uinteger_t& r_value)
+// SN-2015-07-29: [[ Bug 15649 ]] The cursor can be empty - it is optional
+void MCInterfaceGetCursor(MCExecContext& ctxt, uinteger_t*& r_value)
 {
-	r_value = MCcursorid;
+    if (MCcursor != None)
+        *r_value = MCcursorid;
+    else
+        r_value = NULL;
 }
 
-void MCInterfaceSetCursor(MCExecContext& ctxt, uinteger_t p_value)
+void MCInterfaceSetCursor(MCExecContext& ctxt, uinteger_t* p_value)
 {
 	MCCursorRef t_cursor;
-	MCInterfaceSetCursor(ctxt, p_value, false, t_cursor);
+
+    uinteger_t t_cursor_id;
+    if (p_value == NULL)
+        t_cursor_id = 0;
+    else
+        t_cursor_id = *p_value;
+
+    MCInterfaceSetCursor(ctxt, t_cursor_id, false, t_cursor);
     // PM-2015-03-17: [[ Bug 14965 ]] Error check to prevent a crash if cursor image not found
 	if (t_cursor != nil && !ctxt.HasError())
 	{
 		MCcursor = t_cursor;
-		MCcursorid = p_value;
+        MCcursorid = t_cursor_id;
 		if (MCmousestackptr != NULL)
 			MCmousestackptr->resetcursor(True);
 		else
