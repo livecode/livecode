@@ -52,10 +52,11 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder
    set the itemDelimiter to comma
    
    -- Other parameters
-   local tName, tFiles, tAuxStackFiles
+   local tName, tFiles, tAuxStackFiles, tExtensions
    put tSettings["name"] into tName
    put tSettings["files"] into tFiles
    put tSettings["auxiliary_stackfiles"] into tAuxStackFiles
+   put tSettings["extensions"] into tExtensions
 
    -- If the datagrid is used, then include the library as an aux stack
    if "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
@@ -99,10 +100,12 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder
       
       -- Define some paths within the zip archive
       local tBootPath, tStandalonePath, tBootStackPath, tAuxStackPath
+      local tExtensionsPath
       put "boot" into tBootPath
       put tBootPath & slash & "standalone" into tStandalonePath
       put tStandalonePath & slash & "__boot.livecode" into tBootStackPath
       put tBootPath & slash & "auxiliary_stackfiles" into tAuxStackPath
+      put tBootPath & slash & "extensions" into tExtensionsPath
       
       -- Store the initial stack
       logDebug "boot-stack", "Storing" && tStackFile
@@ -124,6 +127,9 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder
             throw "could not store auxiliar stack in standalone archive"
          end if
       end repeat
+      
+      -- Store extensions
+      storeExtensions tBuildZip, tExtensions, tExtensionsPath
       
       -- Close zip file
       revZipCloseArchive tBuildZip
@@ -177,6 +183,77 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder
    end if
    
 end revSaveAsEmscriptenStandalone
+
+----------------------------------------------------------------
+-- LiveCode Builder extensions
+----------------------------------------------------------------
+
+private command storeExtensions pZip, pExtensions, pExtensionsPath
+   if pExtensions is empty then
+      exit storeExtensions
+   end if
+   
+   -- Put extensions in the correct order for loading
+   local tExtensions
+   put revIDEExtensionsOrderByDependency(pExtensions) into tExtensions
+   
+   -- Store the list of extensions
+   storeExtensionsList pZip, tExtensions, pExtensionsPath
+   
+   -- Store each extension's data
+   local tKind
+   repeat for each line tKind in tExtensions
+      storeExtensionByKind pZip, tKind, pExtensionsPath
+   end repeat
+end storeExtensions
+
+private command storeExtensionsList pZip, pExtensions, pExtensionsPath
+   local tData, tZipPath
+   
+   put textEncode(pExtensions, "UTF-8") into tData
+   
+   put pExtensionsPath & slash & "extensions.txt" into tZipPath
+   
+   logDebug "lcb", "Storing" && tZipPath
+   
+   revZipAddUncompressedItemWithData pZip, tZipPath, "tData"
+   
+   if the result is not empty then
+      LogDebug "lcb", the result
+      throw "could not store extension list in standalone archive"
+   end if
+end storeExtensionsList
+
+private command storeExtensionByKind pZip, pKind, pExtensionsPath
+   local tInstallFolder
+   put revIDEExtensionProperty(pKind, "install_path") into tInstallFolder
+   
+   local tFiles
+   put getExtensionFilesByKind(tInstallFolder) into tFiles
+   
+   local tZipPath, tFilePath
+   repeat for each element tFilePath in tFiles
+      put pExtensionsPath & slash & pKind & slash & tFilePath into tZipPath
+      put tInstallFolder & slash before tFilePath
+      
+      logDebug "lcb", "Storing" && tFilePath
+      revZipAddUncompressedItemWithFile pZip, tZipPath, tFilePath
+      if the result is not empty then
+         throw "could not store extension file in standalone archive"
+      end if
+   end repeat
+end storeExtensionByKind
+
+-- For community (GPL) standalones, we need to include the extension in
+-- "the preferred form for modification".  I.e. with all of its source code
+-- and documentation.  Otherwise, just include compiled extension + resources
+private function getExtensionFilesByKind pInstallFolder
+   if revLicenseType() is "community" then
+      return scanFolder(pInstallFolder)
+   else
+      throw "commercial standalones are not supported"
+   end if
+end getExtensionFilesByKind
 
 ----------------------------------------------------------------
 -- File & path helper functions
