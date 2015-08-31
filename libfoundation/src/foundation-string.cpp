@@ -3662,7 +3662,7 @@ bool MCStringInsertChars(MCStringRef self, uindex_t p_at, const unichar_t *p_cha
     // Copy the chars across recomputing whether the string can be native at
     // the same time.
 	bool t_can_be_native;
-    t_can_be_native = __MCStringCopyChars(self -> chars + p_at, p_chars, p_char_count * sizeof(unichar_t), __MCStringCanBeNative(self));
+    t_can_be_native = __MCStringCopyChars(self -> chars + p_at, p_chars, p_char_count, __MCStringCanBeNative(self));
 	
 	__MCStringChanged(self, false, false, t_can_be_native);
 	
