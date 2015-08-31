@@ -19,7 +19,7 @@ Example:
 mobileControlCreate "browser", "web view"
 put the result into sBrowserID
 mobileControlSet sBrowserID, "visible", "true"
-mobileControlSet sBrowserID, "url", "http://www.runrev.com"
+mobileControlSet sBrowserID, "url", "http://www.livecode.com"
 
 Description:
 An Android browser control is created using a control type of "browser".

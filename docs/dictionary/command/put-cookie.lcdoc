@@ -21,14 +21,14 @@ put cookie "testcookie2" with "some cookie value" until (the seconds + 60 * 60 *
 
 Example:
 -- Cookie available across whole website
-put cookie "testcookie3" for "/" on "www.runrev.com" with "some cookie value"
+put cookie "testcookie3" for "/" on "www.livecode.com" with "some cookie value"
 
 Example:
 -- Cookie available to specific pages
-put cookie "testcookie4" for "/products/" on "www.runrev.com" with "some cookie value" until (the seconds + 60 * 60 * 24 * 365)
+put cookie "testcookie4" for "/products/" on "www.livecode.com" with "some cookie value" until (the seconds + 60 * 60 * 24 * 365)
 
 Example:
-put secure httponly cookie "testcookie4" for "/products/" on "www.runrev.com" with "some cookie value" until (the seconds + 60 * 60 * 24 * 365)
+put secure httponly cookie "testcookie4" for "/products/" on "www.livecode.com" with "some cookie value" until (the seconds + 60 * 60 * 24 * 365)
 
 Parameters:
 secure: An optional value. If present, the browser only sends the cookie if communicating over a secure connection (https).
@@ -45,11 +45,11 @@ Use the <put cookie> command to create a cookie with the given data in the visit
 
 A cookie is used by a website to store state information in the user's browser, which is returned to the website on subsequent visits. Cookies are often used to store user preferences and session data. For example, you may allow a user to choose a theme through which to view your website and store this choice in a cookie to be used on subsequent visits.
 
-When setting a cookie you can specify a path. Cookies are returned to all URLs within the specified path. For example, a cookie set on the domain "www.runrev.com" with the following path:
+When setting a cookie you can specify a path. Cookies are returned to all URLs within the specified path. For example, a cookie set on the domain "www.livecode.com" with the following path:
 
 /products/
 
-Is available to all pages within and under http://www.runrev.com/products/
+Is available to all pages within and under http://www.livecode.com/products/
 
 To make the cookie available across your entire website, set the path to: "/"
 

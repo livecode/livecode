@@ -19,7 +19,7 @@ Example:
 revMail "help@example.com",,"Help!",field "Message"
 
 Example:
-revMail "support@runrev.com","me@example.org","Installation Help"
+revMail "support@livecode.com","me@example.org","Installation Help"
 
 Example:
 revMail the bugAddress of this stack,,"Auto Bug Report",myBugsList
