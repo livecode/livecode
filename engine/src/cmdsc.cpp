@@ -1330,17 +1330,28 @@ Parse_stat MCFlip::parse(MCScriptPoint &sp)
 	Symbol_type type;
 	const LT *te;
 	initpoint(sp);
-	if (sp.skip_token(SP_FACTOR, TT_CHUNK, CT_IMAGE) == PS_NORMAL)
+	
+	// Allow flipping the portion currently selected with the Select paint tool
+	// In this case an image is not specified, i.e. "flip vertical"
+	if (sp.next(type) == PS_NORMAL && sp.lookup(SP_FLIP, te) == PS_NORMAL)
 	{
-		sp.backup();
-		image = new MCChunk(False);
-		if (image->parse(sp, False) != PS_NORMAL)
-		{
-			MCperror->add
-			(PE_FLIP_BADIMAGE, sp);
-			return PS_ERROR;
-		}
+		direction = (Flip_dir)te->which;
+		return PS_NORMAL;
 	}
+	
+	sp.backup();
+	
+	// PM-2015-08-07: [[ Bug 1751 ]] Allow more flexible parsing: 'flip the selobj ..', 'flip last img..' etc
+	
+	// Parse an arbitrary chunk. If it does not resolve as an image, a runtime error will occur in MCFlip::exec
+	image = new MCChunk(False);
+	if (image->parse(sp, False) != PS_NORMAL)
+	{
+		MCperror->add(PE_FLIP_BADIMAGE, sp);
+		return PS_ERROR;
+	}
+	
+	
 	if (sp.next(type) != PS_NORMAL || sp.lookup(SP_FLIP, te) != PS_NORMAL)
 	{
 		MCperror->add
