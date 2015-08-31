@@ -250,6 +250,7 @@
 							'DYLIB_COMPATIBILITY_VERSION': '',
 							'DYLIB_CURRENT_VERSION': '',
 							'MACH_O_TYPE': 'mh_object',
+							'LINK_WITH_STANDARD_LIBRARIES': 'NO',
 							'OTHER_LDFLAGS':
 							[
 								'-Wl,-sectcreate,__MISC,__deps,<(deps_file)',
