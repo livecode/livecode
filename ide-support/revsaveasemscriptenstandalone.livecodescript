@@ -212,6 +212,68 @@ private function mapResPath pPath
    end if
 end mapResPath
 
+-- Scan a directory, returning a number-indexed array of files found.
+-- The returned paths are relative to the specified directory.
+private function scanFolder pFolder
+   local tSaveFolder, tTemplateRoot, tFiles, tCount, tError
+
+   -- Short-circuit if pFolder is missing
+   if there is no folder pFolder then
+      return empty
+   end if
+
+   put 0 into tCount
+   put empty into tFiles
+   put the defaultfolder into tSaveFolder
+
+   set the defaultfolder to pfolder
+   try
+      scanFolder_recurse tCount, tFiles, empty
+   catch tError
+   end try
+
+   set the defaultfolder to tSaveFolder
+
+   if tError is not empty then
+      throw tError
+   end if
+
+   return tFiles
+end scanFolder
+
+-- Recursive function used by scanFolder()
+private command scanFolder_recurse @xCount, @xFiles, pRelPath
+   local tFile, tFilepath, tSaveFolder
+
+   -- List files
+   repeat for each line tFile in the files
+      -- Skip dotfiles
+      if tFile begins with "." then
+         next repeat
+      end if
+
+      add 1 to xCount
+      put pRelPath & slash & tFile into tFilePath
+      put tFilePath into xFiles[xCount]
+   end repeat
+
+   -- Recurse
+   put the defaultfolder into tSaveFolder
+   repeat for each line tFolder in the folders
+      if tFolder begins with "." then
+         next repeat
+      end if
+
+      set the defaultfolder to tSaveFolder & slash & tFolder
+      if pRelPath is not empty then
+         put pRelPath & slash before tFolder
+      end if
+      scanFolder_recurse xCount, xFiles, tFolder
+   end repeat
+
+   set the defaultFolder to tSaveFolder
+end scanFolder_recurse
+
 -- Return a number-indexed array of engine files that need to be
 -- copied into the standalone output folder.
 private function getEngineFiles
@@ -238,59 +300,8 @@ end getStandaloneTemplateFolder
 -- template folder.  The paths returned are relative to the path returned
 -- by getStandaloneTemplateFolder()
 private function getStandaloneTemplateFiles
-   local tSaveFolder, tTemplateRoot, tFiles, tCount
-   
-   -- Short-circuit if the template directory is missing
-   put getStandaloneTemplateFolder() into tTemplateRoot
-   if there is no folder tTemplateRoot then
-      logDebug "template", "No template in" && tTemplateRoot
-      return empty
-   end if
-   
-   put 0 into tCount
-   put empty into tFiles
-   put the defaultFolder into tSaveFolder
-   
-   set the defaultfolder to tTemplateRoot
-   getStandaloneTemplateFiles_Impl tCount, tFiles, empty
-   
-   set the defaultFolder to tSaveFolder
-   return tFiles
+   return scanFolder(getStandaloneTemplateFolder())
 end getStandaloneTemplateFiles
-
-private command getStandaloneTemplateFiles_Impl @xCount, @xFiles, pRelPath
-   local tFile, tFilePath, tSaveFolder
-   
-   logDebug "template", "Scanning" && the defaultfolder
-   
-   -- List files
-   repeat for each line tFile in the files
-      -- Skip dotfiles
-      if tFile begins with "." then
-         next repeat
-      end if
-
-      add 1 to xCount
-      put pRelPath & slash & tFile into tFilePath
-      put tFilePath into xFiles[xCount]
-      logDebug "template", xCount & ":" && slash & tFilePath
-   end repeat
-   
-   -- Recurse
-   put the defaultFolder into tSaveFolder
-   repeat for each line tFolder in the folders
-      if tFolder is "." or tFolder is ".." then
-         next repeat
-      end if
-      
-      set the defaultFolder to tSaveFolder & slash & tFolder
-      if pRelPath is not empty then
-         put pRelPath & slash before tFolder
-      end if
-      getStandaloneTemplateFiles_Impl xCount, xFiles, tFolder
-   end repeat
-   set the defaultFolder to tSaveFolder
-end getStandaloneTemplateFiles_Impl
 
 -- Get the filename of the Emscripten standalone template HTML file.
 -- This has some standalone-dependent JavaScript substituted into it
