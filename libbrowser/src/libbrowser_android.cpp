@@ -65,6 +65,324 @@ bool MCBrowserJavaStringToUtf8String(JNIEnv* env, jstring p_java_string, char *&
     return t_success;
 }
 
+class MCBrowserJavaConverter
+{
+public:
+	MCBrowserJavaConverter(JNIEnv *p_env) : m_env(p_env)
+	{
+		m_boolean_class = nil;
+		m_boolean_value_method = nil;
+
+		m_integer_class = nil;
+		m_integer_value_method = nil;
+
+		m_double_class = nil;
+		m_double_value_method = nil;
+
+		m_string_class = nil;
+		
+		m_jsonarray_class = nil;
+		m_jsonarray_length_method = nil;
+		m_jsonarray_get_method = nil;
+	}
+	
+	~MCBrowserJavaConverter()
+	{
+	}
+	
+	bool IsBoolean(jobject p_obj)
+	{
+		if (!InitBoolean())
+			return false;
+		
+		return m_env->IsInstanceOf(p_obj, m_boolean_class);
+	}
+	
+	bool IsInteger(jobject p_obj)
+	{
+		if (!InitInteger())
+			return false;
+		
+		return m_env->IsInstanceOf(p_obj, m_integer_class);
+	}
+	
+	bool IsDouble(jobject p_obj)
+	{
+		if (!InitDouble())
+			return false;
+		
+		return m_env->IsInstanceOf(p_obj, m_double_class);
+	}
+	
+	bool IsString(jobject p_obj)
+	{
+		if (!InitString())
+			return false;
+		
+		return m_env->IsInstanceOf(p_obj, m_string_class);
+	}
+	
+	bool IsJSONArray(jobject p_obj)
+	{
+		if (!InitJSONArray())
+			return false;
+		
+		return m_env->IsInstanceOf(p_obj, m_jsonarray_class);
+	}
+	
+	bool GetBooleanValue(jobject p_obj, bool &r_value)
+	{
+		if (!InitBoolean())
+			return false;
+		
+		r_value = m_env->CallBooleanMethod(p_obj, m_boolean_value_method);
+		return true;
+	}
+	
+	bool GetIntegerValue(jobject p_obj, int &r_value)
+	{
+		if (!InitInteger())
+			return false;
+		
+		r_value = m_env->CallIntMethod(p_obj, m_integer_value_method);
+		return true;
+	}
+	
+	bool GetDoubleValue(jobject p_obj, double &r_value)
+	{
+		if (!InitDouble())
+			return false;
+		
+		r_value = m_env->CallDoubleMethod(p_obj, m_double_value_method);
+		return true;
+	}
+	
+	bool GetStringValue(jstring p_string, char *&r_string)
+	{
+		return MCBrowserJavaStringToUtf8String(m_env, p_string, r_string);
+	}
+	
+	bool GetJSONArrayLength(jobject p_array, uint32_t &r_length)
+	{
+		if (!InitJSONArray())
+			return false;
+		
+		r_length = m_env->CallIntMethod(p_array, m_jsonarray_length_method);
+		return true;
+	}
+	
+	bool GetJSONArrayElement(jobject p_array, uint32_t p_index, jobject &r_element)
+	{
+		if (!InitJSONArray())
+			return false;
+		
+		r_element = m_env->CallObjectMethod(p_array, m_jsonarray_get_method, (int)p_index);
+		return true;
+	}
+	
+	bool GetJSONArrayValue(jobject p_array, MCBrowserListRef &r_list)
+	{
+		bool t_success;
+		t_success = true;
+		
+		uint32_t t_size;
+		if (t_success)
+			t_success = GetJSONArrayLength(p_array, t_size);
+
+		MCBrowserListRef t_list;
+		t_list = nil;
+		
+		if (t_success)
+			t_success = MCBrowserListCreate(t_list, t_size);
+		
+		for (uint32_t i = 0; t_success && i < t_size; i++)
+		{
+			jobject t_obj;
+			t_obj = nil;
+			
+			t_success = GetJSONArrayElement(p_array, i, t_obj);
+			
+			bool t_identified;
+			t_identified = false;
+			
+			if (t_success)
+			{
+				if (IsBoolean(t_obj))
+				{
+					bool t_val;
+					t_success = GetBooleanValue(t_obj, t_val);
+					
+					if (t_success)
+						t_success = MCBrowserListSetBoolean(t_list, i, t_val);
+				}
+				else if (IsInteger(t_obj))
+				{
+					int t_val;
+					t_success = GetIntegerValue(t_obj, t_val);
+					
+					if (t_success)
+						t_success = MCBrowserListSetInteger(t_list, i, t_val);
+				}
+				else if (IsDouble(t_obj))
+				{
+					double t_val;
+					t_success = GetDoubleValue(t_obj, t_val);
+					
+					if (t_success)
+						t_success = MCBrowserListSetDouble(t_list, i, t_val);
+				}
+				else if (IsString(t_obj))
+				{
+					char *t_val;
+					t_val = nil;
+					t_success = GetStringValue((jstring)t_obj, t_val);
+					
+					if (t_success)
+						t_success = MCBrowserListSetUTF8String(t_list, i, t_val);
+					
+					if (t_val != nil)
+						MCCStringFree(t_val);
+				}
+				else if (IsJSONArray(t_obj))
+				{
+					MCBrowserListRef t_val;
+					t_val = nil;
+					t_success = GetJSONArrayValue(t_obj, t_val);
+					
+					if (t_success)
+						t_success = MCBrowserListSetList(t_list, i, t_val);
+					
+					if (t_val != nil)
+						MCBrowserListRelease(t_val);
+				}
+				else
+				{
+					MCLog("Convert: unhandled object class: %p", t_obj);
+				}
+			}
+		}
+		
+		if (t_success)
+			r_list = t_list;
+		else
+			MCBrowserListRelease(t_list);
+			
+		return t_success;
+	}
+	
+private:
+	bool InitClass(const char *p_class, jclass &r_class)
+	{
+		if (m_env == nil)
+			return false;
+
+		jclass t_class;
+		t_class = nil;
+		
+		t_class = m_env->FindClass(p_class);
+		if (t_class == nil)
+			return false;
+		
+		r_class = t_class;
+		return true;
+	}
+	
+	bool InitMethod(jclass p_class, const char *p_method, const char *p_signature, jmethodID &r_method)
+	{
+		if (m_env == nil || p_class == nil)
+			return false;
+
+		jmethodID t_method;
+		t_method = nil;
+		
+		t_method = m_env->GetMethodID(p_class, p_method, p_signature);
+		if (t_method == nil)
+			return false;
+		
+		r_method = t_method;
+		return true;
+	}
+	
+	bool InitBoolean()
+	{
+		if (m_boolean_class == nil && !InitClass("java/lang/Boolean", m_boolean_class))
+			return false;
+		
+		if (m_boolean_value_method == nil && !InitMethod(m_boolean_class, "booleanValue", "()Z", m_boolean_value_method))
+			return false;
+		
+		return true;
+	}
+	
+	bool InitInteger()
+	{
+		if (m_integer_class == nil && !InitClass("java/lang/Integer", m_integer_class))
+			return false;
+		
+		if (m_integer_value_method == nil && !InitMethod(m_integer_class, "intValue", "()I", m_integer_value_method))
+			return false;
+		
+		return true;
+	}
+	
+	bool InitDouble()
+	{
+		if (m_double_class == nil && !InitClass("java/lang/Double", m_double_class))
+			return false;
+		
+		if (m_double_value_method == nil && !InitMethod(m_double_class, "doubleValue", "()D", m_double_value_method))
+			return false;
+		
+		return true;
+	}
+	
+	bool InitString()
+	{
+		if (m_string_class == nil && !InitClass("java/lang/String", m_string_class))
+			return false;
+		
+		return true;
+	}
+	
+	bool InitJSONArray()
+	{
+		if (m_jsonarray_class == nil && !InitClass("org/json/JSONArray", m_jsonarray_class))
+			return false;
+		
+		if (m_jsonarray_length_method == nil && !InitMethod(m_jsonarray_class, "length", "()I", m_jsonarray_length_method))
+			return false;
+		
+		if (m_jsonarray_get_method == nil && !InitMethod(m_jsonarray_class, "get", "(I)Ljava/lang/Object;", m_jsonarray_get_method))
+			return false;
+		
+		return true;
+	}
+	
+	jclass m_boolean_class;
+	jmethodID m_boolean_value_method;
+
+	jclass m_integer_class;
+	jmethodID m_integer_value_method;
+
+	jclass m_double_class;
+	jmethodID m_double_value_method;
+
+	jclass m_string_class;
+
+	jclass m_jsonarray_class;
+	jmethodID m_jsonarray_length_method;
+	jmethodID m_jsonarray_get_method;
+	
+	JNIEnv *m_env;
+};
+
+bool MCBrowserJavaJSONArrayToMCBrowserList(JNIEnv *env, jobject p_array, MCBrowserListRef &r_list)
+{
+	MCBrowserJavaConverter t_converter(env);
+	
+	return t_converter.GetJSONArrayValue(p_array, r_list);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern void MCAndroidObjectRemoteCall(jobject p_object, const char *p_method, const char *p_signature, void *p_return_value, ...);
@@ -168,6 +486,9 @@ public:
 			case kMCBrowserUserAgent:
 				return GetUserAgent(r_utf8_string);
 				
+			case kMCBrowserJavaScriptHandlers:
+				return GetJavaScriptHandlers(r_utf8_string);
+				
 			default:
 				break;
 		}
@@ -182,6 +503,9 @@ public:
 			case kMCBrowserUserAgent:
 				return SetUserAgent(p_utf8_string);
 			
+			case kMCBrowserJavaScriptHandlers:
+				return SetJavaScriptHandlers(p_utf8_string);
+				
 			default:
 				break;
 		}
@@ -294,6 +618,25 @@ private:
 		MCAndroidObjectRemoteCall(m_view, "setUserAgent", "vs", nil, p_useragent);
 		return true;
 	}
+	
+	bool GetJavaScriptHandlers(char *&r_js_handlers)
+	{
+		char *t_handlers;
+		t_handlers = nil;
+		MCAndroidObjectRemoteCall(m_view, "getJavaScriptHandlers", "s", &t_handlers);
+		
+		if (t_handlers == nil)
+			return false;
+		
+		r_js_handlers = t_handlers;
+		return true;
+	}
+	
+	bool SetJavaScriptHandlers(const char *p_js_handlers)
+	{
+		MCAndroidObjectRemoteCall(m_view, "setJavaScriptHandlers", "vs", nil, p_js_handlers);
+		return true;
+	}
 };
 
 //////////
@@ -335,9 +678,28 @@ bool MCBrowserFindWithJavaView(JNIEnv *env, jobject p_view, MCBrowser *&r_browse
 	return true;
 }
 
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doCallJSHandler(JNIEnv *env, jobject object, jstring handler, jobject args) __attribute__((visibility("default")));
+JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doCallJSHandler(JNIEnv *env, jobject object, jstring handler, jobject args)
+{
+	char *t_handler = nil;
+	/* UNCHECKED */ MCBrowserJavaStringToUtf8String(env, handler, t_handler);
+	
+	MCBrowserListRef t_args = nil;
+	/* UNCHECKED */ MCBrowserJavaJSONArrayToMCBrowserList(env, args, t_args);
+	
+	MCBrowser *t_browser;
+	if (MCBrowserFindWithJavaView(env, object, t_browser))
+		((MCAndroidWebViewBrowser*)t_browser)->OnJavaScriptCall(t_handler, t_args);
+	
+	MCCStringFree(t_handler);
+	MCBrowserListRelease(t_args);
+}
+
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doJSExecutionResult(JNIEnv *env, jobject object, jstring tag, jstring result) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doJSExecutionResult(JNIEnv *env, jobject object, jstring tag, jstring result)
 {
+	MCLog("doJSExecutionResult", nil);
+	
     char *t_tag = nil;
     /* UNCHECKED */ MCBrowserJavaStringToUtf8String(env, tag, t_tag);
 	

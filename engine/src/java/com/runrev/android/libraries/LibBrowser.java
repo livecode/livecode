@@ -35,6 +35,9 @@ import java.security.*;
 import java.util.*;
 import java.util.regex.*;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+
 public class LibBrowser
 {
     public static final String TAG = "revandroid.LibBrowser";
@@ -154,6 +157,9 @@ class LibBrowserWebView extends WebView
 	private WebChromeClient.CustomViewCallback m_custom_view_callback;
 	private WebChromeClient m_chrome_client;
 
+	private String m_js_handlers = "";
+	private List<String> m_js_handler_list = null;
+
 	public LibBrowserWebView(Context p_context)
 	{
 		super(p_context);
@@ -174,6 +180,10 @@ class LibBrowserWebView extends WebView
 			public void onPageStarted(WebView view, String url, Bitmap favicon)
 			{
 				//Log.i(TAG, "onPageStarted() - " + url);
+				
+				if (m_js_handler_list != null)
+					addJSHandlers(m_js_handler_list);
+					
 				//doStartedLoading(toAPKPath(url));
 				doStartedLoading(url);
 				wakeEngineThread();
@@ -327,26 +337,28 @@ class LibBrowserWebView extends WebView
 
 	class JSInterface
 	{
-		private String[] m_js_handlers = new String[0];
-		
-		private void setJSHandlers(String[] p_handlers)
-		{
-			m_js_handlers = p_handlers;
-		}
-		
 		//@JavascriptInterface
-		public void invokeHandler(String p_handler, String[] p_args)
+		public void __invokeHandler(String p_handler, String p_json_args)
 		{
-			if (Arrays.asList(m_js_handlers).contains(p_handler))
+			if (m_js_handler_list != null && m_js_handler_list.contains(p_handler))
 			{
-				// TODO - implement
-				//doCallJSHandler(p_handler, p_args);
-				//wakeEngineThread();
+				JSONArray t_args;
+				try
+				{
+					t_args = new JSONArray(p_json_args);
+				}
+				catch (JSONException e)
+				{
+					t_args = new JSONArray();
+				}
+				
+				doCallJSHandler(p_handler, t_args);
+				wakeEngineThread();
 			}
 		}
 
 		//@JavascriptInterface
-		public void storeExecuteJavaScriptResult(String p_tag, String p_result)
+		public void __storeExecuteJavaScriptResult(String p_tag, String p_result)
 		{
 			doJSExecutionResult(p_tag, p_result);
 			wakeEngineThread();
@@ -354,7 +366,54 @@ class LibBrowserWebView extends WebView
 	}
 	
 	/* PROPERTIES */
+	
+	private void addJSHandler(String p_handler)
+	{
+		String t_js = String.format("javascript:liveCode.%s = function() {window.liveCode.__invokeHandler('%s', JSON.stringify(Array.prototype.slice.call(arguments))); }", p_handler, p_handler);
+		loadUrl(t_js);
+	}
 
+	private void removeJSHandler(String p_handler)
+	{
+		String t_js = String.format("javascript:delete window.liveCode.%s", p_handler, p_handler);
+		loadUrl(t_js);
+	}
+	
+	private void addJSHandlers(List<String> p_handlers)
+	{
+		for (String t_handler : p_handlers)
+			addJSHandler(t_handler);
+	}
+	
+	public void setJavaScriptHandlers(String p_handlers)
+	{
+		String[] t_handlers = null;
+		
+		if (!p_handlers.isEmpty())
+			t_handlers = p_handlers.split("\n");
+		
+		if (m_js_handler_list != null)
+		{
+			for (String t_handler : m_js_handler_list)
+				removeJSHandler(t_handler);
+		}
+		
+		m_js_handler_list = null;
+		
+		if (t_handlers != null)
+		{
+			m_js_handler_list = Arrays.asList(t_handlers);
+			addJSHandlers(m_js_handler_list);
+		}
+		
+		m_js_handlers = p_handlers;
+	}
+	
+	public String getJavaScriptHandlers()
+	{
+		return m_js_handlers;
+	}
+	
 	public void setUrl(String p_url)
 	{
 		//p_url = fromAPKPath(p_url);
@@ -442,7 +501,7 @@ class LibBrowserWebView extends WebView
 			t_tag = t_random.nextLong();
 		
 		//        Log.i(TAG, "generated tag: " + t_tag);
-		String t_js = String.format("javascript:window.liveCode.storeExecuteJavaScriptResult('%d', eval('%s'))", t_tag, escapeJSString(p_javascript));
+		String t_js = String.format("javascript:{var t_result = ''; try {t_result = eval('%s');} catch(e){t_result = String(e);} window.liveCode.__storeExecuteJavaScriptResult('%d', t_result); }", escapeJSString(p_javascript), t_tag);
 		//        Log.i(TAG, t_js);
 		loadUrl(t_js);
 		
@@ -544,6 +603,7 @@ class LibBrowserWebView extends WebView
     
 	/* NATIVE METHODS */
 	
+	public native void doCallJSHandler(String p_handler, JSONArray p_args);
 	public native void doJSExecutionResult(String tag, String result);
 	public native void doStartedLoading(String url);
 	public native void doFinishedLoading(String url);
