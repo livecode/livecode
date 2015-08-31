@@ -450,6 +450,8 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
                                              selector: @selector(orientationChanged:)
                                                  name: UIDeviceOrientationDidChangeNotification
                                                object: nil];
+    
+    return TRUE;
 }
 
 // MM-2014-09-30: [[ iOS 8 Support ]] Method called after successully registering (local or remote) notification settings.

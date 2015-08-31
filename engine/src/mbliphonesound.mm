@@ -119,10 +119,15 @@ bool MCSystemSoundFinalize()
 
 -(id)init
 {
-    m_asset = nil;
-	m_player = nil;
-	m_player_item = nil;
-    m_looping = false;
+    if (self = [super init])
+    {
+        m_asset = nil;
+        m_player = nil;
+        m_player_item = nil;
+        m_looping = false;
+    }
+    
+    return self;
 }
 
 -(void)cleanUp
