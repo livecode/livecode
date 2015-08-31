@@ -276,7 +276,6 @@ property browserUrl get getUrl set setUrl
 metadata browserUrl.editor is "com.livecode.pi.text"
 
 property browserHtmltext get getHtmlText set setHtmlText
-metadata browserHtmltext.editor is "com.livecode.pi.text"
 
 property browserScrollbars get getScrollbars set setScrollbars
 metadata browserScrollbars.editor is "com.livecode.pi.boolean"
