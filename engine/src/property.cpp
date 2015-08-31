@@ -1225,7 +1225,10 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 	//   customprop is non-nil. Handle this case here rather than in the caller to
 	//   simplify code.
 	if (which == P_CUSTOM)
-    /* UNCHECKED */ MCNameClone(customprop, t_prop_name);
+    {
+        if (!MCNameClone(customprop, t_prop_name))
+            return false;
+    }
 	
 	// At present, something like the 'pVar[pIndex] of me' is evaluated as 'the pVar of me'
 	// this is because any index is extracted from the pVar variable. It might be worth
@@ -1248,7 +1251,8 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
             MCStringLastIndexOfChar(*t_string, ']', UINDEX_MAX, kMCStringOptionCompareExact, t_end_offset) &&
             t_end_offset == MCStringGetLength(*t_string) - 1)
         {
-            /* UNCHECKED */ MCStringCopySubstring(*t_string, MCRangeMake(0, t_offset), &t_property_name);
+            if (!MCStringCopySubstring(*t_string, MCRangeMake(0, t_offset), &t_property_name))
+                return false;
             
             // AL-2015-08-27: [[ Bug 15798 ]] If the index is quoted, we don't want to include the
             //  quotes in the index name.
@@ -1259,13 +1263,17 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
                 t_end_offset--;
             }
             
-            /* UNCHECKED */ MCStringCopySubstring(*t_string, MCRangeMake(t_offset + 1, t_end_offset - t_offset - 1), &t_icarray);
+            if (!MCStringCopySubstring(*t_string, MCRangeMake(t_offset + 1, t_end_offset - t_offset - 1), &t_icarray))
+                return false;
         }
         else
             t_property_name = *t_string;
         
         if (*t_icarray != nil)
-        /* UNCHECKED */ MCNameCreate(*t_icarray, t_index_name);
+        {
+            if (!MCNameCreate(*t_icarray, t_index_name))
+                return false;
+        }
         
         MCScriptPoint sp(*t_property_name);
 		Symbol_type type;
@@ -1278,13 +1286,17 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 			//   if the var contains empty, this function returns a nil name which causes
 			//   customprop to be used incorrectly.
             //            
-            /* UNCHECKED */ MCNameCreate(*t_property_name, t_prop_name);
+            if (!MCNameCreate(*t_property_name, t_prop_name))
+                return false;
             
 			t_prop = P_CUSTOM;
 		}
 	}
 	else if (customindex != nil)
-        /* UNCHECKED */ ctxt . EvalExprAsNameRef(customindex, EE_PROPERTY_BADEXPRESSION, t_index_name);
+    {
+        if (!ctxt . EvalExprAsNameRef(customindex, EE_PROPERTY_BADEXPRESSION, t_index_name))
+            return false;
+    }
     
 	r_which = t_prop;
 	r_prop_name = t_prop_name;
