@@ -854,6 +854,8 @@ bool MCHandlerTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self, int p_abi, vo
         uindex_t t_arity;
         t_arity = self -> handler . field_count;
         
+        // We need arity + 1 ffi_type slots, as we use the first slot to store
+        // the return type (if any).
         ffi_type **t_ffi_arg_types;
         if (!MCMemoryNewArray(t_arity + 1, t_ffi_arg_types))
             return false;

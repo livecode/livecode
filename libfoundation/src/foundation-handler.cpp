@@ -115,7 +115,6 @@ static void __exec_closure(ffi_cif *cif, void *ret, void **args, void *user_data
         MCErrorThrowUnimplemented(MCSTR("closures only supported for handlers with at most 16 parameters"));
         return;
     }
-        
     
     // Check that we can resolve the return type.
     MCTypeInfoRef t_return_type;
@@ -128,6 +127,7 @@ static void __exec_closure(ffi_cif *cif, void *ret, void **args, void *user_data
         return;
     }
     
+    // Build the argument list, doing foreign type bridging as necessary.
     MCValueRef t_value_result;
     MCValueRef t_value_args[16];
     uindex_t t_arg_index;
@@ -141,12 +141,14 @@ static void __exec_closure(ffi_cif *cif, void *ret, void **args, void *user_data
         MCTypeInfoRef t_type;
         t_type = MCHandlerTypeInfoGetParameterType(t_signature, t_arg_index);
         
+        // We don't support anything other than 'in' mode parameters at the moment.
         if (t_mode != kMCHandlerTypeFieldModeIn)
         {
             MCErrorThrowUnimplemented(MCSTR("closures only support in arguments"));
             goto error_exit;
         }
         
+        // Make sure we can resolve the parameter type.
         MCResolvedTypeInfo t_resolved_type;
         if (!MCTypeInfoResolve(t_type, t_resolved_type))
         {
@@ -154,6 +156,8 @@ static void __exec_closure(ffi_cif *cif, void *ret, void **args, void *user_data
             goto error_exit;
         }
         
+        // If the parameter type is foreign then we must attempt to bridge it
+        // from the passed in type; otherwise we just retain the valueref.
         if (MCTypeInfoIsForeign(t_resolved_type . type))
         {
             const MCForeignTypeDescriptor *t_descriptor;
@@ -181,9 +185,12 @@ static void __exec_closure(ffi_cif *cif, void *ret, void **args, void *user_data
         }
     }
     
+    // Actually call the LCB handler.
     if (!MCHandlerInvoke(t_handler, t_value_args, t_arity, t_value_result))
         goto error_exit;
     
+    // If the return type is not 'void' then we must map the value back
+    // appropriately.
     if (t_resolved_return_type . named_type != kMCNullTypeInfo)
     {
         if (MCTypeInfoIsForeign(t_resolved_return_type . type))
