@@ -249,7 +249,7 @@ bool MCScriptThrowUnableToResolveForeignHandlerError(MCScriptModuleRef p_module,
 
 bool MCScriptThrowUnableToResolveTypeError(MCTypeInfoRef p_type)
 {
-    return MCErrorCreateAndThrow(kMCScriptTypeBindingErrorTypeInfo, "type", MCNamedTypeInfoGetName(p_type), nil);
+    return MCErrorThrowUnboundTypeError(p_type);
 }
 
 bool MCScriptThrowUnableToResolveMultiInvoke(MCScriptModuleRef p_module, MCScriptDefinition *p_definition, MCProperListRef p_arguments)

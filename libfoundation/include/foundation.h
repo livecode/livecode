@@ -2671,6 +2671,8 @@ MC_DLLEXPORT bool MCHandlerGetFunctionPtr(MCHandlerRef handler, void*& r_func_pt
 
 MC_DLLEXPORT extern MCTypeInfoRef kMCOutOfMemoryErrorTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCGenericErrorTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCUnboundTypeErrorTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCUnimplementedErrorTypeInfo;
 
 MC_DLLEXPORT bool MCErrorCreate(MCTypeInfoRef typeinfo, MCArrayRef info, MCErrorRef& r_error);
 
@@ -2708,6 +2710,12 @@ MC_DLLEXPORT MCErrorRef MCErrorPeek(void);
 
 // Throw an out of memory error.
 MC_DLLEXPORT bool MCErrorThrowOutOfMemory(void);
+    
+// Throw an unbound type error.
+MC_DLLEXPORT bool MCErrorThrowUnboundType(MCTypeInfoRef type);
+    
+// Throw an unimplemented error.
+MC_DLLEXPORT bool MCErrorThrowUnimplemented(MCStringRef thing);
 
 // Throw a generic runtime error (one that hasn't had a class made for it yet).
 // The message argument is optional (nil if no message).

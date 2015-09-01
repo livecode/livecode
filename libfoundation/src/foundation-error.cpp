@@ -25,6 +25,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCOutOfMemoryErrorTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCGenericErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCUnboundTypeErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCUnimplementedErrorTypeInfo;
 
 static MCErrorRef s_last_error = nil;
 
@@ -389,6 +391,18 @@ bool MCErrorThrowOutOfMemory(void)
 }
 
 MC_DLLEXPORT_DEF
+bool MCErrorThrowUnboundType(MCTypeInfoRef p_type)
+{
+    return MCErrorCreateAndThrow(kMCUnboundTypeErrorTypeInfo, "type", MCNamedTypeInfoGetName(p_type), nil);
+}
+
+MC_DLLEXPORT_DEF
+bool MCErrorThrowUnimplemented(MCStringRef p_reason)
+{
+    return MCErrorCreateAndThrow(kMCUnimplementedErrorTypeInfo, "reason", p_reason, nil);
+}
+
+MC_DLLEXPORT_DEF
 bool MCErrorThrowGeneric(MCStringRef p_reason)
 {
     return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", p_reason, nil);
@@ -447,6 +461,12 @@ bool __MCErrorInitialize(void)
         return false;
 	
 	if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.GenericError"), MCNAME("runtime"), MCSTR("%{reason}"), kMCGenericErrorTypeInfo))
+        return false;
+	
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.UnboundTypeError"), MCNAME("runtime"), MCSTR("attempt to use unbound named type %{type}"), kMCUnboundTypeErrorTypeInfo))
+        return false;
+    
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.UnimplementedError"), MCNAME("runtime"), MCSTR("%{reason}"), kMCUnboundTypeErrorTypeInfo))
         return false;
     
     if (!MCErrorCreate(kMCOutOfMemoryErrorTypeInfo, nil, s_out_of_memory_error))
