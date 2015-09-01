@@ -1,0 +1,36 @@
+Name: export widget
+
+Type: command
+
+Syntax: export <widget> to array arrayVar
+
+Summary: Exports the state of the given widget in a form which can be imported
+using <import widget | import widget from array>.
+
+Introduced: 8.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,web,mobile
+
+Example:
+export widget 1 to array tMyArray
+
+Parameters:
+widget: A chunk reference resolving to a widget object.
+arrayVar: The variable to place the widget's state array into.
+
+Description:
+Use the <export widget> command to save the state of the given widget in a form
+which can be used to recreate the widget at a later date.
+
+The returned array has two keys $kind and $state. The $kind key is the fully
+qualified name of the widget's extension module. The $state key is an array
+representing the widget as it is at that point in time. This is typically the
+values of all the widget's persistent properties, although its exact structure
+is defined by the widget.
+
+>*Note:* The <export widget> command is subject to change throughout the 8.0
+development cycle.
+
+References: import widget (command), create widget (command)
