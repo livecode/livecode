@@ -453,29 +453,42 @@ static bool s_lock_responder_change = false;
 }
 
 // MW-2014-07-22: [[ Bug 12720 ]] Mark the period we are inside a focus event handler.
+// SN-2015-05-20: [[ Bug 15208 ]] Renamed to better reflect the functions action
 - (void)windowDidBecomeKey:(NSNotification *)notification
 {
     if (s_inside_focus_event)
-        m_window -> ProcessDidBecomeKey();
+        m_window -> ProcessGainedMainFocus();
     else
     {
         s_inside_focus_event = true;
-        m_window -> ProcessDidBecomeKey();
+        m_window -> ProcessGainedMainFocus();
         s_inside_focus_event = false;
     }
 }
 
 // MW-2014-07-22: [[ Bug 12720 ]] Mark the period we are inside a focus event handler.
+// SN-2015-05-20: [[ Bug 15208 ]] If we are not the KeyWindow, we can still be
+//  the MainWindow, and in that case we keep the focus.
 - (void)windowDidResignKey:(NSNotification *)notification
 {
-    if (s_inside_focus_event)
-        m_window -> ProcessDidBecomeKey();
-    else
-    {
-        s_inside_focus_event = true;
-        m_window -> ProcessDidResignKey();
-        s_inside_focus_event = false;
-    }
+}
+
+// SN-2015-05-20: [[ Bug 15208 ]] A main window is not necessarily the key window
+// (see https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/WinPanel/Concepts/ChangingMainKeyWindow.html)
+//  We do no want to unfocus the active field if a utility window (such as Color
+//  Picker or Character Viewer) is opened, or that can lead to a crash since we
+//  might want to insert text in this field (it is not properly speaking unfocusing).
+//  That leads to a not-so-nice blinking cursor on the message box when using
+//     answer color
+//  but there might not be any other option to avoid the Character Viewer crash.
+- (void)windowDidBecomeMain:(NSNotification *)notification
+{
+    m_window -> ProcessGainedMainFocus();
+}
+
+- (void)windowDidResignMain:(NSNotification *)notification
+{
+    m_window -> ProcessLostMainFocus();
 }
 
 - (void)windowDidChangeBackingProperties:(NSNotification *)notification
@@ -1736,12 +1749,13 @@ void MCMacPlatformWindow::ProcessDidDeminiaturize(void)
 	HandleUniconify();
 }
 
-void MCMacPlatformWindow::ProcessDidBecomeKey(void)
+// SN-2015-05-20: [[ Bug 15208 ]] Renamed to better reflect the functions action
+void MCMacPlatformWindow::ProcessGainedMainFocus(void)
 {
-	HandleFocus();
+    HandleFocus();
 }
 
-void MCMacPlatformWindow::ProcessDidResignKey(void)
+void MCMacPlatformWindow::ProcessLostMainFocus(void)
 {
     HandleUnfocus();
 }
