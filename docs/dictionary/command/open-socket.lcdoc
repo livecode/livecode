@@ -25,10 +25,10 @@ Example:
 open socket to "ftp.example.org:21|sendFiles"
 
 Example:
-open secure socket to "runrev.com:443" with message "wasConnected" without verification
+open secure socket to "livecode.com:443" with message "wasConnected" without verification
 
 Example:
-open secure socket to "runrev.com:443" with message "wasConnected" with verification for host "livecode.com"
+open secure socket to "livecode.com:443" with message "wasConnected" with verification for host "livecode.com"
 
 Example:
 on mouseUp
