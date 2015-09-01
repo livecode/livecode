@@ -539,7 +539,7 @@
 			
 			'variables':
 			{
-				'app_plist': 'rsrc/Revolution-Info.plist',
+				'app_plist': 'rsrc/LiveCode-Info.plist',
 			},
 			
 			'dependencies':
