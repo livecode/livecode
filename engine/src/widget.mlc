@@ -749,9 +749,9 @@ Example:
 */
 	
 syntax IsPointWithinRect is neutral binary operator with precedence 5
-  <mPoint: Expression> "is" "within" <mRect: Expression>
+  <Point: Expression> "is" "within" <Rect: Expression>
 begin
-    MCWidgetEvalIsPointWithinRect(mPoint, mRect, output)
+    MCWidgetEvalIsPointWithinRect(Point, Rect, output)
 end syntax
 
 /* 
