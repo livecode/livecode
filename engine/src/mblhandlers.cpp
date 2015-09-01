@@ -5663,24 +5663,30 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
             }
         }
     }
-    
-    MCPickButtonType t_type = kMCPickButtonNone;
-    // now process any additional parameters
-    while (t_success && t_has_buttons && p_parameters != nil)
+	
+    // PM-2015-09-01: [[ Bug 15816 ]] Process any additional parameters correctly
+    while (t_success && t_has_buttons && t_string_param != nil)
     {
         if (MCStringIsEqualToCString(t_string_param, "checkmark", kMCCompareCaseless))
             t_use_checkmark = true;
         else if (MCStringIsEqualToCString(t_string_param, "cancel", kMCCompareCaseless))
-            t_type = kMCPickButtonCancel;
+			t_use_cancel = true;
         else if (MCStringIsEqualToCString(t_string_param, "done", kMCCompareCaseless))
-            t_type = kMCPickButtonDone;
+			t_use_done = true;
         else if (MCStringIsEqualToCString(t_string_param, "canceldone", kMCCompareCaseless))
-            t_type = kMCPickButtonCancelAndDone;
+		{
+			t_use_cancel = true;
+			t_use_done = true;
+		}
         else if (MCStringIsEqualToCString(t_string_param, "picker", kMCCompareCaseless))
             t_use_picker = true;
         
         MCValueRelease(t_string_param);
-        t_success = MCParseParameters(p_parameters, "x", &t_string_param);
+		t_string_param = nil;
+		
+		if (p_parameters != nil)
+			t_success = MCParseParameters(p_parameters, "x", &t_string_param);
+		
     }
     
     ctxt.SetTheResultToEmpty();
