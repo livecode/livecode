@@ -106,8 +106,27 @@ static void __exec_closure(ffi_cif *cif, void *ret, void **args, void *user_data
     MCTypeInfoRef t_signature;
     t_signature = t_handler -> typeinfo;
     
+    // Check the arity of the handler - at the moment we can only handle 16
+    // arguments.
     uindex_t t_arity;
     t_arity = MCHandlerTypeInfoGetParameterCount(t_signature);
+    if (t_arity > 16)
+    {
+        MCErrorThrowUnimplemented(MCSTR("closures only supported for handlers with at most 16 parameters"));
+        return;
+    }
+        
+    
+    // Check that we can resolve the return type.
+    MCTypeInfoRef t_return_type;
+    t_return_type = MCHandlerTypeInfoGetReturnType(t_signature);
+    
+    MCResolvedTypeInfo t_resolved_return_type;
+    if (!MCTypeInfoResolve(t_return_type, t_resolved_return_type))
+    {
+        MCErrorThrowUnboundType(t_return_type);
+        return;
+    }
     
     MCValueRef t_value_result;
     MCValueRef t_value_args[16];
@@ -123,12 +142,15 @@ static void __exec_closure(ffi_cif *cif, void *ret, void **args, void *user_data
         t_type = MCHandlerTypeInfoGetParameterType(t_signature, t_arg_index);
         
         if (t_mode != kMCHandlerTypeFieldModeIn)
-            abort();
+        {
+            MCErrorThrowUnimplemented(MCSTR("closures only support in arguments"));
+            goto error_exit;
+        }
         
         MCResolvedTypeInfo t_resolved_type;
         if (!MCTypeInfoResolve(t_type, t_resolved_type))
         {
-            MCErrorThrowGeneric(nil);
+            MCErrorThrowUnboundType(t_type);
             goto error_exit;
         }
         
@@ -162,17 +184,6 @@ static void __exec_closure(ffi_cif *cif, void *ret, void **args, void *user_data
     if (!MCHandlerInvoke(t_handler, t_value_args, t_arity, t_value_result))
         goto error_exit;
     
-    MCTypeInfoRef t_return_type;
-    t_return_type = MCHandlerTypeInfoGetReturnType(t_signature);
-    
-    MCResolvedTypeInfo t_resolved_return_type;
-    t_return_type = MCHandlerTypeInfoGetReturnType(t_signature);
-    if (!MCTypeInfoResolve(t_return_type, t_resolved_return_type))
-    {
-        MCErrorThrowGeneric(nil);
-        goto error_exit;
-    }
-    
     if (t_resolved_return_type . named_type != kMCNullTypeInfo)
     {
         if (MCTypeInfoIsForeign(t_resolved_return_type . type))
@@ -188,8 +199,6 @@ static void __exec_closure(ffi_cif *cif, void *ret, void **args, void *user_data
             t_value_result = nil;
         }
     }
-    
-    return;
     
 error_exit:
     if (t_value_result != nil)
@@ -218,7 +227,7 @@ bool MCHandlerGetFunctionPtr(MCHandlerRef self, void*& r_function_ptr)
     {
         ffi_closure_free(self -> closure);
         self -> closure = nil;
-        return MCErrorThrowGeneric(nil);
+        return MCErrorThrowGeneric(MCSTR("unexpected libffi failure"));
     }
     
     r_function_ptr = self -> function_ptr;

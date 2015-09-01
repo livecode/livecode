@@ -838,7 +838,7 @@ bool MCHandlerTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self, int p_abi, vo
         
         MCResolvedTypeInfo t_resolved_return_type;
         if (!MCTypeInfoResolve(t_return_type, t_resolved_return_type))
-            return MCErrorThrowGeneric(nil);
+            return MCErrorThrowUnboundType(t_return_type);
         
         ffi_type *t_ffi_return_type;
         if (t_return_type != kMCNullTypeInfo)
@@ -860,9 +860,7 @@ bool MCHandlerTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self, int p_abi, vo
         
         t_ffi_arg_types[0] = t_ffi_return_type;
         
-        bool t_success;
-        t_success = true;
-        for(uindex_t i = 0; t_success && i < t_arity; i++)
+        for(uindex_t i = 0; i < t_arity; i++)
         {
             MCTypeInfoRef t_type;
             MCHandlerTypeFieldMode t_mode;
@@ -871,10 +869,7 @@ bool MCHandlerTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self, int p_abi, vo
             
             MCResolvedTypeInfo t_resolved_type;
             if (!MCTypeInfoResolve(t_type, t_resolved_type))
-            {
-                t_success = false;
-                break;
-            }
+                return MCErrorThrowUnboundType(t_type);
             
             if (t_mode == kMCHandlerTypeFieldModeIn)
             {
@@ -886,9 +881,6 @@ bool MCHandlerTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self, int p_abi, vo
             else
                 t_ffi_arg_types[i + 1] = &ffi_type_pointer;
         }
-
-        if (!t_success)
-            return MCErrorThrowGeneric(nil);
         
         self -> handler . layout_args = (void **)t_ffi_arg_types;
     }
@@ -901,7 +893,7 @@ bool MCHandlerTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self, int p_abi, vo
     if (ffi_prep_cif((ffi_cif *)&t_layout -> cif, (ffi_abi)p_abi, self -> handler . field_count, (ffi_type *)self -> handler . layout_args[0], (ffi_type **)(self -> handler . layout_args + 1)) != FFI_OK)
     {
         MCMemoryDeallocate(t_layout);
-        return MCErrorThrowGeneric(nil);
+        return MCErrorThrowGeneric(MCSTR("unexpected libffi failure"));
     }
     
     t_layout -> next = self -> handler . layouts;
