@@ -729,8 +729,7 @@ __MCRecordTypeInfoGetBaseTypeForField (__MCTypeInfo *self,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_DLLEXPORT_DEF
-bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *p_fields, index_t p_field_count, MCTypeInfoRef p_return_type, MCTypeInfoRef& r_typeinfo)
+static bool MCCommonHandlerTypeInfoCreate(bool p_is_foreign, const MCHandlerTypeFieldInfo *p_fields, index_t p_field_count, MCTypeInfoRef p_return_type, MCTypeInfoRef& r_typeinfo)
 {
     __MCTypeInfo *self;
     if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
@@ -749,7 +748,10 @@ bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *p_fields, index_t p_f
     
     self -> flags |= kMCValueTypeCodeHandler;
 
-	for (uindex_t i = 0; i < p_field_count; ++i)
+    if (p_is_foreign)
+        self -> flags |= kMCTypeInfoFlagHandlerIsForeign;
+
+    for (uindex_t i = 0; i < p_field_count; ++i)
     {
         self -> handler . fields[i] . type = MCValueRetain(p_fields[i] . type);
         self -> handler . fields[i] . mode = p_fields[i] . mode;
@@ -767,6 +769,27 @@ bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *p_fields, index_t p_f
     MCValueRelease(self);
     
     return false;
+}
+
+MC_DLLEXPORT_DEF
+bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *p_fields, index_t p_field_count, MCTypeInfoRef p_return_type, MCTypeInfoRef& r_typeinfo)
+{
+    return MCCommonHandlerTypeInfoCreate(false, p_fields, p_field_count, p_return_type, r_typeinfo);
+}
+
+MC_DLLEXPORT_DEF
+bool MCForeignHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *p_fields, index_t p_field_count, MCTypeInfoRef p_return_type, MCTypeInfoRef& r_typeinfo)
+{
+    return MCCommonHandlerTypeInfoCreate(true, p_fields, p_field_count, p_return_type, r_typeinfo);
+}
+
+MC_DLLEXPORT_DEF
+bool MCHandlerTypeInfoIsForeign(MCTypeInfoRef unresolved_self)
+{
+    MCTypeInfoRef self;
+    self = __MCTypeInfoResolve(unresolved_self);
+
+    return (self -> flags & kMCTypeInfoFlagHandlerIsForeign) != 0;
 }
 
 MC_DLLEXPORT_DEF
@@ -838,7 +861,7 @@ bool MCHandlerTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self, int p_abi, vo
         
         MCResolvedTypeInfo t_resolved_return_type;
         if (!MCTypeInfoResolve(t_return_type, t_resolved_return_type))
-            return MCErrorThrowGeneric(nil);
+            return MCErrorThrowUnboundType(t_return_type);
         
         ffi_type *t_ffi_return_type;
         if (t_return_type != kMCNullTypeInfo)
@@ -854,15 +877,15 @@ bool MCHandlerTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self, int p_abi, vo
         uindex_t t_arity;
         t_arity = self -> handler . field_count;
         
+        // We need arity + 1 ffi_type slots, as we use the first slot to store
+        // the return type (if any).
         ffi_type **t_ffi_arg_types;
         if (!MCMemoryNewArray(t_arity + 1, t_ffi_arg_types))
             return false;
         
         t_ffi_arg_types[0] = t_ffi_return_type;
         
-        bool t_success;
-        t_success = true;
-        for(uindex_t i = 0; t_success && i < t_arity; i++)
+        for(uindex_t i = 0; i < t_arity; i++)
         {
             MCTypeInfoRef t_type;
             MCHandlerTypeFieldMode t_mode;
@@ -871,10 +894,7 @@ bool MCHandlerTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self, int p_abi, vo
             
             MCResolvedTypeInfo t_resolved_type;
             if (!MCTypeInfoResolve(t_type, t_resolved_type))
-            {
-                t_success = false;
-                break;
-            }
+                return MCErrorThrowUnboundType(t_type);
             
             if (t_mode == kMCHandlerTypeFieldModeIn)
             {
@@ -886,9 +906,6 @@ bool MCHandlerTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self, int p_abi, vo
             else
                 t_ffi_arg_types[i + 1] = &ffi_type_pointer;
         }
-
-        if (!t_success)
-            return MCErrorThrowGeneric(nil);
         
         self -> handler . layout_args = (void **)t_ffi_arg_types;
     }
@@ -901,7 +918,7 @@ bool MCHandlerTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self, int p_abi, vo
     if (ffi_prep_cif((ffi_cif *)&t_layout -> cif, (ffi_abi)p_abi, self -> handler . field_count, (ffi_type *)self -> handler . layout_args[0], (ffi_type **)(self -> handler . layout_args + 1)) != FFI_OK)
     {
         MCMemoryDeallocate(t_layout);
-        return MCErrorThrowGeneric(nil);
+        return MCErrorThrowGeneric(MCSTR("unexpected libffi failure"));
     }
     
     t_layout -> next = self -> handler . layouts;
@@ -1223,6 +1240,8 @@ bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self)
     }
     else if (t_code == kMCValueTypeCodeHandler)
     {
+        if ((self -> flags & kMCTypeInfoFlagHandlerIsForeign) != (other_self -> flags & kMCTypeInfoFlagHandlerIsForeign))
+            return false;
         if (self -> handler . field_count != other_self -> handler . field_count)
             return false;
         if (self -> handler . return_type != other_self -> handler . return_type)

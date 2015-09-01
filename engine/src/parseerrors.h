@@ -1724,11 +1724,26 @@ enum Parse_errors
     
     // {PE-0560} load: missing 'from'
     PE_LOAD_NOFROM,
+
+    // {PE-0561} is really: missing 'an' or 'a'
+    PE_ISREALLY_NOAN,
+    
+    // {PE-0562} is really: missing 'string'
+    PE_ISREALLY_NOSTRING,
+    
+    // {PE-0563} is really: missing type
+    PE_ISREALLY_NOTYPE,
+    
+    // {PE-0564} import: no array expression
+    PE_IMPORT_NOARRAY,
+    
+    // {PE-0565} export: no array expression
+    PE_EXPORT_NOARRAY,
 	
-	// {PE-0561} go: error in widget expression
+	// {PE-0566} go: error in widget expression
 	PE_GO_BADWIDGETEXP,
 	
-	// {PE-0562} launch: error in widget expression
+	// {PE-0567} launch: error in widget expression
 	PE_LAUNCH_BADWIDGETEXP,
 };
 

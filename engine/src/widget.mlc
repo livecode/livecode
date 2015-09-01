@@ -749,9 +749,9 @@ Example:
 */
 	
 syntax IsPointWithinRect is neutral binary operator with precedence 5
-  <mPoint: Expression> "is" "within" <mRect: Expression>
+  <Point: Expression> "is" "within" <Rect: Expression>
 begin
-    MCWidgetEvalIsPointWithinRect(mPoint, mRect, output)
+    MCWidgetEvalIsPointWithinRect(Point, Rect, output)
 end syntax
 
 /* 
@@ -781,7 +781,7 @@ end syntax
 public foreign handler MCWidgetExecPopupMenuAtLocation(in pMenu as String, in pAt as Point) returns optional String binds to "<builtin>"
 public foreign handler MCWidgetExecPopupAtLocation(in pKind as String, in pAt as Point) returns any binds to "<builtin>"
 public foreign handler MCWidgetExecPopupAtLocationWithProperties(in pKind as String, in pAt as Point, in pProperties as Array) returns any binds to "<builtin>"
-public foreign handler MCWidgetEvalIsPopup(out rPopup as bool) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetEvalIsPopup(out rPopup as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetExecClosePopup() returns nothing binds to "<builtin>"
 public foreign handler MCWidgetExecClosePopupWithResult(in pResult as any) returns nothing binds to "<builtin>"
 

@@ -58,16 +58,4 @@ public foreign type ZStringNative binds to "kMCNativeCStringTypeInfo"
 public foreign type ZStringUTF16 binds to "kMCWStringTypeInfo"
 public foreign type ZStringUTF8 binds to "kMCUTF8StringTypeInfo"
 
-----------------------------------------------------------------
--- Deprecated
-----------------------------------------------------------------
-
-public type bool is CBool
-public type uint is UInt32
-public type int is Int32
-public type float is Float32
-public type double is Float64
-
-public type NativeCString is ZStringNative
-
 end module

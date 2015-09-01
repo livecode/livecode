@@ -176,6 +176,7 @@ public:
     virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool flag);
     
     void GetKind(MCExecContext& ctxt, MCNameRef& r_kind);
+    void GetState(MCExecContext& ctxt, MCArrayRef& r_state);
     
     // Bind a widget to a kind and rep.
     void bind(MCNameRef p_kind, MCValueRef p_rep);

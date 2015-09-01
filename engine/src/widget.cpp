@@ -929,6 +929,16 @@ void MCWidget::GetKind(MCExecContext& ctxt, MCNameRef& r_kind)
     r_kind = MCValueRetain(m_kind);
 }
 
+void MCWidget::GetState(MCExecContext& ctxt, MCArrayRef& r_state)
+{
+    MCAutoValueRef t_value;
+    MCWidgetOnSave(m_widget, &t_value);
+    MCExtensionConvertToScriptType(ctxt, InOut(t_value));
+    if (ctxt . HasError())
+        return;
+    r_state = (MCArrayRef)t_value . Take();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCWidget::isInRunMode()

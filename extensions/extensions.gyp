@@ -3,24 +3,25 @@
 	[
 		'../common.gypi',
 	],
-	
+
 	'targets':
 	[
 		{
 			'target_name': 'extensions',
 			'type': 'none',
-			
+
 			'dependencies':
 			[
 				'../toolchain/lc-compile/lc-compile.gyp:lc-compile',
 				'../engine/lcb-modules.gyp:engine_lcb_modules',
 			],
-			
+
 			'sources':
 			[
 				'libraries/canvas/canvas.lcb',
 				'libraries/iconsvg/iconsvg.lcb',
-				
+				'libraries/json/json.lcb',
+
 				'widgets/browser/browser.lcb',
 				'widgets/button/button.lcb',
 				#'widgets/button-popup/button-popup.lcb',
@@ -46,7 +47,7 @@
 				'widgets/colorswatch/colorswatch.lcb',
 				'widgets/gradientrampeditor/gradientrampeditor.lcb',
 			],
-			
+
 			'all_dependent_settings':
 			{
 				'variables':
@@ -58,25 +59,25 @@
 					],
 				},
 			},
-			
+
 			'actions':
 			[
 				{
 					'action_name': 'build_extensions',
-					
-					'inputs': 
+
+					'inputs':
 					[
 						'../util/build-extensions.sh',
 						'<@(_sources)',
 					],
-					
+
 					'outputs':
 					[
 						'<(PRODUCT_DIR)/packaged_extensions',
 					],
-					
+
 					'message': 'Building extensions',
-					
+
 					'conditions':
 					[
 						[
@@ -95,7 +96,7 @@
 							},
 						],
 					],
-					
+
 					'action':
 					[
 						'<@(build_command)',

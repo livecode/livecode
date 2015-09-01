@@ -48,7 +48,7 @@ typedef struct __MCGRegion *MCGRegionRef;
 typedef uint32_t MCGPixelFormat;
 
 // IM_2013-08-21: [[ RefactorGraphics ]] set iOS pixel format to RGBA
-#if defined(ANDROID) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(_LINUX)
+#if defined(ANDROID) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(_LINUX) || defined(__EMSCRIPTEN__)
 #define kMCGPixelFormatNative kMCGPixelFormatRGBA
 // IM-2013-11-01: [[ Bug 11198 ]] Set PPC pixel format to ARGB
 #elif defined(__ppc__)

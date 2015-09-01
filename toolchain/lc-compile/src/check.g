@@ -306,7 +306,7 @@
             Info'Type -> Type
             FullyResolveType(Type -> BaseType)
             (|
-                where(BaseType -> handler(_, Signature))
+                where(BaseType -> handler(_, _, Signature))
             ||
                 Id'Position -> Position
                 Error_NonHandlerTypeVariablesCannotBeCalled(Position)
@@ -318,7 +318,7 @@
     'rule' CheckBindingIsVariableOrGetHandlerId(Id):
         QuerySymbolId(Id -> Info)
         Info'Kind -> handler
-        Info'Type -> handler(_, Signature)
+        Info'Type -> handler(_, _, Signature)
         (|
             where(Signature -> signature(nil, ReturnType))
             (|
@@ -343,7 +343,7 @@
     'rule' CheckBindingIsVariableOrSetHandlerId(Id):
         QuerySymbolId(Id -> Info)
         Info'Kind -> handler
-        Info'Type -> handler(_, Signature)
+        Info'Type -> handler(_, _, Signature)
         (|
             where(Signature -> signature(parameterlist(parameter(_, in, _, _), nil), _))
         ||
@@ -863,7 +863,7 @@
 
     'rule' CheckSyntaxMethod(Class, method(Position, Name, Arguments)):
         QuerySymbolId(Name -> Info)
-        Info'Type -> handler(_, signature(Parameters, ReturnType))
+        Info'Type -> handler(_, _, signature(Parameters, ReturnType))
         Info'Access -> Access
         [|
             ne(Access, public)
@@ -1661,7 +1661,7 @@
         |)
     'rule' IsHighLevelType(optional(_, Type)):
         IsHighLevelType(Type)
-    'rule' IsHighLevelType(handler(_, _)):
+    'rule' IsHighLevelType(handler(_, _, _)):
     'rule' IsHighLevelType(record(_, _, _)):
     'rule' IsHighLevelType(boolean(_)):
     'rule' IsHighLevelType(integer(_)):
@@ -1795,13 +1795,13 @@
     'rule' QueryHandlerIdSignature(Id -> Signature)
         QueryId(Id -> symbol(Info))
         Info'Kind -> handler
-        Info'Type -> handler(_, Signature)
+        Info'Type -> handler(_, _, Signature)
         
     'rule' QueryHandlerIdSignature(Id -> Signature)
         QueryId(Id -> symbol(Info))
         Info'Kind -> variable
         Info'Type -> Type
-        FullyResolveType(Type -> handler(_, Signature))
+        FullyResolveType(Type -> handler(_, _, Signature))
 
 'condition' QueryKindOfSymbolId(ID -> SYMBOLKIND)
 

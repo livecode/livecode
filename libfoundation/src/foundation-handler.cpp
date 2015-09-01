@@ -106,9 +106,28 @@ static void __exec_closure(ffi_cif *cif, void *ret, void **args, void *user_data
     MCTypeInfoRef t_signature;
     t_signature = t_handler -> typeinfo;
     
+    // Check the arity of the handler - at the moment we can only handle 16
+    // arguments.
     uindex_t t_arity;
     t_arity = MCHandlerTypeInfoGetParameterCount(t_signature);
+    if (t_arity > 16)
+    {
+        MCErrorThrowUnimplemented(MCSTR("closures only supported for handlers with at most 16 parameters"));
+        return;
+    }
     
+    // Check that we can resolve the return type.
+    MCTypeInfoRef t_return_type;
+    t_return_type = MCHandlerTypeInfoGetReturnType(t_signature);
+    
+    MCResolvedTypeInfo t_resolved_return_type;
+    if (!MCTypeInfoResolve(t_return_type, t_resolved_return_type))
+    {
+        MCErrorThrowUnboundType(t_return_type);
+        return;
+    }
+    
+    // Build the argument list, doing foreign type bridging as necessary.
     MCValueRef t_value_result;
     MCValueRef t_value_args[16];
     uindex_t t_arg_index;
@@ -122,16 +141,23 @@ static void __exec_closure(ffi_cif *cif, void *ret, void **args, void *user_data
         MCTypeInfoRef t_type;
         t_type = MCHandlerTypeInfoGetParameterType(t_signature, t_arg_index);
         
+        // We don't support anything other than 'in' mode parameters at the moment.
         if (t_mode != kMCHandlerTypeFieldModeIn)
-            abort();
+        {
+            MCErrorThrowUnimplemented(MCSTR("closures only support in arguments"));
+            goto cleanup;
+        }
         
+        // Make sure we can resolve the parameter type.
         MCResolvedTypeInfo t_resolved_type;
         if (!MCTypeInfoResolve(t_type, t_resolved_type))
         {
-            MCErrorThrowGeneric(nil);
-            goto error_exit;
+            MCErrorThrowUnboundType(t_type);
+            goto cleanup;
         }
         
+        // If the parameter type is foreign then we must attempt to bridge it
+        // from the passed in type; otherwise we just retain the valueref.
         if (MCTypeInfoIsForeign(t_resolved_type . type))
         {
             const MCForeignTypeDescriptor *t_descriptor;
@@ -144,43 +170,35 @@ static void __exec_closure(ffi_cif *cif, void *ret, void **args, void *user_data
                 if (t_descriptor -> bridgetype != kMCNullTypeInfo)
                 {
                     if (!t_descriptor -> doimport(args[t_arg_index], false, t_value_args[t_arg_index]))
-                        goto error_exit;
+                        goto cleanup;
                 }
                 else
                 {
-                    if (!MCForeignValueCreateAndRelease(t_resolved_type . named_type, args[t_arg_index], (MCForeignValueRef&)t_value_args[t_arg_index]))
-                        goto error_exit;
+                    if (!MCForeignValueCreate(t_resolved_type . named_type, args[t_arg_index], (MCForeignValueRef&)t_value_args[t_arg_index]))
+                        goto cleanup;
                 }
             }
         }
         else
         {
-            t_value_args[t_arg_index] = MCValueRetain((MCValueRef)args[t_arg_index]);
+            t_value_args[t_arg_index] = MCValueRetain(*(MCValueRef*)args[t_arg_index]);
         }
     }
     
+    // Actually call the LCB handler.
     if (!MCHandlerInvoke(t_handler, t_value_args, t_arity, t_value_result))
-        goto error_exit;
+        goto cleanup;
     
-    MCTypeInfoRef t_return_type;
-    t_return_type = MCHandlerTypeInfoGetReturnType(t_signature);
-    
-    MCResolvedTypeInfo t_resolved_return_type;
-    t_return_type = MCHandlerTypeInfoGetReturnType(t_signature);
-    if (!MCTypeInfoResolve(t_return_type, t_resolved_return_type))
-    {
-        MCErrorThrowGeneric(nil);
-        goto error_exit;
-    }
-    
+    // If the return type is not 'void' then we must map the value back
+    // appropriately.
     if (t_resolved_return_type . named_type != kMCNullTypeInfo)
     {
         if (MCTypeInfoIsForeign(t_resolved_return_type . type))
         {
             const MCForeignTypeDescriptor *t_descriptor;
             t_descriptor = MCForeignTypeInfoGetDescriptor(t_resolved_return_type . type);
-            if (!t_descriptor -> doexport(t_value_result, true, ret))
-                goto error_exit;
+            if (!t_descriptor -> doexport(t_value_result, false, ret))
+                goto cleanup;
         }
         else
         {
@@ -189,9 +207,7 @@ static void __exec_closure(ffi_cif *cif, void *ret, void **args, void *user_data
         }
     }
     
-    return;
-    
-error_exit:
+cleanup:
     if (t_value_result != nil)
         MCValueRelease(t_value_result);
     for(uindex_t i = 0; i < t_arg_index; i++)
@@ -219,7 +235,7 @@ bool MCHandlerGetFunctionPtr(MCHandlerRef self, void*& r_function_ptr)
     {
         ffi_closure_free(self -> closure);
         self -> closure = nil;
-        return MCErrorThrowGeneric(nil);
+        return MCErrorThrowGeneric(MCSTR("unexpected libffi failure"));
     }
     
     r_function_ptr = self -> function_ptr;

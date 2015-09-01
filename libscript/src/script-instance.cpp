@@ -121,6 +121,11 @@ void MCScriptDestroyInstance(MCScriptInstanceRef self)
         MCMemoryDeleteArray(self -> slots);
     }
     
+    // If the instance has handler-refs, then free them.
+    for(uindex_t i = 0; i < self -> handler_count; i++)
+        MCValueRelease(self -> handlers[i] . value);
+    MCMemoryDeleteArray(self -> handlers);
+    
     // If the instance has a module, and this is the shared instance then set
     // the shared instance field to nil.
     if (self -> module != nil &&
@@ -249,7 +254,7 @@ bool MCScriptThrowUnableToResolveForeignHandlerError(MCScriptModuleRef p_module,
 
 bool MCScriptThrowUnableToResolveTypeError(MCTypeInfoRef p_type)
 {
-    return MCErrorCreateAndThrow(kMCScriptTypeBindingErrorTypeInfo, "type", MCNamedTypeInfoGetName(p_type), nil);
+    return MCErrorThrowUnboundType(p_type);
 }
 
 bool MCScriptThrowUnableToResolveMultiInvoke(MCScriptModuleRef p_module, MCScriptDefinition *p_definition, MCProperListRef p_arguments)
@@ -273,8 +278,19 @@ bool MCScriptThrowUnableToResolveMultiInvoke(MCScriptModuleRef p_module, MCScrip
         return false;
     
     for(uindex_t i = 0; i < MCProperListGetLength(p_arguments); i++)
-        if (!MCListAppend(*t_types, MCNamedTypeInfoGetName(MCValueGetTypeInfo(MCProperListFetchElementAtIndex(p_arguments, i)))))
+    {
+        MCTypeInfoRef t_type;
+        t_type = MCValueGetTypeInfo(MCProperListFetchElementAtIndex(p_arguments, i));
+        
+        MCNewAutoNameRef t_type_name;
+        if (MCTypeInfoIsNamed(t_type))
+            t_type_name = MCNamedTypeInfoGetName(t_type);
+        else
+            t_type_name = MCNAME("unknown");
+        
+        if (!MCListAppend(*t_types, *t_type_name))
             return false;
+    }
     
     MCAutoStringRef t_handler_list, t_type_list;
     if (!MCListCopyAsString(*t_handlers, &t_handler_list) ||
@@ -1116,7 +1132,7 @@ static bool MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance
 // If p_throw is true, then this function throws an error if resolution fails.
 // If p_throw is false, then this function does not throw errors related to being
 // unable to bind. Instead it returns true, and indicates binding success in r_bound.
-static bool MCScriptPrepareForeignFunction(MCScriptFrame *p_frame, MCScriptInstanceRef p_instance, MCScriptForeignHandlerDefinition *p_handler, bool p_throw, bool& r_bound)
+static bool MCScriptPrepareForeignFunction(MCScriptInstanceRef p_instance, MCScriptForeignHandlerDefinition *p_handler, bool p_throw, bool& r_bound)
 {
     ffi_abi t_abi;
     if (!MCScriptResolveForeignFunctionBinding(p_instance, p_handler, t_abi, p_throw, r_bound))
@@ -1152,7 +1168,7 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
     if (p_handler -> function == nil)
     {
         bool t_bound;
-        if (!MCScriptPrepareForeignFunction(x_frame, p_instance, p_handler, true, t_bound))
+        if (!MCScriptPrepareForeignFunction(p_instance, p_handler, true, t_bound))
             return false;
     }
     
@@ -1269,13 +1285,14 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                     t_arg_new[t_arg_index] = true;
                 }
             }
-            else
+            else if (!MCTypeInfoIsHandler(t_types[t_arg_index] . type) ||
+                     !MCHandlerTypeInfoIsForeign(t_types[t_arg_index] . type))
             {
                 // The target type is not foreign - t_argument will be a valueref ptr.
                 
                 // If the source value is foreign and it has an import method then
                 // we map to the high-level type. Otherwise, we just pass through the
-                // foriegn value direct.
+                // foreign value direct.
                 if (MCTypeInfoIsForeign(t_source . type))
                 {
                     const MCForeignTypeDescriptor *t_src_descriptor;
@@ -1316,6 +1333,20 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                     // Need to release the argument
                     t_arg_new[t_arg_index] = true;
                 }
+            }
+            else
+            {
+                // The target type is a foreign handler type. At this point the source
+                // value is a handler-ref which we must map to a C closure if
+                // the target type is of foreign kind.
+                void *t_function_ptr;
+                if (!MCHandlerGetFunctionPtr((MCHandlerRef)t_value, t_function_ptr))
+                    break;
+                
+                t_argument = t_function_ptr;
+                
+                // No need to finalize the storage.
+                t_arg_new[t_arg_index] = false;
             }
         }
         else
@@ -1608,8 +1639,6 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
 static bool MCScriptPerformInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_bytecode, MCScriptInstanceRef p_instance, MCScriptDefinition *p_handler, uindex_t *p_arguments, uindex_t p_arity)
 {
     x_frame -> address = x_next_bytecode - x_frame -> instance -> module -> bytecode;
-    
-    // MCLog("Invoke %@", MCScriptGetNameOfDefinitionInModule(p_instance -> module, p_handler));
     
 	if (p_handler -> kind == kMCScriptDefinitionKindHandler)
 	{
@@ -2185,68 +2214,21 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     
                     t_success = MCScriptCheckedStoreToRegisterInFrame(t_target_frame, t_dst, t_value);
                 }
-                else if (t_definition -> kind == kMCScriptDefinitionKindHandler)
+                else if (t_definition -> kind == kMCScriptDefinitionKindHandler ||
+                         t_definition -> kind == kMCScriptDefinitionKindForeignHandler)
                 {
                     MCScriptHandlerDefinition *t_handler_definition;
                     t_handler_definition = static_cast<MCScriptHandlerDefinition *>(t_definition);
                     
-                    MCTypeInfoRef t_signature;
-                    t_signature = t_instance -> module -> types[t_handler_definition -> type] -> typeinfo;
-                    
-                    // The context struct is 'moved' into the handlerref.
-                    __MCScriptHandlerContext t_context;
-                    t_context . instance = MCScriptRetainInstance(t_instance);
-                    t_context . definition = t_handler_definition;
-                    
+                    // Evaluate the value of the handler definition. This will
+                    // create an MCHandlerRef if one doesn't exist, or use the
+                    // previously created one. These MCHandlerRefs are retained
+                    // on a per-instance basis. Unbindable foreign handlers are
+                    // returned as nil.
                     MCHandlerRef t_value;
-                    t_success = MCHandlerCreate(t_signature, &__kMCScriptHandlerCallbacks, &t_context, t_value);
-                    
+                    t_success = MCScriptEvaluateHandlerOfInstanceInternal(t_instance, t_handler_definition, t_value);
                     if (t_success)
-                    {
-                        t_success = MCScriptCheckedStoreToRegisterInFrame(t_frame, t_dst, t_value);
-                        MCValueRelease(t_value);
-                    }
-                }
-                else if (t_definition -> kind == kMCScriptDefinitionKindForeignHandler)
-                {
-                    MCScriptForeignHandlerDefinition *t_handler_definition;
-                    t_handler_definition = static_cast<MCScriptForeignHandlerDefinition *>(t_definition);
-                    
-                    MCTypeInfoRef t_signature;
-                    t_signature = t_instance -> module -> types[t_handler_definition -> type] -> typeinfo;
-                    
-                    bool t_bound;
-                    if (t_handler_definition -> function == nil)
-                    {
-                        if (!MCScriptPrepareForeignFunction(t_frame, t_instance, t_handler_definition, false, t_bound))
-	                        t_success = false;
-                    }
-                    else
-                        t_bound = true;
-                    
-                    if (t_success)
-                    {
-	                    if (t_bound)
-	                    {
-		                    // The context struct is 'moved' into the handlerref.
-		                    __MCScriptHandlerContext t_context;
-		                    t_context . instance = MCScriptRetainInstance(t_instance);
-		                    t_context . definition = t_handler_definition;
-                        
-		                    MCHandlerRef t_value;
-		                    t_success = MCHandlerCreate(t_signature, &__kMCScriptHandlerCallbacks, &t_context, t_value);
-                        
-		                    if (t_success)
-		                    {
-			                    t_success = MCScriptCheckedStoreToRegisterInFrame(t_frame, t_dst, t_value);
-			                    MCValueRelease(t_value);
-		                    }
-	                    }
-	                    else
-	                    {
-		                    t_success = MCScriptCheckedStoreToRegisterInFrame(t_frame, t_dst, kMCNull);
-	                    }
-                    }
+                        t_success = MCScriptCheckedStoreToRegisterInFrame(t_frame, t_dst, t_value != nil ? (MCValueRef)t_value : kMCNull);
                 }
             }
             break;
@@ -2403,6 +2385,112 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
     }
     
     return t_success;
+}
+
+static uindex_t MCScriptComputeHandlerIndexOfInstance(MCScriptInstanceRef p_instance, MCScriptCommonHandlerDefinition *p_handler)
+{
+    uindex_t t_min, t_max;
+    t_min = 0;
+    t_max = p_instance -> handler_count;
+    while(t_min < t_max)
+    {
+        uindex_t t_mid;
+        t_mid = (t_min + t_max) / 2;
+        
+        if (p_instance -> handlers[t_mid] . definition < p_handler)
+            t_min = t_mid + 1;
+        else
+            t_max = t_mid;
+    }
+    
+    return t_min;
+}
+
+bool MCScriptEvaluateHandlerOfInstanceInternal(MCScriptInstanceRef p_instance, MCScriptCommonHandlerDefinition *p_handler, MCHandlerRef& r_handler)
+{
+    // Compute the index in the handler table of p_handler; then, if it is the
+    // definition we are looking for, return its previously computed value.
+    uindex_t t_index;
+    t_index = MCScriptComputeHandlerIndexOfInstance(p_instance, p_handler);
+    if (t_index < p_instance -> handler_count &&
+        p_instance -> handlers[t_index] . definition == p_handler)
+    {
+        r_handler = p_instance -> handlers[t_index] . value;
+        return true;
+    }
+    
+    // Calculate the handlerref value we need.
+    MCHandlerRef t_value;
+    if (p_handler -> kind == kMCScriptDefinitionKindHandler)
+    {
+        // LCB handlers are easy - we just wrap up the instance and handler definition
+        // pair in a handler-ref.
+        
+        MCScriptHandlerDefinition *t_handler_definition;
+        t_handler_definition = static_cast<MCScriptHandlerDefinition *>(p_handler);
+        
+        MCTypeInfoRef t_signature;
+        t_signature = p_instance -> module -> types[t_handler_definition -> type] -> typeinfo;
+        
+        // The context struct is 'moved' into the handlerref.
+        __MCScriptHandlerContext t_context;
+        t_context . instance = MCScriptRetainInstance(p_instance);
+        t_context . definition = t_handler_definition;
+        
+        if (!MCHandlerCreate(t_signature, &__kMCScriptHandlerCallbacks, &t_context, t_value))
+            return false;
+    }
+    else if (p_handler -> kind == kMCScriptDefinitionKindForeignHandler)
+    {
+        // Foreign handlers are a little trickier - we must first attempt to bind
+        // the function and if that fails we make the handler value nothing.
+        
+        MCScriptForeignHandlerDefinition *t_handler_definition;
+        t_handler_definition = static_cast<MCScriptForeignHandlerDefinition *>(p_handler);
+        
+        MCTypeInfoRef t_signature;
+        t_signature = p_instance -> module -> types[t_handler_definition -> type] -> typeinfo;
+        
+        bool t_bound;
+        if (t_handler_definition -> function == nil)
+        {
+            if (!MCScriptPrepareForeignFunction(p_instance, t_handler_definition, false, t_bound))
+                return false;
+        }
+        else
+            t_bound = true;
+        
+        if (t_bound)
+        {
+            // The context struct is 'moved' into the handlerref.
+            __MCScriptHandlerContext t_context;
+            t_context . instance = MCScriptRetainInstance(p_instance);
+            t_context . definition = t_handler_definition;
+            
+            if (!MCHandlerCreate(t_signature, &__kMCScriptHandlerCallbacks, &t_context, t_value))
+                return false;
+        }
+        else
+            t_value = nil;
+    }
+    
+    // Now put the handler value into the instance's handler list. First we make
+    // space in the array, then insert the value at the index we computed at the
+    // start.
+    if (!MCMemoryResizeArray(p_instance -> handler_count + 1, p_instance -> handlers, p_instance -> handler_count))
+    {
+        MCValueRelease(t_value);
+        return false;
+    }
+    
+    MCMemoryMove(p_instance -> handlers + t_index + 1, p_instance -> handlers + t_index, (p_instance -> handler_count - t_index - 1) * sizeof(MCScriptHandlerValue));
+    
+    p_instance -> handlers[t_index] . definition = p_handler;
+    p_instance -> handlers[t_index] . value = t_value;
+    
+    r_handler = t_value;
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

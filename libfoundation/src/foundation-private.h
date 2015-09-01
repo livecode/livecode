@@ -54,6 +54,7 @@ struct __MCValue
 enum
 {
     kMCTypeInfoTypeCodeMask = 0xff,
+    kMCTypeInfoFlagHandlerIsForeign = 1 << 8,
     
     // We use typecodes well above the fixed ones we have to
     // indicate 'special' typeinfo (i.e. those with no real

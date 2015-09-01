@@ -33,20 +33,45 @@
 					[
 						'toolset_os == "mac"',
 						{
-							'libraries':
+							'conditions':
 							[
-								'lib/mac/libicui18n.a',
-								'lib/mac/libicuio.a',
-								'lib/mac/libicule.a',
-								'lib/mac/libiculx.a',
-								'lib/mac/libicutu.a',
-								'lib/mac/libicuuc.a',
-								'lib/mac/libicudata.a',
+								[
+									'GENERATOR == "xcode"',
+									{
+										'libraries':
+										[
+											'lib/mac/libicui18n.a',
+											'lib/mac/libicuio.a',
+											'lib/mac/libicule.a',
+											'lib/mac/libiculx.a',
+											'lib/mac/libicutu.a',
+											'lib/mac/libicuuc.a',
+											'lib/mac/libicudata.a',
+										],
+									},
+									{
+										'library_dirs':
+										[
+											'lib/mac',
+										],
+										
+										'libraries':
+										[
+											'-licui18n',
+											'-licuio',
+											'-licule',
+											'-liculx',
+											'-licutu',
+											'-licuuc',
+											'-licudata',
+										],
+									},
+								],
 							],
 						},
 					],
 					[
-						'OS == "ios"',
+						'toolset_os == "ios"',
 						{
 							'libraries':
 							[
@@ -65,7 +90,7 @@
 							# Gyp doesn't seem to handle non-absolute paths here properly...
 							'library_dirs':
 							[
-								'<(src_top_dir_abs)/prebuilt/lib/linux/>(toolset_arch)',
+								'lib/linux/>(toolset_arch)',
 							],
 							
 							'libraries':
@@ -82,12 +107,12 @@
 						},
 					],
 					[
-						'OS == "android"',
+						'toolset_os == "android"',
 						{
 							# Gyp doesn't seem to handle non-absolute paths here properly...
 							'library_dirs':
 							[
-								'<(src_top_dir_abs)/prebuilt/lib/android/<(target_arch)',
+								'lib/android/<(target_arch)',
 							],
 							
 							'libraries':
@@ -104,7 +129,7 @@
 						},
 					],
 					[
-						'OS == "win"',
+						'toolset_os == "win"',
 						{
 							'library_dirs':
 							[
@@ -131,7 +156,7 @@
 						{
 							'library_dirs':
 							[
-								'<(src_top_dir_abs)/prebuilt/lib/emscripten/js',
+								'lib/emscripten/js',
 							],
 
 							'libraries':
