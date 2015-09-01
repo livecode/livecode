@@ -308,29 +308,6 @@ constant kPersistentProps is ["scrollbars", "allowNewWindows", "enableContextMen
 
 --------------------------------------------------------------------------------
 
-/* TODO - need to provide a wrapper handler here as we can't (yet) get a pointer to a foreign native handler */
-variable mWaitHandler
-private handler doWait()
-	MCEngineRunloopWait()
-end handler
-
-variable mRunloopAction as MCRunloopActionRef
-public handler OnModuleLoad()
-	/* UNCHECKED */ MCBrowserLibraryInitialize()
-
-	put doWait into mWaitHandler
-
-	variable tWait as Pointer
-	MCHandlerGetFunctionPtr(mWaitHandler, tWait)
-	MCBrowserLibrarySetWaitFunction(tWait)
-
-	variable tCallback as MCRunloopActionCallback
-	variable tContext as Pointer
-	if MCBrowserLibraryGetRunloopCallback(tCallback, tContext) then
-		MCEngineAddRunloopAction(tCallback, tContext, mRunloopAction)
-	end if
-end handler
-
 public handler OnLoad(in pProperties as Array)
 	loadProperties(pProperties)
 end handler
@@ -346,7 +323,7 @@ end handler
 
 -- called when the widget is created
 public handler OnCreate()
-	OnModuleLoad()
+	libbrowserInit()
 
 	put the empty string into mBrowserType
 	put the empty array into mProperties

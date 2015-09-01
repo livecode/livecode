@@ -29,7 +29,6 @@ module com.livecode.extensions.libbrowser
 
 -- dependancy declarations
 use com.livecode.foreign
-use com.livecode.widget
 use com.livecode.engine
 --
 
@@ -57,7 +56,9 @@ public type MCBrowserRequestState is CInt
 public foreign handler MCBrowserLibraryInitialize() returns CBool binds to "<builtin>"
 public foreign handler MCBrowserLibraryFinalize() returns nothing binds to "<builtin>"
 
-public foreign handler MCBrowserLibrarySetWaitFunction(in pWait as Pointer) returns nothing binds to "<builtin>"
+public foreign handler type MCBrowserWaitFunction() returns CBool
+
+public foreign handler MCBrowserLibrarySetWaitFunction(in pWait as MCBrowserWaitFunction) returns nothing binds to "<builtin>"
 public foreign handler MCBrowserLibraryGetRunloopCallback(out rCallback as Pointer, out rContext as Pointer) returns CBool binds to "<builtin>"
 
 public foreign handler MCBrowserFactoryGet(in pFactoryId as ZStringUTF8, out rFactory as MCBrowserFactoryRef) returns CBool binds to "<builtin>"
@@ -261,6 +262,39 @@ public handler browserSetProperty(in pBrowser as MCBrowserRef, in pProperty as S
 	if not browserSetEnumProperty(pBrowser, browserLookupProperty(pProperty), pValue) then
 		throw "Error setting browser property: " & pProperty
 	end if
+end handler
+
+----------
+
+private variable mInitialized as optional Boolean
+
+private variable mRunloopAction as MCRunloopActionRef
+private variable mWaitHandler
+
+/* TODO - need to provide a wrapper handler here as we can't (yet) get a pointer to a foreign native handler */
+private handler doWait() returns CBool
+	MCEngineRunloopWait()
+	return true
+end handler
+
+public handler libbrowserInit() returns nothing
+	if mInitialized is not nothing then
+		return
+	end if
+	
+	if not MCBrowserLibraryInitialize() then
+		return
+	end if
+
+	MCBrowserLibrarySetWaitFunction(doWait)
+
+	variable tCallback as MCRunloopActionCallback
+	variable tContext as Pointer
+	if MCBrowserLibraryGetRunloopCallback(tCallback, tContext) then
+		MCEngineAddRunloopAction(tCallback, tContext, mRunloopAction)
+	end if
+	
+	put true into mInitialized
 end handler
 
 ----------
