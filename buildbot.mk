@@ -98,7 +98,7 @@ bin_dir = ${top_src_dir}/$(BUILD_PLATFORM)-bin
 ifeq ($(BUILD_PLATFORM),mac)
   LIVECODE = $(bin_dir)/LiveCode-Community.app/Contents/MacOS/LiveCode-Community
   buildtool_platform = mac
-else ifeq ($(BUILD_PLATFORM),linux-x86)
+else ifeq ($(findstring linux,$(BUILD_PLATFORM)),linux)
   LIVECODE = $(bin_dir)/livecode-community
   buildtool_platform = linux
 endif
