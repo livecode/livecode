@@ -14,7 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "script.h"
+#include "libscript/script.h"
 #include "script-private.h"
 
 #include "ffi.h"
@@ -294,6 +294,16 @@ bool MCScriptThrowCannotCallContextHandlerError(MCScriptModuleRef p_module, MCSc
     return MCErrorCreateAndThrow(kMCScriptCannotCallContextHandlerErrorTypeInfo, "module", p_module -> name, "handler", MCScriptGetNameOfDefinitionInModule(p_module, p_handler), nil);
 }
 
+bool MCScriptThrowHandlerNotFoundError(MCScriptModuleRef p_module, MCNameRef p_handler)
+{
+    return MCErrorCreateAndThrow(kMCScriptHandlerNotFoundErrorTypeInfo, "module", p_module -> name, "handler", p_handler, nil);
+}
+
+bool MCScriptThrowPropertyNotFoundError(MCScriptModuleRef p_module, MCNameRef p_property)
+{
+    return MCErrorCreateAndThrow(kMCScriptPropertyNotFoundErrorTypeInfo, "module", p_module -> name, "property", p_property, nil);
+}
+
 ///////////
 
 MCScriptVariableDefinition *MCScriptDefinitionAsVariable(MCScriptDefinition *self)
@@ -333,7 +343,7 @@ bool MCScriptGetPropertyOfInstance(MCScriptInstanceRef self, MCNameRef p_propert
     // Lookup the definition (throws if not found).
     MCScriptPropertyDefinition *t_definition;
     if (!MCScriptLookupPropertyDefinitionInModule(self -> module, p_property, t_definition))
-        return false;
+        return MCScriptThrowPropertyNotFoundError(self -> module, p_property);
     
     MCScriptDefinition *t_getter;
     t_getter = t_definition -> getter != 0 ? self -> module -> definitions[t_definition -> getter - 1] : nil;
@@ -386,10 +396,10 @@ bool MCScriptSetPropertyOfInstance(MCScriptInstanceRef self, MCNameRef p_propert
 {
     __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindInstance);
     
-    // Lookup the definition (throws if not found).
+    // Lookup the definition.
     MCScriptPropertyDefinition *t_definition;
     if (!MCScriptLookupPropertyDefinitionInModule(self -> module, p_property, t_definition))
-        return false;
+        return MCScriptThrowPropertyNotFoundError(self -> module, p_property);
     
     MCScriptDefinition *t_setter;
     t_setter = t_definition -> setter != 0 ? self -> module -> definitions[t_definition -> setter - 1] : nil;
@@ -517,7 +527,7 @@ bool MCScriptCallHandlerOfInstance(MCScriptInstanceRef self, MCNameRef p_handler
     // Lookup the definition (throws if not found).
     MCScriptHandlerDefinition *t_definition;
     if (!MCScriptLookupHandlerDefinitionInModule(self -> module, p_handler, t_definition))
-        return MCErrorThrowGeneric(MCSTR("handler not found"));
+        return MCScriptThrowHandlerNotFoundError(self -> module, p_handler);
     
     return MCScriptCallHandlerOfInstanceDirect(self, t_definition, p_arguments, p_argument_count, r_value);
 }
@@ -606,6 +616,7 @@ static bool MCScriptCreateFrame(MCScriptFrame *p_caller, MCScriptInstanceRef p_i
     self -> instance = MCScriptRetainInstance(p_instance);
     self -> handler = p_handler;
     self -> address = p_handler -> start_address;
+    self -> mapping = nil;
     
     r_frame = self;
     
@@ -882,7 +893,7 @@ static bool MCScriptPerformScriptInvoke(MCScriptFrame*& x_frame, byte_t*& x_next
 }
 
 // This method resolves the binding string in the foreign function. The format is:
-//   [lang:][library@][class.]function[!calling]
+//   [lang:][library>][class.]function[!calling]
 //
 // lang - one of c, cpp, objc or java. If not present, it is taken to be c.
 // library - the library to load the symbol from. If not present, it is taken to be the
@@ -925,7 +936,84 @@ static bool __split_binding(MCStringRef& x_string, codepoint_t p_char, MCStringR
     return true;
 }
 
-static bool MCScriptResolveForeignFunctionBinding(MCScriptForeignHandlerDefinition *p_handler, ffi_abi& r_abi, bool p_throw, bool& r_bound)
+static bool MCScriptPlatformLoadSharedLibrary(MCStringRef p_path, void*& r_handle)
+{
+#if defined(_WIN32)
+    HMODULE t_module;
+    MCAutoStringRefAsWString t_library_wstr;
+    if (!t_library_wstr.Lock(p_path))
+        return false;
+    t_module = LoadLibraryW(*t_library_wstr);
+    if (t_module == NULL)
+        return false;
+    r_handle = (void *)t_module;
+#else
+    MCAutoStringRefAsUTF8String t_utf8_library;
+    if (!t_utf8_library.Lock(p_path))
+        return false;
+    void *t_module;
+    t_module = dlopen(*t_utf8_library, RTLD_LAZY);
+    if (t_module == NULL)
+        return false;
+    r_handle = (void *)t_module;
+#endif
+    return true;
+}
+
+static bool MCScriptPlatformLoadSharedLibraryFunction(void *p_module, MCStringRef p_function, void*& r_pointer)
+{
+    MCAutoStringRefAsCString t_function_name;
+    if (!t_function_name.Lock(p_function))
+        return false;
+    
+    void *t_pointer;
+#if defined(_WIN32)
+    t_pointer = GetProcAddress((HMODULE)p_module, *t_function_name);
+#else
+    t_pointer = dlsym(p_module, *t_function_name);
+#endif
+    
+    r_pointer = t_pointer;
+    
+    return true;
+}
+
+static bool MCScriptLoadSharedLibrary(MCScriptModuleRef p_module, MCStringRef p_library, void*& r_handle)
+{
+    // If there is no library name then we resolve to the executable module.
+    if (MCStringIsEmpty(p_library))
+    {
+#if defined(_WIN32)
+        r_handle = GetModuleHandle(NULL);
+#elif defined(TARGET_SUBPLATFORM_ANDROID)
+        r_handle = dlopen("librevandroid.so", 0);
+#else
+        r_handle = dlopen(NULL, 0);
+#endif
+        return true;
+    }
+
+    // If there is no slash in the name, we try to resolve based on the module.
+    uindex_t t_offset;
+    if (!MCStringFirstIndexOfChar(p_library, '/', 0, kMCStringOptionCompareExact, t_offset))
+    {
+        MCAutoStringRef t_mapped_library;
+        if (MCScriptResolveSharedLibrary(p_module, p_library, Out(t_mapped_library)))
+        {
+            if (MCScriptPlatformLoadSharedLibrary(*t_mapped_library, r_handle))
+                return true;
+        }
+    }
+    
+    // If the previous two things failed, then just try to load the library as written.
+    if (MCScriptPlatformLoadSharedLibrary(p_library, r_handle))
+        return true;
+    
+    // Oh dear - no native code library for us!
+    return false;
+}
+
+static bool MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance, MCScriptForeignHandlerDefinition *p_handler, ffi_abi& r_abi, bool p_throw, bool& r_bound)
 {
     MCStringRef t_rest;
     t_rest = MCValueRetain(p_handler -> binding);
@@ -968,62 +1056,21 @@ static bool MCScriptResolveForeignFunctionBinding(MCScriptForeignHandlerDefiniti
         if (!MCStringIsEmpty(*t_class))
             return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("class not allowed in c binding string"), nil);
         
+        void *t_module;
+        if (!MCScriptLoadSharedLibrary(MCScriptGetModuleOfInstance(p_instance), *t_library, t_module))
+        {
+            if (p_throw)
+                return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("unable to load foreign library"), nil);
+            
+            r_bound = false;
+            return true;
+        }
         
-#ifdef _WIN32
-        if (MCStringIsEmpty(*t_library))
-        {
-            p_handler -> function = GetProcAddress(GetModuleHandle(NULL), MCStringGetCString(*t_function));
-        }
-        else
-        {
-            HMODULE t_module;
-			MCAutoStringRefAsWString t_library_wstr;
-			if (!t_library_wstr.Lock(*t_library))
-                return false;
-            t_module = LoadLibraryW(*t_library_wstr);
-            if (t_module == nil)
-            {
-                if (p_throw)
-                    return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("unable to load foreign library"), nil);
-
-                r_bound = false;
-                return true;
-            }
-            p_handler -> function = GetProcAddress(t_module, MCStringGetCString(*t_function));
-        }
-#else
-        if (MCStringIsEmpty(*t_library))
-        {
-            void* t_self;
-#ifdef TARGET_SUBPLATFORM_ANDROID
-            t_self = dlopen("librevandroid.so", 0);
-            if (t_self == NULL)
-            {
-                return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("could not bind to engine"), nil);
-            }
-#else
-            t_self = dlopen(NULL, 0);
-#endif
-            p_handler -> function = dlsym(t_self, MCStringGetCString(*t_function));
-        }
-        else
-        {
-            MCAutoStringRefAsUTF8String t_utf8_library;
-            if (!t_utf8_library.Lock(*t_library))
-                return false;
-            void *t_module;
-            t_module = dlopen(*t_utf8_library, RTLD_LAZY);
-            if (t_module == nil)
-            {
-                if (p_throw)
-                    return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("unable to load foreign library"), nil);
-             
-                r_bound = false;
-                return true;
-            }
-            p_handler -> function = dlsym(t_module, MCStringGetCString(*t_function));
-        }
-#endif
+        void *t_pointer;
+        if (!MCScriptPlatformLoadSharedLibraryFunction(t_module, *t_function, t_pointer))
+            return false;
+        
+        p_handler -> function = t_pointer;
     }
     else if (MCStringIsEqualToCString(*t_language, "cpp", kMCStringOptionCompareExact))
     {
@@ -1072,7 +1119,7 @@ static bool MCScriptResolveForeignFunctionBinding(MCScriptForeignHandlerDefiniti
 static bool MCScriptPrepareForeignFunction(MCScriptFrame *p_frame, MCScriptInstanceRef p_instance, MCScriptForeignHandlerDefinition *p_handler, bool p_throw, bool& r_bound)
 {
     ffi_abi t_abi;
-    if (!MCScriptResolveForeignFunctionBinding(p_handler, t_abi, p_throw, r_bound))
+    if (!MCScriptResolveForeignFunctionBinding(p_instance, p_handler, t_abi, p_throw, r_bound))
         return false;
     
     if (!p_throw && !r_bound)
@@ -2415,7 +2462,7 @@ __MCScriptHandlerDescribe (void *p_context,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" bool MC_DLLEXPORT MCScriptBuiltinRepeatCounted(uinteger_t *x_count)
+extern "C" bool MC_DLLEXPORT_DEF MCScriptBuiltinRepeatCounted(uinteger_t *x_count)
 {
     if (*x_count == 0)
         return false;
@@ -2424,27 +2471,27 @@ extern "C" bool MC_DLLEXPORT MCScriptBuiltinRepeatCounted(uinteger_t *x_count)
     return true;
 }
 
-extern "C" bool MC_DLLEXPORT MCScriptBuiltinRepeatUpToCondition(double p_counter, double p_limit)
+extern "C" bool MC_DLLEXPORT_DEF MCScriptBuiltinRepeatUpToCondition(double p_counter, double p_limit)
 {
     return p_counter <= p_limit;
 }
 
-extern "C" double MC_DLLEXPORT MCScriptBuiltinRepeatUpToIterate(double p_counter, double p_step)
+extern "C" double MC_DLLEXPORT_DEF MCScriptBuiltinRepeatUpToIterate(double p_counter, double p_step)
 {
     return p_counter + p_step;
 }
 
-extern "C" bool MC_DLLEXPORT MCScriptBuiltinRepeatDownToCondition(double p_counter, double p_limit)
+extern "C" bool MC_DLLEXPORT_DEF MCScriptBuiltinRepeatDownToCondition(double p_counter, double p_limit)
 {
     return p_counter >= p_limit;
 }
 
-extern "C" double MC_DLLEXPORT MCScriptBuiltinRepeatDownToIterate(double p_counter, double p_step)
+extern "C" double MC_DLLEXPORT_DEF MCScriptBuiltinRepeatDownToIterate(double p_counter, double p_step)
 {
     return p_counter + p_step;
 }
 
-extern "C" void MC_DLLEXPORT MCScriptBuiltinThrow(MCStringRef p_reason)
+extern "C" void MC_DLLEXPORT_DEF MCScriptBuiltinThrow(MCStringRef p_reason)
 {
     MCErrorThrowGeneric(p_reason);
 }

@@ -731,34 +731,34 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 //////////
 
 #define DEFINE_RW_PROPERTY(prop, type, module, tag) \
-{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyThunkGet##type(MC##module##Get##tag), (void *)MCPropertyThunkSet##type(MC##module##Set##tag) },
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyThunkGet##type(MC##module##Get##tag), (void *)MCPropertyThunkSet##type(MC##module##Set##tag), false, false, kMCPropertyInfoChunkTypeNone },
 
 #define DEFINE_RW_SET_PROPERTY(prop, type, module, tag) \
-{ prop, false, kMCPropertyTypeSet, kMC##type##TypeInfo, (void *)MCPropertyThunkGetSetType(MC##module##Get##tag), (void *)MCPropertyThunkSetSetType(MC##module##Set##tag) },
+{ prop, false, kMCPropertyTypeSet, kMC##type##TypeInfo, (void *)MCPropertyThunkGetSetType(MC##module##Get##tag), (void *)MCPropertyThunkSetSetType(MC##module##Set##tag), false, false, kMCPropertyInfoChunkTypeNone },
 
 #define DEFINE_RW_ENUM_PROPERTY(prop, type, module, tag) \
-{ prop, false, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MCPropertyThunkGetEnumType(MC##module##Get##tag), (void *)MCPropertyThunkSetEnumType(MC##module##Set##tag) },
+{ prop, false, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MCPropertyThunkGetEnumType(MC##module##Get##tag), (void *)MCPropertyThunkSetEnumType(MC##module##Set##tag), false, false, kMCPropertyInfoChunkTypeNone },
 
 #define DEFINE_RW_CUSTOM_PROPERTY(prop, type, module, tag) \
-{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyThunkGetCustomType(MC##module##Get##tag, MC##type), (void *)MCPropertyThunkSetCustomType(MC##module##Set##tag, MC##type) },
+{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyThunkGetCustomType(MC##module##Get##tag, MC##type), (void *)MCPropertyThunkSetCustomType(MC##module##Set##tag, MC##type), false, false, kMCPropertyInfoChunkTypeNone },
 
 #define DEFINE_RW_ARRAY_PROPERTY(prop, type, module, tag) \
 { prop, false, kMCPropertyType##type, nil, (void *)MCPropertyThunkArrayGet##type(MC##module##Get##tag), (void *)MCPropertyThunkArraySet##type(MC##module##Set##tag), false, true, kMCPropertyInfoChunkTypeNone },
 
 #define DEFINE_RO_PROPERTY(prop, type, module, tag) \
-{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyThunkGet##type(MC##module##Get##tag), nil },
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyThunkGet##type(MC##module##Get##tag), nil, false, false, kMCPropertyInfoChunkTypeNone },
 
 #define DEFINE_RO_SET_PROPERTY(prop, type, module, tag) \
-{ prop, false, kMCPropertyTypeSet, kMC##type##TypeInfo, (void *)MCPropertyThunkGetSetType(MC##module##Get##tag), nil },
+{ prop, false, kMCPropertyTypeSet, kMC##type##TypeInfo, (void *)MCPropertyThunkGetSetType(MC##module##Get##tag), nil, false, false, kMCPropertyInfoChunkTypeNone },
 
 #define DEFINE_RO_ENUM_PROPERTY(prop, type, module, tag) \
-{ prop, false, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MCPropertyThunkGetEnumType(MC##module##Get##tag), nil },
+{ prop, false, kMCPropertyTypeEnum, kMC##type##TypeInfo, (void *)MCPropertyThunkGetEnumType(MC##module##Get##tag), nil, false, false, kMCPropertyInfoChunkTypeNone },
 
 #define DEFINE_RO_CUSTOM_PROPERTY(prop, type, module, tag) \
-{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyThunkGetCustomType(MC##module##Get##tag, MC##type), nil },
+{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyThunkGetCustomType(MC##module##Get##tag, MC##type), nil, false, false, kMCPropertyInfoChunkTypeNone },
 
 #define DEFINE_RO_EFFECTIVE_PROPERTY(prop, type, module, tag) \
-{ prop, true, kMCPropertyType##type, nil, (void *)MCPropertyThunkGet##type(MC##module##GetEffective##tag), nil },
+{ prop, true, kMCPropertyType##type, nil, (void *)MCPropertyThunkGet##type(MC##module##GetEffective##tag), nil, false, false, kMCPropertyInfoChunkTypeNone },
 
 #define DEFINE_RO_ARRAY_PROPERTY(prop, type, module, tag) \
 { prop, false, kMCPropertyType##type, nil, (void *)MCPropertyThunkArrayGet##type(MC##module##Get##tag), nil, false, true, kMCPropertyInfoChunkTypeNone },
@@ -786,6 +786,9 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 
 #define DEFINE_RO_OBJ_PART_PROPERTY(prop, type, obj, tag) \
 { prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectPartThunkGet##type(obj, Get##tag), nil, false, false, kMCPropertyInfoChunkTypeNone },
+
+#define DEFINE_WO_OBJ_PART_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyType##type, nil, nil, (void *)MCPropertyObjectPartThunkSet##type(obj, Set##tag), false, false, kMCPropertyInfoChunkTypeNone },
 
 #define DEFINE_RW_OBJ_PART_NON_EFFECTIVE_PROPERTY(prop, type, obj, tag) \
 { prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectPartThunkGet##type(obj, Get##tag), (void *)MCPropertyObjectPartThunkSet##type(obj, Set##tag), true, false, kMCPropertyInfoChunkTypeNone },
@@ -1140,6 +1143,7 @@ template<typename C, void (C::*Method)(MCExecContext&)> inline void MCExecNative
 #define MCExecNativeControlUnaryThunkImp(ctrl, mth, typ) (void(*)(MCExecContext&,MCNativeControlPtr*,typ))MCExecNativeControlThunk<ctrl,typ,&ctrl::mth>
 #define MCExecNativeControlThunkExecString(ctrl, mth) MCExecNativeControlUnaryThunkImp(ctrl, mth, MCStringRef)
 #define MCExecNativeControlThunkExecInt32(ctrl, mth) MCExecNativeControlUnaryThunkImp(ctrl, mth, integer_t)
+#define MCExecNativeControlThunkExecOptionalInt32(ctrl, mth) MCExecNativeControlUnaryThunkImp(ctrl, mth, integer_t*)
 
 #define MCExecNativeControlBinaryThunkImp(ctrl, mth, typ1, typ2) (void(*)(MCExecContext&,MCNativeControlPtr*,typ1,typ2))MCExecNativeControlThunk<ctrl,typ1,typ2,&ctrl::mth>
 #define MCExecNativeControlThunkExecStringString(ctrl, mth) MCExecNativeControlBinaryThunkImp(ctrl, mth, MCStringRef, MCStringRef)
@@ -1148,17 +1152,23 @@ template<typename C, void (C::*Method)(MCExecContext&)> inline void MCExecNative
 #define MCExecNativeControlTernaryThunkImp(ctrl, mth, typ1, typ2, typ3) (void(*)(MCExecContext&,MCNativeControlPtr*,typ1,typ2,typ3))MCExecNativeControlThunk<ctrl,typ1,typ2,typ3,&ctrl::mth>
 #define MCExecNativeControlThunkExecInt32OptionalInt32OptionalInt32(ctrl, mth) MCExecNativeControlTernaryThunkImp(ctrl, mth, integer_t, integer_t*, integer_t*)
 
-#define DEFINE_CTRL_EXEC_METHOD(act, ctrl, tag) \
-{ kMCNativeControlAction##act, (void *)MCExecNativeControlThunkExec(ctrl, Exec##tag) },
+#define DEFINE_CTRL_EXEC_METHOD(act, actsig, ctrl, tag) \
+{ false, (MCNativeControlAction)kMCNativeControlAction##act, (MCNativeControlActionSignature)kMCNativeControlActionSignature_##actsig, (void *)MCExecNativeControlThunkExec(ctrl, Exec##tag) },
 
-#define DEFINE_CTRL_EXEC_UNARY_METHOD(act, ctrl, param1, tag) \
-{ kMCNativeControlAction##act, (void *)MCExecNativeControlThunkExec##param1(ctrl, Exec##tag) },
+#define DEFINE_CTRL_EXEC_UNARY_METHOD(act, actsig, ctrl, param1, tag) \
+{ false, (MCNativeControlAction)kMCNativeControlAction##act, (MCNativeControlActionSignature)kMCNativeControlActionSignature_##actsig, (void *)MCExecNativeControlThunkExec##param1(ctrl, Exec##tag) },
 
-#define DEFINE_CTRL_EXEC_BINARY_METHOD(act, ctrl, param1, param2, tag) \
-{ kMCNativeControlAction##act, (void *)MCExecNativeControlThunkExec##param1##param2(ctrl, Exec##tag) },
+#define DEFINE_CTRL_EXEC_BINARY_METHOD(act, actsig, ctrl, param1, param2, tag) \
+{ false, (MCNativeControlAction)kMCNativeControlAction##act, (MCNativeControlActionSignature)kMCNativeControlActionSignature_##actsig, (void *)MCExecNativeControlThunkExec##param1##param2(ctrl, Exec##tag) },
 
-#define DEFINE_CTRL_EXEC_TERNARY_METHOD(act, ctrl, param1, param2, param3, tag) \
-{ kMCNativeControlAction##act, (void *)MCExecNativeControlThunkExec##param1##param2##param3(ctrl, Exec##tag) },
+#define DEFINE_CTRL_EXEC_TERNARY_METHOD(act, actsig, ctrl, param1, param2, param3, tag) \
+{ false, (MCNativeControlAction)kMCNativeControlAction##act, (MCNativeControlActionSignature)kMCNativeControlActionSignature_##actsig, (void *)MCExecNativeControlThunkExec##param1##param2##param3(ctrl, Exec##tag) },
+
+#define DEFINE_CTRL_WAITABLE_EXEC_METHOD(act, actsig, ctrl, tag) \
+{ true, (MCNativeControlAction)kMCNativeControlAction##act, (MCNativeControlActionSignature)kMCNativeControlActionSignature_##actsig, (void *)MCExecNativeControlThunkExec(ctrl, Exec##tag) },
+
+#define DEFINE_CTRL_WAITABLE_EXEC_UNARY_METHOD(act, actsig, ctrl, param1, tag) \
+{ true, (MCNativeControlAction)kMCNativeControlAction##act, (MCNativeControlActionSignature)kMCNativeControlActionSignature_##actsig, (void *)MCExecNativeControlThunkExec##param1(ctrl, Exec##tag) },
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -5345,6 +5355,7 @@ extern MCExecEnumTypeInfo* kMCMiscStatusBarStyleTypeInfo;
 
 extern MCExecMethodInfo* kMCMiscGetDeviceTokenMethodInfo;
 extern MCExecMethodInfo* kMCMiscGetLaunchUrlMethodInfo;
+extern MCExecMethodInfo* kMCMiscGetLaunchDataMethodInfo;
 extern MCExecMethodInfo* kMCMiscExecBeepMethodInfo;
 extern MCExecMethodInfo* kMCMiscExecVibrateMethodInfo;
 extern MCExecMethodInfo* kMCMiscGetDeviceResolutionMethodInfo;
@@ -5376,6 +5387,8 @@ extern MCExecMethodInfo* kMCMiscGetBuildInfoMethodInfo;
 
 void MCMiscGetDeviceToken(MCExecContext& ctxt, MCStringRef& r_token);
 void MCMiscGetLaunchUrl(MCExecContext& ctxt, MCStringRef& r_url);
+
+void MCMiscGetLaunchData(MCExecContext &ctxt, MCArrayRef &r_data);
 
 void MCMiscExecBeep(MCExecContext& ctxt, int32_t* p_number_of_times);
 void MCMiscExecVibrate(MCExecContext& ctxt, int32_t* p_number_of_times);

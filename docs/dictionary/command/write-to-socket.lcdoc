@@ -8,9 +8,9 @@ Summary: Sends data to a <socket>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac,windows,linux,ios,android
 
-Platforms: desktop,server,web
+Platforms: desktop,server,web,mobile
 
 Security: network
 

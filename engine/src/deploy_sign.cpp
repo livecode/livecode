@@ -939,10 +939,8 @@ static bool MCDeploySignWindowsAddTimeStamp(const MCDeploySignParameters& p_para
 			t_data . setnext(&t_url);
 			t_url . setvalueref_argument(p_params . timestamper);
             extern MCExecContext *MCECptr;
-            // SN-2014-05-09 [[ ClearResult ]]
-            // isempty is different from isclear - 'isempty' returns false for a cleared result
 			if (MCECptr->GetObject() -> message(MCM_post_url, &t_data, False, True) == ES_NORMAL &&
-				MCresult -> isclear())
+				MCresult -> isempty())
 			{
 				t_failed = false;
 				break;
@@ -1078,7 +1076,7 @@ bool MCDeploySignWindows(const MCDeploySignParameters& p_params)
 	EVP_PKEY* t_privatekey;
 	t_cert_chain = nil;
 	t_privatekey = nil;
-	if (t_success && p_params . certstore != nil)
+	if (t_success && !MCValueIsEmpty(p_params . certstore))
         t_success = MCDeployCertStoreLoad(p_params . passphrase,
                                           p_params . certstore,
 										  t_cert_chain, t_privatekey);
@@ -1256,7 +1254,7 @@ bool MCDeploySignWindows(const MCDeploySignParameters& p_params)
 
 	// Now we have our signature, we timestamp it - but only if we were
 	// given a timestamp authority url.
-	if (t_success && p_params . timestamper != nil)
+	if (t_success && !MCValueIsEmpty(p_params . timestamper))
 		t_success = MCDeploySignWindowsAddTimeStamp(p_params, t_signature);
 
 	// We now have a complete PKCS7 SignedData object which is now serialized.

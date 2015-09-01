@@ -18,15 +18,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <foundation.h>
 #include <foundation-system.h>
 #include <foundation-auto.h>
-#include <script.h>
-#include <script-auto.h>
+#include <libscript/script.h>
+#include <libscript/script-auto.h>
 
 #if defined(__WINDOWS__)
 #	include <windows.h>
 #endif
 
-extern bool MCModulesInitialize(void);
-extern void MCModulesFinalize(void);
+extern "C" bool MCModulesInitialize(void);
+extern "C" void MCModulesFinalize(void);
 
 /* Possible exit statuses used by lc-run */
 enum {
@@ -348,18 +348,12 @@ MCRunLoadModule (MCStringRef p_filename,
                  MCScriptModuleRef & r_module)
 {
 	MCAutoDataRef t_module_data;
-	MCAutoValueRefBase<MCStreamRef> t_stream;
 	MCAutoScriptModuleRef t_module;
 
 	if (!MCSFileGetContents (p_filename, &t_module_data))
 		return false;
 
-	if (!MCMemoryInputStreamCreate (MCDataGetBytePtr (*t_module_data),
-	                                MCDataGetLength (*t_module_data),
-	                                &t_stream))
-		return false;
-
-	if (!MCScriptCreateModuleFromStream (*t_stream, &t_module))
+	if (!MCScriptCreateModuleFromData (*t_module_data, &t_module))
 		return false;
 
 	r_module = MCScriptRetainModule (*t_module);
@@ -500,3 +494,14 @@ main (int argc,
 
 	exit (0);
 }
+
+/* ----------------------------------------------------------------
+ * Dummy module finit/inits - no canvas, engine, widget module
+ * ---------------------------------------------------------------- */
+
+extern "C" bool com_livecode_engine_Initialize(void) { return true; }
+extern "C" void com_livecode_engine_Finalize(void) { }
+extern "C" bool com_livecode_widget_Initialize(void) { return true; }
+extern "C" void com_livecode_widget_Finalize(void) { }
+extern "C" bool com_livecode_canvas_Initialize(void) { return true; }
+extern "C" void com_livecode_canvas_Finalize(void) { }

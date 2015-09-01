@@ -263,7 +263,8 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_DONT_USE_QT, Bool, Multimedia, DontUseQt)
 	DEFINE_RW_PROPERTY(P_DONT_USE_QT_EFFECTS, Bool, Multimedia, DontUseQtEffects)
 	
-	DEFINE_RW_PROPERTY(P_RECURSION_LIMIT, UInt16, Engine, RecursionLimit)
+	// PM-2015-07-15: [[ Bug 15602 ]] Use 32-bit number for 'recursionLimit' property
+	DEFINE_RW_PROPERTY(P_RECURSION_LIMIT, UInt32, Engine, RecursionLimit)
 
 	DEFINE_RW_PROPERTY(P_IDLE_RATE, UInt16, Interface, IdleRate)
 	DEFINE_RW_PROPERTY(P_IDLE_TICKS, UInt16, Interface, IdleTicks)

@@ -66,6 +66,8 @@ MCServerScript::~MCServerScript(void)
         else
             delete t_file -> script;
 
+        // SN-2015-07-09: [[ Merge 6.7.7 RC 1 ]] Avoid memory leak
+        MCValueRelease(t_file -> filename);
 		delete t_file;
 	}
 	
@@ -362,7 +364,11 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 	// Look for the file
 	File *t_file;
 	t_file = FindFile(p_filename, true);
-	
+	if (t_file -> index == 1)
+	{
+		setfilename(t_file -> filename);
+	}
+
 	// Set back the old default folder
 	MCsystem->SetCurrentFolder(*t_old_folder);
 

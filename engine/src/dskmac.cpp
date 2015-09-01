@@ -48,6 +48,7 @@
 #include <sys/utsname.h>
 #include <sys/time.h>
 #include <sys/ioctl.h>
+#include <sys/sysctl.h>
 
 // SN-2014-12-09: [[ Bug 14001 ]] Update the module loading for Mac server
 #include <dlfcn.h>
@@ -4711,18 +4712,27 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         }
         return "unknown";
 #endif /* MCS_getmachine_dsk_mac */
-        static Str255 machineName;
-        long response;
-        if ((errno = Gestalt(gestaltMachineType, &response)) == noErr)
-        {
-            GetIndString(machineName, kMachineNameStrID, response);
-            if (machineName != nil)
-            {
-                p2cstr(machineName);
-                return MCStringCreateWithNativeChars((const char_t *)machineName, MCCStringLength((const char *)machineName), r_string);
-            }
-        }
-        return MCStringCopy(MCNameGetString(MCN_unknown), r_string);
+
+		// PM-2015-07-21: [[ Bug 15623 ]] machine() returns "unknown" in OSX because of Gestalt being deprecated
+		size_t t_len = 0;
+		sysctlbyname("hw.model", NULL, &t_len, NULL, 0);
+
+		if (t_len)
+		{
+			char *t_model;
+			if (!MCMemoryNewArray(t_len, t_model))
+				return false;
+			sysctlbyname("hw.model", t_model, &t_len, NULL, 0);
+
+			if (!MCStringCreateWithCStringAndRelease(t_model, r_string))
+			{
+				free(t_model);
+				return false;
+			}
+			return true;
+		}
+
+		return MCStringCopy(MCNameGetString(MCN_unknown), r_string); //in case model name can't be read
     }
 	virtual MCNameRef GetProcessor(void)
     {
@@ -5890,7 +5900,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
     }
     
 #define CATALOG_MAX_ENTRIES 16
-	virtual bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *x_context)
+	virtual bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *x_context)
     {
 #ifdef /* MCS_getentries_dsk_mac */ LEGACY_SYSTEM
         OSStatus t_os_status;
@@ -6042,20 +6052,22 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         FSCloseIterator(t_catalog_iterator);
 #endif /* MCS_getentries_dsk_mac */  
         
-        MCAutoStringRef t_curdir, t_redirect;
+        MCAutoStringRef t_path, t_redirect;
         bool t_success;
         t_success = true;
-        
-        MCS_getcurdir(&t_curdir);
+		if (p_folder == nil)
+			MCS_getcurdir(&t_path);
+		else
+			&t_path = MCValueRetain (p_folder);
         // MW-2014-09-17: [[ Bug 13455 ]] First list in the usual path.
-        t_success = MCS_getentries_for_folder(*t_curdir, p_callback, x_context);
+        t_success = MCS_getentries_for_folder(*t_path, p_callback, x_context);
         
         bool *t_files = (bool *)x_context;
         // MW-2014-09-17: [[ Bug 13455 ]] If we are fetching files, and the path is inside MacOS, then
         //   merge the list with files from the corresponding path in Resources/_MacOS.
         // NOTE: the overall operation should still succeed if the redirect doesn't exist
         if (t_success && *t_files &&
-            MCS_apply_redirect(*t_curdir, false, &t_redirect))
+            MCS_apply_redirect(*t_path, false, &t_redirect))
             t_success = MCS_getentries_for_folder(*t_redirect, p_callback, x_context) || t_success;
         
         return t_success;
@@ -6585,7 +6597,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             struct stat64 t_buf;
             if (t_fd != -1 && !fstat64(t_fd, &t_buf))
             {
-                uint4 t_len = t_buf.st_size;
+                off_t t_len = t_buf.st_size;
                 if (t_len != 0)
                 {
                     char *t_buffer = (char *)mmap(NULL, t_len, PROT_READ, MAP_SHARED,
@@ -7419,10 +7431,19 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             close(toparent[0]);
             if (MCprocesses[index].pid != 0)
                 Kill(MCprocesses[index].pid, SIGKILL);
-            /* UNCHECKED */ MCDataCreateWithBytes((char_t*)buffer, size, r_data);
+            
+            // SN-2015-07-15: [[ Bug 15592 ]] Do not copy the buffer as we want
+            //  to take ownership of it - and ensure to free it in any case.
+            if (!MCDataCreateWithBytesAndRelease((char_t*)buffer, size, r_data))
+                free(buffer);
+
             return false;
         }
-        /* UNCHECKED */ MCDataCreateWithBytes((char_t*)buffer, size, r_data);
+        // SN-2015-07-15: [[ Bug 15592 ]] Do not copy the buffer as we want
+        //  to take ownership of it - and ensure to free it in any case.
+        if (!MCDataCreateWithBytesAndRelease((char_t*)buffer, size, r_data))
+            free(buffer);
+
         close(toparent[0]);
         CheckProcesses();
         if (MCprocesses[index].pid != 0)
@@ -7764,28 +7785,9 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 maxfd = MCshellfd;
         }
         
-        uint2 i;
-        for (i = 0 ; i < MCnsockets ; i++)
-        {
-            int fd = MCsockets[i]->fd;
-            if (!fd || MCsockets[i]->resolve_state == kMCSocketStateResolving ||
-				MCsockets[i]->resolve_state == kMCSocketStateError)
-                continue;
-            if (MCsockets[i]->connected && !MCsockets[i]->closing
-		        && !MCsockets[i]->shared || MCsockets[i]->accepting)
-                FD_SET(fd, &rmaskfd);
-            if (!MCsockets[i]->connected || MCsockets[i]->wevents != NULL)
-                FD_SET(fd, &wmaskfd);
-            FD_SET(fd, &emaskfd);
-            if (fd > maxfd)
-                maxfd = fd;
-            if (MCsockets[i]->added)
-            {
-                p_delay = 0.0;
-                MCsockets[i]->added = False;
-                handled = True;
-            }
-        }
+        handled = MCSocketsAddToFileDescriptorSets(maxfd, rmaskfd, wmaskfd, emaskfd);
+        if (handled)
+            p_delay = 0.0;
         
         struct timeval timeoutval;
         timeoutval.tv_sec = (long)p_delay;
@@ -7800,32 +7802,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (MCshellfd != -1 && FD_ISSET(MCshellfd, &rmaskfd))
             return True;
         
-        for (i = 0 ; i < MCnsockets ; i++)
-        {
-            int fd = MCsockets[i]->fd;
-            if (FD_ISSET(fd, &emaskfd) && fd != 0)
-            {
-                
-                if (!MCsockets[i]->waiting)
-                {
-                    MCsockets[i]->error = strclone("select error");
-                    MCsockets[i]->doclose();
-                }
-                
-            }
-            else
-            {
-                if (FD_ISSET(fd, &rmaskfd) && !MCsockets[i]->shared)
-                {
-                    MCsockets[i]->readsome();
-                }
-                if (FD_ISSET(fd, &wmaskfd))
-                {
-                    MCsockets[i]->writesome();
-                }
-            }
-            MCsockets[i]->setselect();
-        }
+        MCSocketsHandleFileDescriptorSets(rmaskfd, wmaskfd, emaskfd);
         
         return True;
     }

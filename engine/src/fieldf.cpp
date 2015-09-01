@@ -2340,13 +2340,17 @@ void MCField::fmove(Field_translations function, MCStringRef p_string, KeySym ke
 	drect.x += getcontentx();
 	setfocus(drect.x, drect.y);
 	replacecursor(True, function != FT_UP && function != FT_DOWN);
+	
+	// PM-2015-07-20: [[ Bug 7217 ]] Send selectionChanged on arrow navigation, regardless of whether Shift key is held down
 	if (state & CS_SELECTING)
 	{
 		state &= ~CS_SELECTING;
 		MCundos->freestate();
-		signallisteners(P_HILITED_LINES);
-		message(MCM_selection_changed);
 	}
+	
+	signallisteners(P_HILITED_LINES);
+	message(MCM_selection_changed);
+	
 	extend = extendwords = extendlines = False;
 	contiguous = True;
 }

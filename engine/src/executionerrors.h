@@ -2334,6 +2334,7 @@ enum Exec_errors
 	EE_RELAYER_NOTARGET,
 
 	// {EE-0769} relayer: couldn't resolve source control
+
 	EE_RELAYER_NOSOURCE,
 
 	// {EE-0770} relayer: source not a control
@@ -2573,85 +2574,90 @@ enum Exec_errors
     // MW-2014-10-23: Improve the error message you get from 'start using <name>'
     // {EE-0843} start: script of specified stack won't compile
     EE_START_WONTCOMPILE,
-    
-    // MW-2014-12-10: [[ Extensions ]] The error codes used to indicate an extension error.
-    // {EE-0844} extension: error occured with domain
-    EE_EXTENSION_ERROR_DOMAIN,
-    // {EE-0845} extension: error occured with description
-    EE_EXTENSION_ERROR_DESCRIPTION,
-    // {EE-0846} extension: error occured with file
-    EE_EXTENSION_ERROR_FILE,
-    // {EE-0847} extension: error occured with line
-    EE_EXTENSION_ERROR_LINE,
 
     // SN-2014-12-16: [[ Bug 14181 ]] hostnameToAddress should have no message on server
-    // {EE-0848} hostnameToAddress: callbacks are not allowed on server
+    // {EE-0844} hostnameToAddress: callbacks are not allowed on server
     EE_HOSTNAME_BADMESSAGE,
 
     // SN-2014-12-15: [[ Bug 14211 ]] Add an error when using a parsed bad extents (such as 'next')
-    // {EE-0849} Chunk: bad extents provided
+    // {EE-0845} Chunk: bad extents provided
     EE_CHUNK_BADEXTENTS,
 
-	// MDW-2014-09-28: [[ feature_floor ]]
-	// {EE-0850} floor: bad parameter
-	EE_FLOOR_BADSOURCE,
-
-	// MDW-2014-09-28: [[ feature_floor ]]
-	// {EE-0851} ceil: bad parameter
-	EE_CEIL_BADSOURCE,
-	
-	// {EE-0852} load: error in extension expression
-	EE_LOAD_BADEXTENSION,
-	
-	// {EE-0853} load: error in resource path expression
-	EE_LOAD_BADRESOURCEPATH,
-    
-    // {EE-0854} Error evaluating expression
+    // {EE-0846} Error evaluating expression
     EE_EXPR_EVALERROR,
     
-    // {EE-0855} Property: value is not a character
+    // {EE-0847} Property: value is not a character
     EE_PROPERTY_NAC,
     
-    // {EE-0856} Property: value is not a string
+    // {EE-0848} Property: value is not a string
     EE_PROPERTY_NAS,
     
-    // {EE-0857} Property: value is not a color
+    // {EE-0849} Property: value is not a color
     EE_PROPERTY_NOTACOLOR,
     
-    // {EE-0858} Property: value is not a rectangle
+    // {EE-0850} Property: value is not a rectangle
     EE_PROPERTY_NOTARECT,
     
-    // {EE-0859} Property: value is not a point
+    // {EE-0851} Property: value is not a point
     EE_PROPERTY_NOTAPOINT,
     
-    // {EE-0860} Property: value is not a pair of integers
+    // {EE-0852} Property: value is not a pair of integers
     EE_PROPERTY_NOTAINTPAIR,
     
-    // {EE-0861} Property: value is not a quadruple of integers
+    // {EE-0853} Property: value is not a quadruple of integers
     EE_PROPERTY_NOTAINTQUAD,
     
-    // {EE-0862} Property: invalid enumeration value
+    // {EE-0854} Property: invalid enumeration value
     EE_PROPERTY_BADENUMVALUE,
     
-    // {EE-0863} Backdrop: invalid value
+    // {EE-0855} Backdrop: invalid value
     EE_BACKDROP_INVALIDVALUE,
     
-    // {EE-0864} Property: value is not an array
+    // {EE-0856} Property: value is not an array
     EE_PROPERTY_NOTANARRAY,
     
-    // {EE-0865} MCInternalPayloadPatch: error in patch item expression
+    // {EE-0857} MCInternalPayloadPatch: error in patch item expression
     EE_INTERNAL_PATCH_BADITEM,
     
-    // {EE-0866} MCInternalPayloadPatch: error in base item expression
+    // {EE-0858} MCInternalPayloadPatch: error in base item expression
     EE_INTERNAL_BASE_BADITEM,
 
-    // {EE-0867} System error: function
+    // MDW-2014-09-28: [[ feature_floor ]]
+    // {EE-0859} floor: bad parameter
+    EE_FLOOR_BADSOURCE,
+    
+    // MDW-2014-09-28: [[ feature_floor ]]
+    // {EE-0860} ceil: bad parameter
+    EE_CEIL_BADSOURCE,
+    
+    // {EE-861} commandArguments: bad parameter
+    EE_COMMANDARGUMENTS_BADPARAM,
+    
+    // AL-2015-07-07: The following error codes are 8.0 specific so should have their numbers
+    //  incremented whenever new codes are merged up from below.
+    // MW-2014-12-10: [[ Extensions ]] The error codes used to indicate an extension error.
+    // {EE-0862} extension: error occured with domain
+    EE_EXTENSION_ERROR_DOMAIN,
+    // {EE-0863} extension: error occured with description
+    EE_EXTENSION_ERROR_DESCRIPTION,
+    // {EE-0864} extension: error occured with file
+    EE_EXTENSION_ERROR_FILE,
+    // {EE-0865} extension: error occured with line
+    EE_EXTENSION_ERROR_LINE,
+    
+    // {EE-0866} load: error in extension expression
+    EE_LOAD_BADEXTENSION,
+    
+    // {EE-0867} load: error in resource path expression
+    EE_LOAD_BADRESOURCEPATH,
+    
+    // {EE-0868} System error: function
     EE_SYSTEM_FUNCTION,
 
-    // {EE-0867} System error: code
+    // {EE-0869} System error: code
     EE_SYSTEM_CODE,
 
-    // {EE-0867} System error: message
+    // {EE-0869} System error: message
     EE_SYSTEM_MESSAGE,
 };
 

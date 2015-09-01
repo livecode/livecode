@@ -18,12 +18,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #if defined(_WINDOWS) || defined(_WINDOWS_SERVER)
 #define LIBRARY_EXPORT __declspec(dllexport)
-#elif defined(_MACOSX)
-#define LIBRARY_EXPORT
-#elif defined(_LINUX)
-#define LIBRARY_EXPORT
-#elif defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID)
-#define LIBRARY_EXPORT
+#else
+#define LIBRARY_EXPORT __attribute__((__visibility__("default")))
 #endif
 
 // Default implementations for DBField

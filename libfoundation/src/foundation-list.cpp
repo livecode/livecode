@@ -47,6 +47,7 @@ bool MCListCreateMutable(MCStringRef p_delimiter, MCListRef& r_list)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCListAppend(MCListRef self, MCValueRef p_value)
 {
 	bool t_first = self->buffer == nil;
@@ -77,9 +78,11 @@ bool MCListAppend(MCListRef self, MCValueRef p_value)
 		break;
 
 	default:
-		// value type conversion not implemented
-		MCAssert(false);
-		return false;
+		if (!MCStringFormat(t_string, "%@", p_value))
+		{
+			return false;
+		}
+		break;
 	}
 	if (!t_first && !MCStringAppend(self -> buffer, self -> delimiter))
 		return false;
@@ -87,6 +90,7 @@ bool MCListAppend(MCListRef self, MCValueRef p_value)
 	return MCStringAppend(self -> buffer, t_string);
 }
 
+MC_DLLEXPORT_DEF
 bool MCListCopy(MCListRef self, MCListRef& r_list)
 {
 	MCAssert(self != nil);
@@ -121,6 +125,7 @@ bool MCListCopy(MCListRef self, MCListRef& r_list)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCListCopyAndRelease(MCListRef self, MCListRef& r_list)
 {
     // If there are no other references, just clear the mutable flag
@@ -138,6 +143,7 @@ bool MCListCopyAndRelease(MCListRef self, MCListRef& r_list)
     return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCListCopyAsString(MCListRef self, MCStringRef& r_string)
 {
 	MCStringRef t_string;
@@ -152,6 +158,7 @@ bool MCListCopyAsString(MCListRef self, MCStringRef& r_string)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCListCopyAsStringAndRelease(MCListRef self, MCStringRef& r_string)
 {
 	if (!MCListCopyAsString(self, r_string))
@@ -162,6 +169,7 @@ bool MCListCopyAsStringAndRelease(MCListRef self, MCStringRef& r_string)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCListAppendFormat(MCListRef self, const char *p_format, ...)
 {
 	bool t_success;
@@ -184,6 +192,7 @@ bool MCListAppendFormat(MCListRef self, const char *p_format, ...)
 	return t_success;
 }
 
+MC_DLLEXPORT_DEF
 bool MCListAppendNativeChars(MCListRef self, const char_t *p_chars, uindex_t p_char_count)
 {
 	bool t_first = self->buffer == nil;
@@ -197,11 +206,13 @@ bool MCListAppendNativeChars(MCListRef self, const char_t *p_chars, uindex_t p_c
 	return MCStringAppendNativeChars(self -> buffer, p_chars, p_char_count);
 }
 
+MC_DLLEXPORT_DEF
 bool MCListAppendSubstring(MCListRef self, MCStringRef p_string, MCRange p_range)
 {
 	return MCListAppendFormat(self, "%*@", &p_range, p_string);
 }
 
+MC_DLLEXPORT_DEF
 bool MCListIsEmpty(MCListRef self)
 {
 	return self -> buffer == nil;
@@ -209,7 +220,7 @@ bool MCListIsEmpty(MCListRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCListRef kMCEmptyList;
+MC_DLLEXPORT_DEF MCListRef kMCEmptyList;
 
 bool __MCListInitialize(void)
 {

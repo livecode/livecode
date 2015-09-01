@@ -31,13 +31,56 @@
     (|
         ErrorsDidOccur()
     ||
-        (|
-            IsBootstrapCompile()
-            BootstrapCompile(Modules)
-        ||
-            Compile(Modules)
-        |)
+        IsDependencyCompile()
+        
+        DependStart()
+
+        -- First generate the mapping between module name and source-file(s)
+        Depend_GenerateMapping(Modules)
+        
+        -- Now generate the direct dependencies for each module
+        Depend_GenerateDependencies(Modules)
+        
+        DependFinish()
+    ||
+        Compile(Modules)
     |)
+
+---------
+
+'action' Depend_GenerateMapping(MODULELIST)
+
+    'rule' Depend_GenerateMapping(modulelist(module(Position, Kind, Name, _), Rest)):
+        Name'Name -> ModuleName
+        GetFilenameOfPosition(Position -> Filename)
+        DependDefineMapping(ModuleName, Filename)
+        Depend_GenerateMapping(Rest)
+        
+    'rule' Depend_GenerateMapping(nil):
+        -- do nothing
+        
+'action' Depend_GenerateDependencies(MODULELIST)
+
+    'rule' Depend_GenerateDependencies(modulelist(module(_, _, Name, Definitions), Rest)):
+        Name'Name -> ModuleName
+        Depend_GenerateDependenciesForModule(ModuleName, Definitions)
+        Depend_GenerateDependencies(Rest)
+
+    'rule' Depend_GenerateDependencies(nil):
+        -- do nothing
+
+'action' Depend_GenerateDependenciesForModule(NAME, DEFINITION)
+
+    'rule' Depend_GenerateDependenciesForModule(ModuleName, sequence(Left, Right)):
+        Depend_GenerateDependenciesForModule(ModuleName, Left)
+        Depend_GenerateDependenciesForModule(ModuleName, Right)
+
+    'rule' Depend_GenerateDependenciesForModule(ModuleName, import(_, Name)):
+        Name'Name -> DependencyName
+        DependDefineDependency(ModuleName, DependencyName)
+
+    'rule' Depend_GenerateDependenciesForModule(ModuleName, _):
+        -- do nothing
 
 ---------
 
@@ -46,35 +89,32 @@
     'rule' Compile(Modules):
         InitializeBind
         BindModules(Modules, Modules)
-        CheckModules(Modules)
         (|
             ErrorsDidOccur()
         ||
-            where(Modules -> modulelist(Head, _))
-            Generate(Head)
-        |)
-
-'action' BootstrapCompile(MODULELIST)
-
-    'rule' BootstrapCompile(Modules):
-        BindModules(Modules, Modules)
-        CheckModules(Modules)
-        (|
-            ErrorsDidOccur()
-        ||
-            GenerateSyntaxForModules(Modules)
+            CheckModules(Modules)
             (|
                 ErrorsDidOccur()
             ||
-                GenerateSyntaxRules()
+                (|
+                    IsBootstrapCompile()
+                    GenerateSyntaxForModules(Modules)
+                    (|
+                        ErrorsDidOccur()
+                    ||
+                        GenerateSyntaxRules()
+                        GenerateModules(Modules)
+                    |)
+                ||
+                    where(Modules -> modulelist(Head, _))
+                    Generate(Head)
+                |)
             |)
         |)
 
 'action' BindModules(MODULELIST, MODULELIST)
 
     'rule' BindModules(modulelist(Head, Tail), Imports):
-        InitializeBind
-        
         (|
             Head'Kind -> import
         ||
@@ -223,9 +263,18 @@
         Id'Name -> Name
         GetStringOfNameLiteral(Name -> NameString)
         (|
-            AddImportedModuleFile(NameString)
+            (|
+                -- In bootstrap mode, all modules have to be listed on command line.
+                IsBootstrapCompile()
+            ||
+                AddImportedModuleFile(NameString)
+            |)
         ||
-            Error_UnableToFindImportedModule(Position, Name)
+            (|
+                IsDependencyCompile()
+            ||
+                Error_UnableToFindImportedModule(Position, Name)
+            |)
         |)
 
     'rule' ExpandImports(Position, idlist(Id, Tail) -> sequence(import(Position, Id), ExpandedTail)):
@@ -309,7 +358,7 @@
     'rule' OptionalTypeClause(-> Type):
         "as" Type(-> Type)
         
-    'rule' OptionalTypeClause(-> optional(Position, any(Position))):
+    'rule' OptionalTypeClause(-> unspecified):
         @(-> Position)
 
 ---------- Type
@@ -434,7 +483,7 @@
     'rule' OptionalReturnsClause(-> Type)
         "returns" @(-> Position) Type(-> Type)
 
-    'rule' OptionalReturnsClause(-> optional(Position, any(Position)))
+    'rule' OptionalReturnsClause(-> unspecified)
         @(-> Position)
 
 'nonterm' OptionalParameterList(-> PARAMETERLIST)
@@ -637,7 +686,7 @@
     'rule' OptionalElementType(-> Type)
         "of" Type(-> Type)
         
-    'rule' OptionalElementType(-> optional(Position, any(Position))):
+    'rule' OptionalElementType(-> unspecified):
         @(-> Position)
 
 --------------------------------------------------------------------------------
@@ -1186,13 +1235,39 @@
 'token' END_OF_UNIT
 'token' NEXT_UNIT
 
+'action' DefineCustomInvokeList(INT, INVOKELIST)
+'action' LookupCustomInvokeList(INT -> INVOKELIST)
+
+'action' CustomInvokeLists(INT -> INVOKELIST)
+    'rule' CustomInvokeLists(Index -> List):
+        LookupCustomInvokeList(Index -> List)
+
+'action' MakeCustomInvokeMethodArgs1(MODE, INT -> INVOKESIGNATURE)
+    'rule' MakeCustomInvokeMethodArgs1(Mode, Index -> invokesignature(Mode, Index, nil)):
+    
+'action' MakeCustomInvokeMethodArgs2(MODE, INT, MODE, INT -> INVOKESIGNATURE)
+    'rule' MakeCustomInvokeMethodArgs2(Mode1, Index1, Mode2, Index2 -> invokesignature(Mode1, Index1, invokesignature(Mode2, Index2, nil))):
+
+'action' MakeCustomInvokeMethodArgs3(MODE, INT, MODE, INT, MODE, INT, -> INVOKESIGNATURE)
+    'rule' MakeCustomInvokeMethodArgs3(Mode1, Index1, Mode2, Index2, Mode3, Index3 -> invokesignature(Mode1, Index1, invokesignature(Mode2, Index2, invokesignature(Mode3, Index3, nil)))):
+
+'action' MakeCustomInvokeMethodList(STRING, INVOKEMETHODTYPE, INVOKESIGNATURE, INVOKEMETHODLIST -> INVOKEMETHODLIST)
+    'rule' MakeCustomInvokeMethodList(Name, Type, Signature, Previous -> methodlist(Name, Type, Signature, Previous))
+
+'action' MakeCustomInvokeList(STRING, STRING, INVOKEMETHODLIST, INVOKELIST -> INVOKELIST)
+    'rule' MakeCustomInvokeList(Name, ModuleName, Methods, Previous -> List)
+        Info::INVOKEINFO
+        Info'Index <- -1
+        Info'ModuleIndex <- -1
+        Info'Name <- Name
+        Info'ModuleName <- ModuleName
+        Info'Methods <- Methods
+        where(invokelist(Info, Previous) -> List)
+
 --*--*--*--*--*--*--*--
 
 'action' InitializeCustomInvokeLists()
     'rule' InitializeCustomInvokeLists():
-        -- nothing
-'action' CustomInvokeLists(INT -> INVOKELIST)
-    'rule' CustomInvokeLists(_ -> nil):
         -- nothing
 'nonterm' CustomStatements(-> STATEMENT)
     'rule' CustomStatements(-> nil):

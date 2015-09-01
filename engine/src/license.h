@@ -44,6 +44,7 @@ enum
 	kMCLicenseDeployToServer = 1 << 7,
 	kMCLicenseDeployToIOSEmbedded = 1 << 8,
 	kMCLicenseDeployToAndroidEmbedded = 1 << 9,
+    kMCLicenseDeployToHTML5 = 1 << 10,
 };
 
 enum

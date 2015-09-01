@@ -228,7 +228,7 @@ void MCCefFinalise(void)
 	if (!s_cef_initialised)
 		return;
 
-	CefShutdown();
+    //CefShutdown();
 
 	s_cef_initialised = false;
 }

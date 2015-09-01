@@ -17,7 +17,8 @@
 #include <foundation.h>
 #include <foundation-auto.h>
 
-#include "script.h"
+#include "libscript/script.h"
+#include <libscript/script-auto.h>
 #include "script-private.h"
 
 #include <stddef.h>
@@ -500,6 +501,25 @@ bool MCScriptCreateModuleFromStream(MCStreamRef stream, MCScriptModuleRef& r_mod
     return true;
 }
 
+MC_DLLEXPORT_DEF bool
+MCScriptCreateModuleFromData (MCDataRef data,
+                              MCScriptModuleRef & r_module)
+{
+	MCAutoValueRefBase<MCStreamRef> t_stream;
+	MCAutoScriptModuleRef t_module;
+
+	if (!MCMemoryInputStreamCreate (MCDataGetBytePtr (data),
+	                                MCDataGetLength (data),
+	                                &t_stream))
+		return false;
+
+	if (!MCScriptCreateModuleFromStream (*t_stream, &t_module))
+		return false;
+
+	r_module = MCScriptRetainModule (*t_module);
+	return true;
+}
+
 bool MCScriptLookupModule(MCNameRef p_name, MCScriptModuleRef& r_module)
 {
     for(MCScriptModule *t_module = s_modules; t_module != nil; t_module = t_module -> next_module)
@@ -907,8 +927,7 @@ bool MCScriptCopyHandlersOfModule(MCScriptModuleRef self, /* copy */ MCProperLis
         return false;
     
     for(uindex_t i = 0; i < self -> exported_definition_count; i++)
-        if (self -> definitions[self -> exported_definitions[i] . index] -> kind == kMCScriptDefinitionKindHandler ||
-            self -> definitions[self -> exported_definitions[i] . index] -> kind == kMCScriptDefinitionKindForeignHandler)
+        if (self -> definitions[self -> exported_definitions[i] . index] -> kind == kMCScriptDefinitionKindHandler)
             if (!MCProperListPushElementOntoBack(*t_handlers, self -> exported_definitions[i] . name))
                 return false;
     
@@ -996,7 +1015,8 @@ bool MCScriptLookupHandlerDefinitionInModule(MCScriptModuleRef self, MCNameRef p
     
     for(uindex_t i = 0; i < self -> exported_definition_count; i++)
     {
-        if (self -> definitions[self -> exported_definitions[i] . index] -> kind != kMCScriptDefinitionKindHandler)
+        if (self -> definitions[self -> exported_definitions[i] . index] -> kind != kMCScriptDefinitionKindHandler &&
+            self -> definitions[self -> exported_definitions[i] . index] -> kind != kMCScriptDefinitionKindForeignHandler)
             continue;
         
         if (!MCNameIsEqualTo(p_handler, self -> exported_definitions[i] . name))

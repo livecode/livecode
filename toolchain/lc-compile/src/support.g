@@ -31,6 +31,7 @@
     GetColumnOfCurrentPosition
     GetUndefinedPosition
     AddImportedModuleFile
+    GetFilenameOfPosition
 
     InitializeLiterals
     FinalizeLiterals
@@ -122,6 +123,14 @@
     PushOutMarkArgumentSyntaxMapping
     PushInOutMarkArgumentSyntaxMapping
 
+    IsDependencyCompile
+    DependStart
+    DependFinish
+    DependDefineMapping
+    DependDefineDependency
+
+    EmitStart
+    EmitFinish
     EmitBeginModule
     EmitBeginLibraryModule
     EmitBeginWidgetModule
@@ -304,6 +313,11 @@
     Error_IntegerLiteralOutOfRange
     Error_NextRepeatOutOfContext
     Error_ExitRepeatOutOfContext
+    Error_DependentModuleNotIncludedWithInputs
+    Error_InterfaceFileNameMismatch
+    Error_NoReturnTypeSpecifiedForForeignHandler
+    Error_NoTypeSpecifiedForForeignHandlerParameter
+    Warning_MetadataClausesShouldComeAfterUseClauses
     Warning_DeprecatedTypeName
     Warning_UnsuitableNameForDefinition
     Warning_UsingAsForHandlerReturnTypeDeprecated
@@ -331,6 +345,8 @@
 'action' GetUndefinedPosition(-> Position: POS)
 
 'condition' AddImportedModuleFile(Name: STRING)
+
+'action' GetFilenameOfPosition(Position: POS -> Filename: STRING)
 
 --------------------------------------------------------------------------------
 
@@ -455,6 +471,17 @@
 'action' PushIndexedMarkArgumentSyntaxMapping(MarkIndex: INT, Index: INT)
 
 --------------------------------------------------------------------------------
+
+'condition' IsDependencyCompile()
+'action' DependStart()
+'action' DependFinish()
+'action' DependDefineMapping(ModuleName: NAME, SourceFile: STRING)
+'action' DependDefineDependency(ModuleName: NAME, RequiredModuleName: NAME)
+
+--------------------------------------------------------------------------------
+
+'action' EmitStart()
+'action' EmitFinish()
 
 'action' EmitBeginModule(Name: NAME -> ModuleIndex: INT)
 'action' EmitBeginWidgetModule(Name: NAME -> ModuleIndex: INT)
@@ -669,6 +696,13 @@
 'action' Error_NextRepeatOutOfContext(Position: POS)
 'action' Error_ExitRepeatOutOfContext(Position: POS)
 
+'action' Error_DependentModuleNotIncludedWithInputs(Position: POS, Module: NAME)
+'action' Error_InterfaceFileNameMismatch(Position: POS, Module: NAME)
+
+'action' Error_NoReturnTypeSpecifiedForForeignHandler(Position: POS)
+'action' Error_NoTypeSpecifiedForForeignHandlerParameter(Position: POS)
+
+'action' Warning_MetadataClausesShouldComeAfterUseClauses(Position: POS)
 'action' Warning_DeprecatedTypeName(Position: POS, NewType: STRING)
 'action' Warning_UnsuitableNameForDefinition(Position: POS, Identifier: NAME)
 'action' Warning_UsingAsForHandlerReturnTypeDeprecated(Position: POS)
