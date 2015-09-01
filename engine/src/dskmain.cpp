@@ -261,7 +261,7 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 		{
             MCAutoPointer<char> t_MCN_version;
             /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(MCN_version_string), &t_MCN_version);
-			fprintf(stderr, "LiveCode %s Copyright 2003-2014 Runtime Revolution Ltd\n\
+			fprintf(stderr, "LiveCode %s Copyright 2003-2015 LiveCode Ltd\n\
 			        Usage: %s [-d[isplay] displayname] \n\
 			        [-f[iles] (disable access to files and processes)\n\
 			        [-g[eometry] ={+-}<xoffset>{+-}<yoffset>]\n\
