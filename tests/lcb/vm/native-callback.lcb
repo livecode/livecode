@@ -1,0 +1,33 @@
+module __VMTEST.native_callback
+
+use com.livecode.foreign
+
+variable sTotal as Number
+
+handler type ProperListCallbackThunk(in pContext as optional Pointer, in pElement as optional any) returns CBool
+
+handler SumElementOfList(in pContext as optional Pointer, in pElement as optional any) returns CBool
+    add pElement to sTotal
+    return true
+end handler
+
+foreign handler MCHandlerGetFunctionPtr(in pHandler as any, out rFuncPtr as Pointer) returns CBool binds to "<builtin>"
+foreign handler MCProperListApply(in pList as List, in pCallback as Pointer, in pContext as optional Pointer) returns CBool binds to "<builtin>"
+
+public handler TestNativeCallback()
+    -- For memory management reasons we need to keep a reference to the handler
+    -- we want to use around for as long as the function ptr we need.
+    variable tHandler as ProperListCallbackThunk
+    put SumElementOfList into tHandler
+
+    -- Fetch the function pointer
+    variable tFunctionPtr as Pointer
+    test "create function pointer" when MCHandlerGetFunctionPtr(tHandler, tFunctionPtr)
+
+    -- See if it works
+    put 0 into sTotal
+    MCProperListApply([1, 2, 3, 4, 5, 6], tFunctionPtr, nothing)
+    test "use function pointer" when sTotal is (1 + 2 + 3 + 4 + 5 + 6)
+end handler
+
+end module
