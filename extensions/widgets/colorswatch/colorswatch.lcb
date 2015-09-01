@@ -168,7 +168,11 @@ public handler setColor(in tColor as optional String) returns nothing
 end handler
 
 public handler getColor() returns String
-	return colorToString(mColor)
+    if mColor is nothing then
+        return ""
+    else
+        return colorToString(mColor)
+    end if
 end handler
 ----------
 
