@@ -13,7 +13,7 @@ OS: mac,windows,linux,ios
 Platforms: desktop,web,mobile
 
 Example:
-print link to url "http://www.runrev.com" with rect 50,50,60,60
+print link to url "http://www.livecode.com" with rect 50,50,60,60
 
 Example:
 print link to anchor "section 1.1" with rect 100,100,200,200

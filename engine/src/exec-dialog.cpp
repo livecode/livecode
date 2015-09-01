@@ -347,7 +347,7 @@ void MCDialogExecAnswerFolder(MCExecContext &ctxt, bool p_plural, MCStringRef p_
 
 void MCDialogExecAnswerNotify(MCExecContext &ctxt, integer_t p_type, MCStringRef p_prompt, MCStringRef *p_buttons, uindex_t p_button_count, MCStringRef p_title, bool p_sheet)
 {
-#ifndef _MOBILE
+#if !defined(_MOBILE) && !defined(__EMSCRIPTEN__)
 	MCAutoStringRef t_value, t_result;
 	MCAutoListRef t_button_list;
 	MCAutoStringRef t_buttons_string;
@@ -468,7 +468,7 @@ void MCDialogExecCustomAnswerDialog(MCExecContext &ctxt, MCNameRef p_stack, MCNa
 
 void MCDialogExecAskQuestion(MCExecContext& ctxt, int p_type, MCStringRef p_prompt, MCStringRef p_answer, bool p_hint_answer, MCStringRef p_title, bool p_as_sheet)
 {
-#ifndef _MOBILE
+#if !defined(_MOBILE) && !defined(__EMSCRIPTEN__)
 	MCStringRef t_args[4];
 	t_args[0] = p_title;
 	t_args[1] = p_prompt;

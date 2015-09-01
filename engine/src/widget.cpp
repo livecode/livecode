@@ -163,14 +163,16 @@ bool MCWidget::visit_self(MCObjectVisitor* p_visitor)
 void MCWidget::open(void)
 {
 	MCControl::open();
-    if (m_widget != nil)
-        MCwidgeteventmanager->event_open(this);
+	// IM-2015-09-01: [[ Bug 15836 ]] Only send widget event when transitioning from 0 -> 1
+	if (opened == 1 && m_widget != nil)
+		MCwidgeteventmanager->event_open(this);
 }
 
 void MCWidget::close(void)
 {
-    if (m_widget != nil)
-        MCwidgeteventmanager->event_close(this);
+	// IM-2015-09-01: [[ Bug 15836 ]] Only send widget event when transitioning from 1 -> 0
+	if (opened == 1 && m_widget != nil)
+		MCwidgeteventmanager->event_close(this);
 	MCControl::close();
 }
 

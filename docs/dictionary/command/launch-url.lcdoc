@@ -15,7 +15,7 @@ Platforms: desktop,mobile
 Security: process
 
 Example:
-launch url "http://www.runrev.com"
+launch url "http://www.livecode.com"
 
 Example:
 launch url "file:/Users/ben/Desktop/test.pdf"

@@ -1124,7 +1124,7 @@ private function revGetMinimumOSByArch pMinimumOS
    if pMinimumOS is empty or pMinimumOS <= "5.1" then
       put "5.1.1" into tMinimumOSByArch["i386"]
    else
-      put pMinimumOS & ".0" after tMinimumOSByArch["i386"]
+      put pMinimumOS after tMinimumOSByArch["i386"]
    end if
    
    -- Assign the same value to the other architectures.

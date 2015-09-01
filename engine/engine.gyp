@@ -250,6 +250,7 @@
 							'DYLIB_COMPATIBILITY_VERSION': '',
 							'DYLIB_CURRENT_VERSION': '',
 							'MACH_O_TYPE': 'mh_object',
+							'LINK_WITH_STANDARD_LIBRARIES': 'NO',
 							'OTHER_LDFLAGS':
 							[
 								'-Wl,-sectcreate,__MISC,__deps,<(deps_file)',
@@ -795,6 +796,7 @@
 									'src/em-preamble.js',
 									'src/em-util.js',
 									'src/em-async.js',
+									'src/em-dialog.js',
 									'src/em-event.js',
 									'src/em-surface.js',
 									'src/em-url.js',
@@ -817,6 +819,7 @@
 									'src/em-preamble.js',
 									'src/em-util.js',
 									'src/em-async.js',
+									'src/em-dialog.js',
 									'src/em-event.js',
 									'src/em-surface.js',
 									'src/em-url.js',

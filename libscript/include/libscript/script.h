@@ -162,6 +162,9 @@ bool MCScriptUnloadPackage(MCScriptPackageRef package);
 // Load a module from a stream.
 bool MCScriptCreateModuleFromStream(MCStreamRef stream, MCScriptModuleRef& r_module);
 
+// Load a module from a blob
+MC_DLLEXPORT bool MCScriptCreateModuleFromData(MCDataRef data, MCScriptModuleRef & r_module);
+
 // Lookup the module with the given name. Returns false if no such module exists.
 bool MCScriptLookupModule(MCNameRef name, MCScriptModuleRef& r_module);
 

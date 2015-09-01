@@ -52,10 +52,16 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder
    set the itemDelimiter to comma
    
    -- Other parameters
-   local tName, tFiles
+   local tName, tFiles, tAuxStackFiles
    put tSettings["name"] into tName
    put tSettings["files"] into tFiles
-   
+   put tSettings["auxiliary_stackfiles"] into tAuxStackFiles
+
+   -- If the datagrid is used, then include the library as an aux stack
+   if "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
+      put the effective filename of stack "revDataGridLibrary" & return after tAuxStackFiles
+   end if
+
    local tError
    try
       ---------- Create a working directory
@@ -92,10 +98,11 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder
       end repeat
       
       -- Define some paths within the zip archive
-      local tBootPath, tStandalonePath, tBootStackPath
+      local tBootPath, tStandalonePath, tBootStackPath, tAuxStackPath
       put "boot" into tBootPath
       put tBootPath & slash & "standalone" into tStandalonePath
       put tStandalonePath & slash & "__boot.livecode" into tBootStackPath
+      put tBootPath & slash & "auxiliary_stackfiles" into tAuxStackPath
       
       -- Store the initial stack
       logDebug "boot-stack", "Storing" && tStackFile
@@ -103,6 +110,20 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder
       if the result is not empty then
          throw "could not store initial stack in standalone archive"
       end if
+
+      -- Store auxiliary stacks
+      local tZipAuxPath
+      repeat for each line tStackFile in tAuxStackFiles
+         set the itemdelimiter to slash
+         put item -1 of tStackFile into tZipAuxPath
+         put tAuxStackPath & slash before tZipAuxPath
+
+         logDebug "aux-stack", "Storing" && tStackFile
+         revZipAddUncompressedItemWithFile tBuildZip, tAuxStackPath, tStackFile
+         if the result is not empty then
+            throw "could not store auxiliar stack in standalone archive"
+         end if
+      end repeat
       
       -- Close zip file
       revZipCloseArchive tBuildZip
@@ -132,7 +153,7 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder
       put tBuildFolder & slash & tName & ".html" into tHtmlFile
       logDebug "html", "Creating" && tHtmlFile
       logDebug "html", "Copying" && getHtmlTemplateFile()
-      revSBCopyFileToFile mapPath(getHtmlTemplateFile()), tHtmlFile, \
+      revSBCopyFileToFile mapBinPath(getHtmlTemplateFile()), tHtmlFile, \
             "revStandaloneProgressCallback", the long id of me
       
    catch tError
@@ -161,9 +182,9 @@ end revSaveAsEmscriptenStandalone
 -- File & path helper functions
 ----------------------------------------------------------------
 
--- Map a file path into an absolute filesystem path.  This is used to
--- cope with running from a git repository working tree.
-private function mapPath pPath
+-- Map a compiled file's path into an absolute filesystem path.  This
+-- is used to cope with running from a git repository working tree.
+private function mapBinPath pPath
    if there is a file pPath then
       return pPath
    end if
@@ -175,7 +196,21 @@ private function mapPath pPath
       -- We're running from a git checkout
       return getRepoBinariesFolder() & slash & pPath
    end if
-end mapPath
+end mapBinPath
+
+-- Map a resource file's path into an absolute filesystem path.  This
+-- is used to cope with running from a git repository working tree.
+private function mapResPath pPath
+   if there is a file pPath then
+      return pPath
+   end if
+
+   if revEnvironmentIsInstalled() then
+      return getRuntimeFolder() & slash & pPath
+   else
+      return getRepoResourceFolder() & slash & pPath
+   end if
+end mapResPath
 
 -- Return a number-indexed array of engine files that need to be
 -- copied into the standalone output folder.
@@ -183,10 +218,10 @@ private function getEngineFiles
    local tFiles
    
    -- Engine JavaScript
-   put mapPath("standalone-" & revLicenseType() & "-" & the version & ".js") into tFiles[1]
+   put mapBinPath("standalone-" & revLicenseType() & "-" & the version & ".js") into tFiles[1]
    
    -- Memory initialisation file
-   put mapPath("standalone-" & revLicenseType() & "-" & the version & ".html.mem") into tFiles[2]
+   put mapBinPath("standalone-" & revLicenseType() & "-" & the version & ".html.mem") into tFiles[2]
    
    return tFiles
 end getEngineFiles
@@ -196,7 +231,7 @@ end getEngineFiles
 -- initialisation data that's automatically included in all
 -- standalones (especially fonts).
 private function getStandaloneTemplateFolder
-   return mapPath("emscripten-standalone-template")
+   return mapResPath("emscripten-standalone-template")
 end getStandaloneTemplateFolder
 
 -- Return a number-indexed array of files in the Emscripten standalone
@@ -230,6 +265,11 @@ private command getStandaloneTemplateFiles_Impl @xCount, @xFiles, pRelPath
    
    -- List files
    repeat for each line tFile in the files
+      -- Skip dotfiles
+      if tFile begins with "." then
+         next repeat
+      end if
+
       add 1 to xCount
       put pRelPath & slash & tFile into tFilePath
       put tFilePath into xFiles[xCount]
@@ -256,7 +296,7 @@ end getStandaloneTemplateFiles_Impl
 -- This has some standalone-dependent JavaScript substituted into it
 -- to instantiate the engine.
 private function getHtmlTemplateFile
-   return mapPath("standalone-" & revLicenseType() & "-" & the version & ".html")
+   return mapBinPath("standalone-" & revLicenseType() & "-" & the version & ".html")
 end getHtmlTemplateFile
 
 -- Get the directory containing the Emscripten runtime
@@ -264,7 +304,7 @@ private function getRuntimeFolder
    
    local tRelFolder, tOverridePath, tUserPath
    
-   put slash & "Emscripten" into tRelFolder
+   put slash & "Emscripten" & slash & "js" into tRelFolder
    
    put revOverrideRuntimePath() into tOverridePath
    if tOverridePath is not empty then
@@ -291,9 +331,7 @@ private function getRepoBinariesFolder
 	return revEnvironmentRepositoryPath() & slash & "emscripten-bin"
 end getRepoBinariesFolder
 
----------------------------------------
--- FIXME REMOVE THESE
-
-function revEmscriptenGetRepoBinariesFolder
-   return getRepoBinariesFolder()
-end revEmscriptenGetRepoBinariesFolder
+-- Get the directory where Emscripten resources are kept
+private function getRepoResourceFolder
+   return revEnvironmentRepositoryPath() & slash & "engine" & slash & "rsrc"
+end getRepoResourceFolder

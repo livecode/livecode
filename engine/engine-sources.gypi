@@ -729,6 +729,7 @@
 			'src/em-dc-mainloop.cpp',
 			'src/em-dc.h',
 			'src/em-dc.cpp',
+			'src/em-dialog.js',
 			'src/em-event.h',
 			'src/em-event.cpp',
 			'src/em-event.js',
