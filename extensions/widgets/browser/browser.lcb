@@ -300,9 +300,6 @@ variable mContentSource as String
 
 --
 
-variable mRequestHandler
-variable mJavaScriptHandler
-
 variable mScriptObject as ScriptObject
 
 --------------------------------------------------------------------------------
@@ -350,9 +347,6 @@ end handler
 -- called when the widget is created
 public handler OnCreate()
 	OnModuleLoad()
-	
-	put OnBrowserRequestCallback into mRequestHandler
-	put OnJavaScriptCallback into mJavaScriptHandler
 
 	put the empty string into mBrowserType
 	put the empty array into mProperties
@@ -385,20 +379,9 @@ public handler OnOpen()
 	//set my native layer to tBrowserView
 	MCWidgetSetMyNativeLayer(tBrowserView)
 	
-	variable tRequestCallback as Pointer
-	variable tJavaScriptCallback as Pointer
-	
-	if not MCHandlerGetFunctionPtr(mRequestHandler, tRequestCallback) then
-		throw "error getting request handler function pointer"
-	end if
-	
-	if not MCHandlerGetFunctionPtr(mJavaScriptHandler, tJavaScriptCallback) then
-		throw "error getting javascript handler function pointer"
-	end if
+	MCBrowserSetRequestHandler(mBrowser, OnBrowserRequestCallback, nothing)
+	MCBrowserSetJavaScriptHandler(mBrowser, OnJavaScriptCallback, nothing)
 
-	MCBrowserSetRequestHandler(mBrowser, tRequestCallback, nothing)
-	MCBrowserSetJavaScriptHandler(mBrowser, tJavaScriptCallback, nothing)
-	
 	// Keep a reference to this widget's script object so we can post to it from
 	//   the callbacks (which don't have a target widget when called).
 	put my script object into mScriptObject
@@ -430,6 +413,8 @@ private handler capitalize(in pString as String) returns String
 	return pString
 end handler
 
+/* WORKAROUND - Need to retain foreign types in handler as conversion to those in the foreign handler type signature not yet implemented */
+//private handler OnBrowserRequestCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pType as MCBrowserRequestType, in pState as MCBrowserRequestState, in pFrame as Boolean, in pUrl as String, in pError as optional String) returns nothing
 private handler OnBrowserRequestCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pType as MCBrowserRequestType, in pState as MCBrowserRequestState, in pFrame as CBool, in pUrl as ZStringUTF8, in pError as optional ZStringUTF8) returns nothing
 	variable tType as String
 	put element (pType + 1) of kMCBrowserRequestTypeMap into tType
@@ -459,7 +444,9 @@ private handler OnBrowserRequestCallback(in pContext as optional Pointer, in pBr
 	post tMessage to mScriptObject with tArgs
 end handler
 
-private handler OnJavaScriptCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pHandler as ZStringUTF8, in pParams as MCBrowserListRef)
+/* WORKAROUND - Need to retain foreign types in handler as conversion to those in the foreign handler type signature is not yet implemented */
+//private handler OnJavaScriptCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pHandler as String, in pParams as MCBrowserListRef) returns nothing
+private handler OnJavaScriptCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pHandler as ZStringUTF8, in pParams as MCBrowserListRef) returns nothing
 	variable tList
 	if not browserListToLCBList(pParams, tList) then
 		throw "error converting javascript callback parameters"

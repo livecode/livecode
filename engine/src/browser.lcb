@@ -89,8 +89,11 @@ public foreign handler MCBrowserListGetDouble(in pList as MCBrowserListRef, in p
 public foreign handler MCBrowserListGetUTF8String(in pList as MCBrowserListRef, in pIndex as UInt32, out rValue as ZStringUTF8) returns CBool binds to "<builtin>"
 public foreign handler MCBrowserListGetList(in pList as MCBrowserListRef, in pIndex as UInt32, out rValue as MCBrowserListRef) returns CBool binds to "<builtin>"
 
-public foreign handler MCBrowserSetRequestHandler(in pBrowser as MCBrowserRef, in pCallback as Pointer, in pContext as optional Pointer) returns CBool binds to "<builtin>"
-public foreign handler MCBrowserSetJavaScriptHandler(in pBrowser as MCBrowserRef, in pCallback as Pointer, in pContext as optional Pointer) returns CBool binds to "<builtin>"
+public foreign handler type MCBrowserRequestCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pType as MCBrowserRequestType, in pState as MCBrowserRequestState, in pFrame as CBool, in pUrl as ZStringUTF8, in pError as optional ZStringUTF8) returns nothing
+public foreign handler type MCBrowserJavaScriptCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pHandler as ZStringUTF8, in pParams as MCBrowserListRef) returns nothing
+
+public foreign handler MCBrowserSetRequestHandler(in pBrowser as MCBrowserRef, in pCallback as MCBrowserRequestCallback, in pContext as optional Pointer) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserSetJavaScriptHandler(in pBrowser as MCBrowserRef, in pCallback as MCBrowserJavaScriptCallback, in pContext as optional Pointer) returns CBool binds to "<builtin>"
 
 --------------------------------------------------------------------------------
 
