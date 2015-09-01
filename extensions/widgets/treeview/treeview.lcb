@@ -150,6 +150,51 @@ References: arrayData (property)
 
 property arrayStyle                 get mArrayStyle                 set setArrayStyle
 
+/*
+Syntax: set the sortOrder of <widget> to <pOrder>
+Syntax: get the sortOrder of <widget>
+
+Summary: Manipulates the order in which elements of the tree view are displayed, with respect to the current <sortType>.
+
+Parameters:
+pOrder (enum): The order in which to display elements of the tree view.
+-"ascending": Display from first to last in the order. This is the default
+-"descending": Display from last to first in the order.
+
+Description:
+Use the <sortOrder> property to display the elements of the tree view in ascending or descending order of the
+keys of its <arrayData>, given the current <sortType>.
+
+References: arrayData (property), sortType (property)
+*/
+
+property sortOrder                 get getSortOrder                 set setSortOrder
+
+metadata sortOrder.editor is "com.livecode.pi.enum"
+metadata sortOrder.options is "ascending,descending"
+
+/*
+Syntax: set the sortType of <widget> to <pType>
+Syntax: get the sortType of <widget>
+
+Summary: Manipulates the type of ordering in which elements of the tree view are displayed.
+
+Parameters:
+pType (enum): The type of ordering to use in displaying elements of the tree view.
+-"text": Display in alphabetical order of the keys
+-"numeric": Display in numeric order of the keys. This is the default
+
+Description:
+Use the <sortType> property to use text or numeric comparison when ordering the keys of the <arrayData>
+of the tree view widget.
+
+References: sortOrder (property)
+*/
+
+property sortType                 get getSortType                 set setSortType
+
+metadata sortType.editor is "com.livecode.pi.enum"
+metadata sortType.options is "text,numeric"
 
 // The unmodified array data
 private variable mData as Array
@@ -198,6 +243,9 @@ private variable mIconWidth as Real
 private variable mReadOnly as Boolean
 private variable mArrayStyle as Boolean
 
+private variable mSortAscending as Boolean
+private variable mSortNumeric as Boolean
+
 constant kMaxKeyDisplayChars is 50
 constant kMaxValueDisplayChars is 200
 
@@ -242,6 +290,10 @@ public handler OnCreate() returns nothing
 	
 	put false into mReadOnly
     put false into mArrayStyle
+
+    put true into mSortNumeric
+    put true into mSortAscending
+
 	put true into mRecalculate
 	
 	put the empty array into mFoldState
@@ -258,6 +310,8 @@ public handler OnSave(out rProperties as Array)
 	put mSelectedRowColor into rProperties["selected row color"]
 	put mReadOnly into rProperties["read only"]
     put mArrayStyle into rProperties["array style"]
+    put mSortAscending into rProperties["sort ascending"]
+    put mSortNumeric into rProperties["sort numeric"]
 	return rProperties
 end handler
 
@@ -267,6 +321,14 @@ public handler OnLoad(in pProperties as Array)
 	put pProperties["read only"] into mReadOnly
 
     if ["array style"] is in the keys of pProperties then
+        put pProperties["array style"] into mArrayStyle
+    end if
+
+    if ["sort ascending"] is in the keys of pProperties then
+        put pProperties["array style"] into mArrayStyle
+    end if
+
+    if ["sort numeric"] is in the keys of pProperties then
         put pProperties["array style"] into mArrayStyle
     end if
 end handler
@@ -889,6 +951,50 @@ private handler getArrayData() returns Array
 	return mData
 end handler
 
+-- Sorts numerically, converting strings to numbers where possible
+private handler CompareKeysNumeric(in pLeft as any, in pRight as any) as Integer
+	variable tLeft as optional Number
+	variable tRight as optional Number
+	
+	if pLeft is a number then
+		put pLeft into tLeft
+	else
+		put pLeft parsed as number into tLeft
+	end if
+	
+	if pRight is a number then
+		put pRight into tRight
+	else
+		put pRight parsed as number into tRight
+	end if
+
+	if tRight is tLeft then
+		return 0
+	end if
+		
+	if tRight is nothing then
+		return -1
+	end if
+	
+	if tLeft is nothing then
+		return 1
+	end if
+	
+	if tLeft < tRight then
+		if mSortAscending then
+			return -1
+		else
+			return 1
+		end if
+	end if
+	
+	if mSortAscending then
+		return 1
+	else
+		return -1
+	end if
+end handler
+
 // Convert an array to a list, as used by this widget. Ignoring the 'folded' ans selected
 //  parameters, mDataList should always be the result of calling this on mData
 private handler convertArrayToList(in pArray as Array, in pLevel as Integer, in pPath as List) returns List
@@ -902,7 +1008,16 @@ private handler convertArrayToList(in pArray as Array, in pLevel as Integer, in 
 	
 	variable tKeys as List
 	put the keys of pArray into tKeys
-	sort tKeys in ascending order
+	
+	if mSortNumeric then
+		sort tKeys using handler CompareKeysNumeric
+	else
+		if mSortAscending then
+			sort tKeys in ascending order
+		else
+			sort tKeys in descending order
+		end if
+	end if
 	
 	variable tKey as String
 	variable tElement as Array
@@ -1350,6 +1465,62 @@ private handler setArrayStyle(in pArrayStyle as Boolean)
         put true into mRecalculate
         redraw all
     end if
+end handler
+
+constant kSortTypeNumeric is "numeric"
+constant kSortTypeText is "text"
+
+private handler getSortType() returns String
+    if mSortNumeric then
+        return kSortTypeNumeric
+    else
+        return kSortTypeText
+    end if
+end handler
+
+private handler setSortType(in pType as String) returns nothing
+    variable tSortNumeric as Boolean
+    if pType is kSortTypeText then
+        put false into tSortNumeric
+    else if pType is kSortTypeNumeric then
+        put true into tSortNumeric
+    else
+        throw "invalid sort type"
+    end if
+
+    if tSortNumeric is not mSortNumeric then
+        put tSortNumeric into mSortNumeric
+        setArrayData(mData)
+    end if  
+
+end handler
+
+constant kSortOrderAscending is "ascending"
+constant kSortOrderDescending is "descending"
+
+private handler getSortOrder() returns String
+    if mSortAscending then
+        return kSortOrderAscending
+    else
+        return kSortOrderDescending
+    end if
+end handler
+
+private handler setSortOrder(in pType as String) returns nothing
+    variable tSortAscending as Boolean
+    if pType is kSortOrderDescending then
+        put false into tSortAscending
+    else if pType is kSortOrderAscending then
+        put true into tSortAscending
+    else
+        throw "invalid sort order"
+    end if
+
+    if tSortAscending is not mSortAscending then
+        put tSortAscending into mSortAscending
+        setArrayData(mData)
+    end if  
+
 end handler
 
 --------------------------------------------------------------------------------
