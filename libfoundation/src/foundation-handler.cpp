@@ -145,7 +145,7 @@ static void __exec_closure(ffi_cif *cif, void *ret, void **args, void *user_data
         if (t_mode != kMCHandlerTypeFieldModeIn)
         {
             MCErrorThrowUnimplemented(MCSTR("closures only support in arguments"));
-            goto error_exit;
+            goto cleanup;
         }
         
         // Make sure we can resolve the parameter type.
@@ -153,7 +153,7 @@ static void __exec_closure(ffi_cif *cif, void *ret, void **args, void *user_data
         if (!MCTypeInfoResolve(t_type, t_resolved_type))
         {
             MCErrorThrowUnboundType(t_type);
-            goto error_exit;
+            goto cleanup;
         }
         
         // If the parameter type is foreign then we must attempt to bridge it
@@ -170,24 +170,24 @@ static void __exec_closure(ffi_cif *cif, void *ret, void **args, void *user_data
                 if (t_descriptor -> bridgetype != kMCNullTypeInfo)
                 {
                     if (!t_descriptor -> doimport(args[t_arg_index], false, t_value_args[t_arg_index]))
-                        goto error_exit;
+                        goto cleanup;
                 }
                 else
                 {
-                    if (!MCForeignValueCreateAndRelease(t_resolved_type . named_type, args[t_arg_index], (MCForeignValueRef&)t_value_args[t_arg_index]))
-                        goto error_exit;
+                    if (!MCForeignValueCreate(t_resolved_type . named_type, args[t_arg_index], (MCForeignValueRef&)t_value_args[t_arg_index]))
+                        goto cleanup;
                 }
             }
         }
         else
         {
-            t_value_args[t_arg_index] = MCValueRetain((MCValueRef)args[t_arg_index]);
+            t_value_args[t_arg_index] = MCValueRetain(*(MCValueRef*)args[t_arg_index]);
         }
     }
     
     // Actually call the LCB handler.
     if (!MCHandlerInvoke(t_handler, t_value_args, t_arity, t_value_result))
-        goto error_exit;
+        goto cleanup;
     
     // If the return type is not 'void' then we must map the value back
     // appropriately.
@@ -197,8 +197,8 @@ static void __exec_closure(ffi_cif *cif, void *ret, void **args, void *user_data
         {
             const MCForeignTypeDescriptor *t_descriptor;
             t_descriptor = MCForeignTypeInfoGetDescriptor(t_resolved_return_type . type);
-            if (!t_descriptor -> doexport(t_value_result, true, ret))
-                goto error_exit;
+            if (!t_descriptor -> doexport(t_value_result, false, ret))
+                goto cleanup;
         }
         else
         {
@@ -207,13 +207,14 @@ static void __exec_closure(ffi_cif *cif, void *ret, void **args, void *user_data
         }
     }
     
-error_exit:
+cleanup:
     if (t_value_result != nil)
         MCValueRelease(t_value_result);
     for(uindex_t i = 0; i < t_arg_index; i++)
         MCValueRelease(t_value_args[i]);
 }
 
+MC_DLLEXPORT_DEF
 bool MCHandlerGetFunctionPtr(MCHandlerRef self, void*& r_function_ptr)
 {
     if (self -> function_ptr != nil)
