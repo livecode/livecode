@@ -182,7 +182,7 @@ void MCNativeLayerMac::OnGeometryChanged(const MCRectangle& p_old_rect)
     MCRectangle t_rect, t_cardrect;
     t_rect = t_widget->getrect();
     t_cardrect = t_widget->getcard()->getrect();
-    t_nsrect = NSMakeRect(t_rect.x, t_cardrect.height-t_rect.y-t_rect.height-1, t_rect.width, t_rect.height);
+    t_nsrect = NSMakeRect(t_rect.x, t_cardrect.height-t_rect.y-t_rect.height, t_rect.width, t_rect.height);
     [m_view setFrame:t_nsrect];
     [m_view setNeedsDisplay:YES];
     [m_cached release];
