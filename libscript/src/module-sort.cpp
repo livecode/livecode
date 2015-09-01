@@ -213,6 +213,41 @@ void MCSortExecSortListDescendingDateTime(MCProperListRef& x_target)
 
 ////////////////////////////////////////////////////////////////
 
+static compare_t MCSortCompareUsingHandler(void *context, MCValueRef p_left, MCValueRef p_right)
+{
+    MCHandlerRef t_handler;
+    t_handler = *(MCHandlerRef *)context;
+    
+    MCAutoValueRefArray t_values;
+    t_values.Push(p_left);
+    t_values.Push(p_right);
+    
+    MCAutoValueRef t_result;
+    MCHandlerInvoke(t_handler, t_values . Ptr(), t_values . Size(), &t_result);
+    
+    if (*t_result != nil && MCValueGetTypeCode(*t_result) == kMCValueTypeCodeNumber)
+        return MCNumberFetchAsInteger((MCNumberRef)*t_result);
+    
+    return 0;
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCSortExecSortListUsingHandler(MCProperListRef& x_target, MCHandlerRef p_handler)
+{
+    MCAutoProperListRef t_mutable_list;
+    if (!MCProperListMutableCopy(x_target, &t_mutable_list))
+        return;
+    
+    MCProperListStableSort(*t_mutable_list, false, MCSortCompareUsingHandler, &p_handler);
+    
+    MCAutoProperListRef t_sorted_list;
+    if (!MCProperListCopy(*t_mutable_list, &t_sorted_list))
+        return;
+    
+    MCValueAssign(x_target, *t_sorted_list);
+}
+
+////////////////////////////////////////////////////////////////
+
 extern "C" bool com_livecode_sort_Initialize (void)
 {
 	return true;

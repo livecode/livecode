@@ -250,6 +250,7 @@
 							'DYLIB_COMPATIBILITY_VERSION': '',
 							'DYLIB_CURRENT_VERSION': '',
 							'MACH_O_TYPE': 'mh_object',
+							'LINK_WITH_STANDARD_LIBRARIES': 'NO',
 							'OTHER_LDFLAGS':
 							[
 								'-Wl,-sectcreate,__MISC,__deps,<(deps_file)',
@@ -418,9 +419,9 @@
 								'dist_aux_files':
 								[
 									'rsrc/emscripten-standalone-template/',
-									'<(PRODUCT_DIR)/standalone-community.js',
-									'<(PRODUCT_DIR)/standalone-community.html',
-									'<(PRODUCT_DIR)/standalone-community.html.mem',
+									'<(PRODUCT_DIR)/standalone-community-<(version_string).js',
+									'<(PRODUCT_DIR)/standalone-community-<(version_string).html',
+									'<(PRODUCT_DIR)/standalone-community-<(version_string).html.mem',
 								],
 							},
 						},
@@ -776,6 +777,11 @@
 							'standalone',
 						],
 
+						'variables':
+						{
+							'version_suffix': '<(version_string)',
+						},
+
 						'actions':
 						[
 							{
@@ -784,12 +790,13 @@
 
 								'inputs':
 								[
+									'emscripten-javascriptify.sh',
 									'<(PRODUCT_DIR)/standalone-community.bc',
-									'src/em-exported.json',
 									'src/em-whitelist.json',
 									'src/em-preamble.js',
 									'src/em-util.js',
 									'src/em-async.js',
+									'src/em-dialog.js',
 									'src/em-event.js',
 									'src/em-surface.js',
 									'src/em-url.js',
@@ -798,21 +805,21 @@
 
 								'outputs':
 								[
-									'<(PRODUCT_DIR)/standalone-community.js',
-									'<(PRODUCT_DIR)/standalone-community.html',
-									'<(PRODUCT_DIR)/standalone-community.html.mem',
+									'<(PRODUCT_DIR)/standalone-community-<(version_suffix).js',
+									'<(PRODUCT_DIR)/standalone-community-<(version_suffix).html',
+									'<(PRODUCT_DIR)/standalone-community-<(version_suffix).html.mem',
 								],
 
 								'action':
 								[
 									'./emscripten-javascriptify.sh',
 									'<(PRODUCT_DIR)/standalone-community.bc',
-									'<(PRODUCT_DIR)/standalone-community.html',
-									'src/em-exported.json',
+									'<(PRODUCT_DIR)/standalone-community-<(version_suffix).html',
 									'src/em-whitelist.json',
 									'src/em-preamble.js',
 									'src/em-util.js',
 									'src/em-async.js',
+									'src/em-dialog.js',
 									'src/em-event.js',
 									'src/em-surface.js',
 									'src/em-url.js',

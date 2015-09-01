@@ -16,7 +16,7 @@ Security: network
 
 Example:
 local tBrowserID
-put revOpenBrowserCef(the windowId of this stack, "http://www.runrev.com") into tBrowserID
+put revOpenBrowserCef(the windowId of this stack, "http://www.livecode.com") into tBrowserID
 revBrowserAddJavaScriptHander, tBrowserID, "myLiveCodeHandler"
 
 Parameters:

@@ -20,6 +20,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "em-dc-mainloop.h"
 
+#include <libscript/script.h>
+
 #include "globdefs.h"
 #include "parsedef.h"
 #include "scriptpt.h"
@@ -29,6 +31,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "dispatch.h"
 
 #include <unistd.h>
+
+/* Declarations that should probably be in a header */
+extern "C" bool MCModulesInitialize(void);
 
 /* ================================================================
  * Emscripten engine start-up
@@ -54,6 +59,14 @@ main(int argc, char *argv[])
 	if (!MCInitialize())
 	{
 		MCEmscriptenBootError("Core initialisation");
+	}
+	if (!MCScriptInitialize())
+	{
+		MCEmscriptenBootError("LCB VM initialisation");
+	}
+	if (!MCModulesInitialize())
+	{
+		MCEmscriptenBootError("LCB library initialisation");
 	}
 
 	/* ---------- Process command-line arguments.
