@@ -348,18 +348,12 @@ MCRunLoadModule (MCStringRef p_filename,
                  MCScriptModuleRef & r_module)
 {
 	MCAutoDataRef t_module_data;
-	MCAutoValueRefBase<MCStreamRef> t_stream;
 	MCAutoScriptModuleRef t_module;
 
 	if (!MCSFileGetContents (p_filename, &t_module_data))
 		return false;
 
-	if (!MCMemoryInputStreamCreate (MCDataGetBytePtr (*t_module_data),
-	                                MCDataGetLength (*t_module_data),
-	                                &t_stream))
-		return false;
-
-	if (!MCScriptCreateModuleFromStream (*t_stream, &t_module))
+	if (!MCScriptCreateModuleFromData (*t_module_data, &t_module))
 		return false;
 
 	r_module = MCScriptRetainModule (*t_module);
