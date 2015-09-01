@@ -109,6 +109,12 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType
    put tBody & notesFolderLCBToHTML(pVersion, tTags, tContents) into tBody
    put tBody & gPageBreak into tBody
    
+   put tBody & newSection("LiveCode Extension changes", 1, tContents) into tBody
+   
+   builderLog "message", "Adding entries for extension bugfixes and features"
+   put tBody & notesFolderExtensionsToHTML(pVersion, tTags, tContents) into tBody
+   put tBody & gPageBreak into tBody
+   
    builderLog "message", "Adding entries for dictionary and user guide changes"
    local tChangeList
    local tChangeStatusList
@@ -503,13 +509,31 @@ function notesFolderLCBToHTML pVersion, pTags, @xContents
    
    local tDataA
    repeat for each line tFile in tList
-      addLCBReleaseNoteData tFile, tDataA
+      addLCBReleaseNoteData tFile, "", tDataA
    end repeat
    
    local tConglomeratedMarkdown
    put noteDataLCBToMD(tDataA) into tConglomeratedMarkdown
    return markdownToHTML(tConglomeratedMarkdown, 2, 1, xContents, true)
 end notesFolderLCBToHTML
+
+function notesFolderExtensionsToHTML pVersion, pTags, @xContents
+   local tBody
+   local tNumTags
+   put relevantTags(pVersion, pTags) into pTags
+   put the number of lines in pTags into tNumTags
+   
+   local tFirstVersion, tCurVersion
+   put line 1 of pTags into tFirstVersion
+   put line -1 of pTags into tCurVersion
+   
+   local tDataA
+   addExtensionReleaseNoteData tFirstVersion, tCurVersion, tDataA
+   
+   local tConglomeratedMarkdown
+   put noteDataLCBToMD(tDataA) into tConglomeratedMarkdown
+   return markdownToHTML(tConglomeratedMarkdown, 2, 1, xContents, true)
+end notesFolderExtensionsToHTML
 
 function noteSubsectionDataToMD pLevel, pDataA
    local tHashes
@@ -585,11 +609,75 @@ on addDataToSection pLevel, @xData, @xSectionA
    end repeat
 end addDataToSection
 
-on addLCBReleaseNoteData pFile, @xDataA
+function fetchExtensionName pFolder
+   local tManifestContents, tId
+   put url ("file:" & pFolder & slash & "manifest.xml") into tManifestContents
+   put revXMLCreateTree(tManifestContents,true,true,false) into tId
+   
+   if tId begins with "xmlerr" then
+      return empty
+   end if
+   
+   local tTargetName
+   put textDecode(revXMLNodeContents(tId, "/package/title"), "utf-8") into tTargetName
+   if tTargetName begins with "xmlerr" then
+      return empty
+   end if
+   return tTargetName
+end fetchExtensionName
+
+on generateExtensionsDiff pFirstVersion, pCurrentVersion, pType, @xDataA
+   local tDefaultFolder
+   put the defaultFolder into tDefaultFolder
+   set the defaultFolder to builderRepoFolder() & slash & "extensions" & slash & pType
+   
+   local tExtensions
+   put the folders into tExtensions
+   filter tExtensions without ".."
+   
+   set the defaultFolder to tDefaultFolder
+   
+   local tExtensionFileList, tExtensionName
+   repeat for each line tExtension in tExtensions
+      put fetchNameOnlyDiff(pFirstVersion, pCurrentVersion, "extensions" & slash & pType & slash & tExtension & slash & "notes") into tExtensionFileList
+      if tExtensionFileList is not empty then
+         put fetchExtensionName(builderRepoFolder() & slash & "extensions" & slash & pType & slash & tExtension) into tExtensionName
+         if tExtensionName is empty then
+            put tExtension into tExtensionName
+         end if
+         put tExtensionFileList into xDataA[pType][tExtensionName]
+      end if
+   end repeat
+end generateExtensionsDiff
+
+on addExtensionReleaseNoteData pFirstVersion, pCurVersion, @xDataA
+   local tReleaseNoteDataA
+   generateExtensionsDiff pFirstVersion, pCurVersion, "libraries", tReleaseNoteDataA
+   generateExtensionsDiff pFirstVersion, pCurVersion, "widgets", tReleaseNoteDataA   
+   
+   local tExtensionDataA
+   repeat for each key tType in tReleaseNoteDataA
+      repeat for each key tName in tReleaseNoteDataA[tType]
+         put empty into tExtensionDataA
+         local tSectionName
+         if tType is "libraries" then
+            put tName && "Library" into tSectionName
+         else
+            put tName && "Widget" into tSectionName
+         end if
+         repeat for each line tFile in tReleaseNoteDataA[tType][tName]
+            addLCBReleaseNoteData tFile, tSectionName, xDataA 
+         end repeat
+      end repeat
+   end repeat
+   
+end addExtensionReleaseNoteData
+
+on addLCBReleaseNoteData pFile, pSectionName, @xDataA
    local tNoteData
    put url ("file:" & pFile) into tNoteData
    
-   local tCount, tSection
+   local tCount, tSection, tBugList
    
    repeat while tNoteData is not empty
       get line 1 of tNoteData
@@ -602,23 +690,34 @@ on addLCBReleaseNoteData pFile, @xDataA
       if tCount is 1 then
          # If this is not a bug number, then it is a section
          if lineIsBugInfo(it) then
-            if xDataA[tSection]["bugs"] is empty then
-               put word 2 to -1 of it into xDataA[tSection]["bugs"]
+            if tBugList is empty then
+               put word 2 to -1 of it into tBugList
             else
-               put return & word 2 to -1 of it after xDataA[tSection]["bugs"]
+               put return & word 2 to -1 of it after tBugList
             end if
             delete line 1 of tNoteData
          else
+            if tSection is not empty and pSectionName is empty then
+               put tBugList into xDataA[tSection]["bugs"]
+               put empty into tBugList
+            end if
             put word 2 to -1 of it into tSection
             delete line 1 of tNoteData
-            addDataToSection 1, tNoteData, xDataA[tSection]
+            if pSectionName is not empty then
+               addDataToSection 1, tNoteData, xDataA[pSectionName]["subsection"][tSection]
+            else
+               addDataToSection 1, tNoteData, xDataA[tSection]
+            end if
          end if
       else
          // throw error?
          delete line 1 of tNoteData
       end if
-      
    end repeat
+   
+   if pSectionName is not empty then
+      put tBugList into xDataA[pSectionName]["bugs"]
+   end if
 end addLCBReleaseNoteData
 
 function dictPath
