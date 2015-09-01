@@ -732,7 +732,7 @@ Boolean MCAudioClip::open_audio()
 		return x11audio -> init(NULL, nchannels, swidth);
 	return false ;
 }
-#elif defined _SERVER || defined(_MOBILE)
+#elif defined _SERVER || defined(_MOBILE) || defined(__EMSCRIPTEN__)
 Boolean MCAudioClip::open_audio()
 {
 	return False;
@@ -854,7 +854,7 @@ Boolean MCAudioClip::play()
 	}
 
 	return True;
-#elif defined(_SERVER) || defined(_MOBILE)
+#elif defined(_SERVER) || defined(_MOBILE) || defined(__EMSCRIPTEN__)
 	return True;
 #else
 #error "MCAudioClip::play() not supported for this platform"

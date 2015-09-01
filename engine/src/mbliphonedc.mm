@@ -657,6 +657,8 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
 
 Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 {
+    MCDeletedObjectsEnterWait(dispatch);
+    
 	real8 curtime = MCS_time();
 	
 	if (duration < 0.0)
@@ -676,8 +678,11 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		DoRunloopActions();
 		
 		// MW-2013-08-18: [[ XPlatNotify ]] Handle any pending notifications
-		if (MCNotifyDispatch(dispatch == True) && anyevent)
-			break;
+		if (MCNotifyDispatch(dispatch == True))
+        {
+            if (anyevent)
+                break;
+        }
 		
 		real8 eventtime = exittime;
 		if (handlepending(curtime, eventtime, dispatch))
@@ -719,6 +724,15 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		else if (!done && eventtime > curtime)
 			t_sleep = MCMin(eventtime - curtime, exittime - curtime);
 		
+        // MM-2015-08-11: [[ Bug 15700 ]] Poll the sockets. Code pulled over from OS X wait.
+        extern Boolean MCS_handle_sockets();
+        if (MCS_handle_sockets())
+        {
+            if (anyevent)
+                done = True;
+            t_sleep = 0.0;
+        }
+        
 		// Switch to the main fiber and wait for at most t_sleep seconds. This
 		// returns 'true' if the wait was broken rather than timed out.
 		if (MCIPhoneWait(t_sleep) && anyevent)
@@ -738,8 +752,10 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 	// MW-2012-09-19: [[ Bug 10218 ]] Make sure we update the screen in case
 	//   any engine event handling methods need us to.
 	MCRedrawUpdateScreen();
-
-	return abort;
+    
+    MCDeletedObjectsLeaveWait(dispatch);
+	
+    return abort;
 }
 
 // MW-2011-08-16: [[ Wait ]] Break the OS event loop, causing a switch back to

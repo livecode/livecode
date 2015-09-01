@@ -55,7 +55,7 @@ __MCMathPropagateNanBinary (double p_left, double p_right, double p_out)
 
 ////////////////////////////////////////////////////////////////
 
-extern "C" MC_DLLEXPORT void MCMathEvalRealToPowerOfReal(double p_left, double p_right, double& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalRealToPowerOfReal(double p_left, double p_right, double& r_output)
 {
     r_output = pow(p_left, p_right);
 
@@ -65,7 +65,7 @@ extern "C" MC_DLLEXPORT void MCMathEvalRealToPowerOfReal(double p_left, double p
     MCErrorCreateAndThrow (kMCMathDomainErrorTypeInfo, nil);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalNumberToPowerOfNumber(MCNumberRef p_left, MCNumberRef p_right, MCNumberRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalNumberToPowerOfNumber(MCNumberRef p_left, MCNumberRef p_right, MCNumberRef& r_output)
 {
     double t_left, t_right;
     t_left = MCNumberFetchAsReal(p_left);
@@ -78,7 +78,7 @@ extern "C" MC_DLLEXPORT void MCMathEvalNumberToPowerOfNumber(MCNumberRef p_left,
     MCNumberCreateWithReal(t_result, r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalBase10LogReal(double p_operand, double& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalBase10LogReal(double p_operand, double& r_output)
 {
     r_output = log10(p_operand);
 
@@ -88,7 +88,7 @@ extern "C" MC_DLLEXPORT void MCMathEvalBase10LogReal(double p_operand, double& r
     MCErrorCreateAndThrow (kMCMathDomainErrorTypeInfo, nil);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalBase10LogNumber(MCNumberRef p_operand, MCNumberRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalBase10LogNumber(MCNumberRef p_operand, MCNumberRef& r_output)
 {
     double t_operand;
     t_operand = MCNumberFetchAsReal(p_operand);
@@ -100,7 +100,7 @@ extern "C" MC_DLLEXPORT void MCMathEvalBase10LogNumber(MCNumberRef p_operand, MC
     MCNumberCreateWithReal(t_result, r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalNaturalLogReal(double p_operand, double& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalNaturalLogReal(double p_operand, double& r_output)
 {
     r_output = log(p_operand);
 
@@ -110,7 +110,7 @@ extern "C" MC_DLLEXPORT void MCMathEvalNaturalLogReal(double p_operand, double& 
     MCErrorCreateAndThrow (kMCMathDomainErrorTypeInfo, nil);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalNaturalLogNumber(MCNumberRef p_operand, MCNumberRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalNaturalLogNumber(MCNumberRef p_operand, MCNumberRef& r_output)
 {
     double t_operand;
     t_operand = MCNumberFetchAsReal(p_operand);
@@ -122,12 +122,12 @@ extern "C" MC_DLLEXPORT void MCMathEvalNaturalLogNumber(MCNumberRef p_operand, M
     MCNumberCreateWithReal(t_result, r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalExpReal(double p_operand, double& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalExpReal(double p_operand, double& r_output)
 {
     r_output = exp(p_operand);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalExpNumber(MCNumberRef p_operand, MCNumberRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalExpNumber(MCNumberRef p_operand, MCNumberRef& r_output)
 {
     double t_operand;
     t_operand = MCNumberFetchAsReal(p_operand);
@@ -139,12 +139,12 @@ extern "C" MC_DLLEXPORT void MCMathEvalExpNumber(MCNumberRef p_operand, MCNumber
     MCNumberCreateWithReal(t_result, r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalSinReal(double p_operand, double& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalSinReal(double p_operand, double& r_output)
 {
     r_output = sin(p_operand);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalSinNumber(MCNumberRef p_operand, MCNumberRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalSinNumber(MCNumberRef p_operand, MCNumberRef& r_output)
 {
     double t_operand;
     t_operand = MCNumberFetchAsReal(p_operand);
@@ -156,12 +156,12 @@ extern "C" MC_DLLEXPORT void MCMathEvalSinNumber(MCNumberRef p_operand, MCNumber
     MCNumberCreateWithReal(t_result, r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalCosReal(double p_operand, double& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalCosReal(double p_operand, double& r_output)
 {
     r_output = cos(p_operand);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalCosNumber(MCNumberRef p_operand, MCNumberRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalCosNumber(MCNumberRef p_operand, MCNumberRef& r_output)
 {
     double t_operand;
     t_operand = MCNumberFetchAsReal(p_operand);
@@ -173,12 +173,12 @@ extern "C" MC_DLLEXPORT void MCMathEvalCosNumber(MCNumberRef p_operand, MCNumber
     MCNumberCreateWithReal(t_result, r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalTanReal(double p_operand, double& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalTanReal(double p_operand, double& r_output)
 {
     r_output = tan(p_operand);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalTanNumber(MCNumberRef p_operand, MCNumberRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalTanNumber(MCNumberRef p_operand, MCNumberRef& r_output)
 {
     double t_operand;
     t_operand = MCNumberFetchAsReal(p_operand);
@@ -190,7 +190,7 @@ extern "C" MC_DLLEXPORT void MCMathEvalTanNumber(MCNumberRef p_operand, MCNumber
     MCNumberCreateWithReal(t_result, r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalAsinReal(double p_operand, double& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalAsinReal(double p_operand, double& r_output)
 {
     r_output = asin(p_operand);
 
@@ -200,7 +200,7 @@ extern "C" MC_DLLEXPORT void MCMathEvalAsinReal(double p_operand, double& r_outp
     MCErrorCreateAndThrow (kMCMathDomainErrorTypeInfo, nil);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalAsinNumber(MCNumberRef p_operand, MCNumberRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalAsinNumber(MCNumberRef p_operand, MCNumberRef& r_output)
 {
     double t_operand;
     t_operand = MCNumberFetchAsReal(p_operand);
@@ -212,7 +212,7 @@ extern "C" MC_DLLEXPORT void MCMathEvalAsinNumber(MCNumberRef p_operand, MCNumbe
     MCNumberCreateWithReal(t_result, r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalAcosReal(double p_operand, double& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalAcosReal(double p_operand, double& r_output)
 {
     r_output = acos(p_operand);
 
@@ -222,7 +222,7 @@ extern "C" MC_DLLEXPORT void MCMathEvalAcosReal(double p_operand, double& r_outp
     MCErrorCreateAndThrow (kMCMathDomainErrorTypeInfo, nil);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalAcosNumber(MCNumberRef p_operand, MCNumberRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalAcosNumber(MCNumberRef p_operand, MCNumberRef& r_output)
 {
     double t_operand;
     t_operand = MCNumberFetchAsReal(p_operand);
@@ -234,12 +234,12 @@ extern "C" MC_DLLEXPORT void MCMathEvalAcosNumber(MCNumberRef p_operand, MCNumbe
     MCNumberCreateWithReal(t_result, r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalAtanReal(double p_operand, double& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalAtanReal(double p_operand, double& r_output)
 {
     r_output = atan(p_operand);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalAtanNumber(MCNumberRef p_operand, MCNumberRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalAtanNumber(MCNumberRef p_operand, MCNumberRef& r_output)
 {
     double t_operand;
     t_operand = MCNumberFetchAsReal(p_operand);
@@ -251,12 +251,12 @@ extern "C" MC_DLLEXPORT void MCMathEvalAtanNumber(MCNumberRef p_operand, MCNumbe
     MCNumberCreateWithReal(t_result, r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalAtan2Real(double p_first, double p_second, double& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalAtan2Real(double p_first, double p_second, double& r_output)
 {
     r_output = atan2(p_first, p_second);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalAtan2Number(MCNumberRef p_first, MCNumberRef p_second, MCNumberRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalAtan2Number(MCNumberRef p_first, MCNumberRef p_second, MCNumberRef& r_output)
 {
     double t_first, t_second;
     t_first = MCNumberFetchAsReal(p_first);
@@ -269,17 +269,17 @@ extern "C" MC_DLLEXPORT void MCMathEvalAtan2Number(MCNumberRef p_first, MCNumber
     MCNumberCreateWithReal(t_result, r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalAbsInteger(integer_t p_operand, integer_t& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalAbsInteger(integer_t p_operand, integer_t& r_output)
 {
     r_output = MCAbs(p_operand);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalAbsReal(double p_operand, double& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalAbsReal(double p_operand, double& r_output)
 {
     r_output = MCAbs(p_operand);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalAbsNumber(MCNumberRef p_operand, MCNumberRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalAbsNumber(MCNumberRef p_operand, MCNumberRef& r_output)
 {
     if (MCNumberIsInteger(p_operand))
     {
@@ -294,17 +294,17 @@ extern "C" MC_DLLEXPORT void MCMathEvalAbsNumber(MCNumberRef p_operand, MCNumber
     MCNumberCreateWithReal(t_abs_real, r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalTruncInteger(integer_t p_operand, integer_t& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalTruncInteger(integer_t p_operand, integer_t& r_output)
 {
     r_output = p_operand;
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalTruncReal(double p_operand, double& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalTruncReal(double p_operand, double& r_output)
 {
     r_output = trunc(p_operand);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalTruncNumber(MCNumberRef p_operand, MCNumberRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalTruncNumber(MCNumberRef p_operand, MCNumberRef& r_output)
 {
     if (MCNumberIsInteger(p_operand))
     {
@@ -319,17 +319,17 @@ extern "C" MC_DLLEXPORT void MCMathEvalTruncNumber(MCNumberRef p_operand, MCNumb
     MCNumberCreateWithReal(t_abs_real, r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalMinInteger(integer_t p_left, integer_t p_right, integer_t& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalMinInteger(integer_t p_left, integer_t p_right, integer_t& r_output)
 {
     r_output = MCMin(p_left, p_right);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalMinReal(double p_left, double p_right, double& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalMinReal(double p_left, double p_right, double& r_output)
 {
     r_output = MCMin(p_left, p_right);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalMinNumber(MCNumberRef p_left, MCNumberRef p_right, MCNumberRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalMinNumber(MCNumberRef p_left, MCNumberRef p_right, MCNumberRef& r_output)
 {
     double t_left, t_right, t_result;
     t_left = MCNumberFetchAsReal(p_left);
@@ -365,27 +365,27 @@ static void MCMathEvalMinMaxList(MCProperListRef p_list, bool p_is_min, MCNumber
     MCNumberCreateWithReal(t_minmax, r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalMinList(MCProperListRef p_list, MCNumberRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalMinList(MCProperListRef p_list, MCNumberRef& r_output)
 {
     MCMathEvalMinMaxList(p_list, true, r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalMaxList(MCProperListRef p_list, MCNumberRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalMaxList(MCProperListRef p_list, MCNumberRef& r_output)
 {
     MCMathEvalMinMaxList(p_list, false, r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalMaxInteger(integer_t p_left, integer_t p_right, integer_t& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalMaxInteger(integer_t p_left, integer_t p_right, integer_t& r_output)
 {
     r_output = MCMax(p_left, p_right);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalMaxReal(double p_left, double p_right, double& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalMaxReal(double p_left, double p_right, double& r_output)
 {
     r_output = MCMax(p_left, p_right);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalMaxNumber(MCNumberRef p_left, MCNumberRef p_right, MCNumberRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalMaxNumber(MCNumberRef p_left, MCNumberRef p_right, MCNumberRef& r_output)
 {
     double t_left, t_right, t_result;
     t_left = MCNumberFetchAsReal(p_left);
@@ -396,14 +396,14 @@ extern "C" MC_DLLEXPORT void MCMathEvalMaxNumber(MCNumberRef p_left, MCNumberRef
     MCNumberCreateWithReal(t_result, r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalRandomReal(double& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalRandomReal(double& r_output)
 {
     r_output = MCSRandomReal();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-extern "C" MC_DLLEXPORT void MCMathEvalConvertToBase10(MCStringRef p_operand, integer_t p_source_base, integer_t& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalConvertToBase10(MCStringRef p_operand, integer_t p_source_base, integer_t& r_output)
 {
     if (p_source_base < 2 || p_source_base > 32)
         MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("source base must be between 2 and 32"), nil);
@@ -424,7 +424,7 @@ extern "C" MC_DLLEXPORT void MCMathEvalConvertToBase10(MCStringRef p_operand, in
 	}
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalConvertFromBase10(integer_t p_operand, integer_t p_dest_base, MCStringRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalConvertFromBase10(integer_t p_operand, integer_t p_dest_base, MCStringRef& r_output)
 {
     if (p_dest_base < 2 || p_dest_base > 32)
         MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("destination base must be between 2 and 32"), nil);
@@ -443,7 +443,7 @@ extern "C" MC_DLLEXPORT void MCMathEvalConvertFromBase10(integer_t p_operand, in
 //    ctxt . Throw();
 }
 
-extern "C" MC_DLLEXPORT void MCMathEvalConvertBase(MCStringRef p_operand, integer_t p_source_base, integer_t p_dest_base, MCStringRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalConvertBase(MCStringRef p_operand, integer_t p_source_base, integer_t p_dest_base, MCStringRef& r_output)
 {
     
     if (p_source_base < 2 || p_source_base > 32)
@@ -468,8 +468,7 @@ extern "C" MC_DLLEXPORT void MCMathEvalConvertBase(MCStringRef p_operand, intege
 
 ////////////////////////////////////////////////////////////////
 
-bool
-MCMathModuleInitialize (void)
+extern "C" bool com_livecode_math_Initialize (void)
 {
 	if (!MCNamedErrorTypeInfoCreate (MCNAME("com.livecode.math.DomainError"), MCNAME("math"), MCSTR("mathematical function domain error"), kMCMathDomainErrorTypeInfo))
 		return false;
@@ -477,8 +476,7 @@ MCMathModuleInitialize (void)
 	return true;
 }
 
-void
-MCMathModuleFinalize (void)
+extern "C" void com_livecode_math_Finalize (void)
 {
 	MCValueRelease (kMCMathDomainErrorTypeInfo);
 }

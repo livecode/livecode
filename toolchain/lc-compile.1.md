@@ -7,6 +7,8 @@ lc-compile(1) -- compile LiveCode Builder source code
 
 **lc-compile** [_OPTION_ ...] --outputc _OUTFILE_ [--] _LCBFILE_
 
+**lc-compile** [_OPTION_ ...] --deps [make|order|changed-order] [--] _LCBFILE_ ... _LCBFILE_...
+
 ## DESCRIPTION
 
 **lc-compile** compiles the named input _LCBFILE_ to bytecode, saving the
@@ -31,6 +33,18 @@ specified.
   Generate LiveCode bytecode as a static array embedded in C source code in
   _OUTFILE_, which should be the path to a `.c` file.  If _OUTFILE_ already
   exists, it will be overwritten.
+  
+* --deps [make]:
+  Generate lci file dependencies in make format for the input source files.
+
+* --deps order:
+  Output the input source files in dependency order, the one that needs to be
+  compiled first being first.
+
+* --deps changed-order:
+  Output the input source files in dependency order, the one that needs to be
+  compiled first being first. Any source files which don't need to be recompiled
+  (based on timestamp comparisons with the interface files) will be omitted.
 
 * --manifest _MANIFEST_:
   Generate a module manifest in _MANIFEST_.  This is used by the LiveCode IDE.

@@ -46,6 +46,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 #include "system.h"
 #include "dispatch.h"
+#include "scriptpt.h"
 
 #if defined(_MACOSX)
 #include <mach-o/dyld.h>
@@ -1572,8 +1573,11 @@ Boolean MCU_parsepoints(MCPoint *&points, uindex_t &noldpoints, MCStringRef data
 			MCU_realloc((char **)&points, npoints, npoints + 1, sizeof(MCPoint));
 		points[npoints].x = i1;
 		points[npoints++].y = i2;
-        if (l > 0 && (sptr - *t_data) > 2 && *(sptr - 1) == '\n'
-		        && *(sptr - 2) == '\n')
+        // At this point we have skipped any CRs, so if the previous two chars
+        // are CR (and there is room for two previous CRs) then we append a
+        // 'non-point' to indicate a break in path. This ensures we preserve
+        // a trailing 'non-point'.
+		if (sptr - *t_data >= 2 && *(sptr - 1) == '\n' && *(sptr - 2) == '\n')
 		{
 			if (npoints + 1 > noldpoints)
 				MCU_realloc((char **)&points, npoints, npoints + 1, sizeof(MCPoint));
@@ -2014,6 +2018,12 @@ void MCU_getshift(uint4 mask, uint2 &shift, uint2 &outmask)
 	outmask = j;
 }
 
+static bool _MCStackNotifyToolChange(MCStack *p_stack, void *p_context)
+{
+    p_stack -> notifyattachments(kMCStackAttachmentEventToolChanged);
+    return true;
+}
+
 void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
 {
 	Tool t_new_tool;
@@ -2084,6 +2094,8 @@ void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
     // MW-2014-04-24: [[ Bug 12249 ]] Prod each player to make sure its buffered correctly for the new tool.
     for(MCPlayer *t_player = MCplayers; t_player != NULL; t_player = t_player -> getnextplayer())
         t_player -> syncbuffering(nil);
+    
+    MCdispatcher -> foreachstack(_MCStackNotifyToolChange, nil);
     
 	ctxt . GetObject()->message_with_valueref_args(MCM_new_tool, *t_tool_name);
 }
@@ -2333,14 +2345,30 @@ void MCU_fix_path(MCStringRef in, MCStringRef& r_out)
 				{ //search backword for '/'
 					if (*bptr == '/')
 					{
-						/* Delete "/xxx/.." component */
-						t_length -= strmove(bptr, fptr + 3, true);
-						fptr = bptr;
+                        // Leave "/../.." unchanged
+                        if (fptr-bptr == 3 && bptr[1] == '.' && bptr[2] == '.')
+                        {
+                            // Ignore this "/../" sequence and move to next component
+                            fptr += 3;
+                            break;
+                        }
+                        
+                        /* Delete "/xxx/.." component */
+                        t_length -= strmove(bptr, fptr + 3, true);
+                        fptr = bptr;
 						break;
 					}
 					else if (bptr == t_unicode_str)
 					{
-						/* Delete "xxx/../" component */
+                        // Leave "../../" unchanged
+                        if (fptr-bptr == 2 && bptr[0] == '.' && bptr[1] == '.')
+                        {
+                            // Ignore this "/../" sequence and move to next component
+                            fptr += 3;
+                            break;
+                        }
+                        
+                        /* Delete "xxx/../" component */
 						t_length -= strmove (bptr, fptr + 4, true);
 						fptr = bptr;
 						break;
@@ -3335,6 +3363,39 @@ void *MCU_resolvemodulesymbol(void* p_module, const char *p_symbol)
         return nil;
 
     return MCS_resolvemodulesymbol((MCSysModuleHandle)p_module, *t_symbol_str);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+bool
+MCU_is_token(MCStringRef p_string)
+{
+	MCScriptPoint sp(p_string);
+
+	++MCerrorlock;
+
+	Parse_stat ps = sp.nexttoken();
+
+	--MCerrorlock;
+
+	if (ps == PS_ERROR || ps == PS_EOF)
+	{
+		return false;
+	}
+
+	/* Check that token is located at start of query string */
+	if (sp.getindex() != 0)
+	{
+		return false;
+	}
+
+	/* Check that token spans full length of query string */
+	if (MCStringGetLength(p_string) != MCStringGetLength(sp.gettoken_stringref()))
+	{
+		return false;
+	}
+
+	return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

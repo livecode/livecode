@@ -31,13 +31,56 @@
     (|
         ErrorsDidOccur()
     ||
-        (|
-            IsBootstrapCompile()
-            BootstrapCompile(Modules)
-        ||
-            Compile(Modules)
-        |)
+        IsDependencyCompile()
+        
+        DependStart()
+
+        -- First generate the mapping between module name and source-file(s)
+        Depend_GenerateMapping(Modules)
+        
+        -- Now generate the direct dependencies for each module
+        Depend_GenerateDependencies(Modules)
+        
+        DependFinish()
+    ||
+        Compile(Modules)
     |)
+
+---------
+
+'action' Depend_GenerateMapping(MODULELIST)
+
+    'rule' Depend_GenerateMapping(modulelist(module(Position, Kind, Name, _), Rest)):
+        Name'Name -> ModuleName
+        GetFilenameOfPosition(Position -> Filename)
+        DependDefineMapping(ModuleName, Filename)
+        Depend_GenerateMapping(Rest)
+        
+    'rule' Depend_GenerateMapping(nil):
+        -- do nothing
+        
+'action' Depend_GenerateDependencies(MODULELIST)
+
+    'rule' Depend_GenerateDependencies(modulelist(module(_, _, Name, Definitions), Rest)):
+        Name'Name -> ModuleName
+        Depend_GenerateDependenciesForModule(ModuleName, Definitions)
+        Depend_GenerateDependencies(Rest)
+
+    'rule' Depend_GenerateDependencies(nil):
+        -- do nothing
+
+'action' Depend_GenerateDependenciesForModule(NAME, DEFINITION)
+
+    'rule' Depend_GenerateDependenciesForModule(ModuleName, sequence(Left, Right)):
+        Depend_GenerateDependenciesForModule(ModuleName, Left)
+        Depend_GenerateDependenciesForModule(ModuleName, Right)
+
+    'rule' Depend_GenerateDependenciesForModule(ModuleName, import(_, Name)):
+        Name'Name -> DependencyName
+        DependDefineDependency(ModuleName, DependencyName)
+
+    'rule' Depend_GenerateDependenciesForModule(ModuleName, _):
+        -- do nothing
 
 ---------
 
@@ -46,35 +89,32 @@
     'rule' Compile(Modules):
         InitializeBind
         BindModules(Modules, Modules)
-        CheckModules(Modules)
         (|
             ErrorsDidOccur()
         ||
-            where(Modules -> modulelist(Head, _))
-            Generate(Head)
-        |)
-
-'action' BootstrapCompile(MODULELIST)
-
-    'rule' BootstrapCompile(Modules):
-        BindModules(Modules, Modules)
-        CheckModules(Modules)
-        (|
-            ErrorsDidOccur()
-        ||
-            GenerateSyntaxForModules(Modules)
+            CheckModules(Modules)
             (|
                 ErrorsDidOccur()
             ||
-                GenerateSyntaxRules()
+                (|
+                    IsBootstrapCompile()
+                    GenerateSyntaxForModules(Modules)
+                    (|
+                        ErrorsDidOccur()
+                    ||
+                        GenerateSyntaxRules()
+                        GenerateModules(Modules)
+                    |)
+                ||
+                    where(Modules -> modulelist(Head, _))
+                    Generate(Head)
+                |)
             |)
         |)
 
 'action' BindModules(MODULELIST, MODULELIST)
 
     'rule' BindModules(modulelist(Head, Tail), Imports):
-        InitializeBind
-        
         (|
             Head'Kind -> import
         ||
@@ -136,36 +176,30 @@
 
 'nonterm' Module(-> MODULE)
 
-    'rule' Module(-> module(Position, module, Name, Imports, Definitions)):
+    'rule' Module(-> module(Position, module, Name, Definitions)):
         OptionalSeparator
         "module" @(-> Position) Identifier(-> Name) Separator
-        Imports(-> Imports)
         Definitions(-> Definitions)
         "end" "module" OptionalSeparator
         END_OF_UNIT
 
-    'rule' Module(-> module(Position, widget, Name, Imports, sequence(PreImportDefs, Definitions))):
+    'rule' Module(-> module(Position, widget, Name, Definitions)):
         OptionalSeparator
         "widget" @(-> Position) Identifier(-> Name) Separator
-        PreImportMetadata(-> PreImportDefs)
-        Imports(-> Imports)
         Definitions(-> Definitions)
         "end" "widget" OptionalSeparator
         END_OF_UNIT
 
-    'rule' Module(-> module(Position, library, Name, Imports, sequence(PreImportDefs, Definitions))):
+    'rule' Module(-> module(Position, library, Name, Definitions)):
         OptionalSeparator
         "library" @(-> Position) Identifier(-> Name) Separator
-        PreImportMetadata(-> PreImportDefs)
-        Imports(-> Imports)
         Definitions(-> Definitions)
         "end" "library" OptionalSeparator
         END_OF_UNIT
 
-    'rule' Module(-> module(Position, import, Name, Imports, Definitions)):
+    'rule' Module(-> module(Position, import, Name, Definitions)):
         OptionalSeparator
         "import" "module" @(-> Position) Identifier(-> Name) Separator
-        Imports(-> Imports)
         ImportDefinitions(-> Definitions)
         "end" "module" OptionalSeparator
         END_OF_UNIT
@@ -180,6 +214,9 @@
         -- done!
         
 'nonterm' ImportDefinition(-> DEFINITION)
+
+    'rule' ImportDefinition(-> Import):
+        Import(-> Import)
 
     'rule' ImportDefinition(-> type(Position, public, Id, foreign(Position, ""))):
         "foreign" @(-> Position) "type" Identifier(-> Id)
@@ -206,15 +243,6 @@
 -- Metadata Syntax
 --------------------------------------------------------------------------------
 
-'nonterm' PreImportMetadata(-> DEFINITION)
-
-    'rule' PreImportMetadata(-> sequence(Left, Right)):
-        Metadata(-> Left) Separator
-        PreImportMetadata(-> Right)
-
-    'rule' PreImportMetadata(-> nil):
-        -- do nothing
-
 'nonterm' Metadata(-> DEFINITION)
 
     'rule' Metadata(-> metadata(Position, Key, Value)):
@@ -224,30 +252,29 @@
 -- Import Syntax
 --------------------------------------------------------------------------------
 
-'nonterm' Imports(-> IMPORT)
-
-    'rule' Imports(-> sequence(Head, Tail)):
-        Import(-> Head) Separator
-        Imports(-> Tail)
-        
-    'rule' Imports(-> nil):
-        -- empty
-        
-'nonterm' Import(-> IMPORT)
-
+'nonterm' Import(-> DEFINITION)
     'rule' Import(-> ImportList):
         "use" @(-> Position) IdentifierList(-> Identifiers)
         ExpandImports(Position, Identifiers -> ImportList)
 
-'action' ExpandImports(POS, IDLIST -> IMPORT)
+'action' ExpandImports(POS, IDLIST -> DEFINITION)
 
     'rule' ExpandImports(Position, idlist(Id, nil) -> import(Position, Id)):
         Id'Name -> Name
         GetStringOfNameLiteral(Name -> NameString)
         (|
-            AddImportedModuleFile(NameString)
+            (|
+                -- In bootstrap mode, all modules have to be listed on command line.
+                IsBootstrapCompile()
+            ||
+                AddImportedModuleFile(NameString)
+            |)
         ||
-            Error_UnableToFindImportedModule(Position, Name)
+            (|
+                IsDependencyCompile()
+            ||
+                Error_UnableToFindImportedModule(Position, Name)
+            |)
         |)
 
     'rule' ExpandImports(Position, idlist(Id, Tail) -> sequence(import(Position, Id), ExpandedTail)):
@@ -270,6 +297,9 @@
 
     'rule' Definition(-> Metadata):
         Metadata(-> Metadata)
+
+    'rule' Definition(-> Import):
+        Import(-> Import)
         
     'rule' Definition(-> Constant):
         ConstantDefinition(-> Constant)
@@ -328,7 +358,7 @@
     'rule' OptionalTypeClause(-> Type):
         "as" Type(-> Type)
         
-    'rule' OptionalTypeClause(-> optional(Position, any(Position))):
+    'rule' OptionalTypeClause(-> unspecified):
         @(-> Position)
 
 ---------- Type
@@ -453,7 +483,7 @@
     'rule' OptionalReturnsClause(-> Type)
         "returns" @(-> Position) Type(-> Type)
 
-    'rule' OptionalReturnsClause(-> optional(Position, any(Position)))
+    'rule' OptionalReturnsClause(-> unspecified)
         @(-> Position)
 
 'nonterm' OptionalParameterList(-> PARAMETERLIST)
@@ -656,7 +686,7 @@
     'rule' OptionalElementType(-> Type)
         "of" Type(-> Type)
         
-    'rule' OptionalElementType(-> optional(Position, any(Position))):
+    'rule' OptionalElementType(-> unspecified):
         @(-> Position)
 
 --------------------------------------------------------------------------------
@@ -1205,13 +1235,39 @@
 'token' END_OF_UNIT
 'token' NEXT_UNIT
 
+'action' DefineCustomInvokeList(INT, INVOKELIST)
+'action' LookupCustomInvokeList(INT -> INVOKELIST)
+
+'action' CustomInvokeLists(INT -> INVOKELIST)
+    'rule' CustomInvokeLists(Index -> List):
+        LookupCustomInvokeList(Index -> List)
+
+'action' MakeCustomInvokeMethodArgs1(MODE, INT -> INVOKESIGNATURE)
+    'rule' MakeCustomInvokeMethodArgs1(Mode, Index -> invokesignature(Mode, Index, nil)):
+    
+'action' MakeCustomInvokeMethodArgs2(MODE, INT, MODE, INT -> INVOKESIGNATURE)
+    'rule' MakeCustomInvokeMethodArgs2(Mode1, Index1, Mode2, Index2 -> invokesignature(Mode1, Index1, invokesignature(Mode2, Index2, nil))):
+
+'action' MakeCustomInvokeMethodArgs3(MODE, INT, MODE, INT, MODE, INT, -> INVOKESIGNATURE)
+    'rule' MakeCustomInvokeMethodArgs3(Mode1, Index1, Mode2, Index2, Mode3, Index3 -> invokesignature(Mode1, Index1, invokesignature(Mode2, Index2, invokesignature(Mode3, Index3, nil)))):
+
+'action' MakeCustomInvokeMethodList(STRING, INVOKEMETHODTYPE, INVOKESIGNATURE, INVOKEMETHODLIST -> INVOKEMETHODLIST)
+    'rule' MakeCustomInvokeMethodList(Name, Type, Signature, Previous -> methodlist(Name, Type, Signature, Previous))
+
+'action' MakeCustomInvokeList(STRING, STRING, INVOKEMETHODLIST, INVOKELIST -> INVOKELIST)
+    'rule' MakeCustomInvokeList(Name, ModuleName, Methods, Previous -> List)
+        Info::INVOKEINFO
+        Info'Index <- -1
+        Info'ModuleIndex <- -1
+        Info'Name <- Name
+        Info'ModuleName <- ModuleName
+        Info'Methods <- Methods
+        where(invokelist(Info, Previous) -> List)
+
 --*--*--*--*--*--*--*--
 
 'action' InitializeCustomInvokeLists()
     'rule' InitializeCustomInvokeLists():
-        -- nothing
-'action' CustomInvokeLists(INT -> INVOKELIST)
-    'rule' CustomInvokeLists(_ -> nil):
         -- nothing
 'nonterm' CustomStatements(-> STATEMENT)
     'rule' CustomStatements(-> nil):

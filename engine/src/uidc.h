@@ -255,6 +255,17 @@ enum MCPlatformFeature
 
 class MCUIDC
 {
+public:
+    
+    typedef void (*modal_break_callback_fn)(void *);
+    struct modal_loop
+    {
+        modal_break_callback_fn break_function;
+        void* context;
+        modal_loop* chain;
+        bool broken;
+    };
+    
 protected:
 	MCMessageList *messages;
 	MCMovingList *moving;
@@ -278,6 +289,8 @@ protected:
 	uint2 bluebits;
 	const char *  m_sound_internal ;
 	
+    modal_loop* m_modal_loops;
+    
 	// IM-2014-01-24: [[ HiDPI ]] Cache displays array returned from platform-specific methods
 	static MCDisplay *s_displays;
 	static uint4 s_display_count;
@@ -461,6 +474,19 @@ public:
     virtual void addmessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params);
     virtual void delaymessage(MCObject *optr, MCNameRef name, MCStringRef p1 = nil, MCStringRef p2 = nil);
 	
+    // When called, all modal loops should be exited and control should return
+    // to the main event loop. The intended use of this method is to prevent UI
+    // lockups when a script error occurs during a modal loop (e.g during
+    // the drag-and-drop loop)
+    void breakModalLoops();
+    
+    // Indicates that a modal event loop is being entered. A callback function
+    // should be passed in order to allow the breaking of the loop.
+    void modalLoopStart(modal_loop& info);
+    
+    // Indicates that the innermost modal loop is being exited
+    void modalLoopEnd();
+    
 	// Wait for at most 'duration' seconds. If 'dispatch' is true then event
 	// dispatch will occur. If 'anyevent' is true then the call will return
 	// as soon as something notable happens. If an abort/quit occurs while the
@@ -619,11 +645,14 @@ public:
 	void addtimer(MCObject *optr, MCNameRef name, uint4 delay);
 	void cancelmessageindex(uint2 i, Boolean dodelete);
 	void cancelmessageid(uint4 id);
-	void cancelmessageobject(MCObject *optr, MCNameRef name);
+	void cancelmessageobject(MCObject *optr, MCNameRef name, MCValueRef param = nil);
     bool listmessages(MCExecContext& ctxt, MCListRef& r_list);
-    void doaddmessage(MCObject *optr, MCNameRef name, real8 time, uint4 id, MCParameter *params);
+    void doaddmessage(MCObject *optr, MCNameRef name, real8 time, uint4 id, MCParameter *params = nil);
     int doshiftmessage(int index, real8 newtime);
     
+    void addsubtimer(MCObject *target, MCValueRef subtarget, MCNameRef name, uint4 delay);
+    void cancelsubtimer(MCObject *target, MCNameRef name, MCValueRef subtarget);
+
     // MW-2014-05-28: [[ Bug 12463 ]] This is used by 'send in time' - separating user sent messages from
     //   engine sent messages. The former are subject to a limit to stop pending message queue overflow.
     bool addusermessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params);

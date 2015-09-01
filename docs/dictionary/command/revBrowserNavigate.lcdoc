@@ -23,7 +23,7 @@ revBrowserNavigate sBrowserId, "http://www.google.com"
 
 Parameters:
 instanceId: The instanceId  is an integer that identifies a browser control opened by the revBrowserOpen function.
-url: Any url that the browser supports. Eg "http://www.runrev.com", "https://secure.runrev.com/storefront.php".
+url: Any url that the browser supports. Eg "http://www.livecode.com", "https://livecode.com".
 
 The result: The <revBrowserNavigate> command places empty into the result.
 

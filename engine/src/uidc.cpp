@@ -16,6 +16,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
+#include "sysdefs.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -41,6 +42,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "redraw.h"
 #include "notify.h"
 #include "dispatch.h"
+#include "notify.h"
+#include "mode.h"
+#include "eventqueue.h"
 
 #include "graphicscontext.h"
 
@@ -201,6 +205,10 @@ MCMovingList::~MCMovingList()
 
 MCUIDC::MCUIDC()
 {
+#if defined(FEATURE_NOTIFY)
+	MCNotifyInitialize();
+#endif
+    
 	messageid = 0;
 	nmessages = maxmessages = 0;
 	messages = NULL;
@@ -247,6 +255,8 @@ MCUIDC::MCUIDC()
 
 	// IM-2014-03-06: [[ revBrowserCEF ]] List of callback functions to call during wait()
 	m_runloop_actions = nil;
+    
+    m_modal_loops = NULL;
 }
 
 MCUIDC::~MCUIDC()
@@ -254,6 +264,10 @@ MCUIDC::~MCUIDC()
 	while (nmessages != 0)
 		cancelmessageindex(0, True);
 	delete messages;
+
+#if defined(FEATURE_NOTIFY)
+	MCNotifyFinalize();
+#endif
 }
 
 
@@ -846,10 +860,14 @@ Boolean MCUIDC::getmouseclick(uint2 button, Boolean& r_abort)
 
 Boolean MCUIDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 {
+	MCwaitdepth++;
+    MCDeletedObjectsEnterWait(dispatch);
+    
 	real8 curtime = MCS_time();
 	if (duration < 0.0)
 		duration = 0.0;
 	real8 exittime = curtime + duration;
+    Boolean abort = False;
 	Boolean done = False;
 	Boolean donepending = False;
 	do
@@ -860,8 +878,18 @@ Boolean MCUIDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		real8 eventtime = exittime;
 		donepending = handlepending(curtime, eventtime, dispatch);
 		siguser();
+        
+		MCModeQueueEvents();
+
+#if defined(FEATURE_NOTIFY)
+		if ((MCNotifyDispatch(dispatch == True) || donepending) && anyevent)
+			break;
+#endif
+		if (abort)
+			break;
 		if (MCquit)
-			return True;
+            break;
+        
 		if (curtime < eventtime)
 		{
 			done = MCS_poll(donepending ? 0 : eventtime - curtime, 0);
@@ -869,12 +897,19 @@ Boolean MCUIDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		}
 	}
 	while (curtime < exittime  && !(anyevent && (done || donepending)));
-	return False;
+    
+    if (MCquit)
+        abort = True;
+    
+    MCDeletedObjectsLeaveWait(dispatch);
+    MCwaitdepth--;
+    
+	return abort;
 }
 
 void MCUIDC::pingwait(void)
 {
-#ifdef _DESKTOP
+#if defined(_DESKTOP) && defined(FEATURE_NOTIFY)
 	// MW-2013-06-14: [[ DesktopPingWait ]] Use the notify mechanism to wake up
 	//   any running wait.
 	MCNotifyPing(false);
@@ -1107,7 +1142,22 @@ void MCUIDC::addtimer(MCObject *optr, MCNameRef mptr, uint4 delay)
     // Remove existing message from the queue.
     cancelmessageobject(optr, mptr);
     
-    doaddmessage(optr, mptr, MCS_time() + delay / 1000.0, 0, NULL);
+    doaddmessage(optr, mptr, MCS_time() + delay / 1000.0, 0);
+}
+
+void MCUIDC::addsubtimer(MCObject *optr, MCValueRef suboptr, MCNameRef mptr, uint4 delay)
+{
+    cancelmessageobject(optr, mptr, suboptr);
+    
+    MCParameter *t_param;
+    t_param = new MCParameter;
+    t_param -> setvalueref_argument(suboptr);
+    doaddmessage(optr, mptr, MCS_time() + delay / 1000.0, 0, t_param);
+}
+
+void MCUIDC::cancelsubtimer(MCObject *optr, MCNameRef mptr, MCValueRef suboptr)
+{
+    cancelmessageobject(optr, mptr, suboptr);
 }
 
 void MCUIDC::cancelmessageindex(uint2 i, Boolean dodelete)
@@ -1139,12 +1189,14 @@ void MCUIDC::cancelmessageid(uint4 id)
 		}
 }
 
-void MCUIDC::cancelmessageobject(MCObject *optr, MCNameRef mptr)
+void MCUIDC::cancelmessageobject(MCObject *optr, MCNameRef mptr, MCValueRef subobject)
 {
     // MW-2014-05-14: [[ Bug 12294 ]] Cancel list in reverse order to minimize movement.
 	for (uindex_t i = nmessages ; i > 0 ; i--)
 		if (messages[i - 1].object == optr
-		        && (mptr == NULL || MCNameIsEqualTo(messages[i - 1].message, mptr, kMCCompareCaseless)))
+		        && (mptr == NULL || MCNameIsEqualTo(messages[i - 1].message, mptr, kMCCompareCaseless))
+                && (subobject == NULL || (messages[i - 1] . params != nil &&
+                                          messages[i - 1] . params -> getvalueref_argument() == subobject)))
 			cancelmessageindex(i - 1, True);
 }
 
@@ -1947,4 +1999,26 @@ bool MCUIDC::platform_get_display_handle(void *&r_display)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCUIDC::breakModalLoops()
+{
+    modal_loop* loop = m_modal_loops;
+    while (loop != NULL)
+    {
+        loop->break_function(loop->context);
+        loop->broken = true;
+        loop = loop->chain;
+    }
+}
+
+void MCUIDC::modalLoopStart(modal_loop& info)
+{
+    info.chain = m_modal_loops;
+    info.broken = false;
+    m_modal_loops = &info;
+}
+
+void MCUIDC::modalLoopEnd()
+{
+    m_modal_loops = m_modal_loops->chain;
+}
 

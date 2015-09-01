@@ -20,7 +20,7 @@ put specialFolderPath("engine) & "/intro_movie.mp4" into tVideoFile
 play video tVideoFile
 
 Example:
-play video "http://www.runrev.com/buildanapp.mp4"
+play video "http://www.livecode.com/buildanapp.mp4"
 
 Parameters:
 video-file: If a path is specified it will be interpreted as a local file. If a URL is specified then it must either be an 'http' or 'https' url. In this case the content will be streamed.

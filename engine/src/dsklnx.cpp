@@ -1727,7 +1727,7 @@ public:
             struct stat64 t_buf;
             if (t_fd != -1 && !fstat64(t_fd, &t_buf))
             {
-                uint4 t_len = t_buf.st_size;
+                off_t t_len = t_buf.st_size;
                 if (t_len != 0)
                 {
                     char *t_buffer = (char *)mmap(NULL, t_len, PROT_READ, MAP_SHARED,
@@ -1895,7 +1895,7 @@ public:
         dlclose(p_module);
     }
 
-    virtual bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *x_context)
+    virtual bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *x_context)
     {
 #ifdef /* MCS_getentries_dsk_lnx */ LEGACY_SYSTEM
         uint4 flag = files ? S_IFREG : S_IFDIR;
@@ -1955,9 +1955,15 @@ public:
         closedir(dirptr);
         *dptr = tptr;
 #endif /* MCS_getentries_dsk_lnx */
+		MCAutoStringRefAsSysString t_path;
+		if (p_folder == nil)
+			/* UNCHECKED */ t_path . Lock(MCSTR("."));
+		else
+			/* UNCHECKED */ t_path . Lock(p_folder);
+
         DIR *dirptr;
 
-        if ((dirptr = opendir(".")) == NULL)
+        if ((dirptr = opendir(*t_path)) == NULL)
         {
             return false;
         }
@@ -1966,6 +1972,19 @@ public:
 
         bool t_success = true;
 
+		/* For each directory entry, we need to construct a path that can
+		 * be passed to stat(2).  Allocate a buffer large enough for the
+		 * path, a path separator character, and any possible filename. */
+		size_t t_path_len = strlen(*t_path);
+		size_t t_entry_path_len = t_path_len + 1 + NAME_MAX;
+		char *t_entry_path = new char[t_entry_path_len + 1];
+		strcpy (t_entry_path, *t_path);
+		if ((*t_path)[t_path_len - 1] != '/')
+		{
+			strcat (t_entry_path, "/");
+			++t_path_len;
+		}
+
         while (t_success && (direntp = readdir64(dirptr)) != NULL)
         {
             MCSystemFolderEntry p_entry;
@@ -1973,8 +1992,14 @@ public:
 
             if (MCCStringEqual(direntp->d_name, "."))
                 continue;
+
+			/* Truncate the directory entry path buffer to the path
+			 * separator. */
+			t_entry_path[t_path_len] = 0;
+			strcat (t_entry_path, direntp->d_name);
+
             struct stat buf;
-            stat(direntp->d_name, &buf);
+            stat(t_entry_path, &buf);
 
             if (direntp -> d_name != nil && MCStringCreateWithSysString(direntp -> d_name, t_unicode_name))
                 p_entry.name = t_unicode_name;
@@ -1994,6 +2019,7 @@ public:
             MCValueRelease(t_unicode_name);
         }
 
+		delete t_entry_path;
         closedir(dirptr);
 
         return t_success;
@@ -2056,36 +2082,35 @@ public:
             }
             delete tpath;
         }
+        else if (path[0] != '/')
+        {
+            // SN-2015-06-05: [[ Bug 15432 ]] Fix resolvepath on Linux: we want an
+            //  absolute path.
+            char *t_curfolder;
+            t_curfolder = MCS_getcurdir();
+            tildepath = new char[strlen(t_curfolder) + strlen(path) + 2];
+            /* UNCHECKED */ sprintf(tildepath, "%s/%s", t_curfolder, path);
+
+            delete t_curfolder;
+        }
         else
             tildepath = strclone(path);
 
         struct stat64 buf;
         if (lstat64(tildepath, &buf) != 0 || !S_ISLNK(buf.st_mode))
             return tildepath;
-        int4 size;
+
         char *newname = new char[PATH_MAX + 2];
-        if ((size = readlink(tildepath, newname, PATH_MAX)) < 0)
+
+        // SN-2015-06-05: [[ Bug 15432 ]] Use realpath to solve the symlink.
+        if (realpath(tildepath, newname) == NULL)
         {
-            delete tildepath;
+            // Clear the memory in case of failure
             delete newname;
-            return NULL;
+            newname = NULL;
         }
+
         delete tildepath;
-        newname[size] = '\0';
-        if (newname[0] != '/')
-        {
-            char *fullpath = new char[strlen(path) + strlen(newname) + 2];
-            strcpy(fullpath, path);
-            char *sptr = strrchr(fullpath, '/');
-            if (sptr == NULL)
-                sptr = fullpath;
-            else
-                sptr++;
-            strcpy(sptr, newname);
-            delete newname;
-            newname = MCS_resolvepath(fullpath);
-            delete fullpath;
-        }
         return newname;
 #endif /* MCS_resolvepath_dsk_lnx */
         if (MCStringGetLength(p_path) == 0)
@@ -2130,12 +2155,30 @@ public:
             else
                 t_tilde_path = p_path;
         }
+        else if (MCStringGetNativeCharAtIndex(p_path, 0) != '/')
+        {
+            // SN-2015-06-05: [[ Bug 15432 ]] Fix resolvepath on Linux: we want an
+            //  absolute path.
+            MCAutoStringRef t_curdir;
+            MCS_getcurdir(&t_curdir);
+
+            if (!MCStringFormat(&t_tilde_path, "%@/%@", *t_curdir, p_path))
+            {
+                return false;
+            }
+        }
         else
             t_tilde_path = p_path;
 
         // SN-2014-12-18: [[ Bug 14001 ]] Update the server file resolution to use realpath
         //  so that we get the absolute path (needed for MCcmd for instance).
-#ifdef _SERVER
+        // SN-2015-06-08: Use realpath on desktop as well.
+#ifndef _SERVER
+        // IM-2012-07-23
+        // Keep (somewhat odd) semantics of the original function for now
+        if (!MCS_lnx_is_link(*t_tilde_path))
+            return MCStringCopy(*t_tilde_path, r_resolved_path);
+#endif
         MCAutoStringRefAsSysString t_tilde_path_sys;
         t_tilde_path_sys . Lock(*t_tilde_path);
 
@@ -2155,40 +2198,6 @@ public:
         MCMemoryDelete(t_resolved_path);
 
         return t_success;
-#else
-
-        // IM-2012-07-23
-        // Keep (somewhat odd) semantics of the original function for now
-        if (!MCS_lnx_is_link(*t_tilde_path))
-            return MCStringCopy(*t_tilde_path, r_resolved_path);
-
-        MCAutoStringRef t_newname;
-        if (!MCS_lnx_readlink(*t_tilde_path, &t_newname))
-            return false;
-
-        if (MCStringGetCharAtIndex(*t_newname, 0) != '/')
-        {
-            MCAutoStringRef t_resolved;
-
-            uindex_t t_last_component;
-            uindex_t t_path_length;
-
-            t_path_length = MCStringGetLength(p_path);
-
-            if (MCStringLastIndexOfChar(p_path, '/', t_path_length, kMCStringOptionCompareExact, t_last_component))
-                t_last_component++;
-            else
-                t_last_component = 0;
-
-            if (!MCStringMutableCopySubstring(p_path, MCRangeMake(0, t_last_component), &t_resolved) ||
-                !MCStringAppend(*t_resolved, *t_newname))
-                return false;
-
-            return MCStringCopy(*t_resolved, r_resolved_path);
-        }
-        else
-            return MCStringCopy(*t_newname, r_resolved_path);
-#endif
     }
 
     virtual bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path)
@@ -3244,10 +3253,6 @@ public:
         return True;
 #endif /* MCS_poll_dsk_lnx */
 
-#ifdef _LINUX_SERVER
-        Sleep(p_delay);
-        return False;
-#else
         Boolean readinput = False;
         int4 n;
         uint2 i;
@@ -3280,27 +3285,10 @@ public:
             if (MCinputfd > maxfd)
                 maxfd = MCinputfd;
         }
-        for (i = 0 ; i < MCnsockets ; i++)
-        {
-            if (MCsockets[i]->resolve_state != kMCSocketStateResolving &&
-               MCsockets[i]->resolve_state != kMCSocketStateError)
-            {
-	            if ((MCsockets[i]->connected && !MCsockets[i]->closing
-	                 && !MCsockets[i]->shared) || MCsockets[i]->accepting)
-                    FD_SET(MCsockets[i]->fd, &rmaskfd);
-                if (!MCsockets[i]->connected || MCsockets[i]->wevents != NULL)
-                    FD_SET(MCsockets[i]->fd, &wmaskfd);
-                FD_SET(MCsockets[i]->fd, &emaskfd);
-                if (MCsockets[i]->fd > maxfd)
-                    maxfd = MCsockets[i]->fd;
-                if (MCsockets[i]->added)
-                {
-                    p_delay = 0.0;
-                    MCsockets[i]->added = False;
-                    handled = True;
-                }
-            }
-        }
+
+        handled = MCSocketsAddToFileDescriptorSets(maxfd, rmaskfd, wmaskfd, emaskfd);
+        if (handled)
+            p_delay = 0.0;
 
         if (g_notify_pipe[0] != -1)
         {
@@ -3322,28 +3310,7 @@ public:
             return True;
         if (MCinputfd != -1 && FD_ISSET(MCinputfd, &rmaskfd))
             readinput = True;
-        for (i = 0 ; i < MCnsockets ; i++)
-        {
-            if (FD_ISSET(MCsockets[i]->fd, &emaskfd))
-            {
-                if (!MCsockets[i]->waiting)
-                {
-                    MCsockets[i]->error = strclone("select error");
-                    MCsockets[i]->doclose();
-                }
-            }
-            else
-            {
-                /* read first here, otherwise a situation can arise when select indicates
-                 * read & write on the socket as part of the sslconnect handshaking
-                 * and so consumed during writesome() leaving no data to read
-                 */
-                if (FD_ISSET(MCsockets[i]->fd, &rmaskfd) && !MCsockets[i]->shared)
-                    MCsockets[i]->readsome();
-                if (FD_ISSET(MCsockets[i]->fd, &wmaskfd))
-                    MCsockets[i]->writesome();
-            }
-        }
+        MCSocketsHandleFileDescriptorSets(rmaskfd, wmaskfd, emaskfd);
 
         if (g_notify_pipe[0] != -1 && FD_ISSET(g_notify_pipe[0], &rmaskfd))
         {
@@ -3369,7 +3336,6 @@ public:
         if (wasalarm)
             Alarm(CHECK_INTERVAL);
         return True;
-#endif
     }
 
     virtual Boolean IsInteractiveConsole(int p_fd)

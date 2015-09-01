@@ -849,6 +849,26 @@ static MCColorPanelDelegate* s_color_dialog_delegate;
 
 //////////
 // NSWindow delegate's method
+
+// PM-2015-07-10: [[ Bug 15096 ]] Escape key should dismiss the 'answer color' dialog
+- (void) windowDidBecomeKey:(NSNotification *)notification
+{
+	NSEvent* (^handler)(NSEvent*) = ^(NSEvent *theEvent) {
+		
+		NSEvent *result = theEvent;
+		// Check if the esc key is pressed
+		if (theEvent.keyCode == 53)
+		{
+			[self processEscKeyDown];
+			result = nil;
+		}
+		
+		return result;
+	};
+	
+	eventMonitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSKeyDownMask handler:handler];
+}
+
 - (void)windowDidResize:(NSNotification *)notification
 {
     [self relayout];
@@ -858,6 +878,9 @@ static MCColorPanelDelegate* s_color_dialog_delegate;
 {
     if (mResult != kMCPlatformDialogResultSuccess)
         mResult = kMCPlatformDialogResultCancel;
+		
+	// Detach the event monitor when window closes.
+	[NSEvent removeMonitor:eventMonitor];
 }
 
 //////////
@@ -872,6 +895,11 @@ static MCColorPanelDelegate* s_color_dialog_delegate;
 {
     mResult = kMCPlatformDialogResultSuccess;
     [self getColor];
+}
+
+- (void) processEscKeyDown
+{
+	[self pickerCancelClicked];
 }
 
 //////////

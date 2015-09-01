@@ -340,7 +340,7 @@ int CALLBACK fontnames_FontFamProc(const LOGFONTW * lpelf,
 	MCNewAutoNameRef t_name;
 
 	size_t t_length;
-	if (StringCchLength(lpelf->lfFaceName, LF_FACESIZE, &t_length) != S_OK)
+	if (StringCchLengthW(lpelf->lfFaceName, LF_FACESIZE, &t_length) != S_OK)
 		return False;
 
 	if (!MCNameCreateWithChars(lpelf->lfFaceName, t_length, &t_name))
@@ -468,7 +468,7 @@ bool MCFontlist::getfontsizes(MCStringRef p_fname, MCListRef& r_sizes)
 	lf.lfPitchAndFamily = 0;
 
 	// Copy the font family name
-	if (StringCchCopy(lf.lfFaceName, LF_FACESIZE, *t_fname_wstr) != S_OK)
+	if (StringCchCopyW(lf.lfFaceName, LF_FACESIZE, *t_fname_wstr) != S_OK)
 		return false;
 
 	EnumFontFamiliesExW(hdc, &lf, (FONTENUMPROCW)fontsizes_FontFamProc, (LPARAM)&context, 0);

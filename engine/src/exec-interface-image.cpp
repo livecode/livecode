@@ -775,14 +775,18 @@ void MCImage::SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting)
 // MERG-2015-02-11: [[ ImageMetadata ]] Refactored image metadata property
 void MCImage::GetMetadataProperty(MCExecContext& ctxt, MCNameRef p_prop, MCExecValue& r_value)
 {
-    MCImageMetadata t_metadata;
-    m_rep->GetMetadata(t_metadata);
-    
+    // AL-2015-07-22: [[ Bug 15620 ]] If image rep is nil, don't try to fetch metadata
     bool t_stat;
-    t_stat = t_metadata.has_density;
+    t_stat = m_rep != nil;
+    
+    MCImageMetadata t_metadata;
+    if (t_stat)
+    {
+        m_rep->GetMetadata(t_metadata);
+        t_stat = t_metadata.has_density;
+    }
     
     MCExecValue t_density;
-    
     if (t_stat)
     {
         t_density . double_value = t_metadata . density;

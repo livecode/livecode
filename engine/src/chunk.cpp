@@ -1330,8 +1330,13 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
                     //                        if (toptr == object && group == nil)
                     if (t_object . object -> gettype() == CT_CARD)
                         MCInterfaceEvalObjectOfCardByOrdinal(ctxt, t_object, toptr -> otype, toptr -> ptype, toptr -> etype, t_object);
-                    else
+                    else if (t_object . object -> gettype() == CT_GROUP)
                         MCInterfaceEvalObjectOfGroupByOrdinal(ctxt, t_object, toptr -> otype, toptr -> etype, t_object);
+                    else
+                    {
+                        ctxt . LegacyThrow(EE_CHUNK_OBJECTNOTCONTAINER);
+                        return;
+                    }
                     break;
                 case CT_ID:
                 {
@@ -1349,10 +1354,15 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
                         else
                             MCInterfaceEvalObjectOfCardById(ctxt, t_object, toptr -> otype, toptr -> ptype, t_id, t_object);
                     }
-                    else
+                    else if (t_object . object -> gettype() == CT_GROUP)
                     {
                         // if we have a group then stack override is irrelevant.
                         MCInterfaceEvalObjectOfGroupById(ctxt, t_object, toptr -> otype, t_id, t_object);
+                    }
+                    else
+                    {
+                        ctxt . LegacyThrow(EE_CHUNK_OBJECTNOTCONTAINER);
+                        return;
                     }
                 }
                     break;
@@ -1364,8 +1374,13 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
                     
                     if (t_object . object -> gettype() == CT_CARD)
                         MCInterfaceEvalObjectOfCardByName(ctxt, t_object, toptr -> otype, toptr -> ptype, *t_expression, t_object);
-                    else
+                    else if (t_object . object -> gettype() == CT_GROUP)
                         MCInterfaceEvalObjectOfGroupByName(ctxt, t_object, toptr -> otype, *t_expression, t_object);
+                    else
+                    {
+                        ctxt . LegacyThrow(EE_CHUNK_OBJECTNOTCONTAINER);
+                        return;
+                    }
                 }
                     break;
                 default:
@@ -4708,8 +4723,8 @@ Exec_stat MCChunk::del(MCExecPoint &ep)
 				MCeerror->add(EE_CHUNK_CANTDELETEOBJECT, line, pos);
 				return ES_ERROR;
 			}
-			if (objptr->gettype() == CT_STACK)
-				MCtodestroy->remove((MCStack *)objptr); // prevent duplicates
+            if (objptr->gettype() == CT_STACK)
+                MCtodestroy->remove((MCStack *)objptr);
 			objptr->scheduledelete();
 		}
 		else

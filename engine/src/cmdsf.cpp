@@ -32,7 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "chunk.h"
 #include "mcerror.h"
 #include "object.h"
-#include "control.h"
+#include "mccontrol.h"
 #include "aclip.h"
 #include "vclip.h"
 #include "eps.h"

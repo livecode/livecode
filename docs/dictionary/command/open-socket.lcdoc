@@ -12,9 +12,9 @@ Summary: Establishes a <TCP> communications <socket> between your system and ano
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac,windows,linux,iOS,android
 
-Platforms: desktop,server,web
+Platforms: desktop,server,web,mobile
 
 Security: network
 
@@ -25,10 +25,10 @@ Example:
 open socket to "ftp.example.org:21|sendFiles"
 
 Example:
-open secure socket to "runrev.com:443" with message "wasConnected" without verification
+open secure socket to "livecode.com:443" with message "wasConnected" without verification
 
 Example:
-open secure socket to "runrev.com:443" with message "wasConnected" with verification for host "livecode.com"
+open secure socket to "livecode.com:443" with message "wasConnected" with verification for host "livecode.com"
 
 Example:
 on mouseUp
@@ -71,7 +71,9 @@ The most common CAs such as verisign can be found in the file root.pem.  If a ve
 
 For technical information about the numbers used to designate standard ports, see the list of port numbers at &lt;http://www.iana.org/assignments/port-numbers&gt;, in particular the section titled "Well Known Port Numbers".
 
->*Important:*  The open secure socket command is part of the SSL & Encryption library. To ensure that the command works in a standalone application, you must include this custom library when you create your standalone. In the Inclusions section on the General screen of the Standalone Application Settings window, make sure "SSL & Encryption" is selected in the list of script libraries.
+>*Important:*  The open secure socket command is part of the SSL & Encryption library. To ensure that the command works in a standalone application, you must include this custom library when you create your standalone. For desktop standalones, in the Inclusions section on the General screen of the Standalone Application Settings window, make sure "SSL & Encryption" is selected in the list of script libraries. For iOS standalones, in the "Basic Application Settings" section on the iOS screen of the Standalone Application Settings window, make sure "Encryption" is checked. For Android standalones, in the "Basic Application Settings" section on the Android screen of the Standalone Application Settings window, make sure "SSL & Encryption" is checked.
+>*Important:* 
+On Android, when using remote sockets, internet permissions must be enabled. Do this by selecting the "Internet" checkbox of the "Application Permissions" section of the Android screen.
 
 (4.5) The open socket command no longer blocks on DNS resolution. Instead, if resolution is required the command will return immediately and the DNS lookup will happen in the background. If resolution fails, then a socketError message is sent in the same was as if connection fails.
 

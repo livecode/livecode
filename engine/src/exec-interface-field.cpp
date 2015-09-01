@@ -202,10 +202,10 @@ static MCExecCustomTypeInfo _kMCInterfaceFieldRangesTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCInterfaceLayerModeElementInfo[] =
 {
-	{ "static", kMCLayerModeHintStatic },
-    { "dynamic", kMCLayerModeHintDynamic },
-	{ "scrolling", kMCLayerModeHintScrolling },
-	{ "container", kMCLayerModeHintContainer }
+	{ "static", kMCLayerModeHintStatic, false },
+	{ "dynamic", kMCLayerModeHintDynamic, false },
+	{ "scrolling", kMCLayerModeHintScrolling, false },
+	{ "container", kMCLayerModeHintContainer, false },
 };
 
 static MCExecEnumTypeInfo _kMCInterfaceLayerModeTypeInfo =

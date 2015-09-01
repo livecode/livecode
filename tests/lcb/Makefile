@@ -1,9 +1,33 @@
-top_srcdir=../..
+top_srcdir ?= ../..
+TEST_DIR ?= $(top_srcdir)/_tests/lcb
 
-include $(top_srcdir)/rules/environment.linux.makefile
+################################################################
+# Attempt to guess where to find the LCB toolchain & LCI files
+################################################################
 
-SOLUTION_DIR = $(top_srcdir)
-TEST_DIR = $(SOLUTION_DIR)/_tests/lcb
+guess_linux_arch_script := \
+	case `uname -p` in \
+	    x86_64) echo x86_64 ;; \
+	    x86|i*85) echo x86 ;; \
+	esac
+guess_linux_arch := $(shell $(guess_linux_arch_script))
+
+guess_platform_script := \
+	case `uname -s` in \
+	    Linux) echo linux-$(guess_linux_arch) ;; \
+	    Darwin) echo mac ;; \
+	esac
+guess_platform := $(shell $(guess_platform_script))
+
+bin_dir ?= $(top_srcdir)/$(guess_platform)-bin
+
+LC_COMPILE ?= $(bin_dir)/lc-compile
+LC_RUN ?= $(bin_dir)/lc-run
+MODULE_DIR ?= $(bin_dir)/modules/lci
+
+################################################################
+
+.DEFAULT: check
 
 check: lcb-check
 clean:

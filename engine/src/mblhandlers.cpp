@@ -1299,8 +1299,7 @@ Exec_stat MCHandleStartTrackingSensor(void *p_context, MCParameter *p_parameters
     }
     
     MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
-    
+
     if (t_sensor != kMCSensorTypeUnknown)
     {
         MCSensorExecStartTrackingSensor(t_ctxt, t_sensor, t_loosely);
@@ -1790,8 +1789,7 @@ Exec_stat MCHandleHeadingCalibrationTimeout(void *p_context, MCParameter *p_para
     int t_timeout;
     MCSensorGetLocationCalibrationTimeout(ctxt, t_timeout);
     MCresult->setnvalue(t_timeout);
-    
-    ctxt . SetTheResultToEmpty();
+
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 
@@ -4282,6 +4280,24 @@ Exec_stat MCHandleGetLaunchUrl (void *context, MCParameter *p_parameters)
     
     ctxt.SetTheResultToEmpty();
     return ES_ERROR;
+}
+
+Exec_stat MCHandleGetLaunchData(void *context, MCParameter *p_parameters)
+{
+	MCExecContext ctxt(nil, nil, nil);
+	
+	MCAutoArrayRef t_data;
+	
+	MCMiscGetLaunchData(ctxt, &t_data);
+	
+	if (!ctxt.HasError())
+	{
+		ctxt.SetTheResultToValue(*t_data);
+		return ES_NORMAL;
+	}
+	
+	ctxt.SetTheResultToEmpty();
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleBeep(void *p_context, MCParameter *p_parameters)
@@ -6870,6 +6886,8 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {false, "iphoneGetDeviceToken", MCHandleGetDeviceToken, nil},
     {false, "iphoneGetLaunchUrl", MCHandleGetLaunchUrl, nil},
 	
+	{false, "mobileGetLaunchData", MCHandleGetLaunchData, nil},
+	
 	{false, "iphoneSetStatusBarStyle", MCHandleSetStatusBarStyle, nil},
 	{false, "iphoneShowStatusBar", MCHandleShowStatusBar, nil},
 	{false, "iphoneHideStatusBar", MCHandleHideStatusBar, nil},
@@ -6929,14 +6947,14 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	{false, "iphoneControlDelete", MCHandleControlDelete, nil},
 	{false, "iphoneControlSet", MCHandleControlSet, nil},
 	{false, "iphoneControlGet", MCHandleControlGet, nil},
-	{false, "iphoneControlDo", MCHandleControlDo, nil},
+	{true, "iphoneControlDo", MCHandleControlDo, nil},
 	{false, "iphoneControlTarget", MCHandleControlTarget, nil},
 	{false, "iphoneControls", MCHandleControlList, nil},
 	{false, "mobileControlCreate", MCHandleControlCreate, nil},
 	{false, "mobileControlDelete", MCHandleControlDelete, nil},
 	{false, "mobileControlSet", MCHandleControlSet, nil},
 	{false, "mobileControlGet", MCHandleControlGet, nil},
-	{false, "mobileControlDo", MCHandleControlDo, nil},
+	{true, "mobileControlDo", MCHandleControlDo, nil},
 	{false, "mobileControlTarget", MCHandleControlTarget, nil},
 	{false, "mobileControls", MCHandleControlList, nil},
 	
@@ -7057,7 +7075,6 @@ bool MCIsPlatformMessage(MCNameRef handler_name)
     
     for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
     {
-        const char* t_message = s_platform_messages[i].message;
 		if (MCNameIsEqualToCString(handler_name, s_platform_messages[i].message, kMCCompareCaseless))
 			found = true;
     }
@@ -7083,39 +7100,43 @@ static void invoke_platform(void *p_context)
 
 extern void MCIPhoneCallOnMainFiber(void (*)(void *), void *);
 
-Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters)
+bool MCDoHandlePlatformMessage(bool p_waitable, MCPlatformMessageHandler p_handler, void *p_context, MCParameter *p_parameters, Exec_stat& r_result)
+{
+    // MW-2012-07-31: [[ Fibers ]] If the method doesn't need script / wait, then
+    //   jump to the main fiber for it.
+    if (!p_waitable)
+    {
+        handle_context_t ctxt;
+        ctxt . handler = p_handler;
+        ctxt . context = p_context;
+        ctxt . parameters = p_parameters;
+        MCIPhoneCallOnMainFiber(invoke_platform, &ctxt);
+        r_result = ctxt . result;
+        return true;
+    }
+    
+    // Execute the method as normal, in this case the method will have to jump
+    // to the main fiber to do any system stuff.
+    r_result = p_handler(p_context, p_parameters);
+    return true;
+    
+}
+#else // Android
+bool MCDoHandlePlatformMessage(bool p_waitable, MCPlatformMessageHandler p_handler, void *p_context, MCParameter *p_parameters, Exec_stat& r_result)
+{
+    r_result = p_handler(p_context, p_parameters);
+    return true;
+}
+#endif
+
+bool MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters, Exec_stat& r_result)
 {
 	for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
 		if (MCNameIsEqualToCString(p_message, s_platform_messages[i] . message, kMCCompareCaseless))
 		{
-			// MW-2012-07-31: [[ Fibers ]] If the method doesn't need script / wait, then
-			//   jump to the main fiber for it.
-			if (!s_platform_messages[i] . waitable)
-			{
-				handle_context_t ctxt;
-				ctxt . handler = s_platform_messages[i] . handler;
-				ctxt . context = s_platform_messages[i] . context;
-				ctxt . parameters = p_parameters;
-				MCIPhoneCallOnMainFiber(invoke_platform, &ctxt);
-				return ctxt . result;
-			}
-			
-			// Execute the method as normal, in this case the method will have to jump
-			// to the main fiber to do any system stuff.
-			return s_platform_messages[i] . handler(s_platform_messages[i] . context, p_parameters);
+            return MCDoHandlePlatformMessage(s_platform_messages[i] . waitable, s_platform_messages[i] . handler, s_platform_messages[i] . context, p_parameters, r_result);
 		}
 	
-	return ES_NOT_HANDLED;
+    r_result = ES_NOT_HANDLED;
+	return false;
 }
-#else // Android
-Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters)
-{
-	for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
-    {
-		if (MCNameIsEqualToCString(p_message, s_platform_messages[i] . message, kMCCompareCaseless))
-			return s_platform_messages[i] . handler(s_platform_messages[i] . context, p_parameters);
-    }
-	
-	return ES_NOT_HANDLED;
-}
-#endif

@@ -42,6 +42,8 @@ extern MCTypeInfoRef kMCScriptCannotSetReadOnlyPropertyErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptInvalidPropertyValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptNotAHandlerValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptCannotCallContextHandlerErrorTypeInfo;
+extern MCTypeInfoRef kMCScriptPropertyNotFoundErrorTypeInfo;
+extern MCTypeInfoRef kMCScriptHandlerNotFoundErrorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
