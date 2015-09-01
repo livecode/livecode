@@ -22,6 +22,7 @@
 
 'export'
     Generate
+    GenerateModules
 
 --------------------------------------------------------------------------------
 
@@ -29,9 +30,38 @@
 
 'var' IgnoredModuleList : NAMELIST
 
+'var' GeneratingModuleIndex : INT
+
+'action' GenerateModules(MODULELIST)
+
+    'rule' GenerateModules(List):
+        GeneratingModuleIndex <- 1
+        EmitStart()
+        GenerateForEachModule(List)
+        EmitFinish()
+    
+'action' GenerateForEachModule(MODULELIST)
+
+    'rule' GenerateForEachModule(modulelist(Head, Rest)):
+        GenerateSingleModule(Head)
+        GeneratingModuleIndex -> CurrentIndex
+        GeneratingModuleIndex <- CurrentIndex + 1
+        GenerateForEachModule(Rest)
+        
+    'rule' GenerateForEachModule(nil):
+        -- do nothing
+
 'action' Generate(MODULE)
 
-    'rule' Generate(Module:module(_, Kind, Id, Imports, Definitions)):
+    'rule' Generate(Module):
+        GeneratingModuleIndex <- 1
+        EmitStart()
+        GenerateSingleModule(Module)
+        EmitFinish()
+
+'action' GenerateSingleModule(MODULE)
+
+    'rule' GenerateSingleModule(Module:module(_, Kind, Id, Definitions)):
         ModuleDependencyList <- nil
         
         QueryModuleId(Id -> Info)
@@ -48,11 +78,13 @@
             EmitBeginLibraryModule(ModuleName -> ModuleIndex)
         |)
         Info'Index <- ModuleIndex
+        GeneratingModuleIndex -> Generator
+        Info'Generator <- Generator
         
         (|
             ne(Kind, widget)
             (|
-                ImportContainsCanvas(Imports)
+                ImportContainsCanvas(Definitions)
                 MakeNameLiteral("com.livecode.widget" -> WidgetModuleName)
                 IgnoredModuleList <- namelist(WidgetModuleName, nil)
             ||
@@ -81,7 +113,7 @@
         
         GenerateManifest(Module)
 
-'condition' ImportContainsCanvas(IMPORT)
+'condition' ImportContainsCanvas(DEFINITION)
 
     'rule' ImportContainsCanvas(sequence(Left, _)):
         ImportContainsCanvas(Left)
@@ -98,7 +130,7 @@
 
 'action' GenerateManifest(MODULE)
 
-    'rule' GenerateManifest(module(_, Kind, Id, Imports, Definitions)):
+    'rule' GenerateManifest(module(_, Kind, Id, Definitions)):
         OutputBeginManifest()
         Id'Name -> Name
         OutputWrite("<package version=\"0.0\">\n")
@@ -287,6 +319,9 @@
     'rule' GenerateManifestTypeBody(list(_, _)):
         OutputWrite("list")
 
+    'rule' GenerateManifestTypeBody(unspecified):
+        OutputWrite("any")
+
     'rule' GenerateManifestTypeBody(Type):
         print(Type)
         Fatal_InternalInconsistency("attempt to generate uncoded type for manifest")
@@ -437,6 +472,8 @@
         
         -- We now have an index of an 'external definition' to use when referencing it.
         SymbolInfo'Index <- SymbolIndex
+        GeneratingModuleIndex -> Generator
+        SymbolInfo'Generator <- Generator
         
     'rule' GenerateImportedDefinition(Id):
         -- If we get here then either the id isn't imported, or we have previously
@@ -451,10 +488,11 @@
         QueryModuleId(Id -> ModuleInfo)
         
         -- Fetch the module index
-        ModuleInfo'Index -> CurrentModuleIndex
+        GeneratingModuleIndex -> CurrentGenerator
+        ModuleInfo'Generator -> Generator
         [|
             -- If the module has been depended on yet, it will have index -1
-            eq(CurrentModuleIndex, -1)
+            ne(CurrentGenerator, Generator)
             Id'Name -> ModuleName
             
             -- Emit a dependency for the module and get its index
@@ -708,6 +746,9 @@
         EmitEndSyntaxDefinition()
         
     'rule' GenerateDefinitions(metadata(_, _, _)):
+        -- do nothing
+
+    'rule' GenerateDefinitions(import(_, _)):
         -- do nothing
 
     'rule' GenerateDefinitions(nil):
@@ -1534,7 +1575,7 @@
         ||
             where(-1 -> HandlerReg)
         |)
-        
+
         GenerateInvoke_EvaluateArguments(Result, Context, InvokeSig, Arguments)
         
         (|
@@ -1934,6 +1975,10 @@
     'rule' GenerateBaseType(list(_, _) -> Index):
         EmitListType(-> Index)
 
+    'rule' GenerateBaseType(unspecified -> Index):
+        EmitAnyType(-> AnyIndex)
+        EmitOptionalType(AnyIndex -> Index)
+
     'rule' GenerateBaseType(Type -> 0):
         print(Type)
         Fatal_InternalInconsistency("attempt to generate uncoded type")
@@ -1974,17 +2019,19 @@
 'condition' IsUngeneratedExternalId(ID)
 
     'rule' IsUngeneratedExternalId(Id):
-        -- Ungenerated if index is -1
+        -- Ungenerated if generator is not the current generator
         QuerySymbolId(Id -> Info)
-        Info'Index -> Index
-        eq(Index, -1)
+        Info'Generator -> Generator
+        Id'Name -> Name
+        GeneratingModuleIndex -> CurrentGenerator
+        ne(Generator, CurrentGenerator)
 
-        -- Extenal if module index is not 0
+        -- Extenal if module index is not CurrentGenerator
         Info'Parent -> ModuleId
         QueryModuleId(ModuleId -> ModuleInfo)
-        ModuleInfo'Index -> ModuleIndex
+        ModuleInfo'Generator -> ModGenerator
 
-        ne(ModuleIndex, 0)
+        ne(ModGenerator, CurrentGenerator)
 
 'condition' IsExternalId(ID)
 
@@ -1993,8 +2040,9 @@
         QuerySymbolId(Id -> Info)
         Info'Parent -> ModuleId
         QueryModuleId(ModuleId -> ModuleInfo)
-        ModuleInfo'Index -> ModuleIndex
-        ne(ModuleIndex, 0)
+        ModuleInfo'Generator -> ModGenerator
+        GeneratingModuleIndex -> CurrentGenerator
+        ne(ModGenerator, CurrentGenerator)
 
 'action' QueryModuleOfId(ID -> ID)
 

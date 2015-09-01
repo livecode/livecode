@@ -414,7 +414,8 @@ void MCLoadableImageRep::UnlockBitmap(uindex_t p_index, MCImageBitmap *p_bitmap)
 
 	if (m_frames == nil)
 		ConvertToMCGFrames(m_bitmap_frames, m_frame_count, false);
-	
+    
+    // PM-2015-07-13: [[ Bug 15590 ]] Free the correct number of frames
 	MCImageFreeFrames(m_bitmap_frames, m_frame_count);
 	m_bitmap_frames = nil;
 	
@@ -738,7 +739,6 @@ bool MCImageRepGetReferenced(MCStringRef p_filename, MCImageRep *&r_rep)
 	
 	if (MCCachedImageRep::FindWithKey(p_filename, t_rep))
 	{
-        //MCLog("image rep cache hit for file %@", p_filename);
 		r_rep = t_rep->Retain();
 		return true;
 	}

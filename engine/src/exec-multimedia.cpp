@@ -652,7 +652,7 @@ void MCMultimediaExecPlayOperation(MCExecContext& ctxt, MCPlayer *p_player, int 
 {
 	if (p_player != nil)
 	{	
-		p_player->setflag(True, F_VISIBLE);
+		// PM-2015-07-10: [[ Bug 15472 ]] Preserve the visible/invisible state of the player
 		switch (p_operation)
 		{
 		case PP_FORWARD:

@@ -40,6 +40,10 @@
 
 #include "foundation.h"
 
+#if defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
+#include "mblcontrol.h"
+#endif
+
 #include <signal.h>
 #ifdef _WIN32
 #include <float.h> // _isnan()
@@ -70,6 +74,7 @@ extern MCSystemInterface *MCDesktopCreateWindowsSystem(void);
 extern MCSystemInterface *MCDesktopCreateLinuxSystem(void);
 extern MCSystemInterface *MCMobileCreateIPhoneSystem(void);
 extern MCSystemInterface *MCMobileCreateAndroidSystem(void);
+extern MCSystemInterface *MCDesktopCreateEmscriptenSystem(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -208,6 +213,26 @@ static void handle_signal(int p_signal)
 #endif
 #endif
 
+#if defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
+extern bool MCIsPlatformMessage(MCNameRef name);
+extern bool MCHandlePlatformMessage(MCNameRef name, MCParameter *parameters, Exec_stat& r_result);
+static MCHookGlobalHandlersDescriptor s_global_handlers_desc =
+{
+    MCIsPlatformMessage,
+    MCHandlePlatformMessage,
+};
+
+extern bool MCNativeControlCreate(MCNativeControlType type, MCNativeControl*& r_control);
+static MCHookNativeControlsDescriptor s_native_control_desc =
+{
+    (bool(*)(MCStringRef,intenum_t&))MCNativeControl::LookupType,
+    (bool(*)(MCStringRef,intenum_t&))MCNativeControl::LookupProperty,
+    (bool(*)(MCStringRef,intenum_t&))MCNativeControl::LookupAction,
+    (bool(*)(intenum_t,void*&))MCNativeControlCreate,
+    nil,
+};
+#endif
+
 void MCS_common_init(void)
 {	
 	MCsystem -> Initialize();    
@@ -217,7 +242,7 @@ void MCS_common_init(void)
 
 	// MW-2013-10-08: [[ Bug 11259 ]] We use our own tables on linux since
 	//   we use a fixed locale which isn't available on all systems.
-#if !defined(_LINUX_SERVER) && !defined(_LINUX_DESKTOP) && !defined(_WINDOWS_DESKTOP) && !defined(_WINDOWS_SERVER)
+#if !defined(_LINUX_SERVER) && !defined(_LINUX_DESKTOP) && !defined(_WINDOWS_DESKTOP) && !defined(_WINDOWS_SERVER) && !defined(__EMSCRIPTEN__)
 	MCuppercasingtable = new uint1[256];
 	for(uint4 i = 0; i < 256; ++i)
 		MCuppercasingtable[i] = (uint1)toupper((uint1)i);
@@ -226,7 +251,12 @@ void MCS_common_init(void)
 	for(uint4 i = 0; i < 256; ++i)
 		MClowercasingtable[i] = (uint1)tolower((uint1)i);
 #endif
-	
+    
+#if defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
+    MCHookRegister(kMCHookGlobalHandlers, &s_global_handlers_desc);
+    MCHookRegister(kMCHookNativeControls, &s_native_control_desc);
+#endif
+    
 	MCStackSecurityInit();
 }
 
@@ -248,6 +278,8 @@ void MCS_init(void)
     MCsystem = MCMobileCreateIPhoneSystem();
 #elif defined (_ANDROID_MOBILE)
     MCsystem = MCMobileCreateAndroidSystem();
+#elif defined (__EMSCRIPTEN__)
+    MCsystem = MCDesktopCreateEmscriptenSystem();
 #else
 #error Unknown server platform.
 #endif
@@ -983,7 +1015,7 @@ bool MCS_getentries(bool p_files, bool p_detailed, MCListRef& r_list)
 	t_state.details = p_detailed;
 	t_state.list = *t_list;
 	
-	if (!MCsystem -> ListFolderEntries(MCS_getentries_callback, (void*)&t_state))
+	if (!MCsystem -> ListFolderEntries(nil, MCS_getentries_callback, (void*)&t_state))
 		return false;
     
 	if (!MCListCopy(*t_list, r_list))
@@ -1584,8 +1616,16 @@ IO_stat MCS_readall(void *p_ptr, uint32_t p_byte_count, IO_handle p_stream, uint
 	if (MCabortscript || p_ptr == NULL || p_stream == NULL)
 		return IO_ERROR;
     
+    // SN-2015-07-07: [[ Bug 15569 ]] Reading referenced images on Linux was
+    //  always failing, since it was reading a input buffer of 4096 bytes.
+    //  We should return IO_EOF in case the stream is exhausted, not an error.
     if (!p_stream -> Read(p_ptr, p_byte_count, r_bytes_read))
-        return IO_ERROR;
+    {
+        if (p_stream -> IsExhausted())
+            return IO_EOF;
+        else
+            return IO_ERROR;
+    }
     
     if (p_stream -> IsExhausted())
         return IO_EOF;
@@ -1799,11 +1839,25 @@ MCSysModuleHandle MCS_loadmodule(MCStringRef p_filename)
 {
     MCAutoStringRef t_resolved_path;
     MCAutoStringRef t_native_path;
-    
-    if (!(MCS_resolvepath(p_filename, &t_resolved_path) && MCS_pathtonative(*t_resolved_path, &t_native_path)))
+
+    // SN-2015-06-08: [[ ResolvePath ]] Loading system libraries (such as
+    //  libpango-1.0.so.6, from linuxstubs.cpp) will fail if we turn the library
+    //  name into an invalid absolute name constructed from the current folder.
+    //  We consider any leaf path as a system library.
+    if (MCStringContains(p_filename, MCSTR("/"), kMCStringOptionCompareExact))
+    {
+        if (!MCS_resolvepath(p_filename, &t_resolved_path))
+            return NULL;
+    }
+    else
+    {
+        t_resolved_path = p_filename;
+    }
+
+    if (!MCS_pathtonative(*t_resolved_path, &t_native_path))
         return NULL;
-    
-	return MCsystem -> LoadModule(*t_native_path);
+
+    return MCsystem -> LoadModule(*t_native_path);
 }
 
 MCSysModuleHandle MCS_resolvemodulesymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)

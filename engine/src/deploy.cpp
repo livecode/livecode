@@ -197,7 +197,7 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
 		MCValueRelease(t_temp_string);
 	}
 	
-	if (!ctxt.CopyElementAsFilepath(p_array, MCNAME("stackfile"), false, t_temp_string))
+	if (!ctxt.CopyOptElementAsFilepath(p_array, MCNAME("stackfile"), false, t_temp_string))
 		return false;
 	MCValueAssign(stackfile, t_temp_string);
 	MCValueRelease(t_temp_string);
@@ -646,7 +646,9 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 	// Now, if we are not licensed for a target, then its an error.
 	bool t_is_licensed;
 	t_is_licensed = false;
-	if (m_platform == PLATFORM_WINDOWS)
+    if (MCnoui && MClicenseparameters . license_class == kMCLicenseClassCommunity)
+        t_is_licensed = true;
+	else if (m_platform == PLATFORM_WINDOWS)
 		t_is_licensed = (MClicenseparameters . deploy_targets & kMCLicenseDeployToWindows) != 0;
 	else if (m_platform == PLATFORM_MACOSX)
 		t_is_licensed = (MClicenseparameters . deploy_targets & kMCLicenseDeployToMacOSX) != 0;
@@ -768,11 +770,11 @@ void MCIdeSign::exec_ctxt(MCExecContext &ctxt)
 			ctxt . Throw();
 	
 	if (!ctxt . HasError())
-		if (t_params . certstore != NULL && (t_params . certificate != NULL || t_params . privatekey != NULL))
+		if (!MCValueIsEmpty(t_params . certstore) && (!MCValueIsEmpty(t_params . certificate) || !MCValueIsEmpty(t_params . privatekey)))
 			ctxt . Throw();
 
 	if (!ctxt . HasError())
-		if (t_params . certstore == NULL && (t_params . certificate == NULL || t_params . privatekey == NULL))
+		if (MCValueIsEmpty(t_params . certstore) && (MCValueIsEmpty(t_params . certificate) || MCValueIsEmpty(t_params . privatekey)))
 			ctxt . Throw();
 
 	bool t_can_sign;
@@ -1042,13 +1044,10 @@ void MCIdeDmgBuild::exec_ctxt(MCExecContext& ctxt)
 
 	/////////
 
+    // SN-2015-06-19: [[ CID 100294 ]] Check the return value.
     MCAutoStringRef t_string;
-	if (!ctxt . HasError())
-    {
-        /* UNCHECKED */ ctxt . EvalExprAsStringRef(m_filename, EE_UNDEFINED, &t_string);
-    }
-
-	if (!ctxt . HasError())
+	if (!ctxt . HasError()
+            && ctxt . EvalExprAsStringRef(m_filename, EE_UNDEFINED, &t_string))
 	{
         MCAutoPointer<char> temp;
         if (!MCStringConvertToCString(*t_string, &temp))

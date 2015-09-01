@@ -20,13 +20,13 @@ Security: network
 
 Example:
 local tBrowserId
-put revBrowserOpen(the windowId of this stack, "http://www.runrev.com") into tBrowserId
+put revBrowserOpen(the windowId of this stack, "http://www.livecode.com") into tBrowserId
 if tBrowserId is not an integer then
   answer "Failed to open browser"
 end if
 
 -- Using the old XBrowser syntax
-XBrowser_Open the windowId of this stack, "http://www.runrev.com"
+XBrowser_Open the windowId of this stack, "http://www.livecode.com"
 put the result into tBrowserId
 
 Parameters:

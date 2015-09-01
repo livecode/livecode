@@ -31,7 +31,7 @@ If the <mouseV> is positive, the <pointer> is below the top of the <stack window
 
 This function is equal to item 2 of the <mouseLoc> <function>.
 
->*Note:* When in a mouseDown handler, you can use the <clickV> function to get the position of the mouse as it was when the mouseDown action occured.
+>*Note:* When in a mouseDown handler, you can use the <clickV> function to get the position of the mouse as it was when the mouseDown action occurred.
 
 >*Tip:*  The <mouseMove> message sends the mouse's vertical position as a <parameter>. This means that in a <mouseMove> <handler>, normally it's not necessary to use the <mouseV> <function>.
 

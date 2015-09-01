@@ -24,7 +24,8 @@ end errorShow
 
 command docsBuilderRun pEdition, pVersion
    set the itemdelimiter to "."
-   if item 1 of pVersion > 7 then
+   if item 1 of pVersion > 7 then   
+      start using stack (builderRepoFolder() & slash & "ide-support/revdocsparser.livecodescript")
       docsBuilderGenerateDocsNew
       exit docsBuilderRun
    end if
@@ -32,6 +33,8 @@ command docsBuilderRun pEdition, pVersion
    local tSourceDir, tOutputDir
    put docsBuilderGetSourceDirectory() into tSourceDir
    put docsBuilderGetOutputDirectory() & "/packaged_xml" into tOutputDir
+   
+   start using stack (builderIdeRepoFolder() & slash & "Toolset/palettes/revdocumentationlibrary.rev")
    
    builderLog "report", "Building docs into" && tOutputDir
    buildDocumentation tSourceDir & "/dictionary", tSourceDir & "/glossary", tOutputDir & "/dictionary", tOutputDir & "/glossary", tOutputDir, "docsBuilderProgressUpdate", the long id of me
@@ -1911,8 +1914,126 @@ command docsBuilderGenerateDocsNew
    docsBuilderGenerateDistributedGuide
    builderLog "report", "Building api into" && builderAPIFolder() & slash & "distributed_api.js"
    docsBuilderGenerateDistributedAPI   
+   
+   # Build the actual JSON data for the dictionary. This is needed until the docs are built on the fly in a 
+   # suitable location - for the moment the dictionary will only display docs for preinstalled extensions.
+   docsBuilderGenerateBuiltDocs
+   
    builderLog "report", "Built docs"
 end docsBuilderGenerateDocsNew
+
+private function escape pString, pConvertLineEndings
+   replace "\" with "\\" in pString
+   replace quote with ("\" & quote) in pString
+   
+   if pConvertLineEndings is true then
+      replace (numToChar(13) & CR) with (CR & numToChar(13)) in pString
+      replace (CR & numToChar(13)) with CR in pString
+   end if
+   replace CR with "\n" in pString
+   replace tab with "\t" in pString
+   return (quote & pString & quote)
+end escape
+
+on docsBuilderGenerateBuiltDocs 
+   local tExtensions
+   
+   local tDefaultFolder
+   put the defaultFolder into tDefaultFolder
+   set the defaultFolder to builderPackagedExtensionsFolder()
+   put the folders into tExtensions
+   filter tExtensions without ".."
+   
+   # Build guide data using distributed guide and extensions' guides
+   docsBuilderGenerateBuiltGuide tExtensions
+   # Build api data using distributed api and extensions' apis
+   docsBuilderGenerateBuiltAPI tExtensions
+   
+   set the defaultFolder to tDefaultFolder
+end docsBuilderGenerateBuiltDocs
+
+private function builderGetDocsAPIData pExtensions
+   local tData
+   put url ("binfile:" & builderAPIFolder() & slash & "distributed_api.js") into tData
+   
+   local tFolder
+   repeat for each line tExtensionFolder in pExtensions
+      put builderPackagedExtensionsFolder() & slash & tExtensionFolder into tFolder
+      
+      set the defaultFolder to tFolder
+      # Isolate the source file
+      local tSource
+      put the files into tSource
+      filter tSource with "*.lcb"
+      
+      # Generate the docs text in lcdoc format
+      local tLcdoc
+      put revDocsGenerateDocsFileFromModularFile(tFolder & slash & tSource) into tLcdoc
+      
+      # Output the lcdoc file
+      put textEncode(tLcdoc, "utf-8") into url ("binfile:" & tFolder & slash & "api.lcdoc")
+      
+      # Convert to JSON
+      put revDocsFormatDocTextAsJSON(tFolder & slash & "api.lcdoc", tLcdoc,"", "LiveCode") into tExtensionAPI
+      
+      # add to the data
+      if tExtensionAPI is not empty then
+         put comma & tExtensionAPI after tData
+      end if
+   end repeat
+   
+   return tData
+end builderGetDocsAPIData
+
+private function builderGetDocsGuideData pExtensions
+   local tData
+   put url ("binfile:" & builderGuideFolder() & slash & "distributed_guide.js") into tData
+   
+   local tFolder
+   repeat for each line tExtensionFolder in pExtensions
+      put builderPackagedExtensionsFolder() & slash & tExtensionFolder into tFolder
+      if there is a not file (tFolder & slash & "guide.md")  then next repeat
+      
+      local tGuide
+      put url ("binfile:" & tFolder & slash & "guide.md") into tGuide
+      put textDecode(tGuide, "utf-8") into tGuide
+      
+      # If there is a guide, add it to the guide data
+      if tGuide is not empty then
+         put "{" & CR after tExtensionGuide
+         put tab & quote & "guide" & quote & ":" && quote & tFolder & quote & comma & CR after tExtensionGuide
+         put quote & "data" & quote & ":" & escape(tGuide, true) & CR after tExtensionGuide
+         put "}" after tExtensionGuide
+         
+         put comma & tExtensionGuide after tData
+      end if
+   end repeat
+   
+   return tData
+end builderGetDocsGuideData
+
+on docsBuilderGenerateBuiltGuide pExtensions
+   local tData
+   put "var tUserGuideData =" & CR & "{" & CR & tab & quote & "guides" & quote & ":[" into tData
+   
+   # Add the guide data from each of the packaged extensions
+   put builderGetDocsGuideData(pExtensions) after tData
+   
+   put CR & tab & "]" & CR & "}" after tData
+   
+   put tData into url ("binfile:" & builderGuideFolder() & slash & "built_guide.js")
+end docsBuilderGenerateBuiltGuide
+
+on docsBuilderGenerateBuiltAPI pExtensions
+   local tData
+   put "var dictionary_data =" & CR & "{" & CR & tab & quote & "docs" & quote & ":[" after tData
+   
+   # Add the api data from each of the packaged extensions
+   put builderGetDocsAPIData(pExtensions) after tData
+   
+   put CR & tab & "]" & CR & "}" after tData
+   put tData into url ("binfile:" & builderAPIFolder() & slash & "built_api.js")
+end docsBuilderGenerateBuiltAPI
 
 /*
 command errorShow pError
@@ -1935,7 +2056,10 @@ command docsBuilderGenerateDistributedGuide
       if it is not empty then
          get textDecode(it, "utf-8")
          replace "[toc]" with empty in it
-         put tab & "{" & CR & tab & escape("guide") & ":" & escape(tGuideName) & comma & CR & tab & escape("data") & ":" & escape(it, true) & CR & tab & "}," after tGuideData
+         put tab & "{" & CR after tGuideData
+         put tab & escape("name") & ":" & escape(revDocsModifyForURL(tGuideName)) & comma & CR after tGuideData 
+         put tab & escape("display name") & ":" & escape(tGuideName) & comma & CR after tGuideData 
+         put tab & escape("data") & ":" & escape(it, true) & CR & tab & "}," after tGuideData
       end if
    end repeat
    delete the last char of tGuideData
@@ -2058,3 +2182,45 @@ command docsBuilderGenerateDistributedAPI
    
    put textEncode(tJSON, "utf-8") into url ("binfile:" & builderAPIFolder() & slash & "distributed_api.js")
 end docsBuilderGenerateDistributedAPI
+
+--- LEGACY
+
+function revDocumentationRetrieve pType, pTag, pFolder
+   -- We know how many files per clump cuz of kFilesPerClump
+   -- pType is either "dictionary/" or "glossary/"
+   local tClumpNumber, tFileNumber, tPropNumber, tPropName
+   local tClumpName, tDocData, tClumpPath, tType, tOpenClumps
+   ---------
+   
+   put pType into tType
+   if the last char of tType is not slash then put slash after tType
+   
+   if pFolder is empty then
+      put revEnvironmentDocumentationPath() & slash & "packaged_xml/" & tType into tClumpPath
+   else
+      put pFolder & slash & "packaged_xml/" & tType into tClumpPath
+   end if
+   
+   set the itemDelimiter to "."
+   put item 1 of pTag into tFileNumber
+   if tFileNumber is not a number then
+      return empty
+   end if
+   put ((tFileNumber - 1) div kFilesPerClump) + 1 into tClumpNumber
+   put ((tFileNumber - 1) mod kFilesPerClump) + 1 into tPropNumber
+   
+   put "c" & tPropNumber into tPropName
+   put the mainStacks into tOpenClumps
+   filter tOpenClumps with kClumpNamePrefix & "*"
+   
+   put kClumpNamePrefix & tClumpNumber into tClumpName
+   
+   put the tPropName of stack (tClumpPath & tClumpName & ".rev") into tDocData
+   if tDocData is empty then
+      return empty
+   end if
+   
+   -- We've got the doc's compressed data, uncompress and return
+   return the decompress of tDocData
+end revDocumentationRetrieve
+

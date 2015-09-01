@@ -27,14 +27,14 @@ Example:
 put "Hello World!" into tAttachment["data"]
 put "text/plain" into tAttachment["type"]
 put "Greetings.txt" into tAttachment["name"]
-mobileComposeMail "Greetings", "test@runrev.com",,,, tAttachment
+mobileComposeMail "Greetings", "test@livecode.com",,,, tAttachment
 
 Example:
 -- Attach an image --
 put image 1 into tAttachment["data"]
 put "image/gif" into tAttachment["type"]
 put "my picture" into tAttachment["name"]
-mobileComposeMail "Image Example", "test@runrev.com",,,, tAttachment
+mobileComposeMail "Image Example", "test@livecode.com",,,, tAttachment
 
 Parameters:
 subject: The subject line of the email.

@@ -28,13 +28,13 @@ foreach my $line (@sourceLines)
 	{
 		next;
 	}
-	
+
 	# Is the next token a C-string?
 	if (substr($line, 0, 1) ne '"')
 	{
 		next;
 	}
-	
+
 	# Scan to the end of the string
 	# NOTE: embedded quotation marks are not handled correctly!
 	my $end = index($line, '"', 1);
@@ -42,13 +42,13 @@ foreach my $line (@sourceLines)
 	{
 		next;
 	}
-	
+
 	# Copied over from hash_strings.rev
 	if (substr($line, 1, 1) eq '\\')
 	{
 		next;
 	}
-	
+
 	# Add to the list of tokens
 	my $token = substr($line, 1, $end-1);
 	$tokens{$token} = 1;
@@ -57,12 +57,12 @@ foreach my $line (@sourceLines)
 # Write the list of tokens out to a temporary file
 ($tempFH, $tempName) = tempfile();
 ($tempFH2, $tempName2) = tempfile();
-print $tempFH join("\n", keys %tokens);
+print $tempFH join("\n", sort(keys %tokens));
 close $tempFH;
 close $tempFH2;		# Need to close because Win32 opens exclusively
 
 # Path to the "perfect" executable
-my $perfectExe = dirname($0) . "/perfect/$perfectCmd";
+my $perfectExe = $perfectCmd;
 
 # Execute the appropriate "perfect" executable
 my $result = system("\"$perfectExe\" <\"$tempName\" >\"$tempName2\"");

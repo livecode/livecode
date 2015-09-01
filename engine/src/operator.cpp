@@ -1936,6 +1936,10 @@ void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
             else
                 MCStringsEvalIsNotAscii(ctxt, *t_value, t_result);
             break;
+
+		default:
+			MCUnreachable();
+			break;
         }
 
         if (!ctxt . HasError())
@@ -2062,6 +2066,10 @@ void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
                 else
                     MCStringsEvalIsNotAmongTheCodeunitsOf(ctxt, *t_left, *t_right, t_result);
                 break;
+
+			default:
+				MCUnreachable();
+				break;
             }
         }
         break;

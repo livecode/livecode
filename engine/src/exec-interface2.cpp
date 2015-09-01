@@ -1490,15 +1490,15 @@ void MCInterfaceSetDefaultCursor(MCExecContext& ctxt, uinteger_t p_value)
 {
 	MCCursorRef t_cursor;
 	MCInterfaceSetCursor(ctxt, p_value, true, t_cursor);
-	if (t_cursor != nil)
-	{
-		MCdefaultcursor = t_cursor;
-		MCdefaultcursorid = p_value;
-		if (MCmousestackptr != NULL)
-			MCmousestackptr->resetcursor(True);
-		else
-			MCdefaultstackptr->resetcursor(True);
-	}
+	
+    // PM-2015-06-17: [[ Bug 15200 ]] Default cursor should reset when set to empty, thus t_cursor *can* be nil
+    MCdefaultcursor = t_cursor;
+    MCdefaultcursorid = p_value;
+    if (MCmousestackptr != NULL)
+        MCmousestackptr->resetcursor(True);
+    else
+        MCdefaultstackptr->resetcursor(True);
+
 }
 void MCInterfaceGetDefaultStack(MCExecContext& ctxt, MCStringRef& r_value)
 {
@@ -2145,7 +2145,15 @@ void MCInterfaceGetScreenRect(MCExecContext& ctxt, bool p_working, bool p_effect
 	const MCDisplay *t_displays;
 	MCscreen -> getdisplays(t_displays, p_effective);
 
-	r_value = p_working ? t_displays[0] . workarea : t_displays[0] . viewport;
+    if (t_displays)
+    {
+        r_value = p_working ? t_displays[0] . workarea : t_displays[0] . viewport;
+    }
+    else
+    {
+        // No-UI mode
+        r_value = MCRectangleMake(0, 0, 0, 0);
+    }
 }
 
 void MCInterfaceGetScreenRects(MCExecContext& ctxt, bool p_working, bool p_effective, MCStringRef& r_value)

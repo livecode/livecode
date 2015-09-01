@@ -6,8 +6,6 @@ Syntax: codepoints
 
 Summary: Used with the <number> <function to designate> codepoints as a separate portion of a <string>.
 
-Synonyms: codepoints
-
 Introduced: 7.0
 
 OS: mac,windows,linux,ios,android

@@ -53,6 +53,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #undef __WINDOWS_MOBILE__
 // __LINUX_MOBILE__ will be defined if the Linux mobile platform is the target.
 #undef __LINUX_MOBILE__
+// __EMSCRIPTEN__ will be defined if Emscripten JavaScript is the target
+//#undef __EMSCRIPTEN__ // It will be defined by the compiler
 
 // __32_BIT__ will be defined if the target processor is 32-bit.
 #undef __32_BIT__
@@ -123,11 +125,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __32_BIT__ 1 
 #define __LITTLE_ENDIAN__ 1
 #define __I386__ 1
+#define __LP32__ 1
 #define __SMALL__ 1
 #elif defined(_M_X64)
 #define __64_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __X86_64__ 1
+#define __LLP64__ 1
 #define __HUGE__ 1
 #else
 #error Unknown target architecture
@@ -159,16 +163,19 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __32_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __I386__ 1
+#define __LP32__ 1
 #define __SMALL__ 1
 #elif defined(__ppc__)
 #define __32_BIT__ 1 
 #define __BIG_ENDIAN__ 1 
 #define __PPC__ 1
+#define __LP32__ 1
 #define __SMALL__ 1
 #elif defined(__x86_64__)
 #define __64_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __X86_64__ 1
+#define __LP64__ 1
 #define __HUGE__ 1
 #endif
 
@@ -188,7 +195,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //  CONFIGURE DEFINITIONS FOR LINUX
 //
 
-#if defined(__GNUC__) && !defined(__APPLE__) && !defined(__PLATFORM_IS_ANDROID__)
+#if defined(__GNUC__) && !defined(__APPLE__) && !defined(__PLATFORM_IS_ANDROID__) && !defined(__EMSCRIPTEN__)
 
 // Compiler
 #define __GCC__ 1
@@ -201,16 +208,19 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __32_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __I386__ 1
-#define __SMALL__ 1
+#define __LP32__ 1
+#define __SMALL__
 #elif defined(__x86_64__)
 #define __64_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __X86_64__ 1
+#define __LP64__ 1
 #define __MEDIUM__ 1
 #elif defined(__arm__)
 #define __32_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __ARM__ 1
+#define __LP32__ 1
 #define __SMALL__ 1
 #endif
 
@@ -240,26 +250,31 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __32_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __I386__ 1
+#define __LP32__ 1
 #define __SMALL__ 1
 #elif defined(__ppc__)
 #define __32_BIT__ 1 
 #define __BIG_ENDIAN__ 1 
 #define __PPC__ 1
+#define __LP32__ 1
 #define __SMALL__ 1
 #elif defined(__x86_64__)
 #define __64_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __X86_64__ 1
+#define __LP64__ 1
 #define __MEDIUM__ 1
 #elif defined(__arm__)
 #define __32_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __ARM__ 1
+#define __LP32__ 1
 #define __SMALL__ 1 
 #elif defined(__arm64__)
 #define __64_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __ARM64__
+#define __LP64__ 1
 #define __HUGE__ 1
 #endif
 
@@ -292,18 +307,46 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __32_BIT__
 #define __LITTLE_ENDIAN__
 #define __I386__
+#define __LP32__ 1
 #define __SMALL__
 #elif defined(__x86_64__)
 #define __64_BIT__
 #define __LITTLE_ENDIAN__
 #define __X86_64__
-#define __MEDIUM__
+#define __LP64__ 1
+#define __MEDIUM__ 1
 #elif defined(__arm__)
 #define __32_BIT__
 #define __LITTLE_ENDIAN__
 #define __ARM__
+#define __LP32__ 1
 #define __SMALL__
 #endif
+
+// Native char set
+#define __ISO_8859_1__
+
+// Native line endings
+#define __LF__
+
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  CONFIGURE DEFINITIONS FOR EMSCRIPTEN JS
+
+#if defined(__EMSCRIPTEN__)
+
+// Nasty, evil hack -- remove me
+#define __LITTLE_ENDIAN__ 1
+
+// Compiler
+#define __GCC__
+
+// Architecture
+#define __32_BIT__
+#define __LP32__
+#define __SMALL__
 
 // Native char set
 #define __ISO_8859_1__
@@ -346,14 +389,26 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //
 //  SYMBOL EXPORTS
 //
+
+/* MC_DLLEXPORT should be applied to declarations.  MC_DLLEXPORT_DEF
+ * should be applied to definitions. */
 #ifdef _WIN32
+/* On Windows, declaring something as having "dllexport" storage
+ * modifies the naming of the corresponding symbol, so the export
+ * attribute must be attached to declarations (and possibly to the
+ * definition *as well* if no separate declaration appears) */
 #  ifdef _MSC_VER
 #    define MC_DLLEXPORT __declspec(dllexport)
 #  else
 #    define MC_DLLEXPORT __attribute__((dllexport))
 #  endif
+#  define MC_DLLEXPORT_DEF MC_DLLEXPORT
 #else
-#  define MC_DLLEXPORT __attribute__((__visibility__("default")))
+/* On non-Windows platforms, the external visibility of a symbol is
+ * simply a property of its definition (i.e. whether or not it should
+ * appear in the list of exported symbols). */
+#  define MC_DLLEXPORT
+#  define MC_DLLEXPORT_DEF __attribute__((__visibility__("default"), __used__))
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -362,10 +417,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //
 
 #if !defined(__VISUALC__)
+#	define __HAVE_STDDEF_H__
+#	include <stddef.h>
 #	define __HAVE_STDINT_H__
 #	define __STDC_LIMIT_MACROS
 #	include <stdint.h>
 #   include <stddef.h>
+#   include <limits.h>
 #endif
 
 #if !defined(__HAVE_STDINT_H__)
@@ -429,23 +487,29 @@ typedef uint32_t uinteger_t;
 typedef int32_t intenum_t;
 typedef uint32_t intset_t;
 
+#if !defined(__HAVE_STDDEF_H__)
+#	if defined(__WINDOWS__)
+typedef unsigned int size_t;
+#	elif defined(__LINUX__) || defined(__ANDROID__)
+typedef unsigned int size_t;
+#	else
+typedef unsigned long size_t;
+#   endif
+#endif /* !__HAVE_STDDEF_H__ */
+
 #if !defined(__HAVE_STDINT_H__)
 #	if defined(__WINDOWS__)
 typedef signed int intptr_t;
 typedef unsigned int uintptr_t;
-typedef unsigned int size_t;
 #	elif defined(__LINUX__)
 typedef signed int intptr_t;
 typedef unsigned int uintptr_t;
-typedef unsigned int size_t;
 #	elif defined(__ANDROID__)
 typedef signed int intptr_t;
 typedef unsigned int uintptr_t;
-typedef unsigned int size_t;
 #	else
 typedef long signed int intptr_t;
 typedef long unsigned int uintptr_t;
-typedef unsigned long size_t;
 #	endif
 #endif /* !__HAVE_STDINT_H__ */
 
@@ -533,11 +597,14 @@ typedef int64_t compare_t;
 
 #if !defined(__HAVE_STDINT_H__)
 typedef uintptr_t size_t;
+typedef intptr_t ssize_t;
 
 #	define SIZE_MAX UINTPTR_MAX
+#	define SSIZE_MAX INTPTR_MAX
 #endif /* !__HAVE_STDINT_H__ */
 
 #define SIZE_MIN UINTPTR_MIN
+#define SSIZE_MIN INTPTR_MIN
 
 typedef int64_t filepos_t;
 
@@ -674,12 +741,6 @@ typedef struct __MCLocale* MCLocaleRef;
 //  MINIMUM FUNCTIONS
 //
 
-//inline uint32_t MCMin(uint32_t a, uint32_t b) { return a < b ? a : b; }
-//inline int32_t MCMin(int32_t a, int32_t b) { return a < b ? a : b; }
-//inline uint64_t MCMin(uint64_t a, uint64_t b) { return a < b ? a : b; }
-//inline int64_t MCMin(int64_t a, int64_t b) { return a < b ? a : b; }
-//inline double MCMin(double a, double b) { return a < b ? a : b; }
-//inline float MCMin(float a, float b) { return a < b ? a : b; }
 template <class T, class U> inline T MCMin(T a, U b) { return a < b ? a : b; }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -687,12 +748,6 @@ template <class T, class U> inline T MCMin(T a, U b) { return a < b ? a : b; }
 //  MAXIMUM FUNCTIONS
 //
 
-//inline uint32_t MCMax(uint32_t a, uint32_t b) { return a > b ? a : b; }
-//inline int32_t MCMax(int32_t a, int32_t b) { return a > b ? a : b; }
-//inline uint64_t MCMax(uint64_t a, uint64_t b) { return a > b ? a : b; }
-//inline int64_t MCMax(int64_t a, int64_t b) { return a > b ? a : b; }
-//inline double MCMax(double a, double b) { return a > b ? a : b; }
-//inline float MCMax(float a, float b) { return a > b ? a : b; }
 template <class T, class U> inline T MCMax(T a, U b) { return a > b ? a : b; }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -700,8 +755,8 @@ template <class T, class U> inline T MCMax(T a, U b) { return a > b ? a : b; }
 //  ABSOLUTE VALUE FUNCTIONS
 //
 
-inline uint32_t MCAbs(int32_t a) { return a < 0 ? -a : a; }
-inline uint64_t MCAbs(int64_t a) { return a < 0 ? -a : a; }
+inline uint32_t MCAbs(int32_t a) { return uint32_t(a < 0 ? -a : a); }
+inline uint64_t MCAbs(int64_t a) { return uint64_t(a < 0 ? -a : a); }
 inline float MCAbs(float a) { return fabsf(a); }
 inline double MCAbs(double a) { return fabs(a); }
 
@@ -710,8 +765,6 @@ inline double MCAbs(double a) { return fabs(a); }
 //  SIGN FUNCTIONS
 //
 
-//inline compare_t MCSgn(int32_t a) { return a < 0 ? -1 : (a > 0 ? 1 : 0); }
-//inline compare_t MCSgn(int64_t a) { return a < 0 ? -1 : (a > 0 ? 1 : 0); }
 template <class T> inline compare_t MCSgn(T a) { return a < 0 ? -1 : (a > 0 ? 1 : 0); }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -719,23 +772,19 @@ template <class T> inline compare_t MCSgn(T a) { return a < 0 ? -1 : (a > 0 ? 1 
 //  COMPARE FUNCTIONS
 //
 
-// SN-2015-01-07: [[ iOS-64bit ]] Update the MCCompare functions
-inline compare_t MCCompare(int a, int b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(unsigned int a, unsigned int b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(long a, long b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(unsigned long a, unsigned long b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(long long a, long long b) { return a < b ? -1 : (a > b ? 1 : 0); }
-inline compare_t MCCompare(unsigned long long a, unsigned long long b) { return a < b ? -1 : (a > b ? 1 : 0); }
-
+template <typename T> inline compare_t MCCompare(T a, T b) { return ((a < b) ? -1 : ((a > b) ? 1 : 0)); }
 
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  COMPARE FUNCTIONS
 //
 
-inline bool MCIsPowerOfTwo(uint32_t x) { return (x & (x - 1)) == 0; }
+template <typename T> inline bool MCIsPowerOfTwo(T x) { return (x & (x - 1)) == 0; }
 
-inline float MCClamp(float value, float min, float max) {return MCMax(min, MCMin(max, value));}
+template <typename T, typename U, typename V>
+inline T MCClamp(T value, U min, V max) {
+	return MCMax(MCMin(value, max), min);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -760,7 +809,7 @@ inline MCByteOrder MCByteOrderGetCurrent(void)
 
 inline uint16_t MCSwapInt16(uint16_t x)
 {
-	return (x >> 8) | (x << 8);
+	return (uint16_t)(x >> 8) | (uint16_t)(x << 8);
 }
 
 inline uint32_t MCSwapInt32(uint32_t x)
@@ -907,10 +956,10 @@ extern void __MCAssert(const char *file, uint32_t line, const char *message) ATT
 #define MCAssert(m_expr) (void)( (!!(m_expr)) || (__MCAssert(__FILE__, __LINE__, #m_expr), 0) )
 
 extern void __MCLog(const char *file, uint32_t line, const char *format, ...);
-#define MCLog(m_format, ...) __MCLog(__FILE__, __LINE__, m_format, __VA_ARGS__)
+#define MCLog(...) __MCLog(__FILE__, __LINE__, __VA_ARGS__)
 
 extern void __MCLogWithTrace(const char *file, uint32_t line, const char *format, ...);
-#define MCLogWithTrace(m_format, ...) __MCLogWithTrace(__FILE__, __LINE__, m_format, __VA_ARGS__)
+#define MCLogWithTrace(...) __MCLogWithTrace(__FILE__, __LINE__, __VA_ARGS__)
 
 extern void __MCUnreachable(void) ATTRIBUTE_NORETURN;
 #define MCUnreachable() __MCUnreachable();
@@ -969,6 +1018,18 @@ inline bool MCMemoryEqual(const void *left, const void *right, size_t size) { re
 // depending on whether left < right, left == right or left > right when
 // compared using byte-wise lexicographic ordering.
 inline compare_t MCMemoryCompare(const void *left, const void *right, size_t size) { return memcmp(left, right, size); }
+
+//////////
+
+}
+
+// Clear the memory of the given structure to all 0's
+template <typename T> void inline MCMemoryClear(T&p_struct)
+{
+	MCMemoryClear(&p_struct, sizeof(T));
+}
+
+extern "C" {
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -1158,6 +1219,7 @@ extern "C" {
 // Return a hash for the given integer.
 MC_DLLEXPORT hash_t MCHashInteger(integer_t);
 MC_DLLEXPORT hash_t MCHashUInteger(uinteger_t);
+MC_DLLEXPORT hash_t MCHashSize(ssize_t);
 MC_DLLEXPORT hash_t MCHashUSize(size_t);
 
 // Return a hash value for the given double - note that (hopefully!) hashing
@@ -1396,7 +1458,9 @@ MC_DLLEXPORT extern MCTypeInfoRef kMCUIntTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCFloatTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCDoubleTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCPointerTypeInfo;
+
 MC_DLLEXPORT extern MCTypeInfoRef kMCSizeTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCSSizeTypeInfo;
 
 //////////
 
@@ -1846,7 +1910,7 @@ MC_DLLEXPORT bool MCStringCreateWithCFString(CFStringRef cf_string, MCStringRef&
 MC_DLLEXPORT bool MCStringCreateWithCFStringAndRelease(CFStringRef cf_string, MCStringRef& r_string);
 #endif
 
-#ifdef __LINUX__
+#if !defined(__WINDOWS__)
 // Create a string from a C string in the system encoding
 MC_DLLEXPORT bool MCStringCreateWithSysString(const char *sys_string, MCStringRef &r_string);
 #endif
@@ -1866,6 +1930,10 @@ MC_DLLEXPORT bool MCStringEncodeAndRelease(MCStringRef string, MCStringEncoding 
 // Decode the given data, intepreting in the given encoding.
 MC_DLLEXPORT bool MCStringDecode(MCDataRef data, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
 MC_DLLEXPORT bool MCStringDecodeAndRelease(MCDataRef data, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
+
+// SN-2015-07-27: [[ Bug 15379 ]] We can need to build a string from data,
+//  without any ASCII value conversion.
+bool MCStringCreateUnicodeStringFromData(MCDataRef p_data, bool p_is_external_rep, MCStringRef& r_string);
 
 /////////
 
@@ -1914,7 +1982,8 @@ MC_DLLEXPORT bool MCStringIsEmpty(MCStringRef string);
 MC_DLLEXPORT bool MCStringCanBeNative(MCStringRef string);
 
 // Returns true if under the given comparison conditions, string cannot be represented natively.
-MC_DLLEXPORT bool MCStringCantBeNative(MCStringRef string, MCStringOptions p_options);
+MC_DLLEXPORT bool MCStringCantBeEqualToNative(MCStringRef string, MCStringOptions p_options);
+
 
 // Returns true if the string is stored as native chars.
 MC_DLLEXPORT bool MCStringIsNative(MCStringRef string);
@@ -2879,7 +2948,7 @@ MC_DLLEXPORT bool MCProperListMutableCopyAndRelease(MCProperListRef list, MCProp
 MC_DLLEXPORT bool MCProperListIsMutable(MCProperListRef list);
 
 // Returns the number of elements in the list.
-uindex_t MCProperListGetLength(MCProperListRef list);
+MC_DLLEXPORT uindex_t MCProperListGetLength(MCProperListRef list);
 
 // Returns true if the given list is the empty list.
 MC_DLLEXPORT bool MCProperListIsEmpty(MCProperListRef list);
@@ -3014,7 +3083,7 @@ struct MCPickleVariantInfo
     MCPickleRecordInfo *k##Type##PickleInfo = &__##Type##_PickleImp::__info; \
     MCPickleRecordFieldInfo __##Type##_PickleImp::__fields[] = {
 #define MC_PICKLE_END_RECORD() \
-        { kMCPickleFieldTypeNone, nil, 0 } \
+	{ kMCPickleFieldTypeNone, nil, 0, 0, nil } \
     };
 
 #define MC_PICKLE_BEGIN_VARIANT(Type, Kind) \

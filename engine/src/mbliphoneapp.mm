@@ -30,7 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblnotification.h"
 #import <sys/utsname.h>
 
-#include "script.h"
+#include "libscript/script.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2026,9 +2026,9 @@ static char *my_strndup(const char * p, int n)
 	return s;
 }
 
-extern bool MCModulesInitialize();
+extern "C" bool MCModulesInitialize();
 
-MC_DLLEXPORT int main(int argc, char *argv[], char *envp[])
+MC_DLLEXPORT_DEF int main(int argc, char *argv[], char *envp[])
 {
 #if defined(_DEBUG) && defined(_VALGRIND)
 	if (argc < 2 ||  (argc >= 2 && strcmp(argv[1], "-valgrind") != 0))

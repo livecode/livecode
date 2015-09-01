@@ -48,7 +48,8 @@
 
 #include "uuid.h"
 
-#include "script.h"
+#include "libscript/script.h"
+#include "libscript/script-auto.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -95,7 +96,7 @@ static void __rebuild_library_handler_list(void)
         }
 }
 
-bool MCEngineAddExtensionFromModule(MCStringRef p_filename, MCScriptModuleRef p_module)
+bool MCEngineAddExtensionFromModule(MCScriptModuleRef p_module)
 {
     if (!MCScriptEnsureModuleIsUsable(p_module))
     {
@@ -166,6 +167,63 @@ bool MCEngineLookupResourcePathForModule(MCScriptModuleRef p_module, MCStringRef
 	return false;
 }
 
+void MCEngineLoadExtensionFromData(MCExecContext& ctxt, MCDataRef p_extension_data, MCStringRef p_resource_path)
+{
+    MCAutoScriptModuleRef t_module;
+    if (!MCScriptCreateModuleFromData(p_extension_data, &t_module))
+    {
+        MCAutoErrorRef t_error;
+        if (MCErrorCatch(Out(t_error)))
+            ctxt . SetTheResultToValue(MCErrorGetMessage(In(t_error)));
+        else
+            ctxt . SetTheResultToStaticCString("failed to load module");
+        return;
+    }
+    
+    MCEngineAddExtensionFromModule(*t_module);
+    if (p_resource_path != nil)
+        MCEngineAddResourcePathForModule(*t_module, p_resource_path);
+    
+    return;
+}
+
+// This is the callback given to libscript so that it can resolve the absolute
+// path of native code libraries used by foreign handlers in the module. At
+// the moment we use the resources path of the module, however it will need to be
+// changed to a separate location at some point with explicit declaration so that
+// iOS linkage and Android placement issues can be resolved.
+//
+// Currently it expects:
+//   <resources>
+//     code/
+//       mac/<name>.dylib
+//       linux-x86/<name>.so
+//       linux-x86_64/<name>.so
+//       win-x86/<name>.dll
+//
+static bool MCEngineResolveSharedLibrary(MCScriptModuleRef p_module, MCStringRef p_name, MCStringRef& r_path)
+{
+    // If the module has no resource path, then it has no code.
+    MCAutoStringRef t_resource_path;
+    if (!MCEngineLookupResourcePathForModule(p_module, Out(t_resource_path)))
+        return false;
+    
+    if (MCStringIsEmpty(*t_resource_path))
+        return false;
+    
+#if defined(_MACOSX)
+    return MCStringFormat(r_path, "%@/code/mac/%@.dylib", *t_resource_path, p_name);
+#elif defined(_LINUX) && defined(__32_BIT__)
+    return MCStringFormat(r_path, "%@/code/linux-x86/%@.so", *t_resource_path, p_name);
+#elif defined(_LINUX) && defined(__64_BIT__)
+    return MCStringFormat(r_path, "%@/code/linux-x86_64/%@.so", *t_resource_path, p_name);
+#elif defined(_WINDOWS)
+    return MCStringFormat(r_path, "%@/code/win-x86/%@.dll", *t_resource_path, p_name);
+#else
+    return false;
+#endif
+}
+
 void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename, MCStringRef p_resource_path)
 {
     ctxt . SetTheResultToEmpty();
@@ -178,31 +236,12 @@ void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename, MCSt
     if (!MCS_loadbinaryfile(*t_resolved_filename, &t_data))
         return;
     
-    MCStreamRef t_stream;
-    /* UNCHECKED */ MCMemoryInputStreamCreate(MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), t_stream);
+    // Make sure we set the shared library callback - this should be done in
+    // module init for 'extension' when we have such a mechanism.
+    MCScriptSetResolveSharedLibraryCallback(MCEngineResolveSharedLibrary);
     
-    MCScriptModuleRef t_module;
-    if (!MCScriptCreateModuleFromStream(t_stream, t_module))
-    {
-        MCAutoErrorRef t_error;
-        if (MCErrorCatch(Out(t_error)))
-            ctxt . SetTheResultToValue(MCErrorGetMessage(In(t_error)));
-        else
-            ctxt . SetTheResultToStaticCString("failed to load module");
-        MCValueRelease(t_stream);
-        return;
-    }
-    
-    MCValueRelease(t_stream);
-    
-    MCEngineAddExtensionFromModule(*t_resolved_filename, t_module);
-	if (p_resource_path != nil)
-		MCEngineAddResourcePathForModule(t_module, p_resource_path);
-    
-    MCScriptReleaseModule(t_module);
-    
-    return;
-}
+    MCEngineLoadExtensionFromData(ctxt, *t_data, p_resource_path);
+ }
 
 void MCEngineExecUnloadExtension(MCExecContext& ctxt, MCStringRef p_module_name)
 {
@@ -326,7 +365,8 @@ Exec_stat MCEngineHandleLibraryMessage(MCNameRef p_message, MCParameter *p_param
     
     MCValueRef t_result;
     t_result = nil;
-    if (MCScriptCallHandlerOfInstance(t_ext -> instance, p_message, t_arguments . Ptr(), t_arguments . Size(), t_result))
+    if (t_success &&
+        MCScriptCallHandlerOfInstance(t_ext -> instance, p_message, t_arguments . Ptr(), t_arguments . Size(), t_result))
     {
         MCParameter *t_param;
         t_param = p_parameters;
@@ -639,12 +679,12 @@ bool MCExtensionTryToConvertFromScriptType(MCExecContext& ctxt, MCTypeInfoRef p_
         if (!__script_try_to_convert_to_list(ctxt, x_value, r_converted))
             return false;
     }
-    else if (MCTypeInfoIsRecord(t_resolved_type . named_type))
+    else if (MCTypeInfoIsRecord(t_resolved_type . type))
     {
         if (!__script_try_to_convert_to_record(ctxt, t_resolved_type . named_type, x_value, r_converted))
             return false;
     }
-    else if (MCTypeInfoIsForeign(t_resolved_type . named_type))
+    else if (MCTypeInfoIsForeign(t_resolved_type . type))
     {
         if (!__script_try_to_convert_to_foreign(ctxt, t_resolved_type . named_type, x_value, r_converted))
             return false;

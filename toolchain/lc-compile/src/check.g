@@ -1287,15 +1287,15 @@
 
 'var' IgnoredModulesList : NAMELIST
 
-'condition' ImportContainsCanvas(IMPORT)
+'condition' ImportContainsCanvas(DEFINITION)
 
 'sweep' CheckInvokes(ANY)
 
-    'rule' CheckInvokes(MODULE'module(_, Kind, Name, Imports, Definitions)):
+    'rule' CheckInvokes(MODULE'module(_, Kind, Name, Definitions)):
         (|
             ne(Kind, widget)
             (|
-                ImportContainsCanvas(Imports)
+                ImportContainsCanvas(Definitions)
                 MakeNameLiteral("com.livecode.widget" -> WidgetModuleName)
                 IgnoredModulesList <- namelist(WidgetModuleName, nil)
             ||
@@ -1543,9 +1543,9 @@
 'condition' ComputeInvokeSignature(INVOKEMETHODTYPE, INVOKELIST, EXPRESSIONLIST -> INVOKESIGNATURE)
 
     'rule' ComputeInvokeSignature(Type, invokelist(Head, Tail), Arguments -> Signature)
-        IsInvokeModuleAllowed(Head)
-        Head'Methods -> Methods
         (|
+            IsInvokeModuleAllowed(Head)
+            Head'Methods -> Methods
             ComputeInvokeSignatureForMethods(Type, Methods, Arguments -> Signature)
         ||
             ComputeInvokeSignature(Type, Tail, Arguments -> Signature)
@@ -1610,9 +1610,13 @@
             --Error_VariableMustHaveHighLevelType(Position)
         |)
 
-    'rule' CheckDeclaredTypes(DEFINITION'foreignhandler(_, _, _, Signature, _)):
-        -- Foreign handler signatures can contain any type so no need to
-        -- check anything here.
+    'rule' CheckDeclaredTypes(DEFINITION'foreignhandler(Position, _, _, signature(Parameters, ReturnType), _)):
+        -- Foreign handlers must be fully typed.
+        [|
+            where(ReturnType -> unspecified)
+            Error_NoReturnTypeSpecifiedForForeignHandler(Position)
+        |]
+        CheckForeignHandlerParameterTypes(Parameters)
         
     'rule' CheckDeclaredTypes(PARAMETER'parameter(Position, _, _, Type)):
         (|
@@ -1628,6 +1632,19 @@
         ||
             --Error_VariableMustHaveHighLevelType(Position)
         |)
+        
+'action' CheckForeignHandlerParameterTypes(PARAMETERLIST)
+
+    'rule' CheckForeignHandlerParameterTypes(parameterlist(parameter(Position, _, _, Type), Rest)):
+        [|
+            where(Type -> unspecified)
+            Error_NoTypeSpecifiedForForeignHandlerParameter(Position)
+        |]
+        CheckForeignHandlerParameterTypes(Rest)
+        
+    'rule' CheckForeignHandlerParameterTypes(nil):
+        -- do nothing
+
 
 'condition' IsHighLevelType(TYPE)
 
@@ -1654,6 +1671,7 @@
     'rule' IsHighLevelType(data(_)):
     'rule' IsHighLevelType(array(_)):
     'rule' IsHighLevelType(list(_, _)):
+    'rule' IsHighLevelType(unspecified):
 
 --------------------------------------------------------------------------------
 
@@ -1669,9 +1687,8 @@
 
 'sweep' CheckIdentifiers(ANY)
 
-    'rule' CheckIdentifiers(MODULE'module(_, _, Id, Imports, Definitions)):
+    'rule' CheckIdentifiers(MODULE'module(_, _, Id, Definitions)):
         CheckIdIsSuitableForDefinition(Id)
-        CheckIdentifiers(Imports)
         CheckIdentifiers(Definitions)
 
     --

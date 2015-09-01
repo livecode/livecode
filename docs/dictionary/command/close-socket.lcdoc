@@ -8,9 +8,9 @@ Summary: Shuts down a connection that was opened with the <open socket> or <acce
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac,windows,linux,iOS,android
 
-Platforms: desktop,server,web
+Platforms: desktop,server,web,mobile
 
 Security: network
 

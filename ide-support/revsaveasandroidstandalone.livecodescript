@@ -603,6 +603,17 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       revStandaloneProgress "Building executable..."
       
       local tDeploy
+      # AL-2015-07-24: [[ Standalone Extensions ]] Include selected extensions in android standalone
+      repeat for each line tExtension in revIDEExtensionsOrderByDependency(tSettings["extensions"])
+         local tExtensionFile
+         put revIDEExtensionModuleFile(tExtension) into tExtensionFile
+         if tDeploy["modules"] is empty then
+            put tExtensionFile into tDeploy["modules"]
+         else
+            put return & tExtensionFile after tDeploy["modules"]
+         end if
+      end repeat
+      
       -- Engine to use
       put mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Standalone") into tDeploy["engine"]
       // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occured
@@ -1127,6 +1138,16 @@ private function pathToZipAlign pRoot
    return the result
 end pathToZipAlign
 
+// SN-2015-07-02: [[ GypifiedAndroid ]] Get the right folder for android binaries
+private function pathToRepoAndroidBinaries
+   if revEnvironmentBinariesPath() contains "/Debug" then
+      put "Debug" into tBuild
+   else
+      put "Release" into tBuild
+   end if
+   return revEnvironmentRepositoryPath() & "/build-android-armv6/livecode/out/" & tBuild
+end pathToRepoAndroidBinaries
+
 private function pathToDex pRoot
    // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
    dispatch function "pathToDex" to stack "revDeployLibraryAndroid" with pRoot
@@ -1180,47 +1201,49 @@ function mapFilePath pPath
    end if
    
    local tPath
-   local tRepo, tComponent, tBuild, tSuffix
+   local tBinariesFolder, tComponent, tSuffix
    set the itemDelimiter to slash
-   put revEnvironmentRepositoryPath() into tRepo
-   put the last item of pPath into tComponent
-   if revEnvironmentBinariesPath() contains "/Debug" then
-      put "debug" into tBuild
-   else
-      put "release" into tBuild
+   put pathToRepoAndroidBinaries() into tBinariesFolder
+   
+   // SN-2015-07-02: [[ GypifiedAndroid ]] Throw an error if there is
+   //  not the expected build folder
+   if there is no folder tBinariesFolder then
+      throw "Error: Android binaries folder" && tBinariesFolder && "could not be found"
    end if
+   
+   put the last item of pPath into tComponent
    put revLicenseType() into tSuffix
    put toUpper(char 1 of tSuffix) into char 1 of tSuffix
    switch tComponent
       case "notify_icon.png"
-         put merge("[[tRepo]]/_build/android/[[tBuild]]/notify_icon.png") into tPath
+         put merge("[[tBinariesFolder]]/notify_icon.png") into tPath
          break
       case "Manifest.xml"
-         put merge("[[tRepo]]/_build/android/[[tBuild]]/Manifest.xml") into tPath
+         put merge("[[tBinariesFolder]]/Manifest.xml") into tPath
          break
       case "livecode_inputcontrol.xml"
-         put merge("[[tRepo]]/_build/android/[[tBuild]]/livecode_inputcontrol.xml") into tPath
+         put merge("[[tBinariesFolder]]/livecode_inputcontrol.xml") into tPath
          break
       case "Classes"
-         put merge("[[tRepo]]/_build/android/[[tBuild]]/Classes-[[tSuffix]]") into tPath
+         put merge("[[tBinariesFolder]]/Classes-[[tSuffix]]") into tPath
          break
       case "Standalone"
-         put merge("[[tRepo]]/_build/android/[[tBuild]]/Standalone-[[tSuffix]]") into tPath
+         put merge("[[tBinariesFolder]]/Standalone-[[tSuffix]]") into tPath
          break
       case "revzip"
-         put merge("[[tRepo]]/_build/android/[[tBuild]]/RevZip") into tPath
+         put merge("[[tBinariesFolder]]/RevZip") into tPath
          break
       case "revdb"
-         put merge("[[tRepo]]/_build/android/[[tBuild]]/RevDb") into tPath
+         put merge("[[tBinariesFolder]]/RevDb") into tPath
          break
       case "revxml"
-         put merge("[[tRepo]]/_build/android/[[tBuild]]/RevXml") into tPath
+         put merge("[[tBinariesFolder]]/RevXml") into tPath
          break
       case "dbsqlite"
-         put merge("[[tRepo]]/_build/android/[[tBuild]]/DbSqlite") into tPath
+         put merge("[[tBinariesFolder]]/DbSqlite") into tPath
          break
       case "dbmysql"
-         put merge("[[tRepo]]/_build/android/[[tBuild]]/DbMysql") into tPath
+         put merge("[[tBinariesFolder]]/DbMysql") into tPath
          break
       default
          put pPath into tPath

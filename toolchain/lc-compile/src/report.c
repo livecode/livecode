@@ -22,13 +22,17 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+extern int IsDependencyCompile(void);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static int s_error_count;
+int s_verbose_level;
 
 void InitializeReports(void)
 {
     s_error_count = 0;
+    s_verbose_level = 0;
 }
 
 void FinalizeReports(void)
@@ -52,6 +56,42 @@ void Fatal_InternalInconsistency(const char *p_message)
 {
     fprintf(stderr, "*** INTERNAL INCONSISTENCY (%s) ***\n", p_message);
     exit(1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void
+Debug_Emit(const char *p_format, ...)
+{
+	va_list t_args;
+	
+	if (s_verbose_level < 1)
+		return;
+
+	va_start(t_args, p_format);
+
+	fprintf(stderr, "debug: [Emit] ");
+	vfprintf(stderr, p_format, t_args);
+	fprintf(stderr, "\n");
+
+	va_end(t_args);
+}
+
+void
+Debug_Depend(const char *p_format, ...)
+{
+	va_list t_args;
+	
+	if (s_verbose_level < 1)
+		return;
+    
+	va_start(t_args, p_format);
+    
+	fprintf(stderr, "debug: [Depend] ");
+	vfprintf(stderr, p_format, t_args);
+	fprintf(stderr, "\n");
+    
+	va_end(t_args);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -120,6 +160,9 @@ static void _Error(long p_position, const char *p_message)
 
 static void _Warning(long p_position, const char *p_message)
 {
+    if (IsDependencyCompile())
+        return;
+    
     _PrintPosition(p_position);
     fprintf(stderr, "warning: %s\n", p_message);
 }
@@ -138,6 +181,10 @@ static void _ErrorS(long p_position, const char *p_message, const char *p_string
 static void _WarningS(long p_position, const char *p_message, const char *p_string)
 {
     long t_row, t_column;
+    
+    if (IsDependencyCompile())
+        return;
+    
     GetColumnOfPosition(p_position, &t_column);
     GetRowOfPosition(p_position, &t_row);
     _PrintPosition(p_position);
@@ -246,10 +293,16 @@ DEFINE_ERROR(ConstantsMustBeSimple, "Constant definitions must be a literal expr
 DEFINE_ERROR_I(HandlerNotSuitableForPropertyGetter, "'%s' has inappropriate signature to be a property getter")
 DEFINE_ERROR_I(HandlerNotSuitableForPropertySetter, "'%s' has inappropriate signature to be a property setter")
 
+DEFINE_ERROR_I(DependentModuleNotIncludedWithInputs, "Module '%s' not found in input list")
+DEFINE_ERROR_I(InterfaceFileNameMismatch, "Module '%s' has mismatched name in interface file")
+               
 DEFINE_ERROR_S(UnsuitableStringForKeyword, "Keyword '%s' is ambiguous with identifiers")
 
 DEFINE_ERROR(NextRepeatOutOfContext, "'next repeat' must appear within a repeat")
 DEFINE_ERROR(ExitRepeatOutOfContext, "'exit repeat' must appear within a repeat")
+
+DEFINE_ERROR(NoReturnTypeSpecifiedForForeignHandler, "Foreign handlers must specify a return type")
+DEFINE_ERROR(NoTypeSpecifiedForForeignHandlerParameter, "Foreign handler parameters must be typed")
 
 #define DEFINE_WARNING(Name, Message) \
     void Warning_##Name(long p_position) { _Warning(p_position, Message); }

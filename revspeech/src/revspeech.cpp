@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <stdio.h>
 
 #include <revolution/external.h>
+#include <revolution/support.h>
 
 #include "revspeech.h"
 
@@ -74,6 +75,8 @@ static bool NarratorUnload(void)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
+extern "C" void getXtable();
 
 void revSpeechLoad(char *args[], int nargs, char **retstring,
 					Bool *pass, Bool *error)

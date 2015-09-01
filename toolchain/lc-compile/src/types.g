@@ -21,7 +21,6 @@
 
 'export'
     MODULE MODULELIST MODULEKIND
-    IMPORT
     DEFINITION SIGNATURE ACCESS SCOPE
     TYPE FIELD FIELDLIST
     PARAMETER MODE PARAMETERLIST
@@ -53,12 +52,7 @@
     application
 
 'type' MODULE
-    module(Position: POS, Kind: MODULEKIND, Name: ID, Imports: IMPORT, Definitions: DEFINITION)
-
-'type' IMPORT
-    sequence(Left: IMPORT, Right: IMPORT)
-    import(Position: POS, Name: ID)
-    nil
+    module(Position: POS, Kind: MODULEKIND, Name: ID, Definitions: DEFINITION)
 
 'type' SCOPE
     normal
@@ -67,6 +61,7 @@
 'type' DEFINITION
     sequence(Left: DEFINITION, Right: DEFINITION)
     metadata(Position: POS, Key: STRING, Value: STRING)
+    import(Position: POS, Name: ID)
     type(Position: POS, Access: ACCESS, Name: ID, Type: TYPE)
     constant(Position: POS, Access: ACCESS, Name: ID, Value: EXPRESSION)
     variable(Position: POS, Access: ACCESS, Name: ID, Type: TYPE)
@@ -104,6 +99,7 @@
     data(Position: POS)
     array(Position: POS)
     list(Position: POS, Element: TYPE)
+    unspecified
     nil
 
 'type' FIELDLIST
@@ -307,8 +303,8 @@
 
 'table' ID(Position: POS, Name: NAME, Meaning: MEANING)
 
-'table' MODULEINFO(Index: INT)
-'table' SYMBOLINFO(Index: INT, Parent: ID, Access: ACCESS, Kind: SYMBOLKIND, Type: TYPE)
+'table' MODULEINFO(Index: INT, Generator: INT)
+'table' SYMBOLINFO(Index: INT, Generator: INT, Parent: ID, Access: ACCESS, Kind: SYMBOLKIND, Type: TYPE)
 'table' SYNTAXINFO(Index: INT, Parent: ID, Class: SYNTAXCLASS, Syntax: SYNTAX, Methods: SYNTAXMETHODLIST, Prefix: SYNTAXTERM, Suffix: SYNTAXTERM)
 'table' SYNTAXMARKINFO(Index: INT, RMode: MODE, LMode: MODE, Type: SYNTAXMARKTYPE)
 'table' INVOKEINFO(Index: INT, ModuleIndex: INT, Name: STRING, ModuleName: STRING, Methods: INVOKEMETHODLIST)

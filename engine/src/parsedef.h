@@ -341,7 +341,9 @@ enum Functions {
     F_CODEPOINT_OFFSET,
     F_CODEUNIT_OFFSET,
     F_COLOR_NAMES,
+    F_COMMAND_ARGUMENTS,
     F_COMMAND_KEY,
+    F_COMMAND_NAME,
     F_COMMAND_NAMES,
     F_COMPOUND,
     F_COMPRESS,
@@ -1690,6 +1692,8 @@ enum Properties {
 
     // MW-2014-12-10: [[ Extensions ]] 'loadedExtensions' global property
     P_LOADED_EXTENSIONS,
+    
+    __P_LAST,
 };
 
 enum Look_and_feel {
@@ -1721,7 +1725,9 @@ enum Repeat_form {
     RF_STEP,
     RF_UNTIL,
     RF_WHILE,
-    RF_WITH
+    RF_WITH,
+    // SN-2015-06-18: [[ Bug 15509 ]] Parse 'times' in 'repeat for x times'
+    RF_TIMES
 };
 
 enum Reset_type {
@@ -1910,6 +1916,9 @@ enum Sugar_constants {
     SG_EXTENSION,
 	SG_RESOURCE,
 	SG_PATH,
+    
+    // AL-2015-06-11: [[ Load Extension From Var ]] Add 'data' syntactic sugar
+    SG_DATA,
     
     SG_REALLY,
     SG_REAL,

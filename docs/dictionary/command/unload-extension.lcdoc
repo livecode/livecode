@@ -1,0 +1,36 @@
+Name: unload extension
+
+Type: command
+
+Syntax: unload extension <extensionIdentifier>
+
+Summary: Unload a <LiveCode Builder extension>.
+
+Introduced: 8.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+unload extension com.livecode.widget.navbar
+
+Example:
+-- Unload all extensions
+repeat for each line tExtension in the loadedExtensions
+	unload extension tExtension
+end repeat
+
+Parameters:
+extensionIdentifier: The identifier of the extension to unload.
+
+Description:
+Use the <unload extension> <command> to unload a <LiveCode Builder extension>. The extension is removed from memory.
+If the extension is a library, its public handlers will no longer be in the message path.
+If it is a widget, it will no longer be available as a control to add to a stack. 
+
+>*Note:* If there is an instance of a widget still present on a stack in memory, the <unload extension> <command> will fail.
+
+References: load extension (command), loadedExtensions (function), LiveCode Builder extension (glossary)
+
+Tags: extensions

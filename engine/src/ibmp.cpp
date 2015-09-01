@@ -2713,8 +2713,9 @@ bool MCXWDImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_
 	char *newname = nil;
 
 	if (t_success)
-		t_success = nil != (newname = new char[namesize]) &&
-		IO_read(newname, namesize, stream) == IO_NORMAL;
+        // SN-2015-06-19: [[ CID 48071 ]] Use MCMemoryNewArray for consistency
+        t_success = MCMemoryNewArray(namesize, newname)
+            && IO_read(newname, namesize, stream) == IO_NORMAL;
 
 	if (t_success)
 	{

@@ -36,6 +36,7 @@ MCTypeInfoRef __MCCustomValueResolveTypeInfo(__MCValue *p_value)
     return __MCTypeInfoResolve(t_value -> typeinfo);
 }
 
+MC_DLLEXPORT_DEF
 bool MCValueCreateCustom(MCTypeInfoRef p_typeinfo, size_t p_extra_bytes, MCValueRef& r_value)
 {
 	__MCValue *t_value;
@@ -51,6 +52,7 @@ bool MCValueCreateCustom(MCTypeInfoRef p_typeinfo, size_t p_extra_bytes, MCValue
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 MCValueTypeCode MCValueGetTypeCode(MCValueRef p_value)
 {
 	__MCValue *self = (__MCValue *)p_value;
@@ -60,6 +62,7 @@ MCValueTypeCode MCValueGetTypeCode(MCValueRef p_value)
 	return __MCValueGetTypeCode(self);
 }
 
+MC_DLLEXPORT_DEF
 MCTypeInfoRef MCValueGetTypeInfo(MCValueRef p_value)
 {
     switch(MCValueGetTypeCode(p_value))
@@ -101,6 +104,7 @@ MCTypeInfoRef MCValueGetTypeInfo(MCValueRef p_value)
     MCUnreachable();
 }
 
+MC_DLLEXPORT_DEF
 uindex_t MCValueGetRetainCount(MCValueRef p_value)
 {
 	__MCValue *self = (__MCValue *)p_value;
@@ -110,6 +114,7 @@ uindex_t MCValueGetRetainCount(MCValueRef p_value)
     return self -> references;
 }
 
+MC_DLLEXPORT_DEF
 MCValueRef MCValueRetain(MCValueRef p_value)
 {
 	__MCValue *self = (__MCValue *)p_value;
@@ -121,6 +126,7 @@ MCValueRef MCValueRetain(MCValueRef p_value)
 	return self;
 }
 
+MC_DLLEXPORT_DEF
 void MCValueRelease(MCValueRef p_value)
 {
 	__MCValue *self = (__MCValue *)p_value;
@@ -137,6 +143,7 @@ void MCValueRelease(MCValueRef p_value)
 	__MCValueDestroy(self);
 }
 
+MC_DLLEXPORT_DEF
 bool MCValueCopy(MCValueRef p_value, MCValueRef& r_immutable_copy)
 {
 	__MCValue *t_copy;
@@ -149,6 +156,7 @@ bool MCValueCopy(MCValueRef p_value, MCValueRef& r_immutable_copy)
 	return false;
 }
 
+MC_DLLEXPORT_DEF
 bool MCValueCopyAndRelease(MCValueRef p_value, MCValueRef& r_immutable_copy)
 {
 	__MCValue *t_copy;
@@ -161,6 +169,7 @@ bool MCValueCopyAndRelease(MCValueRef p_value, MCValueRef& r_immutable_copy)
 	return false;
 }
 
+MC_DLLEXPORT_DEF
 hash_t MCValueHash(MCValueRef p_value)
 {
 	__MCValue *self = (__MCValue *)p_value;
@@ -216,6 +225,7 @@ hash_t MCValueHash(MCValueRef p_value)
 	return 0;
 }
 
+MC_DLLEXPORT_DEF
 bool MCValueIsEqualTo(MCValueRef p_value, MCValueRef p_other_value)
 {
 	__MCValue *self = (__MCValue *)p_value;
@@ -297,6 +307,7 @@ bool MCValueIsEqualTo(MCValueRef p_value, MCValueRef p_other_value)
 	return false;
 }
 
+MC_DLLEXPORT_DEF
 bool MCValueCopyDescription(MCValueRef p_value, MCStringRef& r_desc)
 {
 	__MCValue *self = (__MCValue *)p_value;
@@ -344,6 +355,7 @@ bool MCValueCopyDescription(MCValueRef p_value, MCStringRef& r_desc)
 
 //////////
 
+MC_DLLEXPORT_DEF
 bool MCValueIsMutable(MCValueRef p_value)
 {
 	__MCValue *self = (__MCValue *)p_value;
@@ -360,6 +372,7 @@ bool MCValueIsMutable(MCValueRef p_value)
 	        __MCCustomDefaultIsMutable (p_value));
 }
 
+MC_DLLEXPORT_DEF
 bool MCValueMutableCopy(MCValueRef p_value, MCValueRef& r_mutable_copy)
 {
 	__MCValue *self = (__MCValue *)p_value;
@@ -376,6 +389,7 @@ bool MCValueMutableCopy(MCValueRef p_value, MCValueRef& r_mutable_copy)
 	        __MCCustomDefaultMutableCopy (p_value, false, r_mutable_copy));
 }
 
+MC_DLLEXPORT_DEF
 bool MCValueMutableCopyAndRelease(MCValueRef p_value, MCValueRef& r_mutable_copy)
 {
 	__MCValue *self = (__MCValue *)p_value;
@@ -394,6 +408,7 @@ bool MCValueMutableCopyAndRelease(MCValueRef p_value, MCValueRef& r_mutable_copy
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCValueIsUnique(MCValueRef p_value)
 {
 	__MCValue *self = (__MCValue *)p_value;
@@ -414,6 +429,7 @@ bool MCValueIsUnique(MCValueRef p_value)
 	return (self -> flags & kMCValueFlagIsInterred) != 0;
 }
 
+MC_DLLEXPORT_DEF
 bool MCValueInter(MCValueRef p_value, MCValueRef& r_unique_value)
 {
 	// If the value is already unique then this is just a copy.
@@ -427,6 +443,7 @@ bool MCValueInter(MCValueRef p_value, MCValueRef& r_unique_value)
 	return __MCValueInter((__MCValue *)p_value, false, r_unique_value);
 }
 
+MC_DLLEXPORT_DEF
 bool MCValueInterAndRelease(MCValueRef p_value, MCValueRef& r_unique_value)
 {
 	// If the value is already unique then this is just a copy but since
@@ -1035,6 +1052,7 @@ bool __MCValueImmutableCopy(__MCValue *self, bool p_release, __MCValue*& r_new_v
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCBooleanCreateWithBool(bool p_value, MCBooleanRef& r_boolean)
 {
     r_boolean = MCValueRetain(p_value ? kMCTrue : kMCFalse);
@@ -1043,9 +1061,9 @@ bool MCBooleanCreateWithBool(bool p_value, MCBooleanRef& r_boolean)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNullRef kMCNull;
-MCBooleanRef kMCTrue;
-MCBooleanRef kMCFalse;
+MC_DLLEXPORT_DEF MCNullRef kMCNull;
+MC_DLLEXPORT_DEF MCBooleanRef kMCTrue;
+MC_DLLEXPORT_DEF MCBooleanRef kMCFalse;
 
 bool __MCValueInitialize(void)
 {

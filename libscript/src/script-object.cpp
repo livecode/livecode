@@ -14,7 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "script.h"
+#include "libscript/script.h"
 #include "script-private.h"
 
 #include "foundation-auto.h"
@@ -37,6 +37,8 @@ MCTypeInfoRef kMCScriptCannotSetReadOnlyPropertyErrorTypeInfo;
 MCTypeInfoRef kMCScriptInvalidPropertyValueErrorTypeInfo;
 MCTypeInfoRef kMCScriptNotAHandlerValueErrorTypeInfo;
 MCTypeInfoRef kMCScriptCannotCallContextHandlerErrorTypeInfo;
+MCTypeInfoRef kMCScriptHandlerNotFoundErrorTypeInfo;
+MCTypeInfoRef kMCScriptPropertyNotFoundErrorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -50,6 +52,9 @@ struct MCBuiltinModule
 static MCScriptModuleRef s_builtin_module = nil;
 static MCScriptModuleRef *s_builtin_modules = nil;
 static uindex_t s_builtin_module_count = 0;
+
+static MCScriptResolveSharedLibraryCallback s_resolve_shared_library_callback = nil;
+
 static bool MCFetchBuiltinModuleSection(MCBuiltinModule**& r_modules, unsigned int& r_count);
 
 bool MCScriptInitialize(void)
@@ -269,8 +274,14 @@ bool MCScriptInitialize(void)
 			return false;
 		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.CannotCallContextHandlerError"), MCNAME("runtime"), MCSTR("Cannot call context handler"), kMCScriptCannotCallContextHandlerErrorTypeInfo))
 			return false;
+		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.HandlerNotFoundError"), MCNAME("runtime"), MCSTR("No handler %{handler} in module %{module}"), kMCScriptHandlerNotFoundErrorTypeInfo))
+			return false;
+		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.PropertyNotFoundError"), MCNAME("runtime"), MCSTR("No property %{property} in module %{module}"), kMCScriptPropertyNotFoundErrorTypeInfo))
+			return false;
     }
 
+    s_resolve_shared_library_callback = nil;
+    
     return true;
 }
 
@@ -280,6 +291,19 @@ void MCScriptFinalize(void)
         MCScriptReleaseModule(s_builtin_modules[i]);
     MCMemoryDeleteArray(s_builtin_modules);
     MCValueRelease(s_builtin_module);
+}
+
+void MCScriptSetResolveSharedLibraryCallback(MCScriptResolveSharedLibraryCallback p_callback)
+{
+    s_resolve_shared_library_callback = p_callback;
+}
+
+bool MCScriptResolveSharedLibrary(MCScriptModuleRef p_module, MCStringRef p_name, MCStringRef& r_path)
+{
+    if (s_resolve_shared_library_callback == nil)
+        return false;
+    
+    return s_resolve_shared_library_callback(p_module, p_name, r_path);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

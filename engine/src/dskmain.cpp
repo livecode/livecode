@@ -337,16 +337,11 @@ void X_main_loop_iteration()
 		MCtracedobject->message(MCM_trace_done);
 		MCtracedobject = NULL;
 	}
-	if (!MCtodestroy->isempty() || MCtodelete != NULL)
-	{
-		MCtooltip->cleartip();
-		while (MCtodelete != NULL)
-		{
-			MCObject *optr = MCtodelete->remove(MCtodelete);
-			delete optr;
-		}
-		MCtodestroy->destroy();
-	}
+    if (!MCtodestroy -> isempty())
+    {
+        MCtooltip -> cleartip();
+        MCtodestroy -> destroy();
+    }
 	MCU_cleaninserted();
 	MCscreen->siguser();
 	MCdefaultstackptr = MCstaticdefaultstackptr;
