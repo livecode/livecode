@@ -923,6 +923,8 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 	}
     
     // MERG-2014-07-11: [[ ImageMetadata ]] metadata array
+    bool t_is_image;
+    t_is_image = false;
     if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL || sp . skip_token(SP_FACTOR, TT_BINOP, O_AND) == PS_NORMAL )
     {
         if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_METADATA) != PS_NORMAL ||
@@ -931,127 +933,143 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
             MCperror -> add(PE_IMPORT_BADFILENAME, sp);
             return PS_ERROR;
         }
+        t_is_image = true;
     }
-
+    
 	if (sp.skip_token(SP_FACTOR, TT_TO) != PS_NORMAL)
 	{
 		MCperror->add(PE_EXPORT_NOTO, sp);
 		return PS_ERROR;
 	}
 
-	if (sp.skip_token(SP_OPEN, TT_UNDEFINED) == PS_NORMAL)
-	{
-		if (sp.parseexp(False, True, &fname) != PS_NORMAL)
-		{
-			MCperror->add(PE_EXPORT_BADFILENAME, sp);
-			return PS_ERROR;
-		}
-	}
-	else
-	{
-		dest = new MCChunk(True);
-		if (dest->parse(sp, False) != PS_NORMAL)
-		{
-			MCperror->add(PE_EXPORT_NOFILE, sp);
-			return PS_ERROR;
-		}
-	}
+    if (!t_is_image &&
+        sp.skip_token(SP_VALIDATION, TT_UNDEFINED, IV_ARRAY) == PS_NORMAL)
+    {
+        dest = new MCChunk(True);
+        if (dest->parse(sp, False) != PS_NORMAL)
+        {
+            MCperror->add(PE_EXPORT_NOARRAY, sp);
+            return PS_ERROR;
+        }
+        sformat = EX_OBJECT;
+    }
+    else
+    {
+        if (sp.skip_token(SP_OPEN, TT_UNDEFINED) == PS_NORMAL)
+        {
+            if (sp.parseexp(False, True, &fname) != PS_NORMAL)
+            {
+                MCperror->add(PE_EXPORT_BADFILENAME, sp);
+                return PS_ERROR;
+            }
+        }
+        else
+        {
+            dest = new MCChunk(True);
+            if (dest->parse(sp, False) != PS_NORMAL)
+            {
+                MCperror->add(PE_EXPORT_NOFILE, sp);
+                return PS_ERROR;
+            }
+        }
 
-	if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
-	{
-		if (sp.skip_token(SP_EXPORT, TT_UNDEFINED) != PS_NORMAL)
-		{
-			MCperror->add(PE_EXPORT_NOMASK, sp);
-			return PS_ERROR;
-		}
-		if (sp.parseexp(False, True, &mname) != PS_NORMAL)
-		{
-			MCperror->add(PE_EXPORT_BADMASKNAME, sp);
-			return PS_ERROR;
-		}
-	}
+        if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
+        {
+            if (sp.skip_token(SP_EXPORT, TT_UNDEFINED) != PS_NORMAL)
+            {
+                MCperror->add(PE_EXPORT_NOMASK, sp);
+                return PS_ERROR;
+            }
+            if (sp.parseexp(False, True, &mname) != PS_NORMAL)
+            {
+                MCperror->add(PE_EXPORT_BADMASKNAME, sp);
+                return PS_ERROR;
+            }
+        }
 
-	if (sp.skip_token(SP_FACTOR, TT_PREP, PT_AS) == PS_NORMAL)
-	{
-		if (sp.next(type) != PS_NORMAL || sp.lookup(SP_EXPORT, te) != PS_NORMAL)
-		{
-			MCperror->add(PE_EXPORT_BADTYPE, sp);
-			return PS_ERROR;
-		}
-		format = (Export_format)te->which;
-		if (format == EX_RAW)
-		{
-			Export_format t_format_list[] = {EX_RAW_ARGB, EX_RAW_ABGR, EX_RAW_RGBA, EX_RAW_BGRA};
-			Export_format t_format = EX_RAW;
-			for (uint32_t i=0; i<(sizeof(t_format_list) / sizeof(t_format_list[0])); i++)
-			{
-				if (sp.skip_token(SP_EXPORT, TT_UNDEFINED, t_format_list[i]) == PS_NORMAL)
-				{
-					t_format = t_format_list[i];
-					break;
-				}
-			}
-			format = t_format;
-		}
-		if (format == EX_GIF || format == EX_PNG || MCU_israwimageformat(format))
-		{
-			if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
-			{
-				if (sp.skip_token(SP_COMMAND, TT_STATEMENT, S_PALETTE) == PS_NORMAL)
-				{
-					if (sp.parseexp(False, True, &palette_color_list) != PS_NORMAL)
-					{
-						MCperror->add(PE_EXPORT_BADPALETTE, sp);
-						return PS_ERROR;
-					}
-					palette_type = kMCImagePaletteTypeCustom;
-					// palette specified.  if raw format then export as indexed data
-					if (format == EX_RAW)
-						format = EX_RAW_INDEXED;
-				}
-				else if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_STANDARD) == PS_NORMAL)
-				{
-					if (sp.skip_token(SP_COMMAND, TT_STATEMENT, S_PALETTE) != PS_NORMAL)
-					{
-						MCperror->add(PE_EXPORT_BADPALETTE, sp);
-						return PS_ERROR;
-					}
-					palette_type = kMCImagePaletteTypeWebSafe;
-				}
-				else if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_OPTIMIZED) == PS_NORMAL)
-				{
-					if (sp.skip_token(SP_COMMAND, TT_STATEMENT, S_PALETTE) != PS_NORMAL)
-					{
-						MCperror->add(PE_EXPORT_BADPALETTE, sp);
-						return PS_ERROR;
-					}
-					palette_type = kMCImagePaletteTypeOptimal;
-				}
-				else if (sp.parseexp(False, True, &palette_color_count) == PS_NORMAL)
-				{
-					if (sp.skip_token(SP_VALIDATION, TT_UNDEFINED, IV_COLOR) != PS_NORMAL)
-					{
-						MCperror->add(PE_EXPORT_BADPALETTE, sp);
-						return PS_ERROR;
-					}
-					sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_OPTIMIZED);
-					if (sp.skip_token(SP_COMMAND, TT_STATEMENT, S_PALETTE) != PS_NORMAL)
-					{
-						MCperror->add(PE_EXPORT_BADPALETTE, sp);
-						return PS_ERROR;
-					}
-					palette_type = kMCImagePaletteTypeOptimal;
-				}
-				else
-				{
-					MCperror->add(PE_EXPORT_BADPALETTE, sp);
-					return PS_ERROR;
-				}
-			}
-			if (format == EX_RAW)
-				format = EX_RAW_ARGB;
-		}
-	}
+        if (sp.skip_token(SP_FACTOR, TT_PREP, PT_AS) == PS_NORMAL)
+        {
+            if (sp.next(type) != PS_NORMAL || sp.lookup(SP_EXPORT, te) != PS_NORMAL)
+            {
+                MCperror->add(PE_EXPORT_BADTYPE, sp);
+                return PS_ERROR;
+            }
+            format = (Export_format)te->which;
+            if (format == EX_RAW)
+            {
+                Export_format t_format_list[] = {EX_RAW_ARGB, EX_RAW_ABGR, EX_RAW_RGBA, EX_RAW_BGRA};
+                Export_format t_format = EX_RAW;
+                for (uint32_t i=0; i<(sizeof(t_format_list) / sizeof(t_format_list[0])); i++)
+                {
+                    if (sp.skip_token(SP_EXPORT, TT_UNDEFINED, t_format_list[i]) == PS_NORMAL)
+                    {
+                        t_format = t_format_list[i];
+                        break;
+                    }
+                }
+                format = t_format;
+            }
+            if (format == EX_GIF || format == EX_PNG || MCU_israwimageformat(format))
+            {
+                if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
+                {
+                    if (sp.skip_token(SP_COMMAND, TT_STATEMENT, S_PALETTE) == PS_NORMAL)
+                    {
+                        if (sp.parseexp(False, True, &palette_color_list) != PS_NORMAL)
+                        {
+                            MCperror->add(PE_EXPORT_BADPALETTE, sp);
+                            return PS_ERROR;
+                        }
+                        palette_type = kMCImagePaletteTypeCustom;
+                        // palette specified.  if raw format then export as indexed data
+                        if (format == EX_RAW)
+                            format = EX_RAW_INDEXED;
+                    }
+                    else if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_STANDARD) == PS_NORMAL)
+                    {
+                        if (sp.skip_token(SP_COMMAND, TT_STATEMENT, S_PALETTE) != PS_NORMAL)
+                        {
+                            MCperror->add(PE_EXPORT_BADPALETTE, sp);
+                            return PS_ERROR;
+                        }
+                        palette_type = kMCImagePaletteTypeWebSafe;
+                    }
+                    else if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_OPTIMIZED) == PS_NORMAL)
+                    {
+                        if (sp.skip_token(SP_COMMAND, TT_STATEMENT, S_PALETTE) != PS_NORMAL)
+                        {
+                            MCperror->add(PE_EXPORT_BADPALETTE, sp);
+                            return PS_ERROR;
+                        }
+                        palette_type = kMCImagePaletteTypeOptimal;
+                    }
+                    else if (sp.parseexp(False, True, &palette_color_count) == PS_NORMAL)
+                    {
+                        if (sp.skip_token(SP_VALIDATION, TT_UNDEFINED, IV_COLOR) != PS_NORMAL)
+                        {
+                            MCperror->add(PE_EXPORT_BADPALETTE, sp);
+                            return PS_ERROR;
+                        }
+                        sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_OPTIMIZED);
+                        if (sp.skip_token(SP_COMMAND, TT_STATEMENT, S_PALETTE) != PS_NORMAL)
+                        {
+                            MCperror->add(PE_EXPORT_BADPALETTE, sp);
+                            return PS_ERROR;
+                        }
+                        palette_type = kMCImagePaletteTypeOptimal;
+                    }
+                    else
+                    {
+                        MCperror->add(PE_EXPORT_BADPALETTE, sp);
+                        return PS_ERROR;
+                    }
+                }
+                if (format == EX_RAW)
+                    format = EX_RAW_ARGB;
+            }
+        }
+    }
+    
 	return PS_NORMAL;
 }
 
@@ -1395,6 +1413,35 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 	return t_status;
 #endif /* MCExport */
 
+    if (sformat == EX_OBJECT)
+    {
+        MCObject *optr = NULL;
+        if (image != NULL)
+        {
+            //get image from chunk
+            uint4 parid;
+            if (!image->getobj(ctxt, optr, parid, True))
+            {
+                ctxt . LegacyThrow(EE_EXPORT_NOSELECTED);
+                return;
+            }
+        }
+        
+        MCAutoArrayRef t_array;
+        MCInterfaceExecExportObjectToArray(ctxt, optr, &t_array);
+        if (ctxt . HasError())
+            return;
+        
+        dest->set(ctxt, PT_INTO, *t_array);
+        if (ctxt . HasError())
+        {
+            ctxt . LegacyThrow(EE_EXPORT_CANTWRITE);
+            return;
+        }
+        
+        return;
+    }
+    
     MCAutoDataRef t_return_data;
     MCAutoStringRef t_filename;
     if (!ctxt . EvalOptionalExprAsNullableStringRef(fname, EE_EXPORT_BADNAME, &t_filename))
@@ -2168,10 +2215,17 @@ Parse_stat MCImport::parse(MCScriptPoint &sp)
 	}
 	if (sp.lookup(SP_EXPORT, te) != PS_NORMAL)
 	{
-		MCperror->add(PE_IMPORT_BADTYPE, sp);
-		return PS_ERROR;
+        if (sp.lookup(SP_FACTOR, te) != PS_NORMAL ||
+            te -> type != TT_CHUNK ||
+            te -> which != CT_WIDGET)
+        {
+            MCperror->add(PE_IMPORT_BADTYPE, sp);
+            return PS_ERROR;
+        }
+        format = EX_OBJECT;
 	}
-	format = (Export_format)te->which;
+    else
+        format = (Export_format)te->which;
 	if (format == EX_SNAPSHOT)
 	{
 		if (sp.skip_token(SP_FACTOR, TT_FROM) == PS_NORMAL)
@@ -2253,34 +2307,46 @@ Parse_stat MCImport::parse(MCScriptPoint &sp)
 		}
 		return PS_NORMAL;
 	}
+    
 	if (sp.skip_token(SP_FACTOR, TT_FROM) != PS_NORMAL)
 	{
 		MCperror->add(PE_IMPORT_NOFROM, sp);
 		return PS_ERROR;
 	}
-	if (sp.skip_token(SP_OPEN, TT_UNDEFINED) != PS_NORMAL)
-	{
-		MCperror->add(PE_IMPORT_NOFILE, sp);
-		return PS_ERROR;
-	}
-	if (sp.parseexp(False, True, &fname) != PS_NORMAL)
-	{
-		MCperror->add(PE_IMPORT_BADFILENAME, sp);
-		return PS_ERROR;
-	}
-	if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
-	{
-		if (sp.skip_token(SP_EXPORT, TT_UNDEFINED) != PS_NORMAL)
-		{
-			MCperror->add(PE_IMPORT_NOMASK, sp);
-			return PS_ERROR;
-		}
-		if (sp.parseexp(False, True, &mname) != PS_NORMAL)
-		{
-			MCperror->add(PE_IMPORT_BADMASKNAME, sp);
-			return PS_ERROR;
-		}
-	}
+    if (sp.skip_token(SP_VALIDATION, TT_UNDEFINED, IV_ARRAY) == PS_NORMAL)
+    {
+        if (sp.parseexp(False, True, &fname) != PS_NORMAL)
+        {
+            MCperror -> add(PE_IMPORT_NOARRAY, sp);
+            return PS_ERROR;
+        }
+    }
+    else
+    {
+        if (sp.skip_token(SP_OPEN, TT_UNDEFINED) != PS_NORMAL)
+        {
+            MCperror->add(PE_IMPORT_NOFILE, sp);
+            return PS_ERROR;
+        }
+        if (sp.parseexp(False, True, &fname) != PS_NORMAL)
+        {
+            MCperror->add(PE_IMPORT_BADFILENAME, sp);
+            return PS_ERROR;
+        }
+        if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
+        {
+            if (sp.skip_token(SP_EXPORT, TT_UNDEFINED) != PS_NORMAL)
+            {
+                MCperror->add(PE_IMPORT_NOMASK, sp);
+                return PS_ERROR;
+            }
+            if (sp.parseexp(False, True, &mname) != PS_NORMAL)
+            {
+                MCperror->add(PE_IMPORT_BADMASKNAME, sp);
+                return PS_ERROR;
+            }
+        }
+    }
 	if (sp.skip_token(SP_FACTOR, TT_IN) == PS_NORMAL
 	        || sp.skip_token(SP_FACTOR, TT_PREP) == PS_NORMAL)
 	{
@@ -2629,7 +2695,27 @@ void MCImport::exec_ctxt(MCExecContext &ctxt)
             // MW-2014-02-20: [[ Bug 11811 ]] Pass the wanted size to the snapshot method.
 			MCInterfaceExecImportSnapshotOfScreen(ctxt, t_rect_ptr, t_size_ptr);
 	}
-	else
+	else if (format == EX_OBJECT)
+    {
+        MCAutoArrayRef t_array;
+        if (!ctxt . EvalExprAsArrayRef(fname, EE_IMPORT_BADARRAY, &t_array))
+            return;
+        
+        MCObject *parent = NULL;
+        if (container != NULL)
+        {
+            uint4 parid;
+            if (!container->getobj(ctxt, parent, parid, True)
+                || (parent->gettype() != CT_GROUP && parent->gettype() != CT_CARD))
+            {
+                ctxt . LegacyThrow(EE_CREATE_BADBGORCARD);
+                return;
+            }
+        }
+        
+        MCInterfaceExecImportObjectFromArray(ctxt, *t_array, parent);
+    }
+    else
 	{
 		MCAutoStringRef t_filename;
         if (!ctxt . EvalOptionalExprAsNullableStringRef(fname, EE_IMPORT_BADNAME, &t_filename))
@@ -2734,7 +2820,11 @@ void MCImport::compile(MCSyntaxFactoryRef ctxt)
 			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecImportSnapshotOfScreenMethodInfo);
 		}
 	}
-	else
+	else if (format == EX_OBJECT)
+    {
+        // COMPILE-TODO
+    }
+    else
 	{
 		if (fname != nil)
 			fname -> compile(ctxt);
