@@ -1107,6 +1107,8 @@ end syntax
 
 // Constructors
 
+public foreign handler MCCanvasSolidPaintMakeWithColor(in pColor as Color, out rSolid as SolidPaint) returns nothing binds to "<builtin>"
+
 /*
 Summary:	Creates a new solid color paint.
 
@@ -1121,8 +1123,6 @@ Example:
 
 Tags: Canvas
 */
-
-public foreign handler MCCanvasSolidPaintMakeWithColor(in pColor as Color, out rSolid as SolidPaint) returns nothing binds to "<builtin>"
 
 syntax SolidPaintMake is prefix operator with precedence 4
 	"solid" "paint" "with" <mColor: Expression>
