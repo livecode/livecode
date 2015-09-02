@@ -13,7 +13,7 @@
 	<summary>Launches a url in the appropriate manner for the current system.</summary>
 
 	<examples>
-<example>launch url &quot;http://www.runrev.com&quot;</example>
+<example>launch url &quot;http://www.livecode.com&quot;</example>
 <example>launch url &quot;file:/Users/ben/Desktop/test.pdf&quot;</example>
 <example><p>launch url &quot;tel:44 7818 8822&quot;</p></example>
 	</examples>

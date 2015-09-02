@@ -13,7 +13,7 @@
 	<summary>Defines a hyperlink within a pdf print loop.</summary>
 
 	<examples>
-<example>print link to url &quot;http://www.runrev.com&quot; with rect 50,50,60,60</example>
+<example>print link to url &quot;http://www.livecode.com&quot; with rect 50,50,60,60</example>
 <example>print link to anchor &quot;section 1.1&quot; with rect 100,100,200,200</example>
 	</examples>
 

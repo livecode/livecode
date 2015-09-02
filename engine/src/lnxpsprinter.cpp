@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -487,7 +487,7 @@ void MCPSPrinterDevice::BeginPage(void)
 {
 
 	page_count++;
-	sprintf(buffer, "%%%%Page: Revolution %d\n", page_count);
+	sprintf(buffer, "%%%%Page: LiveCode %d\n", page_count);
 	PSwrite ( buffer ) ;
 	PSwrite("1.3 setlinewidth\n");
 	m_page_started = true;
@@ -739,7 +739,7 @@ MCPrinterResult MCPSPrinter::DoBeginPrint(const char *p_document, MCPrinterDevic
 		return PRINTER_RESULT_FAILURE;
 	
 	PSwrite("%!PS-Adobe-3.0\n");
-	sprintf(buffer, "%%%%Creator: Revolution %s\n", MCversionstring); PSwrite(buffer);
+	sprintf(buffer, "%%%%Creator: LiveCode %s\n", MCversionstring); PSwrite(buffer);
 	PSwrite("%%DocumentData: Clean8Bit\n");
 	sprintf(buffer, "%%%%Title: %s\n", p_document ) ; PSwrite(buffer ) ;
 	PSwrite("%%MCOrientation Portrait\n");

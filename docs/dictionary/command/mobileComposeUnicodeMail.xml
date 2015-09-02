@@ -15,7 +15,7 @@
 
 	<examples>
 <example>mobileComposeUnicodeMail tUnicodeHeader, &quot;guido@example.net&quot;,,, tUnicodeMailBody, tAttachment</example>
-<example><p>put &quot;Hello World!&quot; into tAttachment[&quot;data&quot;]</p><p>put &quot;text/plain&quot; into tAttachment[&quot;type&quot;]</p><p>put &quot;Greetings.txt&quot; into tAttachment[&quot;name&quot;]</p><p>mobileComposeUnicodeMail tUnicodeHeader, &quot;test@runrev.com&quot;,,,, tAttachment</p></example>
+<example><p>put &quot;Hello World!&quot; into tAttachment[&quot;data&quot;]</p><p>put &quot;text/plain&quot; into tAttachment[&quot;type&quot;]</p><p>put &quot;Greetings.txt&quot; into tAttachment[&quot;name&quot;]</p><p>mobileComposeUnicodeMail tUnicodeHeader, &quot;test@livecode.com&quot;,,,, tAttachment</p></example>
 <example><p>mobileComposeUnicodeMail uniEncode (tTextHeader, &quot;UTF8&quot;), &quot;guido@example.net&quot;,,, uniEncode (tTextMailBody, &quot;UTF8&quot;), tAttachment</p></example>
 	</examples>
 

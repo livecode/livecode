@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -27,7 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// The MCVariableArray class represents Revolution's 'hash' value.
+// The MCVariableArray class represents LiveCode's 'hash' value.
 // It is intended to be used by another class that controls construction and
 // destruction (notice it has no constructor/destructor). The reason behind
 // this is that we want to be able to put it in 'union' constructs and have
@@ -238,7 +238,7 @@ inline uint32_t MCVariableArray::getnfilled(void) const
 ///////////////////////////////////////////////////////////////////////////////
 //
 // The MCVariableValue class represents a value that can be stored in a 
-// Revolution variable, or container (such as a hash).
+// LiveCode variable, or container (such as a hash).
 //
 // A value has one of 5 states:
 //   - UNDEFINED: no value has been set, this is evaluated as *both* 0.0 and
