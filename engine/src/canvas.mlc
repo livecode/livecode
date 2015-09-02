@@ -2750,7 +2750,7 @@ public foreign handler MCCanvasPathCurveThroughPoints(in pThroughA as Point, in 
 
 public foreign handler MCCanvasPathArcTo(in pThrough as Point, in pTo as Point, in pRadius as CanvasFloat, inout xPath as Path) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasPathEllipticArcToWithRadiiAsList(in pTo as Point, in pRadii as List, in pRotation as CanvasFloat, inout xPath as Path) returns nothing binds to "<builtin>"
-public foreign handler MCCanvasPathEllipticArcToWithFlagsWithRadiiAsList(in pTo as Point, in pRadii as List, in pRotation as CanvasFloat, in pLargest as bool, in pClockwise as bool, inout xPath as Path) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasPathEllipticArcToWithFlagsWithRadiiAsList(in pTo as Point, in pRadii as List, in pRotation as CanvasFloat, in pLargest as CBool, in pClockwise as CBool, inout xPath as Path) returns nothing binds to "<builtin>"
 
 public foreign handler MCCanvasPathClosePath(inout xPath as Path) returns nothing binds to "<builtin>"
 
