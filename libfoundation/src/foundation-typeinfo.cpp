@@ -748,7 +748,8 @@ static bool MCCommonHandlerTypeInfoCreate(bool p_is_foreign, const MCHandlerType
     
     self -> flags |= kMCValueTypeCodeHandler;
 
-    self -> handler . is_foreign = p_is_foreign;
+    if (p_is_foreign)
+        self -> flags |= kMCTypeInfoFlagHandlerIsForeign;
 
     for (uindex_t i = 0; i < p_field_count; ++i)
     {
@@ -788,7 +789,7 @@ bool MCHandlerTypeInfoIsForeign(MCTypeInfoRef unresolved_self)
     MCTypeInfoRef self;
     self = __MCTypeInfoResolve(unresolved_self);
 
-    return self -> handler . is_foreign;
+    return (self -> flags & kMCTypeInfoFlagHandlerIsForeign) != 0;
 }
 
 MC_DLLEXPORT_DEF
@@ -1239,7 +1240,7 @@ bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self)
     }
     else if (t_code == kMCValueTypeCodeHandler)
     {
-        if (self -> handler . is_foreign != other_self -> handler . is_foreign)
+        if ((self -> flags & kMCTypeInfoFlagHandlerIsForeign) != (other_self -> flags & kMCTypeInfoFlagHandlerIsForeign))
             return false;
         if (self -> handler . field_count != other_self -> handler . field_count)
             return false;

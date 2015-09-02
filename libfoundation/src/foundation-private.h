@@ -54,6 +54,7 @@ struct __MCValue
 enum
 {
     kMCTypeInfoTypeCodeMask = 0xff,
+    kMCTypeInfoFlagHandlerIsForeign = 1 << 8,
     
     // We use typecodes well above the fixed ones we have to
     // indicate 'special' typeinfo (i.e. those with no real
@@ -93,7 +94,6 @@ struct __MCTypeInfo: public __MCValue
         } record;
         struct
         {
-            bool is_foreign : 1;
             MCHandlerTypeFieldInfo *fields;
             uindex_t field_count;
             MCTypeInfoRef return_type;
