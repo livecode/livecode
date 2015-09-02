@@ -325,11 +325,11 @@ public handler OnLoad(in pProperties as Array)
     end if
 
     if ["sort ascending"] is in the keys of pProperties then
-        put pProperties["array style"] into mArrayStyle
+        put pProperties["sort ascending"] into mSortAscending
     end if
 
     if ["sort numeric"] is in the keys of pProperties then
-        put pProperties["array style"] into mArrayStyle
+        put pProperties["sort numeric"] into mSortNumeric
     end if
 end handler
 
