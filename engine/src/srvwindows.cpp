@@ -682,6 +682,8 @@ struct MCWindowsSystem: public MCSystemInterface
 			ep . setsvalue(fname);
 		else
 			ep . setsvalue(t_long_fname);
+        
+        ep . grabsvalue();
 		
 		if (t_ptr != NULL)
 			ep.appendstringf("/%s", ++t_ptr);
