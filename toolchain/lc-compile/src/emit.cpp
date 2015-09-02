@@ -108,6 +108,7 @@ extern "C" void EmitBeginRecordType(long base_type_index);
 extern "C" void EmitRecordTypeField(NameRef name, long type_index);
 extern "C" void EmitEndRecordType(long& r_type_index);
 extern "C" void EmitBeginHandlerType(long return_type_index);
+extern "C" void EmitBeginForeignHandlerType(long return_type_index);
 extern "C" void EmitHandlerTypeInParameter(NameRef name, long type_index);
 extern "C" void EmitHandlerTypeOutParameter(NameRef name, long type_index);
 extern "C" void EmitHandlerTypeInOutParameter(NameRef name, long type_index);
@@ -1251,6 +1252,13 @@ void EmitBeginHandlerType(long return_type_index)
     MCScriptBeginHandlerTypeInModule(s_builder, return_type_index);
 
     Debug_Emit("BeginHandlerType(%ld)", return_type_index);
+}
+
+void EmitBeginForeignHandlerType(long return_type_index)
+{
+    MCScriptBeginForeignHandlerTypeInModule(s_builder, return_type_index);
+    
+    Debug_Emit("BeginForeignHandlerType(%ld)", return_type_index);
 }
 
 static void EmitHandlerTypeParameter(MCHandlerTypeFieldMode mode, NameRef name, long type_index)

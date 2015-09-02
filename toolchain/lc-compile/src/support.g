@@ -196,6 +196,7 @@
     EmitRecordTypeField
     EmitEndRecordType
     EmitBeginHandlerType
+    EmitBeginForeignHandlerType
     EmitHandlerTypeInParameter
     EmitHandlerTypeOutParameter
     EmitHandlerTypeInOutParameter
@@ -560,6 +561,7 @@
 'action' EmitEndRecordType(-> INT)
 
 'action' EmitBeginHandlerType(ReturnType: INT)
+'action' EmitBeginForeignHandlerType(ReturnType: INT)
 'action' EmitHandlerTypeInParameter(Name: NAME, Type: INT)
 'action' EmitHandlerTypeOutParameter(Name: NAME, Type: INT)
 'action' EmitHandlerTypeInOutParameter(Name: NAME, Type: INT)

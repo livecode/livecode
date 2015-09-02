@@ -79,6 +79,7 @@ MC_PICKLE_BEGIN_VARIANT(MCScriptType, kind)
     MC_PICKLE_VARIANT_CASE(kMCScriptTypeKindOptional, MCScriptOptionalType)
     MC_PICKLE_VARIANT_CASE(kMCScriptTypeKindHandler, MCScriptHandlerType)
     MC_PICKLE_VARIANT_CASE(kMCScriptTypeKindRecord, MCScriptRecordType)
+    MC_PICKLE_VARIANT_CASE(kMCScriptTypeKindForeignHandler, MCScriptHandlerType)
 MC_PICKLE_END_VARIANT()
 
 //////////
@@ -245,8 +246,6 @@ void MCScriptDestroyModule(MCScriptModuleRef self)
         {
             MCScriptForeignHandlerDefinition *t_def;
             t_def = static_cast<MCScriptForeignHandlerDefinition *>(self -> definitions[i]);
-            MCMemoryDeleteArray(t_def -> function_argtypes);
-            MCMemoryDelete(t_def -> function_cif);
         }
     
     // Remove ourselves from the context slot owners list.
@@ -777,22 +776,31 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
             }
             break;
             case kMCScriptTypeKindHandler:
+            case kMCScriptTypeKindForeignHandler:
             {
                 MCScriptHandlerType *t_type;
                 t_type = static_cast<MCScriptHandlerType *>(self -> types[i]);
                 
                 MCAutoArray<MCHandlerTypeFieldInfo> t_parameters;
-                for(uindex_t i = 0; i < t_type -> parameter_count; i++)
+                for(uindex_t j = 0; j < t_type -> parameter_count; j++)
                 {
                     MCHandlerTypeFieldInfo t_parameter;
-                    t_parameter . mode = (MCHandlerTypeFieldMode)t_type -> parameters[i] . mode;
-                    t_parameter . type = self -> types[t_type -> parameters[i] . type] -> typeinfo;
+                    t_parameter . mode = (MCHandlerTypeFieldMode)t_type -> parameters[j] . mode;
+                    t_parameter . type = self -> types[t_type -> parameters[j] . type] -> typeinfo;
                     if (!t_parameters . Push(t_parameter))
 						goto error_cleanup;
                 }
                 
-                if (!MCHandlerTypeInfoCreate(t_parameters . Ptr(), t_type -> parameter_count, self -> types[t_type -> return_type] -> typeinfo, &t_typeinfo))
-					goto error_cleanup; // oom
+                if (t_type -> kind == kMCScriptTypeKindHandler)
+                {
+                    if (!MCHandlerTypeInfoCreate(t_parameters . Ptr(), t_type -> parameter_count, self -> types[t_type -> return_type] -> typeinfo, &t_typeinfo))
+                        goto error_cleanup; // oom
+                }
+                else
+                {
+                    if (!MCForeignHandlerTypeInfoCreate(t_parameters . Ptr(), t_type -> parameter_count, self -> types[t_type -> return_type] -> typeinfo, &t_typeinfo))
+                        goto error_cleanup; // oom
+                }
             }
             break;
         }
@@ -1190,6 +1198,7 @@ static void type_to_string(MCScriptModuleRef self, uindex_t p_type, MCStringRef&
             MCStringFormat(r_string, "optional %@", *t_target_name);
         }
         break;
+        case kMCScriptTypeKindForeignHandler:
         case kMCScriptTypeKindHandler:
         {
             MCAutoStringRef t_sig;
@@ -1251,6 +1260,13 @@ bool MCScriptWriteInterfaceOfModule(MCScriptModuleRef self, MCStreamRef stream)
                     case kMCScriptTypeKindForeign:
                     {
                         __writeln(stream, "foreign type %@", t_def_name);
+                    }
+                    break;
+                    case kMCScriptTypeKindForeignHandler:
+                    {
+                        MCAutoStringRef t_sig;
+                        type_to_string(self, static_cast<MCScriptTypeDefinition *>(t_def) -> type, &t_sig);
+                        __writeln(stream, "foreign handler type %@%@", t_def_name, *t_sig);
                     }
                     break;
                     case kMCScriptTypeKindHandler:
