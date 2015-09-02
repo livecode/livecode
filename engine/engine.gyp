@@ -708,7 +708,7 @@
 			
 						'variables':
 						{
-							'app_plist': 'rsrc/Standalone-Info.plist',
+							'app_plist': 'rsrc/standalone-mobile-Info.plist',
 						},
 			
 						'dependencies':
@@ -721,8 +721,6 @@
 						[
 							'src/dummy.cpp',
 						],
-
-						'app_plist': 'rsrc/standalone-mobile-Info.plist',
 					},
 				],
 			},
