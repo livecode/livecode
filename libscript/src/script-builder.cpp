@@ -569,7 +569,7 @@ void MCScriptAddOptionalTypeToModule(MCScriptModuleBuilderRef self, uindex_t p_t
     __add_script_type(self, t_type, r_type);
 }
 
-void MCScriptBeginHandlerTypeInModule(MCScriptModuleBuilderRef self, uindex_t p_return_type)
+static void MCScriptBeginCommonHandlerTypeInModule(MCScriptModuleBuilderRef self, bool p_is_foreign, uindex_t p_return_type)
 {
     if (self == nil ||
         !self -> valid)
@@ -582,10 +582,20 @@ void MCScriptBeginHandlerTypeInModule(MCScriptModuleBuilderRef self, uindex_t p_
         return;
     }
     
-    t_type -> kind = kMCScriptTypeKindHandler;
+    t_type -> kind = p_is_foreign ? kMCScriptTypeKindForeignHandler : kMCScriptTypeKindHandler;
     t_type -> return_type = p_return_type;
     
     self -> current_type = t_type;
+}
+
+void MCScriptBeginHandlerTypeInModule(MCScriptModuleBuilderRef self, uindex_t p_return_type)
+{
+    MCScriptBeginCommonHandlerTypeInModule(self, false, p_return_type);
+}
+
+void MCScriptBeginForeignHandlerTypeInModule(MCScriptModuleBuilderRef self, uindex_t p_return_type)
+{
+    MCScriptBeginCommonHandlerTypeInModule(self, true, p_return_type);
 }
 
 void MCScriptContinueHandlerTypeInModule(MCScriptModuleBuilderRef self, MCScriptHandlerTypeParameterMode p_mode, MCNameRef p_name, uindex_t p_type)
@@ -620,7 +630,7 @@ void MCScriptEndHandlerTypeInModule(MCScriptModuleBuilderRef self, uindex_t& r_n
     
     for(uindex_t i = 0; i < self -> module . type_count; i++)
     {
-        if (self -> module . types[i] -> kind != kMCScriptTypeKindHandler)
+        if (self -> module . types[i] -> kind != t_type -> kind)
             continue;
         
         MCScriptHandlerType *t_other_type;

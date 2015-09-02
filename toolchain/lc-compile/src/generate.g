@@ -234,7 +234,7 @@
         QuerySymbolId(Getter -> GetInfo)
         GetInfo'Type -> GetDefType
         (|
-            where(GetDefType -> handler(_, signature(_, GetType)))
+            where(GetDefType -> handler(_, _, signature(_, GetType)))
         ||
             where(GetDefType -> GetType)
         |)
@@ -243,7 +243,7 @@
             QuerySymbolId(Setter -> SetInfo)
             SetInfo'Type -> SetDefType
             (|
-                where(SetDefType -> handler(_, signature(parameterlist(parameter(_, _, _, SetType), _), _)))
+                where(SetDefType -> handler(_, _, signature(parameterlist(parameter(_, _, _, SetType), _), _)))
             ||
                 where(SetDefType -> SetType)
             |)
@@ -680,7 +680,7 @@
         EmitContextVariableDefinition(DefIndex, Position, Name, TypeIndex, ConstIndex)
 
     'rule' GenerateDefinitions(handler(Position, _, Id, Scope, Signature:signature(Parameters, _), _, Body)):
-        GenerateType(handler(Position, Signature) -> TypeIndex)
+        GenerateType(handler(Position, normal, Signature) -> TypeIndex)
         
         QuerySymbolId(Id -> Info)
         Id'Name -> Name
@@ -706,7 +706,7 @@
         EmitEndHandlerDefinition()
 
     'rule' GenerateDefinitions(foreignhandler(Position, _, Id, Signature, Binding)):
-        GenerateType(handler(Position, Signature) -> TypeIndex)
+        GenerateType(handler(Position, foreign, Signature) -> TypeIndex)
         
         QuerySymbolId(Id -> Info)
         Id'Name -> Name
@@ -729,7 +729,7 @@
         EmitPropertyDefinition(DefIndex, Position, Name, GetIndex, SetIndex)
         
     'rule' GenerateDefinitions(event(Position, _, Id, Signature)):
-        GenerateType(handler(Position, Signature) -> TypeIndex)
+        GenerateType(handler(Position, normal, Signature) -> TypeIndex)
 
         QuerySymbolId(Id -> Info)
         Id'Name -> Name
@@ -1564,7 +1564,7 @@
         Info'Index -> Index
         Info'Kind -> Kind
         Info'Type -> Type
-        FullyResolveType(Type -> handler(_, signature(HandlerSig, _)))
+        FullyResolveType(Type -> handler(_, _, signature(HandlerSig, _)))
         GenerateCall_GetInvokeSignature(HandlerSig, 0 -> InvokeSig)
 
         (|
@@ -1903,7 +1903,7 @@
             where(Type -> foreign(_, _))
             where(ThisType -> Base)
         ||
-            where(Type -> handler(_, _))
+            where(Type -> handler(_, _, _))
             where(ThisType -> Base)
         ||
             where(Type -> record(_, _, _))
@@ -1947,9 +1947,15 @@
         GenerateRecordTypeFields(Fields)
         EmitEndRecordType(-> Index)
 
-    'rule' GenerateBaseType(handler(_, signature(Parameters, ReturnType)) -> Index):
+    'rule' GenerateBaseType(handler(_, Language, signature(Parameters, ReturnType)) -> Index):
         GenerateType(ReturnType -> ReturnTypeIndex)
-        EmitBeginHandlerType(ReturnTypeIndex)
+        (|
+            where(Language -> normal)
+            EmitBeginHandlerType(ReturnTypeIndex)
+        ||
+            where(Language -> foreign)
+            EmitBeginForeignHandlerType(ReturnTypeIndex)
+        |)
         GenerateHandlerTypeParameters(Parameters)
         EmitEndHandlerType(-> Index)
 

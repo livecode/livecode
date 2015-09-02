@@ -2,31 +2,52 @@ module __VMTEST.native_callback
 
 use com.livecode.foreign
 
+-------- OLD STYLE FUNCTION PTRS
+
+variable sTotal_Old as Number
+
+handler type ProperListCallbackThunk_Old(in pContext as optional Pointer, in pElement as optional any) returns CBool
+
+handler SumElementOfList_Old(in pContext as optional Pointer, in pElement as optional any) returns CBool
+    add pElement to sTotal_Old
+    return true
+end handler
+
+foreign handler MCHandlerGetFunctionPtr_Old(in pHandler as any, out rFuncPtr as Pointer) returns CBool binds to "MCHandlerGetFunctionPtr"
+foreign handler MCProperListApply_Old(in pList as List, in pCallback as Pointer, in pContext as optional Pointer) returns CBool binds to "MCProperListApply"
+
+public handler TestNativeCallback_Old()
+    -- For memory management reasons we need to keep a reference to the handler
+    -- we want to use around for as long as the function ptr we need.
+    variable tHandler as ProperListCallbackThunk_Old
+    put SumElementOfList_Old into tHandler
+
+    -- Fetch the function pointer
+    variable tFunctionPtr as Pointer
+    test "create function pointer - old" when MCHandlerGetFunctionPtr_Old(tHandler, tFunctionPtr)
+
+    -- See if it works
+    put 0 into sTotal_Old
+    MCProperListApply_Old([1, 2, 3, 4, 5, 6], tFunctionPtr, nothing)
+    test "use function pointer - old" when sTotal_Old is (1 + 2 + 3 + 4 + 5 + 6)
+end handler
+
+--------- NEW STYLE FUNCTION PTRS
+
 variable sTotal as Number
 
-handler type ProperListCallbackThunk(in pContext as optional Pointer, in pElement as optional any) returns CBool
+public foreign handler type MCProperListApplyCallback(in pContext as optional Pointer, in pElement as optional any) returns CBool
 
 handler SumElementOfList(in pContext as optional Pointer, in pElement as optional any) returns CBool
     add pElement to sTotal
     return true
 end handler
 
-foreign handler MCHandlerGetFunctionPtr(in pHandler as any, out rFuncPtr as Pointer) returns CBool binds to "<builtin>"
-foreign handler MCProperListApply(in pList as List, in pCallback as Pointer, in pContext as optional Pointer) returns CBool binds to "<builtin>"
+foreign handler MCProperListApply(in pList as List, in pCallback as MCProperListApplyCallback, in pContext as optional Pointer) returns CBool binds to "<builtin>"
 
 public handler TestNativeCallback()
-    -- For memory management reasons we need to keep a reference to the handler
-    -- we want to use around for as long as the function ptr we need.
-    variable tHandler as ProperListCallbackThunk
-    put SumElementOfList into tHandler
-
-    -- Fetch the function pointer
-    variable tFunctionPtr as Pointer
-    test "create function pointer" when MCHandlerGetFunctionPtr(tHandler, tFunctionPtr)
-
-    -- See if it works
     put 0 into sTotal
-    MCProperListApply([1, 2, 3, 4, 5, 6], tFunctionPtr, nothing)
+    MCProperListApply([1, 2, 3, 4, 5, 6], SumElementOfList, nothing)
     test "use function pointer" when sTotal is (1 + 2 + 3 + 4 + 5 + 6)
 end handler
 

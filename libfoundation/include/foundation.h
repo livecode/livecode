@@ -1673,6 +1673,18 @@ struct MCHandlerTypeFieldInfo
 // an MCHandlerTypeFieldInfo where name is null.
 MC_DLLEXPORT bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *fields, index_t field_count, MCTypeInfoRef return_type, MCTypeInfoRef& r_typeinfo);
 
+// Create a description of a foreign handler with the given signature.
+// If field_count is negative, the fields array must be terminated by
+// an MCHandlerTypeFieldInfo where name is null.
+//
+// Note: Foreign handlers and handlers are interchangeable for the most part. The
+//   distinction is made so that the FFI knows when it needs to bridge from an
+//   MCHandlerRef to a C function ptr.
+MC_DLLEXPORT bool MCForeignHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *fields, index_t field_count, MCTypeInfoRef return_type, MCTypeInfoRef& r_typeinfo);
+
+// Returns true if the handler is of foreign type.
+MC_DLLEXPORT bool MCHandlerTypeInfoIsForeign(MCTypeInfoRef typeinfo);
+    
 // Get the return type of the handler. A return-type of kMCNullTypeInfo means no
 // value is returned.
 MC_DLLEXPORT MCTypeInfoRef MCHandlerTypeInfoGetReturnType(MCTypeInfoRef typeinfo);

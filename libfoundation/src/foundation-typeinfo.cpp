@@ -729,8 +729,7 @@ __MCRecordTypeInfoGetBaseTypeForField (__MCTypeInfo *self,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_DLLEXPORT_DEF
-bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *p_fields, index_t p_field_count, MCTypeInfoRef p_return_type, MCTypeInfoRef& r_typeinfo)
+static bool MCCommonHandlerTypeInfoCreate(bool p_is_foreign, const MCHandlerTypeFieldInfo *p_fields, index_t p_field_count, MCTypeInfoRef p_return_type, MCTypeInfoRef& r_typeinfo)
 {
     __MCTypeInfo *self;
     if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
@@ -749,7 +748,9 @@ bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *p_fields, index_t p_f
     
     self -> flags |= kMCValueTypeCodeHandler;
 
-	for (uindex_t i = 0; i < p_field_count; ++i)
+    self -> handler . is_foreign = p_is_foreign;
+
+    for (uindex_t i = 0; i < p_field_count; ++i)
     {
         self -> handler . fields[i] . type = MCValueRetain(p_fields[i] . type);
         self -> handler . fields[i] . mode = p_fields[i] . mode;
@@ -767,6 +768,27 @@ bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *p_fields, index_t p_f
     MCValueRelease(self);
     
     return false;
+}
+
+MC_DLLEXPORT_DEF
+bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *p_fields, index_t p_field_count, MCTypeInfoRef p_return_type, MCTypeInfoRef& r_typeinfo)
+{
+    return MCCommonHandlerTypeInfoCreate(false, p_fields, p_field_count, p_return_type, r_typeinfo);
+}
+
+MC_DLLEXPORT_DEF
+bool MCForeignHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *p_fields, index_t p_field_count, MCTypeInfoRef p_return_type, MCTypeInfoRef& r_typeinfo)
+{
+    return MCCommonHandlerTypeInfoCreate(true, p_fields, p_field_count, p_return_type, r_typeinfo);
+}
+
+MC_DLLEXPORT_DEF
+bool MCHandlerTypeInfoIsForeign(MCTypeInfoRef unresolved_self)
+{
+    MCTypeInfoRef self;
+    self = __MCTypeInfoResolve(unresolved_self);
+
+    return self -> handler . is_foreign;
 }
 
 MC_DLLEXPORT_DEF
@@ -1217,6 +1239,8 @@ bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self)
     }
     else if (t_code == kMCValueTypeCodeHandler)
     {
+        if (self -> handler . is_foreign != other_self -> handler . is_foreign)
+            return false;
         if (self -> handler . field_count != other_self -> handler . field_count)
             return false;
         if (self -> handler . return_type != other_self -> handler . return_type)

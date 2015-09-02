@@ -93,6 +93,7 @@ struct __MCTypeInfo: public __MCValue
         } record;
         struct
         {
+            bool is_foreign : 1;
             MCHandlerTypeFieldInfo *fields;
             uindex_t field_count;
             MCTypeInfoRef return_type;

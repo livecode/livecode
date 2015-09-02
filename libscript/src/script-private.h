@@ -125,6 +125,7 @@ enum MCScriptTypeKind
     kMCScriptTypeKindOptional,
     kMCScriptTypeKindHandler,
     kMCScriptTypeKindRecord,
+    kMCScriptTypeKindForeignHandler,
 };
 
 struct MCScriptType
@@ -422,6 +423,12 @@ MCNameRef MCScriptGetNameOfContextVariableInModule(MCScriptModuleRef module, uin
 
 ////////////////////////////////////////////////////////////////////////////////
 
+struct MCScriptHandlerValue
+{
+    MCScriptCommonHandlerDefinition *definition;
+    MCHandlerRef value;
+};
+
 struct MCScriptInstance: public MCScriptObject
 {
     // The module defining the instance.
@@ -429,11 +436,28 @@ struct MCScriptInstance: public MCScriptObject
     
     // The module's array of slots (module -> slot_count in length).
     MCValueRef *slots;
+    
+    // The instance's handler refs. This is a mapping from handler def to
+    // MCHandlerRef. The MCHandlerRefs are freed when the instance is freed.
+    MCScriptHandlerValue *handlers;
+    uindex_t handler_count;
 };
 
 void MCScriptDestroyInstance(MCScriptInstanceRef instance);
 
 bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef instance, MCScriptHandlerDefinition *handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_result);
+
+// Evaluate the value of the given handler definition. This will create an
+// appropriate MCHandlerRef which can then be called. The instance retains the
+// handler ref and releases when the instance goes away. This implicitly means
+// that any C function ptrs generated from MCHandlerRefs have lifetime equivalent
+// to that of the instance.
+//
+// If the definition is a foreign function and it cannot be bound, then nil is
+// returned for the handler (i.e. it is not an error).
+//
+// The function returns false if there is a memory error.
+bool MCScriptEvaluateHandlerOfInstanceInternal(MCScriptInstanceRef instance, MCScriptCommonHandlerDefinition *definition, MCHandlerRef& r_handler);
 
 ////////////////////////////////////////////////////////////////////////////////
 
