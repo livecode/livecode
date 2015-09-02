@@ -13,7 +13,7 @@
 	<summary>Adds the named handler to the 'LiveCode' object within the current JavaScript context of the browser.</summary>
 
 	<examples>
-<example><p>local tBrowserID</p><p>put revOpenBrowserCef(the windowId of this stack, "http://www.runrev.com") into tBrowserID</p><p>revBrowserAddJavaScriptHander, tBrowserID, "myLiveCodeHandler"</p></example>
+<example><p>local tBrowserID</p><p>put revOpenBrowserCef(the windowId of this stack, "http://www.livecode.com") into tBrowserID</p><p>revBrowserAddJavaScriptHander, tBrowserID, "myLiveCodeHandler"</p></example>
 	</examples>
 
 	<history>

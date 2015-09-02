@@ -14,7 +14,7 @@
 
 	<examples>
 <example><p>local tBrowserId</p><p>put revBrowserOpenCef(the windowId of
-this stack, "http://www.runrev.com") into tBrowserId</p><p>if tBrowserId is
+this stack, "http://www.livecode.com") into tBrowserId</p><p>if tBrowserId is
 not an integer then</p><p>  answer "Failed to open browser"</p><p>end
 if</p></example>
 <example><p>local tBrowserId, tFile   </p><p>answer file "Please choose a
@@ -93,8 +93,8 @@ will be empty.</value>
 browser in the window with the given windowId. If a url is given, the
 browser immediately navigates to this
 url.<p></p><p><b>Example:</b></p><p>Create a new browser window in the
-current stack, set to open on the runrev homepage:</p><p></p><p>put
-revOpenBrowserCef(the windowId of this stack, "http://www.runrev.com") into
+current stack, set to open on the LiveCode homepage:</p><p></p><p>put
+revOpenBrowserCef(the windowId of this stack, "http://www.livecode.com") into
 tMyBrowserId</p></comments>
 	</description>
 </doc>

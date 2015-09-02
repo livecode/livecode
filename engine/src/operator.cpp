@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1473,7 +1473,7 @@ Exec_stat MCIs::eval(MCExecPoint &ep)
 			(EE_IS_WITHINNAR, line, pos, ep2.getsvalue());
 			return ES_ERROR;
 		}
-		// MW-2007-01-08: [[ Bug 5745 ]] For consistency across Revolution and also with
+		// MW-2007-01-08: [[ Bug 5745 ]] For consistency across LiveCode and also with
 		//   HyperCard, 'is within' should *not* include bottom and right edges.
 		match = i1 >= i3 && i1 < i5 && i2 >= i4 && i2 < i6;
 		if (form == IT_NOT_WITHIN)

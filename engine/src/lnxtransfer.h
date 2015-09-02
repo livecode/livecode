@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -31,7 +31,7 @@ extern guint32 LastPositionTime;
 //
 // Class MCMIMEtype:
 // 		Encapsulates a MIME type. Stored as an Atom you can use this class
-//		to convert between an Atom, a String, the Revolution transfer type
+//		to convert between an Atom, a String, the LiveCode transfer type
 // 		and the Rev transfer type string.
 
 class MCMIMEtype
@@ -135,7 +135,7 @@ private:
 class MCXTransferStore 
 {
 public:
-		
+
 
 	
 private:	

@@ -17,7 +17,7 @@
 	<summary>Sets a given property of a specified browser.</summary>
 
 	<examples>
-<example>revBrowserSet tBrowserId, "url", "http://www.runrev.com"</example>
+<example>revBrowserSet tBrowserId, "url", "http://www.livecode.com"</example>
 <example><p>answer file "Please choose a file to display"</p><p>if theresult
 is not "cancel" then</p><p>  put it into tFile</p><p>  put revBrowserSet
 tBrowserID,"url","file://" &amp; tFile     </p><p>end
@@ -216,7 +216,7 @@ disabling scrollbars, revBrowser won't allow you to turn scrollbars back on.
 The way to work around this and create a browser that allows scrollbars to
 be toggled on both platforms is like this:</p><p></p><p>local
 sBrowserId</p><p></p><p>on browserOpen</p><p>  put revBrowserOpen(the
-windowId of me, http://www.runrev.com) into sBrowserId</p><p>  if the
+windowId of me, http://www.livecode.com) into sBrowserId</p><p>  if the
 platform is MacOS then</p><p>    send browserDisableScrollbars to me in 1
 second</p><p>  else</p><p>    revBrowserSet sBrowserId, scrollbars,
 false</p><p>  end if</p><p>end browserOpen</p><p></p><p>on

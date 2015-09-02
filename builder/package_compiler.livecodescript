@@ -1033,7 +1033,7 @@ private command compilerExecuteShortcut @self, pCommand
             exit repeat
          end if
          
-         -- See if the target matches a folder prefix (e.g. .../Revolution.app)
+         -- See if the target matches a folder prefix (e.g. .../LiveCode.app)
          if item 2 of tLine begins with (tTarget & slash) then
             put true into tFound
             exit repeat

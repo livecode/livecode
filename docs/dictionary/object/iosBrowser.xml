@@ -13,7 +13,7 @@
 
 	<examples>
 <example><p>mobileControlCreate &quot;browser&quot;</p><p></p></example>
-<example><p>mobileControlCreate &quot;browser&quot;, &quot;web view&quot;</p><p>put the result into sBrowserID</p><p>mobileControlSet sBrowserID, &quot;visible&quot;, &quot;true&quot;</p><p>mobileControlSet sBrowserID, &quot;url&quot;, &quot;http://www.runrev.com&quot;</p></example>
+<example><p>mobileControlCreate &quot;browser&quot;, &quot;web view&quot;</p><p>put the result into sBrowserID</p><p>mobileControlSet sBrowserID, &quot;visible&quot;, &quot;true&quot;</p><p>mobileControlSet sBrowserID, &quot;url&quot;, &quot;http://www.livecode.com&quot;</p></example>
 	</examples>
 
 	<history>

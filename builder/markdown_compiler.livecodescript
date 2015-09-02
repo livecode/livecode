@@ -1,7 +1,7 @@
 ﻿script "MarkdownCompiler"
 /*
 
-Compiles RunRev flavoured markdown files to HTML
+Compiles LiveCode flavoured markdown files to HTML
 
 MD:
 ##... <headings>
