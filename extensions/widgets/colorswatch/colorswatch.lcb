@@ -15,6 +15,9 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+/*
+This widget displays a color with optional alpha channel.
+*/
 widget com.livecode.widget.colorSwatch
 --
 
@@ -33,6 +36,43 @@ metadata svgicon is "M86.6,0H7.9C3.5,0,0,3.5,0,7.9v78.8c0,4.3,3.5,7.9,7.9,7.9h78
 --
 
 -- property declarations
+
+/*
+Syntax:
+set the swatchColor of <widget> to <pColor>
+get the swatchColor of <widget>
+
+Summary: Determines the color displayed by the swatch.
+
+Parameters:
+pColor: The color of the swatch in RGB or RGBA format, or empty.
+
+Example: set the swatchColor of widget "Color Swatch" to empty
+
+Example: 
+    on copySwatchColorToGraphic pSwatchName, pGraphicName
+        local tColorWithAlpha
+        put the swatchColor of widget pSwatchName into tColorWithAlpha
+        
+        local tColor, tBlendLevel
+        put item 1 to 3 of tColorWithAlpha into tColor
+        put (255 - item 4 of tColorWithAlpha) / 2.55 into tBlendLevel
+
+        set the backcolor of graphic pGraphicName to tColor
+        set the blendLevel of graphic pGraphicName to tBlendLevel
+    end copySwatchColorToGraphic
+
+
+Description:
+Use the iconColor property to set the color of the widget icon. The color is
+in the form of a 3 or 4 item string, the 4th optional item being the alpha value,
+all between 0 and 255.
+
+>*Note:* The color returned by the <swatchColor> property, if not empty,
+always includes an alpha value which is 255 by default.
+
+*/
+
 property swatchColor get getColor set setColor
 metadata swatchColor.editor is "com.livecode.pi.colorwithalpha"
 metadata swatchColor.default is "255,100,0"
