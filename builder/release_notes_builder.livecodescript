@@ -541,14 +541,16 @@ function noteSubsectionDataToMD pLevel, pDataA
       put "#" after tHashes
    end repeat
    
-   local tMD
-   repeat for each key tSubsection in pDataA
-      put tHashes && tSubsection & return after tMD
-      if pDataA[tSubsection]["data"] is not empty then
-         put pDataA[tSubsection]["data"] & return after tMD
+   local tMD, tSubsections
+   put the keys of pDataA into tSubsections
+   sort tSubsections by pDataA[each]["order"]
+   repeat for each line tSection in tSubsections
+      put tHashes && tSection & return after tMD
+      if pDataA[tSection]["data"] is not empty then
+         put pDataA[tSection]["data"] & return after tMD
       end if
-      if pDataA[tSubsection]["subsection"] is not empty then
-         put noteSubsectionDataToMD(pLevel + 1, pDataA[tSubsection]["subsection"]) & return after tMD
+      if pDataA[tSection]["subsection"] is not empty then
+         put noteSubsectionDataToMD(pLevel + 1, pDataA[tSection]["subsection"]) & return after tMD
       end if
    end repeat
    return tMD
@@ -604,6 +606,12 @@ on addDataToSection pLevel, @xData, @xSectionA
          local tSection
          put word 2 to -1 of it into tSection
          delete line 1 of xData
+         
+         local tSectionOrder
+         if tSection is not among the keys of xSectionA["subsection"] then
+            put the number of elements of xSectionA["subsection"] + 1 into tSectionOrder
+            put tSectionOrder into xSectionA["subsection"][tSection]["order"]
+         end if
          addDataToSection pLevel + 1, xData, xSectionA["subsection"][tSection]
       end if
    end repeat
@@ -661,7 +669,8 @@ on addExtensionReleaseNoteData pFirstVersion, pCurVersion, @xDataA
          put empty into tExtensionDataA
          local tSectionName
          if tType is "libraries" then
-            put tName && "Library" into tSectionName
+            # Libraries usually have 'Library' in their name already
+            put tName into tSectionName
          else
             put tName && "Widget" into tSectionName
          end if
@@ -704,6 +713,11 @@ on addLCBReleaseNoteData pFile, pSectionName, @xDataA
             put word 2 to -1 of it into tSection
             delete line 1 of tNoteData
             if pSectionName is not empty then
+               local tSectionOrder
+               if tSection is not among the keys of xDataA[pSectionName]["subsection"] then
+                  put the number of elements of xDataA[pSectionName]["subsection"] + 1 into tSectionOrder
+                  put tSectionOrder into xDataA[pSectionName]["subsection"][tSection]["order"]
+               end if
                addDataToSection 1, tNoteData, xDataA[pSectionName]["subsection"][tSection]
             else
                addDataToSection 1, tNoteData, xDataA[tSection]
