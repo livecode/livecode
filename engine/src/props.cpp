@@ -596,6 +596,7 @@ static PropList playerprops[] =
         {"layerMode", P_LAYER_MODE},
         {"lockLoc", P_LOCK_LOCATION},
         {"looping", P_LOOPING},
+        {"mirrored", P_MIRRORED},
         {"name", P_SHORT_NAME},
         {"outerGlow", P_BITMAP_EFFECT_OUTER_GLOW},
         {"opaque", P_OPAQUE},

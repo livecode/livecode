@@ -1221,6 +1221,9 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
         case P_LOOPING:
             ep.setboolean(getflag(F_LOOPING));
             break;
+        case P_MIRRORED:
+            ep.setboolean(getflag(F_MIRRORED));
+            break;
         case P_PAUSED:
             ep.setboolean(ispaused());
             break;
@@ -1534,9 +1537,21 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
             if (dirty)
                 setlooping((flags & F_LOOPING) != 0); //set/unset movie looping
             break;
+
         case P_DONT_USE_QT:
             setdontuseqt(data == MCtruemcstring); //set/unset dontuseqt
+			break;
+
+        case P_MIRRORED:
+            if (!MCU_matchflags(data, flags, F_MIRRORED, dirty))
+            {
+                MCeerror->add(EE_OBJECT_NAB, 0, 0, data);
+                return ES_ERROR;
+            }
+            if (dirty)
+                setmirror((flags & F_MIRRORED) != 0); //set/unset mirrored player
             break;
+			
         case P_PAUSED:
             playpause(data == MCtruemcstring); //pause or unpause the player
             break;
@@ -1986,6 +2001,17 @@ void MCPlayer::updateplayrate(real8 p_rate)
     else
         rate = p_rate;
 }
+
+void MCPlayer::setmirror(Boolean mirrored)
+{
+	if (m_platform_player != nil && hasfilename())
+	{
+		bool t_mirrored;
+		t_mirrored = mirrored;
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMirrored, kMCPlatformPropertyTypeBool, &t_mirrored);
+	}
+}
+
 void MCPlayer::setplayrate()
 {
 	if (m_platform_player != nil && hasfilename())
@@ -2163,15 +2189,17 @@ Boolean MCPlayer::prepare(const char *options)
 	
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyRect, kMCPlatformPropertyTypeRectangle, &trect);
 	
-	bool t_looping, t_play_selection, t_show_controller, t_show_selection;
+	bool t_looping, t_play_selection, t_show_controller, t_show_selection, t_mirrored;
 	
 	t_looping = getflag(F_LOOPING);
 	t_show_selection = getflag(F_SHOW_SELECTION);
     t_play_selection = getflag(F_PLAY_SELECTION);
+    t_mirrored = getflag(F_MIRRORED);
 	
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &lasttime);
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLoop, kMCPlatformPropertyTypeBool, &t_looping);
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
+    MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMirrored, kMCPlatformPropertyTypeBool, &t_mirrored);
     
     // PM-2014-08-06: [[ Bug 13104 ]] When new movie is opened then playRate should be set to 0
     rate = 0.0;

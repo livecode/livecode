@@ -145,6 +145,7 @@ public:
 	void setcurtime(uint4 curtime, bool notify);
 	void setselection(bool notify);                  //set movie selection
 	void setlooping(Boolean loop);        //to loop or not to loop a movie
+    void setmirror(Boolean mirrored);      //flip player horizontally
 	void setplayrate();                   //set the movie playing rate
     void setdontuseqt(Boolean noqt);
     real8 getplayrate();
