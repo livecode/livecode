@@ -682,7 +682,13 @@ public handler OnClick() returns nothing
 end handler
 
 private handler yPosToRowNumber(in pYPos as Number) returns Integer
-	return the floor of ((mViewTopPosition + pYPos) / mRowHeight + 1)
+    variable tRow as Number
+    put the floor of ((mViewTopPosition + pYPos) / mRowHeight + 1) into tRow
+    if mReadOnly then
+        add 1 to tRow
+    end if
+
+    return tRow
 end handler
 
 private handler xPosToIconString(in pXPos as Number) returns String
@@ -723,11 +729,7 @@ end handler
 // Clamp mViewTopPosition
 private handler ensureViewTopPosition()
 	variable tMinTop as Real
-	if mReadOnly then
-		put mRowHeight into tMinTop
-	else
-		put 0 into tMinTop
-	end if
+    put 0 into tMinTop
 
 	// Make sure we don't try to scroll above 0
 	if mViewTopPosition < tMinTop then 
@@ -745,15 +747,18 @@ private handler updateFirstDataItem()
 	put the floor of (mViewTopPosition / mRowHeight) + 1 into mFirstDataItem
 	if mFirstDataItem < 1 then
 		put 1 into mFirstDataItem
-	end if	
+	end if
+    if mReadOnly then
+        add 1 to mFirstDataItem
+    end if  
 end handler
 
 private handler updateParameters() returns nothing
 	put the number of elements in mDataList into mDataCount
 	if mReadOnly then
-		put mRowHeight * mDataCount into mDataHeight
-	else
 		put mRowHeight * (mDataCount - 1) into mDataHeight
+	else
+		put mRowHeight * mDataCount into mDataHeight
 	end if
 	put my height into mViewHeight
 	put my width into mViewWidth
