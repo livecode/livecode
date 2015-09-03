@@ -316,21 +316,22 @@ public handler OnSave(out rProperties as Array)
 end handler
 
 public handler OnLoad(in pProperties as Array)
-	put pProperties["array"] into mData
 	put pProperties["selected row color"] into mSelectedRowColor
 	put pProperties["read only"] into mReadOnly
 
-    if ["array style"] is in the keys of pProperties then
+    if "array style" is among the keys of pProperties then
         put pProperties["array style"] into mArrayStyle
     end if
 
-    if ["sort ascending"] is in the keys of pProperties then
+    if "sort ascending" is among the keys of pProperties then
         put pProperties["sort ascending"] into mSortAscending
     end if
 
-    if ["sort numeric"] is in the keys of pProperties then
+    if "sort numeric" is among the keys of pProperties then
         put pProperties["sort numeric"] into mSortNumeric
     end if
+
+	setArrayData(pProperties["array"])
 end handler
 
 public handler OnPaint() returns nothing
