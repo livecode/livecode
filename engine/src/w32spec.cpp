@@ -481,7 +481,9 @@ char *MCS_get_canonical_path(const char *path)
 		// absolute path
 		t_path = strclone(path);
 	}
-	else
+	// SN-2015-09-03: [[ Bug 15814 ]] UNC paths (such as //servername/path)
+	//  should not be changed, as they are already valid.
+	else if (path[0] != '/' && path[1] != '/')
 	{
 		// relative to current folder
 		t_curdir = MCS_getcurdir();
