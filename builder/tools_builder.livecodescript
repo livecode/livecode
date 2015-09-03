@@ -15,7 +15,7 @@ command toolsBuilderRun pPlatform, pEdition, pVersion
    -- If on windows or linux, we can't do anything macosxy due to lack of lipo/strip :o(
    local tEngineFolders
 
-   get "windows linux-x86 linux-x86_64 linux-armv6hf macosx ios android"
+   get "windows linux-x86 linux-x86_64 linux-armv6hf macosx ios android emscripten"
       
    repeat for each word tPlatform in it
       builderFetchEngine pVersion, tPlatform
@@ -112,6 +112,7 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    packageCompilerConfigureSource tPackager, "windows", pEngineFolders["windows"]
    packageCompilerConfigureSource tPackager, "ios", pEngineFolders["ios"]
    packageCompilerConfigureSource tPackager, "android", pEngineFolders["android"]
+   packageCompilerConfigureSOurce tPackager, "emscripten", pEngineFolders["emscripten"]
    packageCompilerConfigureSource tPackager, "prebuilt", builderRepoFolder() & slash & "prebuilt"
    packageCompilerConfigureSource tPackager, "repo", builderRepoFolder()
    if tEditionType is among the items of "indy,business" then

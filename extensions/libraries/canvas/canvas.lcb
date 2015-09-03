@@ -34,7 +34,7 @@ This simple library gives access to the LiveCode Builder canvas syntax from Live
    
 Tags: Canvas Library
 */
-library com.livecode.libraries.example.canvas
+library com.livecode.library.canvas
 
 metadata version is "1.0.0"
 metadata author is "LiveCode"

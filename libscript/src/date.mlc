@@ -32,13 +32,13 @@ Summary:	The local gregorian date
 
 Example:
 	variable tDateTime as List
-	put the local time into tDateTime
+	put the local date into tDateTime
 
 	variable tDayOfMonth as Number
 	put tDateTime[3] into tDayOfMonth
 
 Description:
-Returns the local time as a list of six numeric components.  The
+Returns the local date as a list of six numeric components.  The
 elements of the list are:
 
 * The year

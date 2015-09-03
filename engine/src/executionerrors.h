@@ -2659,6 +2659,12 @@ enum Exec_errors
 
     // {EE-0869} System error: message
     EE_SYSTEM_MESSAGE,
+    
+    // {EE-0868} Import: bad array
+    EE_IMPORT_BADARRAY,
+    
+    // {EE-0869} Import: not an object array
+    EE_IMPORT_NOTANOBJECTARRAY,
 };
 
 extern const char *MCexecutionerrors;

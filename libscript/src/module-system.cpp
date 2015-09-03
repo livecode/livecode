@@ -36,6 +36,8 @@ MCSystemExecGetOperatingSystem (MCStringRef & r_string)
 		"android"
 #elif defined(__LINUX__)
 		"linux"
+#elif defined(__EMSCRIPTEN__)
+		"emscripten"
 #else
 #  error "Unrecognized operating system"
 #endif

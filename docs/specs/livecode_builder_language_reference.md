@@ -130,6 +130,7 @@ A module may use any other module, as long as doing so does not cause a cycle in
     Definition
       : ( 'public' | 'private' ) ConstantDefinition
       | ( 'public' | 'private' ) TypeDefinition
+      | ( 'public' | 'private' ) HandlerTypeDefinition
       | ( 'public' | 'private' ) VariableDefinition
       | ( 'public' | 'private' ) HandlerDefinition
       | ( 'public' | 'private' ) ForeignHandlerDefinition
@@ -200,6 +201,23 @@ The remaining types are as follows:
 > **Note:** In a subsequent update you will be able to specify lists and arrays of fixed types. For example, *list of string*.
 
 > **Note:** In a subsequence update you will be able to define record types (named collections of values - like structs in C) and handler types (allowing dynamic handler calls through a variable - like function pointers in C).
+
+## Handler Types
+
+    HandlerTypeDefinition
+      : [ 'foreign' ] 'handler' 'type' <Name: Identifier> '(' [ ParameterList ] ')' [ 'returns' <ReturnType: Type> ]
+
+A handler type definition defines a type which can hold a handler. Variables of
+such types can hold handlers (just like function pointers in C) which allows them
+to be called dynamically.
+
+If the handler type is defined as foreign then automatic bridging to a C function
+pointer will occur when the type appears as the type of a parameter in a foreign
+handler definition.
+
+> **Note:** Passing an LCB handler to a foreign function requires creation of
+a function pointer. The lifetime of the function pointer is the same as the widget
+or module which created it.
 
 ## Variables
 
@@ -296,7 +314,7 @@ If the return type is of a Ref type, then it must be a copy.
 If an out parameter is of a Ref type, then it must be a copy (on exit)
 
 If an inout parameter is of a Ref type, then its existing value must be released, and replaced by a copy (on exit).
- 
+
 The binding string for foreign handlers has the following form:
 
     [lang:][library>][class.]function[!calling]
@@ -366,7 +384,7 @@ There are a number of built-in statements which define control flow, variables, 
 
     VariableStatement
       : 'variable' <Name: Identifier> [ 'as' <TypeOf: Type> ]
-      
+
 A variable statement defines a handler-scope variable. Such variables can be used after the variable statement, but not before.
 
 > **Note:** Variables are currently not block-scoped, they are defined from the point of declaration to the end of the handler - this might change in a subsequent revision.
@@ -465,7 +483,7 @@ If a Value expression is specified, it is evaluated and returned as the result o
 
     PutStatement
       : 'put' <Value: Expression> into <Target: Expression>
-    
+
     SetStatement
       : 'set' <Target: Expression> 'to' <Value: Expression>
 

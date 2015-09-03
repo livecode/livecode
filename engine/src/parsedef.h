@@ -233,6 +233,7 @@ enum Export_format {
 	EX_RAW_GRAY,
 	EX_RAW_INDEXED,
 	EX_BMP,
+    EX_OBJECT,
 };
 
 enum Factor_rank {
@@ -648,6 +649,8 @@ enum Is_type {
 	IT_NOT_AMONG_THE_DRAG_DATA,
 	IT_AMONG_THE_CLIPBOARD_DATA,
 	IT_NOT_AMONG_THE_CLIPBOARD_DATA,
+    IT_REALLY,
+    IT_NOT_REALLY,
 };
 
 enum Is_validation {
@@ -663,6 +666,10 @@ enum Is_validation {
 	IV_ARRAY,
 	// MERG-2013-06-24: [[ IsAnAsciiString ]] Tag for 'ascii'.
     IV_ASCII,
+    
+    IV_STRING,
+    IV_BINARY_STRING,
+    IV_REAL,
 };
 
 enum Lock_constants {
@@ -1915,6 +1922,9 @@ enum Sugar_constants {
     
     // AL-2015-06-11: [[ Load Extension From Var ]] Add 'data' syntactic sugar
     SG_DATA,
+    
+    SG_REALLY,
+    SG_REAL,
 };
 
 enum Statements {

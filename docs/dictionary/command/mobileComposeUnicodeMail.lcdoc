@@ -21,7 +21,7 @@ Example:
 put "Hello World!" into tAttachment["data"]
 put "text/plain" into tAttachment["type"]
 put "Greetings.txt" into tAttachment["name"]
-mobileComposeUnicodeMail tUnicodeHeader, "test@runrev.com",,,, tAttachment
+mobileComposeUnicodeMail tUnicodeHeader, "test@livecode.com",,,, tAttachment
 
 Example:
 mobileComposeUnicodeMail uniEncode (tTextHeader, "UTF8"), "guido@example.net",,, uniEncode (tTextMailBody, "UTF8"), tAttachment

@@ -111,6 +111,8 @@ command builderFetchEngine pVersion, pPlatform
             return sEngineDir & slash & "ios-bin"
          case "android"
             return sEngineDir & slash & "android-armv6-bin"
+         case "emscripten"
+            return sEngineDir & slash & "emscripten-bin"
          default
             write the executionContexts to stderr
             builderLog "error", "Unknown platform '" & pPlatform & "'"
