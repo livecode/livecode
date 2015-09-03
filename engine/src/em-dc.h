@@ -64,6 +64,9 @@ public:
     virtual int32_t popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message);
     virtual bool popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial, bool p_hint, MCStringRef& r_result);
 
+    /* Mouse management */
+    virtual void platform_querymouse(int16_t& r_x, int16_t& r_y);
+    
 protected:
 	void UpdateFocus();
 	void FitWindow();
