@@ -156,7 +156,7 @@
 						{
 							'library_dirs':
 							[
-								'<(src_top_dir_abs)/prebuilt/lib/emscripten/js',
+								'lib/emscripten/js',
 							],
 
 							'libraries':

@@ -268,7 +268,7 @@
 					{
 						'ldflags':
 						[
-							'-T', '<(src_top_dir_abs)/engine/linux.link',
+							'-T', '$(abs_srcdir)/engine/linux.link',
 						],
 					},
 				],
@@ -525,7 +525,7 @@
 					{
 						'ldflags':
 						[
-							'-T', '<(src_top_dir_abs)/engine/linux.link',
+							'-T', '$(abs_srcdir)/engine/linux.link',
 						],
 					},
 				],
