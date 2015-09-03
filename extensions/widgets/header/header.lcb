@@ -17,10 +17,49 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 /*
 This widget is a header bar.
+
+Name: headerAction
+Type: message
+Syntax: on headerAction <pName>
+
+Summary: Sent when one of the <headerActions> icons is clicked.
+
+Parameters:
+pName: The name of the header action that was clicked.
+
+Description:
+Use the <headerAction> message to perform an action when one of the action icons is
+clicked by the user.
+
+References: headerActions (property)
+
+Name: leftAction
+Type: message
+Syntax: on leftAction
+
+Summary: Sent when the <leftLabel> of the header bar is clicked.
+
+Description:
+Use the leftAction message to perform an action when the label at the left hand side
+of the header bar is clicked.
+
+References: leftLabel (property)
+
+Name: searchAction
+Type: message
+Syntax: on searchAction
+
+Summary: Sent when the search icon of the header bar is clicked.
+
+Description:
+Use the searchAction message to perform an action when the search icon is clicked. Whether
+the search icon is visible or not is controlled by the <showSearchIcon> property.
+
+References: showSearchIcon (property)
 */
 
 -- declaring the extension as a widget, followed by identifier
-widget com.livecode.extensions.livecode.header
+widget com.livecode.widget.headerBar
 
 -- dependency declarations
 use com.livecode.canvas

@@ -221,8 +221,11 @@
     'rule' ImportDefinition(-> type(Position, public, Id, foreign(Position, ""))):
         "foreign" @(-> Position) "type" Identifier(-> Id)
     
-    'rule' ImportDefinition(-> type(Position, public, Id, handler(Position, Signature))):
+    'rule' ImportDefinition(-> type(Position, public, Id, handler(Position, normal, Signature))):
         "handler" @(-> Position) "type" Identifier(-> Id) Signature(-> Signature)
+
+    'rule' ImportDefinition(-> type(Position, public, Id, handler(Position, foreign, Signature))):
+        "foreign" @(-> Position) "handler" "type" Identifier(-> Id) Signature(-> Signature)
         
     'rule' ImportDefinition(-> type(Position, public, Id, Type)):
         "type" @(-> Position) Identifier(-> Id) "is" Type(-> Type)
@@ -370,7 +373,6 @@
     
     'rule' TypeDefinition(-> type(Position, Access, Name, foreign(Position, Binding))):
         Access(-> Access) "foreign" @(-> Position) "type" Identifier(-> Name) "binds" "to" STRING_LITERAL(-> Binding)
-
         
     'rule' TypeDefinition(-> type(Position, Access, Name, record(Position, Base, Fields))):
         Access(-> Access) "record" @(-> Position) "type" Identifier(-> Name) OptionalBaseType(-> Base) Separator
@@ -382,8 +384,11 @@
             EnumFields(-> Fields)
         "end" "type"
         
-    'rule' TypeDefinition(-> type(Position, Access, Name, handler(Position, Signature))):
+    'rule' TypeDefinition(-> type(Position, Access, Name, handler(Position, normal, Signature))):
         Access(-> Access) "handler" @(-> Position) "type" Identifier(-> Name) Signature(-> Signature)
+
+    'rule' TypeDefinition(-> type(Position, Access, Name, handler(Position, foreign, Signature))):
+        Access(-> Access) "foreign" @(-> Position) "handler" "type" Identifier(-> Name) Signature(-> Signature)
 
 --
 
@@ -628,51 +633,27 @@
 
     'rule' Type(-> boolean(Position)):
         "Boolean" @(-> Position)
-    'rule' Type(-> boolean(Position)):
-        "boolean" @(-> Position)
-        Warning_DeprecatedTypeName(Position, "Boolean")
 
     'rule' Type(-> integer(Position)):
         "Integer" @(-> Position)
-    'rule' Type(-> integer(Position)):
-        "integer" @(-> Position)
-        Warning_DeprecatedTypeName(Position, "Integer")
 
     'rule' Type(-> real(Position)):
         "Real" @(-> Position)
-    'rule' Type(-> real(Position)):
-        "real" @(-> Position)
-        Warning_DeprecatedTypeName(Position, "Real")
 
     'rule' Type(-> number(Position)):
         "Number" @(-> Position)
-    'rule' Type(-> number(Position)):
-        "number" @(-> Position)
-        Warning_DeprecatedTypeName(Position, "Number")
 
     'rule' Type(-> string(Position)):
         "String" @(-> Position)
-    'rule' Type(-> string(Position)):
-        "string" @(-> Position)
-        Warning_DeprecatedTypeName(Position, "String")
 
     'rule' Type(-> data(Position)):
         "Data" @(-> Position)
-    'rule' Type(-> data(Position)):
-        "data" @(-> Position)
-        Warning_DeprecatedTypeName(Position, "Data")
 
     'rule' Type(-> array(Position)):
         "Array" @(-> Position)
-    'rule' Type(-> array(Position)):
-        "array" @(-> Position)
-        Warning_DeprecatedTypeName(Position, "Array")
 
     'rule' Type(-> list(Position, ElementType)):
         "List" @(-> Position) OptionalElementType(-> ElementType)
-    'rule' Type(-> list(Position, ElementType)):
-        "list" @(-> Position) OptionalElementType(-> ElementType)
-        Warning_DeprecatedTypeName(Position, "List")
 
     'rule' Type(-> undefined(Position)):
         "undefined" @(-> Position)

@@ -22,7 +22,7 @@ Example:
 get message -- evaluates expression in message box
 
 Example:
-get URL "https://www.runrev.com"
+get URL "https://www.livecode.com"
 
 Parameters:
 expression: Any expression that yields a value.

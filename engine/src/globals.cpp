@@ -94,6 +94,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 #include "exec.h"
+#include "chunk.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -495,9 +496,13 @@ MCLocaleRef kMCSystemLocale = nil;
 
 uint32_t MCactionsrequired = 0;
 
+MCArrayRef MCenvironmentvariables;
+
 // SN-2015-07-17: [[ CommandArguments ]] Add global array for the arguments.
 MCStringRef MCcommandname;
 MCArrayRef MCcommandarguments;
+
+MCHook *MChooks = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -837,9 +842,15 @@ void X_clear_globals(void)
 	MCmainstackschanged = False;
     
     MCactionsrequired = 0;
-
-    MCSocketsInitialize();
     
+    MChooks = nil;
+
+#if defined(MCSSL)
+    MCSocketsInitialize();
+#endif
+    
+    MCenvironmentvariables = nil;
+
     MCcommandarguments = NULL;
     MCcommandname = NULL;
 
@@ -861,6 +872,174 @@ void X_clear_globals(void)
 	
 	MCDateTimeInitialize();
 }
+
+/* ---------------------------------------------------------------- */
+
+/* Helper function for X_open_environment_variables() */
+static bool
+X_open_environment_variables_store(MCArrayRef x_array,
+                                   MCStringRef p_name_str,
+                                   MCStringRef p_value,
+                                   bool p_make_global)
+{
+	MCNewAutoNameRef t_name;
+	if (!MCNameCreate(p_name_str, &t_name))
+	{
+		return false;
+	}
+
+	/* Store the environment variable in the array of
+	 * environment variables.  Note that if there are
+	 * duplicates, we always use the *first* value found in
+	 * the environment.  This matches the behaviour of most
+	 * shells. See also bug 13622.
+	 *
+	 * The global array of environment variables is *case
+	 * sensitive*, because "path" and "PATH" are distinct.
+	 */
+	MCValueRef t_current_value;
+	if (MCArrayFetchValue(x_array, true, *t_name, t_current_value))
+	{
+		return true; /* We already have a value for this variable */
+	}
+
+	if (!MCArrayStoreValue(x_array, true, *t_name, p_value))
+	{
+		return false;
+	}
+
+	// SN-2014-06-12 [[ RefactorServer ]] We don't want to duplicate
+	// the environment variables on server, as they have been copied
+	// to $_SERVER
+#ifndef _SERVER
+	/* Create a global variable for the environment variable, but only
+	 * if the variable name is a valid token that doesn't start with
+	 * "#" or "0".  These rules are to match the way MCVariable
+	 * detects whether a variable proxies an environment variable. */
+	unichar_t t_first = MCStringGetCharAtIndex(p_name_str, 0);
+	if (p_make_global &&
+	    '#' != t_first &&
+	    !isdigit(t_first) &&
+	    MCU_is_token(p_name_str))
+	{
+		MCAutoStringRef t_global_str;
+		MCNewAutoNameRef t_global;
+		if (!MCStringFormat(&t_global_str, "$%@", p_name_str))
+		{
+			return false;
+		}
+		if (!MCNameCreate(*t_global_str, &t_global))
+		{
+			return false;
+		}
+
+		MCVariable *t_var;
+		MCVariable::ensureglobal(*t_global, t_var);
+		t_var->setvalueref(p_value);
+	}
+#endif
+	return true;
+}
+
+/* Parse environment variables.  All environment variables are placed
+ * into the MCenvironmentvariables global array.  Some environment
+ * variables are turned into special "$<name>" global LiveCode
+ * variables, but only if they are well-formed (i.e. in the
+ * format "name=value"). */
+static bool
+X_open_environment_variables(MCStringRef envp[])
+{
+	if (nil == envp || !MCModeHasEnvironmentVariables())
+	{
+		MCenvironmentvariables = nil;
+		return true;
+	}
+
+	/* Create the array of raw environment variables */
+	MCAutoArrayRef t_env_array;
+	if (!MCArrayCreateMutable(&t_env_array))
+	{
+		return false;
+	}
+
+	/* Create an list for degenerate environment variables (ones which
+	 * are not in the "name=value" format.  These are considered after
+	 * all other variables have been processed. */
+	/* FIXME use MCProperListRef */
+	MCAutoArrayRef t_degenerate;
+	if (!MCArrayCreateMutable(&t_degenerate))
+	{
+		return false;
+	}
+
+	for (uint32_t i = 0 ; envp[i] != nil ; i++)
+	{
+		MCStringRef t_env_var = envp[i];
+		MCAutoStringRef t_env_namestr;
+		MCNewAutoNameRef t_env_name;
+		MCAutoStringRef t_env_value;
+		uindex_t t_equal;
+
+		/* Split the environment variable into name and value.  If the
+		 * environment string doesn't contain an '=' character, treat
+		 * the whole string as a name, and delay processing. */
+		if (MCStringFirstIndexOfChar(t_env_var, '=', 0,
+		                             kMCStringOptionCompareExact, t_equal))
+		{
+			if (!MCStringCopySubstring(t_env_var, MCRangeMake(0, t_equal),
+			                           &t_env_namestr))
+			{
+				return false;
+			}
+
+			if (!MCStringCopySubstring(t_env_var,
+			                           MCRangeMake(t_equal + 1, UINDEX_MAX),
+			                           &t_env_value))
+			{
+				return false;
+			}
+
+			if (!X_open_environment_variables_store(*t_env_array,
+			                                        *t_env_namestr,
+			                                        *t_env_value,
+			                                        true))
+			{
+				return false;
+			}
+		}
+		else
+		{
+			/* Delay for processing later. */
+			if (!MCArrayStoreValueAtIndex(*t_degenerate,
+			                              MCArrayGetCount(*t_degenerate) + 1,
+			                              t_env_var))
+			{
+				return false;
+			}
+		}
+	}
+
+	/* Process degenerate environment variables */
+	for (uindex_t i = 1; i <= MCArrayGetCount(*t_degenerate); ++i)
+	{
+		MCValueRef t_env_var;
+		if (!MCArrayFetchValueAtIndex(*t_degenerate, i, t_env_var))
+		{
+			return false;
+		}
+
+		if (!X_open_environment_variables_store(*t_env_array,
+		                                        static_cast<MCStringRef>(t_env_var),
+		                                        kMCEmptyString, false))
+		{
+			return false;
+		}
+	}
+
+	return MCArrayCopy(*t_env_array, MCenvironmentvariables);
+}
+
+/* ---------------------------------------------------------------- */
 
 bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 {
@@ -884,8 +1063,10 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	MCGraphicsInitialize();
 	
 	// MM-2014-02-14: [[ LibOpenSSL 1.0.1e ]] Initialise the openlSSL module.
+#ifdef MCSSL
 	InitialiseSSL();
-    
+#endif
+
     ////
     
 #ifdef _MACOSX
@@ -903,44 +1084,23 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 
 	/* UNCHECKED */ MCVariable::ensureglobal(MCN_each, MCeach);
 
-    // SN-2014-06-12 [[ RefactorServer ]] We don't want to duplicate the environment variables
-    // on server, as they have been copied to $_SERVER
-#ifndef _SERVER
-	if (envp != nil)
-		for (uint32_t i = 0 ; envp[i] != nil ; i++)
+	/* Environment variables */
+	if (!X_open_environment_variables(envp))
+	{
+		return false;
+	}
+
+	/* Handle special "MCNOFILES" environment variable */
+	if (nil != MCenvironmentvariables)
+	{
+		MCValueRef t_env_value;
+		if (MCArrayFetchValue(MCenvironmentvariables, true, MCNAME("MCNOFILES"), t_env_value) &&
+		    MCStringGetCharAtIndex(static_cast<MCStringRef>(t_env_value), 0) != '0')
 		{
-			MCStringRef t_env_var = envp[i];
-			if (isupper(MCStringGetCharAtIndex(t_env_var, 0)))
-			{
-				uindex_t t_equal;
-				/* UNCHECKED */ MCStringFirstIndexOfChar(t_env_var, '=', 0, kMCStringOptionCompareExact, t_equal);
-
-				MCAutoStringRef t_vname;
-				/* UNCHECKED */ MCStringCreateMutable(0, &t_vname);
-				/* UNCHECKED */ MCStringAppendChar(*t_vname, '$');
-				/* UNCHECKED */ MCStringAppendSubstring(*t_vname, t_env_var, MCRangeMake(0, t_equal));
-
-				MCNewAutoNameRef t_name;
-				/* UNCHECKED */ MCNameCreate(*t_vname, &t_name);
-
-				MCVariable *tvar;
-				/* UNCHECKED */ MCVariable::ensureglobal(*t_name, tvar);
-				if (MCStringIsEqualToCString(*t_vname, "$MCNOFILES", kMCCompareExact) 
-					&& MCStringGetCharAtIndex(t_env_var, t_equal + 1) != '0')
-				{
-					MCnofiles = True;
-					MCsecuremode = MC_SECUREMODE_ALL;
-				}
-				
-				MCAutoStringRef t_value;
-				/* UNCHECKED */ MCStringCopySubstring(t_env_var, 
-													  MCRangeMake(t_equal + 1, MCStringGetLength(t_env_var) - t_equal - 1),
-													  &t_value);
-				
-				tvar->setvalueref(*t_value);
-			}
-        }
-#endif // _SERVER
+			MCnofiles = True;
+			MCsecuremode = MC_SECUREMODE_ALL;
+		}
+	}
 
     // SN-2015-07-17: [[ CommandArguments ]] Initialise the commandName and
     //  commandArguments properties.
@@ -1249,15 +1409,18 @@ int X_close(void)
 	delete MCsslcertificates;
 	delete MCdefaultnetworkinterface;
 	
-#ifndef _MOBILE
+#if defined(MCSSL) && !defined(_MOBILE)
 	ShutdownSSL();
-#else
+#endif
+
+#if defined(_MOBILE)
     // SN-2015-02-24: [[ Merge 6.7.4-rc-1 ]] Need to clean-up the completed
     //  purchase list
     extern void MCPurchaseClearPurchaseList();
     
     MCPurchaseClearPurchaseList();
 #endif
+
 	MCS_shutdown();
 	delete MCundos;
 	while (MCcur_effects != NULL)
@@ -1270,6 +1433,9 @@ int X_close(void)
 	if (MCcurtheme != NULL)
 		MCcurtheme -> unload();
 	delete MCcurtheme;
+
+	MCValueRelease(MCenvironmentvariables);
+	MCenvironmentvariables = nil;
 
     // SN-2015-07-17: [[ CommandArguments ]] Clean up the memory
     MCValueRelease(MCcommandname);
@@ -1351,6 +1517,8 @@ int X_close(void)
 	return MCretcode;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 void MCActionsDoRunSome(uint32_t p_mask)
 {
     uint32_t t_actions;
@@ -1369,9 +1537,248 @@ void MCActionsDoRunSome(uint32_t p_mask)
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+struct MCHook
+{
+    MCHook *next;
+    MCHookType type;
+    void *descriptor;
+};
+
+bool MCHookRegister(MCHookType p_type, void *p_descriptor)
+{
+    MCHook *t_hook;
+    if (!MCMemoryNew(t_hook))
+        return false;
+    
+    t_hook -> next = MChooks;
+    t_hook -> type = p_type;
+    t_hook -> descriptor = p_descriptor;
+    
+    MChooks = t_hook;
+    
+    return true;
+}
+
+void MCHookUnregister(MCHookType p_type, void *p_descriptor)
+{
+    MCHook *t_hook, *t_previous;
+    for(t_previous = nil, t_hook = MChooks; t_hook != nil; t_previous = t_hook, t_hook = t_hook -> next)
+        if (t_hook -> type == p_type &&
+            t_hook -> descriptor == p_descriptor)
+            break;
+    
+    if (t_hook != nil)
+    {
+        if (t_previous != nil)
+            t_previous -> next = t_hook -> next;
+        else
+            MChooks = t_hook -> next;
+        
+        MCMemoryDelete(t_hook);
+    }
+}
+
+bool MCHookForEach(MCHookType p_type, MCHookForEachCallback p_callback, void *p_context)
+{
+    for(MCHook *t_hook = MChooks; t_hook != nil; t_hook = t_hook -> next)
+        if (t_hook -> type == p_type)
+            if (p_callback(p_context, t_hook -> descriptor))
+                return true;
+    
+    return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct __MCIsGlobalHandlerContext
+{
+    MCNameRef name;
+};
+
+static bool __MCIsGlobalHandlerCallback(void *p_context, void *p_descriptor)
+{
+    __MCIsGlobalHandlerContext *ctxt;
+    ctxt = (__MCIsGlobalHandlerContext *)p_context;
+    
+    MCHookGlobalHandlersDescriptor *t_desc;
+    t_desc = (MCHookGlobalHandlersDescriptor *)p_descriptor;
+    
+    return t_desc -> can_handle(ctxt -> name);
+}
+
+bool MCIsGlobalHandler(MCNameRef message)
+{
+    __MCIsGlobalHandlerContext ctxt;
+    ctxt . name = message;
+    return MCHookForEach(kMCHookGlobalHandlers, __MCIsGlobalHandlerCallback, &ctxt);
+}
+
+//////////
+
+struct __MCRunGlobalHandlerContext
+{
+    MCNameRef name;
+    MCParameter *parameters;
+    Exec_stat *result;
+};
+
+static bool __MCRunGlobalHandlerCallback(void *p_context, void *p_descriptor)
+{
+    __MCRunGlobalHandlerContext *ctxt;
+    ctxt = (__MCRunGlobalHandlerContext *)p_context;
+    
+    MCHookGlobalHandlersDescriptor *t_desc;
+    t_desc = (MCHookGlobalHandlersDescriptor *)p_descriptor;
+ 
+    return t_desc -> handle(ctxt -> name, ctxt -> parameters, *(ctxt -> result));
+}
+
+bool MCRunGlobalHandler(MCNameRef message, MCParameter *parameters, Exec_stat& r_result)
+{
+    __MCRunGlobalHandlerContext ctxt;
+    ctxt . name = message;
+    ctxt . parameters = parameters;
+    ctxt . result = &r_result;
+    return MCHookForEach(kMCHookGlobalHandlers, __MCRunGlobalHandlerCallback, &ctxt);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct __MCLookupNativeControlContext
+{
+    MCStringRef name;
+    intenum_t *type;
+};
+
+static bool __MCLookupNativeControlTypeCallback(void *p_context, void *p_descriptor)
+{
+    __MCLookupNativeControlContext *ctxt;
+    ctxt = (__MCLookupNativeControlContext *)p_context;
+    
+    MCHookNativeControlsDescriptor *t_desc;
+    t_desc = (MCHookNativeControlsDescriptor *)p_descriptor;
+    
+    return t_desc -> lookup_type(ctxt -> name, *(ctxt -> type));
+}
+
+bool MCLookupNativeControlType(MCStringRef p_name, intenum_t& r_type)
+{
+    __MCLookupNativeControlContext ctxt;
+    ctxt . name = p_name;
+    ctxt . type = &r_type;
+    return MCHookForEach(kMCHookNativeControls, __MCLookupNativeControlTypeCallback, &ctxt);
+}
+
+////
+
+static bool __MCLookupNativeControlPropertyCallback(void *p_context, void *p_descriptor)
+{
+    __MCLookupNativeControlContext *ctxt;
+    ctxt = (__MCLookupNativeControlContext *)p_context;
+    
+    MCHookNativeControlsDescriptor *t_desc;
+    t_desc = (MCHookNativeControlsDescriptor *)p_descriptor;
+    
+    return t_desc -> lookup_property(ctxt -> name, *(ctxt -> type));
+}
+
+bool MCLookupNativeControlProperty(MCStringRef p_name, intenum_t& r_type)
+{
+    __MCLookupNativeControlContext ctxt;
+    ctxt . name = p_name;
+    ctxt . type = &r_type;
+    return MCHookForEach(kMCHookNativeControls, __MCLookupNativeControlPropertyCallback, &ctxt);
+}
+
+////
+
+static bool __MCLookupNativeControlActionCallback(void *p_context, void *p_descriptor)
+{
+    __MCLookupNativeControlContext *ctxt;
+    ctxt = (__MCLookupNativeControlContext *)p_context;
+    
+    MCHookNativeControlsDescriptor *t_desc;
+    t_desc = (MCHookNativeControlsDescriptor *)p_descriptor;
+    
+    return t_desc -> lookup_action(ctxt -> name, *(ctxt -> type));
+}
+
+bool MCLookupNativeControlAction(MCStringRef p_name, intenum_t& r_type)
+{
+    __MCLookupNativeControlContext ctxt;
+    ctxt . name = p_name;
+    ctxt . type = &r_type;
+    return MCHookForEach(kMCHookNativeControls, __MCLookupNativeControlActionCallback, &ctxt);
+}
+
+////
+
+struct __MCCreateNativeControlContext
+{
+    intenum_t type;
+    void **control;
+};
+
+static bool __MCCreateNativeControlCallback(void *p_context, void *p_descriptor)
+{
+    __MCCreateNativeControlContext *ctxt;
+    ctxt = (__MCCreateNativeControlContext *)p_context;
+    
+    MCHookNativeControlsDescriptor *t_desc;
+    t_desc = (MCHookNativeControlsDescriptor *)p_descriptor;
+    
+    return t_desc -> create(ctxt -> type, *(ctxt -> control));
+}
+
+bool MCCreateNativeControl(intenum_t p_type, void *& r_control)
+{
+    __MCCreateNativeControlContext ctxt;
+    ctxt . type = p_type;
+    ctxt . control = &r_control;
+    return MCHookForEach(kMCHookNativeControls, __MCCreateNativeControlCallback, &ctxt);
+}
+
+////
+
+struct __MCPerformNativeControlActionContext
+{
+    intenum_t action;
+    void *control;
+    MCValueRef *arguments;
+    uindex_t argument_count;
+};
+
+static bool __MCPerformNativeControlActionCallback(void *p_context, void *p_descriptor)
+{
+    __MCPerformNativeControlActionContext *ctxt;
+    ctxt = (__MCPerformNativeControlActionContext *)p_context;
+    
+    MCHookNativeControlsDescriptor *t_desc;
+    t_desc = (MCHookNativeControlsDescriptor *)p_descriptor;
+    
+    if (t_desc -> action == nil)
+        return false;
+    
+    return t_desc -> action(ctxt -> action, ctxt -> control, ctxt -> arguments, ctxt -> argument_count);
+}
+
+bool MCPerformNativeControlAction(intenum_t p_action, void *p_control, MCValueRef *p_arguments, uindex_t p_argument_count)
+{
+    __MCPerformNativeControlActionContext ctxt;
+    ctxt . action = p_action;
+    ctxt . control = p_control;
+    ctxt . arguments = p_arguments;
+    ctxt . argument_count = p_argument_count;
+    return MCHookForEach(kMCHookNativeControls, __MCPerformNativeControlActionCallback, &ctxt);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 // MW-2013-10-08: [[ Bug 11259 ]] Make sure the Linux specific case tables are
 //   in a global place so it works for server and desktop.
-#if defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER)
+#if defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER) || defined(__EMSCRIPTEN__)
 // MW-2013-10-01: [[ Bug 11160 ]] Use our own lowercasing table (ISO8859-1)
 uint1 MClowercasingtable[] =
 {
@@ -1435,3 +1842,5 @@ uint2 MCctypetable[] =
 	0x0385, 0x0385, 0x0385, 0x0385, 0x0385, 0x0385, 0x0385, 0x0340, 0x0385, 0x0385, 0x0385, 0x0385, 0x0385, 0x0385, 0x0385, 0x0385, 
 };
 #endif
+
+////////////////////////////////////////////////////////////////////////////////

@@ -28,6 +28,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 typedef struct _Streamnode Streamnode;
 typedef struct _Linkatts Linkatts;
 
+////////////////////////////////////////////////////////////////////////////////
+//
+//  GLOBAL VARIABLES
+//
+
 extern Bool MCquit;
 
 // MW-2013-04-01: [[ Bug 10799 ]] If this is true, it means we must do an 'exit' after the
@@ -36,7 +41,6 @@ extern Bool MCquit;
 extern Bool MCquitisexplicit;
 
 extern int MCidleRate;
-
 
 extern Boolean MCaqua;
 extern MCStringRef MCcmd;
@@ -362,6 +366,8 @@ extern uint4 MCqtidlerate;
 extern MCStringRef MCcommandname;
 extern MCArrayRef MCcommandarguments;
 
+extern MCArrayRef MCenvironmentvariables;
+
 #ifdef _LINUX_DESKTOP
 extern Window MCgtkthemewindow;
 #endif
@@ -412,6 +418,65 @@ extern char *MCsysencoding;
 // Locales
 extern MCLocaleRef kMCBasicLocale;
 extern MCLocaleRef kMCSystemLocale;
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  HOOK REGISTRATION
+//
+
+struct MCHookGlobalHandlersDescriptor
+{
+    bool (*can_handle)(MCNameRef message_name);
+    bool (*handle)(MCNameRef message, MCParameter *parameters, Exec_stat& r_result);
+};
+
+struct MCHookNativeControlsDescriptor
+{
+    bool (*lookup_type)(MCStringRef name, intenum_t& r_type);
+    bool (*lookup_property)(MCStringRef name, intenum_t& r_type);
+    bool (*lookup_action)(MCStringRef name, intenum_t& r_type);
+    bool (*create)(intenum_t type, void*& r_control);
+    bool (*action)(intenum_t action, void *control, MCValueRef *arguments, uindex_t argument_count);
+};
+
+enum MCHookType
+{
+    kMCHookGlobalHandlers,
+    kMCHookNativeControls,
+};
+
+struct MCHook;
+extern MCHook *MChooks;
+
+typedef bool (*MCHookForEachCallback)(void *context, void *descriptor);
+
+bool MCHookRegister(MCHookType type, void *descriptor);
+void MCHookUnregister(MCHookType type, void *descriptor);
+bool MCHookForEach(MCHookType type, MCHookForEachCallback callback, void *context);
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  GLOBAL HANDLERS
+//
+
+bool MCIsGlobalHandler(MCNameRef name);
+bool MCRunGlobalHandler(MCNameRef message, MCParameter *parameters, Exec_stat& r_result);
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  NATIVE CONTROLS
+//
+
+bool MCLookupNativeControlType(MCStringRef p_type_name, intenum_t& r_type);
+bool MCLookupNativeControlProperty(MCStringRef p_name, intenum_t& r_prop);
+bool MCLookupNativeControlAction(MCStringRef p_name, intenum_t& r_action);
+bool MCCreateNativeControl(intenum_t type, void*& r_control);
+bool MCPerformNativeControlAction(intenum_t action, void *control, MCValueRef *arguments, uindex_t argument_count);
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  POST EXECUTION ACTIONS
+//
 
 enum
 {

@@ -254,6 +254,7 @@
 			'src/image_rep.cpp',
 			'src/image_rep_densitymapped.cpp',
 			'src/image_rep_encoded.cpp',
+			'src/image_rep_gimage.cpp',
 			'src/image_rep_mutable.cpp',
 			'src/image_rep_resampled.cpp',
 			'src/imagebitmap.cpp',
@@ -716,6 +717,42 @@
 			'src/w32textlayout.cpp',
 			'src/w32theme.cpp',
 			'src/w32transfer.cpp',
+
+			# Group "Desktop - Emscripten"
+			'src/em-async.h',
+			'src/em-async.js',
+			'src/em-dc-mainloop.h',
+			'src/em-dc-mainloop.cpp',
+			'src/em-dc.h',
+			'src/em-dc.cpp',
+			'src/em-dialog.js',
+			'src/em-event.h',
+			'src/em-event.cpp',
+			'src/em-event.js',
+			'src/em-filehandle.h',
+			'src/em-filehandle.cpp',
+			'src/em-fontlist.h',
+			'src/em-fontlist.cpp',
+			'src/em-main.cpp',
+			'src/em-osspec-misc.cpp',
+			'src/em-osspec-network.cpp',
+			'src/em-preamble.js',
+			'src/em-resolution.cpp',
+			'src/em-stack.cpp',
+			'src/em-standalone.h',
+			'src/em-standalone.cpp',
+			'src/em-standalone.js',
+			'src/em-surface.h',
+			'src/em-surface.cpp',
+			'src/em-system.h',
+			'src/em-system.cpp',
+			'src/em-theme.cpp',
+			'src/em-url.cpp',
+			'src/em-url.js',
+			'src/em-util.h',
+			'src/em-util.js',
+			'src/em-view.h',
+			'src/em-view.cpp',
 		],
 		
 		# Sources that need to be compiled separately for each mode
@@ -983,6 +1020,15 @@
 				},
 			],
 			[
+				'OS != "emscripten"',
+				{
+					'sources/':
+					[
+						['exclude', '(^|/)em-.*\\.cpp$'],
+					],
+				},
+			],
+			[
 				'OS != "android"',
 				{
 					'sources/':
@@ -1101,6 +1147,17 @@
 					'sources!':
 					[
 						'src/srvposix.cpp',
+					],
+				},
+			],
+			[
+				'OS == "emscripten"',
+				{
+					'sources!':
+					[
+						'src/tilecachegl.cpp',
+						'src/mcssl.cpp',
+						'src/notify.cpp',
 					],
 				},
 			],

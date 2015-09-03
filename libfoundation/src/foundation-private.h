@@ -54,6 +54,7 @@ struct __MCValue
 enum
 {
     kMCTypeInfoTypeCodeMask = 0xff,
+    kMCTypeInfoFlagHandlerIsForeign = 1 << 8,
     
     // We use typecodes well above the fixed ones we have to
     // indicate 'special' typeinfo (i.e. those with no real
@@ -63,6 +64,13 @@ enum
     kMCTypeInfoTypeIsAlias = 253,
     kMCTypeInfoTypeIsOptional = 252,
     kMCTypeInfoTypeIsForeign = 251,
+};
+
+struct MCHandlerTypeLayout
+{
+    MCHandlerTypeLayout *next;
+    int abi;
+    char cif[1];
 };
 
 struct __MCTypeInfo: public __MCValue
@@ -89,6 +97,8 @@ struct __MCTypeInfo: public __MCValue
             MCHandlerTypeFieldInfo *fields;
             uindex_t field_count;
             MCTypeInfoRef return_type;
+            void **layout_args;
+            MCHandlerTypeLayout *layouts;
         } handler;
         struct
         {
@@ -421,6 +431,8 @@ struct __MCHandler: public __MCValue
 {
     MCTypeInfoRef typeinfo;
     const MCHandlerCallbacks *callbacks;
+    void *closure;
+    void *function_ptr;
     char context[1];
 };
 

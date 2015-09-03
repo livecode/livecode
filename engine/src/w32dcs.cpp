@@ -196,7 +196,7 @@ Boolean MCScreenDC::open()
     MCAutoStringRef t_type, t_error;
     /* UNCHECKED */ MCS_query_registry(t_key, &t_value, &t_type, &t_error);
 
-	if (!MCValueIsEmpty(*t_value))
+	if (*t_value != nil && !MCValueIsEmpty(*t_value))
 	{
 		MCAutoStringRef t_string;
 		/* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
@@ -222,7 +222,7 @@ Boolean MCScreenDC::open()
     MCAutoStringRef t_type2, t_error2;
     /* UNCHECKED */ MCS_query_registry(t_key2, &t_value2, &t_type2, &t_error2);
 
-	if (!MCValueIsEmpty(*t_value2))
+	if (*t_value != nil && !MCValueIsEmpty(*t_value2))
 	{
 		MCAutoStringRef t_string;
 		/* UNCHECKED */ ctxt . ConvertToString(*t_value2, &t_string);

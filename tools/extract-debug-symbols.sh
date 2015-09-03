@@ -30,6 +30,14 @@ done
 
 }
 
+function extract_emscripten {
+
+for input in $@ ; do
+	touch "${input}${suffix}"
+done
+
+}
+
 function extract_mac_or_ios {
 
 for input in $@ ; do
@@ -48,20 +56,22 @@ for input in $@ ; do
 		real_input="${input}"
 	fi
 
-	# Extract a copy of the debugging information
-	echo Extracting debug symbols for ${input}
-	dsymutil --out "${output}" "${real_input}"
 
-	# Strip the executable
-	$STRIP -x -S "$real_input"
+	# If the OS is iOS and this is a debug build, do nothing
+	if [ "$os" == "ios" -a "$BUILDTYPE" == "Debug" ] ; then
+		echo Creating empty debug symbols file for ${input}
+		touch "${output}"
+	else
+		# Extract a copy of the debugging information
+		echo Extracting debug symbols for ${input}
+		dsymutil --out "${output}" "${real_input}"
+
+		# Strip the executable
+		$STRIP -x -S "$real_input"
+	fi
 done
 
 }
-
-# If the OS is iOS and this is a debug build, do nothing
-if [ "$os" == "ios" -a "$BUILDTYPE" == "Debug" ] ; then
-	exit 0
-fi
 
 case $os in
 	linux|android)
@@ -70,6 +80,9 @@ case $os in
 	mac|ios)
 		extract_mac_or_ios ${inputs}
 		;;
+	emscripten)
+		extract_emscripten ${inputs}
+		;;	
 	*)
 		echo OS "$os" not supported by this script
 		exit 1

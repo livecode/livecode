@@ -3,6 +3,8 @@ local sEngineDir
 local sWorkDir
 local sOutputDir
 local sPrivateDir
+local sDocsDir
+local sBuiltDocsDir
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -33,6 +35,14 @@ end builderSetPrivateDir
 command builderSetWorkDir pDir
    put pDir into sWorkDir
 end builderSetWorkDir
+
+command builderSetDocsDir pDir
+   put pDir into sDocsDir
+end builderSetDocsDir
+
+command builderSetBuiltDocsDir pDir
+   put pDir into sBuiltDocsDir
+end builderSetBuiltDocsDir
 
 command builderSetOutputDir pDir
    put pDir into sOutputDir
@@ -101,6 +111,8 @@ command builderFetchEngine pVersion, pPlatform
             return sEngineDir & slash & "ios-bin"
          case "android"
             return sEngineDir & slash & "android-armv6-bin"
+         case "emscripten"
+            return sEngineDir & slash & "emscripten-bin"
          default
             write the executionContexts to stderr
             builderLog "error", "Unknown platform '" & pPlatform & "'"
@@ -243,10 +255,16 @@ function builderGuideFolder
 end builderGuideFolder
 
 function builderDocsFolder
+   if sDocsDir is not empty then
+      return sDocsDir
+   end if
    return builderRepoFolder() & slash & "docs"
 end builderDocsFolder
 
 function builderBuiltDocsFolder
+   if sBuiltDocsDir is not empty then
+      return sBuiltDocsDir
+   end if
    return builderRepoFolder() & slash & "_build/docs"
 end builderBuiltDocsFolder
 

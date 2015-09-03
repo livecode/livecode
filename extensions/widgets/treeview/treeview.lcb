@@ -18,56 +18,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 /*
 A widget to display array data in a tree view
 
-Name: arrayData
-Type: property
-Syntax: set the arrayData of <widget> to <pArray>
-Syntax: get the arrayData of <widget>
-Summary: The array being displayed by the widget
-
-Parameters:
-pArray (array): The array data.
-
-Description:
-The arrayData is the data currently being displayed by the tree view widget.
-
-Name: alternateRowBackgrounds
-
-Type: property
-Syntax: set the alternateRowBackgrounds of <widget> to (true|false)
-Syntax: get the alternateRowBackgrounds of <widget>
-
-Summary: Whether the alternate rows of the widget have different backgrounds or not. 
-
-Description:
-Use the alternateRowBackgrounds property if you want to more clearly distinguish the rows displayed by the widget.
-
-Name: selectedElement
-Type: property
-Syntax: set the selectedElement of <widget> to <pPath>
-Syntax: get the selectedElement of <widget>
-
-Summary: Select the row corresponding to <pPath>
-
-Parameters:
-pPath: A comma delimited list of array keys.
-
-Description:
-<pPath> is a list of the keys which determine the row to be selected. For example, if tArray is the arrayData 
-of the widget, to select a row corresponding to tArray["key1"]["subkey2"]["subsubkey5"], simply execute
-
-
-``` set the selectedElement of widget "Array Viewer" to "key1,subkey2,subsubkey5" ```
-
-Name: showFrameBorder
-Type: property
-Syntax: set the showFrameBorder of <widget> to {true|false}
-Syntax: get the showFrameBorder of <widget>
-
-Summary: Whether the widget has a border or not. 
-
-Description:
-Use the showFrameBorder property to show the bounds of the widget object.
-
 Name: selectedElementChanged
 Type: message
 Syntax: selectedElementChanged pPath
@@ -82,7 +32,6 @@ The selectedElementChanged message is sent to the widget's script object when a 
 causing that row to be selected. The <pPath> parameter contains the path to the new <selectedElement>.
 
 References: selectedElement (property)
-
 */
 
 widget com.livecode.widget.treeView
@@ -96,16 +45,156 @@ metadata version is "1.0.0"
 metadata title is "Tree View"
 metadata userVisible is "false"
 
+-- property declarations
+/*
+Syntax: set the arrayData of <widget> to <pArray>
+Syntax: get the arrayData of <widget>
+Summary: The array being displayed by the widget
+
+Parameters:
+pArray (array): The array data.
+
+Description:
+The arrayData is the data currently being displayed by the tree view widget.
+*/
+
+property arrayData 					get getArrayData 				set setArrayData
+
+/*
+Syntax: set the alternateRowBackgrounds of <widget> to {true|false}
+Syntax: get the alternateRowBackgrounds of <widget>
+
+Summary: Whether the alternate rows of the widget have different backgrounds or not.
+
+Description:
+Use the alternateRowBackgrounds property if you want to more clearly distinguish the rows displayed by the widget.
+*/
+
+property alternateRowBackgrounds 	get mAlternateRowBackgrounds 	set setRowBackgrounds
+
+/*
+Syntax: set the selectedElement of <widget> to <pPath>
+Syntax: get the selectedElement of <widget>
+
+Summary: Select the row corresponding to <pPath>
+
+Parameters:
+pPath: A comma delimited list of array keys.
+
+Description:
+<pPath> is a list of the keys which determine the row to be selected. For example, if tArray is the arrayData
+of the widget, to select a row corresponding to tArray["key1"]["subkey2"]["subsubkey5"], simply execute
+
+
+``` set the selectedElement of widget "Array Viewer" to "key1,subkey2,subsubkey5" ```
+*/
+
+property selectedElement			get getSelectedElement			set setSelectedElement
+
+/*
+Syntax: set the showFrameBorder of <widget> to {true|false}
+Syntax: get the showFrameBorder of <widget>
+
+Summary: Whether the widget has a border or not.
+
+Description:
+Use the showFrameBorder property to show the bounds of the widget object.
+*/
+
+property showFrameBorder			get mFrameBorder				set setFrameBorder
+
+/*
+Syntax: set the selectedRowColor of <widget> to <pColor>
+Syntax: get the selectedRowColor of <widget>
+
+Summary: The color used to highlight a selected row.
+
+Parameters:
+pColor: The color to use to highlight a row when it is selected.
+
+Description:
+Use the <selectedRowColor> property to get or set the color the tree view widget uses to highlight the selected row.
+*/
+
+property selectedRowColor			get mSelectedRowColor			set setSelectedRowColor
 metadata selectedRowColor.editor is "com.livecode.pi.color"
 metadata selectedRowColor.default is "10,105,216"
 
--- property declarations
-property arrayData 					get getArrayData 				set setArrayData
-property alternateRowBackgrounds 	get mAlternateRowBackgrounds 	set setRowBackgrounds
-property selectedElement			get getSelectedElement			set setSelectedElement
-property showFrameBorder			get mFrameBorder				set setFrameBorder
-property selectedRowColor			get mSelectedRowColor			set setSelectedRowColor
+/*
+Syntax: set the readOnly of <widget> to {true|false}
+Syntax: get the readOnly of <widget>
+
+Summary: Whether the options to modify elements of the underlying array are present or not.
+
+Description:
+The <readOnly> property controls whether the widget presents the option to add elements to arrays or not.
+If false, the first row of the widget is always "Add new element", and when rows are hovered over, icons
+appear at the right to enable the removal of that element, or the addition of a new subelement.
+
+*/
+
 property readOnly					get mReadOnly					set setReadOnly
+
+/*
+Syntax: set the arrayStyle of <widget> to {true|false}
+Syntax: get the arrayStyle of <widget>
+
+Summary: Whether the tree view should display its contents in array style or as a standard tree view.
+
+Description:
+The <arrayStyle> property controls whether the keys of the <arrayData> of the widget are displayed with
+square brackets around them or not.
+
+References: arrayData (property)
+*/
+
+property arrayStyle                 get mArrayStyle                 set setArrayStyle
+
+/*
+Syntax: set the sortOrder of <widget> to <pOrder>
+Syntax: get the sortOrder of <widget>
+
+Summary: Manipulates the order in which elements of the tree view are displayed, with respect to the current <sortType>.
+
+Parameters:
+pOrder (enum): The order in which to display elements of the tree view.
+-"ascending": Display from first to last in the order. This is the default
+-"descending": Display from last to first in the order.
+
+Description:
+Use the <sortOrder> property to display the elements of the tree view in ascending or descending order of the
+keys of its <arrayData>, given the current <sortType>.
+
+References: arrayData (property), sortType (property)
+*/
+
+property sortOrder                 get getSortOrder                 set setSortOrder
+
+metadata sortOrder.editor is "com.livecode.pi.enum"
+metadata sortOrder.options is "ascending,descending"
+
+/*
+Syntax: set the sortType of <widget> to <pType>
+Syntax: get the sortType of <widget>
+
+Summary: Manipulates the type of ordering in which elements of the tree view are displayed.
+
+Parameters:
+pType (enum): The type of ordering to use in displaying elements of the tree view.
+-"text": Display in alphabetical order of the keys
+-"numeric": Display in numeric order of the keys. This is the default
+
+Description:
+Use the <sortType> property to use text or numeric comparison when ordering the keys of the <arrayData>
+of the tree view widget.
+
+References: sortOrder (property)
+*/
+
+property sortType                 get getSortType                 set setSortType
+
+metadata sortType.editor is "com.livecode.pi.enum"
+metadata sortType.options is "text,numeric"
 
 // The unmodified array data
 private variable mData as Array
@@ -152,6 +241,13 @@ private variable mIconRect as Rectangle
 private variable mIconWidth as Real
 
 private variable mReadOnly as Boolean
+private variable mArrayStyle as Boolean
+
+private variable mSortAscending as Boolean
+private variable mSortNumeric as Boolean
+
+constant kMaxKeyDisplayChars is 50
+constant kMaxValueDisplayChars is 200
 
 --------------------------------------------------------------------------------
 --
@@ -193,6 +289,11 @@ public handler OnCreate() returns nothing
 	initialiseScrollbar()	
 	
 	put false into mReadOnly
+    put false into mArrayStyle
+
+    put true into mSortNumeric
+    put true into mSortAscending
+
 	put true into mRecalculate
 	
 	put the empty array into mFoldState
@@ -208,6 +309,9 @@ public handler OnSave(out rProperties as Array)
 	put mData into rProperties["array"]
 	put mSelectedRowColor into rProperties["selected row color"]
 	put mReadOnly into rProperties["read only"]
+    put mArrayStyle into rProperties["array style"]
+    put mSortAscending into rProperties["sort ascending"]
+    put mSortNumeric into rProperties["sort numeric"]
 	return rProperties
 end handler
 
@@ -215,6 +319,18 @@ public handler OnLoad(in pProperties as Array)
 	put pProperties["array"] into mData
 	put pProperties["selected row color"] into mSelectedRowColor
 	put pProperties["read only"] into mReadOnly
+
+    if ["array style"] is in the keys of pProperties then
+        put pProperties["array style"] into mArrayStyle
+    end if
+
+    if ["sort ascending"] is in the keys of pProperties then
+        put pProperties["sort ascending"] into mSortAscending
+    end if
+
+    if ["sort numeric"] is in the keys of pProperties then
+        put pProperties["sort numeric"] into mSortNumeric
+    end if
 end handler
 
 public handler OnPaint() returns nothing
@@ -336,19 +452,44 @@ private handler paintDataItem(in pDataItem as Array, in pTop as Real, in pRow as
 		
 	// Draw the key
 	set the paint of this canvas to getPaint("text","disabled" & tStyle)
-	fill text "[" & pDataItem["key"] & "]" at left of rectangle [tLeft, pTop, mViewWidth - 3 * mMargin - 2 * mIconWidth, pTop + mRowHeight] on this canvas
+
+    // AL-2015-07-26: [[ Bug 15752 ]] Only draw specified amount of key string
+    variable tKeyLength as Number
+    variable tKeyDisplay as String
+    put the number of chars in pDataItem["key"] into tKeyLength
+    if tKeyLength <= kMaxKeyDisplayChars then
+        put pDataItem["key"] into tKeyDisplay
+    else
+        put (char 1 to kMaxKeyDisplayChars of pDataItem["key"]) & "..." into tKeyDisplay
+    end if
+
+    if mArrayStyle then
+        put "[" & tKeyDisplay & "]" into tKeyDisplay
+    end if
+
+	fill text tKeyDisplay at left of rectangle [tLeft, pTop, mViewWidth - 3 * mMargin - 2 * mIconWidth, pTop + mRowHeight] on this canvas
 		
 	variable tTextBounds as Rectangle
-	measure "[" & pDataItem["key"] & "]" on this canvas
+	measure tKeyDisplay on this canvas
 	put the result into tTextBounds
 	put tTextBounds into pDataItem["keyRect"]
 
 	add the width of tTextBounds + mMargin to tLeft
 		
-	// Draw the value if it is a 'leaf' (i.e. if it does not contain a sub-array
+	// Draw the value if it is a 'leaf' (i.e. if it does not contain a sub-array)
 	if pDataItem["leaf"] then
+        // AL-2015-07-26: [[ Bug 15752 ]] Only draw specified amount of value string
+        variable tValueLength as Number
+        variable tValueDisplay as String
+        put the number of chars in pDataItem["string_value"] into tValueLength
+        if tValueLength <= kMaxValueDisplayChars then
+            put pDataItem["string_value"] into tValueDisplay
+        else
+            put (char 1 to kMaxValueDisplayChars of pDataItem["string_value"]) & "..." into tValueDisplay
+        end if
+
 		set the paint of this canvas to getPaint("text","fill" & tStyle)
-		fill text pDataItem["string_value"] at left of rectangle [tLeft, pTop, mViewWidth - 3 * mMargin - 2 * mIconWidth, pTop + mRowHeight] on this canvas
+		fill text tValueDisplay at left of rectangle [tLeft, pTop, mViewWidth - 3 * mMargin - 2 * mIconWidth, pTop + mRowHeight] on this canvas
 	end if
 	
 	// Draw the action icons 
@@ -541,7 +682,13 @@ public handler OnClick() returns nothing
 end handler
 
 private handler yPosToRowNumber(in pYPos as Number) returns Integer
-	return the floor of ((mViewTopPosition + pYPos) / mRowHeight + 1)
+    variable tRow as Number
+    put the floor of ((mViewTopPosition + pYPos) / mRowHeight + 1) into tRow
+    if mReadOnly then
+        add 1 to tRow
+    end if
+
+    return tRow
 end handler
 
 private handler xPosToIconString(in pXPos as Number) returns String
@@ -582,11 +729,7 @@ end handler
 // Clamp mViewTopPosition
 private handler ensureViewTopPosition()
 	variable tMinTop as Real
-	if mReadOnly then
-		put mRowHeight into tMinTop
-	else
-		put 0 into tMinTop
-	end if
+    put 0 into tMinTop
 
 	// Make sure we don't try to scroll above 0
 	if mViewTopPosition < tMinTop then 
@@ -604,15 +747,18 @@ private handler updateFirstDataItem()
 	put the floor of (mViewTopPosition / mRowHeight) + 1 into mFirstDataItem
 	if mFirstDataItem < 1 then
 		put 1 into mFirstDataItem
-	end if	
+	end if
+    if mReadOnly then
+        add 1 to mFirstDataItem
+    end if  
 end handler
 
 private handler updateParameters() returns nothing
 	put the number of elements in mDataList into mDataCount
 	if mReadOnly then
-		put mRowHeight * mDataCount into mDataHeight
-	else
 		put mRowHeight * (mDataCount - 1) into mDataHeight
+	else
+		put mRowHeight * mDataCount into mDataHeight
 	end if
 	put my height into mViewHeight
 	put my width into mViewWidth
@@ -810,6 +956,50 @@ private handler getArrayData() returns Array
 	return mData
 end handler
 
+-- Sorts numerically, converting strings to numbers where possible
+private handler CompareKeysNumeric(in pLeft as any, in pRight as any) as Integer
+	variable tLeft as optional Number
+	variable tRight as optional Number
+	
+	if pLeft is a number then
+		put pLeft into tLeft
+	else
+		put pLeft parsed as number into tLeft
+	end if
+	
+	if pRight is a number then
+		put pRight into tRight
+	else
+		put pRight parsed as number into tRight
+	end if
+
+	if tRight is tLeft then
+		return 0
+	end if
+		
+	if tRight is nothing then
+		return -1
+	end if
+	
+	if tLeft is nothing then
+		return 1
+	end if
+	
+	if tLeft < tRight then
+		if mSortAscending then
+			return -1
+		else
+			return 1
+		end if
+	end if
+	
+	if mSortAscending then
+		return 1
+	else
+		return -1
+	end if
+end handler
+
 // Convert an array to a list, as used by this widget. Ignoring the 'folded' ans selected
 //  parameters, mDataList should always be the result of calling this on mData
 private handler convertArrayToList(in pArray as Array, in pLevel as Integer, in pPath as List) returns List
@@ -823,7 +1013,16 @@ private handler convertArrayToList(in pArray as Array, in pLevel as Integer, in 
 	
 	variable tKeys as List
 	put the keys of pArray into tKeys
-	sort tKeys in ascending order
+	
+	if mSortNumeric then
+		sort tKeys using handler CompareKeysNumeric
+	else
+		if mSortAscending then
+			sort tKeys in ascending order
+		else
+			sort tKeys in descending order
+		end if
+	end if
 	
 	variable tKey as String
 	variable tElement as Array
@@ -1263,6 +1462,70 @@ private handler setReadOnly(in pReadOnly as Boolean)
         put true into mRecalculate
         redraw all
     end if
+end handler
+
+private handler setArrayStyle(in pArrayStyle as Boolean)
+    if pArrayStyle is not mArrayStyle then
+        put pArrayStyle into mArrayStyle
+        put true into mRecalculate
+        redraw all
+    end if
+end handler
+
+constant kSortTypeNumeric is "numeric"
+constant kSortTypeText is "text"
+
+private handler getSortType() returns String
+    if mSortNumeric then
+        return kSortTypeNumeric
+    else
+        return kSortTypeText
+    end if
+end handler
+
+private handler setSortType(in pType as String) returns nothing
+    variable tSortNumeric as Boolean
+    if pType is kSortTypeText then
+        put false into tSortNumeric
+    else if pType is kSortTypeNumeric then
+        put true into tSortNumeric
+    else
+        throw "invalid sort type"
+    end if
+
+    if tSortNumeric is not mSortNumeric then
+        put tSortNumeric into mSortNumeric
+        setArrayData(mData)
+    end if  
+
+end handler
+
+constant kSortOrderAscending is "ascending"
+constant kSortOrderDescending is "descending"
+
+private handler getSortOrder() returns String
+    if mSortAscending then
+        return kSortOrderAscending
+    else
+        return kSortOrderDescending
+    end if
+end handler
+
+private handler setSortOrder(in pType as String) returns nothing
+    variable tSortAscending as Boolean
+    if pType is kSortOrderDescending then
+        put false into tSortAscending
+    else if pType is kSortOrderAscending then
+        put true into tSortAscending
+    else
+        throw "invalid sort order"
+    end if
+
+    if tSortAscending is not mSortAscending then
+        put tSortAscending into mSortAscending
+        setArrayData(mData)
+    end if  
+
 end handler
 
 --------------------------------------------------------------------------------

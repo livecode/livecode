@@ -151,6 +151,26 @@
 							],
 						},
 					],
+					[
+						'OS == "emscripten"',
+						{
+							'library_dirs':
+							[
+								'<(src_top_dir_abs)/prebuilt/lib/emscripten/js',
+							],
+
+							'libraries':
+							[
+								'-licui18n',
+								'-licuio',
+								'-licule',
+								'-liculx',
+								'-licutu',
+								'-licuuc',
+								'-licudata',
+							],
+						},
+					],
 				],
 			},
 		},

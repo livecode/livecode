@@ -40,6 +40,10 @@
 
 #include "foundation.h"
 
+#if defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
+#include "mblcontrol.h"
+#endif
+
 #include <signal.h>
 #ifdef _WIN32
 #include <float.h> // _isnan()
@@ -70,6 +74,7 @@ extern MCSystemInterface *MCDesktopCreateWindowsSystem(void);
 extern MCSystemInterface *MCDesktopCreateLinuxSystem(void);
 extern MCSystemInterface *MCMobileCreateIPhoneSystem(void);
 extern MCSystemInterface *MCMobileCreateAndroidSystem(void);
+extern MCSystemInterface *MCDesktopCreateEmscriptenSystem(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -208,6 +213,26 @@ static void handle_signal(int p_signal)
 #endif
 #endif
 
+#if defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
+extern bool MCIsPlatformMessage(MCNameRef name);
+extern bool MCHandlePlatformMessage(MCNameRef name, MCParameter *parameters, Exec_stat& r_result);
+static MCHookGlobalHandlersDescriptor s_global_handlers_desc =
+{
+    MCIsPlatformMessage,
+    MCHandlePlatformMessage,
+};
+
+extern bool MCNativeControlCreate(MCNativeControlType type, MCNativeControl*& r_control);
+static MCHookNativeControlsDescriptor s_native_control_desc =
+{
+    (bool(*)(MCStringRef,intenum_t&))MCNativeControl::LookupType,
+    (bool(*)(MCStringRef,intenum_t&))MCNativeControl::LookupProperty,
+    (bool(*)(MCStringRef,intenum_t&))MCNativeControl::LookupAction,
+    (bool(*)(intenum_t,void*&))MCNativeControlCreate,
+    nil,
+};
+#endif
+
 void MCS_common_init(void)
 {	
 	MCsystem -> Initialize();    
@@ -217,7 +242,7 @@ void MCS_common_init(void)
 
 	// MW-2013-10-08: [[ Bug 11259 ]] We use our own tables on linux since
 	//   we use a fixed locale which isn't available on all systems.
-#if !defined(_LINUX_SERVER) && !defined(_LINUX_DESKTOP) && !defined(_WINDOWS_DESKTOP) && !defined(_WINDOWS_SERVER)
+#if !defined(_LINUX_SERVER) && !defined(_LINUX_DESKTOP) && !defined(_WINDOWS_DESKTOP) && !defined(_WINDOWS_SERVER) && !defined(__EMSCRIPTEN__)
 	MCuppercasingtable = new uint1[256];
 	for(uint4 i = 0; i < 256; ++i)
 		MCuppercasingtable[i] = (uint1)toupper((uint1)i);
@@ -226,7 +251,12 @@ void MCS_common_init(void)
 	for(uint4 i = 0; i < 256; ++i)
 		MClowercasingtable[i] = (uint1)tolower((uint1)i);
 #endif
-	
+    
+#if defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
+    MCHookRegister(kMCHookGlobalHandlers, &s_global_handlers_desc);
+    MCHookRegister(kMCHookNativeControls, &s_native_control_desc);
+#endif
+    
 	MCStackSecurityInit();
 }
 
@@ -248,6 +278,8 @@ void MCS_init(void)
     MCsystem = MCMobileCreateIPhoneSystem();
 #elif defined (_ANDROID_MOBILE)
     MCsystem = MCMobileCreateAndroidSystem();
+#elif defined (__EMSCRIPTEN__)
+    MCsystem = MCDesktopCreateEmscriptenSystem();
 #else
 #error Unknown server platform.
 #endif

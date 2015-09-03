@@ -277,7 +277,6 @@ Boolean MCDispatch::cut(Boolean home)
 	return MCnoui || (flags & F_WAS_LICENSED) != 0;
 }
 
-//extern Exec_stat MCHandlePlatformMessage(Handler_type htype, const MCString& mess, MCParameter *params);
 Exec_stat MCDispatch::handle(Handler_type htype, MCNameRef mess, MCParameter *params, MCObject *pass_from)
 {
 	Exec_stat stat = ES_NOT_HANDLED;
@@ -1753,6 +1752,28 @@ MCStack *MCDispatch::findstackid(uint4 fid)
 	}
 	while (tstk != stacks);
 	return NULL;
+}
+
+bool MCDispatch::foreachstack(MCStackForEachCallback p_callback, void *p_context)
+{
+	bool t_continue;
+	t_continue = true;
+	
+	if (stacks)
+	{
+		MCStack *t_stack;
+		t_stack = stacks;
+		
+		do
+		{
+			t_continue = t_stack->foreachstack(p_callback, p_context);
+			
+			t_stack = (MCStack*)t_stack->next();
+		}
+		while (t_continue && t_stack != stacks);
+	}
+	
+	return t_continue;
 }
 
 bool MCDispatch::foreachchildstack(MCStack *p_stack, MCStackForEachCallback p_callback, void *p_context)

@@ -38,7 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define IO_UPDATE_MODE 	"r+b"
 #define IO_CREATE_MODE "wb+"
 #define ENV_SEPARATOR 	':'
-#elif defined(_LINUX_DESKTOP) || defined(_SERVER) || defined(_MOBILE)
+#elif defined(_LINUX_DESKTOP) || defined(_SERVER) || defined(_MOBILE) || defined(__EMSCRIPTEN__)
 #define IO_APPEND_MODE "a"
 #define IO_READ_MODE "r"
 #define IO_WRITE_MODE "w"

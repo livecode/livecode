@@ -24,20 +24,169 @@ private variable mMaintainAspectRatio as Boolean
 private variable mFlipVertically     as Boolean // some SVG Paths need to be flipped (all font awesome SVG paths do, Illustrator SVG does not)
 private variable mAngle     as Real
 variable mPathName as String
+
+/*
+Syntax:
+set the iconColor of <widget> to <pColor>
+get the iconColor of <widget>
+
+Summary: Determines the color of the icon.
+
+Parameters:
+pColor: The color of the icon, in RGB or RGBA format
+
+Example: set the iconColor of widget "SVG Icon" to "255,255,0,128"
+
+Description:
+Use the iconColor property to set the color of the widget icon. The color is
+in the form of a 3 or 4 item string, the 4th optional item being the alpha value,
+all between 0 and 255.
+
+*/
+
 property iconColor            get getColor          set setColor
-metadata iconColor.editor is "com.livecode.pi.color"
+metadata iconColor.editor is "com.livecode.pi.colorwithalpha"
+
+/*
+Syntax:
+set the iconHiliteColor of <widget> to <pColor>
+get the iconHiliteColor of <widget>
+
+Summary: Determines the color of the icon when clicked.
+
+Parameters:
+pColor: The color of the iconwhen clicked, in RGB or RGBA format
+
+Example: set the iconHiliteColor of widget "SVG Icon" to "255,255,0,128"
+
+Description:
+Use the iconHiliteColor property to set the color of the widget icon when clicked.
+The color is in the form of a 3 or 4 item string, the 4th optional item being the
+alpha value, all between 0 and 255.
+
+*/
+
 property iconHiliteColor      get getHiliteColor    set setHiliteColor
-metadata iconHiliteColor.editor is "com.livecode.pi.color"
+metadata iconHiliteColor.editor is "com.livecode.pi.colorwithalpha"
+
+/*
+Syntax:
+set the iconPathPreset of <widget> to <pIconName>
+get the iconPathPreset of <widget>
+
+Summary: One of the predefined SVG icon path names.
+
+Parameters:
+pIconName: The name of the icon to display.
+
+Example: set the iconPathPreset of widget "SVG Icon" to "thumbs up"
+
+Description:
+Use the iconPathPreset property to set the icon of the widget to one of the
+predefined values. The complete list of preset values is available by executing
+
+``` put iconNames()```
+
+*/
+
 property iconPathPreset            get getPathPreset           set setPathPreset
 metadata iconPathPreset.editor is "com.livecode.pi.enum"
 metadata iconPathPreset.options is "execute: get iconNames()"
 metadata iconPathPreset.default is "Star"
+
+/*
+Syntax:
+set the iconPath of <widget> to <pSVGPath>
+get the iconPath of <widget>
+
+Summary: Manipulates the svg path displayed by the icon.
+
+Parameters:
+pSVGPath: The path of the icon to display.
+
+Example:
+-- Create a filled triangle
+set the iconPath of widget "SVG Icon" to "M150 0 L75 200 L225 200 Z"
+
+Description:
+Use the iconPath property to set the icon of the widget to an SVG path.
+
+See http://www.w3schools.com/svg/svg_path.asp for more information on valid SVG path operations.
+*/
+
 property iconPath       get mPath           set setPath
 metadata iconPath.editor is "com.livecode.pi.text"
+
+/*
+Syntax:
+set the isHilited of <widget> to {true|false}
+get the isHilited of <widget>
+
+Summary: Whether the icon is hilited or not.
+
+Description:
+Use the isHilited property to hilite the icon or check if it is hilited from script.
+*/
+
 property isHilited            get mHilited          set setIsHilited
+
+/*
+Syntax:
+set the toggleHilite of <widget> to {true|false}
+get the toggleHilite of <widget>
+
+Summary: Whether the icon has toggle behavior or not.
+
+Description:
+Use the toggleHilite property to make the icon behave like a toggle. The
+default behavior is toggleHilite false, so that the icon returns to its
+unhilited state when the mouse button is released. When toggleHilite is true,
+clicking the icon causes it to remain hilited until clicked again.
+*/
 property toggleHilite         get mToggleHilite     set mToggleHilite
+
+/*
+Syntax:
+set the maintainAspectRatio of <widget> to {true|false}
+get the maintainAspectRatio of <widget>
+
+Summary: Whether the icon maintains its aspect ratio when resized.
+
+Description:
+If the maintainAspectRatio of the icon widget is true, the icon will be its maximum
+size within its bounds while maintaining the original ratio of width to height. If
+false, it will stretch to fit the extent of its bounds.
+
+*/
 property maintainAspectRatio  get mMaintainAspectRatio  set setMaintainAspectRatio
+
+/*
+Syntax:
+set the flipVertically of <widget> to {true|false}
+get the flipVertically of <widget>
+
+Summary: Whether the icon is flipped vertically.
+
+Description:
+Use the flipped vertically to flip the icon upside down.
+
+*/
 property flipVertically       get mFlipVertically       set setFlipVertically
+
+/*
+Syntax:
+set the iconAngle of <widget> to <pAngle>
+get the iconAngle of <widget>
+
+Parameters:
+pAngle: The angle of rotation in degrees.
+
+Summary: The angle of rotation of the icon.
+
+Description:
+Use the iconAngle property to rotate the icon <pAngle> degrees clockwise.
+*/
+
 property iconAngle       get mAngle       set setAngle
 --
 
@@ -308,10 +457,10 @@ private handler stringToColor(in pString as String) returns Color
 	if tComponentCount is 4 then
 		put (element 4 of tComponentList) parsed as number into tAlpha
 	else
-		put 1.0 into tAlpha
+		put 255 into tAlpha
 	end if
 
-	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha ]
+	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha/255 ]
 end handler
 
 

@@ -2,7 +2,7 @@
 	'conditions':
 	[
 		[
-			'OS != "win"',
+			'OS != "win" and OS != "emscripten"',
 			{
 				'variables':
 				{
@@ -52,7 +52,7 @@
 			}
 		],
 		[
-			'OS == "win"',
+			'OS == "win" or OS == "emscripten"',
 			{
 				# Not yet implemented...
 				'variables':

@@ -2,7 +2,7 @@ Name: accept
 
 Type: command
 
-Syntax: accept [datagram] connections on port <number> with message <callbackMessage> 
+Syntax: accept [datagram] connections on port <portNumber> with message <callbackMessage> 
 
 Summary: Accepts an internet connection and creates a <socket> for that connection.
 
@@ -30,7 +30,6 @@ on connectionMade pIPAddress
 end connectionMade
 
 Parameters:
-number: 
 callbackMessage: The name of a message to be sent when a connection is made or a datagram is received.
 portNumber: The TCP port number on which to accept connections.
 

@@ -144,7 +144,7 @@ MC_DLLEXPORT_DEF bool
 MCSFileDelete (MCStringRef p_path)
 {
 	MCS_FILE_CONVERT_PATH(p_path, t_native_path);
-	return __MCSFileDelete (p_path);
+	return __MCSFileDelete (t_native_path);
 }
 
 MC_DLLEXPORT_DEF bool
@@ -195,6 +195,27 @@ MCSFileGetDirectoryEntries (MCStringRef p_path,
 	                        MCSFileGetDirectoryEntries_MapCallback,
 	                        r_entries,
 	                        NULL);
+}
+
+MC_DLLEXPORT_DEF bool
+MCSFileGetType (MCStringRef p_path,
+                bool p_follow_links,
+                MCSFileType & r_type)
+{
+	MCS_FILE_CONVERT_PATH(p_path, t_native_path);
+	bool t_success = true;
+
+	if (t_success)
+	{
+		t_success = __MCSFileGetType (t_native_path, p_follow_links, r_type);
+	}
+
+	if (t_success && r_type == kMCSFileTypeUnsupported)
+	{
+		MCLog ("%s: file '%@' has unrecognised type", __FUNCTION__, p_path);
+	}
+
+	return t_success;
 }
 
 /* ================================================================

@@ -262,7 +262,7 @@
     'rule' Define(ModuleId, type(Position, Access, Name, Type)):
         DefineSymbolId(Name, ModuleId, Access, type, Type)
         [|
-            where(Type -> handler(_, signature(Parameters, _)))
+            where(Type -> handler(_, _, signature(Parameters, _)))
             DefineParameters(Name, Parameters)
         |]
     
@@ -277,11 +277,11 @@
         DefineSymbolId(Name, ModuleId, Access, context, Type)
     
     'rule' Define(ModuleId, handler(Position, Access, Name, _, Signature:signature(Parameters, _), _, _)):
-        DefineSymbolId(Name, ModuleId, Access, handler, handler(Position, Signature))
+        DefineSymbolId(Name, ModuleId, Access, handler, handler(Position, normal, Signature))
         DefineParameters(Name, Parameters)
     
     'rule' Define(ModuleId, foreignhandler(Position, Access, Name, Signature:signature(Parameters, _), _)):
-        DefineSymbolId(Name, ModuleId, Access, handler, handler(Position, Signature))
+        DefineSymbolId(Name, ModuleId, Access, handler, handler(Position, foreign, Signature))
         DefineParameters(Name, Parameters)
 
     'rule' Define(ModuleId, property(Position, Access, Name, Getter, Setter)):
@@ -436,7 +436,7 @@
         -- Leave the fields scope
         LeaveScope
         
-    'rule' Apply(TYPE'handler(_, signature(Parameters, Type))):
+    'rule' Apply(TYPE'handler(_, _, signature(Parameters, Type))):
         -- The return type of the handler is resolved in the current scope.
         Apply(Type)
         

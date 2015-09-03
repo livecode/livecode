@@ -15,7 +15,7 @@ command toolsBuilderRun pPlatform, pEdition, pVersion
    -- If on windows or linux, we can't do anything macosxy due to lack of lipo/strip :o(
    local tEngineFolders
 
-   get "windows linux-x86 linux-x86_64 linux-armv6hf macosx ios android"
+   get "windows linux-x86 linux-x86_64 linux-armv6hf macosx ios android emscripten"
       
    repeat for each word tPlatform in it
       builderFetchEngine pVersion, tPlatform
@@ -68,7 +68,18 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    local tPackageFile
    
    local tEditionType
+   local tBaseEditionType
    put pEdition into tEditionType
+   
+   switch tEditionType
+      case "Community"
+         put "Community" into tBaseEditionType
+         break
+      case "Indy"
+      case "Business"
+         put "Commercial" into tBaseEditionType
+         break
+   end switch
    
    -- Compute the package temp folder
    local tTempFolder
@@ -101,14 +112,17 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    packageCompilerConfigureSource tPackager, "windows", pEngineFolders["windows"]
    packageCompilerConfigureSource tPackager, "ios", pEngineFolders["ios"]
    packageCompilerConfigureSource tPackager, "android", pEngineFolders["android"]
+   packageCompilerConfigureSOurce tPackager, "emscripten", pEngineFolders["emscripten"]
    packageCompilerConfigureSource tPackager, "prebuilt", builderRepoFolder() & slash & "prebuilt"
-   if tEditionType is "Commercial" then
+   packageCompilerConfigureSource tPackager, "repo", builderRepoFolder()
+   if tEditionType is among the items of "indy,business" then
       packageCompilerConfigureSource tPackager, "private", builderPrivateRepoFolder()
    end if
    
    -- Now set up variables used by the description: TargetFolder, SupportFolder, ToolsFolder, TargetPlatform, TargetEdition
    packageCompilerConfigureVariable tPackager, "TargetFolder", "[[installFolder]]"
    packageCompilerConfigureVariable tPackager, "TargetEdition", tEditionType
+   packageCompilerConfigureVariable tPackager, "BaseEdition", tBaseEditionType
    if pPlatform is "macosx" then
       packageCompilerConfigureVariable tPackager, "SupportFolder", "[[installFolder]]/Contents/Tools"
       packageCompilerConfigureVariable tPackager, "ToolsFolder", "[[installFolder]]/Contents/Tools"
@@ -142,25 +156,27 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
       else
          packageCompilerConfigureVariable tPackager, "ProductName", "LiveCode Community"
       end if
-   else
-      packageCompilerConfigureVariable tPackager, "ProductTitle", "LiveCode" && getReadableVersion(pVersion)
-      packageCompilerConfigureVariable tPackager, "ProductTag", "livecode_" & getTaggedVersion(pVersion)
-      if pPlatform is "Linux" or pPlatform is "Linux-x86_64" or pPlatform is "Linux-armv6hf" then
-         packageCompilerConfigureVariable tPackager, "ProductName", "livecode"
-      else
-         packageCompilerConfigureVariable tPackager, "ProductName", "LiveCode"
-      end if
+   else if pEdition is "Indy" then
+      packageCompilerConfigureVariable tPackager, "ProductTitle", "LiveCode Indy" && getReadableVersion(pVersion)
+      packageCompilerConfigureVariable tPackager, "ProductTag", "livecodeindy_" & getTaggedVersion(pVersion)
+      packageCompilerConfigureVariable tPackager, "ProductName", "LiveCode Indy"
+   else if pEdition is "Business" then
+      packageCompilerConfigureVariable tPackager, "ProductTitle", "LiveCode Business" && getReadableVersion(pVersion)
+      packageCompilerConfigureVariable tPackager, "ProductTag", "livecodebusiness_" & getTaggedVersion(pVersion)
+      packageCompilerConfigureVariable tPackager, "ProductName", "LiveCode Business"
    end if
    
    -- The edition tags.
    packageCompilerConfigureVariable tPackager, "EditionTagLower", "-" & toLower(char 1 of tEditionType) & char 2 to -1 of tEditionType
    packageCompilerConfigureVariable tPackager, "EditionTagUpper", "-" & toUpper(char 1 of tEditionType) & char 2 to -1 of tEditionType
+   packageCompilerConfigureVariable tPackager, "BaseEditionTagLower", "-" & toLower(char 1 of tBaseEditionType) & char 2 to -1 of tBaseEditionType
+   packageCompilerConfigureVariable tPackager, "BaseEditionTagUpper", "-" & toUpper(char 1 of tBaseEditionType) & char 2 to -1 of tBaseEditionType
    
    local tSuccess
    put true into tSuccess
    
    local tDescFile
-   put pIdeFolder & slash & "Installer/package.txt" into tDescFile
+   put builderRepoFolder() & slash & "Installer/package.txt" into tDescFile
    builderLog "message", "Parsing description file '" & tDescFile & "'"
    packageCompilerParse tPackager, url ("file:" & tDescFile)
    if the result is empty then
@@ -207,6 +223,9 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    -- Make sure no stack messages trigger
    lock messages
    
+   -- Ensure the correct capitalisation of the edition name
+   put toUpper(char 1 of pEdition) & toLower(char 2 to -1 of pEdition) into pEdition
+   
    -- Compute the deploy temp folder
    local tTempFolder
    put builderWorkFolder() & slash & "tools-" & pPlatform & "-" & pVersion & ".tmp" into tTempFolder
@@ -226,8 +245,8 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    if pEdition is "Community" then
       put the short name of stack (builderSystemFolder() & "/tools_installer_resources.rev") into tResources
    else
-      builderLog "report", "Commercial installer resources:" && builderCommercialResourceFolder() & "/tools_installer_resources.rev"
-      put the short name of stack (builderCommercialResourceFolder() & "/tools_installer_resources.rev") into tResources
+      builderLog "report", "Commercial installer resources:" && builderCommercialResourceFolder() & slash & pEdition & "/tools_installer_resources.rev"
+      put the short name of stack (builderCommercialResourceFolder() & slash & pEdition & "/tools_installer_resources.rev") into tResources
    end if
    set the mainStack of stack tResources to tInstaller
    
@@ -236,13 +255,19 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
       set the uProduct of stack tInstaller to "LiveCode Community"
       set the uProductTitle of stack tInstaller to "LiveCode Community" && getReadableVersion(pVersion)
       set the uProductTag of stack tInstaller to "livecodecommunity-" & pVersion
-      set the uProductDetails of stack tInstaller to loadTextFile(pIdeFolder & slash & "Installer/description.txt")
+      set the uProductDetails of stack tInstaller to loadTextFile(builderSystemFolder() & "/../Installer/description.txt")
       set the uProductLicense of stack tInstaller to loadTextFile(pIdeFolder & slash & "License Agreement.txt")
-   else
-      set the uProduct of stack tInstaller to "LiveCode"
-      set the uProductTitle of stack tInstaller to "LiveCode" && getReadableVersion(pVersion)
-      set the uProductTag of stack tInstaller to "livecode-" & pVersion
-      set the uProductDetails of stack tInstaller to loadTextFile(pIdeFolder & slash & "Installer/description.txt")
+   else if pEdition is "Indy" then
+      set the uProduct of stack tInstaller to "LiveCode Indy"
+      set the uProductTitle of stack tInstaller to "LiveCode Indy" && getReadableVersion(pVersion)
+      set the uProductTag of stack tInstaller to "livecodeindy-" & pVersion
+      set the uProductDetails of stack tInstaller to loadTextFile(builderSystemFolder() & "/../Installer/description.txt")
+      set the uProductLicense of stack tInstaller to loadTextFile(pPrivateFolder & slash & "License Agreement.txt")
+   else if pEdition is "Business" then
+      set the uProduct of stack tInstaller to "LiveCode Business"
+      set the uProductTitle of stack tInstaller to "LiveCode Business" && getReadableVersion(pVersion)
+      set the uProductTag of stack tInstaller to "livecodebusiness-" & pVersion
+      set the uProductDetails of stack tInstaller to loadTextFile(builderSystemFolder() & "/../Installer/description.txt")
       set the uProductLicense of stack tInstaller to loadTextFile(pPrivateFolder & slash & "License Agreement.txt")
    end if
    
@@ -265,12 +290,12 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    
    -- Next build up the deploy info
    local tDietParams, tSignParams, tParams
-   put "RunRev Ltd" into tParams["version"]["CompanyName"]
+   put "LiveCode Ltd" into tParams["version"]["CompanyName"]
    if pEdition is "Community" then
-      put "RunRev LiveCode Community Installer" into tParams["version"]["FileDescription"]
+      put "LiveCode Community Installer" into tParams["version"]["FileDescription"]
       put "LiveCode Community Installer" into tParams["version"]["ProductName"]
    else
-      put "RunRev LiveCode Installer" into tParams["version"]["FileDescription"]
+      put "LiveCode Installer" into tParams["version"]["FileDescription"]
       put "LiveCode Installer" into tParams["version"]["ProductName"]
    end if
    put "©" && word -1 of the long date & ". All rights reserved worldwide." into tParams["version"]["LegalCopyright"]
@@ -317,9 +342,9 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
          
          // libURL is needed in the timestamp processing
          start using stack (builderRepoFolder() & slash & "ide-support" & slash & "revliburl.livecodescript")
-         
-         if pEdition is "Commercial" then
-            put builderCommercialResourceFolder() & "/installer.ico" into tParams["appicon"]
+
+         if pEdition is not "Community" then
+            put builderCommercialResourceFolder() & slash & pEdition & "/installer.ico" into tParams["appicon"]
          end if
          
          builderLog "message", "Deploying unsigned windows installer to '" && tParams["output"] & "'"
@@ -330,6 +355,7 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
          end if
          
          -- Next we sign the installer using the certificate (if available)
+         local tCertificatesFolder
          put builderPrivateRepoFolder() & slash & "certificates" into tCertificatesFolder
          if there is a folder (tCertificatesFolder) then
             put tParams["output"] into tSignParams["input"]
@@ -340,9 +366,9 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
             put "http://timestamp.verisign.com/scripts/timstamp.dll" into tSignParams["timestamper"]
             put "http://www.runrev.com" into tSignParams["url"]
             if pEdition is "Community" then
-               put "RunRev LiveCode Community Installer" into tSignParams["description"]
+               put "LiveCode Community Installer" into tSignParams["description"]
             else
-               put "RunRev LiveCode Installer" into tSignParams["description"]
+               put "LiveCode Installer" into tSignParams["description"]
             end if
             
             builderLog "message", "Signing windows installer to '" && tSignParams["output"] & "'"
@@ -396,7 +422,7 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
          if pEdition is "Community" then
             put url ("binfile:" & builderCommunityResourceFolder() & "/Installer.icns")  into url ("binfile:" & tOutputFileStub & ".app" & slash & "Contents/Resources/Installer.icns")
          else
-            put url ("binfile:" & builderCommercialResourceFolder() & "/Installer.icns") into url ("binfile:" & tOutputFileStub & ".app" & slash & "Contents/Resources/Installer.icns")
+            put url ("binfile:" & builderCommercialResourceFolder() & slash & pEdition & "/Installer.icns") into url ("binfile:" & tOutputFileStub & ".app" & slash & "Contents/Resources/Installer.icns")
          end if
          
          -- Get us an installer by dieting the source installer
@@ -456,15 +482,13 @@ command toolsBuilderMakeDisk pVersion, pEdition, pPlatform, tInputZip
       builderLog "warning", "No valid identity found for signing OSX installer"
    end if
    
+   local tEdition
+   put toUpper(char 1 of pEdition) & toLower(char 2 to -1 of pEdition) into tEdition
+   
    local tDmgFile, tDmgName, tDmgAppFolder
    put tOutputFileStub & ".dmg" into tDmgFile
-   if pEdition is "Community" then
-      put "LiveCode Community" && getReadableVersion(pVersion) && "Installer" into tDmgName
-      put (tOutputFileFolder & slash & "Install LiveCode Community" && getReadableVersion(pVersion) & ".app") into tDmgAppFolder
-   else
-      put "LiveCode" && getReadableVersion(pVersion) && "Installer" into tDmgName
-      put (tOutputFileFolder & slash & "Install LiveCode" && getReadableVersion(pVersion) & ".app") into tDmgAppFolder
-   end if
+    put "LiveCode" && tEdition && getReadableVersion(pVersion) && "Installer" into tDmgName
+    put (tOutputFileFolder & slash & "Install LiveCode" && tEdition && getReadableVersion(pVersion) & ".app") into tDmgAppFolder
    builderLog "message", "Building Mac DMG to '" & tDmgFile & "'"
    if there is a file tDmgFile then
       delete file tDmgFile
@@ -540,11 +564,11 @@ function getInstallerFilenameStub pVersion, pPlatform, pEdition
    else if pPlatform begins with "linux" then
       put "Linux" into pPlatform
    end if
-   if pEdition is "Community" then
-      return "LiveCodeCommunityInstaller-" & pVersion & "-" & pPlatform
-   else
-      return "LiveCodeInstaller-" & pVersion & "-" & pPlatform
-   end if
+   
+   -- Ensure that the edition name is capitalised appropriately
+   local tEdition
+   put toUpper(char 1 of pEdition) & toLower(char 2 to -1 of pEdition) into tEdition
+   return "LiveCode" & tEdition & "Installer-" & pVersion & "-" & pPlatform
 end getInstallerFilenameStub
 
 function loadTextFile pFile

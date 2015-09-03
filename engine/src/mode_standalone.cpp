@@ -99,6 +99,8 @@ __attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule
 __attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {0};
 #elif defined(TARGET_PLATFORM_MOBILE)
 MCCapsuleInfo MCcapsule = {0};
+#elif defined(__EMSCRIPTEN__)
+MCCapsuleInfo MCcapsule = {0};
 #endif
 
 MCLicenseParameters MClicenseparameters =
@@ -416,11 +418,17 @@ IO_stat MCDispatch::startup(void)
 #endif
 		
 		if (t_stream == NULL)
+        {
+		    MCresult->sets("unable to open startup stack");
 			return IO_ERROR;
+        }
 		
 		MCStack *t_stack;
 		if (readstartupstack(t_stream, t_stack) != IO_NORMAL)
+        {
+		    MCresult->sets("unable to read startup stack");
 			return IO_ERROR;
+        }
 		
 		MCS_close(t_stream);
 		
@@ -511,6 +519,62 @@ IO_stat MCDispatch::startup(void)
 	
 	// MW-2010-12-18: Startup message / stack init now down in 'main'
     
+	return IO_NORMAL;
+}
+
+#elif defined(__EMSCRIPTEN__)
+
+#define kMCEmscriptenBootStackFilename "/boot/standalone/__boot.livecode"
+#define kMCEmscriptenStartupScriptFilename "/boot/__startup"
+
+IO_stat
+MCDispatch::startup()
+{
+	/* The standalone data should already have been unpacked by now */
+
+	/* Load the initial stack */
+	/* FIXME Hardcoded boot stack path*/
+	MCStack *t_stack;
+	if (IO_NORMAL != MCdispatcher->loadfile(MCSTR(kMCEmscriptenBootStackFilename),
+	                                        t_stack))
+	{
+		MCresult->sets("failed to read initial stackfile");
+		return IO_ERROR;
+	}
+
+	MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
+
+	/* Load & run the startup script */
+	MCAutoStringRef t_startup_script;
+	if (!MCS_loadtextfile(MCSTR(kMCEmscriptenStartupScriptFilename),
+	                      &t_startup_script))
+	{
+		MCresult->sets("failed to read startup script");
+		return IO_ERROR;
+	}
+
+	if (ES_NORMAL != t_stack->domess(*t_startup_script))
+	{
+		MCresult->sets("failed to execute startup script");
+		return IO_ERROR;
+	}
+
+	/* Complete startup tasks and send the startup message */
+
+	MCModeResetCursors();
+	MCImage::init();
+
+	MCallowinterrupts = false;
+
+	t_stack->extraopen(false);
+
+	send_startup_message();
+
+	if (!MCquit)
+	{
+		t_stack->open();
+	}
+
 	return IO_NORMAL;
 }
 
@@ -839,6 +903,13 @@ bool MCModeHasCommandLineArguments(void)
 #else
     return true;
 #endif
+}
+
+// Standalones have environment variables
+bool
+MCModeHasEnvironmentVariables()
+{
+	return true;
 }
 
 // In standalone mode, we only automatically open stacks if there isn't an
