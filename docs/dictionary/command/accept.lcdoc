@@ -34,7 +34,8 @@ callbackMessage: The name of a message to be sent when a connection is made or a
 portNumber: The TCP port number on which to accept connections.
 
 Description:
-Use the <accept> <command> when running a <server>, to accept <TCP> connections or <UDP> <datagram|datagrams> from other systems (or other <process|processes> on the same system).
+Use the <accept> <command> when running a <server>, to accept <TCP> connections or <UDP> 
+<datagram|datagrams> from other systems (or other <process|processes> on the same system).
 Use the datagram option if you want to accept UDP datagrams.
 
 When a connection is made or a datagram is received, the <accept> <command> creates a new <socket> that can be used to communicate with the other system (or <process>). When using the <close socket>, <read from socket>, or <write to socket> <command|commands>, you can refer to this <socket> with a socket identifier that looks like this:
