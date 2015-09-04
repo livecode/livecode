@@ -95,9 +95,9 @@ bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, const MCString& p_data)
 
 	switch(p_kind)
 	{
-	case kMCSPutOutput:
 	case kMCSPutBeforeMessage:
         return MCmb -> prepend(ep, False) == ES_NORMAL;
+	case kMCSPutOutput:
 	case kMCSPutIntoMessage:
 		return MCmb -> store(ep, False) == ES_NORMAL;
 	case kMCSPutAfterMessage:
