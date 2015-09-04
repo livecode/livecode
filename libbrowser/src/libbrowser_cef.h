@@ -54,6 +54,8 @@ public:
 	virtual bool GoToURL(const char *p_url);
 	virtual bool EvaluateJavaScript(const char *p_script, char *&r_result);
 	
+	virtual void Destroy();
+	
 private:
 	CefRefPtr<CefBrowser> m_browser;
 	CefRefPtr<MCCefBrowserClient> m_client;
@@ -92,6 +94,7 @@ public:
 	virtual ~MCCefBrowserBase(void);
 	
 	bool Initialize();
+	void Finalize();
 	
 	// Browser Properties
 	

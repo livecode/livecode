@@ -900,6 +900,18 @@ bool MCCefBrowserBase::Initialize()
 	return m_browser != nil;
 }
 
+void MCCefBrowserBase::Finalize()
+{
+	if (m_browser != nil)
+		m_browser->GetHost()->CloseBrowser(false);
+	
+	// IM-2014-07-21: [[ Bug 12296 ]] Notify client of browser being closed
+	if (m_client)
+		m_client->OnOwnerClosed();
+	
+	m_browser = nil;
+	m_client = nil;
+}
 
 MCCefBrowserBase::MCCefBrowserBase()
 {
@@ -919,17 +931,16 @@ MCCefBrowserBase::MCCefBrowserBase()
 
 MCCefBrowserBase::~MCCefBrowserBase(void)
 {
-	if (m_browser != nil)
-		m_browser->GetHost()->CloseBrowser(false);
-	
-	// IM-2014-07-21: [[ Bug 12296 ]] Notify client of browser being closed
-	if (m_client)
-		m_client->OnOwnerClosed();
-	
-	m_browser = nil;
-	m_client = nil;
-	
 	MCCefDecrementInstanceCount();
+}
+
+void MCCefBrowserBase::Destroy()
+{
+	// Calling virtual methods from the destructor is A Bad Thing, so make sure
+	//   we close the CEF browser (which results in a call to 
+	//   virtual method PlatformCloseBrowserWindow()) before destruction.
+	Finalize();
+	MCBrowserRefCounted::Destroy();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
