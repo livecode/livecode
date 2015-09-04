@@ -89,6 +89,7 @@ enum MCNativeControlProperty
 	kMCNativeControlPropertyDuration,
 	kMCNativeControlPropertyPlayableDuration,
 	kMCNativeControlPropertyLoadState,
+	kMCNativeControlPropertyReadyForDisplay,
 	kMCNativeControlPropertyPlaybackState,
 	kMCNativeControlPropertyStartTime,
 	kMCNativeControlPropertyEndTime,

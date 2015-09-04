@@ -341,6 +341,9 @@ public:
     
     void GetStatus(MCExecContext& ctxt, intenum_t& r_status);
     
+    void SetMirrored(MCExecContext& ctxt, bool p_mirrored);
+    void GetMirrored(MCExecContext& ctxt, bool& r_mirrored);
+    
     ////////////////////////////////////////////////////////////////////////////////
     // MCPlayer specific implementation for the platform player
     
@@ -415,6 +418,8 @@ public:
     // PM-2014-10-14: [[ Bug 13569 ]] Make sure changes to player are not visible in preOpenCard
     void attachplayer(void);
     void detachplayer(void);
+    
+    void setmirrored(bool p_mirrored);
 };
 #endif
 

@@ -58,6 +58,6 @@
 		</parameters>
 
 	<value>The <b>qtEffects</b> <glossary tag="function">function</glossary> <glossary tag="return">returns</glossary> a list of installed effect names, one per line.</value>
-	<comments>The effects returned by the <b>qtEffects</b> <glossary tag="function">function</glossary> can be used as visual effects with the <command tag="visual effect">visual effect</command>, <command tag="unlock screen">unlock screen</command>, <command tag="show">show</command> and <command tag="hide">hide</command> commands.</comments>
+	<comments>The effects returned by the <b>qtEffects</b> <glossary tag="function">function</glossary> can be used as visual effects with the <command tag="visual effect">visual effect</command>, <command tag="unlock screen">unlock screen</command>, <command tag="show">show</command> and <command tag="hide">hide</command> commands. When using this function, make sure the <b>dontUseQT</b> property is set to false, to allow LiveCode work with QuickTime</comments>
 	</description>
 </doc>

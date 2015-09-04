@@ -268,7 +268,9 @@ static struct {const char *name; Properties property;} s_native_control_properti
     {"playrate", P_PLAY_RATE},
     
 	{"loadstate", P_LOAD_STATE},
-	{"useapplicationaudiosession", P_USE_APPLICATION_AUDIO_SESSION},
+    {"useapplicationaudiosession", P_USE_APPLICATION_AUDIO_SESSION},
+    // PM-2015-07-09: [[ Bug 9744 ]] Added readyForDisplay property for native player
+    {"readyForDisplay", P_READY_FOR_DISPLAY},
 	{"allowsairplay", P_ALLOWS_AIR_PLAY},
 	
 	{"enabled", P_ENABLED},
