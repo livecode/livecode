@@ -132,8 +132,7 @@ bool MCBrowserValueGetUTF8String(MCBrowserValue &self, char *&r_value)
 	if (self.type != kMCBrowserValueTypeUTF8String)
 		return false;
 	
-	r_value = self.utf8_string;
-	return true;
+	return MCCStringClone(self.utf8_string, r_value);
 }
 
 bool MCBrowserValueSetList(MCBrowserValue &self, MCBrowserListRef p_value)
