@@ -1793,6 +1793,13 @@ IO_stat MCVariableArray::load(MCObjectInputStream& p_stream, bool p_merge)
 	if (t_nfilled == 0 && !p_merge)
 	{
 		nfilled = 0;
+        
+        uint8_t t_terminator;
+        t_stat = p_stream . ReadU8(t_terminator);
+        if (t_stat == IO_ERROR &&
+            t_terminator != 0)
+            t_stat = IO_ERROR;
+        
 		return t_stat;
 	}
 
