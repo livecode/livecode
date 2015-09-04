@@ -169,6 +169,9 @@ bool MCCefStringToUInt(const CefString &p_string, uint32_t &r_int);
 
 bool MCCefAuthSchemeFromCefString(const CefString &p_string, MCCefAuthScheme &r_scheme);
 
+bool MCCefListToBrowserList(CefRefPtr<CefListValue> p_list, MCBrowserListRef &r_list);
+bool MCCefDictionaryToBrowserDictionary(CefRefPtr<CefDictionaryValue> p_dict, MCBrowserDictionaryRef &r_dict);
+
 //////////
 
 #define MC_CEFMSG_EXECUTE_SCRIPT "cefbrowser_request_execute_script"

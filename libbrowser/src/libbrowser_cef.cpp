@@ -129,6 +129,13 @@ bool MCCefListToBrowserList(CefRefPtr<CefListValue> p_list, MCBrowserListRef &r_
 				break;
 			}
 			
+			case VTYPE_DICTIONARY:
+			{
+				MCBrowserDictionaryRef t_dict_val = nil;
+				t_success = MCCefDictionaryToBrowserDictionary(p_list->GetDictionary(i), t_dict_val) && MCBrowserListSetDictionary(t_list, i, t_dict_val);
+				MCBrowserDictionaryRelease(t_dict_val);
+				break;
+			}
 			default:
 				// unimplemented value type
 				t_success = false;
@@ -139,6 +146,85 @@ bool MCCefListToBrowserList(CefRefPtr<CefListValue> p_list, MCBrowserListRef &r_
 		r_list = t_list;
 	else
 		MCBrowserListRelease(t_list);
+	
+	return t_success;
+}
+
+bool MCCefDictionaryToBrowserDictionary(CefRefPtr<CefDictionaryValue> p_dict, MCBrowserDictionaryRef &r_dict)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCBrowserDictionaryRef t_dict;
+	t_dict = nil;
+	
+	CefDictionaryValue::KeyList t_key_list;
+	if (t_success)
+		t_success = p_dict->GetKeys(t_key_list);
+	
+	if (t_success)
+		t_success = MCBrowserDictionaryCreate(t_dict, t_key_list.size());
+	
+	for (CefDictionaryValue::KeyList::iterator i = t_key_list.begin(); t_success && i < t_key_list.end(); i++)
+	{
+		char *t_key;
+		t_key = nil;
+		
+		if (t_success)
+			t_success = MCCefStringToUtf8String(*i, t_key);
+		
+		if (t_success)
+		{
+			switch (p_dict->GetType(*i))
+			{
+				case VTYPE_BOOL:
+					t_success = MCBrowserDictionarySetBoolean(t_dict, t_key, p_dict->GetBool(*i));
+					break;
+				
+				case VTYPE_INT:
+					t_success = MCBrowserDictionarySetInteger(t_dict, t_key, p_dict->GetInt(*i));
+					break;
+				
+				case VTYPE_DOUBLE:
+					t_success = MCBrowserDictionarySetDouble(t_dict, t_key, p_dict->GetDouble(*i));
+					break;
+				
+				case VTYPE_STRING:
+				{
+					char *t_string = nil;
+					t_success = MCCefStringToUtf8String(p_dict->GetString(*i), t_string) && MCBrowserDictionarySetUTF8String(t_dict, t_key, t_string);
+					if (t_string != nil)
+						MCCStringFree(t_string);
+					break;
+				}
+				
+				case VTYPE_LIST:
+				{
+					MCBrowserListRef t_list_val = nil;
+					t_success = MCCefListToBrowserList(p_dict->GetList(*i), t_list_val) && MCBrowserDictionarySetList(t_dict, t_key, t_list_val);
+					MCBrowserListRelease(t_list_val);
+					break;
+				}
+				
+				case VTYPE_DICTIONARY:
+				{
+					MCBrowserDictionaryRef t_dict_val = nil;
+					t_success = MCCefDictionaryToBrowserDictionary(p_dict->GetDictionary(*i), t_dict_val) && MCBrowserDictionarySetDictionary(t_dict, t_key, t_dict_val);
+					MCBrowserDictionaryRelease(t_dict_val);
+					break;
+				}
+				
+				default:
+					// unimplemented value type
+					t_success = false;
+			}
+		}
+	}
+	
+	if (t_success)
+		r_dict = t_dict;
+	else
+		MCBrowserDictionaryRelease(t_dict);
 	
 	return t_success;
 }

@@ -142,6 +142,134 @@ bool MCCefListToV8List(CefRefPtr<CefV8Context> p_context, CefRefPtr<CefListValue
 	return t_success;
 }
 
+bool MCCefV8ArrayToList(CefRefPtr<CefV8Context> p_context, CefRefPtr<CefV8Value> p_array, CefRefPtr<CefListValue> &r_list);
+bool MCCefV8ObjectToDictionary(CefRefPtr<CefV8Context> p_context, CefRefPtr<CefV8Value> p_obj, CefRefPtr<CefDictionaryValue> &r_dict);
+
+bool MCCefV8ArrayToList(CefRefPtr<CefV8Context> p_context, CefRefPtr<CefV8Value> p_array, CefRefPtr<CefListValue> &r_list)
+{
+	bool t_success;
+	t_success = true;
+	
+	p_context->Enter();
+	
+	CefRefPtr<CefListValue> t_list;
+	if (t_success)
+		t_list = CefListValue::Create();
+	
+	uint32_t t_length;
+	t_length = p_array->GetArrayLength();
+	
+	if (t_success)
+		t_success = t_list->SetSize(t_length);
+	
+	for (uint32_t i = 0; i < t_length; i++)
+	{
+		CefRefPtr<CefV8Value> t_val;
+		t_val = p_array->GetValue(i);
+		
+		if (t_val->IsBool())
+			t_success = t_list->SetBool(i, t_val->GetBoolValue());
+		else if (t_val->IsInt())
+			t_success = t_list->SetInt(i, t_val->GetIntValue());
+		else if (t_val->IsUInt())
+			t_success = t_list->SetInt(i, t_val->GetUIntValue());
+		else if (t_val->IsDouble())
+			t_success = t_list->SetDouble(i, t_val->GetDoubleValue());
+		else if (t_val->IsString())
+			t_success = t_list->SetString(i, t_val->GetStringValue());
+		else if (t_val->IsArray())
+		{
+			CefRefPtr<CefListValue> t_list_val;
+			t_success = MCCefV8ArrayToList(p_context, t_val, t_list_val);
+			if (t_success)
+				t_success = t_list->SetList(i, t_list_val);
+		}
+		else if (t_val->IsObject())
+		{
+			CefRefPtr<CefDictionaryValue> t_dict_val;
+			t_success = MCCefV8ObjectToDictionary(p_context, t_val, t_dict_val);
+			if (t_success)
+				t_success = t_list->SetDictionary(i, t_dict_val);
+		}
+		else
+		{
+			t_success = MCCefV8ValueConvertToString(p_context, t_val);
+			if (t_success)
+				t_success = t_list->SetString(i, t_val->GetStringValue());
+		}
+	}
+	
+	p_context->Exit();
+	
+	if (t_success)
+		r_list = t_list;
+
+	return t_success;
+}
+
+bool MCCefV8ObjectToDictionary(CefRefPtr<CefV8Context> p_context, CefRefPtr<CefV8Value> p_obj, CefRefPtr<CefDictionaryValue> &r_dict)
+{
+	bool t_success;
+	t_success = true;
+	
+	p_context->Enter();
+	
+	CefRefPtr<CefDictionaryValue> t_dict;
+	if (t_success)
+		t_dict = CefDictionaryValue::Create();
+	
+	std::vector<CefString> t_keys;
+	if (t_success)
+		t_success = p_obj->GetKeys(t_keys);
+	
+	for (std::vector<CefString>::const_iterator i = t_keys.begin(); t_success && i != t_keys.end(); i++)
+	{
+		CefRefPtr<CefV8Value> t_val;
+		t_val = p_obj->GetValue(*i);
+		
+		uint32_t t_index;
+		t_index = i - t_keys.begin();
+		
+		if (t_val->IsBool())
+			t_success = t_dict->SetBool(*i, t_val->GetBoolValue());
+		else if (t_val->IsInt())
+			t_success = t_dict->SetInt(*i, t_val->GetIntValue());
+		else if (t_val->IsUInt())
+			t_success = t_dict->SetInt(*i, t_val->GetUIntValue());
+		else if (t_val->IsDouble())
+			t_success = t_dict->SetDouble(*i, t_val->GetDoubleValue());
+		else if (t_val->IsString())
+			t_success = t_dict->SetString(*i, t_val->GetStringValue());
+		else if (t_val->IsArray())
+		{
+			CefRefPtr<CefListValue> t_list_val;
+			t_success = MCCefV8ArrayToList(p_context, t_val, t_list_val);
+			if (t_success)
+				t_success = t_dict->SetList(*i, t_list_val);
+		}
+		else if (t_val->IsObject())
+		{
+			CefRefPtr<CefDictionaryValue> t_dict_val;
+			t_success = MCCefV8ObjectToDictionary(p_context, t_val, t_dict_val);
+			if (t_success)
+				t_success = t_dict->SetDictionary(*i, t_dict_val);
+		}
+		else
+		{
+			t_success = MCCefV8ValueConvertToString(p_context, t_val);
+			if (t_success)
+				t_success = t_dict->SetString(*i, t_val->GetStringValue());
+		}
+	}
+	
+	p_context->Exit();
+	
+	if (t_success)
+		r_dict = t_dict;
+
+	return t_success;
+}
+
 bool MCCefV8ListToList(CefRefPtr<CefV8Context> p_context, const CefV8ValueList &p_list, CefRefPtr<CefListValue> &r_list)
 {
 	bool t_success;
@@ -174,6 +302,20 @@ bool MCCefV8ListToList(CefRefPtr<CefV8Context> p_context, const CefV8ValueList &
 			t_success = t_list->SetDouble(t_index, t_val->GetDoubleValue());
 		else if (t_val->IsString())
 			t_success = t_list->SetString(t_index, t_val->GetStringValue());
+		else if (t_val->IsArray())
+		{
+			CefRefPtr<CefListValue> t_list_val;
+			t_success = MCCefV8ArrayToList(p_context, t_val, t_list_val);
+			if (t_success)
+				t_success = t_list->SetList(t_index, t_list_val);
+		}
+		else if (t_val->IsObject())
+		{
+			CefRefPtr<CefDictionaryValue> t_dict_val;
+			t_success = MCCefV8ObjectToDictionary(p_context, t_val, t_dict_val);
+			if (t_success)
+				t_success = t_list->SetDictionary(t_index, t_dict_val);
+		}
 		else
 		{
 			t_success = MCCefV8ValueConvertToString(p_context, t_val);
