@@ -31,6 +31,7 @@ struct MCBrowserValue
 		double double_val;
 		char *utf8_string;
 		MCBrowserListRef array;
+		MCBrowserDictionaryRef dictionary;
 	};
 };
 
@@ -44,6 +45,10 @@ void MCBrowserValueClear(MCBrowserValue &p_value)
 		
 		case kMCBrowserValueTypeList:
 			MCBrowserListRelease(p_value.array);
+			break;
+		
+		case kMCBrowserValueTypeDictionary:
+			MCBrowserDictionaryRelease(p_value.dictionary);
 			break;
 		
 		default:
@@ -148,6 +153,26 @@ bool MCBrowserValueGetList(MCBrowserValue &self, MCBrowserListRef &r_value)
 		return false;
 	
 	r_value = self.array;
+	return true;
+}
+
+bool MCBrowserValueSetDictionary(MCBrowserValue &self, MCBrowserDictionaryRef p_value)
+{
+	MCBrowserDictionaryRef t_dict;
+	t_dict = MCBrowserDictionaryRetain(p_value);
+	MCBrowserValueClear(self);
+	self.type = kMCBrowserValueTypeDictionary;
+	self.dictionary = t_dict;
+	
+	return true;
+}
+
+bool MCBrowserValueGetDictionary(MCBrowserValue &self, MCBrowserDictionaryRef &r_value)
+{
+	if (self.type != kMCBrowserValueTypeDictionary)
+		return false;
+	
+	r_value = self.dictionary;
 	return true;
 }
 
@@ -266,9 +291,25 @@ public:
 	bool GetList(uint32_t p_index, MCBrowserListRef &r_value)
 	{
 		if (p_index >= m_size)
-		return false;
+			return false;
 		
 		return MCBrowserValueGetList(m_elements[p_index], r_value);
+	}
+	
+	bool SetDictionary(uint32_t p_index, MCBrowserDictionaryRef p_value)
+	{
+		if (p_index >= m_size)
+			return false;
+		
+		return MCBrowserValueSetDictionary(m_elements[p_index], p_value);
+	}
+	
+	bool GetDictionary(uint32_t p_index, MCBrowserDictionaryRef &r_value)
+	{
+		if (p_index >= m_size)
+			return false;
+		
+		return MCBrowserValueGetDictionary(m_elements[p_index], r_value);
 	}
 	
 	bool AppendBoolean(bool p_value)
@@ -309,6 +350,14 @@ public:
 		t_index = m_size;
 		
 		return Expand(m_size + 1) && SetList(t_index, p_value);
+	}
+	
+	bool AppendDictionary(MCBrowserDictionaryRef p_value)
+	{
+		uint32_t t_index;
+		t_index = m_size;
+		
+		return Expand(m_size + 1) && SetDictionary(t_index, p_value);
 	}
 
 private:
@@ -406,6 +455,14 @@ bool MCBrowserListSetList(MCBrowserListRef p_list, uint32_t p_index, MCBrowserLi
 	return ((MCBrowserList*)p_list)->SetList(p_index, p_value);
 }
 
+bool MCBrowserListSetDictionary(MCBrowserListRef p_list, uint32_t p_index, MCBrowserDictionaryRef p_value)
+{
+	if (p_list == nil)
+		return false;
+	
+	return ((MCBrowserList*)p_list)->SetDictionary(p_index, p_value);
+}
+
 bool MCBrowserListAppendBoolean(MCBrowserListRef p_list, bool p_value)
 {
 	if (p_list == nil)
@@ -444,6 +501,14 @@ bool MCBrowserListAppendList(MCBrowserListRef p_list, MCBrowserListRef p_value)
 		return false;
 	
 	return ((MCBrowserList*)p_list)->AppendList(p_value);
+}
+
+bool MCBrowserListAppendDictionary(MCBrowserListRef p_list, MCBrowserDictionaryRef p_value)
+{
+	if (p_list == nil)
+		return false;
+	
+	return ((MCBrowserList*)p_list)->AppendDictionary(p_value);
 }
 
 bool MCBrowserListGetBoolean(MCBrowserListRef p_list, uint32_t p_index, bool &r_value)
@@ -486,5 +551,375 @@ bool MCBrowserListGetList(MCBrowserListRef p_list, uint32_t p_index, MCBrowserLi
 	return ((MCBrowserList*)p_list)->GetList(p_index, r_value);
 }
 
+bool MCBrowserListGetDictionary(MCBrowserListRef p_list, uint32_t p_index, MCBrowserDictionaryRef &r_value)
+{
+	if (p_list == nil)
+		return false;
+	
+	return ((MCBrowserList*)p_list)->GetDictionary(p_index, r_value);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCBrowserDictionary : public MCBrowserRefCounted
+{
+public:
+	MCBrowserDictionary()
+	{
+		m_elements = nil;
+		m_keys = nil;
+		m_capacity = 0;
+		m_size = 0;
+	}
+	
+	virtual ~MCBrowserDictionary()
+	{
+		for (uint32_t i = 0; i < m_size; i++)
+			MCBrowserValueClear(m_elements[i]);
+		for (uint32_t i = 0; i < m_size; i++)
+			MCCStringFree(m_keys[i]);
+			
+		MCBrowserMemoryDeleteArray(m_elements);
+		MCBrowserMemoryDeleteArray(m_keys);
+	}
+	
+	bool GetKeys(char **&r_keys, uint32_t &r_count)
+	{
+		r_keys = m_keys;
+		r_count = m_size;
+		
+		return true;
+	}
+	
+	bool Expand(uint32_t p_size)
+	{
+		if (p_size <= m_capacity)
+			return true;
+		
+		return MCBrowserMemoryResizeArray(p_size, m_elements, m_capacity) && MCBrowserMemoryResizeArray(p_size, m_keys, m_capacity);
+	}
+	
+	bool FindElement(const char *p_key, uint32_t &r_index)
+	{
+		for (uint32_t i = 0; i < m_size; i++)
+		{
+			if (MCCStringEqualCaseless(m_keys[i], p_key))
+			{
+				r_index = i;
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	bool EnsureElement(const char *p_key, uint32_t &r_index)
+	{
+		if (FindElement(p_key, r_index))
+			return true;
+		
+		if (!Expand(m_size + 1))
+			return false;
+		
+		if (!MCCStringClone(p_key, m_keys[m_size]))
+			return false;
+		
+		r_index = m_size;
+		m_size += 1;
+		
+		return true;
+	}
+	
+	bool GetType(const char *p_key, MCBrowserValueType &r_type)
+	{
+		uint32_t t_index;
+		if (!FindElement(p_key, t_index))
+			return false;
+		
+		r_type = m_elements[t_index].type;
+		return true;
+	}
+	
+	bool SetBoolean(const char *p_key, bool p_value)
+	{
+		uint32_t t_index;
+		if (!EnsureElement(p_key, t_index))
+			return false;
+		
+		return MCBrowserValueSetBoolean(m_elements[t_index], p_value);
+	}
+	
+	bool GetBoolean(const char *p_key, bool &r_value)
+	{
+		uint32_t t_index;
+		if (!FindElement(p_key, t_index))
+			return false;
+		
+		return MCBrowserValueGetBoolean(m_elements[t_index], r_value);
+	}
+	
+	bool SetInteger(const char *p_key, int32_t p_value)
+	{
+		uint32_t t_index;
+		if (!EnsureElement(p_key, t_index))
+			return false;
+		
+		return MCBrowserValueSetInteger(m_elements[t_index], p_value);
+	}
+	
+	bool GetInteger(const char *p_key, int32_t &r_value)
+	{
+		uint32_t t_index;
+		if (!FindElement(p_key, t_index))
+			return false;
+		
+		return MCBrowserValueGetInteger(m_elements[t_index], r_value);
+	}
+	
+	bool SetDouble(const char *p_key, double p_value)
+	{
+		uint32_t t_index;
+		if (!EnsureElement(p_key, t_index))
+			return false;
+		
+		return MCBrowserValueSetDouble(m_elements[t_index], p_value);
+	}
+
+	bool GetDouble(const char *p_key, double &r_value)
+	{
+		uint32_t t_index;
+		if (!FindElement(p_key, t_index))
+			return false;
+		
+		return MCBrowserValueGetDouble(m_elements[t_index], r_value);
+	}
+	
+	bool SetUTF8String(const char *p_key, const char *p_value)
+	{
+		uint32_t t_index;
+		if (!EnsureElement(p_key, t_index))
+			return false;
+		
+		return MCBrowserValueSetUTF8String(m_elements[t_index], p_value);
+	}
+	
+	bool GetUTF8String(const char *p_key, char *&r_value)
+	{
+		uint32_t t_index;
+		if (!FindElement(p_key, t_index))
+			return false;
+		
+		return MCBrowserValueGetUTF8String(m_elements[t_index], r_value);
+	}
+	
+	bool SetList(const char *p_key, MCBrowserListRef p_value)
+	{
+		uint32_t t_index;
+		if (!EnsureElement(p_key, t_index))
+			return false;
+		
+		return MCBrowserValueSetList(m_elements[t_index], p_value);
+	}
+	
+	bool GetList(const char *p_key, MCBrowserListRef &r_value)
+	{
+		uint32_t t_index;
+		if (!FindElement(p_key, t_index))
+			return false;
+		
+		return MCBrowserValueGetList(m_elements[t_index], r_value);
+	}
+	
+	bool SetDictionary(const char *p_key, MCBrowserDictionaryRef p_value)
+	{
+		uint32_t t_index;
+		if (!EnsureElement(p_key, t_index))
+			return false;
+		
+		return MCBrowserValueSetDictionary(m_elements[t_index], p_value);
+	}
+	
+	bool GetDictionary(const char *p_key, MCBrowserDictionaryRef &r_value)
+	{
+		uint32_t t_index;
+		if (!FindElement(p_key, t_index))
+			return false;
+		
+		return MCBrowserValueGetDictionary(m_elements[t_index], r_value);
+	}
+	
+private:
+	MCBrowserValue *m_elements;
+	char **m_keys;
+	uint32_t m_capacity;
+	uint32_t m_size;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCBrowserDictionaryCreate(MCBrowserDictionaryRef &r_dict, uint32_t p_size)
+{
+	MCBrowserDictionary *t_dict;
+	t_dict = new MCBrowserDictionary();
+	if (t_dict == nil)
+		return false;
+	
+	if (!t_dict->Expand(p_size))
+	{
+		delete t_dict;
+		return false;
+	}
+	
+	r_dict = (MCBrowserDictionaryRef)t_dict;
+	return true;
+}
+
+MCBrowserDictionaryRef MCBrowserDictionaryRetain(MCBrowserDictionaryRef p_dictionary)
+{
+	if (p_dictionary != nil)
+		((MCBrowserDictionary*)p_dictionary)->Retain();
+	
+	return p_dictionary;
+}
+
+void MCBrowserDictionaryRelease(MCBrowserDictionaryRef p_dictionary)
+{
+	if (p_dictionary != nil)
+		((MCBrowserDictionary*)p_dictionary)->Release();
+}
+
+bool MCBrowserDictionaryGetKeys(MCBrowserDictionaryRef p_dictionary, char **&r_keys, uint32_t &r_count)
+{
+	if (p_dictionary == nil)
+		return false;
+	
+	return ((MCBrowserDictionary*)p_dictionary)->GetKeys(r_keys, r_count);
+}
+
+/* WORKAROUND - Lack of Pointer dereferencing or C Array abstraction in LCB */
+bool MCBrowserDictionaryGetKeyCount(MCBrowserDictionaryRef p_dictionary, uint32_t &r_count)
+{
+	char **t_keys;
+	return MCBrowserDictionaryGetKeys(p_dictionary, t_keys, r_count);
+}
+
+/* WORKAROUND - Lack of Pointer dereferencing or C Array abstraction in LCB */
+bool MCBrowserDictionaryGetKey(MCBrowserDictionaryRef p_dictionary, uint32_t p_index, char *&r_key)
+{
+	char **t_keys;
+	uint32_t t_count;
+	
+	if (!MCBrowserDictionaryGetKeys(p_dictionary, t_keys, t_count))
+		return false;
+	
+	if (p_index >= t_count)
+		return false;
+	
+	return MCCStringClone(t_keys[p_index], r_key);
+}
+
+bool MCBrowserDictionaryGetType(MCBrowserDictionaryRef p_dictionary, const char *p_key, MCBrowserValueType &r_type)
+{
+	if (p_dictionary == nil)
+		return false;
+	
+	return ((MCBrowserDictionary*)p_dictionary)->GetType(p_key, r_type);
+}
+
+bool MCBrowserDictionarySetBoolean(MCBrowserDictionaryRef p_dictionary, const char *p_key, bool p_value)
+{
+	if (p_dictionary == nil)
+		return false;
+	
+	return ((MCBrowserDictionary*)p_dictionary)->SetBoolean(p_key, p_value);
+}
+
+bool MCBrowserDictionarySetInteger(MCBrowserDictionaryRef p_dictionary, const char *p_key, int32_t p_value)
+{
+	if (p_dictionary == nil)
+		return false;
+	
+	return ((MCBrowserDictionary*)p_dictionary)->SetInteger(p_key, p_value);
+}
+
+bool MCBrowserDictionarySetDouble(MCBrowserDictionaryRef p_dictionary, const char *p_key, double p_value)
+{
+	if (p_dictionary == nil)
+		return false;
+	
+	return ((MCBrowserDictionary*)p_dictionary)->SetDouble(p_key, p_value);
+}
+
+bool MCBrowserDictionarySetUTF8String(MCBrowserDictionaryRef p_dictionary, const char *p_key, const char *p_value)
+{
+	if (p_dictionary == nil)
+		return false;
+	
+	return ((MCBrowserDictionary*)p_dictionary)->SetUTF8String(p_key, p_value);
+}
+
+bool MCBrowserDictionarySetList(MCBrowserDictionaryRef p_dictionary, const char *p_key, MCBrowserListRef p_value)
+{
+	if (p_dictionary == nil)
+		return false;
+	
+	return ((MCBrowserDictionary*)p_dictionary)->SetList(p_key, p_value);
+}
+
+bool MCBrowserDictionarySetDictionary(MCBrowserDictionaryRef p_dictionary, const char *p_key, MCBrowserDictionaryRef p_value)
+{
+	if (p_dictionary == nil)
+		return false;
+	
+	return ((MCBrowserDictionary*)p_dictionary)->SetDictionary(p_key, p_value);
+}
+
+bool MCBrowserDictionaryGetBoolean(MCBrowserDictionaryRef p_dictionary, const char *p_key, bool &r_value)
+{
+	if (p_dictionary == nil)
+		return false;
+	
+	return ((MCBrowserDictionary*)p_dictionary)->GetBoolean(p_key, r_value);
+}
+
+bool MCBrowserDictionaryGetInteger(MCBrowserDictionaryRef p_dictionary, const char *p_key, int32_t &r_value)
+{
+	if (p_dictionary == nil)
+		return false;
+	
+	return ((MCBrowserDictionary*)p_dictionary)->GetInteger(p_key, r_value);
+}
+
+bool MCBrowserDictionaryGetDouble(MCBrowserDictionaryRef p_dictionary, const char *p_key, double &r_value)
+{
+	if (p_dictionary == nil)
+		return false;
+	
+	return ((MCBrowserDictionary*)p_dictionary)->GetDouble(p_key, r_value);
+}
+
+bool MCBrowserDictionaryGetUTF8String(MCBrowserDictionaryRef p_dictionary, const char *p_key, char *&r_value)
+{
+	if (p_dictionary == nil)
+		return false;
+	
+	return ((MCBrowserDictionary*)p_dictionary)->GetUTF8String(p_key, r_value);
+}
+
+bool MCBrowserDictionaryGetList(MCBrowserDictionaryRef p_dictionary, const char *p_key, MCBrowserListRef &r_value)
+{
+	if (p_dictionary == nil)
+		return false;
+	
+	return ((MCBrowserDictionary*)p_dictionary)->GetList(p_key, r_value);
+}
+
+bool MCBrowserDictionaryGetDictionary(MCBrowserDictionaryRef p_dictionary, const char *p_key, MCBrowserDictionaryRef &r_value)
+{
+	if (p_dictionary == nil)
+		return false;
+	
+	return ((MCBrowserDictionary*)p_dictionary)->GetDictionary(p_key, r_value);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
