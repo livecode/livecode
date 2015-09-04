@@ -27,7 +27,7 @@
 
 MCBrowserRefCounted::MCBrowserRefCounted()
 {
-	m_ref_count = 0;
+	m_ref_count = 1;
 }
 
 void MCBrowserRefCounted::Retain()
@@ -37,7 +37,7 @@ void MCBrowserRefCounted::Retain()
 
 void MCBrowserRefCounted::Release()
 {
-	if (--m_ref_count > 1)
+	if (m_ref_count-- > 1)
 		return;
 	
 	Destroy();
