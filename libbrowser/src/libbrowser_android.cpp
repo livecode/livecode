@@ -84,6 +84,10 @@ public:
 		m_jsonarray_class = nil;
 		m_jsonarray_length_method = nil;
 		m_jsonarray_get_method = nil;
+		
+		m_jsonobject_class = nil;
+		m_jsonobject_names_method = nil;
+		m_jsonobject_get_method = nil;
 	}
 	
 	~MCBrowserJavaConverter()
@@ -130,6 +134,14 @@ public:
 		return m_env->IsInstanceOf(p_obj, m_jsonarray_class);
 	}
 	
+	bool IsJSONObject(jobject p_obj)
+	{
+		if (!InitJSONObject())
+			return false;
+		
+		return m_env->IsInstanceOf(p_obj, m_jsonobject_class);
+	}
+	
 	bool GetBooleanValue(jobject p_obj, bool &r_value)
 	{
 		if (!InitBoolean())
@@ -162,6 +174,80 @@ public:
 		return MCBrowserJavaStringToUtf8String(m_env, p_string, r_string);
 	}
 	
+	bool GetBrowserValue(jobject p_obj, MCBrowserValue &r_value)
+	{
+		bool t_success;
+		t_success = true;
+		
+		if (IsBoolean(p_obj))
+		{
+			bool t_val;
+			t_success = GetBooleanValue(p_obj, t_val);
+			
+			if (t_success)
+				t_success = MCBrowserValueSetBoolean(r_value, t_val);
+		}
+		else if (IsInteger(p_obj))
+		{
+			int t_val;
+			t_success = GetIntegerValue(p_obj, t_val);
+			
+			if (t_success)
+				t_success = MCBrowserValueSetInteger(r_value, t_val);
+		}
+		else if (IsDouble(p_obj))
+		{
+			double t_val;
+			t_success = GetDoubleValue(p_obj, t_val);
+			
+			if (t_success)
+				t_success = MCBrowserValueSetDouble(r_value, t_val);
+		}
+		else if (IsString(p_obj))
+		{
+			char *t_val;
+			t_val = nil;
+			t_success = GetStringValue((jstring)p_obj, t_val);
+			
+			if (t_success)
+				t_success = MCBrowserValueSetUTF8String(r_value, t_val);
+			
+			if (t_val != nil)
+				MCCStringFree(t_val);
+		}
+		else if (IsJSONArray(p_obj))
+		{
+			MCBrowserListRef t_val;
+			t_val = nil;
+			t_success = GetJSONArrayValue(p_obj, t_val);
+			
+			if (t_success)
+				t_success = MCBrowserValueSetList(r_value, t_val);
+			
+			if (t_val != nil)
+				MCBrowserListRelease(t_val);
+		}
+		else if (IsJSONObject(p_obj))
+		{
+			MCBrowserDictionaryRef t_val;
+			t_val = nil;
+			t_success = GetJSONObjectValue(p_obj, t_val);
+			
+			if (t_success)
+				t_success = MCBrowserValueSetDictionary(r_value, t_val);
+			
+			if (t_val != nil)
+				MCBrowserDictionaryRelease(t_val);
+		}
+		else
+		{
+			MCLog("Convert: unhandled object class: %p", p_obj);
+			MCBrowserValueClear(r_value);
+		}
+		
+		return t_success;
+	}
+	
 	bool GetJSONArrayLength(jobject p_array, uint32_t &r_length)
 	{
 		if (!InitJSONArray())
@@ -182,6 +268,9 @@ public:
 	
 	bool GetJSONArrayValue(jobject p_array, MCBrowserListRef &r_list)
 	{
+		if (!InitJSONArray())
+			return  false;
+		
 		bool t_success;
 		t_success = true;
 		
@@ -197,75 +286,122 @@ public:
 		
 		for (uint32_t i = 0; t_success && i < t_size; i++)
 		{
+			MCBrowserValue t_value;
+			MCBrowserMemoryClear(&t_value, sizeof(MCBrowserValue));
+			
 			jobject t_obj;
 			t_obj = nil;
 			
 			t_success = GetJSONArrayElement(p_array, i, t_obj);
 			
-			bool t_identified;
-			t_identified = false;
+			if (t_success)
+				t_success = GetBrowserValue(t_obj, t_value);
 			
 			if (t_success)
-			{
-				if (IsBoolean(t_obj))
-				{
-					bool t_val;
-					t_success = GetBooleanValue(t_obj, t_val);
-					
-					if (t_success)
-						t_success = MCBrowserListSetBoolean(t_list, i, t_val);
-				}
-				else if (IsInteger(t_obj))
-				{
-					int t_val;
-					t_success = GetIntegerValue(t_obj, t_val);
-					
-					if (t_success)
-						t_success = MCBrowserListSetInteger(t_list, i, t_val);
-				}
-				else if (IsDouble(t_obj))
-				{
-					double t_val;
-					t_success = GetDoubleValue(t_obj, t_val);
-					
-					if (t_success)
-						t_success = MCBrowserListSetDouble(t_list, i, t_val);
-				}
-				else if (IsString(t_obj))
-				{
-					char *t_val;
-					t_val = nil;
-					t_success = GetStringValue((jstring)t_obj, t_val);
-					
-					if (t_success)
-						t_success = MCBrowserListSetUTF8String(t_list, i, t_val);
-					
-					if (t_val != nil)
-						MCCStringFree(t_val);
-				}
-				else if (IsJSONArray(t_obj))
-				{
-					MCBrowserListRef t_val;
-					t_val = nil;
-					t_success = GetJSONArrayValue(t_obj, t_val);
-					
-					if (t_success)
-						t_success = MCBrowserListSetList(t_list, i, t_val);
-					
-					if (t_val != nil)
-						MCBrowserListRelease(t_val);
-				}
-				else
-				{
-					MCLog("Convert: unhandled object class: %p", t_obj);
-				}
-			}
+				t_success = MCBrowserListSetValue(t_list, i, t_value);
+			
+			if (t_obj != nil)
+				m_env->DeleteLocalRef(t_obj);
+			
+			MCBrowserValueClear(t_value);
 		}
 		
 		if (t_success)
 			r_list = t_list;
 		else
 			MCBrowserListRelease(t_list);
+			
+		return t_success;
+	}
+	
+	bool GetJSONObjectNames(jobject p_object, jobject &r_names_array)
+	{
+		if (!InitJSONObject())
+			return false;
+		
+		r_names_array = m_env->CallObjectMethod(p_object, m_jsonobject_names_method);
+		return true;
+	}
+	
+	bool GetJSONObjectElement(jobject p_object, jstring p_key, jobject &r_element)
+	{
+		if (!InitJSONObject())
+			return false;
+		
+		r_element = m_env->CallObjectMethod(p_object, m_jsonobject_get_method, p_key);
+		return true;
+	}
+	
+	bool GetJSONObjectValue(jobject p_object, MCBrowserDictionaryRef &r_dict)
+	{
+		if (!InitJSONObject())
+			return true;
+		
+		bool t_success;
+		t_success = true;
+		
+		jobject t_names;
+		t_names = nil;
+		if (t_success)
+			t_success = GetJSONObjectNames(p_object, t_names);
+		
+		uint32_t t_size;
+		if (t_success)
+			t_success = GetJSONArrayLength(t_names, t_size);
+
+		MCBrowserDictionaryRef t_dict;
+		t_dict = nil;
+		
+		if (t_success)
+			t_success = MCBrowserDictionaryCreate(t_dict, t_size);
+		
+		for (uint32_t i = 0; t_success && i < t_size; i++)
+		{
+			MCBrowserValue t_value;
+			MCBrowserMemoryClear(&t_value, sizeof(MCBrowserValue));
+			
+			jstring t_key;
+			t_key = nil;
+			
+			if (t_success)
+				t_success = GetJSONArrayElement(t_names, i, (jobject&)t_key);
+			
+			char *t_key_string;
+			t_key_string = nil;
+			
+			if (t_success)
+				t_success = GetStringValue(t_key, t_key_string);
+			
+			jobject t_obj;
+			t_obj = nil;
+			if (t_success)
+				t_success = GetJSONObjectElement(p_object, t_key, t_obj);
+			
+			if (t_success)
+				t_success = GetBrowserValue(t_obj, t_value);
+			
+			if (t_success)
+				t_success = MCBrowserDictionarySetValue(t_dict, t_key_string, t_value);
+			
+			if (t_key_string != nil)
+				MCCStringFree(t_key_string);
+			
+			if (t_key != nil)
+				m_env->DeleteLocalRef(t_key);
+			
+			if (t_obj != nil)
+				m_env->DeleteLocalRef(t_obj);
+			
+			MCBrowserValueClear(t_value);
+		}
+		
+		if (t_names != nil)
+			m_env->DeleteLocalRef(t_names);
+		
+		if (t_success)
+			r_dict = t_dict;
+		else
+			MCBrowserDictionaryRelease(t_dict);
 			
 		return t_success;
 	}
@@ -358,6 +494,20 @@ private:
 		return true;
 	}
 	
+	bool InitJSONObject()
+	{
+		if (m_jsonobject_class == nil && !InitClass("org/json/JSONObject", m_jsonobject_class))
+			return false;
+		
+		if (m_jsonobject_names_method == nil && !InitMethod(m_jsonobject_class, "names", "()Lorg/json/JSONArray;", m_jsonobject_names_method))
+			return false;
+		
+		if (m_jsonobject_get_method == nil && !InitMethod(m_jsonobject_class, "get", "(Ljava/lang/String;)Ljava/lang/Object;", m_jsonobject_get_method))
+			return false;
+		
+		return true;
+	}
+	
 	jclass m_boolean_class;
 	jmethodID m_boolean_value_method;
 
@@ -372,6 +522,10 @@ private:
 	jclass m_jsonarray_class;
 	jmethodID m_jsonarray_length_method;
 	jmethodID m_jsonarray_get_method;
+	
+	jclass m_jsonobject_class;
+	jmethodID m_jsonobject_names_method;
+	jmethodID m_jsonobject_get_method;
 	
 	JNIEnv *m_env;
 };

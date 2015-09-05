@@ -147,4 +147,43 @@ inline void MCBrowserMemoryDeleteArray(T*p_array)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+struct MCBrowserValue
+{
+	MCBrowserValueType type;
+	union
+	{
+		bool boolean;
+		int32_t integer;
+		double double_val;
+		char *utf8_string;
+		MCBrowserListRef array;
+		MCBrowserDictionaryRef dictionary;
+	};
+};
+
+void MCBrowserValueClear(MCBrowserValue &p_value);
+bool MCBrowserValueCopy(const MCBrowserValue &p_src, MCBrowserValue &r_dst);
+
+bool MCBrowserValueSetBoolean(MCBrowserValue &self, bool p_value);
+bool MCBrowserValueGetBoolean(MCBrowserValue &self, bool &r_value);
+bool MCBrowserValueSetInteger(MCBrowserValue &self, int32_t p_value);
+bool MCBrowserValueGetInteger(MCBrowserValue &self, int32_t &r_value);
+bool MCBrowserValueSetDouble(MCBrowserValue &self, double p_value);
+bool MCBrowserValueGetDouble(MCBrowserValue &self, double &r_value);
+bool MCBrowserValueSetUTF8String(MCBrowserValue &self, const char *p_value);
+bool MCBrowserValueGetUTF8String(MCBrowserValue &self, char *&r_value);
+bool MCBrowserValueSetList(MCBrowserValue &self, MCBrowserListRef p_value);
+bool MCBrowserValueGetList(MCBrowserValue &self, MCBrowserListRef &r_value);
+bool MCBrowserValueSetDictionary(MCBrowserValue &self, MCBrowserDictionaryRef p_value);
+bool MCBrowserValueGetDictionary(MCBrowserValue &self, MCBrowserDictionaryRef &r_value);
+
+bool MCBrowserListSetValue(MCBrowserListRef p_list, uint32_t p_index, const MCBrowserValue &p_value);
+bool MCBrowserListGetValue(MCBrowserListRef p_list, uint32_t p_index, MCBrowserValue &r_value);
+bool MCBrowserListAppendValue(MCBrowserListRef p_list, const MCBrowserValue &p_value);
+
+bool MCBrowserDictionarySetValue(MCBrowserDictionaryRef p_dict, const char *p_key, const MCBrowserValue &p_value);
+bool MCBrowserDictionaryGetValue(MCBrowserDictionaryRef p_dict, const char *p_key, MCBrowserValue &r_value);
+
+////////////////////////////////////////////////////////////////////////////////
+
 #endif //__LIBBROWSER_INTERNAL_H__
