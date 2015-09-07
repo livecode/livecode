@@ -780,7 +780,7 @@ void MCPlayer::GetMirrored(MCExecContext &ctxt, bool &r_mirrored)
 void MCPlayer::SetMirrored(MCExecContext &ctxt, bool p_mirrored)
 {
     bool t_dirty;
-    t_dirty = changeflag(p_mirrored, F_TRAVERSAL_ON);
+    t_dirty = changeflag(p_mirrored, F_MIRRORED);
     
     if (t_dirty)
         setmirrored((flags & F_MIRRORED) != 0); //set/unset mirrored player
