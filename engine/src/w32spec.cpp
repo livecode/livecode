@@ -455,52 +455,35 @@ char *MCS_get_canonical_path(const char *path)
 {
 	char *t_path = NULL;
 	char *t_curdir = NULL;
-	char *t_livecode_path = NULL;
-	char *t_livecode_path_start;
 
 	if (path == NULL)
 		return NULL;
-	
-	// SN-2015-09-04: [[ Bug 15814 ]] Backslashes are not valid filename chars
-	//  on Windows, so we can accept Windows paths using backslashes (for the 
-	//  people who are still using them in LiveCode scripts).
-	bool t_use_backslashes;
-	t_use_backslashes = false;
-	uint4 i = 0;
-	while (path[i] != NULL && !t_use_backslashes)
-		t_use_backslashes = path[i++] == '\\';
-	
-	t_livecode_path = strclone(path);
-	t_livecode_path_start = t_livecode_path;
 
-	if (t_use_backslashes)
-		MCU_path2native(t_livecode_path);
-
-	if (t_livecode_path[0] == '/' && t_livecode_path[1] != '/')
+	if (path[0] == '/' && path[1] != '/')
 	{
 		// path in root of current drive
 		t_curdir = MCS_getcurdir();
 
 		int t_path_len;
 		t_path_len = strlen(path);
-		while (t_livecode_path[0] == '/')
+		while (path[0] == '/')
 		{
-			t_livecode_path ++;
+			path ++;
 			t_path_len --;
 		}
 		
 		t_path = (char*)malloc(3 + t_path_len + 1);
 		t_path[0] = t_curdir[0]; t_path[1] = ':'; t_path[2] = '/';
-		strcpy(t_path + 3, t_livecode_path);
+		strcpy(t_path + 3, path);
 	}
-	else if (is_legal_drive(t_livecode_path[0]) && t_livecode_path[1] == ':')
+	else if (is_legal_drive(path[0]) && path[1] == ':')
 	{
 		// absolute path
-		t_path = strclone(t_livecode_path);
+		t_path = strclone(path);
 	}
 	// SN-2015-09-03: [[ Bug 15814 ]] UNC paths (such as //servername/path)
 	//  should not be changed, as they are already valid.
-	else if (t_livecode_path[0] != '/' && t_livecode_path[1] != '/')
+	else if (path[0] != '/' && path[1] != '/')
 	{
 		// relative to current folder
 		t_curdir = MCS_getcurdir();
@@ -513,9 +496,9 @@ char *MCS_get_canonical_path(const char *path)
 		int t_path_len;
 		t_path_len = strlen(path);
 
-		while (t_path_len > 0 && t_livecode_path[0] == '/')
+		while (t_path_len > 0 && path[0] == '/')
 		{
-			t_livecode_path ++;
+			path ++;
 			t_path_len --;
 		}
 
@@ -524,17 +507,8 @@ char *MCS_get_canonical_path(const char *path)
 		t_path[t_curdir_len] = '/';
 		memcpy(t_path + t_curdir_len + 1, path, t_path_len + 1);
 	}
-	else
-		t_path = strclone(t_livecode_path);
 
 	MCU_fix_path(t_path);
-
-	// SN-2015-09-04: [[ Bug 15814]] Reinstate the backslashes if needed
-	if (t_use_backslashes)
-		MCU_path2std(t_path);
-
-	delete t_livecode_path_start;
-
 	return t_path;
 }
 
