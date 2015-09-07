@@ -174,6 +174,22 @@ static char *string_prepend(const char *trunk, const char *prefix)
 	return t_new_string;
 }
 
+// PM-2015-09-07: [[ Bug 9942 ]] On Linux, the short/abbr system time should not return the seconds
+static char *remove_seconds(const char *p_input)
+{
+	char *t_new_string;
+	t_new_string = new char[strlen(p_input)];
+	strcpy(t_new_string, p_input);
+	
+	char *t_seconds_loc;
+	t_seconds_loc = strstr(t_new_string, ":%S");
+	
+	if (t_seconds_loc != NULL)
+		strcpy(t_seconds_loc, t_seconds_loc + strlen(":%S"));
+	
+	return t_new_string;
+}
+
 
 static char *query_locale(uint4 t_index)
 {
@@ -246,6 +262,8 @@ static void cache_locale(void)
     else
     {
         s_datetime_locale -> time_formats[0] = string_prepend(swap_time_tokens(strdup(t_time_ampm)), "!");
+		// PM-2015-09-07: [[ Bug 9942 ]] On Linux, the short/abbr system time should not return the seconds
+		s_datetime_locale -> time_formats[0] = remove_seconds(s_datetime_locale -> time_formats[0]);
         s_datetime_locale -> time_formats[1] = string_prepend(swap_time_tokens(strdup(t_time_ampm)), "");
     }
     
