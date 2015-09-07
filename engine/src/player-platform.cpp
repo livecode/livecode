@@ -832,6 +832,7 @@ MCPlayer::MCPlayer()
 	formattedwidth = formattedheight = 0;
 	loudness = 100;
     dontuseqt = True;
+    usingqt = False;
     
     // PM-2014-05-29: [[ Bugfix 12501 ]] Initialize m_callbacks/m_callback_count to prevent a crash when setting callbacks
     m_callback_count = 0;
@@ -855,9 +856,6 @@ MCPlayer::MCPlayer()
     m_is_attached = false;
     m_should_attach = false;
     m_should_recreate = false;
-    
-    dontuseqt = False;
-    usingqt = False;
 }
 
 MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
@@ -876,6 +874,7 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	formattedwidth = formattedheight = 0;
 	loudness = sref.loudness;
     dontuseqt = True;
+    usingqt = False;
     
     // PM-2014-05-29: [[ Bugfix 12501 ]] Initialize m_callbacks/m_callback_count to prevent a crash when setting callbacks
     m_callback_count = 0;
@@ -894,9 +893,6 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
     // MW-2014-07-16: [[ Bug ]] Put the player in the list.
     nextplayer = MCplayers;
     MCplayers = this;
-    
-    dontuseqt = False;
-    usingqt = False;
 }
 
 MCPlayer::~MCPlayer()
@@ -1953,12 +1949,6 @@ void MCPlayer::setlooping(Boolean loop)
 		t_loop = loop;
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLoop, kMCPlatformPropertyTypeBool, &t_loop);
 	}
-}
-
-// PM-2015-06-16: [[ Bug 13820 ]] Extend dontuseqt to be (also) a player property 
-void MCPlayer::setdontuseqt(Boolean noqt)
-{
-	dontuseqt = noqt;
 }
 
 real8 MCPlayer::getplayrate()
