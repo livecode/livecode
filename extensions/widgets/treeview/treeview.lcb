@@ -40,13 +40,26 @@ Syntax: actionInspect pPath
 Summary: Sent when an the inspect icon is clicked in read only mode
 
 Parameters:
-pPath: The path to the selected element
+pPath: The path to the clicked element
 
 Description:
 The actionInspect message is sent to the widget's script object when the inspect icon is clicked on.
 The inspect icon appears when the value string of a particular array element contains a newline character,
 or if it is too large to fit in the space provided. The <pPath> parameter contains the path to the 
 element whose icon was clicked.
+
+Name: actionDoubleClick
+Type: message
+Syntax: actionDoubleClick pPath
+
+Summary: Sent when a leaf node of the tree view is double-clicked.
+
+Parameters:
+pPath: The path to the clicked element
+
+Description:
+The actionDoubleClick message is sent to the widget's script object when a row of the widget
+is double-clicked. The <pPath> parameter contains the path to the element whose row was clicked.
 */
 
 widget com.livecode.widget.treeView
@@ -696,8 +709,10 @@ public handler OnClick() returns nothing
 		return
 	end if
 
-	if tData["leaf"] is not true then
-	   if the click count > 1 then
+	if the click count > 1 then
+		if tData["leaf"] then
+			post "actionDoubleClick" with tData["path"]
+		else
 		   if tData["folded"] is true then
 			   unfoldPath(tData["path"])
 		   else
