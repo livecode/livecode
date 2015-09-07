@@ -459,22 +459,21 @@ char *MCS_get_canonical_path(const char *path)
 	if (path == NULL)
 		return NULL;
 
-	if (path[0] == '/' && path[1] != '/')
+	// SN-2015-09-07: [[ Bug 15814 ]] We consider backslashes and slashes the
+	//  same in this context.
+	if ((path[0] == '/' && path[1] != '/')
+			|| (path[0] == '\\' && path[1] != '\\'))
 	{
 		// path in root of current drive
 		t_curdir = MCS_getcurdir();
 
 		int t_path_len;
 		t_path_len = strlen(path);
-		while (path[0] == '/')
-		{
-			path ++;
-			t_path_len --;
-		}
 		
-		t_path = (char*)malloc(3 + t_path_len + 1);
-		t_path[0] = t_curdir[0]; t_path[1] = ':'; t_path[2] = '/';
-		strcpy(t_path + 3, path);
+		// We append CWD and a colon to the path: length + 2
+		t_path = (char*)malloc(2 + t_path_len + 1);
+		t_path[0] = t_curdir[0]; t_path[1] = ':';
+		strcpy(t_path + 2, path);
 	}
 	else if (is_legal_drive(path[0]) && path[1] == ':')
 	{
@@ -483,7 +482,8 @@ char *MCS_get_canonical_path(const char *path)
 	}
 	// SN-2015-09-03: [[ Bug 15814 ]] UNC paths (such as //servername/path)
 	//  should not be changed, as they are already valid.
-	else if (path[0] != '/' && path[1] != '/')
+	else if ((path[0] != '/' && path[1] != '/')
+			|| (path[0] != '\\' && path[1] != '\\'))
 	{
 		// relative to current folder
 		t_curdir = MCS_getcurdir();
@@ -496,17 +496,13 @@ char *MCS_get_canonical_path(const char *path)
 		int t_path_len;
 		t_path_len = strlen(path);
 
-		while (t_path_len > 0 && path[0] == '/')
-		{
-			path ++;
-			t_path_len --;
-		}
-
 		t_path = (char*)malloc(t_curdir_len + 1 + t_path_len + 1);
 		memcpy(t_path, t_curdir, t_curdir_len);
 		t_path[t_curdir_len] = '/';
 		memcpy(t_path + t_curdir_len + 1, path, t_path_len + 1);
 	}
+	else
+		t_path = strclone(t_path);
 
 	MCU_fix_path(t_path);
 	return t_path;
