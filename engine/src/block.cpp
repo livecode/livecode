@@ -1027,7 +1027,8 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_left, coord_t p_cel
 
 			// MW-2012-02-09: [[ ParaStyles ]] Compute the cell clip, taking into account padding.
             // SN-2014-08-14: [[ Bug 13106 ]] Fix for the cell clipping and update to GetInnerWidth
-            t_cell_clip . x = p_cell_left - 1;
+            // SN-2015-09-07: [[ Bug 15273 ]] We clip from the origin of the block
+            t_cell_clip . x = p_cell_left + origin - 1;
             // AL-2014-07-29: [[ Bug 12952 ]] Clip to segment boundaries
 			t_cell_clip . width = MCU_max(segment -> GetInnerWidth() - origin, 0.0f);
 
