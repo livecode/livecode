@@ -371,7 +371,7 @@ void MCMultimediaExecRecord(MCExecContext& ctxt, MCStringRef p_filename)
 	// PM-2015-08-04: [[ Bug 15321 ]] Make sure we always pass an absolute path to MCQTRecordSound
 	MCStringRef t_absolute_path;
 	if (!is_windows_absolute_path(*soundfile))
-		ctxt . GetObject()->getstack()->resolve_relative_path(*soundfile, t_absolute_path);
+		ctxt . GetObject()->getstack()->resolve_relative_path_to_default_folder(*soundfile, t_absolute_path);
 	else
 		t_absolute_path = MCValueRetain(*soundfile);
 		
