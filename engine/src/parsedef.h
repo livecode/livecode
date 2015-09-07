@@ -1306,6 +1306,7 @@ enum Properties {
     P_CURRENT_TIME,
     P_DURATION,
     P_LOOPING,
+    P_MIRRORED,
     P_PLAY_RATE,
     P_SHOW_BADGE,
     P_SHOW_CONTROLLER,
@@ -1666,6 +1667,8 @@ enum Properties {
     P_IS_PREPARED_TO_PLAY,
     P_LOAD_STATE,
     P_PLAYBACK_STATE,
+    // SN-2015-09-04: [[ Bug 9744 ]] readyForDisplay property added for players
+    P_READY_FOR_DISPLAY,
     
     // MOBILE STORE PROPERTIES
     P_PRODUCT_IDENTIFIER,

@@ -115,6 +115,8 @@ private:
     
 	static void DoSwitch(void *context);
     static void DoUpdateCurrentTime(void *ctxt);
+    void Mirror(void);
+    void Unmirror(void);
     
     NSLock *m_lock;
     
@@ -156,6 +158,8 @@ private:
     bool m_frame_changed_pending : 1;
     bool m_finished : 1;
     bool m_has_invalid_filename : 1;
+    bool m_mirrored : 1;
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -235,6 +239,7 @@ private:
     [t_layer setVideoGravity: AVLayerVideoGravityResize];
     [self setLayer: t_layer];
     [self setWantsLayer: YES];
+    self.layerContentsRedrawPolicy = NSViewLayerContentsRedrawOnSetNeedsDisplay;
 }
 
 @end
@@ -284,6 +289,8 @@ MCAVFoundationPlayer::MCAVFoundationPlayer(void)
     
     m_time_observer_token = nil;
     m_endtime_observer_token = nil;
+
+    m_mirrored = false;
 }
 
 MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
@@ -784,6 +791,8 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
     // Now set the player of the view.
     [m_view setPlayer: m_player];
 
+    m_view.layer.affineTransform = CGAffineTransformMakeScale(-1, 1);
+    
     m_last_marker = UINT32_MAX;
 
     [[NSNotificationCenter defaultCenter] removeObserver: m_observer];
@@ -801,6 +810,21 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
     m_selection_start = 0;
 }
 
+void MCAVFoundationPlayer::Mirror(void)
+{
+    CGAffineTransform t_transform1 = CGAffineTransformMakeScale(-1, 1);
+    
+    CGAffineTransform t_transform2 = CGAffineTransformMakeTranslation(m_view.bounds.size.width, 0);
+    
+    CGAffineTransform t_flip_horizontally = CGAffineTransformConcat(t_transform1, t_transform2);
+    
+    m_view.layer.affineTransform = t_flip_horizontally;
+}
+
+void MCAVFoundationPlayer::Unmirror(void)
+{
+    m_view.layer.affineTransform = CGAffineTransformMakeScale(1, 1);
+}
 
 void MCAVFoundationPlayer::Synchronize(void)
 {
@@ -818,6 +842,11 @@ void MCAVFoundationPlayer::Synchronize(void)
 	[m_view setFrame: t_frame];
     
 	[m_view setHidden: !m_visible];
+    
+    if (m_mirrored)
+        Mirror();
+    else
+        Unmirror();
     
     m_synchronizing = false;
 }
@@ -973,8 +1002,13 @@ void MCAVFoundationPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
 		CGContextRef t_cg_context;
 		t_cg_context = CGBitmapContextCreate(t_bitmap -> data, t_bitmap -> width, t_bitmap -> height, 8, t_bitmap -> stride, t_colorspace, MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, true));
         
-		CIImage *t_ci_image;
-		t_ci_image = [[CIImage alloc] initWithCVImageBuffer: m_current_frame];
+        CIImage *t_old_ci_image;
+		t_old_ci_image = [[CIImage alloc] initWithCVImageBuffer: m_current_frame];
+        CIImage *t_ci_image;
+        if (m_mirrored)
+            t_ci_image = [t_old_ci_image imageByApplyingTransform:CGAffineTransformMakeScale(-1, 1)];
+        else
+            t_ci_image = t_old_ci_image;
         
         NSAutoreleasePool *t_pool;
         t_pool = [[NSAutoreleasePool alloc] init];
@@ -986,7 +1020,7 @@ void MCAVFoundationPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
         
         [t_pool release];
         
-		[t_ci_image release];
+		[t_old_ci_image release];
         
 		CGContextRelease(t_cg_context);
 		CGColorSpaceRelease(t_colorspace);
@@ -1079,6 +1113,13 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
 			break;
 		case kMCPlatformPlayerPropertyLoop:
 			m_looping = *(bool *)p_value;
+			break;
+        case kMCPlatformPlayerPropertyMirrored:
+            m_mirrored = *(bool *)p_value;
+            if (m_mirrored)
+                Mirror();
+            else
+                Unmirror();
 			break;
         case kMCPlatformPlayerPropertyMarkers:
         {
@@ -1198,9 +1239,14 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
 		case kMCPlatformPlayerPropertyLoop:
 			*(bool *)r_value = m_looping;
 			break;
+
         // PM-2014-12-17: [[ Bug 14232 ]] Read-only property that indicates if a filename is invalid or if the file is corrupted
         case kMCPlatformPlayerPropertyInvalidFilename:
 			*(bool *)r_value = m_has_invalid_filename;
+			break;
+
+        case kMCPlatformPlayerPropertyMirrored:
+            *(bool *)r_value = m_mirrored;
 			break;
 	}
 }
