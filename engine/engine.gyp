@@ -8,6 +8,7 @@
 		'kernel-installer.gypi',
 		'kernel-standalone.gypi',
 		'kernel-server.gypi',
+		'ctest.gypi',
 	],
 	
 	'target_defaults':
