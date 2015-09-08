@@ -74,5 +74,7 @@
 	<array>
 		${CUSTOM_FONTS}
 	</array>
+	<key>beta-reports-active</key>
+		${BETA_REPORT_ACTIVE}
 </dict>
 </plist>

@@ -1326,6 +1326,14 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    end repeat
    replace "${BUNDLE_ICONS}" with it in pPlist
    
+   local tIsBeta
+   if pSettings["ios,beta version"] is not empty and pSettings["ios,beta version"] then
+      put "<true/>" into tIsBeta
+   else
+      put "<false/>" into tIsBeta
+   end if
+   replace "${BETA_REPORT_ACTIVE}" with tIsBeta in pPlist
+   
    -- MM-2014-09-30: [[ iOS8 Support ]] Added new iOS 7 style entries for the splash screens
    -- MM-2014-10-06: [[ Bug 13512 ]] Splash screen sizes are in points and should omit the @2x @3x suffix, iOS is smart enough to figure that out.
    local tSplashScreens   
