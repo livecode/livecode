@@ -1205,6 +1205,8 @@ enum Properties {
 	P_FULLSCREENMODE,
 	// IM-2014-01-07: [[ StackScale ]] Property tag for the scalefactor
 	P_SCALE_FACTOR,
+    // MERG-2015-08-31: [[ ScriptOnly ]] Property tag for scriptOnly
+    P_SCRIPT_ONLY,
     P_FILE_NAME,
     P_SAVE_COMPRESSED,
     P_USER_LEVEL,

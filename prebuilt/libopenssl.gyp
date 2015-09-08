@@ -53,7 +53,7 @@
 							# Gyp doesn't seem to handle non-absolute paths here properly...
 							'library_dirs':
 							[
-								'<(src_top_dir_abs)/prebuilt/lib/linux/<(target_arch)',
+								'lib/linux/<(target_arch)',
 							],
 							
 							'libraries':
@@ -70,7 +70,7 @@
 						{
 							'library_dirs':
 							[
-								'<(src_top_dir_abs)/prebuilt/lib/android/<(target_arch)',
+								'lib/android/<(target_arch)',
 							],
 							
 							'libraries':

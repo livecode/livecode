@@ -142,15 +142,30 @@
 			
 			'link_settings':
 			{
-				'conditions':
+				'target_conditions':
 				[
 					[
-						'OS == "mac" or OS == "ios"',
+						'toolset_os == "mac" or toolset_os == "ios"',
 						{
-							'libraries':
+							'conditions':
 							[
-								'$(SDKROOT)/System/Library/Frameworks/CoreFoundation.framework',
-								'$(SDKROOT)/System/Library/Frameworks/Foundation.framework',
+								[
+									'GENERATOR == "xcode"',
+									{							
+										'libraries':
+										[
+											'$(SDKROOT)/System/Library/Frameworks/CoreFoundation.framework',
+											'$(SDKROOT)/System/Library/Frameworks/Foundation.framework',
+										],
+									},
+									{
+										'ldflags':
+										[
+											'-framework', 'CoreFoundation',
+											'-framework', 'Foundation',
+										],
+									},
+								],
 							],
 						},
 					],
