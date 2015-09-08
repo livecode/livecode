@@ -4097,6 +4097,7 @@ void MCCanvasEffectDefault(MCCanvasEffectType p_type, __MCCanvasEffectImpl &x_ef
 	}
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasEffectMake(integer_t p_type, MCCanvasEffectRef &r_effect)
 {
 	__MCCanvasEffectImpl t_effect;
