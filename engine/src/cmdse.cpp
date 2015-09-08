@@ -1294,13 +1294,10 @@ void MCMessage::exec_ctxt(MCExecContext &ctxt)
 
 			// MW-2011-08-11: [[ Bug 9668 ]] Make sure we copy 'pdata' if we use it, since
 			//   mptr (into which it points) only lasts as long as this method call.
-			// MW-2013-11-15: [[ Bug 11277 ]] If no handler, evaluate in the context of the
-			//   server script object.
+			// MW-2013-11-15: [[ Bug 11277 ]] Refactor MCHandler::eval
 			Exec_stat t_stat;
-			if (ep.gethandler() != nil)
-				t_stat = ep . gethandler() -> eval(ep);
-			else
-				t_stat = ep . gethlist() -> eval(ep);
+            t_stat = ep . eval(ep);
+            
 			if (t_stat == ES_NORMAL)
 				newparam->set_argument(ep);
 			else

@@ -515,8 +515,17 @@ void MCInterfaceEvalScreenLoc(MCExecContext& ctxt, MCStringRef& r_string)
     MCDisplay const *t_displays;
     MCscreen->getdisplays(t_displays, false);
     integer_t x, y;
-    x = t_displays->viewport.x + (t_displays->viewport.width >> 1);
-    y = t_displays->viewport.y + (t_displays->viewport.height >> 1);
+    
+    if (t_displays)
+    {
+        x = t_displays->viewport.x + (t_displays->viewport.width >> 1);
+        y = t_displays->viewport.y + (t_displays->viewport.height >> 1);
+    }
+    else
+    {
+        // No-UI mode
+        x = y = 0;
+    }
     
     if (MCStringFormat(r_string, "%d,%d", x, y))
         return;
@@ -1938,11 +1947,10 @@ void MCInterfaceExecRevert(MCExecContext& ctxt)
 	Boolean oldlock = MClockmessages;
 	MClockmessages = True;
 	MCerrorlock++;
-	t_sptr->del();
+    if (t_sptr->del())
+        t_sptr -> scheduledelete();
 	MCerrorlock--;
 	MClockmessages = oldlock;
-	MCtodestroy->add
-	(t_sptr);
 	MCNewAutoNameRef t_name;
 	/* UNCHECKED */ MCNameCreate(*t_filename, &t_name);
 	t_sptr = MCdispatcher->findstackname(*t_name);
@@ -2189,9 +2197,8 @@ void MCInterfaceExecDeleteObjects(MCExecContext& ctxt, MCObjectPtr *p_objects, u
 			ctxt . LegacyThrow(EE_CHUNK_CANTDELETEOBJECT);
 			return;
 		}
-
-		if (p_objects[i] . object -> gettype() == CT_STACK)
-			MCtodestroy -> remove((MCStack *)p_objects[i] . object);
+        if (p_objects[i] . object -> gettype() == CT_STACK)
+            MCtodestroy -> remove((MCStack *)p_objects[i] . object);
 		p_objects[i] . object -> scheduledelete();
 	}
 }
@@ -2381,6 +2388,9 @@ void MCInterfaceExecSelectTextOfField(MCExecContext& ctxt, Preposition_type p_ty
 		break;
 	case PT_AFTER:
 		t_start = t_finish;
+		break;
+	default:
+		MCUnreachable();
 		break;
 	}
     
@@ -2816,7 +2826,14 @@ void MCInterfaceExecSubwindow(MCExecContext& ctxt, MCStack *p_target, MCStack *p
 	MCtrace = False;
 	if (p_mode >= WM_MODELESS)
 		MCRedrawForceUnlockScreen();
-
+    
+	Boolean added = False;
+	if (MCnexecutioncontexts < MAX_CONTEXTS)
+	{
+		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
+		added = True;
+	}
+    
 	p_target->openrect(p_rect, (Window_mode)p_mode, p_parent, (Window_position)p_at, (Object_pos)p_aligned);
 
 	if (MCwatchcursor)
@@ -2826,7 +2843,12 @@ void MCInterfaceExecSubwindow(MCExecContext& ctxt, MCStack *p_target, MCStack *p
 		if (MCmousestackptr != NULL && MCmousestackptr != p_target)
 			MCmousestackptr->resetcursor(True);
 	}
+    
+	if (added)
+		MCnexecutioncontexts--;
+    
 	MCtrace = oldtrace;
+    
 	if (p_mode > WM_TOP_LEVEL)
 		MCdefaultstackptr = olddefault;
 }
@@ -3130,6 +3152,9 @@ void MCInterfaceExecCreateControl(MCExecContext& ctxt, MCStringRef p_new_name, i
 	if (p_new_name != nil)
 		t_object->setstringprop(ctxt, 0, P_NAME, False, p_new_name);
 
+    // AL-2015-06-30: [[ Bug 15556 ]] Ensure mouse focus is synced after creating object
+    t_object -> sync_mfocus();
+    
 	MCAutoValueRef t_id;
 	t_object->names(P_LONG_ID, &t_id);
 	ctxt . SetItToValue(*t_id);
@@ -3150,11 +3175,20 @@ void MCInterfaceExecCreateWidget(MCExecContext& ctxt, MCStringRef p_new_name, MC
     Boolean wasvisible = t_widget->isvisible();
     if (p_force_invisible)
         t_widget->setflag(!p_force_invisible, F_VISIBLE);
-    t_widget->setparent(MCdefaultstackptr->getcard());
+    
+    // AL-2015-05-21: [[ Bug 15405 ]] Honour specified parent container when creating widget
+    if (p_container == nil)
+        t_widget->setparent(MCdefaultstackptr->getcard());
+    else
+        t_widget -> setparent(p_container);
+    
     t_widget->attach(OP_CENTER, false);
     
     if (p_new_name != nil)
         t_widget->setstringprop(ctxt, 0, P_NAME, False, p_new_name);
+    
+    // AL-2015-06-30: [[ Bug 15556 ]] Ensure mouse focus is synced after creating object
+    t_widget -> sync_mfocus();
     
     MCAutoValueRef t_id;
     t_widget->names(P_LONG_ID, &t_id);
@@ -3284,14 +3318,15 @@ void MCInterfaceExecPutIntoField(MCExecContext& ctxt, MCStringRef p_string, int 
     if (p_chunk . mark . changed != 0)
     {
         MCAutoStringRef t_string;
-        if (!MCStringMutableCopy((MCStringRef)p_chunk . mark . text, &t_string))
+        // SN-2015-05-05: [[ Bug 15315 ]] Changing the whole text of a field
+        //  will delete all the settings of the field, so we only append the
+        //  chars which were added (similar to MCExecResolveCharsOfField).
+        if (!MCStringCopySubstring((MCStringRef)p_chunk . mark . text, MCRangeMake(p_chunk.mark.start - p_chunk.mark.changed, p_chunk.mark.changed), &t_string))
             return;
         
-        // in this case the chunk indices will be correct whatever the preposition
-        /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_chunk . mark . start, p_chunk . mark . finish - p_chunk . mark . start), p_string);
-        
-        p_chunk . object -> setstringprop(ctxt, p_chunk . part_id, P_TEXT, False, *t_string);
-        return;
+        //  The insertion position of the added chunk delimiters is right before
+        //  the insertion position for the string.
+        t_field -> settextindex(p_chunk .part_id, p_chunk.mark.start - 1, p_chunk.mark.start - 1, *t_string, False);
     }
      
     integer_t t_start, t_finish;
@@ -3683,6 +3718,46 @@ void MCInterfaceExecImportImage(MCExecContext& ctxt, MCStringRef p_filename, MCS
 	MCU_unwatchcursor(ctxt . GetObject()->getstack(), True);
 }
 
+void MCInterfaceExecImportObjectFromArray(MCExecContext& ctxt, MCArrayRef p_array, MCObject *p_container)
+{
+    if ((p_container == nil && MCdefaultstackptr->islocked()) ||
+        (p_container != nil && p_container -> getstack() -> islocked()))
+    {
+        ctxt . LegacyThrow(EE_CREATE_LOCKED);
+        return;
+    }
+    
+    MCNewAutoNameRef t_kind;
+    MCAutoArrayRef t_state;
+    MCValueRef t_value;
+    if (!MCArrayFetchValue(p_array, false, MCNAME("$kind"), t_value) ||
+        !ctxt . ConvertToName(t_value, &t_kind) ||
+        !MCArrayFetchValue(p_array, false, MCNAME("$state"), t_value) ||
+        !ctxt . ConvertToArray(t_value, &t_state))
+    {
+        ctxt . LegacyThrow(EE_IMPORT_NOTANOBJECTARRAY);
+        return;
+    }
+    
+    MCWidget *t_widget;
+    t_widget = new MCWidget;
+    if (t_widget == NULL)
+        return;
+    
+    t_widget -> bind(*t_kind, *t_state);
+    
+    if (p_container == nil)
+        t_widget -> setparent(MCdefaultstackptr -> getcard());
+    else
+        t_widget -> setparent(p_container);
+    
+    t_widget -> attach(OP_CENTER, false);
+    
+    MCAutoValueRef t_id;
+    t_widget -> names(P_LONG_ID, &t_id);
+    ctxt . SetItToValue(*t_id);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCInterfaceExportBitmap(MCExecContext &ctxt, MCImageBitmap *p_bitmap, int p_format, MCInterfaceImagePaletteSettings *p_palette, bool p_dither, MCImageMetadata* p_metadata, MCDataRef &r_data)
@@ -3987,6 +4062,37 @@ void MCInterfaceExecExportImageToFile(MCExecContext& ctxt, MCImage *p_target, in
 	}
 }
 
+void MCInterfaceExecExportObjectToArray(MCExecContext& ctxt, MCObject *p_object, MCArrayRef& r_array)
+{
+    if (p_object -> gettype() != CT_WIDGET)
+    {
+        r_array = MCValueRetain(kMCEmptyArray);
+        return;
+    }
+    
+    MCWidget *t_widget;
+    t_widget = static_cast<MCWidget *>(p_object);
+    
+    MCNewAutoNameRef t_kind;
+    t_widget -> GetKind(ctxt, &t_kind);
+    if (ctxt . HasError())
+        return;
+    
+    MCAutoArrayRef t_state;
+    t_widget -> GetState(ctxt, &t_state);
+    if (ctxt . HasError())
+        return;
+    
+    MCAutoArrayRef t_array;
+    if (!MCArrayCreateMutable(&t_array) ||
+        !MCArrayStoreValue(*t_array, false, MCNAME("$kind"), *t_kind) ||
+        !MCArrayStoreValue(*t_array, false, MCNAME("$state"), *t_state) ||
+        !t_array . MakeImmutable())
+        return;
+    
+    r_array = t_array . Take();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p_type, Sort_type p_direction, int p_form, MCExpression *p_by, MCStringRef &r_output)
@@ -4007,7 +4113,8 @@ bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p
 	else
 		t_delimiter = ctxt . GetLineDelimiter();
 
-	if (t_delimiter == '\0')
+	if (MCStringIsEqualToCString(t_delimiter, "\0",
+	                             kMCStringOptionCompareExact))
 		return false;
 
     MCAutoStringRefArray t_chunks;

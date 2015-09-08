@@ -278,14 +278,30 @@ MCLine *MCSegment::Fit(coord_t p_max_width)
             m_LastBlock = m_LastBlock->next();
     }
     
+    // If this is not the first segment of the line and there were no suitable
+    // breaking locations before we ran out of space, split the line before
+    // this segment (assuming the segment was created using a tab)
+    bool t_need_break_line = false;
+    if (!t_need_break_segment && !t_need_break_block
+        && t_frontier_width > p_max_width && this != m_Parent->GetFirstSegment()
+        && prev()->GetLastBlock()->GetCodepointAtIndex(prev()->GetLastBlock()->GetLength() - 1) == '\t')
+    {
+        t_need_break_line = true;
+    }
+    
     // Was breaking required?
     // FG-2014-10-21: [[ Bugfix 13727 ]] Breaking a block implies breaking a segment
     MCLine *t_newline = NULL;
-    if (t_need_break_segment || t_need_break_block)
+    if (t_need_break_line || t_need_break_segment || t_need_break_block)
     {
         // A block was broken and therefore the segment possibly needs to be split
         MCSegment *t_split_segment;
-        if (t_break_block != m_LastBlock)
+        if (t_need_break_line)
+        {
+            t_split_segment = this;
+            t_break_block = m_FirstBlock->prev();
+        }
+        else if (t_break_block != m_LastBlock)
         {
             // Split this segment
             t_split_segment = new MCSegment(this);
@@ -302,16 +318,22 @@ MCLine *MCSegment::Fit(coord_t p_max_width)
             t_split_segment = next();
         }
         
-        // Update the last block pointer
-        m_LastBlock = t_break_block;
+        MCLine* t_parent_line;
+        MCSegment* t_prev_segment;
+        t_parent_line = m_Parent;
+        t_prev_segment = t_split_segment->prev();
+        
+        // Update the last block pointer if we're not taking all of the segment
+        if (t_split_segment != this)
+            m_LastBlock = t_break_block;
         
         // Create a new line containing the segments and blocks that don't fit
         t_newline = new MCLine(*m_Parent);
-        t_newline->appendsegments(t_split_segment, m_Parent->lastsegment);
+        t_newline->appendsegments(t_split_segment, t_parent_line->lastsegment);
         
         // Update the parent line's block and segment pointers
-        m_Parent->lastblock = t_break_block;
-        m_Parent->lastsegment = this;
+        t_parent_line->lastblock = t_break_block;
+        t_parent_line->lastsegment = t_prev_segment;
     }
     
     // Return the new line, if it exists

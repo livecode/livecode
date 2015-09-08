@@ -84,7 +84,6 @@ SOURCES=\
 	modules.cpp \
 	syntax.cpp \
 	foundation-legacy.cpp legacy_spec.cpp \
-	sysunxthreads.cpp, stacktile.cpp \
 	native-layer.cpp native-layer-x11.cpp \
 	widget.cpp widget-events.cpp \
 	linux-theme.cpp \

@@ -9,7 +9,6 @@
 #include "stack.h"
 #include "image.h"
 #include "imagelist.h"
-#include "systhreads.h"
 
 #include "globals.h"
 
@@ -102,8 +101,8 @@ MCPatternRef MCPatternRetain(MCPatternRef p_pattern)
 	if (p_pattern == nil)
 		return nil;
 	
-	MCThreadAtomicInc((int32_t *)&p_pattern -> references);
-	
+    p_pattern -> references += 1;
+    
 	return p_pattern;
 }
 
@@ -112,7 +111,8 @@ void MCPatternRelease(MCPatternRef p_pattern)
 	if (p_pattern == nil)
 		return;
 	
-    if (MCThreadAtomicDec((int32_t *)&p_pattern -> references) == 1)
+    p_pattern -> references -= 1;
+    if (p_pattern -> references == 0)
     {
 		MCGImageRelease(p_pattern->image);
 		MCGImageRelease(p_pattern->cache.image);
@@ -213,7 +213,6 @@ bool MCPatternLockForContextTransform(MCPatternRef p_pattern, const MCGAffineTra
 			
 			if (!MCGAffineTransformIsRectangular(p_pattern->transform))
 			{
-                MCThreadMutexLock(MCimagerepmutex);
 				if (p_pattern->cache.x_scale != t_frame.x_scale || p_pattern->cache.y_scale != t_frame.y_scale)
 				{
 					MCGImageRelease(p_pattern->cache.image);
@@ -249,7 +248,6 @@ bool MCPatternLockForContextTransform(MCPatternRef p_pattern, const MCGAffineTra
 					t_image = MCGImageRetain(p_pattern->cache.image);
 					t_transform = p_pattern->cache.transform;
 				}
-                MCThreadMutexUnlock(MCimagerepmutex);
 			}
 			else
 			{

@@ -48,6 +48,7 @@
 #include <sys/utsname.h>
 #include <sys/time.h>
 #include <sys/ioctl.h>
+#include <sys/sysctl.h>
 
 // SN-2014-12-09: [[ Bug 14001 ]] Update the module loading for Mac server
 #include <dlfcn.h>
@@ -4711,18 +4712,27 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         }
         return "unknown";
 #endif /* MCS_getmachine_dsk_mac */
-        static Str255 machineName;
-        long response;
-        if ((errno = Gestalt(gestaltMachineType, &response)) == noErr)
-        {
-            GetIndString(machineName, kMachineNameStrID, response);
-            if (machineName != nil)
-            {
-                p2cstr(machineName);
-                return MCStringCreateWithNativeChars((const char_t *)machineName, MCCStringLength((const char *)machineName), r_string);
-            }
-        }
-        return MCStringCopy(MCNameGetString(MCN_unknown), r_string);
+
+		// PM-2015-07-21: [[ Bug 15623 ]] machine() returns "unknown" in OSX because of Gestalt being deprecated
+		size_t t_len = 0;
+		sysctlbyname("hw.model", NULL, &t_len, NULL, 0);
+
+		if (t_len)
+		{
+			char *t_model;
+			if (!MCMemoryNewArray(t_len, t_model))
+				return false;
+			sysctlbyname("hw.model", t_model, &t_len, NULL, 0);
+
+			if (!MCStringCreateWithCStringAndRelease(t_model, r_string))
+			{
+				free(t_model);
+				return false;
+			}
+			return true;
+		}
+
+		return MCStringCopy(MCNameGetString(MCN_unknown), r_string); //in case model name can't be read
     }
 	virtual MCNameRef GetProcessor(void)
     {
@@ -5653,14 +5663,29 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         
         // SN-2014-08-08: [[ Bug 13026 ]] Fix ported from 6.7
-        if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless))
+        if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless)
+                // SN-2015-04-20: [[ Bug 14295 ]] If we are here, we are a standalone
+                // so the resources folder is the redirected engine folder
+                || MCNameIsEqualTo(p_type, MCN_resources, kMCCompareCaseless))
         {
+            MCAutoStringRef t_engine_folder;
             uindex_t t_last_slash;
             
             if (!MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash))
                 t_last_slash = MCStringGetLength(MCcmd);
-            
-            return MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), r_folder) ? True : False;
+
+            if (!MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), &t_engine_folder))
+                return False;
+
+            if (MCNameIsEqualTo(p_type, MCN_resources, kMCCompareCaseless))
+            {
+                if (!MCS_apply_redirect(*t_engine_folder, false, r_folder))
+                    return False;
+            }
+            else
+                r_folder = MCValueRetain(*t_engine_folder);
+
+            return True;
         }
         
         if (MCS_mac_specialfolder_to_mac_folder(MCNameGetString(p_type), t_mac_folder, t_domain))
@@ -5875,7 +5900,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
     }
     
 #define CATALOG_MAX_ENTRIES 16
-	virtual bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *x_context)
+	virtual bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *x_context)
     {
 #ifdef /* MCS_getentries_dsk_mac */ LEGACY_SYSTEM
         OSStatus t_os_status;
@@ -6027,20 +6052,22 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         FSCloseIterator(t_catalog_iterator);
 #endif /* MCS_getentries_dsk_mac */  
         
-        MCAutoStringRef t_curdir, t_redirect;
+        MCAutoStringRef t_path, t_redirect;
         bool t_success;
         t_success = true;
-        
-        MCS_getcurdir(&t_curdir);
+		if (p_folder == nil)
+			MCS_getcurdir(&t_path);
+		else
+			&t_path = MCValueRetain (p_folder);
         // MW-2014-09-17: [[ Bug 13455 ]] First list in the usual path.
-        t_success = MCS_getentries_for_folder(*t_curdir, p_callback, x_context);
+        t_success = MCS_getentries_for_folder(*t_path, p_callback, x_context);
         
         bool *t_files = (bool *)x_context;
         // MW-2014-09-17: [[ Bug 13455 ]] If we are fetching files, and the path is inside MacOS, then
         //   merge the list with files from the corresponding path in Resources/_MacOS.
         // NOTE: the overall operation should still succeed if the redirect doesn't exist
         if (t_success && *t_files &&
-            MCS_apply_redirect(*t_curdir, false, &t_redirect))
+            MCS_apply_redirect(*t_path, false, &t_redirect))
             t_success = MCS_getentries_for_folder(*t_redirect, p_callback, x_context) || t_success;
         
         return t_success;
@@ -6365,30 +6392,17 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         struct stat buf;
         if (lstat(tildepath, &buf) != 0 || !S_ISLNK(buf.st_mode))
             return tildepath;
-        int4 size;
         char *newname = new char[PATH_MAX + 2];
-        if ((size = readlink(tildepath, newname, PATH_MAX)) < 0)
+
+        // SN-2015-06-05: [[ Bug 15432 ]] Use realpath to solve the symlink.
+        if (realpath(tildepath, newname) == NULL)
         {
-            delete tildepath;
+            // Clear the memory in case of failure
             delete newname;
-            return NULL;
+            newname = NULL;
         }
+
         delete tildepath;
-        newname[size] = '\0';
-        if (newname[0] != '/')
-        {
-            char *fullpath = new char[strlen(path) + strlen(newname) + 2];
-            strcpy(fullpath, path);
-            char *sptr = strrchr(fullpath, '/');
-            if (sptr == NULL)
-                sptr = fullpath;
-            else
-                sptr++;
-            strcpy(sptr, newname);
-            delete newname;
-            newname = MCS_resolvepath(fullpath);
-            delete fullpath;
-        }
         return newname;
 #endif /* MCS_resolvepath_dsk_mac */
         if (MCStringGetLength(p_path) == 0)
@@ -6446,32 +6460,29 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (!MCS_mac_is_link(*t_fullpath))
             return MCStringCopy(*t_fullpath, r_resolved_path);
         
-        MCAutoStringRef t_newname;
-        if (!MCS_mac_readlink(*t_fullpath, &t_newname))
-            return false;
-        
-        // IM - Should we really be using the original p_path parameter here?
-        // seems like we should use the computed t_fullpath value.
-        if (MCStringGetCharAtIndex(*t_newname, 0) != '/')
-        {
-            MCAutoStringRef t_resolved;
-            
-            uindex_t t_last_component;
-            uindex_t t_path_length;
-            
-            if (MCStringLastIndexOfChar(p_path, '/', MCStringGetLength(p_path), kMCStringOptionCompareExact, t_last_component))
-                t_last_component++;
-            else
-                t_last_component = 0;
-            
-            if (!MCStringMutableCopySubstring(p_path, MCRangeMake(0, t_last_component), &t_resolved) ||
-                !MCStringAppend(*t_resolved, *t_newname))
-                return false;
-            
-            return MCStringCopy(*t_resolved, r_resolved_path);
-        }
+        // SN-2015-06-08: [[ Bug 15432 ]] Use realpath to solve the symlink
+        MCAutoStringRefAsUTF8String t_utf8_path;
+        bool t_success;
+        t_success = true;
+
+        if (t_success)
+            t_success = t_utf8_path . Lock(*t_fullpath);
+
+        char *t_resolved_path;
+
+        t_resolved_path = realpath(*t_utf8_path, NULL);
+
+        // If the does not exist, then realpath will fail: we want to
+        // return something though, so we keep the input path (as it
+        // is done for desktop).
+        if (t_resolved_path != NULL)
+            t_success = MCStringCreateWithBytes((const byte_t*)t_resolved_path, strlen(t_resolved_path), kMCStringEncodingUTF8, false, r_resolved_path);
         else
-            return MCStringCopy(*t_newname, r_resolved_path);
+            t_success = false;
+
+        MCMemoryDelete(t_resolved_path);
+
+        return t_success;
     }
 	
     virtual IO_handle DeployOpen(MCStringRef p_path, intenum_t p_mode)
@@ -6586,7 +6597,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             struct stat64 t_buf;
             if (t_fd != -1 && !fstat64(t_fd, &t_buf))
             {
-                uint4 t_len = t_buf.st_size;
+                off_t t_len = t_buf.st_size;
                 if (t_len != 0)
                 {
                     char *t_buffer = (char *)mmap(NULL, t_len, PROT_READ, MAP_SHARED,
@@ -7420,10 +7431,19 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             close(toparent[0]);
             if (MCprocesses[index].pid != 0)
                 Kill(MCprocesses[index].pid, SIGKILL);
-            /* UNCHECKED */ MCDataCreateWithBytes((char_t*)buffer, size, r_data);
+            
+            // SN-2015-07-15: [[ Bug 15592 ]] Do not copy the buffer as we want
+            //  to take ownership of it - and ensure to free it in any case.
+            if (!MCDataCreateWithBytesAndRelease((char_t*)buffer, size, r_data))
+                free(buffer);
+
             return false;
         }
-        /* UNCHECKED */ MCDataCreateWithBytes((char_t*)buffer, size, r_data);
+        // SN-2015-07-15: [[ Bug 15592 ]] Do not copy the buffer as we want
+        //  to take ownership of it - and ensure to free it in any case.
+        if (!MCDataCreateWithBytesAndRelease((char_t*)buffer, size, r_data))
+            free(buffer);
+
         close(toparent[0]);
         CheckProcesses();
         if (MCprocesses[index].pid != 0)
@@ -7765,28 +7785,9 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 maxfd = MCshellfd;
         }
         
-        uint2 i;
-        for (i = 0 ; i < MCnsockets ; i++)
-        {
-            int fd = MCsockets[i]->fd;
-            if (!fd || MCsockets[i]->resolve_state == kMCSocketStateResolving ||
-				MCsockets[i]->resolve_state == kMCSocketStateError)
-                continue;
-            if (MCsockets[i]->connected && !MCsockets[i]->closing
-		        && !MCsockets[i]->shared || MCsockets[i]->accepting)
-                FD_SET(fd, &rmaskfd);
-            if (!MCsockets[i]->connected || MCsockets[i]->wevents != NULL)
-                FD_SET(fd, &wmaskfd);
-            FD_SET(fd, &emaskfd);
-            if (fd > maxfd)
-                maxfd = fd;
-            if (MCsockets[i]->added)
-            {
-                p_delay = 0.0;
-                MCsockets[i]->added = False;
-                handled = True;
-            }
-        }
+        handled = MCSocketsAddToFileDescriptorSets(maxfd, rmaskfd, wmaskfd, emaskfd);
+        if (handled)
+            p_delay = 0.0;
         
         struct timeval timeoutval;
         timeoutval.tv_sec = (long)p_delay;
@@ -7801,32 +7802,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (MCshellfd != -1 && FD_ISSET(MCshellfd, &rmaskfd))
             return True;
         
-        for (i = 0 ; i < MCnsockets ; i++)
-        {
-            int fd = MCsockets[i]->fd;
-            if (FD_ISSET(fd, &emaskfd) && fd != 0)
-            {
-                
-                if (!MCsockets[i]->waiting)
-                {
-                    MCsockets[i]->error = strclone("select error");
-                    MCsockets[i]->doclose();
-                }
-                
-            }
-            else
-            {
-                if (FD_ISSET(fd, &rmaskfd) && !MCsockets[i]->shared)
-                {
-                    MCsockets[i]->readsome();
-                }
-                if (FD_ISSET(fd, &wmaskfd))
-                {
-                    MCsockets[i]->writesome();
-                }
-            }
-            MCsockets[i]->setselect();
-        }
+        MCSocketsHandleFileDescriptorSets(rmaskfd, wmaskfd, emaskfd);
         
         return True;
     }
@@ -8164,7 +8140,13 @@ MCSystemInterface *MCDesktopCreateMacSystem(void)
 static bool fetch_ae_as_fsref_list(MCListRef &r_list)
 {
 	AEDescList docList; //get a list of alias records for the documents
-	long count;
+    long count;
+    // SN-2015-04-14: [[ Bug 15105 ]] We want to return at least an empty list
+    //  in any case where we return true
+    // SN-2014-10-07: [[ Bug 13587 ]] We store the paths in a list
+    MCAutoListRef t_list;
+    /* UNCHECKED */ MCListCreateMutable('\n', &t_list);
+    
 	if (AEGetParamDesc(aePtr, keyDirectObject,
 					   typeAEList, &docList) == noErr
 		&& AECountItems(&docList, &count) == noErr && count > 0)
@@ -8177,9 +8159,6 @@ static bool fetch_ae_as_fsref_list(MCListRef &r_list)
 		Size rSize;      //returned size, atual size of the docName
 		long item;
 		// get a FSSpec record, starts from count==1
-        // SN-2014-10-07: [[ Bug 13587 ]] We store the paths in a list
-        MCAutoListRef t_list;
-        /* UNCHECKED */ MCListCreateMutable('\n', &t_list);
         
 		for (item = 1; item <= count; item++)
 		{
@@ -8196,10 +8175,8 @@ static bool fetch_ae_as_fsref_list(MCListRef &r_list)
                 MCListAppend(*t_list, *t_fullpathname);
 		}
 		AEDisposeDesc(&docList);
-        
-        return MCListCopy(*t_list, r_list);
 	}
-	return true;
+    return MCListCopy(*t_list, r_list);
 }
 
 OSErr MCS_fsspec_to_fsref(const FSSpec *p_fsspec, FSRef *r_fsref)

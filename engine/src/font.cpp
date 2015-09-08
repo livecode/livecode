@@ -228,7 +228,8 @@ int32_t MCFontGetSize(MCFontRef self)
 bool MCFontHasPrinterMetrics(MCFontRef self)
 {
 	// MW-2013-12-19: [[ Bug 11559 ]] If the font has a nil font, do nothing.
-	if (self -> fontstruct == nil)
+    // PM-2015-04-16: [[ Bug 14244 ]] If the font is nil, do nothing
+	if (self == nil || self -> fontstruct == nil)
 		return false;
 	
 	return (self -> style & kMCFontStylePrinterMetrics) != 0;
@@ -237,7 +238,8 @@ bool MCFontHasPrinterMetrics(MCFontRef self)
 coord_t MCFontGetAscent(MCFontRef self)
 {
 	// MW-2013-12-19: [[ Bug 11559 ]] If the font has a nil font, do nothing.
-	if (self -> fontstruct == nil)
+    // PM-2015-04-16: [[ Bug 14244 ]] If the font is nil, do nothing
+	if (self == nil || self -> fontstruct == nil)
 		return 0;
 	
 	return self -> fontstruct -> m_ascent;
@@ -246,7 +248,8 @@ coord_t MCFontGetAscent(MCFontRef self)
 coord_t MCFontGetDescent(MCFontRef self)
 {
 	// MW-2013-12-19: [[ Bug 11559 ]] If the font has a nil font, do nothing.
-	if (self -> fontstruct == nil)
+    // PM-2015-04-16: [[ Bug 14244 ]] If the font is nil, do nothing
+	if (self == nil || self -> fontstruct == nil)
 		return 0;
 	
 	return self -> fontstruct -> m_descent;
@@ -254,7 +257,8 @@ coord_t MCFontGetDescent(MCFontRef self)
 
 coord_t MCFontGetLeading(MCFontRef self)
 {
-    if (self -> fontstruct == nil)
+    // PM-2015-06-02: [[ Bug 14244 ]] If the font is nil, do nothing
+    if (self == nil || self -> fontstruct == nil)
         return 0;
     
     return self -> fontstruct -> m_leading;
@@ -262,7 +266,8 @@ coord_t MCFontGetLeading(MCFontRef self)
 
 coord_t MCFontGetXHeight(MCFontRef self)
 {
-    if (self -> fontstruct == nil)
+    // PM-2015-06-02: [[ Bug 14244 ]] If the font is nil, do nothing
+    if (self == nil || self -> fontstruct == nil)
         return 0;
     
     return self -> fontstruct -> m_xheight;
@@ -271,7 +276,8 @@ coord_t MCFontGetXHeight(MCFontRef self)
 void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFontBreakTextCallback p_callback, void *p_callback_data, bool p_rtl)
 {
 	// MW-2013-12-19: [[ Bug 11559 ]] If the font has a nil font, do nothing.
-	if (p_font -> fontstruct == nil)
+    // PM-2015-04-16: [[ Bug 14244 ]] If the font is nil, do nothing
+	if (p_font == nil || p_font -> fontstruct == nil)
 		return;
 
     // If the text is small enough, don't bother trying to break it
@@ -394,7 +400,7 @@ void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFo
         else
             t_range = MCRangeMake(t_offset, t_break_point);
 
-#if !defined(_WIN32) && !defined(_ANDROID_MOBILE)
+#if !defined(_WIN32) && !defined(_ANDROID_MOBILE) && !defined(__EMSCRIPTEN__)
         // This is a really ugly hack to get LTR/RTL overrides working correctly -
         // ATSUI and Pango think they know better than us and won't let us suppress
         // the BiDi algorithm they uses for text layout. So instead, we need to add

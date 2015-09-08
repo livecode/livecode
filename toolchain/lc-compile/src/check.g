@@ -43,6 +43,9 @@
 
         -- Check that suitable identifiers are used in definitions
         CheckIdentifiers(Module)
+        
+        -- Check that repeat-specific commands are appropriate
+        CheckRepeats(Module, 0)
 
 --------------------------------------------------------------------------------
 
@@ -303,7 +306,7 @@
             Info'Type -> Type
             FullyResolveType(Type -> BaseType)
             (|
-                where(BaseType -> handler(_, Signature))
+                where(BaseType -> handler(_, _, Signature))
             ||
                 Id'Position -> Position
                 Error_NonHandlerTypeVariablesCannotBeCalled(Position)
@@ -315,7 +318,7 @@
     'rule' CheckBindingIsVariableOrGetHandlerId(Id):
         QuerySymbolId(Id -> Info)
         Info'Kind -> handler
-        Info'Type -> handler(_, Signature)
+        Info'Type -> handler(_, _, Signature)
         (|
             where(Signature -> signature(nil, ReturnType))
             (|
@@ -340,7 +343,7 @@
     'rule' CheckBindingIsVariableOrSetHandlerId(Id):
         QuerySymbolId(Id -> Info)
         Info'Kind -> handler
-        Info'Type -> handler(_, Signature)
+        Info'Type -> handler(_, _, Signature)
         (|
             where(Signature -> signature(parameterlist(parameter(_, in, _, _), nil), _))
         ||
@@ -434,15 +437,42 @@
 'condition' IsExpressionSimpleConstant(EXPRESSION)
 
     'rule' IsExpressionSimpleConstant(undefined(_)):
+
     'rule' IsExpressionSimpleConstant(true(_)):
+
     'rule' IsExpressionSimpleConstant(false(_)):
+
     'rule' IsExpressionSimpleConstant(unsignedinteger(_, _)):
+
     'rule' IsExpressionSimpleConstant(integer(_, _)):
+
     'rule' IsExpressionSimpleConstant(real(_, _)):
+
     'rule' IsExpressionSimpleConstant(string(_, _)):
+
     'rule' IsExpressionSimpleConstant(list(_, List)):
         IsExpressionListSimpleConstant(List)
-        
+
+    'rule' IsExpressionSimpleConstant(invoke(Position, invokelist(Info, nil), expressionlist(Operand, nil))):
+        Info'Name -> SyntaxName
+        (|
+            eq(SyntaxName, "PlusUnaryOperator")
+        ||
+            eq(SyntaxName, "MinusUnaryOperator")
+        |)
+        (|
+            where(Operand -> integer(_, _))
+        ||
+            where(Operand -> unsignedinteger(_, UIntValue))
+            (|
+                ge(UIntValue, 0)
+            ||
+                Error_IntegerLiteralOutOfRange(Position)
+            |)
+        ||
+            where(Operand -> real(_, _))
+        |)
+
 'condition' IsExpressionListSimpleConstant(EXPRESSIONLIST)
 
     'rule' IsExpressionListSimpleConstant(expressionlist(Head, Tail)):
@@ -833,7 +863,7 @@
 
     'rule' CheckSyntaxMethod(Class, method(Position, Name, Arguments)):
         QuerySymbolId(Name -> Info)
-        Info'Type -> handler(_, signature(Parameters, ReturnType))
+        Info'Type -> handler(_, _, signature(Parameters, ReturnType))
         Info'Access -> Access
         [|
             ne(Access, public)
@@ -1257,15 +1287,15 @@
 
 'var' IgnoredModulesList : NAMELIST
 
-'condition' ImportContainsCanvas(IMPORT)
+'condition' ImportContainsCanvas(DEFINITION)
 
 'sweep' CheckInvokes(ANY)
 
-    'rule' CheckInvokes(MODULE'module(_, Kind, Name, Imports, Definitions)):
+    'rule' CheckInvokes(MODULE'module(_, Kind, Name, Definitions)):
         (|
             ne(Kind, widget)
             (|
-                ImportContainsCanvas(Imports)
+                ImportContainsCanvas(Definitions)
                 MakeNameLiteral("com.livecode.widget" -> WidgetModuleName)
                 IgnoredModulesList <- namelist(WidgetModuleName, nil)
             ||
@@ -1513,9 +1543,9 @@
 'condition' ComputeInvokeSignature(INVOKEMETHODTYPE, INVOKELIST, EXPRESSIONLIST -> INVOKESIGNATURE)
 
     'rule' ComputeInvokeSignature(Type, invokelist(Head, Tail), Arguments -> Signature)
-        IsInvokeModuleAllowed(Head)
-        Head'Methods -> Methods
         (|
+            IsInvokeModuleAllowed(Head)
+            Head'Methods -> Methods
             ComputeInvokeSignatureForMethods(Type, Methods, Arguments -> Signature)
         ||
             ComputeInvokeSignature(Type, Tail, Arguments -> Signature)
@@ -1580,9 +1610,13 @@
             --Error_VariableMustHaveHighLevelType(Position)
         |)
 
-    'rule' CheckDeclaredTypes(DEFINITION'foreignhandler(_, _, _, Signature, _)):
-        -- Foreign handler signatures can contain any type so no need to
-        -- check anything here.
+    'rule' CheckDeclaredTypes(DEFINITION'foreignhandler(Position, _, _, signature(Parameters, ReturnType), _)):
+        -- Foreign handlers must be fully typed.
+        [|
+            where(ReturnType -> unspecified)
+            Error_NoReturnTypeSpecifiedForForeignHandler(Position)
+        |]
+        CheckForeignHandlerParameterTypes(Parameters)
         
     'rule' CheckDeclaredTypes(PARAMETER'parameter(Position, _, _, Type)):
         (|
@@ -1598,6 +1632,19 @@
         ||
             --Error_VariableMustHaveHighLevelType(Position)
         |)
+        
+'action' CheckForeignHandlerParameterTypes(PARAMETERLIST)
+
+    'rule' CheckForeignHandlerParameterTypes(parameterlist(parameter(Position, _, _, Type), Rest)):
+        [|
+            where(Type -> unspecified)
+            Error_NoTypeSpecifiedForForeignHandlerParameter(Position)
+        |]
+        CheckForeignHandlerParameterTypes(Rest)
+        
+    'rule' CheckForeignHandlerParameterTypes(nil):
+        -- do nothing
+
 
 'condition' IsHighLevelType(TYPE)
 
@@ -1614,7 +1661,7 @@
         |)
     'rule' IsHighLevelType(optional(_, Type)):
         IsHighLevelType(Type)
-    'rule' IsHighLevelType(handler(_, _)):
+    'rule' IsHighLevelType(handler(_, _, _)):
     'rule' IsHighLevelType(record(_, _, _)):
     'rule' IsHighLevelType(boolean(_)):
     'rule' IsHighLevelType(integer(_)):
@@ -1624,6 +1671,7 @@
     'rule' IsHighLevelType(data(_)):
     'rule' IsHighLevelType(array(_)):
     'rule' IsHighLevelType(list(_, _)):
+    'rule' IsHighLevelType(unspecified):
 
 --------------------------------------------------------------------------------
 
@@ -1639,9 +1687,8 @@
 
 'sweep' CheckIdentifiers(ANY)
 
-    'rule' CheckIdentifiers(MODULE'module(_, _, Id, Imports, Definitions)):
+    'rule' CheckIdentifiers(MODULE'module(_, _, Id, Definitions)):
         CheckIdIsSuitableForDefinition(Id)
-        CheckIdentifiers(Imports)
         CheckIdentifiers(Definitions)
 
     --
@@ -1704,18 +1751,57 @@
 
 --------------------------------------------------------------------------------
 
+'sweep' CheckRepeats(ANY, INT)
+
+    'rule' CheckRepeats(repeatforever(_, Body), Depth):
+        CheckRepeats(Body, Depth + 1)
+
+    'rule' CheckRepeats(repeatcounted(_, _, Body), Depth):
+        CheckRepeats(Body, Depth + 1)
+
+    'rule' CheckRepeats(repeatwhile(_, _, Body), Depth):
+        CheckRepeats(Body, Depth + 1)
+        
+    'rule' CheckRepeats(repeatuntil(_, _, Body), Depth):
+        CheckRepeats(Body, Depth + 1)
+
+    'rule' CheckRepeats(repeatupto(_, _, _, _, _, Body), Depth):
+        CheckRepeats(Body, Depth + 1)
+
+    'rule' CheckRepeats(repeatdownto(_, _, _, _, _, Body), Depth):
+        CheckRepeats(Body, Depth + 1)
+
+    'rule' CheckRepeats(repeatforeach(_, _, _, Body), Depth):
+        CheckRepeats(Body, Depth + 1)
+        
+    'rule' CheckRepeats(nextrepeat(Position), Depth):
+        (|
+            gt(Depth, 0)
+        ||
+            Error_NextRepeatOutOfContext(Position)
+        |)
+
+    'rule' CheckRepeats(exitrepeat(Position), Depth):
+        (|
+            gt(Depth, 0)
+        ||
+            Error_ExitRepeatOutOfContext(Position)
+        |)
+
+--------------------------------------------------------------------------------
+
 'condition' QueryHandlerIdSignature(ID -> SIGNATURE)
 
     'rule' QueryHandlerIdSignature(Id -> Signature)
         QueryId(Id -> symbol(Info))
         Info'Kind -> handler
-        Info'Type -> handler(_, Signature)
+        Info'Type -> handler(_, _, Signature)
         
     'rule' QueryHandlerIdSignature(Id -> Signature)
         QueryId(Id -> symbol(Info))
         Info'Kind -> variable
         Info'Type -> Type
-        FullyResolveType(Type -> handler(_, Signature))
+        FullyResolveType(Type -> handler(_, _, Signature))
 
 'condition' QueryKindOfSymbolId(ID -> SYMBOLKIND)
 

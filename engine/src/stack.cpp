@@ -31,7 +31,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "card.h"
 #include "aclip.h"
 #include "vclip.h"
-#include "control.h"
+#include "mccontrol.h"
 #include "image.h"
 #include "button.h"
 #include "mcerror.h"
@@ -195,6 +195,9 @@ MCPropertyInfo MCStack::kProperties[] =
     
     // IM-2014-01-07: [[ StackScale ]] Add stack scalefactor property
     DEFINE_RW_OBJ_PROPERTY(P_SCALE_FACTOR, Double, MCStack, ScaleFactor)
+    
+    // MERG-2015-08-31: [[ ScriptOnly ]] Add stack scriptOnly property
+    DEFINE_RW_OBJ_PROPERTY(P_SCRIPT_ONLY, Bool, MCStack, ScriptOnly)
 };
 
 MCObjectPropertyTable MCStack::kPropertyTable =
@@ -279,9 +282,6 @@ MCStack::MCStack()
 
 	// MW-2012-10-10: [[ IdCache ]]
 	m_id_cache = nil;
-    
-    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single thread mutates the ID cache at a time.
-    /* UNCHECKED */ MCThreadMutexCreate(m_id_cache_lock);
 
 	// MW-2014-03-12: [[ Bug 11914 ]] Stacks are not engine menus by default.
 	m_is_menu = false;
@@ -298,6 +298,8 @@ MCStack::MCStack()
 	cursoroverride = false ;
 	old_rect.x = old_rect.y = old_rect.width = old_rect.height = 0 ;
 
+    m_attachments = nil;
+    
 	view_init();
 }
 
@@ -359,9 +361,6 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	m_id_cache = nil;
-	
-    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single thread mutates the ID cache at a time.
-    /* UNCHECKED */ MCThreadMutexCreate(m_id_cache_lock);
     
 	mnemonics = NULL;
 	nfuncs = 0;
@@ -499,6 +498,8 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	m_view_need_redraw = sref.m_view_need_redraw;
 	m_view_need_resize = sref.m_view_need_resize;
 
+    m_attachments = nil;
+    
 	view_copy(sref);
 }
 
@@ -621,9 +622,6 @@ MCStack::~MCStack()
 	
 	// MW-2012-10-10: [[ IdCache ]] Free the idcache.
 	freeobjectidcache();
-    
-    // MM-2014-07-31: [[ ThreadedRendering ]] Release cache mutex.
-    MCThreadMutexRelease(m_id_cache_lock);
 	
 	view_destroy();
 
@@ -2903,6 +2901,8 @@ Boolean MCStack::del()
 	if (MCdispatcher->gethome() == this)
 		return False;
 	
+    setstate(CS_DELETE_STACK, True);
+    
 	if (opened)
 	{
 		// MW-2007-04-22: [[ Bug 4203 ]] Coerce the flags to include F_DESTROY_WINDOW to ensure we don't
@@ -2917,6 +2917,8 @@ Boolean MCStack::del()
 		if (cards != NULL)
 			cards->message(MCM_delete_stack);
 	
+    notifyattachments(kMCStackAttachmentEventDeleting);
+    
 	if (MCdispatcher->ismainstack(this))
 	{
 		MCdispatcher->removestack(this);
@@ -3082,6 +3084,8 @@ void MCStack::toolchanged(Tool p_new_tool)
 
 void MCStack::loadexternals(void)
 {
+    notifyattachments(kMCStackAttachmentEventRealizing);
+    
 	if (MCStringIsEmpty(externalfiles) || m_externals != NULL || !MCSecureModeCanAccessExternal())
 		return;
 
@@ -3109,6 +3113,8 @@ void MCStack::loadexternals(void)
 
 void MCStack::unloadexternals(void)
 {
+    notifyattachments(kMCStackAttachmentEventUnrealizing);
+    
 	if (m_externals == NULL)
 		return;
 
@@ -3157,6 +3163,30 @@ bool MCStack::resolve_relative_path(MCStringRef p_path, MCStringRef& r_resolved)
 	}
     
     return false;
+}
+
+// PM-2015-01-26: [[ Bug 14435 ]] Make possible to set the filename using a relative path to the default folder
+bool MCStack::resolve_relative_path_to_default_folder(MCStringRef p_path, MCStringRef &r_resolved)
+{
+    if (MCStringIsEmpty(p_path))
+		return false;
+	
+	// If the relative path begins with "./" or ".\", we must remove this, otherwise
+    // certain system calls will get confused by the path.
+    uindex_t t_start_index;
+    MCAutoStringRef t_cur_dir;
+
+    if (MCStringBeginsWith(p_path, MCSTR("./"), kMCCompareExact)
+            || MCStringBeginsWith(p_path, MCSTR(".\\"), kMCCompareExact))
+        t_start_index = 2;
+    else
+        t_start_index = 0;
+	
+    MCS_getcurdir(&t_cur_dir);
+
+    MCRange t_range;
+    t_range = MCRangeMake(t_start_index, MCStringGetLength(p_path) - t_start_index);
+    return MCStringFormat(r_resolved, "%@/%*@", *t_cur_dir, &t_range, p_path);
 }
 
 // OK-2009-01-09: [[Bug 1161]]
@@ -3409,4 +3439,55 @@ MCPlatformControlType MCStack::getcontroltype()
 MCPlatformControlPart MCStack::getcontrolsubpart()
 {
     return kMCPlatformControlPartNone;
+}
+
+//////////
+
+bool MCStack::attach(void *p_context, MCStackAttachmentCallback p_callback)
+{
+    MCStackAttachment *t_attachment;
+    for(t_attachment = m_attachments; t_attachment != nil; t_attachment = t_attachment -> next)
+        if (t_attachment -> context == p_context && t_attachment -> callback == p_callback)
+            return true;
+    
+    if (!MCMemoryNew(t_attachment))
+        return false;
+    
+    t_attachment -> next = m_attachments;
+    t_attachment -> context = p_context;
+    t_attachment -> callback = p_callback;
+    m_attachments = t_attachment;
+    
+    // If we are already realized, then notify.
+    if (window != nil)
+        p_callback(p_context, this, kMCStackAttachmentEventRealizing);
+    
+    return true;
+}
+
+void MCStack::detach(void *p_context, MCStackAttachmentCallback p_callback)
+{
+    MCStackAttachment *t_attachment, *t_previous;
+    for(t_previous = nil, t_attachment = m_attachments; t_attachment != nil; t_attachment = t_attachment -> next)
+    {
+        if (t_attachment -> context == p_context && t_attachment -> callback == p_callback)
+            break;
+        t_previous = t_attachment;
+    }
+    
+    if (t_attachment == nil)
+        return;
+    
+    if (t_previous != nil)
+        t_previous -> next = t_attachment -> next;
+    else
+        m_attachments = t_attachment -> next;
+    
+    MCMemoryDelete(t_attachment);
+}
+
+void MCStack::notifyattachments(MCStackAttachmentEvent p_event)
+{
+    for(MCStackAttachment *t_attachment = m_attachments; t_attachment != nil; t_attachment = t_attachment -> next)
+        t_attachment -> callback(t_attachment -> context, this, p_event);
 }

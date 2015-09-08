@@ -3,8 +3,18 @@
 use warnings;
 use Text::ParseWords;
 
-# Read all the data available on stdin
-my @spec = <STDIN>;
+my $inputFile = $ARGV[0];
+my $outputFile = $ARGV[1];
+
+# Read all of the input data
+open INPUT, "<$inputFile"
+	or die "Could not open input file \"$inputFile\": $!";
+my @spec = <INPUT>;
+close INPUT;
+
+# Open the output file
+open OUTPUT, ">$outputFile"
+	or die "Could not open output file \"$outputFile\": $!";
 
 # Modules
 my %moduleSymbols = ();
@@ -124,6 +134,7 @@ foreach my $module (keys %moduleDetails)
 
 output "}";
 
+close OUTPUT;
 
 sub generateModule
 {
@@ -162,7 +173,7 @@ sub generateModule
 	output ;
     output "#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)";
     output "#define MODULE_${moduleUpper}_NAME \"$darwinLibrary\"";
-    output "#elif defined(_LINUX)";
+    output "#elif defined(_LINUX) || defined(__EMSCRIPTEN__)";
     output "#define MODULE_${moduleUpper}_NAME \"$unixLibrary\"";
     # MM-2014-02-10: [[ LibOpenSSL 1.0.1e ]] Prefix android modules with lib.
     output "#elif defined(TARGET_SUBPLATFORM_ANDROID)";
@@ -433,5 +444,5 @@ sub output
 		$line = "";
 	}
 	
-	print STDOUT "$line\n";
+	print OUTPUT "$line\n";
 }

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source "${BASEDIR}/scripts/platform.inc"
+source "${BASEDIR}/scripts/lib_versions.inc"
 
 # Only for desktop platforms
 if [ "${PLATFORM}" == "ios" -o "${PLATFORM}" == "android" ] ; then
@@ -8,8 +9,7 @@ if [ "${PLATFORM}" == "ios" -o "${PLATFORM}" == "android" ] ; then
 	exit 0
 fi
 
-# Version and configuration flags
-CURL_VERSION=7.21.1
+# Configuration flags
 CURL_CONFIG="--disable-debug \
             --enable-http --enable-ftp --disable-file --disable-ldap --disable-ldaps --disable-rtsp --disable-dict --disable-telnet \
             --disable-tftp --disable-pop3 --disable-imap --disable-smtp \
@@ -18,14 +18,14 @@ CURL_CONFIG="--disable-debug \
             --without-gnutls --without-polarssl --without-nss --without-libssh2 --without-librtmp --without-libidn"
 
 # Grab the source for the library
-CURL_TGZ="curl-${CURL_VERSION}.tar.gz"
-CURL_SRC="curl-${CURL_VERSION}"
+CURL_TGZ="curl-${Curl_VERSION}.tar.gz"
+CURL_SRC="curl-${Curl_VERSION}"
 cd "${BUILDDIR}"
 
 if [ ! -d "$CURL_SRC" ] ; then
 	if [ ! -e "$CURL_TGZ" ] ; then
 		echo "Fetching Curl source"
-		curl http://curl.haxx.se/download/curl-${CURL_VERSION}.tar.gz -o ${CURL_TGZ}
+		curl http://curl.haxx.se/download/curl-${Curl_VERSION}.tar.gz -o ${CURL_TGZ}
 		if [ $? != 0 ] ; then
 			echo "    failed"
 			if [ -e "${CURL_TGZ}" ] ; then 

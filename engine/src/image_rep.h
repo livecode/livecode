@@ -17,8 +17,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_IMAGE_REP_H__
 #define __MC_IMAGE_REP_H__
 
-#include "systhreads.h"
-
 typedef enum
 {
 	kMCImageRepUnknown,
@@ -29,6 +27,7 @@ typedef enum
 	kMCImageRepVector,
 	kMCImageRepCompressed,
 	kMCImageRepPixelData,
+	kMCImageRepGImage,
 	
 	kMCImageRepResampled,
 } MCImageRepType;
@@ -187,10 +186,6 @@ private:
 	MCGImageFrame *m_frames;
 	uindex_t m_frame_count;
 	bool m_frames_premultiplied;
-    
-    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single threrad locks an image frame at a time.
-    MCThreadMutexRef m_frame_lock;
-
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -474,6 +469,9 @@ bool MCImageRepGetDensityMapped(MCStringRef p_filename, MCImageRep *&r_rep);
 // IM-2014-07-23: [[ Bug 12842 ]] Modify resampled image rep to take a target width & height
 // and explicit flip params instead of scale values.
 bool MCImageRepGetResampled(uint32_t p_width, uint32_t p_height, bool p_flip_horizontal, bool p_flip_vertical, MCImageRep *p_source, MCImageRep *&r_rep);
+
+// IM-2015-06-25: [[ GImageRep ]] Create image rep using MCGImageRef as source
+bool MCImageRepCreateWithGImage(MCGImageRef p_image, MCImageRep *&r_image_rep);
 
 ////////////////////////////////////////////////////////////////////////////////
 

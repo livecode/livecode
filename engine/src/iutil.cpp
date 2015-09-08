@@ -466,6 +466,9 @@ void MCImage::crop(MCRectangle *newrect)
 	unlockbitmap(t_bitmap);
 
 	/* UNCHECKED */ setbitmap(t_cropimage, 1.0);
+	
+	// PM-2015-07-13: [[ Bug 15590 ]] Fix memory leak
+	MCImageFreeBitmap(t_cropimage);
 
 	uint32_t t_pixwidth, t_pixheight;
 	getgeometry(t_pixwidth, t_pixheight);
@@ -738,6 +741,9 @@ MCCursorRef MCImage::createcursor()
 	{
 		MCColor t_palette[2];
 		MCColor *t_colors;
+        // SN-2015-06-02: [[ CID 90611 ]] Initialise t_colors
+        t_colors = NULL;
+        
 		if (!MCcursorbwonly)
 			MCImageGenerateOptimalPaletteWithWeightedPixels(t_cursor_bitmap, 2, t_colors);
 		else

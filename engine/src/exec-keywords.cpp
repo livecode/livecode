@@ -38,11 +38,6 @@
 
 #include "globals.h"
 
-#ifdef _MOBILE
-extern bool MCIsPlatformMessage(MCNameRef handler_name);
-extern Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters);
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 
 static Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p_statements, Exec_errors p_error)
@@ -63,8 +58,8 @@ static Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p
         tspr->exec_ctxt(ctxt);
         stat = ctxt . GetExecStat();
         ctxt . IgnoreLastError();
-        // MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
-        MCRedrawUpdateScreen();
+        
+        MCActionsRunAll();
         
         switch(stat)
         {
@@ -110,7 +105,7 @@ static Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p
     return stat;
 }
 
-void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandler *handler, MCParameter *params, MCNameRef name, uint2 line, uint2 pos, bool platform_message, bool is_function)
+void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandler *handler, MCParameter *params, MCNameRef name, uint2 line, uint2 pos, bool global_handler, bool is_function)
 {    
 	if (MCscreen->abortkey())
 	{
@@ -181,16 +176,16 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
 		added = True;
 	}
     
-    if (platform_message)
+    if (global_handler)
     {
+        if (!MCRunGlobalHandler(name, params, stat))
+            stat = ES_NOT_HANDLED;
+		
+		// AL-2014-03-14: Currently no mobile handler's execution is halted when ES_ERROR
+		//  is returned. Error info is returned via the result.
 #ifdef _MOBILE
-        extern Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters);
-        
-        // AL-2014-03-14: Currently no mobile handler's execution is halted when ES_ERROR
-        //  is returned. Error info is returned via the result. 
-        stat = MCHandlePlatformMessage(name, params);
-        if (stat != ES_NOT_HANDLED)
-            stat = ES_NORMAL;
+		if (stat != ES_NOT_HANDLED)
+			stat = ES_NORMAL;
 #endif
     }
 	else if (handler != nil)
@@ -385,7 +380,9 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
 	MCNameRef t_key;
 	MCValueRef t_value;
 	uintptr_t t_iterator;
-    const byte_t *t_data_ptr;
+    // SN2015-06-15: [[ Bug 15457 ]] The index can be a negative index.
+    index_t t_sequenced_iterator;
+    const byte_t *t_data_ptr, *t_data_end;
     Parse_stat ps;
     MCScriptPoint *sp = nil;
     int4 count = 0;
@@ -405,12 +402,12 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
             if (!ctxt . ConvertToArray(*t_condition, &t_array))
                 return;
             
-            // If this is a numerical array, do it in order
-            if (each == FU_ELEMENT && MCArrayIsSequence(*t_array))
+            // SN-2015-06-15: [[ Bug 15457 ]] If this is a numerical array, do
+            //  it in order - even if it does not start at 1
+            if (each == FU_ELEMENT && MCArrayIsNumericSequence(*t_array, t_sequenced_iterator))
             {
                 t_sequence_array = true;
-                t_iterator = 1;
-                if (!MCArrayFetchValueAtIndex(*t_array, t_iterator, t_value))
+                if (!MCArrayFetchValueAtIndex(*t_array, t_sequenced_iterator, t_value))
                     return;
             }
             else
@@ -512,9 +509,11 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
                 case FU_ELEMENT:
                 {
                     loopvar -> set(ctxt, t_value);
+                    // SN-2015-06-15: [[ Bug 15457 ]] Sequenced, numeric arrays
+                    //  have their own iterator
                     if (t_sequence_array)
                     {
-                        if (!MCArrayFetchValueAtIndex(*t_array, ++t_iterator, t_value))
+                        if (!MCArrayFetchValueAtIndex(*t_array, ++t_sequenced_iterator, t_value))
                             endnext = true;
                     }
                     else
@@ -720,8 +719,7 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
         stat = ctxt . GetExecStat();
         ctxt . IgnoreLastError();
         
-		// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
-		MCRedrawUpdateScreen();
+        MCActionsRunAll();
         
 		switch(stat)
 		{

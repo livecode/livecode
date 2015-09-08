@@ -15,7 +15,7 @@ Platforms: desktop,server,web
 Security: disk,process
 
 Example:
-revXMLRPC_SetHost theRequest,"www.runrev.com"
+revXMLRPC_SetHost theRequest,"www.livecode.com"
 
 Example:
 revXMLRPC_SetHost myRequest,"example.com",10000

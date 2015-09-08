@@ -164,7 +164,7 @@ class MCFuncref : public MCExpression
 	MCObject *parent;
 	MCParameter *params;
 	bool resolved : 1;
-    bool platform_message : 1;
+    bool global_handler : 1;
 public:
 	MCFuncref(MCNameRef);
 	virtual ~MCFuncref();

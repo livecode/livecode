@@ -1208,7 +1208,7 @@ void MCVariable::synchronize(MCExecContext& ctxt, bool p_notify)
 				if (MCwatchedvars[i].expression != nil && !MCStringIsEmpty(MCwatchedvars[i].expression))
 				{
                     MCAutoValueRef t_val;
-					ctxt.GetHandler() -> eval(ctxt, MCwatchedvars[i].expression, &t_val);
+                    ctxt.eval(ctxt, MCwatchedvars[i].expression, &t_val);
                     
 					MCAutoBooleanRef t_bool;
 					if (!ctxt.HasError() && ctxt.ConvertToBoolean(*t_val, &t_bool) && *t_bool == kMCTrue)

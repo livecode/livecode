@@ -423,11 +423,11 @@ bool MCSellist::clipboard(bool p_is_cut)
 					if (tptr -> ref -> getstack() -> iskeyed())
 					{
 						if (tptr -> ref -> del())
-						{
-							if (tptr -> ref -> gettype() == CT_STACK)
-								MCtodestroy -> remove(static_cast<MCStack *>(tptr -> ref));
+                        {
+                            if (tptr -> ref -> gettype() == CT_STACK)
+                                MCtodestroy -> remove(static_cast<MCStack *>(tptr -> ref));
 							tptr -> ref -> scheduledelete();
-						}
+                        }
 					}
 
 					delete tptr;

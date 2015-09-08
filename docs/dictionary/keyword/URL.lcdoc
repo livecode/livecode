@@ -45,6 +45,8 @@ For technical information about URLs and URL schemes, see RFC 1630 at http://www
 
 >*Important:*  The space character is not valid in URLs, however libURL (Desktop platforms) replaces this character with the required '%20'. This is something that the mobile and server platforms do not do. Be careful to construct valid URLs when working an fully cross platform applications.
 
+From LiveCode 7.0.0, URL keyword has been upgraded to understand Unicode files when using URL("file:"). If the file located at the path has a Byte Order Mark at its beginning, then URL will decode the file according to that Byte Order Mark (UTF-8, UTF-16BE, UTF-16LE, UTF-32BE and UTF-32LE are compatible). If no Byte Order Mark is found, then the file will be decoded as if it were using Native encoding (MacRoman on Mac OS X, ISO-8859-1 on Linux, CP-1252 on Windows).
+
 References: HTMLText (property), URL (keyword), file (keyword), libURLSetAuthCallback (command), launch url (command), libURLSetExpect100 (command), load (command), container (glossary), keyword (glossary), resource (glossary)
 
 Tags: networking

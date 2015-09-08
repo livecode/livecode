@@ -1,0 +1,1 @@
+# LC 8 has a very noisy startup

@@ -26,6 +26,7 @@ public foreign type UInt32 binds to "kMCUIntTypeInfo"
 public foreign type Int32 binds to "kMCIntTypeInfo"
 
 public foreign type UIntSize binds to "kMCSizeTypeInfo"
+public foreign type IntSize binds to "kMCSSizeTypeInfo"
 
 public foreign type Float32 binds to "kMCFloatTypeInfo"
 public foreign type Float64 binds to "kMCDoubleTypeInfo"
@@ -55,17 +56,5 @@ public type LCUIndex is UInt32
 
 public foreign type ZStringNative binds to "kMCNativeCStringTypeInfo"
 public foreign type ZStringUTF16 binds to "kMCWStringTypeInfo"
-
-----------------------------------------------------------------
--- Deprecated
-----------------------------------------------------------------
-
-public type bool is CBool
-public type uint is UInt32
-public type int is Int32
-public type float is Float32
-public type double is Float64
-
-public type NativeCString is ZStringNative
 
 end module

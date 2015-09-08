@@ -1455,6 +1455,9 @@ void MCChunkOffset::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     case CT_CODEUNIT:
         MCStringsEvalCodeunitOffset(ctxt, *t_chunk, *t_string, t_start, r_value . uint_value);
         break;
+	default:
+		MCUnreachable();
+		break;
 	}
     
     r_value . type = kMCExecValueTypeUInt;
@@ -1658,6 +1661,48 @@ void MCChunkOffset::compile(MCSyntaxFactoryRef ctxt)
 	return ES_NORMAL;
 #endif /* MCColorNames */
 
+Parse_stat MCCommandArguments::parse(MCScriptPoint &sp, Boolean the)
+{
+    if (!get0or1param(sp, &argument_index, the))
+    {
+        MCperror -> add(PE_FACTOR_BADPARAM, line, pos);
+        return PS_ERROR;
+    }
+
+    return PS_NORMAL;
+}
+
+void MCCommandArguments::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
+    // If no parameter has been provided, then we return the list of parameters
+    //  as an array.
+    if (argument_index == NULL)
+    {
+        MCExecValueTraits<MCArrayRef>::set(r_value, MCValueRetain(MCcommandarguments));
+        return;
+    }
+    else
+    {
+        integer_t t_index;
+        if (!ctxt . EvalExprAsInt(argument_index, EE_COMMANDARGUMENTS_BADPARAM, t_index))
+            return;
+
+        MCStringRef t_value;
+        // If the index is wrong (< 0 or > argument count) then we return empty
+        if (!MCArrayFetchValueAtIndex(MCcommandarguments, t_index, (MCValueRef&)t_value))
+            t_value = kMCEmptyString;
+
+        MCExecValueTraits<MCStringRef>::set(r_value, MCValueRetain(t_value));
+    }
+}
+
+void MCCommandName::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
+    if (MCcommandname != NULL)
+        MCExecValueTraits<MCStringRef>::set(r_value, MCcommandname);
+    else
+        MCExecValueTraits<MCStringRef>::set(r_value, kMCEmptyString);
+}
 
 #ifdef /* MCCommandNames */ LEGACY_EXEC
 	ep.clear();
@@ -3234,7 +3279,6 @@ Parse_stat MCLocals::parse(MCScriptPoint &sp, Boolean the)
 	return MCFunction::parse(sp, the);
 }
 
-
 #ifdef /* MCLocals */ LEGACY_EXEC
 	// MW-2013-11-15: [[ Bug 11277 ]] Server mode may call this outwith a handler.
 	
@@ -3246,7 +3290,6 @@ Parse_stat MCLocals::parse(MCScriptPoint &sp, Boolean the)
 	
 	return ES_NORMAL;
 #endif /* MCLocals */
-
 
 
 #ifdef /* MCMachine */ LEGACY_EXEC
@@ -3409,11 +3452,29 @@ void MCMatch::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     
     MCAutoValueRef t_source_valueref;
     MCAutoStringRef t_source;
-    if (!params->eval(ctxt, &t_source_valueref) || !ctxt . ConvertToString(*t_source_valueref, &t_source))
-	{
-		ctxt . LegacyThrow(EE_MATCH_BADSOURCE);
-		return;
-	}
+    if (!params->eval(ctxt, &t_source_valueref))
+    {
+        ctxt . LegacyThrow(EE_MATCH_BADPARAM);
+        return;
+    }
+    
+    // SN-2015-07-27: [[ Bug 15379 ]] PCRE takes UTF-16 as input parameters, but
+    //  if that input parameter is a DataRef, then we want to copy byte-to-unichar_t
+    //  its contents. Otherwise, ConvertToString makes a native StringRef out of
+    //  it, which will then be unnativised before being passed to MCR_exec; any
+    //  byte in the range [0x80;0xFF] will be converted from the OS-specific
+    //  extended ASCII table to the corresponding Unicode char.
+    bool t_success;
+    if (MCValueGetTypeCode(*t_source_valueref) == kMCValueTypeCodeData)
+        t_success = MCStringCreateUnicodeStringFromData((MCDataRef)*t_source_valueref, false, &t_source);
+    else
+        t_success = ctxt . ConvertToString(*t_source_valueref, &t_source);
+    
+    if (!t_success)
+    {
+        ctxt . LegacyThrow(EE_MATCH_BADPARAM);
+        return;
+    }
 
     MCAutoValueRef t_pattern_valueref;
     MCAutoStringRef t_pattern;
@@ -3594,10 +3655,8 @@ Parse_stat MCMe::parse(MCScriptPoint &sp, Boolean the)
 			if (isexpression)
 			{
 				Exec_stat t_stat;
-				if (ep.gethandler() != nil)
-					t_stat = ep . gethandler()->eval(ep2);
-				else
-					t_stat = ep . gethlist()-> eval(ep2);
+                t_stat = ep . eval(ep2);
+                
 				if (t_stat != ES_ERROR)
 				{
 					ep.insert(ep2.getsvalue(), si, ei);
@@ -3606,11 +3665,11 @@ Parse_stat MCMe::parse(MCScriptPoint &sp, Boolean the)
 			}
 			else
 			{
+                // SN-2015-06-03: [[ Bug 11277 ]] Refactor doscript (same for both
+                //  MCHandler and MCHandlerlist)
 				Exec_stat t_stat;
-				if (ep.gethandler() != nil)
-					t_stat = ep . gethandler() -> doscript(ep2, line, pos);
-				else
-					t_stat = ep . gethlist() -> doscript(ep2, line, pos);
+                t_stat = ep . doscript(ep2, line, pos);
+                
 				if (t_stat != ES_ERROR)
 				{
 					MCresult->fetch(ep2);
@@ -4027,17 +4086,20 @@ Parse_stat MCParamCount::parse(MCScriptPoint &sp, Boolean the)
 	return MCFunction::parse(sp, the);
 }
 
-
 #ifdef /* MCParamCount */ LEGACY_EXEC
-	uint2 count;
-    // PM-2014-04-14: [[Bug 12105]] Do this check to prevent crash in LC server
-    if (h == NULL)
-    {
-        MCeerror->add(EE_PARAMCOUNT_NOHANDLER, line, pos);
-        return ES_ERROR;
-    }
-	h->getnparams(count);
-	ep.setnvalue(count);
+	// MW-2013-11-15: [[ Bug 11277 ]] If we don't have a handler then 'the param'
+	//   makes no sense so just return 0.
+	if (ep.gethandler() != nil)
+	{
+		uint2 count;
+		ep.gethandler()->getnparams(count);
+		ep.setnvalue(count);
+	}
+	else
+	{
+		ep.setnvalue(0);
+	}
+
 	return ES_NORMAL;
 #endif /* MCParamCount */
 
@@ -4046,7 +4108,6 @@ Parse_stat MCParams::parse(MCScriptPoint &sp, Boolean the)
 {
 	return MCFunction::parse(sp, the);
 }
-
 
 #ifdef /* MCParams */ LEGACY_EXEC
 	// MW-2013-11-15: [[ Bug 11277 ]] If we don't have a handler then 'the param'
@@ -5748,10 +5809,7 @@ void MCValue::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 	else
 	{
 		Exec_stat t_stat;
-		if (ep . gethandler() != nil)
-			t_stat = ep . gethandler() -> eval(ep);
-		else
-			t_stat = ep . gethlist() -> eval(ep);
+        t_stat = ep . eval(ep);
 		
 		if (t_stat != ES_NORMAL)
 		{
@@ -5813,7 +5871,6 @@ Parse_stat MCVariables::parse(MCScriptPoint &sp, Boolean the)
 {
 	return MCFunction::parse(sp, the);
 }
-
 
 #ifdef /* MCVariables */ LEGACY_EXEC
 	// MW-2013-11-15: [[ Bug 11277 ]] If no handler, then process the handler list
@@ -6740,7 +6797,12 @@ void MCSetResource::compile(MCSyntaxFactoryRef ctxt)
 		MCeerror->add(EE_SPECIALFOLDERPATH_BADPARAM, line, pos);
 		return ES_ERROR;
 	}
-	MCS_getspecialfolder(ep);
+    
+    // SN-2015-01-16: [[ Bug 14295 ]] Added mode-specific way to get the resources folder
+    if (ep . getsvalue() == "resources")
+        MCModeGetResourcesFolder(ep);
+    else
+        MCS_getspecialfolder(ep);
 	return ES_NORMAL;
 #endif /* MCSpecialFolderPath */
 

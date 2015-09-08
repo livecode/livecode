@@ -58,7 +58,7 @@ local sUserScriptLibraries
 -- MW-2013-11-06: [[ LinuxX64 ]] Add Linux x64 to the list of supported platforms.
 -- MM-2014-03-21: [[ PPC Support Dropped ]] Remove Mac PPC and Mac Universal from supported platforms.
 -- FG-2014-08-19: [[ RPi ]] Add Linux ARMv6-HF to the list of supported platforms
-constant kPlatforms = "Windows,MacOSX x86-32,Linux,Linux x64,Linux armv6-hf"
+constant kPlatforms = "Windows,MacOSX x86-32,Linux,Linux x64,Linux armv6-hf,Emscripten"
 
 -- list of info fields for the windows engine
 constant kVersionFlds = "Comments,CompanyName,FileDescription,FileVersion,InternalName,LegalCopyright,LegalTrademarks,OriginalFilename,PrivateBuild,ProductName,ProductVersion,SpecialBuild"
@@ -86,7 +86,7 @@ on initialiseLibrary
    
    # Internet
    put "libUrl" into sPatternsA["Internet"]["Root"]
-   put "cachedURL,cachedURLs,ftp,http,https,SSL & Encryption,load,post,resetAll,URL,URLStatus" into sPatternsA["Internet"]["Script"]
+   put "cachedURL,cachedURLs,ftp,http,https,load,post,resetAll,URL,URLStatus" into sPatternsA["Internet"]["Script"]
    
    # XML
    put "revXML" into sPatternsA["XMLRPC"]["Root"]
@@ -99,7 +99,8 @@ on initialiseLibrary
    put "revCloseVideoGrabber,revInitializeVideoGrabber,revPreviewVideo,revRecordVideo,revSetVideoGrabberRect,revSetVideoGrabSettings,revStopPreviewingVideo,revStopRecordingVideo,revVideoFrameImage,revVideoGrabDialog,revVideoGrabIdle,revVideoGrabSettings" into sPatternsA["Video Grabber"]["Script"]
    
    # SSL & Encryption 
-   put "secure,encrypt,decrypt,cipherNames,randomBytes" into sPatternsA["SSL & Encryption"]["Script"]
+   // AL-2015-04-28: [[ Bug 15288 ]] 'https' requires revsecurity.
+   put "secure,encrypt,decrypt,cipherNames,randomBytes,https" into sPatternsA["SSL & Encryption"]["Script"]
    
    # Printing
    put "revPrintField,revPrintText,revShowPrintDialog" into sPatternsA["Printing"]["Script"]
@@ -226,6 +227,7 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    end repeat
    put tCanBuild or sStandaloneSettingsA["ios"] into tCanBuild
    put tCanBuild or sStandaloneSettingsA["android"] into tCanBuild
+   put tCanBuild or sStandaloneSettingsA["emscripten"] into tCanBuild
    if not tCanBuild then
       if revTestEnvironment() then
          return tError
@@ -290,7 +292,7 @@ on revSaveAsStandalone pStack, pFolder, pPreview
       put the mainStack of stack pStack into pStack
       set the defaultStack to pStack
       try
-         if sStandaloneSettingsA["ios"] or sStandaloneSettingsA["android"] then
+         if sStandaloneSettingsA["ios"] or sStandaloneSettingsA["android"] or sStandaloneSettingsA["emscripten"] then
             local tOutputMobileFolder
             revOutputDirectories tFolder & slash
             put the result into tOutputMobileFolder
@@ -319,6 +321,11 @@ on revSaveAsStandalone pStack, pFolder, pPreview
                --revIDEDeployBuild "android", pStack, tOutputMobileFolder
                dispatch "revSaveAsMobileStandalone" to stack "revSaveAsAndroidStandalone" with \
                      pStack, tOutputMobileFolder & slash & sStandaloneSettingsA["name"] & ".apk", "Build"
+            end if
+            
+            if sStandaloneSettingsA["emscripten"] then
+               dispatch "revSaveAsEmscriptenStandalone" to stack "revSaveAsEmscriptenStandalone" with \
+                     pStack, tOutputMobileFolder, "Build"
             end if
          else
             revCreateStandalone pStack,pFolder
@@ -574,7 +581,16 @@ private command revCreateStandalone pStack, pFolder
             case "MacOSX"
             case "MacOSX PowerPC-32"
             case "MacOSX x86-32"
-               put it & "/Mac OS X/x86-32/Standalone.app/Contents/MacOS/Standalone" into line 1 of tEngineSourceFile[tPlatform]
+               // SN-2015-07-09: [[ StandaloneDeployment ]] Gypified Standalone-<edition>.app building does not
+               //  allow to create broken applications, so that the executable file in it bears the edition.
+               local tEdition
+               put the editionType into tEdition
+               if tEdition is "professional" then
+                  put "Commercial" into tEdition
+               else
+                  put the upper of char 1 of tEdition into char 1 of tEdition
+               end if
+               put it & "/Mac OS X/x86-32/Standalone.app/Contents/MacOS/Standalone-" & tEdition into line 1 of tEngineSourceFile[tPlatform]
                break
             case "Windows"
                put it & "/Windows/x86-32/Standalone" into tEngineSourceFile[tPlatform]
@@ -596,38 +612,44 @@ private command revCreateStandalone pStack, pFolder
          end switch
       else
          -- Make sure the platform is correct
+         // SN-2015-05-15: [[ DeployAllPlatforms ]] Allow the deployment to happen
+         //  for another platform, from the repository.
+         local tBinariesPath
+         
          if tPlatform contains "MacOSX" and the platform is not "macos" or \
-               tPlatform is "Linux" and the platform is not "linux" or \
+               tPlatform contains "Linux" and the platform is not "linux" or \
                tPlatform is "Windows" and the platform is not "win32" then
-            put empty into tEngineSourceFile[tPlatform]
+            put revEnvironmentNonNativeBinariesPath(tPlatform) into tBinariesPath
          else
-            switch word 1 of tPlatform
-               case "MacOSX"
-                  if revLicenseType() is "community" then
-                     put revEnvironmentBinariesPath() & slash & "Standalone-Community.app/Contents/MacOS/Standalone-Community" into tEngineSourceFile[tPlatform]
-                  else
-                     put revEnvironmentBinariesPath() & slash & "Standalone-Commercial.app/Contents/MacOS/Standalone-Commercial" into tEngineSourceFile[tPlatform]
-                  end if
-                  break;
-               case "Windows"
-                  if revLicenseType() is "community" then
-                     put revEnvironmentBinariesPath() & slash & "standalone-community.exe" into tEngineSourceFile[tPlatform]
-                  else
-                     put revEnvironmentBinariesPath() & slash & "standalone-commercial.exe" into tEngineSourceFile[tPlatform]
-                  end if
-                  break
-               case "Linux"
-                  if revLicenseType() is "community" then
-                     put revEnvironmentBinariesPath() & slash & "standalone-community" into tEngineSourceFile[tPlatform]
-                  else
-                     put revEnvironmentBinariesPath() & slash & "standalone-commercial" into tEngineSourceFile[tPlatform]
-                  end if
-                  break
-               default
-                  put empty into tEngineSourceFile[tPlatform]
-                  break
-            end switch
+            put revEnvironmentBinariesPath() into tBinariesPath
          end if
+         
+         switch word 1 of tPlatform
+            case "MacOSX"
+               if revLicenseType() is "community" then
+                  put tBinariesPath & slash & "Standalone-Community.app/Contents/MacOS/Standalone-Community" into tEngineSourceFile[tPlatform]
+               else
+                  put tBinariesPath & slash & "Standalone-Commercial.app/Contents/MacOS/Standalone-Commercial" into tEngineSourceFile[tPlatform]
+               end if
+               break;
+            case "Windows"
+               if revLicenseType() is "community" then
+                  put tBinariesPath & slash & "standalone-community.exe" into tEngineSourceFile[tPlatform]
+               else
+                  put tBinariesPath & slash & "standalone-commercial.exe" into tEngineSourceFile[tPlatform]
+               end if
+               break
+            case "Linux"
+               if revLicenseType() is "community" then
+                  put tBinariesPath & slash & "standalone-community" into tEngineSourceFile[tPlatform]
+               else
+                  put tBinariesPath & slash & "standalone-commercial" into tEngineSourceFile[tPlatform]
+               end if
+               break
+            default
+               put empty into tEngineSourceFile[tPlatform]
+               break
+         end switch
       end if
       
       -- Necessary as some "users" might rename the actual executable file, arghhhh!
@@ -659,13 +681,6 @@ private command revCreateStandalone pStack, pFolder
       -- copy externals
       revCopyExternals tPlatform, tStackSourceFile[tPlatform], tEngineSourceFile[tPlatform], tStandalonePath[tPlatform]
       
-      // AL-2015-02-27: Include fontawesome in every standalone
-      if there is a file (revIDESpecialFolderPath("fonts") & slash & "fontawesome.ttf") then
-         local tCurrentLocation
-         set the itemDel to "/"
-         put item 1 to -2 of tStandalonePath[tPlatform] into tCurrentLocation
-         revCopyFile (revIDESpecialFolderPath("fonts") & slash & "fontawesome.ttf"), tCurrentLocation & slash & "fontawesome.ttf", "revStandaloneProgressCallback", the long id of me
-      end if
       revBuildStandaloneDeploy tPlatform, tStackSourceFile[tPlatform], tEngineSourceFile[tPlatform], tStandalonePath[tPlatform]
       
       add 1 to tCount
@@ -863,11 +878,8 @@ private command revCopyScriptLibraries pStack, pPlatform
       set the mainStack of stack "revDataGridLibrary" to pStack
    end if
    
-   if sStandaloneSettingsA["databaseDrivers"] = "" then 
-      revAddLibrary "Database"
-   end if
-   
-   if sStandaloneSettingsA["includeProfiles"] = "" then 
+   // AL-2015-04-28: [[ Bug 15244 ]] Include profiles library if needed
+   if sStandaloneSettingsA["includeProfiles"] is not empty then 
       revAddLibrary "Profiles"
    end if
    
@@ -917,6 +929,11 @@ private command revCopyResources pStack, pStackFileList
    
    if sStandaloneSettingsA["brushes"] then
       put "revCompatibilityBrushes1" & return after tCopyFiles
+   end if
+   
+   -- PM-2015-06-24: [[ Bug 15535 ]] Make possible to use magnify palette in standalones
+   if sStandaloneSettingsA["Magnify"] then
+      put "Magnify" & return after tCopyFiles
    end if
    
    if sStandaloneSettingsA["revolutionPrintDialogs"] then
@@ -1711,7 +1728,11 @@ private function revSaveToFolder pFolder, pStack, pGeneric
       put ".rev" after tFileName
    end if
    lock screen
+   // SN-2015-07-01: [[ Bug 15259 ]] We don't want the saving to be trapped by
+   //  a saveStackRequest handler in the standalone stack
+   lock messages
    save stack pStack as pFolder&tFileName
+   unlock messages
    return tFileName
 end revSaveToFolder
 
@@ -1767,7 +1788,7 @@ private command revCopyDatabaseDrivers pPlatform, pStackFilePath, pStandalonePat
    end if
    
    # AL-2015-02-06: [[ SB Inclusions ]] Ensure revDatabaseLibrary stack is included
-   put return & "Database" after sStandaloneSettingsA["scriptLibraries"]
+   revAddLibrary "Database"
    
    local tDBLibPath
    put revStandaloneDatabaseDriversPath(pPlatform) into tDBLibPath
@@ -1876,6 +1897,11 @@ end revCopyDatabaseDrivers
 #####################################################################
 
 private command revAddExternal pExternalName
+   if pExternalName is among the lines of sStandaloneSettingsA["externals"]  then
+      exit revAddExternal
+   end if
+
+   // AL-2015-05-07: [[ Bug 15320 ]] Don't duplicate external names in standalone settings
    if sStandaloneSettingsA["externals"] is not empty then put return after sStandaloneSettingsA["externals"]
    put pExternalName after sStandaloneSettingsA["externals"]
 end revAddExternal
@@ -1932,7 +1958,8 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
    local tAppBundle, tCEFFramework, tCEFResources, tCEFDest
    // IM-2014-03-20: [[ revBrowserCEF ]] Ensure revbrowser is included if revbrowser-cef is selected
    if "Browser (CEF)"  is among the lines of tScriptLibraries and "Browser" is not among the lines of tScriptLibraries then
-      put "Browser" & cr after tScriptLibraries
+      // AL-2015-03-13: [[ Bug 14936 ]] tScriptLibraries doesn't necessarily have an empty line at the end
+      put "Browser" & cr before tScriptLibraries
    end if
    
    revStandaloneProgress "Copying externals..."
@@ -2047,6 +2074,13 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
       -- get the path to the external
       put revExternalPath(tExternalName, tPlatform, tArch) into tExternalPath
       
+      -- SN-2015-04-15: [[ Bug 15231 ]] We don't want to copy from an empty path
+      --  in case we cannot find any Runtime/<platform>/<arch>/Externals/externals.txt file
+      if tExternalPath is empty then
+         revStandaloneAddWarning tPlatform && tArch & ", external" && "No externals.txt config file found for" &&tExternalName
+         next repeat
+      end if
+      
       -- SN-2015-03-06: [[ DBDriverInclusion ]] In case Database drivers were
       -- included, then the revdb external has been copied.
       -- No issue to copy over it on Windows / Linux, but copying a folder (revdb.bundle)
@@ -2059,7 +2093,12 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
          next repeat
       end if
       
-      revCopyModule tPlatform, tExternalName, item -1 of tExternalPath, item 1 to -2 of tExternalPath, tCurrentLocation, "Externals", tPlatform is "MacOSX"
+      // AL-2015-05-07: [[ Bug 15320 ]] Make sure universal external name is used.
+      local tExternal
+      set the itemdel to "."
+      put item 1 of tSourceExternal into tExternal
+      set the itemDel to slash 
+      revCopyModule tPlatform, tExternal, tSourceExternal, item 1 to -2 of tExternalPath, tCurrentLocation, "Externals", tPlatform is "MacOSX"
       if the result is not empty then
          revStandaloneAddWarning tPlatform && tArch & ", external" && the result & ":" && quote & tExternalPath & quote
          next repeat
@@ -2068,7 +2107,7 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
             put "BNDL????" into URL ("binfile:" & (tCurrentLocation & slash & "Externals/" & (item -1 of tExternalPath) & "/Contents/PkgInfo"))
          end if
       end if
-      revAddExternal tExternalName
+      revAddExternal tExternal
    end repeat
    
    
@@ -2076,7 +2115,8 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
    // IM-2014-08-14: [[ LibCef2062 ]] Reorganisation of libcef framework files
    if "Browser (CEF)" is among the lines of tScriptLibraries then
       put revExternalPath("Browser", tPlatform, tArch) into tExternalPath
-      switch pPlatform
+      // AL-2015-03-13: [[ Bug 14936 ]] Switch where case takes an expression should not switch on a value
+      switch
          case pPlatform contains "MacOSX"
             put (item 1 to -3 of pStandalonePath) & "/Frameworks" into tCEFFramework
             put (item 1 to -2 of tExternalPath) & "/CEF" into tCEFResources
@@ -2130,7 +2170,11 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
             break
       end switch
    end if
+   // SN-2015-07-01: [[ Bug 15259 ]] We don't want the saving to be trapped by
+   //  a saveStackRequest handler in the standalone stack
+   lock messages
    save stack pStackFilePath
+   unlock messages
    
    -- MM-2013-04-05: [[ Bug 10756 ]] Make sure we're allowed to delete the stack before deleteing.
    set the cantDelete of stack pStackFilePath to false
@@ -2178,7 +2222,8 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
       if there is a stack tLibraryStack then
          if sStandaloneSettingsA["auxiliary_stackfiles"] is not empty then put return after sStandaloneSettingsA["auxiliary_stackfiles"]
          put the effective filename of stack tLibraryStack after sStandaloneSettingsA["auxiliary_stackfiles"]
-         put return & "revInternal__LoadLibrary" && tLibraryStack after sStandaloneSettingsA["startup_script"]
+         if sStandaloneSettingsA["startup_script"] is not empty then put return after sStandaloneSettingsA["startup_script"]
+         put "revInternal__LoadLibrary" && tLibraryStack after sStandaloneSettingsA["startup_script"]
       end if
    end repeat
    if sStandaloneSettingsA["auxiliary_stackfiles"] is not empty then
@@ -2212,22 +2257,6 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
       end if
    end if   
    
-   // AL-2015-02-27: Include fontawesome in every standalone
-   local  tTargetFontPath
-   if tPlatformDetailsA["platform"] begins with "MacOS" then
-      put "specialfolderpath(" & quote & "engine" & quote & ") & slash & " & quote & ".." & quote & " & slash & Resources & slash & _MacOS & slash & fontawesome.ttf" into tTargetFontPath
-   else
-      put "specialfolderpath(" & quote & "engine" & quote & ") & slash & fontawesome.ttf" into tTargetFontPath
-   end if
-   
-   if there is a file (revIDESpecialFolderPath("fonts") & slash & "fontawesome.ttf") then
-      if sStandaloneSettingsA["startup_script"] is not empty then
-         put "start using font file " & tTargetFontPath into sStandaloneSettingsA["startup_script"]
-      else
-         put return & "start using font file " & tTargetFontPath after sStandaloneSettingsA["startup_script"]
-      end if
-   end if
-   
    # AL-2015-01-29: [[ Scriptify IDE ]] Add the startup script to the deploy parameters
    if sStandaloneSettingsA["startup_script"] is not empty then
       put sStandaloneSettingsA["startup_script"] into tDeployInfo["startup_script"]
@@ -2240,6 +2269,18 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
    if sStandaloneSettingsA[tPlatformDetailsA["platform"] & ",library"] is not empty then
       put sStandaloneSettingsA[tPlatformDetailsA["platform"] & ",library"] into tDeployInfo["library"]
    end if
+   
+   # AL-2015-04-12: [[ Standalone Extensions ]] Add chosen extensions to the standalone inclusions
+   # AL-2015-07-21: [[ Standalone Extensions ]] Automatically include dependecies, and load in order
+   repeat for each line tExtension in revIDEExtensionsOrderByDependency(sStandaloneSettingsA["extensions"])
+      local tExtensionFile
+      put revIDEExtensionModuleFile(tExtension) into tExtensionFile
+      if tDeployInfo["modules"] is empty then
+         put tExtensionFile into tDeployInfo["modules"]
+      else
+         put return & tExtensionFile after tDeployInfo["modules"]
+      end if
+   end repeat
    
    if tPlatformDetailsA["platform"] is "MacOSX" then
       -- MW-2013-06-13: [[ CloneAndRun ]] If installed do things in the usual way, otherwise pass
@@ -2469,6 +2510,7 @@ private command revSmartChecking pStackFilesList, pSearchForInclusions
       put false into sStandaloneSettingsA["answerDialog"]
       put false into sStandaloneSettingsA["askDialog"]
       put false into sStandaloneSettingsA["brushes"]   --LG-2007-12-13: Bug 4370
+      put false into sStandaloneSettingsA["Magnify"]  -- PM-2015-06-24: [[ Bug 15535 ]] Make possible to include magnify palette in standalones
       put false into sStandaloneSettingsA["pdfPrinter"]
       
       # OK-2007-11-13 : Support for revolution print dialogs
@@ -2513,6 +2555,10 @@ private command revSmartChecking pStackFilesList, pSearchForInclusions
 end revSmartChecking
 
 private command revAddLibrary pLibrary
+   if pLibrary is among the lines of sStandaloneSettingsA["scriptLibraries"]  then
+      exit revAddLibrary
+   end if
+   
    if sStandaloneSettingsA["scriptLibraries"] is not empty then put return after sStandaloneSettingsA["scriptLibraries"]
    put pLibrary after sStandaloneSettingsA["scriptLibraries"]
 end revAddLibrary

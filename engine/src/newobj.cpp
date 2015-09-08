@@ -395,8 +395,12 @@ MCExpression *MCN_new_function(int2 which)
         return new MCCodeunitOffset;
 	case F_COLOR_NAMES:
 		return new MCColorNames;
+    case F_COMMAND_ARGUMENTS:
+        return new MCCommandArguments;
 	case F_COMMAND_KEY:
 		return new MCCommandKey;
+    case F_COMMAND_NAME:
+        return new MCCommandName;
 	case F_COMMAND_NAMES:
 		return new MCCommandNames;
 	case F_COMPOUND:

@@ -206,6 +206,7 @@ MCNameRef MCN_html;
 MCNameRef MCN_browser;
 MCNameRef MCN_command_line;
 MCNameRef MCN_development;
+MCNameRef MCN_development_cmdline;
 MCNameRef MCN_helper_application;
 MCNameRef MCN_installer;
 MCNameRef MCN_mobile;
@@ -283,6 +284,7 @@ MCNameRef MCN_desktop;
 MCNameRef MCN_documents;
 MCNameRef MCN_engine;
 MCNameRef MCN_fonts;
+MCNameRef MCN_resources;
 MCNameRef MCN_home;
 MCNameRef MCN_start;
 //MCNameRef MCN_system;
@@ -505,6 +507,10 @@ MCNameRef MCM_unload_url;
 MCNameRef MCM_update_screen;
 MCNameRef MCM_update_var;
 
+#ifdef FEATURE_PLATFORM_URL
+MCNameRef MCM_url_progress;
+#endif
+
 #ifdef _MOBILE
 MCNameRef MCN_firstname;
 MCNameRef MCN_lastname;
@@ -548,7 +554,6 @@ MCNameRef MCM_touch_release;
 MCNameRef MCM_motion_start;
 MCNameRef MCM_motion_end;
 MCNameRef MCM_motion_release;
-MCNameRef MCM_url_progress;
 MCNameRef MCM_acceleration_changed;
 MCNameRef MCM_orientation_changed;
 MCNameRef MCM_location_changed;
@@ -645,6 +650,7 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("browser", MCN_browser);
 	/* UNCHECKED */ MCNameCreateWithCString("command line", MCN_command_line);
 	/* UNCHECKED */ MCNameCreateWithCString("development", MCN_development);
+    /* UNCHECKED */ MCNameCreateWithCString("development command line", MCN_development_cmdline);
 	/* UNCHECKED */ MCNameCreateWithCString("helper application", MCN_helper_application);
 	/* UNCHECKED */ MCNameCreateWithCString("installer", MCN_installer);
 	/* UNCHECKED */ MCNameCreateWithCString("mobile", MCN_mobile);
@@ -721,6 +727,7 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("desktop", MCN_desktop);
 	/* UNCHECKED */ MCNameCreateWithCString("documents", MCN_documents);
 	/* UNCHECKED */ MCNameCreateWithCString("engine", MCN_engine);
+    /* UNCHECKED */ MCNameCreateWithCString("resources", MCN_resources);
 	/* UNCHECKED */ MCNameCreateWithCString("fonts", MCN_fonts);
 	/* UNCHECKED */ MCNameCreateWithCString("home", MCN_home);
 	/* UNCHECKED */ MCNameCreateWithCString("start", MCN_start);
@@ -942,6 +949,10 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("updateScreen", MCM_update_screen);
 	/* UNCHECKED */ MCNameCreateWithCString("updateVariable", MCM_update_var);
 
+#ifdef FEATURE_PLATFORM_URL
+	/* UNCHECKED */ MCNameCreateWithCString("urlProgress", MCM_url_progress);
+#endif
+
 #ifdef _MOBILE
 	/* UNCHECKED */ MCNameCreateWithCString("firstname", MCN_firstname);
 	/* UNCHECKED */ MCNameCreateWithCString("lastname", MCN_lastname);
@@ -988,7 +999,6 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("motionStart", MCM_motion_start);
 	/* UNCHECKED */ MCNameCreateWithCString("motionEnd", MCM_motion_end);
 	/* UNCHECKED */ MCNameCreateWithCString("motionRelease", MCM_motion_release);
-	/* UNCHECKED */ MCNameCreateWithCString("urlProgress", MCM_url_progress);
 	/* UNCHECKED */ MCNameCreateWithCString("accelerationChanged", MCM_acceleration_changed);
 	/* UNCHECKED */ MCNameCreateWithCString("orientationChanged", MCM_orientation_changed);
 	/* UNCHECKED */ MCNameCreateWithCString("locationChanged", MCM_location_changed);
@@ -1082,6 +1092,7 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCN_browser);
 	MCNameDelete(MCN_command_line);
 	MCNameDelete(MCN_development);
+    MCNameDelete(MCN_development_cmdline);
 	MCNameDelete(MCN_helper_application);
 	MCNameDelete(MCN_installer);
 	MCNameDelete(MCN_mobile);
@@ -1158,6 +1169,7 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCN_desktop);
 	MCNameDelete(MCN_documents);
 	MCNameDelete(MCN_engine);
+    MCNameDelete(MCN_resources);
 	MCNameDelete(MCN_fonts);
 	MCNameDelete(MCN_home);
 	MCNameDelete(MCN_start);
@@ -1376,6 +1388,10 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCM_update_screen);
 	MCNameDelete(MCM_update_var);
 
+#ifdef FEATURE_PLATFORM_URL
+	MCNameDelete(MCM_url_progress);
+#endif
+
 #ifdef _MOBILE
 	MCNameDelete(MCN_firstname);
 	MCNameDelete(MCN_lastname);
@@ -1420,7 +1436,6 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCM_motion_start);
 	MCNameDelete(MCM_motion_end);
 	MCNameDelete(MCM_motion_release);
-	MCNameDelete(MCM_url_progress);
 	MCNameDelete(MCM_acceleration_changed);
 	MCNameDelete(MCM_orientation_changed);
 	MCNameDelete(MCM_location_changed);

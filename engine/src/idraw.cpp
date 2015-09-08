@@ -53,22 +53,17 @@ bool MCImage::get_rep_and_transform(MCImageRep *&r_rep, bool &r_has_transform, M
 		else
 		{
 			// MM-2014-08-05: [[ Bug 13112 ]] Make sure only a single thread resamples the image.
-			MCThreadMutexLock(MCimagerepmutex);
 			if (m_resampled_rep != nil && m_resampled_rep->Matches(rect.width, rect.height, t_h_flip, t_v_flip, m_rep))
 				r_rep = m_resampled_rep;
 			else
 			{
 				if (!MCImageRepGetResampled(rect.width, rect.height, t_h_flip, t_v_flip, m_rep, r_rep))
-				{
-					MCThreadMutexUnlock(MCimagerepmutex);
 					return false;
-				}
 
 				if (m_resampled_rep != nil)
 					m_resampled_rep->Release();
 				m_resampled_rep = static_cast<MCResampledImageRep*>(r_rep);
 			}
-			MCThreadMutexUnlock(MCimagerepmutex);
 		}
 		
 		r_has_transform = false;
@@ -228,7 +223,6 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 			// MM-2014-07-31: [[ ThreadedRendering ]] Make sure only a single thread posts the timer message (i.e. the first that gets here)
 			if (!m_animate_posted)
 			{
-				MCThreadMutexLock(MCanimationmutex);
 				if (!m_animate_posted)
 				{
 					// IM-2014-11-25: [[ ImageRep ]] Use ImageRep method to get frame duration
@@ -240,7 +234,6 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 					m_animate_posted = true;
 					MCscreen->addtimer(this, MCM_internal, t_frame_duration);
 				}
-				MCThreadMutexUnlock(MCanimationmutex);
 			}
 
 			state &= ~CS_DO_START;

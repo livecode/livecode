@@ -388,6 +388,9 @@ bool MCImageParseColourList(MCStringRef p_input, uint32_t &r_ncolours, MCColor *
 				break;
 			}
 		}
+        
+        // PM-2015-05-12: [[ Bug 15359 ]] Update t_ncolours var
+        t_ncolours = t_nlines;
 	}
 
 	if (t_success)

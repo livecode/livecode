@@ -11,6 +11,7 @@
 			<array>
 				<string>rev</string>
 				<string>livecode</string>
+				<string>livecodescript</string>
 			</array>
 			<key>CFBundleTypeIconFile</key>
 			<string>LiveCodeDoc.icns</string>
@@ -108,6 +109,25 @@
 				<key>public.filename-extension</key>
 				<array>
 					<string>livecode</string>
+				</array>
+			</dict>
+		</dict>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>LiveCode Stack</string>
+			<key>UTTypeIdentifier</key>
+			<string>com.runrev.livecode.stack</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>com.apple.macos.ostype</key>
+				<string>RSTK</string>
+				<key>public.filename-extension</key>
+				<array>
+					<string>livecodescript</string>
 				</array>
 			</dict>
 		</dict>

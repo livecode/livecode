@@ -24,7 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //#include "execpt.h"
 #include "date.h"
 
-#if defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER) || defined(_DARWIN_SERVER)
+#if defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER) || defined(_DARWIN_SERVER) || defined(__EMSCRIPTEN__)
 #include <time.h>
 #define sys_time_t time_t
 #define sys_localtime localtime
@@ -176,7 +176,8 @@ static MCStringRef query_locale(uint4 t_index)
 	char *t_buffer;
 	MCStringRef t_result;
 	t_buffer = nl_langinfo(t_index);
-	MCStringCreateWithCString(t_buffer, t_result);
+    // SN-2015-04-07: [[ Bug 15161 ]] We get a system string, not a C-string.
+    MCStringCreateWithSysString(t_buffer, t_result);
 	return t_result;
 }
 

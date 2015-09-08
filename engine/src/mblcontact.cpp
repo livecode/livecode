@@ -79,7 +79,10 @@ bool MCContactAddProperty(MCArrayRef p_contact, MCNameRef p_property, MCStringRe
 
 bool MCContactAddPropertyWithLabel(MCArrayRef p_contact, MCNameRef p_property, MCNameRef p_label, MCValueRef p_value)
 {
+    // AL-2015-05-14: [[ Bug 15371 ]] mobileGetContactData fails when there are multiple labels of the same property
     bool t_success;
+    t_success = true;
+    
 	MCValueRef t_element;
 	MCValueRef t_array;
     // SN-2014-11-17: [[ Bug 14016 ]] Creates the properties array, if it does not exist for this contact.

@@ -29,7 +29,6 @@ get trueWord 4 of ("The programme output:" && quote & "Hello World!"  quote) -- 
 
 Description:
 Use the <trueWord> keyword to refer to one or more words, delimited by Unicode word breaks.
-﻿ <doc> 
 
 A <trueWord> is a word chunk, delimited by Unicode word breaks, as determined by the ICU Library. When there are no alphabetic or numeric characters between two word breaks, that string is not considered by LiveCode to be a trueWord.
 
