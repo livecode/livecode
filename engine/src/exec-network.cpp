@@ -566,10 +566,7 @@ void MCNetworkExecPerformOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNam
     // MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
 	MCSocket *s = MCS_open_socket(p_name, p_datagram, ctxt . GetObject(), p_message, p_secure, p_ssl, kMCEmptyString, p_end_hostname);
 	if (s != NULL)
-	{
-		MCU_realloc((char **)&MCsockets, MCnsockets, MCnsockets + 1, sizeof(MCSocket *));
-		MCsockets[MCnsockets++] = s;
-	}
+        MCSocketsAppendToSocketList(s);
 }
 
 void MCNetworkExecOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, MCNameRef p_end_hostname)
@@ -613,11 +610,7 @@ void MCNetworkExecPerformAcceptConnections(MCExecContext& ctxt, uint2 p_port, MC
 
 	MCSocket *s = MCS_accept(p_port, ctxt . GetObject(), p_message, p_datagram ? True : False, p_secure ? True : False, p_with_verification ? True : False, kMCEmptyString);
 	if (s != NULL)
-	{
-		MCU_realloc((char **)&MCsockets, MCnsockets,
-		            MCnsockets + 1, sizeof(MCSocket *));
-		MCsockets[MCnsockets++] = s;
-	}
+        MCSocketsAppendToSocketList(s);
 }
 
 void MCNetworkExecAcceptConnectionsOnPort(MCExecContext& ctxt, uint2 p_port, MCNameRef p_message)
@@ -764,8 +757,19 @@ void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCValueRef p_value, int p_wher
         /* UNCHECKED */ ctxt . ConvertToString(p_value, &t_value);
         
         MCStringRef t_string;
-		/* UNCHECKED */ MCStringMutableCopy((MCStringRef)p_chunk . mark . text, t_string);
-		/* UNCHECKED */ MCStringReplace(t_string, MCRangeMake(p_chunk.mark.start, p_chunk.mark.finish - p_chunk.mark.start), *t_value);
+        MCRange t_range;
+        /* UNCHECKED */ MCStringMutableCopy((MCStringRef)p_chunk . mark . text, t_string);
+
+        // SN-2015-05-19: [[ Bug 15368 ]] Insert the new string at the right
+        //  position: might be after or before the chunk, not only into it.
+        if (p_where == PT_INTO)
+            t_range = MCRangeMake(p_chunk . mark . start, p_chunk . mark . finish - p_chunk . mark . start);
+        else if (p_where == PT_BEFORE)
+            t_range = MCRangeMake(p_chunk . mark . start, 0);
+        else // p_where == PT_AFTER
+            t_range = MCRangeMake(p_chunk . mark . finish, 0);
+
+        /* UNCHECKED */ MCStringReplace(t_string, t_range, *t_value);
 		/* UNCHECKED */ MCStringCopyAndRelease(t_string, (MCStringRef&)&t_new_value);
 	}
 	

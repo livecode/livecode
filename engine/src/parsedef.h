@@ -233,6 +233,7 @@ enum Export_format {
 	EX_RAW_GRAY,
 	EX_RAW_INDEXED,
 	EX_BMP,
+    EX_OBJECT,
 };
 
 enum Factor_rank {
@@ -341,7 +342,9 @@ enum Functions {
     F_CODEPOINT_OFFSET,
     F_CODEUNIT_OFFSET,
     F_COLOR_NAMES,
+    F_COMMAND_ARGUMENTS,
     F_COMMAND_KEY,
+    F_COMMAND_NAME,
     F_COMMAND_NAMES,
     F_COMPOUND,
     F_COMPRESS,
@@ -646,6 +649,8 @@ enum Is_type {
 	IT_NOT_AMONG_THE_DRAG_DATA,
 	IT_AMONG_THE_CLIPBOARD_DATA,
 	IT_NOT_AMONG_THE_CLIPBOARD_DATA,
+    IT_REALLY,
+    IT_NOT_REALLY,
 };
 
 enum Is_validation {
@@ -661,6 +666,10 @@ enum Is_validation {
 	IV_ARRAY,
 	// MERG-2013-06-24: [[ IsAnAsciiString ]] Tag for 'ascii'.
     IV_ASCII,
+    
+    IV_STRING,
+    IV_BINARY_STRING,
+    IV_REAL,
 };
 
 enum Lock_constants {
@@ -1196,6 +1205,8 @@ enum Properties {
 	P_FULLSCREENMODE,
 	// IM-2014-01-07: [[ StackScale ]] Property tag for the scalefactor
 	P_SCALE_FACTOR,
+    // MERG-2015-08-31: [[ ScriptOnly ]] Property tag for scriptOnly
+    P_SCRIPT_ONLY,
     P_FILE_NAME,
     P_SAVE_COMPRESSED,
     P_USER_LEVEL,
@@ -1684,6 +1695,8 @@ enum Properties {
 
     // MW-2014-12-10: [[ Extensions ]] 'loadedExtensions' global property
     P_LOADED_EXTENSIONS,
+    
+    __P_LAST,
 };
 
 enum Look_and_feel {
@@ -1715,7 +1728,9 @@ enum Repeat_form {
     RF_STEP,
     RF_UNTIL,
     RF_WHILE,
-    RF_WITH
+    RF_WITH,
+    // SN-2015-06-18: [[ Bug 15509 ]] Parse 'times' in 'repeat for x times'
+    RF_TIMES
 };
 
 enum Reset_type {
@@ -1904,6 +1919,12 @@ enum Sugar_constants {
     SG_EXTENSION,
 	SG_RESOURCE,
 	SG_PATH,
+    
+    // AL-2015-06-11: [[ Load Extension From Var ]] Add 'data' syntactic sugar
+    SG_DATA,
+    
+    SG_REALLY,
+    SG_REAL,
 };
 
 enum Statements {

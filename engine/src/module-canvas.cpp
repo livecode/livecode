@@ -26,7 +26,7 @@
 
 //////////
 
-extern MCWidget *MCwidgetobject;
+extern MCWidgetRef MCcurrentwidget;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -417,20 +417,20 @@ bool MCSolveQuadraticEqn(MCGFloat p_a, MCGFloat p_b, MCGFloat p_c, MCGFloat &r_x
 bool MCCanvasTypesInitialize();
 void MCCanvasTypesFinalize();
 
-MCTypeInfoRef kMCCanvasRectangleTypeInfo;
-MCTypeInfoRef kMCCanvasPointTypeInfo;
-MCTypeInfoRef kMCCanvasColorTypeInfo;
-MCTypeInfoRef kMCCanvasTransformTypeInfo;
-MCTypeInfoRef kMCCanvasImageTypeInfo;
-MCTypeInfoRef kMCCanvasPaintTypeInfo;
-MCTypeInfoRef kMCCanvasSolidPaintTypeInfo;
-MCTypeInfoRef kMCCanvasPatternTypeInfo;
-MCTypeInfoRef kMCCanvasGradientTypeInfo;
-MCTypeInfoRef kMCCanvasGradientStopTypeInfo;
-MCTypeInfoRef kMCCanvasPathTypeInfo;
-MCTypeInfoRef kMCCanvasEffectTypeInfo;
-MCTypeInfoRef kMCCanvasFontTypeInfo;
-MCTypeInfoRef kMCCanvasTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasRectangleTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasPointTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasColorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasTransformTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasImageTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasPaintTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasSolidPaintTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasPatternTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasGradientTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasGradientStopTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasPathTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasEffectTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasFontTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -439,34 +439,34 @@ MCTypeInfoRef kMCCanvasTypeInfo;
 bool MCCanvasErrorsInitialize();
 void MCCanvasErrorsFinalize();
 
-MCTypeInfoRef kMCCanvasRectangleListFormatErrorTypeInfo;
-MCTypeInfoRef kMCCanvasPointListFormatErrorTypeInfo;
-MCTypeInfoRef kMCCanvasColorListFormatErrorTypeInfo;
-MCTypeInfoRef kMCCanvasScaleListFormatErrorTypeInfo;
-MCTypeInfoRef kMCCanvasTranslationListFormatErrorTypeInfo;
-MCTypeInfoRef kMCCanvasSkewListFormatErrorTypeInfo;
-MCTypeInfoRef kMCCanvasRadiiListFormatErrorTypeInfo;
-MCTypeInfoRef kMCCanvasImageSizeListFormatErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasRectangleListFormatErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasPointListFormatErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasColorListFormatErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasScaleListFormatErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasTranslationListFormatErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasSkewListFormatErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasRadiiListFormatErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasImageSizeListFormatErrorTypeInfo;
 
-MCTypeInfoRef kMCCanvasTransformMatrixListFormatErrorTypeInfo;
-MCTypeInfoRef kMCCanvasTransformDecomposeErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasTransformMatrixListFormatErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasTransformDecomposeErrorTypeInfo;
 
-MCTypeInfoRef kMCCanvasImageRepReferencedErrorTypeInfo;
-MCTypeInfoRef kMCCanvasImageRepDataErrorTypeInfo;
-MCTypeInfoRef kMCCanvasImageRepPixelsErrorTypeInfo;
-MCTypeInfoRef kMCCanvasImageRepGetGeometryErrorTypeInfo;
-MCTypeInfoRef kMCCanvasImageRepLockErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasImageRepReferencedErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasImageRepDataErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasImageRepPixelsErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasImageRepGetGeometryErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasImageRepLockErrorTypeInfo;
 
-MCTypeInfoRef kMCCanvasGradientStopRangeErrorTypeInfo;
-MCTypeInfoRef kMCCanvasGradientStopOrderErrorTypeInfo;
-MCTypeInfoRef kMCCanvasGradientTypeErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasGradientStopRangeErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasGradientStopOrderErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasGradientTypeErrorTypeInfo;
 
-MCTypeInfoRef kMCCanvasEffectInvalidPropertyErrorTypeInfo;
-MCTypeInfoRef kMCCanvasEffectPropertyNotAvailableErrorTypeInfo;
-MCTypeInfoRef kMCCanvasEffectPropertyInvalidValueErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasEffectInvalidPropertyErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasEffectPropertyNotAvailableErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasEffectPropertyInvalidValueErrorTypeInfo;
 
-MCTypeInfoRef kMCCanvasPathPointListFormatErrorTypeInfo;
-MCTypeInfoRef kMCCanvasSVGPathParseErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasPathPointListFormatErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasSVGPathParseErrorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -520,7 +520,7 @@ static MCNameRef s_cap_style_map[kMCGCapStyleCount];
 bool MCCanvasStringsInitialize();
 void MCCanvasStringsFinalize();
 
-bool MCCanvasModuleInitialize()
+extern "C" bool com_livecode_canvas_Initialize()
 {
 	if (!MCCanvasErrorsInitialize())
 		return false;
@@ -533,7 +533,7 @@ bool MCCanvasModuleInitialize()
     return true;
 }
 
-void MCCanvasModuleFinalize()
+extern "C" void com_livecode_canvas_Finalize()
 {
 	MCCanvasConstantsFinalize();
 	MCCanvasTypesFinalize();
@@ -647,11 +647,13 @@ bool MCProperListToRectangle(MCProperListRef p_list, MCGRectangle &r_rectangle)
 
 // Constructors
 
+MC_DLLEXPORT_DEF
 void MCCanvasRectangleMakeWithLTRB(MCCanvasFloat p_left, MCCanvasFloat p_top, MCCanvasFloat p_right, MCCanvasFloat p_bottom, MCCanvasRectangleRef &r_rect)
 {
 	/* UNCHECKED */ MCCanvasRectangleCreateWithMCGRectangle(MCGRectangleMake(p_left, p_top, p_right - p_left, p_bottom - p_top), r_rect);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasRectangleMakeWithList(MCProperListRef p_list, MCCanvasRectangleRef &r_rect)
 {
 	MCGRectangle t_rect;
@@ -673,6 +675,7 @@ void MCCanvasRectangleSetMCGRectangle(const MCGRectangle &p_rect, MCCanvasRectan
 	MCValueRelease(t_rect);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasRectangleGetLeft(MCCanvasRectangleRef p_rect, MCCanvasFloat &r_left)
 {
 	MCGRectangle t_rect;
@@ -680,6 +683,7 @@ void MCCanvasRectangleGetLeft(MCCanvasRectangleRef p_rect, MCCanvasFloat &r_left
 	r_left = t_rect.origin.x;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasRectangleSetLeft(MCCanvasFloat p_left, MCCanvasRectangleRef &x_rect)
 {
 	MCGRectangle t_rect;
@@ -689,6 +693,7 @@ void MCCanvasRectangleSetLeft(MCCanvasFloat p_left, MCCanvasRectangleRef &x_rect
 	MCCanvasRectangleSetMCGRectangle(t_rect, x_rect);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasRectangleGetTop(MCCanvasRectangleRef p_rect, MCCanvasFloat &r_top)
 {
 	MCGRectangle t_rect;
@@ -696,6 +701,7 @@ void MCCanvasRectangleGetTop(MCCanvasRectangleRef p_rect, MCCanvasFloat &r_top)
 	r_top = t_rect.origin.y;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasRectangleSetTop(MCCanvasFloat p_top, MCCanvasRectangleRef &x_rect)
 {
 	MCGRectangle t_rect;
@@ -705,6 +711,7 @@ void MCCanvasRectangleSetTop(MCCanvasFloat p_top, MCCanvasRectangleRef &x_rect)
 	MCCanvasRectangleSetMCGRectangle(t_rect, x_rect);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasRectangleGetRight(MCCanvasRectangleRef p_rect, MCCanvasFloat &r_right)
 {
 	MCGRectangle t_rect;
@@ -712,6 +719,7 @@ void MCCanvasRectangleGetRight(MCCanvasRectangleRef p_rect, MCCanvasFloat &r_rig
 	r_right = t_rect.origin.x + t_rect.size.width;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasRectangleSetRight(MCCanvasFloat p_right, MCCanvasRectangleRef &x_rect)
 {
 	MCGRectangle t_rect;
@@ -721,6 +729,7 @@ void MCCanvasRectangleSetRight(MCCanvasFloat p_right, MCCanvasRectangleRef &x_re
 	MCCanvasRectangleSetMCGRectangle(t_rect, x_rect);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasRectangleGetBottom(MCCanvasRectangleRef p_rect, MCCanvasFloat &r_bottom)
 {
 	MCGRectangle t_rect;
@@ -728,6 +737,7 @@ void MCCanvasRectangleGetBottom(MCCanvasRectangleRef p_rect, MCCanvasFloat &r_bo
 	r_bottom = t_rect.origin.y + t_rect.size.height;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasRectangleSetBottom(MCCanvasFloat p_bottom, MCCanvasRectangleRef &x_rect)
 {
 	MCGRectangle t_rect;
@@ -737,6 +747,7 @@ void MCCanvasRectangleSetBottom(MCCanvasFloat p_bottom, MCCanvasRectangleRef &x_
 	MCCanvasRectangleSetMCGRectangle(t_rect, x_rect);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasRectangleGetWidth(MCCanvasRectangleRef p_rect, MCCanvasFloat &r_width)
 {
 	MCGRectangle t_rect;
@@ -744,6 +755,7 @@ void MCCanvasRectangleGetWidth(MCCanvasRectangleRef p_rect, MCCanvasFloat &r_wid
 	r_width = t_rect.size.width;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasRectangleSetWidth(MCCanvasFloat p_width, MCCanvasRectangleRef &x_rect)
 {
 	MCGRectangle t_rect;
@@ -753,6 +765,7 @@ void MCCanvasRectangleSetWidth(MCCanvasFloat p_width, MCCanvasRectangleRef &x_re
 	MCCanvasRectangleSetMCGRectangle(t_rect, x_rect);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasRectangleGetHeight(MCCanvasRectangleRef p_rect, MCCanvasFloat &r_height)
 {
 	MCGRectangle t_rect;
@@ -760,6 +773,7 @@ void MCCanvasRectangleGetHeight(MCCanvasRectangleRef p_rect, MCCanvasFloat &r_he
 	r_height = t_rect.size.height;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasRectangleSetHeight(MCCanvasFloat p_height, MCCanvasRectangleRef &x_rect)
 {
 	MCGRectangle t_rect;
@@ -868,11 +882,13 @@ bool MCProperListFromPoint(const MCGPoint &p_point, MCProperListRef &r_list)
 
 // Constructors
 
+MC_DLLEXPORT_DEF
 void MCCanvasPointMake(MCCanvasFloat p_x, MCCanvasFloat p_y, MCCanvasPointRef &r_point)
 {
 	/* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(MCGPointMake(p_x, p_y), r_point);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPointMakeWithList(MCProperListRef p_list, MCCanvasPointRef &r_point)
 {
 	MCGPoint t_point;
@@ -893,6 +909,7 @@ void MCCanvasPointSetMCGPoint(const MCGPoint &p_point, MCCanvasPointRef &x_point
 	MCValueRelease(t_point);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPointGetX(MCCanvasPointRef p_point, MCCanvasFloat &r_x)
 {
 	MCGPoint t_point;
@@ -900,6 +917,7 @@ void MCCanvasPointGetX(MCCanvasPointRef p_point, MCCanvasFloat &r_x)
 	r_x = t_point.x;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPointSetX(MCCanvasFloat p_x, MCCanvasPointRef &x_point)
 {
 	MCGPoint t_point;
@@ -909,6 +927,7 @@ void MCCanvasPointSetX(MCCanvasFloat p_x, MCCanvasPointRef &x_point)
 	MCCanvasPointSetMCGPoint(t_point, x_point);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPointGetY(MCCanvasPointRef p_point, MCCanvasFloat &r_y)
 {
 	MCGPoint t_point;
@@ -916,6 +935,7 @@ void MCCanvasPointGetY(MCCanvasPointRef p_point, MCCanvasFloat &r_y)
 	r_y = t_point.y;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPointSetY(MCCanvasFloat p_y, MCCanvasPointRef &x_point)
 {
 	MCGPoint t_point;
@@ -1075,11 +1095,13 @@ bool MCProperListToRGBA(MCProperListRef p_list, MCCanvasFloat &r_red, MCCanvasFl
 
 // Constructors
 
+MC_DLLEXPORT_DEF
 void MCCanvasColorMakeRGBA(MCCanvasFloat p_red, MCCanvasFloat p_green, MCCanvasFloat p_blue, MCCanvasFloat p_alpha, MCCanvasColorRef &r_color)
 {
 	/* UNCHECKED */ MCCanvasColorCreate(MCCanvasColorImplMake(p_red, p_blue, p_green, p_alpha), r_color);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasColorMakeWithList(MCProperListRef p_color, MCCanvasColorRef &r_color)
 {
 	MCCanvasFloat t_red, t_green, t_blue, t_alpha;
@@ -1102,11 +1124,13 @@ void MCCanvasColorSet(const __MCCanvasColorImpl &p_color, MCCanvasColorRef &x_co
 	MCValueRelease(t_color);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasColorGetRed(MCCanvasColorRef p_color, MCCanvasFloat &r_red)
 {
 	r_red = MCCanvasColorGetRed(p_color);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasColorSetRed(MCCanvasFloat p_red, MCCanvasColorRef &x_color)
 {
 	__MCCanvasColorImpl t_color;
@@ -1119,11 +1143,13 @@ void MCCanvasColorSetRed(MCCanvasFloat p_red, MCCanvasColorRef &x_color)
 	MCCanvasColorSet(t_color, x_color);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasColorGetGreen(MCCanvasColorRef p_color, MCCanvasFloat &r_green)
 {
 	r_green = MCCanvasColorGetGreen(p_color);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasColorSetGreen(MCCanvasFloat p_green, MCCanvasColorRef &x_color)
 {
 	__MCCanvasColorImpl t_color;
@@ -1136,11 +1162,13 @@ void MCCanvasColorSetGreen(MCCanvasFloat p_green, MCCanvasColorRef &x_color)
 	MCCanvasColorSet(t_color, x_color);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasColorGetBlue(MCCanvasColorRef p_color, MCCanvasFloat &r_blue)
 {
 	r_blue = MCCanvasColorGetBlue(p_color);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasColorSetBlue(MCCanvasFloat p_blue, MCCanvasColorRef &x_color)
 {
 	__MCCanvasColorImpl t_color;
@@ -1153,11 +1181,13 @@ void MCCanvasColorSetBlue(MCCanvasFloat p_blue, MCCanvasColorRef &x_color)
 	MCCanvasColorSet(t_color, x_color);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasColorGetAlpha(MCCanvasColorRef p_color, MCCanvasFloat &r_alpha)
 {
 	r_alpha = MCCanvasColorGetAlpha(p_color);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasColorSetAlpha(MCCanvasFloat p_alpha, MCCanvasColorRef &x_color)
 {
 	__MCCanvasColorImpl t_color;
@@ -1339,16 +1369,19 @@ void MCCanvasTransformMake(const MCGAffineTransform &p_transform, MCCanvasTransf
 	/* UNCHECKED */ MCCanvasTransformCreateWithMCGAffineTransform(p_transform, r_transform);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformMakeIdentity(MCCanvasTransformRef &r_transform)
 {
 	r_transform = MCValueRetain(kMCCanvasIdentityTransform);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformMakeScale(MCCanvasFloat p_xscale, MCCanvasFloat p_yscale, MCCanvasTransformRef &r_transform)
 {
 	MCCanvasTransformMake(MCGAffineTransformMakeScale(p_xscale, p_yscale), r_transform);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformMakeScaleWithList(MCProperListRef p_scale, MCCanvasTransformRef &r_transform)
 {
 	MCGPoint t_scale;
@@ -1358,16 +1391,19 @@ void MCCanvasTransformMakeScaleWithList(MCProperListRef p_scale, MCCanvasTransfo
 	MCCanvasTransformMakeScale(t_scale.x, t_scale.y, r_transform);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformMakeRotation(MCCanvasFloat p_angle, MCCanvasTransformRef &r_transform)
 {
 	MCCanvasTransformMake(MCGAffineTransformMakeRotation(MCCanvasAngleToDegrees(p_angle)), r_transform);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformMakeTranslation(MCCanvasFloat p_x, MCCanvasFloat p_y, MCCanvasTransformRef &r_transform)
 {
 	MCCanvasTransformMake(MCGAffineTransformMakeTranslation(p_x, p_y), r_transform);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformMakeTranslationWithList(MCProperListRef p_translation, MCCanvasTransformRef &r_transform)
 {
 	MCGPoint t_translation;
@@ -1377,11 +1413,13 @@ void MCCanvasTransformMakeTranslationWithList(MCProperListRef p_translation, MCC
 	MCCanvasTransformMakeTranslation(t_translation.x, t_translation.y, r_transform);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformMakeSkew(MCCanvasFloat p_x, MCCanvasFloat p_y, MCCanvasTransformRef &r_transform)
 {
 	MCCanvasTransformMake(MCGAffineTransformMakeSkew(p_x, p_y), r_transform);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformMakeSkewWithList(MCProperListRef p_skew, MCCanvasTransformRef &r_transform)
 {
 	MCGPoint t_skew;
@@ -1391,11 +1429,13 @@ void MCCanvasTransformMakeSkewWithList(MCProperListRef p_skew, MCCanvasTransform
 	MCCanvasTransformMakeSkew(t_skew.x, t_skew.y, r_transform);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformMakeWithMatrixValues(MCCanvasFloat p_a, MCCanvasFloat p_b, MCCanvasFloat p_c, MCCanvasFloat p_d, MCCanvasFloat p_tx, MCCanvasFloat p_ty, MCCanvasTransformRef &r_transform)
 {
 	MCCanvasTransformMake(MCGAffineTransformMake(p_a, p_b, p_c, p_d, p_tx, p_ty), r_transform);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformMakeWithMatrixAsList(MCProperListRef p_matrix, MCCanvasTransformRef &r_transform)
 {
 	MCGAffineTransform t_transform;
@@ -1418,11 +1458,13 @@ void MCCanvasTransformSetMCGAffineTransform(const MCGAffineTransform &p_transfor
 	MCValueRelease(t_transform);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformGetMatrixAsList(MCCanvasTransformRef p_transform, MCProperListRef &r_matrix)
 {
 	/* UNCHECKED */ MCProperListFromTransform(*MCCanvasTransformGet(p_transform), r_matrix);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformSetMatrixAsList(MCProperListRef p_matrix, MCCanvasTransformRef &x_transform)
 {
 	bool t_success;
@@ -1435,6 +1477,7 @@ void MCCanvasTransformSetMatrixAsList(MCProperListRef p_matrix, MCCanvasTransfor
 	MCCanvasTransformSetMCGAffineTransform(t_transform, x_transform);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformGetInverse(MCCanvasTransformRef p_transform, MCCanvasTransformRef &r_transform)
 {
 	MCCanvasTransformMake(MCGAffineTransformInvert(*MCCanvasTransformGet(p_transform)), r_transform);
@@ -1489,6 +1532,7 @@ bool MCCanvasTransformDecompose(const MCGAffineTransform &p_transform, MCGPoint 
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformGetScaleAsList(MCCanvasTransformRef p_transform, MCProperListRef &r_scale)
 {
 	MCGPoint t_scale, t_skew, t_translation;
@@ -1503,6 +1547,7 @@ void MCCanvasTransformGetScaleAsList(MCCanvasTransformRef p_transform, MCProperL
 	/* UNCHECKED */ MCProperListFromPoint(t_scale, r_scale);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformSetScaleAsList(MCProperListRef p_scale, MCCanvasTransformRef &x_transform)
 {
 	MCGPoint t_scale, t_skew, t_translation;
@@ -1520,6 +1565,7 @@ void MCCanvasTransformSetScaleAsList(MCProperListRef p_scale, MCCanvasTransformR
 	MCCanvasTransformSetMCGAffineTransform(MCCanvasTransformCompose(t_scale, t_rotation, t_skew, t_translation), x_transform);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformGetRotation(MCCanvasTransformRef p_transform, MCCanvasFloat &r_rotation)
 {
 	MCGPoint t_scale, t_skew, t_translation;
@@ -1533,6 +1579,7 @@ void MCCanvasTransformGetRotation(MCCanvasTransformRef p_transform, MCCanvasFloa
 	r_rotation = MCCanvasAngleFromRadians(t_rotation);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformSetRotation(MCCanvasFloat p_rotation, MCCanvasTransformRef &x_transform)
 {
 	MCGPoint t_scale, t_skew, t_translation;
@@ -1547,6 +1594,7 @@ void MCCanvasTransformSetRotation(MCCanvasFloat p_rotation, MCCanvasTransformRef
 	MCCanvasTransformSetMCGAffineTransform(MCCanvasTransformCompose(t_scale, MCCanvasAngleToRadians(p_rotation), t_skew, t_translation), x_transform);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformGetSkewAsList(MCCanvasTransformRef p_transform, MCProperListRef &r_skew)
 {
 	MCGPoint t_scale, t_skew, t_translation;
@@ -1561,6 +1609,7 @@ void MCCanvasTransformGetSkewAsList(MCCanvasTransformRef p_transform, MCProperLi
 	/* UNCHECKED */ MCProperListFromPoint(t_skew, r_skew);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformSetSkewAsList(MCProperListRef p_skew, MCCanvasTransformRef &x_transform)
 {
 	MCGPoint t_scale, t_skew, t_translation;
@@ -1578,6 +1627,7 @@ void MCCanvasTransformSetSkewAsList(MCProperListRef p_skew, MCCanvasTransformRef
 	MCCanvasTransformSetMCGAffineTransform(MCCanvasTransformCompose(t_scale, t_rotation, t_skew, t_translation), x_transform);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformGetTranslationAsList(MCCanvasTransformRef p_transform, MCProperListRef &r_translation)
 {
 	MCGPoint t_scale, t_skew, t_translation;
@@ -1592,6 +1642,7 @@ void MCCanvasTransformGetTranslationAsList(MCCanvasTransformRef p_transform, MCP
 	/* UNCHECKED */ MCProperListFromPoint(t_translation, r_translation);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformSetTranslationAsList(MCProperListRef p_translation, MCCanvasTransformRef &x_transform)
 {
 	MCGPoint t_scale, t_skew, t_translation;
@@ -1618,16 +1669,19 @@ void MCCanvasTransformConcat(MCCanvasTransformRef &x_transform, const MCGAffineT
 	MCCanvasTransformSetMCGAffineTransform(MCGAffineTransformConcat(*MCCanvasTransformGet(x_transform), p_transform), x_transform);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformConcat(MCCanvasTransformRef &x_transform, MCCanvasTransformRef p_transform)
 {
 	MCCanvasTransformConcat(x_transform, *MCCanvasTransformGet(p_transform));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformScale(MCCanvasTransformRef &x_transform, MCCanvasFloat p_x_scale, MCCanvasFloat p_y_scale)
 {
 	MCCanvasTransformConcat(x_transform, MCGAffineTransformMakeScale(p_x_scale, p_y_scale));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformScaleWithList(MCCanvasTransformRef &x_transform, MCProperListRef p_scale)
 {
 	MCGPoint t_scale;
@@ -1637,16 +1691,19 @@ void MCCanvasTransformScaleWithList(MCCanvasTransformRef &x_transform, MCProperL
 	MCCanvasTransformScale(x_transform, t_scale.x, t_scale.y);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformRotate(MCCanvasTransformRef &x_transform, MCCanvasFloat p_rotation)
 {
 	MCCanvasTransformConcat(x_transform, MCGAffineTransformMakeRotation(MCCanvasAngleToDegrees(p_rotation)));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformTranslate(MCCanvasTransformRef &x_transform, MCCanvasFloat p_dx, MCCanvasFloat p_dy)
 {
 	MCCanvasTransformConcat(x_transform, MCGAffineTransformMakeTranslation(p_dx, p_dy));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformTranslateWithList(MCCanvasTransformRef &x_transform, MCProperListRef p_translation)
 {
 	MCGPoint t_translation;
@@ -1656,12 +1713,14 @@ void MCCanvasTransformTranslateWithList(MCCanvasTransformRef &x_transform, MCPro
 	MCCanvasTransformTranslate(x_transform, t_translation.x, t_translation.y);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransformSkew(MCCanvasTransformRef &x_transform, MCCanvasFloat p_xskew, MCCanvasFloat p_yskew)
 {
 	MCCanvasTransformConcat(x_transform, MCGAffineTransformMakeSkew(p_xskew, p_yskew));
 }
 
-void MCCanvasTransformSkew(MCCanvasTransformRef &x_transform, MCProperListRef p_skew)
+MC_DLLEXPORT_DEF
+void MCCanvasTransformSkewWithList(MCCanvasTransformRef &x_transform, MCProperListRef p_skew)
 {
 	MCGPoint t_skew;
 	if (!MCProperListToSkew(p_skew, t_skew))
@@ -1761,12 +1820,13 @@ void MCCanvasImageMake(MCImageRep *p_image, MCCanvasImageRef &r_image)
 	/* UNCHECKED */ MCCanvasImageCreateWithImageRep(p_image, r_image);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasImageMakeWithPath(MCStringRef p_path, MCCanvasImageRef &r_image)
 {
 	MCImageRep *t_image_rep;
 	t_image_rep = nil;
 	
-	if (!MCImageGetRepForFileWithStackContext(p_path, MCwidgetobject->getstack(), t_image_rep))
+	if (!MCImageGetRepForFileWithStackContext(p_path, MCWidgetGetHost(MCcurrentwidget)->getstack(), t_image_rep))
 	{
 		MCCanvasThrowError(kMCCanvasImageRepReferencedErrorTypeInfo);
 		return;
@@ -1776,6 +1836,7 @@ void MCCanvasImageMakeWithPath(MCStringRef p_path, MCCanvasImageRef &r_image)
 	MCImageRepRelease(t_image_rep);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasImageMakeWithResourceFile(MCStringRef p_resource, MCCanvasImageRef &r_image)
 {
 	MCImageRep *t_image_rep;
@@ -1791,6 +1852,7 @@ void MCCanvasImageMakeWithResourceFile(MCStringRef p_resource, MCCanvasImageRef 
 	MCImageRepRelease(t_image_rep);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasImageMakeWithData(MCDataRef p_data, MCCanvasImageRef &r_image)
 {
 	MCImageRep *t_image_rep;
@@ -1807,6 +1869,7 @@ void MCCanvasImageMakeWithData(MCDataRef p_data, MCCanvasImageRef &r_image)
 }
 
 // Input should be unpremultiplied ARGB pixels
+MC_DLLEXPORT_DEF
 void MCCanvasImageMakeWithPixels(integer_t p_width, integer_t p_height, MCDataRef p_pixels, MCCanvasImageRef &r_image)
 {
 	MCImageRep *t_image_rep;
@@ -1822,6 +1885,7 @@ void MCCanvasImageMakeWithPixels(integer_t p_width, integer_t p_height, MCDataRe
 	MCImageRepRelease(t_image_rep);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasImageMakeWithPixelsWithSizeAsList(MCProperListRef p_size, MCDataRef p_pixels, MCCanvasImageRef &r_image)
 {
 	integer_t t_size[2];
@@ -1836,6 +1900,7 @@ void MCCanvasImageMakeWithPixelsWithSizeAsList(MCProperListRef p_size, MCDataRef
 
 // Properties
 
+MC_DLLEXPORT_DEF
 void MCCanvasImageGetWidth(MCCanvasImageRef p_image, uint32_t &r_width)
 {
 	uint32_t t_width, t_height;
@@ -1847,6 +1912,7 @@ void MCCanvasImageGetWidth(MCCanvasImageRef p_image, uint32_t &r_width)
 	r_width = t_width;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasImageGetHeight(MCCanvasImageRef p_image, uint32_t &r_height)
 {
 	uint32_t t_width, t_height;
@@ -1858,6 +1924,7 @@ void MCCanvasImageGetHeight(MCCanvasImageRef p_image, uint32_t &r_height)
 	r_height = t_height;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasImageGetPixels(MCCanvasImageRef p_image, MCDataRef &r_pixels)
 {
 	MCImageRep *t_image_rep;
@@ -1983,6 +2050,7 @@ bool MCCanvasPaintIsSolidPaint(MCCanvasPaintRef p_paint)
 
 // Constructor
 
+MC_DLLEXPORT_DEF
 void MCCanvasSolidPaintMakeWithColor(MCCanvasColorRef p_color, MCCanvasSolidPaintRef &r_paint)
 {
 	/* UNCHECKED */ MCCanvasSolidPaintCreateWithColor(p_color, r_paint);
@@ -1990,11 +2058,13 @@ void MCCanvasSolidPaintMakeWithColor(MCCanvasColorRef p_color, MCCanvasSolidPain
 
 // Properties
 
+MC_DLLEXPORT_DEF
 void MCCanvasSolidPaintGetColor(MCCanvasSolidPaintRef p_paint, MCCanvasColorRef &r_color)
 {
 	r_color = MCValueRetain(MCCanvasSolidPaintGet(p_paint)->color);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasSolidPaintSetColor(MCCanvasColorRef p_color, MCCanvasSolidPaintRef &x_paint)
 {
 	MCCanvasSolidPaintRef t_paint;
@@ -2092,6 +2162,7 @@ void MCCanvasPatternMakeWithTransformedImage(MCCanvasImageRef p_image, MCCanvasT
 	/* UNCHECKED */ MCCanvasPatternCreateWithImage(p_image, p_transform, r_pattern);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPatternMakeWithTransformedImage(MCCanvasImageRef p_image, const MCGAffineTransform &p_transform, MCCanvasPatternRef &r_pattern)
 {
 	MCCanvasTransformRef t_transform;
@@ -2103,16 +2174,19 @@ void MCCanvasPatternMakeWithTransformedImage(MCCanvasImageRef p_image, const MCG
 	MCValueRelease(t_transform);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPatternMakeWithImage(MCCanvasImageRef p_image, MCCanvasPatternRef &r_pattern)
 {
 	MCCanvasPatternMakeWithTransformedImage(p_image, kMCCanvasIdentityTransform, r_pattern);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPatternMakeWithScaledImage(MCCanvasImageRef p_image, MCCanvasFloat p_xscale, MCCanvasFloat p_yscale, MCCanvasPatternRef &r_pattern)
 {
 	MCCanvasPatternMakeWithTransformedImage(p_image, MCGAffineTransformMakeScale(p_xscale, p_yscale), r_pattern);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPatternMakeWithImageScaledWithList(MCCanvasImageRef p_image, MCProperListRef p_scale, MCCanvasPatternRef &r_pattern)
 {
 	MCGPoint t_scale;
@@ -2122,16 +2196,19 @@ void MCCanvasPatternMakeWithImageScaledWithList(MCCanvasImageRef p_image, MCProp
 	MCCanvasPatternMakeWithScaledImage(p_image, t_scale.x, t_scale.y, r_pattern);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPatternMakeWithRotatedImage(MCCanvasImageRef p_image, MCCanvasFloat p_angle, MCCanvasPatternRef &r_pattern)
 {
 	MCCanvasPatternMakeWithTransformedImage(p_image, MCGAffineTransformMakeRotation(MCCanvasAngleToDegrees(p_angle)), r_pattern);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPatternMakeWithTranslatedImage(MCCanvasImageRef p_image, MCCanvasFloat p_x, MCCanvasFloat p_y, MCCanvasPatternRef &r_pattern)
 {
 	MCCanvasPatternMakeWithTransformedImage(p_image, MCGAffineTransformMakeTranslation(p_x, p_y), r_pattern);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPatternMakeWithImageTranslatedWithList(MCCanvasImageRef p_image, MCProperListRef p_translation, MCCanvasPatternRef &r_pattern)
 {
 	MCGPoint t_translation;
@@ -2153,21 +2230,25 @@ void MCCanvasPatternSet(MCCanvasImageRef p_image, MCCanvasTransformRef p_transfo
 	MCValueRelease(t_pattern);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPatternGetImage(MCCanvasPatternRef p_pattern, MCCanvasImageRef &r_image)
 {
 	r_image = MCValueRetain(MCCanvasPatternGet(p_pattern)->image);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPatternSetImage(MCCanvasImageRef p_image, MCCanvasPatternRef &x_pattern)
 {
 	MCCanvasPatternSet(p_image, MCCanvasPatternGet(x_pattern)->transform, x_pattern);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPatternGetTransform(MCCanvasPatternRef p_pattern, MCCanvasTransformRef &r_transform)
 {
 	r_transform = MCValueRetain(MCCanvasPatternGet(p_pattern)->transform);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPatternSetTransform(MCCanvasTransformRef p_transform, MCCanvasPatternRef &x_pattern)
 {
 	MCCanvasPatternSet(MCCanvasPatternGet(x_pattern)->image, p_transform, x_pattern);
@@ -2188,16 +2269,19 @@ void MCCanvasPatternTransform(MCCanvasPatternRef &x_pattern, const MCGAffineTran
 	MCValueRelease(t_transform);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPatternTransform(MCCanvasPatternRef &x_pattern, MCCanvasTransformRef p_transform)
 {
 	MCCanvasPatternTransform(x_pattern, *MCCanvasTransformGet(p_transform));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPatternScale(MCCanvasPatternRef &x_pattern, MCCanvasFloat p_xscale, MCCanvasFloat p_yscale)
 {
 	MCCanvasPatternTransform(x_pattern, MCGAffineTransformMakeScale(p_xscale, p_yscale));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPatternScaleWithList(MCCanvasPatternRef &x_pattern, MCProperListRef p_scale)
 {
 	MCGPoint t_scale;
@@ -2207,16 +2291,19 @@ void MCCanvasPatternScaleWithList(MCCanvasPatternRef &x_pattern, MCProperListRef
 	MCCanvasPatternScale(x_pattern, t_scale.x, t_scale.y);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPatternRotate(MCCanvasPatternRef &x_pattern, MCCanvasFloat p_angle)
 {
 	MCCanvasPatternTransform(x_pattern, MCGAffineTransformMakeRotation(MCCanvasAngleToDegrees(p_angle)));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPatternTranslate(MCCanvasPatternRef &x_pattern, MCCanvasFloat p_x, MCCanvasFloat p_y)
 {
 	MCCanvasPatternTransform(x_pattern, MCGAffineTransformMakeTranslation(p_x, p_y));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPatternTranslateWithList(MCCanvasPatternRef &x_pattern, MCProperListRef p_translation)
 {
 	MCGPoint t_translation;
@@ -2303,6 +2390,7 @@ __MCCanvasGradientStopImpl *MCCanvasGradientStopGet(MCCanvasGradientStopRef p_st
 
 // Constructors
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientStopMake(MCCanvasFloat p_offset, MCCanvasColorRef p_color, MCCanvasGradientStopRef &r_stop)
 {
 	/* UNCHECKED */ MCCanvasGradientStopCreate(p_offset, p_color, r_stop);
@@ -2319,11 +2407,13 @@ void MCCanvasGradientStopSet(MCCanvasFloat p_offset, MCCanvasColorRef p_color, M
 	MCValueRelease(t_stop);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientStopGetOffset(MCCanvasGradientStopRef p_stop, MCCanvasFloat &r_offset)
 {
 	r_offset = MCCanvasGradientStopGet(p_stop)->offset;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientStopSetOffset(MCCanvasFloat p_offset, MCCanvasGradientStopRef &x_stop)
 {
 	__MCCanvasGradientStopImpl *t_stop;
@@ -2332,11 +2422,13 @@ void MCCanvasGradientStopSetOffset(MCCanvasFloat p_offset, MCCanvasGradientStopR
 	MCCanvasGradientStopSet(p_offset, t_stop->color, x_stop);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientStopGetColor(MCCanvasGradientStopRef p_stop, MCCanvasColorRef &r_color)
 {
 	r_color = MCValueRetain(MCCanvasGradientStopGet(p_stop)->color);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientStopSetColor(MCCanvasColorRef p_color, MCCanvasGradientStopRef &x_stop)
 {
 	__MCCanvasGradientStopImpl *t_stop;
@@ -2492,6 +2584,7 @@ bool MCCanvasGradientCheckStopOrder(MCProperListRef p_ramp)
 
 //////////
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientEvaluateType(integer_t p_type, integer_t& r_type)
 {
     r_type = p_type;
@@ -2499,6 +2592,7 @@ void MCCanvasGradientEvaluateType(integer_t p_type, integer_t& r_type)
 
 // Constructor
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientMakeWithRamp(integer_t p_type, MCProperListRef p_ramp, MCCanvasGradientRef &r_gradient)
 {
 	MCCanvasGradientRef t_gradient;
@@ -2533,11 +2627,13 @@ void MCCanvasGradientSet(const __MCCanvasGradientImpl &p_gradient, MCCanvasGradi
 	MCValueRelease(t_gradient);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientGetRamp(MCCanvasGradientRef p_gradient, MCProperListRef &r_ramp)
 {
 	r_ramp = MCValueRetain(MCCanvasGradientGet(p_gradient)->ramp);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientSetRamp(MCProperListRef p_ramp, MCCanvasGradientRef &x_gradient)
 {
 	if (!MCCanvasGradientCheckStopOrder(p_ramp))
@@ -2551,11 +2647,13 @@ void MCCanvasGradientSetRamp(MCProperListRef p_ramp, MCCanvasGradientRef &x_grad
 	MCCanvasGradientSet(t_gradient, x_gradient);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientGetTypeAsString(MCCanvasGradientRef p_gradient, MCStringRef &r_string)
 {
 	/* UNCHECKED */ MCCanvasGradientTypeToString(MCCanvasGradientGet(p_gradient)->function, r_string);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientSetTypeAsString(MCStringRef p_string, MCCanvasGradientRef &x_gradient)
 {
 	__MCCanvasGradientImpl t_gradient;
@@ -2570,11 +2668,13 @@ void MCCanvasGradientSetTypeAsString(MCStringRef p_string, MCCanvasGradientRef &
 	MCCanvasGradientSet(t_gradient, x_gradient);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientGetRepeat(MCCanvasGradientRef p_gradient, integer_t &r_repeat)
 {
 	r_repeat = MCCanvasGradientGet(p_gradient)->repeats;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientSetRepeat(integer_t p_repeat, MCCanvasGradientRef &x_gradient)
 {
 	__MCCanvasGradientImpl t_gradient;
@@ -2585,11 +2685,13 @@ void MCCanvasGradientSetRepeat(integer_t p_repeat, MCCanvasGradientRef &x_gradie
 	MCCanvasGradientSet(t_gradient, x_gradient);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientGetWrap(MCCanvasGradientRef p_gradient, bool &r_wrap)
 {
 	r_wrap = MCCanvasGradientGet(p_gradient)->wrap;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientSetWrap(bool p_wrap, MCCanvasGradientRef &x_gradient)
 {
 	__MCCanvasGradientImpl t_gradient;
@@ -2600,11 +2702,13 @@ void MCCanvasGradientSetWrap(bool p_wrap, MCCanvasGradientRef &x_gradient)
 	MCCanvasGradientSet(t_gradient, x_gradient);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientGetMirror(MCCanvasGradientRef p_gradient, bool &r_mirror)
 {
 	r_mirror = MCCanvasGradientGet(p_gradient)->mirror;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientSetMirror(bool p_mirror, MCCanvasGradientRef &x_gradient)
 {
 	__MCCanvasGradientImpl t_gradient;
@@ -2665,6 +2769,7 @@ void MCCanvasGradientSetPoints(MCCanvasGradientRef &x_gradient, const MCGPoint &
 	MCCanvasGradientSetTransform(x_gradient, t_transform);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientGetFrom(MCCanvasGradientRef p_gradient, MCCanvasPointRef &r_from)
 {
 	MCGPoint t_from, t_to, t_via;
@@ -2673,6 +2778,7 @@ void MCCanvasGradientGetFrom(MCCanvasGradientRef p_gradient, MCCanvasPointRef &r
 	/* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(t_from, r_from);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientGetTo(MCCanvasGradientRef p_gradient, MCCanvasPointRef &r_to)
 {
 	MCGPoint t_from, t_to, t_via;
@@ -2681,6 +2787,7 @@ void MCCanvasGradientGetTo(MCCanvasGradientRef p_gradient, MCCanvasPointRef &r_t
 	/* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(t_to, r_to);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientGetVia(MCCanvasGradientRef p_gradient, MCCanvasPointRef &r_via)
 {
 	MCGPoint t_from, t_to, t_via;
@@ -2689,6 +2796,7 @@ void MCCanvasGradientGetVia(MCCanvasGradientRef p_gradient, MCCanvasPointRef &r_
 	/* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(t_via, r_via);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientSetFrom(MCCanvasPointRef p_from, MCCanvasGradientRef &x_gradient)
 {
 	MCGPoint t_from, t_to, t_via;
@@ -2696,6 +2804,7 @@ void MCCanvasGradientSetFrom(MCCanvasPointRef p_from, MCCanvasGradientRef &x_gra
 	MCCanvasGradientSetPoints(x_gradient, *MCCanvasPointGet(p_from), t_to, t_via);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientSetTo(MCCanvasPointRef p_to, MCCanvasGradientRef &x_gradient)
 {
 	MCGPoint t_from, t_to, t_via;
@@ -2703,6 +2812,7 @@ void MCCanvasGradientSetTo(MCCanvasPointRef p_to, MCCanvasGradientRef &x_gradien
 	MCCanvasGradientSetPoints(x_gradient, t_from, *MCCanvasPointGet(p_to), t_via);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientSetVia(MCCanvasPointRef p_via, MCCanvasGradientRef &x_gradient)
 {
 	MCGPoint t_from, t_to, t_via;
@@ -2710,11 +2820,13 @@ void MCCanvasGradientSetVia(MCCanvasPointRef p_via, MCCanvasGradientRef &x_gradi
 	MCCanvasGradientSetPoints(x_gradient, t_from, t_to, *MCCanvasPointGet(p_via));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientGetTransform(MCCanvasGradientRef p_gradient, MCCanvasTransformRef &r_transform)
 {
 	r_transform = MCValueRetain(MCCanvasGradientGet(p_gradient)->transform);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientSetTransform(MCCanvasTransformRef p_transform, MCCanvasGradientRef &x_gradient)
 {
 	__MCCanvasGradientImpl t_gradient;
@@ -2751,6 +2863,7 @@ bool MCProperListGetGradientStopInsertionPoint(MCProperListRef p_list, MCCanvasG
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientAddStop(MCCanvasGradientStopRef p_stop, MCCanvasGradientRef &x_gradient)
 {
 	bool t_success;
@@ -2811,16 +2924,19 @@ void MCCanvasGradientTransform(MCCanvasGradientRef &x_gradient, const MCGAffineT
 	MCValueRelease(t_transform);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientTransform(MCCanvasGradientRef &x_gradient, MCCanvasTransformRef p_transform)
 {
 	MCCanvasGradientTransform(x_gradient, *MCCanvasTransformGet(p_transform));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientScale(MCCanvasGradientRef &x_gradient, MCCanvasFloat p_xscale, MCCanvasFloat p_yscale)
 {
 	MCCanvasGradientTransform(x_gradient, MCGAffineTransformMakeScale(p_xscale, p_yscale));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientScaleWithList(MCCanvasGradientRef &x_gradient, MCProperListRef p_scale)
 {
 	MCGPoint t_scale;
@@ -2830,16 +2946,19 @@ void MCCanvasGradientScaleWithList(MCCanvasGradientRef &x_gradient, MCProperList
 	MCCanvasGradientScale(x_gradient, t_scale.x, t_scale.y);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientRotate(MCCanvasGradientRef &x_gradient, MCCanvasFloat p_angle)
 {
 	MCCanvasGradientTransform(x_gradient, MCGAffineTransformMakeRotation(MCCanvasAngleToDegrees(p_angle)));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientTranslate(MCCanvasGradientRef &x_gradient, MCCanvasFloat p_x, MCCanvasFloat p_y)
 {
 	MCCanvasGradientTransform(x_gradient, MCGAffineTransformMakeTranslation(p_x, p_y));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGradientTranslateWithList(MCCanvasGradientRef &x_gradient, MCProperListRef p_translation)
 {
 	MCGPoint t_translation;
@@ -2989,6 +3108,7 @@ bool MCProperListToRadii(MCProperListRef p_list, MCGPoint &r_radii)
 
 // Constructors
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathMakeEmpty(MCCanvasPathRef &r_path)
 {
 	r_path = MCValueRetain(kMCCanvasEmptyPath);
@@ -3158,6 +3278,7 @@ void MCCanvasPathMakeWithMCGPath(MCGPathRef p_path, MCCanvasPathRef &r_path)
 }
 
 // TODO - investigate error handling in libgraphics, libskia - don't think skia mem errors are tested for
+MC_DLLEXPORT_DEF
 void MCCanvasPathMakeWithInstructionsAsString(MCStringRef p_instructions, MCCanvasPathRef &r_path)
 {
 	bool t_success;
@@ -3183,6 +3304,7 @@ void MCCanvasPathMakeWithInstructionsAsString(MCStringRef p_instructions, MCCanv
 	MCGPathRelease(t_path);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathMakeWithRoundedRectangleWithRadii(MCCanvasRectangleRef p_rect, MCCanvasFloat p_x_radius, MCCanvasFloat p_y_radius, MCCanvasPathRef &r_path)
 {
 	MCGPathRef t_path;
@@ -3198,11 +3320,13 @@ void MCCanvasPathMakeWithRoundedRectangleWithRadii(MCCanvasRectangleRef p_rect, 
 	MCGPathRelease(t_path);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathMakeWithRoundedRectangle(MCCanvasRectangleRef p_rect, MCCanvasFloat p_radius, MCCanvasPathRef &r_path)
 {
 	MCCanvasPathMakeWithRoundedRectangleWithRadii(p_rect, p_radius, p_radius, r_path);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathMakeWithRoundedRectangleWithRadiiAsList(MCCanvasRectangleRef p_rect, MCProperListRef p_radii, MCCanvasPathRef &r_path)
 {
 	MCGPoint t_radii;
@@ -3212,6 +3336,7 @@ void MCCanvasPathMakeWithRoundedRectangleWithRadiiAsList(MCCanvasRectangleRef p_
 	MCCanvasPathMakeWithRoundedRectangleWithRadii(p_rect, t_radii.x, t_radii.y, r_path);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathMakeWithRectangle(MCCanvasRectangleRef p_rect, MCCanvasPathRef &r_path)
 {
 	MCGPathRef t_path;
@@ -3227,6 +3352,7 @@ void MCCanvasPathMakeWithRectangle(MCCanvasRectangleRef p_rect, MCCanvasPathRef 
 	MCGPathRelease(t_path);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathMakeWithEllipse(MCCanvasPointRef p_center, MCCanvasFloat p_radius_x, MCCanvasFloat p_radius_y, MCCanvasPathRef &r_path)
 {
 	MCGPathRef t_path;
@@ -3242,6 +3368,7 @@ void MCCanvasPathMakeWithEllipse(MCCanvasPointRef p_center, MCCanvasFloat p_radi
 	MCGPathRelease(t_path);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathMakeWithEllipseWithRadiiAsList(MCCanvasPointRef p_center, MCProperListRef p_radii, MCCanvasPathRef &r_path)
 {
 	MCGPoint t_radii;
@@ -3251,11 +3378,13 @@ void MCCanvasPathMakeWithEllipseWithRadiiAsList(MCCanvasPointRef p_center, MCPro
 	MCCanvasPathMakeWithEllipse(p_center, t_radii.x, t_radii.y, r_path);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathMakeWithCircle(MCCanvasPointRef p_center, MCCanvasFloat p_radius, MCCanvasPathRef &r_path)
 {
 	MCCanvasPathMakeWithEllipse(p_center, p_radius, p_radius, r_path);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathMakeWithLine(MCCanvasPointRef p_start, MCCanvasPointRef p_end, MCCanvasPathRef &r_path)
 {
 	MCGPathRef t_path;
@@ -3309,6 +3438,7 @@ bool MCCanvasPointsListToMCGPoints(MCProperListRef p_points, MCGPoint *&r_points
 	return t_success;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathMakeWithPoints(bool p_close, MCProperListRef p_points, MCCanvasPathRef &r_path)
 {
 	bool t_success;
@@ -3358,11 +3488,13 @@ static void MCCanvasPathMakeWithArcWithRadii(const MCGPoint &p_center, MCGFloat 
 	MCGPathRelease(t_path);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathMakeWithArcWithRadius(MCCanvasPointRef p_center, MCCanvasFloat p_radius, MCCanvasFloat p_start_angle, MCCanvasFloat p_end_angle, MCCanvasPathRef &r_path)
 {
 	MCCanvasPathMakeWithArcWithRadii(*MCCanvasPointGet(p_center), p_radius, p_radius, p_start_angle, p_end_angle, r_path);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathMakeWithArcWithRadiiAsList(MCCanvasPointRef p_center, MCProperListRef p_radii, MCCanvasFloat p_start_angle, MCCanvasFloat p_end_angle, MCCanvasPathRef &r_path)
 {
 	MCGPoint t_radii;
@@ -3389,11 +3521,13 @@ static void MCCanvasPathMakeWithSectorWithRadii(const MCGPoint &p_center, MCGFlo
 	MCGPathRelease(t_path);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathMakeWithSectorWithRadius(MCCanvasPointRef p_center, MCCanvasFloat p_radius, MCCanvasFloat p_start_angle, MCCanvasFloat p_end_angle, MCCanvasPathRef &r_path)
 {
 	MCCanvasPathMakeWithSectorWithRadii(*MCCanvasPointGet(p_center), p_radius, p_radius, p_start_angle, p_end_angle, r_path);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathMakeWithSectorWithRadiiAsList(MCCanvasPointRef p_center, MCProperListRef p_radii, MCCanvasFloat p_start_angle, MCCanvasFloat p_end_angle, MCCanvasPathRef &r_path)
 {
 	MCGPoint t_radii;
@@ -3419,11 +3553,13 @@ static void MCCanvasPathMakeWithSegmentWithRadii(const MCGPoint &p_center, MCGFl
 	MCGPathRelease(t_path);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathMakeWithSegmentWithRadius(MCCanvasPointRef p_center, MCCanvasFloat p_radius, MCCanvasFloat p_start_angle, MCCanvasFloat p_end_angle, MCCanvasPathRef &r_path)
 {
 	MCCanvasPathMakeWithSegmentWithRadii(*MCCanvasPointGet(p_center), p_radius, p_radius, p_start_angle, p_end_angle, r_path);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathMakeWithSegmentWithRadiiAsList(MCCanvasPointRef p_center, MCProperListRef p_radii, MCCanvasFloat p_start_angle, MCCanvasFloat p_end_angle, MCCanvasPathRef &r_path)
 {
 	MCGPoint t_radii;
@@ -3444,6 +3580,7 @@ void MCCanvasPathSetMCGPath(MCGPathRef p_path, MCCanvasPathRef &x_path)
 	MCValueRelease(t_path);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathGetSubpaths(integer_t p_start, integer_t p_end, MCCanvasPathRef p_path, MCCanvasPathRef &r_subpaths)
 {
 	MCGPathRef t_path;
@@ -3456,11 +3593,13 @@ void MCCanvasPathGetSubpaths(integer_t p_start, integer_t p_end, MCCanvasPathRef
 	MCGPathRelease(t_path);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathGetSubpath(integer_t p_index, MCCanvasPathRef p_path, MCCanvasPathRef &r_subpath)
 {
 	MCCanvasPathGetSubpaths(p_index, p_index, p_path, r_subpath);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathGetBoundingBox(MCCanvasPathRef p_path, MCCanvasRectangleRef &r_bounds)
 {
 	MCGRectangle t_rect;
@@ -3469,6 +3608,7 @@ void MCCanvasPathGetBoundingBox(MCCanvasPathRef p_path, MCCanvasRectangleRef &r_
 	/* UNCHECKED */ MCCanvasRectangleCreateWithMCGRectangle(t_rect, r_bounds);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathGetInstructionsAsString(MCCanvasPathRef p_path, MCStringRef &r_instruction_string)
 {
 	MCAutoStringRef t_instruction_string;
@@ -3502,16 +3642,19 @@ void MCCanvasPathTransform(MCCanvasPathRef &x_path, const MCGAffineTransform &p_
 	MCGPathRelease(t_path);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathTransform(MCCanvasPathRef &x_path, MCCanvasTransformRef p_transform)
 {
 	MCCanvasPathTransform(x_path, *MCCanvasTransformGet(p_transform));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathScale(MCCanvasPathRef &x_path, MCCanvasFloat p_xscale, MCCanvasFloat p_yscale)
 {
 	MCCanvasPathTransform(x_path, MCGAffineTransformMakeScale(p_xscale, p_yscale));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathScaleWithList(MCCanvasPathRef &x_path, MCProperListRef p_scale)
 {
 	MCGPoint t_scale;
@@ -3521,16 +3664,19 @@ void MCCanvasPathScaleWithList(MCCanvasPathRef &x_path, MCProperListRef p_scale)
 	MCCanvasPathScale(x_path, t_scale.x, t_scale.y);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathRotate(MCCanvasPathRef &x_path, MCCanvasFloat p_angle)
 {
 	MCCanvasPathTransform(x_path, MCGAffineTransformMakeRotation(MCCanvasAngleToDegrees(p_angle)));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathTranslate(MCCanvasPathRef &x_path, MCCanvasFloat p_x, MCCanvasFloat p_y)
 {
 	MCCanvasPathTransform(x_path, MCGAffineTransformMakeTranslation(p_x, p_y));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathTranslateWithList(MCCanvasPathRef &x_path, MCProperListRef p_translation)
 {
 	MCGPoint t_translation;
@@ -3540,6 +3686,7 @@ void MCCanvasPathTranslateWithList(MCCanvasPathRef &x_path, MCProperListRef p_tr
 	MCCanvasPathTranslate(x_path, t_translation.x, t_translation.y);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathAddPath(MCCanvasPathRef p_source, MCCanvasPathRef &x_dest)
 {
 	bool t_success;
@@ -3566,6 +3713,7 @@ void MCCanvasPathAddPath(MCCanvasPathRef p_source, MCCanvasPathRef &x_dest)
 	MCGPathRelease(t_path);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathMoveTo(MCCanvasPointRef p_point, MCCanvasPathRef &x_path)
 {
 	bool t_success;
@@ -3592,6 +3740,7 @@ void MCCanvasPathMoveTo(MCCanvasPointRef p_point, MCCanvasPathRef &x_path)
 	MCGPathRelease(t_path);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathLineTo(MCCanvasPointRef p_point, MCCanvasPathRef &x_path)
 {
 	bool t_success;
@@ -3618,6 +3767,7 @@ void MCCanvasPathLineTo(MCCanvasPointRef p_point, MCCanvasPathRef &x_path)
 	MCGPathRelease(t_path);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathCurveThroughPoint(MCCanvasPointRef p_through, MCCanvasPointRef p_to, MCCanvasPathRef &x_path)
 {
 	bool t_success;
@@ -3644,6 +3794,7 @@ void MCCanvasPathCurveThroughPoint(MCCanvasPointRef p_through, MCCanvasPointRef 
 	MCGPathRelease(t_path);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathCurveThroughPoints(MCCanvasPointRef p_through_a, MCCanvasPointRef p_through_b, MCCanvasPointRef p_to, MCCanvasPathRef &x_path)
 {
 	bool t_success;
@@ -3670,6 +3821,7 @@ void MCCanvasPathCurveThroughPoints(MCCanvasPointRef p_through_a, MCCanvasPointR
 	MCGPathRelease(t_path);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathClosePath(MCCanvasPathRef &x_path)
 {
 	bool t_success;
@@ -3696,6 +3848,7 @@ void MCCanvasPathClosePath(MCCanvasPathRef &x_path)
 	MCGPathRelease(t_path);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathArcTo(MCCanvasPointRef p_tangent, MCCanvasPointRef p_to, MCCanvasFloat p_radius, MCCanvasPathRef &x_path)
 {
 	bool t_success;
@@ -3722,6 +3875,7 @@ void MCCanvasPathArcTo(MCCanvasPointRef p_tangent, MCCanvasPointRef p_to, MCCanv
 	MCGPathRelease(t_path);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathEllipticArcToWithFlagsWithRadiiAsList(MCCanvasPointRef p_to, MCProperListRef p_radii, MCCanvasFloat p_rotation, bool p_largest, bool p_clockwise, MCCanvasPathRef &x_path)
 {
 	bool t_success;
@@ -3752,6 +3906,7 @@ void MCCanvasPathEllipticArcToWithFlagsWithRadiiAsList(MCCanvasPointRef p_to, MC
 	MCGPathRelease(t_path);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasPathEllipticArcToWithRadiiAsList(MCCanvasPointRef p_to, MCProperListRef p_radii, MCCanvasFloat p_rotation, MCCanvasPathRef &x_path)
 {
 	bool t_success;
@@ -3905,6 +4060,7 @@ __MCCanvasEffectImpl *MCCanvasEffectGet(MCCanvasEffectRef p_effect)
 
 //////////
 
+MC_DLLEXPORT_DEF
 void MCCanvasEffectEvaluateType(integer_t p_type, integer_t& r_type)
 {
 	r_type = p_type;
@@ -4029,6 +4185,7 @@ bool MCCanvasEffectSetAngleProperty(__MCCanvasEffectImpl &x_effect, MCCanvasFloa
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasEffectMakeWithPropertyArray(integer_t p_type, MCArrayRef p_properties, MCCanvasEffectRef &r_effect)
 {
 	bool t_success;
@@ -4132,16 +4289,19 @@ void MCCanvasEffectSet(const __MCCanvasEffectImpl &p_effect, MCCanvasEffectRef &
 	MCValueRelease(t_effect);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasEffectGetTypeAsString(MCCanvasEffectRef p_effect, MCStringRef &r_type)
 {
 	/* UNCHECKED */ MCCanvasEffectTypeToString(MCCanvasEffectGet(p_effect)->type, r_type);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasEffectGetColor(MCCanvasEffectRef p_effect, MCCanvasColorRef &r_color)
 {
 	r_color = MCValueRetain(MCCanvasEffectGet(p_effect)->color);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasEffectSetColor(MCCanvasColorRef p_color, MCCanvasEffectRef &x_effect)
 {
 	__MCCanvasEffectImpl t_effect;
@@ -4150,11 +4310,13 @@ void MCCanvasEffectSetColor(MCCanvasColorRef p_color, MCCanvasEffectRef &x_effec
 	MCCanvasEffectSet(t_effect, x_effect);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasEffectGetBlendModeAsString(MCCanvasEffectRef p_effect, MCStringRef &r_blend_mode)
 {
 	/* UNCHECKED */ MCCanvasBlendModeToString(MCCanvasEffectGet(p_effect)->blend_mode, r_blend_mode);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasEffectSetBlendModeAsString(MCStringRef p_blend_mode, MCCanvasEffectRef &x_effect)
 {
 	__MCCanvasEffectImpl t_effect;
@@ -4166,11 +4328,13 @@ void MCCanvasEffectSetBlendModeAsString(MCStringRef p_blend_mode, MCCanvasEffect
 	MCCanvasEffectSet(t_effect, x_effect);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasEffectGetOpacity(MCCanvasEffectRef p_effect, MCCanvasFloat &r_opacity)
 {
 	r_opacity = MCCanvasEffectGet(p_effect)->opacity;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasEffectSetOpacity(MCCanvasFloat p_opacity, MCCanvasEffectRef &x_effect)
 {
 	__MCCanvasEffectImpl t_effect;
@@ -4179,6 +4343,7 @@ void MCCanvasEffectSetOpacity(MCCanvasFloat p_opacity, MCCanvasEffectRef &x_effe
 	MCCanvasEffectSet(t_effect, x_effect);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasEffectGetSize(MCCanvasEffectRef p_effect, MCCanvasFloat &r_size)
 {
 	if (!MCCanvasEffectHasSizeAndSpread(MCCanvasEffectGet(p_effect)->type))
@@ -4190,6 +4355,7 @@ void MCCanvasEffectGetSize(MCCanvasEffectRef p_effect, MCCanvasFloat &r_size)
 	r_size = MCCanvasEffectGet(p_effect)->size;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasEffectSetSize(MCCanvasFloat p_size, MCCanvasEffectRef &x_effect)
 {
 	__MCCanvasEffectImpl t_effect;
@@ -4201,6 +4367,7 @@ void MCCanvasEffectSetSize(MCCanvasFloat p_size, MCCanvasEffectRef &x_effect)
 	MCCanvasEffectSet(t_effect, x_effect);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasEffectGetSpread(MCCanvasEffectRef p_effect, MCCanvasFloat &r_spread)
 {
 	if (!MCCanvasEffectHasSizeAndSpread(MCCanvasEffectGet(p_effect)->type))
@@ -4212,6 +4379,7 @@ void MCCanvasEffectGetSpread(MCCanvasEffectRef p_effect, MCCanvasFloat &r_spread
 	r_spread = MCCanvasEffectGet(p_effect)->spread;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasEffectSetSpread(MCCanvasFloat p_spread, MCCanvasEffectRef &x_effect)
 {
 	__MCCanvasEffectImpl t_effect;
@@ -4223,6 +4391,7 @@ void MCCanvasEffectSetSpread(MCCanvasFloat p_spread, MCCanvasEffectRef &x_effect
 	MCCanvasEffectSet(t_effect, x_effect);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasEffectGetDistance(MCCanvasEffectRef p_effect, MCCanvasFloat &r_distance)
 {
 	if (!MCCanvasEffectHasDistanceAndAngle(MCCanvasEffectGet(p_effect)->type))
@@ -4234,6 +4403,7 @@ void MCCanvasEffectGetDistance(MCCanvasEffectRef p_effect, MCCanvasFloat &r_dist
 	r_distance = MCCanvasEffectGet(p_effect)->distance;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasEffectSetDistance(MCCanvasFloat p_distance, MCCanvasEffectRef &x_effect)
 {
 	__MCCanvasEffectImpl t_effect;
@@ -4245,6 +4415,7 @@ void MCCanvasEffectSetDistance(MCCanvasFloat p_distance, MCCanvasEffectRef &x_ef
 	MCCanvasEffectSet(t_effect, x_effect);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasEffectGetAngle(MCCanvasEffectRef p_effect, MCCanvasFloat &r_angle)
 {
 	if (!MCCanvasEffectHasDistanceAndAngle(MCCanvasEffectGet(p_effect)->type))
@@ -4256,6 +4427,7 @@ void MCCanvasEffectGetAngle(MCCanvasEffectRef p_effect, MCCanvasFloat &r_angle)
 	r_angle = MCCanvasEffectGet(p_effect)->angle;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasEffectSetAngle(MCCanvasFloat p_angle, MCCanvasEffectRef &x_effect)
 {
 	__MCCanvasEffectImpl t_effect;
@@ -4399,17 +4571,20 @@ bool MCCanvasFontGetDefault(MCCanvasFontRef &r_font)
 }
 
 // Constructors
+MC_DLLEXPORT_DEF
 void MCCanvasFontMakeWithSize(MCStringRef p_name, bool p_bold, bool p_italic, integer_t p_size, MCCanvasFontRef &r_font)
 {
 	/* UNCHECKED */ MCCanvasFontCreate(p_name, MCFontStyleMake(p_bold, p_italic), p_size, r_font);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasFontMakeWithStyle(MCStringRef p_name, bool p_bold, bool p_italic, MCCanvasFontRef &r_font)
 {
 	// TODO - confirm default font size - make configurable?
 	/* UNCHECKED */ MCCanvasFontCreate(p_name, MCFontStyleMake(p_bold, p_italic), 12, r_font);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasFontMake(MCStringRef p_name, MCCanvasFontRef &r_font)
 {
 	MCCanvasFontMakeWithStyle(p_name, false, false, r_font);
@@ -4437,11 +4612,13 @@ void MCCanvasFontSetProps(MCCanvasFontRef &x_font, MCStringRef p_name, MCFontSty
 	MCValueRelease(t_font);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasFontGetName(MCCanvasFontRef p_font, MCStringRef &r_name)
 {
 	r_name = MCValueRetain(MCNameGetString(MCFontGetName(MCCanvasFontGetMCFont(p_font))));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasFontSetName(MCStringRef p_name, MCCanvasFontRef &x_font)
 {
 	MCStringRef t_name;
@@ -4452,11 +4629,13 @@ void MCCanvasFontSetName(MCStringRef p_name, MCCanvasFontRef &x_font)
 	MCCanvasFontSetProps(x_font, p_name, t_style, t_size);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasFontGetBold(MCCanvasFontRef p_font, bool &r_bold)
 {
 	r_bold = MCFontStyleIsBold(MCFontGetStyle(MCCanvasFontGetMCFont(p_font)));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasFontSetBold(bool p_bold, MCCanvasFontRef &x_font)
 {
 	MCStringRef t_name;
@@ -4467,11 +4646,13 @@ void MCCanvasFontSetBold(bool p_bold, MCCanvasFontRef &x_font)
 	MCCanvasFontSetProps(x_font, t_name, MCFontStyleSetFlag(t_style, kMCFontStyleBold, p_bold), t_size);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasFontGetItalic(MCCanvasFontRef p_font, bool &r_italic)
 {
 	r_italic = MCFontStyleIsItalic(MCFontGetStyle(MCCanvasFontGetMCFont(p_font)));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasFontSetItalic(bool p_italic, MCCanvasFontRef &x_font)
 {
 	MCStringRef t_name;
@@ -4482,11 +4663,13 @@ void MCCanvasFontSetItalic(bool p_italic, MCCanvasFontRef &x_font)
 	MCCanvasFontSetProps(x_font, t_name, MCFontStyleSetFlag(t_style, kMCFontStyleItalic, p_italic), t_size);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasFontGetSize(MCCanvasFontRef p_font, uinteger_t &r_size)
 {
 	r_size = MCFontGetSize(MCCanvasFontGetMCFont(p_font));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasFontSetSize(uinteger_t p_size, MCCanvasFontRef &x_font)
 {
 	MCStringRef t_name;
@@ -4517,11 +4700,13 @@ MCCanvasRectangleRef MCCanvasFontMeasureTextTypographicBoundsWithTransform(MCStr
 	return t_rect;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasFontMeasureTextTypographicBounds(MCStringRef p_text, MCCanvasFontRef p_font, MCCanvasRectangleRef& r_rect)
 {
 	r_rect = MCCanvasFontMeasureTextTypographicBoundsWithTransform(p_text, p_font, MCGAffineTransformMakeIdentity());
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasFontMeasureTextTypographicBoundsOnCanvas(MCStringRef p_text, MCCanvasRef p_canvas, MCCanvasRectangleRef& r_rect)
 {
 	__MCCanvasImpl *t_canvas;
@@ -4549,11 +4734,13 @@ MCCanvasRectangleRef MCCanvasFontMeasureTextImageBoundsWithTransform(MCStringRef
 	return t_rect;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasFontMeasureTextImageBounds(MCStringRef p_text, MCCanvasFontRef p_font, MCCanvasRectangleRef& r_rect)
 {
 	r_rect = MCCanvasFontMeasureTextImageBoundsWithTransform(p_text, p_font, MCGAffineTransformMakeIdentity());
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasFontMeasureTextImageBoundsOnCanvas(MCStringRef p_text, MCCanvasRef p_canvas, MCCanvasRectangleRef& r_rect)
 {
 	__MCCanvasImpl *t_canvas;
@@ -4684,6 +4871,7 @@ bool MCCanvasPropertiesPop(__MCCanvasImpl &x_canvas)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCCanvasCreate(MCGContextRef p_context, MCCanvasRef &r_canvas)
 {
 	bool t_success;
@@ -4780,11 +4968,13 @@ static inline MCCanvasProperties &MCCanvasGetProps(MCCanvasRef p_canvas)
 	return MCCanvasGet(p_canvas)->props();
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGetPaint(MCCanvasRef p_canvas, MCCanvasPaintRef &r_paint)
 {
 	r_paint = MCValueRetain(MCCanvasGetProps(p_canvas).paint);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasSetPaint(MCCanvasPaintRef p_paint, MCCanvasRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
@@ -4793,6 +4983,7 @@ void MCCanvasSetPaint(MCCanvasPaintRef p_paint, MCCanvasRef p_canvas)
 	t_canvas->paint_changed = true;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGetFillRuleAsString(MCCanvasRef p_canvas, MCStringRef &r_string)
 {
 	if (!MCCanvasFillRuleToString(MCCanvasGetProps(p_canvas).fill_rule, r_string))
@@ -4801,6 +4992,7 @@ void MCCanvasGetFillRuleAsString(MCCanvasRef p_canvas, MCStringRef &r_string)
 	}
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasSetFillRuleAsString(MCStringRef p_string, MCCanvasRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
@@ -4815,11 +5007,13 @@ void MCCanvasSetFillRuleAsString(MCStringRef p_string, MCCanvasRef p_canvas)
 	t_canvas->fill_rule_changed = true;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGetAntialias(MCCanvasRef p_canvas, bool &r_antialias)
 {
 	r_antialias = MCCanvasGetProps(p_canvas).antialias;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasSetAntialias(bool p_antialias, MCCanvasRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
@@ -4829,11 +5023,13 @@ void MCCanvasSetAntialias(bool p_antialias, MCCanvasRef p_canvas)
 	t_canvas->antialias_changed = true;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGetOpacity(MCCanvasRef p_canvas, MCCanvasFloat &r_opacity)
 {
 	r_opacity = MCCanvasGetProps(p_canvas).opacity;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasSetOpacity(MCCanvasFloat p_opacity, MCCanvasRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
@@ -4843,11 +5039,13 @@ void MCCanvasSetOpacity(MCCanvasFloat p_opacity, MCCanvasRef p_canvas)
 	t_canvas->opacity_changed = true;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGetBlendModeAsString(MCCanvasRef p_canvas, MCStringRef &r_blend_mode)
 {
 	/* UNCHECKED */ MCCanvasBlendModeToString(MCCanvasGetProps(p_canvas).blend_mode, r_blend_mode);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasSetBlendModeAsString(MCStringRef p_blend_mode, MCCanvasRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
@@ -4857,11 +5055,13 @@ void MCCanvasSetBlendModeAsString(MCStringRef p_blend_mode, MCCanvasRef p_canvas
 	t_canvas->blend_mode_changed = true;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGetStippled(MCCanvasRef p_canvas, bool &r_stippled)
 {
 	r_stippled = MCCanvasGetProps(p_canvas).stippled;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasSetStippled(bool p_stippled, MCCanvasRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
@@ -4874,11 +5074,13 @@ void MCCanvasSetStippled(bool p_stippled, MCCanvasRef p_canvas)
 		t_canvas->paint_changed = true;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGetImageResizeQualityAsString(MCCanvasRef p_canvas, MCStringRef &r_quality)
 {
 	/* UNCHECKED */ MCCanvasImageFilterToString(MCCanvasGetProps(p_canvas).image_filter, r_quality);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasSetImageResizeQualityAsString(MCStringRef p_quality, MCCanvasRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
@@ -4890,11 +5092,13 @@ void MCCanvasSetImageResizeQualityAsString(MCStringRef p_quality, MCCanvasRef p_
 		t_canvas->paint_changed = true;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGetStrokeWidth(MCCanvasRef p_canvas, MCGFloat& r_stroke_width)
 {
 	r_stroke_width = MCCanvasGetProps(p_canvas).stroke_width;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasSetStrokeWidth(MCGFloat p_stroke_width, MCCanvasRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
@@ -4904,21 +5108,25 @@ void MCCanvasSetStrokeWidth(MCGFloat p_stroke_width, MCCanvasRef p_canvas)
 	t_canvas->stroke_width_changed = true;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGetFont(MCCanvasRef p_canvas, MCCanvasFontRef &r_font)
 {
 	r_font = MCValueRetain(MCCanvasGetProps(p_canvas).font);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasSetFont(MCCanvasFontRef p_font, MCCanvasRef p_canvas)
 {
 	MCValueAssign(MCCanvasGetProps(p_canvas).font, p_font);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGetJoinStyleAsString(MCCanvasRef p_canvas, MCStringRef &r_join_style)
 {
 	/* UNCHECKED */ MCCanvasJoinStyleToString(MCCanvasGetProps(p_canvas).join_style, r_join_style);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasSetJoinStyleAsString(MCStringRef p_join_style, MCCanvasRef p_canvas)
 {
 	if (!MCCanvasJoinStyleFromString(p_join_style, MCCanvasGetProps(p_canvas).join_style))
@@ -4930,11 +5138,13 @@ void MCCanvasSetJoinStyleAsString(MCStringRef p_join_style, MCCanvasRef p_canvas
 	MCCanvasGet(p_canvas)->join_style_changed = true;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGetCapStyleAsString(MCCanvasRef p_canvas, MCStringRef &r_cap_style)
 {
 	/* UNCHECKED */ MCCanvasCapStyleToString(MCCanvasGetProps(p_canvas).cap_style, r_cap_style);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasSetCapStyleAsString(MCStringRef p_cap_style, MCCanvasRef p_canvas)
 {
 	if (!MCCanvasCapStyleFromString(p_cap_style, MCCanvasGetProps(p_canvas).cap_style))
@@ -4946,17 +5156,20 @@ void MCCanvasSetCapStyleAsString(MCStringRef p_cap_style, MCCanvasRef p_canvas)
 	MCCanvasGet(p_canvas)->cap_style_changed = true;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGetMiterLimit(MCCanvasRef p_canvas, MCCanvasFloat &r_limit)
 {
 	r_limit = MCCanvasGetProps(p_canvas).miter_limit;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasSetMiterLimit(MCCanvasFloat p_limit, MCCanvasRef p_canvas)
 {
 	MCCanvasGetProps(p_canvas).miter_limit = p_limit;
 	MCCanvasGet(p_canvas)->miter_limit_changed = true;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGetDashes(MCCanvasRef p_canvas, MCProperListRef &r_dashes)
 {
 	r_dashes = MCValueRetain(MCCanvasGetProps(p_canvas).dash_lengths);
@@ -4976,6 +5189,7 @@ bool MCCanvasDashesCheckList(MCProperListRef p_list)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasSetDashes(MCProperListRef p_dashes, MCCanvasRef p_canvas)
 {
 	if (!MCCanvasDashesCheckList(p_dashes))
@@ -4988,11 +5202,13 @@ void MCCanvasSetDashes(MCProperListRef p_dashes, MCCanvasRef p_canvas)
 	MCCanvasGet(p_canvas)->dashes_changed = true;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasGetDashPhase(MCCanvasRef p_canvas, MCCanvasFloat &r_phase)
 {
 	r_phase = MCCanvasGetProps(p_canvas).dash_phase;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasSetDashPhase(MCCanvasFloat p_phase, MCCanvasRef p_canvas)
 {
 	MCCanvasGetProps(p_canvas).dash_phase = p_phase;
@@ -5193,16 +5409,19 @@ void MCCanvasTransform(MCCanvasRef p_canvas, const MCGAffineTransform &p_transfo
 		t_canvas->paint_changed = true;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTransform(MCCanvasRef p_canvas, MCCanvasTransformRef p_transform)
 {
 	MCCanvasTransform(p_canvas, *MCCanvasTransformGet(p_transform));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasScale(MCCanvasRef p_canvas, MCCanvasFloat p_scale_x, MCCanvasFloat p_scale_y)
 {
 	MCCanvasTransform(p_canvas, MCGAffineTransformMakeScale(p_scale_x, p_scale_y));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasScaleWithList(MCCanvasRef p_canvas, MCProperListRef p_scale)
 {
 	MCGPoint t_scale;
@@ -5212,16 +5431,19 @@ void MCCanvasScaleWithList(MCCanvasRef p_canvas, MCProperListRef p_scale)
 	MCCanvasScale(p_canvas, t_scale.x, t_scale.y);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasRotate(MCCanvasRef p_canvas, MCCanvasFloat p_angle)
 {
 	MCCanvasTransform(p_canvas, MCGAffineTransformMakeRotation(MCCanvasAngleToDegrees(p_angle)));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTranslate(MCCanvasRef p_canvas, MCCanvasFloat p_x, MCCanvasFloat p_y)
 {
 	MCCanvasTransform(p_canvas, MCGAffineTransformMakeTranslation(p_x, p_y));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasTranslateWithList(MCCanvasRef p_canvas, MCProperListRef p_translation)
 {
 	MCGPoint t_translation;
@@ -5233,6 +5455,7 @@ void MCCanvasTranslateWithList(MCCanvasRef p_canvas, MCProperListRef p_translati
 
 //////////
 
+MC_DLLEXPORT_DEF
 void MCCanvasSaveState(MCCanvasRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
@@ -5244,6 +5467,7 @@ void MCCanvasSaveState(MCCanvasRef p_canvas)
 	MCGContextSave(t_canvas->context);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasRestoreState(MCCanvasRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
@@ -5255,6 +5479,7 @@ void MCCanvasRestoreState(MCCanvasRef p_canvas)
 	MCGContextRestore(t_canvas->context);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasBeginLayer(MCCanvasRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
@@ -5273,7 +5498,7 @@ static void MCPolarCoordsToCartesian(MCGFloat p_distance, MCGFloat p_angle, MCGF
 	r_y = p_distance * sin(p_angle);
 }
 
-
+MC_DLLEXPORT_DEF
 void MCCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
@@ -5352,6 +5577,7 @@ void MCCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRef p_canv
 	MCGContextBeginWithEffects(t_canvas->context, t_rect, t_effects);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasEndLayer(MCCanvasRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
@@ -5363,6 +5589,7 @@ void MCCanvasEndLayer(MCCanvasRef p_canvas)
 	MCGContextEnd(t_canvas->context);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasFill(MCCanvasRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
@@ -5374,6 +5601,7 @@ void MCCanvasFill(MCCanvasRef p_canvas)
 	MCGContextEnd(t_canvas->context);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasStroke(MCCanvasRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
@@ -5385,6 +5613,7 @@ void MCCanvasStroke(MCCanvasRef p_canvas)
 	MCGContextEnd(t_canvas->context);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasClipToRect(MCCanvasRectangleRef p_rect, MCCanvasRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
@@ -5393,6 +5622,7 @@ void MCCanvasClipToRect(MCCanvasRectangleRef p_rect, MCCanvasRef p_canvas)
 	MCGContextClipToRect(t_canvas->context, *MCCanvasRectangleGet(p_rect));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasAddPath(MCCanvasPathRef p_path, MCCanvasRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
@@ -5401,12 +5631,14 @@ void MCCanvasAddPath(MCCanvasPathRef p_path, MCCanvasRef p_canvas)
 	MCGContextAddPath(t_canvas->context, *MCCanvasPathGet(p_path));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasFillPath(MCCanvasPathRef p_path, MCCanvasRef p_canvas)
 {
 	MCCanvasAddPath(p_path, p_canvas);
 	MCCanvasFill(p_canvas);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasStrokePath(MCCanvasPathRef p_path, MCCanvasRef p_canvas)
 {
 	MCCanvasAddPath(p_path, p_canvas);
@@ -5442,11 +5674,13 @@ void MCCanvasDrawRectOfImage(MCCanvasRef p_canvas, MCCanvasImageRef p_image, con
 	}
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasDrawRectOfImage(MCCanvasRectangleRef p_src_rect, MCCanvasImageRef p_image, MCCanvasRectangleRef p_dst_rect, MCCanvasRef p_canvas)
 {
 	MCCanvasDrawRectOfImage(p_canvas, p_image, *MCCanvasRectangleGet(p_src_rect), *MCCanvasRectangleGet(p_dst_rect));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasDrawImage(MCCanvasImageRef p_image, MCCanvasRectangleRef p_dst_rect, MCCanvasRef p_canvas)
 {
 	MCGRectangle t_src_rect;
@@ -5457,6 +5691,7 @@ void MCCanvasDrawImage(MCCanvasImageRef p_image, MCCanvasRectangleRef p_dst_rect
 	MCCanvasDrawRectOfImage(p_canvas, p_image, t_src_rect, *MCCanvasRectangleGet(p_dst_rect));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasMoveTo(MCCanvasPointRef p_point, MCCanvasRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
@@ -5465,6 +5700,7 @@ void MCCanvasMoveTo(MCCanvasPointRef p_point, MCCanvasRef p_canvas)
 	MCGContextMoveTo(t_canvas->context, *MCCanvasPointGet(p_point));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasLineTo(MCCanvasPointRef p_point, MCCanvasRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
@@ -5473,6 +5709,7 @@ void MCCanvasLineTo(MCCanvasPointRef p_point, MCCanvasRef p_canvas)
 	MCGContextLineTo(t_canvas->context, *MCCanvasPointGet(p_point));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasCurveThroughPoint(MCCanvasPointRef p_through, MCCanvasPointRef p_to, MCCanvasRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
@@ -5481,6 +5718,7 @@ void MCCanvasCurveThroughPoint(MCCanvasPointRef p_through, MCCanvasPointRef p_to
 	MCGContextQuadraticTo(t_canvas->context, *MCCanvasPointGet(p_through), *MCCanvasPointGet(p_to));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasCurveThroughPoints(MCCanvasPointRef p_through_a, MCCanvasPointRef p_through_b, MCCanvasPointRef p_to, MCCanvasRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
@@ -5489,6 +5727,7 @@ void MCCanvasCurveThroughPoints(MCCanvasPointRef p_through_a, MCCanvasPointRef p
 	MCGContextCubicTo(t_canvas->context, *MCCanvasPointGet(p_through_a), *MCCanvasPointGet(p_through_b), *MCCanvasPointGet(p_to));
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasClosePath(MCCanvasRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
@@ -5497,6 +5736,7 @@ void MCCanvasClosePath(MCCanvasRef p_canvas)
 	MCGContextCloseSubpath(t_canvas->context);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasFillText(MCStringRef p_text, MCCanvasPointRef p_point, MCCanvasRef p_canvas)
 {
 	MCGPoint t_point;
@@ -5564,6 +5804,7 @@ void MCCanvasFillTextAligned(MCStringRef p_text, integer_t p_halign, integer_t p
 	MCFontDrawText(t_context, t_rect.origin.x + t_x, t_rect.origin.y + t_y, p_text, t_font, false, false);
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasAlignmentEvaluate(integer_t p_h_align, integer_t p_v_align, integer_t &r_align)
 {
 	// range of h/v align is -1, 0, 1 so shift to 0,1,2 and combine
@@ -5576,6 +5817,7 @@ void MCCanvasAlignmentSplit(integer_t p_align, integer_t &r_h_align, integer_t &
 	r_v_align = (0x3 & (p_align >> 2)) - 1;
 }
 
+MC_DLLEXPORT_DEF
 void MCCanvasFillTextAligned(MCStringRef p_text, integer_t p_align, MCCanvasRectangleRef p_rect, MCCanvasRef p_canvas)
 {
 	integer_t t_h_aligh, t_v_align;
@@ -5583,6 +5825,7 @@ void MCCanvasFillTextAligned(MCStringRef p_text, integer_t p_align, MCCanvasRect
 	MCCanvasFillTextAligned(p_text, t_h_aligh, t_v_align, p_rect, p_canvas);
 }
 
+MC_DLLEXPORT_DEF
 MCCanvasRectangleRef MCCanvasMeasureText(MCStringRef p_text, MCCanvasRef p_canvas)
 {
 	MCCanvasRectangleRef t_rect;
@@ -5613,7 +5856,7 @@ void MCCanvasPop(uintptr_t p_cookie)
     MCValueRelease(t_canvas);
 }
 
-extern "C" MC_DLLEXPORT void MCCanvasThisCanvas(MCCanvasRef& r_canvas)
+extern "C" MC_DLLEXPORT_DEF void MCCanvasThisCanvas(MCCanvasRef& r_canvas)
 {
     if (s_current_canvas == nil)
     {
@@ -5624,11 +5867,11 @@ extern "C" MC_DLLEXPORT void MCCanvasThisCanvas(MCCanvasRef& r_canvas)
     r_canvas = MCValueRetain(s_current_canvas);
 }
 
-extern "C" MC_DLLEXPORT void MCCanvasPretendToAssignToThisCanvas(MCCanvasRef p_canvas)
+extern "C" MC_DLLEXPORT_DEF void MCCanvasPretendToAssignToThisCanvas(MCCanvasRef p_canvas)
 {
 }
 
-extern "C" MC_DLLEXPORT void MCCanvasNewCanvasWithSize(MCProperListRef p_list, MCCanvasRef& r_canvas)
+extern "C" MC_DLLEXPORT_DEF void MCCanvasNewCanvasWithSize(MCProperListRef p_list, MCCanvasRef& r_canvas)
 {
 	MCGPoint t_scale;
 	if (!MCProperListToScale(p_list, t_scale))
@@ -5653,7 +5896,7 @@ extern "C" MC_DLLEXPORT void MCCanvasNewCanvasWithSize(MCProperListRef p_list, M
     r_canvas = t_canvas;
 }
 
-extern "C" MC_DLLEXPORT void MCCanvasGetPixelDataOfCanvas(MCCanvasRef p_canvas, MCDataRef& r_data)
+extern "C" MC_DLLEXPORT_DEF void MCCanvasGetPixelDataOfCanvas(MCCanvasRef p_canvas, MCDataRef& r_data)
 {
 	__MCCanvasImpl *t_canvas;
 	t_canvas = MCCanvasGet(p_canvas);
@@ -5686,14 +5929,14 @@ extern "C" MC_DLLEXPORT void MCCanvasGetPixelDataOfCanvas(MCCanvasRef p_canvas, 
         return;
 }
 
-extern "C" MC_DLLEXPORT void MCCanvasGetPixelWidthOfCanvas(MCCanvasRef p_canvas, uinteger_t& r_width)
+extern "C" MC_DLLEXPORT_DEF void MCCanvasGetPixelWidthOfCanvas(MCCanvasRef p_canvas, uinteger_t& r_width)
 {
 	__MCCanvasImpl *t_canvas;
 	t_canvas = MCCanvasGet(p_canvas);
     r_width = MCGContextGetWidth(t_canvas -> context);
 }
 
-extern "C" MC_DLLEXPORT void MCCanvasGetPixelHeightOfCanvas(MCCanvasRef p_canvas, uinteger_t& r_height)
+extern "C" MC_DLLEXPORT_DEF void MCCanvasGetPixelHeightOfCanvas(MCCanvasRef p_canvas, uinteger_t& r_height)
 {
 	__MCCanvasImpl *t_canvas;
 	t_canvas = MCCanvasGet(p_canvas);
@@ -6366,6 +6609,9 @@ bool MCSVGTryToParseRangeAsReal(const char *p_string, const MCRange &p_range, MC
 	
 	char *t_end;
 	t_end = nil;
+	
+	// IM-2015-08-04: [[ Bug 15681 ]] clear errno to avoid spurious ERANGE error.
+	errno = 0;
 	
 	real64_t t_real;
 	t_real = strtod(t_start, &t_end);

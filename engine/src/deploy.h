@@ -75,8 +75,11 @@ struct MCDeployParameters
 	// If true, then the standalone will have an implicit timeout
 	uint32_t timeout;
 	
-	// The list of redirection mappings
+    // The list of redirection mappings
 	MCArrayRef redirects;
+
+    // The list of font mappings
+    MCArrayRef fontmappings;
 
     // AL-2015-02-10: [[ Standalone Inclusions ]] The list of resource mappings.
     MCArrayRef library;
@@ -123,6 +126,9 @@ struct MCDeployParameters
         output			= MCValueRetain(kMCEmptyString);
         modules         = MCValueRetain(kMCEmptyArray);
         library         = MCValueRetain(kMCEmptyArray);
+        
+        // SN-2015-04-23: [[ Merge-6.7.5-rc-1 ]] Initialise fontmappings array
+        fontmappings    = MCValueRetain(kMCEmptyArray);
         
         // SN-2015-02-04: [[ Merge-6.7.2 ]] Init the versions pointer / count
         min_os_versions = nil;

@@ -1,0 +1,22 @@
+#!/bin/bash
+
+
+for arg in "$@" ; do
+	if [[ "$cmd" == "" ]] ; then
+		if [[ "$arg" == /* ]] ; then
+			cmd="$arg"
+		else
+			cmd=$(winepath --unix "$arg")
+		fi
+	else
+		if [[ "$arg" == -* ]] ; then
+			cmd="$cmd"\ "$arg"
+		else
+			cmd="$cmd"\ $(winepath --unix "$arg")
+		fi
+	fi
+done
+
+# Just run the command given
+$cmd
+exit $?

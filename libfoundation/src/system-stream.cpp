@@ -426,7 +426,7 @@ __MCSStreamGetStandardStream (FILE *p_cstream,
 	return true;
 }
 
-bool
+MC_DLLEXPORT_DEF bool
 MCSStreamGetStandardOutput (MCStreamRef & r_stream)
 {
 	return __MCSStreamGetStandardStream (stdout,
@@ -434,7 +434,7 @@ MCSStreamGetStandardOutput (MCStreamRef & r_stream)
 	                                     r_stream);
 }
 
-bool
+MC_DLLEXPORT_DEF bool
 MCSStreamGetStandardInput (MCStreamRef & r_stream)
 {
 	return __MCSStreamGetStandardStream (stdin,
@@ -442,7 +442,7 @@ MCSStreamGetStandardInput (MCStreamRef & r_stream)
 	                                     r_stream);
 }
 
-bool
+MC_DLLEXPORT_DEF bool
 MCSStreamGetStandardError (MCStreamRef & r_stream)
 {
 	return __MCSStreamGetStandardStream (stderr,

@@ -512,7 +512,17 @@ CVReturn MCAVFoundationPlayer::MyDisplayLinkCallback (CVDisplayLinkRef displayLi
                                 void *displayLinkContext)
 {
     MCAVFoundationPlayer *t_self = (MCAVFoundationPlayer *)displayLinkContext;
-        
+    
+    // PM-2015-06-12: [[ Bug 15495 ]] If the file has no video component, then just update the currentTime (no need to updateCurrentFrame, since there are no frames)
+    bool t_has_video;
+    t_has_video = ( [[[[t_self -> m_player currentItem] asset] tracksWithMediaType:AVMediaTypeVideo] count] != 0);
+    
+    if (!t_has_video)
+    {
+        t_self -> HandleCurrentTimeChanged();
+        return kCVReturnSuccess;
+    }
+    
     CMTime t_output_item_time = [t_self -> m_player_item_video_output itemTimeForCVTimeStamp:*inOutputTime];
     
     if (![t_self -> m_player_item_video_output hasNewPixelBufferForItemTime:t_output_item_time])
@@ -1222,21 +1232,22 @@ void MCAVFoundationPlayer::SetTrackProperty(uindex_t p_index, MCPlatformPlayerTr
 		return;
     
     NSArray *t_tracks;
-    t_tracks = [[[m_player currentItem] asset] tracks];
+    t_tracks = [[m_player currentItem] tracks];
     
-    // TODO: Fix error LiveCode-Community[20563:303] -[AVAssetTrack setEnabled:]: unrecognized selector sent to instance 0xb281f50
-    /*AVPlayerItemTrack *t_playerItemTrack;
-    t_playerItemTrack = [t_tracks objectAtIndex:p_index];
-    [t_playerItemTrack setEnabled:*(bool *)p_value];*/
+    // PM-2015-03-23: [[ Bug 15052 ]] Make sure we actually set the enabledTracks
+    AVPlayerItemTrack *t_playerItemTrack;
+    t_playerItemTrack = (AVPlayerItemTrack *)[t_tracks objectAtIndex:p_index];
+    [t_playerItemTrack setEnabled:*(bool *)p_value];
 }
 
 void MCAVFoundationPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTrackProperty p_property, MCPlatformPropertyType p_type, void *r_value)
 {
-    NSArray *t_tracks;
-    t_tracks = [[[m_player currentItem] asset] tracks];
-    
-    // PM-2014-07-10: [[ Bug 12757 ]] Get the AVAssetTrack from t_tracks 
-    AVAssetTrack *t_asset_track = (AVAssetTrack *)[t_tracks objectAtIndex:p_index];
+    // PM-2015-03-23: [[ Bug 15052 ]] Get the value of the enabledTracks property from the AVPlayerItemTrack
+    NSArray *t_player_item_tracks;
+    t_player_item_tracks = [[m_player currentItem] tracks];
+    AVPlayerItemTrack *t_player_item_track = (AVPlayerItemTrack *)[t_player_item_tracks objectAtIndex:p_index];
+    // PM-2014-07-10: [[ Bug 12757 ]] Get the AVAssetTrack from t_player_item_track
+    AVAssetTrack *t_asset_track = t_player_item_track . assetTrack;
     
 	switch(p_property)
 	{
@@ -1263,7 +1274,8 @@ void MCAVFoundationPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTr
         }
 			break;
 		case kMCPlatformPlayerTrackPropertyEnabled:
-			*(bool *)r_value = [t_asset_track isEnabled];
+        // PM-2015-03-23: [[ Bug 15052 ]] Get the value of the enabledTracks property from the AVPlayerItemTrack
+			*(bool *)r_value = [t_player_item_track isEnabled];
 			break;
 	}
 }

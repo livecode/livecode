@@ -1,0 +1,1 @@
+# backColor doesn't work properly for graphic on closed stack

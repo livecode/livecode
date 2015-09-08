@@ -48,7 +48,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "uuid.h"
 
-#include "script.h"
+#include "libscript/script.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -446,12 +446,11 @@ void MCEngineEvalParam(MCExecContext& ctxt, integer_t p_index, MCValueRef& r_val
 void MCEngineEvalParamCount(MCExecContext& ctxt, integer_t& r_count)
 {
 	// MW-2013-11-15: [[ Bug 11277 ]] If we don't have a handler then 'the param'
-	//   makes no sense so just return 0.
-    // PM-2014-04-14: [[Bug 12105]] Do this check to prevent crash in LC server
+    //   makes no sense so just return 0.
 	if (ctxt.GetHandler() != nil)
 		r_count = ctxt.GetHandler()->getnparams();
 	else
-        ctxt . LegacyThrow(EE_PARAMCOUNT_NOHANDLER);
+        r_count = 0;
 }
 
 void MCEngineEvalParams(MCExecContext& ctxt, MCStringRef& r_string)
@@ -652,10 +651,9 @@ void MCEngineEvalValue(MCExecContext& ctxt, MCStringRef p_script, MCValueRef& r_
 		return;
 	}
 
-	if (ctxt.GetHandler() != nil)
-		ctxt.GetHandler()->eval(ctxt, p_script, r_value);
-	else
-		ctxt.GetHandlerList()->eval(ctxt, p_script, r_value);
+    // SN-2015-06-03: [[ Bug 11277 ]] MCHandler::eval refactored
+    ctxt.eval(ctxt, p_script, r_value);
+
 	if (ctxt.HasError())
 		ctxt.LegacyThrow(EE_VALUE_ERROR, p_script);
 }
@@ -767,6 +765,21 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
                 return;
             }
             
+            // AL-2015-04-01: [[ Bug 15139 ]] Make sure the mark text is the correct value type.
+            MCValueRef t_mark_text;
+            if (!ctxt . ConvertToString(p_var . mark . text, (MCStringRef &)t_mark_text))
+            {
+                ctxt . Throw();
+                return;
+            }
+
+            // SN-2015-07-27: [[ Bug 15646 ]] MCExecContext::ConvertToString
+            //  already makes a copy. We want to make sure that p_var.mark.text
+            //  has 0 reference when exiting this function, so p_var.mark.text
+            //  must become t_mark_text, not get a copy of it.
+            MCValueRelease(p_var . mark . text);
+            p_var . mark . text = t_mark_text;
+            
             // SN-2014-09-03: [[ Bug 13314 ]] MCMarkedText::changed updated to store the number of chars appended
             if (p_var . mark . changed != 0)
             {
@@ -844,10 +857,8 @@ void MCEngineExecDo(MCExecContext& ctxt, MCStringRef p_script, int p_line, int p
 		added = True;
 	}
 
-	if (ctxt.GetHandler() != nil)
-		ctxt.GetHandler() -> doscript(ctxt, p_script, p_line, p_pos);
-	else
-		ctxt.GetHandlerList() -> doscript(ctxt, p_script, p_line, p_pos);
+    // SN-2015-06-03: [[ Bug 11277 ]] MCHandler::doscript refactored
+    ctxt.doscript(ctxt, p_script, p_line, p_pos);
 
 	if (added)
 		MCnexecutioncontexts--;
@@ -873,10 +884,8 @@ void MCEngineExecDoInCaller(MCExecContext& ctxt, MCStringRef p_script, int p_lin
     
     MCExecContext *caller = MCexecutioncontexts[MCnexecutioncontexts - 2];
     
-    if (caller -> GetHandler() != nil)
-        caller -> GetHandler() -> doscript(*caller, p_script, p_line, p_pos);
-    else
-        caller -> GetHandlerList() -> doscript(*caller, p_script, p_line, p_pos);
+    // SN-2015-06-03: [[ Bug 11277 ]] MCHandler::doscript refactored
+    caller -> doscript(*caller, p_script, p_line, p_pos);
     
     if (added)
         MCnexecutioncontexts--;
@@ -1298,8 +1307,9 @@ static void MCEngineSplitScriptIntoMessageAndParameters(MCExecContext& ctxt, MCS
             
             // MW-2011-08-11: [[ Bug 9668 ]] Make sure we copy 'pdata' if we use it, since
             //   mptr (into which it points) only lasts as long as this method call.
+            // SN-2015-06-03: [[ Bug 11277 ]] MCHandler::eval_ctxt refactored
             MCExecValue t_value;
-            ctxt . GetHandler() -> eval_ctxt(ctxt, *t_expression, t_value);
+            ctxt . eval_ctxt(ctxt, *t_expression, t_value);
             if (!ctxt.HasError())
                 newparam->set_exec_argument(ctxt, t_value);
             else
@@ -1984,10 +1994,108 @@ void MCEngineEvalSHA1Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStr
 
 void MCEngineGetEditionType(MCExecContext& ctxt, MCStringRef& r_edition)
 {
-    if (MCStringCreateWithCString(MClicenseparameters . license_class == kMCLicenseClassCommunity ? "community" : "commercial", r_edition))
+    bool t_success;
+    switch (MClicenseparameters.license_class)
+    {
+        case kMCLicenseClassCommunity:
+            t_success = MCStringCreateWithCString("community", r_edition);
+            break;
+            
+        case kMCLicenseClassCommercial:
+            t_success = MCStringCreateWithCString("commercial", r_edition);
+            break;
+            
+        case kMCLicenseClassProfessional:
+            t_success = MCStringCreateWithCString("professional", r_edition);
+            break;
+            
+        default:
+            t_success = false;
+            break;
+    }
+    
+    if (t_success)
         return;
     
     ctxt . Throw();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCEngineEvalIsReallyNothing(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+{
+    r_result = MCValueGetTypeCode(value) == kMCValueTypeCodeNull;
+}
+
+void MCEngineEvalIsNotReallyNothing(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+{
+    r_result = MCValueGetTypeCode(value) != kMCValueTypeCodeNull;
+}
+
+void MCEngineEvalIsReallyABoolean(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+{
+    r_result = MCValueGetTypeCode(value) == kMCValueTypeCodeBoolean;
+}
+
+void MCEngineEvalIsNotReallyABoolean(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+{
+    r_result = MCValueGetTypeCode(value) != kMCValueTypeCodeBoolean;
+}
+
+void MCEngineEvalIsReallyAnInteger(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+{
+    r_result = MCValueGetTypeCode(value) == kMCValueTypeCodeNumber &&
+                MCNumberIsInteger((MCNumberRef)value);
+}
+
+void MCEngineEvalIsNotReallyAnInteger(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+{
+    r_result = !(MCValueGetTypeCode(value) == kMCValueTypeCodeNumber &&
+                 MCNumberIsInteger((MCNumberRef)value));
+}
+
+void MCEngineEvalIsReallyAReal(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+{
+    r_result = MCValueGetTypeCode(value) == kMCValueTypeCodeNumber &&
+                MCNumberIsReal((MCNumberRef)value);
+}
+
+void MCEngineEvalIsNotReallyAReal(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+{
+    r_result = !(MCValueGetTypeCode(value) == kMCValueTypeCodeNumber &&
+                 MCNumberIsReal((MCNumberRef)value));
+}
+
+void MCEngineEvalIsReallyAString(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+{
+    r_result = MCValueGetTypeCode(value) == kMCValueTypeCodeString ||
+                MCValueGetTypeCode(value) == kMCValueTypeCodeName;
+}
+
+void MCEngineEvalIsNotReallyAString(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+{
+    r_result = !(MCValueGetTypeCode(value) == kMCValueTypeCodeString ||
+                 MCValueGetTypeCode(value) == kMCValueTypeCodeName);
+}
+
+void MCEngineEvalIsReallyABinaryString(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+{
+    r_result = MCValueGetTypeCode(value) == kMCValueTypeCodeData;
+}
+
+void MCEngineEvalIsNotReallyABinaryString(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+{
+    r_result = MCValueGetTypeCode(value) != kMCValueTypeCodeData;
+}
+
+void MCEngineEvalIsReallyAnArray(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+{
+    r_result = MCValueGetTypeCode(value) == kMCValueTypeCodeArray;
+}
+
+void MCEngineEvalIsNotReallyAnArray(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+{
+    r_result = MCValueGetTypeCode(value) != kMCValueTypeCodeArray;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

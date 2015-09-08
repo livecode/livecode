@@ -24,7 +24,7 @@ Example:
 put "Hello World!" into tAttachment["data"]
 put "text/plain" into tAttachment["type"]
 put "Greetings.txt" into tAttachment["name"]
-mobileComposeHtmlMail "Greetings", "test@runrev.com",,,, tAttachment
+mobileComposeHtmlMail "Greetings", "test@livecode.com",,,, tAttachment
 
 Parameters:
 subject: The subject line of the email.

@@ -17,7 +17,7 @@
 #ifndef __MC_IMAGE_LOADER_H__
 #define __MC_IMAGE_LOADER_H__
 
-#import "objdefs.h"
+#include "objdefs.h"
 
 // Supported import formats
 enum MCImageLoaderFormat

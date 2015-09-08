@@ -112,6 +112,12 @@ enum MCCustomPrinterImageType
 	kMCCustomPrinterImagePNG
 };
 
+#ifdef __LITTLE_ENDIAN__
+#define kMCCustomPrinterImagePixelFormat kMCGPixelFormatBGRA
+#else
+#define kMCCustomPrinterImagePixelFormat kMCGPixelFormatARGB
+#endif
+
 struct MCCustomPrinterImage
 {
 	MCCustomPrinterImageType type;

@@ -13,7 +13,11 @@ OS: mac,windows,linux
 Platforms: desktop,web
 
 Example:
-set the clipboardData["text"] to "Meep!"
+set the clipboardData["text"] to "привет"
+put textDecode(the clipboardData["unicode"], "utf-16") -- outputs привет
+
+set the clipboardData["unicode"] to textEncode("привет", "utf-16")
+put the clipboardData["text"] -- outputs привет
 
 Example:
 set the clipboardData["RTF"] to the RTFText of field "Info"
@@ -25,9 +29,9 @@ Example:
 set the clipboardData["styledText"] to the styledText of field 4
 
 Parameters:
-text: plain text in the native encoding to the platform (MacRoman on OS X, Windows-1252 on Windows and ISO8859-1 on Unix)
+text: plain text
+unicode: plain text encoded as utf-16 in host byte order
 styledText: styled text in LiveCode styledText array format (the same as the styledText property of a field)
-unicode: plain text in UTF-16 encoded using host byte order
 styles: styled text in LiveCode internal styled-text format
 html: styled text in LiveCode HTML format
 rtf: styled text in LiveCode RTF format
@@ -38,25 +42,25 @@ private: an arbitrary application-defined string. This format will only be visib
 
 Value:
 The <clipboardData> pseudo-array provides access to the data to be transferred through a drag-drop operation.
-If the clipboard does not contain data of the specified type, the array element for that type is empty. (For example, if the clipboard contains text, clipboardData["image"] is empty.).
+If the clipboard contains data compatible with the specified type, it is converted to the requested type; otherwise the array element for that type is empty. For example, if the clipboard contains text "hello", clipboardData["image"] is empty, whereas the clipboardData["html"] returns "<p>hello</p>"
 
 Description:
 Use the <clipboardData> property to put data in the clipboard in a specified format, or to get the contents of the clipboard, without copying or pasting.
 
-The clipboardData property is populated automatically when the clipboard content is changed, either by using the cut or copy command, or by cutting or copying in another application.
+The <clipboardData> property is populated automatically when the clipboard content is changed, either by using the cut or copy command, or by cutting or copying in another application.
 
-You can query the keys of the clipboardData to determine what types of data are on the clipboard. For example, if the clipboard contains styled text, you can put that text (in htmlText format) in a variable with the following statement:
+You can query the keys of the <clipboardData> to determine what types of data are on the clipboard. For example, if the clipboard contains styled text, you can put that text (in htmlText format) in a variable with the following statement:
 
 put the clipboardData["html"] into tHTML
 
->*Note:*  The objects type can now be queried and will return a binary string that can be re-used.  Furthermore, this type is now published to all applications and so object cut/copy/paste operaions can occur between LiveCode processes.  To change the contents of the clipboard, you can set the clipboardData property directly. For example, the following statement places the text "Hello World" on the clipboard:
+>*Note:*  The objects type can now be queried and will return a binary string that can be re-used.  Furthermore, this type is now published to all applications and so object cut/copy/paste operaions can occur between LiveCode processes.  To change the contents of the clipboard, you can set the <clipboardData> property directly. For example, the following statement places the text "Hello World" on the clipboard:
 
 set the clipboardData["text"] to "Hello World"
 
-The above statement is equivalent to selecting the text "Hello World" in a field and choosing Edit menu, or to using the copy command. The data you place on the clipboard is accessible to your application using the paste command, and to other applications (that support pasting text) using the application's Paste menu item.
+The above statement is equivalent to selecting the text "Hello World" in a field and choosing Edit menu, or to using the <copy> command. The data you place on the clipboard is accessible to your application using the <paste> command, and to other applications (that support pasting text) using the application's Paste menu item.
 
->*Tip:*  To quickly find out what kind of data is on the clipboard, use the clipboardfunction.
+>*Tip:*  To quickly find out what kind of data is on the clipboard, use the <clipboard> function.
 
-References: copy (command), dragData (property), clipboard (function)
+References: copy (command), dragData (property), clipboard (function), paste (command)
 
 Tags: ui

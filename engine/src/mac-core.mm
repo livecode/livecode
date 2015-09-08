@@ -25,7 +25,7 @@
 
 #include "graphics_util.h"
 
-#include "script.h"
+#include "libscript/script.h"
 
 #include <objc/objc-runtime.h>
 
@@ -1679,7 +1679,7 @@ void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef p_window)
         
         // PM-2014-04-02: [[ Bug 12082 ]] IDE no longer crashes when changing an applied pattern
         if (t_cursor != nil)
-            MCPlatformShowCursor(t_cursor);
+            MCPlatformSetCursor(t_cursor);
         // SN-2014-10-01: [[ Bug 13516 ]] Hiding a cursor here is not what we want to happen if a cursor hasn't been found
         else
             MCMacPlatformResetCursor();
@@ -1969,6 +1969,9 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern "C" bool MCModulesInitialize(void);
+extern "C" void MCModulesFinalize(void);
+
 int main(int argc, char *argv[], char *envp[])
 {
 	extern bool MCS_mac_elevation_bootstrap_main(int argc, char* argv[]);
@@ -1988,7 +1991,6 @@ int main(int argc, char *argv[], char *envp[])
 	// Register for reconfigurations.
 	CGDisplayRegisterReconfigurationCallback(display_reconfiguration_callback, nil);
     
-    extern bool MCModulesInitialize();
 	if (!MCInitialize() || !MCSInitialize() ||
 	    !MCModulesInitialize() || !MCScriptInitialize())
 		exit(-1);
@@ -2041,7 +2043,6 @@ int main(int argc, char *argv[], char *envp[])
 	// Drain the autorelease pool.
 	[t_pool release];
 	
-    extern void MCModulesFinalize(void);
     MCScriptFinalize();
     MCModulesFinalize();
 	MCFinalize();

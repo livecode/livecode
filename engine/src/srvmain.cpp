@@ -39,7 +39,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 #include "uidc.h"
 #include "font.h"
-#include "script.h"
+#include "libscript/script.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -461,12 +461,15 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 	
 static void IO_printf(IO_handle stream, const char *format, ...)
 {
-	char t_buffer[4096];
+    MCAutoStringRef t_string;
 	va_list args;
 	va_start(args, format);
-	vsprintf(t_buffer, format, args);
+    MCStringFormatV(&t_string, format, args);
 	va_end(args);
-	MCS_write(t_buffer, 1, strlen(t_buffer), stream);
+    
+    MCAutoStringRefAsSysString t_sys_string;
+    t_sys_string . Lock(*t_string);
+	MCS_write(*t_sys_string, 1, t_sys_string . Size(), stream);
 }
 
 static bool load_extension_callback(void *p_context, const MCSystemFolderEntry *p_entry)
@@ -493,7 +496,7 @@ static void X_load_extensions(MCServerScript *p_script)
 
 	if (MCS_setcurdir(s_server_home) &&
 		MCS_setcurdir(MCSTR("externals")))
-		MCsystem -> ListFolderEntries(load_extension_callback, p_script);
+		MCsystem -> ListFolderEntries(nil, load_extension_callback, p_script);
 	
 	MCS_setcurdir(*t_dir);
 	
@@ -605,8 +608,8 @@ void X_main_loop(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern bool MCModulesInitialize();
-extern void MCModulesFinalize();
+extern "C" bool MCModulesInitialize();
+extern "C" void MCModulesFinalize();
 
 int main(int argc, char *argv[], char *envp[])
 {
@@ -655,7 +658,19 @@ int main(int argc, char *argv[], char *envp[])
     MCScriptFinalize();
     MCModulesFinalize();
 	MCFinalize();
-	
+
+	for (int i = 0; i < argc; i++)
+	{
+		MCValueRelease(t_new_argv[i]);
+	}
+	MCMemoryDeleteArray(t_new_argv);
+
+	for (int i = 0; i < t_envp_count; i++)
+	{
+		MCValueRelease(t_new_envp[i]);
+	}
+	MCMemoryDeleteArray(t_new_envp);
+
 	exit(t_exit_code);
 }
 

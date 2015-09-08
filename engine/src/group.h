@@ -20,7 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	GROUP_H
 #define	GROUP_H
 
-#include "control.h"
+#include "mccontrol.h"
 
 class MCScrollbar;
 
@@ -130,6 +130,8 @@ public:
 	virtual void relayercontrol_remove(MCControl *control);
 	virtual void relayercontrol_insert(MCControl *control, MCControl *target);
 
+    virtual void scheduledelete(bool p_is_child);
+    
 	MCControl *findchildwithid(Chunk_term type, uint4 p_id);
 
 	// MCGroup functions
@@ -300,6 +302,10 @@ public:
     void SetLockUpdates(MCExecContext& ctxt, bool p_locked);
     void SetClipsToRect(MCExecContext& ctxt, bool p_clips_to_rect);
     void GetClipsToRect(MCExecContext& ctxt, bool &r_clips_to_rect);
+
+    void SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting);
+    void SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting);
+    void SetVisibility(MCExecContext& ctxt, uinteger_t part, bool flag, bool visible);
     
 	virtual void SetEnabled(MCExecContext& ctxt, uint32_t part, bool setting);
 	virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool setting);

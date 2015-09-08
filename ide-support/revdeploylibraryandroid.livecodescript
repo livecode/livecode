@@ -225,6 +225,39 @@ end deployGetJDK
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// SN-2015-05-13: [[ AndroidVersions ]] Make the available Android minimum versions
+//  something changeable from a script-only stack
+function deployGetVersionsList
+   return "2.3 - Gingerbread,2.3.3,3.0 - Honeycomb,3.1,3.2,4.0 - IceCream Sandwich,4.1 - Jelly Bean,4.2,4.3,4.4 - KitKat,5.0 - Lollipop,5.1"
+end deployGetVersionsList
+
+function deployGetAPIsList
+   return "9,10,11,12,13,14,16,17,18,19,21,22"
+end deployGetAPIsList
+
+function deployGetApiFromVersion pVersion
+   local tItemNumber, tAPI
+   put 1 into tItemNumber
+   put 0 into tAPI
+   
+   repeat for each item tAndroidVersion in deployGetVersionsList()
+      if pVersion is tAndroidVersion then
+         put item tItemNumber of deployGetAPIsList() into tAPI
+         exit repeat
+      else
+         add 1 to tItemNumber
+      end if
+   end repeat
+   
+   if tAPI = 0 then // Keep the previous behaviour: defaulting to the smallest API
+      put 9 into tAPI
+   end if
+   
+   return tAPI
+end deployGetApiFromVersion
+
+////////////////////////////////////////////////////////////////////////////////
+
 private command executeShellCommand
    local tShell
    repeat with i = 2 to the paramCount

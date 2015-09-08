@@ -88,39 +88,32 @@ bool MCLocalPasteboard::Find(MCTransferType p_type, uint4& r_index)
 
 bool MCLocalPasteboard::Normalize(MCTransferType p_type, MCValueRef p_data, MCTransferType& r_normal_type, MCDataRef &r_normal_data)
 {
-	if (p_type == TRANSFER_TYPE_RTF_TEXT)
+	switch (p_type)
 	{
-		r_normal_type = TRANSFER_TYPE_STYLED_TEXT;
-        return MCConvertRTFToStyledText((MCDataRef)p_data, r_normal_data);
-	}
-	else if (p_type == TRANSFER_TYPE_HTML_TEXT)
-	{
-		r_normal_type = TRANSFER_TYPE_STYLED_TEXT;
-        return MCConvertHTMLToStyledText((MCDataRef)p_data, r_normal_data);
-	}
-    // If unicode text is asked, we are provided a StringRef and not a DataRef
-    // In case we are anyway provided a StringRef, we should store it as a unicode string - breaks some pasting otherwise
-    // AL-2014-05-27: [[ Bug 12514 ]] If the transfer type is 'private', it should remain so
-	// SN-2014-10-07: [[ Bug 13695 ]] 'set the clipboarddata to "some text"' gives a NameRef, not a StringRef
-    else if (p_type == TRANSFER_TYPE_UNICODE_TEXT ||
-             (p_type == TRANSFER_TYPE_TEXT && 
-				(MCValueGetTypeCode(p_data) == kMCValueTypeCodeString ||
-				 MCValueGetTypeCode(p_data) == kMCValueTypeCodeName)))
-    {
-        r_normal_type = TRANSFER_TYPE_UNICODE_TEXT;
-		MCStringRef t_string;
-		if (MCValueGetTypeCode(p_data) == kMCValueTypeCodeName)
-			t_string = MCNameGetString((MCNameRef)p_data);
-		else
-			t_string = (MCStringRef)p_data;
-
-        return MCStringEncode(t_string, kMCStringEncodingUTF16, false, r_normal_data);
-    }
-    else
-	{
-		r_normal_type = p_type;
-        r_normal_data = MCValueRetain((MCDataRef)p_data);
-		return true;
+		case TRANSFER_TYPE_RTF_TEXT:
+			r_normal_type = TRANSFER_TYPE_STYLED_TEXT;
+			return MCConvertRTFToStyledText((MCDataRef)p_data, r_normal_data);
+			
+		case TRANSFER_TYPE_HTML_TEXT:
+			r_normal_type = TRANSFER_TYPE_STYLED_TEXT;
+			return MCConvertHTMLToStyledText((MCDataRef)p_data, r_normal_data);
+			
+		case TRANSFER_TYPE_STYLED_TEXT_ARRAY:
+			r_normal_type = TRANSFER_TYPE_STYLED_TEXT;
+			return MCConvertStyledTextArrayToStyledText((MCArrayRef)p_data, r_normal_data);
+			
+		case TRANSFER_TYPE_TEXT:
+			r_normal_type = TRANSFER_TYPE_UNICODE_TEXT;
+			return MCStringEncode((MCStringRef)p_data, kMCStringEncodingUTF16, false, r_normal_data);
+			
+		case TRANSFER_TYPE_FILES:
+			r_normal_type = TRANSFER_TYPE_FILES;
+			return MCStringEncode((MCStringRef)p_data, kMCStringEncodingUTF16, false, r_normal_data);
+			
+		default:
+			r_normal_type = p_type;
+			r_normal_data = MCValueRetain((MCDataRef)p_data);
+			return true;
 	}
 }
 

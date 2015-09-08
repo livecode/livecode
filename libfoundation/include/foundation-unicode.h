@@ -463,6 +463,25 @@ bool    MCUnicodeCreateSortKey(MCLocaleRef, MCUnicodeCollateOption,
                                const unichar_t* p_in, uindex_t p_in_length,
                                byte_t* &r_out, uindex_t &r_out_length);
 
+/////
+
+// The collator reference - this is not a valueref!
+typedef void *MCUnicodeCollatorRef;
+
+// Creates a collation object which can be reused.
+bool MCUnicodeCreateCollator(MCLocaleRef locale, MCUnicodeCollateOption options, MCUnicodeCollatorRef& r_collator);
+
+// Destroys a previously create collator.
+void MCUnicodeDestroyCollator(MCUnicodeCollatorRef collator);
+
+int32_t MCUnicodeCollateWithCollator(MCUnicodeCollatorRef collator,
+                                     const unichar_t* p_first, uindex_t p_first_len,
+                                     const unichar_t* p_second, uindex_t p_second_len);
+
+// Create a sort key using the given collator.
+bool MCUnicodeCreateSortKeyWithCollator(MCUnicodeCollatorRef collator,
+                                        const unichar_t* p_in, uindex_t p_in_length,
+                                        byte_t* &r_out, uindex_t &r_out_length);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -546,7 +565,7 @@ inline uinteger_t MCUnicodeCodepointAdvanceSurrogate(const unichar_t* p_input, u
 	{
         // FG-2014-10-23: [[ Bugfix 13761 ]] Codepoint was calculated incorrectly
         uinteger_t t_codepoint;
-		t_codepoint = (0x10000 + ((p_input[x_index] - 0xD800) << 10)) | (p_input[x_index + 1] - 0xDC00);
+		t_codepoint = (0x10000U + ((p_input[x_index] - 0xD800U) << 10)) | (p_input[x_index + 1] - 0xDC00U);
 		x_index += 2;
 		return t_codepoint;
 	}

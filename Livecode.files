@@ -104,6 +104,7 @@ engine/src/contextscalewrapper.cpp
 engine/src/contextscalewrapper.h
 engine/src/control.cpp
 engine/src/control.h
+engine/src/coretextfonts.cpp
 engine/src/cpalette.cpp
 engine/src/cpalette.h
 engine/src/customprinter.cpp
@@ -789,6 +790,14 @@ ide/Engine License.txt
 ide/IDE License.txt
 ide/License Agreement.txt
 ide/Open Source Licenses.txt
+ide-support/revdeploylibraryandroid.livecodescript
+ide-support/revdocsparser.livecodescript
+ide-support/revsaveasandroidstandalone.livecodescript
+ide-support/revsaveasstandalone.livecodescript
+ide-support/revdeploylibraryios.livecodescript
+ide-support/revliburl.livecodescript
+ide-support/revsaveasiosstandalone.livecodescript
+ide-support/revsblibrary.livecodescript
 lcidlc/src/Error.cpp
 lcidlc/src/Error.h
 lcidlc/src/Interface.cpp
@@ -3444,8 +3453,11 @@ thirdparty/libzip/src/zipint.h
 thirdparty/libzip/src/zipintw32.h
 thirdparty/libzip/score.txt
 thirdparty/tools/perfect.c
+tools/build-android.osx
+tools/build-ios.osx
 tools/build-extension-ios.sh
 score.txt
+version
 Makefile
 engine/Makefile.standalone
 engine/Makefile.server

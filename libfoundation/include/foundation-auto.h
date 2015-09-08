@@ -43,9 +43,15 @@ template<typename T> inline T& InOut(MCAutoValueRefBase<T>& p_auto)
 template<typename T> class MCAutoValueRefBase
 {
 public:
+
 	inline MCAutoValueRefBase(void)
+		: m_value(nil)
 	{
-		m_value = nil;
+	}
+
+	inline MCAutoValueRefBase(T p_value)
+		: m_value(MCValueRetain(p_value))
+	{
 	}
 
 	inline ~MCAutoValueRefBase(void)
@@ -423,6 +429,92 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class MCAutoStringRefAsUTF16String
+{
+public:
+	MCAutoStringRefAsUTF16String(void)
+		: m_string(nil), m_buf(nil), m_length(0)
+	{
+	}
+
+	~MCAutoStringRefAsUTF16String(void)
+	{
+		Unlock();
+	}
+
+	bool Lock(MCStringRef p_string)
+	{
+		if (nil == p_string)
+		{
+			return false;
+		}
+
+		m_length = MCStringGetLength(p_string);
+
+		if (MCStringIsNative(p_string))
+		{
+			m_string = nil;
+			return MCStringConvertToWString(p_string, m_buf);
+		}
+		else
+		{
+			m_string = MCValueRetain(p_string);
+			m_buf = nil;
+			return true;
+		}
+	}
+
+	void Unlock(void)
+	{
+		if (nil != m_string)
+		{
+			MCValueRelease(m_string);
+		}
+		else
+		{
+			MCMemoryDeleteArray(m_buf);
+		}
+
+		m_string = nil;
+		m_buf = nil;
+		m_length = 0;
+	}
+
+	const unichar_t *Ptr(void)
+	{
+		if (nil != m_buf)
+		{
+			return m_buf;
+		}
+		else if (nil != m_string)
+		{
+			return MCStringGetCharPtr(m_string);
+		}
+		else
+		{
+			MCUnreachable();
+			return nil;
+		}
+	}
+
+	uindex_t Size(void)
+	{
+		return m_length;
+	}
+
+	const unichar_t *operator * (void)
+	{
+		return Ptr();
+	}
+
+private:
+	MCStringRef m_string;
+	unichar_t *m_buf;
+	uindex_t m_length;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 #if defined(__MAC__) || defined(__IOS__)
 #include <CoreFoundation/CoreFoundation.h>
 class MCAutoStringRefAsCFString
@@ -462,13 +554,13 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if defined(__LINUX__)
 class MCAutoStringRefAsSysString
 {
 public:
     MCAutoStringRefAsSysString()
     {
-        m_sysstring = nil;
+        m_bytes = nil;
+        m_byte_count = 0;
     }
 
     ~MCAutoStringRefAsSysString()
@@ -478,29 +570,40 @@ public:
 
     bool Lock(MCStringRef p_string)
     {
-        return MCStringConvertToSysString(p_string, m_sysstring);
+        MCAssert(m_bytes == nil);
+        return MCStringConvertToSysString(p_string, m_bytes, m_byte_count);
     }
 
     void Unlock()
     {
-        if (m_sysstring != nil)
-            free((void*)m_sysstring);
-        m_sysstring = nil;
+        if (m_bytes != nil)
+        {
+            free(m_bytes);
+            m_bytes = nil;
+            m_byte_count = 0;
+        }
     }
 
-    const char * operator * () const
+    const char *operator * () const
     {
-        return m_sysstring;
+        return Ptr();
+    }
+    
+    const char *Ptr(void) const
+    {
+        MCAssert(m_bytes != nil);
+        return m_bytes;
+    }
+    
+    size_t Size(void) const
+    {
+        return m_byte_count;
     }
 
 private:
-    const char *m_sysstring;
+    char *m_bytes;
+    size_t m_byte_count;
 };
-#elif defined(__WINDOWS__)
-#  define MCAutoStringRefAsSysString MCAutoStringRefAsWS
-#else
-#  define MCAutoStringRefAsSysString MCAutoStringRefAsUTF8String
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

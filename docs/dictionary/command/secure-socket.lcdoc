@@ -10,14 +10,14 @@ Summary: Secures an open socket.
 
 Introduced: 6.6
 
-OS: mac,windows,linux
+OS: mac,windows,linux,ios,android
 
-Platforms: desktop
+Platforms: desktop,mobile
 
 Security: network
 
 Example:
-secure socket "runrev.com:443"
+secure socket "livecode.com:443"
 
 Example:
 open socket to "127.0.0.0:8080"

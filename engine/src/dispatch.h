@@ -215,6 +215,8 @@ public:
 	
 	// IM-2014-07-23: [[ Bug 12930 ]] Replace findchildstack method with iterating method
 	bool foreachchildstack(MCStack *p_stack, MCStackForEachCallback p_callback, void *p_context);
+    
+	bool foreachstack(MCStackForEachCallback p_callback, void *p_context);
 	
 	MCObject *getobjid(Chunk_term type, uint4 inid);
 	MCObject *getobjname(Chunk_term type, MCNameRef);
@@ -260,7 +262,7 @@ public:
     // AL-2015-02-10: [[ Standalone Inclusions ]] Add functions to fetch relative paths present
     //  in the resource mapping array of MCdispatcher.
     void addlibrarymapping(MCStringRef p_mapping);
-    bool fetchlibrarymapping(const char *p_name, MCStringRef &r_path);
+    bool fetchlibrarymapping(MCStringRef p_name, MCStringRef &r_path);
     
 private:
 	// MW-2012-02-17: [[ LogFonts ]] Actual method which performs a load stack. This

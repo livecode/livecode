@@ -35,6 +35,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define FEATURE_RELAUNCH_SUPPORT
 #define FEATURE_QUICKTIME
 #define FEATURE_QUICKTIME_EFFECTS
+#define FEATURE_NOTIFY 1
 
 #elif defined(_MAC_DESKTOP)
 
@@ -46,6 +47,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define FEATURE_PLATFORM_PLAYER
 #define FEATURE_PLATFORM_RECORDER
 #define FEATURE_PLATFORM_AUDIO
+#define FEATURE_NOTIFY 1
 
 #elif defined(_LINUX_DESKTOP)
 
@@ -53,24 +55,28 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define MCSSL
 #define FEATURE_MPLAYER
+#define FEATURE_NOTIFY 1
 
 #elif defined(_WINDOWS_SERVER)
 
 #define PLATFORM_STRING "Win32"
 
 #define MCSSL
+#define FEATURE_NOTIFY 1
 
 #elif defined(_MAC_SERVER)
 
 #define PLATFORM_STRING "MacOS"
 
 #define MCSSL
+#define FEATURE_NOTIFY 1
 
 #elif defined(_LINUX_SERVER) || defined(_DARWIN_SERVER)
 
 #define PLATFORM_STRING "Linux"
 
 #define MCSSL
+#define FEATURE_NOTIFY 1
 
 #elif defined(_IOS_MOBILE)
 
@@ -79,12 +85,24 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __LF__
 #define PLATFORM_STRING "iphone"
 
+#define FEATURE_PLATFORM_URL 1
+#define FEATURE_NOTIFY 1
+
 #elif defined(_ANDROID_MOBILE)
 
 #define MCSSL
 #define __ISO_8859_1__
 #define __LF__
 #define PLATFORM_STRING "android"
+
+#define FEATURE_PLATFORM_URL 1
+#define FEATURE_NOTIFY 1
+
+#elif defined(__EMSCRIPTEN__)
+
+#define PLATFORM_STRING "HTML"
+
+#define FEATURE_PLATFORM_URL 1
 
 #endif
 
@@ -96,7 +114,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #if defined(_MSC_VER)
 #define _HAS_VSCPRINTF
 #define _HAS_QSORT_S
-#elif defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER)
+#elif defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER) || defined(__EMSCRIPTEN__)
 #define _HAS_VSNPRINTF
 #undef _HAS_QSORT_R
 #elif defined(_MAC_DESKTOP) || defined(_MAC_SERVER) || defined(_DARWIN_SERVER) || defined(_IOS_MOBILE)
@@ -245,6 +263,7 @@ typedef struct __MCWinSysMetafileHandle *MCWinSysMetafileHandle;
 typedef struct __MCWinSysEnhMetafileHandle *MCWinSysEnhMetafileHandle;
 
 #define PLACEMENT_NEW_DEFINED
+#define __PLACEMENT_NEW_INLINE
 inline void *operator new (size_t size, void *p)
 {
 	return p;
@@ -367,7 +386,7 @@ struct MCFontStruct
 #define SECONDS_MIN -32535244799.0
 #define SECONDS_MAX 32535244799.0
 
-#elif defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER)
+#elif defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER) || defined(__EMSCRIPTEN__)
 
 #include <stdarg.h>
 #include <errno.h>
@@ -414,7 +433,8 @@ extern uint2 MCctypetable[];
 
 struct MCFontStruct
 {
-	uint16_t size;
+    MCSysFontHandle fid;
+    uint16_t size;
 	uint2 ascent;
 	uint2 descent;
     
@@ -531,20 +551,23 @@ struct MCFontStruct
 
 #endif
 
+// SN-2015-04-17: [[ Bug 15187 ]] Needed to know whether we are compiling for
+//  iOS Device or iOS Simulator
+#if defined TARGET_SUBPLATFORM_IPHONE
+#include <TargetConditionals.h>
+#endif
+
 //////////////////////////////////////////////////////////////////////
 //
 //  NEW / DELETE REDEFINTIONS
 //
 
-#ifndef PLACEMENT_NEW_DEFINED
-inline void *operator new (size_t size, void *p)
-{
-	return p;
-}
-#endif
+#include <new>
 
 // MW-2014-08-14: [[ Bug 13154 ]] Make sure we use the nothrow variants of new / delete.
-#ifndef __VISUALC__
+// SN-2015-04-17: [[ Bug 15187 ]] Don't use the nothrow variant on iOS Simulator
+//  as they won't let iOS Simulator 6.3 engine compile.
+#if (!defined __VISUALC__) && (!TARGET_IPHONE_SIMULATOR)
 void *operator new (size_t size) throw();
 void *operator new[] (size_t size) throw();
 #endif
@@ -1407,10 +1430,6 @@ struct MCObjectChunkIndexPtr
 	MCMarkedText mark;
     MCNameRef index;
 };
-
-// MM-2014-07-31: [[ ThreadedRendering ]]
-typedef struct __MCThreadCondition *MCThreadConditionRef;
-typedef struct __MCThreadMutex *MCThreadMutexRef;
 
 //////////////////////////////////////////////////////////////////////
 

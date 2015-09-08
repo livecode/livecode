@@ -894,7 +894,7 @@ struct MCWindowsSystem: public MCSystemInterface
 	}
 	
 	
-	bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *p_context)
+	bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *p_context)
 	{
 		MCSystemFolderEntry t_entry;
 		memset(&t_entry, 0, sizeof(MCSystemFolderEntry));
@@ -906,7 +906,10 @@ struct MCWindowsSystem: public MCSystemInterface
 		Boolean ok = False;
 
 		MCAutoStringRef tpath_ref;
-		/* UNCHECKED */ GetCurrentFolder(&tpath_ref);
+		if (p_folder == nil)
+			/* UNCHECKED */ GetCurrentFolder(&tpath_ref);
+		else
+			&tpath_ref = MCValueRetain (p_folder);
 
 		char *tpath = strdup(MCStringGetCString(*tpath_ref));
 		char *spath = new char [strlen(tpath) + 5];//path to be searched
@@ -914,7 +917,6 @@ struct MCWindowsSystem: public MCSystemInterface
 		if (tpath[strlen(tpath) - 1] != '\\')
 			strcat(spath, "\\");
 		strcat(spath, "*.*");
-		delete tpath;
 		/*
 		* Now open the directory for reading and iterate over the contents.
 		*/
@@ -925,14 +927,32 @@ struct MCWindowsSystem: public MCSystemInterface
 			return true;
 		}
 
+		/* For each directory entry, we need to construct a path that can
+		 * be passed to stat(2).  Allocate a buffer large enough for the
+		 * path, a path separator character, and any possible filename. */
+		size_t t_path_len = strlen(tpath);
+		size_t t_entry_path_len = t_path_len + 1 + MAX_PATH;
+		char *t_entry_path = new char[t_entry_path_len + 1];
+		strcpy (t_entry_path, tpath);
+		if (tpath[t_path_len - 1] != '\\')
+		{
+			strcat (t_entry_path, "\\");
+			++t_path_len;
+		}
+		delete tpath;
+
 		bool t_success;
 		t_success = true;
 		while(t_success)
 		{
 			if (!strequal(data.cFileName, "."))
 			{
+				/* Truncate and append entry name */
+				t_entry_path[t_path_len] = 0;
+				strcat (t_entry_path, data.cFilename);
+
 				struct _stati64 t_stat;
-				_stati64(data.cFileName, &t_stat);
+				_stati64(t_entry_path, &t_stat);
 
 				t_entry . name = data . cFileName;
 				t_entry . data_size = t_stat . st_size;
@@ -951,6 +971,7 @@ struct MCWindowsSystem: public MCSystemInterface
 		}
 		FindClose(ffh);
 		delete spath;
+		delete t_entry_path;
 
 		return t_success;
 	}

@@ -30,7 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "undolst.h"
 #include "chunk.h"
 #include "object.h"
-#include "control.h"
+#include "mccontrol.h"
 #include "mcerror.h"
 #include "dispatch.h"
 #include "stack.h"
@@ -776,10 +776,12 @@ Exec_errors MCClipboardCmd::processtoclipboard(MCExecPoint& ep, MCObjectRef *p_o
 		{
 			for(uint4 i = 0; i < p_object_count; ++i)
 			{
-				p_objects[i] . object -> del();
-				if (p_objects[i] . object -> gettype() == CT_STACK)
-					MCtodestroy -> remove(static_cast<MCStack *>(p_objects[i] . object));
-				p_objects[i] . object -> scheduledelete();
+				if (p_objects[i] . object -> del())
+                {
+                    if (p_objects[i] . object -> gettype() == CT_STACK)
+                        MCtodestroy -> remove(static_cast<MCStack *>(p_objects[i] . object));
+                    p_objects[i] . object -> scheduledelete();
+                }
 			}
 		}
 	}
@@ -983,36 +985,41 @@ Parse_stat MCCreate::parse(MCScriptPoint &sp)
 			return PS_ERROR;
 		}
 	}
-	else if (sp.skip_token(SP_FACTOR, TT_IN) == PS_NORMAL ||
-             (otype == CT_STACK && sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL))
+	else
     {
-        if (!script_only_stack)
+        // AL-2015-05-21: [[ Bug 15405 ]] Allow 'create widget as ... in group ...'
+        if (otype == CT_WIDGET)
         {
-            container = new MCChunk(False);
-            if (container->parse(sp, False) != PS_NORMAL)
+            if (sp.skip_token(SP_FACTOR, TT_PREP, PT_AS) != PS_NORMAL)
             {
-                MCperror->add
-                (PE_CREATE_BADBGORCARD, sp);
+                MCperror -> add(PE_CREATE_BADTYPE, sp);
+                return PS_ERROR;
+            }
+            if (sp.parseexp(False, True, &kind) != PS_NORMAL)
+            {
+                MCperror -> add(PE_CREATE_BADTYPE, sp);
                 return PS_ERROR;
             }
         }
-        else
+        
+        if (sp.skip_token(SP_FACTOR, TT_IN) == PS_NORMAL ||
+            (otype == CT_STACK && sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL))
         {
-            MCperror -> add(PE_CREATE_BADTYPE, sp);
-            return PS_ERROR;
-        }
-    }
-    else if (otype == CT_WIDGET)
-    {
-        if (sp.skip_token(SP_FACTOR, TT_PREP, PT_AS) != PS_NORMAL)
-        {
-            MCperror -> add(PE_CREATE_BADTYPE, sp);
-            return PS_ERROR;
-        }
-        if (sp.parseexp(False, True, &kind) != PS_NORMAL)
-        {
-            MCperror -> add(PE_CREATE_BADTYPE, sp);
-            return PS_ERROR;
+            if (!script_only_stack)
+            {
+                container = new MCChunk(False);
+                if (container->parse(sp, False) != PS_NORMAL)
+                {
+                    MCperror->add
+                    (PE_CREATE_BADBGORCARD, sp);
+                    return PS_ERROR;
+                }
+            }
+            else
+            {
+                MCperror -> add(PE_CREATE_BADTYPE, sp);
+                return PS_ERROR;
+            }
         }
     }
 	return PS_NORMAL;
@@ -2346,6 +2353,23 @@ Parse_stat MCLoad::parse(MCScriptPoint &sp)
 	{
         is_extension = true;
 		
+        if (sp.skip_token(SP_FACTOR, TT_FROM) != PS_NORMAL)
+        {
+            MCperror->add(PE_LOAD_NOFROM, sp);
+            return PS_ERROR;
+        }
+        
+        // AL-2015-11-06: [[ Load Extension From Var ]] Allow loading an extension from data in a variable
+        if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_DATA) == PS_NORMAL)
+        {
+            from_data = true;
+        }
+        else if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_FILE) != PS_NORMAL)
+        {
+            MCperror->add(PE_LOAD_NOFILE, sp);
+            return PS_ERROR;
+        }
+        
 		if (sp.parseexp(False, True, &url) != PS_NORMAL)
 		{
 			MCperror->add(PE_LOAD_BADEXTENSION, sp);
@@ -2429,15 +2453,29 @@ void MCLoad::exec_ctxt(MCExecContext& ctxt)
     
 	if (is_extension)
 	{
-		MCAutoStringRef t_filename;
 		MCAutoStringRef t_resource_path;
-		if (!ctxt . EvalExprAsStringRef(url, EE_LOAD_BADEXTENSION, &t_filename))
-			return;
+        if (has_resource_path && !ctxt . EvalExprAsStringRef(message, EE_LOAD_BADRESOURCEPATH, &t_resource_path))
+            return;
+        
+        // AL-2015-11-06: [[ Load Extension From Var ]] Allow loading an extension from data in a variable
+        if (from_data)
+        {
+            MCAutoDataRef t_data;
+            
+            if (!ctxt . EvalExprAsDataRef(url, EE_LOAD_BADEXTENSION, &t_data))
+                return;
 		
-		if (has_resource_path && !ctxt . EvalExprAsStringRef(message, EE_LOAD_BADRESOURCEPATH, &t_resource_path))
-			return;
+            MCEngineLoadExtensionFromData(ctxt, *t_data, *t_resource_path);
+        }
+        else
+        {
+            MCAutoStringRef t_filename;
+            
+            if (!ctxt . EvalExprAsStringRef(url, EE_LOAD_BADEXTENSION, &t_filename))
+                return; 
 		
-        MCEngineExecLoadExtension(ctxt, *t_filename, *t_resource_path);
+            MCEngineExecLoadExtension(ctxt, *t_filename, *t_resource_path);
+        }
 	}
 	else
     {
@@ -3462,11 +3500,10 @@ void MCRevert::exec_ctxt(MCExecContext& ctxt)
 		Boolean oldlock = MClockmessages;
 		MClockmessages = True;
 		MCerrorlock++;
-		sptr->del();
+		if (sptr->del())
+            sptr -> scheduledelete();
 		MCerrorlock--;
 		MClockmessages = oldlock;
-		MCtodestroy->add
-		(sptr);
 		sptr = MCdispatcher->findstackname(ep.getsvalue());
 		if (sptr != NULL)
 			sptr->openrect(oldrect, oldmode, NULL, WP_DEFAULT, OP_NONE);

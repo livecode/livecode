@@ -212,6 +212,17 @@ struct MCInterfaceTextStyle;
 struct MCInterfaceTriState;
 struct MCExecValue;
 
+struct MCDeletedObjectPool;
+void MCDeletedObjectsSetup(void);
+void MCDeletedObjectsTeardown(void);
+void MCDeletedObjectsEnterWait(bool p_dispatching);
+void MCDeletedObjectsLeaveWait(bool p_dispatching);
+void MCDeletedObjectsOnObjectCreated(MCObject *object);
+void MCDeletedObjectsOnObjectDeleted(MCObject *object);
+void MCDeletedObjectsOnObjectDestroyed(MCObject *object);
+
+void MCDeletedObjectsDoDrain(void);
+
 struct MCPatternInfo
 {
 	uint32_t id;
@@ -283,6 +294,8 @@ protected:
 
 	// MW-2012-02-16: [[ LogFonts ]] The object's logical font attrs.
 	MCObjectFontAttrs *m_font_attrs;
+    
+    MCDeletedObjectPool *m_pool;
 
 	static uint1 dashlist[2];
 	static uint1 dotlist[2];
@@ -820,14 +833,7 @@ public:
 		return kMCPropertyChangedMessageTypeNone;
 	}	
 
-	void scheduledelete(void);
-	
-	// IM-2013-02-11 image change notification (used by button icons, field images, etc.)
-	// returns true if the referenced image is still in use by this object
-	virtual bool imagechanged(MCImage *p_image, bool p_deleting)
-	{
-		return false;
-	}
+	virtual void scheduledelete(bool p_is_child = false);
 
 	// MW-2012-10-10: [[ IdCache ]]
 	void setinidcache(bool p_value)
@@ -838,7 +844,14 @@ public:
 	bool getinidcache(void)
 	{
 		return m_in_id_cache;
-	}
+    }
+
+	// IM-2013-02-11 image change notification (used by button icons, field images, etc.)
+	// returns true if the referenced image is still in use by this object
+	virtual bool imagechanged(MCImage *p_image, bool p_deleting)
+	{
+        return false;
+    }
     
     void setisparentscript(bool p_value)
     {
@@ -854,7 +867,7 @@ public:
     
     // Copy the font which should be used for this object. This will map/unmap
     // as appropriate.
-    bool copyfont(MCFontRef& r_font);
+    void copyfont(MCFontRef& r_font);
     
     // MW-2014-12-17: [[ Widgets ]] Returns true if the object is a widget or contains
     //   a widget.
@@ -862,6 +875,9 @@ public:
     
     // Currently non-functional: always returns false
     bool is_rtl() const { return false; }
+    
+    // AL-2015-06-30: [[ Bug 15556 ]] Refactored function to sync mouse focus
+    void sync_mfocus(void);
     
 	////////// PROPERTY SUPPORT METHODS
 
@@ -1158,7 +1174,13 @@ public:
 #endif
     
 //////////
-				
+			
+    MCRectangle measuretext(const MCString& p_text, bool p_is_unicode);
+    
+    // Object pool instance variable manipulation
+    MCDeletedObjectPool *getdeletedobjectpool(void) const { return m_pool; }
+    void setdeletedobjectpool(MCDeletedObjectPool *pool) { m_pool = pool; }
+
 protected:
 	IO_stat defaultextendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
 	IO_stat defaultextendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_remaining);

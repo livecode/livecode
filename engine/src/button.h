@@ -17,7 +17,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	BUTTON_H
 #define	BUTTON_H
 
-#include "control.h"
+#include "mccontrol.h"
 
 
 #define AQUA_FUDGE 8

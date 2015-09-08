@@ -18,15 +18,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <foundation.h>
 #include <foundation-system.h>
 #include <foundation-auto.h>
-#include <script.h>
-#include <script-auto.h>
+#include <libscript/script.h>
+#include <libscript/script-auto.h>
 
 #if defined(__WINDOWS__)
 #	include <windows.h>
 #endif
 
-extern bool MCModulesInitialize(void);
-extern void MCModulesFinalize(void);
+extern "C" bool MCModulesInitialize(void);
+extern "C" void MCModulesFinalize(void);
 
 /* Possible exit statuses used by lc-run */
 enum {
@@ -108,9 +108,27 @@ MCRunHandlerError (void)
 	MCErrorRef t_error;
 
 	if (MCErrorCatch (t_error))
+	{
 		t_reason = MCErrorGetMessage (t_error);
+
+		/* Print stack trace */
+		uindex_t t_num_frames = MCErrorGetDepth (t_error);
+		for (uindex_t t_depth = 0; t_depth < t_num_frames; ++t_depth)
+		{
+			MCAutoStringRef t_frame;
+			/* UNCHECKED */ MCStringFormat (&t_frame,
+			                                "#%u\tat %@:%u:%u\n",
+			                                t_depth,
+			                                MCErrorGetTargetAtLevel (t_error, t_depth),
+			                                MCErrorGetRowAtLevel (t_error, t_depth),
+			                                MCErrorGetColumnAtLevel (t_error, t_depth));
+			MCRunPrintMessage (stderr, *t_frame);
+		}
+	}
 	else
+	{
 		/* UNCHECKED */ MCStringCopy (MCSTR("Unknown error"), &t_reason);
+	}
 
 	/* UNCHECKED */ MCStringFormat (&t_message,
 	                                "ERROR: Uncaught error: %@\n",
@@ -330,18 +348,12 @@ MCRunLoadModule (MCStringRef p_filename,
                  MCScriptModuleRef & r_module)
 {
 	MCAutoDataRef t_module_data;
-	MCAutoValueRefBase<MCStreamRef> t_stream;
 	MCAutoScriptModuleRef t_module;
 
 	if (!MCSFileGetContents (p_filename, &t_module_data))
 		return false;
 
-	if (!MCMemoryInputStreamCreate (MCDataGetBytePtr (*t_module_data),
-	                                MCDataGetLength (*t_module_data),
-	                                &t_stream))
-		return false;
-
-	if (!MCScriptCreateModuleFromStream (*t_stream, &t_module))
+	if (!MCScriptCreateModuleFromData (*t_module_data, &t_module))
 		return false;
 
 	r_module = MCScriptRetainModule (*t_module);
@@ -482,3 +494,14 @@ main (int argc,
 
 	exit (0);
 }
+
+/* ----------------------------------------------------------------
+ * Dummy module finit/inits - no canvas, engine, widget module
+ * ---------------------------------------------------------------- */
+
+extern "C" bool com_livecode_engine_Initialize(void) { return true; }
+extern "C" void com_livecode_engine_Finalize(void) { }
+extern "C" bool com_livecode_widget_Initialize(void) { return true; }
+extern "C" void com_livecode_widget_Finalize(void) { }
+extern "C" bool com_livecode_canvas_Initialize(void) { return true; }
+extern "C" void com_livecode_canvas_Finalize(void) { }

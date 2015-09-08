@@ -373,5 +373,9 @@ public:
     
     virtual bool loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_font_handle);
     virtual bool unloadfont(MCStringRef p_path, bool p_globally, void *r_loaded_font_handle);
+
+private:
+    
+    void DnDClientEvent(GdkEvent*);
 };
 #endif

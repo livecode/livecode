@@ -270,7 +270,9 @@ end handler
 
 public handler TestContainsChar()
 	test "char is in" when "y" is in "xyz"
-	test "char isn'tString in" when not "w" is in "xyz"
+	test "char isn't in" when not "w" is in "xyz"
+
+	test "multi-codeunit char isn't in" when not "\u{1f499}" is in "\r\n"
 
 	test diagnostic "TODO 'y' is not in 'xyz'"
 end handler

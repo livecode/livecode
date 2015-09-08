@@ -56,6 +56,14 @@ IO_stat MCModeCheckSaveStack(MCStack *stack, const MCStringRef p_filename);
 MCNameRef MCModeGetEnvironment(void);
 uint32_t MCModeGetEnvironmentType(void);
 
+
+// SN-2015-01-16: [[ Bug 14295 ]] Added mode-specific way to get the resources folder
+// This hook is used to work out what is the resource folder on Mac.
+// On a standalone built, it is <app>.app/Contents/Resources/_MacOS
+// On the other modes, it is 'the filename of this stack'
+//
+void MCModeGetResourcesFolder(MCStringRef &r_resources_folder);
+
 // This hook is used to work out whether the engine has been licensed.
 //
 // The hook is called by MCLicensed::eval.
@@ -68,6 +76,20 @@ bool MCModeGetLicensed(void);
 // This hook is called by X_init.
 //
 bool MCModeIsExecutableFirstArgument(void);
+
+// This hook is used to determine if we populate the command line name and
+// arguments at startup.
+//
+// This hook is called by X_open.
+//
+bool MCModeHasCommandLineArguments(void);
+
+// This hook is used to determine if we populate the environment
+// variables at startup.
+//
+// This hook is called by X_open.
+//
+bool MCModeHasEnvironmentVariables(void);
 
 // This hook is used to determine if any stacks on the command-line
 // should be opened on startup.

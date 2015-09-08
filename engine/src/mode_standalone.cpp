@@ -64,7 +64,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 #include "resolution.h"
-#include "script.h"
+#include "libscript/script.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -98,6 +98,8 @@ __attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
 __attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {0};
 #elif defined(TARGET_PLATFORM_MOBILE)
+MCCapsuleInfo MCcapsule = {0};
+#elif defined(__EMSCRIPTEN__)
 MCCapsuleInfo MCcapsule = {0};
 #endif
 
@@ -147,6 +149,7 @@ extern IO_stat readheader(IO_handle& stream, char *version);
 extern void send_startup_message(bool p_do_relaunch = true);
 
 extern void add_simulator_redirect(const char *);
+extern void add_ios_fontmap(const char *);
 
 // This structure contains the information we collect from reading in the
 // project.
@@ -204,7 +207,26 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 		delete t_redirect;
 	}
 	break;
-			
+            
+    case kMCCapsuleSectionTypeFontmap:
+    {
+        char *t_fontmap;
+        t_fontmap = new char[p_length];
+        if (IO_read(t_fontmap, p_length, p_stream) != IO_NORMAL)
+        {
+            MCresult -> sets("failed to read fontmap");
+            return false;
+        }
+        
+#ifdef TARGET_SUBPLATFORM_IPHONE
+        // The font mapping is only viable (and needed) on iOS
+        add_ios_fontmap(t_fontmap);
+#endif
+        
+        delete[] t_fontmap;
+    }
+    break;
+        
 	case kMCCapsuleSectionTypeStack:
 		if (MCdispatcher -> readstartupstack(p_stream, self -> stack) != IO_NORMAL)
 		{
@@ -321,8 +343,8 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
             return false;
         }
         
-        extern bool MCEngineAddExtensionFromModule(MCStringRef name, MCScriptModuleRef module);
-        if (!MCEngineAddExtensionFromModule(MCNameGetString(MCScriptGetNameOfModule(t_module)), t_module))
+        extern bool MCEngineAddExtensionFromModule(MCScriptModuleRef module);
+        if (!MCEngineAddExtensionFromModule(t_module))
         {
             MCScriptReleaseModule(t_module);
             return false;
@@ -396,11 +418,17 @@ IO_stat MCDispatch::startup(void)
 #endif
 		
 		if (t_stream == NULL)
+        {
+		    MCresult->sets("unable to open startup stack");
 			return IO_ERROR;
+        }
 		
 		MCStack *t_stack;
 		if (readstartupstack(t_stream, t_stack) != IO_NORMAL)
+        {
+		    MCresult->sets("unable to read startup stack");
 			return IO_ERROR;
+        }
 		
 		MCS_close(t_stream);
 		
@@ -494,6 +522,62 @@ IO_stat MCDispatch::startup(void)
 	return IO_NORMAL;
 }
 
+#elif defined(__EMSCRIPTEN__)
+
+#define kMCEmscriptenBootStackFilename "/boot/standalone/__boot.livecode"
+#define kMCEmscriptenStartupScriptFilename "/boot/__startup"
+
+IO_stat
+MCDispatch::startup()
+{
+	/* The standalone data should already have been unpacked by now */
+
+	/* Load the initial stack */
+	/* FIXME Hardcoded boot stack path*/
+	MCStack *t_stack;
+	if (IO_NORMAL != MCdispatcher->loadfile(MCSTR(kMCEmscriptenBootStackFilename),
+	                                        t_stack))
+	{
+		MCresult->sets("failed to read initial stackfile");
+		return IO_ERROR;
+	}
+
+	MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
+
+	/* Load & run the startup script */
+	MCAutoStringRef t_startup_script;
+	if (!MCS_loadtextfile(MCSTR(kMCEmscriptenStartupScriptFilename),
+	                      &t_startup_script))
+	{
+		MCresult->sets("failed to read startup script");
+		return IO_ERROR;
+	}
+
+	if (ES_NORMAL != t_stack->domess(*t_startup_script))
+	{
+		MCresult->sets("failed to execute startup script");
+		return IO_ERROR;
+	}
+
+	/* Complete startup tasks and send the startup message */
+
+	MCModeResetCursors();
+	MCImage::init();
+
+	MCallowinterrupts = false;
+
+	t_stack->extraopen(false);
+
+	send_startup_message();
+
+	if (!MCquit)
+	{
+		t_stack->open();
+	}
+
+	return IO_NORMAL;
+}
+
 #else
 
 IO_stat MCDispatch::startup(void)
@@ -526,23 +610,22 @@ IO_stat MCDispatch::startup(void)
     MCAutoStringRef t_env;
     if (MCS_getenv(MCSTR("TEST_STACK"), &t_env) && !MCStringIsEmpty(*t_env))
     {
-        MCStack *t_stack;
-        IO_handle t_stream;
-        t_stream = MCS_open(*t_env, kMCOpenFileModeRead, False, False, 0);
+	    MCStack *t_stack;
+	    if (MCdispatcher->loadfile(*t_env, t_stack) != IO_NORMAL)
+	    {
+		    MCresult->sets("failed to read TEST_STACK stackfile");
+		    return IO_ERROR;
+	    }
 
-		if (t_stream == nil || MCdispatcher -> readstartupstack(t_stream, t_stack) != IO_NORMAL)
-		{
-			MCresult -> sets("failed to read standalone stack");
-			return IO_ERROR;
-		}
-		MCS_close(t_stream);
-		
 		MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
-		
-		t_stack -> extraopen(false);
-		
+
 		MCModeResetCursors();
 		MCImage::init();
+
+		MCallowinterrupts = False;
+
+		t_stack -> extraopen(false);
+
 		send_startup_message();
 		if (!MCquit)
 			t_stack -> open();
@@ -794,6 +877,12 @@ uint32_t MCModeGetEnvironmentType(void)
 	return kMCModeEnvironmentTypeDesktop;
 }
 
+// SN-2015-01-16: [[ Bug 14295 ]] Get the standalone, redirected resources folder.
+void MCModeGetResourcesFolder(MCStringRef &r_resources_folder)
+{
+    MCS_getresourcesfolder(true, r_resources_folder);
+}
+
 // In standalone mode, we are never licensed.
 bool MCModeGetLicensed(void)
 {
@@ -802,6 +891,23 @@ bool MCModeGetLicensed(void)
 
 // In standalone mode, the executable is $0 if there is an embedded stack.
 bool MCModeIsExecutableFirstArgument(void)
+{
+	return true;
+}
+
+// Desktop standalone have command line arguments - not mobile platforms
+bool MCModeHasCommandLineArguments(void)
+{
+#ifdef _MOBILE
+    return false;
+#else
+    return true;
+#endif
+}
+
+// Standalones have environment variables
+bool
+MCModeHasEnvironmentVariables()
 {
 	return true;
 }
