@@ -459,8 +459,15 @@ char *MCS_get_canonical_path(const char *path)
 	if (path == NULL)
 		return NULL;
 
-	// SN-2015-09-07: [[ Bug 15814 ]] We consider backslashes and slashes the
-	//  same in this context.
+	// The following rules are used to process paths on Windows:
+	// - an absolute UNIX path is mapped to an absolute windows path using the drive of the CWD:
+	// /foo/bar -> CWD-DRIVE:/foo/bar
+	// - an absolute windows path is left as is:
+	// //foo/bar -> //foo/bar
+	// C:/foo/bar -> C:/foo/bar
+	// - a relative path is prefixed by the CWD:
+	// foo/bar -> CWD/foo/bar
+	// Note: / and \ are treated the same, but not changed. When adding a path separator / is used.
 	if ((path[0] == '/' && path[1] != '/')
 			|| (path[0] == '\\' && path[1] != '\\'))
 	{
@@ -475,8 +482,6 @@ char *MCS_get_canonical_path(const char *path)
 		t_path[0] = t_curdir[0]; t_path[1] = ':';
 		strcpy(t_path + 2, path);
 	}
-	// SN-2015-09-03: [[ Bug 15814 ]] UNC paths (such as //servername/path)
-	//  should not be changed, as they are already valid.
 	else if ((is_legal_drive(path[0]) && path[1] == ':')
 			|| (path[0] == '/' && path[1] == '/')
 			|| (path[0] == '\\' && path[1] == '\\'))
