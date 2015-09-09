@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -743,7 +743,7 @@ void GetColumnByNumber(DBCursor *thecursor, char *&result, int columnid, char *v
 inline const char *BooltoStr(Bool b) {return b == True?"True":"False";}
 
 /// @brief Sets the location that revdb should look for drivers next time a connection is attempted.
-/// @param driverPath The folder path to look for drivers in. This should be a path in Revolution format.
+/// @param driverPath The folder path to look for drivers in. This should be a path in LiveCode format.
 /// No input checking is carried out, if the path is invalid, then the intended drivers will just not be found.
 void REVDB_SetDriverPath(char *args[], int nargs, char **retstring,
 	       Bool *pass, Bool *error)

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -268,7 +268,9 @@ static struct {const char *name; Properties property;} s_native_control_properti
     {"playrate", P_PLAY_RATE},
     
 	{"loadstate", P_LOAD_STATE},
-	{"useapplicationaudiosession", P_USE_APPLICATION_AUDIO_SESSION},
+    {"useapplicationaudiosession", P_USE_APPLICATION_AUDIO_SESSION},
+    // PM-2015-07-09: [[ Bug 9744 ]] Added readyForDisplay property for native player
+    {"readyForDisplay", P_READY_FOR_DISPLAY},
 	{"allowsairplay", P_ALLOWS_AIR_PLAY},
 	
 	{"enabled", P_ENABLED},
@@ -441,7 +443,10 @@ bool MCNativeControl::GetControlList(MCStringRef& r_list)
             t_success = MCListAppend(*t_list, *t_control_string);
     }
     
-    MCListCopyAsString(*t_list, r_list);
+    if (t_success)
+        t_success = MCListCopyAsString(*t_list, r_list);
+    
+    return t_success;
 }
 
 

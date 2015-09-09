@@ -20,7 +20,7 @@ For images, use the syntax
 ![<alt id>](<image number>.<extension>)
 The image must be named bugfix-<bug number>-<image number>.<extension>
 
-Otherwise the file should be RunRev flavoured Markdown.
+Otherwise the file should be LiveCode flavoured Markdown.
 
 Single line files will be added to the table of sepcific bug fixes along with a link to their entry 
 on Bugzilla. Multiline files will have their own subsection in the release notes.

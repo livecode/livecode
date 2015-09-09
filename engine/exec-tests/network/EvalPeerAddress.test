@@ -1,5 +1,5 @@
 setup
-put "www.runrev.com:80" into tSock
+put "www.livecode.com:80" into tSock
 open socket tSock
 test the peeraddress of tSock is among the lines of hostnametoaddress(tSock)
 close socket tSock

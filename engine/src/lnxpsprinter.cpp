@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -488,7 +488,7 @@ void MCPSPrinterDevice::BeginPage(void)
 {
 
 	page_count++;
-	sprintf(buffer, "%%%%Page: Revolution %d\n", page_count);
+	sprintf(buffer, "%%%%Page: LiveCode %d\n", page_count);
 	PSwrite ( buffer ) ;
 	PSwrite("1.3 setlinewidth\n");
 	m_page_started = true;
@@ -760,8 +760,7 @@ MCPrinterResult MCPSPrinter::DoBeginPrint(MCStringRef p_document, MCPrinterDevic
     // and the PostScript engine. General support for Unicode text in PS
     // documents isn't easy and is not implemented here. :-(
     PSwrite("%!PS-Adobe-3.0\n");
-	sprintf(buffer, "%%%%Creator: Revolution %s\n", *t_MCN_version); PSwrite(buffer);
-	PSwrite("%%DocumentData: Clean8Bit\n");
+	sprintf(buffer, "%%%%Creator: LiveCode %s\n", *t_MCN_version); PSwrite(buffer);
 
     // SN-2014-12-22: [[ Bug 14278 ]] Export the name as UTF-8 string, as it was done pre-7.0
     MCAutoStringRefAsUTF8String t_doc;
