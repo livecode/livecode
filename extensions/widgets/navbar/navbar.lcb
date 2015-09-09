@@ -105,7 +105,7 @@ property widgetTheme get mWidgetTheme set setWidgetTheme
 metadata widgetTheme.editor is "com.livecode.pi.enum"
 metadata widgetTheme.options is "iOS,Android(Dark),Android(Light)"
 metadata widgetTheme.default is "iOS"
-metadata widgetTheme.label is "Platform Theme"
+metadata widgetTheme.label is "Widget Theme"
 
 /*
 Syntax: set the itemStyle of <widget> to <pItemStyle>
