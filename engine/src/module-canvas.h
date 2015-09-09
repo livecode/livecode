@@ -156,6 +156,10 @@ extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasGradientStopRangeErrorTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasGradientStopOrderErrorTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasGradientTypeErrorTypeInfo;
 
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasEffectInvalidPropertyErrorTypeInfo;
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasEffectPropertyNotAvailableErrorTypeInfo;
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasEffectPropertyInvalidValueErrorTypeInfo;
+
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasPathPointListFormatErrorTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasSVGPathParseErrorTypeInfo;
 
@@ -453,6 +457,7 @@ extern "C" MC_DLLEXPORT void MCCanvasPathEllipticArcToWithRadiiAsList(MCCanvasPo
 extern "C" MC_DLLEXPORT void MCCanvasEffectEvaluateType(integer_t p_type, integer_t &r_type);
 
 // Constructors
+extern "C" MC_DLLEXPORT void MCCanvasEffectMake(integer_t p_type, MCCanvasEffectRef &r_effect);
 extern "C" MC_DLLEXPORT void MCCanvasEffectMakeWithPropertyArray(integer_t p_type, MCArrayRef p_properties, MCCanvasEffectRef &r_effect);
 
 // Properties
