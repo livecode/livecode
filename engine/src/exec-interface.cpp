@@ -206,6 +206,7 @@ MC_EXEC_DEFINE_EXEC_METHOD(Interface, ShowObject, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, ShowObjectWithEffect, 3)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, ShowMenuBar, 0)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, ShowTaskBar, 0)
+MC_EXEC_DEFINE_EXEC_METHOD(Interface, PopupWidget, 3);
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, PopupButton, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, DrawerStack, 5)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, DrawerStackByName, 5)
@@ -2750,6 +2751,32 @@ void MCInterfaceExecShowTaskBar(MCExecContext& ctxt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCInterfaceExecPopupWidget(MCExecContext &ctxt, MCNameRef p_kind, MCPoint *p_at, MCArrayRef p_properties)
+{
+	extern bool MCWidgetPopupAtLocationWithProperties(MCNameRef p_kind, const MCPoint &p_at, MCArrayRef p_properties, MCValueRef &r_result);
+	
+	MCPoint t_at;
+	if (p_at != nil)
+		t_at = *p_at;
+	else
+		t_at = MCPointMake(MCmousex, MCmousey);
+	
+	MCAutoValueRef t_result;
+	if (!MCWidgetPopupAtLocationWithProperties(p_kind, t_at, p_properties, &t_result) || MCValueIsEmpty(*t_result))
+	{
+		if (MCErrorIsPending())
+			MCExtensionCatchError(ctxt);
+		
+		ctxt.SetTheResultToCString(MCcancelstring);
+		ctxt.SetItToEmpty();
+	}
+	else
+	{
+		ctxt.SetTheResultToEmpty();
+		ctxt.SetItToValue(*t_result);
+	}
+}
 
 void MCInterfaceExecPopupButton(MCExecContext& ctxt, MCButton *p_target, MCPoint *p_at)
 {
