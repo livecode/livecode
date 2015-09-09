@@ -48,7 +48,7 @@ use com.livecode.library.iconSVG
 
 -- adding metadata to ensure the extension displays correctly in livecode
 metadata author is "LiveCode"
-metadata version is "1.0.2"
+metadata version is "1.0.3"
 metadata title is "Navigation Bar"
 metadata preferredSize is "320,49"
 metadata svgicon is "M0,0v29.5h80.2V0H0z M21.1,21.5c-0.2-0.1-0.4-0.2-0.4-0.2c-0.5-0.2-0.9-0.3-1.4-0.4c-0.7-0.1-0.9-0.4-0.9-1.1c0-0.1-0.1-0.9,0-1c0.4-0.2,0.5-0.9,0.5-1.3c0-0.3,0.2-0.5,0.3-0.7c0.2-0.3,0.2-0.6,0.3-0.9c0.1-0.2,0.2-0.6,0.1-0.8c0-0.2-0.2-0.4-0.2-0.6c0-0.3,0.1-0.6,0.1-0.9c0-0.5,0-0.9,0-1.4c-0.2-1.2-1.4-1.6-2.5-1.9c-1-0.2-2.2,0.3-2.9,1c-0.3,0.3-0.6,0.7-0.7,1.1c-0.1,0.4,0,0.9,0,1.2c0,0.2,0,0.4,0.1,0.6c0,0.2,0.1,0.3,0.1,0.5c0,0.1-0.1,0.2-0.1,0.3c-0.2,0.4,0,1,0.2,1.4c0.1,0.2,0.2,0.4,0.3,0.5c0.2,0.2,0.2,0.3,0.2,0.6c0,0.4,0.1,1.2,0.6,1.4c0.1,0.1,0,0.8-0.1,0.9c0,0.7,0,1-0.6,1.1c-0.5,0.1-0.9,0.2-1.4,0.4c-0.2,0.1-0.4,0.2-0.7,0.3c-2-1.4-3.4-3.8-3.4-6.4c0-4.3,3.5-7.8,7.8-7.8s7.8,3.5,7.8,7.8C24.3,17.8,23,20.1,21.1,21.5z M45.1,22.7l-4.9-3.6v-0.7l0.2,0.2l3.6,2.6L42.6,17l-0.1-0.4l0.3-0.3l3.4-2.5H42h-0.4l-0.1-0.4l-1.4-4.2l-1.4,4.2l-0.1,0.4h-0.4h-4.3l3.4,2.5l0.3,0.3L37.5,17l-1.4,4.2l3.6-2.6l0.2-0.2v0.7L35,22.7l1.9-5.9l-4.9-3.6h6.1l1.9-5.9l1.9,5.9h6.1l-4.9,3.6L45.1,22.7z M71.1,23.1l-4.9-4.9c-1,0.9-2.4,1.4-3.9,1.5V19c3-0.1,5.4-2.5,5.4-5.5c0-3.1-2.5-5.5-5.5-5.5c-3.1,0-5.5,2.5-5.5,5.5c0,3,2.4,5.4,5.4,5.5v0.7c-3.4-0.1-6-2.8-6-6.2c0-3.4,2.8-6.2,6.2-6.2c3.4,0,6.2,2.8,6.2,6.2c0,1.5-0.6,2.9-1.5,4l4.9,4.9L71.1,23.1z"
@@ -94,7 +94,7 @@ Summary: The theme of the widget
 
 Parameters:
 pWidgetTheme(enum): The theme of the widget
--"iOS8"
+-"iOS"
 -"Android(Dark)"
 -"Android(Light)"
 
@@ -1505,7 +1505,7 @@ private handler setOpacity(in pOpacity as String) returns nothing
 	if tInList is false then
 		throw "invalid background opacity"
 	end if
-	
+
 	if pOpacity is mOpacity then
 		return
 	end if
