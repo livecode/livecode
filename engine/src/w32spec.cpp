@@ -475,15 +475,16 @@ char *MCS_get_canonical_path(const char *path)
 		t_path[0] = t_curdir[0]; t_path[1] = ':';
 		strcpy(t_path + 2, path);
 	}
-	else if (is_legal_drive(path[0]) && path[1] == ':')
+	// SN-2015-09-03: [[ Bug 15814 ]] UNC paths (such as //servername/path)
+	//  should not be changed, as they are already valid.
+	else if ((is_legal_drive(path[0]) && path[1] == ':')
+			|| (path[0] == '/' && path[1] == '/')
+			|| (path[0] == '\\' && path[1] == '\\'))
 	{
 		// absolute path
 		t_path = strclone(path);
 	}
-	// SN-2015-09-03: [[ Bug 15814 ]] UNC paths (such as //servername/path)
-	//  should not be changed, as they are already valid.
-	else if ((path[0] != '/' && path[1] != '/')
-			|| (path[0] != '\\' && path[1] != '\\'))
+	else
 	{
 		// relative to current folder
 		t_curdir = MCS_getcurdir();
@@ -501,8 +502,6 @@ char *MCS_get_canonical_path(const char *path)
 		t_path[t_curdir_len] = '/';
 		memcpy(t_path + t_curdir_len + 1, path, t_path_len + 1);
 	}
-	else
-		t_path = strclone(t_path);
 
 	MCU_fix_path(t_path);
 	return t_path;
