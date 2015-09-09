@@ -737,7 +737,9 @@ MCControl *MCWidget::clone(Boolean p_attach, Object_pos p_position, bool invisib
 		t_new_widget -> attach(p_position, invisible);
     
     MCAutoValueRef t_rep;
-    MCWidgetOnSave(m_widget, &t_rep);
+    // AL-2015-09-08: [[ Bug 15897 ]] Ensure m_widget is not nil before fetching save state
+    if (m_widget != nil)
+        MCWidgetOnSave(m_widget, &t_rep);
     if (*t_rep == nil)
         t_rep = kMCNull;
     

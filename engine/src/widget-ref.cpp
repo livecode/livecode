@@ -1262,6 +1262,7 @@ bool MCChildWidgetSetDisabled(MCWidgetRef p_widget, bool p_disabled)
 
 MCWidgetBase *MCWidgetAsBase(MCWidgetRef self)
 {
+    MCAssert(self != nil);
     return (MCWidgetBase *)MCValueGetExtraBytesPtr(self);
 }
 
