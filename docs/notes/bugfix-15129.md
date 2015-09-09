@@ -1,10 +1,11 @@
 # LCS-Widget: Add 'popup widget' command
 
-Syntax: popup widget <kind> [ at <location> ] [ with properties <propertyArray> ]
+Syntax: `popup widget <kind> [ at <location> ] [ with properties <propertyArray> ]`
 
 Summary: Opens a widget within a popup window.
 
 Example:
+`
 	local tProps
 	// Set the size of the popup
 	put "0,0,120,50" into tProps["rect"]
@@ -13,3 +14,4 @@ Example:
 	
 	// Show the widget in a popup window
 	popup widget "com.example.mycolorpicker" at the mouseloc with properties tProps
+`
