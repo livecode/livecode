@@ -98,10 +98,59 @@ void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 #ifdef /* MCS_savefile_dsk_w32 */ LEGACY_SYSTEM
 void MCS_savefile(const MCString &fname, MCExecPoint &data, Boolean binary)
 {
-	if (!MCSecureModeCanAccessDisk())
+	char *t_path = NULL;
+	char *t_curdir = NULL;
+
+	if (path == NULL)
+		return NULL;
+
+	// The following rules are used to process paths on Windows:
+	// - an absolute UNIX path is mapped to an absolute windows path using the drive of the CWD:
+	// /foo/bar -> CWD-DRIVE:/foo/bar
+	// - an absolute windows path is left as is:
+	// //foo/bar -> //foo/bar
+	// C:/foo/bar -> C:/foo/bar
+	// - a relative path is prefixed by the CWD:
+	// foo/bar -> CWD/foo/bar
+	// Note: / and \ are treated the same, but not changed. When adding a path separator / is used.
+	if ((path[0] == '/' && path[1] != '/')
+			|| (path[0] == '\\' && path[1] != '\\'))
 	{
-		MCresult->sets("can't open file");
-		return;
+		// path in root of current drive
+		t_curdir = MCS_getcurdir();
+
+		int t_path_len;
+		t_path_len = strlen(path);
+		
+		// We append CWD and a colon to the path: length + 2
+		t_path = (char*)malloc(2 + t_path_len + 1);
+		t_path[0] = t_curdir[0]; t_path[1] = ':';
+		strcpy(t_path + 2, path);
+	}
+	else if ((is_legal_drive(path[0]) && path[1] == ':')
+			|| (path[0] == '/' && path[1] == '/')
+			|| (path[0] == '\\' && path[1] == '\\'))
+	{
+		// absolute path
+		t_path = strclone(path);
+	}
+	else
+	{
+		// relative to current folder
+		t_curdir = MCS_getcurdir();
+		int t_curdir_len;
+		t_curdir_len = strlen(t_curdir);
+
+		while (t_curdir_len > 0 && t_curdir[t_curdir_len - 1] == '/')
+			t_curdir_len--;
+
+		int t_path_len;
+		t_path_len = strlen(path);
+
+		t_path = (char*)malloc(t_curdir_len + 1 + t_path_len + 1);
+		memcpy(t_path, t_curdir, t_curdir_len);
+		t_path[t_curdir_len] = '/';
+		memcpy(t_path + t_curdir_len + 1, path, t_path_len + 1);
 	}
 
 	char *tpath = fname.clone();
