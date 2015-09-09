@@ -15,10 +15,10 @@ for people with no experience of git or other version control systems.
 
 ### Making your dictionary change
 
-**Navigate to the file you want to modify in the [dictionary folder of the community-docs branch](https://github.com/runrev/livecode/blob/community-docs/docs/dictionary).**
+**Navigate to the file you want to modify in the [dictionary folder of the community-docs branch](https://github.com/livecode/livecode/blob/community-docs/docs/dictionary).**
 
 For example, the accept command is at:
-https://github.com/runrev/livecode/blob/community-docs/docs/dictionary/command/accept.lcdoc
+https://github.com/livecode/livecode/blob/community-docs/docs/dictionary/command/accept.lcdoc
 
 **Click the pencil icon to the right of Raw|Blame|History buttons**
 
@@ -69,7 +69,7 @@ It will confirm the title and description you entered before.
 **Click Create Pull Request again.**
 
 You should now be able to see your pull request here
-https://github.com/runrev/livecode/pulls
+https://github.com/livecode/livecode/pulls
 
 **Sign the CLA if you haven't already**
 
@@ -121,7 +121,7 @@ or something similar.
 
 **Click the "Commit new file" button.**
 
-Check the pull request again in https://github.com/runrev/livecode/pulls
+Check the pull request again in https://github.com/livecode/livecode/pulls
 You should see the "Add release note" commit added to the pull request.
 
 **Post a link to the pull request on the bug report.**
@@ -140,7 +140,7 @@ Download a Git GUI Client from
 http://git-scm.com/downloads/guis
 
 Once you have familiarised yourself with the client, go to the livecode repo
-https://github.com/runrev/livecode
+https://github.com/livecode/livecode
 and click Fork, and then "Clone in Desktop" button at the top right.
 clone to a suitable location.
 
@@ -193,15 +193,15 @@ Click commit to <branch>
 
 Then click "Submit pull request"
 
-Make sure the target branch is runrev/community-docs
+Make sure the target branch is livecode/community-docs
 
 Check the pull request has appeared in
-https://github.com/runrev/livecode/pulls
+https://github.com/livecode/livecode/pulls
 
 ## Command Line
 
 go to the livecode repo
-https://github.com/runrev/livecode
+https://github.com/livecode/livecode
 and click Fork
 
 then in a terminal window, in a suitable directory, run
@@ -210,7 +210,7 @@ then in a terminal window, in a suitable directory, run
 
 once this is done, add the livecode repo as upstream
 
-`git remote add upstream https://github.com/runrev/livecode.git`
+`git remote add upstream https://github.com/livecode/livecode.git`
 
 make sure your name and email address are set up
 
@@ -261,9 +261,9 @@ Navigate to your fork on the Git website, https://github.com/<user name>/livecod
 You should see a link to the recently pushed branch, and an invitation to submit a pull request.
 Click this. 
 
-Ensure the base fork is runrev/livecode, and the base is community-docs.
+Ensure the base fork is livecode/livecode, and the base is community-docs.
 
 Click create pull request.
 
 Check the pull request has appeared in
-https://github.com/runrev/livecode/pulls
+https://github.com/livecode/livecode/pulls
