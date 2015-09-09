@@ -518,6 +518,13 @@
 			
 			# Other files
 			'src/socket_resolve.cpp',
+
+			'src/mac-clipboard.h',
+			'src/raw-clipboard.h',
+			'src/mac-clipboard.mm',
+			'src/raw-clipboard.cpp',
+
+			'src/mixin-refcounted.h',
 		],
 		
 		# Sources that are only for desktop mode
