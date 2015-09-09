@@ -275,7 +275,7 @@ Syntax: get the <backgroundOpacity> of <widget>
 Summary: The opacity of the background of the navbar
 
 Parameters:
-pBackgroundOpacity(enum): The opacity of the background
+pOpacity(enum): The opacity of the background
 -"Opaque"
 -"Translucent"
 -"Transparent"
@@ -374,10 +374,13 @@ end handler
 
 public handler OnLoad(in pProperties as Array)
 	setNavData(pProperties["items"])
-	put pProperties["theme"] into mWidgetTheme
 	put pProperties["selected"] into mSelectedItem
 	put pProperties["itemStyle"] into mItemStyle
 	put stringToColor(pProperties["hiliteColor"]) into mHiliteColor
+
+	if "theme" is among the keys of pProperties then
+    	put pProperties["theme"] into mWidgetTheme
+	end if
 end handler
 
 public handler OnCreate() returns nothing
@@ -424,7 +427,7 @@ public handler OnCreate() returns nothing
 
 	put tNavItems into mNavData
 
-	put "Android(Dark)" into mWidgetTheme
+	put "iOS" into mWidgetTheme
 	put 1 into mSelectedItem
 	put the empty array into mDragData
 	put "icons and names" into mItemStyle
@@ -442,7 +445,7 @@ public handler OnCreate() returns nothing
 
 	put color [0, 121/255,1] into mHiliteColor
 
-	put "Transparent" into mOpacity
+	put "Opaque" into mOpacity
 	put true into mShowDivide
 end handler
 
@@ -1362,6 +1365,17 @@ private handler setNavData(in pNavData as Array)
 end handler
 
 private handler setWidgetTheme(in pWidgetTheme as String)
+
+	variable tThemeList as List
+	variable tInList as Boolean
+
+	put ["iOS", "Android(Dark)", "Android(Light)"] into tThemeList
+	put pWidgetTheme is in tThemeList into tInList
+
+	if tInList is false then
+		throw "invalid widget theme"
+	end if
+
 	if pWidgetTheme is mWidgetTheme then
 		return
 	end if
