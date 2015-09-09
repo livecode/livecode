@@ -1364,12 +1364,16 @@ private handler setNavData(in pNavData as Array)
 	end if
 end handler
 
+constant kNavbarThemeIos is "iOS"
+constant kNavbarThemeAndroidDark is "Android(Dark)"
+constant kNavbarThemeAndroidLight is "Android(Light)"
+
 private handler setWidgetTheme(in pWidgetTheme as String)
 
 	variable tThemeList as List
 	variable tInList as Boolean
 
-	put ["iOS", "Android(Dark)", "Android(Light)"] into tThemeList
+	put [kNavbarThemeIos, kNavbarThemeAndroidDark, kNavbarThemeAndroidLight] into tThemeList
 	put pWidgetTheme is in tThemeList into tInList
 
 	if tInList is false then
@@ -1486,7 +1490,22 @@ private handler getDesiredHeight() returns Number
 	end if
 end handler
 
+constant kOpaqueBackground is "Opaque"
+constant kTranslucentBackground is "Translucent"
+constant kTransparentBackground is "Transparent"
+
 private handler setOpacity(in pOpacity as String) returns nothing
+
+	variable tOpacityList as List
+	variable tInList as Boolean
+
+	put [kOpaqueBackground, kTranslucentBackground, kTransparentBackground] into tOpacityList
+	put pOpacity is in tOpacityList into tInList
+
+	if tInList is false then
+		throw "invalid background opacity"
+	end if
+	
 	if pOpacity is mOpacity then
 		return
 	end if
