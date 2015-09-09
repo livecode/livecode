@@ -772,10 +772,15 @@ public:
 
 	//////////
 
-	T& operator [] (const int p_index)
+	T& operator [] (uindex_t p_index)
 	{
 		return m_ptr[p_index];
 	}
+    
+    const T& operator [] (uindex_t p_index) const
+    {
+        return m_ptr[p_index];
+    }
 
 private:
 	T *m_ptr;
