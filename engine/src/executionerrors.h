@@ -2632,6 +2632,9 @@ enum Exec_errors
 
     // {EE-861} commandArguments: bad parameter
     EE_COMMANDARGUMENTS_BADPARAM,
+    
+    // {EE-862} rawClipboardData: bad representation
+    EE_RAW_CLIPBOARD_BADREP,
 };
 
 extern const char *MCexecutionerrors;

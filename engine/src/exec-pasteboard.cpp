@@ -34,16 +34,21 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "sellst.h"
 #include "chunk.h"
 
+#include "raw-clipboard.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, Clipboard, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, ClipboardKeys, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, RawClipboardKeys, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, DropChunk, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, DragDestination, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, DragSource, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, DragDropKeys, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsAmongTheKeysOfTheClipboardData, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsNotAmongTheKeysOfTheClipboardData, 2)
+MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsAmongTheKeysOfTheRawClipboardData, 2)
+MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsNotAmongTheKeysOfTheRawClipboardData, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsAmongTheKeysOfTheDragData, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsNotAmongTheKeysOfTheDragData, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, DragSourceAsObject, 1)
@@ -68,6 +73,8 @@ MC_EXEC_DEFINE_GET_METHOD(Pasteboard, AllowableDragActions, 1)
 MC_EXEC_DEFINE_SET_METHOD(Pasteboard, AllowableDragActions, 1)
 MC_EXEC_DEFINE_GET_METHOD(Pasteboard, ClipboardData, 2)
 MC_EXEC_DEFINE_SET_METHOD(Pasteboard, ClipboardData, 2)
+MC_EXEC_DEFINE_GET_METHOD(Pasteboard, RawClipboardData, 2)
+MC_EXEC_DEFINE_SET_METHOD(Pasteboard, RawClipboardData, 2)
 MC_EXEC_DEFINE_GET_METHOD(Pasteboard, DragData, 2)
 MC_EXEC_DEFINE_SET_METHOD(Pasteboard, DragData, 2)
 MC_EXEC_DEFINE_GET_METHOD(Pasteboard, ClipboardOrDragData, 2)
@@ -290,6 +297,36 @@ void MCPasteboardEvalClipboardKeys(MCExecContext& ctxt, MCStringRef& r_string)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCPasteboardEvalRawClipboardKeys(MCExecContext& ctxt, MCStringRef& r_string)
+{
+    // Get a reference to the system clipboard
+    MCRawClipboard* t_clipboard = MCRawClipboard::getSystemClipboard();
+    
+    // TODO: support multiple items
+    // Get the first item on the clipboard
+    MCAutoRefcounted<const MCRawClipboardItem> t_item = t_clipboard->getItemAtIndex(0);
+    if (t_item == NULL)
+    {
+        r_string = kMCEmptyString;
+        MCValueRetain(kMCEmptyString);
+    }
+    else
+    {
+        MCAutoListRef t_list;
+        /* UNCHECKED */ MCListCreateMutable('\n', &t_list);
+        
+        uindex_t t_type_count = t_item->getRepresentationCount();
+        for (uindex_t i = 0; i < t_type_count; i++)
+        {
+            /* UNCHECKED */ MCListAppend(*t_list, t_item->fetchRepresentationAtIndex(i)->getTypeString());
+        }
+        
+        /* UNCHECKED */ MCListCopyAsString(*t_list, r_string);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCPasteboardEvalDropChunk(MCExecContext& ctxt, MCStringRef& r_string)
 {
 	if (MCdropfield == nil)
@@ -352,6 +389,36 @@ void MCPasteboardEvalIsNotAmongTheKeysOfTheClipboardData(MCExecContext& ctxt, MC
 {
 	MCPasteboardEvalIsAmongTheKeysOfTheClipboardData(ctxt, p_key, r_result);
 	r_result = !r_result;
+}
+
+//////////
+
+void MCPasteboardEvalIsAmongTheKeysOfTheRawClipboardData(MCExecContext& ctxt, MCNameRef p_key, bool& r_result)
+{
+    // Get a reference to the system clipboard
+    MCRawClipboard* t_clipboard = MCRawClipboard::getSystemClipboard();
+    
+    // TODO: support multiple items
+    // Get the first item on the clipboard
+    MCAutoRefcounted<const MCRawClipboardItem> t_item = t_clipboard->getItemAtIndex(0);
+    if (t_item == NULL)
+    {
+        // Clipboard is empty so the key is not present
+        r_result = false;
+    }
+    else
+    {
+        // Check whether the key is a valid representation for this item
+        r_result = t_item->hasRepresentation(MCNameGetString(p_key));
+    }
+}
+
+void MCPasteboardEvalIsNotAmongTheKeysOfTheRawClipboardData(MCExecContext& ctxt, MCNameRef p_key, bool& r_result)
+{
+    // Inverse of the result from "is among the keys of"
+    MCPasteboardEvalIsAmongTheKeysOfTheRawClipboardData(ctxt, p_key, r_result);
+    if (!ctxt.HasError())
+        r_result = !r_result;
 }
 
 //////////
@@ -762,6 +829,41 @@ void MCPasteboardGetDragTextData(MCExecContext& ctxt, MCValueRef& r_data)
 void MCPasteboardSetDragTextData(MCExecContext& ctxt, MCValueRef p_data)
 {
 	MCPasteboardSetClipboardOrDragData(ctxt, nil, false, p_data);
+}
+
+void MCPasteboardGetRawClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef& r_data)
+{
+    // Get a reference to the system clipboard
+    MCRawClipboard* t_clipboard = MCRawClipboard::getSystemClipboard();
+    
+    // TODO: support multiple items
+    // Get the first item on the clipboard
+    MCAutoRefcounted<const MCRawClipboardItem> t_item = t_clipboard->getItemAtIndex(0);
+    if (t_item == NULL)
+    {
+        // Clipboard is empty so the key is not present
+        ctxt.LegacyThrow(EE_RAW_CLIPBOARD_BADREP);
+    }
+    else
+    {
+        // Attempt to get the data for this item
+        const MCRawClipboardItemRep* t_rep = t_item->fetchRepresentationByType(MCNameGetString(p_index));
+        if (t_rep == NULL)
+            ctxt.LegacyThrow(EE_RAW_CLIPBOARD_BADREP);
+        else
+        {
+            // Get the data for this representation
+            MCDataRef t_data = t_rep->getData();
+            if (t_data == NULL)
+                ctxt.LegacyThrow(EE_RAW_CLIPBOARD_BADREP);
+            r_data = t_data;
+        }
+    }
+}
+
+void MCPasteboardSetRawClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef p_data)
+{
+    ctxt.LegacyThrow(EE_RAW_CLIPBOARD_BADREP);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

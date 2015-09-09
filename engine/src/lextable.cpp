@@ -1408,6 +1408,7 @@ LT factor_table[] =
         {"random", TT_FUNCTION, F_RANDOM},
 		{"randombytes", TT_FUNCTION, F_RANDOM_BYTES},
         {"randomseed", TT_PROPERTY, P_RANDOM_SEED},
+        {"rawclipboarddata", TT_PROPERTY, P_RAW_CLIPBOARD_DATA},
         {"recent", TT_CHUNK, CT_RECENT},
         {"recentcards", TT_PROPERTY, P_RECENT_CARDS},
         {"recentnames", TT_PROPERTY, P_RECENT_NAMES},
