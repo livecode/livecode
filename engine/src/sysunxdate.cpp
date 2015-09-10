@@ -182,12 +182,12 @@ static MCStringRef remove_seconds(MCStringRef p_input)
     if (MCStringFind(p_input, MCRangeMake(0, UINDEX_MAX), MCSTR(":%S"), kMCStringOptionCompareExact, &t_range))
     {
         // If :%S is found, then we remove it
-        MCAutoStringRef t_mutable_copy;
-        /* UNCHECKED */ MCStringMutableCopy(p_input, &t_mutable_copy);
+        MCStringRef t_mutable_copy;
+        /* UNCHECKED */ MCStringMutableCopy(p_input, t_mutable_copy);
 
-        /* UNCHECKED */ MCStringRemove(*t_mutable_copy, t_range);
+        /* UNCHECKED */ MCStringRemove(t_mutable_copy, t_range);
 
-        /* UNCHECKED */ MCStringCopy(*t_mutable_copy, t_new_string);
+        /* UNCHECKED */ MCStringCopyAndRelease(t_mutable_copy, t_new_string);
     }
     else
     {
