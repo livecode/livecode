@@ -171,6 +171,34 @@ static MCStringRef string_prepend(MCStringRef t_string, unichar_t t_char)
 	return t_result;
 }
 
+
+// PM-2015-09-07: [[ Bug 9942 ]] On Linux, the short/abbr system time should
+//  not return the seconds
+static MCStringRef remove_seconds(MCStringRef p_input)
+{
+    MCStringRef t_new_string;
+    MCRange t_range;
+
+    if (MCStringFind(p_input, MCRangeMake(0, UINDEX_MAX), MCSTR(":%S"), kMCStringOptionCompareExact, &t_range))
+    {
+        // If :%S is found, then we remove it
+        MCAutoStringRef t_mutable_copy;
+        /* UNCHECKED */ MCStringMutableCopy(p_input, &t_mutable_copy);
+
+        /* UNCHECKED */ MCStringRemove(*t_mutable_copy, t_range);
+
+        /* UNCHECKED */ MCStringCopy(*t_mutable_copy, t_new_string);
+    }
+    else
+    {
+        // Otherwise we take the whole string
+        t_new_string = MCValueRetain(p_input);
+    }
+	
+	return t_new_string;
+}
+
+
 static MCStringRef query_locale(uint4 t_index)
 {
 	char *t_buffer;
@@ -230,8 +258,16 @@ static void cache_locale(void)
     }
     else
     {
-        s_datetime_locale -> time_formats[0] = string_prepend(swap_time_tokens(t_time_ampm), '!');
+        // PM-2015-09-07: [[ Bug 9942 ]] On Linux, the short/abbr system time
+        //  should not return the seconds
+        MCStringRef t_short_time;
+        t_short_time = string_prepend(swap_time_tokens(t_time_ampm), '!');
+
+        s_datetime_locale -> time_formats[0] = remove_seconds(t_short_time);
         s_datetime_locale -> time_formats[1] = swap_time_tokens(t_time_ampm);
+
+        // string_prepend() returns a new StringRef, which we must release
+        MCValueRelease(t_short_time);
     }
     
 	s_datetime_locale -> time24_formats[0] = MCSTR("!%H:%M");
