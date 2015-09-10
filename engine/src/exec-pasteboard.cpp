@@ -61,6 +61,8 @@ MC_EXEC_DEFINE_EXEC_METHOD(Pasteboard, CopyObjectsToClipboard, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Pasteboard, Cut, 0)
 MC_EXEC_DEFINE_EXEC_METHOD(Pasteboard, CutTextToClipboard, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Pasteboard, CutObjectsToClipboard, 1)
+MC_EXEC_DEFINE_EXEC_METHOD(Pasteboard, LockClipboard, 0)
+MC_EXEC_DEFINE_EXEC_METHOD(Pasteboard, UnlockClipboard, 0)
 MC_EXEC_DEFINE_GET_METHOD(Pasteboard, AcceptDrop, 1)
 MC_EXEC_DEFINE_SET_METHOD(Pasteboard, AcceptDrop, 1)
 MC_EXEC_DEFINE_GET_METHOD(Pasteboard, DragAction, 1)
@@ -81,6 +83,8 @@ MC_EXEC_DEFINE_GET_METHOD(Pasteboard, ClipboardOrDragData, 2)
 MC_EXEC_DEFINE_SET_METHOD(Pasteboard, ClipboardOrDragData, 2)
 MC_EXEC_DEFINE_GET_METHOD(Pasteboard, ClipboardTextData, 2)
 MC_EXEC_DEFINE_SET_METHOD(Pasteboard, ClipboardTextData, 2)
+MC_EXEC_DEFINE_GET_METHOD(Pasteboard, RawClipboardTextData, 2)
+MC_EXEC_DEFINE_SET_METHOD(Pasteboard, RawClipboardTextData, 2)
 MC_EXEC_DEFINE_GET_METHOD(Pasteboard, DragTextData, 2)
 MC_EXEC_DEFINE_SET_METHOD(Pasteboard, DragTextData, 2)
 
@@ -299,12 +303,16 @@ void MCPasteboardEvalClipboardKeys(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCPasteboardEvalRawClipboardKeys(MCExecContext& ctxt, MCStringRef& r_string)
 {
-    // Get a reference to the system clipboard
-    MCRawClipboard* t_clipboard = MCRawClipboard::getSystemClipboard();
+    // Ensure there is an active script clipboard
+    if (MCscriptrawclipboard == NULL)
+    {
+        ctxt.LegacyThrow(EE_RAW_CLIPBOARD_NOT_LOCKED);
+        return;
+    }
     
     // TODO: support multiple items
     // Get the first item on the clipboard
-    MCAutoRefcounted<const MCRawClipboardItem> t_item = t_clipboard->getItemAtIndex(0);
+    MCAutoRefcounted<const MCRawClipboardItem> t_item = MCscriptrawclipboard->getItemAtIndex(0);
     if (t_item == NULL)
     {
         r_string = kMCEmptyString;
@@ -395,12 +403,16 @@ void MCPasteboardEvalIsNotAmongTheKeysOfTheClipboardData(MCExecContext& ctxt, MC
 
 void MCPasteboardEvalIsAmongTheKeysOfTheRawClipboardData(MCExecContext& ctxt, MCNameRef p_key, bool& r_result)
 {
-    // Get a reference to the system clipboard
-    MCRawClipboard* t_clipboard = MCRawClipboard::getSystemClipboard();
+    // Ensure there is an active script clipboard
+    if (MCscriptrawclipboard == NULL)
+    {
+        ctxt.LegacyThrow(EE_RAW_CLIPBOARD_NOT_LOCKED);
+        return;
+    }
     
     // TODO: support multiple items
     // Get the first item on the clipboard
-    MCAutoRefcounted<const MCRawClipboardItem> t_item = t_clipboard->getItemAtIndex(0);
+    MCAutoRefcounted<const MCRawClipboardItem> t_item = MCscriptrawclipboard->getItemAtIndex(0);
     if (t_item == NULL)
     {
         // Clipboard is empty so the key is not present
@@ -833,12 +845,16 @@ void MCPasteboardSetDragTextData(MCExecContext& ctxt, MCValueRef p_data)
 
 void MCPasteboardGetRawClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef& r_data)
 {
-    // Get a reference to the system clipboard
-    MCRawClipboard* t_clipboard = MCRawClipboard::getSystemClipboard();
+    // Ensure there is an active script clipboard
+    if (MCscriptrawclipboard == NULL)
+    {
+        ctxt.LegacyThrow(EE_RAW_CLIPBOARD_NOT_LOCKED);
+        return;
+    }
     
     // TODO: support multiple items
     // Get the first item on the clipboard
-    MCAutoRefcounted<const MCRawClipboardItem> t_item = t_clipboard->getItemAtIndex(0);
+    MCAutoRefcounted<const MCRawClipboardItem> t_item = MCscriptrawclipboard->getItemAtIndex(0);
     if (t_item == NULL)
     {
         // Clipboard is empty so the key is not present
@@ -863,7 +879,76 @@ void MCPasteboardGetRawClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCV
 
 void MCPasteboardSetRawClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef p_data)
 {
+    // Ensure there is an active script clipboard
+    if (MCscriptrawclipboard == NULL)
+    {
+        ctxt.LegacyThrow(EE_RAW_CLIPBOARD_NOT_LOCKED);
+        return;
+    }
+    
+    // TODO: support multiple items
+    // Get the first item in the clipboard
+    MCAutoRefcounted<MCRawClipboardItem> t_item = MCscriptrawclipboard->getItemAtIndex(0);
+    
+    // If there is no item on the clipboard yet, we will have to allocate one
+    if (t_item == NULL)
+    {
+        t_item = MCscriptrawclipboard->createNewItem();
+        if (!MCscriptrawclipboard->pushItem(t_item))
+        {
+            ctxt.LegacyThrow(EE_RAW_CLIPBOARD_INSERT_FAILED);
+            return;
+        }
+    }
+    
+    // Convert the incoming valueref to data
+    MCAutoDataRef t_data;
+    if (!ctxt.ConvertToData(p_data, &t_data))
+    {
+        ctxt.LegacyThrow(EE_RAW_CLIPBOARD_BADREP);
+        return;
+    }
+    
+    // Add the representation to the clipboard item
+    if (!t_item->addRepresentation(MCNameGetString(p_index), *t_data))
+    {
+        ctxt.LegacyThrow(EE_RAW_CLIPBOARD_BADREP);
+        return;
+    }
+}
+
+void MCPasteboardGetRawClipboardTextData(MCExecContext& ctxt, MCValueRef& r_value)
+{
+    // Ensure there is an active script clipboard
+    if (MCscriptrawclipboard == NULL)
+    {
+        ctxt.LegacyThrow(EE_RAW_CLIPBOARD_NOT_LOCKED);
+        return;
+    }
+    
+    // Calling this method is always an error
     ctxt.LegacyThrow(EE_RAW_CLIPBOARD_BADREP);
+}
+
+void MCPasteboardSetRawClipboardTextData(MCExecContext& ctxt, MCValueRef p_value)
+{
+    // Ensure there is an active script clipboard
+    if (MCscriptrawclipboard == NULL)
+    {
+        ctxt.LegacyThrow(EE_RAW_CLIPBOARD_NOT_LOCKED);
+        return;
+    }
+    
+    // The only supported value here is empty as it is used to clear the
+    // contents of the clipboard to prepare it for writing.
+    if (!MCValueIsEmpty(p_value))
+    {
+        ctxt.LegacyThrow(EE_RAW_CLIPBOARD_BADREP);
+        return;
+    }
+    
+    // Clear the clipboard
+    MCscriptrawclipboard->clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -891,3 +976,46 @@ void MCPasteboardEvalDragDestinationAsObject(MCExecContext& ctxt, MCObjectPtr& r
     
     ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+void MCPasteboardExecLockClipboard(MCExecContext& ctxt)
+{
+    // Don't allow recursive locking
+    if (MCscriptrawclipboard != NULL)
+    {
+        ctxt.LegacyThrow(EE_CLIPBOARD_ALREADY_LOCKED);
+        return;
+    }
+    
+    // Create a new clipboard object for the scripting world.
+    //
+    // If this fails, it won't be reported immediately but later clipboard
+    // accesses will throw errors as the clipboard hasn't been locked yet.
+    MCscriptrawclipboard = MCRawClipboard::Create();
+    if (!MCscriptrawclipboard)
+        return;
+    
+    // Ensure that the clipboard is up-to-date
+    MCscriptrawclipboard->PullUpdates();
+}
+
+void MCPasteboardExecUnlockClipboard(MCExecContext& ctxt)
+{
+    // Make sure a clipboard has actually been locked
+    if (MCscriptrawclipboard == NULL)
+    {
+        ctxt.LegacyThrow(EE_CLIPBOARD_NOT_LOCKED);
+        return;
+    }
+    
+    // Push out changes onto the system clipboard
+    MCscriptrawclipboard->PushUpdates();
+    
+    // Release our hold on the scripting world's raw clipboard object
+    MCscriptrawclipboard->Release();
+    MCscriptrawclipboard = NULL;
+}
+
+////////////////////////////////////////////////////////////////////////////////

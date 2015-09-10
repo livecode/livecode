@@ -678,6 +678,7 @@ enum Lock_constants {
     LC_RECENT,
     LC_SCREEN,
 	LC_SCREEN_FOR_EFFECT,
+    LC_CLIPBOARD,
 };
 
 enum Mark_constants {

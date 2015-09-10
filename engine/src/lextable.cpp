@@ -1884,6 +1884,7 @@ static LT insert_table[] =
 
 static LT lock_table[] =
     {
+        {"clipboard", TT_UNDEFINED, LC_CLIPBOARD},
         {"colormap", TT_UNDEFINED, LC_COLORMAP},
         {"cursor", TT_UNDEFINED, LC_CURSOR},
         {"dialog", TT_UNDEFINED, LC_ERRORS},

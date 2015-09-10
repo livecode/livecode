@@ -3574,6 +3574,9 @@ extern MCExecMethodInfo *kMCPasteboardSetRawClipboardDataMethodInfo;
 extern MCExecMethodInfo *kMCPasteboardGetDragDataMethodInfo;
 extern MCExecMethodInfo *kMCPasteboardSetDragDataMethodInfo;
 
+extern MCExecMethodInfo *kMCPasteboardExecLockClipboardMethodInfo;
+extern MCExecMethodInfo *kMCPasteboardExecUnlockClipboardMethodInfo;
+
 void MCPasteboardEvalClipboard(MCExecContext& ctxt, MCNameRef& r_string);
 void MCPasteboardEvalClipboardKeys(MCExecContext& ctxt, MCStringRef& r_string);
 void MCPasteboardEvalDropChunk(MCExecContext& ctxt, MCStringRef& r_string);
@@ -3603,6 +3606,9 @@ void MCPasteboardExecCut(MCExecContext& ctxt);
 void MCPasteboardExecCutTextToClipboard(MCExecContext& ctxt, MCObjectChunkPtr p_target);
 void MCPasteboardExecCutObjectsToClipboard(MCExecContext& ctxt, MCObjectPtr *p_targets, uindex_t p_target_count);
 
+void MCPasteboardExecLockClipboard(MCExecContext& ctxt);
+void MCPasteboardExecUnlockClipboard(MCExecContext& ctxt);
+
 void MCPasteboardGetAcceptDrop(MCExecContext& ctxt, bool& r_value);
 void MCPasteboardSetAcceptDrop(MCExecContext& ctxt, bool p_value);
 void MCPasteboardGetDragAction(MCExecContext& ctxt, intenum_t& r_value);
@@ -3622,6 +3628,8 @@ void MCPasteboardGetDragData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef&
 void MCPasteboardSetDragData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef p_data);
 void MCPasteboardGetClipboardTextData(MCExecContext& ctxt, MCValueRef& r_data);
 void MCPasteboardSetClipboardTextData(MCExecContext& ctxt, MCValueRef p_data);
+void MCPasteboardGetRawClipboardTextData(MCExecContext& ctxt, MCValueRef& r_data);
+void MCPasteboardSetRawClipboardTextData(MCExecContext& ctxt, MCValueRef p_data);
 void MCPasteboardGetDragTextData(MCExecContext& ctxt, MCValueRef& r_data);
 void MCPasteboardSetDragTextData(MCExecContext& ctxt, MCValueRef p_data);
 

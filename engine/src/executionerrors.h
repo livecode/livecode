@@ -2633,8 +2633,20 @@ enum Exec_errors
     // {EE-861} commandArguments: bad parameter
     EE_COMMANDARGUMENTS_BADPARAM,
     
-    // {EE-862} rawClipboardData: bad representation
+    // {EE-862} rawClipboardData: bad item type or data
     EE_RAW_CLIPBOARD_BADREP,
+    
+    // {EE-863} rawClipboardData: failed to insert item
+    EE_RAW_CLIPBOARD_INSERT_FAILED,
+    
+    // {EE-864} rawClipboardData: clipboard not locked
+    EE_RAW_CLIPBOARD_NOT_LOCKED,
+    
+    // {EE-865} lock clipboard: already locked
+    EE_CLIPBOARD_ALREADY_LOCKED,
+    
+    // {EE-866} unlock clipboard: not locked
+    EE_CLIPBOARD_NOT_LOCKED,
 };
 
 extern const char *MCexecutionerrors;

@@ -365,6 +365,7 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
     DEFINE_RW_PROPERTY(P_DRAG_DATA, Any, Pasteboard, DragTextData)
     
     DEFINE_RW_ARRAY_PROPERTY(P_RAW_CLIPBOARD_DATA, Any, Pasteboard, RawClipboardData)
+    DEFINE_RW_PROPERTY(P_RAW_CLIPBOARD_DATA, Any, Pasteboard, RawClipboardTextData)
 
 	// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog    
     DEFINE_RW_PROPERTY(P_COLOR_DIALOG_COLORS, LinesOfString, Dialog, ColorDialogColors)

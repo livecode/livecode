@@ -103,6 +103,7 @@ public:
     // index is not valid. The returned item holds a reference to the clipboard
     // data and must be release()'d after use.
     virtual const MCRawClipboardItem* getItemAtIndex(uindex_t p_index) const = 0;
+    virtual MCRawClipboardItem* getItemAtIndex(uindex_t p_index) = 0;
     
     // Deletes the current contents of the clipboard. This must be called before
     // any modifications to the clipboard or undefined behaviour will result.
@@ -133,13 +134,20 @@ public:
     // Ensures that all updates to the clipboard have been synchronised with the
     // system -- note that this does not guarantee that the *data* has been
     // uploaded somewhere; just that the meta-data is up-to-date.
-    virtual void synchronizeUpdates() = 0;
+    virtual bool PushUpdates() = 0;
+    
+    // Fetches the latest changes from the system clipboard.
+    //
+    // Note that if the clipboard is not owned, this will discard the contents
+    // of this clipboard object in favour of the newer updates from the system's
+    // clipboard.
+    virtual bool PullUpdates() = 0;
     
     // Uploads all the offered representations to the clipboard to ensure that
     // they will remain available after the termination of the LiveCode process.
     // This is not needed on some systems and not possible on others but, for
     // those that do implement it, not doing so is a huge user annoyance!
-    virtual void flushData() = 0;
+    virtual bool flushData() = 0;
     
     // Returns the maximum number of items that can be added to the clipboard.
     // This will usually be either 1 or a very large integer (e.g. UINDEX_MAX),
@@ -159,9 +167,10 @@ public:
     virtual ~MCRawClipboard() = 0;
     
     
-    // Returns the main system clipboard
-    // This is a temporary thing for testing during development.
-    static MCRawClipboard* getSystemClipboard();
+    // Creates a new clipboard associated with the main system clipboard. Note
+    // that these are not kept synchronised - clipboards are only updated when
+    // the "synchronizeUpdates" method is called.
+    static MCRawClipboard* Create();
 };
 
 

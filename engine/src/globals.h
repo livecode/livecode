@@ -419,6 +419,9 @@ extern char *MCsysencoding;
 extern MCLocaleRef kMCBasicLocale;
 extern MCLocaleRef kMCSystemLocale;
 
+// The raw clipboard object used for raw clipboard access from scripts
+extern class MCRawClipboard* MCscriptrawclipboard;
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  HOOK REGISTRATION

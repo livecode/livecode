@@ -502,6 +502,9 @@ MCArrayRef MCcommandarguments;
 
 MCHook *MChooks = nil;
 
+// The raw clipboard object used for raw clipboard access from scripts
+class MCRawClipboard* MCscriptrawclipboard;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern MCUIDC *MCCreateScreenDC(void);
@@ -842,6 +845,8 @@ void X_clear_globals(void)
     MCactionsrequired = 0;
     
     MChooks = nil;
+    
+    MCscriptrawclipboard = NULL;
 
     MCSocketsInitialize();
 

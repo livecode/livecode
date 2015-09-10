@@ -52,9 +52,18 @@ public:
     
     // Increments the reference count.
     // TODO: atomic ops
-    inline void Retain() const
+    inline const Derived* Retain() const
     {
         ++m_refcount;
+        return static_cast<const Derived*> (this);
+    }
+    
+    // Increments the reference count.
+    // TODO: atomic ops
+    inline Derived* Retain()
+    {
+        ++m_refcount;
+        return static_cast<Derived*> (this);
     }
     
     // Decreases the reference count
@@ -107,7 +116,15 @@ public:
     
     ~MCAutoRefcounted()
     {
-        m_object->Release();
+        if (m_object != NULL)
+            m_object->Release();
+    }
+    
+    MCAutoRefcounted& operator= (T* p_object)
+    {
+        if (m_object)
+            m_object->Release();
+        m_object = p_object;
     }
     
     operator T* ()
