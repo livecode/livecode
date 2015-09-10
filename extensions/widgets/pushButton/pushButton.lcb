@@ -1,0 +1,542 @@
+/*
+Copyright (C) 2015 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+This widget is a push button that dispatches mouse events to its script object.
+*/
+
+-- declaring the extension as a widget, followed by the identifier
+widget com.livecode.widget.pushButton
+--
+
+-- dependency declarations
+use com.livecode.canvas
+use com.livecode.widget
+use com.livecode.engine
+use com.livecode.library.iconSVG
+--
+
+-- adding metadata to ensure the extension displays correctly in LiveCode
+metadata author is "LiveCode"
+metadata version is "1.0.0"
+metadata title is "Push Button"
+metadata preferredSize is "64,36"
+metadata svgicon is "M49.2,0h-34C6.8,0,0,6.8,0,15.2c0,8.4,6.8,15.2,15.2,15.2h34c8.4,0,15.2-6.8,15.2-15.2C64.3,6.8,57.5,0,49.2,0z M18.5,19.6c-0.2,0.3-0.4,0.6-0.7,0.8c-0.3,0.2-0.7,0.4-1.1,0.5s-0.9,0.1-1.4,0.1h-4.5v-2.9h2v1.2h2.4c0.4,0,0.8-0.1,1-0.2c0.4-0.2,0.7-0.6,0.7-1.3c0-0.5-0.2-0.9-0.6-1.1c-0.2-0.1-0.6-0.2-1-0.2h-2.5v1.2h-2V14h2v1h2.4c0.4,0,0.8-0.1,1.1-0.2c0.3-0.2,0.4-0.5,0.4-0.9c0-0.5-0.2-0.8-0.5-0.9c-0.3-0.1-0.7-0.2-1.2-0.2h-2.2v1h-2V11h4.9c1.2,0,2.1,0.4,2.6,1.1c0.3,0.4,0.5,0.9,0.5,1.5c0,0.6-0.2,1.1-0.5,1.5c-0.2,0.2-0.4,0.4-0.8,0.6c0.5,0.2,0.9,0.5,1.2,0.9S19,17.5,19,18C19,18.6,18.8,19.2,18.5,19.6z M27.3,21.1h-1.9V20c0,0-0.1,0.1-0.1,0.2c-0.1,0.1-0.2,0.2-0.3,0.3c-0.3,0.3-0.6,0.5-0.9,0.6s-0.6,0.2-1,0.2c-1.1,0-1.8-0.4-2.2-1.2c-0.2-0.4-0.3-1.1-0.3-1.9v-4.5h2v4.5c0,0.4,0,0.7,0.1,1c0.2,0.4,0.5,0.6,1,0.6c0.7,0,1.1-0.3,1.4-0.8c0.1-0.3,0.2-0.7,0.2-1.2v-4.1h2V21.1z M32.6,15.1h-1.2V19c0,0.3,0,0.5,0.1,0.6s0.3,0.1,0.7,0.1c0.1,0,0.1,0,0.2,0c0.1,0,0.1,0,0.2,0v1.5l-0.9,0c-0.9,0-1.5-0.1-1.9-0.5c-0.2-0.2-0.3-0.6-0.3-1v-4.6h-1v-1.4h1v-2.1h1.9v2.1h1.2V15.1z M37.2,15.1H36V19c0,0.3,0,0.5,0.1,0.6s0.3,0.1,0.7,0.1c0.1,0,0.1,0,0.2,0c0.1,0,0.1,0,0.2,0v1.5l-0.9,0c-0.9,0-1.5-0.1-1.9-0.5c-0.2-0.2-0.3-0.6-0.3-1v-4.6h-1v-1.4h1v-2.1H36v2.1h1.2V15.1z M44.7,20.2c-0.6,0.8-1.6,1.2-2.9,1.2s-2.2-0.4-2.9-1.2c-0.6-0.7-0.9-1.6-0.9-2.6h2c0,0.7,0.2,1.2,0.5,1.6c0.3,0.4,0.7,0.6,1.3,0.6s1-0.2,1.3-0.6c0.3-0.4,0.5-1,0.5-1.7c0-0.7-0.2-1.3-0.5-1.7c-0.3-0.4-0.7-0.6-1.3-0.6s-1,0.2-1.3,0.6c-0.3,0.4-0.4,0.9-0.5,1.6h-2c0-1,0.3-1.9,0.9-2.6c0.6-0.8,1.6-1.2,2.9-1.2s2.2,0.4,2.9,1.2s0.9,1.7,0.9,2.8C45.7,18.5,45.3,19.4,44.7,20.2z M53.8,21.1h-2v-4.5c0-0.4-0.1-0.7-0.2-0.9c-0.2-0.4-0.6-0.6-1.1-0.6c-0.7,0-1.1,0.3-1.3,0.8C49.1,16.2,49,16.6,49,17v4h-1.9v-7.4h1.9v1.1c0.2-0.4,0.5-0.7,0.7-0.8c0.4-0.3,0.9-0.5,1.5-0.5c0.8,0,1.4,0.2,1.9,0.6c0.5,0.4,0.7,1.1,0.7,2V21.1z M47.2,5.5h-30c-6,0-13.1,3.2-14.6,7.8C3.6,7.5,9.7,3,17.2,3h30c8.1,0,14.7,5.3,14.7,11.9C61.9,9.5,53.8,5.5,47.2,5.5z"
+--
+
+/*
+Syntax: set the widgetTheme of <widget> to <pWidgetTheme>
+Syntax: get the widgetTheme of <widget>
+
+Summary: The theme of the widget
+
+Parameters:
+pWidgetTheme(enum): The theme of the widget
+-"iOS"
+-"Android(Raised)"
+-"Android(Flat)"
+
+Description:
+Use the <widgetTheme> property to set the theme of the widget.
+*/
+property widgetTheme get mWidgetTheme set setWidgetTheme
+metadata widgetTheme.editor is "com.livecode.pi.enum"
+metadata widgetTheme.options is "iOS,Android(Raised),Android(Flat)"
+metadata widgetTheme.default is "iOS"
+metadata widgetTheme.label is "Widget Theme"
+
+/*
+Syntax: set the buttonLabel of <widget> to <pLabel>
+Syntax: get the buttonLabel of <widget>
+
+Summary: The text displayed on the button
+
+Parameters:
+pLabel(string): The text shown on the button
+
+Description:
+Use the <buttonLabel> property to set the label of the button, which is the text displayed in the button.
+*/
+property buttonLabel get mButtonLabel set setButtonLabel
+metadata buttonLabel.default is "Button"
+metadata buttonLabel.label is "Label"
+
+/*
+Syntax: set the <textColor> of <widget> to <pTextColor>
+Syntax: get the <textColor> of <widget>
+
+Summary: The color of the text displayed on the button
+
+Parameters:
+pTextColor(color): The color of the text
+
+Description:
+Use the <textColor> property to set the color of the label on the button.
+
+If the theme of the widget is "Android(Raised)" and the background color of the widget is not white, then the text color of the widget will always be set to white.
+*/
+property buttonTextColor get getTextColor set setTextColor
+metadata buttonTextColor.editor is "com.livecode.pi.color"
+metadata buttonTextColor.label is "Text Color"
+metadata buttonTextColor.default is "0,121,255"
+
+/*
+Syntax: set the <backgroundColor> of <widget> to <pBackgroundColor>
+Syntax: get the <backgroundColor> of <widget>
+
+Summary: The color of the button's background
+
+Parameters:
+pBackgroundColor(color): The color of the background
+
+Description:
+Use the <backgroundColor> property to set the background color of the button.
+
+This property can only be set if the theme of the widget is "Android(Raised)"
+*/
+property buttonBackgroundColor get getBackgroundColor set setBackgroundColor
+metadata buttonBackgroundColor.editor is "com.livecode.pi.color"
+metadata buttonBackgroundColor.label is "Background Color"
+metadata buttonBackgroundColor.default is "255,255,255"
+
+/*
+Syntax: set the <backgroundOpacity> of <widget> to <pOpacity>
+Syntax: get the <backgroundOpacity> of <widget>
+
+Summary: The background opacity of the button
+
+Parameters:
+pOpacity(enum): The background opacity of the button
+-"Opaque"
+-"Translucent"
+
+Description:
+Use the <backgroundOpacity> property to set the opacity of the button's background.
+
+This property can only be set if the theme of the widget is "iOS".
+*/
+property backgroundOpacity get mBackgroundOpacity set setBackgroundOpacity
+metadata backgroundOpacity.editor is "com.livecode.pi.enum"
+metadata backgroundOpacity.options is "Opaque,Translucent,Transparent"
+metadata backgroundOpacity.default is "Transparent"
+metadata backgroundOpacity.label is "Background Opacity"
+
+-- private instance variables
+private variable mWidgetTheme as String
+private variable mButtonLabel as String
+private variable mTextColor as Color
+private variable mBackgroundColor as Color
+private variable mBackgroundOpacity as String
+
+private variable mShowBorder as Boolean
+private variable mDefaultColor as Color
+private variable mAndroidRaisedBounds as Rectangle
+private variable mIosFontSize as Real
+private variable mAndroidFontSize as Real
+
+public handler OnSave(out rProperties as Array)
+   put the empty array into rProperties
+
+   put mWidgetTheme into rProperties["theme"]
+   put mButtonLabel into rProperties["label"]
+   put colorToString(mTextColor) into rProperties["textColor"]
+   put colorToString(mBackgroundColor) into rProperties["backgroundColor"]
+   put mBackgroundOpacity into rProperties["opacity"]
+
+   return rProperties
+end handler
+
+public handler OnLoad(in pProperties as Array)
+   put pProperties["theme"] into mWidgetTheme
+   put pProperties["label"] into mButtonLabel
+   put stringToColor(pProperties["textColor"]) into mTextColor
+   put stringToColor(pProperties["backgroundColor"]) into mBackgroundColor
+   put pProperties["opacity"] into mBackgroundOpacity
+end handler
+
+public handler OnCreate() returns nothing
+   put "iOS" into mWidgetTheme
+   put "Button" into mButtonLabel
+   put color [0, 121/255, 1] into mTextColor
+   put color [1, 1, 1] into mBackgroundColor
+   put "Transparent" into mBackgroundOpacity
+
+   put false into mShowBorder
+   put color [0, 121/255, 1] into mDefaultColor
+   put rectangle [0, 0, (my width)-3, (my height)-3] into mAndroidRaisedBounds
+   put (my height)*(17/29) into mIosFontSize
+   put (my height)*(14/36) into mAndroidFontSize
+end handler
+
+public handler OnPaint() returns nothing
+   updateVariables()
+
+   if mWidgetTheme is "iOS" then
+      drawIosButton()
+   else if mWidgetTheme is "Android(Raised)" then
+      drawAndroidRaisedButton()
+   else if mWidgetTheme is "Android(Flat)" then
+      drawAndroidFlatButton()
+   end if
+
+end handler
+
+private handler drawIosButton() returns nothing
+
+   -- make sure the color of the label text is not white
+   variable tColorString as String
+   put colorToString(mTextColor) into tColorString
+   checkTextColor(tColorString)
+
+   -- background
+   set the paint of this canvas to fetchPaint("background")
+   fill fetchPath("background") on this canvas
+
+   -- label
+   set the font of this canvas to fetchFont()
+   set the paint of this canvas to fetchPaint("label")
+   fill text mButtonLabel at center of my bounds on this canvas
+end handler
+
+private handler drawAndroidRaisedButton() returns nothing
+
+   -- check if we need to show a border based on the background color
+   variable tColorString as String
+   put colorToString(mBackgroundColor) into tColorString
+   checkBackgroundColor(tColorString)
+
+   -- shadow
+   set the paint of this canvas to fetchPaint("bottomShadow")
+   fill fetchPath("bottomShadow") on this canvas
+   set the paint of this canvas to fetchPaint("rightShadow")
+   fill fetchPath("rightShadow") on this canvas
+
+   -- background
+   set the paint of this canvas to fetchPaint("background")
+   fill fetchPath("background") on this canvas
+
+   -- border
+   if mShowBorder then
+      set the paint of this canvas to fetchPaint("border")
+      set the stroke width of this canvas to 0.5
+      stroke fetchPath("border") on this canvas
+   end if
+
+   -- label
+   variable tLabel as String
+   put the upper of mButtonLabel into tLabel
+
+   set the font of this canvas to fetchFont()
+   set the paint of this canvas to fetchPaint("label")
+   fill text tLabel at center of mAndroidRaisedBounds on this canvas
+end handler
+
+private handler drawAndroidFlatButton() returns nothing
+
+   -- make sure the color of the label text is not white
+   variable tColorString as String
+   put colorToString(mTextColor) into tColorString
+   checkTextColor(tColorString)
+
+   -- label
+   variable tLabel as String
+   put the upper of mButtonLabel into tLabel
+
+   set the font of this canvas to fetchFont()
+   set the paint of this canvas to fetchPaint("label")
+   fill text tLabel at center of my bounds on this canvas
+end handler
+
+private handler updateVariables() returns nothing
+   put rectangle [0, 0, (my width)-3, (my height)-3] into mAndroidRaisedBounds
+   put (my height)*(17/29) into mIosFontSize
+   put (my height)*(14/36) into mAndroidFontSize
+end handler
+
+private handler fetchPaint(in pObject as String) returns Paint
+   if pObject is "background" then
+      if mWidgetTheme is "iOS" then
+         if mBackgroundOpacity is "Opaque" then
+            return solid paint with color [1,1,1]
+         else if mBackgroundOpacity is "Translucent" then
+            return solid paint with color [1,1,1,0.8]
+         else if mBackgroundOpacity is "Transparent" then
+            return solid paint with color [1,1,1,0]
+         end if
+      else if mWidgetTheme is "Android(Raised)" then
+         return solid paint with mBackgroundColor
+      end if
+
+   else if pObject is "label" then
+      return solid paint with mTextColor
+
+   else if pObject is "border" then
+      return solid paint with color [167/255, 167/255, 167/255]
+
+   else if pObject is "rightShadow" then
+      variable tRamp1 as List
+      put the empty list into tRamp1
+      push gradient stop at 0 with color [183/255, 183/255, 183/255] onto tRamp1
+      push gradient stop at 0.25 with color [209/255, 209/255, 209/255] onto tRamp1
+      push gradient stop at 0.5 with color [230/255, 230/255, 230/255] onto tRamp1
+      push gradient stop at 0.75 with color [241/255, 241/255, 241/255] onto tRamp1
+
+      variable tPaint1 as Paint
+      put linear gradient with ramp tRamp1 into tPaint1
+      --rotate tPaint by 90
+      scale tPaint1 by [3, 1]
+      return tPaint1
+
+   else if pObject is "bottomShadow" then
+      variable tRamp2 as List
+      put the empty list into tRamp2
+      push gradient stop at 0 with color [183/255, 183/255, 183/255] onto tRamp2
+      push gradient stop at 0.25 with color [209/255, 209/255, 209/255] onto tRamp2
+      push gradient stop at 0.5 with color [230/255, 230/255, 230/255] onto tRamp2
+      push gradient stop at 0.75 with color [241/255, 241/255, 241/255] onto tRamp2
+
+      variable tPaint2 as Paint
+      put linear gradient with ramp tRamp2 into tPaint2
+      rotate tPaint2 by 90
+      scale tPaint2 by [3, 1]
+      return tPaint2
+
+
+   end if
+end handler
+
+private handler fetchPath(in pObject as String) returns Path
+   if pObject is "background" then
+      if mWidgetTheme is "iOS" then
+         return rounded rectangle path of my bounds with radius 5
+      else if mWidgetTheme is "Android(Raised)" then
+         return rounded rectangle path of mAndroidRaisedBounds with radius 2
+      end if
+   else if pObject is "border" then
+      return rounded rectangle path of mAndroidRaisedBounds with radius 2
+   else if pObject is "bottomShadow" then
+      return rectangle path of rectangle [0, my height - 3, my width, my height]
+   else if pObject is "rightShadow" then
+      return rectangle path of rectangle [my width - 3, 0, my width, my height]
+   end if
+end handler
+
+private handler fetchFont() returns Font
+   if mWidgetTheme is "iOS" then
+      return font "Helvetica Neue" at size mIosFontSize
+   else if mWidgetTheme contains "Android" then
+      return font "Roboto Medium" at size mAndroidFontSize
+   end if
+end handler
+
+--------------------------------------------------------------------------------
+--
+--		Getting and Setting Properties
+--
+--------------------------------------------------------------------------------
+
+constant kButtonThemeIos is "iOS"
+constant kButtonThemeAndroidRaised is "Android(Raised)"
+constant kButtonThemeAndroidFlat is "Android(Flat)"
+
+private handler setWidgetTheme(in pWidgetTheme as String)
+
+   variable tThemeList as List
+   variable tInList as Boolean
+
+   put [kButtonThemeIos, kButtonThemeAndroidRaised, kButtonThemeAndroidFlat] into tThemeList
+   put pWidgetTheme is in tThemeList into tInList
+
+   if tInList is false then
+      throw "invalid widget theme"
+   end if
+
+   if pWidgetTheme is mWidgetTheme then
+      return
+   end if
+
+   put pWidgetTheme into mWidgetTheme
+
+   if mWidgetTheme is "Android(Raised)" then
+      put "Opaque" into mBackgroundOpacity
+   else if mWidgetTheme is "Android(Flat)" then
+      put "Transparent" into mBackgroundOpacity
+   end if
+
+   redraw all
+end handler
+
+private handler setButtonLabel(in pLabel as String)
+   put pLabel into mButtonLabel
+   redraw all
+end handler
+
+public handler getTextColor() returns String
+   return colorToString(mTextColor)
+end handler
+
+public handler setTextColor(in pTextColor as String) returns nothing
+   checkTextColor(pTextColor)
+   put stringToColor(pTextColor) into mTextColor
+   redraw all
+end handler
+
+public handler getBackgroundColor() returns String
+   return colorToString(mBackgroundColor)
+end handler
+
+public handler setBackgroundColor(in pBackgroundColor as String) returns nothing
+
+   if mWidgetTheme is "Android(Raised)" then
+      checkBackgroundColor(pBackgroundColor)
+   end if
+
+   put stringToColor(pBackgroundColor) into mBackgroundColor
+   redraw all
+end handler
+
+constant kOpaqueBackground is "Opaque"
+constant kTranslucentBackground is "Translucent"
+
+private handler setBackgroundOpacity(in pOpacity as String)
+
+   variable tOpacityList as List
+   variable tInList as Boolean
+
+   put [kOpaqueBackground, kTranslucentBackground] into tOpacityList
+   put pOpacity is in tOpacityList into tInList
+
+   if tInList is false then
+      throw "invalid background opacity"
+   end if
+
+   if pOpacity is mBackgroundOpacity then
+      return
+   end if
+
+   if mWidgetTheme is "Android(Raised)" then
+      put "Opaque" into mBackgroundOpacity
+   else if mWidgetTheme is "Android(Flat)" then
+      put "Transparent" into mBackgroundOpacity
+   else if mWidgetTheme is "iOS" then
+      put pOpacity into mBackgroundOpacity
+   end if
+
+   redraw all
+end handler
+
+--------------------------------------------------------------------------------
+--
+--		Checking Color Properties
+--
+--------------------------------------------------------------------------------
+
+private handler checkTextColor(in pTextColor as String) returns nothing
+   if mWidgetTheme is "Android(Raised)" then
+      if pTextColor is "255,255,255,255" then
+         put false into mShowBorder
+         put mDefaultColor into mBackgroundColor
+      else
+         put true into mShowBorder
+         put color [1,1,1] into mBackgroundColor
+      end if
+   else
+      if pTextColor is "255,255,255,255" then
+         put mDefaultColor into mTextColor
+      end if
+   end if
+end handler
+
+private handler checkBackgroundColor(in pBackgroundColor as String) returns nothing
+   if pBackgroundColor is "255,255,255,255" then
+      put true into mShowBorder
+      put mDefaultColor into mTextColor
+   else
+      put false into mShowBorder
+      put color [1,1,1] into mTextColor
+   end if
+end handler
+
+--------------------------------------------------------------------------------
+--
+--		Converting Data Types
+--
+--------------------------------------------------------------------------------
+
+-- this handler converts a string of numbers to an RGBA color
+private handler stringToColor(in pString as String) returns Color
+   variable tRed as Real
+	variable tGreen as Real
+	variable tBlue as Real
+	variable tAlpha as Real
+
+	variable tComponentList as List
+	split pString by "," into tComponentList
+
+	variable tComponentCount
+	put the number of elements in tComponentList into tComponentCount
+	if tComponentCount is not 3 and tComponentCount is not 4 then
+		-- Invalid number of components detected
+		throw "Invalid color"
+	end if
+
+	put (element 1 of tComponentList) parsed as number into tRed
+	put (element 2 of tComponentList) parsed as number into tGreen
+	put (element 3 of tComponentList) parsed as number into tBlue
+
+	if tComponentCount is 4 then
+		put (element 4 of tComponentList) parsed as number into tAlpha
+	else
+		put 255 into tAlpha
+	end if
+
+	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha/255 ]
+end handler
+
+-- this handler converts an RGBA color to a string of numbers
+private handler colorToString(in pColor as Color) returns String
+
+   variable tRed as String
+   variable tGreen as String
+   variable tBlue as String
+   variable tAlpha as String
+
+   put stripZeros((the rounded of ((the red of pColor) * 255)) formatted as string) into tRed
+   put stripZeros((the rounded of ((the green of pColor) * 255)) formatted as string) into tGreen
+   put stripZeros((the rounded of ((the blue of pColor) * 255)) formatted as string) into tBlue
+   put stripZeros((the rounded of ((the alpha of pColor) * 255)) formatted as string) into tAlpha
+
+   return tRed & "," & tGreen & "," & tBlue & "," & tAlpha
+end handler
+
+-- this handler strips the zeros when a integer is formatted as a string
+private handler stripZeros(in tString as String) returns String
+	if tString contains "." then
+		variable tCount as Integer
+		repeat while ((the last char of tString) is in ".0")
+			if the last char of tString is "." then
+				delete the last char of tString
+				exit repeat
+			else
+				delete the last char of tString
+			end if
+		end repeat
+	end if
+	return tString
+end handler
+
+end widget
