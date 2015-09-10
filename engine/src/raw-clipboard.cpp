@@ -31,13 +31,13 @@ MCRawClipboardItem::~MCRawClipboardItem()
     ;
 }
 
-bool MCRawClipboardItem::hasRepresentation(MCStringRef p_type) const
+bool MCRawClipboardItem::HasRepresentation(MCStringRef p_type) const
 {
     // Loop over the representations of this item and test each one
-    for (uindex_t i = 0; i < getRepresentationCount(); i++)
+    for (uindex_t i = 0; i < GetRepresentationCount(); i++)
     {
         MCAutoStringRef t_type;
-        t_type = fetchRepresentationAtIndex(i)->getTypeString();
+        t_type = FetchRepresentationAtIndex(i)->GetTypeString();
         if (MCStringIsEqualTo(p_type, *t_type, kMCStringOptionCompareExact))
             return true;
     }
@@ -45,15 +45,15 @@ bool MCRawClipboardItem::hasRepresentation(MCStringRef p_type) const
     return false;
 }
 
-const MCRawClipboardItemRep* MCRawClipboardItem::fetchRepresentationByType(MCStringRef p_type) const
+const MCRawClipboardItemRep* MCRawClipboardItem::FetchRepresentationByType(MCStringRef p_type) const
 {
     // Loop over the representations of this item and test each one
-    for (uindex_t i = 0; i < getRepresentationCount(); i++)
+    for (uindex_t i = 0; i < GetRepresentationCount(); i++)
     {
         MCAutoStringRef t_type;
-        t_type = fetchRepresentationAtIndex(i)->getTypeString();
+        t_type = FetchRepresentationAtIndex(i)->GetTypeString();
         if (MCStringIsEqualTo(p_type, *t_type, kMCStringOptionCompareExact))
-            return fetchRepresentationAtIndex(i);
+            return FetchRepresentationAtIndex(i);
     }
     
     return NULL;

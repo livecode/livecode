@@ -70,7 +70,7 @@ MCMacRawClipboard::~MCMacRawClipboard()
     [m_pasteboard release];
 }
 
-uindex_t MCMacRawClipboard::getItemCount() const
+uindex_t MCMacRawClipboard::GetItemCount() const
 {
     NSArray* t_items = [m_pasteboard pasteboardItems];
     
@@ -82,7 +82,7 @@ uindex_t MCMacRawClipboard::getItemCount() const
     return [t_items count];
 }
 
-const MCMacRawClipboardItem* MCMacRawClipboard::getItemAtIndex(uindex_t p_index) const
+const MCMacRawClipboardItem* MCMacRawClipboard::GetItemAtIndex(uindex_t p_index) const
 {
     // Range check
     if (p_index > NSUIntegerMax)
@@ -101,33 +101,33 @@ const MCMacRawClipboardItem* MCMacRawClipboard::getItemAtIndex(uindex_t p_index)
     return new MCMacRawClipboardItem(t_item);
 }
 
-MCMacRawClipboardItem* MCMacRawClipboard::getItemAtIndex(uindex_t p_index)
+MCMacRawClipboardItem* MCMacRawClipboard::GetItemAtIndex(uindex_t p_index)
 {
     // Call the const-version of this method and cast away the constness. This
     // is safe as we know the underlying object is non-const.
-    return const_cast<MCMacRawClipboardItem*> ((const_cast<const MCMacRawClipboard*> (this))->getItemAtIndex(p_index));
+    return const_cast<MCMacRawClipboardItem*> ((const_cast<const MCMacRawClipboard*> (this))->GetItemAtIndex(p_index));
 }
 
-void MCMacRawClipboard::clear()
+void MCMacRawClipboard::Clear()
 {
     // Discard any contents that we might already have
     [m_items release];
     m_items = nil;
 }
 
-bool MCMacRawClipboard::isOwned() const
+bool MCMacRawClipboard::IsOwned() const
 {
     // We own the clipboard if it hasn't been changed since we last asserted
     // ownership.
     return [m_pasteboard changeCount] == m_last_changecount;
 }
 
-MCMacRawClipboardItem* MCMacRawClipboard::createNewItem()
+MCMacRawClipboardItem* MCMacRawClipboard::CreateNewItem()
 {
     return new MCMacRawClipboardItem;
 }
 
-bool MCMacRawClipboard::pushItem(MCRawClipboardItem* p_item)
+bool MCMacRawClipboard::AddItem(MCRawClipboardItem* p_item)
 {
     // Assume that the user of this class has read the documentation and is only
     // passing MCMacRawClipboardItem instances to us.
@@ -170,19 +170,19 @@ bool MCMacRawClipboard::PullUpdates()
     return (m_items != NULL);
 }
 
-bool MCMacRawClipboard::flushData()
+bool MCMacRawClipboard::FlushData()
 {
     // Automatically handled by the system.
     return true;
 }
 
-uindex_t MCMacRawClipboard::getMaximumItemCount() const
+uindex_t MCMacRawClipboard::GetMaximumItemCount() const
 {
     // As many items as an NSArray can handle
     return NSUIntegerMax;
 }
 
-MCStringRef MCMacRawClipboard::getKnownTypeString(MCRawClipboardKnownType p_type) const
+MCStringRef MCMacRawClipboard::GetKnownTypeString(MCRawClipboardKnownType p_type) const
 {
     // TODO: implement
     return NULL;
@@ -242,17 +242,17 @@ MCMacRawClipboardItem::~MCMacRawClipboardItem()
     }
 }
 
-uindex_t MCMacRawClipboardItem::getRepresentationCount() const
+uindex_t MCMacRawClipboardItem::GetRepresentationCount() const
 {
     // The number of representations was grabbed in the constructor and is equal
     // to the number of items in the representation cache array.
     return m_rep_cache.Size();
 }
 
-const MCMacRawClipboardItemRep* MCMacRawClipboardItem::fetchRepresentationAtIndex(uindex_t p_index) const
+const MCMacRawClipboardItemRep* MCMacRawClipboardItem::FetchRepresentationAtIndex(uindex_t p_index) const
 {
     // Is the index valid?
-    if (p_index >= getRepresentationCount())
+    if (p_index >= GetRepresentationCount())
         return NULL;
     
     // If there isn't a representation object for this index yet, create it now
@@ -264,7 +264,7 @@ const MCMacRawClipboardItemRep* MCMacRawClipboardItem::fetchRepresentationAtInde
     return m_rep_cache[p_index];
 }
 
-bool MCMacRawClipboardItem::addRepresentation(MCStringRef p_type, MCDataRef p_bytes)
+bool MCMacRawClipboardItem::AddRepresentation(MCStringRef p_type, MCDataRef p_bytes)
 {
     // Extend the representation array to hold this new representation
     uindex_t t_index = m_rep_cache.Size();
@@ -296,7 +296,7 @@ bool MCMacRawClipboardItem::addRepresentation(MCStringRef p_type, MCDataRef p_by
     return t_result;
 }
 
-bool MCMacRawClipboardItem::addRepresentation(MCStringRef p_type, render_callback_t p_render, void* p_context)
+bool MCMacRawClipboardItem::AddRepresentation(MCStringRef p_type, render_callback_t p_render, void* p_context)
 {
     return false;
 }
@@ -334,7 +334,7 @@ MCMacRawClipboardItemRep::~MCMacRawClipboardItemRep()
     // refernce for us.
 }
 
-MCStringRef MCMacRawClipboardItemRep::getTypeString() const
+MCStringRef MCMacRawClipboardItemRep::GetTypeString() const
 {
     // If the type string has already been fetched, just return it
     if (*m_type != NULL)
@@ -421,7 +421,7 @@ MCStringRef MCMacRawClipboardItemRep::getTypeString() const
     return t_type_string;
 }
 
-MCDataRef MCMacRawClipboardItemRep::getData() const
+MCDataRef MCMacRawClipboardItemRep::GetData() const
 {
     // If the data has already been fetched, just return it
     if (*m_data != NULL)
@@ -434,7 +434,7 @@ MCDataRef MCMacRawClipboardItemRep::getData() const
     {
         // Get the type string for this representation (as lookup is by type)
         MCAutoStringRef t_type_string;
-        t_type_string = getTypeString();
+        t_type_string = GetTypeString();
         if (*t_type_string == NULL)
             return NULL;
         

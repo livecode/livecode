@@ -97,28 +97,28 @@ public:
     
     // Returns the number of items on the clipboard. This may be subject to
     // change at any time as the clipboard contents may get replaced.
-    virtual uindex_t getItemCount() const = 0;
+    virtual uindex_t GetItemCount() const = 0;
     
     // Returns the item at the requested slot in the clipboard, or NULL if the
     // index is not valid. The returned item holds a reference to the clipboard
     // data and must be release()'d after use.
-    virtual const MCRawClipboardItem* getItemAtIndex(uindex_t p_index) const = 0;
-    virtual MCRawClipboardItem* getItemAtIndex(uindex_t p_index) = 0;
+    virtual const MCRawClipboardItem* GetItemAtIndex(uindex_t p_index) const = 0;
+    virtual MCRawClipboardItem* GetItemAtIndex(uindex_t p_index) = 0;
     
     // Deletes the current contents of the clipboard. This must be called before
     // any modifications to the clipboard or undefined behaviour will result.
     //
     // Clearing the clipboard will transfer ownership of the clipboard to this
     // instance of LiveCode.
-    virtual void clear() = 0;
+    virtual void Clear() = 0;
     
     // Indicates whether this clipboard is currently owned by this LiveCode
     // instance. To gain ownership of the clipboard, call clear().
-    virtual bool isOwned() const = 0;
+    virtual bool IsOwned() const = 0;
     
     // Creates a new clipboard data item with no representations. Ownership of
     // the item is passed to the caller.
-    virtual MCRawClipboardItem* createNewItem() = 0;
+    virtual MCRawClipboardItem* CreateNewItem() = 0;
     
     // Pushes an item onto the clipboard. It will be inserted after all other
     // items on the clipboard (i.e at index getItemCount()). Ownership of the
@@ -129,7 +129,7 @@ public:
     // in undefined behaviour.
     //
     // Returns false if the insertion failed.
-    virtual bool pushItem(MCRawClipboardItem* p_item) = 0;
+    virtual bool AddItem(MCRawClipboardItem* p_item) = 0;
     
     // Ensures that all updates to the clipboard have been synchronised with the
     // system -- note that this does not guarantee that the *data* has been
@@ -147,21 +147,21 @@ public:
     // they will remain available after the termination of the LiveCode process.
     // This is not needed on some systems and not possible on others but, for
     // those that do implement it, not doing so is a huge user annoyance!
-    virtual bool flushData() = 0;
+    virtual bool FlushData() = 0;
     
     // Returns the maximum number of items that can be added to the clipboard.
     // This will usually be either 1 or a very large integer (e.g. UINDEX_MAX),
     // depending on whether the operating system supports multi-item clipboards.
-    virtual uindex_t getMaximumItemCount() const = 0;
+    virtual uindex_t GetMaximumItemCount() const = 0;
     
     // Checks for multi-item clipboard support
-    inline bool supportsMultipleItems() const
-      { return getMaximumItemCount() > 1; }
+    inline bool SupportsMultipleItems() const
+      { return GetMaximumItemCount() > 1; }
     
     // Returns the type string that this clipboard uses to identify particular
     // data representations. If the platform doesn't have a 'well-known' type
     // for the requested representation, these will return NULL.
-    virtual MCStringRef getKnownTypeString(MCRawClipboardKnownType p_type) const = 0;
+    virtual MCStringRef GetKnownTypeString(MCRawClipboardKnownType p_type) const = 0;
     
     // Destructor
     virtual ~MCRawClipboard() = 0;
@@ -205,15 +205,15 @@ class MCRawClipboardItem :
 public:
     
     // Returns the number of representations that are available for this item.
-    virtual uindex_t getRepresentationCount() const = 0;
+    virtual uindex_t GetRepresentationCount() const = 0;
     
     // Fetches the representation at the requested index. No ownership of the
     // representation is transferred.
-    virtual const MCRawClipboardItemRep* fetchRepresentationAtIndex(uindex_t p_index) const = 0;
+    virtual const MCRawClipboardItemRep* FetchRepresentationAtIndex(uindex_t p_index) const = 0;
     
     // Fetches the representation (if any) identified by the representation's
     // type string. No ownership of the representation is transferred.
-    const MCRawClipboardItemRep* fetchRepresentationByType(MCStringRef p_type) const;
+    const MCRawClipboardItemRep* FetchRepresentationByType(MCStringRef p_type) const;
     
     // Adds a representation for this clipboard item. On systems that use atoms
     // to store clipboard format strings, an atom will be automatically
@@ -222,7 +222,7 @@ public:
     //
     // If there is already a representation with the given type, it will be
     // replaced by the new data.
-    virtual bool addRepresentation(MCStringRef p_type, MCDataRef p_bytes) = 0;
+    virtual bool AddRepresentation(MCStringRef p_type, MCDataRef p_bytes) = 0;
     
     // Adds a representation for this clipboard item without supplying any data.
     // The provided callback will be invoked when the data is required (this
@@ -231,11 +231,11 @@ public:
     // When invoked, the callback should return a DataRef containing the item
     // rendered into the requested format or NULL if rendering failed.
     typedef MCDataRef (*render_callback_t)(void* p_context, MCRawClipboardItem* p_item, MCStringRef p_type);
-    virtual bool addRepresentation(MCStringRef p_type, render_callback_t, void* p_context) = 0;
+    virtual bool AddRepresentation(MCStringRef p_type, render_callback_t, void* p_context) = 0;
     
     // Indicates whether the named type is available as a representation for
     // this item.
-    bool hasRepresentation(MCStringRef p_type) const;
+    bool HasRepresentation(MCStringRef p_type) const;
     
 protected:
     
@@ -267,14 +267,14 @@ public:
     // form that these strings take is platform-specific (so some platform-
     // specific knowledge is required to interpret them). This string should be
     // released when no longer required.
-    virtual MCStringRef getTypeString() const = 0;
+    virtual MCStringRef GetTypeString() const = 0;
     
     // Fetches the data for this representation. This is potentially a very
     // slow operation! (There is the possibility on Windows, for example, that
     // the COM object supplying the data is on a remote computer and so the
     // transfer time is potentially unbounded). The data should be released when
     // no longer required.
-    virtual MCDataRef getData() const = 0;
+    virtual MCDataRef GetData() const = 0;
     
     
 protected:

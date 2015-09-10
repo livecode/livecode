@@ -33,8 +33,8 @@ public MCRawClipboardItemRep
 public:
     
     // Methods inherited from MCRawClipboardItem
-    virtual MCStringRef getTypeString() const;
-    virtual MCDataRef getData() const;
+    virtual MCStringRef GetTypeString() const;
+    virtual MCDataRef GetData() const;
     
 private:
     
@@ -63,10 +63,10 @@ class MCMacRawClipboardItem :
 public:
     
     // Methods inherited from MCRawClipboardItem
-    virtual uindex_t getRepresentationCount() const;
-    virtual const MCMacRawClipboardItemRep* fetchRepresentationAtIndex(uindex_t p_index) const;
-    virtual bool addRepresentation(MCStringRef p_type, MCDataRef p_bytes);
-    virtual bool addRepresentation(MCStringRef p_type, render_callback_t, void* p_context);
+    virtual uindex_t GetRepresentationCount() const;
+    virtual const MCMacRawClipboardItemRep* FetchRepresentationAtIndex(uindex_t p_index) const;
+    virtual bool AddRepresentation(MCStringRef p_type, MCDataRef p_bytes);
+    virtual bool AddRepresentation(MCStringRef p_type, render_callback_t, void* p_context);
     
     
 private:
@@ -96,18 +96,18 @@ class MCMacRawClipboard :
 public:
     
     // Methods inherited from MCRawClipboard
-    virtual uindex_t getItemCount() const;
-    virtual const MCMacRawClipboardItem* getItemAtIndex(uindex_t p_index) const;
-    virtual MCMacRawClipboardItem* getItemAtIndex(uindex_t p_index);
-    virtual void clear();
-    virtual bool isOwned() const;
-    virtual MCMacRawClipboardItem* createNewItem();
-    virtual bool pushItem(MCRawClipboardItem* p_item);
+    virtual uindex_t GetItemCount() const;
+    virtual const MCMacRawClipboardItem* GetItemAtIndex(uindex_t p_index) const;
+    virtual MCMacRawClipboardItem* GetItemAtIndex(uindex_t p_index);
+    virtual void Clear();
+    virtual bool IsOwned() const;
+    virtual MCMacRawClipboardItem* CreateNewItem();
+    virtual bool AddItem(MCRawClipboardItem* p_item);
     virtual bool PushUpdates();
     virtual bool PullUpdates();
-    virtual bool flushData();
-    virtual uindex_t getMaximumItemCount() const;
-    virtual MCStringRef getKnownTypeString(MCRawClipboardKnownType p_type) const;
+    virtual bool FlushData();
+    virtual uindex_t GetMaximumItemCount() const;
+    virtual MCStringRef GetKnownTypeString(MCRawClipboardKnownType p_type) const;
     
     // Constructor. The NSPasteboard being wrapped is required.
     MCMacRawClipboard(NSPasteboard* p_pasteboard);

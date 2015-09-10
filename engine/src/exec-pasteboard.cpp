@@ -312,7 +312,7 @@ void MCPasteboardEvalRawClipboardKeys(MCExecContext& ctxt, MCStringRef& r_string
     
     // TODO: support multiple items
     // Get the first item on the clipboard
-    MCAutoRefcounted<const MCRawClipboardItem> t_item = MCscriptrawclipboard->getItemAtIndex(0);
+    MCAutoRefcounted<const MCRawClipboardItem> t_item = MCscriptrawclipboard->GetItemAtIndex(0);
     if (t_item == NULL)
     {
         r_string = kMCEmptyString;
@@ -323,10 +323,10 @@ void MCPasteboardEvalRawClipboardKeys(MCExecContext& ctxt, MCStringRef& r_string
         MCAutoListRef t_list;
         /* UNCHECKED */ MCListCreateMutable('\n', &t_list);
         
-        uindex_t t_type_count = t_item->getRepresentationCount();
+        uindex_t t_type_count = t_item->GetRepresentationCount();
         for (uindex_t i = 0; i < t_type_count; i++)
         {
-            /* UNCHECKED */ MCListAppend(*t_list, t_item->fetchRepresentationAtIndex(i)->getTypeString());
+            /* UNCHECKED */ MCListAppend(*t_list, t_item->FetchRepresentationAtIndex(i)->GetTypeString());
         }
         
         /* UNCHECKED */ MCListCopyAsString(*t_list, r_string);
@@ -412,7 +412,7 @@ void MCPasteboardEvalIsAmongTheKeysOfTheRawClipboardData(MCExecContext& ctxt, MC
     
     // TODO: support multiple items
     // Get the first item on the clipboard
-    MCAutoRefcounted<const MCRawClipboardItem> t_item = MCscriptrawclipboard->getItemAtIndex(0);
+    MCAutoRefcounted<const MCRawClipboardItem> t_item = MCscriptrawclipboard->GetItemAtIndex(0);
     if (t_item == NULL)
     {
         // Clipboard is empty so the key is not present
@@ -421,7 +421,7 @@ void MCPasteboardEvalIsAmongTheKeysOfTheRawClipboardData(MCExecContext& ctxt, MC
     else
     {
         // Check whether the key is a valid representation for this item
-        r_result = t_item->hasRepresentation(MCNameGetString(p_key));
+        r_result = t_item->HasRepresentation(MCNameGetString(p_key));
     }
 }
 
@@ -854,7 +854,7 @@ void MCPasteboardGetRawClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCV
     
     // TODO: support multiple items
     // Get the first item on the clipboard
-    MCAutoRefcounted<const MCRawClipboardItem> t_item = MCscriptrawclipboard->getItemAtIndex(0);
+    MCAutoRefcounted<const MCRawClipboardItem> t_item = MCscriptrawclipboard->GetItemAtIndex(0);
     if (t_item == NULL)
     {
         // Clipboard is empty so the key is not present
@@ -863,13 +863,13 @@ void MCPasteboardGetRawClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCV
     else
     {
         // Attempt to get the data for this item
-        const MCRawClipboardItemRep* t_rep = t_item->fetchRepresentationByType(MCNameGetString(p_index));
+        const MCRawClipboardItemRep* t_rep = t_item->FetchRepresentationByType(MCNameGetString(p_index));
         if (t_rep == NULL)
             ctxt.LegacyThrow(EE_RAW_CLIPBOARD_BADREP);
         else
         {
             // Get the data for this representation
-            MCDataRef t_data = t_rep->getData();
+            MCDataRef t_data = t_rep->GetData();
             if (t_data == NULL)
                 ctxt.LegacyThrow(EE_RAW_CLIPBOARD_BADREP);
             r_data = t_data;
@@ -888,13 +888,13 @@ void MCPasteboardSetRawClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCV
     
     // TODO: support multiple items
     // Get the first item in the clipboard
-    MCAutoRefcounted<MCRawClipboardItem> t_item = MCscriptrawclipboard->getItemAtIndex(0);
+    MCAutoRefcounted<MCRawClipboardItem> t_item = MCscriptrawclipboard->GetItemAtIndex(0);
     
     // If there is no item on the clipboard yet, we will have to allocate one
     if (t_item == NULL)
     {
-        t_item = MCscriptrawclipboard->createNewItem();
-        if (!MCscriptrawclipboard->pushItem(t_item))
+        t_item = MCscriptrawclipboard->CreateNewItem();
+        if (!MCscriptrawclipboard->AddItem(t_item))
         {
             ctxt.LegacyThrow(EE_RAW_CLIPBOARD_INSERT_FAILED);
             return;
@@ -910,7 +910,7 @@ void MCPasteboardSetRawClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCV
     }
     
     // Add the representation to the clipboard item
-    if (!t_item->addRepresentation(MCNameGetString(p_index), *t_data))
+    if (!t_item->AddRepresentation(MCNameGetString(p_index), *t_data))
     {
         ctxt.LegacyThrow(EE_RAW_CLIPBOARD_BADREP);
         return;
@@ -948,7 +948,7 @@ void MCPasteboardSetRawClipboardTextData(MCExecContext& ctxt, MCValueRef p_value
     }
     
     // Clear the clipboard
-    MCscriptrawclipboard->clear();
+    MCscriptrawclipboard->Clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
