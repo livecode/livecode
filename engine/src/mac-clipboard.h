@@ -52,6 +52,7 @@ private:
     // Lifetime is managed by the parent MCMacRawClipboardItem
     friend class MCMacRawClipboardItem;
     MCMacRawClipboardItemRep(id p_item, NSUInteger p_index);
+    MCMacRawClipboardItemRep(id p_item, NSUInteger p_index, MCStringRef p_type, MCDataRef p_data);
     virtual ~MCMacRawClipboardItemRep();
 };
 
@@ -79,7 +80,9 @@ private:
     // representation objects are only allocated when they are requested.
     mutable MCAutoArray<MCMacRawClipboardItemRep*> m_rep_cache;
     
-    // Constructor. The object being wrapped is required.
+    // Constructors. If no item is supplied, a new NSPasteboardItem will be
+    // automatically created.
+    MCMacRawClipboardItem();
     MCMacRawClipboardItem(id p_item);
     
     // Destructor
@@ -95,12 +98,14 @@ public:
     // Methods inherited from MCRawClipboard
     virtual uindex_t getItemCount() const;
     virtual const MCMacRawClipboardItem* getItemAtIndex(uindex_t p_index) const;
+    virtual MCMacRawClipboardItem* getItemAtIndex(uindex_t p_index);
     virtual void clear();
     virtual bool isOwned() const;
     virtual MCMacRawClipboardItem* createNewItem();
     virtual bool pushItem(MCRawClipboardItem* p_item);
-    virtual void synchronizeUpdates();
-    virtual void flushData();
+    virtual bool PushUpdates();
+    virtual bool PullUpdates();
+    virtual bool flushData();
     virtual uindex_t getMaximumItemCount() const;
     virtual MCStringRef getKnownTypeString(MCRawClipboardKnownType p_type) const;
     

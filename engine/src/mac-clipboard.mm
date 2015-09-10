@@ -49,10 +49,9 @@ const char* const MCMacRawClipboard::s_clipboard_types[] =
 };
 
 
-MCRawClipboard* MCRawClipboard::getSystemClipboard()
+MCRawClipboard* MCRawClipboard::Create()
 {
-    static MCRawClipboard* s_clipboard = new MCMacRawClipboard([NSPasteboard generalPasteboard]);
-    return s_clipboard;
+    return new MCMacRawClipboard([NSPasteboard generalPasteboard]);
 }
 
 
@@ -89,9 +88,11 @@ const MCMacRawClipboardItem* MCMacRawClipboard::getItemAtIndex(uindex_t p_index)
     if (p_index > NSUIntegerMax)
         return NULL;
     
-    // Retrieve the item at the specified index
-    NSArray* t_items = [m_pasteboard pasteboardItems];
-    id t_item = [t_items objectAtIndex:p_index];
+    // Retrieve the item at the specified index, if it exists
+    if (p_index >= [m_items count])
+        return NULL;
+    
+    id t_item = [m_items objectAtIndex:p_index];
     
     // Index may have been invalid
     if (t_item == nil)
@@ -100,13 +101,18 @@ const MCMacRawClipboardItem* MCMacRawClipboard::getItemAtIndex(uindex_t p_index)
     return new MCMacRawClipboardItem(t_item);
 }
 
+MCMacRawClipboardItem* MCMacRawClipboard::getItemAtIndex(uindex_t p_index)
+{
+    // Call the const-version of this method and cast away the constness. This
+    // is safe as we know the underlying object is non-const.
+    return const_cast<MCMacRawClipboardItem*> ((const_cast<const MCMacRawClipboard*> (this))->getItemAtIndex(p_index));
+}
+
 void MCMacRawClipboard::clear()
 {
-    // Clear the pasteboard and take ownership of it
-    m_last_changecount = [m_pasteboard clearContents];
-    
     // Discard any contents that we might already have
     [m_items release];
+    m_items = nil;
 }
 
 bool MCMacRawClipboard::isOwned() const
@@ -118,7 +124,7 @@ bool MCMacRawClipboard::isOwned() const
 
 MCMacRawClipboardItem* MCMacRawClipboard::createNewItem()
 {
-    return new MCMacRawClipboardItem(nil);
+    return new MCMacRawClipboardItem;
 }
 
 bool MCMacRawClipboard::pushItem(MCRawClipboardItem* p_item)
@@ -140,14 +146,34 @@ bool MCMacRawClipboard::pushItem(MCRawClipboardItem* p_item)
     return true;
 }
 
-void MCMacRawClipboard::synchronizeUpdates()
+bool MCMacRawClipboard::PushUpdates()
 {
-    // Automatically handled by the system.
+    // Take ownership of the clipboard
+    m_last_changecount = [m_pasteboard clearContents];
+    
+    // Push all of the clipboard items onto the clipboard
+    BOOL t_success = YES;
+    if (m_items != nil)
+        t_success = [m_pasteboard writeObjects:m_items];
+    
+    // Update the change count
+    m_last_changecount = [m_pasteboard changeCount];
+    
+    return (t_success != NO);
 }
 
-void MCMacRawClipboard::flushData()
+bool MCMacRawClipboard::PullUpdates()
+{
+    // Grab the contents of the clipboard
+    [m_items release];
+    m_items = [[m_pasteboard pasteboardItems] mutableCopy];
+    return (m_items != NULL);
+}
+
+bool MCMacRawClipboard::flushData()
 {
     // Automatically handled by the system.
+    return true;
 }
 
 uindex_t MCMacRawClipboard::getMaximumItemCount() const
@@ -160,6 +186,15 @@ MCStringRef MCMacRawClipboard::getKnownTypeString(MCRawClipboardKnownType p_type
 {
     // TODO: implement
     return NULL;
+}
+
+
+MCMacRawClipboardItem::MCMacRawClipboardItem() :
+  MCRawClipboardItem(),
+  m_item([[NSPasteboardItem alloc] init]),
+  m_rep_cache()
+{
+    ;
 }
 
 
@@ -231,7 +266,34 @@ const MCMacRawClipboardItemRep* MCMacRawClipboardItem::fetchRepresentationAtInde
 
 bool MCMacRawClipboardItem::addRepresentation(MCStringRef p_type, MCDataRef p_bytes)
 {
-    return false;
+    // Extend the representation array to hold this new representation
+    uindex_t t_index = m_rep_cache.Size();
+    if (!m_rep_cache.Extend(t_index + 1))
+        return false;
+    
+    // Allocate a new representation object.
+    // If this fails to allocate a new item, we ignore the failure. This is safe
+    // as the cache can be re-generated on demand from the data stored in the
+    // NSPasteboardItem itself.
+    m_rep_cache[t_index] = new MCMacRawClipboardItemRep(m_item, t_index, p_type, p_bytes);
+    
+    // Turn the type string and data into their NS equivalents.
+    // Note that the NSData is auto-released when we get it.
+    NSString* t_type;
+    NSData* t_data;
+    if (!MCStringConvertToCFStringRef(p_type, (CFStringRef&)t_type))
+        return false;
+    t_data = [NSData dataWithBytes:MCDataGetBytePtr(p_bytes) length:MCDataGetLength(p_bytes)];
+    if (t_data == nil)
+    {
+        [t_type release];
+        return false;
+    }
+    
+    // Add a new representation to the NSPasteboardItem object
+    BOOL t_result = [m_item setData:t_data forType:t_type];
+    [t_type release];
+    return t_result;
 }
 
 bool MCMacRawClipboardItem::addRepresentation(MCStringRef p_type, render_callback_t p_render, void* p_context)
@@ -247,6 +309,21 @@ MCMacRawClipboardItemRep::MCMacRawClipboardItemRep(id p_item, NSUInteger p_index
   m_type(),
   m_data()
 {
+    // m_item is not retained as the parent MCMacRawClipboardItem holds the
+    // reference for us.
+}
+
+MCMacRawClipboardItemRep::MCMacRawClipboardItemRep(id p_item, NSUInteger p_index, MCStringRef p_type, MCDataRef p_data) :
+  MCRawClipboardItemRep(),
+  m_item(p_item),
+  m_index(p_index),
+  m_type(),
+  m_data()
+{
+    // Retain references to the type string and data
+    m_type = p_type;
+    m_data = p_data;
+    
     // m_item is not retained as the parent MCMacRawClipboardItem holds the
     // reference for us.
 }
