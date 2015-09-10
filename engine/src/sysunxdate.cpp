@@ -177,21 +177,24 @@ static MCStringRef string_prepend(MCStringRef t_string, unichar_t t_char)
 static MCStringRef remove_seconds(MCStringRef p_input)
 {
     MCStringRef t_new_string;
+    t_new_string = NULL;
     MCRange t_range;
 
     if (MCStringFind(p_input, MCRangeMake(0, UINDEX_MAX), MCSTR(":%S"), kMCStringOptionCompareExact, &t_range))
     {
         // If :%S is found, then we remove it
         MCStringRef t_mutable_copy;
-        /* UNCHECKED */ MCStringMutableCopy(p_input, t_mutable_copy);
-
-        /* UNCHECKED */ MCStringRemove(t_mutable_copy, t_range);
-
-        /* UNCHECKED */ MCStringCopyAndRelease(t_mutable_copy, t_new_string);
+        if (MCStringMutableCopy(p_input, t_mutable_copy))
+        {
+        	if (!MCStringRemove(t_mutable_copy, t_range)
+        			|| !MCStringCopyAndRelease(t_mutable_copy, t_new_string))
+        		MCValueRelease(t_mutable_copy);
+        }
     }
-    else
+    
+    if (t_new_string == NULL)
     {
-        // Otherwise we take the whole string
+        // If removing ':%S' failed, or wasn't necessary, we copy the whole string
         t_new_string = MCValueRetain(p_input);
     }
 	
