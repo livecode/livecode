@@ -434,7 +434,7 @@ end handler
 
 private handler checkTextColor(in pTextColor as String) returns nothing
    if mWidgetTheme is "Android(Raised)" then
-      if pTextColor is "255,255,255,255" then
+      if pTextColor is "255,255,255" then
          put false into mShowBorder
          put mDefaultColor into mBackgroundColor
       else
@@ -442,16 +442,16 @@ private handler checkTextColor(in pTextColor as String) returns nothing
          put color [1,1,1] into mBackgroundColor
       end if
    else
-      if pTextColor is "255,255,255,255" then
+      if pTextColor is "255,255,255" then
          put mDefaultColor into mTextColor
       end if
    end if
 end handler
 
 private handler checkBackgroundColor(in pBackgroundColor as String) returns nothing
-   if pBackgroundColor is "255,255,255,255" then
+   if pBackgroundColor is "255,255,255" then
       put true into mShowBorder
-      if colorToString(mTextColor) is "255,255,255,255" then
+      if colorToString(mTextColor) is "255,255,255" then
          put mDefaultColor into mTextColor
       end if
    else
@@ -487,13 +487,7 @@ private handler stringToColor(in pString as String) returns Color
 	put (element 2 of tComponentList) parsed as number into tGreen
 	put (element 3 of tComponentList) parsed as number into tBlue
 
-	if tComponentCount is 4 then
-		put (element 4 of tComponentList) parsed as number into tAlpha
-	else
-		put 255 into tAlpha
-	end if
-
-	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha/255 ]
+	return color [ tRed/255, tGreen/255, tBlue/255]
 end handler
 
 -- this handler converts an RGBA color to a string of numbers
@@ -507,9 +501,8 @@ private handler colorToString(in pColor as Color) returns String
    put stripZeros((the rounded of ((the red of pColor) * 255)) formatted as string) into tRed
    put stripZeros((the rounded of ((the green of pColor) * 255)) formatted as string) into tGreen
    put stripZeros((the rounded of ((the blue of pColor) * 255)) formatted as string) into tBlue
-   put stripZeros((the rounded of ((the alpha of pColor) * 255)) formatted as string) into tAlpha
 
-   return tRed & "," & tGreen & "," & tBlue & "," & tAlpha
+   return tRed & "," & tGreen & "," & tBlue
 end handler
 
 -- this handler strips the zeros when a integer is formatted as a string
