@@ -75,7 +75,7 @@ Encloses text whose <textFont>, <textSize>, <foregroundColor>, or <backgroundCol
 In standard HTML, the size attribute normally takes a value between 1 and 7, representing a relative text size, with 3 being the normal text size for the web page. To accommodate this convention, when setting the <HTMLText> of a <field(keyword)>, if the pointSize is between 1 and 7, the <textSize> of the text is set to a standard value:
 
 pointSize | textSize
---------------------
+:----------:|:---------:
 1 | 8 point
 2 | 10 point
 3 | 12 point
@@ -96,8 +96,9 @@ Encloses text whose textStyle is "link" or whose <linkText> <property> is not em
 Replaces a character whose imageSource <property> is not empty. The value of the <imageSource> <property> is included as the value of the "src" attribute.
 
 When you set the <HTMLText> of a <field(keyword)>, all tags other than those above are ignored, except heading tags (&lt;h1&gt;--&lt;h6&gt;), which change the size of the text in the heading element:
+
 tag | textSize
---------------
+:----:|:---------:
 &lt;h1&gt; | 34 point
 &lt;h2&gt; | 24 point
 &lt;h3&gt; | 18 point
@@ -110,8 +111,9 @@ You can use LiveCode color references for the "color" and "bgcolor" attributes. 
 If a chunk of text includes more than one of the above styles, LiveCode encloses the text in the tags corresponding to each style, from the inside out. For example, if the word "Flail" in a field is underlined and bold, its corresponding <HTMLText> is "&lt;u&gt;&lt;b&gt;Flail&lt;/b&gt;&lt;/u&gt;".
 
 Special characters (whose ASCII value is greater than 127) are <encode|encoded> as <HTML> entities. LiveCode recognizes the following named entities:
+
 character | entity
-------------------
+:----------:|:-------:
 Á | &amp;Aacute;
 á | &amp;aacute;
 Â | &amp;Acirc;
