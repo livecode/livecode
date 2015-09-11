@@ -1,17 +1,91 @@
-# Community Documentation Contributions
+# Contributing to the LiveCode Dictionary
+
+*Note this document is specifically about contributing to the documentation of LiveCode.
+If you are looking for a general guide to contributing to the LiveCode source, see the 
+[toplevel CONTRIBUTE.md document](../CONTRIBUTING.md)*
 
 Have you noticed an error in the documentation? Do you want to add an instructive example? 
 Or can you explain a concept better than it is currently explained? Please consider submitting
 your proposed changes directly to the livecode repo on GitHub.
 
-Before you start, please familiarize yourself with the documentation format specification in
-the [Extending LiveCode](../../../../livecode-ide/blob/develop/Documentation/guides/Extending LiveCode.md) guide.
+Before you start, please familiarize yourself with the [documentation format specification](../../../../livecode-ide/blob/develop/Documentation/guides/Extending LiveCode.md#documentation-markup).
+
+# Documentation Objectives
+
+## Completeness
+
+## Correctness
+
+## Runnable examples
+
+Where possible, the `Example:` elements of the docs should be complete and runnable.
+This means that where possible one of the following should apply:
+	* The example can be copied, pasted into the message box and executed to demonstrate 
+	  the functionality being described.
+	* The example contains commented commands and functions which, can be copied and pasted
+	  into the script of an object, and which when called with appropriate parameters 
+	  demonstrates the functionality being described.
+
+
+In general, the way to ensure this is to use constants where possible, rather than 
+variables and objects:
+
+(Good)
+`put sentence 1 of "Hello! Is it me you're looking for?"  -- output is 'Hello! '`
+
+(Bad)
+`put sentence tSentenceNum of field "fullText" into field "textSnippet"`
+
+Encapsulate functionality rather than providing code snippets, and always
+assume that strict compilation mode is on (i.e. always declare your variables)
+
+(Good)
+
+`
+/*
+Returns the number at 1-based index pIndex in the Fibonacci sequence
+*/
+function fibonacciNumber pIndex
+  local tFirst = 1, tSecond = 1
+  local tCounter, tSum
+  repeat with tCounter = 3 to x
+     put tFirst + tSecond into tSum
+     put tSecond into tFirst
+     put tSum into tSecond
+  end repeat
+  return tSecond
+end fibonacciNumber
+`
+
+(Bad)
+`
+...
+  put 1 into tFirst
+  put 1 into tSecond
+  repeat with tCounter = 3 to x
+     put tFirst + tSecond into tSum
+     put tSecond into tFirst
+     put tSum into tSecond
+  end repeat
+...
+
+## Tags
+
+Tags are a great way to help users find what they want in the dictionary. However badly  
+coordinated tags can quickly become a hindrance. Ensure the tag you want to add doesn't 
+exist already in a slightly different form, and consider starting a dialogue about a new
+tag and what entries could be most usefully tagged with it.
+
+# Community Documentation Contribution Process
 
 After creating an account on GitHub at https://github.com/join, there are three main ways 
 of submitting pull requests. The first exclusively uses the GitHub website, and is most suitable
 for people with no experience of git or other version control systems.
 
 ## Using the GitHub Web Interface
+
+It is possible to contribute to the LiveCode dictionary using the GitHub website, without
+having to download any software or use the command line.
 
 ### Making your dictionary change
 
