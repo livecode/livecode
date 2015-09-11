@@ -22,7 +22,6 @@
 				'libraries/iconsvg/iconsvg.lcb',
 				'libraries/json/json.lcb',
 
-				'widgets/button/button.lcb',
 				#'widgets/button-popup/button-popup.lcb',
 				#’widgets/chart/chart.lcb',
 				'widgets/checkbox/checkbox.lcb',
@@ -36,6 +35,7 @@
 				'widgets/paletteactions/paletteactions.lcb',
 				#’widgets/pinkcircle/pinkcircle.lcb',
 				'widgets/progressbar/progressbar.lcb',
+				'widgets/pushButton/pushButton.lcb',
 				'widgets/radiobutton/radiobutton.lcb',
 				'widgets/segmented/segmented.lcb',
 				#'widgets/segmented-popup/segmented-popup.lcb',

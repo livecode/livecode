@@ -178,8 +178,7 @@ public handler OnCreate() returns nothing
 
    put false into mShowBorder
    put color [0, 121/255, 1] into mDefaultColor
-   put (my height)*(17/29) into mIosFontSize
-   put (my height)*(14/36) into mAndroidFontSize
+   updateVariables()
 end handler
 
 public handler OnPaint() returns nothing
@@ -220,7 +219,10 @@ private handler drawAndroidRaisedButton() returns nothing
    checkBackgroundColor(tColorString)
 
    -- shadow
+   variable tShadow as Effect
+   put drawDropShadow() into tShadow
 
+   begin layer with tShadow on this canvas
    -- background
    set the paint of this canvas to fetchPaint("background")
    fill fetchPath("background") on this canvas
@@ -231,6 +233,7 @@ private handler drawAndroidRaisedButton() returns nothing
       set the stroke width of this canvas to 0.5
       stroke fetchPath("border") on this canvas
    end if
+   end layer on this canvas
 
    -- label
    variable tLabel as String
@@ -257,9 +260,31 @@ private handler drawAndroidFlatButton() returns nothing
    fill text tLabel at center of my bounds on this canvas
 end handler
 
+private handler drawDropShadow() returns Effect
+   variable tProps as Array
+   put the empty array into tProps
+
+   put color [186/255, 186/255, 186/255] into tProps["color"]
+   put "source over" into tProps["blend mode"]
+   put 125 into tProps["opacity"]
+   put 0 into tProps["spread"]
+   put 1 into tProps["size"]
+   put 2 into tProps["distance"]
+   put 90 into tProps["angle"]
+
+   variable tEffect as Effect
+   put outer shadow effect with properties tProps into tEffect
+   return tEffect
+end handler
+
+constant kIosDefaultFontSize is 17
+constant kIosDefaultHeight is 29
+constant kAndroidDefaultFontSize is 14
+constant kAndroidDefaultHeight is 36
+
 private handler updateVariables() returns nothing
-   put (my height)*(17/29) into mIosFontSize
-   put (my height)*(14/36) into mAndroidFontSize
+   put (my height)*(kIosDefaultFontSize/kIosDefaultHeight) into mIosFontSize
+   put (my height)*(kAndroidDefaultFontSize/kAndroidDefaultHeight) into mAndroidFontSize
 end handler
 
 private handler fetchPaint(in pObject as String) returns Paint
@@ -290,10 +315,10 @@ private handler fetchPath(in pObject as String) returns Path
       if mWidgetTheme is "iOS" then
          return rounded rectangle path of my bounds with radius 5
       else if mWidgetTheme is "Android(Raised)" then
-         return rounded rectangle path of my bounds with radius 2
+         return rounded rectangle path of rectangle [0,0,(my width)-3,(my height)-3] with radius 2
       end if
    else if pObject is "border" then
-      return rounded rectangle path of my bounds with radius 2
+      return rounded rectangle path of rectangle [0,0,(my width)-3,(my height)-3] with radius 2
    end if
 end handler
 
