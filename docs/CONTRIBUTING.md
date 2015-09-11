@@ -41,7 +41,7 @@ assume that strict compilation mode is on (i.e. always declare your variables)
 
 (Good)
 
-`
+```
 /*
 Returns the number at 1-based index pIndex in the Fibonacci sequence
 */
@@ -55,10 +55,10 @@ function fibonacciNumber pIndex
   end repeat
   return tSecond
 end fibonacciNumber
-`
+```
 
 (Bad)
-`
+```
 ...
   put 1 into tFirst
   put 1 into tSecond
@@ -68,6 +68,7 @@ end fibonacciNumber
      put tSum into tSecond
   end repeat
 ...
+```
 
 ## Tags
 
