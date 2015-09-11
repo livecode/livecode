@@ -2,7 +2,7 @@
 
 *Note this document is specifically about contributing to the documentation of LiveCode.
 If you are looking for a general guide to contributing to the LiveCode source, see the 
-[toplevel CONTRIBUTE.md document](../CONTRIBUTING.md)*
+[toplevel CONTRIBUTING.md document](../CONTRIBUTING.md)*
 
 Have you noticed an error in the documentation? Do you want to add an instructive example? 
 Or can you explain a concept better than it is currently explained? Please consider submitting
