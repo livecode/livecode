@@ -123,11 +123,13 @@ Parameters:
 pOpacity(enum): The background opacity of the button
 -"Opaque"
 -"Translucent"
+-"Transparent"
 
 Description:
 Use the <backgroundOpacity> property to set the opacity of the button's background.
 
-This property can only be set if the theme of the widget is "iOS".
+This property is fixed at "Opaque" for the Android(Raised) theme and fixed at "Transparent" for the Android(Flat) theme.
+This property can only be changed if the theme of the widget is "iOS".
 */
 property backgroundOpacity get mBackgroundOpacity set setBackgroundOpacity
 metadata backgroundOpacity.editor is "com.livecode.pi.enum"
