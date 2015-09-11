@@ -144,7 +144,6 @@ private variable mBackgroundOpacity as String
 
 private variable mShowBorder as Boolean
 private variable mDefaultColor as Color
-private variable mAndroidRaisedBounds as Rectangle
 private variable mIosFontSize as Real
 private variable mAndroidFontSize as Real
 
@@ -177,7 +176,6 @@ public handler OnCreate() returns nothing
 
    put false into mShowBorder
    put color [0, 121/255, 1] into mDefaultColor
-   put rectangle [0, 0, (my width)-3, (my height)-3] into mAndroidRaisedBounds
    put (my height)*(17/29) into mIosFontSize
    put (my height)*(14/36) into mAndroidFontSize
 end handler
@@ -220,10 +218,6 @@ private handler drawAndroidRaisedButton() returns nothing
    checkBackgroundColor(tColorString)
 
    -- shadow
-   set the paint of this canvas to fetchPaint("bottomShadow")
-   fill fetchPath("bottomShadow") on this canvas
-   set the paint of this canvas to fetchPaint("rightShadow")
-   fill fetchPath("rightShadow") on this canvas
 
    -- background
    set the paint of this canvas to fetchPaint("background")
@@ -242,7 +236,7 @@ private handler drawAndroidRaisedButton() returns nothing
 
    set the font of this canvas to fetchFont()
    set the paint of this canvas to fetchPaint("label")
-   fill text tLabel at center of mAndroidRaisedBounds on this canvas
+   fill text tLabel at center of my bounds on this canvas
 end handler
 
 private handler drawAndroidFlatButton() returns nothing
@@ -262,7 +256,6 @@ private handler drawAndroidFlatButton() returns nothing
 end handler
 
 private handler updateVariables() returns nothing
-   put rectangle [0, 0, (my width)-3, (my height)-3] into mAndroidRaisedBounds
    put (my height)*(17/29) into mIosFontSize
    put (my height)*(14/36) into mAndroidFontSize
 end handler
@@ -287,35 +280,6 @@ private handler fetchPaint(in pObject as String) returns Paint
    else if pObject is "border" then
       return solid paint with color [167/255, 167/255, 167/255]
 
-   else if pObject is "rightShadow" then
-      variable tRamp1 as List
-      put the empty list into tRamp1
-      push gradient stop at 0 with color [183/255, 183/255, 183/255] onto tRamp1
-      push gradient stop at 0.25 with color [209/255, 209/255, 209/255] onto tRamp1
-      push gradient stop at 0.5 with color [230/255, 230/255, 230/255] onto tRamp1
-      push gradient stop at 0.75 with color [241/255, 241/255, 241/255] onto tRamp1
-
-      variable tPaint1 as Paint
-      put linear gradient with ramp tRamp1 into tPaint1
-      --rotate tPaint by 90
-      scale tPaint1 by [3, 1]
-      return tPaint1
-
-   else if pObject is "bottomShadow" then
-      variable tRamp2 as List
-      put the empty list into tRamp2
-      push gradient stop at 0 with color [183/255, 183/255, 183/255] onto tRamp2
-      push gradient stop at 0.25 with color [209/255, 209/255, 209/255] onto tRamp2
-      push gradient stop at 0.5 with color [230/255, 230/255, 230/255] onto tRamp2
-      push gradient stop at 0.75 with color [241/255, 241/255, 241/255] onto tRamp2
-
-      variable tPaint2 as Paint
-      put linear gradient with ramp tRamp2 into tPaint2
-      rotate tPaint2 by 90
-      scale tPaint2 by [3, 1]
-      return tPaint2
-
-
    end if
 end handler
 
@@ -324,14 +288,10 @@ private handler fetchPath(in pObject as String) returns Path
       if mWidgetTheme is "iOS" then
          return rounded rectangle path of my bounds with radius 5
       else if mWidgetTheme is "Android(Raised)" then
-         return rounded rectangle path of mAndroidRaisedBounds with radius 2
+         return rounded rectangle path of my bounds with radius 2
       end if
    else if pObject is "border" then
-      return rounded rectangle path of mAndroidRaisedBounds with radius 2
-   else if pObject is "bottomShadow" then
-      return rectangle path of rectangle [0, my height - 3, my width, my height]
-   else if pObject is "rightShadow" then
-      return rectangle path of rectangle [my width - 3, 0, my width, my height]
+      return rounded rectangle path of my bounds with radius 2
    end if
 end handler
 
@@ -464,7 +424,9 @@ end handler
 private handler checkBackgroundColor(in pBackgroundColor as String) returns nothing
    if pBackgroundColor is "255,255,255,255" then
       put true into mShowBorder
-      put mDefaultColor into mTextColor
+      if colorToString(mTextColor) is "255,255,255,255" then
+         put mDefaultColor into mTextColor
+      end if
    else
       put false into mShowBorder
       put color [1,1,1] into mTextColor
