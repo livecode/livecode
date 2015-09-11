@@ -559,9 +559,20 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    if pTarget is "Device" and not revEnvironmentIsInstalled() then
       revStandaloneProgress "Extracting debug symbols..."
       
+      // SN-2015-09-10: [[ Xcode 7.0 ]] Xcode 7.0 sets the env var MallocNanoZone to 1
+      //  but this makes dsymutil crash...
+      if $MallocNanoZone is not empty then
+         put 0 into $MallocNanoZone
+      end if
+      
       get shell("dsymutil" && quote & tDeploy["output"] & quote)
       if it is not empty then
          throw "extracting debug symbols failed with" && it
+      end if
+      
+      // Reinstate env var MallocNanoZone if it was set.
+      if $MallocNanoZone is not empty then
+         put 1 into $MallocNanoZone
       end if
    end if
    
@@ -632,7 +643,13 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       put uniDecode(uniEncode(tCertificate, "UTF8")) into tCertificate
       
       -- Do the codesigning
-      put tSdkRoot & slash & "Platforms/iPhoneOS.platform/Developer/usr/bin/codesign_allocate" into $CODESIGN_ALLOCATE
+      // SN-2015-09-11: [[ Xcode 7.0 ]] Setting CODESIGN_ALLOCATE environment variable 
+      // make codesigning fail when Xcode 7.0 is used.
+      //  Xcode 7.0 is only available from Mac OS 10.11, so we can get the info from the systemVersion
+      dispatch function "deploySanatizeSystemVersion" to stack "revDeployLibraryIOS" with the systemVersion
+      if the result < 101100 then
+         put tSdkRoot & slash & "Platforms/iPhoneOS.platform/Developer/usr/bin/codesign_allocate" into $CODESIGN_ALLOCATE
+      end if
       
       --try
       -- Perform the codesigning of the main bundle
