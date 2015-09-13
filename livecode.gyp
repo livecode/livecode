@@ -177,5 +177,41 @@
 				'files': [ '>@(dist_files)', '>@(dist_aux_files)', ],
 			}],
 		},
+
+		{
+			'target_name': 'cef-copy',
+			'type': 'none',
+			
+			'dependencies':
+			[
+				'LiveCode-all',
+				'debug-symbols',
+			],
+			
+			'conditions':
+			[
+				[
+					'OS == "linux" and "<!(echo $BUILDTYPE)" == "Debug"',
+					{
+						'copies':
+						[
+							{
+								'destination': '<(output_dir)',
+								'files': [
+									'prebuilt/lib/linux/<(target_arch)/CEF/',
+									'prebuilt/lib/linux/<(target_arch)/CEF/icudtl.dat',
+								],
+							},
+							{
+								'destination': '<(output_dir)/CEF',
+								'files': [
+									'<(output_dir)/libbrowser-cefprocess',
+								],
+							}
+						],
+					},
+				],
+			],
+		},
 	],
 }
