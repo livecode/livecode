@@ -352,8 +352,8 @@
 							{
 								'destination': '<(PRODUCT_DIR)',
 								'files': [
-									'$(SOLUTION_DIR)/prebuilt/lib/linux/<(target_arch)/CEF/',
-									'$(SOLUTION_DIR)/prebuilt/lib/linux/<(target_arch)/CEF/icudtl.dat',
+									'../prebuilt/lib/linux/<(target_arch)/CEF/',
+									'../prebuilt/lib/linux/<(target_arch)/CEF/icudtl.dat',
 								],
 							},
 							{
