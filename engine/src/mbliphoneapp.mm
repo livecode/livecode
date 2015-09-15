@@ -1,5 +1,4 @@
-
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -452,6 +451,8 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
                                              selector: @selector(orientationChanged:)
                                                  name: UIDeviceOrientationDidChangeNotification
                                                object: nil];
+    
+    return TRUE;
 }
 
 // MM-2014-09-30: [[ iOS 8 Support ]] Method called after successully registering (local or remote) notification settings.
