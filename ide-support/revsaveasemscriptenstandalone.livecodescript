@@ -330,7 +330,10 @@ private command scanFolder_recurse @xCount, @xFiles, pRelPath
       end if
 
       add 1 to xCount
-      put pRelPath & slash & tFile into tFilePath
+      put tFile into tFilePath
+      if pRelPath is not empty then
+         put pRelPath & slash before tFilePath
+      end if
       put tFilePath into xFiles[xCount]
    end repeat
 
