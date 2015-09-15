@@ -52,10 +52,11 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder
    set the itemDelimiter to comma
    
    -- Other parameters
-   local tName, tFiles, tAuxStackFiles
+   local tName, tFiles, tAuxStackFiles, tExtensions
    put tSettings["name"] into tName
    put tSettings["files"] into tFiles
    put tSettings["auxiliary_stackfiles"] into tAuxStackFiles
+   put tSettings["extensions"] into tExtensions
 
    -- If the datagrid is used, then include the library as an aux stack
    if "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
@@ -99,10 +100,12 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder
       
       -- Define some paths within the zip archive
       local tBootPath, tStandalonePath, tBootStackPath, tAuxStackPath
+      local tExtensionsPath
       put "boot" into tBootPath
       put tBootPath & slash & "standalone" into tStandalonePath
       put tStandalonePath & slash & "__boot.livecode" into tBootStackPath
       put tBootPath & slash & "auxiliary_stackfiles" into tAuxStackPath
+      put tBootPath & slash & "extensions" into tExtensionsPath
       
       -- Store the initial stack
       logDebug "boot-stack", "Storing" && tStackFile
@@ -117,13 +120,16 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder
          set the itemdelimiter to slash
          put item -1 of tStackFile into tZipAuxPath
          put tAuxStackPath & slash before tZipAuxPath
-
-         logDebug "aux-stack", "Storing" && tStackFile
+         
+         logDebug "aux", "Storing" && tStackFile
          revZipAddUncompressedItemWithFile tBuildZip, tAuxStackPath, tStackFile
          if the result is not empty then
-            throw "could not store auxiliar stack in standalone archive"
+            throw "could not store auxiliary stack in standalone archive"
          end if
       end repeat
+      
+      -- Store extensions
+      storeExtensions tBuildZip, tExtensions, tExtensionsPath
       
       -- Close zip file
       revZipCloseArchive tBuildZip
@@ -179,6 +185,77 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder
 end revSaveAsEmscriptenStandalone
 
 ----------------------------------------------------------------
+-- LiveCode Builder extensions
+----------------------------------------------------------------
+
+private command storeExtensions pZip, pExtensions, pExtensionsPath
+   if pExtensions is empty then
+      exit storeExtensions
+   end if
+   
+   -- Put extensions in the correct order for loading
+   local tExtensions
+   put revIDEExtensionsOrderByDependency(pExtensions) into tExtensions
+   
+   -- Store the list of extensions
+   storeExtensionsList pZip, tExtensions, pExtensionsPath
+   
+   -- Store each extension's data
+   local tKind
+   repeat for each line tKind in tExtensions
+      storeExtensionByKind pZip, tKind, pExtensionsPath
+   end repeat
+end storeExtensions
+
+private command storeExtensionsList pZip, pExtensions, pExtensionsPath
+   local tData, tZipPath
+   
+   put textEncode(pExtensions, "UTF-8") into tData
+   
+   put pExtensionsPath & slash & "extensions.txt" into tZipPath
+   
+   logDebug "lcb", "Storing" && tZipPath
+   
+   revZipAddUncompressedItemWithData pZip, tZipPath, "tData"
+   
+   if the result is not empty then
+      LogDebug "lcb", the result
+      throw "could not store extension list in standalone archive"
+   end if
+end storeExtensionsList
+
+private command storeExtensionByKind pZip, pKind, pExtensionsPath
+   local tInstallFolder
+   put revIDEExtensionProperty(pKind, "install_path") into tInstallFolder
+   
+   local tFiles
+   put getExtensionFilesByKind(tInstallFolder) into tFiles
+   
+   local tZipPath, tFilePath
+   repeat for each element tFilePath in tFiles
+      put pExtensionsPath & slash & pKind & slash & tFilePath into tZipPath
+      put tInstallFolder & slash before tFilePath
+      
+      logDebug "lcb", "Storing" && tFilePath
+      revZipAddUncompressedItemWithFile pZip, tZipPath, tFilePath
+      if the result is not empty then
+         throw "could not store extension file in standalone archive"
+      end if
+   end repeat
+end storeExtensionByKind
+
+-- For community (GPL) standalones, we need to include the extension in
+-- "the preferred form for modification".  I.e. with all of its source code
+-- and documentation.  Otherwise, just include compiled extension + resources
+private function getExtensionFilesByKind pInstallFolder
+   if revLicenseType() is "community" then
+      return scanFolder(pInstallFolder)
+   else
+      throw "commercial standalones are not supported"
+   end if
+end getExtensionFilesByKind
+
+----------------------------------------------------------------
 -- File & path helper functions
 ----------------------------------------------------------------
 
@@ -212,6 +289,71 @@ private function mapResPath pPath
    end if
 end mapResPath
 
+-- Scan a directory, returning a number-indexed array of files found.
+-- The returned paths are relative to the specified directory.
+private function scanFolder pFolder
+   local tSaveFolder, tTemplateRoot, tFiles, tCount, tError
+
+   -- Short-circuit if pFolder is missing
+   if there is no folder pFolder then
+      return empty
+   end if
+
+   put 0 into tCount
+   put empty into tFiles
+   put the defaultfolder into tSaveFolder
+
+   set the defaultfolder to pfolder
+   try
+      scanFolder_recurse tCount, tFiles, empty
+   catch tError
+   end try
+
+   set the defaultfolder to tSaveFolder
+
+   if tError is not empty then
+      throw tError
+   end if
+
+   return tFiles
+end scanFolder
+
+-- Recursive function used by scanFolder()
+private command scanFolder_recurse @xCount, @xFiles, pRelPath
+   local tFile, tFilepath, tSaveFolder
+
+   -- List files
+   repeat for each line tFile in the files
+      -- Skip dotfiles
+      if tFile begins with "." then
+         next repeat
+      end if
+
+      add 1 to xCount
+      put tFile into tFilePath
+      if pRelPath is not empty then
+         put pRelPath & slash before tFilePath
+      end if
+      put tFilePath into xFiles[xCount]
+   end repeat
+
+   -- Recurse
+   put the defaultfolder into tSaveFolder
+   repeat for each line tFolder in the folders
+      if tFolder begins with "." then
+         next repeat
+      end if
+
+      set the defaultfolder to tSaveFolder & slash & tFolder
+      if pRelPath is not empty then
+         put pRelPath & slash before tFolder
+      end if
+      scanFolder_recurse xCount, xFiles, tFolder
+   end repeat
+
+   set the defaultFolder to tSaveFolder
+end scanFolder_recurse
+
 -- Return a number-indexed array of engine files that need to be
 -- copied into the standalone output folder.
 private function getEngineFiles
@@ -238,59 +380,8 @@ end getStandaloneTemplateFolder
 -- template folder.  The paths returned are relative to the path returned
 -- by getStandaloneTemplateFolder()
 private function getStandaloneTemplateFiles
-   local tSaveFolder, tTemplateRoot, tFiles, tCount
-   
-   -- Short-circuit if the template directory is missing
-   put getStandaloneTemplateFolder() into tTemplateRoot
-   if there is no folder tTemplateRoot then
-      logDebug "template", "No template in" && tTemplateRoot
-      return empty
-   end if
-   
-   put 0 into tCount
-   put empty into tFiles
-   put the defaultFolder into tSaveFolder
-   
-   set the defaultfolder to tTemplateRoot
-   getStandaloneTemplateFiles_Impl tCount, tFiles, empty
-   
-   set the defaultFolder to tSaveFolder
-   return tFiles
+   return scanFolder(getStandaloneTemplateFolder())
 end getStandaloneTemplateFiles
-
-private command getStandaloneTemplateFiles_Impl @xCount, @xFiles, pRelPath
-   local tFile, tFilePath, tSaveFolder
-   
-   logDebug "template", "Scanning" && the defaultfolder
-   
-   -- List files
-   repeat for each line tFile in the files
-      -- Skip dotfiles
-      if tFile begins with "." then
-         next repeat
-      end if
-
-      add 1 to xCount
-      put pRelPath & slash & tFile into tFilePath
-      put tFilePath into xFiles[xCount]
-      logDebug "template", xCount & ":" && slash & tFilePath
-   end repeat
-   
-   -- Recurse
-   put the defaultFolder into tSaveFolder
-   repeat for each line tFolder in the folders
-      if tFolder is "." or tFolder is ".." then
-         next repeat
-      end if
-      
-      set the defaultFolder to tSaveFolder & slash & tFolder
-      if pRelPath is not empty then
-         put pRelPath & slash before tFolder
-      end if
-      getStandaloneTemplateFiles_Impl xCount, xFiles, tFolder
-   end repeat
-   set the defaultFolder to tSaveFolder
-end getStandaloneTemplateFiles_Impl
 
 -- Get the filename of the Emscripten standalone template HTML file.
 -- This has some standalone-dependent JavaScript substituted into it
