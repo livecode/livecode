@@ -726,7 +726,7 @@ function revDocsFormatInlineComments pDataA, pIsLibrary
             put tElementA["content"] into tType
             next repeat
          else if tElement is "Syntax" then
-            put tElementA["content"] into tSyntax
+            put tElementA["content"] into tSyntax[the number of elements of tSyntax + 1]
             next repeat
          end if
          
@@ -802,12 +802,11 @@ function revDocsFormatInlineComments pDataA, pIsLibrary
          put return after tEntryDoc
       end repeat
       if tHasA["Syntax"] is not true then
-         repeat with x = 1 to the number of elements in pDataA["syntax"]
-            put "Syntax:" && pDataA["syntax"][x] & return & return before tEntryDoc
-         end repeat
-      else
-         put "Syntax:" && tSyntax & return & return before tEntryDoc
+         put pDataA["syntax"] into tSyntax
       end if
+      repeat with x = 1 to the number of elements in tSyntax
+         put "Syntax:" && tSyntax[x] & return & return before tEntryDoc
+      end repeat
       
       if tHasA["Type"] is not true then
          put pDataA["type"] into tType
@@ -910,6 +909,7 @@ function revDocsExtractElements pText
    local tArrayDepth
    put 0 into tArrayDepth
    
+   local tInternalBlankLines
    repeat for each line tLine in pText
       # Variables to store regex matches
       local tNextElementName, tParamType, tAfterElement
@@ -940,6 +940,11 @@ function revDocsExtractElements pText
       # otherwise just append to the accumulated content
       
       if word 1 of tLine is empty then
+         # AL-2015-09-03: [[ Bug 15866 ]] If we have an empty line and there is already content for this element,
+         #  then the blank line is intentional whitespace, so keep track of the number
+         if tAccumulatedContent is not empty then
+            add 1 to tInternalBlankLines
+         end if
          next repeat
       else if matchText(tLine, tElementRegex, tNextElementName, tParamType, tAfterElement) then        
          if tElementCount is not 0 then
@@ -950,6 +955,7 @@ function revDocsExtractElements pText
          add 1 to tElementCount
          
          put empty into tAccumulatedContent
+         put 0 into tInternalBlankLines
          # Prevent propagation of element details
          put empty into tElementA
          put tNextElementName into tElementA["name"]
@@ -966,6 +972,11 @@ function revDocsExtractElements pText
             put word 1 to -1 of tAfterElement & return into tAccumulatedContent
          end if
       else
+         # AL-2015-09-03: [[ Bug 15866 ]] Include internal blank lines in content
+         repeat tInternalBlankLines
+            put return after tAccumulatedContent
+         end repeat
+         put 0 into tInternalBlankLines
          put tLine & return after tAccumulatedContent
       end if
    end repeat
@@ -1229,7 +1240,7 @@ end revDocsParseDocTextToLibraryArray
 function revDocsParseDocFile pFile
    local tFileContents
    put url("binfile:" & pFile) into tFileContents
-   return revDocsParseDocText(pFile, tFileContents)
+   return revDocsParseDocText(tFileContents, pFile)
 end revDocsParseDocFile
 
 function revDocsGroupElements pElementsA

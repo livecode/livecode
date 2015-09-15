@@ -92,7 +92,7 @@ There are several ways to get help with installing and using LiveCode:
 
 ## Contributing to LiveCode
 
-For information on modifying LiveCode and submitting contributions to the LiveCode Community project, please see the [HACKING](HACKING.md) file.
+For information on modifying LiveCode and submitting contributions to the LiveCode Community project, please see the [CONTRIBUTING](CONTRIBUTING.md) file.
 
 ## License
 

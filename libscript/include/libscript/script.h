@@ -162,6 +162,9 @@ bool MCScriptUnloadPackage(MCScriptPackageRef package);
 // Load a module from a stream.
 bool MCScriptCreateModuleFromStream(MCStreamRef stream, MCScriptModuleRef& r_module);
 
+// Load a module from a blob
+MC_DLLEXPORT bool MCScriptCreateModuleFromData(MCDataRef data, MCScriptModuleRef & r_module);
+
 // Lookup the module with the given name. Returns false if no such module exists.
 bool MCScriptLookupModule(MCNameRef name, MCScriptModuleRef& r_module);
 
@@ -306,6 +309,7 @@ void MCScriptAddDefinedTypeToModule(MCScriptModuleBuilderRef builder, uindex_t i
 void MCScriptAddForeignTypeToModule(MCScriptModuleBuilderRef builder, MCStringRef p_binding, uindex_t& r_type);
 void MCScriptAddOptionalTypeToModule(MCScriptModuleBuilderRef builder, uindex_t type, uindex_t& r_new_type);
 void MCScriptBeginHandlerTypeInModule(MCScriptModuleBuilderRef builder, uindex_t return_type);
+void MCScriptBeginForeignHandlerTypeInModule(MCScriptModuleBuilderRef builder, uindex_t return_type);
 void MCScriptContinueHandlerTypeInModule(MCScriptModuleBuilderRef builder, MCScriptHandlerTypeParameterMode mode, MCNameRef name, uindex_t type);
 void MCScriptEndHandlerTypeInModule(MCScriptModuleBuilderRef builder, uindex_t& r_new_type);
 void MCScriptBeginRecordTypeInModule(MCScriptModuleBuilderRef builder, uindex_t base_type);

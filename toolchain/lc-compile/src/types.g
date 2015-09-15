@@ -22,7 +22,7 @@
 'export'
     MODULE MODULELIST MODULEKIND
     DEFINITION SIGNATURE ACCESS SCOPE
-    TYPE FIELD FIELDLIST
+    TYPE FIELD FIELDLIST LANGUAGE
     PARAMETER MODE PARAMETERLIST
     STATEMENT
     EXPRESSION EXPRESSIONLIST
@@ -90,7 +90,7 @@
     optional(Position: POS, Type: TYPE)
     record(Position: POS, Base: TYPE, Fields: FIELDLIST)
     enum(Position: POS, Base: TYPE, Fields: FIELDLIST)
-    handler(Position: POS, Signature: SIGNATURE)
+    handler(Position: POS, Language: LANGUAGE, Signature: SIGNATURE)
     boolean(Position: POS)
     integer(Position: POS)
     real(Position: POS)
@@ -101,6 +101,10 @@
     list(Position: POS, Element: TYPE)
     unspecified
     nil
+
+'type' LANGUAGE
+    normal
+    foreign
 
 'type' FIELDLIST
     fieldlist(Head: FIELD, Tail: FIELDLIST)

@@ -27,6 +27,7 @@ typedef enum
 	kMCImageRepVector,
 	kMCImageRepCompressed,
 	kMCImageRepPixelData,
+	kMCImageRepGImage,
 	
 	kMCImageRepResampled,
 } MCImageRepType;
@@ -468,6 +469,9 @@ bool MCImageRepGetDensityMapped(MCStringRef p_filename, MCImageRep *&r_rep);
 // IM-2014-07-23: [[ Bug 12842 ]] Modify resampled image rep to take a target width & height
 // and explicit flip params instead of scale values.
 bool MCImageRepGetResampled(uint32_t p_width, uint32_t p_height, bool p_flip_horizontal, bool p_flip_vertical, MCImageRep *p_source, MCImageRep *&r_rep);
+
+// IM-2015-06-25: [[ GImageRep ]] Create image rep using MCGImageRef as source
+bool MCImageRepCreateWithGImage(MCGImageRef p_image, MCImageRep *&r_image_rep);
 
 ////////////////////////////////////////////////////////////////////////////////
 

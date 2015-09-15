@@ -96,9 +96,9 @@ enum MCCanvasEffectType
 	kMCCanvasEffectTypeOuterShadow,
 	kMCCanvasEffectTypeInnerGlow,
 	kMCCanvasEffectTypeOuterGlow,
-	
-	_MCCanvasEffectTypeCount
 };
+
+#define _MCCanvasEffectTypeCount (kMCCanvasEffectTypeOuterGlow + 1)
 
 enum MCCanvasEffectProperty
 {
@@ -112,9 +112,9 @@ enum MCCanvasEffectProperty
 	
 	kMCCanvasEffectPropertyDistance,
 	kMCCanvasEffectPropertyAngle,
-	
-	_MCCanvasEffectPropertyCount
 };
+
+#define _MCCanvasEffectPropertyCount (kMCCanvasEffectPropertyAngle + 1)
 
 struct __MCCanvasEffectImpl
 {

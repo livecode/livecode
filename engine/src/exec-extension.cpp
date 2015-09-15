@@ -49,6 +49,7 @@
 #include "uuid.h"
 
 #include "libscript/script.h"
+#include "libscript/script-auto.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -168,28 +169,20 @@ bool MCEngineLookupResourcePathForModule(MCScriptModuleRef p_module, MCStringRef
 
 void MCEngineLoadExtensionFromData(MCExecContext& ctxt, MCDataRef p_extension_data, MCStringRef p_resource_path)
 {
-    MCStreamRef t_stream;
-    /* UNCHECKED */ MCMemoryInputStreamCreate(MCDataGetBytePtr(p_extension_data), MCDataGetLength(p_extension_data), t_stream);
-    
-    MCScriptModuleRef t_module;
-    if (!MCScriptCreateModuleFromStream(t_stream, t_module))
+    MCAutoScriptModuleRef t_module;
+    if (!MCScriptCreateModuleFromData(p_extension_data, &t_module))
     {
         MCAutoErrorRef t_error;
         if (MCErrorCatch(Out(t_error)))
             ctxt . SetTheResultToValue(MCErrorGetMessage(In(t_error)));
         else
             ctxt . SetTheResultToStaticCString("failed to load module");
-        MCValueRelease(t_stream);
         return;
     }
     
-    MCValueRelease(t_stream);
-    
-    MCEngineAddExtensionFromModule(t_module);
+    MCEngineAddExtensionFromModule(*t_module);
     if (p_resource_path != nil)
-        MCEngineAddResourcePathForModule(t_module, p_resource_path);
-    
-    MCScriptReleaseModule(t_module);
+        MCEngineAddResourcePathForModule(*t_module, p_resource_path);
     
     return;
 }

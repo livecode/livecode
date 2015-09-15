@@ -316,3 +316,13 @@ MCScreenDC::popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_m
     MCStringCreateWithBytesAndRelease((byte_t*)t_result, t_result_length, kMCStringEncodingUTF16, false, r_result);
     return true;
 }
+
+
+void
+MCScreenDC::platform_querymouse(int16_t& r_x, int16_t& r_y)
+{
+    // There is no asynchronous mouse position in Emscripten; just whatever the
+    // browser has told us about.
+    r_x = MCmousex;
+    r_y = MCmousey;
+}

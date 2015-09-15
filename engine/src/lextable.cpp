@@ -1510,7 +1510,8 @@ LT factor_table[] =
         {"script", TT_PROPERTY, P_SCRIPT},
 		{"scriptexecutionerrors", TT_PROPERTY, P_SCRIPT_EXECUTION_ERRORS},
         {"scriptlimits", TT_FUNCTION, F_SCRIPT_LIMITS},
-		{"scriptparsingerrors", TT_PROPERTY, P_SCRIPT_PARSING_ERRORS},
+        {"scriptonly", TT_PROPERTY, P_SCRIPT_ONLY},
+        {"scriptparsingerrors", TT_PROPERTY, P_SCRIPT_PARSING_ERRORS},
         {"scripttextfont", TT_PROPERTY, P_SCRIPT_TEXT_FONT},
         {"scripttextsize", TT_PROPERTY, P_SCRIPT_TEXT_SIZE},		
         {"scroll", TT_PROPERTY, P_VSCROLL},
@@ -2122,6 +2123,8 @@ static LT sugar_table[] =
 		{"path", TT_UNDEFINED, SG_PATH},
 		// JS-2013-07-01: [[ EnhancedFilter ]] Token for 'pattern'.
 		{"pattern", TT_UNDEFINED, SG_PATTERN},
+        {"real", TT_UNDEFINED, SG_REAL},
+        {"really", TT_UNDEFINED, SG_REALLY},
 		// MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
 		// AL-2013-10-30: [[ Bug 11351 ]] Ensure table is in alphabetical order.
         {"recursively", TT_UNDEFINED, SG_RECURSIVELY},

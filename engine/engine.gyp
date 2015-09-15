@@ -268,7 +268,7 @@
 					{
 						'ldflags':
 						[
-							'-T', '<(src_top_dir_abs)/engine/linux.link',
+							'-T', '$(abs_srcdir)/engine/linux.link',
 						],
 					},
 				],
@@ -282,12 +282,17 @@
 						'product_dir': '<(PRODUCT_DIR)',	# Shared libraries are not placed in PRODUCT_DIR by default
 						'type': 'shared_library',
 						
+						'sources':
+						[
+							'engine/linux.link',
+						],
+						
 						'ldflags':
 						[
 							# Helpful for catching build problems
 							'-Wl,-no-undefined',
 							
-							'-Wl,-T,<(src_top_dir_abs)/engine/linux.link',
+							'-Wl,-T,$(abs_srcdir)/engine/linux.link',
 						],
 						
 						'actions':
@@ -520,7 +525,7 @@
 					{
 						'ldflags':
 						[
-							'-T', '<(src_top_dir_abs)/engine/linux.link',
+							'-T', '$(abs_srcdir)/engine/linux.link',
 						],
 					},
 				],
@@ -792,6 +797,7 @@
 								[
 									'emscripten-javascriptify.sh',
 									'<(PRODUCT_DIR)/standalone-community.bc',
+									'rsrc/emscripten-html-template.html',
 									'src/em-whitelist.json',
 									'src/em-preamble.js',
 									'src/em-util.js',
@@ -815,6 +821,7 @@
 									'./emscripten-javascriptify.sh',
 									'<(PRODUCT_DIR)/standalone-community.bc',
 									'<(PRODUCT_DIR)/standalone-community-<(version_suffix).html',
+									'rsrc/emscripten-html-template.html',
 									'src/em-whitelist.json',
 									'src/em-preamble.js',
 									'src/em-util.js',

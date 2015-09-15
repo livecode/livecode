@@ -37,7 +37,7 @@ The <tan> <function> requires its input to be in <radian|radians>. To provide an
 
   function tanInDegrees angleInDegrees
     return tan(angleInDegrees * pi / 180)
-  end cosInDegrees
+  end tanInDegrees
 
 References: pi (constant), radian (glossary), custom function (glossary), return (glossary), degree (glossary), function (control_st)
 
