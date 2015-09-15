@@ -43,9 +43,7 @@ import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.media.MediaPlayer.OnErrorListener;
 import android.media.MediaPlayer.OnVideoSizeChangedListener;
-
 import android.media.MediaPlayer.OnBufferingUpdateListener;
-
 import android.net.Uri;
 import android.os.PowerManager;
 import android.util.AttributeSet;
@@ -248,13 +246,11 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
     }
 
     private void openVideo() {
-	
-        if ((mUri == null && mFileDescriptor == null) || mSurfaceHolder == null) {
+		if ((mUri == null && mFileDescriptor == null) || mSurfaceHolder == null) {
             // not ready for playback just yet, will try again later
             return;
         }
-		
-        // Tell the music playback service to pause
+		// Tell the music playback service to pause
         // TODO: these constants need to be published somewhere in the framework.
         Intent i = new Intent("com.android.music.musicservicecommand");
         i.putExtra("command", "pause");
@@ -723,7 +719,6 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
     public int getDuration() {
         if (isInPlaybackState()) {
             if (mDuration > 0) {
-
                 return mDuration;
             }
             mDuration = mMediaPlayer.getDuration();
