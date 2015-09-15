@@ -334,8 +334,6 @@ public handler OnSave(out rProperties as Array)
    put mLeftLabel into rProperties["leftLabel"]
    put getActionColor() into rProperties["actionColor"]
    put mShowSearchIcon into rProperties["showSearchIcon"]
-
-   return rProperties
 end handler
 
 public handler OnLoad(in pProperties as Array)
