@@ -54,7 +54,7 @@ public class VideoControl extends NativeControl
                 m_module.getEngine().wakeEngineThread();
             }
         });
-        
+		
         setOnErrorListener(new MediaPlayer.OnErrorListener() {
             @Override
             public boolean onError(MediaPlayer mp, int what, int extra)
@@ -179,7 +179,12 @@ public class VideoControl extends NativeControl
     {
         return m_video_view.getDuration();
     }
-    
+	
+	public int getPlayableDuration()
+	{
+		return m_video_view.getPlayableDuration();
+	}
+	
     public int getCurrentTime()
     {
         return m_video_view.getCurrentPosition();
@@ -230,7 +235,7 @@ public class VideoControl extends NativeControl
     {
         m_video_view.setOnErrorListener(listener);
     }
-    
+	
     public void setOnVideoSizeChangedListener(MediaPlayer.OnVideoSizeChangedListener listener)
     {
         m_video_view.setOnVideoSizeChangedListener(listener);
@@ -263,7 +268,6 @@ public class VideoControl extends NativeControl
 
     	
 ////////////////////////////////////////////////////////////////////////////////
-	
     public native void doPlayerFinished();
     public native void doPlayerError();
     public native void doPropertyAvailable(int property);

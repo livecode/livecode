@@ -190,7 +190,15 @@ Exec_stat MCAndroidPlayerControl::Get(MCNativeControlProperty p_property, MCExec
             FormatInteger(ep, t_integer);
             return ES_NORMAL;
         }
-            
+		
+		// PM-2015-09-15: [[ Bug 15925 ]] Allow mobileControlGet(myPlayer, "playableDuration" on Android
+		case kMCNativeControlPropertyPlayableDuration:
+		{
+			MCAndroidObjectRemoteCall(t_view, "getPlayableDuration", "i", &t_integer);
+			FormatInteger(ep, t_integer);
+			return ES_NORMAL;
+		}
+			
         case kMCNativeControlPropertyCurrentTime:
         {
             MCAndroidObjectRemoteCall(t_view, "getCurrentTime", "i", &t_integer);
