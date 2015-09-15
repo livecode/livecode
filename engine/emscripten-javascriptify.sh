@@ -14,9 +14,10 @@ set -e
 #
 input=$1
 output=$2
-whitelist=$3
-preamble=$4
-shift 4
+html_template=$3
+whitelist=$4
+preamble=$5
+shift 5
 
 
 for lib in $@ ; do
@@ -39,6 +40,7 @@ fi
 ${EMCC} ${optimisation_flags} ${CFLAGS} \
 	"${input}" \
 	-o "${output}" \
+	--shell-file "${html_template}" \
 	-s EMTERPRETIFY_WHITELIST=@"${whitelist}" \
 	-s ASSERTIONS=1 \
 	-s EMTERPRETIFY=1 \
