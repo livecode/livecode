@@ -432,6 +432,22 @@ MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasEffectTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasFontTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasTypeInfo;
 
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCCanvasRectangleTypeInfo(void) { return kMCCanvasRectangleTypeInfo; }
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCCanvasPointTypeInfo(void) { return kMCCanvasPointTypeInfo; }
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCCanvasColorTypeInfo(void) { return kMCCanvasColorTypeInfo; }
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCCanvasTransformTypeInfo(void) { return kMCCanvasTransformTypeInfo; }
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCCanvasImageTypeInfo(void) { return kMCCanvasImageTypeInfo; }
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCCanvasPaintTypeInfo(void) { return kMCCanvasPaintTypeInfo; }
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCCanvasSolidPaintTypeInfo(void) { return kMCCanvasSolidPaintTypeInfo; }
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCCanvasPatternTypeInfo(void) { return kMCCanvasPatternTypeInfo; }
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCCanvasGradientTypeInfo(void) { return kMCCanvasGradientTypeInfo; }
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCCanvasGradientStopTypeInfo(void) { return kMCCanvasGradientStopTypeInfo; }
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCCanvasPathTypeInfo(void) { return kMCCanvasPathTypeInfo; }
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCCanvasEffectTypeInfo(void) { return kMCCanvasEffectTypeInfo; }
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCCanvasFontTypeInfo(void) { return kMCCanvasFontTypeInfo; }
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCCanvasTypeInfo(void) { return kMCCanvasTypeInfo; }
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Error types
