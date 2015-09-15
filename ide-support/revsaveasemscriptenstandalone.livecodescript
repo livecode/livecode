@@ -120,11 +120,11 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder
          set the itemdelimiter to slash
          put item -1 of tStackFile into tZipAuxPath
          put tAuxStackPath & slash before tZipAuxPath
-
-         logDebug "aux-stack", "Storing" && tStackFile
+         
+         logDebug "aux", "Storing" && tStackFile
          revZipAddUncompressedItemWithFile tBuildZip, tAuxStackPath, tStackFile
          if the result is not empty then
-            throw "could not store auxiliar stack in standalone archive"
+            throw "could not store auxiliary stack in standalone archive"
          end if
       end repeat
       
