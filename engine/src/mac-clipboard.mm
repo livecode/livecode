@@ -189,6 +189,10 @@ bool MCMacRawClipboard::PushUpdates()
 
 bool MCMacRawClipboard::PullUpdates()
 {
+    // If we're still the owner of the clipboard, do nothing
+    if (IsOwned())
+        return true;
+    
     // Grab the contents of the clipboard
     [m_items release];
     m_items = [[m_pasteboard pasteboardItems] mutableCopy];
