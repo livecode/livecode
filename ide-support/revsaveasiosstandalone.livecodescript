@@ -645,9 +645,11 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       -- Do the codesigning
       // SN-2015-09-11: [[ Xcode 7.0 ]] Setting CODESIGN_ALLOCATE environment variable 
       // make codesigning fail when Xcode 7.0 is used.
-      //  Xcode 7.0 is only available from Mac OS 10.11, so we can get the info from the systemVersion
-      dispatch function "deploySanatizeSystemVersion" to stack "revDeployLibraryIOS" with the systemVersion
-      if the result < 101100 then
+      // We use Clang version to get the Xcode version in use
+      local tClangVersion, tClangMajorVersion
+      put shell("clang++ --version") into tClangVersion
+      if matchText(tClangVersion, "Apple LLVM version ([0-9]+)\.[0-9]+.[0-9]+", tClangMajorVersion) \
+            and tClangMajorVersion < 7 then
          put tSdkRoot & slash & "Platforms/iPhoneOS.platform/Developer/usr/bin/codesign_allocate" into $CODESIGN_ALLOCATE
       end if
       
