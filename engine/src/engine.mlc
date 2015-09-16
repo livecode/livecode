@@ -37,7 +37,7 @@ module com.livecode.engine
 
 use com.livecode.foreign
 
-public foreign type ScriptObject binds to "kMCEngineScriptObjectTypeInfo"
+public foreign type ScriptObject binds to "MCEngineScriptObjectTypeInfo"
 
 public foreign handler MCEngineExecResolveScriptObject(in pObjectId as String) returns ScriptObject binds to "<builtin>"
 public foreign handler MCEngineEvalScriptObjectExists(in pObject as ScriptObject, out rExists as CBool) returns nothing binds to "<builtin>"

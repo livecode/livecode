@@ -35,6 +35,18 @@ MC_DLLEXPORT_DEF MCTypeInfoRef kMCSetTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCListTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCProperListTypeInfo;
 
+MC_DLLEXPORT_DEF MCTypeInfoRef MCAnyTypeInfo() { return kMCAnyTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCNullTypeInfo() { return kMCNullTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCBooleanTypeInfo() { return kMCBooleanTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCNumberTypeInfo() { return kMCNumberTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCStringTypeInfo() { return kMCStringTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCNameTypeInfo() { return kMCNameTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCDataTypeInfo() { return kMCDataTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCArrayTypeInfo() { return kMCArrayTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCSetTypeInfo() { return kMCSetTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCListTypeInfo() { return kMCListTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCProperListTypeInfo() { return kMCProperListTypeInfo; }
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static bool __MCTypeInfoIsNamed(MCTypeInfoRef self);
