@@ -450,8 +450,41 @@ MCDataRef MCMacRawClipboardItemRep::CopyData() const
         return MCValueRetain(*m_data);
     }
     
+    // Objects of type NSURL need special handling when attempting to get their
+    // URL so that it is returned as a path rather than an inode number.
+    if (MCStringIsEqualTo(*m_type, MCSTR("public.file-url"), kMCStringOptionCompareExact))
+    {
+        // Turn the data into an NSURL object
+        NSData* t_bytes = [m_item dataForType:@"public.file-url"];
+        if (t_bytes == nil)
+            return NULL;
+        NSString* t_url_string = [[NSString alloc] initWithData:t_bytes encoding:NSUTF8StringEncoding];
+        if (t_url_string == nil)
+            return NULL;
+        NSURL* t_url = [NSURL URLWithString:t_url_string];
+        [t_url_string release];
+        if (t_url == nil)
+            return NULL;
+        
+        // Get the current path of the file referenced by the URL
+        NSString* t_path = [t_url path];
+        if (t_path == nil)
+            return NULL;
+        
+        // Turn this path into a LiveCode string
+        MCAutoStringRef t_path_string;
+        if (!MCStringCreateWithCFString((CFStringRef)t_path, &t_path_string))
+            return NULL;
+        
+        // Because this needs to return data, UTF-8 encode the result
+        if (!MCStringEncode(*t_path_string, kMCStringEncodingUTF8, false, &m_data))
+            return NULL;
+        
+        return MCValueRetain(*m_data);
+    }
+    
     // Is this item an NSPasteboardItem or something else?
-    if ([m_item isKindOfClass:[NSPasteboardItem class]])
+    else if ([m_item isKindOfClass:[NSPasteboardItem class]])
     {
         // Get the type string for this representation (as lookup is by type)
         MCAutoStringRef t_type_string(CopyTypeString());
