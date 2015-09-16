@@ -71,7 +71,8 @@ MCMacRawClipboard::MCMacRawClipboard(NSPasteboard* p_pasteboard) :
   MCRawClipboard(),
   m_pasteboard(p_pasteboard),
   m_last_changecount(0),
-  m_items(nil)
+  m_items(nil),
+  m_dirty(false)
 {
     [m_pasteboard retain];
 }
@@ -116,6 +117,7 @@ MCMacRawClipboardItem* MCMacRawClipboard::GetItemAtIndex(uindex_t p_index)
 void MCMacRawClipboard::Clear()
 {
     // Discard any contents that we might already have
+    m_dirty = true;
     [m_items release];
     m_items = nil;
 }
@@ -146,6 +148,9 @@ bool MCMacRawClipboard::AddItem(MCRawClipboardItem* p_item)
     if (m_items == nil)
         return false;
     
+    // Clipboard has been modified
+    m_dirty = true;
+    
     // Push the item onto the array
     [m_items addObject:t_item->m_item];
     return true;
@@ -153,6 +158,10 @@ bool MCMacRawClipboard::AddItem(MCRawClipboardItem* p_item)
 
 bool MCMacRawClipboard::PushUpdates()
 {
+    // Do nothing if no changes have been made
+    if (!m_dirty)
+        return true;
+    
     // Take ownership of the clipboard
     m_last_changecount = [m_pasteboard clearContents];
     
@@ -163,6 +172,10 @@ bool MCMacRawClipboard::PushUpdates()
     
     // Update the change count
     m_last_changecount = [m_pasteboard changeCount];
+    
+    // Clipboard is now clean
+    if (t_success)
+        m_dirty = false;
     
     return (t_success != NO);
 }

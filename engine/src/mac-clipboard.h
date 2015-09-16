@@ -123,6 +123,9 @@ private:
     // The array that we are pushing onto the clipboard
     NSMutableArray* m_items;
     
+    // Indicates whether any changes have been made to the clipboard
+    bool m_dirty;
+    
     
     // Table used to map from MCRawClipboardKnownType constants to Apple's UTIs
     static const char* const s_clipboard_types[];
