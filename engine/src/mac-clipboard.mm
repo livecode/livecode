@@ -24,7 +24,7 @@
 const char* const MCMacRawClipboard::s_clipboard_types[] =
 {
     "public.utf8-plain-text",
-    "public.utf16-plain-text",
+    "public.utf16-external-plain-text",
     NULL,
     "com.apple.traditional-mac-plain-text",
     NULL,
@@ -32,20 +32,20 @@ const char* const MCMacRawClipboard::s_clipboard_types[] =
     "public.rtf",
     "public.html",
     
+    "public.png",
+    "com.compuserve.gif",
+    "public.jpeg",
     NULL,
     NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    NULL,                   // "com.microsoft.bmp" but the Mac engine doesn't support this format
     NULL,
     
     "com.runrev.livecode.objects-1",
     "com.runrev.livecode.text-styled-1",
     
+    "public.file-url",
     NULL,
-    NULL,
-    NULL,
+    "public.url",
     NULL,
 };
 
