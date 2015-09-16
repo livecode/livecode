@@ -221,6 +221,12 @@ MCStringRef MCMacRawClipboard::GetKnownTypeString(MCRawClipboardKnownType p_type
     return NULL;
 }
 
+MCStringEncoding MCMacRawClipboard::GetURLTextEncoding() const
+{
+    // We explicitly perform the encoding in-engine so we choose UTF-8.
+    return kMCStringEncodingUTF8;
+}
+
 
 MCMacRawClipboardItem::MCMacRawClipboardItem() :
   MCRawClipboardItem(),
@@ -335,13 +341,33 @@ bool MCMacRawClipboardItem::AddRepresentation(MCStringRef p_type, MCDataRef p_by
         m_rep_cache[t_index] = t_rep = new MCMacRawClipboardItemRep(m_item, t_index, p_type, p_bytes);
     }
     
+    // If we are setting a "public.file-url" type, we'll need to do a bit of
+    // massaging to get it into the correct form.
+    MCAutoDataRef t_bytes;
+    if (MCStringIsEqualTo(p_type, MCSTR("public.file-url"), kMCStringOptionCompareExact))
+    {
+        // Prefix the URL with "file://"... we cheat here and take advantage of
+        // the fact that the URLs are encoded in an ASCII-compatible manner.
+        MCAutoDataRef t_prefixed_url;
+        if (!MCDataMutableCopy(p_bytes, &t_prefixed_url))
+            return false;
+        if (!MCDataPrependBytes(*t_prefixed_url, (const byte_t*)"file://", 7))
+            return false;
+        if (!MCDataCopy(*t_prefixed_url, &t_bytes))
+            return false;
+    }
+    else
+    {
+        t_bytes = p_bytes;
+    }
+    
     // Turn the type string and data into their NS equivalents.
     // Note that the NSData is auto-released when we get it.
     NSString* t_type;
     NSData* t_data;
     if (!MCStringConvertToCFStringRef(p_type, (CFStringRef&)t_type))
         return false;
-    t_data = [NSData dataWithBytes:MCDataGetBytePtr(p_bytes) length:MCDataGetLength(p_bytes)];
+    t_data = [NSData dataWithBytes:MCDataGetBytePtr(*t_bytes) length:MCDataGetLength(*t_bytes)];
     if (t_data == nil)
     {
         [t_type release];

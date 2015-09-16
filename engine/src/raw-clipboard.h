@@ -169,6 +169,9 @@ public:
     // for the requested representation, these will return NULL.
     virtual MCStringRef GetKnownTypeString(MCRawClipboardKnownType p_type) const = 0;
     
+    // Returns the text encoding used for the file/URL item/list types.
+    virtual MCStringEncoding GetURLTextEncoding() const = 0;
+    
     // Destructor
     virtual ~MCRawClipboard() = 0;
     

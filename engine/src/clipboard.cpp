@@ -152,8 +152,89 @@ bool MCClipboard::IsEmpty() const
 
 bool MCClipboard::AddFileList(MCStringRef p_file_names)
 {
-    // TODO: implement
-    return false;
+    AutoLock t_lock(this);
+    
+    // Clear contents if the clipboard contains external data
+    if (m_clipboard->IsExternalData())
+        Clear();
+    
+    // Does the clipboard support multiple items?
+    if (m_clipboard->SupportsMultipleItems())
+    {
+        // Split the file name list into individual paths
+        MCAutoArrayRef t_paths;
+        if (!MCStringSplit(p_file_names, MCSTR("\n"), NULL, kMCStringOptionCompareExact, &t_paths))
+            return false;
+        
+        // For each path, add a new item to the clipboard
+        for (uindex_t i = 0; i < MCArrayGetCount(*t_paths); i++)
+        {
+            // Get the existing item for this index or create a new one
+            MCAutoRefcounted<MCRawClipboardItem> t_item;
+            if ((t_item = m_clipboard->GetItemAtIndex(i)) == NULL)
+            {
+                // No item yet; create a new one and add it to the clipboard
+                t_item = m_clipboard->CreateNewItem();
+                if (t_item == NULL)
+                    return false;
+                if (!m_clipboard->AddItem(t_item))
+                    return false;
+            }
+            
+            // Get this path
+            MCValueRef t_path;
+            if (!MCArrayFetchValueAtIndex(*t_paths, index_t(i+1), t_path))
+                return false;
+            
+            // Sanity check - should always be a string!
+            if (MCValueGetTypeCode(t_path) != kMCValueTypeCodeString)
+                return false;
+            
+            // Encode it appropriately for this clipboard
+            MCAutoDataRef t_encoded_path;
+            if (!MCStringEncode((MCStringRef)t_path, m_clipboard->GetURLTextEncoding(), false, &t_encoded_path))
+                return false;
+            
+            // Add a representation to this item containing the path
+            if (!t_item->AddRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeFileURL), *t_encoded_path))
+                return false;
+            
+            // And add a text representation containing the file name, too
+            if (!AddTextToItem(t_item, (MCStringRef)t_path))
+                return false;
+        }
+    }
+    else
+    {
+        // The platforms that have a file URL list type use NULs to separate
+        // the entries. Replace the newlines with NULs.
+        MCAutoStringRef t_list;
+        if (!MCStringMutableCopy(p_file_names, &t_list))
+            return false;
+        if (!MCStringFindAndReplaceChar(*t_list, '\n', '\0', kMCStringOptionCompareExact))
+            return false;
+        
+        // Encode the list appropriately for this clipboard
+        MCAutoDataRef t_encoded_list;
+        if (!MCStringEncode(*t_list, m_clipboard->GetURLTextEncoding(), false, &t_encoded_list))
+            return false;
+        
+        // Get the first item on the clipboard
+        MCAutoRefcounted<MCRawClipboardItem> t_item = GetItem();
+        if (t_item == NULL)
+            return false;
+        
+        // And add the representation to it
+        if (!t_item->AddRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeFileURLList), *t_encoded_list))
+            return false;
+        
+        // Add the original list as a text representation as well
+        if (!AddTextToItem(t_item, p_file_names))
+            return false;
+    }
+    
+    // Done!
+    return true;
 }
 
 bool MCClipboard::AddText(MCStringRef p_string)
@@ -428,7 +509,17 @@ bool MCClipboard::AddPrivateData(MCDataRef p_private_data)
 
 bool MCClipboard::HasFileList() const
 {
-    // TODO: implement
+    // A list of files can be returned as either multiple file URL items or a
+    // single file URL list item.
+    MCAutoRefcounted<const MCRawClipboardItem> t_item = GetItem();
+    if (t_item == NULL)
+        return false;
+    
+    if (t_item->HasRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeFileURL)))
+        return true;
+    if (t_item->HasRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeFileURLList)))
+        return true;
+    
     return false;
 }
 
@@ -567,8 +658,81 @@ bool MCClipboard::HasPrivateData() const
 
 bool MCClipboard::CopyAsFileList(MCStringRef& r_file_list) const
 {
-    // TODO: implement
-    return false;
+    AutoLock t_lock(this);
+    
+    // String containing a newline-separated list of file paths
+    MCStringRef t_output = NULL;
+    
+    // If the clipboard supports multiple items, look for multiple "file URL"
+    // representations.
+    if (m_clipboard->SupportsMultipleItems())
+    {
+        // Accumulate the items into a list, separated by newlines
+        MCAutoListRef t_list;
+        if (!MCListCreateMutable('\n', &t_list))
+            return false;
+        
+        for (uindex_t i = 0; i < m_clipboard->GetItemCount(); i++)
+        {
+            // Get this item and extract the file URL representation from it
+            const MCRawClipboardItemRep* t_rep = NULL;
+            MCAutoRefcounted<const MCRawClipboardItem> t_item = m_clipboard->GetItemAtIndex(i);
+            if (t_item == NULL)
+                return false;
+            
+            t_rep = t_item->FetchRepresentationByType(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeFileURL));
+            if (t_rep == NULL)
+                return false;
+            
+            // Get the data for this representation and decode it
+            MCAutoStringRef t_url;
+            MCAutoDataRef t_encoded_url(t_rep->CopyData());
+            if (!MCStringDecode(*t_encoded_url, m_clipboard->GetURLTextEncoding(), false, &t_url))
+                return false;
+            
+            // Append it to the list
+            if (!MCListAppend(*t_list, *t_url))
+                return false;
+        }
+        
+        // Convert the list to a string
+        if (!MCListCopyAsString(*t_list, t_output))
+            return false;
+    }
+    else
+    {
+        // Clipboard only supports a single item. Grab the contents of the file
+        // URL list representation and massage slightly.
+        MCAutoRefcounted<const MCRawClipboardItem> t_item = GetItem();
+        if (t_item == NULL)
+            return false;
+        
+        const MCRawClipboardItemRep* t_rep = t_item->FetchRepresentationByType(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeFileURLList));
+        if (t_rep == NULL)
+            return false;
+        
+        MCAutoStringRef t_raw_list;
+        MCAutoDataRef t_data(t_rep->CopyData());
+        if (!MCStringDecode(*t_data, m_clipboard->GetURLTextEncoding(), false, &t_raw_list))
+            return false;
+        
+        // We have the list. Some platforms use NULs to separate the paths but
+        // we need newlines. Perform that conversion.
+        MCAutoStringRef t_list;
+        if (!MCStringMutableCopy(*t_raw_list, &t_list))
+            return false;
+        if (!MCStringFindAndReplaceChar(*t_list, '\0', '\n', kMCStringOptionCompareExact))
+            return false;
+        
+        if (!MCStringCopy(*t_list, t_output))
+            return false;
+    }
+    
+    // All done
+    if (t_output != NULL)
+        r_file_list = t_output;
+    
+    return t_output != NULL;
 }
 
 bool MCClipboard::CopyAsText(MCStringRef& r_text) const
