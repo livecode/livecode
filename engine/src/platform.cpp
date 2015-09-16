@@ -71,8 +71,6 @@ void MCPlatformHandleDragDrop(MCPlatformWindowRef window, bool& r_accepted);
 void MCPlatformHandleMenuUpdate(MCPlatformMenuRef menu);
 void MCPlatformHandleMenuSelect(MCPlatformMenuRef menu, uindex_t index);
 
-void MCPlatformHandlePasteboardResolve(MCPlatformPasteboardRef pasteboard, MCPlatformPasteboardFlavor flavor, void *handle, void*& r_data, size_t& r_data_size);
-
 void MCPlatformHandleViewFocusSwitched(MCPlatformWindowRef window, uint32_t id);
 
 void MCPlatformHandlePlayerFrameChanged(MCPlatformPlayerRef player);
@@ -369,14 +367,6 @@ void MCPlatformCallbackSendMenuSelect(MCPlatformMenuRef p_menu, uindex_t p_index
 {
 	MCLog("Menu(%p) -> Select(%d)", p_menu, p_index);
 	MCPlatformHandleMenuSelect(p_menu, p_index);
-}
-
-//////////
-
-void MCPlatformCallbackSendPasteboardResolve(MCPlatformPasteboardRef p_pasteboard, MCPlatformPasteboardFlavor p_flavor, void *p_handle, void*& r_data, size_t& r_data_size)
-{
-	MCLog("Pasteboard(%p) -> Resolve(%d, %p)", p_pasteboard, p_flavor, p_handle);
-	MCPlatformHandlePasteboardResolve(p_pasteboard, p_flavor, p_handle, r_data, r_data_size);
 }
 
 //////////

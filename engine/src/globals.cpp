@@ -1293,7 +1293,10 @@ int X_close(void)
 	MClockmessages = True;
 	MCS_killall();
 
-	MCscreen -> flushclipboard();
+    // Flush all engine clipboards to the system clipboards
+    MCclipboard->FlushData();
+    MCselection->FlushData();
+    MCdragboard->FlushData();
 
     MCdispatcher -> remove_transient_stack(MCtooltip);
 	delete MCtooltip;

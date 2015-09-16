@@ -1482,7 +1482,7 @@ void MCField::endselection()
 	{
 		firstparagraph = lastparagraph = NULL;
 		firsty = 0;
-		MCscreen -> setselection(NULL);
+        MCselection->Clear();
 	}
 	else
 	{
@@ -1528,7 +1528,7 @@ void MCField::unselect(Boolean clear, Boolean internal)
 	if (state & CS_SELECTING)
 		endselection();
 	if (MCactivefield == this && internal)
-		MCscreen -> setselection(NULL);
+        MCselection->Clear();
 	if (clear || (MCactivefield == this && !(state & CS_KFOCUSED)))
 		MCactivefield = NULL;
 	if (!opened || focusedparagraph == NULL)

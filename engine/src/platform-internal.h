@@ -320,8 +320,6 @@ void MCPlatformCallbackSendTextInputAction(MCPlatformWindowRef window, MCPlatfor
 void MCPlatformCallbackSendMenuUpdate(MCPlatformMenuRef menu);
 void MCPlatformCallbackSendMenuSelect(MCPlatformMenuRef menu, uindex_t item);
 
-void MCPlatformCallbackSendPasteboardResolve(MCPlatformPasteboardRef pasteboard, MCPlatformPasteboardFlavor flavor, void *handle, void*& r_data, size_t& r_data_size);
-
 void MCPlatformCallbackSendViewFocusSwitched(MCPlatformWindowRef window, uint32_t view_id);
 
 void MCPlatformCallbackSendPlayerFrameChanged(MCPlatformPlayerRef player);

@@ -66,6 +66,11 @@ public:
     // If forced, the clipboard will be pushed even in the absence of changes.
     bool PushUpdates(bool p_force = false) const;
     
+    // Ensures all data in this clipboard has been pushed out to the OS'
+    // clipboard. This means that the data will still be available after
+    // LiveCode exits.
+    void FlushData();
+    
     // On some platforms, the drag board used for an incoming drag-and-drop
     // operation may be different from the main system drag board. This
     // method can be called to get this clipboard to re-bind to the supplied
@@ -161,8 +166,7 @@ private:
     MCDataRef m_private_data;
     
     // Set whenever a modification is made to the clipboard. No updates are
-    // pushed if no modifications have been made. Clearing the clipboard does
-    // *not* count as a modification.
+    // pushed if no modifications have been made.
     bool m_dirty;
     
     

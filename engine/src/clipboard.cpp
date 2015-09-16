@@ -95,6 +95,7 @@ void MCClipboard::Clear()
     // Pass on the request
     Lock();
     m_clipboard->Clear();
+    m_dirty = true;
     Unlock();
 }
 
@@ -119,6 +120,12 @@ bool MCClipboard::PushUpdates(bool p_force) const
     }
     
     return true;
+}
+
+void MCClipboard::FlushData()
+{
+    // Pass on the request
+    m_clipboard->FlushData();
 }
 
 bool MCClipboard::Rebind(MCRawClipboard* p_clipboard)

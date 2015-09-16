@@ -90,6 +90,73 @@ MC_EXEC_DEFINE_SET_METHOD(Pasteboard, DragTextData, 2)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+///////////////////////////////////////////////////////////////////////////////
+//
+//  Enumeration:
+//    MCTransferType
+//
+//  Type:
+//    Platform independent enumeration
+//
+//  Description:
+//    The MCTransferType enumeration describes the type of data that is being
+//    passed around in the transfer mechanism.
+//
+//    The types are as follows:
+//      - TEXT: a string of single byte per character characters in native text
+//        encoding (ISO8859-1 on UNIX, MacRoman on Mac OS X, CP-1252 on Windows)
+//      - UNICODE_TEXT: a string of UTF-16 codepoints in native byte-order
+//      - STYLED_TEXT: a LiveCode styled-text pickle
+//      - RTF_TEXT: a string of single byte per character characters in native
+//        encoding describing text formatted as RTF. Note this format can also
+//        contain unicode characters though the appropriate RTF escaping
+//        mechanism.
+//      - HTML_TEXT: a string of single byte per character characters in native
+//        encoding, describing text formatted as RHTML. Note this format can
+//        also contain unicode characters through the appropriate RTF escaping
+//        mechanism.
+//      - IMAGE: a binary data stream containing a PNG, JPEG or GIF image.
+//      - FILES: a return-separated list of files in LiveCode path format
+//        encoded in native text encoding.
+//      - PRIVATE: a binary data stream
+//      - OBJECTS: a sequence of LiveCode object pickles.
+//
+//    These types are classified into the following classes:
+//      - text: TEXT, UNICODE_TEXT, STYLED_TEXT, RTF_TEXT, HTML_TEXT
+//      - image: IMAGE
+//      - files: FILES
+//      - private: PRIVATE
+//      - objects: OBJECTS
+//
+//    The RTF_TEXT and HTML_TEXT types are considered to be part of an
+//    additional class 'derived'.
+//
+//    The derived types and PRIVATE type are never passed to a method of
+//    MCScreenDC and as such lower-level interfaces need not take them into
+//    account.
+//
+enum MCTransferType
+{
+    TRANSFER_TYPE_NULL,
+    TRANSFER_TYPE_TEXT,
+    
+    TRANSFER_TYPE_TEXT__FIRST = TRANSFER_TYPE_TEXT,
+    TRANSFER_TYPE_UNICODE_TEXT,
+    TRANSFER_TYPE_STYLED_TEXT,
+    TRANSFER_TYPE_STYLED_TEXT_ARRAY,
+    TRANSFER_TYPE_RTF_TEXT,
+    TRANSFER_TYPE_HTML_TEXT,
+    TRANSFER_TYPE_TEXT__LAST = TRANSFER_TYPE_HTML_TEXT,
+    
+    TRANSFER_TYPE_IMAGE,
+    TRANSFER_TYPE_FILES,
+    TRANSFER_TYPE_PRIVATE,
+    TRANSFER_TYPE_OBJECTS
+    
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 static MCExecEnumTypeElementInfo _kMCPasteboardDragActionElementInfo[] =
 {
 	{ "none", DRAG_ACTION_NONE, false },
