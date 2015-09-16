@@ -20,8 +20,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_GLOBALS__
 #define __MC_GLOBALS__
 
+#include "clipboard.h"
 #include "mcstring.h"
 #include "imagelist.h"
+#include "parsedef.h"
+#include "sysdefs.h"
 
 #include "foundation-locale.h"
 

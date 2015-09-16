@@ -36,7 +36,7 @@ public:
 	}
 	virtual ~MCDLlist();
 	// shared by buttons and text blocks
-	virtual void removelink(MCObject *optr);
+	virtual void removelink(class MCObject *optr);
 	MCDLlist *next()
 	{
 		return nptr;

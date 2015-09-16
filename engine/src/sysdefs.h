@@ -17,6 +17,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_SYSDEFS__
 #define __MC_SYSDEFS__
 
+
+#include "globdefs.h"
+
+
 //////////////////////////////////////////////////////////////////////
 //
 //  MODE AND FEATURE DEFINITIONS

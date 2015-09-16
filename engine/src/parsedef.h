@@ -20,6 +20,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	PARSEDEFS_H
 #define	PARSEDEFS_H
 
+#include "mcutility.h"
+#include "sysdefs.h"
+
 typedef struct _constant
 {
 	MCString name;
