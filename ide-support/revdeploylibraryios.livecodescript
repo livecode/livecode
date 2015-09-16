@@ -35,6 +35,10 @@ function deployGetIphoneOSes
    else if tMacVersion < 101100 then
       put "8.4,6.4" into tList[1]
       put "8.2,6.2" into tList[2]
+      // Xcode 7.0 can be installed from Mac OSX 10.10.4 onwards
+      if tMacVersion >= 101004 then
+         put "9.0,7.0" into tList[3]
+      end if
    else
       put "9.0,7.0" into tList[1]
    end if
