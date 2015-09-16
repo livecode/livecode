@@ -165,6 +165,13 @@ bool MCClipboard::AddText(MCStringRef p_string)
     if (t_item == NULL)
         return false;
     
+    return AddTextToItem(t_item, p_string);
+}
+
+bool MCClipboard::AddTextToItem(MCRawClipboardItem* p_item, MCStringRef p_string)
+{
+    AutoLock t_lock(this);
+    
     // For each text encoding that the underlying clipboard supports, encode the
     // text and add it.
     bool t_success = true;
@@ -176,7 +183,7 @@ bool MCClipboard::AddText(MCStringRef p_string)
         MCAutoDataRef t_utf8;
         t_success = MCStringEncode(p_string, kMCStringEncodingUTF8, false, &t_utf8);
         if (t_success)
-            t_success = t_item->AddRepresentation(t_type_string, *t_utf8);
+            t_success = p_item->AddRepresentation(t_type_string, *t_utf8);
     }
     if (t_success && (t_type_string = m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeUTF16)) != NULL)
     {
@@ -184,7 +191,7 @@ bool MCClipboard::AddText(MCStringRef p_string)
         MCAutoDataRef t_utf16;
         t_success = MCStringEncode(p_string, kMCStringEncodingUTF16, false, &t_utf16);
         if (t_success)
-            t_success = t_item->AddRepresentation(t_type_string, *t_utf16);
+            t_success = p_item->AddRepresentation(t_type_string, *t_utf16);
     }
     if (t_success && (t_type_string = m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeISO8859_1)) != NULL)
     {
@@ -192,7 +199,7 @@ bool MCClipboard::AddText(MCStringRef p_string)
         MCAutoDataRef t_latin1;
         t_success = MCStringEncode(p_string, kMCStringEncodingISO8859_1, false, &t_latin1);
         if (t_success)
-            t_success = t_item->AddRepresentation(t_type_string, *t_latin1);
+            t_success = p_item->AddRepresentation(t_type_string, *t_latin1);
     }
     if (t_success && (t_type_string = m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeMacRoman)) != NULL)
     {
@@ -200,7 +207,7 @@ bool MCClipboard::AddText(MCStringRef p_string)
         MCAutoDataRef t_macroman;
         t_success = MCStringEncode(p_string, kMCStringEncodingMacRoman, false, &t_macroman);
         if (t_success)
-            t_success = t_item->AddRepresentation(t_type_string, *t_macroman);
+            t_success = p_item->AddRepresentation(t_type_string, *t_macroman);
     }
     if (t_success && (t_type_string = m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeCP1252)) != NULL)
     {
@@ -208,7 +215,7 @@ bool MCClipboard::AddText(MCStringRef p_string)
         MCAutoDataRef t_1252;
         t_success = MCStringEncode(p_string, kMCStringEncodingWindows1252, false, &t_1252);
         if (t_success)
-            t_success = t_item->AddRepresentation(t_type_string, *t_1252);
+            t_success = p_item->AddRepresentation(t_type_string, *t_1252);
     }
     
     return t_success;

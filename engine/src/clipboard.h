@@ -198,6 +198,9 @@ private:
     bool CopyAsEncodedText(const MCRawClipboardItem* p_item, MCRawClipboardKnownType p_type, MCStringEncoding p_encoding, MCStringRef& r_text) const;
     bool CopyAsData(MCRawClipboardKnownType, MCDataRef& r_data) const;
     
+    // Utility function for adding text representations
+    bool AddTextToItem(MCRawClipboardItem* p_item, MCStringRef p_string);
+    
     // Private utility class for clipboard locking
     class AutoLock;
 };
