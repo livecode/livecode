@@ -122,22 +122,27 @@ public:
     
     MCAutoRefcounted& operator= (T* p_object)
     {
-        if (m_object)
-            m_object->Release();
-        m_object = p_object;
+        if (p_object != m_object)
+        {
+            if (m_object)
+                m_object->Release();
+            m_object = p_object;
+        }
+        
+        return *this;
     }
     
-    operator T* ()
+    operator T* () const
     {
         return m_object;
     }
     
-    T& operator* ()
+    T& operator* () const
     {
         return *m_object;
     }
     
-    T* operator-> ()
+    T* operator-> () const
     {
         return m_object;
     }
