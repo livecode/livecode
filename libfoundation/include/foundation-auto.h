@@ -31,6 +31,11 @@ public:
 	{
 		m_value = nil;
 	}
+    
+    explicit MCAutoValueRefBase(T value)
+    {
+        m_value = value;
+    }
 
 	~MCAutoValueRefBase(void)
 	{
