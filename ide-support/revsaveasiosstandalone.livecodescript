@@ -561,7 +561,10 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       
       // SN-2015-09-10: [[ Xcode 7.0 ]] Xcode 7.0 sets the env var MallocNanoZone to 1
       //  but this makes dsymutil crash...
+      //  We reinstate it after symbol extraction as a user might as well set MallocNanoZone
+      local tOldMallocNanoZone
       if $MallocNanoZone is not empty then
+         put $MallocNanoZone into tOldMallocNanoZone
          put 0 into $MallocNanoZone
       end if
       
@@ -572,7 +575,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       
       // Reinstate env var MallocNanoZone if it was set.
       if $MallocNanoZone is not empty then
-         put 1 into $MallocNanoZone
+         put tOldMallocNanoZone into $MallocNanoZone
       end if
    end if
    
@@ -643,8 +646,8 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       put uniDecode(uniEncode(tCertificate, "UTF8")) into tCertificate
       
       -- Do the codesigning
-      // SN-2015-09-11: [[ Xcode 7.0 ]] Setting CODESIGN_ALLOCATE environment variable 
-      // make codesigning fail when Xcode 7.0 is used.
+      // SN-2015-09-11: [[ Xcode 7.0 ]] codesign in Xcode 7.0 will not work if CODESIGN_ALLOCATE
+      // environment variable is set, so we only set it up to Xcode 6.4
       // We use Clang version to get the Xcode version in use
       local tClangVersion, tClangMajorVersion
       put shell("clang++ --version") into tClangVersion
