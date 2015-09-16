@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -27,6 +27,8 @@ struct __MCStreamImpl
 };
 
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCStreamTypeInfo;
+
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCStreamTypeInfo() { return kMCStreamTypeInfo; }
 
 static inline __MCStreamImpl &__MCStreamGet(MCStreamRef p_stream)
 {

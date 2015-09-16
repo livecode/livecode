@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -197,7 +197,7 @@ public:
 
 static MCStringRef s_command_path = nil;
 
-static void restart_revolution(void)
+static void restart_livecode(void)
 {
 #if defined(TARGET_PLATFORM_WINDOWS)
     MCAutoStringRefAsUTF8String t_command_path;
@@ -264,7 +264,7 @@ void MCRevRelicense::exec_ctxt(MCExecContext& ctxt)
 	
 	s_command_path = MCValueRetain(*t_command_path);
 
-	atexit(restart_revolution);
+	atexit(restart_livecode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

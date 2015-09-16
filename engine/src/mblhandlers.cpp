@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -1273,6 +1273,8 @@ Exec_stat MCHandleCanSendMail(void *context, MCParameter *p_parameters)
         ctxt . SetTheResultToValue(kMCTrue);
     else
         ctxt . SetTheResultToValue(kMCFalse);
+    
+    return ES_NORMAL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5663,24 +5665,30 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
             }
         }
     }
-    
-    MCPickButtonType t_type = kMCPickButtonNone;
-    // now process any additional parameters
-    while (t_success && t_has_buttons && p_parameters != nil)
+	
+    // PM-2015-09-01: [[ Bug 15816 ]] Process any additional parameters correctly
+    while (t_success && t_has_buttons && t_string_param != nil)
     {
         if (MCStringIsEqualToCString(t_string_param, "checkmark", kMCCompareCaseless))
             t_use_checkmark = true;
         else if (MCStringIsEqualToCString(t_string_param, "cancel", kMCCompareCaseless))
-            t_type = kMCPickButtonCancel;
+			t_use_cancel = true;
         else if (MCStringIsEqualToCString(t_string_param, "done", kMCCompareCaseless))
-            t_type = kMCPickButtonDone;
+			t_use_done = true;
         else if (MCStringIsEqualToCString(t_string_param, "canceldone", kMCCompareCaseless))
-            t_type = kMCPickButtonCancelAndDone;
+		{
+			t_use_cancel = true;
+			t_use_done = true;
+		}
         else if (MCStringIsEqualToCString(t_string_param, "picker", kMCCompareCaseless))
             t_use_picker = true;
         
         MCValueRelease(t_string_param);
-        t_success = MCParseParameters(p_parameters, "x", &t_string_param);
+		t_string_param = nil;
+		
+		if (p_parameters != nil)
+			t_success = MCParseParameters(p_parameters, "x", &t_string_param);
+		
     }
     
     ctxt.SetTheResultToEmpty();
@@ -6621,6 +6629,8 @@ Exec_stat MCHandleControlTarget(void *context, MCParameter *p_parameters)
     MCNativeControlIdentifierFree(ctxt, t_identifier);
     if (*t_string != nil)
         ctxt . SetTheResultToValue(*t_string);
+    
+    return ES_NORMAL;
 }
 
 bool list_native_controls(void *context, MCNativeControl* p_control)
@@ -6744,6 +6754,11 @@ Exec_stat MCHandleSetRemoteControlDisplay(void *context, MCParameter *p_paramete
     
     if (t_success)
         MCMiscSetRemoteControlDisplayProperties(ctxt, *t_props);
+    
+    if (t_success)
+        return ES_NORMAL;
+    else
+        return ES_ERROR;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

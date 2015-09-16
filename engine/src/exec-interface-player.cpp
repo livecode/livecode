@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -762,6 +762,21 @@ void MCPlayer::GetStatus(MCExecContext& ctxt, intenum_t& r_status)
         r_status = kMCInterfacePlayerStatusNone;
     
 }
+
+void MCPlayer::GetMirrored(MCExecContext &ctxt, bool &r_mirrored)
+{
+    r_mirrored = getflag(F_MIRRORED);
+}
+
+void MCPlayer::SetMirrored(MCExecContext &ctxt, bool p_mirrored)
+{
+    bool t_dirty;
+    t_dirty = changeflag(p_mirrored, F_MIRRORED);
+    
+    if (t_dirty)
+        setmirrored((flags & F_MIRRORED) != 0); //set/unset mirrored player
+}
+
 #endif
 
 void MCPlayer::SetDontUseQT(MCExecContext &ctxt, bool p_dont_use_qt)

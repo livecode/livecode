@@ -20,22 +20,22 @@ module com.livecode.foreign
 -- Universal types
 ----------------------------------------------------------------
 
-public foreign type Pointer binds to "kMCPointerTypeInfo"
+public foreign type Pointer binds to "MCForeignPointerTypeInfo"
 
-public foreign type UInt32 binds to "kMCUIntTypeInfo"
-public foreign type Int32 binds to "kMCIntTypeInfo"
+public foreign type UInt32 binds to "MCForeignUIntTypeInfo"
+public foreign type Int32 binds to "MCForeignIntTypeInfo"
 
-public foreign type UIntSize binds to "kMCSizeTypeInfo"
-public foreign type IntSize binds to "kMCSSizeTypeInfo"
+public foreign type UIntSize binds to "MCForeignSizeTypeInfo"
+public foreign type IntSize binds to "MCForeignSSizeTypeInfo"
 
-public foreign type Float32 binds to "kMCFloatTypeInfo"
-public foreign type Float64 binds to "kMCDoubleTypeInfo"
+public foreign type Float32 binds to "MCForeignFloatTypeInfo"
+public foreign type Float64 binds to "MCForeignDoubleTypeInfo"
 
 ----------------------------------------------------------------
 -- C types
 ----------------------------------------------------------------
 
-public foreign type CBool binds to "kMCBoolTypeInfo"
+public foreign type CBool binds to "MCForeignBoolTypeInfo"
 public type CInt is Int32
 public type CUInt is UInt32
 public type CFloat is Float32
@@ -54,7 +54,7 @@ public type LCUIndex is UInt32
 -- Nul-terminated string pointer types
 ----------------------------------------------------------------
 
-public foreign type ZStringNative binds to "kMCNativeCStringTypeInfo"
-public foreign type ZStringUTF16 binds to "kMCWStringTypeInfo"
+public foreign type ZStringNative binds to "MCNativeCStringTypeInfo"
+public foreign type ZStringUTF16 binds to "MCWStringTypeInfo"
 
 end module

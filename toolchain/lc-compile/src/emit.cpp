@@ -354,7 +354,7 @@ void EmitFinish(void)
             if (__FindEmittedModule(s_ordered_modules[i], t_module))
             {
                 if (fprintf(s_output_code_file,
-                            "extern int %s_Finalize(void);\n",
+                            "extern void %s_Finalize(void);\n",
                             t_module -> modified_name) < 0)
                     goto error_cleanup;
             }
