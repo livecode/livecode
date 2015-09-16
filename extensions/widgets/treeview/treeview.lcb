@@ -309,10 +309,9 @@ public handler OnSave(out rProperties as Array)
 	put mData into rProperties["array"]
 	put mSelectedRowColor into rProperties["selected row color"]
 	put mReadOnly into rProperties["read only"]
-    put mArrayStyle into rProperties["array style"]
-    put mSortAscending into rProperties["sort ascending"]
-    put mSortNumeric into rProperties["sort numeric"]
-	return rProperties
+	put mArrayStyle into rProperties["array style"]
+	put mSortAscending into rProperties["sort ascending"]
+	put mSortNumeric into rProperties["sort numeric"]
 end handler
 
 public handler OnLoad(in pProperties as Array)

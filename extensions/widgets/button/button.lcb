@@ -61,8 +61,6 @@ public handler OnSave(out rProperties as Array)
 	put mTheme into rProperties["theme"]
 	put mStyle into rProperties["buttonstyle"]
 	put mLabel into rProperties["label"]
-	
-	return rProperties
 end handler
 
 public handler OnLoad(in pProperties as Array)

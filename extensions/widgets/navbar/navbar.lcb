@@ -368,8 +368,6 @@ public handler OnSave(out rProperties as Array)
 	put mSelectedItem into rProperties["selected"]
 	put mItemStyle into rProperties["itemStyle"]
 	put colorToString(mHiliteColor) into rProperties["hiliteColor"]
-
-	return rProperties
 end handler
 
 public handler OnLoad(in pProperties as Array)

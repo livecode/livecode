@@ -223,8 +223,6 @@ public handler OnSave(out rProperties as Array)
 	put mMaintainAspectRatio into rProperties["maintain aspect ratio"]
 	put mFlipVertically into rProperties["flip vertically"]
 	put mAngle into rProperties["angle"]
-	
-	return rProperties
 end handler
 ----------
 

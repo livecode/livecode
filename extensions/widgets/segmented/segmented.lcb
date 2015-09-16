@@ -241,8 +241,6 @@ public handler OnSave(out rProperties as Array)
 	put mSegmentMinWidth	into rProperties["segmentMinWidth"]	
 	put mSelectedSegments	into rProperties["selectedSegment"]
 	put mShowFrameBorder	into rProperties["showFrameBorder"]
-	
-	return rProperties
 end handler
 
 public handler OnLoad(in pProperties as Array)

@@ -61,8 +61,6 @@ public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
 
 	put mIsChecked into rProperties["checked"]
-	
-	return rProperties
 end handler
 
 public handler OnLoad(in pProperties as Array)

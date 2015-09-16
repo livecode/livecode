@@ -75,8 +75,6 @@ public handler OnSave(out rProperties as Array)
 	
 	put mNumSelections into rProperties["numSelections"]
 	put mSelected into rProperties["selected"]
-	
-	return rProperties
 end handler
 
 public handler OnLoad(in pProperties as Array)
