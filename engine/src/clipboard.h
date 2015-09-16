@@ -71,6 +71,10 @@ public:
     // LiveCode exits.
     void FlushData();
     
+    // Returns the clipboard underlying this one.
+    MCRawClipboard* GetRawClipboard();
+    const MCRawClipboard* GetRawClipboard() const;
+    
     // On some platforms, the drag board used for an incoming drag-and-drop
     // operation may be different from the main system drag board. This
     // method can be called to get this clipboard to re-bind to the supplied

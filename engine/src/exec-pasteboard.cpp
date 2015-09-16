@@ -1225,16 +1225,16 @@ void MCPasteboardExecLockClipboard(MCExecContext& ctxt)
         return;
     }
     
-    // Create a new clipboard object for the scripting world.
-    //
-    // If this fails, it won't be reported immediately but later clipboard
-    // accesses will throw errors as the clipboard hasn't been locked yet.
-    MCscriptrawclipboard = MCRawClipboard::CreateSystemClipboard();
-    if (!MCscriptrawclipboard)
+    // Lock the main clipboard. This has the side-effect of pulling updates.
+    if (!MCclipboard->Lock())
+    {
+        ctxt.LegacyThrow(EE_CLIPBOARD_NOT_LOCKED);
         return;
+    }
     
-    // Ensure that the clipboard is up-to-date
-    MCscriptrawclipboard->PullUpdates();
+    // Use the same underlying clipboard as the higher-level clipboard code (so
+    // that they are kept in sync) for the raw clipboard accesses.
+    MCscriptrawclipboard = MCclipboard->GetRawClipboard()->Retain();
 }
 
 void MCPasteboardExecUnlockClipboard(MCExecContext& ctxt)
@@ -1246,12 +1246,12 @@ void MCPasteboardExecUnlockClipboard(MCExecContext& ctxt)
         return;
     }
     
-    // Push out changes onto the system clipboard
-    MCscriptrawclipboard->PushUpdates();
-    
     // Release our hold on the scripting world's raw clipboard object
     MCscriptrawclipboard->Release();
     MCscriptrawclipboard = NULL;
+    
+    // Unlock the main clipboard. This will push any changes to the system.
+    MCclipboard->Unlock();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

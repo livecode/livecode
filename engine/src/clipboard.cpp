@@ -128,6 +128,16 @@ void MCClipboard::FlushData()
     m_clipboard->FlushData();
 }
 
+MCRawClipboard* MCClipboard::GetRawClipboard()
+{
+    return m_clipboard;
+}
+
+const MCRawClipboard* MCClipboard::GetRawClipboard() const
+{
+    return m_clipboard;
+}
+
 bool MCClipboard::Rebind(MCRawClipboard* p_clipboard)
 {
     // Change the underlying clipboard
