@@ -114,7 +114,7 @@ public:
     virtual void Clear() = 0;
     
     // Indicates whether this clipboard is currently owned by this LiveCode
-    // instance. To gain ownership of the clipboard, call clear().
+    // instance. To gain ownership of the clipboard, call Clear().
     virtual bool IsOwned() const = 0;
     
     // Indicates whether the data on this clipboard came from LiveCode or an

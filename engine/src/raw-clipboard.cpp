@@ -52,7 +52,7 @@ const MCRawClipboardItemRep* MCRawClipboardItem::FetchRepresentationByType(MCStr
 {
     // Check that the representation string is valid
     if (p_type == NULL)
-        return false;
+        return NULL;
     
     // Loop over the representations of this item and test each one
     for (uindex_t i = 0; i < GetRepresentationCount(); i++)
