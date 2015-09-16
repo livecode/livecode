@@ -59,6 +59,13 @@ public:
 	{
 		return m_value;
 	}
+    
+    void Reset(T value = nil)
+    {
+        if (m_value)
+            MCValueRelease(m_value);
+        m_value = (T)MCValueRetain(value);
+    }
 
 private:
 	T m_value;
