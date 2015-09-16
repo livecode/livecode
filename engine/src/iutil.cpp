@@ -318,7 +318,7 @@ void MCImage::copyimage()
 		/* UNCHECKED */ getclipboardtext(&t_image_data);
 	
 	if (*t_image_data != NULL)
-		MCclipboarddata -> Store(TRANSFER_TYPE_IMAGE, *t_image_data);
+        /* UNCHECKED */ MCclipboard->AddImage(*t_image_data);
 }
 
 void MCImage::delimage()

@@ -1498,19 +1498,18 @@ void MCField::endselection()
 		}
 		if (MCscreen -> hasfeature(PLATFORM_FEATURE_TRANSIENT_SELECTION))
 		{
-			MCAutoStringRef t_string;
+            // Grab the currently selected text so we can place it on the OS'
+            // transient-selection clipboard.
+            MCAutoStringRef t_string;
 			selectedtext(&t_string);
 			
-			MCAutoDataRef t_data;
-            MCStringEncode(*t_string, kMCStringEncodingNative, false, &t_data);
-			if (*t_data != nil)
-            {
-                // SN-2014-12-08: [[ Bug 12784 ]] Only make this field the selectedfield
-                //  if it is Focusable
-                if (MCselectiondata -> Store(TRANSFER_TYPE_TEXT, *t_data)
-                        && flags & F_TRAVERSAL_ON)
-					MCactivefield = this;
-			}
+            // Place the data on the selection clipboard
+            bool t_success = MCselection->AddText(*t_string);
+            
+            // If successful and this field is focusable, make it the currently
+            // focused field.
+            if (t_success && (flags & F_TRAVERSAL_ON))
+                MCactivefield = this;
 		}
 
 		if (!(flags & F_LOCK_TEXT) && MCU_point_in_rect(rect, mx, my))

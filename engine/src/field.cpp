@@ -960,32 +960,45 @@ void MCField::munfocus()
 
 void MCField::mdrag(void)
 {
-	// MW-2008-02-27: [[ Bug 5968 ]] dragStart sent if click started in scrollbar
+	// Don't act as a field drag if the cursor is within a scrollbar
 	if (getstate(CS_HSCROLL) || getstate(CS_VSCROLL))
 		return;
 
-	// MW-2008-03-31: [[ Bug 6294 ]] dragStart should only be sent to an unlocked
-	//   field if there's a selection already.
+	// We can do an automatic (engine-based) drag from a field if the following
+    // conditions are true:
+    //  - the drag start message was not handled (or failed, or passed)
+    //  - the field contains draggable text
+    //
 	bool t_auto_start;
 	if (getflag(F_LOCK_TEXT) || getstate(CS_SOURCE_TEXT))
 		t_auto_start = message(MCM_drag_start) != ES_NORMAL;
 	else
 		t_auto_start = false;
 
+    // This field is the object being dragged
 	MCdragtargetptr = this;
 
+    // If we're not using engine-based dragging, there isn't anything more to
+    // do for the moment.
 	if (!t_auto_start)
 		return;
 
+    // If there is nothing to drag, there are no contents to put on the drag
+    // board.
 	if (!getstate(CS_SOURCE_TEXT))
 		return;
 
+    // Serialise the current selection and place it on the drag board.
 	MCAutoDataRef t_data;
 	pickleselection(&t_data);
 	if (*t_data != nil)
 	{
 		MCallowabledragactions = DRAG_ACTION_MOVE | DRAG_ACTION_COPY;
-		MCdragdata -> Store(TRANSFER_TYPE_STYLED_TEXT, *t_data);
+		if (!MCdragboard->AddLiveCodeStyledText(*t_data))
+        {
+            // If we failed to put the data on the drag board, prohibit the drag
+            MCallowabledragactions = 0;
+        }
 	}
 }
 
@@ -1234,16 +1247,28 @@ Boolean MCField::mup(uint2 which, bool p_release)
 			else
 				message_with_valueref_args(MCM_mouse_release, MCSTR("2"));
 		}
-		else if (MCscreen -> hasfeature(PLATFORM_FEATURE_TRANSIENT_SELECTION) && MCselectiondata -> HasText())
+		else if (MCscreen -> hasfeature(PLATFORM_FEATURE_TRANSIENT_SELECTION))
 		{
-			MCAutoStringRef t_string;
-			if (MCselectiondata -> Fetch(TRANSFER_TYPE_TEXT, (MCValueRef&)&t_string))
-			{
-				extend = extendwords = False;
-				// MW-2012-01-25: [[ FieldMetrics ]] Co-ordinates are now card-based.
-				setfocus(mx, my);
-				typetext(*t_string);
-			}
+            // TODO: implement the possibility of pasting styled text by using
+            // middle-mouse clicks.
+            /*
+            if (MCselection->HasLiveCodeStyledTextOrCompatible())
+            {
+                
+            }
+            else*/ if (MCselection->HasText())
+            {
+                MCAutoStringRef t_text;
+                if (MCselection->CopyAsText(&t_text))
+                {
+                    // Set the focus position based on the current mouse
+                    // position and enter the text as if it came from the
+                    // keyboard.
+                    extend = extendwords = False;
+                    setfocus(mx, my);
+                    typetext(*t_text);
+                }
+            }
 		}
 		break;
 	case Button3:

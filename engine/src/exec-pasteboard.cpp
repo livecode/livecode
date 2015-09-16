@@ -182,71 +182,53 @@ MCNameRef MCPasteboardTransferTypeToName(MCTransferType p_type)
 		return MCN_private;
 	case TRANSFER_TYPE_OBJECTS:
 		return MCN_objects;
+    case TRANSFER_TYPE_NULL:
+    case TRANSFER_TYPE_STYLED_TEXT_ARRAY:
+    default:
+        break;
 	}
 
 	return kMCEmptyName;
 }
 
-bool MCPasteboardListKeys(MCTransferData *p_data, char_t p_delimiter, MCListRef& r_list)
+bool MCPasteboardListKeys(MCClipboard *p_clipboard, char_t p_delimiter, MCListRef& r_list)
 {
 	MCAutoListRef t_list;
 	if (!MCListCreateMutable(p_delimiter, &t_list))
 		return false;
 
-	MCTransferType *t_types;
-	size_t t_count;
-
-	if (!p_data->Lock())
+    // Ensure the clipboard stays consistent while we query it
+	if (!p_clipboard->Lock())
 		return false;
 
 	bool t_success = true;
 
-	t_success = p_data->Query(t_types, t_count);
+    // Does the clipboard have plain text or equivalents?
+    if (t_success && p_clipboard->HasTextOrCompatible())
+        t_success = MCListAppend(*t_list, MCN_text) && MCListAppend(*t_list, MCN_unicode);
+    
+    // Does the clipboard have styled text or equivalents?
+    // TODO: why isn't HTML on this list?
+    if (t_success && p_clipboard->HasLiveCodeStyledTextOrCompatible())
+        t_success = MCListAppend(*t_list, MCN_styles)
+                    && MCListAppend(*t_list, MCN_rtf)
+                    && MCListAppend(*t_list, MCN_text)
+                    && MCListAppend(*t_list, MCN_unicode);
+    
+    // Does the clipboard contain an image recognised by LiveCode?
+    if (t_success && p_clipboard->HasImage())
+        t_success = MCListAppend(*t_list, MCN_image);
+    
+    // Does the clipboard contain a list of files?
+    if (t_success && p_clipboard->HasFileList())
+        t_success = MCListAppend(*t_list, MCN_files);
+    
+    // Does the clipboard contain serialised LiveCode objects?
+    if (t_success && p_clipboard->HasLiveCodeObjects())
+        t_success = MCListAppend(*t_list, MCN_objects);
 
-	for (uinteger_t i = 0; t_success && i < t_count; i++)
-	{
-		switch(t_types[i])
-		{
-		case TRANSFER_TYPE_TEXT:
-			t_success = MCListAppend(*t_list, MCN_text);
-			break;
-
-		case TRANSFER_TYPE_UNICODE_TEXT:
-			t_success = MCListAppend(*t_list, MCN_unicode) &&
-				MCListAppend(*t_list, MCN_text);
-			break;
-
-		case TRANSFER_TYPE_STYLED_TEXT:
-			t_success = MCListAppend(*t_list, MCN_styles) &&
-				MCListAppend(*t_list, MCN_rtf) &&
-				MCListAppend(*t_list, MCN_unicode) &&
-				MCListAppend(*t_list, MCN_text);
-			break;
-
-		case TRANSFER_TYPE_IMAGE:
-			t_success = MCListAppend(*t_list, MCN_image);
-			break;
-
-		case TRANSFER_TYPE_FILES:
-			t_success = MCListAppend(*t_list, MCN_files) &&
-				MCListAppend(*t_list, MCN_text);
-			break;
-
-		case TRANSFER_TYPE_PRIVATE:
-			t_success = MCListAppend(*t_list, MCN_private);
-			break;
-
-		case TRANSFER_TYPE_OBJECTS:
-			t_success = MCListAppend(*t_list, MCN_objects);
-			break;
-
-		default:
-			// MW-2009-04-05: Stop GCC warning
-			break;
-		}
-	}
-
-	p_data->Unlock();
+    // Unlock the clipboard.
+	p_clipboard->Unlock();
 
 	if (t_success)
 		t_success = MCListCopy(*t_list, r_list);
@@ -254,32 +236,84 @@ bool MCPasteboardListKeys(MCTransferData *p_data, char_t p_delimiter, MCListRef&
 	return t_success;
 }
 
+void MCPasteboardEvalIsAmongTheKeysOf(MCExecContext& ctxt, MCClipboard* p_clipboard, MCNameRef p_key, bool& r_result)
+{
+    // Turn the array index into a tranfer type
+    MCTransferType t_type = MCPasteboardTransferTypeFromName(p_key);
+    
+    // Is this type present in the array?
+    switch (t_type)
+    {
+        case TRANSFER_TYPE_TEXT:
+        case TRANSFER_TYPE_UNICODE_TEXT:
+            r_result = p_clipboard->HasTextOrCompatible();
+            break;
+
+        case TRANSFER_TYPE_STYLED_TEXT:
+        case TRANSFER_TYPE_RTF_TEXT:
+        case TRANSFER_TYPE_HTML_TEXT:
+            r_result = p_clipboard->HasLiveCodeStyledTextOrCompatible();
+            break;
+            
+        case TRANSFER_TYPE_IMAGE:
+            r_result = p_clipboard->HasImage();
+            break;
+            
+        case TRANSFER_TYPE_FILES:
+            r_result = p_clipboard->HasFileList();
+            break;
+            
+        case TRANSFER_TYPE_OBJECTS:
+            r_result = p_clipboard->HasLiveCodeObjects();
+            break;
+            
+        case TRANSFER_TYPE_PRIVATE:
+            r_result = p_clipboard->HasPrivateData();
+            break;
+            
+        case TRANSFER_TYPE_NULL:
+        case TRANSFER_TYPE_STYLED_TEXT_ARRAY:
+        default:
+            r_result = false;
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPasteboardEvalClipboard(MCExecContext& ctxt, MCNameRef& r_string)
+void MCPasteboardEvalClipboard(MCExecContext& ctxt, MCNameRef& r_type)
 {
-	if (MCclipboarddata -> Lock())
-	{
-		MCNameRef t_clipboard = nil;
-		if (MCclipboarddata -> Contains(TRANSFER_TYPE_FILES, false))
-			t_clipboard = MCN_files;
-		else if (MCclipboarddata -> Contains(TRANSFER_TYPE_OBJECTS, false))
-			t_clipboard = MCN_objects;
-		else if (MCclipboarddata -> Contains(TRANSFER_TYPE_IMAGE, true))
-			t_clipboard = MCN_image;
-		else if (MCclipboarddata -> Contains(TRANSFER_TYPE_PRIVATE, false))
-			t_clipboard = MCN_private;
-		else if (MCclipboarddata -> Contains(TRANSFER_TYPE_TEXT, true))
-			t_clipboard = MCN_text;
-		else
-			t_clipboard = MCN_empty;
-
-		MCclipboarddata -> Unlock();
-		r_string = MCValueRetain(t_clipboard);
-	}
+    // We need to ensure that the clipboard contents are consistent while
+    // checking for multiple data types
+    if (MCclipboard->Lock())
+    {
+        // Only one data type can be returned by this function. The order of
+        // these is fixed and cannot be changed without breaking compatibility.
+        MCNameRef t_format;
+        if (MCclipboard->HasFileList())
+            t_format = MCN_files;
+        else if (MCclipboard->HasLiveCodeObjects())
+            t_format = MCN_objects;
+        else if (MCclipboard->HasImage())
+            t_format=  MCN_image;
+        else if (MCclipboard->HasTextOrCompatible())
+            t_format = MCN_text;
+        else if (MCclipboard->HasPrivateData())
+            t_format = MCN_private;
+        else
+            t_format = MCN_empty;
+        
+        // Unlock the clipboard.
+        //
+        // Unfortunately, this introduces a race condition -- by the time a
+        // script can make use of this information, the clipboard contents
+        // could have changed.
+        MCclipboard->Unlock();
+        r_type = MCValueRetain(t_format);
+    }
 	else
 	{
-		r_string = MCValueRetain(kMCEmptyName);
+        // Could not gain access to the clipboard.
+        r_type = MCValueRetain(kMCEmptyName);
 		ctxt . SetTheResultToCString("unable to access clipboard");
 	}
 }
@@ -287,7 +321,7 @@ void MCPasteboardEvalClipboard(MCExecContext& ctxt, MCNameRef& r_string)
 void MCPasteboardEvalClipboardKeys(MCExecContext& ctxt, MCStringRef& r_string)
 {
 	MCAutoListRef t_list;
-	if (!MCPasteboardListKeys(MCclipboarddata, '\n', &t_list))
+	if (!MCPasteboardListKeys(MCclipboard, '\n', &t_list))
 	{
 		ctxt . SetTheResultToCString("unable to query clipboard");
 		r_string = MCValueRetain(kMCEmptyString);
@@ -326,7 +360,8 @@ void MCPasteboardEvalRawClipboardKeys(MCExecContext& ctxt, MCStringRef& r_string
         uindex_t t_type_count = t_item->GetRepresentationCount();
         for (uindex_t i = 0; i < t_type_count; i++)
         {
-            /* UNCHECKED */ MCListAppend(*t_list, t_item->FetchRepresentationAtIndex(i)->GetTypeString());
+            MCAutoStringRef t_type(t_item->FetchRepresentationAtIndex(i)->CopyTypeString());
+            /* UNCHECKED */ MCListAppend(*t_list, *t_type);
         }
         
         /* UNCHECKED */ MCListCopyAsString(*t_list, r_string);
@@ -374,7 +409,7 @@ void MCPasteboardEvalDragSource(MCExecContext& ctxt, MCStringRef& r_string)
 void MCPasteboardEvalDragDropKeys(MCExecContext& ctxt, MCStringRef& r_string)
 {
 	MCAutoListRef t_list;
-	if (!MCPasteboardListKeys(MCdragdata, '\n', &t_list))
+	if (!MCPasteboardListKeys(MCdragboard, '\n', &t_list))
 	{
 		ctxt . SetTheResultToCString("unable to query clipboard");
 		r_string = MCValueRetain(kMCEmptyString);
@@ -390,7 +425,7 @@ void MCPasteboardEvalDragDropKeys(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCPasteboardEvalIsAmongTheKeysOfTheClipboardData(MCExecContext& ctxt, MCNameRef p_key, bool& r_result)
 {
-	r_result = MCclipboarddata->Contains(MCPasteboardTransferTypeFromName(p_key), true);
+    MCPasteboardEvalIsAmongTheKeysOf(ctxt, MCclipboard, p_key, r_result);
 }
 
 void MCPasteboardEvalIsNotAmongTheKeysOfTheClipboardData(MCExecContext& ctxt, MCNameRef p_key, bool& r_result)
@@ -437,7 +472,7 @@ void MCPasteboardEvalIsNotAmongTheKeysOfTheRawClipboardData(MCExecContext& ctxt,
 
 void MCPasteboardEvalIsAmongTheKeysOfTheDragData(MCExecContext& ctxt, MCNameRef p_key, bool& r_result)
 {
-	r_result = MCclipboarddata->Contains(MCPasteboardTransferTypeFromName(p_key), true);
+    MCPasteboardEvalIsAmongTheKeysOf(ctxt, MCdragboard, p_key, r_result);
 }
 
 void MCPasteboardEvalIsNotAmongTheKeysOfTheDragData(MCExecContext& ctxt, MCNameRef p_key, bool& r_result)
@@ -503,12 +538,13 @@ void MCPasteboardProcessToClipboard(MCExecContext& ctxt, MCObjectPtr *p_targets,
 	t_success = true;
 
 	// Open the clipboard ready for storing data
-	MCclipboarddata -> Open();
+    bool t_clipboard_locked = false;
+	if (t_success)
+        t_success = t_clipboard_locked = MCclipboard->Lock();
 
 	// Attempt to store the objects onto the clipboard
 	if (t_success)
-		if (!MCclipboarddata -> Store(TRANSFER_TYPE_OBJECTS, *t_pickle))
-			t_success = false;
+        t_success = MCclipboard->AddLiveCodeObjects(*t_pickle);
 
 	// If we've managed to store objects, and we are only copying/cutting one
 	// image object, attempt to copy the image data.
@@ -516,17 +552,15 @@ void MCPasteboardProcessToClipboard(MCExecContext& ctxt, MCObjectPtr *p_targets,
 	if (t_success)
 		if (p_object_count == 1 && p_targets[0] . object -> gettype() == CT_IMAGE)
 		{
-			// MW-2011-02-26: [[ Bug 9403 ]] If no image data is fetched, then don't try
-			//   and store anything!
 			MCAutoDataRef t_image_data;
 			if (static_cast<MCImage *>(p_targets[0] . object) -> getclipboardtext(&t_image_data))
-				MCclipboarddata -> Store(TRANSFER_TYPE_IMAGE, *t_image_data);
+                /* UNCHECKED */ MCclipboard->AddImage(*t_image_data);
 		}
 
 	// Close the clipboard. If this returns false, then it means the
 	// writing was unsuccessful.
-	if (!MCclipboarddata -> Close())
-		t_success = false;
+	if (t_clipboard_locked)
+        t_success = MCclipboard->Unlock();
 
 	// If all is well, delete the original objects.
 	if (t_success)
@@ -662,47 +696,105 @@ void MCPasteboardSetAllowableDragActions(MCExecContext& ctxt, intset_t p_value)
 
 void MCPasteboardGetClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_index, bool p_is_clipboard, MCValueRef& r_data)
 {
-	MCTransferData *t_pasteboard;
+    // Clipboard or drag board?
+    MCClipboard* t_clipboard;
 	if (p_is_clipboard)
-		t_pasteboard = MCclipboarddata;
+		t_clipboard = MCclipboard;
 	else
-		t_pasteboard = MCdragdata;
+		t_clipboard = MCdragboard;
 
 	bool t_success;
 	t_success = true;
+    
+    // Lock the clipboard so it doesn't change while we're querying it.
+    bool t_clipboard_locked;
+    t_success = t_clipboard_locked = t_clipboard->Lock();
 
-	if (t_pasteboard -> Lock())
+	if (t_success)
 	{
-		MCTransferType t_type;
-		if (p_index == nil)
+        // Which data type are we fetching?
+        MCTransferType t_type;
+        if (p_index == nil)
             t_type = TRANSFER_TYPE_TEXT;
-		else
-			t_type = MCTransferData::StringToType(MCNameGetString(p_index));
-
-        // MW-2014-03-12: [[ ClipboardStyledText ]] If styledText is being requested, then
-        //   convert the styles data to an array and return that.
-        if (t_type == TRANSFER_TYPE_STYLED_TEXT_ARRAY &&
-            t_pasteboard -> Contains(TRANSFER_TYPE_STYLED_TEXT, true))
+        else
+            t_type = MCPasteboardTransferTypeFromName(p_index);
+        
+        // Retrieve the contents using the appropriate type.
+        MCAutoValueRef t_value;
+        bool t_retrieved = false;
+        switch (t_type)
         {
-            MCAutoValueRef t_data;
-            if (t_pasteboard -> Fetch(TRANSFER_TYPE_STYLED_TEXT, &t_data))
-                t_success = MCConvertStyledTextToStyledTextArray((MCDataRef)*t_data, (MCArrayRef&)r_data);
-            else
-                t_success = false;
+            case TRANSFER_TYPE_TEXT:
+                t_retrieved = t_clipboard->CopyAsText((MCStringRef&)&t_value);
+                break;
+                
+            case TRANSFER_TYPE_UNICODE_TEXT:
+            {
+                // Retrieve as text and then encode into UTF-16
+                MCAutoStringRef t_string;
+                t_retrieved = t_clipboard->CopyAsText(&t_string);
+                if (t_retrieved)
+                    t_success = MCStringEncode(*t_string, kMCStringEncodingUTF16, false, (MCDataRef&)&t_value);
+                break;
+            }
+                
+            case TRANSFER_TYPE_STYLED_TEXT:
+                t_retrieved = t_clipboard->CopyAsLiveCodeStyledText((MCDataRef&)&t_value);
+                break;
+                
+            case TRANSFER_TYPE_STYLED_TEXT_ARRAY:
+                t_retrieved = t_clipboard->CopyAsLiveCodeStyledTextArray((MCArrayRef&)&t_value);
+                break;
+                
+            case TRANSFER_TYPE_RTF_TEXT:
+                t_retrieved = t_clipboard->CopyAsRTFText((MCDataRef&)&t_value);
+                break;
+                
+            case TRANSFER_TYPE_HTML_TEXT:
+                t_retrieved = t_clipboard->CopyAsHTML((MCDataRef&)&t_value);
+                break;
+                
+            case TRANSFER_TYPE_IMAGE:
+                t_retrieved = t_clipboard->CopyAsImage((MCDataRef&)&t_value);
+                break;
+                
+            case TRANSFER_TYPE_FILES:
+                t_retrieved = t_clipboard->CopyAsFileList((MCStringRef&)&t_value);
+                break;
+            
+            case TRANSFER_TYPE_OBJECTS:
+                t_retrieved = t_clipboard->CopyAsLiveCodeObjects((MCDataRef&)&t_value);
+                break;
+            
+            case TRANSFER_TYPE_PRIVATE:
+                t_retrieved = t_clipboard->CopyAsPrivateData((MCDataRef&)&t_value);
+                break;
+                
+            case TRANSFER_TYPE_NULL:
+                // Can't retrieve any data for these types
+                break;
+                
+            default:
+                MCUnreachable();
         }
-		else if (t_type != TRANSFER_TYPE_NULL && t_pasteboard -> Contains(t_type, true))
-            t_success = t_pasteboard -> Fetch(t_type, r_data);
-		else
+        
+        // If the requested data format was not on the clipboard, set the
+        // result to indicate this.
+        if (t_success && !t_retrieved)
 		{
 			r_data = MCValueRetain(kMCEmptyData);
 			ctxt . SetTheResultToStaticCString("format not available");
 		}
-		
-		t_pasteboard -> Unlock();
-	}
-	else
-		t_success = false;
+        
+        // Return the retrieved data
+        if (t_success && t_retrieved)
+            r_data = MCValueRetain(*t_value);
+    }
 	
+    // Unlock the clipboard.
+    if (t_clipboard_locked)
+        t_clipboard->Unlock();
+    
 	if (!t_success)
 	{
 		r_data = MCValueRetain(kMCEmptyData);
@@ -712,65 +804,143 @@ void MCPasteboardGetClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_index, 
 
 void MCPasteboardSetClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_index, bool p_is_clipboard, MCValueRef p_data)
 {
-	MCTransferData *t_pasteboard;
+    // Clipboard or drag board?
+    MCClipboard* t_clipboard;
 	if (p_is_clipboard)
-		t_pasteboard = MCclipboarddata;
+		t_clipboard = MCclipboard;
 	else
-		t_pasteboard = MCdragdata;
+		t_clipboard = MCdragboard;
 	
+    // What type of data are we being asked to place on the clipboard?
 	MCTransferType t_type;
 	if (p_index == nil)
         t_type = TRANSFER_TYPE_TEXT;
 	else
-		t_type = MCTransferData::StringToType(MCNameGetString(p_index));
+        t_type = MCPasteboardTransferTypeFromName(p_index);
 
+    bool t_success;
+    t_success = true;
+    
+    // Lock the clipboard so no other changes happen as we modify it.
+    bool t_clipboard_locked;
+    t_success = t_clipboard_locked = t_clipboard->Lock();
+    
+    // If we have both a valid transfer type and some data, add it to the
+    // clipboard under the appropriate type.
+    //
+    // If either of these is missing, do nothing but don't throw an error.
 	if (t_type != TRANSFER_TYPE_NULL && p_data != nil)
-	{    
-        MCAutoValueRef t_value;
-        bool t_success;
-        t_success = true;
-		
+	{
 		switch (t_type)
 		{
 			case TRANSFER_TYPE_TEXT:
+            {
+                // Add as text
+                MCAutoStringRef t_string;
+                t_success = ctxt.ConvertToString(p_data, &t_string);
+                if (t_success)
+                    t_success = t_clipboard->AddText(*t_string);
+                
+                break;
+            }
+                
 			case TRANSFER_TYPE_FILES:
 			{
-				// convert to MCStringRef
+				// Add as a newline-separated file list
 				MCAutoStringRef t_string;
 				t_success = ctxt.ConvertToString(p_data, &t_string);
 				if (t_success)
-					t_value = *t_string;
+                    t_success = t_clipboard->AddFileList(*t_string);
 				
 				break;
 			}
 				
 			case TRANSFER_TYPE_UNICODE_TEXT:
+            {
+                // Decode from UTF-16 and add as text
+                MCAutoDataRef t_data;
+                MCAutoStringRef t_string;
+                t_success = ctxt.ConvertToData(p_data, &t_data);
+                if (t_success)
+                    t_success = MCStringDecode(*t_data, kMCStringEncodingUTF16, false, &t_string);
+                if (t_success)
+                    t_success = t_clipboard->AddText(*t_string);
+                
+                break;
+            }
+                
 			case TRANSFER_TYPE_STYLED_TEXT:
+            {
+                // Add to the clipboard as serialised styled text
+                MCAutoDataRef t_data;
+                t_success = ctxt.ConvertToData(p_data, &t_data);
+                if (t_success)
+                    t_success = t_clipboard->AddLiveCodeStyledText(*t_data);
+                
+                break;
+            }
+                
 			case TRANSFER_TYPE_RTF_TEXT:
+            {
+                // Add to the clipboard as RTF data
+                MCAutoDataRef t_data;
+                t_success = ctxt.ConvertToData(p_data, &t_data);
+                if (t_success)
+                    t_success = t_clipboard->AddRTFText(*t_data);
+                
+                break;
+            }
+                
 			case TRANSFER_TYPE_IMAGE:
+            {
+                // Add to the clipboard as image data
+                MCAutoDataRef t_data;
+                t_success = ctxt.ConvertToData(p_data, &t_data);
+                if (t_success)
+                    t_success = t_clipboard->AddImage(*t_data);
+                
+                break;
+            }
+                
 			case TRANSFER_TYPE_PRIVATE:
+            {
+                // Add to the clipboard as private data
+                MCAutoDataRef t_data;
+                t_success = ctxt.ConvertToData(p_data, &t_data);
+                if (t_success)
+                    t_success = t_clipboard->AddPrivateData(*t_data);
+                break;
+            }
+                
 			case TRANSFER_TYPE_OBJECTS:
 			{
-				// convert to MCDataRef
+				// Add to the clipboard as serialised LiveCode objects
 				MCAutoDataRef t_data;
 				t_success = ctxt.ConvertToData(p_data, &t_data);
 				if (t_success)
-					t_value = *t_data;
+                    t_success = t_clipboard->AddLiveCodeObjects(*t_data);
 				
 				break;
 			}
 				
 			case TRANSFER_TYPE_HTML_TEXT:
 			{
-				// convert to MCStringRef or MCDataRef
+				// For backwards compatibility, HTML can be added to the
+                // clipboard as either data or text.
 				if (MCValueGetTypeCode(p_data) == kMCValueTypeCodeData)
-					t_value = p_data;
+                    t_success = t_clipboard->AddHTML(static_cast<MCDataRef>(p_data));
 				else
 				{
-					MCAutoStringRef t_string;
-					t_success = ctxt.ConvertToString(p_data, &t_string);
-					if (t_success)
-						t_value = *t_string;
+                    // If it is a string, encode it into the native encoding
+                    // then add as data. This probably should be ASCII but we've
+                    // always used the native encoding here...
+                    MCAutoStringRef t_string;
+                    MCAutoDataRef t_data;
+                    t_success = ctxt.ConvertToString(p_data, &t_string);
+                    if (t_success)
+                        t_success = MCStringEncode(*t_string, kMCStringEncodingNative, false, &t_data);
+                    if (t_success)
+                        t_success = t_clipboard->AddHTML(*t_data);
 				}
 				
 				break;
@@ -778,29 +948,28 @@ void MCPasteboardSetClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_index, 
 				
 			case TRANSFER_TYPE_STYLED_TEXT_ARRAY:
 			{
-				// convert to MCArrayRef
+				// If the incoming data is an array, add it. If it isn't, add
+                // an empty array in its place.
 				if (MCValueGetTypeCode(p_data) == kMCValueTypeCodeArray)
-					t_value = p_data;
+                    t_success = t_clipboard->AddLiveCodeStyledTextArray(static_cast<MCArrayRef>(p_data));
 				else
-					t_value = kMCEmptyArray;
+                    t_success = t_clipboard->AddLiveCodeStyledTextArray(static_cast<MCArrayRef>(p_data));
 				
 				break;
 			}
 				
 			case TRANSFER_TYPE_NULL:
+            default:
 				MCUnreachable();
 		}
-		
-        if (t_success)
-        {
-            if (t_pasteboard -> Store(t_type, *t_value))
-                return;
-        }
 	}
-	else
-		return;
 
-	ctxt . Throw();
+    // Unlock the clipboard so the changes are pushed to the OS' clipboard.
+    if (t_clipboard_locked)
+        t_clipboard->Unlock();
+    
+    if (!t_success)
+        ctxt.Throw();
 }
 
 void MCPasteboardGetClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef& r_data)
@@ -869,7 +1038,7 @@ void MCPasteboardGetRawClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCV
         else
         {
             // Get the data for this representation
-            MCDataRef t_data = t_rep->GetData();
+            MCDataRef t_data = t_rep->CopyData();
             if (t_data == NULL)
                 ctxt.LegacyThrow(EE_RAW_CLIPBOARD_BADREP);
             r_data = t_data;
@@ -993,7 +1162,7 @@ void MCPasteboardExecLockClipboard(MCExecContext& ctxt)
     //
     // If this fails, it won't be reported immediately but later clipboard
     // accesses will throw errors as the clipboard hasn't been locked yet.
-    MCscriptrawclipboard = MCRawClipboard::Create();
+    MCscriptrawclipboard = MCRawClipboard::CreateSystemClipboard();
     if (!MCscriptrawclipboard)
         return;
     

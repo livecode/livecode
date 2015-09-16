@@ -519,8 +519,10 @@
 			# Other files
 			'src/socket_resolve.cpp',
 
+			'src/clipboard.h',
 			'src/mac-clipboard.h',
 			'src/raw-clipboard.h',
+			'src/clipboard.cpp',
 			'src/mac-clipboard.mm',
 			'src/raw-clipboard.cpp',
 

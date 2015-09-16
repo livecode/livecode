@@ -610,7 +610,7 @@ public:
 	// The method returns the actual result of the drag-drop operation - DRAG_ACTION_NONE meaning
 	// that no drop occured.
 	//
-	virtual MCDragAction dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset);
+	virtual MCDragAction dodragdrop(Window w, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset);
 	
 	//
 

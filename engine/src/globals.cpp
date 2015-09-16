@@ -242,10 +242,10 @@ uint2 MCiconicstacks;
 uint2 MCwaitdepth;
 uint4 MCrecursionlimit = 400000; // actual max is about 480K on OSX
 
-MCClipboardData *MCclipboarddata;
-MCSelectionData *MCselectiondata;
+MCClipboard* MCclipboard;
+MCClipboard* MCselection;
+MCClipboard* MCdragboard;
 
-MCDragData *MCdragdata;
 MCDragAction MCdragaction;
 MCDragActionSet MCallowabledragactions;
 uint4 MCdragimageid;
@@ -636,9 +636,9 @@ void X_clear_globals(void)
 	MCiconicstacks = 0;
 	MCwaitdepth = 0;
 	MCrecursionlimit = 400000;
-	MCclipboarddata = nil;
-	MCselectiondata = nil;
-	MCdragdata = nil;
+	MCclipboard = NULL;
+	MCselection = NULL;
+    MCdragboard = NULL;
 	MCdragaction = 0;
 	MCallowabledragactions = 0;
 	MCdragimageid = 0;
@@ -1137,9 +1137,9 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	
 	MCtooltip = new MCTooltip;
 
-	MCclipboarddata = new MCClipboardData;
-	MCdragdata = new MCDragData;
-	MCselectiondata = new MCSelectionData;
+    MCclipboard = MCClipboard::CreateSystemClipboard();
+    MCdragboard = MCClipboard::CreateSystemDragboard();
+    MCselection = MCClipboard::CreateSystemSelectionClipboard();
 	
 	MCundos = new MCUndolist;
 	MCselected = new MCSellist;
@@ -1388,9 +1388,9 @@ int X_close(void)
 	delete MCperror;
 	delete MCeerror;
 
-	delete MCclipboarddata;
-	delete MCdragdata;
-	delete MCselectiondata;
+    MCclipboard->Release();
+    MCselection->Release();
+    MCdragboard->Release();
 
 	MCValueRelease(MCshellcmd);
 	MCValueRelease(MCvcplayer);

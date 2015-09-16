@@ -55,6 +55,7 @@ enum MCRawClipboardKnownType
     
     // LiveCode internal types
     kMCRawClipboardKnownTypeLiveCodeObjects,    // LiveCode object serialisation
+    kMCRawClipboardKnownTypeLiveCodeStyledText, // LiveCode text serialisation
     
     // Files and URLs
     kMCRawClipboardKnownTypeFileURL,    // Single file URL
@@ -170,7 +171,9 @@ public:
     // Creates a new clipboard associated with the main system clipboard. Note
     // that these are not kept synchronised - clipboards are only updated when
     // the "synchronizeUpdates" method is called.
-    static MCRawClipboard* Create();
+    static MCRawClipboard* CreateSystemClipboard();
+    static MCRawClipboard* CreateSystemSelectionClipboard();
+    static MCRawClipboard* CreateSystemDragboard();
 };
 
 
@@ -267,14 +270,14 @@ public:
     // form that these strings take is platform-specific (so some platform-
     // specific knowledge is required to interpret them). This string should be
     // released when no longer required.
-    virtual MCStringRef GetTypeString() const = 0;
+    virtual MCStringRef CopyTypeString() const = 0;
     
     // Fetches the data for this representation. This is potentially a very
     // slow operation! (There is the possibility on Windows, for example, that
     // the COM object supplying the data is on a remote computer and so the
     // transfer time is potentially unbounded). The data should be released when
     // no longer required.
-    virtual MCDataRef GetData() const = 0;
+    virtual MCDataRef CopyData() const = 0;
     
     
 protected:

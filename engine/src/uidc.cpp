@@ -1921,7 +1921,7 @@ bool MCUIDC::unloadfont(MCStringRef p_path, bool p_globally, void *r_loaded_font
 
 //
 
-MCDragAction MCUIDC::dodragdrop(Window w, MCPasteboard* p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset)
+MCDragAction MCUIDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset)
 {
 	return DRAG_ACTION_NONE;
 }
