@@ -26,6 +26,7 @@
 #include "platform.h"
 #include "platform-internal.h"
 
+#include "mac-clipboard.h"
 #include "mac-internal.h"
 
 #include <objc/objc-runtime.h>
@@ -1352,9 +1353,9 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (NSDragOperation)draggingEntered: (id<NSDraggingInfo>)sender
 {
-	MCPlatformPasteboardRef t_pasteboard;
-	MCMacPlatformPasteboardCreate([sender draggingPasteboard], t_pasteboard);
-	
+    // Create a wrapper around the drag board for this operation
+    MCAutoRefcounted<MCMacRawClipboard> t_dragboard = new MCMacRawClipboard([sender draggingPasteboard]);
+    
 	NSDragOperation t_ns_operation;
 	
 	MCMacPlatformWindow *t_window;
@@ -1362,7 +1363,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	if (t_window != nil)
 	{
 		MCPlatformDragOperation t_operation;
-		t_window -> HandleDragEnter(t_pasteboard, t_operation);
+		t_window -> HandleDragEnter(t_dragboard, t_operation);
 		t_ns_operation = MCMacPlatformMapDragOperationToNSDragOperation(t_operation);
 	}
 	else

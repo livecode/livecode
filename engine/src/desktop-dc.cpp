@@ -1262,73 +1262,8 @@ static bool fetch_dragboard(MCPlatformPasteboardFlavor p_flavor, void*& r_data, 
 	return fetch_pasteboard(s_local_dragboard, p_flavor, r_data, r_data_size);
 }
 
-MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset)
+MCDragAction MCScreenDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset)
 {
-	/////////
-	
-	MCPlatformPasteboardRef t_dragboard;
-	MCPlatformGetDragboard(t_dragboard);
-	
-	MCPlatformPasteboardClear(t_dragboard);
-	
-	// COCOA-TODO: Duplicate code - needs refactored along with code in setclipboard().
-	
-	MCTransferType *t_types;
-	size_t t_type_count;
-	if (!p_pasteboard -> Query(t_types, t_type_count))
-	{
-		t_type_count = 0;
-		t_types = nil;
-	}
-	
-	s_local_dragboard = p_pasteboard;
-	
-	for(uindex_t i = 0; i < t_type_count; i++)
-	{
-		MCPlatformPasteboardFlavor t_flavors[2];
-		uindex_t t_flavor_count;
-		t_flavor_count = 0;
-		
-		switch(t_types[i])
-		{
-			case TRANSFER_TYPE_TEXT:
-			case TRANSFER_TYPE_UNICODE_TEXT:
-				t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorUTF8;
-				break;
-			case TRANSFER_TYPE_STYLED_TEXT:
-				t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorRTF;
-				t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorUTF8;
-				break;
-			case TRANSFER_TYPE_IMAGE:
-			{
-				MCAutoDataRef t_data;
-				if (p_pasteboard -> Fetch(TRANSFER_TYPE_IMAGE, &t_data))
-				{
-					if (MCImageDataIsPNG(*t_data))
-						t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorPNG;
-					if (MCImageDataIsGIF(*t_data))
-						t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorGIF;
-					if (MCImageDataIsJPEG(*t_data))
-						t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorJPEG;
-				}
-			}
-				break;
-			case TRANSFER_TYPE_FILES:
-				t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorFiles;
-				break;
-			case TRANSFER_TYPE_OBJECTS:
-				t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorObjects;
-				break;
-			case TRANSFER_TYPE_PRIVATE:
-				break;
-		}
-		
-		if (t_flavor_count != 0)
-			MCPlatformPasteboardStore(t_dragboard, t_flavors, t_flavor_count, (void *)fetch_dragboard);
-	}
-	
-	/////////
-	
 	MCPlatformAllowedDragOperations t_operations;
 	t_operations = kMCPlatformDragOperationNone;
 	if ((p_allowed_actions & DRAG_ACTION_COPY) != 0)
@@ -1352,10 +1287,6 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
 	MCPlatformDoDragDrop(w, t_operations, t_image_bitmap, p_image_offset, t_op);
 	
 	MCImageFreeBitmap(t_image_bitmap);
-	
-	MCPlatformPasteboardRelease(t_dragboard);
-	
-	s_local_dragboard = nil;
 	
 	MCDragAction t_action;
 	switch(t_op)

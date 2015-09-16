@@ -155,7 +155,7 @@ public:
     //  Mismatching types - thus the 'unimplemented' MCUICDC::snapshot was called instead of the MCScreenDC one
 	virtual MCImageBitmap *snapshot(MCRectangle &r, uint4 window, MCStringRef displayname, MCPoint *size);
 	
-	virtual MCDragAction dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset);
+	virtual MCDragAction dodragdrop(Window w, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset);
     // SN-2014-07-23: [[ Bug 12907 ]] File > Import as control > Snapshot from screen
     //  Update as well MCSreenDC::createscriptenvironment (and callees)
 	virtual MCScriptEnvironment *createscriptenvironment(MCStringRef p_language);

@@ -1,5 +1,23 @@
+/* Copyright (C) 2003-2015 LiveCode Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+
 #include "platform.h"
 #include "platform-internal.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -45,7 +63,7 @@ void MCPlatformHandleMouseRelease(MCPlatformWindowRef window, uint32_t button, b
 void MCPlatformHandleMouseMove(MCPlatformWindowRef window, MCPoint location);
 void MCPlatformHandleMouseScroll(MCPlatformWindowRef window, int dx, int dy);
 
-void MCPlatformHandleDragEnter(MCPlatformWindowRef window, MCPlatformPasteboardRef pasteboard, MCPlatformDragOperation& r_operation);
+void MCPlatformHandleDragEnter(MCPlatformWindowRef window, class MCRawClipboard* p_clipboard, MCPlatformDragOperation& r_operation);
 void MCPlatformHandleDragMove(MCPlatformWindowRef window, MCPoint location, MCPlatformDragOperation& r_operation);
 void MCPlatformHandleDragLeave(MCPlatformWindowRef window);
 void MCPlatformHandleDragDrop(MCPlatformWindowRef window, bool& r_accepted);
@@ -246,11 +264,11 @@ void MCPlatformCallbackSendMouseScroll(MCPlatformWindowRef p_window, int dx, int
 
 //////////
 
-void MCPlatformCallbackSendDragEnter(MCPlatformWindowRef p_window, MCPlatformPasteboardRef p_pasteboard, MCPlatformDragOperation& r_operation)
+void MCPlatformCallbackSendDragEnter(MCPlatformWindowRef p_window, MCRawClipboard* p_dragboard, MCPlatformDragOperation& r_operation)
 {
-	MCLog("Window(%p) -> DragEnter(%p)", p_window, p_pasteboard);
+	MCLog("Window(%p) -> DragEnter(%p)", p_window, p_dragboard);
 	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleDragEnter(p_window, p_pasteboard, r_operation);
+	MCPlatformHandleDragEnter(p_window, p_dragboard, r_operation);
 }
 
 void MCPlatformCallbackSendDragLeave(MCPlatformWindowRef p_window)

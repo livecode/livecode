@@ -33,8 +33,8 @@ public MCRawClipboardItemRep
 public:
     
     // Methods inherited from MCRawClipboardItem
-    virtual MCStringRef GetTypeString() const;
-    virtual MCDataRef GetData() const;
+    virtual MCStringRef CopyTypeString() const;
+    virtual MCDataRef CopyData() const;
     
 private:
     

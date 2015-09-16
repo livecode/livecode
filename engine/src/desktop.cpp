@@ -40,6 +40,7 @@
 #include "player.h"
 #include "aclip.h"
 #include "stacklst.h"
+#include "clipboard.h"
 
 #include "desktop-dc.h"
 #include "param.h"
@@ -361,7 +362,7 @@ void MCPlatformHandleMouseDown(MCPlatformWindowRef p_window, uint32_t p_button, 
 				MCdragimageid = 0;
 				MCdragimageoffset . x = 0;
 				MCdragimageoffset . y = 0;
-				MCdragdata -> ResetSource();
+                MCdragboard->Clear();
 			}
 			
 			t_target -> mdown(p_button + 1);
@@ -520,13 +521,16 @@ static MCPlatformDragOperation dragaction_to_dragoperation(MCDragAction p_action
 	return kMCPlatformDragOperationNone;
 }
 
-void MCPlatformHandleDragEnter(MCPlatformWindowRef p_window, MCPlatformPasteboardRef p_pasteboard, MCPlatformDragOperation& r_operation)
+void MCPlatformHandleDragEnter(MCPlatformWindowRef p_window, MCRawClipboard* p_dragboard, MCPlatformDragOperation& r_operation)
 {
-	MCSystemPasteboard *t_pasteboard;
-	t_pasteboard = new MCSystemPasteboard(p_pasteboard);
-	MCdispatcher -> wmdragenter(p_window, t_pasteboard);
-	t_pasteboard -> Release();
+    // On some platforms (Mac and iOS), the drag board used for drag-and-drop
+    // operations may not be the main drag board. If a non-NULL clipboard was
+    // supplied for this operation, tell the engine drag board to re-bind to it.
+    if (p_dragboard != NULL)
+        MCdragboard->Rebind(p_dragboard);
 	
+    MCdispatcher->wmdragenter(p_window);
+    
 	r_operation = dragaction_to_dragoperation(MCdragaction);
 }
 
@@ -539,7 +543,12 @@ void MCPlatformHandleDragMove(MCPlatformWindowRef p_window, MCPoint p_location, 
 
 void MCPlatformHandleDragLeave(MCPlatformWindowRef p_window)
 {
-	MCdispatcher -> wmdragleave(p_window);
+    // On some platforms (Mac and iOS), the drag board used for drag-and-drop
+    // operations may not be the main drag board. Reset the drag board back to
+    // the main one after the drag has left.
+    MCdragboard->Rebind(MCRawClipboard::CreateSystemDragboard());
+    
+    MCdispatcher -> wmdragleave(p_window);
 }
 
 void MCPlatformHandleDragDrop(MCPlatformWindowRef p_window, bool& r_accepted)

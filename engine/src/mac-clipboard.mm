@@ -41,6 +41,7 @@ const char* const MCMacRawClipboard::s_clipboard_types[] =
     NULL,
     
     "com.runrev.livecode.objects-1",
+    "com.runrev.livecode.text-styled-1",
     
     NULL,
     NULL,
@@ -49,9 +50,20 @@ const char* const MCMacRawClipboard::s_clipboard_types[] =
 };
 
 
-MCRawClipboard* MCRawClipboard::Create()
+MCRawClipboard* MCRawClipboard::CreateSystemClipboard()
 {
     return new MCMacRawClipboard([NSPasteboard generalPasteboard]);
+}
+
+MCRawClipboard* MCRawClipboard::CreateSystemSelectionClipboard()
+{
+    // Create a pasteboard internal to LiveCode
+    return new MCMacRawClipboard([NSPasteboard pasteboardWithUniqueName]);
+}
+
+MCRawClipboard* MCRawClipboard::CreateSystemDragboard()
+{
+    return new MCMacRawClipboard([NSPasteboard pasteboardWithName:NSDragPboard]);
 }
 
 
@@ -72,14 +84,7 @@ MCMacRawClipboard::~MCMacRawClipboard()
 
 uindex_t MCMacRawClipboard::GetItemCount() const
 {
-    NSArray* t_items = [m_pasteboard pasteboardItems];
-    
-    // If an error occurred retrieving the clipboard items, we will have
-    // received nil.
-    if (t_items == nil)
-        return 0;
-    
-    return [t_items count];
+    return [m_items count];
 }
 
 const MCMacRawClipboardItem* MCMacRawClipboard::GetItemAtIndex(uindex_t p_index) const
@@ -184,7 +189,10 @@ uindex_t MCMacRawClipboard::GetMaximumItemCount() const
 
 MCStringRef MCMacRawClipboard::GetKnownTypeString(MCRawClipboardKnownType p_type) const
 {
-    // TODO: implement
+    // Index into the mapping table
+    if (s_clipboard_types[p_type] != NULL)
+        return MCSTR(s_clipboard_types[p_type]);
+    
     return NULL;
 }
 
@@ -334,7 +342,7 @@ MCMacRawClipboardItemRep::~MCMacRawClipboardItemRep()
     // refernce for us.
 }
 
-MCStringRef MCMacRawClipboardItemRep::GetTypeString() const
+MCStringRef MCMacRawClipboardItemRep::CopyTypeString() const
 {
     // If the type string has already been fetched, just return it
     if (*m_type != NULL)
@@ -421,7 +429,7 @@ MCStringRef MCMacRawClipboardItemRep::GetTypeString() const
     return t_type_string;
 }
 
-MCDataRef MCMacRawClipboardItemRep::GetData() const
+MCDataRef MCMacRawClipboardItemRep::CopyData() const
 {
     // If the data has already been fetched, just return it
     if (*m_data != NULL)
@@ -433,8 +441,7 @@ MCDataRef MCMacRawClipboardItemRep::GetData() const
     if ([m_item isKindOfClass:[NSPasteboardItem class]])
     {
         // Get the type string for this representation (as lookup is by type)
-        MCAutoStringRef t_type_string;
-        t_type_string = GetTypeString();
+        MCAutoStringRef t_type_string(CopyTypeString());
         if (*t_type_string == NULL)
             return NULL;
         
