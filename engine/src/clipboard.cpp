@@ -160,6 +160,10 @@ bool MCClipboard::AddText(MCStringRef p_string)
 {
     AutoLock t_lock(this);
     
+    // Clear contents if the clipboard contains external data
+    if (m_clipboard->IsExternalData())
+        Clear();
+    
     // Get the first item on the clipboard
     MCAutoRefcounted<MCRawClipboardItem> t_item = GetItem();
     if (t_item == NULL)
@@ -171,6 +175,10 @@ bool MCClipboard::AddText(MCStringRef p_string)
 bool MCClipboard::AddTextToItem(MCRawClipboardItem* p_item, MCStringRef p_string)
 {
     AutoLock t_lock(this);
+    
+    // Clear contents if the clipboard contains external data
+    if (m_clipboard->IsExternalData())
+        Clear();
     
     // For each text encoding that the underlying clipboard supports, encode the
     // text and add it.
@@ -225,6 +233,10 @@ bool MCClipboard::AddLiveCodeObjects(MCDataRef p_pickled_objects)
 {
     AutoLock t_lock(this);
     
+    // Clear contents if the clipboard contains external data
+    if (m_clipboard->IsExternalData())
+        Clear();
+    
     // Get the first item on the clipboard
     MCAutoRefcounted<MCRawClipboardItem> t_item = GetItem();
     if (t_item == NULL)
@@ -241,6 +253,10 @@ bool MCClipboard::AddLiveCodeObjects(MCDataRef p_pickled_objects)
 bool MCClipboard::AddLiveCodeStyledText(MCDataRef p_pickled_text)
 {
     AutoLock t_lock(this);
+    
+    // Clear contents if the clipboard contains external data
+    if (m_clipboard->IsExternalData())
+        Clear();
     
     // Get the first item on the clipboard
     MCAutoRefcounted<MCRawClipboardItem> t_item = GetItem();
@@ -324,6 +340,10 @@ bool MCClipboard::AddPNG(MCDataRef p_png)
 {
     AutoLock t_lock(this);
     
+    // Clear contents if the clipboard contains external data
+    if (m_clipboard->IsExternalData())
+        Clear();
+    
     // Get the first item on the clipboard
     MCAutoRefcounted<MCRawClipboardItem> t_item = GetItem();
     if (t_item == NULL)
@@ -341,6 +361,10 @@ bool MCClipboard::AddGIF(MCDataRef p_gif)
 {
     AutoLock t_lock(this);
     
+    // Clear contents if the clipboard contains external data
+    if (m_clipboard->IsExternalData())
+        Clear();
+    
     // Get the first item on the clipboard
     MCAutoRefcounted<MCRawClipboardItem> t_item = GetItem();
     if (t_item == NULL)
@@ -357,6 +381,10 @@ bool MCClipboard::AddGIF(MCDataRef p_gif)
 bool MCClipboard::AddJPEG(MCDataRef p_jpeg)
 {
     AutoLock t_lock(this);
+    
+    // Clear contents if the clipboard contains external data
+    if (m_clipboard->IsExternalData())
+        Clear();
     
     // Get the first item on the clipboard
     MCAutoRefcounted<MCRawClipboardItem> t_item = GetItem();
@@ -386,6 +414,10 @@ bool MCClipboard::AddImage(MCDataRef p_image_data)
 
 bool MCClipboard::AddPrivateData(MCDataRef p_private_data)
 {
+    // Clear contents if the clipboard contains external data
+    if (m_clipboard->IsExternalData())
+        Clear();
+    
     // Update the stored private data
     if (m_private_data != NULL)
         MCValueRelease(m_private_data);

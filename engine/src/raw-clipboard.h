@@ -117,6 +117,11 @@ public:
     // instance. To gain ownership of the clipboard, call clear().
     virtual bool IsOwned() const = 0;
     
+    // Indicates whether the data on this clipboard came from LiveCode or an
+    // external source. Externally-provided data cannot be modified; the
+    // clipboard must be cleared and data re-added.
+    virtual bool IsExternalData() const = 0;
+    
     // Creates a new clipboard data item with no representations. Ownership of
     // the item is passed to the caller.
     virtual MCRawClipboardItem* CreateNewItem() = 0;

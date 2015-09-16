@@ -101,6 +101,7 @@ public:
     virtual MCMacRawClipboardItem* GetItemAtIndex(uindex_t p_index);
     virtual void Clear();
     virtual bool IsOwned() const;
+    virtual bool IsExternalData() const;
     virtual MCMacRawClipboardItem* CreateNewItem();
     virtual bool AddItem(MCRawClipboardItem* p_item);
     virtual bool PushUpdates();
@@ -125,6 +126,9 @@ private:
     
     // Indicates whether any changes have been made to the clipboard
     bool m_dirty;
+    
+    // Indicates that the data on the clipboard is from outside LiveCode
+    bool m_external_data;
     
     
     // Table used to map from MCRawClipboardKnownType constants to Apple's UTIs

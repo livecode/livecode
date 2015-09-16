@@ -72,7 +72,8 @@ MCMacRawClipboard::MCMacRawClipboard(NSPasteboard* p_pasteboard) :
   m_pasteboard(p_pasteboard),
   m_last_changecount(0),
   m_items(nil),
-  m_dirty(false)
+  m_dirty(false),
+  m_external_data(false)
 {
     [m_pasteboard retain];
 }
@@ -118,6 +119,7 @@ void MCMacRawClipboard::Clear()
 {
     // Discard any contents that we might already have
     m_dirty = true;
+    m_external_data = false;
     [m_items release];
     m_items = nil;
 }
@@ -127,6 +129,11 @@ bool MCMacRawClipboard::IsOwned() const
     // We own the clipboard if it hasn't been changed since we last asserted
     // ownership.
     return [m_pasteboard changeCount] == m_last_changecount;
+}
+
+bool MCMacRawClipboard::IsExternalData() const
+{
+    return m_external_data;
 }
 
 MCMacRawClipboardItem* MCMacRawClipboard::CreateNewItem()
@@ -185,6 +192,7 @@ bool MCMacRawClipboard::PullUpdates()
     // Grab the contents of the clipboard
     [m_items release];
     m_items = [[m_pasteboard pasteboardItems] mutableCopy];
+    m_external_data = true;
     return (m_items != NULL);
 }
 

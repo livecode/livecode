@@ -1122,6 +1122,13 @@ void MCPasteboardSetRawClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCV
         return;
     }
     
+    // We cannot write to the clipboard if it contains externally-sourced data
+    if (MCscriptrawclipboard->IsExternalData())
+    {
+        ctxt.LegacyThrow(EE_RAW_CLIPBOARD_EXTERNAL_DATA);
+        return;
+    }
+    
     // TODO: support multiple items
     // Get the first item in the clipboard
     MCAutoRefcounted<MCRawClipboardItem> t_item = MCscriptrawclipboard->GetItemAtIndex(0);

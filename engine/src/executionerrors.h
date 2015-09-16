@@ -2647,6 +2647,9 @@ enum Exec_errors
     
     // {EE-866} unlock clipboard: not locked
     EE_CLIPBOARD_NOT_LOCKED,
+    
+    // {EE-867} rawClipboardData: needs to be cleared (contains external data)
+    EE_RAW_CLIPBOARD_EXTERNAL_DATA,
 };
 
 extern const char *MCexecutionerrors;
