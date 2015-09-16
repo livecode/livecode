@@ -576,7 +576,7 @@ Boolean MCField::kdown(const char *string, KeySym key)
 	// MW-2008-02-26: [[ Bug 5939 ]] 'Escape' key inserts characters into fields
 	if (key == XK_Escape)
 		return False;
-		
+	
 	switch (function)
 	{
 	case FT_UNDEFINED:
