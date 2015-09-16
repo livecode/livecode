@@ -577,10 +577,6 @@ Boolean MCField::kdown(const char *string, KeySym key)
 	if (key == XK_Escape)
 		return False;
 		
-	// PM-2015-09-16: [[ Bug 15934 ]] Make sure pressing Backspace key works as expected, even if Shift key is down
-	if (key == XK_BackSpace && (MCmodifierstate & MS_SHIFT) != 0)
-		function = FT_DELBCHAR;
-	
 	switch (function)
 	{
 	case FT_UNDEFINED:
