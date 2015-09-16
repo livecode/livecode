@@ -299,16 +299,41 @@ const MCMacRawClipboardItemRep* MCMacRawClipboardItem::FetchRepresentationAtInde
 
 bool MCMacRawClipboardItem::AddRepresentation(MCStringRef p_type, MCDataRef p_bytes)
 {
-    // Extend the representation array to hold this new representation
-    uindex_t t_index = m_rep_cache.Size();
-    if (!m_rep_cache.Extend(t_index + 1))
-        return false;
+    // Look for an existing representation with this type
+    MCMacRawClipboardItemRep* t_rep = NULL;
+    for (uindex_t i = 0; i < GetRepresentationCount(); i++)
+    {
+        // Calling this method forces the rep object to be generated
+        if (!FetchRepresentationAtIndex(i))
+            return false;
+        
+        MCAutoStringRef t_type(m_rep_cache[i]->CopyTypeString());
+        if (MCStringIsEqualTo(*t_type, p_type, kMCStringOptionCompareExact))
+        {
+            // This is the rep we're looking for
+            t_rep = m_rep_cache[i];
+            
+            // Update the cached data for this representation
+            t_rep->m_data.Reset(p_bytes);
+            
+            break;
+        }
+    }
     
-    // Allocate a new representation object.
-    // If this fails to allocate a new item, we ignore the failure. This is safe
-    // as the cache can be re-generated on demand from the data stored in the
-    // NSPasteboardItem itself.
-    m_rep_cache[t_index] = new MCMacRawClipboardItemRep(m_item, t_index, p_type, p_bytes);
+    // If there wasn't an existing representation, create one now
+    if (t_rep == NULL)
+    {
+        // Extend the representation array to hold this new representation
+        uindex_t t_index = m_rep_cache.Size();
+        if (!m_rep_cache.Extend(t_index + 1))
+            return false;
+        
+        // Allocate a new representation object.
+        // If this fails to allocate a new item, we ignore the failure. This is safe
+        // as the cache can be re-generated on demand from the data stored in the
+        // NSPasteboardItem itself.
+        m_rep_cache[t_index] = t_rep = new MCMacRawClipboardItemRep(m_item, t_index, p_type, p_bytes);
+    }
     
     // Turn the type string and data into their NS equivalents.
     // Note that the NSData is auto-released when we get it.
