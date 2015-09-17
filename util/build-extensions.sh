@@ -44,9 +44,5 @@ build_order=$(${lc_compile} --modulepath ${module_dir} --deps changed-order -- $
 
 # Loop over the extensions that need to be (re-)built
 for ext in ${build_order} ; do
-	# Create the output directory
-	mkdir -p "${destination_dir}"/com.livecode.extensions.livecode.$(basename -s .lcb "${ext}")
-	
-	# Build this extension
 	build_widget $(dirname "${ext}") "${destination_dir}" "${module_dir}" "${lc_compile}"
 done
