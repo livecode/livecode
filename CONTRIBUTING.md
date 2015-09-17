@@ -16,7 +16,7 @@ If you wish to contribute to development of LiveCode, you must sign the [Contrib
 
 ## Using GitHub
 
-The LiveCode workflow is a typical git workflow, where contributors fork the [runrev/livecode](https://github.com/runrev/livecode) repository, make their changes on a branch, and then submit a pull request.
+The LiveCode workflow is a typical git workflow, where contributors fork the [livecode/livecode](https://github.com/livecode/livecode) repository, make their changes on a branch, and then submit a pull request.
 
 ### Setting up git with your user information
 

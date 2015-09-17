@@ -253,7 +253,8 @@ static MCKeyBinding s_mac_keybindings[] =
 	{ XK_K, MK_CTRL, FT_DELEOP },
 
 	// Backward Deletion
-	{ XK_BackSpace, MK_NONE, FT_DELBCHAR },
+	// PM-2015-09-16: [[ Bug 15934 ]] Make sure pressing Backspace key works as expected, even if Shift key is down
+	{ XK_BackSpace, MK_IGNORE_SHIFT, FT_DELBCHAR },
 	{ XK_BackSpace, MK_CMD, FT_DELBOL },
 	{ XK_BackSpace, MK_CTRL, FT_DELBSUBCHAR },
 	{ XK_BackSpace, MK_OPT, FT_DELBWORD },
