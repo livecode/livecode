@@ -73,6 +73,7 @@ The following additional packages are installed:
 * liblcms-dev
 * pkg-config
 * libgtk2.0-dev
+* zip
 
 ### Linux x86
 
@@ -108,6 +109,7 @@ The following additional packages are installed:
 * libesd0-dev
 * liblcms-dev
 * pkgconfig
+* zip
 
 In addition, LiveCode requires a more modern version of GTK+ than is available in the Debian Squeeze repositories.  The following packages are compiled and installed from source:
 
