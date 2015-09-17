@@ -199,9 +199,12 @@ bool MCClipboard::AddFileList(MCStringRef p_file_names)
             if (!t_item->AddRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeFileURL), *t_encoded_path))
                 return false;
             
-            // And add a text representation containing the file name, too
-            if (!AddTextToItem(t_item, (MCStringRef)t_path))
-                return false;
+            // The first item on the list also receives a text representation
+            // containing the paths that were added (unless the user has already
+            // added a text representation).
+            if (i == 0 && !HasText())
+                if (!AddTextToItem(t_item, p_file_names))
+                    return false;
         }
     }
     else
