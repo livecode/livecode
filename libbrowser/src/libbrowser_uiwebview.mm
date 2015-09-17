@@ -756,50 +756,57 @@ bool MCUIWebViewBrowser::Init(void)
 	
 	m_frame_request = ![[request URL] isEqual: [request mainDocumentURL]];
 	
-	char *t_url;
+	char *&t_url = m_frame_request ? m_frame_request_url : m_request_url;
+	if (t_url != nil)
+		MCCStringFree(t_url);
 	t_url = nil;
 	
 	/* UNCHECKED */ MCCStringClone([request.URL.absoluteString cStringUsingEncoding: NSUTF8StringEncoding], t_url);
 	
 	if (!m_frame_request)
-	{
-		if (m_request_url != nil)
-			MCCStringFree(m_request_url);
-		m_request_url = t_url;
-	}
-	else
-	{
-		if (m_frame_request_url != nil)
-			MCCStringFree(m_frame_request_url);
-		m_frame_request_url = t_url;
-	}
-	
-	if (!m_frame_request)
-		m_instance->OnNavigationBegin(false, m_request_url);
+		m_instance->OnNavigationBegin(false, t_url);
 
 	return YES;
 }
 
 - (void)webViewDidStartLoad:(UIWebView *)webView
 {
-	m_instance->OnDocumentLoadBegin(m_frame_request, m_frame_request ? m_frame_request_url : m_request_url);
+	char *t_url = m_frame_request ? m_frame_request_url : m_request_url;
+	if (t_url == nil)
+		return;
+	
+	m_instance->OnDocumentLoadBegin(m_frame_request, t_url);
 }
 
 - (void)webViewDidFinishLoad:(UIWebView *)webView
 {
-	m_instance->OnDocumentLoadComplete(m_frame_request, m_frame_request ? m_frame_request_url : m_request_url);
+	char *&t_url = m_frame_request ? m_frame_request_url : m_request_url;
+	if (t_url == nil)
+		return;
+
+	m_instance->OnDocumentLoadComplete(m_frame_request, t_url);
 	if (!m_frame_request)
-		m_instance->OnNavigationComplete(false, m_request_url);
+		m_instance->OnNavigationComplete(false, t_url);
+
+	MCCStringFree(t_url);
+	t_url = nil;
 }
 
 - (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error
 {
+	char *&t_url = m_frame_request ? m_frame_request_url : m_request_url;
+	if (t_url == nil)
+		return;
+
 	const char *t_error;
 	t_error = [[error localizedDescription] cStringUsingEncoding:NSUTF8StringEncoding];
 
 	m_instance->OnDocumentLoadFailed(m_frame_request, m_frame_request ? m_frame_request_url : m_request_url, t_error);
 	if (!m_frame_request)
 		m_instance->OnNavigationFailed(false, m_request_url, t_error);
+
+	MCCStringFree(t_url);
+	t_url = nil;
 }
 
 - (void)setPendingRequest:(bool)p_new_value
