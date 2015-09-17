@@ -636,6 +636,13 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          replace "${REMOTE_NOTIFICATIONS}" with empty in tEntitlements
       end if     
       
+      // SN-2015-09-17: [[ BetaApp ]] Add entitlement for beta apps
+      local tBetaEntitlement
+      if tSettings["ios,beta version"] then
+         put url("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "BetaReportEntitlement.xcent")) into tBetaEntitlement
+      end if
+      replace "${BETA_REPORT_ENTITLEMENT}" with tBetaEntitlement in tEntitlements
+      
       put numToChar(0xfa) & numToChar(0xde) & numToChar(0x71) & numToChar(0x71) & binaryEncode("M", the length of tEntitlements + 8) before tEntitlements
       
       local tEntitlementsFile
@@ -1348,14 +1355,6 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    end repeat
    replace "${BUNDLE_ICONS}" with it in pPlist
    
-   local tIsBeta
-   if pSettings["ios,beta version"] is not empty and pSettings["ios,beta version"] then
-      put "<true/>" into tIsBeta
-   else
-      put "<false/>" into tIsBeta
-   end if
-   replace "${BETA_REPORT_ACTIVE}" with tIsBeta in pPlist
-   
    -- MM-2014-09-30: [[ iOS8 Support ]] Added new iOS 7 style entries for the splash screens
    -- MM-2014-10-06: [[ Bug 13512 ]] Splash screen sizes are in points and should omit the @2x @3x suffix, iOS is smart enough to figure that out.
    local tSplashScreens   
@@ -1602,6 +1601,9 @@ function mapFilePath pPath
          break
       case "RemoteNotificationStoreEntitlements.xcent"
          put tRepo & slash & "engine/rsrc/template-remote-notification-store-entitlements.xcent" into tPath
+         break
+      case "BetaReportEntitlement.xcent"
+         put tRepo & slash & "engine/rsrc/template-beta-report-entitlement.xcent" into tPath
          break
       case "RemoteNotificationSettings.plist"
          put tRepo & slash & "engine/rsrc/mobile-remote-notification-template.plist" into tPath
