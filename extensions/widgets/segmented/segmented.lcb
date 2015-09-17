@@ -122,7 +122,9 @@ of the com.livecode.library.iconSVG library.
 References: selectedIcons (property)
 */
 property segmentIcons		get getSegmentIcons		set setSegmentIcons	
-metadata segmentIcons.editor		is "com.livecode.pi.string"
+metadata segmentIcons.editor		is "com.livecode.pi.editorlist"
+metadata segmentIcons.subeditor		is "com.livecode.pi.svgicon"
+metadata segmentIcons.delimiter		is ","
 metadata segmentIcons.default		is "align left,align center,align right"
 
 /*
@@ -145,7 +147,9 @@ References: segmentIcons (property)
 */
 
 property selectedIcons		get getSelectedIcons		set setSelectedIcons
-metadata selectedIcons.editor		is "com.livecode.pi.string"
+metadata selectedIcons.editor		is "com.livecode.pi.editorlist"
+metadata selectedIcons.subeditor		is "com.livecode.pi.svgicon"
+metadata selectedIcons.delimiter		is ","
 metadata selectedIcons.default		is "align left,align center,align right"
 
 /*
