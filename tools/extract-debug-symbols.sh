@@ -13,12 +13,14 @@ STRIP="${STRIP:-strip}"
 
 function extract_linux_or_android {
 
-for input in $@ ; do
-	output="${input}${suffix}"	
+for input in "$@" ; do
+	output="${input}${suffix}"
 
-  # The --preserver-dates flag for strip and objcopy only has whole
-  # second resolution, so copy the timestamps to a separate file instead
-  cp --attributes-only --preserve=timestamps "$input" "$input.timestamps" 2>&1 || true
+	# The --preserve-dates flag for strip and objcopy only has
+	# whole second resolution, so move to a new file and copy to
+	# preserve the timestamps
+	mv "$input" "$input.timestamps"
+	cp "$input.timestamps" "$input"
 
 	# Extract a copy of the debugging information
 	$OBJCOPY --only-keep-debug "$input" "$output" 
@@ -31,15 +33,16 @@ for input in $@ ; do
 	$OBJCOPY --remove-section=.gnu_debuglink "$input"
 	$OBJCOPY --add-gnu-debuglink="$output" "$input"
 
-  cp --attributes-only --preserve=timestamps "$input.timestamps" "$input" 2>&1 || true
-  rm "$input.timestamps" 2>&1 || true
+	# Restore the original modification time
+	touch -m -r "$input.timestamps" "$input"
+	rm "$input.timestamps" 2>&1
 done
 
 }
 
 function extract_emscripten {
 
-for input in $@ ; do
+for input in "$@" ; do
 	touch "${input}${suffix}"
 done
 
@@ -47,7 +50,7 @@ done
 
 function extract_mac_or_ios {
 
-for input in $@ ; do
+for input in "$@" ; do
 	output="${input}${suffix}"
 
 	# If this is an app bundle, find the executable name
