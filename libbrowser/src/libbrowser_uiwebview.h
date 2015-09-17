@@ -54,6 +54,9 @@ protected:
 	bool GetScrollingEnabled(bool& r_value);
 	bool SetScrollingEnabled(bool p_value);
 	
+	bool GetJavaScriptHandlers(char *&r_handlers);
+	bool SetJavaScriptHandlers(const char *p_handlers);
+	
 	// Browser-specific actions
 	bool ExecReload();
 	bool ExecStop();
@@ -65,8 +68,13 @@ protected:
 private:
 	bool GetView(UIWebView *&r_view);
 	
+	bool SyncJavaScriptHandlers(NSArray *p_handlers);
+	
 	UIWebView *m_view;
 	MCUIWebViewBrowserDelegate *m_delegate;
+	
+	char *m_js_handlers;
+	NSArray *m_js_handler_list;
 };
 
 //////////
