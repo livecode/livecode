@@ -35,7 +35,6 @@
 				'src/legacygradients.cpp',
 				'src/lnxtext.cpp',
 				'src/mblandroidtext.cpp',
-				'src/mbliphonetext.mm',
 				#'src/osxtext.cpp', # UNUSED?
 				'src/path.cpp',
 				'src/region.cpp',
@@ -48,15 +47,6 @@
 			[
 				[
 					'OS != "mac" and OS != "ios"',
-					{
-						'sources!':
-						[
-							'src/coretext.cpp',
-						],
-					},
-				],
-				[
-					'OS == "ios"',
 					{
 						'sources!':
 						[

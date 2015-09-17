@@ -459,24 +459,32 @@ char *MCS_get_canonical_path(const char *path)
 	if (path == NULL)
 		return NULL;
 
-	if (path[0] == '/' && path[1] != '/')
+	// The following rules are used to process paths on Windows:
+	// - an absolute UNIX path is mapped to an absolute windows path using the drive of the CWD:
+	// /foo/bar -> CWD-DRIVE:/foo/bar
+	// - an absolute windows path is left as is:
+	// //foo/bar -> //foo/bar
+	// C:/foo/bar -> C:/foo/bar
+	// - a relative path is prefixed by the CWD:
+	// foo/bar -> CWD/foo/bar
+	// Note: / and \ are treated the same, but not changed. When adding a path separator / is used.
+	if ((path[0] == '/' && path[1] != '/')
+			|| (path[0] == '\\' && path[1] != '\\'))
 	{
 		// path in root of current drive
 		t_curdir = MCS_getcurdir();
 
 		int t_path_len;
 		t_path_len = strlen(path);
-		while (path[0] == '/')
-		{
-			path ++;
-			t_path_len --;
-		}
 		
-		t_path = (char*)malloc(3 + t_path_len + 1);
-		t_path[0] = t_curdir[0]; t_path[1] = ':'; t_path[2] = '/';
-		strcpy(t_path + 3, path);
+		// We append CWD and a colon to the path: length + 2
+		t_path = (char*)malloc(2 + t_path_len + 1);
+		t_path[0] = t_curdir[0]; t_path[1] = ':';
+		strcpy(t_path + 2, path);
 	}
-	else if (is_legal_drive(path[0]) && path[1] == ':')
+	else if ((is_legal_drive(path[0]) && path[1] == ':')
+			|| (path[0] == '/' && path[1] == '/')
+			|| (path[0] == '\\' && path[1] == '\\'))
 	{
 		// absolute path
 		t_path = strclone(path);
@@ -493,12 +501,6 @@ char *MCS_get_canonical_path(const char *path)
 
 		int t_path_len;
 		t_path_len = strlen(path);
-
-		while (t_path_len > 0 && path[0] == '/')
-		{
-			path ++;
-			t_path_len --;
-		}
 
 		t_path = (char*)malloc(t_curdir_len + 1 + t_path_len + 1);
 		memcpy(t_path, t_curdir, t_curdir_len);

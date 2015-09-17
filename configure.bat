@@ -9,6 +9,9 @@ SET warnings=0
 REM Not all versions of windows the the %programfiles(x86)% variable
 IF NOT DEFINED programfiles(x86) SET programfiles(x86)=%programfiles%
 
+REM When calling configure.bat from the command line, BUILD_EDITION is not defined
+IF NOT DEFINED BUILD_EDITION SET BUILD_EDITION="community"
+
 REM Note: to test whether a directory exists in batch script, you need to check
 REM whether a file within that directory exists. Easiest way to do this is to
 REM add the "*" wildcard after the directory
