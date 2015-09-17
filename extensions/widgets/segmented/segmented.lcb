@@ -561,7 +561,7 @@ private handler updateProperties() returns nothing
 		
 	if (the number of elements in mSegmentIcons) < mNumSegments then
 		repeat with tX from 1 up to (mNumSegments-(the number of elements in mSegmentIcons))
-			push "f10c" onto back of mSegmentIcons
+			push "circle" onto back of mSegmentIcons
 		end repeat
 	else if (the number of elements in mSegmentIcons) > mNumSegments then
 		repeat with tX from 1 up to (the number of elements in mSegmentIcons)-mNumSegments
@@ -571,7 +571,7 @@ private handler updateProperties() returns nothing
 	
 	if (the number of elements in mSelectedIcons) < mNumSegments then
 		repeat with tX from 1 up to (mNumSegments-(the number of elements in mSelectedIcons))
-			push "f111" onto back of mSelectedIcons
+			push "circle" onto back of mSelectedIcons
 		end repeat
 	else if (the number of elements in mSelectedIcons) > mNumSegments then
 		repeat with tX from 1 up to (the number of elements in mSelectedIcons)-mNumSegments
