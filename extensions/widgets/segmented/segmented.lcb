@@ -15,127 +15,9 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/* A segmented control. A segmented control is a horizontal control that is made up of multiple segments, where each segment functions as a discrete button.
-
-Name: segmentStyle
-Type: property
-Syntax: set the segmentStyle of <widget> to <pStyle>
-Syntax: get the segmentStyle of <widget>
-
-Summary: The style of the control.
-
-Parameters:
-pStyle(enum): The style of the control.
--"segment": The widget displays as a segmented control
--"bar": The widget displays as a button bar
-
-Description:
-The style property of the control (segmented control or bar button).
-
-Name: multiSelect
-Type: property
-Syntax: set the multiSelect of <widget> to <pCanMultiSelect>
-Syntax: get the multiSelect of <widget>
-
-Summary: Whether the control can have multiple segments selected
-
-Parameters:
-pCanMultiSelect(boolean):
-
-Description:
-The multiSelect property of the control.
-
-Name: segmentNames
-Type: property
-Syntax: set the segmentNames of <widget> to <pNames>
-Syntax: get the segmentNames of <widget>
-Summary: Sets the names of the segments.
-
-Parameters:
-pNames(string): A comma-delimited list of names for the segments.
-
-Description:
-Sets the names of each segment in the control.
-
-Name: segmentLabels
-Type: property
-Syntax: set the segmentLabels of <widget> to <pLabels>
-Syntax: get the segmentLabels of <widget>
-
-Summary: Sets the labels of the segments.
-
-Parameters:
-pLabels: A comma-delimited list of labels for the segments.
-
-Description:
-Sets the labels of each segment in the control.
-
-Name: segmentIcons
-Type: property
-Syntax: set the segmentIcons of <widget> to <pIcons>
-Syntax: get the segmentIcons of <widget>
-
-Summary: Sets the icons of the segments.
-
-Parameters:
-pIcons: A comma-delimited list of codepoints, which display as fontawesome icons for the segments
-
-Description:
-Sets the icons of each segment in the control.
-
-Name: selectedIcons
-Type: property
-Syntax: set the selectedIcons of <widget> to <pSelectedIcons>
-Syntax: get the selectedIcons of <widget>
-
-Summary: Sets the selected icons of the segments.
-
-Parameters:
-pSelectedIcons: A comma-delimited list of codepoints, which display as fontawesome icons for the selected segments.
-
-Description:
-Sets the selected icons of each segment in the control.
-
-Name: segmentDisplay
-Type: property
-Syntax: set the segmentDisplay of <widget> to <pSegmentDisplay>
-Syntax: get the segmentDisplay of <widget>
-
-Summary: Sets the segment display style.
-
-Parameters:
-pSegmentDisplay(enum): The style of the segment display.
--"icon": Show the chosen fontawesome icons
--"label": Show the chosen labels
-
-Description:
-Sets the segment display style of the control to either icon or label.
-
-Name: segmentMinWidth
-Type: property
-Syntax: set the segmentMinWidth of <widget> to <pMinWidths>
-Syntax: get the segmentMinWidth of <widget>
-
-Summary: Sets the minimum widths of the segments.
-
-Parameters:
-pMinWidths: A comma-delimited list of numbers.
-
-Description:
-Sets the minimum width of each segment in the control.
-
-Name: selectedSegment
-Type: property
-Syntax: set the selectedSegment of <widget> to <pSelectedSegments>
-Syntax: get the selectedSegment of <widget>
-
-Summary: Sets the selected segment.
-
-Parameters:
-pSelectedSegments: A comma-delimited list of the numbers of the selected segment.
-
-Description:
-Sets the selected segments of the control.
+/* 
+A segmented control. A segmented control is a horizontal control that is made up of 
+multiple segments, where each segment functions as a discrete button.
 */
 
 
@@ -156,45 +38,179 @@ metadata version is "1.0.0"
 metadata svgicon is "M72.6,0H7.7C3.4,0,0,3.4,0,7.7v14c0,4.2,3.4,7.7,7.7,7.7h64.9c4.2,0,7.7-3.4,7.7-7.7v-14C80.2,3.4,76.8,0,72.6,0z M7.8,13.5h8v2.3h-8V13.5z M19.7,20.6h-12v-2.3h12V20.6z M19.7,11h-12V8.8h12V11z M27.8,25.5h-1V3.8h1V25.5z M46.1,20.6h-12v-2.3h12V20.6zM36.1,15.7v-2.3h8v2.3H36.1z M46.1,11h-12V8.8h12V11z M54.4,25.5h-1V3.8h1V25.5z M72.7,20.6h-12v-2.3h12V20.6z M72.7,15.7h-8v-2.3h8V15.7z M72.7,11h-12V8.8h12V11z"
 
 -- property declarations
+
+/*
+Syntax: set the segmentStyle of <widget> to <pStyle>
+Syntax: get the segmentStyle of <widget>
+
+Summary: The style of the control.
+
+Parameters:
+pStyle(enum): The style of the control.
+-"segment": The widget displays as a segmented control
+-"bar": The widget displays as a button bar
+
+Description:
+The style property of the control (segmented control or bar button).
+*/
 property segmentStyle 		get mStyle				set setStyle
-property multiSelect		get mMultiSelect		set setMultiSelect		
-
-property segmentNames		get getSegmentNames		set setSegmentNames
-property segmentLabels		get getSegmentLabels	set setSegmentLabels
-property segmentIcons		get getSegmentIcons		set setSegmentIcons	
-property selectedIcons		get getSelectedIcons	set setSelectedIcons
-
-property segmentDisplay		get mSegmentDisplay		set setSegmentDisplay
-property segmentMinWidth	get getSegmentMinWidth	set setSegmentMinWidth
-property selectedSegment	get getSelectedSegment	set setSelectedSegment	
-
-property showFrameBorder	get mShowFrameBorder	set setShowFrameBorder
---
-
--- property metadata
 metadata segmentStyle.editor 		is "com.livecode.pi.enum"
 metadata segmentStyle.options 		is "segment,bar"
 metadata segmentStyle.default		is "segment"
+
+/*
+Syntax: set the multiSelect of <widget> to <pCanMultiSelect>
+Syntax: get the multiSelect of <widget>
+
+Summary: Whether the control can have multiple segments selected
+
+Parameters:
+pCanMultiSelect(boolean):
+
+Description:
+The multiSelect property of the control.
+*/
+property multiSelect		get mMultiSelect		set setMultiSelect		
 metadata multiSelect.editor			is "com.livecode.pi.boolean"
 metadata multiSelect.default		is "false"
 
+/*
+Syntax: set the segmentNames of <widget> to <pNames>
+Syntax: get the segmentNames of <widget>
+Summary: Sets the names of the segments.
+
+Parameters:
+pNames(string): A comma-delimited list of names for the segments.
+
+Description:
+Sets the names of each segment in the control.
+*/
+property segmentNames		get getSegmentNames		set setSegmentNames
 metadata segmentNames.editor		is "com.livecode.pi.string"
 metadata segmentNames.default		is "segment1,segment2,segment3"
+
+/*
+Syntax: set the segmentLabels of <widget> to <pLabels>
+Syntax: get the segmentLabels of <widget>
+
+Summary: Sets the labels of the segments.
+
+Parameters:
+pLabels: A comma-delimited list of labels for the segments.
+
+Description:
+Sets the labels of each segment in the control.
+*/
+property segmentLabels		get getSegmentLabels	set setSegmentLabels
 metadata segmentLabels.editor 		is "com.livecode.pi.string"
 metadata segmentLabels.default		is "Title,Title,Title"
-metadata segmentIcons.editor		is "com.livecode.pi.string"
-metadata segmentIcons.default		is "f036,f037,f038"
-metadata selectedIcons.editor		is "com.livecode.pi.string"
-metadata selectedIcons.default		is "f036,f037,f038"
 
+/*
+Syntax: set the segmentIcons of <widget> to <pIcons>
+Syntax: get the segmentIcons of <widget>
+
+Summary: Sets the icons of the segments.
+
+Parameters:
+pIcons: A comma-delimited list of icon names which display as the icons for the segments.
+
+Description:
+Use the <segmentIcons> property to get or set the icons of the segmented control.
+The name of an icon must be one of the names returned by the iconNames() function 
+of the com.livecode.library.iconSVG library.
+
+References: selectedIcons (property)
+*/
+property segmentIcons		get getSegmentIcons		set setSegmentIcons	
+metadata segmentIcons.editor		is "com.livecode.pi.string"
+metadata segmentIcons.default		is "align left,align center,align right"
+
+/*
+Syntax: set the selectedIcons of <widget> to <pSelectedIcons>
+Syntax: get the selectedIcons of <widget>
+
+Summary: Sets the selected icons of the segments.
+
+Parameters:
+pSelectedIcons: A comma-delimited list of icon names which display as the icons for 
+each segment when it is selected.
+
+Description:
+Use the <selectedIcons> property to get or set the icons of the segments when they are
+selected.
+The name of an icon must be one of the names returned by the iconNames() function 
+of the com.livecode.library.iconSVG library.
+
+References: segmentIcons (property)
+*/
+
+property selectedIcons		get getSelectedIcons		set setSelectedIcons
+metadata selectedIcons.editor		is "com.livecode.pi.string"
+metadata selectedIcons.default		is "align left,align center,align right"
+
+/*
+Syntax: set the segmentDisplay of <widget> to <pSegmentDisplay>
+Syntax: get the segmentDisplay of <widget>
+
+Summary: Sets the segment display style.
+
+Parameters:
+pSegmentDisplay(enum): The style of the segment display.
+-"icon": Show the chosen fontawesome icons
+-"label": Show the chosen labels
+
+Description:
+Sets the segment display style of the control to either icon or label.
+*/
+property segmentDisplay		get mSegmentDisplay		set setSegmentDisplay
 metadata segmentDisplay.editor		is "com.livecode.pi.enum"
 metadata segmentDisplay.options		is "text,icon"
 metadata segmentDisplay.default		is "text"
+
+/*
+Syntax: set the segmentMinWidth of <widget> to <pMinWidths>
+Syntax: get the segmentMinWidth of <widget>
+
+Summary: Sets the minimum widths of the segments.
+
+Parameters:
+pMinWidths: A comma-delimited list of numbers.
+
+Description:
+Sets the minimum width of each segment in the control.
+*/
+
+property segmentMinWidth	get getSegmentMinWidth	set setSegmentMinWidth
 metadata segmentMinWidth.editor		is "com.livecode.pi.string"
 metadata segmentMinWidth.default 	is "30,30,30"
+
+/*
+Syntax: set the selectedSegment of <widget> to <pSelectedSegments>
+Syntax: get the selectedSegment of <widget>
+
+Summary: Sets the selected segment.
+
+Parameters:
+pSelectedSegments: A comma-delimited list of the numbers of the selected segment.
+
+Description:
+Sets the selected segments of the control.
+*/
+property selectedSegment	get getSelectedSegment	set setSelectedSegment	
 metadata selectedSegment.editor		is "com.livecode.pi.string"
 metadata selectedSegment.default	is "1"
---
+
+/*
+Syntax: set the showFrameBorder of <widget> to {true|false}
+Syntax: get the showFrameBorder of <widget>
+
+Summary: Whether the widget has a border or not.
+
+Description:
+Use the <showFrameBorder> property to control whether the segmented control has
+a border round it or not.
+*/
+property showFrameBorder	get mShowFrameBorder	set setShowFrameBorder
 
 -- private instance variables
 --properties
@@ -210,6 +226,8 @@ private variable mSegmentDisplay	as String
 private variable mSegmentMinWidth	as List
 private variable mSelectedSegments	as List
 
+private variable mShowFrameBorder	as Boolean
+
 --variables
 private variable mGeometryIsChanged	as Boolean
 private variable mNumSegments		as Integer
@@ -218,9 +236,6 @@ private variable mLeft				as Real
 private variable mPerimeter			as Path
 private variable mLines				as List			-- list of line paths
 private variable mRadius			as Real
-
-private variable mShowFrameBorder	as Boolean
---
 
 -- constants
 constant kIconSize is 16
@@ -259,8 +274,7 @@ public handler OnLoad(in pProperties as Array)
 end handler
 
 public handler OnCreate()
-	
-	-- properties
+	// Set the default values of all the properties
 	put "segment" into mStyle
 	put false into mMultiSelect
 	
@@ -272,18 +286,17 @@ public handler OnCreate()
 	put "icon" into mSegmentDisplay
 	put [30,30,30] into mSegmentMinWidth
 	put [1] into mSelectedSegments
-	--
 	
-	-- variables
+	put false into mShowFrameBorder
+		
+	// Initialise other variables
 	put true into mGeometryIsChanged
 	put (the number of elements in mSegmentNames) into mNumSegments
 	put 0 into mLeft
 	put the empty path into mPerimeter
 	put the empty list into mLines
 	put 0 into mRadius
-	--
-	put false into mShowFrameBorder
-	
+
 end handler
 
 public handler OnPaint()
