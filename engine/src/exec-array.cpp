@@ -606,12 +606,23 @@ void MCArraysDoIntersect(MCExecContext& ctxt, MCArrayRef p_dst_array, MCArrayRef
 	MCNameRef t_key;
 	MCValueRef t_src_value;
     MCValueRef t_dst_value;
+    MCArrayRef p_orig_array;
 	uintptr_t t_iterator;
 	t_iterator = 0;
     
     bool t_is_array;
     
-	while(MCArrayIterate(p_dst_array, t_iterator, t_key, t_dst_value))
+    // TS-2015-19-18: [[ Bug 15948 ]] Take a copy of p_dst_array and iterate through
+    // the copy so that we are not removing values from the same array.  Otherwise
+    // the array may be rehashed during the MCArrayRemoveValue() call and break the
+    // iteration sequence.
+    if (!MCArrayMutableCopy(p_dst_array, p_orig_array)) {
+        return;
+    }
+    
+    // Loop through the copy of the array, not the one that we will be removing entries
+    // from.
+    while(MCArrayIterate(p_orig_array, t_iterator, t_key, t_dst_value))
 	{
 		if (MCArrayFetchValue(p_src_array, ctxt . GetCaseSensitive(), t_key, t_src_value))
         {
