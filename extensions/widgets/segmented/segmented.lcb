@@ -18,6 +18,59 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 /* 
 A segmented control. A segmented control is a horizontal control that is made up of 
 multiple segments, where each segment functions as a discrete button.
+
+Name: segmentSelected
+Type: message
+Syntax: on segmentSelected <pSegment>
+
+Summary: Sent when a segment is selected
+
+Parameters:
+pSegment: The name of the newly selected segment
+
+Description:
+Handle the <segmentSelected> message in order to respond to a user clicking on a segment
+to select it.
+
+>*Note:* if the <selectedSegment> property is set by manually (by script or through the 
+property inspector), the <segmentSelected> message will not be set, because some segments
+will be selected and others deselected simultaneously. It is usually better to handle the 
+<selectionChanged> message.
+
+References: selectedSegment (property), selectionChanged (message), segmentUnselected (message)
+
+Name: segmentUnselected
+Type: message
+Syntax: on segmentUnselected <pSegment>
+
+Summary: Sent when a segment is unselected
+
+Parameters:
+pSegment: The name of the newly unselected segment
+
+Description:
+Handle the <segmentUnselected> message in order to respond to a user clicking on a segment
+to unselect it.
+
+>*Note:* if the <selectedSegment> property is set by manually (by script or through the 
+property inspector), the <segmentUnselected> message will not be set, because some segments
+will be selected and others deselected simultaneously. It is usually better to handle the 
+<selectionChanged> message.
+
+References: selectedSegment (property), selectionChanged (message), segmentSelected (message)
+
+Name: selectionChanged
+Type: message
+Syntax: on selectionChanged <pList>
+
+Summary: Sent when the selection of the segmented control widget changes
+
+Parameters:
+pList: A comma delimited list of the selected segment names
+
+Description:
+Handle the <selectionChanged> message in order to respond to a change in the selection
+of the segmented control.
 */
 
 
@@ -201,10 +254,8 @@ Description:
 Sets the selected segments of the control.
 */
 property selectedSegment	get getSelectedSegment	set setSelectedSegment	
-metadata selectedSegment.editor		is "com.livecode.pi.number"
-metadata selectedSegment.step is "1"
-metadata selectedSegment.min is "0"
-metadata selectedSegment.default	is "0"
+metadata selectedSegment.editor		is "com.livecode.pi.string"
+metadata selectedSegment.default	is ""
 
 /*
 Syntax: set the showFrameBorder of <widget> to {true|false}
@@ -305,7 +356,7 @@ public handler OnCreate()
 	
 	put "icon" into mSegmentDisplay
 	put [30,30,30] into mSegmentMinWidth
-	put [0] into mSelectedSegments
+	put [] into mSelectedSegments
 	
 	put false into mShowFrameBorder
 		
@@ -358,64 +409,86 @@ public handler OnGeometryChanged()
 	put true into mGeometryIsChanged
 end handler
 
-public handler OnClick()
+-- Replace the selection
+private handler setSelection(in pSelection as List)
+	sort pSelection in ascending numeric order
+	if pSelection is not mSelectedSegments then
+		put pSelection into mSelectedSegments
+		selectionChanged(false)
+	end if
+end handler
+
+private handler addToSelection(in pWhich as Number)
+	push pWhich onto mSelectedSegments
+	post "segmentSelected" with [mSegmentNames[pWhich]]
+	selectionChanged(true)
+end handler
+
+private handler removeFromSelection(in pWhich as Number)
+	variable tIndex as Number
+	put the index of pWhich in mSelectedSegments into tIndex
+	if tIndex is not 0 then
+		delete element tIndex of mSelectedSegments
+		post "segmentUnselected" with [mSegmentNames[pWhich]]
+	end if
+	selectionChanged(true)
+end handler
+
+private handler selectionChanged(in pSort as Boolean)
+	if pSort then
+		sort mSelectedSegments in ascending numeric order
+	end if
+	variable tSelectedNames as List
+	put [] into tSelectedNames
+	variable tNum as Number
+	repeat for each element tNum in mSelectedSegments
+		push mSegmentNames[tNum] onto tSelectedNames
+	end repeat
 	
+	variable tNames as String
+	combine tSelectedNames with "," into tNames
+	
+	post "selectionChanged" with [tNames]
+	redraw all
+end handler
+
+private handler clickPosToComponent(in pLoc as Point) returns Integer
 	variable tX as Integer
+	repeat with tX from 1 up to mNumSegments
+		if pLoc is within fetchBounds(tX) then
+			return tX
+		end if
+	end repeat
+	return 0
+end handler
+
+public handler OnClick() returns nothing
+
 	variable tLabel as String
 	variable tSegment
 	variable tCount as Integer
+
+	variable tX as Integer
+	put clickPosToComponent(the click position) into tX
+	 
+	 if tX is 0 then
+		 return
+	 end if
 	 
 	if mMultiSelect is false then
 		-- if cannot multiselect, then need to select the clicked-on segment and deselect the currently selected segment
-		-- if the clicked-on segment is already selected, then do nothing
-	
-		if the click position is not within fetchBounds(element 1 of mSelectedSegments) then
-			repeat with tX from 1 up to mNumSegments
-			
-				if the click position is within fetchBounds(tX) then
-					
-					put the empty list into mSelectedSegments
-					push tX onto back of mSelectedSegments
-					
-					put element tX of mSegmentNames into tLabel
-					post "segmentSelected" with [tLabel]
-				end if
-				
-			end repeat	
+		-- if the clicked-on segment is already selected, then do nothing		
+		if not (tX is in mSelectedSegments) then
+			setSelection([tX])
 		end if
-		
 	else
 		-- if can multiselect, then select the clicked-on segment if it is unselected or unselect if its selected
-		repeat with tX from 1 up to mNumSegments
-			if the click position is within fetchBounds(tX) then
-		
-				variable tIsIn
-				put tX is in mSelectedSegments into tIsIn
-		
-				if tIsIn then
-					put 1 into tCount
-					variable tElement
-					repeat for each element tElement in mSelectedSegments
-						if tElement = tX then
-							exit repeat
-						end if
-						add 1 to tCount
-					end repeat
-					
-					delete element tCount of mSelectedSegments
-					put element tX of mSegmentNames into tLabel
-					post "segmentUnselected" with [tLabel]
-				else
-					put element tX of mSegmentNames into tLabel
-					post "segmentSelected" with [tLabel]
-					push tX onto back of mSelectedSegments
-						
-				end if
-			end if
-		end repeat
+ 		if tX is in mSelectedSegments then
+			removeFromSelection(tX)
+		else
+			addToSelection(tX)
+		end if
 	end if
-	
-	redraw all
 end handler
 
 private handler drawSegments() returns nothing
@@ -789,7 +862,13 @@ private handler setStyle(in pStyle as String)
 end handler
 
 private handler setMultiSelect(in pCanMultiSelect as Boolean)
-	put pCanMultiSelect into mMultiSelect
+	if pCanMultiSelect is not mMultiSelect then
+		put pCanMultiSelect into mMultiSelect
+		// If we have multiple selections and go to single select, empty the selection
+		if not pCanMultiSelect and the number of elements in mSelectedSegments > 1 then
+			setSelection(the empty list)
+		end if
+	end if
 end handler
 
 private handler setSegmentNames(in pNames as String)
@@ -848,11 +927,12 @@ private handler setSelectedSegment(in pSelectedSegment as String)
 	
 	variable tSelectedString as String
 	variable tSelected as Real
+	variable tNewSelection as List
 	repeat for each element tSelectedString in tStringList
 		put tSelectedString parsed as number into tSelected
-		push tSelected onto back of mSelectedSegments
+		push tSelected onto back of tNewSelection
 	end repeat
-	redraw all
+	setSelection(tNewSelection)
 end handler
 
 private handler setShowFrameBorder(in pShow as Boolean)
