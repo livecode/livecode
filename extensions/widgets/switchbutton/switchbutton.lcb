@@ -130,6 +130,8 @@ private variable mSwitchIsOn as Boolean
 private variable mIsEnabled as Boolean
 
 private variable mIsPressed as Boolean
+private variable mXClick as Real
+private variable mMouseHasMoved as Boolean
 
 private variable mAndroidLightOnColors as Array
 private variable mAndroidDarkOnColors as Array
@@ -173,6 +175,8 @@ public handler OnCreate() returns nothing
 	put true into mIsEnabled
 
 	put false into mIsPressed
+	put 0 into mXClick
+	put false into mMouseHasMoved
 
 	fetchAndroidColors()
 	updateVariables()
@@ -440,12 +444,6 @@ private handler fetchPath(in pObject as String) returns Path
 	end if
 end handler
 
-private handler getRect(in pObject as String) returns Rectangle
-	if pObject is "bounding box" then
-		return rectangle [mWidth/2 - 3*mHeight/4, mHeight/4, mWidth/2 + 3*mHeight/4, 3*mHeight/4]
-	end if
-end handler
-
 private handler fetchAndroidColors() returns nothing
 
 	put the empty array into mAndroidLightOnColors
@@ -508,21 +506,60 @@ private handler updateVariables() returns nothing
 	put mWidth/9 into mRadius
 end handler
 
+private handler clickableRect() returns Rectangle
+	if mWidgetTheme is "iOS" then
+		return rectangle [mWidth/2 - mHeight/2, mHeight/4, mWidth/2 + mHeight/2, 3*mHeight/4]
+	else if mWidgetTheme contains "Android" then
+		return rectangle [1.5*mRadius, mHeight/2 - mRadius, 6*mRadius, mHeight/2 + mRadius]
+	end if
+end handler
+
+public handler OnMouseMove() returns nothing
+	if mIsPressed then
+		variable tXMousePos as Real
+		variable tChange as Real
+		variable tMovedRight as Boolean
+
+		put true into mMouseHasMoved
+
+		put the x of the mouse position into tXMousePos
+		put tXMousePos - mXClick into tChange
+		if tChange > 0 then
+			put true into tMovedRight
+		else
+			put false into tMovedRight
+		end if
+
+		if tMovedRight then
+			put true into mSwitchIsOn
+		else
+			put false into mSwitchIsOn
+		end if
+
+		redraw all
+	end if
+end handler
+
 public handler OnMouseDown() returns nothing
-	if the click position is within getRect("bounding box") then
+	if the click position is within clickableRect() then
+		put the x of the click position into mXClick
 		put true into mIsPressed
 		redraw all
 	end if
 end handler
 
 public handler OnMouseUp() returns nothing
-	if the click position is within getRect("bounding box") then
-		setSwitch(not(mSwitchIsOn))
-		put false into mIsPressed
-		redraw all
+	if mMouseHasMoved then
+		post "mouseUp" with [mSwitchIsOn]
+	else
+		if the click position is within clickableRect() then
+			setSwitch(not(mSwitchIsOn))
+			post "mouseUp" with [mSwitchIsOn]
+		end if
 	end if
 
-	post "mouseUp" with [mSwitchIsOn]
+	put false into mIsPressed
+	redraw all
 end handler
 
 --------------------------------------------------------------------------------
