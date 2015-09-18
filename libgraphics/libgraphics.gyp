@@ -38,7 +38,6 @@
 				'src/lnxtext.cpp',
 				'src/harfbuzztext.cpp',
 				'src/hb-sk.cpp',
-				'src/mbliphonetext.mm',
 				#'src/osxtext.cpp', # UNUSED?
 				'src/path.cpp',
 				'src/region.cpp',

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -195,6 +195,9 @@ MCPropertyInfo MCStack::kProperties[] =
     
     // IM-2014-01-07: [[ StackScale ]] Add stack scalefactor property
     DEFINE_RW_OBJ_PROPERTY(P_SCALE_FACTOR, Double, MCStack, ScaleFactor)
+    
+    // MERG-2015-08-31: [[ ScriptOnly ]] Add stack scriptOnly property
+    DEFINE_RW_OBJ_PROPERTY(P_SCRIPT_ONLY, Bool, MCStack, ScriptOnly)
 };
 
 MCObjectPropertyTable MCStack::kPropertyTable =

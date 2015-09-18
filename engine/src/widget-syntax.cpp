@@ -766,6 +766,9 @@ MC_DLLEXPORT_DEF MCTypeInfoRef kMCWidgetNoCurrentWidgetErrorTypeInfo = nil;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCWidgetSizeFormatErrorTypeInfo = nil;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCWidgetTypeInfo = nil;
 
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCWidgetTypeInfo()
+{ return kMCWidgetTypeInfo; }
+
 bool com_livecode_widget_InitializePopups(void);
 void com_livecode_widget_FinalizePopups(void);
 

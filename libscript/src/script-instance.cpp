@@ -2434,7 +2434,7 @@ bool MCScriptEvaluateHandlerOfInstanceInternal(MCScriptInstanceRef p_instance, M
         
         // The context struct is 'moved' into the handlerref.
         __MCScriptHandlerContext t_context;
-        t_context . instance = MCScriptRetainInstance(p_instance);
+        t_context . instance = p_instance;
         t_context . definition = t_handler_definition;
         
         if (!MCHandlerCreate(t_signature, &__kMCScriptHandlerCallbacks, &t_context, t_value))
@@ -2464,7 +2464,7 @@ bool MCScriptEvaluateHandlerOfInstanceInternal(MCScriptInstanceRef p_instance, M
         {
             // The context struct is 'moved' into the handlerref.
             __MCScriptHandlerContext t_context;
-            t_context . instance = MCScriptRetainInstance(p_instance);
+            t_context . instance = p_instance;
             t_context . definition = t_handler_definition;
             
             if (!MCHandlerCreate(t_signature, &__kMCScriptHandlerCallbacks, &t_context, t_value))

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -573,7 +573,7 @@ public:
 
 	// Flush the contents of the current clipboard to the OS if we are the current
 	// owner. This method is called before final shutdown to ensure that the
-	// clipboard isn't lost when a Revolution application quits.
+	// clipboard isn't lost when a LiveCode application quits.
 	virtual void flushclipboard(void);
 
 	// Returns true if this application currently owns the clipboard.

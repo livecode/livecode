@@ -22,12 +22,13 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C"
-{
-    MC_DLLEXPORT_DEF MCTypeInfoRef kMCNativeCStringTypeInfo;
-	MC_DLLEXPORT_DEF MCTypeInfoRef kMCWStringTypeInfo;
-	MC_DLLEXPORT_DEF MCTypeInfoRef kMCUTF8StringTypeInfo;
-}
+MCTypeInfoRef kMCNativeCStringTypeInfo;
+MCTypeInfoRef kMCWStringTypeInfo;
+MCTypeInfoRef kMCUTF8StringTypeInfo;
+
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCNativeCStringTypeInfo(void) { return kMCNativeCStringTypeInfo; }
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCWStringTypeInfo(void) { return kMCWStringTypeInfo; }
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCUTF8StringTypeInfo(void) { return kMCUTF8StringTypeInfo; }
 
 MCTypeInfoRef kMCForeignZStringNullErrorTypeInfo;
 

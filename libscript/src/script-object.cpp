@@ -91,44 +91,44 @@ bool MCScriptInitialize(void)
         uindex_t t_def_index, t_type_index;
             
         MCScriptAddDefinitionToModule(t_builder, t_def_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCAnyTypeInfo"), t_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCAnyTypeInfo"), t_type_index);
         MCScriptAddTypeToModule(t_builder, MCNAME("any"), t_type_index, t_def_index);
         MCScriptAddExportToModule(t_builder, t_def_index);
         
         uindex_t t_null_type_index;
         MCScriptAddDefinitionToModule(t_builder, t_null_type_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCNullTypeInfo"), t_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCNullTypeInfo"), t_type_index);
         MCScriptAddTypeToModule(t_builder, MCNAME("undefined"), t_type_index, t_null_type_index);
         MCScriptAddExportToModule(t_builder, t_null_type_index);
         
         MCScriptAddDefinitionToModule(t_builder, t_def_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCBooleanTypeInfo"), t_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCBooleanTypeInfo"), t_type_index);
         MCScriptAddTypeToModule(t_builder, MCNAME("boolean"), t_type_index, t_def_index);
         MCScriptAddExportToModule(t_builder, t_def_index);
         
         MCScriptAddDefinitionToModule(t_builder, t_def_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCNumberTypeInfo"), t_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCNumberTypeInfo"), t_type_index);
         MCScriptAddTypeToModule(t_builder, MCNAME("number"), t_type_index, t_def_index);
         MCScriptAddExportToModule(t_builder, t_def_index);
         
         uindex_t t_string_type_index;
         MCScriptAddDefinitionToModule(t_builder, t_string_type_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCStringTypeInfo"), t_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCStringTypeInfo"), t_type_index);
         MCScriptAddTypeToModule(t_builder, MCNAME("string"), t_type_index, t_string_type_index);
         MCScriptAddExportToModule(t_builder, t_string_type_index);
         
         MCScriptAddDefinitionToModule(t_builder, t_def_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCDataTypeInfo"), t_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCDataTypeInfo"), t_type_index);
         MCScriptAddTypeToModule(t_builder, MCNAME("data"), t_type_index, t_def_index);
         MCScriptAddExportToModule(t_builder, t_def_index);
         
         MCScriptAddDefinitionToModule(t_builder, t_def_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCArrayTypeInfo"), t_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCArrayTypeInfo"), t_type_index);
         MCScriptAddTypeToModule(t_builder, MCNAME("array"), t_type_index, t_def_index);
         MCScriptAddExportToModule(t_builder, t_def_index);
         
         MCScriptAddDefinitionToModule(t_builder, t_def_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCProperListTypeInfo"), t_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCProperListTypeInfo"), t_type_index);
         MCScriptAddTypeToModule(t_builder, MCNAME("list"), t_type_index, t_def_index);
         MCScriptAddExportToModule(t_builder, t_def_index);
         
@@ -136,34 +136,34 @@ bool MCScriptInitialize(void)
         
         uindex_t t_bool_type_index;
         MCScriptAddDefinitionToModule(t_builder, t_bool_type_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCBoolTypeInfo"), t_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCForeignBoolTypeInfo"), t_type_index);
         MCScriptAddTypeToModule(t_builder, MCNAME("bool"), t_type_index, t_bool_type_index);
         MCScriptAddExportToModule(t_builder, t_bool_type_index);
         
         MCScriptAddDefinitionToModule(t_builder, t_def_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCIntTypeInfo"), t_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCForeignIntTypeInfo"), t_type_index);
         MCScriptAddTypeToModule(t_builder, MCNAME("int"), t_type_index, t_def_index);
         MCScriptAddExportToModule(t_builder, t_def_index);
         
         uindex_t t_uint_type_index;
         MCScriptAddDefinitionToModule(t_builder, t_uint_type_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCUIntTypeInfo"), t_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCForeignUIntTypeInfo"), t_type_index);
         MCScriptAddTypeToModule(t_builder, MCNAME("uint"), t_type_index, t_uint_type_index);
         MCScriptAddExportToModule(t_builder, t_uint_type_index);
         
         MCScriptAddDefinitionToModule(t_builder, t_def_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCFloatTypeInfo"), t_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCForeignFloatTypeInfo"), t_type_index);
         MCScriptAddTypeToModule(t_builder, MCNAME("float"), t_type_index, t_def_index);
         MCScriptAddExportToModule(t_builder, t_def_index);
         
         uindex_t t_double_type_index;
         MCScriptAddDefinitionToModule(t_builder, t_double_type_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCDoubleTypeInfo"), t_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCForeignDoubleTypeInfo"), t_type_index);
         MCScriptAddTypeToModule(t_builder, MCNAME("double"), t_type_index, t_double_type_index);
         MCScriptAddExportToModule(t_builder, t_double_type_index);
         
         MCScriptAddDefinitionToModule(t_builder, t_def_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCPointerTypeInfo"), t_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCForeignPointerTypeInfo"), t_type_index);
         MCScriptAddTypeToModule(t_builder, MCNAME("pointer"), t_type_index, t_def_index);
         MCScriptAddExportToModule(t_builder, t_def_index);
         

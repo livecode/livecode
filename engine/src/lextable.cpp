@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -726,6 +726,7 @@ LT factor_table[] =
         {"closebox", TT_PROPERTY, P_CLOSE_BOX},
         {"cmdargs", TT_FUNCTION, F_COMMAND_ARGUMENTS},
         {"cmdkey", TT_FUNCTION, F_COMMAND_KEY},
+        {"cmdname", TT_FUNCTION, F_COMMAND_NAME},
         {"codepoint", TT_CHUNK, CT_CODEPOINT},
         {"codepointoffset", TT_FUNCTION, F_CODEPOINT_OFFSET},
         {"codepointproperty", TT_FUNCTION, F_CODEPOINT_PROPERTY},
@@ -734,7 +735,6 @@ LT factor_table[] =
         {"codeunit", TT_CHUNK, CT_CODEUNIT},
         {"codeunitoffset", TT_FUNCTION, F_CODEUNIT_OFFSET},
         {"codeunits", TT_CLASS, CT_CODEUNIT},
-        {"cmdname", TT_FUNCTION, F_COMMAND_NAME},
         {"collapsebox", TT_PROPERTY, P_COLLAPSE_BOX},
 		// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog
 		{"colordialogcolors", TT_PROPERTY, P_COLOR_DIALOG_COLORS},
@@ -1220,6 +1220,7 @@ LT factor_table[] =
         {"minheight", TT_PROPERTY, P_MIN_HEIGHT},
         {"minimizebox", TT_PROPERTY, P_MINIMIZE_BOX},
         {"minwidth", TT_PROPERTY, P_MIN_WIDTH},
+        {"mirrored", TT_PROPERTY, P_MIRRORED},
 		{"miterlimit", TT_PROPERTY, P_MITER_LIMIT},
         {"mnemonic", TT_PROPERTY, P_MNEMONIC},
         {"mod", TT_BINOP, O_MOD},
@@ -1510,7 +1511,8 @@ LT factor_table[] =
         {"script", TT_PROPERTY, P_SCRIPT},
 		{"scriptexecutionerrors", TT_PROPERTY, P_SCRIPT_EXECUTION_ERRORS},
         {"scriptlimits", TT_FUNCTION, F_SCRIPT_LIMITS},
-		{"scriptparsingerrors", TT_PROPERTY, P_SCRIPT_PARSING_ERRORS},
+        {"scriptonly", TT_PROPERTY, P_SCRIPT_ONLY},
+        {"scriptparsingerrors", TT_PROPERTY, P_SCRIPT_PARSING_ERRORS},
         {"scripttextfont", TT_PROPERTY, P_SCRIPT_TEXT_FONT},
         {"scripttextsize", TT_PROPERTY, P_SCRIPT_TEXT_SIZE},		
         {"scroll", TT_PROPERTY, P_VSCROLL},

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1208,6 +1208,10 @@ public:
     // SN-2014-06-25: [[ IgnoreMouseEvents ]] Setter and getter added
     void SetIgnoreMouseEvents(MCExecContext &ctxt, bool p_ignore);
     void GetIgnoreMouseEvents(MCExecContext &ctxt, bool &r_ignored);
+    
+    // MERG-2015-08-31: [[ ScriptOnly ]] Setter and getter added
+    void GetScriptOnly(MCExecContext &ctxt, bool &r_script_only);
+    void SetScriptOnly(MCExecContext &ctxt, bool p_script_only);
     
     virtual void SetForePixel(MCExecContext& ctxt, uinteger_t* pixel);
 	virtual void SetBackPixel(MCExecContext& ctxt, uinteger_t* pixel);

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -380,9 +380,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #if defined(__GNUC__) || defined (__clang__) || defined (__llvm__)
 #  define ATTRIBUTE_NORETURN  __attribute__((__noreturn__))
 #  define ATTRIBUTE_UNUSED __attribute__((__unused__))
+#  define ATTRIBUTE_PURE __attribute__((__pure__))
 #else
 #  define ATTRIBUTE_NORETURN
 #  define ATTRIBUTE_UNUSED
+#  define ATTRIBUTE_PURE
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1440,6 +1442,8 @@ extern "C" {
 // The 'any' type is essentially a union of all typeinfos.
 MC_DLLEXPORT extern MCTypeInfoRef kMCAnyTypeInfo;
 
+MC_DLLEXPORT MCTypeInfoRef MCAnyTypeInfo(void) ATTRIBUTE_PURE;
+
 // These are typeinfos for all the 'builtin' valueref types.
 MC_DLLEXPORT extern MCTypeInfoRef kMCNullTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCBooleanTypeInfo;
@@ -1452,6 +1456,17 @@ MC_DLLEXPORT extern MCTypeInfoRef kMCSetTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCListTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCProperListTypeInfo;
 
+MC_DLLEXPORT MCTypeInfoRef MCNullTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCBooleanTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCNumberTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCStringTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCNameTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCDataTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCArrayTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCSetTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCListTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCProperListTypeInfo(void) ATTRIBUTE_PURE;
+
 MC_DLLEXPORT extern MCTypeInfoRef kMCBoolTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCIntTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCUIntTypeInfo;
@@ -1459,8 +1474,18 @@ MC_DLLEXPORT extern MCTypeInfoRef kMCFloatTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCDoubleTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCPointerTypeInfo;
 
+MC_DLLEXPORT MCTypeInfoRef MCForeignBoolTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignUIntTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignIntTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignFloatTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignDoubleTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignPointerTypeInfo(void) ATTRIBUTE_PURE;
+
 MC_DLLEXPORT extern MCTypeInfoRef kMCSizeTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCSSizeTypeInfo;
+
+MC_DLLEXPORT MCTypeInfoRef MCForeignSizeTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignSSizeTypeInfo(void) ATTRIBUTE_PURE;
 
 //////////
 

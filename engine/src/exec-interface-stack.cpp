@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -2170,3 +2170,13 @@ void MCStack::GetIgnoreMouseEvents(MCExecContext &ctxt, bool &r_ignored)
     r_ignored = getextendedstate(ECS_IGNORE_MOUSE_EVENTS);
 }
 
+// MERG-2015-08-31: [[ ScriptOnly ]] Setter and getter for scriptOnly
+void MCStack::GetScriptOnly(MCExecContext& ctxt, bool& r_script_only)
+{
+    r_script_only = isscriptonly();
+}
+
+void MCStack::SetScriptOnly(MCExecContext& ctxt, bool p_script_only)
+{
+    m_is_script_only = p_script_only;
+}
