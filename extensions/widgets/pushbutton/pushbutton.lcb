@@ -158,7 +158,6 @@ public handler OnSave(out rProperties as Array)
    put colorToString(mBackgroundColor) into rProperties["backgroundColor"]
    put mBackgroundOpacity into rProperties["opacity"]
 
-   return rProperties
 end handler
 
 public handler OnLoad(in pProperties as Array)
