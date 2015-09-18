@@ -49,9 +49,9 @@ std::string replace_all_copy(
   string retval;
   if (before.length() == after.length()) retval.reserve(original.size());
 
-  auto end = original.end();
-  auto current = original.begin();
-  auto next =
+  std::string::const_iterator end = original.end();
+  std::string::const_iterator current = original.begin();
+  std::string::const_iterator next =
     search(current, end, before.begin(), before.end());
 
   while ( next != end ) {

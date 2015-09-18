@@ -24,7 +24,7 @@
 			'sources':
 			[
 				'googletest/googletest/src/gtest-all.cc',
-				'googletest/googletest/src/gtest_main.cc',
+				'src/gtest_main.cc',
 			],
 
 			'defines':
