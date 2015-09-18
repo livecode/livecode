@@ -543,12 +543,9 @@ constant kWidgetThemeAndroidLight is "Android(Light)"
 private handler setWidgetTheme(in pWidgetTheme as String) returns nothing
 
 	variable tThemeList as List
-	variable tInList as Boolean
-
 	put [kWidgetThemeIos, kWidgetThemeAndroidDark, kWidgetThemeAndroidLight] into tThemeList
-	put pWidgetTheme is in tThemeList into tInList
 
-	if tInList is false then
+	if not(pWidgetTheme is in tThemeList) then
 		throw "invalid widget theme"
 	end if
 
@@ -587,14 +584,15 @@ constant kAndroidColorSchemeBlueGrey is "Blue Grey"
 
 private handler setColorScheme(in pColorScheme as String) returns nothing
 
-	variable tColorSchemeList as List
-	variable tInList as Boolean
-
-	put [kAndroidColorSchemeRed, kAndroidColorSchemePink, kAndroidColorSchemePurple, kAndroidColorSchemeDeepPurple, kAndroidColorSchemeIndigo, kAndroidColorSchemeBlue, kAndroidColorSchemeLightBlue, kAndroidColorSchemeCyan, kAndroidColorSchemeTeal, kAndroidColorSchemeGreen, kAndroidColorSchemeLightGreen, kAndroidColorSchemeLime, kAndroidColorSchemeYellow, kAndroidColorSchemeAmber, kAndroidColorSchemeOrange, kAndroidColorSchemeDeepOrange, kAndroidColorSchemeBrown, kAndroidColorSchemeGrey, kAndroidColorSchemeBlueGrey] into tColorSchemeList
-	put pColorScheme is in tColorSchemeList into tInList
-
 	if pColorScheme is mColorScheme then
 		return
+	end if
+
+	variable tColorSchemeList as List
+	put [kAndroidColorSchemeRed, kAndroidColorSchemePink, kAndroidColorSchemePurple, kAndroidColorSchemeDeepPurple, kAndroidColorSchemeIndigo, kAndroidColorSchemeBlue, kAndroidColorSchemeLightBlue, kAndroidColorSchemeCyan, kAndroidColorSchemeTeal, kAndroidColorSchemeGreen, kAndroidColorSchemeLightGreen, kAndroidColorSchemeLime, kAndroidColorSchemeYellow, kAndroidColorSchemeAmber, kAndroidColorSchemeOrange, kAndroidColorSchemeDeepOrange, kAndroidColorSchemeBrown, kAndroidColorSchemeGrey, kAndroidColorSchemeBlueGrey] into tColorSchemeList
+
+	if not(pColorScheme is in tColorSchemeList) then
+		throw "invalid color scheme"
 	end if
 
 	if mWidgetTheme contains "Android" then
