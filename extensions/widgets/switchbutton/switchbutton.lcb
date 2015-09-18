@@ -427,14 +427,14 @@ private handler getPaint(in pObject as String) returns Paint
 
 	if pObject is "border" then
 		if mSwitchIsOn is false then
-			return solid paint with color [224/255, 224/255, 224/255]
+			return solid paint with color [228/255, 228/255, 228/255]
 		else
-			return solid paint with color [0, 204/255, 0]
+			return solid paint with color [66/255, 212/255, 81/255]
 		end if
 
 	else if pObject is "background" then
 		if mSwitchIsOn is true then
-			return solid paint with color [0, 204/255, 0]
+			return solid paint with color [66/255, 212/255, 81/255]
 
 		else if mSwitchIsOn is false then
 			if mIsPressed is false then
@@ -614,7 +614,11 @@ private handler setSwitch(in pIsOn as Boolean) returns nothing
 end handler
 
 private handler setEnabled(in pIsEnabled as Boolean) returns nothing
-	put pIsEnabled into mIsEnabled
+	if mWidgetTheme is "iOS" then
+		put true into mIsEnabled
+	else
+		put pIsEnabled into mIsEnabled
+	end if
 	redraw all
 end handler
 
