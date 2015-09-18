@@ -17,64 +17,178 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 /*
 A switch button, consisting of two mutually exclusive choices or states.
-
-Name: checked
-Type: property
-Syntax: set the checked of <widget> to <pIsChecked>
-Syntax: get the checked of <widget>
-Summary: The checked state of the switch button.
-
-pIsChecked (boolean): The state of the button.
-
-Description:
-The checked property determines whether the switch button displays as on (true) or off (false).
 */
 
 -- declaring extension as widget, followed by identifier
-widget com.livecode.widget.switchButton
+widget com.livecode.widget.switchbutton
 --
 
 -- dependancy declarations
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
+use com.livecode.library.iconSVG
 --
 
--- metadata
+-- adding metadata to ensure the extension displays correctly in livecode
 metadata title is "Switch Button"
 metadata author is "LiveCode"
 metadata version is "1.0.3"
+metadata preferredSize is "60,48"
 metadata svgicon is "M47.3,0H18.5C8.3,0,0,8.3,0,18.5v0C0,28.7,8.3,37,18.5,37h28.8c10.2,0,18.5-8.3,18.5-18.5v0C65.8,8.3,57.5,0,47.3,0zM19.8,33.5c-8.3,0-15-6.7-15-15c0-8.3,6.7-15,15-15s15,6.7,15,15C34.8,26.8,28,33.5,19.8,33.5z"
 --
 
--- property declarations
-property isChecked			get mIsChecked		set setChecked
-metadata isChecked.default is "false"
---
+/*
+Syntax: set the widgetTheme of <widget> to <pWidgetTheme>
+Syntax: get the widgetTheme of <widget>
+
+Summary: The theme of the widget
+
+Parameters:
+pWidgetTheme(enum): The theme of the widget
+-"iOS"
+-"Android(Dark)"
+-"Android(Light)"
+
+Description:
+Use the <widgetTheme> property to set the theme of the widget.
+*/
+property widgetTheme get mWidgetTheme set setWidgetTheme
+metadata widgetTheme.editor is "com.livecode.pi.enum"
+metadata widgetTheme.options is "iOS,Android(Dark),Android(Light)"
+metadata widgetTheme.default is "iOS"
+metadata widgetTheme.label is "Widget Theme"
+
+/*
+Syntax: set the colorScheme of <widget> to <pColorScheme>
+Syntax: get the colorScheme of <widget>
+
+Summary: The color scheme of the widget (Android only)
+
+Parameters:
+pColorScheme(enum): The color scheme of the widget
+-"Red"
+-"Pink"
+-"Purple"
+-"Deep Purple"
+-"Indigo"
+-"Blue"
+-"Light Blue"
+-"Cyan"
+-"Teal"
+-"Green"
+-"Light Green"
+-"Lime"
+-"Yellow"
+-"Amber"
+-"Orange"
+-"Deep Orange"
+-"Brown"
+-"Grey"
+-"Blue Grey"
+
+Description:
+Use the <colorScheme> property to set the color scheme of the widget.
+This property can be set for Android only, the color scheme for the iOS switch button is fixed.
+*/
+property colorScheme get mColorScheme set setColorScheme
+metadata colorScheme.editor is "com.livecode.pi.enum"
+metadata colorScheme.options is "Red,Pink,Purple,Deep Purple,Indigo,Blue,Light Blue,Cyan,Teal,Green,Light Green,Lime,Yellow,Amber,Orange,Deep Orange,Brown,Grey,Blue Grey"
+metadata colorScheme.default is "Teal"
+metadata colorScheme.label is "Color Scheme"
+
+/*
+Syntax: set the switchIsOn of <widget> to {true | false}
+Syntax: get the switchIsOn of <widget>
+
+Summary: Whether the switch is on or off
+
+Description:
+Use this property to determine whether the switch button displays as on (true) or off (false).
+*/
+property switchIsOn get mSwitchIsOn set setSwitch
+metadata switchIsOn.default is "false"
+metadata switchIsOn.label is "Switch On"
+
+/*
+Syntax: set the buttonIsEnabled of <widget> to {true | false}
+Syntax: get the buttonIsEnabled of <widget>
+
+Summary: Whether the swicth button is enabled or disabled
+
+Description:
+Use this property to determins whether the switch button is enabled (true) or disabled (false).
+*/
+property buttonIsEnabled get mIsEnabled set setEnabled
+metadata buttonIsEnabled.default is "true"
+metadata buttonIsEnabled.default is "Enabled"
 
 -- private instance variables
-private variable mIsChecked as Boolean
-private variable mState as String
+private variable mWidgetTheme as String
+private variable mColorScheme as String
+private variable mSwitchIsOn as Boolean
+private variable mIsEnabled as Boolean
+
+private variable mAnimating as Boolean
+
+-- pressed state for android
+
+private variable mAndroidLightThumbOnColors as Array
+private variable mAndroidLightTrackOnColors as Array
+private variable mAndroidDarkThumbOnColors as Array
+private variable mAndroidDarkTrackOnColors as Array
+
+private variable mAndroidLightThumbOff as Color
+private variable mAndroidLightThumbDisabled as Color
+private variable mAndroidLightTrackOff as Color
+private variable mAndroidLightTrackDisabled as Color
+
+private variable mAndroidDarkThumbOff as Color
+private variable mAndroidDarkThumbDisabled as Color
+private variable mAndroidDarkTrackOff as Color
+private variable mAndroidDarkTrackDisabled as Color
 --
 
 public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
 
-	put mIsChecked into rProperties["checked"]
-	
+	put mWidgetTheme into rProperties["widgetTheme"]
+	put mColorScheme into rProperties["colorScheme"]
+	put mSwitchIsOn into rProperties["checked"]
+	put mIsEnabled into rProperties["enabled"]
+
 	return rProperties
 end handler
 
 public handler OnLoad(in pProperties as Array)
-	put pProperties["checked"] into mIsChecked
+	put pProperties["widgetTheme"] into mWidgetTheme
+	put pProperties["colorScheme"] into mColorScheme
+	put pProperties["checked"] into mSwitchIsOn
+	put pProperties["enabled"] into mIsEnabled
 end handler
 
-public handler OnCreate()
-	put false into mIsChecked
-	put "not animating" into mState
+public handler OnCreate() returns nothing
+	put "iOS" into mWidgetTheme
+	put the empty string into mColorScheme
+	put false into mSwitchIsOn
+	put true into mIsEnabled
+
+	put false into mAnimating
+
+	fetchAndroidColors()
 end handler
 
-public handler OnPaint()
+public handler OnPaint() returns nothing
+
+	if mWidgetTheme is "iOS" then
+		drawIos()
+	else if mWidgetTheme contains "Android" then
+		drawAndroid()
+	end if
+
+end handler
+
+private handler drawIos() returns nothing
 
 	-- draw the check box when animating and not animating
 	set the stroke width of this canvas to 2
@@ -83,79 +197,141 @@ public handler OnPaint()
 	set the paint of this canvas to getPaint("background")
 	fill getPath("box") on this canvas
 	--
-	
-	-- when the state is "not animating"
-	if mState is "not animating" then
-		
-		-- draw the circle 
+
+	-- draw based on whether animating or not
+	if mAnimating then
+		set the stroke width of this canvas to (my width/2)*0.01
+
+		if mSwitchIsOn is false then
+
+			set the paint of this canvas to solid paint with color [96/255, 96/255, 96/255]
+			stroke getPath("left rect") on this canvas
+			stroke getPath("ellipse") on this canvas
+			stroke getPath("left circle") on this canvas
+
+			set the paint of this canvas to solid paint with color [1,1,1]
+			fill getPath("left rect") on this canvas
+			fill getPath("ellipse") on this canvas
+			fill getPath("left circle") on this canvas
+
+		else if mSwitchIsOn then
+
+			set the paint of this canvas to solid paint with color [96/255, 96/255, 96/255]
+			stroke getPath("right rect") on this canvas
+			stroke getPath("ellipse") on this canvas
+			stroke getPath("right circle") on this canvas
+
+			set the paint of this canvas to solid paint with color [1,1,1]
+			fill getPath("right rect") on this canvas
+			fill getPath("ellipse") on this canvas
+			fill getPath("right circle") on this canvas
+
+		end if
+
+	else
+		-- draw the circle
 		set the paint of this canvas to getPaint("circle")
-		
-		if mIsChecked is true then
+
+		if mSwitchIsOn then
 			fill getPath("right circle") on this canvas
 		else
 			fill getPath("left circle") on this canvas
 		end if
-	
+
 		set the paint of this canvas to solid paint with color [96/255, 96/255, 96/255]
 		set the stroke width of this canvas to 0.5
 
-		if mIsChecked is true then
+		if mSwitchIsOn then
 			stroke getPath("right circle") on this canvas
 		else
 			stroke getPath("left circle") on this canvas
 		end if
 		--
-	
-	-- when the state is "animating"
-	else if mState is "animating" then
-		set the stroke width of this canvas to (my width/2)*0.01
-		
-		if mIsChecked is false then
-		
-			set the paint of this canvas to solid paint with color [96/255, 96/255, 96/255]
-			stroke getPath("left rect") on this canvas
-			stroke getPath("ellipse") on this canvas
-			stroke getPath("left circle") on this canvas
-			
-			set the paint of this canvas to solid paint with color [1,1,1]
-			fill getPath("left rect") on this canvas
-			fill getPath("ellipse") on this canvas
-			fill getPath("left circle") on this canvas
-	
-		else if mIsChecked is true then
-		
-			set the paint of this canvas to solid paint with color [96/255, 96/255, 96/255]
-			stroke getPath("right rect") on this canvas
-			stroke getPath("ellipse") on this canvas
-			stroke getPath("right circle") on this canvas
-	
-			set the paint of this canvas to solid paint with color [1,1,1]
-			fill getPath("right rect") on this canvas
-			fill getPath("ellipse") on this canvas
-			fill getPath("right circle") on this canvas
-		
-		end if
-		
 	end if
 	--
-	
 end handler
 
-public handler OnMouseDown()
-	if the click position is within getRect("bounding box") then
-		put "animating" into mState
-		redraw all
-	end if
+private handler drawAndroid() returns nothing
+
+	-- draw the track
+	set the paint of this canvas to fetchPaint("track")
+	fill fetchPath("track") on this canvas
+
+	-- draw the circle
+	set the paint of this canvas to fetchPaint("thumb")
+	fill fetchPath("thumb") on this canvas
+
 end handler
 
-public handler OnMouseUp()
-	if the click position is within getRect("bounding box") then
-		setChecked(not(mIsChecked))
-		put "not animating" into mState
-		redraw all
+private handler fetchPaint(in pObject as String) returns Paint
+	variable tColorString as String
+	variable tColor as Color
+	variable tTheme as String
+
+	if mWidgetTheme is "Android(Light)" then
+		if mIsEnabled then
+			if mSwitchIsOn then
+				if pObject is "thumb" then
+					put mAndroidLightThumbOnColors[mColorScheme] into tColorString
+				else if pObject is "track" then
+					put mAndroidLightTrackOnColors[mColorScheme] into tColorString
+				end if
+				put stringToColor(tColorString) into tColor
+			else
+				if pObject is "thumb" then
+					put mAndroidLightThumbOff into tColor
+				else if pObject is "track" then
+					put mAndroidLightTrackOff into tColor
+				end if
+			end if
+		else
+			if pObject is "thumb" then
+				put mAndroidLightThumbDisabled into tColor
+			else if pObject is "track" then
+				put mAndroidLightTrackDisabled into tColor
+			end if
+		end if
+
+	else if mWidgetTheme is "Android(Dark)" then
+		if mIsEnabled then
+			if mSwitchIsOn then
+				if pObject is "thumb" then
+					put mAndroidDarkThumbOnColors[mColorScheme] into tColorString
+				else if pObject is "track" then
+					put mAndroidDarkTrackOnColors[mColorScheme] into tColorString
+				end if
+				put stringToColor(tColorString) into tColor
+			else
+				if pObject is "thumb" then
+					put mAndroidDarkThumbOff into tColor
+				else if pObject is "track" then
+					put mAndroidDarkTrackOff into tColor
+				end if
+			end if
+		else
+			if pObject is "thumb" then
+				put mAndroidDarkThumbDisabled into tColor
+			else if pObject is "track" then
+				put mAndroidDarkTrackDisabled into tColor
+			end if
+		end if
+
 	end if
 
-	post "mouseUp" with [mIsChecked]
+	return solid paint with tColor
+end handler
+
+private handler fetchPath(in pObject as String) returns Path
+	if pObject is "thumb" then
+		if mSwitchIsOn then
+			return circle path centered at point [(my width)/2 + (my height)/4, (my height)/2] with radius (my height)/3
+		else
+			return circle path centered at point [(my width)/2 - (my height)/4, (my height)/2] with radius (my height)/3
+		end if
+
+	else if pObject is "track" then
+		return rounded rectangle path of rectangle [(my width)/2 - (my height)/2, (my height)/3, (my width)/2 + (my height)/2, 2*(my height)/3] with radius (my height)/6
+	end if
 end handler
 
 private handler getPath(in pShape as String) returns Path
@@ -183,35 +359,298 @@ end handler
 private handler getPaint(in pObject as String) returns Paint
 
 	if pObject is "border" then
-		if mIsChecked is false then
+		if mSwitchIsOn is false then
 			return solid paint with color [224/255, 224/255, 224/255]
 		else
 			return solid paint with color [0, 204/255, 0]
 		end if
-		
+
 	else if pObject is "background" then
-		if mIsChecked is true then
+		if mSwitchIsOn is true then
 			return solid paint with color [0, 204/255, 0]
-				
-		else if mIsChecked is false then
-			if mState is "not animating" then
+
+		else if mSwitchIsOn is false then
+			if mAnimating is false then
 				return solid paint with color [1,1,1]
-			else 
+			else
 				return solid paint with color [224/255, 224/255, 224/255]
 			end if
-			
+
 		end if
-		
+
 	else if pObject is "circle" then
 		return solid paint with color [1,1,1]
-		
+
 	end if
 end handler
 
-public handler setChecked(in pIsChecked as Boolean) returns nothing
-	put pIsChecked into mIsChecked
+private handler fetchAndroidColors() returns nothing
+
+	put the empty array into mAndroidLightThumbOnColors
+	put "238,43,41" into mAndroidLightThumbOnColors["Red"]
+	put "224,0,81" into mAndroidLightThumbOnColors["Pink"]
+	put "137,0,161" into mAndroidLightThumbOnColors["Purple"]
+	put "83,33,168" into mAndroidLightThumbOnColors["Deep Purple"]
+	put "48,58,165" into mAndroidLightThumbOnColors["Indigo"]
+	put "30,128,240" into mAndroidLightThumbOnColors["Blue"]
+	put "20,150,241" into mAndroidLightThumbOnColors["Light Blue"]
+	put "22,175,202" into mAndroidLightThumbOnColors["Cyan"]
+	put "17,133,117" into mAndroidLightThumbOnColors["Teal"]
+	put "63,164,63" into mAndroidLightThumbOnColors["Green"]
+	put "122,186,58" into mAndroidLightThumbOnColors["Light Green"]
+	put "194,215,45" into mAndroidLightThumbOnColors["Lime"]
+	put "254,233,46" into mAndroidLightThumbOnColors["Yellow"]
+	put "253,182,13" into mAndroidLightThumbOnColors["Amber"]
+	put "253,133,9" into mAndroidLightThumbOnColors["Orange"]
+	put "251,63,28" into mAndroidLightThumbOnColors["Deep Orange"]
+	put "101,67,56" into mAndroidLightThumbOnColors["Brown"]
+	put "140,140,140" into mAndroidLightThumbOnColors["Grey"]
+	put "78,106,120" into mAndroidLightThumbOnColors["Blue Grey"]
+
+	put the empty array into mAndroidLightTrackOnColors
+	put "238,43,41,128" into mAndroidLightTrackOnColors["Red"]
+	put "224,0,81,128" into mAndroidLightTrackOnColors["Pink"]
+	put "137,0,161,128" into mAndroidLightTrackOnColors["Purple"]
+	put "83,33,168,128" into mAndroidLightTrackOnColors["Deep Purple"]
+	put "48,58,165,128" into mAndroidLightTrackOnColors["Indigo"]
+	put "30,128,240,128" into mAndroidLightTrackOnColors["Blue"]
+	put "20,150,241,128" into mAndroidLightTrackOnColors["Light Blue"]
+	put "22,175,202,128" into mAndroidLightTrackOnColors["Cyan"]
+	put "17,133,117,128" into mAndroidLightTrackOnColors["Teal"]
+	put "63,164,63,128" into mAndroidLightTrackOnColors["Green"]
+	put "122,186,58,128" into mAndroidLightTrackOnColors["Light Green"]
+	put "194,215,45,128" into mAndroidLightTrackOnColors["Lime"]
+	put "254,233,46,128" into mAndroidLightTrackOnColors["Yellow"]
+	put "253,182,13,128" into mAndroidLightTrackOnColors["Amber"]
+	put "253,133,9,128" into mAndroidLightTrackOnColors["Orange"]
+	put "251,63,28,128" into mAndroidLightTrackOnColors["Deep Orange"]
+	put "101,67,56,128" into mAndroidLightTrackOnColors["Brown"]
+	put "140,140,140,128" into mAndroidLightTrackOnColors["Grey"]
+	put "78,106,120,128" into mAndroidLightTrackOnColors["Blue Grey"]
+
+	put the empty array into mAndroidDarkThumbOnColors
+	put "233,133,136" into mAndroidDarkThumbOnColors["Red"]
+	put "239,119,162" into mAndroidDarkThumbOnColors["Pink"]
+	put "193,124,206" into mAndroidDarkThumbOnColors["Purple"]
+	put "163,135,210" into mAndroidDarkThumbOnColors["Deep Purple"]
+	put "141,149,209" into mAndroidDarkThumbOnColors["Indigo"]
+	put "127,190,247" into mAndroidDarkThumbOnColors["Blue"]
+	put "112,201,248" into mAndroidDarkThumbOnColors["Light Blue"]
+	put "113,215,229" into mAndroidDarkThumbOnColors["Cyan"]
+	put "112,194,184" into mAndroidDarkThumbOnColors["Teal"]
+	put "150,207,151" into mAndroidDarkThumbOnColors["Green"]
+	put "186,220,148" into mAndroidDarkThumbOnColors["Light Green"]
+	put "224,237,138" into mAndroidDarkThumbOnColors["Lime"]
+	put "255,245,140" into mAndroidDarkThumbOnColors["Yellow"]
+	put "254,219,111" into mAndroidDarkThumbOnColors["Amber"]
+	put "254,193,109" into mAndroidDarkThumbOnColors["Orange"]
+	put "253,153,127" into mAndroidDarkThumbOnColors["Deep Orange"]
+	put "174,154,147" into mAndroidDarkThumbOnColors["Brown"]
+	put "234,234,234" into mAndroidDarkThumbOnColors["Grey"]
+	put "160,176,185" into mAndroidDarkThumbOnColors["Blue Grey"]
+
+	put the empty array into mAndroidDarkTrackOnColors
+	put "233,133,136,128" into mAndroidDarkTrackOnColors["Red"]
+	put "239,119,162,128" into mAndroidDarkTrackOnColors["Pink"]
+	put "193,124,206,128" into mAndroidDarkTrackOnColors["Purple"]
+	put "163,135,210,128" into mAndroidDarkTrackOnColors["Deep Purple"]
+	put "141,149,209,128" into mAndroidDarkTrackOnColors["Indigo"]
+	put "127,190,247,128" into mAndroidDarkTrackOnColors["Blue"]
+	put "112,201,248,128" into mAndroidDarkTrackOnColors["Light Blue"]
+	put "113,215,229,128" into mAndroidDarkTrackOnColors["Cyan"]
+	put "112,194,184,128" into mAndroidDarkTrackOnColors["Teal"]
+	put "150,207,151,128" into mAndroidDarkTrackOnColors["Green"]
+	put "186,220,148,128" into mAndroidDarkTrackOnColors["Light Green"]
+	put "224,237,138,128" into mAndroidDarkTrackOnColors["Lime"]
+	put "255,245,140,128" into mAndroidDarkTrackOnColors["Yellow"]
+	put "254,219,111,128" into mAndroidDarkTrackOnColors["Amber"]
+	put "254,193,109,128" into mAndroidDarkTrackOnColors["Orange"]
+	put "253,153,127,128" into mAndroidDarkTrackOnColors["Deep Orange"]
+	put "174,154,147,128" into mAndroidDarkTrackOnColors["Brown"]
+	put "234,234,234,128" into mAndroidDarkTrackOnColors["Grey"]
+	put "160,176,185,128" into mAndroidDarkTrackOnColors["Blue Grey"]
+
+	put color [249/255,249/255,249/255] into mAndroidLightThumbOff
+	put color [175/255,175/255,175/255] into mAndroidLightThumbDisabled
+	put color [0,0,0,0.26] into mAndroidLightTrackOff
+	put color [0,0,0,0.12] into mAndroidLightTrackDisabled
+
+	put color [175/255,175/255,175/255] into mAndroidDarkThumbOff
+	put color [51/255,51/255,51/255] into mAndroidDarkThumbDisabled
+	put color [1,1,1,0.3] into mAndroidDarkTrackOff
+	put color [1,1,1,0.1] into mAndroidDarkTrackDisabled
+
+end handler
+
+public handler OnMouseDown() returns nothing
+	if the click position is within getRect("bounding box") then
+		put true into mAnimating
+		redraw all
+	end if
+end handler
+
+public handler OnMouseUp() returns nothing
+	if the click position is within getRect("bounding box") then
+		setSwitch(not(mSwitchIsOn))
+		put false into mAnimating
+		redraw all
+	end if
+
+	post "mouseUp" with [mSwitchIsOn]
+end handler
+
+--------------------------------------------------------------------------------
+--
+--		Setting Properties
+--
+--------------------------------------------------------------------------------
+
+constant kWidgetThemeIos is "iOS"
+constant kWidgetThemeAndroidDark is "Android(Dark)"
+constant kWidgetThemeAndroidLight is "Android(Light)"
+
+private handler setWidgetTheme(in pWidgetTheme as String) returns nothing
+
+	variable tThemeList as List
+	variable tInList as Boolean
+
+	put [kWidgetThemeIos, kWidgetThemeAndroidDark, kWidgetThemeAndroidLight] into tThemeList
+	put pWidgetTheme is in tThemeList into tInList
+
+	if tInList is false then
+		throw "invalid widget theme"
+	end if
+
+	if pWidgetTheme is mWidgetTheme then
+		return
+	end if
+
+	put pWidgetTheme into mWidgetTheme
+	if mWidgetTheme contains "Android" then
+		put "Teal" into mColorScheme
+	else
+		put the empty string into mColorScheme
+	end if
 	redraw all
 end handler
 
+constant kAndroidColorSchemeRed is "Red"
+constant kAndroidColorSchemePink is "Pink"
+constant kAndroidColorSchemePurple is "Purple"
+constant kAndroidColorSchemeDeepPurple is "Deep Purple"
+constant kAndroidColorSchemeIndigo is "Indigo"
+constant kAndroidColorSchemeBlue is "Blue"
+constant kAndroidColorSchemeLightBlue is "Light Blue"
+constant kAndroidColorSchemeCyan is "Cyan"
+constant kAndroidColorSchemeTeal is "Teal"
+constant kAndroidColorSchemeGreen is "Green"
+constant kAndroidColorSchemeLightGreen is "Light Green"
+constant kAndroidColorSchemeLime is "Lime"
+constant kAndroidColorSchemeYellow is "Yellow"
+constant kAndroidColorSchemeAmber is "Amber"
+constant kAndroidColorSchemeOrange is "Orange"
+constant kAndroidColorSchemeDeepOrange is "Deep Orange"
+constant kAndroidColorSchemeBrown is "Brown"
+constant kAndroidColorSchemeGrey is "Grey"
+constant kAndroidColorSchemeBlueGrey is "Blue Grey"
+
+private handler setColorScheme(in pColorScheme as String) returns nothing
+
+	variable tColorSchemeList as List
+	variable tInList as Boolean
+
+	put [kAndroidColorSchemeRed, kAndroidColorSchemePink, kAndroidColorSchemePurple, kAndroidColorSchemeDeepPurple, kAndroidColorSchemeIndigo, kAndroidColorSchemeBlue, kAndroidColorSchemeLightBlue, kAndroidColorSchemeCyan, kAndroidColorSchemeTeal, kAndroidColorSchemeGreen, kAndroidColorSchemeLightGreen, kAndroidColorSchemeLime, kAndroidColorSchemeYellow, kAndroidColorSchemeAmber, kAndroidColorSchemeOrange, kAndroidColorSchemeDeepOrange, kAndroidColorSchemeBrown, kAndroidColorSchemeGrey, kAndroidColorSchemeBlueGrey] into tColorSchemeList
+	put pColorScheme is in tColorSchemeList into tInList
+
+	if pColorScheme is mColorScheme then
+		return
+	end if
+
+	if mWidgetTheme contains "Android" then
+		put pColorScheme into mColorScheme
+	else
+		put the empty string into mColorScheme
+	end if
+	redraw all
+
+end handler
+
+private handler setSwitch(in pIsOn as Boolean) returns nothing
+	put pIsOn into mSwitchIsOn
+	redraw all
+end handler
+
+private handler setEnabled(in pIsEnabled as Boolean) returns nothing
+	put pIsEnabled into mIsEnabled
+	redraw all
+end handler
+
+--------------------------------------------------------------------------------
+--
+--		Converting Data Types
+--
+--------------------------------------------------------------------------------
+
+-- this handler converts a string of numbers to an RGBA color
+private handler stringToColor(in pString as String) returns Color
+   variable tRed as Real
+	variable tGreen as Real
+	variable tBlue as Real
+	variable tAlpha as Real
+
+	variable tComponentList as List
+	split pString by "," into tComponentList
+
+	variable tComponentCount
+	put the number of elements in tComponentList into tComponentCount
+	if tComponentCount is not 3 and tComponentCount is not 4 then
+		-- Invalid number of components detected
+		throw "Invalid color"
+	end if
+
+	put (element 1 of tComponentList) parsed as number into tRed
+	put (element 2 of tComponentList) parsed as number into tGreen
+	put (element 3 of tComponentList) parsed as number into tBlue
+
+	if tComponentCount is 4 then
+		put (element 4 of tComponentList) parsed as number into tAlpha
+	else
+		put 255 into tAlpha
+	end if
+
+	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha/255 ]
+end handler
+
+-- this handler converts an RGBA color to a string of numbers
+private handler colorToString(in pColor as Color) returns String
+
+   variable tRed as String
+   variable tGreen as String
+   variable tBlue as String
+   variable tAlpha as String
+
+   put stripZeros((the rounded of ((the red of pColor) * 255)) formatted as string) into tRed
+   put stripZeros((the rounded of ((the green of pColor) * 255)) formatted as string) into tGreen
+   put stripZeros((the rounded of ((the blue of pColor) * 255)) formatted as string) into tBlue
+	put stripZeros((the rounded of ((the alpha of pColor) * 255)) formatted as string) into tAlpha
+
+   return tRed & "," & tGreen & "," & tBlue & "," & tAlpha
+end handler
+
+-- this handler strips the zeros when a integer is formatted as a string
+private handler stripZeros(in tString as String) returns String
+	if tString contains "." then
+		variable tCount as Integer
+		repeat while ((the last char of tString) is in ".0")
+			if the last char of tString is "." then
+				delete the last char of tString
+				exit repeat
+			else
+				delete the last char of tString
+			end if
+		end repeat
+	end if
+	return tString
+end handler
 
 end widget
