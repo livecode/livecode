@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -992,7 +992,8 @@ enum MCPlatformPlayerProperty
 	kMCPlatformPlayerPropertyOnlyPlaySelection,
 	
 	kMCPlatformPlayerPropertyLoop,
-	
+    kMCPlatformPlayerPropertyMirrored,
+    	
 	kMCPlatformPlayerPropertyQTVRNode,
 	kMCPlatformPlayerPropertyQTVRPan,
 	kMCPlatformPlayerPropertyQTVRTilt,
@@ -1037,7 +1038,7 @@ struct MCPlatformPlayerQTVRConstraints
 	double z_min, z_max;
 };
 
-void MCPlatformCreatePlayer(MCPlatformPlayerRef& r_player);
+void MCPlatformCreatePlayer(bool dontuseqt, MCPlatformPlayerRef& r_player);
 
 void MCPlatformPlayerRetain(MCPlatformPlayerRef player);
 void MCPlatformPlayerRelease(MCPlatformPlayerRef player);

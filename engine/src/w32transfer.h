@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -301,9 +301,9 @@ typedef bool (*MCWindowsConversionCallback)(MCDataRef p_input, STGMEDIUM& r_stor
 //
 //  Description:
 //    The TransferData class is an implementation of the OLE IDataObject
-//    implementation specific to Revolution.
+//    implementation specific to LiveCode.
 //
-//    The class allows the publishing of a number of Revolution formats that
+//    The class allows the publishing of a number of LiveCode formats that
 //    are presented in formats appropriate to the platform. Conversion is done
 //    on demand by a client of the object.
 //
@@ -340,13 +340,13 @@ public:
 	// constructs a standard FORMATETC structure.
 	bool Publish(CLIPFORMAT p_format, TYMED p_storage, MCDataRef p_data, MCWindowsConversionCallback p_converter);
 
-	// Publish the given Revolution transfer type in this object
+	// Publish the given LiveCode transfer type in this object
 	//
 	// This call will publish appropriate external formats for the given
 	// internal format
 	bool Publish(MCTransferType p_type, MCDataRef p_data);
 
-	// Publish the contents of the Revolution pasteboard in this object
+	// Publish the contents of the LiveCode pasteboard in this object
 	//
 	// Note that this will skip the PRIVATE data type.
 	bool Publish(MCPasteboard *p_pasteboard);
@@ -487,7 +487,7 @@ private:
 //    abstract interface.
 //
 //    This class wraps an OLE IDataObject and performs appropriate format
-//    conversions specific to the Revolution transfer type.
+//    conversions specific to the LiveCode transfer type.
 //
 //  Known Issues:
 //    <none>
@@ -526,7 +526,7 @@ public:
 
 private:
 	// An Entry represents a given type that is published by the underlying
-	// data object. It contains the Revolution transfer type, clipboard format
+	// data object. It contains the LiveCode transfer type, clipboard format
 	// from which it can be derived and a cache of the data (filled on
 	// demand by 'Fetch').
 	//
@@ -573,7 +573,7 @@ private:
 //    MCConvertTextToWindowsAnsi
 //
 //  Description:
-//    Convert the given input string in the internal Revolution text format to
+//    Convert the given input string in the internal LiveCode text format to
 //    Windows CF_TEXT format.
 //
 //    This function simply does line-ending conversion mapping LF to CRLF
@@ -590,7 +590,7 @@ bool MCConvertTextToWindowsAnsi(MCDataRef p_input, STGMEDIUM& r_storage);
 //    MCConvertTextToWindowsAnsi
 //
 //  Description:
-//    Convert the given input string in the internal Revolution text format to
+//    Convert the given input string in the internal LiveCode text format to
 //    Windows CF_UNICODETEXT format.
 //
 //    This function first converts line endings from LF to CRLF, then converts
@@ -604,7 +604,7 @@ bool MCConvertTextToWindowsWide(MCDataRef p_input, STGMEDIUM& r_storage);
 //    MCConvertUnicodeToWindowsWide
 //
 //  Description:
-//    Convert the given input string in the internal Revolution text format to
+//    Convert the given input string in the internal LiveCode text format to
 //    Windows CF_UNICODETEXT format.
 //
 //    This call first converts the text to UTF-8, does an LF -> CRLF mapping
@@ -618,7 +618,7 @@ bool MCConvertUnicodeToWindowsWide(MCDataRef p_input, STGMEDIUM& r_storage);
 //    MCConvertUnicodeToWindowsWide
 //
 //  Description:
-//    Convert the given input string in the internal Revolution text format to
+//    Convert the given input string in the internal LiveCode text format to
 //    Windows CF_UNICODETEXT format.
 //
 //    This call first converts the text to UTF-8 and does an LF -> CRLF
@@ -632,7 +632,7 @@ bool MCConvertUnicodeToWindowsAnsi(MCDataRef p_input, STGMEDIUM& r_storage);
 //    MCConvertStyledTextToWindowsWide
 //
 //  Description:
-//    Convert the given input string in the internal Revolution styled text
+//    Convert the given input string in the internal LiveCode styled text
 //    format to wide text.
 //
 //    This call chains a conversion from styled text to unicode, then unicode
@@ -646,7 +646,7 @@ bool MCConvertStyledTextToWindowsWide(MCDataRef p_input, STGMEDIUM& r_storage);
 //    MCConvertStyledTextToWindowsAnsi
 //
 //  Description:
-//    Convert the given input string in the internal Revolution styled text
+//    Convert the given input string in the internal LiveCode styled text
 //    format to ansi text.
 //
 //    This call chains a conversion from styled text to text, then text to
@@ -660,7 +660,7 @@ bool MCConvertStyledTextToWindowsAnsi(MCDataRef p_input, STGMEDIUM& r_storage);
 //    MCConvertStyledTextToWindowsRTF
 //
 //  Description:
-//    Convert the given input string in the internal Revolution styled text
+//    Convert the given input string in the internal LiveCode styled text
 //    format to RTF suitable to be published on the Windows clipboard.
 //
 bool MCConvertStyledTextToWindowsRTF(MCDataRef p_input, STGMEDIUM& r_storage);

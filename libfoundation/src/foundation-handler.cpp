@@ -246,8 +246,6 @@ bool MCHandlerGetFunctionPtr(MCHandlerRef self, void*& r_function_ptr)
 
 void __MCHandlerDestroy(__MCHandler *self)
 {
-    if (self -> callbacks -> release != nil)
-        self -> callbacks -> release(MCHandlerGetContext(self));
     if (self -> function_ptr != nil)
         ffi_closure_free(self -> function_ptr);
 }

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -139,6 +139,7 @@ public:
     void GetLoadState(MCExecContext& ctxt, MCNativeControlLoadState& r_state);
     void GetPlaybackState(MCExecContext& ctxt, MCNativeControlPlaybackState& r_state);
     void GetNaturalSize(MCExecContext& ctxt, integer_t r_size[2]);
+    void GetIsReadyForDisplay(MCExecContext& ctxt, bool& r_value);
     
     
 	// Player-specific actions
@@ -197,6 +198,7 @@ MCPropertyInfo MCiOSPlayerControl::kProperties[] =
     DEFINE_RO_CTRL_SET_PROPERTY(P_LOAD_STATE, NativeControlLoadState, MCiOSPlayerControl, LoadState)
     DEFINE_RO_CTRL_ENUM_PROPERTY(P_PLAYBACK_STATE, NativeControlPlaybackState, MCiOSPlayerControl, PlaybackState)
     DEFINE_RO_CTRL_PROPERTY(P_NATURAL_SIZE, Int32X2, MCiOSPlayerControl, NaturalSize)
+    DEFINE_RO_CTRL_PROPERTY(P_READY_FOR_DISPLAY, Bool, MCiOSPlayerControl, IsReadyForDisplay)
 };
 
 MCObjectPropertyTable MCiOSPlayerControl::kPropertyTable =
@@ -593,6 +595,20 @@ void MCiOSPlayerControl::GetIsPreparedToPlay(MCExecContext& ctxt, bool& r_value)
         r_value = false;
 }
 
+// SN-2015-09-04: [[ Bug 9744 ]] Add getter for readyForDisplay property
+void MCiOSPlayerControl::GetIsReadyForDisplay(MCExecContext& ctxt, bool& r_value)
+{
+    r_value = false;
+    
+    if (m_controller != nil)
+    {
+#ifdef __IPHONE_6_0
+        if (MCmajorosversion >= 600)
+            r_value = [m_controller readyForDisplay];
+#endif
+    }
+}
+
 void MCiOSPlayerControl::GetLoadState(MCExecContext& ctxt, MCNativeControlLoadState& r_state)
 {
     uint32_t t_load_state;
@@ -872,6 +888,20 @@ Exec_stat MCiOSPlayerControl::Get(MCNativeControlProperty p_property, MCExecPoin
 		case kMCNativeControlPropertyIsPreparedToPlay:
 			if (m_controller != nil)
 				FormatBoolean(ep, [m_controller isPreparedToPlay]);
+			return ES_NORMAL;
+		
+		// PM-2015-07-09: [[ Bug 9744 ]] Added readyForDisplay (RO) property for native player
+		case kMCNativeControlPropertyReadyForDisplay:
+			if (m_controller != nil)
+			{
+#ifdef __IPHONE_6_0
+				if (MCmajorosversion >= 600)
+					FormatBoolean(ep, [m_controller readyForDisplay]);
+				else
+#endif
+				FormatBoolean(ep, false);
+			}
+			
 			return ES_NORMAL;
 			
 		case kMCNativeControlPropertyLoadState:

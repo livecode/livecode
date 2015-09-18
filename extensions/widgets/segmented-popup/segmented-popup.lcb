@@ -60,8 +60,6 @@ public handler OnSave(out rData as array)
 	put mTheme into rData["theme"]
 	put mLabels into rData["labels"]
 	put mSelected into rData["selected"]
-	
-	return rData
 end handler
 ----------
 

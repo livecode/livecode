@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -530,9 +530,6 @@ void MCB_parsebreaks(MCExecContext& ctxt, MCStringRef p_input)
 
 			if (t_success)
 				t_success = MCStringDivideAtIndex(*t_break, t_offset, &t_head, &t_tail);
-			
-			if (t_success)
-				t_success = MCInterfaceTryToResolveObject(ctxt, *t_head, t_object);
 
 			MCAutoStringRef t_line_string;
 			MCAutoStringRef t_info;
@@ -540,12 +537,20 @@ void MCB_parsebreaks(MCExecContext& ctxt, MCStringRef p_input)
 			if (t_success)
 				t_success = MCStringDivideAtChar(*t_tail, ',', kMCCompareExact, &t_line_string, &t_info);
 			
+            // AL-2015-07-31: [[ Bug 15822 ]] Don't abort parsing if a given line is not correctly formatted
+            bool t_valid_break;
+            t_valid_break = t_success;
+            
+            if (t_valid_break)
+                t_valid_break = MCInterfaceTryToResolveObject(ctxt, *t_head, t_object);
+            
 			int32_t t_line;
-
-			if (t_success)
-				t_success = MCU_strtol(*t_line_string, t_line);
-
-			if (t_success && t_line > 0)
+            t_line = 0;
+            
+			if (t_valid_break)
+                t_valid_break = MCU_strtol(*t_line_string, t_line) && t_line > 0;
+            
+            if (t_valid_break)
 			{
 				Breakpoint *t_new_breakpoints;
 				t_new_breakpoints = (Breakpoint *)realloc(MCbreakpoints, sizeof(Breakpoint) * (MCnbreakpoints + 1));
@@ -553,7 +558,7 @@ void MCB_parsebreaks(MCExecContext& ctxt, MCStringRef p_input)
 				{
 					MCbreakpoints = t_new_breakpoints;
 					MCbreakpoints[MCnbreakpoints] . object = t_object . object;
-					MCbreakpoints[MCnbreakpoints] . line = t_line;
+					MCbreakpoints[MCnbreakpoints] . line = (uint32_t)t_line;
 					MCbreakpoints[MCnbreakpoints] . info = MCValueRetain(*t_info);
 					MCnbreakpoints++;
 				}
@@ -696,19 +701,22 @@ void MCB_parsewatches(MCExecContext& ctxt, MCStringRef p_input)
 		if (t_success)
 			t_success = MCStringDivideAtChar(*t_hname_tail, ',', kMCCompareExact, &t_vname, &t_express);
 
-		MCObjectPtr t_object;
-
-        // SN-2014-09-18: [[ Bug 13453 ]] With an empty string (no watchedVariables anymore), TryToResolveObject fails
-		if (t_success)
-			t_success = MCInterfaceTryToResolveObject(ctxt, *t_obj, t_object);
+        // AL-2015-07-31: [[ Bug 15822 ]] Don't abort parsing if a given line is not correctly formatted
+        bool t_valid_watch;
+        t_valid_watch = t_success;
         
-        if (t_success)
+		MCObjectPtr t_object;
+        // SN-2014-09-18: [[ Bug 13453 ]] With an empty string (no watchedVariables anymore), TryToResolveObject fails
+		if (t_valid_watch)
+			t_valid_watch = MCInterfaceTryToResolveObject(ctxt, *t_obj, t_object);
+        
+        if (t_valid_watch)
         {
 			// OK-2010-01-14: [[Bug 6506]] - Allow globals in watchedVariables
 			//   If the object and handler are empty we assume its a global, otherwise
 			//   do the previous behavior.
 
-			if ((MCStringGetLength(*t_obj) == 0 && MCStringGetLength(*t_hname) == 0) ||
+			if ((MCStringIsEmpty(*t_obj) && MCStringIsEmpty(*t_hname)) ||
 				t_object . object != nil)
 			{
 				Watchvar *t_new_watches;

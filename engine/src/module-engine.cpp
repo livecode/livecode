@@ -52,6 +52,9 @@ struct __MCScriptObjectImpl
 
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCEngineScriptObjectTypeInfo;
 
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCEngineScriptObjectTypeInfo()
+{ return kMCEngineScriptObjectTypeInfo; }
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static bool s_last_message_was_handled = false;
