@@ -1786,8 +1786,16 @@ static bool save_array_to_stream(void *p_context, MCArrayRef p_array, MCNameRef 
 		t_str_value = nil;
 		break;
 	case kMCValueTypeCodeArray:
-		t_type = VF_ARRAY;
-		t_str_value = nil;
+        if (MCArrayGetCount((MCArrayRef)p_value) != 0)
+        {
+            t_type = VF_ARRAY;
+            t_str_value = nil;
+        }
+        else
+        {
+            t_type = VF_STRING;
+            t_str_value = kMCEmptyString;
+        }
 		break;
 	default:
 		MCAssert(false);
