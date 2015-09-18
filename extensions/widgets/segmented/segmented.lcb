@@ -647,7 +647,17 @@ private handler updateProperties() returns nothing
 	
 	if (the number of elements in mSegmentNames) < mNumSegments then
 		repeat with tX from 1 up to (mNumSegments-(the number of elements in mSegmentNames))
-			push "Title" onto back of mSegmentNames
+			variable tName as String
+			put (the number of elements in mSegmentNames + 1) formatted as string into tName
+			variable tDotIndex as Number
+			put the index of "." in tName into tDotIndex
+			if tDotIndex is not 0 then
+				put "segment" & (char 1 to tDotIndex - 1 of tName) into tName
+			else
+				put "segment" before tName
+			end if
+			
+			push tName onto back of mSegmentNames
 		end repeat
 	else if (the number of elements in mSegmentNames) > mNumSegments then
 		repeat with tX from 1 up to (the number of elements in mSegmentNames)-mNumSegments
