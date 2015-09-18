@@ -147,6 +147,9 @@ private variable mAndroidDarkThumbOff as Color
 private variable mAndroidDarkThumbDisabled as Color
 private variable mAndroidDarkTrackOff as Color
 private variable mAndroidDarkTrackDisabled as Color
+
+private variable mWidth as Real
+private variable mHeight as Real
 --
 
 public handler OnSave(out rProperties as Array)
@@ -175,9 +178,12 @@ public handler OnCreate() returns nothing
 	put false into mAnimating
 
 	fetchAndroidColors()
+	updateVariables()
 end handler
 
 public handler OnPaint() returns nothing
+
+	updateVariables()
 
 	if mWidgetTheme is "iOS" then
 		drawIos()
@@ -256,9 +262,18 @@ private handler drawAndroid() returns nothing
 	set the paint of this canvas to fetchPaint("track")
 	fill fetchPath("track") on this canvas
 
-	-- draw the circle
+	-- draw the thumb
 	set the paint of this canvas to fetchPaint("thumb")
 	fill fetchPath("thumb") on this canvas
+
+	-- draw the thumb border
+	if mWidgetTheme is "Android(Light)" then
+		if mIsEnabled is false or mSwitchIsOn is false then
+			set the paint of this canvas to fetchPaint("thumbBorder")
+			set the stroke width of this canvas to 0.5
+			stroke fetchPath("thumb") on this canvas
+		end if
+	end if
 
 end handler
 
@@ -281,6 +296,8 @@ private handler fetchPaint(in pObject as String) returns Paint
 					put mAndroidLightThumbOff into tColor
 				else if pObject is "track" then
 					put mAndroidLightTrackOff into tColor
+				else if pObject is "thumbBorder" then
+					put color [167/255, 167/255, 167/255] into tColor
 				end if
 			end if
 		else
@@ -288,6 +305,10 @@ private handler fetchPaint(in pObject as String) returns Paint
 				put mAndroidLightThumbDisabled into tColor
 			else if pObject is "track" then
 				put mAndroidLightTrackDisabled into tColor
+			else if pObject is "thumbBorder" then
+				log "thumbBorder colour is:"
+				put color [168/255, 168/255, 168/255] into tColor
+				log colorToString(tColor)
 			end if
 		end if
 
@@ -323,9 +344,9 @@ end handler
 private handler fetchPath(in pObject as String) returns Path
 	if pObject is "thumb" then
 		if mSwitchIsOn then
-			return circle path centered at point [(my width)/2 + (my height)/4, (my height)/2] with radius (my height)/3
+			return circle path centered at point [mWidth/2, mHeight/2] with radius mHeight/6
 		else
-			return circle path centered at point [(my width)/2 - (my height)/4, (my height)/2] with radius (my height)/3
+			return circle path centered at point [mWidth/2, mHeight/2] with radius mHeight/6
 		end if
 
 	else if pObject is "track" then
@@ -479,6 +500,11 @@ private handler fetchAndroidColors() returns nothing
 	put color [1,1,1,0.3] into mAndroidDarkTrackOff
 	put color [1,1,1,0.1] into mAndroidDarkTrackDisabled
 
+end handler
+
+private handler updateVariables() returns nothing
+	put my width into mWidth
+	put my height into mHeight
 end handler
 
 public handler OnMouseDown() returns nothing
