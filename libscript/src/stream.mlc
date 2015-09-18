@@ -22,7 +22,7 @@ stream input and output operations in modular LiveCode.
 
 module com.livecode.stream
 
-public foreign type Stream binds to "kMCStreamTypeInfo"
+public foreign type Stream binds to "MCStreamTypeInfo"
 
 --
 

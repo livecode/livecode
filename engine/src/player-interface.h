@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -126,8 +126,8 @@ public:
 		scale = s;
 	}
     
-    void setdontuseqt(bool p_dont_use_qt) { dontuseqt = p_dont_use_qt; }
-    void getdontuseqt(bool &r_dont_use_qt) { r_dont_use_qt = dontuseqt; }
+    virtual void setdontuseqt(bool p_dont_use_qt) { dontuseqt = p_dont_use_qt; }
+    virtual void getdontuseqt(bool &r_dont_use_qt) { r_dont_use_qt = dontuseqt; }
     
 	virtual Boolean prepare(MCStringRef options) = 0;
 	virtual Boolean playstart(MCStringRef options) = 0;

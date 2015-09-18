@@ -8,13 +8,13 @@
 #define synonym_verb__ reply_none__, dp_none__, { }
 #define plural__    "", {"", kAESpecialClassProperties, cType, "", reserved, singleItem, notEnumerated, readOnly, Reserved8, noApostrophe, notFeminine, notMasculine, plural}, {}
 
-resource 'aete' (0, "Revolution Terminology") {
+resource 'aete' (0, "LiveCode Terminology") {
 	0x1,  // major version
 	0x0,  // minor version
 	english,
 	roman,
 	{
-		"Revolution Miscellaneous Commands",
+		"LiveCode Miscellaneous Commands",
 		"Miscellaneous commands",
 		'REVO',
 		1,
@@ -23,7 +23,7 @@ resource 'aete' (0, "Revolution Terminology") {
 			/* Events */
 
 			"do script",
-			"Execute Revolution script",
+			"Execute LiveCode script",
 			'misc', 'dosc',
 			'TEXT',
 			"Return value",
@@ -37,13 +37,13 @@ resource 'aete' (0, "Revolution Terminology") {
 			},
 
 			"evaluate",
-			"Evaluate Revolution expression",
+			"Evaluate LiveCode expression",
 			'misc', 'eval',
 			'TEXT',
 			"Value of expression",
 			replyRequired, singleItem, notEnumerated, Reserved13,
 			'TEXT',
-			"Exprerssion to evaluate",
+			"Expression to evaluate",
 			directParamRequired,
 			singleItem, notEnumerated, Reserved13,
 			{

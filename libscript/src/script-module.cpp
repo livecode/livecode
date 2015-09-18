@@ -752,8 +752,10 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                                                    nil);
 					goto error_cleanup;
                 }
-                
-                t_typeinfo = MCValueRetain(*(MCTypeInfoRef *)t_symbol);
+
+                /* The symbol is a function that returns a type info reference. */
+                MCTypeInfoRef (*t_type_func)(void) = (MCTypeInfoRef (*)(void)) t_symbol;
+                t_typeinfo = MCValueRetain(t_type_func());
             }
             break;
             case kMCScriptTypeKindRecord:

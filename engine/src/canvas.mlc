@@ -25,44 +25,44 @@ use com.livecode.foreign
 public type CanvasFloat is CFloat
 
 // Point
-public foreign type Point binds to "kMCCanvasPointTypeInfo"
+public foreign type Point binds to "MCCanvasPointTypeInfo"
 
 // Rectangle
-public foreign type Rectangle binds to "kMCCanvasRectangleTypeInfo"
+public foreign type Rectangle binds to "MCCanvasRectangleTypeInfo"
 
 // Transform
-public foreign type Transform binds to "kMCCanvasTransformTypeInfo"
+public foreign type Transform binds to "MCCanvasTransformTypeInfo"
 
 // Color
-public foreign type Color binds to "kMCCanvasColorTypeInfo"
+public foreign type Color binds to "MCCanvasColorTypeInfo"
 
 // Paint (supertype of pattern, gradient, solidpaint)
-public foreign type Paint binds to "kMCCanvasPaintTypeInfo"
+public foreign type Paint binds to "MCCanvasPaintTypeInfo"
 
 // Solid Paint
-public foreign type SolidPaint binds to "kMCCanvasSolidPaintTypeInfo"
+public foreign type SolidPaint binds to "MCCanvasSolidPaintTypeInfo"
 
 // Pattern
-public foreign type Pattern binds to "kMCCanvasPatternTypeInfo"
+public foreign type Pattern binds to "MCCanvasPatternTypeInfo"
 
 // Gradient
-public foreign type Gradient binds to "kMCCanvasGradientTypeInfo"
-public foreign type GradientStop binds to "kMCCanvasGradientStopTypeInfo"
+public foreign type Gradient binds to "MCCanvasGradientTypeInfo"
+public foreign type GradientStop binds to "MCCanvasGradientStopTypeInfo"
 
 // Image
-public foreign type Image binds to "kMCCanvasImageTypeInfo"
+public foreign type Image binds to "MCCanvasImageTypeInfo"
 
 // Path
-public foreign type Path binds to "kMCCanvasPathTypeInfo"
+public foreign type Path binds to "MCCanvasPathTypeInfo"
 
 // Effect
-public foreign type Effect binds to "kMCCanvasEffectTypeInfo"
+public foreign type Effect binds to "MCCanvasEffectTypeInfo"
 
 // Font
-public foreign type Font binds to "kMCCanvasFontTypeInfo"
+public foreign type Font binds to "MCCanvasFontTypeInfo"
 
 // Canvas
-public foreign type Canvas binds to "kMCCanvasTypeInfo"
+public foreign type Canvas binds to "MCCanvasTypeInfo"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Rectangle

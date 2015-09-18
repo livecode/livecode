@@ -56,8 +56,6 @@ public handler OnSave(out rProperties as Array)
 	put mIsChecked into rProperties["checked"]
 	put mTheme into rProperties["theme"]
 	put mLabelText into rProperties["label"]
-	
-	return rProperties
 end handler
 ----------
 

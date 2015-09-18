@@ -154,7 +154,7 @@ private variable mHeight as Real
 
 public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
-
+	
 	put mWidgetTheme into rProperties["widgetTheme"]
 	put mColorScheme into rProperties["colorScheme"]
 	put mSwitchIsOn into rProperties["checked"]

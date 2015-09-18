@@ -589,7 +589,7 @@
 			
 			'variables':
 			{
-				'app_plist': 'rsrc/Revolution-Info.plist',
+				'app_plist': 'rsrc/LiveCode-Info.plist',
 			},
 			
 			'dependencies':
@@ -797,6 +797,7 @@
 								[
 									'emscripten-javascriptify.sh',
 									'<(PRODUCT_DIR)/standalone-community.bc',
+									'rsrc/emscripten-html-template.html',
 									'src/em-whitelist.json',
 									'src/em-preamble.js',
 									'src/em-util.js',
@@ -820,6 +821,7 @@
 									'./emscripten-javascriptify.sh',
 									'<(PRODUCT_DIR)/standalone-community.bc',
 									'<(PRODUCT_DIR)/standalone-community-<(version_suffix).html',
+									'rsrc/emscripten-html-template.html',
 									'src/em-whitelist.json',
 									'src/em-preamble.js',
 									'src/em-util.js',

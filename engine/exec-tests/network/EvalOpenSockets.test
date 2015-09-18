@@ -1,5 +1,5 @@
 setup
-put "www.runrev.com:80" into tSock
+put "www.livecode.com:80" into tSock
 open socket tSock
 test tSock is among the lines of the openSockets
 close socket tSock

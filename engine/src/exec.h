@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -3227,8 +3227,9 @@ void MCInterfaceSetProcessType(MCExecContext& ctxt, intenum_t value);
 void MCInterfaceGetShowInvisibles(MCExecContext& ctxt, bool& r_value);
 void MCInterfaceSetShowInvisibles(MCExecContext& ctxt, bool p_value);
 
-void MCInterfaceGetCursor(MCExecContext& ctxt, uinteger_t& r_value);
-void MCInterfaceSetCursor(MCExecContext& ctxt, uinteger_t p_value);
+// SN-2015-07-29: [[ Bug 15649 ]] The cursor can be empty - it is optional
+void MCInterfaceGetCursor(MCExecContext& ctxt, uinteger_t *&r_value);
+void MCInterfaceSetCursor(MCExecContext& ctxt, uinteger_t* p_value);
 void MCInterfaceGetDefaultCursor(MCExecContext& ctxt, uinteger_t& r_value);
 void MCInterfaceSetDefaultCursor(MCExecContext& ctxt, uinteger_t p_value);
 void MCInterfaceGetDefaultStack(MCExecContext& ctxt, MCStringRef& r_value);

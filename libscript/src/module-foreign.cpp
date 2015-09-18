@@ -22,11 +22,11 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C"
-{
-    MC_DLLEXPORT_DEF MCTypeInfoRef kMCNativeCStringTypeInfo;
-	MC_DLLEXPORT_DEF MCTypeInfoRef kMCWStringTypeInfo;
-}
+MCTypeInfoRef kMCNativeCStringTypeInfo;
+MCTypeInfoRef kMCWStringTypeInfo;
+
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCNativeCStringTypeInfo(void) { return kMCNativeCStringTypeInfo; }
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCWStringTypeInfo(void) { return kMCWStringTypeInfo; }
 
 MCTypeInfoRef kMCForeignZStringNullErrorTypeInfo;
 
