@@ -34,7 +34,7 @@ use com.livecode.library.iconSVG
 metadata title is "Switch Button"
 metadata author is "LiveCode"
 metadata version is "1.0.3"
-metadata preferredSize is "60,48"
+metadata preferredSize is "64,48"
 metadata svgicon is "M47.3,0H18.5C8.3,0,0,8.3,0,18.5v0C0,28.7,8.3,37,18.5,37h28.8c10.2,0,18.5-8.3,18.5-18.5v0C65.8,8.3,57.5,0,47.3,0zM19.8,33.5c-8.3,0-15-6.7-15-15c0-8.3,6.7-15,15-15s15,6.7,15,15C34.8,26.8,28,33.5,19.8,33.5z"
 --
 
@@ -114,10 +114,10 @@ metadata switchIsOn.label is "Switch On"
 Syntax: set the buttonIsEnabled of <widget> to {true | false}
 Syntax: get the buttonIsEnabled of <widget>
 
-Summary: Whether the swicth button is enabled or disabled
+Summary: Whether the switch button is enabled or disabled
 
 Description:
-Use this property to determins whether the switch button is enabled (true) or disabled (false).
+Use this property to determines whether the switch button is enabled (true) or disabled (false).
 */
 property buttonIsEnabled get mIsEnabled set setEnabled
 metadata buttonIsEnabled.default is "true"
@@ -129,14 +129,10 @@ private variable mColorScheme as String
 private variable mSwitchIsOn as Boolean
 private variable mIsEnabled as Boolean
 
-private variable mAnimating as Boolean
+private variable mIsPressed as Boolean
 
--- pressed state for android
-
-private variable mAndroidLightThumbOnColors as Array
-private variable mAndroidLightTrackOnColors as Array
-private variable mAndroidDarkThumbOnColors as Array
-private variable mAndroidDarkTrackOnColors as Array
+private variable mAndroidLightOnColors as Array
+private variable mAndroidDarkOnColors as Array
 
 private variable mAndroidLightThumbOff as Color
 private variable mAndroidLightThumbDisabled as Color
@@ -150,11 +146,12 @@ private variable mAndroidDarkTrackDisabled as Color
 
 private variable mWidth as Real
 private variable mHeight as Real
+private variable mRadius as Real
 --
 
 public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
-	
+
 	put mWidgetTheme into rProperties["widgetTheme"]
 	put mColorScheme into rProperties["colorScheme"]
 	put mSwitchIsOn into rProperties["checked"]
@@ -175,7 +172,7 @@ public handler OnCreate() returns nothing
 	put false into mSwitchIsOn
 	put true into mIsEnabled
 
-	put false into mAnimating
+	put false into mIsPressed
 
 	fetchAndroidColors()
 	updateVariables()
@@ -204,7 +201,7 @@ private handler drawIos() returns nothing
 	--
 
 	-- draw based on whether animating or not
-	if mAnimating then
+	if mIsPressed then
 		set the stroke width of this canvas to (my width/2)*0.01
 
 		if mSwitchIsOn is false then
@@ -258,13 +255,24 @@ end handler
 
 private handler drawAndroid() returns nothing
 
+	-- draw the pressed circle
+	if mIsPressed then
+		set the paint of this canvas to fetchPaint("pressedHilite")
+		fill fetchPath("pressedHilite") on this canvas
+	end if
+
 	-- draw the track
 	set the paint of this canvas to fetchPaint("track")
 	fill fetchPath("track") on this canvas
 
-	-- draw the thumb
+	-- draw the thumb with drop shadow
+	variable tShadow as Effect
+	put drawDropShadow() into tShadow
+
+	begin layer with tShadow on this canvas
 	set the paint of this canvas to fetchPaint("thumb")
 	fill fetchPath("thumb") on this canvas
+	end layer on this canvas
 
 	-- draw the thumb border
 	if mWidgetTheme is "Android(Light)" then
@@ -277,6 +285,23 @@ private handler drawAndroid() returns nothing
 
 end handler
 
+private handler drawDropShadow() returns Effect
+   variable tProps as Array
+   put the empty array into tProps
+
+   put color [164/255, 164/255, 164/255] into tProps["color"]
+   put "source over" into tProps["blend mode"]
+   put 25 into tProps["opacity"]
+   put 0 into tProps["spread"]
+   put 1 into tProps["size"]
+   put 4 into tProps["distance"]
+   put 45 into tProps["angle"]
+
+   variable tEffect as Effect
+   put outer shadow effect with properties tProps into tEffect
+   return tEffect
+end handler
+
 private handler fetchPaint(in pObject as String) returns Paint
 	variable tColorString as String
 	variable tColor as Color
@@ -286,9 +311,13 @@ private handler fetchPaint(in pObject as String) returns Paint
 		if mIsEnabled then
 			if mSwitchIsOn then
 				if pObject is "thumb" then
-					put mAndroidLightThumbOnColors[mColorScheme] into tColorString
+					put mAndroidLightOnColors[mColorScheme] into tColorString
 				else if pObject is "track" then
-					put mAndroidLightTrackOnColors[mColorScheme] into tColorString
+					put mAndroidLightOnColors[mColorScheme] into tColorString
+					put ",128" after tColorString
+				else if pObject is "pressedHilite" then
+					put mAndroidLightOnColors[mColorScheme] into tColorString
+					put ",20" after tColorString
 				end if
 				put stringToColor(tColorString) into tColor
 			else
@@ -298,6 +327,8 @@ private handler fetchPaint(in pObject as String) returns Paint
 					put mAndroidLightTrackOff into tColor
 				else if pObject is "thumbBorder" then
 					put color [167/255, 167/255, 167/255] into tColor
+				else if pObject is "pressedHilite" then
+					put color [0,0,0,0.06] into tColor
 				end if
 			end if
 		else
@@ -306,9 +337,9 @@ private handler fetchPaint(in pObject as String) returns Paint
 			else if pObject is "track" then
 				put mAndroidLightTrackDisabled into tColor
 			else if pObject is "thumbBorder" then
-				log "thumbBorder colour is:"
 				put color [168/255, 168/255, 168/255] into tColor
-				log colorToString(tColor)
+			else if pObject is "pressedHilite" then
+				put color [0,0,0,0.06] into tColor
 			end if
 		end if
 
@@ -316,9 +347,13 @@ private handler fetchPaint(in pObject as String) returns Paint
 		if mIsEnabled then
 			if mSwitchIsOn then
 				if pObject is "thumb" then
-					put mAndroidDarkThumbOnColors[mColorScheme] into tColorString
+					put mAndroidDarkOnColors[mColorScheme] into tColorString
 				else if pObject is "track" then
-					put mAndroidDarkTrackOnColors[mColorScheme] into tColorString
+					put mAndroidDarkOnColors[mColorScheme] into tColorString
+					put ",128" after tColorString
+				else if pObject is "pressedHilite" then
+					put mAndroidLightOnColors[mColorScheme] into tColorString
+					put ",30" after tColorString
 				end if
 				put stringToColor(tColorString) into tColor
 			else
@@ -326,6 +361,8 @@ private handler fetchPaint(in pObject as String) returns Paint
 					put mAndroidDarkThumbOff into tColor
 				else if pObject is "track" then
 					put mAndroidDarkTrackOff into tColor
+				else if pObject is "pressedHilite" then
+					put color [1,1,1,0.15] into tColor
 				end if
 			end if
 		else
@@ -333,6 +370,8 @@ private handler fetchPaint(in pObject as String) returns Paint
 				put mAndroidDarkThumbDisabled into tColor
 			else if pObject is "track" then
 				put mAndroidDarkTrackDisabled into tColor
+			else if pObject is "pressedHilite" then
+				put color [1,1,1,0.15] into tColor
 			end if
 		end if
 
@@ -344,35 +383,43 @@ end handler
 private handler fetchPath(in pObject as String) returns Path
 	if pObject is "thumb" then
 		if mSwitchIsOn then
-			return circle path centered at point [mWidth/2, mHeight/2] with radius mHeight/6
+			return circle path centered at point [5*mRadius, mHeight/2] with radius mRadius
 		else
-			return circle path centered at point [mWidth/2, mHeight/2] with radius mHeight/6
+			return circle path centered at point [3*mRadius, mHeight/2] with radius mRadius
 		end if
 
 	else if pObject is "track" then
-		return rounded rectangle path of rectangle [(my width)/2 - (my height)/2, (my height)/3, (my width)/2 + (my height)/2, 2*(my height)/3] with radius (my height)/6
+		return rounded rectangle path of rectangle [2.5*mRadius, mHeight/2 - 2*mRadius/3, 5.5*mRadius, mHeight/2 + 2*mRadius/3] with radius 2*mRadius/3
+
+	else if pObject is "pressedHilite" then
+		if mSwitchIsOn then
+			return circle path centered at point [5*mRadius, mHeight/2] with radius 2.5*mRadius
+		else
+			return circle path centered at point [3*mRadius, mHeight/2] with radius 2.5*mRadius
+
+		end if
 	end if
 end handler
 
 private handler getPath(in pShape as String) returns Path
 	if pShape is "box" then
-		return rounded rectangle path of rectangle [(my width)/2 - (my height)/2, (my height)/4, (my width)/2 + (my height)/2, 3*(my height)/4] with radius (my height)/4
+		return rounded rectangle path of rectangle [mWidth/2 - mHeight/2, mHeight/4, mWidth/2 + mHeight/2, 3*mHeight/4] with radius mHeight/4
 	else if pShape is "left circle" then
-		return circle path centered at point [(my width)/2 - (my height)/4, (my height)/2] with radius (my height)/4
+		return circle path centered at point [mWidth/2 - mHeight/4, mHeight/2] with radius mHeight/4
 	else if pShape is "right circle" then
-		return circle path centered at point [(my width)/2 + (my height)/4, (my height)/2] with radius (my height)/4
+		return circle path centered at point [mWidth/2 + mHeight/4, mHeight/2] with radius mHeight/4
 	else if pShape is "ellipse" then
-		return ellipse path centered at point [(my width)/2, (my height)/2] with radii [(my height)/8, (my height)/4]
+		return ellipse path centered at point [mWidth/2, mHeight/2] with radii [mHeight/8, mHeight/4]
 	else if pShape is "left rect" then
-		return rectangle path of rectangle [(my width)/2 - (my height)/4, (my height)/4, (my width)/2, 3*(my height)/4]
+		return rectangle path of rectangle [mWidth/2 - mHeight/4, mHeight/4, mWidth/2, 3*mHeight/4]
 	else if pShape is "right rect" then
-		return rectangle path of rectangle [(my width)/2, (my height)/4, (my width)/2 + (my height)/4, 3*(my height)/4]
+		return rectangle path of rectangle [mWidth/2, mHeight/4, mWidth/2 + mHeight/4, 3*mHeight/4]
 	end if
 end handler
 
 private handler getRect(in pObject as String) returns Rectangle
 	if pObject is "bounding box" then
-		return rectangle [(my width)/2 - 3*(my height)/4, (my height)/4, (my width)/2 + 3*(my height)/4, 3*(my height)/4]
+		return rectangle [mWidth/2 - 3*mHeight/4, mHeight/4, mWidth/2 + 3*mHeight/4, 3*mHeight/4]
 	end if
 end handler
 
@@ -390,7 +437,7 @@ private handler getPaint(in pObject as String) returns Paint
 			return solid paint with color [0, 204/255, 0]
 
 		else if mSwitchIsOn is false then
-			if mAnimating is false then
+			if mIsPressed is false then
 				return solid paint with color [1,1,1]
 			else
 				return solid paint with color [224/255, 224/255, 224/255]
@@ -406,89 +453,47 @@ end handler
 
 private handler fetchAndroidColors() returns nothing
 
-	put the empty array into mAndroidLightThumbOnColors
-	put "238,43,41" into mAndroidLightThumbOnColors["Red"]
-	put "224,0,81" into mAndroidLightThumbOnColors["Pink"]
-	put "137,0,161" into mAndroidLightThumbOnColors["Purple"]
-	put "83,33,168" into mAndroidLightThumbOnColors["Deep Purple"]
-	put "48,58,165" into mAndroidLightThumbOnColors["Indigo"]
-	put "30,128,240" into mAndroidLightThumbOnColors["Blue"]
-	put "20,150,241" into mAndroidLightThumbOnColors["Light Blue"]
-	put "22,175,202" into mAndroidLightThumbOnColors["Cyan"]
-	put "17,133,117" into mAndroidLightThumbOnColors["Teal"]
-	put "63,164,63" into mAndroidLightThumbOnColors["Green"]
-	put "122,186,58" into mAndroidLightThumbOnColors["Light Green"]
-	put "194,215,45" into mAndroidLightThumbOnColors["Lime"]
-	put "254,233,46" into mAndroidLightThumbOnColors["Yellow"]
-	put "253,182,13" into mAndroidLightThumbOnColors["Amber"]
-	put "253,133,9" into mAndroidLightThumbOnColors["Orange"]
-	put "251,63,28" into mAndroidLightThumbOnColors["Deep Orange"]
-	put "101,67,56" into mAndroidLightThumbOnColors["Brown"]
-	put "140,140,140" into mAndroidLightThumbOnColors["Grey"]
-	put "78,106,120" into mAndroidLightThumbOnColors["Blue Grey"]
+	put the empty array into mAndroidLightOnColors
+	put "238,43,41" into mAndroidLightOnColors["Red"]
+	put "224,0,81" into mAndroidLightOnColors["Pink"]
+	put "137,0,161" into mAndroidLightOnColors["Purple"]
+	put "83,33,168" into mAndroidLightOnColors["Deep Purple"]
+	put "48,58,165" into mAndroidLightOnColors["Indigo"]
+	put "30,128,240" into mAndroidLightOnColors["Blue"]
+	put "20,150,241" into mAndroidLightOnColors["Light Blue"]
+	put "22,175,202" into mAndroidLightOnColors["Cyan"]
+	put "17,133,117" into mAndroidLightOnColors["Teal"]
+	put "63,164,63" into mAndroidLightOnColors["Green"]
+	put "122,186,58" into mAndroidLightOnColors["Light Green"]
+	put "194,215,45" into mAndroidLightOnColors["Lime"]
+	put "254,233,46" into mAndroidLightOnColors["Yellow"]
+	put "253,182,13" into mAndroidLightOnColors["Amber"]
+	put "253,133,9" into mAndroidLightOnColors["Orange"]
+	put "251,63,28" into mAndroidLightOnColors["Deep Orange"]
+	put "101,67,56" into mAndroidLightOnColors["Brown"]
+	put "140,140,140" into mAndroidLightOnColors["Grey"]
+	put "78,106,120" into mAndroidLightOnColors["Blue Grey"]
 
-	put the empty array into mAndroidLightTrackOnColors
-	put "238,43,41,128" into mAndroidLightTrackOnColors["Red"]
-	put "224,0,81,128" into mAndroidLightTrackOnColors["Pink"]
-	put "137,0,161,128" into mAndroidLightTrackOnColors["Purple"]
-	put "83,33,168,128" into mAndroidLightTrackOnColors["Deep Purple"]
-	put "48,58,165,128" into mAndroidLightTrackOnColors["Indigo"]
-	put "30,128,240,128" into mAndroidLightTrackOnColors["Blue"]
-	put "20,150,241,128" into mAndroidLightTrackOnColors["Light Blue"]
-	put "22,175,202,128" into mAndroidLightTrackOnColors["Cyan"]
-	put "17,133,117,128" into mAndroidLightTrackOnColors["Teal"]
-	put "63,164,63,128" into mAndroidLightTrackOnColors["Green"]
-	put "122,186,58,128" into mAndroidLightTrackOnColors["Light Green"]
-	put "194,215,45,128" into mAndroidLightTrackOnColors["Lime"]
-	put "254,233,46,128" into mAndroidLightTrackOnColors["Yellow"]
-	put "253,182,13,128" into mAndroidLightTrackOnColors["Amber"]
-	put "253,133,9,128" into mAndroidLightTrackOnColors["Orange"]
-	put "251,63,28,128" into mAndroidLightTrackOnColors["Deep Orange"]
-	put "101,67,56,128" into mAndroidLightTrackOnColors["Brown"]
-	put "140,140,140,128" into mAndroidLightTrackOnColors["Grey"]
-	put "78,106,120,128" into mAndroidLightTrackOnColors["Blue Grey"]
-
-	put the empty array into mAndroidDarkThumbOnColors
-	put "233,133,136" into mAndroidDarkThumbOnColors["Red"]
-	put "239,119,162" into mAndroidDarkThumbOnColors["Pink"]
-	put "193,124,206" into mAndroidDarkThumbOnColors["Purple"]
-	put "163,135,210" into mAndroidDarkThumbOnColors["Deep Purple"]
-	put "141,149,209" into mAndroidDarkThumbOnColors["Indigo"]
-	put "127,190,247" into mAndroidDarkThumbOnColors["Blue"]
-	put "112,201,248" into mAndroidDarkThumbOnColors["Light Blue"]
-	put "113,215,229" into mAndroidDarkThumbOnColors["Cyan"]
-	put "112,194,184" into mAndroidDarkThumbOnColors["Teal"]
-	put "150,207,151" into mAndroidDarkThumbOnColors["Green"]
-	put "186,220,148" into mAndroidDarkThumbOnColors["Light Green"]
-	put "224,237,138" into mAndroidDarkThumbOnColors["Lime"]
-	put "255,245,140" into mAndroidDarkThumbOnColors["Yellow"]
-	put "254,219,111" into mAndroidDarkThumbOnColors["Amber"]
-	put "254,193,109" into mAndroidDarkThumbOnColors["Orange"]
-	put "253,153,127" into mAndroidDarkThumbOnColors["Deep Orange"]
-	put "174,154,147" into mAndroidDarkThumbOnColors["Brown"]
-	put "234,234,234" into mAndroidDarkThumbOnColors["Grey"]
-	put "160,176,185" into mAndroidDarkThumbOnColors["Blue Grey"]
-
-	put the empty array into mAndroidDarkTrackOnColors
-	put "233,133,136,128" into mAndroidDarkTrackOnColors["Red"]
-	put "239,119,162,128" into mAndroidDarkTrackOnColors["Pink"]
-	put "193,124,206,128" into mAndroidDarkTrackOnColors["Purple"]
-	put "163,135,210,128" into mAndroidDarkTrackOnColors["Deep Purple"]
-	put "141,149,209,128" into mAndroidDarkTrackOnColors["Indigo"]
-	put "127,190,247,128" into mAndroidDarkTrackOnColors["Blue"]
-	put "112,201,248,128" into mAndroidDarkTrackOnColors["Light Blue"]
-	put "113,215,229,128" into mAndroidDarkTrackOnColors["Cyan"]
-	put "112,194,184,128" into mAndroidDarkTrackOnColors["Teal"]
-	put "150,207,151,128" into mAndroidDarkTrackOnColors["Green"]
-	put "186,220,148,128" into mAndroidDarkTrackOnColors["Light Green"]
-	put "224,237,138,128" into mAndroidDarkTrackOnColors["Lime"]
-	put "255,245,140,128" into mAndroidDarkTrackOnColors["Yellow"]
-	put "254,219,111,128" into mAndroidDarkTrackOnColors["Amber"]
-	put "254,193,109,128" into mAndroidDarkTrackOnColors["Orange"]
-	put "253,153,127,128" into mAndroidDarkTrackOnColors["Deep Orange"]
-	put "174,154,147,128" into mAndroidDarkTrackOnColors["Brown"]
-	put "234,234,234,128" into mAndroidDarkTrackOnColors["Grey"]
-	put "160,176,185,128" into mAndroidDarkTrackOnColors["Blue Grey"]
+	put the empty array into mAndroidDarkOnColors
+	put "233,133,136" into mAndroidDarkOnColors["Red"]
+	put "239,119,162" into mAndroidDarkOnColors["Pink"]
+	put "193,124,206" into mAndroidDarkOnColors["Purple"]
+	put "163,135,210" into mAndroidDarkOnColors["Deep Purple"]
+	put "141,149,209" into mAndroidDarkOnColors["Indigo"]
+	put "127,190,247" into mAndroidDarkOnColors["Blue"]
+	put "112,201,248" into mAndroidDarkOnColors["Light Blue"]
+	put "113,215,229" into mAndroidDarkOnColors["Cyan"]
+	put "112,194,184" into mAndroidDarkOnColors["Teal"]
+	put "150,207,151" into mAndroidDarkOnColors["Green"]
+	put "186,220,148" into mAndroidDarkOnColors["Light Green"]
+	put "224,237,138" into mAndroidDarkOnColors["Lime"]
+	put "255,245,140" into mAndroidDarkOnColors["Yellow"]
+	put "254,219,111" into mAndroidDarkOnColors["Amber"]
+	put "254,193,109" into mAndroidDarkOnColors["Orange"]
+	put "253,153,127" into mAndroidDarkOnColors["Deep Orange"]
+	put "174,154,147" into mAndroidDarkOnColors["Brown"]
+	put "234,234,234" into mAndroidDarkOnColors["Grey"]
+	put "160,176,185" into mAndroidDarkOnColors["Blue Grey"]
 
 	put color [249/255,249/255,249/255] into mAndroidLightThumbOff
 	put color [175/255,175/255,175/255] into mAndroidLightThumbDisabled
@@ -505,11 +510,12 @@ end handler
 private handler updateVariables() returns nothing
 	put my width into mWidth
 	put my height into mHeight
+	put mWidth/9 into mRadius
 end handler
 
 public handler OnMouseDown() returns nothing
 	if the click position is within getRect("bounding box") then
-		put true into mAnimating
+		put true into mIsPressed
 		redraw all
 	end if
 end handler
@@ -517,7 +523,7 @@ end handler
 public handler OnMouseUp() returns nothing
 	if the click position is within getRect("bounding box") then
 		setSwitch(not(mSwitchIsOn))
-		put false into mAnimating
+		put false into mIsPressed
 		redraw all
 	end if
 
@@ -601,6 +607,10 @@ private handler setColorScheme(in pColorScheme as String) returns nothing
 end handler
 
 private handler setSwitch(in pIsOn as Boolean) returns nothing
+	if mIsEnabled is false then
+		return
+	end if
+
 	put pIsOn into mSwitchIsOn
 	redraw all
 end handler
