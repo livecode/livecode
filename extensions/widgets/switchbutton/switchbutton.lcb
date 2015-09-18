@@ -157,7 +157,6 @@ public handler OnSave(out rProperties as Array)
 	put mSwitchIsOn into rProperties["checked"]
 	put mIsEnabled into rProperties["enabled"]
 
-	return rProperties
 end handler
 
 public handler OnLoad(in pProperties as Array)
