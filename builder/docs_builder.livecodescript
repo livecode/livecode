@@ -1911,8 +1911,10 @@ end escape
 command docsBuilderGenerateDocsNew
    start using stack (builderRepoFolder() & slash & "ide-support" & slash & "revdocsparser.livecodescript")
    builderLog "report", "Building guide into" && builderGuideFolder() & slash & "distributed_guide.js"
+   pathEnsure (builderGuideFolder())
    docsBuilderGenerateDistributedGuide
    builderLog "report", "Building api into" && builderAPIFolder() & slash & "distributed_api.js"
+   pathEnsure (builderAPIFolder())
    docsBuilderGenerateDistributedAPI   
    
    # Build the actual JSON data for the dictionary. This is needed until the docs are built on the fly in a 
