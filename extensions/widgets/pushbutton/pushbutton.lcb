@@ -47,6 +47,7 @@ Summary: The theme of the widget
 Parameters:
 pWidgetTheme(enum): The theme of the widget
 -"iOS"
+-"Android(Floating Action)"
 -"Android(Raised)"
 -"Android(Flat)"
 
@@ -55,9 +56,17 @@ Use the <widgetTheme> property to set the theme of the widget.
 */
 property widgetTheme get mWidgetTheme set setWidgetTheme
 metadata widgetTheme.editor is "com.livecode.pi.enum"
-metadata widgetTheme.options is "iOS,Android(Raised),Android(Flat)"
+metadata widgetTheme.options is "iOS,Android(Floating Action),Android(Raised),Android(Flat)"
 metadata widgetTheme.default is "iOS"
 metadata widgetTheme.label is "Widget Theme"
+
+/*
+*/
+property widgetDisplay get mWidgetDisplay set setWidgetDisplay
+metadata widgetDisplay.editor is "com.livecode.pi.enum"
+metadata widgetDisplay.options is "text,icon"
+metadata widgetTheme.deafult is "text"
+metadata widgetTheme.label is "Widget Display"
 
 /*
 Syntax: set the buttonLabel of <widget> to <pLabel>
