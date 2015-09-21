@@ -109,7 +109,8 @@ public:
     virtual bool FlushData();
     virtual uindex_t GetMaximumItemCount() const;
     virtual MCStringRef GetKnownTypeString(MCRawClipboardKnownType p_type) const;
-    virtual MCStringEncoding GetURLTextEncoding() const;
+    virtual MCDataRef EncodeFileListForTransfer(MCStringRef p_file_path) const;
+    virtual MCStringRef DecodeTransferredFileList(MCDataRef p_encoded_path) const;
     
     // Constructor. The NSPasteboard being wrapped is required.
     MCMacRawClipboard(NSPasteboard* p_pasteboard);

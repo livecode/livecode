@@ -221,10 +221,18 @@ MCStringRef MCMacRawClipboard::GetKnownTypeString(MCRawClipboardKnownType p_type
     return NULL;
 }
 
-MCStringEncoding MCMacRawClipboard::GetURLTextEncoding() const
+MCDataRef MCMacRawClipboard::EncodeFileListForTransfer(MCStringRef p_file_path) const
 {
-    // We explicitly perform the encoding in-engine so we choose UTF-8.
-    return kMCStringEncodingUTF8;
+    MCDataRef t_encoded = NULL;
+    MCStringEncode(p_file_path, kMCStringEncodingUTF8, false, t_encoded);
+    return t_encoded;
+}
+
+MCStringRef MCMacRawClipboard::DecodeTransferredFileList(MCDataRef p_encoded_path) const
+{
+    MCStringRef t_decoded = NULL;
+    MCStringDecode(p_encoded_path, kMCStringEncodingUTF8, false, t_decoded);
+    return t_decoded;
 }
 
 

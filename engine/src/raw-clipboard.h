@@ -169,9 +169,16 @@ public:
     // for the requested representation, these will return NULL.
     virtual MCStringRef GetKnownTypeString(MCRawClipboardKnownType p_type) const = 0;
     
-    // Returns the text encoding used for the file/URL item/list types.
-    virtual MCStringEncoding GetURLTextEncoding() const = 0;
-    
+    // For single-item clipboards, this method takes a newline-separated list
+	// of file paths and encodes it into a DataRef containing the system-
+	// specific data used to pass file path lists.
+	//
+	// For multi-item clipboards, encodes a single path.
+	virtual MCDataRef EncodeFileListForTransfer(MCStringRef p_paths) const = 0;
+
+	// Reverses CreateEncodedFileList.
+	virtual MCStringRef DecodeTransferredFileList(MCDataRef p_data) const = 0;
+
     // Destructor
     virtual ~MCRawClipboard() = 0;
     

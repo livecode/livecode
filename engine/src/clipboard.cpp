@@ -191,9 +191,9 @@ bool MCClipboard::AddFileList(MCStringRef p_file_names)
                 return false;
             
             // Encode it appropriately for this clipboard
-            MCAutoDataRef t_encoded_path;
-            if (!MCStringEncode((MCStringRef)t_path, m_clipboard->GetURLTextEncoding(), false, &t_encoded_path))
-                return false;
+            MCAutoDataRef t_encoded_path(m_clipboard->EncodeFileListForTransfer((MCStringRef)t_path));
+			if (*t_encoded_path == NULL)
+				return false;
             
             // Add a representation to this item containing the path
             if (!t_item->AddRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeFileURL), *t_encoded_path))
@@ -209,18 +209,10 @@ bool MCClipboard::AddFileList(MCStringRef p_file_names)
     }
     else
     {
-        // The platforms that have a file URL list type use NULs to separate
-        // the entries. Replace the newlines with NULs.
-        MCAutoStringRef t_list;
-        if (!MCStringMutableCopy(p_file_names, &t_list))
-            return false;
-        if (!MCStringFindAndReplaceChar(*t_list, '\n', '\0', kMCStringOptionCompareExact))
-            return false;
-        
-        // Encode the list appropriately for this clipboard
-        MCAutoDataRef t_encoded_list;
-        if (!MCStringEncode(*t_list, m_clipboard->GetURLTextEncoding(), false, &t_encoded_list))
-            return false;
+        // Convert the file list into the correct format
+		MCAutoDataRef t_encoded_list(m_clipboard->EncodeFileListForTransfer(p_file_names));
+		if (*t_encoded_list == NULL)
+			return false;
         
         // Get the first item on the clipboard
         MCAutoRefcounted<MCRawClipboardItem> t_item = GetItem();
@@ -231,8 +223,9 @@ bool MCClipboard::AddFileList(MCStringRef p_file_names)
         if (!t_item->AddRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeFileURLList), *t_encoded_list))
             return false;
         
-        // Add the original list as a text representation as well
-        if (!AddTextToItem(t_item, p_file_names))
+        // Add the original list as a text representation as well (unless one
+		// already exists)
+        if (!HasText() && !AddTextToItem(t_item, p_file_names))
             return false;
     }
     
@@ -690,8 +683,11 @@ bool MCClipboard::CopyAsFileList(MCStringRef& r_file_list) const
             // Get the data for this representation and decode it
             MCAutoStringRef t_url;
             MCAutoDataRef t_encoded_url(t_rep->CopyData());
-            if (!MCStringDecode(*t_encoded_url, m_clipboard->GetURLTextEncoding(), false, &t_url))
-                return false;
+			if (*t_encoded_url == NULL)
+				return false;
+            t_url.Reset(m_clipboard->DecodeTransferredFileList(*t_encoded_url));
+			if (*t_url == NULL)
+				return false;
             
             // Append it to the list
             if (!MCListAppend(*t_list, *t_url))
@@ -714,21 +710,11 @@ bool MCClipboard::CopyAsFileList(MCStringRef& r_file_list) const
         if (t_rep == NULL)
             return false;
         
-        MCAutoStringRef t_raw_list;
+		// Decode the list of files
         MCAutoDataRef t_data(t_rep->CopyData());
-        if (!MCStringDecode(*t_data, m_clipboard->GetURLTextEncoding(), false, &t_raw_list))
-            return false;
-        
-        // We have the list. Some platforms use NULs to separate the paths but
-        // we need newlines. Perform that conversion.
-        MCAutoStringRef t_list;
-        if (!MCStringMutableCopy(*t_raw_list, &t_list))
-            return false;
-        if (!MCStringFindAndReplaceChar(*t_list, '\0', '\n', kMCStringOptionCompareExact))
-            return false;
-        
-        if (!MCStringCopy(*t_list, t_output))
-            return false;
+		if (*t_data == NULL)
+			return false;
+		t_output = m_clipboard->DecodeTransferredFileList(*t_data);
     }
     
     // All done
