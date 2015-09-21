@@ -73,7 +73,6 @@ MCScreenDC::MCScreenDC()
 	grabbingclipboard = False;
 	exposures = False;
 	opened = 0;
-	dnddata = NULL;
 	taskbarhidden = False;
 
 	backdrop_active = false;
@@ -86,8 +85,6 @@ MCScreenDC::MCScreenDC()
 	m_printer_dc = NULL;
 	m_printer_dc_locked = false;
 	m_printer_dc_changed = false;
-
-	m_clipboard = NULL;
 }
 
 MCScreenDC::~MCScreenDC()

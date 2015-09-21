@@ -520,9 +520,11 @@
 			'src/clipboard.h',
 			'src/mac-clipboard.h',
 			'src/raw-clipboard.h',
+			'src/w32-clipboard.h',
 			'src/clipboard.cpp',
 			'src/mac-clipboard.mm',
 			'src/raw-clipboard.cpp',
+			'src/w32-clipboard.cpp',
 
 			'src/mixin-refcounted.h',
 		],
@@ -639,9 +641,7 @@
 			'src/w32printer.h',
 			'src/w32text.h',
 			'src/w32theme.h',
-			'src/w32transfer.h',
 			'src/w32ans.cpp',
-			'src/w32clipboard.cpp',
 			'src/w32color.cpp',
 			'src/w32compat.cpp',
 			'src/w32cursor.cpp',
@@ -663,7 +663,6 @@
 			'src/w32text.cpp',
 			'src/w32textlayout.cpp',
 			'src/w32theme.cpp',
-			'src/w32transfer.cpp',
 		],
 		
 		# Sources that need to be compiled separately for each mode
