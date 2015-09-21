@@ -308,6 +308,10 @@ public:
 	int32_t gettexty(void) const;
 	int32_t getfirstindent(void) const;
 	int32_t getfixedheight(void) const { return fixedheight; }
+	
+	MCScrollbar* getvscrollbar(void) const {return vscrollbar;}
+	MCScrollbar* gethscrollbar(void) const {return hscrollbar;}
+	
 
 	bool getshowlines(void) const;
 
