@@ -1,4 +1,4 @@
-m/*
+/*
 Copyright (C) 2015 Runtime Revolution Ltd.
 
 This file is part of LiveCode.
@@ -20,7 +20,7 @@ This widget is a push button that dispatches mouse events to its script object.
 */
 
 -- declaring the extension as a widget, followed by the identifier
-widget com.livecode.widget.pushButton
+widget com.livecode.widget.pushbutton
 --
 
 -- dependency declarations
@@ -73,6 +73,9 @@ pStyle(enum): The display style
 
 Description:
 Use the <labelStyle> property to set the display style of the widget's label, either text or an icon.
+
+This property can only be changed if the theme of the widget is "iOS".
+This property is fixed for the Android themes.
 */
 property labelStyle get mLabelStyle set setLabelStyle
 metadata labelStyle.editor is "com.livecode.pi.enum"
@@ -132,6 +135,7 @@ Description:
 Use the <labelColor> property to set the color of the label on the button.
 
 If the theme of the widget is "Android(Raised)" and the background color of the widget is not white, then the text color of the widget will always be set to white.
+This property is fixed to white if the theme of the widget is "Android(Floating Action)".
 */
 property labelColor get getLabelColor set setLabelColor
 metadata labelColor.editor is "com.livecode.pi.color"
@@ -139,8 +143,8 @@ metadata labelColor.label is "Label Color"
 metadata labelColor.default is "0,121,255"
 
 /*
-Syntax: set the <backgroundColor> of <widget> to <pBackgroundColor>
-Syntax: get the <backgroundColor> of <widget>
+Syntax: set the <widgetBackgroundColor> of <widget> to <pBackgroundColor>
+Syntax: get the <widgetBackgroundColor> of <widget>
 
 Summary: The color of the button's background
 
@@ -148,14 +152,14 @@ Parameters:
 pBackgroundColor(color): The color of the background
 
 Description:
-Use the <backgroundColor> property to set the background color of the button.
+Use the <widgetBackgroundColor> property to set the background color of the button.
 
-This property can only be set if the theme of the widget is "Android(Raised)"
+This property can only be set if the theme of the widget is "Android(Raised)" or "Android(Floating Action)"
 */
-property buttonBackgroundColor get getBackgroundColor set setBackgroundColor
-metadata buttonBackgroundColor.editor is "com.livecode.pi.color"
-metadata buttonBackgroundColor.label is "Background Color"
-metadata buttonBackgroundColor.default is "255,255,255"
+property widgetBackgroundColor get getBackgroundColor set setBackgroundColor
+metadata widgetBackgroundColor.editor is "com.livecode.pi.color"
+metadata widgetBackgroundColor.label is "Background Color"
+metadata widgetBackgroundColor.default is "255,255,255"
 
 /*
 Syntax: set the <backgroundOpacity> of <widget> to <pOpacity>
@@ -172,7 +176,7 @@ pOpacity(enum): The background opacity of the button
 Description:
 Use the <backgroundOpacity> property to set the opacity of the button's background.
 
-This property is fixed at "Opaque" for the Android(Raised) theme and fixed at "Transparent" for the Android(Flat) theme.
+This property is fixed at "Opaque" for the Android(Raised) and Android(Floating Action) themes and fixed at "Transparent" for the Android(Flat) theme.
 This property can only be changed if the theme of the widget is "iOS".
 */
 property backgroundOpacity get mBackgroundOpacity set setBackgroundOpacity
@@ -183,7 +187,7 @@ metadata backgroundOpacity.label is "Background Opacity"
 
 -- private instance variables
 private variable mWidgetTheme as String
-private variable mLabelStyle as string
+private variable mLabelStyle as String
 private variable mLabelText as String
 private variable mLabelIcon as String
 private variable mLabelColor as Color
@@ -194,6 +198,26 @@ private variable mShowBorder as Boolean
 private variable mDefaultColor as Color
 private variable mIosFontSize as Real
 private variable mAndroidFontSize as Real
+private variable mWidth as Real
+private variable mHeight as Real
+
+-- constants
+constant kWidgetThemeIos is "iOS"
+constant kWidgetThemeAndroidFloatingAction is "Android(Floating Action)"
+constant kWidgetThemeAndroidRaised is "Android(Raised)"
+constant kWidgetThemeAndroidFlat is "Android(Flat)"
+
+constant kLabelStyleText is "text"
+constant kLabelStyleIcon is "icon"
+
+constant kOpaqueBackground is "Opaque"
+constant kTranslucentBackground is "Translucent"
+constant kTransparentBackground is "Transparent"
+
+constant kIosDefaultFontSize is 17
+constant kIosDefaultHeight is 29
+constant kAndroidDefaultFontSize is 14
+constant kAndroidDefaultHeight is 36
 
 public handler OnSave(out rProperties as Array)
    put the empty array into rProperties
@@ -224,7 +248,7 @@ public handler OnCreate() returns nothing
    put "Button" into mLabelText
    put "Star" into mLabelIcon
    put color [0, 121/255, 1] into mLabelColor
-   put color [1, 1, 1] into mBackgroundColor
+   put color [1, 1, 1, 0] into mBackgroundColor
    put "Transparent" into mBackgroundOpacity
 
    put false into mShowBorder
@@ -235,25 +259,19 @@ end handler
 public handler OnPaint() returns nothing
    updateVariables()
 
-   if mWidgetTheme is "iOS" then
+   if mWidgetTheme is kWidgetThemeIos then
       drawIosButton()
-   else if mWidgetTheme is "Android(Floating Action)" then
+   else if mWidgetTheme is kWidgetThemeAndroidFloatingAction then
       drawAndroidFloatingActionButton()
-   else if mWidgetTheme is "Android(Raised)" then
+   else if mWidgetTheme is kWidgetThemeAndroidRaised then
       drawAndroidRaisedButton()
-   else if mWidgetTheme is "Android(Flat)" then
+   else if mWidgetTheme is kWidgetThemeAndroidFlat then
       drawAndroidFlatButton()
    end if
 
 end handler
 
 private handler drawIosButton() returns nothing
-
-   -- make sure the color of the label text is not white
-   variable tColorString as String
-   put colorToString(mTextColor) into tColorString
-   checkTextColor(tColorString)
-
    -- background
    set the paint of this canvas to fetchPaint("background")
    fill fetchPath("background") on this canvas
@@ -261,25 +279,31 @@ private handler drawIosButton() returns nothing
    -- label
    set the font of this canvas to fetchFont()
    set the paint of this canvas to fetchPaint("label")
-   if mLabelStyle is "text" then
-      fill text mButtonLabel at center of my bounds on this canvas
-   else if mLabelStyle is "icon" then
+   if mLabelStyle is kLabelStyleText then
+      fill text mLabelText at center of my bounds on this canvas
+   else if mLabelStyle is kLabelStyleIcon then
       fill fetchIconPath(mLabelIcon) on this canvas
    end if
 
 end handler
 
 private handler drawAndroidFloatingActionButton() returns nothing
+   -- shadow
+   variable tShadow as Effect
+   put drawDropShadow() into tShadow
 
+   begin layer with tShadow on this canvas
+   -- background
+   set the paint of this canvas to fetchPaint("background")
+   fill fetchPath("background") on this canvas
+
+   -- label
+   set the paint of this canvas to fetchPaint("label")
+   fill fetchIconPath(mLabelIcon) on this canvas
+   end layer on this canvas
 end handler
 
 private handler drawAndroidRaisedButton() returns nothing
-
-   -- check if we need to show a border based on the background color
-   variable tColorString as String
-   put colorToString(mBackgroundColor) into tColorString
-   checkBackgroundColor(tColorString)
-
    -- shadow
    variable tShadow as Effect
    put drawDropShadow() into tShadow
@@ -299,7 +323,7 @@ private handler drawAndroidRaisedButton() returns nothing
 
    -- label
    variable tLabel as String
-   put the upper of mButtonLabel into tLabel
+   put the upper of mLabelText into tLabel
 
    set the font of this canvas to fetchFont()
    set the paint of this canvas to fetchPaint("label")
@@ -307,15 +331,9 @@ private handler drawAndroidRaisedButton() returns nothing
 end handler
 
 private handler drawAndroidFlatButton() returns nothing
-
-   -- make sure the color of the label text is not white
-   variable tColorString as String
-   put colorToString(mTextColor) into tColorString
-   checkTextColor(tColorString)
-
    -- label
    variable tLabel as String
-   put the upper of mButtonLabel into tLabel
+   put the upper of mLabelText into tLabel
 
    set the font of this canvas to fetchFont()
    set the paint of this canvas to fetchPaint("label")
@@ -326,45 +344,45 @@ private handler drawDropShadow() returns Effect
    variable tProps as Array
    put the empty array into tProps
 
-   put color [186/255, 186/255, 186/255] into tProps["color"]
-   put "source over" into tProps["blend mode"]
-   put 125 into tProps["opacity"]
-   put 0 into tProps["spread"]
-   put 1 into tProps["size"]
-   put 2 into tProps["distance"]
-   put 90 into tProps["angle"]
+   if mWidgetTheme is kWidgetThemeAndroidFloatingAction then
+      put color [186/255, 186/255, 186/255, 0.9] into tProps["color"]
+      put "source over" into tProps["blend mode"]
+      put 255 into tProps["opacity"]
+      put 0.5 into tProps["spread"]
+      put 5 into tProps["size"]
+      put 7 into tProps["distance"]
+      put 90 into tProps["angle"]
+
+   else if mWidgetTheme is kWidgetThemeAndroidRaised then
+      put color [186/255, 186/255, 186/255, 0.8] into tProps["color"]
+      put "source over" into tProps["blend mode"]
+      put 255 into tProps["opacity"]
+      put 0.6 into tProps["spread"]
+      put 1 into tProps["size"]
+      put 4 into tProps["distance"]
+      put 60 into tProps["angle"]
+
+   end if
 
    variable tEffect as Effect
    put outer shadow effect with properties tProps into tEffect
    return tEffect
 end handler
 
-constant kIosDefaultFontSize is 17
-constant kIosDefaultHeight is 29
-constant kAndroidDefaultFontSize is 14
-constant kAndroidDefaultHeight is 36
-
 private handler updateVariables() returns nothing
-   put (my height)*(kIosDefaultFontSize/kIosDefaultHeight) into mIosFontSize
-   put (my height)*(kAndroidDefaultFontSize/kAndroidDefaultHeight) into mAndroidFontSize
+   put my width into mWidth
+   put my height into mHeight
+
+   put mHeight*(kIosDefaultFontSize/kIosDefaultHeight) into mIosFontSize
+   put mHeight*(kAndroidDefaultFontSize/kAndroidDefaultHeight) into mAndroidFontSize
 end handler
 
 private handler fetchPaint(in pObject as String) returns Paint
    if pObject is "background" then
-      if mWidgetTheme is "iOS" then
-         if mBackgroundOpacity is "Opaque" then
-            return solid paint with color [1,1,1]
-         else if mBackgroundOpacity is "Translucent" then
-            return solid paint with color [1,1,1,0.8]
-         else if mBackgroundOpacity is "Transparent" then
-            return solid paint with color [1,1,1,0]
-         end if
-      else if mWidgetTheme is "Android(Raised)" then
          return solid paint with mBackgroundColor
-      end if
 
    else if pObject is "label" then
-      return solid paint with mTextColor
+      return solid paint with mLabelColor
 
    else if pObject is "border" then
       return solid paint with color [167/255, 167/255, 167/255]
@@ -374,23 +392,27 @@ end handler
 
 private handler fetchPath(in pObject as String) returns Path
    if pObject is "background" then
-      if mWidgetTheme is "iOS" then
+      if mWidgetTheme is kWidgetThemeIos then
          return rounded rectangle path of my bounds with radius 5
-      else if mWidgetTheme is "Android(Raised)" then
-         return rounded rectangle path of rectangle [0,0,(my width)-3,(my height)-3] with radius 2
+      else if mWidgetTheme is kWidgetThemeAndroidRaised then
+         return rounded rectangle path of rectangle [0, 0, mWidth-5, mHeight-5] with radius 2
+      else if mWidgetTheme is kWidgetThemeAndroidFloatingAction then
+         return circle path centered at point [mWidth/2, (mHeight-10)/2] with radius (mHeight-10)/2
       end if
    else if pObject is "border" then
-      return rounded rectangle path of rectangle [0,0,(my width)-3,(my height)-3] with radius 2
+      return rounded rectangle path of rectangle [0, 0, mWidth-5, mHeight-5] with radius 2
    end if
 end handler
 
 private handler fetchIconPath(in pIconName as String) returns Path
    variable tIconPath as Path
-   put iconSVGPathFromName(pIconName) into tIconPath
+   put path iconSVGPathFromName(pIconName) into tIconPath
 
-   variable tIconRect as Rect
-   if mWidgetTheme is "iOS" then
-      put my bounds into tIconRect
+   variable tIconRect as Rectangle
+   if mWidgetTheme is kWidgetThemeIos then
+      put rectangle [0, mHeight/4, mWidth, 3*mHeight/4] into tIconRect
+   else if mWidgetTheme is kWidgetThemeAndroidFloatingAction then
+      put rectangle [mWidth/2 - (mHeight-10)/2, (mHeight-10)/4, mWidth/2 + (mHeight-10)/2, 3*(mHeight-10)/4] into tIconRect
    end if
 
    setIconPath(tIconRect, tIconPath)
@@ -398,7 +420,7 @@ private handler fetchIconPath(in pIconName as String) returns Path
 end handler
 
 private handler fetchFont() returns Font
-   if mWidgetTheme is "iOS" then
+   if mWidgetTheme is kWidgetThemeIos then
       return font "Helvetica Neue" at size mIosFontSize
    else if mWidgetTheme contains "Android" then
       return font "Roboto Medium" at size mAndroidFontSize
@@ -411,17 +433,13 @@ end handler
 --
 --------------------------------------------------------------------------------
 
-constant kButtonThemeIos is "iOS"
-constant kButtonThemeAndroidRaised is "Android(Raised)"
-constant kButtonThemeAndroidFlat is "Android(Flat)"
-
 private handler setWidgetTheme(in pWidgetTheme as String)
    if pWidgetTheme is mWidgetTheme then
       return
    end if
 
    variable tThemeList as List
-   put [kButtonThemeIos, kButtonThemeAndroidRaised, kButtonThemeAndroidFlat] into tThemeList
+   put [kWidgetThemeIos, kWidgetThemeAndroidFloatingAction, kWidgetThemeAndroidRaised, kWidgetThemeAndroidFlat] into tThemeList
 
    if not(pWidgetTheme is in tThemeList) then
       throw "invalid widget theme"
@@ -429,49 +447,73 @@ private handler setWidgetTheme(in pWidgetTheme as String)
 
    put pWidgetTheme into mWidgetTheme
 
-   if mWidgetTheme is "Android(Raised)" then
-      put "Opaque" into mBackgroundOpacity
-   else if mWidgetTheme is "Android(Flat)" then
-      put "Transparent" into mBackgroundOpacity
+   variable tBackgroundColorString as String
+   put getBackgroundColor() into tBackgroundColorString
+   checkBackgroundColor(tBackgroundColorString)
+   put stringToColor(tBackgroundColorString) into mBackgroundColor
+
+   variable tLabelColorString as String
+   put getLabelColor() into tLabelColorString
+   checkTextColor(tLabelColorString)
+   put stringToColor(tLabelColorString) into mLabelColor
+
+   if mWidgetTheme is kWidgetThemeAndroidFloatingAction then
+      put kOpaqueBackground into mBackgroundOpacity
+      put kLabelStyleIcon into mLabelStyle
+
+   else if mWidgetTheme is kWidgetThemeAndroidRaised then
+      put kOpaqueBackground into mBackgroundOpacity
+      put kLabelStyleText into mLabelStyle
+
+   else if mWidgetTheme is kWidgetThemeAndroidFlat then
+      put kTransparentBackground into mBackgroundOpacity
+      put kLabelStyleText into mLabelStyle
+
    end if
 
    redraw all
 end handler
-
-constant kLabelStyleText is "text"
-constant kLabelStyleIcon is "icon"
 
 private handler setLabelStyle(in pStyle as String)
    if pStyle is mLabelStyle then
       return
    end if
 
-   variable tSyleList
+   variable tStyleList as List
    put [kLabelStyleText, kLabelStyleIcon] into tStyleList
 
    if not(pStyle is in tStyleList) then
       throw "invalid label style"
    end if
 
-   if pWidgetTheme contains "Android" then
-      if pStyle is "icon" then
-         put "Android(Floating Action)" into mWidgetTheme
-      else if pStyle is "text" then
-         put "Android(Light)" into mWidgetTheme
-      end if
+   if mWidgetTheme is kWidgetThemeIos then
+      put pStyle into mLabelStyle
+   else if mWidgetTheme is kWidgetThemeAndroidFloatingAction then
+      put kLabelStyleIcon into mLabelStyle
+   else if mWidgetTheme is kWidgetThemeAndroidRaised or mWidgetTheme is kWidgetThemeAndroidRaised then
+      put kLabelStyleText into mLabelStyle
    end if
 
-   put pStyle into mLabelStyle
    redraw all
 end handler
 
-public handler getTextColor() returns String
-   return colorToString(mTextColor)
+private handler setLabelText(in pText as String)
+   put pText into mLabelText
+   redraw all
 end handler
 
-public handler setTextColor(in pTextColor as String) returns nothing
-   checkTextColor(pTextColor)
-   put stringToColor(pTextColor) into mTextColor
+private handler setLabelIcon(in pIconName as String)
+   put pIconName into mLabelIcon
+   redraw all
+end handler
+
+public handler getLabelColor() returns String
+   return colorToString(mLabelColor)
+end handler
+
+public handler setLabelColor(in pLabelColor as String) returns nothing
+   checkTextColor(pLabelColor)
+   put stringToColor(pLabelColor) into mLabelColor
    redraw all
 end handler
 
@@ -480,17 +522,10 @@ public handler getBackgroundColor() returns String
 end handler
 
 public handler setBackgroundColor(in pBackgroundColor as String) returns nothing
-
-   if mWidgetTheme is "Android(Raised)" then
-      checkBackgroundColor(pBackgroundColor)
-   end if
-
+   checkBackgroundColor(pBackgroundColor)
    put stringToColor(pBackgroundColor) into mBackgroundColor
    redraw all
 end handler
-
-constant kOpaqueBackground is "Opaque"
-constant kTranslucentBackground is "Translucent"
 
 private handler setBackgroundOpacity(in pOpacity as String)
 
@@ -499,18 +534,26 @@ private handler setBackgroundOpacity(in pOpacity as String)
    end if
 
    variable tOpacityList as List
-   put [kOpaqueBackground, kTranslucentBackground] into tOpacityList
+   put [kOpaqueBackground, kTranslucentBackground, kTransparentBackground] into tOpacityList
 
    if not(pOpacity is in tOpacityList) then
       throw "invalid background opacity"
    end if
 
-   if mWidgetTheme is "Android(Raised)" then
-      put "Opaque" into mBackgroundOpacity
-   else if mWidgetTheme is "Android(Flat)" then
-      put "Transparent" into mBackgroundOpacity
-   else if mWidgetTheme is "iOS" then
+   if mWidgetTheme is kWidgetThemeIos then
       put pOpacity into mBackgroundOpacity
+
+      variable tColorString as String
+      put colorToString(mBackgroundColor) into tColorString
+      checkBackgroundColor(tColorString)
+      put stringToColor(tColorString) into mBackgroundColor
+
+   else if mWidgetTheme is kWidgetThemeAndroidFloatingAction or mWidgetTheme is kWidgetThemeAndroidRaised then
+      put kOpaqueBackground into mBackgroundOpacity
+
+   else if mWidgetTheme is kWidgetThemeAndroidFlat then
+      put kTransparentBackground into mBackgroundOpacity
+
    end if
 
    redraw all
@@ -569,31 +612,62 @@ end handler
 --
 --------------------------------------------------------------------------------
 
-private handler checkTextColor(in pTextColor as String) returns nothing
-   if mWidgetTheme is "Android(Raised)" then
-      if pTextColor is "255,255,255" then
+constant kWhiteColorString is "255,255,255"
+constant kDefaultColorString is "0,121,255"
+
+private handler checkTextColor(inout xTextColor as String) returns nothing
+
+   if mWidgetTheme is kWidgetThemeAndroidRaised then
+      if xTextColor is kWhiteColorString then
          put false into mShowBorder
          put mDefaultColor into mBackgroundColor
       else
          put true into mShowBorder
          put color [1,1,1] into mBackgroundColor
       end if
+
+   else if mWidgetTheme is kWidgetThemeAndroidFloatingAction then
+      put kWhiteColorString into xTextColor
+
    else
-      if pTextColor is "255,255,255" then
-         put mDefaultColor into mTextColor
+      if xTextColor is kWhiteColorString then
+         put kDefaultColorString into xTextColor
+         put color [1,1,1] into mBackgroundColor
       end if
    end if
 end handler
 
-private handler checkBackgroundColor(in pBackgroundColor as String) returns nothing
-   if pBackgroundColor is "255,255,255" then
-      put true into mShowBorder
-      if colorToString(mTextColor) is "255,255,255" then
-         put mDefaultColor into mTextColor
+private handler checkBackgroundColor(inout xBackgroundColor as String) returns nothing
+
+   if mWidgetTheme is kWidgetThemeIos then
+      if mBackgroundOpacity is kOpaqueBackground then
+         put kWhiteColorString into xBackgroundColor
+      else if mBackgroundOpacity is kTranslucentBackground then
+         put "255,255,255,204" into xBackgroundColor
+      else if mBackgroundOpacity is kTransparentBackground then
+         put "255,255,255,0" into xBackgroundColor
       end if
-   else
-      put false into mShowBorder
-      put color [1,1,1] into mTextColor
+
+   else if mWidgetTheme is kWidgetThemeAndroidFloatingAction then
+      put color [1,1,1] into mLabelColor
+      if xBackgroundColor contains kWhiteColorString then
+         put kDefaultColorString into xBackgroundColor
+      end if
+
+   else if mWidgetTheme is kWidgetThemeAndroidRaised then
+      if xBackgroundColor contains kWhiteColorString then
+         put true into mShowBorder
+         if colorToString(mLabelColor) is kWhiteColorString then
+            put mDefaultColor into mLabelColor
+         end if
+      else
+         put false into mShowBorder
+         put color [1,1,1] into mLabelColor
+      end if
+
+   else if  mWidgetTheme is kWidgetThemeAndroidFlat then
+      put kWhiteColorString into xBackgroundColor
+
    end if
 end handler
 
@@ -624,7 +698,13 @@ private handler stringToColor(in pString as String) returns Color
 	put (element 2 of tComponentList) parsed as number into tGreen
 	put (element 3 of tComponentList) parsed as number into tBlue
 
-	return color [ tRed/255, tGreen/255, tBlue/255]
+   if tComponentCount is 4 then
+     put (element 4 of tComponentList) parsed as number into tAlpha
+     return color [tRed/255, tGreen/255, tBlue/255, tAlpha/255]
+  else
+     return color [tRed/255, tGreen/255, tBlue/255]
+  end if
+
 end handler
 
 -- this handler converts an RGBA color to a string of numbers
@@ -638,8 +718,14 @@ private handler colorToString(in pColor as Color) returns String
    put stripZeros((the rounded of ((the red of pColor) * 255)) formatted as string) into tRed
    put stripZeros((the rounded of ((the green of pColor) * 255)) formatted as string) into tGreen
    put stripZeros((the rounded of ((the blue of pColor) * 255)) formatted as string) into tBlue
+   put stripZeros((the rounded of ((the alpha of pColor) * 255)) formatted as string) into tAlpha
 
-   return tRed & "," & tGreen & "," & tBlue
+   if tAlpha is "255" then
+      return tRed & "," & tGreen & "," & tBlue
+   else
+      return tRed & "," & tGreen & "," & tBlue & "," & tAlpha
+   end if
+
 end handler
 
 -- this handler strips the zeros when a integer is formatted as a string
