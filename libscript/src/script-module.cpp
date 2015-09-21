@@ -742,6 +742,10 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                 void *t_symbol;
 #ifdef _WIN32
 				t_symbol = GetProcAddress(GetModuleHandle(NULL), MCStringGetCString(t_type -> binding));
+#elif defined(__EMSCRIPTEN__)
+				void *t_handle = dlopen(NULL, RTLD_LAZY);
+				t_symbol = dlsym(t_handle, MCStringGetCString(t_type->binding));
+				dlclose(t_handle);
 #else
                 t_symbol = dlsym(RTLD_DEFAULT, MCStringGetCString(t_type -> binding));
 #endif
