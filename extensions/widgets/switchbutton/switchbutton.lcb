@@ -16,7 +16,23 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 /*
-A switch button, consisting of two mutually exclusive choices or states.
+This widget is a switch button, consisting of two mutually exclusive choices or states.
+
+Name: switchChanged
+Type: message
+Syntax: on switchChanged <pSwitchIsOn>
+Summary: Sent when the switch is changed to either the on or off position
+
+Parameters:
+pSwitchIsOn (boolean): True if the switch is in the on position and false if the switch is in the off position
+
+Example:
+on switchChanged pSwitchIsOn
+	set the visible of group 1 to pSwitchIsOn
+end switchChanged
+
+Description:
+Handle the switchChanged message in the widget's object script to respond to the user switching the button on or off.
 */
 
 -- declaring extension as widget, followed by identifier
@@ -132,6 +148,7 @@ private variable mIsEnabled as Boolean
 private variable mIsPressed as Boolean
 private variable mXClick as Real
 private variable mMouseHasMoved as Boolean
+private variable mSwitchIsInOnPosition as Boolean
 
 private variable mAndroidLightOnColors as Array
 private variable mAndroidDarkOnColors as Array
@@ -177,6 +194,7 @@ public handler OnCreate() returns nothing
 	put false into mIsPressed
 	put 0 into mXClick
 	put false into mMouseHasMoved
+	put false into mSwitchIsInOnPosition
 
 	fetchAndroidColors()
 	updateVariables()
@@ -246,18 +264,24 @@ private handler drawAndroid() returns nothing
 	set the paint of this canvas to fetchPaint("track")
 	fill fetchPath("track") on this canvas
 
-	-- draw the thumb with drop shadow
-	variable tShadow as Effect
-	put drawDropShadow() into tShadow
+	-- draw the thumb with drop shadow for Android(Light) theme
+	if mWidgetTheme is "Android(Light)" then
+		variable tShadow as Effect
+		put drawDropShadow() into tShadow
 
-	begin layer with tShadow on this canvas
-	set the paint of this canvas to fetchPaint("thumb")
-	fill fetchPath("thumb") on this canvas
-	end layer on this canvas
+		begin layer with tShadow on this canvas
+		set the paint of this canvas to fetchPaint("thumb")
+		fill fetchPath("thumb") on this canvas
+		end layer on this canvas
+
+	else if mWidgetTheme is "Android(Dark)" then
+		set the paint of this canvas to fetchPaint("thumb")
+		fill fetchPath("thumb") on this canvas
+	end if
 
 	-- draw the thumb border
 	if mWidgetTheme is "Android(Light)" then
-		if mIsEnabled is false or mSwitchIsOn is false then
+		if mIsEnabled is false or mSwitchIsOn is false or mSwitchIsInOnPosition is false then
 			set the paint of this canvas to fetchPaint("thumbBorder")
 			set the stroke width of this canvas to 0.5
 			stroke fetchPath("thumb") on this canvas
@@ -272,19 +296,19 @@ private handler drawDropShadow() returns Effect
 
 	-- iOS drop shadow effect
 	if mWidgetTheme is "iOS" then
-		put color [168/255, 168/255, 168/255] into tProps["color"]
+		put color [168/255, 168/255, 168/255, 0.75] into tProps["color"]
    	put "source over" into tProps["blend mode"]
-   	put 25 into tProps["opacity"]
+   	put 255 into tProps["opacity"]
    	put 0.9 into tProps["spread"]
    	put 1 into tProps["size"]
    	put 2 into tProps["distance"]
    	put 135 into tProps["angle"]
 
 	-- Android drop shadow effect
-	else if mWidgetTheme contains "Android" then
-   	put color [164/255, 164/255, 164/255] into tProps["color"]
+else if mWidgetTheme is "Android(Light)" then
+   	put color [164/255, 164/255, 164/255, 0.5] into tProps["color"]
    	put "source over" into tProps["blend mode"]
-   	put 25 into tProps["opacity"]
+   	put 255 into tProps["opacity"]
    	put 0 into tProps["spread"]
    	put 1 into tProps["size"]
    	put 4 into tProps["distance"]
@@ -304,13 +328,13 @@ private handler fetchPaint(in pObject as String) returns Paint
 	-- iOS colors
 	if mWidgetTheme is "iOS" then
 		if pObject is "border" then
-			if mSwitchIsOn is false then
+			if mSwitchIsOn is false or mSwitchIsInOnPosition is false then
 				put color [228/255, 228/255, 228/255] into tColor
 			else
 				put color [66/255, 212/255, 81/255] into tColor
 			end if
 		else if pObject is "track" then
-			if mSwitchIsOn then
+			if mSwitchIsOn or mSwitchIsInOnPosition then
 				put color [66/255, 212/255, 81/255] into tColor
 			else
 				if mIsPressed then
@@ -326,7 +350,7 @@ private handler fetchPaint(in pObject as String) returns Paint
 	-- Android(Light) colors
 	else if mWidgetTheme is "Android(Light)" then
 		if mIsEnabled then
-			if mSwitchIsOn then
+			if mSwitchIsOn or mSwitchIsInOnPosition then
 				if pObject is "thumb" then
 					put mAndroidLightOnColors[mColorScheme] into tColorString
 				else if pObject is "track" then
@@ -363,7 +387,7 @@ private handler fetchPaint(in pObject as String) returns Paint
 	-- Android(Dark) colors
 	else if mWidgetTheme is "Android(Dark)" then
 		if mIsEnabled then
-			if mSwitchIsOn then
+			if mSwitchIsOn or mSwitchIsInOnPosition then
 				if pObject is "thumb" then
 					put mAndroidDarkOnColors[mColorScheme] into tColorString
 				else if pObject is "track" then
@@ -404,19 +428,19 @@ private handler fetchPath(in pObject as String) returns Path
 		if pObject is "track" then
 			return rounded rectangle path of rectangle [mWidth/2 - 3*mHeight/8, mHeight/4, mWidth/2 + 3*mHeight/8, 3*mHeight/4] with radius mHeight/4
 		else if pObject is "thumb" then
-			if mSwitchIsOn then
+			if mSwitchIsOn or mSwitchIsInOnPosition then
 				return circle path centered at point [mWidth/2 + 3*mHeight/16, mHeight/2] with radius mHeight/4
 			else
 				return circle path centered at point [mWidth/2 - 3*mHeight/16, mHeight/2] with radius mHeight/4
 			end if
 		else if pObject is "thumbExtensionCircle" then
-			if mSwitchIsOn then
+			if mSwitchIsOn or mSwitchIsInOnPosition then
 				return circle path centered at point [mWidth/2 + mHeight/16, mHeight/2] with radius mHeight/4
 			else
 				return circle path centered at point [mWidth/2 - mHeight/16, mHeight/2] with radius mHeight/4
 			end if
 		else if pObject is "thumbExtensionRect" then
-			if mSwitchIsOn then
+			if mSwitchIsOn or mSwitchIsInOnPosition then
 				return rectangle path of rectangle [mWidth/2 + mHeight/16, mHeight/4, mWidth/2 + 3*mHeight/16, 3*mHeight/4]
 			else
 				return rectangle path of rectangle [mWidth/2 - 3*mHeight/16, mHeight/4, mWidth/2 - mHeight/16, 3*mHeight/4]
@@ -434,7 +458,7 @@ private handler fetchPath(in pObject as String) returns Path
 		else if pObject is "track" then
 			return rounded rectangle path of rectangle [2.5*mRadius, mHeight/2 - 2*mRadius/3, 5.5*mRadius, mHeight/2 + 2*mRadius/3] with radius 2*mRadius/3
 		else if pObject is "pressedHilite" then
-			if mSwitchIsOn then
+			if mSwitchIsOn or mSwitchIsInOnPosition then
 				return circle path centered at point [5*mRadius, mHeight/2] with radius 2.5*mRadius
 			else
 				return circle path centered at point [3*mRadius, mHeight/2] with radius 2.5*mRadius
@@ -531,9 +555,9 @@ public handler OnMouseMove() returns nothing
 		end if
 
 		if tMovedRight then
-			put true into mSwitchIsOn
+			put true into mSwitchIsInOnPosition
 		else
-			put false into mSwitchIsOn
+			put false into mSwitchIsInOnPosition
 		end if
 
 		redraw all
@@ -550,16 +574,25 @@ end handler
 
 public handler OnMouseUp() returns nothing
 	if mMouseHasMoved then
-		post "mouseUp" with [mSwitchIsOn]
+		setSwitch(mSwitchIsInOnPosition)
+		put false into mMouseHasMoved
 	else
 		if the click position is within clickableRect() then
 			setSwitch(not(mSwitchIsOn))
-			post "mouseUp" with [mSwitchIsOn]
 		end if
 	end if
 
+	post "switchChanged" with [mSwitchIsOn]
 	put false into mIsPressed
-	redraw all
+end handler
+
+public handler OnMouseRelease() returns nothing
+	if mMouseHasMoved then
+		setSwitch(mSwitchIsInOnPosition)
+		put false into mMouseHasMoved
+		post "switchChanged" with [mSwitchIsOn]
+		put false into mIsPressed
+	end if
 end handler
 
 --------------------------------------------------------------------------------
@@ -574,15 +607,15 @@ constant kWidgetThemeAndroidLight is "Android(Light)"
 
 private handler setWidgetTheme(in pWidgetTheme as String) returns nothing
 
+	if pWidgetTheme is mWidgetTheme then
+		return
+	end if
+
 	variable tThemeList as List
 	put [kWidgetThemeIos, kWidgetThemeAndroidDark, kWidgetThemeAndroidLight] into tThemeList
 
 	if not(pWidgetTheme is in tThemeList) then
 		throw "invalid widget theme"
-	end if
-
-	if pWidgetTheme is mWidgetTheme then
-		return
 	end if
 
 	put pWidgetTheme into mWidgetTheme
@@ -642,6 +675,7 @@ private handler setSwitch(in pIsOn as Boolean) returns nothing
 	end if
 
 	put pIsOn into mSwitchIsOn
+	put mSwitchIsOn into mSwitchIsInOnPosition
 	redraw all
 end handler
 
