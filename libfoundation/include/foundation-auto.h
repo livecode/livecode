@@ -215,6 +215,7 @@ private:
 typedef MCAutoValueRefArrayBase<MCValueRef> MCAutoValueRefArray;
 typedef MCAutoValueRefArrayBase<MCNumberRef> MCAutoNumberRefArray;
 typedef MCAutoValueRefArrayBase<MCStringRef> MCAutoStringRefArray;
+typedef MCAutoValueRefArrayBase<MCDataRef> MCAutoDataRefArray;
 typedef MCAutoValueRefArrayBase<MCArrayRef> MCAutoArrayRefArray;
 typedef MCAutoValueRefArrayBase<MCListRef> MCAutoListRefArray;
 typedef MCAutoValueRefArrayBase<MCBooleanRef> MCAutoBooleanRefArray;
