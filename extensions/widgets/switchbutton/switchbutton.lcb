@@ -281,7 +281,7 @@ private handler drawAndroid() returns nothing
 
 	-- draw the thumb border
 	if mWidgetTheme is "Android(Light)" then
-		if mIsEnabled is false or mSwitchIsOn is false or mSwitchIsInOnPosition is false then
+		if mIsEnabled is false or mSwitchIsInOnPosition is false then
 			set the paint of this canvas to fetchPaint("thumbBorder")
 			set the stroke width of this canvas to 0.5
 			stroke fetchPath("thumb") on this canvas
@@ -328,13 +328,13 @@ private handler fetchPaint(in pObject as String) returns Paint
 	-- iOS colors
 	if mWidgetTheme is "iOS" then
 		if pObject is "border" then
-			if mSwitchIsOn is false or mSwitchIsInOnPosition is false then
+			if mSwitchIsInOnPosition is false then
 				put color [228/255, 228/255, 228/255] into tColor
 			else
 				put color [66/255, 212/255, 81/255] into tColor
 			end if
 		else if pObject is "track" then
-			if mSwitchIsOn or mSwitchIsInOnPosition then
+			if mSwitchIsInOnPosition then
 				put color [66/255, 212/255, 81/255] into tColor
 			else
 				if mIsPressed then
@@ -350,7 +350,7 @@ private handler fetchPaint(in pObject as String) returns Paint
 	-- Android(Light) colors
 	else if mWidgetTheme is "Android(Light)" then
 		if mIsEnabled then
-			if mSwitchIsOn or mSwitchIsInOnPosition then
+			if mSwitchIsInOnPosition then
 				if pObject is "thumb" then
 					put mAndroidLightOnColors[mColorScheme] into tColorString
 				else if pObject is "track" then
@@ -387,7 +387,7 @@ private handler fetchPaint(in pObject as String) returns Paint
 	-- Android(Dark) colors
 	else if mWidgetTheme is "Android(Dark)" then
 		if mIsEnabled then
-			if mSwitchIsOn or mSwitchIsInOnPosition then
+			if mSwitchIsInOnPosition then
 				if pObject is "thumb" then
 					put mAndroidDarkOnColors[mColorScheme] into tColorString
 				else if pObject is "track" then
@@ -428,19 +428,19 @@ private handler fetchPath(in pObject as String) returns Path
 		if pObject is "track" then
 			return rounded rectangle path of rectangle [mWidth/2 - 3*mHeight/8, mHeight/4, mWidth/2 + 3*mHeight/8, 3*mHeight/4] with radius mHeight/4
 		else if pObject is "thumb" then
-			if mSwitchIsOn or mSwitchIsInOnPosition then
+			if mSwitchIsInOnPosition then
 				return circle path centered at point [mWidth/2 + 3*mHeight/16, mHeight/2] with radius mHeight/4
 			else
 				return circle path centered at point [mWidth/2 - 3*mHeight/16, mHeight/2] with radius mHeight/4
 			end if
 		else if pObject is "thumbExtensionCircle" then
-			if mSwitchIsOn or mSwitchIsInOnPosition then
+			if mSwitchIsInOnPosition then
 				return circle path centered at point [mWidth/2 + mHeight/16, mHeight/2] with radius mHeight/4
 			else
 				return circle path centered at point [mWidth/2 - mHeight/16, mHeight/2] with radius mHeight/4
 			end if
 		else if pObject is "thumbExtensionRect" then
-			if mSwitchIsOn or mSwitchIsInOnPosition then
+			if mSwitchIsInOnPosition then
 				return rectangle path of rectangle [mWidth/2 + mHeight/16, mHeight/4, mWidth/2 + 3*mHeight/16, 3*mHeight/4]
 			else
 				return rectangle path of rectangle [mWidth/2 - 3*mHeight/16, mHeight/4, mWidth/2 - mHeight/16, 3*mHeight/4]
@@ -450,7 +450,7 @@ private handler fetchPath(in pObject as String) returns Path
 	-- Android paths
 	else if mWidgetTheme contains "Android" then
 		if pObject is "thumb" then
-			if mSwitchIsOn then
+			if mSwitchIsInOnPosition then
 				return circle path centered at point [5*mRadius, mHeight/2] with radius mRadius
 			else
 				return circle path centered at point [3*mRadius, mHeight/2] with radius mRadius
@@ -458,7 +458,7 @@ private handler fetchPath(in pObject as String) returns Path
 		else if pObject is "track" then
 			return rounded rectangle path of rectangle [2.5*mRadius, mHeight/2 - 2*mRadius/3, 5.5*mRadius, mHeight/2 + 2*mRadius/3] with radius 2*mRadius/3
 		else if pObject is "pressedHilite" then
-			if mSwitchIsOn or mSwitchIsInOnPosition then
+			if mSwitchIsInOnPosition then
 				return circle path centered at point [5*mRadius, mHeight/2] with radius 2.5*mRadius
 			else
 				return circle path centered at point [3*mRadius, mHeight/2] with radius 2.5*mRadius
