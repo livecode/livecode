@@ -595,10 +595,117 @@ static void cgi_fetch_valueref_for_key(MCVariable *p_variable, MCNameRef p_key, 
     r_var_value = p_variable->getvalueref(&p_key, 1, false);
 }
 
-static bool cgi_store_control_value(MCVariable *p_variable, MCNameRef p_key, MCValueRef p_value)
+// SN-2015-09-21: [[ Bug 15946 ]] Ensure that the variable are parsed correctly
+static bool cgi_store_control_value(MCVariable *p_variable, MCNameRef p_raw_key, MCValueRef p_value)
 {
-    return p_variable->setvalueref(&p_key, 1, false, p_value);
+    MCStringRef t_raw_key_str;
+    t_raw_key_str = MCNameGetString(p_raw_key);
+
+    uindex_t t_key_end;
+
+    // Use the full key if there is no subkey
+    if (!MCStringFirstIndexOfChar(t_raw_key_str, '[', 0, kMCStringOptionCompareExact, t_key_end))
+    {
+        return p_variable -> setvalueref(&p_raw_key, 1, false, p_value);
+    }
+
+    // Store the key path.
+    MCAutoArray<MCNameRef> t_path;
+    MCValueRef t_fetched_value;
+
+    bool t_success;
+    t_success = true;
+
+    // We get the value for the first key.
+    MCAutoStringRef t_key_str;
+    MCNewAutoNameRef t_key;
+
+    // We fetch the initial key
+    if (t_success)
+        t_success = MCStringCopySubstring(t_raw_key_str, MCRangeMake(0, t_key_end), &t_key_str)
+                && MCNameCreate(*t_key_str, &t_key)
+                && t_path . Push(MCValueRetain(*t_key));
+
+    if (!t_success)
+        return false;
+
+    t_fetched_value = p_variable -> getvalueref(t_path . Ptr(), t_path . Size(), false);
+
+    uindex_t t_subkey_start, t_subkey_end;
+
+    // Initialise t_subkey_end to find the first subkey after the initial key
+    t_subkey_end = t_key_end;
+
+    while (t_success
+           && MCStringFirstIndexOfChar(t_raw_key_str, '[', t_subkey_end, kMCStringOptionCompareExact, t_subkey_start))
+    {
+        // Fetch the value at the current path.
+        if (t_success)
+            t_fetched_value = p_variable -> getvalueref(t_path . Ptr(), t_path . Size(), false);
+
+        // The subkey starts after the '['
+        t_subkey_start++;
+
+        if (t_success)
+            t_success = MCStringFirstIndexOfChar(t_raw_key_str, ']', t_subkey_start, kMCStringOptionCompareExact, t_subkey_end);
+
+        if (t_success)
+        {
+            MCAutoStringRef t_subkey_str;
+            MCNewAutoNameRef t_subkey;
+            // We create the subkeys as needed (unnamed keys are translated to
+            //  indices).
+            if (t_subkey_end == t_subkey_start)
+            {
+                // Subkey with no name: we must use an index
+                uindex_t t_index;
+
+                // getvalueref returns kMCEmptyString if the key path does not lead to
+                //  an existing value.
+                if (t_fetched_value == kMCEmptyString
+                        || !MCValueIsArray(t_fetched_value))
+                {
+                    // Not an array: we put the value at the index 1
+                    t_index = 1;
+                }
+                else if (MCArrayIsSequence((MCArrayRef)t_fetched_value))
+                {
+                    // Sequence: we put after the last element
+                    t_index = MCArrayGetCount((MCArrayRef)t_fetched_value) + 1;
+                }
+                else
+                {
+                    // We get the first index available
+                    for (t_index = 1; p_variable -> getvalueref(t_path.Ptr(), t_path.Size(), false) != kMCEmptyString; ++t_index)
+                        ;
+                }
+
+                t_success = MCStringFormat(&t_subkey_str, "%u", t_index);
+            }
+            else
+            {
+                // We have a named key, we just add the name to the path.
+                t_success = MCStringCopySubstring(t_raw_key_str, MCRangeMake(t_subkey_start, t_subkey_end - t_subkey_start), &t_subkey_str);
+            }
+
+            // Create a name from the subkey string, and append it to the path
+            if (t_success)
+                t_success == MCNameCreate(*t_subkey_str, &t_subkey)
+                        && t_path . Push(MCValueRetain(*t_subkey));
+        }
+    }
+
+    // Store the value at the built key path - setvalueref will take care of
+    //  creating subarrays if needed.
+    if (t_success)
+        t_success = p_variable -> setvalueref(t_path . Ptr(), t_path . Size(), false, p_value);
+
+    // Clean keys array
+    t_path . Delete();
+
+    return t_success;
 }
+
 
 static bool MCConvertNativeFromUTF16(const uint16_t *p_chars, uint32_t p_char_count, uint8_t*& r_output, uint32_t& r_output_length);
 static bool MCConvertNativeFromWindows1252(const uint8_t *p_chars, uint32_t p_char_count, uint8_t*& r_output, uint32_t& r_output_length);
