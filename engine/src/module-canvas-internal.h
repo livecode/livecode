@@ -104,7 +104,6 @@ enum MCCanvasEffectProperty
 {
 	kMCCanvasEffectPropertyColor,
 	kMCCanvasEffectPropertyBlendMode,
-	kMCCanvasEffectPropertyOpacity,
 	
 	//	kMCCanvasEffectPropertyFilter,
 	kMCCanvasEffectPropertySize,
@@ -120,7 +119,6 @@ struct __MCCanvasEffectImpl
 {
 	MCCanvasEffectType type;
 	
-	MCCanvasFloat opacity;
 	MCGBlendMode blend_mode;
 	MCCanvasColorRef color;
 	
