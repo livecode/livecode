@@ -870,7 +870,7 @@ MCParagraph *MCField::texttoparagraphs(MCStringRef p_text)
 
 		if (t_next > 0)
 		{
-            t_block . string_buffer = t_unicode_text;
+            t_block . string_buffer = (const uint2*)t_unicode_text;
 			t_block . string_length = t_next;
             
 			converttoparagraphs(t_paragraphs, NULL, &t_block);
