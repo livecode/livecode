@@ -1,4 +1,4 @@
-/*
+m/*
 Copyright (C) 2015 Runtime Revolution Ltd.
 
 This file is part of LiveCode.
@@ -61,47 +61,82 @@ metadata widgetTheme.default is "iOS"
 metadata widgetTheme.label is "Widget Theme"
 
 /*
+Syntax: set the labelStyle of <widget> to <pStyle>
+Syntax: get the labelStyle of <widget>
+
+Summary: The display style of the widget's label
+
+Parameters:
+pStyle(enum): The display style
+-"text"
+-"icon"
+
+Description:
+Use the <labelStyle> property to set the display style of the widget's label, either text or an icon.
 */
-property widgetDisplay get mWidgetDisplay set setWidgetDisplay
-metadata widgetDisplay.editor is "com.livecode.pi.enum"
-metadata widgetDisplay.options is "text,icon"
-metadata widgetTheme.deafult is "text"
-metadata widgetTheme.label is "Widget Display"
+property labelStyle get mLabelStyle set setLabelStyle
+metadata labelStyle.editor is "com.livecode.pi.enum"
+metadata labelStyle.options is "text,icon"
+metadata labelStyle.default is "text"
+metadata labelStyle.label is "Label Type"
 
 /*
-Syntax: set the buttonLabel of <widget> to <pLabel>
-Syntax: get the buttonLabel of <widget>
+Syntax: set the labelText of <widget> to <pText>
+Syntax: get the labelText of <widget>
 
 Summary: The text displayed on the button
 
 Parameters:
-pLabel(string): The text shown on the button
+pText(string): The text shown on the button
 
 Description:
-Use the <buttonLabel> property to set the label of the button, which is the text displayed in the button.
+Use the <labelText> property to set the text of the widget's label.
 */
-property buttonLabel get mButtonLabel set setButtonLabel
-metadata buttonLabel.default is "Button"
-metadata buttonLabel.label is "Label"
+property labelText get mLabelText set setLabelText
+metadata labelText.default is "Button"
+metadata labelText.label is "Label Text"
 
 /*
-Syntax: set the <textColor> of <widget> to <pTextColor>
-Syntax: get the <textColor> of <widget>
+Syntax: set the labelIcon of <widget> to <pIconName>
+Syntax: get the labelIcon of <widget>
 
-Summary: The color of the text displayed on the button
+Summary: The icon displayed on the button
 
 Parameters:
-pTextColor(color): The color of the text
+pIconName(enum): The name of the icon shown on the button
+- a list of predefined values
 
 Description:
-Use the <textColor> property to set the color of the label on the button.
+Use the <labelIcon> property to set the icon of the widget's label  to one of the predefined values.
+The complete list of preset values is available by executing
+
+``` put iconNames()```
+
+*/
+property labelIcon get mLabelIcon set setLabelIcon
+metadata labelIcon.editor is "com.livecode.pi.enum"
+metadata labelIcon.options is "execute: get iconNames()"
+metadata labelIcon.default is "Star"
+metadata labelIcon.label is "Label Icon"
+
+/*
+Syntax: set the <labelColor> of <widget> to <pLabelColor>
+Syntax: get the <labelColor> of <widget>
+
+Summary: The color of the label shown on the button
+
+Parameters:
+pLabelColor(color): The color of the label
+
+Description:
+Use the <labelColor> property to set the color of the label on the button.
 
 If the theme of the widget is "Android(Raised)" and the background color of the widget is not white, then the text color of the widget will always be set to white.
 */
-property buttonTextColor get getTextColor set setTextColor
-metadata buttonTextColor.editor is "com.livecode.pi.color"
-metadata buttonTextColor.label is "Text Color"
-metadata buttonTextColor.default is "0,121,255"
+property labelColor get getLabelColor set setLabelColor
+metadata labelColor.editor is "com.livecode.pi.color"
+metadata labelColor.label is "Label Color"
+metadata labelColor.default is "0,121,255"
 
 /*
 Syntax: set the <backgroundColor> of <widget> to <pBackgroundColor>
@@ -148,8 +183,10 @@ metadata backgroundOpacity.label is "Background Opacity"
 
 -- private instance variables
 private variable mWidgetTheme as String
-private variable mButtonLabel as String
-private variable mTextColor as Color
+private variable mLabelStyle as string
+private variable mLabelText as String
+private variable mLabelIcon as String
+private variable mLabelColor as Color
 private variable mBackgroundColor as Color
 private variable mBackgroundOpacity as String
 
@@ -162,8 +199,10 @@ public handler OnSave(out rProperties as Array)
    put the empty array into rProperties
 
    put mWidgetTheme into rProperties["theme"]
-   put mButtonLabel into rProperties["label"]
-   put colorToString(mTextColor) into rProperties["textColor"]
+   put mLabelStyle into rProperties["labelStyle"]
+   put mLabelText into rProperties["labelText"]
+   put mLabelIcon into rProperties["labelIcon"]
+   put colorToString(mLabelColor) into rProperties["labelColor"]
    put colorToString(mBackgroundColor) into rProperties["backgroundColor"]
    put mBackgroundOpacity into rProperties["opacity"]
 
@@ -171,16 +210,20 @@ end handler
 
 public handler OnLoad(in pProperties as Array)
    put pProperties["theme"] into mWidgetTheme
-   put pProperties["label"] into mButtonLabel
-   put stringToColor(pProperties["textColor"]) into mTextColor
+   put pProperties["labelStyle"] into mLabelStyle
+   put pProperties["labelText"] into mLabelText
+   put pProperties["labelIcon"] into mLabelIcon
+   put stringToColor(pProperties["labelColor"]) into mLabelColor
    put stringToColor(pProperties["backgroundColor"]) into mBackgroundColor
    put pProperties["opacity"] into mBackgroundOpacity
 end handler
 
 public handler OnCreate() returns nothing
    put "iOS" into mWidgetTheme
-   put "Button" into mButtonLabel
-   put color [0, 121/255, 1] into mTextColor
+   put "text" into mLabelStyle
+   put "Button" into mLabelText
+   put "Star" into mLabelIcon
+   put color [0, 121/255, 1] into mLabelColor
    put color [1, 1, 1] into mBackgroundColor
    put "Transparent" into mBackgroundOpacity
 
@@ -194,6 +237,8 @@ public handler OnPaint() returns nothing
 
    if mWidgetTheme is "iOS" then
       drawIosButton()
+   else if mWidgetTheme is "Android(Floating Action)" then
+      drawAndroidFloatingActionButton()
    else if mWidgetTheme is "Android(Raised)" then
       drawAndroidRaisedButton()
    else if mWidgetTheme is "Android(Flat)" then
@@ -216,7 +261,16 @@ private handler drawIosButton() returns nothing
    -- label
    set the font of this canvas to fetchFont()
    set the paint of this canvas to fetchPaint("label")
-   fill text mButtonLabel at center of my bounds on this canvas
+   if mLabelStyle is "text" then
+      fill text mButtonLabel at center of my bounds on this canvas
+   else if mLabelStyle is "icon" then
+      fill fetchIconPath(mLabelIcon) on this canvas
+   end if
+
+end handler
+
+private handler drawAndroidFloatingActionButton() returns nothing
+
 end handler
 
 private handler drawAndroidRaisedButton() returns nothing
@@ -330,6 +384,19 @@ private handler fetchPath(in pObject as String) returns Path
    end if
 end handler
 
+private handler fetchIconPath(in pIconName as String) returns Path
+   variable tIconPath as Path
+   put iconSVGPathFromName(pIconName) into tIconPath
+
+   variable tIconRect as Rect
+   if mWidgetTheme is "iOS" then
+      put my bounds into tIconRect
+   end if
+
+   setIconPath(tIconRect, tIconPath)
+   return tIconPath
+end handler
+
 private handler fetchFont() returns Font
    if mWidgetTheme is "iOS" then
       return font "Helvetica Neue" at size mIosFontSize
@@ -349,19 +416,15 @@ constant kButtonThemeAndroidRaised is "Android(Raised)"
 constant kButtonThemeAndroidFlat is "Android(Flat)"
 
 private handler setWidgetTheme(in pWidgetTheme as String)
-
-   variable tThemeList as List
-   variable tInList as Boolean
-
-   put [kButtonThemeIos, kButtonThemeAndroidRaised, kButtonThemeAndroidFlat] into tThemeList
-   put pWidgetTheme is in tThemeList into tInList
-
-   if tInList is false then
-      throw "invalid widget theme"
-   end if
-
    if pWidgetTheme is mWidgetTheme then
       return
+   end if
+
+   variable tThemeList as List
+   put [kButtonThemeIos, kButtonThemeAndroidRaised, kButtonThemeAndroidFlat] into tThemeList
+
+   if not(pWidgetTheme is in tThemeList) then
+      throw "invalid widget theme"
    end if
 
    put pWidgetTheme into mWidgetTheme
@@ -375,8 +438,30 @@ private handler setWidgetTheme(in pWidgetTheme as String)
    redraw all
 end handler
 
-private handler setButtonLabel(in pLabel as String)
-   put pLabel into mButtonLabel
+constant kLabelStyleText is "text"
+constant kLabelStyleIcon is "icon"
+
+private handler setLabelStyle(in pStyle as String)
+   if pStyle is mLabelStyle then
+      return
+   end if
+
+   variable tSyleList
+   put [kLabelStyleText, kLabelStyleIcon] into tStyleList
+
+   if not(pStyle is in tStyleList) then
+      throw "invalid label style"
+   end if
+
+   if pWidgetTheme contains "Android" then
+      if pStyle is "icon" then
+         put "Android(Floating Action)" into mWidgetTheme
+      else if pStyle is "text" then
+         put "Android(Light)" into mWidgetTheme
+      end if
+   end if
+
+   put pStyle into mLabelStyle
    redraw all
 end handler
 
@@ -409,18 +494,15 @@ constant kTranslucentBackground is "Translucent"
 
 private handler setBackgroundOpacity(in pOpacity as String)
 
-   variable tOpacityList as List
-   variable tInList as Boolean
-
-   put [kOpaqueBackground, kTranslucentBackground] into tOpacityList
-   put pOpacity is in tOpacityList into tInList
-
-   if tInList is false then
-      throw "invalid background opacity"
-   end if
-
    if pOpacity is mBackgroundOpacity then
       return
+   end if
+
+   variable tOpacityList as List
+   put [kOpaqueBackground, kTranslucentBackground] into tOpacityList
+
+   if not(pOpacity is in tOpacityList) then
+      throw "invalid background opacity"
    end if
 
    if mWidgetTheme is "Android(Raised)" then
@@ -432,6 +514,53 @@ private handler setBackgroundOpacity(in pOpacity as String)
    end if
 
    redraw all
+end handler
+
+--------------------------------------------------------------------------------
+--
+--		Icon Paths
+--
+--------------------------------------------------------------------------------
+
+-- Translate and scale xPath so that it fits within pTargetRect
+private handler setIconPath(in pTargetRect as Rectangle, inout xPath as Path)
+
+	-- Scale the icon appropriately
+	variable tBounds
+   variable tXScale as Real
+   variable tYScale as Real
+
+	put the bounding box of xPath into tBounds
+	put the width of pTargetRect / the width of tBounds into tXScale
+	put the height of pTargetRect / the height of tBounds into tYScale
+
+	if tXScale > tYScale then
+		put tYScale into tXScale
+	else
+		put tXScale into tYScale
+	end if
+
+    scale xPath by [tXScale, tYScale]
+
+	variable tXTranslate as Real
+	variable tYTranslate as Real
+
+   put the bounding box of xPath into tBounds
+
+	put the left of pTargetRect - the left of tBounds into tXTranslate
+	put the top of pTargetRect - the top of tBounds into tYTranslate
+
+    variable tXDiff as Real
+    variable tYDiff as Real
+
+    put the width of pTargetRect - the width of tBounds into tXDiff
+    put the height of pTargetRect - the height of tBounds into tYDiff
+
+	-- Align center
+	divide tXDiff by 2
+	divide tYDiff by 2
+
+	translate xPath by [tXTranslate + tXDiff, tYTranslate + tYDiff]
 end handler
 
 --------------------------------------------------------------------------------
