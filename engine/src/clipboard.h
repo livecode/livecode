@@ -175,7 +175,7 @@ private:
     
     
     // Constructor and destructor
-    friend class MCMixinRefcounted;
+    friend class MCMixinRefcounted<MCClipboard>;
     MCClipboard(MCRawClipboard* t_underlying_clipboard);
     ~MCClipboard();
     
