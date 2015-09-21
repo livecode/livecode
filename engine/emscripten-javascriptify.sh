@@ -41,12 +41,15 @@ ${EMCC} ${optimisation_flags} ${CFLAGS} \
 	"${input}" \
 	-o "${output}" \
 	--shell-file "${html_template}" \
-	-s EMTERPRETIFY_WHITELIST=@"${whitelist}" \
+	-s ALLOW_MEMORY_GROWTH=1 \
 	-s ASSERTIONS=1 \
 	-s EMTERPRETIFY=1 \
 	-s EMTERPRETIFY_ASYNC=1 \
-	-s ALLOW_MEMORY_GROWTH=1 \
+	-s EMTERPRETIFY_WHITELIST=@"${whitelist}" \
+	-s LINKABLE=1 \
+	-s RESERVED_FUNCTION_POINTERS=1024 \
 	-s TOTAL_MEMORY=67108864 \
+	-s WARN_ON_UNDEFINED_SYMBOLS=1 \
 	--pre-js "${preamble}" \
 	${libs}
 

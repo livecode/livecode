@@ -15,7 +15,7 @@
 		'conditions':
 		[
 			[
-				'OS == "linux" or OS == "android"',
+				'OS == "linux" or OS == "android" or OS == "emscripten"',
 				{
 					# Ensure that the symbols LCB binds to are exported from the engine
 					'ldflags': [ '-rdynamic' ],
