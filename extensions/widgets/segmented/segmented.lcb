@@ -632,12 +632,15 @@ private handler updatePerimeter() returns nothing
 	put rounded rectangle path of rectangle [0.5, 0.5, (the trunc of tRight) + 0.5, (the trunc of my height) - 0.5] with radius mRadius into mPerimeter
 end handler
 
+constant kDefaultSegmentIcon is "circle"
+constant kDefaultSegmentLabel is "Title"
+
 private handler updateProperties() returns nothing
 	variable tX as Integer
 	
 	if (the number of elements in mSegmentLabels) < mNumSegments then
 		repeat with tX from 1 up to (mNumSegments-(the number of elements in mSegmentLabels))
-			push "Title" onto back of mSegmentLabels
+			push kDefaultSegmentLabel onto back of mSegmentLabels
 		end repeat
 	else if (the number of elements in mSegmentLabels) > mNumSegments then
 		repeat with tX from 1 up to (the number of elements in mSegmentLabels)-mNumSegments
@@ -667,7 +670,7 @@ private handler updateProperties() returns nothing
 		
 	if (the number of elements in mSegmentIcons) < mNumSegments then
 		repeat with tX from 1 up to (mNumSegments-(the number of elements in mSegmentIcons))
-			push "circle" onto back of mSegmentIcons
+			push kDefaultSegmentIcon onto back of mSegmentIcons
 		end repeat
 	else if (the number of elements in mSegmentIcons) > mNumSegments then
 		repeat with tX from 1 up to (the number of elements in mSegmentIcons)-mNumSegments
@@ -677,7 +680,7 @@ private handler updateProperties() returns nothing
 	
 	if (the number of elements in mSelectedIcons) < mNumSegments then
 		repeat with tX from 1 up to (mNumSegments-(the number of elements in mSelectedIcons))
-			push "circle" onto back of mSelectedIcons
+			push kDefaultSegmentIcon onto back of mSelectedIcons
 		end repeat
 	else if (the number of elements in mSelectedIcons) > mNumSegments then
 		repeat with tX from 1 up to (the number of elements in mSelectedIcons)-mNumSegments
