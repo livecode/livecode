@@ -85,6 +85,7 @@
 				'src/foundation-unicodechars.cpp',
 				'src/foundation-value.cpp',
 				'src/foundation-objc.mm',
+				'src/foundation-ffi-js.cpp',
 				'src/system-commandline.cpp',
 				'src/system-file.cpp',
 				'src/system-file-posix.cpp',
@@ -136,6 +137,15 @@
 					'_toolset != "target"',
 					{
 						'product_name': 'libFoundation->(_toolset)',
+					},
+				],
+				[
+					'toolset_os != "emscripten"',
+					{
+						'sources!':
+						[
+							'src/foundation-ffi-js.cpp',
+						],
 					},
 				],
 			],
