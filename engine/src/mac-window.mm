@@ -2053,7 +2053,6 @@ void MCMacPlatformWindow::DoHide(void)
 	
 		// CW-2015-09-21: [[ Bug 15979 ]] Call close instead of orderOut here to properly close
 		// windows that have been iconified.
-		[m_window_handle setReleasedWhenClosed: NO];
 		[m_window_handle close];
 	}
 	
