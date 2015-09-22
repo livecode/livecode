@@ -694,11 +694,7 @@ void MCX11PutImage(GdkDisplay *p_dpy, GdkDrawable* d, GdkRegion* p_clip_region, 
                           int2 dx, int2 dy, uint2 w, uint2 h)
 {
 	if (d == nil)
-		return;
-
-	GdkGC *t_gc;
-
-	t_gc = gdk_gc_new(d);
+        return;
 
     // If we use gdk_draw_pixbuf, the pixbuf gets blended with the existing
     // contents of the window - something that we definitely do not want. We
