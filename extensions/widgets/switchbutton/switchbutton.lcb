@@ -126,24 +126,10 @@ property switchIsOn get mSwitchIsOn set setSwitch
 metadata switchIsOn.default is "false"
 metadata switchIsOn.label is "Switch On"
 
-/*
-Syntax: set the buttonIsEnabled of <widget> to {true | false}
-Syntax: get the buttonIsEnabled of <widget>
-
-Summary: Whether the switch button is enabled or disabled
-
-Description:
-Use this property to determines whether the switch button is enabled (true) or disabled (false).
-*/
-property buttonIsEnabled get mIsEnabled set setEnabled
-metadata buttonIsEnabled.default is "true"
-metadata buttonIsEnabled.default is "Enabled"
-
 -- private instance variables
 private variable mWidgetTheme as String
 private variable mColorScheme as String
 private variable mSwitchIsOn as Boolean
-private variable mIsEnabled as Boolean
 
 private variable mIsPressed as Boolean
 private variable mXClick as Real
@@ -174,7 +160,6 @@ public handler OnSave(out rProperties as Array)
 	put mWidgetTheme into rProperties["widgetTheme"]
 	put mColorScheme into rProperties["colorScheme"]
 	put mSwitchIsOn into rProperties["checked"]
-	put mIsEnabled into rProperties["enabled"]
 
 end handler
 
@@ -182,14 +167,12 @@ public handler OnLoad(in pProperties as Array)
 	put pProperties["widgetTheme"] into mWidgetTheme
 	put pProperties["colorScheme"] into mColorScheme
 	put pProperties["checked"] into mSwitchIsOn
-	put pProperties["enabled"] into mIsEnabled
 end handler
 
 public handler OnCreate() returns nothing
 	put "iOS" into mWidgetTheme
 	put the empty string into mColorScheme
 	put false into mSwitchIsOn
-	put true into mIsEnabled
 
 	put false into mIsPressed
 	put 0 into mXClick
@@ -281,7 +264,7 @@ private handler drawAndroid() returns nothing
 
 	-- draw the thumb border
 	if mWidgetTheme is "Android(Light)" then
-		if mIsEnabled is false or mSwitchIsInOnPosition is false then
+		if my enabled is false or mSwitchIsInOnPosition is false then
 			set the paint of this canvas to fetchPaint("thumbBorder")
 			set the stroke width of this canvas to 0.5
 			stroke fetchPath("thumb") on this canvas
@@ -349,7 +332,7 @@ private handler fetchPaint(in pObject as String) returns Paint
 
 	-- Android(Light) colors
 	else if mWidgetTheme is "Android(Light)" then
-		if mIsEnabled then
+		if my enabled is true then
 			if mSwitchIsInOnPosition then
 				if pObject is "thumb" then
 					put mAndroidLightOnColors[mColorScheme] into tColorString
@@ -386,7 +369,7 @@ private handler fetchPaint(in pObject as String) returns Paint
 
 	-- Android(Dark) colors
 	else if mWidgetTheme is "Android(Dark)" then
-		if mIsEnabled then
+		if my enabled is true then
 			if mSwitchIsInOnPosition then
 				if pObject is "thumb" then
 					put mAndroidDarkOnColors[mColorScheme] into tColorString
@@ -565,6 +548,10 @@ public handler OnMouseMove() returns nothing
 end handler
 
 public handler OnMouseDown() returns nothing
+	if my enabled is false then
+		return
+	end if
+
 	if the click position is within clickableRect() then
 		put the x of the click position into mXClick
 		put true into mIsPressed
@@ -573,6 +560,10 @@ public handler OnMouseDown() returns nothing
 end handler
 
 public handler OnMouseUp() returns nothing
+	if my enabled is false then
+		return
+	end if
+
 	if mMouseHasMoved then
 		setSwitch(mSwitchIsInOnPosition)
 		put false into mMouseHasMoved
@@ -587,6 +578,10 @@ public handler OnMouseUp() returns nothing
 end handler
 
 public handler OnMouseRelease() returns nothing
+	if my enabled is false then
+		return
+	end if
+
 	if mMouseHasMoved then
 		setSwitch(mSwitchIsInOnPosition)
 		put false into mMouseHasMoved
@@ -670,21 +665,12 @@ private handler setColorScheme(in pColorScheme as String) returns nothing
 end handler
 
 private handler setSwitch(in pIsOn as Boolean) returns nothing
-	if mIsEnabled is false then
+	if my enabled is false then
 		return
 	end if
 
 	put pIsOn into mSwitchIsOn
 	put mSwitchIsOn into mSwitchIsInOnPosition
-	redraw all
-end handler
-
-private handler setEnabled(in pIsEnabled as Boolean) returns nothing
-	if mWidgetTheme is "iOS" then
-		put true into mIsEnabled
-	else
-		put pIsEnabled into mIsEnabled
-	end if
 	redraw all
 end handler
 
