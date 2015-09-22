@@ -1712,7 +1712,7 @@ static bool MCScriptPerformMultiInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_
         MCScriptDefinition *t_definition;
         MCScriptResolveDefinitionInFrame(x_frame, t_group -> handlers[i], t_instance, t_definition);
         
-        uindex_t t_type_index;
+        uindex_t t_type_index = 0;
         if (t_definition -> kind == kMCScriptDefinitionKindHandler)
             t_type_index = static_cast<MCScriptHandlerDefinition *>(t_definition) -> type;
         else if (t_definition -> kind == kMCScriptDefinitionKindForeignHandler)
@@ -2215,11 +2215,13 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     
                     // If we are a normal handler we use the current frame.
                     // If we are context handler, we use the caller's frame.
-                    MCScriptFrame *t_target_frame;
+                    MCScriptFrame *t_target_frame = nil;
                     if (t_frame -> handler -> scope == kMCScriptHandlerScopeNormal)
                         t_target_frame = t_frame;
                     else if (t_frame -> caller != nil)
                         t_target_frame = t_frame -> caller;
+                    else
+                        __MCScriptUnreachable__("cannot determine context variable target frame");
                     
                     // If there is no context table, or the value of the slot at the given
                     // index is nil then we use the default.
@@ -2296,11 +2298,13 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     
                     // If we are a normal handler we use the current frame.
                     // If we are context handler, we use the caller's frame.
-                    MCScriptFrame *t_target_frame;
+                    MCScriptFrame *t_target_frame = nil;
                     if (t_frame -> handler -> scope == kMCScriptHandlerScopeNormal)
                         t_target_frame = t_frame;
                     else if (t_frame -> caller != nil)
                         t_target_frame = t_frame -> caller;
+                    else
+	                    __MCScriptUnreachable__("cannot determine context variable target frame");
                     
                     if (t_success &&
                         (t_target_frame -> context == nil ||
