@@ -66,6 +66,7 @@ use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
 use com.livecode.library.iconSVG
+use com.livecode.widgetutils
 
 -- metadata
 metadata title is "Header"
@@ -553,7 +554,7 @@ private handler drawActionIcon(in pIconName as String) returns nothing
    put path iconSVGPathFromName(pIconName) into tIconPath
    put fetchRect("actionIcon") into tIconRect
 
-   setIconPath(tIconRect, tIconPath)
+   constrainPathToRect(tIconRect, tIconPath)
    fill tIconPath on this canvas
 
    push tIconRect onto back of mActionRects
@@ -573,7 +574,7 @@ private handler drawActionName(in pActionLabel as String) returns nothing
 
 end handler
 
-private handler setIconPath(in pTargetRect as Rectangle, inout xPath as Path)
+private handler constrainPathToRect(in pTargetRect as Rectangle, inout xPath as Path)
 
 	-- Scale the icon
 	variable tBounds
@@ -634,7 +635,7 @@ private handler fetchPath(in pObject as String) returns Path
       put path iconSVGPathFromName("angle left") into tIconPath
       put rectangle [kMargin, mLabelTop, kMargin + mIconWidth, mLabelBottom] into tIconRect
 
-      setIconPath(tIconRect, tIconPath)
+      constrainPathToRect(tIconRect, tIconPath)
       return tIconPath
 
    else if pObject is "searchIcon" then
@@ -655,7 +656,7 @@ private handler fetchPath(in pObject as String) returns Path
       put path iconSVGPathFromName("search") into tIconPath
       put rectangle [tLeft-mIconWidth/4, mLabelTop-mIconWidth/4, tRight+mIconWidth/4, mLabelBottom+mIconWidth/4] into tIconRect
 
-      setIconPath(tIconRect, tIconPath)
+      constrainPathToRect(tIconRect, tIconPath)
       return tIconPath
 
    end if
@@ -839,67 +840,6 @@ private handler locToAction(in pLoc as Point) returns Integer
    return 0
 end handler
 
--- this handler converts an RGBA color to a string
-private handler colorToString(in pColor as Color) returns String
-
-   variable tRed as Integer
-   variable tGreen as Integer
-   variable tBlue as Integer
-   variable tAlpha as Integer
-
-   put the rounded of ((the red of pColor)*255) into tRed
-   put the rounded of ((the green of pColor)*255) into tGreen
-   put the rounded of ((the blue of pColor)*255) into tBlue
-   put the rounded of ((the alpha of pColor)*255) into tAlpha
-
-   return stripZeros(tRed formatted as string) & "," & stripZeros(tGreen formatted as string) & \
-      "," & stripZeros(tBlue formatted as string) & "," & stripZeros(tAlpha formatted as string)
-
-end handler
---
-
--- this handler converts a string to an RGBA color
-private handler stringToColor(in pString as String) returns Color
-
-   variable tStringList as List
-   variable tColorList as List
-   variable tComponent
-
-   split pString by "," into tStringList
-   put the empty list into tColorList
-
-   variable tComponentCount
-	put the number of elements in tStringList into tComponentCount
-	if tComponentCount is not 3 and tComponentCount is not 4 then
-		-- Invalid number of components detected
-		throw "Invalid color"
-	end if
-
-   repeat for each element tComponent in tStringList
-      push (tComponent parsed as number)/255 onto back of tColorList
-   end repeat
-
-   return color tColorList
-
-end handler
---
-
--- this handler strips the zeros when an integer is formatted as a string
-private handler stripZeros(in pString as String) returns String
-   if pString contains "." then
-      repeat while ((the last char of pString) is in ".0")
-         if the last char of pString is "." then
-            delete the last char of pString
-            exit repeat
-         else
-            delete the last char of pString
-         end if
-      end repeat
-   end if
-   return pString
-end handler
---
-
 -- this handler returns an array of the default action
 private handler defaultActionsArray() returns Array
    variable tArray as Array
@@ -936,7 +876,7 @@ end handler
 
 -- these handlers convert the color properties for output in the PI
 private handler getActionColor() returns String
-   return colorToString(mActionColor)
+   return colorToString(mActionColor, false)
 end handler
 
 --------------------------------------------------------------------------------

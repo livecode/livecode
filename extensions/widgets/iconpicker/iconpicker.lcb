@@ -155,7 +155,7 @@ private handler drawTitleBar()
 		else
 			put mPaths[mSelectedElement] into tPath
 		end if
-		setIconPath(tIconRect, tPath)
+		constrainPathToRect(tIconRect, tPath)
 		set the paint of this canvas to solid paint with color kIconColor
 		fill tPath on this canvas
 	end if
@@ -173,7 +173,7 @@ private handler drawIcon(in pIcon as Integer)
 		put mPaths[tIconName] into tPath
 	end if
 		
-	setIconPath(mIconRects[pIcon], tPath)
+	constrainPathToRect(mIconRects[pIcon], tPath)
 	
 	if mSelectedElement is not nothing and tIconName is mSelectedElement then
 		set the paint of this canvas to getPaint("icon", "selected")
@@ -401,7 +401,7 @@ private handler updateIconRects(in pTopOffset as Real)
 	put tRects into mIconRects	
 end handler
 
-private handler setIconPath(in pTargetRect as Rectangle, inout xPath as Path)
+private handler constrainPathToRect(in pTargetRect as Rectangle, inout xPath as Path)
 
 	// Scale the icon
 	variable tBounds
