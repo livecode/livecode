@@ -1184,18 +1184,59 @@ void MCIPhoneRunBlockOnMainFiber(void (^block)(void))
 // MW-2012-08-06: [[ Fibers ]] Updated entry point for didBecomeActive.
 static void MCIPhoneDoDidBecomeActive(void *)
 {
-	extern char **environ;
-	char **env;
-	env = environ;
-	
 	// MW-2011-08-11: [[ Bug 9671 ]] Make sure we initialize MCstackbottom.
 	int i;
 	MCstackbottom = (char *)&i;
 	
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];
-	
-	char *args[1];
+
+    // SN-2015-09-22: [[ Bug 15987 ]] Use NSProcessInfo to get the env variables
+    char **env;
+    uindex_t envc;
+    
+    envc = (uindex_t)[[[NSProcessInfo processInfo] environment] count];
+    env = NULL;
+    
+    // last elem of env must be a NULL element, so we allocated envc + 1 elems
+    if (MCMemoryNewArray(envc + 1, env))
+    {
+        NSDictionary *t_environment;
+        NSEnumerator* t_key_enumerator;
+        NSString* t_key;
+        NSString* t_value;
+        
+        // NSProcessInfo::environment returns NSDictionary<NSString*,NSString*>
+        t_environment = [[NSProcessInfo processInfo] environment];
+        
+        t_key_enumerator = [t_environment keyEnumerator];
+        uindex_t t_index = 0;
+        
+        // Loop through all the keys in the environment array
+        while (t_key = (NSString*)[t_key_enumerator nextObject])
+        {
+            t_value = [t_environment objectForKey:t_key];
+            
+            // Values fetched with cStringUsingEncoding are not user-free'd
+            const char *t_value_cstr = [t_value cStringUsingEncoding: NSMacOSRomanStringEncoding];
+            const char *t_variable_cstr = [t_key cStringUsingEncoding: NSMacOSRomanStringEncoding];
+            
+            // The size of shell-like environment variable is
+            //  strlen(variable_name) + '=' + strlen(value) + NULL byte
+            size_t t_env_size;
+            t_env_size = strlen(t_variable_cstr) + 1 + strlen(t_value_cstr) + 1;
+            
+            if (MCMemoryNew((uindex_t)t_env_size, (void*&)env[t_index]))
+                sprintf(env[t_index], "%s=%s", t_variable_cstr, t_value_cstr);
+            
+            t_index++;
+        }
+        
+        // Ensure env C-string array is NULL-terminated
+        env[envc] = NULL;
+    }
+    
+    char *args[1];
 	args[0] = (char *)[[[[NSProcessInfo processInfo] arguments] objectAtIndex: 0] cString];
 	
 	// Initialize the engine.
@@ -1203,6 +1244,11 @@ static void MCIPhoneDoDidBecomeActive(void *)
 	t_init_success = X_init(1, args, env);
 	
 	[t_pool release];
+    
+    // Release the env array and its elements
+    for (uindex_t j = 0; j < envc; ++j)
+        MCMemoryDelete(env[j]);
+    MCMemoryDelete(env);
 	
 	if (!t_init_success)
 	{
