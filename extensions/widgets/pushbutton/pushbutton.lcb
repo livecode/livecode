@@ -327,7 +327,7 @@ private handler drawAndroidRaisedButton() returns nothing
 
    set the font of this canvas to fetchFont()
    set the paint of this canvas to fetchPaint("label")
-   fill text tLabel at center of my bounds on this canvas
+   fill text tLabel at center of rectangle [0, 0, mWidth-5, mHeight-5] on this canvas
 end handler
 
 private handler drawAndroidFlatButton() returns nothing
