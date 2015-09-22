@@ -4,7 +4,7 @@ Type: property
 
 Syntax: set the showPict of <card> to {true | false}
 
-Summary: This <property> is included in <Revolution|LiveCode> for compatibility with imported <HyperCard> stacks.
+Summary: This <property> is included in <LiveCode> for compatibility with imported <HyperCard> stacks.
 
 Associations: card
 
@@ -17,4 +17,4 @@ In HyperCard, the <showPict> <property> determines whether the <card> <image> is
 
 In LiveCode, setting this property does not cause a script error, but doing so has no effect.
 
-References: visible (property), card (keyword), image (keyword), show (command), hide (command), property (glossary), Revolution (glossary), HyperCard (glossary)
+References: visible (property), card (keyword), image (keyword), show (command), hide (command), property (glossary), LiveCode (glossary), HyperCard (glossary)

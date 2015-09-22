@@ -30,7 +30,7 @@ If you try to paint with the Line tool on a card that has no images, an image th
 
 Setting the <style> of a <graphic(keyword)> to "line" makes the <graphic(keyword)> into a curved line. Line <graphic(object)|graphics>, unlike painted lines, can be changed and reshaped: use the <points> <property> to change the line's angle and position.
 
->*Note:* To avoid script errors, enclose the word "line" in <double quote|double quotes> when you use it to indicate a <graphic(object)|graphic's> <style>. This prevents <Revolution|LiveCode> from getting confused about whether you mean the line style, or the contents of a line in a <container>.
+>*Note:* To avoid script errors, enclose the word "line" in <double quote|double quotes> when you use it to indicate a <graphic(object)|graphic's> <style>. This prevents <LiveCode> from getting confused about whether you mean the line style, or the contents of a line in a <container>.
 
 By default, a line is delimited by return (ASCII 10). However, you can set the <lineDelimiter> <property> to any <character> in order to directly address <chunk|chunks> <delimit|delimited> by that character.
 
@@ -43,6 +43,6 @@ A line is a string of characters delimited by a single return character (or a si
    Line 3
   &lt;empty Line&gt;
 
-References: characters (keyword), string (keyword), character (keyword), lines (keyword), line (keyword), word (keyword), graphic (keyword), words (keyword), items (keyword), style (property), points (property), lineDelimiter (property), penColor (property), choose (command), graphic (object), property (glossary), Revolution (glossary), chunk expression (glossary), container (glossary), chunk (glossary), keyword (glossary), double quote (glossary), delimit (glossary), paint tool (glossary)
+References: characters (keyword), string (keyword), character (keyword), lines (keyword), line (keyword), word (keyword), graphic (keyword), words (keyword), items (keyword), style (property), points (property), lineDelimiter (property), penColor (property), choose (command), graphic (object), property (glossary), LiveCode (glossary), chunk expression (glossary), container (glossary), chunk (glossary), keyword (glossary), double quote (glossary), delimit (glossary), paint tool (glossary)
 
 Tags: text processing

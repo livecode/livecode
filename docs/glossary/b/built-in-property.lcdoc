@@ -5,8 +5,8 @@ Synonyms: built-in property,built-in properties
 Type: glossary
 
 Description:
-A <property> that is part of the <Revolution|LiveCode> language. Most built-in properties affect the <appearance> or <behavior> of the <object>.
+A <property> that is part of the <LiveCode> language. Most built-in properties affect the <appearance> or <behavior> of the <object>.
 
-References: property (glossary), appearance (glossary), behavior (glossary), Revolution (glossary), object (object)
+References: property (glossary), appearance (glossary), behavior (glossary), LiveCode (glossary), object (object)
 
 Tags: properties

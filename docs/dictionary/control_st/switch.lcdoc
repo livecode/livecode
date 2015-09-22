@@ -22,8 +22,8 @@ Parameters:
 switchExpression: Any expression.
 caseValue: Any <expression>. (If the <caseValue> evaluates to the same <value> as the <switchExpression>, the condition is matched for that <case> section.)
 caseCondition (bool): Any <expression> that <evaluate|evaluates> to true or false. (If the <caseCondition> <evaluate|evaluates> to true, the condition is matched for that <case> section.)
-statementList: Of one or more <Revolution|LiveCode> <statement|statements>, and can also include <if>, <switch>, <try>, or <repeat> <control structure|control structures>.
-defaultStatementList: Of one or more <Revolution|LiveCode> <statement|statements>.
+statementList: Of one or more <LiveCode> <statement|statements>, and can also include <if>, <switch>, <try>, or <repeat> <control structure|control structures>.
+defaultStatementList: Of one or more <LiveCode> <statement|statements>.
 
 Description:
 Use the <switch> <control structure> to select among multiple possible conditions, performing a different set of actions for each possibility.   

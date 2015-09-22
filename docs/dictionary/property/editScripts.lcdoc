@@ -4,7 +4,7 @@ Type: property
 
 Syntax: set the editScripts to {true | false}
 
-Summary: Has no effect and is included in <Revolution|LiveCode> for compatibility with imported <SuperCard> projects.
+Summary: Has no effect and is included in <LiveCode> for compatibility with imported <SuperCard> projects.
 
 Introduced: 1.0
 
@@ -17,4 +17,4 @@ The <editScripts> <property> is present in LiveCode for compatibility with scrip
 
 It has no effect on the LiveCode environment, and although it may be set or evaluated without causing an error, its value will always be true.
 
-References: edit (command), property (glossary), SuperCard (glossary), Revolution (glossary)
+References: edit (command), property (glossary), SuperCard (glossary), LiveCode (glossary)

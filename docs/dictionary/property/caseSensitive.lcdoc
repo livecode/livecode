@@ -23,7 +23,7 @@ Use the <caseSensitive> <property> to control the behavior of text comparisons.
 
 The <caseSensitive> <property> <control|controls> the <behavior> of the all <string> comparisons, including the comparison <operator|operators> <=>, &gt;, &lt; , &gt;=, &lt;=, <is in>, <is among>, <is not among>, and <contains>; the <command|commands> <filter>, <find>, and <replace>; and the <function|functions> <offset>, <itemOffset>, <wordOffset>, <lineOffset>, and <replaceText>. 
 
-If the <caseSensitive> <property> is set to true, all the <Revolution|LiveCode> terms listed above, as well as all other <string> comparisons, treat uppercase and lowercase letters as different. For example, a search for "Apple" does not find the <string> "apple" or "APPLE", and the <expression> "APPLE" = "apple" <evaluate|evaluates> to false. 
+If the <caseSensitive> <property> is set to true, all the <LiveCode> terms listed above, as well as all other <string> comparisons, treat uppercase and lowercase letters as different. For example, a search for "Apple" does not find the <string> "apple" or "APPLE", and the <expression> "APPLE" = "apple" <evaluate|evaluates> to false. 
 
 If the <caseSensitive> is false, uppercase letters are treated as equal to their lowercase equivalents: a search for "Apple" finds strings such as "apple" or "APPLE" without paying attention to the case of each letter, and the expression  "APPLE" = "apple" <evaluate|evaluates> to true. 
 
@@ -31,8 +31,8 @@ The <caseSensitive> also affects <custom property> names and <array> <key> names
 
 Since the <caseSensitive> is a local property, its <value> is <reset> to false when the current <handler> finishes <execute|executing>. It retains its <value> only for the current <handler>, and setting it in one <handler> does not affect its <value> in other <handler|handlers> it <call|calls>. 
 
->*Important:* <message|Messages>, <object> names, and <Revolution|LiveCode> terms are never treated as case-sensitive, even if the <caseSensitive> is set to true.
+>*Important:* <message|Messages>, <object> names, and <LiveCode> terms are never treated as case-sensitive, even if the <caseSensitive> is set to true.
 
-References: wholeMatches (property), = (operator), contains (operator), &gt; (operator), is among (operator), is not among (operator), &lt;= (operator), is in (operator), string (keyword), control (object), object (object), wordOffset (function), offset (function), value (function), lineOffset (function), replaceText (function), keys (function), itemOffset (function), replace (command), find (command), filter (command), reset (command), element (glossary), call (glossary), property (glossary), evaluate (glossary), behavior (glossary), operator (glossary), caseSensitive (glossary), array (glossary), execute (glossary), expression (glossary), command (glossary), function (glossary), Revolution (glossary), custom property (glossary), key (glossary), message (glossary), handler (glossary)
+References: wholeMatches (property), = (operator), contains (operator), &gt; (operator), is among (operator), is not among (operator), &lt;= (operator), is in (operator), string (keyword), control (object), object (object), wordOffset (function), offset (function), value (function), lineOffset (function), replaceText (function), keys (function), itemOffset (function), replace (command), find (command), filter (command), reset (command), element (glossary), call (glossary), property (glossary), evaluate (glossary), behavior (glossary), operator (glossary), caseSensitive (glossary), array (glossary), execute (glossary), expression (glossary), command (glossary), function (glossary), LiveCode (glossary), custom property (glossary), key (glossary), message (glossary), handler (glossary)
 
 Tags: database

@@ -5,6 +5,6 @@ Synonyms: handler
 Type: glossary
 
 Description:
-A group of <Revolution|LiveCode> <statement|statements> that begin with an <on>, <function>, <setProp>, or <getProp> <statement> and end with an <end> <statement>. The basic unit of the <Revolution|LiveCode> language.
+A group of <LiveCode> <statement|statements> that begin with an <on>, <function>, <setProp>, or <getProp> <statement> and end with an <end> <statement>. The basic unit of the <LiveCode|LiveCode> language.
 
-References: end (keyword), statement (glossary), Revolution (glossary), function (glossary), on (control_st), setProp (control_st), getProp (control_st)
+References: end (keyword), statement (glossary), LiveCode (glossary), function (glossary), on (control_st), setProp (control_st), getProp (control_st)

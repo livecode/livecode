@@ -4,7 +4,7 @@ Type: property
 
 Syntax: set the checkmark of <menuItem> to {true | false}
 
-Summary: Has no effect and is included in <Revolution|LiveCode> for compatibility with imported <HyperCard> <stacks>.
+Summary: Has no effect and is included in <LiveCode> for compatibility with imported <HyperCard> <stacks>.
 
 Introduced: 1.0
 
@@ -17,4 +17,4 @@ In HyperCard, the <checkmark> <property> determines whether a <menu item> has a 
 
 A handler can set the <checkmark> to any <value> without causing a <error|script error>, but the actual checkmark is not changed.
 
-References: menuItem (keyword), property (glossary), Revolution (glossary), HyperCard (glossary), menu item (glossary), error (glossary), stacks (function), value (function)
+References: menuItem (keyword), property (glossary), LiveCode (glossary), HyperCard (glossary), menu item (glossary), error (glossary), stacks (function), value (function)
