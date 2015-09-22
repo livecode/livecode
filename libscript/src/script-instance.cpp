@@ -47,6 +47,37 @@ bool __MCScriptHandlerDescribe(void *context, MCStringRef &r_desc);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+template <size_t WORD, size_t LENGTH>
+class __MCScriptStackStorage
+{
+public:
+	__MCScriptStackStorage()
+		: m_used(0)
+	{
+	}
+
+	void *Allocate(size_t p_request)
+	{
+		/* Ensure the amount allocated is aligned to the word size */
+		size_t t_amount = (~(WORD-1)) & ((WORD-1) + p_request);
+
+		/* Ensure there's enough space left in the storage */
+		MCAssert(m_used + t_amount < (WORD * LENGTH));
+
+		/* Create and return the pointer, updating the current offset */
+		void *t_ptr = &m_storage[m_used];
+
+		m_used += t_amount;
+
+		return t_ptr;
+	}
+private:
+	uint8_t m_storage[WORD * LENGTH];
+	size_t m_used;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 // This is the module of the most recent LCB stack frame on the current thread's
 // stack. It is set before and after a foreign handler call so that the native
 // code can get some element of context.
@@ -1188,9 +1219,7 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
     void *t_args[16];
     ffi_type *t_arg_types[16];
     bool t_arg_new[16];
-    uint8_t t_storage[256];
-    uindex_t t_storage_index;
-    t_storage_index = 0;
+    __MCScriptStackStorage<sizeof(void *),32> t_invoke_storage;
     
     uindex_t t_arg_index;
     t_arg_index = 0;
@@ -1252,12 +1281,9 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                     else
                     {
                         // For inout mode, we need to copy it.
-                        
-                        if (!t_descriptor -> copy(MCForeignValueGetContentsPtr(t_value), t_storage + t_storage_index))
+                        t_argument = t_invoke_storage.Allocate(t_descriptor->size);
+                        if (!t_descriptor -> copy(MCForeignValueGetContentsPtr(t_value), t_argument))
                             break;
-                        
-                        t_argument = t_storage + t_storage_index;
-                        t_storage_index += t_descriptor -> size;
                         
                         // Need to finalize the storage.
                         t_arg_new[t_arg_index] = true;
@@ -1267,19 +1293,17 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                 {
                     // The source type is not foreign - it must be the target type's
                     // bridge type or null. Thus we must export the value.
+                    t_argument = t_invoke_storage.Allocate(t_descriptor->size);
                     if (t_value == kMCNull)
                     {
-                        if (!t_descriptor -> initialize(t_storage + t_storage_index))
+                        if (!t_descriptor -> initialize(t_argument))
                             break;
                     }
                     else
                     {
-                        if (!t_descriptor -> doexport(t_value, false, t_storage + t_storage_index))
+                        if (!t_descriptor -> doexport(t_value, false, t_argument))
                             break;
                     }
-                    
-                    t_argument = t_storage + t_storage_index;
-                    t_storage_index += t_descriptor -> size;
                     
                     // Need to finalize the storage.
                     t_arg_new[t_arg_index] = true;
@@ -1355,9 +1379,11 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
             if (t_descriptor != nil)
             {
                 // Target is foreign - use the initialize method, if any.
+                t_argument = t_invoke_storage.Allocate(t_descriptor->size);
+
                 if (t_descriptor -> initialize != nil)
                 {
-                    if (!t_descriptor -> initialize(t_storage + t_storage_index))
+                    if (!t_descriptor -> initialize(t_argument))
                         break;
                     
                     // Need to finalize the storage.
@@ -1369,9 +1395,6 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                     // cleanup.
                     t_arg_new[t_arg_index] = false;
                 }
-                
-                t_argument = t_storage + t_storage_index;
-                t_storage_index += t_descriptor -> size;
             }
             else
             {
@@ -1397,8 +1420,7 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
             else
             {
                 // Allocate space for the storage pointer
-                t_args[t_arg_index] = t_storage + t_storage_index;
-                t_storage_index += sizeof(uintptr_t);
+                t_args[t_arg_index] = t_invoke_storage.Allocate(sizeof(void *));
                 *(void **)t_args[t_arg_index] = t_argument;
                 t_arg_types[t_arg_index] = &ffi_type_pointer;
             }
@@ -1413,20 +1435,17 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
             if (t_descriptor != nil)
             {
                 // Allocate space for the storage pointer
-                t_args[t_arg_index] = t_storage + t_storage_index;
-                t_storage_index += sizeof(uintptr_t);
+                t_args[t_arg_index] = t_invoke_storage.Allocate(sizeof(void **));
                 
                 *(void **)t_args[t_arg_index] = t_argument;
             }
             else
             {
                 // Allocate space for the storage pointer
-                t_args[t_arg_index] = t_storage + t_storage_index;
-                t_storage_index += sizeof(uintptr_t);
+                t_args[t_arg_index] = t_invoke_storage.Allocate(sizeof(void ***));
                 
                 // The argument is the storage pointer.
-                *(void **)t_args[t_arg_index] = t_storage + t_storage_index;
-                t_storage_index += sizeof(uintptr_t);
+                *(void **)t_args[t_arg_index] = t_invoke_storage.Allocate(sizeof(void **));
                 
                 **(void ***)t_args[t_arg_index] = t_argument;
             }
