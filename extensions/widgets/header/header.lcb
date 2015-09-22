@@ -414,6 +414,11 @@ private variable mLetterCount as Integer
 private variable mActionRects as List
 
 private variable mIsDarkColorScheme as Boolean
+private variable mAndroidColors as Array
+private variable mAndroidFontSize as Real
+private variable mAndroidIconDimension as Real
+private variable mAndroidBuffer as Real
+private variable mAndroidMargin as Real
 
 -- constants (some defined as varibales)
 private variable kBackgroundColor as List
@@ -426,6 +431,8 @@ constant kSubtitleRatio is 0.171875
 constant kWidgetThemeIos is "iOS"
 constant kWidgetThemeAndroid is "Android"
 
+constant kAndroidColorSchemeLight is "Light"
+constant kAndroidColorSchemeDark is "Dark"
 constant kAndroidColorSchemeRed is "Red"
 constant kAndroidColorSchemePink is "Pink"
 constant kAndroidColorSchemePurple is "Purple"
@@ -445,6 +452,13 @@ constant kAndroidColorSchemeDeepOrange is "Deep Orange"
 constant kAndroidColorSchemeBrown is "Brown"
 constant kAndroidColorSchemeGrey is "Grey"
 constant kAndroidColorSchemeBlueGrey is "Blue Grey"
+
+constant kAndroidDefaultHeight is 56
+constant kAndroidDefaultWidth is 320
+constant kAndroidDefaultFontSize is 21
+constant kAndroidDefaultIconDimension is 24
+constant kAndroidDefaultBuffer is 16
+constant kAndroidDefaultMargin is 72
 
 public handler OnSave(out rProperties as Array)
    put the empty array into rProperties
@@ -524,11 +538,9 @@ public handler OnCreate()
    put true into mTitleIsVisible
 
    -- variables
-   put false into mShowLeftLabel
-   put false into mShowSubtitle
+   updateVariables()
+   fetchAndroidColors()
    put 0 into mSelectedAction
-   put 0 into mRight
-   put 0 into mLetterCount
    put true into mIsDarkColorScheme
 
    -- constants (defined as variables)
@@ -542,6 +554,8 @@ public handler OnPaint()
 
    if mWidgetTheme is kWidgetThemeIos then
       drawIosHeader()
+   else if mWidgetTheme is kWidgetThemeAndroid then
+      drawAndroidHeader()
    end if
 
 end handler
@@ -614,6 +628,20 @@ private handler drawIosHeader() returns nothing
       set the paint of this canvas to fetchPaint("searchIcon")
       fill fetchPath("searchIcon") on this canvas
    end if
+
+end handler
+
+private handler drawAndroidHeader() returns nothing
+
+   -- draw the background
+
+   -- draw the bottom line (drop shadow?)
+
+   -- draw the left action
+
+   -- draw the title
+
+   -- draw the right actions
 
 end handler
 
@@ -895,6 +923,33 @@ private handler checkIfThemeIsDark() returns nothing
 end handler
 --
 
+private handler fetchAndroidColors() returns nothing
+
+	put the empty array into mAndroidColors
+   put "250,250,250" into mAndroidColors["Light"]
+   put "39,39,39" into mAndroidColors["Dark"]
+	put "238,43,41" into mAndroidColors["Red"]
+	put "224,0,81" into mAndroidColors["Pink"]
+	put "137,0,161" into mAndroidColors["Purple"]
+	put "83,33,168" into mAndroidColors["Deep Purple"]
+	put "48,58,165" into mAndroidColors["Indigo"]
+	put "30,128,240" into mAndroidColors["Blue"]
+	put "20,150,241" into mAndroidColors["Light Blue"]
+	put "22,175,202" into mAndroidColors["Cyan"]
+	put "17,133,117" into mAndroidColors["Teal"]
+	put "63,164,63" into mAndroidColors["Green"]
+	put "122,186,58" into mAndroidColors["Light Green"]
+	put "194,215,45" into mAndroidColors["Lime"]
+	put "254,233,46" into mAndroidColors["Yellow"]
+	put "253,182,13" into mAndroidColors["Amber"]
+	put "253,133,9" into mAndroidColors["Orange"]
+	put "251,63,28" into mAndroidColors["Deep Orange"]
+	put "101,67,56" into mAndroidColors["Brown"]
+	put "140,140,140" into mAndroidColors["Grey"]
+	put "78,106,120" into mAndroidColors["Blue Grey"]
+
+end handler
+
 private handler updateVariables() returns nothing
 
    if mHeaderSubtitle is empty then
@@ -930,6 +985,11 @@ private handler updateVariables() returns nothing
    put 0 into mLetterCount
 
    put the empty list into mActionRects
+
+   put tH*(kAndroidDefaultFontSize/kAndroidDefaultHeight) into mAndroidFontSize
+   put tH*(kAndroidDefaultIconDimension/kAndroidDefaultHeight) into mAndroidIconDimension
+   put tH*(kAndroidDefaultBuffer/kAndroidDefaultHeight) into mAndroidBuffer
+   put tH*(kAndroidDefaultMargin/kAndroidDefaultHeight) into mAndroidMargin
 end handler
 
 public handler OnMouseDown()
@@ -1229,7 +1289,7 @@ private handler setColorScheme(in pColorScheme as String) returns nothing
 	end if
 
 	variable tColorSchemeList as List
-	put [kAndroidColorSchemeRed, kAndroidColorSchemePink, kAndroidColorSchemePurple, kAndroidColorSchemeDeepPurple, kAndroidColorSchemeIndigo, kAndroidColorSchemeBlue, kAndroidColorSchemeLightBlue, kAndroidColorSchemeCyan, kAndroidColorSchemeTeal, kAndroidColorSchemeGreen, kAndroidColorSchemeLightGreen, kAndroidColorSchemeLime, kAndroidColorSchemeYellow, kAndroidColorSchemeAmber, kAndroidColorSchemeOrange, kAndroidColorSchemeDeepOrange, kAndroidColorSchemeBrown, kAndroidColorSchemeGrey, kAndroidColorSchemeBlueGrey] into tColorSchemeList
+	put [kAndroidColorSchemeLight, kAndroidColorSchemeDark, kAndroidColorSchemeRed, kAndroidColorSchemePink, kAndroidColorSchemePurple, kAndroidColorSchemeDeepPurple, kAndroidColorSchemeIndigo, kAndroidColorSchemeBlue, kAndroidColorSchemeLightBlue, kAndroidColorSchemeCyan, kAndroidColorSchemeTeal, kAndroidColorSchemeGreen, kAndroidColorSchemeLightGreen, kAndroidColorSchemeLime, kAndroidColorSchemeYellow, kAndroidColorSchemeAmber, kAndroidColorSchemeOrange, kAndroidColorSchemeDeepOrange, kAndroidColorSchemeBrown, kAndroidColorSchemeGrey, kAndroidColorSchemeBlueGrey] into tColorSchemeList
 
 	if not(pColorScheme is in tColorSchemeList) then
 		throw "invalid color scheme"
