@@ -17,6 +17,9 @@
 # This file contains rules used by the LiveCode Buildbot installation at
 # <https://vulcan.livecode.com/>
 
+# Force the setting of Xcode to Xcode 6.4, as Xcode 7.0 won't build iOS in release-7.1.0
+XCODEBUILD="/Users/administrator/Vulcan/toolchain/mac/Xcode_6_4.app/Contents/Developer/usr/bin/xcodebuild"
+
 # Load version information
 include version
 
