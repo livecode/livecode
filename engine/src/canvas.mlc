@@ -3729,6 +3729,10 @@ Description:
 
 >*Note:* The layout bounds is used to position blocks of text relative to each other, so the text may overlap these bounds.
 
+The `layout` is optional and has no effect on the return value, but may be used to emphasize the difference between `the layout bounds` and `the image bounds`.
+
+References:  CanvasOperationMeasureText(statement), FontOperationTextLayoutBoundsOnCanvas(operator), FontOperationTextImageBounds(operator), FontOperationTextImageBoundsOnCanvas(operator)
+
 Tags:	Canvas
 */
 syntax FontOperationTextLayoutBounds is prefix operator with precedence 4
