@@ -40,7 +40,7 @@ public:
     // For efficiency, a clipboard used as a drag board should be permanently
     // locked as this inhibits automatic updates. (The contents of the drag
     // board are only meaningful during a drag-and-drop operation).
-    bool Lock() const;
+    bool Lock(bool p_skip_pull = false) const;
     bool Unlock() const;
     
     // Clears the contents of this clipboard.

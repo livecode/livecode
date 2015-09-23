@@ -546,7 +546,8 @@ void MCPlatformHandleDragLeave(MCPlatformWindowRef p_window)
     // On some platforms (Mac and iOS), the drag board used for drag-and-drop
     // operations may not be the main drag board. Reset the drag board back to
     // the main one after the drag has left.
-    MCdragboard->Rebind(MCRawClipboard::CreateSystemDragboard());
+    MCAutoRefcounted<MCRawClipboard> t_dragboard(MCRawClipboard::CreateSystemDragboard());
+    MCdragboard->Rebind(t_dragboard);
     
     MCdispatcher -> wmdragleave(p_window);
 }

@@ -62,13 +62,13 @@ MCClipboard::~MCClipboard()
         MCValueRelease(m_private_data);
 }
 
-bool MCClipboard::Lock() const
+bool MCClipboard::Lock(bool p_skip_pull) const
 {
     // Increase the lock count. If it moves from zero to one, update the
     // contents of this clipboard.
     //
     // TODO: atomic operations
-    if (m_lock_count++ == 0)
+    if (m_lock_count++ == 0 && !p_skip_pull)
     {
         return PullUpdates();
     }
@@ -1152,7 +1152,7 @@ MCClipboard* MCClipboard::CreateSystemDragboard()
 {
     // Drag boards are created in a locked state
     MCClipboard* t_dragboard = new MCClipboard(MCRawClipboard::CreateSystemDragboard());
-    t_dragboard->Lock();
+    t_dragboard->Lock(true);
     t_dragboard->Clear();
     return t_dragboard;
 }
