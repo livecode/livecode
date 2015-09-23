@@ -577,6 +577,10 @@ glib libglib-2.0.so.0
 	g_main_context_iteration: (pointer, integer) -> ()
 	g_main_context_default: () -> (pointer)
 	g_main_context_pending: (pointer) -> (integer)
+	g_main_context_prepare: (pointer, pointer) -> (integer)
+	g_main_context_query: (pointer, integer, pointer, pointer, integer) -> (integer)
+	g_main_context_check: (pointer, integer, pointer, integer) -> (integer)
+	g_main_context_dispatch: (pointer) -> ()
 
 esd libesd.so.0
 	esd_close: (integer) -> (integer)
