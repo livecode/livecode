@@ -4797,10 +4797,15 @@ Summary:	The canvas used when drawing a widget.
 
 Returns:	The target canvas for widget drawing operations.
 
+Description:  The canvas used when drawing a widget.
+>*Note:* An error will be thrown if the widget is not currently being drawn.  In other words, <ThisCanvas | this canvas> is only valid during the execution of the <OnPaint> handler.
+
 Example:
 	// Draw the label centered on the rect of the widget
 	set the paint of this canvas to solid paint with color [1,1,1]
 	fill text "Start" at center of my rectangle on this canvas
+
+References: OnPaint(message)
 
 Tags:	Canvas
 */

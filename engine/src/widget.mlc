@@ -70,7 +70,7 @@ Description:
 Handle the <OnPaint> message to draw the widget when it needs to be updated.
 >*Note:* Access to most script object operations is not allowed whilst an OnPaint
 handler is running.
-References: RedrawAll(statement)
+References: RedrawAll(statement), ThisCanvas(expression)
 
 
 Name: OnGeometryChanged
