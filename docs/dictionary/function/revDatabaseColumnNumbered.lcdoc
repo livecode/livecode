@@ -43,11 +43,11 @@ If you specify a <holderVariable>, the data is placed in that <variable>. Otherw
 
 If the attempt to get the data is not successful, the <revDatabaseColumnNumbered> <function> returns an error message that begins with the <string> "revdberr".
 
->*Important:*  The <revDatabaseColumnNumbered> <function> is part of the <Database library>. To ensure that the <function> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the General screen of the <Standalone Application Settings> window, make sure the "Database Support" checkbox is checked and the database drivers you are using are selected in the list of database drivers.
+>*Important:*  The <revDatabaseColumnNumbered> <function> is part of the <Database library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the General screen of the <Standalone Application Settings> window, make sure the "Database Support" checkbox is checked and the database drivers you are using are selected in the list of database drivers.
 
 Changes:
 The ability to specify an array element as a holder variable was added in version 2.9.
 
-References: string (keyword), Database library (library), Revolution custom library (library), revMoveToLastRecord (command), revMoveToFirstRecord (command), revMoveToNextRecord (command), revDatabaseColumnCount (function), revCurrentRecord (function), revDatabaseColumnNamed (function), revDatabaseColumnLengths (function), revDatabaseColumnIsNull (function), return (glossary), variable (glossary), record set (database cursor) (glossary), record (glossary), Standalone Application Settings (glossary), standalone application (glossary), database field (glossary), function (control_st)
+References: string (keyword), Database library (library), LiveCode custom library (library), revMoveToLastRecord (command), revMoveToFirstRecord (command), revMoveToNextRecord (command), revDatabaseColumnCount (function), revCurrentRecord (function), revDatabaseColumnNamed (function), revDatabaseColumnLengths (function), revDatabaseColumnIsNull (function), return (glossary), variable (glossary), record set (database cursor) (glossary), record (glossary), Standalone Application Settings (glossary), standalone application (glossary), database field (glossary), function (control_st)
 
 Tags: database

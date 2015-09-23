@@ -31,8 +31,8 @@ Use the <revSpeechVoices> <function> to find out what voices can be used to spea
 
 The <revSpeechVoices> <function> returns a list of voices installed on the current system. Each voice is either male, female, or neuter, and you can use the optional <voiceGender> <parameter> to request one of the genders.
 
->*Important:*  The <revSpeechVoices> <function> is part of the <Speech library>. To ensure that the <function> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "Speech" is selected in the list of script libraries.
+>*Important:*  The <revSpeechVoices> <function> is part of the <Speech library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "Speech" is selected in the list of script libraries.
 
-References: line (keyword), revSetSpeechVoice (command), revSpeak (command), revSetSpeechProvider (command), function (control_st), parameter (glossary), Standalone Application Settings (glossary), command (glossary), return (glossary), standalone application (glossary), Speech library (library), Revolution custom library (library)
+References: line (keyword), revSetSpeechVoice (command), revSpeak (command), revSetSpeechProvider (command), function (control_st), parameter (glossary), Standalone Application Settings (glossary), command (glossary), return (glossary), standalone application (glossary), Speech library (library), LiveCode custom library (library)
 
 Tags: multimedia

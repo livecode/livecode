@@ -4,7 +4,7 @@ Type: property
 
 Syntax: set the commandChar of <menuItem> to <character> 
 
-Summary: Has no effect and is included in <Revolution|LiveCode> for compatibility with imported <HyperCard> <stacks>.
+Summary: Has no effect and is included in <LiveCode> for compatibility with imported <HyperCard> <stacks>.
 
 Introduced: 1.0
 
@@ -17,4 +17,4 @@ In HyperCard, the <commandChar> <property> determines the Command <key combinati
 
 A handler can set the <commandChar> to any <value> without causing a <error|script error>, but the actual Command <key combination> is not changed.
 
-References: menuItem (keyword), markChar (property), acceleratorKey (property), stacks (function), value (function), property (glossary), Revolution (glossary), key combination (glossary), HyperCard (glossary), error (glossary), menu item (glossary)
+References: menuItem (keyword), markChar (property), acceleratorKey (property), stacks (function), value (function), property (glossary), LiveCode (glossary), key combination (glossary), HyperCard (glossary), error (glossary), menu item (glossary)

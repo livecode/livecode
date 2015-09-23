@@ -27,8 +27,8 @@ By default, XML-RPC uses the <post command> to execute an <XML-RPC request>, but
 
 If the <revXMLRPC_SetSocket> <command> encounters an error, it <return|returns> an error message starting with "xmlrpcerr"..
 
->*Important:*  The <revXMLRPC_SetSocket> <command> is part of the <XML-RPC library>. To ensure that the <command> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML-RPC Library" is selected in the list of script libraries.
+>*Important:*  The <revXMLRPC_SetSocket> <command> is part of the <XML-RPC library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML-RPC Library" is selected in the list of script libraries.
 
-References: post command (command), revXMLRPC_GetSocket (function), revXMLRPC_CreateRequest (function), return (glossary), XML-RPC request (glossary), Standalone Application Settings (glossary), socket (glossary), standalone application (glossary), function (glossary), command (glossary), XML-RPC library (library), Revolution custom library (library)
+References: post command (command), revXMLRPC_GetSocket (function), revXMLRPC_CreateRequest (function), return (glossary), XML-RPC request (glossary), Standalone Application Settings (glossary), socket (glossary), standalone application (glossary), function (glossary), command (glossary), XML-RPC library (library), LiveCode custom library (library)
 
 Tags: networking

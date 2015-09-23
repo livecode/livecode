@@ -43,7 +43,7 @@ The result: If you specify a <time>, the <message> is sent to the <object> after
 Description:
 Use the <send> <command> to override the normal <message path>, or to delay a <command> until a specified time. 
 
-The <message> can be either the name of a <handler> or a <Revolution|LiveCode> <statement>. If the <message> is a <literal string> containing more than one <word> (for example, if it includes <parameter|parameters>, or if it is a multi-word command), it must be enclosed in <double quote|double quotes>. 
+The <message> can be either the name of a <handler> or a <LiveCode> <statement>. If the <message> is a <literal string> containing more than one <word> (for example, if it includes <parameter|parameters>, or if it is a multi-word command), it must be enclosed in <double quote|double quotes>. 
 
 Any parameters are evaluated before they are passed to the <send> <command>. For example, the following statement sends the <mouseUp> <message> with 2 as the first parameter:
 
@@ -55,4 +55,4 @@ When the send command is used the stack containing the target handler temporaril
 
 >*Note:*  Using the <send> <command> is slower than directly <execute|executing> the <command|commands> using the normal <message path>. For best efficiency, use the <send> <command> only when you want to delay the <message> or when the <handler> you want to execute is not in the <message path>.
 
-References: callbacks (property), backgroundBehavior (property), function (control_st), mouseUp (message), word (keyword), object (object), literal string (glossary), return (glossary), evaluate (glossary), execute (glossary), command (glossary), Revolution (glossary), double quote (glossary), trigger (glossary), message path (glossary), message (glossary), parameter (glossary), statement (glossary), handler (glossary), debugDo (command), dispatch (command), call (command), cancel (command), result (function), pendingMessages (function)
+References: callbacks (property), backgroundBehavior (property), function (control_st), mouseUp (message), word (keyword), object (object), literal string (glossary), return (glossary), evaluate (glossary), execute (glossary), command (glossary), LiveCode (glossary), double quote (glossary), trigger (glossary), message path (glossary), message (glossary), parameter (glossary), statement (glossary), handler (glossary), debugDo (command), dispatch (command), call (command), cancel (command), result (function), pendingMessages (function)

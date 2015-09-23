@@ -3,7 +3,7 @@
 //  stdlib-testing
 //
 //  Created by Ali Lloyd on 22/10/2014.
-//  Copyright (c) 2014 RunRev. All rights reserved.
+//  Copyright (c) 2015 LiveCode Ltd. All rights reserved.
 //
 #include "prefix.h"
 

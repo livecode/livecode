@@ -25,8 +25,8 @@ menuName: The name of the menu in which the menuItem appears.
 Description:
 Use the <doMenu> <command> to choose a <menu item>.
 
-The <doMenu> <command> is not implemented for all <menu item|menu items>. This command is included in <Revolution|LiveCode> for compatibility with imported <HyperCard> stacks.
+The <doMenu> <command> is not implemented for all <menu item|menu items>. This command is included in <LiveCode> for compatibility with imported <HyperCard> stacks.
 
-References: copy (command), enable menu (command), paste (command), menuItem (keyword), menu (keyword), Revolution (glossary), command (glossary), menu item (glossary), HyperCard (glossary)
+References: copy (command), enable menu (command), paste (command), menuItem (keyword), menu (keyword), LiveCode (glossary), command (glossary), menu item (glossary), HyperCard (glossary)
 
 Tags: menus

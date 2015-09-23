@@ -29,8 +29,8 @@ The result: If the <revXMLDeleteNode> <command> encounters an error, the <result
 Description:
 Use the <revXMLDeleteNode> <command> to remove part of an <XML tree> you're working with.
 
->*Important:*  The <revXMLDeleteNode> <command> is part of the <XML library>. To ensure that the <command> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
+>*Important:*  The <revXMLDeleteNode> <command> is part of the <XML library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
 
-References: revEndXMLNode (message), revStartXMLNode (message), revXMLAddNode (command), revXMLDeleteTree (command), revXMLPutIntoNode (command), revXMLRootNode (function), revXMLNodeContents (function), result (function), node (glossary), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), command (glossary), XML library (library), Revolution custom library (library)
+References: revEndXMLNode (message), revStartXMLNode (message), revXMLAddNode (command), revXMLDeleteTree (command), revXMLPutIntoNode (command), revXMLRootNode (function), revXMLNodeContents (function), result (function), node (glossary), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), command (glossary), XML library (library), LiveCode custom library (library)
 
 Tags: text processing

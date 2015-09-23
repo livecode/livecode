@@ -5,8 +5,8 @@ Synonyms: Geometry libraries,Geometry library
 Type: library
 
 Description:
-The <Revolution custom library|LiveCode custom library> that supports the Geometry pane in the <property inspector>. The <revCacheGeometry> and <revUpdateGeometry> <command|commands> are part of the Geometry library.
+The <LiveCode custom library|LiveCode custom library> that supports the Geometry pane in the <property inspector>. The <revCacheGeometry> and <revUpdateGeometry> <command|commands> are part of the Geometry library.
 
-References: revCacheGeometry (command), revUpdateGeometry (command), command (glossary), property inspector (glossary), Revolution custom library (library)
+References: revCacheGeometry (command), revUpdateGeometry (command), command (glossary), property inspector (glossary), LiveCode custom library (library)
 
 Tags: ui
