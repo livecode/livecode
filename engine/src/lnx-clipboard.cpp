@@ -40,7 +40,7 @@ const char * const MCLinuxRawClipboard::s_formats[kMCRawClipboardKnownTypeLast+1
     NULL,                           // MacRoman text
     NULL,                           // Windows codepage 1252 text
     
-    "text/richtext",                // Rich Text format
+    "text/rtf",                     // Rich Text format
     "text/html",                    // HTML
     
     "image/png",                    // PNG image
@@ -519,6 +519,25 @@ bool MCLinuxRawClipboardItem::AddRepresentation(MCStringRef p_type, MCDataRef p_
     // If we still have no rep, something went wrong
     if (t_rep == NULL)
         return false;
+    
+    // Various built-in formats may be offered under multiple MIME-types. This
+    // duplication is based on the keys provided by LibreOffice and is done so
+    // that the largest number of apps will understand the clipboard data.
+    if (MCStringIsEqualToCString(p_type, "text/rtf", kMCStringOptionCompareExact))
+    {
+        AddRepresentation(MCSTR("application/rtf"), p_bytes);
+        AddRepresentation(MCSTR("text/richtext"), p_bytes);
+    }
+    else if (MCStringIsEqualToCString(p_type, "UTF8_STRING", kMCStringOptionCompareExact))
+    {
+        AddRepresentation(MCSTR("UTF-8"), p_bytes);
+        AddRepresentation(MCSTR("text/plain;charset=utf-8"), p_bytes);
+        AddRepresentation(MCSTR("text/plain;charset=UTF-8"), p_bytes);
+    }
+    else if (MCStringIsEqualToCString(p_type, "STRING", kMCStringOptionCompareExact))
+    {
+        AddRepresentation(MCSTR("text/plain"), p_bytes);
+    }
     
     // All done
     return true;
