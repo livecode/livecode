@@ -136,6 +136,17 @@ config-ios-%:
 
 compile-ios-%:
 	$(XCODEBUILD) -project "build-ios-$*$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE)
+	
+# Dummy targets to prevent our build system from building iOS 9.0 simulator and Device
+config-ios-iphonesimulator9.0:
+	@echo "Skipping iOS simulator 9.0 (not yet supported)"
+compile-ios-iphonesimulator9.0:
+	@echo "Skipping iOS simulator 9.0 (not yet supported)"
+	
+config-ios-iphoneos9.0:
+	@echo "Skipping iOS OS 9.0 (not yet supported)"
+compile-ios-iphoneos9.0:
+	@echo "Skipping iOS OS 9.0 (not yet supported)"
 
 # Provide some synonyms for "latest iOS SDK"
 $(addsuffix -ios-iphoneos,all config compile): %: %8.4
