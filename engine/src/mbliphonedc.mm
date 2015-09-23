@@ -1203,7 +1203,6 @@ static void MCIPhoneDoDidBecomeActive(void *)
     {
         NSDictionary *t_environment;
         NSEnumerator* t_key_enumerator;
-        NSString* t_key;
         NSString* t_value;
         
         // NSProcessInfo::environment returns NSDictionary<NSString*,NSString*>
@@ -1213,7 +1212,7 @@ static void MCIPhoneDoDidBecomeActive(void *)
         uindex_t t_index = 0;
         
         // Loop through all the keys in the environment array
-        while (t_key = (NSString*)[t_key_enumerator nextObject])
+        for (id t_key in t_environment)
         {
             t_value = [t_environment objectForKey:t_key];
             
@@ -1245,7 +1244,8 @@ static void MCIPhoneDoDidBecomeActive(void *)
 	
 	[t_pool release];
     
-    // Release the env array and its elements
+    // Release the env array and its elements - X_init only pass env to X_open,
+    //  which only copies the relevant env vars from it: safe to release here.
     for (uindex_t j = 0; j < envc; ++j)
         MCMemoryDelete(env[j]);
     MCMemoryDelete(env);
