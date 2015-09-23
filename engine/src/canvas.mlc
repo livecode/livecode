@@ -3797,6 +3797,8 @@ Description:
 
 >*Note:* This can be more time-consuming to compute than the layout bounds.
 
+References:  CanvasOperationMeasureText(statement), FontOperationTextLayoutBounds(operator), FontOperationTextLayoutBoundsOnCanvas(operator), FontOperationTextImageBoundsOnCanvas(operator)
+
 Tags:	Canvas
 */
 syntax FontOperationTextImageBounds is prefix operator with precedence 4
@@ -3825,6 +3827,8 @@ Description:
 The exact bounds of the text, which will fully enclose each character.
 
 >*Note:* This can be more time-consuming to compute than the layout bounds.
+
+References:  CanvasOperationMeasureText(statement), FontOperationTextLayoutBounds(operator), FontOperationTextLayoutBoundsOnCanvas(operator), FontOperationTextImageBounds(operator)
 
 Tags:	Canvas
 */
