@@ -30,7 +30,7 @@ If you try to paint with the Line tool on a card that has no images, an image th
 
 Setting the <style> of a <graphic(keyword)> to "line" makes the <graphic(keyword)> into a curved line. Line <graphic(object)|graphics>, unlike painted lines, can be changed and reshaped: use the <points> <property> to change the line's angle and position.
 
->*Note:* To avoid script errors, enclose the word "line" in <double quote|double quotes> when you use it to indicate a <graphic(object)|graphic's> <style>. This prevents <LiveCode|LiveCode> from getting confused about whether you mean the line style, or the contents of a line in a <container>.
+>*Note:* To avoid script errors, enclose the word "line" in <double quote|double quotes> when you use it to indicate a <graphic(object)|graphic's> <style>. This prevents <LiveCode> from getting confused about whether you mean the line style, or the contents of a line in a <container>.
 
 By default, a line is delimited by return (ASCII 10). However, you can set the <lineDelimiter> <property> to any <character> in order to directly address <chunk|chunks> <delimit|delimited> by that character.
 

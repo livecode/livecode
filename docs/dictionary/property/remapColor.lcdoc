@@ -4,7 +4,7 @@ Type: property
 
 Syntax: set the remapColor to {true | false}
 
-Summary: Has no effect and is included in <LiveCode|LiveCode> for compatibility with imported <SuperCard> projects.
+Summary: Has no effect and is included in <LiveCode> for compatibility with imported <SuperCard> projects.
 
 Introduced: 1.0
 

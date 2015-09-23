@@ -6,7 +6,7 @@ Syntax: the colorNames
 
 Syntax: colorNames()
 
-Summary: <return|Returns> a list of the color names you can use in <LiveCode|LiveCode>.
+Summary: <return|Returns> a list of the color names you can use in <LiveCode>.
 
 Introduced: 1.0
 

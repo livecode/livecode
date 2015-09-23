@@ -25,7 +25,7 @@ end if
 Returns: The <buildNumber> function <return|returns> an integer.
 
 Description:
-Use the <buildNumber> <function> to determine which <engine> version the <application> is using. This is useful to figure out, for example, whether a certain <LiveCode|LiveCode> feature is available.
+Use the <buildNumber> <function> to determine which <engine> version the <application> is using. This is useful to figure out, for example, whether a certain <LiveCode> feature is available.
 
 The <buildNumber> of two copies of LiveCode or a <standalone application> may be different, even if the <version> function <return|returns> the same number. This is because new builds of the same version may be released to provide fixes to specific problems.
 

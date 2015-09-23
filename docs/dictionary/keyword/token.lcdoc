@@ -4,7 +4,7 @@ Type: keyword
 
 Syntax: token
 
-Summary: Designates a <LiveCode|LiveCode> token as part of a <chunk expression>.
+Summary: Designates a <LiveCode> token as part of a <chunk expression>.
 
 Introduced: 1.0
 
