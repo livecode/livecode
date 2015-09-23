@@ -863,10 +863,13 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                         {
                             // Set a property on the requestor containing the
                             // list of targets we can convert to.
+                            uindex_t t_atom_count = MCDataGetLength(*t_targets)/sizeof(gulong);
                             gdk_property_change(t_requestor, t_property,
-                                                s_targets, 32, GDK_PROP_MODE_REPLACE,
+                                                GDK_SELECTION_TYPE_ATOM,
+                                                32,
+                                                GDK_PROP_MODE_REPLACE,
                                                 (const guchar*)MCDataGetBytePtr(*t_targets),
-                                                MCDataGetLength(*t_targets)/sizeof(gulong));
+                                                t_atom_count);
                             
                             // Notify the requestor that we have replied
                             gdk_selection_send_notify(t_event->selection.requestor,
