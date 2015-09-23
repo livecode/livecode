@@ -548,6 +548,24 @@ bool MCLinuxRawClipboardItem::AddRepresentation(MCStringRef p_type, render_callb
     return false;
 }
 
+static bool SelectionNotifyFilter(GdkEvent *t_event, void *)
+{
+    return (t_event->type == GDK_SELECTION_NOTIFY);
+}
+
+static bool WaitForSelectionNotify()
+{
+    // Loop until a selection notify event is received
+    MCScreenDC *dc = (MCScreenDC*)MCscreen;
+    GdkEvent *t_notify;
+    while (!dc->GetFilteredEvent(SelectionNotifyFilter, t_notify, NULL))
+    {
+        // TODO: timeout
+    }
+    
+    return true;
+}
+
 void MCLinuxRawClipboardItem::FetchExternalRepresentations() const
 {
     // Fail if GDK isn't available
@@ -570,6 +588,9 @@ void MCLinuxRawClipboardItem::FetchExternalRepresentations() const
                           m_clipboard->GetSelectionAtom(),
                           t_targets_atom,
                           GDK_CURRENT_TIME);
+    
+    // Wait for a SelectionNotify event that tells us the data is ready
+    WaitForSelectionNotify();
     
     // Get the data for this property
     guchar* t_data;
@@ -637,6 +658,9 @@ MCLinuxRawClipboardItemRep::MCLinuxRawClipboardItemRep(GdkAtom p_selection, GdkA
     // Request the data for this representation
     gdk_selection_convert(MCLinuxRawClipboard::GetClipboardWindow(),
                           p_selection, p_atom, GDK_CURRENT_TIME);
+    
+    // Wait for a SelectionNotify event that tells us the data is ready
+    WaitForSelectionNotify();
     
     // Get the data for this property
     guchar* t_data;
