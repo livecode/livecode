@@ -373,7 +373,7 @@ MCDataRef MCLinuxRawClipboard::CopyTargets() const
     
     // Create a DataRef for the atoms
     MCAutoDataRef t_data;
-    if (!MCDataCreateMutable(sizeof(gulong) * m_selected_item->GetRepresentationCount(), &t_data))
+    if (!MCDataCreateMutable(0, &t_data))
         return NULL;
     
     // Add the representations in the form of atoms
