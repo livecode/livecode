@@ -73,6 +73,7 @@ public:
     bool OnLayerChanged();
     bool OnParentPropertyChanged(void);
     bool OnToolChanged(Tool tool);
+    bool OnVisibilityChanged(bool p_visible);
     
     bool CopyAnnotation(MCNameRef annotation, MCValueRef& r_value);
     bool SetAnnotation(MCNameRef annotation, MCValueRef value);

@@ -654,6 +654,14 @@ void MCWidget::layerchanged()
     MCwidgeteventmanager -> event_layerchanged(this);
 }
 
+void MCWidget::visibilitychanged(bool p_visible)
+{
+    if (m_widget == nil)
+        return;
+    
+    MCwidgeteventmanager -> event_visibilitychanged(this, p_visible);
+}
+
 Exec_stat MCWidget::handle(Handler_type p_type, MCNameRef p_method, MCParameter *p_parameters, MCObject *p_passing_object)
 {
 	return MCControl::handle(p_type, p_method, p_parameters, p_passing_object);
