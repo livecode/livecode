@@ -23,6 +23,6 @@ In LiveCode, setting this property sets the stack's <decorations> <property> to 
 
 Setting the <draggable> <property> causes the <stack window> to flash briefly.
 
-References: title (keyword), decorations (property), systemWindow (property), zoomBox (property), stack (object), property (glossary), title bar (glossary), SuperCard (glossary), Revolution (glossary), stack window (glossary)
+References: title (keyword), decorations (property), systemWindow (property), zoomBox (property), stack (object), property (glossary), title bar (glossary), SuperCard (glossary), LiveCode (glossary), stack window (glossary)
 
 Tags: windowing

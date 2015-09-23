@@ -29,6 +29,6 @@ You can use the <margins property> instead to set all four <field> margins to an
 
 The <wideMargins> <property> interacts with the <margins> : setting the <margins> <property> to 20 sets the <wideMargins> to true, and setting the <wideMargins> to true sets the <margins> to 20.
 
-References: margins property (property), pixels (property), margins (property), firstIndent (property), field (keyword), field (object), property (glossary), Revolution (glossary), HyperCard (glossary)
+References: margins property (property), pixels (property), margins (property), firstIndent (property), field (keyword), field (object), property (glossary), LiveCode (glossary), HyperCard (glossary)
 
 Tags: ui

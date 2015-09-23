@@ -45,6 +45,6 @@ Some database types do not support returning the number of records in a result s
 
 &nbsp;
 
-References: string (keyword), revMoveToNextRecord (command), Standalone Application Settings (glossary), record (glossary), standalone application (glossary), record set (database cursor) (glossary), return (glossary), SQL query (glossary), Database library (library), Revolution custom library (library)
+References: string (keyword), revMoveToNextRecord (command), Standalone Application Settings (glossary), record (glossary), standalone application (glossary), record set (database cursor) (glossary), return (glossary), SQL query (glossary), Database library (library), LiveCode custom library (library)
 
 Tags: database

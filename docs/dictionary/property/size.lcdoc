@@ -30,6 +30,6 @@ The <size> <property> of a <stack> is always 10000. For <stacks>, this <property
 
 >*Note:* The size of an image that has a <filename> is always empty. To get the true size of such an image, either use the detailed <files>, or check the length of the file url.
 
-References: image (keyword), integer (keyword), filename (property), heapSpace (function), hasMemory (function), stacks (function), files (function), diskSpace (function), stack (object), object (object), property (glossary), Revolution (glossary), audio clip (glossary), EPS (glossary), HyperCard (glossary), video clip (glossary), byte (glossary)
+References: image (keyword), integer (keyword), filename (property), heapSpace (function), hasMemory (function), stacks (function), files (function), diskSpace (function), stack (object), object (object), property (glossary), LiveCode (glossary), audio clip (glossary), EPS (glossary), HyperCard (glossary), video clip (glossary), byte (glossary)
 
 Tags: file system

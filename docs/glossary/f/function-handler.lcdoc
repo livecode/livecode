@@ -7,4 +7,4 @@ Type: glossary
 Description:
 A <LiveCode|LiveCode> <handler> you write that defines a <custom function>. Function handlers begin with the <function> <control structure>.
 
-References: handler (glossary), Revolution (glossary), custom function (glossary), function (glossary), control structure (glossary)
+References: handler (glossary), LiveCode (glossary), custom function (glossary), function (glossary), control structure (glossary)

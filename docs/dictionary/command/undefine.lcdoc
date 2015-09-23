@@ -19,4 +19,4 @@ In SuperCard and Oracle Media Objects, the <undefine> command is used to release
 
 In LiveCode, you can use a custom property without creating it first.
 
-References: customKeys (property), define (command), custom property (glossary), SuperCard (glossary), import (glossary), Oracle Media Objects (glossary), Revolution (glossary)
+References: customKeys (property), define (command), custom property (glossary), SuperCard (glossary), import (glossary), Oracle Media Objects (glossary), LiveCode (glossary)

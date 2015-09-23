@@ -9,4 +9,4 @@ A set of program <statement|statements>, with a name, that performs a particular
  
 In <LiveCode|LiveCode>, routines are called <handler|handlers>.
 
-References: statement (glossary), Revolution (glossary), handler (glossary)
+References: statement (glossary), LiveCode (glossary), handler (glossary)

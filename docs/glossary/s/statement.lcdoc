@@ -7,4 +7,4 @@ Type: glossary
 Description:
 A single programming instruction. A single line of <LiveCode|LiveCode> code that starts with a <command>.
 
-References: command (glossary), Revolution (glossary)
+References: command (glossary), LiveCode (glossary)

@@ -17,4 +17,4 @@ Platforms: desktop,server,web,mobile
 Description:
 In HyperCard, the <freeSize> <property> reports the amount of wasted space in a <stack>. In LiveCode, this <property> always reports zero.
 
-References: stack (object), stacks (function), diskSpace (function), hasMemory (function), property (glossary), Revolution (glossary), HyperCard (glossary)
+References: stack (object), stacks (function), diskSpace (function), hasMemory (function), property (glossary), LiveCode (glossary), HyperCard (glossary)

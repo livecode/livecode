@@ -19,4 +19,4 @@ In SuperCard and Oracle Media Objects, the <define> <command> is used to create 
 
 In LiveCode, you can use a custom property simply by setting its value with the set <command>, without creating it first, so this <command> is not needed.
 
-References: undefine (command), custom property (glossary), SuperCard (glossary), command (glossary), Revolution (glossary)
+References: undefine (command), custom property (glossary), SuperCard (glossary), command (glossary), LiveCode (glossary)
