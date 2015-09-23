@@ -15,7 +15,7 @@ OS: mac,windows,linux
 Platforms: desktop,server,web
 
 Description:
-The <draggable> <property> is included in <Revolution|LiveCode> for compatibility with imported <SuperCard> projects.
+The <draggable> <property> is included in <LiveCode|LiveCode> for compatibility with imported <SuperCard> projects.
 
 In SuperCard, the <draggable> <property> determines whether a window can be dragged by its <title bar>.
 

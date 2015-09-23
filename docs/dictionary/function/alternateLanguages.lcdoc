@@ -25,7 +25,7 @@ end if
 Returns: The <alternateLanguages> <function> <return|returns> a list of script languages, one per line.
 
 Description:
-Use the <alternateLanguages> <function> to find out what scripting languages (in addition to <Revolution|LiveCode>) are available for use with the do command.
+Use the <alternateLanguages> <function> to find out what scripting languages (in addition to <LiveCode|LiveCode>) are available for use with the do command.
 
 Mac OS and OS X systems support system-wide script languages (such as AppleScript) through the Open Scripting Architecture (OSA). You can write statements in any OSA language and execute them using the do command.
 

@@ -4,7 +4,7 @@ Type: property
 
 Syntax: set the commandChar of <menuItem> to <character> 
 
-Summary: Has no effect and is included in <Revolution|LiveCode> for compatibility with imported <HyperCard> <stacks>.
+Summary: Has no effect and is included in <LiveCode|LiveCode> for compatibility with imported <HyperCard> <stacks>.
 
 Introduced: 1.0
 

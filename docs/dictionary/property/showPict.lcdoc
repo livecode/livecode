@@ -4,7 +4,7 @@ Type: property
 
 Syntax: set the showPict of <card> to {true | false}
 
-Summary: This <property> is included in <Revolution|LiveCode> for compatibility with imported <HyperCard> stacks.
+Summary: This <property> is included in <LiveCode|LiveCode> for compatibility with imported <HyperCard> stacks.
 
 Associations: card
 

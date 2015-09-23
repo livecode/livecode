@@ -4,7 +4,7 @@ Type: property
 
 Syntax: get the freeSize of <stack> 
 
-Summary: Always reports zero and is included in <Revolution|LiveCode> for compatibility with imported <HyperCard> <stacks>.
+Summary: Always reports zero and is included in <LiveCode|LiveCode> for compatibility with imported <HyperCard> <stacks>.
 
 Associations: stack
 

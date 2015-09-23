@@ -36,7 +36,7 @@ If you place the <constant> <statement> in a <handler>, you can use the <constan
 
 Once you have defined a constant, you cannot redefine it in the same handler; doing so causes an execution error.
 
-You can use the <constant> <command> to redefine <Revolution|LiveCode's> built-in <constant(glossary)|constants> within a <script> or <handler>, but doing so makes your code harder to read and maintain. To find out whether a word is already defined as a built-in <constant(command)>, use the <constantNames> <function>.
+You can use the <constant> <command> to redefine <LiveCode|LiveCode's> built-in <constant(glossary)|constants> within a <script> or <handler>, but doing so makes your code harder to read and maintain. To find out whether a word is already defined as a built-in <constant(command)>, use the <constantNames> <function>.
 
 >*Tip:*  To see a list of built-in constants, open the Documentation window, click LiveCode Dictionary, and choose "Constants" from the menu at the top of the window.
 

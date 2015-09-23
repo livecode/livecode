@@ -6,7 +6,7 @@ Syntax: the menus
 
 Syntax: menus()
 
-Summary: Does not <return> a meaningful <value> and is included in <Revolution|LiveCode> for compatibility with imported <HyperCard> stacks.
+Summary: Does not <return> a meaningful <value> and is included in <LiveCode|LiveCode> for compatibility with imported <HyperCard> stacks.
 
 Introduced: 1.0
 

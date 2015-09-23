@@ -25,7 +25,7 @@ The first line of a <setProp> <handler> consists of the word "setProp" followed 
 
 The last line of a <setProp> <handler> consists of the word "end" followed by the <property|property's> name.
 
-A <setProp> <handler> can contain any set of <Revolution|LiveCode> <statement|statements>.
+A <setProp> <handler> can contain any set of <LiveCode|LiveCode> <statement|statements>.
 
 The <propertyName> is the name of the <custom property> whose <value> is being changed with the <set> <command>. 
 
