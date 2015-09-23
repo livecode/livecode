@@ -1260,22 +1260,26 @@ void MCPSMetaContext::drawtext(MCMark * p_mark )
 	if (l == 0)
 		return;
 
-	char *newsptr = NULL;
-	char *text = new char[l + 1];
-	memcpy(text, p_mark -> text . data , l);
-	
 	bool t_is_unicode;
 	t_is_unicode = p_mark -> text . unicode_override;
     
-	MCAutoStringRef t_text_string;
-	/* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)p_mark -> text . data, p_mark -> text . length, t_is_unicode ? kMCStringEncodingUTF16 : kMCStringEncodingNative, false, &t_text_string);
+    MCAutoPointer<char> t_text_cstring;
+    if (t_is_unicode)
+    {
+        MCAutoStringRef t_unicode_string;
+        /* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)p_mark -> text . data, p_mark -> text . length, t_is_unicode ? kMCStringEncodingUTF16 : kMCStringEncodingNative, false, &t_unicode_string);
+        /* UNCHECKED */ MCStringConvertToCString(*t_unicode_string, &t_text_cstring);
+    }
+    
+    MCAutoStringRef t_text_string;
+    /* UNCHECKED */ MCStringCreateWithCString(*t_text_cstring, &t_text_string);
 
     // MM-2014-04-16: [[ Bug 11964 ]] Prototype for MCFontMeasureText now takes transform param. Pass through identity.
     uint2 w = MCFontMeasureText(p_mark -> text . font, *t_text_string, MCGAffineTransformMakeIdentity());
 	
-	text[l] = '\0';
-	const char *sptr = text;
-	if ((sptr = strpbrk(text, "()\\")) != NULL)
+	const char *sptr = *t_text_cstring;
+    char *newsptr = NULL;
+	if ((sptr = strpbrk(*t_text_cstring, "()\\")) != NULL)
 	{
 		uint2 count = 0;
 		while (sptr != NULL)
@@ -1283,9 +1287,9 @@ void MCPSMetaContext::drawtext(MCMark * p_mark )
 			sptr = strpbrk(sptr + 1, "()\\");
 			count++;
 		}
-		newsptr = new char[strlen(text) + count + 1];
+		newsptr = new char[strlen(*t_text_cstring) + count + 1];
 		char *dptr = newsptr;
-		sptr = text;
+		sptr = *t_text_cstring;
 		uint2 ilength = l;
 		while (ilength--)
 		{
@@ -1299,7 +1303,7 @@ void MCPSMetaContext::drawtext(MCMark * p_mark )
 		sptr = newsptr;
 	}
 	else
-		sptr = text;
+		sptr = *t_text_cstring;
 
 	
 	if (l == 1)
@@ -1307,10 +1311,11 @@ void MCPSMetaContext::drawtext(MCMark * p_mark )
 	else
 		sprintf(buffer, "%d %d (%1.*s) %d %d AT\n",
 		        l - 1, w, (int)l, sptr, x, cardheight - y );
-	delete text;
+    
 	if (newsptr != NULL)
 		delete newsptr;
-	PSwrite(buffer);
+	
+    PSwrite(buffer);
 }
 
 
