@@ -64,7 +64,14 @@ public:
     {
         if (m_value)
             MCValueRelease(m_value);
-        m_value = (T)MCValueRetain(value);
+        m_value = (value) ? (T)MCValueRetain(value) : NULL;
+    }
+    
+    void Give(T value)
+    {
+        if (m_value)
+            MCValueRelease(m_value);
+        m_value = value;
     }
 
 private:
