@@ -852,6 +852,8 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                     
                     // What type should the selection be converted to?
                     static GdkAtom s_targets = gdk_atom_intern_static_string("TARGETS");
+                    static GdkAtom s_multiple = gdk_atom_intern_static_string("MULTIPLE");
+                    static GdkAtom s_timestamp = gdk_atom_intern_static_string("TIMESTAMP");
                     if (t_event->selection.target == s_targets)
                     {
                         // Get the list of types we can convert to
@@ -883,6 +885,16 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                                                       GDK_NONE,
                                                       t_event->selection.time);
                         }
+                    }
+                    else if (t_event->selection.target == s_multiple)
+                    {
+                        // This should be handled by GDK
+                        MCAssert(false);
+                    }
+                    else if (t_event->selection.target == s_timestamp)
+                    {
+                        // This should be handled by GDK
+                        MCAssert(false);
                     }
                     else
                     {

@@ -389,6 +389,14 @@ MCDataRef MCLinuxRawClipboard::CopyTargets() const
         MCDataAppendBytes(*t_data, (const byte_t*)&t_atom, sizeof(t_atom));
     }
     
+    // Add some special targets to the list too
+    gulong t_targets = gulong(gdk_atom_intern_static_string("TARGETS"));
+    gulong t_multiple = gulong(gdk_atom_intern_static_string("MULTIPLE"));
+    gulong t_timestamp = gulong(gdk_atom_intern_static_string("TIMESTAMP"));
+    MCDataAppendBytes(*t_data, (const byte_t*)&t_targets, sizeof(t_targets));
+    MCDataAppendBytes(*t_data, (const byte_t*)&t_multiple, sizeof(t_multiple));
+    MCDataAppendBytes(*t_data, (const byte_t*)&t_timestamp, sizeof(t_timestamp));
+    
     // Done
     return MCValueRetain(*t_data);
 }
