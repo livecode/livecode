@@ -310,6 +310,8 @@ Summary: The color scheme of the widget (Android only)
 
 Parameters:
 pColorScheme(enum): The color scheme of the widget
+-"Light"
+-"Dark"
 -"Red"
 -"Pink"
 -"Purple"
@@ -335,7 +337,7 @@ Use the <colorScheme> property to set the color scheme of the widget, Android on
 */
 property colorScheme get mColorScheme set setColorScheme
 metadata colorScheme.editor is "com.livecode.pi.enum"
-metadata colorScheme.options is "Red,Pink,Purple,Deep Purple,Indigo,Blue,Light Blue,Cyan,Teal,Green,Light Green,Lime,Yellow,Amber,Orange,Deep Orange,Brown,Grey,Blue Grey"
+metadata colorScheme.options is "Light,Dark,Red,Pink,Purple,Deep Purple,Indigo,Blue,Light Blue,Cyan,Teal,Green,Light Green,Lime,Yellow,Amber,Orange,Deep Orange,Brown,Grey,Blue Grey"
 metadata colorScheme.default is "Teal"
 metadata colorScheme.label is "Color Scheme"
 
@@ -376,6 +378,19 @@ property titleVisibility get mTitleIsVisible set setTitleVisibility
 metadata titleVisibility.default is "true"
 metadata titleVisibility.label is "Title Visibile"
 
+/*
+Syntax: set the distinctTitle of <widget> to {true | false}
+Syntax: get the distinctTitle of <widget>
+
+Summary: Whether the title is distinct or not
+
+Description:
+Use this property to determine whether the title distinct (true) or not (false), Android only.
+*/
+property distinctTitle get mTitleIsDistinct set setDistinctTitle
+metadata distinctTitle.default is "false"
+metadata distinctTitle.label is "Distinct Title"
+
 -- private instance variables
 -- iOS and Android properties
 private variable mWidgetTheme as String
@@ -398,6 +413,7 @@ private variable mShowSubtitle as Boolean
 private variable mColorScheme as String
 private variable mLeftAction as String
 private variable mTitleIsVisible as Boolean
+private variable mTitleIsDistinct as Boolean
 
 private variable mIconColor as Color
 private variable mTitleRatio as Real
@@ -413,12 +429,10 @@ private variable mRight as Real
 private variable mLetterCount as Integer
 private variable mActionRects as List
 
-private variable mIsDarkColorScheme as Boolean
+private variable mAndroidTitleColor as Color
+private variable mAndroidIconColor as Color
 private variable mAndroidColors as Array
 private variable mAndroidFontSize as Real
-private variable mAndroidIconDimension as Real
-private variable mAndroidBuffer as Real
-private variable mAndroidMargin as Real
 
 -- constants (some defined as varibales)
 private variable kBackgroundColor as List
@@ -431,34 +445,34 @@ constant kSubtitleRatio is 0.171875
 constant kWidgetThemeIos is "iOS"
 constant kWidgetThemeAndroid is "Android"
 
-constant kAndroidColorSchemeLight is "Light"
-constant kAndroidColorSchemeDark is "Dark"
-constant kAndroidColorSchemeRed is "Red"
-constant kAndroidColorSchemePink is "Pink"
-constant kAndroidColorSchemePurple is "Purple"
-constant kAndroidColorSchemeDeepPurple is "Deep Purple"
-constant kAndroidColorSchemeIndigo is "Indigo"
-constant kAndroidColorSchemeBlue is "Blue"
-constant kAndroidColorSchemeLightBlue is "Light Blue"
-constant kAndroidColorSchemeCyan is "Cyan"
-constant kAndroidColorSchemeTeal is "Teal"
-constant kAndroidColorSchemeGreen is "Green"
-constant kAndroidColorSchemeLightGreen is "Light Green"
-constant kAndroidColorSchemeLime is "Lime"
-constant kAndroidColorSchemeYellow is "Yellow"
-constant kAndroidColorSchemeAmber is "Amber"
-constant kAndroidColorSchemeOrange is "Orange"
-constant kAndroidColorSchemeDeepOrange is "Deep Orange"
-constant kAndroidColorSchemeBrown is "Brown"
-constant kAndroidColorSchemeGrey is "Grey"
-constant kAndroidColorSchemeBlueGrey is "Blue Grey"
+constant kLightColor is "Light"
+constant kDarkColor is "Dark"
+constant kRedColor is "Red"
+constant kPinkColor is "Pink"
+constant kPurpleColor is "Purple"
+constant kDeepPurpleColor is "Deep Purple"
+constant kIndigoColor is "Indigo"
+constant kBlueColor is "Blue"
+constant kLightBlueColor is "Light Blue"
+constant kCyanColor is "Cyan"
+constant kTealColor is "Teal"
+constant kGreenColor is "Green"
+constant kLightGreenColor is "Light Green"
+constant kLimeColor is "Lime"
+constant kYellowColor is "Yellow"
+constant kAmberColor is "Amber"
+constant kOrangeColor is "Orange"
+constant kDeepOrangeColor is "Deep Orange"
+constant kBrownColor is "Brown"
+constant kGreyColor is "Grey"
+constant kBlueGreyColor is "Blue Grey"
 
 constant kAndroidDefaultHeight is 56
 constant kAndroidDefaultWidth is 320
-constant kAndroidDefaultFontSize is 21
+constant kAndroidDefaultFontSize is 20
 constant kAndroidDefaultIconDimension is 24
-constant kAndroidDefaultBuffer is 16
-constant kAndroidDefaultMargin is 72
+constant kAndroidHMargin is 72
+
 
 public handler OnSave(out rProperties as Array)
    put the empty array into rProperties
@@ -479,6 +493,7 @@ public handler OnSave(out rProperties as Array)
    put mColorScheme into rProperties["colorScheme"]
    put mLeftAction into rProperties["leftAction"]
    put mTitleIsVisible into rProperties["titleVisibility"]
+   put mTitleIsDistinct into rProperties["distinctTitle"]
 
 end handler
 
@@ -499,6 +514,7 @@ public handler OnLoad(in pProperties as Array)
    put pProperties["colorScheme"] into mColorScheme
    put pProperties["leftAction"] into mLeftAction
    put pProperties["titleVisibility"] into mTitleIsVisible
+   put pProperties["distinctTitle"] into mTitleIsDistinct
 end handler
 
 public handler OnCreate()
@@ -536,12 +552,14 @@ public handler OnCreate()
    put "Purple" into mColorScheme
    put "reorder" into mLeftAction
    put true into mTitleIsVisible
+   put false into mTitleIsDistinct
 
    -- variables
    updateVariables()
    fetchAndroidColors()
    put 0 into mSelectedAction
-   put true into mIsDarkColorScheme
+   put color [1,1,1] into mAndroidTitleColor
+   put color [1,1,1] into mAndroidIconColor
 
    -- constants (defined as variables)
    put [247/255,247/255,247/255] into kBackgroundColor
@@ -588,11 +606,9 @@ private handler drawIosHeader() returns nothing
 
    -- drawing the back button
    set the paint of this canvas to fetchPaint("backButton")
-
    if mShowBackIcon is true then
       fill fetchPath("backIcon") on this canvas
    end if
-
    if mShowLeftLabel is true then
       set the font of this canvas to fetchFont("label")
       fill text mLeftLabel at left of fetchRect("leftLabel") on this canvas
@@ -600,26 +616,20 @@ private handler drawIosHeader() returns nothing
 
    -- draw the actions
    if mHeaderActions is not the empty list then
-
       variable tX as Integer
       variable tActionsCount as Integer
-
       put the number of elements in mHeaderActions into tActionsCount
-
       repeat with tX from 1 up to tActionsCount
-
          if tX+2 is mSelectedAction then
             set the paint of this canvas to solid paint with color [the red of mActionColor, the green of mActionColor, the blue of mActionColor, 0.5]
          else
             set the paint of this canvas to solid paint with mActionColor
          end if
-
          if mActionStyle is "icons" then
             drawActionIcon(mHeaderActions[tX]["icon_name"])
          else if mActionStyle is "names" then
             drawActionName(mHeaderActions[tX]["label"])
          end if
-
       end repeat
    end if
 
@@ -628,21 +638,49 @@ private handler drawIosHeader() returns nothing
       set the paint of this canvas to fetchPaint("searchIcon")
       fill fetchPath("searchIcon") on this canvas
    end if
-
 end handler
 
 private handler drawAndroidHeader() returns nothing
 
-   -- draw the background
+   -- draw the background with drop shadow
+   if mIsOpaque then
+      variable tShadow as Effect
+      put drawDropShadow() into tShadow
 
-   -- draw the bottom line (drop shadow?)
+      begin layer with tShadow on this canvas
+      set the paint of this canvas to fetchPaint("background")
+      fill fetchPath("background") on this canvas
+      end layer on this canvas
+   end if
 
    -- draw the left action
+   set the paint of this canvas to fetchPaint("icon")
+   fill fetchIconPath(mLeftAction) on this canvas
 
-   -- draw the title
+   -- draw the title (WIP)
+   set the font of this canvas to fetchFont("title")
+   set the paint of this canvas to fetchPaint("title")
+   fill text mHeaderTitle at bottom left of fetchRect("title") on this canvas
 
    -- draw the right actions
 
+end handler
+
+private handler drawDropShadow() returns Effect
+   variable tProps as Array
+   put the empty array into tProps
+
+   put color [153/255, 153/255, 153/255, 1] into tProps["color"]
+   put "source over" into tProps["blend mode"]
+   put 255 into tProps["opacity"]
+   put 0.75 into tProps["spread"]
+   put 5 into tProps["size"]
+   put 1 into tProps["distance"]
+   put 90 into tProps["angle"]
+
+   variable tEffect as Effect
+   put outer shadow effect with properties tProps into tEffect
+   return tEffect
 end handler
 
 private handler drawActionIcon(in pIconName as String) returns nothing
@@ -657,7 +695,6 @@ private handler drawActionIcon(in pIconName as String) returns nothing
    fill tIconPath on this canvas
 
    push tIconRect onto back of mActionRects
-
 end handler
 
 private handler drawActionName(in pActionLabel as String) returns nothing
@@ -670,9 +707,23 @@ private handler drawActionName(in pActionLabel as String) returns nothing
    fill text pActionLabel at right of tActionRect on this canvas
 
    push tActionRect onto back of mActionRects
-
 end handler
 
+-- WIP - all iOS icons should be drawn using this handler
+private handler fetchIconPath(in pIconName as String) returns Path
+   variable tIconPath as Path
+   put path iconSVGPathFromName(pIconName) into tIconPath
+
+   variable tIconRect as Rectangle
+   if mWidgetTheme is kWidgetThemeAndroid then
+      put rectangle [16, (my height - 5)/2 - 12, 40, (my height - 5)/2 + 12] into tIconRect
+   end if
+
+   setIconPath(tIconRect, tIconPath)
+   return tIconPath
+end handler
+
+-- WIP - icon paths should be fetched from above handler
 private handler fetchPath(in pObject as String) returns Path
    variable tIconPath as Path
    variable tIconRect as Rectangle
@@ -683,7 +734,11 @@ private handler fetchPath(in pObject as String) returns Path
    put my height into tH
 
    if pObject is "background" then
-      return rectangle path of rectangle [0, 0, tW, tH-1]
+      if mWidgetTheme is kWidgetThemeIos then
+         return rectangle path of rectangle [0, 0, tW, tH-1]
+      else if mWidgetTheme is kWidgetThemeAndroid then
+         return rectangle path of rectangle [0, 0, tW, tH-5]
+      end if
 
    else if pObject is "line" then
       return rectangle path of rectangle [0, tH-1, tW, tH]
@@ -720,7 +775,6 @@ private handler fetchPath(in pObject as String) returns Path
 end handler
 
 private handler fetchRect(in pObject as String) returns Rectangle
-
    variable tRect as Rectangle
    variable tLeft as Real
    variable tTop as Real
@@ -733,12 +787,16 @@ private handler fetchRect(in pObject as String) returns Rectangle
    put tH*kActionRatio/2 into tSize
 
    if pObject is "title" then
-      if mShowSubtitle is false then
-         return rectangle [0, mLabelTop-mTitleVAdjust, my width, mLabelBottom-mTitleVAdjust]
-      else
-         put mSubtitleCenter-tH*mTitleRatio-kMargin/2 into tTop
-         put mSubtitleCenter-kMargin/2 into tBottom
-         return rectangle [0, tTop, my width, tBottom]
+      if mWidgetTheme is kWidgetThemeIos then
+         if mShowSubtitle is false then
+            return rectangle [0, mLabelTop-mTitleVAdjust, my width, mLabelBottom-mTitleVAdjust]
+         else
+            put mSubtitleCenter-tH*mTitleRatio-kMargin/2 into tTop
+            put mSubtitleCenter-kMargin/2 into tBottom
+            return rectangle [0, tTop, my width, tBottom]
+         end if
+      else if mWidgetTheme is kWidgetThemeAndroid then
+         return rectangle [kAndroidHMargin, 0, my width, (my height)/2]
       end if
 
    else if pObject is "subtitle" then
@@ -768,17 +826,26 @@ private handler fetchRect(in pObject as String) returns Rectangle
    end if
 end handler
 
+-- WIP - icons for iOS the same paint??
 private handler fetchPaint(in pObject as String) returns Paint
    variable tPaint as Paint
 
    if pObject is "background" then
-      put solid paint with color kBackgroundColor into tPaint
+      if mWidgetTheme is kWidgetThemeIos then
+         put solid paint with color kBackgroundColor into tPaint
+      else if mWidgetTheme is kWidgetThemeAndroid then
+         put solid paint with stringToColor(mAndroidColors[mColorScheme]) into tPaint
+      end if
 
    else if pObject is "line" then
       put solid paint with color [0, 0, 0, 0.2] into tPaint
 
    else if pObject is "title" then
-      put solid paint with color kBlackColor into tPaint
+      if mWidgetTheme is kWidgetThemeIos then
+         put solid paint with color kBlackColor into tPaint
+      else if mWidgetTheme is kWidgetThemeAndroid then
+         put solid paint with mAndroidTitleColor into tPaint
+      end if
 
    else if pObject is "backButton" then
       if mSelectedAction is 1 then
@@ -794,19 +861,28 @@ private handler fetchPaint(in pObject as String) returns Paint
          put solid paint with mActionColor into tPaint
       end if
 
+   else if pObject is "icon" then
+      if mWidgetTheme is kWidgetThemeAndroid then
+         put solid paint with mAndroidIconColor into tPaint
+      end if
+
    end if
 
    return tPaint
 end handler
 
 private handler fetchFont(in pType as String) returns Font
-
    variable tSize as Number
    variable tFont as String
 
    if pType is "title" then
-      put (my height)*mTitleRatio into tSize
-      put "Helvetica Neue Medium" into tFont
+      if mWidgetTheme is kWidgetThemeIos then
+         put (my height)*mTitleRatio into tSize
+         put "Helvetica Neue Medium" into tFont
+      else if mWidgetTheme is kWidgetThemeAndroid then
+         put mAndroidFontSize into tSize
+         put "Roboto Medium" into tFont
+      end if
 
    else if pType is "subtitle" then
       put (my height)*kSubtitleRatio into tSize
@@ -817,12 +893,10 @@ private handler fetchFont(in pType as String) returns Font
       put "Helvetica Neue Regular" into tFont
 
    end if
-
    return font tFont at size tSize
 end handler
 
 private handler fetchSelectedItem() returns Integer
-
    variable tSelected as Integer
    variable tBackRect as Rectangle
    variable tSearchRect as Rectangle
@@ -842,22 +916,19 @@ private handler fetchSelectedItem() returns Integer
    end if
 
    return tSelected
-
 end handler
 
+-- WIP - fetchRect ??
 private handler fetchBackRect() returns Rectangle
    variable tBackRect as Rectangle
 
    if mShowLeftLabel is true then
-
       variable tLetterCount as Integer
       variable tSize as Real
       variable tWidth as Real
-
       put the number of chars in mLeftLabel into tLetterCount
       put (my height)*kActionRatio/2 into tSize
       put tLetterCount*tSize into tWidth
-
    end if
 
    if mShowBackIcon is true and mShowLeftLabel is false then
@@ -873,27 +944,24 @@ private handler fetchBackRect() returns Rectangle
    return tBackRect
 end handler
 
+-- WIP - fetchRect ??
 private handler fetchSearchRect() returns Rectangle
    variable tSearchRect as Rectangle
-
    if mShowSearchIcon is true then
       put rectangle [mRight - mIconWidth - kMargin, mLabelTop, mRight - kMargin, mLabelBottom] into tSearchRect
    else
       put rectangle [0,0,0,0] into tSearchRect
    end if
-
    return tSearchRect
 end handler
 
 private handler locToAction(in pLoc as Point) returns Integer
    variable tX as Integer
-
    repeat with tX from 1 up to the number of elements in mActionRects
       if pLoc is within (element tX of mActionRects) then
          return (tX + 2)
       end if
    end repeat
-
    return 0
 end handler
 
@@ -910,21 +978,33 @@ end handler
 
 -- this handler checks whether the android theme is dark or light based on the color scheme
 private handler checkIfThemeIsDark() returns nothing
+   variable tDarkColorSchemes as List
+   put [kDarkColor,kRedColor,kPinkColor,kPurpleColor,kDeepPurpleColor,kIndigoColor,kBlueColor,kTealColor,kDeepOrangeColor,kBrownColor,kBlueGreyColor] into tDarkColorSchemes
 
-   variable tDarkColorSchemes
-   put [kAndroidColorSchemeRed, kAndroidColorSchemePink, kAndroidColorSchemePurple, kAndroidColorSchemeDeepPurple, kAndroidColorSchemeIndigo, kAndroidColorSchemeBlue, kAndroidColorSchemeTeal, kAndroidColorSchemeDeepOrange, kAndroidColorSchemeBrown, kAndroidColorSchemeBlueGrey] into tDarkColorSchemes
-
-   if mColorScheme is in tDarkColorSchemes then
-      put true into mIsDarkColorScheme
+   if mIsOpaque then
+      if mColorScheme is in tDarkColorSchemes then
+         put color [1,1,1] into mAndroidTitleColor
+         if mTitleIsDistinct then
+            put color [0,0,0,0.3] into mAndroidIconColor
+         else
+            put color [1,1,1] into mAndroidIconColor
+         end if
+      else
+         put color [0,0,0] into mAndroidTitleColor
+         if mTitleIsDistinct then
+            put color [1,1,1,0.38] into mAndroidIconColor
+         else
+            put color [0,0,0] into mAndroidIconColor
+         end if
+      end if
    else
-      put false into mIsDarkColorScheme
+      put color [0,0,0] into mAndroidTitleColor
    end if
 
 end handler
 --
 
 private handler fetchAndroidColors() returns nothing
-
 	put the empty array into mAndroidColors
    put "250,250,250" into mAndroidColors["Light"]
    put "39,39,39" into mAndroidColors["Dark"]
@@ -947,11 +1027,9 @@ private handler fetchAndroidColors() returns nothing
 	put "101,67,56" into mAndroidColors["Brown"]
 	put "140,140,140" into mAndroidColors["Grey"]
 	put "78,106,120" into mAndroidColors["Blue Grey"]
-
 end handler
 
 private handler updateVariables() returns nothing
-
    if mHeaderSubtitle is empty then
       put false into mShowSubtitle
    else
@@ -985,27 +1063,20 @@ private handler updateVariables() returns nothing
    put 0 into mLetterCount
 
    put the empty list into mActionRects
-
-   put tH*(kAndroidDefaultFontSize/kAndroidDefaultHeight) into mAndroidFontSize
-   put tH*(kAndroidDefaultIconDimension/kAndroidDefaultHeight) into mAndroidIconDimension
-   put tH*(kAndroidDefaultBuffer/kAndroidDefaultHeight) into mAndroidBuffer
-   put tH*(kAndroidDefaultMargin/kAndroidDefaultHeight) into mAndroidMargin
+   put (tH-5)*(kAndroidDefaultFontSize/kAndroidDefaultHeight) into mAndroidFontSize
 end handler
 
 public handler OnMouseDown()
    -- the icons change color when they are pressed down
    variable tSelectedDown as Integer
    put fetchSelectedItem() into tSelectedDown
-
    if tSelectedDown > 0 then
       put tSelectedDown into mSelectedAction
       redraw all
    end if
-
 end handler
 
 public handler OnMouseUp()
-
    -- the icons change back to their original colors on mouse up
    put 0 into mSelectedAction
    redraw all
@@ -1015,27 +1086,20 @@ public handler OnMouseUp()
    put fetchSelectedItem() into tSelectedUp
 
    if tSelectedUp > 2 then
-
       variable tActionCount as Integer
       variable tNumActions as Integer
-
       put the number of elements in element 1 of mHeaderActions into tNumActions
-
       repeat with tActionCount from 1 up to tNumActions
-
          if tActionCount is tSelectedUp-2 then
             post "headerAction" with [mHeaderActions[tActionCount]["name"]]
          end if
-
       end repeat
 
    else if tSelectedUp = 1 then
       post "leftAction"
-
    else if tSelectedUp = 2 then
       post "searchAction"
    end if
-
 end handler
 
 --------------------------------------------------------------------------------
@@ -1045,7 +1109,6 @@ end handler
 --------------------------------------------------------------------------------
 
 private handler setIconPath(in pTargetRect as Rectangle, inout xPath as Path)
-
 	-- Scale the icon
 	variable tBounds
 	put the bounding box of xPath into tBounds
@@ -1053,7 +1116,6 @@ private handler setIconPath(in pTargetRect as Rectangle, inout xPath as Path)
 	-- Scale appropriately
 	variable tXScale as Real
 	variable tYScale as Real
-
 	put the width of pTargetRect / the width of tBounds into tXScale
 	put the height of pTargetRect / the height of tBounds into tYScale
 
@@ -1062,27 +1124,22 @@ private handler setIconPath(in pTargetRect as Rectangle, inout xPath as Path)
 	else
 		put tXScale into tYScale
 	end if
-
    scale xPath by [tXScale, tYScale]
 
 	variable tXTranslate as Real
 	variable tYTranslate as Real
-
    put the bounding box of xPath into tBounds
-
 	put the left of pTargetRect - the left of tBounds into tXTranslate
 	put the top of pTargetRect - the top of tBounds into tYTranslate
 
     variable tXDiff as Real
     variable tYDiff as Real
-
     put the width of pTargetRect - the width of tBounds into tXDiff
     put the height of pTargetRect - the height of tBounds into tYDiff
 
 	-- align center
 	divide tXDiff by 2
 	divide tYDiff by 2
-
 	translate xPath by [tXTranslate + tXDiff, tYTranslate + tYDiff]
 end handler
 
@@ -1132,7 +1189,6 @@ private handler stringToColor(in pString as String) returns Color
    end repeat
 
    return color tColorList
-
 end handler
 
 -- this handler strips the zeros when an integer is formatted as a string
@@ -1237,6 +1293,10 @@ private handler setBackgroundOpacity(in pOpaque as Boolean) returns nothing
 		return
 	end if
 
+   if mWidgetTheme is kWidgetThemeAndroid then
+      checkIfThemeIsDark()
+   end if
+
 	put pOpaque into mIsOpaque
 	redraw all
 end handler
@@ -1289,15 +1349,14 @@ private handler setColorScheme(in pColorScheme as String) returns nothing
 	end if
 
 	variable tColorSchemeList as List
-	put [kAndroidColorSchemeLight, kAndroidColorSchemeDark, kAndroidColorSchemeRed, kAndroidColorSchemePink, kAndroidColorSchemePurple, kAndroidColorSchemeDeepPurple, kAndroidColorSchemeIndigo, kAndroidColorSchemeBlue, kAndroidColorSchemeLightBlue, kAndroidColorSchemeCyan, kAndroidColorSchemeTeal, kAndroidColorSchemeGreen, kAndroidColorSchemeLightGreen, kAndroidColorSchemeLime, kAndroidColorSchemeYellow, kAndroidColorSchemeAmber, kAndroidColorSchemeOrange, kAndroidColorSchemeDeepOrange, kAndroidColorSchemeBrown, kAndroidColorSchemeGrey, kAndroidColorSchemeBlueGrey] into tColorSchemeList
+	put [kLightColor,kDarkColor,kRedColor,kPinkColor,kPurpleColor,kDeepPurpleColor,kIndigoColor,kBlueColor,kLightBlueColor,kCyanColor,kTealColor,kGreenColor,kLightGreenColor,kLimeColor,kYellowColor,kAmberColor,kOrangeColor,kDeepOrangeColor,kBrownColor,kGreyColor,kBlueGreyColor] into tColorSchemeList
 
 	if not(pColorScheme is in tColorSchemeList) then
 		throw "invalid color scheme"
 	end if
 
-   checkIfThemeIsDark()
-
 	put pColorScheme into mColorScheme
+   checkIfThemeIsDark()
 	redraw all
 end handler
 
@@ -1326,6 +1385,16 @@ private handler setTitleVisibility(in pIsVisible as Boolean) returns nothing
    end if
 
    put pIsVisible into mTitleIsVisible
+   redraw all
+end handler
+
+private handler setDistinctTitle(in pIsDistinct as Boolean) returns nothing
+   if pIsDistinct is mTitleIsDistinct then
+      return
+   end if
+
+   put pIsDistinct into mTitleIsDistinct
+   checkIfThemeIsDark()
    redraw all
 end handler
 
