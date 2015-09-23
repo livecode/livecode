@@ -29,6 +29,6 @@ The result: If the <revXMLInsertNode> <command> encounters an error, the <result
 Description:
 Use revXMLInsertNode to insert a node into an XML tree.
 
->*Important:*  The <revXMLInsertNode> <command> is part of the <XML library>. To ensure that the <command> works in a <standalone application>, you must include this <custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
+>*Important:*  The <revXMLInsertNode> <command> is part of the <XML library>. To ensure that the <command> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
 
-References: revXMLAppend (command), result (function), XML library (library), LiveCode custom library (library), Standalone Application Settings (glossary), standalone application (glossary), command (glossary)
+References: revXMLAppend (command), result (function), XML library (library), Revolution custom library (library), Standalone Application Settings (glossary), standalone application (glossary), command (glossary)

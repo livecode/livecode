@@ -25,7 +25,7 @@ The first line of a <setProp> <handler> consists of the word "setProp" followed 
 
 The last line of a <setProp> <handler> consists of the word "end" followed by the <property|property's> name.
 
-A <setProp> <handler> can contain any set of <LiveCode> <statement|statements>.
+A <setProp> <handler> can contain any set of <Revolution|LiveCode> <statement|statements>.
 
 The <propertyName> is the name of the <custom property> whose <value> is being changed with the <set> <command>. 
 
@@ -63,4 +63,4 @@ The above <setProp> <handler> responds to changes in the <custom property> named
 Changes:
 In version 2.0 and later, setting a custom property (other than the one that the current setProp handler applies to) inside a setProp handler sends a setProp trigger. In previous versions, setting a custom property within a setProp handler never sent a setProp trigger, regardless of which custom property you set.
 
-References: properties (property), customPropertySets (property), customProperties (property), call (command), set (command), card (keyword), $ (keyword), stack (object), object (object), propertyNames (function), paramCount (function), value (function), pass (control_st), exit (control_st), setProp (control_st), statement (glossary), handler (glossary), property (glossary), recursion (glossary), command (glossary), LiveCode (glossary), control structure (glossary), custom property set (glossary), trigger (glossary), custom property (glossary), handle (glossary), message path (glossary), trap (glossary), message (glossary), parameter (glossary), script (glossary), button (glossary)
+References: properties (property), customPropertySets (property), customProperties (property), call (command), set (command), card (keyword), $ (keyword), stack (object), object (object), propertyNames (function), paramCount (function), value (function), pass (control_st), exit (control_st), setProp (control_st), statement (glossary), handler (glossary), property (glossary), recursion (glossary), command (glossary), Revolution (glossary), control structure (glossary), custom property set (glossary), trigger (glossary), custom property (glossary), handle (glossary), message path (glossary), trap (glossary), message (glossary), parameter (glossary), script (glossary), button (glossary)
