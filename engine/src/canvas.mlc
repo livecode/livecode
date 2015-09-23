@@ -4773,7 +4773,16 @@ Example:
 	measure "Sample text" on this canvas
 	put the result into tBounds
 
+Description:
+Sets the result to the layout bounds of the text, constructed from the ascent and descent values of the font, and the width of the text string.
+
+>*Note:* The layout bounds are used to position blocks of text relative to each other, so the text may overlap these bounds.
+
+The value of the result is the same as the expression `the layout bounds of text mText on mCanvas`.
+
 Tags:	Canvas
+
+References:  FontOperationTextLayoutBounds(operator), FontOperationTextLayoutBoundsOnCanvas(operator), FontOperationTextImageBounds(operator), FontOperationTextImageBoundsOnCanvas(operator)
 */
 syntax CanvasOperationMeasureText is statement
 	"measure" <mText: Expression> "on" <mCanvas: Expression>
