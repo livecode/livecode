@@ -552,11 +552,6 @@ Boolean MCScreenDC::open()
 		MCuselibgnome = initialise_weak_link_libgnome();
 		gnome_vfs_init();
 	}
-	
-	// Create the various Transfer data stores....
-	m_DND_store = new MCGdkTransferStore(dpy);
-	m_Clipboard_store = new MCGdkTransferStore(dpy);
-	m_Selection_store = new MCGdkTransferStore(dpy);
     
     // There are also some atoms that we need to set up
     MCworkareaatom = gdk_atom_intern_static_string("_NET_WORKAREA");

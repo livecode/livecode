@@ -20,7 +20,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
-#include "transfer.h"
 //#include "execpt.h" 
 #include "dispatch.h"
 #include "image.h"
@@ -31,14 +30,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "lnxdc.h"
 
-#include "lnxtransfer.h"
-#include "lnxpasteboard.h"
 #include "lnxdnd.h" 
 
-bool g_dnd_init = false;
-GdkCursor *g_dnd_cursor_drop_okay = NULL;
-GdkCursor *g_dnd_cursor_drop_fail = NULL;
-MCGdkTransferStore *MCtransferstore = NULL;
+
+static bool g_dnd_init = false;
+static GdkCursor *g_dnd_cursor_drop_okay = NULL;
+static GdkCursor *g_dnd_cursor_drop_fail = NULL;
+
 
 // Do all the setup of the xDnD protocol
 void init_dnd()
@@ -48,9 +46,7 @@ void init_dnd()
 		// Create cursors for indicating drop acceptability
         g_dnd_cursor_drop_okay = gdk_cursor_new(GDK_CROSS);
         g_dnd_cursor_drop_fail = gdk_cursor_new(GDK_PIRATE);
-
-		MCtransferstore = new MCGdkTransferStore(MCdpy);
-		
+        
         // Initialisation done
         g_dnd_init = true;
 	}
@@ -61,7 +57,6 @@ void shutdown_xdnd()
 {
     //gdk_cursor_unref(g_dnd_cursor_drop_okay);
     //gdk_cursor_unref(g_dnd_cursor_drop_fail);
-    delete MCtransferstore;
     g_dnd_init = false;
 }
 
@@ -90,7 +85,7 @@ static void break_dnd_modal_loop(void* context)
 }
 
 // SN-2014-07-11: [[ Bug 12769 ]] Update the signature - the non-implemented UIDC dodragdrop was called otherwise
-MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset)
+MCDragAction MCScreenDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset)
 {
     //fprintf(stderr, "DND: dodragdrop\n");
     // The source window for the drag and drop operation
@@ -118,27 +113,24 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
     else if (t_possible_actions & GDK_ACTION_COPY)
         t_suggested_action = GDK_ACTION_COPY;
     
-    // Get the list of supported transfer types
-    MCTransferType *t_transfer_types;
-    size_t t_transfer_types_count;
-    MCtransferstore->cleartypes();
-    if (!p_pasteboard->Query(t_transfer_types, t_transfer_types_count))
-    {
-        // No types supported therefore nothing to drop
+    // Get the list of supported targets
+    const MCLinuxRawClipboard* t_dragboard = static_cast<const MCLinuxRawClipboard*> (MCdragboard->GetRawClipboard());
+    MCAutoDataRef t_targets(t_dragboard->CopyTargets());
+    if (*t_targets == NULL)
         return DRAG_ACTION_NONE;
-    }
     
-    // Get the data for each transfer type
-    for (uint32_t i = 0; i < t_transfer_types_count; i++)
+    // Turn it into a GList
+    GList* t_target_list = NULL;
+    for (uindex_t i = 0; i < MCDataGetLength(*t_targets)/sizeof(uint32_t); i++)
     {
-        // Ignore the type if we can't convert the data to the required form
-        MCAutoDataRef t_data;
-        if (p_pasteboard->Fetch(t_transfer_types[i], &t_data))
-            MCtransferstore->addRevType(t_transfer_types[i], *t_data);
+        uint32_t t_atom = reinterpret_cast<const uint32_t*>(MCDataGetBytePtr(*t_targets))[i];
+        t_target_list = g_list_append(t_target_list, gpointer(t_atom));
     }
+    if (t_target_list == NULL)
+        return DRAG_ACTION_NONE;
     
     // Create a drag-and-drop context for this operation
-    GdkDragContext *t_context = MCtransferstore->CreateDragContext(t_source);
+    GdkDragContext *t_context = gdk_drag_begin(MCLinuxRawClipboard::GetClipboardWindow(), t_target_list);
     
     // Take ownership of the mouse so that nothing interferes with the drag
     GdkScreen *t_screen;
@@ -248,65 +240,108 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
             case GDK_SELECTION_REQUEST:
             {
                 //fprintf(stderr, "DND: selection request\n");
-                // The data from the drag-and-drop selection has been requested
-                //if (t_event->selection.selection == gdk_drag_get_selection(t_context))
+                // We are using the dragboard
+                MCLinuxRawClipboard* t_clipboard = static_cast<MCLinuxRawClipboard*> (MCdragboard->GetRawClipboard());
+                
+                // Convert the requestor window XID into a GdkWindow
+                GdkWindow *t_requestor;
+                t_requestor = x11::gdk_x11_window_foreign_new_for_display(dpy, t_event->selection.requestor);
+                
+                // There is a backwards-compatibility issue with the way the
+                // ICCCM deals with selections: older clients can request a
+                // selection but not supply a property name. In that case,
+                // the property set should be equal to the target name.
+                //
+                // The GDK manual does not say whether it works around this
+                // wrinkle so we might as well check ourselves.
+                GdkAtom t_property;
+                if (t_event->selection.property != GDK_NONE)
+                    t_property = t_event->selection.property;
+                else
+                    t_property = t_event->selection.target;
+                
+                // What type should the selection be converted to?
+                static GdkAtom s_targets = gdk_atom_intern_static_string("TARGETS");
+                if (t_event->selection.target == s_targets)
                 {
-                    // What transfer type ended up being requested?
-                    MCTransferType t_type;
-                    MCMIMEtype *t_mime_type;
-                    t_mime_type = new MCMIMEtype(dpy, t_event->selection.target);
-                    t_type = t_mime_type->asRev();
+                    // Get the list of types we can convert to
+                    MCAutoDataRef t_targets(t_clipboard->CopyTargets());
                     
-                    GdkWindow *t_requestor;
-                    t_requestor = x11::gdk_x11_window_foreign_new_for_display(dpy, t_event->selection.requestor);
-                    
-                    // There is a backwards-compatibility issue with the way the
-                    // ICCCM deals with selections: older clients can request a
-                    // selection but not supply a property name. In that case,
-                    // the property set should be equal to the target name.
-                    //
-                    // The GDK manual does not say whether it works around this
-                    // wrinkle so we might as well check ourselves.
-                    GdkAtom t_property;
-                    if (t_event->selection.property != GDK_NONE)
-                        t_property = t_event->selection.property;
-                    else
-                        t_property = t_event->selection.target;
-                    
-                    // Send the requested data, if at all possible
-                    MCAutoDataRef t_data;
-                    //fprintf(stderr, "DND:     selection target=%s property=%s\n", gdk_atom_name(t_event->selection.target), gdk_atom_name(t_event->selection.property));
-                    if (MCtransferstore->Fetch(t_mime_type, &t_data, 0, NULL, NULL, t_event->selection.time))
+                    if (*t_targets != NULL)
                     {
-                        // Send the data to the requestor window
-                        gdk_property_change(t_requestor,
-                                            t_property,
-                                            t_event->selection.target,
-                                            8, GDK_PROP_MODE_REPLACE,
-                                            MCDataGetBytePtr(*t_data),
-                                            MCDataGetLength(*t_data));
-                        //fprintf(stderr, "DND: data = %s\n", MCDataGetBytePtr(*t_data));
-                        // Tell the requestor that the data is ready
+                        // Set a property on the requestor containing the
+                        // list of targets we can convert to.
+                        gdk_property_change(t_requestor, t_property,
+                                            s_targets, 32, GDK_PROP_MODE_REPLACE,
+                                            (const guchar*)MCDataGetBytePtr(*t_targets),
+                                            MCDataGetLength(*t_targets)/sizeof(uint32_t));
+                        
+                        // Notify the requestor that we have replied
                         gdk_selection_send_notify(t_event->selection.requestor,
                                                   t_event->selection.selection,
                                                   t_event->selection.target,
                                                   t_property,
                                                   t_event->selection.time);
-                        
                     }
                     else
                     {
-                        // The selection request could not be fulfilled.
-                        //fprintf(stderr, "DND: selection request failed\n");
+                        // We don't actually have anything to supply so
+                        // reject the request without supplying any data
                         gdk_selection_send_notify(t_event->selection.requestor,
                                                   t_event->selection.selection,
                                                   t_event->selection.target,
                                                   GDK_NONE,
                                                   t_event->selection.time);
                     }
-                    
-                    g_object_unref(t_requestor);
                 }
+                else
+                {
+                    // Turn the requested selection into a string
+                    MCAutoStringRef t_atom_string(MCLinuxRawClipboard::CopyTypeForAtom(t_event->selection.target));
+                    
+                    // Get the requested representation of the data
+                    const MCRawClipboardItemRep* t_rep = NULL;
+                    MCAutoRefcounted<const MCLinuxRawClipboardItem> t_item = t_clipboard->GetSelectionItem();
+                    if (t_item != NULL)
+                        t_rep = t_item->FetchRepresentationByType(*t_atom_string);
+                    
+                    // Get the data in the requested form
+                    MCAutoDataRef t_data;
+                    if (t_rep != NULL)
+                        t_data.Give(t_rep->CopyData());
+                    
+                    if (*t_data != NULL)
+                    {
+                        // Transfer the data to the requestor via the
+                        // property that it specified
+                        gdk_property_change(t_requestor, t_property,
+                                            t_event->selection.target,
+                                            8,
+                                            GDK_PROP_MODE_REPLACE,
+                                            (const guchar*)MCDataGetBytePtr(*t_data),
+                                            MCDataGetLength(*t_data));
+                        
+                        // Notify the requestor that we have replied
+                        gdk_selection_send_notify(t_event->selection.requestor,
+                                                  t_event->selection.selection,
+                                                  t_event->selection.target,
+                                                  t_property,
+                                                  t_event->selection.time);
+                    }
+                    else
+                    {
+                        // Could not convert the data to the format that was
+                        // requested - reject the request.
+                        gdk_selection_send_notify(t_event->selection.requestor,
+                                                  t_event->selection.selection,
+                                                  t_event->selection.target,
+                                                  GDK_NONE,
+                                                  t_event->selection.time);
+                    }
+                }
+                
+                // We don't need the requestor window handle any longer
+                g_object_unref(t_requestor);
                 break;
             }
                 

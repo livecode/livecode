@@ -41,8 +41,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "lnxdc.h"
 #include "lnxgtkthemedrawing.h"
-#include "lnxtransfer.h"
-#include "lnxpasteboard.h"
 
 #include "resolution.h"
 
@@ -51,10 +49,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <gdk/gdkkeysyms.h>
 
+
 Boolean tripleclick = False;
 static Boolean dragclick;
 
-extern MCGdkTransferStore* MCtransferstore;
 
 void MCScreenDC::setupcolors()
 {
@@ -795,6 +793,15 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                 
             case GDK_SELECTION_CLEAR:
             {
+                // Tell the appropriate clipboard that it lost ownership
+                MCLinuxRawClipboard* t_clipboard = NULL;
+                if (t_event->selection.selection == GDK_SELECTION_PRIMARY)
+                    t_clipboard = static_cast<MCLinuxRawClipboard*> (MCselection->GetRawClipboard());
+                else if (t_event->selection.selection == GDK_SELECTION_CLIPBOARD)
+                    t_clipboard = static_cast<MCLinuxRawClipboard*> (MCclipboard->GetRawClipboard());
+                if (t_clipboard)
+                    t_clipboard->LostSelection();
+                
                 if (t_event->selection.time != MCeventtime)
                 {
                     // Clear the active selection
@@ -812,20 +819,19 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                 
             case GDK_SELECTION_REQUEST:
             {
-                // MW-2014-05-22: [[ Bug 12468 ]] Make sure we use the appropriate store when
-                //   selection is requested from another app.
-                MCGdkTransferStore *t_store;
-				if (t_event->selection.selection == GDK_SELECTION_PRIMARY &&
-				    ownsselection())
-					t_store = m_Selection_store;
-				else if (t_event->selection.selection == GDK_SELECTION_CLIPBOARD &&
-				         ownsclipboard())
-					t_store = m_Clipboard_store;
+                // Get the clipboard associated with the requested selection
+                // Checking for ownership is unreliable in GDK so don't bother
+                // -- we just fulfil the request anyway.
+                MCLinuxRawClipboard* t_clipboard;
+				if (t_event->selection.selection == GDK_SELECTION_PRIMARY)
+                    t_clipboard = static_cast<MCLinuxRawClipboard*> (MCselection->GetRawClipboard());
+				else if (t_event->selection.selection == GDK_SELECTION_CLIPBOARD)
+                    t_clipboard = static_cast<MCLinuxRawClipboard*> (MCclipboard->GetRawClipboard());
                 else
-                    t_store = nil;
+                    t_clipboard = NULL;
                 
                 // Note: we don't use a secondary selection
-                if (t_store != nil)
+                if (t_clipboard != NULL)
                 {
                     // Convert the requestor window XID into a GdkWindow
                     GdkWindow *t_requestor;
@@ -849,17 +855,16 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                     if (t_event->selection.target == s_targets)
                     {
                         // Get the list of types we can convert to
-                        size_t t_count;
-                        GdkAtom *t_atoms;
-                        t_atoms = t_store->QueryAtoms(t_count);
+                        MCAutoDataRef t_targets(t_clipboard->CopyTargets());
                         
-                        if (t_atoms != NULL)
+                        if (*t_targets != NULL)
                         {
                             // Set a property on the requestor containing the
                             // list of targets we can convert to.
                             gdk_property_change(t_requestor, t_property,
                                                 s_targets, 32, GDK_PROP_MODE_REPLACE,
-                                                (const guchar*)t_atoms, t_count);
+                                                (const guchar*)MCDataGetBytePtr(*t_targets),
+                                                MCDataGetLength(*t_targets)/sizeof(gulong));
                             
                             // Notify the requestor that we have replied
                             gdk_selection_send_notify(t_event->selection.requestor,
@@ -881,14 +886,28 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                     }
                     else
                     {
+                        // Turn the requested selection into a string
+                        MCAutoStringRef t_atom_string(MCLinuxRawClipboard::CopyTypeForAtom(t_event->selection.target));
+                        
+                        // Get the requested representation of the data
+                        const MCRawClipboardItemRep* t_rep = NULL;
+                        MCAutoRefcounted<const MCLinuxRawClipboardItem> t_item = t_clipboard->GetSelectionItem();
+                        if (t_item != NULL)
+                            t_rep = t_item->FetchRepresentationByType(*t_atom_string);
+                        
                         // Get the data in the requested form
                         MCAutoDataRef t_data;
-                        if (t_store->Fetch(new MCMIMEtype(dpy, t_event->selection.target), &t_data, 0, NULL, NULL, t_event->selection.time))
+                        if (t_rep != NULL)
+                            t_data.Give(t_rep->CopyData());
+                        
+                        if (*t_data != NULL)
                         {
                             // Transfer the data to the requestor via the
                             // property that it specified
                             gdk_property_change(t_requestor, t_property,
-                                                t_event->selection.target, 8, GDK_PROP_MODE_REPLACE,
+                                                t_event->selection.target,
+                                                8,
+                                                GDK_PROP_MODE_REPLACE,
                                                 (const guchar*)MCDataGetBytePtr(*t_data),
                                                 MCDataGetLength(*t_data));
                             
@@ -931,6 +950,9 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                 // Any other event types are ignored
                 break;
         }
+        
+        // Flush all pending messages to X11
+        gdk_display_flush(dpy);
         
         // Queue the message if required. Otherwise, dispose of it
         if (t_queue)
@@ -1129,9 +1151,7 @@ void MCScreenDC::configureIME(int32_t x, int32_t y)
 
 void init_xDnD()
 {
-    // Need to ensure we have a transfer store
-    if (MCtransferstore == NULL)
-        MCtransferstore = new MCGdkTransferStore(((MCScreenDC*)MCscreen)->dpy);
+    ;
 }
 
 void MCScreenDC::DnDClientEvent(GdkEvent* p_event)
@@ -1156,32 +1176,19 @@ void MCScreenDC::DnDClientEvent(GdkEvent* p_event)
             GdkAtom t_selection;
             t_selection = gdk_drag_get_selection(p_event->dnd.context);
             
-            // Source window for the D&D operation
-            GdkWindow *t_source;
-            t_source = gdk_drag_context_get_source_window(p_event->dnd.context);
-            
-            // Convert the selection into a pasteboard
-            MCGdkPasteboard *t_pasteboard;
-            t_pasteboard = new MCGdkPasteboard(t_selection, MCtransferstore);
-            t_pasteboard->SetWindows(t_source, p_event->dnd.window);
-            
-            // Get the list of targets supported by the source
-            MCtransferstore->cleartypes();
-            GList *t_targets;
-            t_targets = gdk_drag_context_list_targets(p_event->dnd.context);
-            for (GList *t_elem = t_targets; t_elem != NULL; t_elem = t_elem->next)
-                MCtransferstore->addAtom((GdkAtom)t_elem->data);
+            // Get the dragboard and tell it to switch selection
+            MCAutoRefcounted<MCLinuxRawClipboard> t_new_dragboard = new MCLinuxRawClipboard(t_selection);
+            MCdragboard->Rebind(t_new_dragboard);
             
             // Temporarily set the modifier state to the asynchronous state
             uint16_t t_old_modstate = MCmodifierstate;
             MCmodifierstate = MCscreen->querymods();
             
             // Handle the event
-            MCdispatcher->wmdragenter(p_event->dnd.window, t_pasteboard);
+            MCdispatcher->wmdragenter(p_event->dnd.window);
             
             // Clean up
             MCmodifierstate = t_old_modstate;
-            t_pasteboard->Release();
             
             break;
         }
@@ -1191,7 +1198,7 @@ void MCScreenDC::DnDClientEvent(GdkEvent* p_event)
             //fprintf(stderr, "DND: drag leave\n");
             // The drag is no longer relevant to us
             MCdispatcher->wmdragleave(p_event->dnd.window);
-            MCtransferstore->cleartypes();
+            MCdragboard->FlushData();
             break;
         }
             
