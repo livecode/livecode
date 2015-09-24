@@ -159,8 +159,14 @@
 			'sources':
 			[
 				'<@(engine_security_source_files)',
+				'src/main.cpp',
 			],
 			
+			'include_dirs':
+			[
+				'../libfoundation/include',
+			],
+
 			'conditions':
 			[
 				[
@@ -213,6 +219,12 @@
 			[
 				'src/dummy.cpp',
 				'rsrc/standalone.rc',
+				'src/main.cpp',
+			],
+
+			'include_dirs':
+			[
+				'../libfoundation/include',
 			],
 			
 			'conditions':
@@ -498,8 +510,14 @@
 			[
 				'src/dummy.cpp',
 				'rsrc/installer.rc',
+				'src/main.cpp',
 			],
-			
+
+			'include_dirs':
+			[
+				'../libfoundation/include',
+			],
+
 			'conditions':
 			[
 				[
@@ -603,6 +621,12 @@
 			[
 				'<(SHARED_INTERMEDIATE_DIR)/src/startupstack.cpp',
 				'rsrc/development.rc',
+				'src/main.cpp',
+			],
+
+			'include_dirs':
+			[
+				'../libfoundation/include',
 			],
 
 			'conditions':
@@ -662,6 +686,16 @@
 				'standalone',
 			],
 			
+			'sources':
+			[
+				'src/main.cpp',
+			],
+
+			'include_dirs':
+			[
+				'../libfoundation/include',
+			],
+
 			'conditions':
 			[
 				[
@@ -763,7 +797,14 @@
 						'sources':
 						[
 							'src/dummy.cpp',
+							'src/main.cpp',
 						],
+
+						'include_dirs':
+						[
+							'../libfoundation/include',
+						],
+
 					},
 				],
 			},
