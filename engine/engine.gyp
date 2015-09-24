@@ -795,7 +795,7 @@
 
 								'inputs':
 								[
-									'emscripten-javascriptify.sh',
+									'emscripten-javascriptify.py',
 									'<(PRODUCT_DIR)/standalone-community.bc',
 									'rsrc/emscripten-html-template.html',
 									'src/em-whitelist.json',
@@ -818,12 +818,18 @@
 
 								'action':
 								[
-									'./emscripten-javascriptify.sh',
+									'./emscripten-javascriptify.py',
+									'--input',
 									'<(PRODUCT_DIR)/standalone-community.bc',
+									'--output',
 									'<(PRODUCT_DIR)/standalone-community-<(version_suffix).html',
+									'--shell-file',
 									'rsrc/emscripten-html-template.html',
+									'--whitelist',
 									'src/em-whitelist.json',
+									'--pre-js',
 									'src/em-preamble.js',
+									'--js-library',
 									'src/em-util.js',
 									'src/em-async.js',
 									'src/em-dialog.js',
