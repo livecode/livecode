@@ -219,6 +219,7 @@ gdk libgdk-x11-2.0.so.0
 	gdk_draw_drawable: (pointer, pointer, pointer, integer, integer, integer, integer, integer, integer) -> ()
 	gdk_draw_pixbuf: (pointer, pointer, pointer, integer, integer, integer, integer, integer, integer, integer, integer, integer) -> ()
 	gdk_cursor_new: (integer) -> (pointer)
+	gdk_cursor_new_from_name: (pointer, pointer) -> (pointer)
 	gdk_gc_set_foreground: (pointer, pointer) -> ()
 	gdk_gc_set_subwindow: (pointer, integer) -> ()
 	gdk_event_put: (pointer) -> ()

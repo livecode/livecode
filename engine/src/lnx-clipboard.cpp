@@ -73,7 +73,7 @@ MCRawClipboard* MCRawClipboard::CreateSystemSelectionClipboard()
 
 MCRawClipboard* MCRawClipboard::CreateSystemDragboard()
 {
-    new MCLinuxRawClipboard("LiveCode Dragboard");
+    new MCLinuxRawClipboard("XdndSelection");
 }
 
 
@@ -111,7 +111,7 @@ MCLinuxRawClipboard::~MCLinuxRawClipboard()
         gdk_selection_owner_set_for_display(GetDisplay(), NULL, m_selection, GDK_CURRENT_TIME, FALSE);
     
     // Ensure all resources are freed
-    m_selected_item->Release();
+    LostSelection();
     Clear();
 }
 
@@ -360,7 +360,7 @@ void MCLinuxRawClipboard::LostSelection()
     m_owned = false;
 }
 
-GdkAtom MCLinuxRawClipboard::GetSelectionAtom()
+GdkAtom MCLinuxRawClipboard::GetSelectionAtom() const
 {
     return m_selection;
 }

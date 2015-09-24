@@ -123,7 +123,7 @@ public:
     void LostSelection();
     
     // Returns the selection atom for this clipboard
-    GdkAtom GetSelectionAtom();
+    GdkAtom GetSelectionAtom() const;
     
     // Returns a DataRef containing the contents of the "TARGETS" representation
     // for this clipboard (this is the representation that lists the other

@@ -34,18 +34,24 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 
 static bool g_dnd_init = false;
-static GdkCursor *g_dnd_cursor_drop_okay = NULL;
+static GdkCursor *g_dnd_cursor_drag_init = NULL;
+static GdkCursor *g_dnd_cursor_drop_copy = NULL;
+static GdkCursor *g_dnd_cursor_drop_move = NULL;
+static GdkCursor *g_dnd_cursor_drop_link = NULL;
 static GdkCursor *g_dnd_cursor_drop_fail = NULL;
 
 
 // Do all the setup of the xDnD protocol
-void init_dnd()
+static void MCLinuxDragAndDropInit(GdkDisplay* p_display)
 {
 	if (!g_dnd_init)
 	{
-		// Create cursors for indicating drop acceptability
-        g_dnd_cursor_drop_okay = gdk_cursor_new(GDK_CROSS);
-        g_dnd_cursor_drop_fail = gdk_cursor_new(GDK_PIRATE);
+        // Create cursors for indicating drop acceptability
+        g_dnd_cursor_drag_init = gdk_cursor_new_from_name(p_display, "grabbing");
+        g_dnd_cursor_drop_copy = gdk_cursor_new_from_name(p_display, "copy");
+        g_dnd_cursor_drop_move = gdk_cursor_new_from_name(p_display, "move");
+        g_dnd_cursor_drop_link = gdk_cursor_new_from_name(p_display, "link");
+        g_dnd_cursor_drop_fail = gdk_cursor_new_from_name(p_display, "no-drop");
         
         // Initialisation done
         g_dnd_init = true;
@@ -53,21 +59,47 @@ void init_dnd()
 }
 
 // Nothing ever calls this but somebody might, one day...
-void shutdown_xdnd()
+void MCLinuxDragAndDropFinalize()
 {
-    //gdk_cursor_unref(g_dnd_cursor_drop_okay);
-    //gdk_cursor_unref(g_dnd_cursor_drop_fail);
+    if (g_dnd_cursor_drag_init)
+        gdk_cursor_unref(g_dnd_cursor_drag_init);
+    if (g_dnd_cursor_drop_copy)
+        gdk_cursor_unref(g_dnd_cursor_drop_copy);
+    if (g_dnd_cursor_drop_move)
+        gdk_cursor_unref(g_dnd_cursor_drop_move);
+    if (g_dnd_cursor_drop_link)
+        gdk_cursor_unref(g_dnd_cursor_drop_link);
+    if (g_dnd_cursor_drop_fail)
+        gdk_cursor_unref(g_dnd_cursor_drop_fail);
     g_dnd_init = false;
 }
 
-void set_dnd_cursor(GdkWindow *w, bool p_okay, MCImage *p_image)
+void MCLinuxDragAndDropSetCursorDragStart(GdkWindow *w, MCImage *p_image)
+{
+    // Images are not yet supported
+    gdk_window_set_cursor(w, g_dnd_cursor_drag_init);
+}
+
+void MCLinuxDragAndDropSetCursorForAction(GdkWindow *w, MCDragAction p_action, MCImage *p_image)
 {
     // Images are not supported at the moment (though GDK does provide some very
     // basic support for doing so via the find_window_for_screen function)
-    if (p_okay)
-        gdk_window_set_cursor(w, g_dnd_cursor_drop_okay);
+    if (p_action == DRAG_ACTION_COPY)
+    {
+        gdk_window_set_cursor(w, g_dnd_cursor_drop_copy);
+    }
+    else if (true || p_action == DRAG_ACTION_MOVE)
+    {
+        gdk_window_set_cursor(w, g_dnd_cursor_drop_move);
+    }
+    else if (p_action == DRAG_ACTION_LINK)
+    {
+        gdk_window_set_cursor(w, g_dnd_cursor_drop_link);
+    }
     else
+    {
         gdk_window_set_cursor(w, g_dnd_cursor_drop_fail);
+    }
 }
 
 
@@ -88,6 +120,9 @@ static void break_dnd_modal_loop(void* context)
 MCDragAction MCScreenDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset)
 {
     //fprintf(stderr, "DND: dodragdrop\n");
+    // Ensure that the DnD mechanisms are ready for use
+    MCLinuxDragAndDropInit(dpy);
+    
     // The source window for the drag and drop operation
     GdkWindow *t_source;
     t_source = last_window;
@@ -121,23 +156,28 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions,
     
     // Turn it into a GList
     GList* t_target_list = NULL;
-    for (uindex_t i = 0; i < MCDataGetLength(*t_targets)/sizeof(uint32_t); i++)
+    for (uindex_t i = 0; i < MCDataGetLength(*t_targets)/sizeof(gulong); i++)
     {
-        uint32_t t_atom = reinterpret_cast<const uint32_t*>(MCDataGetBytePtr(*t_targets))[i];
+        gulong t_atom = reinterpret_cast<const gulong*>(MCDataGetBytePtr(*t_targets))[i];
         t_target_list = g_list_append(t_target_list, gpointer(t_atom));
     }
     if (t_target_list == NULL)
         return DRAG_ACTION_NONE;
     
-    // Create a drag-and-drop context for this operation
-    GdkDragContext *t_context = gdk_drag_begin(MCLinuxRawClipboard::GetClipboardWindow(), t_target_list);
-    
-    // Take ownership of the mouse so that nothing interferes with the drag
+    // Screen that we're using
     GdkScreen *t_screen;
     t_screen = gdk_display_get_default_screen(dpy);
-    gdk_pointer_grab(gdk_screen_get_root_window(t_screen), FALSE,
-                     GdkEventMask(GDK_POINTER_MOTION_MASK|GDK_BUTTON_PRESS_MASK|GDK_BUTTON_RELEASE_MASK),
-                     NULL, NULL, MCeventtime);
+    
+    // The window used for clipboard communications
+    GdkWindow* t_clipboard_window = MCLinuxRawClipboard::GetClipboardWindow();
+    
+    // Create a drag-and-drop context for this operation
+    GdkDragContext *t_context = gdk_drag_begin(w, t_target_list);
+    
+    // Take ownership of the mouse so that nothing interferes with the drag
+    GdkGrabStatus t_grab = gdk_pointer_grab(w, FALSE,
+                                            GdkEventMask(GDK_POINTER_MOTION_MASK|GDK_BUTTON_PRESS_MASK|GDK_BUTTON_RELEASE_MASK),
+                                            NULL, NULL, MCeventtime);
     
     // We need to know what action was selected so we know whether to delete
     // the data afterwards (as done for move actions)
@@ -155,6 +195,9 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions,
     t_modal_loop.context = &t_loop_context;
     modalLoopStart(t_modal_loop);
     
+    // Set the cursor
+    MCLinuxDragAndDropSetCursorDragStart(w, p_image);
+    
     // The drag-and-drop loop
     bool t_dnd_done = false;
     while (!t_dnd_done)
@@ -163,8 +206,7 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions,
             break;
         
         // Run the GLib event loop to exhaustion
-        while (g_main_context_iteration(NULL, FALSE))
-            ;
+        EnqueueGdkEvents();
         
         GdkEvent *t_event;
         if (pendingevents != NULL)
@@ -208,19 +250,26 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions,
                 GdkWindow *t_dest_window;
                 GdkDragProtocol t_protocol;
                 gdk_drag_find_window_for_screen(t_context, NULL, t_screen,
-                                                t_event->motion.x,
-                                                t_event->motion.y,
+                                                t_event->motion.x_root,
+                                                t_event->motion.y_root,
                                                 &t_dest_window,
                                                 &t_protocol);
                 
-                // TODO: set the cursor appropriately
-                
-                // Send a drag motion event
-                gdk_drag_motion(t_context, t_dest_window, t_protocol,
-                                t_event->motion.x, t_event->motion.y,
-                                GdkDragAction(t_suggested_action),
-                                GdkDragAction(t_possible_actions),
-                                t_event->motion.time);
+                // Clear the action if we didn't find a target
+                if (t_dest_window == NULL)
+                {
+                    t_action = DRAG_ACTION_NONE;
+                    MCLinuxDragAndDropSetCursorForAction(w, DRAG_ACTION_NONE, p_image);
+                }
+                else
+                {
+                    // Send a drag motion event
+                    gdk_drag_motion(t_context, t_dest_window, t_protocol,
+                                    t_event->motion.x_root, t_event->motion.y_root,
+                                    GdkDragAction(t_suggested_action),
+                                    GdkDragAction(t_possible_actions),
+                                    t_event->motion.time);
+                }
                 
                 break;
             }
@@ -231,7 +280,8 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions,
                 //fprintf(stderr, "DND: button release\n");
                 
                 // Take ownership of the drag-and-drop selection
-                gdk_selection_owner_set_for_display(dpy, t_source, gdk_drag_get_selection(t_context), t_event->motion.time, TRUE);
+                GdkAtom t_selection = t_dragboard->GetSelectionAtom();
+                gdk_selection_owner_set_for_display(dpy, t_clipboard_window, t_selection, t_event->motion.time, TRUE);
                 
                 gdk_drag_drop(t_context, t_event->button.time);
                 break;
@@ -271,10 +321,13 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions,
                     {
                         // Set a property on the requestor containing the
                         // list of targets we can convert to.
+                        uindex_t t_target_atom_count = MCDataGetLength(*t_targets)/sizeof(gulong);
                         gdk_property_change(t_requestor, t_property,
-                                            s_targets, 32, GDK_PROP_MODE_REPLACE,
+                                            GDK_SELECTION_TYPE_ATOM,
+                                            32,
+                                            GDK_PROP_MODE_REPLACE,
                                             (const guchar*)MCDataGetBytePtr(*t_targets),
-                                            MCDataGetLength(*t_targets)/sizeof(uint32_t));
+                                            t_target_atom_count);
                         
                         // Notify the requestor that we have replied
                         gdk_selection_send_notify(t_event->selection.requestor,
@@ -366,7 +419,7 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions,
                 // Which action did the destination request?
                 GdkDragAction t_gdk_action;
                 t_gdk_action = gdk_drag_context_get_selected_action(t_context);
-                
+
                 // Convert to the engine's drag actions
                 if (t_gdk_action == GDK_ACTION_LINK)
                     t_action = DRAG_ACTION_LINK;
@@ -374,6 +427,9 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions,
                     t_action = DRAG_ACTION_MOVE;
                 if (t_gdk_action == GDK_ACTION_COPY)
                     t_action = DRAG_ACTION_COPY;
+                
+                // Update the cursor
+                MCLinuxDragAndDropSetCursorForAction(w, t_action, p_image);
                 
                 break;
             }
@@ -400,6 +456,15 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions,
                 t_dnd_done = true;
                 break;
             }
+                
+            case GDK_GRAB_BROKEN:
+            {
+                //fprintf(stderr, "DND: drop broken\n");
+                // Drag operation was a failure
+                t_action = DRAG_ACTION_NONE;
+                t_dnd_done = true;
+                break;
+            }
         }
         
         gdk_event_free(t_event);
@@ -415,6 +480,9 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions,
     // Other people can now use the pointer
     g_object_unref(t_context);
     gdk_display_pointer_ungrab(dpy, GDK_CURRENT_TIME);
+    
+    // Restore the cursor
+    gdk_window_set_cursor(w, NULL);
     
     // Restore the original modifier key state
     MCmodifierstate = t_old_modstate;

@@ -573,7 +573,7 @@ Atom  MCScreenDC::make_atom ( char * p_atom_name )
 }
 
 //XDND
-void shutdown_xdnd(void) ;
+extern void MCLinuxDragAndDropFinalize();
 
 Boolean MCScreenDC::close(Boolean force)
 {
@@ -586,7 +586,7 @@ Boolean MCScreenDC::close(Boolean force)
     g_object_unref(gc);
 
 	//XDND
-	shutdown_xdnd();
+	MCLinuxDragAndDropFinalize();
 	
     gdk_display_close(dpy);
 	

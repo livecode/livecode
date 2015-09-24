@@ -1187,14 +1187,6 @@ void MCScreenDC::DnDClientEvent(GdkEvent* p_event)
         case GDK_DRAG_ENTER:
         {
             //fprintf(stderr, "DND: drag enter\n");
-            // Get the selection atom for this drag event
-            GdkAtom t_selection;
-            t_selection = gdk_drag_get_selection(p_event->dnd.context);
-            
-            // Get the dragboard and tell it to switch selection
-            MCAutoRefcounted<MCLinuxRawClipboard> t_new_dragboard = new MCLinuxRawClipboard(t_selection);
-            MCdragboard->Rebind(t_new_dragboard);
-            
             // Temporarily set the modifier state to the asynchronous state
             uint16_t t_old_modstate = MCmodifierstate;
             MCmodifierstate = MCscreen->querymods();
@@ -1248,7 +1240,7 @@ void MCScreenDC::DnDClientEvent(GdkEvent* p_event)
                 t_gdk_action = GDK_ACTION_LINK;
             
             // Reply to the motion event
-            gdk_drag_status(p_event->dnd.context, t_gdk_action, p_event->dnd.time);
+            gdk_drag_status(p_event->dnd.context, t_gdk_action, GDK_CURRENT_TIME);
             break;
         }
             
