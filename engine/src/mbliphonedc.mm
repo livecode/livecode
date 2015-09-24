@@ -1214,12 +1214,18 @@ static void MCIPhoneDoDidBecomeActive(void *)
 	// Convert the environment variables into stringrefs
 	uindex_t envc = 0;
 	MCAutoArray<MCStringRef> t_envp;
-	while (env[envc] != 0)
-	{
-		t_envp.Extend(envc + 1);
-		MCStringCreateWithBytes((const byte_t*)env[envc], strlen(env[envc]), kMCStringEncodingUTF8, false, t_envp[envc]);
-		envc++;
-	}
+    
+    // SN-2015-09-22: [[ Bug 15753 ]] Only iterate through the env elements if
+    //  there is any element (not the case with iOS min version 5.1.1)
+    if (env)
+    {
+        while (env[envc] != 0)
+        {
+            t_envp.Extend(envc + 1);
+            MCStringCreateWithBytes((const byte_t*)env[envc], strlen(env[envc]), kMCStringEncodingUTF8, false, t_envp[envc]);
+            envc++;
+        }
+    }
 	t_envp.Extend(envc + 1);
 	t_envp[envc] = nil;
 	
