@@ -153,6 +153,9 @@
         |]
         OutputWrite("  <license>community</license>\n")
         (|
+            where(Kind -> module)
+            OutputWrite("  <type>module</type>\n")
+        ||
             where(Kind -> widget)
             OutputWrite("  <type>widget</type>\n")
         ||
