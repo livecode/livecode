@@ -13,6 +13,15 @@
 			[
 				'<!@(ls -1 test/*.cpp)',
 			],
+
+			'msvs_settings':
+			{
+				'VCLinkerTool':
+				{
+					'SubSystem': '1',	# /SUBSYSTEM:CONSOLE
+				},
+			},
+
 		},
 	],
 
