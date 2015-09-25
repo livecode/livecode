@@ -161,7 +161,7 @@
 				'<@(engine_security_source_files)',
 				'src/main.cpp',
 			],
-			
+
 			'include_dirs':
 			[
 				'../libfoundation/include',
@@ -219,16 +219,23 @@
 			[
 				'src/dummy.cpp',
 				'rsrc/standalone.rc',
-				'src/main.cpp',
 			],
 
-			'include_dirs':
-			[
-				'../libfoundation/include',
-			],
-			
 			'conditions':
 			[
+				[
+					'OS != "win"',
+					{
+						'sources':
+						[
+							'src/main.cpp',
+						],
+						'include_dirs':
+						[
+							'../libfoundation/include',
+						],
+					},
+				],
 				[
 					'OS == "mac"',
 					{
@@ -510,16 +517,23 @@
 			[
 				'src/dummy.cpp',
 				'rsrc/installer.rc',
-				'src/main.cpp',
-			],
-
-			'include_dirs':
-			[
-				'../libfoundation/include',
 			],
 
 			'conditions':
 			[
+				[
+					'OS != "win"',
+					{
+						'sources':
+						[
+							'src/main.cpp',
+						],
+						'include_dirs':
+						[
+							'../libfoundation/include',
+						],
+					},
+				],
 				[
 					'OS == "mac"',
 					{
@@ -621,16 +635,23 @@
 			[
 				'<(SHARED_INTERMEDIATE_DIR)/src/startupstack.cpp',
 				'rsrc/development.rc',
-				'src/main.cpp',
-			],
-
-			'include_dirs':
-			[
-				'../libfoundation/include',
 			],
 
 			'conditions':
 			[
+				[
+					'OS != "win"',
+					{
+						'sources':
+						[
+							'src/main.cpp',
+						],
+						'include_dirs':
+						[
+							'../libfoundation/include',
+						],
+					},
+				],
 				[
 					'OS == "mac"',
 					{
@@ -685,19 +706,22 @@
 			[
 				'standalone',
 			],
-			
-			'sources':
-			[
-				'src/main.cpp',
-			],
-
-			'include_dirs':
-			[
-				'../libfoundation/include',
-			],
 
 			'conditions':
 			[
+				[
+					'OS != "win"',
+					{
+						'sources':
+						[
+							'src/main.cpp',
+						],
+						'include_dirs':
+						[
+							'../libfoundation/include',
+						],
+					},
+				],
 				[
 					'OS == "ios"',
 					{
