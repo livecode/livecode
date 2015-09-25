@@ -656,8 +656,30 @@ private handler drawAndroidHeader() returns nothing
    variable tActionsCount as Integer
    put the number of elements in mHeaderActions into tActionsCount
    repeat with tX from 1 up to tActionsCount
-      -- draw android icon
+      drawAndroidActions()
    end repeat
+end handler
+
+private handler drawAndroidActions() returns nothing
+   if mHeaderActions is the empty list then
+      return
+   end if
+
+   variable tX as Integer
+   variable tActionsCount as Integer
+   variable tIconPath as Path
+   variable tActionRect as Rectangle
+
+   put the number of elements in mHeaderActions into tActionsCount
+   repeat with tX from 1 up to tActionsCount
+      set the paint of this canvas to fetchPaint("actionIcon")
+      put fetchRect("actionIcon") into tActionRect
+      put fetchIconPath(mHeaderActions[tX]["icon_name"], tActionRect) into tIconPath
+      translate tIconPath by [my width - (mAndroidBuffer + mAndroidIconDimension)*tX, 0]
+      fill tIconPath on this canvas
+      push tActionRect onto back of mActionRects
+   end repeat
+
 end handler
 
 private handler drawIosActions() returns nothing
@@ -673,29 +695,22 @@ private handler drawIosActions() returns nothing
    put the number of elements in mHeaderActions into tActionsCount
    repeat with tX from 1 up to tActionsCount
 
-      if mWidgetTheme is kWidgetThemeIos then
-         if tX+2 is mSelectedAction then
-            set the paint of this canvas to fetchPaint("actionIcon")
-         else
-            set the paint of this canvas to fetchPaint("selectedIcon")
-         end if
+      if tX+2 is mSelectedAction then
+         set the paint of this canvas to fetchPaint("actionIcon")
+      else
+         set the paint of this canvas to fetchPaint("selectedIcon")
+      end if
 
-         if mActionStyle is "icons" then
-            put fetchRect("actionIcon") into tActionRect
-            put fetchIconPath(mHeaderActions[tX]["icon_name"], tActionRect) into tIconPath
-            fill tIconPath on this canvas
-
-         else if mActionStyle is "names" then
-            put the number of chars in mHeaderActions[tX]["label"] into mLetterCount
-            put fetchRect("actionLabel") into tActionRect
-            set the font of this canvas to fetchFont("label")
-            fill text mHeaderActions[tX]["label"] at right of tActionRect on this canvas
-         end if
-
-      else if mWidgetTheme is kWidgetThemeIos then
+      if mActionStyle is "icons" then
          put fetchRect("actionIcon") into tActionRect
          put fetchIconPath(mHeaderActions[tX]["icon_name"], tActionRect) into tIconPath
          fill tIconPath on this canvas
+
+      else if mActionStyle is "names" then
+         put the number of chars in mHeaderActions[tX]["label"] into mLetterCount
+         put fetchRect("actionLabel") into tActionRect
+         set the font of this canvas to fetchFont("label")
+         fill text mHeaderActions[tX]["label"] at right of tActionRect on this canvas
       end if
 
       push tActionRect onto back of mActionRects
