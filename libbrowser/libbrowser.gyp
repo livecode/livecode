@@ -170,6 +170,18 @@
 						],
 					},
 				],
+				
+				[
+					# Copy libbrowser files into the necessary place to run when doing a
+					#    debug build.
+					'"<!(echo $BUILDTYPE)" == "Debug"',
+					{
+						'dependencies':
+						[
+							'libbrowser-copy',
+						],
+					},
+				],
 			],
 			
 			'direct_dependent_settings':
