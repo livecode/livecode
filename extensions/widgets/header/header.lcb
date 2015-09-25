@@ -284,10 +284,10 @@ pColor (color): The color of the actions and back button
 Description:
 Sets the color of the actions and the back button, iOS only.
 */
-property actionColor get getActionColor set setActionColor
+property actionColor get getIosActionColor set setIosActionColor
 metadata actionColor.editor is "com.livecode.pi.color"
 metadata actionColor.default is "0,121,255"
-metadata actionColor.label is "Action Color"
+metadata actionColor.label is "iOS Action Color"
 
 /*
 Syntax: set the <showDivide> of <widget> to {true | false}
@@ -403,7 +403,7 @@ private variable mHeaderSubtitle as String
 private variable mActionStyle as String
 private variable mShowBackIcon as Boolean
 private variable mLeftLabel as String
-private variable mActionColor as Color
+private variable mIosActionColor as Color
 private variable mShowSearchIcon as Boolean
 private variable mShowDivide as Boolean
 private variable mShowLeftLabel as Boolean
@@ -415,7 +415,6 @@ private variable mLeftAction as String
 private variable mTitleIsVisible as Boolean
 private variable mTitleIsDistinct as Boolean
 
-private variable mIconColor as Color
 private variable mTitleRatio as Real
 private variable mTitleVAdjust as Real
 private variable mIconTop as Real
@@ -428,6 +427,7 @@ private variable mSelectedAction as Integer
 private variable mRight as Real
 private variable mLetterCount as Integer
 private variable mActionRects as List
+private variable mIosSelectedActionColor as Color
 
 private variable mAndroidTitleColor as Color
 private variable mAndroidIconColor as Color
@@ -435,7 +435,7 @@ private variable mAndroidColors as Array
 private variable mAndroidFontSize as Real
 
 -- constants (some defined as varibales)
-private variable kBackgroundColor as List
+private variable kIosBackgroundColor as List
 private variable kBlackColor as List
 
 constant kMargin is 8
@@ -470,9 +470,9 @@ constant kBlueGreyColor is "Blue Grey"
 constant kAndroidDefaultHeight is 56
 constant kAndroidDefaultWidth is 320
 constant kAndroidDefaultFontSize is 20
-constant kAndroidDefaultIconDimension is 24
+constant kAndroidIconDimension is 24
 constant kAndroidHMargin is 72
-
+constant kAndroidBuffer is 16
 
 public handler OnSave(out rProperties as Array)
    put the empty array into rProperties
@@ -486,7 +486,7 @@ public handler OnSave(out rProperties as Array)
    put mActionStyle into rProperties["actionStyle"]
    put mShowBackIcon into rProperties["showBackIcon"]
    put mLeftLabel into rProperties["leftLabel"]
-   put getActionColor() into rProperties["actionColor"]
+   put getIosActionColor() into rProperties["actionColor"]
    put mShowSearchIcon into rProperties["showSearchIcon"]
    put mShowDivide into rProperties["showDivide"]
 
@@ -507,7 +507,7 @@ public handler OnLoad(in pProperties as Array)
    put pProperties["actionStyle"] into mActionStyle
    put pProperties["showBackIcon"] into mShowBackIcon
    put pProperties["leftLabel"] into mLeftLabel
-   setActionColor(pProperties["actionColor"])
+   setIosActionColor(pProperties["actionColor"])
    put pProperties["showSearchIcon"] into mShowSearchIcon
    put pProperties["showDivide"] into mShowDivide
 
@@ -545,7 +545,7 @@ public handler OnCreate()
    put "icons" into mActionStyle
    put true into mShowBackIcon
    put "Back" into mLeftLabel
-   put color [0, 121/255, 1] into mActionColor
+   put color [0, 121/255, 1] into mIosActionColor
    put true into mShowSearchIcon
    put true into mShowDivide
 
@@ -562,7 +562,7 @@ public handler OnCreate()
    put color [1,1,1] into mAndroidIconColor
 
    -- constants (defined as variables)
-   put [247/255,247/255,247/255] into kBackgroundColor
+   put [247/255,247/255,247/255] into kIosBackgroundColor
    put [0,0,0] into kBlackColor
 end handler
 
@@ -615,23 +615,7 @@ private handler drawIosHeader() returns nothing
    end if
 
    -- draw the actions
-   if mHeaderActions is not the empty list then
-      variable tX as Integer
-      variable tActionsCount as Integer
-      put the number of elements in mHeaderActions into tActionsCount
-      repeat with tX from 1 up to tActionsCount
-         if tX+2 is mSelectedAction then
-            set the paint of this canvas to solid paint with color [the red of mActionColor, the green of mActionColor, the blue of mActionColor, 0.5]
-         else
-            set the paint of this canvas to solid paint with mActionColor
-         end if
-         if mActionStyle is "icons" then
-            drawActionIcon(mHeaderActions[tX]["icon_name"])
-         else if mActionStyle is "names" then
-            drawActionName(mHeaderActions[tX]["label"])
-         end if
-      end repeat
-   end if
+   drawIosActions()
 
    -- draw the search icon
    if mShowSearchIcon is true then
@@ -654,8 +638,8 @@ private handler drawAndroidHeader() returns nothing
    end if
 
    -- draw the left action
-   set the paint of this canvas to fetchPaint("icon")
-   fill fetchIconPath(mLeftAction) on this canvas
+   set the paint of this canvas to fetchPaint("actionIcon")
+   fill fetchIconPath(mLeftAction, fetchRect("actionIcon")) on this canvas
 
    -- draw the title (WIP)
    set the font of this canvas to fetchFont("title")
@@ -663,7 +647,55 @@ private handler drawAndroidHeader() returns nothing
    fill text mHeaderTitle at bottom left of fetchRect("title") on this canvas
 
    -- draw the right actions
+   set the paint of this canvas to fetchPaint("actionIcon")
+   variable tX as Integer
+   variable tActionsCount as Integer
+   put the number of elements in mHeaderActions into tActionsCount
+   repeat with tX from 1 up to tActionsCount
+      -- draw android icon
+   end repeat
+end handler
 
+private handler drawIosActions() returns nothing
+   if mHeaderActions is the empty list then
+      return
+   end if
+
+   variable tX as Integer
+   variable tActionsCount as Integer
+   variable tIconPath as Path
+   variable tActionRect as Rectangle
+
+   put the number of elements in mHeaderActions into tActionsCount
+   repeat with tX from 1 up to tActionsCount
+
+      if mWidgetTheme is kWidgetThemeIos then
+         if tX+2 is mSelectedAction then
+            set the paint of this canvas to fetchPaint("actionIcon")
+         else
+            set the paint of this canvas to fetchPaint("selectedIcon")
+         end if
+
+         if mActionStyle is "icons" then
+            put fetchRect("actionIcon") into tActionRect
+            put fetchIconPath(mHeaderActions[tX]["icon_name"], tActionRect) into tIconPath
+            fill tIconPath on this canvas
+
+         else if mActionStyle is "names" then
+            put the number of chars in mHeaderActions[tX]["label"] into mLetterCount
+            put fetchRect("actionLabel") into tActionRect
+            set the font of this canvas to fetchFont("label")
+            fill text mHeaderActions[tX]["label"] at right of tActionRect on this canvas
+         end if
+
+      else if mWidgetTheme is kWidgetThemeIos then
+         put fetchRect("actionIcon") into tActionRect
+         put fetchIconPath(mHeaderActions[tX]["icon_name"], tActionRect) into tIconPath
+         fill tIconPath on this canvas
+      end if
+
+      push tActionRect onto back of mActionRects
+   end repeat
 end handler
 
 private handler drawDropShadow() returns Effect
@@ -683,47 +715,13 @@ private handler drawDropShadow() returns Effect
    return tEffect
 end handler
 
-private handler drawActionIcon(in pIconName as String) returns nothing
-
-   variable tIconPath as Path
-   variable tIconRect as Rectangle
-
-   put path iconSVGPathFromName(pIconName) into tIconPath
-   put fetchRect("actionIcon") into tIconRect
-
-   setIconPath(tIconRect, tIconPath)
-   fill tIconPath on this canvas
-
-   push tIconRect onto back of mActionRects
-end handler
-
-private handler drawActionName(in pActionLabel as String) returns nothing
-   put the number of chars in pActionLabel into mLetterCount
-
-   variable tActionRect as Rectangle
-   put fetchRect("actionLabel") into tActionRect
-
-   set the font of this canvas to fetchFont("label")
-   fill text pActionLabel at right of tActionRect on this canvas
-
-   push tActionRect onto back of mActionRects
-end handler
-
--- WIP - all iOS icons should be drawn using this handler
-private handler fetchIconPath(in pIconName as String) returns Path
+private handler fetchIconPath(in pIconName as String, in pIconRect as Rectangle) returns Path
    variable tIconPath as Path
    put path iconSVGPathFromName(pIconName) into tIconPath
-
-   variable tIconRect as Rectangle
-   if mWidgetTheme is kWidgetThemeAndroid then
-      put rectangle [16, (my height - 5)/2 - 12, 40, (my height - 5)/2 + 12] into tIconRect
-   end if
-
-   setIconPath(tIconRect, tIconPath)
+   setIconPath(pIconRect, tIconPath)
    return tIconPath
 end handler
 
--- WIP - icon paths should be fetched from above handler
 private handler fetchPath(in pObject as String) returns Path
    variable tIconPath as Path
    variable tIconRect as Rectangle
@@ -744,11 +742,8 @@ private handler fetchPath(in pObject as String) returns Path
       return rectangle path of rectangle [0, tH-1, tW, tH]
 
    else if pObject is "backIcon" then
-      put path iconSVGPathFromName("angle left") into tIconPath
       put rectangle [kMargin, mLabelTop, kMargin + mIconWidth, mLabelBottom] into tIconRect
-
-      setIconPath(tIconRect, tIconPath)
-      return tIconPath
+      return fetchIconPath("angle left", tIconRect)
 
    else if pObject is "searchIcon" then
       variable tLeft as Real
@@ -765,11 +760,8 @@ private handler fetchPath(in pObject as String) returns Path
       end if
       put tRight - mIconWidth into tLeft
 
-      put path iconSVGPathFromName("search") into tIconPath
       put rectangle [tLeft-mIconWidth/4, mLabelTop-mIconWidth/4, tRight+mIconWidth/4, mLabelBottom+mIconWidth/4] into tIconRect
-
-      setIconPath(tIconRect, tIconPath)
-      return tIconPath
+      return fetchIconPath("search", tIconRect)
 
    end if
 end handler
@@ -796,7 +788,7 @@ private handler fetchRect(in pObject as String) returns Rectangle
             return rectangle [0, tTop, my width, tBottom]
          end if
       else if mWidgetTheme is kWidgetThemeAndroid then
-         return rectangle [kAndroidHMargin, 0, my width, (my height)/2]
+         return rectangle [kAndroidHMargin, 0, my width, (my height - 5)/2 + 12]
       end if
 
    else if pObject is "subtitle" then
@@ -813,12 +805,15 @@ private handler fetchRect(in pObject as String) returns Rectangle
       return rectangle [tLeft, mLabelTop, my width, mLabelBottom]
 
    else if pObject is "actionIcon" then
-      put rectangle [mRight-5*mIconWidth/4, mLabelTop-mIconWidth/4, mRight+mIconWidth/4, mLabelBottom+mIconWidth/4] into tRect
-      put (mRight - 5*mIconWidth/4 - 2*kMargin) into mRight
-      return tRect
+      if mWidgetTheme is kWidgetThemeIos then
+         put rectangle [mRight-5*mIconWidth/4, mLabelTop-mIconWidth/4, mRight+mIconWidth/4, mLabelBottom+mIconWidth/4] into tRect
+         put (mRight - 5*mIconWidth/4 - 2*kMargin) into mRight
+         return tRect
+      else if mWidgetTheme is kWidgetThemeAndroid then
+         return rectangle [kAndroidBuffer, (my height - 5)/2 - kAndroidIconDimension/2, kAndroidBuffer + kAndroidIconDimension, (my height - 5)/2 + kAndroidIconDimension/2]
+      end if
 
    else if pObject is "actionLabel" then
-
       put rectangle [mRight - mLetterCount*tSize, mLabelTop, mRight, mLabelBottom] into tRect
       put (mRight - mLetterCount*tSize - kMargin) into mRight
       return tRect
@@ -826,13 +821,12 @@ private handler fetchRect(in pObject as String) returns Rectangle
    end if
 end handler
 
--- WIP - icons for iOS the same paint??
 private handler fetchPaint(in pObject as String) returns Paint
    variable tPaint as Paint
 
    if pObject is "background" then
       if mWidgetTheme is kWidgetThemeIos then
-         put solid paint with color kBackgroundColor into tPaint
+         put solid paint with color kIosBackgroundColor into tPaint
       else if mWidgetTheme is kWidgetThemeAndroid then
          put solid paint with stringToColor(mAndroidColors[mColorScheme]) into tPaint
       end if
@@ -849,25 +843,29 @@ private handler fetchPaint(in pObject as String) returns Paint
 
    else if pObject is "backButton" then
       if mSelectedAction is 1 then
-         put solid paint with color [the red of mActionColor, the green of mActionColor, the blue of mActionColor, 0.5] into tPaint
+         put solid paint with mIosSelectedActionColor into tPaint
       else
-         put solid paint with mActionColor into tPaint
+         put solid paint with mIosActionColor into tPaint
       end if
 
    else if pObject is "searchIcon" then
       if mSelectedAction is 2 then
-         put solid paint with color [the red of mActionColor, the green of mActionColor, the blue of mActionColor, 0.5] into tPaint
+         put solid paint with mIosSelectedActionColor into tPaint
       else
-         put solid paint with mActionColor into tPaint
+         put solid paint with mIosActionColor into tPaint
       end if
 
-   else if pObject is "icon" then
-      if mWidgetTheme is kWidgetThemeAndroid then
+   else if pObject is "actioIcon" then
+      if mWidgetTheme is kWidgetThemeIos then
+         put solid paint with mIosSelectedActionColor into tPaint
+      else if mWidgetTheme is kWidgetThemeAndroid then
          put solid paint with mAndroidIconColor into tPaint
       end if
 
-   end if
+   else if pObject is "selectedIcon" then
+      put solid paint with mIosActionColor into tPaint
 
+   end if
    return tPaint
 end handler
 
@@ -918,7 +916,6 @@ private handler fetchSelectedItem() returns Integer
    return tSelected
 end handler
 
--- WIP - fetchRect ??
 private handler fetchBackRect() returns Rectangle
    variable tBackRect as Rectangle
 
@@ -944,7 +941,6 @@ private handler fetchBackRect() returns Rectangle
    return tBackRect
 end handler
 
--- WIP - fetchRect ??
 private handler fetchSearchRect() returns Rectangle
    variable tSearchRect as Rectangle
    if mShowSearchIcon is true then
@@ -1047,6 +1043,8 @@ private handler updateVariables() returns nothing
    else
       put true into mShowLeftLabel
    end if
+
+   put color [the red of mIosActionColor, the green of mIosActionColor, the blue of mIosActionColor, 0.5] into mIosSelectedActionColor
 
    variable tH
    put my height into tH
@@ -1230,8 +1228,8 @@ private handler getActionIcons() returns String
 end handler
 
 -- these handlers convert the color properties for output in the PI
-private handler getActionColor() returns String
-   return colorToString(mActionColor)
+private handler getIosActionColor() returns String
+   return colorToString(mIosActionColor)
 end handler
 
 --------------------------------------------------------------------------------
@@ -1322,8 +1320,8 @@ private handler setLeftLabel(in pLabel as String) returns nothing
    redraw all
 end handler
 
-private handler setActionColor(in pColor as String) returns nothing
-   put stringToColor(pColor) into mActionColor
+private handler setIosActionColor(in pColor as String) returns nothing
+   put stringToColor(pColor) into mIosActionColor
    redraw all
 end handler
 
