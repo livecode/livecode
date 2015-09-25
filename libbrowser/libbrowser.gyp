@@ -311,7 +311,62 @@
 			{
 				'INFOPLIST_FILE': 'rsrc/libbrowser-cefprocess-Info.plist',
 			},
-		}
+		},
+
+		{
+			'target_name': 'libbrowser-copy',
+			'type': 'none',
+			
+			'dependencies':
+			[
+				'libbrowser-cefprocess',
+			],
+			
+			'conditions':
+			[
+				[
+					'OS == "mac"',
+					{
+						'dependencies':
+						[
+							'libbrowser-cefprocess-helpers',
+						],
+
+						'copies':
+						[
+							{
+								'destination': '<(PRODUCT_DIR)/LiveCode-Community.app/Contents',
+								'files': [
+									'<(PRODUCT_DIR)/Frameworks/',
+								],
+							}
+						],
+					},
+				],
+
+				[
+					'OS == "linux"',
+					{
+						'copies':
+						[
+							{
+								'destination': '<(PRODUCT_DIR)',
+								'files': [
+									'$(SOLUTION_DIR)/prebuilt/lib/linux/<(target_arch)/CEF/',
+									'$(SOLUTION_DIR)/prebuilt/lib/linux/<(target_arch)/CEF/icudtl.dat',
+								],
+							},
+							{
+								'destination': '<(PRODUCT_DIR)/CEF',
+								'files': [
+									'<(PRODUCT_DIR)/libbrowser-cefprocess',
+								],
+							}
+						],
+					},
+				],
+			],
+		},
 	],
 
 	'conditions':
