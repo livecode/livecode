@@ -224,7 +224,7 @@
 			'conditions':
 			[
 				[
-					'OS != "win"',
+					'OS != "win" and OS != "android"',
 					{
 						'sources':
 						[
@@ -522,7 +522,7 @@
 			'conditions':
 			[
 				[
-					'OS != "win"',
+					'OS != "win" and OS != "android"',
 					{
 						'sources':
 						[
@@ -640,7 +640,7 @@
 			'conditions':
 			[
 				[
-					'OS != "win"',
+					'OS != "win" and OS != "android"',
 					{
 						'sources':
 						[
@@ -710,7 +710,7 @@
 			'conditions':
 			[
 				[
-					'OS != "win"',
+					'OS != "win" and OS != "android"',
 					{
 						'sources':
 						[
