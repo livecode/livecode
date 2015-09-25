@@ -433,14 +433,18 @@ private variable mAndroidTitleColor as Color
 private variable mAndroidIconColor as Color
 private variable mAndroidColors as Array
 private variable mAndroidFontSize as Real
+private variable mAndroidBuffer as Real
+private variable mAndroidIconDimension as Real
+private variable mAndroidTitleHMargin as Real
+private variable mAndroidTitleVMargin as Real
 
 -- constants (some defined as varibales)
 private variable kIosBackgroundColor as List
 private variable kBlackColor as List
 
-constant kMargin is 8
-constant kActionRatio is 0.265625
-constant kSubtitleRatio is 0.171875
+constant kIosMargin is 8
+constant kIosActionRatio is 0.265625
+constant kIosSubtitleRatio is 0.171875
 
 constant kWidgetThemeIos is "iOS"
 constant kWidgetThemeAndroid is "Android"
@@ -644,7 +648,7 @@ private handler drawAndroidHeader() returns nothing
    -- draw the title (WIP)
    set the font of this canvas to fetchFont("title")
    set the paint of this canvas to fetchPaint("title")
-   fill text mHeaderTitle at bottom left of fetchRect("title") on this canvas
+   fill text mHeaderTitle at left of fetchRect("title") on this canvas
 
    -- draw the right actions
    set the paint of this canvas to fetchPaint("actionIcon")
@@ -742,26 +746,10 @@ private handler fetchPath(in pObject as String) returns Path
       return rectangle path of rectangle [0, tH-1, tW, tH]
 
    else if pObject is "backIcon" then
-      put rectangle [kMargin, mLabelTop, kMargin + mIconWidth, mLabelBottom] into tIconRect
-      return fetchIconPath("angle left", tIconRect)
+      return fetchIconPath("angle left", fetchRect("backIcon"))
 
    else if pObject is "searchIcon" then
-      variable tLeft as Real
-      variable tRight as Real
-
-      if mHeaderActions is empty then
-         put tW - kMargin into tRight
-      else
-         if mActionStyle is "icons" then
-            put mRight into tRight
-         else
-            put mRight - kMargin into tRight
-         end if
-      end if
-      put tRight - mIconWidth into tLeft
-
-      put rectangle [tLeft-mIconWidth/4, mLabelTop-mIconWidth/4, tRight+mIconWidth/4, mLabelBottom+mIconWidth/4] into tIconRect
-      return fetchIconPath("search", tIconRect)
+      return fetchIconPath("search", fetchRect("searchIcon"))
 
    end if
 end handler
@@ -773,50 +761,72 @@ private handler fetchRect(in pObject as String) returns Rectangle
    variable tRight as Real
    variable tBottom as Real
    variable tH as Real
+   variable tW as Real
    variable tSize as Real
 
+   put my width into tW
    put my height into tH
-   put tH*kActionRatio/2 into tSize
+   put tH*kIosActionRatio/2 into tSize
 
    if pObject is "title" then
       if mWidgetTheme is kWidgetThemeIos then
          if mShowSubtitle is false then
             return rectangle [0, mLabelTop-mTitleVAdjust, my width, mLabelBottom-mTitleVAdjust]
          else
-            put mSubtitleCenter-tH*mTitleRatio-kMargin/2 into tTop
-            put mSubtitleCenter-kMargin/2 into tBottom
+            put mSubtitleCenter-tH*mTitleRatio-kIosMargin/2 into tTop
+            put mSubtitleCenter-kIosMargin/2 into tBottom
             return rectangle [0, tTop, my width, tBottom]
          end if
       else if mWidgetTheme is kWidgetThemeAndroid then
-         return rectangle [kAndroidHMargin, 0, my width, (my height - 5)/2 + 12]
+         put (my height)- 5 - mAndroidFontSize - mAndroidTitleVMargin into tTop
+         put (my height)- 5 - mAndroidTitleVMargin into tBottom
+         return rectangle [mAndroidTitleHMargin, tTop, my width, tBottom]
       end if
 
    else if pObject is "subtitle" then
-      put kMargin/2 + mSubtitleCenter into tTop
-      put kMargin/2 + mSubtitleCenter + tH*kSubtitleRatio into tBottom
+      put kIosMargin/2 + mSubtitleCenter into tTop
+      put kIosMargin/2 + mSubtitleCenter + tH*kIosSubtitleRatio into tBottom
       return rectangle [0, tTop, my width, tBottom]
+
+   else if pObject is "backIcon" then
+      return rectangle [kIosMargin, mLabelTop, kIosMargin + mIconWidth, mLabelBottom]
 
    else if pObject is "leftLabel" then
       if mShowBackIcon is true then
-         put 3*kMargin/2 + mIconWidth into tLeft
+         put 3*kIosMargin/2 + mIconWidth into tLeft
       else
-         put kMargin into tLeft
+         put kIosMargin into tLeft
       end if
       return rectangle [tLeft, mLabelTop, my width, mLabelBottom]
 
    else if pObject is "actionIcon" then
       if mWidgetTheme is kWidgetThemeIos then
          put rectangle [mRight-5*mIconWidth/4, mLabelTop-mIconWidth/4, mRight+mIconWidth/4, mLabelBottom+mIconWidth/4] into tRect
-         put (mRight - 5*mIconWidth/4 - 2*kMargin) into mRight
+         put (mRight - 5*mIconWidth/4 - 2*kIosMargin) into mRight
          return tRect
       else if mWidgetTheme is kWidgetThemeAndroid then
-         return rectangle [kAndroidBuffer, (my height - 5)/2 - kAndroidIconDimension/2, kAndroidBuffer + kAndroidIconDimension, (my height - 5)/2 + kAndroidIconDimension/2]
+         put (my height - 5)/2 - mAndroidIconDimension/2 into tTop
+         put (my height - 5)/2 + mAndroidIconDimension/2 into tBottom
+         return rectangle [mAndroidBuffer, tTop, mAndroidBuffer + mAndroidIconDimension, tBottom]
       end if
 
    else if pObject is "actionLabel" then
       put rectangle [mRight - mLetterCount*tSize, mLabelTop, mRight, mLabelBottom] into tRect
-      put (mRight - mLetterCount*tSize - kMargin) into mRight
+      put (mRight - mLetterCount*tSize - kIosMargin) into mRight
       return tRect
+
+   else if pObject is "searchIcon" then
+      if mHeaderActions is empty then
+         put tW - kIosMargin into tRight
+      else
+         if mActionStyle is "icons" then
+            put mRight into tRight
+         else
+            put mRight - kIosMargin into tRight
+         end if
+      end if
+      put tRight - mIconWidth into tLeft
+      return rectangle [tLeft-mIconWidth/4, mLabelTop-mIconWidth/4, tRight+mIconWidth/4, mLabelBottom+mIconWidth/4]
 
    end if
 end handler
@@ -855,7 +865,7 @@ private handler fetchPaint(in pObject as String) returns Paint
          put solid paint with mIosActionColor into tPaint
       end if
 
-   else if pObject is "actioIcon" then
+   else if pObject is "actionIcon" then
       if mWidgetTheme is kWidgetThemeIos then
          put solid paint with mIosSelectedActionColor into tPaint
       else if mWidgetTheme is kWidgetThemeAndroid then
@@ -883,11 +893,11 @@ private handler fetchFont(in pType as String) returns Font
       end if
 
    else if pType is "subtitle" then
-      put (my height)*kSubtitleRatio into tSize
+      put (my height)*kIosSubtitleRatio into tSize
       put "Helvetica Neue Regular" into tFont
 
    else if pType is "label" then
-      put (my height)*kActionRatio into tSize
+      put (my height)*kIosActionRatio into tSize
       put "Helvetica Neue Regular" into tFont
 
    end if
@@ -924,16 +934,16 @@ private handler fetchBackRect() returns Rectangle
       variable tSize as Real
       variable tWidth as Real
       put the number of chars in mLeftLabel into tLetterCount
-      put (my height)*kActionRatio/2 into tSize
+      put (my height)*kIosActionRatio/2 into tSize
       put tLetterCount*tSize into tWidth
    end if
 
    if mShowBackIcon is true and mShowLeftLabel is false then
-      put rectangle [kMargin, mLabelTop, kMargin + mIconWidth, mLabelBottom] into tBackRect
+      put fetchRect("backRect") into tBackRect
    else if mShowBackIcon is false and mShowLeftLabel is true then
-      put rectangle [kMargin, mLabelTop, kMargin + tWidth, mLabelBottom] into tBackRect
+      put fetchRect("leftLabel") into tBackRect
    else if mShowBackIcon is true and mShowLeftLabel is true then
-      put rectangle [kMargin, mLabelTop, kMargin + mIconWidth + tWidth, mLabelBottom] into tBackRect
+      put rectangle [kIosMargin, mLabelTop, kIosMargin + mIconWidth + tWidth, mLabelBottom] into tBackRect
    else
       put rectangle [0,0,0,0] into tBackRect
    end if
@@ -944,7 +954,7 @@ end handler
 private handler fetchSearchRect() returns Rectangle
    variable tSearchRect as Rectangle
    if mShowSearchIcon is true then
-      put rectangle [mRight - mIconWidth - kMargin, mLabelTop, mRight - kMargin, mLabelBottom] into tSearchRect
+      put fetchRect("searchIcon") into tSearchRect
    else
       put rectangle [0,0,0,0] into tSearchRect
    end if
@@ -1057,11 +1067,17 @@ private handler updateVariables() returns nothing
    put tH*(73/64) into mLabelBottom
    put tH*(43/64) into mSubtitleCenter
 
-   put (my width - kMargin) into mRight
+   put (my width - kIosMargin*2) into mRight
    put 0 into mLetterCount
 
    put the empty list into mActionRects
    put (tH-5)*(kAndroidDefaultFontSize/kAndroidDefaultHeight) into mAndroidFontSize
+
+   put (tH-5)*(kAndroidBuffer/kAndroidDefaultHeight) into mAndroidBuffer
+   put (tH-5)*(kAndroidIconDimension/kAndroidDefaultHeight) into mAndroidIconDimension
+   put (tH-5)*(kAndroidHMargin/kAndroidDefaultHeight) into mAndroidTitleHMargin
+   put (tH-5)*(20/kAndroidDefaultHeight) into mAndroidTitleVMargin
+
 end handler
 
 public handler OnMouseDown()
