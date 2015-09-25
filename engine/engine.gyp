@@ -435,7 +435,6 @@
 				[
 					'OS == "emscripten"',
 					{
-						'product_name': 'standalone-community.bc',
 						'all_dependent_settings':
 						{
 							'variables':

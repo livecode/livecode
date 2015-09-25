@@ -180,5 +180,34 @@
 				'files': [ '>@(dist_files)', '>@(dist_aux_files)', ],
 			}],
 		},
+
+		{
+			'target_name': 'cpptest-all',
+			'type': 'none',
+
+			'variables':
+			{
+				'javascriptify': ''
+			},
+
+			'conditions':
+			[
+				[
+					'OS == "emscripten"',
+					{
+						'variables':
+						{
+							'javascriptify': '-javascriptify'
+						},
+					},
+				],
+			],
+
+			'dependencies':
+			[
+				'libcpptest/libcpptest.gyp:test-libcpptest<(javascriptify)',
+			],
+
+		},
 	],
 }
