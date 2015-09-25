@@ -41,14 +41,13 @@ public:
     virtual MCDataRef CopyData() const;
     
 private:
-    
     // Cache of the type string and data for this representation
     MCAutoStringRef m_type;
     MCAutoDataRef m_bytes;
     
     // Controlled by the parent MCLinuxRawClipboardItem
     friend class MCLinuxRawClipboardItem;
-    MCLinuxRawClipboardItemRep(GdkAtom p_selection, GdkAtom p_atom);
+    MCLinuxRawClipboardItemRep(MCLinuxRawClipboard* p_clipboard, GdkAtom p_selection, GdkAtom p_atom);
     MCLinuxRawClipboardItemRep(MCStringRef p_type, MCDataRef p_bytes);
     ~MCLinuxRawClipboardItemRep();
 };
@@ -80,12 +79,12 @@ private:
     friend class MCLinuxRawClipboard;
     friend class MCLinuxRawClipboardItemRep;
     MCLinuxRawClipboardItem(MCLinuxRawClipboard* p_parent);
-    MCLinuxRawClipboardItem(MCLinuxRawClipboard* p_parent, GdkAtom p_selection);
+    MCLinuxRawClipboardItem(MCLinuxRawClipboard* p_parent, GdkAtom p_selection, GdkDragContext *p_context);
     ~MCLinuxRawClipboardItem();
     
     // Ensures that the representations have been loaded if the data is from an
     // external source. Does nothing if the data is local.
-    void FetchExternalRepresentations() const;
+    void FetchExternalRepresentations(GdkDragContext* p_context) const;
 };
 
 
@@ -130,6 +129,19 @@ public:
     // supported representations)
     MCDataRef CopyTargets() const;
     
+    // Returns the window being used for clipboard operations
+    GdkWindow* GetClipboardWindow() const;
+    
+    // Sets a custom window to use as the owner of this clipboard. This is used
+    // for drag-and-drop operations as some targets get upset if the selection
+    // owner is not the same as the drag window.
+    void SetClipboardWindow(GdkWindow* p_window);
+    
+    // Sets a drag context to be used as an additional source of dragboard data
+    // (the X11 drag protocol allows for the targets to be specified in the XDnD
+    // message rather than using the TARGETS selection type).
+    void SetDragContext(GdkDragContext* p_context);
+    
     
     // Returns the atom for the given type string. If it hasn't been registered
     // yet, this function will do so and then return it.
@@ -137,9 +149,6 @@ public:
     
     // Returns the string associated with the given atom
     static MCStringRef CopyTypeForAtom(GdkAtom p_atom);
-    
-    // Returns the window being used for clipboard operations
-    static GdkWindow* GetClipboardWindow();
     
     // Returns the GdkDisplay in use by the engine
     static GdkDisplay* GetDisplay();
@@ -163,6 +172,12 @@ private:
     
     // A copy of the data item used to back the current selection
     MCLinuxRawClipboardItem* m_selected_item;
+    
+    // Custom window, if any, to be used for this selection
+    GdkWindow* m_window;
+    
+    // Drag context, if any, associated with this selection
+    GdkDragContext* m_drag_context;
     
     // Information about the data on the clipboard
     bool m_dirty;               // Data has been modified

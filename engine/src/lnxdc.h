@@ -104,6 +104,7 @@ extern Atom MCclipboardatom;*/
 extern Atom MCclientlistatom;
 extern Atom MCstrutpartialatom;
 extern Atom MCworkareaatom;
+extern Atom MCdndselectionatom;
 
 extern Boolean tripleclick;
 

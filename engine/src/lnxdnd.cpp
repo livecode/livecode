@@ -149,7 +149,7 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions,
         t_suggested_action = GDK_ACTION_COPY;
     
     // Get the list of supported targets
-    const MCLinuxRawClipboard* t_dragboard = static_cast<const MCLinuxRawClipboard*> (MCdragboard->GetRawClipboard());
+    MCLinuxRawClipboard* t_dragboard = static_cast<MCLinuxRawClipboard*> (MCdragboard->GetRawClipboard());
     MCAutoDataRef t_targets(t_dragboard->CopyTargets());
     if (*t_targets == NULL)
         return DRAG_ACTION_NONE;
@@ -168,11 +168,9 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions,
     GdkScreen *t_screen;
     t_screen = gdk_display_get_default_screen(dpy);
     
-    // The window used for clipboard communications
-    GdkWindow* t_clipboard_window = MCLinuxRawClipboard::GetClipboardWindow();
-    
     // Create a drag-and-drop context for this operation
     GdkDragContext *t_context = gdk_drag_begin(w, t_target_list);
+    g_list_free(t_target_list);
     
     // Take ownership of the mouse so that nothing interferes with the drag
     GdkGrabStatus t_grab = gdk_pointer_grab(w, FALSE,
@@ -197,6 +195,11 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions,
     
     // Set the cursor
     MCLinuxDragAndDropSetCursorDragStart(w, p_image);
+    
+    // Take ownership of the drag-and-drop selection
+    t_dragboard->SetClipboardWindow(w);
+    GdkAtom t_selection = t_dragboard->GetSelectionAtom();
+    gdk_selection_owner_set_for_display(dpy, w, t_selection, GDK_CURRENT_TIME, TRUE);
     
     // The drag-and-drop loop
     bool t_dnd_done = false;
@@ -261,15 +264,13 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions,
                     t_action = DRAG_ACTION_NONE;
                     MCLinuxDragAndDropSetCursorForAction(w, DRAG_ACTION_NONE, p_image);
                 }
-                else
-                {
-                    // Send a drag motion event
-                    gdk_drag_motion(t_context, t_dest_window, t_protocol,
-                                    t_event->motion.x_root, t_event->motion.y_root,
-                                    GdkDragAction(t_suggested_action),
-                                    GdkDragAction(t_possible_actions),
-                                    t_event->motion.time);
-                }
+
+                // Send a drag motion event
+                gdk_drag_motion(t_context, t_dest_window, t_protocol,
+                                t_event->motion.x_root, t_event->motion.y_root,
+                                GdkDragAction(t_suggested_action),
+                                GdkDragAction(t_possible_actions),
+                                t_event->motion.time);
                 
                 break;
             }
@@ -278,12 +279,11 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions,
             {
                 // Drop the item that was being dragged
                 //fprintf(stderr, "DND: button release\n");
+                if (t_action != DRAG_ACTION_NONE)
+                    gdk_drag_drop(t_context, t_event->button.time);
+                else
+                    t_dnd_done = true;
                 
-                // Take ownership of the drag-and-drop selection
-                GdkAtom t_selection = t_dragboard->GetSelectionAtom();
-                gdk_selection_owner_set_for_display(dpy, t_clipboard_window, t_selection, t_event->motion.time, TRUE);
-                
-                gdk_drag_drop(t_context, t_event->button.time);
                 break;
             }
                 
@@ -480,6 +480,7 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions,
     // Other people can now use the pointer
     g_object_unref(t_context);
     gdk_display_pointer_ungrab(dpy, GDK_CURRENT_TIME);
+    t_dragboard->SetClipboardWindow(NULL);
     
     // Restore the cursor
     gdk_window_set_cursor(w, NULL);

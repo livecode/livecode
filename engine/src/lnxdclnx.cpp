@@ -799,6 +799,8 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                     t_clipboard = static_cast<MCLinuxRawClipboard*> (MCselection->GetRawClipboard());
                 else if (t_event->selection.selection == GDK_SELECTION_CLIPBOARD)
                     t_clipboard = static_cast<MCLinuxRawClipboard*> (MCclipboard->GetRawClipboard());
+                else if (t_event->selection.selection == MCdndselectionatom)
+                    t_clipboard = static_cast<MCLinuxRawClipboard*> (MCdragboard->GetRawClipboard());
                 if (t_clipboard)
                     t_clipboard->LostSelection();
                 
@@ -827,6 +829,8 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                     t_clipboard = static_cast<MCLinuxRawClipboard*> (MCselection->GetRawClipboard());
 				else if (t_event->selection.selection == GDK_SELECTION_CLIPBOARD)
                     t_clipboard = static_cast<MCLinuxRawClipboard*> (MCclipboard->GetRawClipboard());
+                else if (t_event->selection.selection == MCdndselectionatom)
+                    t_clipboard = static_cast<MCLinuxRawClipboard*> (MCdragboard->GetRawClipboard());
                 else
                     t_clipboard = NULL;
                 
@@ -995,6 +999,7 @@ void MCScreenDC::waitmessage(GdkWindow* w, int event_type)
 GdkAtom MCworkareaatom;
 GdkAtom MCstrutpartialatom;
 GdkAtom MCclientlistatom;
+GdkAtom MCdndselectionatom;
 
 
 void MCScreenDC::EnqueueGdkEvents()
@@ -1191,22 +1196,26 @@ void MCScreenDC::DnDClientEvent(GdkEvent* p_event)
             uint16_t t_old_modstate = MCmodifierstate;
             MCmodifierstate = MCscreen->querymods();
             
+            // Ensure our dragboard ownership info is up-to-date
+            MCLinuxRawClipboard* t_dragboard = static_cast<MCLinuxRawClipboard*>(MCdragboard->GetRawClipboard());
+            if (!MCdispatcher->isdragsource())
+               t_dragboard->LostSelection();
+            t_dragboard->SetDragContext(p_event->dnd.context);
+            
+            // We use the destination window as the clipboard window for drag-
+            // and-drop operations from outside LiveCode as some sources get
+            // confused when the window requesting the data != the drag target
+            // window.
+            if (!MCdispatcher->isdragsource())
+                t_dragboard->SetClipboardWindow(p_event->dnd.window);
+            
             // Handle the event
             MCdispatcher->wmdragenter(p_event->dnd.window);
             
-            // Clean up
-            MCmodifierstate = t_old_modstate;
+            // Also perform a motion so that we have some status to return. If
+            // we don't do this, some drag sources will get confused.
             
-            break;
-        }
-            
-        case GDK_DRAG_LEAVE:
-        {
-            //fprintf(stderr, "DND: drag leave\n");
-            // The drag is no longer relevant to us
-            MCdispatcher->wmdragleave(p_event->dnd.window);
-            MCdragboard->FlushData();
-            break;
+            // Fall through to the GDK_DRAG_MOTION_CASE
         }
             
         case GDK_DRAG_MOTION:
@@ -1241,6 +1250,16 @@ void MCScreenDC::DnDClientEvent(GdkEvent* p_event)
             
             // Reply to the motion event
             gdk_drag_status(p_event->dnd.context, t_gdk_action, GDK_CURRENT_TIME);
+            break;
+        }
+            
+        case GDK_DRAG_LEAVE:
+        {
+            //fprintf(stderr, "DND: drag leave\n");
+            // The drag is no longer relevant to us
+            MCdispatcher->wmdragleave(p_event->dnd.window);
+            static_cast<MCLinuxRawClipboard*>(MCdragboard->GetRawClipboard())->SetDragContext(NULL);
+            MCdragboard->FlushData();
             break;
         }
             

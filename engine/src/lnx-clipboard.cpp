@@ -82,6 +82,8 @@ MCLinuxRawClipboard::MCLinuxRawClipboard(const char* p_selection_atom_name) :
   m_selection(0),
   m_item(NULL),
   m_selected_item(NULL),
+  m_window(NULL),
+  m_drag_context(NULL),
   m_dirty(false),
   m_external_data(false),
   m_owned(false)
@@ -97,6 +99,8 @@ MCLinuxRawClipboard::MCLinuxRawClipboard(GdkAtom p_selection) :
   m_selection(p_selection),
   m_item(NULL),
   m_selected_item(NULL),
+  m_window(NULL),
+  m_drag_context(NULL),
   m_dirty(false),
   m_external_data(false),
   m_owned(false)
@@ -336,7 +340,7 @@ bool MCLinuxRawClipboard::PullUpdates()
     
     // Create a new item for the new contents
     m_external_data = true;
-    m_item = new MCLinuxRawClipboardItem(this, m_selection);
+    m_item = new MCLinuxRawClipboardItem(this, m_selection, m_drag_context);
     return (m_item != NULL);
 }
 
@@ -406,8 +410,12 @@ GdkDisplay* MCLinuxRawClipboard::GetDisplay()
     return MCdpy;
 }
 
-GdkWindow* MCLinuxRawClipboard::GetClipboardWindow()
+GdkWindow* MCLinuxRawClipboard::GetClipboardWindow() const
 {
+    // Use the custom window, if specified
+    if (m_window)
+        return m_window;
+    
     // Fail if GDK isn't available
     if (!HasGDK())
         return NULL;
@@ -426,6 +434,16 @@ GdkWindow* MCLinuxRawClipboard::GetClipboardWindow()
     
     // Create the window
     s_clipboard_window = gdk_window_new(NULL, &t_attributes, GDK_WA_TITLE);
+}
+
+void MCLinuxRawClipboard::SetClipboardWindow(GdkWindow* p_window)
+{
+    m_window = p_window;
+}
+
+void MCLinuxRawClipboard::SetDragContext(GdkDragContext* p_context)
+{
+    m_drag_context = p_context;
 }
 
 bool MCLinuxRawClipboard::HasGDK()
@@ -454,7 +472,7 @@ MCLinuxRawClipboardItem::MCLinuxRawClipboardItem(MCLinuxRawClipboard* p_clipboar
     ;
 }
 
-MCLinuxRawClipboardItem::MCLinuxRawClipboardItem(MCLinuxRawClipboard* p_clipboard, GdkAtom p_selection) :
+MCLinuxRawClipboardItem::MCLinuxRawClipboardItem(MCLinuxRawClipboard* p_clipboard, GdkAtom p_selection, GdkDragContext* p_drag_context) :
   MCRawClipboardItem(),
   m_clipboard(p_clipboard),
   m_data_is_external(true),
@@ -462,7 +480,7 @@ MCLinuxRawClipboardItem::MCLinuxRawClipboardItem(MCLinuxRawClipboard* p_clipboar
 {
     // We have to fetch the representations now in case the selection moves to
     // another owner.
-    FetchExternalRepresentations();
+    FetchExternalRepresentations(p_drag_context);
 }
 
 MCLinuxRawClipboardItem::~MCLinuxRawClipboardItem()
@@ -574,7 +592,7 @@ static bool WaitForSelectionNotify()
     return true;
 }
 
-void MCLinuxRawClipboardItem::FetchExternalRepresentations() const
+void MCLinuxRawClipboardItem::FetchExternalRepresentations(GdkDragContext* p_drag_context) const
 {
     // Fail if GDK isn't available
     if (!MCLinuxRawClipboard::HasGDK())
@@ -588,73 +606,94 @@ void MCLinuxRawClipboardItem::FetchExternalRepresentations() const
     if (m_reps.Size() > 0)
         return;
     
-    // Get the atom for the "TARGETS" property
-    GdkAtom t_targets_atom = gdk_atom_intern_static_string("TARGETS");
-    
-    // Request the list of targets that the selection can supply
-    gdk_selection_convert(MCLinuxRawClipboard::GetClipboardWindow(),
-                          m_clipboard->GetSelectionAtom(),
-                          t_targets_atom,
-                          GDK_CURRENT_TIME);
-    
-    // Wait for a SelectionNotify event that tells us the data is ready
-    WaitForSelectionNotify();
-    
-    // Get the data for this property
-    guchar* t_data;
-    GdkAtom t_type;
-    gint t_format;
-    gint t_data_length = gdk_selection_property_get(MCLinuxRawClipboard::GetClipboardWindow(),
-                                                    &t_data, &t_type, &t_format);
-    
-    // Was the property received successfully?
-    if (t_data == NULL || t_type != GDK_SELECTION_TYPE_ATOM)
-        return;
-    
-    // The number of atoms that were read. GDK always allocates an extra byte
-    // in the returned data, which we need to ignore.
-    //
-    // If the format isn't valid, act as if there are no representations.
-    uindex_t t_atom_count = 0;
-    if (t_format == 8)
-        t_atom_count = (t_data_length - 1) / sizeof(guchar);
-    else if (t_format == 16)
-        t_atom_count = (t_data_length - 1) / sizeof(gushort);
-    else if (t_format == 32)
-        t_atom_count = (t_data_length - 1) / sizeof(gulong);
-    
-    // Allocate each of the representations
-    for (uindex_t i = 0; i < t_atom_count; i++)
+    // If we have a drag context, get the target list from it
+    if (p_drag_context != NULL)
     {
-        // Get the atom for this index. Note that these are stored using the
-        // GDK types, which may not correspond to their true sizes.
-        gulong t_atom;
-        if (t_format == 8)
-            t_atom = reinterpret_cast<guchar*>(t_data)[i];
-        else if (t_format == 16)
-            t_atom = reinterpret_cast<gushort*>(t_data)[i];
-        else /* if (t_format == 32) */
-            t_atom = reinterpret_cast<gulong*>(t_data)[i];
-        
-        // If the atom is invalid, skip this entry
-        if (t_atom == 0)
-            continue;
-        
-        // Extend the representation array
-        uindex_t t_index = m_reps.Size();
-        if (!m_reps.Extend(t_index + 1))
-            break;
-        
-        // Add the representation
-        m_reps[t_index] = new MCLinuxRawClipboardItemRep(m_clipboard->GetSelectionAtom(), (GdkAtom)t_atom);
+        GList* t_targets = gdk_drag_context_list_targets(p_drag_context);
+        while (t_targets != NULL)
+        {
+            // Extend the representation list
+            uindex_t t_index = m_reps.Size();
+            m_reps.Extend(t_index + 1);
+            
+            // Add the new representation
+            m_reps[t_index] = new MCLinuxRawClipboardItemRep(m_clipboard, m_clipboard->GetSelectionAtom(), (GdkAtom)t_targets->data);
+            
+            // Next item on the target list
+            t_targets = t_targets->next;
+        }
     }
-    
-    // Free the memory containing the atoms
-    g_free(t_data);
+    // If we have no drag context, get the "TARGETS" property from the selection
+    else
+    {
+        // Get the atom for the "TARGETS" property
+        GdkAtom t_targets_atom = gdk_atom_intern_static_string("TARGETS");
+        
+        // Request the list of targets that the selection can supply
+        gdk_selection_convert(m_clipboard->GetClipboardWindow(),
+                              m_clipboard->GetSelectionAtom(),
+                              t_targets_atom,
+                              GDK_CURRENT_TIME);
+        
+        // Wait for a SelectionNotify event that tells us the data is ready
+        WaitForSelectionNotify();
+        
+        // Get the data for this property
+        guchar* t_data;
+        GdkAtom t_type;
+        gint t_format;
+        gint t_data_length = gdk_selection_property_get(m_clipboard->GetClipboardWindow(),
+                                                        &t_data, &t_type, &t_format);
+        
+        // Was the property received successfully?
+        if (t_data == NULL || t_type != GDK_SELECTION_TYPE_ATOM)
+            return;
+        
+        // The number of atoms that were read. GDK always allocates an extra byte
+        // in the returned data, which we need to ignore.
+        //
+        // If the format isn't valid, act as if there are no representations.
+        uindex_t t_atom_count = 0;
+        if (t_format == 8)
+            t_atom_count = (t_data_length - 1) / sizeof(guchar);
+        else if (t_format == 16)
+            t_atom_count = (t_data_length - 1) / sizeof(gushort);
+        else if (t_format == 32)
+            t_atom_count = (t_data_length - 1) / sizeof(gulong);
+        
+        // Allocate each of the representations
+        for (uindex_t i = 0; i < t_atom_count; i++)
+        {
+            // Get the atom for this index. Note that these are stored using the
+            // GDK types, which may not correspond to their true sizes.
+            gulong t_atom;
+            if (t_format == 8)
+                t_atom = reinterpret_cast<guchar*>(t_data)[i];
+            else if (t_format == 16)
+                t_atom = reinterpret_cast<gushort*>(t_data)[i];
+            else /* if (t_format == 32) */
+                t_atom = reinterpret_cast<gulong*>(t_data)[i];
+            
+            // If the atom is invalid, skip this entry
+            if (t_atom == 0)
+                continue;
+            
+            // Extend the representation array
+            uindex_t t_index = m_reps.Size();
+            if (!m_reps.Extend(t_index + 1))
+                break;
+            
+            // Add the representation
+            m_reps[t_index] = new MCLinuxRawClipboardItemRep(m_clipboard, m_clipboard->GetSelectionAtom(), (GdkAtom)t_atom);
+        }
+        
+        // Free the memory containing the atoms
+        g_free(t_data);
+    }
 }
 
 
-MCLinuxRawClipboardItemRep::MCLinuxRawClipboardItemRep(GdkAtom p_selection, GdkAtom p_atom) :
+MCLinuxRawClipboardItemRep::MCLinuxRawClipboardItemRep(MCLinuxRawClipboard* p_clipboard, GdkAtom p_selection, GdkAtom p_atom) :
   MCRawClipboardItemRep(),
   m_type(NULL),
   m_bytes(NULL)
@@ -664,7 +703,7 @@ MCLinuxRawClipboardItemRep::MCLinuxRawClipboardItemRep(GdkAtom p_selection, GdkA
     MCAssert(*m_type != NULL);
     
     // Request the data for this representation
-    gdk_selection_convert(MCLinuxRawClipboard::GetClipboardWindow(),
+    gdk_selection_convert(p_clipboard->GetClipboardWindow(),
                           p_selection, p_atom, GDK_CURRENT_TIME);
     
     // Wait for a SelectionNotify event that tells us the data is ready
@@ -674,7 +713,7 @@ MCLinuxRawClipboardItemRep::MCLinuxRawClipboardItemRep(GdkAtom p_selection, GdkA
     guchar* t_data;
     GdkAtom t_type;
     gint t_format;
-    gint t_data_length = gdk_selection_property_get(MCLinuxRawClipboard::GetClipboardWindow(),
+    gint t_data_length = gdk_selection_property_get(p_clipboard->GetClipboardWindow(),
                                                     &t_data, &t_type, &t_format);
     
     // Copy the data for this property

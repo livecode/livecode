@@ -557,6 +557,7 @@ Boolean MCScreenDC::open()
     MCworkareaatom = gdk_atom_intern_static_string("_NET_WORKAREA");
     MCclientlistatom = gdk_atom_intern_static_string("_NET_CLIENT_LIST");
     MCstrutpartialatom = gdk_atom_intern_static_string("_NET_WM_STRUT_PARTIAL");
+    MCdndselectionatom = gdk_atom_intern_static_string("XdndSelection");
 
 	return True; 
 }
