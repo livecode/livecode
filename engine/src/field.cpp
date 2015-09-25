@@ -1249,6 +1249,9 @@ Boolean MCField::mup(uint2 which, bool p_release)
 		}
 		else if (MCscreen -> hasfeature(PLATFORM_FEATURE_TRANSIENT_SELECTION))
 		{
+            // Lock the selection
+            MCselection->Lock();
+            
             // TODO: implement the possibility of pasting styled text by using
             // middle-mouse clicks.
             /*
@@ -1269,6 +1272,9 @@ Boolean MCField::mup(uint2 which, bool p_release)
                     typetext(*t_text);
                 }
             }
+            
+            // Unlock the selection
+            MCselection->Unlock();
 		}
 		break;
 	case Button3:
