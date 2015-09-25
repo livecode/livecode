@@ -1391,6 +1391,12 @@ private handler setDistinctTitle(in pIsDistinct as Boolean) returns nothing
       return
    end if
 
+   variable tThemeList
+   put [kDarkColor, kLightColor] into tThemeList
+   if not(mIsOpaque) or (mColorScheme is in tThemeList) then
+      put false into pIsDistinct
+   end if
+
    put pIsDistinct into mTitleIsDistinct
    checkIfThemeIsDark()
    redraw all
