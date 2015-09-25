@@ -675,7 +675,7 @@ private handler drawAndroidActions() returns nothing
       set the paint of this canvas to fetchPaint("actionIcon")
       put fetchRect("actionIcon") into tActionRect
       put fetchIconPath(mHeaderActions[tX]["icon_name"], tActionRect) into tIconPath
-      translate tIconPath by [my width - (mAndroidBuffer + mAndroidIconDimension)*tX, 0]
+      translate tIconPath by [my width - (mAndroidBuffer*2 + mAndroidIconDimension)*tX, 0]
       fill tIconPath on this canvas
       push tActionRect onto back of mActionRects
    end repeat
