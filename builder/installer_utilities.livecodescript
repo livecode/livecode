@@ -244,7 +244,14 @@ end runFacelessInstall
 
 -- Faceless uninstall option
 command runFacelessUninstall
-   send "runFaceless" to stack "UninstallerUI"
+   put true into sIsFaceless
+   
+   try
+      send "runFaceless" to stack "UninstallerUI"
+   catch tError
+      quit 1
+   end try
+   quit 0
 end runFacelessUninstall
 
 -- InstallerActions mode is backend process for installation. It reads the
