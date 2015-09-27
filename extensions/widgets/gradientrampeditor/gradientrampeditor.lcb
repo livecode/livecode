@@ -285,6 +285,10 @@ public handler OnMouseDoubleUp() returns nothing
    gradientStopsChanged()
 end handler
 
+public handler onMouseCancel() returns nothing
+   put false into mIsDraggingStop
+end handler
+
 public handler OnKeyPress(in pKey as String) returns nothing
    if not mIsDraggingStop and mCurrentlySelectedStopIndex is not 0 then
       delete element mCurrentlySelectedStopIndex of mGradientRamp
