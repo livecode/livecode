@@ -167,7 +167,7 @@ bool MCClipboard::AddFileList(MCStringRef p_file_names)
             return false;
         
         // For each path, add a new item to the clipboard
-        for (uindex_t i = 0; i < MCArrayGetCount(*t_paths); i++)
+        for (uindex_t i = 1; i <= MCArrayGetCount(*t_paths); i++)
         {
             // Get the existing item for this index or create a new one
             MCAutoRefcounted<MCRawClipboardItem> t_item;
