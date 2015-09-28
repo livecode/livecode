@@ -85,7 +85,7 @@ MCRawClipboard* MCRawClipboard::CreateSystemSelectionClipboard()
 
 MCRawClipboard* MCRawClipboard::CreateSystemDragboard()
 {
-	return new MCWin32RawDragboard;
+	return new MCWin32RawClipboardNull;
 }
 
 
@@ -112,12 +112,6 @@ MCWin32RawClipboard::MCWin32RawClipboard() :
 }
 
 MCWin32RawClipboardNull::MCWin32RawClipboardNull() :
-  MCWin32RawClipboardCommon()
-{
-	;
-}
-
-MCWin32RawDragboard::MCWin32RawDragboard() :
   MCWin32RawClipboardCommon()
 {
 	;
@@ -524,30 +518,6 @@ bool MCWin32RawClipboardNull::FlushData()
 {
 	// This clipboard is non-functional
 	return true;
-}
-
-bool MCWin32RawDragboard::IsOwned() const
-{
-	// TODO: implement
-	return false;
-}
-
-bool MCWin32RawDragboard::PullUpdates()
-{
-	// TODO: implement
-	return false;
-}
-
-bool MCWin32RawDragboard::PushUpdates()
-{
-	// TODO: implement
-	return false;
-}
-
-bool MCWin32RawDragboard::FlushData()
-{
-	// TODO: implement
-	return false;
 }
 
 

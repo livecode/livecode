@@ -29,7 +29,6 @@
 class MCWin32RawClipboardCommon;
 class MCWin32RawClipboard;
 class MCWin32RawClipboardNull;
-class MCWin32RawDragboard;
 class MCWin32RawClipboardItem;
 class MCWin32RawClipboardItemRep;
 class MCWin32DataObject;
@@ -94,7 +93,6 @@ private:
 	// Lifetime is managed entirely by the parent MCWin32RawClipboard
 	friend class MCWin32RawClipboardCommon;
 	friend class MCWin32RawClipboard;
-	friend class MCWin32RawDragboard;
 	MCWin32RawClipboardItem(MCWin32RawClipboardCommon* p_parent);
 	MCWin32RawClipboardItem(MCWin32RawClipboardCommon* p_parent, IDataObject* p_external_data);
 	~MCWin32RawClipboardItem();
@@ -191,20 +189,6 @@ public:
 	virtual bool FlushData();
 
 	MCWin32RawClipboardNull();
-};
-
-class MCWin32RawDragboard :
-  public MCWin32RawClipboardCommon
-{
-public:
-
-	// Inherited from MCWin32RawClipboardCommon
-	virtual bool IsOwned() const;
-	virtual bool PushUpdates();
-	virtual bool PullUpdates();
-	virtual bool FlushData();
-
-	MCWin32RawDragboard();
 };
 
 
