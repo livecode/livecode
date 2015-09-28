@@ -30,6 +30,6 @@ The result: If the <revXMLCopyNode> command encounters an error, the result is s
 Description:
 Use the <revXMLCopyNode> command to create a duplicate of a node in an xml tree.
 
->*Important:*  The <revXMLCopyNode> <command> is part of the <XML library>. To ensure that the <command> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
+>*Important:*  The <revXMLCopyNode> <command> is part of the <XML library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
 
-References: revXMLMoveNode (command), Standalone Application Settings (glossary), standalone application (glossary), command (glossary), XML library (library), Revolution custom library (library)
+References: revXMLMoveNode (command), Standalone Application Settings (glossary), standalone application (glossary), command (glossary), XML library (library), LiveCode custom library (library)

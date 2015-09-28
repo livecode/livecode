@@ -90,8 +90,7 @@ predefined values. The complete list of preset values is available by executing
 */
 
 property iconPathPreset            get getPathPreset           set setPathPreset
-metadata iconPathPreset.editor is "com.livecode.pi.enum"
-metadata iconPathPreset.options is "execute: get iconNames()"
+metadata iconPathPreset.editor is "com.livecode.pi.svgicon"
 metadata iconPathPreset.default is "Star"
 
 /*

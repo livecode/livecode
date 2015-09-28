@@ -4,7 +4,7 @@ Type: property
 
 Syntax: set the multiSpace to {true | false}
 
-Summary: Has no effect and is included in <Revolution|LiveCode> for compatibility with imported <HyperCard> stacks.
+Summary: Has no effect and is included in <LiveCode> for compatibility with imported <HyperCard> stacks.
 
 Introduced: 1.0
 
@@ -13,4 +13,4 @@ Platforms: desktop,server,web
 Description:
 In HyperCard, the <multiSpace> <property> determines the amount of space left between multiple paint shapes. In LiveCode, the <paint tool|paint tools> draw a single shape, so the <multiSpace> <property> has no effect.
 
-References: multiple (property), property (glossary), paint tool (glossary), Revolution (glossary), HyperCard (glossary)
+References: multiple (property), property (glossary), paint tool (glossary), LiveCode (glossary), HyperCard (glossary)

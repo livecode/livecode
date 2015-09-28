@@ -5,6 +5,6 @@ Synonyms: Profiles library,Profiles libraries,Profile library,Profile libraries
 Type: library
 
 Description:
-The <Revolution custom library|LiveCode custom library> that supports <property profile|property profiles>. The <property profile|profile> <property> is part of the Profile library.
+The <LiveCode custom library|LiveCode custom library> that supports <property profile|property profiles>. The <property profile|profile> <property> is part of the Profile library.
 
-References: property (glossary), property profile (glossary), Revolution custom library (library)
+References: property (glossary), property profile (glossary), LiveCode custom library (library)

@@ -4,7 +4,7 @@ Type: command
 
 Syntax: undefine <propertyName> of <object> 
 
-Summary: Has no effect and is included in <Revolution|LiveCode> for compatibility with <import|imported> <Oracle Media Objects> and <SuperCard> projects.
+Summary: Has no effect and is included in <LiveCode> for compatibility with <import|imported> <Oracle Media Objects> and <SuperCard> projects.
 
 Introduced: 1.0
 
@@ -19,4 +19,4 @@ In SuperCard and Oracle Media Objects, the <undefine> command is used to release
 
 In LiveCode, you can use a custom property without creating it first.
 
-References: customKeys (property), define (command), custom property (glossary), SuperCard (glossary), import (glossary), Oracle Media Objects (glossary), Revolution (glossary)
+References: customKeys (property), define (command), custom property (glossary), SuperCard (glossary), import (glossary), Oracle Media Objects (glossary), LiveCode (glossary)

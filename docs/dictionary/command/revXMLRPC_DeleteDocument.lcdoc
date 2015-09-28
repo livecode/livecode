@@ -27,8 +27,8 @@ The result: If the <revXMLRPC_DeleteDocument> <command> encounters an error, the
 Description:
 Use the <revXMLRPC_DeleteDocument> <command> to free up memory when you're finished using an <XML-RPC document>.
 
->*Important:*  The <revXMLRPC_DeleteDocument> <command> is part of the <XML-RPC library>. To ensure that the <command> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML-RPC Library" is selected in the list of script libraries.
+>*Important:*  The <revXMLRPC_DeleteDocument> <command> is part of the <XML-RPC library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML-RPC Library" is selected in the list of script libraries.
 
-References: revXMLRPC_DeleteAllDocuments (command), result (function), XML-RPC library (library), Revolution custom library (library), Standalone Application Settings (glossary), standalone application (glossary), command (glossary), XML-RPC document (glossary)
+References: revXMLRPC_DeleteAllDocuments (command), result (function), XML-RPC library (library), LiveCode custom library (library), Standalone Application Settings (glossary), standalone application (glossary), command (glossary), XML-RPC document (glossary)
 
 Tags: networking

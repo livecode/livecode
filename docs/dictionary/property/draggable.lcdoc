@@ -15,7 +15,7 @@ OS: mac,windows,linux
 Platforms: desktop,server,web
 
 Description:
-The <draggable> <property> is included in <Revolution|LiveCode> for compatibility with imported <SuperCard> projects.
+The <draggable> <property> is included in <LiveCode> for compatibility with imported <SuperCard> projects.
 
 In SuperCard, the <draggable> <property> determines whether a window can be dragged by its <title bar>.
 
@@ -23,6 +23,6 @@ In LiveCode, setting this property sets the stack's <decorations> <property> to 
 
 Setting the <draggable> <property> causes the <stack window> to flash briefly.
 
-References: title (keyword), decorations (property), systemWindow (property), zoomBox (property), stack (object), property (glossary), title bar (glossary), SuperCard (glossary), Revolution (glossary), stack window (glossary)
+References: title (keyword), decorations (property), systemWindow (property), zoomBox (property), stack (object), property (glossary), title bar (glossary), SuperCard (glossary), LiveCode (glossary), stack window (glossary)
 
 Tags: windowing

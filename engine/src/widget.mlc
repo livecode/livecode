@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -237,12 +237,6 @@ Name: OnMouseScroll
 Type: message
 Syntax: OnMouseScroll
 Summary: Sent when the mouse wheel is scrolled within the widget's rect.
-
-
-Name: OnMouseStillDown
-Type: message
-Syntax: OnMouseStillDown
-Summary: Sent when the mouse button is held down within the widget's rect.
 
 
 Name: OnMouseHover

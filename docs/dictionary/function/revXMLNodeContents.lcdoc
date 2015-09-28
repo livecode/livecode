@@ -37,8 +37,8 @@ The <revXMLNodeContents> function returns the text content of a node. This is de
 
 In the preceeding XML document, <revXMLNodeContents> will return the string "Text" when called with "root" as the <node>.
 
->*Important:*  The <revXMLNodeContents> <function> is part of the <XML library>. To ensure that the <function> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
+>*Important:*  The <revXMLNodeContents> <function> is part of the <XML library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
 
-References: function (control_st), string (keyword), revXMLDeleteNode (command), revXMLAppend (command), revXMLAttribute (function), node (glossary), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), return (glossary), XML library (library), Revolution custom library (library)
+References: function (control_st), string (keyword), revXMLDeleteNode (command), revXMLAppend (command), revXMLAttribute (function), node (glossary), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), return (glossary), XML library (library), LiveCode custom library (library)
 
 Tags: text processing

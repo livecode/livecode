@@ -24,6 +24,7 @@ bin_dir ?= $(top_srcdir)/$(guess_platform)-bin
 LC_COMPILE ?= $(bin_dir)/lc-compile
 LC_RUN ?= $(bin_dir)/lc-run
 MODULE_DIR ?= $(bin_dir)/modules/lci
+VALGRIND ?=
 
 ################################################################
 
@@ -64,7 +65,7 @@ lcb-check: $(LC_RUN) $(LC_COMPILE)
 	@for lcmfile in $(TEST_LCM); do \
 	    logfile=`echo $$lcmfile | sed -e's:lcm$$:log:'` ; \
 	    $(LC_RUN) $(LC_RUN_FLAGS) --handler RunModuleTests -- \
-	        $(TEST_RUNNER_LCM) --lc-run "$(LC_RUN) $(LC_RUN_FLAGS)" \
+	        $(TEST_RUNNER_LCM) --lc-run "$(VALGRIND) $(LC_RUN) $(LC_RUN_FLAGS)" \
 	        $$lcmfile > $$logfile || exit $$? ; \
 	done
 	@$(LC_RUN) $(LC_RUN_FLAGS) --handler SummarizeTests -- \

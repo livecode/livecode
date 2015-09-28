@@ -4,7 +4,7 @@ Type: property
 
 Syntax: set the powerKeys to {true | false}
 
-Summary: Has no effect and is included in <Revolution|LiveCode> for compatibility with imported <HyperCard> stacks.
+Summary: Has no effect and is included in <LiveCode> for compatibility with imported <HyperCard> stacks.
 
 Introduced: 1.0
 
@@ -15,4 +15,4 @@ In HyperCard, the <powerKeys> <property> determines whether certain keyboard sho
 
 The <powerKeys> <property> is set to true by <default>. A <handler> can change this <property> without causing a <error|script error>, but the setting has no effect.
 
-References: filled (property), centered (property), navigationArrows (property), tool (property), default (keyword), keyDown (message), property (glossary), handler (glossary), Revolution (glossary), paint tool (glossary), HyperCard (glossary), error (glossary)
+References: filled (property), centered (property), navigationArrows (property), tool (property), default (keyword), keyDown (message), property (glossary), handler (glossary), LiveCode (glossary), paint tool (glossary), HyperCard (glossary), error (glossary)

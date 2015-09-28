@@ -7,6 +7,6 @@ Type: glossary
 Description:
 A set of program <statement|statements>, with a name, that performs a particular task. The subroutine can be called from other routines. 
  
-In <Revolution|LiveCode>, routines are called <handler|handlers>.
+In <LiveCode>, routines are called <handler|handlers>.
 
-References: statement (glossary), Revolution (glossary), handler (glossary)
+References: statement (glossary), LiveCode (glossary), handler (glossary)

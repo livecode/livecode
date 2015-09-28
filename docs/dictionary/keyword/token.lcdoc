@@ -4,7 +4,7 @@ Type: keyword
 
 Syntax: token
 
-Summary: Designates a <Revolution|LiveCode> token as part of a <chunk expression>.
+Summary: Designates a <LiveCode> token as part of a <chunk expression>.
 
 Introduced: 1.0
 
@@ -39,6 +39,6 @@ A single token can contain multiple characters, but not multiple words, items, o
 
 >*Note:* The token chunk is implemented for the LiveCode language, and probably isn't suitable for use in a general-purpose language parser.
 
-References: word (keyword), real8 (keyword), chunk expression (glossary), Revolution (glossary)
+References: word (keyword), real8 (keyword), chunk expression (glossary), LiveCode (glossary)
 
 Tags: text processing

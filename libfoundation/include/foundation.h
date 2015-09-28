@@ -952,7 +952,11 @@ void MCFinalize(void);
 //  DEBUG HANDLING
 //
 
-#ifdef _DEBUG
+#if defined(_DEBUG)
+#	define DEBUG_LOG 1
+#endif
+
+#if defined(DEBUG_LOG)
 
 extern void __MCAssert(const char *file, uint32_t line, const char *message) ATTRIBUTE_NORETURN;
 #define MCAssert(m_expr) (void)( (!!(m_expr)) || (__MCAssert(__FILE__, __LINE__, #m_expr), 0) )
