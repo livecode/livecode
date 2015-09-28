@@ -5,6 +5,6 @@ Synonyms: statement list,statement
 Type: glossary
 
 Description:
-A single programming instruction. A single line of <Revolution|LiveCode> code that starts with a <command>.
+A single programming instruction. A single line of <LiveCode> code that starts with a <command>.
 
-References: command (glossary), Revolution (glossary)
+References: command (glossary), LiveCode (glossary)

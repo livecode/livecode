@@ -50,6 +50,6 @@ To see how to create a numbered set of variables see the dictionary entry for th
 The ability to specify an <alternateLanguageName> on Windows systems was added in LiveCode 2.9.
 
 Changes:
-The <alternateLanguageName> option was introduced in version 1.1. In previous versions, it was not possible to include AppleScript or other <Open Scripting Architecture (OSA)|OSA> languages in a <Revolution|LiveCode> <handler>.
+The <alternateLanguageName> option was introduced in version 1.1. In previous versions, it was not possible to include AppleScript or other <Open Scripting Architecture (OSA)|OSA> languages in a <LiveCode> <handler>.
 
-References: message box (keyword), as (keyword), debugDo (command), breakpoint (command), local (command), call (command), local command (command), result (function), alternateLanguages (function), system (glossary), Revolution (glossary), handler (glossary), execute (glossary), statement (glossary), Unix (glossary), compile (glossary), command (glossary), Open Scripting Architecture (OSA) (glossary)
+References: message box (keyword), as (keyword), debugDo (command), breakpoint (command), local (command), call (command), local command (command), result (function), alternateLanguages (function), system (glossary), LiveCode (glossary), handler (glossary), execute (glossary), statement (glossary), Unix (glossary), compile (glossary), command (glossary), Open Scripting Architecture (OSA) (glossary)

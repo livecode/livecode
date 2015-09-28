@@ -4,7 +4,7 @@ Type: property
 
 Syntax: set the blindTyping to {true | false}
 
-Summary: Has no effect and is included in <Revolution|LiveCode> for compatibility with imported <HyperCard> <stacks>.
+Summary: Has no effect and is included in <LiveCode> for compatibility with imported <HyperCard> <stacks>.
 
 Introduced: 1.0
 
@@ -15,4 +15,4 @@ In HyperCard, the <blindTyping> <property> determines whether the user can type 
 
 In LiveCode, the message box always acts as though the <blindTyping> is set to false<a/>:  it must be visible for the user to type into it.
 
-References: message box (keyword), visible (property), type (command), stacks (function), property (glossary), Revolution (glossary), HyperCard (glossary)
+References: message box (keyword), visible (property), type (command), stacks (function), property (glossary), LiveCode (glossary), HyperCard (glossary)

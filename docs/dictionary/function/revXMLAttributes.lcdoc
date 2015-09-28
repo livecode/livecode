@@ -36,8 +36,8 @@ Use the <revXMLAttributes> <function> to display a <node|node's> <attribute|attr
 
 If the <revXMLAttributes> <function> encounters an error, it <return|returns> an error message starting with "xmlerr".
 
->*Important:*  The <revXMLAttributes> <function> is part of the <XML library>. To ensure that the <function> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
+>*Important:*  The <revXMLAttributes> <function> is part of the <XML library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
 
-References: function (control_st), repeat (control_st), string (keyword), revXMLSetAttribute (command), revXMLAttributeValues (function), revXMLText (function), revXMLAttribute (function), revXMLMatchingNode (function), revXMLChildContents (function), node (glossary), Standalone Application Settings (glossary), loop (glossary), attribute (glossary), return (glossary), standalone application (glossary), XML library (library), Revolution custom library (library)
+References: function (control_st), repeat (control_st), string (keyword), revXMLSetAttribute (command), revXMLAttributeValues (function), revXMLText (function), revXMLAttribute (function), revXMLMatchingNode (function), revXMLChildContents (function), node (glossary), Standalone Application Settings (glossary), loop (glossary), attribute (glossary), return (glossary), standalone application (glossary), XML library (library), LiveCode custom library (library)
 
 Tags: text processing

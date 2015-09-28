@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if defined(_DEBUG)
+#if defined(DEBUG_LOG)
 
 #if defined(_WINDOWS) || defined(_WINDOWS_SERVER)
 

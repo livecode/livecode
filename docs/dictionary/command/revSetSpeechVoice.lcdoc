@@ -37,8 +37,8 @@ The voice specified by the <revSetSpeechVoice> <command> is used for all speeche
 
 If the <revSetSpeechVoice> <command> is <execute|executed> while a speech is being spoken, the current speech is halted.
 
->*Important:*  The <revSetSpeechVoice> <command> is part of the <Speech library>. To ensure that the <command> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "Speech" is selected in the list of script libraries.
+>*Important:*  The <revSetSpeechVoice> <command> is part of the <Speech library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "Speech" is selected in the list of script libraries.
 
-References: function (control_st), revSetSpeechSpeed (command), revSpeak (command), result (function), revSpeechVoices (function), Standalone Application Settings (glossary), command (glossary), standalone application (glossary), execute (glossary), text to speech (glossary), Speech library (library), Revolution custom library (library)
+References: function (control_st), revSetSpeechSpeed (command), revSpeak (command), result (function), revSpeechVoices (function), Standalone Application Settings (glossary), command (glossary), standalone application (glossary), execute (glossary), text to speech (glossary), Speech library (library), LiveCode custom library (library)
 
 Tags: multimedia

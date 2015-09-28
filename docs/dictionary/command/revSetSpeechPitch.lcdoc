@@ -37,8 +37,8 @@ The <pitchLevel> is logarithmically related to the voice frequency: the range 30
 
 The pitch specified by the <revSetSpeechPitch> <command> is used for all speeches following the <command> during the current session. If the computer is already speaking when you <execute> the <command>, the new pitch affects the current speech.
 
->*Important:*  The <revSetSpeechPitch> <command> is part of the <Speech library>. To ensure that the <command> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "Speech" is selected in the list of script libraries.
+>*Important:*  The <revSetSpeechPitch> <command> is part of the <Speech library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "Speech" is selected in the list of script libraries.
 
-References: Speech library (library), Revolution custom library (library), revSetSpeechSpeed (command), revSpeak (command), result (function), command (glossary), Standalone Application Settings (glossary), custom function (glossary), text to speech (glossary), standalone application (glossary), execute (glossary), function (control_st)
+References: Speech library (library), LiveCode custom library (library), revSetSpeechSpeed (command), revSpeak (command), result (function), command (glossary), Standalone Application Settings (glossary), custom function (glossary), text to speech (glossary), standalone application (glossary), execute (glossary), function (control_st)
 
 Tags: multimedia

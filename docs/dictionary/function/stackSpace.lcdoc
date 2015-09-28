@@ -6,7 +6,7 @@ Syntax: the stackSpace
 
 Syntax: stackSpace()
 
-Summary: Does not <return> a meaningful <value> and is included in <Revolution|LiveCode> for compatibility with imported <HyperCard> stacks.
+Summary: Does not <return> a meaningful <value> and is included in <LiveCode> for compatibility with imported <HyperCard> stacks.
 
 Introduced: 1.0
 
@@ -15,4 +15,4 @@ Platforms: desktop,server,web
 Description:
 In HyperCard, the <stackSpace> function <return(glossary)|returns> the disk size of the <current stack>. In LiveCode, this <function> does not <return(constant)> a meaningful <value>.
 
-References: return (constant), heapSpace (function), hasMemory (function), value (function), diskSpace (function), current stack (glossary), Revolution (glossary), HyperCard (glossary), return (glossary), function (control_st)
+References: return (constant), heapSpace (function), hasMemory (function), value (function), diskSpace (function), current stack (glossary), LiveCode (glossary), HyperCard (glossary), return (glossary), function (control_st)

@@ -36,8 +36,8 @@ Typically, you use the <flushEvents> <function> in a <handler> to dump user acti
 
 To clear multiple event types, call the <flushEvents> <function> once for each event type you want to clear.
 
-Although some of the eventTypes have the same names as built-in <Revolution|LiveCode> <message|messages>, there is a distinction. For example, the mouseDown <event> type is the operating system's response to the user clicking the <mouse button>. When the operating system sends this <event> to the <application>, LiveCode sends a <mouseDown> <message> to the target <object>. The expression flushEvents(mouseDown) prevents the application from responding to any mouseDown <event|events> it has received from the operating system, but has not yet processed.
+Although some of the eventTypes have the same names as built-in <LiveCode> <message|messages>, there is a distinction. For example, the mouseDown <event> type is the operating system's response to the user clicking the <mouse button>. When the operating system sends this <event> to the <application>, LiveCode sends a <mouseDown> <message> to the target <object>. The expression flushEvents(mouseDown) prevents the application from responding to any mouseDown <event|events> it has received from the operating system, but has not yet processed.
 
-References: suspendStack (message), appleEvent (message), mouseUp (message), mouseDown (message), resumeStack (message), cancel (command), function (control_st), Revolution (glossary), event (glossary), return (glossary), handler (glossary), mouse button (glossary), trigger (glossary), execute (glossary), message (glossary), application (glossary), object (object)
+References: suspendStack (message), appleEvent (message), mouseUp (message), mouseDown (message), resumeStack (message), cancel (command), function (control_st), LiveCode (glossary), event (glossary), return (glossary), handler (glossary), mouse button (glossary), trigger (glossary), execute (glossary), message (glossary), application (glossary), object (object)
 
 Tags: ui

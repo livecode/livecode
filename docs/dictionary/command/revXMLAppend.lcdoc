@@ -30,8 +30,8 @@ The result: If the <revXMLAppend> <command> encounters an error, the <result> is
 Description:
 Use the <revXMLAppend> <command> to add new <XML> data to an existing <XML tree>.
 
->*Important:*  The <revXMLAppend> <command> is part of the <XML library>. To ensure that the <command> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
+>*Important:*  The <revXMLAppend> <command> is part of the <XML library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
 
-References: revXMLAddDTD (command), revXMLPutIntoNode (command), revXMLSetAttribute (command), revXMLInsertNode (command), revXMLAddNode (command), revXMLNodeContents (function), result (function), revXMLText (function), revXMLCreateTreeFromFile (function), revXMLCreateTree (function), revXMLChildContents (function), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), XML (glossary), command (glossary), XML library (library), Revolution custom library (library)
+References: revXMLAddDTD (command), revXMLPutIntoNode (command), revXMLSetAttribute (command), revXMLInsertNode (command), revXMLAddNode (command), revXMLNodeContents (function), result (function), revXMLText (function), revXMLCreateTreeFromFile (function), revXMLCreateTree (function), revXMLChildContents (function), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), XML (glossary), command (glossary), XML library (library), LiveCode custom library (library)
 
 Tags: text processing

@@ -4,7 +4,7 @@ Type: property
 
 Syntax: set the markChar of <menuItem> to <character> 
 
-Summary: Has no effect and is included in <Revolution|LiveCode> for compatibility with imported <HyperCard> stacks.
+Summary: Has no effect and is included in <LiveCode> for compatibility with imported <HyperCard> stacks.
 
 Introduced: 1.0
 
@@ -17,4 +17,4 @@ In HyperCard, the <markChar> <property> places a <character> (such as a checkmar
 
 A handler can set the <markChar> to any <value> without causing a <error|script error>, but the actual appearance of the <menu item> is not changed.
 
-References: commandChar (property), character (keyword), value (function), property (glossary), Revolution (glossary), HyperCard (glossary), menu item (glossary), error (glossary)
+References: commandChar (property), character (keyword), value (function), property (glossary), LiveCode (glossary), HyperCard (glossary), menu item (glossary), error (glossary)

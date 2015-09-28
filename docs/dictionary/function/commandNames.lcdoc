@@ -6,7 +6,7 @@ Syntax: the commandNames
 
 Syntax: commandNames()
 
-Summary: <return|Returns> a list of all built-in <command|commands> in <Revolution|LiveCode>.
+Summary: <return|Returns> a list of all built-in <command|commands> in <LiveCode>.
 
 Introduced: 1.0
 
@@ -23,8 +23,8 @@ if field "Name" is among the lines of the commandNames then exit repeat
 Returns: The <commandNames> <function> <return|returns> a list of <command> names, one per <line>.
 
 Description:
-Use the <commandNames> <function> to check whether a particular <command> already exists in <Revolution|LiveCode>, to avoid using a <reserved word> for your own custom <handler|handlers>.
+Use the <commandNames> <function> to check whether a particular <command> already exists in <LiveCode>, to avoid using a <reserved word> for your own custom <handler|handlers>.
 
-The <commandNames> <function> <return|returns> all the <command|commands> that can be used in <Revolution|LiveCode>, including synonyms.
+The <commandNames> <function> <return|returns> all the <command|commands> that can be used in <LiveCode>, including synonyms.
 
-References: line (keyword), propertyNames (function), functionNames (function), handler (glossary), Revolution (glossary), command (glossary), return (glossary), reserved word (glossary), on (control_st), function (control_st)
+References: line (keyword), propertyNames (function), functionNames (function), handler (glossary), LiveCode (glossary), command (glossary), return (glossary), reserved word (glossary), on (control_st), function (control_st)

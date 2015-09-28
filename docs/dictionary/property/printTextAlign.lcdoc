@@ -4,7 +4,7 @@ Type: property
 
 Syntax: set the printTextAlign to {left | center | right}
 
-Summary: Has no effect and is included in <Revolution|LiveCode> for compatibility with imported <HyperCard> stacks.
+Summary: Has no effect and is included in <LiveCode> for compatibility with imported <HyperCard> stacks.
 
 Introduced: 1.0
 
@@ -17,4 +17,4 @@ In HyperCard, the <printTextAlign> <property> specifies the alignment of printed
 
 By default, the value of <printTextAlign> is center. A handler can set the <property>, but the new setting has no effect.
 
-References: properties (property), textAlign (property), card (keyword), print (command), card (object), object (object), property (glossary), Revolution (glossary), HyperCard (glossary)
+References: properties (property), textAlign (property), card (keyword), print (command), card (object), object (object), property (glossary), LiveCode (glossary), HyperCard (glossary)
