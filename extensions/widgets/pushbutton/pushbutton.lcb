@@ -618,10 +618,7 @@ private handler updateAndroidColors() returns nothing
       if my enabled then
          put stringToColor(mAndroidColors[mColorScheme]) into mAndroidLabelColor
          if mIsPressed then
-            if mWidgetTheme is kWidgetThemeAndroidFlat then
-               put color [153/255, 153/255, 153/255, 0.4] into mAndroidBackgroundColor
-               -- TO-DO raised light background color ??
-            end if
+            put color [153/255, 153/255, 153/255, 0.4] into mAndroidBackgroundColor
          else
             put color [1,1,1] into mAndroidBackgroundColor
          end if
@@ -692,6 +689,11 @@ private handler setWidgetTheme(in pWidgetTheme as String)
    else if mWidgetTheme is kWidgetThemeAndroidRaised then
       put kOpaqueBackground into mBackgroundOpacity
       put kLabelStyleText into mLabelStyle
+      if mColorTheme is "Light" then
+         put true into mShowBorder
+      else if mColorTheme is "Dark" then
+         put false into mShowBorder
+      end if
 
    else if mWidgetTheme is kWidgetThemeAndroidFlat then
       put kTransparentBackground into mBackgroundOpacity
