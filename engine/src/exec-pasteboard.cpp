@@ -155,6 +155,20 @@ enum MCTransferType
     
 };
 
+enum MCTransferTypeBits
+{
+    TRANSFER_BIT_TEXT               = 0x001,
+    TRANSFER_BIT_UNICODE            = 0x002,
+    TRANSFER_BIT_STYLED_TEXT        = 0x004,
+    TRANSFER_BIT_STYLED_TEXT_ARRAY  = 0x008,
+    TRANSFER_BIT_RTF_TEXT           = 0x010,
+    TRANSFER_BIT_HTML_TEXT          = 0x020,
+    TRANSFER_BIT_IMAGE              = 0x040,
+    TRANSFER_BIT_FILES              = 0x080,
+    TRANSFER_BIT_PRIVATE            = 0x100,
+    TRANSFER_BIT_OBJECTS            = 0x200,
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static MCExecEnumTypeElementInfo _kMCPasteboardDragActionElementInfo[] =
@@ -260,43 +274,71 @@ MCNameRef MCPasteboardTransferTypeToName(MCTransferType p_type)
 
 bool MCPasteboardListKeys(MCClipboard *p_clipboard, char_t p_delimiter, MCListRef& r_list)
 {
-	MCAutoListRef t_list;
-	if (!MCListCreateMutable(p_delimiter, &t_list))
-		return false;
-
+    // Transfer types available given the clipboard contents
+    unsigned int t_types = 0;
+	
     // Ensure the clipboard stays consistent while we query it
 	if (!p_clipboard->Lock())
 		return false;
 
-	bool t_success = true;
-
     // Does the clipboard have plain text or equivalents?
-    if (t_success && p_clipboard->HasTextOrCompatible())
-        t_success = MCListAppend(*t_list, MCN_text) && MCListAppend(*t_list, MCN_unicode);
+    if (p_clipboard->HasTextOrCompatible())
+        t_types |= TRANSFER_BIT_TEXT|TRANSFER_BIT_UNICODE;
     
     // Does the clipboard have styled text or equivalents?
     // TODO: why isn't HTML on this list?
-    if (t_success && p_clipboard->HasLiveCodeStyledTextOrCompatible())
-        t_success = MCListAppend(*t_list, MCN_styles)
-                    && MCListAppend(*t_list, MCN_rtf)
-                    && MCListAppend(*t_list, MCN_text)
-                    && MCListAppend(*t_list, MCN_unicode);
+    if (p_clipboard->HasLiveCodeStyledTextOrCompatible())
+        t_types |= TRANSFER_BIT_STYLED_TEXT_ARRAY
+                    |TRANSFER_BIT_RTF_TEXT
+                    |TRANSFER_BIT_HTML_TEXT
+                    |TRANSFER_BIT_UNICODE;
     
     // Does the clipboard contain an image recognised by LiveCode?
-    if (t_success && p_clipboard->HasImage())
-        t_success = MCListAppend(*t_list, MCN_image);
+    if (p_clipboard->HasImage())
+        t_types |= TRANSFER_BIT_IMAGE;
     
     // Does the clipboard contain a list of files?
-    if (t_success && p_clipboard->HasFileList())
-        t_success = MCListAppend(*t_list, MCN_files);
+    if (p_clipboard->HasFileList())
+        t_types |= TRANSFER_BIT_FILES;
     
     // Does the clipboard contain serialised LiveCode objects?
-    if (t_success && p_clipboard->HasLiveCodeObjects())
-        t_success = MCListAppend(*t_list, MCN_objects);
+    if (p_clipboard->HasLiveCodeObjects())
+        t_types |= TRANSFER_BIT_OBJECTS;
+    
+    // Does the clipboard contain private data?
+    if (p_clipboard->HasPrivateData())
+        t_types |= TRANSFER_BIT_PRIVATE;
 
     // Unlock the clipboard.
 	p_clipboard->Unlock();
 
+    // Create the list of tranfer types
+    MCAutoListRef t_list;
+    if (!MCListCreateMutable(p_delimiter, &t_list))
+        return false;
+
+    // Append the available tranfer types to the list
+    bool t_success = true;
+    if (t_success && (t_types & TRANSFER_BIT_TEXT))
+        t_success = MCListAppend(*t_list, MCN_text);
+    if (t_success && (t_types & TRANSFER_BIT_UNICODE))
+        t_success = MCListAppend(*t_list, MCN_unicode);
+    if (t_success && (t_types & TRANSFER_BIT_STYLED_TEXT_ARRAY))
+        t_success = MCListAppend(*t_list, MCN_styles);
+    if (t_success && (t_types & TRANSFER_BIT_RTF_TEXT))
+        t_success = MCListAppend(*t_list, MCN_rtf);
+    if (t_success && (t_types & TRANSFER_BIT_HTML_TEXT))
+        t_success = MCListAppend(*t_list, MCN_html);
+    if (t_success && (t_types & TRANSFER_BIT_IMAGE))
+        t_success = MCListAppend(*t_list, MCN_image);
+    if (t_success && (t_types & TRANSFER_BIT_FILES))
+        t_success = MCListAppend(*t_list, MCN_files);
+    if (t_success && (t_types & TRANSFER_BIT_OBJECTS))
+        t_success = MCListAppend(*t_list, MCN_objects);
+    if (t_success && (t_types & TRANSFER_BIT_PRIVATE))
+        t_success = MCListAppend(*t_list, MCN_private);
+    
+    // Convert the list to a string
 	if (t_success)
 		t_success = MCListCopy(*t_list, r_list);
 
