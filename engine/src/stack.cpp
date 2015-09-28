@@ -568,8 +568,7 @@ void MCStack::close()
 		MCacptr->setmessagestack(NULL);
 	if (state & CS_ICONIC)
 	{
-		MCiconicstacks--;
-		state &= ~CS_ICONIC;
+		seticonic(false);
 	}
 	if (MCmousestackptr == this)
 	{
