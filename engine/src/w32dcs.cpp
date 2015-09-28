@@ -433,6 +433,10 @@ void MCScreenDC::openwindow(Window w, Boolean override)
 	{
 		if (t_stack -> getmode() == WM_SHEET || t_stack -> getmode() == WM_MODAL)
 			MCstacks -> enableformodal(w, False);
+
+		// CW-2015-09-28: [[ Bug 15873 ]] If the window has opened iconified, set the stack state to iconic.
+		if (IsIconic((HWND)w->handle.window))
+			t_stack -> seticonic(true);
 	}
 }
 
