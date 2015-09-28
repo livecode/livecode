@@ -239,12 +239,6 @@ Syntax: OnMouseScroll
 Summary: Sent when the mouse wheel is scrolled within the widget's rect.
 
 
-Name: OnMouseStillDown
-Type: message
-Syntax: OnMouseStillDown
-Summary: Sent when the mouse button is held down within the widget's rect.
-
-
 Name: OnMouseHover
 Type: message
 Syntax: OnMouseHover
