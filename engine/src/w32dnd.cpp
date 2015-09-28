@@ -360,6 +360,10 @@ STDMETHODIMP CDropTarget::DragLeave()
 
 	MCdispatcher -> wmdragleave(dropstack -> getw());
 
+	// Remove the data object from the dragboard
+	MCWin32RawClipboardCommon* t_raw_clipboard = static_cast<MCWin32RawClipboardCommon*>(MCdragboard->GetRawClipboard());
+	t_raw_clipboard->SetToIDataObject(NULL);
+
 	return S_OK;
 }
 

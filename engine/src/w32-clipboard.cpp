@@ -322,7 +322,11 @@ void MCWin32RawClipboardCommon::SetDirty()
 bool MCWin32RawClipboardCommon::SetToIDataObject(IDataObject* p_object)
 {
 	// Do nothing if this is our own object
-	if (p_object == m_item->GetIDataObject())
+	if (m_item && p_object == m_item->GetIDataObject())
+		return true;
+
+	// Also do nothing if this is a request to clear a non-external object
+	if (!m_external_data && p_object == NULL)
 		return true;
 	
 	// Clear the clipboard
