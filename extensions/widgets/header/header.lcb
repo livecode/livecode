@@ -619,7 +619,7 @@ private handler drawIosHeader() returns nothing
    end if
 
    -- draw the actions
-   drawIosActions()
+   drawActions()
 
    -- draw the search icon
    if mShowSearchIcon is true then
@@ -645,10 +645,12 @@ private handler drawAndroidHeader() returns nothing
    set the paint of this canvas to fetchPaint("actionIcon")
    fill fetchIconPath(mLeftAction, fetchRect("actionIcon")) on this canvas
 
-   -- draw the title (WIP)
-   set the font of this canvas to fetchFont("title")
-   set the paint of this canvas to fetchPaint("title")
-   fill text mHeaderTitle at left of fetchRect("title") on this canvas
+   -- draw the title
+   if mTitleIsVisible then
+      set the font of this canvas to fetchFont("title")
+      set the paint of this canvas to fetchPaint("title")
+      fill text mHeaderTitle at left of fetchRect("title") on this canvas
+   end if
 
    -- draw the right actions
    set the paint of this canvas to fetchPaint("actionIcon")
@@ -656,33 +658,11 @@ private handler drawAndroidHeader() returns nothing
    variable tActionsCount as Integer
    put the number of elements in mHeaderActions into tActionsCount
    repeat with tX from 1 up to tActionsCount
-      drawAndroidActions()
+      drawActions()
    end repeat
 end handler
 
-private handler drawAndroidActions() returns nothing
-   if mHeaderActions is the empty list then
-      return
-   end if
-
-   variable tX as Integer
-   variable tActionsCount as Integer
-   variable tIconPath as Path
-   variable tActionRect as Rectangle
-
-   put the number of elements in mHeaderActions into tActionsCount
-   repeat with tX from 1 up to tActionsCount
-      set the paint of this canvas to fetchPaint("actionIcon")
-      put fetchRect("actionIcon") into tActionRect
-      put fetchIconPath(mHeaderActions[tX]["icon_name"], tActionRect) into tIconPath
-      translate tIconPath by [my width - (mAndroidBuffer*2 + mAndroidIconDimension)*tX, 0]
-      fill tIconPath on this canvas
-      push tActionRect onto back of mActionRects
-   end repeat
-
-end handler
-
-private handler drawIosActions() returns nothing
+private handler drawActions() returns nothing
    if mHeaderActions is the empty list then
       return
    end if
@@ -695,22 +675,32 @@ private handler drawIosActions() returns nothing
    put the number of elements in mHeaderActions into tActionsCount
    repeat with tX from 1 up to tActionsCount
 
-      if tX+2 is mSelectedAction then
+      if mWidgetTheme is kWidgetThemeIos then
+         if tX+2 is mSelectedAction then
+            set the paint of this canvas to fetchPaint("actionIcon")
+         else
+            set the paint of this canvas to fetchPaint("selectedIcon")
+         end if
+
+         if mActionStyle is "icons" then
+            put fetchRect("actionIcon") into tActionRect
+            put fetchIconPath(mHeaderActions[tX]["icon_name"], tActionRect) into tIconPath
+            fill tIconPath on this canvas
+
+         else if mActionStyle is "names" then
+            put the number of chars in mHeaderActions[tX]["label"] into mLetterCount
+            put fetchRect("actionLabel") into tActionRect
+            set the font of this canvas to fetchFont("label")
+            fill text mHeaderActions[tX]["label"] at right of tActionRect on this canvas
+         end if
+
+      else if mWidgetTheme is kWidgetThemeAndroid then
          set the paint of this canvas to fetchPaint("actionIcon")
-      else
-         set the paint of this canvas to fetchPaint("selectedIcon")
-      end if
-
-      if mActionStyle is "icons" then
          put fetchRect("actionIcon") into tActionRect
          put fetchIconPath(mHeaderActions[tX]["icon_name"], tActionRect) into tIconPath
+         translate tIconPath by [my width - (mAndroidBuffer*2 + mAndroidIconDimension)*tX, 0]
          fill tIconPath on this canvas
 
-      else if mActionStyle is "names" then
-         put the number of chars in mHeaderActions[tX]["label"] into mLetterCount
-         put fetchRect("actionLabel") into tActionRect
-         set the font of this canvas to fetchFont("label")
-         fill text mHeaderActions[tX]["label"] at right of tActionRect on this canvas
       end if
 
       push tActionRect onto back of mActionRects
@@ -1015,11 +1005,12 @@ private handler checkIfThemeIsDark() returns nothing
          if mTitleIsDistinct then
             put color [1,1,1,0.38] into mAndroidIconColor
          else
-            put color [0,0,0] into mAndroidIconColor
+            put color [0,0,0,0.87] into mAndroidIconColor
          end if
       end if
    else
       put color [0,0,0] into mAndroidTitleColor
+      put color [0,0,0,0.87] into mAndroidIconColor
    end if
 
 end handler
@@ -1322,11 +1313,13 @@ private handler setBackgroundOpacity(in pOpaque as Boolean) returns nothing
 		return
 	end if
 
+	put pOpaque into mIsOpaque
+
    if mWidgetTheme is kWidgetThemeAndroid then
+      put false into mTitleIsDistinct
       checkIfThemeIsDark()
    end if
 
-	put pOpaque into mIsOpaque
 	redraw all
 end handler
 
@@ -1383,6 +1376,10 @@ private handler setColorScheme(in pColorScheme as String) returns nothing
 	if not(pColorScheme is in tColorSchemeList) then
 		throw "invalid color scheme"
 	end if
+
+   if pColorScheme is "Dark" or pColorScheme is "Light" then
+      put false into mTitleIsDistinct
+   end if
 
 	put pColorScheme into mColorScheme
    checkIfThemeIsDark()
