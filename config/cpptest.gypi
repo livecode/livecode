@@ -2,7 +2,20 @@
 	'targets': [
 		{
 			'target_name': 'test-<(module_name)',
-			'type': 'executable',
+
+		 	'conditions':
+			[
+				[
+					'OS == "ios"',
+					{
+						# We can't compile to an executable, but we can at least compile.
+						'type': 'static_library',
+					},
+					{
+						'type': 'executable',
+					}
+				],
+			],
 
 		  'dependencies':
 			[
