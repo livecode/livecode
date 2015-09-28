@@ -143,25 +143,6 @@ metadata labelColor.label is "Label Color"
 metadata labelColor.default is "0,121,255"
 
 /*
-Syntax: set the <widgetBackgroundColor> of <widget> to <pBackgroundColor>
-Syntax: get the <widgetBackgroundColor> of <widget>
-
-Summary: The color of the button's background
-
-Parameters:
-pBackgroundColor(color): The color of the background
-
-Description:
-Use the <widgetBackgroundColor> property to set the background color of the button.
-
-This property can only be set if the theme of the widget is "Android(Raised)" or "Android(Floating Action)"
-*/
-property widgetBackgroundColor get getBackgroundColor set setBackgroundColor
-metadata widgetBackgroundColor.editor is "com.livecode.pi.color"
-metadata widgetBackgroundColor.label is "Background Color"
-metadata widgetBackgroundColor.default is "255,255,255"
-
-/*
 Syntax: set the <backgroundOpacity> of <widget> to <pOpacity>
 Syntax: get the <backgroundOpacity> of <widget>
 
@@ -261,7 +242,6 @@ private variable mLabelStyle as String
 private variable mLabelText as String
 private variable mLabelIcon as String
 private variable mLabelColor as Color
-private variable mBackgroundColor as Color
 private variable mBackgroundOpacity as String
 private variable mColorScheme as String
 private variable mColorTheme as String
@@ -271,6 +251,7 @@ private variable mShowBorder as Boolean
 private variable mDefaultColor as Color
 private variable mIosFontSize as Real
 private variable mAndroidFontSize as Real
+private variable mIosBackgroundColor as Color
 private variable mWidth as Real
 private variable mHeight as Real
 
@@ -314,7 +295,6 @@ public handler OnSave(out rProperties as Array)
    put mLabelText into rProperties["labelText"]
    put mLabelIcon into rProperties["labelIcon"]
    put colorToString(mLabelColor) into rProperties["labelColor"]
-   put colorToString(mBackgroundColor) into rProperties["backgroundColor"]
    put mBackgroundOpacity into rProperties["opacity"]
    put mColorScheme into rProperties["colorScheme"]
    put mColorTheme into rProperties["colorTheme"]
@@ -328,7 +308,6 @@ public handler OnLoad(in pProperties as Array)
    put pProperties["labelText"] into mLabelText
    put pProperties["labelIcon"] into mLabelIcon
    put stringToColor(pProperties["labelColor"]) into mLabelColor
-   put stringToColor(pProperties["backgroundColor"]) into mBackgroundColor
    put pProperties["opacity"] into mBackgroundOpacity
    put pProperties["colorScheme"] into mColorScheme
    put pProperties["colorTheme"] into mColorTheme
@@ -341,7 +320,6 @@ public handler OnCreate() returns nothing
    put "Button" into mLabelText
    put "Star" into mLabelIcon
    put color [0, 121/255, 1] into mLabelColor
-   put color [1, 1, 1, 0] into mBackgroundColor
    put "Transparent" into mBackgroundOpacity
    put "Blue" into mColorScheme
    put "Light" into mColorTheme
@@ -349,6 +327,8 @@ public handler OnCreate() returns nothing
 
    put false into mShowBorder
    put color [0, 121/255, 1] into mDefaultColor
+   put color [1,1,1,0] into mIosBackgroundColor
+
    updateVariables()
    fetchAndroidColors()
 
@@ -488,7 +468,7 @@ end handler
 private handler fetchPaint(in pObject as String) returns Paint
    if pObject is "background" then
       if mWidgetTheme is kWidgetThemeIos then
-         return solid paint with mBackgroundColor
+         return solid paint with mIosBackgroundColor
       else if mWidgetTheme contains "Android" then
          return solid paint with mAndroidBackgroundColor
       end if
@@ -681,16 +661,6 @@ private handler setWidgetTheme(in pWidgetTheme as String)
 
    put pWidgetTheme into mWidgetTheme
 
-   variable tBackgroundColorString as String
-   put getBackgroundColor() into tBackgroundColorString
-   checkBackgroundColor(tBackgroundColorString)
-   put stringToColor(tBackgroundColorString) into mBackgroundColor
-
-   variable tLabelColorString as String
-   put getLabelColor() into tLabelColorString
-   checkTextColor(tLabelColorString)
-   put stringToColor(tLabelColorString) into mLabelColor
-
    if mWidgetTheme is kWidgetThemeAndroidFloatingAction then
       put kOpaqueBackground into mBackgroundOpacity
       put kLabelStyleIcon into mLabelStyle
@@ -745,19 +715,15 @@ public handler getLabelColor() returns String
    return colorToString(mLabelColor)
 end handler
 
+constant kWhiteColorString is "255,255,255"
+constant kDefaultColorString is "0,121,255"
+
 public handler setLabelColor(in pLabelColor as String) returns nothing
-   checkTextColor(pLabelColor)
+   if pLabelColor is kWhiteColorString then
+      put kDefaultColorString into pLabelColor
+   end if
+   
    put stringToColor(pLabelColor) into mLabelColor
-   redraw all
-end handler
-
-public handler getBackgroundColor() returns String
-   return colorToString(mBackgroundColor)
-end handler
-
-public handler setBackgroundColor(in pBackgroundColor as String) returns nothing
-   checkBackgroundColor(pBackgroundColor)
-   put stringToColor(pBackgroundColor) into mBackgroundColor
    redraw all
 end handler
 
@@ -777,10 +743,13 @@ private handler setBackgroundOpacity(in pOpacity as String)
    if mWidgetTheme is kWidgetThemeIos then
       put pOpacity into mBackgroundOpacity
 
-      variable tColorString as String
-      put colorToString(mBackgroundColor) into tColorString
-      checkBackgroundColor(tColorString)
-      put stringToColor(tColorString) into mBackgroundColor
+      if mBackgroundOpacity is kOpaqueBackground then
+         put color [1,1,1] into mIosBackgroundColor
+      else if mBackgroundOpacity is kTranslucentBackground then
+         put color [1,1,1,204/255] into mIosBackgroundColor
+      else if mBackgroundOpacity is kTransparentBackground then
+         put [1,1,1,0] into mIosBackgroundColor
+      end if
 
    else if mWidgetTheme is kWidgetThemeAndroidFloatingAction or mWidgetTheme is kWidgetThemeAndroidRaised then
       put kOpaqueBackground into mBackgroundOpacity
@@ -875,71 +844,6 @@ private handler setIconPath(in pTargetRect as Rectangle, inout xPath as Path)
 	divide tYDiff by 2
 
 	translate xPath by [tXTranslate + tXDiff, tYTranslate + tYDiff]
-end handler
-
---------------------------------------------------------------------------------
---
---		Checking Color Properties
---
---------------------------------------------------------------------------------
-
-constant kWhiteColorString is "255,255,255"
-constant kDefaultColorString is "0,121,255"
-
-private handler checkTextColor(inout xTextColor as String) returns nothing
-
-   if mWidgetTheme is kWidgetThemeAndroidRaised then
-      if xTextColor is kWhiteColorString then
-         put false into mShowBorder
-         put mDefaultColor into mBackgroundColor
-      else
-         put true into mShowBorder
-         put color [1,1,1] into mBackgroundColor
-      end if
-
-   else if mWidgetTheme is kWidgetThemeAndroidFloatingAction then
-      put kWhiteColorString into xTextColor
-
-   else
-      if xTextColor is kWhiteColorString then
-         put kDefaultColorString into xTextColor
-         put color [1,1,1] into mBackgroundColor
-      end if
-   end if
-end handler
-
-private handler checkBackgroundColor(inout xBackgroundColor as String) returns nothing
-
-   if mWidgetTheme is kWidgetThemeIos then
-      if mBackgroundOpacity is kOpaqueBackground then
-         put kWhiteColorString into xBackgroundColor
-      else if mBackgroundOpacity is kTranslucentBackground then
-         put "255,255,255,204" into xBackgroundColor
-      else if mBackgroundOpacity is kTransparentBackground then
-         put "255,255,255,0" into xBackgroundColor
-      end if
-
-   else if mWidgetTheme is kWidgetThemeAndroidFloatingAction then
-      put color [1,1,1] into mLabelColor
-      if xBackgroundColor contains kWhiteColorString then
-         put kDefaultColorString into xBackgroundColor
-      end if
-
-   else if mWidgetTheme is kWidgetThemeAndroidRaised then
-      if xBackgroundColor contains kWhiteColorString then
-         put true into mShowBorder
-         if colorToString(mLabelColor) is kWhiteColorString then
-            put mDefaultColor into mLabelColor
-         end if
-      else
-         put false into mShowBorder
-         put color [1,1,1] into mLabelColor
-      end if
-
-   else if  mWidgetTheme is kWidgetThemeAndroidFlat then
-      put kWhiteColorString into xBackgroundColor
-
-   end if
 end handler
 
 --------------------------------------------------------------------------------
