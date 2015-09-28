@@ -374,22 +374,30 @@ private handler drawAndroidFloatingActionButton() returns nothing
 end handler
 
 private handler drawAndroidRaisedButton() returns nothing
-   -- shadow
-   variable tShadow as Effect
-   put drawDropShadow() into tShadow
+   -- shadow if widget is enabled
+   if my enabled then
+      variable tShadow as Effect
+      put drawDropShadow() into tShadow
 
-   begin layer with tShadow on this canvas
-   -- background
-   set the paint of this canvas to fetchPaint("background")
-   fill fetchPath("background") on this canvas
+      begin layer with tShadow on this canvas
+      -- background
+      set the paint of this canvas to fetchPaint("background")
+      fill fetchPath("background") on this canvas
 
-   -- border
-   if mShowBorder then
-      set the paint of this canvas to fetchPaint("border")
-      set the stroke width of this canvas to 0.5
-      stroke fetchPath("border") on this canvas
+      -- border
+      if mShowBorder then
+         set the paint of this canvas to fetchPaint("border")
+         set the stroke width of this canvas to 0.5
+         stroke fetchPath("border") on this canvas
+      end if
+      end layer on this canvas
+
+   else
+      -- background only
+      set the paint of this canvas to fetchPaint("background")
+      fill fetchPath("background") on this canvas
+
    end if
-   end layer on this canvas
 
    -- label
    variable tLabel as String
@@ -415,9 +423,9 @@ private handler drawDropShadow() returns Effect
    put the empty array into tProps
 
    if mWidgetTheme is kWidgetThemeAndroidFloatingAction then
-      put color [186/255, 186/255, 186/255, 0.2] into tProps["color"]
+      put color [186/255, 186/255, 186/255, 0.8] into tProps["color"]
       put "source over" into tProps["blend mode"]
-      put 25 into tProps["opacity"]
+      put 255 into tProps["opacity"]
       put 0.5 into tProps["spread"]
       put 5 into tProps["size"]
       put 7 into tProps["distance"]
@@ -505,12 +513,29 @@ private handler updateVariables() returns nothing
    put mHeight*(kAndroidDefaultFontSize/kAndroidDefaultHeight) into mAndroidFontSize
 
    if mWidgetTheme contains "Android" then
+
       if mColorTheme is "Light" then
-         put stringToColor(mAndroidColors[mColorScheme]) into mAndroidLabelColor
-         put color [1,1,1] into mAndroidBackgroundColor
+         if my enabled then
+            put stringToColor(mAndroidColors[mColorScheme]) into mAndroidLabelColor
+            put color [1,1,1] into mAndroidBackgroundColor
+         else
+            put color [0,0,0,0.26] into mAndroidLabelColor
+            if mWidgetTheme is kWidgetThemeAndroidRaised then
+               put color [0,0,0,0.12] into mAndroidBackgroundColor
+            end if
+         end if
+
       else if mColorTheme is "Dark" then
-         put stringToColor(mAndroidColors[mColorScheme]) into mAndroidBackgroundColor
-         put color [1,1,1] into mAndroidLabelColor
+         if my enabled then
+            put stringToColor(mAndroidColors[mColorScheme]) into mAndroidBackgroundColor
+            put color [1,1,1] into mAndroidLabelColor
+         else
+            put color [1,1,1,0.3] into mAndroidLabelColor
+            if mWidgetTheme is kWidgetThemeAndroidRaised then
+               put color [1,1,1,0.12] into mAndroidBackgroundColor
+            end if
+         end if
+
       end if
    end if
 
