@@ -1,4 +1,10 @@
 {
+	'includes':
+	[
+		'../common.gypi',
+		'engine-sources.gypi',
+	],
+
 	'targets':
 	[
 		{
@@ -18,9 +24,7 @@
 			
 			'dependencies':
 			[
-				'../libfoundation/libfoundation.gyp:libFoundation',
 				'../libexternal/libexternal.gyp:libExternal',
-				'../libgraphics/libgraphics.gyp:libGraphics',
 				
 				'../prebuilt/libcurl.gyp:libcurl',
 				'../prebuilt/libopenssl.gyp:libopenssl',
@@ -31,8 +35,7 @@
 				'../thirdparty/libpng/libpng.gyp:libpng',
 				'../thirdparty/libz/libz.gyp:libz',
 				
-				'encode_version',
-				'quicktime_stubs',
+				'engine-common.gyp:quicktime_stubs',
 				
 				'lcb-modules.gyp:engine_lcb_modules',
 			],

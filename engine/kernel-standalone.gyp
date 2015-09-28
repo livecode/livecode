@@ -1,4 +1,10 @@
 {
+	'includes':
+	[
+		'../common.gypi',
+		'engine-sources.gypi',
+	],
+
 	'targets':
 	[
 		{
@@ -7,7 +13,7 @@
 			
 			'dependencies':
 			[
-				'kernel',
+				'kernel.gyp:kernel',
 			],
 			
 			'includes':
@@ -38,7 +44,7 @@
 					{
 						'dependencies':
 						[
-							'kernel-java',
+							'kernel.gyp:kernel-java',
 						],
 						
 						'sources':

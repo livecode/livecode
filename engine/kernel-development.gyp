@@ -1,4 +1,10 @@
 {
+	'includes':
+	[
+		'../common.gypi',
+		'engine-sources.gypi',
+	],
+
 	'targets':
 	[
 		{
@@ -17,7 +23,7 @@
 			
 			'dependencies':
 			[
-				'kernel',
+				'kernel.gyp:kernel',
 				
 				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl',
 				'../thirdparty/libz/libz.gyp:libz',
