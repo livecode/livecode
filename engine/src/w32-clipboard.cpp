@@ -794,8 +794,58 @@ MCDataRef MCWin32RawClipboardItemRep::CopyData() const
 			break;
 		}
 
-		case TYMED_FILE:
 		case TYMED_ISTREAM:
+		{
+			// The data is available via an IStream interface
+			IStream* t_stream = p_medium.pstm;
+
+			// Find the size of the data represented by the stream
+			STATSTG t_statstg;
+			if (t_stream->Stat(&t_statstg, STATFLAG_NONAME) == S_OK)
+			{
+				// Allocate memory for the data
+				MCAutoArray<byte_t> t_bytes;
+				if (t_statstg.cbSize.QuadPart <= UINDEX_MAX && t_bytes.Extend(t_statstg.cbSize.QuadPart))
+				{
+					// Loop until all the data has been read
+					uindex_t t_cursor = 0;
+					while (t_cursor < t_bytes.Size())
+					{
+						// Read the next block of data
+						ULONG t_read = 0;
+						HRESULT t_result = t_stream->Read(t_bytes.Ptr(), t_bytes.Size()-t_cursor, &t_read);
+
+						// If the result is S_OK, then all data was sucessfully
+						// read. If it was S_FALSE, we only had a partial read.
+						// Otherwise, an error occurred.
+						if (t_result == S_OK)
+							break;
+						else if (t_result == S_FALSE)
+							t_cursor += t_read;
+						else
+							break;
+					}
+				}
+
+				// If all data was read successfully, turn the bytes into a
+				// DataRef.
+				if (t_bytes.Size() == t_statstg.cbSize.QuadPart)
+				{
+					// Take the storage from the autoarray and hand it directly
+					// to the dataref to save a reallocation of (what is likely
+					// to be) a large chunk of memory.
+					byte_t* t_pointer;
+					uindex_t t_length;
+					t_bytes.Take(t_pointer, t_length);
+					if (!MCDataCreateWithBytesAndRelease(t_pointer, t_length, t_data))
+						MCMemoryDelete(t_pointer);
+				}
+			}
+			
+			break;
+		}
+
+		case TYMED_FILE:
 		case TYMED_ISTORAGE:
 		{
 			// TODO: implement
