@@ -387,7 +387,7 @@ Description:
 Use this property to determine whether the title distinct (true) or not (false), Android only.
 
 The title can only be set to distinct if the header is opaque and the color scheme is not "Dark" or "Light".
-It is recommended to only set the title to distinct when the color scheme has enough contrast for black and white glyphs.
+The title can have a distinct color from the icons if increased visual hierarchy is needed. Distinct title colors work best on backgrounds with enough contrast for both white and balck glyphs.
 */
 property distinctTitle get mTitleIsDistinct set setDistinctTitle
 metadata distinctTitle.default is "false"
