@@ -2246,7 +2246,7 @@ void MCFontStyles::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     if (!ctxt . EvalExprAsStringRef(fontname, EE_FONTSTYLES_BADFONTNAME, &t_fontname))
         return;
     uinteger_t fsize;
-    if (!ctxt . EvalExprAsUInt(fontsize, EE_FONTSTYLES_BADFONTSIZE, fsize))
+    if (!ctxt . EvalExprAsStrictUInt(fontsize, EE_FONTSTYLES_BADFONTSIZE, fsize))
         return;
     
 	MCTextEvalFontStyles(ctxt, *t_fontname, fsize, r_value . stringref_value);

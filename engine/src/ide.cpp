@@ -319,10 +319,10 @@ bool MCIdeScriptAction::eval_target_range(MCExecContext& ctxt, MCExpression *p_s
     int4 t_end = 0;
     MCField *t_target = nil;
 
-    t_success = ctxt . EvalExprAsInt(p_start, EE_OBJECT_NAN, t_start);
+    t_success = ctxt . EvalExprAsStrictInt(p_start, EE_OBJECT_NAN, t_start);
 
     if (t_success)
-        t_success = ctxt . EvalExprAsInt(p_end, EE_OBJECT_NAN, t_end);
+        t_success = ctxt . EvalExprAsStrictInt(p_end, EE_OBJECT_NAN, t_end);
 
     if (t_success)
         t_success = eval_target(ctxt, p_target, t_target);
