@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -3800,6 +3800,9 @@ MCRectangle MCPlayer::qt_getpreferredrect(void)
 	trect . x = trect . y = 0;
 	trect . height = naturalbounds.bottom - naturalbounds.top;
 	trect . width = naturalbounds.right - naturalbounds.left;
+    // PM-2015-06-09: [[ Bug 5209 ]] formattedHeight should take into account the controller
+    if (flags & F_SHOW_CONTROLLER)
+        trect . height += 16; // default height of native QuickTime controller is 16
 
 	return trect;
 }

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1340,6 +1340,7 @@ enum Properties {
     P_CURRENT_TIME,
     P_DURATION,
     P_LOOPING,
+    P_MIRRORED,
     P_PLAY_RATE,
     P_SHOW_BADGE,
     P_SHOW_CONTROLLER,

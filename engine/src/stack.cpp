@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -32,7 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "card.h"
 #include "aclip.h"
 #include "vclip.h"
-#include "control.h"
+#include "mccontrol.h"
 #include "image.h"
 #include "button.h"
 #include "mcerror.h"
@@ -2688,6 +2688,8 @@ Boolean MCStack::del()
 	if (MCdispatcher->gethome() == this)
 		return False;
 	
+    setstate(CS_DELETE_STACK, True);
+    
 	if (opened)
 	{
 		// MW-2007-04-22: [[ Bug 4203 ]] Coerce the flags to include F_DESTROY_WINDOW to ensure we don't

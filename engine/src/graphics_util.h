@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -348,6 +348,12 @@ static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 {
 	MCGFont t_font;
+	if (p_font == nil)
+	{
+		MCMemoryClear(&t_font, sizeof(t_font));
+		return t_font;
+	}
+
 	t_font . size = p_font -> size;
 	t_font . ascent = p_font -> ascent;
 	t_font . descent = p_font -> descent;

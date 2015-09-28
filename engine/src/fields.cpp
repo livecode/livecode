@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -28,7 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "card.h"
 #include "cdata.h"
 #include "field.h"
-#include "block.h"
+#include "MCBlock.h"
 #include "paragraf.h"
 #include "scrolbar.h"
 #include "mcerror.h"

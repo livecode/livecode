@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -87,19 +87,9 @@ static const char *ppmediastrings[] =
 
 
 static MCColor controllercolors[] = {
-    {0, 0x8000, 0x8000, 0x8000, 0, 0},         /* 50% gray */
     
-    {0, 0xCCCC, 0xCCCC, 0xCCCC, 0, 0},         /* 20% gray -- 80% white */
-    
-    {0, 0xa8a8, 0x0101, 0xffff, 0, 0},         /* Purple */
-    
-    //{0, 0xcccc, 0x9999, 0xffff, 0, 0},         /* Magenda */
-    
-    {0, 0x2b2b, 0x2b2b, 0x2b2b, 0, 0},         /* gray */
-    
-    {0, 0x2222, 0x2222, 0x2222, 0, 0},         /* dark gray */
-    
-    
+            {0, 0x2222, 0x2222, 0x2222, 0, 0},         /* dark gray */
+            {0, 0xFFFF, 0xFFFF, 0xFFFF, 0, 0},         /* white */
 };
 
 inline MCGColor MCGColorMakeRGBA(MCGFloat p_red, MCGFloat p_green, MCGFloat p_blue, MCGFloat p_alpha)
@@ -205,7 +195,7 @@ public:
     {
         MCRectangle t_volume_bar_rect = dirty;
         MCGContextAddRectangle(p_gcontext, MCRectangleToMCGRectangle(t_volume_bar_rect));
-        MCGContextSetFillRGBAColor(p_gcontext, (m_player -> getcontrollerbackcolor() . red / 255.0) / 257.0, (m_player -> getcontrollerbackcolor() . green / 255.0) / 257.0, (m_player -> getcontrollerbackcolor() . blue / 255.0) / 257.0, 1.0f);
+        MCGContextSetFillRGBAColor(p_gcontext, (m_player -> getcontrollerfontcolor() . red / 255.0) / 257.0, (m_player -> getcontrollerfontcolor() . green / 255.0) / 257.0, (m_player -> getcontrollerfontcolor() . blue / 255.0) / 257.0, 1.0f);
         MCGContextFill(p_gcontext);
     }
     
@@ -835,25 +825,11 @@ MCPlayer::MCPlayer()
 	lasttime = 0;
 	starttime = endtime = MAXUINT4;
     
-    // Default controller back area color (darkgray)
-    controllerbackcolor . red = 34 * 257;
-    controllerbackcolor . green = 34 * 257;
-    controllerbackcolor . blue = 34 * 257;
-    
-    // Default controller played area color (purple)
-    controllermaincolor . red = 168 * 257;
-    controllermaincolor . green = 1 * 257;
-    controllermaincolor . blue = 255 * 257;
-    
-    // Default controller selected area color (some gray)
-    selectedareacolor . red = 43 * 257;
-    selectedareacolor . green = 43 * 257;
-    selectedareacolor . blue = 43 * 257;
-    
 	disposable = istmpfile = False;
 	userCallbackStr = NULL;
 	formattedwidth = formattedheight = 0;
 	loudness = 100;
+    dontuseqt = True;
     
     // PM-2014-05-29: [[ Bugfix 12501 ]] Initialize m_callbacks/m_callback_count to prevent a crash when setting callbacks
     m_callback_count = 0;
@@ -889,14 +865,12 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	rate = sref.rate;
 	lasttime = sref.lasttime;
 	starttime = sref.starttime;
-    controllerbackcolor = sref.controllerbackcolor;
-    controllermaincolor = sref.controllermaincolor;
-    selectedareacolor = sref.selectedareacolor;
 	endtime = sref.endtime;
 	disposable = istmpfile = False;
 	userCallbackStr = strclone(sref.userCallbackStr);
 	formattedwidth = formattedheight = 0;
 	loudness = sref.loudness;
+    dontuseqt = True;
     
     // PM-2014-05-29: [[ Bugfix 12501 ]] Initialize m_callbacks/m_callback_count to prevent a crash when setting callbacks
     m_callback_count = 0;
@@ -1247,8 +1221,14 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
         case P_LOOPING:
             ep.setboolean(getflag(F_LOOPING));
             break;
+        case P_MIRRORED:
+            ep.setboolean(getflag(F_MIRRORED));
+            break;
         case P_PAUSED:
             ep.setboolean(ispaused());
+            break;
+        case P_DONT_USE_QT:
+            ep.setboolean(dontuseqt);
             break;
         case P_ALWAYS_BUFFER:
             ep.setboolean(getflag(F_ALWAYS_BUFFER));
@@ -1287,12 +1267,6 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
             break;
         case P_PLAY_SELECTION:
             ep.setboolean(getflag(F_PLAY_SELECTION));
-            break;
-        case P_HILITE_COLOR:
-            ep.setcolor(controllermaincolor);
-            break;
-        case P_FORE_COLOR:
-            ep.setcolor(selectedareacolor);
             break;
         case P_SHOW_SELECTION:
             ep.setboolean(getflag(F_SHOW_SELECTION));
@@ -1414,11 +1388,13 @@ static bool MCPathIsAbsolute(const char *p_path)
 	return p_path[0] == '/' || p_path[0] == ':';
 }
 
-static bool MCPathIsRemoteURL(const char *p_path)
+static bool MCPathIsURL(const char *p_path)
 {
 	return MCCStringBeginsWith(p_path, "http://") ||
 	MCCStringBeginsWith(p_path, "https://") ||
-	MCCStringBeginsWith(p_path, "ftp://");
+	MCCStringBeginsWith(p_path, "ftp://") ||
+    // PM-2015-06-30: [[ Bug 14418 ]] Allow URLs of the form file://
+    MCCStringBeginsWith(p_path, "file://");
 }
 
 // PM-2014-12-19: [[ Bug 14245 ]] Make possible to set the filename using a relative path to the stack folder
@@ -1427,8 +1403,8 @@ bool MCPlayer::resolveplayerfilename(const char *p_filename, char *&r_filename)
 {
     if (p_filename == nil)
         return false;
-        
-    if (MCPathIsAbsolute(p_filename) || MCPathIsRemoteURL(p_filename))
+    
+    if (MCPathIsAbsolute(p_filename) || MCPathIsURL(p_filename))
     {
         r_filename = strdup(p_filename);
         return true;
@@ -1561,6 +1537,21 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
             if (dirty)
                 setlooping((flags & F_LOOPING) != 0); //set/unset movie looping
             break;
+
+        case P_DONT_USE_QT:
+            setdontuseqt(data == MCtruemcstring); //set/unset dontuseqt
+			break;
+
+        case P_MIRRORED:
+            if (!MCU_matchflags(data, flags, F_MIRRORED, dirty))
+            {
+                MCeerror->add(EE_OBJECT_NAB, 0, 0, data);
+                return ES_ERROR;
+            }
+            if (dirty)
+                setmirror((flags & F_MIRRORED) != 0); //set/unset mirrored player
+            break;
+			
         case P_PAUSED:
             playpause(data == MCtruemcstring); //pause or unpause the player
             break;
@@ -1647,40 +1638,6 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
             if (dirty)
                 playselection((flags & F_PLAY_SELECTION) != 0);
             break;
-        case P_FORE_COLOR:
-        {
-            MCColor t_color;
-			char *t_colorname = NULL;
-			if (!MCscreen->parsecolor(data, &t_color, &t_colorname))
-			{
-				MCeerror->add
-				(EE_COLOR_BADSELECTEDCOLOR, 0, 0, data);
-				return ES_ERROR;
-			}
-			if (t_colorname != NULL)
-				delete t_colorname;
-            selectedareacolor = t_color;
-            dirty = True;
-        }
-            break;
-            
-        case P_HILITE_COLOR:
-        {
-            MCColor t_color;
-			char *t_colorname = NULL;
-			if (!MCscreen->parsecolor(data, &t_color, &t_colorname))
-			{
-				MCeerror->add
-				(EE_COLOR_BADSELECTEDCOLOR, 0, 0, data);
-				return ES_ERROR;
-			}
-			if (t_colorname != NULL)
-				delete t_colorname;
-            controllermaincolor = t_color;
-            dirty = True;
-        }
-            break;
-   
         case P_SHOW_SELECTION: //means make movie editable
             if (!MCU_matchflags(data, flags, F_SHOW_SELECTION, dirty))
             {
@@ -2019,6 +1976,12 @@ void MCPlayer::setlooping(Boolean loop)
 	}
 }
 
+// PM-2015-06-16: [[ Bug 13820 ]] Extend dontuseqt to be (also) a player property 
+void MCPlayer::setdontuseqt(Boolean noqt)
+{
+	dontuseqt = noqt;
+}
+
 real8 MCPlayer::getplayrate()
 {
     if (rate < MIN_RATE)
@@ -2038,6 +2001,17 @@ void MCPlayer::updateplayrate(real8 p_rate)
     else
         rate = p_rate;
 }
+
+void MCPlayer::setmirror(Boolean mirrored)
+{
+	if (m_platform_player != nil && hasfilename())
+	{
+		bool t_mirrored;
+		t_mirrored = mirrored;
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMirrored, kMCPlatformPropertyTypeBool, &t_mirrored);
+	}
+}
+
 void MCPlayer::setplayrate()
 {
 	if (m_platform_player != nil && hasfilename())
@@ -2149,11 +2123,11 @@ Boolean MCPlayer::prepare(const char *options)
    	if (!opened)
 		return False;
     
-	if (m_platform_player == nil || m_should_recreate)
+	if (m_platform_player == nil || m_should_recreate || !dontuseqt)
     {
         if (m_platform_player != nil)
             MCPlatformPlayerRelease(m_platform_player);
-        MCPlatformCreatePlayer(m_platform_player);
+        MCPlatformCreatePlayer(dontuseqt, m_platform_player);
     }
 		
     
@@ -2215,15 +2189,17 @@ Boolean MCPlayer::prepare(const char *options)
 	
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyRect, kMCPlatformPropertyTypeRectangle, &trect);
 	
-	bool t_looping, t_play_selection, t_show_controller, t_show_selection;
+	bool t_looping, t_play_selection, t_show_controller, t_show_selection, t_mirrored;
 	
 	t_looping = getflag(F_LOOPING);
 	t_show_selection = getflag(F_SHOW_SELECTION);
     t_play_selection = getflag(F_PLAY_SELECTION);
+    t_mirrored = getflag(F_MIRRORED);
 	
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &lasttime);
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLoop, kMCPlatformPropertyTypeBool, &t_looping);
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
+    MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMirrored, kMCPlatformPropertyTypeBool, &t_mirrored);
     
     // PM-2014-08-06: [[ Bug 13104 ]] When new movie is opened then playRate should be set to 0
     rate = 0.0;
@@ -2456,6 +2432,10 @@ MCRectangle MCPlayer::getpreferredrect()
 	if (m_platform_player != nil)
     {
 		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMovieRect, kMCPlatformPropertyTypeRectangle, &t_bounds);
+        // PM-2015-06-09: [[ Bug 5209 ]] formattedHeight should take into account the controller
+        if (flags & F_SHOW_CONTROLLER)
+            t_bounds.height += CONTROLLER_HEIGHT;
+        
         // PM-2014-04-28: [[Bug 12299]] Make sure the correct MCRectangle is returned
         return t_bounds;
     }
@@ -2469,14 +2449,43 @@ uint2 MCPlayer::getloudness()
 	return loudness;
 }
 
-MCColor MCPlayer::getcontrollerbackcolor()
+MCColor MCPlayer::getcontrollerfontcolor()
 {
-    return controllerbackcolor;
+    // Default controller font color (darkgray)
+    return controllercolors[0];
 }
 
+// PM-2014-09-16: [[ Bug 12834 ]] Allow setting the color of controller icons (backcolor property of player)
+MCColor MCPlayer::getcontrollericoncolor()
+{
+    uint2 i;
+    if (getcindex(DI_BACK, i))
+        return colors[i];
+    
+    // Default controller icons color (white)
+    return controllercolors[1];
+}
+
+// PM-2014-09-16: [[ Bug 13390 ]] use the MCObject colors list since we are using the standard color prop names, so no extra stuff needs to be saved
 MCColor MCPlayer::getcontrollermaincolor()
 {
-    return controllermaincolor;
+    uint2 i;
+    if (getcindex(DI_HILITE, i))
+        return colors[i];
+    
+    // Default controller played area color (platform default - light blue)
+    return MChilitecolor;
+}
+
+// PM-2014-09-16: [[ Bug 13391 ]] Changed default forecolor
+MCColor MCPlayer::getcontrollerselectedareacolor()
+{
+    uint2 i;
+    if (getcindex(DI_FORE, i))
+        return colors[i];
+    
+    // Default controller selected area color (platform default - light gray)
+    return MCselectioncolor;
 }
 
 void MCPlayer::updateloudness(int2 newloudness)
@@ -2785,7 +2794,7 @@ void MCPlayer::SynchronizeUserCallbacks(void)
 	delete cblist;
     
     if (!hasfilename())
-        return True;
+        return;
     
     // Now set the markers in the player so that we get notified.
     array_t<uint32_t> t_markers;
@@ -2796,7 +2805,7 @@ void MCPlayer::SynchronizeUserCallbacks(void)
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMarkers, kMCPlatformPropertyTypeUInt32Array, &t_markers);
     MCMemoryDeleteArray(t_markers . ptr);
     
-	return True;
+	return;
 }
 
 Boolean MCPlayer::isbuffering(void)
@@ -2923,7 +2932,7 @@ void MCPlayer::drawcontroller(MCDC *dc)
     
     // SN-2014-08-25: [[ Bug 13187 ]] Fill up the controller background color after clipping
     MCGContextAddRectangle(t_gcontext, MCRectangleToMCGRectangle(t_rect));
-    MCGContextSetFillRGBAColor(t_gcontext, (controllerbackcolor . red / 255.0) / 257.0, (controllerbackcolor . green / 255.0) / 257.0, (controllerbackcolor . blue / 255.0) / 257.0, 1.0f);
+    MCGContextSetFillRGBAColor(t_gcontext, (getcontrollerfontcolor() . red / 255.0) / 257.0, (getcontrollerfontcolor() . green / 255.0) / 257.0, (getcontrollerfontcolor() . blue / 255.0) / 257.0, 1.0f);
     MCGContextFill(t_gcontext);
     
     drawControllerVolumeButton(t_gcontext);
@@ -2967,11 +2976,11 @@ void MCPlayer::drawControllerVolumeButton(MCGContextRef p_gcontext)
     if (m_show_volume)
     {
         MCGContextAddRectangle(p_gcontext, MCRectangleToMCGRectangle(t_volume_rect));
-        MCGContextSetFillRGBAColor(p_gcontext, (controllermaincolor . red / 255.0) / 257.0, (controllermaincolor . green / 255.0) / 257.0, (controllermaincolor . blue / 255.0) / 257.0, 1.0f);
+        MCGContextSetFillRGBAColor(p_gcontext, (getcontrollermaincolor() . red / 255.0) / 257.0, (getcontrollermaincolor() . green / 255.0) / 257.0, (getcontrollermaincolor() . blue / 255.0) / 257.0, 1.0f);
         MCGContextFill(p_gcontext);
     }
     
-    MCGContextSetFillRGBAColor(p_gcontext, 257 / 257.0, 257 / 257.0, 257 / 257.0, 1.0f); // WHITE
+    MCGContextSetFillRGBAColor(p_gcontext, (getcontrollericoncolor() . red / 255) / 257.0, (getcontrollericoncolor() . green / 255) / 257.0, (getcontrollericoncolor() . blue / 255) / 257.0, 1.0f);
 
     MCGContextSetShouldAntialias(p_gcontext, true);
     
@@ -3003,7 +3012,8 @@ void MCPlayer::drawControllerVolumeButton(MCGContextRef p_gcontext)
         MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_volume_rect, 0.8 , 0.7));
     }
     
-    MCGContextSetStrokeRGBAColor(p_gcontext, 257 / 257.0, 257 / 257.0, 257 / 257.0, 1.0f); // WHITE
+    MCGContextSetStrokeRGBAColor(p_gcontext, (getcontrollericoncolor() . red / 255) / 257.0, (getcontrollericoncolor() . green / 255) / 257.0, (getcontrollericoncolor() . blue / 255) / 257.0, 1.0f);
+
     MCGContextSetStrokeWidth(p_gcontext, t_volume_rect . width / 20.0 );
     MCGContextStroke(p_gcontext);
 }
@@ -3035,7 +3045,7 @@ void MCPlayer::drawControllerPlayPauseButton(MCGContextRef p_gcontext)
         
     }
     
-    MCGContextSetFillRGBAColor(p_gcontext, 257 / 257.0, 257 / 257.0, 257 / 257.0, 1.0f); // WHITE
+    MCGContextSetFillRGBAColor(p_gcontext, (getcontrollericoncolor() . red / 255) / 257.0, (getcontrollericoncolor() . green / 255) / 257.0, (getcontrollericoncolor() . blue / 255) / 257.0, 1.0f);
     MCGContextFill(p_gcontext);
 }
 
@@ -3171,8 +3181,7 @@ void MCPlayer::drawControllerSelectionStartButton(MCGContextRef p_gcontext)
     MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_start_rect, 0.3, 0.88));
     MCGContextCloseSubpath(p_gcontext);
 
-    
-    MCGContextSetFillRGBAColor(p_gcontext, 257 / 257.0, 257 / 257.0, 257 / 257.0, 1.0f); // WHITE
+    MCGContextSetFillRGBAColor(p_gcontext, (getcontrollericoncolor() . red / 255) / 257.0, (getcontrollericoncolor() . green / 255) / 257.0, (getcontrollericoncolor() . blue / 255) / 257.0, 1.0f);
     MCGContextFill(p_gcontext);
 }
 
@@ -3201,9 +3210,8 @@ void MCPlayer::drawControllerSelectionFinishButton(MCGContextRef p_gcontext)
     MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_finish_rect, 0.3, 0.88));
     MCGContextCloseSubpath(p_gcontext);
     
-    MCGContextSetFillRGBAColor(p_gcontext, 257 / 257.0, 257 / 257.0, 257 / 257.0, 1.0f); // WHITE
+    MCGContextSetFillRGBAColor(p_gcontext, (getcontrollericoncolor() . red / 255) / 257.0, (getcontrollericoncolor() . green / 255) / 257.0, (getcontrollericoncolor() . blue / 255) / 257.0, 1.0f);
     MCGContextFill(p_gcontext);
-
 }
 
 void MCPlayer::drawControllerScrubForwardButton(MCGContextRef p_gcontext)
@@ -3215,7 +3223,7 @@ void MCPlayer::drawControllerScrubForwardButton(MCGContextRef p_gcontext)
     if (m_scrub_forward_is_pressed)
     {
         MCGContextAddRectangle(p_gcontext, MCRectangleToMCGRectangle(t_scrub_forward_rect));
-        MCGContextSetFillRGBAColor(p_gcontext, (controllermaincolor . red / 255.0) / 257.0, (controllermaincolor . green / 255.0) / 257.0, (controllermaincolor . blue / 255.0) / 257.0, 1.0f);
+        MCGContextSetFillRGBAColor(p_gcontext, (getcontrollermaincolor() . red / 255.0) / 257.0, (getcontrollermaincolor() . green / 255.0) / 257.0, (getcontrollermaincolor() . blue / 255.0) / 257.0, 1.0f);
         MCGContextFill(p_gcontext);
     }
     
@@ -3230,8 +3238,8 @@ void MCPlayer::drawControllerScrubForwardButton(MCGContextRef p_gcontext)
     MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_scrub_forward_rect, 0.55, 0.7));
     MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_scrub_forward_rect, 0.75, 0.5));
     MCGContextCloseSubpath(p_gcontext);
-     
-    MCGContextSetFillRGBAColor(p_gcontext, 257 / 257.0, 257 / 257.0, 257 / 257.0, 1.0f); // WHITE
+    
+    MCGContextSetFillRGBAColor(p_gcontext, (getcontrollericoncolor() . red / 255) / 257.0, (getcontrollericoncolor() . green / 255) / 257.0, (getcontrollericoncolor() . blue / 255) / 257.0, 1.0f);
     MCGContextFill(p_gcontext);
 }
 
@@ -3244,7 +3252,7 @@ void MCPlayer::drawControllerScrubBackButton(MCGContextRef p_gcontext)
     if (m_scrub_back_is_pressed)
     {
         MCGContextAddRectangle(p_gcontext, MCRectangleToMCGRectangle(t_scrub_back_rect));
-        MCGContextSetFillRGBAColor(p_gcontext, (controllermaincolor . red / 255.0) / 257.0, (controllermaincolor . green / 255.0) / 257.0, (controllermaincolor . blue / 255.0) / 257.0, 1.0f);
+        MCGContextSetFillRGBAColor(p_gcontext, (getcontrollermaincolor() . red / 255.0) / 257.0, (getcontrollermaincolor() . green / 255.0) / 257.0, (getcontrollermaincolor() . blue / 255.0) / 257.0, 1.0f);
         MCGContextFill(p_gcontext);
     }
     
@@ -3260,7 +3268,7 @@ void MCPlayer::drawControllerScrubBackButton(MCGContextRef p_gcontext)
     MCGContextAddRectangle(p_gcontext, t_grect);
     MCGContextCloseSubpath(p_gcontext);
     
-    MCGContextSetFillRGBAColor(p_gcontext, 257 / 257.0, 257 / 257.0, 257 / 257.0, 1.0f); // WHITE
+    MCGContextSetFillRGBAColor(p_gcontext, (getcontrollericoncolor() . red / 255) / 257.0, (getcontrollericoncolor() . green / 255) / 257.0, (getcontrollericoncolor() . blue / 255) / 257.0, 1.0f);
     MCGContextFill(p_gcontext);
 }
 
@@ -3273,7 +3281,7 @@ void MCPlayer::drawControllerSelectedAreaButton(MCGContextRef p_gcontext)
     t_drawn_selected_area . height = CONTROLLER_HEIGHT / 7;
     
     MCGContextAddRectangle(p_gcontext, MCRectangleToMCGRectangle(t_drawn_selected_area));
-    MCGContextSetFillRGBAColor(p_gcontext, (selectedareacolor . red / 255.0) / 257.0, (selectedareacolor . green / 255.0) / 257.0, (selectedareacolor . blue / 255.0) / 257.0, 1.0f);
+    MCGContextSetFillRGBAColor(p_gcontext, (getcontrollerselectedareacolor() . red / 255.0) / 257.0, (getcontrollerselectedareacolor() . green / 255.0) / 257.0, (getcontrollerselectedareacolor() . blue / 255.0) / 257.0, 1.0f);
     MCGContextFill(p_gcontext);
 }
 
@@ -3286,8 +3294,7 @@ void MCPlayer::drawControllerPlayedAreaButton(MCGContextRef p_gcontext)
     t_drawn_played_area . height = CONTROLLER_HEIGHT / 7;
     t_drawn_played_area . x--;
 
-    
-    MCGContextSetFillRGBAColor(p_gcontext, (controllermaincolor . red / 255.0) / 257.0, (controllermaincolor . green / 255.0) / 257.0, (controllermaincolor . blue / 255.0) / 257.0, 1.0f);
+    MCGContextSetFillRGBAColor(p_gcontext, (getcontrollermaincolor() . red / 255.0) / 257.0, (getcontrollermaincolor() . green / 255.0) / 257.0, (getcontrollermaincolor() . blue / 255.0) / 257.0, 1.0f);
     
     MCGRectangle t_rounded_rect = MCRectangleToMCGRectangle(t_drawn_played_area);
     MCGContextAddRoundedRectangle(p_gcontext, t_rounded_rect, MCGSizeMake(30, 30));    

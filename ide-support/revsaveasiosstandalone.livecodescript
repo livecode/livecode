@@ -86,33 +86,21 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    --
    
    local tSDKs, tSDKInfo
-   if pTarget is "Device" then      
-      -- PM-2015-02-06: [[ Bug 14422 ]] Drop support for OSX 10.6 and iOS 5.0 
-      if revIDEDeployIOSSanatizeSystemVersion() < 100800 then
-         
-         -- MM-2012-09-18: Armv7 builds are created with the iOS 6.0 SDK.
-         --  
-         if not getIosSdkInfo("6.1", tSDKInfo) then
-            throw revIDEDeployIOSGetInvalidityMessage("6.1", "4.6")
+   if pTarget is "Device" then
+      local tIosXcodePairs, tValid
+      
+      put revIDEDeployIOSGetIphoneOSes() into tIosXcodePairs
+      put false into tValid
+      
+      repeat for each element tIosXcodePair in tIosXcodePairs
+         if getIosSDKInfo(item 1 of tIosXcodePair, tSDKInfo) then
+            put true into tValid
+            exit repeat
          end if
-      else if revIDEDeployIOSSanatizeSystemVersion() < 100900 then
-         
-         if not getIosSdkInfo("7.1", tSDKInfo) then
-            throw revIDEDeployIOSGetInvalidityMessage("7.1", "5.1")
-         end if
-      else if revIDEDeployIOSSanatizeSystemVersion() < 101000 then
-         
-         if not getIosSdkInfo("8.2", tSDKInfo) then
-            throw revIDEDeployIOSGetInvalidityMessage("8.2", "6.2")
-         end if
-      else
-         -- SN-2015-04-14: [[ Bug 15187 ]] From Mac OS 10.10, the default iOS SDK version is 8.3
-         --  and 8.2 will be fetched 
-         // We want to catch the exception for Xcode 6.3
-         if not getIosSdkInfo("8.3", tSDKInfo) and not \
-              getIosSdkInfo("8.2", tSDKInfo) then
-            throw revIDEDeployIOSGetInvalidityMessage("8.2 / 8.3", "6.2 / 6.3")
-         end if
+      end repeat
+      
+      if not tValid then
+         throw revIDEDeployIOSGetInvalidityMessage(tIosXcodePairs)
       end if
       put tSDKInfo into tSDKs["arm"]
    else
@@ -571,9 +559,23 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    if pTarget is "Device" and not revEnvironmentIsInstalled() then
       revStandaloneProgress "Extracting debug symbols..."
       
+      // SN-2015-09-10: [[ Xcode 7.0 ]] Xcode 7.0 sets the env var MallocNanoZone to 1
+      //  but this makes dsymutil crash...
+      //  We reinstate it after symbol extraction as a user might as well set MallocNanoZone
+      local tOldMallocNanoZone
+      if $MallocNanoZone is not empty then
+         put $MallocNanoZone into tOldMallocNanoZone
+         put 0 into $MallocNanoZone
+      end if
+      
       get shell("dsymutil" && quote & tDeploy["output"] & quote)
       if it is not empty then
          throw "extracting debug symbols failed with" && it
+      end if
+      
+      // Reinstate env var MallocNanoZone if it was set.
+      if $MallocNanoZone is not empty then
+         put tOldMallocNanoZone into $MallocNanoZone
       end if
    end if
    
@@ -634,6 +636,13 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          replace "${REMOTE_NOTIFICATIONS}" with empty in tEntitlements
       end if     
       
+      // SN-2015-09-17: [[ BetaApp ]] Add entitlement for beta apps
+      local tBetaEntitlement
+      if tSettings["ios,beta version"] then
+         put url("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "BetaReportEntitlement.xcent")) into tBetaEntitlement
+      end if
+      replace "${BETA_REPORT_ENTITLEMENT}" with tBetaEntitlement in tEntitlements
+      
       put numToChar(0xfa) & numToChar(0xde) & numToChar(0x71) & numToChar(0x71) & binaryEncode("M", the length of tEntitlements + 8) before tEntitlements
       
       local tEntitlementsFile
@@ -644,7 +653,15 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       put uniDecode(uniEncode(tCertificate, "UTF8")) into tCertificate
       
       -- Do the codesigning
-      put tSdkRoot & slash & "Platforms/iPhoneOS.platform/Developer/usr/bin/codesign_allocate" into $CODESIGN_ALLOCATE
+      // SN-2015-09-11: [[ Xcode 7.0 ]] codesign in Xcode 7.0 will not work if CODESIGN_ALLOCATE
+      // environment variable is set, so we only set it up to Xcode 6.4
+      // We use Clang version to get the Xcode version in use
+      local tClangVersion, tClangMajorVersion
+      put shell("clang++ --version") into tClangVersion
+      if matchText(tClangVersion, "Apple LLVM version ([0-9]+)\.[0-9]+.[0-9]+", tClangMajorVersion) \
+            and tClangMajorVersion < 7 then
+         put tSdkRoot & slash & "Platforms/iPhoneOS.platform/Developer/usr/bin/codesign_allocate" into $CODESIGN_ALLOCATE
+      end if
       
       --try
       -- Perform the codesigning of the main bundle
@@ -1125,7 +1142,7 @@ private function revGetMinimumOSByArch pMinimumOS
    if pMinimumOS is empty or pMinimumOS <= "5.1" then
       put "5.1.1" into tMinimumOSByArch["i386"]
    else
-      put pMinimumOS & ".0" after tMinimumOSByArch["i386"]
+      put pMinimumOS after tMinimumOSByArch["i386"]
    end if
    
    -- Assign the same value to the other architectures.
@@ -1502,7 +1519,7 @@ function revMobileRuntimeFolder pTarget, pVersion
    local tStub
    if pTarget is "Device" then
       if pVersion is empty then
-         // SN-2015-04-30: [[ Bug 15175 ]] Take the lastest SDK installed
+         // SN-2015-04-30: [[ Bug 15175 ]] Take the latest valid SDK installed
          // (can be 8.2 or 8.3 onwards on Yosemite).
          local tVersion
          if revIDEDeployIOSGetLatestSDKInstalled(tVersion) then
@@ -1511,30 +1528,12 @@ function revMobileRuntimeFolder pTarget, pVersion
          end if
       end if
       put "Device-" & pVersion into tStub
-   else if pTarget contains "4.2" then
-      put "Simulator-4_2" into tStub
-   else if pTarget contains "4.3" then
-      put "Simulator-4_3" into tStub
-   else if pTarget contains "5.0" then
-      put "Simulator-5_0" into tStub
-   else if pTarget contains "5.1" then
-      put "Simulator-5_1" into tStub
-   else if pTarget contains "6.0" then
-      put "Simulator-6_0" into tStub
-   else if pTarget contains "6.1" then
-      put "Simulator-6_1" into tStub
-   else if pTarget contains "7.0" then
-      put "Simulator-7_0" into tStub
-   else if pTarget contains "7.1" then
-      put "Simulator-7_1" into tStub
-   else if pTarget contains "8.0" then
-      put "Simulator-8_0" into tStub
-   else if pTarget contains "8.1" then
-      put "Simulator-8_1" into tStub
-   else if pTarget contains "8.2" then
-      put "Simulator-8_2" into tStub
-   else if pTarget contains "8.3" then
-      put "Simulator-8_3" into tStub
+   else
+      // SN-2015-05-01: [[ Refactor iOS SDK version ]] Build the simulator location
+      //  stub on the fly.
+      replace "." with "_" in pTarget
+      replace space with "-" in pTarget
+      put pTarget into tStub
    end if
    
    local tUserPath, tOverridePath
@@ -1603,6 +1602,9 @@ function mapFilePath pPath
       case "RemoteNotificationStoreEntitlements.xcent"
          put tRepo & slash & "engine/rsrc/template-remote-notification-store-entitlements.xcent" into tPath
          break
+      case "BetaReportEntitlement.xcent"
+         put tRepo & slash & "engine/rsrc/template-beta-report-entitlement.xcent" into tPath
+         break
       case "RemoteNotificationSettings.plist"
          put tRepo & slash & "engine/rsrc/mobile-remote-notification-template.plist" into tPath
          break
@@ -1616,7 +1618,7 @@ function mapFilePath pPath
          if tIsDevice then
             put tRepo & merge("/_build/ios/[[tBuild]]/standalone-mobile-lib-[[tSuffix]].lcext") into tPath
          else
-            put tRepo & merge("/_build/ios/[[tBuild]]/standalone-mobile-[[tSuffix]].app/standalone-mobile-[[tSuffix]]") into tPath
+            put tRepo & merge("/_build/ios/[[tBuild]]/standalone-mobile-[[tSuffix]].ios-engine") into tPath
          end if
          break
       case "revzip"

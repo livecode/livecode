@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1406,7 +1406,7 @@ struct LibInfo __libinfo =
 	__libexports
 };
 
-__attribute((section("__DATA,__libs"))) volatile struct LibInfo *__libinfoptr_revpdfprinter = &__libinfo;
+__attribute((section("__DATA,__libs"))) volatile struct LibInfo *__libinfoptr_revpdfprinter __attribute__((__visibility__("default"))) = &__libinfo;
 }
 #endif
 

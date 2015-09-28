@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -854,7 +854,7 @@ void MCMacOSXPrinter::GetProperties(bool p_include_output)
 			t_margins . right = 0.0;
 			t_margins . bottom = 0.0;
 					
-			PMPaperCreate(m_printer, CFSTR("Revolution"), CFSTR("Revolution Custom Paper"), GetPageWidth(), GetPageHeight(), &t_margins, &t_paper);
+			PMPaperCreate(m_printer, CFSTR("LiveCode"), CFSTR("LiveCode Custom Paper"), GetPageWidth(), GetPageHeight(), &t_margins, &t_paper);
 		}
 		
 		PMCreatePageFormatWithPMPaper(&m_page_format, t_paper);

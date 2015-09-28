@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -162,7 +162,6 @@ extern MCUndolist *MCundos;
 extern MCSellist *MCselected;
 extern MCStacklist *MCstacks;
 extern MCStacklist *MCtodestroy;
-extern MCObject *MCtodelete;
 extern MCCardlist *MCrecent;
 extern MCCardlist *MCcstack;
 extern MCDispatch *MCdispatcher;
@@ -411,6 +410,44 @@ extern MCPoint MCgroupedobjectoffset;
 // MW-2012-11-14: [[ Bug 10516 ]] When true, sending packets to broadcast
 //   addresses will work.
 extern Boolean MCallowdatagrambroadcasts;
+
+//////////
+
+enum
+{
+    kMCActionsUpdateScreen = 1 << 0,
+    kMCActionsDrainDeletedObjects = 1 << 2,
+};
+
+extern uint32_t MCactionsrequired;
+extern void MCActionsDoRunSome(uint32_t mask);
+
+inline void MCActionsSchedule(uint32_t mask)
+{
+    MCactionsrequired |= mask;
+}
+
+inline void MCActionsRunAll(void)
+{
+    if (MCactionsrequired != 0)
+        MCActionsDoRunSome(UINT32_MAX);
+}
+
+inline void MCActionsRunSome(uint32_t mask)
+{
+    if ((MCactionsrequired & mask) != 0)
+        MCActionsDoRunSome(mask);
+}
+
+inline void MCRedrawUpdateScreen(void)
+{
+    MCActionsRunSome(kMCActionsUpdateScreen);
+}
+
+inline void MCDeletedObjectsDrain(void)
+{
+    MCActionsRunSome(kMCActionsDrainDeletedObjects);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 

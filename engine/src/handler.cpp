@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -403,8 +403,7 @@ Exec_stat MCHandler::exec(MCExecPoint &ep, MCParameter *plist)
 
 		stat = tspr->exec(ep);
 
-		// MW-2011-08-17: [[ Redraw ]] Flush any screen updates.
-		MCRedrawUpdateScreen();
+        MCActionsRunAll();
 
 		switch(stat)
 		{

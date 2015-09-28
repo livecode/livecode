@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1863,7 +1863,7 @@ Input: [0]=xml document id
 [2]= attribute name
 [3]= attribute value
 Output: error message on bad attribute or bad element 
-Example: XML_SetAttributeValue docid,elementpath,"product","revolution"
+Example: XML_SetAttributeValue docid,elementpath,"product","livecode"
 */
 void XML_SetAttributeValue(char *args[], int nargs, char **retstring,
 						   Bool *pass, Bool *error)
@@ -3121,6 +3121,6 @@ BOOL WINAPI DllMain(HINSTANCE tInstance, DWORD dwReason, LPVOID lpReserved)
 extern "C"
 {
 	extern struct LibInfo __libinfo;
-	__attribute((section("__DATA,__libs"))) volatile struct LibInfo *__libinfoptr_revxml = &__libinfo;
+	__attribute((section("__DATA,__libs"))) volatile struct LibInfo *__libinfoptr_revxml __attribute__((__visibility__("default"))) = &__libinfo;
 }
 #endif

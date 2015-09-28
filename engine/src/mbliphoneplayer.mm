@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -430,6 +430,20 @@ Exec_stat MCNativePlayerControl::Get(MCNativeControlProperty p_property, MCExecP
 		case kMCNativeControlPropertyIsPreparedToPlay:
 			if (m_controller != nil)
 				FormatBoolean(ep, [m_controller isPreparedToPlay]);
+			return ES_NORMAL;
+		
+		// PM-2015-07-09: [[ Bug 9744 ]] Added readyForDisplay (RO) property for native player
+		case kMCNativeControlPropertyReadyForDisplay:
+			if (m_controller != nil)
+			{
+#ifdef __IPHONE_6_0
+				if (MCmajorosversion >= 600)
+					FormatBoolean(ep, [m_controller readyForDisplay]);
+				else
+#endif
+				FormatBoolean(ep, false);
+			}
+			
 			return ES_NORMAL;
 			
 		case kMCNativeControlPropertyLoadState:

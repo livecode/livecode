@@ -20,7 +20,7 @@ For images, use the syntax
 ![<alt id>](<image number>.<extension>)
 The image must be named bugfix-<bug number>-<image number>.<extension>
 
-Otherwise the file should be RunRev flavoured Markdown.
+Otherwise the file should be LiveCode flavoured Markdown.
 
 Single line files will be added to the table of sepcific bug fixes along with a link to their entry 
 on Bugzilla. Multiline files will have their own subsection in the release notes.
@@ -175,15 +175,26 @@ end releaseNotesBuilderRun
 command HTMLToPDF pName, pTitle
    local tShell
    local tOptions
+   local tCommand
+
    put " --header-right " & quote & pTitle & " " & the date & quote into tOptions
    put tOptions & " --header-font-size 8 --header-spacing 5 --footer-center [page] --footer-font-size 8 --footer-spacing 5 " into tOptions
    put tOptions & "--margin-top 30 --margin-bottom 20 --margin-left 20 --margin-right 20 --enable-internal-links " into tOptions
-   if there is no file (builderRepoFolder() & slash & "builder" & slash & "wkhtmltopdf") then
-      builderLog "error", "Can't find wkhtmltopdf"
-      throw "Can't find wkhtmltopdf"
+
+   if $WKHTMLTOPDF is empty then
+      put builderRepoFolder() & slash & "builder" & slash & "wkhtmltopdf" into tCommand
+   else
+      put $WKHTMLTOPDF into tCommand
    end if
-   put toLower(quote & builderRepoFolder()) & slash & "builder" & slash & "wkhtmltopdf" & quote & tOptions  & pName & ".html " & pName & ".pdf" into tShell
+
+   put quote & tCommand & quote & tOptions  & pName & ".html " & pName & ".pdf" into tShell
+
    get shell(tShell)
+
+   if the result is not 0 then
+      builderLog "error", "Failed to run wkhtmltopdf"
+      throw "wkhtmltopdf failed"
+   end if
 end HTMLToPDF
 
 function getPastNotes pTags

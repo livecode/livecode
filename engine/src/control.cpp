@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -27,7 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "tooltip.h"
 #include "card.h"
-#include "control.h"
+#include "mccontrol.h"
 #include "group.h"
 #include "field.h"
 #include "scrolbar.h"
@@ -1815,6 +1815,8 @@ Exec_stat MCControl::setsbprop(Properties which, const MCString &data,
 			}
 			else
 			{
+				// PM-2015-07-16: [[ Bug 11569 ]] Unset CS_HSCROLL when the hscrollBar of a control is set to false
+			    state &= ~CS_HSCROLL;
 				delete hsb;
 				hsb = NULL;
 				if (opened)
@@ -1855,6 +1857,8 @@ Exec_stat MCControl::setsbprop(Properties which, const MCString &data,
 			}
 			else
 			{
+				// PM-2015-07-16: [[ Bug 11569 ]] Unset CS_VSCROLL when the vscrollBar of a control is set to false
+				state &= ~CS_VSCROLL;
 				delete vsb;
 				vsb = NULL;
 				if (opened)

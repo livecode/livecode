@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -1677,7 +1677,7 @@ void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef p_window)
         
         // PM-2014-04-02: [[ Bug 12082 ]] IDE no longer crashes when changing an applied pattern
         if (t_cursor != nil)
-            MCPlatformShowCursor(t_cursor);
+            MCPlatformSetCursor(t_cursor);
         // SN-2014-10-01: [[ Bug 13516 ]] Hiding a cursor here is not what we want to happen if a cursor hasn't been found
         else
             MCMacPlatformResetCursor();

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -424,7 +424,7 @@ void MCMacPlatformUnlockMenuSelect(void)
     // SN-2014-12-05: [[ Bug 14019 ]] Forbid any Cmd-key reaction when the target is the colour picker
     // (that colour picker is modal after all)
     if ([[[event window] delegate] isKindOfClass: [MCColorPanelDelegate class]])
-        return;
+        return NO;
 
 	// If the event is not targetted at one of our windows, we just let things
 	// flow as normal.

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -31,7 +31,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "vclip.h"
 #include "card.h"
 #include "objptr.h"
-#include "control.h"
+#include "mccontrol.h"
 #include "image.h"
 #include "player.h"
 #include "field.h"
@@ -112,8 +112,8 @@ void MCStack::checkdestroy()
 					}
 					while (sptr != substacks);
 				}
-				MCtodestroy->remove(this); // prevent duplicates
-				MCtodestroy->add(this);
+                MCtodestroy -> remove(this);
+                MCtodestroy -> add(this);
 			}
 	}
 	else if (!MCdispatcher -> is_transient_stack(this))
@@ -1689,8 +1689,8 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	MCRectangle myoldrect = rect;
 	if (state & (CS_IGNORE_CLOSE | CS_NO_FOCUS | CS_DELETE_STACK))
 		return ES_NORMAL;
-
-	MCtodestroy->remove(this); // prevent delete
+    
+    MCtodestroy -> remove(this);
 	if (wm == WM_LAST)
 		if (opened)
 			wm = mode;
@@ -1713,8 +1713,6 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 		if (window == NULL && !MCModeMakeLocalWindows() && (wm != WM_MODAL && wm != WM_SHEET || wm == mode))
 			return ES_NORMAL;
 
-		if (window == NULL && wm == mode)
-			fprintf(stderr, "*** ASSERTION FAILURE: MCStack::openrect() - window == NULL\n");
 		if (wm == mode && parentptr == NULL)
 		{
 			bool t_topped;

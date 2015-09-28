@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -214,6 +214,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define F_PLAY_SELECTION        (1UL << 20)
 #define F_SHOW_SELECTION        (1UL << 21)
 #define F_SHOW_VOLUME           (1UL << 22)
+#define F_MIRRORED              (1UL << 23)
 // MCVideoClip attributes, scale is for backward compatibility
 #define F_SCALE_FACTOR          (1UL << 15)
 // MCEPS attributes
@@ -762,6 +763,8 @@ enum Lang_charset
 	LCH_LITHUANIAN,
     LCH_UNICODE,
     LCH_UTF8,
+    // SN-2015-06-18: [[ Bug 11803 ]] Added for Android TextEncode
+    LCH_WINDOWS_NATIVE,
 	LCH_DEFAULT = 255
 };
 

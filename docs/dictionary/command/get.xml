@@ -16,7 +16,7 @@
 <example>get the colors</example>
 <example>get 2 * 25 * pi <i>-- gets area of circle with radius 25</i></example>
 <example><p>get message <i>-- evaluates expression in message box</i></p></example>
-<example>get URL "https://www.runrev.com"</example>
+<example>get URL "https://www.livecode.com"</example>
 	</examples>
 
 	<history>

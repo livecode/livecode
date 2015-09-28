@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -34,7 +34,7 @@
 #include "card.h"
 #include "debug.h"
 #include "dispatch.h"
-#include "control.h"
+#include "mccontrol.h"
 #include "field.h"
 #include "graphics_util.h"
 #include "redraw.h"

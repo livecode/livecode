@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -238,6 +238,8 @@ static struct {const char *name; MCNativeControlProperty property;} s_native_con
     {"playrate", kMCNativeControlPropertyPlayRate},
     
 	{"loadstate", kMCNativeControlPropertyLoadState},
+	// PM-2015-07-09: [[ Bug 9744 ]] Added readyForDisplay property for native player
+	{"readyForDisplay", kMCNativeControlPropertyReadyForDisplay},
 	{"useapplicationaudiosession", kMCNativeControlPropertyUseApplicationAudioSession},
 	{"allowsairplay", kMCNativeControlPropertyAllowsAirPlay},
 	

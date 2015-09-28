@@ -574,7 +574,12 @@ private command revCreateStandalone pStack, pFolder
             case "MacOSX"
             case "MacOSX PowerPC-32"
             case "MacOSX x86-32"
-               put it & "/Mac OS X/x86-32/Standalone.app/Contents/MacOS/Standalone" into line 1 of tEngineSourceFile[tPlatform]
+               // SN-2015-07-09: [[ StandaloneDeployment ]] Gypified Standalone-<edition>.app building does not
+               //  allow to create broken applications, so that the executable file in it bears the edition.
+               local tEdition
+               put the editionType into tEdition
+               put the upper of char 1 of tEdition into char 1 of tEdition
+               put it & "/Mac OS X/x86-32/Standalone.app/Contents/MacOS/Standalone-" & tEdition into line 1 of tEngineSourceFile[tPlatform]
                break
             case "Windows"
                put it & "/Windows/x86-32/Standalone" into tEngineSourceFile[tPlatform]
@@ -639,7 +644,7 @@ private command revCreateStandalone pStack, pFolder
       -- Necessary as some "users" might rename the actual executable file, arghhhh!
       if (line 1 of tEngineSourceFile[tPlatform] is not empty and there is not a file line 1 of tEngineSourceFile[tPlatform]) and \
             (line 2 of tEngineSourceFile[tPlatform] is not empty and there is not a file line 2 of tEngineSourceFile[tPlatform]) then
-         throw "Standalone: Ensure that you have not renamed the main Revolution executable file: " &cr& tEngineSourceFile[tPlatform]
+         throw "Standalone: Ensure that you have not renamed the main LiveCode executable file: " &cr& tEngineSourceFile[tPlatform]
       end if
       put tDirectory & sStandaloneSettingsA["name"] into tStandalonePath[tPlatform]
       if tPlatform is "Windows" then
@@ -913,6 +918,11 @@ private command revCopyResources pStack, pStackFileList
    
    if sStandaloneSettingsA["brushes"] then
       put "revCompatibilityBrushes1" & return after tCopyFiles
+   end if
+   
+   -- PM-2015-06-24: [[ Bug 15535 ]] Make possible to use magnify palette in standalones
+   if sStandaloneSettingsA["Magnify"] then
+      put "Magnify" & return after tCopyFiles
    end if
    
    if sStandaloneSettingsA["revolutionPrintDialogs"] then
@@ -1707,7 +1717,11 @@ private function revSaveToFolder pFolder, pStack, pGeneric
       put ".rev" after tFileName
    end if
    lock screen
+   // SN-2015-07-01: [[ Bug 15259 ]] We don't want the saving to be trapped by
+   //  a saveStackRequest handler in the standalone stack
+   lock messages
    save stack pStack as pFolder&tFileName
+   unlock messages
    return tFileName
 end revSaveToFolder
 
@@ -2145,7 +2159,11 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
             break
       end switch
    end if
+   // SN-2015-07-01: [[ Bug 15259 ]] We don't want the saving to be trapped by
+   //  a saveStackRequest handler in the standalone stack
+   lock messages
    save stack pStackFilePath
+   unlock messages
    
    -- MM-2013-04-05: [[ Bug 10756 ]] Make sure we're allowed to delete the stack before deleteing.
    set the cantDelete of stack pStackFilePath to false
@@ -2469,9 +2487,10 @@ private command revSmartChecking pStackFilesList, pSearchForInclusions
       put false into sStandaloneSettingsA["answerDialog"]
       put false into sStandaloneSettingsA["askDialog"]
       put false into sStandaloneSettingsA["brushes"]   --LG-2007-12-13: Bug 4370
+      put false into sStandaloneSettingsA["Magnify"]  -- PM-2015-06-24: [[ Bug 15535 ]] Make possible to include magnify palette in standalones
       put false into sStandaloneSettingsA["pdfPrinter"]
       
-      # OK-2007-11-13 : Support for revolution print dialogs
+      # OK-2007-11-13 : Support for LiveCode print dialogs
       put false into sStandaloneSettingsA["revolutionPrintDialogs"]
    end if
    
@@ -2602,7 +2621,7 @@ private command revCheckObject pObject,pUserLibraries, pSearchForInclusions
          put true into sStandaloneSettingsA["pdfPrinter"]
       end if
       
-      # OK-2007-11-13 : Support for revolution print dialogs. The dialogs are included if there is any reference to systemPrintSelector in the script,
+      # OK-2007-11-13 : Support for LiveCode print dialogs. The dialogs are included if there is any reference to systemPrintSelector in the script,
       # or if we are building for linux. (This might include the files more often than they are required).
       if offset("systemPrintSelector", tScript) is not 0 or "Linux" is among the lines of sPlatformList then
          put true into sStandaloneSettingsA["revolutionPrintDialogs"]
