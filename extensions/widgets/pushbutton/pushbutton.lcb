@@ -174,6 +174,7 @@ Summary: The color scheme of the widget
 
 Parameters:
 pColorScheme(enum): The color scheme of the widget
+-"Black"
 -"Red"
 -"Pink"
 -"Purple"
@@ -199,7 +200,7 @@ Use the <colorScheme> property to set the color scheme of the widget, Android on
 */
 property colorScheme get mColorScheme set setColorScheme
 metadata colorScheme.editor is "com.livecode.pi.enum"
-metadata colorScheme.options is "Red,Pink,Purple,Deep Purple,Indigo,Blue,Light Blue,Cyan,Teal,Green,Light Green,Lime,Yellow,Amber,Orange,Deep Orange,Brown,Grey,Blue Grey"
+metadata colorScheme.options is "Black,Red,Pink,Purple,Deep Purple,Indigo,Blue,Light Blue,Cyan,Teal,Green,Light Green,Lime,Yellow,Amber,Orange,Deep Orange,Brown,Grey,Blue Grey"
 metadata colorScheme.default is "Blue"
 metadata colorScheme.label is "Color Scheme"
 
@@ -526,6 +527,7 @@ end handler
 private handler fetchAndroidColors() returns nothing
 
 	put the empty array into mAndroidColors
+   put "0,0,0" into mAndroidColors["Black"]
 	put "238,43,41" into mAndroidColors["Red"]
 	put "224,0,81" into mAndroidColors["Pink"]
 	put "137,0,161" into mAndroidColors["Purple"]
@@ -547,6 +549,7 @@ private handler fetchAndroidColors() returns nothing
 	put "78,106,120" into mAndroidColors["Blue Grey"]
 
    put the empty array into mAndroidColorsPressed
+   put "46,46,46" into mAndroidColorsPressed["Black"]
 	put "199,25,36" into mAndroidColorsPressed["Red"]
 	put "179,0,73" into mAndroidColorsPressed["Pink"]
 	put "102,0,145" into mAndroidColorsPressed["Purple"]
