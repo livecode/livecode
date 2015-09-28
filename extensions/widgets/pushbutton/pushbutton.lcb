@@ -523,67 +523,6 @@ private handler fetchFont() returns Font
    end if
 end handler
 
-private handler updateVariables() returns nothing
-   put my width into mWidth
-   put my height into mHeight
-
-   put mHeight*(kIosDefaultFontSize/kIosDefaultHeight) into mIosFontSize
-   put mHeight*(kAndroidDefaultFontSize/kAndroidDefaultHeight) into mAndroidFontSize
-
-   if mIsMiniFloatingAction then
-      put ((mHeight-10)/2)*(kDefaultMiniFloatingActionDiameter/kDefaultFloatingActionDiameter) into mFloatingActionRadius
-      put mFloatingActionRadius*2*(kAndroidDefaultIconDimension/kDefaultMiniFloatingActionDiameter) into mFloatingActionIconDimension
-   else
-      put (mHeight-10)/2 into mFloatingActionRadius
-      put mFloatingActionRadius*2*(kAndroidDefaultIconDimension/kDefaultFloatingActionDiameter) into mFloatingActionIconDimension
-   end if
-
-   if mWidgetTheme contains "Android" then
-      if mColorTheme is "Light" then
-         if my enabled then
-            put stringToColor(mAndroidColors[mColorScheme]) into mAndroidLabelColor
-            if mIsPressed then
-               if mWidgetTheme is kWidgetThemeAndroidFlat then
-                  put color [153/255, 153/255, 153/255, 0.4] into mAndroidBackgroundColor
-                  -- TO-DO raised light background color ??
-               end if
-            else
-               put color [1,1,1] into mAndroidBackgroundColor
-            end if
-
-         else
-            put color [0,0,0,0.26] into mAndroidLabelColor
-            if mWidgetTheme is kWidgetThemeAndroidRaised then
-               put color [0,0,0,0.12] into mAndroidBackgroundColor
-            end if
-         end if
-
-      else if mColorTheme is "Dark" then
-         if my enabled then
-            put color [1,1,1] into mAndroidLabelColor
-
-            if mIsPressed then
-               if mWidgetTheme is kWidgetThemeAndroidFlat then
-                  put color [204/255, 204/255, 204/255, 0.25] into mAndroidBackgroundColor
-               else if mWidgetTheme is kWidgetThemeAndroidRaised then
-                  put stringToColor(mAndroidColorsPressed[mColorScheme]) into mAndroidBackgroundColor
-               end if
-            else
-               put stringToColor(mAndroidColors[mColorScheme]) into mAndroidBackgroundColor
-            end if
-
-         else
-            put color [1,1,1,0.3] into mAndroidLabelColor
-            if mWidgetTheme is kWidgetThemeAndroidRaised then
-               put color [1,1,1,0.12] into mAndroidBackgroundColor
-            end if
-         end if
-
-      end if
-   end if
-
-end handler
-
 private handler fetchAndroidColors() returns nothing
 
 	put the empty array into mAndroidColors
@@ -628,6 +567,91 @@ private handler fetchAndroidColors() returns nothing
 	put "78,78,78" into mAndroidColorsPressed["Grey"]
 	put "54,72,81" into mAndroidColorsPressed["Blue Grey"]
 
+end handler
+
+private handler updateVariables() returns nothing
+   put my width into mWidth
+   put my height into mHeight
+
+   put mHeight*(kIosDefaultFontSize/kIosDefaultHeight) into mIosFontSize
+   put mHeight*(kAndroidDefaultFontSize/kAndroidDefaultHeight) into mAndroidFontSize
+
+   if mIsMiniFloatingAction then
+      put ((mHeight-10)/2)*(kDefaultMiniFloatingActionDiameter/kDefaultFloatingActionDiameter) into mFloatingActionRadius
+      put mFloatingActionRadius*2*(kAndroidDefaultIconDimension/kDefaultMiniFloatingActionDiameter) into mFloatingActionIconDimension
+   else
+      put (mHeight-10)/2 into mFloatingActionRadius
+      put mFloatingActionRadius*2*(kAndroidDefaultIconDimension/kDefaultFloatingActionDiameter) into mFloatingActionIconDimension
+   end if
+
+   if mWidgetTheme is kWidgetThemeIos then
+      updateIosColors()
+   else if mWidgetTheme contains "Android" then
+      updateAndroidColors()
+   end if
+
+end handler
+
+private handler updateIosColors() returns nothing
+   if mBackgroundOpacity is kOpaqueBackground then
+      if mIsPressed then
+         put color [0.98,0.98,0.98] into mIosBackgroundColor
+      else
+         put color [1,1,1] into mIosBackgroundColor
+      end if
+
+   else if mBackgroundOpacity is kTranslucentBackground then
+      if mIsPressed then
+         put color [0.9,0.9,0.9,204/255] into mIosBackgroundColor
+      else
+         put color [1,1,1,204/255] into mIosBackgroundColor
+      end if
+
+   else if mBackgroundOpacity is kTransparentBackground then
+      put color [1,1,1,0] into mIosBackgroundColor
+
+   end if
+end handler
+
+private handler updateAndroidColors() returns nothing
+   if mColorTheme is "Light" then
+      if my enabled then
+         put stringToColor(mAndroidColors[mColorScheme]) into mAndroidLabelColor
+         if mIsPressed then
+            if mWidgetTheme is kWidgetThemeAndroidFlat then
+               put color [153/255, 153/255, 153/255, 0.4] into mAndroidBackgroundColor
+               -- TO-DO raised light background color ??
+            end if
+         else
+            put color [1,1,1] into mAndroidBackgroundColor
+         end if
+      else
+         put color [0,0,0,0.26] into mAndroidLabelColor
+         if mWidgetTheme is kWidgetThemeAndroidRaised then
+            put color [0,0,0,0.12] into mAndroidBackgroundColor
+         end if
+      end if
+
+   else if mColorTheme is "Dark" then
+      if my enabled then
+         put color [1,1,1] into mAndroidLabelColor
+         if mIsPressed then
+            if mWidgetTheme is kWidgetThemeAndroidFlat then
+               put color [204/255, 204/255, 204/255, 0.25] into mAndroidBackgroundColor
+            else if mWidgetTheme is kWidgetThemeAndroidRaised then
+               put stringToColor(mAndroidColorsPressed[mColorScheme]) into mAndroidBackgroundColor
+            end if
+         else
+            put stringToColor(mAndroidColors[mColorScheme]) into mAndroidBackgroundColor
+         end if
+      else
+         put color [1,1,1,0.3] into mAndroidLabelColor
+         if mWidgetTheme is kWidgetThemeAndroidRaised then
+            put color [1,1,1,0.12] into mAndroidBackgroundColor
+         end if
+      end if
+
+   end if
 end handler
 
 public handler OnMouseDown() returns nothing
@@ -722,7 +746,7 @@ public handler setLabelColor(in pLabelColor as String) returns nothing
    if pLabelColor is kWhiteColorString then
       put kDefaultColorString into pLabelColor
    end if
-   
+
    put stringToColor(pLabelColor) into mLabelColor
    redraw all
 end handler
@@ -742,14 +766,6 @@ private handler setBackgroundOpacity(in pOpacity as String)
 
    if mWidgetTheme is kWidgetThemeIos then
       put pOpacity into mBackgroundOpacity
-
-      if mBackgroundOpacity is kOpaqueBackground then
-         put color [1,1,1] into mIosBackgroundColor
-      else if mBackgroundOpacity is kTranslucentBackground then
-         put color [1,1,1,204/255] into mIosBackgroundColor
-      else if mBackgroundOpacity is kTransparentBackground then
-         put [1,1,1,0] into mIosBackgroundColor
-      end if
 
    else if mWidgetTheme is kWidgetThemeAndroidFloatingAction or mWidgetTheme is kWidgetThemeAndroidRaised then
       put kOpaqueBackground into mBackgroundOpacity
