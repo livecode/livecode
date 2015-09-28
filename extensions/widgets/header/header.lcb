@@ -180,7 +180,6 @@ Summary: Whether the background of the header bar is drawn opaque or not
 
 Description:
 Use the <backgroundOpacity> property to determine whether objects underneath the header bar are visible or not.
-
 */
 property backgroundOpacity get mIsOpaque set setBackgroundOpacity
 metadata backgroundOpacity.default is "true"
@@ -386,6 +385,9 @@ Summary: Whether the title is distinct or not
 
 Description:
 Use this property to determine whether the title distinct (true) or not (false), Android only.
+
+The title can only be set to distinct if the header is opaque and the color scheme is not "Dark" or "Light".
+It is recommended to only set the title to distinct when the color scheme has enough contrast for black and white glyphs.
 */
 property distinctTitle get mTitleIsDistinct set setDistinctTitle
 metadata distinctTitle.default is "false"
