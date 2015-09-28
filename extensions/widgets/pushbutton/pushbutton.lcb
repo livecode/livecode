@@ -224,7 +224,7 @@ metadata colorScheme.label is "Color Scheme"
 
 /*
 Syntax: set the colorTheme of <widget> to <pColorTheme>
-Synatx: get the colorTheme of <widget>
+Syntax: get the colorTheme of <widget>
 
 Summary: The color theme of the widget
 
@@ -242,6 +242,19 @@ metadata colorTheme.options is "Light,Dark"
 metadata colorTheme.default is "Light"
 metadata colorTheme.label is "Color Theme"
 
+/*
+Syntax: set the miniFloatingAction of <widget> to {true | false}
+Syntax: get the miniFloatingAction of <widget>
+
+Summary: Whether the floating action button is the default size or mini
+
+Description:
+Use this property to determine whether the Android Floating Action button is the default size (false) or mini (true), Android only.
+*/
+property miniFloatingAction get mIsMiniFloatingAction set setMiniFloatingAction
+metadata miniFloatingAction.default is "false"
+metadata miniFloatingAction.label is "Mini Floating Action"
+
 -- private instance variables
 private variable mWidgetTheme as String
 private variable mLabelStyle as String
@@ -252,6 +265,7 @@ private variable mBackgroundColor as Color
 private variable mBackgroundOpacity as String
 private variable mColorScheme as String
 private variable mColorTheme as String
+private variable mIsMiniFloatingAction as Boolean
 
 private variable mShowBorder as Boolean
 private variable mDefaultColor as Color
@@ -261,8 +275,14 @@ private variable mWidth as Real
 private variable mHeight as Real
 
 private variable mAndroidColors as Array
+private variable mAndroidColorsPressed as Array
 private variable mAndroidBackgroundColor as Color
 private variable mAndroidLabelColor as Color
+
+private variable mFloatingActionRadius as Real
+private variable mFloatingActionIconDimension as Real
+
+private variable mIsPressed as Boolean
 
 -- constants
 constant kWidgetThemeIos is "iOS"
@@ -282,6 +302,10 @@ constant kIosDefaultHeight is 29
 constant kAndroidDefaultFontSize is 14
 constant kAndroidDefaultHeight is 36
 
+constant kAndroidDefaultIconDimension is 24
+constant kDefaultFloatingActionDiameter is 56
+constant kDefaultMiniFloatingActionDiameter is 40
+
 public handler OnSave(out rProperties as Array)
    put the empty array into rProperties
 
@@ -294,6 +318,7 @@ public handler OnSave(out rProperties as Array)
    put mBackgroundOpacity into rProperties["opacity"]
    put mColorScheme into rProperties["colorScheme"]
    put mColorTheme into rProperties["colorTheme"]
+   put mIsMiniFloatingAction into rProperties["miniFloatingAction"]
 
 end handler
 
@@ -307,6 +332,7 @@ public handler OnLoad(in pProperties as Array)
    put pProperties["opacity"] into mBackgroundOpacity
    put pProperties["colorScheme"] into mColorScheme
    put pProperties["colorTheme"] into mColorTheme
+   put pProperties["miniFloatingAction"] into mIsMiniFloatingAction
 end handler
 
 public handler OnCreate() returns nothing
@@ -319,11 +345,14 @@ public handler OnCreate() returns nothing
    put "Transparent" into mBackgroundOpacity
    put "Blue" into mColorScheme
    put "Light" into mColorTheme
+   put false into mIsMiniFloatingAction
 
    put false into mShowBorder
    put color [0, 121/255, 1] into mDefaultColor
    updateVariables()
    fetchAndroidColors()
+
+   put false into mIsPressed
 end handler
 
 public handler OnPaint() returns nothing
@@ -367,6 +396,11 @@ private handler drawAndroidFloatingActionButton() returns nothing
    set the paint of this canvas to fetchPaint("background")
    fill fetchPath("background") on this canvas
 
+   -- border
+   set the paint of this canvas to solid paint with color [209/255,209/255,209/255]
+   set the stroke width of this canvas to 0.5
+   stroke fetchPath("background") on this canvas
+
    -- label
    set the paint of this canvas to fetchPaint("label")
    fill fetchIconPath(mLabelIcon) on this canvas
@@ -409,6 +443,12 @@ private handler drawAndroidRaisedButton() returns nothing
 end handler
 
 private handler drawAndroidFlatButton() returns nothing
+   -- background if button is pressed
+   if mIsPressed then
+      set the paint of this canvas to fetchPaint("background")
+      fill fetchPath("background") on this canvas
+   end if
+
    -- label
    variable tLabel as String
    put the upper of mLabelText into tLabel
@@ -422,19 +462,17 @@ private handler drawDropShadow() returns Effect
    variable tProps as Array
    put the empty array into tProps
 
+   put color [39/255, 39/255, 39/255, 0.2] into tProps["color"]
+   put "source over" into tProps["blend mode"]
+   put 255 into tProps["opacity"]
+
    if mWidgetTheme is kWidgetThemeAndroidFloatingAction then
-      put color [186/255, 186/255, 186/255, 0.8] into tProps["color"]
-      put "source over" into tProps["blend mode"]
-      put 255 into tProps["opacity"]
       put 0.5 into tProps["spread"]
       put 5 into tProps["size"]
       put 7 into tProps["distance"]
       put 90 into tProps["angle"]
 
    else if mWidgetTheme is kWidgetThemeAndroidRaised then
-      put color [186/255, 186/255, 186/255, 0.8] into tProps["color"]
-      put "source over" into tProps["blend mode"]
-      put 255 into tProps["opacity"]
       put 0.6 into tProps["spread"]
       put 1 into tProps["size"]
       put 4 into tProps["distance"]
@@ -472,10 +510,10 @@ private handler fetchPath(in pObject as String) returns Path
    if pObject is "background" then
       if mWidgetTheme is kWidgetThemeIos then
          return rounded rectangle path of my bounds with radius 5
-      else if mWidgetTheme is kWidgetThemeAndroidRaised then
+      else if mWidgetTheme is kWidgetThemeAndroidRaised or mWidgetTheme is kWidgetThemeAndroidFlat then
          return rounded rectangle path of rectangle [0, 0, mWidth-5, mHeight-5] with radius 2
       else if mWidgetTheme is kWidgetThemeAndroidFloatingAction then
-         return circle path centered at point [mWidth/2, (mHeight-10)/2] with radius (mHeight-10)/2
+         return circle path centered at point [mWidth/2, mFloatingActionRadius] with radius mFloatingActionRadius
       end if
    else if pObject is "border" then
       return rounded rectangle path of rectangle [0, 0, mWidth-5, mHeight-5] with radius 2
@@ -490,7 +528,7 @@ private handler fetchIconPath(in pIconName as String) returns Path
    if mWidgetTheme is kWidgetThemeIos then
       put rectangle [0, mHeight/4, mWidth, 3*mHeight/4] into tIconRect
    else if mWidgetTheme is kWidgetThemeAndroidFloatingAction then
-      put rectangle [mWidth/2 - (mHeight-10)/2, (mHeight-10)/4, mWidth/2 + (mHeight-10)/2, 3*(mHeight-10)/4] into tIconRect
+      put rectangle [(mWidth-mFloatingActionIconDimension)/2, mFloatingActionRadius-mFloatingActionIconDimension/2, (mWidth+mFloatingActionIconDimension)/2, mFloatingActionRadius+mFloatingActionIconDimension/2] into tIconRect
    end if
 
    setIconPath(tIconRect, tIconPath)
@@ -512,12 +550,27 @@ private handler updateVariables() returns nothing
    put mHeight*(kIosDefaultFontSize/kIosDefaultHeight) into mIosFontSize
    put mHeight*(kAndroidDefaultFontSize/kAndroidDefaultHeight) into mAndroidFontSize
 
-   if mWidgetTheme contains "Android" then
+   if mIsMiniFloatingAction then
+      put ((mHeight-10)/2)*(kDefaultMiniFloatingActionDiameter/kDefaultFloatingActionDiameter) into mFloatingActionRadius
+      put mFloatingActionRadius*2*(kAndroidDefaultIconDimension/kDefaultMiniFloatingActionDiameter) into mFloatingActionIconDimension
+   else
+      put (mHeight-10)/2 into mFloatingActionRadius
+      put mFloatingActionRadius*2*(kAndroidDefaultIconDimension/kDefaultFloatingActionDiameter) into mFloatingActionIconDimension
+   end if
 
+   if mWidgetTheme contains "Android" then
       if mColorTheme is "Light" then
          if my enabled then
             put stringToColor(mAndroidColors[mColorScheme]) into mAndroidLabelColor
-            put color [1,1,1] into mAndroidBackgroundColor
+            if mIsPressed then
+               if mWidgetTheme is kWidgetThemeAndroidFlat then
+                  put color [153/255, 153/255, 153/255, 0.4] into mAndroidBackgroundColor
+                  -- TO-DO raised light background color ??
+               end if
+            else
+               put color [1,1,1] into mAndroidBackgroundColor
+            end if
+
          else
             put color [0,0,0,0.26] into mAndroidLabelColor
             if mWidgetTheme is kWidgetThemeAndroidRaised then
@@ -527,8 +580,18 @@ private handler updateVariables() returns nothing
 
       else if mColorTheme is "Dark" then
          if my enabled then
-            put stringToColor(mAndroidColors[mColorScheme]) into mAndroidBackgroundColor
             put color [1,1,1] into mAndroidLabelColor
+
+            if mIsPressed then
+               if mWidgetTheme is kWidgetThemeAndroidFlat then
+                  put color [204/255, 204/255, 204/255, 0.25] into mAndroidBackgroundColor
+               else if mWidgetTheme is kWidgetThemeAndroidRaised then
+                  put stringToColor(mAndroidColorsPressed[mColorScheme]) into mAndroidBackgroundColor
+               end if
+            else
+               put stringToColor(mAndroidColors[mColorScheme]) into mAndroidBackgroundColor
+            end if
+
          else
             put color [1,1,1,0.3] into mAndroidLabelColor
             if mWidgetTheme is kWidgetThemeAndroidRaised then
@@ -564,6 +627,38 @@ private handler fetchAndroidColors() returns nothing
 	put "140,140,140" into mAndroidColors["Grey"]
 	put "78,106,120" into mAndroidColors["Blue Grey"]
 
+   put the empty array into mAndroidColorsPressed
+	put "199,25,36" into mAndroidColorsPressed["Red"]
+	put "179,0,73" into mAndroidColorsPressed["Pink"]
+	put "102,0,145" into mAndroidColorsPressed["Purple"]
+	put "63,23,151" into mAndroidColorsPressed["Deep Purple"]
+	put "36,42,142" into mAndroidColorsPressed["Indigo"]
+	put "23,95,199" into mAndroidColorsPressed["Blue"]
+	put "14,114,198" into mAndroidColorsPressed["Light Blue"]
+	put "17,134,150" into mAndroidColorsPressed["Cyan"]
+	put "13,104,88" into mAndroidColorsPressed["Teal"]
+	put "46,127,46" into mAndroidColorsPressed["Green"]
+	put "87,145,43" into mAndroidColorsPressed["Light Green"]
+	put "160,168,33" into mAndroidColorsPressed["Lime"]
+	put "249,180,36" into mAndroidColorsPressed["Yellow"]
+	put "253,142,9" into mAndroidColorsPressed["Amber"]
+	put "240,103,8" into mAndroidColorsPressed["Orange"]
+	put "222,51,21" into mAndroidColorsPressed["Deep Orange"]
+	put "74,49,42" into mAndroidColorsPressed["Brown"]
+	put "78,78,78" into mAndroidColorsPressed["Grey"]
+	put "54,72,81" into mAndroidColorsPressed["Blue Grey"]
+
+end handler
+
+public handler OnMouseDown() returns nothing
+   put true into mIsPressed
+   redraw all
+end handler
+
+public handler OnMouseUp() returns nothing
+   put false into mIsPressed
+   redraw all
+   post "mouseUp"
 end handler
 
 --------------------------------------------------------------------------------
@@ -728,6 +823,11 @@ private handler setColorTheme(in pColorTheme as String) returns nothing
    put pColorTheme into mColorTheme
    redraw all
 
+end handler
+
+private handler setMiniFloatingAction(in pIsMiniFloatingAction as Boolean) returns nothing
+   put pIsMiniFloatingAction into mIsMiniFloatingAction
+   redraw all
 end handler
 
 --------------------------------------------------------------------------------
