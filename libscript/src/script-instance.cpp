@@ -1217,7 +1217,6 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
     MCHandlerTypeFieldMode t_modes[16];
     MCResolvedTypeInfo t_types[16];
     void *t_args[16];
-    ffi_type *t_arg_types[16];
     bool t_arg_new[16];
     __MCScriptStackStorage<sizeof(void *),32> t_invoke_storage;
     
@@ -1415,14 +1414,12 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
             {
                 // In mode arguments are the value themselves.
                 t_args[t_arg_index] = t_argument;
-                t_arg_types[t_arg_index] = (ffi_type *)MCForeignTypeInfoGetLayoutType(t_types[t_arg_index] . type);
             }
             else
             {
                 // Allocate space for the storage pointer
                 t_args[t_arg_index] = t_invoke_storage.Allocate(sizeof(void *));
                 *(void **)t_args[t_arg_index] = t_argument;
-                t_arg_types[t_arg_index] = &ffi_type_pointer;
             }
         }
         else
@@ -1430,8 +1427,6 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
             // Out mode arguments are the contents for foreign values but
             // marked 'pointer' type. However, for valuerefs we must make storage
             // to put the valueref in.
-            t_arg_types[t_arg_index] = &ffi_type_pointer;
-            
             if (t_descriptor != nil)
             {
                 // Allocate space for the storage pointer
