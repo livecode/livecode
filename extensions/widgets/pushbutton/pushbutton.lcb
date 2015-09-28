@@ -476,7 +476,12 @@ private handler fetchPaint(in pObject as String) returns Paint
 
    else if pObject is "label" then
       if mWidgetTheme is kWidgetThemeIos then
-         return solid paint with mLabelColor
+         if mIsPressed then
+            return solid paint with color [the red of mLabelColor, the green of mLabelColor, the blue of mLabelColor, 0.5]
+         else
+            return solid paint with mLabelColor
+         end if
+
       else if mWidgetTheme contains "Android" then
          return solid paint with mAndroidLabelColor
       end if
