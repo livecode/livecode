@@ -524,6 +524,8 @@ IO_stat MCDispatch::startup(void)
 
 #elif defined(__EMSCRIPTEN__)
 
+#include "stacksecurity.h"
+
 #define kMCEmscriptenBootStackFilename "/boot/standalone/__boot.livecode"
 #define kMCEmscriptenStartupScriptFilename "/boot/__startup"
 
@@ -532,34 +534,11 @@ MCDispatch::startup()
 {
 	/* The standalone data should already have been unpacked by now */
 
-	/* Load & run the startup script in a temporary stack */
-	MCStack t_temporary_stack;
+	/* Load the default stack */
 
-	MCAutoStringRef t_startup_script;
-	if (!MCS_loadtextfile(MCSTR(kMCEmscriptenStartupScriptFilename),
-	                      &t_startup_script))
-	{
-		MCresult->sets("failed to read startup script");
+	if (IO_NORMAL != MCStackSecurityEmscriptenStartup()) {
 		return IO_ERROR;
 	}
-
-	if (ES_NORMAL != t_temporary_stack.domess(*t_startup_script))
-	{
-		MCresult->sets("failed to execute startup script");
-		return IO_ERROR;
-	}
-
-	/* Load the initial stack */
-	/* FIXME Hardcoded boot stack path*/
-	MCStack *t_stack;
-	if (IO_NORMAL != MCdispatcher->loadfile(MCSTR(kMCEmscriptenBootStackFilename),
-	                                        t_stack))
-	{
-		MCresult->sets("failed to read initial stackfile");
-		return IO_ERROR;
-	}
-
-	MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
 
 	/* Complete startup tasks and send the startup message */
 
@@ -568,13 +547,13 @@ MCDispatch::startup()
 
 	MCallowinterrupts = false;
 
-	t_stack->extraopen(false);
+	MCdefaultstackptr->extraopen(false);
 
 	send_startup_message();
 
 	if (!MCquit)
 	{
-		t_stack->open();
+		MCdefaultstackptr->open();
 	}
 
 	return IO_NORMAL;
