@@ -41,6 +41,7 @@ public:
     virtual MCDataRef CopyData() const;
     
 private:
+    
     // Cache of the type string and data for this representation
     MCAutoStringRef m_type;
     MCAutoDataRef m_bytes;
@@ -85,6 +86,10 @@ private:
     // Ensures that the representations have been loaded if the data is from an
     // external source. Does nothing if the data is local.
     void FetchExternalRepresentations(GdkDragContext* p_context) const;
+    
+    // Utility function that converts from a text/uri-list encoding to the
+    // file list types used internally by GNOME and KDE
+    static MCDataRef UriListToCopyList(MCDataRef p_data);
 };
 
 

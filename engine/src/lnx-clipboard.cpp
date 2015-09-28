@@ -22,6 +22,7 @@
 #include "globals.h"
 #include "lnxdc.h"
 #include "lnxprefix.h"
+#include "util.h"
 
 
 // Functions used to load the weakly-linked GDK library
@@ -73,7 +74,7 @@ MCRawClipboard* MCRawClipboard::CreateSystemSelectionClipboard()
 
 MCRawClipboard* MCRawClipboard::CreateSystemDragboard()
 {
-    new MCLinuxRawClipboard("XdndSelection");
+    return new MCLinuxRawClipboard("XdndSelection");
 }
 
 
@@ -200,47 +201,119 @@ MCStringRef MCLinuxRawClipboard::GetKnownTypeString(MCRawClipboardKnownType p_ty
 
 MCDataRef MCLinuxRawClipboard::EncodeFileListForTransfer(MCStringRef p_list) const
 {
-    // Create a mutable copy of the list
-    MCAutoStringRef t_copy;
-    if (!MCStringMutableCopy(p_list, &t_copy))
+    // Split the string up into individual paths
+    MCAutoArrayRef t_path_list;
+    if (!MCStringSplit(p_list, MCSTR("\n"), NULL, kMCStringOptionCompareExact, &t_path_list))
         return NULL;
     
-    // Replace all newlines with NULs
-    if (!MCStringFindAndReplaceChar(*t_copy, '\n', '\0', kMCStringOptionCompareExact))
+    // Create an output string
+    MCAutoStringRef t_modified_path_list;
+    if (!MCStringCreateMutable(0, &t_modified_path_list))
         return NULL;
     
-    // Encode the string as UTF-8 data
-    MCDataRef t_encoded_paths;
-    if (!MCStringEncode(*t_copy, kMCStringEncodingUTF8, false, t_encoded_paths))
+    // Loop over the paths in the file list
+    for (uindex_t i = 1; i <= MCArrayGetCount(*t_path_list); i++)
+    {
+        // Get the path at this index (and sanity-check it)
+        MCValueRef t_path;
+        if (!MCArrayFetchValueAtIndex(*t_path_list, i, t_path))
+            return NULL;
+        if (MCValueGetTypeCode(t_path) != kMCValueTypeCodeString)
+            return NULL;
+        
+        // Encode the string as UTF-8 data and then URL encode it
+        MCAutoStringRef t_encoded_path;
+        MCU_urlencode((MCStringRef)t_path, true, &t_encoded_path);
+        
+        // Unfortunately, URL encoding also replaces the '/' characters - undo
+        // that.
+        MCAutoStringRef t_fixed_path;
+        if (!MCStringMutableCopy(*t_encoded_path, &t_fixed_path))
+            return NULL;
+        if (!MCStringFindAndReplace(*t_fixed_path, MCSTR("%2F"), MCSTR("/"), kMCStringOptionCompareExact))
+            return NULL;
+        
+        // Build up the modified path. The XDND protocol specifies that paths
+        // are given as fully-qualified URLs but, in practice, a large number
+        // of apps elide the hostname. We do that here for simplicity.
+        //
+        // Note that the line termination is CRLF
+        if (!MCStringAppendFormat(*t_modified_path_list, "file://%@%@\r\n", kMCEmptyString, *t_fixed_path))
+            return NULL;
+    }
+    
+    // Convert the encoded string to data (we just want to grab the bytes so the
+    // native encoding is used here).
+    MCDataRef t_encoded;
+    if (!MCStringEncode(*t_modified_path_list, kMCStringEncodingNative, false, t_encoded))
         return NULL;
     
     // Done
-    return t_encoded_paths;
+    return t_encoded;
 }
 
 MCStringRef MCLinuxRawClipboard::DecodeTransferredFileList(MCDataRef p_data) const
 {
-    // Decode the string as UTF-8 data
-    MCStringRef t_decoded_paths;
-    if (!MCStringDecode(p_data, kMCStringEncodingUTF8, false, t_decoded_paths))
+    // We need to convert the data to a string, preserving all the byte values,
+    // as the URL decoding routine expects a stringref.
+    MCAutoStringRef t_encoded_string;
+    if (!MCStringCreateWithBytes(MCDataGetBytePtr(p_data), MCDataGetLength(p_data), kMCStringEncodingNative, false, &t_encoded_string))
         return NULL;
     
-    // We need to be able to mutate the string
-    MCAutoStringRef t_mutable;
-    if (!MCStringMutableCopyAndRelease(t_decoded_paths, &t_mutable))
-    {
-        MCValueRelease(t_decoded_paths);
+    // URL-decode the string and convert from UTF-8
+    MCAutoStringRef t_string;
+    MCU_urldecode(*t_encoded_string, true, &t_string);
+    
+    // Split the string on CRLF sequences
+    MCAutoArrayRef t_uri_list;
+    if (!MCStringSplit(*t_string, MCSTR("\r\n"), NULL, kMCStringOptionCompareExact, &t_uri_list))
         return NULL;
+    
+    // Output list
+    MCAutoListRef t_output_list;
+    if (!MCListCreateMutable('\n', &t_output_list))
+        return NULL;
+    
+    // Loop over the paths and convert to the expected form
+    for (uindex_t i = 1; i <= MCArrayGetCount(*t_uri_list); i++)
+    {
+        // Get the path at this index (and sanity-check it)
+        MCValueRef t_path;
+        if (!MCArrayFetchValueAtIndex(*t_uri_list, i, t_path))
+            return NULL;
+        if (MCValueGetTypeCode(t_path) != kMCValueTypeCodeString)
+            return NULL;
+        
+        // Create a mutable copy of this path
+        MCAutoStringRef t_modified_path;
+        if (!MCStringMutableCopy((MCStringRef)t_path, &t_modified_path))
+            return NULL;
+        
+        // Remove any "file://" prefix that the path has
+        if (MCStringBeginsWithCString(*t_modified_path, (const char_t*)"file:///", kMCStringOptionCompareExact))
+        {
+            // Remove the "file://" prefix
+            MCStringRemove(*t_modified_path, MCRangeMake(0, 7));
+        }
+        else if (MCStringBeginsWithCString(*t_modified_path, (const char_t*)"file://", kMCStringOptionCompareExact))
+        {
+            // Find the end of the hostname portion of the path
+            uindex_t t_end;
+            if (!MCStringFirstIndexOfChar(*t_modified_path, '/', 7, kMCStringOptionCompareExact, t_end))
+                return NULL;
+            MCStringRemove(*t_modified_path, MCRangeMake(0, t_end-1));
+        }
+        
+        // Append to the list
+        if (!MCListAppend(*t_output_list, *t_modified_path))
+            return NULL;
     }
     
-    // Replace all NULs with newlines
-    if (!MCStringFindAndReplaceChar(*t_mutable, '\0', '\n', kMCStringOptionCompareExact))
+    // Return the list as a string
+    MCStringRef t_paths;
+    if (!MCListCopyAsString(*t_output_list, t_paths))
         return NULL;
-    
-    // Done
-    MCStringRef t_retval = NULL;
-    MCStringCopy(*t_mutable, t_retval);
-    return t_retval;
+    return t_paths;
 }
 
 const MCLinuxRawClipboardItem* MCLinuxRawClipboard::GetSelectionItem() const
@@ -434,6 +507,7 @@ GdkWindow* MCLinuxRawClipboard::GetClipboardWindow() const
     
     // Create the window
     s_clipboard_window = gdk_window_new(NULL, &t_attributes, GDK_WA_TITLE);
+    return s_clipboard_window;
 }
 
 void MCLinuxRawClipboard::SetClipboardWindow(GdkWindow* p_window)
@@ -562,7 +636,16 @@ bool MCLinuxRawClipboardItem::AddRepresentation(MCStringRef p_type, MCDataRef p_
     }
     else if (MCStringIsEqualToCString(p_type, "STRING", kMCStringOptionCompareExact))
     {
+        AddRepresentation(MCSTR("TEXT"), p_bytes);
         AddRepresentation(MCSTR("text/plain"), p_bytes);
+    }
+    else if (MCStringIsEqualToCString(p_type, "text/uri-list", kMCStringOptionCompareExact))
+    {
+        // Various GNOME and KDE file managers don't like copying file lists
+        // without also specifying some special MIME types.
+        MCAutoDataRef t_copy_list(UriListToCopyList(p_bytes));
+        AddRepresentation(MCSTR("x-special/gnome-copied-files"), *t_copy_list);
+        AddRepresentation(MCSTR("application/x-kde-cutselection"), *t_copy_list);
     }
     
     // All done
@@ -572,6 +655,39 @@ bool MCLinuxRawClipboardItem::AddRepresentation(MCStringRef p_type, MCDataRef p_
 bool MCLinuxRawClipboardItem::AddRepresentation(MCStringRef p_type, render_callback_t p_callback, void* p_context)
 {
     return false;
+}
+
+MCDataRef MCLinuxRawClipboardItem::UriListToCopyList(MCDataRef p_in)
+{
+    // Convert the bytes to a stringref
+    MCAutoStringRef t_string_in;
+    if (!MCStringCreateWithBytes(MCDataGetBytePtr(p_in), MCDataGetLength(p_in), kMCStringEncodingNative, false, &t_string_in))
+        return NULL;
+    
+    // Make mutable
+    MCAutoStringRef t_string;
+    if (!MCStringMutableCopy(*t_string_in, &t_string))
+        return NULL;
+    
+    // Convert CRLF sequences to LF
+    if (!MCStringFindAndReplace(*t_string, MCSTR("\r\n"), MCSTR("\n"), kMCStringOptionCompareExact))
+        return NULL;
+    
+    // Replace the ending LF with a NUL
+    if (!MCStringRemove(*t_string, MCRangeMake(MCStringGetLength(*t_string)-1, 1)))
+        return NULL;
+    if (!MCStringAppendChar(*t_string, '\0'))
+        return NULL;
+    
+    // Prepend a "copy" instruction
+    if (!MCStringPrepend(*t_string, MCSTR("copy\n")))
+        return NULL;
+    
+    // Re-encode to data
+    MCDataRef t_out;
+    if (!MCStringEncode(*t_string, kMCStringEncodingNative, false, t_out))
+        return NULL;
+    return t_out;
 }
 
 static bool SelectionNotifyFilter(GdkEvent *t_event, void *)
