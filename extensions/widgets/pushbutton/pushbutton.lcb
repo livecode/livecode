@@ -185,6 +185,43 @@ metadata backgroundOpacity.options is "Opaque,Translucent,Transparent"
 metadata backgroundOpacity.default is "Transparent"
 metadata backgroundOpacity.label is "Background Opacity"
 
+/*
+Syntax: set the colorScheme of <widget> to <pColorScheme>
+Syntax: get the colorScheme of <widget>
+
+Summary: The color scheme of the widget (Android only)
+
+Parameters:
+pColorScheme(enum): The color scheme of the widget
+-"Red"
+-"Pink"
+-"Purple"
+-"Deep Purple"
+-"Indigo"
+-"Blue"
+-"Light Blue"
+-"Cyan"
+-"Teal"
+-"Green"
+-"Light Green"
+-"Lime"
+-"Yellow"
+-"Amber"
+-"Orange"
+-"Deep Orange"
+-"Brown"
+-"Grey"
+-"Blue Grey"
+
+Description:
+Use the <colorScheme> property to set the color scheme of the widget, Android only.
+*/
+property colorScheme get mColorScheme set setColorScheme
+metadata colorScheme.editor is "com.livecode.pi.enum"
+metadata colorScheme.options is "Red,Pink,Purple,Deep Purple,Indigo,Blue,Light Blue,Cyan,Teal,Green,Light Green,Lime,Yellow,Amber,Orange,Deep Orange,Brown,Grey,Blue Grey"
+metadata colorScheme.default is "Teal"
+metadata colorScheme.label is "Color Scheme"
+
 -- private instance variables
 private variable mWidgetTheme as String
 private variable mLabelStyle as String
@@ -193,6 +230,7 @@ private variable mLabelIcon as String
 private variable mLabelColor as Color
 private variable mBackgroundColor as Color
 private variable mBackgroundOpacity as String
+private variable mColorScheme as String
 
 private variable mShowBorder as Boolean
 private variable mDefaultColor as Color
@@ -200,6 +238,8 @@ private variable mIosFontSize as Real
 private variable mAndroidFontSize as Real
 private variable mWidth as Real
 private variable mHeight as Real
+
+private variable mAndroidColors as Array
 
 -- constants
 constant kWidgetThemeIos is "iOS"
@@ -229,6 +269,7 @@ public handler OnSave(out rProperties as Array)
    put colorToString(mLabelColor) into rProperties["labelColor"]
    put colorToString(mBackgroundColor) into rProperties["backgroundColor"]
    put mBackgroundOpacity into rProperties["opacity"]
+   put mColorScheme into rProperties["colorScheme"]
 
 end handler
 
@@ -240,6 +281,7 @@ public handler OnLoad(in pProperties as Array)
    put stringToColor(pProperties["labelColor"]) into mLabelColor
    put stringToColor(pProperties["backgroundColor"]) into mBackgroundColor
    put pProperties["opacity"] into mBackgroundOpacity
+   put pProperties["colorScheme"] into mColorScheme
 end handler
 
 public handler OnCreate() returns nothing
@@ -250,10 +292,12 @@ public handler OnCreate() returns nothing
    put color [0, 121/255, 1] into mLabelColor
    put color [1, 1, 1, 0] into mBackgroundColor
    put "Transparent" into mBackgroundOpacity
+   put "Blue" into mColorScheme
 
    put false into mShowBorder
    put color [0, 121/255, 1] into mDefaultColor
    updateVariables()
+   fetchAndroidColors()
 end handler
 
 public handler OnPaint() returns nothing
@@ -427,6 +471,30 @@ private handler fetchFont() returns Font
    end if
 end handler
 
+private handler fetchAndroidColors() returns nothing
+
+	put the empty array into mAndroidColors
+	put "238,43,41" into mAndroidColors["Red"]
+	put "224,0,81" into mAndroidColors["Pink"]
+	put "137,0,161" into mAndroidColors["Purple"]
+	put "83,33,168" into mAndroidColors["Deep Purple"]
+	put "48,58,165" into mAndroidColors["Indigo"]
+	put "30,128,240" into mAndroidColors["Blue"]
+	put "20,150,241" into mAndroidColors["Light Blue"]
+	put "22,175,202" into mAndroidColors["Cyan"]
+	put "17,133,117" into mAndroidColors["Teal"]
+	put "63,164,63" into mAndroidColors["Green"]
+	put "122,186,58" into mAndroidColors["Light Green"]
+	put "194,215,45" into mAndroidColors["Lime"]
+	put "254,233,46" into mAndroidColors["Yellow"]
+	put "253,182,13" into mAndroidColors["Amber"]
+	put "253,133,9" into mAndroidColors["Orange"]
+	put "251,63,28" into mAndroidColors["Deep Orange"]
+	put "101,67,56" into mAndroidColors["Brown"]
+	put "140,140,140" into mAndroidColors["Grey"]
+	put "78,106,120" into mAndroidColors["Blue Grey"]
+
+end handler
 --------------------------------------------------------------------------------
 --
 --		Getting and Setting Properties
@@ -557,6 +625,21 @@ private handler setBackgroundOpacity(in pOpacity as String)
    end if
 
    redraw all
+end handler
+
+private handler setColorScheme(in pColorScheme as String) returns nothing
+
+   if pColorScheme is mColorScheme then
+      return
+   end if
+
+   if pColorScheme is not among the keys of mAndroidColors then
+      throw "invalid color scheme"
+   end if
+
+   put pColorScheme into mColorScheme
+   redraw all
+
 end handler
 
 --------------------------------------------------------------------------------
