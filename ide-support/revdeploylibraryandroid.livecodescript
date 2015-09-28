@@ -169,6 +169,10 @@ function deployIsValidJDK pPath
    return true
 end deployIsValidJDK
 
+function deployRequiredSDK
+   return "Android 4.0.3 (API 15)"
+end deployRequiredSDK
+
 function deployIsValidSDK pPath 
    if there is no folder (pPath & slash & "platforms") or \
          there is no folder (pPath & slash & "platform-tools") or \
@@ -177,7 +181,9 @@ function deployIsValidSDK pPath
       return false
    end if
    
-   if there is no folder (pPath & slash & "platforms/android-8") then
+   // We need API 15 in order to be able to give the value 'screenSize' to the manifest variable configChanges
+   // That was introduced in the API 13, but the SDK manager only have API 15 nowadays
+   if there is no folder (pPath & slash & "platforms/android-15") then
       --return "could not find install of SDK level 8, make sure it has been installed with the Android SDK Manager"
       return false
    end if
@@ -228,11 +234,11 @@ end deployGetJDK
 // SN-2015-05-13: [[ AndroidVersions ]] Make the available Android minimum versions
 //  something changeable from a script-only stack
 function deployGetVersionsList
-   return "2.3 - Gingerbread,2.3.3,3.0 - Honeycomb,3.1,3.2,4.0 - IceCream Sandwich,4.1 - Jelly Bean,4.2,4.3,4.4 - KitKat,5.0 - Lollipop,5.1"
+   return "2.3.3 - Gingerbread,3.0 - Honeycomb,3.1,3.2,4.0 - IceCream Sandwich,4.1 - Jelly Bean,4.2,4.3,4.4 - KitKat,5.0 - Lollipop,5.1"
 end deployGetVersionsList
 
 function deployGetAPIsList
-   return "9,10,11,12,13,14,16,17,18,19,21,22"
+   return "10,11,12,13,14,16,17,18,19,21,22"
 end deployGetAPIsList
 
 function deployGetApiFromVersion pVersion
@@ -303,7 +309,7 @@ function pathToRootClasses pRoot
    if pRoot is empty then
       put sAndroidRoot into pRoot
    end if
-   return pRoot & slash & "platforms/android-8/android.jar"
+   return pRoot & slash & "platforms/android-15/android.jar"
 end pathToRootClasses
 
 function pathToSDKClasses pRoot
