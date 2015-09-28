@@ -1195,7 +1195,7 @@ private handler getArrayData() returns Array
 end handler
 
 -- Sorts numerically, converting strings to numbers where possible
-private handler CompareKeysNumeric(in pLeft as any, in pRight as any) as Integer
+private handler CompareKeysNumeric(in pLeft as any, in pRight as any) returns Integer
 	variable tLeft as optional Number
 	variable tRight as optional Number
 	
