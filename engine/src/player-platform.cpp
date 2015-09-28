@@ -83,7 +83,9 @@ static const char *ppmediastrings[] =
 #define MIN_RATE -3
 #define MAX_RATE 3
 
-
+extern "C" int initialise_weak_link_QuickTime(void);
+extern "C" int initialise_weak_link_QTKit(void);
+extern "C" int initialise_weak_link_QuickDraw(void);
 
 
 static MCColor controllercolors[] = {
@@ -1980,6 +1982,14 @@ void MCPlayer::setlooping(Boolean loop)
 void MCPlayer::setdontuseqt(Boolean noqt)
 {
 	dontuseqt = noqt;
+	
+	// Weak link QT when setting a player's dontuseqt to false, if it is not already linked
+	if (!noqt && MCdontuseQT)
+	{
+		initialise_weak_link_QuickTime();
+		initialise_weak_link_QTKit() ;
+		initialise_weak_link_QuickDraw() ;
+	}
 }
 
 real8 MCPlayer::getplayrate()
