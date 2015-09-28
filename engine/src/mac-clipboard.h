@@ -115,6 +115,9 @@ public:
     // Constructor. The NSPasteboard being wrapped is required.
     MCMacRawClipboard(NSPasteboard* p_pasteboard);
     
+    // Converts a LiveCode-style RawClipboardData key into an OSX UTI
+    static MCStringRef CopyAsUTI(MCStringRef p_key);
+    
 private:
     
     // The NSPasteboard being wrapped

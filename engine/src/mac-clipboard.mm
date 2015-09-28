@@ -18,6 +18,7 @@
 #include "mac-clipboard.h"
 
 #include "foundation-auto.h"
+#include "util.h"
 
 
 // Table mapping MCRawClipboardKnownType constants to UTIs
@@ -223,16 +224,88 @@ MCStringRef MCMacRawClipboard::GetKnownTypeString(MCRawClipboardKnownType p_type
 
 MCDataRef MCMacRawClipboard::EncodeFileListForTransfer(MCStringRef p_file_path) const
 {
-    MCDataRef t_encoded = NULL;
-    MCStringEncode(p_file_path, kMCStringEncodingUTF8, false, t_encoded);
-    return t_encoded;
+    // Encode as UTF-8 and then as a URL
+    MCAutoStringRef t_encoded;
+    MCU_urlencode(p_file_path, true, &t_encoded);
+    
+    // Undo the transformation of slashes to '%2F'
+    MCAutoStringRef t_modified;
+    if (!MCStringMutableCopy(*t_encoded, &t_modified))
+        return NULL;
+    if (!MCStringFindAndReplace(*t_modified, MCSTR("%2F"), MCSTR("/"), kMCStringOptionCompareExact))
+        return NULL;
+    
+    // Add the required "file://" prefix to the path
+    if (!MCStringPrepend(*t_modified, MCSTR("file://")))
+        return NULL;
+    
+    // Convert the encoded path to bytes
+    MCDataRef t_bytes;
+    if (!MCStringEncode(*t_modified, kMCStringEncodingNative, false, t_bytes))
+        return NULL;
+    return t_bytes;
 }
 
 MCStringRef MCMacRawClipboard::DecodeTransferredFileList(MCDataRef p_encoded_path) const
 {
-    MCStringRef t_decoded = NULL;
-    MCStringDecode(p_encoded_path, kMCStringEncodingUTF8, false, t_decoded);
-    return t_decoded;
+    // Convert the bytes into its string equivalent
+    MCAutoStringRef t_bytes;
+    if (!MCStringDecode(p_encoded_path, kMCStringEncodingNative, false, &t_bytes))
+        return NULL;
+    
+    // URL-decode and then decode the resulting UTF-8 bytes
+    MCAutoStringRef t_decoded;
+    MCU_urldecode(*t_bytes, true, &t_decoded);
+    
+    // Remove the file prefix, if it exists
+    MCStringRef t_path = NULL;
+    if (MCStringBeginsWithCString(*t_decoded, (const char_t*)"file://", kMCStringOptionCompareExact))
+    {
+        MCStringCopySubstring(*t_decoded, MCRangeMake(7, MCStringGetLength(*t_decoded)-7), t_path);
+    }
+    else
+    {
+        t_path = MCValueRetain(*t_decoded);
+    }
+    
+    // All done
+    return t_path;
+}
+
+MCStringRef MCMacRawClipboard::CopyAsUTI(MCStringRef p_key)
+{
+    // If the key is already in UTI form, just pass it out
+    uindex_t t_index;
+    if (!MCStringFirstIndexOfChar(p_key, ':', 0, kMCStringOptionCompareExact, t_index))
+        return MCValueRetain(p_key);
+    
+    // Split the string into a prefix and a suffix
+    MCAutoStringRef t_prefix, t_suffix;
+    if (!MCStringCopySubstring(p_key, MCRangeMake(0, t_index), &t_prefix))
+        return NULL;
+    if (!MCStringCopySubstring(p_key, MCRangeMake(t_index + 1, MCStringGetLength(p_key) - t_index - 1), &t_suffix))
+        return NULL;
+    
+    // Create the UTI for this class and type
+    CFStringRef t_class, t_tag;
+    if (!MCStringConvertToCFStringRef(*t_prefix, t_class))
+        return NULL;
+    if (!MCStringConvertToCFStringRef(*t_suffix, t_tag))
+    {
+        CFRelease(t_class);
+        return NULL;
+    }
+    CFStringRef t_uti = UTTypeCreatePreferredIdentifierForTag(t_class, t_tag, NULL);
+    CFRelease(t_class);
+    CFRelease(t_tag);
+    if (t_uti == NULL)
+        return NULL;
+    
+    // Convert the UTI to a StringRef
+    MCStringRef t_return = NULL;
+    MCStringCreateWithCFString(t_uti, t_return);
+    CFRelease(t_uti);
+    return t_return;
 }
 
 
@@ -349,33 +422,16 @@ bool MCMacRawClipboardItem::AddRepresentation(MCStringRef p_type, MCDataRef p_by
         m_rep_cache[t_index] = t_rep = new MCMacRawClipboardItemRep(m_item, t_index, p_type, p_bytes);
     }
     
-    // If we are setting a "public.file-url" type, we'll need to do a bit of
-    // massaging to get it into the correct form.
-    MCAutoDataRef t_bytes;
-    if (MCStringIsEqualTo(p_type, MCSTR("public.file-url"), kMCStringOptionCompareExact))
-    {
-        // Prefix the URL with "file://"... we cheat here and take advantage of
-        // the fact that the URLs are encoded in an ASCII-compatible manner.
-        MCAutoDataRef t_prefixed_url;
-        if (!MCDataMutableCopy(p_bytes, &t_prefixed_url))
-            return false;
-        if (!MCDataPrependBytes(*t_prefixed_url, (const byte_t*)"file://", 7))
-            return false;
-        if (!MCDataCopy(*t_prefixed_url, &t_bytes))
-            return false;
-    }
-    else
-    {
-        t_bytes = p_bytes;
-    }
+    // Convert the RawClipboardData-style key into a UTI
+    MCAutoStringRef t_uti(MCMacRawClipboard::CopyAsUTI(p_type));
     
     // Turn the type string and data into their NS equivalents.
     // Note that the NSData is auto-released when we get it.
     NSString* t_type;
     NSData* t_data;
-    if (!MCStringConvertToCFStringRef(p_type, (CFStringRef&)t_type))
+    if (!MCStringConvertToCFStringRef(*t_uti, (CFStringRef&)t_type))
         return false;
-    t_data = [NSData dataWithBytes:MCDataGetBytePtr(*t_bytes) length:MCDataGetLength(*t_bytes)];
+    t_data = [NSData dataWithBytes:MCDataGetBytePtr(p_bytes) length:MCDataGetLength(p_bytes)];
     if (t_data == nil)
     {
         [t_type release];
