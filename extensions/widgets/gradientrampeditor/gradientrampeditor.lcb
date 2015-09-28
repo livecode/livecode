@@ -287,6 +287,9 @@ end handler
 
 public handler onMouseCancel() returns nothing
    put false into mIsDraggingStop
+   put xCoordToStopNumber(the x of the mouse position) into mCurrentlySelectedStopIndex
+   redraw all
+   gradientStopsChanged()
 end handler
 
 public handler OnKeyPress(in pKey as String) returns nothing
