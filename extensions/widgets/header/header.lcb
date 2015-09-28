@@ -1372,10 +1372,7 @@ private handler setColorScheme(in pColorScheme as String) returns nothing
 		return
 	end if
 
-	variable tColorSchemeList as List
-	put [kLightColor,kDarkColor,kRedColor,kPinkColor,kPurpleColor,kDeepPurpleColor,kIndigoColor,kBlueColor,kLightBlueColor,kCyanColor,kTealColor,kGreenColor,kLightGreenColor,kLimeColor,kYellowColor,kAmberColor,kOrangeColor,kDeepOrangeColor,kBrownColor,kGreyColor,kBlueGreyColor] into tColorSchemeList
-
-	if not(pColorScheme is in tColorSchemeList) then
+	if pColorScheme is not among the keys of mAndroidColors then
 		throw "invalid color scheme"
 	end if
 
