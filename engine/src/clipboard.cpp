@@ -62,6 +62,11 @@ MCClipboard::~MCClipboard()
         MCValueRelease(m_private_data);
 }
 
+bool MCClipboard::IsOwned() const
+{
+    return m_clipboard->IsOwned();
+}
+
 bool MCClipboard::Lock(bool p_skip_pull) const
 {
     // Increase the lock count. If it moves from zero to one, update the

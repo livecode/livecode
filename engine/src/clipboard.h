@@ -29,6 +29,9 @@ class MCClipboard :
 {
 public:
     
+    // Is this clipboard currently owned by this LiveCode instance?
+    bool IsOwned() const;
+    
     // These methods lock the clipboard -- this prevents any implicit
     // synchronisation with the OS clipboard for the duration of the lock.
     // Explicit synchronisation (via Push/PullUpdates) is not affected by

@@ -1482,7 +1482,13 @@ void MCField::endselection()
 	{
 		firstparagraph = lastparagraph = NULL;
 		firsty = 0;
-        MCselection->Clear();
+        
+        // Clear the selection, if we're the owner (we don't clear if we're not
+        // the owner as that means the last selection was made in another
+        // program and the user might be focusing in the field to paste that
+        // selection).
+        if (MCselection->IsOwned())
+            MCselection->Clear();
 	}
 	else
 	{
@@ -1528,7 +1534,14 @@ void MCField::unselect(Boolean clear, Boolean internal)
 	if (state & CS_SELECTING)
 		endselection();
 	if (MCactivefield == this && internal)
-        MCselection->Clear();
+    {
+        // Clear the selection, if we're the owner (we don't clear if we're not
+        // the owner as that means the last selection was made in another
+        // program and the user might be focusing in the field to paste that
+        // selection).
+        if (MCselection->IsOwned())
+            MCselection->Clear();
+    }
 	if (clear || (MCactivefield == this && !(state & CS_KFOCUSED)))
 		MCactivefield = NULL;
 	if (!opened || focusedparagraph == NULL)
