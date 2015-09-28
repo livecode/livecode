@@ -189,7 +189,7 @@ metadata backgroundOpacity.label is "Background Opacity"
 Syntax: set the colorScheme of <widget> to <pColorScheme>
 Syntax: get the colorScheme of <widget>
 
-Summary: The color scheme of the widget (Android only)
+Summary: The color scheme of the widget
 
 Parameters:
 pColorScheme(enum): The color scheme of the widget
@@ -219,8 +219,28 @@ Use the <colorScheme> property to set the color scheme of the widget, Android on
 property colorScheme get mColorScheme set setColorScheme
 metadata colorScheme.editor is "com.livecode.pi.enum"
 metadata colorScheme.options is "Red,Pink,Purple,Deep Purple,Indigo,Blue,Light Blue,Cyan,Teal,Green,Light Green,Lime,Yellow,Amber,Orange,Deep Orange,Brown,Grey,Blue Grey"
-metadata colorScheme.default is "Teal"
+metadata colorScheme.default is "Blue"
 metadata colorScheme.label is "Color Scheme"
+
+/*
+Syntax: set the colorTheme of <widget> to <pColorTheme>
+Synatx: get the colorTheme of <widget>
+
+Summary: The color theme of the widget
+
+Parameters:
+pColorTheme(enum): The color theme of the widget
+-"Light"
+-"Dark"
+
+Description:
+Use the <colorTheme> property to set the color theme of the widget, Android only.
+*/
+property colorTheme get mColorTheme set setColorTheme
+metadata colorTheme.editor is "com.livecode.pi.enum"
+metadata colorTheme.options is "Light,Dark"
+metadata colorTheme.default is "Light"
+metadata colorTheme.label is "Color Theme"
 
 -- private instance variables
 private variable mWidgetTheme as String
@@ -231,6 +251,7 @@ private variable mLabelColor as Color
 private variable mBackgroundColor as Color
 private variable mBackgroundOpacity as String
 private variable mColorScheme as String
+private variable mColorTheme as String
 
 private variable mShowBorder as Boolean
 private variable mDefaultColor as Color
@@ -240,6 +261,8 @@ private variable mWidth as Real
 private variable mHeight as Real
 
 private variable mAndroidColors as Array
+private variable mAndroidBackgroundColor as Color
+private variable mAndroidLabelColor as Color
 
 -- constants
 constant kWidgetThemeIos is "iOS"
@@ -270,6 +293,7 @@ public handler OnSave(out rProperties as Array)
    put colorToString(mBackgroundColor) into rProperties["backgroundColor"]
    put mBackgroundOpacity into rProperties["opacity"]
    put mColorScheme into rProperties["colorScheme"]
+   put mColorTheme into rProperties["colorTheme"]
 
 end handler
 
@@ -282,6 +306,7 @@ public handler OnLoad(in pProperties as Array)
    put stringToColor(pProperties["backgroundColor"]) into mBackgroundColor
    put pProperties["opacity"] into mBackgroundOpacity
    put pProperties["colorScheme"] into mColorScheme
+   put pProperties["colorTheme"] into mColorTheme
 end handler
 
 public handler OnCreate() returns nothing
@@ -293,6 +318,7 @@ public handler OnCreate() returns nothing
    put color [1, 1, 1, 0] into mBackgroundColor
    put "Transparent" into mBackgroundOpacity
    put "Blue" into mColorScheme
+   put "Light" into mColorTheme
 
    put false into mShowBorder
    put color [0, 121/255, 1] into mDefaultColor
@@ -389,9 +415,9 @@ private handler drawDropShadow() returns Effect
    put the empty array into tProps
 
    if mWidgetTheme is kWidgetThemeAndroidFloatingAction then
-      put color [186/255, 186/255, 186/255, 0.9] into tProps["color"]
+      put color [186/255, 186/255, 186/255, 0.2] into tProps["color"]
       put "source over" into tProps["blend mode"]
-      put 255 into tProps["opacity"]
+      put 25 into tProps["opacity"]
       put 0.5 into tProps["spread"]
       put 5 into tProps["size"]
       put 7 into tProps["distance"]
@@ -413,20 +439,20 @@ private handler drawDropShadow() returns Effect
    return tEffect
 end handler
 
-private handler updateVariables() returns nothing
-   put my width into mWidth
-   put my height into mHeight
-
-   put mHeight*(kIosDefaultFontSize/kIosDefaultHeight) into mIosFontSize
-   put mHeight*(kAndroidDefaultFontSize/kAndroidDefaultHeight) into mAndroidFontSize
-end handler
-
 private handler fetchPaint(in pObject as String) returns Paint
    if pObject is "background" then
+      if mWidgetTheme is kWidgetThemeIos then
          return solid paint with mBackgroundColor
+      else if mWidgetTheme contains "Android" then
+         return solid paint with mAndroidBackgroundColor
+      end if
 
    else if pObject is "label" then
-      return solid paint with mLabelColor
+      if mWidgetTheme is kWidgetThemeIos then
+         return solid paint with mLabelColor
+      else if mWidgetTheme contains "Android" then
+         return solid paint with mAndroidLabelColor
+      end if
 
    else if pObject is "border" then
       return solid paint with color [167/255, 167/255, 167/255]
@@ -471,6 +497,25 @@ private handler fetchFont() returns Font
    end if
 end handler
 
+private handler updateVariables() returns nothing
+   put my width into mWidth
+   put my height into mHeight
+
+   put mHeight*(kIosDefaultFontSize/kIosDefaultHeight) into mIosFontSize
+   put mHeight*(kAndroidDefaultFontSize/kAndroidDefaultHeight) into mAndroidFontSize
+
+   if mWidgetTheme contains "Android" then
+      if mColorTheme is "Light" then
+         put stringToColor(mAndroidColors[mColorScheme]) into mAndroidLabelColor
+         put color [1,1,1] into mAndroidBackgroundColor
+      else if mColorTheme is "Dark" then
+         put stringToColor(mAndroidColors[mColorScheme]) into mAndroidBackgroundColor
+         put color [1,1,1] into mAndroidLabelColor
+      end if
+   end if
+
+end handler
+
 private handler fetchAndroidColors() returns nothing
 
 	put the empty array into mAndroidColors
@@ -495,6 +540,7 @@ private handler fetchAndroidColors() returns nothing
 	put "78,106,120" into mAndroidColors["Blue Grey"]
 
 end handler
+
 --------------------------------------------------------------------------------
 --
 --		Getting and Setting Properties
@@ -638,6 +684,23 @@ private handler setColorScheme(in pColorScheme as String) returns nothing
    end if
 
    put pColorScheme into mColorScheme
+   redraw all
+
+end handler
+
+private handler setColorTheme(in pColorTheme as String) returns nothing
+
+   if pColorTheme is mColorTheme then
+      return
+   end if
+
+   variable tThemeList as List
+   put ["Dark","Light"] into tThemeList
+   if not(pColorTheme is in tThemeList) then
+      throw "invalid color theme"
+   end if
+
+   put pColorTheme into mColorTheme
    redraw all
 
 end handler
