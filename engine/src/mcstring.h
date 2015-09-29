@@ -14,6 +14,10 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+
+#include "typedefs.h"
+
+
 extern const uint1 MCisotranslations[256];
 extern const uint1 MCmactranslations[256];
 

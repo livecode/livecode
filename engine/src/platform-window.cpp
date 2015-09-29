@@ -566,9 +566,9 @@ void MCPlatformWindow::HandleKeyUp(MCPlatformKeyCode p_key_code, codepoint_t p_m
 	MCPlatformCallbackSendKeyUp(this, p_key_code, p_mapped_char, p_unmapped_char);
 }
 
-void MCPlatformWindow::HandleDragEnter(MCPlatformPasteboardRef p_pasteboard, MCPlatformDragOperation& r_operation)
+void MCPlatformWindow::HandleDragEnter(MCRawClipboard* p_dragboard, MCPlatformDragOperation& r_operation)
 {
-	MCPlatformCallbackSendDragEnter(this, p_pasteboard, r_operation);
+	MCPlatformCallbackSendDragEnter(this, p_dragboard, r_operation);
 }
 
 void MCPlatformWindow::HandleDragMove(MCPoint p_location, MCPlatformDragOperation& r_operation)

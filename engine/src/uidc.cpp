@@ -1873,41 +1873,6 @@ void MCUIDC::stopplayingsound(void)
 
 //
 
-bool MCUIDC::ownsselection(void)
-{
-	return false;
-}
-
-MCPasteboard *MCUIDC::getselection(void)
-{
-	return NULL;
-}
-
-bool MCUIDC::setselection(MCPasteboard *p_pasteboard)
-{
-	return false;
-}
-
-void MCUIDC::flushclipboard(void)
-{
-}
-
-bool MCUIDC::ownsclipboard(void)
-{
-	return false;
-}
-
-MCPasteboard *MCUIDC::getclipboard(void)
-{
-	return NULL;
-}
-
-bool MCUIDC::setclipboard(MCPasteboard *p_pasteboard)
-{
-	return false;
-}
-
-
 // TD-2013-07-01: [[ DynamicFonts ]]
 bool MCUIDC::loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_font_handle)
 {
@@ -1921,7 +1886,7 @@ bool MCUIDC::unloadfont(MCStringRef p_path, bool p_globally, void *r_loaded_font
 
 //
 
-MCDragAction MCUIDC::dodragdrop(Window w, MCPasteboard* p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset)
+MCDragAction MCUIDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset)
 {
 	return DRAG_ACTION_NONE;
 }

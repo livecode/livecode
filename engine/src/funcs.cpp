@@ -3048,7 +3048,7 @@ Parse_stat MCKeys::parse(MCScriptPoint &sp, Boolean the)
 			return PS_ERROR;
 		}
 		if (sp.lookup(SP_FACTOR, te) != PS_NORMAL
-		        || (te->which != P_DRAG_DATA && te->which != P_CLIPBOARD_DATA))
+		        || (te->which != P_DRAG_DATA && te->which != P_CLIPBOARD_DATA && te->which != P_RAW_CLIPBOARD_DATA))
 		{
 			MCperror->add(PE_KEYS_BADPARAM, sp);
 			return PS_ERROR;
@@ -3188,8 +3188,12 @@ void MCKeys::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 	{
 		if (which == P_DRAG_DATA)
 			MCPasteboardEvalDragDropKeys(ctxt, r_value . stringref_value);
-		else
+        else if (which == P_RAW_CLIPBOARD_DATA)
+            MCPasteboardEvalRawClipboardKeys(ctxt, r_value . stringref_value);
+		else if (which == P_CLIPBOARD_DATA)
 			MCPasteboardEvalClipboardKeys(ctxt, r_value . stringref_value);
+        else
+            MCUnreachable();
         r_value . type = kMCExecValueTypeStringRef;
 	}
 }
@@ -3207,8 +3211,12 @@ void MCKeys::compile(MCSyntaxFactoryRef ctxt)
 	{
 		if (which == P_DRAG_DATA)
 			MCSyntaxFactoryEvalMethod(ctxt, kMCPasteboardEvalDragDropKeysMethodInfo);
-		else
+        else if (which == P_RAW_CLIPBOARD_DATA)
+            MCSyntaxFactoryEvalMethod(ctxt, kMCPasteboardEvalRawClipboardKeysMethodInfo);
+		else if (which == P_CLIPBOARD_DATA)
 			MCSyntaxFactoryEvalMethod(ctxt, kMCPasteboardEvalClipboardKeysMethodInfo);
+        else
+            MCUnreachable();
 	}
 
 	MCSyntaxFactoryEndExpression(ctxt);

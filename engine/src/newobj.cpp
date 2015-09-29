@@ -388,7 +388,7 @@ MCExpression *MCN_new_function(int2 which)
 	case F_CLICK_V:
 		return new MCClickV;
 	case F_CLIPBOARD:
-		return new MCClipboard;
+		return new MCClipboardProp;
     case F_CODEPOINT_OFFSET:
         return new MCCodepointOffset;
     case F_CODEUNIT_OFFSET:

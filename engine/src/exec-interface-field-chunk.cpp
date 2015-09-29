@@ -1512,7 +1512,7 @@ void MCField::SetStyledTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, 
     MCParagraph *stpgptr = styledtexttoparagraphs(value);
 
     if (stpgptr == nil)
-        stpgptr = texttoparagraphs(MCnullmcstring, false);
+        stpgptr = texttoparagraphs(kMCEmptyString);
         
     setparagraphs(stpgptr, p_part_id, p_start, p_finish);
     

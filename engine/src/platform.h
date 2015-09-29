@@ -674,46 +674,9 @@ enum MCPlatformDragOperation
 	// COCOA-TODO: Add other drag operation types.
 };
 
-// The flavors expoted by the platform layer are currently only the ones which
-// the LiveCode engine can handle on a platform-independent basis - the platform
-// layer will do any internal conversions (for example, on Mac TIFF is a typical
-// image format - the platform layer will recode as PNG for the engine).
-enum MCPlatformPasteboardFlavor
-{
-	kMCPlatformPasteboardFlavorNone,
-	
-	kMCPlatformPasteboardFlavorUTF8,
-	kMCPlatformPasteboardFlavorRTF,
-	kMCPlatformPasteboardFlavorHTML,
-	kMCPlatformPasteboardFlavorPNG,
-	kMCPlatformPasteboardFlavorJPEG,
-	kMCPlatformPasteboardFlavorGIF,
-	kMCPlatformPasteboardFlavorFiles,
-	
-	// PLATFORM-TODO: This needs a better mechanism for extending recognised formats
-	kMCPlatformPasteboardFlavorObjects,
-	kMCPlatformPasteboardFlavorStyledText,
-};
-
-void MCPlatformPasteboardRetain(MCPlatformPasteboardRef pasteboard);
-void MCPlatformPasteboardRelease(MCPlatformPasteboardRef pasteboard);
-
-uindex_t MCPlatformPasteboardGetGeneration(MCPlatformPasteboardRef pasteboard);
-
-bool MCPlatformPasteboardQuery(MCPlatformPasteboardRef pasteboard, MCPlatformPasteboardFlavor*& r_flavors, uindex_t& r_count);
-bool MCPlatformPasteboardFetch(MCPlatformPasteboardRef pasteboard, MCPlatformPasteboardFlavor flavor, void*& r_bytes, uindex_t& r_byte_count);
-
-void MCPlatformPasteboardClear(MCPlatformPasteboardRef pasteboard);
-bool MCPlatformPasteboardStore(MCPlatformPasteboardRef pasteboard, MCPlatformPasteboardFlavor *flavor, uindex_t flavor_count, void *handle);
-
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPlatformGetDragboard(MCPlatformPasteboardRef& r_pasteboard);
 void MCPlatformDoDragDrop(MCPlatformWindowRef window, MCPlatformAllowedDragOperations allowed_operations, MCImageBitmap *image, const MCPoint *image_loc, MCPlatformDragOperation& r_operation);
-
-////////////////////////////////////////////////////////////////////////////////
-
-void MCPlatformGetClipboard(MCPlatformPasteboardRef& r_pasteboard);
 
 ////////////////////////////////////////////////////////////////////////////////
 

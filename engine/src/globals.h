@@ -20,8 +20,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_GLOBALS__
 #define __MC_GLOBALS__
 
+#include "clipboard.h"
 #include "mcstring.h"
 #include "imagelist.h"
+#include "parsedef.h"
+#include "sysdefs.h"
 
 #include "foundation-locale.h"
 
@@ -377,15 +380,15 @@ extern Window MCgtkthemewindow;
 #define RTB_NO_UNICODE_WINDOWS (1 << 2)
 extern uint4 MCruntimebehaviour;
 
-extern MCDragData *MCdragdata;
 extern MCDragAction MCdragaction;
 extern MCObject *MCdragtargetptr;
 extern MCDragActionSet MCallowabledragactions;
 extern uint4 MCdragimageid;
 extern MCPoint MCdragimageoffset;
 
-extern MCClipboardData *MCclipboarddata;
-extern MCSelectionData *MCselectiondata;
+extern MCClipboard* MCclipboard;
+extern MCClipboard* MCselection;
+extern MCClipboard* MCdragboard;
 
 extern uint4 MCsecuremode;
 
@@ -418,6 +421,9 @@ extern char *MCsysencoding;
 // Locales
 extern MCLocaleRef kMCBasicLocale;
 extern MCLocaleRef kMCSystemLocale;
+
+// The raw clipboard object used for raw clipboard access from scripts
+extern class MCRawClipboard* MCscriptrawclipboard;
 
 ////////////////////////////////////////////////////////////////////////////////
 //

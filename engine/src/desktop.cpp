@@ -40,6 +40,7 @@
 #include "player.h"
 #include "aclip.h"
 #include "stacklst.h"
+#include "clipboard.h"
 
 #include "desktop-dc.h"
 #include "param.h"
@@ -361,7 +362,7 @@ void MCPlatformHandleMouseDown(MCPlatformWindowRef p_window, uint32_t p_button, 
 				MCdragimageid = 0;
 				MCdragimageoffset . x = 0;
 				MCdragimageoffset . y = 0;
-				MCdragdata -> ResetSource();
+                MCdragboard->Clear();
 			}
 			
 			t_target -> mdown(p_button + 1);
@@ -520,13 +521,16 @@ static MCPlatformDragOperation dragaction_to_dragoperation(MCDragAction p_action
 	return kMCPlatformDragOperationNone;
 }
 
-void MCPlatformHandleDragEnter(MCPlatformWindowRef p_window, MCPlatformPasteboardRef p_pasteboard, MCPlatformDragOperation& r_operation)
+void MCPlatformHandleDragEnter(MCPlatformWindowRef p_window, MCRawClipboard* p_dragboard, MCPlatformDragOperation& r_operation)
 {
-	MCSystemPasteboard *t_pasteboard;
-	t_pasteboard = new MCSystemPasteboard(p_pasteboard);
-	MCdispatcher -> wmdragenter(p_window, t_pasteboard);
-	t_pasteboard -> Release();
+    // On some platforms (Mac and iOS), the drag board used for drag-and-drop
+    // operations may not be the main drag board. If a non-NULL clipboard was
+    // supplied for this operation, tell the engine drag board to re-bind to it.
+    if (p_dragboard != NULL)
+        MCdragboard->Rebind(p_dragboard);
 	
+    MCdispatcher->wmdragenter(p_window);
+    
 	r_operation = dragaction_to_dragoperation(MCdragaction);
 }
 
@@ -539,7 +543,13 @@ void MCPlatformHandleDragMove(MCPlatformWindowRef p_window, MCPoint p_location, 
 
 void MCPlatformHandleDragLeave(MCPlatformWindowRef p_window)
 {
-	MCdispatcher -> wmdragleave(p_window);
+    // On some platforms (Mac and iOS), the drag board used for drag-and-drop
+    // operations may not be the main drag board. Reset the drag board back to
+    // the main one after the drag has left.
+    MCAutoRefcounted<MCRawClipboard> t_dragboard(MCRawClipboard::CreateSystemDragboard());
+    MCdragboard->Rebind(t_dragboard);
+    
+    MCdispatcher -> wmdragleave(p_window);
 }
 
 void MCPlatformHandleDragDrop(MCPlatformWindowRef p_window, bool& r_accepted)
@@ -1294,23 +1304,6 @@ void MCPlatformHandleTextInputAction(MCPlatformWindowRef p_window, MCPlatformTex
 			MCactivefield -> deleteselection(False);
 			break;
 	};
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-typedef bool (*pasteboard_resolve_callback_t)(MCPlatformPasteboardFlavor flavor, void*& r_data, size_t& r_data_size);
-
-void MCPlatformHandlePasteboardResolve(MCPlatformPasteboardRef p_pasteboard, MCPlatformPasteboardFlavor p_flavor, void *p_handle, void *& r_data, size_t& r_data_size)
-{
-	void *t_data;
-	size_t t_data_size;
-	if (((pasteboard_resolve_callback_t)p_handle)(p_flavor, t_data, t_data_size))
-	{
-		r_data = t_data;
-		r_data_size = t_data_size;
-	}
-	else
-		r_data = nil, r_data_size = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

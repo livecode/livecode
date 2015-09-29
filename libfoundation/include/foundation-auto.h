@@ -31,6 +31,11 @@ public:
 	{
 		m_value = nil;
 	}
+    
+    explicit MCAutoValueRefBase(T value)
+    {
+        m_value = value;
+    }
 
 	~MCAutoValueRefBase(void)
 	{
@@ -54,6 +59,20 @@ public:
 	{
 		return m_value;
 	}
+    
+    void Reset(T value = nil)
+    {
+        if (m_value)
+            MCValueRelease(m_value);
+        m_value = (value) ? (T)MCValueRetain(value) : NULL;
+    }
+    
+    void Give(T value)
+    {
+        if (m_value)
+            MCValueRelease(m_value);
+        m_value = value;
+    }
 
 private:
 	T m_value;
@@ -203,6 +222,7 @@ private:
 typedef MCAutoValueRefArrayBase<MCValueRef> MCAutoValueRefArray;
 typedef MCAutoValueRefArrayBase<MCNumberRef> MCAutoNumberRefArray;
 typedef MCAutoValueRefArrayBase<MCStringRef> MCAutoStringRefArray;
+typedef MCAutoValueRefArrayBase<MCDataRef> MCAutoDataRefArray;
 typedef MCAutoValueRefArrayBase<MCArrayRef> MCAutoArrayRefArray;
 typedef MCAutoValueRefArrayBase<MCListRef> MCAutoListRefArray;
 typedef MCAutoValueRefArrayBase<MCBooleanRef> MCAutoBooleanRefArray;
@@ -772,10 +792,15 @@ public:
 
 	//////////
 
-	T& operator [] (const int p_index)
+	T& operator [] (uindex_t p_index)
 	{
 		return m_ptr[p_index];
 	}
+    
+    const T& operator [] (uindex_t p_index) const
+    {
+        return m_ptr[p_index];
+    }
 
 private:
 	T *m_ptr;

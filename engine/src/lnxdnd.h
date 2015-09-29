@@ -14,16 +14,8 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
-
-	Header files for the implimentation of the XDnD protocol
-    (see http://www.newplanetsoftware.com/xdnd/)
-
-*/
 
 #ifndef _XDND_H
 #define _XDND_H
-
-#include "transfer.h"
 
 #endif

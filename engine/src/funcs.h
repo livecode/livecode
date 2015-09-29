@@ -343,7 +343,7 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCClipboard : public MCConstantFunctionCtxt<MCNameRef, MCPasteboardEvalClipboard>
+class MCClipboardProp : public MCConstantFunctionCtxt<MCNameRef, MCPasteboardEvalClipboard>
 {
 public:
 	// virtual Exec_stat eval(MCExecPoint &);

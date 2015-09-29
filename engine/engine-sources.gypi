@@ -144,7 +144,6 @@
 			'src/securemode.h',
 			'src/sha1.h',
 			'src/text.h',
-			'src/transfer.h',
 			'src/uidc.h',
 			'src/unicode.h',
 			'src/util.h',
@@ -168,7 +167,6 @@
 			'src/securemode.cpp',
 			'src/sha1.cpp',			
 			'src/text.cpp',
-			'src/transfer.cpp',
 			'src/uidc.cpp',
 			'src/unicode.cpp',
 			'src/util.cpp',
@@ -518,6 +516,19 @@
 			
 			# Other files
 			'src/socket_resolve.cpp',
+
+			'src/clipboard.h',
+			'src/lnx-clipboard.h',
+			'src/mac-clipboard.h',
+			'src/raw-clipboard.h',
+			'src/w32-clipboard.h',
+			'src/clipboard.cpp',
+			'src/lnx-clipboard.cpp',
+			'src/mac-clipboard.mm',
+			'src/raw-clipboard.cpp',
+			'src/w32-clipboard.cpp',
+
+			'src/mixin-refcounted.h',
 		],
 		
 		# Sources that are only for desktop mode
@@ -533,7 +544,6 @@
 			'src/desktop-dc.cpp',
 			'src/desktop-stack.cpp',
 			'src/desktop-menu.cpp',
-			'src/desktop-pasteboard.cpp',
 			'src/desktop-image.cpp',
 			'src/desktop-ans.cpp',
 			'src/legacy_spec.cpp',
@@ -555,14 +565,11 @@
 			'src/lnxgtkthemedrawing.h',
 			'src/lnximagecache.h',
 			'src/lnxmplayer.h',
-			'src/lnxpasteboard.h',
 			'src/lnxprefix.h',
 			'src/lnxpsprinter.h',
 			'src/lnxtheme.h',
-			'src/lnxtransfer.h',
 			'src/lnxans.cpp',
 			'src/lnxaudio.cpp',
-			'src/lnxclipboard.cpp',
 			'src/lnxcolor.cpp',
 			'src/lnxcursor.cpp',
 			'src/lnxdc.cpp',
@@ -578,12 +585,10 @@
 			'src/lnxkeymapping.cpp',
 			'src/lnxmisc.cpp',
 			'src/lnxmplayer.cpp',
-			'src/lnxpasteboard.cpp',
 			'src/lnxpsprinter.cpp',
 			'src/lnxspec.cpp',
 			'src/lnxstack.cpp',
 			'src/lnxtextlayout.cpp',
-			'src/lnxtransfer.cpp',
 			
 			# Group "Desktop - Mac"
 			'src/mac-internal.h',
@@ -633,9 +638,7 @@
 			'src/w32printer.h',
 			'src/w32text.h',
 			'src/w32theme.h',
-			'src/w32transfer.h',
 			'src/w32ans.cpp',
-			'src/w32clipboard.cpp',
 			'src/w32color.cpp',
 			'src/w32compat.cpp',
 			'src/w32cursor.cpp',
@@ -657,7 +660,6 @@
 			'src/w32text.cpp',
 			'src/w32textlayout.cpp',
 			'src/w32theme.cpp',
-			'src/w32transfer.cpp',
 		],
 		
 		# Sources that need to be compiled separately for each mode
@@ -926,7 +928,6 @@
 						'src/desktop-dc.cpp',
 						'src/desktop-image.cpp',
 						'src/desktop-menu.cpp',
-						'src/desktop-pasteboard.cpp',
 						'src/desktop-stack.cpp',
 						'src/platform.cpp',
 						'src/platform-recorder.cpp',

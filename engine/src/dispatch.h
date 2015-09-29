@@ -127,7 +127,7 @@ public:
 	// This method is invoked when this application is acting as a drag-drop
 	// target and the mouse pointer has entered the given window.
 	//
-	void wmdragenter(Window w, MCPasteboard* p_data);
+	void wmdragenter(Window w);
 
 	// This method is invoked when this application is acting as a drag-drop
 	// target and the mouse pointer has moved within the given window to the

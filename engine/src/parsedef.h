@@ -20,6 +20,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	PARSEDEFS_H
 #define	PARSEDEFS_H
 
+#include "mcutility.h"
+#include "sysdefs.h"
+
 typedef struct _constant
 {
 	MCString name;
@@ -648,6 +651,8 @@ enum Is_type {
 	IT_NOT_AMONG_THE_DRAG_DATA,
 	IT_AMONG_THE_CLIPBOARD_DATA,
 	IT_NOT_AMONG_THE_CLIPBOARD_DATA,
+    IT_AMONG_THE_RAW_CLIPBOARD_DATA,
+    IT_NOT_AMONG_THE_RAW_CLIPBOARD_DATA,
 };
 
 enum Is_validation {
@@ -676,6 +681,7 @@ enum Lock_constants {
     LC_RECENT,
     LC_SCREEN,
 	LC_SCREEN_FOR_EFFECT,
+    LC_CLIPBOARD,
 };
 
 enum Mark_constants {
@@ -1685,6 +1691,8 @@ enum Properties {
     P_LOCALIZED_TITLE,
     P_LOCALIZED_DESCRIPTION,
     P_LOCALIZED_PRICE,
+    
+    P_RAW_CLIPBOARD_DATA,
     
     __P_LAST,
 };

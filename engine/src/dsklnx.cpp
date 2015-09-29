@@ -3163,7 +3163,8 @@ public:
         timeoutval.tv_sec = (long)delay;
         timeoutval.tv_usec = (long)((delay - floor(delay)) * 1000000.0);
 
-            n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
+        n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
+        
         if (n <= 0)
             return handled;
         if (MCshellfd != -1 && FD_ISSET(MCshellfd, &rmaskfd))
@@ -3248,9 +3249,8 @@ public:
             if (MCinputfd > maxfd)
                 maxfd = MCinputfd;
         }
+        
         handled = MCSocketsAddToFileDescriptorSets(maxfd, rmaskfd, wmaskfd, emaskfd);
-        if (handled)
-            p_delay = 0.0;
 
         if (g_notify_pipe[0] != -1)
         {
@@ -3259,13 +3259,46 @@ public:
                 maxfd = g_notify_pipe[0];
         }
 
+        // Prepare GLib for the poll we are about to do
+        gint t_glib_ready_priority;
+        if (g_main_context_prepare(NULL, &t_glib_ready_priority))
+            handled = true;
+        
+        // If things are already ready, ensure the timeout is zero
+        if (handled)
+            p_delay = 0.0;
+            
+        // Get the list of file descriptors that the GLib main loop needs to
+        // add to the poll operation.
+        GMainContext* t_glib_main_context = g_main_context_default();
+        MCAutoArray<GPollFD> t_glib_fds;
+        gint t_glib_timeout;
+        t_glib_fds.Extend(g_main_context_query(t_glib_main_context, G_MAXINT, &t_glib_timeout, NULL, 0));
+        g_main_context_query(t_glib_main_context, G_MAXINT, &t_glib_timeout, t_glib_fds.Ptr(), t_glib_fds.Size());
+        
+        // Add the GLib descriptors to the list
+        for (uindex_t i = 0; i < t_glib_fds.Size(); i++)
+        {
+            // Are we polling this FD for reading?
+            if (t_glib_fds[i].events & (G_IO_IN|G_IO_PRI))
+                FD_SET(t_glib_fds[i].fd, &rmaskfd);
+            if (t_glib_fds[i].events & (G_IO_OUT))
+                FD_SET(t_glib_fds[i].fd, &wmaskfd);
+            if (t_glib_fds[i].events & (G_IO_ERR|G_IO_HUP))
+                FD_SET(t_glib_fds[i].fd, &emaskfd);
+            
+            if (t_glib_fds[i].events != 0 && t_glib_fds[i].fd > maxfd)
+                maxfd = t_glib_fds[i].fd;
+        }
+        
         MCModePreSelectHook(maxfd, rmaskfd, wmaskfd, emaskfd);
 
         struct timeval timeoutval;
         timeoutval.tv_sec = (long)p_delay;
         timeoutval.tv_usec = (long)((p_delay - floor(p_delay)) * 1000000.0);
 
-            n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
+        n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
+        
         if (n <= 0)
             return handled;
         if (MCshellfd != -1 && FD_ISSET(MCshellfd, &rmaskfd))
@@ -3274,6 +3307,21 @@ public:
             readinput = True;
         MCSocketsHandleFileDescriptorSets(rmaskfd, wmaskfd, emaskfd);
 
+        // Check whether any of the GLib file descriptors were signalled
+        for (uindex_t i = 0; i < t_glib_fds.Size(); i++)
+        {
+            if (FD_ISSET(t_glib_fds[i].fd, &rmaskfd))
+                t_glib_fds[i].revents |= G_IO_IN;
+            if (FD_ISSET(t_glib_fds[i].fd, &wmaskfd))
+                t_glib_fds[i].revents |= G_IO_OUT;
+            if (FD_ISSET(t_glib_fds[i].fd, &emaskfd))
+                t_glib_fds[i].revents |= G_IO_ERR;
+        }
+        
+        // Let GLib know which file descriptors were signalled. We don't
+        // dispatch these now as that will happen later.
+        g_main_context_check(t_glib_main_context, G_MAXINT, t_glib_fds.Ptr(), t_glib_fds.Size());
+        
         if (g_notify_pipe[0] != -1 && FD_ISSET(g_notify_pipe[0], &rmaskfd))
         {
             char t_notify_char;

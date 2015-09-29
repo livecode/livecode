@@ -20,20 +20,22 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	UIDC_H
 #define	UIDC_H
 
-#ifndef DLLST_H
 #include "dllst.h"
-#endif
-
-#ifndef FILEDEFS_H
 #include "filedefs.h"
-#endif
-
-#ifndef __MC_TRANSFER__
-#include "transfer.h"
-#endif
-
 #include "graphics.h"
 #include "imagebitmap.h"
+
+enum
+{
+    DRAG_ACTION_MOVE_BIT = 0,
+    DRAG_ACTION_COPY_BIT,
+    DRAG_ACTION_LINK_BIT,
+    
+    DRAG_ACTION_NONE = 0,
+    DRAG_ACTION_MOVE = 1 << DRAG_ACTION_MOVE_BIT,
+    DRAG_ACTION_COPY = 1 << DRAG_ACTION_COPY_BIT,
+    DRAG_ACTION_LINK = 1 << DRAG_ACTION_LINK_BIT,
+};
 
 enum Flush_events {
     FE_ALL,
@@ -539,63 +541,6 @@ public:
 
 	//
 
-	// Returns true if this application currently owns the transient selection.
-	//
-	virtual bool ownsselection(void);
-
-	// Attempt to grab the transient selection with the given list of data types.
-	// Upon success, true should be returned.
-	//
-	// If p_pasteboard is NULL, then the selection is ungrabbed if this application
-	// is the current owner.
-	//
-	// The pasteboard object is passed with get semantics, the callee must retain
-	// the object if it wishes to keep a reference.
-	//
-	virtual bool setselection(MCPasteboard *p_pasteboard);
-
-	// Return an object allowing access to the current transient selection. See
-	// the definition of MCPasteboard for more information.
-	//
-	// The pasteboard object is returned with copy semantics - the caller must
-	// release the object when it is finished with it.
-	//
-	virtual MCPasteboard *getselection(void);
-
-	//
-
-	// Flush the contents of the current clipboard to the OS if we are the current
-	// owner. This method is called before final shutdown to ensure that the
-	// clipboard isn't lost when a LiveCode application quits.
-	virtual void flushclipboard(void);
-
-	// Returns true if this application currently owns the clipboard.
-	//
-	virtual bool ownsclipboard(void);
-
-	// Attempt to grab the clipboard and place the given list of data types
-	// upon it.
-	//
-	// If p_pasteboard is NULL and this application is the current owner of the
-	// clipboard, ownersup should be relinquished.
-	// 
-	// The pasteboard object is passed with get semantics, the callee must retain
-	// the object if it wishes to keep a reference.
-	//
-	virtual bool setclipboard(MCPasteboard *p_pasteboard);
-
-	// Return an object allowing access to the current clipboard. See
-	// the definition of MCPasteboard for more information.
-	//
-	// The returned object has copy semantics, the caller should release it when
-	// it is finished with it.
-	//
-	// Note that the system clipboard should be considered locked by this method
-	// and will remain so until the object is released. Therefore, the object 
-	// should not be held for 'too long'.
-	//
-	virtual MCPasteboard *getclipboard(void);
-
 	// Begin a drag-drop operation with this application as source and with the
 	// given list of data-types.
 	//
@@ -610,7 +555,7 @@ public:
 	// The method returns the actual result of the drag-drop operation - DRAG_ACTION_NONE meaning
 	// that no drop occured.
 	//
-	virtual MCDragAction dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset);
+	virtual MCDragAction dodragdrop(Window w, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset);
 	
 	//
 
