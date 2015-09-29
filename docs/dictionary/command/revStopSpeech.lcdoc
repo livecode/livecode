@@ -23,8 +23,8 @@ Use the <revStopSpeech> <command> to let the user interrupt a lengthy speech, or
 
 You can use the <revIsSpeaking> <function> to determine whether there's currently a speech in progress.
 
->*Important:*  The <revStopSpeech> <command> is part of the <Speech library>. To ensure that the <command> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "Speech" is selected in the list of script libraries.
+>*Important:*  The <revStopSpeech> <command> is part of the <Speech library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "Speech" is selected in the list of script libraries.
 
-References: function (control_st), revUnloadSpeech (command), revSpeak (command), revIsSpeaking (function), command (glossary), Standalone Application Settings (glossary), standalone application (glossary), Speech library (library), Revolution custom library (library)
+References: function (control_st), revUnloadSpeech (command), revSpeak (command), revIsSpeaking (function), command (glossary), Standalone Application Settings (glossary), standalone application (glossary), Speech library (library), LiveCode custom library (library)
 
 Tags: multimedia

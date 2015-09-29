@@ -1179,6 +1179,10 @@ void MCObject::layerchanged()
 {
 }
 
+void MCObject::visibilitychanged(bool p_visible)
+{
+}
+
 const MCRectangle& MCObject::getrect(void) const
 {
 	return rect;

@@ -28,8 +28,8 @@ You specify settings for video capture in the video capture dialog box, which is
 
 >*Important:*  The <revSetVideoGrabSettings> <command> works only for <QuickTime> <video capture>.
 
->*Important:*  The <revSetVideoGrabSettings> <command> is part of the <Video library>. To ensure that the <command> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure that "Video Grabber" is selected from the list of script libraries.
+>*Important:*  The <revSetVideoGrabSettings> <command> is part of the <Video library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure that "Video Grabber" is selected from the list of script libraries.
 
-References: revVideoGrabSettings (command), function (control_st), video capture (glossary), Standalone Application Settings (glossary), standalone application (glossary), QuickTime (glossary), command (glossary), Video library (library), Revolution custom library (library)
+References: revVideoGrabSettings (command), function (control_st), video capture (glossary), Standalone Application Settings (glossary), standalone application (glossary), QuickTime (glossary), command (glossary), Video library (library), LiveCode custom library (library)
 
 Tags: multimedia

@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 Runtime Revolution Ltd.
+/* Copyright (C) 2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -426,6 +426,24 @@ bool MCWidgetBase::OnLayerChanged()
         GetHost()->getNativeLayer()->OnLayerChanged();
     
     return Dispatch(MCNAME("OnLayerChanged"));
+}
+
+bool MCWidgetBase::OnVisibilityChanged(bool p_visible)
+{
+    if (GetHost()->getNativeLayer())
+        GetHost()->getNativeLayer()->OnVisibilityChanged(p_visible);
+    
+    
+    MCAutoValueRefArray t_args;
+    if (!t_args . New(1))
+        return false;
+    
+    if (p_visible)
+        (MCBooleanRef&)t_args[0] = MCValueRetain(kMCTrue);
+    else
+        (MCBooleanRef&)t_args[0] = MCValueRetain(kMCFalse);
+    
+    return Dispatch(MCNAME("OnVisibilityChanged"), t_args . Ptr(), t_args . Count());
 }
 
 bool MCWidgetBase::OnParentPropertyChanged(void)
@@ -1180,6 +1198,11 @@ bool MCWidgetOnGeometryChanged(MCWidgetRef self)
 bool MCWidgetOnLayerChanged(MCWidgetRef self)
 {
     return MCWidgetAsBase(self) -> OnLayerChanged();
+}
+
+bool MCWidgetOnVisibilityChanged(MCWidgetRef self, bool p_visible)
+{
+    return MCWidgetAsBase(self) -> OnVisibilityChanged(p_visible);
 }
 
 bool MCWidgetOnParentPropertyChanged(MCWidgetRef self)

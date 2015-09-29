@@ -30,8 +30,8 @@ The greater the <wordsPerMinute>, the faster the speech. (A normal speech rate f
 
 The speed specified by the <revSetSpeechSpeed> <command> is used for all speeches following the <command> during the current session. If the computer is already speaking when you <execute> the <command>, the new speed affects the current speech.
 
->*Important:*  The <revSetSpeechSpeed> <command> is part of the <Speech library>. To ensure that the <command> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "Speech" is selected in the list of script libraries.
+>*Important:*  The <revSetSpeechSpeed> <command> is part of the <Speech library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "Speech" is selected in the list of script libraries.
 
-References: function (control_st), revSetSpeechPitch (command), revSetSpeechVoice (command), revSpeak (command), revSetSpeechProvider (command), revGetSpeechVolume (function), result (function), Standalone Application Settings (glossary), command (glossary), standalone application (glossary), execute (glossary), text to speech (glossary), Speech library (library), Revolution custom library (library)
+References: function (control_st), revSetSpeechPitch (command), revSetSpeechVoice (command), revSpeak (command), revSetSpeechProvider (command), revGetSpeechVolume (function), result (function), Standalone Application Settings (glossary), command (glossary), standalone application (glossary), execute (glossary), text to speech (glossary), Speech library (library), LiveCode custom library (library)
 
 Tags: multimedia

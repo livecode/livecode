@@ -4,7 +4,7 @@ Type: property
 
 Syntax: set the multiEffect to {true | false}
 
-Summary: Has no effect and is included in <Revolution|LiveCode> for compatibility with imported <SuperCard> projects.
+Summary: Has no effect and is included in <LiveCode> for compatibility with imported <SuperCard> projects.
 
 Introduced: 1.0
 
@@ -15,4 +15,4 @@ In SuperTalk, the <multiEffect> <property> determines whether multiple visual ef
 
 The <multiEffect> <property> is always set to false. A <handler> can set it to any value without causing a <error|script error>, but the actual value is not changed.
 
-References: visual effect (command), property (glossary), handler (glossary), SuperCard (glossary), Revolution (glossary), error (glossary)
+References: visual effect (command), property (glossary), handler (glossary), SuperCard (glossary), LiveCode (glossary), error (glossary)

@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 Runtime Revolution Ltd.
+/* Copyright (C) 2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -79,6 +79,7 @@ bool MCWidgetOnGeometryChanged(MCWidgetRef widget);
 bool MCWidgetOnLayerChanged(MCWidgetRef widget);
 bool MCWidgetOnParentPropertyChanged(MCWidgetRef widget);
 bool MCWidgetOnToolChanged(MCWidgetRef widget, Tool p_tool);
+bool MCWidgetOnVisibilityChanged(MCWidgetRef widget, bool p_visible);
 
 bool MCWidgetCopyAnnotation(MCWidgetRef widget, MCNameRef annotation, MCValueRef& r_value);
 bool MCWidgetSetAnnotation(MCWidgetRef widget, MCNameRef annotation, MCValueRef value);
@@ -167,7 +168,7 @@ public:
 	virtual bool setcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCExecValue p_value);
     
     virtual void toolchanged(Tool p_new_tool);
-    
+    virtual void visibilitychanged(bool p_visible);
     virtual void layerchanged();
 	
 	bool GetNativeView(void *&r_view);

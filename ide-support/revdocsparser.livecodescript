@@ -414,6 +414,9 @@ function revDocsGenerateDocsFileFromModular pText, pFilename
    
    local tLibraryData, tAPIData
    
+   # Keep track of if this is a widget module or not
+   local tIsWidget
+   put false into tIsWidget
    repeat for each line tLine in pText
       # Check to see if this is the start of a handler / syntax or a block of comments 
       put word 1 of tLine into tFirstWord
@@ -435,6 +438,7 @@ function revDocsGenerateDocsFileFromModular pText, pFilename
                put true into tEntryData["need_docs"]
                break
             case "widget"
+               put true into tIsWidget
                put "widget" into tEntryData["type"]
                put word 2 to -1 of tLine into tEntryData["name"]
                put true into tEntryEnded
@@ -461,7 +465,9 @@ function revDocsGenerateDocsFileFromModular pText, pFilename
                   # eat the word 'public'
                   put word 2 to -1 of tLine into tLine
                   put token 2 of tLine into tEntryData["name"]
-                  put true into tEntryData["need_docs"]
+                  
+                  # If we have a widget, then public handlers are not in the message path and so don't need docs.
+                  put not tIsWidget into tEntryData["need_docs"]
                else 
                   put true into tEntryData["private"]
                   if word 2 of tLine is "foreign" then

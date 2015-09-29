@@ -532,6 +532,23 @@ MCDispatch::startup()
 {
 	/* The standalone data should already have been unpacked by now */
 
+	/* Load & run the startup script in a temporary stack */
+	MCStack t_temporary_stack;
+
+	MCAutoStringRef t_startup_script;
+	if (!MCS_loadtextfile(MCSTR(kMCEmscriptenStartupScriptFilename),
+	                      &t_startup_script))
+	{
+		MCresult->sets("failed to read startup script");
+		return IO_ERROR;
+	}
+
+	if (ES_NORMAL != t_temporary_stack.domess(*t_startup_script))
+	{
+		MCresult->sets("failed to execute startup script");
+		return IO_ERROR;
+	}
+
 	/* Load the initial stack */
 	/* FIXME Hardcoded boot stack path*/
 	MCStack *t_stack;
@@ -543,21 +560,6 @@ MCDispatch::startup()
 	}
 
 	MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
-
-	/* Load & run the startup script */
-	MCAutoStringRef t_startup_script;
-	if (!MCS_loadtextfile(MCSTR(kMCEmscriptenStartupScriptFilename),
-	                      &t_startup_script))
-	{
-		MCresult->sets("failed to read startup script");
-		return IO_ERROR;
-	}
-
-	if (ES_NORMAL != t_stack->domess(*t_startup_script))
-	{
-		MCresult->sets("failed to execute startup script");
-		return IO_ERROR;
-	}
 
 	/* Complete startup tasks and send the startup message */
 

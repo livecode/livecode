@@ -30,8 +30,8 @@ Use the <revdb_closecursor> <function> to clean up after using a <record set (da
 
 Evaluating the <revdb_closecursor> <function> has the same effect as <execute|executing> the <revCloseCursor> <command>. The only difference is that one is a <function call> and the other is a <command>.
 
->*Important:*  The <revdb_closecursor> <function> is part of the <Database library>. To ensure that the <function> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the General screen of the <Standalone Application Settings> window, make sure the "Database Support" checkbox is checked and the database drivers you are using are selected in the list of database drivers.
+>*Important:*  The <revdb_closecursor> <function> is part of the <Database library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the General screen of the <Standalone Application Settings> window, make sure the "Database Support" checkbox is checked and the database drivers you are using are selected in the list of database drivers.
 
-References: revCloseCursor (command), function (control_st), function call (glossary), Standalone Application Settings (glossary), command (glossary), standalone application (glossary), execute (glossary), record set (database cursor) (glossary), Database library (library), Revolution custom library (library)
+References: revCloseCursor (command), function (control_st), function call (glossary), Standalone Application Settings (glossary), command (glossary), standalone application (glossary), execute (glossary), record set (database cursor) (glossary), Database library (library), LiveCode custom library (library)
 
 Tags: database

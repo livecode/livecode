@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -91,10 +91,10 @@ extern void __MCScriptAssertFailed__(const char *label, const char *expr, const 
 
 #else
 
-#define __MCScriptValidateObject__(obj)
-#define __MCScriptValidateObjectAndKind__(obj, kind)
-#define __MCScriptAssert__(expr, label)
-#define __MCScriptUnreachable__(label)
+#define __MCScriptValidateObject__(obj) do { } while (false)
+#define __MCScriptValidateObjectAndKind__(obj, kind) do { } while (false)
+#define __MCScriptAssert__(expr, label) do { } while (false)
+#define __MCScriptUnreachable__(label) do { } while (false)
 
 #endif
 

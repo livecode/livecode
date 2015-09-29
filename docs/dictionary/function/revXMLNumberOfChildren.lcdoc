@@ -33,8 +33,8 @@ Use the <revXMLNumberOfChildren> <function> to find out how many <child node|chi
 
 If the <revXMLNumberOfChildren> <function> encounters an error, it <return|returns> an error message starting with "xmlerr".
 
->*Important:*  The revXMLAddElement <function> is part of the <XML library>. To ensure that the <function> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
+>*Important:*  The revXMLAddElement <function> is part of the <XML library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
 
-References: function (control_st), integer (keyword), revXMLChildContents (function), revXMLFirstChild (function), revXMLChildNames (function), XML library (library), Revolution custom library (library), return (glossary), XML tree (glossary), child node (glossary), Standalone Application Settings (glossary), standalone application (glossary), non-negative (glossary), node (glossary), parent node (glossary)
+References: function (control_st), integer (keyword), revXMLChildContents (function), revXMLFirstChild (function), revXMLChildNames (function), XML library (library), LiveCode custom library (library), return (glossary), XML tree (glossary), child node (glossary), Standalone Application Settings (glossary), standalone application (glossary), non-negative (glossary), node (glossary), parent node (glossary)
 
 Tags: text processing
