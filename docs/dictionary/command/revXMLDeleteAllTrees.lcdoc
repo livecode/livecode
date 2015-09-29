@@ -25,8 +25,8 @@ The result: If the <revXMLDeleteAllTrees> <command> encounters an error, the <re
 Description:
 Use the <revXMLDeleteAllTrees> <command> to free up memory after you finish using the <XML library>.
 
->*Important:*  The <revXMLDeleteAllTrees> <command> is part of the <XML library>. To ensure that the <command> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
+>*Important:*  The <revXMLDeleteAllTrees> <command> is part of the <XML library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
 
-References: revXMLDeleteTree (command), result (function), revXMLTrees (function), revXMLCreateTreeFromFile (function), revXMLCreateTree (function), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), command (glossary), XML library (library), Revolution custom library (library)
+References: revXMLDeleteTree (command), result (function), revXMLTrees (function), revXMLCreateTreeFromFile (function), revXMLCreateTree (function), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), command (glossary), XML library (library), LiveCode custom library (library)
 
 Tags: text processing

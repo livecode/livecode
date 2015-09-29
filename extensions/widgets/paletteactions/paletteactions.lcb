@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015 Runtime Revolution Ltd.
+Copyright (C) 2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -100,7 +100,7 @@ public handler OnCreate()
 		put tCount formatted as string into tKey
 		put the empty array into tMenuItem[tKey]
 		put "Choice" && tKey into tMenuItem[tKey]["label"]
-		put false into tMenuItem[tKey]["checked"]
+		put "false" into tMenuItem[tKey]["checked"]
 		put "" into tMenuItem[tKey]["name"]
 		put "" into tMenuItem[tKey]["menu"]
 		put tMenuItem[tKey] into tAction["menu"][tKey]

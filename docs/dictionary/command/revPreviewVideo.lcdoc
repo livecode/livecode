@@ -33,8 +33,8 @@ If the video grabber was already recording video to a file, the <revPreviewVideo
 
 To stop displaying the video input, use the <revStopPreviewingVideo> <command>.
 
->*Important:*  The <revPreviewVideo> <command> is part of the <Video library>. To ensure that the <command> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure that "Video Grabber" is selected from the list of script libraries.
+>*Important:*  The <revPreviewVideo> <command> is part of the <Video library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure that "Video Grabber" is selected from the list of script libraries.
 
-References: file (keyword), revVideoFrameImage (command), revRecordVideo (command), revVideoGrabIdle (command), revStopPreviewingVideo (command), execute (glossary), Standalone Application Settings (glossary), command (glossary), video grabber (glossary), standalone application (glossary), QuickTime (glossary), Video library (library), Revolution custom library (library)
+References: file (keyword), revVideoFrameImage (command), revRecordVideo (command), revVideoGrabIdle (command), revStopPreviewingVideo (command), execute (glossary), Standalone Application Settings (glossary), command (glossary), video grabber (glossary), standalone application (glossary), QuickTime (glossary), Video library (library), LiveCode custom library (library)
 
 Tags: multimedia

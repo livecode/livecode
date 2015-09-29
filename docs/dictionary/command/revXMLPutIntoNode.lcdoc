@@ -36,8 +36,8 @@ Use the <revXMLPutIntoNode> <command> to put data into a <node>, between the <no
 
   revXMLPutIntoNode the docId of field "xmltree",selectedNode, uniDecode(the unicodeText of field "Contents","UTF8")
 
->*Important:*  The <revXMLPutIntoNode> <command> is part of the <XML library>. To ensure that the <command> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
+>*Important:*  The <revXMLPutIntoNode> <command> is part of the <XML library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
 
-References: revXMLDeleteNode (command), revXMLAppend (command), result (function), uniDecode (function), XML tree (glossary), Standalone Application Settings (glossary), tag (glossary), standalone application (glossary), Unicode (glossary), node (glossary), command (glossary), XML library (library), Revolution custom library (library)
+References: revXMLDeleteNode (command), revXMLAppend (command), result (function), uniDecode (function), XML tree (glossary), Standalone Application Settings (glossary), tag (glossary), standalone application (glossary), Unicode (glossary), node (glossary), command (glossary), XML library (library), LiveCode custom library (library)
 
 Tags: text processing

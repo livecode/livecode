@@ -45,6 +45,6 @@ Posted messages can only be handled by a direct parent, and a widget's script ob
 only receive messages posted by host widget, i.e. the topmost parent. 
 
 ### Example
-See https://github.com/runrev/livecode/blob/develop/extensions/widgets/simplecomposed/simplecomposed.lcb 
+See https://github.com/livecode/livecode/blob/develop/extensions/widgets/simplecomposed/simplecomposed.lcb 
 for an example of how the host/child relationship can be used.
 

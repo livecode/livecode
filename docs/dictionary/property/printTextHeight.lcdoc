@@ -4,7 +4,7 @@ Type: property
 
 Syntax: set the printTextHeight to <lineHeight> 
 
-Summary: Has no effect and is included in <Revolution|LiveCode> for compatibility with imported <HyperCard> <stacks>.
+Summary: Has no effect and is included in <LiveCode> for compatibility with imported <HyperCard> <stacks>.
 
 Introduced: 1.0
 
@@ -17,4 +17,4 @@ In HyperCard, the <printTextHeight> <property> specifies the vertical spacing of
 
 By default, the value of <printTextHeight> is 18. A <handler> can set the <property>, but the new setting has no effect.
 
-References: textHeight (property), properties (property), card (keyword), print (command), stacks (function), property (glossary), handler (glossary), Revolution (glossary), HyperCard (glossary), card (object), object (object)
+References: textHeight (property), properties (property), card (keyword), print (command), stacks (function), property (glossary), handler (glossary), LiveCode (glossary), HyperCard (glossary), card (object), object (object)

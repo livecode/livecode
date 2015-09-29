@@ -1,5 +1,5 @@
 /*                                                                     -*-c++-*-
- Copyright (C) 2015 Runtime Revolution Ltd.
+ Copyright (C) 2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  

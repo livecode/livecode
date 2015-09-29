@@ -83,9 +83,7 @@ Additionally, all types can be annotated with **optional**. An optional annotati
 
     Module
         : 'module' <Name: Identifier> SEPARATOR
-            { Metadata SEPARATOR }
-            { Import SEPARATOR }
-            { ( Definition | Metadata ) SEPARATOR }
+            { ( Definition | Metadata | Import ) SEPARATOR }
           'end' 'module'
 
 The smallest compilable unit of Modular LiveCode is the module. Each module is uniquely named using reverse DNS notation, and the names of modules are considered to live in a global namespace.
@@ -198,9 +196,9 @@ The remaining types are as follows:
 
 > **Note:** *integer* and *real* are currently the same as *number*.
 
-> **Note:** In a subsequent update you will be able to specify lists and arrays of fixed types. For example, *list of string*.
+> **Note:** In a subsequent update you will be able to specify lists and arrays of fixed types. For example, *List of String*.
 
-> **Note:** In a subsequence update you will be able to define record types (named collections of values - like structs in C) and handler types (allowing dynamic handler calls through a variable - like function pointers in C).
+> **Note:** In a subsequent update you will be able to define record types (named collections of values - like structs in C) and handler types (allowing dynamic handler calls through a variable - like function pointers in C).
 
 ## Handler Types
 

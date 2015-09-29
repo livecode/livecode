@@ -442,13 +442,10 @@ function notesFolderToHTML pIsIDE, pFolder, pVersion, pTags, @xContents, @rUpdat
             else
                put tLine into tFile
             end if
-            put url ("file:" & tFile) into tFileText
-            put the number of lines of tFileText into tNumLines
             
-            // AL-2014-11-14: Still a one-liner if the bugfix note contains a second empty line
-            if tNumLines is 2 and word 1 of line 2 of tFileText is empty then
-               delete line 2 of tFileText
-            end if
+            # Delete any empty trailing lines
+            put word 1 to -1 of url ("file:" & tFile) into tFileText
+            put the number of lines of tFileText into tNumLines
             
             if tLine contains "bugfix" then
                local tOffset
@@ -458,7 +455,7 @@ function notesFolderToHTML pIsIDE, pFolder, pVersion, pTags, @xContents, @rUpdat
                put tOneLiners & tId & "," & tTitle & CR into tOneLiners
                put tId & " - " & tTitle & CR after rUpdateBugs
             end if
-            if tNumLines > 1 and not (tNumLines is 2 and the last line of tFileText is not empty) then
+            if tNumLines > 1 then
                if tLine contains "feature" then put char 2 to -1 of line 1 of tFileText & CR after rUpdateFeatures
                put markdownToHTML(tFileText, 2, 1, xContents, true) into tParsedFile
                if tParsedFile is not empty then

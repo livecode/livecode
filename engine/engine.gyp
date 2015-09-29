@@ -15,7 +15,7 @@
 		'conditions':
 		[
 			[
-				'OS == "linux" or OS == "android"',
+				'OS == "linux" or OS == "android" or OS == "emscripten"',
 				{
 					# Ensure that the symbols LCB binds to are exported from the engine
 					'ldflags': [ '-rdynamic' ],
@@ -795,11 +795,12 @@
 
 								'inputs':
 								[
-									'emscripten-javascriptify.sh',
+									'emscripten-javascriptify.py',
 									'<(PRODUCT_DIR)/standalone-community.bc',
 									'rsrc/emscripten-html-template.html',
 									'src/em-whitelist.json',
 									'src/em-preamble.js',
+									'src/em-preamble-overlay.js',
 									'src/em-util.js',
 									'src/em-async.js',
 									'src/em-dialog.js',
@@ -818,12 +819,19 @@
 
 								'action':
 								[
-									'./emscripten-javascriptify.sh',
+									'./emscripten-javascriptify.py',
+									'--input',
 									'<(PRODUCT_DIR)/standalone-community.bc',
+									'--output',
 									'<(PRODUCT_DIR)/standalone-community-<(version_suffix).html',
+									'--shell-file',
 									'rsrc/emscripten-html-template.html',
+									'--whitelist',
 									'src/em-whitelist.json',
+									'--pre-js',
 									'src/em-preamble.js',
+									'src/em-preamble-overlay.js',
+									'--js-library',
 									'src/em-util.js',
 									'src/em-async.js',
 									'src/em-dialog.js',
