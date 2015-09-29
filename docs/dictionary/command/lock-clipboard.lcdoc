@@ -1,0 +1,32 @@
+Name: lock clipboard
+
+Type: command
+
+Syntax: lock [the] clipboard
+
+Summary: Locks the clipboard to prevent updates by other apps.
+
+Introduced: 8.0
+
+OS: mac,windows,linux
+
+Platforms: desktop
+
+Example:
+lock the clipboard
+
+Description:
+Use the <lock clipboard> <command> to ensure that other apps do not change the contents of the clipboard while you are working with it.
+
+>*Note:* If you use the <clipboardData> <property> or <clipboard> <function>, locking the clipboard is not required (it will be done automatically) but is recommended.
+
+While the clipboard is locked, the contents of the clipboard available via the <clipboardData> <property> and the <rawClipboardData> property will not change due to accesses by other apps. Similarly, changes made within LiveCode will not be visible to other apps until the clipboard is unlocked (using the <unlock clipboard> <command>).
+
+>*Tip:* Use <lock clipboard> to ensure the clipboard does not change between accesses.
+
+Locking the clipboard will throw an error if it is already locked.
+
+
+References: unlock clipboard (command), clipboard (function), clipboardData (property), rawClipboardData (property)
+
+Tags: ui, clipboard
