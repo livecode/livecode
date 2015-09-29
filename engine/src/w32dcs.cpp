@@ -422,21 +422,22 @@ void MCScreenDC::openwindow(Window w, Boolean override)
 	if (w == NULL)
 		return;
 
+	MCStack *t_stack;
+	t_stack = MCdispatcher -> findstackd(w);
+
 	if (override)
 		ShowWindow((HWND)w->handle.window, SW_SHOWNA);
 	else
-		ShowWindow((HWND)w->handle.window, SW_SHOW);
+		// CW-2015-09-28: [[ Bug 15873 ]] If the stack state is iconic, restore the window minimised.
+		if (t_stack != NULL && t_stack -> getstate(CS_ICONIC))
+			ShowWindow((HWND)w->handle.window, SW_SHOWMINIMIZED);
+		else
+			ShowWindow((HWND)w->handle.window, SW_RESTORE);
 
-	MCStack *t_stack;
-	t_stack = MCdispatcher -> findstackd(w);
 	if (t_stack != NULL)
 	{
 		if (t_stack -> getmode() == WM_SHEET || t_stack -> getmode() == WM_MODAL)
 			MCstacks -> enableformodal(w, False);
-
-		// CW-2015-09-28: [[ Bug 15873 ]] If the window has opened iconified, set the stack state to iconic.
-		if (IsIconic((HWND)w->handle.window))
-			t_stack -> seticonic(true);
 	}
 }
 
