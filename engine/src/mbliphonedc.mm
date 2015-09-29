@@ -1234,6 +1234,11 @@ static void MCIPhoneDoDidBecomeActive(void *)
         // Ensure env C-string array is NULL-terminated
         env[envc] = NULL;
     }
+    else
+    {
+        // Set envc to 0, so that memory cleanup won't access unallocated memory
+        envc = 0;
+    }
     
     char *args[1];
 	args[0] = (char *)[[[[NSProcessInfo processInfo] arguments] objectAtIndex: 0] cString];
