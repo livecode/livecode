@@ -240,11 +240,6 @@ Use the <stringToColor> handler when receiving colors from LiveCode script
 via a property setter, or from the widget's stored properties array when loading.
 */
 public handler stringToColor(in pString as String) returns Color
-	variable tRed as Real
-	variable tGreen as Real
-	variable tBlue as Real
-	variable tAlpha as Real
-
 	variable tComponentList as List
 	split pString by "," into tComponentList
 
@@ -261,10 +256,6 @@ public handler stringToColor(in pString as String) returns Color
 	repeat for each element tColorComponent in tComponentList
 		push stringToColorComponent(tColorComponent) onto tColor
 	end repeat
-
-	if tComponentCount is 3 then
-		push 1 onto tColor
-	end if
 
 	return color tColor
 end handler
