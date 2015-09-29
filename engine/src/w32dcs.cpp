@@ -431,8 +431,10 @@ void MCScreenDC::openwindow(Window w, Boolean override)
 		// CW-2015-09-28: [[ Bug 15873 ]] If the stack state is iconic, restore the window minimised.
 		if (t_stack != NULL && t_stack -> getstate(CS_ICONIC))
 			ShowWindow((HWND)w->handle.window, SW_SHOWMINIMIZED);
-		else
+		else if (IsIconic((HWND)w->handle.window))
 			ShowWindow((HWND)w->handle.window, SW_RESTORE);
+		else 
+			ShowWindow((HWND)w->handle.window, SW_SHOW);
 
 	if (t_stack != NULL)
 	{
