@@ -67,7 +67,7 @@ Input files are considered up-to-date if the corresponding interface
 file is newer than its dependencies.
 
 If _DEPSMODE_ is `make`, or is not specified, then the output is a
-Makefile frament declaring the dependencies between the input files
+Makefile fragment declaring the dependencies between the input files
 and any interface files that they depend on.  `--deps make` can also
 be used with a single input file and the `--output` option.  In this
 mode, **lc-compile** the output is a Makefile fragment that declares
