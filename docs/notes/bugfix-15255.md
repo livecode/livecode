@@ -1,1 +1,1 @@
-# Windows player should default to DirectX, not Qt
+# Windows videograbber should default to DirectX, not Qt
