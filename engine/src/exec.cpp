@@ -923,6 +923,42 @@ static bool EvalExprAs(MCExecContext* self, MCExpression *p_expr, Exec_errors p_
 }
 
 template <typename T>
+static bool EvalExprAsStrictNumber(MCExecContext* self, MCExpression *p_expr, Exec_errors p_error, MCExecValueType p_type, T& r_value)
+{
+	MCAssert(p_expr != nil);
+	
+    // SN-2014-04-08 [[ NumberExpectation ]] Ensure we get a number when it's possible instead of a ValueRef
+    MCExecValue t_value;
+    Boolean t_number_expected = self -> GetNumberExpected();
+    self -> SetNumberExpected(True);
+    
+	p_expr -> eval_ctxt(*self, t_value);
+    
+    if (MCExecTypeIsValueRef(t_value . type) && MCValueIsEmpty(t_value . valueref_value))
+    {
+        self -> LegacyThrow(p_error);
+        
+        return false;
+    }
+    
+    self -> SetNumberExpected(t_number_expected);
+    
+    if (!self -> HasError())
+        MCExecTypeConvertAndReleaseAlways(*self, t_value . type, &t_value, p_type, &r_value);
+	
+	if (!self -> HasError())
+		return true;
+	
+	self -> LegacyThrow(p_error);
+	
+	return false;
+}
+
+bool MCExecContext::EvalExprAsStrictUInt(MCExpression *p_expr, Exec_errors p_error, uinteger_t& r_value) { return EvalExprAsStrictNumber(this, p_expr, p_error, kMCExecValueTypeUInt, r_value); }
+
+bool MCExecContext::EvalExprAsStrictInt(MCExpression *p_expr, Exec_errors p_error, integer_t& r_value) { return EvalExprAsStrictNumber(this, p_expr, p_error, kMCExecValueTypeInt, r_value); }
+
+template <typename T>
 static bool EvalExprAsNumber(MCExecContext* self, MCExpression *p_expr, Exec_errors p_error, MCExecValueType p_type, T& r_value)
 {
 	MCAssert(p_expr != nil);
