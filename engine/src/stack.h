@@ -529,6 +529,8 @@ public:
 	              const MCRectangle *srect, const MCRectangle *drect);
 	void resize(uint2 oldw, uint2 oldh);
 	void configure(Boolean user);
+	// CW-2015-09-28: [[ Bug 15873 ]] Separate the application of stack iconic properties from the (un)iconify actions.
+	void seticonic(Boolean on);
 	void iconify();
 	void uniconify();
 	Window_mode getmode();
