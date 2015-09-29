@@ -28,6 +28,7 @@ use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
 use com.livecode.library.iconSVG
+use com.livecode.widgetutils
 --
 
 -- adding metadata to ensure the extension displays correctly in LiveCode
@@ -295,7 +296,7 @@ public handler OnSave(out rProperties as Array)
    put mLabelStyle into rProperties["labelStyle"]
    put mLabelText into rProperties["labelText"]
    put mLabelIcon into rProperties["labelIcon"]
-   put colorToString(mLabelColor) into rProperties["labelColor"]
+   put colorToString(mLabelColor, false) into rProperties["labelColor"]
    put mBackgroundOpacity into rProperties["opacity"]
    put mColorScheme into rProperties["colorScheme"]
    put mColorTheme into rProperties["colorTheme"]
@@ -517,7 +518,7 @@ private handler fetchIconPath(in pIconName as String) returns Path
       put rectangle [(mWidth-mFloatingActionIconDimension)/2, mFloatingActionRadius-mFloatingActionIconDimension/2, (mWidth+mFloatingActionIconDimension)/2, mFloatingActionRadius+mFloatingActionIconDimension/2] into tIconRect
    end if
 
-   setIconPath(tIconRect, tIconPath)
+   constrainPathToRect(tIconRect, tIconPath)
    return tIconPath
 end handler
 
@@ -746,7 +747,7 @@ private handler setLabelIcon(in pIconName as String)
 end handler
 
 public handler getLabelColor() returns String
-   return colorToString(mLabelColor)
+   return colorToString(mLabelColor, false)
 end handler
 
 constant kWhiteColorString is "255,255,255"
@@ -823,126 +824,6 @@ end handler
 private handler setMiniFloatingAction(in pIsMiniFloatingAction as Boolean) returns nothing
    put pIsMiniFloatingAction into mIsMiniFloatingAction
    redraw all
-end handler
-
---------------------------------------------------------------------------------
---
---		Icon Paths
---
---------------------------------------------------------------------------------
-
--- Translate and scale xPath so that it fits within pTargetRect
-private handler setIconPath(in pTargetRect as Rectangle, inout xPath as Path)
-
-	-- Scale the icon appropriately
-	variable tBounds
-   variable tXScale as Real
-   variable tYScale as Real
-
-	put the bounding box of xPath into tBounds
-	put the width of pTargetRect / the width of tBounds into tXScale
-	put the height of pTargetRect / the height of tBounds into tYScale
-
-	if tXScale > tYScale then
-		put tYScale into tXScale
-	else
-		put tXScale into tYScale
-	end if
-
-    scale xPath by [tXScale, tYScale]
-
-	variable tXTranslate as Real
-	variable tYTranslate as Real
-
-   put the bounding box of xPath into tBounds
-
-	put the left of pTargetRect - the left of tBounds into tXTranslate
-	put the top of pTargetRect - the top of tBounds into tYTranslate
-
-    variable tXDiff as Real
-    variable tYDiff as Real
-
-    put the width of pTargetRect - the width of tBounds into tXDiff
-    put the height of pTargetRect - the height of tBounds into tYDiff
-
-	-- Align center
-	divide tXDiff by 2
-	divide tYDiff by 2
-
-	translate xPath by [tXTranslate + tXDiff, tYTranslate + tYDiff]
-end handler
-
---------------------------------------------------------------------------------
---
---		Converting Data Types
---
---------------------------------------------------------------------------------
-
--- this handler converts a string of numbers to an RGBA color
-private handler stringToColor(in pString as String) returns Color
-   variable tRed as Real
-	variable tGreen as Real
-	variable tBlue as Real
-	variable tAlpha as Real
-
-	variable tComponentList as List
-	split pString by "," into tComponentList
-
-	variable tComponentCount
-	put the number of elements in tComponentList into tComponentCount
-	if tComponentCount is not 3 and tComponentCount is not 4 then
-		-- Invalid number of components detected
-		throw "Invalid color"
-	end if
-
-	put (element 1 of tComponentList) parsed as number into tRed
-	put (element 2 of tComponentList) parsed as number into tGreen
-	put (element 3 of tComponentList) parsed as number into tBlue
-
-   if tComponentCount is 4 then
-     put (element 4 of tComponentList) parsed as number into tAlpha
-     return color [tRed/255, tGreen/255, tBlue/255, tAlpha/255]
-  else
-     return color [tRed/255, tGreen/255, tBlue/255]
-  end if
-
-end handler
-
--- this handler converts an RGBA color to a string of numbers
-private handler colorToString(in pColor as Color) returns String
-
-   variable tRed as String
-   variable tGreen as String
-   variable tBlue as String
-   variable tAlpha as String
-
-   put stripZeros((the rounded of ((the red of pColor) * 255)) formatted as string) into tRed
-   put stripZeros((the rounded of ((the green of pColor) * 255)) formatted as string) into tGreen
-   put stripZeros((the rounded of ((the blue of pColor) * 255)) formatted as string) into tBlue
-   put stripZeros((the rounded of ((the alpha of pColor) * 255)) formatted as string) into tAlpha
-
-   if tAlpha is "255" then
-      return tRed & "," & tGreen & "," & tBlue
-   else
-      return tRed & "," & tGreen & "," & tBlue & "," & tAlpha
-   end if
-
-end handler
-
--- this handler strips the zeros when a integer is formatted as a string
-private handler stripZeros(in tString as String) returns String
-	if tString contains "." then
-		variable tCount as Integer
-		repeat while ((the last char of tString) is in ".0")
-			if the last char of tString is "." then
-				delete the last char of tString
-				exit repeat
-			else
-				delete the last char of tString
-			end if
-		end repeat
-	end if
-	return tString
 end handler
 
 end widget
