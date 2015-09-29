@@ -39,6 +39,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "param.h"
 #include "mbldc.h"
 
+#include "font.h"
+
 #include <objc/runtime.h>
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
@@ -840,7 +842,7 @@ Window MCScreenDC::get_current_window(void)
 
 extern void *coretext_font_create_with_name_size_and_style(MCStringRef p_name, uint32_t p_size, bool p_bold, bool p_italic);
 extern bool coretext_font_destroy(void *p_font);
-extern bool coretext_font_get_metrics(void *p_font, float& r_ascent, float& r_descent);
+extern bool coretext_font_get_metrics(void *p_font, float& r_ascent, float& r_descent, float& r_leading, float& r_xheight);
 
 struct do_iphone_font_create_env
 {
@@ -879,9 +881,9 @@ void *iphone_font_create(MCStringRef p_name, uint32_t p_size, bool p_bold, bool 
 	return env . result;
 }
 
-void iphone_font_get_metrics(void *p_font, float& r_ascent, float& r_descent)
+void iphone_font_get_metrics(void *p_font, float& r_ascent, float& r_descent, float& r_leading, float& r_xheight)
 {
-    coretext_font_get_metrics(p_font, r_ascent, r_descent);
+    coretext_font_get_metrics(p_font, r_ascent, r_descent, r_leading, r_xheight);
 }
 
 void iphone_font_destroy(void *p_font)
@@ -1212,12 +1214,18 @@ static void MCIPhoneDoDidBecomeActive(void *)
 	// Convert the environment variables into stringrefs
 	uindex_t envc = 0;
 	MCAutoArray<MCStringRef> t_envp;
-	while (env[envc] != 0)
-	{
-		t_envp.Extend(envc + 1);
-		MCStringCreateWithBytes((const byte_t*)env[envc], strlen(env[envc]), kMCStringEncodingUTF8, false, t_envp[envc]);
-		envc++;
-	}
+    
+    // SN-2015-09-22: [[ Bug 15753 ]] Only iterate through the env elements if
+    //  there is any element (not the case with iOS min version 5.1.1)
+    if (env)
+    {
+        while (env[envc] != 0)
+        {
+            t_envp.Extend(envc + 1);
+            MCStringCreateWithBytes((const byte_t*)env[envc], strlen(env[envc]), kMCStringEncodingUTF8, false, t_envp[envc]);
+            envc++;
+        }
+    }
 	t_envp.Extend(envc + 1);
 	t_envp[envc] = nil;
 	
@@ -1696,3 +1704,24 @@ MCGFloat MCScreenDC::logicaltoscreenscale(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// No theming for mobile platforms yet
+bool MCPlatformGetControlThemePropBool(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, bool&)
+{
+    return false;
+}
+
+bool MCPlatformGetControlThemePropInteger(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, int&)
+{
+    return false;
+}
+
+bool MCPlatformGetControlThemePropColor(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCColor&)
+{
+    return false;
+}
+
+bool MCPlatformGetControlThemePropFont(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCFontRef& r_font)
+{
+    return MCFontCreate(MCNAME("Helvetica"), 0, 13, r_font);
+}

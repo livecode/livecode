@@ -1,0 +1,36 @@
+Name: destroyStack
+
+Type: property
+
+Syntax: set the destroyStack of <stack> to {true | false}
+
+Summary: Specifies whether a <stack> is purged from memory when it's closed, or whether it remains in memory.
+
+Associations: stack
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the destroyStack of this stack to true
+
+Value (bool):The <destroyStack> of a <stack> is true or false.
+By default, the <destroyStack> <property> of newly created <stacks> is set to false.
+
+Description:
+Use the <destroyStack> <property> to leave a <stack> in memory after it is closed.
+
+If a stack's <destroyStack> <property> is set to true, closing all <stacks> in its <stack file> removes it from memory space, cleaning up after the <stack> and freeing memory for use by the <application>. If any <handler|handlers> in the stack are running, the stack is not purged from memory until all <handler|handlers> have completed. (The <stack> is not removed from memory until all <stacks> in the same <stack file> are also closed.)
+
+If the <destroyStack> is false, closing a <stack window|stack's window> leaves it in memory. If you open and close many <stacks> in a session, and the <destroyStack> of all these <stacks> is false, the memory used by these <stacks> will continue growing until you quit the <application>. If you reopen the <stack> during the same session, a warning message appears cautioning you that the <stack> is already open.
+
+If you close a stack whose <destroyStack> is true while a <handler> is running, the <stack> is removed from memory after all running <handler|handlers> finish <execute|executing>. This means that if you close and re-open a <stack> during a <handler>, and the <stack|stack's> <destroyStack> is true, the stack is removed from memory (and closed again) after the <handler> finishes.
+
+>*Note:* Despite its alarming name, the <destroyStack> <property> does not destroy or damage a <stack>. It simply allows it to be automatically removed from memory.
+
+References: destroyStack (property), reloadStack (message), close (command), heapSpace (function), stacks (function), hasMemory (function), stack (object), property (glossary), handler (glossary), stack file (glossary), application (glossary), stack window (glossary), execute (glossary)
+
+Tags: windowing

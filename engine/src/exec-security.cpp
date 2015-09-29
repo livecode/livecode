@@ -62,6 +62,8 @@ void MCSecurityEvalCipherNames(MCExecContext& ctxt, MCStringRef& r_names)
 {
 	MCAutoListRef t_list;
 	MCAutoStringRef t_error;
+
+#ifdef MCSSL
 	if (SSL_ciphernames(&t_list, &t_error))
 	{
 		if (*t_error != nil)
@@ -69,6 +71,7 @@ void MCSecurityEvalCipherNames(MCExecContext& ctxt, MCStringRef& r_names)
 		if (MCListCopyAsString(*t_list, r_names))
 			return;
 	}
+#endif /* MCSSL */
 
 	ctxt.Throw();
 }
@@ -83,7 +86,7 @@ void MCSecurityEvalRandomBytes(MCExecContext& ctxt, uinteger_t p_byte_count, MCD
 		return;
 	}
 
-	if (MCU_random_bytes(p_byte_count, r_bytes))
+	if (MCSRandomData (p_byte_count, r_bytes))
 	{
 		ctxt.SetTheResultToEmpty();
 		return;

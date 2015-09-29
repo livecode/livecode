@@ -1,0 +1,10 @@
+Name: development environment
+
+Synonyms: development environment,dev environment
+
+Type: glossary
+
+Description:
+The user interface LiveCode provides for development, including the standard menus, <message box>, <debugger>, tool <palette|palettes>, and so on.
+
+References: message box (glossary), palette (glossary), debugger (glossary)

@@ -202,8 +202,9 @@ void MCAudioClip::timer(MCNameRef mptr, MCParameter *params)
 			delete this;
 	}
 }
- #ifdef LEGACY_EXEC
-Exec_stat MCAudioClip::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+
+#ifdef LEGACY_EXEC
+Exec_stat MCAudioClip::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective, bool recursive)
 {
 	switch (which)
     {
@@ -223,7 +224,7 @@ Exec_stat MCAudioClip::getprop_legacy(uint4 parid, Properties which, MCExecPoint
 		break;
 #endif /* MCAudioClip::getprop */ 
 	default:
-		return MCObject::getprop_legacy(parid, which, ep, effective);
+		return MCObject::getprop_legacy(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }
@@ -731,7 +732,7 @@ Boolean MCAudioClip::open_audio()
 		return x11audio -> init(NULL, nchannels, swidth);
 	return false ;
 }
-#elif defined _SERVER || defined(_MOBILE)
+#elif defined _SERVER || defined(_MOBILE) || defined(__EMSCRIPTEN__)
 Boolean MCAudioClip::open_audio()
 {
 	return False;
@@ -853,7 +854,7 @@ Boolean MCAudioClip::play()
 	}
 
 	return True;
-#elif defined(_SERVER) || defined(_MOBILE)
+#elif defined(_SERVER) || defined(_MOBILE) || defined(__EMSCRIPTEN__)
 	return True;
 #else
 #error "MCAudioClip::play() not supported for this platform"

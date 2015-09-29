@@ -173,7 +173,7 @@ sub generateModule
 	output ;
     output "#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)";
     output "#define MODULE_${moduleUpper}_NAME \"$darwinLibrary\"";
-    output "#elif defined(_LINUX)";
+    output "#elif defined(_LINUX) || defined(__EMSCRIPTEN__)";
     output "#define MODULE_${moduleUpper}_NAME \"$unixLibrary\"";
     # MM-2014-02-10: [[ LibOpenSSL 1.0.1e ]] Prefix android modules with lib.
     output "#elif defined(TARGET_SUBPLATFORM_ANDROID)";

@@ -195,6 +195,9 @@ MCPropertyInfo MCStack::kProperties[] =
     
     // IM-2014-01-07: [[ StackScale ]] Add stack scalefactor property
     DEFINE_RW_OBJ_PROPERTY(P_SCALE_FACTOR, Double, MCStack, ScaleFactor)
+    
+    // MERG-2015-08-31: [[ ScriptOnly ]] Add stack scriptOnly property
+    DEFINE_RW_OBJ_PROPERTY(P_SCRIPT_ONLY, Bool, MCStack, ScriptOnly)
 };
 
 MCObjectPropertyTable MCStack::kPropertyTable =
@@ -271,6 +274,8 @@ MCStack::MCStack()
 	
 	// MW-2011-09-13: [[ Masks ]] The window mask starts off as nil.
 	m_window_shape = nil;
+
+	m_window_buffer = nil;
 	
 	// MW-2011-11-24: [[ UpdateScreen ]] Start off with defer updates false.
 	m_defer_updates = false;
@@ -473,6 +478,8 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	// MW-2011-09-13: [[ Masks ]] The windowmask starts off as nil.
 	m_window_shape = nil;
 
+	m_window_buffer = nil;
+
 	// MW-2011-11-24: [[ UpdateScreen ]] Start off with defer updates false.
 	m_defer_updates = false;
 	
@@ -617,6 +624,8 @@ MCStack::~MCStack()
 	freeobjectidcache();
 	
 	view_destroy();
+
+	release_window_buffer();
 }
 
 Chunk_term MCStack::gettype() const
@@ -629,13 +638,15 @@ const char *MCStack::gettypestring()
 	return MCstackstring;
 }
 
-bool MCStack::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_visitor)
+bool MCStack::visit_self(MCObjectVisitor* p_visitor)
+{
+	return p_visitor -> OnStack(this);
+}
+
+bool MCStack::visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor* p_visitor)
 {
 	bool t_continue;
 	t_continue = true;
-
-	if (p_style == VISIT_STYLE_DEPTH_LAST)
-		t_continue = p_visitor -> OnStack(this);
 
 	if (t_continue && cards != nil)
 	{
@@ -643,7 +654,10 @@ bool MCStack::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_vi
 		t_card = cards;
 		do
 		{
-			t_continue = p_visitor -> OnCard(t_card);
+			if (MCObjectVisitorIsHeirarchical(p_options))
+				t_continue = t_card->visit(p_options, p_part, p_visitor);
+			else
+				t_continue = t_card->visit_self(p_visitor);
 			t_card = t_card -> next();
 		}
 		while(t_continue && t_card != cards);
@@ -655,15 +669,24 @@ bool MCStack::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_vi
 		t_control = controls;
 		do
 		{
-			t_continue = t_control -> visit(p_style, 0, p_visitor);
+			if (!MCObjectVisitorIsHeirarchical(p_options) || t_control->getparent() == this)
+				t_continue = t_control -> visit(p_options, 0, p_visitor);
 			t_control = t_control -> next();
 		}
 		while(t_continue && t_control != controls);
 	}
 
-	if (p_style == VISIT_STYLE_DEPTH_FIRST)
-		t_continue = p_visitor -> OnStack(this);
-
+	if (t_continue && MCObjectVisitorIsHeirarchical(p_options) && substacks != nil)
+	{
+		MCStack *t_stack = substacks;
+		do
+		{
+			t_continue = t_stack->visit(p_options, 0, p_visitor);
+			t_stack = t_stack->next();
+		}
+		while (t_continue && t_stack != substacks);
+	}
+	
 	return true;
 }
 
@@ -1259,7 +1282,7 @@ void MCStack::setrect(const MCRectangle &nrect)
 }
 
 #ifdef LEGACY_EXEC
-Exec_stat MCStack::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+Exec_stat MCStack::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective, bool recursive)
 {
 	uint2 j = 0;
 	uint2 k = 0;
@@ -1768,7 +1791,7 @@ Exec_stat MCStack::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 		Exec_stat t_stat;
 		t_stat = mode_getprop(parid, which, ep, kMCEmptyString, effective);
 		if (t_stat == ES_NOT_HANDLED)
-			return MCObject::getprop_legacy(parid, which, ep, effective);
+			return MCObject::getprop_legacy(parid, which, ep, effective, recursive);
 
 		return t_stat;
 	}
@@ -3051,6 +3074,12 @@ void MCStack::recompute()
 		curcard->recompute();
 }
 
+void MCStack::toolchanged(Tool p_new_tool)
+{
+    if (curcard != NULL)
+        curcard->toolchanged(p_new_tool);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 void MCStack::loadexternals(void)
@@ -3400,6 +3429,16 @@ void MCStack::setasscriptonly(MCStringRef p_script)
         curcard = cards = MCtemplatecard->clone(False, False);
         cards->setparent(this);
     }
+}
+
+MCPlatformControlType MCStack::getcontroltype()
+{
+    return kMCPlatformControlTypeWindow;
+}
+
+MCPlatformControlPart MCStack::getcontrolsubpart()
+{
+    return kMCPlatformControlPartNone;
 }
 
 //////////

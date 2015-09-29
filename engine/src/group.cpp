@@ -45,6 +45,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "font.h"
 #include "redraw.h"
 #include "objectstream.h"
+#include "widget.h"
 
 #include "mctheme.h"
 #include "globals.h"
@@ -240,27 +241,26 @@ const char *MCGroup::gettypestring()
 	return MCgroupstring;
 }
 
-bool MCGroup::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_visitor)
+bool MCGroup::visit_self(MCObjectVisitor* p_visitor)
+{
+	return p_visitor -> OnGroup(this);
+}
+
+bool MCGroup::visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor* p_visitor)
 {
 	bool t_continue;
 	t_continue = true;
-
-	if (p_style == VISIT_STYLE_DEPTH_LAST)
-		t_continue = p_visitor -> OnGroup(this);
 
 	if (t_continue && controls != NULL)
 	{
 		MCControl *cptr = controls;
 		do
 		{
-			t_continue = cptr -> visit(p_style, p_part, p_visitor);
+			t_continue = cptr -> visit(p_options, p_part, p_visitor);
 			cptr = cptr->next();
 		}
 		while(t_continue && cptr != controls);
 	}
-
-	if (t_continue && p_style == VISIT_STYLE_DEPTH_FIRST)
-		t_continue = p_visitor -> OnGroup(this);
 
 	return t_continue;
 }
@@ -336,7 +336,7 @@ void MCGroup::kfocus()
 
 Boolean MCGroup::kfocusnext(Boolean top)
 {
-	if (state & CS_KFOCUSED && flags & F_TAB_GROUP_BEHAVIOR
+	if ((state & CS_KFOCUSED && flags & F_TAB_GROUP_BEHAVIOR)
 	        || !(flags & F_TRAVERSAL_ON) || !(flags & F_VISIBLE || MCshowinvisibles))
 		return False;
 	if (newkfocused != NULL)
@@ -393,7 +393,7 @@ Boolean MCGroup::kfocusnext(Boolean top)
 
 Boolean MCGroup::kfocusprev(Boolean bottom)
 {
-	if (state & CS_KFOCUSED && flags & F_TAB_GROUP_BEHAVIOR
+	if ((state & CS_KFOCUSED && flags & F_TAB_GROUP_BEHAVIOR)
 	        || !(flags & F_TRAVERSAL_ON) || !(flags & F_VISIBLE || MCshowinvisibles))
 		return False;
 	MCControl *startptr = NULL;
@@ -535,7 +535,7 @@ void MCGroup::mdrag(void)
 Boolean MCGroup::mfocus(int2 x, int2 y)
 {
 	if (!(flags & F_VISIBLE || MCshowinvisibles)
-	        || flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE)
+	    || (flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE))
 		return False;
 	if (state & CS_MENU_ATTACHED)
 		return MCObject::mfocus(x, y);
@@ -803,8 +803,9 @@ void MCGroup::setrect(const MCRectangle &nrect)
 	t_size_changed = nrect . width != rect . width || nrect . height != rect . height;
 
 	if (controls != NULL)
-		if (state & CS_SIZE || rect.x + rect.width == nrect.x + nrect.width
-		        && rect.y + rect.height == nrect.y + nrect.height)
+		if (state & CS_SIZE ||
+		    (rect.x + rect.width == nrect.x + nrect.width &&
+		     rect.y + rect.height == nrect.y + nrect.height))
 		{
 			if (flags & F_HSCROLLBAR || flags & F_VSCROLLBAR)
 			{
@@ -861,7 +862,7 @@ void MCGroup::setrect(const MCRectangle &nrect)
 }
 
 #ifdef LEGACY_EXEC
-Exec_stat MCGroup::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+Exec_stat MCGroup::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective, bool recursive)
 {
 	switch (which)
 	{
@@ -1046,7 +1047,7 @@ Exec_stat MCGroup::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
         break;
 #endif
 	default:
-		return MCControl::getprop_legacy(parid, which, ep, effective);
+		return MCControl::getprop_legacy(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }
@@ -1652,7 +1653,7 @@ MCControl *MCGroup::findchildwithid(Chunk_term type, uint4 p_id)
 MCControl *MCGroup::findid(Chunk_term type, uint4 inid, Boolean alt)
 {
 	if ((type == CT_GROUP || type == CT_LAYER)
-	        && (inid == obj_id || alt && inid == altid))
+	    && (inid == obj_id || (alt && inid == altid)))
 		return this;
 
 	if (controls != NULL && (alt || type == CT_IMAGE))
@@ -2108,7 +2109,10 @@ MCControl *MCGroup::getchild(Chunk_term etype, const MCString &expression,
 		count(otype, NULL, num);
 		// MW-2007-08-30: [[ Bug 4152 ]] If we're counting groups, we get one too many as it
 		//   includes the owner - thus we adjust (this means you can do 'the last group of group ...')
-		if (otype == CT_GROUP)
+		
+		// PM-2015-08-31: [[ Bug 15763 ]] Same as above - If we're counting controls, we get one too many as it
+		//   includes the owner - thus we adjust (this means you can do 'the last control of group ...')
+		if (otype == CT_GROUP || otype == CT_LAYER)
 			num--;
 		switch (etype)
 		{
@@ -2623,10 +2627,12 @@ void MCGroup::computecrect()
 		do
 		{
 			if (cptr->getflag(F_VISIBLE))
+			{
 				if (minrect.width == 0)
 					minrect = cptr->getrect();
 				else
 					minrect = MCU_union_rect(cptr->getrect(), minrect);
+			}
 			cptr = cptr->next();
 		}
 		while (cptr != controls);
@@ -3094,10 +3100,12 @@ void MCGroup::drawbord(MCDC *dc, const MCRectangle &dirty)
 		else
 		{
 			if (flags & F_SHOW_BORDER)
+			{
 				if (flags & F_3D)
 					draw3d(dc, trect, ETCH_SUNKEN, borderwidth);
 				else
 					drawborder(dc, trect, borderwidth);
+			}
 		}
 	}
 }
@@ -3430,7 +3438,19 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 				}
 				neweps->appendto(controls);
 			}
-			break;
+        break;
+        case OT_WIDGET:
+        {
+            MCWidget *neweps = new MCWidget;
+            neweps->setparent(this);
+            if ((stat = neweps->load(stream, version)) != IO_NORMAL)
+            {
+                delete neweps;
+                return stat;
+            }
+            neweps->appendto(controls);
+        }
+        break;
 		case OT_MAGNIFY:
 			{
 				MCMagnify *newmag = new MCMagnify;
@@ -3563,7 +3583,7 @@ bool MCGroup::resolveparentscript(void)
 MCObject *MCGroup::hittest(int32_t x, int32_t y)
 {
 	if (!(flags & F_VISIBLE || MCshowinvisibles)
-		|| flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE)
+	    || (flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE))
 		return nil;
 	
 	// If not inside the groups bounds, do nothing.
@@ -3636,8 +3656,8 @@ void MCGroup::relayercontrol(MCControl *p_source, MCControl *p_target)
 	if (p_source == p_target)
 		return;
 
-	if (p_source -> next() != controls && p_source -> next() == p_target ||
-		p_target == nil && p_source -> next() == controls)
+	if ((p_source -> next() != controls && p_source -> next() == p_target) ||
+	    (p_target == nil && p_source -> next() == controls))
 		return;
 
 	p_source -> remove(controls);

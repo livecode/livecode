@@ -378,7 +378,7 @@ bool MCUnicodeGetProperty(const unichar_t *p_chars, uindex_t p_char_count, MCUni
             {
                 int32_t t_prop;
                 t_prop = MCUnicodeGetIntegerProperty(t_char, p_property);
-                if (t_prop < UINT8_MIN || t_prop > UINT8_MAX)
+                if (t_prop < 0 || t_prop > UINT8_MAX)
                     return false;
                 ((uint8_t*)x_result_array)[t_offset] = uint8_t(t_prop);
                 if (t_advance == 2)
@@ -390,7 +390,7 @@ bool MCUnicodeGetProperty(const unichar_t *p_chars, uindex_t p_char_count, MCUni
             {
                 int32_t t_prop;
                 t_prop = MCUnicodeGetIntegerProperty(t_char, p_property);
-                if (t_prop < UINT16_MIN || t_prop > UINT16_MAX)
+                if (t_prop < 0 || t_prop > UINT16_MAX)
                     return false;
                 ((uint16_t*)x_result_array)[t_offset] = uint16_t(t_prop);
                 if (t_advance == 2)
@@ -402,7 +402,7 @@ bool MCUnicodeGetProperty(const unichar_t *p_chars, uindex_t p_char_count, MCUni
             {
                 int32_t t_prop;
                 t_prop = MCUnicodeGetIntegerProperty(t_char, p_property);
-                if (t_prop < UINT32_MIN || t_prop > UINT32_MAX)
+                if (t_prop < 0 || t_prop > UINT32_MAX)
                     return false;
                 ((uint32_t*)x_result_array)[t_offset] = uint32_t(t_prop);
                 if (t_advance == 2)
@@ -454,6 +454,7 @@ bool MCUnicodeGetProperty(const unichar_t *p_chars, uindex_t p_char_count, MCUni
                 ((const unichar_t**)x_result_array)[t_offset] = t_prop;
                 if (t_advance == 2)
                     ((const unichar_t**)x_result_array)[t_offset + 1] = t_prop;
+				break;
             }
         
             default:
@@ -1327,9 +1328,7 @@ MCUnicodeCollateOption MCUnicodeCollateOptionFromCompareOption(MCUnicodeCompareO
     return (MCUnicodeCollateOption)t_option;
 }
 
-int32_t MCUnicodeCollate(MCLocaleRef p_locale, MCUnicodeCollateOption p_options,
-                         const unichar_t *p_first, uindex_t p_first_length,
-                         const unichar_t *p_second, uindex_t p_second_length)
+bool MCUnicodeCreateCollator(MCLocaleRef p_locale, MCUnicodeCollateOption p_options, MCUnicodeCollatorRef& r_collator)
 {
     // Create a collation object for the given locale
     UErrorCode t_error = U_ZERO_ERROR;
@@ -1341,6 +1340,8 @@ int32_t MCUnicodeCollate(MCLocaleRef p_locale, MCUnicodeCollateOption p_options,
     {
         t_error = U_ZERO_ERROR;
         t_collator = icu::Collator::createInstance(t_error);
+        if (t_collator == NULL)
+            return false;
     }
     
     // Set the collation options
@@ -1380,100 +1381,92 @@ int32_t MCUnicodeCollate(MCLocaleRef p_locale, MCUnicodeCollateOption p_options,
     
     if (p_options & kMCUnicodeCollateOptionIgnorePunctuation)
         t_collator->setAttribute(UCOL_ALTERNATE_HANDLING, UCOL_SHIFTED, t_error);
+ 
+    r_collator = t_collator;
     
-    // Do the comparison
-    UCollationResult t_result;
-    t_result = t_collator->compare(p_first, p_first_length, p_second, p_second_length, t_error);
-    
-    // Dispose of the collator
+    return true;
+}
+
+void MCUnicodeDestroyCollator(MCUnicodeCollatorRef p_collator)
+{
+    icu::Collator* t_collator;
+    t_collator = (icu::Collator *)p_collator;
     delete t_collator;
+}
+
+int32_t MCUnicodeCollate(MCLocaleRef p_locale, MCUnicodeCollateOption p_options,
+                         const unichar_t *p_first, uindex_t p_first_length,
+                         const unichar_t *p_second, uindex_t p_second_length)
+{
+    MCUnicodeCollatorRef t_collator_ref;
+    if (!MCUnicodeCreateCollator(p_locale, p_options, t_collator_ref))
+        return 0;
     
-    // The UCollationResult type maps UCOL_{GREATER,EQUAL,LESS} to +1,0,-1
-    return int32_t(t_result);
+    int32_t t_result;
+    t_result = MCUnicodeCollateWithCollator(t_collator_ref, p_first, p_first_length, p_second, p_second_length);
+    
+    MCUnicodeDestroyCollator(t_collator_ref);
+    
+    return t_result;
 }
 
 bool MCUnicodeCreateSortKey(MCLocaleRef p_locale, MCUnicodeCollateOption p_options,
                             const unichar_t *p_string, uindex_t p_string_length,
                             byte_t *&r_key, uindex_t &r_key_length)
 {
-    // Create a collation object for the given locale
-    UErrorCode t_error = U_ZERO_ERROR;
+    MCUnicodeCollatorRef t_collator;
+    if (!MCUnicodeCreateCollator(p_locale, p_options, t_collator))
+        return false;
+    
+    bool t_success;
+    t_success = MCUnicodeCreateSortKeyWithCollator(t_collator, p_string, p_string_length, r_key, r_key_length);
+    
+    MCUnicodeDestroyCollator(t_collator);
+    
+    return t_success;
+}
+
+bool MCUnicodeCreateSortKeyWithCollator(MCUnicodeCollatorRef p_collator,
+                                        const unichar_t *p_string, uindex_t p_string_length,
+                                        byte_t *&r_key, uindex_t &r_key_length)
+{
     icu::Collator* t_collator;
-    t_collator = icu::Collator::createInstance(MCLocaleGetICULocale(p_locale), t_error);
-    
-    // Ensure the collator was created properly
-    if (U_FAILURE(t_error))
-        return false;
-    
-    // Set the collation options
-    // Note that the enumerated strengths have the same values as the ICU enum
-    switch (p_options & kMCUnicodeCollateOptionStrengthMask)
-    {
-        case kMCUnicodeCollateOptionStrengthPrimary:
-            t_collator->setStrength(icu::Collator::PRIMARY);
-            break;
-            
-        case kMCUnicodeCollateOptionStrengthSecondary:
-            t_collator->setStrength(icu::Collator::SECONDARY);
-            break;
-            
-        case kMCUnicodeCollateOptionStrengthTertiary:
-            t_collator->setStrength(icu::Collator::TERTIARY);
-            break;
-            
-        case kMCUnicodeCollateOptionStrengthQuaternary:
-            t_collator->setStrength(icu::Collator::QUATERNARY);
-            break;
-            
-        case kMCUnicodeCollateOptionStrengthIdentical:
-            t_collator->setStrength(icu::Collator::IDENTICAL);
-            break;
-            
-        default:
-            // Use the default strength
-            break;
-    }
-    
-    if (p_options & kMCUnicodeCollateOptionAutoNormalise)
-        t_collator->setAttribute(UCOL_NORMALIZATION_MODE, UCOL_ON, t_error);
-    
-    if (p_options & kMCUnicodeCollateOptionNumeric)
-        t_collator->setAttribute(UCOL_NUMERIC_COLLATION, UCOL_ON, t_error);
-    
-    if (p_options & kMCUnicodeCollateOptionIgnorePunctuation)
-        t_collator->setAttribute(UCOL_ALTERNATE_HANDLING, UCOL_SHIFTED, t_error);
-    
-    // If an error occurred when setting attributes, abort
-    if (U_FAILURE(t_error))
-    {
-        delete t_collator;
-        return false;
-    }
+    t_collator = (icu::Collator *)p_collator;
     
     // Find the length of the sort key that will be generated
     uindex_t t_key_length;
-    t_key_length = t_collator->getSortKey(p_string, p_string_length, NULL, 0);
+    t_key_length = (unsigned)t_collator->getSortKey(p_string, (signed)p_string_length, NULL, 0);
     
     // Allocate memory for the sort key
     MCAutoArray<byte_t> t_key;
     if (!t_key.New(t_key_length))
-    {
-        delete t_collator;
         return false;
-    }
     
     // Generate the sort key
-    t_collator->getSortKey(p_string, p_string_length, t_key.Ptr(), t_key.Size());
+    t_collator->getSortKey(p_string, (signed)p_string_length, t_key.Ptr(), (signed)t_key.Size());
     
-    // Clean up and return
-    delete t_collator;
     t_key.Take(r_key, r_key_length);
+    
     return true;
 }
 
-// SN-2014-04-16:
-// Relocating the function from engine/src/unicode.h here since some are needed in foundation-bidi
-
+int32_t MCUnicodeCollateWithCollator(MCUnicodeCollatorRef p_collator,
+                                  const unichar_t *p_first, uindex_t p_first_length,
+                                  const unichar_t *p_second, uindex_t p_second_length)
+{
+    
+    UErrorCode t_error = U_ZERO_ERROR;
+    
+    icu::Collator* t_collator;
+    t_collator = (icu::Collator *)p_collator;
+    
+    // Do the comparison
+    UCollationResult t_result;
+    t_result = t_collator->compare(p_first, (signed)p_first_length, p_second, (signed)p_second_length, t_error);
+    
+    // The UCollationResult type maps UCOL_{GREATER,EQUAL,LESS} to +1,0,-1
+    return int32_t(t_result);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

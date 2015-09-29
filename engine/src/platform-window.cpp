@@ -28,7 +28,7 @@
 
 MCPlatformWindow::MCPlatformWindow(void)
 {
-	MCLog("Create window %p", this);
+    //MCLog("Create window %p", this);
 	
 	m_references = 1;
 	
@@ -63,11 +63,13 @@ MCPlatformWindow::MCPlatformWindow(void)
 	m_is_focused = false;
 	m_is_iconified = false;
     m_is_realized = false;
+	
+	m_is_opaque = true;
 }
 
 MCPlatformWindow::~MCPlatformWindow(void)
 {
-	MCLog("Destroy window %p", this);
+    //MCLog("Destroy window %p", this);
 	
 	MCRegionDestroy(m_dirty_region);
 	
@@ -172,6 +174,9 @@ void MCPlatformWindow::Hide(void)
 	
 	// Update the state.
 	m_is_visible = false;
+    
+	// CW-2015-19-22: [[ Bug 15979 ]] Reset m_is_iconified, otherwise if the window is reopened, it cannot be iconified.
+	m_is_iconified = false;
 	
 	// Hide the window.
 	DoHide();
@@ -300,6 +305,11 @@ void MCPlatformWindow::SetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 				MCPlatformWindowMaskRetain(m_mask);
 			m_changes . mask_changed = true;
 			break;
+		case kMCPlatformWindowPropertyIsOpaque:
+			assert(p_type == kMCPlatformPropertyTypeBool);
+			m_is_opaque = *(bool *)p_value;
+			m_changes . is_opaque_changed = true;
+			break;
 		case kMCPlatformWindowPropertyContentRect:
 			assert(p_type == kMCPlatformPropertyTypeRectangle);
 			m_content = *(MCRectangle *)p_value;
@@ -403,6 +413,10 @@ void MCPlatformWindow::GetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 			break;
 		case kMCPlatformWindowPropertyMask:
 			assert(p_type == kMCPlatformPropertyTypeWindowMask);
+			break;
+		case kMCPlatformWindowPropertyIsOpaque:
+			assert(p_type == kMCPlatformPropertyTypeBool);
+			*(bool *)r_value = m_is_opaque;
 			break;
 		case kMCPlatformWindowPropertyFrameRect:
 			assert(p_type == kMCPlatformPropertyTypeRectangle);

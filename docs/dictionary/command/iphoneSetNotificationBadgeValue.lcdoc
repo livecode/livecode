@@ -1,0 +1,31 @@
+Name: iphoneSetNotificationBadgeValue
+
+Type: command
+
+Syntax: iphoneSetNotificationBadgeValue <badgeValue> 
+
+Summary: Sets the badge value of the Application Badge.
+
+Introduced: 5.5
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+iphoneSetNotificationBadgeValue 10
+
+Example:
+iphoneSetNotificationBadgeValue 0
+
+Parameters:
+badgeValue: A positive integer or zero.
+
+Description:
+Use the <iphoneSetNotificationBadgeValue> <command> to change the value of the Application Badge Value.
+
+This command sets the Badge Value of the application to the integer value specified. If the value is positive the badge and the value are displayed next to the application icon. If the badge is 0 (zero), then the badge is hidden.
+
+References: iphoneGetNotificationBadgeValue (function), command (glossary)
+
+Tags: networking

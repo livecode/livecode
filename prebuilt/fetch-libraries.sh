@@ -1,18 +1,20 @@
 #!/bin/bash
 
 # Libraries to fetch
-PLATFORMS=( mac linux win32 android ios )
+PLATFORMS=( mac linux win32 android ios emscripten )
 ARCHS_android=( armv6 )
 ARCHS_mac=( Universal )
 ARCHS_ios=( Universal )
 ARCHS_win32=( i386 )
 ARCHS_linux=( i386 x86_64 )
+ARCHS_emscripten=( js )
 LIBS_android=( OpenSSL ICU )
 LIBS_mac=( OpenSSL ICU CEF )
 LIBS_ios=( OpenSSL ICU )
 LIBS_win32=( OpenSSL Curl ICU CEF )
-LIBS_linux=( OpenSSL Curl ICU )
-SUBPLATFORMS_ios=( iPhoneSimulator5.1 iPhoneSimulator6.1 iPhoneSimulator7.1 iPhoneSimulator8.2 iPhoneSimulator8.3 iPhoneSimulator8.4 iPhoneOS8.2 iPhoneOS8.3 iPhoneOS8.4 )
+LIBS_linux=( OpenSSL Curl ICU CEF )
+LIBS_emscripten=( ICU )
+SUBPLATFORMS_ios=( iPhoneSimulator5.1 iPhoneSimulator6.1 iPhoneSimulator7.1 iPhoneSimulator8.2 iPhoneSimulator8.3 iPhoneSimulator8.4 iPhoneSimulator9.0 iPhoneOS8.2 iPhoneOS8.3 iPhoneOS8.4 iPhoneOS9.0)
 
 # Fetch settings
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)

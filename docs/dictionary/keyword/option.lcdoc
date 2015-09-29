@@ -1,0 +1,27 @@
+Name: option
+
+Type: keyword
+
+Syntax: option
+
+Summary: Specifies one of the <menu> types that can be used with the <menuMode> <property>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+set the menuMode of button "Style" to option
+
+Description:
+Use the <option> <keyword> to create a popup, option, or drop-down <menu>.
+
+If the lookAndFeel <property> is set to "Appearance Manager" or "Macintosh", the <option> <keyword> designates a <popup menu>. If the <lookAndFeel> is "Motif", the <option> <keyword> designates an option menu. If the <lookAndFeel> is "Windows 95", the <option> <keyword> designates a drop-down list similar to a <combo box>.
+
+Option menus are normally used to designate a state. Choosing an item from an option menu changes the menu's current setting, making this menu type suitable for situations in which the user must choose one of the predefined states.
+
+References: menu (keyword), popup (keyword), lookAndFeel (property), menuMode (property), property (glossary), keyword (glossary), popup menu (glossary), combo box (glossary)
+
+Tags: menus

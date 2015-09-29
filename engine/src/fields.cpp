@@ -2192,7 +2192,6 @@ Boolean MCField::locmark(Boolean wholeline, Boolean wholeword,
 
 Boolean MCField::locmarkpoint(MCPoint p, Boolean wholeline, Boolean wholeword, Boolean chunk, Boolean inc_cr, int4 &si, int4 &ei)
 {
-	MCRectangle frect = getfrect();
 	int4 cx, cy;
 	
 	cx = p . x;
@@ -2221,7 +2220,7 @@ Boolean MCField::locmarkpoint(MCPoint p, Boolean wholeline, Boolean wholeword, B
 	cy -= y;
 	if (chunk && cy > pgptr->getheight(fixedheight))
 		return False;
-	if (wholeline || wholeword && flags & F_LIST_BEHAVIOR)
+	if (wholeline || (wholeword && flags & F_LIST_BEHAVIOR))
 	{
 		ei = si + pgptr->gettextlengthcr();
 		if (!inc_cr || flags & F_LIST_BEHAVIOR || pgptr->next() == paragraphs)

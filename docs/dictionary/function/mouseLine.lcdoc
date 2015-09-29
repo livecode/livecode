@@ -1,0 +1,34 @@
+Name: mouseLine
+
+Type: function
+
+Syntax: the mouseLine
+
+Syntax: mouseLine()
+
+Summary: <return|Returns> a <chunk expression> describing the location of the <line> of text under the <mouse pointer>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+the mouseLine
+
+Example:
+set the backgroundColor of the mouseLine to "yellow"
+
+Returns: The <mouseLine> <function> <return|returns> a <chunk expression> of the form line lineNumber of field fieldNumber.
+
+Description:
+Use the <mouseLine> <function> within a <handler> to determine which line the mouse is hovering over, in order to take some action based on the click.
+
+The <mouseLine> <function> only <return|returns> locations in a <field>. If the <mouse pointer> is not over a <field>, the <mouseLine> <function> <return|returns> empty.
+
+To get  a chunk expression describing the exact word or text group that the mouse is over, use the mouseChunk <function>.
+
+References: field (keyword), line (keyword), mouseCharChunk (function), mouseChar (function), clickLine (function), foundLine (function), selectedLine (function), handler (glossary), mouse pointer (glossary), return (glossary), chunk expression (glossary), function (control_st)
+
+Tags: ui

@@ -20,6 +20,10 @@ encryptedstack.cpp
 encryptedstack.h
 stacksecurity_encrypted.cpp
 util/perfect/perfect.linux-*
+extensions/*/*/*.xml
+extensions/*/*/*.lci
+extensions/*/*/*.lcm
+extensions/*/*/*.lce
 
 # Compiled source and intermediates #
 ###################
@@ -92,12 +96,16 @@ xcuserdata/
 make-*_*/
 vsprojects/
 xcprojects/
+GPATH
+GRTAGS
+GTAGS
 
 # Build folders #
 #################
 _build/
 _cache/
 build/
+/_tests/
 *-bin/
 build-*/
 
@@ -112,3 +120,8 @@ prebuilt/lib
 prebuilt/build
 prebuilt/packaged
 prebuilt/fetched
+
+# Stamp files and generated C files
+###################################
+stamp-mlc*
+_mlc

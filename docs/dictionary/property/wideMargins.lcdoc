@@ -1,0 +1,34 @@
+Name: wideMargins
+
+Type: property
+
+Syntax: set the wideMargins of <field> to {true | false}
+
+Summary: Specifies the amount of blank space at the edges of a <field>.
+
+Associations: field
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the wideMargins of field "Info" to true
+
+Value (bool):The <wideMargins> of a <field(keyword)> is true or false.
+By default, the <wideMargins> <property> of newly created <field(object)|fields> is set to false.
+
+Description:
+Use the <wideMargins> <property> to set all the margins of a <field> to 20 pixels.
+
+The <wideMargins> <property> sets the blank space at the edges of a <field> to 20 <pixels>.
+
+You can use the <margins property> instead to set all four <field> margins to any value. The <wideMargins> <property> is included in <LiveCode> for compatibility with imported <HyperCard> stacks.
+
+The <wideMargins> <property> interacts with the <margins> : setting the <margins> <property> to 20 sets the <wideMargins> to true, and setting the <wideMargins> to true sets the <margins> to 20.
+
+References: margins property (property), pixels (property), margins (property), firstIndent (property), field (keyword), field (object), property (glossary), LiveCode (glossary), HyperCard (glossary)
+
+Tags: ui

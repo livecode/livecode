@@ -1,0 +1,31 @@
+Name: magnify
+
+Type: property
+
+Syntax: set the magnify of <image> to {true | false}
+
+Summary: Shows or hides a window showing a magnified view of an <image>.
+
+Associations: image
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+set the magnify of image "Dots" to true
+
+Value (bool): The <magnify> of an <image> is true or false.
+
+Description:
+Use the <magnify> <property> to edit an <image> <pixel> -by- <pixel>.
+
+When you set the <magnify> of an <image> to true, a <palette> appears displaying a close-up view of the center of the <image>. At the same time, a box appears in the <stack window> showing you what portion of the <image> is magnified. Drag this box by its edges to magnify different parts of the <image>. In the Magnify <palette>, you use the <paint tool|paint tools> to change the <image>.
+
+Setting the <magnify> of the <image> to false hides the Magnify <palette>.
+
+You can also show the Magnify palette by choosing the Pencil tool and Command-clicking the image (on Mac OS systems) or Control-clicking it (on Unix and Windows systems). This action selects the image, so if the image is part of a group, either the editGroupedControls <property> must be true, or you must be in <group-editing mode>.
+
+References: palette (command), choose (command), magnifier (keyword), image (keyword), property (glossary), pixel (glossary), paint tool (glossary), group-editing mode (glossary), stack window (glossary)

@@ -795,6 +795,11 @@ function revEngineCheck pEngine
                return true
             end if
             break
+         case "Emscripten"
+            if there is a folder (tPath & "/Emscripten/js") then
+               return true
+            end if
+            break
       end switch
    end repeat
    return false
@@ -948,5 +953,6 @@ function revSBLibraryList
    if "Browser" is among the keys of tLibrariesA then
       put empty into tLibrariesA["Browser (CEF)"]
    end if
+
    return the keys of tLibrariesA
 end revSBLibraryList

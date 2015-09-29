@@ -1,0 +1,28 @@
+Name: desktop folder
+
+Type: property
+
+Syntax: the desktop folder
+
+Summary: Returns the path to the current user's desktop folder.
+
+Introduced: 5.0.2
+
+OS: mac,windows,linux
+
+Platforms: desktop
+
+Example:
+get the desktop folder
+
+Example:
+put the desktop folder & "/log.txt" into tLogFile
+
+Description:
+Returns the full path to the current user's desktop folder.
+
+The documents folder property returns the path to the user's desktop folder.
+
+This property is read only and is equivalent to the specialFolderPath("desktop") function.
+
+References: engine folder (property), documents folder (property), home folder (property), temporary folder (property), specialFolderPath (function)

@@ -97,7 +97,6 @@ bool MCMutableImageRep::LockImageFrame(uindex_t p_frame, MCGFloat p_density, MCG
 	
     MCGImageFrame t_frame;
     t_frame.x_scale = t_frame.y_scale = 1.0;
-    t_frame.duration = 0.0;
     
 	if (!MCGImageCreateWithRasterNoCopy(t_raster, t_frame.image))
 		return false;
@@ -119,29 +118,29 @@ void MCMutableImageRep::UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_fram
 	Release();
 }
 
-bool MCMutableImageRep::LockBitmapFrame(uindex_t p_frame, MCGFloat p_density, MCBitmapFrame *&r_frame)
+bool MCMutableImageRep::LockBitmap(uindex_t p_frame, MCGFloat p_density, MCImageBitmap *&r_bitmap)
 {
 	if (p_frame > 0)
 		return false;
 	
-	if (!MCImageCopyBitmap(m_bitmap, m_frame.image))
+	if (!MCImageCopyBitmap(m_bitmap, m_locked_bitmap))
 		return false;
-	MCImageBitmapUnpremultiply(m_frame.image);
+	MCImageBitmapUnpremultiply(m_locked_bitmap);
 	
 	Retain();
 	
-	r_frame = &m_frame;
+	r_bitmap = m_locked_bitmap;
 	
 	return true;
 }
 
-void MCMutableImageRep::UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame)
+void MCMutableImageRep::UnlockBitmap(uindex_t p_index, MCImageBitmap *p_bitmap)
 {
-	if (p_index > 0 || p_frame != &m_frame)
+	if (p_index > 0 || p_bitmap != m_locked_bitmap)
 		return;
 	
-	MCImageFreeBitmap(m_frame.image);
-	m_frame.image = nil;
+	MCImageFreeBitmap(m_locked_bitmap);
+	m_locked_bitmap = nil;
 	
 	Release();
 }
@@ -149,6 +148,15 @@ void MCMutableImageRep::UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_fra
 uindex_t MCMutableImageRep::GetFrameCount()
 {
 	return 1;
+}
+
+bool MCMutableImageRep::GetFrameDuration(uindex_t p_index, uint32_t &r_duration)
+{
+	if (p_index > 0)
+		return false;
+	
+	r_duration = 0;
+	return true;
 }
 
 bool MCMutableImageRep::GetGeometry(uindex_t &r_width, uindex_t &r_height)
@@ -181,11 +189,9 @@ MCMutableImageRep::MCMutableImageRep(MCImage *p_owner, MCImageBitmap *p_bitmap)
 	mx = my = 0;
 	state = 0;
 
-	m_frame.image = nil;
+	m_locked_bitmap = nil;
 	m_gframe.image = nil;
 	
-	m_frame.duration = m_gframe.duration = 0;
-	m_frame.x_scale = m_frame.y_scale = 1.0;
 	m_gframe.x_scale = m_gframe.y_scale = 1.0;
 }
 
@@ -198,7 +204,7 @@ MCMutableImageRep::~MCMutableImageRep()
 
 	MCImageFreeMask(m_draw_mask);
 
-	MCImageFreeBitmap(m_frame.image);
+	MCImageFreeBitmap(m_locked_bitmap);
 	MCGImageRelease(m_gframe.image);
 }
 
@@ -234,11 +240,12 @@ Boolean MCMutableImageRep::image_mfocus(int2 x, int2 y)
 	}
 
 	if (state & CS_OWN_SELECTION)
+	{
 		if (m_owner->getstack() -> gettool(m_owner) == T_SELECT)
 			return True;
 		else
 			endsel();
-			
+	}
 	return False;
 }
 
@@ -252,9 +259,9 @@ Boolean MCMutableImageRep::image_mdown(uint2 which)
 	case Button1:
 		if (state & CS_DRAW)
 		{
-			if (mx == points[0].x && my == points[0].y
-			        || which == Button1 && erasing
-			        || which == Button3 && !erasing)
+			if ((mx == points[0].x && my == points[0].y)
+			    || (which == Button1 && erasing)
+			    || (which == Button3 && !erasing))
 			{
 				if (mx == points[0].x && my == points[0].y)
 					points[polypoints++] = points[0];
@@ -297,7 +304,7 @@ Boolean MCMutableImageRep::image_mdown(uint2 which)
 
 Boolean MCMutableImageRep::image_doubledown(uint2 which)
 {
-	if (state & CS_DRAW && (which == Button1 || which == Button3 && erasing)
+	if (state & CS_DRAW && (which == Button1 || (which == Button3 && erasing))
 	        && m_owner->getstack() -> gettool(m_owner) == T_POLYGON)
 		return True;
 	return False;
@@ -305,7 +312,7 @@ Boolean MCMutableImageRep::image_doubledown(uint2 which)
 
 Boolean MCMutableImageRep::image_doubleup(uint2 which)
 {
-	if (state & CS_DRAW && (which == Button1 || which == Button3 && erasing)
+	if (state & CS_DRAW && (which == Button1 || (which == Button3 && erasing))
 	        && m_owner->getstack() -> gettool(m_owner) == T_POLYGON)
 	{
 		enddraw();
@@ -559,6 +566,8 @@ void MCMutableImageRep::continuedraw()
 
 			stroke_path(t_path);
 
+            MCGPathRelease(t_path);
+            
 			brect = MCU_compute_rect(points[polypoints-1].x,
 			                         points[polypoints-1].y, mx, my);
 			brect = MCU_reduce_rect(brect, -((MClinesize >> 1) + 1));
@@ -621,16 +630,22 @@ void MCMutableImageRep::continuedraw()
 			int2 oldx = startx;
 			int2 oldy = starty;
 			if (MCmodifierstate & MS_SHIFT)
+			{
 				if (MCU_abs(oldx - mx) > MCU_abs(oldy - my))
+				{
 					if (oldx > mx)
 						mx = oldx - MCU_abs(my - oldy);
 					else
 						mx = oldx + MCU_abs(my - oldy);
+				}
 				else
+				{
 					if (oldy > my)
 						my = oldy - MCU_abs(mx - oldx);
 					else
 						my = oldy + MCU_abs(mx - oldx);
+				}
+			}
 			if (MCcentered)
 			{
 				oldx -= mx - oldx;
@@ -676,12 +691,13 @@ void MCMutableImageRep::enddraw()
 		{
 			MCU_offset_points(points, polypoints, -rect.x, -rect.y);
 
-			/* OVERHAUL - REVISIT: for now convert points to MCGPathRef,
-			 * but we should be able to build the path directly */
-			MCGPathRef t_path = nil;
-			/* UNCHECKED */ MCGPathCreateMutable(t_path);
 			if (polypoints > 0)
 			{
+                /* OVERHAUL - REVISIT: for now convert points to MCGPathRef,
+                 * but we should be able to build the path directly */
+                MCGPathRef t_path = nil;
+                /* UNCHECKED */ MCGPathCreateMutable(t_path);
+                
 				MCGPathMoveTo(t_path, MCGPointMake(points[0].x, points[0].y));
 				for (uint32_t i = 0; i < polypoints; i++)
 					MCGPathLineTo(t_path, MCGPointMake(points[i].x, points[i].y));
@@ -692,7 +708,9 @@ void MCMutableImageRep::enddraw()
 					fill_path(t_path);
 				}
 				stroke_path(t_path);
-			}
+                
+                MCGPathRelease(t_path);
+            }
 
 			delete points;
 			points = NULL;
@@ -777,6 +795,7 @@ MCRectangle MCMutableImageRep::continuerub(Boolean line)
 	MCU_snap(my);
 	MCRectangle brect = newrect;
 	if (MCmodifierstate & MS_SHIFT)
+	{
 		if (line)
 		{
 			real8 dx = (real8)(mx - oldx);
@@ -790,16 +809,23 @@ MCRectangle MCMutableImageRep::continuerub(Boolean line)
 			newrect = MCU_compute_rect(oldx, oldy, mx, my);
 		}
 		else
+		{
 			if (MCU_abs(oldx - mx) > MCU_abs(oldy - my))
+			{
 				if (oldx > mx)
 					mx = oldx - MCU_abs(my - oldy);
 				else
 					mx = oldx + MCU_abs(my - oldy);
+			}
 			else
+			{
 				if (oldy > my)
 					my = oldy - MCU_abs(mx - oldx);
 				else
 					my = oldy + MCU_abs(mx - oldx);
+			}
+		}
+	}
 	if (MCcentered)
 	{
 		oldx -= mx - oldx;
@@ -833,7 +859,7 @@ void MCMutableImageRep::endrub()
 
 void MCMutableImageRep::startseldrag()
 {
-	MCLog("MCMutableImageRep<%p>::startseldrag()", this);
+    //MCLog("MCMutableImageRep<%p>::startseldrag()", this);
 	state |= CS_DRAG;
 	if (state & CS_BEEN_MOVED)
 	{
@@ -846,7 +872,7 @@ void MCMutableImageRep::startseldrag()
 
 void MCMutableImageRep::endsel()
 {
-	MCLog("MCMutableImageRep<%p>::endsel()", this);
+    //MCLog("MCMutableImageRep<%p>::endsel()", this);
 	if (state & CS_BEEN_MOVED)
 	{
 		stampsel();
@@ -869,8 +895,8 @@ void MCMutableImageRep::battson(MCContext *p_context, uint2 depth)
 {
 	if (erasing)
 		p_context->setforeground(fixmaskcolor(MCzerocolor));
-	else
-		if (depth != 1)
+	else if (depth != 1)
+	{
 			if (MCbrushpattern == nil)
 			{
 				p_context->setforeground(MCbrushcolor);
@@ -878,6 +904,7 @@ void MCMutableImageRep::battson(MCContext *p_context, uint2 depth)
 			}
 			else
 				p_context->setfillstyle(FillTiled, MCbrushpattern, 0, 0);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1179,7 +1206,7 @@ void MCMutableImageRep::bucket_fill(MCImageBitmap *p_src, uint4 scolor, MCGRaste
 		}
 	}
 	while (pstacktop);
-	delete pstack;
+	delete[] pstack;
 }
 
 void MCMutableImageRep::drawbucket()
@@ -1328,7 +1355,9 @@ MCRectangle MCMutableImageRep::drawline(Boolean cancenter)
 	/* UNCHECKED */ MCGPathCreateMutable(t_path);
 	MCGPathAddLine(t_path, MCGPointMake(oldx - rect.x, oldy - rect.y), MCGPointMake(mx - rect.x, my - rect.y));
 	stroke_path(t_path);
-
+    
+    MCGPathRelease(t_path);
+    
 	return brect;
 }
 
@@ -1443,7 +1472,7 @@ MCRectangle MCMutableImageRep::drawoval()
 	if (MCarcangle != 0 && MCarcangle % 360 == 0)
 		MCGPathAddArc(t_path, t_center, t_radii, 0.0, 360 - (MCstartangle + MCarcangle), 360 - MCstartangle);
 	else
-		MCGPathAddSegment(t_path, t_center, t_radii, 0.0, 360 - (MCstartangle + MCarcangle), 360 - MCstartangle);
+		MCGPathAddSector(t_path, t_center, t_radii, 0.0, 360 - (MCstartangle + MCarcangle), 360 - MCstartangle);
 	
 	draw_path(t_path);
 
@@ -1624,7 +1653,7 @@ void MCMutableImageRep::croptoopaque()
 
 void MCMutableImageRep::selimage()
 {
-	MCLog("MCMutableImageRep<%p>::selimage()", this);
+    //MCLog("MCMutableImageRep<%p>::selimage()", this);
 	if (MCcurtool != T_SELECT)
 	{
 		oldtool = MCcurtool;
@@ -1656,7 +1685,7 @@ void MCMutableImageRep::selimage()
 
 void MCMutableImageRep::getsel(Boolean cut)
 {
-	MCLog("MCMutableImageRep<%p>::getsel()", this);
+    //MCLog("MCMutableImageRep<%p>::getsel()", this);
 	/* UNCHECKED */ MCImageCopyBitmapRegion(m_bitmap, selrect, m_selection_image);
 	
 	if (cut)
@@ -1667,7 +1696,7 @@ void MCMutableImageRep::getsel(Boolean cut)
 
 void MCMutableImageRep::cutoutsel()
 {
-	MCLog("MCMutableImageRep<%p>::cutoutsel()", this);
+    //MCLog("MCMutableImageRep<%p>::cutoutsel()", this);
 	if (state & CS_BEEN_MOVED)
 		MCImageBitmapClear(m_selection_image);
 	else
@@ -1687,7 +1716,7 @@ void MCImageBitmapMerge(MCImageBitmap *p_dst, MCImageBitmap *p_src, uindex_t p_d
 
 void MCMutableImageRep::stampsel()
 {
-	MCLog("MCMutableImageRep<%p>::stampsel()", this);
+    //MCLog("MCMutableImageRep<%p>::stampsel()", this);
 	// merge m_selection_image(0, 0) onto m_bitmap(selrect) srcOver
 	MCImageBitmapMerge(m_bitmap, m_selection_image, selrect.x, selrect.y, 0, 0, selrect.width, selrect.height);
 	
@@ -1901,7 +1930,7 @@ void MCMutableImageRep::flipsel(Boolean ishorizontal)
 
 void MCMutableImageRep::pasteimage(MCImageBitmap *p_bitmap)
 {
-	MCLog("MCMutableImageRep<%p>::pasteimage()", this);
+    //MCLog("MCMutableImageRep<%p>::pasteimage()", this);
 	if (MCcurtool != T_SELECT)
 	{
 		oldtool = MCcurtool;
@@ -1961,7 +1990,7 @@ void MCMutableImageRep::image_undo(Ustruct *us)
 
 void MCMutableImageRep::image_freeundo(Ustruct *us)
 {
-	MCLog("MCMutableImage::image_free_undo(%p) - freeing image %p", us, m_undo_image);
+    //MCLog("MCMutableImage::image_free_undo(%p) - freeing image %p", us, m_undo_image);
 	MCImageFreeBitmap(m_undo_image);
 	m_undo_image = nil;
 }
@@ -1986,3 +2015,11 @@ void MCMutableImageRep::shutdown()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// MERG-2014-09-16: [[ ImageMetadata ]] Support for image metadata property
+bool MCMutableImageRep::GetMetadata(MCImageMetadata& r_metadata)
+{
+    r_metadata = m_metadata;
+    
+    return true;
+}

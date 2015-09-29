@@ -1,0 +1,36 @@
+Name: resizeQuality
+
+Type: property
+
+Syntax: set the resizeQuality of <image> to <qualityValue> 
+
+Summary: Specifies which method LiveCode should use to scale an image.
+
+Associations: image
+
+Introduced: 2.5.1
+
+OS: mac,windows,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+get the resizeQuality of image "myImage"
+
+Example:
+set the resizeQuality of the templateImage to "best"
+
+Description:
+The <resizeQuality> of an image takes one of three values:
+
+"normal": uses a "nearest" filter- i.e. no interpolation. This is the fastest scaling method and is the default for new images
+"good": uses a bilinear filter- i.e. interpolation is done between the four nearest pixels using bilinearity.
+"best": uses a bicubic filter- i.e.interpolation is done using cubic approximation from near pixels. This is the slowest scaling method but produces the best quality scaling.
+
+The default value of the <resizeQuality> for new images is "normal"
+
+>*Note:* Setting the <resizeQuality> of an image to any value other than "normal", "good" or "best" has no affect.  It will not produce an error, but the value of the property will remain as it was before.
+
+References: image (object)
+
+Tags: multimedia

@@ -1,0 +1,39 @@
+Name: option
+
+Type: command
+
+Syntax: option <stack> 
+
+Summary: Displays an option menu whose <menu item|menu items> are <button|buttons> in a <stack>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+option stack "Hot Text Items"
+
+Example:
+option stack (the menuStack of this image) -- custom property
+
+Parameters:
+stack: Any stack reference. The stack's first card must contain a button for each menu item in the option menu.
+
+Description:
+Use the <option> <command> to display a <stack menu> as an option menu in situations where it is not possible to attach the <menu> to a <button> (for example, if the contents of the <menu> are not known in advance).
+
+Use the <option> <command> in a <mouseDown> <handler> to display the <menu> :
+
+  on mouseDown
+    option stack "Help Menu"
+  end mouseDown
+
+While the menu is displayed, the handler pauses.
+
+The menu appears centered over the center of the control containing the handler. Choosing a menu item from the menu sends a mouseUp <message> to the <stack>.
+
+References: menuName (property), menuLines (property), mouseDown (message), pulldown (command), menuButton (function), menu item (glossary), stack menu (glossary), handler (glossary), button (glossary), message (glossary), menu (glossary), command (glossary), stack (object), button (object)
+
+Tags: menus

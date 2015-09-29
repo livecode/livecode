@@ -35,6 +35,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "redraw.h"
 #include "region.h"
+#include "font.h"
 
 #include "mbldc.h"
 
@@ -50,6 +51,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <android/bitmap.h>
 #include <GLES/gl.h>
 #include <unistd.h>
+
+#include "libscript/script.h"
+
+extern "C" bool MCModulesInitialize();
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1835,6 +1840,9 @@ extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doKeyboardHidde
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doCreate(JNIEnv *env, jobject object, jobject activity, jobject container, jobject view)
 {
     MCInitialize();
+    MCSInitialize();
+    MCModulesInitialize();
+    MCScriptInitialize();
     
 	MCLog("doCreate called", 0);
 
@@ -2866,3 +2874,23 @@ void MCJavaDetachCurrentThread()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// No theming for mobile platforms yet
+bool MCPlatformGetControlThemePropBool(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, bool&)
+{
+    return false;
+}
+
+bool MCPlatformGetControlThemePropInteger(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, int&)
+{
+    return false;
+}
+
+bool MCPlatformGetControlThemePropColor(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCColor&)
+{
+    return false;
+}
+
+bool MCPlatformGetControlThemePropFont(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCFontRef& r_font)
+{
+    return MCFontCreate(MCNAME("Arial"), 0, 12, r_font);
+}

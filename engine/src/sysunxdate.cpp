@@ -24,7 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //#include "execpt.h"
 #include "date.h"
 
-#if defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER) || defined(_DARWIN_SERVER)
+#if defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER) || defined(_DARWIN_SERVER) || defined(__EMSCRIPTEN__)
 #include <time.h>
 #define sys_time_t time_t
 #define sys_localtime localtime
@@ -171,6 +171,37 @@ static MCStringRef string_prepend(MCStringRef t_string, unichar_t t_char)
 	return t_result;
 }
 
+
+// PM-2015-09-07: [[ Bug 9942 ]] On Linux, the short/abbr system time should
+//  not return the seconds
+static MCStringRef remove_seconds(MCStringRef p_input)
+{
+    MCStringRef t_new_string;
+    t_new_string = NULL;
+    MCRange t_range;
+
+    if (MCStringFind(p_input, MCRangeMake(0, UINDEX_MAX), MCSTR(":%S"), kMCStringOptionCompareExact, &t_range))
+    {
+        // If :%S is found, then we remove it
+        MCStringRef t_mutable_copy;
+        if (MCStringMutableCopy(p_input, t_mutable_copy))
+        {
+        	if (!MCStringRemove(t_mutable_copy, t_range)
+        			|| !MCStringCopyAndRelease(t_mutable_copy, t_new_string))
+        		MCValueRelease(t_mutable_copy);
+        }
+    }
+    
+    if (t_new_string == NULL)
+    {
+        // If removing ':%S' failed, or wasn't necessary, we copy the whole string
+        t_new_string = MCValueRetain(p_input);
+    }
+	
+	return t_new_string;
+}
+
+
 static MCStringRef query_locale(uint4 t_index)
 {
 	char *t_buffer;
@@ -219,19 +250,27 @@ static void cache_locale(void)
 	s_datetime_locale -> date_formats[1] = MCSTR("%a, %b %#d, %#Y");
 	s_datetime_locale -> date_formats[2] = MCSTR("%A, %B %#d, %#Y");
 
-    MCStringRef t_time_ampm;
+    MCAutoStringRef t_time_ampm;
     t_time_ampm = query_locale(T_FMT_AMPM);
     
     // AL-2014-01-16: [[ Bug 11672 ]] If the locale doesn't use AM/PM, then always use 24-hour time.
-    if (MCStringIsEmpty(t_time_ampm))
+    if (MCStringIsEmpty(*t_time_ampm))
     {
         s_datetime_locale -> time24_formats[0] = MCSTR("!%H:%M");
         s_datetime_locale -> time24_formats[1] = MCSTR("!%H:%M:%S");
     }
     else
     {
-        s_datetime_locale -> time_formats[0] = string_prepend(swap_time_tokens(t_time_ampm), '!');
-        s_datetime_locale -> time_formats[1] = swap_time_tokens(t_time_ampm);
+        // PM-2015-09-07: [[ Bug 9942 ]] On Linux, the short/abbr system time
+        //  should not return the seconds
+        MCStringRef t_short_time;
+        t_short_time = string_prepend(swap_time_tokens(*t_time_ampm), '!');
+
+        s_datetime_locale -> time_formats[0] = remove_seconds(t_short_time);
+        s_datetime_locale -> time_formats[1] = swap_time_tokens(*t_time_ampm);
+
+        // string_prepend() returns a new StringRef, which we must release
+        MCValueRelease(t_short_time);
     }
     
 	s_datetime_locale -> time24_formats[0] = MCSTR("!%H:%M");

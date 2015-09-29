@@ -150,7 +150,7 @@ void MCGradientFillInit(MCGradientFill *&r_gradient, MCRectangle p_rect)
 
 void MCGradientFillFree(MCGradientFill *p_gradient)
 {
-	delete p_gradient -> ramp;
+	delete[] p_gradient -> ramp;
 	delete p_gradient;
 }
 
@@ -969,7 +969,10 @@ bool MCGradientFillSetProperties(MCExecContext& ctxt, MCGradientFill*& x_gradien
         MCAutoArrayRef t_array;
         MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value , kMCExecValueTypeArrayRef, &(&t_array));
         if (ctxt . HasError())
+        {
+            delete t_gradient;
             return false;
+        }
         
         if (MCArrayIsEmpty(*t_array))
         {
@@ -1177,7 +1180,7 @@ template<MCGradientFillKind x_type> static inline int4 compute_index(int4 p_x, i
 		break;
 	default:
 		MCUnreachable();
-		return NULL;
+		return 0;
 	}
 	if (p_mirror)
 	{

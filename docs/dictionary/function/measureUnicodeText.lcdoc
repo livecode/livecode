@@ -1,0 +1,39 @@
+Name: measureUnicodeText
+
+Type: function
+
+Syntax: measureUnicodeText(unicodeText,object reference,[mode])
+
+Summary: Returns the width, size or bounds of the unicode text drawn with the effective font attribute of the given object.
+
+Introduced: 6.5
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+put measureUnicodeText(theText,me) into theTextWidth
+
+Example:
+put measureUnicodeText(theText,me,"size") into theTextSize
+
+Example:
+put measureUnicodeText(theText,me,"bounds") into theTextBounds
+
+Description:
+Use the <measureUnicodeText> function to find the dimensions of unicode text drawn with the effective font attributes of an object.
+
+Parameters:
+The text is any unicode string. For native strings use measureText.
+The object reference is an expression that evaluates to an object reference.
+The mode is one of:
+width - (default if not specified) - returns the width of the text
+size - returns the width,height of the text
+bounds - returns a rectangle identifying the bounds of the text in the form 0,-ascent,width,descent where ascent and descent are relative to a 0 baseline the text is drawn on.
+
+Deprecated: In LiveCode 7.0 the language was changed to handle unicode transparently. This means that language functionality which previously aided unicode text manipulation is no longer required. This function should not be used in new code. measureUnicodeText(tText) is equivalent to measureText(textDecode(tText, "UTF16")).
+
+References: formattedWidth (property), formattedHeight (property), measureText (function)
+
+Tags: ui

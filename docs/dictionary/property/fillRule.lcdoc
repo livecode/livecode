@@ -1,0 +1,33 @@
+Name: fillRule
+
+Type: property
+
+Syntax: set the fillRule [of graphic] to {evenodd | nonzero | none}
+
+Summary: Specifies the rule used to determine whether a point lies inside or outside the graphic.
+
+Associations: graphic
+
+Introduced: 3.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the fillRule of graphic "Rectangle 1" of me to "evenodd"
+
+Description:
+This property will affect polygon graphic objects that consist of multiple sub-polygons.  To define a polygon graphic object with multiple sub-polygons, seperate the individual polygons by an extra return character in the points property.
+
+The property can be one of none, nonzero and evenodd.
+
+When set to none all space enclosed by the outer most perimeter of the polygon will be treated as being inside the graphic.  
+
+When set to nonzero, the shape is filled using the Non-Zero winding rule.  This determines whether a point is inside or outside a shape based on the directions of the edges preceeding the scanline.  If the difference between the number of edges going up and going down is non-zero, then the pixel is considered inside the shape, otherwise it is not.
+
+When set to evenodd, the shape is filled using the Even-Odd winding rule.  This determines whether a point is inside the shape based on the number of edges before it on the scanline.  If there are an even number of edges, the point is outside the shape, if there is an odd number of edges it is inside.
+
+>*Note:* This only affects polygon graphics which have thier antialiased set to true.
+
+References: opaque (property), antialiased (property)

@@ -1,0 +1,47 @@
+module __VMTEST.dynamic_call
+
+use com.livecode.foreign
+
+---------- LCB THUNKS
+
+handler type Thunk()
+
+handler Yes()
+	return true
+end handler
+
+handler InvokeArgument(in pFunc as Thunk)
+	return pFunc()
+end handler
+
+public handler TestDynamicInvokeVariable()
+	variable pFunc as Thunk
+	put Yes into pFunc
+	test "dynamic invoke (variable)" when pFunc()
+end handler
+
+public handler TestDynamicInvokeArgument()
+	test "dynamic invoke (argument)" when InvokeArgument(Yes)
+end handler
+
+--------- FOREIGN THUNKS
+
+foreign handler type ForeignThunk(in pValue as any) returns CBool
+
+foreign handler MCStringIsEmpty(in pValue as String) returns CBool binds to "<builtin>"
+
+handler InvokeForeignArgument(in pFunc as ForeignThunk, in pParam as any)
+	return pFunc(pParam)
+end handler
+
+public handler TestDynamicForeignInvokeVariable()
+	variable tFunc as ForeignThunk
+	put MCStringIsEmpty into tFunc
+	test "dynamic foreign invoke (variable)" when tFunc("")
+end handler
+
+public handler TestDynamicForeignInvokeArgument()
+	test "dynamic foreign invoke (argument)" when InvokeForeignArgument(MCStringIsEmpty, "")
+end handler
+
+end module

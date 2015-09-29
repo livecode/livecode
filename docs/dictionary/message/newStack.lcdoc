@@ -1,0 +1,33 @@
+Name: newStack
+
+Type: message
+
+Syntax: newStack
+
+Summary: Sent to the <current card> of a new <stack> right after the <stack> is created.
+
+Associations: card
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+on newStack -- store a path for later use in a closeStack handler
+  ask file "Where do you want to store the backup?" with \
+     char 1 to 24 of the short name of this stack && "Backup"
+ set the backupLocation of the target to it
+end newStack
+
+Description:
+Handle the <newStack> <message> if you want to create additional <object|objects> or do other tasks when a new <stack> is created.
+
+Normally, the <newStack> <message> is handled at a higher level of the <message path>, since the newly-created <stack> does not yet have a <script> unless the <templateStack> contains one.
+
+The actual creation is not triggered by the <newStack> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <stack> from being created.
+
+References: script (property), deleteStack (message), create stack (command), stack (object), object (object), trap (glossary), templateStack (glossary), current card (glossary), message (glossary), message path (glossary), pass (control_st)
+
+Tags: objects

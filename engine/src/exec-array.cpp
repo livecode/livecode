@@ -223,7 +223,7 @@ void MCArraysExecCombineByRow(MCExecContext& ctxt, MCArrayRef p_array, MCStringR
         MCArrayApply(p_array, list_array_elements, &t_lisctxt);
         qsort(t_lisctxt . elements, t_count, sizeof(array_element_t), compare_array_element);
 
-        for (int i = 0; i < t_count && t_success; ++i)
+        for (uindex_t i = 0; i < t_count && t_success; ++i)
         {
             MCAutoStringRef t_string;
             if (ctxt . ConvertToString(t_lisctxt . elements[i] . value, &t_string))
@@ -274,7 +274,7 @@ void MCArraysExecCombineByColumn(MCExecContext& ctxt, MCArrayRef p_array, MCStri
             index_t t_last_index;
             t_valid_keys = true;
             t_last_index = 0;
-            for (int i = 0; i < t_count && t_valid_keys; ++i)
+            for (uindex_t i = 0; i < t_count && t_valid_keys; ++i)
             {
                 if (!t_last_index)
                     t_last_index = t_lisctxt . elements[i] . key;
@@ -297,7 +297,7 @@ void MCArraysExecCombineByColumn(MCExecContext& ctxt, MCArrayRef p_array, MCStri
                 // MCMemoryNewArray initialises all t_next_row_indices elements to 0.
                 /* UNCHECKED */ MCMemoryNewArray(t_count, t_next_row_indices);
                 
-                for (int i = 0; i < t_count && t_success; ++i)
+                for (uindex_t i = 0; i < t_count && t_success; ++i)
                 {
                     if (t_lisctxt . elements[i] . key == 0) // The index 0 is ignored
                         continue;
@@ -321,7 +321,7 @@ void MCArraysExecCombineByColumn(MCExecContext& ctxt, MCArrayRef p_array, MCStri
                         t_elements_over = 0;
                         
                         // Iterate through all the elements of the array
-                        for (int i = 0; i < t_count && t_success; ++i)
+                        for (uindex_t i = 0; i < t_count && t_success; ++i)
                         {
                             // Only consider this element if it has any uncombined rows remaining
                             if (t_next_row_indices[i] < MCStringGetLength(t_strings[i]))
@@ -606,12 +606,23 @@ void MCArraysDoIntersect(MCExecContext& ctxt, MCArrayRef p_dst_array, MCArrayRef
 	MCNameRef t_key;
 	MCValueRef t_src_value;
     MCValueRef t_dst_value;
+    MCAutoArrayRef t_orig_dst_array;
 	uintptr_t t_iterator;
 	t_iterator = 0;
     
     bool t_is_array;
     
-	while(MCArrayIterate(p_dst_array, t_iterator, t_key, t_dst_value))
+    // TS-2015-19-18: [[ Bug 15948 ]] Take a copy of p_dst_array and iterate through
+    // the copy so that we are not removing values from the same array.  Otherwise
+    // the array may be rehashed during the MCArrayRemoveValue() call and break the
+    // iteration sequence.
+    if (!MCArrayCopy(p_dst_array, &t_orig_dst_array)) {
+        return;
+    }
+    
+    // Loop through the copy of the array, not the one that we will be removing entries
+    // from.
+    while(MCArrayIterate(*t_orig_dst_array, t_iterator, t_key, t_dst_value))
 	{
 		if (MCArrayFetchValue(p_src_array, ctxt . GetCaseSensitive(), t_key, t_src_value))
         {
@@ -1026,7 +1037,7 @@ bool MCArraysCopyMatrix(MCExecContext& ctxt, MCArrayRef self, matrix_t*& r_matri
 	integer_t t_row_offset = t_extents[0].min;
 	integer_t t_col_offset = t_extents[1].min;
 
-	if (MCArrayGetCount(self) != t_rows * t_cols)
+	if (MCArrayGetCount(self) != (uindex_t) t_rows * t_cols)
 		return false;
 
 	MCAutoPointer<matrix_t> t_matrix;
@@ -1143,7 +1154,7 @@ bool MCArraysCopyTransposed(MCArrayRef self, MCArrayRef& r_transposed)
 	integer_t t_row_end = t_extents[0].min + t_rows;
 	integer_t t_col_end = t_extents[1].min + t_cols;
 
-	if (MCArrayGetCount(self) != t_rows * t_cols)
+	if (MCArrayGetCount(self) != (uindex_t) t_rows * t_cols)
 		return false;
 
 	MCAutoArrayRef t_transposed;

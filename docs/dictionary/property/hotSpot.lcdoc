@@ -1,0 +1,33 @@
+Name: hotSpot
+
+Type: property
+
+Syntax: set the hotSpot of <image> to <point> 
+
+Summary: Specifies the location of the hot spot when an <image> is being used as a <cursor>.
+
+Associations: image
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+set the hotSpot of image "Arrow" to "20,0"
+
+Value:
+The <hotSpot> of an <image(keyword)> is a point: an <integer> between 1 and the width of the <image(keyword)>, a comma, and an <integer> between 1 and the height of the <image(keyword)>.
+By default, the <hotSpot> <property> of newly created <image(object)|images> is set to "1,1".
+
+Description:
+Use the <hotSpot> <property> to specify the position of the hot spot of an <image(keyword)> you want to use as a <cursor>.
+
+A mouse cursor, regardless of its shape, always has a single active point or hot spot. For example, the arrow cursor's hot spot is at its tip, and to select an object, you must click it with the arrow tip.
+
+The first item of the <hotSpot> <property> is the horizontal distance in <pixels> from the left edge of the <image(keyword)> to the hot spot <point>, and is equal to the <image(object)|image's> <xHot> <property>. The second <item> of the <hotSpot> <property> is the vertical distance in <pixels> from the top of the <image(keyword)> to the hot spot <point>, and is equal to the <image(object)|image's> <yHot> <property>.
+
+References: left (property), cursor (property), yHot (property), pixels (property), xHot (property), item (keyword), image (keyword), integer (keyword), point (keyword), mouseColor (function), image (object), property (glossary)
+
+Tags: ui

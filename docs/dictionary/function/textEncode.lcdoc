@@ -1,0 +1,49 @@
+Name: textEncode
+
+Type: function
+
+Syntax: textEncode(<stringToEncode>, <encoding>)
+
+Summary: Converts from text to binary data.
+
+Introduced: 7.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+textEncode("A","UTF16")
+
+Example:
+put textEncode(field "output","UTF-8") into tOutput
+put tOutput into url ("file:output.txt")
+
+Parameters:
+stringToEncode (string): Any string, or expression that evaluates to a string.
+encoding (enum): the encoding to be used
+- "ASCII"
+- "ISO-8859-1": Linux only
+- "MacRoman": OS X only
+- "Native": ISO-8859-1 on Linux, MacRoman on OS X, CP1252 on Windows
+- "UTF-16"
+- "UTF-16BE"
+- "UTF-16LE"
+- "UTF-32"
+- "UTF-32BE"
+- "UTF-32LE"
+- "UTF-8"
+- "CP1252"
+
+Returns: Returns the <stringToEncode> as binary data.
+
+Description:
+Converts from text to binary data.
+
+The <textEncode> function takes text, and returns it as binary data, encoded with the specified encoding.
+
+It is highly recommended that any time you interface with things outside LiveCode (files, network sockets, processes, etc) that you explicitly <textEncode> any text you send outside LiveCode and <textDecode> all text received into LiveCode. If this doesnt happen, a platform-dependent encoding will be used (which normally does not support Unicode text).
+
+It is not, in general, possible to reliably auto-detect text encodings so please check the documentation for the programme you are communicating with to find out what it expects. If in doubt, try UTF-8.
+
+References: textDecode (function), textEncode (function)

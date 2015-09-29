@@ -113,8 +113,9 @@ public:
 	virtual Boolean doubleup(uint2 which);
 	virtual void setrect(const MCRectangle &nrect);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
+
 #ifdef LEGACY_EXEC
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
 	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 #endif
     
@@ -341,6 +342,9 @@ public:
     
     void GetStatus(MCExecContext& ctxt, intenum_t& r_status);
     
+    void SetMirrored(MCExecContext& ctxt, bool p_mirrored);
+    void GetMirrored(MCExecContext& ctxt, bool& r_mirrored);
+    
     ////////////////////////////////////////////////////////////////////////////////
     // MCPlayer specific implementation for the platform player
     
@@ -415,6 +419,8 @@ public:
     // PM-2014-10-14: [[ Bug 13569 ]] Make sure changes to player are not visible in preOpenCard
     void attachplayer(void);
     void detachplayer(void);
+    
+    void setmirrored(bool p_mirrored);
 };
 #endif
 

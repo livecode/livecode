@@ -25,6 +25,8 @@
 
 #include "graphics_util.h"
 
+#include "libscript/script.h"
+
 #include <objc/objc-runtime.h>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1967,6 +1969,9 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern "C" bool MCModulesInitialize(void);
+extern "C" void MCModulesFinalize(void);
+
 int main(int argc, char *argv[], char *envp[])
 {
 	extern bool MCS_mac_elevation_bootstrap_main(int argc, char* argv[]);
@@ -1986,10 +1991,10 @@ int main(int argc, char *argv[], char *envp[])
 	// Register for reconfigurations.
 	CGDisplayRegisterReconfigurationCallback(display_reconfiguration_callback, nil);
     
-	
-	if (!MCInitialize())
+	if (!MCInitialize() || !MCSInitialize() ||
+	    !MCModulesInitialize() || !MCScriptInitialize())
 		exit(-1);
-	
+    
 	// On OSX, argv and envp are encoded as UTF8
 	MCStringRef *t_new_argv;
 	/* UNCHECKED */ MCMemoryNewArray(argc, t_new_argv);
@@ -2038,6 +2043,8 @@ int main(int argc, char *argv[], char *envp[])
 	// Drain the autorelease pool.
 	[t_pool release];
 	
+    MCScriptFinalize();
+    MCModulesFinalize();
 	MCFinalize();
 	
 	return 0;

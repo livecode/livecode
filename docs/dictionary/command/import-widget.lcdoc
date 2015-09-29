@@ -1,0 +1,32 @@
+Name: import widget
+
+Type: command
+
+Syntax: import widget from array <arrayVar>
+
+Summary: Creates a widget from the supplied state array.
+
+Introduced: 8.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,web,modile
+
+Example:
+import widget from array tMyArray
+
+Parameters:
+arrayVar: A variable containing a widget state array, previously obtained using
+<export widget>
+
+Description:
+Use the <import widget> command to recreate a widget previously saved using the <export> command.
+
+The imported object is placed in the current stack.
+
+For details of the format of the widget state array see <export widget>.
+
+>*Note*: The <export widget> command is subject to change throughout the 8.0
+development cycle.
+
+References: export widget (command), create widget (command)

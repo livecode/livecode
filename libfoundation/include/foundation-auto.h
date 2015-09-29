@@ -23,39 +23,56 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+template<typename T> class MCAutoValueRefBase;
+
+template<typename T> inline T In(const MCAutoValueRefBase<T>& p_auto)
+{
+    return p_auto . In();
+}
+
+template<typename T> inline T& Out(MCAutoValueRefBase<T>& p_auto)
+{
+    return p_auto . Out();
+}
+
+template<typename T> inline T& InOut(MCAutoValueRefBase<T>& p_auto)
+{
+    return p_auto . InOut();
+}
+
 template<typename T> class MCAutoValueRefBase
 {
 public:
 
-	MCAutoValueRefBase(void)
+	inline MCAutoValueRefBase(void)
+		: m_value(nil)
 	{
-		m_value = nil;
 	}
     
-    explicit MCAutoValueRefBase(T value)
-    {
-        m_value = value;
-    }
+    inline explicit MCAutoValueRefBase(T p_value)
+		: m_value(MCValueRetain(p_value))
+	{
+	}
 
-	~MCAutoValueRefBase(void)
+	inline ~MCAutoValueRefBase(void)
 	{
 		MCValueRelease(m_value);
 	}
 
-	T operator = (T value)
+	inline T operator = (T value)
 	{
 		MCAssert(m_value == nil);
 		m_value = (T)MCValueRetain(value);
 		return value;
 	}
 
-	T& operator & (void)
+	inline T& operator & (void)
 	{
 		MCAssert(m_value == nil);
 		return m_value;
 	}
 
-	T operator * (void) const
+	inline T operator * (void) const
 	{
 		return m_value;
 	}
@@ -67,30 +84,107 @@ public:
         m_value = (value) ? (T)MCValueRetain(value) : NULL;
     }
     
-    void Give(T value)
+    inline T& operator ! (void)
+    {
+		return m_value;
+    }
+    
+    // The give method places the given value into the container without
+    // retaining it - the auto container is considered to now own the value.
+    inline void Give(T value)
     {
         if (m_value)
             MCValueRelease(m_value);
         m_value = value;
     }
-
-private:
+    
+    // The take method removes the value from the container passing ownership
+    // to the caller.
+    inline T Take(void)
+    {
+        T t_value;
+        t_value = m_value;
+        m_value = nil;
+        return t_value;
+    }
+    
+    friend T In<>(const MCAutoValueRefBase<T>&);
+    friend T& Out<>(MCAutoValueRefBase<T>&);
+    friend T& InOut<>(MCAutoValueRefBase<T>&);
+    
+protected:
 	T m_value;
     
+    // Return the contents of the auto pointer in a form for an in parameter.
+    inline T In(void) const
+    {
+        return m_value;
+    }
+    
+    // Return the contents of the auto pointer in a form for an out parameter.
+    inline T& Out(void)
+    {
+		MCAssert(m_value == nil);
+		return m_value;
+    }
+    
+    // Return the contents of the auto pointer in a form for an inout parameter.
+    inline T& InOut(void)
+    {
+        return m_value;
+    }
+
+private:
     MCAutoValueRefBase<T>& operator = (MCAutoValueRefBase<T>& x);
+};
+
+template<typename T, bool (*MutableCopyAndRelease)(T, T&), bool (*ImmutableCopyAndRelease)(T, T&)>
+class MCAutoMutableValueRefBase :
+  public MCAutoValueRefBase<T>
+{
+public:
+    inline MCAutoMutableValueRefBase() :
+      MCAutoValueRefBase<T>()
+    {
+    }
+    
+    inline explicit MCAutoMutableValueRefBase(T p_value) :
+      MCAutoValueRefBase<T>(p_value)
+    {
+    }
+    
+    inline T operator = (T value)
+	{
+        return MCAutoValueRefBase<T>::operator =(value);
+	}
+    
+    inline bool MakeMutable(void)
+    {
+        return MutableCopyAndRelease(MCAutoValueRefBase<T>::m_value, MCAutoValueRefBase<T>::m_value);
+    }
+    
+    inline bool MakeImmutable(void)
+    {
+        return ImmutableCopyAndRelease(MCAutoValueRefBase<T>::m_value, MCAutoValueRefBase<T>::m_value);
+    }
+    
+private:
+    MCAutoMutableValueRefBase<T, MutableCopyAndRelease, ImmutableCopyAndRelease>& operator = (MCAutoMutableValueRefBase<T, MutableCopyAndRelease, ImmutableCopyAndRelease>& x);
 };
 
 typedef MCAutoValueRefBase<MCValueRef> MCAutoValueRef;
 typedef MCAutoValueRefBase<MCNumberRef> MCAutoNumberRef;
-typedef MCAutoValueRefBase<MCStringRef> MCAutoStringRef;
-typedef MCAutoValueRefBase<MCArrayRef> MCAutoArrayRef;
+typedef MCAutoMutableValueRefBase<MCStringRef, MCStringMutableCopyAndRelease, MCStringCopyAndRelease> MCAutoStringRef;
+typedef MCAutoMutableValueRefBase<MCArrayRef, MCArrayMutableCopyAndRelease, MCArrayCopyAndRelease> MCAutoArrayRef;
 typedef MCAutoValueRefBase<MCListRef> MCAutoListRef;
 typedef MCAutoValueRefBase<MCBooleanRef> MCAutoBooleanRef;
-typedef MCAutoValueRefBase<MCSetRef> MCAutoSetRef;
-
+typedef MCAutoMutableValueRefBase<MCSetRef, MCSetMutableCopyAndRelease, MCSetCopyAndRelease> MCAutoSetRef;
 typedef MCAutoValueRefBase<MCNameRef> MCNewAutoNameRef;
-typedef MCAutoValueRefBase<MCDataRef> MCAutoDataRef;
-
+typedef MCAutoMutableValueRefBase<MCDataRef, MCDataMutableCopyAndRelease, MCDataCopyAndRelease> MCAutoDataRef;
+typedef MCAutoValueRefBase<MCTypeInfoRef> MCAutoTypeInfoRef;
+typedef MCAutoMutableValueRefBase<MCRecordRef, MCRecordMutableCopyAndRelease, MCRecordCopyAndRelease> MCAutoRecordRef;
+typedef MCAutoValueRefBase<MCErrorRef> MCAutoErrorRef;
+typedef MCAutoMutableValueRefBase<MCProperListRef, MCProperListMutableCopyAndRelease, MCProperListCopyAndRelease> MCAutoProperListRef;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -139,8 +233,35 @@ public:
 		m_value_count = 0;
 	}
 
+	/* Take the contents of the array as an immutable MCProperList.
+	 * The contents of the array will no longer be accessible. */
+	bool TakeAsProperList (MCProperListRef& r_list)
+	{
+		MCProperListRef t_list;
+		if (!MCProperListCreateAndRelease ((MCValueRef *) m_values,
+		                                   m_value_count,
+		                                   t_list))
+			return false;
+
+		m_values = nil;
+		m_value_count = 0;
+
+		r_list = t_list;
+		return true;
+	}
+
 	//////////
 
+    T* Ptr()
+    {
+        return m_values;
+    }
+    
+    uindex_t Size()
+    {
+        return m_value_count;
+    }
+    
 	T*& PtrRef()
 	{
 		MCAssert(m_values == nil);
@@ -293,6 +414,7 @@ public:
     MCAutoStringRefAsUTF8String(void)
     {
         m_utf8string = nil;
+		m_size = 0;
     }
     
     ~MCAutoStringRefAsUTF8String(void)
@@ -324,6 +446,92 @@ public:
 private:
     char *m_utf8string;
     uindex_t m_size;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCAutoStringRefAsUTF16String
+{
+public:
+	MCAutoStringRefAsUTF16String(void)
+		: m_string(nil), m_buf(nil), m_length(0)
+	{
+	}
+
+	~MCAutoStringRefAsUTF16String(void)
+	{
+		Unlock();
+	}
+
+	bool Lock(MCStringRef p_string)
+	{
+		if (nil == p_string)
+		{
+			return false;
+		}
+
+		m_length = MCStringGetLength(p_string);
+
+		if (MCStringIsNative(p_string))
+		{
+			m_string = nil;
+			return MCStringConvertToWString(p_string, m_buf);
+		}
+		else
+		{
+			m_string = MCValueRetain(p_string);
+			m_buf = nil;
+			return true;
+		}
+	}
+
+	void Unlock(void)
+	{
+		if (nil != m_string)
+		{
+			MCValueRelease(m_string);
+		}
+		else
+		{
+			MCMemoryDeleteArray(m_buf);
+		}
+
+		m_string = nil;
+		m_buf = nil;
+		m_length = 0;
+	}
+
+	const unichar_t *Ptr(void)
+	{
+		if (nil != m_buf)
+		{
+			return m_buf;
+		}
+		else if (nil != m_string)
+		{
+			return MCStringGetCharPtr(m_string);
+		}
+		else
+		{
+			MCUnreachable();
+			return nil;
+		}
+	}
+
+	uindex_t Size(void)
+	{
+		return m_length;
+	}
+
+	const unichar_t *operator * (void)
+	{
+		return Ptr();
+	}
+
+private:
+	MCStringRef m_string;
+	unichar_t *m_buf;
+	uindex_t m_length;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -610,7 +818,7 @@ private:
 	T *m_ptr;
 };
 
-template<typename T, void (*FREE)(const void*)> class MCAutoCustomPointer
+template<typename T, void (*FREE)(T*)> class MCAutoCustomPointer
 {
 	
 public:
@@ -624,32 +832,39 @@ public:
 		FREE(m_ptr);
 	}
 	
-	T operator = (T value)
+	T *operator = (T *value)
 	{
 		FREE(m_ptr);
 		m_ptr = value;
 		return value;
 	}
 	
-	T& operator & (void)
+	T*& operator & (void)
 	{
 		MCAssert(m_ptr == nil);
 		return m_ptr;
 	}
 	
-	T operator * (void) const
+	T *operator * (void) const
 	{
 		return m_ptr;
 	}
 	
-	void Take(T&r_ptr)
+	void Take(T*&r_ptr)
 	{
 		r_ptr = m_ptr;
 		m_ptr = nil;
 	}
 	
+	T *Take()
+	{
+		T *t_ptr = m_ptr;
+		m_ptr = nil;
+		return t_ptr;
+	}
+	
 private:
-	T m_ptr;
+	T *m_ptr;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1,0 +1,37 @@
+Name: dontDither
+
+Type: property
+
+Syntax: set the dontDither of <image> to {true | false}
+
+Summary: Specifies whether 24-bit <image|images> are <dither|dithered> on displays with fewer colors.
+
+Associations: image
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the dontDither of image "Photo" to false
+
+Example:
+set the dontDither of image "Line Art" to true
+
+Value (bool):The <dontDither> of an <image(keyword)> is true or false.
+By default, the <dontDither> <property> of newly created <image(object)|images> is set to false.
+
+Description:
+Use the <dontDither> <property> to control how <bitmap|bitmapped> <image(object)|images> such as <JPEG|JPEGs> or <PNG|PNGs> behave when the <stack> is used on a display whose <bit depth> is 8 <bit|bits> (256 colors) or fewer.
+
+If the <dontDither> of an <image(keyword)> is set to true, then when that <image(keyword)> is displayed on an 8- <bit> screen, colors that are not part of the current <color table> are displayed as a solid block of the closest available color. This may create visible banding on <image(object)|images> with continuous gradations of color.
+
+If the <dontDither> of an <image(keyword)> is false, colors that are not part of the current <color table> are displayed as a <dither|dithered> pattern made up of two or more close colors, in order to approximate the exact color. This is preferable for <image(object)|images> such as photographs that include continuous gradations of color, but may produce speckling on <image(object)|images> with large blocks of solid color.
+
+The setting of the <dontDither> <property> has no effect on 24-bit or 16-bit screens.
+
+References: screenGamma (property), bufferHiddenImages (property), colorMap (property), image (keyword), screenDepth (function), stack (object), image (object), property (glossary), dither (glossary), JPEG (glossary), bitmap (glossary), bit (glossary), color table (glossary), PNG (glossary), bit depth (glossary)
+
+Tags: multimedia

@@ -234,12 +234,10 @@ char * get_next_mask ( char *p_masks )
 // Get mask number <p_mask_id> from the comma delimited list of masks.
 char * get_filter_mask ( uint4 p_mask_id, char * p_masks ) 
 {
-	uint4 a ;
 	uint4 t_count ;
 	char *t_ptr ;
 
 	t_count = 0 ;
-	a = 0 ;
 	t_ptr = p_masks ;
 	
 	
@@ -383,13 +381,19 @@ void add_dialog_filters(GtkWidget *dialog, MCStringRef *p_types, uint4 p_type_co
 		{
             MCAutoStringRefAsSysString t_type_str;
             t_type_str.Lock(p_types[a]);
-            char *t_filter_name, *t_filter_masks;
-            t_filter_name = get_filter_name(*t_type_str);
-            t_filter_masks = get_filter_masks(*t_type_str);
 
-            // [[ bug 11268 ]] - Ensure there is a filter alongside with the name
+			char *t_filter_name;
+            t_filter_name = get_filter_name(*t_type_str);
+			if (t_filter_name == nil)
+				continue;
+
+			char * t_filter_masks;
+            t_filter_masks = get_filter_masks(*t_type_str);
             if (t_filter_masks == nil)
+			{
+				free (t_filter_name);
                 continue;
+			}
 
 			filter = gtk_file_filter_new();
 			gtk_file_filter_set_name(filter, t_filter_name);
@@ -416,8 +420,8 @@ void add_dialog_filters(GtkWidget *dialog, MCStringRef *p_types, uint4 p_type_co
 
 			gtk_file_chooser_add_filter ( GTK_FILE_CHOOSER ( dialog ) , filter ) ;
 
-			delete t_filter_name;
-			delete t_filter_masks;
+			free (t_filter_name);
+			free (t_filter_masks);
 		}
 	}
 		
@@ -586,7 +590,7 @@ int MCA_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *
 
     if (r_value == nil)
         /* UNCHECKED */ MCStringCreateWithCString(MCcancelstring, r_result);
-    else if (p_options & MCA_OPTION_RETURN_FILTER != 0)
+    else if ((p_options & MCA_OPTION_RETURN_FILTER) != 0)
         /* UNCHECKED */ MCStringCreateWithSysString(get_current_filter_name(dialog), r_result);
 
 	
@@ -908,7 +912,7 @@ MCPrinterDialogResult MCA_gtk_printer_setup ( PSPrinterSettings &p_settings )
 			p_settings . page_range_count = t_range_count ;
 			
 			// We need to adjust these as GTK starts pages at 0 and we start pages at 1
-			for ( uint4 a=0; a<t_range_count; a++)
+			for (int4 a = 0; a < t_range_count; a++)
 			{
 				p_settings . page_ranges[a] . from++;
 				p_settings . page_ranges[a] . to++;
@@ -1086,65 +1090,11 @@ MCPrinterDialogResult MCA_gtk_page_setup (PSPrinterSettings &p_settings)
 bool MCLinuxPageSetupEncode(const MCLinuxPageSetup& setup, MCDataRef &r_data)
 {
 	return false;
-
-	/*bool t_success;
-	t_success = true;
-
-	MCBinaryEncoder *t_encoder;
-	t_encoder = nil;
-	if (t_success)
-		t_success = MCBinaryEncoderCreate(t_encoder);
-
-	if (t_success)
-		t_success = 
-			MCBinaryEncoderWriteUInt32(t_encoder, 0) &&
-			MCBinaryEncoderWriteInt32(t_encoder, setup . paper_width) &&
-			MCBinaryEncoderWriteInt32(t_encoder, setup . paper_height) &&
-			MCBinaryEncoderWriteInt32(t_encoder, setup . left_margin) &&
-			MCBinaryEncoderWriteInt32(t_encoder, setup . top_margin) &&
-			MCBinaryEncoderWriteInt32(t_encoder, setup . right_margin) &&
-			MCBinaryEncoderWriteInt32(t_encoder, setup . bottom_margin) &&
-			MCBinaryEncoderWriteUInt32(t_encoder, setup . orientation);
-
-	if (t_success)
-	{
-		void *t_data;
-		uint32_t t_data_size;
-		MCBinaryEncoderBorrow(t_encoder, t_data, t_data_size);
-		t_success = MCMemoryAllocateCopy(t_data, t_data_size, r_data);
-		if (t_success)
-			r_data_size = t_data_size;
-	}
-
-	MCBinaryEncoderDestroy(t_encoder);
-
-	return t_success;*/
 }
 
 bool MCLinuxPageSetupDecode(MCDataRef p_data, MCLinuxPageSetup& setup)
 {
 	return false;
-
-	/*MCBinaryDecoder *t_decoder;
-
-	if (!MCBinaryDecoderCreate(p_data, p_data_size, t_decoder))
-		return false;
-
-	bool t_success;
-	uint32_t version;
-	t_success =
-		MCBinaryDecoderReadUInt32(t_decoder, version) &&
-		MCBinaryDecoderReadInt32(t_decoder, setup . paper_width) &&
-		MCBinaryDecoderReadInt32(t_decoder, setup . paper_height) &&
-		MCBinaryDecoderReadInt32(t_decoder, setup . left_margin) &&
-		MCBinaryDecoderReadInt32(t_decoder, setup . top_margin) &&
-		MCBinaryDecoderReadInt32(t_decoder, setup . right_margin) &&
-		MCBinaryDecoderReadInt32(t_decoder, setup . bottom_margin) &&
-		MCBinaryDecoderReadUInt32(t_decoder, setup . orientation);
-
-	MCBinaryDecoderDestroy(t_decoder);
-
-	return t_success;*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1152,48 +1102,11 @@ bool MCLinuxPageSetupDecode(MCDataRef p_data, MCLinuxPageSetup& setup)
 bool MCLinuxPrintSetupEncode(const MCLinuxPrintSetup& setup, MCDataRef &r_data)
 {
 	return false;
-
-	/*bool t_success;
-	t_success = true;
-
-	MCBinaryEncoder *t_encoder;
-	t_encoder = nil;
-	if (t_success)
-		t_success = MCBinaryEncoderCreate(t_encoder);
-
-	if (t_success)
-		t_success = true;
-
-	if (t_success)
-	{
-		void *t_data;
-		uint32_t t_data_size;
-		MCBinaryEncoderBorrow(t_encoder, t_data, t_data_size);
-		t_success = MCMemoryAllocateCopy(t_data, t_data_size, r_data);
-		if (t_success)
-			r_data_size = t_data_size;
-	}
-
-	MCBinaryEncoderDestroy(t_encoder);
-
-	return t_success;*/
 }
 
 bool MCLinuxPrintSetupDecode(MCDataRef p_data, MCLinuxPrintSetup& setup)
 {
 	return false;
-
-	/*MCBinaryDecoder *t_decoder;
-
-	if (!MCBinaryDecoderCreate(p_data, p_data_size, t_decoder))
-		return false;
-
-	bool t_success;
-	t_success = true;
-
-	MCBinaryDecoderDestroy(t_decoder);
-
-	return t_success;*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////

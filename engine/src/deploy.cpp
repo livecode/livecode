@@ -318,7 +318,12 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
         MCValueRelease(t_temp_string);
     }
 	
-	return true;
+	if (!ctxt.CopyOptElementAsFilepathArray(p_array, MCNAME("modules"), false, t_temp_array))
+		return false;
+	MCValueAssign(modules, t_temp_array);
+	MCValueRelease(t_temp_array);
+	
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -374,13 +379,34 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 		t_success = MCDeployWriteCapsuleDefineStandaloneSections(p_params, t_capsule);
 
 	// Add any redirects
-    if (t_success)
-		for(uint32_t i = 0; i < MCArrayGetCount(p_params.redirects) && t_success; i++)
+	if (t_success)
+		for(uindex_t i = 0; i < MCArrayGetCount(p_params.redirects) && t_success; i++)
 		{
 			MCValueRef t_val;
             /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.redirects, i + 1, t_val);
 			t_success = MCDeployCapsuleDefineString(t_capsule, kMCCapsuleSectionTypeRedirect, (MCStringRef)t_val);
 		}
+    
+    ////////
+    
+    // Add all the modules before the stacks, this is so that widgets can resolve
+    // themselves on load.
+    MCAutoArray<MCDeployFileRef> t_module_files;
+	if (t_success)
+		t_success = t_module_files . New(MCArrayGetCount(p_params . modules));
+    if (t_success)
+        for(uindex_t i = 0; i < MCArrayGetCount(p_params.modules) && t_success; i++)
+        {
+            MCValueRef t_module_filename;
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params .modules, i + 1, t_module_filename);
+			if (t_success && !MCDeployFileOpen((MCStringRef)t_module_filename, kMCOpenFileModeRead, t_module_files[i]))
+				t_success = MCDeployThrow(kMCDeployErrorNoModule);
+            if (t_success)
+                t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeModule, t_module_files[i]);
+        }
+    
+    ////////
+    
 			
     // Add any font mappings
     if (t_success)
@@ -395,13 +421,12 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 	if (t_success)
 		t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeStack, t_stackfile);
 
-	// Now we add the auxiliary stackfiles, if any
-	MCDeployFileRef *t_aux_stackfiles;
-	t_aux_stackfiles = nil;
-    if (t_success)
-        t_success = MCMemoryNewArray(MCArrayGetCount(p_params . auxiliary_stackfiles), t_aux_stackfiles);
+	// Now we add the auxillary stackfiles, if any
+	MCAutoArray<MCDeployFileRef> t_aux_stackfiles;
 	if (t_success)
-        for(uint32_t i = 0; i < MCArrayGetCount(p_params.auxiliary_stackfiles) && t_success; i++)
+        t_success = t_aux_stackfiles . New(MCArrayGetCount(p_params . auxiliary_stackfiles));
+	if (t_success)
+        for(uindex_t i = 0; i < MCArrayGetCount(p_params.auxiliary_stackfiles) && t_success; i++)
 		{
 			MCValueRef t_val;
             /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.auxiliary_stackfiles, i + 1, t_val);
@@ -413,7 +438,7 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 	
     // AL-2015-02-10: [[ Standalone Inclusions ]] Add the resource mappings, if any.
     if (t_success)
-        for(uint32_t i = 0; i < MCArrayGetCount(p_params.library) && t_success; i++)
+        for(uindex_t i = 0; i < MCArrayGetCount(p_params.library) && t_success; i++)
         {
             MCValueRef t_val;
             /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.library, i + 1, t_val);
@@ -422,7 +447,7 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
     
 	// Now add the externals, if any
 	if (t_success)
-		for(uint32_t i = 0; i < MCArrayGetCount(p_params.externals) && t_success; i++)
+		for(uindex_t i = 0; i < MCArrayGetCount(p_params.externals) && t_success; i++)
 		{
 			MCValueRef t_val;
             /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.externals, i + 1, t_val);
@@ -432,7 +457,7 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 	// Now add the startup script, if any.
 	if (t_success && (!MCStringIsEmpty(p_params . startup_script)))
 		t_success = MCDeployCapsuleDefineString(t_capsule, kMCCapsuleSectionTypeStartupScript, p_params . startup_script);
-
+    
 	// Now a digest
 	if (t_success)
 		t_success = MCDeployCapsuleChecksum(t_capsule);
@@ -445,10 +470,11 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 	if (t_success)
 		t_success = MCDeployCapsuleGenerate(t_capsule, p_output, t_spill, x_offset);
 
-    MCDeployCapsuleDestroy(t_capsule);
-    for(uint32_t i = 0; i < MCArrayGetCount(p_params.auxiliary_stackfiles); i++)
+	MCDeployCapsuleDestroy(t_capsule);
+	for(uindex_t i = 0; i < t_aux_stackfiles . Size(); i++)
 		MCDeployFileClose(t_aux_stackfiles[i]);
-	MCMemoryDeleteArray(t_aux_stackfiles);
+    for(uindex_t i = 0; i < t_module_files . Size(); i++)
+        MCDeployFileClose(t_module_files[i]);
 	MCDeployFileClose(t_spill);
 	MCDeployFileClose(t_stackfile);
 
@@ -550,6 +576,7 @@ bool MCDeployWritePayload(const MCDeployParameters& p_params, bool p_to_network,
 MCIdeDeploy::MCIdeDeploy(void)
 {
 	m_params = NULL;
+    m_platform = PLATFORM_NONE;
 }
 
 MCIdeDeploy::~MCIdeDeploy(void)
@@ -675,6 +702,7 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 MCIdeSign::MCIdeSign(void)
 {
 	m_params = NULL;
+    m_platform = PLATFORM_NONE;
 }
 
 MCIdeSign::~MCIdeSign(void)
@@ -783,6 +811,7 @@ void MCIdeSign::exec_ctxt(MCExecContext &ctxt)
 MCIdeDiet::MCIdeDiet(void)
 {
 	m_params = NULL;
+    m_platform = PLATFORM_NONE;
 }
 
 MCIdeDiet::~MCIdeDiet(void)
@@ -906,8 +935,11 @@ void MCIdeDmgDump::exec_ctxt(MCExecContext &ctxt)
         }
 		FILE *t_output;
 		t_output = fopen("C:\\Users\\Mark\\Desktop\\dmg.txt", "w");
-		MCDeployDmgDump(*temp, stdfile_log, t_output);
-		fclose(t_output);
+        if (t_output != nil)
+        {
+            MCDeployDmgDump(*temp, stdfile_log, t_output);
+            fclose(t_output);
+        }
     }
 }
 
@@ -953,20 +985,15 @@ void MCIdeDmgBuild::exec_ctxt(MCExecContext& ctxt)
         return;
     }
 	
-	MCDeployDmgItem *t_items;
-	uint32_t t_item_count;
-	t_items = nil;
-	t_item_count = 0;
+	MCAutoArray<MCDeployDmgItem> t_items;
 	if (!ctxt . HasError())
 	{
-		if (MCMemoryNewArray(MCArrayGetCount(*t_array), t_items))
-			t_item_count = MCArrayGetCount(*t_array);
-		else
-			ctxt . Throw();
+        if (!t_items . New(MCArrayGetCount(*t_array)))
+            ctxt . Throw();
 	}
 
 	if (!ctxt . HasError())
-		for(uint32_t i = 0; i < t_item_count && !ctxt . HasError(); i++)
+		for(uindex_t i = 0; i < t_items . Size() && !ctxt . HasError(); i++)
 		{
 			MCValueRef t_val = nil;
 			if (!MCArrayFetchValueAtIndex(*t_array, i + 1, t_val))
@@ -1029,8 +1056,8 @@ void MCIdeDmgBuild::exec_ctxt(MCExecContext& ctxt)
             return;
         }
 		MCDeployDmgParameters t_params;
-		t_params . items = t_items;
-		t_params . item_count = t_item_count;
+		t_params . items = t_items . Ptr();
+		t_params . item_count = t_items . Size();
 		t_params . output = *temp;
 		if (!MCDeployDmgBuild(t_params))
 			ctxt . Throw();
@@ -1086,20 +1113,18 @@ void MCIdeExtract::exec_ctxt(MCExecContext& ctxt)
 	MCAutoStringRef t_filename;
     if (!ctxt . EvalExprAsStringRef(m_filename, EE_IDE_EXTRACT_BADFILENAME, &t_filename))
         return;
-		
+
 	void *t_data;
 	uint32_t t_data_size;
     Exec_stat t_stat;
-	if (!ctxt . HasError())
-		t_stat = MCDeployExtractMacOSX(*t_filename, *t_segment, *t_section, t_data, t_data_size);
-	
-	if (t_stat == ES_NORMAL)
-	{
+    t_stat = MCDeployExtractMacOSX(*t_filename, *t_segment, *t_section, t_data, t_data_size);
+    if (t_stat == ES_NORMAL)
+    {
         MCAutoStringRef t_string;
         /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)t_data, t_data_size, &t_string);
         ctxt . SetItToValue(*t_string);
-	}
-	else
+    }
+    else
         ctxt . SetItToEmpty();
 }
 

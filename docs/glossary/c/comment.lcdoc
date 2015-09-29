@@ -1,0 +1,10 @@
+Name: comment
+
+Synonyms: comment,commented,commenting,comment out,commented out,comments out,commenting out,comment in,commented in,comments in,commenting in,uncomment,uncommented,uncommenting,remark
+
+Type: glossary
+
+Description:
+A remark placed in a <script> to explain the <script> or part of it. LiveCode ignores comments when <execute|executing> a <handler>.
+
+References: execute (glossary), handler (glossary), script (glossary)

@@ -1,0 +1,33 @@
+Name: trackingError
+
+Type: message
+
+Syntax: trackingError <sensor>, <errorMessage> 
+
+Summary: Sent when sensor tracking could not be started or is terminated.
+
+Introduced: 5.5
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+on trackingError pSensor, pError
+   answer "There was an error with sensor" && pSensor
+end trackingError
+
+Parameters:
+sensor (enum): the name of the sensor that is the source of the error
+- "acceleration"
+- "heading"
+- "location"
+- "rotation rate"
+errorMessage: The error message, giving the reason for the error
+
+Description:
+The <trackingError> message is sent when sensor tracking could not be started or is terminated.
+
+The <trackingError> message is sent to the current card of the default stack when sensor tracking could not be started or sensor tracking is terminated.
+
+References: mobileStopTrackingSensor (command), mobileStartTrackingSensor (command), accelerationChanged (message), rotationRateChanged (message), locationChanged (message), headingChanged (message)

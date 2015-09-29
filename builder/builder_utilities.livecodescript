@@ -111,6 +111,8 @@ command builderFetchEngine pVersion, pPlatform
             return sEngineDir & slash & "ios-bin"
          case "android"
             return sEngineDir & slash & "android-armv6-bin"
+         case "emscripten"
+            return sEngineDir & slash & "emscripten-bin"
          default
             write the executionContexts to stderr
             builderLog "error", "Unknown platform '" & pPlatform & "'"
@@ -323,8 +325,13 @@ end builderArchiveBuilderStack
 
 function builderModuleInterfaceFolder
    builderFetchEngine "", "macosx"
-   return the result & slash & "modules"
+   return the result & slash & "modules" & slash & "lci"
 end builderModuleInterfaceFolder
+
+function builderPackagedExtensionsFolder
+   builderFetchEngine "", "macosx"
+   return the result & slash & "packaged_extensions"
+end builderPackagedExtensionsFolder
 
 -- Returns the engine that should be used to build the installer
 function builderInstallerEngine pPlatform

@@ -5,13 +5,13 @@
 		
 		'../libfoundation/libfoundation.gyp:libFoundation',
 		'../libgraphics/libgraphics.gyp:libGraphics',
+		'../libscript/libscript.gyp:libScript',
 	],
 
 	'conditions':
 	[
 		[
-			# Only the Linux and Android builds support proper cross-compilation
-			'OS == "linux" or OS == "android"',
+			'cross_compile != 0',
 			{
 				'dependencies':
 				[

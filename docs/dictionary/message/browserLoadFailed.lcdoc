@@ -1,0 +1,29 @@
+Name: browserLoadFailed
+
+Type: message
+
+Syntax: browserLoadFailed <url>, <error> 
+
+Summary: Sent when the given URL fails to load.
+
+Introduced: 4.5.3
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+on browserLoadFailed pURL, pError
+  put "Failed to load" && pURL && "Error:" && pError into field "status"
+end browserLoadFailed
+
+Parameters:
+url: The URL that failed to load.
+error: The error message.
+
+Description:
+Handle the <browserLoadFailed> message to perform an action when a URL fails to load in a native mobile browser created using <mobileControlCreate>.
+
+The <browserLoadFailed> message is sent to the object containing the script that created the mobile browser control when a URL fails to load.
+
+References: mobileControlCreate (command), mobileControlDelete (command), mobileControlSet (command), mobileControlGet (function), mobileControlTarget (function), mobileControls (function), browserStartedLoading (message), browserLoadRequest (message), browserFinishedLoading (message)

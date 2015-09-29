@@ -21,10 +21,24 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-struct __MCStream
+struct __MCStreamImpl
 {
 	const MCStreamCallbacks *callbacks;
 };
+
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCStreamTypeInfo;
+
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCStreamTypeInfo() { return kMCStreamTypeInfo; }
+
+static inline __MCStreamImpl &__MCStreamGet(MCStreamRef p_stream)
+{
+	return *(__MCStreamImpl*)MCValueGetExtraBytesPtr(p_stream);
+}
+
+static inline const MCStreamCallbacks *__MCStreamCallbacks(MCStreamRef self)
+{
+	return __MCStreamGet(self).callbacks;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -128,6 +142,7 @@ static MCStreamCallbacks kMCMemoryInputStreamCallbacks =
 	__MCMemoryInputStreamSeek,
 };
 
+MC_DLLEXPORT_DEF
 bool MCMemoryInputStreamCreate(const void *p_block, size_t p_size, MCStreamRef& r_stream)
 {
 	MCStreamRef t_stream;
@@ -148,23 +163,113 @@ bool MCMemoryInputStreamCreate(const void *p_block, size_t p_size, MCStreamRef& 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCMemoryOutputStreamCreate(MCStreamRef& r_stream)
+struct __MCMemoryOutputStream
 {
-	return false;
+    void *buffer;
+	size_t length;
+	size_t capacity;
+};
+
+static void __MCMemoryOutputStreamDestroy(MCStreamRef p_stream)
+{
+	__MCMemoryOutputStream *self;
+	self = (__MCMemoryOutputStream *)MCStreamGetExtraBytesPtr(p_stream);
+    
+    free(self -> buffer);
 }
 
-bool MCMemoryOutputStreamFinish(MCStreamRef stream, void*& r_buffer, size_t& r_size)
+static bool __MCMemoryOutputStreamIsFinished(MCStreamRef p_stream, bool& r_finished)
 {
-	return false;
+	__MCMemoryOutputStream *self;
+	self = (__MCMemoryOutputStream *)MCStreamGetExtraBytesPtr(p_stream);
+    r_finished = false;
+	return true;
+}
+
+static bool __MCMemoryOutputStreamGetAvailableForWrite(MCStreamRef p_stream, size_t& r_amount)
+{
+	__MCMemoryOutputStream *self;
+	self = (__MCMemoryOutputStream *)MCStreamGetExtraBytesPtr(p_stream);
+	r_amount = SIZE_MAX;
+	return true;
+}
+
+static bool __MCMemoryOutputStreamWrite(MCStreamRef p_stream, const void *p_buffer, size_t p_amount)
+{
+	__MCMemoryOutputStream *self;
+	self = (__MCMemoryOutputStream *)MCStreamGetExtraBytesPtr(p_stream);
+	if (p_amount > self -> capacity - self -> length)
+    {
+        size_t t_new_capacity;
+        t_new_capacity = (self -> length + p_amount + 65536) & ~65535;
+        
+        void *t_new_buffer;
+        t_new_buffer = realloc(self -> buffer, t_new_capacity);
+        if (t_new_buffer == nil)
+            return false;
+        
+        self -> buffer = t_new_buffer;
+        self -> capacity = t_new_capacity;
+    }
+	MCMemoryCopy((byte_t *)self -> buffer + self -> length, p_buffer, p_amount);
+	self -> length += p_amount;
+	return true;
+}
+
+static MCStreamCallbacks kMCMemoryOutputStreamCallbacks =
+{
+	__MCMemoryOutputStreamDestroy,
+	__MCMemoryOutputStreamIsFinished,
+	nil,
+	nil,
+	__MCMemoryOutputStreamGetAvailableForWrite,
+	__MCMemoryOutputStreamWrite,
+	nil,
+	nil,
+	nil,
+	nil,
+	nil,
+};
+
+MC_DLLEXPORT_DEF
+bool MCMemoryOutputStreamCreate(MCStreamRef& r_stream)
+{
+	MCStreamRef t_stream;
+	if (!MCStreamCreate(&kMCMemoryOutputStreamCallbacks, sizeof(__MCMemoryOutputStream), t_stream))
+		return false;
+    
+	__MCMemoryOutputStream *self;
+	self = (__MCMemoryOutputStream *)MCStreamGetExtraBytesPtr(t_stream);
+	self -> buffer = nil;
+	self -> length = 0;
+	self -> capacity = 0;
+    
+	r_stream = t_stream;
+    
+	return true;
+}
+
+MC_DLLEXPORT_DEF
+bool MCMemoryOutputStreamFinish(MCStreamRef p_stream, void*& r_buffer, size_t& r_size)
+{
+	__MCMemoryOutputStream *self;
+	self = (__MCMemoryOutputStream *)MCStreamGetExtraBytesPtr(p_stream);
+    
+    r_buffer = realloc(self -> buffer, self -> length);
+    r_size = self -> length;
+    
+    self -> buffer = nil;
+    self -> length = 0;
+    self -> capacity = 0;
+    
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 static void __MCStreamDestroy(MCValueRef p_value)
 {
-	__MCStream *self;
-	self = (__MCStream *)MCValueGetExtraBytesPtr(p_value);
-	self -> callbacks -> destroy(self);
+	__MCStreamCallbacks((MCStreamRef)p_value)->destroy((MCStreamRef)p_value);
 }
 
 static bool __MCStreamCopy(MCValueRef p_value, bool p_release, MCValueRef& r_value)
@@ -182,7 +287,7 @@ static bool __MCStreamEqual(MCValueRef p_value, MCValueRef p_other_value)
 
 static hash_t __MCStreamHash(MCValueRef p_value)
 {
-	return (hash_t)p_value;
+	return (hash_t) MCHashPointer (p_value);
 }
 
 static bool __MCStreamDescribe(MCValueRef p_value, MCStringRef& r_desc)
@@ -198,131 +303,150 @@ static MCValueCustomCallbacks kMCStreamCustomValueCallbacks =
 	__MCStreamEqual,
 	__MCStreamHash,
 	__MCStreamDescribe,
+	nil,
+	nil,
 };
 
+MC_DLLEXPORT_DEF
 bool MCStreamCreate(const MCStreamCallbacks *p_callbacks, size_t p_extra_bytes, MCStreamRef& r_stream)
 {
-	__MCStream *self;
-	if (!MCValueCreateCustom(&kMCStreamCustomValueCallbacks, sizeof(__MCStream) + p_extra_bytes, self))
+	MCStreamRef self;
+	if (!MCValueCreateCustom(kMCStreamTypeInfo, sizeof(__MCStreamImpl) + p_extra_bytes, self))
 		return false;
 
-	self -> callbacks = p_callbacks;
+	__MCStreamGet(self).callbacks = p_callbacks;
 
 	r_stream = self;
 	
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 const MCStreamCallbacks *MCStreamGetCallbacks(MCStreamRef self)
 {
-	return self -> callbacks;
+	return __MCStreamCallbacks(self);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCStreamIsReadable(MCStreamRef self)
 {
-	return self -> callbacks -> read != nil;
+	return __MCStreamCallbacks(self) -> read != nil;
 }
 
+MC_DLLEXPORT_DEF
 bool MCStreamIsWritable(MCStreamRef self)
 {
-	return self -> callbacks -> write != nil;
+	return __MCStreamCallbacks(self) -> write != nil;
 }
 
+MC_DLLEXPORT_DEF
 bool MCStreamIsMarkable(MCStreamRef self)
 {
-	return self -> callbacks -> mark != nil;
+	return __MCStreamCallbacks(self) -> mark != nil;
 }
 
+MC_DLLEXPORT_DEF
 bool MCStreamIsSeekable(MCStreamRef self)
 {
-	return self -> callbacks -> seek != nil;
+	return __MCStreamCallbacks(self) -> seek != nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCStreamGetAvailableForRead(MCStreamRef self, size_t& r_available)
 {
-	if (self -> callbacks -> get_available_for_read == nil)
+	if (__MCStreamCallbacks(self) -> get_available_for_read == nil)
 		return false;
-	return self -> callbacks -> get_available_for_read(self, r_available);
+	return __MCStreamCallbacks(self) -> get_available_for_read(self, r_available);
 }
 
+MC_DLLEXPORT_DEF
 bool MCStreamRead(MCStreamRef self, void *p_buffer, size_t p_amount)
 {
-	if (self -> callbacks -> read == nil)
+	if (__MCStreamCallbacks(self) -> read == nil)
 		return false;
-	return self -> callbacks -> read(self, p_buffer, p_amount);
+	return __MCStreamCallbacks(self) -> read(self, p_buffer, p_amount);
 }
 
+MC_DLLEXPORT_DEF
 bool MCStreamGetAvailableForWrite(MCStreamRef self, size_t& r_available)
 {
-	if (self -> callbacks -> get_available_for_write == nil)
+	if (__MCStreamCallbacks(self) -> get_available_for_write == nil)
 		return false;
-	return self -> callbacks -> get_available_for_write(self, r_available);
+	return __MCStreamCallbacks(self) -> get_available_for_write(self, r_available);
 }
 
+MC_DLLEXPORT_DEF
 bool MCStreamWrite(MCStreamRef self, const void *p_buffer, size_t p_amount)
 {
-	if (self -> callbacks -> write == nil)
+	if (__MCStreamCallbacks(self) -> write == nil)
 		return false;
-	return self -> callbacks -> write(self, p_buffer, p_amount);
+	return __MCStreamCallbacks(self) -> write(self, p_buffer, p_amount);
 }
 
+MC_DLLEXPORT_DEF
 bool MCStreamSkip(MCStreamRef self, size_t p_amount)
 {
-	if (self -> callbacks -> skip != nil)
-		return self -> callbacks -> skip(self, p_amount);
-	if (self -> callbacks -> seek != nil)
+	if (__MCStreamCallbacks(self) -> skip != nil)
+		return __MCStreamCallbacks(self) -> skip(self, p_amount);
+	if (__MCStreamCallbacks(self) -> seek != nil)
 	{
 		filepos_t t_pos;
-		if (!self -> callbacks -> tell(self, t_pos))
+		if (!__MCStreamCallbacks(self) -> tell(self, t_pos))
 			return false;
-		return self -> callbacks -> seek(self, t_pos + p_amount);
+		return __MCStreamCallbacks(self) -> seek(self, t_pos + p_amount);
 	}
 	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCStreamMark(MCStreamRef self, size_t p_read_limit)
 {
-	if (self -> callbacks -> mark == nil)
+	if (__MCStreamCallbacks(self) -> mark == nil)
 		return false;
-	return self -> callbacks -> mark(self, p_read_limit);
+	return __MCStreamCallbacks(self) -> mark(self, p_read_limit);
 }
 
+MC_DLLEXPORT_DEF
 bool MCStreamReset(MCStreamRef self)
 {
-	if (self -> callbacks -> reset == nil)
+	if (__MCStreamCallbacks(self) -> reset == nil)
 		return false;
-	return self -> callbacks -> reset(self);
+	return __MCStreamCallbacks(self) -> reset(self);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCStreamTell(MCStreamRef self, filepos_t& r_position)
 {
-	if (self -> callbacks -> tell == nil)
+	if (__MCStreamCallbacks(self) -> tell == nil)
 		return false;
-	return self -> callbacks -> tell(self, r_position);
+	return __MCStreamCallbacks(self) -> tell(self, r_position);
 }
 
+MC_DLLEXPORT_DEF
 bool MCStreamSeek(MCStreamRef self, filepos_t p_position)
 {
-	if (self -> callbacks -> seek == nil)
+	if (__MCStreamCallbacks(self) -> seek == nil)
 		return false;
-	return self -> callbacks -> seek(self, p_position);
+	return __MCStreamCallbacks(self) -> seek(self, p_position);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCStreamReadUInt8(MCStreamRef self, uint8_t& r_value)
 {
 	return MCStreamRead(self, &r_value, sizeof(uint8_t));
 }
 
+MC_DLLEXPORT_DEF
 bool MCStreamReadUInt16(MCStreamRef self, uint16_t& r_value)
 {
 	if (MCStreamRead(self, &r_value, sizeof(uint16_t)))
@@ -333,6 +457,7 @@ bool MCStreamReadUInt16(MCStreamRef self, uint16_t& r_value)
 	return false;
 }
 
+MC_DLLEXPORT_DEF
 bool MCStreamReadUInt32(MCStreamRef self, uint32_t& r_value)
 {
 	if (MCStreamRead(self, &r_value, sizeof(uint32_t)))
@@ -343,6 +468,7 @@ bool MCStreamReadUInt32(MCStreamRef self, uint32_t& r_value)
 	return false;
 }
 
+MC_DLLEXPORT_DEF
 bool MCStreamReadUInt64(MCStreamRef self, uint64_t& r_value)
 {
 	if (MCStreamRead(self, &r_value, sizeof(uint64_t)))
@@ -353,11 +479,13 @@ bool MCStreamReadUInt64(MCStreamRef self, uint64_t& r_value)
 	return false;
 }
 
+MC_DLLEXPORT_DEF
 bool MCStreamReadInt8(MCStreamRef self, int8_t& r_value)
 {
 	return MCStreamRead(self, &r_value, sizeof(int8_t));
 }
 
+MC_DLLEXPORT_DEF
 bool MCStreamReadInt16(MCStreamRef self, int16_t& r_value)
 {
 	if (MCStreamRead(self, &r_value, sizeof(int16_t)))
@@ -368,6 +496,7 @@ bool MCStreamReadInt16(MCStreamRef self, int16_t& r_value)
 	return false;
 }
 
+MC_DLLEXPORT_DEF
 bool MCStreamReadInt32(MCStreamRef self, int32_t& r_value)
 {
 	if (MCStreamRead(self, &r_value, sizeof(int32_t)))
@@ -378,6 +507,7 @@ bool MCStreamReadInt32(MCStreamRef self, int32_t& r_value)
 	return false;
 }
 
+MC_DLLEXPORT_DEF
 bool MCStreamReadInt64(MCStreamRef self, int64_t& r_value)
 {
 	if (MCStreamRead(self, &r_value, sizeof(int64_t)))
@@ -388,13 +518,7 @@ bool MCStreamReadInt64(MCStreamRef self, int64_t& r_value)
 	return false;
 }
 
-bool MCStreamReadCompactUInt32(MCStreamRef stream, uint32_t& r_value);
-bool MCStreamReadCompactUInt64(MCStreamRef stream, uint64_t& r_value);
-bool MCStreamReadCompactSInt32(MCStreamRef stream, uint32_t& r_value);
-bool MCStreamReadCompactSInt64(MCStreamRef stream, uint64_t& r_value);
-
-bool MCStreamReadFloat(MCStreamRef stream, float& r_value);
-
+MC_DLLEXPORT_DEF
 bool MCStreamReadDouble(MCStreamRef stream, double& r_value)
 {
 	uint64_t t_bits;
@@ -408,6 +532,77 @@ bool MCStreamReadDouble(MCStreamRef stream, double& r_value)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
+bool MCStreamWriteUInt8(MCStreamRef self, uint8_t p_value)
+{
+	return MCStreamWrite(self, &p_value, sizeof(uint8_t));
+}
+
+MC_DLLEXPORT_DEF
+bool MCStreamWriteUInt16(MCStreamRef self, uint16_t p_value)
+{
+    uint16_t t_swapped_value;
+    t_swapped_value = MCSwapInt16NetworkToHost(p_value);
+	return MCStreamWrite(self, &t_swapped_value, sizeof(uint16_t));
+}
+
+MC_DLLEXPORT_DEF
+bool MCStreamWriteUInt32(MCStreamRef self, uint32_t p_value)
+{
+    uint32_t t_swapped_value;
+    t_swapped_value = MCSwapInt32NetworkToHost(p_value);
+	return MCStreamWrite(self, &t_swapped_value, sizeof(uint32_t));
+}
+
+MC_DLLEXPORT_DEF
+bool MCStreamWriteUInt64(MCStreamRef self, uint64_t p_value)
+{
+    uint64_t t_swapped_value;
+    t_swapped_value = MCSwapInt64NetworkToHost(p_value);
+	return MCStreamWrite(self, &t_swapped_value, sizeof(uint64_t));
+}
+
+MC_DLLEXPORT_DEF
+bool MCStreamWriteInt8(MCStreamRef self, int8_t p_value)
+{
+	return MCStreamWrite(self, &p_value, sizeof(int8_t));
+}
+
+MC_DLLEXPORT_DEF
+bool MCStreamWriteInt16(MCStreamRef self, int16_t p_value)
+{
+    uint16_t t_swapped_value;
+    t_swapped_value = MCSwapInt16NetworkToHost((uint16_t)p_value);
+	return MCStreamWrite(self, &t_swapped_value, sizeof(uint16_t));
+}
+
+MC_DLLEXPORT_DEF
+bool MCStreamWriteInt32(MCStreamRef self, int32_t p_value)
+{
+    uint32_t t_swapped_value;
+    t_swapped_value = MCSwapInt16NetworkToHost((uint32_t)p_value);
+	return MCStreamWrite(self, &t_swapped_value, sizeof(uint32_t));
+}
+
+MC_DLLEXPORT_DEF
+bool MCStreamWriteInt64(MCStreamRef self, int64_t p_value)
+{
+    uint64_t t_swapped_value;
+    t_swapped_value = MCSwapInt16NetworkToHost((uint64_t)p_value);
+	return MCStreamWrite(self, &t_swapped_value, sizeof(uint64_t));
+}
+
+MC_DLLEXPORT_DEF
+bool MCStreamWriteDouble(MCStreamRef stream, double p_value)
+{
+	uint64_t t_bits;
+    MCMemoryCopy(&t_bits, &p_value, sizeof(uint64_t));
+	return MCStreamWriteUInt64(stream, t_bits);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MC_DLLEXPORT_DEF
 bool MCStreamReadBoolean(MCStreamRef stream, MCBooleanRef& r_boolean)
 {
 	uint8_t t_value;
@@ -422,6 +617,7 @@ bool MCStreamReadBoolean(MCStreamRef stream, MCBooleanRef& r_boolean)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCStreamReadNumber(MCStreamRef stream, MCNumberRef& r_number)
 {
 	uint8_t t_tag;
@@ -442,6 +638,7 @@ bool MCStreamReadNumber(MCStreamRef stream, MCNumberRef& r_number)
 	return MCNumberCreateWithReal(t_value, r_number);
 }
 
+MC_DLLEXPORT_DEF
 bool MCStreamReadName(MCStreamRef stream, MCNameRef& r_name)
 {
 	MCStringRef t_string;
@@ -451,6 +648,7 @@ bool MCStreamReadName(MCStreamRef stream, MCNameRef& r_name)
 	return MCNameCreateAndRelease(t_string, r_name);
 }
 
+MC_DLLEXPORT_DEF
 bool MCStreamReadString(MCStreamRef stream, MCStringRef& r_string)
 {
 	uint32_t t_length;
@@ -473,6 +671,7 @@ bool MCStreamReadString(MCStreamRef stream, MCStringRef& r_string)
 	return t_chars . CreateStringAndRelease(r_string);
 }
 
+MC_DLLEXPORT_DEF
 bool MCStreamReadArray(MCStreamRef stream, MCArrayRef& r_array)
 {
 	uint32_t t_count;
@@ -514,6 +713,7 @@ bool MCStreamReadArray(MCStreamRef stream, MCArrayRef& r_array)
 	return MCArrayCopyAndRelease(t_array, r_array);
 }
 
+MC_DLLEXPORT_DEF
 bool MCStreamReadSet(MCStreamRef stream, MCSetRef& r_set)
 {
 	uint32_t t_length;
@@ -540,6 +740,7 @@ bool MCStreamReadSet(MCStreamRef stream, MCSetRef& r_set)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCStreamReadValue(MCStreamRef stream, MCValueRef& r_value)
 {
 	uint8_t t_tag;
@@ -591,6 +792,21 @@ bool MCStreamReadValue(MCStreamRef stream, MCValueRef& r_value)
 	}
 
 	return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool __MCStreamInitialize(void)
+{
+	if (!MCNamedCustomTypeInfoCreate(MCNAME("livecode.lang.Stream"), kMCNullTypeInfo, &kMCStreamCustomValueCallbacks, kMCStreamTypeInfo))
+		return false;
+	
+    return true;
+}
+
+void __MCStreamFinalize(void)
+{
+    MCValueRelease(kMCStreamTypeInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

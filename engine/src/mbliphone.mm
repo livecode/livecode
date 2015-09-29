@@ -96,8 +96,8 @@ real8 curtime;
 
 ////////////////////////////////////////////////////////////////////////
 
-extern "C" void *load_module(const char *);
-extern "C" void *resolve_symbol(void *, const char *);
+extern "C" MC_DLLEXPORT_DEF void *load_module(const char *);
+extern "C" MC_DLLEXPORT_DEF void *resolve_symbol(void *, const char *);
 
 struct LibExport
 {
@@ -111,7 +111,8 @@ struct LibInfo
 	struct LibExport *exports;
 };
 
-void *load_module(const char *p_path) __attribute__((__visibility__("default")))
+MC_DLLEXPORT_DEF
+void *load_module(const char *p_path)
 {
 	const char *t_last_component;
 	t_last_component = strrchr(p_path, '/');
@@ -830,16 +831,35 @@ bool MCIPhoneSystem::ResolvePath(MCStringRef p_path, MCStringRef& r_resolved)
 //}
 
 
-bool MCIPhoneSystem::ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *p_context)
+bool MCIPhoneSystem::ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *p_context)
 {
+	MCAutoStringRefAsUTF8String t_path;
+	if (p_folder == nil)
+	  /* UNCHECKED */ t_path . Lock(MCSTR("."));
+	else
+	  /* UNCHECKED */ t_path . Lock(p_folder);
+
 	DIR *t_dir;
-	t_dir = opendir(".");
+	t_dir = opendir(*t_path);
 	if (t_dir == NULL)
 		return false;
 	
 	MCSystemFolderEntry t_entry;
 	memset(&t_entry, 0, sizeof(MCSystemFolderEntry));
 	
+	/* For each directory entry, we need to construct a path that can
+	 * be passed to stat(2).  Allocate a buffer large enough for the
+	 * path, a path separator character, and any possible filename. */
+	size_t t_path_len = strlen(*t_path);
+	size_t t_entry_path_len = t_path_len + 1 + NAME_MAX;
+	char *t_entry_path = new char[t_entry_path_len + 1];
+	strcpy (t_entry_path, *t_path);
+	if ((*t_path)[t_path_len - 1] != '/')
+	{
+		strcat (t_entry_path, "/");
+		++t_path_len;
+	}
+
 	bool t_success;
 	t_success = true;
 	while(t_success)
@@ -852,8 +872,13 @@ bool MCIPhoneSystem::ListFolderEntries(MCSystemListFolderEntriesCallback p_callb
 		if (strcmp(t_dir_entry -> d_name, ".") == 0)
 			continue;
 		
+		/* Truncate the directory entry path buffer to the path
+		 * separator. */
+		t_entry_path[t_path_len] = 0;
+		strcat (t_entry_path, t_dir_entry->d_name);
+
 		struct stat t_stat;
-		stat(t_dir_entry -> d_name, &t_stat);
+		stat(t_entry_path, &t_stat);
                 
         MCStringRef t_unicode_str;
         MCStringCreateWithBytes((byte_t*)t_dir_entry -> d_name, strlen(t_dir_entry -> d_name), kMCStringEncodingUTF8, false, t_unicode_str);
@@ -873,6 +898,7 @@ bool MCIPhoneSystem::ListFolderEntries(MCSystemListFolderEntriesCallback p_callb
         MCValueRelease(t_unicode_str);
 	}
 	
+	delete t_entry_path;
 	closedir(t_dir);
 	
 	return t_success;
@@ -1187,18 +1213,6 @@ bool MCIPhoneSystem::GetDNSservers(MCListRef &r_list)
 MCSystemInterface *MCMobileCreateIPhoneSystem(void)
 {
 	return new MCIPhoneSystem;
-}
-
-//////////////////
-
-// MW-2013-05-21: [[ RandomBytes ]] System function for random bytes on iOS.
-bool MCS_random_bytes(size_t p_count, MCDataRef& r_buffer)
-{
-    // IM-2014-04-16: [[ Bug 11860 ]] SecRandomCopyBytes returns 0 on success
-    MCAutoByteArray t_bytes;
-    return (t_bytes . New(p_count) &&
-            SecRandomCopyBytes(kSecRandomDefault, p_count, (uint8_t *)t_bytes . Bytes()) == 0 &&
-            t_bytes . CreateData(r_buffer));
 }
 
 //////////////////

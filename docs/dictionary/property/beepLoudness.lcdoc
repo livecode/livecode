@@ -1,0 +1,35 @@
+Name: beepLoudness
+
+Type: property
+
+Syntax: set the beepLoudness to <level> 
+
+Summary: Sets the volume of the sound played by the <beep> <command>.
+
+Introduced: 1.0
+
+OS: linux
+
+Platforms: desktop,server,web
+
+Example:
+set the beepLoudness to 0
+
+Example:
+set the beepLoudness to 50
+
+Example:
+put the beepLoudness into storedBeepVolume
+
+Value: The <beepLoudness> is an <integer> between zero and 100.
+
+Description:
+Use the <beepLoudness> <property> to vary the volumne of the beep, in order to increase or decrease its urgency.
+
+Set the <beepLoudness> to -1 to use the <default> system setting.
+
+The <beepLoudness> has no effect on <Mac OS> or <Windows|Windows systems>, and on some <Unix|Unix systems> which don't allow changing the beep loudness.
+
+References: default (keyword), integer (keyword), beep (command), recordLoudness (function), property (glossary), Windows (glossary), Unix (glossary), command (glossary), Mac OS (glossary)
+
+Tags: multimedia

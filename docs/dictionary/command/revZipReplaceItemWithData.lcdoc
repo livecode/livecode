@@ -1,0 +1,33 @@
+Name: revZipReplaceItemWithData
+
+Type: command
+
+Syntax: revZipReplaceItemWithData <archivePath>, <itemName>, <variableName> 
+
+Summary: Replaces the contents of an item in a zip archive with the contents of a variable.
+
+Introduced: 2.7.3
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Security: disk,network
+
+Example:
+revZipReplaceItemWithData tArchive, "myZippedItem", "tData"
+
+Example:
+revZipReplaceItemWithData the cArchive of me, "Test.txt", "tNewTest"
+
+Parameters:
+archivePath: The absolute path to the zip archive to process.
+itemName: The name of the item in the zip archive to  replace.
+variableName: The name of the variable in your program containing the data to replace with. If the revZipReplaceItemWithData command encounters an error then the result will be set to an error code beginning with "ziperr", otherwise the result will be empty.
+
+Description:
+Use the <revZipReplaceItemWithData> command to put the contents of a variable in your LiveCode program into one of the items of an open zip archive. The archive must have first been opened with the <revZipOpenArchive> command.
+
+References: revZipOpenArchive (command), revZipAddItemWithData (command), revZipReplaceItemWithFile (command)
+
+Tags: text processing

@@ -93,11 +93,6 @@ static MCColor controllercolors[] = {
             {0, 0xFFFF, 0xFFFF, 0xFFFF, 0, 0},         /* white */
 };
 
-inline MCGColor MCGColorMakeRGBA(MCGFloat p_red, MCGFloat p_green, MCGFloat p_blue, MCGFloat p_alpha)
-{
-	return ((uint8_t)(p_red * 255) << 16) | ((uint8_t)(p_green * 255) << 8) | ((uint8_t)(p_blue * 255) << 0) | ((uint8_t)(p_alpha * 255) << 24);
-}
-
 inline void MCGraphicsContextAngleAndDistanceToXYOffset(int p_angle, int p_distance, MCGFloat &r_x_offset, MCGFloat &r_y_offset)
 {
 	r_x_offset = floor(0.5f + p_distance * cos(p_angle * M_PI / 180.0));
@@ -831,6 +826,8 @@ MCPlayer::MCPlayer()
 	userCallbackStr = MCValueRetain(kMCEmptyString);
 	formattedwidth = formattedheight = 0;
 	loudness = 100;
+    dontuseqt = True;
+    usingqt = False;
     
     // PM-2014-05-29: [[ Bugfix 12501 ]] Initialize m_callbacks/m_callback_count to prevent a crash when setting callbacks
     m_callback_count = 0;
@@ -854,9 +851,6 @@ MCPlayer::MCPlayer()
     m_is_attached = false;
     m_should_attach = false;
     m_should_recreate = false;
-    
-    dontuseqt = False;
-    usingqt = False;
 }
 
 MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
@@ -874,6 +868,8 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	userCallbackStr = MCValueRetain(sref.userCallbackStr);
 	formattedwidth = formattedheight = 0;
 	loudness = sref.loudness;
+    dontuseqt = True;
+    usingqt = False;
     
     // PM-2014-05-29: [[ Bugfix 12501 ]] Initialize m_callbacks/m_callback_count to prevent a crash when setting callbacks
     m_callback_count = 0;
@@ -892,9 +888,6 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
     // MW-2014-07-16: [[ Bug ]] Put the player in the list.
     nextplayer = MCplayers;
     MCplayers = this;
-    
-    dontuseqt = False;
-    usingqt = False;
 }
 
 MCPlayer::~MCPlayer()
@@ -1203,7 +1196,7 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
 }
 
 #ifdef LEGACY_EXEC
-Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective, bool recursive)
 {
 	uint2 i = 0;
 	switch (which)
@@ -1227,8 +1220,14 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
         case P_LOOPING:
             ep.setboolean(getflag(F_LOOPING));
             break;
+        case P_MIRRORED:
+            ep.setboolean(getflag(F_MIRRORED));
+            break;
         case P_PAUSED:
             ep.setboolean(ispaused());
+            break;
+        case P_DONT_USE_QT:
+            ep.setboolean(dontuseqt);
             break;
         case P_ALWAYS_BUFFER:
             ep.setboolean(getflag(F_ALWAYS_BUFFER));
@@ -1375,7 +1374,7 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
             break;
 #endif /* MCPlayer::getprop */
         default:
-            return MCControl::getprop(parid, which, ep, effective);
+            return MCControl::getprop(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }
@@ -1498,6 +1497,21 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
             if (dirty)
                 setlooping((flags & F_LOOPING) != 0); //set/unset movie looping
             break;
+
+        case P_DONT_USE_QT:
+            setdontuseqt(data == MCtruemcstring); //set/unset dontuseqt
+			break;
+
+        case P_MIRRORED:
+            if (!MCU_matchflags(data, flags, F_MIRRORED, dirty))
+            {
+                MCeerror->add(EE_OBJECT_NAB, 0, 0, data);
+                return ES_ERROR;
+            }
+            if (dirty)
+                setmirror((flags & F_MIRRORED) != 0); //set/unset mirrored player
+            break;
+			
         case P_PAUSED:
             playpause(data == MCtruemcstring); //pause or unpause the player
             break;
@@ -1951,6 +1965,7 @@ void MCPlayer::updateplayrate(real8 p_rate)
     else
         rate = p_rate;
 }
+
 void MCPlayer::setplayrate()
 {
 	if (m_platform_player != nil && hasfilename())
@@ -2062,11 +2077,11 @@ Boolean MCPlayer::prepare(MCStringRef options)
    	if (!opened)
 		return False;
     
-	if (m_platform_player == nil || m_should_recreate)
+	if (m_platform_player == nil || m_should_recreate || !dontuseqt)
     {
         if (m_platform_player != nil)
             MCPlatformPlayerRelease(m_platform_player);
-        MCPlatformCreatePlayer(m_platform_player);
+        MCPlatformCreatePlayer(dontuseqt, m_platform_player);
     }
 		
     
@@ -2118,15 +2133,17 @@ Boolean MCPlayer::prepare(MCStringRef options)
 	
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyRect, kMCPlatformPropertyTypeRectangle, &trect);
 	
-	bool t_looping, t_play_selection, t_show_controller, t_show_selection;
+	bool t_looping, t_play_selection, t_show_controller, t_show_selection, t_mirrored;
 	
 	t_looping = getflag(F_LOOPING);
 	t_show_selection = getflag(F_SHOW_SELECTION);
     t_play_selection = getflag(F_PLAY_SELECTION);
+    t_mirrored = getflag(F_MIRRORED);
 	
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &lasttime);
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLoop, kMCPlatformPropertyTypeBool, &t_looping);
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
+    MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMirrored, kMCPlatformPropertyTypeBool, &t_mirrored);
     
     // PM-2014-08-06: [[ Bug 13104 ]] When new movie is opened then playRate should be set to 0
     rate = 0.0;
@@ -4474,3 +4491,14 @@ void MCPlayer::shift_play()
     }
 
 }
+
+void MCPlayer::setmirrored(bool p_mirrored)
+{
+    if (m_platform_player != nil && hasfilename())
+    {
+        bool t_mirrored;
+        t_mirrored = p_mirrored;
+        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMirrored, kMCPlatformPropertyTypeBool, &t_mirrored);
+    }
+}
+

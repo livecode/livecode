@@ -10,6 +10,20 @@
 		'kernel-server.gypi',
 	],
 	
+	'target_defaults':
+	{
+		'conditions':
+		[
+			[
+				'OS == "linux" or OS == "android" or OS == "emscripten"',
+				{
+					# Ensure that the symbols LCB binds to are exported from the engine
+					'ldflags': [ '-rdynamic' ],
+				},
+			],
+		],
+	},
+	
 	'targets':
 	[
 		{
@@ -236,12 +250,13 @@
 							'DYLIB_COMPATIBILITY_VERSION': '',
 							'DYLIB_CURRENT_VERSION': '',
 							'MACH_O_TYPE': 'mh_object',
+							'LINK_WITH_STANDARD_LIBRARIES': 'NO',
 							'OTHER_LDFLAGS':
 							[
 								'-Wl,-sectcreate,__MISC,__deps,<(deps_file)',
-								'-Wl,-exported_symbol,_main',
-								'-Wl,-exported_symbol,_load_module',
-								'-Wl,-exported_symbol,_resolve_symbol',
+								'-Wl,-u,_main',
+								'-Wl,-u,_load_module',
+								'-Wl,-u,_resolve_symbol',
 								#'-all_load',		# Dead stripping later will remove un-needed symbols
 							],
 						},
@@ -253,7 +268,7 @@
 					{
 						'ldflags':
 						[
-							'-T', '<(src_top_dir_abs)/engine/linux.link',
+							'-T', '$(abs_srcdir)/engine/linux.link',
 						],
 					},
 				],
@@ -267,12 +282,17 @@
 						'product_dir': '<(PRODUCT_DIR)',	# Shared libraries are not placed in PRODUCT_DIR by default
 						'type': 'shared_library',
 						
+						'sources':
+						[
+							'engine/linux.link',
+						],
+						
 						'ldflags':
 						[
 							# Helpful for catching build problems
 							'-Wl,-no-undefined',
 							
-							'-Wl,-T,<(src_top_dir_abs)/engine/linux.link',
+							'-Wl,-T,$(abs_srcdir)/engine/linux.link',
 						],
 						
 						'actions':
@@ -393,6 +413,30 @@
 						},
 					},
 				],
+				[
+					'OS == "emscripten"',
+					{
+						'product_name': 'standalone-community.bc',
+						'all_dependent_settings':
+						{
+							'variables':
+							{
+								'dist_aux_files':
+								[
+									'rsrc/emscripten-standalone-template/',
+									'<(PRODUCT_DIR)/standalone-community-<(version_string).js',
+									'<(PRODUCT_DIR)/standalone-community-<(version_string).html',
+									'<(PRODUCT_DIR)/standalone-community-<(version_string).html.mem',
+								],
+							},
+						},
+
+						'sources!':
+						[
+							'src/dummy.cpp',
+						],
+					},
+				],
 			],
 			
 			'all_dependent_settings':
@@ -414,7 +458,13 @@
 							},
 						],
 						[
-							'OS != "android" and OS != "ios"',
+							'OS == "emscripten"',
+							{
+								'dist_files': [],
+							}
+						],
+						[
+							'OS != "android" and OS != "ios" and OS != "emscripten"',
 							{
 								'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(app_bundle_suffix)' ],
 							}
@@ -475,7 +525,7 @@
 					{
 						'ldflags':
 						[
-							'-T', '<(src_top_dir_abs)/engine/linux.link',
+							'-T', '$(abs_srcdir)/engine/linux.link',
 						],
 					},
 				],
@@ -713,6 +763,84 @@
 						'sources':
 						[
 							'src/dummy.cpp',
+						],
+					},
+				],
+			},
+		],
+		[
+			'OS == "emscripten"',
+			{
+				'targets':
+				[
+					{
+						'target_name': 'javascriptify',
+						'type': 'none',
+
+						'dependencies':
+						[
+							'standalone',
+						],
+
+						'variables':
+						{
+							'version_suffix': '<(version_string)',
+						},
+
+						'actions':
+						[
+							{
+								'action_name': 'javascriptify',
+								'message': 'Javascript-ifying the Emscripten engine',
+
+								'inputs':
+								[
+									'emscripten-javascriptify.py',
+									'<(PRODUCT_DIR)/standalone-community.bc',
+									'rsrc/emscripten-html-template.html',
+									'src/em-whitelist.json',
+									'src/em-preamble.js',
+									'src/em-preamble-overlay.js',
+									'src/em-util.js',
+									'src/em-async.js',
+									'src/em-dialog.js',
+									'src/em-event.js',
+									'src/em-surface.js',
+									'src/em-url.js',
+									'src/em-standalone.js',
+								],
+
+								'outputs':
+								[
+									'<(PRODUCT_DIR)/standalone-community-<(version_suffix).js',
+									'<(PRODUCT_DIR)/standalone-community-<(version_suffix).html',
+									'<(PRODUCT_DIR)/standalone-community-<(version_suffix).html.mem',
+								],
+
+								'action':
+								[
+									'./emscripten-javascriptify.py',
+									'--input',
+									'<(PRODUCT_DIR)/standalone-community.bc',
+									'--output',
+									'<(PRODUCT_DIR)/standalone-community-<(version_suffix).html',
+									'--shell-file',
+									'rsrc/emscripten-html-template.html',
+									'--whitelist',
+									'src/em-whitelist.json',
+									'--pre-js',
+									'src/em-preamble.js',
+									'src/em-preamble-overlay.js',
+									'--js-library',
+									'src/em-util.js',
+									'src/em-async.js',
+									'src/em-dialog.js',
+									'src/em-event.js',
+									'src/em-surface.js',
+									'src/em-url.js',
+									'src/em-standalone.js',
+								],
+							},
 						],
 					},
 				],

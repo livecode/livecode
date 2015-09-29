@@ -326,6 +326,11 @@ public:
 
 	// Append the given byte sequence to the variable.
 	bool append_string(const MCString& s);
+    
+    // Prepend the given byte sequence to the variable.
+	bool prepend_string(const MCString& s);
+    
+    bool insert_string(const MCString& s, int insert_at);
 
 	// This method is used to set the buffer of the value to a custom conversion
 	// of it as a number. It results in the format being VF_NUMBER, but the buffer
@@ -350,6 +355,8 @@ public:
 	// Append the value of ep to 'this'.
 	// String coercion is performed as required.
 	Exec_stat append(MCExecPoint& ep);
+    
+    Exec_stat prepend(MCExecPoint& ep);
 
 	bool has_element(MCExecPoint& ep, const MCString& key);
 

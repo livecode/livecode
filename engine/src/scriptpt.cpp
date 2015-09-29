@@ -1537,19 +1537,20 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 	while (True)
 	{
 		if (next(type) != PS_NORMAL)
+		{
 			if (needfact)
 			{
 				MCperror->add(PE_EXPRESSION_NOFACT, *this);
 				return PS_ERROR;
 			}
-			else
-				if (depth == 0)
+			else if (depth == 0)
 					return PS_NORMAL;
 				else
 				{
 					MCperror->add(PE_EXPRESSION_NORPAR, *this);
 					return PS_ERROR;
 				}
+		}
 		if (!needfact && type != ST_OP && type != ST_MIN && type != ST_RP
 		        && !(type == ST_SEP && litems)
 		        && !(type == ST_ID && lookup(SP_FACTOR, te) == PS_NORMAL
@@ -1674,9 +1675,9 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 					break;
 				case TT_BIN_OR_UNOP:
 					if (curfact == NULL
-					        || curfact->getrank() == FR_GROUPING
-					        && curfact->getright() == NULL
-					        || curfact->getright() == NULL && curfact->getleft() != NULL)
+					    || (curfact->getrank() == FR_GROUPING
+					        && curfact->getright() == NULL)
+					    || (curfact->getright() == NULL && curfact->getleft() != NULL))
 					{
 						newfact = MCN_new_operator(te->which);
 						newfact->parse(*this, doingthe);
@@ -1861,6 +1862,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 						else if (type == ST_LP)
 								newfact = new MCFuncref(t_name);
 						if (newfact == NULL)
+						{
 							if (MCexplicitvariables)
 							{
 								MCperror->add(PE_EXPRESSION_NOTLITERAL, *this);
@@ -1878,6 +1880,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 								newvar->parsearray(*this);
 								newfact = newvar;
 							}
+						}
 					}
 					// MW-2007-08-30: [[ Bug 2633 ]] Things such as sum2(1, 2+) don't flag a parse error this is
 					//   because this parse method could fail - we now produce an error in this case.

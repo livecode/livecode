@@ -1,0 +1,52 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.foreign.tests
+
+use com.livecode.foreign
+use com.livecode.__INTERNAL._testlib
+
+handler TestZStringNative_Null()
+	variable tList as ZStringNative
+	put "\u{0}" into tList
+end handler
+public handler TestZStringNative()
+	-- bug 14826
+	-- Check that strings containing embedded nuls can't be
+	-- bridged.
+	MCUnitTestHandlerThrowsBroken(TestZStringNative_Null, "ZStringNative (nulls", "bug 14829")
+end handler
+
+handler TestZStringUTF16_Null()
+	variable tList as ZStringUTF16
+	put "\u{0}" into tList
+end handler
+public handler TestZStringUTF16()
+	variable tUTF16 as ZStringUTF16
+	variable tInternal as String
+
+	-- Test round-trip bridging
+	put "\u{fffd}" into tUTF16
+	test "ZStringUTF16 (round-trip)" when tUTF16 is "\u{fffd}"
+
+	-- bug 14826
+	-- Check that strings containing embedded nuls can't be
+	-- bridged.
+	MCUnitTestHandlerThrowsBroken(TestZStringUTF16_Null, "ZStringUTF16 (nulls)", "bug 14829")
+end handler
+
+end module

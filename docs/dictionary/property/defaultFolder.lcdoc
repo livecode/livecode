@@ -1,0 +1,44 @@
+Name: defaultFolder
+
+Type: property
+
+Syntax: set the defaultFolder to <folderPath> 
+
+Summary: Specifies the <folder> that is used by the <files> and <folders> <function|functions> and by <command|commands> that manipulate <files>.
+
+Synonyms: folder,directory
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the defaultFolder to "/Hard Disk/Applications/GetIt"
+
+Example:
+set the defaultFolder to it
+
+Value:
+The <defaultFolder> is a <string> consisting of a valid <file path|path> to a <folder>.
+When a LiveCode application starts up, the <defaultFolder> initially contains whatever the working directory was at the time the application was launched. Typically this is the folder that the application resides in, however this is not always the case and shouldn't be relied on. It is best always to set the <defaultFolder> before using relative paths.
+
+When you start up the application via a file association (eg by launching a document you have chosen to link to your application using "Open With..." on Windows or by dragging the document onto the application icon on OS X ) then the defaultFolder is set to the folder containing the document being launched.
+
+The result: If you set the <defaultFolder> to a <folder> that doesn't exist, the <result> is set to "can't open directory" and the <value> of the <defaultFolder> does not change.
+
+Description:
+Use the <defaultFolder> to perform <file> manipulations on <files> in the same <folder> without having to include the <absolute file path|full path>.
+
+The <defaultFolder> <property> specifies the <folder> LiveCode uses as the <current folder|current directory> when resolving <relative file path|relative paths> (except for <relative file path|relative paths> specified in the <stackFiles> <property>).
+
+If you specify a file without giving its full path, LiveCode looks for the file in the <defaultFolder>. If you specify a <relative file path|relative path>, the <defaultFolder> is <prepend|prepended> to it to create the <absolute file path|full path>.
+
+You cannot delete the current <defaultFolder>.
+
+>*Important:*  The <folderPath> is specified using <Unix> conventions, even on <Mac OS> and <Windows> systems. The names of <folder|folders> are separated with a "/" character, and <absolute file path|absolute paths> (starting with a disk or partition name) must begin with a "/" character.
+
+References: string (keyword), file (keyword), stackFiles (property), create alias (command), revSetDatabaseDriverPath (command), result (function), files (function), folders (function), file path (glossary), property (glossary), function (glossary), command (glossary), prepend (glossary), Windows (glossary), relative file path (glossary), absolute file path (glossary), current folder (glossary), Unix (glossary), value (glossary), Mac OS (glossary), folder (glossary)
+
+Tags: file system

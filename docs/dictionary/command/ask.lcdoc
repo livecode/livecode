@@ -1,0 +1,59 @@
+Name: ask
+
+Type: command
+
+Syntax: ask [<iconType>] <question> [with <defaultResponse>] [titled <windowTitle>] [as sheet]
+
+Summary: Displays a <dialog box> with a question, a text box for the user to enter a response, and OK and Cancel buttons.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,web,mobile
+
+Example:
+ask "What is your name?"
+
+Example:
+ask "Please enter your occupation:" with "Geek"
+
+Example:
+ask field "Prompt" with firstGuess titled "Guess!"
+
+Example:
+ask myPrompt as sheet
+
+Example:
+ask "Please say hello:" with "DEFAULT" titled "Hello World"
+
+Parameters:
+iconType (enum): The icon that is displayed on the left side of the dialog box. If you do not specify an icon, none is displayed. iOS and Android do not support iconType. The following types are supported:
+- "information"
+- "question"
+- "error"
+- "warning"
+question (string): A string of formatted (or unformated) text.
+defaultResponse (string): A string, and is placed in the text box when the dialog box appears. If no defaultResponse is specified, the text box is empty when the dialog box appears.
+windowTitle: Appears in the title bar of the dialog box. If no windowTitle is given, the title bar is blank.
+
+The result: If the user cancels the <dialog box|dialog>, the <it> <variable> is set to empty and the <result> <function> <return|returns> "cancel".
+
+It: The contents of the text box is placed in the it <variable>.
+
+Description:
+Use the <ask> <command> when a <handler> needs to get information from the user before continuing.
+
+If the ask...as sheet form is used, the dialog box appears as a sheet on OS X systems. On other systems, the as sheet form has no effect and the dialog box appears normally. Attempting to open a sheet from within another sheet displays the second stack as a <modal dialog box> instead.
+
+>*Cross-platform note:* On <OS X|OS X systems>, there is no image for the question icon. Therefore, the information icon appears instead. In addition, the image specified by the <gRevAppIcon keyword> appears if you do not specify an <iconType>. If you specify an iconType, the image specified by the <gRevSmallAppIcon keyword> appears instead, along with the standard icon specified by the <iconType>. 
+
+>*Cross-platform note:* Mobile does not support <iconType> and 'as sheet'.
+
+The ask...as sheet form was introduced in version 2.0.
+The ability to provide formatted text for the prompt was introduced in version 2.0.
+
+Changes:
+The ability to specify an <iconType> was added in version 2.0. In previous versions, no icon was displayed.
+
+References: dialogData (property), gRevAppIcon (keyword), it (keyword), gRevProfileReadOnly (keyword), gRevSmallAppIcon (keyword), gRevAppIcon keyword (keyword), gRevSmallAppIcon keyword (keyword), answer (command), ask file (command), ask password (command), modal (command), sheet (command), ask file with type (command), result (function), return (glossary), OS X (glossary), variable (glossary), handler (glossary), modal dialog box (glossary), dialog box (glossary), command (glossary), function (control_st)

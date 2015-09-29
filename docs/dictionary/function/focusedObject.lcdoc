@@ -1,0 +1,32 @@
+Name: focusedObject
+
+Type: function
+
+Syntax: the focusedObject
+
+Syntax: focusedObject()
+
+Summary: <return|Returns> the currently <active control|focused control>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+the focusedObject
+
+Example:
+put the focusedObject into objectToReturnTo
+
+Returns: The <focusedObject> <function> <return|returns> the long <ID> <property> of the <object>.
+
+Description:
+Use the <focusedObject> <function> to determine which <object> receives any keystrokes that are typed by the user or created by the <type> <command>.
+
+The <focusedObject> can be any <control> on the <current card>. If no <object> has the <focus>, the <focusedObject> is the <current card>.
+
+References: control (keyword), ID (property), focus (command), type (command), object (object), property (glossary), current card (glossary), command (glossary), return (glossary), active control (glossary), function (control_st)
+
+Tags: ui

@@ -1,0 +1,384 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.sort.tests
+
+use com.livecode.sort
+use com.livecode.__INTERNAL._testlib
+
+----------------------------------------------------------------
+-- Utilities
+----------------------------------------------------------------
+
+handler RandomNumericList() returns List
+	variable tList
+	put [] into tList
+
+	variable tCount
+	repeat with tCount from 1 up to 100
+		push any number onto tList
+	end repeat
+
+	return tList
+end handler
+
+-- Create a list containing 100 random strings of 1-10 characters
+handler RandomStringList() returns List
+	variable tDict
+	-- TODO allow generation of *any* codepoint
+	put "abcdefghijklmnopqrstuvwxyz01234567890!£$%^^&*(){}[]?+/=@'<,>.~#|\\�\u{0}-_" into tDict
+
+	variable tList
+	put [] into tList
+
+	variable tCount
+	repeat with tCount from 1 up to 100
+		variable tString
+		put "" into tString
+
+		variable tIdx
+		repeat with tIdx from 1 up to the floor of (any number * 10) + 1
+			variable tCharIdx
+			put the floor of (any number * (the number of chars in tDict) + 1) into tCharIdx
+			variable tChar
+			put char tCharIdx of tDict into tChar
+
+			if any number > 0.5 then
+				put the upper of tChar after tString
+			else
+				put the lower of tChar after tString
+			end if
+		end repeat
+		push tString onto tList
+	end repeat
+
+	return tList
+end handler
+
+-- Create a list containing 100 random strings of 1-10 characters, or numbers from 1 to 100
+handler RandomMixedList() returns List
+	variable tStringList as List
+	variable tNumericList as List
+	put RandomStringList() into tStringList
+	put RandomNumericList() into tNumericList
+	
+	variable tList
+	put [] into tList
+	
+	variable tCount
+	repeat with tCount from 1 up to 100
+		if any number > 0.5 then
+			push tStringList[tCount] onto tList
+		else
+			push tNumericList[tCount] onto tList
+		end if
+	end repeat	
+	
+	return tList
+end handler
+
+handler IsSorted(in pList as List, in pDescending as Boolean) returns Boolean
+	if pList is empty then
+		return true
+	end if
+
+	variable tLast
+	pop front of pList into tLast
+
+	variable tSorted
+	put true into tSorted
+
+	variable tIter
+	repeat for each element tIter in pList
+		if (pDescending and tIter > tLast) or (not pDescending and tIter < tLast) then
+			put false into tSorted
+			exit repeat
+		end if
+		put tIter into tLast
+	end repeat
+	return tSorted
+end handler
+
+handler CompareNumericAscending(in pLeft as any, in pRight as any) returns Integer
+	return CompareNumeric(pLeft, pRight, false)	
+end handler
+
+handler CompareNumericDescending(in pLeft as any, in pRight as any) returns Integer
+	return CompareNumeric(pLeft, pRight, true)	
+end handler
+
+-- Sorts numerically, converting strings to numbers where possible
+handler CompareNumeric(in pLeft as any, in pRight as any, in pDescending as Boolean) returns Integer
+	variable tLeft as optional Number
+	variable tRight as optional Number
+	
+	if pLeft is a number then
+		put pLeft into tLeft
+	else
+		put pLeft parsed as number into tLeft
+	end if
+	
+	if pRight is a number then
+		put pRight into tRight
+	else
+		put pRight parsed as number into tRight
+	end if
+
+	if tRight is tLeft then
+		return 0
+	end if
+		
+	if tRight is nothing then
+		return -1
+	end if
+	
+	if tLeft is nothing then
+		return 1
+	end if
+	
+	if tLeft < tRight then
+		if pDescending then
+			return 1
+		else
+			return -1
+		end if
+	end if
+	
+	if pDescending then
+		return -1
+	else
+		return 1
+	end if
+end handler
+
+handler IsSortedUsingHandler(in pList as List, in pHandler as SortCompare) returns Boolean
+	if pList is empty then
+		return true
+	end if
+
+	variable tLast
+	pop front of pList into tLast
+
+	variable tSorted
+	put true into tSorted
+
+	variable tIter
+	repeat for each element tIter in pList
+		if pHandler(tLast, tIter) > 0 then
+			put false into tSorted
+			exit repeat
+		end if
+		put tIter into tLast
+	end repeat
+	return tSorted
+end handler
+
+----------------------------------------------------------------
+-- Tests
+----------------------------------------------------------------
+
+public handler TestAscendingNumeric() -- RANDOMIZED
+	variable tRandom
+	repeat forever
+		put RandomNumericList() into tRandom
+		if not IsSorted(tRandom, false) then
+			exit repeat
+		end if
+	end repeat
+
+	variable tList
+
+	-- Test sorting
+	put tRandom into tList
+	sort tList in ascending numeric order
+	test "sort ascending numeric" when IsSorted(tList, false)
+
+	put tRandom into tList
+	sort tList in ascending order
+	test "sort ascending generic (numeric)" when IsSorted(tList, false)
+
+	-- Test sorting stability
+	variable tStable
+	put tList into tStable
+	sort tList in ascending numeric order
+	test "sort ascending numeric is stable" when tList is tStable
+end handler
+
+public handler TestDescendingNumeric() -- RANDOMIZED
+	variable tRandom
+	repeat forever
+		put RandomNumericList() into tRandom
+		if not IsSorted(tRandom, true) then
+			exit repeat
+		end if
+	end repeat
+
+	variable tList
+
+	-- Test sorting
+	put tRandom into tList
+	sort tList in descending numeric order
+	test "sort descending numeric" when IsSorted(tList, true)
+
+	put tRandom into tList
+	sort tList in descending order
+	test "sort descending generic (numeric)" when IsSorted(tList, true)
+
+	-- Test sorting stability
+	variable tStable
+	put tList into tStable
+	sort tList in descending numeric order
+	test "sort descending numeric is stable" when tList is tStable
+end handler
+
+public handler TestAscendingText() -- RANDOMIZED
+	variable tRandom
+	repeat forever
+		put RandomStringList() into tRandom
+		if not IsSorted(tRandom, false) then
+			exit repeat
+		end if
+	end repeat
+
+	variable tList
+
+	-- Test sorting
+	put tRandom into tList
+	sort tList in ascending text order
+	test "sort ascending text" when IsSorted(tList, false)
+
+	put tRandom into tList
+	sort tList in ascending order
+	test "sort ascending generic (text)" when IsSorted(tList, false)
+
+	-- Test sorting stability
+	variable tStable
+	put tList into tStable
+	sort tList in ascending text order
+	test "sort ascending text is stable" when tList is tStable
+end handler
+
+public handler TestDescendingText() -- RANDOMIZED
+	variable tRandom
+	repeat forever
+		put RandomStringList() into tRandom
+		if not IsSorted(tRandom, true) then
+			exit repeat
+		end if
+	end repeat
+
+	variable tList
+
+	-- Test sorting
+	put tRandom into tList
+	sort tList in descending text order
+	test "sort descending text" when IsSorted(tList, true)
+
+	put tRandom into tList
+	sort tList in descending order
+	test "sort descending generic (text)" when IsSorted(tList, true)
+
+	-- Test sorting stability
+	variable tStable
+	put tList into tStable
+	sort tList in descending text order
+	test "sort descending text is stable" when tList is tStable
+end handler
+
+public handler TestAscendingNumericMixed() -- RANDOMIZED
+	variable tRandom
+	repeat forever
+		put RandomMixedList() into tRandom
+		if not IsSortedUsingHandler(tRandom, CompareNumericAscending) then
+			exit repeat
+		end if
+	end repeat
+
+	variable tList
+
+	-- Test sorting
+	put tRandom into tList	
+	sort tList using handler CompareNumericAscending
+	test "sort using handler ascending numeric" when IsSortedUsingHandler(tList, CompareNumericAscending)
+	
+	-- Test sorting stability
+	variable tStable
+	put tList into tStable
+	sort tList using handler CompareNumericAscending
+	test "sort using handler ascending numeric is stable" when tList is tStable
+end handler
+
+public handler TestDescendingNumericMixed() -- RANDOMIZED
+	variable tRandom
+	repeat forever
+		put RandomMixedList() into tRandom
+		if not IsSortedUsingHandler(tRandom, CompareNumericDescending) then
+			exit repeat
+		end if
+	end repeat
+
+	variable tList
+
+	-- Test sorting
+	put tRandom into tList	
+	sort tList using handler CompareNumericDescending
+	test "sort using handler descending numeric" when IsSortedUsingHandler(tList, CompareNumericDescending)
+	
+	-- Test sorting stability
+	variable tStable
+	put tList into tStable
+	sort tList using handler CompareNumericDescending
+	test "sort using handler descending numeric is stable" when tList is tStable
+end handler
+
+handler InvalidSortHandler_Args(in pValue as any) returns Integer
+	return 1
+end handler
+
+handler InvalidSortHandler_ReturnType(in pLeft as any, in pRight as any) returns String
+	return ""
+end handler
+
+handler InvalidSortHandler_MissingReturn(in pLeft as any, in pRight as any) returns Integer
+
+end handler
+
+handler TestSortUsingHandler_InvalidArgs()
+	variable tList as List
+	put [1,2,3,4] into tList
+	sort tList using handler InvalidSortHandler_Args
+end handler
+
+handler TestSortUsingHandler_InvalidReturnType()
+	variable tList as List
+	put [1,2,3,4] into tList
+	sort tList using handler InvalidSortHandler_ReturnType
+end handler
+
+handler TestSortUsingHandler_MissingReturn()
+	variable tList as List
+	put [1,2,3,4] into tList
+	sort tList using handler InvalidSortHandler_MissingReturn
+end handler
+
+public handler TestUsingHandlerErrors()
+	MCUnitTestHandlerThrows(TestSortUsingHandler_InvalidArgs, "handler invalid number of args")
+	MCUnitTestHandlerThrows(TestSortUsingHandler_InvalidReturnType, "handler invalid return type")
+	MCUnitTestHandlerThrows(TestSortUsingHandler_MissingReturn, "handler missing return")
+end handler
+
+end module

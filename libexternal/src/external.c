@@ -87,14 +87,17 @@ enum
 	/* V2 */ OPERATION_SET_VARIABLE_EX_UTF8_BINARY,
 	/* V2 */ OPERATION_GET_ARRAY_UTF8_TEXT,
 	/* V2 */ OPERATION_GET_ARRAY_UTF8_BINARY,
-	/* V2 */ OPERATION_SET_ARRAY_UTF8_TEXT,
+    /* V2 */ OPERATION_SET_ARRAY_UTF8_TEXT,
     /* V2 */ OPERATION_SET_ARRAY_UTF8_BINARY,
     
     // AL-2015-02-06: [[ SB Inclusions ]] Add new callbacks for resource loading.
     /* V3 */ OPERATION_LOAD_MODULE,
     /* V3 */ OPERATION_UNLOAD_MODULE,
     /* V3 */ OPERATION_RESOLVE_SYMBOL_IN_MODULE,
-    
+
+    // SN-2015-02-25: [[ Merge 6.7.4-rc-1 ]] OPERATION_GET_XDISPLAY_HANDLE is
+    //  actually from the version 4 (V3 is Ali's module functions).
+    /* V3 */ OPERATION_GET_XDISPLAY_HANDLE,
     // SN-2015-03-12: [[ Bug 14413 ]] Add new UTF-8 <-> native conversion functions
     /* V4 */ OPERATION_CONVERT_FROM_NATIVE_TO_UTF8,
     /* V4 */ OPERATION_CONVERT_TO_NATIVE_FROM_UTF8,
@@ -929,6 +932,27 @@ void ResolveSymbolInModule(void *p_handle, const char *p_symbol, void **r_resolv
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+//
+// IM-2014-09-23: [[ RevBrowserCEF ]] External V4 functions
+
+extern void GetXDisplayHandle(void **r_display, int *r_success)
+{
+    char *t_result;
+
+    if (s_external_interface_version < 4 ||
+            s_operations[OPERATION_GET_XDISPLAY_HANDLE] == NULL)
+    {
+        *r_success = EXTERNAL_FAILURE;
+        return;
+    }
+
+    t_result = (s_operations[OPERATION_GET_XDISPLAY_HANDLE])(NULL, NULL, r_display, r_success);
+    if (t_result != NULL)
+        s_delete(t_result);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 // V4: UTF-8 <-> native string conversion
 
 const char *ConvertCStringFromNativeToUTF8(const char *p_native, int *r_success)

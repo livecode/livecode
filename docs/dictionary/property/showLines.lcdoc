@@ -1,0 +1,36 @@
+Name: showLines
+
+Type: property
+
+Syntax: set the showLines of <field> to {true | false}
+
+Summary: Specifies whether dotted lines are shown on the text baselines of a <field>.
+
+Associations: field
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the showLines of the target to true
+
+Value (bool):The <showLines> of a <field(keyword)> is true or false.
+By default, the <showLines> <property> of newly created <field(object)|fields> is set to false.
+
+Description:
+Use the <showLines> <property> to control the appearance of a <field>.
+
+If a field's <showLines> <property> is true, a dotted horizontal line is drawn across the <field>, every lineHeight <pixels>. The line falls at the text baseline, so descenders (in letters like "p" and "g") extend into or below the line.
+
+The dotted lines drawn by the <showLines> appear above the solid lines drawn by the <hGrid> <property>, and are drawn in the <foregroundColor> (or <foregroundPattern>).
+
+If the field's <fixedLineHeight> <property> is set to false, the <showLines> <property> has no effect.
+
+The line does not appear under text that is selected.
+
+References: foregroundColor (property), pixels (property), hGrid (property), fixedLineHeight (property), foregroundPattern (property), field (keyword), field (object), property (glossary)
+
+Tags: ui

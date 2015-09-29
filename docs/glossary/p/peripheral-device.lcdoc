@@ -1,0 +1,12 @@
+Name: peripheral device
+
+Synonyms: peripheral device,peripheral,device
+
+Type: glossary
+
+Description:
+Part of a computer system that lets the computer interact with the user, communicate with another system, or transfer information. Examples of devices include keyboards and mice, modems, printers, and disk drives. 
+ 
+A device is controlled by a piece of software called a <device driver>.
+
+References: device driver (glossary)

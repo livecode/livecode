@@ -57,6 +57,7 @@ The currently-supported PLATFORMs are:
   linux-x86_64
   android-armv6
   win-x86
+  emscripten
 
 EOF
   exit $1
@@ -176,6 +177,7 @@ case ${PLATFORM} in
   mac) ;;
   ios) ;;
   win-x86) ;;
+  emscripten) ;;
   *)
     echo "ERROR: Unrecognised platform: '${PLATFORM}'" >&2
     exit 1;;
@@ -198,6 +200,7 @@ if test -z "$OS"; then
     mac*) OS="mac" ;;
     ios*) OS="ios" ;;
     win*) OS="win" ;;
+    emscripten*) OS="emscripten" ;;
   esac
 fi
 
@@ -206,7 +209,7 @@ if test -z "$FORMATS"; then
   case ${OS} in
     # Always use Linux-style makefiles for Android as the Android toolchain
     # is more Linux-y than Darwin-y
-    linux|android) FORMATS="make-linux" ;;
+    linux|android|emscripten) FORMATS="make-linux" ;;
     mac|ios)       FORMATS="xcode" ;;
     win)           FORMATS="msvs" ;;
   esac
@@ -239,19 +242,25 @@ if test -z "$XCODE_HOST_SDK"; then
 fi
 
 # Default target architectures
+# iOS architectures are restricted to 32-bit only for iOS 5.1, 6.1 and 7.1
 if test -z "$TARGET_ARCH"; then
   case ${PLATFORM} in
     *-x86)     TARGET_ARCH="x86" ;;
     *-x86_64)  TARGET_ARCH="x86_64" ;;
     *-armv6)   TARGET_ARCH="armv6" ;;
+    emscripten) TARGET_ARCH="js" ;;
 
     mac*|ios*)
       case ${XCODE_TARGET_SDK} in
-        macosx*)           TARGET_ARCH="i386" ;;
-        iphoneos8*)        TARGET_ARCH="armv7 arm64" ;;
-        iphoneos*)         TARGET_ARCH="armv7" ;;
-        iphonesimulator8*) TARGET_ARCH="i386 x86_64" ;;
-        iphonesimulator*)  TARGET_ARCH="i386" ;;
+        macosx*)         		TARGET_ARCH="i386" ;;
+        iphoneos5* | \
+        iphoneos6* | \
+        iphoneos7*)		 		TARGET_ARCH="armv7" ;;
+        iphoneos*)       		TARGET_ARCH="armv7 arm64" ;;
+        iphonesimulator5* | \
+        iphonesimulator6* | \
+        iphonesimulator7*) 		TARGET_ARCH="i386" ;;
+        iphonesimulator*)  	TARGET_ARCH="i386 x86_64" ;;
       esac
       ;;
 
@@ -314,8 +323,8 @@ if test "${OS}" = "android" ; then
 
     ANDROID_AR=${AR:-${ANDROID_TOOLCHAIN}ar}
     ANDROID_CC=${CC:-${ANDROID_TOOLCHAIN}clang -target arm-linux-androideabi -march=armv6 -integrated-as}
-    ANDROID_CXX=${CXX:-${ANDROID_TOOLCHAIN}clang -target arm-linux-androideabi -march=armv6 -integrated-as}
-    ANDROID_LINK=${LINK:-${ANDROID_TOOLCHAIN}clang -target arm-linux-androideabi -march=armv6 -integrated-as -fuse-ld=bfd}
+    ANDROID_CXX=${CXX:-${ANDROID_TOOLCHAIN}clang++ -target arm-linux-androideabi -march=armv6 -integrated-as}
+    ANDROID_LINK=${LINK:-${ANDROID_TOOLCHAIN}clang++ -target arm-linux-androideabi -march=armv6 -integrated-as -fuse-ld=bfd}
     ANDROID_OBJCOPY=${OBJCOPY:-${ANDROID_TOOLCHAIN}objcopy}
     ANDROID_OBJDUMP=${OBJDUMP:-${ANDROID_TOOLCHAIN}objdump}
     ANDROID_STRIP=${STRIP:-${ANDROID_TOOLCHAIN}strip}
@@ -350,7 +359,7 @@ if [ "${BUILD_EDITION}" == "commercial" ] ; then
 fi
 
 case ${OS} in
-  linux)
+  linux|emscripten)
     invoke_gyp $basic_args "-DOS=${OS}" "-Dtarget_arch=${TARGET_ARCH}" "$@"
     ;;
   android)

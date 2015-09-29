@@ -1,0 +1,47 @@
+Name: textFont
+
+Type: property
+
+Syntax: set the textFont of <object> to <fontName> [, <language>]
+
+Syntax: set the textFont of [<chunk> of] <field> to <fontName> [, <language>]
+
+Summary: Specifies the <font|font face> of text in an <object>.
+
+Associations: stack,card,field,button,graphic,scrollbar,player,image
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the textFont of button "Hello" to "Courier"
+
+Example:
+set the textFont of the foundChunk to "Comic Sans"
+
+Example:
+set the textFont of field "Input" to "Arial,Japanese"
+
+Example:
+set the textFont of button "Hello" to "Courier"
+
+Example:
+set the textFont of field "Text" to "Japanese"
+
+Value: The <textFont> of an <object> or <chunk> is either empty or a <string>.
+
+Description:
+Use the <textFont> <property> to change the appearance of text.
+
+Setting the <textFont> of an <object> to empty allows the <textFont> of the <object|object's> <owner> to show through. Use the <effective> <keyword> to find out what <font> is used for the <object>, even if its own <textFont> is empty.
+
+If the <chunk> contains more than one font, the <chunk|chunk's> <textFont> <property> reports "mixed".
+
+On Mac OS systems, if the specified font isn't available, the system font (which is set in the Appearance control panel and specifies the font used for menus) is used. On Unix systems, if the specified font isn't available, Helvetica is used. On Windows systems, if the specified font isn't available, the current Windows font is used.
+
+References: printTextFont (property), owner (property), printFontTable (property), allowInlineInput (property), HTMLText (property), string (keyword), effective (keyword), object (object), property (glossary), keyword (glossary), font (glossary), chunk (glossary)
+
+Tags: ui

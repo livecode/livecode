@@ -152,10 +152,12 @@ Parse_stat MCAnswer::parse(MCScriptPoint &sp)
 			t_error = PE_ANSWER_BADTITLE;
 	
 	if (t_error == PE_UNDEFINED && sp . skip_token(SP_FACTOR, TT_PREP, PT_AS) == PS_NORMAL)
+	{
 		if (sp . skip_token(SP_ASK, TT_UNDEFINED, AT_SHEET) == PS_NORMAL)
 			sheet = True;
 		else
 			t_error = PE_ANSWER_BADRESPONSE;
+	}
 			
 	if (t_error != PE_UNDEFINED)
 	{

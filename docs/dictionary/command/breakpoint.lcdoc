@@ -1,0 +1,26 @@
+Name: breakpoint
+
+Type: command
+
+Syntax: breakpoint
+
+Summary: Pauses the <handler> and displays the <debugger> window.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server
+
+Example:
+breakpoint
+
+Example:
+if x &gt; 0 then breakpoint
+
+Description:
+Use the <breakpoint> <command> to aid in <debug|debugging> a handler. It is especially useful for checking to see whether <value|values> are staying in the correct <range> as the <handler> <execute|executes>.
+
+The <breakpoint> <command> has no effect unless the <stack> is running in the LiveCode <development environment>..
+
+References: answer (command), do (command), value (glossary), handler (glossary), range (glossary), development environment (glossary), execute (glossary), debugger (glossary), debug (glossary), command (glossary), stack (object)

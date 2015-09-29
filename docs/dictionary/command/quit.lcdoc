@@ -1,0 +1,43 @@
+Name: quit
+
+Type: command
+
+Syntax: quit
+
+Summary: Quits the <application>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+quit
+
+Example:
+if it is "OK" then
+  quit
+end if
+
+Description:
+Use the <quit> <command> to exit LiveCode (or a <standalone application>).
+
+Once issued, the <quit> <command> triggers a <shutdownRequest message>.  If the <shutdownRequest message> is not passed then the quit will be blocked (i.e. the program won't close).
+
+If you want to check a condition or ask the user for confirmation before deciding whether to quit, use an <if> <control structure>:
+
+  on getMeOuttaHere
+    answer "Are you sure you want to quit?" with "No way" or "OK"
+    if it is "OK" then 
+      quit
+    end if
+  end getMeOuttaHere
+
+To force a quit without sending a <shutdownRequest message> use: 
+  lock messages 
+  quit
+
+References: shutdownRequest (message), shutdownRequest message (message), shutdown (message), kill (command), close process (command), if (control_st), application (glossary), command (glossary), standalone application (glossary), control structure (glossary)
+
+Tags: windowing

@@ -75,6 +75,8 @@ static inline MCGBlendMode MCBitmapEffectBlendModeToMCGBlendMode(MCBitmapEffectB
 			return kMCGBlendModeColor;
 		case kMCBitmapEffectBlendModeLuminosity:
 			return kMCGBlendModeLuminosity;
+		default:
+			MCUnreachable();
 	}
 }
 
@@ -377,7 +379,7 @@ void MCGraphicsContext::clearclip(void)
 
 void MCGraphicsContext::setorigin(int2 x, int2 y)
 {
-	MCGContextTranslateCTM(m_gcontext, -1.0f * x, -1.0f * y);
+	MCGContextTranslateCTM(m_gcontext, 1.0f * x, 1.0f * y);
 }
 
 void MCGraphicsContext::clearorigin(void)
@@ -618,7 +620,7 @@ void MCGraphicsContext::setfillstyle(uint2 style, MCPatternRef p, int2 x, int2 y
 		// IM-2014-05-13: [[ HiResPatterns ]] Update pattern access to use lock function
 		if (MCPatternLockForContextTransform(p, MCGContextGetDeviceTransform(m_gcontext), t_image, t_transform))
 		{
-			t_transform = MCGAffineTransformTranslate(t_transform, x, y);
+			t_transform = MCGAffineTransformPreTranslate(t_transform, x, y);
 			// IM-2014-05-21: [[ HiResPatterns ]] Use the pattern filter value
 			MCGImageFilter t_filter;
 			/* UNCHECKED */ MCPatternGetFilter(p, t_filter);
@@ -1203,6 +1205,8 @@ void MCGraphicsContext::drawpath(MCPath *path)
 		MCGContextAddPath(m_gcontext, t_path);
 		MCGContextStroke(m_gcontext);
 	}
+
+	MCGPathRelease (t_path);
 }
 
 void MCGraphicsContext::fillpath(MCPath *path, bool p_evenodd)
@@ -1219,6 +1223,8 @@ void MCGraphicsContext::fillpath(MCPath *path, bool p_evenodd)
 		MCGContextFill(m_gcontext);	
 		MCGContextRestore(m_gcontext);
 	}
+
+	MCGPathRelease(t_path);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1231,28 +1237,6 @@ void MCGraphicsContext::draweps(real8 sx, real8 sy, int2 angle, real8 xscale, re
 								const char *prolog, const char *psprolog, uint4 psprologlength, const char *ps, uint4 length,
 								const char *fontname, uint2 fontsize, uint2 fontstyle, MCFontStruct *font, const MCRectangle& trect)
 {
-}
-
-// We have a matrix (a, b, c, d). This can be decomposed as:
-//    (cos t, -sin t, sin t, cos t) * (1, m, 0, 1) * (x, 0, 0, y)
-//
-// Which results in:
-//     t = atan(a / c)
-//     x = sqrt(a^2 + b^2)
-//     m = (cb-ad)/(ba-cd)
-//     y = d / (m.sin(t) - cos(t))
-
-static void decompose_matrix(float a, float b, float c, float d, float& t, float& m, float& x, float& y)
-{
-    /*t = atan2f(a, c);
-    x = sqrtf(a * a + b * b);
-    m = (c * b - a * d) / (b * a - c * d);
-    y = d / (m * sinf(t) - cosf(t));*/
-    
-    t = atan2f(c, a);
-    x = sqrtf(a * a + b * b);
-    m = (a * b - c * d) / (b * c - a * d);
-    y = d / (m * sinf(t) - cosf(t));
 }
 
 static MCGRectangle get_rect_pixel_exterior(MCGRectangle r)
@@ -1302,7 +1286,7 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
         {
             MCGAffineTransform t_transform = MCGAffineTransformMakeTranslation(-t_dest.origin.x, -t_dest.origin.y);
             t_transform = MCGAffineTransformConcat(p_image.transform, t_transform);
-            t_transform = MCGAffineTransformTranslate(t_transform, t_dest.origin.x, t_dest.origin.y);
+            t_transform = MCGAffineTransformPreTranslate(t_transform, t_dest.origin.x, t_dest.origin.y);
             
             MCGContextConcatCTM(m_gcontext, t_transform);
         }

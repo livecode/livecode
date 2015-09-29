@@ -128,6 +128,8 @@ static MCCustomPrinterImageType MCCustomPrinterImageTypeFromMCGRasterFormat(MCGR
 		// Unsupported
 		MCAssert(false);
 		return kMCCustomPrinterImageNone;
+	default:
+		MCUnreachable();
 	}
 }
 
@@ -900,7 +902,10 @@ void MCCustomMetaContext::dorawpathmark(MCMark *p_mark, uint1 *p_commands, uint3
 			// IM-2014-05-13: [[ HiResPatterns ]] Update pattern access to use lock function
 			if (MCPatternLockForContextTransform(p_mark->fill->pattern, MCGAffineTransformMakeIdentity(), t_image, t_transform))
 			{
-				t_transform = MCGAffineTransformTranslate(t_transform, p_mark->fill->origin.x, p_mark->fill->origin.y);
+				MCGRaster t_tile_raster;
+				/* UNCHECKED */ MCGImageGetRaster(t_image, t_tile_raster);
+				
+				t_transform = MCGAffineTransformPreTranslate(t_transform, p_mark->fill->origin.x, p_mark->fill->origin.y);
 				
 				// Construct the paint pattern.
 				t_paint . type = kMCCustomPrinterPaintPattern;
@@ -1106,9 +1111,6 @@ void MCCustomMetaContext::dotextmark(MCMark *p_mark)
 {
     MCFontStruct *f = MCFontGetFontStruct(p_mark -> text . font);
     
-	bool t_is_unicode;
-	t_is_unicode = p_mark -> text . unicode_override;
-
 	MCAutoStringRef t_text_str;
     if (p_mark -> text . unicode_override)
         /* UNCHECKED */ MCStringCreateWithChars((const unichar_t*)p_mark -> text . data, p_mark -> text . length, &t_text_str);
@@ -1735,6 +1737,8 @@ public:
 		m_target = p_target;
 	}
 
+	virtual ~MCLoggingPrintingDevice(void) {}
+
 	////////
 
 	void Destroy(void)
@@ -1878,6 +1882,8 @@ public:
 		m_indent = 0;
 		m_stream = nil;
 	}
+
+	virtual ~MCDebugPrintingDevice(void) {}
 
 	void Destroy(void)
 	{

@@ -1,0 +1,42 @@
+Name: create card
+
+Type: command
+
+Syntax: create card [<cardName>]
+
+Summary: Makes a new <card> with the same <background> (s) as the <current card>.
+
+Synonyms: new card
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+create card
+
+Example:
+create card "Main"
+
+Example:
+create card (field "ouput")
+
+Parameters:
+cardName: The name property of the new card. If you don't specify a cardName, the new card's name is empty.
+
+It: The <create card> <command> places the <ID> <property> of the newly created <card> in the <it> <variable>.
+
+Description:
+Use the <create card> <command> to add a new <card> to the <current stack>.
+
+The new card is placed after the current card in the defaultStack. When the <card> is created, you go to the new <card>.
+
+Any groups on the current card whose backgroundBehavior is set to true will be placed on the newly-created <card> automatically.
+
+>*Tip:* To create a <card> in a specific <stack>, first set the <defaultStack> to the <stack> where you want to create the new <card> :
+
+References: card (keyword), templateCard (keyword), it (keyword), ID (property), defaultStack (property), newCard (message), clone (command), create (command), place (command), create stack (command), stack (object), property (glossary), current card (glossary), background (glossary), current stack (glossary), variable (glossary), command (glossary)
+
+Tags: objects

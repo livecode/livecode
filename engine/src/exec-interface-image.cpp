@@ -286,13 +286,12 @@ void MCImage::SetRepeatCount(MCExecContext& ctxt, integer_t p_count)
 	irepeatcount = repeatcount = p_count;
 	if (opened && m_rep != nil && m_rep->GetFrameCount() > 1 && repeatcount != 0)
 	{
-		setframe(currentframe == m_rep->GetFrameCount() - 1 ? 0 : currentframe + 1);
-		MCGImageFrame t_frame;
-		if (m_rep->LockImageFrame(currentframe, getdevicescale(), t_frame))
-		{
-			MCscreen->addtimer(this, MCM_internal, t_frame.duration);
-			m_rep->UnlockImageFrame(currentframe, t_frame);
-		}
+		setframe((uindex_t) currentframe == m_rep->GetFrameCount() - 1 ? 0 : currentframe + 1);
+		
+		// IM-2014-11-25: [[ ImageRep ]] Use ImageRep method to get frame duration
+		uint32_t t_frame_duration;
+		if (m_rep->GetFrameDuration(currentframe, t_frame_duration))
+			MCscreen->addtimer(this, MCM_internal, t_frame_duration);
 	}
 }
 
@@ -754,11 +753,11 @@ void MCImage::SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting, 
     }
     if (isvisible() && !wasvisible && m_rep != nil && m_rep->GetFrameCount() > 1)
     {
-        MCGImageFrame t_frame;
-        if (m_rep->LockImageFrame(currentframe, getdevicescale(), t_frame))
+		// IM-2014-11-25: [[ ImageRep ]] Use ImageRep method to get frame duration
+		uint32_t t_frame_duration;
+		if (m_rep->GetFrameDuration(currentframe, t_frame_duration))
         {
-            MCscreen->addtimer(this, MCM_internal, t_frame.duration);
-            m_rep->UnlockImageFrame(currentframe, t_frame);
+            MCscreen->addtimer(this, MCM_internal, t_frame_duration);
         }
     }
 }
@@ -771,4 +770,65 @@ void MCImage::SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting)
 void MCImage::SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting)
 {
     SetVisibility(ctxt, part, setting, false);
+}
+
+// MERG-2015-02-11: [[ ImageMetadata ]] Refactored image metadata property
+void MCImage::GetMetadataProperty(MCExecContext& ctxt, MCNameRef p_prop, MCExecValue& r_value)
+{
+    // AL-2015-07-22: [[ Bug 15620 ]] If image rep is nil, don't try to fetch metadata
+    bool t_stat;
+    t_stat = m_rep != nil;
+    
+    MCImageMetadata t_metadata;
+    if (t_stat)
+    {
+        m_rep->GetMetadata(t_metadata);
+        t_stat = t_metadata.has_density;
+    }
+    
+    MCExecValue t_density;
+    if (t_stat)
+    {
+        t_density . double_value = t_metadata . density;
+        t_density . type = kMCExecValueTypeDouble;
+    }
+    
+    if (t_stat)
+    {
+        if (p_prop == nil || MCNameIsEmpty(p_prop))
+        {
+            MCAutoArrayRef v;
+            t_stat = MCArrayCreateMutable(&v);
+            
+            MCNewAutoNameRef t_key;
+            if (t_stat)
+                t_stat = MCNameCreateWithCString("density", &t_key);
+            
+            MCValueRef t_prop_value;
+            
+            if (t_stat)
+            {
+                MCExecTypeConvertAndReleaseAlways(ctxt, t_density . type, &t_density , kMCExecValueTypeValueRef, &t_prop_value);
+                t_stat = !ctxt . HasError();
+            }
+            
+            if (t_stat)
+                t_stat = MCArrayStoreValue(*v, kMCCompareExact, *t_key, t_prop_value);
+            
+            if (t_stat)
+            {
+                r_value . arrayref_value = MCValueRetain(*v);
+                r_value . type = kMCExecValueTypeArrayRef;
+            }
+        }
+        else
+            r_value = t_density;
+    }
+    
+    if (!t_stat)
+    {
+        r_value . arrayref_value = MCValueRetain(kMCEmptyArray);
+        r_value . type = kMCExecValueTypeArrayRef;
+    }
+    
 }

@@ -1,0 +1,28 @@
+Name: fontFilesInUse
+
+Type: property
+
+Syntax: get the fontFilesInUse
+
+Summary: Reports the files that have been loaded into memory by the <start using font> <command>.
+
+Introduced: 6.5
+
+OS: mac,windows
+
+Platforms: desktop
+
+Example:
+if theFontFile is not among the lines \
+   of the fontFilesInUse then start using font file theFontFile
+
+Value:
+The <fontFilesInUse> <property> reports a list of full file paths, one per <line>.
+This property is read-only and cannot be set.
+
+Description:
+Use the <fontFilesInUse> <property> to find out which font files are currently in loaded into memory.
+
+Load font files into memory with the <start using font> <command>; remove them with the <stop using font> <command>.
+
+References: line (keyword), stop using font (command), start using font (command), fontNames (function), command (glossary), property (glossary)

@@ -1,0 +1,18 @@
+Name: multiEffect
+
+Type: property
+
+Syntax: set the multiEffect to {true | false}
+
+Summary: Has no effect and is included in <LiveCode> for compatibility with imported <SuperCard> projects.
+
+Introduced: 1.0
+
+Platforms: desktop,server,web
+
+Description:
+In SuperTalk, the <multiEffect> <property> determines whether multiple visual effects are played in succession or interleaved. In LiveCode, visual effects are always played back in succession, one after the other.
+
+The <multiEffect> <property> is always set to false. A <handler> can set it to any value without causing a <error|script error>, but the actual value is not changed.
+
+References: visual effect (command), property (glossary), handler (glossary), SuperCard (glossary), LiveCode (glossary), error (glossary)

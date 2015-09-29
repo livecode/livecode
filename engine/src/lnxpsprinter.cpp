@@ -736,8 +736,6 @@ MCPrinterDialogResult MCPSPrinter::DoPageSetup(bool p_window_modal, Window p_own
 
 MCPrinterResult MCPSPrinter::DoBeginPrint(MCStringRef p_document, MCPrinterDevice*& r_device)
 {
-	MCPSPrinterDevice *t_device = new MCPSPrinterDevice ;
-	
 	const char *t_output_file;
 	if (GetDeviceOutputType() == PRINTER_OUTPUT_FILE)
 		t_output_file = GetDeviceOutputLocation();
@@ -775,7 +773,7 @@ MCPrinterResult MCPSPrinter::DoBeginPrint(MCStringRef p_document, MCPrinterDevic
 	for ( int i = 0; i < PS_NFUNCS; i++)
 		PSwrite ( PSfuncs [ i ]  );
 	
-	r_device = t_device ;
+	r_device = new MCPSPrinterDevice;
 	
 	return ( PRINTER_RESULT_SUCCESS ) ;
 }
@@ -1260,22 +1258,26 @@ void MCPSMetaContext::drawtext(MCMark * p_mark )
 	if (l == 0)
 		return;
 
-	char *newsptr = NULL;
-	char *text = new char[l + 1];
-	memcpy(text, p_mark -> text . data , l);
-	
 	bool t_is_unicode;
 	t_is_unicode = p_mark -> text . unicode_override;
     
-	MCAutoStringRef t_text_string;
-	/* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)p_mark -> text . data, p_mark -> text . length, t_is_unicode ? kMCStringEncodingUTF16 : kMCStringEncodingNative, false, &t_text_string);
+    MCAutoPointer<char> t_text_cstring;
+    if (t_is_unicode)
+    {
+        MCAutoStringRef t_unicode_string;
+        /* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)p_mark -> text . data, p_mark -> text . length, t_is_unicode ? kMCStringEncodingUTF16 : kMCStringEncodingNative, false, &t_unicode_string);
+        /* UNCHECKED */ MCStringConvertToCString(*t_unicode_string, &t_text_cstring);
+    }
+    
+    MCAutoStringRef t_text_string;
+    /* UNCHECKED */ MCStringCreateWithCString(*t_text_cstring, &t_text_string);
 
     // MM-2014-04-16: [[ Bug 11964 ]] Prototype for MCFontMeasureText now takes transform param. Pass through identity.
     uint2 w = MCFontMeasureText(p_mark -> text . font, *t_text_string, MCGAffineTransformMakeIdentity());
 	
-	text[l] = '\0';
-	const char *sptr = text;
-	if ((sptr = strpbrk(text, "()\\")) != NULL)
+	const char *sptr = *t_text_cstring;
+    char *newsptr = NULL;
+	if ((sptr = strpbrk(*t_text_cstring, "()\\")) != NULL)
 	{
 		uint2 count = 0;
 		while (sptr != NULL)
@@ -1283,9 +1285,9 @@ void MCPSMetaContext::drawtext(MCMark * p_mark )
 			sptr = strpbrk(sptr + 1, "()\\");
 			count++;
 		}
-		newsptr = new char[strlen(text) + count + 1];
+		newsptr = new char[strlen(*t_text_cstring) + count + 1];
 		char *dptr = newsptr;
-		sptr = text;
+		sptr = *t_text_cstring;
 		uint2 ilength = l;
 		while (ilength--)
 		{
@@ -1299,7 +1301,7 @@ void MCPSMetaContext::drawtext(MCMark * p_mark )
 		sptr = newsptr;
 	}
 	else
-		sptr = text;
+		sptr = *t_text_cstring;
 
 	
 	if (l == 1)
@@ -1307,10 +1309,11 @@ void MCPSMetaContext::drawtext(MCMark * p_mark )
 	else
 		sprintf(buffer, "%d %d (%1.*s) %d %d AT\n",
 		        l - 1, w, (int)l, sptr, x, cardheight - y );
-	delete text;
+    
 	if (newsptr != NULL)
 		delete newsptr;
-	PSwrite(buffer);
+	
+    PSwrite(buffer);
 }
 
 
@@ -1496,7 +1499,7 @@ void MCPSMetaContext::fillpattern(MCPatternRef p_pattern, MCPoint p_origin)
 	
 	// IM-2014-05-14: [[ HiResPatterns ]] Update pattern access to use lock function
 	/* UNCHECKED */ MCPatternLockForContextTransform(p_pattern, MCGAffineTransformMakeIdentity(), t_image, t_transform);
-	t_transform = MCGAffineTransformTranslate(t_transform, p_origin.x, cardheight - p_origin.y);
+	t_transform = MCGAffineTransformPreTranslate(t_transform, p_origin.x, cardheight - p_origin.y);
 	
 	if (!pattern_created(t_image))
 		create_pattern(t_image);

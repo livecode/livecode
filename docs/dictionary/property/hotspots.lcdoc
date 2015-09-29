@@ -1,0 +1,35 @@
+Name: hotspots
+
+Type: property
+
+Syntax: get the hotspots of <player> 
+
+Summary: Reports a list of the clickable hot spots in a <QuickTime VR> movie.
+
+Associations: player
+
+Introduced: 1.0
+
+OS: mac,windows
+
+Platforms: desktop,server,web
+
+Example:
+get the number of lines in the hotspots of player "Tut's Tomb"
+
+Value (enum): The <hotspots> consists of a list of hot spots, one per line. Each line consists of two <items>, separated by a comma:
+        - the hot spot ID (an integer)
+        - the hot spot type ("link", "url", or "undefined")
+
+The <hotspots> <property> is <read:only> and cannot be set
+
+Description:
+Use the <hotspots> <property> to list the clickable spots of a <QuickTime VR> movie.
+
+Each hot spot of a QuickTime VR movie is a clickable link, usually from one node to another. The movie author sets the hot spots during development of the movie. The user clicks a hot spot in the player to activate the link.
+
+If the player does not contain a QuickTime VR movie, its <hotspots> <property> is empty.
+
+References: items (keyword), hotspotClicked (message), QuickTime VR (glossary), property (glossary), read-only (glossary)
+
+Tags: multimedia

@@ -389,6 +389,9 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
     
     // MW-2014-08-12: [[ EditionType ]] Return whether the engine is community or commercial.
     DEFINE_RO_PROPERTY(P_EDITION_TYPE, String, Engine, EditionType)
+    
+    // MW-2014-12-10: [[ Extensions ]] Returns a list of loaded extensions.
+    DEFINE_RO_PROPERTY(P_LOADED_EXTENSIONS, ProperLinesOfString, Engine, LoadedExtensions)
 };
 
 static bool MCPropertyInfoTableLookup(Properties p_which, Boolean p_effective, const MCPropertyInfo*& r_info, bool p_is_array_prop)
@@ -906,6 +909,9 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
             
     // MW-2014-08-12: [[ EditionType ]] Add support for global editionType property.
     case P_EDITION_TYPE:
+            
+    // MW-2014-12-10: [[ Extensions ]] Add support for global loadedExtensions property.
+    case P_LOADED_EXTENSIONS:
         break;
 	        
 	case P_REV_CRASH_REPORT_SETTINGS: // DEVELOPMENT only
@@ -1068,6 +1074,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 				if (tocount == CT_MARKED)
 					sp.skip_token(SP_FACTOR, TT_CLASS, CT_CARD);
 				if (sp.next(type) != PS_NORMAL)
+				{
 					if (tocount < CT_LINE)
 					{
 						target = new MCChunk(False);
@@ -1079,8 +1086,9 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 						(PE_PROPERTY_MISSINGOFORIN, sp);
 						return PS_ERROR;
 					}
+				}
 				if (sp.lookup(SP_FACTOR, te) != PS_NORMAL
-				        || te->type != TT_OF && te->type != TT_IN)
+				    || (te->type != TT_OF && te->type != TT_IN))
 				{
 					if (tocount < CT_LINE)
 					{
@@ -1221,7 +1229,10 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 	//   customprop is non-nil. Handle this case here rather than in the caller to
 	//   simplify code.
 	if (which == P_CUSTOM)
-    /* UNCHECKED */ MCNameClone(customprop, t_prop_name);
+    {
+        if (!MCNameClone(customprop, t_prop_name))
+            return false;
+    }
 	
 	// At present, something like the 'pVar[pIndex] of me' is evaluated as 'the pVar of me'
 	// this is because any index is extracted from the pVar variable. It might be worth
@@ -1233,39 +1244,63 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
         if (!ctxt  . EvalExprAsStringRef(destvar, EE_PROPERTY_BADEXPRESSION, &t_string))
             return false;
 
-        MCScriptPoint sp(*t_string);
+        // AL-2015-08-27: [[ Bug 15798 ]] Parse into index and property name before determining
+        //  if this is a custom property or not (otherwise things like textStyle["bold"] are
+        //  interpreted as custom properties).
+        MCAutoStringRef t_icarray, t_property_name;
+        uindex_t t_offset, t_end_offset;
+        // SN-2014-08-08: [[ Bug 13135 ]] Targetting a custom var should resolve the index AND suppress
+        //  it from the initial name
+        if (MCStringFirstIndexOfChar(*t_string, '[', 0, kMCStringOptionCompareExact, t_offset) &&
+            MCStringLastIndexOfChar(*t_string, ']', UINDEX_MAX, kMCStringOptionCompareExact, t_end_offset) &&
+            t_end_offset == MCStringGetLength(*t_string) - 1)
+        {
+            if (!MCStringCopySubstring(*t_string, MCRangeMake(0, t_offset), &t_property_name))
+                return false;
+            
+            // AL-2015-08-27: [[ Bug 15798 ]] If the index is quoted, we don't want to include the
+            //  quotes in the index name.
+            if (MCStringGetCodepointAtIndex(*t_string, t_offset + 1) == '"' &&
+                MCStringGetCodepointAtIndex(*t_string, t_end_offset - 1) == '"')
+            {
+                t_offset++;
+                t_end_offset--;
+            }
+            
+            if (!MCStringCopySubstring(*t_string, MCRangeMake(t_offset + 1, t_end_offset - t_offset - 1), &t_icarray))
+                return false;
+        }
+        else
+            t_property_name = *t_string;
+        
+        if (*t_icarray != nil)
+        {
+            if (!MCNameCreate(*t_icarray, t_index_name))
+                return false;
+        }
+        
+        MCScriptPoint sp(*t_property_name);
 		Symbol_type type;
 		const LT *te;
 		if (sp.next(type) && sp.lookup(SP_FACTOR, te) == PS_NORMAL && te->type == TT_PROPERTY && sp.next(type) == PS_EOF)
 			t_prop = (Properties)te -> which;
 		else
-		{
-            MCAutoStringRef t_icarray, t_property_name;
-			uindex_t t_offset;
-            // SN-2014-08-08: [[ Bug 13135 ]] Targetting a custom var should resolve the index AND suppress
-            //  it from the initial name
-            if (MCStringFirstIndexOfChar(*t_string, '[', 0, kMCStringOptionCompareExact, t_offset))
-            {
-                MCStringCopySubstring(*t_string, MCRangeMake(t_offset + 1, MCStringGetLength(*t_string) - t_offset - 2), &t_icarray);
-                MCStringCopySubstring(*t_string, MCRangeMake(0, t_offset), &t_property_name);
-            }
-            else
-                t_property_name = *t_string;
-            
+        {
 			// MW-2011-09-02: [[ Bug 9698 ]] Always create a name for the property, otherwise
 			//   if the var contains empty, this function returns a nil name which causes
 			//   customprop to be used incorrectly.
             //            
-            /* UNCHECKED */ MCNameCreate(*t_property_name, t_prop_name);
-            
-			if (*t_icarray != nil)
-            /* UNCHECKED */ MCNameCreate(*t_icarray, t_index_name);
+            if (!MCNameCreate(*t_property_name, t_prop_name))
+                return false;
             
 			t_prop = P_CUSTOM;
 		}
 	}
 	else if (customindex != nil)
-        /* UNCHECKED */ ctxt . EvalExprAsNameRef(customindex, EE_PROPERTY_BADEXPRESSION, t_index_name);
+    {
+        if (!ctxt . EvalExprAsNameRef(customindex, EE_PROPERTY_BADEXPRESSION, t_index_name))
+            return false;
+    }
     
 	r_which = t_prop;
 	r_prop_name = t_prop_name;

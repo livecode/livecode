@@ -1,0 +1,29 @@
+Name: revZipDeleteItem
+
+Type: command
+
+Syntax: revZipDeleteItem <archivePath>, <itemName> 
+
+Summary: Deletes an item from a zip archive.
+
+Introduced: 2.7.3
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Security: disk,network
+
+Example:
+revZipDeleteItem tArchive, "myZippedItem"
+
+Parameters:
+archivePath: The absolute path to the zip archive to remove an item from.
+itemName: The name of the item in the archive to remove. If revZipDeleteItem encounters an error then the result will be set to an error code beginning with "ziperr", otherwise the result will be empty
+
+Description:
+Use the <revZipDeleteItem> command to remove one of the items from an open zip archive. The archive must first have been opened using the <revZipOpenArchive> command.
+
+References: revZipOpenArchive (command), revZipRenameItem (command), revZipDescribeItem (function), revZipEnumerateItems (function)
+
+Tags: text processing

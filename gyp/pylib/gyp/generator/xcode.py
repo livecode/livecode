@@ -58,6 +58,9 @@ generator_default_variables = {
   'CONFIGURATION_NAME': '$(CONFIGURATION)',
 }
 
+# Xcode sort-of supports multiple toolchains
+generator_supports_multiple_toolsets = True
+
 # The Xcode-specific sections that hold paths.
 generator_additional_path_sections = [
   'mac_bundle_resources',
@@ -624,9 +627,7 @@ def GenerateOutput(target_list, target_dicts, data, params):
 
     spec = target_dicts[qualified_target]
     if spec['toolset'] != 'target':
-      raise Exception(
-          'Multiple toolsets not supported in xcode build (target %s)' %
-          qualified_target)
+      target_name += " (" + spec['toolset'] + ")"
     configuration_names = [spec['default_configuration']]
     for configuration_name in sorted(spec['configurations'].keys()):
       if configuration_name not in configuration_names:
@@ -1225,27 +1226,42 @@ exit 1
     for configuration_name in configuration_names:
       configuration = spec['configurations'][configuration_name]
       xcbc = xct.ConfigurationNamed(configuration_name)
+      xcbc_support = None
+      if support_xct:
+        xcbc_support = support_xct.ConfigurationNamed(configuration_name)
       for include_dir in configuration.get('mac_framework_dirs', []):
         xcbc.AppendBuildSetting('FRAMEWORK_SEARCH_PATHS', include_dir)
+        if xcbc_support:
+          xcbc.AppendBuildSetting('FRAMEWORK_SEARCH_PATHS', include_dir)
       for include_dir in configuration.get('include_dirs', []):
         xcbc.AppendBuildSetting('HEADER_SEARCH_PATHS', include_dir)
+        if xcbc_support:
+          xcbc_support.AppendBuildSetting('HEADER_SEARCH_PATHS', include_dir)
       for library_dir in configuration.get('library_dirs', []):
         if library_dir not in xcode_standard_library_dirs and (
             not xcbc.HasBuildSetting(_library_search_paths_var) or
             library_dir not in xcbc.GetBuildSetting(_library_search_paths_var)):
           xcbc.AppendBuildSetting(_library_search_paths_var, library_dir)
+          if xcbc_support:
+            xcbc_support.AppendBuildSetting(_library_search_paths_var, library_dir)
 
       if 'defines' in configuration:
         for define in configuration['defines']:
           set_define = EscapeXcodeDefine(define)
           xcbc.AppendBuildSetting('GCC_PREPROCESSOR_DEFINITIONS', set_define)
+          if xcbc_support:
+            xcbc_support.AppendBuildSetting('GCC_PREPROCESSOR_DEFINITIONS', set_define)
       if 'xcode_settings' in configuration:
         for xck, xcv in configuration['xcode_settings'].iteritems():
           xcbc.SetBuildSetting(xck, xcv)
+          if xcbc_support:
+            xcbc_support.SetBuildSetting(xck, xcv)
       if 'xcode_config_file' in configuration:
         config_ref = pbxp.AddOrGetFileInRootGroup(
             configuration['xcode_config_file'])
         xcbc.SetBaseConfiguration(config_ref)
+        if xcbc_support:
+          xcbc_support.SetBaseConfiguration(config_ref)
 
   build_files = []
   for build_file, build_file_dict in data.iteritems():

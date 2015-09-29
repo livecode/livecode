@@ -253,6 +253,16 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    end if
    
    local tDeploy
+   # AL-2015-07-24: [[ Standalone Extensions ]] Include selected extensions in iOS standalone
+   repeat for each line tExtension in revIDEExtensionsOrderByDependency(tSettings["extensions"])
+      local tExtensionFile
+      put revIDEExtensionModuleFile(tExtension) into tExtensionFile
+      if tDeploy["modules"] is empty then
+         put tExtensionFile into tDeploy["modules"]
+      else
+         put return & tExtensionFile after tDeploy["modules"]
+      end if
+   end repeat
    
    -- Link the engine if a device build
    local tLinkEngineFile
@@ -314,8 +324,9 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          
          -- MW-2013-06-26: [[ CloneAndRun ]] Only strip global symbols if an installed env.
          if revEnvironmentIsInstalled() then
+            -- FG-2015-01-21: [[ Widgets ]] We need to keep all exported symbols
             -- Make sure the only exported symbol is "main"
-            put "-Wl,-x -Wl,-exported_symbol -Wl,_main" & return after tLinkCommand
+            --put "-Wl,-x -Wl,-exported_symbol -Wl,_main" & return after tLinkCommand
          end if
          
          -- MW-2013-06-25: [[ PIE ]] Make sure we make the minversion 4.3 so we can make
@@ -559,9 +570,23 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    if pTarget is "Device" and not revEnvironmentIsInstalled() then
       revStandaloneProgress "Extracting debug symbols..."
       
+      // SN-2015-09-10: [[ Xcode 7.0 ]] Xcode 7.0 sets the env var MallocNanoZone to 1
+      //  but this makes dsymutil crash...
+      //  We reinstate it after symbol extraction as a user might as well set MallocNanoZone
+      local tOldMallocNanoZone
+      if $MallocNanoZone is not empty then
+         put $MallocNanoZone into tOldMallocNanoZone
+         put 0 into $MallocNanoZone
+      end if
+      
       get shell("dsymutil" && quote & tDeploy["output"] & quote)
       if it is not empty then
          throw "extracting debug symbols failed with" && it
+      end if
+      
+      // Reinstate env var MallocNanoZone if it was set.
+      if $MallocNanoZone is not empty then
+         put tOldMallocNanoZone into $MallocNanoZone
       end if
    end if
    
@@ -622,6 +647,13 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          replace "${REMOTE_NOTIFICATIONS}" with empty in tEntitlements
       end if     
       
+      // SN-2015-09-17: [[ BetaApp ]] Add entitlement for beta apps
+      local tBetaEntitlement
+      if tSettings["ios,beta version"] then
+         put url("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "BetaReportEntitlement.xcent")) into tBetaEntitlement
+      end if
+      replace "${BETA_REPORT_ENTITLEMENT}" with tBetaEntitlement in tEntitlements
+      
       put numToChar(0xfa) & numToChar(0xde) & numToChar(0x71) & numToChar(0x71) & binaryEncode("M", the length of tEntitlements + 8) before tEntitlements
       
       local tEntitlementsFile
@@ -632,7 +664,15 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       put uniDecode(uniEncode(tCertificate, "UTF8")) into tCertificate
       
       -- Do the codesigning
-      put tSdkRoot & slash & "Platforms/iPhoneOS.platform/Developer/usr/bin/codesign_allocate" into $CODESIGN_ALLOCATE
+      // SN-2015-09-11: [[ Xcode 7.0 ]] codesign in Xcode 7.0 will not work if CODESIGN_ALLOCATE
+      // environment variable is set, so we only set it up to Xcode 6.4
+      // We use Clang version to get the Xcode version in use
+      local tClangVersion, tClangMajorVersion
+      put shell("clang++ --version") into tClangVersion
+      if matchText(tClangVersion, "Apple LLVM version ([0-9]+)\.[0-9]+.[0-9]+", tClangMajorVersion) \
+            and tClangMajorVersion < 7 then
+         put tSdkRoot & slash & "Platforms/iPhoneOS.platform/Developer/usr/bin/codesign_allocate" into $CODESIGN_ALLOCATE
+      end if
       
       --try
       -- Perform the codesigning of the main bundle
@@ -1574,6 +1614,9 @@ function mapFilePath pPath
          break
       case "RemoteNotificationStoreEntitlements.xcent"
          put tRepo & slash & "engine/rsrc/template-remote-notification-store-entitlements.xcent" into tPath
+         break
+      case "BetaReportEntitlement.xcent"
+         put tRepo & slash & "engine/rsrc/template-beta-report-entitlement.xcent" into tPath
          break
       case "RemoteNotificationSettings.plist"
          put tRepo & slash & "engine/rsrc/mobile-remote-notification-template.plist" into tPath

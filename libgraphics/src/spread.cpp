@@ -203,7 +203,8 @@ void dilateDistanceXY(const uint8_t *src, uint8_t *dst, int xradius, int yradius
 
     // Allocate memory for the loop
     size_t t_mem_size = new_width * new_height;
-    uint8_t *buffer = new uint8_t[t_mem_size];
+	uint8_t *buffer;
+	/* UNCHECKED */ buffer = (uint8_t*)malloc(t_mem_size);
 
     // All the destination pixels are set to the infinite distance initially
     memset(buffer, 255, t_mem_size);

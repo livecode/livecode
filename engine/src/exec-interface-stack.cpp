@@ -436,9 +436,6 @@ void MCStack::SetName(MCExecContext& ctxt, MCStringRef p_name)
 			// If the name has changed process...
 			if (!hasname(*t_old_name))
 			{
-				bool t_is_mainstack;
-				t_is_mainstack = MCdispatcher -> ismainstack(this) == True;
-
 				// First flush any references to parentScripts on this stack
 				MCParentScript::FlushStack(this);
 				setextendedstate(false, ECS_HAS_PARENTSCRIPTS);
@@ -628,10 +625,12 @@ void MCStack::SetCantModify(MCExecContext& ctxt, bool setting)
 			return;
 		}
 		if (mode == WM_TOP_LEVEL || mode == WM_TOP_LEVEL_LOCKED)
+		{
 			if (flags & F_CANT_MODIFY || !MCdispatcher->cut(True))
 				mode = WM_TOP_LEVEL_LOCKED;
 			else
 				mode = WM_TOP_LEVEL;
+		}
 		stopedit();
 		dirtywindowname();
 		resetcursor(True);
@@ -2171,3 +2170,13 @@ void MCStack::GetIgnoreMouseEvents(MCExecContext &ctxt, bool &r_ignored)
     r_ignored = getextendedstate(ECS_IGNORE_MOUSE_EVENTS);
 }
 
+// MERG-2015-08-31: [[ ScriptOnly ]] Setter and getter for scriptOnly
+void MCStack::GetScriptOnly(MCExecContext& ctxt, bool& r_script_only)
+{
+    r_script_only = isscriptonly();
+}
+
+void MCStack::SetScriptOnly(MCExecContext& ctxt, bool p_script_only)
+{
+    m_is_script_only = p_script_only;
+}

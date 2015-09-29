@@ -1,0 +1,25 @@
+Name: scrollbar
+
+Type: keyword
+
+Syntax: scrollbar
+
+Summary: Designates the Scrollbar <tool>, which is used to create new <scrollbar|scrollbars>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+choose scrollbar tool
+
+Description:
+Use the <scrollbar> <keyword> to create <scrollbar(object)|scrollbars>, progress bars, and drag bars.
+
+When using the Scrollbar tool, the cursor is a crosshairs. This tool is used for creating scrollbars by clicking at one corner of the scrollbar and dragging to the opposite corner.
+
+You can set the style of the <templateScrollbar> to the <scrollbar(keyword)> type you want, then draw the <scrollbar(keyword)> with the Scrollbar <tool>. The <scrollbar(keyword)> icon on the Tools <palette> works this way: each choice in the <popup menu> sets the <style> of the <templateScrollbar>, then chooses the Scrollbar <tool> so you can create the <scrollbar(keyword)>.
+
+References: templateScrollbar (keyword), scrollbar (keyword), style (property), palette (command), choose (command), tool (function), scrollbar (object), keyword (glossary), popup menu (glossary)

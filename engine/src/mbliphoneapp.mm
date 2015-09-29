@@ -29,6 +29,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblnotification.h"
 #import <sys/utsname.h>
 
+#include "libscript/script.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef _DEBUG
@@ -2025,7 +2027,9 @@ static char *my_strndup(const char * p, int n)
 	return s;
 }
 
-int main(int argc, char *argv[], char *envp[]) __attribute__((__visibility__("default")))
+extern "C" bool MCModulesInitialize();
+
+MC_DLLEXPORT_DEF int main(int argc, char *argv[], char *envp[])
 {
 #if defined(_DEBUG) && defined(_VALGRIND)
 	if (argc < 2 ||  (argc >= 2 && strcmp(argv[1], "-valgrind") != 0))
@@ -2035,7 +2039,8 @@ int main(int argc, char *argv[], char *envp[]) __attribute__((__visibility__("de
 	}
 #endif
 	
-    if (!MCInitialize())
+    if (!MCInitialize() || !MCSInitialize() ||
+        !MCModulesInitialize() || !MCScriptInitialize())
         return -1;
     
 	int t_exit_code;

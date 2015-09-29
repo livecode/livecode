@@ -6,6 +6,8 @@
 		'host_sdk%': 'macosx',
 		
 		'output_dir': '../ios-bin/<(target_sdk)',
+		
+		'mac_tools_dir': '$(SOLUTION_DIR)/_build/ios/<(host_sdk)/$(CONFIGURATION)'
 	},
 	
 	'xcode_config_file': '../version',
@@ -13,6 +15,7 @@
 	'xcode_settings':
 	{
 		'SDKROOT': '<(target_sdk)',
+		'SUPPORTED_PLATFORMS': 'iphoneos iphonesimulator',
 
 		'SOLUTION_DIR': '$(SOURCE_ROOT)/<(DEPTH)',
 		'SYMROOT': '$(SOLUTION_DIR)/_build/ios/$(SDK_NAME)',
@@ -29,6 +32,10 @@
 		'IPHONEOS_DEPLOYMENT_TARGET[arch=i386]': '5.1.1',
 		'IPHONEOS_DEPLOYMENT_TARGET[arch=arm64]': '7.0.0',
 		'IPHONEOS_DEPLOYMENT_TARGET[arch=x86_64]': '7.0.0',
+		'ENABLE_BITCODE[arch=armv7]': 'No',
+		'ENABLE_BITCODE[arch=i386]': 'No',
+		'ENABLE_BITCODE[arch=arm64]': 'Yes',
+		'ENABLE_BITCODE[arch=x86_64]': 'Yes',
 		'TARGETED_DEVICE_FAMILY': '1,2',
 		'DEBUG_INFORMATION_FORMAT': 'dwarf-with-dsym',
 		'ARCHS_STANDARD': 'armv7 arm64',
@@ -53,8 +60,12 @@
 			'ext_suffix': '.so',
 			'debug_info_suffix': '.dSYM',
 			
+			'mac_tools_dir': '$(SOLUTION_DIR)/_build/ios/<(host_sdk)/$(CONFIGURATION)',
+
 			'silence_warnings': 0,
 		},
+		
+		'mac_bundle': 0,
 		
 		'defines':
 		[
@@ -128,6 +139,21 @@
 				},
 			],
 			[
+				# If building a host tool, use the OSX settings
+				'_toolset != "target"',
+				{
+					'xcode_settings':
+					{
+						'SDKROOT[platform=macosx*]': '<(host_sdk)',
+						'SUPPORTED_PLATFORMS': 'macosx',
+						'ARCHS': 'x86_64',
+						
+						'SYMROOT': '$(SOLUTION_DIR)/_build/ios/<(host_sdk)',
+						'OBJROOT': '$(SOLUTION_DIR)/_cache/ios/<(host_sdk)',
+					},
+				},
+			],
+			[
 				'silence_warnings == 0',
 				{
 					'xcode_settings':
@@ -174,6 +200,11 @@
 					'xcode_settings':
 					{
 						'GCC_INHIBIT_ALL_WARNINGS': 'YES',
+
+						'WARNING_CFLAGS':
+						[
+							'-Wno-return-type',
+						],
 					},
 				},
 			],

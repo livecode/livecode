@@ -789,7 +789,7 @@ void MCBinaryDecode::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     {
         uinteger_t t_skipped;
         t_skipped = 0;
-        for (uindex_t i = 0; i < t_result_count && i < r_value . int_value; i++)
+        for (uindex_t i = 0; i < t_result_count && (integer_t) i < r_value . int_value; i++)
         {
             if (t_results[i] != nil)
             {
@@ -812,7 +812,7 @@ void MCBinaryDecode::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         }
         
         // Account for the skipped ("x") parameters
-        if (t_skipped >= r_value . int_value)
+        if ((integer_t) t_skipped >= r_value . int_value)
             r_value . int_value = 0;
         else
             r_value . int_value -= t_skipped;
@@ -1455,6 +1455,9 @@ void MCChunkOffset::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     case CT_CODEUNIT:
         MCStringsEvalCodeunitOffset(ctxt, *t_chunk, *t_string, t_start, r_value . uint_value);
         break;
+	default:
+		MCUnreachable();
+		break;
 	}
     
     r_value . type = kMCExecValueTypeUInt;
@@ -4218,6 +4221,7 @@ Parse_stat MCReplaceText::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
+#ifdef LEGACY_EXEC
 static void *realloc_range(void *p_block, unsigned int p_minimum, unsigned int p_maximum, unsigned int& p_limit)
 {
 	void *p_result;
@@ -4236,6 +4240,7 @@ static void *realloc_range(void *p_block, unsigned int p_minimum, unsigned int p
 		free(p_block);
 	return p_result;
 }
+#endif /* LEGACY_EXEC */
 
 void MCReplaceText::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
@@ -5053,6 +5058,7 @@ Parse_stat MCTarget::parse(MCScriptPoint &sp, Boolean the)
 {
 	contents = False;
 	if (!the)
+	{
 		if (sp.skip_token(SP_FACTOR, TT_LPAREN) == PS_NORMAL)
 		{
 			if (sp.skip_token(SP_FACTOR, TT_RPAREN) != PS_NORMAL)
@@ -5062,7 +5068,10 @@ Parse_stat MCTarget::parse(MCScriptPoint &sp, Boolean the)
 			}
 		}
 		else
+		{
 			contents = True;
+		}
+	}
 	initpoint(sp);
 	return PS_NORMAL;
 }
@@ -7051,40 +7060,6 @@ char *MCHTTPProxyForURL::PACmyIpAddress(const char* const* p_arguments, unsigned
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef /* MCRandomBytes */ LEGACY_EXEC
-	if (byte_count->eval(ep) != ES_NORMAL && ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_RANDOMBYTES_BADCOUNT, line, pos);
-		return ES_ERROR;
-	}
-	
-	size_t t_count;
-	t_count = ep.getuint4();
-	
-	// MW-2013-05-21: [[ RandomBytes ]] Updated to use system primitive, rather
-	//   than SSL.
-	
-	void *t_bytes;
-	t_bytes = ep . getbuffer(t_count);
-	if (t_bytes == nil)
-	{
-		MCeerror -> add(EE_NO_MEMORY, line, pos);
-		return ES_ERROR;
-	}
-	
-	if (MCU_random_bytes(t_count, t_bytes))
-		ep . setlength(t_count);
-	else
-	{
-		ep . clear();
-		MCresult->copysvalue(MCString("error: could not get random bytes"));
-	}
-	
-	return ES_NORMAL;
-#endif /* MCRandomBytes */
-
-///////////////////////////////////////////////////////////////////////////////
-
 MCControlAtLoc::~MCControlAtLoc()
 {
     delete location;
@@ -7541,3 +7516,15 @@ void MCMeasureText::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         r_value . type = kMCExecValueTypeStringRef;
     }
 }
+
+#ifdef _TEST
+#include "test.h"
+
+static void TestIsOperator(void)
+{
+    MCTestAssertTrue("something is correct", true);
+}
+
+TEST_DEFINE(IsOperator, TestIsOperator)
+
+#endif

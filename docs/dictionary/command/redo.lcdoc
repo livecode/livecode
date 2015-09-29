@@ -1,0 +1,13 @@
+Name: redo
+
+Type: command
+
+Syntax: redo
+
+Summary: The <redo> <command> is not implemented and is <reserved word|reserved>.
+
+Introduced: 1.0
+
+Platforms: desktop,server,web
+
+References: undo (command), command (glossary), reserved word (glossary)

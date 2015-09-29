@@ -61,8 +61,6 @@ MCScreenDC::MCScreenDC(void)
 	m_current_scrap_data = NULL;
 	
 	m_dst_profile = nil;
-	
-	MCNotifyInitialize();
 }
 
 MCScreenDC::~MCScreenDC(void)

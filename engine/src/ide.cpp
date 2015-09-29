@@ -359,8 +359,6 @@ Parse_stat MCIdeScriptFlush::parse(MCScriptPoint& p_script)
   Parse_stat t_status;
 	t_status = PS_NORMAL;
 
-	MCChunk *t_target;
-	t_target = NULL;
 	if (t_status == PS_NORMAL)
 		t_status = parse_target(p_script, f_target);
 
@@ -1776,8 +1774,12 @@ void MCIdeScriptColourize::exec_ctxt(MCExecContext &ctxt)
 	MCField *t_target;
     MCIdeState *t_state;
 
-    if (eval_target_range(ctxt, f_start, f_end, f_target, t_start, t_end, t_target))
-		t_state = MCIdeState::Find(t_target);
+	if (!eval_target_range(ctxt, f_start, f_end, f_target,
+	                       t_start, t_end, t_target))
+		return;
+
+	t_state = MCIdeState::Find(t_target);
+
 
     if (t_target && t_target -> getparagraphs() != NULL)
         TokenizeField(t_target, t_state, f_type, t_start, t_end, colourize_paragraph);
@@ -1786,7 +1788,7 @@ void MCIdeScriptColourize::exec_ctxt(MCExecContext &ctxt)
 ///////////////////////////////////////////////////////////////////////////////
 
 MCIdeScriptReplace::MCIdeScriptReplace(void)
-	: f_target(NULL), f_start(NULL), f_end(NULL), f_text(NULL), f_type(CT_UNDEFINED)
+	: f_type(CT_UNDEFINED), f_start(NULL), f_end(NULL), f_target(NULL), f_text(NULL)
 {
 }
 
@@ -2804,6 +2806,7 @@ void MCIdeScriptClassify::exec_ctxt(MCExecContext &ctxt)
     // First try an expression.
     MCAutoStringRef t_expr_error;
     uint2 t_expr_pos;
+    t_expr_pos = 0;
     if (t_success)
     {
         // SP takes a copy of the string in this form.
@@ -2829,6 +2832,7 @@ void MCIdeScriptClassify::exec_ctxt(MCExecContext &ctxt)
     // Now try a command.
     MCAutoStringRef t_cmd_error;
     uint2 t_cmd_pos;
+    t_cmd_pos = 0;
     if (t_success)
     {
         // SP takes a copy of the string in ep in this form.

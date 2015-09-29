@@ -50,8 +50,8 @@ class CXMLAttribute;
 //xmldoc.cpp
 int util_strnicmp(const char *s1, const char *s2, int n);
 int util_strncmp(const char *s1, const char *s2, int n);
-void util_concatstring(char *s, int slen, char *&d, int &dlen, int &dalloc);
-char *util_strchr(char *sptr, char target, int l);
+void util_concatstring(const char *s, int slen, char *&d, int &dlen, int &dalloc);
+const char *util_strchr(const char *sptr, char target, int l);
 
 extern void CB_startDocument();
 extern void CB_endDocument();

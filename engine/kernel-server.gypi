@@ -33,6 +33,8 @@
 				
 				'encode_version',
 				'quicktime_stubs',
+				
+				'lcb-modules.gyp:engine_lcb_modules',
 			],
 			
 			'include_dirs':
@@ -45,6 +47,7 @@
 			[
 				'<@(engine_common_source_files)',
 				'<@(engine_server_source_files)',
+				'<@(engine_module_source_files)',
 			],
 			
 			'sources!':
@@ -91,6 +94,7 @@
 							[
 								'$(SDKROOT)/usr/lib/libcups.dylib',
 								'$(SDKROOT)/System/Library/Frameworks/AudioToolbox.framework',
+								'$(SDKROOT)/System/Library/Frameworks/AppKit.framework',
 								'$(SDKROOT)/System/Library/Frameworks/ApplicationServices.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Carbon.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Cocoa.framework',

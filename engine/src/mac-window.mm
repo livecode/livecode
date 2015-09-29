@@ -272,7 +272,11 @@ static bool s_lock_responder_change = false;
                          ![targetWindowForEvent isPopupWindow])
                      {
                          if (targetWindowForEvent != t_window)
+						 {
                              [self popupWindowShouldClose: nil];
+							 // IM-2015-04-21: [[ Bug 15129 ]] Block mouse down event after cancelling popup
+							 result = nil;
+						 }
                      }
                      
                      return result;
@@ -453,34 +457,47 @@ static bool s_lock_responder_change = false;
 }
 
 // MW-2014-07-22: [[ Bug 12720 ]] Mark the period we are inside a focus event handler.
+// SN-2015-05-20: [[ Bug 15208 ]] Renamed to better reflect the functions action
 - (void)windowDidBecomeKey:(NSNotification *)notification
 {
     if (s_inside_focus_event)
-        m_window -> ProcessDidBecomeKey();
+        m_window -> ProcessGainedMainFocus();
     else
     {
         s_inside_focus_event = true;
-        m_window -> ProcessDidBecomeKey();
+        m_window -> ProcessGainedMainFocus();
         s_inside_focus_event = false;
     }
 }
 
 // MW-2014-07-22: [[ Bug 12720 ]] Mark the period we are inside a focus event handler.
+// SN-2015-05-20: [[ Bug 15208 ]] If we are not the KeyWindow, we can still be
+//  the MainWindow, and in that case we keep the focus.
 - (void)windowDidResignKey:(NSNotification *)notification
 {
-    if (s_inside_focus_event)
-        m_window -> ProcessDidBecomeKey();
-    else
-    {
-        s_inside_focus_event = true;
-        m_window -> ProcessDidResignKey();
-        s_inside_focus_event = false;
-    }
+}
+
+// SN-2015-05-20: [[ Bug 15208 ]] A main window is not necessarily the key window
+// (see https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/WinPanel/Concepts/ChangingMainKeyWindow.html)
+//  We do no want to unfocus the active field if a utility window (such as Color
+//  Picker or Character Viewer) is opened, or that can lead to a crash since we
+//  might want to insert text in this field (it is not properly speaking unfocusing).
+//  That leads to a not-so-nice blinking cursor on the message box when using
+//     answer color
+//  but there might not be any other option to avoid the Character Viewer crash.
+- (void)windowDidBecomeMain:(NSNotification *)notification
+{
+    m_window -> ProcessGainedMainFocus();
+}
+
+- (void)windowDidResignMain:(NSNotification *)notification
+{
+    m_window -> ProcessLostMainFocus();
 }
 
 - (void)windowDidChangeBackingProperties:(NSNotification *)notification
 {
-    MCLog("didChangeBacking %lf", objc_msgSend_fpret(m_window -> GetHandle(), @selector(backingScaleFactor)));
+    //MCLog("didChangeBacking %lf", objc_msgSend_fpret(m_window -> GetHandle(), @selector(backingScaleFactor)));
 }
 
 - (void)didEndSheet: (NSWindow *)sheet returnCode: (NSInteger)returnCode contextInfo: (void *)info
@@ -934,7 +951,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (void)doCommandBySelector:(SEL)aSelector
 {
-	MCLog("doCommandBySelector:", 0);
+    //MCLog("doCommandBySelector:", 0);
 	
 	MCMacPlatformWindow *t_window;
 	t_window = [self platformWindow];
@@ -1017,7 +1034,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (void)unmarkText
 {
-	MCLog("unmarkText", 0);
+    //MCLog("unmarkText", 0);
 	
 	MCMacPlatformWindow *t_window;
 	t_window = [self platformWindow];
@@ -1044,7 +1061,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	
 	MCRange t_marked_range, t_selected_range;
 	MCPlatformCallbackSendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
-	MCLog("selectedRange() = (%d, %d)", t_selected_range . offset, t_selected_range . length);
+    //MCLog("selectedRange() = (%d, %d)", t_selected_range . offset, t_selected_range . length);
 	return NSMakeRange(t_selected_range . offset, t_selected_range . length);
 }
 
@@ -1057,7 +1074,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	
 	MCRange t_marked_range, t_selected_range;
 	MCPlatformCallbackSendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
-	MCLog("markedRange() = (%d, %d)", t_marked_range . offset, t_marked_range . length);
+    //MCLog("markedRange() = (%d, %d)", t_marked_range . offset, t_marked_range . length);
 	return NSMakeRange(t_marked_range . offset, t_marked_range . length);
 }
 
@@ -1070,7 +1087,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	
 	MCRange t_marked_range, t_selected_range;
 	MCPlatformCallbackSendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
-	MCLog("hasMarkedText() = %d", t_marked_range . offset != UINDEX_MAX);
+    //MCLog("hasMarkedText() = %d", t_marked_range . offset != UINDEX_MAX);
 	return t_marked_range . offset != UINDEX_MAX;
 }
 
@@ -1103,7 +1120,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (NSArray*)validAttributesForMarkedText
 {
-	MCLog("validAttributesForMarkedText() = []", nil);
+    //MCLog("validAttributesForMarkedText() = []", nil);
 	return [NSArray array];
 }
 
@@ -1127,7 +1144,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	if (actualRange != nil)
 		*actualRange = NSMakeRange(t_actual_range . offset, t_actual_range . length);
 	
-	MCLog("firstRectForCharacterRange(%d, %d -> %d, %d) = [%d, %d, %d, %d]", aRange . location, aRange . length, t_actual_range . offset, t_actual_range . length, t_rect . x, t_rect . y, t_rect . width, t_rect . height);
+    //MCLog("firstRectForCharacterRange(%d, %d -> %d, %d) = [%d, %d, %d, %d]", aRange . location, aRange . length, t_actual_range . offset, t_actual_range . length, t_rect . x, t_rect . y, t_rect . width, t_rect . height);
 	
 	t_ns_rect . origin = [[self window] convertBaseToScreen: t_ns_rect . origin];
 	
@@ -1149,7 +1166,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	uindex_t t_index;
 	MCPlatformCallbackSendTextInputQueryTextIndex(t_window, t_location, t_index);
 	
-	MCLog("characterIndexForPoint(%d, %d) = %d", t_location . x, t_location . y, t_index);
+    //MCLog("characterIndexForPoint(%d, %d) = %d", t_location . x, t_location . y, t_index);
 	
 	return t_index;
 }
@@ -1736,12 +1753,13 @@ void MCMacPlatformWindow::ProcessDidDeminiaturize(void)
 	HandleUniconify();
 }
 
-void MCMacPlatformWindow::ProcessDidBecomeKey(void)
+// SN-2015-05-20: [[ Bug 15208 ]] Renamed to better reflect the functions action
+void MCMacPlatformWindow::ProcessGainedMainFocus(void)
 {
-	HandleFocus();
+    HandleFocus();
 }
 
-void MCMacPlatformWindow::ProcessDidResignKey(void)
+void MCMacPlatformWindow::ProcessLostMainFocus(void)
 {
     HandleUnfocus();
 }
@@ -1864,7 +1882,7 @@ void MCMacPlatformWindow::DoRealize(void)
         [m_panel_handle setFloatingPanel: [NSApp isActive]];
     else
         [m_window_handle setLevel: t_window_level];
-	[m_window_handle setOpaque: m_mask == nil];
+	[m_window_handle setOpaque: m_is_opaque && m_mask == nil];
 	[m_window_handle setHasShadow: m_has_shadow];
 	if (!m_has_zoom_widget)
 		[[m_window_handle standardWindowButton: NSWindowZoomButton] setEnabled: NO];
@@ -1900,12 +1918,12 @@ void MCMacPlatformWindow::DoSynchronize(void)
     if (m_changes . has_shadow_changed)
         [m_window_handle setHasShadow: m_has_shadow];
     
-	if (m_changes . mask_changed)
+	if (m_changes . mask_changed || m_changes . is_opaque_changed)
 	{
         // MW-2014-07-29: [ Bug 12997 ]] Make sure we invalidate the whole window when
         //   the mask changes.
         [[m_window_handle contentView] setNeedsDisplay: YES];
-		[m_window_handle setOpaque: m_mask == nil];
+		[m_window_handle setOpaque: m_is_opaque && m_mask == nil];
 		if (m_has_shadow)
 			m_shadow_changed = true;
 	}
@@ -2037,7 +2055,9 @@ void MCMacPlatformWindow::DoHide(void)
 		if ([m_window_handle parentWindow] != nil)
 			[[m_window_handle parentWindow] removeChildWindow: m_window_handle];
 	
-		[m_window_handle orderOut: nil];
+		// CW-2015-09-21: [[ Bug 15979 ]] Call close instead of orderOut here to properly close
+		// windows that have been iconified.
+		[m_window_handle close];
 	}
 	
 	MCMacPlatformHandleMouseAfterWindowHidden();
@@ -2068,7 +2088,11 @@ void MCMacPlatformWindow::DoUpdate(void)
 {	
 	// If the shadow has changed (due to the mask changing) we must disable
 	// screen updates otherwise we get a flicker.
-	if (m_shadow_changed && m_has_shadow)
+	// IM-2015-02-23: [[ WidgetPopup ]] Assume shadow changes when redrawing a non-opaque widget
+	bool t_shadow_changed;
+	t_shadow_changed = (m_shadow_changed || !m_is_opaque) && m_has_shadow;
+	
+	if (t_shadow_changed)
 		NSDisableScreenUpdates();
 	
 	// Mark the bounding box of the dirty region for needing display.
@@ -2081,7 +2105,7 @@ void MCMacPlatformWindow::DoUpdate(void)
 	[m_view displayIfNeeded];
 	
 	// Re-enable screen updates if needed.
-	if (m_shadow_changed && m_has_shadow)
+	if (t_shadow_changed)
     {
         // MW-2014-06-11: [[ Bug 12495 ]] Turn the shadow off and on to force recaching.
         [m_window_handle setHasShadow: NO];

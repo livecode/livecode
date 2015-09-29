@@ -1,0 +1,66 @@
+Name: files
+
+Type: function
+
+Syntax: the [detailed | long] files
+
+Syntax: files()
+
+Summary: Returns a list of <files> in the <defaultFolder>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Security: disk
+
+Example:
+put the files into field "Current Files"
+
+Example:
+repeat with x = 1 to the number of lines of the detailed files
+
+Example:
+put the files & the folders into diskContents[the defaultFolder]
+
+Returns:
+The <files> <function> returns a list of file names, one per <line>. 
+The detailed files form returns a list of files, one file per line. Each line contains the following attributes, separated by commas:
+* The file's name, URL-encoded
+* The file's size in bytes (on Mac OS and OS X systems, the size of the file's data fork)
+* The resource fork size in bytes (Mac OS and OS X systems only)
+* The file's creation date in seconds (Mac OS, OS X, and Windows systems only)
+* The file's modification date in seconds
+* The file's last-accessed date in seconds (Unix, OS X and Windows systems only)
+* The file's last-backup date in seconds (Mac OS and OS X systems only)
+* The file's owner (Unix and OS X systems only)
+* The file's group owner (Unix and OS X systems only)
+* The file's access permissions
+* The file's creator and file type (Mac OS and OS X only)
+Any attribute that is not supported on the current system is reported as empty.
+
+Description:
+Use the <files> <function> to obtain a list of <files> to display for the user, or to perform an action on each <file> in the <current folder>.
+
+Folders in the <defaultFolder> are not included. To get a list of folders, use the <folders> function.
+
+The names of aliases (on Mac OS and OS X systems), symbolic links (on Unix systems), and shortcuts (on Windows systems) are included in the value returned by the <files> if they refer to a <file>.  If they refer to a <folder>, they are not included. 
+
+The forms the detailed files and the long files are synonyms. 
+
+When listed in the detailed files form, each file's name is URL-encoded.  To obtain the name in plain text, use the <URLDecode> function. If the detailed modifier is not used, the filename is not encoded. 
+
+The access permissions returned in the detailed files form consist of three octal digits. The form is the same as that used for the <umask> property.
+
+The creator and file type returned in the detailed files form is an eight-character string. The first four characters are the creator signature, and the last four are the file type.  
+ 
+>*Note:* For efficiency reasons, the <files> function returns a list in the order provided by the operating system which can differ between platforms and even file systems. If you require an ordered list use the <sort> command explicitly afterwards. 
+ 
+Changes: 
+The detailed files form was introduced in version 1.1. In previous versions, the <files> function provided only a list of file names.
+
+References: fileType (property), umask (property), defaultFolder (property), file (keyword), line (keyword), sort (command), answer file (command), folders (function), files (function), volumes (function), URLDecode (function), current folder (glossary), folder (glossary), function (control_st)
+
+Tags: file system

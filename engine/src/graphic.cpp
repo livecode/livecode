@@ -232,7 +232,7 @@ const char *MCGraphic::gettypestring()
 Boolean MCGraphic::mfocus(int2 x, int2 y)
 {
 	if (!(flags & F_VISIBLE || MCshowinvisibles)
-	        || flags & F_DISABLED && (getstack()->gettool(this) == T_BROWSE))
+	    || (flags & F_DISABLED && (getstack()->gettool(this) == T_BROWSE)))
 		return False;
 	if ((state & CS_SIZE || state & CS_MOVE) && points != NULL
 	        && getstyleint(flags) != F_G_RECTANGLE)
@@ -297,6 +297,9 @@ Boolean MCGraphic::mfocus(int2 x, int2 y)
 		// MW-2011-08-18: [[ Layers ]] Notify of a changed rect and invalidate.
 		layer_rectchanged(drect, true);
 		message_with_args(MCM_mouse_move, x, y);
+        
+        // AL-2015-07-15: [[ Bug 15605 ]] Notify property listener of the change in points property
+        signallisteners(P_POINTS);
 		return True;
 	}
 	else if (m_edit_tool != NULL && m_edit_tool->mfocus(x, y))
@@ -324,6 +327,9 @@ Boolean MCGraphic::mdown(uint2 which)
 			nrealpoints++;
 		startx = mx;
 		starty = my;
+        
+        // AL-2015-07-15: [[ Bug 15605 ]] Notify property listener of the change in points property
+        signallisteners(P_POINTS);
 		return True;
 	}
 	if (state & CS_MFOCUSED)
@@ -515,7 +521,7 @@ void MCGraphic::setgradientrect(MCGradientFill *p_gradient, const MCRectangle &n
 }
 
 #ifdef LEGACY_EXEC
-Exec_stat MCGraphic::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+Exec_stat MCGraphic::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
 {
 	uint2 i;
 	int graphic_type;
@@ -828,7 +834,7 @@ Exec_stat MCGraphic::getprop_legacy(uint4 parid, Properties which, MCExecPoint& 
 		break;
 #endif /* MCGraphic::getprop */
 	default:
-		return MCControl::getprop_legacy(parid, which, ep, effective);
+		return MCControl::getprop_legacy(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }
@@ -1619,7 +1625,7 @@ void MCGraphic::draw_arrow(MCDC *dc, MCPoint &p1, MCPoint &p2)
 {
 	real8 dx = p2.x - p1.x;
 	real8 dy = p2.y - p1.y;
-	if (arrowsize == 0 || dx == 0.0 && dy == 0.0)
+	if (arrowsize == 0 || (dx == 0.0 && dy == 0.0))
 		return;
 	MCPoint pts[3];
 	real8 angle = atan2(dy, dx);
@@ -1991,7 +1997,7 @@ void MCGraphic::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRecta
 	if (fstyle & FA_UNDERLINE)
 		dc->drawline(sx, sy + 1, sx + twidth, sy + 1);
 	if (fstyle & FA_STRIKEOUT)
-		dc->drawline(sx, sy - (MCFontGetAscent(m_font) >> 1), sx + twidth, sy - (MCFontGetAscent(m_font) >> 1));
+		dc->drawline(sx, sy - (MCFontGetAscent(m_font) / 2), sx + twidth, sy - (MCFontGetAscent(m_font) / 2));
 }
 
 // MW-2011-09-06: [[ Redraw ]] Added 'sprite' option - if true, ink and opacity are not set.
@@ -2013,7 +2019,7 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		
 		// MW-2009-06-10: [[ Bitmap Effects ]]
 		if (m_bitmap_effects == NULL)
-			dc -> begin(dc -> gettype() == CONTEXT_TYPE_PRINTER && (m_fill_gradient != NULL) || (m_stroke_gradient != NULL));
+			dc -> begin((dc -> gettype() == CONTEXT_TYPE_PRINTER && (m_fill_gradient != NULL)) || (m_stroke_gradient != NULL));
 		else
 		{
 			if (!dc -> begin_with_effects(m_bitmap_effects, rect))
@@ -2219,23 +2225,37 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		MCAutoArrayRef lines;
 		/* UNCHECKED */ MCStringSplit(slabel, MCSTR("\n"), nil, kMCCompareExact, &lines);
 		uindex_t nlines = MCArrayGetCount(*lines);
-		
-		uint2 fheight;
-		fheight = gettextheight();
 
 		uint2 fontstyle;
 		fontstyle = gettextstyle();
 
-		int32_t fascent, fdescent;
+		coord_t fascent, fdescent, fleading;
 		fascent = MCFontGetAscent(m_font);
 		fdescent = MCFontGetDescent(m_font);
-
+        fleading = MCFontGetLeading(m_font);
+        
+        coord_t fheight;
+        fheight = fascent + fdescent + fleading;
+        
 		int2 centerx = trect.x + leftmargin + ((trect.width - leftmargin - rightmargin) >> 1);
 		int2 centery = trect.y + topmargin + ((trect.height - topmargin - bottommargin) >> 1);
-		uint2 theight = nlines == 1 ? fascent : nlines * fheight;
-		int2 sx = trect.x + leftmargin + borderwidth - DEFAULT_BORDER;
-		int2 sy = centery - (theight >> 1) + fascent;
-		
+
+        coord_t sx, sy, theight;
+        if (nlines == 1)
+        {
+            // Centre things on the middle of the ascent
+            sx = trect.x + leftmargin + borderwidth - DEFAULT_BORDER;
+            sy = roundf(centery + (fascent-fdescent)/2);
+            theight = fascent;
+        }
+        else
+        {
+            // Centre things by centring the bounding box of the text
+            sx = trect.x + leftmargin + borderwidth - DEFAULT_BORDER;
+            sy = centery - (nlines * fheight / 2) + fleading/2 + fascent;
+            theight = nlines * fheight;
+        }
+        
 		uint2 i;
 		uint2 twidth = 0;
 		for (i = 0 ; i < nlines ; i++)

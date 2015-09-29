@@ -1,0 +1,25 @@
+Name: playerError
+
+Type: message
+
+Syntax: playerError
+
+Summary: Sent when the content stops playing to due to an error.
+
+Introduced: 4.6
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+on playerError
+    answer "Stopped playing due to an error." with "Okay"
+end playerError
+
+Description:
+Handle the <playerError> message when the content finishes playing as a result of an error.
+
+Use the <mobileControlGet> function to request more information about the player properties.
+
+References: playerStopped (message), playerFinished (message), playerLeaveFullscreen (message), playerProgressChanged (message), playerMovieChanged (message), playerPropertyAvailable (message), playerEnterFullscreen (message), mobileControlGet (function)

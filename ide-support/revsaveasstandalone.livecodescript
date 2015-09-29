@@ -22,7 +22,7 @@
 
 private function revListFolders pPath
    local tOldFolder, tFolders
-  
+   
    put the folder into tOldFolder
    
    set the folder to pPath
@@ -35,7 +35,7 @@ end revListFolders
 
 private function revListFiles pPath
    local tOldFolder, tFiles
-  
+   
    put the folder into tOldFolder
    
    set the folder to pPath
@@ -58,7 +58,7 @@ local sUserScriptLibraries
 -- MW-2013-11-06: [[ LinuxX64 ]] Add Linux x64 to the list of supported platforms.
 -- MM-2014-03-21: [[ PPC Support Dropped ]] Remove Mac PPC and Mac Universal from supported platforms.
 -- FG-2014-08-19: [[ RPi ]] Add Linux ARMv6-HF to the list of supported platforms
-constant kPlatforms = "Windows,MacOSX x86-32,Linux,Linux x64,Linux armv6-hf"
+constant kPlatforms = "Windows,MacOSX x86-32,Linux,Linux x64,Linux armv6-hf,Emscripten"
 
 -- list of info fields for the windows engine
 constant kVersionFlds = "Comments,CompanyName,FileDescription,FileVersion,InternalName,LegalCopyright,LegalTrademarks,OriginalFilename,PrivateBuild,ProductName,ProductVersion,SpecialBuild"
@@ -227,6 +227,7 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    end repeat
    put tCanBuild or sStandaloneSettingsA["ios"] into tCanBuild
    put tCanBuild or sStandaloneSettingsA["android"] into tCanBuild
+   put tCanBuild or sStandaloneSettingsA["emscripten"] into tCanBuild
    if not tCanBuild then
       if revTestEnvironment() then
          return tError
@@ -291,7 +292,7 @@ on revSaveAsStandalone pStack, pFolder, pPreview
       put the mainStack of stack pStack into pStack
       set the defaultStack to pStack
       try
-         if sStandaloneSettingsA["ios"] or sStandaloneSettingsA["android"] then
+         if sStandaloneSettingsA["ios"] or sStandaloneSettingsA["android"] or sStandaloneSettingsA["emscripten"] then
             local tOutputMobileFolder
             revOutputDirectories tFolder & slash
             put the result into tOutputMobileFolder
@@ -320,6 +321,11 @@ on revSaveAsStandalone pStack, pFolder, pPreview
                --revIDEDeployBuild "android", pStack, tOutputMobileFolder
                dispatch "revSaveAsMobileStandalone" to stack "revSaveAsAndroidStandalone" with \
                      pStack, tOutputMobileFolder & slash & sStandaloneSettingsA["name"] & ".apk", "Build"
+            end if
+            
+            if sStandaloneSettingsA["emscripten"] then
+               dispatch "revSaveAsEmscriptenStandalone" to stack "revSaveAsEmscriptenStandalone" with \
+                     pStack, tOutputMobileFolder, "Build"
             end if
          else
             revCreateStandalone pStack,pFolder
@@ -372,6 +378,7 @@ end folderNameMakeLegal
 
 private function revStandalonePlatformDetails pPlatform
    local tDetailsA
+
    -- SN-2015-03-04: [[ IDE Restructure ]] Externals folder contains the externals,
    --  and Support contains support libraries (revpdfprinter and revsecurity):
    --  they should have their own keys in the details array.
@@ -1605,7 +1612,7 @@ end revEnumerateIcons
 
 private command revCopyReferencedFiles pStack, pFutureFilePath, pReferencedFilesDestination
    local tControl, tCard, tChars, tOldFilePath, tFileName, tFutureFileName, tFutureFilePath, tIcon, \
-          tCardNum, tControlNum
+         tCardNum, tControlNum
    lock screen
    
    revStandaloneProgress "Copying referenced media..."
@@ -2262,6 +2269,18 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
    if sStandaloneSettingsA[tPlatformDetailsA["platform"] & ",library"] is not empty then
       put sStandaloneSettingsA[tPlatformDetailsA["platform"] & ",library"] into tDeployInfo["library"]
    end if
+   
+   # AL-2015-04-12: [[ Standalone Extensions ]] Add chosen extensions to the standalone inclusions
+   # AL-2015-07-21: [[ Standalone Extensions ]] Automatically include dependecies, and load in order
+   repeat for each line tExtension in revIDEExtensionsOrderByDependency(sStandaloneSettingsA["extensions"])
+      local tExtensionFile
+      put revIDEExtensionModuleFile(tExtension) into tExtensionFile
+      if tDeployInfo["modules"] is empty then
+         put tExtensionFile into tDeployInfo["modules"]
+      else
+         put return & tExtensionFile after tDeployInfo["modules"]
+      end if
+   end repeat
    
    if tPlatformDetailsA["platform"] is "MacOSX" then
       -- MW-2013-06-13: [[ CloneAndRun ]] If installed do things in the usual way, otherwise pass

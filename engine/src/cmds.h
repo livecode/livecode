@@ -495,6 +495,7 @@ class MCCreate : public MCStatement
 	Chunk_term otype;
 	MCExpression *newname;
 	MCExpression *file;
+    MCExpression *kind;
     MCChunk *container;
     Boolean directory: 1;
     Boolean visible: 1;
@@ -507,6 +508,7 @@ public:
 		otype = CT_UNDEFINED;
 		newname = NULL;
 		file = NULL;
+        kind = NULL;
 		container = NULL;
 		directory = False;
 		alias = False;
@@ -704,10 +706,16 @@ class MCLoad : public MCStatement
 {
 	MCExpression *url;
 	MCExpression *message;
+    bool is_extension : 1;
+	bool has_resource_path : 1;
+    bool from_data : 1;
 public:
 	MCLoad()
 	{
 		url = message = NULL;
+        is_extension = false;
+		has_resource_path = false;
+        from_data = false;
 	}
 	virtual ~MCLoad();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -718,10 +726,12 @@ public:
 class MCUnload : public MCStatement
 {
 	MCExpression *url;
+    bool is_extension : 1;
 public:
 	MCUnload()
 	{
 		url = NULL;
+        is_extension = false;
 	}
 	virtual ~MCUnload();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -956,11 +966,11 @@ public:
 
 class MCCancel : public MCStatement
 {
-	MCExpression *id;
+	MCExpression *m_id;
 public:
 	MCCancel()
 	{
-		id = NULL;
+		m_id = NULL;
 	}
 	virtual ~MCCancel();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -1938,6 +1948,9 @@ class MCSubwindow : public MCStatement
 	MCExpression *parent;
 	MCExpression *at;
 	MCExpression *aligned;
+
+	MCExpression *widget;
+	MCExpression *properties;
 protected:
 	Window_mode mode;
 public:
@@ -1948,6 +1961,9 @@ public:
 		parent = NULL;
 		thisstack = False;
 		aligned = NULL;
+		
+		widget = nil;
+		properties = nil;
 	}
 	virtual ~MCSubwindow();
 	virtual Parse_stat parse(MCScriptPoint &);

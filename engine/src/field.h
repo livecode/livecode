@@ -264,7 +264,8 @@ public:
 
 	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
 
-	bool visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_visitor);
+	virtual bool visit_self(MCObjectVisitor *p_visitor);
+	virtual bool visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor* p_visitor);
 
 	virtual void open();
 	virtual void close();
@@ -282,10 +283,12 @@ public:
 	virtual void select();
 	virtual uint2 gettransient() const;
 	virtual void setrect(const MCRectangle &nrect);
+
 #ifdef LEGACY_EXEc
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
 	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 #endif
+
 	virtual void undo(Ustruct *us);
 	virtual void recompute();
 
@@ -904,5 +907,12 @@ public:
     void GetTextStyleElementOfCharChunk(MCExecContext& ctxt, MCNameRef p_index, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool*& r_value);
     void GetEffectiveTextStyleElementOfCharChunk(MCExecContext& ctxt, MCNameRef p_index, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool& r_value);
     void SetTextStyleElementOfCharChunk(MCExecContext& ctxt, MCNameRef p_index, uint32_t p_part_id, int32_t si, int32_t ei, bool *p_value);
+
+protected:
+    
+    // FG-2014-11-11: [[ Better theming ]] Fetch the control type/state for theming purposes
+    virtual MCPlatformControlType getcontroltype();
+    virtual MCPlatformControlPart getcontrolsubpart();
+    virtual MCPlatformControlState getcontrolstate();
 };
 #endif

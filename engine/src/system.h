@@ -73,7 +73,11 @@ struct MCSystemFileHandle
     // Returns true if an attempt has been made to read past the end of the
     // stream.
     virtual bool IsExhausted(void) = 0;
-    
+
+	/* Attempt to read p_length bytes from the file handle.  Returns
+	 * true iff p_length bytes are successfully read.  Partial reads
+	 * may modify p_buffer, r_read and the file handle state, but
+	 * should still return false. */
     virtual bool Read(void *p_buffer, uint32_t p_length, uint32_t& r_read) = 0;
     
 	virtual bool Write(const void *p_buffer, uint32_t p_length) = 0;
@@ -536,7 +540,7 @@ struct MCSystemInterface
 	virtual MCSysModuleHandle ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol) = 0;
 	virtual void UnloadModule(MCSysModuleHandle p_module) = 0;
 	
-	virtual bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *x_context) = 0;
+	virtual bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *x_context) = 0;
     
     // ST-2014-12-18: [[ Bug 14259 ]] Returns the executable from the system tools, not from argv[0]
 	virtual bool GetExecutablePath(MCStringRef& r_path) = 0;
@@ -589,7 +593,8 @@ enum MCSystemUrlStatus
 	kMCSystemUrlStatusUploading,
 	kMCSystemUrlStatusUploaded,
 	kMCSystemUrlStatusLoading,
-	kMCSystemUrlStatusFinished
+	kMCSystemUrlStatusFinished,
+	kMCSystemUrlStatusLoadingProgress,
 };
 
 typedef bool (*MCSystemUrlCallback)(void *context, MCSystemUrlStatus status, const void *param);

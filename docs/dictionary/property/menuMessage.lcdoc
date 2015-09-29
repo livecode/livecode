@@ -1,0 +1,18 @@
+Name: menuMessage
+
+Type: property
+
+Syntax: set the menuMessage of <menuItem> to <messageName> 
+
+Summary: Has no effect and is included in <LiveCode> for compatibility with imported <HyperCard> stacks.
+
+Introduced: 1.0
+
+Platforms: desktop,server,web
+
+Description:
+In HyperCard, the <menuMessage> <property> determines what <message> is sent when the user chooses a <menu item>.
+
+A handler can set the <menuMessage> to any <value> without causing a <error|script error>, but the actual action of the <menu> is not changed.
+
+References: menuItem (keyword), property (glossary), LiveCode (glossary), error (glossary), menu item (glossary), message (glossary), HyperCard (glossary), menu (glossary), value (function)

@@ -465,6 +465,10 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions,
                 t_dnd_done = true;
                 break;
             }
+
+		default:
+			/* Ignore this event */
+			break;
         }
         
         gdk_event_free(t_event);

@@ -1,0 +1,30 @@
+Name: message box
+
+Type: keyword
+
+Syntax: message box
+
+Summary: Indicates the <message box>.
+
+Synonyms: message window,message,msg box,msg window,msg
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+show message box
+
+Example:
+put the result into message
+
+Description:
+Use the <message box> <keyword> to display information to the user.
+
+The message box is a container as well as a window. You can show and hide the message box, put information into it, and get information from it.
+
+The two-word synonyms message window and msg window can be used only to show and hide the message box. To put a value into the message box or read the value in the message box, use the forms message, msg, message box, and msg box.
+
+References: blindTyping (property), message box (keyword), put (command), do (command), keyword (glossary)

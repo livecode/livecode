@@ -1,0 +1,14 @@
+Name: AU
+
+Synonyms: .au,mulaw,mu-law,law,-law,AU
+
+Type: glossary
+
+Description:
+AUdio. A <format> for sound files that is often used on <Unix|Unix systems>. This format is also called "mu-law". 
+ 
+The name of a <file> in this <format> usually ends with ".au".
+
+References: format (glossary), file (glossary), Unix (glossary)
+
+Tags: multimedia

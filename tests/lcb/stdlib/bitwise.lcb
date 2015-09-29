@@ -1,0 +1,81 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.bitwise.tests
+
+use com.livecode.__INTERNAL._testlib
+use com.livecode.bitwise
+
+public handler TestAnd()
+	test "and" when 1 bitwise and 3 is 1
+	test "and (-ve)" when 1 bitwise and -1 is 1
+	test "and (disjoint)" when 1 bitwise and 2 is 0
+end handler
+
+public handler TestOr()
+	test "or" when 1 bitwise or 3 is 3
+	test "and (-ve)" when 1 bitwise or -1 is -1
+	test "and (disjoint)" when 1 bitwise or 2 is 3
+end handler
+
+public handler TestNot()
+	test "not" when bitwise not -5 is 4
+end handler
+
+handler TestShift_OverflowPositive()
+	return 5 shifted left by 29 bitwise
+end handler
+handler TestShift_OverflowNegative()
+	return -5 shifted left by 29 bitwise
+end handler
+public handler TestShift()
+	-- 0…00101 → 0…01010
+	test "shift left (+ve)" when 5 shifted left by 1 bitwise is 10
+	-- 1…11011 → 1…10110
+	test "shift left (-ve)" when -5 shifted left by 1 bitwise is -10
+	-- 0…00000 → 0…00000
+	test "shift left (0)" when 0 shifted left by 1 bitwise is 0
+
+	-- 0…00101 → 0…00010
+	test "shift right (+ve)" when 5 shifted right by 1 bitwise is 2
+	-- 1…11011 → 1…11101
+	test "shift right (-ve)" when -5 shifted right by 1 bitwise is -3
+	-- 0…00000 → 0…00000
+	test "shift right (0)" when 0 shifted right by 1 bitwise is 0
+
+	-- Shift right by any amount is permitted
+	test "shift right (+ve, big)" when 5 shifted right by 255 bitwise is 0
+	test "shift right (-ve, big)" when -5 shifted right by 255 bitwise is -1
+	test "shift right (0, big)" when 0 shifted right by 255 bitwise is 0
+
+	-- Shift left is only permitted if no overflow occurs
+	-- 0…00101 → 01010…0
+	test "shift left (+ve, limit)" when 5 shifted left by 28 bitwise is 1342177280
+	-- 1…11011 → 10110…0
+	test "shift left (-ve, limit)" when -5 shifted left by 28 bitwise is -1342177280
+	-- 1…11111 → 10000…0
+    if -2147483648 < -2147483847 then
+	    test "shift left (-ve, edge)" when -1 shifted left by 31 bitwise is -2147483648
+    else
+        skip test "shift left (-ve, edge)" because "bug 14939"
+    end if
+
+	MCUnitTestHandlerThrows(TestShift_OverflowPositive, "shift left (+ve, overflow")
+	MCUnitTestHandlerThrows(TestShift_OverflowNegative, "shift left (-ve, overflow")
+end handler
+
+end module

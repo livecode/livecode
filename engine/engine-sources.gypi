@@ -1,7 +1,7 @@
 {
 	'variables':
 	{
-		# Sources shared between ctocppdesktop and server builds
+		# Sources shared between desktop and server builds
 		'engine_common_source_files':
 		[	
 			# Group "Core - Graphics"
@@ -123,6 +123,7 @@
 			'src/eventqueue.h',
 			'src/fiber.h',
 			'src/filedefs.h',
+			'src/filepath.h',
 			'src/flst.h',
 			'src/globals.h',
 			'src/license.h',
@@ -153,6 +154,7 @@
 			'src/dllst.cpp',
 			'src/eventqueue.cpp',
 			'src/fiber.cpp',
+			'src/filepath.cpp',
 			'src/globals.cpp',
 			'src/mcerror.cpp',
 			'src/mcio.cpp',
@@ -214,6 +216,9 @@
 			'src/tooltip.h',
 			'src/undolst.h',
 			'src/vclip.h',
+			'src/widget.h',
+			'src/widget-events.h',
+            'src/widget-ref.h',
 			'src/aclip.cpp',
 			'src/block.cpp',
 			'src/button.cpp',
@@ -247,6 +252,7 @@
 			'src/image_rep.cpp',
 			'src/image_rep_densitymapped.cpp',
 			'src/image_rep_encoded.cpp',
+			'src/image_rep_gimage.cpp',
 			'src/image_rep_mutable.cpp',
 			'src/image_rep_resampled.cpp',
 			'src/imagebitmap.cpp',
@@ -289,6 +295,11 @@
 			'src/tooltip.cpp',
 			'src/undolst.cpp',
 			'src/vclip.cpp',
+			'src/widget.cpp',
+			'src/widget-events.cpp',
+            'src/widget-ref.cpp',
+            'src/widget-syntax.cpp',
+            'src/widget-popup.cpp',
 			
 			# Group "Desktop"
 			'src/dskmac.cpp',
@@ -309,6 +320,7 @@
 			'src/exec-debugging.cpp',
 			'src/exec-dialog.cpp',
 			'src/exec-engine.cpp',
+			'src/exec-extension.cpp',
 			'src/exec-files.cpp',
 			'src/exec-filters.cpp',
 			'src/exec-graphics.cpp',
@@ -482,17 +494,45 @@
 			'src/syscfdate.cpp',
 			'src/syslnxfs.cpp',
 			'src/syslnxregion.cpp',
-			'src/sysosxrandom.cpp',
 			'src/sysosxregion.cpp',
 			'src/sysspec.cpp',
+			'src/sysspec-url.cpp',
 			'src/sysunxdate.cpp',
 			'src/sysunxnetwork.cpp',
-			'src/sysunxrandom.cpp',
 			'src/sysw32fs.cpp',
 			'src/sysw32network.cpp',
-			'src/sysw32random.cpp',
 			'src/sysw32region.cpp',
 			'src/sysw32registry.cpp',
+			
+			# Group "Text"
+			'src/text.h',
+			'src/text-api.h',
+			'src/text-block.h',
+			'src/text-breakblock.h',
+			'src/text-breakingengine.h',
+			'src/text-cell.h',
+			'src/text-controlblock.h',
+			'src/text-imageblock.h',
+			'src/text-line.h',
+			'src/text-pane.h',
+			'src/text-paragraph.h',
+			'src/text-run.h',
+			'src/text-segment.h',
+			'src/text-simplebreakingengine.h',
+			'src/text.cpp',
+			'src/text-api.cpp',
+			'src/text-block.cpp',
+			'src/text-breakblock.cpp',
+			'src/text-breakingengine.cpp',
+			'src/text-cell.cpp',
+			'src/text-controlblock.cpp',
+			'src/text-imageblock.cpp',
+			'src/text-line.cpp',
+			'src/text-pane.cpp',
+			'src/text-paragraph.cpp',
+			'src/text-run.cpp',
+			'src/text-segment.cpp',
+			'src/text-simplebreakingengine.cpp',
 			
 			# Group "Desktop"
 			'src/quicktime.cpp',
@@ -509,6 +549,11 @@
 			
 			# Group "Desktop - Windows"
 			'src/w32date.cpp',
+							
+			# Group "Theming"
+			'src/linux-theme.cpp',
+			'src/mac-theme.mm',
+			'src/windows-theme.cpp',
 				
 			# Group "Syntax"
 			'src/syntax.h',
@@ -529,6 +574,20 @@
 			'src/w32-clipboard.cpp',
 
 			'src/mixin-refcounted.h',
+			
+			# Native layers
+			'src/native-layer.h',
+			'src/native-layer-android.h',
+			'src/native-layer-ios.h',
+			'src/native-layer-mac.h',
+			'src/native-layer-win32.h',
+			'src/native-layer-x11.h',
+			'src/native-layer.cpp',
+			'src/native-layer-android.cpp',
+			'src/native-layer-ios.mm',
+			'src/native-layer-mac.mm',
+			'src/native-layer-win32.cpp',
+			'src/native-layer-x11.cpp',
 		],
 		
 		# Sources that are only for desktop mode
@@ -660,6 +719,42 @@
 			'src/w32text.cpp',
 			'src/w32textlayout.cpp',
 			'src/w32theme.cpp',
+
+			# Group "Desktop - Emscripten"
+			'src/em-async.h',
+			'src/em-async.js',
+			'src/em-dc-mainloop.h',
+			'src/em-dc-mainloop.cpp',
+			'src/em-dc.h',
+			'src/em-dc.cpp',
+			'src/em-dialog.js',
+			'src/em-event.h',
+			'src/em-event.cpp',
+			'src/em-event.js',
+			'src/em-filehandle.h',
+			'src/em-filehandle.cpp',
+			'src/em-fontlist.h',
+			'src/em-fontlist.cpp',
+			'src/em-main.cpp',
+			'src/em-osspec-misc.cpp',
+			'src/em-osspec-network.cpp',
+			'src/em-preamble.js',
+			'src/em-resolution.cpp',
+			'src/em-stack.cpp',
+			'src/em-standalone.h',
+			'src/em-standalone.cpp',
+			'src/em-standalone.js',
+			'src/em-surface.h',
+			'src/em-surface.cpp',
+			'src/em-system.h',
+			'src/em-system.cpp',
+			'src/em-theme.cpp',
+			'src/em-url.cpp',
+			'src/em-url.js',
+			'src/em-util.h',
+			'src/em-util.js',
+			'src/em-view.h',
+			'src/em-view.cpp',
 		],
 		
 		# Sources that need to be compiled separately for each mode
@@ -700,14 +795,19 @@
 			'src/internal_development.cpp',
 			'src/mode_development.cpp',
 		],
-		
+
+		# Sources for minizip
+		'engine_minizip_source_files':
+		[
+			'src/minizip.h',
+			'src/minizip.cpp',
+		],
+
 		# Sources for the installer engine
 		'engine_installer_mode_source_files':
 		[
-			'src/minizip.h',
 			'src/bsdiff_apply.cpp',
 			'src/internal.cpp',
-			'src/minizip.cpp',
 			'src/mode_installer.cpp',
 			'src/mode_installer_lnx.cpp',
 			'src/mode_installer_osx.cpp',
@@ -823,6 +923,33 @@
 			'src/player-platform.cpp',
 			'src/stacke.cpp',
 		],
+		
+		# Sources used to implement LCB modules in the engine
+		'engine_module_source_files':
+		[
+			'src/module-canvas.h',
+			'src/module-canvas-internal.h',
+			'src/module-engine.h',
+			'src/module-resources.h',
+			
+			'src/module-canvas.cpp',
+			'src/module-engine.cpp',
+			'src/module-resources.cpp',
+		],
+		
+		# Engine LCB files containing syntax
+		'engine_syntax_lcb_files':
+		[
+			'src/canvas.mlc',
+			'src/engine.mlc',
+			'src/widget.mlc',
+		],
+		
+		# Other engine LCB files
+		'engine_other_lcb_files':
+		[
+		
+		],
 	},
 	
 	'target_defaults':
@@ -854,6 +981,8 @@
 					[
 						['exclude', '(^|/)sysosx.*\\.(cpp|mm)$'],
 						['exclude', '\\.mac\\.'],
+						['exclude', '(^|/)mac-'],
+						['exclude', '-mac\.(mm|cpp)$'],
 					],
 					
 					'sources!':
@@ -870,6 +999,8 @@
 					[
 						['exclude', '(^|/)dsklnx.*\\.cpp$'],
 						['exclude', '(^|/)syslnx.*\\.cpp$'],
+						['exclude', '(^|/)linux-'],
+						['exclude', '-x11\.cpp$'],
 					],
 				},
 			],
@@ -880,11 +1011,40 @@
 					[
 						['exclude', '(^|/)sysw32.*\\.cpp$'],
 						['exclude', '(^|/)dskw32.*\\.cpp$'],
+						['exclude', '(^|/)win(dows|32)?-'],
+						['exclude', '-win32\.cpp$'],
 					],
 					
 					'sources!':
 					[
 						'src/srvwindows.cpp',
+					],
+				},
+			],
+			[
+				'OS != "emscripten"',
+				{
+					'sources/':
+					[
+						['exclude', '(^|/)em-.*\\.cpp$'],
+					],
+				},
+			],
+			[
+				'OS != "android"',
+				{
+					'sources/':
+					[
+						['exclude', '-android\.cpp$'],
+					],
+				},
+			],
+			[
+				'OS != "ios"',
+				{
+					'sources/':
+					[
+						['exclude', '-ios\.(mm|cpp)$'],
 					],
 				},
 			],
@@ -988,6 +1148,17 @@
 					'sources!':
 					[
 						'src/srvposix.cpp',
+					],
+				},
+			],
+			[
+				'OS == "emscripten"',
+				{
+					'sources!':
+					[
+						'src/tilecachegl.cpp',
+						'src/mcssl.cpp',
+						'src/notify.cpp',
 					],
 				},
 			],

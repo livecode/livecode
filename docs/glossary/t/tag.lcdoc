@@ -1,0 +1,13 @@
+Name: tag
+
+Synonyms: tag
+
+Type: glossary
+
+Description:
+The structure that marks the start and end of an <XML> or <HTML> element. Tags are enclosed in angle brackets and include the tag's name and any <attribute|attributes> it has: 
+  &lt;tag attribute=value&gt;
+
+References: XML (glossary), HTML (glossary), attribute (glossary)
+
+Tags: text processing

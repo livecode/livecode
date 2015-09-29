@@ -1,0 +1,35 @@
+Name: keyUp
+
+Type: message
+
+Syntax: keyUp <keyname> 
+
+Summary: Sent when the user releases a pressed key.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+on keyUp -- play a keyclick sound
+  -- in this example, the parameter is not needed or used
+  play audioClip "click"
+end keyUp
+
+Parameters:
+keyName: The actual character of the pressed key.
+
+Description:
+Handle the <keyUp> <message> if you want to do something special when the user releases any key (or a particular key you check for in the <handler>).
+
+The message is sent to the active (focused) control, or to the current card if no control is focused.
+
+If the key pressed is the Return, Tab, Backspace, Delete, or Enter key, an arrow key, or a function key, no <keyUp> <message> is sent.
+
+>*Cross-platform note:*  On <Mac OS|Mac OS systems>, the <keyUp> <message> is sent after any <keyDown> <handler|handlers> finish <execute|executing>, whether or not the key has been released. On <Unix> and <Windows|Windows systems>, the <keyUp> <message> is sent when the key is released, after the typed character has been added to the current <field>. To test whether a key is actually being pressed, use the <keysDown> <function>.
+
+References: field (keyword), keyDown (message), focus (command), keysDown (function), handler (glossary), Unix (glossary), message (glossary), Windows (glossary), Mac OS (glossary), execute (glossary), function (control_st)
+
+Tags: ui

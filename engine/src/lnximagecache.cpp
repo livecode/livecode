@@ -95,7 +95,7 @@ void MCXImageCacheNode::add(MCXImageCacheNode *node)
 
 	
 	
-Boolean MCXImageCacheNode::matches ( uint4 p_width, uint4 p_height, GtkThemeWidgetType p_moztype, GtkWidgetState *p_state, uint4 p_flags ) 
+Boolean MCXImageCacheNode::matches ( int32_t p_width, int32_t p_height, GtkThemeWidgetType p_moztype, GtkWidgetState *p_state, uint4 p_flags )
 {
 	return(	( !isText ) &&
 		    ( p_width == gdk_pixbuf_get_width(cached_image) ) &&
