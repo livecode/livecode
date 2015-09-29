@@ -626,7 +626,7 @@ static bool cgi_store_control_value(MCVariable *p_variable, MCNameRef p_raw_key,
     }
 
     // Store the key path.
-    MCAutoArray<MCNameRef> t_path;
+    MCAutoNameRefArray t_path;
     MCValueRef t_fetched_value;
 
     // We get the value for the first key.
@@ -636,10 +636,10 @@ static bool cgi_store_control_value(MCVariable *p_variable, MCNameRef p_raw_key,
     // We fetch the initial key
     if (!MCStringCopySubstring(t_raw_key_str, MCRangeMake(0, t_key_end), &t_key_str)
             || !MCNameCreate(*t_key_str, &t_key)
-            || !t_path . Push(MCValueRetain(*t_key)))
+            || !t_path . Push(*t_key))
         return false;
 
-    t_fetched_value = p_variable -> getvalueref(t_path . Ptr(), t_path . Size(), false);
+    t_fetched_value = p_variable -> getvalueref(*t_path, t_path . Count(), false);
 
     uindex_t t_subkey_start, t_subkey_end;
 
@@ -649,7 +649,7 @@ static bool cgi_store_control_value(MCVariable *p_variable, MCNameRef p_raw_key,
     while (MCStringFirstIndexOfChar(t_raw_key_str, '[', t_subkey_end, kMCStringOptionCompareExact, t_subkey_start))
     {
         // Fetch the value at the current path.
-        t_fetched_value = p_variable -> getvalueref(t_path . Ptr(), t_path . Size(), false);
+        t_fetched_value = p_variable -> getvalueref(*t_path, t_path . Count(), false);
 
         // The subkey starts after the '['
         t_subkey_start++;
@@ -681,8 +681,9 @@ static bool cgi_store_control_value(MCVariable *p_variable, MCNameRef p_raw_key,
             }
             else
             {
-                // We get the first index available
-                for (t_index = 1; p_variable -> getvalueref(t_path.Ptr(), t_path.Size(), false) != kMCEmptyString; ++t_index)
+                // We get the first index available in the fetched array
+                MCValueRef t_indexed_value;
+                for (t_index = 1; MCArrayFetchValueAtIndex((MCArrayRef)t_fetched_value, t_index, t_indexed_value); ++t_index)
                     ;
             }
 
@@ -698,19 +699,13 @@ static bool cgi_store_control_value(MCVariable *p_variable, MCNameRef p_raw_key,
 
         // Create a name from the subkey string, and append it to the path
         if (!MCNameCreate(*t_subkey_str, &t_subkey)
-                || !t_path . Push(MCValueRetain(*t_subkey)))
+                || !t_path . Push(*t_subkey))
             return false;
     }
 
     // Store the value at the built key path - setvalueref will take care of
     //  creating subarrays if needed.
-    bool t_success;
-    t_success = p_variable -> setvalueref(t_path . Ptr(), t_path . Size(), false, p_value);
-
-    // Clean keys array
-    t_path . Delete();
-
-    return t_success;
+    return p_variable -> setvalueref(*t_path, t_path . Count(), false, p_value);
 }
 
 
