@@ -1,9 +1,17 @@
 {
+	'variables':
+	{
+		'module_test_dependencies%': '',
+		'module_test_additional_sources%': '',
+		'module_test_include_dirs%': '',
+		'module_test_defines%': '',
+	},
+
 	'targets': [
 		{
 			'target_name': 'test-<(module_name)',
 
-		 	'conditions':
+			'conditions':
 			[
 				[
 					'OS == "ios"',
@@ -17,15 +25,20 @@
 				],
 			],
 
-		  'dependencies':
+			'dependencies':
 			[
-				'libcpptest'
+				'../libcpptest/libcpptest.gyp:libcpptest',
+				'<@(module_test_dependencies)',
 			],
 
 			'sources':
 			[
 				'<!@(ls -1 test/*.cpp)',
+				'<@(module_test_additional_sources)',
 			],
+
+			'include_dirs': [ '<@(module_test_include_dirs)', ],
+			'defines': [ '<@(module_test_defines)', ],
 
 			'msvs_settings':
 			{
@@ -38,7 +51,7 @@
 		},
 	],
 
- 	'conditions':
+	'conditions':
 	[
 		[
 			'OS == "emscripten"',

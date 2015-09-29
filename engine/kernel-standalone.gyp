@@ -1,8 +1,27 @@
 {
+	'variables':
+	{
+		'module_name': 'kernel-standalone',
+		'module_test_dependencies':
+		[
+			'kernel-standalone',
+			'engine-common.gyp:security-community',
+			'../libfoundation/libfoundation.gyp:libFoundation',
+			'../libgraphics/libgraphics.gyp:libGraphics',
+		],
+		'module_test_include_dirs':
+		[
+			'include',
+			'src',
+		],
+		'module_test_defines': [ 'MODE_STANDALONE', ],
+	},
+
 	'includes':
 	[
 		'../common.gypi',
 		'engine-sources.gypi',
+		'../config/cpptest.gypi'
 	],
 
 	'targets':

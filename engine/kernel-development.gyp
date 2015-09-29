@@ -1,8 +1,31 @@
 {
+	'variables':
+	{
+		'module_name': 'kernel-development',
+		'module_test_dependencies':
+		[
+			'kernel-development',
+			'engine-common.gyp:security-community',
+			'../libfoundation/libfoundation.gyp:libFoundation',
+			'../libgraphics/libgraphics.gyp:libGraphics',
+		],
+		'module_test_additional_sources':
+		[
+			'<(SHARED_INTERMEDIATE_DIR)/src/startupstack.cpp',
+		],
+		'module_test_include_dirs':
+		[
+			'include',
+			'src',
+		],
+		'module_test_defines': [ 'MODE_DEVELOPMENT', ],
+	},
+
 	'includes':
 	[
 		'../common.gypi',
 		'engine-sources.gypi',
+		'../config/cpptest.gypi'
 	],
 
 	'targets':

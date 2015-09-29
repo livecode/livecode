@@ -2,6 +2,7 @@
 	'includes':
 	[
 		'../common.gypi',
+		'engine-sources.gypi',
 	],
 
 	'targets':
@@ -70,6 +71,25 @@
 						'<@(_outputs)',
 					],
 				},
+			],
+		},
+
+		{
+			'target_name': 'security-community',
+			'type': 'static_library',
+			
+			'dependencies':
+			[
+				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl',
+				
+				# Because our headers are so messed up...
+				'../libfoundation/libfoundation.gyp:libFoundation',
+				'../libgraphics/libgraphics.gyp:libGraphics',
+			],
+			
+			'sources':
+			[
+				'<@(engine_security_source_files)',
 			],
 		},
 

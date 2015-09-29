@@ -51,26 +51,7 @@
 				},
 			],
 		},
-		
-		{
-			'target_name': 'security-community',
-			'type': 'static_library',
-			
-			'dependencies':
-			[
-				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl',
 				
-				# Because our headers are so messed up...
-				'../libfoundation/libfoundation.gyp:libFoundation',
-				'../libgraphics/libgraphics.gyp:libGraphics',
-			],
-			
-			'sources':
-			[
-				'<@(engine_security_source_files)',
-			],
-		},
-		
 		{
 			'target_name': 'server',
 			'type': 'executable',
@@ -140,7 +121,7 @@
 			'dependencies':
 			[
 				'kernel-standalone.gyp:kernel-standalone',
-				'security-community',
+				'engine-common.gyp:security-community',
 			],
 			
 			'sources':
@@ -437,7 +418,7 @@
 			'dependencies':
 			[
 				'kernel-installer.gyp:kernel-installer',
-				'security-community',
+				'engine-common.gyp:security-community',
 			],
 			
 			'sources':
@@ -555,7 +536,7 @@
 			[
 				'kernel-development.gyp:kernel-development',
 				'encode_environment_stack',
-				'security-community',
+				'engine-common.gyp:security-community',
 			],
 			
 			'sources':
@@ -742,7 +723,7 @@
 						'dependencies':
 						[
 							'kernel-standalone.gyp:kernel-standalone',
-							'security-community',
+							'engine-common.gyp:security-community',
 						],
 			
 						'sources':

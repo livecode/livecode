@@ -1,8 +1,30 @@
 {
+	'variables':
+	{
+		'module_name': 'kernel-server',
+		'module_test_dependencies':
+		[
+			'kernel-server',
+			'../libfoundation/libfoundation.gyp:libFoundation',
+			'../libgraphics/libgraphics.gyp:libGraphics',
+		],
+		'module_test_additional_sources':
+		[
+			'<@(engine_security_source_files)'
+		],
+		'module_test_include_dirs':
+		[
+			'include',
+			'src',
+		],
+		'module_test_defines': [ 'MODE_SERVER', ],
+	},
+
 	'includes':
 	[
 		'../common.gypi',
 		'engine-sources.gypi',
+		'../config/cpptest.gypi'
 	],
 
 	'targets':

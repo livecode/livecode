@@ -190,6 +190,12 @@
 				'javascriptify': ''
 			},
 
+			'dependencies':
+			[
+				'libcpptest/libcpptest.gyp:test-libcpptest<(javascriptify)',
+				'engine/kernel-standalone.gyp:test-kernel-standalone<(javascriptify)',
+			],
+
 			'conditions':
 			[
 				[
@@ -201,13 +207,18 @@
 						},
 					},
 				],
+				[
+					'mobile == 0',
+					{
+						'dependencies':
+						[
+							'engine/kernel-server.gyp:test-kernel-server<(javascriptify)',
+							'engine/kernel-development.gyp:test-kernel-development<(javascriptify)',
+							'engine/kernel-installer.gyp:test-kernel-installer<(javascriptify)',
+						],
+					},
+				],
 			],
-
-			'dependencies':
-			[
-				'libcpptest/libcpptest.gyp:test-libcpptest<(javascriptify)',
-			],
-
 		},
 	],
 }
