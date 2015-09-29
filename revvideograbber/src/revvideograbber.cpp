@@ -652,7 +652,7 @@ void REVVideoGrabber(VideoGrabberKeyword whichkeyword,
 				int left,top,right,bottom;
                 // SN-2015-04-23: [[ Bug 15255 ]] Checking that qtvideograbber
                 //  is not NULL can't hurt
-                if (qvideograbber && gvideograbber->IsInited()){
+                if (gvideograbber && gvideograbber->IsInited()){
 					if (sscanf(args[2], "%d,%d,%d,%d", &left,&top,&right,&bottom) == 4)
 						gvideograbber->SetRect(left,top,right,bottom);
 				}
