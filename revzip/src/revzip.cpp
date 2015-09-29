@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1499,6 +1499,6 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 extern "C"
 {
 extern struct LibInfo __libinfo;
-__attribute((section("__DATA,__libs"))) volatile struct LibInfo *__libinfoptr_revzip = &__libinfo;
+__attribute((section("__DATA,__libs"))) volatile struct LibInfo *__libinfoptr_revzip __attribute__((__visibility__("default"))) = &__libinfo;
 }
 #endif

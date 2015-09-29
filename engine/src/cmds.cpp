@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -54,6 +54,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "cmds.h"
 #include "mode.h"
 #include "osspec.h"
+#include "hndlrlst.h"
 
 #include "core.h"
 
@@ -309,7 +310,6 @@ MCDo::~MCDo()
 Parse_stat MCDo::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
-	h = sp.gethandler();
 	if (sp.parseexp(False, True, &source) != PS_NORMAL)
 	{
 		MCperror->add(PE_DO_BADEXP, sp);
@@ -418,7 +418,11 @@ Exec_stat MCDo::exec(MCExecPoint &ep)
 		MCeerror->add(EE_DO_BADEXP, line, pos);
 		return ES_ERROR;
 	}
-	Exec_stat stat = h->doscript(*epptr, line, pos);
+	// MW-2013-11-15: [[ Bug 11277 ]] If no handler, then evaluate in context of the
+	//   server script object.
+	Exec_stat stat;
+    stat = ep.doscript(*epptr, line, pos);
+    
 	if (added)
 		MCnexecutioncontexts--;
 	return stat;
@@ -1649,7 +1653,7 @@ Exec_stat MCSort::sort_container(MCExecPoint &p_exec_point, Chunk_term p_type, S
 	}
 
 	// OK-2008-12-11: [[Bug 7503]] - If there are 0 items in the string, don't carry out the search,
-	// this keeps the behavior consistent with previous versions of Revolution.
+	// this keeps the behavior consistent with previous versions of LiveCode.
 	if (t_item_count < 1)
 	{
 		delete t_item_text;

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -96,10 +96,6 @@ extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release);
 
 #include "mcssl.h"
 
-#if !defined(X11) && (!defined(_MACOSX)) && (!defined(TARGET_SUBPLATFORM_IPHONE))
-#define socklen_t int
-#endif
-
 extern real8 curtime;
 
 static char *sslerror = NULL;
@@ -110,6 +106,7 @@ static int verify_callback(int ok, X509_STORE_CTX *store);
 extern Boolean wsainit(void);
 extern HWND sockethwnd;
 extern "C" char *strdup(const char *);
+extern HANDLE g_socket_wakeup;
 #endif
 
 #define READ_SOCKET_SIZE  4096
@@ -642,7 +639,10 @@ void MCS_read_socket(MCSocket *s, MCExecPoint &ep, uint4 length, char *until, MC
 		{
 #ifdef _WINDOWS
 			if (MCnoui)
+			{
 				s->doread = True;
+				SetEvent(g_socket_wakeup);
+			}
 			else
 				PostMessageA(sockethwnd, WM_USER, s->fd, FD_OOB);
 #else
@@ -655,6 +655,15 @@ void MCS_read_socket(MCSocket *s, MCExecPoint &ep, uint4 length, char *until, MC
 		else
 		{
 			s->waiting = True;
+
+			// SN-2015-05-11: [[ Bug 14466 ]] On a native Windows machine,
+			//  the time between the call to WSAAsyncSelect in setselect()
+			//  and the call to s->read_done() below might not be enough
+			//  to let Windows send the message to MCWindowProc.
+			//  If that occurs, with a read until empty, no byte will be 
+			//  found by read_done, and the read will always return an
+			//  an empty value the first time.
+			s -> readsome();
 
 			// SN-2015-03-30: [[ Bug 14466 ]] We want a wait to occur
 			//  to avoid any tigh script loop such as
@@ -840,8 +849,8 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 
 	if (bind(sock, (struct sockaddr *)&addr, sizeof(addr))
 	        || (!datagram && listen(sock, SOMAXCONN))
-	        || !MCnoui && WSAAsyncSelect(sock, sockethwnd, WM_USER,
-	                                     datagram ? FD_READ : FD_ACCEPT))
+	        || (!MCnoui && WSAAsyncSelect(sock, sockethwnd, WM_USER, datagram ? FD_READ : FD_ACCEPT))
+			|| (MCnoui && WSAEventSelect(sock, g_socket_wakeup, datagram ? FD_READ : FD_ACCEPT)))
 	{
 		MCS_seterrno(WSAGetLastError());
 		char buffer[17 + I4L];
@@ -1538,16 +1547,20 @@ void MCSocket::setselect()
 void MCSocket::setselect(uint2 sflags)
 {
 #ifdef _WINDOWS
+	long event = FD_CLOSE;
+	if (!connected)
+		event |= FD_CONNECT;
+	if (sflags & BIONB_TESTWRITE)
+		event |= FD_WRITE;
+	if (sflags & BIONB_TESTREAD)
+		event |= FD_READ;
 	if (!MCnoui)
 	{
-		long event = FD_CLOSE;
-		if (!connected)
-			event |= FD_CONNECT;
-		if (sflags & BIONB_TESTWRITE)
-			event |= FD_WRITE;
-		if (sflags & BIONB_TESTREAD)
-			event |= FD_READ;
 		WSAAsyncSelect(fd, sockethwnd, WM_USER, event);
+	}
+	else
+	{
+		WSAEventSelect(fd, g_socket_wakeup, event);
 	}
 #endif
 #ifdef _MACOSX

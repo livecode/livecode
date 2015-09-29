@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -20,7 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	PLAYER_LEGACY_H
 #define	PLAYER_LEGACY_H
 
-#include "control.h"
+#include "mccontrol.h"
 
 #ifdef FEATURE_QUICKTIME
 enum QTstate {
@@ -65,6 +65,8 @@ class MCPlayer : public MCControl
 	uint2 formattedheight;
 	uint2 loudness;
 	int4 lasttime;
+	Boolean dontuseqt;
+	Boolean usingqt;
 
 #ifdef FEATURE_PLATFORM_PLAYER
 	MCPlatformPlayerRef m_platform_player;
@@ -174,6 +176,7 @@ public:
 	void setselection();                  //set movie selection
 	void setlooping(Boolean loop);        //to loop or not to loop a movie
 	void setplayrate();                   //set the movie playing rate
+	void setdontuseqt(Boolean noqt);
 	Boolean setInterestingTimeCB();       //True, if set, False, if not
 	void showbadge(Boolean show);         //show & hide the movie's badge
 	void showcontroller(Boolean show);
@@ -260,6 +263,11 @@ public:
 		return (m_offscreen != NULL);
 	}
 	
+	Boolean usingQT()
+	{
+		return usingqt;
+	}
+
 #ifdef _WINDOWS_DESKTOP
 	void changewindow(MCSysWindowHandle p_old_window);
 

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -337,7 +337,14 @@ bool MCServerScript::Include(MCExecPoint& outer_ep, const char *p_filename, bool
 	// Look for the file
 	File *t_file;
 	t_file = FindFile(p_filename, true);
-	
+	if (t_file -> index == 1)
+	{
+        // SN-2015-07-09: [[ ServerCrash ]] Make sure that the filename is dup
+        //  as it will be added to MCServerScript::m_files, and deleted in
+        //  ~MCServerScript (as MCServerScript::filename is).
+		setfilename(strdup(t_file -> filename));
+	}
+
 	// Set back the old default folder
 	MCsystem->SetCurrentFolder(t_old_folder);
 	MCCStringFree(t_old_folder);

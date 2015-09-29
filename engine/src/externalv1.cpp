@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -33,7 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "globals.h"
 #include "object.h"
-#include "control.h"
+#include "mccontrol.h"
 #include "notify.h"
 #include "stack.h"
 #include "card.h"
@@ -1045,7 +1045,7 @@ MCExternalError MCExternalContextEvaluate(const char *p_expression, unsigned int
 	MCEPptr -> setsvalue(p_expression);
 	
 	Exec_stat t_stat;
-	t_stat = MCEPptr -> gethandler() -> eval(*MCEPptr);
+	t_stat = MCEPptr -> eval(*MCEPptr);
 	
 	if (t_stat == ES_ERROR)
 		return kMCExternalErrorFailed;
@@ -1064,7 +1064,7 @@ MCExternalError MCExternalContextExecute(const char *p_commands, unsigned int p_
 	MCEPptr -> setsvalue(p_commands);
 	
 	Exec_stat t_stat;
-	t_stat = MCEPptr -> gethandler() -> doscript(*MCEPptr, 0, 0);
+	t_stat = MCEPptr -> doscript(*MCEPptr, 0, 0);
 	
 	if (t_stat == ES_ERROR)
 		return kMCExternalErrorFailed;

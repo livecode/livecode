@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -89,14 +89,10 @@ MCScreenDC::MCScreenDC()
 	m_printer_dc_changed = false;
 
 	m_clipboard = NULL;
-
-	MCNotifyInitialize();
 }
 
 MCScreenDC::~MCScreenDC()
 {
-	MCNotifyFinalize();
-
 	showtaskbar();
 	while (opened)
 		close(True);

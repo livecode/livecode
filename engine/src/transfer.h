@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -16,9 +16,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Overview of Revolution data-transfer features
+//  Overview of LiveCode data-transfer features
 //
-//  The Revolution script and objects interact with the data-transfer features
+//  The LiveCode script and objects interact with the data-transfer features
 //  via derivations of the MCTransferData object: MCDragData, MCSelectionData
 //  MCClipboardData.
 //
@@ -30,7 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //  transfer, meaning that the system objects are only queried for remote
 //  requests.
 //
-//  Usage of data-types is also layered. Revolution scripts can request the
+//  Usage of data-types is also layered. LiveCode scripts can request the
 //  full range of data types, while an MCPasteboard object will never contain
 //  types of class 'derived'. It is possible for an MCPasteboard object to
 //  contain types of class 'private' and these data-types should be ignored
@@ -258,7 +258,7 @@ inline MCSharedString *MCSharedString::CreateNoCopy(void *p_buffer, uint4 p_leng
 //      - TEXT: a string of single byte per character characters in native text
 //        encoding (ISO8859-1 on UNIX, MacRoman on Mac OS X, CP-1252 on Windows)
 //      - UNICODE_TEXT: a string of UTF-16 codepoints in native byte-order
-//      - STYLED_TEXT: a Revolution styled-text pickle
+//      - STYLED_TEXT: a LiveCode styled-text pickle
 //      - RTF_TEXT: a string of single byte per character characters in native
 //        encoding describing text formatted as RTF. Note this format can also
 //        contain unicode characters though the appropriate RTF escaping
@@ -268,10 +268,10 @@ inline MCSharedString *MCSharedString::CreateNoCopy(void *p_buffer, uint4 p_leng
 //        also contain unicode characters through the appropriate RTF escaping
 //        mechanism.
 //      - IMAGE: a binary data stream containing a PNG, JPEG or GIF image.
-//      - FILES: a return-separated list of files in Revolution path format
+//      - FILES: a return-separated list of files in LiveCode path format
 //        encoded in native text encoding.
 //      - PRIVATE: a binary data stream
-//      - OBJECTS: a sequence of Revolution object pickles.
+//      - OBJECTS: a sequence of LiveCode object pickles.
 //
 //    These types are classified into the following classes:
 //      - text: TEXT, UNICODE_TEXT, STYLED_TEXT, RTF_TEXT, HTML_TEXT

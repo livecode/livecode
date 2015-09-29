@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -2854,8 +2854,8 @@ Exec_stat MCChunk::del(MCExecPoint &ep)
 				MCeerror->add(EE_CHUNK_CANTDELETEOBJECT, line, pos);
 				return ES_ERROR;
 			}
-			if (objptr->gettype() == CT_STACK)
-				MCtodestroy->remove((MCStack *)objptr); // prevent duplicates
+            if (objptr->gettype() == CT_STACK)
+                MCtodestroy->remove((MCStack *)objptr);
 			objptr->scheduledelete();
 		}
 		else

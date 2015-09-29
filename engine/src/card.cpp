@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -3195,4 +3195,29 @@ bool MCCard::recomputefonts(MCFontRef p_parent_font)
 	// Return whether anything changed (the card's font has no effect other than
 	// to be provided to children).
 	return t_changed;
+}
+
+void MCCard::scheduledelete(bool p_is_child)
+{
+    MCObject::scheduledelete(p_is_child);
+    
+    if (objptrs != NULL)
+	{
+		MCObjptr *optr = objptrs;
+		do
+		{
+			// MW-2011-08-09: [[ Groups ]] Shared groups just get reparented, rather
+			//   than removed from the stack since they cannot be 'owned' by the card.
+			if (optr->getref()->gettype() == CT_GROUP && static_cast<MCGroup *>(optr->getref())->isshared())
+			{
+                // Do nothing for shared groups as they move to the stack.
+			}
+			else
+			{
+                optr -> getref() -> scheduledelete(true);
+			}
+			optr = optr->next();
+		}
+		while (optr != objptrs);
+	}
 }

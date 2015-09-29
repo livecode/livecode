@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -27,7 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// The MCVariableArray class represents Revolution's 'hash' value.
+// The MCVariableArray class represents LiveCode's 'hash' value.
 // It is intended to be used by another class that controls construction and
 // destruction (notice it has no constructor/destructor). The reason behind
 // this is that we want to be able to put it in 'union' constructs and have
@@ -238,7 +238,7 @@ inline uint32_t MCVariableArray::getnfilled(void) const
 ///////////////////////////////////////////////////////////////////////////////
 //
 // The MCVariableValue class represents a value that can be stored in a 
-// Revolution variable, or container (such as a hash).
+// LiveCode variable, or container (such as a hash).
 //
 // A value has one of 5 states:
 //   - UNDEFINED: no value has been set, this is evaluated as *both* 0.0 and
@@ -310,6 +310,11 @@ public:
 
 	// Append the given byte sequence to the variable.
 	bool append_string(const MCString& s);
+    
+    // Prepend the given byte sequence to the variable.
+	bool prepend_string(const MCString& s);
+    
+    bool insert_string(const MCString& s, int insert_at);
 
 	// This method is used to set the buffer of the value to a custom conversion
 	// of it as a number. It results in the format being VF_NUMBER, but the buffer
@@ -334,6 +339,8 @@ public:
 	// Append the value of ep to 'this'.
 	// String coercion is performed as required.
 	Exec_stat append(MCExecPoint& ep);
+    
+    Exec_stat prepend(MCExecPoint& ep);
 
 	bool has_element(MCExecPoint& ep, const MCString& key);
 
@@ -696,6 +703,15 @@ public:
 	{
 		Exec_stat stat;
 		stat = value . append(ep);
+		synchronize(ep, notify);
+		return stat;
+	}
+    
+    // Prepend the value in ep to this variable
+	Exec_stat prepend(MCExecPoint& ep, Boolean notify)
+	{
+		Exec_stat stat;
+		stat = value . prepend(ep);
 		synchronize(ep, notify);
 		return stat;
 	}

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -32,7 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "card.h"
 #include "aclip.h"
 #include "vclip.h"
-#include "control.h"
+#include "mccontrol.h"
 #include "image.h"
 #include "button.h"
 #include "mcerror.h"
@@ -139,9 +139,6 @@ MCStack::MCStack()
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	m_id_cache = nil;
-    
-    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single thread mutates the ID cache at a time.
-    /* UNCHECKED */ MCThreadMutexCreate(m_id_cache_lock);
 
 	// MW-2014-03-12: [[ Bug 11914 ]] Stacks are not engine menus by default.
 	m_is_menu = false;
@@ -216,9 +213,6 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	m_id_cache = nil;
-	
-    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single thread mutates the ID cache at a time.
-    /* UNCHECKED */ MCThreadMutexCreate(m_id_cache_lock);
     
 	mnemonics = NULL;
 	nfuncs = 0;
@@ -472,9 +466,6 @@ MCStack::~MCStack()
 	
 	// MW-2012-10-10: [[ IdCache ]] Free the idcache.
 	freeobjectidcache();
-    
-    // MM-2014-07-31: [[ ThreadedRendering ]] Release cache mutex.
-    MCThreadMutexRelease(m_id_cache_lock);
 	
 	view_destroy();
 }
@@ -2697,6 +2688,8 @@ Boolean MCStack::del()
 	if (MCdispatcher->gethome() == this)
 		return False;
 	
+    setstate(CS_DELETE_STACK, True);
+    
 	if (opened)
 	{
 		// MW-2007-04-22: [[ Bug 4203 ]] Coerce the flags to include F_DESTROY_WINDOW to ensure we don't
@@ -2938,6 +2931,24 @@ bool MCStack::resolve_relative_path(const char *p_path, char *&r_resolved)
 		t_leaf = p_path;
 	
 	return MCCStringFormat(r_resolved, "%.*s%s", t_last_separator - t_stack_filename + 1, t_stack_filename, t_leaf);
+}
+
+// PM-2015-01-26: [[ Bug 14435 ]] Make possible to set the filename using a relative path to the default folder
+bool MCStack::resolve_relative_path_to_default_folder(const char *p_path, char *&r_resolved)
+{
+	if (MCCStringIsEmpty(p_path))
+		return false;
+	
+	// If the relative path begins with "./" or ".\", we must remove this, otherwise
+	// certain system calls will get confused by the path.
+	const char *t_leaf;
+	if (p_path[0] == '.' && (p_path[1] == '/' || p_path[1] == '\\'))
+		t_leaf = p_path + 2;
+	else
+		t_leaf = p_path;
+	
+    const char *t_default_folder = MCS_getcurdir();
+	return MCCStringFormat(r_resolved, "%s/%s", t_default_folder, t_leaf);
 }
 
 // OK-2009-01-09: [[Bug 1161]]

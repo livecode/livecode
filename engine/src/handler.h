@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -99,10 +99,7 @@ public:
 	Parse_stat newconstant(MCNameRef name, MCNameRef value);
 	void newglobal(MCNameRef name);
 	Exec_stat getvarnames(MCExecPoint &, Boolean all);
-	Exec_stat eval(MCExecPoint &);
 	uint4 linecount();
-	void deletestatements(MCStatement *statements);
-	Exec_stat doscript(MCExecPoint &ep, uint2 line, uint2 pos);
 
 	// Used by the externals API, this method returns the current incarnation of
 	// the 'it' variable in this handler - if any.

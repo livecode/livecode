@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -200,9 +200,6 @@ protected:
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	MCStackIdCache *m_id_cache;
-    
-    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single thread mutates the ID cache at a time.
-    MCThreadMutexRef m_id_cache_lock;
 	
 	// MW-2011-11-24: [[ UpdateScreen ]] If true, then updates to this stack should only
 	//   be flushed at the next updateScreen point.
@@ -566,6 +563,9 @@ public:
 	// IM-2013-10-30: [[ FullscreenMode ]] Resolve the given path relative to the location of the stack file
 	// - Will return a path regardless of whether or not the file exists.
 	bool resolve_relative_path(const char *p_path, char *&r_resolved);
+    
+    // PM-2015-01-26: [[ Bug 14435 ]] Make possible to set the filename using a relative path to the default folder
+    bool resolve_relative_path_to_default_folder(const char *p_path, char *&r_resolved);
 
 	void setopacity(uint1 p_value);
 	

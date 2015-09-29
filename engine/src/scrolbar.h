@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -20,7 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	SCROLLBAR_H
 #define	SCROLLBAR_H
 
-#include "control.h"
+#include "mccontrol.h"
 
 #define MIN_THUMB_SIZE 8
 

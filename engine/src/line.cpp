@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -23,7 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "field.h"
 #include "paragraf.h"
-#include "block.h"
+#include "MCBlock.h"
 #include "line.h"
 #include "context.h"
 #include "uidc.h"

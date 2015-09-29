@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -20,7 +20,7 @@
 #ifndef	PLAYER_PLATFORM_H
 #define	PLAYER_PLATFORM_H
 
-#include "control.h"
+#include "mccontrol.h"
 #include "platform.h"
 
 enum
@@ -59,6 +59,7 @@ class MCPlayer : public MCControl
 {
 	MCPlayer *nextplayer;
 	char *filename;
+    char *resolved_filename;
 	uint2 framerate;
 	Boolean disposable;
 	Boolean istmpfile;
@@ -66,14 +67,12 @@ class MCPlayer : public MCControl
 	real8 rate;
 	uint4 starttime;
 	uint4 endtime;
-    MCColor controllerbackcolor;
-    MCColor controllermaincolor;
-    MCColor selectedareacolor;
 	char *userCallbackStr;  //string contains user movie callbacks
 	uint2 formattedwidth;
 	uint2 formattedheight;
 	uint2 loudness;
 	int4 lasttime;
+    Boolean dontuseqt;
     
 	MCPlatformPlayerRef m_platform_player;
     MCPlayerCallback *m_callbacks;
@@ -146,7 +145,9 @@ public:
 	void setcurtime(uint4 curtime, bool notify);
 	void setselection(bool notify);                  //set movie selection
 	void setlooping(Boolean loop);        //to loop or not to loop a movie
+    void setmirror(Boolean mirrored);      //flip player horizontally
 	void setplayrate();                   //set the movie playing rate
+    void setdontuseqt(Boolean noqt);
     real8 getplayrate();
     void updateplayrate(real8 p_rate);
 	Boolean setInterestingTimeCB();       //True, if set, False, if not
@@ -163,7 +164,9 @@ public:
 	uint2 getloudness();
     void updateloudness(int2 newloudness);
     MCColor getcontrollermaincolor();
-    MCColor getcontrollerbackcolor();
+    MCColor getcontrollericoncolor();
+    MCColor getcontrollerfontcolor();
+    MCColor getcontrollerselectedareacolor();
 	void setloudness();
 	void gettracks(MCExecPoint &ep);
 	void getenabledtracks(MCExecPoint &ep);

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -446,8 +446,12 @@ void MCStack::view_update_transform(void)
 		view_dirty_all();
 	}
 	
+	// PM-2015-07-17: [[ Bug 13754 ]] Make sure stack does not disappear off screen when changing the scalefactor
+	MCRectangle t_bounded_rect;
+	t_bounded_rect = MCU_bound_rect(t_view_rect, 0, 0, MCscreen -> getwidth(), MCscreen -> getheight());
+	
 	// IM-2014-01-16: [[ StackScale ]] Update view rect if needed
-	view_setrect(t_view_rect);
+	view_setrect(t_bounded_rect);
 }
 
 MCRectangle MCStack::view_setstackviewport(const MCRectangle &p_rect)
@@ -960,7 +964,8 @@ MCRectangle MCStack::view_setgeom(const MCRectangle &p_rect)
 
 void MCStack::view_update_geometry()
 {
-	if (m_view_need_resize)
+	if (m_view_need_resize &&
+        window != NULL)
 		view_platform_setgeom(m_view_rect);
 	
 	m_view_need_resize = false;

@@ -1,5 +1,5 @@
 #include "graphics.h"
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -2658,18 +2658,7 @@ MCGFloat MCGContextMeasureText(MCGContextRef self, const char *p_text, uindex_t 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// MM-2014-08-06: [[ ThreadedRendering ]] Reference to system mutex routines. This should probably centralised in libfoundation in future.
-typedef struct __MCThreadMutex *MCThreadMutexRef;
-
-extern bool MCThreadMutexCreate(MCThreadMutexRef &r_mutex);
-extern MCThreadMutexRef MCThreadMutexRetain(MCThreadMutexRef mutex);
-extern void MCThreadMutexRelease(MCThreadMutexRef mutex);
-extern void MCThreadMutexLock(MCThreadMutexRef mutex);
-extern void MCThreadMutexUnlock(MCThreadMutexRef mutex);
-
-
 static MCGCacheTableRef s_measure_cache = NULL;
-static MCThreadMutexRef s_measure_cache_mutex = NULL;
 
 void MCGTextMeasureCacheInitialize(void)
 {
@@ -2677,18 +2666,12 @@ void MCGTextMeasureCacheInitialize(void)
     s_measure_cache = NULL;
 	srand(time(NULL));
 	/* UNCHECKED */ MCGCacheTableCreate(kMCGTextMeasureCacheTableSize, kMCGTextMeasureCacheMaxOccupancy, kMCGTextMeasureCacheByteSize, s_measure_cache);
-    
-    s_measure_cache_mutex = NULL;
-    /* UNCHECKED */ MCThreadMutexCreate(s_measure_cache_mutex);
 }
 
 void MCGTextMeasureCacheFinalize(void)
 {
 	MCGCacheTableDestroy(s_measure_cache);
     s_measure_cache = NULL;
-    
-    MCThreadMutexRelease(s_measure_cache_mutex);
-    s_measure_cache_mutex = NULL;
 }
 
 void MCGTextMeasureCacheCompact(void)
@@ -2772,9 +2755,7 @@ MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_te
 		t_width = __MCGContextMeasurePlatformText(self, p_text, p_length, p_font, p_transform);
         
         // MM-2014-08-05: [[ Bug 13101 ]] Make sure only 1 thread mutates the measure cache at the time.
-        MCThreadMutexLock(s_measure_cache_mutex);
 		MCGCacheTableSet(s_measure_cache, t_key, t_key_length, &t_width, sizeof(MCGFloat));
-        MCThreadMutexUnlock(s_measure_cache_mutex);
         
         return t_width;
 	}

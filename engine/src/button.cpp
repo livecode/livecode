@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1890,8 +1890,8 @@ Exec_stat MCButton::getprop(uint4 parid, Properties which, MCExecPoint& ep, Bool
 				if (icons->curicon != NULL)
 				{
 					MCRectangle trect = icons->curicon->getrect();
-					if (trect.height > fheight)
-						fheight = trect.height;
+					// PM-2015-07-15: [[ Bug 13923 ]] If a button has an icon, increase its formattedHeight by the icon's height
+					fheight += trect.height;
 				}
 			}
 			else if ((getstyleint(flags) == F_CHECK || getstyleint(flags) == F_RADIO) && CHECK_SIZE > fheight)

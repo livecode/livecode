@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -100,6 +100,15 @@ MCNewFontlist::~MCNewFontlist()
 		g_object_unref(m_layout);
 	if (m_pango != nil)
 		g_object_unref(m_pango);
+
+	while (m_fonts)
+    {
+		MCNewFontStruct* t_font = m_fonts;
+		m_fonts = t_font -> next;
+		delete t_font -> family;
+		pango_font_description_free(t_font -> description);
+		delete t_font;
+	}
 }
 
 bool MCNewFontlist::create(void)

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -511,6 +511,12 @@ public:
 	// Attempts to convert the contents of the ep from UTF-16 to native,
 	// returning true if successful and replacing the contents.
     bool trytoconvertutf16tonative();
+    
+    // SN-2015-06-03: [[ Bug 11277 ]] Refactor similar functions from MCHandler
+    //  and MCHandlerlist
+    static void deletestatements(MCStatement *p_statements);
+    Exec_stat eval(MCExecPoint &ep);
+    Exec_stat doscript(MCExecPoint &ep, uint2 line, uint2 pos);
 
 private:
 	void dounicodetomultibyte(bool p_native, bool p_reverse);

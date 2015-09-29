@@ -16,7 +16,7 @@
 	<examples>
 <example>mobileComposeHtmlMail &quot;Test E-mail&quot;, &quot;guido@example.net&quot;,,, &quot;This is the bold &lt;b&gt;e-mail body&lt;/b&gt; text&quot;, tAttachment</example>
 <example>mobileComposeHtmlMail &quot;Help&quot;, &quot;help@example.com&quot;,,,field &quot;Message&quot;</example>
-<example><p>put &quot;Hello World!&quot; into tAttachment[&quot;data&quot;]</p><p>put &quot;text/plain&quot; into tAttachment[&quot;type&quot;]</p><p>put &quot;Greetings.txt&quot; into tAttachment[&quot;name&quot;]</p><p>mobileComposeHtmlMail &quot;Greetings&quot;, &quot;test@runrev.com&quot;,,,, tAttachment</p></example>
+<example><p>put &quot;Hello World!&quot; into tAttachment[&quot;data&quot;]</p><p>put &quot;text/plain&quot; into tAttachment[&quot;type&quot;]</p><p>put &quot;Greetings.txt&quot; into tAttachment[&quot;name&quot;]</p><p>mobileComposeHtmlMail &quot;Greetings&quot;, &quot;test@livecode.com&quot;,,,, tAttachment</p></example>
 	</examples>
 
 	<history>

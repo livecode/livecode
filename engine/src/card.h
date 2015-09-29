@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -92,6 +92,8 @@ public:
 	virtual void relayercontrol_remove(MCControl *control);
 	virtual void relayercontrol_insert(MCControl *control, MCControl *target);
 
+    virtual void scheduledelete(bool p_is_child);
+    
 	void draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated);
 
 	MCObject *hittest(int32_t x, int32_t y);

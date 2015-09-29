@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -162,7 +162,6 @@ extern MCUndolist *MCundos;
 extern MCSellist *MCselected;
 extern MCStacklist *MCstacks;
 extern MCStacklist *MCtodestroy;
-extern MCObject *MCtodelete;
 extern MCCardlist *MCrecent;
 extern MCCardlist *MCcstack;
 extern MCDispatch *MCdispatcher;
@@ -412,14 +411,43 @@ extern MCPoint MCgroupedobjectoffset;
 //   addresses will work.
 extern Boolean MCallowdatagrambroadcasts;
 
-// MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single animation message is sent per redraw
-extern MCThreadMutexRef MCanimationmutex;
-extern MCThreadMutexRef MCpatternmutex;
-extern MCThreadMutexRef MCimagerepmutex;
-extern MCThreadMutexRef MCfieldmutex;
-extern MCThreadMutexRef MCthememutex;
-extern MCThreadMutexRef MCgraphicmutex;
+//////////
 
+enum
+{
+    kMCActionsUpdateScreen = 1 << 0,
+    kMCActionsDrainDeletedObjects = 1 << 2,
+};
+
+extern uint32_t MCactionsrequired;
+extern void MCActionsDoRunSome(uint32_t mask);
+
+inline void MCActionsSchedule(uint32_t mask)
+{
+    MCactionsrequired |= mask;
+}
+
+inline void MCActionsRunAll(void)
+{
+    if (MCactionsrequired != 0)
+        MCActionsDoRunSome(UINT32_MAX);
+}
+
+inline void MCActionsRunSome(uint32_t mask)
+{
+    if ((MCactionsrequired & mask) != 0)
+        MCActionsDoRunSome(mask);
+}
+
+inline void MCRedrawUpdateScreen(void)
+{
+    MCActionsRunSome(kMCActionsUpdateScreen);
+}
+
+inline void MCDeletedObjectsDrain(void)
+{
+    MCActionsRunSome(kMCActionsDrainDeletedObjects);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 

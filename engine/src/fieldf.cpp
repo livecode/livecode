@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -27,7 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "scrolbar.h"
 #include "button.h"
 #include "field.h"
-#include "block.h"
+#include "MCBlock.h"
 #include "paragraf.h"
 #include "sellst.h"
 #include "undolst.h"
@@ -252,7 +252,8 @@ static MCKeyBinding s_mac_keybindings[] =
 	{ XK_K, MK_CTRL, FT_DELEOP },
 
 	// Backward Deletion
-	{ XK_BackSpace, MK_NONE, FT_DELBCHAR },
+	// PM-2015-09-16: [[ Bug 15934 ]] Make sure pressing Backspace key works as expected, even if Shift key is down
+	{ XK_BackSpace, MK_IGNORE_SHIFT, FT_DELBCHAR },
 	{ XK_BackSpace, MK_CMD, FT_DELBOL },
 	{ XK_BackSpace, MK_CTRL, FT_DELBSUBCHAR },
 	{ XK_BackSpace, MK_OPT, FT_DELBWORD },
@@ -2271,13 +2272,17 @@ void MCField::fmove(Field_translations function, const char *string, KeySym key)
 	drect.x += getcontentx();
 	setfocus(drect.x, drect.y);
 	replacecursor(True, function != FT_UP && function != FT_DOWN);
+	
+	// PM-2015-07-20: [[ Bug 7217 ]] Send selectionChanged on arrow navigation, regardless of whether Shift key is held down
 	if (state & CS_SELECTING)
 	{
 		state &= ~CS_SELECTING;
 		MCundos->freestate();
-		signallisteners(P_HILITED_LINES);
-		message(MCM_selection_changed);
 	}
+	
+	signallisteners(P_HILITED_LINES);
+	message(MCM_selection_changed);
+	
 	extend = extendwords = extendlines = False;
 	contiguous = True;
 }

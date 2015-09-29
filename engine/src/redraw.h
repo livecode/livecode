@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -36,14 +36,6 @@ bool MCRedrawIsScreenUpdateEnabled(void);
 void MCRedrawDisableScreenUpdates(void);
 void MCRedrawEnableScreenUpdates(void);
 
-// MW-2011-11-01: This global variable is used to check and see if an update is
-//   required in performance critical places.
-extern bool MCredrawupdatescreenneeded;
-
-inline void MCRedrawUpdateScreen(void)
-{
-	if (MCredrawupdatescreenneeded)
-		MCRedrawDoUpdateScreen();
-}
+void MCRedrawDoUpdateScreen(void);
 
 #endif

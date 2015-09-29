@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -132,6 +132,67 @@ static MCCustomPrinterImageType MCCustomPrinterImageTypeFromMCGRasterFormat(MCGR
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool MCCustomPrinterImageFromMCGImage(MCGImageRef p_image, MCCustomPrinterImage &r_image, void *&r_pixel_cache)
+{
+	MCGRaster t_raster;
+	if (!MCGImageGetRaster(p_image, t_raster))
+		return false;
+	
+	void *t_pixels;
+	t_pixels = nil;
+	
+	void *t_pixel_cache;
+	t_pixel_cache = nil;
+	
+	if (kMCCustomPrinterImagePixelFormat == kMCGPixelFormatNative)
+		t_pixels = t_raster.pixels;
+	else
+	{
+		if (!MCMemoryAllocate(t_raster.stride * t_raster.height, t_pixel_cache))
+			return false;
+		
+		uint8_t *t_src;
+		t_src = (uint8_t*)t_raster.pixels;
+		
+		uint8_t *t_dst;
+		t_dst = (uint8_t*)t_pixel_cache;
+		
+		for (uint32_t i = 0; i < t_raster.height; i++)
+		{
+			uint32_t *t_src_row;
+			t_src_row = (uint32_t*)t_src;
+			
+			uint32_t *t_dst_row;
+			t_dst_row = (uint32_t*)t_dst;
+			
+			for (uint32_t i = 0; i < t_raster.width; i++)
+				*t_dst_row++ = MCGPixelFromNative(kMCCustomPrinterImagePixelFormat, *t_src_row++);
+			
+			t_src += t_raster.stride;
+			t_dst += t_raster.stride;
+		}
+		
+		t_pixels = t_pixel_cache;
+	}
+	
+	// Fill in the printer image info
+	r_image.width = t_raster.width;
+	r_image.height = t_raster.height;
+	
+	bool t_mask, t_alpha;
+	t_mask = !MCGImageIsOpaque(p_image);
+	t_alpha = t_mask && MCGImageHasPartialTransparency(p_image);
+	// IM-2014-06-26: [[ Bug 12699 ]] Set image type appropriately.
+	r_image . type = t_alpha ? kMCCustomPrinterImageRawARGB : (t_mask ? kMCCustomPrinterImageRawMRGB : kMCCustomPrinterImageRawXRGB);
+	r_image . id = (uint32_t)(intptr_t)p_image;
+	r_image . data = t_pixels;
+	r_image . data_size = t_raster.stride * t_raster.height;
+	
+	r_pixel_cache = t_pixel_cache;
+	
+	return true;
+}
 
 class MCCustomMetaContext: public MCMetaContext
 {
@@ -500,32 +561,17 @@ void MCCustomMetaContext::doimagemark(MCMark *p_mark)
 			t_image_type = kMCCustomPrinterImageNone;
 	}
 
-	uint2 t_img_width, t_img_height;
-	MCGRaster t_raster;
-
+	void *t_pixel_cache;
+	t_pixel_cache = nil;
+	
+	// Fill in the printer image info
+	MCCustomPrinterImage t_image;
 	if (!m_execute_error)
 	{
-		if (!MCGImageGetRaster(p_mark->image.descriptor.image, t_raster))
-			m_execute_error = true;
-	}
-
-	if (!m_execute_error)
-	{
-		t_img_width = t_raster.width;
-		t_img_height = t_raster.height;
-
-		// Fill in the printer image info
-		MCCustomPrinterImage t_image;
 		if (t_image_type == kMCCustomPrinterImageNone)
 		{
-			bool t_mask, t_alpha;
-			t_mask = !MCGImageIsOpaque(p_mark->image.descriptor.image);
-			t_alpha = t_mask && MCGImageHasPartialTransparency(p_mark->image.descriptor.image);
-			// IM-2014-06-26: [[ Bug 12699 ]] Set image type appropriately.
-			t_image . type = t_alpha ? kMCCustomPrinterImageRawARGB : (t_mask ? kMCCustomPrinterImageRawMRGB : kMCCustomPrinterImageRawXRGB);
-			t_image . id = (uint32_t)(intptr_t)p_mark->image.descriptor.image;
-			t_image . data = t_raster.pixels;
-			t_image . data_size = t_raster.stride * t_img_height;
+			if (!MCCustomPrinterImageFromMCGImage(p_mark -> image . descriptor . image, t_image, t_pixel_cache))
+				m_execute_error = true;
 		}
 		else
 		{
@@ -533,10 +579,13 @@ void MCCustomMetaContext::doimagemark(MCMark *p_mark)
 			t_image . id = (uint32_t)(intptr_t)p_mark -> image . descriptor . data_bits;
 			t_image . data = p_mark -> image . descriptor . data_bits;
 			t_image . data_size = p_mark -> image . descriptor . data_size;
+			t_image . width = MCGImageGetWidth(p_mark -> image . descriptor . image);
+			t_image . height = MCGImageGetHeight(p_mark -> image . descriptor . image);
 		}
-		t_image . width = t_img_width;
-		t_image . height = t_img_height;
-
+	}
+	
+	if (!m_execute_error)
+	{
 		// Compute the transform that is needed - this transform goes from image
 		// space to page space.
 		// IM-2014-06-26: [[ Bug 12699 ]] Rework to ensure transforms are applied in the correct order - page transform -> image offset -> image transform
@@ -554,6 +603,9 @@ void MCCustomMetaContext::doimagemark(MCMark *p_mark)
 		if (!m_device -> DrawImage(t_image, MCCustomPrinterTransformFromMCGAffineTransform(t_transform), t_clip))
 			m_execute_error = true;
 	}
+	
+	if (t_pixel_cache != nil)
+		MCMemoryDeallocate(t_pixel_cache);
 }
 
 void MCCustomMetaContext::dolinkmark(MCMark *p_mark)
@@ -653,12 +705,11 @@ void MCCustomMetaContext::endcomposite(MCRegionRef p_clip_region)
 	MCGContextRelease(m_composite_context);
 	m_composite_context = nil;
 	
+	void *t_pixel_cache;
+	t_pixel_cache = nil;
+	
 	if (t_success)
 	{
-		MCGRaster t_raster;
-		
-		MCGImageGetRaster(t_image, t_raster);
-		
 		/* OVERHAUL - REVISIT: Disabling the mask stuff for now, just treat the composite image as ARGB */
 		
 		// Make sure the region is in logical coords.
@@ -678,12 +729,8 @@ void MCCustomMetaContext::endcomposite(MCRegionRef p_clip_region)
 		// Now we have a masked image, issue an appropriate image rendering call to the
 		// device
 		MCCustomPrinterImage t_img_data;
-		t_img_data . type = kMCCustomPrinterImageRawARGB;
-		t_img_data . id = 0;
-		t_img_data . width = t_raster . width;
-		t_img_data . height = t_raster . height;
-		t_img_data . data = t_raster . pixels;
-		t_img_data . data_size = t_raster . stride * t_raster . height;
+		
+		t_success = MCCustomPrinterImageFromMCGImage(t_image, t_img_data, t_pixel_cache);
 		
 		MCCustomPrinterTransform t_img_transform;
 		t_img_transform . scale_x = m_scale_x / m_composite_scale;
@@ -705,6 +752,12 @@ void MCCustomMetaContext::endcomposite(MCRegionRef p_clip_region)
 		//	m_execute_error = true;
 	}
 
+	if (t_image != nil)
+		MCGImageRelease(t_image);
+	
+	if (t_pixel_cache != nil)
+		MCMemoryDeallocate(t_pixel_cache);
+	
 	m_execute_error = !t_success;
 	
 	// Delete the region
@@ -787,6 +840,12 @@ void MCCustomMetaContext::dorawpathmark(MCMark *p_mark, uint1 *p_commands, uint3
 		MCCustomPrinterGradientStop *t_paint_stops;
 		t_paint_stops = nil;
 
+		MCGImageRef t_image;
+		t_image = nil;
+		
+		void *t_pixel_cache;
+		t_pixel_cache = nil;
+		
 		// Note we have to check the fill in this order since 'gradient' is not
 		// a fill style and is indicated by the gradient field not being nil.
 		if (p_mark -> fill -> gradient != nil)
@@ -835,29 +894,21 @@ void MCCustomMetaContext::dorawpathmark(MCMark *p_mark, uint1 *p_commands, uint3
 		else if (p_mark -> fill -> style == FillTiled)
 		{
 			// Fetch the size of the tile, and its data.
-			MCGImageRef t_image;
-			t_image = nil;
 			
 			MCGAffineTransform t_transform;
 			
 			// IM-2014-05-13: [[ HiResPatterns ]] Update pattern access to use lock function
 			if (MCPatternLockForContextTransform(p_mark->fill->pattern, MCGAffineTransformMakeIdentity(), t_image, t_transform))
 			{
-				MCGRaster t_tile_raster;
-				/* UNCHECKED */ MCGImageGetRaster(t_image, t_tile_raster);
-				
 				t_transform = MCGAffineTransformTranslate(t_transform, p_mark->fill->origin.x, p_mark->fill->origin.y);
 				
 				// Construct the paint pattern.
 				t_paint . type = kMCCustomPrinterPaintPattern;
-				t_paint . pattern . image . type = MCCustomPrinterImageTypeFromMCGRasterFormat(t_tile_raster . format);
-				t_paint . pattern . image . id = (uint32_t)(intptr_t)p_mark -> fill -> pattern;
-				t_paint . pattern . image . width = t_tile_raster . width;
-				t_paint . pattern . image . height = t_tile_raster . height;
-				t_paint . pattern . image . data = t_tile_raster . pixels;
-				t_paint . pattern . image . data_size = t_tile_raster . stride * t_tile_raster . height;
 				t_paint . pattern . transform = MCCustomPrinterTransformFromMCGAffineTransform(t_transform);
+				if (!MCCustomPrinterImageFromMCGImage(t_image, t_paint . pattern . image, t_pixel_cache))
+					m_execute_error = true;
 				
+				MCGImageRetain(t_image);
 				MCPatternUnlock(p_mark->fill->pattern, t_image);
 			}
 			else
@@ -942,6 +993,12 @@ void MCCustomMetaContext::dorawpathmark(MCMark *p_mark, uint1 *p_commands, uint3
 
 		if (t_paint_stops != nil)
 			delete[] t_paint_stops;
+		
+		if (t_image != nil)
+			MCGImageRelease(t_image);
+		
+		if (t_pixel_cache != nil)
+			MCMemoryDeallocate(t_pixel_cache);
 	}
 	else
 		m_execute_error = true;

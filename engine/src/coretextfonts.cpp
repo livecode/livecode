@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -76,6 +76,7 @@ void ios_clear_font_mapping(void)
     {
         s_font_map -> freehash();
         delete s_font_map;
+        s_font_map = nil;
     }
 }
 #endif

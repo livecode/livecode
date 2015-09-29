@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -14,7 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "external.h"
+#include "revolution/external.h"
 #include "cefbrowser.h"
 
 #include "core.h"
@@ -240,7 +240,7 @@ void MCCefBrowserOSX::PlatformConfigureWindow(CefWindowInfo &r_info)
     
 	NSView *t_handle;
 	if (!GetWindowHandle(t_handle))
-		return false;
+		return;
     
     t_handle = t_handle;
 }

@@ -3,19 +3,23 @@
 local sgModuleSymbols
 local sgModuleDetails
 
+local sOutput
+
 on startup
   try
     process
   catch tError
-    write tError & return to stdout
+    write tError & return to stderr
   end try
 end startup
 
 on process
   local tSpec
 
-  read from stdin until eof
-  put it into tSpec
+  put url("file:" & $1) into tSpec
+  
+  put $2 into sOutput
+  open file sOutput for write
 
   local tLine, tModule
   repeat for each line tLine in tSpec
@@ -315,6 +319,6 @@ function typelistToProto pList, pWithArgs
 end typelistToProto
 
 on output pLine
-  write pLine & return to stdout
+  write pLine & return to file sOutput
 end output
 

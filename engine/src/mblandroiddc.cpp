@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -52,8 +52,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <android/bitmap.h>
 #include <GLES/gl.h>
 #include <unistd.h>
-
-#include "stacktile.cpp"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -460,6 +458,8 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *di
 
 Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 {
+    MCDeletedObjectsEnterWait(dispatch);
+    
 	real8 curtime = MCS_time();
 
 	if (duration < 0.0)
@@ -547,7 +547,9 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 	// MW-2012-09-19: [[ Bug 10218 ]] Make sure we update the screen in case
 	//   any engine event handling methods need us to.
 	MCRedrawUpdateScreen();
-
+    
+    MCDeletedObjectsLeaveWait(dispatch);
+    
 	return abort;
 }
 
@@ -1054,7 +1056,8 @@ void MCStack::view_device_updatewindow(MCRegionRef p_region)
 			//   to prevent a flicker back to an old frame when making the opengl layer visible.
 			view_device_updatewindow(p_region);
 
-			MCAndroidEngineRemoteCall("hideBitmapView", "v", nil);
+            // MW-2015-05-06: [[ Bug 15232 ]] Prevent black flash when enabling setting acceleratedRendering to true
+			MCAndroidEngineRemoteCall("hideBitmapViewInTime", "v", nil);
 		}
 	}
 

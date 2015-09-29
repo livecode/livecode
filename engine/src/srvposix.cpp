@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -524,6 +524,17 @@ struct MCPosixSystem: public MCSystemInterface
 			else
 				t_tilde_path = strdup(p_path);
 		}
+        else if (p_path[0] != '/')
+        {
+            // SN-2015-06-05: [[ Bug 15432 ]] Fix resolvepath on Linux: we want an
+            //  absolute path.
+            char *t_curfolder;
+            t_curfolder = MCS_getcurdir();
+            t_tilde_path = new char[strlen(t_curfolder) + strlen(p_path) + 2];
+            /* UNCHECKED */ sprintf(t_tilde_path, "%s/%s", t_curfolder, p_path);
+
+            delete t_curfolder;
+        }
 		else
 			t_tilde_path = strdup(p_path);
 		

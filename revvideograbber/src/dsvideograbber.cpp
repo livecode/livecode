@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -2694,7 +2694,7 @@ void CDirectXVideoGrabber::GetFormatInfo(int *fwidth, int *fheight, double *fps)
 			{
 				VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *)pmt->pbFormat;
 				
-				// OK-2007-09-26 : The frame rate should be returned to Revolution in frames per second and thus should be convert to 
+				// OK-2007-09-26 : The frame rate should be returned to LiveCode in frames per second and thus should be convert to 
 				// FPS from microseconds per frame.
 				if (fps && !m_stSetting . m_bUseFrameRate)
 					*fps = (double)(10000000.0 / double(pvi -> AvgTimePerFrame));

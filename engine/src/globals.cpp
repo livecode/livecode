@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -68,15 +68,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcssl.h"
 #include "stacksecurity.h"
 #include "resolution.h"
+#include "redraw.h"
 
-#include "systhreads.h"
 #include "stacktile.h"
 
 #define HOLD_SIZE1 65535
 #define HOLD_SIZE2 16384
 
 #ifdef TARGET_PLATFORM_MACOS_X
-#include <Foundation/NSAutoreleasePool.h>
+//#include <Foundation/NSAutoreleasePool.h>
 #endif
 
 #ifdef _ANDROID_MOBILE
@@ -248,7 +248,6 @@ MCUndolist *MCundos;
 MCSellist *MCselected;
 MCStacklist *MCstacks;
 MCStacklist *MCtodestroy;
-MCObject *MCtodelete;
 MCCardlist *MCrecent;
 MCCardlist *MCcstack;
 MCDispatch *MCdispatcher;
@@ -501,13 +500,7 @@ Boolean MCmainstackschanged = False;
 //   UDP sockets.
 Boolean MCallowdatagrambroadcasts = False;
 
-// MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single animation message is sent per redraw
-MCThreadMutexRef MCanimationmutex = NULL;
-MCThreadMutexRef MCpatternmutex = NULL;
-MCThreadMutexRef MCimagerepmutex = NULL;
-MCThreadMutexRef MCfieldmutex = NULL;
-MCThreadMutexRef MCthememutex = NULL;
-MCThreadMutexRef MCgraphicmutex = NULL;
+uint32_t MCactionsrequired = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -640,8 +633,7 @@ void X_clear_globals(void)
 	MCundos = nil;
 	MCselected = nil;
 	MCstacks = nil;
-	MCtodestroy = nil;
-	MCtodelete = nil;
+    MCtodestroy = nil;
 	MCrecent = nil;
 	MCcstack = nil;
 	MCdispatcher = nil;
@@ -835,13 +827,7 @@ void X_clear_globals(void)
 	// MW-2013-03-20: [[ MainStacksChanged ]]
 	MCmainstackschanged = False;
     
-    // MM-2014-07-31: [[ ThreadedRendering ]]
-    MCanimationmutex = NULL;
-    MCpatternmutex = NULL;
-    MCimagerepmutex = NULL;
-    MCfieldmutex = NULL;
-    MCthememutex = NULL;
-    MCgraphicmutex = NULL;
+    MCactionsrequired = 0;
 
 #ifdef _ANDROID_MOBILE
     // MM-2012-02-22: Initialize up any static variables as Android static vars are preserved between sessions
@@ -875,16 +861,6 @@ bool X_open(int argc, char *argv[], char *envp[])
 	
 	// MM-2014-02-14: [[ LibOpenSSL 1.0.1e ]] Initialise the openlSSL module.
 	InitialiseSSL();
-    
-    // MM-2014-07-31: [[ ThreadedRendering ]]
-    /* UNCHECKED */ MCThreadPoolInitialize();
-    /* UNCHECKED */ MCStackTileInitialize();
-    /* UNCHECKED */ MCThreadMutexCreate(MCanimationmutex);
-    /* UNCHECKED */ MCThreadMutexCreate(MCpatternmutex);
-    /* UNCHECKED */ MCThreadMutexCreate(MCimagerepmutex);
-    /* UNCHECKED */ MCThreadMutexCreate(MCfieldmutex);
-    /* UNCHECKED */ MCThreadMutexCreate(MCthememutex);
-    /* UNCHECKED */ MCThreadMutexCreate(MCgraphicmutex);
     
     ////
     
@@ -928,6 +904,8 @@ bool X_open(int argc, char *argv[], char *envp[])
 				delete vname;
 			}
 		}
+    
+    MCDeletedObjectsSetup();
 
 	/* UNCHECKED */ MCStackSecurityCreateStack(MCtemplatestack);
 	MCtemplateaudio = new MCAudioClip;
@@ -951,7 +929,7 @@ bool X_open(int argc, char *argv[], char *envp[])
 	MCundos = new MCUndolist;
 	MCselected = new MCSellist;
 	MCstacks = new MCStacklist;
-	MCtodestroy = new MCStacklist;
+    MCtodestroy = new MCStacklist;
 	MCrecent = new MCCardlist;
 	MCcstack = new MCCardlist;
 
@@ -1088,12 +1066,6 @@ int X_close(void)
 
 	MCscreen -> flushclipboard();
 
-	while (MCtodelete != NULL)
-	{
-		MCObject *optr = MCtodelete->remove(MCtodelete);
-		delete optr;
-	}
-
     MCdispatcher -> remove_transient_stack(MCtooltip);
 	delete MCtooltip;
 	MCtooltip = NULL;
@@ -1151,10 +1123,13 @@ int X_close(void)
 	delete MCtemplateimage;
 	delete MCtemplatefield;
 	delete MCselected;
-	delete MCtodestroy;
+    delete MCtodestroy;
 	delete MCstacks;
 	delete MCcstack;
 	delete MCrecent;
+    
+    MCDeletedObjectsTeardown();
+    
 	delete IO_stdin;
 	delete IO_stdout;
 	delete IO_stderr;
@@ -1258,16 +1233,6 @@ int X_close(void)
 	// MM-2013-09-03: [[ RefactorGraphics ]] Initialize graphics library.
 	MCGraphicsFinalize();
     
-    // MM-2014-07-31: [[ ThreadedRendering ]]
-    MCThreadPoolFinalize();
-    MCStackTileFinalize();
-    MCThreadMutexRelease(MCanimationmutex);
-    MCThreadMutexRelease(MCpatternmutex);
-    MCThreadMutexRelease(MCimagerepmutex);
-    MCThreadMutexRelease(MCfieldmutex);
-    MCThreadMutexRelease(MCthememutex);
-    MCThreadMutexRelease(MCgraphicmutex);
-    
 #ifdef _ANDROID_MOBILE
     // MM-2012-02-22: Clean up any static variables as Android static vars are preserved between sessions
     MCAdFinalize();
@@ -1277,6 +1242,24 @@ int X_close(void)
 #endif
 	
 	return MCretcode;
+}
+
+void MCActionsDoRunSome(uint32_t p_mask)
+{
+    uint32_t t_actions;
+    t_actions = MCactionsrequired & p_mask;
+    
+    if ((t_actions & kMCActionsDrainDeletedObjects) != 0)
+    {
+        MCactionsrequired &= ~kMCActionsDrainDeletedObjects;
+        MCDeletedObjectsDoDrain();
+    }
+    
+    if ((t_actions & kMCActionsUpdateScreen) != 0)
+    {
+        MCactionsrequired &= ~kMCActionsUpdateScreen;
+        MCRedrawDoUpdateScreen();
+    }
 }
 
 // MW-2013-10-08: [[ Bug 11259 ]] Make sure the Linux specific case tables are

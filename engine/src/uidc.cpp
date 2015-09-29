@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -43,6 +43,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "redraw.h"
 #include "notify.h"
 #include "dispatch.h"
+#include "notify.h"
+#include "mode.h"
+#include "eventqueue.h"
 
 #include "graphicscontext.h"
 
@@ -191,6 +194,8 @@ MCMovingList::~MCMovingList()
 
 MCUIDC::MCUIDC()
 {
+	MCNotifyInitialize();
+    
 	messageid = 0;
 	nmessages = maxmessages = 0;
 	messages = NULL;
@@ -202,6 +207,36 @@ MCUIDC::MCUIDC()
 	allocs = NULL;
 	colornames = NULL;
 	lockmods = False;
+    
+	redbits = greenbits = bluebits = 8;
+	redshift = 16;
+	greenshift = 8;
+	blueshift = 0;
+	
+	black_pixel.red = black_pixel.green = black_pixel.blue = 0;
+	white_pixel.red = white_pixel.green = white_pixel.blue = 0xFFFF;
+	black_pixel.pixel = 0;
+	white_pixel.pixel = 0xFFFFFF;
+	
+	MCselectioncolor = MCpencolor = black_pixel;
+	alloccolor(MCselectioncolor);
+	alloccolor(MCpencolor);
+	
+	MConecolor = MCbrushcolor = white_pixel;
+	alloccolor(MCbrushcolor);
+	
+	gray_pixel.red = gray_pixel.green = gray_pixel.blue = 0x8080;
+	alloccolor(gray_pixel);
+	
+	MChilitecolor.red = MChilitecolor.green = 0x0000;
+	MChilitecolor.blue = 0x8080;
+	alloccolor(MChilitecolor);
+	
+	MCaccentcolor = MChilitecolor;
+	alloccolor(MCaccentcolor);
+	
+	background_pixel.red = background_pixel.green = background_pixel.blue = 0xC0C0;
+	alloccolor(background_pixel);
 
 	m_sound_internal = NULL ;
 
@@ -214,6 +249,8 @@ MCUIDC::~MCUIDC()
 	while (nmessages != 0)
 		cancelmessageindex(0, True);
 	delete messages;
+    
+	MCNotifyFinalize();
 }
 
 
@@ -575,7 +612,9 @@ void MCUIDC::querymouse(int2 &x, int2 &y)
 //////////
 
 void MCUIDC::platform_querymouse(int2 &x, int2 &y)
-{ }
+{
+    x = y = 0;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -803,10 +842,14 @@ Boolean MCUIDC::getmouseclick(uint2 button, Boolean& r_abort)
 
 Boolean MCUIDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 {
+	MCwaitdepth++;
+    MCDeletedObjectsEnterWait(dispatch);
+    
 	real8 curtime = MCS_time();
 	if (duration < 0.0)
 		duration = 0.0;
 	real8 exittime = curtime + duration;
+    Boolean abort = False;
 	Boolean done = False;
 	Boolean donepending = False;
 	do
@@ -817,8 +860,17 @@ Boolean MCUIDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		real8 eventtime = exittime;
 		donepending = handlepending(curtime, eventtime, dispatch);
 		siguser();
+        
+		MCModeQueueEvents();
+        
+        if ((MCNotifyDispatch(dispatch == True) ||
+             donepending) && anyevent ||
+            abort)
+            break;
+        
 		if (MCquit)
-			return True;
+            break;
+        
 		if (curtime < eventtime)
 		{
 			done = MCS_poll(donepending ? 0 : eventtime - curtime, 0);
@@ -826,7 +878,14 @@ Boolean MCUIDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		}
 	}
 	while (curtime < exittime  && !(anyevent && (done || donepending)));
-	return False;
+    
+    if (MCquit)
+        abort = True;
+    
+    MCDeletedObjectsLeaveWait(dispatch);
+    MCwaitdepth--;
+    
+	return abort;
 }
 
 void MCUIDC::pingwait(void)

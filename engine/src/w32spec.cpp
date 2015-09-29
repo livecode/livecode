@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -438,7 +438,10 @@ char *MCS_resolvepath(const char *path)
 		MCU_path2native(tpath);
 		return tpath;
 	}
-	char *cstr = strclone(path);
+    // SN-2015-06-05: [[ Bug 15432 ]] The function resolving / fixing paths to
+    //  an absolute one is MCS_get_canonical_path on Windows. We then use it
+    //  here as well.
+    char *cstr = MCS_get_canonical_path(path);
 	MCU_path2native(cstr);
 	return cstr;
 }
@@ -456,24 +459,32 @@ char *MCS_get_canonical_path(const char *path)
 	if (path == NULL)
 		return NULL;
 
-	if (path[0] == '/' && path[1] != '/')
+	// The following rules are used to process paths on Windows:
+	// - an absolute UNIX path is mapped to an absolute windows path using the drive of the CWD:
+	// /foo/bar -> CWD-DRIVE:/foo/bar
+	// - an absolute windows path is left as is:
+	// //foo/bar -> //foo/bar
+	// C:/foo/bar -> C:/foo/bar
+	// - a relative path is prefixed by the CWD:
+	// foo/bar -> CWD/foo/bar
+	// Note: / and \ are treated the same, but not changed. When adding a path separator / is used.
+	if ((path[0] == '/' && path[1] != '/')
+			|| (path[0] == '\\' && path[1] != '\\'))
 	{
 		// path in root of current drive
 		t_curdir = MCS_getcurdir();
 
 		int t_path_len;
 		t_path_len = strlen(path);
-		while (path[0] == '/')
-		{
-			path ++;
-			t_path_len --;
-		}
 		
-		t_path = (char*)malloc(3 + t_path_len + 1);
-		t_path[0] = t_curdir[0]; t_path[1] = ':'; t_path[2] = '/';
-		strcpy(t_path + 3, path);
+		// We append CWD and a colon to the path: length + 2
+		t_path = (char*)malloc(2 + t_path_len + 1);
+		t_path[0] = t_curdir[0]; t_path[1] = ':';
+		strcpy(t_path + 2, path);
 	}
-	else if (is_legal_drive(path[0]) && path[1] == ':')
+	else if ((is_legal_drive(path[0]) && path[1] == ':')
+			|| (path[0] == '/' && path[1] == '/')
+			|| (path[0] == '\\' && path[1] == '\\'))
 	{
 		// absolute path
 		t_path = strclone(path);
@@ -490,12 +501,6 @@ char *MCS_get_canonical_path(const char *path)
 
 		int t_path_len;
 		t_path_len = strlen(path);
-
-		while (t_path_len > 0 && path[0] == '/')
-		{
-			path ++;
-			t_path_len --;
-		}
 
 		t_path = (char*)malloc(t_curdir_len + 1 + t_path_len + 1);
 		memcpy(t_path, t_curdir, t_curdir_len);
@@ -1465,6 +1470,7 @@ void MCS_fakewriteat(IO_handle stream, uint4 p_pos, const void *p_buffer, uint4 
 // MW-2005-02-22: Make these global for opensslsocket.cpp
 static Boolean wsainited = False;
 HWND sockethwnd;
+HANDLE g_socket_wakeup;
 
 Boolean wsainit()
 {
@@ -1483,6 +1489,8 @@ Boolean wsainit()
 			if (!MCnoui)
 				sockethwnd = CreateWindowA(MC_WIN_CLASS_NAME, "MCsocket", WS_POPUP, 0, 0,
 				                          8, 8, NULL, NULL, MChInst, NULL);
+			else
+				g_socket_wakeup = CreateEvent(NULL, FALSE, FALSE, NULL);
 		}
 	}
 	MCS_seterrno(0);
@@ -1634,6 +1642,17 @@ void MCS_saveresfile(const MCString &s, const MCString data)
 
 Boolean MCS_poll(real8 delay, int fd)
 {
+	extern HANDLE g_notify_wakeup;
+	HANDLE t_handles[2];
+	t_handles[0] = g_notify_wakeup;
+	t_handles[1] = g_socket_wakeup;
+
+	int t_num_handles = 2;
+	if (t_handles[1] == NULL)
+		t_num_handles = 1;
+
+	MsgWaitForMultipleObjects(t_num_handles, t_handles, FALSE, delay * 1000.0, 0);
+
 	Boolean handled = False;
 	int4 n;
 	uint2 i;
@@ -1672,9 +1691,7 @@ Boolean MCS_poll(real8 delay, int fd)
 			handled = True;
 		}
 	}
-	struct timeval timeoutval;
-	timeoutval.tv_sec = (long)delay;
-	timeoutval.tv_usec = (long)((delay - floor(delay)) * 1000000.0);
+	struct timeval timeoutval = {0, 0};
 	n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
 	if (n <= 0)
 		return handled;

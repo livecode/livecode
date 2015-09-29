@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -111,6 +111,12 @@ enum MCCustomPrinterImageType
 	// PNG image data
 	kMCCustomPrinterImagePNG
 };
+
+#ifdef __LITTLE_ENDIAN__
+#define kMCCustomPrinterImagePixelFormat kMCGPixelFormatBGRA
+#else
+#define kMCCustomPrinterImagePixelFormat kMCGPixelFormatARGB
+#endif
 
 struct MCCustomPrinterImage
 {
