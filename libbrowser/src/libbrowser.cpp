@@ -360,37 +360,37 @@ public:
 		m_context = p_context;
 	}
 	
-	virtual void OnNavigationBegin(MCBrowser *p_browser, bool p_in_frame, const char *p_url) override
+	virtual void OnNavigationBegin(MCBrowser *p_browser, bool p_in_frame, const char *p_url)
 	{
 		if (m_callback)
 			m_callback(m_context, (MCBrowserRef)p_browser, kMCBrowserRequestTypeNavigate, kMCBrowserRequestStateBegin, p_in_frame, p_url, nil);
 	}
 	
-	virtual void OnNavigationComplete(MCBrowser *p_browser, bool p_in_frame, const char *p_url) override
+	virtual void OnNavigationComplete(MCBrowser *p_browser, bool p_in_frame, const char *p_url)
 	{
 		if (m_callback)
 			m_callback(m_context, (MCBrowserRef)p_browser, kMCBrowserRequestTypeNavigate, kMCBrowserRequestStateComplete, p_in_frame, p_url, nil);
 	}
 	
-	virtual void OnNavigationFailed(MCBrowser *p_browser, bool p_in_frame, const char *p_url, const char *p_error) override
+	virtual void OnNavigationFailed(MCBrowser *p_browser, bool p_in_frame, const char *p_url, const char *p_error)
 	{
 		if (m_callback)
 			m_callback(m_context, (MCBrowserRef)p_browser, kMCBrowserRequestTypeNavigate, kMCBrowserRequestStateFailed, p_in_frame, p_url, p_error);
 	}
 	
-	virtual void OnDocumentLoadBegin(MCBrowser *p_browser, bool p_in_frame, const char *p_url) override
+	virtual void OnDocumentLoadBegin(MCBrowser *p_browser, bool p_in_frame, const char *p_url)
 	{
 		if (m_callback)
 			m_callback(m_context, (MCBrowserRef)p_browser, kMCBrowserRequestTypeDocumentLoad, kMCBrowserRequestStateBegin, p_in_frame, p_url, nil);
 	}
 	
-	virtual void OnDocumentLoadComplete(MCBrowser *p_browser, bool p_in_frame, const char *p_url) override
+	virtual void OnDocumentLoadComplete(MCBrowser *p_browser, bool p_in_frame, const char *p_url)
 	{
 		if (m_callback)
 			m_callback(m_context, (MCBrowserRef)p_browser, kMCBrowserRequestTypeDocumentLoad, kMCBrowserRequestStateComplete, p_in_frame, p_url, nil);
 	}
 	
-	virtual void OnDocumentLoadFailed(MCBrowser *p_browser, bool p_in_frame, const char *p_url, const char *p_error) override
+	virtual void OnDocumentLoadFailed(MCBrowser *p_browser, bool p_in_frame, const char *p_url, const char *p_error)
 	{
 		if (m_callback)
 			m_callback(m_context, (MCBrowserRef)p_browser, kMCBrowserRequestTypeDocumentLoad, kMCBrowserRequestStateFailed, p_in_frame, p_url, p_error);
@@ -434,7 +434,7 @@ public:
 		m_context = p_context;
 	}
 	
-	virtual void OnJavaScriptCall(MCBrowser *p_browser, const char *p_handler, MCBrowserListRef p_params) override
+	virtual void OnJavaScriptCall(MCBrowser *p_browser, const char *p_handler, MCBrowserListRef p_params)
 	{
 		if (m_callback)
 			m_callback(m_context, (MCBrowserRef)p_browser, p_handler, p_params);

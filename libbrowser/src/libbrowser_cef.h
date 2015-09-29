@@ -150,7 +150,7 @@ public:
 	MCCefBrowserFactory();
 	virtual ~MCCefBrowserFactory();
 	
-	bool CreateBrowser(void *p_display, void *p_parent_view, MCBrowser *&r_browser) override;
+	bool CreateBrowser(void *p_display, void *p_parent_view, MCBrowser *&r_browser);
 	
 	//////////
 	
