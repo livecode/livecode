@@ -409,6 +409,11 @@ void MCWidgetEventManager::event_layerchanged(MCWidget* p_widget)
     MCWidgetOnLayerChanged(p_widget -> getwidget());
 }
 
+void MCWidgetEventManager::event_visibilitychanged(MCWidget* p_widget, bool p_visible)
+{
+    MCWidgetOnVisibilityChanged(p_widget -> getwidget(), p_visible);
+}
+
 Boolean MCWidgetEventManager::event_doubledown(MCWidget* p_widget, uint2 p_which)
 {
     // Prevent the IDE from breaking
