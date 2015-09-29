@@ -262,13 +262,6 @@ typedef struct __MCWinSysIconHandle *MCWinSysIconHandle;
 typedef struct __MCWinSysMetafileHandle *MCWinSysMetafileHandle;
 typedef struct __MCWinSysEnhMetafileHandle *MCWinSysEnhMetafileHandle;
 
-#define PLACEMENT_NEW_DEFINED
-#define __PLACEMENT_NEW_INLINE
-inline void *operator new (size_t size, void *p)
-{
-	return p;
-}
-
 #if defined(_DEBUG)
 
 #include <crtdbg.h>

@@ -38,6 +38,7 @@
 				'GTEST_HAS_POSIX_RE=0',
 				'GTEST_HAS_PTHREAD=0',
 				'GTEST_HAS_RTTI=0',
+				'GTEST_HAS_EXCEPTIONS=0',
 			],
 
 			'all_dependent_settings':
@@ -47,6 +48,7 @@
 					'GTEST_HAS_POSIX_RE=0',
 					'GTEST_HAS_PTHREAD=0',
 					'GTEST_HAS_RTTI=0',
+					'GTEST_HAS_EXCEPTIONS=0',
 				],
 
 				'include_dirs':
