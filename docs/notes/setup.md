@@ -38,8 +38,8 @@ Alternatively it is possible to activate the product via the use of a specially 
 In order to better support institutions needing to both deploy the IDE to many machines and to license them for all users on a given machine, a number of facilities have been added which are accessible by using the command-line.
 * **Note:** These features are intended for use by IT administrators for the purposes of deploying LiveCode in multi-user situations. They are not supported for general use.*
 # Command-line installation
-It is possible to invoke the installer from the command-line on both Mac and Windows. When invoked in this fashion, no GUI will be displayed, configuration being supplied by arguments passed to the installer.
-On both platforms, the command is of the following form:
+It is possible to invoke the installer from the command-line on Mac, Linux and Windows. When invoked in this fashion, no GUI will be displayed, configuration being supplied by arguments passed to the installer.
+On the three platforms, the command is of the following form:
 	<exe> install noui *options*
 Here *options* is optional and consists of one or more of the following:
 
@@ -56,6 +56,13 @@ On Windows, you need to do:
 On Mac, you need to do:
 	“<installerexe>/Contents/MacOS/installer” install noui *options*
 On both platforms, the result of the installation will be written to the console.
+# Command-line uninstallation
+It is possible to uninstall LiveCode from the command-line on Windows and Linux, from LiveCode *6.7.8* and *7.1.1*. When invoked in this fashion, no GUI will be displayed.
+On both platforms, the command is of the following form:
+	`<exe> uninstall noui`
+Where <exe> is *.setup.exe* on Windows, and *.setup.x86* on Linux. This executable, for both of the platforms, is located in the folder where LiveCode got installed.
+Same as for the installer, there is no authentication possible with the command-line variant of the uninstaller. It means that you need to run the uninstaller as administrator to uninstall LiveCode, if it was installed in an admin-only location.
+The result of the installation will be written in the console.
 # Command-line activation
 In a similar vein to installation, it is possible to activate an installation of LiveCode for all-users of that machine by using the command-line. When invoked in this fashion, no GUI will be displayed, activation being controlled by any arguments passed.
 On both platforms, the command is of the form:
