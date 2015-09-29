@@ -934,15 +934,18 @@ private handler setSegmentMinWidth(in pMinWidths as String)
 	redraw all
 end handler
 
-private handler setSelectedSegment(in pSelectedSegment as String) 
-	put the empty list into mSelectedSegments
-	
+private handler setSelectedSegment(in pSelectedSegment as String) 	
 	variable tStringList as List
-	split pSelectedSegment by "," into tStringList
+	if pSelectedSegment is "0" then
+		put [] into tStringList
+	else
+		split pSelectedSegment by "," into tStringList
+	end if	
 	
 	variable tSelectedString as String
 	variable tSelected as Real
 	variable tNewSelection as List
+	put [] into tNewSelection
 	repeat for each element tSelectedString in tStringList
 		put tSelectedString parsed as number into tSelected
 		push tSelected onto back of tNewSelection
