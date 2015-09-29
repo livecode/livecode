@@ -57,7 +57,7 @@ On Mac, you need to do:
 	“<installerexe>/Contents/MacOS/installer” install noui *options*
 On both platforms, the result of the installation will be written to the console.
 # Command-line uninstallation
-It is possible to uninstall LiveCode from the command-line on Windows and Linux, from LiveCode *6.7.8* and *7.1.1*. When invoked in this fashion, no GUI will be displayed.
+It is possible to uninstall LiveCode from the command-line on Windows and Linux. When invoked in this fashion, no GUI will be displayed.
 On both platforms, the command is of the following form:
 	`<exe> uninstall noui`
 Where <exe> is *.setup.exe* on Windows, and *.setup.x86* on Linux. This executable, for both of the platforms, is located in the folder where LiveCode got installed.
