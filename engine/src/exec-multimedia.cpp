@@ -684,10 +684,21 @@ void MCMultimediaExecPlayOperation(MCExecContext& ctxt, MCPlayer *p_player, int 
 void MCMultimediaExecPlayVideoClip(MCExecContext& ctxt, MCStack *p_target, int p_chunk_type, MCStringRef p_clip, bool p_looping, MCPoint *p_at, MCStringRef p_options)
 {
 #ifdef _MOBILE
-		extern bool MCSystemPlayVideo(MCStringRef p_video);
-		if (!MCSystemPlayVideo(p_clip))
-			MCresult->sets("no video support");
-		return;
+	// PM-2015-09-22: [[ Bug 15969 ]] Playing a video on iOS crashes when touching the screen
+	extern MCExecContext *MCECptr;
+	
+	// Add a new entry in the execution contexts
+	MCExecContext *oldctxt = MCECptr;
+	MCECptr = &ctxt;
+	
+	extern bool MCSystemPlayVideo(MCStringRef p_video);
+	if (!MCSystemPlayVideo(p_clip))
+		MCresult->sets("no video support");
+	
+	// Remove our entry from the contexts list
+	MCECptr = oldctxt;
+	
+	return;
 #endif
 
 	MCPlayer *tptr = MCMultimediaExecGetClip(p_clip, p_chunk_type);
