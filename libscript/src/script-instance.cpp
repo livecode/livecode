@@ -47,7 +47,7 @@ bool __MCScriptHandlerDescribe(void *context, MCStringRef &r_desc);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template <size_t WORD, size_t LENGTH>
+template <typename WORD, size_t LENGTH>
 class __MCScriptStackStorage
 {
 public:
@@ -59,22 +59,34 @@ public:
 	void *Allocate(size_t p_request)
 	{
 		/* Ensure the amount allocated is aligned to the word size */
-		size_t t_amount = (~(WORD-1)) & ((WORD-1) + p_request);
+		size_t t_amount = (~(sizeof(WORD)-1)) & ((sizeof(WORD)-1) + p_request);
+		MCAssert(t_amount % sizeof(WORD) == 0);
+		MCAssert(t_amount >= p_request);
 
 		/* Ensure there's enough space left in the storage */
-		MCAssert(m_used + t_amount < (WORD * LENGTH));
+		MCAssert(m_used + t_amount < sizeof(m_storage));
 
 		/* Create and return the pointer, updating the current offset */
-		void *t_ptr = &m_storage[m_used];
+		MCAssert(m_used % sizeof(WORD) == 0);
+		void *t_ptr = &m_storage[m_used / sizeof(WORD)];
 
 		m_used += t_amount;
 
 		return t_ptr;
 	}
 private:
-	uint8_t m_storage[WORD * LENGTH];
+	WORD m_storage[LENGTH];
 	size_t m_used;
 };
+
+#if defined(__EMSCRIPTEN__)
+/* On emscripten, we require double alignment */
+typedef __MCScriptStackStorage<double,32> MCScriptStackStorage;
+
+#else
+typedef __MCScriptStackStorage<void *,32> MCScriptStackStorage;
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1219,7 +1231,7 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
     void *t_args[16];
     ffi_type *t_arg_types[16];
     bool t_arg_new[16];
-    __MCScriptStackStorage<sizeof(void *),32> t_invoke_storage;
+    MCScriptStackStorage t_invoke_storage;
     
     uindex_t t_arg_index;
     t_arg_index = 0;
