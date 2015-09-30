@@ -3353,7 +3353,7 @@ Summary:	The spread of an effect.
 
 mEffect:		An expression which evaluates to an effect.
 
-Description:	The spread of <mEffect> as a number. Spread applies to inner shadow, outer shadow, inner glow, and outer glow effect types
+Description:	The spread of <mEffect> as a number between 0 and 1. Spread applies to inner shadow, outer shadow, inner glow, and outer glow effect types
 
 Example:
 	// Create an effect with spread 0
@@ -3366,7 +3366,7 @@ Example:
 	put outer shadow effect with properties tProps into tEffect
 
 	// Set the effect spread
-	set the spread of tEffect to 10
+	set the spread of tEffect to 0.1
 
 Tags:	Canvas
 */

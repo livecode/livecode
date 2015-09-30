@@ -5507,6 +5507,9 @@ void MCCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRef p_canv
 	__MCCanvasEffectImpl *t_effect_impl;
 	t_effect_impl = MCCanvasEffectGet(p_effect);
 	
+	MCCanvasFloat t_spread;
+	t_spread = MCClamp(t_effect_impl->spread, 0.0, 1.0);
+	
 	switch (t_effect_impl->type)
 	{
 		case kMCCanvasEffectTypeColorOverlay:
@@ -5524,7 +5527,7 @@ void MCCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRef p_canv
 			t_effects.inner_glow.color = MCCanvasColorToMCGColor(t_effect_impl->color);
 //			t_effects.inner_glow.inverted = // TODO - inverted property?
 			t_effects.inner_glow.size = t_effect_impl->size;
-			t_effects.inner_glow.spread = t_effect_impl->spread;
+			t_effects.inner_glow.spread = t_spread;
 			break;
 		}
 			
@@ -5535,7 +5538,7 @@ void MCCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRef p_canv
 			t_effects.inner_shadow.color = MCCanvasColorToMCGColor(t_effect_impl->color);
 //			t_effects.inner_shadow.knockout = // TODO - knockout property?
 			t_effects.inner_shadow.size = t_effect_impl->size;
-			t_effects.inner_shadow.spread = t_effect_impl->spread;
+			t_effects.inner_shadow.spread = t_spread;
 			MCPolarCoordsToCartesian(t_effect_impl->distance, MCCanvasAngleToRadians(t_effect_impl->angle), t_effects.inner_shadow.x_offset, t_effects.inner_shadow.y_offset);
 			break;
 		}
@@ -5546,7 +5549,7 @@ void MCCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRef p_canv
 			t_effects.outer_glow.blend_mode = t_effect_impl->blend_mode;
 			t_effects.outer_glow.color = MCCanvasColorToMCGColor(t_effect_impl->color);
 			t_effects.outer_glow.size = t_effect_impl->size;
-			t_effects.outer_glow.spread = t_effect_impl->spread;
+			t_effects.outer_glow.spread = t_spread;
 			break;
 		}
 			
@@ -5556,7 +5559,7 @@ void MCCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRef p_canv
 			t_effects.drop_shadow.blend_mode = t_effect_impl->blend_mode;
 			t_effects.drop_shadow.color = MCCanvasColorToMCGColor(t_effect_impl->color);
 			t_effects.drop_shadow.size = t_effect_impl->size;
-			t_effects.drop_shadow.spread = t_effect_impl->spread;
+			t_effects.drop_shadow.spread = t_spread;
 			MCPolarCoordsToCartesian(t_effect_impl->distance, MCCanvasAngleToRadians(t_effect_impl->angle), t_effects.drop_shadow.x_offset, t_effects.drop_shadow.y_offset);
 			break;
 		}
