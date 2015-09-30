@@ -1955,7 +1955,7 @@ void MCPlayer::setlooping(Boolean loop)
 
 // SN-2015-09-30: Make specific implementation for the platformplayer, which
 //  ensures that QT is weak-linked.
-void MCPlayer::setdontuseqt(Boolean noqt)
+void MCPlayer::setdontuseqt(bool noqt)
 {
 	dontuseqt = noqt;
 	

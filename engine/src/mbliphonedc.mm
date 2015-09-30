@@ -1224,7 +1224,7 @@ static void MCIPhoneDoDidBecomeActive(void *)
         t_environment = [[NSProcessInfo processInfo] environment];
 
         t_key_enumerator = [t_environment keyEnumerator];
-        uindex_t t_index = 0;
+        index_t t_index = 0;
 
         // Loop through all the keys in the environment array
         for (id t_key in t_environment)
@@ -1250,7 +1250,7 @@ static void MCIPhoneDoDidBecomeActive(void *)
 	
 	// Initialize the engine.
 	Bool t_init_success;
-    t_init_success = X_init(1, args, *t_envp);
+    t_init_success = X_init(1, args, envc, *t_envp);
 	
     [t_pool release];
 	
