@@ -7,6 +7,7 @@ use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
 use com.livecode.library.iconSVG
+use com.livecode.widgetutils
 
 -- adding metadata to ensure the extension displays correctly in livecode
 metadata title is "SVG Icon"
@@ -246,7 +247,7 @@ public handler OnMouseUp()
   	if mToggleHilite then
 	  	put not mHilited into mHilited
   	end if
-		post "mouseUp" to my script object with [FormatInt(the click button)] -- formatint needed until dp-2
+		post "mouseUp" to my script object with [intToString(the click button)] -- formatint needed until dp-2
 	end if
   put "up" into mState
 	redraw all
@@ -263,7 +264,7 @@ public handler OnMouseDown()
 	put "down" into mState
 	redraw all
 	
-	post "mouseDown" to my script object with [FormatInt(the click button)]
+	post "mouseDown" to my script object with [intToString(the click button)]
 end handler
 ----------
 
@@ -299,7 +300,7 @@ end handler
 
 
 public handler getColor() returns String
-	return colorToString(mColor, false)
+	return colorToString(mColor, true)
 end handler
 
 
@@ -310,7 +311,7 @@ end handler
 
 
 public handler getHiliteColor() returns String
-	return colorToString(mHiliteColor, false)
+	return colorToString(mHiliteColor, true)
 end handler
 
 public handler setPathPreset(in pPresetName as String) returns nothing
@@ -348,7 +349,7 @@ public handler OnPaint()
 		
 	// scale to fit within widget and maintain aspect ratio
 	if mMaintainAspectRatio then
-		transform tPath by scaleAndMaintainAspectRatioTransform(the bounding box of tPath, my bounds)		
+		constrainPathToRect(my bounds, tPath)		
 	else
 		scale tPath by [my width / the width of the bounding box of tPath, \
 			my height / the height of the bounding box of tPath]
@@ -361,119 +362,6 @@ public handler OnPaint()
 	end if
 	
 	fill tPath on this canvas
-end handler
-
-
--- Translated from some Skia code
-private handler scaleAndMaintainAspectRatioTransform(in pSrcBounds as Rectangle, in pDestBounds as Rectangle) returns Transform
-	// Prepare values for matrix transformation
-	variable isLarger as Boolean
-	variable tXScale as Number
-	variable tYScale as Number
-	
-	put false into isLarger
-	put the width of pDestBounds / the width of pSrcBounds into tXScale
-	put the height of pDestBounds / the height of pSrcBounds into tYScale
-	
-	if tXScale > tYScale then
-		put true into isLarger
-		put tYScale into tXScale
-	else
-		put tXScale into tYScale
-	end if
-	
-	variable tXTranslate as Number
-	variable tYTranslate as Number
-	
-	put the left of pDestBounds - (the left of pSrcBounds*tXScale) into tXTranslate
-	put the top of pDestBounds - (the top of pSrcBounds*tYScale) into tYTranslate
-	
-	variable tDiff as Number
-	
-	if isLarger then
-		put my width - (the width of pSrcBounds*tYScale) into tDiff
-	else
-		put my height - (the height of pSrcBounds*tYScale) into tDiff
-	end if
-	
-	// align center
-	divide tDiff by 2
-	
-	if isLarger then
-		add tDiff to tXTranslate
-	else
-		add tDiff to tYTranslate
-	end if
-	
-	// create transformation matrix and apply
-	variable tTransform as Transform
-	put transform with matrix [tXScale, 0, 0, tYScale, tXTranslate, tYTranslate] into tTransform
-	
-	return tTransform
-end handler
-
-
-private handler colorToString(in pColor as Color, in pIncludeAlpha as Boolean) returns String
-	variable tColor as String
-	
-	put FormatInt(the rounded of ((the red of pColor) * 255)) into tColor
-	put "," & FormatInt(the rounded of ((the green of pColor) * 255)) after tColor
-	put "," & FormatInt(the rounded of ((the blue of pColor) * 255)) after tColor
-	
-	if pIncludeAlpha then
-		put "," & FormatInt(the rounded of ((the alpha of pColor) * 255)) after tColor
-	end if
-	
-	return tColor
-end handler
-
-private handler stringToColor(in pString as String) returns Color
-	if the number of chars in pString is 0 then
-		return ""
-		end if
-
-	variable tRed as Real
-	variable tGreen as Real
-	variable tBlue as Real
-	variable tAlpha as Real
-
-	variable tComponentList as List
-	split pString by "," into tComponentList
-
-	variable tComponentCount
-	put the number of elements in tComponentList into tComponentCount
-	if tComponentCount is not 3 and tComponentCount is not 4 then
-		// Invalid number of components detected
-		throw "Invalid color"
-	end if
-
-	put (element 1 of tComponentList) parsed as number into tRed
-	put (element 2 of tComponentList) parsed as number into tGreen
-	put (element 3 of tComponentList) parsed as number into tBlue
-
-	if tComponentCount is 4 then
-		put (element 4 of tComponentList) parsed as number into tAlpha
-	else
-		put 255 into tAlpha
-	end if
-
-	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha/255 ]
-end handler
-
-
--- Needed until dp-4
-handler FormatInt(in pNumber as Number) returns String
-	variable tNumberString as String
-
-	put pNumber formatted as string into tNumberString
-
-	if "." is in tNumberString then
-		variable tDotOffset
-		put the first offset of "." in tNumberString into tDotOffset
-		delete char tDotOffset to (the number of chars in tNumberString) of tNumberString
-	end if
-
-	return tNumberString
 end handler
 
 end widget
