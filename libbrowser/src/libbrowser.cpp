@@ -483,19 +483,43 @@ struct MCBrowserRunloopAction
 	void *context;
 	
 	uint32_t references;
+	bool remove;
 	
 	MCBrowserRunloopAction *next;
 };
 
 static MCBrowserRunloopAction *s_runloop_actions = nil;
-static uint32_t s_runloop_action_count = 0;
+static uint32_t s_in_runloop_callback = 0;
 
 //////////
 
 void MCBrowserLibraryRunloopCallback(void *p_context)
 {
-	for (MCBrowserRunloopAction *t_action = s_runloop_actions; t_action != nil; t_action = t_action->next)
-		t_action->callback(t_action->context);
+	s_in_runloop_callback++;
+	
+	MCBrowserRunloopAction **t_current_ptr;
+	t_current_ptr = &s_runloop_actions;
+	
+	while (*t_current_ptr != nil)
+	{
+		MCBrowserRunloopAction *t_action;
+		t_action = *t_current_ptr;
+		
+		if (t_action->remove)
+		{
+			// perform deferred delete.
+			*t_current_ptr = t_action->next;
+			
+			MCBrowserMemoryDelete(t_action);
+		}
+		else
+		{
+			t_action->callback(t_action->context);
+			t_current_ptr = &t_action->next;
+		}
+	}
+	
+	s_in_runloop_callback--;
 }
 
 extern "C" bool MCBrowserLibraryGetRunloopCallback(MCBrowserRunloopCallback &r_callback, void *&r_context)
@@ -511,7 +535,7 @@ extern "C" bool MCBrowserLibraryGetRunloopCallback(MCBrowserRunloopCallback &r_c
 bool MCBrowserFindRunloopAction(MCBrowserRunloopCallback p_callback, void *p_context, MCBrowserRunloopAction *&r_action)
 {
 	for (MCBrowserRunloopAction *t_action = s_runloop_actions; t_action != nil; t_action = t_action->next)
-		if (t_action->callback == p_callback && t_action->context == p_context)
+		if (t_action->callback == p_callback && t_action->context == p_context && !t_action->remove)
 		{
 			r_action = t_action;
 			return true;
@@ -535,6 +559,7 @@ bool MCBrowserAddRunloopAction(MCBrowserRunloopCallback p_callback, void *p_cont
 	t_action->callback = p_callback;
 	t_action->context = p_context;
 	t_action->references = 1;
+	t_action->remove = false;
 	
 	t_action->next = s_runloop_actions;
 	s_runloop_actions = t_action;
@@ -548,8 +573,18 @@ void MCBrowserRemoveRunloopAction(MCBrowserRunloopCallback p_callback, void *p_c
 	if (!MCBrowserFindRunloopAction(p_callback, p_context, t_action))
 		return;
 	
+	if (t_action->remove)
+		return;
+	
 	if (t_action->references-- > 1)
 		return;
+	
+	// defer delete if called from within the browser runloop callback
+	if (s_in_runloop_callback)
+	{
+		t_action->remove = true;
+		return;
+	}
 	
 	if (t_action == s_runloop_actions)
 		s_runloop_actions = t_action->next;
