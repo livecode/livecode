@@ -16,11 +16,10 @@ function extract_linux_or_android {
 for input in "$@" ; do
 	output="${input}${suffix}"
 
-	# The --preserve-dates flag for strip and objcopy only has
-	# whole second resolution, so move to a new file and copy to
-	# preserve the timestamps
-	mv "$input" "$input.timestamps"
-	cp "$input.timestamps" "$input"
+	# The --preserve-dates flag for strip and objcopy only has whole
+	# second resolution, so save the timestamps in a separate file
+	# instead.
+	touch -m -r "$input" "$input.timestamps"
 
 	# Extract a copy of the debugging information
 	$OBJCOPY --only-keep-debug "$input" "$output" 
