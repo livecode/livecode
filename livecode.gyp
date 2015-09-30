@@ -20,6 +20,8 @@
 
 				# Widgets and libraries
 				'extensions/extensions.gyp:extensions',
+
+				'engine/engine.gyp:engine-ctest',
 			],
 			
 			'conditions':
