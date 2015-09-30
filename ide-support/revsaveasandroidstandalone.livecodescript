@@ -448,6 +448,15 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       
       replace "${PROVIDER}" with tProvider in tManifest
       
+      // SN-2015-09-24: [[ Bug 15875 ]] Add the screenSize configChanges value for API > 12
+      //  Otherwise the app restarts on orientation change.
+      local tConfigChangesProp
+      put "keyboardHidden|orientation" into tConfigChangesProp
+      if tSettings["android,minimum version"] > 12 then
+         put "|screenSize" after tConfigChangesProp
+      end if
+      replace "${CONFIG_CHANGES}" with tConfigChangesProp in tManifest
+      
       #put tManifest into url ("binfile:c:/scratch/manifestdump.xml")
       put tManifest into url ("binfile:" & tManifestFile)
       if the result is not empty then
