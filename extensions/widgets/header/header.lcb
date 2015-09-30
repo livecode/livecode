@@ -715,7 +715,6 @@ private handler drawDropShadow() returns Effect
 
    put color [153/255, 153/255, 153/255, 1] into tProps["color"]
    put "source over" into tProps["blend mode"]
-   put 255 into tProps["opacity"]
    put 0.75 into tProps["spread"]
    put 5 into tProps["size"]
    put 1 into tProps["distance"]
