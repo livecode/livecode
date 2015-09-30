@@ -18,7 +18,8 @@ ${USES_PERMISSION}${USES_FEATURE}
       android:screenOrientation="${ORIENTATION}"
       android:configChanges="${CONFIG_CHANGES}"
       android:windowSoftInputMode="stateHidden"
-      android:launchMode="singleTask">
+      android:launchMode="singleTask"
+      android:hardwareAccelerated="${HARDWARE_ACCELERATED}">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.LAUNCHER" />
