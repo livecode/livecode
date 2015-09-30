@@ -319,7 +319,8 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    end repeat
    delete the last char of tParams["auxiliary_stackfiles"]
    
-   put "insert script of stack" && quote & "revLibUrl" & quote && "into back" into tParams["startup_script"]
+   // revLibURL needs to initialise its custom props, and revLoadLibrary must therefore be called.
+   put merge("send [[quote]]revLoadLibrary[[quote]] to stack [[quote]]revLibUrl[[quote]]") into tParams["startup_script"]
    put return & "insert script of stack" && quote & "InstallerUtilities" & quote && "into back" after tParams["startup_script"]
    
    switch pPlatform

@@ -84,7 +84,9 @@ static const char *ppmediastrings[] =
 #define MIN_RATE -3
 #define MAX_RATE 3
 
-
+extern "C" int initialise_weak_link_QuickTime(void);
+extern "C" int initialise_weak_link_QTKit(void);
+extern "C" int initialise_weak_link_QuickDraw(void);
 
 
 static MCColor controllercolors[] = {
@@ -1948,6 +1950,21 @@ void MCPlayer::setlooping(Boolean loop)
 		bool t_loop;
 		t_loop = loop;
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLoop, kMCPlatformPropertyTypeBool, &t_loop);
+	}
+}
+
+// SN-2015-09-30: Make specific implementation for the platformplayer, which
+//  ensures that QT is weak-linked.
+void MCPlayer::setdontuseqt(Boolean noqt)
+{
+	dontuseqt = noqt;
+	
+	// Weak link QT when setting a player's dontuseqt to false, if it is not already linked
+	if (!noqt && MCdontuseQT)
+	{
+		initialise_weak_link_QuickTime();
+		initialise_weak_link_QTKit() ;
+		initialise_weak_link_QuickDraw() ;
 	}
 }
 
