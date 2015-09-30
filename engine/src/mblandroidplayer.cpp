@@ -252,7 +252,7 @@ void MCAndroidPlayerControl::GetPlayableDuration(MCExecContext& ctxt, integer_t&
     jobject t_view;
     t_view = GetView();
 
-    MCAndroidObjectRemoteCall(t_view, "getPlayableDuration", "i", &r_integer);
+    MCAndroidObjectRemoteCall(t_view, "getPlayableDuration", "i", &r_duration);
 }
 
 void MCAndroidPlayerControl::GetNaturalSize(MCExecContext& ctxt, integer_t r_size[2])
