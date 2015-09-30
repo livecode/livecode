@@ -446,7 +446,6 @@ private handler drawDropShadow() returns Effect
 
    put color [39/255, 39/255, 39/255, 0.2] into tProps["color"]
    put "source over" into tProps["blend mode"]
-   put 255 into tProps["opacity"]
 
    if mWidgetTheme is kWidgetThemeAndroidFloatingAction then
       put 0.5 into tProps["spread"]
