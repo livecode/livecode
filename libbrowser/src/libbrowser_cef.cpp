@@ -16,6 +16,8 @@
 
 #include <core.h>
 
+#include <stdlib.h>
+
 #include "libbrowser_cef.h"
 
 #include <include/cef_app.h>
