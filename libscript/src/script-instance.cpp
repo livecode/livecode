@@ -79,6 +79,15 @@ private:
 	size_t m_used;
 };
 
+#if defined(__EMSCRIPTEN__)
+/* On emscripten, we require double alignment */
+typedef __MCScriptStackStorage<double,32> MCScriptStackStorage;
+
+#else
+typedef __MCScriptStackStorage<void *,32> MCScriptStackStorage;
+
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // This is the module of the most recent LCB stack frame on the current thread's
@@ -1222,7 +1231,7 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
     void *t_args[16];
     ffi_type *t_arg_types[16];
     bool t_arg_new[16];
-    __MCScriptStackStorage<void *,32> t_invoke_storage;
+    MCScriptStackStorage t_invoke_storage;
     
     uindex_t t_arg_index;
     t_arg_index = 0;
