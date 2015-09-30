@@ -3051,7 +3051,12 @@ Parse_stat MCKeys::parse(MCScriptPoint &sp, Boolean the)
 			return PS_ERROR;
 		}
 		if (sp.lookup(SP_FACTOR, te) != PS_NORMAL
-		        || (te->which != P_DRAG_DATA && te->which != P_CLIPBOARD_DATA && te->which != P_RAW_CLIPBOARD_DATA))
+		        || (te->which != P_DRAG_DATA
+                    && te->which != P_CLIPBOARD_DATA
+                    && te->which != P_RAW_CLIPBOARD_DATA
+                    && te->which != P_RAW_DRAGBOARD_DATA
+                    && te->which != P_FULL_CLIPBOARD_DATA
+                    && te->which != P_FULL_DRAGBOARD_DATA))
 		{
 			MCperror->add(PE_KEYS_BADPARAM, sp);
 			return PS_ERROR;
@@ -3193,6 +3198,12 @@ void MCKeys::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 			MCPasteboardEvalDragDropKeys(ctxt, r_value . stringref_value);
         else if (which == P_RAW_CLIPBOARD_DATA)
             MCPasteboardEvalRawClipboardKeys(ctxt, r_value . stringref_value);
+        else if (which == P_RAW_DRAGBOARD_DATA)
+            MCPasteboardEvalRawDragboardKeys(ctxt, r_value . stringref_value);
+        else if (which == P_FULL_CLIPBOARD_DATA)
+            MCPasteboardEvalFullClipboardKeys(ctxt, r_value . stringref_value);
+        else if (which == P_FULL_DRAGBOARD_DATA)
+            MCPasteboardEvalFullDragboardKeys(ctxt, r_value . stringref_value);
 		else if (which == P_CLIPBOARD_DATA)
 			MCPasteboardEvalClipboardKeys(ctxt, r_value . stringref_value);
         else
@@ -3216,8 +3227,14 @@ void MCKeys::compile(MCSyntaxFactoryRef ctxt)
 			MCSyntaxFactoryEvalMethod(ctxt, kMCPasteboardEvalDragDropKeysMethodInfo);
         else if (which == P_RAW_CLIPBOARD_DATA)
             MCSyntaxFactoryEvalMethod(ctxt, kMCPasteboardEvalRawClipboardKeysMethodInfo);
+        else if (which == P_RAW_DRAGBOARD_DATA)
+            MCSyntaxFactoryEvalMethod(ctxt, kMCPasteboardEvalRawDragboardKeysMethodInfo);
 		else if (which == P_CLIPBOARD_DATA)
 			MCSyntaxFactoryEvalMethod(ctxt, kMCPasteboardEvalClipboardKeysMethodInfo);
+        else if (which == P_FULL_CLIPBOARD_DATA)
+            MCSyntaxFactoryEvalMethod(ctxt, kMCPasteboardEvalFullClipboardKeysMethodInfo);
+        else if (which == P_FULL_DRAGBOARD_DATA)
+            MCSyntaxFactoryEvalMethod(ctxt, kMCPasteboardEvalFullDragboardKeysMethodInfo);
         else
             MCUnreachable();
 	}

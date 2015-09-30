@@ -3557,6 +3557,9 @@ extern MCExecSetTypeInfo *kMCPasteboardAllowableDragActionsTypeInfo;
 extern MCExecMethodInfo *kMCPasteboardEvalClipboardMethodInfo;
 extern MCExecMethodInfo *kMCPasteboardEvalClipboardKeysMethodInfo;
 extern MCExecMethodInfo *kMCPasteboardEvalRawClipboardKeysMethodInfo;
+extern MCExecMethodInfo *kMCPasteboardEvalRawDragboardKeysMethodInfo;
+extern MCExecMethodInfo *kMCPasteboardEvalFullClipboardKeysMethodInfo;
+extern MCExecMethodInfo *kMCPasteboardEvalFullDragboardKeysMethodInfo;
 extern MCExecMethodInfo *kMCPasteboardEvalDropChunkMethodInfo;
 extern MCExecMethodInfo *kMCPasteboardEvalDragDestinationMethodInfo;
 extern MCExecMethodInfo *kMCPasteboardEvalDragSourceMethodInfo;
@@ -3603,6 +3606,9 @@ void MCPasteboardEvalDragSource(MCExecContext& ctxt, MCStringRef& r_string);
 void MCPasteboardEvalDragDropKeys(MCExecContext& ctxt, MCStringRef& r_string);
 
 void MCPasteboardEvalRawClipboardKeys(MCExecContext& ctxt, MCStringRef& r_string);
+void MCPasteboardEvalRawDragboardKeys(MCExecContext& ctxt, MCStringRef& r_string);
+void MCPasteboardEvalFullClipboardKeys(MCExecContext& ctxt, MCStringRef& r_string);
+void MCPasteboardEvalFullDragboardKeys(MCExecContext& ctxt, MCStringRef& r_string);
 
 void MCPasteboardEvalIsAmongTheKeysOfTheClipboardData(MCExecContext& ctxt, MCNameRef p_key, bool& r_result);
 void MCPasteboardEvalIsNotAmongTheKeysOfTheClipboardData(MCExecContext& ctxt, MCNameRef p_key, bool& r_result);
@@ -3611,6 +3617,12 @@ void MCPasteboardEvalIsNotAmongTheKeysOfTheDragData(MCExecContext& ctxt, MCNameR
 
 void MCPasteboardEvalIsAmongTheKeysOfTheRawClipboardData(MCExecContext& ctxt, MCNameRef p_key, bool& r_result);
 void MCPasteboardEvalIsNotAmongTheKeysOfTheRawClipboardData(MCExecContext& ctxt, MCNameRef p_key, bool& r_result);
+void MCPasteboardEvalIsAmongTheKeysOfTheRawDragboardData(MCExecContext& ctxt, MCNameRef p_key, bool& r_result);
+void MCPasteboardEvalIsNotAmongTheKeysOfTheRawDragboardData(MCExecContext& ctxt, MCNameRef p_key, bool& r_result);
+void MCPasteboardEvalIsAmongTheKeysOfTheFullClipboardData(MCExecContext& ctxt, MCNameRef p_key, bool& r_result);
+void MCPasteboardEvalIsNotAmongTheKeysOfTheFullClipboardData(MCExecContext& ctxt, MCNameRef p_key, bool& r_result);
+void MCPasteboardEvalIsAmongTheKeysOfTheFullDragboardData(MCExecContext& ctxt, MCNameRef p_key, bool& r_result);
+void MCPasteboardEvalIsNotAmongTheKeysOfTheFullDragboardData(MCExecContext& ctxt, MCNameRef p_key, bool& r_result);
 
 void MCPasteboardEvalDragSourceAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
 void MCPasteboardEvalDragDestinationAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
@@ -3642,12 +3654,24 @@ void MCPasteboardGetClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCValu
 void MCPasteboardSetClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef p_data);
 void MCPasteboardGetRawClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef& r_data);
 void MCPasteboardSetRawClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef p_data);
+void MCPasteboardGetRawDragboardData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef& r_data);
+void MCPasteboardSetRawDragboardData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef p_data);
+void MCPasteboardGetFullClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef& r_data);
+void MCPasteboardSetFullClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef p_data);
+void MCPasteboardGetFullDragboardData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef& r_data);
+void MCPasteboardSetFullDragboardData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef p_data);
 void MCPasteboardGetDragData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef& r_data);
 void MCPasteboardSetDragData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef p_data);
 void MCPasteboardGetClipboardTextData(MCExecContext& ctxt, MCValueRef& r_data);
 void MCPasteboardSetClipboardTextData(MCExecContext& ctxt, MCValueRef p_data);
 void MCPasteboardGetRawClipboardTextData(MCExecContext& ctxt, MCValueRef& r_data);
 void MCPasteboardSetRawClipboardTextData(MCExecContext& ctxt, MCValueRef p_data);
+void MCPasteboardGetRawDragboardTextData(MCExecContext& ctxt, MCValueRef& r_data);
+void MCPasteboardSetRawDragboardTextData(MCExecContext& ctxt, MCValueRef p_data);
+void MCPasteboardGetFullClipboardTextData(MCExecContext& ctxt, MCValueRef& r_data);
+void MCPasteboardSetFullClipboardTextData(MCExecContext& ctxt, MCValueRef p_data);
+void MCPasteboardGetFullDragboardTextData(MCExecContext& ctxt, MCValueRef& r_data);
+void MCPasteboardSetFullDragboardTextData(MCExecContext& ctxt, MCValueRef p_data);
 void MCPasteboardGetDragTextData(MCExecContext& ctxt, MCValueRef& r_data);
 void MCPasteboardSetDragTextData(MCExecContext& ctxt, MCValueRef p_data);
 

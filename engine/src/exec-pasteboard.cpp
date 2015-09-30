@@ -41,6 +41,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, Clipboard, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, ClipboardKeys, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, RawClipboardKeys, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, RawDragboardKeys, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, FullClipboardKeys, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, FullDragboardKeys, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, DropChunk, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, DragDestination, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, DragSource, 1)
@@ -49,8 +52,14 @@ MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsAmongTheKeysOfTheClipboardData, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsNotAmongTheKeysOfTheClipboardData, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsAmongTheKeysOfTheRawClipboardData, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsNotAmongTheKeysOfTheRawClipboardData, 2)
+MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsAmongTheKeysOfTheFullClipboardData, 2)
+MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsNotAmongTheKeysOfTheFullClipboardData, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsAmongTheKeysOfTheDragData, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsNotAmongTheKeysOfTheDragData, 2)
+MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsAmongTheKeysOfTheRawDragboardData, 2)
+MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsNotAmongTheKeysOfTheRawDragboardData, 2)
+MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsAmongTheKeysOfTheFullDragboardData, 2)
+MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsNotAmongTheKeysOfTheFullDragboardData, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, DragSourceAsObject, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, DragDestinationAsObject, 1)
 
@@ -77,16 +86,28 @@ MC_EXEC_DEFINE_GET_METHOD(Pasteboard, ClipboardData, 2)
 MC_EXEC_DEFINE_SET_METHOD(Pasteboard, ClipboardData, 2)
 MC_EXEC_DEFINE_GET_METHOD(Pasteboard, RawClipboardData, 2)
 MC_EXEC_DEFINE_SET_METHOD(Pasteboard, RawClipboardData, 2)
+MC_EXEC_DEFINE_GET_METHOD(Pasteboard, FullClipboardData, 2)
+MC_EXEC_DEFINE_SET_METHOD(Pasteboard, FullClipboardData, 2)
 MC_EXEC_DEFINE_GET_METHOD(Pasteboard, DragData, 2)
 MC_EXEC_DEFINE_SET_METHOD(Pasteboard, DragData, 2)
+MC_EXEC_DEFINE_GET_METHOD(Pasteboard, RawDragData, 2)
+MC_EXEC_DEFINE_SET_METHOD(Pasteboard, RawDragData, 2)
+MC_EXEC_DEFINE_GET_METHOD(Pasteboard, FullDragData, 2)
+MC_EXEC_DEFINE_SET_METHOD(Pasteboard, FullDragData, 2)
 MC_EXEC_DEFINE_GET_METHOD(Pasteboard, ClipboardOrDragData, 2)
 MC_EXEC_DEFINE_SET_METHOD(Pasteboard, ClipboardOrDragData, 2)
 MC_EXEC_DEFINE_GET_METHOD(Pasteboard, ClipboardTextData, 2)
 MC_EXEC_DEFINE_SET_METHOD(Pasteboard, ClipboardTextData, 2)
 MC_EXEC_DEFINE_GET_METHOD(Pasteboard, RawClipboardTextData, 2)
 MC_EXEC_DEFINE_SET_METHOD(Pasteboard, RawClipboardTextData, 2)
+MC_EXEC_DEFINE_GET_METHOD(Pasteboard, FullClipboardTextData, 2)
+MC_EXEC_DEFINE_SET_METHOD(Pasteboard, FullCLipboardTextData, 2)
 MC_EXEC_DEFINE_GET_METHOD(Pasteboard, DragTextData, 2)
 MC_EXEC_DEFINE_SET_METHOD(Pasteboard, DragTextData, 2)
+MC_EXEC_DEFINE_GET_METHOD(Pasteboard, RawDragTextData, 2)
+MC_EXEC_DEFINE_SET_METHOD(Pasteboard, RawDragTextData, 2)
+MC_EXEC_DEFINE_GET_METHOD(Pasteboard, FullDragTextData, 2)
+MC_EXEC_DEFINE_SET_METHOD(Pasteboard, FullDragTextData, 2)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -206,6 +227,8 @@ static MCExecSetTypeInfo _kMCPasteboardAllowableDragActionsTypeInfo =
 
 MCExecEnumTypeInfo *kMCPasteboardDragActionTypeInfo = &_kMCPasteboardDragActionTypeInfo;
 MCExecSetTypeInfo *kMCPasteboardAllowableDragActionsTypeInfo = &_kMCPasteboardAllowableDragActionsTypeInfo;
+
+static bool MCPasteboardClipboardIsLocked();
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -934,6 +957,10 @@ void MCPasteboardSetClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_index, 
     bool t_clipboard_locked;
     t_success = t_clipboard_locked = t_clipboard->Lock();
     
+    // If we are not inside a "lock" command, clear the clipboard contents
+    if (p_is_clipboard && !MCPasteboardClipboardIsLocked())
+        t_clipboard->Clear();
+    
     // If we have both a valid transfer type and some data, add it to the
     // clipboard under the appropriate type.
     //
@@ -1264,6 +1291,10 @@ void MCPasteboardEvalDragDestinationAsObject(MCExecContext& ctxt, MCObjectPtr& r
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static bool MCPasteboardClipboardIsLocked()
+{
+    return MCscriptrawclipboard != NULL;
+}
 
 void MCPasteboardExecLockClipboard(MCExecContext& ctxt)
 {

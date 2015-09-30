@@ -366,6 +366,12 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
     
     DEFINE_RW_ARRAY_PROPERTY(P_RAW_CLIPBOARD_DATA, Any, Pasteboard, RawClipboardData)
     DEFINE_RW_PROPERTY(P_RAW_CLIPBOARD_DATA, Any, Pasteboard, RawClipboardTextData)
+    DEFINE_RW_ARRAY_PROPERTY(P_RAW_DRAGBOARD_DATA, Any, Pasteboard, RawDragboardData)
+    DEFINE_RW_PROPERTY(P_RAW_DRAGBOARD_DATA, Any, Pasteboard, RawDragboardTextData)
+    DEFINE_RW_ARRAY_PROPERTY(P_FULL_CLIPBOARD_DATA, Any, Pasteboard, FullClipboardData)
+    DEFINE_RW_PROPERTY(P_FULL_CLIPBOARD_DATA, Any, Pasteboard, FullClipboardTextData)
+    DEFINE_RW_ARRAY_PROPERTY(P_FULL_DRAGBOARD_DATA, Any, Pasteboard, FullDragboardData)
+    DEFINE_RW_PROPERTY(P_FULL_DRAGBOARD_DATA, Any, Pasteboard, FullDragboardTextData)
 
 	// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog    
     DEFINE_RW_PROPERTY(P_COLOR_DIALOG_COLORS, LinesOfString, Dialog, ColorDialogColors)
@@ -919,6 +925,9 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	case P_DRAG_DATA:
 	case P_CLIPBOARD_DATA:
     case P_RAW_CLIPBOARD_DATA:
+    case P_RAW_DRAGBOARD_DATA:
+    case P_FULL_CLIPBOARD_DATA:
+    case P_FULL_DRAGBOARD_DATA:
 		if (sp.next(type) != PS_NORMAL)
 			return PS_NORMAL;
 		if (type != ST_LB)
