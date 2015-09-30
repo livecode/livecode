@@ -31,8 +31,8 @@ Use the <revXMLParent> <function> to go up one level in an <XML tree>.
 
 If the <revXMLParent> <function> encounters an error, it <return|returns> an error message starting with "xmlerr".
 
->*Important:*  The <revXMLParent> <function> is part of the <XML library>. To ensure that the <function> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
+>*Important:*  The <revXMLParent> <function> is part of the <XML library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
 
-References: function (control_st), revXMLRootNode (function), revXMLFirstChild (function), XML library (library), Revolution custom library (library), node (glossary), Standalone Application Settings (glossary), standalone application (glossary), return (glossary), XML tree (glossary), parent node (glossary)
+References: function (control_st), revXMLRootNode (function), revXMLFirstChild (function), XML library (library), LiveCode custom library (library), node (glossary), Standalone Application Settings (glossary), standalone application (glossary), return (glossary), XML tree (glossary), parent node (glossary)
 
 Tags: text processing

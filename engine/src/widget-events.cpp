@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 Runtime Revolution Ltd.
+/* Copyright (C) 2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -407,6 +407,11 @@ void MCWidgetEventManager::event_toolchanged(MCWidget* p_widget, Tool p_tool)
 void MCWidgetEventManager::event_layerchanged(MCWidget* p_widget)
 {
     MCWidgetOnLayerChanged(p_widget -> getwidget());
+}
+
+void MCWidgetEventManager::event_visibilitychanged(MCWidget* p_widget, bool p_visible)
+{
+    MCWidgetOnVisibilityChanged(p_widget -> getwidget(), p_visible);
 }
 
 Boolean MCWidgetEventManager::event_doubledown(MCWidget* p_widget, uint2 p_which)

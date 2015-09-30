@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -926,6 +926,8 @@ bool MCHandlerTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self, int p_abi, vo
     MCHandlerTypeLayout *t_layout;
     if (!MCMemoryAllocate(sizeof(MCHandlerTypeLayout) + sizeof(ffi_cif), t_layout))
         return false;
+
+	t_layout -> abi = p_abi;
     
     if (ffi_prep_cif((ffi_cif *)&t_layout -> cif, (ffi_abi)p_abi, self -> handler . field_count, (ffi_type *)self -> handler . layout_args[0], (ffi_type **)(self -> handler . layout_args + 1)) != FFI_OK)
     {

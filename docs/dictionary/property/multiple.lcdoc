@@ -4,7 +4,7 @@ Type: property
 
 Syntax: set the multiple to {true | false}
 
-Summary: Has no effect and is included in <Revolution|LiveCode> for compatibility with imported <HyperCard> stacks.
+Summary: Has no effect and is included in <LiveCode> for compatibility with imported <HyperCard> stacks.
 
 Introduced: 1.0
 
@@ -13,4 +13,4 @@ Platforms: desktop,server,web
 Description:
 In HyperCard, the <multiple> <property> determines whether multiple <object|objects> are drawn when using the <paint tool|paint tools>. In LiveCode, the <paint tool|paint tools> always draw a single shape.
 
-References: lineSize (property), centered (property), multiSpace (property), property (glossary), paint tool (glossary), Revolution (glossary), HyperCard (glossary), object (object)
+References: lineSize (property), centered (property), multiSpace (property), property (glossary), paint tool (glossary), LiveCode (glossary), HyperCard (glossary), object (object)

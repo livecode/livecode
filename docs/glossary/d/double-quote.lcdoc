@@ -7,8 +7,8 @@ Type: glossary
 Description:
 The double straight quote <character>, ASCII 34 ("). 
  
-Double quotes are not interchangeable with "smart quotes" or curved quotes in <Revolution|LiveCode> <statement|statements>. A double quote is also not the same as two single quote characters ('').
+Double quotes are not interchangeable with "smart quotes" or curved quotes in <LiveCode> <statement|statements>. A double quote is also not the same as two single quote characters ('').
 
-References: statement (glossary), character (glossary), Revolution (glossary)
+References: statement (glossary), character (glossary), LiveCode (glossary)
 
 Tags: text processing

@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 Runtime Revolution Ltd.
+/* Copyright (C) 2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -652,6 +652,14 @@ void MCWidget::layerchanged()
         return;
     
     MCwidgeteventmanager -> event_layerchanged(this);
+}
+
+void MCWidget::visibilitychanged(bool p_visible)
+{
+    if (m_widget == nil)
+        return;
+    
+    MCwidgeteventmanager -> event_visibilitychanged(this, p_visible);
 }
 
 Exec_stat MCWidget::handle(Handler_type p_type, MCNameRef p_method, MCParameter *p_parameters, MCObject *p_passing_object)

@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 Runtime Revolution Ltd.
+/* Copyright (C) 2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -58,6 +58,7 @@ public:
     MCObject *event_hittest(MCWidget*, int32_t x, int32_t y);
     void event_toolchanged(MCWidget*, Tool);
     void event_layerchanged(MCWidget*);
+    void event_visibilitychanged(MCWidget*, bool);
     
     // Non-MCControl event for handling touches
     void event_touch(MCWidget*, uint32_t p_id, MCEventTouchPhase, int2 p_x, int2 p_y);

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2014 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -3986,7 +3986,7 @@ static bool __MCCanvasEffectEqual(MCValueRef p_left, MCValueRef p_right)
 	if (t_left->type != t_right->type)
 		return false;
 	
-	if (!MCValueIsEqualTo(t_left->color, t_right->color) || t_left->opacity != t_right->opacity || t_left->blend_mode != t_right->blend_mode)
+	if (!MCValueIsEqualTo(t_left->color, t_right->color) || t_left->blend_mode != t_right->blend_mode)
 		return false;
 	
 	switch (t_left->type)
@@ -4018,7 +4018,7 @@ static hash_t __MCCanvasEffectHash(MCValueRef p_value)
 	t_effect = MCCanvasEffectGet((MCCanvasEffectRef)p_value);
 	
 	hash_t t_hash;
-	t_hash = MCValueHash(t_effect->color) ^ MCHashInteger(t_effect->blend_mode) ^ MCHashDouble(t_effect->opacity);
+	t_hash = MCValueHash(t_effect->color) ^ MCHashInteger(t_effect->blend_mode);
 	
 	switch (t_effect->type)
 	{
@@ -4097,7 +4097,6 @@ bool MCCanvasEffectHasDistanceAndAngle(MCCanvasEffectType p_type)
 void MCCanvasEffectDefault(MCCanvasEffectType p_type, __MCCanvasEffectImpl &x_effect)
 {
 	x_effect.color = kMCCanvasColorBlack;
-	x_effect.opacity = 0.75;
 	x_effect.blend_mode = kMCGBlendModeSourceOver;
 	
 	if (MCCanvasEffectHasSizeAndSpread(p_type))
@@ -4223,7 +4222,6 @@ void MCCanvasEffectMakeWithPropertyArray(integer_t p_type, MCArrayRef p_properti
 	// Set effect properties from the array
 	while (t_success && MCArrayIterate(p_properties, t_iter, t_key, t_value))
 	{
-		//t_success = MCCanvasEffectSetProperty(t_effect, MCNameGetString(t_key), t_value);
 		MCCanvasEffectProperty t_property;
 		if (!MCCanvasEffectPropertyFromString(MCNameGetString(t_key), t_property))
 		{
@@ -4240,13 +4238,6 @@ void MCCanvasEffectMakeWithPropertyArray(integer_t p_type, MCArrayRef p_properti
 					t_success = MCCanvasEffectThrowPropertyInvalidValueError(t_property, t_value);
 				else
 					t_effect.color = (MCCanvasColorRef)t_value;
-				break;
-				
-			case kMCCanvasEffectPropertyOpacity:
-				if (MCValueGetTypeCode(t_value) != kMCValueTypeCodeNumber)
-					t_success = MCCanvasEffectThrowPropertyInvalidValueError(t_property, t_value);
-				else
-					t_effect.opacity = MCNumberFetchAsReal((MCNumberRef)t_value);
 				break;
 				
 			case kMCCanvasEffectPropertyBlendMode:
@@ -4342,21 +4333,6 @@ void MCCanvasEffectSetBlendModeAsString(MCStringRef p_blend_mode, MCCanvasEffect
 	if (!MCCanvasEffectSetBlendModeProperty(t_effect, p_blend_mode))
 		return;
 
-	MCCanvasEffectSet(t_effect, x_effect);
-}
-
-MC_DLLEXPORT_DEF
-void MCCanvasEffectGetOpacity(MCCanvasEffectRef p_effect, MCCanvasFloat &r_opacity)
-{
-	r_opacity = MCCanvasEffectGet(p_effect)->opacity;
-}
-
-MC_DLLEXPORT_DEF
-void MCCanvasEffectSetOpacity(MCCanvasFloat p_opacity, MCCanvasEffectRef &x_effect)
-{
-	__MCCanvasEffectImpl t_effect;
-	t_effect = *MCCanvasEffectGet(x_effect);
-	t_effect.opacity = p_opacity;
 	MCCanvasEffectSet(t_effect, x_effect);
 }
 
@@ -6383,7 +6359,6 @@ bool MCCanvasStringsInitialize()
 	
 	s_effect_property_map[kMCCanvasEffectPropertyColor] = MCNAME("color");
 	s_effect_property_map[kMCCanvasEffectPropertyBlendMode] = MCNAME("blend mode");
-	s_effect_property_map[kMCCanvasEffectPropertyOpacity] = MCNAME("opacity");
 	s_effect_property_map[kMCCanvasEffectPropertySize] = MCNAME("size");
 	s_effect_property_map[kMCCanvasEffectPropertySpread] = MCNAME("spread");
 	s_effect_property_map[kMCCanvasEffectPropertyDistance] = MCNAME("distance");

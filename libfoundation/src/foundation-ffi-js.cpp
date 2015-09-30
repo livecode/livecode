@@ -1,5 +1,5 @@
 /*                                                                     -*-c++-*-
-Copyright (C) 2015 Runtime Revolution Ltd.
+Copyright (C) 2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -114,6 +114,17 @@ ffi_call(ffi_cif *p_cif,
 			// Get the actual JavaScript function
 			var func = Module.Runtime.functionPointers[index];
 
+			/*DEBUG // (no way to hide this behind an #ifdef, unfortunately)
+			// Get the function name
+			var DBG_func_name;
+			for (var key in Module) {
+				if (Module.hasOwnProperty(key) && Module[key] == func) {
+					DBG_func_name = key;
+				}
+			}
+			var DBG_func_args = [];
+			*/
+
 			// ---------- Marshal arguments
 			var func_args = [];
 			for (var i = 0; i < nargs; ++i) {
@@ -127,12 +138,21 @@ ffi_call(ffi_cif *p_cif,
 				var arg_val = getValue(getValue(arg_val_ptr, "*"), arg_type);
 
 				func_args.push(arg_val);
+
+				/*DEBUG
+				DBG_func_args.push('(' + arg_type + ')' + arg_val.toString(16));
+				*/
 			}
 
 			var ret_type = null;
 			if (rvalue_type_ptr != 0) {
 				ret_type = pointer_stringify(rvalue_type_ptr);
 			}
+
+			/*DEBUG
+			console.error('ffi_call: ' + fn.toString(16) + '=' + DBG_func_name +
+			              ' ' + DBG_func_args);
+			*/
 
 			// ---------- Invoke
 			stack = Module.Runtime.stackSave();

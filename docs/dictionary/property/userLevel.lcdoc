@@ -4,7 +4,7 @@ Type: property
 
 Syntax: set the userLevel to <number> 
 
-Summary: Has no effect and is included in <Revolution|LiveCode> for compatibility with imported <HyperCard> stacks.
+Summary: Has no effect and is included in <LiveCode> for compatibility with imported <HyperCard> stacks.
 
 Introduced: 1.0
 
@@ -17,4 +17,4 @@ By default, the <userLevel> <property> is set to 8. (This is greater than any of
 
 A handler can set the <userLevel> to any number without causing a <error|script error>, but the <behavior> of the <application> is not changed.
 
-References: cantModify (property), edit (command), choose (command), stacks (function), property (glossary), Revolution (glossary), behavior (glossary), value (glossary), error (glossary), import (glossary), HyperCard (glossary), application (glossary)
+References: cantModify (property), edit (command), choose (command), stacks (function), property (glossary), LiveCode (glossary), behavior (glossary), value (glossary), error (glossary), import (glossary), HyperCard (glossary), application (glossary)

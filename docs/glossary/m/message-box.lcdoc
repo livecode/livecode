@@ -5,8 +5,8 @@ Synonyms: message box,msg box,message window,msg window,message palette,msg pale
 Type: glossary
 
 Description:
-A window into which you can enter <Revolution|LiveCode> <command|commands> for immediate <execute|execution>.
+A window into which you can enter <LiveCode> <command|commands> for immediate <execute|execution>.
 
-References: command (glossary), Revolution (glossary), execute (glossary)
+References: command (glossary), LiveCode (glossary), execute (glossary)
 
 Tags: windowing

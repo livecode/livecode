@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2014 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -104,7 +104,6 @@ enum MCCanvasEffectProperty
 {
 	kMCCanvasEffectPropertyColor,
 	kMCCanvasEffectPropertyBlendMode,
-	kMCCanvasEffectPropertyOpacity,
 	
 	//	kMCCanvasEffectPropertyFilter,
 	kMCCanvasEffectPropertySize,
@@ -120,7 +119,6 @@ struct __MCCanvasEffectImpl
 {
 	MCCanvasEffectType type;
 	
-	MCCanvasFloat opacity;
 	MCGBlendMode blend_mode;
 	MCCanvasColorRef color;
 	

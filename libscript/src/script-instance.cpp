@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -44,6 +44,37 @@ extern MCHandlerCallbacks __kMCScriptHandlerCallbacks;
 bool __MCScriptHandlerInvoke(void *context, MCValueRef *p_arguments, uindex_t p_argument_count, MCValueRef& r_value);
 void __MCScriptHandlerRelease(void *context);
 bool __MCScriptHandlerDescribe(void *context, MCStringRef &r_desc);
+
+////////////////////////////////////////////////////////////////////////////////
+
+template <size_t WORD, size_t LENGTH>
+class __MCScriptStackStorage
+{
+public:
+	__MCScriptStackStorage()
+		: m_used(0)
+	{
+	}
+
+	void *Allocate(size_t p_request)
+	{
+		/* Ensure the amount allocated is aligned to the word size */
+		size_t t_amount = (~(WORD-1)) & ((WORD-1) + p_request);
+
+		/* Ensure there's enough space left in the storage */
+		MCAssert(m_used + t_amount < (WORD * LENGTH));
+
+		/* Create and return the pointer, updating the current offset */
+		void *t_ptr = &m_storage[m_used];
+
+		m_used += t_amount;
+
+		return t_ptr;
+	}
+private:
+	uint8_t m_storage[WORD * LENGTH];
+	size_t m_used;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1188,9 +1219,7 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
     void *t_args[16];
     ffi_type *t_arg_types[16];
     bool t_arg_new[16];
-    uint8_t t_storage[256];
-    uindex_t t_storage_index;
-    t_storage_index = 0;
+    __MCScriptStackStorage<sizeof(void *),32> t_invoke_storage;
     
     uindex_t t_arg_index;
     t_arg_index = 0;
@@ -1252,12 +1281,9 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                     else
                     {
                         // For inout mode, we need to copy it.
-                        
-                        if (!t_descriptor -> copy(MCForeignValueGetContentsPtr(t_value), t_storage + t_storage_index))
+                        t_argument = t_invoke_storage.Allocate(t_descriptor->size);
+                        if (!t_descriptor -> copy(MCForeignValueGetContentsPtr(t_value), t_argument))
                             break;
-                        
-                        t_argument = t_storage + t_storage_index;
-                        t_storage_index += t_descriptor -> size;
                         
                         // Need to finalize the storage.
                         t_arg_new[t_arg_index] = true;
@@ -1267,19 +1293,17 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                 {
                     // The source type is not foreign - it must be the target type's
                     // bridge type or null. Thus we must export the value.
+                    t_argument = t_invoke_storage.Allocate(t_descriptor->size);
                     if (t_value == kMCNull)
                     {
-                        if (!t_descriptor -> initialize(t_storage + t_storage_index))
+                        if (!t_descriptor -> initialize(t_argument))
                             break;
                     }
                     else
                     {
-                        if (!t_descriptor -> doexport(t_value, false, t_storage + t_storage_index))
+                        if (!t_descriptor -> doexport(t_value, false, t_argument))
                             break;
                     }
-                    
-                    t_argument = t_storage + t_storage_index;
-                    t_storage_index += t_descriptor -> size;
                     
                     // Need to finalize the storage.
                     t_arg_new[t_arg_index] = true;
@@ -1355,9 +1379,11 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
             if (t_descriptor != nil)
             {
                 // Target is foreign - use the initialize method, if any.
+                t_argument = t_invoke_storage.Allocate(t_descriptor->size);
+
                 if (t_descriptor -> initialize != nil)
                 {
-                    if (!t_descriptor -> initialize(t_storage + t_storage_index))
+                    if (!t_descriptor -> initialize(t_argument))
                         break;
                     
                     // Need to finalize the storage.
@@ -1369,9 +1395,6 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                     // cleanup.
                     t_arg_new[t_arg_index] = false;
                 }
-                
-                t_argument = t_storage + t_storage_index;
-                t_storage_index += t_descriptor -> size;
             }
             else
             {
@@ -1397,8 +1420,7 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
             else
             {
                 // Allocate space for the storage pointer
-                t_args[t_arg_index] = t_storage + t_storage_index;
-                t_storage_index += sizeof(uintptr_t);
+                t_args[t_arg_index] = t_invoke_storage.Allocate(sizeof(void *));
                 *(void **)t_args[t_arg_index] = t_argument;
                 t_arg_types[t_arg_index] = &ffi_type_pointer;
             }
@@ -1413,20 +1435,17 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
             if (t_descriptor != nil)
             {
                 // Allocate space for the storage pointer
-                t_args[t_arg_index] = t_storage + t_storage_index;
-                t_storage_index += sizeof(uintptr_t);
+                t_args[t_arg_index] = t_invoke_storage.Allocate(sizeof(void **));
                 
                 *(void **)t_args[t_arg_index] = t_argument;
             }
             else
             {
                 // Allocate space for the storage pointer
-                t_args[t_arg_index] = t_storage + t_storage_index;
-                t_storage_index += sizeof(uintptr_t);
+                t_args[t_arg_index] = t_invoke_storage.Allocate(sizeof(void ***));
                 
                 // The argument is the storage pointer.
-                *(void **)t_args[t_arg_index] = t_storage + t_storage_index;
-                t_storage_index += sizeof(uintptr_t);
+                *(void **)t_args[t_arg_index] = t_invoke_storage.Allocate(sizeof(void **));
                 
                 **(void ***)t_args[t_arg_index] = t_argument;
             }
@@ -1693,7 +1712,7 @@ static bool MCScriptPerformMultiInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_
         MCScriptDefinition *t_definition;
         MCScriptResolveDefinitionInFrame(x_frame, t_group -> handlers[i], t_instance, t_definition);
         
-        uindex_t t_type_index;
+        uindex_t t_type_index = 0;
         if (t_definition -> kind == kMCScriptDefinitionKindHandler)
             t_type_index = static_cast<MCScriptHandlerDefinition *>(t_definition) -> type;
         else if (t_definition -> kind == kMCScriptDefinitionKindForeignHandler)
@@ -2196,11 +2215,13 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     
                     // If we are a normal handler we use the current frame.
                     // If we are context handler, we use the caller's frame.
-                    MCScriptFrame *t_target_frame;
+                    MCScriptFrame *t_target_frame = nil;
                     if (t_frame -> handler -> scope == kMCScriptHandlerScopeNormal)
                         t_target_frame = t_frame;
                     else if (t_frame -> caller != nil)
                         t_target_frame = t_frame -> caller;
+                    else
+                        __MCScriptUnreachable__("cannot determine context variable target frame");
                     
                     // If there is no context table, or the value of the slot at the given
                     // index is nil then we use the default.
@@ -2277,11 +2298,13 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     
                     // If we are a normal handler we use the current frame.
                     // If we are context handler, we use the caller's frame.
-                    MCScriptFrame *t_target_frame;
+                    MCScriptFrame *t_target_frame = nil;
                     if (t_frame -> handler -> scope == kMCScriptHandlerScopeNormal)
                         t_target_frame = t_frame;
                     else if (t_frame -> caller != nil)
                         t_target_frame = t_frame -> caller;
+                    else
+	                    __MCScriptUnreachable__("cannot determine context variable target frame");
                     
                     if (t_success &&
                         (t_target_frame -> context == nil ||

@@ -27,8 +27,8 @@ Use the <revdb_disconnect> <function> to cleanly log off from a <database>.
 
 Evaluating the <revdb_disconnect> <function> has the same effect as <execute|executing> the <revCloseDatabase> <command>. The only difference is that one is a <function call> and the other is a <command>.
 
->*Important:*  The <revdb_disconnect> <function> is part of the <Database library>. To ensure that the <function> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the General screen of the <Standalone Application Settings> window, make sure the "Database Support" checkbox is checked and the database drivers you are using are selected in the list of database drivers.
+>*Important:*  The <revdb_disconnect> <function> is part of the <Database library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the General screen of the <Standalone Application Settings> window, make sure the "Database Support" checkbox is checked and the database drivers you are using are selected in the list of database drivers.
 
-References: revCloseCursor (command), revCloseDatabase (command), function (control_st), Standalone Application Settings (glossary), database (glossary), command (glossary), standalone application (glossary), execute (glossary), function call (glossary), Database library (library), Revolution custom library (library)
+References: revCloseCursor (command), revCloseDatabase (command), function (control_st), Standalone Application Settings (glossary), database (glossary), command (glossary), standalone application (glossary), execute (glossary), function call (glossary), Database library (library), LiveCode custom library (library)
 
 Tags: database

@@ -3101,7 +3101,11 @@ void MCObject::SetVisibility(MCExecContext& ctxt, uint32_t part, bool setting, b
 		t_old_effective_rect = static_cast<MCControl *>(this) -> geteffectiverect();
 	
     if (dirty)
+    {
         signallisteners(P_VISIBLE);
+        // AL-2015-09-23: [[ Bug 15197 ]] Hook up widget OnVisibilityChanged.
+        visibilitychanged((flags & F_VISIBLE) != 0);
+    }
     
     if (dirty && opened)
     {
