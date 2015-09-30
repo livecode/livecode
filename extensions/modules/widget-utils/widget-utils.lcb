@@ -242,13 +242,6 @@ via a property setter, or from the widget's stored properties array when loading
 public handler stringToColor(in pString as String) returns Color
 	variable tComponentList as List
 	split pString by "," into tComponentList
-
-	variable tComponentCount
-	put the number of elements in tComponentList into tComponentCount
-	if tComponentCount is not 3 and tComponentCount is not 4 then
-		// Invalid number of components detected
-		throw "Invalid color"
-	end if
 	
 	variable tColor as List
 	put [] into tColor
