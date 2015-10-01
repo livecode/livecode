@@ -454,8 +454,8 @@ void MCStack::view_update_transform(void)
 	
 	// PM-2015-07-17: [[ Bug 13754 ]] Make sure stack does not disappear off screen when changing the scalefactor
     MCRectangle t_bounded_rect, t_screen_rect;
-	
-	// AL-2015-10-01: [[ Bug 16017 ]] Remember location of stacks on a second monitor
+
+    // AL-2015-10-01: [[ Bug 16017 ]] Remember location of stacks on a second monitor
     const MCDisplay* t_nearest_display = MCscreen -> getnearestdisplay(t_view_rect);
     if (t_nearest_display != NULL)
     {

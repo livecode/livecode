@@ -452,6 +452,11 @@ bool MCExecContext::FormatReal(real64_t p_real, MCStringRef& r_value)
 	return MCU_r8tos(p_real, GetNumberFormatWidth(), GetNumberFormatTrailing(), GetNumberFormatForce(), r_value);
 }
 
+bool MCExecContext::FormatInteger(integer_t p_integer, MCStringRef& r_value)
+{
+	return MCStringFormat(r_value, "%d", p_integer);
+}
+
 bool MCExecContext::FormatUnsignedInteger(uinteger_t p_integer, MCStringRef& r_value)
 {
 	return MCStringFormat(r_value, "%u", p_integer);

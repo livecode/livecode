@@ -738,7 +738,11 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
                                  untilDate: [NSDate dateWithTimeIntervalSinceNow: p_duration]
                                     inMode: p_blocking ? NSEventTrackingRunLoopMode : NSDefaultRunLoopMode
                                    dequeue: YES];
-	if (t_modal)
+    
+    // Run the modal session, if it has been created yet (it might not if this
+    // wait was triggered by reacting to an event caused as part of creating
+    // the modal session, e.g. when losing window focus).
+	if (t_modal && s_modal_sessions[s_modal_session_count - 1].session != nil)
 		[NSApp runModalSession: s_modal_sessions[s_modal_session_count - 1] . session];
     
 	s_in_blocking_wait = false;
