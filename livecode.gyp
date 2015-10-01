@@ -193,6 +193,7 @@
 			'dependencies':
 			[
 				'libcpptest/libcpptest.gyp:test-libcpptest<(javascriptify)',
+				'libfoundation/libfoundation.gyp:test-libFoundation<(javascriptify)',
 				'engine/kernel-standalone.gyp:test-kernel-standalone<(javascriptify)',
 			],
 
@@ -228,6 +229,7 @@
 			'dependencies':
 			[
 				'libcpptest/libcpptest.gyp:run-test-libcpptest',
+				'libfoundation/libfoundation.gyp:run-test-libFoundation',
 				'engine/kernel-standalone.gyp:run-test-kernel-standalone',
 			],
 
