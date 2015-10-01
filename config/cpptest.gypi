@@ -47,8 +47,66 @@
 					'SubSystem': '1',	# /SUBSYSTEM:CONSOLE
 				},
 			},
-
 		},
+
+		{
+			'target_name': 'run-test-<(module_name)',
+			'type': 'none',
+
+			'variables':
+			{
+				'javascriptify': '',
+				'test_suffix': '',
+				'exec_wrapper': '',
+			},
+
+			'dependencies': [ 'test-<(module_name)<(javascriptify)', ],
+
+			'conditions':
+			[
+				[
+					'OS == "emscripten"',
+					{
+						'variables':
+						{
+							'javascriptify': '-javascriptify',
+							'test_suffix': '.js',
+							'exec_wrapper': 'node',
+						},
+					},
+				],
+				[
+					'OS == "win"',
+					{
+						'variables':
+						{
+							'test_suffix': '.exe',
+						},
+					},
+				],
+			],
+
+			'actions':
+			[
+				{
+					'action_name': 'run-test-<(module_name)',
+					'message': 'Running test-<(module_name)',
+
+					'inputs': [ '<(PRODUCT_DIR)/test-<(module_name)<(test_suffix)', ],
+					'outputs': [ '<(PRODUCT_DIR)/test-<(module_name).log' ],
+
+					'action':
+					[
+						'<@(perl)',
+						'../util/run-tests.pl',
+						'<(exec_wrapper)',
+						'<(PRODUCT_DIR)/test-<(module_name)<(test_suffix)',
+					],
+
+				},
+			],
+
+		}
 	],
 
 	'conditions':

@@ -220,5 +220,32 @@
 				],
 			],
 		},
+
+		{
+			'target_name': 'cpptest-run-all',
+			'type': 'none',
+
+			'dependencies':
+			[
+				'libcpptest/libcpptest.gyp:run-test-libcpptest',
+				'engine/kernel-standalone.gyp:run-test-kernel-standalone',
+			],
+
+			'conditions':
+			[
+				[
+					'mobile == 0',
+					{
+						'dependencies':
+						[
+							'engine/kernel-server.gyp:run-test-kernel-server',
+							'engine/kernel-development.gyp:run-test-kernel-development',
+							'engine/kernel-installer.gyp:run-test-kernel-installer',
+						],
+					},
+				],
+			],
+		},
+
 	],
 }
