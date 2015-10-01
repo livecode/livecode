@@ -84,6 +84,17 @@
 						},
 					},
 				],
+				[
+					'OS == "ios" or OS == "android"',
+					{
+						# We can't run the tests on these platform so use `true`
+						# as the wrapper
+						'variables':
+						{
+							'exec_wrapper': 'true',
+						},
+					},
+				],
 			],
 
 			'actions':

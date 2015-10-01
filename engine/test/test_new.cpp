@@ -37,7 +37,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 enum {
 	SIZE =
-#if defined(__EMSCRIPTEN__) || defined(__I386__)
+#if defined(__32_BIT__)
 	1 << 15
 #else
 	1 << 20
