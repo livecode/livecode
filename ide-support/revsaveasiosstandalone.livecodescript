@@ -63,6 +63,22 @@ private function getIosSdkInfo pSDKVersion, @rInfo
    return true
 end getIosSdkInfo
 
+// Check whether the output from linking is valid.
+// This has been added after Xcode 7.0 adds warnings when the minimum
+// version does not match the compiled version.
+private function linkingIsValid pLinkingOutput
+   if pLinkingOutput is empty then return true
+   
+   repeat for each line tLine in pLinkingOutput
+      if not (tLine begins with "ld: warning:") then
+         return false
+      end if
+   end repeat
+   
+   return true
+end linkingIsValid
+   
+
 private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    if the platform is not "macos" then
       throw "not supported on this platform"
@@ -397,7 +413,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
             
             put tArchSpecificEngineFile & space after tArchSpecificEngineList
             delete file tLinkOptionsFile
-            if it is not empty or there is no file tArchSpecificEngineFile then
+            if not linkingIsValid(it) or there is no file tArchSpecificEngineFile then
                throw "linking for" && tInstSet && " (" & tArch & ") failed with " & it
             end if
          end repeat
