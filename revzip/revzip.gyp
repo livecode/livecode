@@ -24,6 +24,7 @@
 			'dependencies':
 			[
 				'../libexternal/libexternal.gyp:libExternal',
+                '../libexternal/libexternal.gyp:libExternal-symbol-exports',
 				'../thirdparty/libzip/libzip.gyp:libzip',
 			],
 			
@@ -57,11 +58,6 @@
 				],
 			],
 			
-			'variables':
-			{
-				'ios_external_symbols': [ '_getXtable' ],
-			},
-			
 			'all_dependent_settings':
 			{
 				'variables':
@@ -78,7 +74,8 @@
 			
 			'dependencies':
 			[
-				'../libexternal/libexternal.gyp:libExternal',
+                '../libexternal/libexternal.gyp:libExternal',
+                '../libexternal/libexternal.gyp:libExternal-symbol-exports',
 				'../thirdparty/libzip/libzip.gyp:libzip',
 			],
 			
@@ -104,11 +101,6 @@
 					},
 				],
 			],
-			
-			'variables':
-			{
-				'ios_external_symbols': [ '_getXtable' ],
-			},
 			
 			'all_dependent_settings':
 			{
