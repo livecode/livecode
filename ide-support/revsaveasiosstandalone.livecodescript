@@ -70,7 +70,9 @@ private function linkingIsValid pLinkingOutput
    if pLinkingOutput is empty then return true
    
    repeat for each line tLine in pLinkingOutput
-      if not (tLine begins with "ld: warning:") then
+      // Discard Xcode 7 new warnings like:
+      // ld: warning: object file (<path_to_exe) was built for newer iOS version (9.0) than being linked (7.0)
+      if not matchtext(tLine, "ld: warning: object file \(.*\) was built for newer iOS version \(.*\) than being linked \(.*\)") then
          return false
       end if
    end repeat
