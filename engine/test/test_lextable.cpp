@@ -28,7 +28,7 @@ TEST(lextable, constant_table)
 	extern Cvalue constant_table[];
 	extern const uint4 constant_table_size;
 
-	ASSERT_GE(constant_table_size, 1);
+	ASSERT_GE(constant_table_size, (unsigned)1);
 
 	for(uint4 i = 0; i < constant_table_size - 1; i++) {
 		EXPECT_LT(strcmp(constant_table[i].token, constant_table[i+1].token), 0)
@@ -57,7 +57,7 @@ TEST(lextable, table_pointer)
 		LT* table = table_pointers[i];
 		const uint4 table_size = table_sizes[i];
 
-		ASSERT_GE(table_size, 1);
+		ASSERT_GE(table_size, (unsigned)1);
 
 		for (uint4 j = 0; j < table_size - 1; j++) {
 			EXPECT_LT(strcmp(table[j].token, table[j+1].token), 0)
