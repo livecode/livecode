@@ -886,6 +886,16 @@ bool MCClipboard::CopyAsHTMLText(MCDataRef& r_html) const
     return true;
 }
 
+bool MCClipboard::CopyAsRTF(MCDataRef& r_rtf_data) const
+{
+    return CopyAsData(kMCRawClipboardKnownTypeRTF, r_rtf_data);
+}
+
+bool MCClipboard::CopyAsHTML(MCDataRef& r_html_data) const
+{
+    return CopyAsData(kMCRawClipboardKnownTypeHTML, r_html_data);
+}
+
 bool MCClipboard::CopyAsPNG(MCDataRef& r_png) const
 {
     return CopyAsData(kMCRawClipboardKnownTypePNG, r_png);

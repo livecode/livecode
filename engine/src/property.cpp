@@ -366,12 +366,12 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
     
     DEFINE_RW_ARRAY_PROPERTY(P_RAW_CLIPBOARD_DATA, Any, Pasteboard, RawClipboardData)
     DEFINE_RW_PROPERTY(P_RAW_CLIPBOARD_DATA, Any, Pasteboard, RawClipboardTextData)
-    DEFINE_RW_ARRAY_PROPERTY(P_RAW_DRAGBOARD_DATA, Any, Pasteboard, RawDragboardData)
-    DEFINE_RW_PROPERTY(P_RAW_DRAGBOARD_DATA, Any, Pasteboard, RawDragboardTextData)
+    DEFINE_RW_ARRAY_PROPERTY(P_RAW_DRAGBOARD_DATA, Any, Pasteboard, RawDragData)
+    DEFINE_RW_PROPERTY(P_RAW_DRAGBOARD_DATA, Any, Pasteboard, RawDragTextData)
     DEFINE_RW_ARRAY_PROPERTY(P_FULL_CLIPBOARD_DATA, Any, Pasteboard, FullClipboardData)
     DEFINE_RW_PROPERTY(P_FULL_CLIPBOARD_DATA, Any, Pasteboard, FullClipboardTextData)
-    DEFINE_RW_ARRAY_PROPERTY(P_FULL_DRAGBOARD_DATA, Any, Pasteboard, FullDragboardData)
-    DEFINE_RW_PROPERTY(P_FULL_DRAGBOARD_DATA, Any, Pasteboard, FullDragboardTextData)
+    DEFINE_RW_ARRAY_PROPERTY(P_FULL_DRAGBOARD_DATA, Any, Pasteboard, FullDragData)
+    DEFINE_RW_PROPERTY(P_FULL_DRAGBOARD_DATA, Any, Pasteboard, FullDragTextData)
 
 	// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog    
     DEFINE_RW_PROPERTY(P_COLOR_DIALOG_COLORS, LinesOfString, Dialog, ColorDialogColors)

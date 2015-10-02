@@ -2137,17 +2137,17 @@ void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
             else if (form == IT_NOT_AMONG_THE_RAW_CLIPBOARD_DATA)
                 MCPasteboardEvalIsNotAmongTheKeysOfTheRawClipboardData(ctxt, *t_right, t_result);
             else if (form == IT_AMONG_THE_RAW_DRAGBOARD_DATA)
-                MCPasteboardEvalIsAmongTheKeysOfTheRawDragboardData(ctxt, *t_right, t_result);
+                MCPasteboardEvalIsAmongTheKeysOfTheRawDragData(ctxt, *t_right, t_result);
             else if (form == IT_NOT_AMONG_THE_RAW_DRAGBOARD_DATA)
-                MCPasteboardEvalIsNotAmongTheKeysOfTheRawDragboardData(ctxt, *t_right, t_result);
+                MCPasteboardEvalIsNotAmongTheKeysOfTheRawDragData(ctxt, *t_right, t_result);
             else if (form == IT_AMONG_THE_FULL_CLIPBOARD_DATA)
                 MCPasteboardEvalIsAmongTheKeysOfTheFullClipboardData(ctxt, *t_right, t_result);
             else if (form == IT_NOT_AMONG_THE_FULL_CLIPBOARD_DATA)
                 MCPasteboardEvalIsNotAmongTheKeysOfTheFullClipboardData(ctxt, *t_right, t_result);
             else if (form == IT_AMONG_THE_FULL_DRAGBOARD_DATA)
-                MCPasteboardEvalIsAmongTheKeysOfTheFullDragboardData(ctxt, *t_right, t_result);
+                MCPasteboardEvalIsAmongTheKeysOfTheFullDragData(ctxt, *t_right, t_result);
             else if (form == IT_NOT_AMONG_THE_FULL_DRAGBOARD_DATA)
-                MCPasteboardEvalIsNotAmongTheKeysOfTheFullDragboardData(ctxt, *t_right, t_result);
+                MCPasteboardEvalIsNotAmongTheKeysOfTheFullDragData(ctxt, *t_right, t_result);
             else
                 MCUnreachable();
         }

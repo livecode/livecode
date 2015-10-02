@@ -3199,11 +3199,11 @@ void MCKeys::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         else if (which == P_RAW_CLIPBOARD_DATA)
             MCPasteboardEvalRawClipboardKeys(ctxt, r_value . stringref_value);
         else if (which == P_RAW_DRAGBOARD_DATA)
-            MCPasteboardEvalRawDragboardKeys(ctxt, r_value . stringref_value);
+            MCPasteboardEvalRawDragKeys(ctxt, r_value . stringref_value);
         else if (which == P_FULL_CLIPBOARD_DATA)
             MCPasteboardEvalFullClipboardKeys(ctxt, r_value . stringref_value);
         else if (which == P_FULL_DRAGBOARD_DATA)
-            MCPasteboardEvalFullDragboardKeys(ctxt, r_value . stringref_value);
+            MCPasteboardEvalFullDragKeys(ctxt, r_value . stringref_value);
 		else if (which == P_CLIPBOARD_DATA)
 			MCPasteboardEvalClipboardKeys(ctxt, r_value . stringref_value);
         else
@@ -3228,13 +3228,13 @@ void MCKeys::compile(MCSyntaxFactoryRef ctxt)
         else if (which == P_RAW_CLIPBOARD_DATA)
             MCSyntaxFactoryEvalMethod(ctxt, kMCPasteboardEvalRawClipboardKeysMethodInfo);
         else if (which == P_RAW_DRAGBOARD_DATA)
-            MCSyntaxFactoryEvalMethod(ctxt, kMCPasteboardEvalRawDragboardKeysMethodInfo);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCPasteboardEvalRawDragKeysMethodInfo);
 		else if (which == P_CLIPBOARD_DATA)
 			MCSyntaxFactoryEvalMethod(ctxt, kMCPasteboardEvalClipboardKeysMethodInfo);
         else if (which == P_FULL_CLIPBOARD_DATA)
             MCSyntaxFactoryEvalMethod(ctxt, kMCPasteboardEvalFullClipboardKeysMethodInfo);
         else if (which == P_FULL_DRAGBOARD_DATA)
-            MCSyntaxFactoryEvalMethod(ctxt, kMCPasteboardEvalFullDragboardKeysMethodInfo);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCPasteboardEvalFullDragKeysMethodInfo);
         else
             MCUnreachable();
 	}
