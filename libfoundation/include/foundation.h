@@ -1837,6 +1837,17 @@ bool MCStringAppendNativeChars(MCStringRef string, const char_t *chars, uindex_t
 bool MCStringAppendChar(MCStringRef string, unichar_t p_char);
 bool MCStringAppendNativeChar(MCStringRef string, char_t p_char);
 
+// Fast-append suffix to string
+//
+// Note that for those functions, Unicode prevails over Nativeness
+// They are intended for tigh loops of small appending, to avoid repeatitive
+// nativeness (costly) checking.
+bool MCStringFastAppend(MCStringRef string, MCStringRef p_suffix);
+bool MCStringFastAppendChar(MCStringRef string, unichar_t p_char);
+bool MCStringFastAppendChars(MCStringRef string, const unichar_t *chars, uindex_t count);
+bool MCStringFastAppendNativeChar(MCStringRef string, char_t p_char);
+bool MCStringFastAppendNativeChars(MCStringRef string, const char_t *chars, uindex_t count);
+
 // Prepend prefix to string.
 //
 // Note that 'string' must be mutable, it is a fatal runtime error if it is not.

@@ -1346,7 +1346,9 @@ uint4 MCFilesExecPerformReadCodeUnit(MCExecContext& ctxt, int4 p_index, intenum_
 				else
 					t_codeunit = *(unichar_t*)t_bytes . Bytes();
 
-				MCStringAppendChar(x_buffer, t_codeunit);
+                // Use fast appending, as we will always read UTF-16 in the
+                // buffer for the whole execution of this 'read' command.
+				MCStringFastAppendChar(x_buffer, t_codeunit);
 				t_codeunit_added = 1;
             }
             // SN-2014-12-02: [[ Bug 14135 ]] Do not wait if reading empty may occur
@@ -1366,7 +1368,10 @@ uint4 MCFilesExecPerformReadCodeUnit(MCExecContext& ctxt, int4 p_index, intenum_
                 MCAutoStringRef t_string;
                 
                 /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)&t_codeunit, t_bytes_read, MCS_file_to_string_encoding((MCFileEncodingType)p_encoding), false, &t_string);
-                /* UNCHECKED */ MCStringAppend(x_buffer, *t_string);
+
+                // Use fast appending, as we will always read UTF-32 in the
+                // buffer for the whole execution of this 'read' command.
+                /* UNCHECKED */ MCStringFastAppend(x_buffer, *t_string);
                 
                 t_codeunit_added = MCStringGetLength(*t_string);
             }
@@ -1438,7 +1443,10 @@ uint4 MCFilesExecPerformReadCodeUnit(MCExecContext& ctxt, int4 p_index, intenum_
 					MCAutoStringRef t_codepoints;
 					MCStringCreateWithBytes(t_bytes . Bytes(), t_bytes_read, kMCStringEncodingUTF8, false, &t_codepoints);
 					t_codeunit_added = MCStringGetLength(*t_codepoints);
-					MCStringAppend(x_buffer, *t_codepoints);
+
+                    // Use fast appending, as we will always read UTF-8 in the
+                    // buffer for the whole execution of this 'read' command.
+					MCStringFastAppend(x_buffer, *t_codepoints);
 				}
 				else
 				{
