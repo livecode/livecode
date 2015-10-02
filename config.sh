@@ -347,6 +347,13 @@ if test "${OS}" = "android" ; then
 
 fi # End of Android defaults & tools
 
+
+# Emscripten default settings and tools
+if test "${OS}" = "emscripten" ; then
+    NODE_JS=${NODE_JS:-node}
+fi
+
+
 ################################################################
 # Invoke gyp
 ################################################################
@@ -359,7 +366,11 @@ if [ "${BUILD_EDITION}" == "commercial" ] ; then
 fi
 
 case ${OS} in
-  linux|emscripten)
+  linux)
+    invoke_gyp $basic_args "-DOS=${OS}" "-Dtarget_arch=${TARGET_ARCH}" "$@"
+    ;;
+  emscripten)
+    export NODE_JS
     invoke_gyp $basic_args "-DOS=${OS}" "-Dtarget_arch=${TARGET_ARCH}" "$@"
     ;;
   android)

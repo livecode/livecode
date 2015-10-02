@@ -71,7 +71,7 @@
 						{
 							'javascriptify': '-javascriptify',
 							'test_suffix': '.js',
-							'exec_wrapper': 'node',
+							'exec_wrapper': '<!(echo ${NODE_JS})',
 						},
 					},
 				],
