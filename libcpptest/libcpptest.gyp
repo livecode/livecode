@@ -31,6 +31,7 @@
 			[
 				'googletest/googletest/src/gtest-all.cc',
 				'src/gtest_main.cpp',
+				'src/MCTapListener.cpp',
 			],
 
 			'defines':

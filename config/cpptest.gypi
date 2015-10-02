@@ -112,6 +112,7 @@
 						'../util/run-tests.pl',
 						'<(exec_wrapper)',
 						'<(PRODUCT_DIR)/test-<(module_name)<(test_suffix)',
+						'test-<(module_name).log',
 					],
 
 				},
