@@ -191,6 +191,7 @@ MCHarfbuzzSkiaFace *MCHarfbuzzGetFaceForSkiaTypeface(SkTypeface *p_typeface, uin
 	if (t_success)
 	{
 		MCHarfbuzzSkiaFace *t_hb_sk_face;
+		MCHarfbuzzSkiaFace **t_hb_sk_face_ptr;
 		// IM-2015-10-02: [[ Bug 14786 ]] Make sure we store & dereference the *pointer* to MCHarfbuzzSkiaFace
 		//    instead of its contents.
 		t_hb_sk_face_ptr = (MCHarfbuzzSkiaFace **)MCGCacheTableGet(s_hb_face_cache, t_key, sizeof(t_id));
