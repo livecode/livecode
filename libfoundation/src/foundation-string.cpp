@@ -66,6 +66,9 @@ static void __MCStringClampRange(MCStringRef string, MCRange& x_range);
 // This method forces a nativization of a string even if there is already a native char ptr.
 static uindex_t __MCStringNativize(MCStringRef string);
 
+// This method checks whether a string can be losslessly nativized
+static bool __MCStringCanBeLosslesslyNativized(MCStringRef string);
+
 // This method ensures there is a unichar ptr.
 static void __MCStringUnnativize(MCStringRef self);
 
@@ -308,7 +311,14 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
         {
             unichar_t *t_chars;
             uindex_t t_char_count;
-            t_char_count = MCUnicodeCharsMapFromUTF8(p_bytes, p_byte_count, nil, 0);
+            bool t_is_native;
+            // Check whether the UTF-8 string is native, to avoid unnecessary
+            //  char mapping.
+            t_char_count = MCUnicodeCharsMapFromUTF8WithNativeCheck(p_bytes, p_byte_count, nil, 0, t_is_native);
+
+            if (t_is_native)
+                return MCStringCreateWithNativeChars(p_bytes, p_byte_count, r_string);
+
             if (!MCMemoryNewArray(t_char_count, t_chars))
                 return false;
             MCUnicodeCharsMapFromUTF8(p_bytes, p_byte_count, t_chars, t_char_count);
@@ -3403,6 +3413,138 @@ bool MCStringAppendChar(MCStringRef self, unichar_t p_char)
 	return MCStringAppendChars(self, &p_char, 1);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// SN-2015-10-02: [[ Bug 15929 ]] Speed up 'read' command
+//
+// String Fast Appending
+//
+// Fast appending a string consists of making Unicode prevail over nativeness
+// (which is the opposite of the usual behaviour).
+//
+//  The fast Append functions are mainly intended for tigh loops where small
+//  chunks of text are appended, and where we don't need nor want to check the
+//  nativeness of the string after each appending.
+//
+//  That is the case in MCFilesExecPerformReadCodeUnit, where the encoding is
+//  fixed for the whole reading, and that we don't want to spend a huge amount
+//  of time checking whether the string is native, as it is not the most likely.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+// Fast StringRef appending is done the following way:
+//   If p_suffix and self are Native, p_suffix's native_chars are appended.
+//   Otherwise, strings are first unnativised, and then p_suffix's chars are
+//   fast appended.
+bool MCStringFastAppend(MCStringRef self, MCStringRef p_suffix)
+{
+    MCAssert(MCStringIsMutable(self));
+
+    // Ensure to make a copy of the suffix, if the strings are the same.
+    if (__MCStringIsIndirect(p_suffix) && p_suffix -> string == self)
+    {
+        MCAutoStringRef t_suffix_copy;
+        MCStringCopy(p_suffix, &t_suffix_copy);
+        return MCStringFastAppend(self, *t_suffix_copy);
+    }
+
+    if (__MCStringIsIndirect(self))
+        if (!__MCStringResolveIndirect(self))
+            return false;
+
+    // If both of the strings are native, we can straight append native_chars
+    if (__MCStringIsNative(self))
+    {
+        if (__MCStringIsNative(p_suffix))
+            return MCStringAppendNativeChars(self, MCStringGetNativeCharPtr(p_suffix), MCStringGetLength(p_suffix));
+
+        // If the string can be native, then we append the native chars.
+        //  Otherwise, we unnativise and fast append the chars
+        if (__MCStringCanBeLosslesslyNativized(p_suffix))
+        {
+            MCStringNativize(p_suffix);
+            return MCStringAppendNativeChars(self, MCStringGetNativeCharPtr(p_suffix), MCStringGetLength(p_suffix));
+        }
+    }
+
+    // Otherwise, we simply unnativise both of the strings to ensure that both
+    // are non-Native, and then we can fast append p_suffix's chars.
+    __MCStringUnnativize(self);
+    __MCStringUnnativize(p_suffix);
+
+    if (!MCStringFastAppendChars(self, MCStringGetCharPtr(p_suffix), MCStringGetLength(p_suffix)))
+        return false;
+
+    return true;
+}
+
+//  If self is native, then it is first unnativised, and then the chars
+//  can be swiftly appended since we keep self non-native.
+bool MCStringFastAppendChars(MCStringRef self, const unichar_t *p_chars, uindex_t p_char_count)
+{
+    MCAssert(MCStringIsMutable(self));
+
+    // Ensure the string is not indirect.
+    if (__MCStringIsIndirect(self))
+        if (!__MCStringResolveIndirect(self))
+            return false;
+
+    // Ensure the string is not native.
+    __MCStringUnnativize(self);
+
+    // Ensure we have enough room in self - with the gap at the end.
+    if (!__MCStringExpandAt(self, self -> char_count, p_char_count))
+        return false;
+
+    // Copy the chars.
+    bool t_can_be_native;
+    t_can_be_native = __MCStringCopyChars(self -> chars + self -> char_count - p_char_count, p_chars, p_char_count, __MCStringCanBeNative(self));
+
+    // Set the NULL
+    self -> chars[self -> char_count] = '\0';
+
+    // We succeeded.
+    return true;
+}
+
+bool MCStringFastAppendChar(MCStringRef self, unichar_t p_char)
+{
+    char_t t_char;
+    
+    if (MCStringIsNative(self)
+            && MCUnicodeCharMapToNative(p_char, t_char))
+        return MCStringFastAppendNativeChar(self, t_char);
+    
+    return MCStringFastAppendChars(self, &p_char, 1);
+}
+
+// We use the usual Append function if self is native, to avoid unnativising
+// for no reason. Otherwise, we convert the char_t to unichar_t, and we simply
+// fast-append them
+bool MCStringFastAppendNativeChars(MCStringRef self, const char_t *p_chars, uindex_t p_count)
+{
+    if (MCStringIsNative(self))
+        return MCStringAppendNativeChars(self, p_chars, p_count);
+    
+    // Create an array of unichar_t, to translate all the char_t
+    MCAutoPointer<unichar_t> t_chars;
+    if (!MCMemoryNewArray(p_count + 1, &t_chars))
+        return false;
+    
+    for (uindex_t i = 0; i < p_count; ++i)
+        (*t_chars)[i] = p_chars[i];
+    
+    return MCStringFastAppendChars(self, *t_chars, p_count);
+}
+
+bool MCStringFastAppendNativeChar(MCStringRef self, char_t p_char)
+{
+    if (MCStringIsNative(self))
+        return MCStringAppendNativeChar(self, p_char);
+
+    return MCStringFastAppendChar(self, (unichar_t)p_char);
+}
+
 bool MCStringPrepend(MCStringRef self, MCStringRef p_prefix)
 {
 	MCAssert(MCStringIsMutable(self));
@@ -4681,6 +4823,27 @@ static void __MCStringShrinkAt(MCStringRef self, uindex_t p_at, uindex_t p_count
 
 	// TODO: Shrink the buffer if its too big.
 }
+
+// Returns whether a string can be losslessly nativised, without operating
+// anything on it.
+static bool __MCStringCanBeLosslesslyNativized(MCStringRef self)
+{
+    if (MCStringIsNative(self))
+        return true;
+    
+    if (__MCStringIsIndirect(self))
+        __MCStringResolveIndirect(self);
+    
+    char_t t_char;
+    for(uindex_t i = 0; i < self -> char_count; i++)
+    {
+        if (!MCUnicodeCharMapToNative(self -> chars[i], t_char))
+            return false;
+    }
+    
+    return true;
+}
+
 
 static uindex_t __MCStringNativize(MCStringRef self)
 {

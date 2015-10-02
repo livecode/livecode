@@ -219,11 +219,17 @@ unichar_t MCUnicodeCharUppercase(unichar_t p_char)
 ////////////////////////////////////////////////////////////////////////////////
 
 // Convert the given UTF-8 string to Unicode. Both counts are in bytes.
+// If p_dest is nil, returns the size of the buffer (in wchars needed)
+// If p_dest is not nil, does the conversion into wchars
+// r_is_native is set to true if the string only contains ASCII chars < 128
 // Returns the number of bytes used.
-static int32_t UTF8ToUnicode(const byte_t *p_src, int32_t p_src_count, unichar_t *p_dst, int32_t p_dst_count)
+static int32_t UTF8ToUnicode(const byte_t *p_src, int32_t p_src_count, unichar_t *p_dst, int32_t p_dst_count, bool &r_is_native)
 {
 	int32_t t_made;
 	t_made = 0;
+    
+    bool t_is_native;
+    t_is_native = true;
 	
 	for(;;)
 	{
@@ -292,6 +298,10 @@ static int32_t UTF8ToUnicode(const byte_t *p_src, int32_t p_src_count, unichar_t
 			}
 		}
 		
+        // Only non-extended ASCII char will map to native char.
+        if (t_consumed != 1)
+            t_is_native = false;
+        
 		if (t_consumed != 0)
 		{
 			if (t_codepoint < 65536)
@@ -329,6 +339,7 @@ static int32_t UTF8ToUnicode(const byte_t *p_src, int32_t p_src_count, unichar_t
 		p_src_count -= t_consumed;
 	}
 	
+    r_is_native = t_is_native;
 	return t_made * 2;
 }
 
@@ -432,7 +443,13 @@ uindex_t MCUnicodeCharsMapToUTF8(const unichar_t *wchars, uindex_t wchar_count, 
 // If wchars is not nil, does the conversion into wchars
 uindex_t MCUnicodeCharsMapFromUTF8(const byte_t *utf8bytes, uindex_t utf8byte_count, unichar_t *wchars, uindex_t wchar_count)
 {
-    return UTF8ToUnicode(utf8bytes, utf8byte_count, wchars, wchar_count * 2) / 2;
+    bool t_dummy;
+    return UTF8ToUnicode(utf8bytes, utf8byte_count, wchars, wchar_count * 2, t_dummy) / 2;
+}
+
+uindex_t MCUnicodeCharsMapFromUTF8WithNativeCheck(const byte_t *utf8bytes, uindex_t utf8byte_count, unichar_t *wchars, uindex_t wchar_count, bool &r_is_native)
+{
+    return UTF8ToUnicode(utf8bytes, utf8byte_count, wchars, wchar_count * 2, r_is_native) / 2;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
