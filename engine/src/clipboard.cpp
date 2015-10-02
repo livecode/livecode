@@ -917,6 +917,14 @@ bool MCClipboard::CopyAsPrivateData(MCDataRef& r_data) const
     return true;
 }
 
+// Wrapper for MCStringIsEqualTo that handles NULL parameters
+static bool MCTypeMatches(MCStringRef p_one, MCStringRef p_two)
+{
+    if (p_one == NULL || p_two == NULL)
+        return false;
+    return MCStringIsEqualTo(p_one, p_two, kMCStringOptionCompareExact);
+}
+
 int MCClipboard::GetLegacyOrdering() const
 {
     AutoLock t_lock(this);
@@ -933,21 +941,21 @@ int MCClipboard::GetLegacyOrdering() const
         
         // Is this an image representation?
         MCAutoStringRef t_type(t_rep->CopyTypeString());
-        if (MCStringIsEqualTo(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypePNG), kMCStringOptionCompareExact)
-            || MCStringIsEqualTo(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeGIF), kMCStringOptionCompareExact)
-            || MCStringIsEqualTo(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeJPEG), kMCStringOptionCompareExact))
+        if (MCTypeMatches(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypePNG))
+            || MCTypeMatches(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeGIF))
+            || MCTypeMatches(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeJPEG)))
             return 1;
         
         // Is this a text (or text-like) representation?
-        if (MCStringIsEqualTo(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeUTF8), kMCStringOptionCompareExact)
-            || MCStringIsEqualTo(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeUTF16), kMCStringOptionCompareExact)
-            || MCStringIsEqualTo(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeISO8859_1), kMCStringOptionCompareExact)
-            || MCStringIsEqualTo(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeMacRoman), kMCStringOptionCompareExact)
-            || MCStringIsEqualTo(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeISO8859_1), kMCStringOptionCompareExact)
-            || MCStringIsEqualTo(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeCP1252), kMCStringOptionCompareExact)
-            || MCStringIsEqualTo(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeHTML), kMCStringOptionCompareExact)
-            || MCStringIsEqualTo(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeRTF), kMCStringOptionCompareExact)
-            || MCStringIsEqualTo(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeLiveCodeStyledText), kMCStringOptionCompareExact))
+        if (MCTypeMatches(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeUTF8))
+            || MCTypeMatches(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeUTF16))
+            || MCTypeMatches(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeISO8859_1))
+            || MCTypeMatches(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeMacRoman))
+            || MCTypeMatches(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeISO8859_1))
+            || MCTypeMatches(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeCP1252))
+            || MCTypeMatches(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeHTML))
+            || MCTypeMatches(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeRTF))
+            || MCTypeMatches(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeLiveCodeStyledText)))
             return -1;
     }
     
