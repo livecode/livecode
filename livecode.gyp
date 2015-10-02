@@ -7,6 +7,18 @@
 	'targets':
 	[
 		{
+			'target_name': 'default',
+			'type': 'none',
+			'dependencies': [ 'binzip-copy', ],
+		},
+
+		{
+			'target_name': 'check',
+			'type': 'none',
+			'dependencies': [ 'cpptest-run-all', ],
+		},
+
+		{
 			'target_name': 'LiveCode-all',
 			'type': 'none',
 			
@@ -180,48 +192,7 @@
 				'files': [ '>@(dist_files)', '>@(dist_aux_files)', ],
 			}],
 		},
-
-		{
-			'target_name': 'cpptest-all',
-			'type': 'none',
-
-			'variables':
-			{
-				'javascriptify': ''
-			},
-
-			'dependencies':
-			[
-				'libcpptest/libcpptest.gyp:test-libcpptest<(javascriptify)',
-				'libfoundation/libfoundation.gyp:test-libFoundation<(javascriptify)',
-				'engine/kernel-standalone.gyp:test-kernel-standalone<(javascriptify)',
-			],
-
-			'conditions':
-			[
-				[
-					'OS == "emscripten"',
-					{
-						'variables':
-						{
-							'javascriptify': '-javascriptify'
-						},
-					},
-				],
-				[
-					'mobile == 0',
-					{
-						'dependencies':
-						[
-							'engine/kernel-server.gyp:test-kernel-server<(javascriptify)',
-							'engine/kernel-development.gyp:test-kernel-development<(javascriptify)',
-							'engine/kernel-installer.gyp:test-kernel-installer<(javascriptify)',
-						],
-					},
-				],
-			],
-		},
-
+		
 		{
 			'target_name': 'cpptest-run-all',
 			'type': 'none',

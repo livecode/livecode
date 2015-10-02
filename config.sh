@@ -359,7 +359,7 @@ fi
 ################################################################
 
 format_args="$(for f in ${FORMATS}; do echo --format ${f} ; done)"
-basic_args="${format_args} --depth ${DEPTH} --generator-output ${GENERATOR_OUTPUT}"
+basic_args="${format_args} --depth ${DEPTH} --generator-output ${GENERATOR_OUTPUT} -G default_target=default"
 
 if [ "${BUILD_EDITION}" == "commercial" ] ; then
   basic_args="${basic_args} ../livecode-commercial.gyp"

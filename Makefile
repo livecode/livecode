@@ -65,6 +65,7 @@ guess_platform_script := \
 guess_platform := $(shell $(guess_platform_script))
 
 all: all-$(guess_platform)
+check: check-$(guess_platform)
 
 ################################################################
 # Linux rules
@@ -86,11 +87,14 @@ config-linux-%:
 compile-linux-%:
 	$(MAKE) -C build-linux-$*/livecode
 
+check-linux-%:
+	$(MAKE) -C build-linux-$*/livecode check
+
 all-linux-%:
 	$(MAKE) config-linux-$*
 	$(MAKE) compile-linux-$*
 
-$(addsuffix -linux,all config compile): %: %-$(guess_linux_arch)
+$(addsuffix -linux,all config compile check): %: %-$(guess_linux_arch)
 
 ################################################################
 # Android rules
@@ -104,11 +108,14 @@ config-android-%:
 compile-android-%:
 	$(MAKE) -C build-android-$*/livecode
 
+check-android-%:
+	$(MAKE) -C build-android-$*/livecode check
+
 all-android-%:
 	$(MAKE) config-android-$*
 	$(MAKE) compile-android-$*
 
-$(addsuffix -android,all config compile): %: %-armv6
+$(addsuffix -android,all config compile check): %: %-armv6
 
 ################################################################
 # Mac rules
@@ -182,6 +189,9 @@ config-emscripten:
 
 compile-emscripten:
 	$(EMMAKE) $(MAKE) -C build-emscripten/livecode
+
+check-emscripten:
+	$(EMMAKE) $(MAKE) -C build-emscripten/livecode check
 
 all-emscripten:
 	$(MAKE) config-emscripten
