@@ -17,7 +17,23 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "gtest/gtest.h"
 #include "MCTapListener.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 int main(int argc, char **argv) {
+
+#ifdef __EMSCRIPTEN__
+	// Mount and cd into a nodefs filesystem so that emscripten tests
+	// have the same access to the filesystem as native tests.  In
+	// particular, they can write to a log file.
+	EM_ASM(
+		FS.mkdir('root');
+		FS.mount(NODEFS, { root: '/' }, 'root');
+		FS.chdir('root/' + process.cwd());
+	);
+#endif
+
 	testing::InitGoogleTest(&argc, argv);
 
 	for (int i = 0; i < argc; i++) {
