@@ -46,15 +46,15 @@ enum {
 
 class Big {
 public:
-		Big() {
-			// Check that the constructor is not called after the
-			// allocation failed.  If the compiler flags are not set
-			// correctly it may be assuming that `new` never returns
-			// NULL and so calls the constructor without checking it's
-			// not NULL.  Writing to `m_big[0]` will cause a seg fault
-			// if `this` is NULL.
-			m_big[0] = 0;
-		}
+	Big() {
+		// Check that the constructor is not called after the
+		// allocation failed.  If the compiler flags are not set
+		// correctly it may be assuming that `new` never returns
+		// NULL and so calls the constructor without checking it's
+		// not NULL.  Writing to `m_big[0]` will cause a seg fault
+		// if `this` is NULL.
+		m_big[0] = 0;
+	}
 
 	char m_big[SIZE];
 };
@@ -64,7 +64,11 @@ struct VeryBig {
 };
 
 
+#ifdef __EMSCRIPTEN__
+TEST(new, DISABLED_new)
+#else
 TEST(new, new)
+#endif
 //
 // Checks that new returns NULL on error.
 //
@@ -87,7 +91,11 @@ TEST(new, new)
 }
 
 
+#ifdef __EMSCRIPTEN__
+TEST(new, DISABLED_array)
+#else
 TEST(new, array)
+#endif
 //
 // Checks that new[] returns NULL on error.
 //
