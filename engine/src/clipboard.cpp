@@ -95,6 +95,11 @@ bool MCClipboard::Unlock() const
     return true;
 }
 
+bool MCClipboard::IsLocked() const
+{
+    return m_lock_count != 0;
+}
+
 void MCClipboard::Clear()
 {
     // Pass on the request
@@ -390,7 +395,7 @@ bool MCClipboard::AddLiveCodeStyledTextArray(MCArrayRef p_styled_text)
     return AddLiveCodeStyledText(*t_pickled_text);
 }
 
-bool MCClipboard::AddHTML(MCDataRef p_html_data)
+bool MCClipboard::AddHTMLText(MCDataRef p_html_data)
 {
     // Adding HTML to the clipboard is done by converting the HTML to LiveCode's
     // internal styled-text format and then adding it to the clipboard in that
@@ -416,6 +421,48 @@ bool MCClipboard::AddRTFText(MCDataRef p_rtf_data)
         return false;
     
     return AddLiveCodeStyledText(*t_pickled_text);
+}
+
+bool MCClipboard::AddRTF(MCDataRef p_rtf)
+{
+    AutoLock t_lock(this);
+    
+    // Clear the contents if the clipboard contains external data
+    if (m_clipboard->IsExternalData())
+        Clear();
+    
+    // Get the first item on the clipboard
+    MCAutoRefcounted<MCRawClipboardItem> t_item = GetItem();
+    if (t_item == NULL)
+        return false;
+    
+    // Add the data to the clipboard with the correct type
+    MCStringRef t_type_string = m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeRTF);
+    if (t_type_string == NULL)
+        return false;
+    
+    return t_item->AddRepresentation(t_type_string, p_rtf);
+}
+
+bool MCClipboard::AddHTML(MCDataRef p_html)
+{
+    AutoLock t_lock(this);
+    
+    // Clear the contents if the clipboard contains external data
+    if (m_clipboard->IsExternalData())
+        Clear();
+    
+    // Get the first item on the clipboard
+    MCAutoRefcounted<MCRawClipboardItem> t_item = GetItem();
+    if (t_item == NULL)
+        return false;
+    
+    // Add the data to the clipboard with the correct type
+    MCStringRef t_type_string = m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeHTML);
+    if (t_type_string == NULL)
+        return false;
+    
+    return t_item->AddRepresentation(t_type_string, p_html);
 }
 
 bool MCClipboard::AddPNG(MCDataRef p_png)
@@ -571,7 +618,7 @@ bool MCClipboard::HasLiveCodeStyledText() const
     return t_item->HasRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeLiveCodeStyledText));
 }
 
-bool MCClipboard::HasRTFText() const
+bool MCClipboard::HasRTF() const
 {
     AutoLock t_lock(this);
     
@@ -649,7 +696,7 @@ bool MCClipboard::HasLiveCodeStyledTextOrCompatible() const
 {
     // Note that plain text is *not* up-converted to styled text
     AutoLock t_lock(this);
-    return HasLiveCodeStyledText() || HasRTFText() || HasHTML();
+    return HasLiveCodeStyledText() || HasRTF() || HasHTML();
 }
 
 bool MCClipboard::HasPrivateData() const
@@ -821,7 +868,7 @@ bool MCClipboard::CopyAsRTFText(MCDataRef& r_rtf) const
     return true;
 }
 
-bool MCClipboard::CopyAsHTML(MCDataRef& r_html) const
+bool MCClipboard::CopyAsHTMLText(MCDataRef& r_html) const
 {
     AutoLock t_lock(this);
     
@@ -868,6 +915,44 @@ bool MCClipboard::CopyAsPrivateData(MCDataRef& r_data) const
     
     r_data = MCValueRetain(m_private_data);
     return true;
+}
+
+int MCClipboard::GetLegacyOrdering() const
+{
+    AutoLock t_lock(this);
+    
+    // Grab the first item on the clipboard - for backwards compatibility, only
+    // this first item is examined.
+    MCAutoRefcounted<const MCRawClipboardItem> t_item = GetItem();
+    
+    // Scan through the list of representations
+    for (uindex_t i = 0; i < t_item->GetRepresentationCount(); i++)
+    {
+        // Get the representation
+        const MCRawClipboardItemRep* t_rep = t_item->FetchRepresentationAtIndex(i);
+        
+        // Is this an image representation?
+        MCAutoStringRef t_type(t_rep->CopyTypeString());
+        if (MCStringIsEqualTo(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypePNG), kMCStringOptionCompareExact)
+            || MCStringIsEqualTo(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeGIF), kMCStringOptionCompareExact)
+            || MCStringIsEqualTo(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeJPEG), kMCStringOptionCompareExact))
+            return 1;
+        
+        // Is this a text (or text-like) representation?
+        if (MCStringIsEqualTo(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeUTF8), kMCStringOptionCompareExact)
+            || MCStringIsEqualTo(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeUTF16), kMCStringOptionCompareExact)
+            || MCStringIsEqualTo(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeISO8859_1), kMCStringOptionCompareExact)
+            || MCStringIsEqualTo(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeMacRoman), kMCStringOptionCompareExact)
+            || MCStringIsEqualTo(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeISO8859_1), kMCStringOptionCompareExact)
+            || MCStringIsEqualTo(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeCP1252), kMCStringOptionCompareExact)
+            || MCStringIsEqualTo(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeHTML), kMCStringOptionCompareExact)
+            || MCStringIsEqualTo(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeRTF), kMCStringOptionCompareExact)
+            || MCStringIsEqualTo(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeLiveCodeStyledText), kMCStringOptionCompareExact))
+            return -1;
+    }
+    
+    // Neither an image nor a text type was found
+    return 0;
 }
 
 MCParagraph* MCClipboard::CopyAsParagraphs(MCField* p_via_field) const

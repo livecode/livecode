@@ -504,8 +504,8 @@ MCArrayRef MCcommandarguments;
 
 MCHook *MChooks = nil;
 
-// The raw clipboard object used for raw clipboard access from scripts
-class MCRawClipboard* MCscriptrawclipboard;
+// Flag indicating whether the clipboard is currently locked
+bool MCclipboardlocked = false;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -848,7 +848,7 @@ void X_clear_globals(void)
     
     MChooks = nil;
     
-    MCscriptrawclipboard = NULL;
+    MCclipboardlocked = false;
 
 #if defined(MCSSL)
     MCSocketsInitialize();

@@ -2666,23 +2666,20 @@ enum Exec_errors
     // {EE-0869} Import: not an object array
     EE_IMPORT_NOTANOBJECTARRAY,
 
-    // {EE-0870} rawClipboardData: bad item type or data
-    EE_RAW_CLIPBOARD_BADREP,
+    // {EE-0870} clipboard: bad item type or data
+    EE_CLIPBOARD_BADREP,
     
-    // {EE-0871} rawClipboardData: failed to insert item
-    EE_RAW_CLIPBOARD_INSERT_FAILED,
+    // {EE-0871} clipboard: failed to insert item
+    EE_CLIPBOARD_INSERT_FAILED,
     
-    // {EE-0872} rawClipboardData: clipboard not locked
-    EE_RAW_CLIPBOARD_NOT_LOCKED,
-    
-    // {EE-0873} lock clipboard: already locked
-    EE_CLIPBOARD_ALREADY_LOCKED,
-    
-    // {EE-0874} unlock clipboard: not locked
+    // {EE-0872} clipboard: clipboard not locked
     EE_CLIPBOARD_NOT_LOCKED,
     
-    // {EE-0875} rawClipboardData: needs to be cleared (contains external data)
-    EE_RAW_CLIPBOARD_EXTERNAL_DATA,
+    // {EE-0873} clipboard: already locked
+    EE_CLIPBOARD_ALREADY_LOCKED,
+    
+    // {EE-0874} clipboard: needs to be cleared (contains external data)
+    EE_CLIPBOARD_EXTERNAL_DATA,
 };
 
 extern const char *MCexecutionerrors;

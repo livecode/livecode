@@ -46,6 +46,9 @@ public:
     bool Lock(bool p_skip_pull = false) const;
     bool Unlock() const;
     
+    // Indicates whether the clipboard is currently locked
+    bool IsLocked() const;
+    
     // Clears the contents of this clipboard.
     void Clear();
     
@@ -97,6 +100,8 @@ public:
     bool AddLiveCodeStyledText(MCDataRef p_picked_text);
     bool AddLiveCodeStyledTextArray(MCArrayRef p_styled_text);
     bool AddRTFText(MCDataRef p_rtf_data);
+    bool AddHTMLText(MCDataRef p_html_data);
+    bool AddRTF(MCDataRef p_rtf_data);
     bool AddHTML(MCDataRef p_html_data);
     bool AddPNG(MCDataRef p_png);
     bool AddGIF(MCDataRef p_gif);
@@ -112,8 +117,8 @@ public:
     bool HasText() const;
     bool HasLiveCodeObjects() const;
     bool HasLiveCodeStyledText() const;
-    bool HasRTFText() const;
     bool HasHTML() const;
+    bool HasRTF() const;
     bool HasPNG() const;
     bool HasGIF() const;
     bool HasJPEG() const;
@@ -131,7 +136,9 @@ public:
     bool CopyAsLiveCodeObjects(MCDataRef& r_objects) const;
     bool CopyAsLiveCodeStyledText(MCDataRef& r_pickled_text) const;
     bool CopyAsLiveCodeStyledTextArray(MCArrayRef& r_style_array) const;
-    bool CopyAsRTFText(MCDataRef& r_rtf_data) const;
+    bool CopyAsRTFText(MCDataRef& r_rtf_data) const;    // Round-tripped via a field object
+    bool CopyAsHTMLText(MCDataRef& r_html_data) const;  // Round-tripped via a field object
+    bool CopyAsRTF(MCDataRef& r_rtf_data) const;
     bool CopyAsHTML(MCDataRef& r_html_data) const;
     bool CopyAsPNG(MCDataRef& r_png_data) const;
     bool CopyAsGIF(MCDataRef& r_gif_data) const;
@@ -152,6 +159,11 @@ public:
     bool AddPrivateData(MCDataRef p_private);
     bool HasPrivateData() const;
     bool CopyAsPrivateData(MCDataRef& r_private) const;
+    
+    // Utility method for assisting with legacy clipboard support - returns a
+    // positive value if an image is found before a text type, negative if a
+    // text type is found first or zero if neither were found.
+    int GetLegacyOrdering() const;
     
     // Creates wrappers for the specified clipboards. If the clipboard is not
     // implemented on the platform, a valid but non-functional clipboard will
