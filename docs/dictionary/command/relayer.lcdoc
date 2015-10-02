@@ -8,11 +8,11 @@ Syntax: relayer <control> {<before> | <after>} control <target>
 
 Syntax: relayer <control> {<before> | <after>} <owner> 
 
-Syntax: relayer <control> to {<before> | <after>} of <layer> <index> 
+Syntax: relayer <control> to {<front> | <back>} of <layer> <index> 
 
-Syntax: relayer <control> to {<before> | <after>} of control <target> 
+Syntax: relayer <control> to {<front> | <back>} of control <target> 
 
-Syntax: relayer <control> to {<before> | <after>} of <owner> 
+Syntax: relayer <control> to {<front> | <back>} of <owner> 
 
 Summary: Aids the manipulation of layers.
 
