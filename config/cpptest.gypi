@@ -145,7 +145,7 @@
 
 								'inputs':
 								[
-									'../engine/emscripten-javascriptify.py',
+									'../util/emscripten-javascriptify.py',
 									'<(PRODUCT_DIR)/test-<(module_name).bc',
 								],
 
@@ -158,7 +158,7 @@
 
 								'action':
 								[
-									'../engine/emscripten-javascriptify.py',
+									'../util/emscripten-javascriptify.py',
 									'--input',
 									'<(PRODUCT_DIR)/test-<(module_name).bc',
 									'--output',

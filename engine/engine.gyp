@@ -768,7 +768,7 @@
 
 								'inputs':
 								[
-									'emscripten-javascriptify.py',
+									'../util/emscripten-javascriptify.py',
 									'<(PRODUCT_DIR)/standalone-community.bc',
 									'rsrc/emscripten-html-template.html',
 									'src/em-whitelist.json',
@@ -792,7 +792,7 @@
 
 								'action':
 								[
-									'./emscripten-javascriptify.py',
+									'../util/emscripten-javascriptify.py',
 									'--input',
 									'<(PRODUCT_DIR)/standalone-community.bc',
 									'--output',
