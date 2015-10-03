@@ -2,9 +2,9 @@ Name: selectedText
 
 Type: function
 
-Syntax: the selectedText [of <field> | <button>]
+Syntax: the selectedText [of { <field> | <button> }]
 
-Syntax: selectedText([<field> | <button>])
+Syntax: selectedText([{ <field> | <button> }])
 
 Summary: <return|Returns> the contents of the text <selection>.
 

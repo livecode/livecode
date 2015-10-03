@@ -2,7 +2,7 @@ Name: files
 
 Type: function
 
-Syntax: the [detailed | long] files
+Syntax: the [{ detailed | long }] files
 
 Syntax: files()
 

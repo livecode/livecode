@@ -2,7 +2,7 @@ Name: usePixelScaling
 
 Type: property
 
-Syntax: set the usePixelScaling to <true> | <false> 
+Syntax: set the usePixelScaling to { true | false } 
 
 Summary: Determines whether or not LiveCode will automatically apply pixel scaling.
 

@@ -2,7 +2,7 @@ Name: owner
 
 Type: property
 
-Syntax: get the [long | abbr[ev[iated] | short] owner of <object> 
+Syntax: get the [{ long | abbr[ev[iated]] | short }] owner of <object> 
 
 Summary: Reports which <object> is next in the <object hierarchy>.
 
