@@ -2,13 +2,15 @@ Name: itemDelimiter
 
 Type: property
 
-Syntax: set the itemDelimiter to <character> 
+Syntax: set the itemDelimiter to <character|character(s)> 
 
-Summary: Specifies the <character> used to separate <items> in <chunk expression|chunk expressions>.
+Summary: Specifies the <character|character(s)> used to separate <items> in <chunk expression|chunk expressions>.
 
 Synonyms: itemDel
 
 Introduced: 1.0
+
+Changed: 7.0.0
 
 OS: mac,windows,linux,ios,android
 
@@ -20,14 +22,17 @@ set the itemDelimiter to numToChar(202)
 Example:
 set the itemDelimiter to tab
 
+Example:
+set the itemDelimiter to ";;"
+
 Value:
-The <itemDelimiter> is a <character>.
+From LiveCode 7.0, <itemDelimiter> can be a string of one or several <character|characters>. 
 By default, the <itemDelimiter> <property> is set to <comma>.
 
 Description:
-Use the <itemDelimiter> <property> to divide text into <chunk|chunks> based on a <delimit|delimiting> <character>.
+Use the <itemDelimiter> <property> to divide text into <chunk|chunks> based on a <delimit|delimiting> <character|character(s)>.
 
-The <itemDelimiter> is a single <character>. <chunk expression|Chunk expressions> use the <itemDelimiter> to determine where one <item> ends and the next begins.
+From LiveCode 7.0, <itemDelimiter> can be a string of one or several <character|characters>.  <chunk expression|Chunk expressions> use the <itemDelimiter> to determine where one <item> ends and the next begins.
 
 Since the <itemDelimiter> is a <local property>, its value is <reset> to comma when the current <handler> finishes <execute|executing>. It retains its <value> only for the current <handler>, and setting it in one <handler> does not affect its <value> in other <handler|handlers> it <call|calls>.
 

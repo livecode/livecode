@@ -2,13 +2,15 @@ Name: columnDelimiter
 
 Type: property
 
-Syntax: set the columnDelimiter to <character> 
+Syntax: set the columnDelimiter to <character|character(s)> 
 
 Syntax: the columnDelimiter
 
-Summary: Specifies the character used to separate columns in a string
+Summary: Specifies the <character|character(s)> used to separate columns in a string
 
 Introduced: 2.8.1
+
+Changed: 7.0.0
 
 OS: mac,windows,linux,ios,android
 
@@ -20,15 +22,18 @@ set the columnDelimiter to comma
 Example:
 put the columnDelimiter into tColumnDelimiter
 
+Example:
+set the columnDelimiter to ";;"
+
 Value:
-The <columnDelimiter> is a character
-By default, the <columnDelimiter> is set to tab.
+From LiveCode 7.0, <columnDelimiter> can be a string of one or several <character|characters>. 
+By default, the <columnDelimiter> is set to <tab>.
 
 Description:
 Use the <columnDelimiter> property in conjunction with the <split command> to divide text into an array of columns or with the <combine command> to combine an array of columns into a string.
 
-The <columnDelimiter> is a single character.
+From LiveCode 7.0, <columnDelimiter> can be a string of one or several <character|characters>.
 
-Since the <columnDelimiter> is a local property, its value is reset to tab when the current handler finishes executing. It retains its value only for the current handler and setting it in one handler does not affect its value in other handlers called.
+Since the <columnDelimiter> is a local property, its value is reset to <tab> when the current handler finishes executing. It retains its value only for the current handler and setting it in one handler does not affect its value in other handlers called.
 
 References: combine command (command), split (command), split command (command)
