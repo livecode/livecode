@@ -3803,7 +3803,7 @@ void MCEngineEvalMenuObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
 void MCEngineEvalTargetAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
 void MCEngineEvalErrorObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
 
-void MCEngineExecGet(MCExecContext& ctxt, MCValueRef value);
+void MCEngineExecGet(MCExecContext& ctxt, /* take */ MCExecValue& value);
 void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef value, int where, MCVariableChunkPtr t_target);
 void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCExecValue value, int where, MCVariableChunkPtr t_target);
 void MCEngineExecPutOutput(MCExecContext& ctxt, MCStringRef value);
