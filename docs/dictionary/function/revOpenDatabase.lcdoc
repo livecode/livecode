@@ -89,6 +89,6 @@ The SQLite revOpenDatabase() call no longer requires 5 arguments and only requir
 Changes:
 LiveCode 6.6
 
-References: revSetDatabaseDriverPath (command), revExecuteSQL (command), revLicenseType (function), revDatabaseID (function), revDatabaseConnectResult (function), revDatabaseTableNames (function), revQueryIsAtStart (function)
+References: revSetDatabaseDriverPath (command), Database library (library), revExecuteSQL (command), revLicenseType (function), revDatabaseID (function), revDatabaseConnectResult (function), revDatabaseTableNames (function), revQueryIsAtStart (function)
 
 Tags: database

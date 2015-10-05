@@ -453,11 +453,15 @@ void MCStack::view_update_transform(void)
 	}
 	
 	// PM-2015-07-17: [[ Bug 13754 ]] Make sure stack does not disappear off screen when changing the scalefactor
-	MCRectangle t_bounded_rect;
-	t_bounded_rect = MCU_bound_rect(t_view_rect, 0, 0, MCscreen -> getwidth(), MCscreen -> getheight());
+    MCRectangle t_bounded_rect, t_screen_rect;
 	
-	// IM-2014-01-16: [[ StackScale ]] Update view rect if needed
-	view_setrect(t_bounded_rect);
+	// AL-2015-10-01: [[ Bug 16017 ]] Remember location of stacks on a second monitor
+    t_screen_rect = MCscreen -> getnearestdisplay(t_view_rect) -> viewport;
+	
+    t_bounded_rect = MCU_bound_rect(t_view_rect, t_screen_rect . x, t_screen_rect . y, t_screen_rect . width, t_screen_rect . height);
+	
+    // IM-2014-01-16: [[ StackScale ]] Update view rect if needed
+    view_setrect(t_bounded_rect);
 }
 
 MCRectangle MCStack::view_setstackviewport(const MCRectangle &p_rect)
