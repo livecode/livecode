@@ -517,6 +517,7 @@ const MCDisplay *MCUIDC::getnearestdisplay(const MCRectangle& p_rectangle)
 
 	t_max_area = 0;
 	t_max_distance = MAXUINT4;
+    t_max_distance_index = 0;
 	for(uint4 t_display = 0; t_display < t_display_count; ++t_display)
 	{
 		MCRectangle t_workarea;
