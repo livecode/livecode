@@ -1465,15 +1465,7 @@ void MCStringsEvalConcatenate(MCExecContext& ctxt, MCStringRef p_left, MCStringR
 
 bool MCDataConcatenate(MCDataRef p_left, MCDataRef p_right, MCDataRef& r_result)
 {
-	MCDataRef t_string = nil;
-	if (!MCDataMutableCopy(p_left, t_string) ||
-		!MCDataAppend(t_string, p_right) ||
-		!MCDataCopyAndRelease(t_string, r_result))
-	{
-		MCValueRelease(t_string);
-		return false;
-	}
-	return true;
+    return MCDataCreateWithData(r_result, p_left, p_right);
 }
 
 void MCStringsEvalConcatenate(MCExecContext& ctxt, MCDataRef p_left, MCDataRef p_right, MCDataRef& r_result)
