@@ -1542,11 +1542,24 @@ bool MCFilesExecPerformReadChunk(MCExecContext &ctxt, int4 p_index, intenum_t p_
 
         break;
     case FU_CHARACTER:
-        //  This loop accumulates codeunits into the buffer and then returns when it crosses a char boundary
-        //  It does this by monitoring the length of the range [index, length(buffer)) for its length in characters
+    {
+        // In order to make the reading of 1 char faster, we use a temporary,
+        // small buffer.
+        // We copy the codeunit(s) we read over the last character boundary at
+        //  the previous reading, and put it into our reading buffer.
+        MCAutoStringRef t_read_buffer;
+        uindex_t t_initial_length;
+        
+        if (!MCStringMutableCopySubstring(x_buffer, MCRangeMake(p_last_boundary, UINDEX_MAX), &t_read_buffer))
+            return false;
+        
+        // We keep track of the number of codeunit that we have copied for the
+        //  main buffer.
+        t_initial_length = MCStringGetLength(*t_read_buffer);
+        
         while(true)
         {
-            uint4 t_codeunit_read = MCFilesExecPerformReadCodeUnit(ctxt, p_index, p_encoding, p_empty_allowed, x_duration, x_stream, x_buffer, r_stat);
+            uint4 t_codeunit_read = MCFilesExecPerformReadCodeUnit(ctxt, p_index, p_encoding, p_empty_allowed, x_duration, x_stream, *t_read_buffer, r_stat);
 
             if (!t_codeunit_read)
             {
@@ -1565,16 +1578,24 @@ bool MCFilesExecPerformReadChunk(MCExecContext &ctxt, int4 p_index, intenum_t p_
             }
 
             MCRange t_cu_range, t_char_range;
-            t_cu_range = MCRangeMake(p_last_boundary, MCStringGetLength(x_buffer) - p_last_boundary);
-            MCStringUnmapIndices(x_buffer, kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
+            t_cu_range = MCRangeMake(0, MCStringGetLength(*t_read_buffer));
+            MCStringUnmapIndices(*t_read_buffer, kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
 
             if (t_char_range . length > 1)
             {
-                // The codeunit loaded is now on part of a second character: must end now the loop and mark the position
+                // We append the reading buffer MINUS the initial codeunits
+                MCAutoStringRef t_new_codeunits;
+                if (!MCStringCopySubstring(*t_read_buffer, MCRangeMake(t_initial_length, UINDEX_MAX), &t_new_codeunits)
+                        || !MCStringAppend(x_buffer, *t_new_codeunits))
+                    return false;
+                
+                // The last codeunit is now on part of a new character:
+                //  we can end here the loop, and appendmust end now the loop and mark the position
                 r_new_boundary = MCStringGetLength(x_buffer) - t_codeunit_read;
                 break;
             }
         }
+    }
         break;
 
     default:
