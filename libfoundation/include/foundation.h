@@ -1489,6 +1489,15 @@ bool MCStringCreateWithCFStringAndRelease(CFStringRef cf_string, MCStringRef& r_
 bool MCStringCreateWithSysString(const char *sys_string, MCStringRef &r_string);
 #endif
 
+// Creates a string from existing strings. The first variant exists to provide
+// an optimised implementation in the (very common) case of only two strings.
+bool MCStringCreateWithStrings(MCStringRef& r_string, MCStringRef p_one, MCStringRef p_two);
+//bool MCStringCreateWithStrings(MCStringRef& r_string, MCStringRef p_one, MCStringRef p_two, MCStringRef p_three, ...);
+
+// Creates a string from existing strings, using the given in-fix character
+bool MCStringCreateWithStringsAndSeparator(MCStringRef& r_string, unichar_t t_separator, MCStringRef p_one, MCStringRef p_two);
+//bool MCStringCreateWithStringsAndSeparator(MCStringRef& r_string, unichar_t t_separator, MCStringRef p_one, MCStringRef p_two, MCStringRef p_three, ...);
+
 // Create a mutable string with the given initial capacity. Note that the
 // initial capacity is only treated as a hint, the string will extend itself
 // as necessary.
