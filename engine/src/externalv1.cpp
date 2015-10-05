@@ -564,7 +564,7 @@ MCExternalError MCExternalVariable::AppendString(MCExternalValueOptions p_option
 		return t_error;
 	
 	MCAutoStringRef t_new_value;
-	if (!MCStringFormat(&t_new_value, "%@%@", *t_current_value, p_value))
+    if (!MCStringCreateWithStrings(&t_new_value, *t_current_value, p_value))
 		return kMCExternalErrorOutOfMemory;
 	
 	SetValueRef(*t_new_value);	

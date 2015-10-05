@@ -728,9 +728,9 @@ void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCValueRef p_value, int p_wher
             {
                 // Both old and new are strings
                 if (p_where == PT_AFTER)
-                    MCStringFormat((MCStringRef&)&t_new_value, "%@%@", *t_old_data, p_value);
+                    MCStringCreateWithStrings((MCStringRef&)&t_new_value, (MCStringRef)*t_old_data, (MCStringRef)p_value);
                 else
-                    MCStringFormat((MCStringRef&)&t_new_value, "%@%@", p_value, *t_old_data);
+                    MCStringCreateWithStrings((MCStringRef&)&t_new_value, (MCStringRef)p_value, (MCStringRef)*t_old_data);
             }
             else
             {
@@ -952,9 +952,9 @@ void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCValueRef p_value, int p_wher
             
             // Both old and new are strings
             if (p_where == PT_AFTER)
-                MCStringFormat(&t_new_value, "%@%@", *t_old_data, p_value);
+                MCStringCreateWithStrings(&t_new_value, (MCStringRef)*t_old_data, (MCStringRef)p_value);
             else
-                MCStringFormat(&t_new_value, "%@%@", p_value, *t_old_data);
+                MCStringCreateWithStrings(&t_new_value, (MCStringRef)p_value, (MCStringRef)*t_old_data);
             
             MCNetworkExecSetUrl(ctxt, *t_new_value, p_url);
         }
