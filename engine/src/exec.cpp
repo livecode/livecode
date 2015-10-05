@@ -1170,6 +1170,11 @@ void MCExecContext::SetItToValue(MCValueRef p_value)
     GetIt() -> set(*this, p_value);
 }
 
+void MCExecContext::GiveValueToIt(/* take */ MCExecValue& p_value)
+{
+    GetIt() -> give_value(*this, p_value);
+}
+
 void MCExecContext::SetItToEmpty(void)
 {
 	SetItToValue(kMCEmptyString);
