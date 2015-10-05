@@ -846,6 +846,12 @@ public:
     // Does what MCVariableValue equivalent was doing
     bool encode(void *&r_buffer, uindex_t r_size);
     bool decode(void *p_buffer, uindex_t p_size);
+    
+    //////////
+    
+    bool peep_isarray(void) const;
+    bool peep_converttomutablenumber(MCExecContext& ctxt);
+    double& peep_getmutablenumber(void);
 };
 
 ///////////////////////////////////////////////////////////////////////////////

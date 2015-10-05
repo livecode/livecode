@@ -1248,6 +1248,25 @@ MCVarref *MCVariable::newvarref(void)
 	return new MCDeferredVarref(this);
 }
 
+//////////
+
+bool MCVariable::peep_isarray(void) const
+{
+    return value.type == kMCExecValueTypeArrayRef ||
+            (value.type == kMCExecValueTypeValueRef &&
+             MCValueGetTypeCode(value.valueref_value) == kMCValueTypeCodeArray);
+}
+
+bool MCVariable::peep_converttomutablenumber(MCExecContext& ctxt)
+{
+    return ctxt . ConvertToNumberOrArray(value);
+}
+
+double& MCVariable::peep_getmutablenumber(void)
+{
+    return value . double_value;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCContainer::~MCContainer(void)

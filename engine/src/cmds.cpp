@@ -1447,6 +1447,7 @@ void MCPut::exec_ctxt(MCExecContext& ctxt)
                 if (!MCDataReplace((MCDataRef)t_var -> getvalueref(), MCRangeMake((unsigned)t_offset, t_length), *t_value_data))
                     return;
                 
+                t_var -> synchronize(ctxt, true);
             }
             break;
         }

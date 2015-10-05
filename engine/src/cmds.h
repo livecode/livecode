@@ -1625,15 +1625,23 @@ public:
 
 // math comands in cmdsm.cc
 
+enum MCAddForm
+{
+    kMCAddFormGeneral,
+    kMCAddFormAddToVariable,
+};
+
 class MCAdd : public MCStatement
 {
 	MCExpression *source;
 	MCChunk *dest;
 	MCVarref *destvar;
-	bool overlap;
+    MCAddForm form : 8;
+	bool overlap : 1;
 public:
 	MCAdd()
 	{
+        form = kMCAddFormGeneral;
 		source = NULL;
 		dest = NULL;
 		destvar = NULL;
