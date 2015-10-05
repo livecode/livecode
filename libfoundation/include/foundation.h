@@ -1949,6 +1949,11 @@ extern MCDataRef kMCEmptyData;
 bool MCDataCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data);
 bool MCDataCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data);
 
+// Creates data from existing data. The first variant exists to provide an
+// optimised implementation in the (very common) case of only two DataRefs.
+bool MCDataCreateWithData(MCDataRef& r_string, MCDataRef p_one, MCDataRef p_two);
+//bool MCDataCreateWithData(MCDataRef& r_string, MCDataRef p_one, MCDataRef p_two, MCDataRef p_three, ...);
+
 bool MCDataConvertStringToData(MCStringRef string, MCDataRef& r_data);
 
 bool MCDataIsEmpty(MCDataRef p_data);
