@@ -28,17 +28,27 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #if defined(__WINDOWS__)
 static bool
-MCDateGetLocalTimeInfo(struct tm & r_timeinfo,
-                       long & r_timezone)
+MCDateGetTimeInfo(bool t_is_local,
+                  struct tm & r_timeinfo,
+                  long & r_timezone)
 {
-	_get_timezone(&t_timezone);
+	if (t_is_local)
+	{
+		_get_timezone(&r_timezone);
+	}
+	else
+	{
+		r_timezone = 0;
+	}
 
 	time_t t_now;
 	time(&t_now);
 
 	/* Windows doesn't have localtime_r(), but it does have an equivalent
 	 * function with the arguments in the opposite order! */
-	if (0 != localtime_s(&r_timeinfo, &t_time))
+	if (0 != (t_is_local
+	          ? localtime_s(&r_timeinfo, &t_time)
+	          : gmtime_s(&r_timeinfo, &t_time)))
 	{
 		return false;
 	}
@@ -48,13 +58,16 @@ MCDateGetLocalTimeInfo(struct tm & r_timeinfo,
 
 #elif defined(__MAC__) || defined(__IOS__)
 static bool
-MCDateGetLocalTimeInfo(struct tm & r_timeinfo,
-                       long & r_timezone)
+MCDateGetTimeInfo(bool t_is_local,
+                  struct tm & r_timeinfo,
+                  long & r_timezone)
 {
 	time_t t_now;
 	time(&t_now);
 
-	if (NULL == localtime_r(&t_now, &r_timeinfo))
+	if (NULL == (t_is_local
+	             ? localtime_r(&t_now, &r_timeinfo)
+	             : gmtime_r(&t_now, &r_timeinfo)))
 	{
 		return false;
 	}
@@ -66,37 +79,48 @@ MCDateGetLocalTimeInfo(struct tm & r_timeinfo,
 
 #elif defined(__LINUX__) || defined(__ANDROID__) || defined(__EMSCRIPTEN__)
 static bool
-MCDateGetLocalTimeInfo(struct tm & r_timeinfo,
-                       long & r_timezone)
+MCDateGetTimeInfo(bool t_is_local,
+                  struct tm & r_timeinfo,
+                  long & r_timezone)
 {
 	time_t t_now;
 	time (&t_now);
 
-	if (NULL == localtime_r(&t_now, &r_timeinfo))
+	if (NULL == (t_is_local
+	             ? localtime_r(&t_now, &r_timeinfo)
+	             : gmtime_r(&t_now, &r_timeinfo)))
 	{
 		return false;
 	}
 
-	/* FIXME This may be expensive, but is probably required if
-	 * MCDateGetLocalTimeInfo() is to behave properly over summer time
-	 * changes. */
-	tzset();
-	r_timezone = timezone;
+	if (t_is_local)
+	{
+		/* FIXME This may be expensive, but is probably required if
+		 * MCDateGetTimeInfo() is to behave properly over summer time
+		 * changes. */
+		tzset();
+		r_timezone = timezone;
+	}
+	else
+	{
+		r_timezone = 0;
+	}
 
 	return true;
 }
 
 #else
-#	error "MCDateGetLocalTimeInfo() not implemented for this platform"
+#	error "MCDateGetTimeInfo() not implemented for this platform"
 #endif
 
-extern "C" MC_DLLEXPORT_DEF void
-MCDateExecGetLocalDate (MCProperListRef & r_datetime)
+static void
+MCDateExecGetDate(bool t_is_local,
+                  MCProperListRef & r_datetime)
 {
 	struct tm t_timeinfo;
 	long t_timezone;
 
-	if (!MCDateGetLocalTimeInfo(t_timeinfo, t_timezone))
+	if (!MCDateGetTimeInfo(t_is_local, t_timeinfo, t_timezone))
 	{
 		return;
 	}
@@ -118,6 +142,18 @@ MCDateExecGetLocalDate (MCProperListRef & r_datetime)
 
 	if (!MCProperListCreate (t_elements, 7, r_datetime))
         return;
+}
+
+extern "C" MC_DLLEXPORT_DEF void
+MCDateExecGetLocalDate (MCProperListRef & r_datetime)
+{
+	MCDateExecGetDate(true, r_datetime);
+}
+
+extern "C" MC_DLLEXPORT_DEF void
+MCDateExecGetUniversalDate(MCProperListRef & r_datetime)
+{
+	MCDateExecGetDate(false, r_datetime);
 }
 
 extern "C" MC_DLLEXPORT_DEF void
