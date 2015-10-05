@@ -670,6 +670,12 @@ public handler OnMouseUp() returns nothing
    post "mouseUp"
 end handler
 
+public handler OnMouseCancel() returns nothing
+   put false into mIsPressed
+   redraw all
+   post "mouseCancel"
+end handler
+
 --------------------------------------------------------------------------------
 --
 --		Getting and Setting Properties
