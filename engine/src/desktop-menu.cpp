@@ -418,8 +418,17 @@ void MCButton::macopenmenu(void)
                 // SN-2014-08-25: [[ Bug 13240 ]] We need to keep the actual popup_menustring,
                 //  in case some menus are nested
                 MCStringRef t_menupick;
-                t_menupick = s_popup_menupick;
-                s_popup_menupick = nil;
+                if (s_popup_menupick != NULL)
+                {
+                    t_menupick = s_popup_menupick;
+                    s_popup_menupick = nil;
+                }
+                else
+                {
+                    // SN-2015-10-05: [[ Bug 16069 ]] s_popup_menupick remains
+                    //  NULL if a menu is closed by clicking outside of it
+                    t_menupick = MCValueRetain(kMCEmptyString);
+                }
                 
 				Exec_stat es = message_with_valueref_args(MCM_menu_pick, t_menupick);
                 
@@ -444,8 +453,17 @@ void MCButton::macopenmenu(void)
                 // SN-2014-08-25: [[ Bug 13240 ]] We need to keep the actual popup_menustring,
                 //  in case some menus are nested
                 MCStringRef t_menupick;
-                t_menupick = s_popup_menupick;
-                s_popup_menupick = nil;
+                if (s_popup_menupick != NULL)
+                {
+                    t_menupick = s_popup_menupick;
+                    s_popup_menupick = nil;
+                }
+                else
+                {
+                    // SN-2015-10-05: [[ Bug 16069 ]] s_popup_menupick remains
+                    //  NULL if a menu is closed by clicking outside of it
+                    t_menupick = MCValueRetain(kMCEmptyString);
+                }
                 
 				Exec_stat es = message_with_valueref_args(MCM_menu_pick, t_menupick);
                 
