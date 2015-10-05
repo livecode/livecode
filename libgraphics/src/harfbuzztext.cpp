@@ -214,7 +214,7 @@ MCHarfbuzzSkiaFace *MCHarfbuzzGetFaceForSkiaTypeface(SkTypeface *p_typeface, uin
         t_hb_sk_face -> skia_face = t_face;
         p_typeface -> ref();
         
-        //MCGCacheTableSet(s_hb_face_cache, t_key, sizeof(t_id), &t_hb_sk_face, sizeof(MCHarfbuzzSkiaFace*));
+		MCGCacheTableSet(s_hb_face_cache, t_key, sizeof(t_id), t_hb_sk_face, sizeof(MCHarfbuzzSkiaFace));
         return t_hb_sk_face;
 	}
 	
