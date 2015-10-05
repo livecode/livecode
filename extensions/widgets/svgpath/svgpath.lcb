@@ -253,6 +253,11 @@ public handler OnMouseUp()
 	redraw all
 end handler
 
+public handler OnClick()
+	if the click count is 2 then
+		post "mouseDoubleUp" with [intToString(the click button)]	
+	end if
+end handler
 
 public handler OnMouseCancel()
 	put "up" into mState
