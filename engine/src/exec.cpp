@@ -1174,9 +1174,7 @@ MCVarref* MCExecContext::GetIt() const
 
 void MCExecContext::SetItToValue(MCValueRef p_value)
 {
-    MCAutoPointer<MCContainer> t_container;
-    GetIt() -> evalcontainer(*this, &t_container);
-	t_container -> set_valueref(p_value);
+    GetIt() -> set(*this, p_value);
 }
 
 void MCExecContext::SetItToEmpty(void)
