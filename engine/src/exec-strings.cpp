@@ -1444,29 +1444,12 @@ void MCStringsEvalMerge(MCExecContext& ctxt, MCStringRef p_format, MCStringRef& 
 
 bool MCStringsConcatenate(MCStringRef p_left, MCStringRef p_right, MCStringRef& r_result)
 {
-	MCStringRef t_string = nil;
-	if (!MCStringMutableCopy(p_left, t_string) ||
-		!MCStringAppend(t_string, p_right) ||
-		!MCStringCopyAndRelease(t_string, r_result))
-	{
-		MCValueRelease(t_string);
-		return false;
-	}
-	return true;
+    return MCStringCreateWithStrings(r_result, p_left, p_right);
 }
 
 bool MCStringsConcatenateWithChar(MCStringRef p_left, MCStringRef p_right, unichar_t p_char, MCStringRef& r_result)
 {
-	MCStringRef t_string = nil;
-	if (!MCStringMutableCopy(p_left, t_string) ||
-		!MCStringAppendChar(t_string, p_char) ||
-		!MCStringAppend(t_string, p_right) ||
-		!MCStringCopyAndRelease(t_string, r_result))
-	{
-		MCValueRelease(t_string);
-		return false;
-	}
-	return true;
+    return MCStringCreateWithStringsAndSeparator(r_result, p_char, p_left, p_right);
 }
 
 void MCStringsEvalConcatenate(MCExecContext& ctxt, MCStringRef p_left, MCStringRef p_right, MCStringRef& r_result)
