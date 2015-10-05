@@ -26,43 +26,97 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #  include <windows.h>
 #endif
 
-/* Windows doesn't have localtime_r(), but it does have an equivalent
- * function with the arguments in the opposite order! */
 #if defined(__WINDOWS__)
-// AL-2015-0728: [[ Bug 15410 ]] Windows localtime_s returns an errno_t
-//  so do a bit of gymnastics to make the signature correct.
-inline struct tm *localtime_r(const time_t *p_time, struct tm *r_timeinfo)
+static bool
+MCDateGetLocalTimeInfo(struct tm & r_timeinfo,
+                       long & r_timezone)
 {
-    if (localtime_s(r_timeinfo, p_time) == 0)
-        return r_timeinfo;
-    
-    return NULL;
+	_get_timezone(&t_timezone);
+
+	time_t t_now;
+	time(&t_now);
+
+	/* Windows doesn't have localtime_r(), but it does have an equivalent
+	 * function with the arguments in the opposite order! */
+	if (0 != localtime_s(&r_timeinfo, &t_time))
+	{
+		return false;
+	}
+
+	return true;
 }
+
+#elif defined(__MAC__) || defined(__IOS__)
+static bool
+MCDateGetLocalTimeInfo(struct tm & r_timeinfo,
+                       long & r_timezone)
+{
+	time_t t_now;
+	time(&t_now);
+
+	if (NULL == localtime_r(&t_now, &r_timeinfo))
+	{
+		return false;
+	}
+
+	r_timezone = r_timeinfo.tm_gmtoff;
+
+	return true;
+}
+
+#elif defined(__LINUX__) || defined(__ANDROID__) || defined(__EMSCRIPTEN__)
+static bool
+MCDateGetLocalTimeInfo(struct tm & r_timeinfo,
+                       long & r_timezone)
+{
+	time_t t_now;
+	time (&t_now);
+
+	if (NULL == localtime_r(&t_now, &r_timeinfo))
+	{
+		return false;
+	}
+
+	/* FIXME This may be expensive, but is probably required if
+	 * MCDateGetLocalTimeInfo() is to behave properly over summer time
+	 * changes. */
+	tzset();
+	r_timezone = timezone;
+
+	return true;
+}
+
+#else
+#	error "MCDateGetLocalTimeInfo() not implemented for this platform"
 #endif
 
 extern "C" MC_DLLEXPORT_DEF void
 MCDateExecGetLocalDate (MCProperListRef & r_datetime)
 {
 	struct tm t_timeinfo;
-	time_t t_now;
+	long t_timezone;
 
-	time (&t_now);
-	if (NULL == localtime_r (&t_now, &t_timeinfo))
+	if (!MCDateGetLocalTimeInfo(t_timeinfo, t_timezone))
+	{
 		return;
+	}
 
-	MCAutoNumberRef t_year, t_month, t_day, t_hour, t_minute, t_second;
+	MCAutoNumberRef t_year, t_month, t_day, t_hour, t_minute, t_second,
+		t_gmtoff;
 	if (!(MCNumberCreateWithInteger (t_timeinfo.tm_year, &t_year) &&
 	      MCNumberCreateWithInteger (t_timeinfo.tm_mon, &t_month) &&
 	      MCNumberCreateWithInteger (t_timeinfo.tm_mday, &t_day) &&
 	      MCNumberCreateWithInteger (t_timeinfo.tm_hour, &t_hour) &&
 	      MCNumberCreateWithInteger (t_timeinfo.tm_min, &t_minute) &&
-	      MCNumberCreateWithInteger (t_timeinfo.tm_sec, &t_second)))
+	      MCNumberCreateWithInteger (t_timeinfo.tm_sec, &t_second) &&
+	      MCNumberCreateWithInteger (t_timezone, &t_gmtoff)))
 		return;
 
 	const MCValueRef t_elements[] = {*t_year, *t_month, *t_day,
-	                                 *t_hour, *t_minute, *t_second};
+	                                 *t_hour, *t_minute, *t_second,
+	                                 *t_gmtoff};
 
-	if (!MCProperListCreate (t_elements, 6, r_datetime))
+	if (!MCProperListCreate (t_elements, 7, r_datetime))
         return;
 }
 

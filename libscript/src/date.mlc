@@ -28,7 +28,7 @@ public foreign handler MCDateExecGetLocalDate(out rDateTime as List) returns not
 public foreign handler MCDateExecGetUniversalTime(out rSeconds as CDouble) returns nothing binds to "<builtin>"
 
 /*
-Summary:	The local gregorian date
+Summary:	The local Gregorian date
 
 Example:
 	variable tDateTime as List
@@ -38,7 +38,7 @@ Example:
 	put tDateTime[3] into tDayOfMonth
 
 Description:
-Returns the local date as a list of six numeric components.  The
+Returns the local date as a list of seven numeric components.  The
 elements of the list are:
 
 * The year
@@ -47,6 +47,7 @@ elements of the list are:
 * The hour (0-23)
 * The minute (0-59)
 * The second (0-59)
+* The offset from UTC in seconds
 
 Tags: Date and time
 */
