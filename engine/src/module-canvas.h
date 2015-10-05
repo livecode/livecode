@@ -476,6 +476,10 @@ extern "C" MC_DLLEXPORT void MCCanvasEffectGetDistance(MCCanvasEffectRef p_effec
 extern "C" MC_DLLEXPORT void MCCanvasEffectSetDistance(MCCanvasFloat p_distance, MCCanvasEffectRef &x_effect);
 extern "C" MC_DLLEXPORT void MCCanvasEffectGetAngle(MCCanvasEffectRef p_effect, MCCanvasFloat &r_angle);
 extern "C" MC_DLLEXPORT void MCCanvasEffectSetAngle(MCCanvasFloat p_angle, MCCanvasEffectRef &x_effect);
+extern "C" MC_DLLEXPORT void MCCanvasEffectGetKnockOut(MCCanvasEffectRef p_effect, bool &r_knockout);
+extern "C" MC_DLLEXPORT void MCCanvasEffectSetKnockOut(bool p_knockout, MCCanvasEffectRef &x_effect);
+extern "C" MC_DLLEXPORT void MCCanvasEffectGetSourceAsString(MCCanvasEffectRef p_effect, MCStringRef &r_source);
+extern "C" MC_DLLEXPORT void MCCanvasEffectSetSourceAsString(MCStringRef p_source, MCCanvasEffectRef &x_effect);
 
 //////////
 
