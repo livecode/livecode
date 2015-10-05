@@ -220,6 +220,7 @@ public handler OnMouseMove() returns nothing
       -- Reorder the ramp to put things back into line (required for gradient rendering).
       reorderGradientRamp()
       redraw all
+      gradientStopsChanged()
    end if
 end handler
 
