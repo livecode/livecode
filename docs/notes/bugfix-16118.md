@@ -1,0 +1,1 @@
+# Error dialog doesn't open correctly in some circumstances

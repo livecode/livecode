@@ -2989,6 +2989,7 @@ void MCSubwindow::exec_ctxt(MCExecContext &ctxt)
 					else
 						MCInterfaceExecDrawerStack(ctxt, (MCStack *)optr, *t_parent_name, thisstack == True, t_pos, t_align);
 				}
+                MCerrorlock--;
 				break;
 			}
 		case WM_PULLDOWN:
