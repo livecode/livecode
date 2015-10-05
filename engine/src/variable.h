@@ -969,6 +969,9 @@ public:
 		isplain = true;
 	}
     virtual ~MCVarref();
+    
+    MCExpressionClass classify(void) const;
+    
 #ifdef LEGACY_EXEC
 	virtual Exec_stat eval(MCExecPoint &);
 #endif

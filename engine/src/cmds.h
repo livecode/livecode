@@ -246,23 +246,35 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
+enum MCPutForm
+{
+    kMCPutFormGeneral,
+    kMCPutFormIntoVariable,
+    kMCPutFormIntoByteOfVariable,
+};
+
 class MCPut : public MCStatement
 {
 	MCExpression *source;
 	MCChunk *dest;
-	Preposition_type prep : 8;
-	// MW-2012-02-23: [[ UnicodePut ]] Indicates if the 'unicode' adjective
-	//   was present.
-	bool is_unicode : 1;
-	bool overlap : 1;
 
 	//cookie
 	MCExpression *name;
 	MCExpression *path;
 	MCExpression *domain;
 	MCExpression *expires;
-	bool is_secure;
-	bool is_httponly;
+    
+	Preposition_type prep : 8;
+    MCPutForm form : 8;
+    
+	// MW-2012-02-23: [[ UnicodePut ]] Indicates if the 'unicode' adjective
+	//   was present.
+	bool is_unicode : 1;
+	
+    bool overlap : 1;
+	bool is_secure : 1;
+	bool is_httponly : 1;
+    
 public:
 	MCPut()
 	{
@@ -281,6 +293,8 @@ public:
 		
 		// MW-2012-02-23: [[ UnicodePut ]] Assume non-unicode to begin with.
 		is_unicode = false;
+        
+        form = kMCPutFormGeneral;
 	}
 	virtual ~MCPut();
 	virtual Parse_stat parse(MCScriptPoint &);

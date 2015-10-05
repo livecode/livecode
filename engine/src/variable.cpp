@@ -1398,6 +1398,14 @@ MCVarref::~MCVarref()
     }
 }
 
+MCExpressionClass MCVarref::classify(void) const
+{
+    if (isparam || dimensions > 0)
+        return kMCExpressionClassIndexedVariable;
+    
+    return kMCExpressionClassVariable;
+}
+
 #ifdef LEGACY_EXEC
 MCVariable *MCVarref::fetchvar(MCExecPoint& ep)
 {
