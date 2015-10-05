@@ -692,7 +692,7 @@ void MCEngineExecSet(MCExecContext& ctxt, MCProperty *p_target, MCValueRef p_val
 
 void MCEngineExecGet(MCExecContext& ctxt, /* take */ MCExecValue& p_value)
 {
-	ctxt . GetIt() -> give_value(ctxt, p_value);
+    ctxt . GiveValueToIt(p_value);
 }
 
 void MCEngineExecPutOutput(MCExecContext& ctxt, MCStringRef p_value)

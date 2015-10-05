@@ -1606,6 +1606,9 @@ public:
     MCVarref *GetIt() const;
 	void SetItToEmpty(void);
 	void SetItToValue(MCValueRef p_value);
+    
+    // Assign the given ExecValue to it, the 'it' variable takes ownership.
+	void GiveValueToIt(/* take */ MCExecValue& p_value);
 	
 	//////////    
 
