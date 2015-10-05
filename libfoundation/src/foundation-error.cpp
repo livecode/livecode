@@ -466,7 +466,7 @@ bool __MCErrorInitialize(void)
 	if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.UnboundTypeError"), MCNAME("runtime"), MCSTR("attempt to use unbound named type %{type}"), kMCUnboundTypeErrorTypeInfo))
         return false;
     
-	if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.UnimplementedError"), MCNAME("runtime"), MCSTR("%{reason}"), kMCUnboundTypeErrorTypeInfo))
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.UnimplementedError"), MCNAME("runtime"), MCSTR("%{reason}"), kMCUnimplementedErrorTypeInfo))
         return false;
     
     if (!MCErrorCreate(kMCOutOfMemoryErrorTypeInfo, nil, s_out_of_memory_error))
@@ -480,6 +480,9 @@ void __MCErrorFinalize(void)
     MCValueRelease(s_last_error);
     MCValueRelease(s_out_of_memory_error);
     MCValueRelease(kMCOutOfMemoryErrorTypeInfo);
+    MCValueRelease(kMCGenericErrorTypeInfo);
+    MCValueRelease(kMCUnboundTypeErrorTypeInfo);
+    MCValueRelease(kMCUnimplementedErrorTypeInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
