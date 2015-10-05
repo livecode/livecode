@@ -2,7 +2,7 @@ Name: answer file with type
 
 Type: command
 
-Syntax: answer file[s] <prompt> [with <defaultPath>] [with type <types> [or type <types> ...]] <windowTitle>] [as sheet]
+Syntax: answer file[s] <prompt> [with <defaultPath>] [with type <types> [or type <types> ...]] [titled <windowTitle>] [as sheet]
 
 Summary: Displays a <file dialog box|standard file dialog> for the user to select a <file>.
 
