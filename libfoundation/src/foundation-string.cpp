@@ -5577,7 +5577,6 @@ MCStringCreateWithSysString(const char *p_sys_string,
 }
 #endif
 
-MC_DLLEXPORT_DEF
 static bool
 __MCStringCreateWithStrings(MCStringRef& r_string, bool p_has_separator, unichar_t p_separator, MCStringRef p_one, MCStringRef p_two)
 {
