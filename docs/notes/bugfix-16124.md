@@ -1,0 +1,1 @@
+# char chunk gives unexpected results when initial index is out of range
