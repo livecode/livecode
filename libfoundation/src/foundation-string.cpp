@@ -568,6 +568,11 @@ bool MCStringCreateWithNativeChars(const char_t *p_chars, uindex_t p_char_count,
 
 bool MCStringCreateWithNativeCharsAndRelease(char_t *p_chars, uindex_t p_char_count, MCStringRef& r_string)
 {
+    return MCStringCreateWithNativeCharBufferAndRelease(p_chars, p_char_count, p_char_count, r_string);
+}
+
+bool MCStringCreateWithNativeCharBufferAndRelease(char_t* p_chars, uindex_t p_char_count, uindex_t p_buffer_length, MCStringRef& r_string)
+{
     bool t_success;
     t_success = true;
     
@@ -583,14 +588,19 @@ bool MCStringCreateWithNativeCharsAndRelease(char_t *p_chars, uindex_t p_char_co
     if (t_success)
         t_success = __MCValueCreate(kMCValueTypeCodeString, self);
     
-    if (t_success)
-        t_success = MCMemoryReallocate(p_chars, p_char_count + 1, p_chars);
-    
+    uindex_t t_capacity = p_buffer_length;
+    if (t_success && t_capacity < p_char_count + 1)
+    {
+        t_capacity = p_char_count + 1;
+        t_success = MCMemoryReallocate(p_chars, t_capacity, p_chars);
+    }
+
     if (t_success)
     {
         p_chars[p_char_count] = '\0';
         self -> native_chars = p_chars;
         self -> char_count = p_char_count;
+        self -> capacity = t_capacity;
         r_string = self;
     }
     else

@@ -1473,6 +1473,7 @@ bool MCStringCreateWithWStringAndRelease(unichar_t *wstring, MCStringRef& r_stri
 // Create an immutable string from the given native char sequence.
 bool MCStringCreateWithNativeChars(const char_t *chars, uindex_t char_count, MCStringRef& r_string);
 bool MCStringCreateWithNativeCharsAndRelease(char_t *chars, uindex_t char_count, MCStringRef& r_string);
+bool MCStringCreateWithNativeCharBufferAndRelease(char_t* buffer, uindex_t char_count, uindex_t buffer_length, MCStringRef& r_string);
 
 // Create an immutable string from the given (native) c-string.
 bool MCStringCreateWithCString(const char *cstring, MCStringRef& r_string);
