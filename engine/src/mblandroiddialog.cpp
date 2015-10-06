@@ -156,6 +156,11 @@ bool MCSystemPickDate(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
     int32_t t_current, t_min, t_max;
     bool t_use_min, t_use_max;
 
+    // Avoid to leave t_min/t_max uninitialised, even though showDatePicker
+    // won't use it if t_use_min/t_use_max is not true
+    t_min = 0;
+    t_max = 0;
+    
     t_use_min = p_min != nil;
     t_use_max = p_max != nil;
     
@@ -182,7 +187,7 @@ bool MCSystemPickDate(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
 		MCD_convert_from_datetime(ctxt, *p_max, CF_SECONDS, CF_UNDEFINED, &t_val);
         /* UNCHECKED */ ctxt.ConvertToInteger(*t_val, t_max);
     }
-    
+
     s_in_popup_dialog = true;
     s_dialog_result = kMCDialogResultUnknown;
 	// IM-2012-10-31 [[ BZ 10483 ]] - make sure we have the timezone bias for the date
