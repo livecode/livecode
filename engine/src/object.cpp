@@ -2125,7 +2125,7 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	MCtargetptr = oldtargetptr;
 	MCdynamicpath = olddynamic;
 
-	if (stat == ES_ERROR && MCerrorlock == 0 && !MCtrylock)
+	if (stat == ES_ERROR && !MCerrorlock && !MCtrylock)
 	{
 		if (MCnoui)
 		{
