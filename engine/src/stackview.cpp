@@ -619,6 +619,11 @@ bool MCStack::view_getacceleratedrendering(void)
 
 void MCStack::view_setacceleratedrendering(bool p_value)
 {
+#ifdef _SERVER
+    // We don't have accelerated rendering on Server
+    return;
+#endif
+    
 	// If we are turning accelerated rendering off, then destroy the tilecache.
 	if (!p_value)
 	{

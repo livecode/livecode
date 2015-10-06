@@ -443,7 +443,7 @@ void MCServerDebugGet(MCStringRef p_property, MCStringRef& r_result)
         /* UNCHECKED */ MCeerror -> copyasstringref(t_error);
 	else if (MCStringIsEqualToCString(p_property, "parse error", kMCCompareExact))
         MCperror -> copyasstringref(t_error);
-	else if (MCStringIsEqualToCString(p_property, "files", kMCCompareExact))
+	else
         t_error = MCValueRetain(kMCEmptyString);
 
     r_result = t_error;
