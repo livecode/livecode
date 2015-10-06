@@ -337,6 +337,17 @@ void MCMultimediaExecStopRecording(MCExecContext& ctxt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// PM-2015-08-04: [[ Bug 15321 ]] Some helper methods
+static bool is_windows_legal_drive(unichar_t p_char)
+{
+	return (p_char >= 'a' && p_char <= 'z') || (p_char >= 'A' && p_char <= 'Z');
+}
+
+static bool is_windows_absolute_path(MCStringRef p_path)
+{
+	return is_windows_legal_drive(MCStringGetCharAtIndex(p_path, 0)) && (MCStringGetCharAtIndex(p_path, 1) == ':');
+}
+
 // SN-2014-06-25: [[ PlatformPlayer ]] Now calling the function from quicktime.cpp
 void MCMultimediaExecRecord(MCExecContext& ctxt, MCStringRef p_filename)
 {
@@ -356,7 +367,17 @@ void MCMultimediaExecRecord(MCExecContext& ctxt, MCStringRef p_filename)
         MCPlatformSoundRecorderStart(MCrecorder, *soundfile);
 #else
 	extern void MCQTRecordSound(MCStringRef soundfile);
-	MCQTRecordSound(*soundfile);
+	
+	// PM-2015-08-04: [[ Bug 15321 ]] Make sure we always pass an absolute path to MCQTRecordSound
+	MCStringRef t_absolute_path;
+	if (!is_windows_absolute_path(*soundfile))
+		ctxt . GetObject()->getstack()->resolve_relative_path_to_default_folder(*soundfile, t_absolute_path);
+	else
+		t_absolute_path = MCValueRetain(*soundfile);
+		
+	MCQTRecordSound(t_absolute_path);
+
+	MCValueRelease(t_absolute_path);
 #endif
 }
 
