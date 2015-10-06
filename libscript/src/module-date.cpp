@@ -47,8 +47,8 @@ MCDateGetTimeInfo(bool t_is_local,
 	/* Windows doesn't have localtime_r(), but it does have an equivalent
 	 * function with the arguments in the opposite order! */
 	if (0 != (t_is_local
-	          ? localtime_s(&r_timeinfo, &t_time)
-	          : gmtime_s(&r_timeinfo, &t_time)))
+	          ? localtime_s(&r_timeinfo, &t_now)
+	          : gmtime_s(&r_timeinfo, &t_now)))
 	{
 		return false;
 	}
