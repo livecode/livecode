@@ -2919,7 +2919,6 @@ void MCSubwindow::exec_ctxt(MCExecContext &ctxt)
 		case WM_SHEET:
 		case WM_DRAWER:
 			{
-				MCerrorlock++;
 				MCNewAutoNameRef t_parent_name;
                 if (!ctxt . EvalOptionalExprAsNullableNameRef(parent, EE_SUBWINDOW_BADEXP, &t_parent_name))
                     return;

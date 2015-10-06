@@ -2520,6 +2520,7 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
             if (MCValueGetTypeCode(t_temp_items[i]) != kMCValueTypeCodeString)
                 t_all_strings = false;
         }
+        MCerrorlock--;
         t_items = t_temp_items;
     }
     else

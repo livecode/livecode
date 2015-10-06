@@ -448,10 +448,10 @@ bool MCGradientFillGetProperties(MCExecContext& ctxt, MCGradientFill* p_gradient
             t_success = MCArrayStoreValue(*v, kMCCompareExact, *t_key, t_prop_value);
     }
     
+    MCerrorlock--;
+    
     if (t_success)
     {
-        MCerrorlock--;
-        
         r_value . arrayref_value = MCValueRetain(*v);
         r_value . type = kMCExecValueTypeArrayRef;
         return true;
