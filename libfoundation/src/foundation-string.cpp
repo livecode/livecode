@@ -581,6 +581,12 @@ bool MCStringCreateWithNativeChars(const char_t *p_chars, uindex_t p_char_count,
 MC_DLLEXPORT_DEF
 bool MCStringCreateWithNativeCharsAndRelease(char_t *p_chars, uindex_t p_char_count, MCStringRef& r_string)
 {
+    return MCStringCreateWithNativeCharBufferAndRelease(p_chars, p_char_count, p_char_count, r_string);
+}
+
+MC_DLLEXPORT_DEF
+bool MCStringCreateWithNativeCharBufferAndRelease(char_t* p_chars, uindex_t p_char_count, uindex_t p_buffer_length, MCStringRef& r_string)
+{
     bool t_success;
     t_success = true;
     
@@ -596,14 +602,19 @@ bool MCStringCreateWithNativeCharsAndRelease(char_t *p_chars, uindex_t p_char_co
     if (t_success)
         t_success = __MCValueCreate(kMCValueTypeCodeString, self);
     
-    if (t_success)
-        t_success = MCMemoryReallocate(p_chars, p_char_count + 1, p_chars);
-    
+    uindex_t t_capacity = p_buffer_length;
+    if (t_success && t_capacity < p_char_count + 1)
+    {
+        t_capacity = p_char_count + 1;
+        t_success = MCMemoryReallocate(p_chars, t_capacity, p_chars);
+    }
+
     if (t_success)
     {
         p_chars[p_char_count] = '\0';
         self -> native_chars = p_chars;
         self -> char_count = p_char_count;
+        self -> capacity = t_capacity;
         r_string = self;
     }
     else
@@ -5567,6 +5578,137 @@ MCStringCreateWithSysString(const char *p_sys_string,
 #endif
 
 MC_DLLEXPORT_DEF
+static bool
+__MCStringCreateWithStrings(MCStringRef& r_string, bool p_has_separator, unichar_t p_separator, MCStringRef p_one, MCStringRef p_two)
+{
+    bool t_success;
+    t_success = true;
+    
+    // Create a new StringRef object
+    __MCString *self;
+    self = nil;
+    if (t_success)
+        t_success = __MCValueCreate(kMCValueTypeCodeString, self);
+    
+    // Resolve indirection
+    if (__MCStringIsIndirect(p_one))
+        p_one = p_one->string;
+    if (__MCStringIsIndirect(p_two))
+        p_two = p_two->string;
+    
+    // Calculate the required length and is-native status of the result string
+    uindex_t t_one_length, t_two_length;
+    t_one_length = MCStringGetLength(p_one);
+    t_two_length = MCStringGetLength(p_two);
+    bool t_native = MCStringIsNative(p_one) && MCStringIsNative(p_two);
+    uindex_t t_length = t_one_length + t_two_length;
+    
+    // Take the separator into account
+    char_t t_native_separator;
+    if (p_has_separator)
+    {
+        t_native = t_native && MCUnicodeCharMapToNative(p_separator, t_native_separator);
+        t_length++;
+    }
+    
+    // Increase the length so we always have a NUL terminator
+    t_length++;
+    
+    // Are we doing a native or a Unicode concatenation?
+    if (t_native)
+    {
+        // Allocate the output buffer
+        if (t_success)
+            t_success = MCMemoryAllocate(t_length, self->native_chars);
+        
+        if (t_success)
+        {
+            // Both sides are already native so the copy is simple
+            MCMemoryCopy(self->native_chars, p_one->native_chars, t_one_length);
+            if (p_has_separator)
+            {
+                // Add the separator character
+                self->native_chars[t_one_length] = t_native_separator;
+                t_one_length++;
+            }
+            MCMemoryCopy(self->native_chars + t_one_length, p_two->native_chars, t_two_length);
+            
+            // Terminate the string
+            self->char_count = t_length-1;
+            self->native_chars[self->char_count] = '\0';
+            
+            // Set the flags
+            self->flags |= kMCStringFlagCanBeNative;
+        }
+    }
+    else
+    {
+        // Allocate the output buffer
+        if (t_success)
+            t_success = MCMemoryAllocate(t_length * sizeof(unichar_t), self->chars);
+        
+        if (t_success)
+        {
+            // Copy the first string
+            if (!MCStringIsNative(p_one))
+                MCMemoryCopy(self->chars, p_one->chars, t_one_length*sizeof(unichar_t));
+            else
+            {
+                // Copy and map each character
+                const char_t* t_one_ptr = p_one->native_chars;
+                for (uindex_t i = 0; i < t_one_length; i++)
+                    self->chars[i] = MCUnicodeCharMapFromNative(t_one_ptr[i]);
+            }
+            
+            if (p_has_separator)
+            {
+                // Add the separator character
+                self->chars[t_one_length] = p_separator;
+                t_one_length++;
+            }
+            
+            // Copy the second string
+            if (!MCStringIsNative(p_two))
+                MCMemoryCopy(self->chars + t_one_length, p_two->chars, t_two_length*sizeof(unichar_t));
+            else
+            {
+                // Copy and map each character
+                const char_t* t_two_ptr = p_two->native_chars;
+                for (uindex_t i = 0; i < t_two_length; i++)
+                    self->chars[t_one_length + i] = MCUnicodeCharMapFromNative(t_two_ptr[i]);
+            }
+            
+            // Terminate the string
+            self->char_count = t_length-1;
+            self->chars[self->char_count] = '\0';
+            
+            // Set the flags
+            self->flags |= kMCStringFlagIsNotNative;
+        }
+    }
+    
+    // Set the output value
+    if (t_success)
+        r_string = self;
+    
+    return t_success;
+}
+
+MC_DLLEXPORT_DEF
+bool
+MCStringCreateWithStrings(MCStringRef& r_string, MCStringRef p_one, MCStringRef p_two)
+{
+    return __MCStringCreateWithStrings(r_string, false, 0, p_one, p_two);
+}
+
+MC_DLLEXPORT_DEF
+bool
+MCStringCreateWithStringsAndSeparator(MCStringRef& r_string, unichar_t p_separator, MCStringRef p_one, MCStringRef p_two)
+{
+    return __MCStringCreateWithStrings(r_string, true, p_separator, p_one, p_two);
+}
+
+MC_DLLEXPORT_DEF
 bool MCStringNormalizedCopyNFC(MCStringRef self, MCStringRef &r_string)
 {
     if (MCStringIsNative(self))
@@ -5637,22 +5779,7 @@ bool MCStringSetNumericValue(MCStringRef self, double p_value)
     if (MCStringIsMutable(self))
         return false;
     
-    // Compute the number of bytes used by the string - including 1 for the
-    // implicit NUL.
-    uindex_t t_byte_count;
-    if (__MCStringIsNative(self))
-        t_byte_count = self -> char_count + 1;
-    else
-        t_byte_count = self -> char_count * 2 + 1;
-    
-    // Round up the byte count to the nearest 8 bytes.
-    t_byte_count = (t_byte_count + 7) & ~7;
-    
-    if (!MCMemoryReallocate(self -> native_chars, t_byte_count + 8, self -> native_chars))
-        return false;
-    
-    *(double *)(&(self -> native_chars[t_byte_count])) = p_value;
-    
+    self -> numeric_value = p_value;
     self -> flags |= kMCStringFlagHasNumber;
     
     return true;
@@ -5666,19 +5793,7 @@ bool MCStringGetNumericValue(MCStringRef self, double &r_value)
     
     if ((self -> flags & kMCStringFlagHasNumber) != 0)
     {
-        // Compute the number of bytes used by the string - including 1 for the
-        // implicit NUL.
-        uindex_t t_byte_count;
-        if (__MCStringIsNative(self))
-            t_byte_count = self -> char_count + 1;
-        else
-            t_byte_count = self -> char_count * 2 + 1;
-        
-        // Round up the byte count to the nearest 8 bytes.
-        t_byte_count = (t_byte_count + 7) & ~7;
-        
-        r_value = *(double *)(&(self -> native_chars[t_byte_count]));
-        
+        r_value = self -> numeric_value;
         return true;
     }
     else
