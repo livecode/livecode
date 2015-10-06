@@ -308,6 +308,8 @@ private variable mPerimeter			as Path
 private variable mLines				as List			-- list of line paths
 private variable mRadius			as Real
 
+private variable mCalculatedWidths as List
+
 -- constants
 constant kIconSize is 16
 constant kTextSize is 13
@@ -370,11 +372,13 @@ public handler OnCreate()
 	put the empty list into mLines
 	put 0 into mRadius
 
+	put [] into mCalculatedWidths
 end handler
 
 public handler OnPaint()	
 	if mGeometryIsChanged then
-		updateProperties()	
+		updateProperties()
+		calculateWidths()
 		-- update mPerimeter and mLines variables if the geometry has changed
 		put (the trunc of my height)/5 into mRadius
 		updatePerimeter()
@@ -732,14 +736,65 @@ private handler fetchWidth(in pSegment as Integer) returns Real
 	if pSegment is 0 then
 		return 0
 	end if
-	
-	variable tWidth as Real
-	put my width / mNumSegments into tWidth
-	if tWidth < (element pSegment of mSegmentMinWidth) then
-		put (element pSegment of mSegmentMinWidth) into tWidth
+
+	return mCalculatedWidths[pSegment]
+end handler
+
+private handler calculateWidths() returns nothing
+	variable tCount as Number
+
+	// Retain existing behavior if display is "icon"
+	if mSegmentDisplay is "icon" then
+		variable tWidth as Real
+		put my width / mNumSegments into tWidth
+
+		repeat with tCount from 1 up to mNumSegments
+         put the maximum of tWidth and mSegmentMinWidth[tCount] into mCalculatedWidths[tCount]
+		end repeat
+		return
 	end if
-	
-	return tWidth
+
+	// We want to be able to fit as much of the text in as possible whilst
+	// respecting the minWidths of each segment.
+
+	// Measure the labels
+	variable tTextSizes as List
+	variable tTotal as Number
+	put 0 into tTotal
+
+	variable tTextBounds as Rectangle
+	repeat with tCount from 1 up to mNumSegments
+		measure mSegmentLabels[tCount] on this canvas into tTextBounds
+		put the width of tTextBounds into tTextSizes[tCount]
+		add tTextSizes[tCount] to tTotal
+	end repeat
+
+	// Work out how much to add to respect min widths
+	variable tOK as Boolean
+	put true into tOK
+
+	variable tNeededIncrease as Number
+	put 0 into tNeededIncrease
+	variable tDifference as Number
+	repeat with tCount from 1 up to mNumSegments
+		put mSegmentMinWidth[tCount] - tTextSizes[tCount] into tDifference
+		if tDifference > 0 then
+			put the maximum of tDifference and tNeededIncrease into tNeededIncrease
+		end if
+	end repeat
+
+	add tNeededIncrease * mNumSegments to tTotal
+
+	// If there is still space to expand, do so
+	if tTotal < my width then
+		add my width / mNumSegments to tNeededIncrease
+	end if
+
+	repeat with tCount from 1 up to mNumSegments
+		add tNeededIncrease to tTextSizes[tCount]
+	end repeat
+
+	put tTextSizes into mCalculatedWidths
 end handler
 
 private handler fetchBounds(in pSegment as Integer) returns Rectangle
