@@ -106,6 +106,42 @@ bool MCDataCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, MCD
     return t_success;
 }
 
+bool
+MCDataCreateWithData(MCDataRef& r_data, MCDataRef p_one, MCDataRef p_two)
+{
+    // Resolve any indirection
+    if (__MCDataIsIndirect(p_one))
+        p_one = p_one->contents;
+    if (__MCDataIsIndirect(p_two))
+        p_two = p_two->contents;
+    
+    // Calculate how much output space is required
+    uindex_t t_length = p_one->byte_count + p_two->byte_count;
+    
+    // Create the new data object
+    __MCData *self = nil;
+    if (!__MCValueCreate(kMCValueTypeCodeData, self))
+        return false;
+    
+    // Allocate memory for the output
+    if (!MCMemoryNewArray(t_length, self->bytes))
+    {
+        MCValueRelease(self);
+        return false;
+    }
+    
+    // Copy the bytes to the object
+    MCMemoryCopy(self->bytes, p_one->bytes, p_one->byte_count);
+    MCMemoryCopy(self->bytes + p_one->byte_count, p_two->bytes, p_two->byte_count);
+    
+    // Set the byte count
+    self->byte_count = p_one->byte_count + p_two->byte_count;
+    
+    // Done
+    r_data = self;
+    return true;
+}
+
 bool MCDataConvertStringToData(MCStringRef string, MCDataRef& r_data)
 {
     // AL-2014-12-12: [[ Bug 14208 ]] Implement MCDataConvertStringToData reduce the overhead in
