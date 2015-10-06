@@ -174,6 +174,7 @@ struct __MCString: public __MCValue
         MCStringRef string;
         struct
         {
+            double numeric_value;
             uindex_t char_count;
             union
             {

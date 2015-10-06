@@ -5283,22 +5283,7 @@ bool MCStringSetNumericValue(MCStringRef self, double p_value)
     if (MCStringIsMutable(self))
         return false;
     
-    // Compute the number of bytes used by the string - including 1 for the
-    // implicit NUL.
-    uindex_t t_byte_count;
-    if (__MCStringIsNative(self))
-        t_byte_count = self -> char_count + 1;
-    else
-        t_byte_count = self -> char_count * 2 + 1;
-    
-    // Round up the byte count to the nearest 8 bytes.
-    t_byte_count = (t_byte_count + 7) & ~7;
-    
-    if (!MCMemoryReallocate(self -> native_chars, t_byte_count + 8, self -> native_chars))
-        return false;
-    
-    *(double *)(&(self -> native_chars[t_byte_count])) = p_value;
-    
+    self -> numeric_value = p_value;
     self -> flags |= kMCStringFlagHasNumber;
     
     return true;
@@ -5311,19 +5296,7 @@ bool MCStringGetNumericValue(MCStringRef self, double &r_value)
     
     if ((self -> flags & kMCStringFlagHasNumber) != 0)
     {
-        // Compute the number of bytes used by the string - including 1 for the
-        // implicit NUL.
-        uindex_t t_byte_count;
-        if (__MCStringIsNative(self))
-            t_byte_count = self -> char_count + 1;
-        else
-            t_byte_count = self -> char_count * 2 + 1;
-        
-        // Round up the byte count to the nearest 8 bytes.
-        t_byte_count = (t_byte_count + 7) & ~7;
-        
-        r_value = *(double *)(&(self -> native_chars[t_byte_count]));
-        
+        r_value = self -> numeric_value;
         return true;
     }
     else
