@@ -134,6 +134,9 @@ MCDataCreateWithData(MCDataRef& r_data, MCDataRef p_one, MCDataRef p_two)
     MCMemoryCopy(self->bytes, p_one->bytes, p_one->byte_count);
     MCMemoryCopy(self->bytes + p_one->byte_count, p_two->bytes, p_two->byte_count);
     
+    // Set the byte count
+    self->byte_count = p_one->byte_count + p_two->byte_count;
+    
     // Done
     r_data = self;
     return true;
