@@ -163,6 +163,7 @@ bool MCModuleGetFilename(MCModuleRef p_module, char*& r_path)
 bool MCModuleLoad(const char *p_filename, MCModuleRef& r_module)
 {
 	MCModuleRef t_module;
+    t_module = NULL;
 	if (MCCStringEndsWith(p_filename, ".dylib"))
 	{
 		t_module = (void *)dlopen(p_filename, (RTLD_NOW | RTLD_LOCAL));

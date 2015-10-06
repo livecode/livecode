@@ -832,7 +832,9 @@ void REVVideoGrabber(VideoGrabberKeyword whichkeyword,
 		break;
 		case VIDEOGRABBER_GETFRAMESIZE:
 		{
-			int fwidth,fheight; 
+			int fwidth,fheight;
+            fwidth = 0;
+            fheight = 0;
 			if (gvideograbber)
 				gvideograbber->GetFrameSize(&fwidth,&fheight);
 			result = (char *)malloc(60);

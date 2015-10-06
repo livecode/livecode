@@ -483,6 +483,8 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 							t_char = 0x25AA, t_marker = "square";
 						else if (t_list_style == kMCParagraphListStyleCircle)
 							t_char = 0x25E6, t_marker = "circle";
+                        else // kMCParagraphListStyleNone
+                            return false;
 						/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "{\\listlevel\\levelnfc23\\leveljc0\\levelstartat1\\levelfollow0{\\*\\levelmarker \\{%s\\}}{\\leveltext\\'01\\u%d.;}{\\levelnumbers;}",
 													t_marker, t_char);
 					}

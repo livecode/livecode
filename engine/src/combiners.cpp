@@ -401,6 +401,8 @@ template<Operation x_combiner, bool x_dst_alpha, bool x_src_alpha> INLINE uint32
 	case OPERATION_SET:
 		r = 0x00ffffff;
 	break;
+    default:
+        MCAssert(false);
 	}
 
 	if (x_src_alpha && x_dst_alpha)
@@ -531,6 +533,8 @@ template<int x_combiner, bool x_dst_alpha, bool x_src_alpha> INLINE uint32_t ari
 		r = rr | rg | rb;
 	}
 	break;
+    default:
+        MCAssert(false);
 	}
 
 	if (x_src_alpha && x_dst_alpha)
@@ -643,6 +647,8 @@ template<int x_combiner, bool x_dst_alpha, bool x_src_alpha> INLINE uint32_t bas
 	case OPERATION_BLEND_SCREEN:
 		r = packed_multiply_bounded(src, packed_inverse(dst)) + dst;
 	break;
+    default:
+        MCAssert(false);
 	}
 
 	return r;
@@ -867,6 +873,8 @@ template<int x_combiner, bool x_dst_alpha, bool x_src_alpha> INLINE uint32_t adv
 		t_blue = downscale(t_src_blue * (t_dst_alpha - t_dst_blue) + t_dst_blue * (t_src_alpha - t_src_blue) + t_inv_dst_alpha_src_blue + t_inv_src_alpha_dst_blue);
 		t_alpha = t_src_alpha + t_dst_alpha - downscale(t_src_alpha_dst_alpha);
 	break;
+    default:
+        MCAssert(false);
 	}
 
 	if (x_dst_alpha)

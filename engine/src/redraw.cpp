@@ -211,6 +211,8 @@ MCLayerModeHint MCControl::layer_computeattrs(bool p_commit)
 		else
 			t_layer_mode = kMCLayerModeHintStatic;
 	}
+    else
+        MCAssert(false);
 
 	// Now compute the sprite attribute.
 	bool t_is_sprite;
