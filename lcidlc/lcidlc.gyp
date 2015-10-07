@@ -52,6 +52,16 @@
                 '<(SHARED_INTERMEDIATE_DIR)/LCIDLC/EncodedJavaSupport.c',
                 '<(SHARED_INTERMEDIATE_DIR)/LCIDLC/EncodedSupport.c',
 			],
+			
+			'conditions':
+			[
+				[
+					# Don't compile on iOS or emscripten
+					'OS == "ios" or OS == "emscripten"',
+					{
+						'type': 'none',
+					},
+			],
 		},
         {
             'target_name': 'encode_support',
