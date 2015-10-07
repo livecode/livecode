@@ -1,0 +1,1 @@
+# Impossible to resize a line at 0 degrees horizontally or 90 degrees vertically
