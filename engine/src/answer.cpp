@@ -530,11 +530,18 @@ Exec_errors MCAnswer::exec_file(MCExecPoint& ep, const char *p_title)
 	t_initial_resolved = nil;
 
 	if (!t_error && t_initial != nil)
-	{
-		// IM-2014-08-06: [[ Bug 13096 ]] Allow file dialogs to work with relative paths by resolving to absolute
-		t_initial_resolved = MCS_get_canonical_path(t_initial);
-		if (nil == t_initial_resolved)
-			t_error == EE_NO_MEMORY;
+    {
+        // We only want to resolve the path if the path is relative (otherwise
+        // it will be created at the current folder - which is /Applications)
+        if (strchr(t_initial, '/'))
+        {
+            // IM-2014-08-06: [[ Bug 13096 ]] Allow file dialogs to work with relative paths by resolving to absolute
+            t_initial_resolved = MCS_get_canonical_path(t_initial);
+            if (nil == t_initial_resolved)
+                t_error = EE_NO_MEMORY;
+        }
+        else
+            t_initial_resolved = strclone(t_initial);
 	}
 
 	if (!t_error)
@@ -596,11 +603,18 @@ Exec_errors MCAnswer::exec_folder(MCExecPoint& ep, const char *p_title)
 	t_initial_resolved = nil;
 
 	if (!t_error && t_initial != nil)
-	{
-		// IM-2014-08-06: [[ Bug 13096 ]] Allow file dialogs to work with relative paths by resolving to absolute
-		t_initial_resolved = MCS_get_canonical_path(t_initial);
-		if (nil == t_initial_resolved)
-			t_error == EE_NO_MEMORY;
+    {
+        // We only want to resolve the path if the path is relative (otherwise
+        // it will be created at the current folder - which is /Applications)
+        if (strchr(t_initial, '/'))
+        {
+            // IM-2014-08-06: [[ Bug 13096 ]] Allow file dialogs to work with relative paths by resolving to absolute
+            t_initial_resolved = MCS_get_canonical_path(t_initial);
+            if (nil == t_initial_resolved)
+                t_error = EE_NO_MEMORY;
+        }
+        else
+            t_initial_resolved = strclone(t_initial);
 	}
 
 	if (!t_error)
