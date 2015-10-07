@@ -1076,13 +1076,13 @@ void MCControl::sizerects(MCRectangle *rects)
 	int2 y[3];
 
 	uint2 handlesize = MCsizewidth;
-
-    x[0] = rect.x - handlesize;
+    
+    x[0] = rect.x - (handlesize >> 1);
  	x[1] = rect.x + ((rect.width - handlesize) >> 1);
-    x[2] = rect.x + rect.width;
-    y[0] = rect.y - handlesize;
+    x[2] = rect.x + rect.width - (handlesize >> 1);
+    y[0] = rect.y - (handlesize >> 1);
  	y[1] = rect.y + ((rect.height - handlesize) >> 1);
-    y[2] = rect.y + rect.height;
+    y[2] = rect.y + rect.height - (handlesize >> 1);
 
 	uint2 i;
 	uint2 j;
