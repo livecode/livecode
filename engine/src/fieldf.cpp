@@ -1501,14 +1501,12 @@ void MCField::endselection()
 		{
 			MCAutoStringRef t_string;
 			selectedtext(&t_string);
-			
-			MCAutoDataRef t_data;
-            MCStringEncode(*t_string, kMCStringEncodingNative, false, &t_data);
-			if (*t_data != nil)
+
+			if (*t_string != nil)
             {
                 // SN-2014-12-08: [[ Bug 12784 ]] Only make this field the selectedfield
                 //  if it is Focusable
-                if (MCselectiondata -> Store(TRANSFER_TYPE_TEXT, *t_data)
+                if (MCselectiondata -> Store(TRANSFER_TYPE_TEXT, *t_string)
                         && flags & F_TRAVERSAL_ON)
 					MCactivefield = this;
 			}
