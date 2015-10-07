@@ -61,11 +61,13 @@ bool MCNumberCreateWithUnsignedInteger(uinteger_t p_value, MCNumberRef& r_number
 
 bool MCNumberIsInteger(MCNumberRef self)
 {
+	__MCAssertIsNumber(self);
 	return (self -> flags & kMCNumberFlagIsReal) == 0;
 }
 
 bool MCNumberIsReal(MCNumberRef self)
 {
+	__MCAssertIsNumber(self);
 	return (self -> flags & kMCNumberFlagIsReal) != 0;
 }
 
