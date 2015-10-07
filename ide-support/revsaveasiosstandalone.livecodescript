@@ -1199,7 +1199,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    ----------
    
    local tDisplayName, tMinimumOS, tDeviceFamily, tRequiredCapabilities, tPersistentWifi, tExitsOnSuspend
-   local tFileSharing, tPrerenderedIcon
+   local tFileSharing, tPrerenderedIcon, tBackGroundAudio
    put pSettings["ios,display name"] into tDisplayName
    put pSettings["ios,minimum version"] into tMinimumOS
    put pSettings["ios,device family"] into tDeviceFamily
@@ -1207,7 +1207,8 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    put pSettings["ios,persistent wifi"] into tPersistentWifi
    -- MW-2011-03-10: Force this to true for now, until we can fix the engine
    --put pSettings["ios,exits on suspend"] into tExitsOnSuspend
-   put true into tExitsOnSuspend
+   
+   put  pSettings["ios,background audio"] into tBackgroundAudio
    put pSettings["ios,file sharing"] into tFileSharing
    put pSettings["ios,prerendered icon"] into tPrerenderedIcon 
    
@@ -1222,14 +1223,19 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    if tPersistentWifi is empty then
       put "false" into tPersistentWifi
    end if
-   if tExitsOnSuspend is empty then
-      put "true" into tExitsOnSuspend
-   end if
+   
    if tFileSharing is empty then
       put "false" into tFileSharing
    end if
    if tPrerenderedIcon is empty then
       put "false" into tPrerenderedIcon
+   end if
+   
+   -- tExitsOnSuspend defaulted to true. We want this to be false to allow background audio
+   if tBackgroundAudio is true then 
+      put "false" into tExitsOnSuspend
+   else -- false or empty
+      put "true" into tExitsOnSuspend
    end if
    
    ----------
@@ -1461,6 +1467,14 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
       get empty
    end if
    replace "${LOCATION_AUTH_TYPE}" with it in pPlist
+   
+   -- PM-2015-10-08:  [[ Bug 16154 ]] Allow audio playing when the app is on background
+   if tBackgroundAudio is true then
+      get "<string>audio</string>"
+   else -- false or empty
+      get empty
+   end if
+   replace "${PLAY_AUDIO_WHEN_IN_BACKGROUND}" with it in pPlist
    
    ----------   
    
