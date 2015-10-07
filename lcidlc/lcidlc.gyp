@@ -31,8 +31,6 @@
 				'src/Coder.cpp',
 				'src/CString.h',
 				'src/CString.cpp',
-				'src/EncodedSupportJava.c',
-				'src/EncodedSupport.c',
 				'src/Error.h',
 				'src/Error.cpp',
 				'src/Interface.h',
@@ -51,6 +49,8 @@
 				'src/Value.h',
 				'src/Value.cpp',
 
+                '<(SHARED_INTERMEDIATE_DIR)/LCIDLC/EncodedJavaSupport.c',
+                '<(SHARED_INTERMEDIATE_DIR)/LCIDLC/EncodedSupport.c',
 			],
 		},
         {
@@ -75,7 +75,7 @@
                     ],
                     'outputs':
                     [
-                        'src/EncodedSupport.c',
+                        '<(SHARED_INTERMEDIATE_DIR)/LCIDLC/EncodedSupport.c',
                     ],
 
                     'action':
@@ -83,7 +83,7 @@
 						'<@(perl)',
 						'../util/encode_source.pl',
 						'src/Support.mm',
-						'src/EncodedSupport.c',
+						'<(SHARED_INTERMEDIATE_DIR)/LCIDLC/EncodedSupport.c',
 						'g_support_template',
 					],
 				},
@@ -97,7 +97,7 @@
                     ],
                     'outputs':
                     [
-                        'src/EncodedJavaSupport.c',
+                        '<(SHARED_INTERMEDIATE_DIR)/LCIDLC/EncodedJavaSupport.c',
                     ],
 
                     'action':
@@ -105,7 +105,7 @@
 						'<@(perl)',
 						'../util/encode_source.pl',
 						'src/Support.java',
-						'src/EncodedJavaSupport.c',
+						'<(SHARED_INTERMEDIATE_DIR)/LCIDLC/EncodedJavaSupport.c',
 						'g_java_support_template',
 					],
 				},
