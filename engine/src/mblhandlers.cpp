@@ -3129,7 +3129,7 @@ Exec_stat MCHandleCancelLocalNotification(void *context, MCParameter *p_paramete
         t_success = false;
     
     
-    if (!ctxt.HasError() && t_success)
+    if (t_success && ctxt.HasError())
         return ES_NORMAL;
     
     return ES_ERROR;
@@ -4429,7 +4429,7 @@ Exec_stat MCHandleUseDeviceResolution(void *context, MCParameter *p_parameters)
     if (t_success)
         MCMiscSetUseDeviceResolution(ctxt, t_use_device_res, t_use_control_device_res);
     
-    if (!ctxt.HasError() && t_success)
+    if (t_success && !ctxt.HasError())
         return ES_NORMAL;
     
     return ES_ERROR;

@@ -472,6 +472,7 @@ static void compose_mail_prewait(void *p_context)
 				t_data = [NSData dataWithMCDataRef: ctxt -> attachments[i] . data];
 			else // ctxt -> attachments[i] . file != nil
 			{
+                MCAssert(ctxt -> attachments[i] . file != nil);
 				MCAutoStringRef t_resolved_path;
 				MCS_resolvepath(ctxt -> attachments[i] . file, &t_resolved_path);
 				t_data = [[NSData alloc] initWithContentsOfMappedFile: [NSString stringWithMCStringRef: *t_resolved_path]];

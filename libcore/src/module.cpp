@@ -163,7 +163,7 @@ bool MCModuleGetFilename(MCModuleRef p_module, char*& r_path)
 bool MCModuleLoad(const char *p_filename, MCModuleRef& r_module)
 {
 	MCModuleRef t_module;
-    t_module = NULL;
+    t_module = nil;
 	if (MCCStringEndsWith(p_filename, ".dylib"))
 	{
 		t_module = (void *)dlopen(p_filename, (RTLD_NOW | RTLD_LOCAL));
@@ -175,7 +175,7 @@ bool MCModuleLoad(const char *p_filename, MCModuleRef& r_module)
 		CFURLRef t_url;
 		t_url = CFURLCreateFromFileSystemRepresentation(kCFAllocatorDefault, (const UInt8 *)p_filename, MCCStringLength(p_filename), TRUE);
 		if (t_url != nil)
-		{
+		{   
 			t_module = (void *)CFBundleCreate(kCFAllocatorDefault, t_url);
 			if (t_module != nil)
 				t_module = (void *)((uintptr_t)t_module | 1);

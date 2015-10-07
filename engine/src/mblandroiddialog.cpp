@@ -157,7 +157,7 @@ bool MCSystemPickDate(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
     bool t_use_min, t_use_max;
 
     // Avoid to leave t_min/t_max uninitialised, even though showDatePicker
-    // won't use it if t_use_min/t_use_max is not true
+    // only use them if t_use_min/t_use_max is true
     t_min = 0;
     t_max = 0;
     

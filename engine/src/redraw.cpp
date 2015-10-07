@@ -212,7 +212,11 @@ MCLayerModeHint MCControl::layer_computeattrs(bool p_commit)
 			t_layer_mode = kMCLayerModeHintStatic;
 	}
     else
-        MCAssert(false);
+    {
+        MCUnreachable();
+        // MCUnreachable has no action in Release mode. Return current value
+        return m_layer_mode;
+    }
 
 	// Now compute the sprite attribute.
 	bool t_is_sprite;

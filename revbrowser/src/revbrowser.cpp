@@ -1814,6 +1814,7 @@ void XBrowserSetProp(char *args[], int nargs, char **retstring, Bool *pass, Bool
 	}
 	else // nargs == 2
 	{
+        MCAssert(nargs == 2);
 		t_browser = s_browsers . GetActiveInstance();
 		if (t_browser == NULL)
 		{

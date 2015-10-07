@@ -402,7 +402,9 @@ template<Operation x_combiner, bool x_dst_alpha, bool x_src_alpha> INLINE uint32
 		r = 0x00ffffff;
 	break;
     default:
-        MCAssert(false);
+        MCUnreachable();
+        // MCUnreachable has no action in Release mode
+        return 0;
 	}
 
 	if (x_src_alpha && x_dst_alpha)
@@ -534,7 +536,9 @@ template<int x_combiner, bool x_dst_alpha, bool x_src_alpha> INLINE uint32_t ari
 	}
 	break;
     default:
-        MCAssert(false);
+        MCUnreachable();
+        // MCUnreachable has no action in Release mode
+        return 0;
 	}
 
 	if (x_src_alpha && x_dst_alpha)
@@ -648,7 +652,9 @@ template<int x_combiner, bool x_dst_alpha, bool x_src_alpha> INLINE uint32_t bas
 		r = packed_multiply_bounded(src, packed_inverse(dst)) + dst;
 	break;
     default:
-        MCAssert(false);
+        MCUnreachable();
+        // MCUnreachable has no action in Release mode
+        return 0;
 	}
 
 	return r;
@@ -874,7 +880,9 @@ template<int x_combiner, bool x_dst_alpha, bool x_src_alpha> INLINE uint32_t adv
 		t_alpha = t_src_alpha + t_dst_alpha - downscale(t_src_alpha_dst_alpha);
 	break;
     default:
-        MCAssert(false);
+        MCUnreachable();
+        // MCUnreachable has no action in Release mode
+        return 0;
 	}
 
 	if (x_dst_alpha)
