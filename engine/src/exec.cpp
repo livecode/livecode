@@ -97,14 +97,22 @@ bool MCExecContext::ConvertToString(MCValueRef p_value, MCStringRef& r_string)
         uint32_t t_length;
         t_length = MCU_r8tos(t_buffer, t_buffer_size, MCNumberFetchAsReal((MCNumberRef)p_value), m_nffw, m_nftrailing, m_nfforce);
 
-        bool t_success;
-        t_success = MCStringCreateWithNativeCharBufferAndRelease((char_t *)t_buffer, t_length, t_buffer_size, r_string) &&
-                MCStringSetNumericValue(r_string, MCNumberFetchAsReal((MCNumberRef)p_value));
-        
-        if (!t_success)
-            delete[] t_buffer;
+        if (!MCStringCreateWithNativeCharBufferAndRelease((char_t *)t_buffer,
+                                                          t_length,
+                                                          t_buffer_size,
+                                                          r_string))
+        {
+	        delete[] t_buffer;
+	        return false;
+        }
 
-        return t_success;
+        if (!MCStringSetNumericValue(r_string,
+                                     MCNumberFetchAsReal((MCNumberRef)p_value)))
+        {
+	        return false;
+        }
+
+        return true;
     }
     break;
     default:
