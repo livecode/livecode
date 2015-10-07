@@ -88,8 +88,9 @@
 					[
 						'-Wall',
 						'-Wextra',
-						'-Wno-unused-parameter',	# Just contributes build noise
+                        '-Wno-unused-parameter',	# Just contributes build noise
 						'-Werror=uninitialized',
+                        '-Wno-error=maybe-uninitialized', # Raises way too many errors, not always relevant
 					],
 				},
 				{
