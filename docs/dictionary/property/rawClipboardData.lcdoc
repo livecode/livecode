@@ -3,6 +3,7 @@ Name: rawClipboardData
 Type: property
 
 Syntax: set the rawClipboardData[<key>] to <data>
+Syntax: set the rawClipboardData to empty
 
 Summary: provides low-level access to the contents of the <clipboard>.
 
@@ -33,7 +34,9 @@ Description:
 
 Use the <rawClipboardData> to gain low-level access to the system clipboard. 
 
-This property should only be used if you require low-level access; the <clipboardData> is more appropriate for most uses.
+If the contents of the clipboard were placed there by another app, the clipboard will have to be cleared before being used: ``set the rawClipboardData to empty``.  Attempting to overwrite externally-provided data without clearing the clipboard will throw an error.
+
+This property should only be used if you require low-level access; the <fullClipboardData> <property> is more appropriate for most uses.
 
 As a low-level feature, platform differences are not hidden. In particular, the form of the keys of the <rawClipboardData> are platform-specific, but can be summarised as:
  - Windows: arbitrary strings but keys of the form CF_xxx correspond to the clipboard formats defined by Windows itself
@@ -42,7 +45,8 @@ As a low-level feature, platform differences are not hidden. In particular, the 
 
 >*Tip:*		All contents of the <rawClipboardData> are binary - use the <textEncode>/<textDecode> functions to convert to/from the appropriate encoding.
 
+>*Tip:*		It is good practice to clear the clipboard before use: ``set the rawClipboardData to empty``
 
-References: lock clipboard (command), unlock clipboard (command), clipboard (function), clipboard (property), dragData (property)
+References: lock clipboard (command), unlock clipboard (command), clipboard (function), clipboard (property), clipboardData (property), fullClipboardData (property), rawDragData (property)
 
 Tags: ui, clipboard

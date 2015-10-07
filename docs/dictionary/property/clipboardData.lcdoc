@@ -7,6 +7,8 @@ Syntax: set the clipboardData to <clipboardArray>
 Summary: Specifies what data and of what type is on the <clipboard>.
 
 Introduced: 2.0
+Deprecated: 8.0
+Replacement: <fullClipboardData> <property>
 
 OS: mac,windows,linux
 
@@ -69,4 +71,4 @@ The above statement is equivalent to selecting the text "Hello World" in a field
 
 References: copy (command), dragData (property), clipboard (function), paste (command), lock clipboard (command), unlock clipboard (command), rawClipboardData (property)
 
-Tags: ui, clipboard
+Tags: ui, clipboard, deprecated

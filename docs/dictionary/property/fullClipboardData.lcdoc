@@ -1,0 +1,61 @@
+Name: fullClipboardData
+
+Type: property
+
+Syntax: set the fullClipboardData[<key>] to <data>
+Syntax: set the fullClipboardData to empty
+
+Summary: provides access to the contents of the <clipboard>.
+
+Introduced: 8.0
+
+OS: mac,windows,linux
+
+Platforms: desktop
+
+Example:
+lock the clipboard
+put the keys of the fullClipboardData
+unlock the clipboard
+
+Example:
+lock the clipboard
+set the fullClipboardData["text"] to "Hello, World!"
+set the fullClipboardData["html"] to "&lt;p&gt;Hello, World!&lt;/p&gt;"
+set the fullClipboardData["private"] to "MyCustomData"
+unlock the clipboard
+
+Value:
+The <fullClipboardData> pseudo-array provides access to the data on the clipboard. It can only be accessed while the clipboard is locked.
+The keys for the <fullClipboardData> are:
+  - "text": plain text
+  - "rtftext": LiveCode rich text format data
+  - "htmltext": LiveCode HTML text
+  - "styles": LiveCode styled text data
+  - "stylesArray": array of LiveCode styled text
+  - "image": any of PNG, GIF or JPEG image
+  - "png": PNG image
+  - "gif": GIF image
+  - "jpeg": JPEG image
+  - "rtf": Rich Text Format data
+  - "html": HTML
+  - "objects": LiveCode objects
+  - "files": List of newline-separated file paths
+  - "private": available for in-app use
+  
+The list of keys above is not exhaustive; more keys and data types may be added in future.
+
+Description:
+>*Note:*	The <fullClipboardData> cannot be accessed outside of a <lock clipboard>/<unlock clipboard> pair. This is to ensure the clipboard contents do not change during access.
+
+Use the <fullClipboardData> to gain access to the system clipboard. 
+
+If the contents of the clipboard were placed there by another app, the clipboard will have to be cleared before being used: ``set the fullClipboardData to empty``.  Attempting to overwrite externally-provided data without clearing the clipboard will throw an error.
+
+If you require lower-level access to the clipboard, see the <rawClipboardData> <property>.
+
+>*Tip:*		It is good practice to clear the clipboard before use: ``set the fullClipboardData to empty``
+
+References: lock clipboard (command), unlock clipboard (command), clipboard (function), clipboard (property), clipboardData (property), rawClipboardData(property), fullDragData (property)
+
+Tags: ui, clipboard
