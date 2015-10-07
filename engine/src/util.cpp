@@ -1648,6 +1648,36 @@ Boolean MCU_rect_in_rect(const MCRectangle &p, const MCRectangle &w)
 	return False;
 }
 
+// AL-2015-10-07:: [[ External Handles ]] Check if possible zero-width line
+// 'intersects' with rect.
+bool MCU_line_intersect_rect(const MCRectangle& srect, const MCRectangle& line)
+{
+    MCRectangle t_test_rect;
+    t_test_rect = line;
+    
+    
+    // If the line is zero-width or zero-height, adjust the test rect
+    //  so that we can just use MCU_intersect_rect.
+    if (t_test_rect . width == 0)
+    {
+        t_test_rect . width++;
+        if (srect . x > t_test_rect . x)
+            t_test_rect . x--;
+    }
+    
+    if (t_test_rect . height == 0)
+    {
+        t_test_rect . height++;
+        if (srect . y > t_test_rect . y)
+            t_test_rect . y--;
+    }
+
+    MCRectangle t_intersect;
+    t_intersect = MCU_intersect_rect(srect, t_test_rect);
+
+    return t_intersect . width != 0 && t_intersect . height != 0;
+}
+
 
 static inline double distance_to_point(int4 x, int4 y, int4 px, int4 py)
 {
