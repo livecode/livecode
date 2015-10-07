@@ -1797,9 +1797,10 @@ static bool save_array_to_stream(void *p_context, MCArrayRef p_array, MCNameRef 
             t_str_value = kMCEmptyString;
         }
 		break;
-	default:
-		MCAssert(false);
-		break;
+    default:
+        MCUnreachable();
+        // MCUnreachable has no action in Release mode
+        return false;
 	}
 
 	IO_stat t_stat;

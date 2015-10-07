@@ -2054,9 +2054,10 @@ void MCIs::compile(MCSyntaxFactoryRef ctxt)
 			case IV_RECT:
 				t_method = form == IT_NORMAL ? kMCGraphicsEvalIsARectangleMethodInfo : kMCGraphicsEvalIsNotARectangleMethodInfo;
 				break;
-			default:
-				MCAssert(false);
-				break;
+            default:
+                MCUnreachable();
+                // MCUnreachable has no action in Release mode
+                return;
 		}
 		
 		right -> compile(ctxt);
@@ -2094,8 +2095,10 @@ void MCIs::compile(MCSyntaxFactoryRef ctxt)
 					case CT_ITEM:
 						t_method = form == IT_AMONG ? kMCStringsEvalIsAmongTheItemsOfMethodInfo : kMCStringsEvalIsNotAmongTheItemsOfMethodInfo;
 						break;
-					default:
-						MCAssert(false);
+                    default:
+                        MCUnreachable();
+                        // MCUnreachable has no action in Release mode
+                        return;
 				}
 				break;
 			case IT_IN:
@@ -2126,9 +2129,10 @@ void MCIs::compile(MCSyntaxFactoryRef ctxt)
 				t_method = kMCPasteboardEvalIsNotAmongTheKeysOfTheDragDataMethodInfo;
 				t_is_unary = true;
 				break;
-			default:
-				MCAssert(false);
-				break;
+            default:
+                MCUnreachable();
+                // MCUnreachable has no action in Release mode
+                return;
 		}				
 		if (!t_is_unary)
 			left -> compile(ctxt);
@@ -2297,9 +2301,10 @@ void MCThere::compile(MCSyntaxFactoryRef ctxt)
 			case TM_DIRECTORY:
 				t_method = form == IT_NORMAL ? kMCFilesEvalThereIsAFolderMethodInfo : kMCFilesEvalThereIsNotAFolderMethodInfo;
 				break;
-			default:
-				MCAssert(false);
-				break;
+            default:
+                MCUnreachable();
+                // MCUnreachable has no action in Release mode
+                return;
 		}
 	}
 	else

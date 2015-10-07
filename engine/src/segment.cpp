@@ -374,7 +374,9 @@ void MCSegment::Draw(MCDC *dc, coord_t p_line_origin_x, int16_t p_line_origin_y,
     }
     else    // m_HAlign == kMCSegmentTextHAlignJustify
     {
-        MCAssert(false);
+        MCUnreachable();
+        // MCUnreachable has no action in Release mode
+        return;
     }
     
     // TODO: vertical alignment

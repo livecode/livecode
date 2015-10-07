@@ -393,9 +393,10 @@ bool MCPlatformPasteboardStore(MCPlatformPasteboardRef p_pasteboard, MCPlatformP
 	//			case kMCPlatformPasteboardFlavorStyledText:
 	//				t_flavor_string = @"";
 	//				break;
-				default:
-					assert(false);
-					break;
+                default:
+                    MCUnreachable();
+                    // MCUnreachable has no action in Release mode
+                    return false;
 			}
 			[t_flavor_strings addObject: t_flavor_string];
 		}

@@ -1024,9 +1024,10 @@ void MCHandler::compile(MCSyntaxFactoryRef ctxt)
 		case HT_AFTER:
 			t_type = kMCSyntaxHandlerTypeAfterMessage;
 			break;
-		default:
-			MCAssert(false);
-			break;
+        default:
+            MCUnreachable();
+            // MCUnreachable has no action in Release mode
+            return;
 	}
 	
 	MCSyntaxFactoryBeginHandler(ctxt, t_type, name);
