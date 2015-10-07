@@ -456,5 +456,24 @@ unichar_t MCUnicodeCharMapFromNative(char_t nchar);
 //unichar_t MCUnicodeCharUppercase(unichar_t);
 
 ////////////////////////////////////////////////////////////////////////////////
+// INTERNAL MCVALUE TYPE ASSERTIONS
+//
+
+#define __MCAssertValueType(x,T) MCAssert(MCValueGetTypeCode(x) == kMCValueTypeCode##T)
+
+#define __MCAssertIsNumber(x)   __MCAssertValueType(x,Number)
+#define __MCAssertIsName(x)     __MCAssertValueType(x,Name)
+#define __MCAssertIsString(x)   __MCAssertValueType(x,String)
+#define __MCAssertIsData(x)     __MCAssertValueType(x,Data)
+#define __MCAssertIsArray(x)    __MCAssertValueType(x,Array)
+#define __MCAssertIsList(x)     __MCAssertValueType(x,List)
+#define __MCAssertIsSet(x)      __MCAssertValueType(x,Set)
+
+#define __MCAssertIsLocale(x)   MCAssert(nil != (x)) /* FIXME */
+
+#define __MCAssertIsMutableString(x) MCAssert(MCStringIsMutable(x))
+#define __MCAssertIsMutableData(x)   MCAssert(MCDataIsMutable(x))
+
+////////////////////////////////////////////////////////////////////////////////
 
 #endif
