@@ -133,15 +133,6 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 			}
 		}
 
-		MCVariable *tmp;
-		for (tmp = MCglobals ; tmp != NULL ; tmp = tmp->getnext())
-			if (tmp -> hasname(t_token_name))
-				if (MCexplicitvariables)
-				{
-					MCperror->add(PE_LOCAL_SHADOW, sp);
-					return PS_ERROR;
-				}
-
 		MCVarref *tvar = NULL;
 		MCAutoStringRef init;
 		bool initialised = false;
