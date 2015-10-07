@@ -169,7 +169,7 @@ void MCU_resetprops(Boolean update)
 			MCselected->redraw();
 		}
 	}
-	MCerrorlock = 0;
+	MCerrorlock.Reset();
 	MClockerrors = MClockmessages = MClockrecent = False;
 	MCscreen->setlockmoves(False);
 	MCerrorlockptr = NULL;

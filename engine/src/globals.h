@@ -25,6 +25,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "imagelist.h"
 #include "parsedef.h"
 #include "sysdefs.h"
+#include "mcsemaphore.h"
 
 #include "foundation-locale.h"
 
@@ -305,8 +306,8 @@ extern uint2 MClook;
 extern MCStringRef MCttbgcolor;
 extern MCStringRef MCttfont;
 extern uint2 MCttsize;
-extern uint2 MCtrylock;
-extern uint2 MCerrorlock;
+extern MCSemaphore MCtrylock;
+extern MCSemaphore MCerrorlock;
 extern Boolean MCwatchcursor;
 extern Boolean MClockcursor;
 extern MCCursorRef MCcursor;

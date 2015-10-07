@@ -67,6 +67,7 @@ widget com.livecode.widget.treeView
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
+use com.livecode.widgetutils
 
 metadata author is "LiveCode"
 metadata version is "1.0.0"
@@ -336,11 +337,11 @@ public handler OnCreate() returns nothing
 	// Make sure all the icons paths are 10 x 10, with centered at the origin
 	put rectangle [-5,-5,5,5] into mIconRect
 	
-	setIconPath(mIconRect, mFoldedArrowPath)
-	setIconPath(mIconRect, mUnfoldedArrowPath)
-	setIconPath(mIconRect, mDeleteItemPath)
-	setIconPath(mIconRect, mAddItemPath)
-	setIconPath(mIconRect, mInspectItemPath)
+	constrainPathToRect(mIconRect, mFoldedArrowPath)
+	constrainPathToRect(mIconRect, mUnfoldedArrowPath)
+	constrainPathToRect(mIconRect, mDeleteItemPath)
+	constrainPathToRect(mIconRect, mAddItemPath)
+	constrainPathToRect(mIconRect, mInspectItemPath)
 
 	variable tWidth as Real
 	put the width of mIconRect into mIconWidth
@@ -1127,48 +1128,6 @@ private handler stringToColor(in pString as String) returns Color
 	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha/255 ]
 end handler
 
-private handler setIconPath(in pTargetRect as Rectangle, inout xPath as Path)
-
-	// Scale the icon
-	variable tBounds
-	put the bounding box of xPath into tBounds
-	
-	// Scale appropriately
-	variable tXScale as Real
-	variable tYScale as Real
-		
-	put the width of pTargetRect / the width of tBounds into tXScale
-	put the height of pTargetRect / the height of tBounds into tYScale
-		
-	if tXScale > tYScale then
-		put tYScale into tXScale
-	else
-		put tXScale into tYScale
-	end if
-
-    scale xPath by [tXScale, tYScale]
-
-	variable tXTranslate as Real
-	variable tYTranslate as Real
-
-    put the bounding box of xPath into tBounds
-
-	put the left of pTargetRect - the left of tBounds into tXTranslate
-	put the top of pTargetRect - the top of tBounds into tYTranslate
-
-    variable tXDiff as Real
-    variable tYDiff as Real
-
-    put the width of pTargetRect - the width of tBounds into tXDiff
-    put the height of pTargetRect - the height of tBounds into tYDiff
-
-	// align center
-	divide tXDiff by 2
-	divide tYDiff by 2
-
-	translate xPath by [tXTranslate + tXDiff, tYTranslate + tYDiff]
-end handler
-
 --------------------------------------------------------------------------------
 --
 --		Handlers for data management and array/list conversions
@@ -1195,7 +1154,7 @@ private handler getArrayData() returns Array
 end handler
 
 -- Sorts numerically, converting strings to numbers where possible
-private handler CompareKeysNumeric(in pLeft as any, in pRight as any) as Integer
+private handler CompareKeysNumeric(in pLeft as any, in pRight as any) returns Integer
 	variable tLeft as optional Number
 	variable tRight as optional Number
 	

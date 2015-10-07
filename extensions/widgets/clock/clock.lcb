@@ -197,7 +197,7 @@ end handler
 
 handler getTimeComponents() returns List
 	-- Fetch the local date.
-    -- This a list in the form [day, month, year, hours,minutes,seconds]
+    -- This a list in the form [day, month, year, hours, minutes, seconds, gmt_offset]
     variable tDate as List
     put the local date into tDate
 
@@ -205,9 +205,22 @@ handler getTimeComponents() returns List
     delete element 1 to 3 of tDate
 
     -- Adjust for the timezone.
+    --
+    -- N.b. we use the local date and translate the timezone because
+    -- the clock widget doesn't yet know how to account for timezones
+    -- with differing daylight savings time transitions.
 	variable tHour as Number
     put element 1 of tDate into tHour
-    put (tHour + mTimeZone) mod 24 into tHour
+
+	-- Estimate the correction needed to get to GMT.  This won't
+	-- work properly for timezones with a GMT offset that isn't a
+	-- whole number of hours (e.g. North Korea).
+	variable tGmtOffset as Number
+	put the last element of tDate into tGmtOffset
+	divide tGmtOffset by 3600
+	round tGmtOffset
+
+	put (tHour - tGmtOffset + mTimeZone) mod 24 into tHour
 
     -- Compute whether it is 'day' or 'night'
 	if tHour > kStartDay and tHour < kEndDay then

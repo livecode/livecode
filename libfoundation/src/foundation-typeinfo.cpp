@@ -49,10 +49,6 @@ MC_DLLEXPORT_DEF MCTypeInfoRef MCProperListTypeInfo() { return kMCProperListType
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool __MCTypeInfoIsNamed(MCTypeInfoRef self);
-
-////////////////////////////////////////////////////////////////////////////////
-
 
 static intenum_t __MCTypeInfoGetExtendedTypeCode(MCTypeInfoRef self)
 {

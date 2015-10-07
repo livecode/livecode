@@ -1546,15 +1546,18 @@ void MCField::endselection()
             // transient-selection clipboard.
             MCAutoStringRef t_string;
 			selectedtext(&t_string);
-			
-            // Place the data on the selection clipboard
-            bool t_success = MCselection->AddText(*t_string);
-            
-            // If successful and this field is focusable, make it the currently
-            // focused field.
-            if (t_success && (flags & F_TRAVERSAL_ON))
-                MCactivefield = this;
-		}
+				
+            if (*t_string != nil)
+            {
+                // Place the data on the selection clipboard
+                bool t_success = MCselection->AddText(*t_string);
+                
+                // If successful and this field is focusable, make it the currently
+                // focused field.
+                if (t_success && (flags & F_TRAVERSAL_ON))
+                    MCactivefield = this;
+            }
+        }
 
 		if (!(flags & F_LOCK_TEXT) && MCU_point_in_rect(rect, mx, my))
 		{

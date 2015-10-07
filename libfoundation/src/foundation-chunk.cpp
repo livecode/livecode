@@ -172,13 +172,13 @@ bool MCChunkGetExtentsByRangeInRange(bool p_strict, bool p_boundary_start, bool 
     }
     
     if (p_first < 0)
-    {
         p_first = 0;
-        t_chunk_count = 0;
-    }
     
-    r_chunk_count = t_chunk_count;
-    r_first = p_first;
+    if (t_chunk_count < 0)
+        t_chunk_count = 0;
+    
+    r_chunk_count = (uindex_t)t_chunk_count;
+    r_first = (uindex_t)p_first;
     return true;
 }
 

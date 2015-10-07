@@ -281,7 +281,6 @@ private handler drawDropShadow() returns Effect
 	if mWidgetTheme is "iOS" then
 		put color [168/255, 168/255, 168/255, 0.75] into tProps["color"]
    	put "source over" into tProps["blend mode"]
-   	put 255 into tProps["opacity"]
    	put 0.9 into tProps["spread"]
    	put 1 into tProps["size"]
    	put 2 into tProps["distance"]
@@ -291,7 +290,6 @@ private handler drawDropShadow() returns Effect
 else if mWidgetTheme is "Android(Light)" then
    	put color [164/255, 164/255, 164/255, 0.5] into tProps["color"]
    	put "source over" into tProps["blend mode"]
-   	put 255 into tProps["opacity"]
    	put 0 into tProps["spread"]
    	put 1 into tProps["size"]
    	put 4 into tProps["distance"]

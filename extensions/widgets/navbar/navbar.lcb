@@ -44,6 +44,7 @@ use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
 use com.livecode.library.iconSVG
+use com.livecode.widgetutils
 --
 
 -- adding metadata to ensure the extension displays correctly in livecode
@@ -367,7 +368,7 @@ public handler OnSave(out rProperties as Array)
 	put mWidgetTheme into rProperties["theme"]
 	put mSelectedItem into rProperties["selected"]
 	put mItemStyle into rProperties["itemStyle"]
-	put colorToString(mHiliteColor) into rProperties["hiliteColor"]
+	put colorToString(mHiliteColor, false) into rProperties["hiliteColor"]
 end handler
 
 public handler OnLoad(in pProperties as Array)
@@ -743,7 +744,7 @@ private handler calculateEditModeIconRects() returns nothing
 		put tLabelRight + kEditModePaddingUnit into tLeft
 
 		put rectangle [tLeft + kEditModePaddingUnit, tLineTop + kEditModePaddingUnit, tLeft + tLineHeight - kEditModePaddingUnit, tLineBottom - kEditModePaddingUnit] into tIconRect
-		setIconPath(tIconRect, tIconPath)
+		constrainPathToRect(tIconRect, tIconPath)
 		put tIconPath into mNavData[tX]["icon_path"]
 		put tIconRect into mNavData[tX]["icon_rect"]
 
@@ -757,7 +758,7 @@ private handler calculateEditModeIconRects() returns nothing
 
 		add tLineHeight to tLeft
 		put rectangle [tLeft + kEditModePaddingUnit, tLineTop + kEditModePaddingUnit, tLeft + tLineHeight - kEditModePaddingUnit, tLineBottom - kEditModePaddingUnit] into tIconRect
-		setIconPath(tIconRect, tIconPath)
+		constrainPathToRect(tIconRect, tIconPath)
 		put tIconPath into mNavData[tX]["selected_icon_path"]
 		put tIconRect into mNavData[tX]["selected_icon_rect"]
 
@@ -770,20 +771,20 @@ private handler calculateEditModeIconRects() returns nothing
 		put mAddIcon into tIconPath
 		add tLineHeight + kEditModePaddingUnit to tLeft
 		put rectangle [tLeft, tLineTop + tLineHeight * (1 - tActionFraction) / 2, tLeft + tLineHeight * tActionFraction, tLineBottom - tLineHeight * (1 - tActionFraction) / 2] into tIconRect
-		setIconPath(tIconRect, tIconPath)
+		constrainPathToRect(tIconRect, tIconPath)
 		put tIconPath into mNavData[tX]["add_icon_path"]
 		setActionRect("add_icon", tX, tIconRect, addItem, true)
 
 		put mReorderIcon into tIconPath
 		add tLineHeight * tActionFraction + kEditModePaddingUnit to tLeft
 		put rectangle [tLeft, tLineTop + tLineHeight * (1 - tActionFraction) / 2, tLeft + tLineHeight * tActionFraction, tLineBottom - tLineHeight * (1 - tActionFraction) / 2] into tIconRect
-		setIconPath(tIconRect, tIconPath)
+		constrainPathToRect(tIconRect, tIconPath)
 		put tIconPath into mNavData[tX]["reorder_icon_path"]
 		setActionRect("reorder_icon", tX, tIconRect, reorderItem, false)
 
 		put mDeleteIcon into tIconPath
 		put rectangle [kEditModePaddingUnit, tLineTop + tLineHeight * (1 - tActionFraction) / 2, kEditModePaddingUnit + tLineHeight * tActionFraction, tLineBottom - tLineHeight * (1 - tActionFraction) / 2] into tIconRect
-		setIconPath(tIconRect, tIconPath)
+		constrainPathToRect(tIconRect, tIconPath)
 		put tIconPath into mNavData[tX]["delete_icon_path"]
 		setActionRect("delete_icon", tX, tIconRect, deleteItem, true)
 	end repeat
@@ -822,7 +823,7 @@ private handler calculateDragRow(in pY as Real) returns nothing
 		put tLabelRight + kEditModePaddingUnit into tLeft
 
 		put rectangle [tLeft + kEditModePaddingUnit, tLineTop + kEditModePaddingUnit, tLeft + tLineHeight - kEditModePaddingUnit, tLineBottom - kEditModePaddingUnit] into tIconRect
-		setIconPath(tIconRect, tIconPath)
+		constrainPathToRect(tIconRect, tIconPath)
 		put tIconPath into mDragData["icon_path"]
 
 		if mNavData[mDragData["item"]]["selected_icon"] is not "" then
@@ -831,7 +832,7 @@ private handler calculateDragRow(in pY as Real) returns nothing
 
 		add tLineHeight to tLeft
 		put rectangle [tLeft + kEditModePaddingUnit, tLineTop + kEditModePaddingUnit, tLeft + tLineHeight - kEditModePaddingUnit, tLineBottom - kEditModePaddingUnit] into tIconRect
-		setIconPath(tIconRect, tIconPath)
+		constrainPathToRect(tIconRect, tIconPath)
 		put tIconPath into mDragData["selected_icon_path"]
 end handler
 
@@ -865,7 +866,7 @@ private handler calculateIosIconRects() returns nothing
 				put rectangle [(1- kIconOnlyPaddingRatio) * mHeight + (tX - 1) * tIconSpacing, kIconOnlyPaddingRatio * mHeight, (1+ kIconOnlyPaddingRatio) * mHeight + (tX - 1) * tIconSpacing, (1 - kIconOnlyPaddingRatio) * mHeight] into tIconRect
 			end if
 
-			setIconPath(tIconRect, tIconPath)
+			constrainPathToRect(tIconRect, tIconPath)
 			put tIconPath into mNavData[tX]["icon_path"]
 			put tIconRect into mNavData[tX]["icon_rect"]
 
@@ -879,7 +880,7 @@ private handler calculateIosIconRects() returns nothing
 				put path mNavData[tX]["selected_icon"] into tIconPath
 			end if
 
-			setIconPath(tIconRect, tIconPath)
+			constrainPathToRect(tIconRect, tIconPath)
 			put tIconPath into mNavData[tX]["selected_icon_path"]
 			put tIconRect into mNavData[tX]["selected_icon_rect"]
 		end if
@@ -907,7 +908,7 @@ private handler calculateAndroidIconRects() returns nothing
 		put tX*(mWidth/(mNavItemCount + 1)) into tCenter
 		put rectangle [tCenter - mHeight/4, mHeight/4, tCenter + mHeight/4, 3*mHeight/4] into tIconRect
 
-		setIconPath(tIconRect, tIconPath)
+		constrainPathToRect(tIconRect, tIconPath)
 		put tIconPath into mNavData[tX]["icon_path"]
 		put tIconRect into mNavData[tX]["icon_rect"]
 
@@ -921,7 +922,7 @@ private handler calculateAndroidIconRects() returns nothing
 			put path mNavData[tX]["selected_icon"] into tIconPath
 		end if
 
-		setIconPath(tIconRect, tIconPath)
+		constrainPathToRect(tIconRect, tIconPath)
 		put tIconPath into mNavData[tX]["selected_icon_path"]
 		put tIconRect into mNavData[tX]["selected_icon_rect"]
 
@@ -978,56 +979,13 @@ private handler yPosToLine(in pY as Number) returns Integer
 	return the floor of (pY / tLineHeight) + 1
 end handler
 
---Translate and scale xPath so that it fits within pTargetRect
-private handler setIconPath(in pTargetRect as Rectangle, inout xPath as Path)
-
-	// Scale the icon
-	variable tBounds
-	put the bounding box of xPath into tBounds
-
-	// Scale appropriately
-	variable tXScale as Real
-	variable tYScale as Real
-
-	put the width of pTargetRect / the width of tBounds into tXScale
-	put the height of pTargetRect / the height of tBounds into tYScale
-
-	if tXScale > tYScale then
-		put tYScale into tXScale
-	else
-		put tXScale into tYScale
-	end if
-
-    scale xPath by [tXScale, tYScale]
-
-	variable tXTranslate as Real
-	variable tYTranslate as Real
-
-    put the bounding box of xPath into tBounds
-
-	put the left of pTargetRect - the left of tBounds into tXTranslate
-	put the top of pTargetRect - the top of tBounds into tYTranslate
-
-    variable tXDiff as Real
-    variable tYDiff as Real
-
-    put the width of pTargetRect - the width of tBounds into tXDiff
-    put the height of pTargetRect - the height of tBounds into tYDiff
-
-	// align center
-	divide tXDiff by 2
-	divide tYDiff by 2
-
-	translate xPath by [tXTranslate + tXDiff, tYTranslate + tYDiff]
-end handler
-
 public handler setHiliteColor(in pColor as String) returns nothing
 	put stringToColor(pColor) into mHiliteColor
 	redraw all
 end handler
 
 public handler getHiliteColor() returns String
-	return colorToString(mHiliteColor)
+	return colorToString(mHiliteColor, false)
 end handler
 
 public handler getPath(in pObject as String) returns Path
@@ -1640,59 +1598,5 @@ private handler addEditableField(in pElement as Array)
 	-- Work around the fact that LCB currently doesn't have editable text fields
 	post "editField" with [formatRectAsString(pElement["rect"]), pElement["number"]]
 end handler
-
--- this handler converts a string of numbers to an RGBA color
-private handler stringToColor(in pString as String) returns Color
-	variable tRed as Real
-	variable tGreen as Real
-	variable tBlue as Real
-	variable tAlpha as Real
-
-	variable tComponentList as List
-	split pString by "," into tComponentList
-
-	variable tComponentCount
-	put the number of elements in tComponentList into tComponentCount
-	if tComponentCount is not 3 and tComponentCount is not 4 then
-		// Invalid number of components detected
-		throw "Invalid color"
-	end if
-
-	put (element 1 of tComponentList) parsed as number into tRed
-	put (element 2 of tComponentList) parsed as number into tGreen
-	put (element 3 of tComponentList) parsed as number into tBlue
-
-	if tComponentCount is 4 then
-		put (element 4 of tComponentList) parsed as number into tAlpha
-	else
-		put 255 into tAlpha
-	end if
-
-	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha/255 ]
-end handler
-----------
-
--- this handler converts an RGBA color to a string
-private handler colorToString(in pColor as Color) returns String
-	return stripZeros((the rounded of ((the red of pColor) * 255)) formatted as string) & "," & stripZeros((the rounded of ((the green of pColor) * 255)) formatted as string) & "," & stripZeros((the rounded of ((the blue of pColor) * 255)) formatted as string) & "," & stripZeros((the rounded of ((the alpha of pColor) * 255)) formatted as string)
-end handler
-----------
-
--- this handler strips the zeros when a integer is formatted as a string
-private handler stripZeros(in tString as String) returns String
-	if tString contains "." then
-		variable tCount as Integer
-		repeat while ((the last char of tString) is in ".0")
-			if the last char of tString is "." then
-				delete the last char of tString
-				exit repeat
-			else
-				delete the last char of tString
-			end if
-		end repeat
-	end if
-	return tString
-end handler
-----------
 
 end widget

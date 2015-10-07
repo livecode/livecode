@@ -1665,9 +1665,6 @@ MC_DLLEXPORT bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *fields, in
 // Return the base type of the record.
 MC_DLLEXPORT MCTypeInfoRef MCRecordTypeInfoGetBaseType(MCTypeInfoRef typeinfo);
 
-// Return the base type of the record.
-MC_DLLEXPORT MCTypeInfoRef MCRecordTypeGetBaseTypeInfo(MCTypeInfoRef typeinfo);
-
 // Return the number of fields in the record.
 MC_DLLEXPORT uindex_t MCRecordTypeInfoGetFieldCount(MCTypeInfoRef typeinfo);
 
@@ -1943,6 +1940,7 @@ MC_DLLEXPORT bool MCStringCreateWithWStringAndRelease(unichar_t *wstring, MCStri
 // Create an immutable string from the given native char sequence.
 MC_DLLEXPORT bool MCStringCreateWithNativeChars(const char_t *chars, uindex_t char_count, MCStringRef& r_string);
 MC_DLLEXPORT bool MCStringCreateWithNativeCharsAndRelease(char_t *chars, uindex_t char_count, MCStringRef& r_string);
+MC_DLLEXPORT bool MCStringCreateWithNativeCharBufferAndRelease(char_t* buffer, uindex_t char_count, uindex_t buffer_length, MCStringRef& r_string);
 
 // Create an immutable string from the given (native) c-string.
 MC_DLLEXPORT bool MCStringCreateWithCString(const char *cstring, MCStringRef& r_string);
@@ -1958,6 +1956,15 @@ MC_DLLEXPORT bool MCStringCreateWithCFStringAndRelease(CFStringRef cf_string, MC
 // Create a string from a C string in the system encoding
 MC_DLLEXPORT bool MCStringCreateWithSysString(const char *sys_string, MCStringRef &r_string);
 #endif
+
+// Creates a string from existing strings. The first variant exists to provide
+// an optimised implementation in the (very common) case of only two strings.
+MC_DLLEXPORT bool MCStringCreateWithStrings(MCStringRef& r_string, MCStringRef p_one, MCStringRef p_two);
+//MC_DLLEXPORT bool MCStringCreateWithStrings(MCStringRef& r_string, MCStringRef p_one, MCStringRef p_two, MCStringRef p_three, ...);
+
+// Creates a string from existing strings, using the given in-fix character
+MC_DLLEXPORT bool MCStringCreateWithStringsAndSeparator(MCStringRef& r_string, unichar_t t_separator, MCStringRef p_one, MCStringRef p_two);
+//MC_DLLEXPORT bool MCStringCreateWithStringsAndSeparator(MCStringRef& r_string, unichar_t t_separator, MCStringRef p_one, MCStringRef p_two, MCStringRef p_three, ...);
 
 // Create a mutable string with the given initial capacity. Note that the
 // initial capacity is only treated as a hint, the string will extend itself
@@ -2423,6 +2430,11 @@ MC_DLLEXPORT extern MCDataRef kMCEmptyData;
 
 MC_DLLEXPORT bool MCDataCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data);
 MC_DLLEXPORT bool MCDataCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data);
+
+// Creates data from existing data. The first variant exists to provide an
+// optimised implementation in the (very common) case of only two DataRefs.
+MC_DLLEXPORT bool MCDataCreateWithData(MCDataRef& r_string, MCDataRef p_one, MCDataRef p_two);
+//MC_DLLEXPORT bool MCDataCreateWithData(MCDataRef& r_string, MCDataRef p_one, MCDataRef p_two, MCDataRef p_three, ...);
 
 MC_DLLEXPORT bool MCDataConvertStringToData(MCStringRef string, MCDataRef& r_data);
 

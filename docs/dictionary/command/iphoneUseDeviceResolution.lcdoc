@@ -2,7 +2,7 @@ Name: iphoneUseDeviceResolution
 
 Type: command
 
-Syntax: iphoneUseDeviceResolution { <true> | <false> }, [true | false]
+Syntax: iphoneUseDeviceResolution { true | false }, [{ true | false }]
 
 Summary: Sets whether the full resolution of high-resolution devices is to be used
 

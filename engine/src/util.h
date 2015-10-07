@@ -24,11 +24,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "sysdefs.h"
 #include "typedefs.h"
+#include "mcsemaphore.h"
 
 typedef struct
 {
 	uint2 lockscreen;
-	uint2 errorlock;
+	MCSemaphore errorlock;
 	Boolean watchcursor;
 	Boolean lockerrors;
 	Boolean lockmessages;

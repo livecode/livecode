@@ -3188,7 +3188,6 @@ Example:
 
 	put color [0,0,0] into tProps["color"]
 	put "source over" into tProps["blend mode"]
-	put 191 into tProps["opacity"]
 	put 0 into tProps["spread"]
 	put 5 into tProps["size"]
 	put 5 into tProps["distance"]
@@ -3214,8 +3213,6 @@ public foreign handler MCCanvasEffectGetColor(in pEffect as Effect, out rColor a
 public foreign handler MCCanvasEffectSetColor(in pColor as Color, inout xEffect as Effect) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasEffectGetBlendModeAsString(in pEffect as Effect, out rBlendMode as String) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasEffectSetBlendModeAsString(in pBlendMode as String, inout xEffect as Effect) returns nothing binds to "<builtin>"
-public foreign handler MCCanvasEffectGetOpacity(in pEffect as Effect, out rOpacity as CanvasFloat) returns nothing binds to "<builtin>"
-public foreign handler MCCanvasEffectSetOpacity(in pOpacity as CanvasFloat, inout xEffect as Effect) returns nothing binds to "<builtin>"
 
 //MCCanvasEffectGetFilterAsString(in pEffect as Effect, out rFilter as String) returns nothing binds to "<builtin>"
 //MCCanvasEffectSetFilterAsString(in pFilter as String, inout xEffect as Effect) returns nothing binds to "<builtin>"
@@ -3228,6 +3225,10 @@ public foreign handler MCCanvasEffectGetDistance(in pEffect as Effect, out rDist
 public foreign handler MCCanvasEffectSetDistance(in pDistance as CanvasFloat, inout xEffect as Effect) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasEffectGetAngle(in pEffect as Effect, out rAngle as CanvasFloat) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasEffectSetAngle(in pAngle as CanvasFloat, inout xEffect as Effect) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasEffectGetKnockOut(in pEffect as Effect, out rKnockOut as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasEffectSetKnockOut(in pKnockOut as CBool, inout xEffect as Effect) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasEffectGetSourceAsString(in pEffect as Effect, out rSource as String) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasEffectSetSourceAsString(in pSource as String, inout xEffect as Effect) returns nothing binds to "<builtin>"
 
 //////////
 
@@ -3321,37 +3322,6 @@ end syntax
 //////////
 
 /*
-Summary:	The opacity of an effect.
-
-mEffect:		An expression which evaluates to an effect.
-
-Description:	The opacity of <mEffect> as a number between 0 and 255.
-
-Example:
-	// Create an effect with opacity = 191 (75%)
-	variable tProps as Array
-	put the empty array into tProps
-
-	put 191 into tProps["opacity"]
-
-	variable tEffect as Effect
-	put outer shadow effect with properties tProps into tEffect
-
-	// Use half-transparency for effect
-	set the opacity of tEffect to 127
-
-Tags:	Canvas
-*/
-syntax EffectPropertyOpacity is prefix operator with precedence 4
-	"the" "opacity" "of" <mEffect: Expression>
-begin
-	MCCanvasEffectGetOpacity(mEffect, output)
-	MCCanvasEffectSetOpacity(input, mEffect)
-end syntax
-
-//////////
-
-/*
 Summary:	The size of an effect.
 
 mEffect:		An expression which evaluates to an effect.
@@ -3387,7 +3357,7 @@ Summary:	The spread of an effect.
 
 mEffect:		An expression which evaluates to an effect.
 
-Description:	The spread of <mEffect> as a number. Spread applies to inner shadow, outer shadow, inner glow, and outer glow effect types
+Description:	The spread of <mEffect> as a number between 0 and 1. Spread applies to inner shadow, outer shadow, inner glow, and outer glow effect types
 
 Example:
 	// Create an effect with spread 0
@@ -3400,7 +3370,7 @@ Example:
 	put outer shadow effect with properties tProps into tEffect
 
 	// Set the effect spread
-	set the spread of tEffect to 10
+	set the spread of tEffect to 0.1
 
 Tags:	Canvas
 */
@@ -3471,6 +3441,68 @@ syntax EffectPropertyAngle is prefix operator with precedence 4
 begin
 	MCCanvasEffectGetAngle(mEffect, output)
 	MCCanvasEffectSetAngle(input, mEffect)
+end syntax
+
+//////////
+
+/*
+Summary:	The knockout of an effect.
+
+mEffect:		An expression which evaluates to an effect.
+
+Description:	The knockout setting of <mEffect> as a boolean. Knockout applies to outer shadow effects and determines whether or not the alpha channel of the source image is applied to the blurred shadow created by the effect. Defaults to true.
+
+Example:
+	// Create an effect with knockout set to false
+	variable tProps as Array
+	put the empty array into tProps
+
+	put false into tProps["knockout"]
+
+	variable tEffect as Effect
+	put outer shadow effect with properties tProps into tEffect
+
+	// Set the effect knockout to true
+	set the knockout of tEffect to true
+
+Tags:	Canvas
+*/
+syntax EffectPropertyKnockOut is prefix operator with precedence 4
+	"the" "knockout" "of" <mEffect: Expression>
+begin
+	MCCanvasEffectGetKnockOut(mEffect, output)
+	MCCanvasEffectSetKnockOut(input, mEffect)
+end syntax
+
+//////////
+
+/*
+Summary:	The source of an effect.
+
+mEffect:		An expression which evaluates to an effect.
+
+Description:	The source of <mEffect> as a string. Can be one of "center" or "edge". Source applies to inner glow effects and determines where the glow extends from. Defaults to "edge".
+
+Example:
+	// Create an effect with source set to "center"
+	variable tProps as Array
+	put the empty array into tProps
+
+	put "center" into tProps["source"]
+
+	variable tEffect as Effect
+	put inner glow effect with properties tProps into tEffect
+
+	// Set the effect source to "edge"
+	set the source of tEffect to "edge"
+
+Tags:	Canvas
+*/
+syntax EffectPropertySource is prefix operator with precedence 4
+	"the" "source" "of" <mEffect: Expression>
+begin
+	MCCanvasEffectGetSourceAsString(mEffect, output)
+	MCCanvasEffectSetSourceAsString(input, mEffect)
 end syntax
 
 ////////////////////////////////////////////////////////////////////////////////
