@@ -21,10 +21,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef UTIL_H
 #define UTIL_H
 
+#include "mcsemaphore.h"
+
 typedef struct
 {
 	uint2 lockscreen;
-	uint2 errorlock;
+	MCSemaphore errorlock;
 	Boolean watchcursor;
 	Boolean lockerrors;
 	Boolean lockmessages;

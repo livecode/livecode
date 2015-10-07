@@ -388,8 +388,8 @@ uint2 MClook;
 MCStringRef MCttbgcolor;
 MCStringRef MCttfont;
 uint2 MCttsize;
-uint2 MCtrylock;
-uint2 MCerrorlock;
+MCSemaphore MCtrylock;
+MCSemaphore MCerrorlock;
 Boolean MCwatchcursor;
 Boolean MClockcursor;
 MCCursorRef MCcursor;
@@ -769,8 +769,8 @@ void X_clear_globals(void)
     MCttfont = MCSTR(DEFAULT_TEXT_FONT);
     MCttsize = 12;
 
-	MCtrylock = 0;
-	MCerrorlock = 0;
+    MCtrylock = MCSemaphore("try");
+    MCerrorlock = MCSemaphore("error");
 	MCwatchcursor = False;
 	MClockcursor = False;
 	MCcursor = nil;
