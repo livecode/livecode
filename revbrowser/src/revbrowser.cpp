@@ -1812,7 +1812,7 @@ void XBrowserSetProp(char *args[], int nargs, char **retstring, Bool *pass, Bool
 			return;
 		}
 	}
-	else // nargs == 2
+	else
 	{
         MCAssert(nargs == 2);
 		t_browser = s_browsers . GetActiveInstance();

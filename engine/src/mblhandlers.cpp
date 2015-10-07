@@ -6685,7 +6685,7 @@ Exec_stat MCHandleLibUrlSetSSLVerification(void *context, MCParameter *p_paramet
     if (t_success)
         MCMiscExecLibUrlSetSSLVerification(ctxt, t_enabled);
     
-    if (!ctxt . HasError() & t_success)
+    if (t_success && !ctxt . HasError())
         return ES_NORMAL;
 	
 	return ES_ERROR;
