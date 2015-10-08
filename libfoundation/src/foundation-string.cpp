@@ -93,6 +93,8 @@ static bool __MCStringCopyMutable(__MCString *self, __MCString*& r_new_string);
 // if all the chars being copied in could be native.
 static bool __MCStringCopyChars(unichar_t *target, const unichar_t *source, uindex_t count, bool target_can_be_native);
 
+static bool MCStringSplitByDelimiterNative(MCStringRef self, MCStringRef p_elem_del, MCStringOptions p_options, MCProperListRef& r_list);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // AL-2015-02-06: [[ Bug 14504 ]] Add wrappers for string flag and length checking,
@@ -4861,8 +4863,8 @@ bool MCStringSplitByDelimiter(MCStringRef self, MCStringRef p_elem_del, MCString
 	return true;
 }
 
-MC_DLLEXPORT_DEF
-bool MCStringSplitByDelimiterNative(MCStringRef self, MCStringRef p_elem_del, MCStringOptions p_options, MCProperListRef& r_list)
+static bool
+MCStringSplitByDelimiterNative(MCStringRef self, MCStringRef p_elem_del, MCStringOptions p_options, MCProperListRef& r_list)
 {
     if (__MCStringIsIndirect(self))
         self = self -> string;

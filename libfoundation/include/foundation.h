@@ -2391,7 +2391,6 @@ MC_DLLEXPORT bool MCStringSplitColumn(MCStringRef string, MCStringRef col_del, M
 //////////
 
 // Proper list versions of string splitting
-MC_DLLEXPORT bool MCStringSplitByDelimiterNative(MCStringRef self, MCStringRef p_elem_del, MCStringOptions p_options, MCProperListRef& r_list);
 MC_DLLEXPORT bool MCStringSplitByDelimiter(MCStringRef self, MCStringRef p_elem_del, MCStringOptions p_options, MCProperListRef& r_list);
 
 //////////
