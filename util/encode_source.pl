@@ -1,11 +1,12 @@
 #!/usr/bin/env perl
 
 use warnings;
+use File::Basename;
 
 # Incoming arguments
 my $sourceFile	= $ARGV[0];
 my $destFile	= $ARGV[1];
-my $varName		= $ARGV[2];
+my $varName	= basename($ARGV[2]);
 
 #! /usr/bin/revolution -ui
 
