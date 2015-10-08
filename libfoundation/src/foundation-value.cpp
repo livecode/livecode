@@ -39,6 +39,8 @@ MCTypeInfoRef __MCCustomValueResolveTypeInfo(__MCValue *p_value)
 MC_DLLEXPORT_DEF
 bool MCValueCreateCustom(MCTypeInfoRef p_typeinfo, size_t p_extra_bytes, MCValueRef& r_value)
 {
+	__MCAssertIsTypeInfo(p_typeinfo);
+
 	__MCValue *t_value;
 	if (!__MCValueCreate(kMCValueTypeCodeCustom, sizeof(__MCCustomValue) + p_extra_bytes, t_value))
 		return false;
