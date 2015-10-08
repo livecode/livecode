@@ -9,8 +9,6 @@ Syntax: clipboard()
 Summary: <return|Returns> the type of information on the <clipboard>.
 
 Introduced: 1.0
-Deprecated: 8.0
-Replacement: <fullClipboardData> <property>
 
 OS: mac,windows,linux
 

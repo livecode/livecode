@@ -7,8 +7,6 @@ Syntax: set the clipboardData to <clipboardArray>
 Summary: Specifies what data and of what type is on the <clipboard>.
 
 Introduced: 2.0
-Deprecated: 8.0
-Replacement: <fullClipboardData> <property>
 
 OS: mac,windows,linux
 
