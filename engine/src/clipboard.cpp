@@ -846,8 +846,18 @@ bool MCClipboard::CopyAsLiveCodeStyledText(MCDataRef& r_pickled_text) const
 
 bool MCClipboard::CopyAsLiveCodeStyledTextArray(MCArrayRef& r_styles) const
 {
-    // TODO: implement
-    return false;
+    // Get the clipboard contents as serialised LiveCode styled text
+    MCAutoDataRef t_serialised;
+    if (!CopyAsLiveCodeStyledText(&t_serialised))
+        return false;
+    
+    // Convert the serialised form to array form
+    MCArrayRef t_styles = ConvertStyledTextToStyledTextArray(*t_serialised);
+    if (t_styles == NULL)
+        return false;
+    
+    r_styles = t_styles;
+    return true;
 }
 
 bool MCClipboard::CopyAsRTFText(MCDataRef& r_rtf) const
