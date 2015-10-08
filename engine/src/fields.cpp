@@ -2759,9 +2759,13 @@ void MCField::copytext()
     // Serialise the text. Failures are ignored here as there isn't really a
     // good way to alert the user that a copy-to-clipboard operation failed.
 	MCAutoDataRef t_data;
-	/* UNCHECKED */ pickleselection(&t_data);
+	pickleselection(&t_data);
 	if (*t_data != nil)
-        /* UNCHECKED */ MCclipboard->AddLiveCodeStyledText(*t_data);
+    {
+        // Clear the clipboard and copy the selection to it
+        MCclipboard->Clear();
+        MCclipboard->AddLiveCodeStyledText(*t_data);
+    }
 }
 
 void MCField::cuttextindex(uint4 parid, findex_t si, findex_t ei)

@@ -390,6 +390,9 @@ bool MCSellist::clipboard(bool p_is_cut)
         if (!MCclipboard->Lock())
             return false;
 
+        // Clear the current contents of the clipboard
+        MCclipboard->Clear();
+        
         // Add the serialised objects to the clipboard
         if (t_success)
             t_success = MCclipboard->AddLiveCodeObjects(*t_pickle);
