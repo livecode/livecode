@@ -1144,7 +1144,11 @@ void MCPasteboardGetClipboardOrDragDataLegacy(MCExecContext& ctxt, MCNameRef p_i
 	if (t_success)
 	{
         // Convert the key name into a transfer type
-        MCTransferType t_type = MCPasteboardTransferTypeFromName(p_index, true);
+        MCTransferType t_type;
+        if (p_index == nil)
+            t_type = TRANSFER_TYPE_TEXT;
+        else
+            t_type = MCPasteboardTransferTypeFromName(p_index, true);
         
         // Get the requested data from the clipboard
         t_success = MCPasteboardCopyAsTypeForLegacyClipboard(t_clipboard, t_type, r_data);
