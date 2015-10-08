@@ -2891,6 +2891,9 @@ public class Engine extends View implements EngineApi
 
     public void onNewIntent(Intent intent)
     {
+		// IM-2015-10-08: [[ Bug 15417 ]] Update the Intent of the Activity to the new one.
+		((Activity)getContext()).setIntent(intent);
+		
         String t_launch_url = getLaunchUri(intent);
         if (t_launch_url != null)
         {
