@@ -4779,6 +4779,9 @@ bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_d
 MC_DLLEXPORT_DEF
 bool MCStringSplitByDelimiter(MCStringRef self, MCStringRef p_elem_del, MCStringOptions p_options, MCProperListRef& r_list)
 {
+	__MCAssertIsString(self);
+	__MCAssertIsString(p_elem_del);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
