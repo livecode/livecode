@@ -96,6 +96,20 @@ bool MCArrayCreate(bool p_case_sensitive, const MCNameRef *p_keys, const MCValue
 MC_DLLEXPORT_DEF
 bool MCArrayCreateWithOptions(bool p_case_sensitive, bool p_form_sensitive, const MCNameRef *p_keys, const MCValueRef *p_values, uindex_t p_length, MCArrayRef& r_array)
 {
+	if (p_length == 0)
+	{
+		if (nil != kMCEmptyArray)
+		{
+			r_array = MCValueRetain(kMCEmptyArray);
+			return true;
+		}
+	}
+	else
+	{
+		MCAssert(nil != p_keys);
+		MCAssert(nil != p_values);
+	}
+
 	bool t_success;
 	t_success = true;
     
@@ -359,12 +373,16 @@ uindex_t MCArrayGetCount(MCArrayRef self)
 MC_DLLEXPORT_DEF
 bool MCArrayIsCaseSensitive(MCArrayRef self)
 {
+	__MCAssertIsArray(self);
+
     return (self -> flags & kMCArrayFlagIsCaseSensitive) != 0;
 }
 
 MC_DLLEXPORT_DEF
 bool MCArrayIsFormSensitive(MCArrayRef self)
 {
+	__MCAssertIsArray(self);
+
     return (self -> flags & kMCArrayFlagIsFormSensitive) != 0;
 }
 
