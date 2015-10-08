@@ -1074,6 +1074,9 @@ Exec_stat MCIs::eval(MCExecPoint &ep)
 				break;
 			case IV_NUMBER:
 				cond = ep.ton() == ES_NORMAL;
+				// PM-2015-10-08: [[ Bug 16163 ]] Special case for +/- inf
+				if (ep.getnvalue() == INFINITY || ep.getnvalue() == -INFINITY)
+					cond = False;
 				break;
 			case IV_POINT:
 				cond = MCU_stoi2x2(ep.getsvalue(), i2, i2);
