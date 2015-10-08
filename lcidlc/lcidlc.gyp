@@ -63,6 +63,14 @@
 					},
 				],
 			],
+
+			'msvs_settings':
+			{
+				'VCLinkerTool':
+				{
+					'SubSystem': 1,	# /SUBSYSTEM:CONSOLE
+				},
+			},
 		},
     {
       'target_name': 'encode_support',
