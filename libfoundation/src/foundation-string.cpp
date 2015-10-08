@@ -1883,7 +1883,7 @@ bool MCStringUnmapTrueWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRang
 		self = self->string;
     
     // Check that the input range is valid
-    if (p_in_range.offset + p_in_range.length > self -> char_count)
+	if (p_in_range.offset + p_in_range.length > __MCStringGetLength(self))
         return false;
     
     // Create a break iterator of the appropriate type
@@ -1922,7 +1922,7 @@ bool MCStringUnmapTrueWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRang
             t_left_break = t_right_break;
         }
 
-        if (t_right_break >= MCStringGetLength(self))
+        if (t_right_break >= __MCStringGetLength(self))
         {
             r_out_range = MCRangeMake(t_right_break, 0);
             return true;
@@ -1951,7 +1951,7 @@ bool MCStringUnmapTrueWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRang
             t_left_break = t_right_break;
         }
         
-        if (t_right_break >= MCStringGetLength(self))
+        if (t_right_break >= __MCStringGetLength(self))
             break;
     }
     
