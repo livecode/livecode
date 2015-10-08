@@ -312,9 +312,7 @@ static MCValueCustomCallbacks kMCStreamCustomValueCallbacks =
 static inline void __MCAssertIsStream(MCStreamRef ref)
 {
 	__MCValue *val = reinterpret_cast<__MCValue *>(ref);
-	MCAssert(nil != val &&
-	         __MCValueGetTypeCode(val) == kMCValueTypeCodeCustom &&
-	         __MCValueGetCustomCallbacks(val) == &kMCStreamCustomValueCallbacks);
+	MCAssert(MCValueGetTypeInfo(val) == kMCStreamTypeInfo);
 }
 
 MC_DLLEXPORT_DEF

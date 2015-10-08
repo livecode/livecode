@@ -452,12 +452,6 @@ inline MCValueTypeCode __MCValueGetTypeCode(__MCValue *self)
 	return (self -> flags >> 28);
 }
 
-inline const MCValueCustomCallbacks *
-__MCValueGetCustomCallbacks(__MCValue *self)
-{
-	return reinterpret_cast<__MCCustomValue *>(self)->callbacks;
-}
-
 template<class T> inline bool __MCValueCreate(MCValueTypeCode p_type_code, T*& r_value)
 {
 	__MCValue *t_value;
