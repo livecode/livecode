@@ -377,7 +377,7 @@ MCTransferType MCPasteboardTransferTypeFromName(MCNameRef p_key, bool p_legacy =
 	if (MCNameIsEqualTo(p_key, MCN_styles))
 		return TRANSFER_TYPE_STYLED_TEXT;
 
-    if (MCNameIsEqualTo(p_key, MCNAME("stylesArray")))
+    if (MCNameIsEqualTo(p_key, MCNAME("styledtext")))
         return TRANSFER_TYPE_STYLED_TEXT_ARRAY;
     
 	if (MCNameIsEqualTo(p_key, MCN_rtf))
@@ -427,7 +427,7 @@ MCNameRef MCPasteboardTransferTypeToName(MCTransferType p_type, bool p_legacy = 
 	case TRANSFER_TYPE_STYLED_TEXT:
 		return MCN_styles;
     case TRANSFER_TYPE_STYLED_TEXT_ARRAY:
-        return MCNAME("stylesArray");
+        return MCNAME("styledtext");
 	case TRANSFER_TYPE_RTF_TEXT:
         return p_legacy ? MCN_rtf : MCNAME("rtftext");
 	case TRANSFER_TYPE_HTML_TEXT:
@@ -779,7 +779,7 @@ void MCPasteboardEvalFullClipboardOrDragKeys(MCExecContext& ctxt, const MCClipbo
         t_success = MCListAppend(*t_list, MCNAME("rtftext"))
                     && MCListAppend(*t_list, MCNAME("htmltext"))
                     && MCListAppend(*t_list, MCNAME("styles"))
-                    && MCListAppend(*t_list, MCNAME("stylesArray"));
+                    && MCListAppend(*t_list, MCNAME("styledtext"));
     }
     
     // Check for any image type

@@ -32,7 +32,7 @@ The keys for the <fullClipboardData> are:
   - "rtftext": LiveCode rich text format data
   - "htmltext": LiveCode HTML text
   - "styles": LiveCode styled text data
-  - "stylesArray": array of LiveCode styled text
+  - "styledtext": array of LiveCode styled text
   - "image": any of PNG, GIF or JPEG image
   - "png": PNG image
   - "gif": GIF image
