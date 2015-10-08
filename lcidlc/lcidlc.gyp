@@ -7,11 +7,11 @@
 
 	'targets':
 	[
-        {
+    {
 			'target_name': 'lcidlc',
 			'type': 'executable',
 
-            'dependencies':
+      'dependencies':
 			[
 				'../libfoundation/libfoundation.gyp:libFoundation',
 				'encode_support',
@@ -27,7 +27,7 @@
 			[
 				'include/LiveCode.h',
 
-                'src/Coder.h',
+        'src/Coder.h',
 				'src/Coder.cpp',
 				'src/CString.h',
 				'src/CString.cpp',
@@ -49,10 +49,10 @@
 				'src/Value.h',
 				'src/Value.cpp',
 
-                '<(SHARED_INTERMEDIATE_DIR)/LCIDLC/EncodedJavaSupport.c',
-                '<(SHARED_INTERMEDIATE_DIR)/LCIDLC/EncodedSupport.c',
+        '<(SHARED_INTERMEDIATE_DIR)/lcidlc/EncodedJavaSupport.c',
+        '<(SHARED_INTERMEDIATE_DIR)/lcidlc/EncodedSupport.c',
 			],
-			
+
 			'conditions':
 			[
 				[
@@ -61,65 +61,67 @@
 					{
 						'type': 'none',
 					},
+				],
 			],
 		},
-        {
-            'target_name': 'encode_support',
-            'type': 'none',
+    {
+      'target_name': 'encode_support',
+      'type': 'none',
 
-            'sources':
+      'sources':
 			[
 				'src/Support.java',
 				'src/Support.mm',
 			],
 
-            'actions':
+      'actions':
 			[
 				{
 					'action_name': 'Encode Support.mm',
 
 					'inputs':
-                    [
-                        '../util/encode_source.pl',
-                        'src/Support.mm',
-                    ],
-                    'outputs':
-                    [
-                        '<(SHARED_INTERMEDIATE_DIR)/LCIDLC/EncodedSupport.c',
-                    ],
+          [
+              '../util/encode_source.pl',
+              'src/Support.mm',
+          ],
+          'outputs':
+          [
+              '<(SHARED_INTERMEDIATE_DIR)/lcidlc/EncodedSupport.c',
+          ],
 
-                    'action':
+          'action':
 					[
 						'<@(perl)',
 						'../util/encode_source.pl',
 						'src/Support.mm',
-						'<(SHARED_INTERMEDIATE_DIR)/LCIDLC/EncodedSupport.c',
+						'<(SHARED_INTERMEDIATE_DIR)/lcidlc/EncodedSupport.c',
 						'g_support_template',
 					],
 				},
-                {
+        {
 					'action_name': 'Encode Support.java',
 
 					'inputs':
-                    [
-                        '../util/encode_source.pl',
-                        'src/Support.java',
-                    ],
-                    'outputs':
-                    [
-                        '<(SHARED_INTERMEDIATE_DIR)/LCIDLC/EncodedJavaSupport.c',
-                    ],
+          [
+              '../util/encode_source.pl',
+              'src/Support.java',
+          ],
 
-                    'action':
+          'outputs':
+          [
+              '<(SHARED_INTERMEDIATE_DIR)/lcidlc/EncodedJavaSupport.c',
+          ],
+
+          'action':
 					[
 						'<@(perl)',
 						'../util/encode_source.pl',
 						'src/Support.java',
-						'<(SHARED_INTERMEDIATE_DIR)/LCIDLC/EncodedJavaSupport.c',
+						'<(SHARED_INTERMEDIATE_DIR)/lcidlc/EncodedJavaSupport.c',
 						'g_java_support_template',
 					],
 				},
 			],
-        },
+    },
 	],
 }
