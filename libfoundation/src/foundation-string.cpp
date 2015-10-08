@@ -5449,11 +5449,11 @@ MCStringCreateWithSysString(const char *p_sys_string,
 	}
 
 	/* Count the number of chars */
-	size_t p_byte_count;
-	for (p_byte_count = 0; p_sys_string[p_byte_count] != '\0'; ++p_byte_count);
+	size_t t_byte_count;
+	for (t_byte_count = 0; p_sys_string[p_byte_count] != '\0'; ++t_byte_count);
 
 	return MCStringCreateWithBytes((const byte_t *) p_sys_string,
-	                               p_byte_count,
+	                               t_byte_count,
 	                               kMCStringEncodingUTF8,
 	                               false, /* is_external_rep */
 	                               r_string);
