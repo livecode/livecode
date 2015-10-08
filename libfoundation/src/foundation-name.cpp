@@ -59,7 +59,7 @@ MCNameRef MCNAME(const char *p_string)
 MC_DLLEXPORT_DEF
 bool MCNameCreate(MCStringRef p_string, MCNameRef& r_name)
 {
-	MCAssert(p_string != nil);
+	__MCAssertIsString(p_string);
 
 	if (p_string -> char_count == 0 && kMCEmptyName != nil)
 	{
@@ -242,12 +242,14 @@ MCNameRef MCNameLookup(MCStringRef p_string)
 MC_DLLEXPORT_DEF
 uintptr_t MCNameGetCaselessSearchKey(MCNameRef self)
 {
+	__MCAssertIsName(self);
 	return (uintptr_t)self -> key;
 }
 
 MC_DLLEXPORT_DEF
 MCStringRef MCNameGetString(MCNameRef self)
 {
+	__MCAssertIsName(self);
 	return self -> string;
 }
 
@@ -259,6 +261,9 @@ bool MCNameIsEmpty(MCNameRef self)
 
 bool MCNameIsEqualTo(MCNameRef self, MCNameRef p_other_name)
 {
+	__MCAssertIsName(self);
+	__MCAssertIsName(p_other_name);
+
 	return self == p_other_name ||
 			self -> key == p_other_name -> key;
 }
