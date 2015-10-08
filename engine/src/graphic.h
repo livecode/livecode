@@ -41,6 +41,8 @@ enum
 	kMCFillRuleEvenOdd
 };
 
+#define GRAPHIC_MIN_SIZE 2
+
 class MCGraphic : public MCControl
 {
 	uint2 linesize;
@@ -143,6 +145,11 @@ public:
 	void setcapstyle(uint2 p_style);
 	uint2 getfillrule();
 	void setfillrule(uint2 p_rule);
+    
+    virtual uint16_t getminsize() const
+    {
+        return GRAPHIC_MIN_SIZE;
+    }
     
     ///////////////
     

@@ -1316,13 +1316,17 @@ void MCControl::drawarrow(MCDC *dc, int2 x, int2 y, uint2 size,
 void MCControl::continuesize(int2 x, int2 y)
 {
 	MCRectangle newrect = rect;
+    
+    uint16_t t_min_size;
+    t_min_size = getminsize();
+    
 	if (state & CS_SIZEL)
 	{
 		int2 rx = newrect.x + newrect.width;
 		newrect.x = x - xoffset;
 		MCU_snap(newrect.x);
-		if (newrect.x > rx - MCminsize)
-			newrect.x = rx - MCminsize;
+		if (newrect.x > rx - t_min_size)
+			newrect.x = rx - t_min_size;
 		newrect.width = rx - newrect.x;
 	}
 	else
@@ -1330,8 +1334,8 @@ void MCControl::continuesize(int2 x, int2 y)
 		{
 			int2 rx = x + xoffset;
 			MCU_snap(rx);
-			if (rx - newrect.x < MCminsize)
-				newrect.width = MCminsize;
+			if (rx - newrect.x < t_min_size)
+				newrect.width = t_min_size;
 			else
 				newrect.width = rx - newrect.x;
 		}
@@ -1340,8 +1344,8 @@ void MCControl::continuesize(int2 x, int2 y)
 		int2 ly = newrect.y + newrect.height;
 		newrect.y = y - yoffset;
 		MCU_snap(newrect.y);
-		if (newrect.y > ly - MCminsize)
-			newrect.y = ly - MCminsize;
+		if (newrect.y > ly - t_min_size)
+			newrect.y = ly - t_min_size;
 		newrect.height = ly - newrect.y;
 	}
 	else
@@ -1349,8 +1353,8 @@ void MCControl::continuesize(int2 x, int2 y)
 		{
 			int2 ly = y + yoffset;
 			MCU_snap(ly);
-			if (ly - newrect.y < MCminsize)
-				newrect.height = MCminsize;
+			if (ly - newrect.y < t_min_size)
+				newrect.height = t_min_size;
 			else
 				newrect.height = ly - newrect.y;
 		}
@@ -1396,7 +1400,7 @@ void MCControl::continuesize(int2 x, int2 y)
 	if (mx < newrect.x && state & CS_SIZER)
 	{
 		state &= ~CS_SIZER;
-		newrect.x -= MCminsize;
+		newrect.x -= t_min_size;
 		state |= CS_SIZEL;
 		fliph();
 	}
@@ -1404,14 +1408,14 @@ void MCControl::continuesize(int2 x, int2 y)
 		if (mx > newrect.x + newrect.width && state & CS_SIZEL)
 		{
 			state &= ~CS_SIZEL;
-			newrect.x += MCminsize;
+			newrect.x += t_min_size;
 			state |= CS_SIZER;
 			fliph();
 		}
 	if (my < newrect.y && state & CS_SIZEB)
 	{
 		state &= ~CS_SIZEB;
-		newrect.y -= MCminsize;
+		newrect.y -= t_min_size;
 		state |= CS_SIZET;
 		flipv();
 	}
@@ -1419,7 +1423,7 @@ void MCControl::continuesize(int2 x, int2 y)
 		if (my > newrect.y + newrect.height && state & CS_SIZET)
 		{
 			state &= ~CS_SIZET;
-			newrect.y += MCminsize;
+			newrect.y += t_min_size;
 			state |= CS_SIZEB;
 			flipv();
 		}

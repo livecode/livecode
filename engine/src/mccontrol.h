@@ -323,6 +323,11 @@ public:
 	{
 		return (MCControl *)MCDLlist::remove((MCDLlist *&)list);
 	}
+    
+    virtual uint16_t getminsize() const
+    {
+        return MCminsize;
+    }
 
 	////////// PROPERTY SUPPORT METHODS
 
