@@ -718,6 +718,9 @@ compare_t MCDataCompareTo(MCDataRef p_left, MCDataRef p_right)
 MC_DLLEXPORT_DEF
 bool MCDataContains(MCDataRef p_data, MCDataRef p_needle)
 {
+	__MCAssertIsData(p_data);
+	__MCAssertIsData(p_needle);
+
     uindex_t t_needle_byte_count, t_byte_count;
     t_needle_byte_count = p_needle -> byte_count;
     t_byte_count = p_data -> byte_count;
@@ -742,6 +745,9 @@ bool MCDataContains(MCDataRef p_data, MCDataRef p_needle)
 MC_DLLEXPORT_DEF
 bool MCDataBeginsWith(MCDataRef p_data, MCDataRef p_needle)
 {
+	__MCAssertIsData(p_data);
+	__MCAssertIsData(p_needle);
+
     uindex_t t_needle_byte_count, t_byte_count;
     t_needle_byte_count = p_needle -> byte_count;
     t_byte_count = p_data -> byte_count;
@@ -755,6 +761,9 @@ bool MCDataBeginsWith(MCDataRef p_data, MCDataRef p_needle)
 MC_DLLEXPORT_DEF
 bool MCDataEndsWith(MCDataRef p_data, MCDataRef p_needle)
 {
+	__MCAssertIsData(p_data);
+	__MCAssertIsData(p_needle);
+
     uindex_t t_needle_byte_count, t_byte_count;
     t_needle_byte_count = p_needle -> byte_count;
     t_byte_count = p_data -> byte_count;
@@ -768,6 +777,9 @@ bool MCDataEndsWith(MCDataRef p_data, MCDataRef p_needle)
 MC_DLLEXPORT_DEF
 bool MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range, uindex_t& r_index)
 {
+	__MCAssertIsData(p_data);
+	__MCAssertIsData(p_chunk);
+
     __MCDataClampRange(p_data, t_range);
     
     uindex_t t_limit, t_chunk_byte_count;
