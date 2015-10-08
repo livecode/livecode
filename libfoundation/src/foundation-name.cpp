@@ -270,6 +270,9 @@ bool MCNameIsEqualTo(MCNameRef self, MCNameRef p_other_name)
 
 bool MCNameIsEqualTo(MCNameRef self, MCNameRef p_other_name, bool p_case_sensitive, bool p_form_sensitive)
 {
+	__MCAssertIsName(self);
+	__MCAssertIsName(p_other_name);
+
     if (self == p_other_name)
         return true;
 
