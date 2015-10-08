@@ -274,7 +274,7 @@ bool MCStreamGetAvailableForRead(MCStreamRef self, size_t& r_available)
 bool MCStreamRead(MCStreamRef self, void *p_buffer, size_t p_amount)
 {
 	__MCAssertIsStream(self);
-	MCAssert(nil != p_buffer);
+	MCAssert(nil != p_buffer || 0 == p_amount);
 
 	if (self -> callbacks -> read == nil)
 		return false;
@@ -293,7 +293,7 @@ bool MCStreamGetAvailableForWrite(MCStreamRef self, size_t& r_available)
 bool MCStreamWrite(MCStreamRef self, const void *p_buffer, size_t p_amount)
 {
 	__MCAssertIsStream(self);
-	MCAssert(nil != p_buffer);
+	MCAssert(nil != p_buffer || 0 == p_amount);
 
 	if (self -> callbacks -> write == nil)
 		return false;

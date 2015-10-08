@@ -287,7 +287,19 @@ bool MCStringIsEqualToCString(MCStringRef p_string, const char *p_cstring, MCStr
 // the specified encoding.
 bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStringEncoding p_encoding, bool p_is_external_rep, MCStringRef& r_string)
 {
-	MCAssert(nil != p_bytes);
+	if (0 == p_byte_count)
+	{
+		if (nil != kMCEmptyString)
+		{
+			r_string = MCValueRetain(kMCEmptyString);
+			return true;
+		}
+	}
+	else
+	{
+		MCAssert(nil != p_bytes);
+	}
+
     MCAssert(!p_is_external_rep);
     
     switch (p_encoding)
@@ -399,14 +411,19 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
 
 bool MCStringCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, MCStringEncoding p_encoding, bool p_is_external_rep, MCStringRef& r_string)
 {
-	if ((p_bytes == nil || p_byte_count == 0) && kMCEmptyString != nil)
-    {
-        r_string = MCValueRetain(kMCEmptyString);
-        free(p_bytes);
-        return true;
-    }
-
-	MCAssert(nil != p_bytes);
+	if (p_byte_count == 0)
+	{
+		if (kMCEmptyString != nil)
+		{
+			r_string = MCValueRetain(kMCEmptyString);
+			free(p_bytes);
+			return true;
+		}
+	}
+	else
+	{
+		MCAssert(nil != p_bytes);
+	}
 
     MCStringRef t_string;
     t_string = nil;
@@ -451,12 +468,17 @@ bool MCStringCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, M
 
 bool MCStringCreateWithChars(const unichar_t *p_chars, uindex_t p_char_count, MCStringRef& r_string)
 {
-	MCAssert(nil != p_chars);
-
-    if (p_char_count == 0 && kMCEmptyString != nil)
+	if (p_char_count == 0)
 	{
-		r_string = MCValueRetain(kMCEmptyString);
-		return true;
+		if (kMCEmptyString != nil)
+		{
+			r_string = MCValueRetain(kMCEmptyString);
+			return true;
+		}
+	}
+	else
+	{
+		MCAssert(nil != p_chars);
 	}
     
 	bool t_success;
