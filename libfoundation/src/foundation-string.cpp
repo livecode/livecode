@@ -5805,7 +5805,7 @@ MCStringCreateWithSysString(const char *p_sys_string,
 
 	/* Count the number of chars */
 	size_t t_byte_count;
-	for (t_byte_count = 0; p_sys_string[p_byte_count] != '\0'; ++t_byte_count);
+	for (t_byte_count = 0; p_sys_string[t_byte_count] != '\0'; ++t_byte_count);
 
 	return MCStringCreateWithBytes((const byte_t *) p_sys_string,
 	                               t_byte_count,
