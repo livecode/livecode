@@ -197,8 +197,17 @@ private command runTestScript pInfo, pScriptFile
    local tCommand, tAnalysis, tMetadata
    put runGetTestMetadata(pScriptFile) into tMetadata
    
-   -- Don't run tests that require UI for now
-   if tMetadata["ui"] is true then
+   -- Only run tests that require UI if possible
+   local tCanRunUITests
+   put true into tCanRunUITests
+   repeat for each element tElement in pInfo["self-command"]
+      if tElement is "ui" then
+         put false into tCanRunUITests
+         exit repeat
+      end if
+   end repeat
+   
+   if tMetadata["ui"] is true and not tCanRunUITests then
       runTestSkipAll pInfo, pScriptFile, "test requires UI mode"
       return the result
    end if
