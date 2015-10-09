@@ -368,6 +368,7 @@ bool MCLinuxRawClipboard::IsOwned() const
 
 bool MCLinuxRawClipboard::PushUpdates()
 {
+#ifndef _SERVER
     // Fail if GDK isn't available
     if (!HasGDK())
         return false;
@@ -391,11 +392,13 @@ bool MCLinuxRawClipboard::PushUpdates()
     // We now own the selection
     m_owned = true;
     m_dirty = false;
+#endif
     return true;
 }
 
 bool MCLinuxRawClipboard::PullUpdates()
 {
+#ifndef _SERVER
     // Fail if GDK isn't available
     if (!HasGDK())
         return false;
@@ -415,6 +418,9 @@ bool MCLinuxRawClipboard::PullUpdates()
     m_external_data = true;
     m_item = new MCLinuxRawClipboardItem(this, m_selection, m_drag_context);
     return (m_item != NULL);
+#else
+    return true;
+#endif
 }
 
 bool MCLinuxRawClipboard::FlushData()
@@ -444,6 +450,7 @@ GdkAtom MCLinuxRawClipboard::GetSelectionAtom() const
 
 MCDataRef MCLinuxRawClipboard::CopyTargets() const
 {
+#ifndef _SERVER
     // Check that we actually have an item
     if (m_selected_item == NULL)
         return NULL;
@@ -476,11 +483,18 @@ MCDataRef MCLinuxRawClipboard::CopyTargets() const
     
     // Done
     return MCValueRetain(*t_data);
+#else
+    return NULL;
+#endif
 }
 
 GdkDisplay* MCLinuxRawClipboard::GetDisplay()
 {
+#ifndef _SERVER
     return MCdpy;
+#else
+    return NULL;
+#endif
 }
 
 GdkWindow* MCLinuxRawClipboard::GetClipboardWindow() const
@@ -690,6 +704,7 @@ MCDataRef MCLinuxRawClipboardItem::UriListToCopyList(MCDataRef p_in)
     return t_out;
 }
 
+#ifndef _SERVER
 static bool SelectionNotifyFilter(GdkEvent *t_event, void *)
 {
     return (t_event->type == GDK_SELECTION_NOTIFY);
@@ -707,9 +722,11 @@ static bool WaitForSelectionNotify()
     
     return true;
 }
+#endif
 
 void MCLinuxRawClipboardItem::FetchExternalRepresentations(GdkDragContext* p_drag_context) const
 {
+#ifndef _SERVER
     // Fail if GDK isn't available
     if (!MCLinuxRawClipboard::HasGDK())
         return;
@@ -806,6 +823,7 @@ void MCLinuxRawClipboardItem::FetchExternalRepresentations(GdkDragContext* p_dra
         // Free the memory containing the atoms
         g_free(t_data);
     }
+#endif
 }
 
 
@@ -814,6 +832,7 @@ MCLinuxRawClipboardItemRep::MCLinuxRawClipboardItemRep(MCLinuxRawClipboard* p_cl
   m_type(NULL),
   m_bytes(NULL)
 {
+#ifndef _SERVER
     // Fetch the type name for this representation
     m_type.Reset(MCLinuxRawClipboard::CopyTypeForAtom(p_atom));
     MCAssert(*m_type != NULL);
@@ -835,6 +854,7 @@ MCLinuxRawClipboardItemRep::MCLinuxRawClipboardItemRep(MCLinuxRawClipboard* p_cl
     // Copy the data for this property
     MCDataCreateWithBytes(t_data, t_data_length, &m_bytes);
     g_free(t_data);
+#endif
 }
 
 MCLinuxRawClipboardItemRep::MCLinuxRawClipboardItemRep(MCStringRef p_type, MCDataRef p_bytes) :
