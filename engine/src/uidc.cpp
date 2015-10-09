@@ -1677,6 +1677,11 @@ Boolean MCUIDC::parsecolor(const MCString &s, MCColor *color, char **cname)
 	
 	// check for numeric first argument
 	i1 = MCU_strtol(sptr, l, ',', done);
+	
+	// PM-2015-10-09: [[ Bug 157 ]] Only integers in [0,255] are valid
+	if (i1 < 0 || i1 > 255)
+		return False;
+		
 	if (!done)
 	{
 		// not numeric, check against the colornames
@@ -1690,22 +1695,29 @@ Boolean MCUIDC::parsecolor(const MCString &s, MCColor *color, char **cname)
 	}
 	// check for a numeric second argument (Green value)
 	i2 = MCU_strtol(sptr, l, ',', done);
+	
+	if (i2 < 0 || i2 > 255)
+		return False;
+		
 	if (!done)
 	{
 		// MDW-2013-06-12: [[ Bug 10950 ]] non-numeric second argument present
 		if (l != 0)
 			return False;
 		// only a single integer as the color specification,
-		// restrict it to 0-255 and get values from sccolors array
-		i1 = MCU_max(1, MCU_min(i1, 256)) - 1;
-		i3 = sccolors[i1].blue;
-		i2 = sccolors[i1].green;
-		i1 = sccolors[i1].red;
+		// get values from sccolors array
+		i3 = sccolors[255 - i1].blue;
+		i2 = sccolors[255 - i1].green;
+		i1 = sccolors[255 - i1].red;
 	}
 	else
 	{
 		// check for a numeric third argument (Blue value)
 		i3 = MCU_strtol(sptr, l, ',', done);
+		
+		if (i3 < 0 || i3 > 255)
+			return False;
+			
 		// MDW-2013-06-12: [[ Bug 10950 ]] third argument not present or not numeric
 		// or fourth argument present
 		if (!done || (l != 0))
