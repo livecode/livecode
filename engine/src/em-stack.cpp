@@ -128,6 +128,13 @@ MCStack::view_platform_updatewindow(MCRegionRef p_dirty_region)
 	view_surface_redrawwindow(&t_surface, t_region);
 }
 
+MCRectangle
+MCStack::view_platform_setgeom(const MCRectangle &p_rect)
+{
+	MCRectangle t_old = MCEmscriptenViewGetBounds();
+	/* UNCHECKED */ MCEmscriptenViewSetBounds(p_rect);
+}
+
 /* ================================================================
  * Stub functions
  * ================================================================ */

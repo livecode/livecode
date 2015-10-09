@@ -159,7 +159,7 @@ Example:
 	put "char" into tVar
 	
 	variable tFirst as String
-	put the last char of tVar into tFirst -- tFirst contains "c"
+	put the first char of tVar into tFirst -- tFirst contains "c"
 
 Description:
 Either locates the first char for use as the target container of another operation, or evaluates the first char as the source of another operation.

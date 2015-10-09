@@ -944,11 +944,11 @@ void MCGet::exec_ctxt(MCExecContext& ctxt)
 	return ES_NORMAL;
 #endif /* MCGet */
 
-    MCAutoValueRef t_value;
-    if (!ctxt . EvalExprAsValueRef(value, EE_GET_BADEXP, &t_value))
+    MCExecValue t_value;
+    if (!ctxt . EvaluateExpression(value, EE_GET_BADEXP, t_value))
         return;
 
-    MCEngineExecGet(ctxt, *t_value);
+    MCEngineExecGet(ctxt, t_value);
 }
 
 void MCGet::compile(MCSyntaxFactoryRef ctxt)

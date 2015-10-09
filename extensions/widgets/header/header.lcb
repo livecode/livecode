@@ -66,6 +66,7 @@ use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
 use com.livecode.library.iconSVG
+use com.livecode.widgetutils
 
 -- metadata
 metadata title is "Header"
@@ -715,7 +716,6 @@ private handler drawDropShadow() returns Effect
 
    put color [153/255, 153/255, 153/255, 1] into tProps["color"]
    put "source over" into tProps["blend mode"]
-   put 255 into tProps["opacity"]
    put 0.75 into tProps["spread"]
    put 5 into tProps["size"]
    put 1 into tProps["distance"]
@@ -729,7 +729,7 @@ end handler
 private handler fetchIconPath(in pIconName as String, in pIconRect as Rectangle) returns Path
    variable tIconPath as Path
    put path iconSVGPathFromName(pIconName) into tIconPath
-   setIconPath(pIconRect, tIconPath)
+   constrainPathToRect(pIconRect, tIconPath)
    return tIconPath
 end handler
 
@@ -1126,110 +1126,6 @@ end handler
 
 --------------------------------------------------------------------------------
 --
---		Icon Paths
---
---------------------------------------------------------------------------------
-
-private handler setIconPath(in pTargetRect as Rectangle, inout xPath as Path)
-	-- Scale the icon
-	variable tBounds
-	put the bounding box of xPath into tBounds
-
-	-- Scale appropriately
-	variable tXScale as Real
-	variable tYScale as Real
-	put the width of pTargetRect / the width of tBounds into tXScale
-	put the height of pTargetRect / the height of tBounds into tYScale
-
-	if tXScale > tYScale then
-		put tYScale into tXScale
-	else
-		put tXScale into tYScale
-	end if
-   scale xPath by [tXScale, tYScale]
-
-	variable tXTranslate as Real
-	variable tYTranslate as Real
-   put the bounding box of xPath into tBounds
-	put the left of pTargetRect - the left of tBounds into tXTranslate
-	put the top of pTargetRect - the top of tBounds into tYTranslate
-
-    variable tXDiff as Real
-    variable tYDiff as Real
-    put the width of pTargetRect - the width of tBounds into tXDiff
-    put the height of pTargetRect - the height of tBounds into tYDiff
-
-	-- align center
-	divide tXDiff by 2
-	divide tYDiff by 2
-	translate xPath by [tXTranslate + tXDiff, tYTranslate + tYDiff]
-end handler
-
---------------------------------------------------------------------------------
---
---		Converting Data Types
---
---------------------------------------------------------------------------------
-
--- this handler converts an RGBA color to a string
-private handler colorToString(in pColor as Color) returns String
-
-   variable tRed as Integer
-   variable tGreen as Integer
-   variable tBlue as Integer
-   variable tAlpha as Integer
-
-   put the rounded of ((the red of pColor)*255) into tRed
-   put the rounded of ((the green of pColor)*255) into tGreen
-   put the rounded of ((the blue of pColor)*255) into tBlue
-   put the rounded of ((the alpha of pColor)*255) into tAlpha
-
-   return stripZeros(tRed formatted as string) & "," & stripZeros(tGreen formatted as string) & \
-      "," & stripZeros(tBlue formatted as string) & "," & stripZeros(tAlpha formatted as string)
-
-end handler
-
--- this handler converts a string to an RGBA color
-private handler stringToColor(in pString as String) returns Color
-
-   variable tStringList as List
-   variable tColorList as List
-   variable tComponent
-
-   split pString by "," into tStringList
-   put the empty list into tColorList
-
-   variable tComponentCount
-	put the number of elements in tStringList into tComponentCount
-	if tComponentCount is not 3 and tComponentCount is not 4 then
-		-- Invalid number of components detected
-		throw "Invalid color"
-	end if
-
-   repeat for each element tComponent in tStringList
-      push (tComponent parsed as number)/255 onto back of tColorList
-   end repeat
-
-   return color tColorList
-end handler
-
--- this handler strips the zeros when an integer is formatted as a string
-private handler stripZeros(in pString as String) returns String
-   if pString contains "." then
-      repeat while ((the last char of pString) is in ".0")
-         if the last char of pString is "." then
-            delete the last char of pString
-            exit repeat
-         else
-            delete the last char of pString
-         end if
-      end repeat
-   end if
-   return pString
-end handler
-
---------------------------------------------------------------------------------
---
 -- Get Handlers
 --
 --------------------------------------------------------------------------------
@@ -1252,8 +1148,9 @@ private handler getActionIcons() returns String
 end handler
 
 -- these handlers convert the color properties for output in the PI
+
 private handler getIosActionColor() returns String
-   return colorToString(mIosActionColor)
+   return colorToString(mIosActionColor, false)
 end handler
 
 --------------------------------------------------------------------------------

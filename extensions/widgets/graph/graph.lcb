@@ -105,6 +105,7 @@ widget com.livecode.widget.lineGraph
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
+use com.livecode.widgetutils
 --
 
 -- adding metadata to ensure the extension displays correctly in LiveCode
@@ -327,7 +328,7 @@ public handler getColors() returns String
 		log tCount
 		if the number of elements in mColors >= tCount then
 			put element tCount of mColors into tColor
-			push colorToString(tColor) onto back of tColorStringList
+			push colorToString(tColor, false) onto back of tColorStringList
 		else
 			push "0,0,0,0" onto back of tColorStringList
 			push stringToColor("0,0,0,0") onto back of mColors
@@ -664,46 +665,6 @@ private handler GraphRect() returns Rectangle
 end handler
 ----------
 
-----------
--- this handler converts a string of numbers to an RGBA color
-private handler stringToColor(in pString as String) returns Color
-	variable tRed as Real
-	variable tGreen as Real
-	variable tBlue as Real
-	variable tAlpha as Real
-
-	variable tComponentList as List
-	split pString by "," into tComponentList
-
-	variable tComponentCount
-	put the number of elements in tComponentList into tComponentCount
-	if tComponentCount is not 3 and tComponentCount is not 4 then
-		// Invalid number of components detected
-		throw "Invalid color"
-	end if
-
-	put (element 1 of tComponentList) parsed as number into tRed
-	put (element 2 of tComponentList) parsed as number into tGreen
-	put (element 3 of tComponentList) parsed as number into tBlue
-
-	if tComponentCount is 4 then
-		put (element 4 of tComponentList) parsed as number into tAlpha
-	else
-		put 255 into tAlpha
-	end if
-
-	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha/255 ]
-end handler
-----------
-
-----------
--- this handler converts an RGBA color to a string
-private handler colorToString(in pColor as Color) returns String
-	return stripZeros((the rounded of ((the red of pColor) * 255)) formatted as string) & "," & stripZeros((the rounded of ((the green of pColor) * 255)) formatted as string) & "," & stripZeros((the rounded of ((the blue of pColor) * 255)) formatted as string) & "," & stripZeros((the rounded of ((the alpha of pColor) * 255)) formatted as string)
-end handler
-----------
-
-----------
 -- this handler draws the grid lines on the graph
 private handler gridPath() returns Path
 	variable tPath
@@ -746,25 +707,7 @@ end handler
 ----------
 
 // UTILITY FUNCTIONS
-----------
--- this handler strips the zeros when a integer is formatted as a string
-private handler stripZeros(in tString as String) returns String
-	if tString contains "." then
-		variable tCount as Integer
-		repeat while ((the last char of tString) is in ".0")
-			if the last char of tString is "." then
-				delete the last char of tString
-				exit repeat
-			else
-				delete the last char of tString
-			end if
-		end repeat
-	end if
-	return tString
-end handler
-----------
 
-----------
 -- the following handlers return the maximum/minimum number from a list
 private handler listMax(in tList as List) returns Number
 	variable tMax as Number

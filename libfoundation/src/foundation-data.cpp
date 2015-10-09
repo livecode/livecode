@@ -20,6 +20,10 @@
 #include "foundation-private.h"
 
 
+////////////////////////////////////////////////////////////////////////////////
+
+// An array of all possible (256) single byte DataRefs.
+static MCDataRef *__kMCSingleBytes;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -106,6 +110,43 @@ bool MCDataCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, MCD
         MCMemoryDelete(self);
     
     return t_success;
+}
+
+MC_DLLEXPORT_DEF
+bool
+MCDataCreateWithData(MCDataRef& r_data, MCDataRef p_one, MCDataRef p_two)
+{
+    // Resolve any indirection
+    if (__MCDataIsIndirect(p_one))
+        p_one = p_one->contents;
+    if (__MCDataIsIndirect(p_two))
+        p_two = p_two->contents;
+    
+    // Calculate how much output space is required
+    uindex_t t_length = p_one->byte_count + p_two->byte_count;
+    
+    // Create the new data object
+    __MCData *self = nil;
+    if (!__MCValueCreate(kMCValueTypeCodeData, self))
+        return false;
+    
+    // Allocate memory for the output
+    if (!MCMemoryNewArray(t_length, self->bytes))
+    {
+        MCValueRelease(self);
+        return false;
+    }
+    
+    // Copy the bytes to the object
+    MCMemoryCopy(self->bytes, p_one->bytes, p_one->byte_count);
+    MCMemoryCopy(self->bytes + p_one->byte_count, p_two->bytes, p_two->byte_count);
+    
+    // Set the byte count
+    self->byte_count = p_one->byte_count + p_two->byte_count;
+    
+    // Done
+    r_data = self;
+    return true;
 }
 
 MC_DLLEXPORT_DEF
@@ -344,6 +385,14 @@ bool MCDataCopyRange(MCDataRef self, MCRange p_range, MCDataRef& r_new_data)
         self = self -> contents;
     
     __MCDataClampRange(self, p_range);
+    
+    // We special-case when the length of the range to be copied is 1. Rather
+    // than create a brand new DataRef, we use one of the pre-allocated ones.
+    if (p_range . length == 1)
+    {
+        r_new_data = MCValueRetain(__kMCSingleBytes[self -> bytes[p_range . offset]]);
+        return true;
+    }
     
     return MCDataCreateWithBytes(self -> bytes + p_range . offset, p_range . length, r_new_data);
 }
@@ -831,11 +880,29 @@ bool __MCDataInitialize(void)
     if (!MCDataCreateWithBytes(nil, 0, kMCEmptyData))
         return false;
     
+    // Allocate the array for the 256 single byte DataRefs.
+    if (!MCMemoryNewArray(256, __kMCSingleBytes))
+        return false;
+    
+    // Create each single byte DataRef.
+    for(uindex_t i = 0; i < 256; i++)
+    {
+        byte_t t_byte;
+        t_byte = (byte_t)i;
+        if (!MCDataCreateWithBytes(&t_byte, 1, __kMCSingleBytes[i]))
+            return false;
+    }
+    
     return true;
 }
 
 void __MCDataFinalize(void)
 {
+    // Deallocate all the single byte DataRefs and their holding array.
+    for(uindex_t i = 0; i < 256; i++)
+        MCValueRelease(__kMCSingleBytes[i]);
+    MCMemoryDeleteArray(__kMCSingleBytes);
+    
     MCValueRelease(kMCEmptyData);
 }
 

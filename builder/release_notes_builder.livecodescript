@@ -655,21 +655,24 @@ on generateExtensionsDiff pFirstVersion, pCurrentVersion, pType, @xDataA
    end repeat
 end generateExtensionsDiff
 
+constant kExtensionsSections = "libraries,modules,widgets"
+
 on addExtensionReleaseNoteData pFirstVersion, pCurVersion, @xDataA
    local tReleaseNoteDataA
-   generateExtensionsDiff pFirstVersion, pCurVersion, "libraries", tReleaseNoteDataA
-   generateExtensionsDiff pFirstVersion, pCurVersion, "widgets", tReleaseNoteDataA   
+   repeat for each item tSection in kExtensionsSections
+      generateExtensionsDiff pFirstVersion, pCurVersion, tSection, tReleaseNoteDataA
+   end repeat
    
    local tExtensionDataA
    repeat for each key tType in tReleaseNoteDataA
       repeat for each key tName in tReleaseNoteDataA[tType]
          put empty into tExtensionDataA
          local tSectionName
-         if tType is "libraries" then
-            # Libraries usually have 'Library' in their name already
-            put tName into tSectionName
-         else
+         if tType is "widgets" then
             put tName && "Widget" into tSectionName
+            else
+            # Modules/libraries names don't need modifying
+            put tName into tSectionName
          end if
          repeat for each line tFile in tReleaseNoteDataA[tType][tName]
             addLCBReleaseNoteData tFile, tSectionName, xDataA 

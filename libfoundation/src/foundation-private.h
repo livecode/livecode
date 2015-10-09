@@ -254,6 +254,7 @@ struct __MCString: public __MCValue
                 char_t *native_chars;
             };
             uindex_t capacity;
+            double numeric_value;
         };
     };
 };

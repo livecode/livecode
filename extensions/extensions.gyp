@@ -18,6 +18,8 @@
 
 			'sources':
 			[
+				'modules/widget-utils/widget-utils.lcb',
+			
 				'libraries/canvas/canvas.lcb',
 				'libraries/iconsvg/iconsvg.lcb',
 				'libraries/json/json.lcb',

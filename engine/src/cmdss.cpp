@@ -1049,7 +1049,7 @@ void MCGo::exec_ctxt(MCExecContext &ctxt)
             else if (stack -> etype == CT_ID)
             {
                 uinteger_t t_stack_id;
-                if (!ctxt . EvalExprAsUInt(stack -> startpos, EE_GO_BADSTACKEXP, t_stack_id))
+                if (!ctxt . EvalExprAsStrictUInt(stack -> startpos, EE_GO_BADSTACKEXP, t_stack_id))
                     return;
 
                 sptr = MCdefaultstackptr->findstackid(t_stack_id);
@@ -1070,7 +1070,7 @@ void MCGo::exec_ctxt(MCExecContext &ctxt)
 				case CT_ID:
                 {
                     uinteger_t t_stack_id;
-                    if (!ctxt . EvalExprAsUInt(stack -> next -> startpos, EE_CHUNK_BADSTACKEXP, t_stack_id))
+                    if (!ctxt . EvalExprAsStrictUInt(stack -> next -> startpos, EE_CHUNK_BADSTACKEXP, t_stack_id))
                         return;
 
                     sptr = sptr -> findsubstackid(t_stack_id);
@@ -2963,7 +2963,6 @@ void MCSubwindow::exec_ctxt(MCExecContext &ctxt)
 		case WM_SHEET:
 		case WM_DRAWER:
 			{
-				MCerrorlock++;
 				MCNewAutoNameRef t_parent_name;
                 if (!ctxt . EvalOptionalExprAsNullableNameRef(parent, EE_SUBWINDOW_BADEXP, &t_parent_name))
                     return;

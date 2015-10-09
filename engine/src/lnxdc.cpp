@@ -112,6 +112,7 @@ MCScreenDC::~MCScreenDC()
 		delete allocs;
 	}
 	
+    MCNameDelete(vendorname);
 	
 	while (pendingevents != NULL)
 	{

@@ -3816,7 +3816,9 @@ void MCButton::docascade(MCStringRef p_pick)
 	
 	if (pptr != this)
 	{
-		if (m_menu_handler == nil || !m_menu_handler->OnMenuPick(pptr, *t_pick, nil))
+		// IM-2015-10-06: [[ Bug 15502 ]] Call the handler of the *parent*
+		//    menu button, rather than of this one.
+		if (pptr->m_menu_handler == nil || !pptr->m_menu_handler->OnMenuPick(pptr, *t_pick, nil))
 		{
 			MCParameter *param = new MCParameter;
 			param->setvalueref_argument(*t_pick);
