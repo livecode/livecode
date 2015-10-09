@@ -128,12 +128,13 @@ end TestInterface7
 on TestInterface8
 
 create stack "Test"
-set the defaultstack to "Test"
+open stack "Test"
+
 click at 50,100
-TestAssert "test", the clickLoc is 50,100
+TestAssert "test", the clickLoc is "50,100"
 
 click at 0,0
-TestAssert "test", the clickLoc is 0,0
+TestAssert "test", the clickLoc is "0,0"
 
 end TestInterface8
 on TestInterface9
@@ -231,7 +232,7 @@ focus on field 1
 -- For some reason focusing doesn't happen until events are processed...
 wait 0 seconds with messages
 
-TestAssert "test", the focusedObject is the long id of field 1
+TestAssertBroken "test", the focusedObject is the long id of field 1, "11799"
 
 end TestBug11799Part1
 on TestBug11799Part2
@@ -251,7 +252,7 @@ focus on nothing
 -- After unfocusing, the card will be focused until events are processed...
 -- ... at which point nothing will be.
 
-TestAssert "test", the focusedObject is the long id of this card
+TestAssertBroken "test", the focusedObject is the long id of this card, "11799"
 
 end TestBug11799Part2
 
@@ -259,26 +260,26 @@ on TestInterface82
 
 create stack "Test"
 set the defaultstack to "Test"
-create field
 
 create card
+
+create field
 
 push current card
 
 pop card into field 1
 
-TestAssert "test", field 1 is the long id of the current card
+TestAssert "test", the text of field 1 is the long id of the current card
 
 end TestInterface82
 
 on TestInterface85
 
-
 create stack "Test"
 set the defaultstack to "Test"
-create field
 
 create card
+create field 
 
 push current card
 

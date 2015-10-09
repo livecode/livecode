@@ -180,7 +180,7 @@ on TestEngine15
 
 
 TestAssert "test", the processor is not empty
-TestAssertBroken "test", the processor is among the items of "unknown,x86,motorola powerpc,i386,arm", "use uname or similar to check"
+TestAssertBroken "test", false /*the processor is among the items of "unknown,x86,motorola powerpc,i386,arm"*/, "use uname or similar to check"
 
 end TestEngine15
 on TestEngine16

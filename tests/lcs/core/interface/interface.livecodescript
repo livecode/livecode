@@ -70,7 +70,7 @@ create field "tf"
 set the text of field "tf" to "abcd" & return & "efgh"
 find "efgh" in field "tf"
 
-TestSkip "test", false /*the foundLine is "line 2 of field 1" or the foundLine is "line 2 of field 2"*/, "16178"
+TestAssert "test", the foundLine is "line 2 of field 1" or the foundLine is "line 2 of field 2"
 
 find characters "x" in field "tf"
 TestAssert "test", the foundLine is empty
