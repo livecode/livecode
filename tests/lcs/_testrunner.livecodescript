@@ -201,7 +201,7 @@ private command runTestScript pInfo, pScriptFile
    local tCanRunUITests
    put true into tCanRunUITests
    repeat for each element tElement in pInfo["self-command"]
-      if tElement is "ui" then
+      if tElement is "-ui" then
          put false into tCanRunUITests
          exit repeat
       end if
