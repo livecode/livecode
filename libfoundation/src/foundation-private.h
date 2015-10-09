@@ -301,6 +301,12 @@ inline MCValueTypeCode __MCValueGetTypeCode(__MCValue *self)
 	return (self -> flags >> 28);
 }
 
+inline const MCValueCustomCallbacks *
+__MCValueGetCustomCallbacks(__MCValue *self)
+{
+	return reinterpret_cast<__MCCustomValue *>(self)->callbacks;
+}
+
 template<class T> inline bool __MCValueCreate(MCValueTypeCode p_type_code, T*& r_value)
 {
 	__MCValue *t_value;
@@ -454,6 +460,25 @@ unichar_t MCUnicodeCharMapFromNative(char_t nchar);
 //unichar_t MCUnicodeCharLowercase(unichar_t);
 
 //unichar_t MCUnicodeCharUppercase(unichar_t);
+
+////////////////////////////////////////////////////////////////////////////////
+// INTERNAL MCVALUE TYPE ASSERTIONS
+//
+
+#define __MCAssertValueType(x,T) MCAssert(MCValueGetTypeCode(x) == kMCValueTypeCode##T)
+
+#define __MCAssertIsNumber(x)   __MCAssertValueType(x,Number)
+#define __MCAssertIsName(x)     __MCAssertValueType(x,Name)
+#define __MCAssertIsString(x)   __MCAssertValueType(x,String)
+#define __MCAssertIsData(x)     __MCAssertValueType(x,Data)
+#define __MCAssertIsArray(x)    __MCAssertValueType(x,Array)
+#define __MCAssertIsList(x)     __MCAssertValueType(x,List)
+#define __MCAssertIsSet(x)      __MCAssertValueType(x,Set)
+
+#define __MCAssertIsLocale(x)   MCAssert(nil != (x)) /* FIXME */
+
+#define __MCAssertIsMutableString(x) MCAssert(MCStringIsMutable(x))
+#define __MCAssertIsMutableData(x)   MCAssert(MCDataIsMutable(x))
 
 ////////////////////////////////////////////////////////////////////////////////
 

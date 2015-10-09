@@ -58,6 +58,16 @@ static bool __MCDataCopyMutable(__MCData *self, __MCData*& r_new_data);
 
 bool MCDataCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data)
 {
+	/* Special case for empty data */
+	if ((p_byte_count == 0 || nil == p_bytes) && nil != kMCEmptyData)
+	{
+		r_data = MCValueRetain(kMCEmptyData);
+		return true;
+	}
+
+	/* Check that if the byte count is non-zero, the source pointer is valid */
+	MCAssert(p_byte_count == 0 || nil != p_bytes);
+
 	bool t_success;
 	t_success = true;
     
@@ -71,7 +81,10 @@ bool MCDataCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCDataR
     
 	if (t_success)
 	{
-        MCMemoryCopy(self -> bytes, p_bytes, p_byte_count);
+		if (nil != p_bytes)
+		{
+			MCMemoryCopy(self -> bytes, p_bytes, p_byte_count);
+		}
         self -> byte_count = p_byte_count;
 		r_data = self;
 	}
@@ -88,6 +101,8 @@ bool MCDataCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCDataR
 
 bool MCDataCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data)
 {
+	MCAssert(nil != p_bytes);
+
     // AL-2014-11-17: Create with bytes and release should just take the bytes.
     
     bool t_success;
@@ -113,6 +128,9 @@ bool MCDataCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, MCD
 bool
 MCDataCreateWithData(MCDataRef& r_data, MCDataRef p_one, MCDataRef p_two)
 {
+	__MCAssertIsData(p_one);
+	__MCAssertIsData(p_two);
+
     // Resolve any indirection
     if (__MCDataIsIndirect(p_one))
         p_one = p_one->contents;
@@ -148,6 +166,8 @@ MCDataCreateWithData(MCDataRef& r_data, MCDataRef p_one, MCDataRef p_two)
 
 bool MCDataConvertStringToData(MCStringRef string, MCDataRef& r_data)
 {
+	__MCAssertIsString(string);
+
     // AL-2014-12-12: [[ Bug 14208 ]] Implement MCDataConvertStringToData reduce the overhead in
     //  converting from non-native string to data.
     
@@ -200,6 +220,8 @@ bool MCDataConvertStringToData(MCStringRef string, MCDataRef& r_data)
 
 bool MCDataIsEmpty(MCDataRef p_data)
 {
+	__MCAssertIsData(p_data);
+
     if (__MCDataIsIndirect(p_data))
         p_data = p_data -> contents;
     
@@ -208,6 +230,8 @@ bool MCDataIsEmpty(MCDataRef p_data)
 
 uindex_t MCDataGetLength(MCDataRef p_data)
 {
+	__MCAssertIsData(p_data);
+
     if (__MCDataIsIndirect(p_data))
         p_data = p_data -> contents;
     
@@ -216,6 +240,8 @@ uindex_t MCDataGetLength(MCDataRef p_data)
 
 const byte_t *MCDataGetBytePtr(MCDataRef p_data)
 {
+	__MCAssertIsData(p_data);
+
     if (__MCDataIsIndirect(p_data))
         p_data = p_data -> contents;
     
@@ -224,6 +250,8 @@ const byte_t *MCDataGetBytePtr(MCDataRef p_data)
 
 byte_t MCDataGetByteAtIndex(MCDataRef p_data, uindex_t p_index)
 {
+	__MCAssertIsData(p_data);
+
     if (__MCDataIsIndirect(p_data))
         p_data = p_data -> contents;
     
@@ -233,6 +261,9 @@ byte_t MCDataGetByteAtIndex(MCDataRef p_data, uindex_t p_index)
 hash_t MCDataHash(MCDataRef p_data);
 bool MCDataIsEqualTo(MCDataRef p_left, MCDataRef p_right)
 {
+	__MCAssertIsData(p_left);
+	__MCAssertIsData(p_right);
+
     if (__MCDataIsIndirect(p_left))
         p_left = p_left -> contents;
 
@@ -273,6 +304,8 @@ bool MCDataCreateMutable(uindex_t p_initial_capacity, MCDataRef& r_data)
 
 bool MCDataCopy(MCDataRef p_data, MCDataRef& r_new_data)
 {
+	__MCAssertIsData(p_data);
+
     if (!MCDataIsMutable(p_data))
     {
         MCValueRetain(p_data);
@@ -294,6 +327,8 @@ bool MCDataCopy(MCDataRef p_data, MCDataRef& r_new_data)
 
 bool MCDataCopyAndRelease(MCDataRef p_data, MCDataRef& r_new_data)
 {
+	__MCAssertIsData(p_data);
+
     // If the MCData is immutable we just pass it through (as we are releasing it).
     if (!MCDataIsMutable(p_data))
     {
@@ -330,6 +365,8 @@ bool MCDataCopyAndRelease(MCDataRef p_data, MCDataRef& r_new_data)
 
 bool MCDataMutableCopy(MCDataRef p_data, MCDataRef& r_mutable_data)
 {
+	__MCAssertIsData(p_data);
+
     // If p_data is immutable, then the new mutable data ref will be indirect
     // referencing it.
     if (!MCDataIsMutable(p_data))
@@ -349,6 +386,8 @@ bool MCDataMutableCopy(MCDataRef p_data, MCDataRef& r_mutable_data)
 
 bool MCDataMutableCopyAndRelease(MCDataRef p_data, MCDataRef& r_mutable_data)
 {
+	__MCAssertIsData(p_data);
+
     if (p_data -> references == 1)
     {
         if (!MCDataIsMutable(p_data))
@@ -367,6 +406,8 @@ bool MCDataMutableCopyAndRelease(MCDataRef p_data, MCDataRef& r_mutable_data)
 
 bool MCDataCopyRange(MCDataRef self, MCRange p_range, MCDataRef& r_new_data)
 {
+	__MCAssertIsData(self);
+
     if (__MCDataIsIndirect(self))
         self = self -> contents;
     
@@ -396,12 +437,15 @@ bool MCDataCopyRangeAndRelease(MCDataRef self, MCRange p_range, MCDataRef& r_new
 
 bool MCDataIsMutable(const MCDataRef p_data)
 {
+	__MCAssertIsData(p_data);
+
     return (p_data->flags & kMCDataFlagIsMutable) != 0;
 }
 
 bool MCDataAppend(MCDataRef r_data, MCDataRef p_suffix)
 {
     MCAssert(MCDataIsMutable(r_data));
+    __MCAssertIsData(p_suffix);
     
     if (__MCDataIsIndirect(p_suffix))
         p_suffix = p_suffix -> contents;
@@ -423,6 +467,7 @@ bool MCDataAppend(MCDataRef r_data, MCDataRef p_suffix)
 bool MCDataAppendBytes(MCDataRef self, const byte_t *p_bytes, uindex_t p_byte_count)
 {
     MCAssert(MCDataIsMutable(self));
+    MCAssert(nil != p_bytes);
     
     // Ensure the data ref is not indirect.
     if (__MCDataIsIndirect(self))
@@ -446,6 +491,7 @@ bool MCDataAppendByte(MCDataRef r_data, byte_t p_byte)
 bool MCDataPrepend(MCDataRef r_data, MCDataRef p_prefix)
 {
     MCAssert(MCDataIsMutable(r_data));
+    __MCAssertIsData(p_prefix);
     
     if (__MCDataIsIndirect(p_prefix))
         p_prefix = p_prefix -> contents;
@@ -467,6 +513,7 @@ bool MCDataPrepend(MCDataRef r_data, MCDataRef p_prefix)
 bool MCDataPrependBytes(MCDataRef self, const byte_t *p_bytes, uindex_t p_byte_count)
 {
     MCAssert(MCDataIsMutable(self));
+    MCAssert(nil != p_bytes);
     
     // Ensure the data ref is not indirect.
     if (__MCDataIsIndirect(self))
@@ -490,6 +537,7 @@ bool MCDataPrependByte(MCDataRef r_data, byte_t p_byte)
 bool MCDataInsert(MCDataRef r_data, uindex_t p_at, MCDataRef p_new_data)
 {
     MCAssert(MCDataIsMutable(r_data));
+    __MCAssertIsData(p_new_data);
     
     if (__MCDataIsIndirect(p_new_data))
         p_new_data = p_new_data -> contents;
@@ -511,6 +559,7 @@ bool MCDataInsert(MCDataRef r_data, uindex_t p_at, MCDataRef p_new_data)
 bool MCDataInsertBytes(MCDataRef self, uindex_t p_at, const byte_t *p_bytes, uindex_t p_byte_count)
 {
     MCAssert(MCDataIsMutable(self));
+    MCAssert(nil != p_bytes);
     
     // Ensure the data ref is not indirect.
     if (__MCDataIsIndirect(self))
@@ -547,6 +596,7 @@ bool MCDataRemove(MCDataRef self, MCRange p_range)
 bool MCDataReplace(MCDataRef r_data, MCRange p_range, MCDataRef p_new_data)
 {
 	MCAssert(MCDataIsMutable(r_data));
+	__MCAssertIsData(p_new_data);
     
     if (__MCDataIsIndirect(p_new_data))
         p_new_data = p_new_data -> contents;
@@ -567,6 +617,7 @@ bool MCDataReplace(MCDataRef r_data, MCRange p_range, MCDataRef p_new_data)
 bool MCDataReplaceBytes(MCDataRef self, MCRange p_range, const byte_t *p_bytes, uindex_t p_byte_count)
 {
     MCAssert(MCDataIsMutable(self));
+    MCAssert(nil != p_bytes);
     
     // Ensure the data ref is not indirect.
     if (__MCDataIsIndirect(self))
@@ -617,6 +668,9 @@ bool MCDataPad(MCDataRef self, byte_t p_byte, uindex_t p_count)
 
 compare_t MCDataCompareTo(MCDataRef p_left, MCDataRef p_right)
 {
+	__MCAssertIsData(p_left);
+	__MCAssertIsData(p_right);
+
     if (__MCDataIsIndirect(p_left))
         p_left = p_left -> contents;
     
@@ -635,6 +689,8 @@ compare_t MCDataCompareTo(MCDataRef p_left, MCDataRef p_right)
 #if defined(__MAC__) || defined (__IOS__)
 bool MCDataConvertToCFDataRef(MCDataRef p_data, CFDataRef& r_cfdata)
 {
+	__MCAssertIsData(p_data);
+
     if (__MCDataIsIndirect(p_data))
         p_data = p_data -> contents;
     
