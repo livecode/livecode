@@ -755,13 +755,6 @@ void MCPasteboardEvalFullDragKeys(MCExecContext& ctxt, MCStringRef& r_keys)
 
 void MCPasteboardEvalFullClipboardOrDragKeys(MCExecContext& ctxt, const MCClipboard* p_clipboard, MCStringRef& r_keys)
 {
-    // Ensure that the clipboard has been locked
-    if (!p_clipboard->IsLocked())
-    {
-        ctxt.LegacyThrow(EE_CLIPBOARD_NOT_LOCKED);
-        return;
-    }
-    
     // Create a list for the keys
     MCAutoListRef t_list;
     if (!MCListCreateMutable('\n', &t_list))
@@ -769,6 +762,9 @@ void MCPasteboardEvalFullClipboardOrDragKeys(MCExecContext& ctxt, const MCClipbo
         ctxt.Throw();
         return;
     }
+    
+    // Lock the clipboard
+    p_clipboard->Lock();
     
     // Check for the auto-converted text types
     bool t_success = true;
@@ -817,6 +813,9 @@ void MCPasteboardEvalFullClipboardOrDragKeys(MCExecContext& ctxt, const MCClipbo
     if (t_success)
         t_success = MCListCopyAsString(*t_list, r_keys);
     
+    // Unlock the clipboard
+    p_clipboard->Unlock();
+    
     // Final check for errors
     if (!t_success)
         ctxt.Throw();
@@ -848,17 +847,13 @@ void MCPasteboardEvalIsNotAmongTheKeysOfTheFullDragData(MCExecContext& ctxt, MCN
 
 void MCPasteboardEvalIsAmongTheKeysOfTheFullClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_key, const MCClipboard* p_clipboard, bool& r_result)
 {
-    // Ensure that the clipboard has been locked
-    if (!p_clipboard->IsLocked())
-    {
-        ctxt.LegacyThrow(EE_CLIPBOARD_NOT_LOCKED);
-        return;
-    }
-    
     // Convert the key into a transfer type
     MCTransferType t_type = MCPasteboardTransferTypeFromName(p_key);
     if (t_type == TRANSFER_TYPE_NULL)
         r_result = false;
+    
+    // Lock the clipboard
+    p_clipboard->Lock();
     
     // Is this transfer type present on the clipboard?
     switch (t_type)
@@ -908,6 +903,9 @@ void MCPasteboardEvalIsAmongTheKeysOfTheFullClipboardOrDragData(MCExecContext& c
             r_result = false;
             break;
     }
+    
+    // Unlock the clipboard
+    p_clipboard->Unlock();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1515,15 +1513,11 @@ void MCPasteboardSetFullDragData(MCExecContext& ctxt, MCNameRef p_index, MCValue
 
 void MCPasteboardGetFullClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_index, const MCClipboard* p_clipboard, MCValueRef& r_value)
 {
-    // Ensure that the clipboard is locked
-    if (!p_clipboard->IsLocked())
-    {
-        ctxt.LegacyThrow(EE_CLIPBOARD_NOT_LOCKED);
-        return;
-    }
-    
     // Convert the key to a transfer type
     MCTransferType t_type = MCPasteboardTransferTypeFromName(p_index);
+    
+    // Lock the clipboard
+    p_clipboard->Lock();
     
     // Try to copy the data from the clipboard, as requested.
     MCAutoValueRef t_data;
@@ -1591,6 +1585,9 @@ void MCPasteboardGetFullClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_ind
             break;
     }
     
+    // Unlock the clipboard
+    p_clipboard->Unlock();
+    
     // Did we manage to get some data?
     if (*t_data == NULL)
         ctxt.LegacyThrow(EE_CLIPBOARD_BADREP);
@@ -1600,20 +1597,13 @@ void MCPasteboardGetFullClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_ind
 
 void MCPasteboardSetFullClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_index, MCClipboard* p_clipboard, MCValueRef p_value)
 {
-    // Ensure the clipboard is locked
-    if (!p_clipboard->IsLocked())
-    {
-        ctxt.LegacyThrow(EE_CLIPBOARD_NOT_LOCKED);
-        return;
-    }
+    // Lock the clipboard
+    p_clipboard->Lock();
     
     // We can't write to the clipboard if it contains external data -- it needs
-    // to be cleared first.
+    // to be cleared first. Do that automatically.
     if (p_clipboard->GetRawClipboard()->IsExternalData())
-    {
-        ctxt.LegacyThrow(EE_CLIPBOARD_EXTERNAL_DATA);
-        return;
-    }
+        p_clipboard->Clear();
 
     // What transfer type is desired?
     MCTransferType t_type = MCPasteboardTransferTypeFromName(p_index);
@@ -1701,6 +1691,9 @@ void MCPasteboardSetFullClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_ind
             break;
     }
     
+    // Unlock the clipboard
+    p_clipboard->Unlock();
+    
     // Did the data get added successfully?
     if (!t_success)
         ctxt.LegacyThrow(EE_CLIPBOARD_BADREP);
@@ -1786,26 +1779,12 @@ void MCPasteboardSetFullDragTextData(MCExecContext& ctxt, MCValueRef p_value)
 
 void MCPasteboardGetFullClipboardOrDragTextData(MCExecContext& ctxt, const MCClipboard* p_clipboard, MCValueRef& r_value)
 {
-    // Ensure there is an active script clipboard
-    if (!p_clipboard->IsLocked())
-    {
-        ctxt.LegacyThrow(EE_CLIPBOARD_NOT_LOCKED);
-        return;
-    }
-    
     // Calling this method is always an error
     ctxt.LegacyThrow(EE_CLIPBOARD_BADREP);
 }
 
 void MCPasteboardSetFullClipboardOrDragTextData(MCExecContext& ctxt, MCClipboard* p_clipboard, MCValueRef p_value)
 {
-    // Ensure there is an active script clipboard
-    if (!p_clipboard->IsLocked())
-    {
-        ctxt.LegacyThrow(EE_CLIPBOARD_NOT_LOCKED);
-        return;
-    }
-    
     // The only supported value here is empty as it is used to clear the
     // contents of the clipboard to prepare it for writing.
     if (!MCValueIsEmpty(p_value))
@@ -1815,7 +1794,9 @@ void MCPasteboardSetFullClipboardOrDragTextData(MCExecContext& ctxt, MCClipboard
     }
     
     // Clear the clipboard
+    p_clipboard->Lock();
     p_clipboard->Clear();
+    p_clipboard->Unlock();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
