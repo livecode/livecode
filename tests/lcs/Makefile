@@ -21,8 +21,8 @@ guess_platform := $(shell $(guess_platform_script))
 
 # When running on headless Linux, run tests in -ui mode.
 guess_flags_script := \
-	if echo $(guess_platform) | grep "^linux" &>/dev/null && \
-	        ! xset -q &>/dev/null; then \
+	if echo $(guess_platform) | grep "^linux" >/dev/null 2>&1 && \
+	        ! xset -q >/dev/null 2>&1 ; then \
 	    echo "-ui"; \
 	fi
 guess_flags := $(shell $(guess_flags_script))
