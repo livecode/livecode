@@ -19,10 +19,19 @@ guess_platform_script := \
 	esac
 guess_platform := $(shell $(guess_platform_script))
 
+# When running on headless Linux, run tests in -ui mode.
+guess_flags_script := \
+	if echo $(guess_platform) | grep "^linux" &>/dev/null && \
+	        ! xset -q &>/dev/null; then \
+	    echo "-ui"; \
+	fi
+guess_flags := $(shell $(guess_flags_script))
+
 bin_dir ?= $(top_srcdir)/$(guess_platform)-bin
 
 ENGINE ?= $(bin_dir)/standalone-community
-ENGINE_FLAGS ?= -ui
+
+ENGINE_FLAGS ?= $(guess_flags)
 
 ################################################################
 
@@ -42,4 +51,4 @@ TEST_RUNNER_SCRIPT = _testrunner.livecodescript
 
 livecodescript-check: $(ENGINE)
 	@rm -f $(TEST_LOG)
-	@$(ENGINE) $(ENGINE_FLAGS) $(TEST_RUNNER_SCRIPT) run
+	$(ENGINE) $(ENGINE_FLAGS) $(TEST_RUNNER_SCRIPT) run
