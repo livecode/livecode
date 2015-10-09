@@ -137,8 +137,7 @@ extern void MCU_additem(char *&dptr, const char *sptr, Boolean first);
 extern void MCU_addline(char *&dptr, const char *sptr, Boolean first);
 extern void MCU_break_string(const MCString &s, MCString *&ptrs, uint2 &nptrs,
 	                             Boolean isunicode = False);
-extern void MCU_sort(MCSortnode *items, uint4 nitems,
-                       Sort_type dir, Sort_type form);
+
 #ifndef _DEBUG_MEMORY
 extern void MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize);
 #endif
