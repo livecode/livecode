@@ -46,11 +46,11 @@ The list of keys above is not exhaustive; more keys and data types may be added 
 Description:
 Use the <fullDragData> to gain access to the system drag-and-drop clipboard. 
 
-If the contents of the drag-and-drop clipboard were placed there by another app, it will have to be cleared before being written to: ``set the fullDragData to empty``.  Attempting to overwrite externally-provided data without clearing it will throw an error.
+If the contents of the drag-and-drop clipboard were placed there by another app, the clipboard will be automatically cleared when written to. If you want to do this explicitly, use ``set the fullDragData to empty``.
+
+The ``text``, ``rtftext``, ``htmltext``, ``styles`` and ``styledtext`` properties are handled specially by LiveCode: adding any one of them will cause the rest to be automatically generated and added.
 
 If you require lower-level access to the drag-and-drop clipboard, see the <rawDragData> <property>.
-
->*Tip:*		It is good practice to clear the drag-and-drop clipboard before use: ``set the fullDragData to empty``
 
 References: dragData (property), rawDragData (property)
 

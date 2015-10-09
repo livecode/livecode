@@ -46,15 +46,15 @@ The keys for the <fullClipboardData> are:
 The list of keys above is not exhaustive; more keys and data types may be added in future.
 
 Description:
->*Note:*	The <fullClipboardData> cannot be accessed outside of a <lock clipboard>/<unlock clipboard> pair. This is to ensure the clipboard contents do not change during access.
-
 Use the <fullClipboardData> to gain access to the system clipboard. 
 
-If the contents of the clipboard were placed there by another app, the clipboard will have to be cleared before being used: ``set the fullClipboardData to empty``.  Attempting to overwrite externally-provided data without clearing the clipboard will throw an error.
+If the contents of the clipboard were placed there by another app, the clipboard will be automatically cleared when written to. If you want to do this explicitly, use ``set the fullClipboardData to empty``.
+
+The ``text``, ``rtftext``, ``htmltext``, ``styles`` and ``styledtext`` properties are handled specially by LiveCode: adding any one of them will cause the rest to be automatically generated and added.
 
 If you require lower-level access to the clipboard, see the <rawClipboardData> <property>.
 
->*Tip:*		It is good practice to clear the clipboard before use: ``set the fullClipboardData to empty``
+>*Tip:*		It is good practice to lock the clipboard before accessing it to prevent data corruption.
 
 References: lock clipboard (command), unlock clipboard (command), clipboard (function), clipboard (property), clipboardData (property), rawClipboardData(property), fullDragData (property)
 
