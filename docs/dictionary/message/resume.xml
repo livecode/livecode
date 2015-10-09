@@ -3,7 +3,7 @@
   <name>resume</name>
   <type>message</type>
   <syntax>
-    <example>resume</example>
+    <example>resume <i>launchData</i></example>
   </syntax>
   <library></library>
   <objects>
@@ -23,24 +23,37 @@
   </references>
   <history>
     <introduced version="2.0">Added.</introduced>
+    <changed version="7.1">Android support added. <i>launchData</i> parameter added</changed>
   </history>
   <platforms>
     <mac/>
     <windows/>
     <linux/>
+    <android/>
   </platforms>
   <classes>
     <desktop/>
+    <mobile/>
     <server/>
     <web/>
   </classes>
   <security>
   </security>
   <summary>Sent to the <glossary tag="current card">current card</glossary> when the <glossary tag="application">application</glossary> is brought to the foreground.</summary>
+  <parameters>
+    <parameter>
+      <name>launchData</name>
+      <description>When the app is resumed to handle a request from another app, this will contain the request data in the form of an array (mobile only).</description>
+    </parameter>
+  </parameters>
   <examples>
     <example>on resume</p><p>  show stack "Toolbar"</p><p>end resume</example>
+    <example>on resume pLoadData</p><p>  if pLaunchData is an array then</p><p>    doLaunchAction pLaunchData</p><p>  end if</p><p>end resume</example>
   </examples>
   <description>
     <p>Handle the <b>resume</b> <keyword tag="message box">message</keyword> if you want to perform some action when the <glossary tag="application">application</glossary> is made active.</p><p/><p><b>Comments:</b></p><p>The <b>resume</b> <keyword tag="message box">message</keyword> is sent whenever the user switches back to the <glossary tag="application">application</glossary> from another program.</p><p/><p>The actual switch is not triggered by the <b>resume</b> <keyword tag="message box">message</keyword>, so <glossary tag="trap">trapping</glossary> the <keyword tag="message box">message</keyword> and not allowing it to <control_st tag="pass">pass</control_st> does not prevent the user from switching into the <glossary tag="application">application</glossary>.</p>
   </description>
+  <references>
+    <function tag="mobileGetLaunchData">mobileGetLaunchData function</function>
+  </references>
 </doc>

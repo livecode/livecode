@@ -124,6 +124,8 @@ public class Engine extends View implements EngineApi
     // MM-2015-06-11: [[ MobileSockets ]] Trust manager and last verification error, used for verifying ssl certificates.
     private X509TrustManager m_trust_manager;
     private String m_last_certificate_verification_error;
+	
+	private boolean m_new_intent;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -213,6 +215,8 @@ public class Engine extends View implements EngineApi
 		//   work-around a general bug in android:
 		// https://code.google.com/p/google-http-java-client/issues/detail?id=116
 		System.setProperty("http.keepAlive", "false");
+		
+		m_new_intent = false;
 	}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2868,7 +2872,19 @@ public class Engine extends View implements EngineApi
 		if (m_video_is_playing)
 			m_video_control . resume();
 
-		doResume();
+		Map<String, Object> t_launch_data = null;
+		if (m_new_intent)
+			t_launch_data = getLaunchData();
+
+		doResume(t_launch_data);
+
+		String t_launch_url = null;
+		if (m_new_intent)
+			t_launch_url = getLaunchUri();
+		if (t_launch_url != null)
+			doLaunchFromUrl(t_launch_url);
+
+		m_new_intent = false;
 
 		s_running = true;
 		if (m_text_editor_visible)
@@ -2876,6 +2892,9 @@ public class Engine extends View implements EngineApi
 		
 		// IM-2013-08-16: [[ Bugfix 11103 ]] dispatch any remote notifications received while paused
 		dispatchNotifications();
+		
+		if (m_wake_on_event)
+			doProcess(false);
 	}
 
 	public void onDestroy()
@@ -2893,15 +2912,8 @@ public class Engine extends View implements EngineApi
     {
 		// IM-2015-10-08: [[ Bug 15417 ]] Update the Intent of the Activity to the new one.
 		((Activity)getContext()).setIntent(intent);
-		
-        String t_launch_url = getLaunchUri(intent);
-        if (t_launch_url != null)
-        {
-            doLaunchFromUrl(t_launch_url);
-            if (m_wake_on_event)
-                doProcess(false);
-        }
-    }
+		m_new_intent = true;
+	}
 
     ////////////////////////////////////////////////////////////////////////////////
 
@@ -3324,7 +3336,7 @@ public class Engine extends View implements EngineApi
 	public static native void doStart();
 	public static native void doStop();
 	public static native void doPause();
-	public static native void doResume();
+	public static native void doResume(Map<String, Object> launch_data);
 	public static native void doLowMemory();
 
 	public static native void doNativeNotify(int callback, int context);
