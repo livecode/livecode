@@ -950,8 +950,10 @@ int MCClipboard::GetLegacyOrdering() const
     AutoLock t_lock(this);
     
     // Grab the first item on the clipboard - for backwards compatibility, only
-    // this first item is examined.
+    // this first item is examined. No item means neither type is present.
     MCAutoRefcounted<const MCRawClipboardItem> t_item = GetItem();
+    if (t_item == NULL)
+        return 0;
     
     // Scan through the list of representations
     for (uindex_t i = 0; i < t_item->GetRepresentationCount(); i++)
@@ -992,13 +994,13 @@ MCParagraph* MCClipboard::CopyAsParagraphs(MCField* p_via_field) const
     if (CopyAsLiveCodeStyledText(&t_pickled_text))
     {
         // Turn the pickled text into a StyledText object
-        MCObject *t_object = MCObject::unpickle(*t_pickled_text, MCactivefield -> getstack());
+        MCObject *t_object = MCObject::unpickle(*t_pickled_text, p_via_field -> getstack());
         if (t_object == NULL)
             return NULL;
         
         // And from that, get the paragraph structures that the field can deal with
         MCParagraph *t_paragraphs;
-        t_paragraphs = (static_cast<MCStyledText*>(t_object))->grabparagraphs(MCactivefield);
+        t_paragraphs = (static_cast<MCStyledText*>(t_object))->grabparagraphs(p_via_field);
         
         delete t_object;
         return t_paragraphs;
