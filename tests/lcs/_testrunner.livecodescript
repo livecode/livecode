@@ -365,6 +365,50 @@ private command runPrintSummary pAnalysis
    write tSummaryString to stdout
 end runPrintSummary
 
+-- Get all the metadata keys and values in the stack file
+private function runGetTestMetadata pFilename
+   local tScript
+   
+   -- Get the contents of the file
+   open file pFilename for "UTF-8" text read
+   if the result is not empty then
+      throw the result
+   end if
+   
+   read from file pFilename until end
+   put it into tScript
+   
+   close file pFilename
+   
+   -- Scan the file for metadata - 
+   -- Metadata is given in the form ### <key> : <value>
+   
+   local tKey, tValue, tMetadata
+   repeat for each line tLine in tScript
+      -- save some time by only looking at commented out lines
+      if token 1 of tLine is not empty then
+         next repeat
+      end if
+      
+      -- remove whitespace
+      put word 1 to -1 of tLine into tLine
+      
+      if not (tLine begins with "###") then
+         next repeat
+      end if
+      
+      -- remove hashes
+      put char 4 to -1 of tLine into tLine
+      
+      set the itemdelimiter to ":"
+      put word 1 to -1 of (item 1 of tLine) into tKey
+      put word 1 to -1 of (item 2 of tLine) into tValue
+      
+      put tValue into tMetadata[tKey]
+   end repeat
+   
+   return tMetadata
+end runGetTestMetadata
 ----------------------------------------------------------------
 -- TAP support
 ----------------------------------------------------------------
