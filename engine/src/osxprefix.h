@@ -23,7 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 inline char *pStrcpy(unsigned char *dest, const unsigned char *src)
 {
-	BlockMove(src, dest, (long)*src + 1);
+    memmove(dest, src, size_t(src) + 1);
 	return (char*)dest;
 }
 
