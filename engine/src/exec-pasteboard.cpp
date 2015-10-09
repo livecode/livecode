@@ -270,13 +270,32 @@ MCTransferType MCPasteboardFindTransferTypeForLegacyClipboard(const MCClipboard*
     if (p_clipboard->HasFileList())
         return TRANSFER_TYPE_FILES;
     
-    // If we have both an image and text on the clipboard, whichever one comes
-    // first determines what we resolve the clipboard type to be.
-    int t_order = p_clipboard->GetLegacyOrdering();
-    if (t_order > 0)
-        return TRANSFER_TYPE_IMAGE;
-    if (t_order < 0)
-        return TRANSFER_TYPE_TEXT;
+    // In theory, the old clipboard code checked for whether image or text data
+    // came first in the list of clipboard formats and chose the format that
+    // way. However, there was a bug in the code that prevented this from
+    // working properly, so text was always chosen in preference to images.
+    //
+    // The correct code is provided here in case we decide that enough time has
+    // passed that the behaviour can now be corrected but, until then, it is
+    // disabled and the "text over images" method is used instead.
+    //
+    if (false)
+    {
+        // If we have both an image and text on the clipboard, whichever one comes
+        // first determines what we resolve the clipboard type to be.
+        int t_order = p_clipboard->GetLegacyOrdering();
+        if (t_order > 0)
+            return TRANSFER_TYPE_IMAGE;
+        if (t_order < 0)
+            return TRANSFER_TYPE_TEXT;
+    }
+    else
+    {
+        if (p_clipboard->HasTextOrCompatible())
+            return TRANSFER_TYPE_TEXT;
+        if (p_clipboard->HasImage())
+            return TRANSFER_TYPE_IMAGE;
+    }
     
     // Does the clipboard contain private data?
     if (p_clipboard->HasPrivateData())
