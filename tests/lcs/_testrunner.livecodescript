@@ -181,9 +181,28 @@ private command runAllScripts pInfo
    return tAnalysis
 end runAllScripts
 
+-- Output a skipped line in the results for eachcommand in the given test file
+private command runTestSkipAll pInfo, pScriptFile, pReason
+   local tSkipTemplate, tAnalysis
+   put "ok - [[tCommand]] # SKIP" && pReason into tSkipTemplate
+
+   repeat for each element tCommand in runGetTestCommandNames(pScriptFile)
+      runTestProcessOutput pScriptFile, tCommand, merge(tSkipTemplate)
+      put tapCombine(tAnalysis, the result) into tAnalysis
+   end repeat
+end runTestSkipAll
+
 -- Run the tests found in one specific script file
 private command runTestScript pInfo, pScriptFile
-   local tCommand, tAnalysis
+   local tCommand, tAnalysis, tMetadata
+   put runGetTestMetadata(pScriptFile) into tMetadata
+   
+   -- Don't run tests that require UI for now
+   if tMetadata["ui"] is true then
+      runTestSkipAll pInfo, pScriptFile, "test requires UI mode"
+      return the result
+   end if
+   
    repeat for each element tCommand in runGetTestCommandNames(pScriptFile)
       runTestCommand pInfo, pScriptFile, tCommand
       put tapCombine(tAnalysis, the result) into tAnalysis
