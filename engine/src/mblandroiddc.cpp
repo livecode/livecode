@@ -1808,7 +1808,7 @@ extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doRestart(JNIEn
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doStart(JNIEnv *env, jobject object) __attribute__((visibility("default")));
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doStop(JNIEnv *env, jobject object) __attribute__((visibility("default")));
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doPause(JNIEnv *env, jobject object) __attribute__((visibility("default")));
-extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doResume(JNIEnv *env, jobject object) __attribute__((visibility("default")));
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doResume(JNIEnv *env, jobject object, jobject launch_data) __attribute__((visibility("default")));
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doLowMemory(JNIEnv *env, jobject object) __attribute__((visibility("default")));
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doProcess(JNIEnv *env, jobject object, bool timedout) __attribute__((visibility("default")));
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doWait(JNIEnv *env, jobject object, double time, bool dispatch, bool anyevent) __attribute__((visibility("default")));
@@ -1961,9 +1961,20 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doPause(JNIEnv *env, jobje
 	MCLog("doPause called", 0);
 }
 
-JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doResume(JNIEnv *env, jobject object)
+bool MCNotificationPostCustom(MCNameRef p_name, uint32_t p_param_count, ...);
+JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doResume(JNIEnv *env, jobject object, jobject launch_data)
 {
-	MCLog("doResume called", 0);
+	MCLog("doResume called: %p", launch_data);
+	
+	if (launch_data == nil)
+	{
+		/* UNCHECKED */ MCNotificationPostCustom(MCM_resume, 0);
+		return;
+	}
+	
+	MCAutoArrayRef t_array;
+	if (MCJavaMapToArrayRef(env, launch_data, &t_array))
+		/* UNCHECKED */ MCNotificationPostCustom(MCM_resume, 1, *t_array);
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doLowMemory(JNIEnv *env, jobject object)
@@ -2229,6 +2240,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doLaunchFromUrl(JNIEnv *en
     if (MCJavaStringToStringRef(env, url, &t_url_str))
         MCNotificationPostUrlWakeUp(*t_url_str);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static jmethodID s_get_asset_info_method = 0;
