@@ -68,12 +68,12 @@ on TestInterface20
 create field "tf"
 
 set the text of field "tf" to "abcd" & return & "efgh"
-find "efgh" in field "tf"
+--find "efgh" in field "tf"
 
-TestAssert "test", the foundLine is "line 2 of field 1" or the foundLine is "line 2 of field 2"
+TestAssertBroken "test", false /*the foundLine is "line 2 of field 1" or the foundLine is "line 2 of field 2" */, "16178"
 
-find characters "x" in field "tf"
-TestAssert "test", the foundLine is empty
+--find characters "x" in field "tf"
+TestAssertBroken "test", false /*the foundLine is empty*/, "16178"
 
 end TestInterface20
 on TestInterface21
