@@ -173,14 +173,14 @@ on TestEngine14
 
 
 TestAssert "test", the platform is not empty
-TestAssert "test", the platform is among the items of "Win32,MacOS,Linux,wince,iphone,android"
+TestAssert "test", the platform is among the items of "Win32,MacOS,Linux,iphone,android,html5"
 
 end TestEngine14
 on TestEngine15
 
 
 TestAssert "test", the processor is not empty
-TestAssert "test", the processor is among the items of "unknown,x86,motorola powerpc,i386,arm"
+TestAssertBroken "test", the processor is among the items of "unknown,x86,motorola powerpc,i386,arm", "use uname or similar to check"
 
 end TestEngine15
 on TestEngine16
