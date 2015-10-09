@@ -191,6 +191,27 @@ private command runTestScript pInfo, pScriptFile
    return tAnalysis
 end runTestScript
 
+private command runTestProcessOutput pScriptfile, pCommand, pOutput
+   -- Create test log
+   local tTestLog
+   put "###" && runGetPrettyTestName(pScriptFile) && pCommand \
+         & return & return into tTestLog
+   put pOutput & return after tTestLog
+   
+   -- Analyse the results and print a summary line
+   local tTapResults, tTotal, tPassed
+   put tapAnalyse(tTestLog) into tTapResults
+   
+   put tTapResults["xpass"] + tTapResults["pass"] + tTapResults["skip"] into tPassed
+   put tapGetTestCount(tTapResults) into tTotal
+   
+   write tapGetWorstResult(tTapResults) & ":" && \
+         runGetPrettyTestName(pScriptfile) & ":" && \
+         pCommand && "[" & tPassed & "/" & tTotal & "]" & return to stdout
+   
+   return tTapResults
+end runTestProcessOutput
+
 -- Run a specific named test command tCommand in a script file
 -- tScriptFile
 private command runTestCommand pInfo, pScriptFile, pCommand
@@ -216,24 +237,8 @@ private command runTestCommand pInfo, pScriptFile, pCommand
             tTestExitStatus & return after tTestOutput
    end if
    
-   -- Create test log
-   local tTestLog
-   put "###" && runGetPrettyTestName(pScriptFile) && pCommand \
-         & return & return into tTestLog
-   put tTestOutput & return after tTestLog
-   
-   -- Analyse the results and print a summary line
-   local tTapResults, tTotal, tPassed
-   put tapAnalyse(tTestLog) into tTapResults
-   
-   put tTapResults["xpass"] + tTapResults["pass"] + tTapResults["skip"] into tPassed
-   put tapGetTestCount(tTapResults) into tTotal
-   
-   write tapGetWorstResult(tTapResults) & ":" && \
-         runGetPrettyTestName(pScriptfile) & ":" && \
-         pCommand && "[" & tPassed & "/" & tTotal & "]" & return to stdout
-   
-   return tTapResults
+   runTestProcessOutput pScriptFile, pCommand, tTestOutput
+   return the result
 end runTestCommand
 
 -- Get all livecode script files beneath the CWD, apart from
