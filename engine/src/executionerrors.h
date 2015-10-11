@@ -2665,6 +2665,9 @@ enum Exec_errors
     
     // {EE-0869} Import: not an object array
     EE_IMPORT_NOTANOBJECTARRAY,
+    
+    // {EE-0870} documentFilename: bad filename
+    EE_DOCUMENTFILENAME_BADFILENAME,
 };
 
 extern const char *MCexecutionerrors;

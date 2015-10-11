@@ -215,6 +215,10 @@ void MCStack::realize(void)
         
         // MW-2014-06-11: [[ Bug 12467 ]] Make sure we reset the cursor property of the window.
         resetcursor(True);
+        
+        // MERG-2015-10-11: [[ DocumentFilename ]] update the window with the document filename property
+        if (m_document_filename != nil)
+            MCPlatformSetWindowProperty(t_window, kMCPlatformWindowPropertyDocumentFilename, kMCPlatformPropertyTypeMCString, &m_document_filename);
 	}
 	
 	start_externals();

@@ -188,6 +188,9 @@ protected:
         
         // MERG-2014-06-02: [[ IgnoreMouseEvents ]] Changed flag for ignore mouse events.
         bool ignore_mouse_events_changed : 1;
+        
+        // MERG-2015-10-11: [[ DocumentFilename ]] Changed flag for docuent filename
+        bool document_filename_changed : 1;
 	} m_changes;
 	MCPlatformWindowStyle m_style;
 	MCStringRef m_title;
@@ -221,6 +224,9 @@ protected:
 		bool m_use_text_input : 1;
         bool m_is_realized : 1;
 	};
+    
+    // MERG-2015-10-11: [[ DocumentFilename ]] documentFilename property
+    MCStringRef m_document_filename;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

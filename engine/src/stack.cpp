@@ -198,6 +198,9 @@ MCPropertyInfo MCStack::kProperties[] =
     
     // MERG-2015-08-31: [[ ScriptOnly ]] Add stack scriptOnly property
     DEFINE_RW_OBJ_PROPERTY(P_SCRIPT_ONLY, Bool, MCStack, ScriptOnly)
+    
+    // MERG-2015-10-11: [[ DocumentFilename ]] Add stack documentFilename property
+    DEFINE_RW_OBJ_PROPERTY(P_DOCUMENT_FILENAME, String, MCStack, DocumentFilename)
 };
 
 MCObjectPropertyTable MCStack::kPropertyTable =
@@ -291,6 +294,9 @@ MCStack::MCStack()
     
 	// IM-2014-05-27: [[ Bug 12321 ]] No fonts to purge yet
 	m_purge_fonts = false;
+    
+    // MERG-2015-10-11: [[ DocumentFilename ]] The filename the stack represnts
+    m_document_filename = nil;
 
 	m_view_need_redraw = false;
 	m_view_need_resize = false;
@@ -499,6 +505,9 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	m_view_need_resize = sref.m_view_need_resize;
 
     m_attachments = nil;
+    
+    // MERG-2015-10-100: [[ DocumentFilename ]] No document filename to begin with
+    m_document_filename = nil;
     
 	view_copy(sref);
 }
