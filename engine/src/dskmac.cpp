@@ -8237,11 +8237,11 @@ static OSStatus getDesc(short locKind, MCStringRef zone, MCStringRef machine,
 	psn.highLongOfPSN = 0;
 	psn.lowLongOfPSN = kNoProcess; //start at the beginning to do the search
 	ProcessInfoRec pInfoRec;
-	Str32 pname;
+	Str255 pname;
 	/* need to specify values for the processInfoLength,processName, and
 	 * processAppSpec fields of the process information record to get
 	 * info returned in those fields. Since we only want the application
-	 * name info returned, we allocate a string of 32 length as buffer
+	 * name info returned, we allocate a string of 255 length as buffer
 	 * to store the process name */
 	pInfoRec.processInfoLength = sizeof(ProcessInfoRec);
 	pInfoRec.processName = pname;
