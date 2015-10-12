@@ -41,6 +41,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblandroidutil.h"
 #include "mblandroidjava.h"
 
+#include "mblnotification.h"
+
 #include "graphics.h"
 #include "resolution.h"
 
@@ -2220,8 +2222,6 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doMediaCanceled(JNIEnv *en
 	MCAndroidMediaCanceled();
 }
 
-void MCNotificationPostUrlWakeUp(MCStringRef t_url);
-
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doLaunchFromUrl(JNIEnv *env, jobject object, jstring url) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doLaunchFromUrl(JNIEnv *env, jobject object, jstring url)
 {
@@ -2229,6 +2229,16 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doLaunchFromUrl(JNIEnv *en
     if (MCJavaStringToStringRef(env, url, &t_url_str))
         MCNotificationPostUrlWakeUp(*t_url_str);
 }
+
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doLaunchDataChanged(JNIEnv *env, jobject object, jobject launch_data) __attribute__((visibility("default")));
+JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doLaunchDataChanged(JNIEnv *env, jobject object, jobject launch_data)
+{
+	
+	MCAutoArrayRef t_array;
+	if (MCJavaMapToArrayRef(env, launch_data, &t_array))
+		/* UNCHECKED */ MCNotificationPostLaunchDataChanged(*t_array);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static jmethodID s_get_asset_info_method = 0;
