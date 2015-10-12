@@ -198,6 +198,8 @@ protected:
 	float m_opacity;
 	MCRectangle m_content;
 	MCCursorRef m_cursor;
+    // MERG-2015-10-11: [[ DocumentFilename ]] documentFilename property
+    MCStringRef m_document_filename;
 	struct
 	{
 		bool m_has_title_widget : 1;
@@ -224,9 +226,6 @@ protected:
 		bool m_use_text_input : 1;
         bool m_is_realized : 1;
 	};
-    
-    // MERG-2015-10-11: [[ DocumentFilename ]] documentFilename property
-    MCStringRef m_document_filename;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
