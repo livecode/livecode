@@ -113,6 +113,10 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 	if (entry != NULL)
 	{
 		drawcombo(dc, shadowrect);
+		// PM-2015-10-12: [[ Bug 16193 ]] Make sure the label stays always within the combobox 
+		MCRectangle trect = entry->getrect();;
+		trect.y = shadowrect.y + shadowrect.height / 2 - trect.height / 2;
+		entry->setrect(trect);
 		entry->draw(dc, dirty, false, false);
 	}
 	else
