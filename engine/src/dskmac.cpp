@@ -126,7 +126,7 @@ typedef struct triplets triplets;
 
 typedef struct
 {
-	char compname[255];
+    MCStringRef compname;
 	OSType compsubtype;
 	ComponentInstance compinstance;
 }
@@ -4608,8 +4608,11 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         DisposeUnicodeToTextInfo(&utf8totextinfo);
         
         for (i = 0; i< osancomponents; i++)
+        {
+            MCValueRelease(osacomponents[i].compname);
             CloseComponent(osacomponents[i].compinstance);
-        delete osacomponents;
+        }
+        delete[] osacomponents;
 #endif
         // End
     }
@@ -8091,7 +8094,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         getosacomponents();
         for (uindex_t i = 0; i < osancomponents; i++)
-            if (!MCListAppendCString(*t_list, osacomponents[i].compname))
+            if (!MCListAppend(*t_list, osacomponents[i].compname))
                 return false;
         
         return MCListCopy(*t_list, r_list);
@@ -8573,7 +8576,7 @@ static void getosacomponents()
 	compdesc.componentManufacturer = 0L;
 	compdesc.componentFlags = kOSASupportsCompiling; // compile and execute
 	compdesc.componentFlagsMask = kOSASupportsCompiling;
-	uint2 compnumber = CountComponents(&compdesc);
+	long compnumber = CountComponents(&compdesc);
 	if (compnumber - 1) //don't include the generic script comp
 		osacomponents = new OSAcomponent[compnumber - 1];
 	while ((tcomponent = FindNextComponent(tcomponent,&compdesc)) != NULL)
@@ -8586,10 +8589,12 @@ static void getosacomponents()
 			break;
 		//self check if return error
 		HLock(compname);
-		p2cstr((unsigned char *)*compname);
-		MCString s = *compname;
-		MCU_lower(osacomponents[osancomponents].compname, s);
-		osacomponents[osancomponents].compname[s.getlength()] = '\0';
+        MCAutoStringRef t_compname;
+        /* UNCHECKED */ MCStringCreateWithPascalString((unsigned char*)*compname, &t_compname);
+        /* UNCHECKED */ t_compname.MakeMutable();
+        /* UNCHECKED */ MCStringLowercase(*t_compname, kMCBasicLocale);
+        /* UNCHECKED */ t_compname.MakeImmutable();
+        osacomponents[osancomponents].compname = MCValueRetain(*t_compname);
 		osacomponents[osancomponents].compsubtype = founddesc.componentSubType;
 		osacomponents[osancomponents].compinstance = NULL;
 		HUnlock(compname);
