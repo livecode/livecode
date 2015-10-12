@@ -1762,16 +1762,36 @@ void MCPasteboardSetRawClipboardOrDragTextData(MCExecContext& ctxt, MCClipboard*
         return;
     }
     
-    // The only supported value here is empty as it is used to clear the
-    // contents of the clipboard to prepare it for writing.
-    if (!MCValueIsEmpty(p_value))
+    // Ensure that the incoming value is an array
+    MCAutoArrayRef t_array;
+    if (!ctxt.ConvertToArray(p_value, &t_array))
     {
         ctxt.LegacyThrow(EE_CLIPBOARD_BADREP);
         return;
     }
     
-    // Clear the clipboard
-    p_clipboard->GetRawClipboard()->Clear();
+    // Clear the clipboard. Even if adding one of the items in the array fails,
+    // we will guarantee that the old clipboard contents have been removed.
+    p_clipboard->Clear();
+    
+    // Place each item in the array onto the clipboard
+    if (!MCValueIsEmpty(*t_array))
+    {
+        uintptr_t t_iterator = 0;
+        MCNameRef t_key;
+        MCValueRef t_value;
+        while (MCArrayIterate(*t_array, t_iterator, t_key, t_value))
+        {
+            // Attempt to add this item to the clipboard
+            MCPasteboardSetRawClipboardOrDragData(ctxt, t_key, p_clipboard, t_value);
+            if (ctxt.HasError())
+                break;
+        }
+    }
+    
+    // If an error occurred while writing the clipboard, clear the partial write
+    if (ctxt.HasError())
+        p_clipboard->Clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1804,17 +1824,41 @@ void MCPasteboardGetFullClipboardOrDragTextData(MCExecContext& ctxt, const MCCli
 
 void MCPasteboardSetFullClipboardOrDragTextData(MCExecContext& ctxt, MCClipboard* p_clipboard, MCValueRef p_value)
 {
-    // The only supported value here is empty as it is used to clear the
-    // contents of the clipboard to prepare it for writing.
-    if (!MCValueIsEmpty(p_value))
+    // Ensure that the incoming value is an array
+    MCAutoArrayRef t_array;
+    if (!ctxt.ConvertToArray(p_value, &t_array))
     {
         ctxt.LegacyThrow(EE_CLIPBOARD_BADREP);
         return;
     }
     
-    // Clear the clipboard
+    // Lock the clipboard implicitly
     p_clipboard->Lock();
+    
+    // Clear the clipboard. Even if adding one of the items in the array fails,
+    // we will guarantee that the old clipboard contents have been removed.
     p_clipboard->Clear();
+    
+    // Place each item in the array onto the clipboard
+    if (!MCValueIsEmpty(*t_array))
+    {
+        uintptr_t t_iterator = 0;
+        MCNameRef t_key;
+        MCValueRef t_value;
+        while (MCArrayIterate(*t_array, t_iterator, t_key, t_value))
+        {
+            // Attempt to add this item to the clipboard
+            MCPasteboardSetFullClipboardOrDragData(ctxt, t_key, p_clipboard, t_value);
+            if (ctxt.HasError())
+                break;
+        }
+    }
+    
+    // If an error occurred while writing the clipboard, clear the partial write
+    if (ctxt.HasError())
+        p_clipboard->Clear();
+    
+    // Unlock the clipboard to confirm the changes
     p_clipboard->Unlock();
 }
 
