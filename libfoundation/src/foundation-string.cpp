@@ -5812,6 +5812,15 @@ MCStringCreateWithSysString(const char *p_sys_string,
 }
 #endif
 
+#ifdef __MAC__
+bool
+MCStringCreateWithPascalString(const unsigned char* p_pascal_string, MCStringRef& r_string)
+{
+    // The first byte of the string gives the length
+    return MCStringCreateWithBytes(p_pascal_string+1, *p_pascal_string, kMCStringEncodingMacRoman, false, r_string);
+}
+#endif
+
 static bool
 __MCStringCreateWithStrings(MCStringRef& r_string, bool p_has_separator, unichar_t p_separator, MCStringRef p_one, MCStringRef p_two)
 {
