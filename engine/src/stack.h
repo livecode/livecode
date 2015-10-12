@@ -1261,6 +1261,9 @@ public:
 private:
 	void loadexternals(void);
 	void unloadexternals(void);
+    
+    // MERG-2015-10-12: [[ DocumentFilename ]] documentFilename property
+    void updatedocumentfilename(void);
 
 	void mode_load(void);
 

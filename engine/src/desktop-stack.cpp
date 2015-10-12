@@ -337,6 +337,13 @@ void MCStack::view_platform_updatewindowwithcallback(MCRegionRef p_region, MCSta
 	s_update_context = nil;
 }
 
+// MERG-2015-10-12: [[ DocumentFilename ]] Stub for documentFilename.
+void MCStack::updatedocumentfilename(void)
+{
+    if (window != nil)
+        MCPlatformSetWindowProperty(window, kMCPlatformWindowPropertyDocumentFilename, kMCPlatformPropertyTypeMCString, &m_document_filename);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // MW-2014-06-11: [[ Bug 12495 ]] Update windowshape by setting window property.

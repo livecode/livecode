@@ -2205,8 +2205,7 @@ void MCStack::SetDocumentFilename(MCExecContext &ctxt, MCStringRef p_document_fi
     
     MCValueAssign(m_document_filename, t_resolved_filename);
     
-    if (window != nil)
-        MCPlatformSetWindowProperty(window, kMCPlatformWindowPropertyDocumentFilename, kMCPlatformPropertyTypeMCString, &m_document_filename);
+    updatedocumentfilename();
 
 }
 
