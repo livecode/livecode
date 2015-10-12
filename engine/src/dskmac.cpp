@@ -8210,11 +8210,7 @@ static OSStatus getDescFromAddress(MCStringRef address, AEDesc *retDesc)
     
 	if (t_index == 0)
 	{ //address contains application name only. Form # 3
-		char *appname;
-        /* UNCHECKED */ MCStringConvertToCString(address, appname);
-		c2pstr(appname);  //convert c string to pascal string
-		errno = getDesc(0, NULL, NULL, (unsigned char*)appname, retDesc);
-		delete appname;
+		errno = getDesc(0, NULL, NULL, address, retDesc);
 	}
     
 	/* CARBON doesn't support the seding apple events between systmes. Therefore no
@@ -8251,11 +8247,16 @@ static OSStatus getDesc(short locKind, MCStringRef zone, MCStringRef machine,
 	while (GetNextProcess(&psn) == noErr)
 	{
 		if (GetProcessInformation(&psn, &pInfoRec) == noErr)
-			if (EqualString(pInfoRec.processName, app, False, True))
-			{
-				processFound = True;
-				break;
-			}
+        {
+            // Convert the process name (as a Pascal string) into a StringRef
+            MCAutoStringRef t_process_name;
+            /* UNCHECKED */ MCStringCreateWithBytes(pInfoRec.processName+1, *pInfoRec.processName, kMCStringEncodingMacRoman, false, &t_process_name);
+            if (MCStringIsEqualTo(*t_process_name, app, kMCStringOptionCompareCaseless))
+            {
+                processFound = True;
+                break;
+            }
+        }
 	}
 	if (processFound)
 		return AECreateDesc(typeProcessSerialNumber, (Ptr)&pInfoRec.processNumber,
