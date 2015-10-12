@@ -147,15 +147,15 @@ static const AppleEvent *aePtr; //current apple event for mcs_request_ae()
  * utility functions used by this module only		                   *
  ***************************************************************************/
 
-static OSErr getDescFromAddress(MCStringRef address, AEDesc *retDesc);
-static OSErr getDesc(short locKind, StringPtr zone, StringPtr machine, StringPtr app, AEDesc *retDesc);
-static OSErr getAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef &r_result);
-static OSErr getAEParams(const AppleEvent *ae, AEKeyword key, MCStringRef &r_result);
-static OSErr getAddressFromDesc(AEAddressDesc targetDesc, char *address);
+static OSStatus getDescFromAddress(MCStringRef address, AEDesc *retDesc);
+static OSStatus getDesc(short locKind, MCStringRef zone, MCStringRef machine, MCStringRef app, AEDesc *retDesc);
+static OSStatus getAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef &r_result);
+static OSStatus getAEParams(const AppleEvent *ae, AEKeyword key, MCStringRef &r_result);
+static OSStatus getAddressFromDesc(AEAddressDesc targetDesc, char *address);
 
 static void getosacomponents();
-static OSErr osacompile(MCStringRef s, ComponentInstance compinstance, OSAID &id);
-static OSErr osaexecute(MCStringRef& r_string,ComponentInstance compinstance, OSAID id);
+static OSStatus osacompile(MCStringRef s, ComponentInstance compinstance, OSAID &id);
+static OSStatus osaexecute(MCStringRef& r_string,ComponentInstance compinstance, OSAID id);
 
 // SN-2014-10-07: [[ Bug 13587 ]] Update to return an MCList
 static bool fetch_ae_as_fsref_list(MCListRef &r_list);
@@ -8190,7 +8190,7 @@ OSErr MCS_fsref_to_fsspec(const FSRef *p_fsref, FSSpec *r_fsspec)
 // * Utility functions used by this module only
 // **************************************************************************/
 
-static OSErr getDescFromAddress(MCStringRef address, AEDesc *retDesc)
+static OSStatus getDescFromAddress(MCStringRef address, AEDesc *retDesc)
 {
 	/* return an address descriptor based on the target address passed in
      * * There are 3 possible forms of target string: *
@@ -8220,8 +8220,8 @@ static OSErr getDescFromAddress(MCStringRef address, AEDesc *retDesc)
 }
 
 // MW-2006-08-05: Vetted for Endian issues
-static OSErr getDesc(short locKind, StringPtr zone, StringPtr machine,
-                     StringPtr app, AEDesc *retDesc)
+static OSStatus getDesc(short locKind, MCStringRef zone, MCStringRef machine,
+                     MCStringRef app, AEDesc *retDesc)
 {
     
 	/* Carbon doesn't support the seding apple events between different
@@ -8261,7 +8261,7 @@ static OSErr getDesc(short locKind, StringPtr zone, StringPtr machine,
 }
 
 // MW-2006-08-05: Vetted for Endian issues
-static OSErr getAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef &r_result)
+static OSStatus getAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef &r_result)
 {
 	DescType rType;
 	Size rSize;
@@ -8365,7 +8365,7 @@ static OSErr getAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef &r
 }
 
 // MW-2006-08-05: Vetted for Endian issues
-static OSErr getAEParams(const AppleEvent *ae, AEKeyword key, MCStringRef &r_result)
+static OSStatus getAEParams(const AppleEvent *ae, AEKeyword key, MCStringRef &r_result)
 {
 	DescType rType;
 	Size rSize;
@@ -8467,7 +8467,7 @@ static OSErr getAEParams(const AppleEvent *ae, AEKeyword key, MCStringRef &r_res
 	return errno;
 }
 
-static OSErr getAddressFromDesc(AEAddressDesc targetDesc, char *address)
+static OSStatus getAddressFromDesc(AEAddressDesc targetDesc, char *address)
 {/* This function returns the zone, machine, and application name for the
   indicated target descriptor.  */
     
@@ -8477,7 +8477,7 @@ static OSErr getAddressFromDesc(AEAddressDesc targetDesc, char *address)
     
 }
 
-static OSErr osacompile(MCStringRef s, ComponentInstance compinstance,
+static OSStatus osacompile(MCStringRef s, ComponentInstance compinstance,
                         OSAID &scriptid)
 {
 	AEDesc aedscript;
@@ -8488,16 +8488,16 @@ static OSErr osacompile(MCStringRef s, ComponentInstance compinstance,
     MCAutoStringRefAsUTF8String t_temp;
     /* UNCHECKED */ t_temp.Lock(*t_mutable_copy);
     AECreateDesc(typeUTF8Text, *t_temp, t_temp.Size(), &aedscript);
-	OSErr err = OSACompile(compinstance, &aedscript, kOSAModeNull, &scriptid);
+	OSStatus err = OSACompile(compinstance, &aedscript, kOSAModeNull, &scriptid);
 	AEDisposeDesc(&aedscript);
 	return err;
 }
 
-static OSErr osaexecute(MCStringRef& r_string, ComponentInstance compinstance,
+static OSStatus osaexecute(MCStringRef& r_string, ComponentInstance compinstance,
                         OSAID scriptid)
 {
 	OSAID scriptresult;
-	OSErr err;
+	OSStatus err;
 	err = OSAExecute(compinstance, scriptid, kOSANullScript,
 	                 kOSAModeNull, &scriptresult);
 	if (err != noErr)
