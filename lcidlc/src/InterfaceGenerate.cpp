@@ -1186,7 +1186,7 @@ static void InterfaceGenerateVariant(InterfaceRef self, CoderRef p_coder, Handle
 							
 		bool t_has_param;
 		t_has_param = false;
-		if (t_variant -> return_type_indirect)
+		if (t_return_type_mapper != nil && t_variant -> return_type_indirect)
 		{
 			CoderWrite(p_coder, "%s%s", t_return_type_mapper -> GetTypedef(kParameterTypeOut), InterfaceGetReferenceSuffix(self));
 			t_has_param = true;
