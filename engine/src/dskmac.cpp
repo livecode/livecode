@@ -137,11 +137,7 @@ static uint2 osancomponents = 0;
 #define MINIMUM_FAKE_PID (1 << 29)
 
 static int4 curpid = MINIMUM_FAKE_PID;
-//static char *replymessage;       //used in DoSpecial() & other routines
-//static uint4 replylength;
 static AEKeyword replykeyword;   // Use in DoSpecial & other routines
-//static char *AEanswerData;// used by DoAEAnswer() & MCS_send()
-//static char *AEanswerErr; //the reply error from an AE send by MC.
 static MCStringRef AEReplyMessage;
 static MCStringRef AEAnswerData;
 static MCStringRef AEAnswerErr;
