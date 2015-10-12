@@ -255,11 +255,31 @@ end storeExtensionByKind
 -- "the preferred form for modification".  I.e. with all of its source code
 -- and documentation.  Otherwise, just include compiled extension + resources
 private function getExtensionFilesByKind pInstallFolder
-   if revLicenseType() is "community" then
-      return scanFolder(pInstallFolder)
+   local tExtensionModule, tFiles, tFileCount, tResourceFiles, tFilePath
+   
+   if isCommercialDeployment() then
+      put empty into tFiles
+      put 0 into tFileCount
+      
+      -- All resource files
+      put scanFolder(pInstallFolder & slash & "resources") into tResourceFiles
+      -- Make resource file paths relative to module install directory
+      repeat for each element tFilePath in tResourceFiles
+         add 1 to tFileCount
+         put "resources" & slash & tFilePath into tFiles[tFileCount]
+      end repeat
+      
+      -- Compiled module file
+      add 1 to tFileCount
+      put pInstallFolder & slash & "module.lcm" into tFiles[tFileCount]
+      
    else
-      throw "commercial standalones are not supported"
+      -- Include *every* file in the extension
+      put scanFolder(pInstallFolder) into tFiles
+      
    end if
+   
+   return tFiles
 end getExtensionFilesByKind
 
 ----------------------------------------------------------------
