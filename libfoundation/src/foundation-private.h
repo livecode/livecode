@@ -673,7 +673,7 @@ unichar_t MCUnicodeCharMapFromNative(char_t nchar);
 // INTERNAL MCVALUE TYPE ASSERTIONS
 //
 
-inline bool
+inline void
 __MCAssertResolvedTypeInfo(MCTypeInfoRef x, bool (*p)(MCTypeInfoRef))
 {
 	MCResolvedTypeInfo r;
