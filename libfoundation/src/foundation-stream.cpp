@@ -145,7 +145,7 @@ static MCStreamCallbacks kMCMemoryInputStreamCallbacks =
 MC_DLLEXPORT_DEF
 bool MCMemoryInputStreamCreate(const void *p_block, size_t p_size, MCStreamRef& r_stream)
 {
-	MCAssert(nil != p_block);
+	MCAssert(nil != p_block || 0 == p_size);
 
 	MCStreamRef t_stream;
 	if (!MCStreamCreate(&kMCMemoryInputStreamCallbacks, sizeof(__MCMemoryInputStream), t_stream))
