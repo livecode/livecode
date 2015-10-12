@@ -67,7 +67,7 @@ MCPlatformWindow::MCPlatformWindow(void)
 	m_is_opaque = true;
     
     // MERG-2015-10-11: [[ DocumentFilename ]] documentFilename property
-    m_document_filename = nil;
+    m_document_filename = MCValueRetain(kMCEmptyString);
 }
 
 MCPlatformWindow::~MCPlatformWindow(void)

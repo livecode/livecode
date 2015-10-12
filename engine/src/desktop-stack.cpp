@@ -217,8 +217,7 @@ void MCStack::realize(void)
         resetcursor(True);
         
         // MERG-2015-10-11: [[ DocumentFilename ]] update the window with the document filename property
-        if (m_document_filename != nil)
-            MCPlatformSetWindowProperty(t_window, kMCPlatformWindowPropertyDocumentFilename, kMCPlatformPropertyTypeMCString, &m_document_filename);
+        MCPlatformSetWindowProperty(t_window, kMCPlatformWindowPropertyDocumentFilename, kMCPlatformPropertyTypeMCString, &m_document_filename);
 	}
 	
 	start_externals();

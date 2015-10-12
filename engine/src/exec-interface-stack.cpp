@@ -2187,9 +2187,6 @@ void MCStack::SetScriptOnly(MCExecContext& ctxt, bool p_script_only)
 // MERG-2015-10-11: [[ DocumentFilename ]] Add stack documentFilename property
 void MCStack::GetDocumentFilename(MCExecContext &ctxt, MCStringRef& r_document_filename)
 {
-    if (m_document_filename == nil)
-        return;
-    
     r_document_filename = MCValueRetain(m_document_filename);
 }
 
@@ -2197,7 +2194,11 @@ void MCStack::SetDocumentFilename(MCExecContext &ctxt, MCStringRef p_document_fi
 {
     MCStringRef t_resolved_filename;
     
-    if (!MCS_resolvepath(p_document_filename, t_resolved_filename))
+    if (MCStringIsEmpty(p_document_filename))
+    {
+        t_resolved_filename = p_document_filename;
+    }
+    else if (!MCS_resolvepath(p_document_filename, t_resolved_filename))
     {
         ctxt . LegacyThrow(EE_DOCUMENTFILENAME_BADFILENAME);
         return;

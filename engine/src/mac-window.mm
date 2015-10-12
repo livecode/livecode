@@ -1898,8 +1898,7 @@ void MCMacPlatformWindow::DoRealize(void)
     [m_window_handle setHidesOnDeactivate: m_hides_on_suspend];
     
     // MERG-2015-10-11: [[ DocumentFilename ]] Set documentFilename.
-    if (m_document_filename != nil)
-        UpdateDocumentFilename();
+    UpdateDocumentFilename();
 }
 
 void MCMacPlatformWindow::DoSynchronize(void)
@@ -2210,11 +2209,14 @@ void MCMacPlatformWindow::UpdateDocumentFilename(void)
     NSString * t_represented_filename;
     t_represented_filename = nil;
     
-    if (m_document_filename != nil && MCS_pathtonative(m_document_filename, t_native_filename))
+    if (!MCStringIsEmpty(m_document_filename) && MCS_pathtonative(m_document_filename, t_native_filename))
     {
         t_represented_filename = [NSString stringWithMCStringRef: t_native_filename];
     }
+    else
+        t_represented_filename = @"";
     
+    // It appears setRepresentedFilename can't be set to nil
     [m_window_handle setRepresentedFilename: t_represented_filename];
 }
 

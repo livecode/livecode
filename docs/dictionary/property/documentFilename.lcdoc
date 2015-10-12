@@ -4,7 +4,7 @@ Type: property
 
 Syntax: set the documentFilename of <stack> to <filename>
 
-Summary: Specifies the file path to the file that the stack is represents.
+Summary: Specifies the file path to the file that the stack represents.
 
 Associations: stack
 

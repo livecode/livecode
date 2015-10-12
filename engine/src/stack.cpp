@@ -296,7 +296,7 @@ MCStack::MCStack()
 	m_purge_fonts = false;
     
     // MERG-2015-10-11: [[ DocumentFilename ]] The filename the stack represnts
-    m_document_filename = nil;
+    m_document_filename = MCValueRetain(kMCEmptyString);
 
 	m_view_need_redraw = false;
 	m_view_need_resize = false;
@@ -506,8 +506,8 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 
     m_attachments = nil;
     
-    // MERG-2015-10-100: [[ DocumentFilename ]] No document filename to begin with
-    m_document_filename = nil;
+    // MERG-2015-10-12: [[ DocumentFilename ]] No document filename to begin with
+    m_document_filename = MCValueRetain(kMCEmptyString);
     
 	view_copy(sref);
 }
