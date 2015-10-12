@@ -2230,13 +2230,10 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doLaunchFromUrl(JNIEnv *en
         MCNotificationPostUrlWakeUp(*t_url_str);
 }
 
-extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doLaunchDataChanged(JNIEnv *env, jobject object, jobject launch_data) __attribute__((visibility("default")));
-JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doLaunchDataChanged(JNIEnv *env, jobject object, jobject launch_data)
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doLaunchDataChanged(JNIEnv *env, jobject object) __attribute__((visibility("default")));
+JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doLaunchDataChanged(JNIEnv *env, jobject object)
 {
-	
-	MCAutoArrayRef t_array;
-	if (MCJavaMapToArrayRef(env, launch_data, &t_array))
-		/* UNCHECKED */ MCNotificationPostLaunchDataChanged(*t_array);
+	/* UNCHECKED */ MCNotificationPostLaunchDataChanged();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

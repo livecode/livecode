@@ -175,9 +175,9 @@ void MCNotificationPostUrlWakeUp (MCStringRef p_url_wake_up_text)
 	/* UNCHECKED */ MCNotificationPostCustom(MCM_url_wake_up, 1, p_url_wake_up_text);
 }
 
-void MCNotificationPostLaunchDataChanged(MCArrayRef p_launch_data)
+void MCNotificationPostLaunchDataChanged()
 {
-	/* UNCHECKED */ MCNotificationPostCustom(MCM_launch_data_changed, 1, p_launch_data);
+	/* UNCHECKED */ MCNotificationPostCustom(MCM_launch_data_changed, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -3,7 +3,7 @@
   <name>launchDataChanged</name>
   <type>message</type>
   <syntax>
-    <example>launchDataChanged <i>launchData</i></example>
+    <example>launchDataChanged</example>
   </syntax>
   <synonyms>
   </synonyms>
@@ -23,13 +23,9 @@
   </security>
   <description>
     <overview>Sent to the <glossary tag="current card">current card</glossary> when the <glossary tag="application">application</glossary>'s launch data is changed by a new request from another app.</overview>
-    <parameters>
-      <parameter>
-        <name>launchData</name>
-        <description>The new request data in the form of an array.</description>
-      </parameter>
-    </parameters>
-
-    <comments>An Android app may be suspended in the background when it receives a request from another app. When this happens, the app's launch data is updated to contain the data for the new request and the app is resumed. This message allows the app to handle these new requests appropriately.</comments>
+    <comments>An Android app may be suspended in the background when it receives a request from another app. When this happens, the app's launch data is updated to contain the data for the new request and the app is resumed. The new launch data can be obtained from the <function tag="mobileGetLaunchData">mobileGetLaunchData</function> function.</comments>
   </description>
+  <examples>
+    <example><p>on launchDataChanged pURL</p><p>   myLaunchHandler mobileGetLaunchData()</p><p>end launchDataChanged</p></example>
+  </examples>
 </doc>

@@ -2876,7 +2876,7 @@ public class Engine extends View implements EngineApi
 
 		if (m_new_intent)
 		{
-			doLaunchDataChanged(getLaunchData());
+			doLaunchDataChanged();
 			
 			String t_launch_url;
 			t_launch_url = getLaunchUri();
@@ -3311,7 +3311,7 @@ public class Engine extends View implements EngineApi
     // url launch callback
     public static native void doLaunchFromUrl(String url);
 	// intent launch callback
-	public static native void doLaunchDataChanged(Map<String, Object> p_launch_data);
+	public static native void doLaunchDataChanged();
 
 	// callbacks from the billing service
 
