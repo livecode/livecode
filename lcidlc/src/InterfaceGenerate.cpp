@@ -1809,7 +1809,7 @@ bool InterfaceGenerate(InterfaceRef self, const char *p_output)
 		
 	if (t_success)
 		t_success = CoderFinish(t_coder);
-	else
+	else if (t_coder != nil)
 		CoderCancel(t_coder);
 	
 	if (t_success && t_java_output_filename != nil)
