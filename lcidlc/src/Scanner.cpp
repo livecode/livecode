@@ -427,7 +427,7 @@ static bool TextFileFetch(const char *p_filename, char*& r_data, uint32_t& r_dat
 		
 	if (t_success)
 	{
-		if (fread(t_file_data, t_file_size, 1, t_stream) != 1)
+		if (fread(t_file_data, (size_t) t_file_size, 1, t_stream) != 1)
 			t_success = Throw(kErrorCouldNotReadFile);
 	}
 	
