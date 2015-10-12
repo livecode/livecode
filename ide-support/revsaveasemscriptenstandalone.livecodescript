@@ -65,6 +65,13 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder
 
    local tError
    try
+      ---------- Check deployment entitlement
+      revStandaloneProgress "Checking deployment entitlement..."
+      
+      if not isPermittedDeployment() then
+         throw "license does not permit HTML5 deployment"
+      end if
+      
       ---------- Create a working directory
       local tBuildFolder
       put pOutputFolder into tBuildFolder
@@ -426,3 +433,21 @@ end getRepoBinariesFolder
 private function getRepoResourceFolder
    return revEnvironmentRepositoryPath() & slash & "engine" & slash & "rsrc"
 end getRepoResourceFolder
+
+-- Check if the license permits HTML5 deployment
+private function isPermittedDeployment
+   if isCommercialDeployment() then
+      return ("HTML5" is among the items of line 5 of the revLicenseInfo)
+   else
+      return true
+   end if
+end isPermittedDeployment
+
+-- Check if deploying a commercial standalone
+private function isCommercialDeployment
+   if revLicenseType() is "community" then
+      return false
+   else
+      return true
+   end if
+end isCommercialDeployment
