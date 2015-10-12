@@ -152,6 +152,7 @@ static bool InterfaceReport(InterfaceRef self, Position p_where, InterfaceError 
 		break;
 	case kInterfaceErrorJavaImpliesInParam:
 		fprintf(stderr, "Java mapped methods can only have 'in' parameters\n");
+        break;
 	case kInterfaceErrorUnknownHandlerMapping:
 		fprintf(stderr, "Unknown handler mapping type '%s'\n", StringGetCStringPtr(NameGetString((NameRef)p_hint)));
 		break;
