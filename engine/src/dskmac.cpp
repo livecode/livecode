@@ -68,6 +68,7 @@
 #define B16600 16600
 
 #include <pwd.h>
+#include <inttypes.h>
 
 #define USE_FSCATALOGINFO
 
@@ -8306,37 +8307,37 @@ static OSStatus getAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef
                 break;
             case typeSInt16:
 			{
-				int2 i;
+				int16_t i;
 				AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
-                /* UNCHECKED */ MCStringFormat(r_result, "%d", i);
+                /* UNCHECKED */ MCStringFormat(r_result, PRId16, i);
 				break;
 			}
             case typeSInt32:
 			{
-				int4 i;
+				int32_t i;
 				AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
-                /* UNCHECKED */ MCStringFormat(r_result, "%d", i);
+                /* UNCHECKED */ MCStringFormat(r_result, PRId32, i);
 				break;
 			}
             case typeIEEE32BitFloatingPoint:
 			{
-				real4 f;
+				float32_t f;
 				AEGetAttributePtr(ae, key, dt, &rType, &f, s, &rSize);
                 /* UNCHECKED */ MCStringFormat(r_result, "%12.12g", f);
 				break;
 			}
             case typeIEEE64BitFloatingPoint:
 			{
-				real8 f;
+				float64_t f;
 				AEGetAttributePtr(ae, key, dt, &rType, &f, s, &rSize);
                 /* UNCHECKED */ MCStringFormat(r_result, "%12.12g", f);
 				break;
 			}
             case typeUInt32:
 			{
-				uint4 i;
+				uint32_t i;
 				AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
-                /* UNCHECKED */ MCStringFormat(r_result, "%u", i);
+                /* UNCHECKED */ MCStringFormat(r_result, PRIu32, i);
 				break;
 			}
             case typeNull:
@@ -8409,37 +8410,37 @@ static OSStatus getAEParams(const AppleEvent *ae, AEKeyword key, MCStringRef &r_
                 break;
             case typeSInt16:
 			{
-				int2 i;
+				int16_t i;
 				AEGetParamPtr(ae, key, dt, &rType, &i, s, &rSize);
-                /* UNCHECKED */ MCStringFormat(r_result, "%d", i);
+                /* UNCHECKED */ MCStringFormat(r_result, PRId16, i);
 				break;
 			}
             case typeSInt32:
 			{
-				int4 i;
+				int32_t i;
 				AEGetParamPtr(ae, key, dt, &rType, &i, s, &rSize);
-                /* UNCHECKED */ MCStringFormat(r_result, "%d", i);
+                /* UNCHECKED */ MCStringFormat(r_result, PRId32, i);
 				break;
 			}
             case typeIEEE32BitFloatingPoint:
 			{
-				real4 f;
+				float32_t f;
 				AEGetParamPtr(ae, key, dt, &rType, &f, s, &rSize);
                 /* UNCHECKED */ MCStringFormat(r_result, "%12.12g", f);
 				break;
 			}
             case typeIEEE64BitFloatingPoint:
 			{
-				real8 f;
+				float64_t f;
 				AEGetParamPtr(ae, key, dt, &rType, &f, s, &rSize);
                 /* UNCHECKED */ MCStringFormat(r_result, "%12.12g", f);
 				break;
 			}
             case typeUInt32:
 			{
-				uint4 i;
+				uint32_t i;
 				AEGetParamPtr(ae, key, dt, &rType, &i, s, &rSize);
-                /* UNCHECKED */ MCStringFormat(r_result, "%u", i);
+                /* UNCHECKED */ MCStringFormat(r_result, PRIu32, i);
 				break;
 			}
             case typeNull:
