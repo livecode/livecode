@@ -768,6 +768,7 @@
 		[
 			'src/stacksecurity.h',
 			'src/stacksecurity.cpp',
+			'src/em-stacksecurity.cpp',
 		],
 		
 		# Sources for the IDE engine

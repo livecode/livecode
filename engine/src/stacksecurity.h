@@ -50,6 +50,16 @@ IO_stat MCStackSecurityRead(char *r_string, uint32_t p_length, IO_handle p_strea
 
 void MCStackSecurityProcessCapsule(void *p_start, void *p_finish);
 
+//////////
+
+#if defined(__EMSCRIPTEN__)
+
+/* Perform any standalone-specific initialisation tasks, and load the
+ * default stack. */
+IO_stat MCStackSecurityEmscriptenStartup(void);
+
+#endif /* __EMSCRIPTEN__ */
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif
