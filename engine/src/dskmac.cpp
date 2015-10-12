@@ -8552,7 +8552,7 @@ static OSStatus osaexecute(MCStringRef& r_string, ComponentInstance compinstance
 		return err;
 	AEDesc aedresult;
 	OSADisplay(compinstance, scriptresult, typeUTF8Text, kOSAModeNull, &aedresult);
-	uint4 tsize = AEGetDescDataSize(&aedresult);
+	Size tsize = AEGetDescDataSize(&aedresult);
 	byte_t *buffer = new byte_t[tsize];
 	err = AEGetDescData(&aedresult,buffer,tsize);
     /* UNCHECKED */ MCStringCreateWithBytesAndRelease(buffer, tsize, kMCStringEncodingUTF8, false, r_string);
