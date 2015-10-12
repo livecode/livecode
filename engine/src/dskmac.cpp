@@ -8364,6 +8364,8 @@ static OSStatus getAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef
             case typeNull:
                 r_result = MCValueRetain(kMCEmptyString);
                 break;
+#ifndef __64_BIT__
+            // FSSpecs don't exist in the 64-bit world
             case typeFSS:
 			{
 				FSSpec fs;
@@ -8371,6 +8373,7 @@ static OSStatus getAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef
 				/* UNCHECKED */ MCS_mac_FSSpec2path(&fs, r_result);
 			}
                 break;
+#endif
             case typeFSRef:
 			{
 				FSRef t_fs_ref;
@@ -8488,6 +8491,7 @@ static OSStatus getAEParams(const AppleEvent *ae, AEKeyword key, MCStringRef &r_
             case typeNull:
                 r_result = MCValueRetain(kMCEmptyString);
                 break;
+#ifndef __64_BIT__
             case typeFSS:
 			{
 				FSSpec fs;
@@ -8495,6 +8499,7 @@ static OSStatus getAEParams(const AppleEvent *ae, AEKeyword key, MCStringRef &r_
 				/* UNCHECKED */ MCS_mac_FSSpec2path(&fs, r_result);
 			}
                 break;
+#endif
             case typeFSRef:
 			{
 				FSRef t_fs_ref;
