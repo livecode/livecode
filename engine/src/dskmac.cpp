@@ -8319,6 +8319,13 @@ static OSStatus getAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef
                 /* UNCHECKED */ MCStringFormat(r_result, PRId32, i);
 				break;
 			}
+            case typeSInt64:
+            {
+                int64_t i;
+                AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
+                /* UNCHECKED */ MCStringFormat(r_result, PRId64, i);
+                break;
+            }
             case typeIEEE32BitFloatingPoint:
 			{
 				float32_t f;
@@ -8333,6 +8340,13 @@ static OSStatus getAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef
                 /* UNCHECKED */ MCStringFormat(r_result, "%12.12g", f);
 				break;
 			}
+            case typeUInt16:
+            {
+                uint16_t i;
+                AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
+                /* UNCHECKED */ MCStringFormat(r_result, PRIu16, i);
+                break;
+            }
             case typeUInt32:
 			{
 				uint32_t i;
@@ -8340,6 +8354,13 @@ static OSStatus getAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef
                 /* UNCHECKED */ MCStringFormat(r_result, PRIu32, i);
 				break;
 			}
+            case typeUInt64:
+            {
+                uint64_t i;
+                AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
+                /* UNCHECKED */ MCStringFormat(r_result, PRIu64, i);
+                break;
+            }
             case typeNull:
                 r_result = MCValueRetain(kMCEmptyString);
                 break;
@@ -8422,6 +8443,13 @@ static OSStatus getAEParams(const AppleEvent *ae, AEKeyword key, MCStringRef &r_
                 /* UNCHECKED */ MCStringFormat(r_result, PRId32, i);
 				break;
 			}
+            case typeSInt64:
+            {
+                int64_t i;
+                AEGetParamPtr(ae, key, dt, &rType, &i, s, &rSize);
+                /* UNCHECKED */ MCStringFormat(r_result, PRId64, i);
+                break;
+            }
             case typeIEEE32BitFloatingPoint:
 			{
 				float32_t f;
@@ -8436,6 +8464,13 @@ static OSStatus getAEParams(const AppleEvent *ae, AEKeyword key, MCStringRef &r_
                 /* UNCHECKED */ MCStringFormat(r_result, "%12.12g", f);
 				break;
 			}
+            case typeUInt16:
+            {
+                uint16_t i;
+                AEGetParamPtr(ae, key, dt, &rType, &i, s, &rSize);
+                /* UNCHECKED */ MCStringFormat(r_result, PRIu16, i);
+                break;
+            }
             case typeUInt32:
 			{
 				uint32_t i;
@@ -8443,6 +8478,13 @@ static OSStatus getAEParams(const AppleEvent *ae, AEKeyword key, MCStringRef &r_
                 /* UNCHECKED */ MCStringFormat(r_result, PRIu32, i);
 				break;
 			}
+            case typeUInt64:
+            {
+                uint64_t i;
+                AEGetParamPtr(ae, key, dt, &rType, &i, s, &rSize);
+                /* UNCHECKED */ MCStringFormat(r_result, PRIu64, i);
+                break;
+            }
             case typeNull:
                 r_result = MCValueRetain(kMCEmptyString);
                 break;
