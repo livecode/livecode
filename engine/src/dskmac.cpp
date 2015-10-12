@@ -232,8 +232,8 @@ OSErr MCAppleEventHandlerDoSpecial(const AppleEvent *ae, AppleEvent *reply, long
 			err = errAECorruptData;
 			if (reply->dataHandle != NULL)
 			{
-				short e = err;
-				AEPutParamPtr(reply, keyReplyErr, typeShortInteger, (Ptr)&e, sizeof(short));
+				int16_t e = err;
+				AEPutParamPtr(reply, keyReplyErr, typeSInt16, (Ptr)&e, sizeof(short));
 			}
 		}
 		else
@@ -249,8 +249,8 @@ OSErr MCAppleEventHandlerDoSpecial(const AppleEvent *ae, AppleEvent *reply, long
                     err = AEPutParamPtr(reply, replykeyword, typeUTF8Text, *t_reply, t_reply.Size());
 					if (err != noErr)
 					{
-						short e = err;
-						AEPutParamPtr(reply, keyReplyErr, typeShortInteger, (Ptr)&e, sizeof(short));
+						int16_t e = err;
+						AEPutParamPtr(reply, keyReplyErr, typeSInt16, (Ptr)&e, sizeof(short));
 					}
 				}
 			}
@@ -381,8 +381,8 @@ OSErr MCAppleEventHandlerDoAEAnswer(const AppleEvent *ae, AppleEvent *reply, lon
 	}
 	else
 	{
-		short e;
-		if (AEGetParamPtr(ae, keyErrorNumber, typeSMInt, &rType, (Ptr)&e, sizeof(short), &rSize) == noErr
+		int16_t e;
+		if (AEGetParamPtr(ae, keyErrorNumber, typeSInt16, &rType, (Ptr)&e, sizeof(short), &rSize) == noErr
             && e != noErr)
 		{
 			/* UNCHECKED */ MCStringFormat(AEAnswerErr, "Got error %d when sending Apple event", e);
@@ -8304,35 +8304,35 @@ static OSStatus getAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef
                 delete[] result;
 			}
                 break;
-            case typeShortInteger:
+            case typeSInt16:
 			{
 				int2 i;
 				AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
                 /* UNCHECKED */ MCStringFormat(r_result, "%d", i);
 				break;
 			}
-            case typeLongInteger:
+            case typeSInt32:
 			{
 				int4 i;
 				AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
                 /* UNCHECKED */ MCStringFormat(r_result, "%d", i);
 				break;
 			}
-            case typeShortFloat:
+            case typeIEEE32BitFloatingPoint:
 			{
 				real4 f;
 				AEGetAttributePtr(ae, key, dt, &rType, &f, s, &rSize);
                 /* UNCHECKED */ MCStringFormat(r_result, "%12.12g", f);
 				break;
 			}
-            case typeLongFloat:
+            case typeIEEE64BitFloatingPoint:
 			{
 				real8 f;
 				AEGetAttributePtr(ae, key, dt, &rType, &f, s, &rSize);
                 /* UNCHECKED */ MCStringFormat(r_result, "%12.12g", f);
 				break;
 			}
-            case typeMagnitude:
+            case typeUInt32:
 			{
 				uint4 i;
 				AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
@@ -8407,35 +8407,35 @@ static OSStatus getAEParams(const AppleEvent *ae, AEKeyword key, MCStringRef &r_
                 delete[] result;
 			}
                 break;
-            case typeShortInteger:
+            case typeSInt16:
 			{
 				int2 i;
 				AEGetParamPtr(ae, key, dt, &rType, &i, s, &rSize);
                 /* UNCHECKED */ MCStringFormat(r_result, "%d", i);
 				break;
 			}
-            case typeLongInteger:
+            case typeSInt32:
 			{
 				int4 i;
 				AEGetParamPtr(ae, key, dt, &rType, &i, s, &rSize);
                 /* UNCHECKED */ MCStringFormat(r_result, "%d", i);
 				break;
 			}
-            case typeShortFloat:
+            case typeIEEE32BitFloatingPoint:
 			{
 				real4 f;
 				AEGetParamPtr(ae, key, dt, &rType, &f, s, &rSize);
                 /* UNCHECKED */ MCStringFormat(r_result, "%12.12g", f);
 				break;
 			}
-            case typeLongFloat:
+            case typeIEEE64BitFloatingPoint:
 			{
 				real8 f;
 				AEGetParamPtr(ae, key, dt, &rType, &f, s, &rSize);
                 /* UNCHECKED */ MCStringFormat(r_result, "%12.12g", f);
 				break;
 			}
-            case typeMagnitude:
+            case typeUInt32:
 			{
 				uint4 i;
 				AEGetParamPtr(ae, key, dt, &rType, &i, s, &rSize);
