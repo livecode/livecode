@@ -40,7 +40,7 @@ static GdkCursor *g_dnd_cursor_drop_fail = NULL;
 
 
 // Do all the setup of the xDnD protocol
-static void MCLinuxDragAndDropInit(GdkDisplay* p_display)
+static void MCLinuxDragAndDropInitialize(GdkDisplay* p_display)
 {
 	if (!g_dnd_init)
 	{
@@ -119,7 +119,7 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions,
 {
     //fprintf(stderr, "DND: dodragdrop\n");
     // Ensure that the DnD mechanisms are ready for use
-    MCLinuxDragAndDropInit(dpy);
+    MCLinuxDragAndDropInitialize(dpy);
     
     // The source window for the drag and drop operation
     GdkWindow *t_source;
