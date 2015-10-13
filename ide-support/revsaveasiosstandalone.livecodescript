@@ -900,7 +900,8 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
    -- MM-2012-09-18: Since we now no longer support sims before 4.3, we always use redirects for sim builds.
    --
    local tUseRedirects
-   if pAppTarget is not "Device" then
+   // We only use symlinks for iOS simulator < 9.0 (from 9.0, the app won't start with symlinks)
+   if pAppTarget is not "Device" and word 2 of pAppTarget < 9.0 then
       put true into tUseRedirects
    end if 
    
