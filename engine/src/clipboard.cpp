@@ -111,7 +111,9 @@ void MCClipboard::Clear()
 
 void MCClipboard::ReleaseData()
 {
-    // TODO: implement
+    // Clear any external data on the clipboard
+    if (m_clipboard->IsExternalData())
+        m_clipboard->Clear();
 }
 
 bool MCClipboard::PullUpdates() const
