@@ -140,10 +140,7 @@ static void __MCGSvgCreate(MCGSvgRef self, const void *p_data, size_t p_data_siz
     
     MCAutoBlock<char> t_data_cstring;
     if (!t_data_cstring . Allocate(p_data_size + 1))
-    {
-        __MCGSvgInvalidate(self);
         return;
-    }
     
     MCMemoryCopy(*t_data_cstring, p_data, p_data_size);
     (*t_data_cstring)[p_data_size] = '\0';
@@ -153,12 +150,11 @@ static void __MCGSvgCreate(MCGSvgRef self, const void *p_data, size_t p_data_siz
     
     self -> image = nsvgParse(*t_data_cstring, "", 1);
     if (self -> image == NULL)
-    {
-        __MCGSvgInvalidate(self);
         return;
-    }
     
     __nsvgMeasure(self -> image, self -> bounding_box);
+    
+    self -> is_valid = true;
 }
 
 static void __MCGSvgDestroy(MCGSvgRef self)
