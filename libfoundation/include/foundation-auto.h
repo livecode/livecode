@@ -50,8 +50,10 @@ public:
 	}
     
     inline explicit MCAutoValueRefBase(T p_value)
-		: m_value(MCValueRetain(p_value))
+		: m_value(nil)
 	{
+        if (p_value)
+            m_value = MCValueRetain(p_value);
 	}
 
 	inline ~MCAutoValueRefBase(void)
