@@ -396,7 +396,7 @@ MCTransferType MCPasteboardTransferTypeFromName(MCNameRef p_key, bool p_legacy =
 	if (MCNameIsEqualTo(p_key, MCN_styles))
 		return TRANSFER_TYPE_STYLED_TEXT;
 
-    if (MCNameIsEqualTo(p_key, MCNAME("styledtext")))
+    if (MCNameIsEqualTo(p_key, MCN_styledtext))
         return TRANSFER_TYPE_STYLED_TEXT_ARRAY;
     
 	if (MCNameIsEqualTo(p_key, MCN_rtf))
@@ -417,19 +417,19 @@ MCTransferType MCPasteboardTransferTypeFromName(MCNameRef p_key, bool p_legacy =
 	if (MCNameIsEqualTo(p_key, MCN_objects))
 		return TRANSFER_TYPE_OBJECTS;
     
-    if (MCNameIsEqualTo(p_key, MCNAME("rtftext")))
+    if (MCNameIsEqualTo(p_key, MCN_rtftext))
         return TRANSFER_TYPE_RTF_TEXT;
     
-    if (MCNameIsEqualTo(p_key, MCNAME("htmltext")))
+    if (MCNameIsEqualTo(p_key, MCN_htmltext))
         return TRANSFER_TYPE_HTML_TEXT;
     
-    if (MCNameIsEqualTo(p_key, MCNAME("png")))
+    if (MCNameIsEqualTo(p_key, MCN_png))
         return TRANSFER_TYPE_PNG;
     
-    if (MCNameIsEqualTo(p_key, MCNAME("gif")))
+    if (MCNameIsEqualTo(p_key, MCN_gif))
         return TRANSFER_TYPE_GIF;
     
-    if (MCNameIsEqualTo(p_key, MCNAME("jpeg")))
+    if (MCNameIsEqualTo(p_key, MCN_jpeg))
         return TRANSFER_TYPE_JPEG;
 
 	return TRANSFER_TYPE_NULL;
@@ -446,11 +446,11 @@ MCNameRef MCPasteboardTransferTypeToName(MCTransferType p_type, bool p_legacy = 
 	case TRANSFER_TYPE_STYLED_TEXT:
 		return MCN_styles;
     case TRANSFER_TYPE_STYLED_TEXT_ARRAY:
-        return MCNAME("styledtext");
+        return MCN_styledtext;
 	case TRANSFER_TYPE_RTF_TEXT:
-        return p_legacy ? MCN_rtf : MCNAME("rtftext");
+        return p_legacy ? MCN_rtf : MCN_rtftext;
 	case TRANSFER_TYPE_HTML_TEXT:
-        return p_legacy ? MCN_html : MCNAME("htmltext");
+        return p_legacy ? MCN_html : MCN_htmltext;
     case TRANSFER_TYPE_HTML:
         return MCN_html;
     case TRANSFER_TYPE_RTF:
@@ -458,11 +458,11 @@ MCNameRef MCPasteboardTransferTypeToName(MCTransferType p_type, bool p_legacy = 
 	case TRANSFER_TYPE_IMAGE:
 		return MCN_image;
     case TRANSFER_TYPE_PNG:
-        return MCNAME("png");
+        return MCN_png;
     case TRANSFER_TYPE_GIF:
-        return MCNAME("gif");
+        return MCN_gif;
     case TRANSFER_TYPE_JPEG:
-        return MCNAME("jpeg");
+        return MCN_jpeg;
 	case TRANSFER_TYPE_FILES:
 		return MCN_files;
 	case TRANSFER_TYPE_PRIVATE:
@@ -788,45 +788,45 @@ void MCPasteboardEvalFullClipboardOrDragKeys(MCExecContext& ctxt, const MCClipbo
     // Check for the auto-converted text types
     bool t_success = true;
     if (t_success && (p_clipboard->HasTextOrCompatible() || p_clipboard->HasFileList()))
-        t_success = MCListAppend(*t_list, MCNAME("text"));
+        t_success = MCListAppend(*t_list, MCN_text);
     if (t_success && p_clipboard->HasLiveCodeStyledTextOrCompatible())
     {
-        t_success = MCListAppend(*t_list, MCNAME("rtftext"))
-                    && MCListAppend(*t_list, MCNAME("htmltext"))
-                    && MCListAppend(*t_list, MCNAME("styles"))
-                    && MCListAppend(*t_list, MCNAME("styledtext"));
+        t_success = MCListAppend(*t_list, MCN_rtftext)
+                    && MCListAppend(*t_list, MCN_htmltext)
+                    && MCListAppend(*t_list, MCN_styles)
+                    && MCListAppend(*t_list, MCN_styledtext);
     }
     
     // Check for any image type
     if (t_success && p_clipboard->HasImage())
-        t_success = MCListAppend(*t_list, MCNAME("image"));
+        t_success = MCListAppend(*t_list, MCN_image);
     
     // Check for specific image types
     if (t_success && p_clipboard->HasPNG())
-        t_success = MCListAppend(*t_list, MCNAME("png"));
+        t_success = MCListAppend(*t_list, MCN_png);
     if (t_success && p_clipboard->HasGIF())
-        t_success = MCListAppend(*t_list, MCNAME("gif"));
+        t_success = MCListAppend(*t_list, MCN_gif);
     if (t_success && p_clipboard->HasJPEG())
-        t_success = MCListAppend(*t_list, MCNAME("jpeg"));
+        t_success = MCListAppend(*t_list, MCN_jpeg);
     
     // Check for specific styled text formats. These are the "true" formats and
     // aren't round-tripped via a LiveCode field.
     if (t_success && p_clipboard->HasRTF())
-        t_success = MCListAppend(*t_list, MCNAME("rtf"));
+        t_success = MCListAppend(*t_list, MCN_rtf);
     if (t_success && p_clipboard->HasHTML())
-        t_success = MCListAppend(*t_list, MCNAME("html"));
+        t_success = MCListAppend(*t_list, MCN_html);
     
     // Check for serialised LiveCode objects
     if (t_success && p_clipboard->HasLiveCodeObjects())
-        t_success = MCListAppend(*t_list, MCNAME("objects"));
+        t_success = MCListAppend(*t_list, MCN_objects);
     
     // Check for a file list
     if (t_success && p_clipboard->HasFileList())
-        t_success = MCListAppend(*t_list, MCNAME("files"));
+        t_success = MCListAppend(*t_list, MCN_files);
     
     // Check for private data
     if (t_success && p_clipboard->HasPrivateData())
-        t_success = MCListAppend(*t_list, MCNAME("private"));
+        t_success = MCListAppend(*t_list, MCN_private);
     
     // Copy the list to the output
     if (t_success)
