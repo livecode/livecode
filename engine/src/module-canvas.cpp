@@ -21,13 +21,11 @@
 #include "image.h"
 #include "stack.h"
 #include "widget.h"
+#include "widget-ref.h"
 
 #include "module-canvas.h"
 #include "module-canvas-internal.h"
-
-//////////
-
-extern MCWidgetRef MCcurrentwidget;
+#include "module-resources.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -439,6 +437,7 @@ MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasPointTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasColorTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasTransformTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasImageTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasSvgTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasPaintTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasSolidPaintTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasPatternTypeInfo;
@@ -454,6 +453,7 @@ extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCCanvasPointTypeInfo(void) { return k
 extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCCanvasColorTypeInfo(void) { return kMCCanvasColorTypeInfo; }
 extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCCanvasTransformTypeInfo(void) { return kMCCanvasTransformTypeInfo; }
 extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCCanvasImageTypeInfo(void) { return kMCCanvasImageTypeInfo; }
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCCanvasSvgTypeInfo(void) { return kMCCanvasSvgTypeInfo; }
 extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCCanvasPaintTypeInfo(void) { return kMCCanvasPaintTypeInfo; }
 extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCCanvasSolidPaintTypeInfo(void) { return kMCCanvasSolidPaintTypeInfo; }
 extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCCanvasPatternTypeInfo(void) { return kMCCanvasPatternTypeInfo; }
@@ -2010,6 +2010,150 @@ void MCCanvasImageGetPixels(MCCanvasImageRef p_image, MCDataRef &r_pixels)
 void MCCanvasImageGetMetadata(MCCanvasImageRef p_image, MCArrayRef &r_metadata)
 {
 	// TODO - implement image metadata
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Svg
+
+__MCCanvasSvgImpl *MCCanvasSvgGet(MCCanvasSvgRef p_svg)
+{
+	return (__MCCanvasSvgImpl *)MCValueGetExtraBytesPtr(p_svg);
+}
+
+MCGSvgRef MCCanvasSvgGetGSvgRef(MCCanvasSvgRef p_svg)
+{
+	return *MCCanvasSvgGet(p_svg);
+}
+
+
+static void __MCCanvasSvgDestroy(MCValueRef p_svg)
+{
+	MCGSvgRelease(MCCanvasSvgGetGSvgRef((MCCanvasSvgRef)p_svg));
+}
+
+static bool __MCCanvasSvgCopy(MCValueRef p_svg, bool p_release, MCValueRef &r_copy)
+{
+	if (p_release)
+        r_copy = p_svg;
+	else
+        r_copy = MCValueRetain(p_svg);
+	
+	return true;
+}
+
+static bool __MCCanvasSvgEqual(MCValueRef p_left, MCValueRef p_right)
+{
+	if (p_left == p_right)
+        return true;
+	
+	return MCMemoryCompare(MCValueGetExtraBytesPtr(p_left), MCValueGetExtraBytesPtr(p_right), sizeof(__MCCanvasSvgImpl)) == 0;
+}
+
+static hash_t __MCCanvasSvgHash(MCValueRef p_value)
+{
+	return MCHashBytes(MCValueGetExtraBytesPtr(p_value), sizeof(__MCCanvasSvgImpl));
+}
+
+static bool __MCCanvasSvgDescribe(MCValueRef p_value, MCStringRef &r_desc)
+{
+	return MCStringFormat(r_desc, "<svg>");
+}
+
+static bool MCCanvasSvgCreateWithGSvgRefAndRelease(MCGSvgRef p_gsvg, MCCanvasSvgRef& r_svg)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCCanvasSvgRef t_svg;
+	t_svg = nil;
+	
+	if (t_success)
+        t_success = MCValueCreateCustom(kMCCanvasSvgTypeInfo, sizeof(__MCCanvasSvgImpl), t_svg);
+	
+	if (t_success)
+		*MCCanvasSvgGet(t_svg) = p_gsvg;
+    
+    if (t_success)
+        r_svg = t_svg;
+    
+	return t_success;
+}
+
+static bool MCCanvasSvgCreateWithData(MCDataRef p_data, MCCanvasSvgRef& r_svg)
+{
+    MCGSvgRef t_gsvg;
+    if (!MCGSvgCreate(MCDataGetBytePtr(p_data), MCDataGetLength(p_data), t_gsvg))
+        return false;
+    
+    if (!MCCanvasSvgCreateWithGSvgRefAndRelease(t_gsvg, r_svg))
+    {
+        MCGSvgRelease(t_gsvg);
+        return false;
+    }
+    
+    return true;
+}
+
+static bool MCCanvasSvgCreateWithFile(MCStringRef p_path, MCCanvasSvgRef& r_svg)
+{
+    MCAutoDataRef t_svg_data;
+    if (!MCSFileGetContents(p_path, Out(t_svg_data)))
+        return false;
+
+    return MCCanvasSvgCreateWithData(In(t_svg_data), r_svg);
+}
+
+// Constructors
+
+MC_DLLEXPORT_DEF
+void MCCanvasSvgMakeWithFile(MCStringRef p_path, MCCanvasSvgRef &r_svg)
+{
+    MCAutoStringRef t_resolved_path;
+    if (!MCResourceResolveStackRelativePath(p_path, Out(t_resolved_path)))
+        return;
+	
+    MCCanvasSvgCreateWithFile(In(t_resolved_path), r_svg);
+}
+
+MC_DLLEXPORT_DEF
+void MCCanvasSvgMakeWithResourceFile(MCStringRef p_resource, MCCanvasSvgRef &r_svg)
+{
+    MCAutoStringRef t_resolved_path;
+    if (!MCResourceResolvePath(p_resource, Out(t_resolved_path)))
+        return;
+	
+    MCCanvasSvgCreateWithFile(In(t_resolved_path), r_svg);
+}
+
+MC_DLLEXPORT_DEF
+void MCCanvasSvgMakeWithString(MCStringRef p_text, MCCanvasSvgRef &r_svg)
+{
+    MCAutoStringRefAsUTF8String t_utf8_string;
+    if (!t_utf8_string . Lock(p_text))
+        return;
+    
+    MCGSvgRef t_gsvg;
+    if (!MCGSvgCreate(*t_utf8_string, t_utf8_string . Size(), t_gsvg))
+        return;
+    
+    if (!MCCanvasSvgCreateWithGSvgRefAndRelease(t_gsvg, r_svg))
+    {
+        MCGSvgRelease(t_gsvg);
+        return;
+    }
+}
+
+MC_DLLEXPORT_DEF
+void MCCanvasSvgGetBoundingBox(MCCanvasSvgRef p_svg, MCCanvasRectangleRef& r_bbox)
+{
+    MCCanvasRectangleCreateWithMCGRectangle(MCGSvgGetBoundingBox(MCCanvasSvgGetGSvgRef(p_svg)), r_bbox);
+}
+
+MC_DLLEXPORT_DEF
+void MCCanvasSvgGetViewingBox(MCCanvasSvgRef p_svg, MCCanvasRectangleRef& r_vbox)
+{
+    MCCanvasRectangleCreateWithMCGRectangle(MCGSvgGetViewBox(MCCanvasSvgGetGSvgRef(p_svg)), r_vbox);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5778,7 +5922,7 @@ void MCCanvasStrokePath(MCCanvasPathRef p_path, MCCanvasRef p_canvas)
 	MCCanvasStroke(p_canvas);
 }
 
-void MCCanvasDrawRectOfImage(MCCanvasRef p_canvas, MCCanvasImageRef p_image, const MCGRectangle &p_src_rect, const MCGRectangle &p_dst_rect)
+static void MCCanvasDrawRectOfImage(MCCanvasRef p_canvas, MCCanvasImageRef p_image, const MCGRectangle &p_src_rect, const MCGRectangle &p_dst_rect)
 {
 	__MCCanvasImpl *t_canvas;
 	t_canvas = MCCanvasGet(p_canvas);
@@ -5822,6 +5966,52 @@ void MCCanvasDrawImage(MCCanvasImageRef p_image, MCCanvasRectangleRef p_dst_rect
 	MCCanvasImageGetHeight(p_image, t_height);
 	t_src_rect = MCGRectangleMake(0, 0, t_width, t_height);
 	MCCanvasDrawRectOfImage(p_canvas, p_image, t_src_rect, *MCCanvasRectangleGet(p_dst_rect));
+}
+
+static void MCCanvasDrawRectOfSvg(MCCanvasRef p_canvas, MCCanvasSvgRef p_svg, const MCGRectangle &p_src_rect, const MCGRectangle &p_dst_rect)
+{
+	__MCCanvasImpl *t_canvas;
+	t_canvas = MCCanvasGet(p_canvas);
+	
+	MCGSvgRef t_svg;
+	t_svg = MCCanvasSvgGetGSvgRef(p_svg);
+	
+	MCCanvasApplyChanges(*t_canvas);
+	
+	MCGFloat t_scale;
+	t_scale = MCGAffineTransformGetEffectiveScale(MCGContextGetDeviceTransform(t_canvas->context));
+	
+    MCGContextSave(t_canvas -> context);
+    
+    MCGContextTranslateCTM(t_canvas -> context,
+                           p_dst_rect . origin . x,
+                           p_dst_rect . origin . y);
+    
+    MCGContextScaleCTM(t_canvas -> context,
+                       p_dst_rect . size . width / p_src_rect . size . height,
+                       p_dst_rect . size . height / p_src_rect . size . height);
+    
+    MCGContextTranslateCTM(t_canvas -> context,
+                           -p_src_rect . origin . x,
+                           -p_src_rect . origin . y);
+    
+    MCGSvgRender(t_svg, t_canvas -> context);
+    
+    MCGContextRestore(t_canvas -> context);
+}
+
+MC_DLLEXPORT_DEF
+void MCCanvasDrawRectOfSvg(MCCanvasRectangleRef p_src_rect, MCCanvasSvgRef p_svg, MCCanvasRectangleRef p_dst_rect, MCCanvasRef p_canvas)
+{
+	MCCanvasDrawRectOfSvg(p_canvas, p_svg, *MCCanvasRectangleGet(p_src_rect), *MCCanvasRectangleGet(p_dst_rect));
+}
+
+MC_DLLEXPORT_DEF
+void MCCanvasDrawSvg(MCCanvasSvgRef p_svg, MCCanvasRectangleRef p_dst_rect, MCCanvasRef p_canvas)
+{
+	MCGSvgRef t_svg;
+	t_svg = MCCanvasSvgGetGSvgRef(p_svg);
+	MCCanvasDrawRectOfSvg(p_canvas, p_svg, MCGSvgGetViewBox(t_svg), *MCCanvasRectangleGet(p_dst_rect));
 }
 
 MC_DLLEXPORT_DEF
@@ -6136,6 +6326,16 @@ static MCValueCustomCallbacks kMCCanvasImageCustomValueCallbacks =
     nil,
 };
 
+static MCValueCustomCallbacks kMCCanvasSvgCustomValueCallbacks =
+{
+	false,
+	__MCCanvasSvgDestroy,
+	__MCCanvasSvgCopy,
+	__MCCanvasSvgEqual,
+	__MCCanvasSvgHash,
+	__MCCanvasSvgDescribe,
+};
+
 static MCValueCustomCallbacks kMCCanvasPaintCustomValueCallbacks =
 {
 	false,
@@ -6255,7 +6455,9 @@ bool MCCanvasTypesInitialize()
 	if (!MCNamedCustomTypeInfoCreate(MCNAME("com.livecode.canvas.Transform"), kMCNullTypeInfo, &kMCCanvasTransformCustomValueCallbacks, kMCCanvasTransformTypeInfo))
 		return false;
 	if (!MCNamedCustomTypeInfoCreate(MCNAME("com.livecode.canvas.Image"), kMCNullTypeInfo, &kMCCanvasImageCustomValueCallbacks, kMCCanvasImageTypeInfo))
-		return false;
+        return false;
+	if (!MCNamedCustomTypeInfoCreate(MCNAME("com.livecode.canvas.Svg"), kMCNullTypeInfo, &kMCCanvasSvgCustomValueCallbacks, kMCCanvasSvgTypeInfo))
+        return false;
 	if (!MCNamedCustomTypeInfoCreate(MCNAME("com.livecode.canvas.Paint"), kMCNullTypeInfo, &kMCCanvasPaintCustomValueCallbacks, kMCCanvasPaintTypeInfo))
 		return false;
 	if (!MCNamedCustomTypeInfoCreate(MCNAME("com.livecode.canvas.SolidPaint"), kMCCanvasPaintTypeInfo, &kMCCanvasSolidPaintCustomValueCallbacks, kMCCanvasSolidPaintTypeInfo))
@@ -6284,6 +6486,7 @@ void MCCanvasTypesFinalize()
 	MCValueRelease(kMCCanvasColorTypeInfo);
 	MCValueRelease(kMCCanvasTransformTypeInfo);
 	MCValueRelease(kMCCanvasImageTypeInfo);
+	MCValueRelease(kMCCanvasSvgTypeInfo);
 	MCValueRelease(kMCCanvasPaintTypeInfo);
 	MCValueRelease(kMCCanvasSolidPaintTypeInfo);
 	MCValueRelease(kMCCanvasPatternTypeInfo);

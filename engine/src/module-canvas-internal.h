@@ -44,6 +44,9 @@ __MCCanvasTransformImpl *MCCanvasTransformGet(MCCanvasTransformRef p_transform);
 typedef MCImageRep *__MCCanvasImageImpl;
 __MCCanvasImageImpl *MCCanvasImageGet(MCCanvasImageRef p_image);
 
+typedef MCGSvgRef __MCCanvasSvgImpl;
+__MCCanvasSvgImpl *MCCanvasSvgGet(MCCanvasSvgRef p_svg);
+
 // Solid Paint type
 struct __MCCanvasSolidPaintImpl
 {
