@@ -216,6 +216,9 @@ inline uint4 MCU_max(uint4 one, uint4 two) {return one > two ? one : two;}
 inline float32_t MCU_max(float32_t one, float32_t two) {return one > two ? one : two;}
 inline float32_t MCU_min(float32_t one, float32_t two) {return one > two ? two : one;}
 
+inline float64_t MCU_max(float64_t one, float64_t two) {return one > two ? one : two;}
+inline float64_t MCU_min(float64_t one, float64_t two) {return one > two ? two : one;}
+
 inline int4 MCU_clamp(int4 v, int4 lower, int4 upper) {return v < lower ? lower : (v > upper ? upper : v);}
 
 inline real8 MCU_fmin(real8 one, real8 two)

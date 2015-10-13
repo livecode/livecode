@@ -181,15 +181,64 @@ private command runAllScripts pInfo
    return tAnalysis
 end runAllScripts
 
+-- Output a skipped line in the results for eachcommand in the given test file
+private command runTestSkipAll pInfo, pScriptFile, pReason
+   local tSkipTemplate, tAnalysis
+   put "ok - [[tCommand]] # SKIP" && pReason into tSkipTemplate
+
+   repeat for each element tCommand in runGetTestCommandNames(pScriptFile)
+      runTestProcessOutput pScriptFile, tCommand, merge(tSkipTemplate)
+      put tapCombine(tAnalysis, the result) into tAnalysis
+   end repeat
+end runTestSkipAll
+
 -- Run the tests found in one specific script file
 private command runTestScript pInfo, pScriptFile
-   local tCommand, tAnalysis
+   local tCommand, tAnalysis, tMetadata
+   put runGetTestMetadata(pScriptFile) into tMetadata
+   
+   -- Only run tests that require UI if possible
+   local tCanRunUITests
+   put true into tCanRunUITests
+   repeat for each element tElement in pInfo["self-command"]
+      if tElement is "-ui" then
+         put false into tCanRunUITests
+         exit repeat
+      end if
+   end repeat
+   
+   if tMetadata["ui"] is true and not tCanRunUITests then
+      runTestSkipAll pInfo, pScriptFile, "test requires UI mode"
+      return the result
+   end if
+   
    repeat for each element tCommand in runGetTestCommandNames(pScriptFile)
       runTestCommand pInfo, pScriptFile, tCommand
       put tapCombine(tAnalysis, the result) into tAnalysis
    end repeat
    return tAnalysis
 end runTestScript
+
+private command runTestProcessOutput pScriptfile, pCommand, pOutput
+   -- Create test log
+   local tTestLog
+   put "###" && runGetPrettyTestName(pScriptFile) && pCommand \
+         & return & return into tTestLog
+   put pOutput & return after tTestLog
+   
+   -- Analyse the results and print a summary line
+   local tTapResults, tTotal, tPassed
+   put tapAnalyse(tTestLog) into tTapResults
+   
+   put tTapResults["xpass"] + tTapResults["pass"] + tTapResults["skip"] into tPassed
+   put tapGetTestCount(tTapResults) into tTotal
+   
+   write tapGetWorstResult(tTapResults) & ":" && \
+         runGetPrettyTestName(pScriptfile) & ":" && \
+         pCommand && "[" & tPassed & "/" & tTotal & "]" & return to stdout
+   
+   return tTapResults
+end runTestProcessOutput
 
 -- Run a specific named test command tCommand in a script file
 -- tScriptFile
@@ -216,24 +265,8 @@ private command runTestCommand pInfo, pScriptFile, pCommand
             tTestExitStatus & return after tTestOutput
    end if
    
-   -- Create test log
-   local tTestLog
-   put "###" && runGetPrettyTestName(pScriptFile) && pCommand \
-         & return & return into tTestLog
-   put tTestOutput & return after tTestLog
-   
-   -- Analyse the results and print a summary line
-   local tTapResults, tTotal, tPassed
-   put tapAnalyse(tTestLog) into tTapResults
-   
-   put tTapResults["xpass"] + tTapResults["pass"] + tTapResults["skip"] into tPassed
-   put tapGetTestCount(tTapResults) into tTotal
-   
-   write tapGetWorstResult(tTapResults) & ":" && \
-         runGetPrettyTestName(pScriptfile) & ":" && \
-         pCommand && "[" & tPassed & "/" & tTotal & "]" & return to stdout
-   
-   return tTapResults
+   runTestProcessOutput pScriptFile, pCommand, tTestOutput
+   return the result
 end runTestCommand
 
 -- Get all livecode script files beneath the CWD, apart from
@@ -365,6 +398,50 @@ private command runPrintSummary pAnalysis
    write tSummaryString to stdout
 end runPrintSummary
 
+-- Get all the metadata keys and values in the stack file
+private function runGetTestMetadata pFilename
+   local tScript
+   
+   -- Get the contents of the file
+   open file pFilename for "UTF-8" text read
+   if the result is not empty then
+      throw the result
+   end if
+   
+   read from file pFilename until end
+   put it into tScript
+   
+   close file pFilename
+   
+   -- Scan the file for metadata - 
+   -- Metadata is given in the form ### <key> : <value>
+   
+   local tKey, tValue, tMetadata
+   repeat for each line tLine in tScript
+      -- save some time by only looking at commented out lines
+      if token 1 of tLine is not empty then
+         next repeat
+      end if
+      
+      -- remove whitespace
+      put word 1 to -1 of tLine into tLine
+      
+      if not (tLine begins with "###") then
+         next repeat
+      end if
+      
+      -- remove hashes
+      put char 4 to -1 of tLine into tLine
+      
+      set the itemdelimiter to ":"
+      put word 1 to -1 of (item 1 of tLine) into tKey
+      put word 1 to -1 of (item 2 of tLine) into tValue
+      
+      put tValue into tMetadata[tKey]
+   end repeat
+   
+   return tMetadata
+end runGetTestMetadata
 ----------------------------------------------------------------
 -- TAP support
 ----------------------------------------------------------------

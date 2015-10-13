@@ -31,3 +31,7 @@ Description:
 Use the <iphoneSetAudioCategory> command to set the audio category identifier for the audio session.
 
 The iphoneSetAudioCatagory command allows the current audio session category to be set and changed while the application is running. This command should be used if the application sound output is to be muted, played on its own or mixed with the sound from other applications.
+
+References: play (command), play file (command), mobilePlaySoundOnChannel (command)
+
+Tags: multimedia

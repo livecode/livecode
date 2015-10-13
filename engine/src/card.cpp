@@ -3138,8 +3138,22 @@ void MCCard::updateselection(MCControl *cptr, const MCRectangle &oldrect,
 		Boolean was, is;
 		if (MCselectintersect)
 		{
-			was = cptr->maskrect(oldrect);
-			is = cptr->maskrect(selrect);
+            was = cptr->maskrect(oldrect);
+            is = cptr->maskrect(selrect);
+
+            // AL-2015-10-07:: [[ External Handles ]] If either dimension is 0,
+            //  recheck the selection intersect
+            MCRectangle t_rect;
+            t_rect = cptr -> getrect();
+
+            if (t_rect . width == 0 || t_rect . height == 0)
+            {
+                if (!was)
+                    was = MCU_line_intersect_rect(oldrect, t_rect);
+                
+                if (!is)
+                    is = MCU_line_intersect_rect(selrect, t_rect);
+            }
 		}
 		else
 		{

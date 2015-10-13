@@ -254,7 +254,7 @@ Boolean MCControl::mfocus(int2 x, int2 y)
 	MCRectangle srect;
 	MCU_set_rect(srect, x, y, 1, 1);
 	Boolean is = maskrect(srect) || (state & CS_SELECTED
-	                                 && MCU_point_in_rect(rect, x, y)
+	                                 && MCU_point_in_rect(geteffectiverect(), x, y)
 	                                 && sizehandles() != 0);
 	mx = x;
 	my = y;
@@ -717,14 +717,14 @@ void MCControl::deselect()
 {
 	if (state & CS_SELECTED)
 	{
-		state &= ~(CS_SELECTED | CS_MOVE | CS_SIZE | CS_CREATE);
-
 		// MW-2011-09-23: [[ Layers ]] Mark the layer attrs as having changed - the selection
 		//   setting can influence the layer type.
 		m_layer_attr_changed = true;
 
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 		layer_redrawall();
+        
+        state &= ~(CS_SELECTED | CS_MOVE | CS_SIZE | CS_CREATE);
 	}
 }
 
@@ -1076,15 +1076,13 @@ void MCControl::sizerects(MCRectangle *rects)
 	int2 y[3];
 
 	uint2 handlesize = MCsizewidth;
-	if (handlesize > MCU_min(rect.width, rect.height) / 3)
-		handlesize = MCU_max(MCU_min(rect.width, rect.height) / 3, 3);
-
-	x[0] = rect.x;
-	x[1] = rect.x + ((rect.width - handlesize) >> 1);
-	x[2] = rect.x + rect.width - handlesize;
-	y[0] = rect.y;
-	y[1] = rect.y + ((rect.height - handlesize) >> 1);
-	y[2] = rect.y + rect.height - handlesize;
+    
+    x[0] = rect.x - (handlesize >> 1);
+ 	x[1] = rect.x + ((rect.width - handlesize) >> 1);
+    x[2] = rect.x + rect.width - (handlesize >> 1);
+    y[0] = rect.y - (handlesize >> 1);
+ 	y[1] = rect.y + ((rect.height - handlesize) >> 1);
+    y[2] = rect.y + rect.height - (handlesize >> 1);
 
 	uint2 i;
 	uint2 j;
@@ -1115,7 +1113,8 @@ void MCControl::drawselected(MCDC *dc)
 	else
 		dc->setfillstyle(FillSolid, nil, 0, 0);
 	dc->setforeground(MCselectioncolor);
-	dc->fillrects(rects, 8);
+    for (uint2 i = 0; i < 8; i++)
+        dc->fillarc(rects[i], 0, 360, false);
 	if (flags & F_LOCK_LOCATION)
 		dc->setfillstyle(FillSolid, nil, 0, 0);
 }
@@ -1321,8 +1320,8 @@ void MCControl::continuesize(int2 x, int2 y)
 		int2 rx = newrect.x + newrect.width;
 		newrect.x = x - xoffset;
 		MCU_snap(newrect.x);
-		if (newrect.x > rx - MCminsize)
-			newrect.x = rx - MCminsize;
+		if (newrect.x > rx)
+			newrect.x = rx;
 		newrect.width = rx - newrect.x;
 	}
 	else
@@ -1330,8 +1329,8 @@ void MCControl::continuesize(int2 x, int2 y)
 		{
 			int2 rx = x + xoffset;
 			MCU_snap(rx);
-			if (rx - newrect.x < MCminsize)
-				newrect.width = MCminsize;
+			if (rx - newrect.x < 0)
+				newrect.width = 0;
 			else
 				newrect.width = rx - newrect.x;
 		}
@@ -1340,8 +1339,8 @@ void MCControl::continuesize(int2 x, int2 y)
 		int2 ly = newrect.y + newrect.height;
 		newrect.y = y - yoffset;
 		MCU_snap(newrect.y);
-		if (newrect.y > ly - MCminsize)
-			newrect.y = ly - MCminsize;
+		if (newrect.y > ly)
+			newrect.y = ly;
 		newrect.height = ly - newrect.y;
 	}
 	else
@@ -1349,8 +1348,8 @@ void MCControl::continuesize(int2 x, int2 y)
 		{
 			int2 ly = y + yoffset;
 			MCU_snap(ly);
-			if (ly - newrect.y < MCminsize)
-				newrect.height = MCminsize;
+			if (ly - newrect.y < 0)
+				newrect.height = 0;
 			else
 				newrect.height = ly - newrect.y;
 		}
@@ -1396,7 +1395,6 @@ void MCControl::continuesize(int2 x, int2 y)
 	if (mx < newrect.x && state & CS_SIZER)
 	{
 		state &= ~CS_SIZER;
-		newrect.x -= MCminsize;
 		state |= CS_SIZEL;
 		fliph();
 	}
@@ -1404,14 +1402,12 @@ void MCControl::continuesize(int2 x, int2 y)
 		if (mx > newrect.x + newrect.width && state & CS_SIZEL)
 		{
 			state &= ~CS_SIZEL;
-			newrect.x += MCminsize;
 			state |= CS_SIZER;
 			fliph();
 		}
 	if (my < newrect.y && state & CS_SIZEB)
 	{
 		state &= ~CS_SIZEB;
-		newrect.y -= MCminsize;
 		state |= CS_SIZET;
 		flipv();
 	}
@@ -1419,7 +1415,6 @@ void MCControl::continuesize(int2 x, int2 y)
 		if (my > newrect.y + newrect.height && state & CS_SIZET)
 		{
 			state &= ~CS_SIZET;
-			newrect.y += MCminsize;
 			state |= CS_SIZEB;
 			flipv();
 		}
@@ -1984,6 +1979,9 @@ MCRectangle MCControl::geteffectiverect(void) const
 	MCRectangle t_rect;
 	t_rect = MCU_reduce_rect(rect, -gettransient());
 
+    if (state & CS_SELECTED)
+        t_rect = MCU_reduce_rect(t_rect, -MCsizewidth);
+    
 	if (m_bitmap_effects != nil)
 		MCBitmapEffectsComputeBounds(m_bitmap_effects, t_rect, t_rect);
 
