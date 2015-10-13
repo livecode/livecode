@@ -483,12 +483,10 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
             local tSource, tTarget
             put char (it + 2) to -1 of tRedirect into tSource
             put pAppBundle into tTarget
-            if there is a file tSource then
-               put slash & char 1 to (it - 1) of tRedirect after tTarget
-            else if there is a folder (tTarget & slash & char 1 to (it - 1) of tRedirect) then
-               revDeleteFolder tTarget & slash & char 1 to (it - 1) of tRedirect
-            end if
-            get shell("ln -s" && quote & tSource & quote && quote & tTarget & quote)
+            
+            put slash & char 1 to (it - 1) of tRedirect after tTarget
+            
+            symlinkRedirect tSource, tTarget
          end if
       end repeat
    end if
@@ -1667,7 +1665,8 @@ end mapFilePath
 
 private command symlinkRedirect pSource, pTarget
    if there is a file pSource then
-      get shell("ln -s" && quote & pSource & quote && quote & pTarget & quote)
+      // Hardlink, since iOS simulator 9.0 does not seem able to handle symlinks
+      get shell("ln" && quote & pSource & quote && quote & pTarget & quote)
    else if there is a folder pSource then
       local tOldFolder
       put the folder into tOldFolder
