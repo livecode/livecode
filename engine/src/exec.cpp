@@ -97,12 +97,22 @@ bool MCExecContext::ConvertToString(MCValueRef p_value, MCStringRef& r_string)
         uint32_t t_length;
         t_length = MCU_r8tos(t_buffer, t_buffer_size, MCNumberFetchAsReal((MCNumberRef)p_value), m_nffw, m_nftrailing, m_nfforce);
 
-        bool t_success;
-        t_success = MCStringCreateWithNativeChars((char_t *)t_buffer, t_length, r_string) &&
-                MCStringSetNumericValue(r_string, MCNumberFetchAsReal((MCNumberRef)p_value));
+        if (!MCStringCreateWithNativeCharBufferAndRelease((char_t *)t_buffer,
+                                                          t_length,
+                                                          t_buffer_size,
+                                                          r_string))
+        {
+	        delete[] t_buffer;
+	        return false;
+        }
 
-        delete[] t_buffer;
-        return t_success;
+        if (!MCStringSetNumericValue(r_string,
+                                     MCNumberFetchAsReal((MCNumberRef)p_value)))
+        {
+	        return false;
+        }
+
+        return true;
     }
     break;
     default:
@@ -1172,9 +1182,12 @@ MCVarref* MCExecContext::GetIt() const
 
 void MCExecContext::SetItToValue(MCValueRef p_value)
 {
-    MCAutoPointer<MCContainer> t_container;
-    GetIt() -> evalcontainer(*this, &t_container);
-	t_container -> set_valueref(p_value);
+    GetIt() -> set(*this, p_value);
+}
+
+void MCExecContext::GiveValueToIt(/* take */ MCExecValue& p_value)
+{
+    GetIt() -> give_value(*this, p_value);
 }
 
 void MCExecContext::SetItToEmpty(void)

@@ -4019,7 +4019,7 @@ bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p
     
     if (t_trailing_delim)
     {
-        return MCStringFormat(r_output, "%@%@", *t_list_string, t_delimiter);
+        return MCStringCreateWithStrings(r_output, *t_list_string, t_delimiter);
     }
     
     r_output = MCValueRetain(*t_list_string);

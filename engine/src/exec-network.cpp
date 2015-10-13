@@ -728,26 +728,22 @@ void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCValueRef p_value, int p_wher
             {
                 // Both old and new are strings
                 if (p_where == PT_AFTER)
-                    MCStringFormat((MCStringRef&)&t_new_value, "%@%@", *t_old_data, p_value);
+                    MCStringCreateWithStrings((MCStringRef&)&t_new_value, (MCStringRef)*t_old_data, (MCStringRef)p_value);
                 else
-                    MCStringFormat((MCStringRef&)&t_new_value, "%@%@", p_value, *t_old_data);
+                    MCStringCreateWithStrings((MCStringRef&)&t_new_value, (MCStringRef)p_value, (MCStringRef)*t_old_data);
             }
             else
             {
                 // Not strings, treat as data
-                MCDataRef t_old, t_new;
-                MCAutoDataRef t_value;
+                MCAutoDataRef t_old, t_value;
                 
-                /* UNCHECKED */ ctxt.ConvertToData(*t_old_data, t_old);
+                /* UNCHECKED */ ctxt.ConvertToData(*t_old_data, &t_old);
                 /* UNCHECKED */ ctxt.ConvertToData(p_value, &t_value);
                 
-                /* UNCHECKED */ MCDataMutableCopyAndRelease(t_old, t_new);
                 if (p_where == PT_AFTER)
-                    /* UNCHECKED */ MCDataAppend(t_new, *t_value);
+                    MCDataCreateWithData((MCDataRef&)&t_new_value, *t_old, *t_value);
                 else
-                    /* UNCHECKED */ MCDataPrepend(t_new, *t_value);
-                
-                /* UNCHECKED */ MCDataCopyAndRelease(t_new, (MCDataRef&)&t_new_value);
+                    MCDataCreateWithData((MCDataRef&)&t_new_value, *t_value, *t_old);
             }
 		}
 	}
@@ -952,9 +948,9 @@ void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCValueRef p_value, int p_wher
             
             // Both old and new are strings
             if (p_where == PT_AFTER)
-                MCStringFormat(&t_new_value, "%@%@", *t_old_data, p_value);
+                MCStringCreateWithStrings(&t_new_value, (MCStringRef)*t_old_data, (MCStringRef)p_value);
             else
-                MCStringFormat(&t_new_value, "%@%@", p_value, *t_old_data);
+                MCStringCreateWithStrings(&t_new_value, (MCStringRef)p_value, (MCStringRef)*t_old_data);
             
             MCNetworkExecSetUrl(ctxt, *t_new_value, p_url);
         }

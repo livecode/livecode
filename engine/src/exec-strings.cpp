@@ -26,6 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "handler.h"
 #include "variable.h"
 #include "hndlrlst.h"
+#include "osspec.h"
 
 #include "scriptpt.h"
 #include "util.h"
@@ -1444,29 +1445,12 @@ void MCStringsEvalMerge(MCExecContext& ctxt, MCStringRef p_format, MCStringRef& 
 
 bool MCStringsConcatenate(MCStringRef p_left, MCStringRef p_right, MCStringRef& r_result)
 {
-	MCStringRef t_string = nil;
-	if (!MCStringMutableCopy(p_left, t_string) ||
-		!MCStringAppend(t_string, p_right) ||
-		!MCStringCopyAndRelease(t_string, r_result))
-	{
-		MCValueRelease(t_string);
-		return false;
-	}
-	return true;
+    return MCStringCreateWithStrings(r_result, p_left, p_right);
 }
 
 bool MCStringsConcatenateWithChar(MCStringRef p_left, MCStringRef p_right, unichar_t p_char, MCStringRef& r_result)
 {
-	MCStringRef t_string = nil;
-	if (!MCStringMutableCopy(p_left, t_string) ||
-		!MCStringAppendChar(t_string, p_char) ||
-		!MCStringAppend(t_string, p_right) ||
-		!MCStringCopyAndRelease(t_string, r_result))
-	{
-		MCValueRelease(t_string);
-		return false;
-	}
-	return true;
+    return MCStringCreateWithStringsAndSeparator(r_result, p_char, p_left, p_right);
 }
 
 void MCStringsEvalConcatenate(MCExecContext& ctxt, MCStringRef p_left, MCStringRef p_right, MCStringRef& r_result)
@@ -1482,15 +1466,7 @@ void MCStringsEvalConcatenate(MCExecContext& ctxt, MCStringRef p_left, MCStringR
 
 bool MCDataConcatenate(MCDataRef p_left, MCDataRef p_right, MCDataRef& r_result)
 {
-	MCDataRef t_string = nil;
-	if (!MCDataMutableCopy(p_left, t_string) ||
-		!MCDataAppend(t_string, p_right) ||
-		!MCDataCopyAndRelease(t_string, r_result))
-	{
-		MCValueRelease(t_string);
-		return false;
-	}
-	return true;
+    return MCDataCreateWithData(r_result, p_left, p_right);
 }
 
 void MCStringsEvalConcatenate(MCExecContext& ctxt, MCDataRef p_left, MCDataRef p_right, MCDataRef& r_result)
@@ -2381,7 +2357,7 @@ void MCStringsSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems,
 	nitems++;
 }
 
-void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, MCStringRef *p_strings_array, uindex_t p_count, MCExpression *p_by, MCStringRef*& r_sorted_array, uindex_t& r_sorted_count)
+void MCStringsExecSortOld(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, MCStringRef *p_strings_array, uindex_t p_count, MCExpression *p_by, MCStringRef*& r_sorted_array, uindex_t& r_sorted_count)
 {
 	// OK-2008-12-11: [[Bug 7503]] - If there are 0 items in the string, don't carry out the search,
 	// this keeps the behavior consistent with previous versions of Revolution.
@@ -2414,6 +2390,355 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
     }
     
     t_sorted . Take(r_sorted_array, r_sorted_count);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+typedef bool (*comparator_t)(void *context, uindex_t left, uindex_t right);
+typedef void (*freer_t)(void *keys, uindex_t count);
+
+static void MCStringsDoSortIndirect(uindex_t *b, uint4 n, uindex_t *t, comparator_t is_less_or_equal, void *context)
+{
+    if (n <= 1)
+		return;
+    
+	uint4 n1 = n / 2;
+	uint4 n2 = n - n1;
+	uindex_t *b1 = b;
+	uindex_t *b2 = b + n1;
+    
+	MCStringsDoSortIndirect(b1, n1, t, is_less_or_equal, context);
+	MCStringsDoSortIndirect(b2, n2, t, is_less_or_equal, context);
+    
+	uindex_t *tmp = t;
+	while (n1 > 0 && n2 > 0)
+	{
+		if (is_less_or_equal(context, *b1, *b2))
+		{
+			*tmp++ = *b1++;
+			n1--;
+		}
+		else
+		{
+			*tmp++ = *b2++;
+			n2--;
+		}
+	}
+    
+	for (uindex_t i = 0; i < n1; i++)
+		tmp[i] = b1[i];
+	for (uindex_t i = 0; i < (n - n2); i++)
+		b[i] = t[i];
+}
+
+static void MCStringsSortIndirect(uindex_t *p_items, uint4 nitems, comparator_t is_less_or_equal, void *context)
+{
+    if (nitems == 0)
+        return;
+    
+    uindex_t *tmp = new uindex_t[nitems];
+    MCStringsDoSortIndirect(p_items, nitems, tmp, is_less_or_equal, context);
+    delete[] tmp;
+}
+
+static bool double_comparator(void *p_context, uindex_t p_left, uindex_t p_right)
+{
+    double *t_keys;
+    t_keys = (double *)p_context;
+    return t_keys[p_left] <= t_keys[p_right];
+}
+
+static void double_freer(void *keys, uindex_t count)
+{
+    double *t_doubles;
+    t_doubles = (double *)keys;
+    delete[] t_doubles;
+}
+
+static bool data_comparator(void *p_context, uindex_t p_left, uindex_t p_right)
+{
+    MCDataRef *t_keys;
+    t_keys = (MCDataRef *)p_context;
+    return MCDataCompareTo(t_keys[p_left], t_keys[p_right]) <= 0;
+}
+
+static bool string_comparator(void *p_context, uindex_t p_left, uindex_t p_right)
+{
+    MCStringRef *t_keys;
+    t_keys = (MCStringRef *)p_context;
+    return MCStringCompareTo(t_keys[p_left], t_keys[p_right], kMCStringOptionCompareExact) <= 0;
+}
+
+
+static void valueref_freer(void *keys, uindex_t count)
+{
+    MCValueRef *t_values;
+    t_values = (MCValueRef *)keys;
+    for(uindex_t i = 0; i < count; i++)
+        MCValueRelease(t_values[i]);
+    delete[] t_values;
+}
+
+static bool MCStringCopyFoldedAndRelease(MCStringRef p_string, MCStringOptions p_options, MCStringRef& r_folded_string)
+{
+    if (p_options == kMCStringOptionCompareExact)
+    {
+        r_folded_string = p_string;
+        return true;
+    }
+    
+    if (!MCStringMutableCopyAndRelease(p_string, p_string))
+        return false;
+    
+    if (!MCStringFold(p_string, p_options))
+        return false;
+    
+    if (!MCStringCopyAndRelease(p_string, p_string))
+        return false;
+    
+    r_folded_string = p_string;
+    
+    return true;
+}
+
+void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, MCStringRef *p_items, uindex_t p_count, MCExpression *p_by, MCStringRef*& r_sorted_array, uindex_t& r_sorted_count)
+{
+    // If there are no items to sort, do nothing.
+    if (p_count == 0)
+        return;
+    
+    // Indicates if all items are stringrefs.
+    bool t_all_strings;
+    t_all_strings = true;
+    
+    // Process the items if there is a 'by'.
+    MCValueRef *t_temp_items;
+    MCValueRef *t_items;
+    t_temp_items = nil;
+    if (p_by != nil)
+    {
+        t_temp_items = new MCValueRef[p_count];
+        MCerrorlock++;
+        for(uindex_t i = 0; i < p_count; i++)
+        {
+            MCeach -> set(ctxt, p_items[i]);
+            if (!ctxt . EvalExprAsValueRef(p_by, EE_UNDEFINED, t_temp_items[i]))
+                t_temp_items[i] = MCValueRetain(p_items[i]);
+            if (MCValueGetTypeCode(t_temp_items[i]) != kMCValueTypeCodeString)
+                t_all_strings = false;
+        }
+        t_items = t_temp_items;
+    }
+    else
+        t_items = (MCValueRef *)p_items;
+    
+    // Build the vector of indicies to sort.
+    uindex_t *t_indicies;
+    t_indicies = new uindex_t[p_count];
+    for(uindex_t i = 0; i < p_count; i++)
+        t_indicies[i] = i;
+    
+    // Now generate the sort keys - what type these are will depend on the
+    // type of sort.
+    void *t_sort_keys;
+    comparator_t t_sort_compare;
+    freer_t t_sort_freer;
+    
+    switch(p_form)
+    {
+        case ST_DATETIME:
+        {
+            // DateTime is sorted by seconds.
+            double *t_seconds;
+            t_seconds = new double[p_count];
+            for(uindex_t i = 0; i < p_count; i++)
+            {
+                MCDateTime t_datetime;
+                if (!MCD_convert_to_datetime(ctxt, t_items[i], CF_UNDEFINED, CF_UNDEFINED, t_datetime) ||
+                    !MCS_datetimetoseconds(t_datetime, t_seconds[i]))
+                    t_seconds[i] = -MAXREAL8;
+            }
+            
+            t_sort_keys = t_seconds;
+            t_sort_compare = double_comparator;
+            t_sort_freer = double_freer;
+        }
+        break;
+            
+        case ST_NUMERIC:
+        {
+            double *t_numbers;
+            t_numbers = new double[p_count];
+            for(uindex_t i = 0; i < p_count; i++)
+            {
+                if (MCValueIsEmpty(t_items[i]))
+                {
+                    t_numbers[i] = -MAXREAL8;
+                    continue;
+                }
+                
+                if (!ctxt . ConvertToReal(t_items[i], t_numbers[i]))
+                {
+                    MCAutoStringRef t_string;
+                    if (!ctxt . ConvertToString(t_items[i], &t_string))
+                    {
+                        t_numbers[i] = -MAXREAL8;
+                        continue;
+                    }
+                    
+                    uindex_t t_start, t_end, t_length;
+                    t_length = MCStringGetLength(*t_string);
+                    t_start = 0;
+                    
+                    // if there are consecutive spaces at the beginning, skip them
+                    while (t_start < t_length && MCUnicodeIsWhitespace(MCStringGetCharAtIndex(*t_string, t_start)))
+                        t_start++;
+                    
+                    t_end = t_start;
+                    while (t_end < t_length)
+                    {
+                        char_t t_char = MCStringGetNativeCharAtIndex(*t_string, t_end);
+                        if (!isdigit((uint1)t_char) && t_char != '.' && t_char != '-' && t_char != '+')
+                            break;
+                        
+                        t_end++;
+                    }
+                    
+                    MCAutoStringRef t_numeric_part;
+                    if (t_end == t_start ||
+                        !MCStringCopySubstring(*t_string, MCRangeMake(t_start, t_end - t_start), &t_numeric_part) ||
+                        !ctxt . ConvertToReal(*t_numeric_part, t_numbers[i]))
+                    {
+                        t_numbers[i] = -MAXREAL8;
+                        continue;
+                    }
+                }
+            }
+            
+            t_sort_keys = t_numbers;
+            t_sort_compare = double_comparator;
+            t_sort_freer = double_freer;
+        }
+        break;
+            
+        case ST_BINARY:
+        {
+            MCDataRef *t_datas;
+            t_datas = new MCDataRef[p_count];
+            for(uindex_t i = 0; i < p_count; i++)
+            {
+                if (!ctxt . ConvertToData(t_items[i], t_datas[i]))
+                    t_datas[i] = MCValueRetain(kMCEmptyData);
+            }
+            
+            t_sort_keys = t_datas;
+            t_sort_compare = data_comparator;
+            t_sort_freer = valueref_freer;
+        }
+        break;
+        
+        case ST_TEXT:
+        {
+            MCStringOptions t_options;
+            t_options = ctxt . GetStringComparisonType();
+            if (t_options == kMCStringOptionCompareExact &&
+                t_all_strings)
+            {
+                t_sort_keys = t_items;
+                t_sort_compare = string_comparator;
+                t_sort_freer = nil;
+            }
+            else
+            {
+                MCStringRef *t_strings;
+                t_strings = new MCStringRef[p_count];
+                for(uindex_t i = 0; i < p_count; i++)
+                {
+                    if (!ctxt . ConvertToString(t_items[i], t_strings[i]) ||
+                        !MCStringCopyFoldedAndRelease(t_strings[i], t_options, t_strings[i]))
+                        t_strings[i] = MCValueRetain(kMCEmptyString);
+                }
+                
+                t_sort_keys = t_strings;
+                t_sort_compare = string_comparator;
+                t_sort_freer = valueref_freer;
+            }
+        }
+        break;
+            
+        case ST_INTERNATIONAL:
+        {
+            MCUnicodeCollateOption t_options;
+            t_options = MCUnicodeCollateOptionFromCompareOption((MCUnicodeCompareOption)ctxt . GetStringComparisonType());
+            
+            MCUnicodeCollatorRef t_collator;
+            /* UNCHECKED */ MCUnicodeCreateCollator(kMCSystemLocale, t_options, t_collator);
+            
+            MCDataRef *t_datas;
+            t_datas = new MCDataRef[p_count];
+            for(uindex_t i = 0; i < p_count; i++)
+            {
+                MCAutoStringRef t_string;
+                if (!ctxt . ConvertToString(t_items[i], &t_string))
+                {
+                    t_datas[i] = MCValueRetain(kMCEmptyData);
+                    continue;
+                }
+                
+                byte_t *t_key;
+                uindex_t t_key_length;
+                if (!MCUnicodeCreateSortKeyWithCollator(t_collator, MCStringGetCharPtr(*t_string), MCStringGetLength(*t_string), t_key, t_key_length))
+                {
+                    t_datas[i] = MCValueRetain(kMCEmptyData);
+                    continue;
+                }
+                
+                if (!MCDataCreateWithBytesAndRelease(t_key, t_key_length, t_datas[i]))
+                {
+                    free(t_key);
+                    t_datas[i] = MCValueRetain(kMCEmptyData);
+                    continue;
+                }
+            }
+            
+            MCUnicodeDestroyCollator(t_collator);
+            
+            t_sort_keys = t_datas;
+            t_sort_compare = data_comparator;
+            t_sort_freer = valueref_freer;
+        }
+        break;
+            
+        default:
+            MCUnreachable();
+            break;
+    }
+    
+    MCStringsSortIndirect(t_indicies, p_count, t_sort_compare, t_sort_keys);
+    
+    t_sort_freer(t_sort_keys, p_count);
+    
+    if (t_temp_items != nil)
+    {
+        for(uindex_t i = 0; i < p_count; i++)
+            MCValueRelease(t_temp_items[i]);
+        delete[] t_temp_items;
+    }
+    
+    MCAutoArray<MCStringRef> t_sorted;
+ 	if (p_dir == ST_ASCENDING)
+    {
+        for (uindex_t i = 0; i < p_count; i++)
+            t_sorted . Push((MCStringRef)p_items[t_indicies[i]]);
+    }
+    else
+    {
+        for (uindex_t i = p_count; i > 0; i--)
+            t_sorted . Push((MCStringRef)p_items[t_indicies[i - 1]]);
+    }
+    t_sorted . Take(r_sorted_array, r_sorted_count);
+    
+    delete[] t_indicies;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
