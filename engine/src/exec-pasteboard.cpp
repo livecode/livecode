@@ -603,7 +603,7 @@ void MCPasteboardEvalRawClipboardOrDragKeys(MCExecContext& ctxt, const MCClipboa
     // Ensure there is an active script clipboard
     if (!p_clipboard->IsLocked())
     {
-        ctxt.LegacyThrow(EE_CLIPBOARD_NOT_LOCKED);
+        ctxt.LegacyThrow(EE_CLIPBOARD_NOTLOCKED);
         return;
     }
     
@@ -728,7 +728,7 @@ void MCPasteboardEvalIsAmongTheKeysOfTheRawClipboardOrDragData(MCExecContext& ct
     // Ensure there is an active script clipboard
     if (!p_clipboard->IsLocked())
     {
-        ctxt.LegacyThrow(EE_CLIPBOARD_NOT_LOCKED);
+        ctxt.LegacyThrow(EE_CLIPBOARD_NOTLOCKED);
         return;
     }
     
@@ -1431,7 +1431,7 @@ void MCPasteboardGetRawClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_inde
     // Ensure there is an active script clipboard
     if (!p_clipboard->IsLocked())
     {
-        ctxt.LegacyThrow(EE_CLIPBOARD_NOT_LOCKED);
+        ctxt.LegacyThrow(EE_CLIPBOARD_NOTLOCKED);
         return;
     }
     
@@ -1465,7 +1465,7 @@ void MCPasteboardSetRawClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_inde
     // Ensure there is an active script clipboard
     if (!p_clipboard->IsLocked())
     {
-        ctxt.LegacyThrow(EE_CLIPBOARD_NOT_LOCKED);
+        ctxt.LegacyThrow(EE_CLIPBOARD_NOTLOCKED);
         return;
     }
     
@@ -1473,7 +1473,7 @@ void MCPasteboardSetRawClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_inde
     MCRawClipboard* t_raw_clipboard = p_clipboard->GetRawClipboard();
     if (t_raw_clipboard->IsExternalData())
     {
-        ctxt.LegacyThrow(EE_CLIPBOARD_EXTERNAL_DATA);
+        ctxt.LegacyThrow(EE_CLIPBOARD_EXTERNALDATA);
         return;
     }
     
@@ -1487,7 +1487,7 @@ void MCPasteboardSetRawClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_inde
         t_item = t_raw_clipboard->CreateNewItem();
         if (!t_raw_clipboard->AddItem(t_item))
         {
-            ctxt.LegacyThrow(EE_CLIPBOARD_INSERT_FAILED);
+            ctxt.LegacyThrow(EE_CLIPBOARD_INSERTFAILED);
             return;
         }
     }
@@ -1745,7 +1745,7 @@ void MCPasteboardGetRawClipboardOrDragTextData(MCExecContext& ctxt, const MCClip
     // Ensure there is an active script clipboard
     if (!p_clipboard->IsLocked())
     {
-        ctxt.LegacyThrow(EE_CLIPBOARD_NOT_LOCKED);
+        ctxt.LegacyThrow(EE_CLIPBOARD_NOTLOCKED);
         return;
     }
     
@@ -1758,7 +1758,7 @@ void MCPasteboardSetRawClipboardOrDragTextData(MCExecContext& ctxt, MCClipboard*
     // Ensure there is an active script clipboard
     if (!p_clipboard->IsLocked())
     {
-        ctxt.LegacyThrow(EE_CLIPBOARD_NOT_LOCKED);
+        ctxt.LegacyThrow(EE_CLIPBOARD_NOTLOCKED);
         return;
     }
     
@@ -1895,14 +1895,14 @@ void MCPasteboardExecLockClipboard(MCExecContext& ctxt)
     // Don't allow recursive locking
     if (MCclipboard->IsLocked())
     {
-        ctxt.LegacyThrow(EE_CLIPBOARD_ALREADY_LOCKED);
+        ctxt.LegacyThrow(EE_CLIPBOARD_ALREADYLOCKED);
         return;
     }
     
     // Lock the main clipboard. This has the side-effect of pulling updates.
     if (!MCclipboard->Lock())
     {
-        ctxt.LegacyThrow(EE_CLIPBOARD_NOT_LOCKED);
+        ctxt.LegacyThrow(EE_CLIPBOARD_NOTLOCKED);
         return;
     }
 }
@@ -1912,7 +1912,7 @@ void MCPasteboardExecUnlockClipboard(MCExecContext& ctxt)
     // Make sure a clipboard has actually been locked
     if (!MCclipboard->IsLocked())
     {
-        ctxt.LegacyThrow(EE_CLIPBOARD_NOT_LOCKED);
+        ctxt.LegacyThrow(EE_CLIPBOARD_NOTLOCKED);
         return;
     }
     

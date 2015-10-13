@@ -2670,16 +2670,16 @@ enum Exec_errors
     EE_CLIPBOARD_BADREP,
     
     // {EE-0871} clipboard: failed to insert item
-    EE_CLIPBOARD_INSERT_FAILED,
+    EE_CLIPBOARD_INSERTFAILED,
     
     // {EE-0872} clipboard: clipboard not locked
-    EE_CLIPBOARD_NOT_LOCKED,
+    EE_CLIPBOARD_NOTLOCKED,
     
     // {EE-0873} clipboard: already locked
-    EE_CLIPBOARD_ALREADY_LOCKED,
+    EE_CLIPBOARD_ALREADYLOCKED,
     
     // {EE-0874} clipboard: needs to be cleared (contains external data)
-    EE_CLIPBOARD_EXTERNAL_DATA,
+    EE_CLIPBOARD_EXTERNALDATA,
 };
 
 extern const char *MCexecutionerrors;
