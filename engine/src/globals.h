@@ -390,6 +390,7 @@ extern MCPoint MCdragimageoffset;
 extern MCClipboard* MCclipboard;
 extern MCClipboard* MCselection;
 extern MCClipboard* MCdragboard;
+extern uindex_t MCclipboardlockcount;
 
 extern uint4 MCsecuremode;
 
@@ -422,9 +423,6 @@ extern char *MCsysencoding;
 // Locales
 extern MCLocaleRef kMCBasicLocale;
 extern MCLocaleRef kMCSystemLocale;
-
-// Flag indicating whether the clipboard is currently locked
-extern bool MCclipboardlocked;
 
 ////////////////////////////////////////////////////////////////////////////////
 //

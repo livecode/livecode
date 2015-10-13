@@ -1892,32 +1892,19 @@ void MCPasteboardEvalDragDestinationAsObject(MCExecContext& ctxt, MCObjectPtr& r
 
 void MCPasteboardExecLockClipboard(MCExecContext& ctxt)
 {
-    // Don't allow recursive locking
-    if (MCclipboard->IsLocked())
-    {
-        ctxt.LegacyThrow(EE_CLIPBOARD_ALREADYLOCKED);
-        return;
-    }
-    
     // Lock the main clipboard. This has the side-effect of pulling updates.
-    if (!MCclipboard->Lock())
-    {
-        ctxt.LegacyThrow(EE_CLIPBOARD_NOTLOCKED);
-        return;
-    }
+    MCclipboard->Lock();
+    MCclipboardlockcount++;
 }
 
 void MCPasteboardExecUnlockClipboard(MCExecContext& ctxt)
 {
-    // Make sure a clipboard has actually been locked
-    if (!MCclipboard->IsLocked())
-    {
-        ctxt.LegacyThrow(EE_CLIPBOARD_NOTLOCKED);
-        return;
-    }
-    
     // Unlock the main clipboard. This will push any changes to the system.
-    MCclipboard->Unlock();
+    if (MCclipboardlockcount > 0)
+    {
+        MCclipboardlockcount--;
+        MCclipboard->Unlock();
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -247,6 +247,7 @@ uint4 MCrecursionlimit = 400000; // actual max is about 480K on OSX
 MCClipboard* MCclipboard;
 MCClipboard* MCselection;
 MCClipboard* MCdragboard;
+uindex_t MCclipboardlockcount;
 
 MCDragAction MCdragaction;
 MCDragActionSet MCallowabledragactions;
@@ -504,9 +505,6 @@ MCArrayRef MCcommandarguments;
 
 MCHook *MChooks = nil;
 
-// Flag indicating whether the clipboard is currently locked
-bool MCclipboardlocked = false;
-
 ////////////////////////////////////////////////////////////////////////////////
 
 extern MCUIDC *MCCreateScreenDC(void);
@@ -641,6 +639,7 @@ void X_clear_globals(void)
 	MCclipboard = NULL;
 	MCselection = NULL;
     MCdragboard = NULL;
+    MCclipboardlockcount = 0;
 	MCdragaction = 0;
 	MCallowabledragactions = 0;
 	MCdragimageid = 0;
@@ -847,8 +846,6 @@ void X_clear_globals(void)
     MCactionsrequired = 0;
     
     MChooks = nil;
-    
-    MCclipboardlocked = false;
 
 #if defined(MCSSL)
     MCSocketsInitialize();
@@ -1146,6 +1143,7 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
     MCclipboard = MCClipboard::CreateSystemClipboard();
     MCdragboard = MCClipboard::CreateSystemDragboard();
     MCselection = MCClipboard::CreateSystemSelectionClipboard();
+    MCclipboardlockcount = 0;
 	
 	MCundos = new MCUndolist;
 	MCselected = new MCSellist;
