@@ -1666,15 +1666,11 @@ end mapFilePath
 private command symlinkRedirect pSource, pTarget
    if there is a file pSource then
       // Hardlink, since iOS simulator 9.0 does not seem able to handle symlinks
-      get shell("ln" && quote & pSource & quote && quote & pTarget & quote)
+      get shell(merge("ln '[[pSource]]' '[[pTarget]]' || cp '[[pSource]]' '[[pTarget]]'"))
       
-      if it is not empty then
-         // Hard linking failed, we copy the file instead
-         get shell("cp" && quote & pSource & quote && quote & pTarget & quote)
-         
-         if it is not empty then
-            throw "Cannot copy" && pSource
-         end if
+      if the result is not empty then
+         // Both 'ln' and 'cp' failedn
+         throw "Cannot copy" && pSource
       end if
    else if there is a folder pSource then
       local tOldFolder
