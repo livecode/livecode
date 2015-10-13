@@ -218,8 +218,7 @@ MCDataRef MCLinuxRawClipboard::EncodeFileListForTransfer(MCStringRef p_list) con
         MCValueRef t_path;
         if (!MCArrayFetchValueAtIndex(*t_path_list, i, t_path))
             return NULL;
-        if (MCValueGetTypeCode(t_path) != kMCValueTypeCodeString)
-            return NULL;
+        MCAssert(MCValueGetTypeCode(t_path) == kMCValueTypeCodeString)
         
         // Encode the string as UTF-8 data and then URL encode it
         MCAutoStringRef t_encoded_path;
@@ -278,15 +277,14 @@ MCStringRef MCLinuxRawClipboard::DecodeTransferredFileList(MCDataRef p_data) con
     for (uindex_t i = 1; i <= MCArrayGetCount(*t_uri_list); i++)
     {
         // Get the path at this index (and sanity-check it)
-        MCValueRef t_path;
-        if (!MCArrayFetchValueAtIndex(*t_uri_list, i, t_path))
+        MCStringRef t_path;
+        if (!MCArrayFetchValueAtIndex(*t_uri_list, i, (MCValueRef&)t_path))
             return NULL;
-        if (MCValueGetTypeCode(t_path) != kMCValueTypeCodeString)
-            return NULL;
+        MCAssert(MCValueGetTypeCode(t_path) == kMCValueTypeCodeString)
         
         // Create a mutable copy of this path
         MCAutoStringRef t_modified_path;
-        if (!MCStringMutableCopy((MCStringRef)t_path, &t_modified_path))
+        if (!MCStringMutableCopy(t_path, &t_modified_path))
             return NULL;
         
         // Remove any "file://" prefix that the path has
