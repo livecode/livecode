@@ -551,12 +551,23 @@ void MCPlatformGetSystemProperty(MCPlatformSystemProperty p_property, MCPlatform
 	switch(p_property)
 	{
 		case kMCPlatformSystemPropertyDoubleClickInterval:
-			*(uint16_t *)r_value = GetDblTime() * 1000.0 / 60.0;
+            // Get the double-click interval, in milliseconds
+            *(uint16_t *)r_value = uint16_t([NSEvent doubleClickInterval] * 1000.0);
 			break;
 			
 		case kMCPlatformSystemPropertyCaretBlinkInterval:
-			*(uint16_t *)r_value = GetCaretTime() * 1000.0 / 60.0;
+        {
+            // Query the user's settings for the cursor blink rate
+            NSInteger t_rate_ms = [[NSUserDefaults standardUserDefaults] integerForKey:@"NSTextInsertionPointBlinkPeriod"];
+            
+            // If the query failed, use the standard value (this seems to be
+            // 567ms on OSX, not that this is documented anywhere).
+            if (t_rate_ms == 0)
+                t_rate_ms = 567;
+            
+            *(uint16_t *)r_value = uint16_t(t_rate_ms);
 			break;
+        }
 			
 		case kMCPlatformSystemPropertyHiliteColor:
 		{

@@ -99,7 +99,7 @@ static bool s_lock_responder_change = false;
 		{
 			if ([t_view respondsToSelector:@selector(com_runrev_livecode_nativeViewId)])
 			{
-				[(MCWindowDelegate *)[self delegate] viewFocusSwitched: (uint32_t)[t_view com_runrev_livecode_nativeViewId]];
+				[(MCWindowDelegate *)[self delegate] viewFocusSwitched: (uintptr_t)[t_view com_runrev_livecode_nativeViewId]];
 				return YES;
 			}
 			
@@ -199,7 +199,7 @@ static bool s_lock_responder_change = false;
 		{
 			if ([t_view respondsToSelector:@selector(com_runrev_livecode_nativeViewId)])
 			{
-				[(MCWindowDelegate *)[self delegate] viewFocusSwitched: (uint32_t)[t_view com_runrev_livecode_nativeViewId]];
+				[(MCWindowDelegate *)[self delegate] viewFocusSwitched: (uintptr_t)[t_view com_runrev_livecode_nativeViewId]];
 				return YES;
 			}
 			
@@ -2305,7 +2305,7 @@ static NSView *MCMacPlatformFindView(MCPlatformWindowRef p_window, uint32_t p_id
 			NSView *t_view;
 			t_view = (NSView *)[t_subviews objectAtIndex: i];
 			if ([t_view respondsToSelector:@selector(com_runrev_livecode_nativeViewId)])
-				if ((uint32_t)[t_view com_runrev_livecode_nativeViewId] == p_id)
+				if ((uintptr_t)[t_view com_runrev_livecode_nativeViewId] == p_id)
 					return t_view;
 		}
 	}
