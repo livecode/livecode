@@ -616,7 +616,8 @@ bool MCVariable::modify_data(MCExecContext& ctxt, MCDataRef p_data, MCNameRef *p
     MCDataRef t_value_as_data;
     t_value_as_data = nil;
     // SN-2014-04-11 [[ FasterVariable ]] now chose between appending or prepending
-	if (MCDataMutableCopy((MCDataRef)t_current_value, t_value_as_data) &&
+	if (ctxt . ConvertToData(t_current_value, t_value_as_data) &&
+	    MCDataMutableCopy(t_value_as_data, t_value_as_data) &&
 		((p_setting == kMCVariableSetAfter && MCDataAppend(t_value_as_data, p_data)) ||
          (p_setting == kMCVariableSetBefore && MCDataPrepend(t_value_as_data, p_data))) &&
 		setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), t_value_as_data))
