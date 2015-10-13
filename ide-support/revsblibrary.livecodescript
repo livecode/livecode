@@ -198,6 +198,8 @@ private command __revSBCopyFolder pSource, pTarget, pCallback, pCallbackTarget
    local tResourceList
    local tResult
    
+   put revSBReadLink(pSource) into pSource
+   
    local tOldFolder
    put the defaultfolder into tOldFolder
    if there is no folder pSource then
@@ -558,6 +560,38 @@ function revSBGenerateUUID
   _internal call "generate_uuid"
   return the result
 end revSBGenerateUUID
+
+private function __readlink pPath
+   if the platform is "Win32" then
+      return empty
+   end if
+   
+   local tLink
+   put shell("readlink " & quote & pPath & quote) into tLink
+   if the last char of tLink is cr then
+      delete the last char of tLink
+   end if
+   return tLink
+end __readlink
+
+// Resolve symbolic links
+private function revSBReadLink pPath
+   repeat forever
+      local tLink
+      put __readlink(pPath) into tLink
+      
+      if tLink is empty then
+         return pPath
+      end if
+      
+      if the first char of tLink is not slash then
+         set the itemdel to slash
+         put revSBCalculateAbsolutePath(item 1 to -2 of pPath, tLink) into tLink
+      end if
+      
+      put tLink into pPath
+   end repeat
+end revSBReadLink
 
 ----------
 
