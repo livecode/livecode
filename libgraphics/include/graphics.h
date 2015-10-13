@@ -30,6 +30,8 @@ typedef struct __MCGMask *MCGMaskRef;
 typedef struct __MCGDashes *MCGDashesRef;
 typedef struct __MCGRegion *MCGRegionRef;
 
+typedef struct __MCGSvg *MCGSvgRef;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Pixel format (32bit)
@@ -1130,6 +1132,23 @@ extern bool MCGRegionIterate(MCGRegionRef p_region, MCGRegionIterateCallback p_c
 
 extern bool MCGRegionCopy(MCGRegionRef p_region, MCGRegionRef &r_copy);
 extern bool MCGRegionCopyWithTransform(MCGRegionRef p_region, const MCGAffineTransform &p_transform, MCGRegionRef &r_copy);
+
+////////////////////////////////////////////////////////////////////////////////
+
+// SVG Support
+
+bool MCGSvgCreate(const void *data, size_t data_size, MCGSvgRef& r_svg);
+
+bool MCGSvgIsValid(MCGSvgRef svg);
+
+MCGSvgRef MCGSvgRetain(MCGSvgRef svg);
+void MCGSvgRelease(MCGSvgRef svg);
+
+MCGRectangle MCGSvgGetViewBox(MCGSvgRef svg);
+
+MCGRectangle MCGSvgGetBoundingBox(MCGSvgRef svg);
+
+void MCGSvgRender(MCGSvgRef svg, MCGContextRef target);
 
 ////////////////////////////////////////////////////////////////////////////////
 
