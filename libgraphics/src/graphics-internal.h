@@ -519,4 +519,20 @@ struct __MCGRegion
 
 ////////////////////////////////////////////////////////////////////////////////
 
+typedef struct NSVGimage NSVGimage;
+
+struct __MCGSvg
+{
+    uindex_t references;
+    
+    NSVGimage *image;
+    
+    MCGRectangle bounding_box;
+    MCGRectangle view_box;
+    
+    bool is_valid : 1;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 #endif
