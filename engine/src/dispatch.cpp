@@ -661,7 +661,6 @@ IO_stat MCDispatch::readfile(MCStringRef p_openpath, MCStringRef p_name, IO_hand
 //   to handle font table cleanup).
 IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_handle &stream, MCStack *&sptr)
 {
-	Boolean loadhome = False;
 	uint32_t version;
 
     sptr = NULL;
