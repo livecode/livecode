@@ -965,26 +965,26 @@ IO_stat MCAudioClip::load(IO_handle stream, uint32_t version)
 	IO_stat stat;
 
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint4(&size, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if (size != 0)
 	{
 		samples = new int1[size];
 		if ((stat = IO_read(samples, size, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	}
 	if ((stat = IO_read_uint2(&format, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint2(&nchannels, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint2(&swidth, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint2(&rate, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if (flags & F_LOUDNESS)
 		if ((stat = IO_read_uint2(&loudness, stream)) != IO_NORMAL)
-            return stat;
+            return checkloadstat(stat);
 	return loadpropsets(stream, version);
 }
 

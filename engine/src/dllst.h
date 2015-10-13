@@ -62,6 +62,18 @@ public:
 	void append(MCDLlist *node);
 	void splitat(MCDLlist *node);
 	MCDLlist *remove(MCDLlist *&list);
+    
+    // This function is called on all 'IO_stat' return in load methods. It
+    // provides an easy hook for a breakpoint to work out why a particular file
+    // failed to load.
+    inline static IO_stat checkloadstat(IO_stat stat)
+    {
+        if (stat != IO_NORMAL)
+        {
+            return stat;
+        }
+        return stat;
+    }
 
 #ifdef  _DEBUG_MALLOC_INC
 	void verify(char *where);

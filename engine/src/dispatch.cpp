@@ -672,7 +672,7 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 		if (version > MAX_STACKFILE_VERSION)
 		{
 			MCresult->sets("stack was produced by a newer version");
-			return IO_ERROR;
+			return checkloadstat(IO_ERROR);
 		}
         
 		// MW-2008-10-20: [[ ParentScripts ]] Set the boolean flag that tells us whether
@@ -687,7 +687,7 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 		        || IO_read_cstring_legacy(newsf, stream, 2) != IO_NORMAL)
 		{
 			MCresult->sets("stack is corrupted, check for ~ backup file");
-			return IO_ERROR;
+			return checkloadstat(IO_ERROR);
 		}
 		delete newsf; // stackfiles is obsolete
 		MCtranslatechars = charset != CHARSET;
@@ -722,7 +722,7 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 				MCresult->sets("stack is corrupted, check for ~ backup file");
 			destroystack(sptr, False);
 			sptr = NULL;
-			return IO_ERROR;
+			return checkloadstat(IO_ERROR);
 		}
 		
 		// MW-2011-08-09: [[ Groups ]] Make sure F_GROUP_SHARED is set
@@ -737,7 +737,7 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 				MCresult->sets("stack is corrupted, check for ~ backup file");
 			destroystack(sptr, False);
 			sptr = NULL;
-			return IO_ERROR;
+			return checkloadstat(IO_ERROR);
 		}
     }
     
@@ -762,7 +762,7 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
         if (IO_read(t_script, t_size, stream) == IO_ERROR)
         {
             MCresult -> sets("unable to read file");
-            return IO_ERROR;
+            return checkloadstat(IO_ERROR);
         }
 
         // SN-2014-10-16: [[ Merge-6.7.0-rc-3 ]] Update to StringRef
