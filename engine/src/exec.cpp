@@ -1573,14 +1573,29 @@ static bool MCPropertyParseUIntList(MCStringRef p_input, char_t p_delimiter, uin
 	uindex_t t_new_offset;
 	t_new_offset = 0;
 	
+	// PM-2015-10-13: [[ Bug 16203 ]] Skip any "empty" elements in the beginning of the list
+	if (MCStringGetNativeCharAtIndex(p_input, 0) == p_delimiter)
+	{
+		t_old_offset++;
+		t_new_offset++;
+	}
+	
 	while (t_success && t_old_offset <= t_length)
 	{
 		MCAutoStringRef t_uint_string;
 		uinteger_t t_d;
 		
+		// PM-2015-10-13: [[ Bug 16203 ]] Skip any "empty" in the list, by ignoring any 2 or more consecutive occurences of p_delimiter
+		// i.e. if the list is 2,3,empty,5 then it will be parsed as 2,3,,5
+		while (MCStringGetNativeCharAtIndex(p_input, t_old_offset) == p_delimiter && MCStringGetNativeCharAtIndex(p_input, t_old_offset - 1) == p_delimiter)
+		{
+			t_old_offset++;
+			t_new_offset++;
+		}
+		
 		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
-		
+			
         if (t_new_offset <= t_old_offset)
             break;
         
