@@ -619,7 +619,6 @@
 			'src/lnxans.h',
 			'src/lnxaudio.h',
 			'src/lnxdc.h',
-			'src/lnxdnd.h',
 			'src/lnxflst.h',
 			'src/lnxgtkthemedrawing.h',
 			'src/lnximagecache.h',

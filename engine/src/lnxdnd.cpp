@@ -30,8 +30,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "lnxdc.h"
 
-#include "lnxdnd.h" 
-
 
 static bool g_dnd_init = false;
 static GdkCursor *g_dnd_cursor_drag_init = NULL;
