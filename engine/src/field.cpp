@@ -1251,14 +1251,16 @@ Boolean MCField::mup(uint2 which, bool p_release)
             // Lock the selection
             MCselection->Lock();
             
-            // TODO: implement the possibility of pasting styled text by using
-            // middle-mouse clicks.
-            /*
-            if (MCselection->HasLiveCodeStyledTextOrCompatible())
-            {
-                
-            }
-            else*/ if (MCselection->HasText())
+            // Pasting styled text with middle-click isn't currently supported.
+            // On the only platform where we support selection pasting (Linux),
+            // a large number of apps use HTML to supply styled text but our
+            // HTML parsing code doesn't really understand HTML so trying to
+            // paste styled text here just causes a mess.
+            //
+            // Strangely, this doesn't seem to affect normal pasting as the
+            // affected apps also supply RTF there, which we can parse fairly
+            // well.
+            if (MCselection->HasText())
             {
                 MCAutoStringRef t_text;
                 if (MCselection->CopyAsText(&t_text))
