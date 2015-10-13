@@ -147,6 +147,7 @@
 				[
 					'-O3',
 					'-g3',
+					'-Wno-error=maybe-uninitialized', #warning added only with optimisation ON
 				],
 				
 				'defines':
