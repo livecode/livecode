@@ -416,9 +416,14 @@ static bool TextFileFetch(const char *p_filename, char*& r_data, uint32_t& r_dat
     
     if (t_success)
     {
-        t_file_size = ftell(t_stream);
-		t_success = fseek(t_stream, 0, SEEK_SET) != 0;
+        long t_size;
+        t_size = ftell(t_stream);
+        t_file_size = (uint32_t) t_size;
+        t_success = (t_size >= 0);
     }
+        
+    if (t_success)
+        t_success = fseek(t_stream, 0, SEEK_SET) != 0;
     
 	char *t_file_data;
 	t_file_data = nil;
@@ -427,7 +432,7 @@ static bool TextFileFetch(const char *p_filename, char*& r_data, uint32_t& r_dat
 		
 	if (t_success)
 	{
-		if (fread(t_file_data, (size_t) t_file_size, 1, t_stream) != 1)
+		if (fread(t_file_data, t_file_size, 1, t_stream) != 1)
 			t_success = Throw(kErrorCouldNotReadFile);
 	}
 	
