@@ -26,6 +26,6 @@
     <comments>An Android app may be suspended in the background when it receives a request from another app. When this happens, the app's launch data is updated to contain the data for the new request and the app is resumed. The new launch data can be obtained from the <function tag="mobileGetLaunchData">mobileGetLaunchData</function> function.</comments>
   </description>
   <examples>
-    <example><p>on launchDataChanged pURL</p><p>   myLaunchHandler mobileGetLaunchData()</p><p>end launchDataChanged</p></example>
+    <example><p>on launchDataChanged</p><p>   myLaunchHandler mobileGetLaunchData()</p><p>end launchDataChanged</p></example>
   </examples>
 </doc>
