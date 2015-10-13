@@ -36,4 +36,4 @@ The ability to sense image data on the clipboard was added in version 2.0.
 
 References: clipboardData (property), object (object), string (keyword), command (glossary), return (glossary), property (glossary), clipboard (function), copy (command), cut (command), paste (command), function (control_st), lock clipboard (command), unlock clipboard (command), rawClipboardData (property), fullClipboardData (property)
 
-Tags: ui, clipboard, deprecated
+Tags: ui, clipboard

@@ -67,6 +67,6 @@ The above statement is equivalent to selecting the text "Hello World" in a field
 
 >*Tip:*  To prevent the clipboard from being changed by other apps while you are accessing it, use the <lock clipboard> and <unlock clipboard> commands.
 
-References: copy (command), dragData (property), clipboard (function), paste (command), lock clipboard (command), unlock clipboard (command), rawClipboardData (property)
+References: copy (command), dragData (property), clipboard (function), paste (command), lock clipboard (command), unlock clipboard (command), fullClipboardData (property), rawClipboardData (property)
 
-Tags: ui, clipboard, deprecated
+Tags: ui, clipboard

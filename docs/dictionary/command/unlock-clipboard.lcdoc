@@ -18,7 +18,7 @@ unlock the clipboard
 Description:
 Use the <unlock clipboard> <command> to make the contents of the clipboard available to other apps.
 
->*Note:* If you use the <clipboardData> <property> or <clipboard> <function>, locking the clipboard is not required (it will be done automatically) but is recommended.
+>*Note:* If you use the <clipboardData> or <fullClipboardData> properties, locking the clipboard is not required (it will be done automatically) but is recommended.
 
 >*Tip:* Use <lock clipboard> to ensure the clipboard does not change between accesses.
 

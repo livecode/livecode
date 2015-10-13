@@ -31,7 +31,6 @@ The keys for the <fullClipboardData> are:
   - "text": plain text
   - "rtftext": LiveCode rich text format data
   - "htmltext": LiveCode HTML text
-  - "styles": LiveCode styled text data
   - "styledtext": array of LiveCode styled text
   - "image": any of PNG, GIF or JPEG image
   - "png": PNG image
@@ -39,11 +38,12 @@ The keys for the <fullClipboardData> are:
   - "jpeg": JPEG image
   - "rtf": Rich Text Format data
   - "html": HTML
+  - "styles": LiveCode styled text data
   - "objects": LiveCode objects
   - "files": List of newline-separated file paths
   - "private": available for in-app use
   
-The list of keys above is not exhaustive; more keys and data types may be added in future.
+>*Note:* More keys and data types may be added in the future
 
 Description:
 Use the <fullClipboardData> to gain access to the system clipboard. 
