@@ -122,4 +122,24 @@ end syntax
 
 --
 
+public foreign handler MCFileEvalPathIsDirectory(in Path as String, out IsDirectory as Boolean) returns nothing binds to "<builtin>"
+
+/*
+Summary:	Test whether a path is a directory.
+
+Path:	An expression that evaluates to a filename.
+
+Description:
+Evaluates to true if the specified filename is a directory.
+
+Tags: IO, Filesystem
+*/
+syntax PathIsDirectory is expression
+	"path" <Path: Expression> "is" "a" "directory"
+begin
+	MCFileEvalPathIsDirectory(Path, output)
+end syntax
+
+--
+
 end module
