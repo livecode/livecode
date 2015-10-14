@@ -90,6 +90,7 @@
 						'-Wextra',
 						'-Wno-unused-parameter',	# Just contributes build noise
 						'-Werror=uninitialized',
+						'-Werror=return-type',
 					],
 				},
 				{

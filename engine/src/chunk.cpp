@@ -5883,7 +5883,7 @@ bool MCTextChunkIterator::next(MCExecContext& ctxt)
             return true;
     
         default:
-            assert(false);
+            MCUnreachableReturn(false);
     }
 }
 
