@@ -471,7 +471,7 @@
 					},
 				],
 				[
-					'OS == "mac"',
+					'OS == "mac" or OS == "ios"',
 					{
 						'xcode_settings':
 						{
