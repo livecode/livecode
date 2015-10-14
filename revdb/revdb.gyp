@@ -470,6 +470,19 @@
 						],
 					},
 				],
+				[
+					'OS == "mac"',
+					{
+						'xcode_settings':
+						{
+							'WARNING_CFLAGS!':
+							[
+								# Error in ../../thirdparty/libsqlite/include/qry_dat.h
+								'-Werror=return-type',
+							],
+						},
+					},
+				],
 			],
 			
 			'all_dependent_settings':
@@ -536,6 +549,19 @@
 						[
 							'-fexceptions',
 						],
+					},
+				],
+				[
+					'OS == "mac"',
+					{
+						'xcode_settings':
+						{
+							'WARNING_CFLAGS!':
+							[
+								# Error in ../../thirdparty/libsqlite/include/qry_dat.h
+								'-Werror=return-type',
+							],
+						},
 					},
 				],
 			],

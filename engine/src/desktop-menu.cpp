@@ -775,6 +775,8 @@ static MCPlatformMenuRef create_menu(MCPlatformMenuRef p_menu, MenuItemDescripto
 		
 		t_index++;
 	}
+    
+    return t_menu;
 }
 
 static void free_menu(MenuItemDescriptor *p_items)

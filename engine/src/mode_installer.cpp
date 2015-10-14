@@ -357,7 +357,7 @@ private:
 		}
 
 		if (s_payload_mapped_data == nil && s_payload_loaded_data == nil)
-            t_succes = false;
+            t_success = false;
         else
         {
             r_payload_data = s_payload_mapped_data != nil ? s_payload_mapped_data : s_payload_loaded_data;
