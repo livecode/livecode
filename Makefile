@@ -67,6 +67,10 @@ guess_platform := $(shell $(guess_platform_script))
 all: all-$(guess_platform)
 check: check-$(guess_platform)
 
+check-common-%:
+	$(MAKE) -C tests/lcb bin_dir=../../$*-bin
+	$(MAKE) -C tests/lcs bin_dir=../../$*-bin
+
 ################################################################
 # Linux rules
 ################################################################
@@ -89,6 +93,7 @@ compile-linux-%:
 
 check-linux-%:
 	$(MAKE) -C build-linux-$*/livecode check
+	$(MAKE) check-common-linux-$*
 
 all-linux-%:
 	$(MAKE) config-linux-$*
@@ -129,6 +134,8 @@ compile-mac:
 
 check-mac:
 	$(XCODEBUILD) -project "build-mac$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE) -target check
+	$(MAKE) check-common-mac
+
 
 all-mac:
 	$(MAKE) config-mac
@@ -186,6 +193,7 @@ compile-win-%:
 check-win-%:
 	# windows builds occur under Wine
 	cd build-win-$* && $(WINE) /K ../make.cmd check
+	$(MAKE) check-common-win-$*
 
 all-win-%:
 	$(MAKE) config-win-$*
