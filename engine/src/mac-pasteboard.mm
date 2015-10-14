@@ -394,9 +394,7 @@ bool MCPlatformPasteboardStore(MCPlatformPasteboardRef p_pasteboard, MCPlatformP
 	//				t_flavor_string = @"";
 	//				break;
                 default:
-                    MCUnreachable();
-                    // MCUnreachable has no action in Release mode
-                    return false;
+                    MCUnreachableReturn(false);
 			}
 			[t_flavor_strings addObject: t_flavor_string];
 		}

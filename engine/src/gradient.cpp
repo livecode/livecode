@@ -1176,8 +1176,7 @@ template<MCGradientFillKind x_type> static inline int4 compute_index(int4 p_x, i
 		}
 		break;
 	default:
-		MCUnreachable();
-		return NULL;
+        MCUnreachableReturn(0);
 	}
 	if (p_mirror)
 	{

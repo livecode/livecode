@@ -1798,9 +1798,7 @@ static bool save_array_to_stream(void *p_context, MCArrayRef p_array, MCNameRef 
         }
 		break;
     default:
-        MCUnreachable();
-        // MCUnreachable has no action in Release mode
-        return false;
+        MCUnreachableReturn(false);
 	}
 
 	IO_stat t_stat;

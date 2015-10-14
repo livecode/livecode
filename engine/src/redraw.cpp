@@ -213,9 +213,7 @@ MCLayerModeHint MCControl::layer_computeattrs(bool p_commit)
 	}
     else
     {
-        MCUnreachable();
-        // MCUnreachable has no action in Release mode. Return current value
-        return m_layer_mode;
+        MCUnreachableReturn(m_layer_mode);
     }
 
 	// Now compute the sprite attribute.

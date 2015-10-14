@@ -803,9 +803,7 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 				t_new_orientation = UIInterfaceOrientationLandscapeLeft;
 				break;
             default:
-                MCUnreachable();
-                // MCUnreachable() has no effect in Release mode
-                return;
+                MCUnreachableReturn();
 		}
 		
 		// Store the pending notification.

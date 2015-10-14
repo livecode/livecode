@@ -2711,10 +2711,7 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
             
         default:
             delete[] t_indicies;
-            ctxt . Throw();
-            MCUnreachable();
-            // MCUnreachable has no effect on Fast or Release mode
-            return;
+            MCUnreachableReturn();
     }
     
     MCStringsSortIndirect(t_indicies, p_count, t_sort_compare, t_sort_keys);

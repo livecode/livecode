@@ -863,8 +863,6 @@ void MCErrorSetHandler(MCErrorHandler handler);
 //  DEBUG HANDLING
 //
 
-#ifdef _DEBUG
-
 // If we are using GCC or Clang, we can give the compiler the hint that the
 // assertion functions do not return. This is particularly useful for Clang's
 // static analysis feature.
@@ -873,6 +871,10 @@ void MCErrorSetHandler(MCErrorHandler handler);
 #else
 #define ATTRIBUTE_NORETURN
 #endif
+
+#define MCUnreachableReturn(x) { MCUnreachable(); return x;}
+
+#ifdef _DEBUG
 
 extern void __MCAssert(const char *file, uint32_t line, const char *message) ATTRIBUTE_NORETURN;
 #define MCAssert(m_expr) (void)( (!!(m_expr)) || (__MCAssert(__FILE__, __LINE__, #m_expr), 0) )
@@ -894,7 +896,17 @@ extern void __MCUnreachable(void) ATTRIBUTE_NORETURN;
 
 #define MCLogWithTrace(m_format, ...)
 
+#if defined(__GNUC__) || defined (__clang__) || defined (__llvm__)
+
+// __MCUnreachable calls GCC's __builtin_unreachable on Release/Fast modes
+extern void __MCUnreachable(void) ATTRIBUTE_NORETURN;
+#define MCUnreachable() __MCUnreachable();
+
+#else // Neither GCC, Clang or LLVM compilers
+
 #define MCUnreachable()
+
+#endif
 
 #endif
 
