@@ -1795,23 +1795,23 @@ IO_stat MCPlayer::load(IO_handle stream, uint32_t version)
 	IO_stat stat;
     
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_stringref_new(filename, stream, version >= 7000)) != IO_NORMAL)
         
         // MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint4(&starttime, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint4(&endtime, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	int4 trate;
 	if ((stat = IO_read_int4(&trate, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	rate = (real8)trate * 10.0 / MAXINT4;
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 	if ((stat = IO_read_stringref_new(userCallbackStr, stream, version >= 7000)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	return loadpropsets(stream, version);
 }
 

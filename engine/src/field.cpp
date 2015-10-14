@@ -3245,16 +3245,16 @@ IO_stat MCField::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
     if (p_length > 0)
     {
 		uint4 t_flags, t_length, t_header_length;
-		t_stat = p_stream . ReadTag(t_flags, t_length, t_header_length);
+		t_stat = checkloadstat(p_stream . ReadTag(t_flags, t_length, t_header_length));
         
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . Mark();
+			t_stat = checkloadstat(p_stream . Mark());
         
         // MW-2014-06-20: [[ 13315 ]] Load the textDirection of the field.
         if (t_stat == IO_NORMAL && (t_flags & FIELD_EXTRA_TEXTDIRECTION) != 0)
         {
             uint8_t t_value;
-            t_stat = p_stream . ReadU8(t_value);
+            t_stat = checkloadstat(p_stream . ReadU8(t_value));
             if (t_stat == IO_NORMAL)
                 text_direction = (MCTextDirection)t_value;
         }
@@ -3266,17 +3266,17 @@ IO_stat MCField::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
             intenum_t *t_alignments;
             t_alignments = NULL;
 
-            t_stat = p_stream . ReadU16(t_nalign);
+            t_stat = checkloadstat(p_stream . ReadU16(t_nalign));
 
             if (t_stat == IO_NORMAL && t_nalign != 0)
             {
                 if (!MCMemoryAllocate(sizeof(intenum_t) * t_nalign, t_alignments))
-                    t_stat = IO_ERROR;
+                    t_stat = checkloadstat(IO_ERROR);
 
                 for (uint2 i = 0; i < t_nalign && t_stat == IO_NORMAL; ++i)
                 {
                     int8_t t_align;
-                    if ((t_stat = p_stream . ReadS8(t_align)) == IO_NORMAL)
+                    if ((t_stat = checkloadstat(p_stream . ReadS8(t_align))) == IO_NORMAL)
                         t_alignments[i] = t_align;
                 }
 
@@ -3291,7 +3291,7 @@ IO_stat MCField::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
         }
         
         if (t_stat == IO_NORMAL)
-            t_stat = p_stream . Skip(t_length);
+            t_stat = checkloadstat(p_stream . Skip(t_length));
         
         if (t_stat == IO_NORMAL)
             p_length -= t_length + t_header_length;
@@ -3399,26 +3399,26 @@ IO_stat MCField::load(IO_handle stream, uint32_t version)
 	IO_stat stat;
 
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_int2(&leftmargin, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_int2(&rightmargin, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_int2(&topmargin, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_int2(&bottommargin, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_int2(&indent, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if (flags & F_TABS)
 	{
 		if ((stat = IO_read_uint2(&ntabs, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		tabs = new uint2[ntabs];
 		uint2 i;
 		for (i = 0 ; i < ntabs ; i++)
 			if ((stat = IO_read_uint2(&tabs[i], stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 	}
 	if (version <= 2000)
 	{
@@ -3429,19 +3429,19 @@ IO_stat MCField::load(IO_handle stream, uint32_t version)
 	if (flags & F_VGRID)
 		flags |= F_DONT_WRAP;
 	if ((stat = loadpropsets(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	while (True)
 	{
 		uint1 type;
 		if ((stat = IO_read_uint1(&type, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (type == OT_FDATA)
 		{
 			MCCdata *newfdata = new MCCdata;
 			if ((stat = newfdata->load(stream, this, version)) != IO_NORMAL)
 			{
 				delete newfdata;
-				return stat;
+				return checkloadstat(stat);
 			}
 			newfdata->appendto(fdata);
 		}
@@ -3453,7 +3453,7 @@ IO_stat MCField::load(IO_handle stream, uint32_t version)
 					vscrollbar = new MCScrollbar;
 					vscrollbar->setparent(this);
 					if ((stat = vscrollbar->load(stream, version)) != IO_NORMAL)
-						return stat;
+						return checkloadstat(stat);
 					vscrollbar->setflag(getflag(F_DISABLED), F_DISABLED);
 					vscrollbar->allowmessages(False);
 					vscrollbar->setembedded();
@@ -3465,7 +3465,7 @@ IO_stat MCField::load(IO_handle stream, uint32_t version)
 						hscrollbar = new MCScrollbar;
 						hscrollbar->setparent(this);
 						if ((stat = hscrollbar->load(stream, version)) != IO_NORMAL)
-							return stat;
+							return checkloadstat(stat);
 						hscrollbar->setflag(getflag(F_DISABLED), F_DISABLED);
 						hscrollbar->allowmessages(False);
 						hscrollbar->setembedded();

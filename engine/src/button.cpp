@@ -4412,7 +4412,7 @@ IO_stat MCButton::extendedload(MCObjectInputStream& p_stream, uint32_t p_version
 	if (p_remaining >= 4)
 	{
 		uint4 t_hover_icon_id;
-		t_stat = p_stream . ReadU32(t_hover_icon_id);
+		t_stat = checkloadstat(p_stream . ReadU32(t_hover_icon_id));
 		if (t_stat == IO_NORMAL)
 		{
 			icons = new iconlist;
@@ -4427,22 +4427,22 @@ IO_stat MCButton::extendedload(MCObjectInputStream& p_stream, uint32_t p_version
     if (p_remaining > 0)
     {
 		uint4 t_flags, t_length, t_header_length;
-		t_stat = p_stream . ReadTag(t_flags, t_length, t_header_length);
+		t_stat = checkloadstat(p_stream . ReadTag(t_flags, t_length, t_header_length));
         
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . Mark();
+			t_stat = checkloadstat(p_stream . Mark());
         
         // MW-2014-06-20: [[ IconGravity ]] Read in the iconGravity property.
         if (t_stat == IO_NORMAL && (t_flags & BUTTON_EXTRA_ICONGRAVITY) != 0)
         {
             uint32_t t_value;
-            t_stat = p_stream . ReadU32(t_value);
+            t_stat = checkloadstat(p_stream . ReadU32(t_value));
             if (t_stat == IO_NORMAL)
                 m_icon_gravity = (MCGravity)t_value;
         }
         
         if (t_stat == IO_NORMAL)
-            t_stat = p_stream . Skip(t_length);
+            t_stat = checkloadstat(p_stream . Skip(t_length));
         
         if (t_stat == IO_NORMAL)
             p_remaining -= t_length + t_header_length;
@@ -4596,7 +4596,7 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 	IO_stat stat;
 
 	if ((stat = MCControl::load(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 
 	// MW-2012-02-17: [[ IntrinsicUnicode ]] If the unicode tag is set, then we are unicode.
 	if ((m_font_flags & FF_HAS_UNICODE_TAG) != 0)
@@ -4607,10 +4607,10 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 		uint4 iconid;
 		uint4 hiliteiconid = 0;
 		if ((stat = IO_read_uint4(&iconid, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (flags & F_HAS_ICONS)
 			if ((stat = IO_read_uint4(&hiliteiconid, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		if (iconid != 0 || hiliteiconid != 0)
 		{
 			flags |= F_HAS_ICONS;
@@ -4638,7 +4638,7 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 			uint2 i;
 			for (i = CI_ARMED ; i < CI_FILE_NICONS ; i++)
 				if ((stat = IO_read_uint4(&icons->iconids[i], stream)) != IO_NORMAL)
-					return stat;
+					return checkloadstat(stat);
 		}
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
@@ -4648,29 +4648,29 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 		if (version < 7000)
 		{
 			if ((stat = IO_read_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		}
 		else
 		{
 			if ((stat = IO_read_stringref_new(label, stream, true)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		}
 	}
 
 	if (flags & F_LABEL_WIDTH)
 		if ((stat = IO_read_uint2(&labelwidth, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 
 	if (!(flags & F_NO_MARGINS))
 	{
 		if ((stat = IO_read_int2(&leftmargin, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if ((stat = IO_read_int2(&rightmargin, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if ((stat = IO_read_int2(&topmargin, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if ((stat = IO_read_int2(&bottommargin, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (leftmargin == defaultmargin
 		        && leftmargin == rightmargin
 		        && leftmargin == topmargin
@@ -4680,7 +4680,7 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 	if ((stat = IO_read_nameref_new(menuname, stream, version >= 7000)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
 	//   legacy unicode output.
@@ -4689,51 +4689,51 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 		if (version < 7000)
 		{
 			if ((stat = IO_read_stringref_legacy(menustring, stream, hasunicode())) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		}
 		else
 		{
 			if ((stat = IO_read_stringref_new(menustring, stream, true)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		}
 	}
 
 	if ((stat = IO_read_uint1(&menubutton, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	family = menubutton >> 4;
 	menubutton &= 0x0F;
 
 	if ((stat = IO_read_uint1(&menumode, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 
 	if (menumode > WM_MODAL)
 		menumode++;
 	if ((menumode == WM_OPTION || menumode == WM_TOP_LEVEL)
 	        && (!MCNameIsEmpty(menuname) || flags & F_MENU_STRING))
 		if ((stat = IO_read_uint2(&menuhistory, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 
 	if (flags & F_MENU_LINES)
 		if ((stat = IO_read_uint2(&menulines, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
 	//   legacy unicode output.
 	if (version < 7000)
 	{
 		if ((stat = IO_read_stringref_legacy(acceltext, stream, hasunicode())) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	}
 	else
 	{
 		if ((stat = IO_read_stringref_new(acceltext, stream, true)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	}
 
 	uint4 tacceltextsize;
 
 	if ((stat = IO_read_uint2(&accelkey, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if (accelkey < 256)
 #ifdef __MACROMAN__
 		accelkey = MCisotranslations[accelkey];
@@ -4742,9 +4742,9 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 #endif
 
 	if ((stat = IO_read_uint1(&accelmods, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint1(&mnemonic, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if (version <= 2000)
 	{
 		if (flags & F_DEFAULT)
@@ -4763,20 +4763,20 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 	}
 
 	if ((stat = loadpropsets(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 
 	while (True)
 	{
 		uint1 type;
 		if ((stat = IO_read_uint1(&type, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (type == OT_BDATA)
 		{
 			MCCdata *newbdata = new MCCdata;
 			if ((stat = newbdata->load(stream, this, version)) != IO_NORMAL)
 			{
 				delete newbdata;
-				return stat;
+				return checkloadstat(stat);
 			}
 			newbdata->appendto(bdata);
 		}

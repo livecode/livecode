@@ -3378,7 +3378,7 @@ IO_stat MCCard::load(IO_handle stream, uint32_t version)
 	IO_stat stat;
 
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 
 //---- 2.7+:
 //  . F_OPAQUE is now valid - default true
@@ -3392,19 +3392,19 @@ IO_stat MCCard::load(IO_handle stream, uint32_t version)
 
 	rect.y = 0; // in case saved on mac with editMenus false
 	if ((stat = loadpropsets(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	while (True)
 	{
 		uint1 type;
 		if ((stat = IO_read_uint1(&type, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (type == OT_PTR)
 		{
 			MCObjptr *newptr = new MCObjptr;
 			if ((stat = newptr->load(stream)) != IO_NORMAL)
 			{
 				delete newptr;
-				return stat;
+				return checkloadstat(stat);
 			}
 			newptr->setparent(this);
 			newptr->appendto(objptrs);
@@ -3430,7 +3430,7 @@ IO_stat MCCard::loadobjects(IO_handle stream, uint32_t version)
 		{
 			uint1 t_object_type;
 			if ((stat = IO_read_uint1(&t_object_type, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 
 			MCControl *t_control;
 			switch(t_object_type)
@@ -3469,14 +3469,14 @@ IO_stat MCCard::loadobjects(IO_handle stream, uint32_t version)
 				t_control = new MCColors;
 			break;
 			default:
-				return IO_ERROR;
+				return checkloadstat(IO_ERROR);
 			break;
 			}
 
 			if ((stat = t_control -> load(stream, version)) != IO_NORMAL)
 			{
 				delete t_control;
-				return stat;
+				return checkloadstat(stat);
 			}
 
 			t_objptr -> setref(t_control);
@@ -3486,7 +3486,7 @@ IO_stat MCCard::loadobjects(IO_handle stream, uint32_t version)
 		while(t_objptr != objptrs);
 	}
 
-	return stat;
+	return checkloadstat(stat);
 }
 
 IO_stat MCCard::save(IO_handle stream, uint4 p_part, bool p_force_ext)

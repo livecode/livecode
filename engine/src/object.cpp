@@ -3114,17 +3114,17 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 	uint2 i;
 
 	if ((stat = IO_read_uint4(&obj_id, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 	MCNameRef t_name;
 	if ((stat = IO_read_nameref_new(t_name, stream, version >= 7000)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	MCNameDelete(_name);
 	_name = t_name;
 
 	if ((stat = IO_read_uint4(&flags, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 
 	// MW-2012-02-19: [[ SplitTextAttrs ]] If we have a font flag, then it means
 	//   we must start off the font flags with all attrs set - this might be
@@ -3145,9 +3145,9 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 		if (version > 1300)
 		{
 			if ((stat = IO_read_uint2(&t_font_index, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			if ((stat = IO_read_uint2(&fontheight, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 
 			// MW-2012-02-19: [[ SplitTextAttrs ]] We have a font index for processing
 			//   later on.
@@ -3160,13 +3160,13 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 			// MW-2013-11-19: [[ UnicodeFileFormat ]] This codepath is only hit on sfv <= 1300,
 			//   so will never be unicode.
 			if ((stat = IO_read_cstring_legacy(fontname, stream, 2)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			if ((stat = IO_read_uint2(&fontheight, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			if ((stat = IO_read_uint2(&fontsize, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			if ((stat = IO_read_uint2(&fontstyle, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
             MCAutoStringRef t_fontname;
             /* UNCHECKED */ MCStringCreateWithCString(fontname, &t_fontname);
 			setfontattrs(*t_fontname, fontsize, fontstyle);
@@ -3180,7 +3180,7 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 	if (flags & F_SCRIPT)
 	{
 		if ((stat = IO_read_stringref_new(_script, stream, version >= 7000)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
         
         // SN-2014-11-07: [[ Bug 13957 ]] It's possible to get a NULL script but having the
         //  F_SCRIPT flag. Unset the flag in case it's needed
@@ -3190,9 +3190,9 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 	}
 
 	if ((stat = IO_read_uint2(&dflags, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint2(&ncolors, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if (ncolors > 0)
 	{
 		colors = new MCColor[ncolors];
@@ -3215,11 +3215,11 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 		{
 			while (i < ncolors)
 				colornames[i++] = nil;
-			return stat;
+			return checkloadstat(stat);
 		}
 	}
 	if ((stat = IO_read_uint2(&npatterns, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	uint2 addflags = npatterns & 0xFFF0;
 	npatterns &= 0x0F;
 	if (npatterns > 0)
@@ -3227,27 +3227,27 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 		/* UNCHECKED */ MCMemoryNewArray(npatterns, patterns);
 		for (i = 0 ; i < npatterns ; i++)
 			if ((stat = IO_read_uint4(&patterns[i].id, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 	}
 	if ((stat = IO_read_int2(&rect.x, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_int2(&rect.y, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint2(&rect.width, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint2(&rect.height, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv < 7000, then we have just the unnamed
 	//   propset here.
 	if (version < 7000 && addflags & AF_CUSTOM_PROPS)
 		if ((stat = loadunnamedpropset_legacy(stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	if (addflags & AF_BORDER_WIDTH)
 		if ((stat = IO_read_uint1(&borderwidth, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	if (addflags & AF_SHADOW_OFFSET)
 		if ((stat = IO_read_int1(&shadowoffset, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	if (addflags & AF_TOOL_TIP)
 	{
 		// MW-2012-03-09: [[ StackFile5500 ]] If the version is 5.5 and above, then
@@ -3261,7 +3261,7 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 			//   so leave as legacy.
 			// Read the tooltip, as encoded in its native format
 			if ((stat = IO_read_stringref_legacy(tooltip, stream, false)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		}
 		else if (version < 7000)
 		{
@@ -3269,21 +3269,21 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 			//   formatted.
 			// The tooltip should be written out encoded in UTF-8 (not UTF-16)
 			if ((stat = IO_read_stringref_legacy_utf8(tooltip, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		}
 		else
 		{
 			// MW-2013-11-19: [[ UnicodeFileFormat ]] sfv >= 7000 so unicode.
 			if ((stat = IO_read_stringref_new(tooltip, stream, true)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		}
 	}
 	if (addflags & AF_ALT_ID)
 		if ((stat = IO_read_uint2(&altid, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	if (addflags & AF_INK)
 		if ((stat = IO_read_uint1(&ink, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	if (addflags & AF_CANT_SELECT)
 		extraflags |= EF_CANT_SELECT;
 	if (addflags & AF_NO_FOCUS_BORDER)
@@ -3309,7 +3309,7 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 				t_length -= 1;
 				
 				MCAutoStringRef t_script_string;
-				stat = t_stream -> ReadTranslatedStringRef(&t_script_string);
+				stat = checkloadstat(t_stream -> ReadTranslatedStringRef(&t_script_string));
 				if (stat == IO_NORMAL)
 				{
 					// Adjust the remaining length based on the length of the string read
@@ -3332,27 +3332,27 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 			if (version < 7000 && stat == IO_NORMAL)
 			{
 				uint1 t_byte;
-				stat = t_stream -> ReadU8(t_byte);
+				stat = checkloadstat(t_stream -> ReadU8(t_byte));
 				if (stat == IO_NORMAL && t_byte != 0)
-					stat = IO_ERROR;
+					stat = checkloadstat(IO_ERROR);
 			}
 
 			// Make sure we flush the rest of the (unknown) stream
 			if (stat == IO_NORMAL)
-				stat = t_stream -> Flush();
+				stat = checkloadstat(t_stream -> Flush());
 			
 			delete t_stream;
 		}
 		
 		if (stat != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	}
 	else if (addflags & AF_LONG_SCRIPT)
 	{
 		MCAutoStringRef t_script_string;
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		if ((stat = IO_read_stringref_new(&t_script_string, stream, version >= 7000, 4)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		
 		setscript(*t_script_string);
 		
@@ -3361,7 +3361,7 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 
 	if (addflags & AF_BLEND_LEVEL)
 		if ((stat = IO_read_uint1(&blendlevel, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 
 	// MW-2013-03-28: The restrictions byte is no longer relevant due to new
 	//   licensing.
@@ -3369,7 +3369,7 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 	{
 		uint1 t_restrictions;
 		if ((stat = IO_read_uint1(&t_restrictions, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	}
 
 	// MW-2012-02-19: [[ SplitTextAttrs ]] Now that we've read the extended props
@@ -3733,11 +3733,11 @@ IO_stat MCObject::defaultextendedload(MCObjectInputStream& p_stream, uint32_t p_
 	if (p_remaining > 0)
 	{
 		uint4 t_flags, t_length, t_header_size;
-		t_stat = p_stream . ReadTag(t_flags, t_length, t_header_size);
+		t_stat = checkloadstat(p_stream . ReadTag(t_flags, t_length, t_header_size));
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . Mark();
+			t_stat = checkloadstat(p_stream . Mark());
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . Skip(t_length);
+			t_stat = checkloadstat(p_stream . Skip(t_length));
 		if (t_stat == IO_NORMAL)
 			p_remaining -= t_length + t_header_size;
 	}
@@ -3751,7 +3751,7 @@ IO_stat MCObject::defaultextendedload(MCObjectInputStream& p_stream, uint32_t p_
 IO_stat MCObject::defaultextendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 {
 	IO_stat t_stat;
-	t_stat = p_stream . WriteTag(0, 0);
+	t_stat = checkloadstat(p_stream . WriteTag(0, 0));
 	if (t_stat == IO_NORMAL)
 		t_stat = MCObject::extendedsave(p_stream, p_part);
 
