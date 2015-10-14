@@ -103,8 +103,21 @@ void MCParagraph::fetchattrs(MCArrayRef src)
     if (ctxt . CopyElementAsInteger(src, MCNAME("textAlign"), false, t_intenum_value))
         SetTextAlign(ctxt, &t_intenum_value);
 
-    if (ctxt . CopyElementAsInteger(src, MCNAME("listStyle"), false, t_intenum_value))
-        SetListStyle(ctxt, t_intenum_value);
+	// PM-2015-10-14: [[ Bug 16210 ]] listStyle is stored as stringref in the src array, so first get the stringref and then map it to the correct int, to be used in SetListStyle()
+	if (ctxt . CopyElementAsString(src, MCNAME("listStyle"), false, t_stringref_value))
+    {
+        int32_t t_list_style;
+		t_list_style = 0;
+		for(int32_t i = 0; MCliststylestrings[i] != nil; i++)
+			if (MCStringIsEqualToCString(t_stringref_value, MCliststylestrings[i], kMCCompareCaseless) )
+			{
+				t_list_style = i;
+				break;
+			}
+		
+		SetListStyle(ctxt, t_list_style);
+        MCValueRelease(t_stringref_value);
+    }
 
     if (ctxt . CopyElementAsUnsignedInteger(src, MCNAME("listDepth"), false, t_uint_value))
         SetListDepth(ctxt, &t_uint_value);
