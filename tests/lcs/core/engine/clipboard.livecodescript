@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 -- Clipboard access requires system interaction so, generally, cannot be run in no-UI mode
 ### ui : true
+### platforms: MacOS, Linux, Win32
 
 -- Utility function that returns the smallest possible valid PNG image
 local sTinyPNG
