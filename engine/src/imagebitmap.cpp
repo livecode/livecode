@@ -817,11 +817,10 @@ bool MCImageDataIsJPEG(MCDataRef p_input)
 	if (t_length < 9)
 		return false;
     
-	if (t_data[0] != 0xFF || t_data[1] != 0xE0)
-		return false;
-    
-	if (memcmp(t_data + 4, "JFIF", 5) != 0)
-		return false;
+	if (t_data[0] != 0xFF || t_data[1] != 0xD8 || t_data[2] != 0xFF)
+        return false;
+    if (t_data[3] != 0xDB && t_data[3] != 0xE0)
+        return false;
     
 	return true;
 }
