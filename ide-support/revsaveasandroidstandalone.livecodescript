@@ -2,7 +2,7 @@
 ################################################################################
 
 local sJavaRoot
-conatant kProcessors = "armeabi"
+conatant kArchs = "armeabi"
 
 ################################################################################
 
@@ -222,8 +222,8 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       put tBuildFolder & slash & "classes_app" into tClassesBuildFolder
       put tBuildFolder & slash & "libs" into tLibsBuildFolder
       
-      // MERG: TODO when support for other processors is added this needs work
-      put tLibsBuildFolder & slash & kProcessors into tArmLibsBuildFolder
+      // MERG: TODO when support for other Archs is added this needs work
+      put tLibsBuildFolder & slash & kArchs into tArmLibsBuildFolder
       put tBuildFolder & slash & "res" into tResBuildFolder
       put tResBuildFolder & slash & "drawable" into tDrawableResBuildFolder
       put tResBuildFolder & slash & "layout" into tLayoutResBuildFolder
@@ -1050,17 +1050,17 @@ private function addExternalFromFile pExternal, pClassesFolder, pLibsFolder
          end if
       end repeat
       
-      repeat for each word tProcessor in kProcessors
-         filter tZipItems with "*" & tProcessor & "*"
-         put pLibsFolder & slash & tProcessor & slash & "lib" & tExternalName & ".so" into tLibFileA[tProcessor]
+      repeat for each word tArch in kArchs
+         filter tZipItems with "*" & tArch & "*"
+         put pLibsFolder & slash & tArch & slash & "lib" & tExternalName & ".so" into tLibFileA[tArch]
          
          repeat for each line tZipItem in tZipItemsFiltered
             if tZipItem ends with ".so" then
                revZipExtractItemToFile pExternal, tZipItem, \
-                     pLibsFolder & slash & tProcessor & slash & the last item of tZipItem 
+                     pLibsFolder & slash & tArch & slash & the last item of tZipItem 
             else 
-               # will be External-<processor> file
-               revZipExtractItemToFile pExternal, tZipItem, tLibFileA[tProcessor]
+               # will be External-<Arch> file
+               revZipExtractItemToFile pExternal, tZipItem, tLibFileA[tArch]
             end if
          end repeat
       end repeat
@@ -1069,9 +1069,9 @@ private function addExternalFromFile pExternal, pClassesFolder, pLibsFolder
    end if
    
    if there is a file tClassesFile then
-      repeat for each word tProcessor in kProcessors
-         if there is no file tLibFileA[tProcessor] then
-            throw "android external contains classes but no library for " & tProcessor
+      repeat for each word tArch in kArchs
+         if there is no file tLibFileA[tArch] then
+            throw "android external contains classes but no library for " & tArch
          end if
       end repeat
    end if
