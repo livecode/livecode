@@ -215,7 +215,7 @@ void __MCUnreachable(void)
 
 #else // Release or Fast mode
 
-#if defined(__GNUC__) || defined (__clang__) || defined (__llvm__)
+#if BUILTIN_UNREACHABLE
 // MCUnreachable uses GCC built-in unreachable function
 void __MCUnreachable(void)
 {

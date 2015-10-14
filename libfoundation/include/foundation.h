@@ -874,6 +874,8 @@ void MCErrorSetHandler(MCErrorHandler handler);
 
 #define MCUnreachableReturn(x) { MCUnreachable(); return x;}
 
+#define BUILTIN_UNREACHABLE defined (__clang__) || defined (__llvm__) || (defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__) >= 405)
+
 #ifdef _DEBUG
 
 extern void __MCAssert(const char *file, uint32_t line, const char *message) ATTRIBUTE_NORETURN;
@@ -896,7 +898,7 @@ extern void __MCUnreachable(void) ATTRIBUTE_NORETURN;
 
 #define MCLogWithTrace(m_format, ...)
 
-#if defined(__GNUC__) || defined (__clang__) || defined (__llvm__)
+#if BUILTIN_UNREACHABLE
 
 // __MCUnreachable calls GCC's __builtin_unreachable on Release/Fast modes
 extern void __MCUnreachable(void) ATTRIBUTE_NORETURN;
