@@ -782,6 +782,7 @@
 			'src/deploy.cpp',
 			'src/deploy_capsule.cpp',
 			'src/deploy_dmg.cpp',
+			'src/deploy_emscripten.cpp',
 			'src/deploy_file.cpp',
 			'src/deploy_linux.cpp',
 			'src/deploy_macosx.cpp',

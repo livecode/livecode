@@ -50,6 +50,11 @@ IO_stat MCStackSecurityRead(char *r_string, uint32_t p_length, IO_handle p_strea
 
 void MCStackSecurityProcessCapsule(void *p_start, void *p_finish);
 
+//////////
+
+/* Create a startup stack for an Emscripten standalone. */
+bool MCStackSecurityEmscriptenPrepareStartupStack(MCStack *r_stack);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif
