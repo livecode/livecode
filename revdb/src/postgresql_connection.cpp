@@ -16,6 +16,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "dbpostgresql.h"
 
+extern bool load_ssl_library();
+
 /*DBCONNECTION_POSTGRESQL - CONNECTION OBJECT FOR MYSQL DATABASES CHILD OF DBCONNECTION*/
 
 char *strndup(const char *p_string, int p_length)
@@ -59,11 +61,101 @@ Bool DBConnection_POSTGRESQL::connect(char **args, int numargs)
 	if (t_delimiter != NULL)
 	{
 		t_port = (t_delimiter + (1 * sizeof(char)));
-		*t_delimiter = NULL;
+		*t_delimiter = '\0';
 	}
-	
-	dbconn = NULL;
-	dbconn = PQsetdbLogin(t_host, t_port, NULL, NULL, t_database, t_user, t_password);
+
+    bool t_have_ssl;
+    t_have_ssl = load_ssl_library();
+
+    // if an ssl mode (other than disable) has been passed, make sure we can load libopenssl
+    // if no ssl mode has been passed, use prefer if we have libopenssl (try an ssl connection,
+    // if that fails try non-ssl), if we don't have libopenssl, don't attempt an ssl connection (disable sslmode)
+    char *t_sslmode;
+    t_sslmode = NULL;
+    if (numargs > 4)
+    {
+        if (strcmp(args[4], "disable") != 0 && !t_have_ssl)
+        {
+            errorMessageSet("revdb,unable to load SSL library");
+            return false;
+        }
+        t_sslmode = strdup(args[4]);
+    }
+    else if (t_have_ssl)
+        t_sslmode = strdup("prefer");
+    else
+        t_sslmode = strdup("disable");
+
+    if (t_sslmode == NULL)
+    {
+        errorMessageSet("revdb,unable to extract SSL mode");
+        return false;
+    }
+
+    char *t_sslcompression;
+    t_sslcompression = NULL;
+    if (numargs > 5)
+        t_sslcompression = args[5];
+
+    char *t_sslcert;
+    t_sslcert = NULL;
+    if (numargs > 6)
+        t_sslcert = args[6];
+
+    char *t_sslkey;
+    t_sslkey = NULL;
+    if (numargs > 7)
+        t_sslkey = args[7];
+
+    char *t_sslrootcert;
+    t_sslrootcert = NULL;
+    if (numargs > 8)
+        t_sslrootcert = args[8];
+
+    char *t_sslcrl;
+    t_sslcrl = NULL;
+    if (numargs > 9)
+        t_sslcrl = args[9];
+
+    const char *t_connect_keys[] =
+    {
+        "host",
+        "port",
+        "dbname",
+        "user",
+        "password",
+
+        "sslmode",
+        "sslcompression",
+        "sslcert",
+        "sslkey",
+        "sslrootcert",
+        "sslcrl",
+
+        NULL,
+    };
+    const char *t_connect_values[] =
+    {
+        t_host,
+        t_port,
+        t_database,
+        t_user,
+        t_password,
+
+        t_sslmode,
+        t_sslcompression,
+        t_sslcert,
+        t_sslkey,
+        t_sslrootcert,
+        t_sslcrl,
+
+        NULL,
+    };
+
+    dbconn = NULL;
+    dbconn = PQconnectdbParams(t_connect_keys, t_connect_values, 0);
+
+    free(t_sslmode);
 
 	// OK-2008-05-16 : Bug where failed connections to postgres databases would
 	// not return any error information. According to the postgres docs, dbconn
