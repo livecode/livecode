@@ -276,7 +276,12 @@ Boolean MCWidget::mfocus(int2 p_x, int2 p_y)
 		(getflag(F_DISABLED) && (getstack() -> gettool(this) == T_BROWSE)))
 		return False;
 	
-	if (getstack() -> gettool(this) != T_BROWSE)
+	if (getstack() -> gettool(this) != T_BROWSE ||
+#ifdef WIDGETS_HANDLE_DND
+        false)
+#else
+        MCdispatcher -> isdragtarget())
+#endif
 		return MCControl::mfocus(p_x, p_y);
 	
 	// Update the mouse loc.
@@ -291,7 +296,12 @@ Boolean MCWidget::mfocus(int2 p_x, int2 p_y)
 
 void MCWidget::munfocus(void)
 {
-	if (getstack() -> gettool(this) != T_BROWSE)
+	if (getstack() -> gettool(this) != T_BROWSE ||
+#ifdef WIDGETS_HANDLE_DND
+        false)
+#else
+        MCdispatcher -> isdragtarget())
+#endif
 	{
 		MCControl::munfocus();
 		return;
