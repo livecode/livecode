@@ -6106,8 +6106,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         FSRef t_defaultfolder_fsref;
         OSErr t_os_error;
-        if (t_defaultfolder != NULL)
-            t_os_error = FSPathMakeRef((const UInt8 *)t_defaultfolder, &t_defaultfolder_fsref, NULL);
+        
+        t_os_error = FSPathMakeRef((const UInt8 *)t_defaultfolder, &t_defaultfolder_fsref, NULL);
 		
         FSCatalogInfo t_catalog_info;
         if (t_os_error == noErr)

@@ -802,7 +802,7 @@ bool __MCValueInitialize(void)
 
 void __MCValueFinalize(void)
 {
-    for(uindex_t i = 0; i < sizeof(s_value_pools) / sizeof(s_value_pools[0]); i++)
+    for(index_t i = 0; i < sizeof(s_value_pools) / sizeof(s_value_pools[0]); i++)
         while(s_value_pools[i] . count > 0)
         {
             __MCValue *t_value;
