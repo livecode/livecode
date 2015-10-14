@@ -1074,9 +1074,11 @@ private function addExternalFromFile pExternal, pClassesFolder, pLibsFolder
             throw "android external contains classes but no library for " & tArch
          end if
       end repeat
+      
+      return true
    end if
    
-   return there is a file tLibFile
+   return false
 end addExternalFromFile
 
 ################################################################################
