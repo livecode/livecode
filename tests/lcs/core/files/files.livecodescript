@@ -37,6 +37,7 @@ end TestFiles2
 on TestFiles5
  // 12039
 
+put the defaultFolder into tOldCwd
 set the defaultFolder to specialFolderPath("temporary")
 
 put "evalfilestest.txt" into tTestfile
@@ -45,10 +46,13 @@ TestAssert "test", tTestfile is among the lines of the files
 delete file tTestfile
 TestAssert "test", tTestfile is not among the lines of the files
 
+set the defaultFolder to tOldCwd
+
 repeat for each line tLine in the files
 if char -4 to -1 of tLine is not "sock" then
-	TestAssert "test", there is a file tLine
-	TestAssert "test", there is not a folder tLine
+	TestDiagnostic tLine
+	TestAssert "files are files", there is a file tLine
+	TestAssert "files are not folders", there is not a folder tLine
 end if
 end repeat
 

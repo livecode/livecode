@@ -670,5 +670,38 @@ unichar_t MCUnicodeCharMapFromNative(char_t nchar);
 //unichar_t MCUnicodeCharUppercase(unichar_t);
 
 ////////////////////////////////////////////////////////////////////////////////
+// INTERNAL MCVALUE TYPE ASSERTIONS
+//
+
+inline void
+__MCAssertResolvedTypeInfo(MCTypeInfoRef x, bool (*p)(MCTypeInfoRef))
+{
+	MCResolvedTypeInfo r;
+	MCAssert(MCTypeInfoResolve(x, r) && p(r.type));
+}
+
+#define __MCAssertValueType(x,T) MCAssert(MCValueGetTypeCode(x) == kMCValueTypeCode##T)
+
+#define __MCAssertIsNumber(x)   __MCAssertValueType(x,Number)
+#define __MCAssertIsName(x)     __MCAssertValueType(x,Name)
+#define __MCAssertIsString(x)   __MCAssertValueType(x,String)
+#define __MCAssertIsData(x)     __MCAssertValueType(x,Data)
+#define __MCAssertIsArray(x)    __MCAssertValueType(x,Array)
+#define __MCAssertIsList(x)     __MCAssertValueType(x,List)
+#define __MCAssertIsSet(x)      __MCAssertValueType(x,Set)
+#define __MCAssertIsTypeInfo(x) __MCAssertValueType(x,TypeInfo)
+#define __MCAssertIsError(x)    __MCAssertValueType(x,Error)
+#define __MCAssertIsRecord(x)   __MCAssertValueType(x,Record)
+#define __MCAssertIsHandler(x)  __MCAssertValueType(x,Handler)
+#define __MCAssertIsProperList(x) __MCAssertValueType(x,ProperList)
+
+#define __MCAssertIsLocale(x)   MCAssert(nil != (x)) /* FIXME */
+
+#define __MCAssertIsMutableString(x) MCAssert(MCStringIsMutable(x))
+#define __MCAssertIsMutableData(x)   MCAssert(MCDataIsMutable(x))
+
+#define __MCAssertIsErrorTypeInfo(x) __MCAssertResolvedTypeInfo(x, MCTypeInfoIsError)
+
+////////////////////////////////////////////////////////////////////////////////
 
 #endif
