@@ -37,13 +37,20 @@ public:
     
     // Returns true if the layer would be attached if its card were visible
     bool isAttached() const;
-    
+	
+	virtual bool GetNativeView(void *&r_view) = 0;
+	
+	// Implemented by the platform-specific native layers: creates a new layer
+	static MCNativeLayer* CreateNativeLayer(MCWidgetRef p_widget, void *p_native_view);
 protected:
     
     bool m_attached;
     
     MCNativeLayer();
     
+	// Returns true if the widget should be currently visible
+	virtual bool ShouldShowWidget(MCWidget *p_widget);
+
     // Utility function for subclasses: given a widget, finds the native layer
     // immediately below or above it. If none exist, returns nil.
     static MCWidget* findNextLayerBelow(MCWidget*);

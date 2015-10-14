@@ -55,6 +55,8 @@
 #include "dispatch.h"
 #include "graphics_util.h"
 
+#include "native-layer.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCCanvasPush(MCGContextRef gcontext, uintptr_t& r_cookie);
@@ -876,6 +878,39 @@ void MCWidget::SetDisabled(MCExecContext& ctxt, uint32_t p_part_id, bool p_flag)
     
     if (t_is_disabled != getflag(F_DISABLED))
         recompute();
+}
+
+bool MCWidget::GetNativeView(void *&r_view)
+{
+	if (m_native_layer == nil)
+		return false;
+	
+	return m_native_layer->GetNativeView(r_view);
+}
+
+bool MCWidget::SetNativeView(void *p_view)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCNativeLayer *t_layer;
+	t_layer = nil;
+	
+	if (t_success && p_view != nil)
+	{
+		t_layer = MCNativeLayer::CreateNativeLayer(getwidget(), p_view);
+		t_success = t_layer != nil;
+	}
+	
+	if (t_success)
+	{
+		if (m_native_layer != nil)
+			delete m_native_layer;
+		
+		m_native_layer = t_layer;
+	}
+	
+	return t_success;
 }
 
 MCWidgetRef MCWidget::getwidget(void) const
