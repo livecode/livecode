@@ -262,6 +262,7 @@ bool MCImageImport(IO_handle p_stream, IO_handle p_mask_stream, MCPoint &r_hotsp
 			t_frames = nil;
 			
 			uint32_t t_count;
+            t_count = 0;
 			
 			if (t_success)
 				t_success = t_loader->GetHotSpot(t_xhot, t_yhot);

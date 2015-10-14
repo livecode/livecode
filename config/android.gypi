@@ -72,6 +72,7 @@
 						'-Wall',
 						'-Wextra',
 						'-Wno-unused-parameter',	# Just contributes build noise
+						'-Werror=uninitialized',
 					],
 					
 					'cflags_c':

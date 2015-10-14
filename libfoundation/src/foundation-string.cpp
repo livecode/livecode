@@ -168,8 +168,7 @@ static bool __MCStringCantBeEqualToNative(MCStringRef self, MCStringOptions p_op
                 break;
             
             default:
-                MCUnreachable();
-                break;
+                MCUnreachableReturn(false);
         }
     }
     

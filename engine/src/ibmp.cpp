@@ -1103,6 +1103,7 @@ bool MCImageDecodeBMPStruct(IO_handle p_stream, uindex_t &x_bytes_read, MCImageB
 	t_success = true;
 
 	MCBitmapStructImageLoader *t_loader;
+    t_loader = NULL;
 	if (t_success)
 		t_success = nil != (t_loader = new MCBitmapStructImageLoader(p_stream));
 
@@ -1976,11 +1977,11 @@ bool MCXBMImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 	if (t_success)
 		t_success = IO_ERROR != IO_fgets(m_line, XBM_MAX_LINE, t_stream);
 
-	uint8_t *t_dst_ptr = nil;
-	uindex_t t_stride = (t_width + 7) / 8;
+    uint8_t *t_dst_ptr = nil;
 
 	if (t_success)
-	{
+    {
+        uindex_t t_stride = (t_width + 7) / 8;
 		t_dst_ptr = (uint8_t*)t_frame->image->data;
 		t_success = MCMemoryAllocate(t_stride, t_row_buffer);
 	}

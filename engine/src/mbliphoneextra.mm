@@ -1320,6 +1320,7 @@ bool MCSystemFileGetDataProtection(MCStringRef p_path, MCStringRef& r_protection
 	MCAutoStringRef t_protection_string;
 
 	bool t_success;
+    t_success = true;
 
 	if (t_success)
 		t_success = MCFileGetDataProtection(p_path, t_protection);
