@@ -2657,17 +2657,27 @@ enum Exec_errors
     // {EE-0869} System error: code
     EE_SYSTEM_CODE,
 
-    // {EE-0869} System error: message
+    // {EE-0870} System error: message
     EE_SYSTEM_MESSAGE,
     
-    // {EE-0868} Import: bad array
+    // {EE-0871} Import: bad array
     EE_IMPORT_BADARRAY,
     
-    // {EE-0869} Import: not an object array
+    // {EE-0872} Import: not an object array
     EE_IMPORT_NOTANOBJECTARRAY,
     
-    // {EE-0870} documentFilename: bad filename
+	// {EE-0873} go: error in widget expression
+	EE_GO_BADWIDGETEXP,
+	
+	// {EE-0874} launch: error in widget expression
+	EE_LAUNCH_BADWIDGETEXP,
+
+	// {EE-0875} do: error in widget expression
+	EE_DO_BADWIDGETEXP,
+
+    // {EE-0876} documentFilename: bad filename
     EE_DOCUMENTFILENAME_BADFILENAME,
+    
 };
 
 extern const char *MCexecutionerrors;

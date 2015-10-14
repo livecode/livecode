@@ -55,6 +55,8 @@
 #include "dispatch.h"
 #include "graphics_util.h"
 
+#include "native-layer.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCCanvasPush(MCGContextRef gcontext, uintptr_t& r_cookie);
@@ -274,7 +276,12 @@ Boolean MCWidget::mfocus(int2 p_x, int2 p_y)
 		(getflag(F_DISABLED) && (getstack() -> gettool(this) == T_BROWSE)))
 		return False;
 	
-	if (getstack() -> gettool(this) != T_BROWSE)
+	if (getstack() -> gettool(this) != T_BROWSE ||
+#ifdef WIDGETS_HANDLE_DND
+        false)
+#else
+        MCdispatcher -> isdragtarget())
+#endif
 		return MCControl::mfocus(p_x, p_y);
 	
 	// Update the mouse loc.
@@ -289,7 +296,12 @@ Boolean MCWidget::mfocus(int2 p_x, int2 p_y)
 
 void MCWidget::munfocus(void)
 {
-	if (getstack() -> gettool(this) != T_BROWSE)
+	if (getstack() -> gettool(this) != T_BROWSE ||
+#ifdef WIDGETS_HANDLE_DND
+        false)
+#else
+        MCdispatcher -> isdragtarget())
+#endif
 	{
 		MCControl::munfocus();
 		return;
@@ -672,15 +684,15 @@ IO_stat MCWidget::load(IO_handle p_stream, uint32_t p_version)
 	IO_stat t_stat;
     
 	if ((t_stat = MCObject::load(p_stream, p_version)) != IO_NORMAL)
-		return t_stat;
+		return checkloadstat(t_stat);
     
     MCNewAutoNameRef t_kind;
     if ((t_stat = IO_read_nameref_new(&t_kind, p_stream, true)) != IO_NORMAL)
-        return t_stat;
+        return checkloadstat(t_stat);
     
     MCAutoValueRef t_rep;
     if ((t_stat = IO_read_valueref_new(&t_rep, p_stream)) != IO_NORMAL)
-        return t_stat;
+        return checkloadstat(t_stat);
     
     if (t_stat == IO_NORMAL)
     {
@@ -694,9 +706,9 @@ IO_stat MCWidget::load(IO_handle p_stream, uint32_t p_version)
     }
     
 	if ((t_stat = loadpropsets(p_stream, p_version)) != IO_NORMAL)
-		return t_stat;
+		return checkloadstat(t_stat);
     
-    return t_stat;
+    return checkloadstat(t_stat);
 }
 
 IO_stat MCWidget::save(IO_handle p_stream, uint4 p_part, bool p_force_ext)
@@ -876,6 +888,39 @@ void MCWidget::SetDisabled(MCExecContext& ctxt, uint32_t p_part_id, bool p_flag)
     
     if (t_is_disabled != getflag(F_DISABLED))
         recompute();
+}
+
+bool MCWidget::GetNativeView(void *&r_view)
+{
+	if (m_native_layer == nil)
+		return false;
+	
+	return m_native_layer->GetNativeView(r_view);
+}
+
+bool MCWidget::SetNativeView(void *p_view)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCNativeLayer *t_layer;
+	t_layer = nil;
+	
+	if (t_success && p_view != nil)
+	{
+		t_layer = MCNativeLayer::CreateNativeLayer(getwidget(), p_view);
+		t_success = t_layer != nil;
+	}
+	
+	if (t_success)
+	{
+		if (m_native_layer != nil)
+			delete m_native_layer;
+		
+		m_native_layer = t_layer;
+	}
+	
+	return t_success;
 }
 
 MCWidgetRef MCWidget::getwidget(void) const

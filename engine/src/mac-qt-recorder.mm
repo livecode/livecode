@@ -857,7 +857,7 @@ double MCQTSoundRecorder::GetLoudness()
     
     MCMemoryDeleteArray(t_levels);
     
-    return MCU_min(t_loudness * 100, 100);
+    return MCU_min(t_loudness * 100.0, 100.0);
 }
 
 MCQTSoundRecorder *MCQTSoundRecorderCreate(void)

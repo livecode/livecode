@@ -1,0 +1,31 @@
+Name: go in widget
+
+Type: command
+
+Syntax: go { forward | forth | back[ward] } in <widget>
+
+Summary: Navigates forward or backward in a widget.
+
+Introduced: 8.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,mobile
+
+Example:
+// Navigate to previous page in browser widget.
+go back in widget "myBrowser"
+
+Example:
+// Return after previous call to "go back"
+go forward in widget "myBrowser"
+
+Parameters:
+widget: A widget reference.
+
+Description:
+Use the <go in widget> command to navigate within a widget. LiveCode sends a "OnGoBack" or "OnGoForward" message to the widget, which can then handle those messages to provide back / forward navigation.
+
+References: widget (object)
+
+Tags: navigation, widget
