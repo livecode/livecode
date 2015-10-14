@@ -463,6 +463,11 @@
 					{
 						'product_name': 'DbSqlite',
 						'product_extension': '',
+						'cflags!':
+						[
+							# Error in ../../thirdparty/libsqlite/include/qry_dat.h
+							'-Werror=return-type',
+						],
 					},
 				],
 			],
