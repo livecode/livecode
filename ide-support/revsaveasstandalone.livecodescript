@@ -2016,6 +2016,9 @@ private command revCopyCEFResources pPlatform, pStandalonePath, pCopyRevBrowserR
          // make sure we only copy the required helper process executable
          put revListFiles(tCEFResources) into tCEFFiles
          filter lines of tCEFFIles not matching "*.exe"
+         if the last char of tCEFFiles is not return then
+            put return after tCEFFiles
+         end if
          if pCopyRevBrowserResources then
             put "revbrowser-cefprocess.exe" & return after tCEFFiles
          end if
@@ -2029,6 +2032,10 @@ private command revCopyCEFResources pPlatform, pStandalonePath, pCopyRevBrowserR
             end if
          end repeat
          
+         revSBCopyFolderToDestination tCefResources & slash & "locales", tCEFDest, "revStandaloneProgressCallback", the long id of me
+         if the result is not empty then
+            revStandaloneAddWarning "Windows, external failed to copy:" && quote & tCefResources & slash & "locales" & quote
+         end if
          break
          # We don't support CEF on Linux yet
       case pPlatform contains "Linux"
