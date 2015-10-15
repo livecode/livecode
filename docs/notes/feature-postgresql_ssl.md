@@ -4,6 +4,6 @@ The PostgreSQL database driver has been updated to support secure connections. T
 
 The syntax for connecting to PostgreSQL databases is now as follows:
 
-**revOpenDatabase(** "postgresql", *<host>[<:port>]*, *<databasename>*, *[<username>]*, *[<password>]*, *[<ssloption>*=*<ssloptionvalue>]*,...**)**
+**revOpenDatabase(**"postgresql", *host[:port]*, *databasename*, *[username]*, *[password]*, *[ssloption*=*ssloptionvalue]*, ...**)**
 
-For full information on the new parameters see the dictionary entry for **revOpenDatabase**.
+For full information on the new parameters see the dictionary entry  for **revOpenDatabase**.
