@@ -29,7 +29,7 @@ guess_flags := $(shell $(guess_flags_script))
 
 bin_dir ?= $(top_srcdir)/$(guess_platform)-bin
 
-ENGINE ?= $(bin_dir)/standalone-community
+ENGINE ?= $(if $(filter mac,$(guess_platform)),$(bin_dir)/Standalone-Community.app/Contents/MacOS/Standalone-Community,$(bin_dir)/standalone-community)
 
 ENGINE_FLAGS ?= $(guess_flags)
 

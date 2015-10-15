@@ -208,6 +208,7 @@ private:
     static MCDataRef ConvertRTFToStyledText(MCDataRef p_rtf_data);
     static MCDataRef ConvertHTMLToStyledText(MCDataRef p_html_data);
     static MCDataRef ConvertStyledTextArrayToStyledText(MCArrayRef p_styles);
+    static MCDataRef ConvertTextToStyledText(MCStringRef p_text);
     
     // Utility functions for extracting data from the clipboard
     bool CopyAsEncodedText(const MCRawClipboardItem* p_item, MCRawClipboardKnownType p_type, MCStringEncoding p_encoding, MCStringRef& r_text) const;

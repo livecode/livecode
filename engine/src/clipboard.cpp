@@ -247,18 +247,11 @@ bool MCClipboard::AddFileList(MCStringRef p_file_names)
 
 bool MCClipboard::AddText(MCStringRef p_string)
 {
-    AutoLock t_lock(this);
-    
-    // Clear contents if the clipboard contains external data
-    if (m_clipboard->IsExternalData())
-        Clear();
-    
-    // Get the first item on the clipboard
-    MCAutoRefcounted<MCRawClipboardItem> t_item = GetItem();
-    if (t_item == NULL)
+    // Convert the text to styled text and add via the styled text method
+    MCAutoDataRef t_styled(ConvertTextToStyledText(p_string));
+    if (*t_styled == NULL)
         return false;
-    
-    return AddTextToItem(t_item, p_string);
+    return AddLiveCodeStyledText(*t_styled);
 }
 
 bool MCClipboard::AddTextToItem(MCRawClipboardItem* p_item, MCStringRef p_string)
@@ -381,7 +374,7 @@ bool MCClipboard::AddLiveCodeStyledText(MCDataRef p_pickled_text)
         // This type is optional as it may not be a faithful representation
         MCAutoStringRef t_text(ConvertStyledTextToText(p_pickled_text));
         if (*t_text != NULL)
-            t_success = AddText(*t_text);
+            t_success = AddTextToItem(t_item, *t_text);
     }
     
     return t_success;
@@ -1221,6 +1214,23 @@ MCDataRef MCClipboard::ConvertStyledTextArrayToStyledText(MCArrayRef p_styles)
     MCObject::pickle(&t_styled_text, 0, t_pickled_text);
  
     return t_pickled_text;
+}
+
+MCDataRef MCClipboard::ConvertTextToStyledText(MCStringRef p_text)
+{
+    // Convert the plain text to a series of paragraph structures
+    MCParagraph *t_paragraphs;
+    t_paragraphs = MCtemplatefield -> texttoparagraphs(p_text);
+    
+    // Create a StyledText object and give it the paragraphs
+    MCStyledText t_styled_text;
+    t_styled_text . setparagraphs(t_paragraphs);
+    
+    // Serialise the styled text
+    MCDataRef t_serialised = NULL;
+    MCObject::pickle(&t_styled_text, 0, t_serialised);
+    
+    return t_serialised;
 }
 
 bool MCClipboard::CopyAsEncodedText(const MCRawClipboardItem* p_item, MCRawClipboardKnownType p_type, MCStringEncoding p_encoding, MCStringRef& r_text) const
