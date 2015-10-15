@@ -64,58 +64,72 @@ Bool DBConnection_POSTGRESQL::connect(char **args, int numargs)
 		*t_delimiter = '\0';
 	}
 
+    const char *t_sslmode;
+    t_sslmode = NULL;
+    const char *t_sslcompression;
+    t_sslcompression = NULL;
+    const char *t_sslcert;
+    t_sslcert = NULL;
+    const char *t_sslkey;
+    t_sslkey = NULL;
+    const char *t_sslrootcert;
+    t_sslrootcert = NULL;
+    const char *t_sslcrl;
+    t_sslcrl = NULL;
+
+    // extract any ssl options spcified as key value pairs in the final args to revOpenDatabase
+    // e.g. sslmode=require
+    const char *t_ssl_opt_key;
+    t_ssl_opt_key = NULL;
+    const char *t_ssl_opt_val;
+    t_ssl_opt_val = NULL;
+    for (int i = 4; i < numargs; i++)
+    {
+        t_delimiter = strchr(args[i], '=');
+        if (t_delimiter != NULL)
+        {
+            *t_delimiter = '\0';
+            t_ssl_opt_key = args[i];
+            t_ssl_opt_val = (t_delimiter + (1 * sizeof(char)));
+
+            if (*t_ssl_opt_val != '\0')
+            {
+                if (strcmp(t_ssl_opt_key, "sslmode") == 0)
+                    t_sslmode = t_ssl_opt_val;
+                else if (strcmp(t_ssl_opt_key, "sslcompression") == 0)
+                    t_sslcompression = t_ssl_opt_val;
+                else if (strcmp(t_ssl_opt_key, "sslcert") == 0)
+                    t_sslcert = t_ssl_opt_val;
+                else if (strcmp(t_ssl_opt_key, "sslkey") == 0)
+                    t_sslkey = t_ssl_opt_val;
+                else if (strcmp(t_ssl_opt_key, "sslrootcert") == 0)
+                    t_sslrootcert = t_ssl_opt_val;
+                else if (strcmp(t_ssl_opt_key, "sslcrl") == 0)
+                    t_sslcrl = t_ssl_opt_val;
+            }
+        }
+    }
+
     bool t_have_ssl;
     t_have_ssl = load_ssl_library();
 
     // if an ssl mode (other than disable) has been passed, make sure we can load libopenssl
-    // if no ssl mode has been passed, use prefer if we have libopenssl (try an ssl connection,
-    // if that fails try non-ssl), if we don't have libopenssl, don't attempt an ssl connection (disable sslmode)
-    char *t_sslmode;
-    t_sslmode = NULL;
-    if (numargs > 4)
+    // if no ssl mode has been passed, use prefer if we have libopenssl (try an ssl connection, if that fails try non-ssl)
+    // if we don't have libopenssl, use disable (don't attempt an ssl connection)
+    const char *t_sslmode_prefer = "prefer";
+    const char *t_sslmode_disable = "disable";
+    if (t_sslmode != NULL)
     {
-        if (strcmp(args[4], "disable") != 0 && !t_have_ssl)
+        if (strcmp(t_sslmode, "disable") != 0 && !t_have_ssl)
         {
             errorMessageSet("revdb,unable to load SSL library");
             return false;
         }
-        t_sslmode = strdup(args[4]);
     }
     else if (t_have_ssl)
-        t_sslmode = strdup("prefer");
+        t_sslmode = t_sslmode_prefer;
     else
-        t_sslmode = strdup("disable");
-
-    if (t_sslmode == NULL)
-    {
-        errorMessageSet("revdb,unable to extract SSL mode");
-        return false;
-    }
-
-    char *t_sslcompression;
-    t_sslcompression = NULL;
-    if (numargs > 5)
-        t_sslcompression = args[5];
-
-    char *t_sslcert;
-    t_sslcert = NULL;
-    if (numargs > 6)
-        t_sslcert = args[6];
-
-    char *t_sslkey;
-    t_sslkey = NULL;
-    if (numargs > 7)
-        t_sslkey = args[7];
-
-    char *t_sslrootcert;
-    t_sslrootcert = NULL;
-    if (numargs > 8)
-        t_sslrootcert = args[8];
-
-    char *t_sslcrl;
-    t_sslcrl = NULL;
-    if (numargs > 9)
-        t_sslcrl = args[9];
+        t_sslmode = t_sslmode_disable;
 
     const char *t_connect_keys[] =
     {
@@ -154,8 +168,6 @@ Bool DBConnection_POSTGRESQL::connect(char **args, int numargs)
 
     dbconn = NULL;
     dbconn = PQconnectdbParams(t_connect_keys, t_connect_values, 0);
-
-    free(t_sslmode);
 
 	// OK-2008-05-16 : Bug where failed connections to postgres databases would
 	// not return any error information. According to the postgres docs, dbconn
