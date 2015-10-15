@@ -449,6 +449,10 @@ GdkAtom MCLinuxRawClipboard::GetSelectionAtom() const
 MCDataRef MCLinuxRawClipboard::CopyTargets() const
 {
 #ifndef _SERVER
+    // Do nothing if we don't have GDK available
+    if (!MCLinuxRawClipboard::HasGDK())
+        return NULL;
+    
     // Check that we actually have an item
     if (m_selected_item == NULL)
         return NULL;
@@ -536,7 +540,7 @@ bool MCLinuxRawClipboard::HasGDK()
 {
     // Only try to initialise GDK once
     static bool s_try_gdk = false;
-    static bool s_has_gdk = initialise_weak_link_X11()
+    static bool s_has_gdk = !MCnoui && initialise_weak_link_X11()
                             && initialise_weak_link_gobject()
                             && initialise_weak_link_gdk();
     if (!s_try_gdk)
@@ -831,6 +835,10 @@ MCLinuxRawClipboardItemRep::MCLinuxRawClipboardItemRep(MCLinuxRawClipboard* p_cl
   m_bytes(NULL)
 {
 #ifndef _SERVER
+    // Do nothing if we don't have GDK available
+    if (!MCLinuxRawClipboard::HasGDK())
+        return;
+    
     // Fetch the type name for this representation
     m_type.Reset(MCLinuxRawClipboard::CopyTypeForAtom(p_atom));
     MCAssert(*m_type != NULL);
