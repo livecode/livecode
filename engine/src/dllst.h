@@ -20,6 +20,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	DLLIST_H
 #define	DLLIST_H
 
+#include "foundation-legacy.h"
+
 // Forward declarations
 class MCObject;
 
