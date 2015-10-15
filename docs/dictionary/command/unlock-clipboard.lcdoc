@@ -25,6 +25,6 @@ Use the <unlock clipboard> <command> to make the contents of the clipboard avail
 Unlocking the clipboard will throw an error if the clipboard is not locked.
 
 
-References: lock clipboard (command), clipboard (function), clipboardData (property), rawClipboardData (property)
+References: lock clipboard (command), clipboard (function), clipboardData (property), fullClipboardData (property), rawClipboardData (property)
 
 Tags: ui, clipboard
