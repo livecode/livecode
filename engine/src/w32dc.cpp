@@ -284,6 +284,13 @@ MCStack *MCScreenDC::platform_getstackatpoint(int32_t x, int32_t y)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+void *MCScreenDC::GetNativeWindowHandle(Window p_win)
+{
+	return p_win != nil ? p_win->handle.window : nil;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 // IM-2014-01-28: [[ HiDPI ]] Return the x & y dpi of the main screen
 bool MCWin32GetScreenDPI(uint32_t &r_xdpi, uint32_t &r_ydpi)
 {

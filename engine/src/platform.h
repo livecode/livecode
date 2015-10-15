@@ -123,6 +123,8 @@ enum MCPlatformPropertyType
 	kMCPlatformPropertyTypeCursorRef,
     
     kMCPlatformPropertyTypeUInt32Array,
+	
+	kMCPlatformPropertyTypePointer,
     
     kMCPlatformPropertyType_Last,
 };
@@ -752,6 +754,7 @@ enum MCPlatformWindowProperty
 	kMCPlatformWindowPropertyUseLiveResizing,
 	
 	kMCPlatformWindowPropertySystemId,
+	kMCPlatformWindowPropertySystemHandle,
 	
 	kMCPlatformWindowPropertyCursor,
     

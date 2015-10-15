@@ -1739,6 +1739,12 @@ enum Parse_errors
     
     // {PE-0565} export: no array expression
     PE_EXPORT_NOARRAY,
+	
+	// {PE-0566} go: error in widget expression
+	PE_GO_BADWIDGETEXP,
+	
+	// {PE-0567} launch: error in widget expression
+	PE_LAUNCH_BADWIDGETEXP,
 };
 
 extern const char *MCparsingerrors;

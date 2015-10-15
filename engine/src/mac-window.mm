@@ -1625,9 +1625,29 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (void)setFrameSize: (NSSize)size
 {
+	CGFloat t_height_diff = size.height - [self frame].size.height;
+	
     [super setFrameSize: size];
     
-    MCMacPlatformWindow *t_window = m_window;
+	// IM-2015-09-01: [[ BrowserWidget ]] Adjust subviews upward to retain same height from top of view
+	NSArray *t_subviews;
+	t_subviews = [self subviews];
+	for (uint32_t i = 0; i < [t_subviews count]; i++)
+	{
+		NSView *t_subview;
+		t_subview = [t_subviews objectAtIndex:i];
+		
+		// Don't adjust the app view, as it gets resized below.
+		if (t_subview != m_window->GetView())
+		{
+			NSPoint t_origin;
+			t_origin = [t_subview frame].origin;
+			t_origin.y += t_height_diff;
+			
+			[t_subview setFrameOrigin:t_origin];
+		}
+	}
+	MCMacPlatformWindow *t_window = m_window;
     if (t_window != nil)
         [t_window -> GetView() setFrameSize: size];
 }
@@ -1984,7 +2004,16 @@ bool MCMacPlatformWindow::DoGetProperty(MCPlatformWindowProperty p_property, MCP
                 RealizeAndNotify();
 			*(uint32_t *)r_value = m_window_handle != nil ? [m_window_handle windowNumber] : 0;
 			return true;
+			
+		case kMCPlatformWindowPropertySystemHandle:
+			assert(p_type == kMCPlatformPropertyTypePointer);
+			// MW-2014-04-30: [[ Bug 12328 ]] If we don't have a handle yet make sure we create one.
+			if (m_window_handle == nil)
+				RealizeAndNotify();
+			*(void**)r_value = m_window_handle;
+			return true;
 	}
+	
 	return false;
 }
 

@@ -257,6 +257,8 @@ public:
 	virtual void platform_setmouse(int16_t p_x, int16_t p_y);
 	
 	virtual bool platform_get_display_handle(void *&r_display);
+
+	virtual void *GetNativeWindowHandle(Window p_window);
 	
 	// IM-2014-01-29: [[ HiDPI ]] Convenience methods to convert logical to screen coords and back
 	MCPoint logicaltoscreenpoint(const MCPoint &p_point);

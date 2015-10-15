@@ -220,6 +220,8 @@ typedef struct _MCRunloopAction
 {
 	MCRunloopActionCallback callback;
 	void *context;
+	
+	uint32_t references;
 
 	_MCRunloopAction *next;
 } MCRunloopAction, *MCRunloopActionRef;
@@ -444,6 +446,8 @@ public:
 
 	virtual uintptr_t dtouint(Drawable d);
 	virtual Boolean uinttowindow(uintptr_t, Window &w);
+	
+	virtual void *GetNativeWindowHandle(Window p_window);
 
 	virtual void getbeep(uint4 property, int4& r_value);
 	virtual void setbeep(uint4 property, int4 beep);
@@ -500,6 +504,7 @@ public:
 	// then it will cause termination of the wait.
 	virtual void pingwait(void);
 
+	bool FindRunloopAction(MCRunloopActionCallback p_callback, void *p_context, MCRunloopActionRef &r_action);
 	// IM-2014-03-06: [[ revBrowserCEF ]] Add action to runloop
 	bool AddRunloopAction(MCRunloopActionCallback p_callback, void *p_context, MCRunloopActionRef &r_action);
 	// IM-2014-03-06: [[ revBrowserCEF ]] Remove action from runloop
