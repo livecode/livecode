@@ -20,8 +20,8 @@ on startup
    put "/boot/extensions" into tExtensionFolder
    put tExtensionFolder & slash & "extensions.txt" into tExtensionListFile
    
-   local tError, tFolder, tFile
-   local tStackName, tStackData
+   local tError, tFolder, tFile, tByteString, tByte
+   local tStackName, tStackData, tStackHashString
    local tModuleList, tModuleName
    try
       -------------------------------------------------------------
@@ -33,10 +33,30 @@ on startup
       -------------------------------------------------------------
       -- Validate boot stack hash
       open file tStartupStack for binary read
+      if the result is not empty then
+         throw the result
+      end if
       read from file tStartupStack until end
+      put it into tStackData
+      if the result is not empty and the result is not "eof" then
+         throw the result
+      end if
       close file tStartupStack
-      if sha1Digest(it) is not kBootHash then
-         throw "Boot stack hash mismatch - standalone is corrupted"
+
+      put the sha1Digest of (byte 1 to 1024 of tStackData) into tStackData
+      put empty into tStackHashString
+      repeat for each byte tByte in tStackData
+         put baseConvert(byteToNum(tByte), 10, 16) into tByteString
+         switch the number of chars in tByteString
+            case 1
+               put "0" after tStackHashString
+            case 2
+               put tByteString after tStackHashString
+         end switch
+      end repeat
+
+      if kBootHash is not tStackHashString then
+        throw  "Boot stack hash mismatch - standalone is corrupted"
       end if
       
       -------------------------------------------------------------

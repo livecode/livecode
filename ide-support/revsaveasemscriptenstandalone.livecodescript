@@ -124,14 +124,14 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder
       end if
 
       -- Store auxiliary stacks
-      local tZipAuxPath
-      repeat for each line tStackFile in tAuxStackFiles
+      local tZipAuxPath, tAuxStackFile
+      repeat for each line tAuxStackFile in tAuxStackFiles
          set the itemdelimiter to slash
-         put item -1 of tStackFile into tZipAuxPath
+         put item -1 of tAuxStackFile into tZipAuxPath
          put tAuxStackPath & slash before tZipAuxPath
          
-         logDebug "aux", "Storing" && tStackFile
-         revZipAddUncompressedItemWithFile tBuildZip, tAuxStackPath, tStackFile
+         logDebug "aux", "Storing" && tAuxStackFile
+         revZipAddUncompressedItemWithFile tBuildZip, tAuxStackPath, tAuxStackFile
          if the result is not empty then
             throw "could not store auxiliary stack in standalone archive"
          end if
@@ -375,7 +375,7 @@ private function getStartupScript pStackFile
    -- Trim to the actual script
    delete line 1 of tScript
    
-   -- Compute the boot stack's SHA-1 hash
+   -- Compute the SHA-1 hash of the first 1 kB of the boot stack
    open file pStackFile for binary read
    if the result is not empty then
       throw pStackFile & ":" && the result
@@ -387,9 +387,17 @@ private function getStartupScript pStackFile
    end if
    close file pStackFile
    
-   put the sha1Digest of tStackData into tStackHash
+   put the sha1Digest of (byte 1 to 1024 of tStackData) into tStackHash
+   put empty into tStackHashString
+   local tByte, tByteString
    repeat for each byte tByte in tStackHash
-      put baseConvert(byteToNum(tByte), 10, 16) after tStackHashString
+      put baseConvert(byteToNum(tByte), 10, 16) into tByteString
+      switch the number of chars in tByteString
+         case 1
+            put "0" after tStackHashString
+         case 2
+            put tByteString after tStackHashString
+      end switch
    end repeat
    
    -- Make substitutions in the startup script
