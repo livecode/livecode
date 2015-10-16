@@ -552,10 +552,21 @@ MCDispatch::startup()
 
 	MCdefaultstackptr = MCstaticdefaultstackptr = t_startup_stack;
 
+	/* Attempt to run the startup handler */
 	if (ES_NORMAL != t_startup_stack->message(MCM_start_up, nil, false, true))
 	{
+		/* Handler couldn't be run at all, or threw an error */
 		MCresult->sets("failed to run startup stack");
-		return IO_ERROR;
+	}
+	/* The startup stack *should* set the result on failure */
+	{
+		MCExecContext ctxt;
+		MCAutoValueRef t_result;
+		MCresult->eval(ctxt, &t_result);
+		if (!MCValueIsEmpty(*t_result))
+		{
+			return IO_ERROR;
+		}
 	}
 
 	/* Delete the startup stack */
