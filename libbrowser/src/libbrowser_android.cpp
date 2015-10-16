@@ -723,6 +723,8 @@ public:
 			MCCStringFree(m_js_tag);
 			m_js_tag = nil;
 			/* UNCHECKED */ MCCStringClone(p_result, m_js_result);
+			
+			MCBrowserRunloopBreakWait();
 		}
 	}
 	

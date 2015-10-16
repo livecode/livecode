@@ -475,6 +475,13 @@ extern "C" void MCBrowserLibrarySetWaitFunction(MCBrowserWaitFunction p_wait)
 	s_browser_wait_func = p_wait;
 }
 
+static MCBrowserBreakWaitFunction s_browser_breakwait_func = nil;
+
+extern "C" void MCBrowserLibrarySetBreakWaitFunction(MCBrowserBreakWaitFunction p_breakwait)
+{
+	s_browser_breakwait_func = p_breakwait;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 struct MCBrowserRunloopAction
@@ -611,6 +618,13 @@ bool MCBrowserRunloopWait()
 		return s_browser_wait_func();
 	
 	return true;
+}
+
+void MCBrowserRunloopBreakWait()
+{
+	MCLog("break wait", nil);
+	if (s_browser_breakwait_func)
+		s_browser_breakwait_func();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

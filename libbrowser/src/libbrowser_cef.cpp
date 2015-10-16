@@ -633,6 +633,8 @@ public:
 					MCAssert(false);
 			}
 			
+			MCBrowserRunloopBreakWait();
+			
 			return true;
 		}
 		else if (t_message_name == MC_CEFMSG_JS_HANDLER)

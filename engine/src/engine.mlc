@@ -61,6 +61,7 @@ public type MCRunloopActionRef is Pointer
 public foreign handler MCEngineAddRunloopAction(in pCallback as MCRunloopActionCallback, in pContext as Pointer, out rAction as MCRunloopActionRef) returns CBool binds to "<builtin>"
 public foreign handler MCEngineRemoveRunloopAction(in pAction as MCRunloopActionRef) returns nothing binds to "<builtin>"
 public foreign handler MCEngineRunloopWait() returns CBool binds to "<builtin>"
+public foreign handler MCEngineRunloopBreakWait() returns nothing binds to "<builtin>"
 
 /*
 Summary:	Resolves a string to a script object.
