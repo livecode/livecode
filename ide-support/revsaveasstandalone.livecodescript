@@ -1967,7 +1967,7 @@ private command revCopyCEFResources pPlatform, pStandalonePath, pCopyRevBrowserR
    local tExternalPath
    put revExternalPath("Browser", tDetails["platform"], tDetails["architecture"]) into tExternalPath
    // AL-2015-03-13: [[ Bug 14936 ]] Switch where case takes an expression should not switch on a value
-   local tCurrentLocation, tCEFResources
+   local tCurrentLocation, tCEFResources, tCEFDest
    set the itemdel to slash
    put (item 1 to -2 of tExternalPath) & "/CEF" into tCEFResources
    put item 1 to -2 of pStandalonePath into tCurrentLocation
@@ -2004,7 +2004,6 @@ private command revCopyCEFResources pPlatform, pStandalonePath, pCopyRevBrowserR
          end repeat
          break
       case pPlatform = "Windows"
-         local tCEFDest
          put tCurrentLocation & slash & "Externals/CEF" into tCEFDest
          
          revSBEnsureFolder tCEFDest
@@ -2037,8 +2036,50 @@ private command revCopyCEFResources pPlatform, pStandalonePath, pCopyRevBrowserR
             revStandaloneAddWarning "Windows, external failed to copy:" && quote & tCefResources & slash & "locales" & quote
          end if
          break
-         # We don't support CEF on Linux yet
       case pPlatform contains "Linux"
+         put tCurrentLocation & slash & "Externals/CEF" into tCEFDest
+         
+         revSBEnsureFolder tCEFDest
+         if the result is not empty then
+            revStandaloneAddWarning "Linux, external failed to create folder:" && quote & tCEFDest & quote
+         end if
+         
+         // make sure we only copy the required helper process executable
+         put revListFiles(tCEFResources) into tCEFFiles
+         filter lines of tCEFFiles not matching "*-cefprocess"
+         // icudtl.dat needs to be placed alongside the executable
+         filter lines of tCEFFiles not matching "icudtl.dat"
+
+         // Copy files to CEF resource folder.
+         repeat for each line tCEFFile in tCEFFiles
+            revSBCopyFileToFolder tCefResources & slash & tCEFFile, tCEFDest, "revStandaloneProgressCallback", the long id of me
+            if the result is not empty then
+               revStandaloneAddWarning "Linux, external failed to copy:" && quote & tCefResources & slash & tCEFFile & quote
+            end if
+         end repeat
+         
+         revSBCopyFolderToDestination tCefResources & slash & "locales", tCEFDest, "revStandaloneProgressCallback", the long id of me
+         if the result is not empty then
+            revStandaloneAddWarning "Linux, external failed to copy:" && quote & tCefResources & slash & "locales" & quote
+         end if
+
+         // Copy files to standalone folder
+         put "icudtl.dat" & return into tCEFFiles
+         if pCopyRevBrowserResources then
+            put "revbrowser-cefprocess" & return after tCEFFiles
+         end if
+         if pCopyLibBrowserResources then
+            put "libbrowser-cefprocess" & return after tCEFFiles
+         end if
+         
+         repeat for each line tCEFFile in tCEFFiles
+            revSBCopyFileToFolder tCefResources & slash & tCEFFile, tCurrentLocation, "revStandaloneProgressCallback", the long id of me
+            if the result is not empty then
+               revStandaloneAddWarning "Linux, external failed to copy:" && quote & tCefResources & slash & tCEFFile & quote
+            end if
+         end repeat
+         
+         break
       default
          break
    end switch
