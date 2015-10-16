@@ -311,6 +311,9 @@ const char *MCDeployErrorToString(MCDeployError p_error)
 		case kMCDeployErrorMacOSXBadTarget:
 			return "invalid mac/ios standalone engine file";
 
+		case kMCDeployErrorEmscriptenBadStack:
+			return "could not prepare startup stack";
+
 		case kMCDeployErrorNoCertificate:
 			return "could not load certificate";
 		case kMCDeployErrorBadCertificate:
