@@ -676,6 +676,11 @@ void MCStack::redrawicon(void)
 {
 }
 
+// MERG-2015-10-12: [[ DocumentFilename ]] Stub for documentFilename.
+void MCStack::updatedocumentfilename(void)
+{
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool __MCApplyMaskCallback(void *p_context, const MCGIntegerRectangle &p_rect)

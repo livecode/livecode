@@ -56,5 +56,6 @@ public type LCUIndex is UInt32
 
 public foreign type ZStringNative binds to "MCNativeCStringTypeInfo"
 public foreign type ZStringUTF16 binds to "MCWStringTypeInfo"
+public foreign type ZStringUTF8 binds to "MCUTF8StringTypeInfo"
 
 end module

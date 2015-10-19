@@ -279,23 +279,23 @@ IO_stat MCVideoClip::load(IO_handle stream, uint32_t version)
 	IO_stat stat;
 
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint4(&size, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if (size != 0)
 	{
 		frames = new uint1[size];
 		if ((stat = IO_read(frames, size, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	}
 	if (flags & F_FRAME_RATE)
 		if ((stat = IO_read_uint2(&framerate, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	if (flags & F_SCALE_FACTOR)
 	{
 		int4 i;
 		if ((stat = IO_read_int4(&i, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		scale = MCU_i4tor8(i);
 	}
 	return loadpropsets(stream, version);

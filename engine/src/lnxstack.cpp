@@ -213,12 +213,6 @@ void MCStack::setsizehints(void)
         
         gdk_window_set_geometry_hints(window, &t_geo, GdkWindowHints(t_flags));
 	}
-	
-	// Use the window manager to set to full screen.
-	if (getextendedstate(ECS_FULLSCREEN))
-	{
-        gdk_window_fullscreen(window);
-	}
 }
 
 void MCStack::sethints()
@@ -273,7 +267,7 @@ void MCStack::sethints()
     
     gdk_window_set_type_hint(window, t_type_hint);
     
-    if (mode >= WM_PULLDOWN && mode <= WM_LICENSE)
+    if ((mode >= WM_PULLDOWN && mode <= WM_LICENSE) || getextendedstate(ECS_FULLSCREEN))
     {
         gdk_window_set_override_redirect(window, TRUE);
     }
@@ -556,7 +550,14 @@ MCRectangle MCStack::view_device_setgeom(const MCRectangle &p_rect,
         if (t_width != p_rect.width || t_height != p_rect.height)
             gdk_window_resize(window, p_rect.width, p_rect.height);
     }
-
+    
+    // Set the fullscreen-ness of the window appropriately
+    // Use the window manager to set to full screen.
+    if (getextendedstate(ECS_FULLSCREEN))
+        gdk_window_fullscreen(window);
+    else
+        gdk_window_unfullscreen(window);
+    
 	return t_old_rect;
 }
 
@@ -666,6 +667,11 @@ void MCStack::applyscroll(void)
 }
 
 void MCStack::clearscroll(void)
+{
+}
+
+// MERG-2015-10-12: [[ DocumentFilename ]] Stub for documentFilename.
+void MCStack::updatedocumentfilename(void)
 {
 }
 

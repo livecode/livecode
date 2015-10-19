@@ -46,6 +46,7 @@
 
 #include "lnxdc.h"
 #include "graphicscontext.h"
+#include "graphics_util.h"
 
 #include "native-layer-x11.h"
 
@@ -53,12 +54,12 @@
 #include <gtk/gtk.h>
 
 
-MCNativeLayerX11::MCNativeLayerX11(MCWidgetRef p_widget) :
+MCNativeLayerX11::MCNativeLayerX11(MCWidgetRef p_widget, x11::Window p_view) :
   m_widget(p_widget),
   m_child_window(NULL),
   m_input_shape(NULL),
   m_socket(NULL),
-  m_widget_xid(0)
+  m_widget_xid(p_view)
 {
     
 }
@@ -82,6 +83,7 @@ MCNativeLayerX11::~MCNativeLayerX11()
 void MCNativeLayerX11::OnToolChanged(Tool p_new_tool)
 {
     updateInputShape();
+    OnVisibilityChanged(ShouldShowWidget(MCWidgetGetHost(m_widget)));
 }
 
 void MCNativeLayerX11::updateInputShape()
@@ -148,17 +150,6 @@ void MCNativeLayerX11::doAttach()
         
         // Create an empty region to act as an input mask while in edit mode
         m_input_shape = gdk_region_new();
-        
-        // TESTING
-        /*
-        GtkPlug *t_plug = GTK_PLUG(gtk_plug_new(0));
-        gtk_widget_realize(GTK_WIDGET(t_plug));
-        m_widget_xid = gtk_plug_get_id(t_plug);
-        GtkButton* t_button = GTK_BUTTON(gtk_button_new_with_label("Native Button"));
-        gtk_container_add(GTK_CONTAINER(t_plug), GTK_WIDGET(t_button));
-        gtk_widget_show(GTK_WIDGET(t_button));
-        gtk_widget_show(GTK_WIDGET(t_plug));
-        */
     }
     
     // Attach the X11 window to this socket
@@ -169,12 +160,7 @@ void MCNativeLayerX11::doAttach()
     // Act as if there were a re-layer to put the widget in the right place
     doRelayer();
     
-    // Restore the visibility state of the widget (in case it changed due to a
-    // tool change while on another card - we don't get a message then)
-    if ((t_widget->getflags() & F_VISIBLE) && t_widget->isInRunMode())
-        gtk_widget_hide(GTK_WIDGET(m_child_window));
-    else
-        gtk_widget_show(GTK_WIDGET(m_child_window));
+    OnVisibilityChanged(ShouldShowWidget(t_widget));
 }
 
 void MCNativeLayerX11::OnDetach()
@@ -231,6 +217,9 @@ void MCNativeLayerX11::OnVisibilityChanged(bool p_visible)
         gtk_widget_show(GTK_WIDGET(m_child_window));
     else
         gtk_widget_hide(GTK_WIDGET(m_child_window));
+
+	if (p_visible)
+		OnGeometryChanged(MCRectangleMake(0,0,0,0));
 }
 
 void MCNativeLayerX11::OnLayerChanged()
@@ -269,8 +258,15 @@ void MCNativeLayerX11::doRelayer()
     }
     
     // Make the widget visible, if appropriate
-    if ((t_widget->getflags() & F_VISIBLE) && t_widget->getstack()->getcurcard() != t_widget->getstack()->getcard())
-        gdk_window_show_unraised(gtk_widget_get_window(GTK_WIDGET(m_child_window)));
+    OnVisibilityChanged(ShouldShowWidget(t_widget));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCNativeLayerX11::GetNativeView(void *&r_view)
+{
+    r_view = (void*)m_widget_xid;
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -288,7 +284,7 @@ GdkWindow* MCNativeLayerX11::getStackGdkWindow()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeLayer* MCWidget::createNativeLayer()
+MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCWidgetRef p_widget, void *p_native_view)
 {
-    return new MCNativeLayerX11(getwidget());
+    return new MCNativeLayerX11(p_widget, (x11::Window)p_native_view);
 }

@@ -394,6 +394,9 @@ public:
     // FG-2014-10-14: [[ Native Widgets ]] Informs the object that its layer has changed
     virtual void layerchanged();
     
+    // AL-2015-09-23: [[ Native Widgets ]] Informs the object that its visibility has changed
+    virtual void visibilitychanged(bool p_visible);
+    
 	// MW-2011-09-20: [[ Collision ]] Compute the shape of the object's mask.
 	virtual bool lockshape(MCObjectShape& r_shape);
 	virtual void unlockshape(MCObjectShape& shape);

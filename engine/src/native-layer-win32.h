@@ -35,7 +35,9 @@ public:
 	virtual void OnToolChanged(Tool p_new_tool);
 	virtual void OnLayerChanged();
     
-    MCNativeLayerWin32(MCWidgetRef);
+	virtual bool GetNativeView(void *&r_view);
+	
+    MCNativeLayerWin32(MCWidgetRef, HWND p_view);
     ~MCNativeLayerWin32();
     
 private:

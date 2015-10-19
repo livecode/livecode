@@ -34,9 +34,11 @@ public:
     virtual void OnToolChanged(Tool p_new_tool);
     virtual void OnLayerChanged();
     
-    MCNativeLayerAndroid(MCWidgetRef);
+    MCNativeLayerAndroid(MCWidgetRef p_widget, jobject p_view);
     ~MCNativeLayerAndroid();
     
+	virtual bool GetNativeView(void *&r_view);
+
 private:
     
     // Wrapper class for android.view.View

@@ -1613,6 +1613,9 @@ public:
     MCVarref *GetIt() const;
 	void SetItToEmpty(void);
 	void SetItToValue(MCValueRef p_value);
+    
+    // Assign the given ExecValue to it, the 'it' variable takes ownership.
+	void GiveValueToIt(/* take */ MCExecValue& p_value);
 	
 	//////////    
 
@@ -1760,6 +1763,10 @@ public:
     
 	void TryToEvalExprAsArrayRef(MCExpression *p_expr, Exec_errors p_error, MCArrayRef& r_value);
     void TryToEvalOptionalExprAsColor(MCExpression *p_expr, MCColor *p_default, Exec_errors p_error, MCColor *&r_value);
+    
+    bool EvalExprAsStrictUInt(MCExpression *p_expr, Exec_errors p_error, uinteger_t& r_value);
+    
+    bool EvalExprAsStrictInt(MCExpression *p_expr, Exec_errors p_error, integer_t& r_value);
     
 private:
 #ifdef LEGACY_EXEC
@@ -2861,6 +2868,10 @@ extern MCExecMethodInfo *kMCInterfaceGetUsePixelScalingMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceGetScreenPixelScaleMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceGetScreenPixelScalesMethodInfo;
 
+extern MCExecMethodInfo *kMCInterfaceExecGoBackInWidgetMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceExecGoForwardInWidgetMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceExecLaunchUrlInWidgetMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceExecDoInWidgetMethodInfo;
 
 void MCInterfaceInitialize(MCExecContext& ctxt);
 void MCInterfaceFinalize(MCExecContext& ctxt);
@@ -3432,6 +3443,11 @@ void MCInterfaceGetUsePixelScaling(MCExecContext& ctxt, bool &r_setting);
 void MCInterfaceGetScreenPixelScale(MCExecContext& ctxt, double& r_scale);
 void MCInterfaceGetScreenPixelScales(MCExecContext& ctxt, uindex_t& r_count, double*& r_scale);
 
+void MCInterfaceExecGoBackInWidget(MCExecContext& ctxt, MCWidget *p_widget);
+void MCInterfaceExecGoForwardInWidget(MCExecContext& ctxt, MCWidget *p_widget);
+void MCInterfaceExecLaunchUrlInWidget(MCExecContext& ctxt, MCStringRef p_url, MCWidget *p_widget);
+void MCInterfaceExecDoInWidget(MCExecContext& ctxt, MCStringRef p_script, MCWidget *p_widget);
+
 ///////////
 
 struct MCInterfaceLayer;
@@ -3799,7 +3815,7 @@ void MCEngineEvalMenuObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
 void MCEngineEvalTargetAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
 void MCEngineEvalErrorObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
 
-void MCEngineExecGet(MCExecContext& ctxt, MCValueRef value);
+void MCEngineExecGet(MCExecContext& ctxt, /* take */ MCExecValue& value);
 void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef value, int where, MCVariableChunkPtr t_target);
 void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCExecValue value, int where, MCVariableChunkPtr t_target);
 void MCEngineExecPutOutput(MCExecContext& ctxt, MCStringRef value);

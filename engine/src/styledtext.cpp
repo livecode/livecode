@@ -128,7 +128,7 @@ IO_stat MCStyledText::load(IO_handle p_stream, uint32_t p_version)
 	{
 		uint1 type;
 		if ((stat = IO_read_uint1(&type, p_stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		switch (type)
 		{
 		// MW-2012-03-04: [[ StackFile5500 ]] Handle both the paragraph and extended
@@ -144,7 +144,7 @@ IO_stat MCStyledText::load(IO_handle p_stream, uint32_t p_version)
 				if ((stat = newpar->load(p_stream, p_version, type == OT_PARAGRAPH_EXT)) != IO_NORMAL)
 				{
 					delete newpar;
-					return stat;
+					return checkloadstat(stat);
 				}
 
 				newpar->appendto(paragraphs);

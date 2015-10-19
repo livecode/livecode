@@ -18,7 +18,6 @@
 #define __MC_WIDGET__
 
 #include "mccontrol.h"
-#include "native-layer.h"
 
 #include "libscript/script.h"
 #include "module-engine.h"
@@ -80,6 +79,7 @@ bool MCWidgetOnGeometryChanged(MCWidgetRef widget);
 bool MCWidgetOnLayerChanged(MCWidgetRef widget);
 bool MCWidgetOnParentPropertyChanged(MCWidgetRef widget);
 bool MCWidgetOnToolChanged(MCWidgetRef widget, Tool p_tool);
+bool MCWidgetOnVisibilityChanged(MCWidgetRef widget, bool p_visible);
 
 bool MCWidgetCopyAnnotation(MCWidgetRef widget, MCNameRef annotation, MCValueRef& r_value);
 bool MCWidgetSetAnnotation(MCWidgetRef widget, MCNameRef annotation, MCValueRef value);
@@ -110,6 +110,8 @@ bool MCChildWidgetSetDisabled(MCWidgetRef widget, bool disabled);
 // The MCWidget control now wraps a (root) MCWidgetRef and passes all events
 // through MCWidgetEventManager which modulates them to appropriate calls on
 // the appropriate (nested) MCWidgetRef.
+
+class MCNativeLayer;
 
 class MCWidget: public MCControl
 {
@@ -166,9 +168,12 @@ public:
 	virtual bool setcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCExecValue p_value);
     
     virtual void toolchanged(Tool p_new_tool);
-    
+    virtual void visibilitychanged(bool p_visible);
     virtual void layerchanged();
-    
+	
+	bool GetNativeView(void *&r_view);
+	bool SetNativeView(void *p_view);
+	
     virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool flag);
     
     void GetKind(MCExecContext& ctxt, MCNameRef& r_kind);
@@ -189,9 +194,6 @@ public:
     {
         return m_native_layer;
     }
-    
-    // Creates a native layer for this widget
-    MCNativeLayer* createNativeLayer();
     
 protected:
 	static MCPropertyInfo kProperties[];

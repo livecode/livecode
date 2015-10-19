@@ -1344,35 +1344,35 @@ IO_stat MCScrollbar::load(IO_handle stream, uint32_t version)
 	IO_stat stat;
 
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if (flags & F_SAVE_ATTS)
 	{
 		uint2 i2;
 		if ((stat = IO_read_uint2(&i2, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		thumbpos = (real8)i2;
 		if ((stat = IO_read_uint2(&i2, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		thumbsize = (real8)i2;
 		if ((stat = IO_read_uint2(&i2, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		lineinc = (real8)i2;
 		if ((stat = IO_read_uint2(&i2, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		pageinc = (real8)i2;
 		if (flags & F_HAS_VALUES)
 		{
 			// MW-2013-08-27: [[ UnicodifyScrollbar ]] Update to use stringref primitives.
 			// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 			if ((stat = IO_read_stringref_new(startstring, stream, version >= 7000)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			if (!MCStringToDouble(startstring, startvalue))
 				startvalue = 0.0;
 			
 			// MW-2013-08-27: [[ UnicodifyScrollbar ]] Update to use stringref primitives.
 			// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 			if ((stat = IO_read_stringref_new(endstring, stream, version >= 7000)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			if (!MCStringToDouble(endstring, endvalue))
 				endvalue = 0.0;
 			
@@ -1382,11 +1382,11 @@ IO_stat MCScrollbar::load(IO_handle stream, uint32_t version)
 			lineinc *= range;
 			pageinc *= range;
 			if ((stat = IO_read_uint2(&nffw, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			if ((stat = IO_read_uint2(&nftrailing, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			if ((stat = IO_read_uint2(&nfforce, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		}
 	}
 	if (version <= 2000)

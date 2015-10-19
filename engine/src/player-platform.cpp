@@ -84,7 +84,9 @@ static const char *ppmediastrings[] =
 #define MIN_RATE -3
 #define MAX_RATE 3
 
-
+extern "C" int initialise_weak_link_QuickTime(void);
+extern "C" int initialise_weak_link_QTKit(void);
+extern "C" int initialise_weak_link_QuickDraw(void);
 
 
 static MCColor controllercolors[] = {
@@ -1793,23 +1795,23 @@ IO_stat MCPlayer::load(IO_handle stream, uint32_t version)
 	IO_stat stat;
     
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_stringref_new(filename, stream, version >= 7000)) != IO_NORMAL)
         
         // MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint4(&starttime, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint4(&endtime, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	int4 trate;
 	if ((stat = IO_read_int4(&trate, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	rate = (real8)trate * 10.0 / MAXINT4;
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 	if ((stat = IO_read_stringref_new(userCallbackStr, stream, version >= 7000)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	return loadpropsets(stream, version);
 }
 
@@ -1943,6 +1945,21 @@ void MCPlayer::setlooping(Boolean loop)
 		bool t_loop;
 		t_loop = loop;
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLoop, kMCPlatformPropertyTypeBool, &t_loop);
+	}
+}
+
+// SN-2015-09-30: Make specific implementation for the platformplayer, which
+//  ensures that QT is weak-linked.
+void MCPlayer::setdontuseqt(bool noqt)
+{
+	dontuseqt = noqt;
+	
+	// Weak link QT when setting a player's dontuseqt to false, if it is not already linked
+	if (!noqt && MCdontuseQT)
+	{
+		initialise_weak_link_QuickTime();
+		initialise_weak_link_QTKit() ;
+		initialise_weak_link_QuickDraw() ;
 	}
 }
 

@@ -210,13 +210,26 @@ void MCStack::configure(Boolean user)
 		foreachchildstack(_MCStackConfigureCallback, nil);
 }
 
+void MCStack::seticonic(Boolean on)
+{
+	if (on && !(state & CS_ICONIC))
+	{
+		MCiconicstacks++;
+		state |= CS_ICONIC;
+	}
+	else if (!on && (state & CS_ICONIC))
+		{
+			MCiconicstacks--;
+			state &= ~CS_ICONIC;
+		}
+}
+
 void MCStack::iconify()
 {
 	if (!(state & CS_ICONIC))
-	{
-		MCtooltip->cleartip();
-		MCiconicstacks++;
-		state |= CS_ICONIC;
+    {
+        MCtooltip->cleartip();
+        seticonic(true);
 		MCstacks->top(NULL);
 		redrawicon();
 		curcard->message(MCM_iconify_stack);
@@ -227,8 +240,7 @@ void MCStack::uniconify()
 {
 	if (state & CS_ICONIC)
 	{
-		MCiconicstacks--;
-		state &= ~CS_ICONIC;
+		seticonic(false);
 		MCstacks->top(this);
 		curcard->message(MCM_uniconify_stack);
 		// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
@@ -702,7 +714,7 @@ IO_stat MCStack::saveas(const MCStringRef p_fname)
 		MCStack *sptr = this;
 		if (!MCdispatcher->ismainstack(sptr))
 			sptr = (MCStack *)sptr->parent;
-		MCdispatcher->savestack(sptr, p_fname);
+		return MCdispatcher->savestack(sptr, p_fname);
 	}
 	return IO_NORMAL;
 }

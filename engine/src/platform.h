@@ -123,6 +123,8 @@ enum MCPlatformPropertyType
 	kMCPlatformPropertyTypeCursorRef,
     
     kMCPlatformPropertyTypeUInt32Array,
+	
+	kMCPlatformPropertyTypePointer,
     
     kMCPlatformPropertyType_Last,
 };
@@ -789,12 +791,15 @@ enum MCPlatformWindowProperty
 	kMCPlatformWindowPropertyUseLiveResizing,
 	
 	kMCPlatformWindowPropertySystemId,
+	kMCPlatformWindowPropertySystemHandle,
 	
 	kMCPlatformWindowPropertyCursor,
     
     kMCPlatformWindowPropertyHideOnSuspend,
     
     kMCPlatformWindowPropertyIgnoreMouseEvents,
+    
+    kMCPlatformWindowPropertyDocumentFilename,
 };
 
 void MCPlatformSetWindowProperty(MCPlatformWindowRef window, MCPlatformWindowProperty property, MCPlatformPropertyType type, const void *value);

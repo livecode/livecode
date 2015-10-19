@@ -129,6 +129,7 @@ MCGo::~MCGo()
 	delete background;
 	delete card;
 	delete window;
+	delete widget;
 }
 
 Parse_stat MCGo::parse(MCScriptPoint &sp)
@@ -292,6 +293,19 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 					case CT_BACKWARD:
 					case CT_FORWARD:
 						{
+							if (sp.skip_token(SP_FACTOR, TT_IN) == PS_NORMAL)
+							{
+								widget = new MCChunk(False);
+								if (widget->parse(sp, False) != PS_NORMAL)
+								{
+									MCperror->add(PE_GO_BADWIDGETEXP, sp);
+									return PS_ERROR;
+								}
+								direction = nterm;
+								
+								break;
+							}
+
 							card = new MCCRef;
 							card->etype = nterm;
 							MCScriptPoint oldsp(sp);
@@ -988,6 +1002,26 @@ void MCGo::exec_ctxt(MCExecContext &ctxt)
 
     ctxt . SetTheResultToEmpty();
     
+	// go ( forward | backward ) in widget ...
+	if (widget != nil)
+	{
+		MCObject *t_object;
+		uint32_t t_parid;
+
+		if (!widget->getobj(ctxt, t_object, t_parid, True) || t_object->gettype() != CT_WIDGET)
+		{
+			ctxt.LegacyThrow(EE_GO_BADWIDGETEXP);
+			return;
+		}
+		
+		if (direction == CT_BACKWARD)
+			MCInterfaceExecGoBackInWidget(ctxt, (MCWidget*)t_object);
+		else
+			MCInterfaceExecGoForwardInWidget(ctxt, (MCWidget*)t_object);
+		
+		return;
+	}
+	
 	if (stack == NULL && background == NULL && card == NULL)
 	{
         ctxt . LegacyThrow(EE_GO_NODEST);
@@ -1015,7 +1049,7 @@ void MCGo::exec_ctxt(MCExecContext &ctxt)
             else if (stack -> etype == CT_ID)
             {
                 uinteger_t t_stack_id;
-                if (!ctxt . EvalExprAsUInt(stack -> startpos, EE_GO_BADSTACKEXP, t_stack_id))
+                if (!ctxt . EvalExprAsStrictUInt(stack -> startpos, EE_GO_BADSTACKEXP, t_stack_id))
                     return;
 
                 sptr = MCdefaultstackptr->findstackid(t_stack_id);
@@ -1036,7 +1070,7 @@ void MCGo::exec_ctxt(MCExecContext &ctxt)
 				case CT_ID:
                 {
                     uinteger_t t_stack_id;
-                    if (!ctxt . EvalExprAsUInt(stack -> next -> startpos, EE_CHUNK_BADSTACKEXP, t_stack_id))
+                    if (!ctxt . EvalExprAsStrictUInt(stack -> next -> startpos, EE_CHUNK_BADSTACKEXP, t_stack_id))
                         return;
 
                     sptr = sptr -> findsubstackid(t_stack_id);
@@ -1216,6 +1250,16 @@ void MCGo::exec_ctxt(MCExecContext &ctxt)
 
 void MCGo::compile(MCSyntaxFactoryRef ctxt)
 {
+	if (widget != nil)
+	{
+		MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+		widget->compile(ctxt);
+		MCSyntaxFactoryExecMethod(ctxt, direction == CT_BACKWARD ? kMCInterfaceExecGoBackInWidgetMethodInfo : kMCInterfaceExecGoForwardInWidgetMethodInfo);
+		MCSyntaxFactoryEndStatement(ctxt);
+		
+		return;
+	}
+	
     MCSyntaxFactoryBeginStatement(ctxt, line, pos);
     
     bool t_is_home, t_is_relative;
@@ -2919,7 +2963,6 @@ void MCSubwindow::exec_ctxt(MCExecContext &ctxt)
 		case WM_SHEET:
 		case WM_DRAWER:
 			{
-				MCerrorlock++;
 				MCNewAutoNameRef t_parent_name;
                 if (!ctxt . EvalOptionalExprAsNullableNameRef(parent, EE_SUBWINDOW_BADEXP, &t_parent_name))
                     return;

@@ -169,7 +169,7 @@ void MCU_resetprops(Boolean update)
 			MCselected->redraw();
 		}
 	}
-	MCerrorlock = 0;
+	MCerrorlock.Reset();
 	MClockerrors = MClockmessages = MClockrecent = False;
 	MCscreen->setlockmoves(False);
 	MCerrorlockptr = NULL;
@@ -1226,114 +1226,6 @@ void MCU_break_string(const MCString &s, MCString *&ptrs, uint2 &nptrs,
 	}
 }
 
-// AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
-#if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
-extern compare_t MCSystemCompareInternational(MCStringRef, MCStringRef);
-#endif
-
-static void msort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, Boolean reverse)
-{
-	if (n <= 1)
-		return;
-
-	uint4 n1 = n / 2;
-	uint4 n2 = n - n1;
-	MCSortnode *b1 = b;
-	MCSortnode *b2 = b + n1;
-
-	msort(b1, n1, t, form, reverse);
-	msort(b2, n2, t, form, reverse);
-
-	MCSortnode *tmp = t;
-	while (n1 > 0 && n2 > 0)
-	{
-		// NOTE:
-		//
-		// This code assumes the types in the MCSortnodes are correct for the
-		// requested sort type. Bad things will happen if this isn't true...
-		bool first;
-		switch (form)
-		{
-		case ST_INTERNATIONAL:
-			{
-                char *t1, *t2;
-                /* UNCHECKED */ MCStringConvertToCString(b1->svalue, t1);
-                /* UNCHECKED */ MCStringConvertToCString(b2->svalue, t2);
-				const char *s1, *s2;
-				s1 = t1;
-				s2 = t2;
-				
-				// WARNING: this will *not* work properly on anything other
-				// than OSX, iOS or Android: the LC_COLLATE locale facet is set to the
-				// locale "en_US.<native encoding>"...
-				//
-				// Additionally, UTF-16 strings don't work at all.
-                
-                // AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
-#if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
-				int result = MCSystemCompareInternational(b1->svalue, b2->svalue);
-#else
-				int result = strcoll(s1, s2);
-#endif
-				delete t1;
-                delete t2;
-				first = reverse ? result >= 0 : result <= 0;
-				break;
-			}
-
-		case ST_TEXT:
-			{
-				// This mode performs the comparison in a locale-independent,
-                // case-sensitive manner. The strings are sorted by order of
-                // codepoint values rather than any lexical sorting order.
-                compare_t result = MCStringCompareTo(b1->svalue, b2->svalue, kMCStringOptionCompareExact);
-
-				first = reverse ? result >= 0 : result <= 0;
-				break;
-			}
-        case ST_BINARY:
-            {
-                compare_t result = MCDataCompareTo(b1->dvalue, b2->dvalue);
-                
-				first = reverse ? result >= 0 : result <= 0;
-				break;
-            }
-		default:
-			{
-				first = reverse
-							? MCNumberFetchAsReal(b1->nvalue) >= MCNumberFetchAsReal(b2->nvalue)
-							: MCNumberFetchAsReal(b1->nvalue) <= MCNumberFetchAsReal(b2->nvalue);
-				break;
-			}
-		}
-		
-		if (first)
-		{
-			*tmp++ = *b1++;
-			n1--;
-		}
-		else
-		{
-			*tmp++ = *b2++;
-			n2--;
-		}
-	}
-	for (uindex_t i = 0; i < n1; i++)
-		tmp[i] = b1[i];
-	for (uindex_t i = 0; i < (n - n2); i++)
-		b[i] = t[i];
-}
-
-void MCU_sort(MCSortnode *items, uint4 nitems,
-              Sort_type dir, Sort_type form)
-{
-	if (nitems <= 1)
-		return;
-	MCSortnode *tmp = new MCSortnode[nitems];
-	msort(items, nitems, tmp, form, dir == ST_DESCENDING);
-	delete[] tmp;
-}
-
 #if !defined(_DEBUG_MEMORY)
 void MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize)
 {
@@ -1646,6 +1538,36 @@ Boolean MCU_rect_in_rect(const MCRectangle &p, const MCRectangle &w)
 	        && p.y >= w.y && p.y + p.height <= w.y + w.height)
 		return True;
 	return False;
+}
+
+// AL-2015-10-07:: [[ External Handles ]] Check if possible zero-width line
+// 'intersects' with rect.
+bool MCU_line_intersect_rect(const MCRectangle& srect, const MCRectangle& line)
+{
+    MCRectangle t_test_rect;
+    t_test_rect = line;
+    
+    
+    // If the line is zero-width or zero-height, adjust the test rect
+    //  so that we can just use MCU_intersect_rect.
+    if (t_test_rect . width == 0)
+    {
+        t_test_rect . width++;
+        if (srect . x > t_test_rect . x)
+            t_test_rect . x--;
+    }
+    
+    if (t_test_rect . height == 0)
+    {
+        t_test_rect . height++;
+        if (srect . y > t_test_rect . y)
+            t_test_rect . y--;
+    }
+
+    MCRectangle t_intersect;
+    t_intersect = MCU_intersect_rect(srect, t_test_rect);
+
+    return t_intersect . width != 0 && t_intersect . height != 0;
 }
 
 

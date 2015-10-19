@@ -19,6 +19,11 @@
 				'perfect.c',
 			],
 
+			'cflags_c!':
+			[
+				'-Wstrict-prototypes',
+			],
+
 			'msvs_settings':
 			{
 				'VCLinkerTool':

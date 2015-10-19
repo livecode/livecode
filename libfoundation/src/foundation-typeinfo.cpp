@@ -49,10 +49,6 @@ MC_DLLEXPORT_DEF MCTypeInfoRef MCProperListTypeInfo() { return kMCProperListType
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool __MCTypeInfoIsNamed(MCTypeInfoRef self);
-
-////////////////////////////////////////////////////////////////////////////////
-
 
 static intenum_t __MCTypeInfoGetExtendedTypeCode(MCTypeInfoRef self)
 {
@@ -64,54 +60,64 @@ static intenum_t __MCTypeInfoGetExtendedTypeCode(MCTypeInfoRef self)
 MC_DLLEXPORT_DEF
 bool MCTypeInfoIsAlias(MCTypeInfoRef self)
 {
+	__MCAssertIsTypeInfo(self);
     return __MCTypeInfoGetExtendedTypeCode(self) == kMCTypeInfoTypeIsAlias;
 }
 
 MC_DLLEXPORT_DEF
 bool MCTypeInfoIsNamed(MCTypeInfoRef self)
 {
+	__MCAssertIsTypeInfo(self);
     return __MCTypeInfoGetExtendedTypeCode(self) == kMCTypeInfoTypeIsNamed;
 }
 
 MC_DLLEXPORT_DEF
 bool MCTypeInfoIsOptional(MCTypeInfoRef self)
 {
+	__MCAssertIsTypeInfo(self);
     return __MCTypeInfoGetExtendedTypeCode(self) == kMCTypeInfoTypeIsOptional;
 }
 
 MC_DLLEXPORT_DEF
 bool MCTypeInfoIsHandler(MCTypeInfoRef self)
 {
+	__MCAssertIsTypeInfo(self);
     return __MCTypeInfoGetExtendedTypeCode(self) == kMCValueTypeCodeHandler;
 }
 
 MC_DLLEXPORT_DEF
 bool MCTypeInfoIsRecord(MCTypeInfoRef self)
 {
+	__MCAssertIsTypeInfo(self);
     return __MCTypeInfoGetExtendedTypeCode(self) == kMCValueTypeCodeRecord;
 }
 
 MC_DLLEXPORT_DEF
 bool MCTypeInfoIsError(MCTypeInfoRef self)
 {
+	__MCAssertIsTypeInfo(self);
     return __MCTypeInfoGetExtendedTypeCode(self) == kMCValueTypeCodeError;
 }
 
 MC_DLLEXPORT_DEF
 bool MCTypeInfoIsForeign(MCTypeInfoRef self)
 {
+	__MCAssertIsTypeInfo(self);
     return __MCTypeInfoGetExtendedTypeCode(self) == kMCTypeInfoTypeIsForeign;
 }
 
 MC_DLLEXPORT_DEF
 bool MCTypeInfoIsCustom(MCTypeInfoRef self)
 {
+	__MCAssertIsTypeInfo(self);
     return __MCTypeInfoGetExtendedTypeCode(self) == kMCValueTypeCodeCustom;
 }
 
 MC_DLLEXPORT_DEF
 bool MCTypeInfoResolve(MCTypeInfoRef self, MCResolvedTypeInfo& r_resolution)
 {
+	__MCAssertIsTypeInfo(self);
+
     intenum_t t_ext_typecode;
     t_ext_typecode = __MCTypeInfoGetExtendedTypeCode(self);
 
@@ -316,6 +322,9 @@ bool MCBuiltinTypeInfoCreate(MCValueTypeCode p_code, MCTypeInfoRef& r_typeinfo)
 MC_DLLEXPORT_DEF
 bool MCAliasTypeInfoCreate(MCNameRef p_name, MCTypeInfoRef p_target, MCTypeInfoRef& r_typeinfo)
 {
+	__MCAssertIsName(p_name);
+	__MCAssertIsTypeInfo(p_target);
+
     __MCTypeInfo *self;
     if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
         return false;
@@ -335,12 +344,14 @@ bool MCAliasTypeInfoCreate(MCNameRef p_name, MCTypeInfoRef p_target, MCTypeInfoR
 MC_DLLEXPORT_DEF
 MCNameRef MCAliasTypeInfoGetName(MCTypeInfoRef self)
 {
+	MCAssert(MCTypeInfoIsAlias(self));
     return self -> alias . name;
 }
 
 MC_DLLEXPORT_DEF
 MCTypeInfoRef MCAliasTypeInfoGetTarget(MCTypeInfoRef self)
 {
+	MCAssert(MCTypeInfoIsAlias(self));
     return self -> alias . typeinfo;
 }
 
@@ -349,6 +360,8 @@ MCTypeInfoRef MCAliasTypeInfoGetTarget(MCTypeInfoRef self)
 MC_DLLEXPORT_DEF
 bool MCNamedTypeInfoCreate(MCNameRef p_name, MCTypeInfoRef& r_typeinfo)
 {
+	__MCAssertIsName(p_name);
+
     __MCTypeInfo *self;
     if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
         return false;
@@ -371,24 +384,29 @@ bool MCNamedTypeInfoCreate(MCNameRef p_name, MCTypeInfoRef& r_typeinfo)
 MC_DLLEXPORT_DEF
 MCNameRef MCNamedTypeInfoGetName(MCTypeInfoRef self)
 {
+	MCAssert(MCTypeInfoIsNamed(self));
     return self -> named . name;
 }
 
 MC_DLLEXPORT_DEF
 bool MCNamedTypeInfoIsBound(MCTypeInfoRef self)
 {
+	MCAssert(MCTypeInfoIsNamed(self));
     return self -> named . typeinfo != nil;
 }
 
 MC_DLLEXPORT_DEF
 MCTypeInfoRef MCNamedTypeInfoGetBoundTypeInfo(MCTypeInfoRef self)
 {
+	MCAssert(MCTypeInfoIsNamed(self));
     return self -> named . typeinfo;
 }
 
 MC_DLLEXPORT_DEF
 bool MCNamedTypeInfoBind(MCTypeInfoRef self, MCTypeInfoRef p_target)
 {
+	MCAssert(MCTypeInfoIsNamed(self));
+	__MCAssertIsTypeInfo(p_target);
     if (self -> named . typeinfo != nil)
         return MCErrorThrowGeneric(nil);
     
@@ -400,6 +418,8 @@ bool MCNamedTypeInfoBind(MCTypeInfoRef self, MCTypeInfoRef p_target)
 MC_DLLEXPORT_DEF
 bool MCNamedTypeInfoUnbind(MCTypeInfoRef self)
 {
+	MCAssert(MCTypeInfoIsNamed(self));
+
     if (self -> named . typeinfo == nil)
         return MCErrorThrowGeneric(nil);
     
@@ -412,6 +432,8 @@ bool MCNamedTypeInfoUnbind(MCTypeInfoRef self)
 MC_DLLEXPORT_DEF
 bool MCNamedTypeInfoResolve(MCTypeInfoRef self, MCTypeInfoRef& r_bound_type)
 {
+	MCAssert(MCTypeInfoIsNamed(self));
+
     if (self -> named . typeinfo == nil)
         return MCErrorThrowGeneric(nil);
     
@@ -425,6 +447,8 @@ bool MCNamedTypeInfoResolve(MCTypeInfoRef self, MCTypeInfoRef& r_bound_type)
 MC_DLLEXPORT_DEF
 bool MCOptionalTypeInfoCreate(MCTypeInfoRef p_base, MCTypeInfoRef& r_new_type)
 {
+	__MCAssertIsTypeInfo(p_base);
+
     if (__MCTypeInfoGetExtendedTypeCode(p_base) == kMCTypeInfoTypeIsOptional)
     {
         r_new_type = MCValueRetain(p_base);
@@ -449,6 +473,8 @@ bool MCOptionalTypeInfoCreate(MCTypeInfoRef p_base, MCTypeInfoRef& r_new_type)
 MC_DLLEXPORT_DEF
 MCTypeInfoRef MCOptionalTypeInfoGetBaseTypeInfo(MCTypeInfoRef p_base)
 {
+	MCAssert(MCTypeInfoIsOptional(p_base));
+
     return p_base -> optional . basetype;
 }
 
@@ -528,6 +554,8 @@ static bool __MCForeignTypeInfoComputeLayoutType(MCTypeInfoRef self)
 MC_DLLEXPORT_DEF
 bool MCForeignTypeInfoCreate(const MCForeignTypeDescriptor *p_descriptor, MCTypeInfoRef& r_typeinfo)
 {
+	MCAssert(nil != p_descriptor);
+
     __MCTypeInfo *self;
     if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
         return false;
@@ -573,6 +601,9 @@ const MCForeignTypeDescriptor *MCForeignTypeInfoGetDescriptor(MCTypeInfoRef unre
 {
 	MCTypeInfoRef self;
 	self = __MCTypeInfoResolve(unresolved_self);
+
+	MCAssert(MCTypeInfoIsForeign(self));
+
     return &self -> foreign . descriptor;
 }
 
@@ -581,6 +612,9 @@ void *MCForeignTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self)
 {
 	MCTypeInfoRef self;
 	self = __MCTypeInfoResolve(unresolved_self);
+
+	MCAssert(MCTypeInfoIsForeign(self));
+
     return self -> foreign . ffi_layout_type;
 }
 
@@ -590,6 +624,8 @@ MC_DLLEXPORT_DEF
 bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *p_fields, index_t p_field_count, MCTypeInfoRef p_base, MCTypeInfoRef& r_typeinfo)
 	
 {
+	MCAssert(nil != p_fields || p_field_count == 0);
+
 	MCTypeInfoRef t_resolved_base;
 	t_resolved_base = kMCNullTypeInfo;
 	if (p_base != kMCNullTypeInfo)
@@ -617,6 +653,8 @@ bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *p_fields, index_t p_fie
 
 	for (uindex_t i = 0; i < p_field_count; ++i)
 	{
+		__MCAssertIsName(p_fields[i].name);
+		__MCAssertIsTypeInfo(p_fields[i].type);
 		/* Verify that the field names are all caselessly distinct.
 		 * N.b. O(N^2) algorithm is inefficient, but will only be run
 		 * in debug builds and will only happen once per type. */
@@ -743,6 +781,9 @@ __MCRecordTypeInfoGetBaseTypeForField (__MCTypeInfo *self,
 
 static bool MCCommonHandlerTypeInfoCreate(bool p_is_foreign, const MCHandlerTypeFieldInfo *p_fields, index_t p_field_count, MCTypeInfoRef p_return_type, MCTypeInfoRef& r_typeinfo)
 {
+	__MCAssertIsTypeInfo(p_return_type);
+	MCAssert(nil != p_fields || 0 == p_field_count);
+
     __MCTypeInfo *self;
     if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
         return false;
@@ -765,6 +806,7 @@ static bool MCCommonHandlerTypeInfoCreate(bool p_is_foreign, const MCHandlerType
 
     for (uindex_t i = 0; i < p_field_count; ++i)
     {
+	    __MCAssertIsTypeInfo(p_fields[i].type);
         self -> handler . fields[i] . type = MCValueRetain(p_fields[i] . type);
         self -> handler . fields[i] . mode = p_fields[i] . mode;
     }
@@ -800,6 +842,8 @@ bool MCHandlerTypeInfoIsForeign(MCTypeInfoRef unresolved_self)
 {
     MCTypeInfoRef self;
     self = __MCTypeInfoResolve(unresolved_self);
+
+    MCAssert(MCTypeInfoIsHandler(self));
 
     return (self -> flags & kMCTypeInfoFlagHandlerIsForeign) != 0;
 }
@@ -948,6 +992,9 @@ bool MCHandlerTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self, int p_abi, vo
 MC_DLLEXPORT_DEF
 bool MCErrorTypeInfoCreate(MCNameRef p_domain, MCStringRef p_message, MCTypeInfoRef& r_typeinfo)
 {
+	__MCAssertIsName(p_domain);
+	__MCAssertIsString(p_message);
+
     __MCTypeInfo *self;
     if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
         return false;
@@ -973,6 +1020,7 @@ MCNameRef MCErrorTypeInfoGetDomain(MCTypeInfoRef unresolved_self)
     MCTypeInfoRef self;
     self = __MCTypeInfoResolve(unresolved_self);
     
+	MCAssert(MCTypeInfoIsError(self));
     return self -> error . domain;
 }
 
@@ -982,6 +1030,7 @@ MCStringRef MCErrorTypeInfoGetMessage(MCTypeInfoRef unresolved_self)
     MCTypeInfoRef self;
     self = __MCTypeInfoResolve(unresolved_self);
     
+    MCAssert(MCTypeInfoIsError(self));
     return self -> error . message;
 }
 
@@ -1049,6 +1098,9 @@ bool MCNamedForeignTypeInfoCreate(MCNameRef p_name, const MCForeignTypeDescripto
 MC_DLLEXPORT_DEF
 bool MCCustomTypeInfoCreate(MCTypeInfoRef p_base, const MCValueCustomCallbacks *p_callbacks, MCTypeInfoRef& r_typeinfo)
 {
+	__MCAssertIsTypeInfo(p_base);
+	MCAssert(nil != p_callbacks);
+
     __MCTypeInfo *self;
     if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
         return false;
@@ -1069,6 +1121,8 @@ MCTypeInfoRef MCCustomTypeInfoGetBaseType(MCTypeInfoRef unresolved_self)
 {
     MCTypeInfoRef self;
     self = __MCTypeInfoResolve(unresolved_self);
+
+    MCAssert(MCTypeInfoIsCustom(self));
     return self -> custom . base;
 }
 
@@ -1077,6 +1131,8 @@ const MCValueCustomCallbacks *MCCustomTypeInfoGetCallbacks(MCTypeInfoRef unresol
 {
     MCTypeInfoRef self;
     self = __MCTypeInfoResolve(unresolved_self);
+
+    MCAssert(MCTypeInfoIsCustom(self));
     return &self -> custom . callbacks;
 }
 
@@ -1084,6 +1140,8 @@ const MCValueCustomCallbacks *MCCustomTypeInfoGetCallbacks(MCTypeInfoRef unresol
 
 MCTypeInfoRef __MCTypeInfoResolve(__MCTypeInfo *self)
 {
+	__MCAssertIsTypeInfo(self);
+
     if (__MCTypeInfoGetExtendedTypeCode(self) != kMCTypeInfoTypeIsNamed)
         return self;
     

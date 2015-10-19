@@ -343,10 +343,16 @@ extern "C" MC_DLLEXPORT_DEF void MCMathEvalMinNumber(MCNumberRef p_left, MCNumbe
 static void MCMathEvalMinMaxList(MCProperListRef p_list, bool p_is_min, MCNumberRef& r_output)
 {
     if (MCProperListIsEmpty(p_list))
+    {
         MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("list must be non-empty"), nil);
+        return;
+    }
     
     if (!MCProperListIsListOfType(p_list, kMCValueTypeCodeNumber))
+    {
         MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("list must be numeric"), nil);
+        return;
+    }
 
     double t_minmax, t_cur_real;
     t_cur_real = MCNumberFetchAsReal((MCNumberRef)MCProperListFetchElementAtIndex(p_list, 0));

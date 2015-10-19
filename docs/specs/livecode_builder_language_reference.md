@@ -194,7 +194,7 @@ The remaining types are as follows:
  - **nothing**: a single value *nothing* (this is used to describe handlers with no return value - i.e. void)
  - **Pointer**: a low-level pointer (this is used with foreign code interconnect and shouldn't be generally used).
 
-> **Note:** *integer* and *real* are currently the same as *number*.
+> **Note:** *Integer* and *Real* are currently the same as *Number*.
 
 > **Note:** In a subsequent update you will be able to specify lists and arrays of fixed types. For example, *List of String*.
 

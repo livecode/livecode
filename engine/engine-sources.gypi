@@ -344,6 +344,7 @@
 			'src/exec-interface-scrollbar.cpp',
 			'src/exec-interface-stack.cpp',
 			'src/exec-interface-vclip.cpp',
+			'src/exec-interface-widget.cpp',
 			'src/exec-keywords.cpp',
 			'src/exec-legacy.cpp',
 			'src/exec-logic.cpp',
@@ -566,17 +567,7 @@
 			
 			# Native layers
 			'src/native-layer.h',
-			'src/native-layer-android.h',
-			'src/native-layer-ios.h',
-			'src/native-layer-mac.h',
-			'src/native-layer-win32.h',
-			'src/native-layer-x11.h',
 			'src/native-layer.cpp',
-			'src/native-layer-android.cpp',
-			'src/native-layer-ios.mm',
-			'src/native-layer-mac.mm',
-			'src/native-layer-win32.cpp',
-			'src/native-layer-x11.cpp',
 		],
 		
 		# Sources that are only for desktop mode
@@ -604,6 +595,20 @@
 			'src/platform-recorder.cpp',
 			'src/platform-surface.cpp',
 			'src/platform-window.cpp',
+			
+			# Group "Native Layer"
+			'src/native-layer.cpp',
+			'src/native-layer.h',
+			'src/native-layer-android.cpp',
+			'src/native-layer-android.h',
+			'src/native-layer-ios.h',
+			'src/native-layer-ios.mm',
+			'src/native-layer-mac.h',
+			'src/native-layer-mac.mm',
+			'src/native-layer-win32.cpp',
+			'src/native-layer-win32.h',
+			'src/native-layer-x11.cpp',
+			'src/native-layer-x11.h',
 			
 			# Group "Desktop - Linux"
 			'src/lnxans.h',
@@ -782,6 +787,7 @@
 			'src/deploy.cpp',
 			'src/deploy_capsule.cpp',
 			'src/deploy_dmg.cpp',
+			'src/deploy_emscripten.cpp',
 			'src/deploy_file.cpp',
 			'src/deploy_linux.cpp',
 			'src/deploy_macosx.cpp',
@@ -842,6 +848,7 @@
 			'src/srvtheme.cpp',
 			'src/srvspec.cpp',
 			'src/srvstack.cpp',
+			'src/native-layer-srv.cpp',
 		],
 		
 		# Java sources for Android
@@ -895,6 +902,8 @@
 			'src/java/com/runrev/android/nativecontrol/NativeControlModule.java',
 			'src/java/com/runrev/android/nativecontrol/ScrollerControl.java',
 			'src/java/com/runrev/android/nativecontrol/VideoControl.java',
+			
+			'src/java/com/runrev/android/libraries/LibBrowser.java',
 		],
 		
 		# AIDL sources for Android
@@ -933,6 +942,8 @@
 			'src/module-canvas.cpp',
 			'src/module-engine.cpp',
 			'src/module-resources.cpp',
+			
+			'src/module-browser.cpp',
 		],
 		
 		# Engine LCB files containing syntax
@@ -946,7 +957,7 @@
 		# Other engine LCB files
 		'engine_other_lcb_files':
 		[
-		
+			'src/browser.lcb',
 		],
 	},
 	
@@ -987,6 +998,7 @@
 					[
 						'src/dskmac.cpp',
 						'src/srvmac.cpp',
+						'src/native-layer-mac.mm',
 					],
 				},
 			],
@@ -999,6 +1011,11 @@
 						['exclude', '(^|/)syslnx.*\\.cpp$'],
 						['exclude', '(^|/)linux-'],
 						['exclude', '-x11\.cpp$'],
+					],
+					
+					'sources!':
+					[
+						'src/native-layer-x11.cpp',
 					],
 				},
 			],
@@ -1016,6 +1033,7 @@
 					'sources!':
 					[
 						'src/srvwindows.cpp',
+						'src/native-layer-win32.cpp',
 					],
 				},
 			],
@@ -1035,6 +1053,11 @@
 					[
 						['exclude', '-android\.cpp$'],
 					],
+
+					'sources!':
+					[
+						'src/native-layer-android.cpp',
+					],
 				},
 			],
 			[
@@ -1043,6 +1066,11 @@
 					'sources/':
 					[
 						['exclude', '-ios\.(mm|cpp)$'],
+					],
+
+					'sources!':
+					[
+						'src/native-layer-ios.mm',
 					],
 				},
 			],

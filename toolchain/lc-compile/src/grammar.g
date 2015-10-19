@@ -481,10 +481,6 @@
 
 'nonterm' OptionalReturnsClause(-> TYPE)
 
-    'rule' OptionalReturnsClause(-> Type):
-        "as" @(-> Position) Type(-> Type)
-        Warning_UsingAsForHandlerReturnTypeDeprecated(Position)
-
     'rule' OptionalReturnsClause(-> Type)
         "returns" @(-> Position) Type(-> Type)
 

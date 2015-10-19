@@ -403,7 +403,8 @@ void MCS_startprocess(char *name, char *doc, Open_mode mode, Boolean elevated)
 				}
 				else
 					close(0);
-				execvp(name, argv);
+                // The executable name should be argv[0].
+                execvp(argv[0], argv);
 				_exit(-1);
 			}
 			MCS_checkprocesses();

@@ -43,6 +43,7 @@ import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.media.MediaPlayer.OnErrorListener;
 import android.media.MediaPlayer.OnVideoSizeChangedListener;
+import android.media.MediaPlayer.OnBufferingUpdateListener;
 import android.net.Uri;
 import android.os.PowerManager;
 import android.util.AttributeSet;
@@ -245,11 +246,11 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
     }
 
     private void openVideo() {
-        if ((mUri == null && mFileDescriptor == null) || mSurfaceHolder == null) {
+		if ((mUri == null && mFileDescriptor == null) || mSurfaceHolder == null) {
             // not ready for playback just yet, will try again later
             return;
         }
-        // Tell the music playback service to pause
+		// Tell the music playback service to pause
         // TODO: these constants need to be published somewhere in the framework.
         Intent i = new Intent("com.android.music.musicservicecommand");
         i.putExtra("command", "pause");
@@ -454,7 +455,10 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
     private MediaPlayer.OnBufferingUpdateListener mBufferingUpdateListener =
         new MediaPlayer.OnBufferingUpdateListener() {
         public void onBufferingUpdate(MediaPlayer mp, int percent) {
-            mCurrentBufferPercentage = percent;
+			if (isInPlaybackState())
+			{
+				mCurrentBufferPercentage = percent;
+			}
         }
     };
 
@@ -723,6 +727,18 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
         mDuration = -1;
         return mDuration;
     }
+
+	// PM-2015-09-15: [[ Bug 15925 ]] Allow mobileControlGet(myPlayer, "playableDuration" on Android
+	public int getPlayableDuration()
+	{
+		if (getDuration() > 0)
+		{
+			int percent = getBufferPercentage();
+			return (mDuration * percent) / 100;
+		}
+
+		return -1;
+	}
 
     public int getCurrentPosition() {
         if (isInPlaybackState()) {

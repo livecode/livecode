@@ -145,6 +145,8 @@ static MCStreamCallbacks kMCMemoryInputStreamCallbacks =
 MC_DLLEXPORT_DEF
 bool MCMemoryInputStreamCreate(const void *p_block, size_t p_size, MCStreamRef& r_stream)
 {
+	MCAssert(nil != p_block || 0 == p_size);
+
 	MCStreamRef t_stream;
 	if (!MCStreamCreate(&kMCMemoryInputStreamCallbacks, sizeof(__MCMemoryInputStream), t_stream))
 		return false;
@@ -307,6 +309,12 @@ static MCValueCustomCallbacks kMCStreamCustomValueCallbacks =
 	nil,
 };
 
+static inline void __MCAssertIsStream(MCStreamRef ref)
+{
+	__MCValue *val = reinterpret_cast<__MCValue *>(ref);
+	MCAssert(MCValueGetTypeInfo(val) == kMCStreamTypeInfo);
+}
+
 MC_DLLEXPORT_DEF
 bool MCStreamCreate(const MCStreamCallbacks *p_callbacks, size_t p_extra_bytes, MCStreamRef& r_stream)
 {
@@ -324,6 +332,8 @@ bool MCStreamCreate(const MCStreamCallbacks *p_callbacks, size_t p_extra_bytes, 
 MC_DLLEXPORT_DEF
 const MCStreamCallbacks *MCStreamGetCallbacks(MCStreamRef self)
 {
+	__MCAssertIsStream(self);
+
 	return __MCStreamCallbacks(self);
 }
 
@@ -332,24 +342,32 @@ const MCStreamCallbacks *MCStreamGetCallbacks(MCStreamRef self)
 MC_DLLEXPORT_DEF
 bool MCStreamIsReadable(MCStreamRef self)
 {
+	__MCAssertIsStream(self);
+
 	return __MCStreamCallbacks(self) -> read != nil;
 }
 
 MC_DLLEXPORT_DEF
 bool MCStreamIsWritable(MCStreamRef self)
 {
+	__MCAssertIsStream(self);
+
 	return __MCStreamCallbacks(self) -> write != nil;
 }
 
 MC_DLLEXPORT_DEF
 bool MCStreamIsMarkable(MCStreamRef self)
 {
+	__MCAssertIsStream(self);
+
 	return __MCStreamCallbacks(self) -> mark != nil;
 }
 
 MC_DLLEXPORT_DEF
 bool MCStreamIsSeekable(MCStreamRef self)
 {
+	__MCAssertIsStream(self);
+
 	return __MCStreamCallbacks(self) -> seek != nil;
 }
 
@@ -358,6 +376,8 @@ bool MCStreamIsSeekable(MCStreamRef self)
 MC_DLLEXPORT_DEF
 bool MCStreamGetAvailableForRead(MCStreamRef self, size_t& r_available)
 {
+	__MCAssertIsStream(self);
+
 	if (__MCStreamCallbacks(self) -> get_available_for_read == nil)
 		return false;
 	return __MCStreamCallbacks(self) -> get_available_for_read(self, r_available);
@@ -366,6 +386,9 @@ bool MCStreamGetAvailableForRead(MCStreamRef self, size_t& r_available)
 MC_DLLEXPORT_DEF
 bool MCStreamRead(MCStreamRef self, void *p_buffer, size_t p_amount)
 {
+	__MCAssertIsStream(self);
+	MCAssert(nil != p_buffer || 0 == p_amount);
+
 	if (__MCStreamCallbacks(self) -> read == nil)
 		return false;
 	return __MCStreamCallbacks(self) -> read(self, p_buffer, p_amount);
@@ -374,6 +397,8 @@ bool MCStreamRead(MCStreamRef self, void *p_buffer, size_t p_amount)
 MC_DLLEXPORT_DEF
 bool MCStreamGetAvailableForWrite(MCStreamRef self, size_t& r_available)
 {
+	__MCAssertIsStream(self);
+
 	if (__MCStreamCallbacks(self) -> get_available_for_write == nil)
 		return false;
 	return __MCStreamCallbacks(self) -> get_available_for_write(self, r_available);
@@ -382,6 +407,9 @@ bool MCStreamGetAvailableForWrite(MCStreamRef self, size_t& r_available)
 MC_DLLEXPORT_DEF
 bool MCStreamWrite(MCStreamRef self, const void *p_buffer, size_t p_amount)
 {
+	__MCAssertIsStream(self);
+	MCAssert(nil != p_buffer || 0 == p_amount);
+
 	if (__MCStreamCallbacks(self) -> write == nil)
 		return false;
 	return __MCStreamCallbacks(self) -> write(self, p_buffer, p_amount);
@@ -390,6 +418,8 @@ bool MCStreamWrite(MCStreamRef self, const void *p_buffer, size_t p_amount)
 MC_DLLEXPORT_DEF
 bool MCStreamSkip(MCStreamRef self, size_t p_amount)
 {
+	__MCAssertIsStream(self);
+
 	if (__MCStreamCallbacks(self) -> skip != nil)
 		return __MCStreamCallbacks(self) -> skip(self, p_amount);
 	if (__MCStreamCallbacks(self) -> seek != nil)
@@ -407,6 +437,8 @@ bool MCStreamSkip(MCStreamRef self, size_t p_amount)
 MC_DLLEXPORT_DEF
 bool MCStreamMark(MCStreamRef self, size_t p_read_limit)
 {
+	__MCAssertIsStream(self);
+
 	if (__MCStreamCallbacks(self) -> mark == nil)
 		return false;
 	return __MCStreamCallbacks(self) -> mark(self, p_read_limit);
@@ -415,6 +447,8 @@ bool MCStreamMark(MCStreamRef self, size_t p_read_limit)
 MC_DLLEXPORT_DEF
 bool MCStreamReset(MCStreamRef self)
 {
+	__MCAssertIsStream(self);
+
 	if (__MCStreamCallbacks(self) -> reset == nil)
 		return false;
 	return __MCStreamCallbacks(self) -> reset(self);
@@ -425,6 +459,8 @@ bool MCStreamReset(MCStreamRef self)
 MC_DLLEXPORT_DEF
 bool MCStreamTell(MCStreamRef self, filepos_t& r_position)
 {
+	__MCAssertIsStream(self);
+
 	if (__MCStreamCallbacks(self) -> tell == nil)
 		return false;
 	return __MCStreamCallbacks(self) -> tell(self, r_position);
@@ -433,6 +469,8 @@ bool MCStreamTell(MCStreamRef self, filepos_t& r_position)
 MC_DLLEXPORT_DEF
 bool MCStreamSeek(MCStreamRef self, filepos_t p_position)
 {
+	__MCAssertIsStream(self);
+
 	if (__MCStreamCallbacks(self) -> seek == nil)
 		return false;
 	return __MCStreamCallbacks(self) -> seek(self, p_position);

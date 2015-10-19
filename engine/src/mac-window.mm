@@ -32,6 +32,8 @@
 
 #include "graphics_util.h"
 
+#include "osspec.h"
+
 ///////////////////////////////////////////////////////////////////////////
 
 static NSDragOperation s_drag_operation_result = NSDragOperationNone;
@@ -99,7 +101,7 @@ static bool s_lock_responder_change = false;
 		{
 			if ([t_view respondsToSelector:@selector(com_runrev_livecode_nativeViewId)])
 			{
-				[(MCWindowDelegate *)[self delegate] viewFocusSwitched: (uint32_t)[t_view com_runrev_livecode_nativeViewId]];
+				[(MCWindowDelegate *)[self delegate] viewFocusSwitched: (uintptr_t)[t_view com_runrev_livecode_nativeViewId]];
 				return YES;
 			}
 			
@@ -199,7 +201,7 @@ static bool s_lock_responder_change = false;
 		{
 			if ([t_view respondsToSelector:@selector(com_runrev_livecode_nativeViewId)])
 			{
-				[(MCWindowDelegate *)[self delegate] viewFocusSwitched: (uint32_t)[t_view com_runrev_livecode_nativeViewId]];
+				[(MCWindowDelegate *)[self delegate] viewFocusSwitched: (uintptr_t)[t_view com_runrev_livecode_nativeViewId]];
 				return YES;
 			}
 			
@@ -1624,9 +1626,29 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (void)setFrameSize: (NSSize)size
 {
+	CGFloat t_height_diff = size.height - [self frame].size.height;
+	
     [super setFrameSize: size];
     
-    MCMacPlatformWindow *t_window = m_window;
+	// IM-2015-09-01: [[ BrowserWidget ]] Adjust subviews upward to retain same height from top of view
+	NSArray *t_subviews;
+	t_subviews = [self subviews];
+	for (uint32_t i = 0; i < [t_subviews count]; i++)
+	{
+		NSView *t_subview;
+		t_subview = [t_subviews objectAtIndex:i];
+		
+		// Don't adjust the app view, as it gets resized below.
+		if (t_subview != m_window->GetView())
+		{
+			NSPoint t_origin;
+			t_origin = [t_subview frame].origin;
+			t_origin.y += t_height_diff;
+			
+			[t_subview setFrameOrigin:t_origin];
+		}
+	}
+	MCMacPlatformWindow *t_window = m_window;
     if (t_window != nil)
         [t_window -> GetView() setFrameSize: size];
 }
@@ -1894,6 +1916,9 @@ void MCMacPlatformWindow::DoRealize(void)
     // MW-2014-04-08: [[ Bug 12080 ]] Make sure we turn off automatic 'hiding on deactivate'.
     //   The engine handles this itself.
     [m_window_handle setHidesOnDeactivate: m_hides_on_suspend];
+    
+    // MERG-2015-10-11: [[ DocumentFilename ]] Set documentFilename.
+    UpdateDocumentFilename();
 }
 
 void MCMacPlatformWindow::DoSynchronize(void)
@@ -1964,7 +1989,12 @@ void MCMacPlatformWindow::DoSynchronize(void)
     if (m_changes . ignore_mouse_events_changed)
         [m_window_handle setIgnoresMouseEvents: m_ignore_mouse_events];
     
-	m_synchronizing = false;
+    if (m_changes . document_filename_changed)
+    {
+        UpdateDocumentFilename();
+    }
+    
+    m_synchronizing = false;
 }
 
 bool MCMacPlatformWindow::DoSetProperty(MCPlatformWindowProperty p_property, MCPlatformPropertyType p_type, const void *value)
@@ -1983,7 +2013,16 @@ bool MCMacPlatformWindow::DoGetProperty(MCPlatformWindowProperty p_property, MCP
                 RealizeAndNotify();
 			*(uint32_t *)r_value = m_window_handle != nil ? [m_window_handle windowNumber] : 0;
 			return true;
+			
+		case kMCPlatformWindowPropertySystemHandle:
+			assert(p_type == kMCPlatformPropertyTypePointer);
+			// MW-2014-04-30: [[ Bug 12328 ]] If we don't have a handle yet make sure we create one.
+			if (m_window_handle == nil)
+				RealizeAndNotify();
+			*(void**)r_value = m_window_handle;
+			return true;
 	}
+	
 	return false;
 }
 
@@ -2191,6 +2230,25 @@ void MCMacPlatformWindow::ComputeCocoaStyle(NSUInteger& r_cocoa_style)
 	r_cocoa_style = t_window_style;
 }
 
+// MERG-2015-10-11: [[ DocumentFilename ]] Set documentFilename.
+void MCMacPlatformWindow::UpdateDocumentFilename(void)
+{
+    MCStringRef t_native_filename;
+    
+    NSString * t_represented_filename;
+    t_represented_filename = nil;
+    
+    if (!MCStringIsEmpty(m_document_filename) && MCS_pathtonative(m_document_filename, t_native_filename))
+    {
+        t_represented_filename = [NSString stringWithMCStringRef: t_native_filename];
+    }
+    else
+        t_represented_filename = @"";
+    
+    // It appears setRepresentedFilename can't be set to nil
+    [m_window_handle setRepresentedFilename: t_represented_filename];
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static bool MCAlphaToCGImageNoCopy(const MCGRaster &p_alpha, CGImageRef &r_image)
@@ -2305,7 +2363,7 @@ static NSView *MCMacPlatformFindView(MCPlatformWindowRef p_window, uint32_t p_id
 			NSView *t_view;
 			t_view = (NSView *)[t_subviews objectAtIndex: i];
 			if ([t_view respondsToSelector:@selector(com_runrev_livecode_nativeViewId)])
-				if ((uint32_t)[t_view com_runrev_livecode_nativeViewId] == p_id)
+				if ((uintptr_t)[t_view com_runrev_livecode_nativeViewId] == p_id)
 					return t_view;
 		}
 	}
