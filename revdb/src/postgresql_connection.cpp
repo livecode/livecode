@@ -88,23 +88,25 @@ Bool DBConnection_POSTGRESQL::connect(char **args, int numargs)
         t_delimiter = strchr(args[i], '=');
         if (t_delimiter != NULL)
         {
-            *t_delimiter = '\0';
             t_ssl_opt_key = args[i];
-            t_ssl_opt_val = (t_delimiter + (1 * sizeof(char)));
+            t_ssl_opt_val = (t_delimiter + sizeof(char));
+
+            size_t t_key_length;
+            t_key_length = (size_t)(t_delimiter - args[i]);
 
             if (*t_ssl_opt_val != '\0')
             {
-                if (strcmp(t_ssl_opt_key, "sslmode") == 0)
+                if (strncmp(t_ssl_opt_key, "sslmode", t_key_length) == 0)
                     t_sslmode = t_ssl_opt_val;
-                else if (strcmp(t_ssl_opt_key, "sslcompression") == 0)
+                else if (strncmp(t_ssl_opt_key, "sslcompression", t_key_length) == 0)
                     t_sslcompression = t_ssl_opt_val;
-                else if (strcmp(t_ssl_opt_key, "sslcert") == 0)
+                else if (strncmp(t_ssl_opt_key, "sslcert", t_key_length) == 0)
                     t_sslcert = t_ssl_opt_val;
-                else if (strcmp(t_ssl_opt_key, "sslkey") == 0)
+                else if (strncmp(t_ssl_opt_key, "sslkey", t_key_length) == 0)
                     t_sslkey = t_ssl_opt_val;
-                else if (strcmp(t_ssl_opt_key, "sslrootcert") == 0)
+                else if (strncmp(t_ssl_opt_key, "sslrootcert", t_key_length) == 0)
                     t_sslrootcert = t_ssl_opt_val;
-                else if (strcmp(t_ssl_opt_key, "sslcrl") == 0)
+                else if (strncmp(t_ssl_opt_key, "sslcrl", t_key_length) == 0)
                     t_sslcrl = t_ssl_opt_val;
             }
         }
