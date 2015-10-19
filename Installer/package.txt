@@ -925,7 +925,7 @@ component Externals.CEF.Windows
 		executable windows:CEF/libEGL.dll
 		executable windows:CEF/libGLESv2.dll
 		executable windows:CEF/pdf.dll
-		file windows:CEF/locales/en-US.pak
+		rfolder windows:CEF/locales
 		file windows:CEF/cef.pak
 		file windows:CEF/cef_100_percent.pak
 		file windows:CEF/cef_200_percent.pak
