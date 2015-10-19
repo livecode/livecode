@@ -245,8 +245,6 @@ MCStringRef MCSTR(const char *p_cstring)
 MC_DLLEXPORT_DEF
 bool MCStringCreateWithCString(const char* p_cstring, MCStringRef& r_string)
 {
-	MCAssert(nil != p_cstring);
-
 	return MCStringCreateWithNativeChars((const char_t*)p_cstring, p_cstring == nil ? 0 : strlen(p_cstring), r_string);
 }
 
