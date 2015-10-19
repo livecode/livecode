@@ -188,6 +188,9 @@ protected:
         
         // MERG-2014-06-02: [[ IgnoreMouseEvents ]] Changed flag for ignore mouse events.
         bool ignore_mouse_events_changed : 1;
+        
+        // MERG-2015-10-11: [[ DocumentFilename ]] Changed flag for docuent filename
+        bool document_filename_changed : 1;
 	} m_changes;
 	MCPlatformWindowStyle m_style;
 	MCStringRef m_title;
@@ -195,6 +198,8 @@ protected:
 	float m_opacity;
 	MCRectangle m_content;
 	MCCursorRef m_cursor;
+    // MERG-2015-10-11: [[ DocumentFilename ]] documentFilename property
+    MCStringRef m_document_filename;
 	struct
 	{
 		bool m_has_title_widget : 1;

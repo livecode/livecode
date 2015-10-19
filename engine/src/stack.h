@@ -287,6 +287,9 @@ protected:
 	// IM-2014-05-27: [[ Bug 12321 ]] Indicate if we need to purge fonts when reopening the window
 	bool m_purge_fonts;
     
+    // MERG-2015-10-11: [[ DocumentFilename ]] The filename the stack represnts
+    MCStringRef m_document_filename;
+    
     virtual MCPlatformControlType getcontroltype();
     virtual MCPlatformControlPart getcontrolsubpart();
 
@@ -595,6 +598,7 @@ public:
 	Boolean hcaddress();
 	Boolean hcstack();
 	
+	virtual bool haspassword() { return false; }
 	virtual bool iskeyed() { return true; }
 	virtual void securescript(MCObject *) { }
 	virtual void unsecurescript(MCObject *) { }
@@ -1047,8 +1051,8 @@ public:
 
 	void mode_constrain(MCRectangle& rect);
 	bool mode_needstoopen(void);
-
-	////////// PROPERTY SUPPORT METHODS
+    
+    ////////// PROPERTY SUPPORT METHODS
 
 	void SetDecoration(Properties which, bool setting);
 	void GetGroupProps(MCExecContext& ctxt, Properties which, MCStringRef& r_props);
@@ -1215,6 +1219,10 @@ public:
     void GetScriptOnly(MCExecContext &ctxt, bool &r_script_only);
     void SetScriptOnly(MCExecContext &ctxt, bool p_script_only);
     
+    // MERG-2015-10-11: [[ DocumentFilename ]] Add stack documentFilename property
+    void GetDocumentFilename(MCExecContext &ctxt, MCStringRef& r_document_filename);
+    void SetDocumentFilename(MCExecContext &ctxt, MCStringRef p_document_filename);
+    
     virtual void SetForePixel(MCExecContext& ctxt, uinteger_t* pixel);
 	virtual void SetBackPixel(MCExecContext& ctxt, uinteger_t* pixel);
 	virtual void SetHilitePixel(MCExecContext& ctxt, uinteger_t* pixel);
@@ -1254,6 +1262,9 @@ public:
 private:
 	void loadexternals(void);
 	void unloadexternals(void);
+    
+    // MERG-2015-10-12: [[ DocumentFilename ]] documentFilename property
+    void updatedocumentfilename(void);
 
 	void mode_load(void);
 

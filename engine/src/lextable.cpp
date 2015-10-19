@@ -823,7 +823,9 @@ LT factor_table[] =
         {"div", TT_BINOP, O_DIV},
         {"dnsservers", TT_FUNCTION, F_DNS_SERVERS},
 		{"document", TT_CHUNK, CT_DOCUMENT},
-		// MW-2011-11-24: [[ Nice Folders ]] The adjective for 'the documents folder'.
+        // MERG-2015-10-11: [[ DocumentFilename ]] Property tag for documentFilename
+        {"documentfilename", TT_PROPERTY, P_DOCUMENT_FILENAME},
+        // MW-2011-11-24: [[ Nice Folders ]] The adjective for 'the documents folder'.
 		{"documents", TT_PROPERTY, P_DOCUMENTS_FOLDER},
         {"dontdither", TT_PROPERTY, P_DONT_DITHER},
         {"dontrefresh", TT_PROPERTY, P_DONT_REFRESH},

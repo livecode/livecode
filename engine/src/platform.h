@@ -761,6 +761,8 @@ enum MCPlatformWindowProperty
     kMCPlatformWindowPropertyHideOnSuspend,
     
     kMCPlatformWindowPropertyIgnoreMouseEvents,
+    
+    kMCPlatformWindowPropertyDocumentFilename,
 };
 
 void MCPlatformSetWindowProperty(MCPlatformWindowRef window, MCPlatformWindowProperty property, MCPlatformPropertyType type, const void *value);

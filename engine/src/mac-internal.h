@@ -521,7 +521,9 @@ public:
 private:
 	// Compute the Cocoa window style from the window's current properties.
 	void ComputeCocoaStyle(NSUInteger& r_window_style);
-	
+    // MERG-2015-10-11: [[ DocumentFilename ]] Set documentFilename.
+    void UpdateDocumentFilename(void);
+    
 	// The window delegate object.
 	MCWindowDelegate *m_delegate;
 	

@@ -158,6 +158,11 @@ void MCStack::clearscroll(void)
 {
 }
 
+// MERG-2015-10-12: [[ DocumentFilename ]] Stub for documentFilename.
+void MCStack::updatedocumentfilename(void)
+{
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCRectangle MCStack::view_platform_getwindowrect() const

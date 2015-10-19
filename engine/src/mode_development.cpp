@@ -1006,6 +1006,7 @@ Exec_stat MCProperty::mode_set(MCExecPoint& ep)
 					{ "server", kMCLicenseDeployToServer },
 					{ "ios-embedded", kMCLicenseDeployToIOSEmbedded },
 					{ "android-embedded", kMCLicenseDeployToIOSEmbedded },
+					{ "html5", kMCLicenseDeployToHTML5 },
 				};
 
 				MClicenseparameters . deploy_targets = 0;

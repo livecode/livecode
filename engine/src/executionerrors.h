@@ -2689,6 +2689,9 @@ enum Exec_errors
 
 	// {EE-0880} do: error in widget expression
 	EE_DO_BADWIDGETEXP,
+
+    // {EE-0881} documentFilename: bad filename
+    EE_DOCUMENTFILENAME_BADFILENAME,    
 };
 
 extern const char *MCexecutionerrors;

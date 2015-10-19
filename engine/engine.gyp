@@ -424,6 +424,7 @@
 								'dist_aux_files':
 								[
 									'rsrc/emscripten-standalone-template/',
+									'rsrc/emscripten-startup-template.livecodescript/',
 									'<(PRODUCT_DIR)/standalone-community-<(version_string).js',
 									'<(PRODUCT_DIR)/standalone-community-<(version_string).html',
 									'<(PRODUCT_DIR)/standalone-community-<(version_string).html.mem',
