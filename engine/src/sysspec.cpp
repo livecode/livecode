@@ -937,15 +937,15 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
 	MCS_getentries_state *t_state;
 	t_state = static_cast<MCS_getentries_state *>(p_context);
 	
-	if (!t_state -> files != p_entry -> is_folder)
-		return true;
-    
 #if defined(_MACOSX)
-    // Mac doesn't list the '..' folder
-    if (p_entry -> is_folder && MCListIsEmpty(t_state -> list)
+    // Mac doesn't list '..', so we manually add it if we are listing folders
+    if (!t_state -> files && MCListIsEmpty(t_state -> list)
             && !MCStringIsEqualToCString(p_entry -> name, "..", kMCStringOptionCompareExact))
         MCListAppendCString(t_state -> list, "..");
 #endif
+    
+    if (!t_state -> files != p_entry -> is_folder)
+        return true;
 	
 	if (t_state -> details)
 	{
