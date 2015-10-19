@@ -2665,7 +2665,7 @@ enum Exec_errors
     
     // {EE-0872} Import: not an object array
     EE_IMPORT_NOTANOBJECTARRAY,
-	
+    
 	// {EE-0873} go: error in widget expression
 	EE_GO_BADWIDGETEXP,
 	
@@ -2674,6 +2674,10 @@ enum Exec_errors
 
 	// {EE-0875} do: error in widget expression
 	EE_DO_BADWIDGETEXP,
+
+    // {EE-0876} documentFilename: bad filename
+    EE_DOCUMENTFILENAME_BADFILENAME,
+    
 };
 
 extern const char *MCexecutionerrors;

@@ -32,6 +32,8 @@
 
 #include "graphics_util.h"
 
+#include "osspec.h"
+
 ///////////////////////////////////////////////////////////////////////////
 
 static NSDragOperation s_drag_operation_result = NSDragOperationNone;
@@ -1914,6 +1916,9 @@ void MCMacPlatformWindow::DoRealize(void)
     // MW-2014-04-08: [[ Bug 12080 ]] Make sure we turn off automatic 'hiding on deactivate'.
     //   The engine handles this itself.
     [m_window_handle setHidesOnDeactivate: m_hides_on_suspend];
+    
+    // MERG-2015-10-11: [[ DocumentFilename ]] Set documentFilename.
+    UpdateDocumentFilename();
 }
 
 void MCMacPlatformWindow::DoSynchronize(void)
@@ -1984,7 +1989,12 @@ void MCMacPlatformWindow::DoSynchronize(void)
     if (m_changes . ignore_mouse_events_changed)
         [m_window_handle setIgnoresMouseEvents: m_ignore_mouse_events];
     
-	m_synchronizing = false;
+    if (m_changes . document_filename_changed)
+    {
+        UpdateDocumentFilename();
+    }
+    
+    m_synchronizing = false;
 }
 
 bool MCMacPlatformWindow::DoSetProperty(MCPlatformWindowProperty p_property, MCPlatformPropertyType p_type, const void *value)
@@ -2218,6 +2228,25 @@ void MCMacPlatformWindow::ComputeCocoaStyle(NSUInteger& r_cocoa_style)
 	if (m_style == kMCPlatformWindowStylePalette)
 		t_window_style |= NSUtilityWindowMask;
 	r_cocoa_style = t_window_style;
+}
+
+// MERG-2015-10-11: [[ DocumentFilename ]] Set documentFilename.
+void MCMacPlatformWindow::UpdateDocumentFilename(void)
+{
+    MCStringRef t_native_filename;
+    
+    NSString * t_represented_filename;
+    t_represented_filename = nil;
+    
+    if (!MCStringIsEmpty(m_document_filename) && MCS_pathtonative(m_document_filename, t_native_filename))
+    {
+        t_represented_filename = [NSString stringWithMCStringRef: t_native_filename];
+    }
+    else
+        t_represented_filename = @"";
+    
+    // It appears setRepresentedFilename can't be set to nil
+    [m_window_handle setRepresentedFilename: t_represented_filename];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1604,7 +1604,10 @@ enum Properties {
     // MW-2014-08-12: [[ EditionType ]] Returns whether the engine is commercial or community
     P_EDITION_TYPE,
     
-	// ARRAY STYLE PROPERTIES
+    // MERG-2015-10-11: [[ DocumentFilename ]] Property tag for documentFilename
+    P_DOCUMENT_FILENAME,
+    
+    // ARRAY STYLE PROPERTIES
 	P_FIRST_ARRAY_PROP,
     P_CUSTOM_KEYS = P_FIRST_ARRAY_PROP,
     P_CUSTOM_PROPERTIES,
