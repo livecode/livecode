@@ -77,6 +77,7 @@ class MCNativeInputControl;
 
 @interface MCNativeMultiLineDelegate : MCNativeInputDelegate <UIScrollViewDelegate>
 {
+    UIView* m_view;
 	int32_t m_verticaltextalign;
 }
 
@@ -1146,6 +1147,10 @@ private:
 		return nil;
 	
 	m_verticaltextalign = kMCTextVerticalAlignTop;
+    
+    // SN-2015-10-19: [[ Bug 16234 ]] We need to keep track of our view, as we
+    //  will be deallocated after m_instance has cleared up its view.
+    m_view = view;
 
 	[view addObserver:self forKeyPath:@"contentSize" options:NSKeyValueObservingOptionNew context:nil];
 	
@@ -1156,7 +1161,7 @@ private:
 //   can be removed that reference this object.
 - (void)dealloc
 {
-	[m_instance -> GetView() removeObserver: self forKeyPath:@"contentSize"];
+    [m_view removeObserver: self forKeyPath:@"contentSize"];
 	[super dealloc];
 }
    
