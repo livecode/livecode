@@ -373,12 +373,12 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
             }
             if (mMediaController != null) {
                 mMediaController.setEnabled(true);
-            }
 
-			// PM-2015-10-19: [[ Bug 16027 ]] Show the controller once the player is prepared (as on iOS)
-			if (isInPlaybackState()){
-				mMediaController.show(0);
-			}
+				// PM-2015-10-19: [[ Bug 16027 ]] Show the controller once the player is prepared (as on iOS)
+				if (isInPlaybackState()){
+					mMediaController.show(0);
+				}
+            }
 
             mVideoWidth = mp.getVideoWidth();
             mVideoHeight = mp.getVideoHeight();
