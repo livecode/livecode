@@ -595,6 +595,7 @@ public:
 	Boolean hcaddress();
 	Boolean hcstack();
 	
+	virtual bool haspassword() { return false; }
 	virtual bool iskeyed() { return true; }
 	virtual void securescript(MCObject *) { }
 	virtual void unsecurescript(MCObject *) { }

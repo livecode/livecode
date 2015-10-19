@@ -137,8 +137,7 @@ extern void MCU_additem(char *&dptr, const char *sptr, Boolean first);
 extern void MCU_addline(char *&dptr, const char *sptr, Boolean first);
 extern void MCU_break_string(const MCString &s, MCString *&ptrs, uint2 &nptrs,
 	                             Boolean isunicode = False);
-extern void MCU_sort(MCSortnode *items, uint4 nitems,
-                       Sort_type dir, Sort_type form);
+
 #ifndef _DEBUG_MEMORY
 extern void MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize);
 #endif
@@ -159,6 +158,7 @@ extern void MCU_set_rect(MCRectangle &rect, int2 x, int2 y, uint2 w, uint2 h);
 extern void MCU_set_rect(MCRectangle32 &rect, int32_t x, int32_t y, int32_t w, int32_t h);
 extern Boolean MCU_point_in_rect(const MCRectangle &srect, int2 x, int2 y);
 extern Boolean MCU_rect_in_rect(const MCRectangle &p, const MCRectangle &w);
+extern bool MCU_line_intersect_rect(const MCRectangle& srect, const MCRectangle& line);
 extern Boolean MCU_point_on_line(MCPoint *points, uint2 npoints,
 	                                 int2 x, int2 y, uint2 linesize);
 extern Boolean MCU_point_in_polygon(MCPoint *points, uint2 npoints,

@@ -43,11 +43,15 @@ static bool __check_conformance(MCTypeInfoRef p_typeinfo, const MCValueRef *p_va
 MC_DLLEXPORT_DEF
 bool MCRecordCreate(MCTypeInfoRef p_typeinfo, const MCValueRef *p_values, uindex_t p_value_count, MCRecordRef& r_record)
 {
+	MCAssert(p_values != nil || p_value_count == 0);
+
     bool t_success;
     t_success = true;
     
     MCTypeInfoRef t_resolved_typeinfo;
     t_resolved_typeinfo = __MCTypeInfoResolve(p_typeinfo);
+
+    MCAssert(MCTypeInfoIsRecord(t_resolved_typeinfo));
     
     uindex_t t_offset = 0;
     if (!__check_conformance(t_resolved_typeinfo, p_values, p_value_count, t_offset))
@@ -89,7 +93,9 @@ bool MCRecordCreateMutable(MCTypeInfoRef p_typeinfo, MCRecordRef& r_record)
     
     MCTypeInfoRef t_resolved_typeinfo;
     t_resolved_typeinfo = __MCTypeInfoResolve(p_typeinfo);
-    
+
+    MCAssert(MCTypeInfoIsRecord(p_typeinfo));
+
     uindex_t t_field_count;
     t_field_count = __MCRecordTypeInfoGetFieldCount(t_resolved_typeinfo);
     
@@ -197,6 +203,7 @@ bool MCRecordMutableCopyAndRelease(MCRecordRef self, MCRecordRef& r_new_record)
 MC_DLLEXPORT_DEF
 bool MCRecordIsMutable(MCRecordRef self)
 {
+	__MCAssertIsRecord(self);
     return (self -> flags & kMCRecordFlagIsMutable) != 0;
 }
 
@@ -221,6 +228,8 @@ static bool __fetch_value(MCTypeInfoRef p_typeinfo, MCRecordRef self, MCNameRef 
 MC_DLLEXPORT_DEF
 bool MCRecordFetchValue(MCRecordRef self, MCNameRef p_field, MCValueRef& r_value)
 {
+	__MCAssertIsRecord(self);
+	__MCAssertIsName(p_field);
     return __fetch_value(self -> typeinfo, self, p_field, r_value);
 }
 
@@ -248,6 +257,9 @@ static bool __store_value(MCTypeInfoRef p_typeinfo, MCRecordRef self, MCNameRef 
 MC_DLLEXPORT_DEF
 bool MCRecordStoreValue(MCRecordRef self, MCNameRef p_field, MCValueRef p_value)
 {
+	__MCAssertIsRecord(self);
+	__MCAssertIsName(p_field);
+	MCAssert(nil != p_value);
     return __store_value(self -> typeinfo, self, p_field, p_value);
 }
 
@@ -272,6 +284,7 @@ MCRecordCopyAsBaseTypeAndRelease(MCRecordRef self,
                                  MCTypeInfoRef p_base_typeinfo,
                                  MCRecordRef & r_new_record)
 {
+	__MCAssertIsRecord(self);
 	MCAssert(MCRecordTypeInfoIsDerivedFrom(self -> typeinfo, p_base_typeinfo));
 
 	/* If there's only one reference, just swap the typeinfo out and
@@ -313,6 +326,7 @@ MCRecordCopyAsDerivedTypeAndRelease(MCRecordRef self,
                                     MCTypeInfoRef p_derived_typeinfo,
                                     MCRecordRef & r_new_record)
 {
+	__MCAssertIsRecord(self);
 	MCAssert(MCRecordTypeInfoIsDerivedFrom(p_derived_typeinfo, self -> typeinfo));
 
 	uindex_t t_field_count, t_new_field_count;
@@ -357,7 +371,7 @@ MC_DLLEXPORT_DEF bool
 MCRecordEncodeAsArray(MCRecordRef record,
                       MCArrayRef & r_array)
 {
-	MCAssert (record != nil);
+	__MCAssertIsRecord(record);
 
 	MCTypeInfoRef t_typeinfo = MCValueGetTypeInfo (record);
 	uindex_t t_num_fields = MCRecordTypeInfoGetFieldCount (t_typeinfo);
@@ -391,6 +405,9 @@ MCRecordDecodeFromArray(MCArrayRef array,
                         MCTypeInfoRef p_typeinfo,
                         MCRecordRef & r_record)
 {
+	__MCAssertIsArray(array);
+	MCAssert(MCTypeInfoIsRecord(p_typeinfo));
+
 	/* Create the result record */
 	MCRecordRef t_new_record;
 	if (!MCRecordCreateMutable (p_typeinfo, t_new_record))

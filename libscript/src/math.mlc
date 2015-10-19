@@ -126,7 +126,7 @@ begin
     MCMathEvalSinNumber(Operand, output)
 end syntax
 
-public handler sin(in pOperand as Number) returns Number
+public handler Sin(in pOperand as Number) returns Number
     variable tVar as Number
     MCMathEvalSinNumber(pOperand, tVar)
     return tVar
@@ -150,7 +150,7 @@ begin
     MCMathEvalCosNumber(Operand, output)
 end syntax
 
-public handler cos(in pOperand as Number) returns Number
+public handler Cos(in pOperand as Number) returns Number
     variable tVar as Number
     MCMathEvalCosNumber(pOperand, tVar)
     return tVar
@@ -178,7 +178,7 @@ begin
     MCMathEvalTanNumber(Operand, output)
 end syntax
 
-public handler tan(in pOperand as Number) returns Number
+public handler Tan(in pOperand as Number) returns Number
     variable tVar as Number
     MCMathEvalTanNumber(pOperand, tVar)
     return tVar
@@ -209,7 +209,7 @@ begin
     MCMathEvalAsinNumber(Operand, output)
 end syntax
 
-public handler asin(in pOperand as Number) returns Number
+public handler Asin(in pOperand as Number) returns Number
     variable tVar as Number
     MCMathEvalAsinNumber(pOperand, tVar)
     return tVar
@@ -240,7 +240,7 @@ begin
     MCMathEvalAcosNumber(Operand, output)
 end syntax
 
-public handler acos(in pOperand as Number) returns Number
+public handler Acos(in pOperand as Number) returns Number
     variable tVar as Number
     MCMathEvalAcosNumber(pOperand, tVar)
     return tVar
@@ -271,7 +271,7 @@ begin
     MCMathEvalAtanNumber(Operand, output)
 end syntax
 
-public handler atan(in pOperand as Number) returns Number
+public handler Atan(in pOperand as Number) returns Number
     variable tVar as Number
     MCMathEvalAtanNumber(pOperand, tVar)
     return tVar
@@ -357,7 +357,7 @@ begin
     MCMathEvalNaturalLogNumber(Operand, output)
 end syntax
 
-public handler ln(in pOperand as Number) returns Number
+public handler Ln(in pOperand as Number) returns Number
     variable tVar as Number
     MCMathEvalNaturalLogNumber(pOperand, tVar)
     return tVar
@@ -383,7 +383,7 @@ begin
     MCMathEvalExpNumber(Operand, output)
 end syntax
 
-public handler exp(in pOperand as Number) returns Number
+public handler Exp(in pOperand as Number) returns Number
     variable tVar as Number
     MCMathEvalExpNumber(pOperand, tVar)
     return tVar
@@ -475,7 +475,7 @@ begin
     MCMathEvalMinNumber(Left, Right, output)
 end syntax
 
-public handler min(in pX as Number, in pY as Number) returns Number
+public handler Min(in pX as Number, in pY as Number) returns Number
     variable tVar as Number
     MCMathEvalMinNumber(pX, pY, tVar)
     return tVar
@@ -497,7 +497,7 @@ begin
     MCMathEvalMaxNumber(Left, Right, output)
 end syntax
 
-public handler max(in pX as Number, in pY as Number) returns Number
+public handler Max(in pX as Number, in pY as Number) returns Number
     variable tVar as Number
     MCMathEvalMaxNumber(pX, pY, tVar)
     return tVar

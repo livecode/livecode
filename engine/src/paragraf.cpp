@@ -489,16 +489,16 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 		// This string can contain a mixture of Unicode and native - t_length is the number
         // of bytes.
         if ((stat = IO_read_string_legacy_full(&t_text_data, t_length, stream, 2, true, false)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 
         if (!MCStringCreateMutable(0, m_text))
-			return IO_ERROR;
+			return checkloadstat(IO_ERROR);
 
         // MW-2012-03-04: [[ StackFile5500 ]] If this is an extended paragraph then
         //   load in the attribute extension record.
         if (is_ext)
             if ((stat = loadattrs(stream, version)) != IO_NORMAL)
-                return IO_ERROR;
+                return checkloadstat(IO_ERROR);
 		
 		// If the whole text isn't covered by the saved blocks, the index of the
 		// portion not covered needs to be retained so that it can be added to
@@ -507,7 +507,7 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 		while (True)
 		{
 			if ((stat = IO_read_uint1(&type, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			switch (type)
 			{
 				// MW-2012-03-04: [[ StackFile5500 ]] Handle either a normal block, or
@@ -523,7 +523,7 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 					if ((stat = newblock->load(stream, version, type == OT_BLOCK_EXT)) != IO_NORMAL)
 					{
 						delete newblock;
-						return stat;
+						return checkloadstat(IO_ERROR);
 					}
 					
 					// The indices returned here are *wrong* from the point of view
@@ -538,7 +538,7 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
                     // SN-2014-10-31: [[ Bug 13881 ]] Ensure that the block hasn't been corrupted.
                     //  (leads to a potential crash, in case the corrupted stack ends up to be valid).
                     if (index > t_length)
-                        return IO_ERROR;
+                        return checkloadstat(IO_ERROR);
                     
                     // Some stacks seem to be saved with invalid blocks that
                     // exceed the length of the paragraph character data
@@ -574,12 +574,12 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 
                             // Append to the paragraph text
                             if (!MCStringAppendChars(m_text, (const unichar_t*)dptr - t_len, t_len))
-                                return IO_ERROR;
+                                return checkloadstat(IO_ERROR);
 							
                             if (len > 0)
                             {
                                 if (!MCStringAppendChar(m_text, (unichar_t)*(const uint8_t *)dptr))
-                                    return IO_ERROR;
+                                    return checkloadstat(IO_ERROR);
                                 t_len += 1;
                             }
                             
@@ -604,7 +604,7 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 
 						// String is in native format. Append to paragraph text
                         if (!MCStringAppendNativeChars(m_text, (const char_t*)(*t_text_data + index), len))
-                            return IO_ERROR;
+                            return checkloadstat(IO_ERROR);
 
                         // Fix the indices used by the block
                         newblock->SetRange(t_index, len);
@@ -627,7 +627,7 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 					if (t_last_added == 0)
 					{
                         if (!MCStringAppendNativeChars(m_text, (const char_t*)*t_text_data, t_length))
-							return IO_ERROR;
+							return checkloadstat(IO_ERROR);
 						t_last_added = t_length;
 					}
 					
@@ -645,7 +645,7 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 		// MW-2013-11-20: [[ UnicodeFileFormat ]] The text is just a stringref, so no
 		//   magical swizzling to be done.
 		if ((stat = IO_read_stringref_new(m_text, stream, true)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
         
         // The paragraph text *must* be mutable
         /* UNCHECKED */ MCStringMutableCopyAndRelease(m_text, m_text);
@@ -654,12 +654,12 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
         //   load in the attribute extension record.
         if (is_ext)
             if ((stat = loadattrs(stream, version)) != IO_NORMAL)
-                return IO_ERROR;
+                return checkloadstat(stat);
 		
 		while (True)
 		{
 			if ((stat = IO_read_uint1(&type, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			switch (type)
 			{
 					// MW-2012-03-04: [[ StackFile5500 ]] Handle either a normal block, or
@@ -675,7 +675,7 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 					if ((stat = newblock->load(stream, version, type == OT_BLOCK_EXT)) != IO_NORMAL)
 					{
 						delete newblock;
-						return stat;
+						return checkloadstat(stat);
 					}
 					
                     // De-(plitter about with) the block indices (the saving code doubles them because

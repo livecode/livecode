@@ -47,7 +47,7 @@ bool MCObjptr::visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObject
 
 IO_stat MCObjptr::load(IO_handle stream)
 {
-	return IO_read_uint4(&id, stream);
+	return checkloadstat(IO_read_uint4(&id, stream));
 }
 
 IO_stat MCObjptr::save(IO_handle stream, uint4 p_part)

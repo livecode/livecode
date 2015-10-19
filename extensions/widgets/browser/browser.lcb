@@ -381,7 +381,7 @@ end handler
 
 ----------
 
-private handler capitalize(in pString as String) returns String
+private handler Capitalize(in pString as String) returns String
 	if pString is empty then
 		return the empty string
 	end if
@@ -406,9 +406,9 @@ private handler OnBrowserRequestCallback(in pContext as optional Pointer, in pBr
 	/* Dispatch browser message */
 	variable tMessage as String
 	if pFrame then
-		put "browserFrame" & capitalize(tType) & capitalize(tState) into tMessage
+		put "browserFrame" & Capitalize(tType) & Capitalize(tState) into tMessage
 	else
-		put "browser" & capitalize(tType) & capitalize(tState) into tMessage
+		put "browser" & Capitalize(tType) & Capitalize(tState) into tMessage
 	end if
 	
 	variable tArgs as List
