@@ -1680,6 +1680,11 @@ end mapFilePath
 ################################################################################
 
 private command symlinkRedirect pSource, pTarget
+   if there is a file pTarget then
+      // We don't want to erase files that have possibly be already copied ith the same name
+      // such as externals, fonts or plist files.
+      exit symlinkRedirect
+   end if
    if there is a file pSource then
       // Hardlink, since iOS simulator 9.0 does not seem able to handle symlinks
       get shell(merge("ln '[[pSource]]' '[[pTarget]]' || cp '[[pSource]]' '[[pTarget]]'"))
