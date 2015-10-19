@@ -729,30 +729,30 @@ Returns: The RGBA color string of the secondary text and icon color depending on
 Description:
 Returns the RGBA color string of the secondary text and icon color in Android, based on whether the color behind the text is a light or dark color.
 */
-public handler androidSecondaryTextColor(in pBackgrouns as String) returns String
+public handler androidSecondaryTextColor(in pBackground as String) returns String
    if pBackground is "Light" then
       return "0,0,0,0.54"
    else if pBackground is "Dark" then
       return "1,1,1,0.7"
    end if
-end library
+end handler
 
 /*
-Returns the RGBA color string of the disbaled/hint text color based on whether the background color is light or dark.
+Returns the RGBA color string of the disabled/hint text color based on whether the background color is light or dark.
 
 pBackground: "Light" or "Dark", depending on the background color.
-Returns: The RGBA color string of the disbaled/hint text color depending on whether the background color is light or dark
+Returns: The RGBA color string of the disabled/hint text color depending on whether the background color is light or dark
 
 Description:
-Returns the RGBA color string of the disbaled/hint text color in Android, based on whether the color behind the text is a light or dark color.
+Returns the RGBA color string of the disabled/hint text color in Android, based on whether the color behind the text is a light or dark color.
 */
-public handler androidDisabledTextColor(in pBackgrouns as String) returns String
+public handler androidDisabledTextColor(in pBackground as String) returns String
    if pBackground is "Light" then
       return "0,0,0,0.38"
    else if pBackground is "Dark" then
       return "1,1,1,0.3"
    end if
-end library
+end handler
 
 /*
 Returns the RGBA color string of the dividers based on whether the background color is light or dark.
@@ -763,10 +763,12 @@ Returns: The RGBA color string of the dividers depending on whether the backgrou
 Description:
 Returns the RGBA color string of the dividers in Android, based on whether the color behind the text is a light or dark color.
 */
-public handler androidDividerColor(in pBackgrouns as String) returns String
+public handler androidDividerColor(in pBackground as String) returns String
    if pBackground is "Light" then
       return "0,0,0,0.12"
    else if pBackground is "Dark" then
       return "1,1,1,0.12"
    end if
+end handler
+
 end library

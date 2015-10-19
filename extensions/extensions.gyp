@@ -18,6 +18,7 @@
 
 			'sources':
 			[
+				'libraries/androidcolors/androidcolors.lcb',
 				'libraries/canvas/canvas.lcb',
 				'libraries/iconsvg/iconsvg.lcb',
 				'libraries/json/json.lcb',
