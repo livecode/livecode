@@ -408,12 +408,13 @@ findex_t MCLine::GetCursorIndex(coord_t cx, Boolean chunk, bool moving_forward)
             
             // SN-2014-08-14: [[ Bug 13106 ]] We want the outside left edge
             coord_t origin = bptr->getorigin() + sgptr->GetLeft();
+
             // Different cases, according to the alignment:
             //  right-aligned: the origin belongs to the previous block
             //  others:        the origin belongs to the current block
             if ((sgptr -> GetHorizontalAlignment() == kMCSegmentTextHAlignRight
                         && cx > origin && cx <= (origin + bptr->getwidth()))
-                    || (cx >= origin && cx < (origin + bptr->getwidth())))
+                    || (cx >= origin && cx <= (origin + bptr->getwidth())))
             {
                 done = true;
                 break;
