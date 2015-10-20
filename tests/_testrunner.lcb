@@ -43,7 +43,7 @@ end handler
 
 foreign handler __system(in Command as ZStringNative) returns CInt binds to "system"
 
-handler Shell(in pCommand as String) returns Number
+handler System(in pCommand as String) returns Number
 	variable tExitStatus as Number
 	put __system(pCommand) into tExitStatus
 
@@ -85,10 +85,73 @@ end handler
 -- Status messages
 ----------------------------------------------------------------
 
+variable sPrintData as optional Array
+
+handler PrintInitializeTput(in pArgs as String) returns String
+	variable tTempFile as String
+	put "tput.tmp" into tTempFile
+
+	variable tCommand
+	put "tput" && pArgs && ">" && tTempFile into tCommand
+
+	variable tResult as String
+	if System(tCommand) is not 0 then
+		put "" into tResult
+	else
+		put DecodeUTF8(the contents of file tTempFile) into tResult
+		delete file tTempFile
+	end if
+
+	return tResult
+end handler
+
+handler PrintInitialize()
+	if sPrintData is not nothing then
+		return
+	end if
+
+	put the empty array into sPrintData
+
+	-- Check whether colour is possible
+	variable tColors as String
+	put PrintInitializeTput("colors") into tColors
+	if tColors is empty or tColors parsed as number <= 8 then
+		-- Use empty colour codes
+		put "" into sPrintData["normal"]
+		put "" into sPrintData["bold"]
+		put "" into sPrintData["red"]
+		put "" into sPrintData["green"]
+		put "" into sPrintData["yellow"]
+		put "" into sPrintData["cyan"]
+	else
+		-- Get specific colour codes
+		put PrintInitializeTput("sgr0") into sPrintData["normal"]
+		put PrintInitializeTput("bold") into sPrintData["bold"]
+		put PrintInitializeTput("setaf 1") into sPrintData["red"]
+		put PrintInitializeTput("setaf 2") into sPrintData["green"]
+		put PrintInitializeTput("setaf 3") into sPrintData["yellow"]
+		put PrintInitializeTput("setaf 6") into sPrintData["cyan"]
+	end if
+end handler
+
 handler PrintStatus(in pType as String, in pMessage as String)
+	PrintInitialize()
+
 	if the last char of pMessage is not "\n" then
 		put "\n" after pMessage
 	end if
+
+	-- Add colour codes, if possible
+	if pType is "ERROR" or pType is "FAIL" then
+		put sPrintData["red"] & sPrintData["bold"] before pType
+	else if pType is "XFAIL" or pType is "XPASS" then
+		put sPrintData["yellow"] before pType
+	else if pType is "PASS" then
+		put sPrintData["green"] before pType
+	else if pType is "SKIP" then
+		put sPrintData["cyan"] before pType
+	end if
+	put sPrintData["normal"] after pType
 
 	variable tOutput as String
 	put pType & ":" && pMessage into tOutput
@@ -171,7 +234,7 @@ handler GetModuleHandlers(in pModulePath as String, out rHandlerNames as List) r
 	variable tCommand as String
 	put sLcRunPath && "--list-handlers" && pModulePath && ">" & tTempPath into tCommand
 
-	if Shell(tCommand) is not 0 then
+	if System(tCommand) is not 0 then
 		put the empty list into rHandlerNames
 		return false
 	end if
@@ -207,7 +270,7 @@ handler GetTestOutput(in pModulePath as String, in pHandlerName as String, out r
 	put "###" && GetModulePrettyPath(pModulePath) && pHandlerName && "\n\n" into rOutput
 
 	variable tExitStatus as Number
-	put Shell(tCommand) into tExitStatus
+	put System(tCommand) into tExitStatus
 	if tExitStatus is not 0 then
 		put "not ok -" && pHandlerName && "#" && "Handler exited with status" && FormatInt(tExitStatus) & "\n" after rOutput
 		return false
