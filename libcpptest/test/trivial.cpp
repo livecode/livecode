@@ -14,16 +14,12 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
+#include "gtest/gtest.h"
 
-	Header files for the implimentation of the XDnD protocol
-    (see http://www.newplanetsoftware.com/xdnd/)
-
-*/
-
-#ifndef _XDND_H
-#define _XDND_H
-
-#include "transfer.h"
-
-#endif
+TEST(trivial, trivial)
+//
+// Trivial test to check the test runner is functional.
+//
+{
+	ASSERT_TRUE(true);
+}

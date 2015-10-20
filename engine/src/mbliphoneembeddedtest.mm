@@ -124,7 +124,7 @@ extern "C" UIView *LiveCodeGetView(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int main(int argc, char *argv[], char *envp[])
+int platform_main(int argc, char *argv[], char *envp[])
 {
 	int t_exit_code;
 	

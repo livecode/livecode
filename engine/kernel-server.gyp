@@ -1,4 +1,32 @@
 {
+	'variables':
+	{
+		'module_name': 'kernel-server',
+		'module_test_dependencies':
+		[
+			'kernel-server',
+			'../libfoundation/libfoundation.gyp:libFoundation',
+			'../libgraphics/libgraphics.gyp:libGraphics',
+		],
+		'module_test_additional_sources':
+		[
+			'<@(engine_security_source_files)'
+		],
+		'module_test_include_dirs':
+		[
+			'include',
+			'src',
+		],
+		'module_test_defines': [ 'MODE_SERVER', ],
+	},
+
+	'includes':
+	[
+		'../common.gypi',
+		'engine-sources.gypi',
+		'../config/cpptest.gypi'
+	],
+
 	'targets':
 	[
 		{
@@ -18,9 +46,7 @@
 			
 			'dependencies':
 			[
-				'../libfoundation/libfoundation.gyp:libFoundation',
 				'../libexternal/libexternal.gyp:libExternal',
-				'../libgraphics/libgraphics.gyp:libGraphics',
 				
 				'../prebuilt/libcurl.gyp:libcurl',
 				'../prebuilt/libopenssl.gyp:libopenssl',
@@ -31,8 +57,7 @@
 				'../thirdparty/libpng/libpng.gyp:libpng',
 				'../thirdparty/libz/libz.gyp:libz',
 				
-				'encode_version',
-				'quicktime_stubs',
+				'engine-common.gyp:quicktime_stubs',
 				
 				'lcb-modules.gyp:engine_lcb_modules',
 			],
@@ -88,7 +113,7 @@
 				'conditions':
 				[
 					[
-						'OS == "mac" or OS == "ios"',
+						'OS == "mac"',
 						{
 							'libraries':
 							[
@@ -97,6 +122,7 @@
 								'$(SDKROOT)/System/Library/Frameworks/AppKit.framework',
 								'$(SDKROOT)/System/Library/Frameworks/ApplicationServices.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Carbon.framework',
+								'$(SDKROOT)/System/Library/Frameworks/Cocoa.framework',
 								'$(SDKROOT)/System/Library/Frameworks/IOKit.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Security.framework',
 							],

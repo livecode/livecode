@@ -315,10 +315,14 @@ void MCImage::copyimage()
 		MCImageFreeBitmap(t_bitmap);
 	}
 	else
-		/* UNCHECKED */ getclipboardtext(&t_image_data);
+		getclipboardtext(&t_image_data);
 	
 	if (*t_image_data != NULL)
-		MCclipboarddata -> Store(TRANSFER_TYPE_IMAGE, *t_image_data);
+    {
+        // Clear the clipboard and add the image to it.
+        MCclipboard->Clear();
+        MCclipboard->AddImage(*t_image_data);
+    }
 }
 
 void MCImage::delimage()

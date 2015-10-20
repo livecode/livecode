@@ -48,10 +48,12 @@ public:
 		: m_value(nil)
 	{
 	}
-
-	inline MCAutoValueRefBase(T p_value)
-		: m_value(MCValueRetain(p_value))
+    
+    inline explicit MCAutoValueRefBase(T p_value)
+		: m_value(nil)
 	{
+        if (p_value)
+            m_value = MCValueRetain(p_value);
 	}
 
 	inline ~MCAutoValueRefBase(void)
@@ -77,6 +79,13 @@ public:
 		return m_value;
 	}
     
+    void Reset(T value = nil)
+    {
+        if (m_value)
+            MCValueRelease(m_value);
+        m_value = (value) ? (T)MCValueRetain(value) : NULL;
+    }
+    
     inline T& operator ! (void)
     {
 		return m_value;
@@ -86,7 +95,8 @@ public:
     // retaining it - the auto container is considered to now own the value.
     inline void Give(T value)
     {
-        MCAssert(m_value == nil);
+        if (m_value)
+            MCValueRelease(m_value);
         m_value = value;
     }
     
@@ -130,10 +140,22 @@ private:
     MCAutoValueRefBase<T>& operator = (MCAutoValueRefBase<T>& x);
 };
 
-template<typename T, bool (*MutableCopyAndRelease)(T, T&), bool (*ImmutableCopyAndRelease)(T, T&)> class MCAutoMutableValueRefBase: public MCAutoValueRefBase<T>
+template<typename T, bool (*MutableCopyAndRelease)(T, T&), bool (*ImmutableCopyAndRelease)(T, T&)>
+class MCAutoMutableValueRefBase :
+  public MCAutoValueRefBase<T>
 {
 public:
-	inline T operator = (T value)
+    inline MCAutoMutableValueRefBase() :
+      MCAutoValueRefBase<T>()
+    {
+    }
+    
+    inline explicit MCAutoMutableValueRefBase(T p_value) :
+      MCAutoValueRefBase<T>(p_value)
+    {
+    }
+    
+    inline T operator = (T value)
 	{
         return MCAutoValueRefBase<T>::operator =(value);
 	}
@@ -323,6 +345,7 @@ private:
 typedef MCAutoValueRefArrayBase<MCValueRef> MCAutoValueRefArray;
 typedef MCAutoValueRefArrayBase<MCNumberRef> MCAutoNumberRefArray;
 typedef MCAutoValueRefArrayBase<MCStringRef> MCAutoStringRefArray;
+typedef MCAutoValueRefArrayBase<MCDataRef> MCAutoDataRefArray;
 typedef MCAutoValueRefArrayBase<MCArrayRef> MCAutoArrayRefArray;
 typedef MCAutoValueRefArrayBase<MCListRef> MCAutoListRefArray;
 typedef MCAutoValueRefArrayBase<MCBooleanRef> MCAutoBooleanRefArray;
@@ -986,12 +1009,12 @@ public:
 
 	//////////
 
-	T& operator [] (int p_index)
+	T& operator [] (uindex_t p_index)
 	{
 		return m_ptr[p_index];
 	}
     
-    const T& operator [] (int p_index) const
+    const T& operator [] (uindex_t p_index) const
     {
         return m_ptr[p_index];
     }

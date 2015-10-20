@@ -65,6 +65,10 @@ guess_platform_script := \
 guess_platform := $(shell $(guess_platform_script))
 
 all: all-$(guess_platform)
+check: check-$(guess_platform)
+
+check-common-%:
+	$(MAKE) -C tests bin_dir=../$*-bin
 
 ################################################################
 # Linux rules
@@ -84,13 +88,17 @@ config-linux-%:
 	./config.sh --platform linux-$*
 
 compile-linux-%:
-	$(MAKE) -C build-linux-$*/livecode
+	$(MAKE) -C build-linux-$*/livecode default
+
+check-linux-%:
+	$(MAKE) -C build-linux-$*/livecode check
+	$(MAKE) check-common-linux-$*
 
 all-linux-%:
 	$(MAKE) config-linux-$*
 	$(MAKE) compile-linux-$*
 
-$(addsuffix -linux,all config compile): %: %-$(guess_linux_arch)
+$(addsuffix -linux,all config compile check): %: %-$(guess_linux_arch)
 
 ################################################################
 # Android rules
@@ -102,13 +110,16 @@ config-android-%:
 	./config.sh --platform android-$*
 
 compile-android-%:
-	$(MAKE) -C build-android-$*/livecode
+	$(MAKE) -C build-android-$*/livecode default
+
+check-android-%:
+	$(MAKE) -C build-android-$*/livecode check
 
 all-android-%:
 	$(MAKE) config-android-$*
 	$(MAKE) compile-android-$*
 
-$(addsuffix -android,all config compile): %: %-armv6
+$(addsuffix -android,all config compile check): %: %-armv6
 
 ################################################################
 # Mac rules
@@ -118,7 +129,12 @@ config-mac:
 	./config.sh --platform mac
 
 compile-mac:
-	$(XCODEBUILD) -project "build-mac$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE)
+	$(XCODEBUILD) -project "build-mac$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE) -target default
+
+check-mac:
+	$(XCODEBUILD) -project "build-mac$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE) -target check
+	$(MAKE) check-common-mac
+
 
 all-mac:
 	$(MAKE) config-mac
@@ -136,18 +152,23 @@ config-ios-%:
 	./config.sh --platform ios --generator-output build-ios-$*/livecode -Dtarget_sdk=$*
 
 compile-ios-%:
-	$(XCODEBUILD) -project "build-ios-$*$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE)
+	$(XCODEBUILD) -project "build-ios-$*$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE) -target default
+
+check-ios-%:
+	$(XCODEBUILD) -project "build-ios-$*$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE) -target check
 
 # Dummy targets to prevent our build system from building iOS 5.1 simulator
 config-ios-iphonesimulator5.1:
 	@echo "Skipping iOS simulator 5.1 (no longer supported)"
 compile-ios-iphonesimulator5.1:
 	@echo "Skipping iOS simulator 5.1 (no longer supported)"
+check-ios-iphonesimulator5.1:
+	@echo "Skipping iOS simulator 5.1 (no longer supported)"
 
 # Provide some synonyms for "latest iOS SDK"
-$(addsuffix -ios-iphoneos,all config compile): %: %8.4
+$(addsuffix -ios-iphoneos,all config compile check): %: %8.4
 	@true
-$(addsuffix -ios-iphonesimulator,all config compile): %: %8.4
+$(addsuffix -ios-iphonesimulator,all config compile check): %: %8.4
 	@true
 
 all_ios_subplatforms = iphoneos iphonesimulator $(IOS_SDKS)
@@ -155,6 +176,7 @@ all_ios_subplatforms = iphoneos iphonesimulator $(IOS_SDKS)
 all-ios: $(addprefix all-ios-,$(IOS_SDKS))
 config-ios: $(addprefix config-ios-,$(IOS_SDKS))
 compile-ios: $(addprefix compile-ios-,$(IOS_SDKS))
+check-ios: $(addprefix check-ios-,$(IOS_SDKS))
 
 ################################################################
 # Windows rules
@@ -165,7 +187,12 @@ config-win-%:
 
 compile-win-%:
 	# windows builds occur under Wine
-	cd build-win-$* && $(WINE) /K ../make.cmd
+	cd build-win-$* && $(WINE) /K ../make.cmd default
+
+check-win-%:
+	# windows builds occur under Wine
+	cd build-win-$* && $(WINE) /K ../make.cmd check
+	$(MAKE) check-common-win-$*
 
 all-win-%:
 	$(MAKE) config-win-$*
@@ -181,7 +208,10 @@ config-emscripten:
 	$(EMMAKE) ./config.sh --platform emscripten
 
 compile-emscripten:
-	$(EMMAKE) $(MAKE) -C build-emscripten/livecode
+	$(EMMAKE) $(MAKE) -C build-emscripten/livecode default
+
+check-emscripten:
+	$(EMMAKE) $(MAKE) -C build-emscripten/livecode check
 
 all-emscripten:
 	$(MAKE) config-emscripten
