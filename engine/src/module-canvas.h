@@ -323,7 +323,7 @@ extern "C" MC_DLLEXPORT void MCCanvasImageGetPixels(MCCanvasImageRef p_image, MC
 // Constructors
 extern "C" MC_DLLEXPORT void MCCanvasSvgMakeWithFile(MCStringRef p_path, MCCanvasSvgRef &x_image);
 extern "C" MC_DLLEXPORT void MCCanvasSvgMakeWithResourceFile(MCStringRef p_resource, MCCanvasSvgRef &r_image);
-extern "C" MC_DLLEXPORT void MCCanvasSvgMakeWithString(MCDataRef p_data, MCCanvasSvgRef &x_image);
+extern "C" MC_DLLEXPORT void MCCanvasSvgMakeWithString(MCStringRef p_data, MCCanvasSvgRef &x_image);
 
 // Properties
 extern "C" MC_DLLEXPORT void MCCanvasSvgGetBoundingBox(MCCanvasSvgRef p_path, MCCanvasRectangleRef &r_bounds);
