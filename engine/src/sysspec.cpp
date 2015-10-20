@@ -937,12 +937,14 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
 	MCS_getentries_state *t_state;
 	t_state = static_cast<MCS_getentries_state *>(p_context);
 	
-#if defined(_MACOSX)
-    // Mac doesn't list '..', so we manually add it if we are listing folders
-    if (!t_state -> files && MCListIsEmpty(t_state -> list)
-            && !MCStringIsEqualToCString(p_entry -> name, "..", kMCStringOptionCompareExact))
+    // SN-2015-10-20" [[ Bug 16223 ]] We force the presence of '..' at the head
+    //  of the list of folders, independently of the OS
+    if (!t_state -> files && MCListIsEmpty(t_state -> list))
         MCListAppendCString(t_state -> list, "..");
-#endif
+    
+    // We never list '..', if the OS / filesystem was letting us get it
+    if (MCStringIsEqualToCString(p_entry -> name, "..", kMCStringOptionCompareExact))
+        return true;
     
     if (!t_state -> files != p_entry -> is_folder)
         return true;
