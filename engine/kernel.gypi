@@ -32,6 +32,7 @@
 			[
 				'<@(engine_common_source_files)',
 				'<@(engine_desktop_source_files)',
+				'<@(engine_java_source_files)',
 			],
 			
 			'conditions':
