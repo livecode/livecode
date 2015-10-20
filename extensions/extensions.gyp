@@ -49,6 +49,7 @@
 				'widgets/gradientrampeditor/gradientrampeditor.lcb',
 				'widgets/tile/tile.lcb',
 				'widgets/spinner/spinner.lcb',
+                'widgets/svgview/svgview.lcb',
 			],
 
 			'all_dependent_settings':
