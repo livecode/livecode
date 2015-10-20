@@ -441,6 +441,12 @@ bool MCScreenDC::platform_get_display_handle(void *&r_display)
 	return true;
 }
 
+void *MCScreenDC::GetNativeWindowHandle(Window p_window)
+{
+	// x11 window handle - dtouint returns the X11 Window id.
+	return (void*)dtouint(p_window);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCResPlatformInitPixelScaling(void)

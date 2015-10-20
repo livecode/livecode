@@ -589,9 +589,14 @@ Boolean MCCard::mfocus(int2 x, int2 y)
 					mfocused = tptr;
 
                 // The widget event manager handles enter/leave itself
-				if (newfocused && mfocused != NULL
-                    && mfocused -> getref() -> gettype() != CT_GROUP
-                    && mfocused -> getref() -> gettype() != CT_WIDGET)
+				if (newfocused && mfocused != NULL &&
+                    mfocused -> getref() -> gettype() != CT_GROUP &&
+#ifdef WIDGETS_HANDLE_DND
+                    mfocused -> getref() -> gettype() != CT_WIDGET)
+#else
+                    (MCdispatcher -> isdragtarget() ||
+                    mfocused -> getref() -> gettype() != CT_WIDGET))
+#endif
 				{
 					mfocused->getref()->enter();
 					

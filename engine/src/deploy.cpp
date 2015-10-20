@@ -607,6 +607,8 @@ Parse_stat MCIdeDeploy::parse(MCScriptPoint& sp)
 			m_platform = PLATFORM_IOS_EMBEDDED;
 		else if (sp . token_is_cstring("androidembedded"))
 			m_platform = PLATFORM_ANDROID_EMBEDDED;
+		else if (sp . token_is_cstring("emscripten"))
+			m_platform = PLATFORM_EMSCRIPTEN;
 		else
 			return PS_ERROR;
 	}
@@ -662,6 +664,8 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 		t_is_licensed = (MClicenseparameters . deploy_targets & kMCLicenseDeployToIOSEmbedded) != 0;
 	else if (m_platform == PLATFORM_ANDROID_EMBEDDED)
 		t_is_licensed = (MClicenseparameters . deploy_targets & kMCLicenseDeployToAndroidEmbedded) != 0;
+	else if (m_platform == PLATFORM_EMSCRIPTEN)
+		t_is_licensed = (MClicenseparameters . deploy_targets & kMCLicenseDeployToHTML5) != 0;
 
 	if (!t_is_licensed)
 	{
@@ -684,6 +688,8 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 			MCDeployToAndroid(t_params);
 		else if (m_platform == PLATFORM_IOS_EMBEDDED)
 			MCDeployToIOS(t_params, true);
+		else if (m_platform == PLATFORM_EMSCRIPTEN)
+			MCDeployToEmscripten(t_params);
 
 		MCDeployError t_error;
 		t_error = MCDeployCatch();

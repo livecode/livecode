@@ -46,6 +46,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "external.h"
 
 #include "exec-interface.h"
+#include "osspec.h"
 
 //////////
 
@@ -2182,3 +2183,30 @@ void MCStack::SetScriptOnly(MCExecContext& ctxt, bool p_script_only)
 {
     m_is_script_only = p_script_only;
 }
+
+// MERG-2015-10-11: [[ DocumentFilename ]] Add stack documentFilename property
+void MCStack::GetDocumentFilename(MCExecContext &ctxt, MCStringRef& r_document_filename)
+{
+    r_document_filename = MCValueRetain(m_document_filename);
+}
+
+void MCStack::SetDocumentFilename(MCExecContext &ctxt, MCStringRef p_document_filename)
+{
+    MCStringRef t_resolved_filename;
+    
+    if (MCStringIsEmpty(p_document_filename))
+    {
+        t_resolved_filename = p_document_filename;
+    }
+    else if (!MCS_resolvepath(p_document_filename, t_resolved_filename))
+    {
+        ctxt . LegacyThrow(EE_DOCUMENTFILENAME_BADFILENAME);
+        return;
+    }
+    
+    MCValueAssign(m_document_filename, t_resolved_filename);
+    
+    updatedocumentfilename();
+
+}
+

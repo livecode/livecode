@@ -40,7 +40,9 @@ public:
     virtual void OnToolChanged(Tool p_new_tool);
     virtual void OnLayerChanged();
     
-    MCNativeLayerX11(MCWidgetRef);
+    virtual bool GetNativeView(void *&r_view);
+    
+    MCNativeLayerX11(MCWidgetRef p_widget, x11::Window p_view);
     ~MCNativeLayerX11();
     
 private:

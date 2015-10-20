@@ -661,7 +661,6 @@ IO_stat MCDispatch::readfile(MCStringRef p_openpath, MCStringRef p_name, IO_hand
 //   to handle font table cleanup).
 IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_handle &stream, MCStack *&sptr)
 {
-	Boolean loadhome = False;
 	uint32_t version;
 
     sptr = NULL;
@@ -2220,9 +2219,12 @@ void MCDispatch::dodrop(bool p_source)
 	{
 		// We are only the source
 		m_drag_end_sent = true;
+        
+#ifdef WIDGETS_HANDLE_DND
         if (MCdragsource->gettype() == CT_WIDGET)
             MCwidgeteventmanager->event_dnd_end(reinterpret_cast<MCWidget*>(MCdragsource));
         else
+#endif
             MCdragsource -> message(MCM_drag_end);
 
 		// OK-2008-10-21 : [[Bug 7316]] - Cursor in script editor follows mouse after dragging to non-LiveCode target.
@@ -2343,12 +2345,14 @@ void MCDispatch::dodrop(bool p_source)
     t_auto_drop = MCdragdest != NULL;
     if (t_auto_drop)
     {
+#ifdef WIDGETS_HANDLE_DND
         if (MCdragdest->gettype() == CT_WIDGET)
         {
             MCwidgeteventmanager->event_dnd_drop(reinterpret_cast<MCWidget*>(MCdragdest));
             t_auto_drop = false;
         }
         else
+#endif
         {
             t_auto_drop = MCdragdest -> message(MCM_drag_drop) != ES_NORMAL;
         }
@@ -2393,12 +2397,14 @@ void MCDispatch::dodrop(bool p_source)
 	if (MCdragsource != NULL)
 	{
 		m_drag_end_sent = true;
+#ifdef WIDGETS_HANDLE_DND
         if (MCdragsource->gettype() == CT_WIDGET)
         {
             MCwidgeteventmanager->event_dnd_end(reinterpret_cast<MCWidget*>(MCdragsource));
             t_auto_end = false;
         }
         else
+#endif
         {
             t_auto_end = MCdragsource -> message(MCM_drag_end) != ES_NORMAL;
         }

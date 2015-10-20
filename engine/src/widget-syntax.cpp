@@ -639,6 +639,82 @@ extern "C" MC_DLLEXPORT_DEF void MCWidgetEvalIsPointNotWithinRect(MCCanvasPointR
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetNativeLayerOfWidget(MCWidgetRef p_widget, void *&r_native_layer)
+{
+	if (!MCWidgetEnsureCanManipulateWidget(p_widget))
+		return;
+	
+	/* UNCHECKED */
+	MCWidgetGetHost(p_widget)->GetNativeView(r_native_layer);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetSetNativeLayerOfWidget(void *p_native_layer, MCWidgetRef p_widget)
+{
+	if (!MCWidgetEnsureCanManipulateWidget(p_widget))
+		return;
+	
+	/* UNCHECKED */
+	MCWidgetGetHost(p_widget)->SetNativeView(p_native_layer);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetStackNativeViewOfWidget(MCWidgetRef p_widget, void *&r_native_view)
+{
+	if (!MCWidgetEnsureCanManipulateWidget(p_widget))
+		return;
+	
+	/* UNCHECKED */
+	r_native_view = MCscreen->GetNativeWindowHandle(MCWidgetGetHost(p_widget)->getw());
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetStackNativeDisplayOfWidget(MCWidgetRef p_widget, void *&r_display)
+{
+	if (!MCWidgetEnsureCanManipulateWidget(p_widget))
+		return;
+	
+	/* UNCHECKED */
+	if (!MCscreen->platform_get_display_handle(r_display))
+	{
+		// TODO - throw error
+		return;
+	}
+}
+
+//////////
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMyNativeLayer(void *&r_native_layer)
+{
+	if (!MCWidgetEnsureCurrentWidget())
+		return;
+	
+	MCWidgetGetNativeLayerOfWidget(MCcurrentwidget, r_native_layer);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetSetMyNativeLayer(void *p_native_layer)
+{
+	if (!MCWidgetEnsureCurrentWidget())
+		return;
+	
+	MCWidgetSetNativeLayerOfWidget(p_native_layer, MCcurrentwidget);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMyStackNativeView(void *&r_view)
+{
+	if (!MCWidgetEnsureCurrentWidget())
+		return;
+	
+	MCWidgetGetStackNativeViewOfWidget(MCcurrentwidget, r_view);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMyStackNativeDisplay(void *&r_display)
+{
+	if (!MCWidgetEnsureCurrentWidget())
+		return;
+	
+	MCWidgetGetStackNativeDisplayOfWidget(MCcurrentwidget, r_display);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 static void __MCWidgetDestroy(MCValueRef p_value)
 {
     MCWidgetBase *t_widget;

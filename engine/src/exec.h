@@ -2868,6 +2868,10 @@ extern MCExecMethodInfo *kMCInterfaceGetUsePixelScalingMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceGetScreenPixelScaleMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceGetScreenPixelScalesMethodInfo;
 
+extern MCExecMethodInfo *kMCInterfaceExecGoBackInWidgetMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceExecGoForwardInWidgetMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceExecLaunchUrlInWidgetMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceExecDoInWidgetMethodInfo;
 
 void MCInterfaceInitialize(MCExecContext& ctxt);
 void MCInterfaceFinalize(MCExecContext& ctxt);
@@ -3438,6 +3442,11 @@ void MCInterfaceSetUsePixelScaling(MCExecContext& ctxt, bool p_setting);
 void MCInterfaceGetUsePixelScaling(MCExecContext& ctxt, bool &r_setting);
 void MCInterfaceGetScreenPixelScale(MCExecContext& ctxt, double& r_scale);
 void MCInterfaceGetScreenPixelScales(MCExecContext& ctxt, uindex_t& r_count, double*& r_scale);
+
+void MCInterfaceExecGoBackInWidget(MCExecContext& ctxt, MCWidget *p_widget);
+void MCInterfaceExecGoForwardInWidget(MCExecContext& ctxt, MCWidget *p_widget);
+void MCInterfaceExecLaunchUrlInWidget(MCExecContext& ctxt, MCStringRef p_url, MCWidget *p_widget);
+void MCInterfaceExecDoInWidget(MCExecContext& ctxt, MCStringRef p_script, MCWidget *p_widget);
 
 ///////////
 

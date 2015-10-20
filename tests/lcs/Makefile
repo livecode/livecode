@@ -8,7 +8,7 @@ TEST_DIR ?= $(top_srcdir)/_tests/lcb
 guess_linux_arch_script := \
 	case `uname -p` in \
 	    x86_64) echo x86_64 ;; \
-	    x86|i*85) echo x86 ;; \
+	    x86|i*86) echo x86 ;; \
 	esac
 guess_linux_arch := $(shell $(guess_linux_arch_script))
 
@@ -29,7 +29,7 @@ guess_flags := $(shell $(guess_flags_script))
 
 bin_dir ?= $(top_srcdir)/$(guess_platform)-bin
 
-ENGINE ?= $(bin_dir)/standalone-community
+ENGINE ?= $(if $(filter mac,$(guess_platform)),$(bin_dir)/Standalone-Community.app/Contents/MacOS/Standalone-Community,$(bin_dir)/standalone-community)
 
 ENGINE_FLAGS ?= $(guess_flags)
 
