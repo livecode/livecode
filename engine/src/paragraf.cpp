@@ -2486,8 +2486,18 @@ int2 MCParagraph::setfocus(int4 x, int4 y, uint2 fixedheight,
 					// It then rounds focusedindex down to the beginning of the
 					// previous word.
 					bptr = indextoblock(originalindex, False);
-					originalindex = findwordbreakafter(bptr, originalindex);
-					if (originalindex < textsize && !bptr -> textisspace(&text[originalindex]))
+                    
+                    // SN-2015-10-20: [[ Bug 16221 ]] findwordbreakafter returns
+                    // the index before the last char of the word, so we need to
+                    // advance the index returned, but *only* if originalindex
+                    // is not already the last char of the word, otherwise we
+                    // get the next word boundary.
+                    uint2 t_old_index;
+                    t_old_index = originalindex;
+                    originalindex = findwordbreakafter(bptr, originalindex);
+
+					if (originalindex != t_old_index && originalindex < textsize
+                            && !bptr -> textisspace(&text[t_old_index]))
 					{
 						originalindex = findwordbreakafter(bptr, originalindex);
 						bptr = indextoblock(originalindex, False);
