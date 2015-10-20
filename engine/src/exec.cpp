@@ -1551,7 +1551,7 @@ static bool MCPropertyFormatPointList(MCPoint *p_list, uindex_t p_count, char_t 
 	return false;
 }
 
-static bool MCPropertyParseUIntList(MCStringRef p_input, char_t p_delimiter, uindex_t& r_count, uinteger_t*& r_list)
+static bool MCPropertyParseUIntList(MCStringRef p_input, bool p_optional, char_t p_delimiter, uindex_t& r_count, uinteger_t*& r_list)
 {
     uindex_t t_length;
 	t_length = MCStringGetLength(p_input);
@@ -1574,11 +1574,15 @@ static bool MCPropertyParseUIntList(MCStringRef p_input, char_t p_delimiter, uin
 	t_new_offset = 0;
 	
 	// PM-2015-10-13: [[ Bug 16203 ]] Skip any "empty" elements in the beginning of the list
-	if (MCStringGetNativeCharAtIndex(p_input, 0) == p_delimiter)
+	if (p_optional)
 	{
-		t_old_offset++;
-		t_new_offset++;
+		if (MCStringGetNativeCharAtIndex(p_input, 0) == p_delimiter)
+		{
+			t_old_offset++;
+			t_new_offset++;
+		}
 	}
+	
 	
 	while (t_success && t_old_offset <= t_length)
 	{
@@ -1587,10 +1591,13 @@ static bool MCPropertyParseUIntList(MCStringRef p_input, char_t p_delimiter, uin
 		
 		// PM-2015-10-13: [[ Bug 16203 ]] Skip any "empty" in the list, by ignoring any 2 or more consecutive occurences of p_delimiter
 		// i.e. if the list is 2,3,empty,5 then it will be parsed as 2,3,,5
-		while (MCStringGetNativeCharAtIndex(p_input, t_old_offset) == p_delimiter && MCStringGetNativeCharAtIndex(p_input, t_old_offset - 1) == p_delimiter)
+		if (p_optional)
 		{
-			t_old_offset++;
-			t_new_offset++;
+			while (MCStringGetNativeCharAtIndex(p_input, t_old_offset) == p_delimiter && MCStringGetNativeCharAtIndex(p_input, t_old_offset - 1) == p_delimiter)
+			{
+				t_old_offset++;
+				t_new_offset++;
+			}
 		}
 		
 		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareExact, t_new_offset))
@@ -2208,6 +2215,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             
         case kMCPropertyTypeLinesOfUInt:
         case kMCPropertyTypeItemsOfUInt:
+		case kMCPropertyTypeOptionalItemsOfUInt:
         {
             uinteger_t* t_value;
             uindex_t t_count;
@@ -2535,7 +2543,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         case kMCPropertyTypeMixedItemsOfUInt:
         {
             bool t_mixed;
-            uinteger_t* t_value;
+            uinteger_t* t_value = nil;
             uindex_t t_count;
             // SN-2014-07-25: [[ Bug 12945 ]] Make sure not to deallocate un-allocated memory
             t_count = 0;
@@ -3027,6 +3035,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                       
         case kMCPropertyTypeLinesOfUInt:
         case kMCPropertyTypeItemsOfUInt:
+		case kMCPropertyTypeOptionalItemsOfUInt:
         // AL-2014-09-24: [[ Bug 13529 ]] Handle mixed items of uint case
         case kMCPropertyTypeMixedItemsOfUInt:
         {
@@ -3040,7 +3049,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             t_delimiter = prop -> type == kMCPropertyTypeLinesOfUInt ? '\n' : ',';
             
             MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_input));
-            if (!MCPropertyParseUIntList(*t_input, t_delimiter, t_count, t_value))
+            if (!MCPropertyParseUIntList(*t_input, prop -> type == kMCPropertyTypeOptionalItemsOfUInt,t_delimiter, t_count, t_value))
                 ctxt . LegacyThrow(EE_PROPERTY_NAN);
             
             if (!ctxt . HasError())

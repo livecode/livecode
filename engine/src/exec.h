@@ -248,6 +248,7 @@ enum MCPropertyType
     kMCPropertyTypeLinesOfDouble,
     kMCPropertyTypeLinesOfPoint,
     kMCPropertyTypeItemsOfUInt,
+	kMCPropertyTypeOptionalItemsOfUInt,
     kMCPropertyTypeItemsOfString,
     kMCPropertyTypeMixedBool,
 	kMCPropertyTypeMixedInt16,
@@ -353,6 +354,7 @@ template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, u
     
 	(static_cast<O *>(obj -> object) ->* Method)(ctxt, obj -> part_id, t_si, t_ei, count, arg);
 }
+
 
 template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, uint32_t, int32_t, int32_t, bool&, A)> inline void MCPropertyObjectChunkMixedThunk(MCExecContext& ctxt, MCObjectChunkPtr *obj, B mixed, A arg)
 {
@@ -854,6 +856,9 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 
 #define DEFINE_RW_OBJ_LIST_PROPERTY(prop, type, obj, tag) \
 { prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectListThunkGet##type(obj, Get##tag), (void *)MCPropertyObjectListThunkSet##type(obj, Set##tag), false, false, kMCPropertyInfoChunkTypeNone },
+
+#define DEFINE_RW_OBJ_OPTIONAL_LIST_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyTypeOptional##type, nil, (void *)MCPropertyObjectListThunkGet##type(obj, Get##tag), (void *)MCPropertyObjectListThunkSet##type(obj, Set##tag), false, false, kMCPropertyInfoChunkTypeNone },
 
 #define DEFINE_RO_OBJ_LIST_PROPERTY(prop, type, obj, tag) \
 { prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectListThunkGet##type(obj, Get##tag), nil, false, false, kMCPropertyInfoChunkTypeNone },

@@ -121,7 +121,8 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_TOGGLE_HILITE, Bool, MCField, ToggleHilite)
 	DEFINE_RW_OBJ_PROPERTY(P_3D_HILITE, Bool, MCField, ThreeDHilite)
 	DEFINE_RO_OBJ_PART_ENUM_PROPERTY(P_ENCODING, InterfaceEncoding, MCField, Encoding)
-    DEFINE_RW_OBJ_LIST_PROPERTY(P_HILITED_LINES, ItemsOfUInt, MCField, HilitedLines)
+	// PM-2015-10-19: [[ Bug 16203 ]] New property type which indicates a list of UInts where empty items are ignored.
+	DEFINE_RW_OBJ_OPTIONAL_LIST_PROPERTY(P_HILITED_LINES, ItemsOfUInt, MCField, HilitedLines)
     DEFINE_RW_OBJ_PART_CUSTOM_PROPERTY(P_FLAGGED_RANGES, InterfaceFieldRanges, MCField, FlaggedRanges)
     DEFINE_RW_OBJ_LIST_PROPERTY(P_TAB_STOPS, ItemsOfUInt, MCField, TabStops)
     DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_TAB_ALIGN, InterfaceFieldTabAlignments, MCField, TabAlignments)
