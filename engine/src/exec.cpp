@@ -2543,7 +2543,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         case kMCPropertyTypeMixedItemsOfUInt:
         {
             bool t_mixed;
-            uinteger_t* t_value = nil;
+            uinteger_t* t_value;
             uindex_t t_count;
             // SN-2014-07-25: [[ Bug 12945 ]] Make sure not to deallocate un-allocated memory
             t_count = 0;
