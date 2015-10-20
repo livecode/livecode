@@ -28,7 +28,7 @@ install: (cd prebuilt && ./fetch-libraries.sh linux)
 # the default test suite.
 script: >
   if [ "${COVERITY_SCAN_BRANCH}" != "1" ]; then
-      make all-linux && make -C tests/lcb && make -C tests/lcs
+      make all-linux && make -C tests
   fi
 
 addons:
