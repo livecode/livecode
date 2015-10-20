@@ -1,0 +1,149 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+-- declaring extension as widget, followed by identifier
+widget com.livecode.widget.svgview
+--
+
+-- dependency declarations
+use com.livecode.canvas
+use com.livecode.widget
+use com.livecode.engine
+--
+
+-- adding metadata to ensure the extension displays correctly in livecode
+metadata title is "SVG View"
+metadata author is "LiveCode"
+metadata version is "0.0.1"
+metadata preferredSize is "100,100"
+metadata svgicon is ""
+
+-- property declarations
+property svgText get GetSvgText set SetSvgText
+
+property visibleBox get GetVisibleBox set SetVisibleBox
+
+property viewBox get GetViewBox
+property boundingBox get GetBoundingBox
+
+--
+
+-- private instance variables
+--
+variable mSvgText as String
+variable mSvg as optional Svg
+variable mVisibleBox as optional Rectangle
+
+-- constants
+--
+
+public handler OnSave(out rProperties as Array) returns nothing
+	put the empty array into rProperties
+end handler
+
+public handler OnLoad(in pProperties as Array) returns nothing
+end handler
+
+-- called when widget is created
+public handler OnCreate() returns nothing
+    put the empty string into mSvgText
+    put nothing into mSvg
+    put nothing into mVisibleBox
+end handler
+
+-- called whenever LiveCode needs to redraw the widget
+public handler OnPaint() returns nothing
+    if mSvg is nothing then
+        return
+    end if
+
+    variable tBox as Rectangle
+    if mVisibleBox is nothing then
+        put the viewing box of mSvg into tBox
+    else
+        put mVisibleBox into tBox
+    end if
+
+    draw from tBox of mSvg into my bounds of this canvas
+end handler
+
+-- property handlers
+private handler GetSvgText() returns String
+    return mSvgText
+end handler
+
+private handler SetSvgText(in pSvgText as String) returns nothing
+    if mSvgText is pSvgText then
+        return
+    end if
+    
+    variable tNewSvg
+    put svg from string pSvgText into tNewSvg
+    
+    put pSvgText into mSvgText
+    put tNewSvg into mSvg
+    
+    redraw all
+end handler
+
+private handler GetVisibleBox() returns String
+    if mVisibleBox is nothing then
+        return the empty string
+    end if
+    return RectangleToString(mVisibleBox)
+end handler
+
+private handler SetVisibleBox(in pVisibleBox as String) returns nothing
+    variable tNewVisibleBox
+    if pVisibleBox is the empty string then
+        put nothing into tNewVisibleBox
+    else
+        put RectangleFromString(pVisibleBox) into tNewVisibleBox
+    end if
+    if tNewVisibleBox is mVisibleBox then
+        return
+    end if
+    put tNewVisibleBox into mVisibleBox
+    redraw all
+end handler
+
+private handler GetViewBox() returns String
+    if mSvg is nothing then
+        return "0,0,0,0"
+    end if
+    return RectangleToString(the viewing box of mSvg)
+end handler
+
+private handler GetBoundingBox() returns String
+    if mSvg is nothing then
+        return "0,0,0,0"
+    end if
+    return RectangleToString(the bounding box of mSvg)
+end handler
+
+-- utilities
+private handler RectangleToString(in pRect as Rectangle) returns String
+    combine [ (the left of pRect) formatted as string, (the top of pRect) formatted as string, (the right of pRect) formatted as string, (the bottom of pRect) formatted as string ] with ","
+    return the result
+end handler
+
+private handler RectangleFromString(in pStrRect as String) returns Rectangle
+    split pStrRect by ","
+    return rectangle (the result parsed as list of number)
+end handler
+
+end widget
