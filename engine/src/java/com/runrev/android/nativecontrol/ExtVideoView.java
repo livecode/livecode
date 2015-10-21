@@ -328,6 +328,10 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
                     (View)this.getParent() : this;
             mMediaController.setAnchorView(anchorView);
             mMediaController.setEnabled(isInPlaybackState());
+			
+			// PM-2015-10-19: [[ Bug 16027 ]] Make sure the controller shows/hides when changing its visibility on demand
+			if (isInPlaybackState())
+				mMediaController.show(0);
         }
     }
 
@@ -369,7 +373,13 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
             }
             if (mMediaController != null) {
                 mMediaController.setEnabled(true);
+
+				// PM-2015-10-19: [[ Bug 16027 ]] Show the controller once the player is prepared (as on iOS)
+				if (isInPlaybackState()){
+					mMediaController.show(0);
+				}
             }
+
             mVideoWidth = mp.getVideoWidth();
             mVideoHeight = mp.getVideoHeight();
 
@@ -390,10 +400,6 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
                     // start the video here instead of in the callback.
                     if (mTargetState == STATE_PLAYING) {
                         start();
-                        if (mMediaController != null) {
-							// PM-2015-10-08: [[ Bug 16027 ]] Make sure the controller does not disappear after some ms of inactivity
-                            mMediaController.show(0);
-                        }
                     } else if (!isPlaying() &&
                                (seekToPosition != 0 || getCurrentPosition() > 0)) {
                        if (mMediaController != null) {
@@ -407,10 +413,6 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
                 // The video size might be reported to us later.
                 if (mTargetState == STATE_PLAYING) {
                     start();
-					// show the controller when starting playing a remote video
-					if (mMediaController != null) {
-						mMediaController.show(0);
-					}
                 }
             }
         }
@@ -542,10 +544,7 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
                     seekTo(mSeekWhenPrepared);
                 }
                 start();
-                if (mMediaController != null) {
-                    mMediaController.show(0);
-                }
-            }
+			}
         }
 
         public void surfaceCreated(SurfaceHolder holder)
@@ -626,7 +625,7 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
                     keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE) {
                 if (mMediaPlayer.isPlaying()) {
                     pause();
-                    mMediaController.show(0);
+					mMediaController.show(0);
                 } else {
                     start();
                     mMediaController.hide();
@@ -635,7 +634,7 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
             } else if (keyCode == KeyEvent.KEYCODE_MEDIA_STOP
                     && mMediaPlayer.isPlaying()) {
                 pause();
-                mMediaController.show(0);
+				mMediaController.show(0);
             } else {
                 toggleMediaControlsVisiblity();
             }
@@ -659,6 +658,12 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
             mCurrentState = STATE_PLAYING;
         }
         mTargetState = STATE_PLAYING;
+
+		// PM-2015-10-19: [[ Bug 16027 ]] Show the controller here, to make sure it is enabled even if
+		// mobileControlDo sPlayerId, "play" is called from a callback message
+		if (mMediaController != null) {
+			mMediaController.show(0);
+		}
     }
 
     public void stop() {
