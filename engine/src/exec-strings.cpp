@@ -2441,11 +2441,18 @@ static void MCStringsSortIndirect(uindex_t *p_items, uint4 nitems, comparator_t 
     delete[] tmp;
 }
 
-static bool double_comparator(void *p_context, uindex_t p_left, uindex_t p_right)
+static bool double_comparator_fwd(void *p_context, uindex_t p_left, uindex_t p_right)
 {
     double *t_keys;
     t_keys = (double *)p_context;
     return t_keys[p_left] <= t_keys[p_right];
+}
+
+static bool double_comparator_rev(void *p_context, uindex_t p_left, uindex_t p_right)
+{
+    double *t_keys;
+    t_keys = (double *)p_context;
+    return t_keys[p_left] >= t_keys[p_right];
 }
 
 static void double_freer(void *keys, uindex_t count)
@@ -2455,20 +2462,33 @@ static void double_freer(void *keys, uindex_t count)
     delete[] t_doubles;
 }
 
-static bool data_comparator(void *p_context, uindex_t p_left, uindex_t p_right)
+static bool data_comparator_fwd(void *p_context, uindex_t p_left, uindex_t p_right)
 {
     MCDataRef *t_keys;
     t_keys = (MCDataRef *)p_context;
     return MCDataCompareTo(t_keys[p_left], t_keys[p_right]) <= 0;
 }
 
-static bool string_comparator(void *p_context, uindex_t p_left, uindex_t p_right)
+static bool data_comparator_rev(void *p_context, uindex_t p_left, uindex_t p_right)
+{
+    MCDataRef *t_keys;
+    t_keys = (MCDataRef *)p_context;
+    return MCDataCompareTo(t_keys[p_left], t_keys[p_right]) >= 0;
+}
+
+static bool string_comparator_fwd(void *p_context, uindex_t p_left, uindex_t p_right)
 {
     MCStringRef *t_keys;
     t_keys = (MCStringRef *)p_context;
     return MCStringCompareTo(t_keys[p_left], t_keys[p_right], kMCStringOptionCompareExact) <= 0;
 }
 
+static bool string_comparator_rev(void *p_context, uindex_t p_left, uindex_t p_right)
+{
+    MCStringRef *t_keys;
+    t_keys = (MCStringRef *)p_context;
+    return MCStringCompareTo(t_keys[p_left], t_keys[p_right], kMCStringOptionCompareExact) >= 0;
+}
 
 static void valueref_freer(void *keys, uindex_t count)
 {
@@ -2560,7 +2580,7 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
             }
             
             t_sort_keys = t_seconds;
-            t_sort_compare = double_comparator;
+            t_sort_compare = p_dir == ST_ASCENDING ? double_comparator_fwd : double_comparator_rev;
             t_sort_freer = double_freer;
         }
         break;
@@ -2616,7 +2636,7 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
             }
             
             t_sort_keys = t_numbers;
-            t_sort_compare = double_comparator;
+            t_sort_compare = p_dir == ST_ASCENDING ? double_comparator_fwd : double_comparator_rev;;
             t_sort_freer = double_freer;
         }
         break;
@@ -2632,7 +2652,7 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
             }
             
             t_sort_keys = t_datas;
-            t_sort_compare = data_comparator;
+            t_sort_compare = p_dir == ST_ASCENDING ? data_comparator_fwd : data_comparator_rev;
             t_sort_freer = valueref_freer;
         }
         break;
@@ -2645,7 +2665,7 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
                 t_all_strings)
             {
                 t_sort_keys = t_items;
-                t_sort_compare = string_comparator;
+                t_sort_compare = p_dir == ST_ASCENDING ? string_comparator_fwd : string_comparator_rev;
                 t_sort_freer = nil;
             }
             else
@@ -2660,7 +2680,7 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
                 }
                 
                 t_sort_keys = t_strings;
-                t_sort_compare = string_comparator;
+                t_sort_compare = p_dir == ST_ASCENDING ? string_comparator_fwd : string_comparator_rev;
                 t_sort_freer = valueref_freer;
             }
         }
@@ -2704,14 +2724,14 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
             MCUnicodeDestroyCollator(t_collator);
             
             t_sort_keys = t_datas;
-            t_sort_compare = data_comparator;
+            t_sort_compare = p_dir == ST_ASCENDING ? data_comparator_fwd : data_comparator_rev;
             t_sort_freer = valueref_freer;
         }
         break;
             
         default:
-            MCUnreachable();
-            break;
+            delete[] t_indicies;
+            MCUnreachableReturn();
     }
     
     MCStringsSortIndirect(t_indicies, p_count, t_sort_compare, t_sort_keys);
@@ -2726,16 +2746,8 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
     }
     
     MCAutoArray<MCStringRef> t_sorted;
- 	if (p_dir == ST_ASCENDING)
-    {
-        for (uindex_t i = 0; i < p_count; i++)
-            t_sorted . Push((MCStringRef)p_items[t_indicies[i]]);
-    }
-    else
-    {
-        for (uindex_t i = p_count; i > 0; i--)
-            t_sorted . Push((MCStringRef)p_items[t_indicies[i - 1]]);
-    }
+    for (uindex_t i = 0; i < p_count; i++)
+        t_sorted . Push((MCStringRef)p_items[t_indicies[i]]);
     t_sorted . Take(r_sorted_array, r_sorted_count);
     
     delete[] t_indicies;

@@ -53,6 +53,10 @@
 	<array>
 		${IPAD_SUPPORTED_ORIENTATIONS}
 	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		${PLAY_AUDIO_WHEN_IN_BACKGROUND}
+	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>
 	${LOCATION_AUTH_TYPE}
