@@ -663,10 +663,12 @@ public:
 		if (p_size <= m_capacity)
 			return true;
 		
-		uindex_t t_capacity;
-		if (MCBrowserMemoryResizeArray(p_size, m_elements, t_capacity) && MCBrowserMemoryResizeArray(p_size, m_keys, t_capacity))
+		uindex_t t_element_capacity, t_key_capacity;
+		// Need to pass original capacity to BOTH calls to MCBrowserMemoryResizeArray, to ensure memory is appropriately cleared.
+		t_element_capacity = t_key_capacity = m_capacity;
+		if (MCBrowserMemoryResizeArray(p_size, m_elements, t_element_capacity) && MCBrowserMemoryResizeArray(p_size, m_keys, t_key_capacity))
 		{
-			m_capacity = t_capacity;
+			m_capacity = t_element_capacity;
 			return true;
 		}
 		
