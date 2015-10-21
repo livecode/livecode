@@ -1506,4 +1506,9 @@ begin
 	MCWidgetSetMyNativeLayer(input)
 end syntax
 
+public foreign handler MCWidgetGetNativeLayerCanRenderToContext(in pWidget as Widget, out rCanRender as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetSetNativeLayerCanRenderToContext(in pCanRender as CBool, in pWidget as Widget) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetMyNativeLayerCanRenderToContext(out rCanRender as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetSetMyNativeLayerCanRenderToContext(in pCanRender as CBool) returns nothing binds to "<builtin>"
+
 end module

@@ -127,16 +127,15 @@ void MCNativeLayerIOS::doDetach()
     });
 }
 
-void MCNativeLayerIOS::OnPaint(MCGContextRef)
+// Rendering view to context not supported on iOS.
+bool MCNativeLayerAndroid::GetCanRenderToContext()
 {
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
-    // If the widget is not in edit mode, we trust it to paint itself
-    if (t_widget->isInRunMode())
-        return;
-    
-    // Edit mode is not supported on iOS
-    return;
+	return false;
+}
+
+bool MCNativeLayerIOS::OnPaint(MCGContextRef)
+{
+	return false;
 }
 
 void MCNativeLayerIOS::OnGeometryChanged(const MCRectangle& p_old_rect)
