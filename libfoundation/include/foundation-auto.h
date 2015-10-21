@@ -592,7 +592,7 @@ public:
         // so the string length has to be clamped to that.
         uindex_t t_length = MCStringGetLength(p_string);
         if (t_length > 255)
-            t_length = 255;
+            return false;
         
         // Allocate a buffer, adding an extra char for the count byte
         MCMemoryNewArray(t_length + 1, m_pascal_string);
