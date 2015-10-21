@@ -200,6 +200,12 @@ MCNameRef MCN_private;
 MCNameRef MCN_text;
 //MCNameRef MCN_unicode;
 MCNameRef MCN_styles;
+MCNameRef MCN_styledtext;
+MCNameRef MCN_rtftext;
+MCNameRef MCN_htmltext;
+MCNameRef MCN_png;
+MCNameRef MCN_gif;
+MCNameRef MCN_jpeg;
 MCNameRef MCN_rtf;
 MCNameRef MCN_html;
 
@@ -644,6 +650,12 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("text", MCN_text);
 //	/* UNCHECKED */ MCNameCreateWithCString("unicode", MCN_unicode);
 	/* UNCHECKED */ MCNameCreateWithCString("styles", MCN_styles);
+    /* UNCHECKED */ MCNameCreateWithCString("styledtext", MCN_styledtext);
+    /* UNCHECKED */ MCNameCreateWithCString("rtftext", MCN_rtftext);
+    /* UNCHECKED */ MCNameCreateWithCString("htmltext", MCN_htmltext);
+    /* UNCHECKED */ MCNameCreateWithCString("png", MCN_png);
+    /* UNCHECKED */ MCNameCreateWithCString("gif", MCN_gif);
+    /* UNCHECKED */ MCNameCreateWithCString("jpeg", MCN_jpeg);
 	/* UNCHECKED */ MCNameCreateWithCString("rtf", MCN_rtf);
 	/* UNCHECKED */ MCNameCreateWithCString("html", MCN_html);
 
@@ -1086,6 +1098,12 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCN_text);
 //	MCNameDelete(MCN_unicode);
 	MCNameDelete(MCN_styles);
+    MCNameDelete(MCN_styledtext);
+    MCNameDelete(MCN_rtftext);
+    MCNameDelete(MCN_htmltext);
+    MCNameDelete(MCN_png);
+    MCNameDelete(MCN_gif);
+    MCNameDelete(MCN_jpeg);
 	MCNameDelete(MCN_rtf);
 	MCNameDelete(MCN_html);
 

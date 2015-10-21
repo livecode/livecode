@@ -23,6 +23,7 @@ struct MCPattern;
 // access to image and transform now through accessor functions
 typedef MCPattern *MCPatternRef;
 
+class MCImage;
 class MCImageRep;
 
 //////////

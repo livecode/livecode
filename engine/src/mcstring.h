@@ -14,6 +14,10 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+
+#include "typedefs.h"
+
+
 extern const uint1 MCisotranslations[256];
 extern const uint1 MCmactranslations[256];
 
@@ -147,6 +151,12 @@ extern MCNameRef MCN_private;
 extern MCNameRef MCN_text;
 //extern MCNameRef MCN_unicode;
 extern MCNameRef MCN_styles;
+extern MCNameRef MCN_styledtext;
+extern MCNameRef MCN_rtftext;
+extern MCNameRef MCN_htmltext;
+extern MCNameRef MCN_png;
+extern MCNameRef MCN_gif;
+extern MCNameRef MCN_jpeg;
 extern MCNameRef MCN_rtf;
 extern MCNameRef MCN_html;
 

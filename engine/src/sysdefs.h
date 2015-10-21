@@ -17,6 +17,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_SYSDEFS__
 #define __MC_SYSDEFS__
 
+
+#include "globdefs.h"
+
+
 //////////////////////////////////////////////////////////////////////
 //
 //  MODE AND FEATURE DEFINITIONS
@@ -1222,8 +1226,8 @@ class MCParameter;
 class MCStack;
 class MCExecContext;
 
-typedef uint4 MCDragAction;
-typedef uint4 MCDragActionSet;
+typedef uint32_t MCDragAction;
+typedef uint32_t MCDragActionSet;
 
 typedef struct _Streamnode Streamnode;
 typedef struct _Linkatts Linkatts;
