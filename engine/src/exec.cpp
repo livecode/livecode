@@ -1661,7 +1661,7 @@ static bool MCPropertyParseDoubleList(MCStringRef p_input, char_t p_delimiter, u
 		{
 			t_old_offset++;
 			t_new_offset++;
-			t_success = t_list . Push(0);
+			t_success = t_list . Push(0.0);
 		}
 		
 		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareExact, t_new_offset))
