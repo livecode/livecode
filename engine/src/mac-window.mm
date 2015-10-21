@@ -469,7 +469,7 @@ static bool s_lock_responder_change = false;
 - (void)windowDidResignKey:(NSNotification *)notification
 {
     if (s_inside_focus_event)
-        m_window -> ProcessDidBecomeKey();
+        m_window -> ProcessDidResignKey();
     else
     {
         s_inside_focus_event = true;
