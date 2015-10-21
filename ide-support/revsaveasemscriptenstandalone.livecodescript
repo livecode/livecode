@@ -65,6 +65,13 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder
 
    local tError
    try
+      ---------- Check deployment entitlement
+      revStandaloneProgress "Checking deployment entitlement..."
+      
+      if not isPermittedDeployment() then
+         throw "license does not permit HTML5 deployment"
+      end if
+      
       ---------- Create a working directory
       local tBuildFolder
       put pOutputFolder into tBuildFolder
@@ -99,9 +106,11 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder
       end repeat
       
       -- Define some paths within the zip archive
-      local tBootPath, tStandalonePath, tBootStackPath, tAuxStackPath
+      local tBootPath, tStandalonePath
+      local tBootStackPath, tAuxStackPath, tStartupStackPath
       local tExtensionsPath
       put "boot" into tBootPath
+      put tBootPath & slash & "__startup.livecode" into tStartupStackPath
       put tBootPath & slash & "standalone" into tStandalonePath
       put tStandalonePath & slash & "__boot.livecode" into tBootStackPath
       put tBootPath & slash & "auxiliary_stackfiles" into tAuxStackPath
@@ -115,14 +124,14 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder
       end if
 
       -- Store auxiliary stacks
-      local tZipAuxPath
-      repeat for each line tStackFile in tAuxStackFiles
+      local tZipAuxPath, tAuxStackFile
+      repeat for each line tAuxStackFile in tAuxStackFiles
          set the itemdelimiter to slash
-         put item -1 of tStackFile into tZipAuxPath
+         put item -1 of tAuxStackFile into tZipAuxPath
          put tAuxStackPath & slash before tZipAuxPath
          
-         logDebug "aux", "Storing" && tStackFile
-         revZipAddUncompressedItemWithFile tBuildZip, tAuxStackPath, tStackFile
+         logDebug "aux", "Storing" && tAuxStackFile
+         revZipAddUncompressedItemWithFile tBuildZip, tAuxStackPath, tAuxStackFile
          if the result is not empty then
             throw "could not store auxiliary stack in standalone archive"
          end if
@@ -131,10 +140,13 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder
       -- Store extensions
       storeExtensions tBuildZip, tExtensions, tExtensionsPath
       
+      -- Deploy and store the startup script
+      storeStartupStack tBuildZip, tStartupStackPath, tBuildFolder, tStackFile
+      
       -- Close zip file
       revZipCloseArchive tBuildZip
       if the result is not empty then
-         throw "could not create standalone archive"
+         throw "could not create standalone archive:" && the result
       end if
       
       ---------- Copy the engine into the build folder
@@ -163,6 +175,10 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder
             "revStandaloneProgressCallback", the long id of me
       
    catch tError
+	if tError is empty then
+		put "an unknown error occurred" into tError
+	end if
+
       -- Cleanup on failure
       if there is a folder pOutputFolder then
          revDeleteFolder pOutputFolder
@@ -248,12 +264,148 @@ end storeExtensionByKind
 -- "the preferred form for modification".  I.e. with all of its source code
 -- and documentation.  Otherwise, just include compiled extension + resources
 private function getExtensionFilesByKind pInstallFolder
-   if revLicenseType() is "community" then
-      return scanFolder(pInstallFolder)
+   local tExtensionModule, tFiles, tFileCount, tResourceFiles, tFilePath
+   
+   if isCommercialDeployment() then
+      put empty into tFiles
+      put 0 into tFileCount
+      
+      -- All resource files
+      put scanFolder(pInstallFolder & slash & "resources") into tResourceFiles
+      -- Make resource file paths relative to module install directory
+      repeat for each element tFilePath in tResourceFiles
+         add 1 to tFileCount
+         put "resources" & slash & tFilePath into tFiles[tFileCount]
+      end repeat
+      
+      -- Compiled module file
+      add 1 to tFileCount
+      put "module.lcm" into tFiles[tFileCount]
+      
    else
-      throw "commercial standalones are not supported"
+      -- Include *every* file in the extension
+      put scanFolder(pInstallFolder) into tFiles
+      
    end if
+   
+   return tFiles
 end getExtensionFilesByKind
+
+----------------------------------------------------------------
+-- Startup stack
+----------------------------------------------------------------
+
+private command storeStartupStack pZip, pStartupPath, pBuildFolder, pStackFile
+   local tTempStack, tTempStackPath, tStartupScript, tDeployInfo
+
+   ---------- Generate the startup stack
+   logDebug "startup", "Generating startup stack"
+
+   put pBuildFolder & slash & "revEmscriptenStandaloneStartup.livecode" into tTempStackPath
+
+   put getStartupScript(pStackFile) into tStartupScript
+
+   create invisible stack "revEmscriptenStandaloneStartup"
+   put it into tTempStack
+   set the script of tTempStack to tStartupScript
+   if the result is not empty then
+      throw "could not generate startup stack:" && the result
+   end if
+
+   save tTempStack as tTempStackPath
+   if the result is not empty then
+      throw "could not save startup stack:" && the result
+   end if
+   close tTempStack
+
+   put tTempStackPath into tDeployInfo["output"]
+   put empty into tDeployInfo["engine"]
+
+   ---------- Perform startup stack deployment
+   logDebug "startup", "Deploying startup stack"
+
+   _internal deploy emscripten tDeployInfo
+   if the result is not empty then
+      throw "could not deploy startup stack:" && the result
+   end if
+
+   ---------- Store startup stack
+   logDebug "startup", "Storing" && tTempStackPath
+   local tStackData
+
+   -- We do this using data so that we can immediately delete the
+   -- temporary stack file.  If used the file, we'd have to keep the
+   -- file around until the zip file is finished.
+
+   open file tTempStackPath for binary read
+   read from file tTempStackPath until end
+   put it into tStackData
+   close file tTempStackPath
+
+   revZipAddUncompressedItemWithData pZip, pStartupPath, "tStackData"
+   if the result is not empty then
+      throw "could not store startup stack in standalone archive:" && the result
+   end if
+
+   ---------- Cleanup
+   delete file tTempStackPath
+
+end storeStartupStack
+
+-- Create the startup script by processing the startup stack template.
+-- Engine-specific and standalone-specific data is substituted into the
+-- template in order 
+private function getStartupScript pStackFile
+   local tTemplateFile, tScript, tStackData
+   local tStackHash, tStackHashString
+   
+   -- Load template
+   put getStartupTemplateFile() into tTemplateFile
+   open file tTemplateFile for "UTF-8" text read
+   if the result is not empty then
+      throw tTemplateFile & ":" && the result
+   end if
+   read from file tTemplateFile until end
+   put it into tScript
+   if the result is not "eof" then
+      throw tTemplateFile & ":" && the result
+   end if
+   close file tTemplateFile
+   
+   -- Trim to the actual script
+   delete line 1 of tScript
+   
+   -- Compute the SHA-1 hash of the first 1 kB of the boot stack
+   open file pStackFile for binary read
+   if the result is not empty then
+      throw pStackFile & ":" && the result
+   end if
+   read from file pStackFile until end
+   put it into tStackData
+   if the result is not "eof" then
+      throw pStackFile & ":" && the result
+   end if
+   close file pStackFile
+   
+   put the sha1Digest of (byte 1 to 1024 of tStackData) into tStackHash
+   put empty into tStackHashString
+   local tByte, tByteString
+   repeat for each byte tByte in tStackHash
+      put baseConvert(byteToNum(tByte), 10, 16) into tByteString
+      switch the number of chars in tByteString
+         case 1
+            put "0" after tStackHashString
+         case 2
+            put tByteString after tStackHashString
+      end switch
+   end repeat
+   
+   -- Make substitutions in the startup script
+   replace "@ENGINE_VERSION@" with the version in tScript
+   replace "@BOOT_HASH@" with tStackHashString in tScript
+   
+   return tScript
+end getStartupScript
 
 ----------------------------------------------------------------
 -- File & path helper functions
@@ -390,6 +542,12 @@ private function getHtmlTemplateFile
    return mapBinPath("standalone-" & revLicenseType() & "-" & the version & ".html")
 end getHtmlTemplateFile
 
+-- Get the filename of the Emscripten standalone startup script-only
+-- stack template.
+private function getStartupTemplateFile
+   return mapResPath("emscripten-startup-template.livecodescript")
+end getStartupTemplateFile
+
 -- Get the directory containing the Emscripten runtime
 private function getRuntimeFolder
    
@@ -426,3 +584,21 @@ end getRepoBinariesFolder
 private function getRepoResourceFolder
    return revEnvironmentRepositoryPath() & slash & "engine" & slash & "rsrc"
 end getRepoResourceFolder
+
+-- Check if the license permits HTML5 deployment
+private function isPermittedDeployment
+   if isCommercialDeployment() then
+      return ("HTML5" is among the items of line 5 of the revLicenseInfo)
+   else
+      return true
+   end if
+end isPermittedDeployment
+
+-- Check if deploying a commercial standalone
+private function isCommercialDeployment
+   if revLicenseType() is "community" then
+      return false
+   else
+      return true
+   end if
+end isCommercialDeployment

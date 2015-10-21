@@ -24,6 +24,7 @@
 			'src/dbmysqlapi.cpp',
 			'src/mysql_connection.cpp',
 			'src/mysql_cursor.cpp',
+			'src/ssl.cpp',
 		],
 		
 		'dbodbc_sources':
@@ -42,6 +43,7 @@
 			'src/dbpostgresqlapi.cpp',
 			'src/postgresql_connection.cpp',
 			'src/postgresql_cursor.cpp',
+			'src/ssl.cpp',
 		],
 		
 		'dbsqlite_sources':
@@ -319,6 +321,7 @@
 			[
 				'../libexternal/libexternal.gyp:libExternal',
 				'../thirdparty/libpq/libpq.gyp:libpq',
+				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl',
 			],
 			
 			'include_dirs':
@@ -364,6 +367,7 @@
 			[
 				'../libexternal/libexternal.gyp:libExternal',
 				'../thirdparty/libpq/libpq.gyp:libpq',
+				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl',
 			],
 			
 			'include_dirs':

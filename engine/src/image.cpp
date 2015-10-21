@@ -1757,7 +1757,7 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
     
 	if (p_remaining >= 1)
 	{
-		t_stat = p_stream . ReadU8(resizequality);
+		t_stat = checkloadstat(p_stream . ReadU8(resizequality));
 		
 		if (t_stat == IO_NORMAL)
 			p_remaining -= 1;
@@ -1766,18 +1766,18 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 	if (p_remaining > 0)
 	{
 		uint4 t_flags, t_length, t_header_length;
-		t_stat = p_stream . ReadTag(t_flags, t_length, t_header_length);
+		t_stat = checkloadstat(p_stream . ReadTag(t_flags, t_length, t_header_length));
         
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . Mark();
+			t_stat = checkloadstat(p_stream . Mark());
 		
 		// MW-2013-09-05: [[ Bug 11127 ]] If we have control colors then read them in
 		//   (first do colors, then pixmapids - if any).
 		if (t_stat == IO_NORMAL && (t_flags & IMAGE_EXTRA_CONTROLCOLORS) != 0)
 		{
 			s_have_control_colors = true;
-			t_stat = p_stream . ReadU16(s_control_color_count);
-			t_stat = p_stream . ReadU16(s_control_color_flags);
+			t_stat = checkloadstat(p_stream . ReadU16(s_control_color_count));
+			t_stat = checkloadstat(p_stream . ReadU16(s_control_color_flags));
 
             if (t_stat == IO_NORMAL)
 			{
@@ -1786,11 +1786,11 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 			}
 
 			for (uint32_t i = 0; t_stat == IO_NORMAL && i < s_control_color_count; i++)
-				t_stat = p_stream . ReadColor(s_control_colors[i]);
+				t_stat = checkloadstat(p_stream . ReadColor(s_control_colors[i]));
 			for (uint32_t i = 0; t_stat == IO_NORMAL && i < s_control_color_count; i++)
 			{
 				// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-				t_stat = p_stream . ReadStringRefNew(s_control_color_names[i], p_version >= 7000);
+				t_stat = checkloadstat(p_stream . ReadStringRefNew(s_control_color_names[i], p_version >= 7000));
 				if (t_stat == IO_NORMAL && MCStringIsEmpty(s_control_color_names[i]))
 				{
 					MCValueRelease(s_control_color_names[i]);
@@ -1798,28 +1798,28 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 				}
 			}
             if (t_stat == IO_NORMAL)
-				t_stat = p_stream . ReadU16(s_control_pixmap_count);
+				t_stat = checkloadstat(p_stream . ReadU16(s_control_pixmap_count));
 			
 			if (t_stat == IO_NORMAL && 
 				!MCMemoryNewArray(s_control_pixmap_count, s_control_pixmapids))
-				t_stat = IO_ERROR;
+				t_stat = checkloadstat(IO_ERROR);
 			for(uint32_t i = 0; t_stat == IO_NORMAL && i < s_control_pixmap_count; i++)
-				t_stat = p_stream . ReadU32(s_control_pixmapids[i] . id);
+				t_stat = checkloadstat(p_stream . ReadU32(s_control_pixmapids[i] . id));
 		}
         
         if (t_stat == IO_NORMAL && (t_flags & IMAGE_EXTRA_CENTERRECT) != 0)
         {
-            t_stat = p_stream . ReadS16(m_center_rect . x);
+            t_stat = checkloadstat(p_stream . ReadS16(m_center_rect . x));
             if (t_stat == IO_NORMAL)
-                t_stat = p_stream . ReadS16(m_center_rect . y);
+                t_stat = checkloadstat(p_stream . ReadS16(m_center_rect . y));
             if (t_stat == IO_NORMAL)
-                t_stat = p_stream . ReadU16(m_center_rect . width);
+                t_stat = checkloadstat(p_stream . ReadU16(m_center_rect . width));
             if (t_stat == IO_NORMAL)
-                t_stat = p_stream . ReadU16(m_center_rect . height);
+                t_stat = checkloadstat(p_stream . ReadU16(m_center_rect . height));
         }
 
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . Skip(t_length);
+			t_stat = checkloadstat(p_stream . Skip(t_length));
 
 		if (t_stat == IO_NORMAL)
 			p_remaining -= t_length + t_header_length;

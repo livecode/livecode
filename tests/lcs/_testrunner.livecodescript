@@ -65,6 +65,7 @@ end getCommandLineInfo
 command TestRunnerMain
    local tInfo
    put getCommandLineInfo() into tInfo
+   logInit
    
    switch tInfo["args"][1]
       case "invoke"
@@ -181,15 +182,59 @@ private command runAllScripts pInfo
    return tAnalysis
 end runAllScripts
 
+-- Output a skipped line in the results for eachcommand in the given test file
+private command runTestSkipAll pInfo, pScriptFile, pReason
+   local tSkipTemplate, tAnalysis
+   put "ok - [[tCommand]] # SKIP" && pReason into tSkipTemplate
+
+   repeat for each element tCommand in runGetTestCommandNames(pScriptFile)
+      runTestProcessOutput pScriptFile, tCommand, merge(tSkipTemplate)
+      put tapCombine(tAnalysis, the result) into tAnalysis
+   end repeat
+end runTestSkipAll
+
 -- Run the tests found in one specific script file
 private command runTestScript pInfo, pScriptFile
-   local tCommand, tAnalysis
+   local tCommand, tAnalysis, tMetadata
+   put runGetTestMetadata(pScriptFile) into tMetadata
+   
+   -- Only run tests that require UI if possible
+   local tCanRunUITests
+   put true into tCanRunUITests
+   repeat for each element tElement in pInfo["self-command"]
+      if tElement is "-ui" then
+         put false into tCanRunUITests
+         exit repeat
+      end if
+   end repeat
+   
+   if tMetadata["ui"] is true and not tCanRunUITests then
+      runTestSkipAll pInfo, pScriptFile, "test requires UI mode"
+      return the result
+   end if
+   
    repeat for each element tCommand in runGetTestCommandNames(pScriptFile)
       runTestCommand pInfo, pScriptFile, tCommand
       put tapCombine(tAnalysis, the result) into tAnalysis
    end repeat
    return tAnalysis
 end runTestScript
+
+private command runTestProcessOutput pScriptfile, pCommand, pOutput
+   -- Create test log
+   local tTestLog
+   put "###" && runGetPrettyTestName(pScriptFile) && pCommand \
+         & return & return into tTestLog
+   put pOutput & return after tTestLog
+   
+   -- Analyse the results and print a summary line
+   local tTapResults
+   put tapAnalyse(tTestLog) into tTapResults
+
+   logSummaryLine tTapResults, (runGetPrettyTestName(pScriptFile) & ":" && pCommand)
+   
+   return tTapResults
+end runTestProcessOutput
 
 -- Run a specific named test command tCommand in a script file
 -- tScriptFile
@@ -216,24 +261,8 @@ private command runTestCommand pInfo, pScriptFile, pCommand
             tTestExitStatus & return after tTestOutput
    end if
    
-   -- Create test log
-   local tTestLog
-   put "###" && runGetPrettyTestName(pScriptFile) && pCommand \
-         & return & return into tTestLog
-   put tTestOutput & return after tTestLog
-   
-   -- Analyse the results and print a summary line
-   local tTapResults, tTotal, tPassed
-   put tapAnalyse(tTestLog) into tTapResults
-   
-   put tTapResults["xpass"] + tTapResults["pass"] + tTapResults["skip"] into tPassed
-   put tapGetTestCount(tTapResults) into tTotal
-   
-   write tapGetWorstResult(tTapResults) & ":" && \
-         runGetPrettyTestName(pScriptfile) & ":" && \
-         pCommand && "[" & tPassed & "/" & tTotal & "]" & return to stdout
-   
-   return tTapResults
+   runTestProcessOutput pScriptFile, pCommand, tTestOutput
+   return the result
 end runTestCommand
 
 -- Get all livecode script files beneath the CWD, apart from
@@ -365,6 +394,116 @@ private command runPrintSummary pAnalysis
    write tSummaryString to stdout
 end runPrintSummary
 
+-- Get all the metadata keys and values in the stack file
+private function runGetTestMetadata pFilename
+   local tScript
+   
+   -- Get the contents of the file
+   open file pFilename for "UTF-8" text read
+   if the result is not empty then
+      throw the result
+   end if
+   
+   read from file pFilename until end
+   put it into tScript
+   
+   close file pFilename
+   
+   -- Scan the file for metadata - 
+   -- Metadata is given in the form ### <key> : <value>
+   
+   local tKey, tValue, tMetadata
+   repeat for each line tLine in tScript
+      -- save some time by only looking at commented out lines
+      if token 1 of tLine is not empty then
+         next repeat
+      end if
+      
+      -- remove whitespace
+      put word 1 to -1 of tLine into tLine
+      
+      if not (tLine begins with "###") then
+         next repeat
+      end if
+      
+      -- remove hashes
+      put char 4 to -1 of tLine into tLine
+      
+      set the itemdelimiter to ":"
+      put word 1 to -1 of (item 1 of tLine) into tKey
+      put word 1 to -1 of (item 2 of tLine) into tValue
+      
+      put tValue into tMetadata[tKey]
+   end repeat
+   
+   return tMetadata
+end runGetTestMetadata
+
+----------------------------------------------------------------
+-- Logging helpers
+----------------------------------------------------------------
+
+local sLogInfo
+
+-- Figure out what the highlighting escape codes are for the terminal
+--
+-- FIXME this really doesn't work properly if LiveCode's stdout
+-- *isn't* a TTY.
+private command logInit
+   -- We can only do colour on Linux and OS X
+   if the platform is not "Linux" and the platform is not "MacOS" then
+      put false into sLogInfo
+   end if
+
+   -- Check if colouring is possible
+   local tTput
+   put shell("tput colors") into tTput
+   if the result is not empty or tTput <= 8 then
+      put false into sLogInfo
+   end if
+
+   -- Get colours
+   put shell("tput sgr0") into sLogInfo["normal"]
+   put shell("tput bold") into sLogInfo["bold"]
+   put shell("tput setaf 1") into sLogInfo["red"]
+   put shell("tput setaf 2") into sLogInfo["green"]
+   put shell("tput setaf 3") into sLogInfo["yellow"]
+   put shell("tput setaf 6") into sLogInfo["cyan"]
+end logInit
+
+private function logHighlight pString
+  if pString is "fail" then
+     return sLogInfo["red"] & sLogInfo["bold"] & pString & sLogInfo["normal"]
+  else if pString is "xfail" or pString is "xpass" then
+     return sLogInfo["yellow"] & pString & sLogInfo["normal"]
+  else if pString is "pass" then
+     return sLogInfo["green"] & pString & sLogInfo["normal"]
+  else if pString is "skip" then
+     return sLogInfo["cyan"] & pString & sLogInfo["normal"]
+  else
+     return pString
+  end if
+end logHighlight
+
+private command logSummaryLine pTapResults, pTestName
+   local tTotal, tPassed, tWorst, tMessage
+
+   put pTapResults["xpass"] + pTapResults["pass"] + pTapResults["skip"] into tPassed
+   put tapGetTestCount(pTapResults) into tTotal
+
+   put tapGetWorstResult(pTapResults) into tWorst
+   put logHighLight(the toUpper of tWorst) into tMessage
+   put ":" after tMessage
+   if the number of chars in tWorst < 5 then
+      put space after tMessage
+   end if
+
+   put space & pTestName after tMessage
+
+   put space & "[" & tPassed & "/" & tTotal & "]" after tMessage
+   write tMessage & return to stdout
+end logSummaryLine
+
 ----------------------------------------------------------------
 -- TAP support
 ----------------------------------------------------------------
@@ -430,19 +569,13 @@ end tapAnalyse
 -- Examine the statistics generated by tapAnalyse() and return a string
 -- describing the test log's worst result
 private function tapGetWorstResult pTapAnalysis
-   if pTapAnalysis["fail"] > 0 then
-      return "FAIL"
-   else if pTapAnalysis["xpass"] > 0 then
-      return "XPASS"
-   else if pTapAnalysis["xfail"] > 0 then
-      return "XFAIL"
-   else if pTapAnalysis["pass"] > 0 then
-      return "PASS"
-   else if pTapAnalysis["skip"] > 0 then
-      return "SKIP"
-   else
-      return "PASS"
-   end if
+   local tResult
+   repeat for each item tResult in "fail,xpass,xfail,pass,skip"
+      if pTapAnalysis[tResult] > 0 then
+         return tResult
+      end if
+   end repeat
+   return "pass"
 end tapGetWorstResult
 
 -- Get the total number of tests from the statistics generated by

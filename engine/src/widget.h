@@ -18,7 +18,6 @@
 #define __MC_WIDGET__
 
 #include "mccontrol.h"
-#include "native-layer.h"
 
 #include "libscript/script.h"
 #include "module-engine.h"
@@ -112,6 +111,8 @@ bool MCChildWidgetSetDisabled(MCWidgetRef widget, bool disabled);
 // through MCWidgetEventManager which modulates them to appropriate calls on
 // the appropriate (nested) MCWidgetRef.
 
+class MCNativeLayer;
+
 class MCWidget: public MCControl
 {
 public:
@@ -169,7 +170,10 @@ public:
     virtual void toolchanged(Tool p_new_tool);
     virtual void visibilitychanged(bool p_visible);
     virtual void layerchanged();
-    
+	
+	bool GetNativeView(void *&r_view);
+	bool SetNativeView(void *p_view);
+	
     virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool flag);
     
     void GetKind(MCExecContext& ctxt, MCNameRef& r_kind);
@@ -190,9 +194,6 @@ public:
     {
         return m_native_layer;
     }
-    
-    // Creates a native layer for this widget
-    MCNativeLayer* createNativeLayer();
     
 protected:
 	static MCPropertyInfo kProperties[];

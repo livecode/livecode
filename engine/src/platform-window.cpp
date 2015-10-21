@@ -65,6 +65,9 @@ MCPlatformWindow::MCPlatformWindow(void)
     m_is_realized = false;
 	
 	m_is_opaque = true;
+    
+    // MERG-2015-10-11: [[ DocumentFilename ]] documentFilename property
+    m_document_filename = MCValueRetain(kMCEmptyString);
 }
 
 MCPlatformWindow::~MCPlatformWindow(void)
@@ -77,6 +80,9 @@ MCPlatformWindow::~MCPlatformWindow(void)
     // SN-2014-06-23: Title updated to StringRef
 	MCValueRelease(m_title);
 	
+    // MERG-2015-10-11: [[ DocumentFilename ]] documentFilename property
+    MCValueRelease(m_document_filename);
+    
 	free(m_attachments);
 }
 
@@ -383,6 +389,12 @@ void MCPlatformWindow::SetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 			m_ignore_mouse_events = *(bool *)p_value;
 			m_changes . ignore_mouse_events_changed = true;
 			break;
+        // MERG-2015-10-11: [[ DocumentFilename ]] Handle document filename
+        case kMCPlatformWindowPropertyDocumentFilename:
+            assert(p_type == kMCPlatformPropertyTypeMCString);
+            MCValueAssign(m_document_filename, *(MCStringRef*)p_value);
+            m_changes . document_filename_changed = true;
+            break;
 		default:
 			assert(false);
 			break;
@@ -454,6 +466,11 @@ void MCPlatformWindow::GetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 		case kMCPlatformWindowPropertyCursor:
 			*(MCPlatformCursorRef *)r_value = m_cursor;
 			break;
+        // MERG-2015-10-11: [[ DocumentFilename ]] Handle document filename
+        case kMCPlatformWindowPropertyDocumentFilename:
+            assert(p_type == kMCPlatformPropertyTypeMCString);
+            *(MCStringRef*)r_value = MCValueRetain(m_document_filename);
+            break;
 		default:
 			assert(false);
 			break;

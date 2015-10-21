@@ -40,15 +40,17 @@
 #include "chunk.h"
 #include "graphicscontext.h"
 
+#include "graphics_util.h"
+
 #include "globals.h"
 #include "context.h"
 
 #include "native-layer-win32.h"
 
 
-MCNativeLayerWin32::MCNativeLayerWin32(MCWidgetRef p_widget) :
+MCNativeLayerWin32::MCNativeLayerWin32(MCWidgetRef p_widget, HWND p_view) :
   m_widget(p_widget),
-  m_hwnd(NULL),
+  m_hwnd(p_view),
   m_cached(NULL)
 {
 
@@ -68,9 +70,7 @@ void MCNativeLayerWin32::OnToolChanged(Tool p_new_tool)
     
     if (p_new_tool == T_BROWSE || p_new_tool == T_HELP)
     {
-        // In run mode. Make visible if requested
-        if (t_widget->getflags() & F_VISIBLE)
-            ShowWindow(m_hwnd, SW_SHOWNOACTIVATE);
+		OnVisibilityChanged(ShouldShowWidget(t_widget));
         t_widget->Redraw();
     }
     else
@@ -108,37 +108,13 @@ void MCNativeLayerWin32::doAttach()
 {
     MCWidget* t_widget = MCWidgetGetHost(m_widget);
     
-    if (m_hwnd == NULL)
-    {
-        // TESTING
-        /*
-        MCRectangle rect = t_widget->getrect();
-        m_hwnd = CreateWindowW
-        (
-         L"BUTTON",
-         L"Native Button",
-         WS_TABSTOP|WS_CHILD|WS_CLIPSIBLINGS|BS_DEFPUSHBUTTON,
-         rect.x,
-         rect.y,
-         rect.width,
-         rect.height,
-         getStackWindow(),
-         NULL,
-         (HINSTANCE)GetWindowLong(getStackWindow(), GWL_HINSTANCE),
-         NULL
-         );
-         */
-    }
-
 	// Set the parent to the stack
 	SetParent(m_hwnd, getStackWindow());
 
 	// Restore the visibility state of the widget (in case it changed due to a
 	// tool change while on another card - we don't get a message then)
-	if ((t_widget->getflags() & F_VISIBLE) && t_widget->isInRunMode())
-		ShowWindow(m_hwnd, SW_SHOWNOACTIVATE);
-	else
-		ShowWindow(m_hwnd, SW_HIDE);
+	OnGeometryChanged(MCRectangleMake(0,0,0,0));
+	OnVisibilityChanged(ShouldShowWidget(t_widget));
 }
 
 void MCNativeLayerWin32::OnDetach()
@@ -303,9 +279,17 @@ HWND MCNativeLayerWin32::getStackWindow()
     return (HWND)t_widget->getstack()->getrealwindow();
 }
 
+bool MCNativeLayerWin32::GetNativeView(void *&r_view)
+{
+	r_view = m_hwnd;
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeLayer* MCWidget::createNativeLayer()
+MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCWidgetRef p_widget, void *p_view)
 {
-	return new MCNativeLayerWin32(getwidget());
+	return new MCNativeLayerWin32(p_widget, (HWND)p_view);
 }
+
+////////////////////////////////////////////////////////////////////////////////

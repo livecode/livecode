@@ -2396,7 +2396,6 @@ MC_DLLEXPORT bool MCStringSplitColumn(MCStringRef string, MCStringRef col_del, M
 //////////
 
 // Proper list versions of string splitting
-MC_DLLEXPORT bool MCStringSplitByDelimiterNative(MCStringRef self, MCStringRef p_elem_del, MCStringOptions p_options, MCProperListRef& r_list);
 MC_DLLEXPORT bool MCStringSplitByDelimiter(MCStringRef self, MCStringRef p_elem_del, MCStringOptions p_options, MCProperListRef& r_list);
 
 //////////
@@ -2446,6 +2445,9 @@ MC_DLLEXPORT bool MCDataConvertStringToData(MCStringRef string, MCDataRef& r_dat
 MC_DLLEXPORT bool MCDataIsEmpty(MCDataRef p_data);
 
 MC_DLLEXPORT uindex_t MCDataGetLength(MCDataRef p_data);
+/* Return a pointer to the data string's underlying byte array.  Note
+ * that if p_data is empty (i.e. has length zero) then
+ * MCDataGetBytePtr() may return null. */
 MC_DLLEXPORT const byte_t *MCDataGetBytePtr(MCDataRef p_data);
 
 MC_DLLEXPORT byte_t MCDataGetByteAtIndex(MCDataRef p_data, uindex_t p_index);

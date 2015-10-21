@@ -1,0 +1,589 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+This widget displays web content within a native web browser view.
+
+Name: browserUrl
+Type: property
+
+Syntax:
+set the browserUrl of <widget> to <pUrl>
+get the browserUrl of <widget>
+
+Summary: The url displayed by the browser.
+
+Parameters:
+pUrl(string): A string specifying a URL.
+
+Example:
+	// Navigate to livecode.com by setting the browserUrl property, keeping a copy of the
+	//    previous URL
+	local tOldUrl
+	put the browserUrl of widget "myBrowser" into tOldUrl
+	set the browserUrl of widget "myBrowser" to "http://livecode.com"
+
+Description:
+The <browserUrl> is the URL of the content be displayed in the browser.
+
+
+Name: browserHtmltext
+Type: property
+
+Syntax:
+set the browserHtmltext of <widget> to <pHtmlText>
+get the browserHtmltext of <widget>
+
+Summary: The HTML text of the content displayed by the browser.
+
+Parameters:
+pHtmlText(string): A string containing HTML data to be displayed by the browser.
+
+Example:
+	// Render a web page in the browser by specifying custom HTML content
+	local tHTML
+	put "<html><head><title>My Page Title</title></head><body>My Page Contents</body></html>" into tHTML
+	set the browserHtmltext of widget "myBrowser" to tHTML
+
+Description:
+The <browserHtmltext> is the HTML representation of the content displayed in the browser.
+
+
+Name: browserScrollbars
+Type: property
+
+Syntax:
+set the browserScrollbars of <widget> to <pEnabled>
+get the browserScrollbars of <widget>
+
+Summary: Controls whether scrollbars are visible and enabled within the browser.
+
+Parameters:
+pEnabled(boolean): True or false.
+
+Description:
+Controls whether scrollbars are visible and enabled within the browser.
+
+
+Name: browserUseragent
+Type: property
+
+Syntax:
+set the browserUseragent of <widget> to <pUserAgent>
+get the browserUseragent of <widget>
+
+Summary: The identifier sent by the browser when fetching content from remote URLs.
+
+Parameters:
+pUserAgent(string): A string conforming to the http specifications at http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.43
+
+Example:
+	// Set custom User-Agent header. The remote web server may be configured to deliver custom content for browsers using this User-Agent.
+	set the browserUseragent of widget "myBrowser" to "myAppEmbeddedBrowser"
+	launch url "http://myexampleserver.com/content.html" in widget "myBrowser"
+
+Description:
+The <browserUseragent> is the identifier sent by the browser when fetching content from remote URLs.
+
+
+Name: browserJavascripthandlers
+Type: property
+
+Syntax:
+set the browserJavascripthandlers of <widget> to <pHanderList>
+get the browserJavascripthandlers of <widget>
+
+Summary: A list of LiveCode handlers that are made available to JavaScript calls within the browser.
+
+Parameters:
+pHandlerList(string): A return-separated list of handler names.
+
+Example:
+	// Define a handler to respond to javascript calls.
+	on myJSHandler pMessage, pValue
+		// Do appropriate actions here.
+		...
+	end myJSHandler
+	
+	...
+	
+	// Set up the browser javascript handler list
+	set the browserJavascripthandlers to "myJSHandler" & return & "myOtherJSHandler"
+
+	...
+	
+	// Calling the handler from JavaScript within the browser:
+	liveCode.myJSHandler("myMessage", 12345);
+	
+Description:
+The <browserJavascripthandlers> is a list of LiveCode handlers that are made available to JavaScript calls within the browser. The handlers will appear as methods attached to a global "liveCode" object. You can call these methods as you would any other JavaScript function and pass whatever parameters you require.
+
+
+
+Name: browserDocumentLoadBegin
+Type: message
+Syntax: browserDocumentLoadBegin pUrl
+
+Summary: Sent when a document begins loading in the browser.
+
+Parameters:
+pUrl(string): The URL of the loading document.
+
+Description:
+The browserDocumentLoadBegin message is sent to the widget's script object when a new document begins to load in the browser. This will happen whenever the browser navigates to a new page. The <pUrl> parameter contains the URL of the loading document.
+
+
+Name: browserDocumentLoadComplete
+Type: message
+Syntax: browserDocumentLoadComplete pUrl
+
+Summary: Sent when a document has completed loading in the browser.
+
+Parameters:
+pUrl(string): The URL of the loaded document.
+
+Description:
+The browserDocumentLoadComplete message is sent to the widget's script object when a new document has completed loading in the browser. The <pUrl> parameter contains the URL of the loaded document.
+
+
+Name: browserDocumentLoadFailed
+Type: message
+Syntax: browserDocumentLoadFailed pUrl, pError
+
+Summary: Sent when a document has failed to load in the browser.
+
+Parameters:
+pUrl(string): The URL of the document.
+pError(string): An error message describing the reason for the failure.
+
+Description:
+The browserDocumentLoadFailed message is sent to the widget's script object when a new document has failed to load in the browser. The <pUrl> parameter contains the URL of the document, and the <pError> parameter gives the reason for the failure.
+
+
+Name: browserFrameDocumentLoadBegin
+Type: message
+Syntax: browserFrameDocumentLoadBegin pUrl
+
+Summary: Sent when a document begins loading in a frame of the browser.
+
+Parameters:
+pUrl(string): The URL of the loading document.
+
+Description:
+The browserFrameDocumentLoadBegin message is sent to the widget's script object when a new document begins to load in a frame of the browser. This will happen whenever the browser navigates to a new page with multiple frames. The <pUrl> parameter contains the URL of the loading document.
+
+
+Name: browserFrameDocumentLoadComplete
+Type: message
+Syntax: browserFrameDocumentLoadComplete pUrl
+
+Summary: Sent when a document has completed loading in a frame of the browser.
+
+Parameters:
+pUrl(string): The URL of the loaded document.
+
+Description:
+The browserFrameDocumentLoadComplete message is sent to the widget's script object when a new document has completed loading in a frame of the browser. The <pUrl> parameter contains the URL of the loaded document.
+
+
+Name: browserFrameDocumentLoadFailed
+Type: message
+Syntax: browserFrameDocumentLoadFailed pUrl, pError
+
+Summary: Sent when a document has failed to load in a frame of the browser.
+
+Parameters:
+pUrl(string): The URL of the document.
+pError(string): An error message describing the reason for the failure.
+
+Description:
+The browserFrameDocumentLoadFailed message is sent to the widget's script object when a new document has failed to load in a frame of the browser. The <pUrl> parameter contains the URL of the document, and the <pError> parameter gives the reason for the failure.
+
+
+Name: browserNavigateBegin
+Type: message
+Syntax: browserNavigateBegin pUrl
+
+Summary: Sent when the browser begins navigation to a new page.
+
+Parameters:
+pUrl(string): The URL of the new page.
+
+Description:
+The browserNavigateBegin message is sent to the widget's script object when the browser begins navigation to a new page. This can be triggered by launching a url in the browser, or clicking a link within the browser. The <pUrl> parameter contains the URL of the new page.
+
+
+Name: browserNavigateComplete
+Type: message
+Syntax: browserNavigateComplete pUrl
+
+Summary: Sent when the browser successfully navigates to a new page.
+
+Parameters:
+pUrl(string): The URL of the new page.
+
+Description:
+The browserNavigateComplete message is sent to the widget's script object when the browser successfully navigates to a new page. The <pUrl> parameter contains the URL of the new page.
+
+
+Name: browserNavigateFailed
+Type: message
+Syntax: browserNavigateFailed pUrl, pError
+
+Summary: Sent when the browser has failed to navigate to a new page.
+
+Parameters:
+pUrl(string): The URL of the document.
+pError(string): An error message describing the reason for the failure.
+
+Description:
+The browserNavigateFailed message is sent to the widget's script object when the browser has failed to navigate to a new page. The <pUrl> parameter contains the URL of the new page, and the <pError> parameter gives the reason for the failure.
+*/
+
+-- declaring extension as widget, followed by identifier
+widget com.livecode.extensions.livecode.browser
+--
+
+-- dependancy declarations
+use com.livecode.foreign
+use com.livecode.widget
+use com.livecode.engine
+use com.livecode.extensions.libbrowser
+--
+
+-- metadata
+metadata title is "Browser"
+metadata author is "LiveCode"
+metadata version is "1.0.0"
+--
+
+-- property declarations
+property browserUrl get getUrl set setUrl
+metadata browserUrl.editor is "com.livecode.pi.text"
+
+property browserHtmltext get getHtmlText set setHtmlText
+
+property browserScrollbars get getScrollbars set setScrollbars
+metadata browserScrollbars.editor is "com.livecode.pi.boolean"
+
+property browserUseragent get getUserAgent set setUserAgent
+metadata browserUseragent.editor is "com.livecode.pi.text"
+
+property browserJavascripthandlers get getJavaScriptHandlers set setJavaScriptHandlers
+metadata browserJavascripthandlers.editor is "com.livecode.pi.text"
+
+--------------------------------------------------------------------------------
+
+foreign handler MCHandlerGetFunctionPtr(in pHandler as any, out rFuncPtr as Pointer) returns CBool binds to "<builtin>"
+
+--------------------------------------------------------------------------------
+
+variable mBrowser as optional MCBrowserRef
+variable mBrowserType as String
+variable mProperties as optional Array
+
+variable mContentSource as String
+
+--
+
+variable mScriptObject as ScriptObject
+
+--------------------------------------------------------------------------------
+
+constant kPersistentProps is ["scrollbars", "allowNewWindows", "enableContextMenu", "userAgent", "javaScriptHandlers"]
+
+--------------------------------------------------------------------------------
+
+public handler OnLoad(in pProperties as Array)
+	loadProperties(pProperties)
+end handler
+
+public handler OnSave(out rProperties as Array)
+	if mBrowser is not nothing then
+		put saveProperties() into mProperties
+	end if
+	put mProperties into rProperties
+end handler
+
+----------
+
+-- called when the widget is created
+public handler OnCreate()
+	libbrowserInit()
+
+	put the empty string into mBrowserType
+	put the empty array into mProperties
+	put the empty string into mContentSource
+end handler
+
+--
+
+public handler OnOpen()
+	variable tParent as Pointer
+	
+	// put my native window into tParent
+	MCWidgetGetMyStackNativeView(tParent)
+		
+	variable tFactory as MCBrowserFactoryRef
+	if not MCBrowserFactoryGet(mBrowserType, tFactory) then
+		throw "error getting browser factory for type: " & mBrowserType
+	end if
+	
+	variable tDisplay as Pointer
+	MCWidgetGetMyStackNativeDisplay(tDisplay)
+	
+	if not MCBrowserFactoryCreateBrowser(tFactory, tDisplay, tParent, mBrowser) then
+		throw "error creating browser"
+	end if
+	
+	variable tBrowserView as Pointer
+	put MCBrowserGetNativeLayer(mBrowser) into tBrowserView
+	
+	//set my native layer to tBrowserView
+	MCWidgetSetMyNativeLayer(tBrowserView)
+	
+	MCBrowserSetRequestHandler(mBrowser, OnBrowserRequestCallback, nothing)
+	MCBrowserSetJavaScriptHandler(mBrowser, OnJavaScriptCallback, nothing)
+
+	// Keep a reference to this widget's script object so we can post to it from
+	//   the callbacks (which don't have a target widget when called).
+	put my script object into mScriptObject
+	
+	loadProperties(mProperties)
+end handler
+
+--
+
+public handler OnClose()
+	// Save browser properties
+	put saveProperties() into mProperties
+	
+	//set my native layer to nothing
+	MCWidgetSetMyNativeLayer(nothing)
+	
+	MCBrowserRelease(mBrowser)
+	put nothing into mBrowser
+end handler
+
+----------
+
+private handler Capitalize(in pString as String) returns String
+	if pString is empty then
+		return the empty string
+	end if
+	
+	put (the upper of char 1 of pString) into char 1 of pString
+	return pString
+end handler
+
+/* WORKAROUND - Need to retain foreign types in handler as conversion to those in the foreign handler type signature not yet implemented */
+//private handler OnBrowserRequestCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pType as MCBrowserRequestType, in pState as MCBrowserRequestState, in pFrame as Boolean, in pUrl as String, in pError as optional String) returns nothing
+private handler OnBrowserRequestCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pType as MCBrowserRequestType, in pState as MCBrowserRequestState, in pFrame as CBool, in pUrl as ZStringUTF8, in pError as optional ZStringUTF8) returns nothing
+	variable tType as String
+	put element (pType + 1) of kMCBrowserRequestTypeMap into tType
+	
+	variable tState as String
+	put element (pState + 1) of kMCBrowserRequestStateMap into tState
+	
+	if pState is kMCBrowserRequestStateFailed then
+		log "Failed: %@" with [pError]
+	end if
+	
+	/* Dispatch browser message */
+	variable tMessage as String
+	if pFrame then
+		put "browserFrame" & Capitalize(tType) & Capitalize(tState) into tMessage
+	else
+		put "browser" & Capitalize(tType) & Capitalize(tState) into tMessage
+	end if
+	
+	variable tArgs as List
+	if pState is kMCBrowserRequestStateFailed then
+		put [pUrl, pError] into tArgs
+	else
+		put [pUrl] into tArgs
+	end if
+	
+	post tMessage to mScriptObject with tArgs
+end handler
+
+/* WORKAROUND - Need to retain foreign types in handler as conversion to those in the foreign handler type signature is not yet implemented */
+//private handler OnJavaScriptCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pHandler as String, in pParams as MCBrowserListRef) returns nothing
+private handler OnJavaScriptCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pHandler as ZStringUTF8, in pParams as MCBrowserListRef) returns nothing
+	variable tList
+	if not browserListToLCBList(pParams, tList) then
+		throw "error converting javascript callback parameters"
+	end if
+	post pHandler to mScriptObject with tList
+end handler
+
+----------
+
+private handler getProperty(in pProperty as String) returns any
+	if mBrowser is nothing then
+		if pProperty is among the keys of mProperties then
+			return mProperties[pProperty]
+		else
+			throw "can't access property: " & pProperty
+		end if
+	else
+		return browserGetProperty(mBrowser, pProperty)
+	end if
+end handler
+
+private handler setProperty(in pProperty as String, in pValue as any)
+	if mBrowser is nothing then
+		put pValue into mProperties[pProperty]
+	else
+		/* UNCHECKED */ browserSetProperty(mBrowser, pProperty, pValue)
+	end if
+end handler
+
+--
+
+private handler getUrl() returns String
+	return getProperty("url")
+end handler
+
+private handler setUrl(in pUrl as String)
+	put "url" into mContentSource
+	if mBrowser is nothing then
+		put pUrl into mProperties["url"]
+	else
+		MCBrowserGoToURL(mBrowser, pUrl)
+	end if
+end handler
+
+--
+
+private handler getHtmlText() returns String
+	return getProperty("htmlText")
+end handler
+
+private handler setHtmlText(in pHtmlText as String)
+	put "htmlText" into mContentSource
+	setProperty("htmlText", pHtmlText)
+end handler
+
+--
+
+private handler getUserAgent() returns String
+	return getProperty("userAgent")
+end handler
+
+private handler setUserAgent(in pUserAgent as String)
+	setProperty("userAgent", pUserAgent)
+end handler
+
+--
+
+private handler getJavaScriptHandlers() returns String
+	return getProperty("javaScriptHandlers")
+end handler
+
+private handler setJavaScriptHandlers(in pJavaScriptHandlers as String)
+	setProperty("javaScriptHandlers", pJavaScriptHandlers)
+end handler
+
+--
+
+private handler getScrollbars() returns Boolean
+	return getProperty("scrollbars")
+end handler
+
+private handler setScrollbars(in pScrollbars as Boolean)
+	setProperty("scrollbars", pScrollbars)
+end handler
+
+----------
+
+private handler loadProperties(in pProperties as Array)
+	variable tKey
+	repeat for each element tKey in kPersistentProps
+		if tKey is among the keys of pProperties then
+			setProperty(tKey, pProperties[tKey])
+		end if
+	end repeat
+	if "url" is among the keys of pProperties then
+		setUrl(pProperties["url"])
+	else if "htmlText" is among the keys of pProperties then
+		setHtmlText(pProperties["htmltext"])
+	end if
+end handler
+
+private handler saveProperties() returns Array
+	variable tProps
+	put the empty array into tProps
+	
+	variable tKey
+	repeat for each element tKey in kPersistentProps
+		put getProperty(tKey) into tProps[tKey]
+	end repeat
+	
+	if mContentSource is not empty then
+		put getProperty(mContentSource) into tProps[mContentSource]
+	end if
+	
+	return tProps
+end handler
+
+----------
+
+public handler OnLaunchUrl(in pUrl as String)
+	if mBrowser is not nothing then
+		if not MCBrowserGoToURL(mBrowser, pUrl) then
+			throw "error launching url " & pUrl
+		end if
+	end if
+end handler
+
+public handler OnGoBack()
+	if mBrowser is not nothing then
+		if not MCBrowserGoBack(mBrowser) then
+			throw "error going back"
+		end if
+	end if
+end handler
+
+public handler OnGoForward()
+	if mBrowser is not nothing then
+		if not MCBrowserGoForward(mBrowser) then
+			throw "error going forward"
+		end if
+	end if
+end handler
+
+public handler OnDo(in pScript as String)
+	browserEvaluateJavaScript(pScript)
+end handler
+
+private handler browserEvaluateJavaScript(in pScript as String) returns String
+	if mBrowser is not nothing then
+		variable tResult as String
+		if not MCBrowserEvaluateJavaScript(mBrowser, pScript, tResult) then
+			throw "error evaluating javascript"
+		end if
+		
+		return tResult
+	end if
+	
+	return the empty string
+end handler
+
+----------
+
+end widget

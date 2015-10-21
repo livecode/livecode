@@ -8,7 +8,7 @@ TEST_DIR ?= $(top_srcdir)/_tests/lcb
 guess_linux_arch_script := \
 	case `uname -p` in \
 	    x86_64) echo x86_64 ;; \
-	    x86|i*85) echo x86 ;; \
+	    x86|i*86) echo x86 ;; \
 	esac
 guess_linux_arch := $(shell $(guess_linux_arch_script))
 
@@ -19,10 +19,19 @@ guess_platform_script := \
 	esac
 guess_platform := $(shell $(guess_platform_script))
 
+# When running on headless Linux, run tests in -ui mode.
+guess_flags_script := \
+	if echo $(guess_platform) | grep "^linux" >/dev/null 2>&1 && \
+	        ! xset -q >/dev/null 2>&1 ; then \
+	    echo "-ui"; \
+	fi
+guess_flags := $(shell $(guess_flags_script))
+
 bin_dir ?= $(top_srcdir)/$(guess_platform)-bin
 
-ENGINE ?= $(bin_dir)/standalone-community
-ENGINE_FLAGS ?= -ui
+ENGINE ?= $(if $(filter mac,$(guess_platform)),$(bin_dir)/Standalone-Community.app/Contents/MacOS/Standalone-Community,$(bin_dir)/standalone-community)
+
+ENGINE_FLAGS ?= $(guess_flags)
 
 ################################################################
 
@@ -42,4 +51,4 @@ TEST_RUNNER_SCRIPT = _testrunner.livecodescript
 
 livecodescript-check: $(ENGINE)
 	@rm -f $(TEST_LOG)
-	@$(ENGINE) $(ENGINE_FLAGS) $(TEST_RUNNER_SCRIPT) run
+	$(ENGINE) $(ENGINE_FLAGS) $(TEST_RUNNER_SCRIPT) run
