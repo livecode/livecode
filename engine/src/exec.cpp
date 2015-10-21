@@ -1551,7 +1551,7 @@ static bool MCPropertyFormatPointList(MCPoint *p_list, uindex_t p_count, char_t 
 	return false;
 }
 
-static bool MCPropertyParseUIntList(MCStringRef p_input, char_t p_delimiter, uindex_t& r_count, uinteger_t*& r_list)
+static bool MCPropertyParseLooseUIntList(MCStringRef p_input, char_t p_delimiter, uindex_t& r_count, uinteger_t*& r_list)
 {
     uindex_t t_length;
 	t_length = MCStringGetLength(p_input);
@@ -1609,7 +1609,7 @@ static bool MCPropertyParseUIntList(MCStringRef p_input, char_t p_delimiter, uin
 	return t_success;
 }
 
-static bool MCPropertyParseDoubleList(MCStringRef p_input, char_t p_delimiter, uindex_t& r_count, double*& r_list)
+static bool MCPropertyParseLooseDoubleList(MCStringRef p_input, char_t p_delimiter, uindex_t& r_count, double*& r_list)
 {
     uindex_t t_length;
 	t_length = MCStringGetLength(p_input);
@@ -3039,7 +3039,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             t_delimiter = prop -> type == kMCPropertyTypeLinesOfLooseUInt ? '\n' : ',';
             
             MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_input));
-            if (!MCPropertyParseUIntList(*t_input, t_delimiter, t_count, t_value))
+            if (!MCPropertyParseLooseUIntList(*t_input, t_delimiter, t_count, t_value))
                 ctxt . LegacyThrow(EE_PROPERTY_NAN);
             
             if (!ctxt . HasError())
@@ -3063,7 +3063,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             t_delimiter = prop -> type == kMCPropertyTypeLinesOfLooseDouble ? '\n' : ',';
             
             MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_input));
-            if (!MCPropertyParseDoubleList(*t_input, t_delimiter, t_count, t_value))
+            if (!MCPropertyParseLooseDoubleList(*t_input, t_delimiter, t_count, t_value))
                 ctxt . LegacyThrow(EE_PROPERTY_NAN);
             
             if (!ctxt . HasError())
