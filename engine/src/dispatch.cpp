@@ -1414,6 +1414,7 @@ void MCDispatch::wmdrag(Window w)
 	if (!MCModeMakeLocalWindows())
 		return;
 
+    // Don't re-enter the drag-and-drop modal loop
 	if (isdragsource())
 		return;
 
@@ -1422,16 +1423,13 @@ void MCDispatch::wmdrag(Window w)
 	if (target != NULL)
 		target->mdrag();
 
-	MCPasteboard *t_pasteboard;
-	t_pasteboard = MCdragdata -> GetSource();
-
-	// OK-2009-03-13: [[Bug 7776]] - Check for null MCdragtargetptr to hopefully fix crash.
-	if (t_pasteboard != NULL && MCdragtargetptr != NULL)
+	// Did an object indicate that it is draggable (by setting itself as the
+    // drag object) and by putting some data on the drag board?
+	if (!MCdragboard->IsEmpty() && MCdragtargetptr != NULL)
 	{
 		m_drag_source = true;
 		m_drag_end_sent = false;
 
-		// MW-2009-02-02: [[ Improved image search ]]
 		// Search for the appropriate image object using the standard method - note
 		// here we search relative to the target of the dragStart message.
 		MCImage *t_image;
@@ -1454,10 +1452,20 @@ void MCDispatch::wmdrag(Window w)
 		MCdragtargetptr->getstack()->resetcursor(True);
 		MCdragtargetptr -> getstack() -> munfocus();
 		
-		MCdragaction = MCscreen -> dodragdrop(w, t_pasteboard, MCallowabledragactions, t_image, t_image != NULL ? &MCdragimageoffset : NULL);
+        // Ensure all of the data placed onto the drag board has been passed to
+        // the OS' drag board.
+        MCdragboard->PushUpdates(true);
+        
+        // Begin the drag-drop modal loop
+		MCdragaction = MCscreen -> dodragdrop(w, MCallowabledragactions, t_image, t_image != NULL ? &MCdragimageoffset : NULL);
 
+        // Perform the drop operation.
 		dodrop(true);
-		MCdragdata -> ResetSource();
+        
+        // Clear the drag board as its contents are no longer required. A manual
+        // push is required as the drag board doesn't update automatically.
+        MCdragboard->Clear();
+        MCdragboard->PushUpdates(true);
 
 		MCdragsource = NULL;
 		MCdragdest = NULL;
@@ -1467,7 +1475,10 @@ void MCDispatch::wmdrag(Window w)
 	}
 	else
 	{
-		MCdragdata -> ResetSource();
+        // Ensure that anything that got added to the drag board has been
+        // removed (this might happen, for example, if a script encountered
+        // an error after placing some of the drag data).
+        MCdragboard->Clear();
 		MCdragsource = NULL;
 		MCdragdest = NULL;
 		MCdropfield = NULL;
@@ -1484,12 +1495,14 @@ void MCDispatch::wmdown_stack(MCStack *target, uint2 which)
 	{
 		if (!isdragsource())
 		{
-			MCallowabledragactions = DRAG_ACTION_COPY;
+            // We are not currently a source for a drag-and-drop operation so
+            // reset all drag settings in case this is the start of one.
+            MCallowabledragactions = DRAG_ACTION_COPY;
 			MCdragaction = DRAG_ACTION_NONE;
 			MCdragimageid = 0;
 			MCdragimageoffset . x = 0;
 			MCdragimageoffset . y = 0;
-			MCdragdata -> ResetSource();
+            MCdragboard->Clear();
 		}
 		
 		if (target != NULL)
@@ -1551,17 +1564,18 @@ void MCDispatch::kfocusset(Window w)
 		target->kfocusset(NULL);
 }
 
-void MCDispatch::wmdragenter(Window w, MCPasteboard *p_data)
+void MCDispatch::wmdragenter(Window w)
 {
-	MCStack *target = findstackd(w);
+    // Find the stack that is being dragged over
+    MCStack *target = findstackd(w);
 	
+    // LiveCode is now the drop target for this drag-and-drop operation
 	m_drag_target = true;
 
-	if (m_drag_source)
-		MCdragdata -> SetTarget(MCdragdata -> GetSource());
-	else
-		MCdragdata -> SetTarget(p_data);
+    // Update the contents of the drag board
+    MCdragboard->PullUpdates();
 
+    // Change the mouse focus to the stack that has had the drag enter it
 	if (MCmousestackptr != NULL && target != MCmousestackptr)
 		MCmousestackptr -> munfocus();
 
@@ -1592,13 +1606,17 @@ MCDragAction MCDispatch::wmdragmove(Window w, int2 x, int2 y)
 
 void MCDispatch::wmdragleave(Window w)
 {
-	MCStack *target = findstackd(w);
+    // No stacks have mouse focus now
+    MCStack *target = findstackd(w);
 	if (target != NULL && target == MCmousestackptr)
 	{
 		MCmousestackptr -> munfocus();
 		MCmousestackptr = NULL;
 	}
-	MCdragdata -> ResetTarget();
+    
+    // We are no longer the drop target and no longer care about the drag data.
+    MCdragboard->Unlock();
+    MCdragboard->ReleaseData();
 	m_drag_target = false;
 }
 
@@ -1609,11 +1627,13 @@ MCDragAction MCDispatch::wmdragdrop(Window w)
 	uint32_t t_drag_action;
 	t_drag_action = MCdragaction;
 	
+    // If a drag action was selected, do it.
 	if (t_drag_action != DRAG_ACTION_NONE)
 		dodrop(false);
 
+    // The drag operation has ended. Remove the drag board contents.
 	MCmousestackptr = NULL;
-	MCdragdata -> ResetTarget();
+    MCdragboard->Clear();
 	m_drag_target = false;
 
 	return t_drag_action;
@@ -2102,14 +2122,14 @@ bool MCDispatch::loadexternal(MCStringRef p_external)
 //
 bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 {
-	r_objptr = NULL;
+    // We haven't created a new object as the result of this paste (yet...)
+    r_objptr = NULL;
 
 	if (MCactivefield != NULL)
 	{
-		MCParagraph *t_paragraphs;
-		t_paragraphs = MCclipboarddata -> FetchParagraphs(MCactivefield);
-
-		//
+        // There is an active field so paste the clipboard into it.
+        MCParagraph *t_paragraphs;
+        t_paragraphs = MCclipboard->CopyAsParagraphs(MCactivefield);
 
 		if (t_paragraphs != NULL)
 		{
@@ -2131,10 +2151,12 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 		}
 	}
 	
-	if (MCactiveimage != NULL && MCclipboarddata -> HasImage())
+	if (MCactiveimage != NULL && MCclipboard->HasImage())
 	{
-		MCAutoValueRef t_data;
-		if (MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE, &t_data))
+        // There is a selected image object and there is an image on the
+        // clipboard so paste the image into it.
+        MCAutoDataRef t_data;
+		if (MCclipboard->CopyAsImage(&t_data))
         {
             MCExecContext ctxt(nil, nil, nil);
 
@@ -2142,7 +2164,7 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 			t_image = new MCImage;
 			t_image -> open();
 			t_image -> openimage();
-			t_image -> SetText(ctxt, (MCDataRef)*t_data);
+			t_image -> SetText(ctxt, *t_data);
 			MCactiveimage -> pasteimage(t_image);
 			t_image -> closeimage();
 			t_image -> close();
@@ -2159,30 +2181,36 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 		MCObject *t_objects;
 		t_objects = NULL;
 
-		if (!MCclipboarddata -> Lock())
+        // Attempt to lock the clipboard so we have a consistent view while we
+        // check for various pasteable data formats.
+		if (!MCclipboard->Lock())
 			return false;
-		if (MCclipboarddata -> HasObjects())
+        
+        // Does the clipboard contain LiveCode objects?
+		if (MCclipboard->HasLiveCodeObjects())
 		{
-			MCAutoValueRef t_data;
-			if (MCclipboarddata -> Fetch(TRANSFER_TYPE_OBJECTS, &t_data))
-				t_objects = MCObject::unpickle((MCDataRef)*t_data, MCdefaultstackptr);
+			MCAutoDataRef t_data;
+			if (MCclipboard->CopyAsLiveCodeObjects(&t_data))
+				t_objects = MCObject::unpickle(*t_data, MCdefaultstackptr);
 		}
-		else if (MCclipboarddata -> HasImage())
+        // What about image data (limited to the formats LiveCode can understand
+        // natively)?
+		else if (MCclipboard->HasImage())
 		{
-			MCAutoValueRef t_data;
-			if (MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE, &t_data))
+			MCAutoDataRef t_data;
+			if (MCclipboard->CopyAsImage(&t_data))
             {
                 MCExecContext ctxt(nil, nil, nil);
 				
 				t_objects = new MCImage(*MCtemplateimage);
 				t_objects -> open();
-				static_cast<MCImage *>(t_objects) -> SetText(ctxt, (MCDataRef)*t_data);
+				static_cast<MCImage *>(t_objects) -> SetText(ctxt, *t_data);
 				t_objects -> close();
 			}
 		}
-		MCclipboarddata -> Unlock();
-
-		//
+        
+        // Let the clipboard update automatically again.
+        MCclipboard->Unlock();
 
 		if (t_objects != NULL)
 		{
@@ -2273,9 +2301,11 @@ void MCDispatch::dodrop(bool p_source)
 	bool t_auto_dest;
 	t_auto_dest = MCdragdest != NULL && MCdragdest -> gettype() == CT_FIELD && MCdragdest -> getstate(CS_DRAG_TEXT);
 
+    // Is the engine handling this drag internally AND the same field is both
+    // the source and destination for the drag?
 	if (t_auto_source && t_auto_dest && MCdragsource == MCdragdest)
 	{
-		// Source and target is the same field
+		// Source and target are the same field
 		MCField *t_field;
 		t_field = static_cast<MCField *>(MCdragsource);
 
@@ -2293,10 +2323,11 @@ void MCDispatch::dodrop(bool p_source)
 			return;
 		}
 
+        // Give the script the opportunity to intercept the drop
 		if (t_field -> message(MCM_drag_drop) != ES_NORMAL)
 		{
 			MCParagraph *t_paragraphs;
-			t_paragraphs = MCdragdata -> FetchParagraphs(MCdropfield);
+            t_paragraphs = MCdragboard->CopyAsParagraphs(MCdropfield);
 
 			// MW-2012-02-16: [[ Bug ]] Bracket any actions that result in
 			//   textChanged message by a lock screen pair.
@@ -2358,7 +2389,12 @@ void MCDispatch::dodrop(bool p_source)
         }
     }
 
-	if (t_auto_dest && t_auto_drop && MCdragdata != NULL && MCdropfield != NULL)
+    // Is the engine handling this drag-and-drop operation internally AND both
+    // the source and target are fields?
+    //
+    // There is a case above for if they are the same field so getting here
+    // implies that the source and destination are different fields.
+	if (t_auto_dest && t_auto_drop && MCdragboard != NULL && MCdropfield != NULL)
 	{
 		// MW-2012-02-16: [[ Bug ]] Bracket any actions that result in
 		//   textChanged message by a lock screen pair.
@@ -2367,8 +2403,9 @@ void MCDispatch::dodrop(bool p_source)
 		// Process an automatic drop action
 		MCdropfield -> seltext(t_start_index, t_start_index, True);
 
+        // Convert the clipboard contents to paragraphs
 		MCParagraph *t_paragraphs;
-		t_paragraphs = MCdragdata -> FetchParagraphs(MCdropfield);
+        t_paragraphs = MCdragboard->CopyAsParagraphs(MCdropfield);
 		MCdropfield -> pastetext(t_paragraphs, true);
 
 		Ustruct *us = MCundos->getstate();

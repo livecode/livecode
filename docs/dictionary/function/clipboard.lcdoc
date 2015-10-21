@@ -34,6 +34,6 @@ If the clipboard has nothing in it, or the contents of the clipboard is a type o
 Changes:
 The ability to sense image data on the clipboard was added in version 2.0.
 
-References: clipboardData (property), object (object), string (keyword), command (glossary), return (glossary), property (glossary), clipboard (function), copy (command), cut (command), paste (command), function (control_st)
+References: clipboardData (property), object (object), string (keyword), command (glossary), return (glossary), property (glossary), clipboard (function), copy (command), cut (command), paste (command), function (control_st), lock clipboard (command), unlock clipboard (command), rawClipboardData (property), fullClipboardData (property)
 
-Tags: ui
+Tags: ui, clipboard

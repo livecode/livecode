@@ -178,6 +178,13 @@ void MCU_resetprops(Boolean update)
 	MCdynamiccard = NULL;
 	MCdynamicpath = False;
 	MCexitall = False;
+    
+    // The clipboard lock is counted and needs to be balanced
+    while (MCclipboardlockcount)
+    {
+        MCclipboardlockcount--;
+        MCclipboard->Unlock();
+    }
 }
 
 void MCU_saveprops(MCSaveprops &sp)

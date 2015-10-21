@@ -1615,8 +1615,13 @@ void MCControl::enter()
 	{
 		MCdragaction = DRAG_ACTION_NONE;
 		MCdragdest = this;
+        
+        // Give the script a chance to respond to the drag operation. If it
+        // doesn't complete successfully or passes, attempt an
+        // automatic drag-drop operation (if this is a field object).
 		if (message(MCM_drag_enter) != ES_NORMAL && gettype() == CT_FIELD
-		        && !(flags & F_LOCK_TEXT) && MCdragdata -> HasText())
+		        && !(flags & F_LOCK_TEXT)
+                && MCdragboard->HasTextOrCompatible())
 		{
 			state |= CS_DRAG_TEXT;
 			state &= ~CS_MFOCUSED;

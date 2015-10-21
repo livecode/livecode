@@ -512,7 +512,7 @@ public:
 	Exec_stat setstyledtext(uint4 parid, MCExecPoint& ep);
 #endif
 	void setstyledtext(uint32_t part_id, MCArrayRef p_text);
-	Exec_stat setpartialtext(uint4 parid, const MCString &data, bool unicode);
+	Exec_stat setpartialtext(uint4 parid, MCStringRef p_text);
 #ifdef LEGACY_EXEC
 	Exec_stat gethtml(uint4 parid, MCExecPoint &ep);
 	Exec_stat getparagraphhtml(MCExecPoint &ep, MCParagraph *start, MCParagraph *end);
@@ -533,7 +533,7 @@ public:
 	MCParagraph *styledtexttoparagraphs(MCExecPoint& ep);
 #endif
 	MCParagraph *styledtexttoparagraphs(MCArrayRef p_array);
-	MCParagraph *texttoparagraphs(const MCString &data, Boolean isunicode);
+	MCParagraph *texttoparagraphs(MCStringRef p_text);
 	
     MCParagraph *parsestyledtextappendparagraph(MCArrayRef p_style, MCStringRef metadata, bool p_split, MCParagraph*& x_paragraphs);
 	void parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_style, MCStringRef p_string, MCStringRef p_metadata);

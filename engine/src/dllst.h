@@ -20,6 +20,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	DLLIST_H
 #define	DLLIST_H
 
+#include "foundation-legacy.h"
+
 // Forward declarations
 class MCObject;
 
@@ -39,7 +41,7 @@ public:
 	}
 	virtual ~MCDLlist();
 	// shared by buttons and text blocks
-	virtual void removelink(MCObject *optr);
+	virtual void removelink(class MCObject *optr);
 	MCDLlist *next()
 	{
 		return nptr;

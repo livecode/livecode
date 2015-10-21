@@ -972,6 +972,8 @@ LT factor_table[] =
         {"from", TT_FROM, PT_FROM},
         {"frontscripts", TT_FUNCTION, F_FRONT_SCRIPTS},
         {"ftpproxy", TT_PROPERTY, P_FTP_PROXY},
+        {"fullclipboarddata", TT_PROPERTY, P_FULL_CLIPBOARD_DATA},
+        {"fulldragdata", TT_PROPERTY, P_FULL_DRAGBOARD_DATA},
 		{"fullscreen", TT_PROPERTY, P_FULLSCREEN},
 		// IM-2013-09-23: [[ FullscreenMode ]] New property for 'fullscreenmode'
 		{"fullscreenmode", TT_PROPERTY, P_FULLSCREENMODE},
@@ -1413,6 +1415,8 @@ LT factor_table[] =
         {"random", TT_FUNCTION, F_RANDOM},
 		{"randombytes", TT_FUNCTION, F_RANDOM_BYTES},
         {"randomseed", TT_PROPERTY, P_RANDOM_SEED},
+        {"rawclipboarddata", TT_PROPERTY, P_RAW_CLIPBOARD_DATA},
+        {"rawdragdata", TT_PROPERTY, P_RAW_DRAGBOARD_DATA},
         {"recent", TT_CHUNK, CT_RECENT},
         {"recentcards", TT_PROPERTY, P_RECENT_CARDS},
         {"recentnames", TT_PROPERTY, P_RECENT_NAMES},
@@ -1891,6 +1895,7 @@ static LT insert_table[] =
 
 static LT lock_table[] =
     {
+        {"clipboard", TT_UNDEFINED, LC_CLIPBOARD},
         {"colormap", TT_UNDEFINED, LC_COLORMAP},
         {"cursor", TT_UNDEFINED, LC_CURSOR},
         {"dialog", TT_UNDEFINED, LC_ERRORS},
