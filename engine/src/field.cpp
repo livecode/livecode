@@ -395,7 +395,12 @@ void MCField::kfocus()
 		uint2 t_old_trans;
 		t_old_trans = gettransient();
 		state |= CS_KFOCUSED;
-
+        
+        if (MCactivefield != NULL && MCactivefield != this)
+            MCactivefield->unselect(True, True);
+        MCactivefield = this;
+        clearfound();
+        
 		if (flags & F_LIST_BEHAVIOR)
 		{
 			if (!(flags & F_TOGGLE_HILITE))
@@ -414,10 +419,6 @@ void MCField::kfocus()
 		}
 		else
 		{
-			if (MCactivefield != NULL && MCactivefield != this)
-				MCactivefield->unselect(True, True);
-			MCactivefield = this;
-			clearfound();
 			// MW-2011-08-18: [[ Layers ]] Invalidate the whole object, noting
 			//   possible change in transient.
 			layer_transientchangedandredrawall(t_old_trans);
