@@ -1573,43 +1573,32 @@ static bool MCPropertyParseUIntList(MCStringRef p_input, char_t p_delimiter, uin
 	uindex_t t_new_offset;
 	t_new_offset = 0;
 	
-	// PM-2015-10-13: [[ Bug 16203 ]] Replace any "empty" elements with 0 in the beginning of the list
-	if (MCStringGetNativeCharAtIndex(p_input, 0) == p_delimiter)
-	{
-		t_old_offset++;
-		t_new_offset++;
-		
-		t_success = t_list . Push(0);
-	}
-	
 	while (t_success && t_old_offset <= t_length)
 	{
-		MCAutoStringRef t_uint_string;
-		uinteger_t t_d;
-		
-		// PM-2015-10-13: [[ Bug 16203 ]] Replace any "empty" elements with 0 in the list,
-		while (MCStringGetNativeCharAtIndex(p_input, t_old_offset) == p_delimiter && MCStringGetNativeCharAtIndex(p_input, t_old_offset - 1) == p_delimiter)
+		// PM-2015-10-13: [[ Bug 16203 ]] Replace any "empty" elements with 0 in the list, ignoring trailing delimiters
+		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareExact, t_new_offset))
 		{
-			t_old_offset++;
-			t_new_offset++;
-			t_success = t_list . Push(0);
+			if (t_old_offset == t_length)
+				break;
+			t_new_offset = t_length;
 		}
 		
-		
-		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareExact, t_new_offset))
-			t_new_offset = t_length;
-			
-        if (t_new_offset <= t_old_offset)
-            break;
+		if (t_new_offset == t_old_offset)
+			t_success = t_list . Push(0);
+		else
+		{
+			MCAutoStringRef t_uint_string;
+			uinteger_t t_d;
         
-		if (t_success)
-            t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_uint_string);
-		
-		if (t_success)
-			t_success = MCU_stoui4(*t_uint_string, t_d);
-		
-		if (t_success)
-			t_success = t_list . Push(t_d);
+			if (t_success)
+				t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_uint_string);
+			
+			if (t_success)
+				t_success = MCU_stoui4(*t_uint_string, t_d);
+			
+			if (t_success)
+				t_success = t_list . Push(t_d);
+		}
 		
 		t_old_offset = t_new_offset + 1;
 	}
@@ -1641,43 +1630,33 @@ static bool MCPropertyParseDoubleList(MCStringRef p_input, char_t p_delimiter, u
 	t_old_offset = 0;
 	uindex_t t_new_offset;
 	t_new_offset = 0;
-	
-	// PM-2015-10-13: [[ Bug 16203 ]] Replace any "empty" elements with 0.0 in the beginning of the list
-	if (MCStringGetNativeCharAtIndex(p_input, 0) == p_delimiter)
-	{
-		t_old_offset++;
-		t_new_offset++;
 		
-		t_success = t_list . Push(0.0);
-	}
-	
 	while (t_success && t_old_offset <= t_length)
 	{
-		MCAutoStringRef t_double_string;
-		double t_d;
-		
-		// PM-2015-10-13: [[ Bug 16203 ]] Replace any "empty" elements with 0.0 in the list,
-		while (MCStringGetNativeCharAtIndex(p_input, t_old_offset) == p_delimiter && MCStringGetNativeCharAtIndex(p_input, t_old_offset - 1) == p_delimiter)
+		// PM-2015-10-13: [[ Bug 16203 ]] Replace any "empty" elements with 0.0 in the list, ignoring trailing delimiters
+		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareExact, t_new_offset))
 		{
-			t_old_offset++;
-			t_new_offset++;
-			t_success = t_list . Push(0.0);
+			if (t_old_offset == t_length)
+			break;
+			t_new_offset = t_length;
 		}
 		
-		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareExact, t_new_offset))
-			t_new_offset = t_length;
-		
-        if (t_new_offset <= t_old_offset)
-            break;
-        
-		if (t_success)
-            t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_double_string);
-		
-		if (t_success)
-			t_success = MCU_stor8(*t_double_string, t_d);
-		
-		if (t_success)
-			t_success = t_list . Push(t_d);
+		if (t_new_offset == t_old_offset)
+			t_success = t_list . Push(0.0);
+		else
+		{
+			MCAutoStringRef t_double_string;
+			double t_d;
+			
+			if (t_success)
+				t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_double_string);
+			
+			if (t_success)
+				t_success = MCU_stor8(*t_double_string, t_d);
+			
+			if (t_success)
+				t_success = t_list . Push(t_d);
+		}
 		
 		t_old_offset = t_new_offset + 1;
 	}
