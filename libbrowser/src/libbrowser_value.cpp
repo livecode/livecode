@@ -663,7 +663,14 @@ public:
 		if (p_size <= m_capacity)
 			return true;
 		
-		return MCBrowserMemoryResizeArray(p_size, m_elements, m_capacity) && MCBrowserMemoryResizeArray(p_size, m_keys, m_capacity);
+		uindex_t t_capacity;
+		if (MCBrowserMemoryResizeArray(p_size, m_elements, t_capacity) && MCBrowserMemoryResizeArray(p_size, m_keys, t_capacity))
+		{
+			m_capacity = t_capacity;
+			return true;
+		}
+		
+		return false;
 	}
 	
 	bool FindElement(const char *p_key, uint32_t &r_index)
