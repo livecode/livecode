@@ -243,12 +243,12 @@ enum MCPropertyType
 	kMCPropertyTypeOptionalEnum,
 	kMCPropertyTypeName,
     kMCPropertyTypeLinesOfString,
-    kMCPropertyTypeLinesOfUInt,
+    kMCPropertyTypeLinesOfLooseUInt,
     kMCPropertyTypeLinesOfUIntX2,
-    kMCPropertyTypeLinesOfDouble,
+    kMCPropertyTypeLinesOfLooseDouble,
     kMCPropertyTypeLinesOfPoint,
-    kMCPropertyTypeItemsOfUInt,
-	kMCPropertyTypeOptionalItemsOfUInt,
+    kMCPropertyTypeItemsOfLooseUInt,
+	kMCPropertyTypeOptionalItemsOfLooseUInt,
     kMCPropertyTypeItemsOfString,
     kMCPropertyTypeMixedBool,
 	kMCPropertyTypeMixedInt16,
@@ -265,9 +265,9 @@ enum MCPropertyType
 	kMCPropertyTypeMixedCustom,
 	kMCPropertyTypeMixedEnum,
 	kMCPropertyTypeMixedOptionalEnum,
-	kMCPropertyTypeMixedItemsOfUInt,
+	kMCPropertyTypeMixedItemsOfLooseUInt,
     kMCPropertyTypeMixedItemsOfString,
-    kMCPropertyTypeMixedLinesOfUInt,
+    kMCPropertyTypeMixedLinesOfLooseUInt,
     kMCPropertyTypeRecord,
     kMCPropertyTypeLegacyPoints,
 };
@@ -489,9 +489,9 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyThunkGetOptionalEnumType(mth) MCPropertyThunkImp(mth, intenum_t*&)
 #define MCPropertyThunkGetArray(mth) MCPropertyThunkImp(mth, MCArrayRef&)
 #define MCPropertyThunkGetName(mth) MCPropertyThunkImp(mth, MCNameRef&)
-#define MCPropertyThunkGetItemsOfUInt(mth) MCPropertyListThunkImp(mth,uindex_t&,uinteger_t*&)
+#define MCPropertyThunkGetItemsOfLooseUInt(mth) MCPropertyListThunkImp(mth,uindex_t&,uinteger_t*&)
 #define MCPropertyThunkGetLinesOfString(mth) MCPropertyListThunkImp(mth,uindex_t&,MCStringRef*&)
-#define MCPropertyThunkGetLinesOfDouble(mth) MCPropertyListThunkImp(mth,uindex_t&,double*&)
+#define MCPropertyThunkGetLinesOfLooseDouble(mth) MCPropertyListThunkImp(mth,uindex_t&,double*&)
 #define MCPropertyThunkGetItemsOfString(mth) MCPropertyListThunkImp(mth,uindex_t*,MCStringRef*&)
 
 #define MCPropertyThunkSetAny(mth) MCPropertyThunkImp(mth, MCValueRef)
@@ -521,9 +521,9 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyThunkSetOptionalEnumType(mth) MCPropertyThunkImp(mth, intenum_t*)
 #define MCPropertyThunkSetArray(mth) MCPropertyThunkImp(mth, MCArrayRef)
 #define MCPropertyThunkSetName(mth) MCPropertyThunkImp(mth, MCNameRef)
-#define MCPropertyThunkSetItemsOfUInt(mth) MCPropertyListThunkImp(mth,uindex_t,uinteger_t*)
+#define MCPropertyThunkSetItemsOfLooseUInt(mth) MCPropertyListThunkImp(mth,uindex_t,uinteger_t*)
 #define MCPropertyThunkSetLinesOfString(mth) MCPropertyListThunkImp(mth,uindex_t,MCStringRef*)
-#define MCPropertyThunkSetLinesOfDouble(mth) MCPropertyListThunkImp(mth,uindex_t,double*)
+#define MCPropertyThunkSetLinesOfLooseDouble(mth) MCPropertyListThunkImp(mth,uindex_t,double*)
 #define MCPropertyThunkSetItemsOfString(mth) MCPropertyListThunkImp(mth,uindex_t,MCStringRef*)
 
 #define MCPropertyObjectThunkImp(obj, mth, typ) (void(*)(MCExecContext&,MCObjectPtr*,typ))MCPropertyObjectThunk<obj,typ,&obj::mth>
@@ -566,9 +566,9 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectThunkGetColor(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCColor&)
 
 #define MCPropertyObjectListThunkGetLinesOfString(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t&, MCStringRef*&)
-#define MCPropertyObjectListThunkGetLinesOfUInt(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t&, uinteger_t*&)
+#define MCPropertyObjectListThunkGetLinesOfLooseUInt(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t&, uinteger_t*&)
 #define MCPropertyObjectListThunkGetLinesOfPoint(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t&, MCPoint*&)
-#define MCPropertyObjectListThunkGetItemsOfUInt(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t&, uinteger_t*&)
+#define MCPropertyObjectListThunkGetItemsOfLooseUInt(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t&, uinteger_t*&)
 #define MCPropertyObjectListThunkGetItemsOfString(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t&, MCStringRef*&)
 
 #define MCPropertyObjectListThunkGetLegacyPoints(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t&, MCPoint*&)
@@ -601,9 +601,9 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectThunkSetColor(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCColor)
 
 #define MCPropertyObjectListThunkSetLinesOfString(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t, MCStringRef*)
-#define MCPropertyObjectListThunkSetLinesOfUInt(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t, uinteger_t*)
+#define MCPropertyObjectListThunkSetLinesOfLooseUInt(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t, uinteger_t*)
 #define MCPropertyObjectListThunkSetLinesOfPoint(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t, MCPoint*)
-#define MCPropertyObjectListThunkSetItemsOfUInt(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t, uinteger_t*)
+#define MCPropertyObjectListThunkSetItemsOfLooseUInt(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t, uinteger_t*)
 #define MCPropertyObjectListThunkSetItemsOfString(obj, mth), MCPropertyObjectListThunkImp(obj, mth, uindex_t, MCStringRef*)
 
 #define MCPropertyObjectListThunkSetLegacyPoints(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t, MCPoint*)
@@ -704,7 +704,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectChunkMixedThunkGetOptionalUInt16(obj, mth) MCPropertyObjectChunkMixedThunkImp(obj, mth, bool&, uinteger_t*&)
 #define MCPropertyObjectChunkMixedThunkGetOptionalEnumType(obj, mth) MCPropertyObjectChunkMixedThunkImp(obj, mth, bool&, intenum_t*&)
 #define MCPropertyObjectChunkMixedThunkGetOptionalString(obj, mth) MCPropertyObjectChunkMixedThunkImp(obj, mth, bool&, MCStringRef&)
-#define MCPropertyObjectChunkMixedListThunkGetItemsOfUInt(obj, mth) MCPropertyObjectChunkMixedListThunkImp(obj, mth, bool&, uindex_t&, uinteger_t*&)
+#define MCPropertyObjectChunkMixedListThunkGetItemsOfLooseUInt(obj, mth) MCPropertyObjectChunkMixedListThunkImp(obj, mth, bool&, uindex_t&, uinteger_t*&)
 #define MCPropertyObjectChunkMixedListThunkGetItemsOfString(obj, mth), MCPropertyObjectChunkMixedListThunkImp(obj, mth, bool&, uindex_t&, MCStringRef*&)
 
 #define MCPropertyObjectChunkMixedThunkSetBool(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, bool)
@@ -719,7 +719,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectChunkMixedThunkSetOptionalUInt16(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, uinteger_t*)
 #define MCPropertyObjectChunkMixedThunkSetOptionalEnumType(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, intenum_t*)
 #define MCPropertyObjectChunkMixedThunkSetOptionalString(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCStringRef)
-#define MCPropertyObjectChunkMixedListThunkSetItemsOfUInt(obj, mth) MCPropertyObjectChunkListThunkImp(obj, mth, uindex_t, uinteger_t*)
+#define MCPropertyObjectChunkMixedListThunkSetItemsOfLooseUInt(obj, mth) MCPropertyObjectChunkListThunkImp(obj, mth, uindex_t, uinteger_t*)
 #define MCPropertyObjectChunkMixedListThunkSetItemsOfString(obj, mth) MCPropertyObjectChunkListThunkImp(obj, mth, uindex_t, MCStringRef*)
 
 #define MCPropertyObjectChunkMixedArrayThunkGetOptionalBool(obj, mth) MCPropertyObjectChunkMixedArrayThunkImp(obj, mth, bool&, bool*&)
@@ -856,9 +856,6 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 
 #define DEFINE_RW_OBJ_LIST_PROPERTY(prop, type, obj, tag) \
 { prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectListThunkGet##type(obj, Get##tag), (void *)MCPropertyObjectListThunkSet##type(obj, Set##tag), false, false, kMCPropertyInfoChunkTypeNone },
-
-#define DEFINE_RW_OBJ_OPTIONAL_LIST_PROPERTY(prop, type, obj, tag) \
-{ prop, false, kMCPropertyTypeOptional##type, nil, (void *)MCPropertyObjectListThunkGet##type(obj, Get##tag), (void *)MCPropertyObjectListThunkSet##type(obj, Set##tag), false, false, kMCPropertyInfoChunkTypeNone },
 
 #define DEFINE_RO_OBJ_LIST_PROPERTY(prop, type, obj, tag) \
 { prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectListThunkGet##type(obj, Get##tag), nil, false, false, kMCPropertyInfoChunkTypeNone },
