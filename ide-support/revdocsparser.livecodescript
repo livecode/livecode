@@ -1012,9 +1012,15 @@ function revDocsExtractElements pText
             add 1 to tInternalBlankLines
          end if
          next repeat
-      else if matchText(tLine, tElementRegex, tNextElementName, tParamType, tAfterElement) then        
+      else if matchText(tLine, tElementRegex, tNextElementName, tParamType, tAfterElement) then   
+         if tAccumulatedContent is not empty and tElementCount is 0 then
+            add 1 to tElementCount
+         end if
          if tElementCount is not 0 then
             put tElementA into tElementsA[tElementCount]
+            if tElementA["name"] is empty then
+               put "Summary" into tElementsA[tElementCount]["name"]
+            end if
             delete the last char of tAccumulatedContent
             put tAccumulatedContent into tElementsA[tElementCount]["content"]
          end if
@@ -1048,8 +1054,16 @@ function revDocsExtractElements pText
    end repeat
    
    # Add any remaining text to the last element
-   put tElementA into tElementsA[tElementCount]
-   put tAccumulatedContent into tElementsA[tElementCount]["content"]
+   if tAccumulatedContent is not empty and tElementCount is 0 then
+      add 1 to tElementCount
+   end if
+   if tElementCount is not 0 then
+      put tElementA into tElementsA[tElementCount]
+      if tElementA["name"] is empty then
+         put "Summary" into tElementsA[tElementCount]["name"]
+      end if
+      put tAccumulatedContent into tElementsA[tElementCount]["content"]
+   end if
    
    return tElementsA
 end revDocsExtractElements
