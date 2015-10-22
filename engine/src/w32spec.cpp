@@ -678,6 +678,10 @@ Boolean MCS_noperm(const char *path)
 
 Boolean MCS_exists(const char *path, Boolean file)
 {
+	// PM-2015-10-22: [[ Bug 16259 ]] 'there is a folder empty' should eval to false
+	if (*path == '\0')
+		return False;
+
 	char *newpath = MCS_resolvepath(path);
 	//MS's stat() fails if there is a trailing '\\'. Workaround is to delete it
 	// MW-2004-04-20: [[ Purify ]] If *newpath == 0 then we should return False
