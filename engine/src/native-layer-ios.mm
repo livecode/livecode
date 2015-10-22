@@ -128,7 +128,7 @@ void MCNativeLayerIOS::doDetach()
 }
 
 // Rendering view to context not supported on iOS.
-bool MCNativeLayerAndroid::GetCanRenderToContext()
+bool MCNativeLayerIOS::GetCanRenderToContext()
 {
 	return false;
 }
