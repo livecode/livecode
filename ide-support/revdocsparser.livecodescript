@@ -401,6 +401,67 @@ Convert inline docs to the standard format (that can be parsed without code bloc
 */
 
 function revDocsGenerateDocsFileFromModular pText, pFilename
+   return revDocsGenerateDocsFileFromText(pText, pFilename)
+end revDocsGenerateDocsFileFromModular
+
+function revDocsGenerateDocsFileFromText pText, pSource
+   local tEntryType
+   put empty into tEntryType
+   
+   local tInComment, tInEntry, tEntryEnded
+   put false into tInComment
+   put false into tInEntry
+   
+   local tFirstWord, tEntryData
+   local tComment, tData
+   local tHandlerData, tPhraseData
+   
+   local tLibraryData, tAPIData
+   revDocsExtractDocBlocks pText, pSource, tAPIData, tLibraryData
+   
+   # Allow inline module description as valid docs
+   if tAPIData is empty then
+      logWarning "No handlers documented", pSource
+   end if
+   
+   if tLibraryData["name"] is empty then
+      logError "No extension name found", pSource
+   end if
+   
+   local tOutput
+   put revDocsFormatInlineComments(tLibraryData, true) into tOutput
+   
+   if tOutput is empty then
+      logWarning "Invalid library-level docs", pSource
+   end if
+   
+   repeat for each key tKey in tAPIData
+      local tFormatted
+      put revDocsFormatInlineComments(tAPIData[tKey], false) into tFormatted
+      if tFormatted is empty then
+         logWarning "No docs for element" && tKey, pSource
+      else
+         put tFormatted & return & return after tOutput
+      end if
+   end repeat
+   return tOutput
+end revDocsGenerateDocsFileFromText
+
+##################################################
+#
+#          PARSING UTILITIES
+#
+##################################################
+
+/*
+Extracts the comment blocks that live in between functions which contain the documentation for those functions 
+
+pText: The script to extract comment blocks from
+pSource : The source of the script (either a filename or an object id)
+Returns (array) : An array containing the details for the comment blocks associated with each api entry
+
+*/
+on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
    local tEntryType
    put empty into tEntryType
    
@@ -417,6 +478,11 @@ function revDocsGenerateDocsFileFromModular pText, pFilename
    # Keep track of if this is a widget module or not
    local tIsWidget
    put false into tIsWidget
+   
+   # If the source is an object, then we are parsing script
+   local tIsScript
+   put there is a pSource into tIsScript
+   
    repeat for each line tLine in pText
       # Check to see if this is the start of a handler / syntax or a block of comments 
       put word 1 of tLine into tFirstWord
@@ -498,11 +564,31 @@ function revDocsGenerateDocsFileFromModular pText, pFilename
                put true into tEntryEnded
                put true into tEntryData["need_docs"]
                break
+            case "on"
+            case "command"
+            case "function"
+               if tFirstWord is "function" then
+                  put "function" into tEntryData["type"]
+               else
+                  put "command" into tEntryData["type"]
+               end if
+               put word 2 of tLine into tEntryData["name"]
+               put true into tEntryData["need_docs"]
+               break
             default
                # This is not a new entry
                put false into tInEntry
                # Check if this is a new comment block
                if tFirstWord begins with "/*" then
+                  
+                  # If this is script, and this is an initial block of comments,
+                  # then treat as the library description
+                  if tIsScript and tAPIData is empty and tComment is not empty then
+                     put "library" into tLibraryData["type"]
+                     put tComment into tLibraryData["comments"]
+                     put the short name of pSource into tLibraryData["name"]
+                  end if
+                  
                   # Discard any previous comments
                   put empty into tComment
                   local tCommentOffset
@@ -558,6 +644,10 @@ function revDocsGenerateDocsFileFromModular pText, pFilename
                   revDocsParseHandler line 1 of tData, tHandlerData
                   revDocsUpdateDocBlocks true, "handler", line 1 of tData, tComment, tAPIData
                   break
+               case "function"
+               case "command"
+                  revDocsUpdateDocBlocks false, tEntryData["type"], line 1 of tData, tComment, tAPIData
+                  break
                case "type"
                   break
                case "phrase"
@@ -582,39 +672,9 @@ function revDocsGenerateDocsFileFromModular pText, pFilename
       end if
    end repeat
    
-   # Allow inline module description as valid docs
-   if tAPIData is empty then
-      logWarning "No handlers documented", pFilename
-   end if
-   
-   if tLibraryData["name"] is empty then
-      logError "No extension name found", pFilename
-   end if
-   
-   local tOutput
-   put revDocsFormatInlineComments(tLibraryData, true) into tOutput
-   
-   if tOutput is empty then
-      logWarning "Invalid library-level docs", pFilename
-   end if
-   
-   repeat for each key tKey in tAPIData
-      local tFormatted
-      put revDocsFormatInlineComments(tAPIData[tKey], false) into tFormatted
-      if tFormatted is empty then
-         logWarning "No docs for element" && tKey, pFilename
-      else
-         put tFormatted & return & return after tOutput
-      end if
-   end repeat
-   return tOutput
-end revDocsGenerateDocsFileFromModular
-
-##################################################
-#
-#          PARSING UTILITIES
-#
-##################################################
+   put tAPIData into rAPIData
+   put tLibraryData into rLibraryData
+end revDocsExtractDocBlocks 
 
 private command log pOutput
       write pOutput & return to stdout
