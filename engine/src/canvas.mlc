@@ -3761,6 +3761,10 @@ Description:
 
 >*Note:* The layout bounds is used to position blocks of text relative to each other, so the text may overlap these bounds.
 
+The `layout` is optional and has no effect on the return value, but may be used to emphasize the difference between `the layout bounds` and `the image bounds`.
+
+References:  CanvasOperationMeasureText(statement), FontOperationTextLayoutBoundsOnCanvas(operator), FontOperationTextImageBounds(operator), FontOperationTextImageBoundsOnCanvas(operator)
+
 Tags:	Canvas
 */
 syntax FontOperationTextLayoutBounds is prefix operator with precedence 4
@@ -3789,6 +3793,10 @@ Description:
 The layout bounds of the text, constructed from the ascent and descent values of the font, and the width of the text string.
 
 >*Note:* The layout bounds is used to position blocks of text relative to each other, so the text may overlap these bounds.
+
+The `layout` is optional and has no effect on the return value, but may be used to emphasize the difference between `the layout bounds` and `the image bounds`.
+
+References:  CanvasOperationMeasureText(statement), FontOperationTextLayoutBounds(operator), FontOperationTextImageBounds(operator), FontOperationTextImageBoundsOnCanvas(operator)
 
 Tags:	Canvas
 */
@@ -3821,6 +3829,8 @@ Description:
 
 >*Note:* This can be more time-consuming to compute than the layout bounds.
 
+References:  CanvasOperationMeasureText(statement), FontOperationTextLayoutBounds(operator), FontOperationTextLayoutBoundsOnCanvas(operator), FontOperationTextImageBoundsOnCanvas(operator)
+
 Tags:	Canvas
 */
 syntax FontOperationTextImageBounds is prefix operator with precedence 4
@@ -3849,6 +3859,8 @@ Description:
 The exact bounds of the text, which will fully enclose each character.
 
 >*Note:* This can be more time-consuming to compute than the layout bounds.
+
+References:  CanvasOperationMeasureText(statement), FontOperationTextLayoutBounds(operator), FontOperationTextLayoutBoundsOnCanvas(operator), FontOperationTextImageBounds(operator)
 
 Tags:	Canvas
 */
@@ -4805,7 +4817,16 @@ Example:
 	measure "Sample text" on this canvas
 	put the result into tBounds
 
+Description:
+Sets the result to the layout bounds of the text, constructed from the ascent and descent values of the font, and the width of the text string.
+
+>*Note:* The layout bounds are used to position blocks of text relative to each other, so the text may overlap these bounds.
+
+The value of the result is the same as the expression `the layout bounds of text mText on mCanvas`.
+
 Tags:	Canvas
+
+References:  FontOperationTextLayoutBounds(operator), FontOperationTextLayoutBoundsOnCanvas(operator), FontOperationTextImageBounds(operator), FontOperationTextImageBoundsOnCanvas(operator)
 */
 syntax CanvasOperationMeasureText is statement
 	"measure" <mText: Expression> "on" <mCanvas: Expression>
@@ -4829,10 +4850,15 @@ Summary:	The canvas used when drawing a widget.
 
 Returns:	The target canvas for widget drawing operations.
 
+Description:  The canvas used when drawing a widget.
+>*Note:* An error will be thrown if the widget is not currently being drawn.  In other words, <ThisCanvas | this canvas> is only valid during the execution of the <OnPaint> handler.
+
 Example:
 	// Draw the label centered on the rect of the widget
 	set the paint of this canvas to solid paint with color [1,1,1]
 	fill text "Start" at center of my rectangle on this canvas
+
+References: OnPaint(message)
 
 Tags:	Canvas
 */
