@@ -19,7 +19,7 @@ value (string): the value associated with this optional key }
 pEnumParam (enum): An enum parameter
 -"option 1" : description of option 1
 - option 2 : description of option 2
-- option 3 : description of option 3
+- option 3 : description of option 3 
 
 pOptionalParam (optional integer): An integer parameter
 pParam: A param afterward with no space
@@ -454,6 +454,9 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
    local tIsScript
    put there is a pSource into tIsScript
    
+   # Keep track of whether we should warn about the comment style
+   local tCommentWarning
+   
    repeat for each line tLine in pText
       # Check to see if this is the start of a handler / syntax or a block of comments 
       put word 1 of tLine into tFirstWord
@@ -552,6 +555,13 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
                # Check if this is a new comment block
                if tFirstWord begins with "/*" then
                   
+                  # Warn when docs are contained in /* comments instead of /**                  
+                  if tFirstWord begins with "/**" then
+                     put false into tCommentWarning
+                  else
+                     put true into tCommentWarning
+                  end if
+                  
                   # If this is script, and this is an initial block of comments,
                   # then treat as the library description
                   if tIsScript and tAPIData is empty and tComment is not empty then
@@ -631,6 +641,13 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
                   revDocsUpdateDocBlocksForProperty tData, tComment, tAPIData
                   break
             end switch
+            
+            # Warn about comment format if appropriate
+            if tCommentWarning then
+               logWarning "Docs comments for" && tEntryData["type"] && tEntryData["name"] && "should be contained in /** comments", pFilename
+            end if	
+            put false into tCommentWarning
+            
          else
             if tEntryData["need_docs"] then
                logError "Required documentation not found for" && tEntryData["type"] && tEntryData["name"], pFilename
@@ -648,7 +665,7 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
 end revDocsExtractDocBlocks 
 
 private command log pOutput
-      write pOutput & return to stdout
+   write pOutput & return to stdout
 end log
 
 private command logError pError, pFilename
