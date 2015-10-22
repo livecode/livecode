@@ -132,6 +132,12 @@ void MCNativeLayerWin32::doDetach()
 
 bool MCNativeLayerWin32::OnPaint(MCGContextRef p_context)
 {
+	MCWidget *t_widget;
+	t_widget = MCWidgetGetHost(m_widget);
+
+	MCRectangle t_rect;
+	t_rect = t_widget->getrect();
+
 	bool t_success;
 	t_success = true;
 	
@@ -153,8 +159,6 @@ bool MCNativeLayerWin32::OnPaint(MCGContextRef p_context)
 	{
 		// Note: this *must* be the original DC because the compatible DC originally
 		// has a monochrome (1BPP) bitmap selected into it and we don't want that.
-		MCRectangle t_rect;
-		t_rect = t_widget->getrect();
 		m_cached = CreateCompatibleBitmap(t_hwindowdc, t_rect.width, t_rect.height);
 		t_success = m_cached != nil;
 	}
@@ -178,7 +182,7 @@ bool MCNativeLayerWin32::OnPaint(MCGContextRef p_context)
 		GetObject(m_cached, sizeof(BITMAP), &t_bitmap);
 
 		// Allocate some memory for capturing the bits from the bitmap
-		t_success = MCMemoryAllocate(t_bitmap.bmWidth * t_bitmap.bmHeight * 4);
+		t_success = MCMemoryAllocate(t_bitmap.bmWidth * t_bitmap.bmHeight * 4, t_bits);
 	}
 
 	MCGImageRef t_gimage;
@@ -227,7 +231,7 @@ bool MCNativeLayerWin32::OnPaint(MCGContextRef p_context)
 	if (t_success)
 	{
 		// At last - we can draw it!
-		MCGRectangle rect = {{0, 0}, {t_raster.width, t_raster.height}};
+		MCGRectangle rect = {{0, 0}, {t_rect.width, t_rect.height}};
 		MCGContextDrawImage(p_context, t_gimage, rect, kMCGImageFilterNone);
 	}
 
