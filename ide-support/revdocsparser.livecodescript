@@ -1802,6 +1802,7 @@ command revDocsUpdateDocBlocks pModular, pType, pLine, pComment, @xDataA
    put tSyntax into xDataA[tEntryName]["syntax"][1]
    put tParamArray into xDataA[tEntryName]["params"]
    put pType into xDataA[tEntryName]["type"]
+   put tEntryName into xDataA[tEntryName]["name"]
    
    # Output the comments that preceded this function definition
    put pComment into xDataA[tEntryName]["comments"]
