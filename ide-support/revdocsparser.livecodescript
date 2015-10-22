@@ -1463,13 +1463,13 @@ function revDocsParseDocText pText, pFilename
    
    // Add association and tag to the last element, if they were not found
    if tParsedA["name"] is not empty and tSeenAssociations is not true and tEntryCount is not 0 then
-      put tAssociationsDefault into tEntriesA[tEntryCount]["elements"][tEntryElementCount]
       add 1 to tEntryElementCount
+      put tAssociationsDefault into tEntriesA[tEntryCount]["elements"][tEntryElementCount]
    end if
    if tParsedA["tags"] is not empty and tSeenTags is not true and tEntryCount is not 0 then
+      add 1 to tEntryElementCount
       put "Tags" into tEntriesA[tEntryCount]["elements"][tEntryElementCount]["name"]
       put tParsedA["tags"] into tEntriesA[tEntryCount]["elements"][tEntryElementCount]["content"]
-      add 1 to tEntryElementCount
    end if
    
    // Add a library entry
