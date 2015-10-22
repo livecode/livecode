@@ -1205,6 +1205,10 @@ void __MCTypeInfoDestroy(__MCTypeInfo *self)
     {
         MCValueRelease(self -> error . domain);
         MCValueRelease(self -> error . message);
+	}
+    else if (t_ext_typecode == kMCValueTypeCodeCustom)
+    {
+		MCValueRelease(self -> custom . base);
     }
 }
 

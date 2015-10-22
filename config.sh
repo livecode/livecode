@@ -347,19 +347,30 @@ if test "${OS}" = "android" ; then
 
 fi # End of Android defaults & tools
 
+
+# Emscripten default settings and tools
+if test "${OS}" = "emscripten" ; then
+    NODE_JS=${NODE_JS:-node}
+fi
+
+
 ################################################################
 # Invoke gyp
 ################################################################
 
 format_args="$(for f in ${FORMATS}; do echo --format ${f} ; done)"
-basic_args="${format_args} --depth ${DEPTH} --generator-output ${GENERATOR_OUTPUT}"
+basic_args="${format_args} --depth ${DEPTH} --generator-output ${GENERATOR_OUTPUT} -G default_target=default"
 
 if [ "${BUILD_EDITION}" == "commercial" ] ; then
   basic_args="${basic_args} ../livecode-commercial.gyp"
 fi
 
 case ${OS} in
-  linux|emscripten)
+  linux)
+    invoke_gyp $basic_args "-DOS=${OS}" "-Dtarget_arch=${TARGET_ARCH}" "$@"
+    ;;
+  emscripten)
+    export NODE_JS
     invoke_gyp $basic_args "-DOS=${OS}" "-Dtarget_arch=${TARGET_ARCH}" "$@"
     ;;
   android)
