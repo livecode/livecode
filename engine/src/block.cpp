@@ -163,7 +163,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	}
 
 	if ((stat = IO_read_uint4(&flags, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 
 	// MW-2012-03-04: [[ StackFile5500 ]] If this isn't an extended block, then strip the
 	//   metadata flag.
@@ -184,7 +184,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 		{
 			uint2 t_font_index;
 			if ((stat = IO_read_uint2(&t_font_index, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 
 			// MW-2012-02-17: [[ LogFonts ]] Map the font index we have to the font attrs.
 			//   Note that we ignore the 'unicode' tag since that is encoded in flags.
@@ -208,11 +208,11 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 			// MW-2013-11-19: [[ UnicodeFileFormat ]] This path only happens sfv < 1300
 			//   so is legacy.
 			if ((stat = IO_read_nameref_legacy(atts->fontname, stream, false)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			if ((stat = IO_read_uint2(&atts->fontsize, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			if ((stat = IO_read_uint2(&atts->fontstyle, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 
 			// MW-2012-02-17; [[ SplitTextAttrs ]] All the font attrs are set.
 			flags |= F_FATTR_MASK;
@@ -222,7 +222,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	{
 		atts->color = new MCColor;
 		if ((stat = IO_read_mccolor(*atts->color, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (flags & F_HAS_COLOR_NAME)
 		{
 			// MW-2012-01-06: [[ Block Changes ]] We no longer use the color name
@@ -231,7 +231,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 			//   so is legacy,
 			char *colorname;
 			if ((stat = IO_read_cstring_legacy(colorname, stream, 2)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			delete colorname;
 			flags &= ~F_HAS_COLOR_NAME;
 		}
@@ -240,7 +240,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	{
 		atts->backcolor = new MCColor;
 		if ((stat = IO_read_mccolor(*atts->backcolor, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (version < 2000 || flags & F_HAS_BACK_COLOR_NAME)
 		{
 			// MW-2012-01-06: [[ Block Changes ]] We no longer use the backcolor name
@@ -249,14 +249,14 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 			//   so is legacy,
 			char *backcolorname;
 			if ((stat = IO_read_cstring_legacy(backcolorname, stream, 2)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			delete backcolorname;
 			flags &= ~F_HAS_BACK_COLOR_NAME;
 		}
 	}
 	if (flags & F_HAS_SHIFT)
 		if ((stat = IO_read_int2(&atts->shift, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 
 	// MW-2012-05-04: [[ Values ]] linkText / imageSource / metaData are now uniqued
 	//   strings.
@@ -264,7 +264,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	{
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		if ((stat = IO_read_stringref_new(atts->linktext, stream, version >= 7000)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		/* UNCHECKED */ MCValueInterAndRelease(atts -> linktext, atts -> linktext);
 	}
 
@@ -272,7 +272,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	{
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		if ((stat = IO_read_stringref_new(atts->imagesource, stream, version >= 7000)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		/* UNCHECKED */ MCValueInterAndRelease(atts -> imagesource, atts -> imagesource);
 	}
 
@@ -282,7 +282,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	{
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		if ((stat = IO_read_stringref_new(atts->metadata, stream, version >= 7000)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		/* UNCHECKED */ MCValueInterAndRelease(atts -> metadata, atts -> metadata);
 	}
 
@@ -290,7 +290,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	//   to the end of the attrs record.
 	if (is_ext)
 		if ((stat = MCS_seek_set(stream, t_attr_end)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	
 	// ***** IMPORTANT *****
 	// The "index" and "size" values loaded below are byte indices into the
@@ -304,9 +304,9 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	// the block of the correct offsets as soon as it knows them.
 	uint2 index, size;
 	if ((stat = IO_read_uint2(&index, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint2(&size, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	m_index = index;
 	m_size = size;
 

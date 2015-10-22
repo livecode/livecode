@@ -18,6 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __MC_IMAGE_BITMAP_H__
 
 #include "graphics.h"
+#include "sysdefs.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 

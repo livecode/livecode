@@ -18,6 +18,8 @@
 				'../libgraphics/libgraphics.gyp:libGraphics',
 				'../libscript/libscript.gyp:libScript',
 				
+				'../libbrowser/libbrowser.gyp:libbrowser',
+
 				'../thirdparty/libgif/libgif.gyp:libgif',
 				'../thirdparty/libjpeg/libjpeg.gyp:libjpeg',
 				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl',

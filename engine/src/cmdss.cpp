@@ -129,6 +129,7 @@ MCGo::~MCGo()
 	delete background;
 	delete card;
 	delete window;
+	delete widget;
 }
 
 Parse_stat MCGo::parse(MCScriptPoint &sp)
@@ -292,6 +293,19 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 					case CT_BACKWARD:
 					case CT_FORWARD:
 						{
+							if (sp.skip_token(SP_FACTOR, TT_IN) == PS_NORMAL)
+							{
+								widget = new MCChunk(False);
+								if (widget->parse(sp, False) != PS_NORMAL)
+								{
+									MCperror->add(PE_GO_BADWIDGETEXP, sp);
+									return PS_ERROR;
+								}
+								direction = nterm;
+								
+								break;
+							}
+
 							card = new MCCRef;
 							card->etype = nterm;
 							MCScriptPoint oldsp(sp);
@@ -988,6 +1002,26 @@ void MCGo::exec_ctxt(MCExecContext &ctxt)
 
     ctxt . SetTheResultToEmpty();
     
+	// go ( forward | backward ) in widget ...
+	if (widget != nil)
+	{
+		MCObject *t_object;
+		uint32_t t_parid;
+
+		if (!widget->getobj(ctxt, t_object, t_parid, True) || t_object->gettype() != CT_WIDGET)
+		{
+			ctxt.LegacyThrow(EE_GO_BADWIDGETEXP);
+			return;
+		}
+		
+		if (direction == CT_BACKWARD)
+			MCInterfaceExecGoBackInWidget(ctxt, (MCWidget*)t_object);
+		else
+			MCInterfaceExecGoForwardInWidget(ctxt, (MCWidget*)t_object);
+		
+		return;
+	}
+	
 	if (stack == NULL && background == NULL && card == NULL)
 	{
         ctxt . LegacyThrow(EE_GO_NODEST);
@@ -1216,6 +1250,16 @@ void MCGo::exec_ctxt(MCExecContext &ctxt)
 
 void MCGo::compile(MCSyntaxFactoryRef ctxt)
 {
+	if (widget != nil)
+	{
+		MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+		widget->compile(ctxt);
+		MCSyntaxFactoryExecMethod(ctxt, direction == CT_BACKWARD ? kMCInterfaceExecGoBackInWidgetMethodInfo : kMCInterfaceExecGoForwardInWidgetMethodInfo);
+		MCSyntaxFactoryEndStatement(ctxt);
+		
+		return;
+	}
+	
     MCSyntaxFactoryBeginStatement(ctxt, line, pos);
     
     bool t_is_home, t_is_relative;
@@ -1638,6 +1682,7 @@ Parse_stat MCLock::parse(MCScriptPoint &sp)
 	const LT *te;
 
 	initpoint(sp);
+    sp.skip_token(SP_FACTOR, TT_THE);
 	if (sp.next(type) != PS_NORMAL)
 	{
 		MCperror->add(PE_LOCK_NOTARGET, sp);
@@ -1794,6 +1839,9 @@ void MCLock::exec_ctxt(MCExecContext &ctxt)
 			MCInterfaceExecLockScreenForEffect(ctxt, t_region_ptr);
 		}
 		break;
+    case LC_CLIPBOARD:
+        MCPasteboardExecLockClipboard(ctxt);
+        break;
 	default:
 		break;
     }
@@ -3115,6 +3163,7 @@ Parse_stat MCUnlock::parse(MCScriptPoint &sp)
 	const LT *te;
 
 	initpoint(sp);
+    sp.skip_token(SP_FACTOR, TT_THE);
 	if (sp.next(type) != PS_NORMAL)
 	{
 		MCperror->add
@@ -3220,6 +3269,9 @@ void MCUnlock::exec_ctxt(MCExecContext &ctxt)
 			else
 				MCInterfaceExecUnlockScreen(ctxt);
 			break;
+        case LC_CLIPBOARD:
+            MCPasteboardExecUnlockClipboard(ctxt);
+            break;
 		default:
 			break;
     }

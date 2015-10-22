@@ -145,7 +145,6 @@
 			'src/securemode.h',
 			'src/sha1.h',
 			'src/text.h',
-			'src/transfer.h',
 			'src/uidc.h',
 			'src/unicode.h',
 			'src/util.h',
@@ -170,7 +169,6 @@
 			'src/securemode.cpp',
 			'src/sha1.cpp',			
 			'src/text.cpp',
-			'src/transfer.cpp',
 			'src/uidc.cpp',
 			'src/unicode.cpp',
 			'src/util.cpp',
@@ -344,6 +342,7 @@
 			'src/exec-interface-scrollbar.cpp',
 			'src/exec-interface-stack.cpp',
 			'src/exec-interface-vclip.cpp',
+			'src/exec-interface-widget.cpp',
 			'src/exec-keywords.cpp',
 			'src/exec-legacy.cpp',
 			'src/exec-logic.cpp',
@@ -563,20 +562,27 @@
 			
 			# Other files
 			'src/socket_resolve.cpp',
+
+			'src/clipboard.h',
+			'src/lnx-clipboard.h',
+			'src/mac-clipboard.h',
+			'src/mblandroid-clipboard.h',
+			'src/mbliphone-clipboard.h',
+			'src/raw-clipboard.h',
+			'src/w32-clipboard.h',
+			'src/clipboard.cpp',
+			'src/lnx-clipboard.cpp',
+			'src/mac-clipboard.mm',
+			'src/mblandroid-clipboard.cpp',
+			'src/mbliphone-clipboard.mm',
+			'src/raw-clipboard.cpp',
+			'src/w32-clipboard.cpp',
+
+			'src/mixin-refcounted.h',
 			
 			# Native layers
 			'src/native-layer.h',
-			'src/native-layer-android.h',
-			'src/native-layer-ios.h',
-			'src/native-layer-mac.h',
-			'src/native-layer-win32.h',
-			'src/native-layer-x11.h',
 			'src/native-layer.cpp',
-			'src/native-layer-android.cpp',
-			'src/native-layer-ios.mm',
-			'src/native-layer-mac.mm',
-			'src/native-layer-win32.cpp',
-			'src/native-layer-x11.cpp',
 		],
 		
 		# Sources that are only for desktop mode
@@ -592,7 +598,6 @@
 			'src/desktop-dc.cpp',
 			'src/desktop-stack.cpp',
 			'src/desktop-menu.cpp',
-			'src/desktop-pasteboard.cpp',
 			'src/desktop-image.cpp',
 			'src/desktop-ans.cpp',
 			'src/legacy_spec.cpp',
@@ -605,23 +610,33 @@
 			'src/platform-surface.cpp',
 			'src/platform-window.cpp',
 			
+			# Group "Native Layer"
+			'src/native-layer.cpp',
+			'src/native-layer.h',
+			'src/native-layer-android.cpp',
+			'src/native-layer-android.h',
+			'src/native-layer-ios.h',
+			'src/native-layer-ios.mm',
+			'src/native-layer-mac.h',
+			'src/native-layer-mac.mm',
+			'src/native-layer-win32.cpp',
+			'src/native-layer-win32.h',
+			'src/native-layer-x11.cpp',
+			'src/native-layer-x11.h',
+			
 			# Group "Desktop - Linux"
 			'src/lnxans.h',
 			'src/lnxaudio.h',
 			'src/lnxdc.h',
-			'src/lnxdnd.h',
 			'src/lnxflst.h',
 			'src/lnxgtkthemedrawing.h',
 			'src/lnximagecache.h',
 			'src/lnxmplayer.h',
-			'src/lnxpasteboard.h',
 			'src/lnxprefix.h',
 			'src/lnxpsprinter.h',
 			'src/lnxtheme.h',
-			'src/lnxtransfer.h',
 			'src/lnxans.cpp',
 			'src/lnxaudio.cpp',
-			'src/lnxclipboard.cpp',
 			'src/lnxcolor.cpp',
 			'src/lnxcursor.cpp',
 			'src/lnxdc.cpp',
@@ -637,12 +652,10 @@
 			'src/lnxkeymapping.cpp',
 			'src/lnxmisc.cpp',
 			'src/lnxmplayer.cpp',
-			'src/lnxpasteboard.cpp',
 			'src/lnxpsprinter.cpp',
 			'src/lnxspec.cpp',
 			'src/lnxstack.cpp',
 			'src/lnxtextlayout.cpp',
-			'src/lnxtransfer.cpp',
 			
 			# Group "Desktop - Mac"
 			'src/mac-internal.h',
@@ -692,9 +705,7 @@
 			'src/w32printer.h',
 			'src/w32text.h',
 			'src/w32theme.h',
-			'src/w32transfer.h',
 			'src/w32ans.cpp',
-			'src/w32clipboard.cpp',
 			'src/w32color.cpp',
 			'src/w32compat.cpp',
 			'src/w32cursor.cpp',
@@ -716,7 +727,6 @@
 			'src/w32text.cpp',
 			'src/w32textlayout.cpp',
 			'src/w32theme.cpp',
-			'src/w32transfer.cpp',
 
 			# Group "Desktop - Emscripten"
 			'src/em-async.h',
@@ -782,6 +792,7 @@
 			'src/deploy.cpp',
 			'src/deploy_capsule.cpp',
 			'src/deploy_dmg.cpp',
+			'src/deploy_emscripten.cpp',
 			'src/deploy_file.cpp',
 			'src/deploy_linux.cpp',
 			'src/deploy_macosx.cpp',
@@ -842,6 +853,7 @@
 			'src/srvtheme.cpp',
 			'src/srvspec.cpp',
 			'src/srvstack.cpp',
+			'src/native-layer-srv.cpp',
 		],
 		
 		# Java sources for Android
@@ -895,6 +907,8 @@
 			'src/java/com/runrev/android/nativecontrol/NativeControlModule.java',
 			'src/java/com/runrev/android/nativecontrol/ScrollerControl.java',
 			'src/java/com/runrev/android/nativecontrol/VideoControl.java',
+			
+			'src/java/com/runrev/android/libraries/LibBrowser.java',
 		],
 		
 		# AIDL sources for Android
@@ -933,6 +947,8 @@
 			'src/module-canvas.cpp',
 			'src/module-engine.cpp',
 			'src/module-resources.cpp',
+			
+			'src/module-browser.cpp',
 		],
 		
 		# Engine LCB files containing syntax
@@ -946,7 +962,7 @@
 		# Other engine LCB files
 		'engine_other_lcb_files':
 		[
-		
+			'src/browser.lcb',
 		],
 	},
 	
@@ -987,6 +1003,7 @@
 					[
 						'src/dskmac.cpp',
 						'src/srvmac.cpp',
+						'src/native-layer-mac.mm',
 					],
 				},
 			],
@@ -999,6 +1016,11 @@
 						['exclude', '(^|/)syslnx.*\\.cpp$'],
 						['exclude', '(^|/)linux-'],
 						['exclude', '-x11\.cpp$'],
+					],
+					
+					'sources!':
+					[
+						'src/native-layer-x11.cpp',
 					],
 				},
 			],
@@ -1016,6 +1038,7 @@
 					'sources!':
 					[
 						'src/srvwindows.cpp',
+						'src/native-layer-win32.cpp',
 					],
 				},
 			],
@@ -1035,6 +1058,11 @@
 					[
 						['exclude', '-android\.cpp$'],
 					],
+
+					'sources!':
+					[
+						'src/native-layer-android.cpp',
+					],
 				},
 			],
 			[
@@ -1043,6 +1071,11 @@
 					'sources/':
 					[
 						['exclude', '-ios\.(mm|cpp)$'],
+					],
+
+					'sources!':
+					[
+						'src/native-layer-ios.mm',
 					],
 				},
 			],
@@ -1086,7 +1119,6 @@
 						'src/desktop-dc.cpp',
 						'src/desktop-image.cpp',
 						'src/desktop-menu.cpp',
-						'src/desktop-pasteboard.cpp',
 						'src/desktop-stack.cpp',
 						'src/platform.cpp',
 						'src/platform-recorder.cpp',

@@ -17,12 +17,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MCUTILITY_H
 #define __MCUTILITY_H
 
-#ifndef _STRING_H
+#include <ctype.h>
 #include <string.h>
-#endif
 
 #include "foundation-unicode.h"
-#include <ctype.h>
+#include "typedefs.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -64,12 +64,14 @@ bool MCNumberCreateWithUnsignedInteger(uinteger_t p_value, MCNumberRef& r_number
 MC_DLLEXPORT_DEF
 bool MCNumberIsInteger(MCNumberRef self)
 {
+	__MCAssertIsNumber(self);
 	return (self -> flags & kMCNumberFlagIsReal) == 0;
 }
 
 MC_DLLEXPORT_DEF
 bool MCNumberIsReal(MCNumberRef self)
 {
+	__MCAssertIsNumber(self);
 	return (self -> flags & kMCNumberFlagIsReal) != 0;
 }
 

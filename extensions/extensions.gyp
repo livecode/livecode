@@ -24,6 +24,7 @@
 				'libraries/iconsvg/iconsvg.lcb',
 				'libraries/json/json.lcb',
 
+				'widgets/browser/browser.lcb',
 				#'widgets/button-popup/button-popup.lcb',
 				#’widgets/chart/chart.lcb',
 				'widgets/checkbox/checkbox.lcb',

@@ -128,6 +128,11 @@ MCErrorCreateWithMessage (MCTypeInfoRef p_typeinfo,
                           MCArrayRef p_info,
                           MCErrorRef & r_error)
 {
+	__MCAssertIsErrorTypeInfo(p_typeinfo);
+	__MCAssertIsString(p_message);
+	if (nil != p_info)
+		__MCAssertIsArray(p_info);
+
     __MCError *self;
     if (!__MCValueCreate(kMCValueTypeCodeError, self))
         return false;
@@ -161,6 +166,7 @@ bool MCErrorCreate(MCTypeInfoRef p_typeinfo, MCArrayRef p_info, MCErrorRef& r_er
 MC_DLLEXPORT_DEF
 bool MCErrorUnwind(MCErrorRef p_error, MCValueRef p_target, uindex_t p_row, uindex_t p_column)
 {
+	__MCAssertIsError(p_error);
     MCErrorFrame *t_frame;
     if (!MCMemoryNew(t_frame))
         return false;
@@ -186,24 +192,29 @@ bool MCErrorUnwind(MCErrorRef p_error, MCValueRef p_target, uindex_t p_row, uind
 MC_DLLEXPORT_DEF
 MCNameRef MCErrorGetDomain(MCErrorRef self)
 {
+	__MCAssertIsError(self);
     return MCErrorTypeInfoGetDomain(self -> typeinfo);
 }
 
 MC_DLLEXPORT_DEF
 MCArrayRef MCErrorGetInfo(MCErrorRef self)
 {
+	__MCAssertIsError(self);
     return self -> info;
 }
 
 MC_DLLEXPORT_DEF
 MCStringRef MCErrorGetMessage(MCErrorRef self)
 {
+	__MCAssertIsError(self);
     return self -> message;
 }
 
 MC_DLLEXPORT_DEF
 uindex_t MCErrorGetDepth(MCErrorRef self)
 {
+	__MCAssertIsError(self);
+
     if (self -> backtrace == nil)
         return 0;
     
@@ -232,6 +243,8 @@ static MCErrorFrame *__MCErrorGetFrameAtLevel(MCErrorRef self, uindex_t p_level)
 MC_DLLEXPORT_DEF
 MCValueRef MCErrorGetTargetAtLevel(MCErrorRef self, uindex_t p_level)
 {
+	__MCAssertIsError(self);
+
     MCErrorFrame *t_frame;
     t_frame = __MCErrorGetFrameAtLevel(self, p_level);
     if (t_frame == nil)
@@ -243,6 +256,8 @@ MCValueRef MCErrorGetTargetAtLevel(MCErrorRef self, uindex_t p_level)
 MC_DLLEXPORT_DEF
 uindex_t MCErrorGetRowAtLevel(MCErrorRef self, uindex_t p_level)
 {
+	__MCAssertIsError(self);
+
     MCErrorFrame *t_frame;
     t_frame = __MCErrorGetFrameAtLevel(self, p_level);
     if (t_frame == nil)
@@ -254,6 +269,8 @@ uindex_t MCErrorGetRowAtLevel(MCErrorRef self, uindex_t p_level)
 MC_DLLEXPORT_DEF
 uindex_t MCErrorGetColumnAtLevel(MCErrorRef self, uindex_t p_level)
 {
+	__MCAssertIsError(self);
+
     MCErrorFrame *t_frame;
     t_frame = __MCErrorGetFrameAtLevel(self, p_level);
     if (t_frame == nil)
@@ -267,6 +284,8 @@ uindex_t MCErrorGetColumnAtLevel(MCErrorRef self, uindex_t p_level)
 MC_DLLEXPORT_DEF
 bool MCErrorThrow(MCErrorRef p_error)
 {
+	__MCAssertIsError(p_error);
+
     if (s_last_error != nil)
         MCValueRelease(s_last_error);
     
@@ -306,6 +325,8 @@ MCErrorCreateAndThrowWithMessageV (MCTypeInfoRef p_error_type,
                                    MCStringRef p_message,
                                    va_list p_args)
 {
+	__MCAssertIsErrorTypeInfo(p_error_type);
+	__MCAssertIsString(p_message);
     MCAutoArrayRef t_info;
     if (!MCArrayCreateMutable(&t_info))
         return false;
@@ -393,18 +414,21 @@ bool MCErrorThrowOutOfMemory(void)
 MC_DLLEXPORT_DEF
 bool MCErrorThrowUnboundType(MCTypeInfoRef p_type)
 {
+	__MCAssertIsTypeInfo(p_type);
     return MCErrorCreateAndThrow(kMCUnboundTypeErrorTypeInfo, "type", MCNamedTypeInfoGetName(p_type), nil);
 }
 
 MC_DLLEXPORT_DEF
 bool MCErrorThrowUnimplemented(MCStringRef p_reason)
 {
+	__MCAssertIsString(p_reason);
     return MCErrorCreateAndThrow(kMCUnimplementedErrorTypeInfo, "reason", p_reason, nil);
 }
 
 MC_DLLEXPORT_DEF
 bool MCErrorThrowGeneric(MCStringRef p_reason)
 {
+	__MCAssertIsString(p_reason);
     return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", p_reason, nil);
 }
 

@@ -113,7 +113,7 @@
 				'conditions':
 				[
 					[
-						'OS == "mac" or OS == "ios"',
+						'OS == "mac"',
 						{
 							'libraries':
 							[
@@ -122,6 +122,7 @@
 								'$(SDKROOT)/System/Library/Frameworks/AppKit.framework',
 								'$(SDKROOT)/System/Library/Frameworks/ApplicationServices.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Carbon.framework',
+								'$(SDKROOT)/System/Library/Frameworks/Cocoa.framework',
 								'$(SDKROOT)/System/Library/Frameworks/IOKit.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Security.framework',
 							],
