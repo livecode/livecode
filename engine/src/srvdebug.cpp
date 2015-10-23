@@ -446,8 +446,6 @@ void MCServerDebugGet(MCStringRef p_property, MCStringRef& r_result)
     else if (MCStringIsEqualToCString(p_property, "files", kMCCompareExact))
         t_error = MCValueRetain(kMCEmptyString);
 	else
-        t_error = MCValueRetain(kMCEmptyString);
-	else
 		t_error = MCValueRetain(kMCEmptyString);
 
     r_result = t_error;
