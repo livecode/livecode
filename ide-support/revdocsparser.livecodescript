@@ -644,13 +644,13 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
             
             # Warn about comment format if appropriate
             if tCommentWarning then
-               logWarning "Docs comments for" && tEntryData["type"] && tEntryData["name"] && "should be contained in /** comments", pFilename
+               logWarning "Docs comments for" && tEntryData["type"] && tEntryData["name"] && "should be contained in /** comments", pSource
             end if	
             put false into tCommentWarning
             
          else
             if tEntryData["need_docs"] then
-               logError "Required documentation not found for" && tEntryData["type"] && tEntryData["name"], pFilename
+               logError "Required documentation not found for" && tEntryData["type"] && tEntryData["name"], pSource
             end if
          end if
          put empty into tEntryData
