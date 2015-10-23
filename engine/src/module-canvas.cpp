@@ -5878,8 +5878,7 @@ void MCCanvasFillTextAligned(MCStringRef p_text, integer_t p_halign, integer_t p
 			t_x = t_rect . size . width - t_text_width;
 			break;
 		default:
-			assert(false);
-			break;
+			MCUnreachableReturn()
 	}
 	
 	int32_t t_y;
@@ -5895,8 +5894,7 @@ void MCCanvasFillTextAligned(MCStringRef p_text, integer_t p_halign, integer_t p
 			t_y = t_rect . size . height - MCFontGetDescent(t_font);
 			break;
 		default:
-			assert(false);
-			break;
+			MCUnreachableReturn()
 	}
 	
 	MCCanvasApplyChanges(*MCCanvasGet(p_canvas));
