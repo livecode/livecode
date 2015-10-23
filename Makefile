@@ -24,8 +24,8 @@ WINE ?= wine
 
 # Some magic to control which versions of iOS we try to build.  N.b. you may
 # also need to modify the buildbot configuration
-IPHONEOS_VERSIONS ?= 8.2 8.4 9.0
-IPHONESIMULATOR_VERSIONS ?= 5.1 6.1 7.1 8.2 8.4 9.0
+IPHONEOS_VERSIONS ?= 8.2 8.4 9.1
+IPHONESIMULATOR_VERSIONS ?= 5.1 6.1 7.1 8.2 8.4 9.1
 
 IOS_SDKS ?= \
 	$(addprefix iphoneos,$(IPHONEOS_VERSIONS)) \
