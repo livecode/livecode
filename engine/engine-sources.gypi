@@ -954,9 +954,9 @@
 		# Engine LCB files containing syntax
 		'engine_syntax_lcb_files':
 		[
-			'src/canvas.mlc',
-			'src/engine.mlc',
-			'src/widget.mlc',
+			'src/canvas.lcb',
+			'src/engine.lcb',
+			'src/widget.lcb',
 		],
 		
 		# Other engine LCB files

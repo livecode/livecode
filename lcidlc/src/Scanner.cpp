@@ -412,7 +412,7 @@ static bool TextFileFetch(const char *p_filename, char*& r_data, uint32_t& r_dat
 	t_file_size = 0;
     
 	if (t_success)
-        t_success = fseek(t_stream, 0, SEEK_END) != 0;
+        t_success = fseek(t_stream, 0, SEEK_END) == 0;
     
     if (t_success)
     {
@@ -423,7 +423,7 @@ static bool TextFileFetch(const char *p_filename, char*& r_data, uint32_t& r_dat
     }
         
     if (t_success)
-        t_success = fseek(t_stream, 0, SEEK_SET) != 0;
+        t_success = fseek(t_stream, 0, SEEK_SET) == 0;
     
 	char *t_file_data;
 	t_file_data = nil;

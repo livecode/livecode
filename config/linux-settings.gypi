@@ -103,6 +103,7 @@
 		'-std=<(c++_std)',
 		'-fno-exceptions',
 		'-fno-rtti',
+		'-fcheck-new',
 	],
 	
 	'configurations':

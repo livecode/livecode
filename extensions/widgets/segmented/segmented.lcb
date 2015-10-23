@@ -742,15 +742,17 @@ end handler
 
 private handler calculateWidths() returns nothing
 	variable tCount as Number
-
 	// Retain existing behavior if display is "icon"
 	if mSegmentDisplay is "icon" then
 		variable tWidth as Real
 		put my width / mNumSegments into tWidth
 
+        variable tWidths as List
+        put [] into tWidths
 		repeat with tCount from 1 up to mNumSegments
-         put the maximum of tWidth and mSegmentMinWidth[tCount] into mCalculatedWidths[tCount]
+          push the maximum of tWidth and mSegmentMinWidth[tCount] onto tWidths
 		end repeat
+        put tWidths into mCalculatedWidths
 		return
 	end if
 
