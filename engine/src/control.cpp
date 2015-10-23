@@ -1118,6 +1118,7 @@ void MCControl::drawselected(MCDC *dc)
         dc->fillarc(rects[i], 0, 360, false);
 	if (flags & F_LOCK_LOCATION)
 		dc->setfillstyle(FillSolid, nil, 0, 0);
+    dc->setquality(QUALITY_DEFAULT);
 }
 
 void MCControl::drawarrow(MCDC *dc, int2 x, int2 y, uint2 size,
