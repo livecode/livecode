@@ -23,6 +23,7 @@ import android.media.*;
 import android.view.*;
 import android.widget.*;
 
+
 import java.io.*;
 
 public class VideoControl extends NativeControl
@@ -43,7 +44,15 @@ public class VideoControl extends NativeControl
     {
         m_video_view = new ExtVideoView(context);
         
-        m_video_controller = new MediaController(context);
+        m_video_controller = new MediaController(context){
+		// PM-2015-10-19: [[ Bug 16027 ]] Make sure the controller does not disappear every
+		// time a control (i.e. Pause button) is clicked. This happened because when touching
+		// the controls, MediaController called show(sDefaultTimeout);
+			@Override
+			public void show(int timeout) {
+				super.show(0);
+			}
+		};
         m_video_view.setMediaController(m_video_controller);
         
         setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
