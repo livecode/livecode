@@ -76,6 +76,7 @@
 					'-w',						# Disable warnings
 					'-fpermissive',				# Be more lax with old code
 					'-Wno-return-type',
+					'-Werror=uninitialized',
 				],
 				
 				'cflags_c':
@@ -128,6 +129,7 @@
 			[
 				'-O3',
 				'-g3',
+				'-Wno-error=maybe-uninitialized', #warning added only with optimisation ON
 			],
 			
 			'defines':

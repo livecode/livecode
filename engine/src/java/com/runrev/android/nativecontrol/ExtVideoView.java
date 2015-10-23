@@ -316,7 +316,7 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
         mMediaController = controller;
         attachMediaController();
     }
-    
+	
     public MediaController getMediaController() {
         return mMediaController;
     }
@@ -391,7 +391,8 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
                     if (mTargetState == STATE_PLAYING) {
                         start();
                         if (mMediaController != null) {
-                            mMediaController.show();
+							// PM-2015-10-08: [[ Bug 16027 ]] Make sure the controller does not disappear after some ms of inactivity
+                            mMediaController.show(0);
                         }
                     } else if (!isPlaying() &&
                                (seekToPosition != 0 || getCurrentPosition() > 0)) {
@@ -406,6 +407,10 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
                 // The video size might be reported to us later.
                 if (mTargetState == STATE_PLAYING) {
                     start();
+					// show the controller when starting playing a remote video
+					if (mMediaController != null) {
+						mMediaController.show(0);
+					}
                 }
             }
         }
@@ -538,7 +543,7 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
                 }
                 start();
                 if (mMediaController != null) {
-                    mMediaController.show();
+                    mMediaController.show(0);
                 }
             }
         }
@@ -621,7 +626,7 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
                     keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE) {
                 if (mMediaPlayer.isPlaying()) {
                     pause();
-                    mMediaController.show();
+                    mMediaController.show(0);
                 } else {
                     start();
                     mMediaController.hide();
@@ -630,7 +635,7 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
             } else if (keyCode == KeyEvent.KEYCODE_MEDIA_STOP
                     && mMediaPlayer.isPlaying()) {
                 pause();
-                mMediaController.show();
+                mMediaController.show(0);
             } else {
                 toggleMediaControlsVisiblity();
             }
@@ -644,7 +649,7 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
         if (mMediaController.isShowing()) {
             mMediaController.hide();
         } else {
-            mMediaController.show();
+            mMediaController.show(0);
         }
     }
 
