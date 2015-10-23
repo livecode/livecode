@@ -973,10 +973,7 @@ void MCWidgetChild::SetOwner(MCWidgetRef p_owner)
     if (p_owner == m_owner)
         return;
     
-    MCValueRelease(m_owner);
     m_owner = p_owner;
-    if (m_owner != nil)
-        MCValueRetain(m_owner);
 }
 
 bool MCWidgetChild::SetFrame(MCGRectangle p_frame)
