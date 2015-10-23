@@ -1370,7 +1370,8 @@ Boolean MCButton::mup(uint2 which, bool p_release)
                 // If the mouse release was handled, close the submenu. This
                 // takes care of backwards compatibility. Otherwise, ignore the
                 // mouse-up event.
-                if (message_with_args(MCM_mouse_release, which) != ES_NOT_HANDLED)
+                Exec_stat es = message_with_args(MCM_mouse_release, which);
+                if (es != ES_NOT_HANDLED && es != ES_PASS)
                     closemenu(True, True);
             }
 		}
