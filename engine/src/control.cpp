@@ -1113,6 +1113,7 @@ void MCControl::drawselected(MCDC *dc)
 	else
 		dc->setfillstyle(FillSolid, nil, 0, 0);
 	dc->setforeground(MCselectioncolor);
+    dc->setquality(QUALITY_SMOOTH);
     for (uint2 i = 0; i < 8; i++)
         dc->fillarc(rects[i], 0, 360, false);
 	if (flags & F_LOCK_LOCATION)
