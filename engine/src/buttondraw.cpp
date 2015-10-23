@@ -496,7 +496,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 					{
 						if (indicator && !(flags & F_SHOW_ICON))
 						{
-							sx += CHECK_SIZE + leftmargin;
+							sx += GetCheckSize() + leftmargin;
 							if (MClook == LF_WIN95)
 							{
 								sy++;
@@ -2004,4 +2004,13 @@ void MCButton::unlockshape(MCObjectShape& p_shape)
 {
 	if (p_shape . type == kMCObjectShapeMask)
 		icons -> curicon -> unlockbitmap(p_shape . mask . bits);
+}
+
+int16_t MCButton::GetCheckSize() const
+{
+    // If we aren't using GTK at the theming engine, return the fixed size
+    if (!IsNativeGTK())
+        return CHECK_SIZE;
+    
+    return MCcurtheme -> getmetric(WTHEME_METRIC_CHECKBUTTON_INDICATORSIZE);
 }
