@@ -703,6 +703,17 @@ void MCButton::drawcheck(MCDC *dc, MCRectangle &srect, Boolean white)
 	if (!(flags & F_AUTO_ARM) && MCcurtheme &&
 	        MCcurtheme->iswidgetsupported(WTHEME_TYPE_CHECKBOX))
 	{
+        if (IsNativeGTK())
+        {
+            int32_t t_size, t_spacing;
+            t_size = MCcurtheme -> getmetric(WTHEME_METRIC_CHECKBUTTON_INDICATORSIZE);
+            t_spacing = MCcurtheme -> getmetric(WTHEME_METRIC_CHECKBUTTON_INDICATORSPACING);
+            trect . x = srect . x + leftmargin - t_spacing;
+            trect . y = srect . y;
+            trect . width = t_size + 2*t_spacing;
+            trect . height = srect . height;
+        }
+        
 		MCWidgetInfo widgetinfo;
 		widgetinfo.type = WTHEME_TYPE_CHECKBOX;
 		getwidgetthemeinfo(widgetinfo);
@@ -859,9 +870,9 @@ void MCButton::drawradio(MCDC *dc, MCRectangle &srect, Boolean white)
 			int32_t t_size, t_spacing;
 			t_size = MCcurtheme -> getmetric(WTHEME_METRIC_RADIOBUTTON_INDICATORSIZE);
 			t_spacing = MCcurtheme -> getmetric(WTHEME_METRIC_RADIOBUTTON_INDICATORSPACING);
-			trect . x = srect . x + leftmargin - 2 + t_spacing;
+			trect . x = srect . x + leftmargin - t_spacing;
 			trect . y = srect . y;
-			trect . width = t_size;
+			trect . width = t_size + 2*t_spacing;
 			trect . height = srect . height;
 		}
 
