@@ -19,7 +19,7 @@ value (string): the value associated with this optional key }
 pEnumParam (enum): An enum parameter
 -"option 1" : description of option 1
 - option 2 : description of option 2
-- option 3 : description of option 3
+- option 3 : description of option 3 
 
 pOptionalParam (optional integer): An integer parameter
 pParam: A param afterward with no space
@@ -170,7 +170,6 @@ Each element of it represents the documentation for a handler contained in the l
 
 There are a number of ways of creating a library array:
 * <revDocsParseDirectoryToLibraryArray> creates a library array from all of the (non-inline) docs entries of a given type in a directory
-* <revDocsParseScriptToLibraryArray> creates a library array from the inline docs of a script
 * <revDocsParseDictionaryToLibraryArray> creates the dictionary library array
 
 */
@@ -233,34 +232,6 @@ function revDocsParseDirectoryToLibraryArray pLibraryName, pAuthor, pRootDir, pT
    return empty
 end revDocsParseDirectoryToLibraryArray
 
-/*
-Summary : Creates a library array from the given script
-
-pObjName: The name of the object whose script is being parsed
-pText: The script to be parsed
-pAuthor: The author name
-*/
-
-function revDocsParseScriptToLibraryArray pObjName, pText, pAuthor
-   local tLibraryA
-   
-   put pObjName into tLibraryA["name"]
-   put pAuthor into tLibraryA["author"]
-   
-   local tBlocksA, tParsedA
-   put revDocsParseScriptDocs(pText) into tBlocksA
-   put revDocsParseDocBlocks(tBlocksA) into tParsedA
-   
-   local tCount
-   put 1 into tCount
-   repeat for each key tEntry in tParsedA
-      put tParsedA[tEntry] into tLibraryA["doc"][tCount]
-      put tEntry into tLibraryA["doc"][tCount]["name"]
-      add 1 to tCount
-   end repeat
-   
-   return tLibraryA
-end revDocsParseScriptToLibraryArray
 
 /*
 Summary: Parses the current directory into a library array.
@@ -401,6 +372,67 @@ Convert inline docs to the standard format (that can be parsed without code bloc
 */
 
 function revDocsGenerateDocsFileFromModular pText, pFilename
+   return revDocsGenerateDocsFileFromText(pText, pFilename)
+end revDocsGenerateDocsFileFromModular
+
+function revDocsGenerateDocsFileFromText pText, pSource
+   local tEntryType
+   put empty into tEntryType
+   
+   local tInComment, tInEntry, tEntryEnded
+   put false into tInComment
+   put false into tInEntry
+   
+   local tFirstWord, tEntryData
+   local tComment, tData
+   local tHandlerData, tPhraseData
+   
+   local tLibraryData, tAPIData
+   revDocsExtractDocBlocks pText, pSource, tAPIData, tLibraryData
+   
+   # Allow inline module description as valid docs
+   if tAPIData is empty then
+      logWarning "No handlers documented", pSource
+   end if
+   
+   if tLibraryData["name"] is empty then
+      logError "No extension name found", pSource
+   end if
+   
+   local tOutput
+   put revDocsFormatInlineComments(tLibraryData, true) into tOutput
+   
+   if tOutput is empty then
+      logWarning "Invalid library-level docs", pSource
+   end if
+   
+   repeat for each key tKey in tAPIData
+      local tFormatted
+      put revDocsFormatInlineComments(tAPIData[tKey], false) into tFormatted
+      if tFormatted is empty then
+         logWarning "No docs for element" && tKey, pSource
+      else
+         put tFormatted & return & return after tOutput
+      end if
+   end repeat
+   return tOutput
+end revDocsGenerateDocsFileFromText
+
+##################################################
+#
+#          PARSING UTILITIES
+#
+##################################################
+
+/*
+Extracts the comment blocks that live in between functions which contain the documentation for those functions 
+
+pText: The script to extract comment blocks from
+pSource : The source of the script (either a filename or an object id)
+Returns (array) : An array containing the details for the comment blocks associated with each api entry
+
+*/
+on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
    local tEntryType
    put empty into tEntryType
    
@@ -417,6 +449,14 @@ function revDocsGenerateDocsFileFromModular pText, pFilename
    # Keep track of if this is a widget module or not
    local tIsWidget
    put false into tIsWidget
+   
+   # If the source is an object, then we are parsing script
+   local tIsScript
+   put there is a pSource into tIsScript
+   
+   # Keep track of whether we should warn about the comment style
+   local tCommentWarning
+   
    repeat for each line tLine in pText
       # Check to see if this is the start of a handler / syntax or a block of comments 
       put word 1 of tLine into tFirstWord
@@ -498,11 +538,38 @@ function revDocsGenerateDocsFileFromModular pText, pFilename
                put true into tEntryEnded
                put true into tEntryData["need_docs"]
                break
+            case "on"
+            case "command"
+            case "function"
+               if tFirstWord is "function" then
+                  put "function" into tEntryData["type"]
+               else
+                  put "command" into tEntryData["type"]
+               end if
+               put word 2 of tLine into tEntryData["name"]
+               put true into tEntryData["need_docs"]
+               break
             default
                # This is not a new entry
                put false into tInEntry
                # Check if this is a new comment block
                if tFirstWord begins with "/*" then
+                  
+                  # Warn when docs are contained in /* comments instead of /**                  
+                  if tFirstWord begins with "/**" then
+                     put false into tCommentWarning
+                  else
+                     put true into tCommentWarning
+                  end if
+                  
+                  # If this is script, and this is an initial block of comments,
+                  # then treat as the library description
+                  if tIsScript and tAPIData is empty and tComment is not empty then
+                     put "library" into tLibraryData["type"]
+                     put tComment into tLibraryData["comments"]
+                     put the short name of pSource into tLibraryData["name"]
+                  end if
+                  
                   # Discard any previous comments
                   put empty into tComment
                   local tCommentOffset
@@ -558,6 +625,10 @@ function revDocsGenerateDocsFileFromModular pText, pFilename
                   revDocsParseHandler line 1 of tData, tHandlerData
                   revDocsUpdateDocBlocks true, "handler", line 1 of tData, tComment, tAPIData
                   break
+               case "function"
+               case "command"
+                  revDocsUpdateDocBlocks false, tEntryData["type"], line 1 of tData, tComment, tAPIData
+                  break
                case "type"
                   break
                case "phrase"
@@ -570,6 +641,13 @@ function revDocsGenerateDocsFileFromModular pText, pFilename
                   revDocsUpdateDocBlocksForProperty tData, tComment, tAPIData
                   break
             end switch
+            
+            # Warn about comment format if appropriate
+            if tCommentWarning then
+               logWarning "Docs comments for" && tEntryData["type"] && tEntryData["name"] && "should be contained in /** comments", pFilename
+            end if	
+            put false into tCommentWarning
+            
          else
             if tEntryData["need_docs"] then
                logError "Required documentation not found for" && tEntryData["type"] && tEntryData["name"], pFilename
@@ -582,42 +660,12 @@ function revDocsGenerateDocsFileFromModular pText, pFilename
       end if
    end repeat
    
-   # Allow inline module description as valid docs
-   if tAPIData is empty then
-      logWarning "No handlers documented", pFilename
-   end if
-   
-   if tLibraryData["name"] is empty then
-      logError "No extension name found", pFilename
-   end if
-   
-   local tOutput
-   put revDocsFormatInlineComments(tLibraryData, true) into tOutput
-   
-   if tOutput is empty then
-      logWarning "Invalid library-level docs", pFilename
-   end if
-   
-   repeat for each key tKey in tAPIData
-      local tFormatted
-      put revDocsFormatInlineComments(tAPIData[tKey], false) into tFormatted
-      if tFormatted is empty then
-         logWarning "No docs for element" && tKey, pFilename
-      else
-         put tFormatted & return & return after tOutput
-      end if
-   end repeat
-   return tOutput
-end revDocsGenerateDocsFileFromModular
-
-##################################################
-#
-#          PARSING UTILITIES
-#
-##################################################
+   put tAPIData into rAPIData
+   put tLibraryData into rLibraryData
+end revDocsExtractDocBlocks 
 
 private command log pOutput
-      write pOutput & return to stdout
+   write pOutput & return to stdout
 end log
 
 private command logError pError, pFilename
@@ -844,10 +892,6 @@ function revDocsFormatInlineComments pDataA, pIsLibrary
    return tDocData
 end revDocsFormatInlineComments
 
-function revDocsParseScriptDocs pText
-   return revDocsExtractDocBlocksFromScript(pText)
-end revDocsParseScriptDocs
-
 function revDocsCollectGlossarySynonyms pRoot
    local tGlossaryA, tText, tName, tSynonyms
    set the defaultfolder to pRoot & slash & "glossary"
@@ -952,9 +996,15 @@ function revDocsExtractElements pText
             add 1 to tInternalBlankLines
          end if
          next repeat
-      else if matchText(tLine, tElementRegex, tNextElementName, tParamType, tAfterElement) then        
+      else if matchText(tLine, tElementRegex, tNextElementName, tParamType, tAfterElement) then   
+         if tAccumulatedContent is not empty and tElementCount is 0 then
+            add 1 to tElementCount
+         end if
          if tElementCount is not 0 then
             put tElementA into tElementsA[tElementCount]
+            if tElementA["name"] is empty then
+               put "Summary" into tElementsA[tElementCount]["name"]
+            end if
             delete the last char of tAccumulatedContent
             put tAccumulatedContent into tElementsA[tElementCount]["content"]
          end if
@@ -988,8 +1038,16 @@ function revDocsExtractElements pText
    end repeat
    
    # Add any remaining text to the last element
-   put tElementA into tElementsA[tElementCount]
-   put tAccumulatedContent into tElementsA[tElementCount]["content"]
+   if tAccumulatedContent is not empty and tElementCount is 0 then
+      add 1 to tElementCount
+   end if
+   if tElementCount is not 0 then
+      put tElementA into tElementsA[tElementCount]
+      if tElementA["name"] is empty then
+         put "Summary" into tElementsA[tElementCount]["name"]
+      end if
+      put tAccumulatedContent into tElementsA[tElementCount]["content"]
+   end if
    
    return tElementsA
 end revDocsExtractElements
@@ -1051,43 +1109,6 @@ private command __nameToKeyAndType pName, @rKey, @rType
          break
    end switch
 end __nameToKeyAndType
-/*
-Summary: Iterates through the keys of <pBlocksA> parsing the "comments" element
-
-Parameters:
-pBlocksA (array): An array representing all the docs data for each handler / syntax element
-{ key (string): the handler name, dictionary entry or lcb syntax name
-value (array): The array of details for this element
-{ key: "comments"
-value (string) : the comment block associated with this element }
-key: "params"
-value (string): a comma-delimited list of the parameters associated with this element
-}
-
-Returns (array): An array consisting of a key for each docs element, containing its corresponding value
-*/
-
-function revDocsParseDocBlocks pBlocksA, pFilename
-   local tParsedBlocksA
-   repeat for each key tHandler in pBlocksA
-      
-      if pBlocksA[tHandler]["comments"] is empty then
-         next repeat
-      end if
-      
-      # Extract the elements from the comment block
-      local tExtractedA
-      put revDocsExtractElements(pBlocksA[tHandler]["comments"]) into tExtractedA
-      
-      # Then parse them
-      local tParsedA
-      put revDocsParseElements(tExtractedA, pBlocksA[tHandler], pFilename) into tParsedA
-      
-      put tParsedA into tParsedBlocksA[tHandler]
-   end repeat
-   
-   return tParsedBlocksA
-end revDocsParseDocBlocks
 
 function revDocsParseElements pExtractedA, pBlocksA, pFilename
    local tParsedA
@@ -1389,13 +1410,13 @@ function revDocsParseDocText pText, pFilename
    
    // Add association and tag to the last element, if they were not found
    if tParsedA["name"] is not empty and tSeenAssociations is not true and tEntryCount is not 0 then
-      put tAssociationsDefault into tEntriesA[tEntryCount]["elements"][tEntryElementCount]
       add 1 to tEntryElementCount
+      put tAssociationsDefault into tEntriesA[tEntryCount]["elements"][tEntryElementCount]
    end if
    if tParsedA["tags"] is not empty and tSeenTags is not true and tEntryCount is not 0 then
+      add 1 to tEntryElementCount
       put "Tags" into tEntriesA[tEntryCount]["elements"][tEntryElementCount]["name"]
       put tParsedA["tags"] into tEntriesA[tEntryCount]["elements"][tEntryElementCount]["content"]
-      add 1 to tEntryElementCount
    end if
    
    // Add a library entry
@@ -1417,105 +1438,6 @@ function revDocsParseDocText pText, pFilename
    
    return tParsedA
 end revDocsParseDocText
-
-/*
-Extracts the comment blocks that live in between functions which contain the documentation for those functions 
-
-pScript: The script to extract comment blocks from
-pObjId (optional id) : The id of the object that the script belongs to
-Returns (array) : An array containing the details for the comment blocks associated with each handler
-
-*/
-function revDocsExtractDocBlocksFromScript pScript, pObjId
-   local tData
-   local tEntryType
-   put empty into tEntryType
-   
-   local tInComment
-   put false into tInComment
-   
-   local tComment, tParams, tFirstLine
-   
-   repeat for each line tLine in pScript
-      // Check to see if this is the start of a block of code or a block of comments 
-      get word 1 of tLine 
-      if not tInComment and tEntryType is empty then
-         if (it is "on") then 
-            put "command" into tEntryType
-         else if (it is "function" or it is "command") then
-            put it into tEntryType
-         end if
-         
-         if it begins with "/*" then
-            // if we have a new comment block, discard the previous one
-            put empty into tComment
-            local tCommentOffset
-            put true into tInComment
-            put offset("/*", tLine) into tCommentOffset
-            put char tCommentOffset + 2 to -1 of tLine into tLine
-            // If there's nothing else on this line, don't add it.
-            if word 1 of tLine is empty then next repeat
-         end if
-      end if
-      
-      // If we're in a handler, check to see if this is the end of a block of code.
-      if tEntryType is not empty  then
-         // ignore empty lines
-         if word 1 of tLine is empty then
-            next repeat
-         end if
-         // If so, then flush all the data
-         if it is "end" then
-            revDocsUpdateDocBlocks false, tEntryType, tFirstLine, tComment, tData
-            put empty into tComment
-            put empty into tFirstLine
-            put empty into tEntryType
-            // Otherwise gather the data from this line
-         else 
-            // Name, Syntax & Params all on the same line for non-syntax
-            if tFirstLine is empty then
-               put tLine into tFirstLine
-            end if
-         end if
-      end if
-      // If we're in comments check to see if this is the end of a block of comments
-      if tInComment then
-         if word -1 of tLine ends with "*/" then
-            put false into tInComment
-            put offset("*/", tLine) into tCommentOffset
-            put char 1 to tCommentOffset - 1 of tLine into tLine
-            // If there's nothing else on this line, don't add it.
-            if word 1 of tLine is empty then
-               next repeat
-            end if
-         else if tComment is empty and word 1 of tLine is empty then
-            next repeat
-         end if
-         put tLine & return after tComment
-      end if
-      
-   end repeat
-   return tData
-end revDocsExtractDocBlocksFromScript
-
-/* 
-Summary: Parses a script's documentation into array format
-
-pScript (string): The script to parse
-pObjId (optional id) : The id of the object that the script belongs to
-Returns (array): An array representing all the information contained in the inline docs
-
-*/
-function revDocsParseDocsFromScript pScript, pObjId
-   local tLibraryA
-   put revDocsExtractDocBlocksFromScript(pScript, pObjId) into tLibraryA
-   
-   return revDocsParseDocBlocks(tLibraryA["data"], the filename of revIDEStackOfObject(pObjID))
-end revDocsParseDocsFromScript
-
-function revDocsParseDocsFromID pObjId
-   return revDocsParseDocsFromScript(the script of pObjId, pObjId)
-end revDocsParseDocsFromID
 
 /*
 Removes the unnecessary (from the point of view of docs) parts of a lcb syntax declaration
@@ -1728,6 +1650,7 @@ command revDocsUpdateDocBlocks pModular, pType, pLine, pComment, @xDataA
    put tSyntax into xDataA[tEntryName]["syntax"][1]
    put tParamArray into xDataA[tEntryName]["params"]
    put pType into xDataA[tEntryName]["type"]
+   put tEntryName into xDataA[tEntryName]["name"]
    
    # Output the comments that preceded this function definition
    put pComment into xDataA[tEntryName]["comments"]
