@@ -1303,7 +1303,8 @@ Boolean MCButton::mup(uint2 which, bool p_release)
 		}
 		if (menudepth > mymenudepth)
 		{
-			menu->mup(which, p_release);
+            // Forward the click to the nested menu
+            menu->mup(which, p_release);
 			if (menudepth > mymenudepth)
 				return True;
 		}
@@ -1342,14 +1343,18 @@ Boolean MCButton::mup(uint2 which, bool p_release)
 		MCmenupoppedup = true;
 		menu->menumup(which, &t_pick, menuhistory);
 		MCmenupoppedup = false;
-		closemenu(True, True);
-		if (!(state & CS_IGNORE_MENU))
+		if (state & CS_IGNORE_MENU)
+            closemenu(True, True);
+        else
 		{
 			// An empty string means something handled the menumup while the
 			// null string means nothing responded to it.
 			if (*t_pick != nil)
 			{
-				if (menumode == WM_OPTION || menumode == WM_COMBO)
+                // Something was selected so close the sub-menu
+                closemenu(True, True);
+                
+                if (menumode == WM_OPTION || menumode == WM_COMBO)
 				{
 					MCValueAssign(label, *t_pick);
                     // SN-2014-08-05: [[ Bug 13100 ]] An empty label is not an issue,
@@ -1361,7 +1366,13 @@ Boolean MCButton::mup(uint2 which, bool p_release)
 				docascade(*t_pick);
 			}
 			else
-				message_with_args(MCM_mouse_release, which);
+            {
+                // If the mouse release was handled, close the submenu. This
+                // takes care of backwards compatibility. Otherwise, ignore the
+                // mouse-up event.
+                if (message_with_args(MCM_mouse_release, which) != ES_NOT_HANDLED)
+                    closemenu(True, True);
+            }
 		}
 		state &= ~CS_IGNORE_MENU;
 		if (MCmenuobjectptr == this)
