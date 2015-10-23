@@ -74,6 +74,14 @@ public:
     void event_dnd_end(MCWidget*);
     void event_dnd_drop(MCWidget*);
     
+    // (Child) Widget appear / disappear notifications (used to ensure the widget
+    // event manager syncs events and internal state appropriately).
+    void widget_appearing(MCWidgetRef widget);
+    void widget_disappearing(MCWidgetRef widget);
+    
+    // Tell the event manager to sync widget state.
+    void widget_sync(void);
+    
     MCWidgetRef GetGrabbedWidget(void) const;
     MCWidgetRef GetTargetWidget(void) const;
     MCWidgetRef SetTargetWidget(MCWidgetRef target);
@@ -113,6 +121,10 @@ private:
     // Parameters for controlling double-click time and position deltas
     uint32_t    m_doubleclick_time;
     coord_t     m_doubleclick_distance;
+    
+    // When set to true, widget-bound state (mouse focus etc.) will be recomputed
+    // after the current event has finished.
+    bool        m_check_mouse_focus : 1;
     
     // State for touch events
     struct MCWidgetTouchEvent;
