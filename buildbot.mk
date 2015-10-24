@@ -98,9 +98,11 @@ bin_dir = ${top_src_dir}/$(BUILD_PLATFORM)-bin
 ifeq ($(BUILD_PLATFORM),mac)
   LIVECODE = $(bin_dir)/LiveCode-Community.app/Contents/MacOS/LiveCode-Community
   buildtool_platform = mac
+  upload_checksum =
 else ifeq ($(findstring linux,$(BUILD_PLATFORM)),linux)
   LIVECODE = $(bin_dir)/livecode-community
   buildtool_platform = linux
+  upload_checksum = sha1sum.txt
 endif
 
 # FIXME add --warn-as-error
@@ -111,6 +113,7 @@ buildtool_command = $(LIVECODE) -ui $(BUILDTOOL_STACK) \
 
 # Settings for upload
 RSYNC ?= rsync
+SHA1SUM ?= sha1sum
 UPLOAD_SERVER ?= meg.on-rev.com
 UPLOAD_PATH = staging/$(BUILD_LONG_VERSION)/$(GIT_VERSION)
 UPLOAD_MAX_RETRIES = 50
@@ -150,7 +153,9 @@ dist-tools-commercial:
 	$(buildtool_command) --platform linux --platform mac --platform win --stage tools --edition commercial
 
 # Make a list of installers to be uploaded to the distribution server
-dist-upload-files.txt:
+# If a checksum file is needed, generate it with sha1sum
+dist-upload-files.txt $(upload_checksum):
+	set -e; \
 	find . -maxdepth 1 -name 'LiveCode*Installer-*-Mac.dmg' \
 	                -o -name 'LiveCode*Installer-*-Windows.exe' \
 	                -o -name 'LiveCode*Installer-*-Linux.*' \
@@ -158,11 +163,11 @@ dist-upload-files.txt:
 	                -o -name 'LiveCode*Server-*-Mac.zip' \
 	                -o -name 'LiveCode*Server-*-Windows.zip' \
 	                -o -name '*-bin.tar.xz' \
-	  > $@
-
-# Compute the SHA-1 sum of all the installers to be uploaded
-sha1sum.txt: dist-upload-files.txt
-	sha1sum < dist-upload-files.txt > $@
+	  > dist-upload-files.txt; \
+	if test -n "$(upload_checksum)"; then \
+	  $(SHA1SUM) < dist-upload-files.txt > $(upload_checksum); \
+	  echo "$(upload_checksum)" >> dist-upload-files.txt; \
+	fi
 
 # Perform the upload.  This is in two steps:
 # (1) Create the target directory
@@ -172,14 +177,14 @@ sha1sum.txt: dist-upload-files.txt
 # connection drops
 dist-upload-mkdir:
 	ssh $(UPLOAD_SERVER) "mkdir -p \"$(UPLOAD_PATH)\""
-dist-upload: dist-upload-files.txt sha1sum.txt dist-upload-mkdir
+dist-upload: dist-upload-files.txt dist-upload-mkdir
 	trap "echo Interrupted; exit;" SIGINT SIGTERM; \
 	i=0; \
 	false; \
 	while [ $$? -ne 0 -a $$i -lt $(UPLOAD_MAX_RETRIES) ] ; do \
 	  i=$$(($$i+1)); \
 	  rsync -v --progress --partial --chmod=ugo=rwX --executability \
-	    --files-from=dist-upload-files.txt sha1sum.txt . $(UPLOAD_SERVER):"\"$(UPLOAD_PATH)\""; \
+	    --files-from=dist-upload-files.txt . $(UPLOAD_SERVER):"\"$(UPLOAD_PATH)\""; \
 	done; \
 	rc=$$?; \
 	if [ $$i -eq $(UPLOAD_MAX_RETRIES) ]; then \
