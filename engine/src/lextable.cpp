@@ -309,6 +309,8 @@ LT command_table[] =
         {"decrypt", TT_STATEMENT, S_DECRYPT},
         {"default", TT_DEFAULT, S_UNDEFINED},
         {"define", TT_STATEMENT, S_DEFINE},
+        // MDW-2015-10-24 [[ "highlight" ]]
+        {"dehighlight", TT_STATEMENT, S_UNHILITE},
         {"dehilite", TT_STATEMENT, S_UNHILITE},
         {"delete", TT_STATEMENT, S_DELETE},
 		// MW-2008-11-05: [[ Dispatch Command ]] 'dispatch' is a statement keyword
@@ -339,6 +341,8 @@ LT command_table[] =
         {"grab", TT_STATEMENT, S_GRAB},
         {"group", TT_STATEMENT, S_GROUP},
         {"hide", TT_STATEMENT, S_HIDE},
+        // MDW-2015-10-24 [[ "highlight" ]]
+        {"highlight", TT_STATEMENT, S_HILITE},
         {"hilite", TT_STATEMENT, S_HILITE},
         {"if", TT_STATEMENT, S_IF},
         {"import", TT_STATEMENT, S_IMPORT},
@@ -420,6 +424,8 @@ LT command_table[] =
         {"undefine", TT_STATEMENT, S_UNDEFINE},
         {"undo", TT_STATEMENT, S_UNDO},
         {"ungroup", TT_STATEMENT, S_UNGROUP},
+        // MDW-2015-10-24 [[ "highlight" ]]
+        {"unhighlight", TT_STATEMENT, S_UNHILITE},
         {"unhilite", TT_STATEMENT, S_UNHILITE},
         {"union", TT_STATEMENT, S_UNION},
         {"unload", TT_STATEMENT, S_UNLOAD},
@@ -591,6 +597,7 @@ LT factor_table[] =
         {"audioclip", TT_CHUNK, CT_AUDIO_CLIP},
         {"audioclips", TT_CLASS, CT_AUDIO_CLIP},
         {"autoarm", TT_PROPERTY, P_AUTO_ARM},
+        // MDW-2015-10-24 [[ "highlight" ]]
         {"autohilight", TT_PROPERTY, P_AUTO_HILITE},
         {"autohilite", TT_PROPERTY, P_AUTO_HILITE},
         {"autoselect", TT_PROPERTY, P_LIST_BEHAVIOR},
@@ -1019,19 +1026,45 @@ LT factor_table[] =
         {"hilight", TT_PROPERTY, P_HILITE},
         {"hilighted", TT_PROPERTY, P_HILITE},
         {"hilite", TT_PROPERTY, P_HILITE},
+        // MDW-2015-10-24 [[ "highlight" ]]
+        {"highlightborder", TT_PROPERTY, P_HILITE_BORDER},
         {"hiliteborder", TT_PROPERTY, P_HILITE_BORDER},
+        // MDW-2015-10-24 [[ "highlight" ]]
+        {"highlightcolor", TT_PROPERTY, P_HILITE_COLOR},
         {"hilitecolor", TT_PROPERTY, P_HILITE_COLOR},
         {"hilited", TT_PROPERTY, P_HILITE},
+         // MDW-2015-10-24 [[ "highlight" ]]
+        {"highlightedbutton", TT_PROPERTY, P_HILITED_BUTTON},
         {"hilitedbutton", TT_PROPERTY, P_HILITED_BUTTON},
+        // MDW-2015-10-24 [[ "highlight" ]]
+        {"highlightedbuttonid", TT_PROPERTY, P_HILITED_BUTTON_ID},
         {"hilitedbuttonid", TT_PROPERTY, P_HILITED_BUTTON_ID},
+        // MDW-2015-10-24 [[ "highlight" ]]
+        {"highlightedbuttonname", TT_PROPERTY, P_HILITED_BUTTON_NAME},
         {"hilitedbuttonname", TT_PROPERTY, P_HILITED_BUTTON_NAME},
+         // MDW-2015-10-24 [[ "highlight" ]]
+        {"highlightedicon", TT_PROPERTY, P_HILITED_ICON},
         {"hilitedicon", TT_PROPERTY, P_HILITED_ICON},
+         // MDW-2015-10-24 [[ "highlight" ]]
+        {"highlightedline", TT_PROPERTY, P_HILITED_LINES},
         {"hilitedline", TT_PROPERTY, P_HILITED_LINES},
+         // MDW-2015-10-24 [[ "highlight" ]]
+        {"highlightedlines", TT_PROPERTY, P_HILITED_LINES},
         {"hilitedlines", TT_PROPERTY, P_HILITED_LINES},
+        // MDW-2015-10-24 [[ "highlight" ]]
+        {"highlightedtext", TT_FUNCTION, F_SELECTED_TEXT},
         {"hilitedtext", TT_FUNCTION, F_SELECTED_TEXT},
+        // MDW-2015-10-24 [[ "highlight" ]]
+        {"highlightfill", TT_PROPERTY, P_HILITE_FILL},
         {"hilitefill", TT_PROPERTY, P_HILITE_FILL},
+        // MDW-2015-10-24 [[ "highlight" ]]
+        {"highlighticon", TT_PROPERTY, P_HILITED_ICON},
         {"hiliteicon", TT_PROPERTY, P_HILITED_ICON},
+        // MDW-2015-10-24 [[ "highlight" ]]
+        {"highlightpattern", TT_PROPERTY, P_HILITE_PATTERN},
         {"hilitepattern", TT_PROPERTY, P_HILITE_PATTERN},
+        // MDW-2015-10-24 [[ "highlight" ]]
+        {"highlightpixel", TT_PROPERTY, P_HILITE_PIXEL},
         {"hilitepixel", TT_PROPERTY, P_HILITE_PIXEL},
 		// MW-2011-11-24: [[ Nice Folders ]] The adjective for 'the home folder'.
 		{"home", TT_PROPERTY, P_HOME_FOLDER},
@@ -1115,6 +1148,8 @@ LT factor_table[] =
         {"lines", TT_CLASS, CT_LINE},
         {"linesize", TT_PROPERTY, P_LINE_SIZE},
         {"linkcolor", TT_PROPERTY, P_LINK_COLOR},
+        // MDW-2015-10-24 [[ "highlight" ]]
+        {"linkhighlightcolor", TT_PROPERTY, P_LINK_HILITE_COLOR},
         {"linkhilitecolor", TT_PROPERTY, P_LINK_HILITE_COLOR},
         {"linktext", TT_PROPERTY, P_LINK_TEXT},
         {"linkvisitedcolor", TT_PROPERTY, P_LINK_VISITED_COLOR},
@@ -1251,6 +1286,8 @@ LT factor_table[] =
         {"movingcontrols", TT_FUNCTION, F_MOVING_CONTROLS},
         {"multieffect", TT_PROPERTY, P_MULTI_EFFECT},
         {"multiple", TT_PROPERTY, P_MULTIPLE},
+         // MDW-2015-10-24 [[ "highlight" ]]
+       {"multiplehighlights", TT_PROPERTY, P_MULTIPLE_HILITES},
         {"multiplehilites", TT_PROPERTY, P_MULTIPLE_HILITES},
         {"multiplelines", TT_PROPERTY, P_MULTIPLE_HILITES},
         {"multispace", TT_PROPERTY, P_MULTI_SPACE},
@@ -1262,6 +1299,8 @@ LT factor_table[] =
         {"ninth", TT_CHUNK, CT_NINTH},
         {"no", TT_UNOP, O_NOT},
         {"nodes", TT_PROPERTY, P_NODES},
+        // MDW-2015-10-24 [[ "highlight" ]]
+        {"noncontiguoushighlights", TT_PROPERTY, P_NONCONTIGUOUS_HILITES},
         {"noncontiguoushilites", TT_PROPERTY, P_NONCONTIGUOUS_HILITES},
         {"normalizetext", TT_FUNCTION, F_NORMALIZE_TEXT},
         {"not", TT_UNOP, O_NOT},
@@ -1578,6 +1617,8 @@ LT factor_table[] =
 		{"sharedbehavior", TT_PROPERTY, P_SHARED_BEHAVIOR},
 		{"sharedgroupids", TT_PROPERTY, P_SHARED_GROUP_IDS},
 		{"sharedgroupnames", TT_PROPERTY, P_SHARED_GROUP_NAMES},
+        // MDW-2015-10-24 [[ "highlight" ]]
+        {"sharedhighlight", TT_PROPERTY, P_SHARED_HILITE},
         {"sharedhilite", TT_PROPERTY, P_SHARED_HILITE},
         {"sharedtext", TT_PROPERTY, P_SHARED_TEXT},
         {"shell", TT_FUNCTION, F_SHELL},
@@ -1591,6 +1632,8 @@ LT factor_table[] =
         {"showfill", TT_PROPERTY, P_FILLED},
         {"showfocusborder", TT_PROPERTY, P_SHOW_FOCUS_BORDER},
         {"showgroups", TT_PROPERTY, P_UNDERLINE_LINKS},
+        // MDW-2015-10-24 [[ "highlight" ]]
+        {"showhighlight", TT_PROPERTY, P_SHOW_HILITE},
         {"showhilite", TT_PROPERTY, P_SHOW_HILITE},
         {"showicon", TT_PROPERTY, P_SHOW_ICON},
         {"showinvisibles", TT_PROPERTY, P_SHOW_INVISIBLES},
@@ -1703,6 +1746,8 @@ LT factor_table[] =
         {"thirdpixel", TT_PROPERTY, P_HILITE_PIXEL},
         {"this", TT_CHUNK, CT_THIS},
         {"threed", TT_PROPERTY, P_3D},
+        // MDW-2015-10-24 [[ "highlight" ]]
+        {"threedhighlight", TT_PROPERTY, P_3D_HILITE},
         {"threedhilite", TT_PROPERTY, P_3D_HILITE},
         {"thumbcolor", TT_PROPERTY, P_FORE_COLOR},
         {"thumbpattern", TT_PROPERTY, P_FORE_PATTERN},
@@ -1717,6 +1762,8 @@ LT factor_table[] =
         {"title", TT_PROPERTY, P_LABEL},
         {"titlewidth", TT_PROPERTY, P_LABEL_WIDTH},
         {"to", TT_TO, PT_TO},
+        // MDW-2015-10-24 [[ "highlight" ]]
+        {"togglehighlights", TT_PROPERTY, P_TOGGLE_HILITE},
         {"togglehilites", TT_PROPERTY, P_TOGGLE_HILITE},
         {"token", TT_CHUNK, CT_TOKEN},
         {"tokens", TT_CLASS, CT_TOKEN},
