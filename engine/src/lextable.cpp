@@ -598,7 +598,7 @@ LT factor_table[] =
         {"audioclips", TT_CLASS, CT_AUDIO_CLIP},
         {"autoarm", TT_PROPERTY, P_AUTO_ARM},
         // MDW-2015-10-24 [[ "highlight" ]]
-        {"autohilight", TT_PROPERTY, P_AUTO_HILITE},
+        {"autohighlight", TT_PROPERTY, P_AUTO_HILITE},
         {"autohilite", TT_PROPERTY, P_AUTO_HILITE},
         {"autoselect", TT_PROPERTY, P_LIST_BEHAVIOR},
         {"autotab", TT_PROPERTY, P_AUTO_TAB},
@@ -1028,43 +1028,32 @@ LT factor_table[] =
         {"hilite", TT_PROPERTY, P_HILITE},
         // MDW-2015-10-24 [[ "highlight" ]]
         {"highlightborder", TT_PROPERTY, P_HILITE_BORDER},
-        {"hiliteborder", TT_PROPERTY, P_HILITE_BORDER},
-        // MDW-2015-10-24 [[ "highlight" ]]
         {"highlightcolor", TT_PROPERTY, P_HILITE_COLOR},
+         {"hiliteborder", TT_PROPERTY, P_HILITE_BORDER},
         {"hilitecolor", TT_PROPERTY, P_HILITE_COLOR},
         {"hilited", TT_PROPERTY, P_HILITE},
          // MDW-2015-10-24 [[ "highlight" ]]
         {"highlightedbutton", TT_PROPERTY, P_HILITED_BUTTON},
-        {"hilitedbutton", TT_PROPERTY, P_HILITED_BUTTON},
-        // MDW-2015-10-24 [[ "highlight" ]]
-        {"highlightedbuttonid", TT_PROPERTY, P_HILITED_BUTTON_ID},
-        {"hilitedbuttonid", TT_PROPERTY, P_HILITED_BUTTON_ID},
-        // MDW-2015-10-24 [[ "highlight" ]]
+         {"highlightedbuttonid", TT_PROPERTY, P_HILITED_BUTTON_ID},
         {"highlightedbuttonname", TT_PROPERTY, P_HILITED_BUTTON_NAME},
-        {"hilitedbuttonname", TT_PROPERTY, P_HILITED_BUTTON_NAME},
-         // MDW-2015-10-24 [[ "highlight" ]]
         {"highlightedicon", TT_PROPERTY, P_HILITED_ICON},
-        {"hilitedicon", TT_PROPERTY, P_HILITED_ICON},
-         // MDW-2015-10-24 [[ "highlight" ]]
         {"highlightedline", TT_PROPERTY, P_HILITED_LINES},
-        {"hilitedline", TT_PROPERTY, P_HILITED_LINES},
-         // MDW-2015-10-24 [[ "highlight" ]]
         {"highlightedlines", TT_PROPERTY, P_HILITED_LINES},
-        {"hilitedlines", TT_PROPERTY, P_HILITED_LINES},
-        // MDW-2015-10-24 [[ "highlight" ]]
         {"highlightedtext", TT_FUNCTION, F_SELECTED_TEXT},
-        {"hilitedtext", TT_FUNCTION, F_SELECTED_TEXT},
-        // MDW-2015-10-24 [[ "highlight" ]]
         {"highlightfill", TT_PROPERTY, P_HILITE_FILL},
-        {"hilitefill", TT_PROPERTY, P_HILITE_FILL},
-        // MDW-2015-10-24 [[ "highlight" ]]
         {"highlighticon", TT_PROPERTY, P_HILITED_ICON},
-        {"hiliteicon", TT_PROPERTY, P_HILITED_ICON},
-        // MDW-2015-10-24 [[ "highlight" ]]
         {"highlightpattern", TT_PROPERTY, P_HILITE_PATTERN},
-        {"hilitepattern", TT_PROPERTY, P_HILITE_PATTERN},
-        // MDW-2015-10-24 [[ "highlight" ]]
         {"highlightpixel", TT_PROPERTY, P_HILITE_PIXEL},
+       {"hilitedbutton", TT_PROPERTY, P_HILITED_BUTTON},
+        {"hilitedbuttonid", TT_PROPERTY, P_HILITED_BUTTON_ID},
+         {"hilitedbuttonname", TT_PROPERTY, P_HILITED_BUTTON_NAME},
+         {"hilitedicon", TT_PROPERTY, P_HILITED_ICON},
+         {"hilitedline", TT_PROPERTY, P_HILITED_LINES},
+         {"hilitedlines", TT_PROPERTY, P_HILITED_LINES},
+        {"hilitedtext", TT_FUNCTION, F_SELECTED_TEXT},
+         {"hilitefill", TT_PROPERTY, P_HILITE_FILL},
+        {"hiliteicon", TT_PROPERTY, P_HILITED_ICON},
+        {"hilitepattern", TT_PROPERTY, P_HILITE_PATTERN},
         {"hilitepixel", TT_PROPERTY, P_HILITE_PIXEL},
 		// MW-2011-11-24: [[ Nice Folders ]] The adjective for 'the home folder'.
 		{"home", TT_PROPERTY, P_HOME_FOLDER},
@@ -1286,8 +1275,8 @@ LT factor_table[] =
         {"movingcontrols", TT_FUNCTION, F_MOVING_CONTROLS},
         {"multieffect", TT_PROPERTY, P_MULTI_EFFECT},
         {"multiple", TT_PROPERTY, P_MULTIPLE},
-         // MDW-2015-10-24 [[ "highlight" ]]
-       {"multiplehighlights", TT_PROPERTY, P_MULTIPLE_HILITES},
+        // MDW-2015-10-24 [[ "highlight" ]]
+        {"multiplehighlights", TT_PROPERTY, P_MULTIPLE_HILITES},
         {"multiplehilites", TT_PROPERTY, P_MULTIPLE_HILITES},
         {"multiplelines", TT_PROPERTY, P_MULTIPLE_HILITES},
         {"multispace", TT_PROPERTY, P_MULTI_SPACE},
