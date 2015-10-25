@@ -671,6 +671,7 @@ TestAssert "test", the highlight of button 1
 end TestHighlightUnhighlight
 
 on TestHighlightBorder
+create button
 set the hiliteborder of button 1 to false
 TestAssert "test", the hiliteborder of button 1 is false
 
@@ -685,6 +686,7 @@ TestAssert "test", the highlightborder of button 1
 end TestHighlightBorder
 
 on TestHighlightFill
+create button
 set the highlightfill of button 1 to false
 TestAssert "test", the highlightfill of button 1 is false
 
@@ -693,6 +695,7 @@ TestAssert "test", the highlightfill of button 1
 end TestHighlightFill
 
 on TestHighlightedIcon
+create button
 set the highlightedIcon of button 1 to 1234
 TestAssert "test", the highlightedIcon of button 1 is 1234
 
@@ -701,6 +704,7 @@ TestAssert "test", the highlightedIcon of button 1 is 42
 end TestHighlightedIcon
 
 on TestSharedHighlight
+create button
 set the sharedhighlight of button 1 to false
 TestAssert "test", the sharedhighlight of button 1 is false
 
@@ -709,6 +713,7 @@ TestAssert "test", the sharedhighlight of button 1
 end TestSharedHighlight
 
 on TestShowHighlight
+create button
 set the showhighlight of button 1 to false
 TestAssert "test", the showhighlight of button 1 is false
 
@@ -733,6 +738,7 @@ TestAssert "test", the linkhilitecolor of field 1 is "blue"
 end TestHighlightColors
 
 on TestHighlighted
+create field
 set the highlighted of field 1 to false
 TestAssert "test", the highlighted of field 1 is false
 
@@ -753,6 +759,7 @@ TestAssert "test", the autohighlight of field 1 is false
 end TestHighlighted
 
 on TestToggleHighlights
+create field
 set the togglehighlights of field 1 to true
 TestAssert "test", the togglehighlights of field 1
 
@@ -767,20 +774,21 @@ TestAssert "test", the togglehilites of field 1 is false
 end TestToggleHighlights
 
 on TestThreedHighlight
-set the threedhighlight of field 1 to true
-TestAssert "test", the threedhighlight of field 1
+create button
+set the threedhighlight of button 1 to true
+TestAssert "test", the threedhighlight of button 1
 
-set the threedhighlight of field 1 to false
-TestAssert "test", the threedhighlight of field 1 is false
+set the threedhighlight of button 1 to false
+TestAssert "test", the threedhighlight of button 1 is false
 
-set the threedhilite of field 1 to true
-TestAssert "test", the threedhilite of field 1
+set the threedhilite of button 1 to true
+TestAssert "test", the threedhilite of button 1
 
-set the threedhilite of field 1 to false
-TestAssert "test", the threedhilite of field 1 is false
+set the threedhilite of button 1 to false
+TestAssert "test", the threedhilite of button 1 is false
 end TestThreedHighlight
 
-on TestInterface81
+on TestHighlightedButton
 # highlightedButton
 create group
 create button in group 1
@@ -789,7 +797,7 @@ set the highlightedButton of group 1 to 1
 TestAssert "test", the highlightedButton of group 1 is 1
 set the highlightedButton of group 1 to 2
 TestAssert "test", the highlightedButton of group 1 is 2
-end TestInterface81
+end TestHighlightedButton
 
 on TestInterface83
 
