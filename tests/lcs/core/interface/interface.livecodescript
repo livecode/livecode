@@ -638,8 +638,7 @@ TestAssert "test", the long id of the current card is tId
 
 end TestInterface76
 
-on TestInterface79
-
+on TestHighlightUnhighlight
 
 create button
 create button
@@ -669,7 +668,9 @@ dehighlight button 1
 TestAssert "test", not the highlight of button 1
 highlight button 1
 TestAssert "test", the highlight of button 1
+end TestHighlightUnhighlight
 
+on TestHighlightBorder
 set the hiliteborder of button 1 to false
 TestAssert "test", the hiliteborder of button 1 is false
 
@@ -681,35 +682,41 @@ TestAssert "test", the highlightborder of button 1 is false
 
 set the highlightborder of button 1 to true
 TestAssert "test", the highlightborder of button 1
+end TestHighlightBorder
 
+on TestHighlightFill
 set the highlightfill of button 1 to false
 TestAssert "test", the highlightfill of button 1 is false
 
 set the highlightfill of button 1 to true
 TestAssert "test", the highlightfill of button 1
+end TestHighlightFill
 
+on TestHighlightedIcon
 set the highlightedIcon of button 1 to 1234
 TestAssert "test", the highlightedIcon of button 1 is 1234
 
 set the highlightedIcon of button 1 to 42
 TestAssert "test", the highlightedIcon of button 1 is 42
+end TestHighlightedIcon
 
+on TestSharedHighlight
 set the sharedhighlight of button 1 to false
 TestAssert "test", the sharedhighlight of button 1 is false
 
 set the sharedhighlight of button 1 to true
 TestAssert "test", the sharedhighlight of button 1
+end TestSharedHighlight
 
+on TestShowHighlight
 set the showhighlight of button 1 to false
 TestAssert "test", the showhighlight of button 1 is false
 
 set the showhighlight of button 1 to true
 TestAssert "test", the showhighlight of button 1
+end TestShowHighlight
 
-end TestInterface79
-
-on TestInterface80
-# field highlight properties
+on TestHighlightColors
 create field
 
 set the highlightcolor of field 1 to "red"
@@ -723,7 +730,9 @@ TestAssert "test", the hilitecolor of field 1 is "red"
 
 set the linkhilitecolor of field 1 to "blue"
 TestAssert "test", the linkhilitecolor of field 1 is "blue"
+end TestHighlightColors
 
+on TestHighlighted
 set the highlighted of field 1 to false
 TestAssert "test", the highlighted of field 1 is false
 
@@ -741,7 +750,9 @@ TestAssert "test", the autohighlight of field 1
 
 set the autohighlight of field 1 to false
 TestAssert "test", the autohighlight of field 1 is false
+end TestHighlighted
 
+on TestToggleHighlights
 set the togglehighlights of field 1 to true
 TestAssert "test", the togglehighlights of field 1
 
@@ -753,7 +764,9 @@ TestAssert "test", the togglehilites of field 1
 
 set the togglehilites of field 1 to false
 TestAssert "test", the togglehilites of field 1 is false
+end TestToggleHighlights
 
+on TestThreedHighlight
 set the threedhighlight of field 1 to true
 TestAssert "test", the threedhighlight of field 1
 
@@ -765,8 +778,7 @@ TestAssert "test", the threedhilite of field 1
 
 set the threedhilite of field 1 to false
 TestAssert "test", the threedhilite of field 1 is false
-
-end TestInterface80
+end TestThreedHighlight
 
 on TestInterface81
 # highlightedButton
