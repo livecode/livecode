@@ -411,7 +411,7 @@ TestAssert "test", the selectedText is empty
 
 end TestInterface51
 on TestInterface52
-
+# highlightedlines, multiplehighlights
 create stack "Test"
 set the defaultstack to "Test"
 create field "tf"
@@ -421,12 +421,24 @@ set the listbehavior of field "tf" to true
 set the multiplehilites of field "tf" to true
 set the noncontiguoushilites of field "tf" to true
 
+set the hilitedLines of field "tf" to empty
+TestAssert "test", the selectedText of field "tf" is empty
+
 set the hilitedlines of field "tf" to 1,3
 
 TestAssert "test", the selectedText of field "tf" is ("abc" & return & "ghi")
 
-set the hilitedLines of field "tf" to empty
+set the highlightedlines of field "tf" to 1,3
+
+TestAssert "test", the selectedText of field "tf" is ("abc" & return & "ghi")
+
+set the highlightedLines of field "tf" to empty
 TestAssert "test", the selectedText of field "tf" is empty
+
+set the multiplehighlights of field "tf" to false
+set the noncontiguoushighlights of field "tf" to false
+set the highlightedline of field "tf" to 3
+TestAssert "test", the selectedText of field "tf" is "ghi"
 
 end TestInterface52
 on TestInterface53
@@ -630,14 +642,101 @@ on TestInterface79
 
 
 create button
+create button
 
+unhilite button 1
+TestAssert "test", not the highlight of button 1
 hilite button 1
-
 TestAssert "test", the hilite of button 1
+TestAssert "test", the highlightedbuttonid of this card is the id of button 1
+TestAssert "test", the highlightedbuttonname of this card is the name of button 1
+
+unhighlight button 1
+TestAssert "test", not the highlight of button 1
+highlight button 2
+TestAssert "test", the highlight of button 2
+TestAssert "test", the highlightedbuttonid of this card is the id of button 2
+TestAssert "test", the highlightedbuttonname of this card is the name of button 2
+
+dehilite button 2
+TestAssert "test", not the highlight of button 2
+hilite button 1
+TestAssert "test", the hilite of button 1
+TestAssert "test", the highlightedbuttonid of this card is the id of button 1
+TestAssert "test", the highlightedbuttonname of this card is the name of button 1
+
+dehighlight button 1
+TestAssert "test", not the highlight of button 1
+highlight button 1
+TestAssert "test", the highlight of button 1
 
 end TestInterface79
 
+on TestInterface80
+# field highlight properties
+create field
 
+set the highlightborder of field 1 to false
+TestAssert "test", the highlightborder of field 1 is false
+
+set the highlightborder of field 1 to true
+TestAssert "test", the highlightborder of field 1
+
+set the highlightcolor of field 1 to "red"
+TestAssert "test", the highlightcolor of field 1 is "red"
+
+set the linkhighlightcolor of field 1 to "blue"
+TestAssert "test", the linkhighlightcolor of field 1 is "blue"
+
+set the hilitecolor of field 1 to "red"
+TestAssert "test", the hilitecolor of field 1 is "red"
+
+set the linkhilitecolor of field 1 to "blue"
+TestAssert "test", the linkhilitecolor of field 1 is "blue"
+
+set the highlighted of field 1 to false
+TestAssert "test", the highlighted of field 1 is false
+
+set the highlighted of field 1 to true
+TestAssert "test", the highlighted of field 1
+
+set the autohilite of field 1 to true
+TestAssert "test", the autohilite of field 1
+
+set the autohilite of field 1 to false
+TestAssert "test", the autohilite of field 1 is false
+
+set the autohighlight of field 1 to true
+TestAssert "test", the autohighlight of field 1
+
+set the autohighlight of field 1 to false
+TestAssert "test", the autohighlight of field 1 is false
+
+set the togglehighlights of field 1 to true
+TestAssert "test", the togglehighlights of field 1
+
+set the togglehighlights of field 1 to false
+TestAssert "test", the togglehighlights of field 1 is false
+
+set the togglehilites of field 1 to true
+TestAssert "test", the togglehilites of field 1
+
+set the togglehilites of field 1 to false
+TestAssert "test", the togglehilites of field 1 is false
+
+set the threedhighlight of field 1 to true
+TestAssert "test", the threedhighlight of field 1
+
+set the threedhighlight of field 1 to false
+TestAssert "test", the threedhighlight of field 1 is false
+
+set the threedhilite of field 1 to true
+TestAssert "test", the threedhilite of field 1
+
+set the threedhilite of field 1 to false
+TestAssert "test", the threedhilite of field 1 is false
+
+end TestInterface80
 
 on TestInterface83
 
@@ -695,7 +794,7 @@ create stack "Test"
 set the defaultstack to "Test"
 create field
 
-put foo into field 1
+put "foo" into field 1
 
 select text of field 1 
 
