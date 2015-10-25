@@ -648,21 +648,21 @@ TestAssert "test", not the highlight of button 1
 hilite button 1
 TestAssert "test", the hilite of button 1
 TestAssert "test", the highlightedbuttonid of this card is the id of button 1
-TestAssert "test", the highlightedbuttonname of this card is the name of button 1
+TestAssert "test", the highlightedbuttonname of this card is the short name of button 1
 
 unhighlight button 1
 TestAssert "test", not the highlight of button 1
 highlight button 2
 TestAssert "test", the highlight of button 2
 TestAssert "test", the highlightedbuttonid of this card is the id of button 2
-TestAssert "test", the highlightedbuttonname of this card is the name of button 2
+TestAssert "test", the highlightedbuttonname of this card is the short name of button 2
 
 dehilite button 2
 TestAssert "test", not the highlight of button 2
 hilite button 1
 TestAssert "test", the hilite of button 1
 TestAssert "test", the highlightedbuttonid of this card is the id of button 1
-TestAssert "test", the highlightedbuttonname of this card is the name of button 1
+TestAssert "test", the highlightedbuttonname of this card is the short name of button 1
 
 dehighlight button 1
 TestAssert "test", not the highlight of button 1
@@ -727,24 +727,37 @@ create field
 set the highlightcolor of field 1 to "red"
 TestAssert "test", the highlightcolor of field 1 is "red"
 
+set the hilitecolor of field 1 to "255,255,0"
+TestAssert "test", the hilitecolor of field 1 is "255,255,0"
+
+set the hilitecolor of field 1 to "#336633"
+TestAssert "test", the hilitecolor of field 1 is "#336633"
+end TestHighlightColors
+
+on TestLinkHighlightColors
+create field
+
 set the linkhighlightcolor of field 1 to "blue"
 TestAssert "test", the linkhighlightcolor of field 1 is "blue"
 
-set the hilitecolor of field 1 to "red"
-TestAssert "test", the hilitecolor of field 1 is "red"
+set the linkhilitecolor of field 1 to "255,255,0"
+TestAssert "test", the linkhilitecolor of field 1 is "255,255,0"
 
-set the linkhilitecolor of field 1 to "blue"
-TestAssert "test", the linkhilitecolor of field 1 is "blue"
-end TestHighlightColors
+set the linkhilitecolor of field 1 to "#336633"
+TestAssert "test", the linkhilitecolor of field 1 is "#336633"
+end TestLinkHighlightColors
 
 on TestHighlighted
+create button
+set the highlighted of button 1 to false
+TestAssert "test", the highlighted of button 1 is false
+
+set the highlighted of button 1 to true
+TestAssert "test", the highlighted of button 1
+end TestHighlighted
+
+on TestAutoHighlight1
 create field
-set the highlighted of field 1 to false
-TestAssert "test", the highlighted of field 1 is false
-
-set the highlighted of field 1 to true
-TestAssert "test", the highlighted of field 1
-
 set the autohilite of field 1 to true
 TestAssert "test", the autohilite of field 1
 
@@ -756,7 +769,22 @@ TestAssert "test", the autohighlight of field 1
 
 set the autohighlight of field 1 to false
 TestAssert "test", the autohighlight of field 1 is false
-end TestHighlighted
+end TestAutoHighlight1
+
+on TestAutoHighlight2
+create button
+set the autohilite of button 1 to true
+TestAssert "test", the autohilite of button 1
+
+set the autohilite of button 1 to false
+TestAssert "test", the autohilite of button 1 is false
+
+set the autohighlight of button 1 to true
+TestAssert "test", the autohighlight of button 1
+
+set the autohighlight of button 1 to false
+TestAssert "test", the autohighlight of button 1 is false
+end TestAutoHighlight2
 
 on TestToggleHighlights
 create field
@@ -774,18 +802,20 @@ TestAssert "test", the togglehilites of field 1 is false
 end TestToggleHighlights
 
 on TestThreedHighlight
-create button
-set the threedhighlight of button 1 to true
-TestAssert "test", the threedhighlight of button 1
+create field
+set the listbehavior of field 1 to true
 
-set the threedhighlight of button 1 to false
-TestAssert "test", the threedhighlight of button 1 is false
+set the threedhighlight of field 1 to true
+TestAssert "test", the threedhighlight of field 1
 
-set the threedhilite of button 1 to true
-TestAssert "test", the threedhilite of button 1
+set the threedhighlight of field 1 to false
+TestAssert "test", the threedhighlight of field 1 is false
 
-set the threedhilite of button 1 to false
-TestAssert "test", the threedhilite of button 1 is false
+set the threedhilite of field 1 to true
+TestAssert "test", the threedhilite of field 1
+
+set the threedhilite of field 1 to false
+TestAssert "test", the threedhilite of field 1 is false
 end TestThreedHighlight
 
 on TestHighlightedButton
