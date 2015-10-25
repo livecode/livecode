@@ -6,7 +6,7 @@ Syntax: set the hilitePixel of <object> to <colorNumber>
 
 Summary: Specifies which entry in the <color table> is used for the background color when an <object>, or text in an <object>, is <highlight|highlighted>.
 
-Synonyms: thirdPixel
+Synonyms: thirdPixel, highlightPixel
 
 Associations: stack,card,field,button,graphic,scrollbar,player,image
 

@@ -6,7 +6,7 @@ Syntax: set the hilitedIcon of <button> to {<imageID> | <imageName>}
 
 Summary: Specifies an <image> to display in a <button> when the <button> is <highlight|highlighted>.
 
-Synonyms: hiliteIcon
+Synonyms: hiliteIcon, highlightIcon, highlightedIcon
 
 Associations: button
 
