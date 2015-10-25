@@ -670,17 +670,47 @@ TestAssert "test", not the highlight of button 1
 highlight button 1
 TestAssert "test", the highlight of button 1
 
+set the hiliteborder of button 1 to false
+TestAssert "test", the hiliteborder of button 1 is false
+
+set the hiliteborder of button 1 to true
+TestAssert "test", the hiliteborder of button 1
+
+set the highlightborder of button 1 to false
+TestAssert "test", the highlightborder of button 1 is false
+
+set the highlightborder of button 1 to true
+TestAssert "test", the highlightborder of button 1
+
+set the highlightfill of button 1 to false
+TestAssert "test", the highlightfill of button 1 is false
+
+set the highlightfill of button 1 to true
+TestAssert "test", the highlightfill of button 1
+
+set the highlightedIcon of button 1 to 1234
+TestAssert "test", the highlightedIcon of button 1 is 1234
+
+set the highlightedIcon of button 1 to 42
+TestAssert "test", the highlightedIcon of button 1 is 42
+
+set the sharedhighlight of button 1 to false
+TestAssert "test", the sharedhighlight of button 1 is false
+
+set the sharedhighlight of button 1 to true
+TestAssert "test", the sharedhighlight of button 1
+
+set the showhighlight of button 1 to false
+TestAssert "test", the showhighlight of button 1 is false
+
+set the showhighlight of button 1 to true
+TestAssert "test", the showhighlight of button 1
+
 end TestInterface79
 
 on TestInterface80
 # field highlight properties
 create field
-
-set the highlightborder of field 1 to false
-TestAssert "test", the highlightborder of field 1 is false
-
-set the highlightborder of field 1 to true
-TestAssert "test", the highlightborder of field 1
 
 set the highlightcolor of field 1 to "red"
 TestAssert "test", the highlightcolor of field 1 is "red"
@@ -737,6 +767,17 @@ set the threedhilite of field 1 to false
 TestAssert "test", the threedhilite of field 1 is false
 
 end TestInterface80
+
+on TestInterface81
+# highlightedButton
+create group
+create button in group 1
+create button in group 1
+set the highlightedButton of group 1 to 1
+TestAssert "test", the highlightedButton of group 1 is 1
+set the highlightedButton of group 1 to 2
+TestAssert "test", the highlightedButton of group 1 is 2
+end TestInterface81
 
 on TestInterface83
 
