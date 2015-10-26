@@ -824,5 +824,3 @@ type "a"
 TestAssert "test", the text of field "fi" is "bar"
 
 end TestInterface101
-
-
