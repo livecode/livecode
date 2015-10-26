@@ -1616,9 +1616,12 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 		default:
 			if (lookup(SP_FACTOR, te) == PS_NORMAL)
 			{
+				extern bool lookup_property_override(const LT&p_lt, Properties &r_property);
+				Properties t_property;
+				
 				Token_type t_type;
 				t_type = te->type;
-				if (doingthe && t_type == TT_CHUNK && te->which == CT_URL)
+				if (doingthe && lookup_property_override(*te, t_property))
 				{
 					t_type = TT_PROPERTY;
 				}
