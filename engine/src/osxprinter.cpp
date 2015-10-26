@@ -53,9 +53,6 @@ static bool deserialize_cfdata(const char *p_stream, uint32_t p_stream_size, uin
 static bool serialize_cfstring(char *&r_stream, uint32_t &r_stream_size, uint32_t &r_offset, CFStringRef p_string);
 static bool deserialize_cfstring(const char *p_stream, uint32_t p_stream_size, uint32_t &r_offset, CFStringRef &r_string);
 
-static bool serialize_handle(char *&r_stream, uint32_t &r_stream_size, uint32_t &r_offset, Handle p_data);
-static bool deserialize_handle(const char *p_stream, uint32_t p_stream_size, uint32_t &r_offset, Handle &r_handle);
-
 static bool serialize_printer_settings(char *&r_stream, uint32_t &r_stream_size, PMPrintSession p_session, PMPrinter p_printer, PMPrintSettings p_settings, PMPageFormat p_format);
 static bool deserialize_printer_settings(const char *p_stream, uint32_t p_stream_size, PMPrintSession &r_session, PMPrinter &r_printer, PMPrintSettings &r_settings, PMPageFormat &r_format);
 
@@ -2194,35 +2191,6 @@ static bool deserialize_cfstring(const char *p_stream, uint32_t p_stream_size, u
 	
 	return t_success;
 }
-
-#ifndef _MACOSX_NOCARBON
-
-static bool serialize_handle(char *&r_stream, uint32_t &r_stream_size, uint32_t &r_offset, Handle p_data)
-{
-	bool t_success = true;
-	HLock(p_data);
-	t_success = serialize_data(r_stream, r_stream_size, r_offset, (char *)*p_data, GetHandleSize(p_data));
-	HUnlock(p_data);
-	return t_success;
-}
-
-static bool deserialize_handle(const char *p_stream, uint32_t p_stream_size, uint32_t &r_offset, Handle &r_handle)
-{
-	void *t_data = nil;
-	uint32_t t_data_size = 0;
-	Handle t_handle = nil;
-	bool t_success = deserialize_data(p_stream, p_stream_size, r_offset, t_data, t_data_size);
-	if (t_success && t_data != nil)
-	{
-		t_success = (PtrToHand(t_data, &t_handle, t_data_size) == noErr);
-		MCMemoryDeallocate(t_data);
-	}
-	if (t_success)
-		r_handle = t_handle;
-	return t_success;
-}
-
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
