@@ -64,7 +64,7 @@ struct VeryBig {
 };
 
 
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__) || defined(__MAC__)
 TEST(new, DISABLED_new)
 #else
 TEST(new, new)
@@ -91,7 +91,7 @@ TEST(new, new)
 }
 
 
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__) || defined(__MAC__)
 TEST(new, DISABLED_array)
 #else
 TEST(new, array)
