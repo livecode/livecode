@@ -68,8 +68,7 @@ all: all-$(guess_platform)
 check: check-$(guess_platform)
 
 check-common-%:
-	$(MAKE) -C tests/lcb bin_dir=../../$*-bin
-	$(MAKE) -C tests/lcs bin_dir=../../$*-bin
+	$(MAKE) -C tests bin_dir=../$*-bin
 
 ################################################################
 # Linux rules
