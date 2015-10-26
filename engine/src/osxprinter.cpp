@@ -1203,10 +1203,14 @@ static OSStatus OSX_PMSessionBeginCGDocument(PMPrintSession p_session, PMPrintSe
     // AL-2014-01-15: [[ Bug 9940 ]] The dialog that opens here is modal, thereby preventing
     // further action in the debugger. So if we are debugging, use the NoDialog version.
     
+#ifdef __64_BIT__
+    return PMSessionBeginCGDocumentNoDialog(p_session, p_settings, p_format);
+#else
     if (MCtrace || MCnbreakpoints)
         return PMSessionBeginCGDocumentNoDialog(p_session, p_settings, p_format);
     else
         return PMSessionBeginCGDocument(p_session, p_settings, p_format);
+#endif
 }
 
 static void OSX_CGContextAddRoundedRect(CGContextRef p_context, CGRect p_rect, float p_radius)
@@ -1995,14 +1999,22 @@ MCPrinterResult MCMacOSXPrinterDevice::Finish(void)
 
 	if (m_page_started)
 	{
-		OSErr t_err;
+		OSStatus t_err;
+#ifdef __64_BIT__
+        t_err = PMSessionEndPageNoDialog(m_session);
+#else
 		t_err = PMSessionEndPage(m_session);
+#endif
 		if (t_err != noErr)
 			return HandleError(t_err, "unable to end page");
 	}
 
-	OSErr t_err;
+	OSStatus t_err;
+#ifdef __64_BIT__
+    t_err = PMSessionEndDocumentNoDialog(m_session);
+#else
 	t_err = PMSessionEndDocument(m_session);
+#endif
 	if (t_err != noErr)
 		return HandleError(t_err, "unable to end document");
 
@@ -2024,14 +2036,22 @@ MCPrinterResult MCMacOSXPrinterDevice::Show(void)
 
 	if (!m_page_started)
 	{
-		OSErr t_err;
+		OSStatus t_err;
+#ifdef __64_BIT__
+        t_err = PMSessionBeginPageNoDialog(m_session, m_page_format, NULL);
+#else
 		t_err = PMSessionBeginPage(m_session, m_page_format, NULL);
+#endif
 		if (t_err != noErr)
 			return HandleError(t_err, "unable to begin page");
 	}
 
-	OSErr t_err;
+	OSStatus t_err;
+#ifdef __64_BIT__
+    t_err = PMSessionEndPageNoDialog(m_session);
+#else
 	t_err = PMSessionEndPage(m_session);
+#endif
 	if (t_err != noErr)
 		return HandleError(t_err, "unable to end page");
 
@@ -2047,8 +2067,12 @@ MCPrinterResult MCMacOSXPrinterDevice::Begin(const MCPrinterRectangle& p_src_rec
 
 	if (!m_page_started)
 	{
-		OSErr t_err;
+		OSStatus t_err;
+#ifdef __64_BIT__
+        t_err = PMSessionBeginPageNoDialog(m_session, m_page_format, NULL);
+#else
 		t_err = PMSessionBeginPage(m_session, m_page_format, NULL);
+#endif
 		if (t_err != noErr)
 			return HandleError(t_err, "unable to begin page");
 
@@ -2123,7 +2147,11 @@ MCPrinterResult MCMacOSXPrinterDevice::HandleError(OSStatus p_error, const char 
 		if (p_error == kPMCancel)
 			PMSessionSetError(m_session, p_error);
 
+#ifdef __64_BIT__
+        PMSessionEndDocumentNoDialog(m_session);
+#else
 		PMSessionEndDocument(m_session);
+#endif
 
 		m_session = NULL;
 		m_page_format = NULL;
