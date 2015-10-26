@@ -186,30 +186,20 @@ bool MCMacOSXPrinter::DoResetSettings(MCDataRef p_settings)
 	t_settings = NULL;
 	if (t_success)
 	{
-		Handle t_handle;
-		if (PtrToHand(t_settings_data . getstring(), &t_handle, t_settings_data . getlength()) == noErr)
-		{
-			if (PMUnflattenPrintSettings(t_handle, &t_settings) != noErr)
-				t_success = false;
-			DisposeHandle(t_handle);
-		}
-		else
-			t_success = false;
+        CFDataRef t_data = CFDataCreate(NULL, (const UInt8*)t_settings_data.getstring(), t_settings_data.getlength());
+        if (t_data == nil || noErr != PMPrintSettingsCreateWithDataRepresentation(t_data, &t_settings))
+            t_success = false;
+        CFRelease(t_data);
 	}
 
 	PMPageFormat t_page_format;
 	t_page_format = NULL;
 	if (t_success)
 	{
-		Handle t_handle;
-		if (PtrToHand(t_settings_data . getstring(), &t_handle, t_settings_data . getlength()) == noErr)
-		{
-			if (PMUnflattenPageFormat(t_handle, &t_page_format) != noErr)
-				t_success = false;
-			DisposeHandle(t_handle);
-		}
-		else
-			t_success = false;
+        CFDataRef t_data = CFDataCreate(NULL, (const UInt8*)t_settings_data.getstring(), t_settings_data.getlength());
+        if (t_data == nil || noErr != PMPageFormatCreateWithDataRepresentation(t_data, &t_page_format))
+            t_success = false;
+        CFRelease(t_data);
 	}
 
 	MCAutoStringRef t_name_string;
@@ -238,32 +228,26 @@ void MCMacOSXPrinter::DoFetchSettings(void*& r_buffer, uint4& r_length)
 
 	if (t_success)
 	{
-		Handle t_handle;
-		t_handle = NULL;
-		if (PMFlattenPageFormat(m_page_format, &t_handle) == noErr)
-		{
-			HLock(t_handle);
-			t_dictionary . Set('OSXP', MCString((char *)*t_handle, GetHandleSize(t_handle)));
-			HUnlock(t_handle);
-			DisposeHandle(t_handle);
-		}
-		else
-			t_success = false;
+        CFDataRef t_flattened;
+        if (PMPageFormatCreateDataRepresentation(m_page_format, &t_flattened, kPMDataFormatXMLDefault) == noErr)
+        {
+            t_dictionary.Set('OSXP', MCString((const char*)CFDataGetBytePtr(t_flattened), CFDataGetLength(t_flattened)));
+            CFRelease(t_flattened);
+        }
+        else
+            t_success = false;
 	}
 
 	if (t_success)
 	{
-		Handle t_handle;
-		t_handle = NULL;
-		if (PMFlattenPrintSettings(m_settings, &t_handle) == noErr)
-		{
-			HLock(t_handle);
-			t_dictionary . Set('OSXS', MCString((char *)*t_handle, GetHandleSize(t_handle)));
-			HUnlock(t_handle);
-			DisposeHandle(t_handle);
-		}
-		else
-			t_success = false;
+        CFDataRef t_flattened;
+        if (PMPrintSettingsCreateDataRepresentation(m_settings, &t_flattened, kPMDataFormatXMLDefault) == noErr)
+        {
+            t_dictionary.Set('OSXS', MCString((const char*)CFDataGetBytePtr(t_flattened), CFDataGetLength(t_flattened)));
+            CFRelease(t_flattened);
+        }
+        else
+            t_success = false;
 	}
 
 	if (t_success)
@@ -2327,47 +2311,22 @@ static bool serialize_printer_settings(char *&r_stream, uint32_t &r_stream_size,
 	if (t_success)
 		t_success = serialize_cfstring(r_stream, r_stream_size, t_offset, t_string);
 
-	if (PMPrintSettingsCreateDataRepresentationProc != nil)
-	{
-		CFDataRef t_data = nil;
-		if (t_success)
-			t_success = (PMPrintSettingsCreateDataRepresentationProc(p_settings, &t_data, 0) == noErr);
-		if (t_success)
-		{
-			t_success = serialize_cfdata(r_stream, r_stream_size, t_offset, t_data);
-			CFRelease(t_data);
-		}
-		
-		if (t_success)
-			t_success = (PMPageFormatCreateDataRepresentationProc(p_format, &t_data, 0) == noErr);
-		if (t_success)
-		{
-			t_success = serialize_cfdata(r_stream, r_stream_size, t_offset, t_data);
-			CFRelease(t_data);
-		}
-		
-	}
-#ifndef _MACOSX_NOCARBON
-	else
-	{
-		Handle t_handle = nil;
-		if (t_success)
-			t_success = (PMFlattenPrintSettings(p_settings, &t_handle) == noErr);
-		if (t_success)
-		{
-			t_success = serialize_handle(r_stream, r_stream_size, t_offset, t_handle);
-			DisposeHandle(t_handle);
-		}
-		
-		if (t_success)
-			t_success = (PMFlattenPageFormat(p_format, &t_handle) == noErr);
-		if (t_success)
-		{
-			t_success = serialize_handle(r_stream, r_stream_size, t_offset, t_handle);
-			DisposeHandle(t_handle);
-		}
-	}
-#endif
+    CFDataRef t_data = nil;
+    if (t_success)
+        t_success = (PMPrintSettingsCreateDataRepresentation(p_settings, &t_data, kPMDataFormatXMLDefault) == noErr);
+    if (t_success)
+    {
+        t_success = serialize_cfdata(r_stream, r_stream_size, t_offset, t_data);
+        CFRelease(t_data);
+    }
+    
+    if (t_success)
+        t_success = (PMPageFormatCreateDataRepresentation(p_format, &t_data, kPMDataFormatXMLDefault) == noErr);
+    if (t_success)
+    {
+        t_success = serialize_cfdata(r_stream, r_stream_size, t_offset, t_data);
+        CFRelease(t_data);
+    }
 
 	PMDestinationType t_dest_type;
 	CFURLRef t_dest_url;
@@ -2420,48 +2379,23 @@ static bool deserialize_printer_settings(const char *p_stream, uint32_t p_stream
 		t_success = (t_printer != NULL);
 	}
 	
-	if (PMPrintSettingsCreateDataRepresentationProc != nil)
-	{
-		CFDataRef t_data;
-		
-		if (t_success)
-			t_success = deserialize_cfdata(p_stream, p_stream_size, t_offset, t_data);
-		if (t_success)
-		{
-			t_success = (PMPrintSettingsCreateWithDataRepresentationProc(t_data, &t_settings) == noErr);
-			CFRelease(t_data);
-		}
-		
-		if (t_success)
-			t_success = deserialize_cfdata(p_stream, p_stream_size, t_offset, t_data);
-		if (t_success)
-		{
-			t_success = (PMPageFormatCreateWithDataRepresentationProc(t_data, &t_format) == noErr);
-			CFRelease(t_data);
-		}
-	}
-#ifndef _MACOSX_NOCARBON
-	else
-	{
-		Handle t_handle;
-		
-		if (t_success)
-			t_success = deserialize_handle(p_stream, p_stream_size, t_offset, t_handle);
-		if (t_success)
-		{
-			t_success = (PMUnflattenPrintSettings(t_handle, &t_settings) == noErr);
-			DisposeHandle(t_handle);
-		}
-		
-		if (t_success)
-			t_success = deserialize_handle(p_stream, p_stream_size, t_offset, t_handle);
-		if (t_success)
-		{
-			t_success = (PMUnflattenPageFormat(t_handle, &t_format) == noErr);
-			DisposeHandle(t_handle);
-		}
-	}	
-#endif
+    CFDataRef t_data;
+    
+    if (t_success)
+        t_success = deserialize_cfdata(p_stream, p_stream_size, t_offset, t_data);
+    if (t_success)
+    {
+        t_success = (PMPrintSettingsCreateWithDataRepresentation(t_data, &t_settings) == noErr);
+        CFRelease(t_data);
+    }
+    
+    if (t_success)
+        t_success = deserialize_cfdata(p_stream, p_stream_size, t_offset, t_data);
+    if (t_success)
+    {
+        t_success = (PMPageFormatCreateWithDataRepresentation(t_data, &t_format) == noErr);
+        CFRelease(t_data);
+    }
 	
 	if (t_success && r_settings != NULL)
 	{
