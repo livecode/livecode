@@ -827,12 +827,17 @@ end TestInterface101
 
 
 on TestLinkHiliteColors
+   TestAssert "test1", the linkhilitecolor is "255,0,0"
+
    set the linkhilitecolor to "blue"
-   TestAssert "test1", the linkhilitecolor is "blue"
+   TestAssert "test2", the linkhilitecolor is "blue"
 
    set the linkhilitecolor to "255,255,0"
-   TestAssert "test2", the linkhilitecolor is "255,255,0"
+   TestAssert "test3", the linkhilitecolor is "255,255,0"
 
    set the linkhilitecolor to "#336633"
-   TestAssert "test3", the linkhilitecolor is "#336633"
+   TestAssert "test4", the linkhilitecolor is "#336633"
+
+   set the linkhilitecolor to empty
+   TestAssert "test5", the linkhilitecolor is empty
 end TestLinkHiliteColors
