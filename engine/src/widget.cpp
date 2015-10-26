@@ -378,7 +378,11 @@ static void lookup_name_for_prop(Properties p_which, MCNameRef& r_name)
             /* UNCHECKED */ MCNameCreateWithCString(factor_table[i] . token, r_name);
             return;
         }
-    
+	
+	extern bool lookup_property_override_name(uint16_t p_property, MCNameRef &r_name);
+	if (lookup_property_override_name(p_which, r_name))
+		return;
+
     assert(false);
 }
 

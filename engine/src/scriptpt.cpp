@@ -1616,7 +1616,13 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 		default:
 			if (lookup(SP_FACTOR, te) == PS_NORMAL)
 			{
-				switch (te->type)
+				Token_type t_type;
+				t_type = te->type;
+				if (doingthe && t_type == TT_CHUNK && te->which == CT_URL)
+				{
+					t_type = TT_PROPERTY;
+				}
+				switch (t_type)
 				{
 				case TT_THE:
 					doingthe = True;
