@@ -85,10 +85,6 @@ extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p
 
 ///////////////////////////////////////////////////////////////////////////////
 
-extern ATSUFontID coretext_font_to_atsufontid(void *p_font);
-
-///////////////////////////////////////////////////////////////////////////////
-
 CGAffineTransform MCGAffineTransformToCGAffineTransform(const MCGAffineTransform &p_transform)
 {
 	return CGAffineTransformMake(p_transform.a, p_transform.b, p_transform.c, p_transform.d, p_transform.tx, p_transform.ty);
@@ -1693,83 +1689,54 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 				CGContextRestoreGState(m_context);
 			}
 			
-			OSStatus t_err;
-			ATSUTextLayout t_layout;
-			ATSUStyle t_style;
-			
-			ATSUFontID t_font_id;
-			Fixed t_font_size;
-			Boolean t_font_is_bold;
-			Boolean t_font_is_italic;
-			Boolean t_font_is_underline;
-			Boolean t_font_is_condensed;
-			Boolean t_font_is_extended;
-			
-			// MW-2013-11-15: [[ Bug 11444 ]] It seems setting these makes things *less* like QuickDraw!
-			/* ATSLineLayoutOptions t_layout_options; */
-			
-			ATSUAttributeTag t_tags[] =
-			{
-				kATSUFontTag,
-				kATSUSizeTag
-			};
-			ByteCount t_sizes[] =
-			{
-				sizeof(ATSUFontID),
-				sizeof(Fixed)
-			};
-			ATSUAttributeValuePtr t_attrs[] =
-			{
-				&t_font_id,
-				&t_font_size
-			};
-			
-			ATSUAttributeTag t_layout_tags[] =
-			{
-				kATSUCGContextTag,
-				/*kATSULineLayoutOptionsTag,*/
-			};
-			ByteCount t_layout_sizes[] =
-			{
-				sizeof(CGContextRef),
-				/*sizeof(ATSLineLayoutOptions)*/
-			};
-			ATSUAttributeValuePtr t_layout_attrs[] =
-			{
-				&m_context,
-				/*&t_layout_options*/
-			};
-			
-			UniCharCount t_run = MCStringGetLength(*t_text);
-			Rect t_bounds;
-			         
-            FMFontStyle t_intrinsic_style;
+            bool t_success;
+            t_success = true;
             
-            // MM-2014-06-04: [[ CoreText ]] Fonts are now coretext font refs. Make sure we convert to ATSUFontIDs.
-            t_font_id = coretext_font_to_atsufontid(f -> fid);
-
-			t_font_size = f -> size << 16;
-			t_err = ATSUCreateStyle(&t_style);
-			t_err = ATSUSetAttributes(t_style, sizeof(t_tags) / sizeof(ATSUAttributeTag), t_tags, t_sizes, t_attrs);
-			t_err = ATSUCreateTextLayout(&t_layout);
-			t_err = ATSUSetTransientFontMatching(t_layout, true);
-
-			/*t_layout_options = kATSLineFractDisable;*/
-			
-			t_err = ATSUSetLayoutControls(t_layout, sizeof(t_layout_tags) / sizeof(ATSUAttributeTag), t_layout_tags, t_layout_sizes, t_layout_attrs);
+            // Make the font
+            CTFontRef t_font = nil;
+            if (t_success)
+            {
+                extern CTFontRef ctfont_from_fontstruct(MCFontStruct *p_font_struct);
+                t_font = ctfont_from_fontstruct(f);
+                if (t_font == nil)
+                    t_success = false;
+            }
+            
+            // Build the typesetter
+            CTTypesetterRef t_typesetter = nil;
+            if (t_success)
+            {
+                CFStringRef t_string;
+                /* UNCHECKED */ MCStringConvertToCFStringRef(*t_text, t_string);
+                
+                CFDictionaryRef t_attributes;
+                t_attributes = CFDictionaryCreate(NULL, (const void**)&t_font, (const void**)&kCTFontAttributeName, 1, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+                
+                CFAttributedStringRef t_attributed_string;
+                t_attributed_string = CFAttributedStringCreate(NULL, t_string, t_attributes);
+                CFRelease(t_string);
+                CFRelease(t_attributes);
+                
+                t_typesetter = CTTypesetterCreateWithAttributedString(t_attributed_string);
+                CFRelease(t_attributed_string);
+                t_success = (t_typesetter != nil);
+            }
+            
+            CTLineRef t_line;
+            t_line = nil;
+            if (t_success)
+            {
+                t_line = CTTypesetterCreateLine(t_typesetter, CFRangeMake(0, 0));
+                if (t_line == nil)
+                    t_success = false;
+            }
 			
 			CGContextSaveGState(m_context);
-			CGContextConcatCTM(m_context, CGAffineTransformMake(1, 0, 0, -1, 0, m_page_height));
-	
-            t_err = ATSUSetTextPointerLocation(t_layout, MCStringGetCharPtr(*t_text), 0, t_run, t_run);
-            t_err = ATSUSetRunStyle(t_layout, t_style, 0, t_run);
-            t_err = ATSUSetTransientFontMatching(t_layout, true);
-            t_err = ATSUDrawText(t_layout, 0, t_run, x << 16, (m_page_height - y) << 16);
+			CGContextConcatCTM(m_context, CGAffineTransformMake(1, 0, 0, -1, x, m_page_height-y));
+
+            CTLineDraw(t_line, m_context);
 
 			CGContextRestoreGState(m_context);
-			
-			t_err = ATSUDisposeTextLayout(t_layout);
-			t_err = ATSUDisposeStyle(t_style);
 		}
 		break;
 		
