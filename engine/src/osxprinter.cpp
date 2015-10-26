@@ -441,7 +441,7 @@ bool MCMacOSXPrinter::Reset(MCStringRef p_name, PMPrintSettings p_settings, PMPa
 	//
 	if (t_success)
 	{
-		OSErr t_err;
+		OSStatus t_err;
 		t_err = p_page_format != NULL ? PMSessionValidatePageFormat(t_session, t_page_format, NULL) : PMSessionDefaultPageFormat(t_session, t_page_format);
 		if (t_err != noErr)
 			t_success = false;
@@ -451,7 +451,7 @@ bool MCMacOSXPrinter::Reset(MCStringRef p_name, PMPrintSettings p_settings, PMPa
 	t_paper = NULL;
 	if (t_success)
 	{
-		OSErr t_err;
+		OSStatus t_err;
 		t_err = PMGetPageFormatPaper(t_page_format, &t_paper);
 		if (t_err != noErr)
 			t_success = false;
@@ -2116,7 +2116,7 @@ MCPrinterResult MCMacOSXPrinterDevice::Bookmark(const char *title, double x, dou
 
 ///////////////////////////////////////////////////////////////////////////////
 
-MCPrinterResult MCMacOSXPrinterDevice::HandleError(OSErr p_error, const char *p_message)
+MCPrinterResult MCMacOSXPrinterDevice::HandleError(OSStatus p_error, const char *p_message)
 {
 	if (m_session != NULL)
 	{
