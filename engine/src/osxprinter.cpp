@@ -741,9 +741,8 @@ void MCMacOSXPrinter::SetDerivedProperties(void)
 	t_features = PRINTER_FEATURE_COPIES | PRINTER_FEATURE_COLLATE;
 	
 	PDEBUG(stderr, "SetProperties: PMPrinterGetDescriptionURL\n");
-	CFURLRef t_ppd_url;
-	t_ppd_url = NULL;
-	if (PMPrinterGetDescriptionURL(m_printer, kPMPPDDescriptionType, &t_ppd_url) == noErr)
+    CFURLRef t_ppd_url = NULL;
+	if (PMPrinterCopyDescriptionURL(m_printer, kPMPPDDescriptionType, &t_ppd_url) == noErr)
 	{
 		char *t_ppd_file;
 		t_ppd_file = osx_cfstring_to_cstring(CFURLCopyFileSystemPath(t_ppd_url, kCFURLPOSIXPathStyle), true);
@@ -914,7 +913,7 @@ void MCMacOSXPrinter::GetProperties(bool p_include_output)
 	CFStringRef t_cf_document;
 	if (MCStringConvertToCFStringRef(*t_document_name_str, t_cf_document))
 	{
-		PMSetJobNameCFString(m_settings, t_cf_document);
+        PMPrintSettingsSetJobName(m_settings, t_cf_document);
 		CFRelease(t_cf_document);
 	}
 	
