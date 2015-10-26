@@ -423,13 +423,7 @@ bool MCMacOSXPrinter::Reset(MCStringRef p_name, PMPrintSettings p_settings, PMPa
 	//   On >= 10.3 we use PMSessionSetCurrentPMPrinter
 	if (t_success && t_printer != NULL)
 	{
-		OSErr t_err;
-		if (PMSessionSetCurrentPMPrinter != NULL)
-			t_err = PMSessionSetCurrentPMPrinter(t_session, t_printer);
-		else
-			t_err = PMSessionSetCurrentPrinter(t_session, PMPrinterGetName(t_printer));
-
-		if (t_err != noErr)
+        if (PMSessionSetCurrentPMPrinter(t_session, t_printer) != noErr)
 			t_success = false;
 	}
 
@@ -455,7 +449,7 @@ bool MCMacOSXPrinter::Reset(MCStringRef p_name, PMPrintSettings p_settings, PMPa
 
 	PMPaper t_paper;
 	t_paper = NULL;
-	if (t_success && MCmajorosversion >= 0x1040 && PMGetPageFormatPaper != NULL)
+	if (t_success)
 	{
 		OSErr t_err;
 		t_err = PMGetPageFormatPaper(t_page_format, &t_paper);
@@ -554,7 +548,7 @@ void MCMacOSXPrinter::SetProperties(bool p_include_output)
 	PDEBUG(stderr, "SetProperties: PMGetPageFormatPaper\n");
 	PMRect t_pm_paper_rect;
 	PMPaper t_pm_paper;
-	if (PMGetPageFormatPaper != NULL && PMGetPageFormatPaper(m_page_format, &t_pm_paper) == noErr)
+	if (PMGetPageFormatPaper(m_page_format, &t_pm_paper) == noErr)
 	{
 		PDEBUG(stderr, "SetProperties: PMPaperGetWidth\n");
 		double t_width;
@@ -567,14 +561,8 @@ void MCMacOSXPrinter::SetProperties(bool p_include_output)
 		t_page_width = ceil(t_width);
 		t_page_height = ceil(t_height);
 
-		if (MCmajorosversion >= 0x1040)
-		{
-			if (m_paper != NULL)
-				PMRelease(m_paper);
-			
-			m_paper = t_pm_paper;
-			PMRetain(t_pm_paper);
-		}
+        m_paper = t_pm_paper;
+        PMRetain(t_pm_paper);
 	}
 	else
 	{
@@ -806,79 +794,67 @@ void MCMacOSXPrinter::GetProperties(bool p_include_output)
 	if (&PMSetDuplex != NULL)
 		t_err = PMSetDuplex(m_settings, GetJobDuplex() == PRINTER_DUPLEX_MODE_SIMPLEX ? kPMDuplexNone : (GetJobDuplex() == PRINTER_DUPLEX_MODE_LONG_EDGE ? kPMDuplexNoTumble : kPMDuplexTumble));
 	
-	if (MCmajorosversion >= 0x1040)
-	{
-		if (m_page_format != NULL)
-		{
-			PMRelease(m_page_format);
-			m_page_format = NULL;
-		}
-		
-		PMPaper t_paper;
-		t_paper = NULL;
-		
-		if (m_paper != NULL)
-		{
-			double t_width;
-			PMPaperGetWidth(m_paper, &t_width);
-			
-			double t_height;
-			PMPaperGetHeight(m_paper, &t_height);
+    if (m_page_format != NULL)
+    {
+        PMRelease(m_page_format);
+        m_page_format = NULL;
+    }
+    
+    PMPaper t_paper;
+    t_paper = NULL;
+    
+    if (m_paper != NULL)
+    {
+        double t_width;
+        PMPaperGetWidth(m_paper, &t_width);
+        
+        double t_height;
+        PMPaperGetHeight(m_paper, &t_height);
 
-			if (ceil(t_width) == GetPageWidth() && ceil(t_height) == GetPageHeight())
-			{
-				t_paper = m_paper;
-				PMRetain(t_paper);
-			}
-		}
-		
-		if (t_paper == NULL)
-		{
-			CFArrayRef t_array;
-			PMPrinterGetPaperList(m_printer, &t_array);
-			for(uint4 i = 0; i < CFArrayGetCount(t_array); ++i)
-			{
-				PMPaper t_paper_to_test;
-				t_paper_to_test = (PMPaper)CFArrayGetValueAtIndex(t_array, i);
-				
-				double t_width;
-				PMPaperGetWidth(t_paper_to_test, &t_width);
-				
-				double t_height;
-				PMPaperGetHeight(t_paper_to_test, &t_height);
-				
-				if (ceil(t_width) == GetPageWidth() && ceil(t_height) == GetPageHeight())
-				{
-					t_paper = t_paper_to_test;
-					PMRetain(t_paper);
-					break;
-				}
-			}
-		}
-		
-		if (t_paper == NULL)
-		{
-			PMPaperMargins t_margins;
-			t_margins . left = 0.0;
-			t_margins . top = 0.0;
-			t_margins . right = 0.0;
-			t_margins . bottom = 0.0;
-					
-			PMPaperCreate(m_printer, CFSTR("LiveCode"), CFSTR("LiveCode Custom Paper"), GetPageWidth(), GetPageHeight(), &t_margins, &t_paper);
-		}
-		
-		PMCreatePageFormatWithPMPaper(&m_page_format, t_paper);
-		PMRelease(t_paper);
-	}
-	else
-	{
-		PMRect t_paper_rect;
-		t_paper_rect . left = 0.0;
-		t_paper_rect . top = 0.0;
-		t_paper_rect . right = GetPageWidth();
-		t_paper_rect . bottom = GetPageHeight();
-		t_err = PMSetPhysicalPaperSize(m_page_format, &t_paper_rect);
-	}
+        if (ceil(t_width) == GetPageWidth() && ceil(t_height) == GetPageHeight())
+        {
+            t_paper = m_paper;
+            PMRetain(t_paper);
+        }
+    }
+    
+    if (t_paper == NULL)
+    {
+        CFArrayRef t_array;
+        PMPrinterGetPaperList(m_printer, &t_array);
+        for(uint4 i = 0; i < CFArrayGetCount(t_array); ++i)
+        {
+            PMPaper t_paper_to_test;
+            t_paper_to_test = (PMPaper)CFArrayGetValueAtIndex(t_array, i);
+            
+            double t_width;
+            PMPaperGetWidth(t_paper_to_test, &t_width);
+            
+            double t_height;
+            PMPaperGetHeight(t_paper_to_test, &t_height);
+            
+            if (ceil(t_width) == GetPageWidth() && ceil(t_height) == GetPageHeight())
+            {
+                t_paper = t_paper_to_test;
+                PMRetain(t_paper);
+                break;
+            }
+        }
+    }
+    
+    if (t_paper == NULL)
+    {
+        PMPaperMargins t_margins;
+        t_margins . left = 0.0;
+        t_margins . top = 0.0;
+        t_margins . right = 0.0;
+        t_margins . bottom = 0.0;
+                
+        PMPaperCreateCustom(m_printer, CFSTR("LiveCode"), CFSTR("LiveCode Custom Paper"), GetPageWidth(), GetPageHeight(), &t_margins, &t_paper);
+    }
+    
+    PMCreatePageFormatWithPMPaper(&m_page_format, t_paper);
+    PMRelease(t_paper);
 	
 	t_err = PMSetScale(m_page_format, GetPageScale() * 100.0);
 	switch(GetPageOrientation())
@@ -953,11 +929,7 @@ void MCMacOSXPrinter::ResetSession(void)
 {
 	PMPrintSession t_session;
 	PMCreateSession(&t_session);
-	if (PMSessionSetCurrentPMPrinter != NULL)
-		PMSessionSetCurrentPMPrinter(t_session, m_printer);
-	else
-		PMSessionSetCurrentPrinter(t_session, PMPrinterGetName(m_printer));
-	
+    PMSessionSetCurrentPMPrinter(t_session, m_printer);
 	PMSessionValidatePrintSettings(t_session, m_settings, kPMDontWantBoolean);
 	PMSessionValidatePageFormat(t_session, m_page_format, kPMDontWantBoolean);
 	
@@ -1223,10 +1195,7 @@ bool MCGImageToCGImage(MCGImageRef p_src, CGImageRef &r_image)
 
 static OSStatus OSX_PMSessionGetCGGraphicsContext(PMPrintSession p_session, CGContextRef* r_context)
 {
-	if (&PMSessionGetCGGraphicsContext != NULL)
-		return PMSessionGetCGGraphicsContext(p_session, r_context);
-		
-	return PMSessionGetGraphicsContext(p_session, kPMGraphicsContextCoreGraphics, reinterpret_cast<void **>(r_context));
+    return PMSessionGetCGGraphicsContext(p_session, r_context);
 }
 
 static OSStatus OSX_PMSessionBeginCGDocument(PMPrintSession p_session, PMPrintSettings p_settings, PMPageFormat p_format)
@@ -2172,38 +2141,6 @@ MCPrinterResult MCMacOSXPrinterDevice::HandleError(OSErr p_error, const char *p_
 
 ///////////////////////////////////////////////////////////////////////////////
 
-typedef OSStatus (*PMPrintSettingsCreateDataRepresentationProcPtr)(PMPrintSettings settings, CFDataRef* r_data, uint32_t format);
-typedef OSStatus (*PMPageFormatCreateDataRepresentationProcPtr)(PMPageFormat settings, CFDataRef* r_data, uint32_t format);
-typedef OSStatus (*PMPrintSettingsCreateWithDataRepresentationProcPtr)(CFDataRef data, PMPrintSettings *settings);
-typedef OSStatus (*PMPageFormatCreateWithDataRepresentationProcPtr)(CFDataRef data, PMPageFormat *settings);
-
-static bool s_has_weaklinked = false;
-static CFBundleRef s_appservices_bundle = nil;
-static PMPrintSettingsCreateDataRepresentationProcPtr PMPrintSettingsCreateDataRepresentationProc = nil;
-static PMPageFormatCreateDataRepresentationProcPtr PMPageFormatCreateDataRepresentationProc = nil;
-static PMPrintSettingsCreateWithDataRepresentationProcPtr PMPrintSettingsCreateWithDataRepresentationProc = nil;
-static PMPageFormatCreateWithDataRepresentationProcPtr PMPageFormatCreateWithDataRepresentationProc = nil;
-
-static void weaklink(void)
-{
-	if (s_has_weaklinked)
-		return;
-	
-	s_has_weaklinked = true;
-	
-	s_appservices_bundle = CFBundleGetBundleWithIdentifier(CFSTR("com.apple.ApplicationServices"));
-	if (s_appservices_bundle == nil ||
-		!CFBundleLoadExecutable(s_appservices_bundle))
-		return;
-	
-	PMPrintSettingsCreateDataRepresentationProc = (PMPrintSettingsCreateDataRepresentationProcPtr)CFBundleGetFunctionPointerForName(s_appservices_bundle, CFSTR("PMPrintSettingsCreateDataRepresentation"));
-	PMPageFormatCreateDataRepresentationProc = (PMPageFormatCreateDataRepresentationProcPtr)CFBundleGetFunctionPointerForName(s_appservices_bundle, CFSTR("PMPageFormatCreateDataRepresentation"));
-	PMPrintSettingsCreateWithDataRepresentationProc = (PMPrintSettingsCreateWithDataRepresentationProcPtr)CFBundleGetFunctionPointerForName(s_appservices_bundle, CFSTR("PMPrintSettingsCreateWithDataRepresentation"));
-	PMPageFormatCreateWithDataRepresentationProc = (PMPageFormatCreateWithDataRepresentationProcPtr)CFBundleGetFunctionPointerForName(s_appservices_bundle, CFSTR("PMPageFormatCreateWithDataRepresentation"));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 static bool serialize_cfdata(char *&r_stream, uint32_t &r_stream_size, uint32_t &r_offset, CFDataRef p_data)
 {
 	if (p_data == nil)
@@ -2299,8 +2236,6 @@ static bool deserialize_handle(const char *p_stream, uint32_t p_stream_size, uin
 static bool serialize_printer_settings(char *&r_stream, uint32_t &r_stream_size, PMPrintSession p_session, PMPrinter p_printer, PMPrintSettings p_settings, PMPageFormat p_format)
 {
 	bool t_success = true;
-
-	weaklink();
 	
 	CFStringRef t_string;
 	t_string = PMPrinterGetID(p_printer);
@@ -2360,8 +2295,6 @@ static bool serialize_printer_settings(char *&r_stream, uint32_t &r_stream_size,
 static bool deserialize_printer_settings(const char *p_stream, uint32_t p_stream_size, PMPrintSession &r_session, PMPrinter &r_printer, PMPrintSettings &r_settings, PMPageFormat &r_format)
 {
 	bool t_success = true;
-	
-	weaklink();
 	
 	CFStringRef t_string;
 	PMPrinter t_printer = NULL;
