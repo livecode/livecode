@@ -1215,29 +1215,29 @@ static OSStatus OSX_PMSessionBeginCGDocument(PMPrintSession p_session, PMPrintSe
 
 static void OSX_CGContextAddRoundedRect(CGContextRef p_context, CGRect p_rect, float p_radius)
 {
-	float hr;
-	hr = MCU_fmin(p_radius / 2.0f, p_rect . size . width / 2.0f);
+	CGFloat hr;
+	hr = MCU_fmin(p_radius / 2.0, p_rect . size . width / 2.0);
 	
-	float vr;
-	vr = MCU_fmin(p_radius / 2.0f, p_rect . size . height / 2.0f);
+	CGFloat vr;
+	vr = MCU_fmin(p_radius / 2.0, p_rect . size . height / 2.0);
 	
-	float l;
+	CGFloat l;
 	l = p_rect . origin . x + hr;
 	
-	float t;
+	CGFloat t;
 	t = p_rect . origin . y + vr;
 	
-	float r;
+	CGFloat r;
 	r = p_rect . origin . x + p_rect . size . width - hr;
 	
-	float b;
+	CGFloat b;
 	b = p_rect . origin . y + p_rect . size . height - vr;
 	
-	float hk;
-	hk = hr * 36195.0f / 65536.0f;
+	CGFloat hk;
+	hk = hr * 36195.0 / 65536.0;
 	
-	float vk;
-	vk = hr * 36195.0f / 65536.0f;
+	CGFloat vk;
+	vk = hr * 36195.0 / 65536.0;
 	
 	CGContextMoveToPoint(p_context, r, t - vr);
 	CGContextAddCurveToPoint(p_context, r + hk, t - vr, r + hr, t - vk, r + hr, t);
@@ -1530,8 +1530,7 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 		
 		if (p_mark -> stroke -> dash . length > 1)
 		{
-			float *t_lengths;
-			t_lengths = new float[p_mark -> stroke -> dash . length];
+			CGFloat *t_lengths = new CGFloat[p_mark -> stroke -> dash . length];
 			for(uint4 i = 0; i < p_mark -> stroke -> dash . length; i++)
 				t_lengths[i] = p_mark -> stroke -> dash . data[i];
 			CGContextSetLineDash(m_context, p_mark -> stroke -> dash . offset, t_lengths, p_mark -> stroke -> dash . length);
@@ -1587,7 +1586,7 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			CGColorSpaceRef t_pattern_space;
 			t_pattern_space = CGColorSpaceCreatePattern(NULL);
 			
-			float t_components[1];
+			CGFloat t_components[1];
 			t_components[0] = 1.0f;
 			
 			if (t_is_stroke)
@@ -1606,13 +1605,13 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 		}
 		else
 		{
-			float t_red;
+			CGFloat t_red;
 			t_red = p_mark -> fill -> colour . red / 65535.0f;
 			
-			float t_green;
+			CGFloat t_green;
 			t_green = p_mark -> fill -> colour . green / 65535.0f;
 			
-			float t_blue;
+			CGFloat t_blue;
 			t_blue = p_mark -> fill -> colour . blue / 65535.0f;
 			
 			if (m_color)
