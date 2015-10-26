@@ -1233,7 +1233,8 @@ void MCInterfaceSetLinkColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p
 
 void MCInterfaceGetLinkHiliteColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color)
 {
-	get_interface_color(MClinkatts . color, MClinkatts . colorname, r_color);
+	// PM-2015-10-26: [[ Bug 16280 ]] Make sure the correct color is returned
+	get_interface_color(MClinkatts . hilitecolor, MClinkatts . hilitecolorname, r_color);
 }
 
 void MCInterfaceSetLinkHiliteColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color)
