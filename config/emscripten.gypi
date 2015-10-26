@@ -36,6 +36,12 @@
 					],
 				},
 			],
+			[
+				'_toolset == "target" and _type == "executable"',
+				{
+					'product_extension': 'bc',
+				},
+			],
 		],
 	},
 }

@@ -551,6 +551,7 @@ extern MCNameRef MCM_push_notification_received;
 extern MCNameRef MCM_push_notification_registered;
 extern MCNameRef MCM_push_notification_registration_error;
 extern MCNameRef MCM_url_wake_up;
+extern MCNameRef MCM_launch_data_changed;
 
 extern MCNameRef MCM_browser_started_loading;
 extern MCNameRef MCM_browser_finished_loading;

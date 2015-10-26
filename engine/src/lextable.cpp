@@ -2209,7 +2209,7 @@ static LT unit_table[] =
         {"codepoint", TT_UNDEFINED, FU_CODEPOINT},
         {"codepoints", TT_UNDEFINED, FU_CODEPOINT},
         {"codeunit", TT_UNDEFINED, FU_CODEUNIT},
-        {"codeunit", TT_UNDEFINED, FU_CODEUNIT},
+        {"codeunits", TT_UNDEFINED, FU_CODEUNIT},
         {"element", TT_UNDEFINED, FU_ELEMENT},
         {"int1", TT_UNDEFINED, FU_INT1},
         {"int1s", TT_UNDEFINED, FU_INT1},
@@ -2368,6 +2368,7 @@ LT *table_pointers[] =
     visual_table,
 	server_table
 };
+extern const uint4 table_pointers_size = ELEMENTS(table_pointers);
 
 uint2 table_sizes[] =
 {
@@ -2406,3 +2407,4 @@ uint2 table_sizes[] =
     ELEMENTS(visual_table),
 	ELEMENTS(server_table),
 };
+extern const uint4 table_sizes_size = ELEMENTS(table_sizes);

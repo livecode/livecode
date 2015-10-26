@@ -611,7 +611,7 @@ void X_main_loop(void)
 extern "C" bool MCModulesInitialize();
 extern "C" void MCModulesFinalize();
 
-int main(int argc, char *argv[], char *envp[])
+int platform_main(int argc, char *argv[], char *envp[])
 {
 	if (!MCInitialize() || !MCSInitialize() ||
 	    !MCModulesInitialize() || !MCScriptInitialize())

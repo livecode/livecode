@@ -6,4 +6,8 @@
 	path = thirdparty
 	url = https://github.com/runrev/livecode-thirdparty
 	branch = develop
+[submodule "libcpptest/googletest"]
+	path = libcpptest/googletest
+	url = https://github.com/google/googletest.git
+	branch = master
 

@@ -564,14 +564,18 @@ inline MCHashentry *MCHashentry::Create(uint32_t p_key_length)
 {
 	void *t_new_entry;
 	t_new_entry = new char[sizeof(MCHashentry) + p_key_length - 3];
-	return new(t_new_entry) MCHashentry;
+	if (t_new_entry != NULL)
+		return new(t_new_entry) MCHashentry;
+	return NULL;
 }
 
 inline MCHashentry *MCHashentry::Create(const MCString& p_key, uint32_t p_hash)
 {
 	void *t_new_entry;
 	t_new_entry = new char[sizeof(MCHashentry) + p_key . getlength() - 3];
-	return new(t_new_entry) MCHashentry(p_key, p_hash);
+	if (t_new_entry != NULL)
+		return new(t_new_entry) MCHashentry(p_key, p_hash);
+	return NULL;
 }
 
 #ifdef _DEBUG

@@ -1,4 +1,10 @@
 {
+	'includes':
+	[
+		'../common.gypi',
+		'engine-sources.gypi',
+	],
+
 	'targets':
 	[
 		{
@@ -21,8 +27,8 @@
 				'../thirdparty/libpng/libpng.gyp:libpng',
 				'../thirdparty/libz/libz.gyp:libz',
 				
-				'encode_version',
-				'quicktime_stubs',
+				'engine-common.gyp:encode_version',
+				'engine-common.gyp:quicktime_stubs',
 				
 				'lcb-modules.gyp:engine_lcb_modules',
 			],
@@ -139,7 +145,6 @@
 								'$(SDKROOT)/System/Library/Frameworks/ApplicationServices.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Carbon.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Cocoa.framework',
-								'$(SDKROOT)/System/Library/Frameworks/QTKit.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Quartz.framework',
 							],
 						},
