@@ -47,11 +47,17 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define MCSSL
 #define FEATURE_TASKBAR_ICON
-#define FEATURE_QUICKTIME_EFFECTS
 #define FEATURE_PLATFORM_PLAYER
 #define FEATURE_PLATFORM_RECORDER
 #define FEATURE_PLATFORM_AUDIO
 #define FEATURE_NOTIFY 1
+
+// QuickTime is not supported in 64-bit OSX applications as it has been
+// deprecated by Apple.
+#ifndef __LP64__
+#define FEATURE_QUICKTIME
+#define FEATURE_QUICKTIME_EFFECTS
+#endif
 
 #elif defined(_LINUX_DESKTOP)
 
