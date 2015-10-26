@@ -210,19 +210,15 @@ void MCNativeLayerAndroid::doDetach()
     m_view->removeFromMainView();
 }
 
-void MCNativeLayerAndroid::OnPaint(MCGContextRef)
+// Rendering view to context not supported on Android.
+bool MCNativeLayerAndroid::GetCanRenderToContext()
 {
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
-    if (m_view == NULL)
-        return;
-    
-    // If the widget is not in edit mode, we trust it to paint itself
-    if (t_widget->isInRunMode())
-        return;
-    
-    // Android does not support edit mode
-    return;
+	return false;
+}
+
+bool MCNativeLayerAndroid::OnPaint(MCGContextRef)
+{
+	return false;
 }
 
 void MCNativeLayerAndroid::OnGeometryChanged(const MCRectangle& p_old_rect)

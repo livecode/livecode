@@ -48,7 +48,7 @@
 
 
 MCNativeLayer::MCNativeLayer() :
-  m_attached(false)
+  m_attached(false), m_can_render_to_context(true)
 {
     ;
 }
@@ -114,3 +114,16 @@ MCWidget* MCNativeLayer::findNextLayerBelow(MCWidget* p_widget)
     return t_after;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+void MCNativeLayer::SetCanRenderToContext(bool p_can_render)
+{
+	m_can_render_to_context = p_can_render;
+}
+
+bool MCNativeLayer::GetCanRenderToContext()
+{
+	return m_can_render_to_context;
+}
+
+////////////////////////////////////////////////////////////////////////////////

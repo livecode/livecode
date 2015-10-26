@@ -139,14 +139,8 @@ void MCNativeLayerMac::doDetach()
     [m_view removeFromSuperview];
 }
 
-void MCNativeLayerMac::OnPaint(MCGContextRef p_context)
+bool MCNativeLayerMac::OnPaint(MCGContextRef p_context)
 {
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
-    // If the widget is not in edit mode, we trust it to paint itself
-    if (t_widget->isInRunMode())
-        return;
-
     // Get an image rep suitable for storing the cached bitmap
     if (m_cached == nil)
     {
@@ -165,13 +159,17 @@ void MCNativeLayerMac::OnPaint(MCGContextRef p_context)
     t_raster.height = [m_cached pixelsHigh];
     t_raster.stride = [m_cached bytesPerRow];
     t_raster.pixels = [m_cached bitmapData];
-    /* UNCHECKED */ MCGImageCreateWithRasterNoCopy(t_raster, t_gimage);
+    
+    if (!MCGImageCreateWithRasterNoCopy(t_raster, t_gimage))
+		return false;
     
     // Draw the image
     // FG-2014-10-10: a y offset of 1 is needed to keep things lined up, for some reason...
     MCGRectangle rect = {{0, 1}, {t_raster.width, t_raster.height}};
     MCGContextDrawImage(p_context, t_gimage, rect, kMCGImageFilterNone);
     MCGImageRelease(t_gimage);
+    
+    return true;
 }
 
 void MCNativeLayerMac::OnGeometryChanged(const MCRectangle& p_old_rect)

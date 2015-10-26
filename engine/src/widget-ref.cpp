@@ -297,11 +297,24 @@ bool MCWidgetBase::OnPaint(MCGContextRef p_gcontext)
     MCGContextClipToRect(p_gcontext, t_frame);
     MCGContextTranslateCTM(p_gcontext, t_frame . origin . x, t_frame . origin . y);
     
-    if (GetHost()->getNativeLayer())
-        GetHost()->getNativeLayer()->OnPaint(p_gcontext);
+    MCWidget *t_widget;
+    t_widget = GetHost();
     
-    if (!Dispatch(MCNAME("OnPaint")))
-        t_success = false;
+    bool t_view_rendered;
+    t_view_rendered = false;
+    
+	if (t_widget->getNativeLayer() != nil)
+	{
+		// If the widget is not in edit mode, we trust it to paint itself
+		if (t_widget->isInRunMode())
+			t_view_rendered = true;
+		else if (t_widget->getNativeLayer()->GetCanRenderToContext())
+			t_success = t_view_rendered = t_widget->getNativeLayer()->OnPaint(p_gcontext);
+	}
+	
+	if (t_success && !t_view_rendered)
+		t_success = Dispatch(MCNAME("OnPaint"));
+    
     if (m_children != nil)
     {
         for(uindex_t i = 0; i < MCProperListGetLength(m_children); i++)
