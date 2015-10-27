@@ -6,6 +6,11 @@
 		[
 			'libFoundation',
 		],
+		'module_test_sources':
+		[
+			'test/environment.cpp',
+			'test/test_string.cpp',
+		],
 	},
 
 

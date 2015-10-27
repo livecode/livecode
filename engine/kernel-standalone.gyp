@@ -15,6 +15,10 @@
 			'src',
 		],
 		'module_test_defines': [ 'MODE_STANDALONE', ],
+		'module_test_sources':
+		[
+			'<@(engine_test_source_files)',
+		],
 	},
 
 	'includes':

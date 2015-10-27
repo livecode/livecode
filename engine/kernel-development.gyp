@@ -9,8 +9,9 @@
 			'../libfoundation/libfoundation.gyp:libFoundation',
 			'../libgraphics/libgraphics.gyp:libGraphics',
 		],
-		'module_test_additional_sources':
+		'module_test_sources':
 		[
+			'<@(engine_test_source_files)',
 			'<(SHARED_INTERMEDIATE_DIR)/src/startupstack.cpp',
 		],
 		'module_test_include_dirs':
