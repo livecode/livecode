@@ -22,7 +22,7 @@
 
 				'../thirdparty/libgif/libgif.gyp:libgif',
 				'../thirdparty/libjpeg/libjpeg.gyp:libjpeg',
-				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl',
+				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl_stubs',
 				'../thirdparty/libpcre/libpcre.gyp:libpcre',
 				'../thirdparty/libpng/libpng.gyp:libpng',
 				'../thirdparty/libz/libz.gyp:libz',

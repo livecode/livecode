@@ -80,8 +80,8 @@
 			
 			'dependencies':
 			[
-				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl',
-				
+				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl_stubs',
+
 				# Because our headers are so messed up...
 				'../libfoundation/libfoundation.gyp:libFoundation',
 				'../libgraphics/libgraphics.gyp:libGraphics',

@@ -84,7 +84,7 @@
 			[
 				'../libexternal/libexternal.gyp:libExternal',
 				'../thirdparty/libmysql/libmysql.gyp:libmysql',
-				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl',
+				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl_stubs',
 				'../thirdparty/libz/libz.gyp:libz',
 			],
 			
@@ -142,7 +142,7 @@
 			[
 				'../libexternal/libexternal.gyp:libExternal',
 				'../thirdparty/libmysql/libmysql.gyp:libmysql',
-				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl',
+				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl_stubs',
 				'../thirdparty/libz/libz.gyp:libz',
 			],
 			
@@ -321,7 +321,7 @@
 			[
 				'../libexternal/libexternal.gyp:libExternal',
 				'../thirdparty/libpq/libpq.gyp:libpq',
-				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl',
+				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl_stubs',
 			],
 			
 			'include_dirs':
@@ -367,7 +367,7 @@
 			[
 				'../libexternal/libexternal.gyp:libExternal',
 				'../thirdparty/libpq/libpq.gyp:libpq',
-				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl',
+				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl_stubs',
 			],
 			
 			'include_dirs':
