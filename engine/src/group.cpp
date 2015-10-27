@@ -2394,6 +2394,7 @@ void MCGroup::clearfocus(MCControl *cptr)
 	if (cptr == kfocused)
 	{
 		kfocused = NULL;
+        state &= ~CS_KFOCUSED;
 		if (parent -> gettype() == CT_CARD)
 			static_cast<MCCard *>(parent) -> erasefocus(this);
 		else
