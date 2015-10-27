@@ -86,7 +86,11 @@ static void dispatch_notification_events(void)
         s_notification_events = s_notification_events -> next;
 
         MCAutoStringRef t_text;
-        /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_event -> text, &t_text);
+		// PM-2015-10-27: [[ Bug 16279 ]] Prevent crash when the payload is empty
+		if (t_event -> text != nil)
+			/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_event -> text, &t_text);
+		else
+			t_text = MCValueRetain(kMCEmptyString);
 
         switch(t_event -> type)
         {
@@ -470,7 +474,12 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     UIApplicationState t_state = [p_application applicationState];
     MCAutoStringRef t_mc_reminder_text;
     NSString *t_reminder_text = [p_notification.userInfo objectForKey:@"payload"];
-	/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_reminder_text, &t_mc_reminder_text);
+	
+	// PM-2015-10-27: [[ Bug 16279 ]] Prevent crash when the payload is empty
+	if (t_reminder_text != nil)
+		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_reminder_text, &t_mc_reminder_text);
+	else
+		t_mc_reminder_text = MCValueRetain(kMCEmptyString);
     if (m_did_become_active)
     {
 		MCNotificationPostLocalNotificationEvent(*t_mc_reminder_text);
@@ -505,7 +514,13 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     UIApplicationState t_state = [p_application applicationState];
     MCAutoStringRef t_mc_push_notification_text;
     NSString *t_reminder_text = [p_dictionary objectForKey:@"payload"];
-    /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_reminder_text, &t_mc_push_notification_text);
+	
+	// PM-2015-10-27: [[ Bug 16279 ]] Prevent crash when the payload is empty
+	if (t_reminder_text != nil)
+		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_reminder_text, &t_mc_push_notification_text);
+	else
+		t_mc_push_notification_text = MCValueRetain(kMCEmptyString);
+	
     if (m_did_become_active)
     {
 		MCNotificationPostPushNotificationEvent(*t_mc_push_notification_text);
