@@ -606,8 +606,11 @@ public:
 	{
 		switch (p_property)
 		{
-			case kMCBrowserScrollbars:
-				return GetScrollbarsEnabled(r_value);
+			case kMCBrowserVerticalScrollbarEnabled:
+				return GetVerticalScrollbarEnabled(r_value);
+				
+			case kMCBrowserHorizontalScrollbarEnabled:
+				return GetHorizontalScrollbarEnabled(r_value);
 			
 			default:
 				break;
@@ -620,9 +623,12 @@ public:
 	{
 		switch (p_property)
 		{
-			case kMCBrowserScrollbars:
-				return SetScrollbarsEnabled(p_value);
+			case kMCBrowserVerticalScrollbarEnabled:
+				return SetVerticalScrollbarEnabled(p_value);
 			
+			case kMCBrowserHorizontalScrollbarEnabled:
+				return SetHorizontalScrollbarEnabled(p_value);
+				
 			default:
 				break;
 		}
@@ -729,15 +735,27 @@ public:
 	//////////
 	
 private:
-	bool GetScrollbarsEnabled(bool &r_value)
+	bool GetVerticalScrollbarEnabled(bool &r_value)
 	{
-		MCAndroidObjectRemoteCall(m_view, "getScrollingEnabled", "b", &r_value);
+		MCAndroidObjectRemoteCall(m_view, "getVerticalScrollbarEnabled", "b", &r_value);
 		return true;
 	}
 	
-	bool SetScrollbarsEnabled(bool p_value)
+	bool SetVerticalScrollbarEnabled(bool p_value)
 	{
-		MCAndroidObjectRemoteCall(m_view, "setScrollingEnabled", "vb", nil, p_value);
+		MCAndroidObjectRemoteCall(m_view, "setVerticalScrollbarEnabled", "vb", nil, p_value);
+		return true;
+	}
+	
+	bool GetHorizontalScrollbarEnabled(bool &r_value)
+	{
+		MCAndroidObjectRemoteCall(m_view, "getHorizontalScrollbarEnabled", "b", &r_value);
+		return true;
+	}
+	
+	bool SetHorizontalScrollbarEnabled(bool p_value)
+	{
+		MCAndroidObjectRemoteCall(m_view, "setHorizontalScrollbarEnabled", "vb", nil, p_value);
 		return true;
 	}
 	
