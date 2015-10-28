@@ -2,6 +2,10 @@
 	'variables':
 	{
 		'module_name': 'libcpptest',
+		'module_test_sources':
+		[
+			'test/trivial.cpp',
+		],
 	},
 
 	'includes':
