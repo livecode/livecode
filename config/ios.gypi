@@ -172,6 +172,7 @@
 							'-Werror=declaration-after-statement',
 							'-Wno-unused-parameter',
 							'-Werror=uninitialized',
+							'-Werror=return-type',
 						],
 					},
 				},
