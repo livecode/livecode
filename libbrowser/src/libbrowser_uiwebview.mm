@@ -16,7 +16,11 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+
+/* JSCore not supported on iOS version < 7.0 */
+#ifdef __IPHONE_7_0
 #import <JavaScriptCore/JavaScriptCore.h>
+#endif
 
 #include <core.h>
 
