@@ -230,6 +230,9 @@ MCUIWebViewBrowser::~MCUIWebViewBrowser(void)
 		
 		if (m_delegate != nil)
 			[m_delegate release];
+		
+		if (m_js_handler_list != nil)
+			[m_js_handler_list release];
 	});
 }
 
@@ -312,9 +315,6 @@ bool MCUIWebViewBrowser::SetJavaScriptHandlers(const char *p_handlers)
 	
 	if (m_js_handlers != nil)
 	{
-		[m_js_handler_list release];
-		m_js_handler_list = nil;
-		
 		MCCStringFree(m_js_handlers);
 		m_js_handlers = nil;
 	}
@@ -322,13 +322,27 @@ bool MCUIWebViewBrowser::SetJavaScriptHandlers(const char *p_handlers)
 	m_js_handlers = t_handlers;
 	t_handlers = nil;
 	
-	if (m_js_handlers != nil)
-		m_js_handler_list = [[[NSString stringWithCString: m_js_handlers encoding:NSUTF8StringEncoding] componentsSeparatedByString: @"\n"] retain];
-
-	MCBrowserRunBlockOnMainFiber(^{
-		SyncJavaScriptHandlers(m_js_handler_list);
-	});
+/* JSCore not supported on iOS version < 7.0 */
+#ifdef __IPHONE_7_0
 	
+	if (NSClassFromString(@"JSContext"))
+	{
+		if (m_js_handlers != nil)
+		{
+			if (m_js_handler_list != nil)
+				[m_js_handler_list release];
+			m_js_handler_list = nil;
+			
+			m_js_handler_list = [[[NSString stringWithCString: m_js_handlers encoding:NSUTF8StringEncoding] componentsSeparatedByString: @"\n"] retain];
+		}
+		
+		MCBrowserRunBlockOnMainFiber(^{
+			SyncJavaScriptHandlers(m_js_handler_list);
+		});
+	}
+	
+#endif
+
 	return true;
 }
 
@@ -337,6 +351,9 @@ bool MCUIWebViewBrowser::SyncJavaScriptHandlers(NSArray *p_handlers)
 	bool t_success;
 	t_success = true;
 	
+/* JSCore not supported on iOS version < 7.0 */
+#ifdef __IPHONE_7_0
+
 	// get js context for browser
 	JSContext *t_context;
 	t_context = nil;
@@ -375,6 +392,8 @@ bool MCUIWebViewBrowser::SyncJavaScriptHandlers(NSArray *p_handlers)
 			[t_context evaluateScript: t_js];
 		}
 	}
+	
+#endif
 	
 	return t_success;
 }
