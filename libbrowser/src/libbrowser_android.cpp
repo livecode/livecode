@@ -748,7 +748,7 @@ private:
 		
 		MCAndroidObjectRemoteCall(m_view, "getUrl", "s", &t_url);
 		if (t_url == nil)
-			return false;
+			return MCCStringClone("", r_utf8_string);
 			
 		r_utf8_string = t_url;
 		return true;
