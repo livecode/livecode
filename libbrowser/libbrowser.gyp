@@ -250,15 +250,6 @@
 			
 			'conditions':
 			[
-				# OSX, Windows, and Linux only
-				[
-					'OS != "mac" and OS != "win" and OS != "linux"',
-					{
-						'type': 'none',
-						'mac_bundle': 0,
-					},
-				],
-				
 				## Exclusions
 				[
 					'OS != "mac"',
@@ -317,13 +308,19 @@
 			'target_name': 'libbrowser-copy',
 			'type': 'none',
 			
-			'dependencies':
-			[
-				'libbrowser-cefprocess',
-			],
-			
 			'conditions':
 			[
+				[
+					# Only the CEF platforms need libbrowser-cefprocess
+					'OS == "mac" or OS == "win" or OS == "linux"',
+					{
+						'dependencies':
+						[
+							'libbrowser-cefprocess',
+						],
+					},
+				],
+
 				[
 					'OS == "mac"',
 					{
