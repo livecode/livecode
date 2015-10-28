@@ -410,8 +410,9 @@ select empty
 TestAssert "test", the selectedText is empty
 
 end TestInterface51
-on TestInterface52
 
+on TestInterface52
+# highlightedlines, multiplehighlights
 create stack "Test"
 set the defaultstack to "Test"
 create field "tf"
@@ -421,6 +422,13 @@ set the listbehavior of field "tf" to true
 set the multiplehilites of field "tf" to true
 set the noncontiguoushilites of field "tf" to true
 
+set the hilitedLines of field "tf" to empty
+TestAssert "test", the selectedText of field "tf" is empty
+
+set the hilitedlines of field "tf" to 1,3
+
+TestAssert "test", the selectedText of field "tf" is ("abc" & return & "ghi")
+
 set the hilitedlines of field "tf" to 1,3
 
 TestAssert "test", the selectedText of field "tf" is ("abc" & return & "ghi")
@@ -428,7 +436,13 @@ TestAssert "test", the selectedText of field "tf" is ("abc" & return & "ghi")
 set the hilitedLines of field "tf" to empty
 TestAssert "test", the selectedText of field "tf" is empty
 
+set the multiplehilites of field "tf" to false
+set the noncontiguoushilites of field "tf" to false
+set the hilitedline of field "tf" to 3
+TestAssert "test", the selectedText of field "tf" is "ghi"
+
 end TestInterface52
+
 on TestInterface53
 
 TestAssert "test", the shiftKey is "up"
@@ -626,18 +640,217 @@ TestAssert "test", the long id of the current card is tId
 
 end TestInterface76
 
-on TestInterface79
+on Test-Unhighlight
+create group
+create button in group 1
+create button in group 1
 
-
-create button
-
+unhilite button 1
+TestAssert "test", not the hilite of button 1
 hilite button 1
+TestAssert "still dehilited", the hilite of button 1
 
-TestAssert "test", the hilite of button 1
+unhilite button 1
+TestAssert "test", not the hilite of button 1
+highlight button 2
+TestAssert "test", the hilite of button 2
 
-end TestInterface79
+dehilite button 2
+TestAssert "dehilite", not the hilite of button 2
+hilite button 1
+TestAssert "still dehilited", the hilite of button 1
 
+dehilite button 1
+TestAssert "dehilite", not the hilite of button 1
+highlight button 1
+TestAssert "still dehilited", the hilite of button 1
+end Test-Unhighlight
 
+# commented out because of http://quality.runrev.com/show_bug.cgi?id=16281
+#on TestHighlightedButtonID
+#create group
+#create button in group 1
+#create button in group 1
+
+#TestAssert "empty hilite on button creation", the hilitedbuttonid of group 1 is 0
+#set the highlitedbuttonid of group 1 to the short id of button 2
+#TestAssert "test", not the hilite of button 1
+#hilite button 1
+#TestAssert "test", the hilitedbuttonid of group 1 is the short id of button 1
+#TestAssert "test", the hilitedbuttonname of group 1 is the short name of button 1
+
+#unhilite button 1
+#TestAssert "test", not the hilite of button 1
+#highlight button 2
+#TestAssert "test", the hilitedbuttonid of group 1 is the short id of button 2
+#TestAssert "test", the hilitedbuttonname of group 1 is the short name of button 2
+
+#dehilite button 2
+#TestAssert "test", not the hilite of button 2
+#set the highlitedbuttonid of group 1 to the short id of button 1
+#TestAssert "test", the hilitedbuttonid of group 1 is the short id of button 1
+#TestAssert "test", the hilitedbuttonname of group 1 is the short name of button 1
+#end TestHighlightedButtonID
+
+on TestHighlightBorder
+create button
+TestAssert "hiliteborder is false on button creation", the hiliteborder of button 1 is false
+
+set the hiliteborder of button 1 to true
+TestAssert "set hiliteborder to true", the hiliteborder of button 1
+
+set the hiliteborder of button 1 to false
+TestAssert "change hiliteborder from true to false", the hiliteborder of button 1 is false
+
+set the hiliteborder of button 1 to true
+TestAssert "change hiliteborder from false to true", the hiliteborder of button 1
+end TestHighlightBorder
+
+on TestHighlightFill
+create button
+set the hilitefill of button 1 to false
+TestAssert "test", the hilitefill of button 1 is false
+
+set the hilitefill of button 1 to true
+TestAssert "test", the hilitefill of button 1
+end TestHighlightFill
+
+on TestHighlightedIcon
+create button
+TestAssert "hilitedIcon is zero after button creation", the hilitedIcon of button 1 is 0
+set the hilitedIcon of button 1 to 1234
+TestAssert "initial hilitedIcon assignment", the hilitedIcon of button 1 is 1234
+
+set the hilitedIcon of button 1 to 42
+TestAssert "change of hilitedIcon", the hilitedIcon of button 1 is 42
+end TestHighlightedIcon
+
+on TestSharedHighlight
+create button
+set the sharedhilite of button 1 to false
+TestAssert "test", the sharedhilite of button 1 is false
+
+set the sharedhilite of button 1 to true
+TestAssert "test", the sharedhilite of button 1
+end TestSharedHighlight
+
+on TestShowHighlight
+create button
+set the showhilite of button 1 to false
+TestAssert "test", the showhilite of button 1 is false
+
+set the showhilite of button 1 to true
+TestAssert "test", the showhilite of button 1
+end TestShowHighlight
+
+on TestHighlightColors
+create field
+# not sure what the default should be
+#TestAssert "test", the hilitecolor of field 1 is empty
+
+set the hilitecolor of field 1 to "red"
+TestAssert "test", the hilitecolor of field 1 is "red"
+
+set the hilitecolor of field 1 to "255,255,0"
+TestAssert "test", the hilitecolor of field 1 is "255,255,0"
+
+set the hilitecolor of field 1 to "#336633"
+TestAssert "test", the hilitecolor of field 1 is "#336633"
+end TestHighlightColors
+
+# commented for now because of http://quality.runrev.com/show_bug.cgi?id=16280
+# this is why unit tests are Good Things
+#on TestLinkHighlightColors
+#set the linkhilitecolor to "blue"
+#TestAssert "test", the linkhilitecolor is "blue"
+
+#set the linkhilitecolor to "255,255,0"
+#TestAssert "test", the linkhilitecolor is "255,255,0"
+
+#set the linkhilitecolor to "#336633"
+#TestAssert "test", the linkhilitecolor is "#336633"
+#end TestLinkHighlightColors
+
+on TestHighlighted
+create button
+set the hilited of button 1 to false
+TestAssert "test", the hilited of button 1 is false
+
+set the hilited of button 1 to true
+TestAssert "test", the hilited of button 1
+end TestHighlighted
+
+on TestAutoHighlight1
+create field
+set the autohilite of field 1 to true
+TestAssert "test", the autohilite of field 1
+
+set the autohilite of field 1 to false
+TestAssert "test", the autohilite of field 1 is false
+
+set the autohilite of field 1 to true
+TestAssert "test", the autohilite of field 1
+
+set the autohilite of field 1 to false
+TestAssert "test", the autohilite of field 1 is false
+end TestAutoHighlight1
+
+on TestAutoHighlight2
+create button
+set the autohilite of button 1 to true
+TestAssert "test", the autohilite of button 1
+
+set the autohilite of button 1 to false
+TestAssert "test", the autohilite of button 1 is false
+
+set the autohilite of button 1 to true
+TestAssert "test", the autohilite of button 1
+
+set the autohilite of button 1 to false
+TestAssert "test", the autohilite of button 1 is false
+end TestAutoHighlight2
+
+on TestToggleHighlights
+create field
+set the togglehilites of field 1 to true
+TestAssert "test", the togglehilites of field 1
+
+set the togglehilites of field 1 to false
+TestAssert "test", the togglehilites of field 1 is false
+
+set the togglehilites of field 1 to true
+TestAssert "test", the togglehilites of field 1
+
+set the togglehilites of field 1 to false
+TestAssert "test", the togglehilites of field 1 is false
+end TestToggleHighlights
+
+on TestThreedHighlight
+create field
+set the listbehavior of field 1 to true
+
+set the threedhilite of field 1 to true
+TestAssert "test", the threedhilite of field 1
+
+set the threedhilite of field 1 to false
+TestAssert "test", the threedhilite of field 1 is false
+
+set the threedhilite of field 1 to true
+TestAssert "test", the threedhilite of field 1
+
+set the threedhilite of field 1 to false
+TestAssert "test", the threedhilite of field 1 is false
+end TestThreedHighlight
+
+on TestHighlightedButton
+create group
+create button in group 1
+create button in group 1
+set the hilitedButton of group 1 to 1
+TestAssert "test", the hilitedButton of group 1 is 1
+set the hilitedButton of group 1 to 2
+TestAssert "test", the hilitedButton of group 1 is 2
+end TestHighlightedButton
 
 on TestInterface83
 
@@ -695,7 +908,7 @@ create stack "Test"
 set the defaultstack to "Test"
 create field
 
-put foo into field 1
+put "foo" into field 1
 
 select text of field 1 
 
