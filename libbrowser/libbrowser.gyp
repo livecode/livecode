@@ -250,15 +250,6 @@
 			
 			'conditions':
 			[
-				# OSX, Windows, and Linux only
-				[
-					'OS != "mac" and OS != "win" and OS != "linux"',
-					{
-						'type': 'none',
-						'mac_bundle': 0,
-					},
-				],
-				
 				## Exclusions
 				[
 					'OS != "mac"',
