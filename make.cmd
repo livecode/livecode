@@ -22,13 +22,7 @@ IF %BUILD_EDITION%==commercial (
   SET BUILD_PROJECT=livecode\livecode.sln
 )
 
-IF -%1-==-- (
-  SET TARGET=default
-) ELSE (
-  SET TARGET=%1
-)
-
-@msbuild %BUILD_PROJECT% /fl /flp:Verbosity=normal /nologo /p:Configuration=%BUILDTYPE% /m:1 /t:%TARGET%
+@msbuild %BUILD_PROJECT% /fl /flp:Verbosity=normal /nologo /p:Configuration=%BUILDTYPE% /m:1
  
 @exit %ERRORLEVEL%
 
