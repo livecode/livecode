@@ -25,6 +25,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+#import <CoreTelephony/CTTelephonyNetworkInfo.h>
+#import <CoreTelephony/CTCarrier.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -503,6 +505,31 @@ struct launch_url_t
 	bool success;
 };
 
+static bool canDevicePlaceAPhoneCall()
+{
+	NSString *t_device_model_name = MCIPhoneGetDeviceModelName();
+	// If we are on an iPhone device, it can place a phone call
+	if ([t_device_model_name rangeOfString:@"iPhone"].length > 0)
+		return true;
+	
+	// From iOS 8 and above, canOpenURL returns true for "tel:" on iPods and iPads because
+	// wireless/facetime calls are allowed on non phone devices. On pre-iOS 8, it returned false.
+	// So we need a way to distinguish between 'real' calls and wireless/facetime calls.
+	
+	// Device supports phone calls, lets confirm it can place one right now
+	CTTelephonyNetworkInfo *t_net_info = [[[CTTelephonyNetworkInfo alloc] init] autorelease];
+	CTCarrier *t_carrier = [t_net_info subscriberCellularProvider];
+	
+	if (t_carrier == nil)
+		return false;
+	
+	NSString *t_mobile_network_code = [t_carrier mobileNetworkCode];
+	if ((t_mobile_network_code.length == 0))
+		return false;
+	
+	return true;
+}
+
 static void do_launch_url(void *p_ctxt)
 {
 	launch_url_t *ctxt;
@@ -516,6 +543,10 @@ static void do_launch_url(void *p_ctxt)
 		t_url = [NSURL URLWithString: [NSString stringWithCString: ctxt -> url encoding: NSMacOSRomanStringEncoding]];
 		t_success = (t_url != nil);
 	}
+	
+	// PM-2015-10-28: [[ Bug 16290 ]] launch url "tel:XXXX" should return error on an iPad that is not linked to an iPhone
+	if (t_success && [t_url.scheme isEqualToString:@"tel"])
+		t_success = canDevicePlaceAPhoneCall();
 	
 	if (t_success)
 	{
