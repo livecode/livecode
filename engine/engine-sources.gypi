@@ -964,6 +964,13 @@
 		[
 			'src/browser.lcb',
 		],
+
+		# Engine cpptest source files
+		'engine_test_source_files':
+		[
+			'test/test_lextable.cpp',
+			'test/test_new.cpp',
+		],
 	},
 	
 	'target_defaults':
