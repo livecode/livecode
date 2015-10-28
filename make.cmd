@@ -1,8 +1,16 @@
+@REM Make sure ProgramFiles(x86) variable is defined
+@SET "ProgramFilesBase=%ProgramFiles% (x86)"
+@IF NOT EXIST "%ProgramFilesBase%" (
+  SET "ProgramFilesBase=%ProgramFiles%"
+)
+
+ECHO %ProgramFilesBase%
+
 @REM Set up environment so that we can run Visual Studio.
 @REM More-or-less the same effect as running vcvars32.bat
 @REM from the Visual Studio source tree.
 @REM @call vcvars32
-@set "PATH=%ProgramFiles(x86)%\Microsoft Visual Studio 10.0\VSTSDB\Deploy;%ProgramFiles(x86)%\Microsoft Visual Studio 10.0\Common7\IDE\;%ProgramFiles(x86)%\Microsoft Visual Studio 10.0\VC\BIN;%ProgramFiles(x86)%\Microsoft Visual Studio 10.0\Common7\Tools;C:\Windows\Microsoft.NET\Framework\v4.0.30319;C:\Windows\Microsoft.NET\Framework\v3.5;%ProgramFiles(x86)%\Microsoft Visual Studio 10.0\VC\VCPackages;%ProgramFiles(x86)%\HTML Help Workshop;%ProgramFiles(x86)%\Microsoft SDKs\Windows\7.0A\bin\NETFX 4.0 Tools;%ProgramFiles(x86)%\Microsoft SDKs\Windows\7.0A\bin;C:\Perl64\site\bin;C:\Perl64\bin;C:\Perl\site\bin;C:\Perl\bin;C:\windows\system32;C:\windows;C:\windows\system32\wbem"
+@set "PATH=%ProgramFilesBase%\Microsoft Visual Studio 10.0\VSTSDB\Deploy;%ProgramFilesBase%\Microsoft Visual Studio 10.0\Common7\IDE\;%ProgramFilesBase%\Microsoft Visual Studio 10.0\VC\BIN;%ProgramFilesBase%\Microsoft Visual Studio 10.0\Common7\Tools;C:\Windows\Microsoft.NET\Framework\v4.0.30319;C:\Windows\Microsoft.NET\Framework\v3.5;%ProgramFilesBase%\Microsoft Visual Studio 10.0\VC\VCPackages;%ProgramFilesBase%\HTML Help Workshop;%ProgramFilesBase%\Microsoft SDKs\Windows\7.0A\bin\NETFX 4.0 Tools;%ProgramFilesBase%\Microsoft SDKs\Windows\7.0A\bin;C:\Perl64\site\bin;C:\Perl64\bin;C:\Perl\site\bin;C:\Perl\bin;C:\windows\system32;C:\windows;C:\windows\system32\wbem"
 
 @REM Works around hangs when generating .pdb files
 @REM Needs to run in the background as never terminates
