@@ -1707,7 +1707,7 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
                 /* UNCHECKED */ MCStringConvertToCFStringRef(*t_text, t_string);
                 
                 CFDictionaryRef t_attributes;
-                t_attributes = CFDictionaryCreate(NULL, (const void**)&t_font, (const void**)&kCTFontAttributeName, 1, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+                t_attributes = CFDictionaryCreate(NULL, (const void**)&kCTFontAttributeName, (const void**)&t_font, 1, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
                 
                 CFAttributedStringRef t_attributed_string;
                 t_attributed_string = CFAttributedStringCreate(NULL, t_string, t_attributes);
@@ -1727,13 +1727,15 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
                 if (t_line == nil)
                     t_success = false;
             }
-			
-			CGContextSaveGState(m_context);
-			CGContextConcatCTM(m_context, CGAffineTransformMake(1, 0, 0, -1, x, m_page_height-y));
-
+            
+            // Draw the line at the correct coordinates. Because we are drawing
+            // with a reversed y-axis, we need to apply a scale, too.
+            CGContextConcatCTM(m_context, CGAffineTransformMake(1, 0, 0, -1, 0, m_page_height));
+            CGContextSetTextPosition(m_context, x, m_page_height - y);
             CTLineDraw(t_line, m_context);
-
-			CGContextRestoreGState(m_context);
+            
+            CFRelease(t_line);
+            CFRelease(t_typesetter);
 		}
 		break;
 		
