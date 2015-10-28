@@ -317,13 +317,19 @@
 			'target_name': 'libbrowser-copy',
 			'type': 'none',
 			
-			'dependencies':
-			[
-				'libbrowser-cefprocess',
-			],
-			
 			'conditions':
 			[
+				[
+					# Only the CEF platforms need libbrowser-cefprocess
+					'OS == "mac" or OS == "win" or OS == "linux"',
+					{
+						'dependencies':
+						[
+							'libbrowser-cefprocess',
+						],
+					},
+				],
+
 				[
 					'OS == "mac"',
 					{
