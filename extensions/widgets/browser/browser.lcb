@@ -63,20 +63,36 @@ Description:
 The <browserHtmltext> is the HTML representation of the content displayed in the browser.
 
 
-Name: browserScrollbars
+Name: vscrollbar
 Type: property
 
 Syntax:
-set the browserScrollbars of <widget> to <pEnabled>
-get the browserScrollbars of <widget>
+set the vscrollbar of <widget> to <pEnabled>
+get the vscrollbar of <widget>
 
-Summary: Controls whether scrollbars are visible and enabled within the browser.
+Summary: Controls whether the vertical scrollbar is visible and enabled within the browser.
 
 Parameters:
 pEnabled(boolean): True or false.
 
 Description:
-Controls whether scrollbars are visible and enabled within the browser.
+Controls whether the vertical scrollbar is visible and enabled within the browser.
+
+
+Name: hscrollbar
+Type: property
+
+Syntax:
+set the hscrollbar of <widget> to <pEnabled>
+get the hscrollbar of <widget>
+
+Summary: Controls whether the horizontal scrollbar is visible and enabled within the browser.
+
+Parameters:
+pEnabled(boolean): True or false.
+
+Description:
+Controls whether the horizontal scrollbar is visible and enabled within the browser.
 
 
 Name: browserUseragent
@@ -277,8 +293,11 @@ metadata browserUrl.editor is "com.livecode.pi.text"
 
 property browserHtmltext get getHtmlText set setHtmlText
 
-property browserScrollbars get getScrollbars set setScrollbars
-metadata browserScrollbars.editor is "com.livecode.pi.boolean"
+property vscrollbar get getVScrollbar set setVScrollbar
+metadata vscrollbar.editor is "com.livecode.pi.boolean"
+
+property hscrollbar get getHScrollbar set setHScrollbar
+metadata hscrollbar.editor is "com.livecode.pi.boolean"
 
 property browserUseragent get getUserAgent set setUserAgent
 metadata browserUseragent.editor is "com.livecode.pi.text"
@@ -304,7 +323,7 @@ variable mScriptObject as ScriptObject
 
 --------------------------------------------------------------------------------
 
-constant kPersistentProps is ["scrollbars", "allowNewWindows", "enableContextMenu", "userAgent", "javaScriptHandlers"]
+constant kPersistentProps is ["verticalScrollbarEnabled", "horizontalScrollbarEnabled", "allowNewWindows", "enableContextMenu", "userAgent", "javaScriptHandlers"]
 
 --------------------------------------------------------------------------------
 
@@ -501,12 +520,22 @@ end handler
 
 --
 
-private handler getScrollbars() returns Boolean
-	return getProperty("scrollbars")
+private handler getVScrollbar() returns Boolean
+	return getProperty("verticalScrollbarEnabled")
 end handler
 
-private handler setScrollbars(in pScrollbars as Boolean)
-	setProperty("scrollbars", pScrollbars)
+private handler setVScrollbar(in pVScrollbar as Boolean)
+	setProperty("verticalScrollbarEnabled", pVScrollbar)
+end handler
+
+--
+
+private handler getHScrollbar() returns Boolean
+	return getProperty("horizontalScrollbarEnabled")
+end handler
+
+private handler setHScrollbar(in pHScrollbar as Boolean)
+	setProperty("horizontalScrollbarEnabled", pHScrollbar)
 end handler
 
 ----------
