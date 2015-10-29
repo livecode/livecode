@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -646,18 +646,13 @@ void MCExpression::compile_out(MCSyntaxFactoryRef ctxt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifdef _MOBILE
-extern bool MCIsPlatformMessage(MCNameRef handler_name);
-extern Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters);
-#endif 
-
 MCFuncref::MCFuncref(MCNameRef inname)
 {
 	/* UNCHECKED */ MCNameClone(inname, name);
 	handler = nil;
 	params = NULL;
 	resolved = false;
-    platform_message = false;
+    global_handler = false;
 }
 
 MCFuncref::~MCFuncref()
@@ -680,13 +675,12 @@ Parse_stat MCFuncref::parse(MCScriptPoint &sp, Boolean the)
 		MCperror->add(PE_FUNCTION_BADPARAMS, sp);
 		return PS_ERROR;
 	}
-#ifdef _MOBILE
-    if (MCIsPlatformMessage(name))
+    
+    if (MCIsGlobalHandler(name))
     {
-        platform_message = true;
+        global_handler = true;
         resolved = true;
     }
-#endif
     
 	return PS_NORMAL;
 }
@@ -845,7 +839,7 @@ Exec_stat MCFuncref::eval(MCExecPoint &ep)
 
 void MCFuncref::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
-    MCKeywordsExecCommandOrFunction(ctxt, resolved, handler, params, name, line, pos, platform_message, true);
+    MCKeywordsExecCommandOrFunction(ctxt, resolved, handler, params, name, line, pos, global_handler, true);
     
     Exec_stat stat = ctxt . GetExecStat();
     

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -164,7 +164,7 @@ class MCFuncref : public MCExpression
 	MCObject *parent;
 	MCParameter *params;
 	bool resolved : 1;
-    bool platform_message : 1;
+    bool global_handler : 1;
 public:
 	MCFuncref(MCNameRef);
 	virtual ~MCFuncref();

@@ -63,6 +63,24 @@ private function getIosSdkInfo pSDKVersion, @rInfo
    return true
 end getIosSdkInfo
 
+// Check whether the output from linking is valid.
+// This has been added after Xcode 7.0 adds warnings when the minimum
+// version does not match the compiled version.
+private function linkingIsValid pLinkingOutput
+   if pLinkingOutput is empty then return true
+   
+   repeat for each line tLine in pLinkingOutput
+      // Discard Xcode 7 new warnings like:
+      // ld: warning: object file (<path_to_exe) was built for newer iOS version (9.0) than being linked (7.0)
+      if not matchtext(tLine, "ld: warning: object file \(.*\) was built for newer iOS version \(.*\) than being linked \(.*\)") then
+         return false
+      end if
+   end repeat
+   
+   return true
+end linkingIsValid
+   
+
 private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    if the platform is not "macos" then
       throw "not supported on this platform"
@@ -397,7 +415,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
             
             put tArchSpecificEngineFile & space after tArchSpecificEngineList
             delete file tLinkOptionsFile
-            if it is not empty or there is no file tArchSpecificEngineFile then
+            if not linkingIsValid(it) or there is no file tArchSpecificEngineFile then
                throw "linking for" && tInstSet && " (" & tArch & ") failed with " & it
             end if
          end repeat
@@ -465,12 +483,10 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
             local tSource, tTarget
             put char (it + 2) to -1 of tRedirect into tSource
             put pAppBundle into tTarget
-            if there is a file tSource then
-               put slash & char 1 to (it - 1) of tRedirect after tTarget
-            else if there is a folder (tTarget & slash & char 1 to (it - 1) of tRedirect) then
-               revDeleteFolder tTarget & slash & char 1 to (it - 1) of tRedirect
-            end if
-            get shell("ln -s" && quote & tSource & quote && quote & tTarget & quote)
+            
+            put slash & char 1 to (it - 1) of tRedirect after tTarget
+            
+            symlinkRedirect tSource, tTarget
          end if
       end repeat
    end if
@@ -559,9 +575,23 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    if pTarget is "Device" and not revEnvironmentIsInstalled() then
       revStandaloneProgress "Extracting debug symbols..."
       
+      // SN-2015-09-10: [[ Xcode 7.0 ]] Xcode 7.0 sets the env var MallocNanoZone to 1
+      //  but this makes dsymutil crash...
+      //  We reinstate it after symbol extraction as a user might as well set MallocNanoZone
+      local tOldMallocNanoZone
+      if $MallocNanoZone is not empty then
+         put $MallocNanoZone into tOldMallocNanoZone
+         put 0 into $MallocNanoZone
+      end if
+      
       get shell("dsymutil" && quote & tDeploy["output"] & quote)
       if it is not empty then
          throw "extracting debug symbols failed with" && it
+      end if
+      
+      // Reinstate env var MallocNanoZone if it was set.
+      if $MallocNanoZone is not empty then
+         put tOldMallocNanoZone into $MallocNanoZone
       end if
    end if
    
@@ -622,6 +652,13 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          replace "${REMOTE_NOTIFICATIONS}" with empty in tEntitlements
       end if     
       
+      // SN-2015-09-17: [[ BetaApp ]] Add entitlement for beta apps
+      local tBetaEntitlement
+      if tSettings["ios,beta version"] then
+         put url("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "BetaReportEntitlement.xcent")) into tBetaEntitlement
+      end if
+      replace "${BETA_REPORT_ENTITLEMENT}" with tBetaEntitlement in tEntitlements
+      
       put numToChar(0xfa) & numToChar(0xde) & numToChar(0x71) & numToChar(0x71) & binaryEncode("M", the length of tEntitlements + 8) before tEntitlements
       
       local tEntitlementsFile
@@ -632,7 +669,15 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       put uniDecode(uniEncode(tCertificate, "UTF8")) into tCertificate
       
       -- Do the codesigning
-      put tSdkRoot & slash & "Platforms/iPhoneOS.platform/Developer/usr/bin/codesign_allocate" into $CODESIGN_ALLOCATE
+      // SN-2015-09-11: [[ Xcode 7.0 ]] codesign in Xcode 7.0 will not work if CODESIGN_ALLOCATE
+      // environment variable is set, so we only set it up to Xcode 6.4
+      // We use Clang version to get the Xcode version in use
+      local tClangVersion, tClangMajorVersion
+      put shell("clang++ --version") into tClangVersion
+      if matchText(tClangVersion, "Apple LLVM version ([0-9]+)\.[0-9]+.[0-9]+", tClangMajorVersion) \
+            and tClangMajorVersion < 7 then
+         put tSdkRoot & slash & "Platforms/iPhoneOS.platform/Developer/usr/bin/codesign_allocate" into $CODESIGN_ALLOCATE
+      end if
       
       --try
       -- Perform the codesigning of the main bundle
@@ -1113,7 +1158,7 @@ private function revGetMinimumOSByArch pMinimumOS
    if pMinimumOS is empty or pMinimumOS <= "5.1" then
       put "5.1.1" into tMinimumOSByArch["i386"]
    else
-      put pMinimumOS & ".0" after tMinimumOSByArch["i386"]
+      put pMinimumOS after tMinimumOSByArch["i386"]
    end if
    
    -- Assign the same value to the other architectures.
@@ -1152,7 +1197,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    ----------
    
    local tDisplayName, tMinimumOS, tDeviceFamily, tRequiredCapabilities, tPersistentWifi, tExitsOnSuspend
-   local tFileSharing, tPrerenderedIcon
+   local tFileSharing, tPrerenderedIcon, tBackGroundAudio
    put pSettings["ios,display name"] into tDisplayName
    put pSettings["ios,minimum version"] into tMinimumOS
    put pSettings["ios,device family"] into tDeviceFamily
@@ -1160,7 +1205,8 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    put pSettings["ios,persistent wifi"] into tPersistentWifi
    -- MW-2011-03-10: Force this to true for now, until we can fix the engine
    --put pSettings["ios,exits on suspend"] into tExitsOnSuspend
-   put true into tExitsOnSuspend
+   
+   put  pSettings["ios,background audio"] into tBackgroundAudio
    put pSettings["ios,file sharing"] into tFileSharing
    put pSettings["ios,prerendered icon"] into tPrerenderedIcon 
    
@@ -1175,14 +1221,19 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    if tPersistentWifi is empty then
       put "false" into tPersistentWifi
    end if
-   if tExitsOnSuspend is empty then
-      put "true" into tExitsOnSuspend
-   end if
+   
    if tFileSharing is empty then
       put "false" into tFileSharing
    end if
    if tPrerenderedIcon is empty then
       put "false" into tPrerenderedIcon
+   end if
+   
+   -- tExitsOnSuspend defaulted to true. We want this to be false to allow background audio
+   if tBackgroundAudio is true then 
+      put "false" into tExitsOnSuspend
+   else -- false or empty
+      put "true" into tExitsOnSuspend
    end if
    
    ----------
@@ -1417,6 +1468,14 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    end if
    replace "${LOCATION_AUTH_TYPE}" with it in pPlist
    
+   -- PM-2015-10-08:  [[ Bug 16154 ]] Allow audio playing when the app is on background
+   if tBackgroundAudio is true then
+      get "<string>audio</string>"
+   else -- false or empty
+      get empty
+   end if
+   replace "${PLAY_AUDIO_WHEN_IN_BACKGROUND}" with it in pPlist
+   
    ----------   
    
    put pPlist into url ("binfile:" & pAppBundle & slash & "Info.plist")   
@@ -1575,6 +1634,9 @@ function mapFilePath pPath
       case "RemoteNotificationStoreEntitlements.xcent"
          put tRepo & slash & "engine/rsrc/template-remote-notification-store-entitlements.xcent" into tPath
          break
+      case "BetaReportEntitlement.xcent"
+         put tRepo & slash & "engine/rsrc/template-beta-report-entitlement.xcent" into tPath
+         break
       case "RemoteNotificationSettings.plist"
          put tRepo & slash & "engine/rsrc/mobile-remote-notification-template.plist" into tPath
          break
@@ -1588,7 +1650,7 @@ function mapFilePath pPath
          if tIsDevice then
             put tRepo & merge("/_build/ios/[[tBuild]]/standalone-mobile-lib-[[tSuffix]].lcext") into tPath
          else
-            put tRepo & merge("/_build/ios/[[tBuild]]/standalone-mobile-[[tSuffix]].app/standalone-mobile-[[tSuffix]]") into tPath
+            put tRepo & merge("/_build/ios/[[tBuild]]/standalone-mobile-[[tSuffix]].ios-engine") into tPath
          end if
          break
       case "revzip"
@@ -1618,8 +1680,19 @@ end mapFilePath
 ################################################################################
 
 private command symlinkRedirect pSource, pTarget
+   if there is a file pTarget then
+      // We don't want to erase files that have possibly be already copied ith the same name
+      // such as externals, fonts or plist files.
+      exit symlinkRedirect
+   end if
    if there is a file pSource then
-      get shell("ln -s" && quote & pSource & quote && quote & pTarget & quote)
+      // Hardlink, since iOS simulator 9.0 does not seem able to handle symlinks
+      get shell(merge("ln '[[pSource]]' '[[pTarget]]' || cp '[[pSource]]' '[[pTarget]]'"))
+      
+      if the result is not empty then
+         // Both 'ln' and 'cp' failedn
+         throw "Cannot copy" && pSource
+      end if
    else if there is a folder pSource then
       local tOldFolder
       put the folder into tOldFolder

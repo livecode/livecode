@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -684,9 +684,9 @@ struct MCWindowsSystem: public MCSystemInterface
 
 		// MW-2008-06-19: Make sure fname is stored in a static to keep the (rather
 		//   unpleasant) current semantics of the call.
-		static char *fname;
-		if (fname != NULL)
-			delete fname;
+		// SN-2015-07-15: [[ ServerCrash ]] t_file in MCS_tmpnam will delete fname
+		//  outside of this function - we don't keep it as static here.
+		char *fname = NULL;
 
 		// TS-2008-06-18: [[ Bug 6403 ]] - specialFolderPath() returns 8.3 paths
 		fname = _tempnam("\\tmp", "tmp");
@@ -704,11 +704,12 @@ struct MCWindowsSystem: public MCSystemInterface
 		if (!LongFilePath(*t_fname_string, &t_long_fname_string))
 			ep . setsvalue(fname);
 		else
-		{
-			delete fname;
+        {
 			fname = strdup(MCStringGetCString(*t_long_fname_string));
 			ep . setsvalue(fname);
-		}
+        }
+        
+        ep . grabsvalue();
 		
 		if (t_ptr != NULL)
 			ep.appendstringf("/%s", ++t_ptr);
@@ -716,6 +717,7 @@ struct MCWindowsSystem: public MCSystemInterface
 		// MW-2008-06-19: Make sure we delete this version of fname, since we don't
 		//   need it anymore.
 		delete fname;
+		delete t_long_fname;
 
 		// MW-2008-06-19: Use ep . getsvalue() . clone() to make sure we get a copy
 		//   of the ExecPoint's string as a NUL-terminated (C-string) string.

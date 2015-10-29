@@ -1,10 +1,7 @@
 #!/bin/bash
 
 # Versions
-OPENSSL_VERSION="1.0.1o"
-CURL_VERSION="7.43.0"
-ICU_VERSION="55.1"
-CEF_VERSION="3.2062.1796"
+source "scripts/lib_versions.inc"
 
 # Package directory
 PACKAGE_DIR="`pwd`/packaged"
@@ -32,7 +29,7 @@ function doPackage {
 
 	local LIBPATH="lib/${PLATFORM}/${ARCHDIR}/${SUBPLATFORM}"
 
-	local OPENSSL_TAR="${PACKAGE_DIR}/OpenSSL-${OPENSSL_VERSION}${SUFFIX}.tar"
+	local OPENSSL_TAR="${PACKAGE_DIR}/OpenSSL-${OpenSSL_VERSION}${SUFFIX}.tar"
 	local CURL_TAR="${PACKAGE_DIR}/Curl-${CURL_VERSION}${SUFFIX}.tar"
 	local ICU_TAR="${PACKAGE_DIR}/ICU-${ICU_VERSION}${SUFFIX}.tar"
 	local CEF_TAR="${PACKAGE_DIR}/CEF-${CEF_VERSION}${SUFFIX}.tar"
@@ -111,7 +108,7 @@ for PLATFORM in `find lib/ -mindepth 1 -maxdepth 1 -type d` ; do
 done
 
 # Package up the includes
-OPENSSL_HDR_TAR="${PACKAGE_DIR}/OpenSSL-${OPENSSL_VERSION}-All-Universal-Headers.tar"
+OPENSSL_HDR_TAR="${PACKAGE_DIR}/OpenSSL-${OpenSSL_VERSION}-All-Universal-Headers.tar"
 ICU_HDR_TAR="${PACKAGE_DIR}/ICU-${ICU_VERSION}-All-Universal-Headers.tar"
 tar -cf "${OPENSSL_HDR_TAR}" include/openssl/*.h
 tar -cf "${ICU_HDR_TAR}" include/layout/*.h include/unicode/*.h

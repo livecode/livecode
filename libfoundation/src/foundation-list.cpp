@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -48,6 +48,9 @@ bool MCListCreateMutable(MCStringRef p_delimiter, MCListRef& r_list)
 
 bool MCListAppend(MCListRef self, MCValueRef p_value)
 {
+	__MCAssertIsList(self);
+	MCAssert(nil != p_value);
+
 	bool t_first = self->buffer == nil;
 	if (t_first)
 		if (!MCStringCreateMutable(0, self -> buffer))
@@ -88,7 +91,7 @@ bool MCListAppend(MCListRef self, MCValueRef p_value)
 
 bool MCListCopy(MCListRef self, MCListRef& r_list)
 {
-	MCAssert(self != nil);
+	__MCAssertIsList(self);
     
     // If we are immutable, just bump the reference count
     if (!self -> flags & kMCListFlagIsMutable)
@@ -122,6 +125,8 @@ bool MCListCopy(MCListRef self, MCListRef& r_list)
 
 bool MCListCopyAndRelease(MCListRef self, MCListRef& r_list)
 {
+	__MCAssertIsList(self);
+
     // If there are no other references, just clear the mutable flag
     if (self -> references == 1)
     {
@@ -139,6 +144,8 @@ bool MCListCopyAndRelease(MCListRef self, MCListRef& r_list)
 
 bool MCListCopyAsString(MCListRef self, MCStringRef& r_string)
 {
+	__MCAssertIsList(self);
+
 	MCStringRef t_string;
 	if (self -> buffer != nil)
 		t_string = self -> buffer;
@@ -163,6 +170,9 @@ bool MCListCopyAsStringAndRelease(MCListRef self, MCStringRef& r_string)
 
 bool MCListAppendFormat(MCListRef self, const char *p_format, ...)
 {
+	__MCAssertIsList(self);
+	MCAssert(nil != p_format);
+
 	bool t_success;
 	t_success = true;
 
@@ -185,6 +195,9 @@ bool MCListAppendFormat(MCListRef self, const char *p_format, ...)
 
 bool MCListAppendNativeChars(MCListRef self, const char_t *p_chars, uindex_t p_char_count)
 {
+	__MCAssertIsList(self);
+	MCAssert(p_chars != nil);
+
 	bool t_first = self->buffer == nil;
 	if (t_first)
 		if (!MCStringCreateMutable(0, self -> buffer))
@@ -203,6 +216,7 @@ bool MCListAppendSubstring(MCListRef self, MCStringRef p_string, MCRange p_range
 
 bool MCListIsEmpty(MCListRef self)
 {
+	__MCAssertIsList(self);
 	return self -> buffer == nil;
 }
 

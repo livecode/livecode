@@ -9,6 +9,9 @@ SET warnings=0
 REM Not all versions of windows the the %programfiles(x86)% variable
 IF NOT DEFINED programfiles(x86) SET programfiles(x86)=%programfiles%
 
+REM When calling configure.bat from the command line, BUILD_EDITION is not defined
+IF NOT DEFINED BUILD_EDITION SET BUILD_EDITION="community"
+
 REM Note: to test whether a directory exists in batch script, you need to check
 REM whether a file within that directory exists. Easiest way to do this is to
 REM add the "*" wildcard after the directory
@@ -71,10 +74,15 @@ IF EXIST "%programfiles(x86)%\Microsoft Speech SDK\*" (
 REM Pause so any warnings can be seen
 IF %warnings% NEQ 0 PAUSE
 
+REM Community or commercial?
+IF /I %BUILD_EDITION% == commercial (
+  SET gypfile="../livecode-commercial.gyp"
+)
+
 REM Run the configure step
-%python% gyp\gyp_main.py --format msvs --depth . --generator-output build-win-x86/livecode -Gmsvs_version=2010 %extra_options%
+%python% gyp\gyp_main.py --format msvs --depth . --generator-output build-win-x86/livecode -Gmsvs_version=2010 %extra_options% %gypfile%
+PAUSE
 
 REM Pause if there was an error so that the user gets a chance to see it
 IF %ERRORLEVEL% NEQ 0 PAUSE
 EXIT %ERRORLEVEL%
-

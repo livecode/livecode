@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -722,6 +722,15 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		else if (!done && eventtime > curtime)
 			t_sleep = MCMin(eventtime - curtime, exittime - curtime);
 		
+        // MM-2015-08-11: [[ Bug 15700 ]] Poll the sockets. Code pulled over from OS X wait.
+        extern Boolean MCS_handle_sockets();
+        if (MCS_handle_sockets())
+        {
+            if (anyevent)
+                done = True;
+            t_sleep = 0.0;
+        }
+        
 		// Switch to the main fiber and wait for at most t_sleep seconds. This
 		// returns 'true' if the wait was broken rather than timed out.
 		if (MCIPhoneWait(t_sleep) && anyevent)
@@ -1184,39 +1193,66 @@ void MCIPhoneRunBlockOnMainFiber(void (^block)(void))
 
 // MW-2012-08-06: [[ Fibers ]] Updated entry point for didBecomeActive.
 static void MCIPhoneDoDidBecomeActive(void *)
-{ 
-	extern char **environ;
-	char **env;
-	env = environ;
-	
+{
 	// MW-2011-08-11: [[ Bug 9671 ]] Make sure we initialize MCstackbottom.
 	int i;
 	MCstackbottom = (char *)&i;
 	
 	NSAutoreleasePool *t_pool;
-	t_pool = [[NSAutoreleasePool alloc] init];
+    t_pool = [[NSAutoreleasePool alloc] init];
 	
 	// Convert the arguments into stringrefs
 	MCStringRef args[1];
 	MCStringCreateWithCFString((CFStringRef)[[[NSProcessInfo processInfo] arguments] objectAtIndex: 0], args[0]);
-	
+
+    // SN-2015-09-22: [[ Bug 15987 ]] Use NSProcessInfo to get the env variables
 	// Convert the environment variables into stringrefs
 	uindex_t envc = 0;
-	MCAutoArray<MCStringRef> t_envp;
-	while (env[envc] != 0)
-	{
-		t_envp.Extend(envc + 1);
-		MCStringCreateWithBytes((const byte_t*)env[envc], strlen(env[envc]), kMCStringEncodingUTF8, false, t_envp[envc]);
-		envc++;
-	}
-	t_envp.Extend(envc + 1);
-	t_envp[envc] = nil;
+    MCAutoStringRefArray t_envp;
+
+    envc = (uindex_t)[[[NSProcessInfo processInfo] environment] count];
+
+    // last elem of env must be a NULL element, so we allocated envc + 1 elems
+    // If the allocation fails, *t_envp will return NULL, so we are fine.
+    if (t_envp . New(envc + 1))
+    {
+        NSDictionary *t_environment;
+        NSEnumerator* t_key_enumerator;
+        NSString* t_value;
+
+        // NSProcessInfo::environment returns NSDictionary<NSString*,NSString*>
+        t_environment = [[NSProcessInfo processInfo] environment];
+
+        t_key_enumerator = [t_environment keyEnumerator];
+        index_t t_index = 0;
+
+        // Loop through all the keys in the environment array
+        for (id t_key in t_environment)
+        {
+            t_value = [t_environment objectForKey:t_key];
+
+            MCAutoStringRef t_value_str, t_variable_str;
+            MCStringRef t_env_var;
+
+            // We convert the CFStringRef that we got from the dictionary into
+            //  StringRefs, and create a Bash-like environment variable
+            if (MCStringCreateWithCFString((CFStringRef)t_value, &t_value_str)
+                    && MCStringCreateWithCFString((CFStringRef)t_key, &t_variable_str)
+                    && MCStringFormat(t_env_var, "%@=%@", *t_variable_str, *t_value_str))
+                t_envp[t_index] = t_env_var;
+
+            t_index++;
+        }
+
+        // Ensure t_envp array is NULL-terminated
+        t_envp[envc] = NULL;
+    }
 	
 	// Initialize the engine.
 	Bool t_init_success;
-	t_init_success = X_init(1, args, envc, t_envp.Ptr());
+    t_init_success = X_init(1, args, envc, *t_envp);
 	
-	[t_pool release];
+    [t_pool release];
 	
 	if (!t_init_success)
 	{

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -27,6 +27,7 @@ enum MCNativeControlType
 	kMCNativeControlTypePlayer,
 	kMCNativeControlTypeInput,
 	kMCNativeControlTypeMultiLineInput,
+    kMCNativeControlType_Last,
 };
 
 enum MCNativeControlProperty
@@ -88,6 +89,7 @@ enum MCNativeControlProperty
 	kMCNativeControlPropertyDuration,
 	kMCNativeControlPropertyPlayableDuration,
 	kMCNativeControlPropertyLoadState,
+	kMCNativeControlPropertyReadyForDisplay,
 	kMCNativeControlPropertyPlaybackState,
 	kMCNativeControlPropertyStartTime,
 	kMCNativeControlPropertyEndTime,
@@ -132,6 +134,8 @@ enum MCNativeControlProperty
     
     // Android specific properties
     kMCNativeControlPropertyMultiLine,
+    
+    kMCNativeControlProperty_Last,
 };
 
  
@@ -167,6 +171,8 @@ enum MCNativeControlAction
 	
 	// TextView-specific actions
 	kMCNativeControlActionScrollRangeToVisible,
+    
+    kMCNativeControlAction_Last,
 };
 
 class MCNativeControl;
@@ -367,9 +373,21 @@ enum MCNativeControlInputVerticalAlign
     kMCNativeControlInputVerticalAlignBottom,
 };
 
+enum MCNativeControlActionSignature
+{
+    kMCNativeControlActionSignature_Void,
+    kMCNativeControlActionSignature_String,
+    kMCNativeControlActionSignature_OptInteger,
+    kMCNativeControlActionSignature_String_String,
+    kMCNativeControlActionSignature_Integer_Integer,
+    kMCNativeControlActionSignature_Integer_OptInteger_OptInteger,
+};
+
 struct MCNativeControlActionInfo
 {
+	bool waitable;
     MCNativeControlAction action;
+    MCNativeControlActionSignature signature;
     void *exec_method;
 };
 

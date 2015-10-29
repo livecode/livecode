@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -78,6 +78,7 @@ class MCiOSInputControl;
 
 @interface MCiOSMultiLineDelegate : MCiOSInputDelegate <UIScrollViewDelegate>
 {
+    UIView* m_view;
 	int32_t m_verticaltextalign;
 }
 
@@ -439,7 +440,7 @@ MCObjectPropertyTable MCiOSInputControl::kPropertyTable =
 
 MCNativeControlActionInfo MCiOSInputControl::kActions[] =
 {
-    DEFINE_CTRL_EXEC_METHOD(Focus, MCiOSInputControl, Focus)
+    DEFINE_CTRL_EXEC_METHOD(Focus, Void, MCiOSInputControl, Focus)
 };
 
 MCNativeControlActionTable MCiOSInputControl::kActionTable =
@@ -519,7 +520,7 @@ MCObjectPropertyTable MCiOSMultiLineControl::kPropertyTable =
 
 MCNativeControlActionInfo MCiOSMultiLineControl::kActions[] =
 {
-    DEFINE_CTRL_EXEC_BINARY_METHOD(ScrollRangeToVisible, MCiOSMultiLineControl, Int32, Int32, ScrollRangeToVisible)
+    DEFINE_CTRL_EXEC_BINARY_METHOD(ScrollRangeToVisible, Integer_Integer, MCiOSMultiLineControl, Int32, Int32, ScrollRangeToVisible)
 };
 
 MCNativeControlActionTable MCiOSMultiLineControl::kActionTable =
@@ -2693,6 +2694,10 @@ private:
 		return nil;
 	
 	m_verticaltextalign = kMCNativeControlInputVerticalAlignTop;
+    
+    // SN-2015-10-19: [[ Bug 16234 ]] We need to keep track of our view, as we
+    //  will be deallocated after m_instance has cleared up its view.
+    m_view = view;
 
 	[view addObserver:self forKeyPath:@"contentSize" options:NSKeyValueObservingOptionNew context:nil];
 	
@@ -2703,7 +2708,7 @@ private:
 //   can be removed that reference this object.
 - (void)dealloc
 {
-	[m_instance -> GetView() removeObserver: self forKeyPath:@"contentSize"];
+    [m_view removeObserver: self forKeyPath:@"contentSize"];
 	[super dealloc];
 }
    

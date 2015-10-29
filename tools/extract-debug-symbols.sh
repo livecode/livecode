@@ -52,12 +52,19 @@ for input in $@ ; do
 		real_input="${input}"
 	fi
 
-	# Extract a copy of the debugging information
-	echo Extracting debug symbols for ${input}
-	dsymutil --out "${output}" "${real_input}"
 
-	# Strip the executable
-	$STRIP -x -S "$real_input"
+	# If the OS is iOS and this is a debug build, do nothing
+	if [ "$os" == "ios" -a "$BUILDTYPE" == "Debug" ] ; then
+		echo Creating empty debug symbols file for ${input}
+		touch "${output}"
+	else
+		# Extract a copy of the debugging information
+		echo Extracting debug symbols for ${input}
+		dsymutil --out "${output}" "${real_input}"
+
+		# Strip the executable
+		$STRIP -x -S "$real_input"
+	fi
 done
 
 }

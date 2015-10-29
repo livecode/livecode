@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -76,6 +76,20 @@ bool MCModeGetLicensed(void);
 // This hook is called by X_init.
 //
 bool MCModeIsExecutableFirstArgument(void);
+
+// This hook is used to determine if we populate the command line name and
+// arguments at startup.
+//
+// This hook is called by X_open.
+//
+bool MCModeHasCommandLineArguments(void);
+
+// This hook is used to determine if we populate the environment
+// variables at startup.
+//
+// This hook is called by X_open.
+//
+bool MCModeHasEnvironmentVariables(void);
 
 // This hook is used to determine if any stacks on the command-line
 // should be opened on startup.

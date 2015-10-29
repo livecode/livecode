@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -172,6 +172,9 @@ void MCPlatformWindow::Hide(void)
 	
 	// Update the state.
 	m_is_visible = false;
+    
+	// CW-2015-19-22: [[ Bug 15979 ]] Reset m_is_iconified, otherwise if the window is reopened, it cannot be iconified.
+	m_is_iconified = false;
 	
 	// Hide the window.
 	DoHide();

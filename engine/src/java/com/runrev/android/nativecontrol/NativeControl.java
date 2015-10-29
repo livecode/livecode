@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -50,6 +50,14 @@ abstract class NativeControl
     
     public abstract View createView(Context p_context);
     
+	public void onPause()
+	{
+	}
+	
+	public void onResume()
+	{
+	}
+	
     public void setRect(int left, int top, int right, int bottom)
     {
         m_module.setNativeControlRect(getView(), left, top, right, bottom);

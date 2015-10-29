@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -313,6 +313,8 @@ MCGAffineTransform view_get_stack_transform(MCStackFullscreenMode p_mode, MCRect
 		t_rect = MCU_center_rect(p_screen_rect, p_stack_rect);
 		// IM-2013-12-19: [[ Bug 11590 ]] Adjust for screen rect origins other than 0,0
 		return MCGAffineTransformMakeTranslation(t_rect.x - p_screen_rect.x, t_rect.y - p_screen_rect.y);
+    default:
+        MCUnreachableReturn(MCGAffineTransformMakeIdentity());
 	}
 }
 
@@ -449,8 +451,23 @@ void MCStack::view_update_transform(void)
 		view_dirty_all();
 	}
 	
-	// IM-2014-01-16: [[ StackScale ]] Update view rect if needed
-	view_setrect(t_view_rect);
+	// PM-2015-07-17: [[ Bug 13754 ]] Make sure stack does not disappear off screen when changing the scalefactor
+    MCRectangle t_bounded_rect, t_screen_rect;
+    
+    const MCDisplay* t_nearest_display = MCscreen -> getnearestdisplay(t_view_rect);
+    if (t_nearest_display != NULL)
+    {
+        t_screen_rect = t_nearest_display -> viewport;
+        t_bounded_rect = MCU_bound_rect(t_view_rect, t_screen_rect . x, t_screen_rect . y, t_screen_rect . width, t_screen_rect . height);
+    }
+    else
+    {
+        // In noUI mode, we don't have a nearest display.
+        t_bounded_rect = MCU_bound_rect(t_view_rect, 0, 0, MCscreen -> getwidth(), MCscreen -> getheight());
+    }
+	
+    // IM-2014-01-16: [[ StackScale ]] Update view rect if needed
+    view_setrect(t_bounded_rect);
 }
 
 MCRectangle MCStack::view_setstackviewport(const MCRectangle &p_rect)
@@ -604,6 +621,11 @@ bool MCStack::view_getacceleratedrendering(void)
 
 void MCStack::view_setacceleratedrendering(bool p_value)
 {
+#ifdef _SERVER
+    // We don't have accelerated rendering on Server
+    return;
+#endif
+    
 	// If we are turning accelerated rendering off, then destroy the tilecache.
 	if (!p_value)
 	{

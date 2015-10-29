@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -197,7 +197,7 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
 		MCValueRelease(t_temp_string);
 	}
 	
-	if (!ctxt.CopyElementAsFilepath(p_array, MCNAME("stackfile"), false, t_temp_string))
+	if (!ctxt.CopyOptElementAsFilepath(p_array, MCNAME("stackfile"), false, t_temp_string))
 		return false;
 	MCValueAssign(stackfile, t_temp_string);
 	MCValueRelease(t_temp_string);
@@ -1091,16 +1091,20 @@ void MCIdeExtract::exec_ctxt(MCExecContext& ctxt)
 	uint32_t t_data_size;
     Exec_stat t_stat;
 	if (!ctxt . HasError())
+    {
 		t_stat = MCDeployExtractMacOSX(*t_filename, *t_segment, *t_section, t_data, t_data_size);
 	
-	if (t_stat == ES_NORMAL)
-	{
-        MCAutoStringRef t_string;
-        /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)t_data, t_data_size, &t_string);
-        ctxt . SetItToValue(*t_string);
-	}
-	else
-        ctxt . SetItToEmpty();
+        if (t_stat == ES_NORMAL)
+        {
+            MCAutoStringRef t_string;
+            /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)t_data, t_data_size, &t_string);
+            ctxt . SetItToValue(*t_string);
+            return;
+        }
+    }
+    
+    // Reach this if any error occurred
+    ctxt . SetItToEmpty();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

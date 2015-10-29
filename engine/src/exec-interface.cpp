@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -2197,6 +2197,8 @@ void MCInterfaceExecDeleteObjects(MCExecContext& ctxt, MCObjectPtr *p_objects, u
 			ctxt . LegacyThrow(EE_CHUNK_CANTDELETEOBJECT);
 			return;
 		}
+        if (p_objects[i] . object -> gettype() == CT_STACK)
+            MCtodestroy -> remove((MCStack *)p_objects[i] . object);
 		p_objects[i] . object -> scheduledelete();
 	}
 }
@@ -3974,7 +3976,8 @@ bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p
 	else
 		t_delimiter = ctxt . GetLineDelimiter();
 
-	if (t_delimiter == '\0')
+	if (MCStringIsEqualToCString(t_delimiter, "\0",
+	                             kMCStringOptionCompareExact))
 		return false;
 
     MCAutoStringRefArray t_chunks;
@@ -4016,7 +4019,7 @@ bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p
     
     if (t_trailing_delim)
     {
-        return MCStringFormat(r_output, "%@%@", *t_list_string, t_delimiter);
+        return MCStringCreateWithStrings(r_output, *t_list_string, t_delimiter);
     }
     
     r_output = MCValueRetain(*t_list_string);

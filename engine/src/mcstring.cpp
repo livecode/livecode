@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -564,6 +564,7 @@ MCNameRef MCM_push_notification_received;
 MCNameRef MCM_push_notification_registered;
 MCNameRef MCM_push_notification_registration_error;
 MCNameRef MCM_url_wake_up;
+MCNameRef MCM_launch_data_changed;
 MCNameRef MCM_browser_started_loading;
 MCNameRef MCM_browser_finished_loading;
 MCNameRef MCM_browser_load_failed;
@@ -1006,6 +1007,7 @@ void MCU_initialize_names(void)
     /* UNCHECKED */ MCNameCreateWithCString("pushNotificationRegistered", MCM_push_notification_registered);
     /* UNCHECKED */ MCNameCreateWithCString("pushNotificationRegistrationError", MCM_push_notification_registration_error);
     /* UNCHECKED */ MCNameCreateWithCString("urlWakeUp", MCM_url_wake_up);
+	/* UNCHECKED */ MCNameCreateWithCString("launchDataChanged", MCM_launch_data_changed);
 	/* UNCHECKED */ MCNameCreateWithCString("browserStartedLoading", MCM_browser_started_loading);
 	/* UNCHECKED */ MCNameCreateWithCString("browserFinishedLoading", MCM_browser_finished_loading);
 	/* UNCHECKED */ MCNameCreateWithCString("browserLoadFailed", MCM_browser_load_failed);
@@ -1440,6 +1442,7 @@ void MCU_finalize_names(void)
     MCNameDelete(MCM_push_notification_registered);
     MCNameDelete(MCM_push_notification_registration_error);
     MCNameDelete(MCM_url_wake_up);
+	MCNameDelete(MCM_launch_data_changed);
 	MCNameDelete(MCM_browser_started_loading);
 	MCNameDelete(MCM_browser_finished_loading);
 	MCNameDelete(MCM_browser_load_failed);

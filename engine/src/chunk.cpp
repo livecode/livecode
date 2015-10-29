@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1060,7 +1060,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
             case CT_ID:
             {
                 uint4 t_id;
-                if (!ctxt . EvalExprAsUInt(stack -> startpos, EE_CHUNK_BADSTACKEXP, t_id))
+                if (!ctxt . EvalExprAsStrictUInt(stack -> startpos, EE_CHUNK_BADSTACKEXP, t_id))
                     return;
 
                 MCInterfaceEvalStackOfStackById(ctxt, t_object, t_id, t_object);
@@ -1089,7 +1089,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
                 case CT_ID:
                 {
                     uint4 t_id;
-                    if (!ctxt . EvalExprAsUInt(stack -> next -> startpos, EE_CHUNK_BADSTACKEXP, t_id))
+                    if (!ctxt . EvalExprAsStrictUInt(stack -> next -> startpos, EE_CHUNK_BADSTACKEXP, t_id))
                         return;
 
                     MCInterfaceEvalSubstackOfStackById(ctxt, t_object, t_id, t_object);
@@ -1118,7 +1118,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
             case CT_ID:
             {
                 uint4 t_id;
-                if (!ctxt . EvalExprAsUInt(object -> startpos, EE_CHUNK_BADOBJECTEXP, t_id))
+                if (!ctxt . EvalExprAsStrictUInt(object -> startpos, EE_CHUNK_BADOBJECTEXP, t_id))
                     return;
 
                 if (object -> otype == CT_AUDIO_CLIP)
@@ -1166,7 +1166,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
             case CT_ID:
             {
                 uint4 t_id;
-                if (!ctxt . EvalExprAsUInt(background -> startpos, EE_CHUNK_BADBACKGROUNDEXP, t_id))
+                if (!ctxt . EvalExprAsStrictUInt(background -> startpos, EE_CHUNK_BADBACKGROUNDEXP, t_id))
                     return;
 
                 if (card == nil)
@@ -1210,7 +1210,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
             case CT_ID:
             {
                 uint4 t_id;
-                if (!ctxt . EvalExprAsUInt(card -> startpos, EE_CHUNK_BADCARDEXP, t_id))
+                if (!ctxt . EvalExprAsStrictUInt(card -> startpos, EE_CHUNK_BADCARDEXP, t_id))
                     return;
 
                 if (background != nil)
@@ -1264,7 +1264,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
             case CT_ID:
             {
                 uint4 t_id;
-                if (!ctxt . EvalExprAsUInt(tgptr -> startpos, EE_CHUNK_BADBACKGROUNDEXP, t_id))
+                if (!ctxt . EvalExprAsStrictUInt(tgptr -> startpos, EE_CHUNK_BADBACKGROUNDEXP, t_id))
                     return;
 
                 // MW-2011-08-09: [[ Groups ]] If there was an explicit stack reference,
@@ -1338,7 +1338,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
                 case CT_ID:
                 {
                     uint4 t_id;
-                    if (!ctxt . EvalExprAsUInt(toptr -> startpos, EE_CHUNK_BADOBJECTEXP, t_id))
+                    if (!ctxt . EvalExprAsStrictUInt(toptr -> startpos, EE_CHUNK_BADOBJECTEXP, t_id))
                         return;
                     
                     // If we are in stack override mode, then search the stack *after*
@@ -4717,6 +4717,8 @@ Exec_stat MCChunk::del(MCExecPoint &ep)
 				MCeerror->add(EE_CHUNK_CANTDELETEOBJECT, line, pos);
 				return ES_ERROR;
 			}
+            if (objptr->gettype() == CT_STACK)
+                MCtodestroy->remove((MCStack *)objptr);
 			objptr->scheduledelete();
 		}
 		else
@@ -5881,7 +5883,7 @@ bool MCTextChunkIterator::next(MCExecContext& ctxt)
             return true;
     
         default:
-            assert(false);
+            MCUnreachableReturn(false);
     }
 }
 

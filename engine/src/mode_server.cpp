@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -276,6 +276,19 @@ bool MCModeGetLicensed(void)
 
 // In standalone mode, the executable is $0 if there is an embedded stack.
 bool MCModeIsExecutableFirstArgument(void)
+{
+	return true;
+}
+
+// In server mode, we have command line name / arguments
+bool MCModeHasCommandLineArguments(void)
+{
+    return true;
+}
+
+// In server mode, we have environment variables
+bool
+MCModeHasEnvironmentVariables()
 {
 	return true;
 }

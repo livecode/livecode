@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1162,7 +1162,7 @@ Parse_stat MCIs::parse(MCScriptPoint &sp, Boolean the)
 				else if (te -> type == TT_CLASS)
 					delimiter = (Chunk_term)te -> which;
 				else
-					MCUnreachable();
+                    MCUnreachableReturn(PS_ERROR);
 
 				if (delimiter == CT_CHARACTER)
 					if (form == IT_NOT)
@@ -1473,7 +1473,7 @@ Exec_stat MCIs::eval(MCExecPoint &ep)
 			(EE_IS_WITHINNAR, line, pos, ep2.getsvalue());
 			return ES_ERROR;
 		}
-		// MW-2007-01-08: [[ Bug 5745 ]] For consistency across Revolution and also with
+		// MW-2007-01-08: [[ Bug 5745 ]] For consistency across LiveCode and also with
 		//   HyperCard, 'is within' should *not* include bottom and right edges.
 		match = i1 >= i3 && i1 < i5 && i2 >= i4 && i2 < i6;
 		if (form == IT_NOT_WITHIN)
@@ -2054,9 +2054,8 @@ void MCIs::compile(MCSyntaxFactoryRef ctxt)
 			case IV_RECT:
 				t_method = form == IT_NORMAL ? kMCGraphicsEvalIsARectangleMethodInfo : kMCGraphicsEvalIsNotARectangleMethodInfo;
 				break;
-			default:
-				MCAssert(false);
-				break;
+            default:
+                MCUnreachableReturn();
 		}
 		
 		right -> compile(ctxt);
@@ -2094,8 +2093,8 @@ void MCIs::compile(MCSyntaxFactoryRef ctxt)
 					case CT_ITEM:
 						t_method = form == IT_AMONG ? kMCStringsEvalIsAmongTheItemsOfMethodInfo : kMCStringsEvalIsNotAmongTheItemsOfMethodInfo;
 						break;
-					default:
-						MCAssert(false);
+                    default:
+                        MCUnreachableReturn();
 				}
 				break;
 			case IT_IN:
@@ -2126,9 +2125,8 @@ void MCIs::compile(MCSyntaxFactoryRef ctxt)
 				t_method = kMCPasteboardEvalIsNotAmongTheKeysOfTheDragDataMethodInfo;
 				t_is_unary = true;
 				break;
-			default:
-				MCAssert(false);
-				break;
+            default:
+                MCUnreachableReturn();
 		}				
 		if (!t_is_unary)
 			left -> compile(ctxt);
@@ -2297,9 +2295,8 @@ void MCThere::compile(MCSyntaxFactoryRef ctxt)
 			case TM_DIRECTORY:
 				t_method = form == IT_NORMAL ? kMCFilesEvalThereIsAFolderMethodInfo : kMCFilesEvalThereIsNotAFolderMethodInfo;
 				break;
-			default:
-				MCAssert(false);
-				break;
+            default:
+                MCUnreachableReturn();
 		}
 	}
 	else

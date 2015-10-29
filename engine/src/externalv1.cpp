@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -32,7 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "globals.h"
 #include "object.h"
-#include "control.h"
+#include "mccontrol.h"
 #include "notify.h"
 #include "stack.h"
 #include "card.h"
@@ -564,7 +564,7 @@ MCExternalError MCExternalVariable::AppendString(MCExternalValueOptions p_option
 		return t_error;
 	
 	MCAutoStringRef t_new_value;
-	if (!MCStringFormat(&t_new_value, "%@%@", *t_current_value, p_value))
+    if (!MCStringCreateWithStrings(&t_new_value, *t_current_value, p_value))
 		return kMCExternalErrorOutOfMemory;
 	
 	SetValueRef(*t_new_value);	

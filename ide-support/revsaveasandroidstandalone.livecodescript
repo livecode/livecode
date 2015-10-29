@@ -448,6 +448,24 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       
       replace "${PROVIDER}" with tProvider in tManifest
       
+      // SN-2015-09-24: [[ Bug 15875 ]] Add the screenSize configChanges value for API > 12
+      //  Otherwise the app restarts on orientation change.
+      local tConfigChangesProp
+      put "keyboardHidden|orientation" into tConfigChangesProp
+      if tSettings["android,minimum version"] > 12 then
+         put "|screenSize" after tConfigChangesProp
+      end if
+      replace "${CONFIG_CHANGES}" with tConfigChangesProp in tManifest
+      
+      // SN-2015-09-30: [[ Bug 10267 ]] Hardware Acceleration option added
+      local tHardwareAccelerated
+      if tSettings["android,hardware accelerated"] then
+         put "true" into tHardwareAccelerated
+      else
+         put "false" into tHardwareAccelerated
+      end if
+      replace "${HARDWARE_ACCELERATED}" with tHardwareAccelerated in tManifest
+      
       #put tManifest into url ("binfile:c:/scratch/manifestdump.xml")
       put tManifest into url ("binfile:" & tManifestFile)
       if the result is not empty then

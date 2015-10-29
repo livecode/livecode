@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -374,11 +374,17 @@ IO_stat MCDispatch::startup(void)
 #endif
 		
 		if (t_stream == NULL)
+        {
+		    MCresult->sets("unable to open startup stack");
 			return IO_ERROR;
+        }
 		
 		MCStack *t_stack;
 		if (readstartupstack(t_stream, t_stack) != IO_NORMAL)
+        {
+		    MCresult->sets("unable to read startup stack");
 			return IO_ERROR;
+        }
 		
 		MCS_close(t_stream);
 		
@@ -785,6 +791,23 @@ bool MCModeGetLicensed(void)
 
 // In standalone mode, the executable is $0 if there is an embedded stack.
 bool MCModeIsExecutableFirstArgument(void)
+{
+	return true;
+}
+
+// Desktop standalone have command line arguments - not mobile platforms
+bool MCModeHasCommandLineArguments(void)
+{
+#ifdef _MOBILE
+    return false;
+#else
+    return true;
+#endif
+}
+
+// Standalones have environment variables
+bool
+MCModeHasEnvironmentVariables()
 {
 	return true;
 }

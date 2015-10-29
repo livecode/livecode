@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -197,7 +197,7 @@ public:
 
 static MCStringRef s_command_path = nil;
 
-static void restart_revolution(void)
+static void restart_livecode(void)
 {
 #if defined(TARGET_PLATFORM_WINDOWS)
     MCAutoStringRefAsUTF8String t_command_path;
@@ -264,7 +264,7 @@ void MCRevRelicense::exec_ctxt(MCExecContext& ctxt)
 	
 	s_command_path = MCValueRetain(*t_command_path);
 
-	atexit(restart_revolution);
+	atexit(restart_livecode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1224,6 +1224,19 @@ bool MCModeIsExecutableFirstArgument(void)
 	return false;
 }
 
+// In development mode, we don't have command line arguments / name
+bool MCModeHasCommandLineArguments(void)
+{
+    return false;
+}
+
+// In development mode, we process environment variables
+bool
+MCModeHasEnvironmentVariables()
+{
+	return true;
+}
+
 // In development mode, we always automatically open stacks.
 bool MCModeShouldLoadStacksOnStartup(void)
 {
@@ -1972,34 +1985,56 @@ void MCModeSetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef p_settings)
     }
     
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("multiplicity"), t_value))
-        MClicenseparameters . license_multiplicity = MCNumberFetchAsUnsignedInteger((MCNumberRef)t_value);
+    {
+	    MCAutoNumberRef t_number;
+	    if (ctxt.ConvertToNumber(t_value, &t_number))
+	    {
+		    MClicenseparameters . license_multiplicity = MCNumberFetchAsUnsignedInteger(*t_number);
+	    }
+    }
     
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("scriptlimit"), t_value))
     {
-        integer_t t_limit;
-        t_limit = MCNumberFetchAsInteger((MCNumberRef)t_value);
-        MClicenseparameters . script_limit = t_limit <= 0 ? 0 : t_limit;
+	    MCAutoNumberRef t_number;
+	    if (ctxt.ConvertToNumber(t_value, &t_number))
+	    {
+		    integer_t t_limit;
+		    t_limit = MCNumberFetchAsInteger(*t_number);
+		    MClicenseparameters . script_limit = t_limit <= 0 ? 0 : t_limit;
+	    }
     }
     
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("dolimit"), t_value))
     {
-        integer_t t_limit;
-        t_limit = MCNumberFetchAsInteger((MCNumberRef)t_value);
-        MClicenseparameters . do_limit = t_limit <= 0 ? 0 : t_limit;
+	    MCAutoNumberRef t_number;
+	    if (ctxt.ConvertToNumber(t_value, &t_number))
+	    {
+		    integer_t t_limit;
+		    t_limit = MCNumberFetchAsInteger(*t_number);
+		    MClicenseparameters . do_limit = t_limit <= 0 ? 0 : t_limit;
+	    }
     }
     
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("usinglimit"), t_value))
     {
-        integer_t t_limit;
-        t_limit = MCNumberFetchAsInteger((MCNumberRef)t_value);
-        MClicenseparameters . using_limit = t_limit <= 0 ? 0 : t_limit;
+	    MCAutoNumberRef t_number;
+	    if (ctxt.ConvertToNumber(t_value, &t_number))
+	    {
+		    integer_t t_limit;
+		    t_limit = MCNumberFetchAsInteger(*t_number);
+		    MClicenseparameters . using_limit = t_limit <= 0 ? 0 : t_limit;
+	    }
     }
     
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("insertlimit"), t_value))
     {
-        integer_t t_limit;
-        t_limit = MCNumberFetchAsInteger((MCNumberRef)t_value);
-        MClicenseparameters . insert_limit = t_limit <= 0 ? 0 : t_limit;
+	    MCAutoNumberRef t_number;
+	    if (ctxt.ConvertToNumber(t_value, &t_number))
+	    {
+		    integer_t t_limit;
+		    t_limit = MCNumberFetchAsInteger(*t_number);
+		    MClicenseparameters . insert_limit = t_limit <= 0 ? 0 : t_limit;
+	    }
     }
     
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("deploy"), t_value))

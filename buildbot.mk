@@ -1,4 +1,4 @@
-# Copyright (C) 2015 Runtime Revolution Ltd.
+# Copyright (C) 2015 LiveCode Ltd.
 #
 # This file is part of LiveCode.
 #
@@ -85,6 +85,8 @@ BUILDTOOL_STACK = builder/builder_tool.livecodescript
 
 WKHTMLTOPDF ?= $(shell which wkhtmltopdf 2>/dev/null)
 
+BUILD_EDITION ?= community
+
 # Those directories are given to the tool builder, and they might get passed
 # (like private-dir) to engine functions, to which a path relative to this file
 # becomes invalid).
@@ -94,15 +96,18 @@ output_dir=${top_src_dir}
 work_dir=${top_src_dir}/_cache/builder_tool
 private_dir=${top_src_dir}/..
 bin_dir = ${top_src_dir}/$(BUILD_PLATFORM)-bin
+docs_source_dir = ${top_src_dir}/docs
+docs_private_source_dir = ${private_dir}/docs
+docs_build_dir = ${top_src_dir}/_build/docs-build
 
 ifeq ($(BUILD_PLATFORM),mac)
   LIVECODE = $(bin_dir)/LiveCode-Community.app/Contents/MacOS/LiveCode-Community
   buildtool_platform = mac
 else ifeq ($(BUILD_PLATFORM),linux-x86)
-  LIVECODE = $(bin_dir)/livecode-community
+  LIVECODE = $(bin_dir)/LiveCode-Community
   buildtool_platform = linux
 else ifeq ($(BUILD_PLATFORM),linux-x86_64)
-  LIVECODE = $(bin_dir)/livecode-community
+  LIVECODE = $(bin_dir)/LiveCode-Community
   buildtool_platform = linux
 endif
 
@@ -118,8 +123,26 @@ UPLOAD_SERVER ?= meg.on-rev.com
 UPLOAD_PATH = staging/$(BUILD_LONG_VERSION)/$(GIT_VERSION)
 UPLOAD_MAX_RETRIES = 50
 
-dist-docs:
-	$(buildtool_command) --platform $(buildtool_platform) --stage docs
+dist-docs: dist-docs-community
+
+ifeq ($(BUILD_EDITION),commercial)
+dist-docs: dist-docs-commercial
+endif
+
+dist-docs-community:
+	mkdir -p $(docs_build_dir)
+	cp -R $(docs_source_dir) $(docs_build_dir)/raw-community
+	$(buildtool_command) --platform $(buildtool_platform) --stage docs \
+	  --docs-dir $(docs_build_dir)/raw-community \
+	  --built-docs-dir $(docs_build_dir)/cooked-community
+	  
+dist-docs-commercial:
+	mkdir -p $(docs_build_dir)
+	cp -R $(docs_source_dir) $(docs_build_dir)/raw-commercial
+	rsync -a $(docs_private_source_dir)/ $(docs_build_dir)/raw-commercial/
+	$(buildtool_command) --platform $(buildtool_platform) --stage docs \
+	  --docs-dir $(docs_build_dir)/raw-commercial \
+	  --built-docs-dir $(docs_build_dir)/cooked-commercial
 
 dist-notes:
 	WKHTMLTOPDF=$(WKHTMLTOPDF) \
@@ -141,16 +164,20 @@ dist-server-commercial:
 
 ifeq ($(BUILD_EDITION),commercial)
 dist-tools: dist-tools-commercial
-distmac-disk: distmac-disk-commercial
+distmac-disk: distmac-disk-indy distmac-disk-business
 endif
 
 dist-tools: dist-tools-community
 distmac-disk: distmac-disk-community
 
 dist-tools-community:
-	$(buildtool_command) --platform linux --platform mac --platform win --stage tools --edition community
+	$(buildtool_command) --platform mac --platform win --platform linux --stage tools --edition community \
+	  --built-docs-dir $(docs_build_dir)/cooked-community
 dist-tools-commercial:
-	$(buildtool_command) --platform linux --platform mac --platform win --stage tools --edition commercial
+	$(buildtool_command) --platform mac --platform win --platform linux --stage tools --edition indy \
+	  --built-docs-dir $(docs_build_dir)/cooked-commercial
+	$(buildtool_command) --platform mac --platform win --platform linux --stage tools --edition business \
+	  --built-docs-dir $(docs_build_dir)/cooked-commercial
 
 # Make a list of installers to be uploaded to the distribution server
 dist-upload-files.txt:
@@ -163,6 +190,10 @@ dist-upload-files.txt:
 	                -o -name '*-bin.tar.xz' \
 	  > $@
 
+# Compute the SHA-1 sum of all the installers to be uploaded
+sha1sum.txt: dist-upload-files.txt
+	sha1sum < dist-upload-files.txt > $@
+
 # Perform the upload.  This is in two steps:
 # (1) Create the target directory
 # (2) Transfer the files using rsync
@@ -171,14 +202,14 @@ dist-upload-files.txt:
 # connection drops
 dist-upload-mkdir:
 	ssh $(UPLOAD_SERVER) "mkdir -p \"$(UPLOAD_PATH)\""
-dist-upload: dist-upload-files.txt dist-upload-mkdir
+dist-upload: dist-upload-files.txt sha1sum.txt dist-upload-mkdir
 	trap "echo Interrupted; exit;" SIGINT SIGTERM; \
 	i=0; \
 	false; \
 	while [ $$? -ne 0 -a $$i -lt $(UPLOAD_MAX_RETRIES) ] ; do \
 	  i=$$(($$i+1)); \
 	  rsync -v --progress --partial --chmod=ugo=rwX --executability \
-	    --files-from=dist-upload-files.txt . $(UPLOAD_SERVER):"\"$(UPLOAD_PATH)\""; \
+	    --files-from=dist-upload-files.txt sha1sum.txt . $(UPLOAD_SERVER):"\"$(UPLOAD_PATH)\""; \
 	done; \
 	rc=$$?; \
 	if [ $$i -eq $(UPLOAD_MAX_RETRIES) ]; then \

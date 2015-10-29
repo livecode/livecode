@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -468,7 +468,7 @@ static bool s_lock_responder_change = false;
 - (void)windowDidResignKey:(NSNotification *)notification
 {
     if (s_inside_focus_event)
-        m_window -> ProcessDidBecomeKey();
+        m_window -> ProcessDidResignKey();
     else
     {
         s_inside_focus_event = true;
@@ -2036,7 +2036,9 @@ void MCMacPlatformWindow::DoHide(void)
 		if ([m_window_handle parentWindow] != nil)
 			[[m_window_handle parentWindow] removeChildWindow: m_window_handle];
 	
-		[m_window_handle orderOut: nil];
+		// CW-2015-09-21: [[ Bug 15979 ]] Call close instead of orderOut here to properly close
+		// windows that have been iconified.
+		[m_window_handle close];
 	}
 	
 	MCMacPlatformHandleMouseAfterWindowHidden();

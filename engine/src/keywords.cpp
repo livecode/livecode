@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -132,15 +132,6 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 				return PS_ERROR;
 			}
 		}
-
-		MCVariable *tmp;
-		for (tmp = MCglobals ; tmp != NULL ; tmp = tmp->getnext())
-			if (tmp -> hasname(t_token_name))
-				if (MCexplicitvariables)
-				{
-					MCperror->add(PE_LOCAL_SHADOW, sp);
-					return PS_ERROR;
-				}
 
 		MCVarref *tvar = NULL;
 		MCAutoStringRef init;

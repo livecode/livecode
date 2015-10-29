@@ -153,6 +153,7 @@ gdk libgdk-x11-2.0.so.0
 	gdk_window_set_modal_hint: (pointer, integer) -> ()
 	gdk_window_set_geometry_hints: (pointer, pointer, integer) -> ()
 	gdk_window_fullscreen: (pointer) -> ()
+	gdk_window_unfullscreen: (pointer) -> ()
 	gdk_window_set_type_hint: (pointer, integer) -> ()
 	gdk_window_set_override_redirect: (pointer, integer) -> ()
 	gdk_window_set_group: (pointer, pointer) -> ()
@@ -305,6 +306,7 @@ gdk libgdk-x11-2.0.so.0
 	gdk_window_set_skip_pager_hint: (pointer, integer) -> ()
 	gdk_window_constrain_size: (pointer, integer, integer, integer, pointer, pointer) -> ()
 	gdk_window_unmaximize: (pointer) -> ()
+	gdk_window_get_frame_extents: (pointer, pointer) -> ()
 
 gdk_pixbuf libgdk_pixbuf-2.0.so.0
 	gdk_pixbuf_get_pixels: (pointer) -> (pointer)

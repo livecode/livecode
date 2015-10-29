@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -1271,6 +1271,8 @@ Exec_stat MCHandleCanSendMail(void *context, MCParameter *p_parameters)
         ctxt . SetTheResultToValue(kMCTrue);
     else
         ctxt . SetTheResultToValue(kMCFalse);
+    
+    return ES_NORMAL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1750,6 +1752,7 @@ Exec_stat MCHandleSetHeadingCalibrationTimeout(void *p_context, MCParameter *p_p
 	ctxt . SetTheResultToEmpty();
     
     int t_timeout;
+    t_timeout = 0;
     if (p_parameters)
     {
         MCAutoValueRef t_value;
@@ -1758,8 +1761,15 @@ Exec_stat MCHandleSetHeadingCalibrationTimeout(void *p_context, MCParameter *p_p
         /* UNCHECKED */ ctxt . ConvertToNumber(*t_value, &t_number);
         t_timeout = MCNumberFetchAsInteger(*t_number);
     }
+    else
+    {
+        // We need a parameter
+        ctxt . Throw();
+    }
     
-    MCSensorSetLocationCalibrationTimeout(ctxt, t_timeout);
+    if (!ctxt . HasError())
+        MCSensorSetLocationCalibrationTimeout(ctxt, t_timeout);
+    
     
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -1787,8 +1797,7 @@ Exec_stat MCHandleHeadingCalibrationTimeout(void *p_context, MCParameter *p_para
     int t_timeout;
     MCSensorGetLocationCalibrationTimeout(ctxt, t_timeout);
     MCresult->setnvalue(t_timeout);
-    
-    ctxt . SetTheResultToEmpty();
+
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 
@@ -3110,14 +3119,17 @@ Exec_stat MCHandleCancelLocalNotification(void *context, MCParameter *p_paramete
     
     ctxt.SetTheResultToEmpty();
     if (p_parameters != nil)
+    {
 		t_success = MCParseParameters (p_parameters, "i", &t_cancel_this);
     
-    if (t_success)
-    {
-        MCNotificationExecCancelLocalNotification (ctxt, t_cancel_this);
+        if (t_success)
+            MCNotificationExecCancelLocalNotification (ctxt, t_cancel_this);
     }
+    else
+        t_success = false;
     
-    if (!ctxt.HasError())
+    
+    if (t_success && ctxt.HasError())
         return ES_NORMAL;
     
     return ES_ERROR;
@@ -4417,7 +4429,7 @@ Exec_stat MCHandleUseDeviceResolution(void *context, MCParameter *p_parameters)
     if (t_success)
         MCMiscSetUseDeviceResolution(ctxt, t_use_device_res, t_use_control_device_res);
     
-    if (!ctxt.HasError() && t_success)
+    if (t_success && !ctxt.HasError())
         return ES_NORMAL;
     
     return ES_ERROR;
@@ -5662,24 +5674,30 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
             }
         }
     }
-    
-    MCPickButtonType t_type = kMCPickButtonNone;
-    // now process any additional parameters
-    while (t_success && t_has_buttons && p_parameters != nil)
+	
+    // PM-2015-09-01: [[ Bug 15816 ]] Process any additional parameters correctly
+    while (t_success && t_has_buttons && t_string_param != nil)
     {
         if (MCStringIsEqualToCString(t_string_param, "checkmark", kMCCompareCaseless))
             t_use_checkmark = true;
         else if (MCStringIsEqualToCString(t_string_param, "cancel", kMCCompareCaseless))
-            t_type = kMCPickButtonCancel;
+			t_use_cancel = true;
         else if (MCStringIsEqualToCString(t_string_param, "done", kMCCompareCaseless))
-            t_type = kMCPickButtonDone;
+			t_use_done = true;
         else if (MCStringIsEqualToCString(t_string_param, "canceldone", kMCCompareCaseless))
-            t_type = kMCPickButtonCancelAndDone;
+		{
+			t_use_cancel = true;
+			t_use_done = true;
+		}
         else if (MCStringIsEqualToCString(t_string_param, "picker", kMCCompareCaseless))
             t_use_picker = true;
         
         MCValueRelease(t_string_param);
-        t_success = MCParseParameters(p_parameters, "x", &t_string_param);
+		t_string_param = nil;
+		
+		if (p_parameters != nil)
+			t_success = MCParseParameters(p_parameters, "x", &t_string_param);
+		
     }
     
     ctxt.SetTheResultToEmpty();
@@ -6320,8 +6338,13 @@ Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters)
         /* UNCHECKED */ MCListAppendCString(*t_list, "rear flash");
     
     MCAutoStringRef t_features_string;
-    /* UNCHECKED */ MCListCopyAsString(*t_list, &t_features_string);
+
+    if (!MCListCopyAsString(*t_list, &t_features_string))
+        return ES_ERROR;
+
     ctxt . SetTheResultToValue(*t_features_string);
+
+    return ES_NORMAL;
 }
 
 Exec_stat MCHandlePickPhoto(void *p_context, MCParameter *p_parameters)
@@ -6605,7 +6628,7 @@ Exec_stat MCHandleControlDo(void *context, MCParameter *p_parameters)
     
     // SN-2014-11-20: [[ Bug 14062 ]] Cleanup the memory
     for (uint32_t i = 0; i < t_params . Size(); ++i)
-        MCValueRelease(t_params[i]);\
+        MCValueRelease(t_params[i]);
 	
 	return ES_NORMAL;
 }
@@ -6620,6 +6643,8 @@ Exec_stat MCHandleControlTarget(void *context, MCParameter *p_parameters)
     MCNativeControlIdentifierFree(ctxt, t_identifier);
     if (*t_string != nil)
         ctxt . SetTheResultToValue(*t_string);
+    
+    return ES_NORMAL;
 }
 
 bool list_native_controls(void *context, MCNativeControl* p_control)
@@ -6662,12 +6687,13 @@ Exec_stat MCHandleLibUrlSetSSLVerification(void *context, MCParameter *p_paramet
     
     MCExecContext ctxt(nil, nil, nil);
     
-    MCMiscExecLibUrlSetSSLVerification(ctxt, t_enabled);
+    if (t_success)
+        MCMiscExecLibUrlSetSSLVerification(ctxt, t_enabled);
     
-    if (!ctxt . HasError())
+    if (t_success && !ctxt . HasError())
         return ES_NORMAL;
 	
-	return ES_NORMAL;
+	return ES_ERROR;
 }
 
 // MM-2013-05-21: [[ Bug 10895 ]] Added iphoneIdentifierForVendor as an initial replacement for iphoneSystemIdentifier.
@@ -6743,6 +6769,11 @@ Exec_stat MCHandleSetRemoteControlDisplay(void *context, MCParameter *p_paramete
     
     if (t_success)
         MCMiscSetRemoteControlDisplayProperties(ctxt, *t_props);
+    
+    if (t_success)
+        return ES_NORMAL;
+    else
+        return ES_ERROR;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6946,14 +6977,14 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	{false, "iphoneControlDelete", MCHandleControlDelete, nil},
 	{false, "iphoneControlSet", MCHandleControlSet, nil},
 	{false, "iphoneControlGet", MCHandleControlGet, nil},
-	{false, "iphoneControlDo", MCHandleControlDo, nil},
+	{true, "iphoneControlDo", MCHandleControlDo, nil},
 	{false, "iphoneControlTarget", MCHandleControlTarget, nil},
 	{false, "iphoneControls", MCHandleControlList, nil},
 	{false, "mobileControlCreate", MCHandleControlCreate, nil},
 	{false, "mobileControlDelete", MCHandleControlDelete, nil},
 	{false, "mobileControlSet", MCHandleControlSet, nil},
 	{false, "mobileControlGet", MCHandleControlGet, nil},
-	{false, "mobileControlDo", MCHandleControlDo, nil},
+	{true, "mobileControlDo", MCHandleControlDo, nil},
 	{false, "mobileControlTarget", MCHandleControlTarget, nil},
 	{false, "mobileControls", MCHandleControlList, nil},
 	
@@ -7074,7 +7105,6 @@ bool MCIsPlatformMessage(MCNameRef handler_name)
     
     for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
     {
-        const char* t_message = s_platform_messages[i].message;
 		if (MCNameIsEqualToCString(handler_name, s_platform_messages[i].message, kMCCompareCaseless))
 			found = true;
     }
@@ -7100,39 +7130,43 @@ static void invoke_platform(void *p_context)
 
 extern void MCIPhoneCallOnMainFiber(void (*)(void *), void *);
 
-Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters)
+bool MCDoHandlePlatformMessage(bool p_waitable, MCPlatformMessageHandler p_handler, void *p_context, MCParameter *p_parameters, Exec_stat& r_result)
+{
+    // MW-2012-07-31: [[ Fibers ]] If the method doesn't need script / wait, then
+    //   jump to the main fiber for it.
+    if (!p_waitable)
+    {
+        handle_context_t ctxt;
+        ctxt . handler = p_handler;
+        ctxt . context = p_context;
+        ctxt . parameters = p_parameters;
+        MCIPhoneCallOnMainFiber(invoke_platform, &ctxt);
+        r_result = ctxt . result;
+        return true;
+    }
+    
+    // Execute the method as normal, in this case the method will have to jump
+    // to the main fiber to do any system stuff.
+    r_result = p_handler(p_context, p_parameters);
+    return true;
+    
+}
+#else // Android
+bool MCDoHandlePlatformMessage(bool p_waitable, MCPlatformMessageHandler p_handler, void *p_context, MCParameter *p_parameters, Exec_stat& r_result)
+{
+    r_result = p_handler(p_context, p_parameters);
+    return true;
+}
+#endif
+
+bool MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters, Exec_stat& r_result)
 {
 	for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
 		if (MCNameIsEqualToCString(p_message, s_platform_messages[i] . message, kMCCompareCaseless))
 		{
-			// MW-2012-07-31: [[ Fibers ]] If the method doesn't need script / wait, then
-			//   jump to the main fiber for it.
-			if (!s_platform_messages[i] . waitable)
-			{
-				handle_context_t ctxt;
-				ctxt . handler = s_platform_messages[i] . handler;
-				ctxt . context = s_platform_messages[i] . context;
-				ctxt . parameters = p_parameters;
-				MCIPhoneCallOnMainFiber(invoke_platform, &ctxt);
-				return ctxt . result;
-			}
-			
-			// Execute the method as normal, in this case the method will have to jump
-			// to the main fiber to do any system stuff.
-			return s_platform_messages[i] . handler(s_platform_messages[i] . context, p_parameters);
+            return MCDoHandlePlatformMessage(s_platform_messages[i] . waitable, s_platform_messages[i] . handler, s_platform_messages[i] . context, p_parameters, r_result);
 		}
 	
-	return ES_NOT_HANDLED;
+    r_result = ES_NOT_HANDLED;
+	return false;
 }
-#else // Android
-Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters)
-{
-	for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
-    {
-		if (MCNameIsEqualToCString(p_message, s_platform_messages[i] . message, kMCCompareCaseless))
-			return s_platform_messages[i] . handler(s_platform_messages[i] . context, p_parameters);
-    }
-	
-	return ES_NOT_HANDLED;
-}
-#endif

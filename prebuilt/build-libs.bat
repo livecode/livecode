@@ -10,9 +10,6 @@ SET _ROOT_DIR=C:\Builds\libraries
 SET _INSTALL_DIR=%_ROOT_DIR%\prefix
 SET _WINSDK_ROOT=c:\program files\microsoft sdks\windows\v6.1
 
-SET OPENSSL_VERSION=1.0.1o
-SET CURL_VERSION=7.43.0
-
 echo "Will build into %_ROOT_DIR%"
 cmd.exe /V:ON /E:ON /C mkdir %_ROOT_DIR%
 
@@ -23,6 +20,8 @@ REM # get the drive & path of the folder this script lives in
 REM # (note: ends with \ path delimiter)
 FOR /F "delims=" %%A IN ("%0") DO SET _TOOLS_DIR=%%~dpA
 
+REM Get the libraries version variables set from scripts/lib_versions.bat
+CALL "scripts\lib_versions.bat"
 CALL "%_WINSDK_ROOT%\bin\setenv.cmd" /x86 /release /xp
 
 REM ############################################################################
@@ -30,20 +29,20 @@ REM #
 REM #   BUILD OPENSSL
 REM #
 
-SET OPENSSL_TGZ=%_ROOT_DIR%\openssl-%OPENSSL_VERSION%.tar.gz
-SET OPENSSL_SRC=%_ROOT_DIR%\openssl-%OPENSSL_VERSION%
+SET OPENSSL_TGZ=%_ROOT_DIR%\openssl-%OpenSSL_VERSION%.tar.gz
+SET OPENSSL_SRC=%_ROOT_DIR%\openssl-%OpenSSL_VERSION%
 SET OPENSSL_CONFIG=no-hw no-idea no-rc5 no-asm enable-static-engine --prefix=%_INSTALL_DIR% VC-WIN32
 
 cd "%_ROOT_DIR%"
 
 if not exist %OPENSSL_TGZ% (
 	echo "Fetching openssl-%OPENSSL_VERSION%
-	perl -MLWP::Simple -e "getstore('http://www.openssl.org/source/openssl-%OPENSSL_VERSION%.tar.gz', '%OPENSSL_TGZ%')"
+	perl -MLWP::Simple -e "getstore('http://www.openssl.org/source/openssl-%OpenSSL_VERSION%.tar.gz', '%OPENSSL_TGZ%')"
 )
 
 if not exist %OPENSSL_SRC% (
 	echo "Unpacking openssl-%OPENSSL_VERSION%"
-	perl -MArchive::Tar -e "$Archive::Tar::FOLLOW_SYMLINK=1;Archive::Tar->extract_archive('%OPENSSL_TGZ%', 1);"
+	perl -MArchive::Tar -e "$Archive::Tar::FOLLOW_SYMLINK=1;Archive::Tar->extract_archive('%OpenSSL_TGZ%', 1);"
 )
 
 cd "%OPENSSL_SRC%"

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -85,8 +85,8 @@ OpenDialogEventProc( const NavEventCallbackMessage callbackSelector,
 	DOMHTMLElement *m_previous_element;
 }
 
-- init;
-- dealloc;
+- (id)init;
+- (void)dealloc;
 
 - (void)setBrowser: (TAltBrowser *)inBrowser;
 - (HIObjectRef)hiobject;
@@ -95,7 +95,7 @@ OpenDialogEventProc( const NavEventCallbackMessage callbackSelector,
 
 @implementation WebBrowserAdapter
 
-- init
+- (id)init
 {
     self = [super init];
 	if ( self )
@@ -105,7 +105,7 @@ OpenDialogEventProc( const NavEventCallbackMessage callbackSelector,
     return self;
 }
 
-- dealloc
+- (void)dealloc
 {
 	if (m_previous_element != NULL)
 		[m_previous_element release];

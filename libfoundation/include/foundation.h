@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -863,6 +863,9 @@ void MCErrorSetHandler(MCErrorHandler handler);
 //  DEBUG HANDLING
 //
 
+
+#define MCUnreachableReturn(x) { MCUnreachable(); return x;}
+
 #ifdef _DEBUG
 
 // If we are using GCC or Clang, we can give the compiler the hint that the
@@ -894,7 +897,15 @@ extern void __MCUnreachable(void) ATTRIBUTE_NORETURN;
 
 #define MCLogWithTrace(m_format, ...)
 
+#if defined(__clang__) || (defined(__GNUC__) && (__GNUC__ >  4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 5)))
+
+#define MCUnreachable() __builtin_unreachable()
+
+#else // Neither GCC >= 4.5 or Clang compiler
+
 #define MCUnreachable()
+
+#endif
 
 #endif
 
@@ -938,6 +949,14 @@ inline bool MCMemoryEqual(const void *left, const void *right, size_t size) { re
 // depending on whether left < right, left == right or left > right when
 // compared using byte-wise lexicographic ordering.
 inline compare_t MCMemoryCompare(const void *left, const void *right, size_t size) { return memcmp(left, right, size); }
+
+//////////
+
+// Clear the memory of the given structure to all 0's
+template <typename T> void inline MCMemoryClear(T&p_struct)
+{
+	MCMemoryClear(&p_struct, sizeof(T));
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -1465,6 +1484,7 @@ bool MCStringCreateWithWStringAndRelease(unichar_t *wstring, MCStringRef& r_stri
 // Create an immutable string from the given native char sequence.
 bool MCStringCreateWithNativeChars(const char_t *chars, uindex_t char_count, MCStringRef& r_string);
 bool MCStringCreateWithNativeCharsAndRelease(char_t *chars, uindex_t char_count, MCStringRef& r_string);
+bool MCStringCreateWithNativeCharBufferAndRelease(char_t* buffer, uindex_t char_count, uindex_t buffer_length, MCStringRef& r_string);
 
 // Create an immutable string from the given (native) c-string.
 bool MCStringCreateWithCString(const char *cstring, MCStringRef& r_string);
@@ -1481,6 +1501,15 @@ bool MCStringCreateWithCFStringAndRelease(CFStringRef cf_string, MCStringRef& r_
 bool MCStringCreateWithSysString(const char *sys_string, MCStringRef &r_string);
 #endif
 
+// Creates a string from existing strings. The first variant exists to provide
+// an optimised implementation in the (very common) case of only two strings.
+bool MCStringCreateWithStrings(MCStringRef& r_string, MCStringRef p_one, MCStringRef p_two);
+//bool MCStringCreateWithStrings(MCStringRef& r_string, MCStringRef p_one, MCStringRef p_two, MCStringRef p_three, ...);
+
+// Creates a string from existing strings, using the given in-fix character
+bool MCStringCreateWithStringsAndSeparator(MCStringRef& r_string, unichar_t t_separator, MCStringRef p_one, MCStringRef p_two);
+//bool MCStringCreateWithStringsAndSeparator(MCStringRef& r_string, unichar_t t_separator, MCStringRef p_one, MCStringRef p_two, MCStringRef p_three, ...);
+
 // Create a mutable string with the given initial capacity. Note that the
 // initial capacity is only treated as a hint, the string will extend itself
 // as necessary.
@@ -1496,6 +1525,10 @@ bool MCStringEncodeAndRelease(MCStringRef string, MCStringEncoding encoding, boo
 // Decode the given data, intepreting in the given encoding.
 bool MCStringDecode(MCDataRef data, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
 bool MCStringDecodeAndRelease(MCDataRef data, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
+
+// SN-2015-07-27: [[ Bug 15379 ]] We can need to build a string from data,
+//  without any ASCII value conversion.
+bool MCStringCreateUnicodeStringFromData(MCDataRef p_data, bool p_is_external_rep, MCStringRef& r_string);
 
 /////////
 
@@ -1927,6 +1960,11 @@ extern MCDataRef kMCEmptyData;
 
 bool MCDataCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data);
 bool MCDataCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data);
+
+// Creates data from existing data. The first variant exists to provide an
+// optimised implementation in the (very common) case of only two DataRefs.
+bool MCDataCreateWithData(MCDataRef& r_string, MCDataRef p_one, MCDataRef p_two);
+//bool MCDataCreateWithData(MCDataRef& r_string, MCDataRef p_one, MCDataRef p_two, MCDataRef p_three, ...);
 
 bool MCDataConvertStringToData(MCStringRef string, MCDataRef& r_data);
 

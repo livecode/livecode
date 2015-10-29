@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -34,7 +34,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "card.h"
 #include "group.h"
 #include "button.h"
-#include "control.h"
+#include "mccontrol.h"
 #include "param.h"
 #include "securemode.h"
 #include "osspec.h"

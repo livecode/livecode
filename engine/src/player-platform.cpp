@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -84,7 +84,9 @@ static const char *ppmediastrings[] =
 #define MIN_RATE -3
 #define MAX_RATE 3
 
-
+extern "C" int initialise_weak_link_QuickTime(void);
+extern "C" int initialise_weak_link_QTKit(void);
+extern "C" int initialise_weak_link_QuickDraw(void);
 
 
 static MCColor controllercolors[] = {
@@ -831,6 +833,8 @@ MCPlayer::MCPlayer()
 	userCallbackStr = MCValueRetain(kMCEmptyString);
 	formattedwidth = formattedheight = 0;
 	loudness = 100;
+    dontuseqt = True;
+    usingqt = False;
     
     // PM-2014-05-29: [[ Bugfix 12501 ]] Initialize m_callbacks/m_callback_count to prevent a crash when setting callbacks
     m_callback_count = 0;
@@ -854,9 +858,6 @@ MCPlayer::MCPlayer()
     m_is_attached = false;
     m_should_attach = false;
     m_should_recreate = false;
-    
-    dontuseqt = False;
-    usingqt = False;
 }
 
 MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
@@ -874,6 +875,8 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	userCallbackStr = MCValueRetain(sref.userCallbackStr);
 	formattedwidth = formattedheight = 0;
 	loudness = sref.loudness;
+    dontuseqt = True;
+    usingqt = False;
     
     // PM-2014-05-29: [[ Bugfix 12501 ]] Initialize m_callbacks/m_callback_count to prevent a crash when setting callbacks
     m_callback_count = 0;
@@ -892,9 +895,6 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
     // MW-2014-07-16: [[ Bug ]] Put the player in the list.
     nextplayer = MCplayers;
     MCplayers = this;
-    
-    dontuseqt = False;
-    usingqt = False;
 }
 
 MCPlayer::~MCPlayer()
@@ -991,6 +991,8 @@ Boolean MCPlayer::kdown(MCStringRef p_string, KeySym key)
         handle_shift_kdown(p_string, key);
     else
         handle_kdown(p_string, key);
+    
+    return True;
 }
 
 Boolean MCPlayer::kup(MCStringRef p_string, KeySym key)
@@ -1227,8 +1229,14 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
         case P_LOOPING:
             ep.setboolean(getflag(F_LOOPING));
             break;
+        case P_MIRRORED:
+            ep.setboolean(getflag(F_MIRRORED));
+            break;
         case P_PAUSED:
             ep.setboolean(ispaused());
+            break;
+        case P_DONT_USE_QT:
+            ep.setboolean(dontuseqt);
             break;
         case P_ALWAYS_BUFFER:
             ep.setboolean(getflag(F_ALWAYS_BUFFER));
@@ -1498,6 +1506,21 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
             if (dirty)
                 setlooping((flags & F_LOOPING) != 0); //set/unset movie looping
             break;
+
+        case P_DONT_USE_QT:
+            setdontuseqt(data == MCtruemcstring); //set/unset dontuseqt
+			break;
+
+        case P_MIRRORED:
+            if (!MCU_matchflags(data, flags, F_MIRRORED, dirty))
+            {
+                MCeerror->add(EE_OBJECT_NAB, 0, 0, data);
+                return ES_ERROR;
+            }
+            if (dirty)
+                setmirror((flags & F_MIRRORED) != 0); //set/unset mirrored player
+            break;
+			
         case P_PAUSED:
             playpause(data == MCtruemcstring); //pause or unpause the player
             break;
@@ -1932,6 +1955,21 @@ void MCPlayer::setlooping(Boolean loop)
 	}
 }
 
+// SN-2015-09-30: Make specific implementation for the platformplayer, which
+//  ensures that QT is weak-linked.
+void MCPlayer::setdontuseqt(bool noqt)
+{
+	dontuseqt = noqt;
+	
+	// Weak link QT when setting a player's dontuseqt to false, if it is not already linked
+	if (!noqt && MCdontuseQT)
+	{
+		initialise_weak_link_QuickTime();
+		initialise_weak_link_QTKit() ;
+		initialise_weak_link_QuickDraw() ;
+	}
+}
+
 real8 MCPlayer::getplayrate()
 {
     if (rate < MIN_RATE)
@@ -1951,6 +1989,7 @@ void MCPlayer::updateplayrate(real8 p_rate)
     else
         rate = p_rate;
 }
+
 void MCPlayer::setplayrate()
 {
 	if (m_platform_player != nil && hasfilename())
@@ -2062,11 +2101,11 @@ Boolean MCPlayer::prepare(MCStringRef options)
    	if (!opened)
 		return False;
     
-	if (m_platform_player == nil || m_should_recreate)
+	if (m_platform_player == nil || m_should_recreate || !dontuseqt)
     {
         if (m_platform_player != nil)
             MCPlatformPlayerRelease(m_platform_player);
-        MCPlatformCreatePlayer(m_platform_player);
+        MCPlatformCreatePlayer(dontuseqt, m_platform_player);
     }
 		
     
@@ -2118,15 +2157,17 @@ Boolean MCPlayer::prepare(MCStringRef options)
 	
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyRect, kMCPlatformPropertyTypeRectangle, &trect);
 	
-	bool t_looping, t_play_selection, t_show_controller, t_show_selection;
+	bool t_looping, t_play_selection, t_show_controller, t_show_selection, t_mirrored;
 	
 	t_looping = getflag(F_LOOPING);
 	t_show_selection = getflag(F_SHOW_SELECTION);
     t_play_selection = getflag(F_PLAY_SELECTION);
+    t_mirrored = getflag(F_MIRRORED);
 	
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &lasttime);
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLoop, kMCPlatformPropertyTypeBool, &t_looping);
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
+    MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMirrored, kMCPlatformPropertyTypeBool, &t_mirrored);
     
     // PM-2014-08-06: [[ Bug 13104 ]] When new movie is opened then playRate should be set to 0
     rate = 0.0;
@@ -2367,10 +2408,10 @@ MCRectangle MCPlayer::getpreferredrect()
         // PM-2015-06-09: [[ Bug 5209 ]] formattedHeight should take into account the controller
         if (flags & F_SHOW_CONTROLLER)
             t_bounds.height += CONTROLLER_HEIGHT;
-        
-        // PM-2014-04-28: [[Bug 12299]] Make sure the correct MCRectangle is returned
-        return t_bounds;
     }
+    
+    // PM-2014-04-28: [[Bug 12299]] Make sure the correct MCRectangle is returned
+    return t_bounds;
 }
 
 uint2 MCPlayer::getloudness()
@@ -2917,7 +2958,7 @@ void MCPlayer::SynchronizeUserCallbacks(void)
         }
         
         MCAutoStringRef t_message;
-        /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMake(t_callback_index, t_space_index - t_callback_index), &t_message);
+        /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMake(t_callback_index, t_space_index - 1 - t_callback_index), &t_message);
         /* UNCHECKED */ MCNameCreate(*t_message, m_callbacks[m_callback_count - 1] . message);
         
         // If no parameter is specified, use the time.
@@ -4474,3 +4515,14 @@ void MCPlayer::shift_play()
     }
 
 }
+
+void MCPlayer::setmirrored(bool p_mirrored)
+{
+    if (m_platform_player != nil && hasfilename())
+    {
+        bool t_mirrored;
+        t_mirrored = p_mirrored;
+        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMirrored, kMCPlatformPropertyTypeBool, &t_mirrored);
+    }
+}
+

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -92,7 +92,8 @@ void MCStack::realize(void)
 		MCPlatformWindowStyle t_window_style;;
 		if (getflag(F_DECORATIONS) && (decorations & WD_UTILITY) != 0)
 			t_window_style = kMCPlatformWindowStyleUtility;
-		else if (mode == WM_PALETTE)
+		else if (mode == WM_PALETTE
+                 || mode == WM_DRAWER)  // COCOA-TODO: Implement drawers
 			t_window_style = kMCPlatformWindowStylePalette;
 		else if (mode == WM_MODAL || mode == WM_SHEET)
 			t_window_style = kMCPlatformWindowStyleDialog;
@@ -102,8 +103,6 @@ void MCStack::realize(void)
 			t_window_style = kMCPlatformWindowStylePopUp;
 		else if (mode == WM_TOOLTIP)
 			t_window_style = kMCPlatformWindowStyleToolTip;
-		else if (mode == WM_DRAWER)
-			; // COCOA-TODO: Implement drawers
 		else
 			t_window_style = kMCPlatformWindowStyleDocument;
 		

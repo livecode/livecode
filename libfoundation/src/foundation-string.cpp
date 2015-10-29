@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -168,8 +168,7 @@ static bool __MCStringCantBeEqualToNative(MCStringRef self, MCStringOptions p_op
                 break;
             
             default:
-                MCUnreachable();
-                break;
+                MCUnreachableReturn(false);
         }
     }
     
@@ -224,6 +223,8 @@ static bool __MCStringIsEmpty(MCStringRef string)
 // and returning that has a similar effect (if slightly slower).
 MCStringRef MCSTR(const char *p_cstring)
 {
+	MCAssert(nil != p_cstring);
+
 	MCStringRef t_string;
 	/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_cstring, strlen(p_cstring), t_string);
 	
@@ -244,6 +245,8 @@ bool MCStringCreateWithCString(const char* p_cstring, MCStringRef& r_string)
 
 bool MCStringCreateWithCStringAndRelease(char* p_cstring, MCStringRef& r_string)
 {
+	MCAssert(nil != p_cstring);
+
 	if (MCStringCreateWithNativeChars((const char_t *)p_cstring, p_cstring == nil ? 0 : strlen((const char*)p_cstring), r_string))
     {
         delete p_cstring;
@@ -257,6 +260,8 @@ const char *MCStringGetCString(MCStringRef p_string)
 {
     if (p_string == nil)
         return nil;
+
+    __MCAssertIsString(p_string);
     
     MCStringNativize(p_string);
     
@@ -270,6 +275,8 @@ const char *MCStringGetCString(MCStringRef p_string)
 
 bool MCStringIsEqualToCString(MCStringRef p_string, const char *p_cstring, MCStringOptions p_options)
 {
+	__MCAssertIsString(p_string);
+
 	return MCStringIsEqualToNativeChars(p_string, (const char_t *)p_cstring, strlen(p_cstring), p_options);
 }
 
@@ -277,6 +284,19 @@ bool MCStringIsEqualToCString(MCStringRef p_string, const char *p_cstring, MCStr
 // the specified encoding.
 bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStringEncoding p_encoding, bool p_is_external_rep, MCStringRef& r_string)
 {
+	if (0 == p_byte_count)
+	{
+		if (nil != kMCEmptyString)
+		{
+			r_string = MCValueRetain(kMCEmptyString);
+			return true;
+		}
+	}
+	else
+	{
+		MCAssert(nil != p_bytes);
+	}
+
     MCAssert(!p_is_external_rep);
     
     switch (p_encoding)
@@ -388,6 +408,20 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
 
 bool MCStringCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, MCStringEncoding p_encoding, bool p_is_external_rep, MCStringRef& r_string)
 {
+	if (p_byte_count == 0)
+	{
+		if (kMCEmptyString != nil)
+		{
+			r_string = MCValueRetain(kMCEmptyString);
+			free(p_bytes);
+			return true;
+		}
+	}
+	else
+	{
+		MCAssert(nil != p_bytes);
+	}
+
     MCStringRef t_string;
     t_string = nil;
     
@@ -407,13 +441,6 @@ bool MCStringCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, M
     
     bool t_success;
     t_success = true;
-    
-    if (p_byte_count == 0 && kMCEmptyString != nil)
-    {
-        r_string = MCValueRetain(kMCEmptyString);
-        free(p_bytes);
-        return true;
-    }
     
     if (t_success)
         t_success = __MCValueCreate(kMCValueTypeCodeString, t_string);
@@ -438,10 +465,17 @@ bool MCStringCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, M
 
 bool MCStringCreateWithChars(const unichar_t *p_chars, uindex_t p_char_count, MCStringRef& r_string)
 {
-    if (p_char_count == 0 && kMCEmptyString != nil)
+	if (p_char_count == 0)
 	{
-		r_string = MCValueRetain(kMCEmptyString);
-		return true;
+		if (kMCEmptyString != nil)
+		{
+			r_string = MCValueRetain(kMCEmptyString);
+			return true;
+		}
+	}
+	else
+	{
+		MCAssert(nil != p_chars);
 	}
     
 	bool t_success;
@@ -500,6 +534,8 @@ bool MCStringCreateWithChars(const unichar_t *p_chars, uindex_t p_char_count, MC
 
 bool MCStringCreateWithCharsAndRelease(unichar_t *p_chars, uindex_t p_char_count, MCStringRef& r_string)
 {
+	MCAssert(nil != p_chars);
+
     if (MCStringCreateWithChars(p_chars, p_char_count, r_string))
     {
         free(p_chars);
@@ -511,6 +547,8 @@ bool MCStringCreateWithCharsAndRelease(unichar_t *p_chars, uindex_t p_char_count
 
 bool MCStringCreateWithWString(const unichar_t *p_wstring, MCStringRef& r_string)
 {
+	MCAssert(nil != p_wstring);
+
 	uindex_t t_length;
 	for(t_length = 0; p_wstring[t_length] != 0; t_length++)
 		;
@@ -520,6 +558,8 @@ bool MCStringCreateWithWString(const unichar_t *p_wstring, MCStringRef& r_string
 
 bool MCStringCreateWithWStringAndRelease(unichar_t* p_wstring, MCStringRef& r_string)
 {
+	MCAssert(nil != p_wstring);
+
 	if (MCStringCreateWithWString(p_wstring, r_string))
 	{
 		free(p_wstring);
@@ -534,11 +574,13 @@ bool MCStringCreateWithNativeChars(const char_t *p_chars, uindex_t p_char_count,
 	bool t_success;
 	t_success = true;
 
-	if (p_char_count == 0 && kMCEmptyString != nil)
+	if ((p_chars == nil || p_char_count == 0) && kMCEmptyString != nil)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return true;
 	}
+
+	MCAssert(nil != p_chars);
 
 	__MCString *self;
 	self = nil;
@@ -568,6 +610,13 @@ bool MCStringCreateWithNativeChars(const char_t *p_chars, uindex_t p_char_count,
 
 bool MCStringCreateWithNativeCharsAndRelease(char_t *p_chars, uindex_t p_char_count, MCStringRef& r_string)
 {
+    return MCStringCreateWithNativeCharBufferAndRelease(p_chars, p_char_count, p_char_count, r_string);
+}
+
+bool MCStringCreateWithNativeCharBufferAndRelease(char_t* p_chars, uindex_t p_char_count, uindex_t p_buffer_length, MCStringRef& r_string)
+{
+	MCAssert(nil != p_chars);
+
     bool t_success;
     t_success = true;
     
@@ -583,14 +632,19 @@ bool MCStringCreateWithNativeCharsAndRelease(char_t *p_chars, uindex_t p_char_co
     if (t_success)
         t_success = __MCValueCreate(kMCValueTypeCodeString, self);
     
-    if (t_success)
-        t_success = MCMemoryReallocate(p_chars, p_char_count + 1, p_chars);
-    
+    uindex_t t_capacity = p_buffer_length;
+    if (t_success && t_capacity < p_char_count + 1)
+    {
+        t_capacity = p_char_count + 1;
+        t_success = MCMemoryReallocate(p_chars, t_capacity, p_chars);
+    }
+
     if (t_success)
     {
         p_chars[p_char_count] = '\0';
         self -> native_chars = p_chars;
         self -> char_count = p_char_count;
+        self -> capacity = t_capacity;
         r_string = self;
     }
     else
@@ -652,6 +706,8 @@ bool MCStringCreateMutable(uindex_t p_initial_capacity, MCStringRef& r_string)
 
 bool MCStringEncode(MCStringRef p_string, MCStringEncoding p_encoding, bool p_is_external_rep, MCDataRef& r_data)
 {
+	__MCAssertIsString(p_string);
+
     byte_t *t_bytes;
     uindex_t t_byte_count;
     if (!MCStringConvertToBytes(p_string, p_encoding, p_is_external_rep, t_bytes, t_byte_count))
@@ -667,7 +723,9 @@ bool MCStringEncode(MCStringRef p_string, MCStringEncoding p_encoding, bool p_is
 }
 
 bool MCStringEncodeAndRelease(MCStringRef p_string, MCStringEncoding p_encoding, bool p_is_external_rep, MCDataRef& r_data)
-{    
+{
+	__MCAssertIsString(p_string);
+
     MCDataRef t_data;
     
     if (!MCStringEncode(p_string, p_encoding, p_is_external_rep, t_data))
@@ -686,6 +744,8 @@ bool MCStringDecode(MCDataRef p_data, MCStringEncoding p_encoding, bool p_is_ext
 
 bool MCStringDecodeAndRelease(MCDataRef p_data, MCStringEncoding p_encoding, bool p_is_external_rep, MCStringRef& r_string)
 {
+	__MCAssertIsData(p_data);
+
     MCStringRef t_string;
     
     if (!MCStringDecode(p_data, p_encoding, p_is_external_rep, t_string))
@@ -695,6 +755,62 @@ bool MCStringDecodeAndRelease(MCDataRef p_data, MCStringEncoding p_encoding, boo
     r_string = t_string;
     
     return true;
+}
+
+// SN-2015-07-27: [[ Bug 15379 ]] This function is only used for internal
+//  purposes, when a LiveCode function parameter can be data - in which case
+//  no char translation must occur between the bytes in the DataRef and the
+//  Unicode string that the engine function takes (in MCR_exec for instance)
+bool MCStringCreateUnicodeStringFromData(MCDataRef p_data, bool p_is_external_rep, MCStringRef& r_string)
+{
+	__MCAssertIsData(p_data);
+    MCAssert(!p_is_external_rep);
+    
+    if (MCDataIsEmpty(p_data))
+    {
+        r_string = MCValueRetain(kMCEmptyString);
+        return true;
+    }
+    
+    bool t_success;
+    t_success = true;
+    
+    __MCString *self;
+    self = nil;
+    if (t_success)
+        t_success = __MCValueCreate(kMCValueTypeCodeString, self);
+    
+    uint32_t t_byte_count;
+    t_byte_count = MCDataGetLength(p_data);
+    
+    const byte_t* t_bytes = MCDataGetBytePtr(p_data);
+    
+    if (t_success)
+        t_success = MCMemoryNewArray(t_byte_count + 1, self -> chars);
+    
+    if (t_success)
+    {
+        uindex_t i;
+        for(i = 0; i < t_byte_count; i++)
+            self -> chars[i] = t_bytes[i];
+    }
+    
+    if (t_success)
+    {
+        self -> flags |= kMCStringFlagIsNotNative;
+        self -> char_count = t_byte_count;
+        
+        r_string = self;
+    }
+    else
+    {
+        if (self != nil)
+            MCMemoryDeleteArray(self -> chars);
+        
+        MCMemoryDelete(self);
+    }
+    
+    return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -727,6 +843,8 @@ static bool __MCStringFormatSupportedForUnicode(const char *p_format)
 
 bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args)
 {
+	MCAssert(nil != p_format);
+
 	MCStringRef t_buffer;
 	if (!MCStringCreateMutable(0, t_buffer))
 		return false;
@@ -945,6 +1063,8 @@ static bool __MCStringCloneNativeBuffer(MCStringRef self, char_t*& chars, uindex
 
 bool MCStringCopy(MCStringRef self, MCStringRef& r_new_string)
 {
+	__MCAssertIsString(self);
+
 	// If the string is immutable we can just bump the reference count.
 	if (!MCStringIsMutable(self))
 	{
@@ -968,6 +1088,8 @@ bool MCStringCopy(MCStringRef self, MCStringRef& r_new_string)
 
 bool MCStringCopyAndRelease(MCStringRef self, MCStringRef& r_new_string)
 {
+	__MCAssertIsString(self);
+
 	// If the string is immutable we just pass it through (as we are releasing the string).
 	if (!MCStringIsMutable(self))
 	{
@@ -1007,6 +1129,8 @@ bool MCStringCopyAndRelease(MCStringRef self, MCStringRef& r_new_string)
 
 bool MCStringMutableCopy(MCStringRef self, MCStringRef& r_new_string)
 {
+	__MCAssertIsString(self);
+
 	// If self is immutable, then the new mutable string will be indirect
 	// referencing it.
     if (!MCStringIsMutable(self))
@@ -1026,6 +1150,8 @@ bool MCStringMutableCopy(MCStringRef self, MCStringRef& r_new_string)
 
 bool MCStringMutableCopyAndRelease(MCStringRef self, MCStringRef& r_new_string)
 {
+	__MCAssertIsString(self);
+
 	if (self -> references == 1)
 	{
 		if (!MCStringIsMutable(self))
@@ -1049,6 +1175,8 @@ bool MCStringMutableCopyAndRelease(MCStringRef self, MCStringRef& r_new_string)
 
 bool MCStringCopySubstring(MCStringRef self, MCRange p_range, MCStringRef& r_substring)
 {
+	__MCAssertIsString(self);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -1077,6 +1205,8 @@ bool MCStringCopySubstringAndRelease(MCStringRef self, MCRange p_range, MCString
 
 bool MCStringMutableCopySubstring(MCStringRef self, MCRange p_range, MCStringRef& r_new_string)
 {
+	__MCAssertIsString(self);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -1130,6 +1260,8 @@ bool MCStringMutableCopySubstringAndRelease(MCStringRef self, MCRange p_range, M
 
 bool MCStringIsMutable(const MCStringRef self)
 {
+	__MCAssertIsString(self);
+
 	return (self -> flags & kMCStringFlagIsMutable) != 0;
 }
 
@@ -1137,6 +1269,8 @@ bool MCStringIsMutable(const MCStringRef self)
 
 uindex_t MCStringGetLength(MCStringRef self)
 {
+	__MCAssertIsString(self);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -1145,6 +1279,8 @@ uindex_t MCStringGetLength(MCStringRef self)
 
 const unichar_t *MCStringGetCharPtr(MCStringRef self)
 {
+	__MCAssertIsString(self);
+
     if (__MCStringIsIndirect(self))
         __MCStringResolveIndirect(self);
     
@@ -1154,6 +1290,8 @@ const unichar_t *MCStringGetCharPtr(MCStringRef self)
 
 const char_t *MCStringGetNativeCharPtr(MCStringRef self)
 {
+	__MCAssertIsString(self);
+
     if (MCStringIsNative(self))
     {
         // AL-2014-07-25: [[ Bug 12672 ]] Ensure possibly indirect string is resolved before returning char ptr
@@ -1168,12 +1306,16 @@ const char_t *MCStringGetNativeCharPtr(MCStringRef self)
 
 const char_t *MCStringGetNativeCharPtrAndLength(MCStringRef self, uindex_t& r_char_count)
 {
+	__MCAssertIsString(self);
+
     r_char_count = __MCStringNativize(self);
 	return self -> native_chars;
 }
 
 unichar_t MCStringGetCharAtIndex(MCStringRef self, uindex_t p_index)
 {
+	__MCAssertIsString(self);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -1185,6 +1327,8 @@ unichar_t MCStringGetCharAtIndex(MCStringRef self, uindex_t p_index)
 
 char_t MCStringGetNativeCharAtIndex(MCStringRef self, uindex_t p_index)
 {
+	__MCAssertIsString(self);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -1199,6 +1343,8 @@ char_t MCStringGetNativeCharAtIndex(MCStringRef self, uindex_t p_index)
 
 codepoint_t MCStringGetCodepointAtIndex(MCStringRef self, uindex_t p_index)
 {
+	__MCAssertIsString(self);
+
 	// Calculate the code unit index for the given codepoint
 	MCRange t_codepoint_idx, t_codeunit_idx;
     t_codepoint_idx = MCRangeMake(p_index, 1);
@@ -1227,6 +1373,8 @@ codepoint_t MCStringGetCodepointAtIndex(MCStringRef self, uindex_t p_index)
 
 uindex_t MCStringGetChars(MCStringRef self, MCRange p_range, unichar_t *p_chars)
 {
+	__MCAssertIsString(self);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -1250,6 +1398,8 @@ uindex_t MCStringGetChars(MCStringRef self, MCRange p_range, unichar_t *p_chars)
 
 uindex_t MCStringGetNativeChars(MCStringRef self, MCRange p_range, char_t *p_chars)
 {
+	__MCAssertIsString(self);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -1274,11 +1424,15 @@ uindex_t MCStringGetNativeChars(MCStringRef self, MCRange p_range, char_t *p_cha
 
 void MCStringNativize(MCStringRef self)
 {
+	__MCAssertIsString(self);
+
     __MCStringNativize(self);
 }
 
 bool MCStringNativeCopy(MCStringRef p_string, MCStringRef& r_copy)
 {
+	__MCAssertIsString(p_string);
+
     // AL-2014-12-12: [[ Bug 14208 ]] Implement a native copy function to aid conversion to data
     if (MCStringIsNative(p_string))
         return MCStringCopy(p_string, r_copy);
@@ -1300,6 +1454,8 @@ bool MCStringNativeCopy(MCStringRef p_string, MCStringRef& r_copy)
 
 bool MCStringIsNative(MCStringRef self)
 {
+	__MCAssertIsString(self);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -1308,6 +1464,8 @@ bool MCStringIsNative(MCStringRef self)
 
 bool MCStringCantBeEqualToNative(MCStringRef self, MCStringOptions p_options)
 {
+	__MCAssertIsString(self);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -1316,6 +1474,8 @@ bool MCStringCantBeEqualToNative(MCStringRef self, MCStringOptions p_options)
 
 bool MCStringCanBeNative(MCStringRef self)
 {
+	__MCAssertIsString(self);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -1325,6 +1485,8 @@ bool MCStringCanBeNative(MCStringRef self)
 // AL-2015-02-06: [[ Bug 14504 ]] Ensure 'simple' flag is checked against the direct string.
 bool MCStringIsSimple(MCStringRef self)
 {
+	__MCAssertIsString(self);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -1334,6 +1496,8 @@ bool MCStringIsSimple(MCStringRef self)
 // AL-2015-02-06: [[ Bug 14504 ]] Ensure 'uncombined' flag is checked against the direct string.
 bool MCStringIsUncombined(MCStringRef self)
 {
+	__MCAssertIsString(self);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -1342,6 +1506,8 @@ bool MCStringIsUncombined(MCStringRef self)
 
 bool MCStringMapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &r_out_range)
 {
+	__MCAssertIsString(self);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -1427,7 +1593,7 @@ bool MCStringMapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &
 
 bool MCStringUnmapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &r_out_range)
 {    
-    MCAssert(self != nil);
+	__MCAssertIsString(self);
     
     // AL-2015-02-06: [[ Bug 14504 ]] Use direct string for checks here, as the flags are not set on the indirect string.
     if (__MCStringIsIndirect(self))
@@ -1491,8 +1657,8 @@ bool MCStringUnmapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange
 
 bool MCStringMapIndices(MCStringRef self, MCBreakIteratorType p_type, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
 {
-    MCAssert(self != nil);
-    MCAssert(p_locale != nil);
+	__MCAssertIsString(self);
+	__MCAssertIsLocale(p_locale);
     
     // Create the appropriate break iterator
     MCBreakIteratorRef t_iter;
@@ -1533,6 +1699,9 @@ bool MCStringMapIndices(MCStringRef self, MCBreakIteratorType p_type, MCLocaleRe
 
 bool MCStringMapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
 {
+	__MCAssertIsString(self);
+	__MCAssertIsLocale(p_locale);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -1563,9 +1732,9 @@ bool MCStringCodepointIsWordPart(codepoint_t p_codepoint)
 }
 
 bool MCStringMapTrueWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
-{    
-    MCAssert(self != nil);
-    MCAssert(p_locale != nil);
+{
+	__MCAssertIsString(self);
+	__MCAssertIsLocale(p_locale);
     
     // Create the appropriate break iterator
     MCBreakIteratorRef t_iter;
@@ -1617,8 +1786,8 @@ bool MCStringMapSentenceIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
 
 bool MCStringUnmapIndices(MCStringRef self, MCBreakIteratorType p_type, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
 {
-    MCAssert(self != nil);
-    MCAssert(p_locale != nil);
+	__MCAssertIsString(self);
+	__MCAssertIsLocale(p_locale);
     
     // Check that the input range is valid
     if (p_in_range.offset + p_in_range.length > MCStringGetLength(self))
@@ -1675,6 +1844,9 @@ bool MCStringUnmapIndices(MCStringRef self, MCBreakIteratorType p_type, MCLocale
 
 bool MCStringUnmapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
 {    
+	__MCAssertIsString(self);
+	__MCAssertIsLocale(p_locale);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -1701,11 +1873,14 @@ bool MCStringUnmapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRang
 
 bool MCStringUnmapTrueWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
 {
-    MCAssert(self != nil);
-    MCAssert(p_locale != nil);
+	__MCAssertIsString(self);
+	__MCAssertIsLocale(p_locale);
+
+	if (__MCStringIsIndirect(self))
+		self = self->string;
     
     // Check that the input range is valid
-    if (p_in_range.offset + p_in_range.length > self -> char_count)
+	if (p_in_range.offset + p_in_range.length > __MCStringGetLength(self))
         return false;
     
     // Create a break iterator of the appropriate type
@@ -1744,7 +1919,7 @@ bool MCStringUnmapTrueWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRang
             t_left_break = t_right_break;
         }
 
-        if (t_right_break >= MCStringGetLength(self))
+        if (t_right_break >= __MCStringGetLength(self))
         {
             r_out_range = MCRangeMake(t_right_break, 0);
             return true;
@@ -1773,7 +1948,7 @@ bool MCStringUnmapTrueWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRang
             t_left_break = t_right_break;
         }
         
-        if (t_right_break >= MCStringGetLength(self))
+        if (t_right_break >= __MCStringGetLength(self))
             break;
     }
     
@@ -1794,6 +1969,8 @@ bool MCStringUnmapSentenceIndices(MCStringRef self, MCLocaleRef p_locale, MCRang
 extern MCLocaleRef kMCBasicLocale;
 bool MCStringMapIndices(MCStringRef self, MCCharChunkType p_type, MCRange p_char_range, MCRange &r_cu_range)
 {
+	__MCAssertIsString(self);
+
     switch (p_type)
     {
         case kMCCharChunkTypeCodeunit:
@@ -1813,6 +1990,8 @@ bool MCStringMapIndices(MCStringRef self, MCCharChunkType p_type, MCRange p_char
 
 bool MCStringUnmapIndices(MCStringRef self, MCCharChunkType p_type, MCRange p_cu_range, MCRange &r_char_range)
 {
+	__MCAssertIsString(self);
+
     switch (p_type)
     {
         case kMCCharChunkTypeCodeunit:
@@ -1834,6 +2013,7 @@ bool MCStringUnmapIndices(MCStringRef self, MCCharChunkType p_type, MCRange p_cu
 
 bool MCStringConvertToBytes(MCStringRef self, MCStringEncoding p_encoding, bool p_is_external_rep, byte_t*& r_bytes, uindex_t& r_byte_count)
 {
+	__MCAssertIsString(self);
     MCAssert(!p_is_external_rep);
     
     switch(p_encoding)
@@ -1932,6 +2112,8 @@ bool MCStringConvertToBytes(MCStringRef self, MCStringEncoding p_encoding, bool 
 
 bool MCStringConvertToAscii(MCStringRef self, char_t *&r_chars, uindex_t& r_char_count)
 {
+	__MCAssertIsString(self);
+
     // Get the native chars, but excludes any char belonging to the extended part of the ASCII -
     char_t *t_chars;
     uindex_t t_char_count = MCStringGetLength(self);
@@ -1953,6 +2135,8 @@ bool MCStringConvertToAscii(MCStringRef self, char_t *&r_chars, uindex_t& r_char
 
 bool MCStringConvertToUnicode(MCStringRef self, unichar_t*& r_chars, uindex_t& r_char_count)
 {
+	__MCAssertIsString(self);
+
 	// Allocate an array of chars one bigger than needed. As the allocated array
 	// is filled with zeros, this will naturally NUL terminate the string.
 	unichar_t *t_chars;
@@ -1966,6 +2150,8 @@ bool MCStringConvertToUnicode(MCStringRef self, unichar_t*& r_chars, uindex_t& r
 
 bool MCStringNormalizeAndConvertToNative(MCStringRef string, char_t*& r_chars, uindex_t& r_char_count)
 {
+	__MCAssertIsString(string);
+
     MCAutoStringRef t_normalized;
     if (!MCStringNormalizedCopyNFC(string, &t_normalized))
         return false;
@@ -1975,6 +2161,8 @@ bool MCStringNormalizeAndConvertToNative(MCStringRef string, char_t*& r_chars, u
 
 bool MCStringConvertToNative(MCStringRef self, char_t*& r_chars, uindex_t& r_char_count)
 {
+	__MCAssertIsString(self);
+
 	// Allocate an array of chars one byte bigger than needed. As the allocated array
 	// is filled with zeros, this will naturally NUL terminate the string.
 	char_t *t_chars;
@@ -1988,6 +2176,8 @@ bool MCStringConvertToNative(MCStringRef self, char_t*& r_chars, uindex_t& r_cha
 
 bool MCStringNormalizeAndConvertToCString(MCStringRef string, char*& r_cstring)
 {
+	__MCAssertIsString(string);
+
     MCAutoStringRef t_normalized;
     if (!MCStringNormalizedCopyNFC(string, &t_normalized))
         return false;
@@ -1997,6 +2187,8 @@ bool MCStringNormalizeAndConvertToCString(MCStringRef string, char*& r_cstring)
 
 bool MCStringConvertToCString(MCStringRef p_string, char*& r_cstring)
 {
+	__MCAssertIsString(p_string);
+
     uindex_t t_length;
     t_length = MCStringGetLength(p_string);
     if (!MCMemoryNewArray(t_length + 1, r_cstring))
@@ -2010,6 +2202,8 @@ bool MCStringConvertToCString(MCStringRef p_string, char*& r_cstring)
 
 bool MCStringConvertToWString(MCStringRef p_string, unichar_t*& r_wstring)
 {
+	__MCAssertIsString(p_string);
+
     uindex_t t_length;
     t_length = MCStringGetLength(p_string);
     if (!MCMemoryNewArray(t_length + 1, r_wstring))
@@ -2023,12 +2217,16 @@ bool MCStringConvertToWString(MCStringRef p_string, unichar_t*& r_wstring)
 
 bool MCStringConvertToUTF8String(MCStringRef p_string, char*& r_utf8string)
 {
+	__MCAssertIsString(p_string);
+
 	uindex_t length_is_ignored;
 	return MCStringConvertToUTF8(p_string, r_utf8string, length_is_ignored);
 }
 
 bool MCStringConvertToUTF8(MCStringRef p_string, char*& r_utf8string, uindex_t& r_utf8_chars)
 {
+	__MCAssertIsString(p_string);
+
 	// Allocate an array of chars one byte bigger than needed. As the allocated array
 	// is filled with zeros, this will naturally NUL terminate the string.
     uindex_t t_length;
@@ -2057,6 +2255,8 @@ bool MCStringConvertToUTF8(MCStringRef p_string, char*& r_utf8string, uindex_t& 
 
 bool MCStringConvertToUTF32(MCStringRef self, uint32_t *&r_codepoints, uinteger_t &r_char_count)
 {
+	__MCAssertIsString(self);
+
     if (MCStringIsNative(self))
     {
         // Shortcut for native string - no surrogate pair checking
@@ -2148,6 +2348,8 @@ bool MCStringConvertToUTF32(MCStringRef self, uint32_t *&r_codepoints, uinteger_
 #if defined(__MAC__) || defined (__IOS__)
 bool MCStringConvertToCFStringRef(MCStringRef p_string, CFStringRef& r_cfstring)
 {
+	__MCAssertIsString(p_string);
+
     uindex_t t_length;
     unichar_t* t_chars;
     
@@ -2191,6 +2393,8 @@ bool MCStringConvertToBSTR(MCStringRef p_string, BSTR& r_bstr)
 
 hash_t MCStringHash(MCStringRef self, MCStringOptions p_options)
 {
+	__MCAssertIsString(self);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -2202,6 +2406,9 @@ hash_t MCStringHash(MCStringRef self, MCStringOptions p_options)
 
 bool MCStringIsEqualTo(MCStringRef self, MCStringRef p_other, MCStringOptions p_options)
 {
+	__MCAssertIsString(self);
+	__MCAssertIsString(p_other);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -2242,6 +2449,9 @@ bool MCStringIsEmpty(MCStringRef string)
 
 bool MCStringSubstringIsEqualTo(MCStringRef self, MCRange p_sub, MCStringRef p_other, MCStringOptions p_options)
 {
+	__MCAssertIsString(self);
+	__MCAssertIsString(p_other);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -2274,6 +2484,9 @@ bool MCStringSubstringIsEqualTo(MCStringRef self, MCRange p_sub, MCStringRef p_o
 
 bool MCStringSubstringIsEqualToSubstring(MCStringRef self, MCRange p_sub, MCStringRef p_other, MCRange p_other_sub, MCStringOptions p_options)
 {
+	__MCAssertIsString(self);
+	__MCAssertIsString(p_other);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -2309,6 +2522,9 @@ bool MCStringSubstringIsEqualToSubstring(MCStringRef self, MCRange p_sub, MCStri
 
 bool MCStringIsEqualToNativeChars(MCStringRef self, const char_t *p_chars, uindex_t p_char_count, MCStringOptions p_options)
 {
+	__MCAssertIsString(self);
+	MCAssert(nil != p_chars);
+
     if (MCStringIsNative(self))
     {
         if (__MCStringIsIndirect(self))
@@ -2330,6 +2546,9 @@ bool MCStringIsEqualToNativeChars(MCStringRef self, const char_t *p_chars, uinde
 
 compare_t MCStringCompareTo(MCStringRef self, MCStringRef p_other, MCStringOptions p_options)
 {
+	__MCAssertIsString(self);
+	__MCAssertIsString(p_other);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -2341,6 +2560,9 @@ compare_t MCStringCompareTo(MCStringRef self, MCStringRef p_other, MCStringOptio
 
 bool MCStringBeginsWith(MCStringRef self, MCStringRef p_prefix, MCStringOptions p_options)
 {
+	__MCAssertIsString(self);
+	__MCAssertIsString(p_prefix);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -2369,6 +2591,9 @@ bool MCStringBeginsWith(MCStringRef self, MCStringRef p_prefix, MCStringOptions 
 
 bool MCStringSharedPrefix(MCStringRef self, MCRange p_range, MCStringRef p_prefix, MCStringOptions p_options, uindex_t& r_self_match_length)
 {
+	__MCAssertIsString(self);
+	__MCAssertIsString(p_prefix);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -2408,6 +2633,9 @@ bool MCStringSharedPrefix(MCStringRef self, MCRange p_range, MCStringRef p_prefi
 
 bool MCStringBeginsWithCString(MCStringRef self, const char_t *p_prefix_cstring, MCStringOptions p_options)
 {
+	__MCAssertIsString(self);
+	MCAssert(nil != p_prefix_cstring);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -2429,6 +2657,9 @@ bool MCStringBeginsWithCString(MCStringRef self, const char_t *p_prefix_cstring,
 
 bool MCStringEndsWith(MCStringRef self, MCStringRef p_suffix, MCStringOptions p_options)
 {
+	__MCAssertIsString(self);
+	__MCAssertIsString(p_suffix);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -2458,6 +2689,9 @@ bool MCStringEndsWith(MCStringRef self, MCStringRef p_suffix, MCStringOptions p_
 
 bool MCStringSharedSuffix(MCStringRef self, MCRange p_range, MCStringRef p_suffix, MCStringOptions p_options, uindex_t& r_self_match_length)
 {
+	__MCAssertIsString(self);
+	__MCAssertIsString(p_suffix);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -2497,6 +2731,9 @@ bool MCStringSharedSuffix(MCStringRef self, MCRange p_range, MCStringRef p_suffi
 
 bool MCStringEndsWithCString(MCStringRef self, const char_t *p_suffix_cstring, MCStringOptions p_options)
 {
+	__MCAssertIsString(self);
+	MCAssert(nil != p_suffix_cstring);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -2518,6 +2755,9 @@ bool MCStringEndsWithCString(MCStringRef self, const char_t *p_suffix_cstring, M
 
 bool MCStringContains(MCStringRef self, MCStringRef p_needle, MCStringOptions p_options)
 {
+	__MCAssertIsString(self);
+	__MCAssertIsString(p_needle);
+
     if (MCStringIsEmpty(p_needle))
         return false;
     
@@ -2557,6 +2797,9 @@ bool MCStringContains(MCStringRef self, MCStringRef p_needle, MCStringOptions p_
 
 bool MCStringSubstringContains(MCStringRef self, MCRange p_range, MCStringRef p_needle, MCStringOptions p_options)
 {
+	__MCAssertIsString(self);
+	__MCAssertIsString(p_needle);
+
     if (__MCStringIsIndirect(p_needle))
         p_needle = p_needle -> string;
     
@@ -2608,6 +2851,9 @@ bool MCStringSubstringContains(MCStringRef self, MCRange p_range, MCStringRef p_
 
 bool MCStringFirstIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_after, MCStringOptions p_options, uindex_t& r_offset)
 {
+	__MCAssertIsString(self);
+	__MCAssertIsString(p_needle);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -2670,6 +2916,8 @@ bool MCStringFirstIndexOfChar(MCStringRef self, codepoint_t p_needle, uindex_t p
 
 bool MCStringFirstIndexOfCharInRange(MCStringRef self, codepoint_t p_needle, MCRange p_range, MCStringOptions p_options, uindex_t& r_offset)
 {
+	__MCAssertIsString(self);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -2713,6 +2961,9 @@ bool MCStringFirstIndexOfCharInRange(MCStringRef self, codepoint_t p_needle, MCR
 
 bool MCStringLastIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_before, MCStringOptions p_options, uindex_t& r_offset)
 {
+	__MCAssertIsString(self);
+	__MCAssertIsString(p_needle);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -2755,6 +3006,8 @@ bool MCStringLastIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_befo
 
 bool MCStringLastIndexOfChar(MCStringRef self, codepoint_t p_needle, uindex_t p_before, MCStringOptions p_options, uindex_t& r_offset)
 {
+	__MCAssertIsString(self);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -2845,6 +3098,9 @@ static bool MCStringFindNative(MCStringRef self, MCRange p_range, MCStringRef p_
 
 bool MCStringFind(MCStringRef self, MCRange p_range, MCStringRef p_needle, MCStringOptions p_options, MCRange *r_result)
 {
+	__MCAssertIsString(self);
+	__MCAssertIsString(p_needle);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -2975,6 +3231,9 @@ static uindex_t MCStringCountStrChars(MCStringRef self, MCRange p_range, const v
 
 uindex_t MCStringCount(MCStringRef self, MCRange p_range, MCStringRef p_needle, MCStringOptions p_options)
 {
+	__MCAssertIsString(self);
+	__MCAssertIsString(p_needle);
+
     if (__MCStringIsIndirect(p_needle))
         p_needle = p_needle -> string;
     
@@ -2994,9 +3253,8 @@ uindex_t MCStringCount(MCStringRef self, MCRange p_range, MCStringRef p_needle, 
 
 uindex_t MCStringCountChar(MCStringRef self, MCRange p_range, codepoint_t p_needle, MCStringOptions p_options)
 {
-	// We only support ASCII for now.
-	//MCAssert(p_needle < 128);
-	
+	__MCAssertIsString(self);
+
 	strchar_t t_native_needle;
 	t_native_needle = (strchar_t)p_needle;
 	
@@ -3015,6 +3273,8 @@ uindex_t MCStringCountChar(MCStringRef self, MCRange p_range, codepoint_t p_need
 
 bool MCStringDivideAtChar(MCStringRef self, codepoint_t p_separator, MCStringOptions p_options, MCStringRef& r_head, MCStringRef& r_tail)
 {
+	__MCAssertIsString(self);
+
 	uindex_t t_offset;
 	if (!MCStringFirstIndexOfChar(self, p_separator, 0, p_options, t_offset))
 	{
@@ -3031,6 +3291,8 @@ bool MCStringDivideAtChar(MCStringRef self, codepoint_t p_separator, MCStringOpt
 
 bool MCStringDivideAtIndex(MCStringRef self, uindex_t p_offset, MCStringRef& r_head, MCStringRef& r_tail)
 {
+	__MCAssertIsString(self);
+
 	MCStringRef t_head;
 	if (!MCStringCopySubstring(self, MCRangeMake(0, p_offset), t_head))
 		return false;
@@ -3052,6 +3314,7 @@ bool MCStringDivideAtIndex(MCStringRef self, uindex_t p_offset, MCStringRef& r_h
 
 bool MCStringBreakIntoChunks(MCStringRef self, codepoint_t p_separator, MCStringOptions p_options, MCRange*& r_ranges, uindex_t& r_range_count)
 {
+	__MCAssertIsString(self);
 	MCAssert(p_separator < 128);
 	
 	uindex_t t_length;
@@ -3607,7 +3870,7 @@ bool MCStringInsertChars(MCStringRef self, uindex_t p_at, const unichar_t *p_cha
     // Copy the chars across recomputing whether the string can be native at
     // the same time.
 	bool t_can_be_native;
-    t_can_be_native = __MCStringCopyChars(self -> chars + p_at, p_chars, p_char_count * sizeof(unichar_t), __MCStringCanBeNative(self));
+    t_can_be_native = __MCStringCopyChars(self -> chars + p_at, p_chars, p_char_count, __MCStringCanBeNative(self));
 	
 	__MCStringChanged(self, false, false, t_can_be_native);
 	
@@ -3798,6 +4061,8 @@ bool MCStringReplaceChars(MCStringRef self, MCRange p_range, const unichar_t *p_
 
 bool MCStringReplace(MCStringRef self, MCRange p_range, MCStringRef p_replacement)
 {
+	__MCAssertIsMutableString(self);
+
     if (__MCStringIsIndirect(p_replacement))
         p_replacement = p_replacement -> string;
     
@@ -3818,6 +4083,8 @@ bool MCStringReplace(MCStringRef self, MCRange p_range, MCStringRef p_replacemen
 
 bool MCStringPad(MCStringRef self, uindex_t p_at, uindex_t p_count, MCStringRef p_value)
 {
+	__MCAssertIsMutableString(self);
+
     // Ensure the string is not indirect.
     if (__MCStringIsIndirect(self))
         if (!__MCStringResolveIndirect(self))
@@ -3840,6 +4107,8 @@ bool MCStringPad(MCStringRef self, uindex_t p_at, uindex_t p_count, MCStringRef 
 
 bool MCStringResolvesLeftToRight(MCStringRef self)
 {
+	__MCAssertIsString(self);
+
     if (MCStringIsNative(self) || MCStringCanBeNative(self))
         return true;
     
@@ -3860,6 +4129,8 @@ bool MCStringAppendFormat(MCStringRef self, const char *p_format, ...)
 
 bool MCStringAppendFormatV(MCStringRef self, const char *p_format, va_list p_args)
 {
+	__MCAssertIsMutableString(self);
+
 	MCAutoStringRef t_formatted_string;
 	if (!MCStringFormatV(&t_formatted_string, p_format, p_args))
 		return false;
@@ -4012,6 +4283,8 @@ bool MCStringSplitNative(MCStringRef self, MCStringRef p_elem_del, MCStringRef p
 
 bool MCStringFindAndReplaceChar(MCStringRef self, char_t p_pattern, char_t p_replacement, MCStringOptions p_options)
 {
+	__MCAssertIsString(self);
+
 	if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareNonliteral)
 	{
 		// Simplest case, just substitute pattern for replacement.
@@ -4174,6 +4447,12 @@ static void split_find_end_of_element_and_key(const void *sptr, uindex_t length,
 
 bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_del, MCStringOptions p_options, MCArrayRef& r_array)
 {
+	__MCAssertIsString(self);
+	__MCAssertIsString(p_elem_del);
+	if (nil != p_key_del)
+		__MCAssertIsString(p_key_del);
+
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -4295,6 +4574,8 @@ bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_d
 
 bool MCStringFindAndReplaceChar(MCStringRef self, codepoint_t p_pattern, codepoint_t p_replacement, MCStringOptions p_options)
 {
+	__MCAssertIsString(self);
+
     // Ensure the string is not indirect.
     if (__MCStringIsIndirect(self))
         if (!__MCStringResolveIndirect(self))
@@ -4348,6 +4629,10 @@ bool MCStringFindAndReplaceChar(MCStringRef self, codepoint_t p_pattern, codepoi
 
 bool MCStringFindAndReplace(MCStringRef self, MCStringRef p_pattern, MCStringRef p_replacement, MCStringOptions p_options)
 {
+	__MCAssertIsString(self);
+	__MCAssertIsString(p_pattern);
+	__MCAssertIsString(p_replacement);
+
     // Ensure the string is not indirect.
     if (__MCStringIsIndirect(self))
         if (!__MCStringResolveIndirect(self))
@@ -4455,6 +4740,9 @@ bool MCStringFindAndReplace(MCStringRef self, MCStringRef p_pattern, MCStringRef
 
 bool MCStringWildcardMatch(MCStringRef source, MCRange source_range, MCStringRef pattern, MCStringOptions p_options)
 {
+	__MCAssertIsString(source);
+	__MCAssertIsString(pattern);
+
     bool source_native = MCStringIsNative(source);
     
     const void *source_chars;
@@ -4807,6 +5095,8 @@ unsigned int MCStringCodepointToSurrogates(codepoint_t p_codepoint, unichar_t (&
 
 bool MCStringIsValidSurrogatePair(MCStringRef self, uindex_t p_index)
 {
+	__MCAssertIsString(self);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -4969,7 +5259,7 @@ static bool do_iconv(iconv_t fd, const char *in, size_t in_len, char * &out, siz
 bool MCStringCreateWithSysString(const char *p_system_string, MCStringRef &r_string)
 {
     // Is the string empty?
-    if (p_system_string == nil)
+    if (p_system_string == nil || *p_system_string == 0)
     {
         r_string = MCValueRetain(kMCEmptyString);
         return true;
@@ -5091,6 +5381,8 @@ bool MCStringConvertToSysString(MCStringRef p_string, char *& r_system_string, s
 #elif defined(__WINDOWS__)
 bool MCStringConvertToSysString(MCStringRef p_string, char *& r_system_string, size_t& r_byte_count)
 {
+	__MCAssertIsString(p_string);
+
     UINT t_codepage;
     t_codepage = GetConsoleOutputCP();
     
@@ -5132,6 +5424,8 @@ bool MCStringConvertToSysString(MCStringRef p_string, char *& r_system_string, s
 #else
 bool MCStringConvertToSysString(MCStringRef p_string, char *& r_system_string, size_t& r_byte_count)
 {
+	__MCAssertIsString(p_string);
+
     bool t_success;
     uindex_t t_byte_count;
     if (!MCStringConvertToUTF8(p_string, r_system_string, t_byte_count))
@@ -5144,26 +5438,163 @@ bool
 MCStringCreateWithSysString(const char *p_sys_string,
                             MCStringRef & r_string)
 {
-	/* Count the number of chars */
-	size_t p_byte_count;
-	for (p_byte_count = 0; p_sys_string[p_byte_count] != '\0'; ++p_byte_count);
-
-	if (0 == p_byte_count)
+	/* Fast path for empty string */
+	if (nil == p_sys_string || 0 == *p_sys_string)
 	{
 		r_string = MCValueRetain(kMCEmptyString);
 		return true;
 	}
 
+	/* Count the number of chars */
+	size_t t_byte_count;
+	for (t_byte_count = 0; p_sys_string[t_byte_count] != '\0'; ++t_byte_count);
+
 	return MCStringCreateWithBytes((const byte_t *) p_sys_string,
-	                               p_byte_count,
+	                               t_byte_count,
 	                               kMCStringEncodingUTF8,
 	                               false, /* is_external_rep */
 	                               r_string);
 }
 #endif
 
+static bool
+__MCStringCreateWithStrings(MCStringRef& r_string, bool p_has_separator, unichar_t p_separator, MCStringRef p_one, MCStringRef p_two)
+{
+    bool t_success;
+    t_success = true;
+    
+    // Create a new StringRef object
+    __MCString *self;
+    self = nil;
+    if (t_success)
+        t_success = __MCValueCreate(kMCValueTypeCodeString, self);
+    
+    // Resolve indirection
+    if (__MCStringIsIndirect(p_one))
+        p_one = p_one->string;
+    if (__MCStringIsIndirect(p_two))
+        p_two = p_two->string;
+    
+    // Calculate the required length and is-native status of the result string
+    uindex_t t_one_length, t_two_length;
+    t_one_length = MCStringGetLength(p_one);
+    t_two_length = MCStringGetLength(p_two);
+    bool t_native = MCStringIsNative(p_one) && MCStringIsNative(p_two);
+    uindex_t t_length = t_one_length + t_two_length;
+    
+    // Take the separator into account
+    char_t t_native_separator;
+    if (p_has_separator)
+    {
+        t_native = t_native && MCUnicodeCharMapToNative(p_separator, t_native_separator);
+        t_length++;
+    }
+    
+    // Increase the length so we always have a NUL terminator
+    t_length++;
+    
+    // Are we doing a native or a Unicode concatenation?
+    if (t_native)
+    {
+        // Allocate the output buffer
+        if (t_success)
+            t_success = MCMemoryAllocate(t_length, self->native_chars);
+        
+        if (t_success)
+        {
+            // Both sides are already native so the copy is simple
+            MCMemoryCopy(self->native_chars, p_one->native_chars, t_one_length);
+            if (p_has_separator)
+            {
+                // Add the separator character
+                self->native_chars[t_one_length] = t_native_separator;
+                t_one_length++;
+            }
+            MCMemoryCopy(self->native_chars + t_one_length, p_two->native_chars, t_two_length);
+            
+            // Terminate the string
+            self->char_count = t_length-1;
+            self->native_chars[self->char_count] = '\0';
+            
+            // Set the flags
+            self->flags |= kMCStringFlagCanBeNative;
+        }
+    }
+    else
+    {
+        // Allocate the output buffer
+        if (t_success)
+            t_success = MCMemoryAllocate(t_length * sizeof(unichar_t), self->chars);
+        
+        if (t_success)
+        {
+            // Copy the first string
+            if (!MCStringIsNative(p_one))
+                MCMemoryCopy(self->chars, p_one->chars, t_one_length*sizeof(unichar_t));
+            else
+            {
+                // Copy and map each character
+                const char_t* t_one_ptr = p_one->native_chars;
+                for (uindex_t i = 0; i < t_one_length; i++)
+                    self->chars[i] = MCUnicodeCharMapFromNative(t_one_ptr[i]);
+            }
+            
+            if (p_has_separator)
+            {
+                // Add the separator character
+                self->chars[t_one_length] = p_separator;
+                t_one_length++;
+            }
+            
+            // Copy the second string
+            if (!MCStringIsNative(p_two))
+                MCMemoryCopy(self->chars + t_one_length, p_two->chars, t_two_length*sizeof(unichar_t));
+            else
+            {
+                // Copy and map each character
+                const char_t* t_two_ptr = p_two->native_chars;
+                for (uindex_t i = 0; i < t_two_length; i++)
+                    self->chars[t_one_length + i] = MCUnicodeCharMapFromNative(t_two_ptr[i]);
+            }
+            
+            // Terminate the string
+            self->char_count = t_length-1;
+            self->chars[self->char_count] = '\0';
+            
+            // Set the flags
+            self->flags |= kMCStringFlagIsNotNative;
+        }
+    }
+    
+    // Set the output value
+    if (t_success)
+        r_string = self;
+    
+    return t_success;
+}
+
+bool
+MCStringCreateWithStrings(MCStringRef& r_string, MCStringRef p_one, MCStringRef p_two)
+{
+	__MCAssertIsString(p_one);
+	__MCAssertIsString(p_two);
+
+    return __MCStringCreateWithStrings(r_string, false, 0, p_one, p_two);
+}
+
+bool
+MCStringCreateWithStringsAndSeparator(MCStringRef& r_string, unichar_t p_separator, MCStringRef p_one, MCStringRef p_two)
+{
+	__MCAssertIsString(p_one);
+	__MCAssertIsString(p_two);
+
+    return __MCStringCreateWithStrings(r_string, true, p_separator, p_one, p_two);
+}
+
 bool MCStringNormalizedCopyNFC(MCStringRef self, MCStringRef &r_string)
 {
+	__MCAssertIsString(self);
+
     if (MCStringIsNative(self))
         return MCStringCopy(self, r_string);
     
@@ -5179,6 +5610,8 @@ bool MCStringNormalizedCopyNFC(MCStringRef self, MCStringRef &r_string)
 
 bool MCStringNormalizedCopyNFD(MCStringRef self, MCStringRef &r_string)
 {
+	__MCAssertIsString(self);
+
     // AL-2014-06-24: [[ Bug 12656 ]] Native strings can be decomposed into non-native ones.
     unichar_t *t_norm = nil;
     uindex_t t_norm_length;
@@ -5191,6 +5624,8 @@ bool MCStringNormalizedCopyNFD(MCStringRef self, MCStringRef &r_string)
 
 bool MCStringNormalizedCopyNFKC(MCStringRef self, MCStringRef &r_string)
 {
+	__MCAssertIsString(self);
+
     // Native strings are already normalized
     if (MCStringIsNative(self))
         return MCStringCopy(self, r_string);
@@ -5207,6 +5642,8 @@ bool MCStringNormalizedCopyNFKC(MCStringRef self, MCStringRef &r_string)
 
 bool MCStringNormalizedCopyNFKD(MCStringRef self, MCStringRef &r_string)
 {
+	__MCAssertIsString(self);
+
     // AL-2014-06-24: [[ Bug 12656 ]] Native strings can be decomposed into non-native ones.
     // Normalise
     unichar_t *t_norm = nil;
@@ -5222,28 +5659,15 @@ bool MCStringNormalizedCopyNFKD(MCStringRef self, MCStringRef &r_string)
 
 bool MCStringSetNumericValue(MCStringRef self, double p_value)
 {
+	__MCAssertIsString(self);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
     if (MCStringIsMutable(self))
         return false;
     
-    // Compute the number of bytes used by the string - including 1 for the
-    // implicit NUL.
-    uindex_t t_byte_count;
-    if (__MCStringIsNative(self))
-        t_byte_count = self -> char_count + 1;
-    else
-        t_byte_count = self -> char_count * 2 + 1;
-    
-    // Round up the byte count to the nearest 8 bytes.
-    t_byte_count = (t_byte_count + 7) & ~7;
-    
-    if (!MCMemoryReallocate(self -> native_chars, t_byte_count + 8, self -> native_chars))
-        return false;
-    
-    *(double *)(&(self -> native_chars[t_byte_count])) = p_value;
-    
+    self -> numeric_value = p_value;
     self -> flags |= kMCStringFlagHasNumber;
     
     return true;
@@ -5251,24 +5675,14 @@ bool MCStringSetNumericValue(MCStringRef self, double p_value)
 
 bool MCStringGetNumericValue(MCStringRef self, double &r_value)
 {
+	__MCAssertIsString(self);
+
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
     if ((self -> flags & kMCStringFlagHasNumber) != 0)
     {
-        // Compute the number of bytes used by the string - including 1 for the
-        // implicit NUL.
-        uindex_t t_byte_count;
-        if (__MCStringIsNative(self))
-            t_byte_count = self -> char_count + 1;
-        else
-            t_byte_count = self -> char_count * 2 + 1;
-        
-        // Round up the byte count to the nearest 8 bytes.
-        t_byte_count = (t_byte_count + 7) & ~7;
-        
-        r_value = *(double *)(&(self -> native_chars[t_byte_count]));
-        
+        r_value = self -> numeric_value;
         return true;
     }
     else

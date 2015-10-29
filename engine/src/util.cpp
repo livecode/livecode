@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -46,6 +46,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 #include "system.h"
 #include "dispatch.h"
+#include "scriptpt.h"
 
 #if defined(_MACOSX)
 #include <mach-o/dyld.h>
@@ -2002,6 +2003,12 @@ void MCU_getshift(uint4 mask, uint2 &shift, uint2 &outmask)
 	outmask = j;
 }
 
+static bool _MCStackNotifyToolChange(MCStack *p_stack, void *p_context)
+{
+    p_stack -> notifyattachments(kMCStackAttachmentEventToolChanged);
+    return true;
+}
+
 void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
 {
 	Tool t_new_tool;
@@ -2060,6 +2067,8 @@ void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
     // MW-2014-04-24: [[ Bug 12249 ]] Prod each player to make sure its buffered correctly for the new tool.
     for(MCPlayer *t_player = MCplayers; t_player != NULL; t_player = t_player -> getnextplayer())
         t_player -> syncbuffering(nil);
+    
+    MCdispatcher -> foreachstack(_MCStackNotifyToolChange, nil);
     
 	ctxt . GetObject()->message_with_valueref_args(MCM_new_tool, *t_tool_name);
 }
@@ -3336,6 +3345,39 @@ void *MCU_resolvemodulesymbol(void* p_module, const char *p_symbol)
         return nil;
 
     return MCS_resolvemodulesymbol((MCSysModuleHandle)p_module, *t_symbol_str);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+bool
+MCU_is_token(MCStringRef p_string)
+{
+	MCScriptPoint sp(p_string);
+
+	++MCerrorlock;
+
+	Parse_stat ps = sp.nexttoken();
+
+	--MCerrorlock;
+
+	if (ps == PS_ERROR || ps == PS_EOF)
+	{
+		return false;
+	}
+
+	/* Check that token is located at start of query string */
+	if (sp.getindex() != 0)
+	{
+		return false;
+	}
+
+	/* Check that token spans full length of query string */
+	if (MCStringGetLength(p_string) != MCStringGetLength(sp.gettoken_stringref()))
+	{
+		return false;
+	}
+
+	return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

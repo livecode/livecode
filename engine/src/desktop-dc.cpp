@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -63,7 +63,6 @@ static CFAbsoluteTime s_animation_current_time = 0;
 
 MCScreenDC::MCScreenDC(void)
 {
-	MCNotifyInitialize();
 }
 
 MCScreenDC::~MCScreenDC(void)

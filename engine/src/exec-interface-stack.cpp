@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -344,6 +344,8 @@ void MCStack::SetFullscreen(MCExecContext& ctxt, bool setting)
         // IM-2014-01-16: [[ StackScale ]] Save the old rect here as view_setfullscreen() will update the stack rect
         if (setting)
             old_rect = rect;
+        else
+            rect = old_rect;
         
         // IM-2014-02-12: [[ Bug 11783 ]] We may also need to reset the fonts on Windows when
         //   fullscreen is changed

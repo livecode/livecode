@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -663,8 +663,7 @@ void MCMetaContext::clear(const MCRectangle *rect)
 
 MCRegionRef MCMetaContext::computemaskregion(void)
 {
-	MCUnreachable();
-	return NULL;
+    MCUnreachableReturn(NULL);
 }
 
 

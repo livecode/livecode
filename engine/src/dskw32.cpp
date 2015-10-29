@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -3650,13 +3650,67 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		if (MCStringGetLength(p_path) == 0)
 			return MCS_getcurdir_native(r_resolved_path);
 
-        MCAutoStringRef t_native;
-        MCAutoStringRef t_native_resolved;
-        
-        MCS_pathtonative(p_path, &t_native);
-		MCU_fix_path(*t_native, &t_native_resolved);
-        MCS_pathfromnative(*t_native_resolved, r_resolved_path);
-		return true;
+		MCAutoStringRef t_canonised_path;
+		bool t_success;
+		t_success = true;
+		
+		// Taken from LiveCode 6.7's w32spec.cpp MCS_get_canonical_path
+		// The following rules are used to process paths on Windows:
+		// - an absolute UNIX path is mapped to an absolute windows path using the drive of the CWD:
+		// /foo/bar -> CWD-DRIVE:/foo/bar
+		// - an absolute windows path is left as is:
+		// //foo/bar -> //foo/bar
+		// C:/foo/bar -> C:/foo/bar
+		// - a relative path is prefixed by the CWD:
+		// foo/bar -> CWD/foo/bar
+		// Note: / and \ are treated the same, but not changed. 
+		// Note: When adding a path separator \ is used in LiveCode 7.0
+		// since we are suppose to have a native path as input for MCSystem functions
+
+		// We store the first chars in this static to make the if
+		// statements more readable
+		char_t t_first_chars[2];
+        t_first_chars[0] = MCStringGetNativeCharAtIndex(p_path, 0);
+		t_first_chars[1] = MCStringGetNativeCharAtIndex(p_path, 1);
+
+		if ((t_first_chars[0] == '/' && t_first_chars[1] != '/')
+				|| (t_first_chars[0] == '\\' && t_first_chars[1] != '\\'))
+		{
+			// path in root of current drive
+			MCAutoStringRef t_curdir;
+			if (t_success)
+				t_success = MCS_getcurdir_native(&t_curdir);
+		
+			if (t_success)
+			t_success = MCStringFormat(&t_canonised_path, 
+							"%c:%@", 
+							MCStringGetNativeCharAtIndex(*t_curdir, 0),
+							p_path);
+		}
+		else if ((is_legal_drive(t_first_chars[0]) && t_first_chars[1] == ':')
+				|| (t_first_chars[0] == '/' && t_first_chars[1] == '/')
+				|| (t_first_chars[0] == '\\' && t_first_chars[1] == '\\'))
+		{
+			// absolute path
+			t_canonised_path = p_path;
+		}
+		else
+		{
+			// relative to current folder
+			MCAutoStringRef t_curdir;
+			t_success = MCS_getcurdir_native(&t_curdir);
+
+			if (t_success)
+				t_success = MCStringFormat(&t_canonised_path,
+						   "%@\\%@",
+						   *t_curdir,
+						   p_path);
+		}
+
+		if (t_success)
+			r_resolved_path = MCValueRetain(*t_canonised_path);
+
+		return t_success;
 	}
 	
 	virtual bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path)

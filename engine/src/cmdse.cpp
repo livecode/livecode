@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -2260,11 +2260,19 @@ void MCMM::exec_ctxt(MCExecContext &ctxt)
 			else
 				MCMultimediaExecPlayLastVideoOperation(ctxt, PP_UNDEFINED);
 		}
-        // AL-2014-09-12: [[ Bug 13428 ]] The only valid audio action without a clip is stop
-        else if (audio)
-        {
-            MCMultimediaExecStopPlaying(ctxt);
-        }
+		// AL-2014-09-12: [[ Bug 13428 ]] The only valid audio action without a clip is stop
+		else if (audio)
+		{
+			MCMultimediaExecStopPlaying(ctxt);
+		}
+		
+		// PM-2015-09-23: [[ Bug 15994 ]] Calling 'play stop' on mobile should stop the currently played video
+		if (stop)
+		{
+#ifdef _MOBILE
+			MCMultimediaExecPlayVideoOperation(ctxt, nil, etype, kMCEmptyString, PP_STOP);
+#endif
+		}
 	}
 	else
 	{

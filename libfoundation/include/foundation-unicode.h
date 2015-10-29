@@ -1,4 +1,4 @@
-/* Copyright (C) 2013 Runtime Revolution Ltd.
+/* Copyright (C) 2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -463,6 +463,25 @@ bool    MCUnicodeCreateSortKey(MCLocaleRef, MCUnicodeCollateOption,
                                const unichar_t* p_in, uindex_t p_in_length,
                                byte_t* &r_out, uindex_t &r_out_length);
 
+/////
+
+// The collator reference - this is not a valueref!
+typedef void *MCUnicodeCollatorRef;
+
+// Creates a collation object which can be reused.
+bool MCUnicodeCreateCollator(MCLocaleRef locale, MCUnicodeCollateOption options, MCUnicodeCollatorRef& r_collator);
+
+// Destroys a previously create collator.
+void MCUnicodeDestroyCollator(MCUnicodeCollatorRef collator);
+
+int32_t MCUnicodeCollateWithCollator(MCUnicodeCollatorRef collator,
+                                     const unichar_t* p_first, uindex_t p_first_len,
+                                     const unichar_t* p_second, uindex_t p_second_len);
+
+// Create a sort key using the given collator.
+bool MCUnicodeCreateSortKeyWithCollator(MCUnicodeCollatorRef collator,
+                                        const unichar_t* p_in, uindex_t p_in_length,
+                                        byte_t* &r_out, uindex_t &r_out_length);
 
 ////////////////////////////////////////////////////////////////////////////////
 

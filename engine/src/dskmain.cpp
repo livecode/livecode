@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -261,7 +261,7 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 		{
             MCAutoPointer<char> t_MCN_version;
             /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(MCN_version_string), &t_MCN_version);
-			fprintf(stderr, "LiveCode %s Copyright 2003-2014 Runtime Revolution Ltd\n\
+			fprintf(stderr, "LiveCode %s Copyright 2003-2015 LiveCode Ltd\n\
 			        Usage: %s [-d[isplay] displayname] \n\
 			        [-f[iles] (disable access to files and processes)\n\
 			        [-g[eometry] ={+-}<xoffset>{+-}<yoffset>]\n\
@@ -329,6 +329,11 @@ void X_main_loop_iteration()
 		MCtracedobject->message(MCM_trace_done);
 		MCtracedobject = NULL;
 	}
+    if (!MCtodestroy -> isempty())
+    {
+        MCtooltip -> cleartip();
+        MCtodestroy -> destroy();
+    }
 	MCU_cleaninserted();
 	MCscreen->siguser();
 	MCdefaultstackptr = MCstaticdefaultstackptr;

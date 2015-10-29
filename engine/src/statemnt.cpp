@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -353,18 +353,13 @@ void MCStatement::compile(MCSyntaxFactoryRef ctxt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifdef _MOBILE
-extern bool MCIsPlatformMessage(MCNameRef handler_name);
-extern Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters);
-#endif
-
 MCComref::MCComref(MCNameRef n)
 {
 	/* UNCHECKED */ MCNameClone(n, name);
 	handler = nil;
 	params = NULL;
 	resolved = false;
-    platform_message = false;
+    global_handler = false;
 }
 
 MCComref::~MCComref()
@@ -386,13 +381,12 @@ Parse_stat MCComref::parse(MCScriptPoint &sp)
 		MCperror->add(PE_STATEMENT_BADPARAMS, sp);
 		return PS_ERROR;
 	}
-#ifdef _MOBILE
-    if (MCIsPlatformMessage(name))
+    
+    if (MCIsGlobalHandler(name))
     {
-        platform_message = true;
+        global_handler = true;
         resolved = true;
     }
-#endif
     
 	return PS_NORMAL;
 }
@@ -536,7 +530,7 @@ Exec_stat MCComref::exec(MCExecPoint &ep)
 
 void MCComref::exec_ctxt(MCExecContext& ctxt)
 {
-    MCKeywordsExecCommandOrFunction(ctxt, resolved, handler, params, name, line, pos, platform_message, false);
+    MCKeywordsExecCommandOrFunction(ctxt, resolved, handler, params, name, line, pos, global_handler, false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

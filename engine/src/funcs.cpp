@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1658,6 +1658,48 @@ void MCChunkOffset::compile(MCSyntaxFactoryRef ctxt)
 	return ES_NORMAL;
 #endif /* MCColorNames */
 
+Parse_stat MCCommandArguments::parse(MCScriptPoint &sp, Boolean the)
+{
+    if (!get0or1param(sp, &argument_index, the))
+    {
+        MCperror -> add(PE_FACTOR_BADPARAM, line, pos);
+        return PS_ERROR;
+    }
+
+    return PS_NORMAL;
+}
+
+void MCCommandArguments::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
+    // If no parameter has been provided, then we return the list of parameters
+    //  as an array.
+    if (argument_index == NULL)
+    {
+        MCExecValueTraits<MCArrayRef>::set(r_value, MCValueRetain(MCcommandarguments));
+        return;
+    }
+    else
+    {
+        integer_t t_index;
+        if (!ctxt . EvalExprAsInt(argument_index, EE_COMMANDARGUMENTS_BADPARAM, t_index))
+            return;
+
+        MCStringRef t_value;
+        // If the index is wrong (< 0 or > argument count) then we return empty
+        if (!MCArrayFetchValueAtIndex(MCcommandarguments, t_index, (MCValueRef&)t_value))
+            t_value = kMCEmptyString;
+
+        MCExecValueTraits<MCStringRef>::set(r_value, MCValueRetain(t_value));
+    }
+}
+
+void MCCommandName::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
+    if (MCcommandname != NULL)
+        MCExecValueTraits<MCStringRef>::set(r_value, MCcommandname);
+    else
+        MCExecValueTraits<MCStringRef>::set(r_value, kMCEmptyString);
+}
 
 #ifdef /* MCCommandNames */ LEGACY_EXEC
 	ep.clear();
@@ -2204,7 +2246,7 @@ void MCFontStyles::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     if (!ctxt . EvalExprAsStringRef(fontname, EE_FONTSTYLES_BADFONTNAME, &t_fontname))
         return;
     uinteger_t fsize;
-    if (!ctxt . EvalExprAsUInt(fontsize, EE_FONTSTYLES_BADFONTSIZE, fsize))
+    if (!ctxt . EvalExprAsStrictUInt(fontsize, EE_FONTSTYLES_BADFONTSIZE, fsize))
         return;
     
 	MCTextEvalFontStyles(ctxt, *t_fontname, fsize, r_value . stringref_value);
@@ -3407,11 +3449,29 @@ void MCMatch::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     
     MCAutoValueRef t_source_valueref;
     MCAutoStringRef t_source;
-    if (!params->eval(ctxt, &t_source_valueref) || !ctxt . ConvertToString(*t_source_valueref, &t_source))
-	{
-		ctxt . LegacyThrow(EE_MATCH_BADSOURCE);
-		return;
-	}
+    if (!params->eval(ctxt, &t_source_valueref))
+    {
+        ctxt . LegacyThrow(EE_MATCH_BADPARAM);
+        return;
+    }
+    
+    // SN-2015-07-27: [[ Bug 15379 ]] PCRE takes UTF-16 as input parameters, but
+    //  if that input parameter is a DataRef, then we want to copy byte-to-unichar_t
+    //  its contents. Otherwise, ConvertToString makes a native StringRef out of
+    //  it, which will then be unnativised before being passed to MCR_exec; any
+    //  byte in the range [0x80;0xFF] will be converted from the OS-specific
+    //  extended ASCII table to the corresponding Unicode char.
+    bool t_success;
+    if (MCValueGetTypeCode(*t_source_valueref) == kMCValueTypeCodeData)
+        t_success = MCStringCreateUnicodeStringFromData((MCDataRef)*t_source_valueref, false, &t_source);
+    else
+        t_success = ctxt . ConvertToString(*t_source_valueref, &t_source);
+    
+    if (!t_success)
+    {
+        ctxt . LegacyThrow(EE_MATCH_BADPARAM);
+        return;
+    }
 
     MCAutoValueRef t_pattern_valueref;
     MCAutoStringRef t_pattern;

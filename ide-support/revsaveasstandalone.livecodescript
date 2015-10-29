@@ -576,7 +576,14 @@ private command revCreateStandalone pStack, pFolder
             case "MacOSX x86-32"
                // SN-2015-07-09: [[ StandaloneDeployment ]] Gypified Standalone-<edition>.app building does not
                //  allow to create broken applications, so that the executable file in it bears the edition.
-               put it & "/Mac OS X/x86-32/Standalone.app/Contents/MacOS/Standalone-" & the editionType into line 1 of tEngineSourceFile[tPlatform]
+               local tEdition
+               put the editionType into tEdition
+               if tEdition is "professional" then
+                  put "Commercial" into tEdition
+               else
+                  put the upper of char 1 of tEdition into char 1 of tEdition
+               end if
+               put it & "/Mac OS X/x86-32/Standalone.app/Contents/MacOS/Standalone-" & tEdition into line 1 of tEngineSourceFile[tPlatform]
                break
             case "Windows"
                put it & "/Windows/x86-32/Standalone" into tEngineSourceFile[tPlatform]
@@ -641,7 +648,7 @@ private command revCreateStandalone pStack, pFolder
       -- Necessary as some "users" might rename the actual executable file, arghhhh!
       if (line 1 of tEngineSourceFile[tPlatform] is not empty and there is not a file line 1 of tEngineSourceFile[tPlatform]) and \
             (line 2 of tEngineSourceFile[tPlatform] is not empty and there is not a file line 2 of tEngineSourceFile[tPlatform]) then
-         throw "Standalone: Ensure that you have not renamed the main Revolution executable file: " &cr& tEngineSourceFile[tPlatform]
+         throw "Standalone: Ensure that you have not renamed the main LiveCode executable file: " &cr& tEngineSourceFile[tPlatform]
       end if
       put tDirectory & sStandaloneSettingsA["name"] into tStandalonePath[tPlatform]
       if tPlatform is "Windows" then
@@ -860,7 +867,10 @@ private command revCopyScriptLibraries pStack, pPlatform
    revAddLibrary "Common"
    
    -- data grid
-   if "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
+   // SN-2015-10-19: [[ Bug 16238 ]] DataGrid can be included on the wish of the user - in case the standalone stack
+   //  will load stacks using DataGrid, for instance.
+   if ("data grid templates" is in the subStacks of stack pStack or "DataGrid" is among the lines of sStandaloneSettingsA["scriptLibraries"]) \
+         and there is a stack "revDataGridLibrary" then
       set the mainStack of stack "revDataGridLibrary" to pStack
    end if
    
@@ -2487,7 +2497,7 @@ private command revSmartChecking pStackFilesList, pSearchForInclusions
       put false into sStandaloneSettingsA["Magnify"]  -- PM-2015-06-24: [[ Bug 15535 ]] Make possible to include magnify palette in standalones
       put false into sStandaloneSettingsA["pdfPrinter"]
       
-      # OK-2007-11-13 : Support for revolution print dialogs
+      # OK-2007-11-13 : Support for LiveCode print dialogs
       put false into sStandaloneSettingsA["revolutionPrintDialogs"]
    end if
    
@@ -2618,7 +2628,7 @@ private command revCheckObject pObject,pUserLibraries, pSearchForInclusions
          put true into sStandaloneSettingsA["pdfPrinter"]
       end if
       
-      # OK-2007-11-13 : Support for revolution print dialogs. The dialogs are included if there is any reference to systemPrintSelector in the script,
+      # OK-2007-11-13 : Support for LiveCode print dialogs. The dialogs are included if there is any reference to systemPrintSelector in the script,
       # or if we are building for linux. (This might include the files more often than they are required).
       if offset("systemPrintSelector", tScript) is not 0 or "Linux" is among the lines of sPlatformList then
          put true into sStandaloneSettingsA["revolutionPrintDialogs"]

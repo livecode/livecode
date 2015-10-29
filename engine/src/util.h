@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -287,5 +287,8 @@ inline MCRectangle MCU_make_rect(int2 x, int2 y, uint2 w, uint2 h)
 	r . height = h;
 	return r;
 }
+
+// Test whether p_string is a valid LiveCode script token
+extern bool MCU_is_token(MCStringRef p_string);
 
 #endif

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -880,7 +880,7 @@ void MCMacOSXPrinter::GetProperties(bool p_include_output)
 			t_margins . right = 0.0;
 			t_margins . bottom = 0.0;
 					
-			PMPaperCreate(m_printer, CFSTR("Revolution"), CFSTR("Revolution Custom Paper"), GetPageWidth(), GetPageHeight(), &t_margins, &t_paper);
+			PMPaperCreate(m_printer, CFSTR("LiveCode"), CFSTR("LiveCode Custom Paper"), GetPageWidth(), GetPageHeight(), &t_margins, &t_paper);
 		}
 		
 		PMCreatePageFormatWithPMPaper(&m_page_format, t_paper);
@@ -1013,7 +1013,7 @@ MCPrinterDialogResult MCMacOSXPrinter::DoDialog(bool p_window_modal, Window p_ow
 
 	Boolean t_accepted;
 	t_accepted = false;
-	OSErr t_err;
+	MCPrinterDialogResult t_err;
 
 	if (!MCModeMakeLocalWindows())
 	{
@@ -1043,11 +1043,11 @@ MCPrinterDialogResult MCMacOSXPrinter::DoDialog(bool p_window_modal, Window p_ow
 		}
 		if (t_success)
 		{
-			t_err = noErr;
+			t_err = PRINTER_DIALOG_RESULT_OKAY;
 			t_accepted = (Boolean)t_result;
 		}
 		else
-			t_err = errAborted;
+            t_err = PRINTER_DIALOG_RESULT_ERROR;
 	}
 	else
 	{
@@ -1085,21 +1085,23 @@ MCPrinterDialogResult MCMacOSXPrinter::DoDialog(bool p_window_modal, Window p_ow
         if (t_result == kMCPlatformPrintDialogResultError)
         {
             PDEBUG(stderr, "DoDialog: Error occured\n");
-            return PRINTER_DIALOG_RESULT_ERROR;
+            t_err = PRINTER_DIALOG_RESULT_ERROR;
         }
         else if (t_result == kMCPlatformPrintDialogResultSuccess)
         {
             PDEBUG(stderr, "DoDialog: SetProperties\n");
             SetProperties(p_is_settings);
             PDEBUG(stderr, "DoDialog: Returning OKAY\n");
-            return PRINTER_DIALOG_RESULT_OKAY;
+            t_err = PRINTER_DIALOG_RESULT_OKAY;
         }
         else
         {
             PDEBUG(stderr, "DoDialog: Returning Cancel\n");
-            return PRINTER_DIALOG_RESULT_CANCEL;
+            t_err = PRINTER_DIALOG_RESULT_CANCEL;
         }
     }
+    
+    return t_err;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

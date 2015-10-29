@@ -1,11 +1,5 @@
 #!/bin/bash
 
-# Library versions
-VERSION_OpenSSL="1.0.1o"
-VERSION_Curl="7.43.0"
-VERSION_ICU="55.1"
-VERSION_CEF="3.2062.1796"
-
 # Libraries to fetch
 PLATFORMS=( mac linux win32 android ios )
 ARCHS_android=( armv6 )
@@ -18,13 +12,16 @@ LIBS_mac=( OpenSSL ICU CEF )
 LIBS_ios=( OpenSSL ICU )
 LIBS_win32=( OpenSSL Curl ICU CEF )
 LIBS_linux=( OpenSSL Curl ICU )
-SUBPLATFORMS_ios=( iPhoneSimulator5.1 iPhoneSimulator6.1 iPhoneSimulator7.1 iPhoneSimulator8.2 iPhoneSimulator8.3 iPhoneSimulator8.4 iPhoneOS8.2 iPhoneOS8.3 iPhoneOS8.4 )
+SUBPLATFORMS_ios=( iPhoneSimulator5.1 iPhoneSimulator6.1 iPhoneSimulator7.1 iPhoneSimulator8.2 iPhoneSimulator8.3 iPhoneSimulator8.4 iPhoneSimulator9.1 iPhoneOS8.2 iPhoneOS8.3 iPhoneOS8.4 iPhoneOS9.1)
 
 # Fetch settings
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 FETCH_DIR="${SCRIPT_DIR}/fetched"
 EXTRACT_DIR="${SCRIPT_DIR}"
 URL="http://downloads.livecode.com/prebuilts"
+
+# Versions
+source "${SCRIPT_DIR}/scripts/lib_versions.inc"
 
 mkdir -p "${FETCH_DIR}"
 mkdir -p "${EXTRACT_DIR}"
@@ -40,7 +37,7 @@ function fetchLibrary {
 	local ARCH=$3
 	local SUBPLATFORM=$4
 
-	eval "local VERSION=\${VERSION_${LIB}}"
+	eval "local VERSION=\${${LIB}_VERSION}"
 
 	local NAME="${LIB}-${VERSION}-${PLATFORM}-${ARCH}"
 

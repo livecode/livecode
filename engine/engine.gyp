@@ -207,6 +207,11 @@
 					'OS == "mac"',
 					{
 						'product_name': 'Standalone-Community',
+						'mac_bundle_resources':
+						[
+							'rsrc/Standalone.icns',
+							'rsrc/StandaloneDoc.icns',
+						],
 					},
 				],
 				[
@@ -451,6 +456,10 @@
 					'OS == "mac"',
 					{
 						'product_name': 'Installer',
+						'mac_bundle_resources':
+						[
+							'rsrc/Installer.icns',
+						],
 					},
 				],
 				[
@@ -521,8 +530,8 @@
 
 		{
 			'target_name': 'development',
-			'product_name': 'livecode-community',
-			
+			'product_name': 'LiveCode-Community',
+
 			'includes':
 			[
 				'app-bundle-template.gypi',
@@ -530,7 +539,7 @@
 			
 			'variables':
 			{
-				'app_plist': 'rsrc/Revolution-Info.plist',
+				'app_plist': 'rsrc/LiveCode-Info.plist',
 			},
 			
 			'dependencies':
@@ -551,13 +560,11 @@
 				[
 					'OS == "mac"',
 					{
-						'product_name': 'LiveCode-Community',
-					},
-				],
-				[
-					'OS == "win"',
-					{
-						'product_name': 'engine-community',
+						'mac_bundle_resources':
+						[
+							'rsrc/LiveCode.icns',
+							'rsrc/LiveCodeDoc.icns',
+						],
 					},
 				],
 				[
@@ -677,6 +684,39 @@
 					},
 				],
 			}
+		],
+		[
+			'OS == "ios"',
+			{
+				'targets':
+				[
+					{
+						'target_name': 'standalone-app-bundle',
+						'product_name': 'Standalone-Community-App',
+			
+						'includes':
+						[
+							'app-bundle-template.gypi',
+						],
+			
+						'variables':
+						{
+							'app_plist': 'rsrc/standalone-mobile-Info.plist',
+						},
+			
+						'dependencies':
+						[
+							'kernel-standalone',
+							'security-community',
+						],
+			
+						'sources':
+						[
+							'src/dummy.cpp',
+						],
+					},
+				],
+			},
 		],
 	],
 }

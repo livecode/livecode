@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -294,6 +294,8 @@ CQTVideoGrabber::CQTVideoGrabber(HWND whichwindow)
 		return nil;
 	
 	m_video_grabber = p_grabber;
+    
+    return self;
 }
 
 - (void)windowDidResize:(NSNotification *)notification

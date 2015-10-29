@@ -32,6 +32,7 @@
 			[
 				'<@(engine_common_source_files)',
 				'<@(engine_desktop_source_files)',
+				'<@(engine_java_source_files)',
 			],
 			
 			'conditions':
@@ -99,13 +100,22 @@
 							'libraries':
 							[
 								'$(SDKROOT)/System/Library/Frameworks/AudioToolbox.framework',
-								'$(SDKROOT)/System/Library/Frameworks/AVFoundation.framework',
 								'$(SDKROOT)/System/Library/Frameworks/CoreFoundation.framework',
 								'$(SDKROOT)/System/Library/Frameworks/CoreMedia.framework',
 								'$(SDKROOT)/System/Library/Frameworks/IOKit.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Security.framework',
 								'$(SDKROOT)/System/Library/Frameworks/SystemConfiguration.framework',
 							],
+							
+							# Adding AVFoundation in the list of libraries does not allow
+							# us to weak link it. Only adding the linking flag does the job
+							'xcode_settings':
+							{
+								'OTHER_LDFLAGS':
+								[
+									'-weak_framework AVFoundation',
+								]
+							},
 						},
 					],
 					[
@@ -117,7 +127,6 @@
 								'$(SDKROOT)/System/Library/Frameworks/ApplicationServices.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Carbon.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Cocoa.framework',
-								'$(SDKROOT)/System/Library/Frameworks/QTKit.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Quartz.framework',
 							],
 						},

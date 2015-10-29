@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -161,12 +161,12 @@ MCObjectPropertyTable MCiOSBrowserControl::kPropertyTable =
 
 MCNativeControlActionInfo MCiOSBrowserControl::kActions[] =
 {
-    DEFINE_CTRL_EXEC_METHOD(Advance, MCiOSBrowserControl, Advance)
-    DEFINE_CTRL_EXEC_METHOD(Retreat, MCiOSBrowserControl, Retreat)
-    DEFINE_CTRL_EXEC_METHOD(Reload, MCiOSBrowserControl, Reload)
-    DEFINE_CTRL_EXEC_METHOD(Stop, MCiOSBrowserControl, Stop)
-    DEFINE_CTRL_EXEC_BINARY_METHOD(Load, MCiOSBrowserControl, String, String, Load)
-    DEFINE_CTRL_EXEC_UNARY_METHOD(Execute, MCiOSBrowserControl, String, Execute)
+    DEFINE_CTRL_EXEC_METHOD(Advance, Void, MCiOSBrowserControl, Advance)
+    DEFINE_CTRL_EXEC_METHOD(Retreat, Void, MCiOSBrowserControl, Retreat)
+    DEFINE_CTRL_EXEC_METHOD(Reload, Void, MCiOSBrowserControl, Reload)
+    DEFINE_CTRL_EXEC_METHOD(Stop, Void, MCiOSBrowserControl, Stop)
+    DEFINE_CTRL_EXEC_BINARY_METHOD(Load, String_String, MCiOSBrowserControl, String, String, Load)
+    DEFINE_CTRL_EXEC_UNARY_METHOD(Execute, String, MCiOSBrowserControl, String, Execute)
 };
 
 MCNativeControlActionTable MCiOSBrowserControl::kActionTable =

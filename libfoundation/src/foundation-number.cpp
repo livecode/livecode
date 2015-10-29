@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -61,11 +61,13 @@ bool MCNumberCreateWithUnsignedInteger(uinteger_t p_value, MCNumberRef& r_number
 
 bool MCNumberIsInteger(MCNumberRef self)
 {
+	__MCAssertIsNumber(self);
 	return (self -> flags & kMCNumberFlagIsReal) == 0;
 }
 
 bool MCNumberIsReal(MCNumberRef self)
 {
+	__MCAssertIsNumber(self);
 	return (self -> flags & kMCNumberFlagIsReal) != 0;
 }
 

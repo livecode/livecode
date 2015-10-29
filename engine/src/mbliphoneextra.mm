@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1320,6 +1320,7 @@ bool MCSystemFileGetDataProtection(MCStringRef p_path, MCStringRef& r_protection
 	MCAutoStringRef t_protection_string;
 
 	bool t_success;
+    t_success = true;
 
 	if (t_success)
 		t_success = MCFileGetDataProtection(p_path, t_protection);

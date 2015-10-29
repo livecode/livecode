@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -18,12 +18,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #if defined(_WINDOWS) || defined(_WINDOWS_SERVER)
 #define LIBRARY_EXPORT __declspec(dllexport)
-#elif defined(_MACOSX) || defined (_MAC_SERVER)
-#define LIBRARY_EXPORT
-#elif defined(_LINUX) || defined (_LINUX_SERVER)
-#define LIBRARY_EXPORT
-#elif defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID)
-#define LIBRARY_EXPORT
+#else
+#define LIBRARY_EXPORT __attribute__((__visibility__("default")))
 #endif
 
 // Default implementations for DBField

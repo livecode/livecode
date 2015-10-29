@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1642,6 +1642,8 @@ void MCButton::setrect(const MCRectangle &nrect)
 			winfo.type = WTHEME_TYPE_COMBOTEXT;
 			MCcurtheme->getwidgetrect(winfo, WTHEME_METRIC_CONTENTSIZE,comboentryrect,trect);
 
+			// PM-2015-10-12: [[ Bug 16193 ]] Make sure the label stays always within the combobox when resizing
+			trect.y = nrect.y + nrect.height / 2 - trect.height / 2;
 		}
 		else
 		{
@@ -1918,8 +1920,8 @@ Exec_stat MCButton::getprop_legacy(uint4 parid, Properties which, MCExecPoint& e
 				if (icons->curicon != NULL)
 				{
 					MCRectangle trect = icons->curicon->getrect();
-					if (trect.height > fheight)
-						fheight = trect.height;
+					// PM-2015-07-15: [[ Bug 13923 ]] If a button has an icon, increase its formattedHeight by the icon's height
+					fheight += trect.height;
 				}
 			}
 			else if ((getstyleint(flags) == F_CHECK || getstyleint(flags) == F_RADIO) && CHECK_SIZE > fheight)

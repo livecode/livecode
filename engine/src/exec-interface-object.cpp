@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1009,10 +1009,15 @@ static void MCInterfaceShadowParse(MCExecContext& ctxt, MCStringRef p_input, MCI
 
 static void MCInterfaceShadowFormat(MCExecContext& ctxt, const MCInterfaceShadow& p_input, MCStringRef& r_output)
 {
-	if (p_input . flag)
-		r_output = (MCStringRef)MCValueRetain(kMCTrue);
-	else
-		r_output = (MCStringRef)MCValueRetain(kMCFalse);
+    if (p_input . is_flag)
+    {
+        if (p_input . flag)
+            r_output = MCValueRetain(kMCTrueString);
+        else
+            r_output = MCValueRetain(kMCFalseString);
+    }
+    else
+        ctxt . FormatInteger(p_input . shadow, r_output);
 }
 
 static void MCInterfaceShadowFree(MCExecContext& ctxt, MCInterfaceShadow& p_input)
@@ -3026,6 +3031,7 @@ void MCObject::SetOpaque(MCExecContext& ctxt, bool setting)
 }
 void MCObject::GetShadow(MCExecContext& ctxt, MCInterfaceShadow& r_shadow)
 {
+    r_shadow . is_flag = true;
 	r_shadow . flag = getflag(F_SHADOW);
 }
 

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -690,9 +690,9 @@ void MCEngineExecSet(MCExecContext& ctxt, MCProperty *p_target, MCValueRef p_val
 	}
 }
 
-void MCEngineExecGet(MCExecContext& ctxt, MCValueRef p_value)
+void MCEngineExecGet(MCExecContext& ctxt, /* take */ MCExecValue& p_value)
 {
-	ctxt . SetItToValue(p_value);
+    ctxt . GiveValueToIt(p_value);
 }
 
 void MCEngineExecPutOutput(MCExecContext& ctxt, MCStringRef p_value)
@@ -770,7 +770,13 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
                 ctxt . Throw();
                 return;
             }
-            MCValueAssign(p_var . mark . text, t_mark_text);
+
+            // SN-2015-07-27: [[ Bug 15646 ]] MCExecContext::ConvertToString
+            //  already makes a copy. We want to make sure that p_var.mark.text
+            //  has 0 reference when exiting this function, so p_var.mark.text
+            //  must become t_mark_text, not get a copy of it.
+            MCValueRelease(p_var . mark . text);
+            p_var . mark . text = t_mark_text;
             
             // SN-2014-09-03: [[ Bug 13314 ]] MCMarkedText::changed updated to store the number of chars appended
             if (p_var . mark . changed != 0)
@@ -1986,7 +1992,27 @@ void MCEngineEvalSHA1Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStr
 
 void MCEngineGetEditionType(MCExecContext& ctxt, MCStringRef& r_edition)
 {
-    if (MCStringCreateWithCString(MClicenseparameters . license_class == kMCLicenseClassCommunity ? "community" : "commercial", r_edition))
+    bool t_success;
+    switch (MClicenseparameters.license_class)
+    {
+        case kMCLicenseClassCommunity:
+            t_success = MCStringCreateWithCString("community", r_edition);
+            break;
+            
+        case kMCLicenseClassCommercial:
+            t_success = MCStringCreateWithCString("commercial", r_edition);
+            break;
+            
+        case kMCLicenseClassProfessional:
+            t_success = MCStringCreateWithCString("professional", r_edition);
+            break;
+            
+        default:
+            t_success = false;
+            break;
+    }
+    
+    if (t_success)
         return;
     
     ctxt . Throw();

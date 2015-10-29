@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1176,8 +1176,7 @@ template<MCGradientFillKind x_type> static inline int4 compute_index(int4 p_x, i
 		}
 		break;
 	default:
-		MCUnreachable();
-		return NULL;
+        MCUnreachableReturn(0);
 	}
 	if (p_mirror)
 	{

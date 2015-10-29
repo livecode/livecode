@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -2108,7 +2108,10 @@ MCControl *MCGroup::getchild(Chunk_term etype, const MCString &expression,
 		count(otype, NULL, num);
 		// MW-2007-08-30: [[ Bug 4152 ]] If we're counting groups, we get one too many as it
 		//   includes the owner - thus we adjust (this means you can do 'the last group of group ...')
-		if (otype == CT_GROUP)
+		
+		// PM-2015-08-31: [[ Bug 15763 ]] Same as above - If we're counting controls, we get one too many as it
+		//   includes the owner - thus we adjust (this means you can do 'the last control of group ...')
+		if (otype == CT_GROUP || otype == CT_LAYER)
 			num--;
 		switch (etype)
 		{
@@ -2390,6 +2393,7 @@ void MCGroup::clearfocus(MCControl *cptr)
 	if (cptr == kfocused)
 	{
 		kfocused = NULL;
+        state &= ~CS_KFOCUSED;
 		if (parent -> gettype() == CT_CARD)
 			static_cast<MCCard *>(parent) -> erasefocus(this);
 		else

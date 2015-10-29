@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -30,7 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "vclip.h"
 #include "card.h"
 #include "objptr.h"
-#include "control.h"
+#include "mccontrol.h"
 #include "image.h"
 #include "player.h"
 #include "field.h"
@@ -112,8 +112,8 @@ void MCStack::checkdestroy()
 					}
 					while (sptr != substacks);
 				}
-                del();
-                scheduledelete();
+                MCtodestroy -> remove(this);
+                MCtodestroy -> add(this);
 			}
 	}
 	else if (!MCdispatcher -> is_transient_stack(this))
@@ -210,13 +210,26 @@ void MCStack::configure(Boolean user)
 		foreachchildstack(_MCStackConfigureCallback, nil);
 }
 
+void MCStack::seticonic(Boolean on)
+{
+	if (on && !(state & CS_ICONIC))
+	{
+		MCiconicstacks++;
+		state |= CS_ICONIC;
+	}
+	else if (!on && (state & CS_ICONIC))
+		{
+			MCiconicstacks--;
+			state &= ~CS_ICONIC;
+		}
+}
+
 void MCStack::iconify()
 {
 	if (!(state & CS_ICONIC))
-	{
-		MCtooltip->cleartip();
-		MCiconicstacks++;
-		state |= CS_ICONIC;
+    {
+        MCtooltip->cleartip();
+        seticonic(true);
 		MCstacks->top(NULL);
 		redrawicon();
 		curcard->message(MCM_iconify_stack);
@@ -227,8 +240,7 @@ void MCStack::uniconify()
 {
 	if (state & CS_ICONIC)
 	{
-		MCiconicstacks--;
-		state &= ~CS_ICONIC;
+		seticonic(false);
 		MCstacks->top(this);
 		curcard->message(MCM_uniconify_stack);
 		// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
@@ -2116,6 +2128,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	if (state & (CS_IGNORE_CLOSE | CS_NO_FOCUS | CS_DELETE_STACK))
 		return ES_NORMAL;
     
+    MCtodestroy -> remove(this);
 	if (wm == WM_LAST)
 		if (opened)
 			wm = mode;
@@ -3324,6 +3337,28 @@ MCRectangle MCStack::getvisiblerect(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool MCStack::foreachstack(MCStackForEachCallback p_callback, void *p_context)
+{
+    if (!p_callback(this, p_context))
+        return false;
+    
+	bool t_continue;
+	t_continue = true;
+    
+	if (substacks != NULL)
+	{
+		MCStack *t_stack = substacks;
+		do
+		{
+            t_continue = p_callback(t_stack, p_context);
+			t_stack = (MCStack *)t_stack->next();
+		}
+		while (t_continue && t_stack != substacks);
+	}
+	
+	return t_continue;
+}
 
 bool MCStack::foreachchildstack(MCStackForEachCallback p_callback, void *p_context)
 {

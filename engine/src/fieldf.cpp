@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -252,7 +252,8 @@ static MCKeyBinding s_mac_keybindings[] =
 	{ XK_K, MK_CTRL, FT_DELEOP },
 
 	// Backward Deletion
-	{ XK_BackSpace, MK_NONE, FT_DELBCHAR },
+	// PM-2015-09-16: [[ Bug 15934 ]] Make sure pressing Backspace key works as expected, even if Shift key is down
+	{ XK_BackSpace, MK_IGNORE_SHIFT, FT_DELBCHAR },
 	{ XK_BackSpace, MK_CMD, FT_DELBOL },
 	{ XK_BackSpace, MK_CTRL, FT_DELBSUBCHAR },
 	{ XK_BackSpace, MK_OPT, FT_DELBWORD },
@@ -1500,14 +1501,12 @@ void MCField::endselection()
 		{
 			MCAutoStringRef t_string;
 			selectedtext(&t_string);
-			
-			MCAutoDataRef t_data;
-            MCStringEncode(*t_string, kMCStringEncodingNative, false, &t_data);
-			if (*t_data != nil)
+
+			if (*t_string != nil)
             {
                 // SN-2014-12-08: [[ Bug 12784 ]] Only make this field the selectedfield
                 //  if it is Focusable
-                if (MCselectiondata -> Store(TRANSFER_TYPE_TEXT, *t_data)
+                if (MCselectiondata -> Store(TRANSFER_TYPE_TEXT, *t_string)
                         && flags & F_TRAVERSAL_ON)
 					MCactivefield = this;
 			}
@@ -2297,13 +2296,17 @@ void MCField::fmove(Field_translations function, MCStringRef p_string, KeySym ke
 	drect.x += getcontentx();
 	setfocus(drect.x, drect.y);
 	replacecursor(True, function != FT_UP && function != FT_DOWN);
+	
+	// PM-2015-07-20: [[ Bug 7217 ]] Send selectionChanged on arrow navigation, regardless of whether Shift key is held down
 	if (state & CS_SELECTING)
 	{
 		state &= ~CS_SELECTING;
 		MCundos->freestate();
-		signallisteners(P_HILITED_LINES);
-		message(MCM_selection_changed);
 	}
+	
+	signallisteners(P_HILITED_LINES);
+	message(MCM_selection_changed);
+	
 	extend = extendwords = extendlines = False;
 	contiguous = True;
 }

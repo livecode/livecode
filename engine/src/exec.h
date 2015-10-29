@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1136,6 +1136,7 @@ template<typename C, void (C::*Method)(MCExecContext&)> inline void MCExecNative
 #define MCExecNativeControlUnaryThunkImp(ctrl, mth, typ) (void(*)(MCExecContext&,MCNativeControlPtr*,typ))MCExecNativeControlThunk<ctrl,typ,&ctrl::mth>
 #define MCExecNativeControlThunkExecString(ctrl, mth) MCExecNativeControlUnaryThunkImp(ctrl, mth, MCStringRef)
 #define MCExecNativeControlThunkExecInt32(ctrl, mth) MCExecNativeControlUnaryThunkImp(ctrl, mth, integer_t)
+#define MCExecNativeControlThunkExecOptionalInt32(ctrl, mth) MCExecNativeControlUnaryThunkImp(ctrl, mth, integer_t*)
 
 #define MCExecNativeControlBinaryThunkImp(ctrl, mth, typ1, typ2) (void(*)(MCExecContext&,MCNativeControlPtr*,typ1,typ2))MCExecNativeControlThunk<ctrl,typ1,typ2,&ctrl::mth>
 #define MCExecNativeControlThunkExecStringString(ctrl, mth) MCExecNativeControlBinaryThunkImp(ctrl, mth, MCStringRef, MCStringRef)
@@ -1144,17 +1145,23 @@ template<typename C, void (C::*Method)(MCExecContext&)> inline void MCExecNative
 #define MCExecNativeControlTernaryThunkImp(ctrl, mth, typ1, typ2, typ3) (void(*)(MCExecContext&,MCNativeControlPtr*,typ1,typ2,typ3))MCExecNativeControlThunk<ctrl,typ1,typ2,typ3,&ctrl::mth>
 #define MCExecNativeControlThunkExecInt32OptionalInt32OptionalInt32(ctrl, mth) MCExecNativeControlTernaryThunkImp(ctrl, mth, integer_t, integer_t*, integer_t*)
 
-#define DEFINE_CTRL_EXEC_METHOD(act, ctrl, tag) \
-{ kMCNativeControlAction##act, (void *)MCExecNativeControlThunkExec(ctrl, Exec##tag) },
+#define DEFINE_CTRL_EXEC_METHOD(act, actsig, ctrl, tag) \
+{ false, (MCNativeControlAction)kMCNativeControlAction##act, (MCNativeControlActionSignature)kMCNativeControlActionSignature_##actsig, (void *)MCExecNativeControlThunkExec(ctrl, Exec##tag) },
 
-#define DEFINE_CTRL_EXEC_UNARY_METHOD(act, ctrl, param1, tag) \
-{ kMCNativeControlAction##act, (void *)MCExecNativeControlThunkExec##param1(ctrl, Exec##tag) },
+#define DEFINE_CTRL_EXEC_UNARY_METHOD(act, actsig, ctrl, param1, tag) \
+{ false, (MCNativeControlAction)kMCNativeControlAction##act, (MCNativeControlActionSignature)kMCNativeControlActionSignature_##actsig, (void *)MCExecNativeControlThunkExec##param1(ctrl, Exec##tag) },
 
-#define DEFINE_CTRL_EXEC_BINARY_METHOD(act, ctrl, param1, param2, tag) \
-{ kMCNativeControlAction##act, (void *)MCExecNativeControlThunkExec##param1##param2(ctrl, Exec##tag) },
+#define DEFINE_CTRL_EXEC_BINARY_METHOD(act, actsig, ctrl, param1, param2, tag) \
+{ false, (MCNativeControlAction)kMCNativeControlAction##act, (MCNativeControlActionSignature)kMCNativeControlActionSignature_##actsig, (void *)MCExecNativeControlThunkExec##param1##param2(ctrl, Exec##tag) },
 
-#define DEFINE_CTRL_EXEC_TERNARY_METHOD(act, ctrl, param1, param2, param3, tag) \
-{ kMCNativeControlAction##act, (void *)MCExecNativeControlThunkExec##param1##param2##param3(ctrl, Exec##tag) },
+#define DEFINE_CTRL_EXEC_TERNARY_METHOD(act, actsig, ctrl, param1, param2, param3, tag) \
+{ false, (MCNativeControlAction)kMCNativeControlAction##act, (MCNativeControlActionSignature)kMCNativeControlActionSignature_##actsig, (void *)MCExecNativeControlThunkExec##param1##param2##param3(ctrl, Exec##tag) },
+
+#define DEFINE_CTRL_WAITABLE_EXEC_METHOD(act, actsig, ctrl, tag) \
+{ true, (MCNativeControlAction)kMCNativeControlAction##act, (MCNativeControlActionSignature)kMCNativeControlActionSignature_##actsig, (void *)MCExecNativeControlThunkExec(ctrl, Exec##tag) },
+
+#define DEFINE_CTRL_WAITABLE_EXEC_UNARY_METHOD(act, actsig, ctrl, param1, tag) \
+{ true, (MCNativeControlAction)kMCNativeControlAction##act, (MCNativeControlActionSignature)kMCNativeControlActionSignature_##actsig, (void *)MCExecNativeControlThunkExec##param1(ctrl, Exec##tag) },
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1599,6 +1606,9 @@ public:
     MCVarref *GetIt() const;
 	void SetItToEmpty(void);
 	void SetItToValue(MCValueRef p_value);
+    
+    // Assign the given ExecValue to it, the 'it' variable takes ownership.
+	void GiveValueToIt(/* take */ MCExecValue& p_value);
 	
 	//////////    
 
@@ -1746,6 +1756,10 @@ public:
     
 	void TryToEvalExprAsArrayRef(MCExpression *p_expr, Exec_errors p_error, MCArrayRef& r_value);
     void TryToEvalOptionalExprAsColor(MCExpression *p_expr, MCColor *p_default, Exec_errors p_error, MCColor *&r_value);
+    
+    bool EvalExprAsStrictUInt(MCExpression *p_expr, Exec_errors p_error, uinteger_t& r_value);
+    
+    bool EvalExprAsStrictInt(MCExpression *p_expr, Exec_errors p_error, integer_t& r_value);
     
 private:
 #ifdef LEGACY_EXEC
@@ -3202,8 +3216,9 @@ void MCInterfaceSetProcessType(MCExecContext& ctxt, intenum_t value);
 void MCInterfaceGetShowInvisibles(MCExecContext& ctxt, bool& r_value);
 void MCInterfaceSetShowInvisibles(MCExecContext& ctxt, bool p_value);
 
-void MCInterfaceGetCursor(MCExecContext& ctxt, uinteger_t& r_value);
-void MCInterfaceSetCursor(MCExecContext& ctxt, uinteger_t p_value);
+// SN-2015-07-29: [[ Bug 15649 ]] The cursor can be empty - it is optional
+void MCInterfaceGetCursor(MCExecContext& ctxt, uinteger_t *&r_value);
+void MCInterfaceSetCursor(MCExecContext& ctxt, uinteger_t* p_value);
 void MCInterfaceGetDefaultCursor(MCExecContext& ctxt, uinteger_t& r_value);
 void MCInterfaceSetDefaultCursor(MCExecContext& ctxt, uinteger_t p_value);
 void MCInterfaceGetDefaultStack(MCExecContext& ctxt, MCStringRef& r_value);
@@ -3773,7 +3788,7 @@ void MCEngineEvalMenuObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
 void MCEngineEvalTargetAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
 void MCEngineEvalErrorObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
 
-void MCEngineExecGet(MCExecContext& ctxt, MCValueRef value);
+void MCEngineExecGet(MCExecContext& ctxt, /* take */ MCExecValue& value);
 void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef value, int where, MCVariableChunkPtr t_target);
 void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCExecValue value, int where, MCVariableChunkPtr t_target);
 void MCEngineExecPutOutput(MCExecContext& ctxt, MCStringRef value);

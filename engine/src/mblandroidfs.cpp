@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -20,6 +20,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mblandroid.h"
 #include "mblandroidutil.h"
+
+#include "mcstring.h"
 
 #include <sys/stat.h>
 #include <dirent.h>
@@ -423,8 +425,8 @@ Boolean MCAndroidSystem::GetStandardFolder(MCNameRef p_folder, MCStringRef &r_fo
 {
     // SN-2015-04-16: [[ Bug 14295 ]] The resources folder on Mobile is the same
     //   as the engine folder.
-    if (MCNameIsEqualToCString(p_folder, "engine", kMCCompareCaseless)
-            || MCNameIsEqualToCString(p_folder, "resources", kMCCompareCaseless))
+    if (MCNameIsEqualTo(p_folder, MCN_engine, kMCCompareCaseless)
+            || MCNameIsEqualTo(p_folder, MCN_resources, kMCCompareCaseless))
     {
         MCLog("GetStandardFolder(\"%@\") -> \"%@\"", MCNameGetString(p_folder), MCcmd);
 		return MCStringCopy(MCcmd, r_folder);

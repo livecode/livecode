@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -82,6 +82,8 @@ static inline uint32_t MCGPixelPack(MCGPixelFormat p_format, uint8_t p_red, uint
 			
 		case kMCGPixelFormatARGB:
 			return __MCGPixelPackComponents(p_alpha, p_red, p_green, p_blue);
+        default:
+            MCUnreachableReturn(0);
 	}
 }
 

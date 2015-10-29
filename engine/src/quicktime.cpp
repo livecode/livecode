@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -224,7 +224,9 @@ static bool path_to_dataref(MCStringRef p_path, DataReferenceRecord& r_rec)
 	if (t_success)
 	{
 		OSErr t_error;
-		t_error = QTNewDataReferenceFromFullPathCFString(t_cf_path, kQTNativeDefaultPathStyle, 0, &r_rec . dataRef, &r_rec . dataRefType);
+		// PM-2015-10-06: [[ Bug 15321 ]] Use kQTPOSIXPathStyle, since filename is of the form C:/dir1/dir2/filename.wav
+		// Using kQTNativeDefaultPathStyle results in QTNewDataReferenceFromFullPathCFString() failure (returns -50)
+		t_error = QTNewDataReferenceFromFullPathCFString(t_cf_path, kQTPOSIXPathStyle, 0, &r_rec . dataRef, &r_rec . dataRefType);
 		t_success = noErr == t_error;
 	}
 	CFRelease(t_cf_path);
@@ -360,8 +362,18 @@ void MCQTStopRecording(void)
 			exportToSoundFile(recordtempfile, recordexportfile);
 			MCS_unlink(recordtempfile);
 		}
-		MCValueRelease(recordexportfile);
-		recordexportfile = NULL;
+
+		if (recordexportfile != NULL)
+		{
+			MCValueRelease(recordexportfile);
+			recordexportfile = NULL;
+		}
+
+		if (recordtempfile != NULL)
+		{
+			MCValueRelease(recordtempfile);
+			recordtempfile = NULL;
+		}
 	}
 }
 

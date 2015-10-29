@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -78,8 +78,8 @@ public:
     void GetCanRetreat(MCExecContext& ctxt, bool& r_value);
     
 	// Browser-specific actions
-	void ExecAdvance(MCExecContext& ctxt, integer_t p_steps);
-	void ExecRetreat(MCExecContext& ctxt, integer_t p_steps);
+	void ExecAdvance(MCExecContext& ctxt, integer_t *p_steps);
+	void ExecRetreat(MCExecContext& ctxt, integer_t *p_steps);
 	void ExecReload(MCExecContext& ctxt);
     void ExecStop(MCExecContext& ctxt);
 	void ExecExecute(MCExecContext& ctxt, MCStringRef p_script);
@@ -122,12 +122,12 @@ MCObjectPropertyTable MCAndroidBrowserControl::kPropertyTable =
 
 MCNativeControlActionInfo MCAndroidBrowserControl::kActions[] =
 {
-    DEFINE_CTRL_EXEC_UNARY_METHOD(Advance, MCAndroidBrowserControl, Int32, Advance)
-    DEFINE_CTRL_EXEC_UNARY_METHOD(Retreat, MCAndroidBrowserControl, Int32, Retreat)
-    DEFINE_CTRL_EXEC_METHOD(Reload, MCAndroidBrowserControl, Reload)
-    DEFINE_CTRL_EXEC_METHOD(Stop, MCAndroidBrowserControl, Stop)
-    DEFINE_CTRL_EXEC_BINARY_METHOD(Load, MCAndroidBrowserControl, String, String, Load)
-    DEFINE_CTRL_EXEC_UNARY_METHOD(Execute, MCAndroidBrowserControl, String, Execute)
+    DEFINE_CTRL_EXEC_UNARY_METHOD(Advance, OptInteger, MCAndroidBrowserControl, OptionalInt32, Advance)
+    DEFINE_CTRL_EXEC_UNARY_METHOD(Retreat, OptInteger, MCAndroidBrowserControl, OptionalInt32, Retreat)
+    DEFINE_CTRL_EXEC_METHOD(Reload, Void, MCAndroidBrowserControl, Reload)
+    DEFINE_CTRL_EXEC_METHOD(Stop, Void, MCAndroidBrowserControl, Stop)
+    DEFINE_CTRL_EXEC_BINARY_METHOD(Load, String_String, MCAndroidBrowserControl, String, String, Load)
+    DEFINE_CTRL_EXEC_UNARY_METHOD(Execute, String, MCAndroidBrowserControl, String, Execute)
 };
 
 MCNativeControlActionTable MCAndroidBrowserControl::kActionTable =
@@ -446,7 +446,7 @@ Exec_stat MCAndroidBrowserControl::Do(MCNativeControlAction p_action, MCParamete
 #endif /* MCAndroidBrowserControl::Do */
 
 // Browser-specific actions
-void MCAndroidBrowserControl::ExecAdvance(MCExecContext& ctxt, integer_t p_steps)
+void MCAndroidBrowserControl::ExecAdvance(MCExecContext& ctxt, integer_t *p_steps)
 {
     jobject t_view;
     t_view = GetView();
@@ -454,10 +454,10 @@ void MCAndroidBrowserControl::ExecAdvance(MCExecContext& ctxt, integer_t p_steps
     if (t_view == nil)
         return;
 
-    MCAndroidObjectRemoteCall(t_view, "goForward", "vi", nil, p_steps);
+    MCAndroidObjectRemoteCall(t_view, "goForward", "vi", nil, p_steps != nil ? *p_steps : 1);
 }
 
-void MCAndroidBrowserControl::ExecRetreat(MCExecContext& ctxt, integer_t p_steps)
+void MCAndroidBrowserControl::ExecRetreat(MCExecContext& ctxt, integer_t *p_steps)
 {
     jobject t_view;
     t_view = GetView();
@@ -465,7 +465,7 @@ void MCAndroidBrowserControl::ExecRetreat(MCExecContext& ctxt, integer_t p_steps
     if (t_view == nil)
         return;
     
-    MCAndroidObjectRemoteCall(t_view, "goBack", "vi", nil, p_steps);
+    MCAndroidObjectRemoteCall(t_view, "goBack", "vi", nil, p_steps != nil ? *p_steps : 1);
 }
 
 void MCAndroidBrowserControl::ExecReload(MCExecContext& ctxt)

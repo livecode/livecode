@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2015 Runtime Revolution Ltd.
+# Copyright (C) 2015 LiveCode Ltd.
 #
 # This file is part of LiveCode.
 #
@@ -239,6 +239,7 @@ if test -z "$XCODE_HOST_SDK"; then
 fi
 
 # Default target architectures
+# iOS architectures are restricted to 32-bit only for iOS 5.1, 6.1 and 7.1
 if test -z "$TARGET_ARCH"; then
   case ${PLATFORM} in
     *-x86)     TARGET_ARCH="x86" ;;
@@ -247,11 +248,15 @@ if test -z "$TARGET_ARCH"; then
 
     mac*|ios*)
       case ${XCODE_TARGET_SDK} in
-        macosx*)           TARGET_ARCH="i386" ;;
-        iphoneos8*)        TARGET_ARCH="armv7 arm64" ;;
-        iphoneos*)         TARGET_ARCH="armv7" ;;
-        iphonesimulator8*) TARGET_ARCH="i386 x86_64" ;;
-        iphonesimulator*)  TARGET_ARCH="i386" ;;
+        macosx*)         		TARGET_ARCH="i386" ;;
+        iphoneos5* | \
+        iphoneos6* | \
+        iphoneos7*)		 		TARGET_ARCH="armv7" ;;
+        iphoneos*)       		TARGET_ARCH="armv7 arm64" ;;
+        iphonesimulator5* | \
+        iphonesimulator6* | \
+        iphonesimulator7*) 		TARGET_ARCH="i386" ;;
+        iphonesimulator*)  	TARGET_ARCH="i386 x86_64" ;;
       esac
       ;;
 
@@ -266,7 +271,7 @@ WIN_PERL=${WIN_PERL:-"C:/perl/bin/perl.exe"}
 # Android default settings and tools
 if test "${OS}" = "android" ; then
     ANDROID_NDK_VERSION=${ANDROID_NDK_VERSION:-r10d}
-    ANDROID_PLATFORM=${ANDROID_PLATFORM:-android-8}
+    ANDROID_PLATFORM=${ANDROID_PLATFORM:-android-10}
 
     # Attempt to locate an Android NDK
     if [ -z "${ANDROID_NDK}" -a "${OS}" = "android" ] ; then

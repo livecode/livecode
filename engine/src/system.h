@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -355,7 +355,7 @@ public:
         
         m_is_eof = false;
         
-		if (!t_stat == IO_NORMAL)
+		if (t_stat != IO_NORMAL)
             return false;
         
         return true;

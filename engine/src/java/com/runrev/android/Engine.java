@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -124,6 +124,8 @@ public class Engine extends View implements EngineApi
     // MM-2015-06-11: [[ MobileSockets ]] Trust manager and last verification error, used for verifying ssl certificates.
     private X509TrustManager m_trust_manager;
     private String m_last_certificate_verification_error;
+	
+	private boolean m_new_intent;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -213,6 +215,8 @@ public class Engine extends View implements EngineApi
 		//   work-around a general bug in android:
 		// https://code.google.com/p/google-http-java-client/issues/detail?id=116
 		System.setProperty("http.keepAlive", "false");
+		
+		m_new_intent = false;
 	}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -945,25 +949,30 @@ public class Engine extends View implements EngineApi
     {
         m_native_control_module.removeControl(p_control);
     }
-
+    
+	Object createNativeControl(String p_class_name)
+	{
+		return m_native_control_module.createControl(p_class_name);
+	}
+    
     Object createBrowserControl()
     {
-        return m_native_control_module.createBrowser();
+        return m_native_control_module.createControl("com.runrev.android.nativecontrol.BrowserControl");
     }
 
     Object createScrollerControl()
     {
-        return m_native_control_module.createScroller();
+        return m_native_control_module.createControl("com.runrev.android.nativecontrol.ScrollerControl");
     }
     
     Object createPlayerControl()
     {
-        return m_native_control_module.createPlayer();
+        return m_native_control_module.createControl("com.runrev.android.nativecontrol.VideoControl");
     }
     
     Object createInputControl()
     {
-        return m_native_control_module.createInput();
+        return m_native_control_module.createControl("com.runrev.android.nativecontrol.InputControl");
     }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1604,7 +1613,7 @@ public class Engine extends View implements EngineApi
         
         boolean t_success = true;
 
-        m_video_control = (VideoControl)m_native_control_module.createPlayer();
+        m_video_control = (VideoControl)m_native_control_module.createControl("com.runrev.android.nativecontrol.VideoControl");
         m_native_control_module.addControl(m_video_control);
 
 		Rect t_workarea = getWorkarea();
@@ -2661,6 +2670,86 @@ public class Engine extends View implements EngineApi
 
 //////////
 
+	private static boolean isValueRefCompatible(Class p_class)
+	{
+		if (String.class == p_class)
+			return true;
+		if (Integer.class == p_class)
+			return true;
+		if (Double.class == p_class)
+			return true;
+		if (Boolean.class == p_class)
+			return true;
+		if (byte[].class == p_class)
+			return true;
+
+		if (p_class.isArray() && isValueRefCompatible(p_class.getComponentType()))
+			return true;
+			
+		return false;
+	}
+	
+	private static boolean isValueRefConvertable(Class p_class)
+	{
+		if (Bundle.class == p_class)
+			return true;
+		
+		if (p_class.isArray() && isValueRefConvertable(p_class.getComponentType()))
+			return true;
+		
+		return false;
+	}
+	
+	private static Object makeValueRefCompatible(Object p_object)
+	{
+		// Object types we can pass through safely
+		if (isValueRefCompatible(p_object.getClass()))
+			return p_object;
+			
+		// try converting bundle
+		else if (p_object instanceof Bundle)
+			return bundleToMap((Bundle)p_object);
+		
+		else if (p_object.getClass().isArray() && isValueRefConvertable(p_object.getClass()))
+		{
+			Object[] t_input_array = (Object[])p_object;
+			Object[] t_converted_array = new Object[t_input_array.length];
+			
+			for (int i = 0; i < t_input_array.length; i++)
+				t_converted_array[i] = makeValueRefCompatible(t_input_array[i]);
+			
+			return t_converted_array;
+		}
+		
+		// fallback to using toString() method
+		return p_object.toString();
+	}
+	
+	private static Map<String, Object> bundleToMap(Bundle p_bundle)
+	{
+		Map<String, Object> t_map;
+		t_map = new HashMap<String, Object>();
+		
+		for (String t_key : p_bundle.keySet())
+		{
+			Object t_value;
+			t_value = p_bundle.get(t_key);
+			
+			if (t_value != null)
+			{
+				Object t_converted;
+				t_converted = makeValueRefCompatible(t_value);
+			
+				if (t_converted != null)
+					t_map.put(t_key, t_converted);
+				else
+					Log.i(TAG, "conversion failed for bundle key " + t_key);
+			}
+		}
+		
+		return t_map;
+	}
+	
 	// IM-2015-07-08: [[ LaunchData ]] Retreive info from launch Intent and return as a Map object.
 	public Map<String, Object> getLaunchData()
 	{
@@ -2705,6 +2794,13 @@ public class Engine extends View implements EngineApi
 				
 				t_data.put("categories", t_category_list.toString());
 			}
+			
+			// IM-2015-08-04: [[ Bug 15684 ]] Retrieve Intent extra data.
+			Bundle t_extras;
+			t_extras = t_intent.getExtras();
+			
+			if (t_extras != null && !t_extras.isEmpty())
+				t_data.put("extras", bundleToMap(t_extras));
 		}
 		
 		return t_data;
@@ -2747,6 +2843,9 @@ public class Engine extends View implements EngineApi
         if (m_sound_module != null)
             m_sound_module.onPause();
 
+		if (m_native_control_module != null)
+			m_native_control_module.onPause();
+		
 		if (m_video_is_playing)
 			m_video_control . suspend();
 
@@ -2766,11 +2865,26 @@ public class Engine extends View implements EngineApi
 
         if (m_sound_module != null)
             m_sound_module.onResume();
+		
+		if (m_native_control_module != null)
+			m_native_control_module.onResume();
 
 		if (m_video_is_playing)
 			m_video_control . resume();
 
 		doResume();
+
+		if (m_new_intent)
+		{
+			doLaunchDataChanged();
+			
+			String t_launch_url;
+			t_launch_url = getLaunchUri();
+			if (t_launch_url != null)
+				doLaunchFromUrl(t_launch_url);
+
+			m_new_intent = false;
+		}
 
 		s_running = true;
 		if (m_text_editor_visible)
@@ -2778,6 +2892,9 @@ public class Engine extends View implements EngineApi
 		
 		// IM-2013-08-16: [[ Bugfix 11103 ]] dispatch any remote notifications received while paused
 		dispatchNotifications();
+		
+		if (m_wake_on_event)
+			doProcess(false);
 	}
 
 	public void onDestroy()
@@ -2793,14 +2910,10 @@ public class Engine extends View implements EngineApi
 
     public void onNewIntent(Intent intent)
     {
-        String t_launch_url = getLaunchUri(intent);
-        if (t_launch_url != null)
-        {
-            doLaunchFromUrl(t_launch_url);
-            if (m_wake_on_event)
-                doProcess(false);
-        }
-    }
+		// IM-2015-10-08: [[ Bug 15417 ]] Update the Intent of the Activity to the new one.
+		((Activity)getContext()).setIntent(intent);
+		m_new_intent = true;
+	}
 
     ////////////////////////////////////////////////////////////////////////////////
 
@@ -3197,6 +3310,8 @@ public class Engine extends View implements EngineApi
 
     // url launch callback
     public static native void doLaunchFromUrl(String url);
+	// intent launch callback
+	public static native void doLaunchDataChanged();
 
 	// callbacks from the billing service
 

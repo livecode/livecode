@@ -359,6 +359,35 @@ private command compilerParse @self, pScript
             put "RootFolder" into tCommand["variable"]
             put empty into tCommand["value"]
             break
+         case "additional"
+         	-- Ensure that the following word is "manifest" and that there is
+         	-- a final word containing the file to use
+         	if the number of words of tLine is not 3 or word 2 of tLine is not "manifest" then
+         	   compilerSyntaxError self, "Invalid command, syntax is 'additional manifest <file>'", tLineNumber
+         	end if
+         	
+         	-- Get the manifest file name and parse it too
+         	local tExtraManifest
+         	local tExtraManifestName
+         	put word 3 of tLine into tExtraManifestName
+         	if char 1 of tExtraManifestName is quote and char -1 of tExtraManifestName is quote then
+         		put char 2 to -2 of tExtraManifestName into tExtraManifestName
+         	end if
+         	put url ("file:" & builderRepoFolder() & slash & tExtraManifestName) into tExtraManifest
+         	if the result is not empty then
+         	   compilerSyntaxError self, "Could not open additional manifest" && builderRepoFolder() & slash & tExtraManifestName, tLineNumber
+         	end if
+         	try
+         		compilerParse self, tExtraManifest
+         	catch tException
+         		-- Rethrow with some additional context information
+         		throw "In additional manifest" && tExtraManifestName & ":" && tException
+         	end try
+         	
+         	-- Note that no executable commands are added beyond those that
+         	-- were added from the manifest file that was just included
+         	put "nop" into tCommand["type"]
+         	break
          case "include"
             -- Ensure that there are two words
             if the number of words of tLine is not 2 then
@@ -688,6 +717,8 @@ private command compilerExecute @self, pCommands
          case "desktop"
             compilerExecuteDesktop self, tCommand
             break
+         case "nop"
+         	break
          default
             throw "Unknown command -" && tCommand["type"]
       end switch
@@ -1002,7 +1033,7 @@ private command compilerExecuteShortcut @self, pCommand
             exit repeat
          end if
          
-         -- See if the target matches a folder prefix (e.g. .../Revolution.app)
+         -- See if the target matches a folder prefix (e.g. .../LiveCode.app)
          if item 2 of tLine begins with (tTarget & slash) then
             put true into tFound
             exit repeat

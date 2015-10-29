@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -2628,7 +2628,10 @@ enum Exec_errors
 
 	// MDW-2014-09-28: [[ feature_floor ]]
 	// {EE-0860} ceil: bad parameter
-	EE_CEIL_BADSOURCE,
+    EE_CEIL_BADSOURCE,
+
+    // {EE-861} commandArguments: bad parameter
+    EE_COMMANDARGUMENTS_BADPARAM,
 };
 
 extern const char *MCexecutionerrors;

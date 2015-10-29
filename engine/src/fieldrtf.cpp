@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -483,6 +483,11 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 							t_char = 0x25AA, t_marker = "square";
 						else if (t_list_style == kMCParagraphListStyleCircle)
 							t_char = 0x25E6, t_marker = "circle";
+                        else // kMCParagraphListStyleNone
+                        {
+                            MCAssert(t_list_style == kMCParagraphListStyleNone);
+                            return false;
+                        }
 						/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "{\\listlevel\\levelnfc23\\leveljc0\\levelstartat1\\levelfollow0{\\*\\levelmarker \\{%s\\}}{\\leveltext\\'01\\u%d.;}{\\levelnumbers;}",
 													t_marker, t_char);
 					}
@@ -600,7 +605,7 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\ilvl%d", MCMin(p_event_data.paragraph_style.list_depth, 8U));
 			
 			// Emit the tag prefix and styling.
-			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\listtext\\tab");
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "{\\listtext\\tab");
 			export_rtf_emit_char_style_changes(ctxt.m_text, ctxt . styles[ctxt . style_index], ctxt . parent_style);
 			
 			// Now fetch the list style of the current paragraph and output the
@@ -753,7 +758,7 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 			}
 			else if (ctxt . styles[ctxt . style_index] . background_color_index == -1)
 			{
-				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}");
+                /* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "{");
 				ctxt . styles[ctxt . style_index + 1] = ctxt . styles[ctxt . style_index];
 				ctxt . style_index += 1;
 			}

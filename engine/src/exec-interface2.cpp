@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1457,21 +1457,31 @@ void MCInterfaceSetCursor(MCExecContext& ctxt, uinteger_t& r_id, bool p_is_defau
 	}
 }
 
-
-void MCInterfaceGetCursor(MCExecContext& ctxt, uinteger_t& r_value)
+// SN-2015-07-29: [[ Bug 15649 ]] The cursor can be empty - it is optional
+void MCInterfaceGetCursor(MCExecContext& ctxt, uinteger_t*& r_value)
 {
-	r_value = MCcursorid;
+    if (MCcursor != None)
+        *r_value = MCcursorid;
+    else
+        r_value = NULL;
 }
 
-void MCInterfaceSetCursor(MCExecContext& ctxt, uinteger_t p_value)
+void MCInterfaceSetCursor(MCExecContext& ctxt, uinteger_t* p_value)
 {
 	MCCursorRef t_cursor;
-	MCInterfaceSetCursor(ctxt, p_value, false, t_cursor);
+
+    uinteger_t t_cursor_id;
+    if (p_value == NULL)
+        t_cursor_id = 0;
+    else
+        t_cursor_id = *p_value;
+
+    MCInterfaceSetCursor(ctxt, t_cursor_id, false, t_cursor);
     // PM-2015-03-17: [[ Bug 14965 ]] Error check to prevent a crash if cursor image not found
 	if (t_cursor != nil && !ctxt.HasError())
 	{
 		MCcursor = t_cursor;
-		MCcursorid = p_value;
+        MCcursorid = t_cursor_id;
 		if (MCmousestackptr != NULL)
 			MCmousestackptr->resetcursor(True);
 		else
@@ -1488,15 +1498,15 @@ void MCInterfaceSetDefaultCursor(MCExecContext& ctxt, uinteger_t p_value)
 {
 	MCCursorRef t_cursor;
 	MCInterfaceSetCursor(ctxt, p_value, true, t_cursor);
-	if (t_cursor != nil)
-	{
-		MCdefaultcursor = t_cursor;
-		MCdefaultcursorid = p_value;
-		if (MCmousestackptr != NULL)
-			MCmousestackptr->resetcursor(True);
-		else
-			MCdefaultstackptr->resetcursor(True);
-	}
+	
+    // PM-2015-06-17: [[ Bug 15200 ]] Default cursor should reset when set to empty, thus t_cursor *can* be nil
+    MCdefaultcursor = t_cursor;
+    MCdefaultcursorid = p_value;
+    if (MCmousestackptr != NULL)
+        MCmousestackptr->resetcursor(True);
+    else
+        MCdefaultstackptr->resetcursor(True);
+
 }
 void MCInterfaceGetDefaultStack(MCExecContext& ctxt, MCStringRef& r_value)
 {

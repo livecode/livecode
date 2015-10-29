@@ -15,9 +15,9 @@
 	<examples>
 <example>put cookie &quot;testcookie1&quot; with &quot;some cookie value&quot;</example>
 <example><p>-- Expires in 1 year</p><p>put cookie &quot;testcookie2&quot; with &quot;some cookie value&quot; until (the seconds + 60 * 60 * 24 * 365) </p></example>
-<example><p>-- Cookie available across whole website</p><p>put cookie &quot;testcookie3&quot; for &quot;/&quot; on &quot;www.runrev.com&quot; with &quot;some cookie value&quot;</p></example>
-<example><p>-- Cookie available to specific pages</p><p>put cookie &quot;testcookie4&quot; for &quot;/products/&quot; on &quot;www.runrev.com&quot; with &quot;some cookie value&quot; until (the seconds + 60 * 60 * 24 * 365)</p></example>
-<example>put secure httponly cookie &quot;testcookie4&quot; for &quot;/products/&quot; on &quot;www.runrev.com&quot; with &quot;some cookie value&quot; until (the seconds + 60 * 60 * 24 * 365)</example>
+<example><p>-- Cookie available across whole website</p><p>put cookie &quot;testcookie3&quot; for &quot;/&quot; on &quot;www.livecode.com&quot; with &quot;some cookie value&quot;</p></example>
+<example><p>-- Cookie available to specific pages</p><p>put cookie &quot;testcookie4&quot; for &quot;/products/&quot; on &quot;www.livecode.com&quot; with &quot;some cookie value&quot; until (the seconds + 60 * 60 * 24 * 365)</p></example>
+<example>put secure httponly cookie &quot;testcookie4&quot; for &quot;/products/&quot; on &quot;www.livecode.com&quot; with &quot;some cookie value&quot; until (the seconds + 60 * 60 * 24 * 365)</example>
 	</examples>
 
 	<history>
@@ -85,6 +85,6 @@
   </parameter>		</parameters>
 
 	<value></value>
-	<comments>A cookie is used by a website to store state information in the user's browser, which is returned to the website on subsequent visits. Cookies are often used to store user preferences and session data. For example, you may allow a user to choose a theme through which to view your website and store this choice in a cookie to be used on subsequent visits.<p></p><p>When setting a cookie you can specify a path. Cookies are returned to all URLs within the specified path. For example, a cookie set on the domain &quot;www.runrev.com&quot; with the following path:</p><p></p><p><i>/products/</i></p><p></p><p>Is available to all pages within and under http://www.runrev.com/products/</p><p></p><p>To make the cookie available across your entire website, set the path to: &quot;/&quot;</p><p></p><p></p><note>Cookies must be set before any headers are sent.</note></comments>
+	<comments>A cookie is used by a website to store state information in the user's browser, which is returned to the website on subsequent visits. Cookies are often used to store user preferences and session data. For example, you may allow a user to choose a theme through which to view your website and store this choice in a cookie to be used on subsequent visits.<p></p><p>When setting a cookie you can specify a path. Cookies are returned to all URLs within the specified path. For example, a cookie set on the domain &quot;www.livecode.com&quot; with the following path:</p><p></p><p><i>/products/</i></p><p></p><p>Is available to all pages within and under http://www.livecode.com/products/</p><p></p><p>To make the cookie available across your entire website, set the path to: &quot;/&quot;</p><p></p><p></p><note>Cookies must be set before any headers are sent.</note></comments>
 	</description>
 </doc>

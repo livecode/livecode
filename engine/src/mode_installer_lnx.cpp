@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -193,21 +193,25 @@ bool MCSystemCanDeleteKey(MCStringRef p_key)
 bool MCSystemCanDeleteFile(MCStringRef p_file)
 {
     MCAutoStringRef t_resolved_file_str;
-    /* UNCHECKED */ MCS_resolvepath(p_file, &t_resolved_file_str);
-    
-    MCAutoStringRefAsSysString t_resolved_file;
-    /* UNCHECKED */ t_resolved_file.Lock(*t_resolved_file_str);
 
-	// Now get the folder.
-    const char *t_terminator = strrchr(*t_resolved_file, '/');
-	if (t_terminator == nil)
-		return false;
-	
-    // This is evil but the AutoStringRefAsSysString owns the string it holds
-	*((char*)*t_terminator) = '\0';
+    if (!MCS_resolvepath(p_file, &t_resolved_file_str))
+        return false;
+
+    uindex_t t_last_delimiter;
+
+    if (!MCStringLastIndexOfChar(*t_resolved_file_str, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_delimiter))
+        return false;
+
+    // Now get the folder.
+    MCAutoStringRef t_folder_path;
+    MCAutoStringRefAsSysString t_folder_sys_str;
+
+    if (!MCStringCopySubstring(*t_resolved_file_str, MCRangeMake(0, t_last_delimiter), &t_folder_path)
+            || !t_folder_sys_str . Lock(*t_folder_path))
+        return false;
 	
 	struct stat64 t_stat;
-	if (stat64(*t_resolved_file, &t_stat) != 0)
+    if (stat64(*t_folder_sys_str, &t_stat) != 0)
 		return false;
 	
 	// Check for user 'write' bit.

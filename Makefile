@@ -1,4 +1,4 @@
-# Copyright (C) 2015 Runtime Revolution Ltd.
+# Copyright (C) 2015 LiveCode Ltd.
 #
 # This file is part of LiveCode.
 #
@@ -24,8 +24,8 @@ WINE ?= wine
 
 # Some magic to control which versions of iOS we try to build.  N.b. you may
 # also need to modify the buildbot configuration
-IPHONEOS_VERSIONS ?= 8.2 8.4
-IPHONESIMULATOR_VERSIONS ?= 5.1 6.1 7.1 8.2 8.4
+IPHONEOS_VERSIONS ?= 8.2 8.4 9.1
+IPHONESIMULATOR_VERSIONS ?= 5.1 6.1 7.1 8.2 8.4 9.1
 
 IOS_SDKS ?= \
 	$(addprefix iphoneos,$(IPHONEOS_VERSIONS)) \
@@ -165,3 +165,17 @@ all-win-%:
 	$(MAKE) compile-win-$*
 
 $(addsuffix -win,all config compile): %: %-x86
+
+################################################################
+# Emscripten rules
+################################################################
+
+config-emscripten:
+	mkdir -p build-emscripten
+
+compile-emscripten:
+	mkdir -p emscripten-bin
+
+all-emscripten:
+	$(MAKE) config-emscripten
+	$(MAKE) compile-emscripten
