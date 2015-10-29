@@ -1582,38 +1582,6 @@ bool MCCustomPrinterDevice::StartPage(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCCustomPrinter: public MCPrinter
-{
-public:
-	MCCustomPrinter(MCStringRef p_name, MCCustomPrintingDevice *p_device);
-	~MCCustomPrinter(void);
-
-	void SetDeviceOptions(MCArrayRef p_options);
-
-protected:
-	void DoInitialize(void);
-	void DoFinalize(void);
-
-	bool DoReset(MCStringRef p_name);
-	bool DoResetSettings(MCDataRef p_settings);
-
-	const char *DoFetchName(void);
-	void DoFetchSettings(void*& r_bufer, uint4& r_length);
-
-	void DoResync(void);
-
-	MCPrinterDialogResult DoPrinterSetup(bool p_window_modal, Window p_owner);
-	MCPrinterDialogResult DoPageSetup(bool p_window_modal, Window p_owner);
-
-	MCPrinterResult DoBeginPrint(MCStringRef p_document, MCPrinterDevice*& r_device);
-	MCPrinterResult DoEndPrint(MCPrinterDevice* p_device);
-
-private:
-	MCStringRef m_device_name;
-	MCCustomPrintingDevice *m_device;
-	MCArrayRef m_device_options;
-};
-
 MCCustomPrinter::MCCustomPrinter(MCStringRef p_name, MCCustomPrintingDevice *p_device)
 {
 	m_device_options = nil;
@@ -2141,7 +2109,7 @@ private:
 
 typedef MCCustomPrintingDevice *(*MCCustomPrinterCreateProc)(void);
 
-Exec_stat MCCustomPrinterCreate(MCStringRef p_destination, MCStringRef p_filename, MCArrayRef p_options, MCPrinter*& r_printer)
+Exec_stat MCCustomPrinterCreate(MCStringRef p_destination, MCStringRef p_filename, MCArrayRef p_options, MCCustomPrinter*& r_printer)
 {
 	MCCustomPrintingDevice *t_device;
 	t_device = nil;
