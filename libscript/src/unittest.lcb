@@ -25,6 +25,9 @@ Each group of tests should be a public handler with a name beginning
 with "Test".  If possible, use one test per handler.  Otherwise, add a
 "plan N tests" statement at the start of the handler.
 
+The test results are output on standard output in TAP (Test Anything
+Protocol) format.
+
 Example:
 
 	public handler TestSelf()
@@ -46,9 +49,6 @@ Example:
 		broken test false because "broken"
 		broken test "Failed 4" when false because "really broken"
 	end handler
-
-The test results are output on standard output in TAP (Test Anything
-Protocol) format.
 */
 
 module com.livecode.unittest
