@@ -100,22 +100,28 @@ void MCParagraph::fetchattrs(MCArrayRef src)
     t_color . name = nil;
 
     // AL-2014-09-30: [[ Bug 13559 ]] Don't explicitly set any paragraph styles that aren't in the array (even to empty)
-    if (ctxt . CopyElementAsInteger(src, MCNAME("textAlign"), false, t_intenum_value))
-        SetTextAlign(ctxt, &t_intenum_value);
-
-	// PM-2015-10-14: [[ Bug 16210 ]] listStyle is stored as stringref in the src array, so first get the stringref and then map it to the correct int, to be used in SetListStyle()
+	// PM-2015-10-14: [[ Bug 16210 ]] Get the stringref for textAlign from the src array and then map it to the correct
+	// intenum_t, to be used in SetTextAlign()
+	if (ctxt . CopyElementAsString(src, MCNAME("textAlign"), false, t_stringref_value))
+    {
+		MCExecValue t_value;
+		t_value . stringref_value = t_stringref_value;
+		t_value . type = kMCExecValueTypeStringRef;
+		MCExecParseEnum(ctxt, kMCInterfaceTextAlignTypeInfo, t_value, t_intenum_value);
+		
+		SetTextAlign(ctxt,&t_intenum_value);
+        MCValueRelease(t_stringref_value);
+    }
+	// PM-2015-10-14: [[ Bug 16210 ]] Get the stringref for listStyle from the src array and then map it to the correct
+	// intenum_t, to be used in SetListStyle()
 	if (ctxt . CopyElementAsString(src, MCNAME("listStyle"), false, t_stringref_value))
     {
-        int32_t t_list_style;
-		t_list_style = 0;
-		for(int32_t i = 0; MCliststylestrings[i] != nil; i++)
-			if (MCStringIsEqualToCString(t_stringref_value, MCliststylestrings[i], kMCCompareCaseless) )
-			{
-				t_list_style = i;
-				break;
-			}
+		MCExecValue t_value;
+		t_value . stringref_value = t_stringref_value;
+		t_value . type = kMCExecValueTypeStringRef;
+		MCExecParseEnum(ctxt, kMCInterfaceListStyleTypeInfo, t_value, t_intenum_value);
 		
-		SetListStyle(ctxt, t_list_style);
+		SetListStyle(ctxt, t_intenum_value);
         MCValueRelease(t_stringref_value);
     }
 
