@@ -40,12 +40,22 @@ on TestMyFeature
 end TestMyFeature
 ````
 
-Before running each test command, the test framework inserts a test library stack, called `TestLibrary`, into the backscripts.  This provides a set of useful utility commands that can be used when writing test commands.  Currently, the following commands are available:
+Before running each test command, the test framework inserts a test library stack, called `TestLibrary`, into the backscripts.  This provides a set of useful utility handlers that can be used when writing test commands.  Currently, the following are available:
 
 * `TestDiagnostic pMessage`: Write *pMessage* to the test log as a message.
 * `TestAssert pDescription, pExpectTrue`: Make a test assertion.  The test is recorded as a failure if *pExpectTrue* is false.  *pDescription* should be a short string that describes the test (e.g. "clipboard is clear").
 * `TestSkip pDescription, pReasonSkipped`: Record a test as having been skipped.  *pReasonSkipped* should be a short explanation of why the test was skipped (e.g. "not supported on Windows").
 * `TestAssertBroken pDescription, pExpectTrue, pReasonBroken`: The same as `TestAssert`, but marking the test as "expected to fail".  *pReasonBroken* should be a short explanation of why the test is currently expected to fail; it should almost always be a reference to a bug report, e.g. "bug 54321".
+* `TestGetEngineRepositoryPath`: A function that returns the path to the main LiveCode engine repository.
+* `TestGetIDERepositoryPath`: A function that returns the path to the LiveCode IDE repository.
+
+Tests can have additional setup requirements before running, for example loading custom libraries. If the script test contains a handler called TestSetup, this will be run prior to running each test command. For example:
+````
+on TestSetup
+   -- All the tests in this script require access to the docs parser
+   start using stack (TestGetEngineRepositoryPath() & slash & "ide-support" & slash & "revdocsparser.livecodescript")
+end TestSetup
+````
 
 Crashes or uncaught errors from a test command cause the test to immediately fail.
 
