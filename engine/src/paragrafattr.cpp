@@ -100,31 +100,14 @@ void MCParagraph::fetchattrs(MCArrayRef src)
     t_color . name = nil;
 
     // AL-2014-09-30: [[ Bug 13559 ]] Don't explicitly set any paragraph styles that aren't in the array (even to empty)
-	// PM-2015-10-14: [[ Bug 16210 ]] Get the stringref for textAlign from the src array and then map it to the correct
-	// intenum_t, to be used in SetTextAlign()
-	if (ctxt . CopyElementAsString(src, MCNAME("textAlign"), false, t_stringref_value))
-    {
-		MCExecValue t_value;
-		t_value . stringref_value = t_stringref_value;
-		t_value . type = kMCExecValueTypeStringRef;
-		MCExecParseEnum(ctxt, kMCInterfaceTextAlignTypeInfo, t_value, t_intenum_value);
-		
-		SetTextAlign(ctxt,&t_intenum_value);
-        MCValueRelease(t_stringref_value);
-    }
-	// PM-2015-10-14: [[ Bug 16210 ]] Get the stringref for listStyle from the src array and then map it to the correct
-	// intenum_t, to be used in SetListStyle()
-	if (ctxt . CopyElementAsString(src, MCNAME("listStyle"), false, t_stringref_value))
-    {
-		MCExecValue t_value;
-		t_value . stringref_value = t_stringref_value;
-		t_value . type = kMCExecValueTypeStringRef;
-		MCExecParseEnum(ctxt, kMCInterfaceListStyleTypeInfo, t_value, t_intenum_value);
-		
+	// PM-2015-10-14: [[ Bug 16210 ]] Make sure textAlign is respected when setting the styledText
+	if (ctxt.CopyElementAsEnum(src, MCNAME("textAlign"), false, kMCInterfaceTextAlignTypeInfo, t_intenum_value))
+		SetTextAlign(ctxt, &t_intenum_value);
+    
+	// PM-2015-10-14: [[ Bug 16210 ]] Make sure listStyle is respected when setting the styledText
+	if (ctxt.CopyElementAsEnum(src, MCNAME("listStyle"), false, kMCInterfaceListStyleTypeInfo, t_intenum_value))
 		SetListStyle(ctxt, t_intenum_value);
-        MCValueRelease(t_stringref_value);
-    }
-
+	
     if (ctxt . CopyElementAsUnsignedInteger(src, MCNAME("listDepth"), false, t_uint_value))
         SetListDepth(ctxt, &t_uint_value);
 

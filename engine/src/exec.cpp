@@ -656,6 +656,22 @@ bool MCExecContext::CopyElementAsFilepathArray(MCArrayRef p_array, MCNameRef p_k
 	return true;
 }
 
+
+bool MCExecContext::CopyElementAsEnum(MCArrayRef p_array, MCNameRef p_key, bool p_case_sensitive, MCExecEnumTypeInfo *p_enum_type_info, intenum_t &r_intenum)
+{
+	MCValueRef t_val = nil;
+	if (!MCArrayFetchValue(p_array, p_case_sensitive, p_key, t_val))
+		return false;
+		
+	MCExecValue t_value;
+	t_value . valueref_value = t_val;
+	t_value . type = kMCExecValueTypeValueRef;
+	
+	MCExecParseEnum(*this, p_enum_type_info, t_value, r_intenum);
+	return true;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCExecContext::CopyOptElementAsBoolean(MCArrayRef p_array, MCNameRef p_name, bool p_case_sensitive, MCBooleanRef &r_boolean)
