@@ -299,6 +299,7 @@ gdk libgdk-x11-2.0.so.0
 	gdk_window_set_skip_pager_hint: (pointer, integer) -> ()
 	gdk_window_constrain_size: (pointer, integer, integer, integer, pointer, pointer) -> ()
 	gdk_window_unmaximize: (pointer) -> ()
+	gdk_window_get_frame_extents: (pointer, pointer) -> ()
 
 gdk_pixbuf libgdk_pixbuf-2.0.so.0
 	gdk_pixbuf_get_pixels: (pointer) -> (pointer)
