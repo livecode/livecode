@@ -61,6 +61,12 @@
 						[
 							'../thirdparty/headers/linux/include/cairo',
 						],
+
+						'defines':
+						[
+							'PANGO_ENABLE_BACKEND',
+							'PANGO_ENABLE_ENGINE',
+						],
 					},
 				],
 				[
