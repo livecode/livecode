@@ -118,12 +118,12 @@ on ErrorDialog executionError, parseError
    quit 1
 end ErrorDialog
 
-function EngineRepositoryPath
+function TestGetEngineRepositoryPath
   set the itemdelimiter to "/"
   return item 1 to -3 of the filename of me
-end EngineRepositoryPath
+end TestGetEngineRepositoryPath
 
-function IDERepositoryPath
+function TestGetIDERepositoryPath
   set the itemdelimiter to "/"
   return item 1 to -3 of the filename of me & slash & "ide"
-end IDERepositoryPath
+end TestGetIDERepositoryPath
