@@ -98,11 +98,11 @@ bin_dir = ${top_src_dir}/$(BUILD_PLATFORM)-bin
 ifeq ($(BUILD_PLATFORM),mac)
   LIVECODE = $(bin_dir)/LiveCode-Community.app/Contents/MacOS/LiveCode-Community
   buildtool_platform = mac
-  upload_checksum =
+  UPLOAD_ENABLE_CHECKSUM ?= no
 else ifeq ($(findstring linux,$(BUILD_PLATFORM)),linux)
   LIVECODE = $(bin_dir)/livecode-community
   buildtool_platform = linux
-  upload_checksum = sha1sum.txt
+  UPLOAD_ENABLE_CHECKSUM ?= yes
 endif
 
 # FIXME add --warn-as-error
@@ -154,7 +154,7 @@ dist-tools-commercial:
 
 # Make a list of installers to be uploaded to the distribution server
 # If a checksum file is needed, generate it with sha1sum
-dist-upload-files.txt $(upload_checksum):
+dist-upload-files.txt sha1sum.txt:
 	set -e; \
 	find . -maxdepth 1 -name 'LiveCode*Installer-*-Mac.dmg' \
 	                -o -name 'LiveCode*Installer-*-Windows.exe' \
@@ -164,9 +164,11 @@ dist-upload-files.txt $(upload_checksum):
 	                -o -name 'LiveCode*Server-*-Windows.zip' \
 	                -o -name '*-bin.tar.xz' \
 	  > dist-upload-files.txt; \
-	if test -n "$(upload_checksum)"; then \
-	  $(SHA1SUM) < dist-upload-files.txt > $(upload_checksum); \
-	  echo "$(upload_checksum)" >> dist-upload-files.txt; \
+	if test "$(UPLOAD_ENABLE_CHECKSUM)" = "yes"; then \
+	  $(SHA1SUM) < dist-upload-files.txt > sha1sum.txt; \
+	  echo sha1sum.txt >> dist-upload-files.txt; \
+	else \
+	  touch sha1sum.txt; \
 	fi
 
 # Perform the upload.  This is in two steps:
