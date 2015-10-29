@@ -187,7 +187,7 @@ MCFontStruct *MCNewFontlist::getfont(MCNameRef p_family, uint2& p_size, uint2 p_
 		pango_font_description_set_weight(t_font -> description, PANGO_WEIGHT_BOLD);
 	if ((p_style & FA_EXPAND) > 0x50)
 		pango_font_description_set_stretch(t_font -> description, PANGO_STRETCH_EXPANDED);
-	else if ((p_style & FA_EXPAND) < 0x05)
+	else if ((p_style & FA_EXPAND) < 0x50)
 		pango_font_description_set_stretch(t_font -> description, PANGO_STRETCH_CONDENSED);
 
 	PangoFont *t_p_font;
