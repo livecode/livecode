@@ -1752,6 +1752,7 @@ Exec_stat MCHandleSetHeadingCalibrationTimeout(void *p_context, MCParameter *p_p
 	ctxt . SetTheResultToEmpty();
     
     int t_timeout;
+    t_timeout = 0;
     if (p_parameters)
     {
         MCAutoValueRef t_value;
@@ -1760,8 +1761,15 @@ Exec_stat MCHandleSetHeadingCalibrationTimeout(void *p_context, MCParameter *p_p
         /* UNCHECKED */ ctxt . ConvertToNumber(*t_value, &t_number);
         t_timeout = MCNumberFetchAsInteger(*t_number);
     }
+    else
+    {
+        // We need a parameter
+        ctxt . Throw();
+    }
     
-    MCSensorSetLocationCalibrationTimeout(ctxt, t_timeout);
+    if (!ctxt . HasError())
+        MCSensorSetLocationCalibrationTimeout(ctxt, t_timeout);
+    
     
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -3111,14 +3119,17 @@ Exec_stat MCHandleCancelLocalNotification(void *context, MCParameter *p_paramete
     
     ctxt.SetTheResultToEmpty();
     if (p_parameters != nil)
+    {
 		t_success = MCParseParameters (p_parameters, "i", &t_cancel_this);
     
-    if (t_success)
-    {
-        MCNotificationExecCancelLocalNotification (ctxt, t_cancel_this);
+        if (t_success)
+            MCNotificationExecCancelLocalNotification (ctxt, t_cancel_this);
     }
+    else
+        t_success = false;
     
-    if (!ctxt.HasError())
+    
+    if (t_success && ctxt.HasError())
         return ES_NORMAL;
     
     return ES_ERROR;
@@ -4418,7 +4429,7 @@ Exec_stat MCHandleUseDeviceResolution(void *context, MCParameter *p_parameters)
     if (t_success)
         MCMiscSetUseDeviceResolution(ctxt, t_use_device_res, t_use_control_device_res);
     
-    if (!ctxt.HasError() && t_success)
+    if (t_success && !ctxt.HasError())
         return ES_NORMAL;
     
     return ES_ERROR;
@@ -6327,8 +6338,13 @@ Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters)
         /* UNCHECKED */ MCListAppendCString(*t_list, "rear flash");
     
     MCAutoStringRef t_features_string;
-    /* UNCHECKED */ MCListCopyAsString(*t_list, &t_features_string);
+
+    if (!MCListCopyAsString(*t_list, &t_features_string))
+        return ES_ERROR;
+
     ctxt . SetTheResultToValue(*t_features_string);
+
+    return ES_NORMAL;
 }
 
 Exec_stat MCHandlePickPhoto(void *p_context, MCParameter *p_parameters)
@@ -6671,12 +6687,13 @@ Exec_stat MCHandleLibUrlSetSSLVerification(void *context, MCParameter *p_paramet
     
     MCExecContext ctxt(nil, nil, nil);
     
-    MCMiscExecLibUrlSetSSLVerification(ctxt, t_enabled);
+    if (t_success)
+        MCMiscExecLibUrlSetSSLVerification(ctxt, t_enabled);
     
-    if (!ctxt . HasError())
+    if (t_success && !ctxt . HasError())
         return ES_NORMAL;
 	
-	return ES_NORMAL;
+	return ES_ERROR;
 }
 
 // MM-2013-05-21: [[ Bug 10895 ]] Added iphoneIdentifierForVendor as an initial replacement for iphoneSystemIdentifier.

@@ -125,9 +125,9 @@ static MCCustomPrinterImageType MCCustomPrinterImageTypeFromMCGRasterFormat(MCGR
 		return kMCCustomPrinterImageRawXRGB;
 	case kMCGRasterFormat_A:
 	case kMCGRasterFormat_U_ARGB:
+    default:
 		// Unsupported
-		MCAssert(false);
-		return kMCCustomPrinterImageNone;
+        MCUnreachableReturn(kMCCustomPrinterImageNone);
 	}
 }
 
@@ -1085,7 +1085,8 @@ static bool dotextmark_callback(void *p_context, const MCTextLayoutSpan *p_span)
 	extern int32_t MCCustomPrinterComputeFontSize(void *font);
 	t_font_size = MCCustomPrinterComputeFontSize(p_span -> font);
 	t_font_handle = p_span -> font;
-#elif defined(_SERVER)
+#else
+    // Neither servers nor Android have an implementation
 	t_font_size = 0;
 	t_font_handle = NULL;
 #endif
@@ -2179,8 +2180,8 @@ Exec_stat MCCustomPrinterCreate(MCStringRef p_destination, MCStringRef p_filenam
             // AL-2014-09-19: Range argument to MCStringFormat is a pointer to an MCRange.
 			MCStringFormat(&t_module_path, "%*@/revpdfprinter.dylib", &t_range, MCcmd);
 			t_module = MCS_loadmodule(*t_module_path);
-#elif defined(_SERVER)
-			
+#else
+			// Neither servers nor Android have an implementation
 			t_module = nil;
 #endif
 			if (t_module != nil)

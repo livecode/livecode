@@ -313,6 +313,8 @@ MCGAffineTransform view_get_stack_transform(MCStackFullscreenMode p_mode, MCRect
 		t_rect = MCU_center_rect(p_screen_rect, p_stack_rect);
 		// IM-2013-12-19: [[ Bug 11590 ]] Adjust for screen rect origins other than 0,0
 		return MCGAffineTransformMakeTranslation(t_rect.x - p_screen_rect.x, t_rect.y - p_screen_rect.y);
+    default:
+        MCUnreachableReturn(MCGAffineTransformMakeIdentity());
 	}
 }
 
@@ -619,6 +621,11 @@ bool MCStack::view_getacceleratedrendering(void)
 
 void MCStack::view_setacceleratedrendering(bool p_value)
 {
+#ifdef _SERVER
+    // We don't have accelerated rendering on Server
+    return;
+#endif
+    
 	// If we are turning accelerated rendering off, then destroy the tilecache.
 	if (!p_value)
 	{

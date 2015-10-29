@@ -240,8 +240,11 @@ IO_stat MCParagraph::loadattrs(IO_handle stream, uint32_t version)
 		t_stat = IO_read_uint2(&t_flags, stream);
 		
 	// Initialize the paragraph attrs to default values.
-	attrs = new MCParagraphAttrs;
-	attrs -> flags = t_flags;
+    if (t_stat == IO_NORMAL)
+    {
+        attrs = new MCParagraphAttrs;
+        attrs -> flags = t_flags;
+    }
 
 	// Now read each attribute in turn.
 	if (t_stat == IO_NORMAL && (attrs -> flags & (PA_HAS_TEXT_ALIGN | PA_HAS_LIST_STYLE | PA_HAS_VGRID | PA_HAS_HGRID | PA_HAS_DONT_WRAP)) != 0)

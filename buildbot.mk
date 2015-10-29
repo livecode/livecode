@@ -190,6 +190,10 @@ dist-upload-files.txt:
 	                -o -name '*-bin.tar.xz' \
 	  > $@
 
+# Compute the SHA-1 sum of all the installers to be uploaded
+sha1sum.txt: dist-upload-files.txt
+	sha1sum < dist-upload-files.txt > $@
+
 # Perform the upload.  This is in two steps:
 # (1) Create the target directory
 # (2) Transfer the files using rsync
@@ -198,14 +202,14 @@ dist-upload-files.txt:
 # connection drops
 dist-upload-mkdir:
 	ssh $(UPLOAD_SERVER) "mkdir -p \"$(UPLOAD_PATH)\""
-dist-upload: dist-upload-files.txt dist-upload-mkdir
+dist-upload: dist-upload-files.txt sha1sum.txt dist-upload-mkdir
 	trap "echo Interrupted; exit;" SIGINT SIGTERM; \
 	i=0; \
 	false; \
 	while [ $$? -ne 0 -a $$i -lt $(UPLOAD_MAX_RETRIES) ] ; do \
 	  i=$$(($$i+1)); \
 	  rsync -v --progress --partial --chmod=ugo=rwX --executability \
-	    --files-from=dist-upload-files.txt . $(UPLOAD_SERVER):"\"$(UPLOAD_PATH)\""; \
+	    --files-from=dist-upload-files.txt sha1sum.txt . $(UPLOAD_SERVER):"\"$(UPLOAD_PATH)\""; \
 	done; \
 	rc=$$?; \
 	if [ $$i -eq $(UPLOAD_MAX_RETRIES) ]; then \

@@ -44,6 +44,13 @@
 						[
 							'../thirdparty/headers/linux/include/cairo',
 						],
+
+						'defines':
+						[
+							# We use some features that are behind config macros in old versions of Pango
+							'PANGO_ENABLE_BACKEND',
+							'PANGO_ENABLE_ENGINE',
+						],
 					},
 				],
 				[
@@ -120,7 +127,6 @@
 								'$(SDKROOT)/System/Library/Frameworks/ApplicationServices.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Carbon.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Cocoa.framework',
-								'$(SDKROOT)/System/Library/Frameworks/QTKit.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Quartz.framework',
 							],
 						},

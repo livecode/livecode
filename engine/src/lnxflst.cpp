@@ -48,6 +48,7 @@ extern "C" int initialise_weak_link_xft();
 extern "C" int initialise_weak_link_pango();
 extern "C" int initialise_weak_link_pangoxft();
 extern "C" int initialise_weak_link_pangoft2();
+extern "C" int initialise_weak_link_pangocairo();
 extern "C" int initialise_weak_link_glib();
 extern "C" int initialise_weak_link_gobject();
 
@@ -92,9 +93,9 @@ MCNewFontlist::MCNewFontlist()
 
 MCNewFontlist::~MCNewFontlist()
 {
-	if (m_font_map != nil)
-		g_object_unref(m_font_map);
-	if (m_layout != nil)
+    // The font map object is owned by Pango so we don't release it
+    
+    if (m_layout != nil)
 		g_object_unref(m_layout);
 	if (m_pango != nil)
 		g_object_unref(m_pango);
@@ -115,24 +116,28 @@ bool MCNewFontlist::create(void)
 	// MM-2013-09-13: [[ RefactorGraphics ]] We don't link to glib and gobject on server by default (but both are needed for font support, so added here).
 	if (initialise_weak_link_pango() == 0 ||
 		initialise_weak_link_pangoft2() == 0 ||
+        initialise_weak_link_pangocairo() == 0 ||
 		initialise_weak_link_gobject() == 0 ||
 		initialise_weak_link_glib() == 0)
 		return false;
 #else
 	if (initialise_weak_link_pango() == 0 ||
+        initialise_weak_link_pangocairo() == 0 ||
 		initialise_weak_link_pangoft2() == 0)
 		return false;
 	
 #endif
 	
-	m_font_map = pango_ft2_font_map_new();
+    // Note that we do not own this font map and should not release it
+    m_font_map = pango_cairo_font_map_get_default();
 	if (m_font_map == nil)
 		return false;
 	
-	//m_pango = pango_font_map_create_context(m_font_map);
-	m_pango = pango_ft2_font_map_create_context((PangoFT2FontMap *) m_font_map);
+    m_pango = pango_context_new();
 	if (m_pango == nil)
 		return false;
+    
+    pango_context_set_font_map(m_pango, m_font_map);
 
 	m_layout = pango_layout_new(m_pango);
 	if (m_layout == nil)
@@ -182,7 +187,7 @@ MCFontStruct *MCNewFontlist::getfont(MCNameRef p_family, uint2& p_size, uint2 p_
 		pango_font_description_set_weight(t_font -> description, PANGO_WEIGHT_BOLD);
 	if ((p_style & FA_EXPAND) > 0x50)
 		pango_font_description_set_stretch(t_font -> description, PANGO_STRETCH_EXPANDED);
-	else if ((p_style & FA_EXPAND) < 0x05)
+	else if ((p_style & FA_EXPAND) < 0x50)
 		pango_font_description_set_stretch(t_font -> description, PANGO_STRETCH_CONDENSED);
 
 	PangoFont *t_p_font;
