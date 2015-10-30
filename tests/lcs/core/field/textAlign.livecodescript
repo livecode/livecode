@@ -21,11 +21,19 @@ on TestStyledTextResetsTextAlign
 open this stack
 create fld "myFld"
 put "This is some text & return & this is some more text" into fld "myFld"
-set the textAlign of char 1 to -1 of fld "myFld" to "center"
+repeat for each item tTextAlign in "left,center,right"
+  set the textAlign of char 1 to -1 of fld "myFld" to tTextAlign
+  put the styledText of fld "myFld" into tStyledText
+  set the styledText of fld "myFld" to tStyledText
+  TestAssert "setting styledText respects textAlign for '" & tTextAlign & "'", the textAlign of char 1 to -1 of fld "myFld" is tTextAlign
+end repeat
+
+set the textAlign of char 1 to -1 of fld "myFld" to empty
 put the styledText of fld "myFld" into tStyledText
 set the styledText of fld "myFld" to tStyledText
 
-TestAssert "setting styledText respects textAlign", the textAlign of char 1 to -1 of fld "myFld" is "center"
+
+TestAssert "setting styledText respects textAlign for empty", the textAlign of char 1 to -1 of fld "myFld" is empty
 
 delete fld "myFld"
 end TestStyledTextResetsTextAlign
