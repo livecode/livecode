@@ -538,6 +538,8 @@ component Documentation
 
 component Extensions
 	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.browser
+	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.clock
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.colorswatch
@@ -644,6 +646,9 @@ component Engine.MacOSX
 	executable macosx:revpdfprinter.bundle as "[[TargetFolder]]/Contents/MacOS/revpdfprinter.bundle"
 	executable macosx:revsecurity.dylib as "[[TargetFolder]]/Contents/MacOS/revsecurity.dylib"
 	into "[[TargetFolder]]/Contents/Frameworks/" place
+		executable macosx:Frameworks/libbrowser-cefprocess.app
+		executable "macosx:Frameworks/libbrowser-cefprocess EH.app"
+		executable "macosx:Frameworks/libbrowser-cefprocess NP.app"
 		executable macosx:Frameworks/revbrowser-cefprocess.app
 		executable "macosx:Frameworks/revbrowser-cefprocess EH.app"
 		executable "macosx:Frameworks/revbrowser-cefprocess NP.app"
@@ -894,6 +899,7 @@ component Externals.MacOSX
 component Externals.CEF.Linux
 	into [[TargetFolder]]/Externals/CEF place
 		executable linux-[[TargetArchitecture]]:revbrowser-cefprocess
+		executable linux-[[TargetArchitecture]]:libbrowser-cefprocess
 		executable linux-[[TargetArchitecture]]:CEF/libcef.so
 		executable linux-[[TargetArchitecture]]:CEF/libffmpegsumo.so
 		executable linux-[[TargetArchitecture]]:CEF/libpdf.so
@@ -905,9 +911,12 @@ component Externals.CEF.Linux
 	// Horrible workaround for a libCEF bug
 	into [[TargetFolder]] place
 		file linux-[[TargetArchitecture]]:CEF/icudtl.dat
+		executable linux-[[TargetArchitecture]]:revbrowser-cefprocess
+		executable linux-[[TargetArchitecture]]:libbrowser-cefprocess
 
 component Externals.CEF.Windows
 	into [[TargetFolder]]/Externals/CEF place
+		executable windows:libbrowser-cefprocess.exe
 		executable windows:revbrowser-cefprocess.exe
 		executable windows:CEF/libcef.dll
 		executable windows:CEF/d3dcompiler_43.dll
@@ -917,7 +926,7 @@ component Externals.CEF.Windows
 		executable windows:CEF/libEGL.dll
 		executable windows:CEF/libGLESv2.dll
 		executable windows:CEF/pdf.dll
-		file windows:CEF/locales/en-US.pak
+		rfolder windows:CEF/locales
 		file windows:CEF/cef.pak
 		file windows:CEF/cef_100_percent.pak
 		file windows:CEF/cef_200_percent.pak
@@ -925,6 +934,9 @@ component Externals.CEF.Windows
 
 component Externals.CEF.MacOSX
 	into [[TargetFolder]]/Externals/CEF place
+		executable macosx:Frameworks/libbrowser-cefprocess.app
+		executable "macosx:Frameworks/libbrowser-cefprocess EH.app"
+		executable "macosx:Frameworks/libbrowser-cefprocess NP.app"
 		executable macosx:Frameworks/revbrowser-cefprocess.app
 		executable "macosx:Frameworks/revbrowser-cefprocess EH.app"
 		executable "macosx:Frameworks/revbrowser-cefprocess NP.app"

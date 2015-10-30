@@ -58,8 +58,10 @@ public foreign handler MCBrowserLibraryInitialize() returns CBool binds to "<bui
 public foreign handler MCBrowserLibraryFinalize() returns nothing binds to "<builtin>"
 
 public foreign handler type MCBrowserWaitFunction() returns CBool
+public foreign handler type MCBrowserBreakWaitFunction() returns nothing
 
 public foreign handler MCBrowserLibrarySetWaitFunction(in pWait as MCBrowserWaitFunction) returns nothing binds to "<builtin>"
+public foreign handler MCBrowserLibrarySetBreakWaitFunction(in pBreakWait as MCBrowserBreakWaitFunction) returns nothing binds to "<builtin>"
 public foreign handler MCBrowserLibraryGetRunloopCallback(out rCallback as Pointer, out rContext as Pointer) returns CBool binds to "<builtin>"
 
 public foreign handler MCBrowserFactoryGet(in pFactoryId as ZStringUTF8, out rFactory as MCBrowserFactoryRef) returns CBool binds to "<builtin>"
@@ -393,6 +395,10 @@ private handler doWait() returns CBool
 	return true
 end handler
 
+private handler doBreakWait() returns nothing
+	MCEngineRunloopBreakWait()
+end handler
+
 public handler libbrowserInit() returns nothing
 	if mInitialized is not nothing then
 		return
@@ -403,6 +409,7 @@ public handler libbrowserInit() returns nothing
 	end if
 
 	MCBrowserLibrarySetWaitFunction(doWait)
+	MCBrowserLibrarySetBreakWaitFunction(doBreakWait)
 
 	variable tCallback as MCRunloopActionCallback
 	variable tContext as Pointer
