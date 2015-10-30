@@ -19,6 +19,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 -- FIXME provide this on the command line
 constant kLogFilename = "_test_suite.log"
 
+-- This is the message dispatched before invoking each test command
+constant kSetupMessage = "TestSetup"
+-- And this message is dispatched *after* each test command
+constant kTeardownMessage = "TestTearDown"
+
 on startup
    send "TestRunnerMain" to me in 0
 end startup
@@ -133,8 +138,10 @@ private command invokeTest pInfo
    -- This should auto-load the test script
    put the name of stack pInfo["invoke"]["script"] into tStackName
    
-   -- Dispatch the test command
+   -- Dispatch the test setup command, and the test command itself
+   dispatch kSetupMessage to tStackName
    dispatch pInfo["invoke"]["command"] to tStackName
+   dispatch kTeardownMessage to tStackName
 end invokeTest
 
 -- Add the unit test library stack to the backscripts
@@ -337,13 +344,26 @@ private function runGetTestCommandNames pFilename
    close file pFilename
    
    -- Scan the file for "on Test*" definitions
-   local tCommandNames, tCount, tLine
+   local tCommandNames, tCount, tLine, tName
    
    repeat for each line tLine in tScript
-      if token 1 of tLine is "on" and token 2 of tLine begins with "Test" then
-         add 1 to tCount
-         put token 2 of tLine into tCommandNames[tCount]
+      if token 1 of tLine is not "on" then
+         next repeat
       end if
+
+      put token 2 of tLine into tName
+
+      if not (tName begins with "Test") then
+         next repeat
+      end if
+
+      -- Exclude the test setup message
+      if tName is kSetupMessage or tName is kTeardownMessage then
+         next repeat
+      end if
+
+      add 1 to tCount
+      put tName into tCommandNames[tCount]
    end repeat
    
    return tCommandNames

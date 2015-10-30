@@ -69,6 +69,7 @@ check: check-$(guess_platform)
 
 check-common-%:
 	$(MAKE) -C tests bin_dir=../$*-bin
+	$(MAKE) -C ide/tests bin_dir=../../$*-bin
 
 ################################################################
 # Linux rules
