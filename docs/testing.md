@@ -70,4 +70,4 @@ Each test is a `.cpp` file added to the `test` directory for the program or libr
 
 When you add a new C++ test source file, you need to add it to the target's corresponding `module_test_sources` gyp variable.  These are currently set in the top-level `.gyp` file for each project, except for the engine, for which you should edit the `engine_test_source_files` variable in `engine/engine-sources.gypi`.
 
-Sadly, Google Test provides pretty much no useful documentation on how to write tests.  Your best bet is to look at the test already in the LiveCode source code and the examples in the Google Test source tree.
+For more information on writing C++ tests with Google Test, please consult the [Google Test documentation](https://github.com/google/googletest/blob/master/googletest/docs/Documentation.md).
