@@ -805,8 +805,7 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 				t_new_orientation = UIInterfaceOrientationLandscapeLeft;
 				break;
             default:
-                assert(false);
-                break;
+                MCUnreachableReturn();
 		}
 		
 		// Store the pending notification.
@@ -2029,7 +2028,7 @@ static char *my_strndup(const char * p, int n)
 
 extern "C" bool MCModulesInitialize();
 
-MC_DLLEXPORT_DEF int main(int argc, char *argv[], char *envp[])
+MC_DLLEXPORT_DEF int platform_main(int argc, char *argv[], char *envp[])
 {
 #if defined(_DEBUG) && defined(_VALGRIND)
 	if (argc < 2 ||  (argc >= 2 && strcmp(argv[1], "-valgrind") != 0))

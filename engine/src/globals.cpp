@@ -244,10 +244,11 @@ uint2 MCiconicstacks;
 uint2 MCwaitdepth;
 uint4 MCrecursionlimit = 400000; // actual max is about 480K on OSX
 
-MCClipboardData *MCclipboarddata;
-MCSelectionData *MCselectiondata;
+MCClipboard* MCclipboard;
+MCClipboard* MCselection;
+MCClipboard* MCdragboard;
+uindex_t MCclipboardlockcount;
 
-MCDragData *MCdragdata;
 MCDragAction MCdragaction;
 MCDragActionSet MCallowabledragactions;
 uint4 MCdragimageid;
@@ -635,9 +636,10 @@ void X_clear_globals(void)
 	MCiconicstacks = 0;
 	MCwaitdepth = 0;
 	MCrecursionlimit = 400000;
-	MCclipboarddata = nil;
-	MCselectiondata = nil;
-	MCdragdata = nil;
+	MCclipboard = NULL;
+	MCselection = NULL;
+    MCdragboard = NULL;
+    MCclipboardlockcount = 0;
 	MCdragaction = 0;
 	MCallowabledragactions = 0;
 	MCdragimageid = 0;
@@ -1138,9 +1140,10 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	
 	MCtooltip = new MCTooltip;
 
-	MCclipboarddata = new MCClipboardData;
-	MCdragdata = new MCDragData;
-	MCselectiondata = new MCSelectionData;
+    MCclipboard = MCClipboard::CreateSystemClipboard();
+    MCdragboard = MCClipboard::CreateSystemDragboard();
+    MCselection = MCClipboard::CreateSystemSelectionClipboard();
+    MCclipboardlockcount = 0;
 	
 	MCundos = new MCUndolist;
 	MCselected = new MCSellist;
@@ -1296,7 +1299,10 @@ int X_close(void)
 	MClockmessages = True;
 	MCS_killall();
 
-	MCscreen -> flushclipboard();
+    // Flush all engine clipboards to the system clipboards
+    MCclipboard->FlushData();
+    MCselection->FlushData();
+    MCdragboard->FlushData();
 
     MCdispatcher -> remove_transient_stack(MCtooltip);
 	delete MCtooltip;
@@ -1391,9 +1397,9 @@ int X_close(void)
 	delete MCperror;
 	delete MCeerror;
 
-	delete MCclipboarddata;
-	delete MCdragdata;
-	delete MCselectiondata;
+    MCclipboard->Release();
+    MCselection->Release();
+    MCdragboard->Release();
 
 	MCValueRelease(MCshellcmd);
 	MCValueRelease(MCvcplayer);

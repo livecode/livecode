@@ -3,11 +3,6 @@
 	[
 		'../common.gypi',
 		'engine-sources.gypi',
-		'kernel.gypi',
-		'kernel-development.gypi',
-		'kernel-installer.gypi',
-		'kernel-standalone.gypi',
-		'kernel-server.gypi',
 	],
 	
 	'target_defaults':
@@ -26,73 +21,6 @@
 	
 	'targets':
 	[
-		{
-			'target_name': 'encode_version',
-			'type': 'none',
-			
-			'actions':
-			[
-				{
-					'action_name': 'encode_version',
-					'inputs':
-					[
-						'../util/encode_version.pl',
-						'../version',
-						'include/revbuild.h.in',
-					],
-					'outputs':
-					[
-						'<(SHARED_INTERMEDIATE_DIR)/include/revbuild.h',
-					],
-					
-					'action':
-					[
-						'<@(perl)',
-						'../util/encode_version.pl',
-						'.',
-						'<(SHARED_INTERMEDIATE_DIR)',
-					],
-				},
-			],
-			
-			'direct_dependent_settings':
-			{
-				'include_dirs':
-				[
-					'<(SHARED_INTERMEDIATE_DIR)/include',
-				],
-			},
-		},
-		
-		{
-			'target_name': 'quicktime_stubs',
-			'type': 'none',
-			
-			'actions':
-			[
-				{
-					'action_name': 'quicktime_stubs',
-					'inputs':
-					[
-						'../util/weak_stub_maker.pl',
-						'src/quicktime.stubs',
-					],
-					'outputs':
-					[
-						'<(SHARED_INTERMEDIATE_DIR)/src/quicktimestubs.mac.cpp',
-					],
-					
-					'action':
-					[
-						'<@(perl)',
-						'../util/weak_stub_maker.pl',
-						'src/quicktime.stubs',
-						'<@(_outputs)',
-					],
-				},
-			],
-		},
-		
 		{
 			'target_name': 'encode_environment_stack',
 			'type': 'none',
@@ -123,26 +51,7 @@
 				},
 			],
 		},
-		
-		{
-			'target_name': 'security-community',
-			'type': 'static_library',
-			
-			'dependencies':
-			[
-				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl',
 				
-				# Because our headers are so messed up...
-				'../libfoundation/libfoundation.gyp:libFoundation',
-				'../libgraphics/libgraphics.gyp:libGraphics',
-			],
-			
-			'sources':
-			[
-				'<@(engine_security_source_files)',
-			],
-		},
-		
 		{
 			'target_name': 'server',
 			'type': 'executable',
@@ -150,7 +59,7 @@
 			
 			'dependencies':
 			[
-				'kernel-server',
+				'kernel-server.gyp:kernel-server',
 				
 				'../libfoundation/libfoundation.gyp:libFoundation',
 				'../libgraphics/libgraphics.gyp:libGraphics',
@@ -159,8 +68,14 @@
 			'sources':
 			[
 				'<@(engine_security_source_files)',
+				'src/main.cpp',
 			],
-			
+
+			'include_dirs':
+			[
+				'../libfoundation/include',
+			],
+
 			'conditions':
 			[
 				[
@@ -205,8 +120,8 @@
 			
 			'dependencies':
 			[
-				'kernel-standalone',
-				'security-community',
+				'kernel-standalone.gyp:kernel-standalone',
+				'engine-common.gyp:security-community',
 			],
 			
 			'sources':
@@ -214,9 +129,22 @@
 				'src/dummy.cpp',
 				'rsrc/standalone.rc',
 			],
-			
+
 			'conditions':
 			[
+				[
+					'OS != "win" and OS != "android"',
+					{
+						'sources':
+						[
+							'src/main.cpp',
+						],
+						'include_dirs':
+						[
+							'../libfoundation/include',
+						],
+					},
+				],
 				[
 					'OS == "mac"',
 					{
@@ -416,7 +344,6 @@
 				[
 					'OS == "emscripten"',
 					{
-						'product_name': 'standalone-community.bc',
 						'all_dependent_settings':
 						{
 							'variables':
@@ -491,8 +418,8 @@
 			
 			'dependencies':
 			[
-				'kernel-installer',
-				'security-community',
+				'kernel-installer.gyp:kernel-installer',
+				'engine-common.gyp:security-community',
 			],
 			
 			'sources':
@@ -500,9 +427,22 @@
 				'src/dummy.cpp',
 				'rsrc/installer.rc',
 			],
-			
+
 			'conditions':
 			[
+				[
+					'OS != "win" and OS != "android"',
+					{
+						'sources':
+						[
+							'src/main.cpp',
+						],
+						'include_dirs':
+						[
+							'../libfoundation/include',
+						],
+					},
+				],
 				[
 					'OS == "mac"',
 					{
@@ -595,9 +535,9 @@
 			
 			'dependencies':
 			[
-				'kernel-development',
+				'kernel-development.gyp:kernel-development',
 				'encode_environment_stack',
-				'security-community',
+				'engine-common.gyp:security-community',
 			],
 			
 			'sources':
@@ -608,6 +548,19 @@
 
 			'conditions':
 			[
+				[
+					'OS != "win" and OS != "android"',
+					{
+						'sources':
+						[
+							'src/main.cpp',
+						],
+						'include_dirs':
+						[
+							'../libfoundation/include',
+						],
+					},
+				],
 				[
 					'OS == "mac"',
 					{
@@ -662,9 +615,22 @@
 			[
 				'standalone',
 			],
-			
+
 			'conditions':
 			[
+				[
+					'OS != "win" and OS != "android"',
+					{
+						'sources':
+						[
+							'src/main.cpp',
+						],
+						'include_dirs':
+						[
+							'../libfoundation/include',
+						],
+					},
+				],
 				[
 					'OS == "ios"',
 					{
@@ -757,14 +723,21 @@
 			
 						'dependencies':
 						[
-							'kernel-standalone',
-							'security-community',
+							'kernel-standalone.gyp:kernel-standalone',
+							'engine-common.gyp:security-community',
 						],
 			
 						'sources':
 						[
 							'src/dummy.cpp',
+							'src/main.cpp',
 						],
+
+						'include_dirs':
+						[
+							'../libfoundation/include',
+						],
+
 					},
 				],
 			},
@@ -796,7 +769,7 @@
 
 								'inputs':
 								[
-									'emscripten-javascriptify.py',
+									'../util/emscripten-javascriptify.py',
 									'<(PRODUCT_DIR)/standalone-community.bc',
 									'rsrc/emscripten-html-template.html',
 									'src/em-whitelist.json',
@@ -820,7 +793,7 @@
 
 								'action':
 								[
-									'./emscripten-javascriptify.py',
+									'../util/emscripten-javascriptify.py',
 									'--input',
 									'<(PRODUCT_DIR)/standalone-community.bc',
 									'--output',

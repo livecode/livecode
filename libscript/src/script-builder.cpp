@@ -1228,7 +1228,7 @@ void MCScriptEndHandlerInModule(MCScriptModuleBuilderRef self)
         uindex_t t_encoded_target_address;
         if (t_target_address >= 0)
             t_encoded_target_address = t_target_address * 2;
-        else if (t_target_address < 0)
+        else
             t_encoded_target_address = (-t_target_address) * 2 + 1;
         
         t_operands[t_address_index] = (1 << 31) | t_encoded_target_address;

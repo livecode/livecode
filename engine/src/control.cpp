@@ -1113,10 +1113,12 @@ void MCControl::drawselected(MCDC *dc)
 	else
 		dc->setfillstyle(FillSolid, nil, 0, 0);
 	dc->setforeground(MCselectioncolor);
+    dc->setquality(QUALITY_SMOOTH);
     for (uint2 i = 0; i < 8; i++)
         dc->fillarc(rects[i], 0, 360, false);
 	if (flags & F_LOCK_LOCATION)
 		dc->setfillstyle(FillSolid, nil, 0, 0);
+    dc->setquality(QUALITY_DEFAULT);
 }
 
 void MCControl::drawarrow(MCDC *dc, int2 x, int2 y, uint2 size,
@@ -1615,8 +1617,13 @@ void MCControl::enter()
 	{
 		MCdragaction = DRAG_ACTION_NONE;
 		MCdragdest = this;
+        
+        // Give the script a chance to respond to the drag operation. If it
+        // doesn't complete successfully or passes, attempt an
+        // automatic drag-drop operation (if this is a field object).
 		if (message(MCM_drag_enter) != ES_NORMAL && gettype() == CT_FIELD
-		        && !(flags & F_LOCK_TEXT) && MCdragdata -> HasText())
+		        && !(flags & F_LOCK_TEXT)
+                && MCdragboard->HasTextOrCompatible())
 		{
 			state |= CS_DRAG_TEXT;
 			state &= ~CS_MFOCUSED;

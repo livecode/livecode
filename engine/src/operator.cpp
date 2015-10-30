@@ -1210,7 +1210,7 @@ Parse_stat MCIs::parse(MCScriptPoint &sp, Boolean the)
 				else if (te -> type == TT_CLASS)
 					delimiter = (Chunk_term)te -> which;
 				else
-					MCUnreachable();
+                    MCUnreachableReturn(PS_ERROR);
 
 				if (delimiter == CT_CHARACTER)
 					if (form == IT_NOT)
@@ -1235,7 +1235,12 @@ Parse_stat MCIs::parse(MCScriptPoint &sp, Boolean the)
 						if (sp . next(type) == PS_NORMAL)
 						{
 							if ((sp.lookup(SP_FACTOR, te) == PS_NORMAL
-									&& (te->which == P_DRAG_DATA || te->which == P_CLIPBOARD_DATA)))
+									&& (te->which == P_DRAG_DATA
+                                        || te->which == P_CLIPBOARD_DATA
+                                        || te->which == P_RAW_CLIPBOARD_DATA
+                                        || te->which == P_RAW_DRAGBOARD_DATA
+                                        || te->which == P_FULL_CLIPBOARD_DATA
+                                        || te->which == P_FULL_DRAGBOARD_DATA)))
 							{
 								if (te -> which == P_CLIPBOARD_DATA)
 								{
@@ -1244,7 +1249,35 @@ Parse_stat MCIs::parse(MCScriptPoint &sp, Boolean the)
 									else
 										form = IT_AMONG_THE_CLIPBOARD_DATA;
 								}
-								else
+                                else if (te -> which == P_RAW_CLIPBOARD_DATA)
+                                {
+                                    if (form == IT_NOT_AMONG)
+                                        form = IT_NOT_AMONG_THE_RAW_CLIPBOARD_DATA;
+                                    else
+                                        form = IT_AMONG_THE_RAW_CLIPBOARD_DATA;
+                                }
+                                else if (te -> which == P_RAW_DRAGBOARD_DATA)
+                                {
+                                   if (form == IT_NOT_AMONG)
+                                       form = IT_NOT_AMONG_THE_RAW_DRAGBOARD_DATA;
+                                    else
+                                        form = IT_AMONG_THE_RAW_DRAGBOARD_DATA;
+                                }
+                                else if (te -> which == P_FULL_CLIPBOARD_DATA)
+                                {
+                                    if (form == IT_NOT_AMONG)
+                                        form = IT_NOT_AMONG_THE_FULL_CLIPBOARD_DATA;
+                                    else
+                                        form = IT_AMONG_THE_FULL_CLIPBOARD_DATA;
+                                }
+                                else if (te -> which == P_FULL_DRAGBOARD_DATA)
+                                {
+                                    if (form == IT_NOT_AMONG)
+                                        form = IT_NOT_AMONG_THE_FULL_DRAGBOARD_DATA;
+                                    else
+                                        form = IT_AMONG_THE_FULL_DRAGBOARD_DATA;
+                                }
+								else /* if (te -> which == P_DRAG_DATA) */
 								{
 									if (form == IT_NOT_AMONG)
 										form = IT_NOT_AMONG_THE_DRAG_DATA;
@@ -2077,6 +2110,14 @@ void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     case IT_NOT_AMONG_THE_CLIPBOARD_DATA:
     case IT_AMONG_THE_DRAG_DATA:
     case IT_NOT_AMONG_THE_DRAG_DATA:
+    case IT_AMONG_THE_RAW_CLIPBOARD_DATA:
+    case IT_NOT_AMONG_THE_RAW_CLIPBOARD_DATA:
+    case IT_AMONG_THE_RAW_DRAGBOARD_DATA:
+    case IT_NOT_AMONG_THE_RAW_DRAGBOARD_DATA:
+    case IT_AMONG_THE_FULL_CLIPBOARD_DATA:
+    case IT_NOT_AMONG_THE_FULL_CLIPBOARD_DATA:
+    case IT_AMONG_THE_FULL_DRAGBOARD_DATA:
+    case IT_NOT_AMONG_THE_FULL_DRAGBOARD_DATA:
         {
             MCNewAutoNameRef t_right;
 
@@ -2091,6 +2132,24 @@ void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
                 MCPasteboardEvalIsAmongTheKeysOfTheDragData(ctxt, *t_right, t_result);
             else if (form == IT_NOT_AMONG_THE_DRAG_DATA)
                 MCPasteboardEvalIsNotAmongTheKeysOfTheDragData(ctxt, *t_right, t_result);
+            else if (form == IT_AMONG_THE_RAW_CLIPBOARD_DATA)
+                MCPasteboardEvalIsAmongTheKeysOfTheRawClipboardData(ctxt, *t_right, t_result);
+            else if (form == IT_NOT_AMONG_THE_RAW_CLIPBOARD_DATA)
+                MCPasteboardEvalIsNotAmongTheKeysOfTheRawClipboardData(ctxt, *t_right, t_result);
+            else if (form == IT_AMONG_THE_RAW_DRAGBOARD_DATA)
+                MCPasteboardEvalIsAmongTheKeysOfTheRawDragData(ctxt, *t_right, t_result);
+            else if (form == IT_NOT_AMONG_THE_RAW_DRAGBOARD_DATA)
+                MCPasteboardEvalIsNotAmongTheKeysOfTheRawDragData(ctxt, *t_right, t_result);
+            else if (form == IT_AMONG_THE_FULL_CLIPBOARD_DATA)
+                MCPasteboardEvalIsAmongTheKeysOfTheFullClipboardData(ctxt, *t_right, t_result);
+            else if (form == IT_NOT_AMONG_THE_FULL_CLIPBOARD_DATA)
+                MCPasteboardEvalIsNotAmongTheKeysOfTheFullClipboardData(ctxt, *t_right, t_result);
+            else if (form == IT_AMONG_THE_FULL_DRAGBOARD_DATA)
+                MCPasteboardEvalIsAmongTheKeysOfTheFullDragData(ctxt, *t_right, t_result);
+            else if (form == IT_NOT_AMONG_THE_FULL_DRAGBOARD_DATA)
+                MCPasteboardEvalIsNotAmongTheKeysOfTheFullDragData(ctxt, *t_right, t_result);
+            else
+                MCUnreachable();
         }
         break;
     case IT_IN:
@@ -2171,9 +2230,8 @@ void MCIs::compile(MCSyntaxFactoryRef ctxt)
 			case IV_RECT:
 				t_method = form == IT_NORMAL ? kMCGraphicsEvalIsARectangleMethodInfo : kMCGraphicsEvalIsNotARectangleMethodInfo;
 				break;
-			default:
-				MCAssert(false);
-				break;
+            default:
+                MCUnreachableReturn();
 		}
 		
 		right -> compile(ctxt);
@@ -2211,8 +2269,8 @@ void MCIs::compile(MCSyntaxFactoryRef ctxt)
 					case CT_ITEM:
 						t_method = form == IT_AMONG ? kMCStringsEvalIsAmongTheItemsOfMethodInfo : kMCStringsEvalIsNotAmongTheItemsOfMethodInfo;
 						break;
-					default:
-						MCAssert(false);
+                    default:
+                        MCUnreachableReturn();
 				}
 				break;
 			case IT_IN:
@@ -2243,9 +2301,8 @@ void MCIs::compile(MCSyntaxFactoryRef ctxt)
 				t_method = kMCPasteboardEvalIsNotAmongTheKeysOfTheDragDataMethodInfo;
 				t_is_unary = true;
 				break;
-			default:
-				MCAssert(false);
-				break;
+            default:
+                MCUnreachableReturn();
 		}				
 		if (!t_is_unary)
 			left -> compile(ctxt);
@@ -2414,9 +2471,8 @@ void MCThere::compile(MCSyntaxFactoryRef ctxt)
 			case TM_DIRECTORY:
 				t_method = form == IT_NORMAL ? kMCFilesEvalThereIsAFolderMethodInfo : kMCFilesEvalThereIsNotAFolderMethodInfo;
 				break;
-			default:
-				MCAssert(false);
-				break;
+            default:
+                MCUnreachableReturn();
 		}
 	}
 	else

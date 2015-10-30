@@ -663,8 +663,7 @@ void MCMetaContext::clear(const MCRectangle *rect)
 
 MCRegionRef MCMetaContext::computemaskregion(void)
 {
-	MCUnreachable();
-	return NULL;
+    MCUnreachableReturn(NULL);
 }
 
 

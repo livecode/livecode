@@ -47,6 +47,7 @@
 
 #include "widget-ref.h"
 #include "widget-events.h"
+#include "native-layer.h"
 
 #include "module-canvas.h"
 
@@ -657,6 +658,36 @@ extern "C" MC_DLLEXPORT_DEF void MCWidgetSetNativeLayerOfWidget(void *p_native_l
 	MCWidgetGetHost(p_widget)->SetNativeView(p_native_layer);
 }
 
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetNativeLayerCanRenderToContext(MCWidgetRef p_widget, bool &r_can_render)
+{
+	if (!MCWidgetEnsureCanManipulateWidget(p_widget))
+		return;
+	
+	void *t_view;
+	if (MCWidgetGetHost(p_widget)->getNativeLayer() == nil)
+	{
+		// TODO - throw error: no native layer
+		return;
+	}
+	
+	r_can_render = MCWidgetGetHost(p_widget)->getNativeLayer()->GetCanRenderToContext();
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetSetNativeLayerCanRenderToContext(bool p_can_render, MCWidgetRef p_widget)
+{
+	if (!MCWidgetEnsureCanManipulateWidget(p_widget))
+		return;
+	
+	void *t_view;
+	if (MCWidgetGetHost(p_widget)->getNativeLayer() == nil)
+	{
+		// TODO - throw error: no native layer
+		return;
+	}
+	
+	MCWidgetGetHost(p_widget)->getNativeLayer()->SetCanRenderToContext(p_can_render);
+}
+
 extern "C" MC_DLLEXPORT_DEF void MCWidgetGetStackNativeViewOfWidget(MCWidgetRef p_widget, void *&r_native_view)
 {
 	if (!MCWidgetEnsureCanManipulateWidget(p_widget))
@@ -695,6 +726,22 @@ extern "C" MC_DLLEXPORT_DEF void MCWidgetSetMyNativeLayer(void *p_native_layer)
 		return;
 	
 	MCWidgetSetNativeLayerOfWidget(p_native_layer, MCcurrentwidget);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMyNativeLayerCanRenderToContext(bool &r_can_render)
+{
+	if (!MCWidgetEnsureCurrentWidget())
+		return;
+	
+	MCWidgetGetNativeLayerCanRenderToContext(MCcurrentwidget, r_can_render);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetSetMyNativeLayerCanRenderToContext(bool p_can_render)
+{
+	if (!MCWidgetEnsureCurrentWidget())
+		return;
+	
+	MCWidgetSetNativeLayerCanRenderToContext(p_can_render, MCcurrentwidget);
 }
 
 extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMyStackNativeView(void *&r_view)

@@ -1106,9 +1106,12 @@ void __MCValueFinalize(void)
 			s_value_pools[i] . count -= 1;
             MCMemoryDelete(t_value);
         }
+	MCMemoryDeleteArray(s_value_pools);
     
 	MCMemoryDeleteArray(s_unique_values);
 	s_unique_values = nil;
+	s_unique_value_count = 0;
+	s_unique_value_capacity_idx = 0;
 
 	MCValueRelease(kMCFalse);
 	kMCFalse = nil;

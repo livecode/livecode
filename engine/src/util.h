@@ -21,6 +21,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef UTIL_H
 #define UTIL_H
 
+#include "parsedef.h"
+#include "sysdefs.h"
+#include "typedefs.h"
 #include "mcsemaphore.h"
 
 typedef struct

@@ -956,6 +956,17 @@ void MCFinalize(void);
 #	define DEBUG_LOG 1
 #endif
 
+#define MCUnreachableReturn(x) { MCUnreachable(); return x;}
+
+// If we are using GCC or Clang, we can give the compiler the hint that the
+// assertion functions do not return. This is particularly useful for Clang's
+// static analysis feature.
+#if defined(__GNUC__) || defined (__clang__) || defined (__llvm__)
+#define ATTRIBUTE_NORETURN  __attribute__((__noreturn__))
+#else
+#define ATTRIBUTE_NORETURN
+#endif
+
 #if defined(DEBUG_LOG)
 
 extern void __MCAssert(const char *file, uint32_t line, const char *message) ATTRIBUTE_NORETURN;
@@ -978,7 +989,15 @@ extern void __MCUnreachable(void) ATTRIBUTE_NORETURN;
 
 #define MCLogWithTrace(m_format, ...)
 
+#if defined(__clang__) || (defined(__GNUC__) && (__GNUC__ >  4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 5)))
+
+#define MCUnreachable() __builtin_unreachable()
+
+#else // Neither GCC >= 4.5 or Clang compiler
+
 #define MCUnreachable()
+
+#endif
 
 #endif
 

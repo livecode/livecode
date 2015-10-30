@@ -175,9 +175,15 @@ void MCNativeLayerX11::doDetach()
     gtk_widget_hide(GTK_WIDGET(m_child_window));
 }
 
-void MCNativeLayerX11::OnPaint(MCGContextRef)
+// We can't get a snapshot of X11 windows so override this to return false
+bool MCNativeLayerX11::GetCanRenderToContext()
 {
-    // Do nothing. Painting is handled entirely by X11.
+	return false;
+}
+
+bool MCNativeLayerX11::OnPaint(MCGContextRef)
+{
+    return false;
 }
 
 void MCNativeLayerX11::OnGeometryChanged(const MCRectangle& p_old_rect)

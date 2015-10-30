@@ -1,0 +1,61 @@
+Name: fullClipboardData
+
+Type: property
+
+Syntax: set the fullClipboardData[<key>] to <data>
+Syntax: set the fullClipboardData to empty
+
+Summary: provides access to the contents of the <clipboard>.
+
+Introduced: 8.0
+
+OS: mac,windows,linux
+
+Platforms: desktop
+
+Example:
+lock the clipboard
+put the keys of the fullClipboardData
+unlock the clipboard
+
+Example:
+lock the clipboard
+set the fullClipboardData["text"] to "Hello, World!"
+set the fullClipboardData["html"] to "&lt;p&gt;Hello, World!&lt;/p&gt;"
+set the fullClipboardData["private"] to "MyCustomData"
+unlock the clipboard
+
+Value:
+The <fullClipboardData> pseudo-array provides access to the data on the clipboard. It can only be accessed while the clipboard is locked.
+The keys for the <fullClipboardData> are:
+  - "text": plain text
+  - "rtftext": LiveCode rich text format data
+  - "htmltext": LiveCode HTML text
+  - "styledtext": array of LiveCode styled text
+  - "image": any of PNG, GIF or JPEG image
+  - "png": PNG image
+  - "gif": GIF image
+  - "jpeg": JPEG image
+  - "rtf": Rich Text Format data
+  - "html": HTML
+  - "styles": LiveCode styled text data
+  - "objects": LiveCode objects
+  - "files": List of newline-separated file paths
+  - "private": available for in-app use
+  
+>*Note:* More keys and data types may be added in the future
+
+Description:
+Use the <fullClipboardData> to gain access to the system clipboard. 
+
+If the contents of the clipboard were placed there by another app, the clipboard will be automatically cleared when written to. If you want to do this explicitly, use ``set the fullClipboardData to empty``.
+
+The ``text``, ``rtftext``, ``htmltext``, ``styles`` and ``styledtext`` properties are handled specially by LiveCode: adding any one of them will cause the rest to be automatically generated and added.
+
+If you require lower-level access to the clipboard, see the <rawClipboardData> <property>.
+
+>*Tip:*		It is good practice to lock the clipboard before accessing it to prevent data corruption.
+
+References: lock clipboard (command), unlock clipboard (command), clipboard (function), clipboard (property), clipboardData (property), rawClipboardData (property), fullDragData (property)
+
+Tags: ui, clipboard

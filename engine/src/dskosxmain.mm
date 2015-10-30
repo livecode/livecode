@@ -54,7 +54,7 @@ void X_main_loop(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int main(int argc, char *argv[], char *envp[])
+int platform_main(int argc, char *argv[], char *envp[])
 {
 	extern bool MCS_mac_elevation_bootstrap_main(int argc, char* argv[]);
 	if (argc == 2 && strcmp(argv[1], "-elevated-slave") == 0)
