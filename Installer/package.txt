@@ -688,6 +688,7 @@ component Runtime.Emscripten
 		file emscripten:standalone[[BaseEditionTagLower]]-[[VersionTag]].html
 		file emscripten:standalone[[BaseEditionTagLower]]-[[VersionTag]].html.mem
 		file emscripten:standalone[[BaseEditionTagLower]]-[[VersionTag]].js
+		file emscripten:emscripten-startup-template.livecodescript
 		rfolder emscripten:emscripten-standalone-template
 
 //////////
