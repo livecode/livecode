@@ -6,7 +6,7 @@ Syntax: set the hilitePattern of <object> to {<patternNumber> | <imageID> | empt
 
 Summary: Specifies the fill pattern used for the background when an <object>, or text in an <object>, is <highlight|highlighted>.
 
-Synonyms: markerPattern,thirdPattern
+Synonyms: markerPattern,thirdPattern, highlightPattern
 
 Associations: stack,card,field,button,graphic,scrollbar,player,image
 

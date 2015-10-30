@@ -6,6 +6,8 @@ Syntax: set the hiliteBorder of <button> to {true | false}
 
 Summary: Specifies whether a three-D <button> appears to be pushed in when it is <highlight|highlighted>.
 
+Synonyms: highlightBorder
+
 Associations: button
 
 Introduced: 1.0

@@ -6,6 +6,8 @@ Syntax: set the sharedHilite of <button> to {true | false}
 
 Summary: Specifies whether a <grouped control|grouped button's> <hilite> <property> is the same on all <card|cards> with that <group>.
 
+Synonym: sharedHighlight
+
 Associations: button
 
 Introduced: 1.0

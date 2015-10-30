@@ -6,7 +6,7 @@ Syntax: set the hiliteColor [of <object>] to {empty | <colorName> | <RGBColor>}
 
 Summary: Specifies the color of the background when an <object>, or text in an <object>, is <highlight|highlighted>.
 
-Synonyms: markerColor,thirdColor
+Synonyms: markerColor,thirdColor, highlightColor
 
 Introduced: 1.0
 

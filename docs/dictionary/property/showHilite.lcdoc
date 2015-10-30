@@ -6,6 +6,8 @@ Syntax: set the showHilite of <button> to {true | false}
 
 Summary: Specifies whether the box or circle belonging to <checkbox|checkboxes> and <radio button|radio buttons> is shown.
 
+Synonym: showHighlight
+
 Associations: button
 
 Introduced: 1.0
