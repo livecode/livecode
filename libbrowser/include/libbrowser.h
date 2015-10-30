@@ -62,7 +62,8 @@ enum MCBrowserProperty
 {
 //	kMCBrowserRect,
 	// Boolean properties
-	kMCBrowserScrollbars,
+	kMCBrowserVerticalScrollbarEnabled,
+	kMCBrowserHorizontalScrollbarEnabled,
 	kMCBrowserAllowNewWindows,
 	kMCBrowserEnableContextMenu,
 	

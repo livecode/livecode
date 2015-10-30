@@ -150,8 +150,6 @@ class LibBrowserWebView extends WebView
 {
 	public static final String TAG = "revandroid.LibBrowserWebView";
 	
-	private boolean m_scrolling_enabled;
-
 	private VideoView m_custom_video_view;
 	private FrameLayout m_custom_view_container;
 	private WebChromeClient.CustomViewCallback m_custom_view_callback;
@@ -164,8 +162,6 @@ class LibBrowserWebView extends WebView
 	{
 		super(p_context);
 		
-		m_scrolling_enabled = true;
-
 		setWebViewClient(new WebViewClient() {
 			public boolean shouldOverrideUrlLoading(WebView p_view, String p_url)
 			{
@@ -427,30 +423,24 @@ class LibBrowserWebView extends WebView
 	//	return toAPKPath(super.getUrl());
 	//}
 
-	public boolean getScrollingEnabled()
+	public boolean getVerticalScrollbarEnabled()
 	{
-		return m_scrolling_enabled;
+		return isVerticalScrollBarEnabled();
 	}
 	
-	public void setScrollingEnabled(boolean p_enabled)
+	public void setVerticalScrollbarEnabled(boolean p_enabled)
 	{
-		if (m_scrolling_enabled == p_enabled)
-			return;
-		m_scrolling_enabled = p_enabled;
-		setHorizontalScrollBarEnabled(p_enabled);
 		setVerticalScrollBarEnabled(p_enabled);
-		getSettings().setBuiltInZoomControls(p_enabled);
-		if (!m_scrolling_enabled)
-		{
-			setOnTouchListener(new View.OnTouchListener() {
-				@Override
-				public boolean onTouch(View v, MotionEvent event) {
-					return (event.getAction() == MotionEvent.ACTION_MOVE);
-				}
-			});
-		}
-		else
-			setOnTouchListener(null);
+	}
+	
+	public boolean getHorizontalScrollbarEnabled()
+	{
+		return isHorizontalScrollBarEnabled();
+	}
+	
+	public void setHorizontalScrollbarEnabled(boolean p_enabled)
+	{
+		setHorizontalScrollBarEnabled(p_enabled);
 	}
 	
 	public String getUserAgent()
