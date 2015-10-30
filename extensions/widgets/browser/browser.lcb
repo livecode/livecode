@@ -24,12 +24,12 @@ Licensed under the terms of the Creative Commons Attribution 3.0 Unported Licens
 /*
 This widget displays web content within a native web browser view.
 
-Name: browserUrl
+Name: url
 Type: property
 
 Syntax:
-set the browserUrl of <widget> to <pUrl>
-get the browserUrl of <widget>
+set the url of <widget> to <pUrl>
+get the url of <widget>
 
 Summary: The url displayed by the browser.
 
@@ -37,22 +37,22 @@ Parameters:
 pUrl(string): A string specifying a URL.
 
 Example:
-	// Navigate to livecode.com by setting the browserUrl property, keeping a copy of the
+	// Navigate to livecode.com by setting the url property, keeping a copy of the
 	//    previous URL
 	local tOldUrl
-	put the browserUrl of widget "myBrowser" into tOldUrl
-	set the browserUrl of widget "myBrowser" to "http://livecode.com"
+	put the url of widget "myBrowser" into tOldUrl
+	set the url of widget "myBrowser" to "http://livecode.com"
 
 Description:
-The <browserUrl> is the URL of the content be displayed in the browser.
+The <url> is the URL of the content be displayed in the browser.
 
 
-Name: browserHtmltext
+Name: htmltext
 Type: property
 
 Syntax:
-set the browserHtmltext of <widget> to <pHtmlText>
-get the browserHtmltext of <widget>
+set the htmltext of <widget> to <pHtmlText>
+get the htmltext of <widget>
 
 Summary: The HTML text of the content displayed by the browser.
 
@@ -63,34 +63,50 @@ Example:
 	// Render a web page in the browser by specifying custom HTML content
 	local tHTML
 	put "<html><head><title>My Page Title</title></head><body>My Page Contents</body></html>" into tHTML
-	set the browserHtmltext of widget "myBrowser" to tHTML
+	set the htmltext of widget "myBrowser" to tHTML
 
 Description:
-The <browserHtmltext> is the HTML representation of the content displayed in the browser.
+The <htmltext> is the HTML representation of the content displayed in the browser.
 
 
-Name: browserScrollbars
+Name: vscrollbar
 Type: property
 
 Syntax:
-set the browserScrollbars of <widget> to <pEnabled>
-get the browserScrollbars of <widget>
+set the vscrollbar of <widget> to <pEnabled>
+get the vscrollbar of <widget>
 
-Summary: Controls whether scrollbars are visible and enabled within the browser.
+Summary: Controls whether the vertical scrollbar is visible and enabled within the browser.
 
 Parameters:
 pEnabled(boolean): True or false.
 
 Description:
-Controls whether scrollbars are visible and enabled within the browser.
+Controls whether the vertical scrollbar is visible and enabled within the browser.
 
 
-Name: browserUseragent
+Name: hscrollbar
 Type: property
 
 Syntax:
-set the browserUseragent of <widget> to <pUserAgent>
-get the browserUseragent of <widget>
+set the hscrollbar of <widget> to <pEnabled>
+get the hscrollbar of <widget>
+
+Summary: Controls whether the horizontal scrollbar is visible and enabled within the browser.
+
+Parameters:
+pEnabled(boolean): True or false.
+
+Description:
+Controls whether the horizontal scrollbar is visible and enabled within the browser.
+
+
+Name: useragent
+Type: property
+
+Syntax:
+set the useragent of <widget> to <pUserAgent>
+get the useragent of <widget>
 
 Summary: The identifier sent by the browser when fetching content from remote URLs.
 
@@ -99,19 +115,19 @@ pUserAgent(string): A string conforming to the http specifications at http://www
 
 Example:
 	// Set custom User-Agent header. The remote web server may be configured to deliver custom content for browsers using this User-Agent.
-	set the browserUseragent of widget "myBrowser" to "myAppEmbeddedBrowser"
+	set the useragent of widget "myBrowser" to "myAppEmbeddedBrowser"
 	launch url "http://myexampleserver.com/content.html" in widget "myBrowser"
 
 Description:
-The <browserUseragent> is the identifier sent by the browser when fetching content from remote URLs.
+The <useragent> is the identifier sent by the browser when fetching content from remote URLs.
 
 
-Name: browserJavascripthandlers
+Name: javascripthandlers
 Type: property
 
 Syntax:
-set the browserJavascripthandlers of <widget> to <pHanderList>
-get the browserJavascripthandlers of <widget>
+set the javascripthandlers of <widget> to <pHanderList>
+get the javascripthandlers of <widget>
 
 Summary: A list of LiveCode handlers that are made available to JavaScript calls within the browser.
 
@@ -128,7 +144,7 @@ Example:
 	...
 	
 	// Set up the browser javascript handler list
-	set the browserJavascripthandlers to "myJSHandler" & return & "myOtherJSHandler"
+	set the javascripthandlers to "myJSHandler" & return & "myOtherJSHandler"
 
 	...
 	
@@ -136,8 +152,9 @@ Example:
 	liveCode.myJSHandler("myMessage", 12345);
 	
 Description:
-The <browserJavascripthandlers> is a list of LiveCode handlers that are made available to JavaScript calls within the browser. The handlers will appear as methods attached to a global "liveCode" object. You can call these methods as you would any other JavaScript function and pass whatever parameters you require.
+The <javascripthandlers> is a list of LiveCode handlers that are made available to JavaScript calls within the browser. The handlers will appear as methods attached to a global "liveCode" object. You can call these methods as you would any other JavaScript function and pass whatever parameters you require.
 
+>*Warning:* Setting the javascriptHandlers property gives JavaScript running within the Web browser permission to execute parts of your application through the handlers you choose to expose. If using this feature, make sure that you have complete control over the webpages which you load into the browser widget, and consider using https to ensure that third-parties cannot inject malicious code into them.
 
 
 Name: browserDocumentLoadBegin
@@ -281,19 +298,22 @@ metadata svgicon is "M21.7,12c0,5.4-4.4,9.7-9.7,9.7S2.3,17.4,2.3,12S6.6,2.3,12,2
 --
 
 -- property declarations
-property browserUrl get getUrl set setUrl
-metadata browserUrl.editor is "com.livecode.pi.text"
+property url get getUrl set setUrl
+metadata url.editor is "com.livecode.pi.text"
 
-property browserHtmltext get getHtmlText set setHtmlText
+property htmltext get getHtmlText set setHtmlText
 
-property browserScrollbars get getScrollbars set setScrollbars
-metadata browserScrollbars.editor is "com.livecode.pi.boolean"
+property vscrollbar get getVScrollbar set setVScrollbar
+metadata vscrollbar.editor is "com.livecode.pi.boolean"
 
-property browserUseragent get getUserAgent set setUserAgent
-metadata browserUseragent.editor is "com.livecode.pi.text"
+property hscrollbar get getHScrollbar set setHScrollbar
+metadata hscrollbar.editor is "com.livecode.pi.boolean"
 
-property browserJavascripthandlers get getJavaScriptHandlers set setJavaScriptHandlers
-metadata browserJavascripthandlers.editor is "com.livecode.pi.text"
+property useragent get getUserAgent set setUserAgent
+metadata useragent.editor is "com.livecode.pi.text"
+
+property javascripthandlers get getJavaScriptHandlers set setJavaScriptHandlers
+metadata javascripthandlers.editor is "com.livecode.pi.text"
 
 --------------------------------------------------------------------------------
 
@@ -313,7 +333,7 @@ variable mScriptObject as ScriptObject
 
 --------------------------------------------------------------------------------
 
-constant kPersistentProps is ["scrollbars", "allowNewWindows", "enableContextMenu", "userAgent", "javaScriptHandlers"]
+constant kPersistentProps is ["verticalScrollbarEnabled", "horizontalScrollbarEnabled", "allowNewWindows", "enableContextMenu", "userAgent", "javaScriptHandlers"]
 
 --------------------------------------------------------------------------------
 
@@ -512,12 +532,22 @@ end handler
 
 --
 
-private handler getScrollbars() returns Boolean
-	return getProperty("scrollbars")
+private handler getVScrollbar() returns Boolean
+	return getProperty("verticalScrollbarEnabled")
 end handler
 
-private handler setScrollbars(in pScrollbars as Boolean)
-	setProperty("scrollbars", pScrollbars)
+private handler setVScrollbar(in pVScrollbar as Boolean)
+	setProperty("verticalScrollbarEnabled", pVScrollbar)
+end handler
+
+--
+
+private handler getHScrollbar() returns Boolean
+	return getProperty("horizontalScrollbarEnabled")
+end handler
+
+private handler setHScrollbar(in pHScrollbar as Boolean)
+	setProperty("horizontalScrollbarEnabled", pHScrollbar)
 end handler
 
 ----------

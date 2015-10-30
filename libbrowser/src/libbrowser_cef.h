@@ -35,6 +35,12 @@ enum MCCefAuthScheme
 	kMCCefAuthSPDYProxy,
 };
 
+enum MCCefScrollbarDirection
+{
+	kMCCefScrollbarVertical = 1<<0,
+	kMCCefScrollbarHorizontal = 1<<1,
+};
+
 class MCCefBrowserBase : public MCBrowserBase
 {
 public:
@@ -82,8 +88,8 @@ private:
 	bool WaitOnResultString(CefString &r_result);
 	bool GetMessageResultString(CefProcessId p_target, CefRefPtr<CefProcessMessage> p_message, CefString &r_result);
 	
-	bool GetOverflowHidden();
-	void SetOverflowHidden(bool p_hidden);
+	bool GetOverflowHidden(MCCefScrollbarDirection);
+	void SetOverflowHidden(MCCefScrollbarDirection, bool p_hidden);
 	
 public:
 	bool GetUserAgent(CefString &r_user_agent);
@@ -101,8 +107,11 @@ public:
 	virtual char *GetSource(void);
 	virtual void SetSource(const char *p_source);
 	
-	virtual bool GetScrollbars(void);
-	virtual void SetScrollbars(bool p_scrollbars);
+	virtual bool GetVerticalScrollbarEnabled(void);
+	virtual void SetVerticalScrollbarEnabled(bool p_scrollbars);
+	
+	virtual bool GetHorizontalScrollbarEnabled(void);
+	virtual void SetHorizontalScrollbarEnabled(bool p_scrollbars);
 	
 	virtual char *GetUserAgent(void);
 	virtual void SetUserAgent(const char *p_user_agent);

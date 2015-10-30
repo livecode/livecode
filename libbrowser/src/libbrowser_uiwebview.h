@@ -51,8 +51,10 @@ protected:
 	bool GetHTMLText(char *&r_htmltext);
 	bool SetHTMLText(const char *p_htmltext);
 	
-	bool GetScrollingEnabled(bool& r_value);
-	bool SetScrollingEnabled(bool p_value);
+	bool GetVerticalScrollbarEnabled(bool& r_value);
+	bool SetVerticalScrollbarEnabled(bool p_value);
+	bool GetHorizontalScrollbarEnabled(bool& r_value);
+	bool SetHorizontalScrollbarEnabled(bool p_value);
 	
 	bool GetJavaScriptHandlers(char *&r_handlers);
 	bool SetJavaScriptHandlers(const char *p_handlers);
