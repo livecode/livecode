@@ -30,12 +30,14 @@ public:
     virtual void OnClose();
     virtual void OnAttach();
     virtual void OnDetach();
-    virtual void OnPaint(MCGContextRef);
+    virtual bool OnPaint(MCGContextRef);
     virtual void OnGeometryChanged(const MCRectangle& p_old_rect);
     virtual void OnVisibilityChanged(bool p_visible);
     virtual void OnToolChanged(Tool p_new_tool);
     virtual void OnLayerChanged();
     
+	virtual bool GetCanRenderToContext();
+
     MCNativeLayerIOS(MCWidgetRef, UIView *p_native_view);
     ~MCNativeLayerIOS();
     

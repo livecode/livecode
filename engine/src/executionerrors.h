@@ -2665,15 +2665,33 @@ enum Exec_errors
     
     // {EE-0872} Import: not an object array
     EE_IMPORT_NOTANOBJECTARRAY,
+
+    // {EE-0873} clipboard: bad item type or data
+    EE_CLIPBOARD_BADREP,
+    
+    // {EE-0874} clipboard: failed to insert item
+    EE_CLIPBOARD_INSERTFAILED,
+    
+    // {EE-0875} clipboard: clipboard not locked
+    EE_CLIPBOARD_NOTLOCKED,
+    
+    // {EE-0876} clipboard: already locked
+    EE_CLIPBOARD_ALREADYLOCKED,
+    
+    // {EE-0877} clipboard: needs to be cleared (contains external data)
+    EE_CLIPBOARD_EXTERNALDATA,
 	
-	// {EE-0873} go: error in widget expression
+	// {EE-0878} go: error in widget expression
 	EE_GO_BADWIDGETEXP,
 	
-	// {EE-0874} launch: error in widget expression
+	// {EE-0879} launch: error in widget expression
 	EE_LAUNCH_BADWIDGETEXP,
 
-	// {EE-0875} do: error in widget expression
+	// {EE-0880} do: error in widget expression
 	EE_DO_BADWIDGETEXP,
+
+    // {EE-0881} documentFilename: bad filename
+    EE_DOCUMENTFILENAME_BADFILENAME,    
 };
 
 extern const char *MCexecutionerrors;

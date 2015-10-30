@@ -1682,6 +1682,7 @@ Parse_stat MCLock::parse(MCScriptPoint &sp)
 	const LT *te;
 
 	initpoint(sp);
+    sp.skip_token(SP_FACTOR, TT_THE);
 	if (sp.next(type) != PS_NORMAL)
 	{
 		MCperror->add(PE_LOCK_NOTARGET, sp);
@@ -1838,6 +1839,9 @@ void MCLock::exec_ctxt(MCExecContext &ctxt)
 			MCInterfaceExecLockScreenForEffect(ctxt, t_region_ptr);
 		}
 		break;
+    case LC_CLIPBOARD:
+        MCPasteboardExecLockClipboard(ctxt);
+        break;
 	default:
 		break;
     }
@@ -3159,6 +3163,7 @@ Parse_stat MCUnlock::parse(MCScriptPoint &sp)
 	const LT *te;
 
 	initpoint(sp);
+    sp.skip_token(SP_FACTOR, TT_THE);
 	if (sp.next(type) != PS_NORMAL)
 	{
 		MCperror->add
@@ -3264,6 +3269,9 @@ void MCUnlock::exec_ctxt(MCExecContext &ctxt)
 			else
 				MCInterfaceExecUnlockScreen(ctxt);
 			break;
+        case LC_CLIPBOARD:
+            MCPasteboardExecUnlockClipboard(ctxt);
+            break;
 		default:
 			break;
     }

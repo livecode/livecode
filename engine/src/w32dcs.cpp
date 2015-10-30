@@ -319,11 +319,7 @@ Boolean MCScreenDC::close(Boolean force)
 			timeKillEvent(mousetimer);
 	timeEndPeriod(1);
 	opened = 0;
-	if (dnddata != NULL)
-	{
-		dnddata->Release();
-		dnddata = NULL;
-	}
+
 	return True;
 }
 

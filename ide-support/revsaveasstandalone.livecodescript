@@ -881,7 +881,10 @@ private command revCopyScriptLibraries pStack, pPlatform
    revAddLibrary "Common"
    
    -- data grid
-   if "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
+   // SN-2015-10-19: [[ Bug 16238 ]] DataGrid can be included on the wish of the user - in case the standalone stack
+   //  will load stacks using DataGrid, for instance.
+   if ("data grid templates" is in the subStacks of stack pStack or "DataGrid" is among the lines of sStandaloneSettingsA["scriptLibraries"]) \
+         and there is a stack "revDataGridLibrary" then
       set the mainStack of stack "revDataGridLibrary" to pStack
    end if
    

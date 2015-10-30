@@ -20,6 +20,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	FILEDEFS_H
 #define	FILEDEFS_H
 
+#include "typedefs.h"
+
 #define SIGNATURE "# MetaCard "
 
 #define READ_PIPE_SIZE 16384

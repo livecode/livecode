@@ -949,6 +949,8 @@ bool solve_simul_eq_2_vars(const MCGFloat p_eq_1[3], const MCGFloat p_eq_2[3], M
 		a2 = -(b * p_eq_2[1] + p_eq_2[2]) / p_eq_2[0];
 		if (a2 * p_eq_1[0] + b * p_eq_2[1] + p_eq_2[2] != 0)
 			return false;
+        
+        a = a2;
 	}
 	else
 		return false;

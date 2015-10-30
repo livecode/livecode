@@ -501,5 +501,8 @@ protected:
     virtual MCPlatformControlType getcontroltype();
     virtual MCPlatformControlPart getcontrolsubpart();
     virtual MCPlatformControlState getcontrolstate();
+    
+    // Returns the size that check-marks should be drawn at
+    int16_t GetCheckSize() const;
 };
 #endif

@@ -733,6 +733,8 @@ static bool cgi_native_from_encoding(MCSOutputTextEncoding p_encoding, MCDataRef
         t_encoding = kMCStringEncodingISO8859_1;
     else if (p_encoding == kMCSOutputTextEncodingNative)
         t_encoding = kMCStringEncodingNative;
+    else // kMCSOutputTextEncodingUndefined
+        return false;
 
     if (MCStringDecode(p_text, t_encoding, false, r_native_text))
     {

@@ -473,9 +473,8 @@ public:
 	void ProcessWillMiniaturize(void);
 	void ProcessDidMiniaturize(void);
 	void ProcessDidDeminiaturize(void);
-    // SN-2015-05-20: [[ Bug 15208 ]] Renamed to better reflect the functions action
-	void ProcessGainedMainFocus(void);
-	void ProcessLostMainFocus(void);
+	void ProcessDidBecomeKey(void);
+	void ProcessDidResignKey(void);
 	
 	void ProcessMouseMove(NSPoint location);
 	void ProcessMousePress(NSInteger button, bool is_down);
@@ -521,7 +520,9 @@ public:
 private:
 	// Compute the Cocoa window style from the window's current properties.
 	void ComputeCocoaStyle(NSUInteger& r_window_style);
-	
+    // MERG-2015-10-11: [[ DocumentFilename ]] Set documentFilename.
+    void UpdateDocumentFilename(void);
+    
 	// The window delegate object.
 	MCWindowDelegate *m_delegate;
 	
@@ -546,7 +547,7 @@ private:
 		bool m_has_sheet : 1;
 		
 		// When the frame is locked, any changes to the window rect will be prevented.
-        bool m_frame_locked : 1;
+		bool m_frame_locked : 1;
 	};
 	
 	// A window might map to one of several different classes, so we use a

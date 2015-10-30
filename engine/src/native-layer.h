@@ -27,7 +27,7 @@ public:
     virtual void OnClose() = 0;
     virtual void OnAttach() = 0;
     virtual void OnDetach() = 0;
-    virtual void OnPaint(MCGContextRef) = 0;
+	virtual bool OnPaint(MCGContextRef p_context) = 0;
     virtual void OnGeometryChanged(const MCRectangle& p_old_rect) = 0;
     virtual void OnVisibilityChanged(bool p_visible) = 0;
     virtual void OnToolChanged(Tool p_new_tool) = 0;
@@ -42,9 +42,14 @@ public:
 	
 	// Implemented by the platform-specific native layers: creates a new layer
 	static MCNativeLayer* CreateNativeLayer(MCWidgetRef p_widget, void *p_native_view);
+
+	void SetCanRenderToContext(bool p_can_render);
+	virtual bool GetCanRenderToContext();
+
 protected:
     
     bool m_attached;
+    bool m_can_render_to_context;
     
     MCNativeLayer();
     

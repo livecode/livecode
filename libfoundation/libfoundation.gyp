@@ -1,7 +1,23 @@
 {
+	'variables':
+	{
+		'module_name': 'libFoundation',
+		'module_test_dependencies':
+		[
+			'libFoundation',
+		],
+		'module_test_sources':
+		[
+			'test/environment.cpp',
+			'test/test_string.cpp',
+		],
+	},
+
+
 	'includes':
 	[
 		'../common.gypi',
+		'../config/cpptest.gypi'
 	],
 	
 	'targets':

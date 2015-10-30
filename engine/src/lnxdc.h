@@ -19,7 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "uidc.h"
 #include "lnxflst.h"
-#include "lnxtransfer.h"
+#include "lnx-clipboard.h"
 
 #define XLOOKUPSTRING_SIZE 32
 #define CONFIGURE_WAIT 0.5
@@ -104,6 +104,7 @@ extern Atom MCclipboardatom;*/
 extern Atom MCclientlistatom;
 extern Atom MCstrutpartialatom;
 extern Atom MCworkareaatom;
+extern Atom MCdndselectionatom;
 
 extern Boolean tripleclick;
 
@@ -148,10 +149,6 @@ class MCScreenDC : public MCUIDC
 	bool m_has_native_color_dialogs;
 	bool m_has_native_print_dialogs;
 	bool m_has_native_file_dialogs;
-	
-	class MCGdkTransferStore * m_DND_store ;
-	class MCGdkTransferStore * m_Clipboard_store ;
-	class MCGdkTransferStore * m_Selection_store ;
     
     // Set if GTK is available
     bool m_has_gtk;
@@ -290,19 +287,7 @@ public:
 	virtual void flushevents(uint2 e);
 	virtual Boolean istripleclick();
 
-	// SN-2014-07-11: [[ Bug 12769 ]] Update the signature - the non-implemented UIDC dodragdrop was called otherwise
-    virtual MCDragAction dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset);
-    //virtual MCTransferType querydragdata(void);
-    
-	// Clipboard and selection interface
-	virtual bool ownsselection(void);
-	virtual bool setselection(MCPasteboard *p_pasteboard);
-	virtual MCPasteboard *getselection(void);
-	
-	virtual bool ownsclipboard(void);
-	virtual bool setclipboard(MCPasteboard *p_pasteboard);
-	virtual MCPasteboard *getclipboard(void);
-	virtual void flushclipboard(void);
+    virtual MCDragAction dodragdrop(Window w, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset);
 
 	void setupcolors();
 	GdkScreen* getscreen();

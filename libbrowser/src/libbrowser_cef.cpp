@@ -119,7 +119,7 @@ bool MCCefListToBrowserList(CefRefPtr<CefListValue> p_list, MCBrowserListRef &r_
 				char *t_string = nil;
 				t_success = MCCefStringToUtf8String(p_list->GetString(i), t_string) && MCBrowserListSetUTF8String(t_list, i, t_string);
 				if (t_string != nil)
-				MCCStringFree(t_string);
+					MCCStringFree(t_string);
 				break;
 			}
 			
@@ -221,6 +221,9 @@ bool MCCefDictionaryToBrowserDictionary(CefRefPtr<CefDictionaryValue> p_dict, MC
 					t_success = false;
 			}
 		}
+		
+		if (t_key != nil)
+			MCCStringFree(t_key);
 	}
 	
 	if (t_success)

@@ -960,7 +960,8 @@ function revSBLibraryList
    local tPath,tSave,tLibrariesA,tBtn,tExternals
    -- rev script libraries
    # AL-2105-03-05: [[ Bug 14813 ]] Use static list of libs rather than generate from loaded libs list
-   repeat for each item tItem in "Animation,Geometry,Internet,Printing,Table,XMLRPC"
+   // SN-2015-10-19: [[ Bug 16238 ]] Add DataGrid library amongst the libraries
+   repeat for each item tItem in "Animation,DataGrid,Geometry,Internet,Printing,Table,XMLRPC"
       put empty into tLibrariesA[tItem]
    end repeat
    

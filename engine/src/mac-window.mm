@@ -26,11 +26,14 @@
 #include "platform.h"
 #include "platform-internal.h"
 
+#include "mac-clipboard.h"
 #include "mac-internal.h"
 
 #include <objc/objc-runtime.h>
 
 #include "graphics_util.h"
+
+#include "osspec.h"
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -456,42 +459,29 @@ static bool s_lock_responder_change = false;
 }
 
 // MW-2014-07-22: [[ Bug 12720 ]] Mark the period we are inside a focus event handler.
-// SN-2015-05-20: [[ Bug 15208 ]] Renamed to better reflect the functions action
 - (void)windowDidBecomeKey:(NSNotification *)notification
 {
     if (s_inside_focus_event)
-        m_window -> ProcessGainedMainFocus();
+        m_window -> ProcessDidBecomeKey();
     else
     {
         s_inside_focus_event = true;
-        m_window -> ProcessGainedMainFocus();
+        m_window -> ProcessDidBecomeKey();
         s_inside_focus_event = false;
     }
 }
 
 // MW-2014-07-22: [[ Bug 12720 ]] Mark the period we are inside a focus event handler.
-// SN-2015-05-20: [[ Bug 15208 ]] If we are not the KeyWindow, we can still be
-//  the MainWindow, and in that case we keep the focus.
 - (void)windowDidResignKey:(NSNotification *)notification
 {
-}
-
-// SN-2015-05-20: [[ Bug 15208 ]] A main window is not necessarily the key window
-// (see https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/WinPanel/Concepts/ChangingMainKeyWindow.html)
-//  We do no want to unfocus the active field if a utility window (such as Color
-//  Picker or Character Viewer) is opened, or that can lead to a crash since we
-//  might want to insert text in this field (it is not properly speaking unfocusing).
-//  That leads to a not-so-nice blinking cursor on the message box when using
-//     answer color
-//  but there might not be any other option to avoid the Character Viewer crash.
-- (void)windowDidBecomeMain:(NSNotification *)notification
-{
-    m_window -> ProcessGainedMainFocus();
-}
-
-- (void)windowDidResignMain:(NSNotification *)notification
-{
-    m_window -> ProcessLostMainFocus();
+    if (s_inside_focus_event)
+        m_window -> ProcessDidResignKey();
+    else
+    {
+        s_inside_focus_event = true;
+        m_window -> ProcessDidResignKey();
+        s_inside_focus_event = false;
+    }
 }
 
 - (void)windowDidChangeBackingProperties:(NSNotification *)notification
@@ -1369,9 +1359,9 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (NSDragOperation)draggingEntered: (id<NSDraggingInfo>)sender
 {
-	MCPlatformPasteboardRef t_pasteboard;
-	MCMacPlatformPasteboardCreate([sender draggingPasteboard], t_pasteboard);
-	
+    // Create a wrapper around the drag board for this operation
+    MCAutoRefcounted<MCMacRawClipboard> t_dragboard = new MCMacRawClipboard([sender draggingPasteboard]);
+    
 	NSDragOperation t_ns_operation;
 	
 	MCMacPlatformWindow *t_window;
@@ -1379,7 +1369,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	if (t_window != nil)
 	{
 		MCPlatformDragOperation t_operation;
-		t_window -> HandleDragEnter(t_pasteboard, t_operation);
+		t_window -> HandleDragEnter(t_dragboard, t_operation);
 		t_ns_operation = MCMacPlatformMapDragOperationToNSDragOperation(t_operation);
 	}
 	else
@@ -1772,13 +1762,12 @@ void MCMacPlatformWindow::ProcessDidDeminiaturize(void)
 	HandleUniconify();
 }
 
-// SN-2015-05-20: [[ Bug 15208 ]] Renamed to better reflect the functions action
-void MCMacPlatformWindow::ProcessGainedMainFocus(void)
+void MCMacPlatformWindow::ProcessDidBecomeKey(void)
 {
-    HandleFocus();
+	HandleFocus();
 }
 
-void MCMacPlatformWindow::ProcessLostMainFocus(void)
+void MCMacPlatformWindow::ProcessDidResignKey(void)
 {
     HandleUnfocus();
 }
@@ -1914,6 +1903,9 @@ void MCMacPlatformWindow::DoRealize(void)
     // MW-2014-04-08: [[ Bug 12080 ]] Make sure we turn off automatic 'hiding on deactivate'.
     //   The engine handles this itself.
     [m_window_handle setHidesOnDeactivate: m_hides_on_suspend];
+    
+    // MERG-2015-10-11: [[ DocumentFilename ]] Set documentFilename.
+    UpdateDocumentFilename();
 }
 
 void MCMacPlatformWindow::DoSynchronize(void)
@@ -1984,7 +1976,12 @@ void MCMacPlatformWindow::DoSynchronize(void)
     if (m_changes . ignore_mouse_events_changed)
         [m_window_handle setIgnoresMouseEvents: m_ignore_mouse_events];
     
-	m_synchronizing = false;
+    if (m_changes . document_filename_changed)
+    {
+        UpdateDocumentFilename();
+    }
+    
+    m_synchronizing = false;
 }
 
 bool MCMacPlatformWindow::DoSetProperty(MCPlatformWindowProperty p_property, MCPlatformPropertyType p_type, const void *value)
@@ -2218,6 +2215,25 @@ void MCMacPlatformWindow::ComputeCocoaStyle(NSUInteger& r_cocoa_style)
 	if (m_style == kMCPlatformWindowStylePalette)
 		t_window_style |= NSUtilityWindowMask;
 	r_cocoa_style = t_window_style;
+}
+
+// MERG-2015-10-11: [[ DocumentFilename ]] Set documentFilename.
+void MCMacPlatformWindow::UpdateDocumentFilename(void)
+{
+    MCStringRef t_native_filename;
+    
+    NSString * t_represented_filename;
+    t_represented_filename = nil;
+    
+    if (!MCStringIsEmpty(m_document_filename) && MCS_pathtonative(m_document_filename, t_native_filename))
+    {
+        t_represented_filename = [NSString stringWithMCStringRef: t_native_filename];
+    }
+    else
+        t_represented_filename = @"";
+    
+    // It appears setRepresentedFilename can't be set to nil
+    [m_window_handle setRepresentedFilename: t_represented_filename];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

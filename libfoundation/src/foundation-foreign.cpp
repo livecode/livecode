@@ -705,6 +705,7 @@ void __MCForeignValueFinalize(void)
     MCValueRelease(kMCDoubleTypeInfo);
     MCValueRelease(kMCPointerTypeInfo);
 	MCValueRelease(kMCSizeTypeInfo);
+	MCValueRelease(kMCSSizeTypeInfo);
 
 	MCValueRelease (kMCForeignImportErrorTypeInfo);
 	MCValueRelease (kMCForeignExportErrorTypeInfo);
