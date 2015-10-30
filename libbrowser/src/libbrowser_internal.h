@@ -86,6 +86,7 @@ extern MCBrowserFactoryMap s_factory_list[];
 bool MCBrowserAddRunloopAction(MCBrowserRunloopCallback p_callback, void *p_context);
 void MCBrowserRemoveRunloopAction(MCBrowserRunloopCallback p_callback, void *p_context);
 bool MCBrowserRunloopWait();
+void MCBrowserRunloopBreakWait();
 
 bool MCBrowserMemoryAllocate(size_t p_size, void *&r_mem);
 bool MCBrowserMemoryReallocate(void *p_mem, size_t p_new_size, void *& r_new_mem);

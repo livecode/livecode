@@ -35,6 +35,7 @@
 #include "eventqueue.h"
 
 #include "dispatch.h"
+#include "notify.h"
 
 #include "module-engine.h"
 
@@ -747,6 +748,11 @@ extern "C" MC_DLLEXPORT_DEF bool MCEngineRunloopWait()
 {
 	MCscreen->wait(60.0, True, True);
 	return true;
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCEngineRunloopBreakWait()
+{
+	MCNotifyPing(false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
