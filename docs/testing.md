@@ -57,6 +57,8 @@ on TestSetup
 end TestSetup
 ````
 
+Tests may need to clean up temporary files or other resources after running.  If a script test contains a handler called `TestTeardown`, this will be run after running each test command -- even if the test failed.  N.b. `TestTeardown` won't be run if running the test command causes an engine crash.
+
 Crashes or uncaught errors from a test command cause the test to immediately fail.
 
 ### LiveCode Builder
