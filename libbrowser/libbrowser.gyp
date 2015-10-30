@@ -349,14 +349,13 @@
 							{
 								'destination': '<(PRODUCT_DIR)',
 								'files': [
-									'../prebuilt/lib/linux/<(target_arch)/CEF/',
 									'../prebuilt/lib/linux/<(target_arch)/CEF/icudtl.dat',
 								],
 							},
 							{
-								'destination': '<(PRODUCT_DIR)/CEF',
+								'destination': '<(PRODUCT_DIR)/Externals/',
 								'files': [
-									'<(PRODUCT_DIR)/libbrowser-cefprocess',
+									'../prebuilt/lib/linux/<(target_arch)/CEF',
 								],
 							}
 						],
