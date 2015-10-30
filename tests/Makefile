@@ -44,7 +44,7 @@ LCS_ENGINE ?= $(guess_engine)
 LCS_ENGINE_FLAGS ?= $(guess_engine_flags)
 
 LCS_LOG = _lcs_test_suite.log
-LCS_TESTRUNNER = _testrunner.livecodescript
+LCS_TESTRUNNER = $(top_srcdir)/tests/_testrunner.livecodescript
 
 ########## LiveCode Builder test parameters
 
@@ -86,7 +86,9 @@ LCM_TEST_MODULES = $(patsubst %.lcb,$(LCM_DIR)/%.lcm,$(LCM_TEST_SOURCES))
 
 ########## Build dependencies rules
 
-include $(LCM_DIR)/deps.mk
+ifneq ($(LCM_SOURCES),)
+	include $(LCM_DIR)/deps.mk
+endif
 
 $(LCM_DIR):
 	mkdir -p $(LCM_DIR)

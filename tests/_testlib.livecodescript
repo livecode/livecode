@@ -117,3 +117,13 @@ on ErrorDialog executionError, parseError
    write executionError & return to stderr
    quit 1
 end ErrorDialog
+
+function TestGetEngineRepositoryPath
+  set the itemdelimiter to "/"
+  return item 1 to -3 of the filename of me
+end TestGetEngineRepositoryPath
+
+function TestGetIDERepositoryPath
+  set the itemdelimiter to "/"
+  return item 1 to -3 of the filename of me & slash & "ide"
+end TestGetIDERepositoryPath

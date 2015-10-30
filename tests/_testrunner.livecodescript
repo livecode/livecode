@@ -89,6 +89,7 @@ end TestRunnerMain
 private command doInvoke pInfo
    put pInfo["args"][2] into pInfo["invoke"]["script"]
    put pInfo["args"][3] into pInfo["invoke"]["command"]
+   put pInfo["args"][4] into pInfo["invoke"]["setup"]
    
    invokeLoadLibrary pInfo
    invokeTest pInfo
@@ -132,6 +133,11 @@ private command invokeTest pInfo
    
    -- This should auto-load the test script
    put the name of stack pInfo["invoke"]["script"] into tStackName
+   
+   -- Call the setup handler, if there is one
+   if pInfo["invoke"]["setup"] is not empty then
+      dispatch pInfo["invoke"]["setup"] to tStackName
+   end if
    
    -- Dispatch the test command
    dispatch pInfo["invoke"]["command"] to tStackName
@@ -186,8 +192,11 @@ end runAllScripts
 private command runTestSkipAll pInfo, pScriptFile, pReason
    local tSkipTemplate, tAnalysis
    put "ok - [[tCommand]] # SKIP" && pReason into tSkipTemplate
-
-   repeat for each element tCommand in runGetTestCommandNames(pScriptFile)
+   
+   local tTestInfo
+   put runGetTestInfo(pScriptFile) into tTestInfo
+   
+   repeat for each element tCommand in tTestInfo["commands"]
       runTestProcessOutput pScriptFile, tCommand, merge(tSkipTemplate)
       put tapCombine(tAnalysis, the result) into tAnalysis
    end repeat
@@ -195,8 +204,10 @@ end runTestSkipAll
 
 -- Run the tests found in one specific script file
 private command runTestScript pInfo, pScriptFile
-   local tCommand, tAnalysis, tMetadata
-   put runGetTestMetadata(pScriptFile) into tMetadata
+   local tCommand, tAnalysis
+   
+   local tScriptInfo
+   put runGetTestInfo(pScriptFile) into tScriptInfo
    
    -- Only run tests that require UI if possible
    local tCanRunUITests
@@ -208,13 +219,13 @@ private command runTestScript pInfo, pScriptFile
       end if
    end repeat
    
-   if tMetadata["ui"] is true and not tCanRunUITests then
+   if tScriptInfo["metadata"]["ui"] is true and not tCanRunUITests then
       runTestSkipAll pInfo, pScriptFile, "test requires UI mode"
       return the result
    end if
    
-   repeat for each element tCommand in runGetTestCommandNames(pScriptFile)
-      runTestCommand pInfo, pScriptFile, tCommand
+   repeat for each element tCommand in tScriptInfo["commands"]
+      runTestCommand pInfo, pScriptFile, tCommand, tScriptInfo["setup"]
       put tapCombine(tAnalysis, the result) into tAnalysis
    end repeat
    return tAnalysis
@@ -238,14 +249,14 @@ end runTestProcessOutput
 
 -- Run a specific named test command tCommand in a script file
 -- tScriptFile
-private command runTestCommand pInfo, pScriptFile, pCommand
+private command runTestCommand pInfo, pScriptFile, pCommand, pSetup
    local tArg, tCommandLine
    
    repeat for each element tArg in pInfo["self-command"]
       put tArg & " " after tCommandLine
    end repeat
    
-   put "invoke" && pScriptFile && pCommand after tCommandLine
+   put "invoke" && pScriptFile && pCommand && pSetup after tCommandLine
    
    -- Invoke the test in a subprocess.  This ensures that we can detect
    -- if a crash occurs
@@ -320,35 +331,6 @@ private command runGetTestFileNames_Recursive pPath, pRelPath, @xFiles, @xCount
    set the defaultfolder to tSaveFolder
 end runGetTestFileNames_Recursive
 
--- Get a number-indexed array contain the names of all "test"
--- commands in pFilename.
-private function runGetTestCommandNames pFilename
-   local tScript
-   
-   -- Get the contents of the file
-   open file pFilename for "UTF-8" text read
-   if the result is not empty then
-      throw the result
-   end if
-   
-   read from file pFilename until end
-   put it into tScript
-   
-   close file pFilename
-   
-   -- Scan the file for "on Test*" definitions
-   local tCommandNames, tCount, tLine
-   
-   repeat for each line tLine in tScript
-      if token 1 of tLine is "on" and token 2 of tLine begins with "Test" then
-         add 1 to tCount
-         put token 2 of tLine into tCommandNames[tCount]
-      end if
-   end repeat
-   
-   return tCommandNames
-end runGetTestCommandNames
-
 -- Prettify a test name by removing a ".livecodescript" suffix
 private function runGetPrettyTestName pFilename
    if pFilename ends with ".livecodescript" then
@@ -394,50 +376,70 @@ private command runPrintSummary pAnalysis
    write tSummaryString to stdout
 end runPrintSummary
 
--- Get all the metadata keys and values in the stack file
-private function runGetTestMetadata pFilename
+private function parseMetadataFromLine pLine
+   local tMetadata
+   -- remove whitespace
+   put word 1 to -1 of pLine into pLine
+   
+   if not (pLine begins with "###") then
+      return empty
+   end if
+   
+   -- remove hashes
+   put char 4 to -1 of pLine into pLine
+   
+   set the itemdelimiter to ":"
+   put word 1 to -1 of (item 1 of pLine) into tMetadata["key"]
+   put word 1 to -1 of (item 2 of pLine) into tMetadata["value"]
+
+   return tMetadata
+end parseMetadataFromLine
+
+-- Get the metadata keys and values, setup info and command names from the file
+function runGetTestInfo pFilename
    local tScript
    
    -- Get the contents of the file
    open file pFilename for "UTF-8" text read
    if the result is not empty then
       throw the result
-   end if
+   end if 
    
    read from file pFilename until end
    put it into tScript
    
    close file pFilename
    
-   -- Scan the file for metadata - 
+   -- Scan the file for metadata, test handlers and a setup handler
    -- Metadata is given in the form ### <key> : <value>
+   -- "test" commands are handlers beginning with "Test"
+   -- A setup handler is called "TestSetup". 
    
-   local tKey, tValue, tMetadata
+   local tScriptInfo, tCommandCount, tLine
+   
    repeat for each line tLine in tScript
-      -- save some time by only looking at commented out lines
-      if token 1 of tLine is not empty then
-         next repeat
+      if token 1 of tLine is "on" and token 2 of tLine begins with "Test" then
+      	if token 2 of tLine is "TestSetup" then
+           put "TestSetup" into tScriptInfo["setup"]
+      	else
+           add 1 to tCommandCount
+           put token 2 of tLine into tScriptInfo["commands"][tCommandCount]
+        end if
+      else
+         -- save some time by only looking at commented out lines
+         if token 1 of tLine is not empty then
+            next repeat
+         end if
+         local tMetadata
+         put parseMetadataFromLine(tLine) into tMetadata
+         if tMetadata is not empty then
+            put tMetadata["value"] into tScriptInfo["metadata"][tMetadata["key"]]
+         end if
       end if
-      
-      -- remove whitespace
-      put word 1 to -1 of tLine into tLine
-      
-      if not (tLine begins with "###") then
-         next repeat
-      end if
-      
-      -- remove hashes
-      put char 4 to -1 of tLine into tLine
-      
-      set the itemdelimiter to ":"
-      put word 1 to -1 of (item 1 of tLine) into tKey
-      put word 1 to -1 of (item 2 of tLine) into tValue
-      
-      put tValue into tMetadata[tKey]
    end repeat
    
-   return tMetadata
-end runGetTestMetadata
+   return tScriptInfo
+end runGetTestInfo
 
 ----------------------------------------------------------------
 -- Logging helpers
