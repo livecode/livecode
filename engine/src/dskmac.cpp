@@ -4745,10 +4745,10 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 #endif
 #endif /* MCS_getprocessor_dsk_mac */
 //get machine processor
-#ifdef __LITTLE_ENDIAN__
-        return MCN_x86;
+#ifdef __64_BIT__
+        return MCN_x86_64;
 #else
-        return MCN_motorola_powerpc;
+        return MCN_x86;
 #endif
     }
 	virtual bool GetAddress(MCStringRef& r_address)
