@@ -526,29 +526,28 @@ end mapAssetPath
 -- Scan a directory, returning a number-indexed array of files found.
 -- The returned paths are relative to the specified directory.
 private function scanFolder pFolder
-   local tSaveFolder, tTemplateRoot, tFiles, tCount, tError
-
+   local tTemplateRoot, tFiles, tCount, tError
+   
    -- Short-circuit if pFolder is missing
    if there is no folder pFolder then
       return empty
    end if
-
+   
    put 0 into tCount
    put empty into tFiles
-   put the defaultfolder into tSaveFolder
-
-   set the defaultfolder to pfolder
+   
+   revIDEPushDefaultFolder pFolder
    try
       scanFolder_recurse tCount, tFiles, empty
    catch tError
    end try
-
-   set the defaultfolder to tSaveFolder
-
+   
+   revIDEPopDefaultFolder
+   
    if tError is not empty then
       throw tError
    end if
-
+   
    return tFiles
 end scanFolder
 
