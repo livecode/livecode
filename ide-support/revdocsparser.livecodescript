@@ -765,6 +765,7 @@ function revDocsFormatInlineComments pDataA, pIsLibrary
    repeat with x = tStart to tEnd
       put empty into tHasA
       put empty into tEntryDoc
+      put empty into tSyntax
       put tEntriesA[x] into tEntryA
       repeat with y = 1 to the number of elements in tEntryA["elements"]
          put tEntryA["elements"][y] into tElementA
@@ -858,8 +859,8 @@ function revDocsFormatInlineComments pDataA, pIsLibrary
       if tHasA["Syntax"] is not true then
          put pDataA["syntax"] into tSyntax
       end if
-      repeat with x = 1 to the number of elements in tSyntax
-         put "Syntax:" && tSyntax[x] & return & return before tEntryDoc
+      repeat with z = 1 to the number of elements in tSyntax
+         put "Syntax:" && tSyntax[z] & return & return before tEntryDoc
       end repeat
       
       if tHasA["Type"] is not true then
