@@ -4558,8 +4558,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         // MW-2005-04-04: [[CoreImage]] Load in CoreImage extension
         extern void MCCoreImageRegister(void);
-        if (MCmajorosversion >= 0x1040)
-            MCCoreImageRegister();
+        MCCoreImageRegister();
+        
         // END HERE
 		
         if (!MCnoui)
