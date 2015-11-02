@@ -256,8 +256,14 @@ bool OSXSpeechNarrator::SpeechStop(bool ReleaseInit)
 	StopSpeech(spchannel);
 	do
 	{
-		EventRecord t_record;
-		WaitNextEvent(0, &t_record, 1, NULL);
+        // Run an inner main loop until the speech has finished processing
+        EventRef t_event;
+        OSStatus t_status = ReceiveNextEvent(0, NULL, 1, true, &t_event);
+        if (t_status == noErr)
+        {
+            SendEventToEventTarget(t_event, GetEventDispatcherTarget());
+            ReleaseEvent(t_event);
+        }
 	}
 	while(SpeechBusy() > 0);
 	
