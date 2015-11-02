@@ -2565,7 +2565,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         }
         
         ResType rtype;
-        /* UNCHECKED */ FourCharCodeFromString(p_type, 0, (uint32_t&)rtype);
+        /* UNCHECKED */ FourCharCodeFromString(p_type, 0, rtype);
         
         // MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
         rtype = (ResType)MCSwapInt32HostToNetwork(rtype);
@@ -3036,8 +3036,8 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
 	MCS_closeresourcefile(rfRefNum);
 #endif /* MCS_deleteresource_dsk_mac */
         ResType restype;
-        short rfRefNum;
-        /* UNCHECKED */ FourCharCodeFromString(p_type, 0, (uint32_t&)restype);
+        ResFileRefNum rfRefNum;
+        /* UNCHECKED */ FourCharCodeFromString(p_type, 0, restype);
         
         MCAutoStringRef t_error;
         if (!MCS_mac_openresourcefile_with_path(p_source, fsRdWrPerm, true, rfRefNum, &t_error))
