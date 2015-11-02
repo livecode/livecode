@@ -694,7 +694,6 @@
 			'src/osxmisc.cpp',
 			'src/osxprinter.cpp',
 			'src/osxstack.cpp',
-			'src/osxtextlayout.cpp',
 			'src/osxtheme.cpp',
 			
 			# Group "Desktop - Windows"
