@@ -1640,8 +1640,12 @@ static bool getResourceInfo(MCListRef p_list, ResType searchType)
 			*sptr++ = 'C';
 		*sptr = '\0';
 		
+        // The resource name is returned as a Pascal string
+        unsigned char t_name_length = *rname;
+        const unsigned char* t_name = rname + 1;
+        
 		MCAutoStringRef t_string;
-		if (!MCStringFormat(&t_string, "%4s,%d,%s,%ld,%s\n", typetmp, rid, cstr,
+		if (!MCStringFormat(&t_string, "%4s,%d,%.*s,%ld,%s\n", typetmp, rid, t_name_length, t_name,
                             GetMaxResourceSize(rh), fstring))
 			return false;
 		if (!MCListAppend(p_list, *t_string))
@@ -2427,23 +2431,19 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         
         // Resource handle
         Handle rh = NULL;
-        char *temp;
-        /* UNCHECKED */ MCStringConvertToCString(p_name, temp);
         
         if (rid != 0)
             rh = Get1Resource(rtype, rid);
         else
         {
-            char *whichres = strclone(temp);
-            unsigned char *rname = c2pstr(whichres); //resource name in Pascal
-            rh = Get1NamedResource(rtype, rname);
-            delete whichres;
+            MCAutoStringRefAsPascalString t_rname;
+            /* UNCHECKED */ t_rname.Lock(p_name);
+            rh = Get1NamedResource(rtype, *t_rname);
         }
         
-        Str255 newname;
-        strcpy((char *)newname, temp);
-        c2pstr((char *)newname);
-        delete temp;
+        MCAutoStringRefAsPascalString t_newname;
+        /* UNCHECKED */ t_newname.Lock(p_name);
+
         if (rh != NULL)
         {
             SInt16 tid;
@@ -2451,7 +2451,13 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
             Str255 tname;
             GetResInfo(rh, &tid, &ttype, tname);
             if (MCStringIsEmpty(p_name))
-                pStrcpy(newname, tname);
+            {
+                // Use the existing name
+                MCAutoStringRef t_existing_name;
+                /* UNCHECKED */ MCStringCreateWithBytes(tname+1, *tname, kMCStringEncodingMacRoman, false, &t_existing_name);
+                t_newname.Unlock();
+                /* UNCHECKED */ t_newname.Lock(*t_existing_name);
+            }
             else
                 if (MCStringIsEmpty(p_id))
                     rid = tid;
@@ -2473,12 +2479,11 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         }
         else
         {
-            char *temp_value;
-            /* UNCHECKED */ MCStringConvertToCString(p_value, temp_value);
-
-            memcpy(*rh, temp_value, len);
-            delete temp_value;
-            AddResource(rh, rtype, rid, newname);
+            // Copy the string (as MacRoman characters) to the memory referenced
+            // by the handle and add it as a resource.
+            MCStringGetNativeChars(p_value, MCRangeMake(0, len), (char_t*)*rh);
+            AddResource(rh, rtype, rid, *t_newname);
+            
             if ((errno = ResError()) != noErr)
             {
                 DisposeHandle(rh);
@@ -2567,21 +2572,20 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         
         /* test to see if "name" is a resource name or an id */
     
-        integer_t rid;
-        //= strtol(whichres, (char **)&eptr, 10);
-                
-        if (!MCStringToInteger(p_name, rid))
-        {  /* conversion failed, so 'name' is resource name*/
-            char *temp_name;
-            /* UNCHECKED */ MCStringConvertToCString(p_name, temp_name);
-            unsigned char *rname;
-            rname = c2pstr(temp_name); //resource name in Pascal
-            delete temp_name;
-            rh = Get1NamedResource(rtype, rname);
+        integer_t t_rid;
+        if (!MCStringToInteger(p_name, t_rid))
+        {
+            // Name wasn't numerical, therefore it is a resource name
+            MCAutoStringRefAsPascalString t_rsrc_name;
+            /* UNCHECKED */ t_rsrc_name.Lock(p_name);
+            rh = Get1NamedResource(rtype, *t_rsrc_name);
         }
-        else //we got an resrouce id, the 'name' specifies an resource id
-            rh = Get1Resource(rtype, rid);
-                
+        else
+        {
+            // The 'name' was really a resource ID
+            rh = Get1Resource(rtype, ResID(t_rid));
+        }
+        
         if (rh == NULL)
         {
             errno = ResError();
@@ -2933,24 +2937,24 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         // MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
         restype = MCSwapInt32HostToNetwork(*(uint32_t*)MCStringGetNativeCharPtr(p_type));
         
-        Str255 t_resname;
-        
         integer_t rid;
-        // passed in is a resource name
-        Boolean hasResName = False;
         Handle rh = NULL;
         
+        // The resource name, if it exists
+        MCAutoStringRefAsPascalString t_resname;
+        
         if (!MCStringToInteger(p_name, rid))
-        {  /*did not do the conversion, use resource name */
-            char *t_name;
-            /* UNCHECKED */ MCStringConvertToCString(p_name, t_name);
-            c2pstrcpy(t_resname, t_name);
-            rh = Get1NamedResource(restype, t_resname);
-            hasResName = True;
-            delete t_name;
+        {
+            // Name was numerical so use at as the resource name
+            /* UNCHECKED */ t_resname.Lock(p_name);
+            rh = Get1NamedResource(restype, *t_resname);
         }
-        else //we got an resource id
-            rh = Get1Resource(restype, rid);
+        else
+        {
+            // The 'name' was really a resource ID
+            rh = Get1Resource(restype, ResID(rid));
+        }
+        
         if (rh == NULL || *rh == 0)
         {//bail out if resource handle is bad
             errno = ResError();
@@ -2959,10 +2963,10 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
             return MCStringCreateWithCString("can't find the resource specified", r_error);
         }
         
-        unsigned char resourceName[255];
+        Str255 resourceName;
         short srcID;        //let's get it's resource name.
         ResType srcType;
-        if (!hasResName) //No name specified for the resource to be copied
+        if (*t_resname == nil) //No name specified for the resource to be copied
             GetResInfo(rh, &srcID, &srcType, resourceName);
         
         //detach the src res file, and select the dest res file
@@ -3042,19 +3046,21 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         }
         
         Handle rh = NULL;
-            /* find out if we got a name or an id */
         integer_t rid;
+        
         if (!MCStringToInteger(p_name, rid))
         {     
-            /* did not do conversion, so use resource name */
-            char* t_name;
-            /* UNCHECKED */ MCStringConvertToCString(p_name, t_name);
-            unsigned char *pname = c2pstr(t_name);
-            rh = Get1NamedResource(restype, pname);
-            delete t_name;
+            // Name wasn't an integer, so use it as the resource name
+            MCAutoStringRefAsPascalString t_resname;
+            /* UNCHECKED */ t_resname.Lock(p_name);
+            rh = Get1NamedResource(restype, *t_resname);
         }
-        else                  /* 'which' param is an resrouce id */
-            rh = Get1Resource(restype, rid);
+        else
+        {
+            // The resource 'name' was really a resource ID
+            rh = Get1Resource(restype, ResID(rid));
+        }
+        
         if (rh == NULL)
             MCresult->sets("can't find the resource specified");
         else
