@@ -3249,24 +3249,28 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         		
         //file mark should be pointing to 0 which is the begining of the file
         //let's get the end of file mark to determine the file size
-        long fsize, toread;
-        if ((errno = GetEOF(fRefNum, &fsize)) != noErr)
+        //
+        // We only support sizes that fit inside a uindex_t
+        SInt64 fsize;
+        if ((errno = FSGetForkSize(fRefNum, &fsize)) != noErr)
             MCresult->sets("can't get file size");
+        if (fsize < 0 || fsize > UINDEX_MAX)
+            MCresult->sets("invalid file size");
         else
         {
-            toread = fsize;
             char *buffer;
             buffer = new char[fsize];
             if (buffer == NULL)
                 MCresult->sets("can't create data buffer");
             else
             {
-                errno = FSRead(fRefNum, &toread, buffer);
-                if (toread != fsize) //did not read bytes as specified
+                ByteCount t_read;
+                errno = FSReadFork(fRefNum, fsFromMark, 0, ByteCount(fsize), buffer, &t_read);
+                if (t_read != ByteCount(fsize)) //did not read bytes as specified
                     MCresult->sets("error reading file");
                 else
                 {
-                    /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)buffer, toread, r_data);
+                    /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)buffer, uindex_t(t_read), r_data);
                     MCresult->clear(False);
                 }
             }
@@ -4373,26 +4377,32 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         MCAutoStringRef dptr; // Check to see if this can ever happen anymore - if not, remove
         /* UNCHECKED */ GetCurrentFolder(&dptr);
         if (MCStringGetLength(*dptr) <= 1)
-        { // if root, then started from Finder
-            SInt16 vRefNum;
-            SInt32 dirID;
-            HGetVol(NULL, &vRefNum, &dirID);
-            FSSpec fspec;
-            FSMakeFSSpec(vRefNum, dirID, NULL, &fspec);
+        {
+            // The current directory is the root dir, which normally indicates
+            // that the application was launched through Finder. Get the path to
+            // the main app bundle and use it as the current directory instead.
+            CFBundleRef t_main_bundle = CFBundleGetMainBundle();
+            
+            // Get the path to the bundle
+            CFURLRef t_bundle_url = CFBundleCopyBundleURL(t_main_bundle);
+            CFStringRef t_fs_path = CFURLCopyFileSystemPath(t_bundle_url, kCFURLPOSIXPathStyle);
+            
+            // Change the current folder
             MCAutoStringRef t_path;
-            MCAutoStringRef t_new_path;
-            /* UNCHECKED */ MCS_mac_FSSpec2path(&fspec, &t_path);
-            /* UNCHECKED */ MCStringFormat(&t_new_path, "%@%s", *t_path, "/../../../");
-            /* UNCHECKED */ SetCurrentFolder(*t_new_path);
+            if (MCStringCreateWithCFString(t_fs_path, &t_path))
+                /* UNCHECKED */ SetCurrentFolder(*t_path);
+            
+            CFRelease(t_bundle_url);
+            CFRelease(t_fs_path);
         }
         
         MCS_reset_time();
         // END HERE
         
-        long response;
+        SInt32 response;
         if (Gestalt('ICAp', &response) == noErr)
         {
-            OSErr err;
+            OSStatus err;
             ICInstance icinst;
             ICAttr icattr;
             err = ICStart(&icinst, 'MCRD');
@@ -4409,8 +4419,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                     err = ICGetPref(icinst, kICHTTPProxyHost ,&icattr, proxystr, &icsize);
                     if (err == noErr)
                     {
-                        p2cstr(proxystr);
-                        /* UNCHECKED */ MCStringCreateWithCString((char *)proxystr, MChttpproxy);
+                        /* UNCHECKED */ MCStringCreateWithBytes(proxystr+1, *proxystr, kMCStringEncodingMacRoman, false, MChttpproxy);
                     }
                 }
                 ICStop(icinst);
