@@ -327,7 +327,13 @@ void MCMacPlatformSurface::Unlock(void)
 MCGFloat MCMacPlatformSurface::GetBackingScaleFactor(void)
 {
 	if ([m_window -> GetHandle() respondsToSelector: @selector(backingScaleFactor)])
-		return objc_msgSend_fpret(m_window -> GetHandle(), @selector(backingScaleFactor));
+    {
+        // This property seems to sometimes return NaN on 64-bit
+        double t_value = objc_msgSend_fpret(m_window -> GetHandle(), @selector(backingScaleFactor));
+        if (t_value != t_value)
+            t_value = 1.0;
+        return t_value;
+    }
 	return 1.0f;
 }
 
