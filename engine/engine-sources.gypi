@@ -564,6 +564,7 @@
 			'src/socket_resolve.cpp',
 
 			'src/clipboard.h',
+			'src/em-clipboard.h',
 			'src/lnx-clipboard.h',
 			'src/mac-clipboard.h',
 			'src/mblandroid-clipboard.h',
@@ -571,6 +572,7 @@
 			'src/raw-clipboard.h',
 			'src/w32-clipboard.h',
 			'src/clipboard.cpp',
+			'src/em-clipboard.cpp',
 			'src/lnx-clipboard.cpp',
 			'src/mac-clipboard.mm',
 			'src/mblandroid-clipboard.cpp',
