@@ -16,6 +16,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "osxbrowser.h"
 
+#import <AppKit/AppKit.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 
 enum
@@ -73,11 +75,6 @@ static NSRect RectToNSRect(NSWindow *p_window, Rect p_rect)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
-void
-OpenDialogEventProc( const NavEventCallbackMessage callbackSelector, 
-									   NavCBRecPtr callbackParms, 
-									   NavCallBackUserData callbackUD );
 
 @interface WebBrowserAdapter : NSObject
 {
@@ -278,135 +275,59 @@ OpenDialogEventProc( const NavEventCallbackMessage callbackSelector,
 
 - (void)webView:(WebView *)sender runJavaScriptAlertPanelWithMessage:(NSString *)message
 {
-	AlertStdCFStringAlertParamRec		param;
-	DialogRef							alert;
-	DialogItemIndex						itemHit;
-
-	param.version 		= kStdCFStringAlertVersionOne;
-	param.movable 		= true;
-	param.helpButton 	= false;
-	param.defaultText 	= (CFStringRef)kAlertDefaultOKText;
-	param.cancelText 	= NULL;
-	param.otherText 	= NULL;
-	param.defaultButton = kAlertStdAlertOKButton;
-	param.cancelButton 	= 0;
-	param.position 		= kWindowDefaultPosition;
-	param.flags 		= 0;
-	
-	CreateStandardAlert( 0, (CFStringRef)message, NULL, NULL, &alert );
-        NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-	RunStandardAlert( alert, NULL, &itemHit );
-        [pool release];
+    // Create and display an alert panel
+    NSAutoreleasePool* t_pool = [[NSAutoreleasePool alloc] init];
+    NSAlert* t_alert = [[[NSAlert alloc] init] autorelease];
+    [t_alert setMessageText:message];
+    [t_alert runModal];
+    [t_pool release];
 }
 
 - (BOOL)webView:(WebView *)sender runJavaScriptConfirmPanelWithMessage:(NSString *)message
 {
-	AlertStdCFStringAlertParamRec		param;
-	DialogRef							alert;
-	DialogItemIndex						itemHit;
-
-	param.version 		= kStdCFStringAlertVersionOne;
-	param.movable 		= true;
-	param.helpButton 	= false;
-	param.defaultText 	= (CFStringRef)kAlertDefaultOKText;
-	param.cancelText 	= (CFStringRef)kAlertDefaultCancelText;
-	param.otherText 	= NULL;
-	param.defaultButton = kAlertStdAlertOKButton;
-	param.cancelButton 	= kAlertStdAlertCancelButton;
-	param.position 		= kWindowDefaultPosition;
-	param.flags 		= 0;
-	
-	CreateStandardAlert( 0, (CFStringRef)message, NULL, &param, &alert );
-        NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-	RunStandardAlert( alert, NULL, &itemHit );
-        [pool release];
-	
-	return (itemHit == kAlertStdAlertOKButton );
+    // Create and display an alert panel with OK/Cancel buttons
+    NSAutoreleasePool* t_pool = [[NSAutoreleasePool alloc] init];
+    NSAlert* t_alert = [[[NSAlert alloc] init] autorelease];
+    NSInteger t_response;
+    [t_alert setMessageText:message];
+    [t_alert addButtonWithTitle:@"Cancel"];
+    t_response = [t_alert runModal];
+    [t_pool release];
+    return (t_response == NSAlertFirstButtonReturn);
 }
 
 - (void)webView:(WebView *)sender runOpenPanelForFileButtonWithResultListener:(id<WebOpenPanelResultListener>)resultListener
 {
-	NavDialogCreationOptions	dialogOptions;
-	NavDialogRef				dialog;
-	OSStatus 					theErr = noErr;
-
-	NavGetDefaultDialogCreationOptions( &dialogOptions );
-
-	dialogOptions.modality = kWindowModalityAppModal;
-	dialogOptions.clientName = CFStringCreateWithPascalString( NULL, LMGetCurApName(), GetApplicationTextEncoding());
-	dialogOptions.optionFlags &= ~kNavAllowMultipleFiles;
-
-	theErr = NavCreateChooseFileDialog( &dialogOptions, NULL, OpenDialogEventProc, NULL, NULL, resultListener, &dialog );
-	if ( theErr == noErr )
-	{
-		theErr = NavDialogRun( dialog );
-	}
-	
-	if ( theErr != noErr )
-	{
-		NavDialogDispose( dialog );
-		[resultListener cancel];
-	}
+    // Create an open-file panel that allows a single file to be chosen
+    NSOpenPanel* t_dialog = [NSOpenPanel openPanel];
+    [t_dialog setCanChooseDirectories:NO];
+    [t_dialog setCanChooseFiles:YES];
+    [t_dialog setAllowsMultipleSelection:NO];
+    
+    // Run the dialogue
+    NSInteger t_result = [t_dialog runModal];
+    
+    // If the user didn't cancel it, get the selection
+    if (t_result == NSFileHandlingPanelOKButton)
+    {
+        // Get the URL that was selected and convert to a file path
+        NSURL* t_url = [[t_dialog URL] filePathURL];
+        NSString* t_path = [t_url path];
+        
+        // Send it to the listener
+        [resultListener chooseFilename:t_path];
+    }
+    else
+    {
+        // The dialogue was cancelled and no selection was made
+        [resultListener cancel];
+    }
+    
+    [t_dialog release];
 }
 
 @end
 
-void
-OpenDialogEventProc( const NavEventCallbackMessage callbackSelector, 
-									   NavCBRecPtr callbackParms, 
-									   NavCallBackUserData callbackUD )
-{
-	id<WebOpenPanelResultListener> 	resultListener = (id<WebOpenPanelResultListener>)callbackUD;
-
-	switch ( callbackSelector )
-	{	
-		case kNavCBUserAction:
-			if ( callbackParms->userAction == kNavUserActionChoose )
-			{
-				NavReplyRecord	reply;
-				OSStatus		status;
-				
-				status = NavDialogGetReply( callbackParms->context, &reply );
-				if ( status == noErr )
-				{
-					OSStatus		anErr;
-					AEKeyword		keywd;
-					DescType		returnedType;
-					Size			actualSize;
-					FSRef 			fileRef;
-					FSCatalogInfo	theCatInfo;
-					UInt8			path[1024];
-					CFStringRef		filename;
-					
-					anErr = AEGetNthPtr( &reply.selection, 1, typeFSRef, &keywd, &returnedType,
-									(Ptr)(&fileRef), sizeof( fileRef ), &actualSize );
-					require_noerr(anErr, AEGetNthPtr);
-			
-					anErr = FSGetCatalogInfo( &fileRef, kFSCatInfoFinderInfo, &theCatInfo, NULL, NULL, NULL );
-					require_noerr(anErr, FSGetCatalogInfo);
-					
-					FSRefMakePath( &fileRef, path, sizeof( path ) );
-					filename = CFStringCreateWithCString( NULL, (char *)path, kCFStringEncodingUTF8 );
-					[resultListener chooseFilename:(NSString*)filename];
-					CFRelease( filename );
-
-				AEGetNthPtr:
-				FSGetCatalogInfo:
-
-					NavDisposeReply( &reply );
-				}
-			}
-			else if ( callbackParms->userAction == kNavUserActionCancel )
-			{
-				[resultListener cancel];
-			}
-			break;
-
-		case kNavCBTerminate:
-			NavDialogDispose( callbackParms->context );
-			break;
-	}
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -487,10 +408,8 @@ TAltBrowser::~TAltBrowser()
 
 @end
 
-void TAltBrowser::init(unsigned int p_window)
+void TAltBrowser::init(uintptr_t p_window)
 {
-	WebInitForCarbon();
-	
 	m_parent = p_window;
 	
 	NSWindow *t_window;
