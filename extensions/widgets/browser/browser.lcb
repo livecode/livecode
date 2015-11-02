@@ -338,14 +338,17 @@ constant kPersistentProps is ["verticalScrollbarEnabled", "horizontalScrollbarEn
 --------------------------------------------------------------------------------
 
 public handler OnLoad(in pProperties as Array)
-	loadProperties(pProperties)
+	/* TODO - reinstate property load / save once cacheing is implemented */
+	// loadProperties(pProperties)
 end handler
 
 public handler OnSave(out rProperties as Array)
-	if mBrowser is not nothing then
-		put saveProperties() into mProperties
-	end if
-	put mProperties into rProperties
+	/* TODO - reinstate property load / save once cacheing is implemented */
+	// if mBrowser is not nothing then
+	// 	put saveProperties() into mProperties
+	// end if
+	// put mProperties into rProperties
+	put the empty array into rProperties
 end handler
 
 ----------
