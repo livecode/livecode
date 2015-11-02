@@ -904,8 +904,8 @@ void TAltBrowser::SetRect(int p_left, int p_top, int p_right, int p_bottom)
 char * TAltBrowser::GetSelectedText()
 {
 	WebView*            nativeView;
-	long				SystemMinorVersion;
-	long				SystemBugFixVersion;
+	SInt32              SystemMinorVersion;
+	SInt32              SystemBugFixVersion;
 	
 	//Domranges only showed up in 10.3.9 and later
 	Gestalt( gestaltSystemVersionMinor, &SystemMinorVersion);
@@ -1011,7 +1011,7 @@ void TAltBrowser::Print()
 	NSView *			  pView;
 	WebFrameView *     pFrame;
 	WebPreferences *   thePrefs;
-	long				 SystemMinorVersion;
+	SInt32				 SystemMinorVersion;
 	
 	
 	nativeView = m_web_browser;
