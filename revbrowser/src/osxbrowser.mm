@@ -1273,12 +1273,12 @@ bool TAltBrowser::GetImage(void*& r_data, int& r_length)
 	return t_success;
 }
 
-int TAltBrowser::GetWindowId(void)
+uintptr_t TAltBrowser::GetWindowId(void)
 {
-	return (int)m_parent;
+	return uintptr_t(m_parent);
 }
 
-void TAltBrowser::SetWindowId(int p_new_id)
+void TAltBrowser::SetWindowId(uintptr_t p_new_id)
 {
 	NSWindow *t_window;
 	t_window = [NSApp windowWithWindowNumber: p_new_id];
