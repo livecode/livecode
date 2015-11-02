@@ -695,7 +695,7 @@
 			'src/osxprinter.cpp',
 			'src/osxstack.cpp',
 			'src/osxtextlayout.cpp',
-			'src/osxtheme.cpp',
+			'src/osxtheme.mm',
 			
 			# Group "Desktop - Windows"
 			'src/w32compat.h',
