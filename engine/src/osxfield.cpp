@@ -35,9 +35,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "text.h"
 
+#ifndef __64_BIT__
+
 bool MCField::macmatchfontname(const char *p_font_name, char p_derived_font_name[])
 {
-	ATSUFontID t_font_id;
+    ATSUFontID t_font_id;
 	if (ATSUFindFontFromName(p_font_name, strlen(p_font_name), kFontFullName, kFontNoPlatform, kFontNoScript, kFontNoLanguage, &t_font_id) == noErr ||
 		ATSUFindFontFromName(p_font_name, strlen(p_font_name), kFontUniqueName, kFontNoPlatform, kFontNoScript, kFontNoLanguage, &t_font_id) == noErr ||
 		ATSUFindFontFromName(p_font_name, strlen(p_font_name), kFontFamilyName, kFontNoPlatform, kFontNoScript, kFontNoLanguage, &t_font_id) == noErr ||
@@ -76,4 +78,4 @@ bool MCField::macmatchfontname(const char *p_font_name, char p_derived_font_name
 	return false;
 }
 
-
+#endif
