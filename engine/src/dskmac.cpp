@@ -1328,7 +1328,7 @@ static OSErr MCS_mac_fsref_to_fsspec(const FSRef *p_fsref, FSSpec *r_fsspec)
 	return FSGetCatalogInfo(p_fsref, 0, NULL, NULL, r_fsspec, NULL);
 }
 
-void MCS_mac_closeresourcefile(SInt16 p_ref) // TODO: remove?
+void MCS_mac_closeresourcefile(ResFileRefNum p_ref) // TODO: remove?
 {
 	OSErr t_err;
 	CloseResFile(p_ref);
@@ -1464,7 +1464,7 @@ bool MCS_mac_FSSpec2path(FSSpec *fSpec, MCStringRef& r_path)
 }
 #endif
 
-static void MCS_openresourcefork_with_fsref(FSRef *p_ref, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref, MCStringRef& r_error)
+static void MCS_openresourcefork_with_fsref(FSRef *p_ref, SInt8 p_permission, bool p_create, FSIORefNum *r_fork_ref, MCStringRef& r_error)
 {
     bool t_success;
     t_success = true;
@@ -1494,7 +1494,7 @@ static void MCS_openresourcefork_with_fsref(FSRef *p_ref, SInt8 p_permission, bo
 	}
 	
 	// Open it..
-	SInt16 t_fork_ref;
+	FSIORefNum t_fork_ref;
 	bool t_fork_opened;
 	t_fork_opened = false;
 	if (t_success)
@@ -1514,7 +1514,7 @@ static void MCS_openresourcefork_with_fsref(FSRef *p_ref, SInt8 p_permission, bo
         *r_fork_ref = t_fork_ref;
 }
 
-static void MCS_mac_openresourcefork_with_path(MCStringRef p_path, SInt8 p_permission, bool p_create, SInt16*r_fork_ref, MCStringRef& r_error)
+static void MCS_mac_openresourcefork_with_path(MCStringRef p_path, SInt8 p_permission, bool p_create, FSIORefNum*r_fork_ref, MCStringRef& r_error)
 {
 	FSRef t_ref;
 	OSErr t_os_error;
@@ -1606,19 +1606,18 @@ static bool getResourceInfo(MCListRef p_list, ResType searchType)
 	Str255 rname;  //Pascal string
 	char cstr[256];  //C string
 	char typetmp[5]; //buffer for storing type string in c format
-	short total = Count1Resources(searchType);
+	SInt16 total = Count1Resources(searchType);
 	if (ResError() != noErr)
 	{
 		errno = ResError();
 		return false;
 	}
 	char buffer[4 + U2L + 255 + U4L + 6];
-	for (uindex_t i = 1 ; i <= total ; i++)
+	for (SInt16 i = 1 ; i <= total ; i++)
 	{
 		if ((rh = Get1IndResource(searchType, i)) == NULL)
 			continue;
 		GetResInfo(rh, &rid, &rtype, rname);
-		p2cstrcpy(cstr, rname); //convert to C string
 		// MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
 		rtype = (ResType)MCSwapInt32NetworkToHost(rtype);
 		memcpy(typetmp, (char*)&rtype, 4);
@@ -1670,26 +1669,26 @@ public:
 			MCS_mac_closeresourcefile(m_res_file);
 	}
 	
-	short operator = (short p_res_file)
+	ResFileRefNum operator = (ResFileRefNum p_res_file)
 	{
 		MCAssert(m_res_file == 0);
 		m_res_file = p_res_file;
 		return m_res_file;
 	}
 	
-	short operator * (void)
+	ResFileRefNum operator * (void)
 	{
 		return m_res_file;
 	}
 	
-	short& operator & (void)
+	ResFileRefNum& operator & (void)
 	{
 		MCAssert(m_res_file == 0);
 		return m_res_file;
 	}
 	
 private:
-	short m_res_file;
+	ResFileRefNum m_res_file;
 };
 
 //////////////////////////////////////////////////////////////////text/////////////
@@ -2420,13 +2419,13 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         {
             /* UNCHECKED */ MCStringToInt16(p_id, rid);
         }
-        SInt16 resFileRefNum; //open resource fork for read and write permission
+        ResFileRefNum resFileRefNum; //open resource fork for read and write permission
         if (!MCS_mac_openresourcefile_with_path(p_source, fsRdWrPerm, true, resFileRefNum, r_error))
         {
             return MCresult -> setvalueref(r_error);
         }
         
-        
+        // Resource handle
         Handle rh = NULL;
         char *temp;
         /* UNCHECKED */ MCStringConvertToCString(p_name, temp);
@@ -2552,7 +2551,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
 	MCS_closeresourcefile(resFileRefNum);
 
 #endif /* MCS_getresource_dsk_mac */
-        SInt16 resFileRefNum;
+        ResFileRefNum resFileRefNum;
         Handle rh = NULL; //resource handle
         
         if (!MCS_mac_openresourcefile_with_path(p_source, fsRdPerm, true, resFileRefNum, r_error))
@@ -2594,7 +2593,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         if (MCresult -> isclear())
         {
             //getting the the resource's size throuth the resource handle
-            int4 resLength = GetHandleSize(rh);
+            Size resLength = GetHandleSize(rh);
             if (resLength <= 0)
             {
                 MCresult -> sets("can't get resouce length.");
@@ -2897,11 +2896,11 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
             !MCStringIsNative(p_type))
         {
             //copying the entire resource file
-            short resTypeCount = Count1Types();
-            short resCount;
+            ResourceCount resTypeCount = Count1Types();
+            ResourceCount resCount;
             ResType resourceType;
             Handle hres;
-            for (uindex_t i = 1; i <= resTypeCount; i++)
+            for (ResourceCount i = 1; i <= resTypeCount; i++)
             {
                 UseResFile(*srcFileRefNum);
                 Get1IndType(&resourceType, i);
@@ -2909,7 +2908,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                 Str255 rname;
                 short id;
                 ResType type;
-                for (uindex_t j = 1; j <= resCount; j++)
+                for (ResourceCount j = 1; j <= resCount; j++)
                 {
                     UseResFile(*srcFileRefNum);
                     hres = Get1IndResource(resourceType, j);
@@ -2976,19 +2975,18 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
             /* UNCHECKED */ MCStringToInteger(p_newid, newResID); //use the id passed in
         
         //delete the resource by id to be copied in the destination file, if it existed
-        Handle rhandle = Get1Resource(restype, newResID);
+        Handle rhandle = Get1Resource(restype, ResID(newResID));
         if (rhandle != NULL && ResError() != resNotFound)
             RemoveResource(rhandle);
         
         //now, let's copy the resource to the dest file
-        if (!hasResName)
-            AddResource(rh, restype, (short)newResID, (unsigned char*)resourceName);
+        if (*t_resname != nil)
+            AddResource(rh, restype, ResID(newResID), *t_resname);
         else
-            AddResource(rh, restype, (short)newResID, t_resname);
-        //errno = ResError();//if errno == 0 means O.K.
-        OSErr t_os_error = ResError();
+            AddResource(rh, restype, ResID(newResID), resourceName);
         
-        UseResFile(prev_res_file); //restore to the original state
+        // Restore to the original state
+        UseResFile(prev_res_file);
         
         return true;
     }
@@ -3124,7 +3122,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
 #endif /* MCS_copyresourcefork_dsk_mac */
         MCAutoStringRef t_error;
         
-        SInt16 t_source_ref;
+        FSIORefNum t_source_ref;
         bool t_source_fork_opened;
         t_source_fork_opened = false;
         
@@ -3132,7 +3130,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         if (*t_error == nil)
             t_source_fork_opened = true;
         
-        SInt16 t_dest_ref;
+        FSIORefNum t_dest_ref;
         bool t_dest_fork_opened;
         t_dest_fork_opened = false;
         
@@ -3234,7 +3232,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         
         MCAutoStringRef t_open_res_error_string;
         
-        short fRefNum;
+        FSIORefNum fRefNum;
         MCS_mac_openresourcefork_with_path(*t_redirected, fsRdPerm, false, &fRefNum, &t_open_res_error_string); // RESFORK
         
         if (*t_open_res_error_string != nil)
@@ -3317,7 +3315,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         if (!MCSecureModeCanAccessDisk())
 		/* UNCHECKED */ MCStringCreateWithCString("can't open file", &t_error);
         
-        SInt16 t_fork_ref;
+        FSIORefNum t_fork_ref;
         bool t_fork_opened;
         t_fork_opened = false;
         
@@ -7911,7 +7909,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             return;
         }
         MCAutoStringRef rvalue;
-        OSErr err;
+        OSStatus err;
         err = osaexecute(&rvalue, posacomp->compinstance, scriptid);
         if (err == noErr)
         {
