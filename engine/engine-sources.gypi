@@ -821,7 +821,7 @@
 			'src/internal.cpp',
 			'src/mode_installer.cpp',
 			'src/mode_installer_lnx.cpp',
-			'src/mode_installer_osx.cpp',
+			'src/mode_installer_osx.mm',
 			'src/mode_installer_w32.cpp',
 		],
 		
