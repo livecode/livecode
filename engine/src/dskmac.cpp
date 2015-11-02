@@ -8028,11 +8028,9 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         getosacomponents();
         OSAcomponent *posacomp = NULL;
         uint2 i;
-        uint4 l = MCStringGetLength(p_language);
         for (i = 0; i < osancomponents; i++)
         {
-            if (l == strlen(osacomponents[i].compname)
-                && MCStringIsEqualToCString(p_language, osacomponents[i].compname, kMCCompareCaseless))
+            if (MCStringIsEqualTo(p_language, osacomponents[i].compname, kMCStringOptionCompareCaseless))
             {
                 posacomp = &osacomponents[i];
                 break;
