@@ -86,7 +86,7 @@ inline FourCharCode FourCharCodeFromString(const char *p_string)
 	return MCSwapInt32HostToNetwork(*(FourCharCode *)p_string);
 }
 
-bool FourCharCodeFromString(MCStringRef p_string, uindex_t p_start, uint32_t& r_four_char_code)
+bool FourCharCodeFromString(MCStringRef p_string, uindex_t p_start, FourCharCode& r_four_char_code)
 {
     char *temp;
     uint32_t t_four_char_code;
@@ -764,8 +764,8 @@ static void MCS_mac_setfiletype(MCStringRef p_new_path)
 	if (FSGetCatalogInfo(&t_fsref, kFSCatInfoFinderInfo, &t_catalog, NULL, NULL, NULL) == noErr)
 	{
 		// Set the creator and filetype of the catalog.
-        FourCharCodeFromString(MCfiletype, 4, (uint32_t&)((FileInfo *) t_catalog . finderInfo) -> fileType);
-        FourCharCodeFromString(MCfiletype, 0, (uint32_t&)((FileInfo *) t_catalog . finderInfo) -> fileCreator);
+        FourCharCodeFromString(MCfiletype, 4, ((FileInfo *) t_catalog . finderInfo) -> fileType);
+        FourCharCodeFromString(MCfiletype, 0, ((FileInfo *) t_catalog . finderInfo) -> fileCreator);
         
 		FSSetCatalogInfo(&t_fsref, kFSCatInfoFinderInfo, &t_catalog);
 	}
@@ -2412,7 +2412,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
             newflags |= resChanged;
         
         ResType rtype;
-        /* UNCHECKED */ FourCharCodeFromString(p_type, 0, (uint32_t&)rtype);
+        /* UNCHECKED */ FourCharCodeFromString(p_type, 0, rtype);
         // MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
         rtype = (ResType)MCSwapInt32HostToNetwork(rtype);
         short rid = 0;
@@ -3491,8 +3491,8 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         AEEventClass ac;
         AEEventID aid;
         
-        /* UNCHECKED */ FourCharCodeFromString(p_eventtype, 0, (uint32_t&)ac);
-        /* UNCHECKED */ FourCharCodeFromString(p_eventtype, 4, (uint32_t&)aid);
+        /* UNCHECKED */ FourCharCodeFromString(p_eventtype, 0, ac);
+        /* UNCHECKED */ FourCharCodeFromString(p_eventtype, 4, aid);
                
         AECreateAppleEvent(ac, aid, &receiver, kAutoGenerateReturnID,
                            kAnyTransactionID, &ae);
@@ -3617,7 +3617,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         //at any one time only either keyword or error is set
         if (p_keyword != NULL)
         {
-            /* UNCHECKED */ FourCharCodeFromString(p_keyword, 0, (uint32_t&)replykeyword);
+            /* UNCHECKED */ FourCharCodeFromString(p_keyword, 0, replykeyword);
         }
         else
         {
@@ -3798,7 +3798,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                 else
                 {
                     AEKeyword key;
-                    /* UNCHECKED */ FourCharCodeFromString(p_message, MCStringGetLength(p_message) - sizeof(AEKeyword), (uint32_t&)key);
+                    /* UNCHECKED */ FourCharCodeFromString(p_message, MCStringGetLength(p_message) - sizeof(AEKeyword), key);
                     
                     if (key == keyAddressAttr || key == keyEventClassAttr
                         || key == keyEventIDAttr || key == keyEventSourceAttr
@@ -4904,10 +4904,10 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         }
         
         if (!t_error)
-            t_error = !FourCharCodeFromString(MCfiletype, 4, (uint32_t&)((FileInfo *) t_dst_catalog . finderInfo) -> fileType);
+            t_error = !FourCharCodeFromString(MCfiletype, 4, ((FileInfo *) t_dst_catalog . finderInfo) -> fileType);
         
         if (!t_error)
-            t_error = !FourCharCodeFromString(MCfiletype, 0, (uint32_t&)((FileInfo *) t_dst_catalog . finderInfo) -> fileCreator);
+            t_error = !FourCharCodeFromString(MCfiletype, 0, ((FileInfo *) t_dst_catalog . finderInfo) -> fileCreator);
         
         bool t_created_dst;
         t_created_dst = false;
