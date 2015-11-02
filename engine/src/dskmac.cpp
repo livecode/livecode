@@ -164,6 +164,9 @@ static OSErr osaexecute(MCStringRef& r_string,ComponentInstance compinstance, OS
 // SN-2014-10-07: [[ Bug 13587 ]] Update to return an MCList
 static bool fetch_ae_as_fsref_list(MCListRef &r_list);
 
+static OSStatus MCS_mac_pathtoref(MCStringRef p_path, FSRef& r_ref);
+static bool MCS_mac_fsref_to_path(FSRef& p_ref, MCStringRef& r_path);
+
 /***************************************************************************/
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1178,7 +1181,7 @@ static bool MCS_mac_path2std(MCStringRef p_path, MCStringRef& r_stdpath)
 }
 #endif
 
-OSErr MCS_mac_pathtoref(MCStringRef p_path, FSRef& r_ref)
+static OSStatus MCS_mac_pathtoref(MCStringRef p_path, FSRef& r_ref)
 {
 #ifdef /* MCS_pathtoref_dsk_mac */ LEGACY_SYSTEM
 	char *t_resolved_path;
@@ -1320,11 +1323,6 @@ static OSErr MCS_mac_pathtoref_and_leaf(MCStringRef p_path, FSRef& r_ref, UniCha
 	return t_error;
 }
 
-static OSErr MCS_mac_fsspec_to_fsref(const FSSpec *p_fsspec, FSRef *r_fsref)
-{
-	return FSpMakeFSRef(p_fsspec, r_fsref);
-}
-
 static OSErr MCS_mac_fsref_to_fsspec(const FSRef *p_fsref, FSSpec *r_fsspec)
 {
 	return FSGetCatalogInfo(p_fsref, 0, NULL, NULL, r_fsspec, NULL);
@@ -1337,7 +1335,7 @@ void MCS_mac_closeresourcefile(SInt16 p_ref) // TODO: remove?
 	t_err = ResError();
 }
 
-bool MCS_mac_fsref_to_path(FSRef& p_ref, MCStringRef& r_path)
+static bool MCS_mac_fsref_to_path(FSRef& p_ref, MCStringRef& r_path)
 {
 	MCAutoArray<byte_t> t_buffer;
 	if (!t_buffer.New(PATH_MAX))
@@ -1349,6 +1347,7 @@ bool MCS_mac_fsref_to_path(FSRef& p_ref, MCStringRef& r_path)
 	return MCStringCreateWithBytes(t_buffer.Ptr(), t_buffer.Size(), kMCStringEncodingUTF8, false, r_path);
 }
 
+#ifndef __64_BIT__
 bool MCS_mac_FSSpec2path(FSSpec *fSpec, MCStringRef& r_path)
 {
 #ifdef /* MCS_mac_FSSpec2path_dsk_mac */ LEGACY_SYSTEM
@@ -1463,6 +1462,7 @@ bool MCS_mac_FSSpec2path(FSSpec *fSpec, MCStringRef& r_path)
     }
 	return true;
 }
+#endif
 
 static void MCS_openresourcefork_with_fsref(FSRef *p_ref, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref, MCStringRef& r_error)
 {
@@ -1528,210 +1528,69 @@ static void MCS_mac_openresourcefork_with_path(MCStringRef p_path, SInt8 p_permi
 	MCS_openresourcefork_with_fsref(&t_ref, p_permission, p_create, r_fork_ref, r_error);
 }
 
-static bool MCS_mac_openresourcefile_with_fsref(FSRef& p_ref, SInt8 p_permissions, bool p_create, SInt16& r_fileref_num, MCStringRef& r_error)
+bool MCS_mac_openresourcefile_with_path(MCStringRef p_path, SInt8 p_permissions, bool p_create, ResFileRefNum& r_fileref_num, MCStringRef& r_error)
 {
-	FSSpec fspec;
-	
-	if (FSGetCatalogInfo(&p_ref, 0, NULL, NULL, &fspec, NULL) != noErr)
-		return MCStringCreateWithCString("file not found", r_error);
-	
-	r_fileref_num = FSOpenResFile(&p_ref, p_permissions);
-	if (p_create && r_fileref_num < 0)
-	{
-		OSType t_creator, t_ftype;
-		CInfoPBRec t_cpb;
-		MCMemoryClear(&t_cpb, sizeof(t_cpb));
-		t_cpb.hFileInfo.ioNamePtr = fspec.name;
-		t_cpb.hFileInfo.ioVRefNum = fspec.vRefNum;
-		t_cpb.hFileInfo.ioDirID = fspec.parID;
-		/* DEPRECATED */ if (PBGetCatInfoSync(&t_cpb) == noErr)
-		{
-			t_creator = t_cpb.hFileInfo.ioFlFndrInfo.fdCreator;
-			t_ftype = t_cpb.hFileInfo.ioFlFndrInfo.fdType;
-		}
-		else
-		{
-            FourCharCodeFromString(MCfiletype, 0, (uint32_t&)t_creator);
-            FourCharCodeFromString(MCfiletype, 4, (uint32_t&)t_ftype);
-		}
-		/* DEPRECATED */ FSpCreateResFile(&fspec, t_creator, t_ftype, smRoman);
-		
-		if ((errno = ResError()) != noErr)
-			return MCStringCreateWithCString("can't create resource fork", r_error);
-		
-		/* DEPRECATED */ r_fileref_num = FSpOpenResFile(&fspec, p_permissions);
-	}
-	
-	if (r_fileref_num < 0)
-	{
-		errno = fnfErr;
-		return MCStringCreateWithCString("Can't open resource fork", r_error);
-	}
-	
-	if ((errno = ResError()) != noErr)
-		return MCStringCreateWithCString("Error opening resource fork", r_error);
-	
+    FSRef t_ref;
+    OSErr t_os_error;
+    
+    t_os_error = MCS_mac_pathtoref(p_path, t_ref);
+    if (t_os_error != noErr)
+        return MCStringCreateWithCString("can't open file", r_error);
+    
+    // Get the parent for the given file. This ensures that all directories on
+    // the path are present and correct.
+    FSRef t_parent;
+    if (FSGetCatalogInfo(&t_ref, 0, NULL, NULL, NULL, &t_parent) != noErr)
+        return MCStringCreateWithCString("file not found", r_error);
+    
+    // Attempt to open the existing resource file
+    r_fileref_num = FSOpenResFile(&t_ref, p_permissions);
+    
+    // If opening failed and creation was requested, create the resource file
+    if (p_create && r_fileref_num < 0)
+    {
+        // Attempt to retrieve the catalog information, this time asking for the
+        // Finder info (this is where the type and creator codes are stored).
+        //
+        // Given that we're about to create this file, I don't see how this
+        // could succeed... (but the FSSpec using code did this so I shall leave
+        //
+        FSCatalogInfo t_catalog_info;
+        if (FSGetCatalogInfo(&t_ref, kFSCatInfoFinderInfo, &t_catalog_info, NULL, NULL, NULL) != noErr)
+        {
+            // Couldn't get the catalog info. Set the finder information based
+            // on the currently configured type and creator code.
+            FileInfo& t_info = (FileInfo&)t_catalog_info.finderInfo;
+            MCMemoryClear(t_info);
+            FourCharCodeFromString(MCfiletype, 0, t_info.fileCreator);
+            FourCharCodeFromString(MCfiletype, 4, t_info.fileType);
+        }
+        
+        // Create the resource file. We make sure to copy the finder info as it
+        // includes the type and creator codes.
+        MCAutoStringRefAsUTF16String t_unichar_string;
+        t_unichar_string.Lock(p_path);
+        FSRef t_new_ref;
+        FSCreateResFile(&t_parent, t_unichar_string.Size(), t_unichar_string.Ptr(), kFSCatInfoFinderInfo, &t_catalog_info, &t_new_ref, NULL);
+        if ((errno = ResError()) != noErr)
+            return MCStringCreateWithCString("can't create resource file", r_error);
+        
+        // Now that the resource file has been created, open it
+        r_fileref_num = FSOpenResFile(&t_new_ref, p_permissions);
+    }
+    
+    // Failed to open the resource file
+    if (r_fileref_num < 0)
+    {
+        errno = fnfErr;
+        return MCStringCreateWithCString("Can't open resource file", r_error);
+    }
+    
+    // Any other errors
+    if ((errno = ResError()) != noErr)
+        return MCStringCreateWithCString("Error opening resource file", r_error);
+
 	return true;
-}
-
-bool MCS_mac_openresourcefile_with_path(MCStringRef p_path, SInt8 p_permission, bool p_create, SInt16& r_fork_ref, MCStringRef& r_error)
-{
-    //	MCAutoStringRef t_utf8_path;
-    //	if (!MCU_nativetoutf8(p_path, &t_utf8_path))
-    //		return false;`
-	
-	FSRef t_ref;
-	OSErr t_os_error;
-	
-	t_os_error = MCS_mac_pathtoref(p_path, t_ref);
-	if (t_os_error != noErr)
-		return MCStringCreateWithCString("can't open file", r_error);
-	
-	return MCS_mac_openresourcefile_with_fsref(t_ref, p_permission, p_create, r_fork_ref, r_error);
-}
-
-static const char *MCS_mac_openresourcefile_with_fsref(FSRef *p_ref, SInt8 permission, bool create, SInt16 *fileRefNum)
-{
-	FSSpec fspec;
-	
-	if (FSGetCatalogInfo(p_ref, 0, NULL, NULL, &fspec, NULL) != noErr)
-		return "file not found";
-	
-	if ((*fileRefNum = FSpOpenResFile(&fspec, permission)) < 0)
-	{
-		if (create)
-		{
-			OSType creator, ftype;
-			CInfoPBRec cpb;
-			memset(&cpb, 0, sizeof(CInfoPBRec));
-			cpb.hFileInfo.ioNamePtr = fspec.name;
-			cpb.hFileInfo.ioVRefNum = fspec.vRefNum;
-			cpb.hFileInfo.ioDirID = fspec.parID;
-			if (PBGetCatInfoSync(&cpb) == noErr)
-			{
-				memcpy(&creator, &cpb.hFileInfo.ioFlFndrInfo.fdCreator, 4);
-				memcpy(&ftype, &cpb.hFileInfo.ioFlFndrInfo.fdType, 4);
-			}
-			else
-			{
-                FourCharCodeFromString(MCfiletype, 0, (uint32_t&)creator);
-                FourCharCodeFromString(MCfiletype, 4, (uint32_t&)ftype);
-			}
-			FSpCreateResFile(&fspec, creator, ftype, smRoman);
-			
-			if ((errno = ResError()) != noErr)
-				return "can't create resource fork";
-            
-			*fileRefNum = FSpOpenResFile(&fspec, permission);
-		}
-		
-		if (*fileRefNum < 0)
-		{
-			errno = fnfErr;
-			return "Can't open resource fork";
-		}
-		
-		if ((errno = ResError()) != noErr)
-			return "Error opening resource fork";
-	}
-	
-	return NULL;
-}
-
-// based on MoreFiles (Apple DTS)
-OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec)
-{
-#ifdef /* MCS_path2FSSpec_dsk_mac */ LEGACY_SYSTEM
-	char *path = MCS_resolvepath(fname);
-	memset(fspec, 0, sizeof(FSSpec));
-    
-    
-	char *f2 = strrchr(path, '/');
-	if (f2 != NULL && f2 != path)
-		*f2++ = '\0';
-	char *fspecname = strclone(f2);
-	path = path2utf(path);
-	FSRef ref;
-	if ((errno = FSPathMakeRef((unsigned char *)path, &ref, NULL)) == noErr)
-	{
-		if ((errno = FSGetCatalogInfo(&ref, kFSCatInfoNone,
-		                              NULL, NULL, fspec, NULL)) == noErr)
-		{
-			CInfoPBRec cpb;
-			memset(&cpb, 0, sizeof(CInfoPBRec));
-			cpb.dirInfo.ioNamePtr = fspec->name;
-			cpb.dirInfo.ioVRefNum = fspec->vRefNum;
-			cpb.dirInfo.ioDrDirID = fspec->parID;
-			if ((errno = PBGetCatInfoSync(&cpb)) != noErr)
-			{
-				delete path;
-				return errno;
-			}
-			c2pstr((char *)fspecname);
-			errno = FSMakeFSSpec(cpb.dirInfo.ioVRefNum, cpb.dirInfo.ioDrDirID,
-			                     (unsigned char *)fspecname, fspec);
-		}
-	}
-	delete fspecname;
-	delete path;
-	return errno;
-#endif /* MCS_path2FSSpec_dsk_mac */
-    MCAutoStringRef t_resolved_path;
-    MCAutoStringRefAsUTF8String t_utf_path;
-    
-	if (!MCS_resolvepath(p_filename, &t_resolved_path))
-        return memFullErr;
-    memset(fspec, 0, sizeof(FSSpec));
-    
-    uindex_t t_last_slash;
-    MCAutoStringRef t_resolved_path_new, t_fspecname;
-    char *fspecname;
-    if (MCStringLastIndexOfChar(*t_resolved_path, '/', UINDEX_MAX, kMCCompareExact, t_last_slash) && t_last_slash != 0)
-    {
-        /* UNCHECKED */ MCStringDivideAtIndex(*t_resolved_path, t_last_slash, &t_resolved_path_new, &t_fspecname);
-        /* UNCHECKED */ MCStringConvertToUTF8String(*t_fspecname, fspecname);
-    }
-    else
-    {
-        /* UNCHECKED */ MCStringCopy(*t_resolved_path, &t_resolved_path_new);
-        fspecname = NULL;
-    }
-    
-    if (!t_utf_path.Lock(*t_resolved_path_new))
-    {
-        delete fspecname;
-        return memFullErr;
-    }
-    
-	FSRef ref;
-	if ((errno = FSPathMakeRef((unsigned char*)*t_utf_path, &ref, NULL)) == noErr)
-	{
-		if ((errno = FSGetCatalogInfo(&ref, kFSCatInfoNone,
-		                              NULL, NULL, fspec, NULL)) == noErr)
-		{
-			CInfoPBRec cpb;
-			memset(&cpb, 0, sizeof(CInfoPBRec));
-			cpb.dirInfo.ioNamePtr = fspec->name;
-			cpb.dirInfo.ioVRefNum = fspec->vRefNum;
-			cpb.dirInfo.ioDrDirID = fspec->parID;
-			if ((errno = PBGetCatInfoSync(&cpb)) != noErr)
-			{
-				return errno;
-			}
-			c2pstr((char *)fspecname);
-			errno = FSMakeFSSpec(cpb.dirInfo.ioVRefNum, cpb.dirInfo.ioDrDirID,
-			                     (unsigned char *)fspecname, fspec);
-		}
-	}
-	delete fspecname;
-	return errno;
-}
-
-OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec)
-{
-	MCAutoStringRef t_filename;
-	/* UNCHECKED */ MCStringCreateWithCString(fname, &t_filename);
-	return MCS_path2FSSpec(*t_filename, fspec);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3647,13 +3506,11 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         
         if (aid == 'odoc' || aid == 'pdoc')
         {
-            FSSpec fspec;
             FSRef t_fsref;
-            
-            if (MCS_mac_pathtoref(p_message, t_fsref) == noErr && MCS_mac_fsref_to_fsspec(&t_fsref, &fspec) == noErr)
+            if (MCS_mac_pathtoref(p_message, t_fsref) == noErr)
             {
                 AECreateList(NULL, 0, false, &files_list);
-                NewAlias(NULL, &fspec, &the_alias);
+                FSNewAlias(NULL, &t_fsref, &the_alias);
                 HLock((Handle)the_alias);
                 AECreateDesc(typeAlias, (Ptr)(*the_alias),
                              GetHandleSize((Handle)the_alias), &file_desc);
@@ -8179,16 +8036,6 @@ static bool fetch_ae_as_fsref_list(MCListRef &r_list)
     return MCListCopy(*t_list, r_list);
 }
 
-OSErr MCS_fsspec_to_fsref(const FSSpec *p_fsspec, FSRef *r_fsref)
-{
-	return FSpMakeFSRef(p_fsspec, r_fsref);
-}
-
-OSErr MCS_fsref_to_fsspec(const FSRef *p_fsref, FSSpec *r_fsspec)
-{
-	return FSGetCatalogInfo(p_fsref, 0, NULL, NULL, r_fsspec, NULL);
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 //**************************************************************************
 // * Utility functions used by this module only
@@ -8245,7 +8092,11 @@ static OSErr getDesc(short locKind, StringPtr zone, StringPtr machine,
 	 * to store the process name */
 	pInfoRec.processInfoLength = sizeof(ProcessInfoRec);
 	pInfoRec.processName = pname;
+#ifdef __64_BIT__
+    pInfoRec.processAppRef = NULL;
+#else
 	pInfoRec.processAppSpec = NULL;
+#endif
 	Boolean processFound = False;
     
 	while (GetNextProcess(&psn) == noErr)
@@ -8820,9 +8671,7 @@ static void MCS_startprocess_launch(MCNameRef name, MCStringRef docname, Open_mo
 	AppleEvent ae;
 	
 	FSRef t_app_fsref;
-	FSSpec t_app_fsspec;
 	errno = MCS_mac_pathtoref(MCNameGetString(name), t_app_fsref);
-	errno = MCS_mac_fsref_to_fsspec(&t_app_fsref, &t_app_fsspec);
 	
 	uint2 i;
     
@@ -8866,13 +8715,18 @@ static void MCS_startprocess_launch(MCNameRef name, MCStringRef docname, Open_mo
 				break;
 		if (i == MCnprocesses)
 		{
-			FInfo fndrInfo;
-			if ((errno = FSpGetFInfo(&t_app_fsspec, &fndrInfo)) != noErr)
-			{
-				MCresult->sets("no such program");
-				return;
-			}
-			OSType creator = fndrInfo.fdCreator;
+            // To get the creator code, we need to get the catalog info for the
+            // app that was launched. The code itself lives in the Finder info.
+            FSCatalogInfo t_catalog_info;
+            if ((errno = FSGetCatalogInfo(&t_app_fsref, kFSCatInfoFinderInfo, &t_catalog_info, NULL, NULL, NULL)) != noErr)
+            {
+                MCresult->sets("no such program");
+                return;
+            }
+            
+            // Add a creator descriptor to the event
+            FileInfo& t_info = (FileInfo&)t_catalog_info.finderInfo;
+            OSType creator = t_info.fileCreator;
 			AECreateDesc(typeApplSignature, (Ptr)&creator, sizeof(OSType), &target);
 		}
 		else
@@ -8880,12 +8734,11 @@ static void MCS_startprocess_launch(MCNameRef name, MCStringRef docname, Open_mo
 			             sizeof(ProcessSerialNumber), &target);
 		AECreateAppleEvent('aevt', 'odoc', &target, kAutoGenerateReturnID,
 		                   kAnyTransactionID, &ae);
-		FSSpec fspec;
 		FSRef t_tmp_fsref;
-		if (MCS_mac_pathtoref(docname, t_tmp_fsref) == noErr && MCS_mac_fsref_to_fsspec(&t_tmp_fsref, &fspec) == noErr)
+		if (MCS_mac_pathtoref(docname, t_tmp_fsref) == noErr)
 		{
 			AECreateList(NULL, 0, false, &files_list);
-			NewAlias(NULL, &fspec, &the_alias);
+			FSNewAlias(NULL, &t_tmp_fsref, &the_alias);
 			HLock((Handle)the_alias);
 			AECreateDesc(typeAlias, (Ptr)(*the_alias),
 			             GetHandleSize((Handle)the_alias), &file_desc);
@@ -8906,7 +8759,15 @@ static void MCS_startprocess_launch(MCNameRef name, MCStringRef docname, Open_mo
 	
 	if (errno != noErr)
 	{
-		launchParms.launchAppSpec = &t_app_fsspec;
+#ifdef __64_BIT__
+        launchParms.launchAppRef = &t_app_fsref;
+#else
+        // For 32-bit apps, the launch parameters take an old-style FSSpec
+        // instead of an FSRef. Convert it.
+        FSSpec t_app_fsspec;
+        FSGetCatalogInfo(&t_app_fsref, 0, NULL, NULL, &t_app_fsspec, NULL);
+        launchParms.launchAppSpec = &t_app_fsspec;
+#endif
 		errno = LaunchApplication(&launchParms);
 		if (errno != noErr)
 		{
