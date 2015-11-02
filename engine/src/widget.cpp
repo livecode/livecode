@@ -452,8 +452,10 @@ bool MCWidget::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
 		case P_ABBREV_OWNER:
 		case P_LONG_OWNER:
 		case P_PROPERTIES:
+		case P_CUSTOM_PROPERTIES:
 		case P_CUSTOM_PROPERTY_SET:
 		case P_CUSTOM_PROPERTY_SETS:
+        case P_CUSTOM_KEYS:
 		case P_INK:
 		case P_CANT_SELECT:
 		case P_BLEND_LEVEL:
@@ -555,8 +557,10 @@ bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
 		case P_ABBREV_OWNER:
 		case P_LONG_OWNER:
 		case P_PROPERTIES:
+		case P_CUSTOM_PROPERTIES:
 		case P_CUSTOM_PROPERTY_SET:
 		case P_CUSTOM_PROPERTY_SETS:
+        case P_CUSTOM_KEYS:
 		case P_INK:
 		case P_CANT_SELECT:
 		case P_BLEND_LEVEL:
