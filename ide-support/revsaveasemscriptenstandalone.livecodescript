@@ -143,6 +143,9 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder
       -- Deploy and store the startup script
       storeStartupStack tBuildZip, tStartupStackPath, tBuildFolder, tStackFile
       
+      -- Store extra, copied files
+      storeAssets tBuildZip, tFiles, tStandalonePath, tBaseFolder
+      
       -- Close zip file
       revZipCloseArchive tBuildZip
       if the result is not empty then
@@ -408,6 +411,55 @@ private function getStartupScript pStackFile
 end getStartupScript
 
 ----------------------------------------------------------------
+-- Extra files from "copy files"
+----------------------------------------------------------------
+
+private command storeAssets pZip, pFiles, pStandalonePath, pBaseFolder
+   -- Get a list of all the files to copy
+   local tPath, tFiles, tCount
+   
+   put empty into tFiles
+   put 0 into tCount
+   
+   repeat for each line tPath in pFiles
+      getAssetFilesFromPath tPath, pBaseFolder, tFiles, tCount
+   end repeat
+   
+   -- Store all the files in the zip archive
+   local tCopyInfo, tZipPath
+   
+   repeat for each element tCopyInfo in tFiles
+      logDebug "asset", "Storing" && tCopyInfo["source"]
+      
+      put pStandalonePath & slash & tCopyInfo["dest"] into tZipPath
+      revZipAddUncompressedItemWithFile pZip, tZipPath, tCopyInfo["source"]
+      if the result is not empty then
+         throw "could not store asset file in standalone archive"
+      end if
+   end repeat
+end storeAssets
+
+private command getAssetFilesFromPath pPath, pBaseFolder, @xFiles, @xCount
+   local tSourcePath, tAssetPath, tFile
+   
+   mapAssetPath pPath, pBaseFolder, tSourcePath, tAssetPath
+   
+   if there is a file tSourcePath then
+      add 1 to xCount
+      put tSourcePath into xFiles[xCount]["source"]
+      put tAssetPath into xFiles[xCount]["dest"]
+   else if there is a folder tSourcePath then
+      repeat for each element tFile in scanFolder(tSourcePath)
+         add 1 to xCount
+         put tSourcePath & slash & tFile into xFiles[xCount]["source"]
+         put tAssetPath & slash & tFile into xFiles[xCount]["dest"]
+      end repeat
+   else
+      throw "could not store asset from '" & pPath & "': not a file or directory"
+   end if
+end getAssetFilesFromPath
+
+----------------------------------------------------------------
 -- File & path helper functions
 ----------------------------------------------------------------
 
@@ -441,32 +493,61 @@ private function mapResPath pPath
    end if
 end mapResPath
 
+-- Map a path pPath for asset inclusion.
+--
+-- Interprets pPath as a user-provided asset source path, defined
+-- relative to pBaseFolder.  Computes the absolute path of the file to
+-- read from into rSourcePath, and the relative asset path to store the
+-- data in into rDestPath.
+--
+-- This is designed to be compatible with computeAssetLocation in the
+-- revSaveAsAndroidStandalone stack.
+--
+-- FIXME This may have problems if pPath is a root directory or if
+-- pPath is not normalized.
+private command mapAssetPath pPath pBaseFolder @rSourcePath @rDestPath
+   local tIsAbsolute
+   put pPath begins with "/" or char 2 to 3 of pPath is ":/" into tIsAbsolute
+   
+   set the itemDelimiter to slash
+   if the last item of pPath is "*" then
+      delete the last item of pPath
+   end if
+   
+   if tIsAbsolute then
+      put item -1 of pPath into rDestPath
+      put pPath into rSourcePath
+   else
+      put pPath into rDestPath
+      put pBaseFolder & slash & pPath into rSourcePath
+   end if
+end mapAssetPath
+
 -- Scan a directory, returning a number-indexed array of files found.
 -- The returned paths are relative to the specified directory.
 private function scanFolder pFolder
-   local tSaveFolder, tTemplateRoot, tFiles, tCount, tError
-
+   local tTemplateRoot, tFiles, tCount, tError
+   
    -- Short-circuit if pFolder is missing
    if there is no folder pFolder then
       return empty
    end if
-
+   
    put 0 into tCount
    put empty into tFiles
-   put the defaultfolder into tSaveFolder
-
-   set the defaultfolder to pfolder
+   
+   revIDEPushDefaultFolder pFolder
    try
       scanFolder_recurse tCount, tFiles, empty
    catch tError
    end try
-
-   set the defaultfolder to tSaveFolder
-
+   
+   revIDEPopDefaultFolder
+   
    if tError is not empty then
       throw tError
    end if
-
+   
    return tFiles
 end scanFolder
 
