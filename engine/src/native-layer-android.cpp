@@ -129,60 +129,15 @@ void MCNativeLayerAndroid::AndroidView::removeFromMainView()
 ////////////////////////////////////////////////////////////////////////////////
 
 MCNativeLayerAndroid::MCNativeLayerAndroid(MCWidgetRef p_widget, jobject p_view) :
-  m_widget(p_widget),
   m_view(NULL)
 {
+	m_widget = p_widget;
 	m_view = new AndroidView(p_view);
 }
 
 MCNativeLayerAndroid::~MCNativeLayerAndroid()
 {
     delete m_view;
-}
-
-void MCNativeLayerAndroid::OnToolChanged(Tool p_new_tool)
-{
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
-    if (m_view == NULL)
-        return;
-    
-    if (p_new_tool == T_BROWSE || p_new_tool == T_HELP)
-    {
-        // In run mode. Make visible if requested
-        if (t_widget->getflags() & F_VISIBLE)
-            addToMainView();
-        t_widget->Redraw();
-    }
-    else
-    {
-        // In edit mode
-        m_view->removeFromMainView();
-        t_widget->Redraw();
-    }
-}
-
-void MCNativeLayerAndroid::OnOpen()
-{
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
-    // Unhide the widget, if required
-    if (isAttached() && t_widget->getopened() == 1)
-        doAttach();
-}
-
-void MCNativeLayerAndroid::OnClose()
-{
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
-    if (isAttached() && t_widget->getopened() == 0)
-        doDetach();
-}
-
-void MCNativeLayerAndroid::OnAttach()
-{
-    m_attached = true;
-    doAttach();
 }
 
 void MCNativeLayerAndroid::doAttach()
@@ -193,12 +148,6 @@ void MCNativeLayerAndroid::doAttach()
         return;
 	
 	OnVisibilityChanged(ShouldShowWidget(t_widget));
-}
-
-void MCNativeLayerAndroid::OnDetach()
-{
-    m_attached = false;
-    doDetach();
 }
 
 void MCNativeLayerAndroid::doDetach()
@@ -216,24 +165,20 @@ bool MCNativeLayerAndroid::GetCanRenderToContext()
 	return false;
 }
 
-bool MCNativeLayerAndroid::OnPaint(MCGContextRef)
+bool MCNativeLayerAndroid::doPaint(MCGContextRef p_context)
 {
 	return false;
 }
 
-void MCNativeLayerAndroid::OnGeometryChanged(const MCRectangle& p_old_rect)
+void MCNativeLayerAndroid::doSetGeometry(const MCRectangle &p_rect)
 {
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
     if (m_view == NULL)
         return;
     
-    MCRectangle t_rect, t_cardrect;
-    t_rect = t_widget->getrect();
-    m_view->setRect(t_rect);
+    m_view->setRect(p_rect);
 }
 
-void MCNativeLayerAndroid::OnVisibilityChanged(bool p_visible)
+void MCNativeLayerAndroid::doSetVisible(bool p_visible)
 {
     if (m_view == NULL)
         return;
@@ -241,15 +186,10 @@ void MCNativeLayerAndroid::OnVisibilityChanged(bool p_visible)
     if (p_visible)
 	{
         addToMainView();
-		OnGeometryChanged(MCRectangleMake(0,0,0,0));
+		doSetGeometry(MCWidgetGetHost(m_widget)->getrect());
 	}
     else
         m_view->removeFromMainView();
-}
-
-void MCNativeLayerAndroid::OnLayerChanged()
-{
-    doRelayer();
 }
 
 void MCNativeLayerAndroid::doRelayer()
