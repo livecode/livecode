@@ -60,6 +60,7 @@ protected:
 	
     bool m_attached;
     bool m_can_render_to_context;
+	bool m_defer_geometry_changes;
     
     MCNativeLayer();
     

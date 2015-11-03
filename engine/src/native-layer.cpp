@@ -49,7 +49,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 MCNativeLayer::MCNativeLayer() :
-  m_attached(false), m_can_render_to_context(true)
+  m_attached(false), m_can_render_to_context(true), m_defer_geometry_changes(false)
 {
     ;
 }
@@ -93,7 +93,8 @@ bool MCNativeLayer::OnPaint(MCGContextRef p_context)
 
 void MCNativeLayer::OnGeometryChanged(const MCRectangle &p_old_rect)
 {
-	doSetGeometry(MCWidgetGetHost(m_widget)->getrect());
+	if (!m_defer_geometry_changes)
+		doSetGeometry(MCWidgetGetHost(m_widget)->getrect());
 }
 
 void MCNativeLayer::OnToolChanged(Tool p_new_tool)
@@ -106,6 +107,18 @@ void MCNativeLayer::OnToolChanged(Tool p_new_tool)
 
 void MCNativeLayer::OnVisibilityChanged(bool p_visible)
 {
+	if (p_visible)
+	{
+		if (m_defer_geometry_changes)
+			doSetGeometry(MCWidgetGetHost(m_widget)->getrect());
+		m_defer_geometry_changes = false;
+	}
+	else
+	{
+		if (!GetCanRenderToContext())
+			m_defer_geometry_changes = true;
+	}
+	
 	doSetVisible(p_visible);
 }
 
