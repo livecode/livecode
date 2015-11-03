@@ -323,9 +323,7 @@ foreign handler MCHandlerGetFunctionPtr(in pHandler as any, out rFuncPtr as Poin
 
 variable mBrowser as optional MCBrowserRef
 variable mBrowserType as String
-variable mProperties as optional Array
-
-variable mContentSource as String
+variable mProperties as Array
 
 --
 
@@ -338,13 +336,10 @@ constant kPersistentProps is ["verticalScrollbarEnabled", "horizontalScrollbarEn
 --------------------------------------------------------------------------------
 
 public handler OnLoad(in pProperties as Array)
-	loadProperties(pProperties)
+	put pProperties into mProperties
 end handler
 
 public handler OnSave(out rProperties as Array)
-	if mBrowser is not nothing then
-		put saveProperties() into mProperties
-	end if
 	put mProperties into rProperties
 end handler
 
@@ -356,7 +351,6 @@ public handler OnCreate()
 
 	put the empty string into mBrowserType
 	put the empty array into mProperties
-	put the empty string into mContentSource
 end handler
 
 --
@@ -394,15 +388,12 @@ public handler OnOpen()
 	//   the callbacks (which don't have a target widget when called).
 	put my script object into mScriptObject
 	
-	loadProperties(mProperties)
+	applyProperties(mProperties)
 end handler
 
 --
 
 public handler OnClose()
-	// Save browser properties
-	put saveProperties() into mProperties
-	
 	//set my native layer to nothing
 	MCWidgetSetMyNativeLayer(nothing)
 	
@@ -449,6 +440,10 @@ private handler OnBrowserRequestCallback(in pContext as optional Pointer, in pBr
 		put [pUrl] into tArgs
 	end if
 	
+	if pType is kMCBrowserRequestTypeNavigate and pState is kMCBrowserRequestStateBegin and not pFrame then
+		updateUrlProperty(pUrl)
+	end if
+	
 	post tMessage to mScriptObject with tArgs
 end handler
 
@@ -477,9 +472,8 @@ private handler getProperty(in pProperty as String) returns any
 end handler
 
 private handler setProperty(in pProperty as String, in pValue as any)
-	if mBrowser is nothing then
-		put pValue into mProperties[pProperty]
-	else
+	put pValue into mProperties[pProperty]
+	if mBrowser is not nothing then
 		/* UNCHECKED */ browserSetProperty(mBrowser, pProperty, pValue)
 	end if
 end handler
@@ -487,27 +481,50 @@ end handler
 --
 
 private handler getUrl() returns String
-	return getProperty("url")
+	if "url" is among the keys of mProperties then
+		return mProperties["url"]
+	else
+		return the empty string
+	end if
 end handler
 
 private handler setUrl(in pUrl as String)
-	put "url" into mContentSource
-	if mBrowser is nothing then
-		put pUrl into mProperties["url"]
-	else
-		MCBrowserGoToURL(mBrowser, pUrl)
+	updateUrlProperty(pUrl)
+
+	if mBrowser is not nothing then
+		if not MCBrowserGoToURL(mBrowser, pUrl) then
+			throw "error launching url " & pUrl
+		end if
+	end if
+end handler
+
+private handler updateUrlProperty(pUrl as String)
+	put pUrl into mProperties["url"]
+	if "htmlText" is among the keys of mProperties then
+		delete mProperties["htmlText"]
 	end if
 end handler
 
 --
 
 private handler getHtmlText() returns String
-	return getProperty("htmlText")
+	if "htmlText" is among the keys of mProperties then
+		return mProperties["htmlText"]
+	else
+		return getProperty("htmlText")
+	end if
 end handler
 
 private handler setHtmlText(in pHtmlText as String)
-	put "htmlText" into mContentSource
+	updateHtmlTextProperty(pHtmlText)
 	setProperty("htmlText", pHtmlText)
+end handler
+
+private handler updateHtmlTextProperty(in pHtmlText as String)
+	put pHtmlText into mProperties["htmlText"]
+	if "url" is among the keys of mProperties then
+		delete mProperties["url"]
+	end if
 end handler
 
 --
@@ -552,7 +569,7 @@ end handler
 
 ----------
 
-private handler loadProperties(in pProperties as Array)
+private handler applyProperties(in pProperties as Array)
 	variable tKey
 	repeat for each element tKey in kPersistentProps
 		if tKey is among the keys of pProperties then
@@ -566,30 +583,10 @@ private handler loadProperties(in pProperties as Array)
 	end if
 end handler
 
-private handler saveProperties() returns Array
-	variable tProps
-	put the empty array into tProps
-	
-	variable tKey
-	repeat for each element tKey in kPersistentProps
-		put getProperty(tKey) into tProps[tKey]
-	end repeat
-	
-	if mContentSource is not empty then
-		put getProperty(mContentSource) into tProps[mContentSource]
-	end if
-	
-	return tProps
-end handler
-
 ----------
 
 public handler OnLaunchUrl(in pUrl as String)
-	if mBrowser is not nothing then
-		if not MCBrowserGoToURL(mBrowser, pUrl) then
-			throw "error launching url " & pUrl
-		end if
-	end if
+	setUrl(pUrl)
 end handler
 
 public handler OnGoBack()
