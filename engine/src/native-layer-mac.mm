@@ -91,6 +91,7 @@ void MCNativeLayerMac::doAttach()
     // Restore the visibility state of the widget (in case it changed due to a
     // tool change while on another card - we don't get a message then)
 	
+	doSetGeometry(t_widget->getrect());
 	doSetVisible(ShouldShowWidget(t_widget));
 }
 
@@ -149,8 +150,6 @@ void MCNativeLayerMac::doSetGeometry(const MCRectangle &p_rect)
 
 void MCNativeLayerMac::doSetVisible(bool p_visible)
 {
-	if (p_visible)
-		doSetGeometry(MCRectangleMake(0,0,0,0));
     [m_view setHidden:!p_visible];
 }
 
