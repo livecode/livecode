@@ -46,6 +46,7 @@ Example:
 Description:
 The <url> is the URL of the content be displayed in the browser.
 
+*Note:* The url property reflects the currently displaying page in the browser, and will change when navigating to another page. Setting the htmlText will result in the url property being empty.
 
 Name: htmltext
 Type: property
@@ -68,6 +69,7 @@ Example:
 Description:
 The <htmltext> is the HTML representation of the content displayed in the browser.
 
+*Note:* When the htmltext has been set, the url property will be empty. When the url property is not empty, the htmlText will fetch the source of the current url displayed in the browser.
 
 Name: vscrollbar
 Type: property
