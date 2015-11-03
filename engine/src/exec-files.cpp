@@ -1345,6 +1345,10 @@ uint4 MCFilesExecPerformReadCodeUnit(MCExecContext& ctxt, int4 p_index, intenum_
 					t_codeunit = MCSwapInt16HostToBig(((unichar_t*)t_bytes . Bytes())[0]);
 				else
 					t_codeunit = *(unichar_t*)t_bytes . Bytes();
+                
+                // SN-2015-11-03: [[ Bug 16286 ]] Skip BOM character
+                if (t_codeunit == 0xFEFF)
+                    break;
 
 				MCStringAppendChar(x_buffer, t_codeunit);
 				t_codeunit_added = 1;
@@ -1364,6 +1368,16 @@ uint4 MCFilesExecPerformReadCodeUnit(MCExecContext& ctxt, int4 p_index, intenum_
             {
                 uint32_t t_codeunit;
                 MCAutoStringRef t_string;
+                
+                // Reverse the bytes in case it's needed
+                if (p_encoding == kMCFileEncodingUTF32BE)
+                    t_codeunit = MCSwapInt32HostToBig(((uint32_t*)t_bytes . Bytes())[0]);
+                else
+                    t_codeunit = *(uint32_t*)t_bytes . Bytes();
+                
+                // SN-2015-11-03: [[ Bug 16286 ]] Skip BOM character
+                if (t_codeunit == 0x0000FEFF)
+                    break;
                 
                 /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)&t_codeunit, t_bytes_read, MCS_file_to_string_encoding((MCFileEncodingType)p_encoding), false, &t_string);
                 /* UNCHECKED */ MCStringAppend(x_buffer, *t_string);
@@ -1412,7 +1426,7 @@ uint4 MCFilesExecPerformReadCodeUnit(MCExecContext& ctxt, int4 p_index, intenum_
 					// Read all the expected bytes from the lead one
 					for (uint4 i = 1; i < t_to_read + 1 && t_sequence_correct; )
 					{
-						t_bytes . Extend(1);
+						t_bytes . Extend(1 + i);
 						r_stat = MCS_readall(t_bytes . Bytes() + i, 1, p_stream, t_rsize);
 						if (t_rsize != 1)
 						{
@@ -1436,6 +1450,14 @@ uint4 MCFilesExecPerformReadCodeUnit(MCExecContext& ctxt, int4 p_index, intenum_
 				if (t_sequence_correct)
 				{
 					MCAutoStringRef t_codepoints;
+                    
+                    // SN-2015-11-03: [[ Bug 16286 ]] Skip BOM
+                    if (t_bytes_read == 3 &&
+                            t_bytes . Bytes()[0] == 0xEF &&
+                            t_bytes . Bytes()[1] == 0xBB &&
+                            t_bytes . Bytes()[2] == 0xBF)
+                        break;
+                    
 					MCStringCreateWithBytes(t_bytes . Bytes(), t_bytes_read, kMCStringEncodingUTF8, false, &t_codepoints);
 					t_codeunit_added = MCStringGetLength(*t_codepoints);
 					MCStringAppend(x_buffer, *t_codepoints);
