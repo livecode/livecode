@@ -593,10 +593,10 @@ private function getEngineFiles
    local tFiles
    
    -- Engine JavaScript
-   put mapBinPath("standalone-" & revLicenseType() & "-" & the version & ".js") into tFiles[1]
+   put mapBinPath("standalone-" & getEngineType() & "-" & the version & ".js") into tFiles[1]
    
    -- Memory initialisation file
-   put mapBinPath("standalone-" & revLicenseType() & "-" & the version & ".html.mem") into tFiles[2]
+   put mapBinPath("standalone-" & getEngineType() & "-" & the version & ".html.mem") into tFiles[2]
    
    return tFiles
 end getEngineFiles
@@ -620,7 +620,7 @@ end getStandaloneTemplateFiles
 -- This has some standalone-dependent JavaScript substituted into it
 -- to instantiate the engine.
 private function getHtmlTemplateFile
-   return mapBinPath("standalone-" & revLicenseType() & "-" & the version & ".html")
+   return mapBinPath("standalone-" & getEngineType() & "-" & the version & ".html")
 end getHtmlTemplateFile
 
 -- Get the filename of the Emscripten standalone startup script-only
@@ -683,3 +683,12 @@ private function isCommercialDeployment
       return true
    end if
 end isCommercialDeployment
+
+-- Get the engine type string ("commercial" or "community")
+private function getEngineType
+   if isCommercialDeployment() then
+      return "commercial"
+   else
+      return "community"
+   end if
+end getEngineType
