@@ -119,8 +119,10 @@
 				'INFOPLIST_FILE': 'rsrc/revvideograbber-Info.plist',
 				'EXPORTED_SYMBOLS_FILE': 'revvideograbber.exports',
 				
-				# The QuickTime support we need was dropped after 10.6
+				# The QuickTime support we need was dropped after 10.6. Correspondingly, it doesn't
+				# work when built for 64-bit either.
 				'SDKROOT': 'macosx10.6',
+				'ARCHS': 'i386',
 				
 				# Gyp adds "-x c++" to the build process, which is a problem as one of the .cpp files
 				# contains some Objective-C code. Changing it to .mm would be the obvious solution, but
