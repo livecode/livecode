@@ -37,7 +37,7 @@ def msg_debug(message):
         print('debug: {}'.format(message))
 
 def msg_normal(message):
-    if verbosity > 0:
+    if verbosity >= 0:
         print(message)
 
 def git_cmd(path, cmd):
@@ -229,7 +229,7 @@ will be updated.
     parser.add_argument('remote', help='name of remote repo to update',
                         metavar='REMOTE', default='origin', nargs='?')
     parser.add_argument('branches', help='name of a remote branch to update',
-                        action='append', metavar='BRANCH', nargs='*')
+                        metavar='BRANCH', nargs='*')
     parser.add_argument('-n', help='disable pushing changes to remote repo',
                         action='store_true', dest='dry_run')
     parser.add_argument('-C', metavar='PATH', help='run in a different directory',
@@ -243,7 +243,10 @@ will be updated.
     dry_run = args.dry_run
     repo_path = args.repo
     remote = args.remote
-    branches = args.branches
+    if len(args.branches) > 0:
+        branches = args.branches
+    else:
+        branches = None
 
     if not is_repo_clean(repo_path):
         print(
