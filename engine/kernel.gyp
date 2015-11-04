@@ -106,6 +106,18 @@
 						],
 					},
 				],
+				[
+					'OS == "mac"',
+					{
+						'defines':
+						[
+							# We want to use the new prototypes for the Objective-C
+							# dispatch methods as it helps catch certain errors at
+							# compile time rather than run time.
+							'OBJC_OLD_DISPATCH_PROTOTYPES=0',
+						],
+					},
+				],
 			],
 			
 			'link_settings':
