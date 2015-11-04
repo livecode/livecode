@@ -44,6 +44,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef FEATURE_QUICKTIME
+
 class MCQTSoundRecorder;
 
 @interface com_runrev_livecode_MCQTSoundRecorderObserver: NSObject
@@ -864,5 +866,14 @@ MCQTSoundRecorder *MCQTSoundRecorderCreate(void)
 {
     return new MCQTSoundRecorder;
 }
+
+#else   /* ifdef FEATURE_QUICKTIME */
+
+class MCQTSoundRecorder* MCQTSoundRecorderCreate()
+{
+    return NULL;
+}
+
+#endif
 
 ////////////////////////////////////////////////////////
