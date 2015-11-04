@@ -201,8 +201,9 @@ def process_repository(path, remote, branches=None):
     # Make sure all submodules have been initialised and checked out
     init_submodules(path)
 
-    # Fetch from the remote
-    cmd = ['fetch', remote]
+    # Fetch from the remote, removing any branches that don't exist
+    # any more.
+    cmd = ['fetch', '--prune', remote]
     git_cmd(path, cmd)
 
     # Process each branch
