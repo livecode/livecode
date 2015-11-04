@@ -365,6 +365,12 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     // MM-2012-09-25: [[ Bug 10391 ]] Retain notification.
     if (t_push_notification)
         m_pending_push_notification = [[t_push_notification objectForKey:@"payload"] retain];
+	
+	// Prevent crash when launching the app from the notifications screen:
+	// JSON null will be deserialized to NSNull. Unlike nil, we cannot send (most) messages to NSNull, so
+	// in this case, convert NSNull to nil
+	if ([m_pending_push_notification isKindOfClass:[NSNull class]])
+		m_pending_push_notification = nil;
 
     // Check if we have received a custom URL
     // This check is carried out at application launch
@@ -514,6 +520,12 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     UIApplicationState t_state = [p_application applicationState];
     MCAutoStringRef t_mc_push_notification_text;
     NSString *t_reminder_text = [p_dictionary objectForKey:@"payload"];
+	
+	// Prevent crash when sending push notifications while the app is running:
+	// JSON null will be deserialized to NSNull. Unlike nil, we cannot send (most) messages to NSNull, so
+	// in this case, convert NSNull to nil
+	if ([t_reminder_text isKindOfClass:[NSNull class]])
+		t_reminder_text = nil;
 	
 	// PM-2015-10-27: [[ Bug 16279 ]] Prevent crash when the payload is empty
 	if (t_reminder_text != nil)
