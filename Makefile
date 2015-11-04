@@ -188,7 +188,7 @@ config-win-%:
 
 compile-win-%:
 	# windows builds occur under Wine
-	cd build-win-$* && $(WINE) /K ../make.cmd default
+	cd build-win-$* && $(WINE) /K ../make.cmd
 
 check-win-%:
 	# windows builds occur under Wine
