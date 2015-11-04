@@ -691,7 +691,7 @@
 			'src/osxfield.cpp',
 			'src/osxfiles.cpp',
 			'src/osximage.cpp',
-			'src/osxmisc.cpp',
+			'src/osxmisc.mm',
 			'src/osxprinter.cpp',
 			'src/osxstack.cpp',
 			'src/osxtextlayout.cpp',
