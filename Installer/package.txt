@@ -728,6 +728,7 @@ component Runtime.iOS
 		file ios:iphonesimulator6.1/mobile-template.plist as "Settings.plist"
 		file ios:iphonesimulator6.1/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphonesimulator6.1/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator6.1/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphonesimulator6.1/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphonesimulator6.1/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-7_1" place
@@ -742,6 +743,7 @@ component Runtime.iOS
 		file ios:iphonesimulator7.1/mobile-template.plist as "Settings.plist"
 		file ios:iphonesimulator7.1/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphonesimulator7.1/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator7.1/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphonesimulator7.1/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphonesimulator7.1/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-8_2" place
@@ -757,6 +759,7 @@ component Runtime.iOS
 		file ios:iphonesimulator8.2/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphonesimulator8.2/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
 		file ios:iphonesimulator8.2/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator8.2/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphonesimulator8.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphonesimulator8.2/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-8_4" place
@@ -772,6 +775,7 @@ component Runtime.iOS
 		file ios:iphonesimulator8.4/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphonesimulator8.4/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
 		file ios:iphonesimulator8.4/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator8.4/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphonesimulator8.4/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphonesimulator8.4/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-9_1" place
@@ -787,6 +791,7 @@ component Runtime.iOS
 		file ios:iphonesimulator9.1/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphonesimulator9.1/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
 		file ios:iphonesimulator9.1/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator9.1/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphonesimulator9.1/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphonesimulator9.1/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Device-8_2" place
@@ -807,6 +812,7 @@ component Runtime.iOS
 		file ios:iphoneos8.2/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
 		file ios:iphoneos8.2/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
 		file ios:iphoneos8.2/template-ResourceRules.plist as "ResourceRules.plist"
+		file ios:iphoneos8.2/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphoneos8.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphoneos8.2/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Device-8_4" place
@@ -827,6 +833,7 @@ component Runtime.iOS
 		file ios:iphoneos8.4/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
 		file ios:iphoneos8.4/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
 		file ios:iphoneos8.4/template-ResourceRules.plist as "ResourceRules.plist"
+		file ios:iphoneos8.4/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphoneos8.4/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphoneos8.4/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Device-9_1" place
@@ -847,6 +854,7 @@ component Runtime.iOS
 		file ios:iphoneos9.1/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
 		file ios:iphoneos9.1/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
 		file ios:iphoneos9.1/template-ResourceRules.plist as "ResourceRules.plist"
+		file ios:iphoneos9.1/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphoneos9.1/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphoneos9.1/fontmap as "fontmap"
 
