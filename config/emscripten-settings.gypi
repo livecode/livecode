@@ -42,6 +42,8 @@
 		'-fno-exceptions',
 		'-fno-rtti',
 		'-std=<(c++_std)',
+
+		'-Werror=mismatched-tags',
 	],
 
 	'target_conditions':
