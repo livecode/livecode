@@ -970,12 +970,28 @@ bool MCUnicodeFirstIndexOf(const void *p_string, uindex_t p_string_length, bool 
         return false;
     
     // Shortcut for native char - for which we are sure to have only one char to compare, and no composing characters
-    if (p_needle_length == 1 && *(codepoint_t *)p_needle < 0x10)
-    {
-        // if we got here, the string should not have been native.
-        MCAssert(!p_string_native);
-        return MCUnicodeFirstIndexOfChar((const unichar_t *)p_string, p_string_length, *(codepoint_t *)p_needle, p_option, r_index);
-    }
+	if (p_needle_length == 1)
+	{
+		codepoint_t t_needle;
+		bool t_ok_fast;
+		if (p_needle_native)
+		{
+			t_needle = codepoint_t(*reinterpret_cast<const char_t *>(p_needle));
+			t_ok_fast = t_needle < 0x80; /* Needle is one ASCII char */
+		}
+		else
+		{
+			t_needle = codepoint_t(*reinterpret_cast<const unichar_t *>(p_needle));
+			t_ok_fast = t_needle < 0xd800; /* Needle is in BMP */
+		}
+
+		if (t_ok_fast)
+		{
+			// if we got here, the string should not have been native.
+			MCAssert(!p_string_native);
+			return MCUnicodeFirstIndexOfChar((const unichar_t *)p_string, p_string_length, t_needle, p_option, r_index);
+		}
+	}
     
     // Create filter chains for the strings being searched
     MCTextFilter* t_string_filter = MCTextFilterCreate(p_string, p_string_length, p_string_native ? kMCStringEncodingNative : kMCStringEncodingUTF16, p_option);
