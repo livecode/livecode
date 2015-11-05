@@ -1113,8 +1113,8 @@ public:
 	void SetSystemWindow(MCExecContext& ctxt, bool setting);
 	void GetMetal(MCExecContext& ctxt, bool& r_setting);
 	void SetMetal(MCExecContext& ctxt, bool setting);
-	void GetShadow(MCExecContext& ctxt, bool& r_setting);
-	void SetShadow(MCExecContext& ctxt, bool setting);
+	void GetWindowShadow(MCExecContext& ctxt, bool& r_setting);
+	void SetWindowShadow(MCExecContext& ctxt, bool setting);
 	void GetResizable(MCExecContext& ctxt, bool& r_setting);
 	void SetResizable(MCExecContext& ctxt, bool setting);
 	void GetMinWidth(MCExecContext& ctxt, uinteger_t& r_width);

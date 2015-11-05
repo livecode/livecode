@@ -838,12 +838,12 @@ void MCStack::SetMetal(MCExecContext& ctxt, bool setting)
 	SetDecoration(P_METAL, setting);
 }
 
-void MCStack::GetShadow(MCExecContext& ctxt, bool& r_setting)
+void MCStack::GetWindowShadow(MCExecContext& ctxt, bool& r_setting)
 {
 	r_setting = (flags & F_DECORATIONS && decorations & WD_NOSHADOW) == False;
 }
 
-void MCStack::SetShadow(MCExecContext& ctxt, bool setting)
+void MCStack::SetWindowShadow(MCExecContext& ctxt, bool setting)
 {
 	SetDecoration(P_SHADOW, setting);
 }
