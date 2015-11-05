@@ -368,9 +368,9 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 		// Prevent crash when launching the app from the notifications screen:
 		// If the payload is empty, JSON null will be deserialized to NSNull. Unlike nil,
 		// we cannot send (most) messages to NSNull
-		id t_pending_push_notification_value = [[t_push_notification objectForKey:@"payload"] retain];
+		id t_pending_push_notification_value = [t_push_notification objectForKey:@"payload"];
 		if ([t_pending_push_notification_value isKindOfClass: [NSString class]])
-			m_pending_push_notification = t_pending_push_notification_value;
+			m_pending_push_notification = [t_pending_push_notification_value retain];
 		else
 			// t_pending_push_notification_value is NSNull, not NSString
 			m_pending_push_notification = nil;
