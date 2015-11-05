@@ -4573,6 +4573,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             setlinebuf(stderr);
         }
 #endif // _MAC_SERVER
+        
+        return true;
     }
     
 	virtual void Finalize(void)
@@ -7493,6 +7495,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             MCS_startprocess_launch(p_name, p_doc, (Open_mode)p_mode);
         else
             MCS_startprocess_unix(p_name, kMCEmptyString, (Open_mode)p_mode, p_elevated);
+        
+        return true;
     }
     
     virtual bool ProcessTypeIsForeground(void)

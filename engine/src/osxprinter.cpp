@@ -961,7 +961,7 @@ MCPrinterDialogResult MCMacOSXPrinter::DoDialog(bool p_window_modal, Window p_ow
 
 	Boolean t_accepted;
 	t_accepted = false;
-	OSErr t_err;
+	MCPrinterDialogResult t_err;
 
 	if (!MCModeMakeLocalWindows())
 	{
@@ -991,11 +991,11 @@ MCPrinterDialogResult MCMacOSXPrinter::DoDialog(bool p_window_modal, Window p_ow
 		}
 		if (t_success)
 		{
-			t_err = noErr;
+			t_err = PRINTER_DIALOG_RESULT_OKAY;
 			t_accepted = (Boolean)t_result;
 		}
 		else
-			t_err = errAborted;
+            t_err = PRINTER_DIALOG_RESULT_ERROR;
 	}
 	else
 	{
@@ -1033,21 +1033,23 @@ MCPrinterDialogResult MCMacOSXPrinter::DoDialog(bool p_window_modal, Window p_ow
         if (t_result == kMCPlatformPrintDialogResultError)
         {
             PDEBUG(stderr, "DoDialog: Error occured\n");
-            return PRINTER_DIALOG_RESULT_ERROR;
+            t_err = PRINTER_DIALOG_RESULT_ERROR;
         }
         else if (t_result == kMCPlatformPrintDialogResultSuccess)
         {
             PDEBUG(stderr, "DoDialog: SetProperties\n");
             SetProperties(p_is_settings);
             PDEBUG(stderr, "DoDialog: Returning OKAY\n");
-            return PRINTER_DIALOG_RESULT_OKAY;
+            t_err = PRINTER_DIALOG_RESULT_OKAY;
         }
         else
         {
             PDEBUG(stderr, "DoDialog: Returning Cancel\n");
-            return PRINTER_DIALOG_RESULT_CANCEL;
+            t_err = PRINTER_DIALOG_RESULT_CANCEL;
         }
     }
+    
+    return t_err;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

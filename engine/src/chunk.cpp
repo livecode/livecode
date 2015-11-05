@@ -5508,6 +5508,6 @@ MCChunkType MCChunkTypeFromChunkTerm(Chunk_term p_chunk_term)
         case CT_BYTE:
             return kMCChunkTypeByte;
         default:
-            assert(false);
+            MCUnreachableReturn(kMCChunkTypeLine);
     }
 }

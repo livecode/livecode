@@ -62,6 +62,7 @@
 	<array>
 		${DEVICE_SUPPORT}
 	</array>
+	${DISABLE_ATS}
 	<key>UIRequiredDeviceCapabilities</key>
 	<dict>
 		${DEVICE_CAPABILITY}

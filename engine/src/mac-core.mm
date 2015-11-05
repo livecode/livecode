@@ -206,6 +206,7 @@ enum
 
 - (NSError *)application:(NSApplication *)application willPresentError:(NSError *)error
 {
+    return error;
 }
 
 //////////
