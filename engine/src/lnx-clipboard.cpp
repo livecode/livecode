@@ -721,7 +721,7 @@ static bool WaitForSelectionNotify()
     // Loop until a selection notify event is received
     MCScreenDC *dc = (MCScreenDC*)MCscreen;
     GdkEvent *t_notify;
-    while (!dc->GetFilteredEvent(SelectionNotifyFilter, t_notify, NULL))
+    while (!dc->GetFilteredEvent(SelectionNotifyFilter, t_notify, NULL, true))
     {
         // TODO: timeout
     }
