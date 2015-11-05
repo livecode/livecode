@@ -589,7 +589,13 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
          if word -1 of tLine ends with "*/" then
             put false into tInComment
             put offset("*/", tLine) into tCommentOffset
-            put char 1 to tCommentOffset - 1 of tLine into tLine
+            delete char tCommentOffset to -1 of tLine
+            
+            # Remove another star if this is a double-star comment closer
+            if char -1 of tLine is "*" then
+               delete char -1 of tLine
+            end if
+            
             # If there's nothing else on this line, don't add it.
             if word 1 of tLine is empty then
                next repeat
