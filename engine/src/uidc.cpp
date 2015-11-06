@@ -592,14 +592,14 @@ bool MCUIDC::platform_getwindowgeometry(Window p_window, MCRectangle &r_rect)
 ////////////////////////////////////////////////////////////////////////////////
 
 // IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
-void MCUIDC::boundrect(MCRectangle &x_rect, Boolean p_title, Window_mode p_mode)
+void MCUIDC::boundrect(MCRectangle &x_rect, Boolean p_title, Window_mode p_mode, Boolean p_resizable)
 {
-	platform_boundrect(x_rect, p_title, p_mode);
+	platform_boundrect(x_rect, p_title, p_mode, p_resizable);
 }
 
 //////////
 
-void MCUIDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m)
+void MCUIDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m, Boolean resizable)
 { }
 
 ////////////////////////////////////////////////////////////////////////////////

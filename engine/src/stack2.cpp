@@ -1986,7 +1986,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	// "bind" the stack's rect... Or in other words, make sure its within the 
 	// screens (well viewports) working area.
 	if (!(flags & F_FORMAT_FOR_PRINTING) && !(state & CS_BEEN_MOVED))
-		MCscreen->boundrect(rect, (!(flags & F_DECORATIONS) || decorations & WD_TITLE), mode);
+		MCscreen->boundrect(rect, (!(flags & F_DECORATIONS) || decorations & WD_TITLE), mode, getflag(F_RESIZABLE));
 	
 	state |= CS_NO_FOCUS;
 	if (flags & F_DYNAMIC_PATHS)
