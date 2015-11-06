@@ -1,16 +1,16 @@
 /* Copyright (C) 2003-2015 LiveCode Ltd.
- 
+
  This file is part of LiveCode.
- 
+
  LiveCode is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License v3 as published by the Free
  Software Foundation.
- 
+
  LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
  WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
  for more details.
- 
+
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
@@ -46,16 +46,16 @@ int IsDependencyCompile(void)
 void bootstrap_main(int argc, char *argv[])
 {
     int i;
-	
+
 	// If there is no filename, error.
     if (argc == 0)
     {
         fprintf(stderr, "Invalid arguments\n");
         return;
     }
-    
+
     s_is_bootstrap = 1;
-    
+
     for(i = 0; i < argc; i++)
     {
         if (strcmp(argv[i], "--inputg") == 0 && i + 1 < argc)
@@ -73,7 +73,7 @@ void bootstrap_main(int argc, char *argv[])
         else
             AddFile(argv[i]);
     }
-    
+
     if (MoveToNextFile())
     {
         yyExtend();
@@ -112,7 +112,7 @@ usage(int status)
 "searched in the order they appear.  An interface file may be generated in\n"
 "the first PATH specified.\n"
 "\n"
-"Report bugs to <http://quality.runrev.com/>\n"
+"Report bugs to <http://quality.livecode.com/>\n"
             );
     exit (status);
 }
@@ -139,7 +139,7 @@ static void full_main(int argc, char *argv[])
                     t_option = argv[++argi];
                 else
                     t_option = "make";
-                
+
                 if (0 == strcmp(t_option, "make"))
                     DependencyMode = kDependencyModeMake;
                 else if (0 == strcmp(t_option, "order"))
@@ -219,7 +219,7 @@ static void full_main(int argc, char *argv[])
                 fprintf(stderr, "WARNING: Ignoring multiple input filenames.\n");
                 continue;
             }
-            
+
             break; /* Doesn't match any option */
         }
         else
@@ -254,28 +254,28 @@ int main(int argc, char *argv[])
 {
     //extern int yydebug;
 	int t_return_code;
-	
+
 	// Skip command arg.
     argc -= 1;
     argv += 1;
-    
+
     // Check for debug mode.
     if (argc > 1 && strcmp(argv[0], "--debug") == 0)
     {
         argc -= 1;
         argv += 1;
-        
+
 #ifdef YYDEBUG
         yydebug = 1;
 #endif
     }
-    
+
     InitializeFiles();
     InitializePosition();
     InitializeLiterals();
     InitializeReports();
     InitializeScopes();
-    
+
     // Check for bootstrap mode.
     if (argc > 1 && strcmp(argv[0], "--bootstrap") == 0)
         bootstrap_main(argc - 1, argv + 1);
@@ -286,15 +286,15 @@ int main(int argc, char *argv[])
         t_return_code = 1;
     else
         t_return_code = 0;
-    
+
     FinalizeScopes();
     FinalizeReports();
     FinalizeLiterals();
     FinalizePosition();
     FinalizeFiles();
-    
+
     return t_return_code;
-    
+
     /*extern FILE *yyin;
     yyin = fopen(argv[0], "r");
     if (yyin == NULL)
@@ -302,8 +302,8 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Could not open file '%s'\n", argv[0]);
         return 1;
     }
-    
+
     Run();
-    
+
     return 0;*/
 }
