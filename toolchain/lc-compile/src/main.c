@@ -112,7 +112,7 @@ usage(int status)
 "searched in the order they appear.  An interface file may be generated in\n"
 "the first PATH specified.\n"
 "\n"
-"Report bugs to <http://quality.runrev.com/>\n"
+"Report bugs to <http://quality.livecode.com/>\n"
             );
     exit (status);
 }

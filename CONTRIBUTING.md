@@ -80,7 +80,7 @@ Once your changes have been reviewed and tested, they will be merged in time for
 
 Finding and fixing bugs in LiveCode is a particularly valuable contribution.
 
-If you've found a bug, please add a ticket to the [LiveCode issue tracking system](http://quality.runrev.com/).  This will give you a bug number which can be used whenever discussing the issue, and included in git commit log messages and in GitHub pull request descriptions.  This will help other contributors keep track of who's working on what.
+If you've found a bug, please add a ticket to the [LiveCode issue tracking system](http://quality.livecode.com/).  This will give you a bug number which can be used whenever discussing the issue, and included in git commit log messages and in GitHub pull request descriptions.  This will help other contributors keep track of who's working on what.
 
 When you submit a pull request that fixes a bug, the status of the bug should be set to "AWAITING_MERGE" -- please also add a comment to the bug with a link to the pull request's page.
 
