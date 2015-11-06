@@ -20,7 +20,12 @@
 #include "textlayout.h"
 
 #include <Foundation/Foundation.h>
+
+#ifdef _MACOSX
+#include <ApplicationServices/ApplicationServices.h>
+#else
 #include <CoreText/CoreText.h>
+#endif
 
 struct MCTextLayoutFont
 {

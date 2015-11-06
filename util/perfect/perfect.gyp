@@ -41,7 +41,6 @@
 						'OS == "mac" or OS == "ios"',
 						{
 							'SDKROOT': '<(host_sdk)',
-							'ARCHS': '<(host_arch)',
 						},
 					],
 					[
