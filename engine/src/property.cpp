@@ -184,7 +184,7 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_START_ANGLE, UInt16, Interface, StartAngle)
 	DEFINE_RW_PROPERTY(P_ARC_ANGLE, UInt16, Interface, ArcAngle)
 	DEFINE_RW_PROPERTY(P_ROUND_ENDS, Bool, Interface, RoundEnds)
-	DEFINE_RW_PROPERTY(P_DASHES, ItemsOfUInt, Interface, Dashes)
+	DEFINE_RW_PROPERTY(P_DASHES, ItemsOfLooseUInt, Interface, Dashes)
 	
 	DEFINE_RW_PROPERTY(P_EDIT_BACKGROUND, Bool, Interface, EditBackground)
 	
@@ -382,7 +382,7 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
     DEFINE_RO_PROPERTY(P_SCREEN_PIXEL_SCALE, Double, Interface, ScreenPixelScale)
     // IM-2014-01-27: [[ HiDPI ]] Global property screenPixelScales returns a return-delimited
     // list of the pixel scales of all connected screens
-    DEFINE_RO_PROPERTY(P_SCREEN_PIXEL_SCALES, LinesOfDouble, Interface, ScreenPixelScales)
+    DEFINE_RO_PROPERTY(P_SCREEN_PIXEL_SCALES, LinesOfLooseDouble, Interface, ScreenPixelScales)
     
     // MW-2014-08-12: [[ EditionType ]] Return whether the engine is community or commercial.
     DEFINE_RO_PROPERTY(P_EDITION_TYPE, String, Engine, EditionType)
