@@ -1,4 +1,4 @@
-﻿script "TestRunner"
+﻿script "BenchRunner"
 /*
 Copyright (C) 2015 Runtime Revolution Ltd.
 
@@ -105,9 +105,6 @@ private command doRun pInfo
    end if
    
    put the result into tAnalysis
-   if tapGetWorstResult(tAnalysis) is "FAIL" then
-      quit 1
-   end if
 end doRun
 
 private command doUsage pStatus
@@ -145,7 +142,7 @@ private command runAllScripts pInfo
    local tFile, tAnalysis
    repeat for each element tFile in runGetBenchFileNames()
       runBenchScript pInfo, tFile
-      put benchCombine(tAnalysis, the result) into tAnalysis
+      put the result after tAnalysis
    end repeat
    runPrintSummary tAnalysis
    
@@ -157,32 +154,48 @@ private command runAllScripts pInfo
    return tAnalysis
 end runAllScripts
 
+private command runBenchProcessOutput pScriptfile, pOutput
+   -- Create test log
+   local tTestLog
+   put "###" && runGetPrettyBenchName(pScriptFile) \
+         & return & return into tTestLog
+   put pOutput & return after tTestLog
+   
+   return tTestLog
+end runBenchProcessOutput
+
 -- Run the benchmark found in one specific script file
 private command runBenchScript pInfo, pScriptFile
-   local tArtCommandLine
+   local tCommandLine
    
-   repeat for each element tArg in pInfo["self-command"]
-      put tArg & " " after tCommandLine
-   end repeat
+   -- Get the path to this engine
+   put pInfo["self-command"][1] into tCommandLine
    
-   --put "invoke" && pScriptFile && pCommand after tCommandLine
+   -- Modify it so that it points to server-community instead
+   set the itemDelimiter to slash
+   if the platform is "macos" then
+      put "server-community" into item -4 to -1 of tCommandLine
+   else
+      put "server-community" into item -1 of tCommandLine
+   end if
+   
+   put " " & pScriptFile after tCommandLine
    
    -- Invoke the test in a subprocess.  This ensures that we can detect
    -- if a crash occurs
-   local tTestOutput, tTestExitStatus
-   put shell(tCommandLine) into tTestOutput
-   put the result into tTestExitStatus
+   local tBenchOutput, tBenchExitStatus
+   put shell(tCommandLine) into tBenchOutput
    
-   -- Check the exit status.  If it suggests failure, add a "not ok" stanza
-   -- to the tail of the TAP output
-   if tTestExitStatus is not empty then
-      put return after tTestOutput
-      put "not ok # Subprocess exited with status" && \
-            tTestExitStatus & return after tTestOutput
+   put the result into tBenchExitStatus
+   write tBenchOutput to stdout
+   -- Check the exit status.
+   if tBenchExitStatus is not empty then
+      put return after tBenchOutput
+      put "FAILED" after tBenchOutput
    end if
    
-   runTestProcessOutput pScriptFile, pCommand, tTestOutput
-   return the result*/
+   runBenchProcessOutput pScriptFile, tBenchOutput
+   return the result
 end runBenchScript
 
 -- Get all livecode script files beneath the CWD, apart from
@@ -250,7 +263,6 @@ end runGetPrettyBenchName
 
 -- Print out a table of statistics
 private command runPrintSummary pAnalysis
-   --write tSummaryString to stdout
 end runPrintSummary
 
 ----------------------------------------------------------------
@@ -265,13 +277,14 @@ local sLogInfo
 -- *isn't* a TTY.
 private command logInit
    -- We can only do colour on Linux and OS X
-   if the platform is not "Linux" and the platform is not "MacOS" then
+   /*if the platform is not "Linux" and the platform is not "MacOS" then
       put false into sLogInfo
    end if
 
    -- Check if colouring is possible
    local tTput
    put shell("tput colors") into tTput
+   put the result
    if the result is not empty or tTput <= 8 then
       put false into sLogInfo
    end if
@@ -282,7 +295,7 @@ private command logInit
    put shell("tput setaf 1") into sLogInfo["red"]
    put shell("tput setaf 2") into sLogInfo["green"]
    put shell("tput setaf 3") into sLogInfo["yellow"]
-   put shell("tput setaf 6") into sLogInfo["cyan"]
+   put shell("tput setaf 6") into sLogInfo["cyan"]*/
 end logInit
 
 private function logHighlight pString
