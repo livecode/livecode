@@ -195,7 +195,11 @@ public:
 	//
 
 	// SN-2014-07-11: [[ Bug 12769 ]] Update the signature - the non-implemented UIDC dodragdrop was called otherwise
-	MCDragAction dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset);
+	/* The mobile MCScreenDC adds an overload of MCUIDC::dodragdrop()
+	 * which uses a pasteboard. By default, both do nothing
+	 * (i.e. always return DRAG_ACTION_NONE). */
+	using MCUIDC::dodragdrop;
+	virtual MCDragAction dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset);
 
 	//
 
