@@ -24,14 +24,14 @@ Licensed under the terms of the Creative Commons Attribution 3.0 Unported Licens
 /*
 This widget displays web content within a native web browser view.
 
-Name: url
+Name: URL
 Type: property
 
 Syntax:
-set the url of <widget> to <pUrl>
-get the url of <widget>
+set the URL of <widget> to <pUrl>
+get the URL of <widget>
 
-Summary: The url displayed by the browser.
+Summary: The URL displayed by the browser.
 
 Parameters:
 pUrl(string): A string specifying a URL.
@@ -40,19 +40,19 @@ Example:
 	// Navigate to livecode.com by setting the url property, keeping a copy of the
 	//    previous URL
 	local tOldUrl
-	put the url of widget "myBrowser" into tOldUrl
-	set the url of widget "myBrowser" to "http://livecode.com"
+	put the URL of widget "myBrowser" into tOldUrl
+	set the URL of widget "myBrowser" to "http://livecode.com"
 
 Description:
-The <url> is the URL of the content be displayed in the browser.
+The <URL> is the URL of the content be displayed in the browser.
 
 
-Name: htmltext
+Name: htmlText
 Type: property
 
 Syntax:
-set the htmltext of <widget> to <pHtmlText>
-get the htmltext of <widget>
+set the htmlText of <widget> to <pHtmlText>
+get the htmlText of <widget>
 
 Summary: The HTML text of the content displayed by the browser.
 
@@ -63,18 +63,18 @@ Example:
 	// Render a web page in the browser by specifying custom HTML content
 	local tHTML
 	put "<html><head><title>My Page Title</title></head><body>My Page Contents</body></html>" into tHTML
-	set the htmltext of widget "myBrowser" to tHTML
+	set the htmlText of widget "myBrowser" to tHTML
 
 Description:
-The <htmltext> is the HTML representation of the content displayed in the browser.
+The <htmlText> is the HTML representation of the content displayed in the browser.
 
 
-Name: vscrollbar
+Name: vScrollbar
 Type: property
 
 Syntax:
-set the vscrollbar of <widget> to <pEnabled>
-get the vscrollbar of <widget>
+set the vScrollbar of <widget> to <pEnabled>
+get the vScrollbar of <widget>
 
 Summary: Controls whether the vertical scrollbar is visible and enabled within the browser.
 
@@ -85,12 +85,12 @@ Description:
 Controls whether the vertical scrollbar is visible and enabled within the browser.
 
 
-Name: hscrollbar
+Name: hScrollbar
 Type: property
 
 Syntax:
-set the hscrollbar of <widget> to <pEnabled>
-get the hscrollbar of <widget>
+set the hScrollbar of <widget> to <pEnabled>
+get the hScrollbar of <widget>
 
 Summary: Controls whether the horizontal scrollbar is visible and enabled within the browser.
 
@@ -101,12 +101,12 @@ Description:
 Controls whether the horizontal scrollbar is visible and enabled within the browser.
 
 
-Name: useragent
+Name: userAgent
 Type: property
 
 Syntax:
-set the useragent of <widget> to <pUserAgent>
-get the useragent of <widget>
+set the userAgent of <widget> to <pUserAgent>
+get the userAgent of <widget>
 
 Summary: The identifier sent by the browser when fetching content from remote URLs.
 
@@ -115,19 +115,19 @@ pUserAgent(string): A string conforming to the http specifications at http://www
 
 Example:
 	// Set custom User-Agent header. The remote web server may be configured to deliver custom content for browsers using this User-Agent.
-	set the useragent of widget "myBrowser" to "myAppEmbeddedBrowser"
+	set the userAgent of widget "myBrowser" to "myAppEmbeddedBrowser"
 	launch url "http://myexampleserver.com/content.html" in widget "myBrowser"
 
 Description:
-The <useragent> is the identifier sent by the browser when fetching content from remote URLs.
+The <userAgent> is the identifier sent by the browser when fetching content from remote URLs.
 
 
-Name: javascripthandlers
+Name: javascriptHandlers
 Type: property
 
 Syntax:
-set the javascripthandlers of <widget> to <pHanderList>
-get the javascripthandlers of <widget>
+set the javascriptHandlers of <widget> to <pHanderList>
+get the javascriptHandlers of <widget>
 
 Summary: A list of LiveCode handlers that are made available to JavaScript calls within the browser.
 
@@ -144,7 +144,7 @@ Example:
 	...
 	
 	// Set up the browser javascript handler list
-	set the javascripthandlers to "myJSHandler" & return & "myOtherJSHandler"
+	set the javascriptHandlers to "myJSHandler" & return & "myOtherJSHandler"
 
 	...
 	
@@ -152,9 +152,9 @@ Example:
 	liveCode.myJSHandler("myMessage", 12345);
 	
 Description:
-The <javascripthandlers> is a list of LiveCode handlers that are made available to JavaScript calls within the browser. The handlers will appear as methods attached to a global "liveCode" object. You can call these methods as you would any other JavaScript function and pass whatever parameters you require.
+The <javascriptHandlers> is a list of LiveCode handlers that are made available to JavaScript calls within the browser. The handlers will appear as methods attached to a global "liveCode" object. You can call these methods as you would any other JavaScript function and pass whatever parameters you require.
 
->*Warning:* Setting the javascriptHandlers property gives JavaScript running within the Web browser permission to execute parts of your application through the handlers you choose to expose. If using this feature, make sure that you have complete control over the webpages which you load into the browser widget, and consider using https to ensure that third-parties cannot inject malicious code into them.
+>*Warning:* Setting the <javascriptHandlers> property gives JavaScript running within the Web browser permission to execute parts of your application through the handlers you choose to expose. If using this feature, make sure that you have complete control over the webpages which you load into the browser widget, and consider using https to ensure that third-parties cannot inject malicious code into them.
 
 
 Name: browserDocumentLoadBegin
@@ -298,22 +298,22 @@ metadata svgicon is "M21.7,12c0,5.4-4.4,9.7-9.7,9.7S2.3,17.4,2.3,12S6.6,2.3,12,2
 --
 
 -- property declarations
-property url get getUrl set setUrl
-metadata url.editor is "com.livecode.pi.text"
+property URL get getUrl set setUrl
+metadata URL.editor is "com.livecode.pi.text"
 
-property htmltext get getHtmlText set setHtmlText
+property htmlText get getHtmlText set setHtmlText
 
-property vscrollbar get getVScrollbar set setVScrollbar
-metadata vscrollbar.editor is "com.livecode.pi.boolean"
+property vScrollbar get getVScrollbar set setVScrollbar
+metadata vScrollbar.editor is "com.livecode.pi.boolean"
 
-property hscrollbar get getHScrollbar set setHScrollbar
-metadata hscrollbar.editor is "com.livecode.pi.boolean"
+property hScrollbar get getHScrollbar set setHScrollbar
+metadata hScrollbar.editor is "com.livecode.pi.boolean"
 
-property useragent get getUserAgent set setUserAgent
-metadata useragent.editor is "com.livecode.pi.text"
+property userAgent get getUserAgent set setUserAgent
+metadata userAgent.editor is "com.livecode.pi.text"
 
-property javascripthandlers get getJavaScriptHandlers set setJavaScriptHandlers
-metadata javascripthandlers.editor is "com.livecode.pi.text"
+property javascriptHandlers get getJavaScriptHandlers set setJavaScriptHandlers
+metadata javascriptHandlers.editor is "com.livecode.pi.text"
 
 --------------------------------------------------------------------------------
 
