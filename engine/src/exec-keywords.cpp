@@ -40,6 +40,10 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCStatement *MCprofilingkeyword = nil;
+
+////////////////////////////////////////////////////////////////////////////////
+
 static Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p_statements, Exec_errors p_error)
 {
     Exec_stat stat = ES_NORMAL;
@@ -55,7 +59,7 @@ static Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p
         ctxt . SetLineAndPos(tspr->getline(), tspr->getpos());
         
        // stat = tspr->exec(ctxt . GetEP());
-        tspr->exec_ctxt(ctxt);
+        tspr->execute(ctxt);
         stat = ctxt . GetExecStat();
         ctxt . IgnoreLastError();
         
@@ -84,7 +88,7 @@ static Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p
                                   p_error))
                             break;
                         ctxt . IgnoreLastError();
-                        tspr->exec_ctxt(ctxt);
+                        tspr->execute(ctxt);
                     }
                 while (MCtrace && (stat = ctxt . GetExecStat()) != ES_NORMAL);
                 if (stat == ES_ERROR)
@@ -370,6 +374,11 @@ void MCKeywordsExecuteRepeatStatements(MCExecContext& ctxt, MCStatement *stateme
 
 void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExpression *endcond, MCVarref *loopvar, File_unit each, uint2 line, uint2 pos)
 {
+#ifdef FEATURE_PROFILE
+    MCStatement *t_profiling_keyword;
+    t_profiling_keyword = MCprofilingkeyword;
+#endif
+    
     MCAutoArrayRef t_array;
     MCAutoStringRef t_string;
     MCAutoDataRef t_data;
@@ -389,8 +398,17 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
     
     MCTextChunkIterator *tci = nil;
     
+#ifdef FEATURE_PROFILE
+    t_profiling_keyword -> MCStatement::starttiming();
+#endif
+    
     if (!ctxt . TryToEvaluateExpression(endcond, line, pos, EE_REPEAT_BADFORCOND, &t_condition))
+    {
+#ifdef FEATURE_PROFILE
+        t_profiling_keyword -> MCStatement::finishtiming();
+#endif
         return;
+    }
     
     bool t_sequence_array;
     t_sequence_array = false;
@@ -400,7 +418,12 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
         if (each == FU_ELEMENT || each == FU_KEY)
         {
             if (!ctxt . ConvertToArray(*t_condition, &t_array))
+            {
+#ifdef FEATURE_PROFILE
+                t_profiling_keyword -> MCStatement::finishtiming();
+#endif
                 return;
+            }
             
             // SN-2015-06-15: [[ Bug 15457 ]] If this is a numerical array, do
             //  it in order - even if it does not start at 1
@@ -408,19 +431,34 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
             {
                 t_sequence_array = true;
                 if (!MCArrayFetchValueAtIndex(*t_array, t_sequenced_iterator, t_value))
+                {
+#ifdef FEATURE_PROFILE
+                    t_profiling_keyword -> MCStatement::finishtiming();
+#endif
                     return;
+                }
             }
             else
             {
                 t_iterator = 0;
                 if (!MCArrayIterate(*t_array, t_iterator, t_key, t_value))
+                {
+#ifdef FEATURE_PROFILE
+                    t_profiling_keyword -> MCStatement::finishtiming();
+#endif
                     return;
+                }
             }
         }
         else if (each == FU_BYTE)
         {
             if (!ctxt . ConvertToData(*t_condition, &t_data))
+            {
+#ifdef FEATURE_PROFILE
+                t_profiling_keyword -> MCStatement::finishtiming();
+#endif
                 return;
+            }
             
             t_length = MCDataGetLength(*t_data);
             t_data_ptr = MCDataGetBytePtr(*t_data);
@@ -429,7 +467,12 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
         else
         {
             if (!ctxt . ConvertToString(*t_condition, &t_string))
+            {
+#ifdef FEATURE_PROFILE
+                t_profiling_keyword -> MCStatement::finishtiming();
+#endif
                 return;
+            }
             
             switch (each)
             {
@@ -473,6 +516,9 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
         if (!ctxt . ConvertToInteger(*t_condition, count) && (MCtrace || MCnbreakpoints)
                 && !MCtrylock && !MClockerrors)
         {
+#ifdef FEATURE_PROFILE
+            t_profiling_keyword -> MCStatement::finishtiming();
+#endif
             MCB_error(ctxt, line, pos, EE_REPEAT_BADFORCOND);
             return;
         }
@@ -570,9 +616,16 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
         else
             done = count-- == 0;
         
+#ifdef FEATURE_PROFILE
+        t_profiling_keyword -> MCStatement::finishtiming();
+#endif
+        
         if (!done)
             MCKeywordsExecuteRepeatStatements(ctxt, statements, line, pos, done);
         
+#ifdef FEATURE_PROFILE
+        t_profiling_keyword -> MCStatement::starttiming();
+#endif
         if (endnext)
         {
             // Reset the loop variable to whatever the value was in the last iteration.
@@ -589,17 +642,33 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
     }
     
     delete tci;
+    
+#ifdef FEATURE_PROFILE
+    t_profiling_keyword -> MCStatement::finishtiming();
+#endif
 }
 
 void MCKeywordsExecRepeatWith(MCExecContext& ctxt, MCStatement *statements, MCExpression *step, MCExpression *startcond, MCExpression *endcond, MCVarref *loopvar, real8 stepval, uint2 line, uint2 pos)
 {
+#ifdef FEATURE_PROFILE
+    MCStatement *t_profiling_keyword;
+    t_profiling_keyword = MCprofilingkeyword;
+#endif
+    
     real8 endn = 0.0;
     MCExecValue t_condition;
+    
+#ifdef FEATURE_PROFILE
+    t_profiling_keyword -> MCStatement::starttiming();
+#endif
     
     if (step != NULL)
     {
         if (!ctxt . TryToEvaluateExpressionAsDouble(step, line, pos, EE_REPEAT_BADWITHSTEP, stepval) || stepval == 0)
         {
+#ifdef FEATURE_PROFILE
+            t_profiling_keyword -> MCStatement::finishtiming();
+#endif
             ctxt . LegacyThrow(EE_REPEAT_BADWITHSTEP);
             return;
         }
@@ -609,6 +678,9 @@ void MCKeywordsExecRepeatWith(MCExecContext& ctxt, MCStatement *statements, MCEx
     real8 t_loop;
     if (!ctxt . TryToEvaluateExpressionAsDouble(startcond, line, pos, EE_REPEAT_BADWITHSTART, t_loop))
     {
+#ifdef FEATURE_PROFILE
+        t_profiling_keyword -> MCStatement::finishtiming();
+#endif
         ctxt . LegacyThrow(EE_REPEAT_BADWITHSTART);
         return;
     }
@@ -619,10 +691,20 @@ void MCKeywordsExecRepeatWith(MCExecContext& ctxt, MCStatement *statements, MCEx
     t_loop_var . type = kMCExecValueTypeDouble;
     t_loop_var . double_value = t_loop;
     if (!ctxt . TryToSetVariable(loopvar, line, pos, EE_REPEAT_BADWITHVAR, t_loop_var))
+    {
+#ifdef FEATURE_PROFILE
+        t_profiling_keyword -> MCStatement::finishtiming();
+#endif
         return;
+    }
     
     if (!ctxt . TryToEvaluateExpressionAsDouble(endcond, line, pos, EE_REPEAT_BADWITHSTART, endn))
+    {
+#ifdef FEATURE_PROFILE
+        t_profiling_keyword -> MCStatement::finishtiming();
+#endif
         return;
+    }
     
     bool done;
     done = false;
@@ -631,7 +713,12 @@ void MCKeywordsExecRepeatWith(MCExecContext& ctxt, MCStatement *statements, MCEx
     {
         real8 t_cur_value;
         if (!ctxt . TryToEvaluateExpressionAsDouble(loopvar, line, pos, EE_REPEAT_BADWITHVAR, t_cur_value))
+        {
+#ifdef FEATURE_PROFILE
+            t_profiling_keyword -> MCStatement::finishtiming();
+#endif
             return;
+        }
         
         if (stepval < 0)
         {
@@ -646,15 +733,29 @@ void MCKeywordsExecRepeatWith(MCExecContext& ctxt, MCStatement *statements, MCEx
         {
             t_loop_var . double_value = t_cur_value + stepval;
             if (!ctxt . TryToSetVariable(loopvar, line, pos, EE_REPEAT_BADWITHVAR, t_loop_var))
+            {
+#ifdef FEATURE_PROFILE
+                t_profiling_keyword -> MCStatement::finishtiming();
+#endif
                 return;
+            }
             
+#ifdef FEATURE_PROFILE
+            t_profiling_keyword -> MCStatement::finishtiming();
+#endif
             MCKeywordsExecuteRepeatStatements(ctxt, statements, line, pos, done);
+#ifdef FEATURE_PROFILE
+            t_profiling_keyword -> MCStatement::starttiming();
+#endif
         }
         
         if (done)
             break;
     }
     
+#ifdef FEATURE_PROFILE
+    t_profiling_keyword -> MCStatement::finishtiming();
+#endif
 }
 
 void MCKeywordsExecRepeatForever(MCExecContext& ctxt, MCStatement *statements, uint2 line, uint2 pos)
@@ -667,35 +768,86 @@ void MCKeywordsExecRepeatForever(MCExecContext& ctxt, MCStatement *statements, u
 
 void MCKeywordsExecRepeatUntil(MCExecContext& ctxt, MCStatement *statements, MCExpression *endcond, uint2 line, uint2 pos)
 {
+#ifdef FEATURE_PROFILE
+    MCStatement *t_profiling_keyword;
+    t_profiling_keyword = MCprofilingkeyword;
+#endif
+    
     bool done;
     done = false;
+    
+#ifdef FEATURE_PROFILE
+    t_profiling_keyword -> MCStatement::starttiming();
+#endif
     
     while (!done)
     {
         if (!ctxt . TryToEvaluateExpressionAsNonStrictBool(endcond, line, pos, EE_REPEAT_BADUNTILCOND, done))
+        {
+#ifdef FEATURE_PROFILE
+            t_profiling_keyword -> MCStatement::finishtiming();
+#endif
             return;
+        }
+        
+#ifdef FEATURE_PROFILE
+        t_profiling_keyword -> MCStatement::finishtiming();
+#endif
         if (!done)
             MCKeywordsExecuteRepeatStatements(ctxt, statements, line, pos, done);
+        
+#ifdef FEATURE_PROFILE
+        t_profiling_keyword -> MCStatement::starttiming();
+#endif
     }
+    
+#ifdef FEATURE_PROFILE
+    t_profiling_keyword -> MCStatement::finishtiming();
+#endif
 }
 
 void MCKeywordsExecRepeatWhile(MCExecContext& ctxt, MCStatement *statements, MCExpression *endcond, uint2 line, uint2 pos)
 {
+#ifdef FEATURE_PROFILE
+    MCStatement *t_profiling_keyword;
+    t_profiling_keyword = MCprofilingkeyword;
+#endif
+    
     bool done;
     done = false;
+    
+#ifdef FEATURE_PROFILE
+    t_profiling_keyword -> MCStatement::starttiming();
+#endif
     
     while (!done)
     {
         MCAutoValueRef t_value;
         bool not_done;
         if (!ctxt . TryToEvaluateExpressionAsNonStrictBool(endcond, line, pos, EE_REPEAT_BADUNTILCOND, not_done))
+        {
+#ifdef FEATURE_PROFILE
+            t_profiling_keyword -> MCStatement::finishtiming();
+#endif
             return;
+        }
         
+#ifdef FEATURE_PROFILE
+        t_profiling_keyword -> MCStatement::finishtiming();
+#endif
         done = !not_done;
         
         if (not_done)
-            MCKeywordsExecuteRepeatStatements(ctxt, statements, line, pos, done);
+            MCKeywordsExecuteRepeatStatements(ctxt, statements, line, pos, done); 
+        
+#ifdef FEATURE_PROFILE
+        t_profiling_keyword -> MCStatement::starttiming();
+#endif
     }
+    
+#ifdef FEATURE_PROFILE
+    t_profiling_keyword -> MCStatement::finishtiming();
+#endif
 }
 
 void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatement *catchstatements, MCStatement *finallystatements, MCVarref *errorvar, uint2 line, uint2 pos)
@@ -716,7 +868,7 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
 		ctxt . SetLineAndPos(tspr->getline(), tspr->getpos());
         
 		//stat = tspr->exec(ctxt . GetEP());
-        tspr->exec_ctxt(ctxt);
+        tspr->execute(ctxt);
         stat = ctxt . GetExecStat();
         ctxt . IgnoreLastError();
         
@@ -748,7 +900,7 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
                         if (MCB_error(ctxt, tspr->getline(), tspr->getpos(), EE_TRY_BADSTATEMENT))
                             break;
                         ctxt.IgnoreLastError();
-                        tspr->exec_ctxt(ctxt);
+                        tspr->execute(ctxt);
                     }
 				while(MCtrace && (stat = ctxt . GetExecStat()) != ES_NORMAL);
                 

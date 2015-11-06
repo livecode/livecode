@@ -3338,7 +3338,7 @@ void MCOpen::exec_ctxt(MCExecContext &ctxt)
 #endif /* MCOpen */
 
 	if (go != NULL)
-        return go->exec_ctxt(ctxt);
+        return go->execute(ctxt);
 
     ctxt . SetTheResultToEmpty();
 

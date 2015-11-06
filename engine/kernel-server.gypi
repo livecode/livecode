@@ -16,6 +16,11 @@
 				'mode_macro': 'MODE_SERVER',
 			},
 			
+            'defines':
+            [
+                'FEATURE_PROFILE',
+            ],
+            
 			'dependencies':
 			[
 				'../libfoundation/libfoundation.gyp:libFoundation',

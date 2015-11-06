@@ -501,6 +501,11 @@ static void X_load_extensions(MCServerScript *p_script)
 	
 }
 
+void X_report_timing(uint2 line, uint64_t count)
+{
+    fprintf(stderr, "%08d %llu\n", line, count);
+}
+
 void X_main_loop(void)
 {
 	int i;
@@ -597,6 +602,10 @@ void X_main_loop(void)
 		}
 	}
 	
+#ifdef FEATURE_PROFILE
+    MCserverscript -> gethandlers() -> reporttiming(X_report_timing);
+#endif
+    
 	if (s_server_cgi)
 		cgi_finalize();
 #ifdef _IREVIAM

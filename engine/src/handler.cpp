@@ -448,7 +448,7 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 		}
 		ctxt.SetLineAndPos(tspr->getline(), tspr->getpos());
         
-        tspr->exec_ctxt(ctxt);
+        tspr->execute(ctxt);
 		stat = ctxt . GetExecStat();
         
         MCActionsRunAll();
@@ -469,7 +469,7 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
                     {
                         MCB_error(ctxt, tspr->getline(), tspr->getpos(), EE_HANDLER_BADSTATEMENT);
                         ctxt . IgnoreLastError();
-                        tspr->exec_ctxt(ctxt);
+                        tspr->execute(ctxt);
                     }
 				while (MCtrace && (stat = ctxt . GetExecStat()) != ES_NORMAL);
                 if (stat != ES_NORMAL)
@@ -1038,5 +1038,19 @@ void MCHandler::compile(MCSyntaxFactoryRef ctxt)
 	
 	MCSyntaxFactoryEndHandler(ctxt);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+#ifdef FEATURE_PROFILE
+void MCHandler::reporttiming(MCProfilingReportCallback report)
+{
+	MCStatement *stmp = statements;
+	while (stmp != NULL)
+	{
+        stmp -> reporttiming(report);
+		stmp = stmp->getnext();
+	}
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////

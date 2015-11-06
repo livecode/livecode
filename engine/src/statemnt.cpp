@@ -350,6 +350,22 @@ void MCStatement::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryEndStatement(ctxt);
 };
 
+#ifdef FEATURE_PROFILE
+void MCStatement::starttiming(void)
+{
+    timer . Start();
+}
+
+void MCStatement::finishtiming(void)
+{
+    timer . Stop();
+}
+
+void MCStatement::reporttiming(MCProfilingReportCallback report)
+{
+    report(line, timer . Total());
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

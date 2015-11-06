@@ -17,6 +17,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_HANDLER__
 #define	__MC_HANDLER__
 
+#ifndef __MC_STATEMENT__
+#include "statemnt.h"
+#endif
+
 struct MCExecValue;
 
 // A single variable definition. If 'init' is nil then it means the var should
@@ -191,6 +195,10 @@ public:
 	{
 		return globals[p_index];
 	}
+    
+#ifdef FEATURE_PROFILE
+    void reporttiming(MCProfilingReportCallback report);
+#endif
 
 private:
 	Parse_stat newparam(MCScriptPoint& sp);
