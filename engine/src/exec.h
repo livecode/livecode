@@ -1046,7 +1046,7 @@ template<typename O, typename A, void (O::*Method)(MCExecContext&, MCNameRef, A)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-struct MCNativeControl;
+class MCNativeControl;
 struct MCNativeControlPtr
 {
     MCNativeControl *control;
