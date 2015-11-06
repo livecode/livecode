@@ -32,6 +32,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef FEATURE_QUICKTIME
+
  class MCQTKitPlayer;
  
  @interface com_runrev_livecode_MCQTKitPlayerObserver: NSObject
@@ -1028,4 +1030,13 @@ MCQTKitPlayer *MCQTKitPlayerCreate(void)
     return new MCQTKitPlayer;
 }
 
+#else   /* ifdef FEATURE_QUICKTIME */
+
+class MCQTKitPlayer* MCQTKitPlayerCreate()
+{
+    return NULL;
+}
+
 ////////////////////////////////////////////////////////
+
+#endif  /* ifdef FEATURE_QUICKTIME ... else ... */

@@ -51,7 +51,7 @@ void MCTextLayoutFinalize(void)
 	}
 }
 
-static CTFontRef ctfont_from_fontstruct(MCFontStruct *p_font_struct)
+CTFontRef ctfont_from_fontstruct(MCFontStruct *p_font_struct)
 {
     // MM-2014-06-04: [[ CoreText ]] Fonts are now already coretext font refs. No extra work needed here anymore.
     return (CTFontRef)CFRetain((CTFontRef) p_font_struct -> fid);

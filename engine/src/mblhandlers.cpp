@@ -6340,8 +6340,13 @@ Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters)
         /* UNCHECKED */ MCListAppendCString(*t_list, "rear flash");
     
     MCAutoStringRef t_features_string;
-    /* UNCHECKED */ MCListCopyAsString(*t_list, &t_features_string);
+
+    if (!MCListCopyAsString(*t_list, &t_features_string))
+        return ES_ERROR;
+
     ctxt . SetTheResultToValue(*t_features_string);
+
+    return ES_NORMAL;
 }
 
 Exec_stat MCHandlePickPhoto(void *p_context, MCParameter *p_parameters)

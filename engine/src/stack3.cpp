@@ -136,6 +136,11 @@ IO_stat MCStack::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 	return t_stat;
 }
 
+IO_stat MCStack::load(IO_handle stream, uint32_t version)
+{
+	MCUnreachableReturn(IO_ERROR);
+}
+
 IO_stat MCStack::load(IO_handle stream, uint32_t version, uint1 type)
 {
 	IO_stat stat;

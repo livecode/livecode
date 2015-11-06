@@ -56,6 +56,13 @@
 						[
 							'../thirdparty/headers/linux/include/cairo',
 						],
+						
+						'defines':
+                        [
+                            # We use some features that are behind config macros in old versions of Pango
+                            'PANGO_ENABLE_BACKEND',
+                            'PANGO_ENABLE_ENGINE',
+						],
 					},
 				],
 				[
@@ -103,6 +110,18 @@
 						'sources':
 						[
 							'<@(engine_minizip_source_files)',
+						],
+					},
+				],
+				[
+					'OS == "mac"',
+					{
+						'defines':
+						[
+							# We want to use the new prototypes for the Objective-C
+							# dispatch methods as it helps catch certain errors at
+							# compile time rather than run time.
+							'OBJC_OLD_DISPATCH_PROTOTYPES=0',
 						],
 					},
 				],
