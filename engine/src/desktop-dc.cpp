@@ -257,7 +257,7 @@ bool MCScreenDC::platform_getdisplays(bool p_effective, MCDisplay *& r_displays,
 	return true;
 }
 
-void MCScreenDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mode mode)
+void MCScreenDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mode mode, Boolean resizable)
 {
 	MCRectangle srect;
 	
@@ -300,7 +300,8 @@ void MCScreenDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mod
 		rect.x = srect . x;
 	if (rect.x + rect.width > srect.x + srect . width - sr)
 	{
-		if (rect.width > srect . width - sw)
+		// PM-2015-10-12: [[ Bug 16177 ]] Modify stack's rect only if stack is resizable
+		if (rect.width > srect . width - sw && resizable)
 			rect.width = srect . width - sw;
 		rect.x = srect . x + srect . width - rect.width - sr;
 	}
@@ -309,7 +310,8 @@ void MCScreenDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mod
 		rect.y = srect.y;
 	if (rect.y + rect.height > srect . y + srect . height - sb)
 	{
-		if (rect.height > srect . height - sh)
+		// PM-2015-10-12: [[ Bug 16177 ]] Modify stack's rect only if stack is resizable
+		if (rect.height > srect . height - sh && resizable)
 			rect.height = srect . height - sh;
 		rect.y = srect . y + srect . height - rect.height - sb;
 	}

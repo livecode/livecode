@@ -1136,6 +1136,15 @@
 					],
 				},
 			],
+            [
+                'OS == "mac" and target_sdk=="macosx10.6"',
+                {
+                    'sources!':
+                    [
+                        'src/mac-av-player.mm',
+                    ],
+                },
+            ],
 			[
 				'OS != "mac" and OS != "ios"',
 				{
