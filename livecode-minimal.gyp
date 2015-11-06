@@ -23,7 +23,8 @@
 						'dependencies':
 						[
 							# Engines
-							'engine/engine.gyp:server',
+                            'engine/engine.gyp:server',
+                            'engine/engine.gyp:profiling-server',
 						],
 					},
 				],
