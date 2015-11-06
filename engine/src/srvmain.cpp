@@ -561,6 +561,13 @@ void X_main_loop(void)
 		return;
 #endif
 	
+#ifdef FEATURE_PROFILE
+    double t_profile_start_time;
+    MCProfilingTimer t_profile_timer;
+    t_profile_start_time = MCS_time();
+    t_profile_timer . Start();
+#endif
+    
 	MCExecContext ctxt;
 	if (!MCserverscript -> Include(ctxt, MCserverinitialscript, false) &&
 		MCS_get_errormode() != kMCSErrorModeDebugger)
@@ -603,7 +610,12 @@ void X_main_loop(void)
 	}
 	
 #ifdef FEATURE_PROFILE
+    double t_profile_finish_time;
+    t_profile_timer . Stop();
+    t_profile_finish_time = MCS_time();
+    
     MCserverscript -> gethandlers() -> reporttiming(X_report_timing);
+    fprintf(stderr, "XXXXXXXX %llu %lf\n", t_profile_timer . Total(), t_profile_finish_time - t_profile_start_time);
 #endif
     
 	if (s_server_cgi)
