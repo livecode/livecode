@@ -1559,6 +1559,8 @@ public:
 	bool CopyElementAsFilepath(MCArrayRef, MCNameRef key, bool case_sensitive, MCStringRef &r_path);
 	bool CopyElementAsFilepathArray(MCArrayRef, MCNameRef key, bool case_sensitive, MCArrayRef &r_path_array);
 	
+	bool CopyElementAsEnum(MCArrayRef, MCNameRef key, bool case_sensitive, MCExecEnumTypeInfo *enum_type_info, intenum_t &r_intenum);
+
 	//////////
 	
 	bool CopyOptElementAsBoolean(MCArrayRef, MCNameRef key, bool case_sensitive, MCBooleanRef &r_boolean);
