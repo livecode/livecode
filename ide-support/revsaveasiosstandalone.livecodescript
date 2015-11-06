@@ -72,7 +72,8 @@ private function linkingIsValid pLinkingOutput
    repeat for each line tLine in pLinkingOutput
       // Discard Xcode 7 new warnings like:
       // ld: warning: object file (<path_to_exe) was built for newer iOS version (9.0) than being linked (7.0)
-      if not matchtext(tLine, "ld: warning: object file \(.*\) was built for newer iOS version \(.*\) than being linked \(.*\)") then
+      // On the first use of Xcode 7.0 for deployment, 'ld: warning: ' is duplicated...
+      if not matchtext(tLine, "(ld: warning: )+object file \(.*\) was built for newer iOS version \(.*\) than being linked \(.*\)") then
          return false
       end if
    end repeat
@@ -1239,7 +1240,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    
    // SN-2015-02-11: [[ Bug 16299 ]] Add ${DISABLE_ATS} in the Plist template
    if pSettings["ios,disable ATS"] then
-      put URL("binfile:" & mapFilePath("DisableATS.plist")) into tDisableATS
+      put URL("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "DisableATS.plist")) into tDisableATS
    end if
    
    
