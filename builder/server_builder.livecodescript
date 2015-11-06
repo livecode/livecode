@@ -37,18 +37,9 @@ command serverBuilderRun pPlatform, pEdition
    delete file tOutputFile
    
    if pPlatform is "windows" then
-      local tExternalsFolder
-      put tEngineFolder into tExternalsFolder
-      set the itemDel to slash
-      put "releaseserver" into the last item of tExternalsFolder
-      set the itemDel to comma
-      
       repeat for each word tExternal in "revdb revzip revxml dbsqlite dbmysql dbpostgresql dbodbc"
          get "server-" & tExternal & ".dll"
-         if there is a file (tExternalsFolder & slash & it) then
-            builderLog "message", "Copying windows external '" & tExternal & "' from release server folder"
-            put URL ("binfile:" & tExternalsFolder & slash & it) into URL ("binfile:" & tEngineFolder & slash & it)
-         else
+         if there is not a file (tEngineFolder & slash & it) then
             get tExternal & ".dll"
             if there is a file (tEngineFolder & slash & it) then
                builderLog "message", "Copying windows external '" & tExternal & "' from desktop external"
