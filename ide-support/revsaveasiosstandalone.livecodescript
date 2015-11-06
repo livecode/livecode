@@ -1240,7 +1240,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    
    // SN-2015-02-11: [[ Bug 16299 ]] Add ${DISABLE_ATS} in the Plist template
    if pSettings["ios,disable ATS"] then
-      put URL("binfile:" & mapFilePath("DisableATS.plist")) into tDisableATS
+      put URL("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "DisableATS.plist")) into tDisableATS
    end if
    
    
