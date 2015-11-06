@@ -3140,9 +3140,11 @@ int2 MCParagraph::setfocus(int4 x, int4 y, uint2 fixedheight,
 					// It rounds originalindex up to the end of the word it is in.
 					// It then rounds focusedindex down to the beginning of the
 					// previous word.
-					bptr = indextoblock(originalindex, False);
-					if (originalindex < gettextlength() && !TextIsWordBreak(GetCodepointAtIndex(originalindex)))
-						originalindex = findwordbreakafter(bptr, originalindex);
+                    // The first time we are moving backwards, originalindex is
+                    // at the beginning of the word and endindex at the end.
+                    // We simply move originalindex to endindex
+                    if (originalindex < endindex)
+                        originalindex = endindex;
 
 					bptr = indextoblock(focusedindex, False);
 					focusedindex = findwordbreakbefore(bptr, focusedindex);
