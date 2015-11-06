@@ -55,6 +55,9 @@ void bootstrap_main(int argc, char *argv[])
     }
     
     s_is_bootstrap = 1;
+
+    /* Treat all warnings as errors in bootstrap mode */
+    s_is_werror_enabled = 1;
     
     for(i = 0; i < argc; i++)
     {
