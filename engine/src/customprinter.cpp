@@ -125,11 +125,9 @@ static MCCustomPrinterImageType MCCustomPrinterImageTypeFromMCGRasterFormat(MCGR
 		return kMCCustomPrinterImageRawXRGB;
 	case kMCGRasterFormat_A:
 	case kMCGRasterFormat_U_ARGB:
+    default:
 		// Unsupported
-		MCAssert(false);
-		return kMCCustomPrinterImageNone;
-	default:
-		MCUnreachable();
+        MCUnreachableReturn(kMCCustomPrinterImageNone);
 	}
 }
 

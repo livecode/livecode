@@ -43,6 +43,7 @@
 		'-fno-rtti',
 		'-std=<(c++_std)',
 
+		'-Werror=mismatched-tags',
 		'-Werror=overloaded-virtual',
 	],
 
