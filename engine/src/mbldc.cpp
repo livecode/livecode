@@ -898,14 +898,6 @@ MCPasteboard *MCScreenDC::getclipboard(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// SN-2014-07-11: [[ Bug 12769 ]] Update the signature - the non-implemented UIDC dodragdrop was called otherwise
-MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset)
-{
-	return DRAG_ACTION_NONE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 MCScriptEnvironment *MCScreenDC::createscriptenvironment(MCStringRef p_language)
 {
 	return NULL;
