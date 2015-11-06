@@ -162,6 +162,9 @@ void MCMultimediaEvalRecordCompressionTypes(MCExecContext& ctxt, MCStringRef& r_
         MCListCopyAsString(t_state, r_string);
         MCValueRelease(t_state);
     }
+	else
+		// PM-2015-10-28: [[ Bug 16292 ]] Prevent crash and return empty if QT is not used
+		r_string = MCValueRetain(kMCEmptyString);
 #else
     extern void MCQTGetRecordCompressionList(MCStringRef &r_string);
     MCQTGetRecordCompressionList(r_string);
