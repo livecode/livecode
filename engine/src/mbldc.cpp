@@ -943,7 +943,7 @@ void MCScreenDC::platform_setmouse(int16_t p_x, int16_t p_y)
 	device_setmouse(t_loc.x, t_loc.y);
 }
 
-void MCScreenDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m)
+void MCScreenDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m, Boolean resizable)
 {
 	MCRectangle t_rect;
 	t_rect = rect;
