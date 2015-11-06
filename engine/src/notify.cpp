@@ -25,6 +25,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define USE_PINGORPIPE
 #define PING_FUNC MCMacBreakWait
 #elif defined(_MAC_SERVER)
+#include <unistd.h>
 #include <pthread.h>
 #define USE_PTHREADS
 #define USE_PIPE
