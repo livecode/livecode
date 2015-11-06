@@ -4,7 +4,7 @@
 This stack implements the command "compileReleaseNotes <release number>"
 which creates a pdf file of the release notes from various markdown files.
 
-The notes directory should contain 
+The notes directory should contain
 - "platforms.md" and "setup.md"
 - optional files "issues.md" containing any known issues, "proposed_changes.md" and "user_guide_changes.md"
 - an optional file "overview.md", if this release has any specific focus or direction
@@ -22,28 +22,28 @@ The image must be named bugfix-<bug number>-<image number>.<extension>
 
 Otherwise the file should be LiveCode flavoured Markdown.
 
-Single line files will be added to the table of sepcific bug fixes along with a link to their entry 
+Single line files will be added to the table of sepcific bug fixes along with a link to their entry
 on Bugzilla. Multiline files will have their own subsection in the release notes.
-   
+
    */
-   
+
    global gExperimental, gPageBreak, gAnchor
-   
+
    function releaseNotesCSS
       return url ("file:" & builderSystemFolder() & slash & "release_notes_css_prefix.txt")
 end releaseNotesCSS
 
 command releaseNotesBuilderInitialize
    start using stack (builderSystemFolder() & slash & "markdown_compiler.livecodescript")
-   
-   put 1 into gAnchor     
+
+   put 1 into gAnchor
    put "<p style=" & quote & "color:red; font-weight:bold" & quote & ">Important: This feature is currently experimental. " into gExperimental
    put gExperimental & "This means that it may not be complete, or may fail in some circumstances that you would expect it to work. " into gExperimental
    put gExperimental & "Please do not be afraid to try it out as we need feedback to develop it further.</p>" & CR into gExperimental
    put CR & "<div style=" & quote & "page-break-after: always;" & quote & "><span style=" & quote & "display: none;" & quote & ">&nbsp;</span></div>" & CR into gPageBreak
-   
+
    set the defaultfolder to builderRepoFolder()
-   set hideconsolewindows to true   
+   set hideconsolewindows to true
 end releaseNotesBuilderInitialize
 
 command releaseNotesBuilderFinalize
@@ -52,19 +52,19 @@ end releaseNotesBuilderFinalize
 
 command releaseNotesBuilderRun pEdition, pVersion, pReleaseType
    builderLog "report", "Building release notes for version" && pVersion
-   
+
    releaseNotesBuilderInitialize
-   
+
    local tTags
    put shell("git tag") into tTags
-   
+
    sortTags tTags
-   
+
    local tContents
    local tBody
-   
+
    builderLog "message", "Creating base release notes"
-   
+
    local tOverview
    put notesFileToHTML("overview.md", pVersion, tContents) into tOverview
    if tOverview is empty then
@@ -72,7 +72,7 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType
       put "This document describes all the changes that have been made for LiveCode " & pVersion & ", including bug fixes and new syntax." into tOverview
    end if
    put tBody & tOverview & CR into tBody
-   
+
    local tIssues
    put notesFileToHTML("issues.md", pVersion, tContents) into tIssues
    if tIssues is empty then
@@ -80,74 +80,74 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType
       put "There are no known issues with this release." into tIssues
    end if
    put tBody & tIssues & CR into tBody
-   
+
    put tBody & notesFileToHTML("platforms.md", pVersion, tContents) into tBody
-   
+
    put tBody & gPageBreak into tBody
-   
+
    put tBody & notesFileToHTML("setup.md", pVersion, tContents) into tBody
    put tBody & notesFileToHTML("proposed_changes.md", pVersion, tContents) into tBody
-   
+
    put tBody & gPageBreak into tBody
-   
+
    put tBody & newSection("Engine changes", 1, tContents) into tBody
-   
+
    builderLog "message", "Adding entries for bugfixes and features"
    local tUpdateFeatures
    local tUpdateBugs
    put tBody & notesFolderToHTML(false, notesPath(), pVersion, tTags, tContents, tUpdateFeatures, tUpdateBugs) into tBody
-   
+
    put tBody & newSection("IDE changes", 1, tContents) into tBody
-   
+
    builderLog "message", "Adding entries for ide bugfixes and features"
    put tBody & notesFolderToHTML(true, notesPath(), pVersion, tTags, tContents, tUpdateFeatures, tUpdateBugs) into tBody
    put tBody & gPageBreak into tBody
-   
+
    put tBody & newSection("LiveCode Builder changes", 1, tContents) into tBody
-   
+
    builderLog "message", "Adding entries for lcb bugfixes and features"
    put tBody & notesFolderLCBToHTML(pVersion, tTags, tContents) into tBody
    put tBody & gPageBreak into tBody
-   
+
    put tBody & newSection("LiveCode Extension changes", 1, tContents) into tBody
-   
+
    builderLog "message", "Adding entries for extension bugfixes and features"
    put tBody & notesFolderExtensionsToHTML(pVersion, tTags, tContents) into tBody
    put tBody & gPageBreak into tBody
-   
+
    builderLog "message", "Adding entries for dictionary and user guide changes"
    local tChangeList
    local tChangeStatusList
    getDictionaryChanges pVersion, tTags, tChangeStatusList, tChangeList
-   
+
    if tChangeStatusList is not empty then
       put tBody & newSection("Dictionary additions", 1, tContents) into tBody
       put tBody & "<ul>" & CR & tChangeStatusList & "</ul>" into tBody
    end if
-   
+
    local tUserGuideChanges
    put notesFileToHTML("user_guide_changes.md", pVersion, tContents) into tUserGuideChanges
    if tUserGuideChanges is not empty then
       put tBody & tUserGuideChanges into tBody
    end if
-   
+
    if tChangeList is not empty then
       put tBody & newSection("Dictionary changes", 1, tContents) into tBody
       put tBody & "<ul>" & CR & tChangeList & "</ul>" into tBody
    end if
-   
+
    put tBody & gPageBreak into tBody
-   
+
    builderLog "message", "Adding links to previous notes"
    put tBody & newSection("Previous Release Notes", 1, tContents) into tBody
    put tBody & getPastNotes(tTags) into tBody
-   
+
    local tNotesFileURL
    local tNotesFile
    builderEnsureFolder  builderRepoFolder() & slash & targetPath()
    put builderRepoFolder() & slash & targetPath() & slash & "LiveCodeNotes-" & replaceText(pVersion, "[-,\.]", "_") into tNotesFile
    put "file:" & tNotesFile & ".html" into tNotesFileURL
-   
+
    local tNotesPrefix
    local tNotesSuffix
    local tTitle
@@ -155,26 +155,26 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType
    put "<html><br>" & CR & releaseNotesCSS() & CR into tNotesPrefix
    put tNotesPrefix & "<h1 style = " & quote & "text-align : center" & quote & ">" & tTitle & "</h1>" & CR into tNotesPrefix
    put tNotesPrefix & "<h2>Table of contents</h2>" & CR into tNotesPrefix
-   put "</html>" into tNotesSuffix   
-   
+   put "</html>" into tNotesSuffix
+
    put tNotesPrefix & tContents & gPageBreak & tBody & tNotesSuffix into url tNotesFileURL
-   
+
    builderLog "message", "Converting release notes to PDF"
    HTMLToPDF tNotesFile, tTitle
-   
+
    builderLog "message", "Copying PDF release notes into IDE"
    put URL ("binfile:" & tNotesFile & ".pdf") into URL ("binfile:" & builderIDEFolder() & "/Release Notes.pdf")
-   
+
    builderLog "message", "Generating updater text"
    local tUpdateText
    filter tUpdateFeatures without ""
    filter tUpdateBugs without ""
    exportUpdateText pVersion, tUpdateFeatures, tUpdateBugs, pReleaseType
    put the result into tUpdateText
-   
-   releaseNotesBuilderFinalize 
+
+   releaseNotesBuilderFinalize
    builderLog "report", "Building release notes for version" && pVersion && "complete"
-   
+
    return tUpdateText
 end releaseNotesBuilderRun
 
@@ -228,7 +228,7 @@ function getPastNotes pTags
 end getPastNotes
 
 function newSection pSection, pLevel, @xContents
-   local tSection 
+   local tSection
    put "<h" & pLevel + 1 & " " & getAnchor(pSection) & ">" & pSection & "</h" & pLevel + 1 & ">" & CR into tSection
    appendLink pLevel, pSection, xContents
    return tSection
@@ -264,11 +264,11 @@ function makeBugTable pBugs, pBold
             put tNoID & "<td>" & item 2 of tLine & "</td></tr>" into tNoID
          end if
       else
-         put "http://quality.runrev.com/show_bug.cgi?id=" & item 1 of tLine into tBugUrl
+         put "http://quality.livecode.com/show_bug.cgi?id=" & item 1 of tLine into tBugUrl
          if pBold then
             put tBugs & CR & "<tr><td><strong>" & item 1 of tLine & "</strong></td>" & CR into tBugs
             put tBugs & "<td><a href=" & quote & tBugUrl & quote & "><strong>" & item 2 of tLine & "</strong></a></td></tr>" into tBugs
-         else 
+         else
             put tBugs & CR & "<tr><td>" & item 1 of tLine & "</td>" & CR into tBugs
             put tBugs & "<td><a href=" & quote & tBugUrl & quote & ">" & item 2 of tLine & "</a></td></tr>" into tBugs
          end if
@@ -292,7 +292,7 @@ end getTerms
 command getDictionaryChanges pVersion, pTags, @rStatusList, @rOtherList
    put empty into rStatusList
    put empty into rOtherList
-   
+
    local tFrom, tExtension
    if pVersion begins with "8.0" then
       put "f9fb4130b570fd7df3b8e1526bbfe6074e798098" into tFrom #initial commit of dictionary
@@ -313,13 +313,13 @@ command getDictionaryChanges pVersion, pTags, @rStatusList, @rOtherList
    end if
    local tModifiedEntries
    put shell("git diff --name-only " & tFrom & "...HEAD -- " & dictPath()) into tModifiedEntries
-   
+
    repeat for each line tLine in tModifiedEntries
       local tFile
       if there is not a file (item 1 of tLine) then next repeat
       if not (tLine ends with tExtension) then next repeat
       put url ("file:" & item 1 of tLine) into tFile
-      
+
       if tExtension is "xml" then
          local tVersion
          local tTree
@@ -343,7 +343,7 @@ command getDictionaryChanges pVersion, pTags, @rStatusList, @rOtherList
          put rStatusList & " has been added to the dictionary." & CR into rStatusList
       else
          put rOtherList & "<li>The entry for " & tEntry & " has been updated." & CR into rOtherList
-      end if     
+      end if
    end repeat
 end getDictionaryChanges
 
@@ -361,7 +361,7 @@ function relevantTags pVersion, pTags
       add 1 to tStart
    end repeat
    put line tStart to -1 of pTags into pTags
-   
+
    repeat for each line tLine in pTags
       if not (tLine begins with char 1 to 3 of pVersion) then
          if not (tEnd is 0) then
@@ -370,7 +370,7 @@ function relevantTags pVersion, pTags
       end if
       add 1 to tEnd
    end repeat
-   
+
    put line 1 to tEnd of pTags into pTags
    if (pVersion is not line -1 of pTags) then
       put pTags & CR & "HEAD" into pTags
@@ -383,7 +383,7 @@ function notesFolderToHTML pIsIDE, pFolder, pVersion, pTags, @xContents, @rUpdat
    local tNumTags
    put relevantTags(pVersion, pTags) into pTags
    put the number of lines in pTags into tNumTags
-   
+
    local tList
    local tFirstVersion
    local tCurVersion
@@ -416,13 +416,13 @@ function notesFolderToHTML pIsIDE, pFolder, pVersion, pTags, @xContents, @rUpdat
       else
          put false into tBoldBugs
       end if
-      
+
       if pIsIDE then
          put fetchIDENameOnlyDiff(line tIndex - 1 of pTags, line tIndex of pTags) into tDiff
       else
          put fetchNameOnlyDiff(line tIndex - 1 of pTags, line tIndex of pTags, pFolder) into tDiff
       end if
-      
+
       local tBugList
       local tFeatureList
       put tDiff into tBugList
@@ -430,10 +430,10 @@ function notesFolderToHTML pIsIDE, pFolder, pVersion, pTags, @xContents, @rUpdat
       filter tBugList with "*bugfix*.md"
       filter tFeatureList with "*feature*.md"
       set the itemdelimiter to "-"
-      sort lines in tBugList descending numeric by item 2 of each 
+      sort lines in tBugList descending numeric by item 2 of each
       sort lines in tFeatureList by item 2 of each
       put tFeatureList & CR & tBugList into tDiff
-      
+
       repeat for each line tLine in tDiff
          if tLine is among the lines of tList then
             local tFile
@@ -442,11 +442,11 @@ function notesFolderToHTML pIsIDE, pFolder, pVersion, pTags, @xContents, @rUpdat
             else
                put tLine into tFile
             end if
-            
+
             # Delete any empty trailing lines
             put word 1 to -1 of url ("file:" & tFile) into tFileText
             put the number of lines of tFileText into tNumLines
-            
+
             if tLine contains "bugfix" then
                local tOffset
                get matchText(tLine, "-(.*)\.", tId)
@@ -464,7 +464,7 @@ function notesFolderToHTML pIsIDE, pFolder, pVersion, pTags, @xContents, @rUpdat
                   if line 1 of tParsedFile contains "experimental" then
                      replace "experimental" with pVersion & " - experimental" in line 1 of tParsedFile
                      put tParsedFile & gExperimental into tParsedFile
-                  else 
+                  else
                      put " (" & tCurVersion & ")" after char -6 of line 1 of tParsedFile
                   end if
                   put tBody & tParsedFile  into tBody
@@ -497,18 +497,18 @@ function notesFolderLCBToHTML pVersion, pTags, @xContents
    local tNumTags
    put relevantTags(pVersion, pTags) into pTags
    put the number of lines in pTags into tNumTags
-   
+
    local tList
    local tFirstVersion, tCurVersion
    put line 1 of pTags into tFirstVersion
    put line -1 of pTags into tCurVersion
    put fetchNameOnlyDiff(tFirstVersion, tCurVersion, notesPathLCB()) into tList
-   
+
    local tDataA
    repeat for each line tFile in tList
       addLCBReleaseNoteData tFile, "", tDataA
    end repeat
-   
+
    local tConglomeratedMarkdown
    put noteDataLCBToMD(tDataA) into tConglomeratedMarkdown
    return markdownToHTML(tConglomeratedMarkdown, 2, 1, xContents, true)
@@ -519,14 +519,14 @@ function notesFolderExtensionsToHTML pVersion, pTags, @xContents
    local tNumTags
    put relevantTags(pVersion, pTags) into pTags
    put the number of lines in pTags into tNumTags
-   
+
    local tFirstVersion, tCurVersion
    put line 1 of pTags into tFirstVersion
    put line -1 of pTags into tCurVersion
-   
+
    local tDataA
    addExtensionReleaseNoteData tFirstVersion, tCurVersion, tDataA
-   
+
    local tConglomeratedMarkdown
    put noteDataLCBToMD(tDataA) into tConglomeratedMarkdown
    return markdownToHTML(tConglomeratedMarkdown, 2, 1, xContents, true)
@@ -537,7 +537,7 @@ function noteSubsectionDataToMD pLevel, pDataA
    repeat pLevel
       put "#" after tHashes
    end repeat
-   
+
    local tMD, tSubsections
    put the keys of pDataA into tSubsections
    sort tSubsections by pDataA[each]["order"]
@@ -584,7 +584,7 @@ end lineIsBugInfo
 on addDataToSection pLevel, @xData, @xSectionA
    repeat while xData is not empty
       get line 1 of xData
-      if word 1 of it is empty then 
+      if word 1 of it is empty then
          delete line 1 of xData
          next repeat
       end if
@@ -603,7 +603,7 @@ on addDataToSection pLevel, @xData, @xSectionA
          local tSection
          put word 2 to -1 of it into tSection
          delete line 1 of xData
-         
+
          local tSectionOrder
          if tSection is not among the keys of xSectionA["subsection"] then
             put the number of elements of xSectionA["subsection"] + 1 into tSectionOrder
@@ -618,11 +618,11 @@ function fetchExtensionName pFolder
    local tManifestContents, tId
    put url ("file:" & pFolder & slash & "manifest.xml") into tManifestContents
    put revXMLCreateTree(tManifestContents,true,true,false) into tId
-   
+
    if tId begins with "xmlerr" then
       return empty
    end if
-   
+
    local tTargetName
    put textDecode(revXMLNodeContents(tId, "/package/title"), "utf-8") into tTargetName
    if tTargetName begins with "xmlerr" then
@@ -635,13 +635,13 @@ on generateExtensionsDiff pFirstVersion, pCurrentVersion, pType, @xDataA
    local tDefaultFolder
    put the defaultFolder into tDefaultFolder
    set the defaultFolder to builderRepoFolder() & slash & "extensions" & slash & pType
-   
+
    local tExtensions
    put the folders into tExtensions
    filter tExtensions without ".."
-   
+
    set the defaultFolder to tDefaultFolder
-   
+
    local tExtensionFileList, tExtensionName
    repeat for each line tExtension in tExtensions
       put fetchNameOnlyDiff(pFirstVersion, pCurrentVersion, "extensions" & slash & pType & slash & tExtension & slash & "notes") into tExtensionFileList
@@ -662,7 +662,7 @@ on addExtensionReleaseNoteData pFirstVersion, pCurVersion, @xDataA
    repeat for each item tSection in kExtensionsSections
       generateExtensionsDiff pFirstVersion, pCurVersion, tSection, tReleaseNoteDataA
    end repeat
-   
+
    local tExtensionDataA
    repeat for each key tType in tReleaseNoteDataA
       repeat for each key tName in tReleaseNoteDataA[tType]
@@ -675,22 +675,22 @@ on addExtensionReleaseNoteData pFirstVersion, pCurVersion, @xDataA
             put tName into tSectionName
          end if
          repeat for each line tFile in tReleaseNoteDataA[tType][tName]
-            addLCBReleaseNoteData tFile, tSectionName, xDataA 
+            addLCBReleaseNoteData tFile, tSectionName, xDataA
          end repeat
       end repeat
    end repeat
-   
+
 end addExtensionReleaseNoteData
 
 on addLCBReleaseNoteData pFile, pSectionName, @xDataA
    local tNoteData
    put url ("file:" & pFile) into tNoteData
-   
+
    local tCount, tSection, tBugList
-   
+
    repeat while tNoteData is not empty
       get line 1 of tNoteData
-      if word 1 of it is empty then 
+      if word 1 of it is empty then
          delete line 1 of tNoteData
          next repeat
       end if
@@ -728,7 +728,7 @@ on addLCBReleaseNoteData pFile, pSectionName, @xDataA
          delete line 1 of tNoteData
       end if
    end repeat
-   
+
    if pSectionName is not empty then
       put tBugList into xDataA[pSectionName]["bugs"]
    end if
@@ -775,14 +775,14 @@ command exportUpdateText pVersion, pFeatures, pBugs, pReleaseType
       put "<li>" & line i of pBugs & "</li>" & CR after tHtmlText
    end repeat
    put "</ul>" & CR & "</li>" & CR & "</ul>" & CR after tHtmlText
-   
+
    put "<p><strong>AUTO UPDATER</strong></p>" & CR after tHtmlText
    put "<p>The auto updater pops up whenever a new release of LiveCode is available. There are 4 types of release: <br>" & CR after tHtmlText
    put "<strong>Stable:</strong> The release has been through a full testing cycle and is deemed stable.<br>" & CR after tHtmlText
    put "<strong>Maintenance:</strong> The release is the previous stable release with fixes ready for testing.<br>" & CR after tHtmlText
    put "<strong>Beta:</strong> The release contains new features which are complete and ready for testing.<br>" & CR after tHtmlText
    put "<strong>Development:</strong> The release contains untested new features.<br>" & CR after tHtmlText
-   
+
    return tHtmlText
 end exportUpdateText
 
@@ -793,7 +793,7 @@ command sortTags @rTags
    local tVersion, tPrevVersion
    repeat for each line tLine in rTags
       put item 1 of tLine into tVersion
-      if tVersion is not tPrevVersion then 
+      if tVersion is not tPrevVersion then
          sort tDPs ascending numeric by item 3 of each
          sort tRCs ascending numeric by item 3 of each
          put tDPs & tRCs & tGM after tSortedTags
@@ -820,11 +820,11 @@ end sortTags
 function fetchIDENameOnlyDiff pFromTag, pToTag
    local tFirstCommit, tLastCommit
    fetchIDECommits pFromTag, pToTag, tFirstCommit, tLastCommit
-   
+
    local tDefaultFolder
    put the defaultFolder into tDefaultFolder
    set the defaultFolder to tDefaultFolder & slash & "ide"
-   
+
    local tDiff
    put shell("git diff --name-only" && tFirstCommit & "..." & tLastCommit && "--" && "notes") into tDiff
    set the defaultFolder to tDefaultFolder
@@ -838,7 +838,7 @@ end fetchIDEDiff
 on fetchIDECommits pFirstVersion, pLastVersion, @rFirst, @rLast
    local tDiff
    put fetchIDEDiff(pFirstVersion, pLastVersion) into tDiff
-   
+
    local tString
    put "Subproject commit (.*)" into tString
 

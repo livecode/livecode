@@ -88,7 +88,7 @@ There are several ways to get help with installing and using LiveCode:
 
 * Visit the [LiveCode open source forums](http://forums.livecode.com/viewforum.php?f=65).  In particular, you may wish to post your question in the [Engine Contributors](http://forums.livecode.com/viewforum.php?f=66) forum.
 
-* If you have discovered a bug, have a feature request, or have written a patch to improve LiveCode, please create an ticket in the [LiveCode issue tracking system](http://quality.runrev.com/).
+* If you have discovered a bug, have a feature request, or have written a patch to improve LiveCode, please create an ticket in the [LiveCode issue tracking system](http://quality.livecode.com/).
 
 ## Contributing to LiveCode
 
