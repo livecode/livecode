@@ -467,8 +467,15 @@ MCValueRef MCEngineDoSendToObjectWithArguments(bool p_is_function, MCStringRef p
         s_last_message_was_handled = true;
     else
         s_last_message_was_handled = false;
-    
-    t_result = MCValueRetain(MCresult -> getvalueref());
+
+	if (MCresult->isclear())
+	{
+		t_result = MCValueRetain(kMCNull);
+	}
+	else
+	{
+		t_result = MCValueRetain(MCresult -> getvalueref());
+	}
     
 cleanup:
     MCEngineFreeScriptParameters(t_params);
