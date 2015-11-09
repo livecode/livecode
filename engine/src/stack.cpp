@@ -98,7 +98,7 @@ MCPropertyInfo MCStack::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_LIVE_RESIZING, Bool, MCStack, LiveResizing)
 	DEFINE_RW_OBJ_PROPERTY(P_SYSTEM_WINDOW, Bool, MCStack, SystemWindow)
 	DEFINE_RW_OBJ_PROPERTY(P_METAL, Bool, MCStack, Metal)
-	DEFINE_RW_OBJ_PROPERTY(P_SHADOW, Bool, MCStack, Shadow)
+	DEFINE_RW_OBJ_PROPERTY(P_SHADOW, Bool, MCStack, WindowShadow)
 	DEFINE_RW_OBJ_PROPERTY(P_RESIZABLE, Bool, MCStack, Resizable)
 
     // AL-2014-05-26: [[ Bug 12510 ]] Stack decoration synonyms not implemented in 7.0
@@ -125,7 +125,7 @@ MCPropertyInfo MCStack::kProperties[] =
 	DEFINE_RO_OBJ_PROPERTY(P_BACKGROUND_IDS, String, MCStack, BackgroundIds)
 	DEFINE_RO_OBJ_PROPERTY(P_SHARED_GROUP_NAMES, String, MCStack, SharedGroupNames)
 	DEFINE_RO_OBJ_PROPERTY(P_SHARED_GROUP_IDS, String, MCStack, SharedGroupIds)
-	DEFINE_RO_OBJ_LIST_PROPERTY(P_CARD_IDS, LinesOfUInt, MCStack, CardIds)
+	DEFINE_RO_OBJ_LIST_PROPERTY(P_CARD_IDS, LinesOfLooseUInt, MCStack, CardIds)
 	DEFINE_RO_OBJ_LIST_PROPERTY(P_CARD_NAMES, LinesOfString, MCStack, CardNames)
 
 	DEFINE_RW_OBJ_PROPERTY(P_EDIT_BACKGROUND, Bool, MCStack, EditBackground)

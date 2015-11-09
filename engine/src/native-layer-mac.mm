@@ -60,10 +60,10 @@
 
 
 MCNativeLayerMac::MCNativeLayerMac(MCWidgetRef p_widget, NSView *p_view) :
-  m_widget(p_widget),
   m_view(p_view),
   m_cached(nil)
 {
+	m_widget = p_widget;
 	[m_view retain];
 }
 
@@ -80,39 +80,6 @@ MCNativeLayerMac::~MCNativeLayerMac()
     }
 }
 
-void MCNativeLayerMac::OnToolChanged(Tool p_new_tool)
-{
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-	
-	OnVisibilityChanged(ShouldShowWidget(t_widget));
-	t_widget->Redraw();
-}
-
-void MCNativeLayerMac::OnOpen()
-{
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
-    // Unhide the widget, if required
-    if (isAttached() && t_widget->getopened() == 1)
-        doAttach();
-}
-
-void MCNativeLayerMac::OnClose()
-{
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
-    if (isAttached() && t_widget->getopened() == 1)
-        doDetach();
-}
-
-#import <AppKit/NSButton.h>
-
-void MCNativeLayerMac::OnAttach()
-{
-    m_attached = true;
-    doAttach();
-}
-
 void MCNativeLayerMac::doAttach()
 {
     MCWidget* t_widget = MCWidgetGetHost(m_widget);
@@ -124,13 +91,8 @@ void MCNativeLayerMac::doAttach()
     // Restore the visibility state of the widget (in case it changed due to a
     // tool change while on another card - we don't get a message then)
 	
-	OnVisibilityChanged(ShouldShowWidget(t_widget));
-}
-
-void MCNativeLayerMac::OnDetach()
-{
-    m_attached = false;
-    doDetach();
+	doSetGeometry(t_widget->getrect());
+	doSetVisible(ShouldShowWidget(t_widget));
 }
 
 void MCNativeLayerMac::doDetach()
@@ -139,7 +101,7 @@ void MCNativeLayerMac::doDetach()
     [m_view removeFromSuperview];
 }
 
-bool MCNativeLayerMac::OnPaint(MCGContextRef p_context)
+bool MCNativeLayerMac::doPaint(MCGContextRef p_context)
 {
     // Get an image rep suitable for storing the cached bitmap
     if (m_cached == nil)
@@ -172,31 +134,23 @@ bool MCNativeLayerMac::OnPaint(MCGContextRef p_context)
     return true;
 }
 
-void MCNativeLayerMac::OnGeometryChanged(const MCRectangle& p_old_rect)
+void MCNativeLayerMac::doSetGeometry(const MCRectangle &p_rect)
 {
     MCWidget* t_widget = MCWidgetGetHost(m_widget);
     
     NSRect t_nsrect;
-    MCRectangle t_rect, t_cardrect;
-    t_rect = t_widget->getrect();
+    MCRectangle t_cardrect;
     t_cardrect = t_widget->getcard()->getrect();
-    t_nsrect = NSMakeRect(t_rect.x, t_cardrect.height-t_rect.y-t_rect.height, t_rect.width, t_rect.height);
+    t_nsrect = NSMakeRect(p_rect.x, t_cardrect.height-p_rect.y-p_rect.height, p_rect.width, p_rect.height);
     [m_view setFrame:t_nsrect];
     [m_view setNeedsDisplay:YES];
     [m_cached release];
     m_cached = nil;
 }
 
-void MCNativeLayerMac::OnVisibilityChanged(bool p_visible)
+void MCNativeLayerMac::doSetVisible(bool p_visible)
 {
-	if (p_visible)
-		OnGeometryChanged(MCRectangleMake(0,0,0,0));
     [m_view setHidden:!p_visible];
-}
-
-void MCNativeLayerMac::OnLayerChanged()
-{
-    doRelayer();
 }
 
 void MCNativeLayerMac::doRelayer()

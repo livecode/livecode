@@ -380,7 +380,7 @@ public:
 	
 	const MCDisplay *getnearestdisplay(const MCRectangle& p_rectangle);
 	Boolean getwindowgeometry(Window w, MCRectangle &drect);
-	void boundrect(MCRectangle &rect, Boolean title, Window_mode m);
+	void boundrect(MCRectangle &rect, Boolean title, Window_mode m, Boolean resizable);
 	void querymouse(int2 &x, int2 &y);
 	void setmouse(int2 x, int2 y);
 
@@ -395,7 +395,7 @@ public:
 	virtual uint16_t platform_getheight(void);
 	virtual bool platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
 	virtual bool platform_getwindowgeometry(Window w, MCRectangle &drect);
-	virtual void platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
+	virtual void platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m, Boolean resizable);
 	virtual void platform_querymouse(int16_t &r_x, int16_t &r_y);
 	virtual void platform_setmouse(int16_t p_x, int16_t p_y);
 

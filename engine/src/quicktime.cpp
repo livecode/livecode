@@ -50,7 +50,7 @@
 extern OSErr MCS_path2FSSpec(MCStringRef fname, FSSpec *fspec);
 
 #elif defined(_MAC_DESKTOP)
-#include "osxprefix.h"
+#include <QuickTime/QuickTime.h>
 
 #ifdef __LITTLE_ENDIAN__
 #define PIXEL_FORMAT_32 k32BGRAPixelFormat
@@ -58,6 +58,7 @@ extern OSErr MCS_path2FSSpec(MCStringRef fname, FSSpec *fspec);
 #define PIXEL_FORMAT_32 k32ARGBPixelFormat
 #endif
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED > MAC_OS_X_VERSION_10_6
 inline void SetRect(Rect *t_rect, int l, int t, int r, int b)
 {
     t_rect -> left = l;
@@ -79,6 +80,7 @@ void *GetPixBaseAddr(PixMapHandle pix);
 void LockPixels(PixMapHandle pix);
 void UnlockPixels(PixMapHandle pix);
 }
+#endif
 
 #endif
 
@@ -1152,6 +1154,11 @@ void MCQTEffectEnd(void)
 }
 
 #else    // if not FEATURE_QUICKTIME_EFFECTS
+
+bool MCQTInit()
+{
+    return false;
+}
 
 void MCQTEffectsList(MCStringRef &r_list)
 {

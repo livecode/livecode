@@ -72,7 +72,8 @@ private function linkingIsValid pLinkingOutput
    repeat for each line tLine in pLinkingOutput
       // Discard Xcode 7 new warnings like:
       // ld: warning: object file (<path_to_exe) was built for newer iOS version (9.0) than being linked (7.0)
-      if not matchtext(tLine, "ld: warning: object file \(.*\) was built for newer iOS version \(.*\) than being linked \(.*\)") then
+      // On the first use of Xcode 7.0 for deployment, 'ld: warning: ' is duplicated...
+      if not matchtext(tLine, "(ld: warning: )+object file \(.*\) was built for newer iOS version \(.*\) than being linked \(.*\)") then
          return false
       end if
    end repeat
@@ -1208,6 +1209,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    ----------
    
    local tDisplayName, tMinimumOS, tDeviceFamily, tRequiredCapabilities, tPersistentWifi, tExitsOnSuspend
+   local tDisableATS
    local tFileSharing, tPrerenderedIcon, tBackGroundAudio
    put pSettings["ios,display name"] into tDisplayName
    put pSettings["ios,minimum version"] into tMinimumOS
@@ -1246,6 +1248,12 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    else -- false or empty
       put "true" into tExitsOnSuspend
    end if
+   
+   // SN-2015-02-11: [[ Bug 16299 ]] Add ${DISABLE_ATS} in the Plist template
+   if pSettings["ios,disable ATS"] then
+      put URL("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "DisableATS.plist")) into tDisableATS
+   end if
+   
    
    ----------
    -- PM-2015-02-17: [[ Bug 14482 ]] Added a new "solid" statusbarstyle
@@ -1327,6 +1335,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    -- SN-2015-02-02: [[ Bug 14422 ]] We now have minimum version depending on the arch.
    replace "${MINIMUM_OS_SUPPORT}" with "<string>" & tMinimumOSByArch["i386"] & "</string>" in pPlist
    replace "${CUSTOM_FONTS}" with tCustomFonts in pPlist
+   replace "${DISABLE_ATS}" with tDisableATS in pPlist
    
    get empty
    repeat for each item tItem in tDeviceFamily
@@ -1647,6 +1656,9 @@ function mapFilePath pPath
          break
       case "BetaReportEntitlement.xcent"
          put tRepo & slash & "engine/rsrc/template-beta-report-entitlement.xcent" into tPath
+         break
+      case "DisableATS.plist"
+         put tRepo & slash & "engine/rsrc/mobile-disable-ats-template.plist" into tPath
          break
       case "RemoteNotificationSettings.plist"
          put tRepo & slash & "engine/rsrc/mobile-remote-notification-template.plist" into tPath

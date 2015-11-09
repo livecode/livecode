@@ -294,6 +294,8 @@ CQTVideoGrabber::CQTVideoGrabber(HWND whichwindow)
 		return nil;
 	
 	m_video_grabber = p_grabber;
+    
+    return self;
 }
 
 - (void)windowDidResize:(NSNotification *)notification

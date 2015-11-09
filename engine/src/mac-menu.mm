@@ -40,6 +40,10 @@ static bool s_quit_selected = false;
 // SN-2014-11-10: [[ Bug 13836 ]] Keeps the track about the open items in the menu bar.
 static uint32_t s_open_menubar_items = 0;
 
+// SN-2015-11-02: [[ Bug 16218 ]] We can't trust popUpMenuPositioningItem on
+//  returning whether an item has been selected.
+static bool s_menu_item_selected = false;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -203,7 +207,10 @@ enum MCShadowedItemTags
         t_quit_accelerator_present = [(com_runrev_livecode_MCMenuDelegate *)[[t_item menu] delegate] platformMenuRef] -> quit_item != nil;
     
 	if (s_menu_select_lock == 0 || t_quit_accelerator_present)
+    {
 		MCPlatformCallbackSendMenuSelect(m_menu, [[t_item menu] indexOfItem: t_item]);
+        s_menu_item_selected = true;
+    }
     
     // SN-2014-11-06: [[ Bug 13836 ]] s_menu_select_occured was not used.
 }
@@ -863,12 +870,17 @@ bool MCPlatformPopUpMenu(MCPlatformMenuRef p_menu, MCPlatformWindowRef p_window,
     
     // MW-2014-07-29: [[ Bug 12990 ]] If item is UINDEX_MAX then don't specify an item, thus preventing
     //   one from being highlighted.
-	bool t_result;
-	t_result = [t_menu popUpMenuPositioningItem: p_item == UINDEX_MAX ? nil : [t_menu itemAtIndex: p_item] atLocation: t_location inView: t_view];
+    
+    // SN-2015-11-02: [[ Bug 16218 ]] popUpMenuPositioningItem always returns
+    // true if the menu is open by keeping the mouse down, even if the mouse is
+    // released outside of the menu list.
+    // We will set s_menu_item_selected in menuItemSelected if selection occurs.
+    s_menu_item_selected = false;
+	[t_menu popUpMenuPositioningItem: p_item == UINDEX_MAX ? nil : [t_menu itemAtIndex: p_item] atLocation: t_location inView: t_view];
 	
 	MCMacPlatformSyncMouseAfterTracking();
 	
-	return t_result;
+	return s_menu_item_selected;
 }
 
 //////////
@@ -1000,12 +1012,12 @@ static void MCPlatformStopUsingMenuAsMenubar(MCPlatformMenuRef p_menu)
 
 void MCPlatformShowMenubar(void)
 {
-	ShowMenuBar();
+    [NSMenu setMenuBarVisible:YES];
 }
 
 void MCPlatformHideMenubar(void)
 {
-	HideMenuBar();
+    [NSMenu setMenuBarVisible:NO];
 }
 
 void MCPlatformSetMenubar(MCPlatformMenuRef p_menu)

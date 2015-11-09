@@ -174,63 +174,63 @@ public handler browserListToLCBList(in pBrowserList as MCBrowserListRef, out rLi
 		return false
 	end if
 	
-	variable i
-	repeat with i from 0 up to tCount - 1
+	variable tIndex
+	repeat with tIndex from 0 up to tCount - 1
 		variable tType as MCBrowserValueType
-		if not MCBrowserListGetType(pBrowserList, i, tType) then
-			log "couldn't get type of %@" with [i]
+		if not MCBrowserListGetType(pBrowserList, tIndex, tType) then
+			log "couldn't get type of %@" with [tIndex]
 			return false
 		end if
 		
 		if tType is kMCBrowserValueTypeBoolean then
 			variable tBoolean as CBool
-			if not MCBrowserListGetBoolean(pBrowserList, i, tBoolean) then
-				log "couldn't get boolean %@" with [i]
+			if not MCBrowserListGetBoolean(pBrowserList, tIndex, tBoolean) then
+				log "couldn't get boolean %@" with [tIndex]
 				return false
 			end if
 			push tBoolean onto tList
 		else if tType is kMCBrowserValueTypeInteger then
 			variable tInteger as CInt
-			if not MCBrowserListGetInteger(pBrowserList, i, tInteger) then
-				log "couldn't get integer %@" with [i]
+			if not MCBrowserListGetInteger(pBrowserList, tIndex, tInteger) then
+				log "couldn't get integer %@" with [tIndex]
 				return false
 			end if
 			push tInteger onto tList
 		else if tType is kMCBrowserValueTypeDouble then
 			variable tDouble as CDouble
-			if not MCBrowserListGetDouble(pBrowserList, i, tDouble) then
-				log "couldn't get double %@" with [i]
+			if not MCBrowserListGetDouble(pBrowserList, tIndex, tDouble) then
+				log "couldn't get double %@" with [tIndex]
 				return false
 			end if
 			push tDouble onto tList
 		else if tType is kMCBrowserValueTypeUTF8String then
 			variable tUTF8String as ZStringNative
-			if not MCBrowserListGetUTF8String(pBrowserList, i, tUTF8String) then
-				log "couldn't get string %@" with [i]
+			if not MCBrowserListGetUTF8String(pBrowserList, tIndex, tUTF8String) then
+				log "couldn't get string %@" with [tIndex]
 				return false
 			end if
 			push tUTF8String onto tList
 		else if tType is kMCBrowserValueTypeList then
 			variable tBrowserList as MCBrowserListRef
-			if not MCBrowserListGetList(pBrowserList, i, tBrowserList) then
-				log "couldn't get list %@" with [i]
+			if not MCBrowserListGetList(pBrowserList, tIndex, tBrowserList) then
+				log "couldn't get list %@" with [tIndex]
 				return false
 			end if
 			variable tConvertedList as List
 			if not browserListToLCBList(tBrowserList, tConvertedList) then
-				log "couldn't convert list %@" with [i]
+				log "couldn't convert list %@" with [tIndex]
 				return false
 			end if
 			push tConvertedList onto tList
 		else if tType is kMCBrowserValueTypeDictionary then
 			variable tBrowserDict as MCBrowserDictionaryRef
-			if not MCBrowserListGetDictionary(pBrowserList, i, tBrowserDict) then
-				log "couldn't get dictionary %@" with [i]
+			if not MCBrowserListGetDictionary(pBrowserList, tIndex, tBrowserDict) then
+				log "couldn't get dictionary %@" with [tIndex]
 				return false
 			end if
 			variable tConvertedDict as Array
 			if not browserDictionaryToLCBArray(tBrowserDict, tConvertedDict) then 
-				log "couldn't convert dictionary %@" with [i]
+				log "couldn't convert dictionary %@" with [tIndex]
 				return false
 			end if
 			push tConvertedDict onto tList
@@ -255,69 +255,69 @@ public handler browserDictionaryToLCBArray(in pBrowserDict as MCBrowserDictionar
 		return false
 	end if
 	
-	variable i
-	repeat with i from 0 up to tCount - 1
+	variable tIndex
+	repeat with tIndex from 0 up to tCount - 1
 		variable tKey as String
-		if not MCBrowserDictionaryGetKey(pBrowserDict, i, tKey) then
-			log "couldn't get key of %@" with [i]
+		if not MCBrowserDictionaryGetKey(pBrowserDict, tIndex, tKey) then
+			log "couldn't get key of %@" with [tIndex]
 			return false
 		end if
 		
 		variable tType as MCBrowserValueType
 		if not MCBrowserDictionaryGetType(pBrowserDict, tKey, tType) then
-			log "couldn't get type of %@" with [i]
+			log "couldn't get type of %@" with [tIndex]
 			return false
 		end if
 		
 		if tType is kMCBrowserValueTypeBoolean then
 			variable tBoolean as CBool
 			if not MCBrowserDictionaryGetBoolean(pBrowserDict, tKey, tBoolean) then
-				log "couldn't get boolean %@" with [i]
+				log "couldn't get boolean %@" with [tIndex]
 				return false
 			end if
 			put tBoolean into tArray[tKey]
 		else if tType is kMCBrowserValueTypeInteger then
 			variable tInteger as CInt
 			if not MCBrowserDictionaryGetInteger(pBrowserDict, tKey, tInteger) then
-				log "couldn't get integer %@" with [i]
+				log "couldn't get integer %@" with [tIndex]
 				return false
 			end if
 			put tInteger into tArray[tKey]
 		else if tType is kMCBrowserValueTypeDouble then
 			variable tDouble as CDouble
 			if not MCBrowserDictionaryGetDouble(pBrowserDict, tKey, tDouble) then
-				log "couldn't get double %@" with [i]
+				log "couldn't get double %@" with [tIndex]
 				return false
 			end if
 			put tDouble into tArray[tKey]
 		else if tType is kMCBrowserValueTypeUTF8String then
 			variable tUTF8String as ZStringNative
 			if not MCBrowserDictionaryGetUTF8String(pBrowserDict, tKey, tUTF8String) then
-				log "couldn't get string %@" with [i]
+				log "couldn't get string %@" with [tIndex]
 				return false
 			end if
 			put tUTF8String into tArray[tKey]
 		else if tType is kMCBrowserValueTypeList then
 			variable tBrowserList as MCBrowserListRef
 			if not MCBrowserDictionaryGetList(pBrowserDict, tKey, tBrowserList) then
-				log "couldn't get list %@" with [i]
+				log "couldn't get list %@" with [tIndex]
 				return false
 			end if
 			variable tConvertedList as List
 			if not browserListToLCBList(tBrowserList, tConvertedList) then
-				log "couldn't convert list %@" with [i]
+				log "couldn't convert list %@" with [tIndex]
 				return false
 			end if
 			put tConvertedList into tArray[tKey]
 		else if tType is kMCBrowserValueTypeDictionary then
 			variable tBrowserDict as MCBrowserDictionaryRef
 			if not MCBrowserDictionaryGetDictionary(pBrowserDict, tKey, tBrowserDict) then
-				log "couldn't get dictionary %@" with [i]
+				log "couldn't get dictionary %@" with [tIndex]
 				return false
 			end if
 			variable tConvertedDict as Array
 			if not browserDictionaryToLCBArray(tBrowserDict, tConvertedDict) then 
-				log "couldn't convert dictionary %@" with [i]
+				log "couldn't convert dictionary %@" with [tIndex]
 				return false
 			end if
 			put tConvertedDict into tArray[tKey]
