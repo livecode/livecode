@@ -938,7 +938,7 @@ end revDocsCollectGlossarySynonyms
 private function __elementRegex
    # Regex used to determine if this line starts a new element
    # Matched substrings are element name, (optional) param type, same line element content
-   return "^ *([tT]he [rR]esult|\w*) *(?:\(( *(?:optional |in |out |inout )?<?\w*>?) *\))? *: *(.*)"
+   return "^ *([tT]he [rR]esult|\w+) *(?:\(( *(?:optional |in |out |inout )?<?\w*>?) *\))? *: *(.*)"
 end __elementRegex
 
 /*
