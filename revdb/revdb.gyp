@@ -467,6 +467,24 @@
 					{
 						'product_name': 'DbSqlite',
 						'product_extension': '',
+						'cflags!':
+						[
+							# Error in ../../thirdparty/libsqlite/include/qry_dat.h
+							'-Werror=return-type',
+						],
+					},
+				],
+				[
+					'OS == "mac" or OS == "ios"',
+					{
+						'xcode_settings':
+						{
+							'WARNING_CFLAGS!':
+							[
+								# Error in ../../thirdparty/libsqlite/include/qry_dat.h
+								'-Werror=return-type',
+							],
+						},
 					},
 				],
 			],
@@ -535,6 +553,19 @@
 						[
 							'-fexceptions',
 						],
+					},
+				],
+				[
+					'OS == "mac"',
+					{
+						'xcode_settings':
+						{
+							'WARNING_CFLAGS!':
+							[
+								# Error in ../../thirdparty/libsqlite/include/qry_dat.h
+								'-Werror=return-type',
+							],
+						},
 					},
 				],
 			],

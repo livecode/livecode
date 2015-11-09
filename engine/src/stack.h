@@ -743,6 +743,7 @@ public:
 	void getstackfile(MCStringRef p_name, MCStringRef &r_name);
 	void setfilename(MCStringRef f);
 
+	virtual IO_stat load(IO_handle stream, uint32_t version); /* Don't use this */
 	virtual IO_stat load(IO_handle stream, uint32_t version, uint1 type);
 	IO_stat load_stack(IO_handle stream, uint32_t version);
 	IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);
@@ -1113,8 +1114,8 @@ public:
 	void SetSystemWindow(MCExecContext& ctxt, bool setting);
 	void GetMetal(MCExecContext& ctxt, bool& r_setting);
 	void SetMetal(MCExecContext& ctxt, bool setting);
-	void GetShadow(MCExecContext& ctxt, bool& r_setting);
-	void SetShadow(MCExecContext& ctxt, bool setting);
+	void GetWindowShadow(MCExecContext& ctxt, bool& r_setting);
+	void SetWindowShadow(MCExecContext& ctxt, bool setting);
 	void GetResizable(MCExecContext& ctxt, bool& r_setting);
 	void SetResizable(MCExecContext& ctxt, bool setting);
 	void GetMinWidth(MCExecContext& ctxt, uinteger_t& r_width);

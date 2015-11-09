@@ -679,6 +679,7 @@ void CQTXVideoGrabber::SetFrameSize(int fwidth,int fheight)
 
 Bool CQTXVideoGrabber::Draw(int twidth,int theight, GWorldPtr gworldMem)
 {
+    return False;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -2,6 +2,7 @@
 ################################################################################
 
 local sJavaRoot
+conatant kArchs = "armeabi"
 
 ################################################################################
 
@@ -220,7 +221,9 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       
       put tBuildFolder & slash & "classes_app" into tClassesBuildFolder
       put tBuildFolder & slash & "libs" into tLibsBuildFolder
-      put tLibsBuildFolder & slash & "armeabi" into tArmLibsBuildFolder
+      
+      // MERG: TODO when support for other Archs is added this needs work
+      put tLibsBuildFolder & slash & kArchs into tArmLibsBuildFolder
       put tBuildFolder & slash & "res" into tResBuildFolder
       put tResBuildFolder & slash & "drawable" into tDrawableResBuildFolder
       put tResBuildFolder & slash & "layout" into tLayoutResBuildFolder
@@ -273,7 +276,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
          -- MERG-2013-09-05: [[ Bug 11152 ]] Only list the external if it was successfully
          --   extracted.
          -- Now attempt to process the external
-         if addExternalFromFile(tFilePath, tClassesBuildFolder, tArmLibsBuildFolder) then
+         if addExternalFromFile(tFilePath, tClassesBuildFolder, tLibsBuildFolder) then
             -- Add the external to the list to load
             put char 1 to -7 of tFileName & return after tExternals
          end if
@@ -1015,30 +1018,67 @@ private function addExternalFromFile pExternal, pClassesFolder, pLibsFolder
    end if
    
    -- Get the name of the external.
+   local tExternalName
    set the itemDelimiter to slash
    get the last item of pExternal
    set the itemDelimiter to "."
-   get the first item of it
-   set the itemDelimiter to comma
+   put the first item of it into tExternalName
+   set the itemDelimiter to slash
    
    -- Compute the class / lib names.
-   local tClassesFile, tLibFile
-   put pClassesFolder & slash & "lib" & it & ".jar" into tClassesFile
-   put pLibsFolder & slash & "lib" & it & ".so" into tLibFile
+   local tClassesFile, tLibFileA
+   put pClassesFolder & slash & "lib" & tExternalName & ".jar" into tClassesFile
    
    -- Otherwise open the archive and check for appropriate android components
    revZipOpenArchive pExternal, "read"
    if the result is empty then
-      revZipExtractItemToFile pExternal, "Android/Classes", tClassesFile
-      revZipExtractItemToFile pExternal, "Android/External-armeabi", tLibFile
+      
+      -- MERG-2015-10-14: [[ ThirdpartyLibs ]] Add support for thirdparty librares
+      local tZipItems
+      put revZipEnumerateItems(pExternal) into tZipItems
+      filter tZipItems with "Android/*"
+      
+      local tZipItemsFiltered
+      filter tZipItems with regex pattern ".*(\.jar|Classes)$" into tZipItemsFiltered
+      repeat for each line tZipItem in tZipItemsFiltered
+         if tZipItem ends with ".jar" then
+            revZipExtractItemToFile pExternal, tZipItem, \
+                  pClassesFolder & slash & the last item of tZipItem 
+         else 
+            # will be Classes file
+            revZipExtractItemToFile pExternal, tZipItem, tClassesFile
+         end if
+      end repeat
+      
+      repeat for each word tArch in kArchs
+         filter tZipItems with "*" & tArch & "*"
+         put pLibsFolder & slash & tArch & slash & "lib" & tExternalName & ".so" into tLibFileA[tArch]
+         
+         repeat for each line tZipItem in tZipItemsFiltered
+            if tZipItem ends with ".so" then
+               revZipExtractItemToFile pExternal, tZipItem, \
+                     pLibsFolder & slash & tArch & slash & the last item of tZipItem 
+            else 
+               # will be External-<Arch> file
+               revZipExtractItemToFile pExternal, tZipItem, tLibFileA[tArch]
+            end if
+         end repeat
+      end repeat
+      
       revZipCloseArchive pExternal
    end if
    
-   if there is a file tClassesFile and there is no file tLibFile then
-      throw "android external contains classes but no library"
+   if there is a file tClassesFile then
+      repeat for each word tArch in kArchs
+         if there is no file tLibFileA[tArch] then
+            throw "android external contains classes but no library for " & tArch
+         end if
+      end repeat
+      
+      return true
    end if
    
-   return there is a file tLibFile
+   return false
 end addExternalFromFile
 
 ################################################################################

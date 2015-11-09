@@ -21,6 +21,7 @@
 	<array>
 		${BUNDLE_ICONS}
 	</array>
+	${DISABLE_ATS}
 	<key>CFBundleDisplayName</key>
 		${BUNDLE_DISPLAY_NAME_SUPPORT}
 	<key>MinimumOSVersion</key>

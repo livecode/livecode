@@ -49,11 +49,10 @@
 
 
 MCNativeLayerWin32::MCNativeLayerWin32(MCWidgetRef p_widget, HWND p_view) :
-  m_widget(p_widget),
   m_hwnd(p_view),
   m_cached(NULL)
 {
-
+	m_widget = p_widget;
 }
 
 MCNativeLayerWin32::~MCNativeLayerWin32()
@@ -62,46 +61,6 @@ MCNativeLayerWin32::~MCNativeLayerWin32()
 		DestroyWindow(m_hwnd);
 	if (m_cached != NULL)
 		DeleteObject(m_cached);
-}
-
-void MCNativeLayerWin32::OnToolChanged(Tool p_new_tool)
-{
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
-    if (p_new_tool == T_BROWSE || p_new_tool == T_HELP)
-    {
-		OnVisibilityChanged(ShouldShowWidget(t_widget));
-        t_widget->Redraw();
-    }
-    else
-    {
-        // In edit mode
-        ShowWindow(m_hwnd, SW_HIDE);
-        t_widget->Redraw();
-    }
-}
-
-void MCNativeLayerWin32::OnOpen()
-{
-	MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
-    // Unhide the widget, if required
-	if (isAttached() && t_widget->getopened() == 1)
-        doAttach();
-}
-
-void MCNativeLayerWin32::OnClose()
-{
-	MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
-    if (isAttached() && t_widget->getopened() == 0)
-        doDetach();
-}
-
-void MCNativeLayerWin32::OnAttach()
-{
-    m_attached = true;
-    doAttach();
 }
 
 void MCNativeLayerWin32::doAttach()
@@ -113,14 +72,8 @@ void MCNativeLayerWin32::doAttach()
 
 	// Restore the visibility state of the widget (in case it changed due to a
 	// tool change while on another card - we don't get a message then)
-	OnGeometryChanged(MCRectangleMake(0,0,0,0));
-	OnVisibilityChanged(ShouldShowWidget(t_widget));
-}
-
-void MCNativeLayerWin32::OnDetach()
-{
-    m_attached = false;
-    doDetach();
+	doSetGeometry(t_widget->getrect());
+	doSetVisible(ShouldShowWidget(t_widget));
 }
 
 void MCNativeLayerWin32::doDetach()
@@ -130,7 +83,7 @@ void MCNativeLayerWin32::doDetach()
 	SetParent(m_hwnd, NULL);
 }
 
-bool MCNativeLayerWin32::OnPaint(MCGContextRef p_context)
+bool MCNativeLayerWin32::doPaint(MCGContextRef p_context)
 {
 	MCWidget *t_widget;
 	t_widget = MCWidgetGetHost(m_widget);
@@ -250,28 +203,21 @@ bool MCNativeLayerWin32::OnPaint(MCGContextRef p_context)
 	return t_success;
 }
 
-void MCNativeLayerWin32::OnGeometryChanged(const MCRectangle& p_old_rect)
+void MCNativeLayerWin32::doSetGeometry(const MCRectangle& p_rect)
 {
 	MCWidget* t_widget = MCWidgetGetHost(m_widget);
     
     // Move the window. Only trigger a repaint if not in edit mode
-	MCRectangle t_rect;
-	t_rect = t_widget->getrect();
-	MoveWindow(m_hwnd, t_rect.x, t_rect.y, t_rect.width, t_rect.height, t_widget->isInRunMode());
+	MoveWindow(m_hwnd, p_rect.x, p_rect.y, p_rect.width, p_rect.height, t_widget->isInRunMode());
 
 	// We need to delete the bitmap that we've been caching
 	DeleteObject(m_cached);
 	m_cached = NULL;
 }
 
-void MCNativeLayerWin32::OnVisibilityChanged(bool p_visible)
+void MCNativeLayerWin32::doSetVisible(bool p_visible)
 {
 	ShowWindow(m_hwnd, p_visible ? SW_SHOWNOACTIVATE : SW_HIDE);
-}
-
-void MCNativeLayerWin32::OnLayerChanged()
-{
-	doRelayer();
 }
 
 void MCNativeLayerWin32::doRelayer()
