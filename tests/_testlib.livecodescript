@@ -140,11 +140,11 @@ on TestLoadExtension pName
    local tExtensionsFolder
    set the itemdelimiter to slash
    repeat while tPath is not tEnginePath and tPath is not empty
-      delete item -1 of tPath
       if there is a folder (tPath & slash & "packaged_extensions") then
          put (tPath & slash & "packaged_extensions") into tExtensionsFolder
          exit repeat
       end if
+      delete item -1 of tPath
    end repeat
 
    local tExtensionFolder
