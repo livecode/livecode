@@ -58,6 +58,7 @@ extern OSErr MCS_path2FSSpec(MCStringRef fname, FSSpec *fspec);
 #define PIXEL_FORMAT_32 k32ARGBPixelFormat
 #endif
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED > MAC_OS_X_VERSION_10_6
 inline void SetRect(Rect *t_rect, int l, int t, int r, int b)
 {
     t_rect -> left = l;
@@ -79,6 +80,7 @@ void *GetPixBaseAddr(PixMapHandle pix);
 void LockPixels(PixMapHandle pix);
 void UnlockPixels(PixMapHandle pix);
 }
+#endif
 
 #endif
 

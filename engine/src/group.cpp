@@ -87,7 +87,7 @@ MCPropertyInfo MCGroup::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_BACK_SIZE, Point, MCGroup, BackSize)
 	DEFINE_RW_OBJ_PROPERTY(P_SELECT_GROUPED_CONTROLS, Bool, MCGroup, SelectGroupedControls)
     DEFINE_RO_OBJ_LIST_PROPERTY(P_CARD_NAMES, LinesOfString, MCGroup, CardNames)
-    DEFINE_RO_OBJ_LIST_PROPERTY(P_CARD_IDS, LinesOfUInt, MCGroup, CardIds)
+    DEFINE_RO_OBJ_LIST_PROPERTY(P_CARD_IDS, LinesOfLooseUInt, MCGroup, CardIds)
     // MERG-2013-05-01: [[ ChildControlProps ]] Add ability to list both
     //   immediate and all descendent controls of a group.
     DEFINE_RO_OBJ_PART_PROPERTY(P_CONTROL_IDS, String, MCGroup, ControlIds)
@@ -2393,6 +2393,7 @@ void MCGroup::clearfocus(MCControl *cptr)
 	if (cptr == kfocused)
 	{
 		kfocused = NULL;
+        state &= ~CS_KFOCUSED;
 		if (parent -> gettype() == CT_CARD)
 			static_cast<MCCard *>(parent) -> erasefocus(this);
 		else

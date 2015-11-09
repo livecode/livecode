@@ -51,7 +51,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define WM_TITLE_HEIGHT 16
 
 // IM-2014-01-29: [[ HiDPI ]] Placeholder method for Linux HiDPI support
-void MCScreenDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m)
+void MCScreenDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m, Boolean resizable)
 {
 	device_boundrect(rect, title, m);
 }

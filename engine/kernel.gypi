@@ -44,6 +44,13 @@
 						[
 							'../thirdparty/headers/linux/include/cairo',
 						],
+
+						'defines':
+						[
+							# We use some features that are behind config macros in old versions of Pango
+							'PANGO_ENABLE_BACKEND',
+							'PANGO_ENABLE_ENGINE',
+						],
 					},
 				],
 				[
@@ -99,16 +106,6 @@
 								'$(SDKROOT)/System/Library/Frameworks/Security.framework',
 								'$(SDKROOT)/System/Library/Frameworks/SystemConfiguration.framework',
 							],
-							
-							# Adding AVFoundation in the list of libraries does not allow
-							# us to weak link it. Only adding the linking flag does the job
-							'xcode_settings':
-							{
-								'OTHER_LDFLAGS':
-								[
-									'-weak_framework AVFoundation',
-								]
-							},
 						},
 					],
 					[
@@ -120,19 +117,42 @@
 								'$(SDKROOT)/System/Library/Frameworks/ApplicationServices.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Carbon.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Cocoa.framework',
-								'$(SDKROOT)/System/Library/Frameworks/QTKit.framework',
 								'$(SDKROOT)/System/Library/Frameworks/Quartz.framework',
 							],
 						},
 					],
+					[
+						'OS == "mac" and target_sdk != "macosx10.6"',
+                        			{
+							# Adding AVFoundation in the list of libraries does not allow
+							# us to weak link it. Only adding the linking flag does the job
+							'xcode_settings':
+							{
+								'OTHER_LDFLAGS':
+								[
+                                    					'-weak_framework AVFoundation',
+								]
+							},
+                        			},
+                    			],
+                    			[
+                        			'OS == "mac" and target_sdk == "macosx10.6"',
+                        			{
+                            				'libraries!':
+                            				[
+                                				'$(SDKROOT)/System/Library/Frameworks/AVFoundation.framework',
+                                				'$(SDKROOT)/System/Library/Frameworks/CoreMedia.framework',
+                            				],
+                        			},
+                    			],
 					[
 						'OS == "ios"',
 						{
 							'libraries':
 							[
 								'$(SDKROOT)/System/Library/Frameworks/AddressBook.framework',
-								'$(SDKROOT)/System/Library/Frameworks/AddressBookUI.framework',
-								'$(SDKROOT)/System/Library/Frameworks/AVFoundation.framework',
+                                				'$(SDKROOT)/System/Library/Frameworks/AddressBookUI.framework',
+                                				'$(SDKROOT)/System/Library/Frameworks/AVFoundation.framework',
 								'$(SDKROOT)/System/Library/Frameworks/CFNetwork.framework',
 								'$(SDKROOT)/System/Library/Frameworks/CoreLocation.framework',
 								'$(SDKROOT)/System/Library/Frameworks/CoreMedia.framework',

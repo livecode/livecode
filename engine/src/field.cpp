@@ -121,12 +121,12 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_TOGGLE_HILITE, Bool, MCField, ToggleHilite)
 	DEFINE_RW_OBJ_PROPERTY(P_3D_HILITE, Bool, MCField, ThreeDHilite)
 	DEFINE_RO_OBJ_PART_ENUM_PROPERTY(P_ENCODING, InterfaceEncoding, MCField, Encoding)
-    DEFINE_RW_OBJ_LIST_PROPERTY(P_HILITED_LINES, ItemsOfUInt, MCField, HilitedLines)
+	DEFINE_RW_OBJ_LIST_PROPERTY(P_HILITED_LINES, ItemsOfLooseUInt, MCField, HilitedLines)
     DEFINE_RW_OBJ_PART_CUSTOM_PROPERTY(P_FLAGGED_RANGES, InterfaceFieldRanges, MCField, FlaggedRanges)
-    DEFINE_RW_OBJ_LIST_PROPERTY(P_TAB_STOPS, ItemsOfUInt, MCField, TabStops)
+    DEFINE_RW_OBJ_LIST_PROPERTY(P_TAB_STOPS, ItemsOfLooseUInt, MCField, TabStops)
     DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_TAB_ALIGN, InterfaceFieldTabAlignments, MCField, TabAlignments)
-    DEFINE_RW_OBJ_LIST_PROPERTY(P_TAB_WIDTHS, ItemsOfUInt, MCField, TabWidths)
-    DEFINE_RO_OBJ_LIST_PROPERTY(P_PAGE_HEIGHTS, LinesOfUInt, MCField, PageHeights)
+    DEFINE_RW_OBJ_LIST_PROPERTY(P_TAB_WIDTHS, ItemsOfLooseUInt, MCField, TabWidths)
+    DEFINE_RO_OBJ_LIST_PROPERTY(P_PAGE_HEIGHTS, LinesOfLooseUInt, MCField, PageHeights)
     DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_PAGE_RANGES, InterfaceFieldRanges, MCField, PageRanges)
 
     DEFINE_RW_OBJ_NON_EFFECTIVE_OPTIONAL_ENUM_PROPERTY(P_TEXT_ALIGN, InterfaceTextAlign, MCField, TextAlign)
@@ -180,8 +180,8 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RO_OBJ_LINE_CHUNK_EFFECTIVE_MIXED_PROPERTY(P_SPACE_ABOVE, UInt16, MCField, SpaceAbove)
 	DEFINE_RW_OBJ_LINE_CHUNK_NON_EFFECTIVE_MIXED_PROPERTY(P_SPACE_BELOW, OptionalUInt16, MCField, SpaceBelow)
 	DEFINE_RO_OBJ_LINE_CHUNK_EFFECTIVE_MIXED_PROPERTY(P_SPACE_BELOW, UInt16, MCField, SpaceBelow)
-	DEFINE_RW_OBJ_LINE_CHUNK_NON_EFFECTIVE_MIXED_LIST_PROPERTY(P_TAB_STOPS, ItemsOfUInt, MCField, TabStops)
-	DEFINE_RO_OBJ_LINE_CHUNK_EFFECTIVE_MIXED_LIST_PROPERTY(P_TAB_STOPS, ItemsOfUInt, MCField, TabStops)
+	DEFINE_RW_OBJ_LINE_CHUNK_NON_EFFECTIVE_MIXED_LIST_PROPERTY(P_TAB_STOPS, ItemsOfLooseUInt, MCField, TabStops)
+	DEFINE_RO_OBJ_LINE_CHUNK_EFFECTIVE_MIXED_LIST_PROPERTY(P_TAB_STOPS, ItemsOfLooseUInt, MCField, TabStops)
     DEFINE_RW_OBJ_LINE_CHUNK_NON_EFFECTIVE_MIXED_CUSTOM_PROPERTY(P_TAB_ALIGN, InterfaceFieldTabAlignments, MCField, TabAlignments)
     DEFINE_RO_OBJ_LINE_CHUNK_EFFECTIVE_MIXED_CUSTOM_PROPERTY(P_TAB_ALIGN, InterfaceFieldTabAlignments, MCField, TabAlignments)
 	DEFINE_RW_OBJ_LINE_CHUNK_NON_EFFECTIVE_MIXED_PROPERTY(P_BORDER_WIDTH, OptionalUInt8, MCField, BorderWidth)
@@ -198,8 +198,8 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RO_OBJ_LINE_CHUNK_EFFECTIVE_MIXED_PROPERTY(P_DONT_WRAP, Bool, MCField, DontWrap)
 	DEFINE_RW_OBJ_LINE_CHUNK_NON_EFFECTIVE_MIXED_PROPERTY(P_PADDING, OptionalUInt8, MCField, Padding)
 	DEFINE_RO_OBJ_LINE_CHUNK_EFFECTIVE_MIXED_PROPERTY(P_PADDING, UInt8, MCField, Padding)
-	DEFINE_RW_OBJ_LINE_CHUNK_NON_EFFECTIVE_MIXED_LIST_PROPERTY(P_TAB_WIDTHS, ItemsOfUInt, MCField, TabWidths)
-	DEFINE_RO_OBJ_LINE_CHUNK_EFFECTIVE_MIXED_LIST_PROPERTY(P_TAB_WIDTHS, ItemsOfUInt, MCField, TabWidths)
+	DEFINE_RW_OBJ_LINE_CHUNK_NON_EFFECTIVE_MIXED_LIST_PROPERTY(P_TAB_WIDTHS, ItemsOfLooseUInt, MCField, TabWidths)
+	DEFINE_RO_OBJ_LINE_CHUNK_EFFECTIVE_MIXED_LIST_PROPERTY(P_TAB_WIDTHS, ItemsOfLooseUInt, MCField, TabWidths)
 	DEFINE_RW_OBJ_LINE_CHUNK_MIXED_PROPERTY(P_INVISIBLE, Bool, MCField, Invisible)
 
 	DEFINE_RW_OBJ_CHAR_CHUNK_NON_EFFECTIVE_MIXED_CUSTOM_PROPERTY(P_FORE_COLOR, InterfaceNamedColor, MCField, ForeColor)
@@ -570,7 +570,12 @@ void MCField::kfocus()
 		uint2 t_old_trans;
 		t_old_trans = gettransient();
 		state |= CS_KFOCUSED;
-
+        
+        if (MCactivefield != NULL && MCactivefield != this)
+            MCactivefield->unselect(True, True);
+        MCactivefield = this;
+        clearfound();
+        
 		if (flags & F_LIST_BEHAVIOR)
 		{
 			if (!(flags & F_TOGGLE_HILITE))
@@ -589,10 +594,6 @@ void MCField::kfocus()
 		}
 		else
 		{
-			if (MCactivefield != NULL && MCactivefield != this)
-				MCactivefield->unselect(True, True);
-			MCactivefield = this;
-			clearfound();
 			// MW-2011-08-18: [[ Layers ]] Invalidate the whole object, noting
 			//   possible change in transient.
 			layer_transientchangedandredrawall(t_old_trans);

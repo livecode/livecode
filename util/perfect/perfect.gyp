@@ -41,9 +41,14 @@
 						'OS == "mac" or OS == "ios"',
 						{
 							'SDKROOT': '<(host_sdk)',
-							'ARCHS': '<(host_arch)',
 						},
 					],
+                    [
+                        'OS == "mac" and target_sdk != "macosx10.6"',
+                        {
+                            'ARCHS': '<(host_arch)',
+                        },
+                    ],
 					[
 						# FIXME Force the perfect executable to be put into
 						# the target SDK's output directory, so that it
@@ -52,6 +57,7 @@
 						'OS == "ios"',
 						{
 							'SYMROOT': '$(SOLUTION_DIR)/_build/ios/<(target_sdk)',
+                            'ARCHS': '<(host_arch)',
 						},
 					],
 				],

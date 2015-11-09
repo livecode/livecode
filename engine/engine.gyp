@@ -383,6 +383,7 @@
 									'rsrc/mobile-splashscreen-template.plist',
 									'rsrc/mobile-template.plist',
 									'rsrc/mobile-url-scheme-template.plist',
+									'rsrc/mobile-disable-ats-template.plist',
 									'rsrc/template-entitlements.xcent',
 									'rsrc/template-store-entitlements.xcent',
 									'rsrc/template-remote-notification-entitlements.xcent',

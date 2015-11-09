@@ -84,8 +84,27 @@
 			{
 				'conditions':
 				[
+                    [
+                        'OS == "mac" and target_sdk == "macosx10.6"',
+                        {
+                            'libraries':
+                            [
+                                '$(SDKROOT)/System/Library/Frameworks/ApplicationServices.framework',
+                            ],
+                        },
+                    ],
+                    [
+                        'OS == "mac" and target_sdk != "macosx10.6"',
+                        {
+                            'libraries':
+                            [
+                                '$(SDKROOT)/System/Library/Frameworks/CoreGraphics.framework',
+                                '$(SDKROOT)/System/Library/Frameworks/CoreText.framework',
+                            ],
+                        },
+                    ],
 					[
-						'OS == "mac" or OS == "ios"',
+						'OS == "ios"',
 						{
 							'libraries':
 							[
