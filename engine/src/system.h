@@ -421,6 +421,154 @@ private:
     bool m_is_eof;
 };
 
+
+// MCBufferedFileHandle implements its own 'PutBack' method, which stores chars
+// in a buffer - and they will be retrieved at the following Read.
+// Any number of chars can be added - as in some imlementation of ungetc, the
+// character will be made available in the reverse order than they are put back:
+//    PutBack('a') -> m_buffer: [a]
+//    PutBack('b') -> m_buffer: [ba]
+//    Read(p_buffer, 1, t_read) -> p_buffer: [b]
+//    Read(p_buffer, 1, t_read) -> p_buffer: [a]
+//
+// Like with ungetc, any call to Flush() or Seek() will discard the buffer.
+// Calls to Close(), Write() and TakeBuffer also discard the buffer.
+//
+class MCBufferedFileHandle: public MCSystemFileHandle
+{
+public:
+    // MCBufferefFileHandle takes ownership of p_handle
+    MCBufferedFileHandle(IO_handle p_handle)
+    {
+        m_handle = p_handle;
+        m_buffer = NULL;
+        m_buffer_size = 0;
+    }
+    
+    
+    // Polymorphic - needs virtual destructor
+    virtual ~MCBufferedFileHandle()
+    {
+        delete m_handle;
+    }
+    
+    virtual void Close(void)
+    {
+        ClearBuffer();
+        m_handle -> Close();
+    }
+    
+    virtual bool IsExhausted(void)
+    {
+        return m_handle -> IsExhausted();
+    }
+    
+    // Read must take into account the chars / bytes that have been put back
+    virtual bool Read(void *p_buffer, uint32_t p_length, uint32_t& r_read)
+    {
+        uint32_t t_copy_length;
+        
+        // Shortcut if we have no buffer
+        if (m_buffer_size == 0)
+            return m_handle -> Read(p_buffer, p_length, r_read);
+        
+        t_copy_length = MCMin(p_length, m_buffer_size);
+        
+        // We copy from the buffer the adequate amount of bytes
+        MCMemoryCopy(p_buffer, m_buffer, t_copy_length);
+        
+        // Shrink the buffer after copy
+        MCMemoryMove(m_buffer, m_buffer + t_copy_length, m_buffer_size - t_copy_length);
+        m_buffer_size -= t_copy_length;
+        MCMemoryReallocate(m_buffer, m_buffer_size, m_buffer);
+        
+        return m_handle -> Read((char*)p_buffer + t_copy_length, p_length, r_read);
+    }
+    
+    virtual bool Write(const void *p_buffer, uint32_t p_length)
+    {
+        ClearBuffer();
+        return m_handle -> Write(p_buffer, p_length);
+    }
+
+    virtual bool Seek(int64_t offset, int p_dir)
+    {
+        ClearBuffer();
+        return m_handle -> Seek(offset, p_dir);
+    }
+    
+    virtual bool Truncate(void)
+    {
+        return m_handle -> Truncate();
+    }
+    
+    virtual bool Sync(void)
+    {
+        return m_handle -> Sync();
+    }
+    
+    virtual bool Flush(void)
+    {
+        ClearBuffer();
+        return m_handle -> Flush();
+    }
+    
+    // PutBack saves the char in our buffer.
+    // If chars are already existing, then
+    virtual bool PutBack(char p_char)
+    {
+        if (!MCMemoryReallocate(m_buffer, m_buffer_size + 1, m_buffer))
+            return false;
+        
+        // Move the buffer by 1
+        MCMemoryMove(m_buffer + 1, m_buffer, 1);
+        
+        m_buffer[0] = (byte_t)p_char;
+        ++m_buffer_size;
+        
+        return true;
+    }
+    
+    virtual int64_t Tell(void)
+    {
+        return m_handle -> Tell();
+    }
+    
+    virtual void *GetFilePointer(void)
+    {
+        return m_handle -> GetFilePointer();
+    }
+    
+    virtual int64_t GetFileSize(void)
+    {
+        return m_handle -> GetFileSize();
+    }
+    
+    virtual bool TakeBuffer(void*& r_buffer, size_t& r_length)
+    {
+        ClearBuffer();
+        return m_handle -> TakeBuffer(r_buffer, r_length);
+    }
+    
+private:
+    IO_handle m_handle;
+    byte_t* m_buffer;
+    uint32_t m_buffer_size;
+    
+    // Remove the internal buffer - after any operation that would reset the
+    // content of ungetc buffer.
+    void ClearBuffer()
+    {
+        if (m_buffer_size != 0)
+        {
+            MCMemoryDeleteArray(m_buffer);
+            m_buffer = NULL;
+            m_buffer_size = 0;
+        }
+    }
+    
+};
+
 enum MCServiceType
 {
     kMCServiceTypeMacSystem,
