@@ -793,8 +793,10 @@ public handler OnClick() returns nothing
 		return
 	end if
 
+    variable tPathString as String
     if mHoverIcon is "inspect" then
-        post "actionInspect" with tData["path"]
+        combine tData["path"] with "," into tPathString
+        post "actionInspect" with [tPathString]
         return
     end if
 
@@ -830,7 +832,8 @@ public handler OnClick() returns nothing
 
 	if the click count > 1 then
 		if tData["leaf"] then
-			post "actionDoubleClick" with tData["path"]
+            combine tData["path"] with "," into tPathString
+			post "actionDoubleClick" with [tPathString]
 		else
 		   if tData["folded"] is true then
 			   unfoldPath(tData["path"])
