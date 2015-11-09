@@ -936,13 +936,8 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
 {
 	MCS_getentries_state *t_state;
 	t_state = static_cast<MCS_getentries_state *>(p_context);
-	
-    // SN-2015-10-20" [[ Bug 16223 ]] We force the presence of '..' at the head
-    //  of the list of folders, independently of the OS
-    if (!t_state -> files && MCListIsEmpty(t_state -> list))
-        MCListAppendCString(t_state -> list, "..");
-    
-    // We never list '..', if the OS / filesystem was letting us get it
+
+    // We never list '..', if the OS / filesystem lets us get it
     if (MCStringIsEqualToCString(p_entry -> name, "..", kMCStringOptionCompareExact))
         return true;
     
@@ -1014,6 +1009,11 @@ bool MCS_getentries(bool p_files, bool p_detailed, MCListRef& r_list)
 	t_state.details = p_detailed;
 	t_state.list = *t_list;
 	
+    // SN-2015-11-09: [[ Bug 16223 ]] Make sure that the list starts with ..
+    // if we ask for folders.
+    if (!p_files)
+        MCListAppendCString(*t_list, "..");
+    
 	if (!MCsystem -> ListFolderEntries(MCS_getentries_callback, (void*)&t_state))
 		return false;
     
