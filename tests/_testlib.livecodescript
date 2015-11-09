@@ -128,10 +128,14 @@ function TestGetIDERepositoryPath
   return item 1 to -3 of the filename of me & slash & "ide"
 end TestGetIDERepositoryPath
 
-on TestLoadExtension pName
-   local tPath, tEnginePath
+on TestLoadExtension pName	
+   set the itemdelimiter to "."
+   local tExtensionUnzipFolder
+   put "com.livecode.extensions.livecode." & item -1 of pName into tExtensionUnzipFolder
+
+   local tPath, tRepoPath
    put specialfolderpath("engine") into tPath
-   put TestGetEngineRepositoryPath() into tEnginePath
+   put TestGetEngineRepositoryPath() into tRepoPath
    
    local tError
    put "extension" && pName && "not found" into tError
@@ -139,20 +143,24 @@ on TestLoadExtension pName
    # Find the built extensions folder
    local tExtensionsFolder
    set the itemdelimiter to slash
-   repeat while tPath is not tEnginePath and tPath is not empty
+   repeat while tPath is not tRepoPath and tPath is not empty
       if there is a folder (tPath & slash & "packaged_extensions") then
          put (tPath & slash & "packaged_extensions") into tExtensionsFolder
          exit repeat
       end if
       delete item -1 of tPath
    end repeat
+   
+   TestDiagnostic tExtensionsFolder
 
    local tExtensionFolder
    if tExtensionsFolder is not empty then
-      if there is a folder (tExtensionsFolder & slash & "com.livecode.extensions.livecode." & pName) then
-        put (tExtensionsFolder & slash & "com.livecode.extensions.livecode." & pName) into tExtensionFolder
+      if there is a folder (tExtensionsFolder & slash & tExtensionUnzipFolder) then
+        put (tExtensionsFolder & slash & tExtensionUnzipFolder) into tExtensionFolder
       end if
    end if
+   
+    TestDiagnostic tExtensionFolder
    
    local tExtensionFile
    if tExtensionFolder is not empty then

@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on TestSetup
-	TestLoadExtension "json"
+	TestLoadExtension "com.livecode.library.json"
 end TestSetup
 
 on TestExportArray
