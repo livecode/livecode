@@ -544,7 +544,22 @@ private handler drawSegments() returns nothing
 
 		variable tIconPath as Path
 		variable tIconRect as Rectangle
-		put rectangle [mLeft + tWidth * kIconPaddingRatio, tWidth * kIconPaddingRatio, mLeft + tWidth * (1 - kIconPaddingRatio), my height - (tWidth * kIconPaddingRatio)] into tIconRect
+
+		-- Compute the size of icon that can be fitted into
+		-- widget given the padding ratio
+		variable tIconSize as Number
+		if tWidth > my height then
+			put my height * (1 - 2*kIconPaddingRatio) into tIconSize
+		else
+			put tWidth * (1 - 2*kIconPaddingRatio) into tIconSize
+		end if
+
+		-- Compute the corresponding icon bounding box
+		put rectangle [mLeft + (tWidth - tIconSize) / 2, \
+			(my height - tIconSize) / 2, \
+			mLeft + (tIconSize + tWidth) / 2, \
+			(my height + tIconSize) / 2] into tIconRect
+
 		if mSegmentDisplay is "icon" then
 			if tIsIn then
 				put path iconSVGPathFromName(element tX of mSelectedIcons) into tIconPath
