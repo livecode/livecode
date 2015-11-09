@@ -127,3 +127,53 @@ function TestGetIDERepositoryPath
   set the itemdelimiter to "/"
   return item 1 to -3 of the filename of me & slash & "ide"
 end TestGetIDERepositoryPath
+
+on TestLoadExtension pName
+   local tPath, tEnginePath
+   put specialfolderpath("engine") into tPath
+   put TestGetEngineRepositoryPath() into tEnginePath
+   
+   local tError
+   put "extension" && pName && "not found" into tError
+   
+   # Find the built extensions folder
+   local tExtensionsFolder
+   set the itemdelimiter to slash
+   repeat while tPath is not tEnginePath and tPath is not empty
+      delete item -1 of tPath
+      if there is a folder (tPath & slash & "packaged_extensions") then
+         put (tPath & slash & "packaged_extensions") into tExtensionsFolder
+         exit repeat
+      end if
+   end repeat
+
+   local tExtensionFolder
+   if tExtensionsFolder is not empty then
+      if there is a folder (tExtensionsFolder & slash & "com.livecode.extensions.livecode." & pName) then
+        put (tExtensionsFolder & slash & "com.livecode.extensions.livecode." & pName) into tExtensionFolder
+      end if
+   end if
+   
+   local tExtensionFile
+   if tExtensionFolder is not empty then
+      if there is a file (tExtensionFolder & slash & "module.lcm") then
+         put (tExtensionFolder & slash & "module.lcm") into tExtensionFile
+      end if
+   end if
+   
+   if tExtensionFile is not empty then
+      if there is a folder (tExtensionFolder & slash & "resources") then
+         load extension from file tExtensionFile with resource path (tExtensionFolder & slash & "resources")
+      else
+         load extension from file tExtensionFile
+      end if
+      
+      put the result into tError
+   end if
+   
+   if tError is not empty then
+      write tError & return to stderr
+      quit 1
+   end if
+   
+end TestLoadExtension
