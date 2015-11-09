@@ -491,8 +491,10 @@ void MCQTSoundRecorder::GetASBD(AudioStreamBasicDescription &r_description)
             break;
         case kAudioFormatMPEG4AAC_LD:
         case kAudioFormatMPEG4AAC_ELD:
+#if MAC_OS_X_VERSION_MAX_ALLOWED > MAC_OS_X_VERSION_10_6
         case kAudioFormatMPEG4AAC_ELD_SBR:
         case kAudioFormatMPEG4AAC_ELD_V2:
+#endif
             if (m_configuration . sample_rate < 16)
                 r_description . mSampleRate = 16000;
             r_description . mFramesPerPacket = 1 << 9;
