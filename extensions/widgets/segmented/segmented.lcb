@@ -309,6 +309,11 @@ private variable mRadius			as Real
 
 private variable mCalculatedWidths as List
 
+private variable mColor as optional Color
+private variable mSelectedColor as optional Color
+private variable mLabelColor as optional Color
+private variable mSelectedLabelColor as optional Color
+
 -- constants
 constant kIconSize is 16
 constant kTextSize is 13
@@ -328,6 +333,22 @@ public handler OnSave(out rProperties as Array)
 	put mSegmentMinWidth	into rProperties["segmentMinWidth"]	
 	put mSelectedSegments	into rProperties["selectedSegment"]
 	put mShowFrameBorder	into rProperties["showFrameBorder"]
+	
+	if mSelectedColor is not nothing then
+		put colorToString(mSelectedColor, false) into rProperties["selectedColor"]
+	end if
+	
+	if mColor is not nothing then
+		put colorToString(mColor, false) into rProperties["color"]
+	end if
+	
+	if mLabelColor is not nothing then
+		put colorToString(mLabelColor, false) into rProperties["LabelColor"]
+	end if
+	
+	if mSelectedLabelColor is not nothing then
+		put colorToString(mSelectedLabelColor, false) into rProperties["selectedLabelColor"]
+	end if
 end handler
 
 public handler OnLoad(in pProperties as Array)
@@ -342,6 +363,22 @@ public handler OnLoad(in pProperties as Array)
 	put pProperties["segmentMinWidth"]	into mSegmentMinWidth
 	put pProperties["selectedSegment"]	into mSelectedSegments
 	put pProperties["showFrameBorder"]	into mShowFrameBorder
+	
+	if "selectedColor" is among the keys of pProperties then
+		put stringToColor(pProperties["selectedColor"]) into mSelectedColor
+	end if
+	
+	if "color" is among the keys of pProperties then
+		put stringToColor(pProperties["color"]) into mColor
+	end if
+	
+	if "selectedLabelColor" is among the keys of pProperties then
+		put stringToColor(pProperties["selectedLabelColor"]) into mSelectedLabelColor
+	end if
+	
+	if "LabelColor" is among the keys of pProperties then
+		put stringToColor(pProperties["LabelColor"]) into mLabelColor
+	end if
 
     put the number of elements in mSegmentNames into mNumSegments
 	
@@ -510,10 +547,18 @@ private handler drawSegments() returns nothing
 		put tX is in mSelectedSegments into tIsIn
 		
 		if tIsIn then
-			-- set the paint of the background of the selected segment(s)
-			set the paint of this canvas to fetchPaint("selected background", "yosemite")
+			if mSelectedColor is nothing then
+				-- set the paint of the background of the selected segment(s)
+				set the paint of this canvas to fetchPaint("selected background", "yosemite")
+			else
+				set the paint of this canvas to solid paint with mSelectedColor
+			end if
 		else
-			set the paint of this canvas to fetchPaint("background", "yosemite")
+			if mColor is nothing then
+				set the paint of this canvas to fetchPaint("background", "yosemite")
+			else
+				set the paint of this canvas to solid paint with mColor
+			end if
 		end if	
 		
 		variable tSegmentRect as List
@@ -535,13 +580,20 @@ private handler drawSegments() returns nothing
 		restore state of this canvas
 
 		if tIsIn then
-			-- set the paint of the label(s) in the selected segment(s)
-			set the paint of this canvas to fetchPaint("selected label", "yosemite")
+			if mSelectedLabelColor is nothing then
+				-- set the paint of the label of the selected segment(s)
+				set the paint of this canvas to fetchPaint("selected label", "yosemite")
+			else
+				set the paint of this canvas to solid paint with mSelectedLabelColor
+			end if
 		else
-			set the paint of this canvas to fetchPaint("label", "yosemite")
+			if mLabelColor is nothing then
+				set the paint of this canvas to fetchPaint("label", "yosemite")
+			else
+				set the paint of this canvas to solid paint with mLabelColor
+			end if
 		end if	
 			
-
 		variable tIconPath as Path
 		variable tLabelRect as Rectangle
 
@@ -988,6 +1040,74 @@ private handler setSegmentCount(in pNum as Integer)
 		put true into mGeometryIsChanged
 		redraw all
 	end if
+end handler
+
+private handler getColor() returns String
+	if mColor is nothing then
+		return ""
+	end if
+	return colorToString(mColor, false)
+end handler
+
+private handler setColor(in pColor as String)
+	if pColor is "" then
+		put nothing into mColor
+	else
+		put stringToColor(pColor) into mColor
+	end if
+
+	redraw all
+end handler
+
+private handler getSelectedColor() returns String
+	if mSelectedColor is nothing then
+		return ""
+	end if
+	return colorToString(mSelectedColor, false)
+end handler
+
+private handler setSelectedColor(in pColor as String)
+	if pColor is "" then
+		put nothing into mSelectedColor
+	else
+		put stringToColor(pColor) into mSelectedColor
+	end if
+	
+	redraw all
+end handler
+
+private handler getLabelColor() returns String
+	if mLabelColor is nothing then
+		return ""
+	end if
+	return colorToString(mLabelColor, false)
+end handler
+
+private handler setLabelColor(in pColor as String)
+	if pColor is "" then
+		put nothing into mLabelColor
+	else
+		put stringToColor(pColor) into mLabelColor
+	end if
+
+	redraw all
+end handler
+
+private handler getSelectedLabelColor() returns String
+	if mSelectedLabelColor is nothing then
+		return ""
+	end if
+	return colorToString(mSelectedLabelColor, false)
+end handler
+
+private handler setSelectedLabelColor(in pColor as String)
+	if pColor is "" then
+		put nothing into mSelectedLabelColor
+	else
+		put stringToColor(pColor) into mSelectedLabelColor
+	end if
+	
+	redraw all
 end handler
 
 end widget
