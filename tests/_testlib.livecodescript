@@ -131,7 +131,7 @@ end TestGetIDERepositoryPath
 on TestLoadExtension pName	
    set the itemdelimiter to "."
    local tExtensionUnzipFolder
-   put "com.livecode.extensions.livecode." & item -1 of pName into tExtensionUnzipFolder
+   put "com.livecode.extensions.livecode." & toLower(item -1 of pName) into tExtensionUnzipFolder
 
    local tPath, tRepoPath
    put specialfolderpath("engine") into tPath
