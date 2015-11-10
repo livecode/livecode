@@ -40,3 +40,15 @@ on TestSetHTMLText
 	delete widget "testBrowser"
 end TestSetHTMLText
 
+on TestSetUrlToEmpty
+	create widget "testBrowser" as "com.livecode.extensions.livecode.browser"
+	set the url of widget "testBrowser" to "http://livecode.com"
+	
+	// Now unset the url - this should clear the contents of the browser
+	set the url of widget "testBrowser" to empty
+	
+	TestAssert "cleared url is empty", the url of widget "testBrowser" is empty
+	TestAssert "cleared htmlText is empty", the htmlText of widget "testBrowser" is empty
+	
+	delete widget "testBrowser"
+end TestSetUrlToEmpty
