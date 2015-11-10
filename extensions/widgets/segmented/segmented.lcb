@@ -545,20 +545,20 @@ private handler drawSegments() returns nothing
 		variable tIconPath as Path
 		variable tIconRect as Rectangle
 
-		-- Compute the size of icon that can be fitted into
-		-- widget given the padding ratio
-		variable tIconSize as Number
+		-- Compute the minimum margin required to provide the correct
+		-- padding ratio.
+		variable tIconMargin as Number
 		if tWidth > my height then
-			put my height * (1 - 2*kIconPaddingRatio) into tIconSize
+			put my height * kIconPaddingRatio into tIconMargin
 		else
-			put tWidth * (1 - 2*kIconPaddingRatio) into tIconSize
+			put tWidth * kIconPaddingRatio into tIconMargin
 		end if
 
 		-- Compute the corresponding icon bounding box
-		put rectangle [mLeft + (tWidth - tIconSize) / 2, \
-			(my height - tIconSize) / 2, \
-			mLeft + (tIconSize + tWidth) / 2, \
-			(my height + tIconSize) / 2] into tIconRect
+		put rectangle [mLeft + tIconMargin, \
+			tIconMargin, \
+			mLeft + tWidth - tIconMargin, \
+			my height - tIconMargin] into tIconRect
 
 		if mSegmentDisplay is "icon" then
 			if tIsIn then
