@@ -391,7 +391,7 @@ public:
 	
 	// IM-2014-01-16: [[ StackScale ]] Ensure the view rect & transform are in sync with the configured view properties
 	// (stack viewport, fullscreen mode, fullscreen, scale factor)
-	void view_update_transform(void);
+	void view_update_transform(bool p_ensure_onscreen = false);
 	
 	// IM-2014-01-16: [[ StackScale ]] Calculate the new view rect, transform, and adjusted stack rect for the given stack rect
 	void view_calculate_viewports(const MCRectangle &p_stack_rect, MCRectangle &r_adjusted_stack_rect, MCRectangle &r_view_rect, MCGAffineTransform &r_transform);
