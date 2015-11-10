@@ -145,13 +145,14 @@ command TestAssertBroken pTest, pSuccess
 end TestAssertBroken*/
 
 // Helper to use TestAssertBroken when needed
-private command __testAssert pMess, pValue, pBroken
-   put pMess
-   if pBroken then
-      TestAssertBroken pMess, pValue
+private command __testAssert pMess, pValue, pShouldFail
+   local tAssertion
+   if pShouldFail then
+      put (not pValue) into tAssertion
    else
-      TestAssert pMess, pValue
+      put pValue into tAssertion
    end if
+   TestAssert pMess, tAssertion
 end __testAssert
 
 // Run all the tests for an encoding.
@@ -160,7 +161,7 @@ end __testAssert
 //   - opening of the file by guessing the encoding,
 //   - decomposed file
 //
-private command runTest pEncoding, pReadType, pSkipFailures
+private command runTest pEncoding, pReadType
    repeat for each item tBom in kNoBom,kBOM
       repeat for each item tGuess in kGuessEncoding,kDontGuessEncoding
          repeat for each item tDecomposed in "false,true"
@@ -179,11 +180,6 @@ private command runTest pEncoding, pReadType, pSkipFailures
             // guess the encoding from the BOM is an expected failure
             local tContent, tExpectedFailure
             put (not tBom) and tGuess into tExpectedFailure
-            
-            // We can't mix expected failures and successful tests in a single test
-            if pSkipFailures is tExpectedFailure then
-               next repeat
-            end if
             
             switch pReadType
                case kReadAll
@@ -215,146 +211,89 @@ end runTest
 
 // Tests for UTF-8 reading char by char
 on TestUnicodeFiles1
-   runTest "utf8", kReadCharByChar, true
+   runTest "utf8", kReadCharByChar
 end TestUnicodeFiles1
 
+// Tests for UTF-8 reading all
 on TestUnicodeFiles2
-   runTest "utf8", kReadCharByChar, false
+   runTest "utf8", kReadAll
 end TestUnicodeFiles2
 
-// Tests for UTF-8 reading all
-on TestUnicodeFiles3
-   runTest "utf8", kReadAll, true
-end TestUnicodeFiles3
-
-on TestUnicodeFiles4
-   runTest "utf8", kReadAll, false
-end TestUnicodeFiles4
-
 // Tests for UTF-8 reading until
-on TestUnicodeFiles5
-   runTest "utf8", kReadUntil, true
-end TestUnicodeFiles5
-
-on TestUnicodeFiles6
-   runTest "utf8", kReadUntil, false
-end TestUnicodeFiles6
+on TestUnicodeFiles3
+   runTest "utf8", kReadUntil
+end TestUnicodeFiles3
 
 ////////////////
 // UTF-16
 ////////////////
 
 // Tests for UTF-16 reading char by char
-on TestUnicodeFiles7
-   runTest "utf16", kReadCharByChar, true
-end TestUnicodeFiles7
-
-on TestUnicodeFiles8
-   runTest "utf16", kReadCharByChar, false
-end TestUnicodeFiles8
+on TestUnicodeFiles4
+   runTest "utf16", kReadCharByChar
+end TestUnicodeFiles4
 
 // Tests for UTF-16 reading all
-on TestUnicodeFiles9
-   runTest "utf16", kReadAll, true
-end TestUnicodeFiles9
-
-on TestUnicodeFiles10
-   runTest "utf16", kReadAll, false
-end TestUnicodeFiles10
+on TestUnicodeFiles5
+   runTest "utf16", kReadAll
+end TestUnicodeFiles5
 
 // Tests for UTF-16 reading until
-on TestUnicodeFiles11
-   runTest "utf16", kReadUntil, true
-end TestUnicodeFiles11
-
-on TestUnicodeFiles12
-   runTest "utf16", kReadUntil, false
-end TestUnicodeFiles12
+on TestUnicodeFiles6
+   runTest "utf16", kReadUntil
+end TestUnicodeFiles6
 
 // Tests for UTF-16LE reading char by char
-on TestUnicodeFiles13
-   runTest "utf16LE", kReadCharByChar, true
-end TestUnicodeFiles13
-
-on TestUnicodeFiles14
-   runTest "utf16LE", kReadCharByChar, false
-end TestUnicodeFiles14
+on TestUnicodeFiles7
+   runTest "utf16LE", kReadCharByChar
+end TestUnicodeFiles7
 
 // Tests for UTF-16LE reading all
-on TestUnicodeFiles15
-   runTest "utf16LE", kReadAll, true
-end TestUnicodeFiles15
-
-on TestUnicodeFiles16
-   runTest "utf16LE", kReadAll, false
-end TestUnicodeFiles16
+on TestUnicodeFiles8
+   runTest "utf16LE", kReadAll
+end TestUnicodeFiles8
 
 // Tests for UTF-16LE reading until
-on TestUnicodeFiles17
-   runTest "utf16LE", kReadUntil, true
-end TestUnicodeFiles17
-
-on TestUnicodeFiles18
-   runTest "utf16LE", kReadUntil, false
-end TestUnicodeFiles18
+on TestUnicodeFiles9
+   runTest "utf16LE", kReadUntil
+end TestUnicodeFiles9
 
 ////////////////
 // UTF-32
 ////////////////
 
 // Tests for UTF-32 reading char by char
-on TestUnicodeFiles19
-   runTest "utf32", kReadCharByChar, true
-end TestUnicodeFiles19
-
-on TestUnicodeFiles20
-   runTest "utf32", kReadCharByChar, false
-end TestUnicodeFiles20
+on TestUnicodeFiles10
+   runTest "utf32", kReadCharByChar
+end TestUnicodeFiles10
 
 // Tests for UTF-32 reading all
-on TestUnicodeFiles21
-   runTest "utf32", kReadAll, true
-end TestUnicodeFiles21
-
-on TestUnicodeFiles22
-   runTest "utf32", kReadAll, false
-end TestUnicodeFiles22
+on TestUnicodeFiles11
+   runTest "utf32", kReadAll
+end TestUnicodeFiles11
 
 // Tests for UTF-32 reading until
-on TestUnicodeFiles23
-   runTest "utf32", kReadUntil, true
-end TestUnicodeFiles23
+on TestUnicodeFiles12
+   runTest "utf32", kReadUntil
+end TestUnicodeFiles12
 
-on TestUnicodeFiles24
-   runTest "utf32", kReadUntil, false
-end TestUnicodeFiles24
-
+////////////////
+// UTF-32LE 
+////////////////
 // Tests for UTF-32LE reading char by char
-on TestUnicodeFiles25
-   runTest "utf32LE", kReadCharByChar, true
-end TestUnicodeFiles25
-
-on TestUnicodeFiles26
-   runTest "utf32LE", kReadCharByChar, false
-end TestUnicodeFiles26
+on TestUnicodeFiles13
+   runTest "utf32LE", kReadCharByChar
+end TestUnicodeFiles13
 
 // Tests for UTF-32LE reading all
-on TestUnicodeFiles27
-   runTest "utf32LE", kReadAll, true
-end TestUnicodeFiles27
-
-on TestUnicodeFiles28
-   runTest "utf32LE", kReadAll, false
-end TestUnicodeFiles28
+on TestUnicodeFiles14
+   runTest "utf32LE", kReadAll
+end TestUnicodeFiles14
 
 // Tests for UTF-32LE reading until
-on TestUnicodeFiles29
-   runTest "utf32LE", kReadUntil, true
-end TestUnicodeFiles29
-
-on TestUnicodeFiles30
-   runTest "utf32LE", kReadUntil, false
-end TestUnicodeFiles30
+on TestUnicodeFiles15
+   runTest "utf32LE", kReadUntil
+end TestUnicodeFiles15
 
 on runAll
    repeat with i=1 to 15
