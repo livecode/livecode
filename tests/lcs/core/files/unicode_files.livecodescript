@@ -129,8 +129,8 @@ constant kGuessEncoding = true
 constant kDontGuessEncoding = false
 
 constant kReadAllContent = "aв€🜁åo̫͂"
-constant kReadUntilFirstRead = "aв€🜁"
-constant kReadUntilRemaining = "åo̫͂"
+constant kReadUntilFirstRead = "aв€🜁å"
+constant kReadUntilRemaining = "o̫͂"
 
 /*command TestAssert pTest, pSuccess
 if not pSuccess then
@@ -193,9 +193,10 @@ private command runTest pEncoding, pReadType
                case kReadUntil
                   // We read until, and then the remaining part
                   get readUntil(tFilename, tContent)
-                  TestAssert merge("readUntil from [[tTextFile]] - first read"), tContent is kReadUntilFirstRead, tExpectedFailure
+                  __TestAssert merge("readUntil from [[tTextFile]] - first read"), tContent is kReadUntilFirstRead, tExpectedFailure
+                  
                   get readAll(tFilename, tContent)
-                  TestAssert merge("readUntil from [[tTextFile]] - second read"), tContent is kReadUntilRemaining, tExpectedFailure
+                  __TestAssert merge("readUntil from [[tTextFile]] - second read"), tContent is kReadUntilRemaining, tExpectedFailure
                   break
             end switch
             
