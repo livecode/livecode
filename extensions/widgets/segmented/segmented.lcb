@@ -15,7 +15,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/* 
+/** 
 A segmented control. A segmented control is a horizontal control that is made up of 
 multiple segments, where each segment functions as a discrete button.
 
@@ -71,7 +71,7 @@ pList: A comma delimited list of the selected segment names
 Description:
 Handle the <selectionChanged> message in order to respond to a change in the selection
 of the segmented control.
-*/
+**/
 
 -- declaring extension as widget, followed by identifier
 widget com.livecode.widget.segmented
@@ -92,7 +92,7 @@ metadata svgicon is "M72.6,0H7.7C3.4,0,0,3.4,0,7.7v14c0,4.2,3.4,7.7,7.7,7.7h64.9
 
 -- property declarations
 
-/*
+/**
 Syntax: set the segmentStyle of <widget> to <pStyle>
 Syntax: get the segmentStyle of <widget>
 
@@ -105,13 +105,13 @@ pStyle(enum): The style of the control.
 
 Description:
 The style property of the control (segmented control or bar button).
-*/
+**/
 property segmentStyle 		get mStyle				set setStyle
 metadata segmentStyle.editor 		is "com.livecode.pi.enum"
 metadata segmentStyle.options 		is "segment,bar"
 metadata segmentStyle.default		is "segment"
 
-/*
+/**
 Syntax: set the multiSelect of <widget> to <pCanMultiSelect>
 Syntax: get the multiSelect of <widget>
 
@@ -122,12 +122,12 @@ pCanMultiSelect(boolean):
 
 Description:
 The multiSelect property of the control.
-*/
+**/
 property multiSelect		get mMultiSelect		set setMultiSelect		
 metadata multiSelect.editor			is "com.livecode.pi.boolean"
 metadata multiSelect.default		is "false"
 
-/*
+/**
 Syntax: set the segmentNames of <widget> to <pNames>
 Syntax: get the segmentNames of <widget>
 Summary: Sets the names of the segments.
@@ -137,12 +137,12 @@ pNames(string): A comma-delimited list of names for the segments.
 
 Description:
 Sets the names of each segment in the control.
-*/
+**/
 property segmentNames		get getSegmentNames		set setSegmentNames
 metadata segmentNames.editor		is "com.livecode.pi.string"
 metadata segmentNames.default		is "segment1,segment2,segment3"
 
-/*
+/**
 Syntax: set the segmentLabels of <widget> to <pLabels>
 Syntax: get the segmentLabels of <widget>
 
@@ -153,12 +153,12 @@ pLabels: A comma-delimited list of labels for the segments.
 
 Description:
 Sets the labels of each segment in the control.
-*/
+**/
 property segmentLabels		get getSegmentLabels	set setSegmentLabels
 metadata segmentLabels.editor 		is "com.livecode.pi.string"
 metadata segmentLabels.default		is "Title,Title,Title"
 
-/*
+/**
 Syntax: set the segmentIcons of <widget> to <pIcons>
 Syntax: get the segmentIcons of <widget>
 
@@ -173,14 +173,14 @@ The name of an icon must be one of the names returned by the iconNames() functio
 of the com.livecode.library.iconSVG library.
 
 References: selectedIcons (property)
-*/
+**/
 property segmentIcons		get getSegmentIcons		set setSegmentIcons	
 metadata segmentIcons.editor		is "com.livecode.pi.editorlist"
 metadata segmentIcons.subeditor		is "com.livecode.pi.svgicon"
 metadata segmentIcons.delimiter		is ","
 metadata segmentIcons.default		is "align left,align center,align right"
 
-/*
+/**
 Syntax: set the selectedIcons of <widget> to <pSelectedIcons>
 Syntax: get the selectedIcons of <widget>
 
@@ -197,7 +197,7 @@ The name of an icon must be one of the names returned by the iconNames() functio
 of the com.livecode.library.iconSVG library.
 
 References: segmentIcons (property)
-*/
+**/
 
 property selectedIcons		get getSelectedIcons		set setSelectedIcons
 metadata selectedIcons.editor		is "com.livecode.pi.editorlist"
@@ -205,7 +205,7 @@ metadata selectedIcons.subeditor		is "com.livecode.pi.svgicon"
 metadata selectedIcons.delimiter		is ","
 metadata selectedIcons.default		is "align left,align center,align right"
 
-/*
+/**
 Syntax: set the segmentDisplay of <widget> to <pSegmentDisplay>
 Syntax: get the segmentDisplay of <widget>
 
@@ -218,13 +218,13 @@ pSegmentDisplay(enum): The style of the segment display.
 
 Description:
 Sets the segment display style of the control to either icon or label.
-*/
+**/
 property segmentDisplay		get mSegmentDisplay		set setSegmentDisplay
 metadata segmentDisplay.editor		is "com.livecode.pi.enum"
 metadata segmentDisplay.options		is "text,icon"
 metadata segmentDisplay.default		is "text"
 
-/*
+/**
 Syntax: set the segmentMinWidth of <widget> to <pMinWidths>
 Syntax: get the segmentMinWidth of <widget>
 
@@ -235,13 +235,13 @@ pMinWidths: A comma-delimited list of numbers.
 
 Description:
 Sets the minimum width of each segment in the control.
-*/
+**/
 
 property segmentMinWidth	get getSegmentMinWidth	set setSegmentMinWidth
 metadata segmentMinWidth.editor		is "com.livecode.pi.string"
 metadata segmentMinWidth.default 	is "30,30,30"
 
-/*
+/**
 Syntax: set the selectedSegment of <widget> to <pSelectedSegments>
 Syntax: get the selectedSegment of <widget>
 
@@ -252,12 +252,12 @@ pSelectedSegments: A comma-delimited list of the numbers of the selected segment
 
 Description:
 Sets the selected segments of the control.
-*/
+**/
 property selectedSegment	get getSelectedSegment	set setSelectedSegment	
 metadata selectedSegment.editor		is "com.livecode.pi.string"
 metadata selectedSegment.default	is ""
 
-/*
+/**
 Syntax: set the showFrameBorder of <widget> to {true|false}
 Syntax: get the showFrameBorder of <widget>
 
@@ -266,10 +266,10 @@ Summary: Whether the widget has a border or not.
 Description:
 Use the <showFrameBorder> property to control whether the segmented control has
 a border round it or not.
-*/
+**/
 property showFrameBorder	get mShowFrameBorder	set setShowFrameBorder
 
-/*
+/**
 Syntax: set the segmentCount of <widget> to <pCount>
 Syntax: get the segmentCount of <widget>
 
@@ -277,11 +277,71 @@ Summary: Manipulates the numbe of segments of the segmented control
 
 Description:
 Use the <segmentCount> property to control the number of segments.
-*/
+**/
 property segmentCount 	get mNumSegments		set setSegmentCount
 metadata segmentCount.editor		is "com.livecode.pi.number"
 metadata segmentCount.step is "1"
 metadata segmentCount.min is "0"
+
+/**
+Syntax: set the segmentColor of <widget> to <pColor>
+Syntax: get the segmentColor of <widget>
+
+Summary: Manipulates the background color of the segments
+
+Description:
+Use the <segmentColor> property to control the background color
+of the segments.
+**/
+property selectedSegmentColor 	get getSelectedColor		set setSelectedColor
+metadata selectedSegmentColor.editor		is "com.livecode.pi.color"
+metadata selectedSegmentColor.default is "empty"
+metadata selectedSegmentColor.section is "Colors"
+
+/**
+Syntax: set the selectedSegmentColor of <widget> to <pColor>
+Syntax: get the selectedSegmentColor of <widget>
+
+Summary: Manipulates the background color of the selected segment
+
+Description:
+Use the <selectedSegmentColor> property to control the background color
+of the selected segment.
+**/
+property segmentColor 	get getColor		set setColor
+metadata segmentColor.editor		is "com.livecode.pi.color"
+metadata segmentColor.default is "empty"
+metadata segmentColor.section is "Colors"
+
+/**
+Syntax: set the segmentLabelColor of <widget> to <pColor>
+Syntax: get the segmentLabelColor of <widget>
+
+Summary: Manipulates the text color of the segments
+
+Description:
+Use the <segmentLabelColor> property to control the text color
+of the segments.
+**/
+property segmentLabelColor 	get getLabelColor		set setLabelColor
+metadata segmentLabelColor.editor		is "com.livecode.pi.color"
+metadata segmentLabelColor.default is "empty"
+metadata segmentLabelColor.section is "Colors"
+
+/**
+Syntax: set the segmentSelectedLabelColor of <widget> to <pColor>
+Syntax: get the segmentSelectedLabelColor of <widget>
+
+Summary: Manipulates the text color of the selected segments
+
+Description:
+Use the <segmentSelectedLabelColor> property to control the selected text color
+of the segments.
+**/
+property segmentSelectedLabelColor 	get getSelectedLabelColor		set setSelectedLabelColor
+metadata segmentSelectedLabelColor.editor		is "com.livecode.pi.color"
+metadata segmentSelectedLabelColor.default is "empty"
+metadata segmentSelectedLabelColor.section is "Colors"
 
 -- private instance variables
 --properties
