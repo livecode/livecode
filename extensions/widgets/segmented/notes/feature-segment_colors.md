@@ -8,3 +8,5 @@ Four new properties have been added to the segmented control:
 * `segmentSelectedLabelColor`: the label color of the selected segments.
 
 Where any of these are empty, the control instead uses its associated default color.
+
+# [16155] Allow the background color of a selected segment to be set
