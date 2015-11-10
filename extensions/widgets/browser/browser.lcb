@@ -482,6 +482,10 @@ end handler
 
 --
 
+private handler clearBrowser()
+	setHtmlText(the empty string)
+end handler
+
 private handler getUrl() returns String
 	if "url" is among the keys of mProperties then
 		return mProperties["url"]
@@ -491,11 +495,15 @@ private handler getUrl() returns String
 end handler
 
 private handler setUrl(in pUrl as String)
-	updateUrlProperty(pUrl)
+	if pUrl is empty then
+		clearBrowser()
+	else
+		updateUrlProperty(pUrl)
 
-	if mBrowser is not nothing then
-		if not MCBrowserGoToURL(mBrowser, pUrl) then
-			throw "error launching url " & pUrl
+		if mBrowser is not nothing then
+			if not MCBrowserGoToURL(mBrowser, pUrl) then
+				throw "error launching url " & pUrl
+			end if
 		end if
 	end if
 end handler
