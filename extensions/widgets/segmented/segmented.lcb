@@ -302,7 +302,6 @@ private variable mShowFrameBorder	as Boolean
 --variables
 private variable mGeometryIsChanged	as Boolean
 private variable mNumSegments		as Integer
-private variable mLeft				as Real
 
 private variable mPerimeter			as Path
 private variable mLines				as List			-- list of line paths
@@ -367,7 +366,6 @@ public handler OnCreate()
 	// Initialise other variables
 	put true into mGeometryIsChanged
 	put (the number of elements in mSegmentNames) into mNumSegments
-	put 0 into mLeft
 	put the empty path into mPerimeter
 	put the empty list into mLines
 	put 0 into mRadius
@@ -503,8 +501,8 @@ private handler drawSegments() returns nothing
 	variable tLabel as String
 	variable tWidth as Real
 	variable tIsIn as Boolean
-	
-	put 0 into mLeft
+	variable tLeft as Real
+	put 0 into tLeft
 	set the font of this canvas to fetchFont()
 	
 	repeat with tX from 1 up to mNumSegments
@@ -518,21 +516,23 @@ private handler drawSegments() returns nothing
 			set the paint of this canvas to fetchPaint("background", "yosemite")
 		end if	
 		
-		variable tSegmentRect as Rectangle
-		put rectangle [mLeft, 0, mLeft+tWidth, my height] into tSegmentRect
+		variable tSegmentRect as List
+		put [tLeft, 0, tLeft+tWidth, my height] into tSegmentRect
+		
+		save state of this canvas
+		clip to rectangle tSegmentRect on this canvas	
+		-- For the rounded rectangle segments at the ends, we fill the round rect beyond the 
+		-- curvature and use the clip rect to display as we would like.
 		if tX = 1 then
-			-- rounded rectangle segment
-			fill rounded rectangle path of tSegmentRect with radius mRadius on this canvas
-			fill rectangle path of rectangle [mLeft+tWidth, 0, mLeft+tWidth*0.5, my height] on this canvas
-				
+			put tLeft + tWidth + mRadius into element 3 of tSegmentRect
+			fill rounded rectangle path of rectangle tSegmentRect with radius mRadius on this canvas
 		else if tX = mNumSegments then
-			-- rounded rectangle segment
-			fill rounded rectangle path of tSegmentRect with radius mRadius on this canvas
-			fill rectangle path of rectangle [mLeft, 0, mLeft+tWidth*0.5, my height] on this canvas
-				
+			put tLeft - mRadius into element 1 of tSegmentRect
+			fill rounded rectangle path of rectangle tSegmentRect with radius mRadius on this canvas
 		else
-			fill rectangle path of tSegmentRect on this canvas
+			fill rectangle path of rectangle tSegmentRect on this canvas
 		end if
+		restore state of this canvas
 
 		if tIsIn then
 			-- set the paint of the label(s) in the selected segment(s)
@@ -543,37 +543,38 @@ private handler drawSegments() returns nothing
 			
 
 		variable tIconPath as Path
-		variable tIconRect as Rectangle
-
-		-- Compute the minimum margin required to provide the correct
-		-- padding ratio.
-		variable tIconMargin as Number
-		if tWidth > my height then
-			put my height * kIconPaddingRatio into tIconMargin
-		else
-			put tWidth * kIconPaddingRatio into tIconMargin
-		end if
-
-		-- Compute the corresponding icon bounding box
-		put rectangle [mLeft + tIconMargin, \
-			tIconMargin, \
-			mLeft + tWidth - tIconMargin, \
-			my height - tIconMargin] into tIconRect
+		variable tLabelRect as Rectangle
 
 		if mSegmentDisplay is "icon" then
+            -- Compute the minimum margin required to provide the correct
+            -- padding ratio.
+            variable tIconMargin as Number
+            if tWidth > my height then
+                put my height * kIconPaddingRatio into tIconMargin
+            else
+                put tWidth * kIconPaddingRatio into tIconMargin
+            end if
+
+            -- Compute the corresponding icon bounding box
+            put rectangle [tLeft + tIconMargin, \
+                tIconMargin, \
+                tLeft + tWidth - tIconMargin, \
+                my height - tIconMargin] into tLabelRect
+
 			if tIsIn then
 				put path iconSVGPathFromName(element tX of mSelectedIcons) into tIconPath
 			else
 				put path iconSVGPathFromName(element tX of mSegmentIcons) into tIconPath
 			end if
-			constrainPathToRect(tIconRect, tIconPath)
+			constrainPathToRect(tLabelRect, tIconPath)
 			fill tIconPath on this canvas
 		else
+			put rectangle [tLeft, 0, tLeft + tWidth, my height] into tLabelRect
 			put (element tX of mSegmentLabels) into tLabel
-			fill text tLabel at center of fetchLabelRect(tWidth) on this canvas
+			fill text tLabel at center of tLabelRect on this canvas
 		end if
 
-		add tWidth to mLeft
+		add tWidth to tLeft
 	end repeat
 	
 end handler
@@ -740,11 +741,6 @@ private handler fetchFont() returns Font
 	put the font of this canvas into tFont
 	set the size of tFont to kTextSize
 	return tFont
-end handler
-
-private handler fetchLabelRect(in pWidth as Real) returns Rectangle
-	return rectangle [mLeft, 0, mLeft + pWidth, my height]
-	
 end handler
 
 private handler fetchWidth(in pSegment as Integer) returns Real
