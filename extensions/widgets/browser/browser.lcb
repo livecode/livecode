@@ -47,6 +47,7 @@ Description:
 The <URL> is the URL of the content be displayed in the browser.
 
 *Note:* The url property reflects the currently displaying page in the browser, and will change when navigating to another page. Setting the htmlText will result in the url property being empty.
+*Note:* Setting the url property to empty will clear the currently loaded page, resulting in a blank page being displayed and the url and htmlText properties being empty.
 
 Name: htmlText
 Type: property
