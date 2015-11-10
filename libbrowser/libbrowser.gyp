@@ -15,6 +15,8 @@
 				# '../libcore/libcore.gyp:libCore',
 				'../thirdparty/libcef/libcef.gyp:libcef_library_wrapper',
 				'../thirdparty/libcef/libcef.gyp:libcef_stubs',
+				
+				'libbrowser-copy',
 			],
 			
 			'include_dirs':
@@ -167,18 +169,6 @@
 						'dependencies':
 						[
 							'libbrowser-cefprocess',
-						],
-					},
-				],
-				
-				[
-					# Copy libbrowser files into the necessary place to run when doing a
-					#    debug build.
-					'"<!(echo $BUILDTYPE)" == "Debug"',
-					{
-						'dependencies':
-						[
-							'libbrowser-copy',
 						],
 					},
 				],
@@ -349,16 +339,38 @@
 							{
 								'destination': '<(PRODUCT_DIR)',
 								'files': [
-									'../prebuilt/lib/linux/<(target_arch)/CEF/',
 									'../prebuilt/lib/linux/<(target_arch)/CEF/icudtl.dat',
 								],
 							},
 							{
-								'destination': '<(PRODUCT_DIR)/CEF',
+								'destination': '<(PRODUCT_DIR)/Externals/',
 								'files': [
-									'<(PRODUCT_DIR)/libbrowser-cefprocess',
+									'../prebuilt/lib/linux/<(target_arch)/CEF',
 								],
 							}
+						],
+					},
+				],
+				
+				[
+					'OS == "win"',
+					{
+						'copies':
+						[
+							{
+								'destination':'<(PRODUCT_DIR)/Externals/',
+								'files':
+								[
+									'../prebuilt/lib/win32/<(target_arch)/CEF/',
+								],
+							},
+							{
+								'destination':'<(PRODUCT_DIR)/Externals/CEF/',
+								'files':
+								[
+									'<(PRODUCT_DIR)/libbrowser-cefprocess.exe',
+								],
+							},
 						],
 					},
 				],
