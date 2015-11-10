@@ -1565,6 +1565,9 @@ bool MCFilesExecPerformReadChunk(MCExecContext &ctxt, int4 p_index, intenum_t p_
                     // EOF is actually not encountered.
                     if (r_stat == IO_EOF)
                         r_stat = IO_NORMAL;
+                    
+                    // Append the buffer that we read until the end of stream
+                    return MCStringAppend(x_buffer, *t_read_buffer);
                     break;
                 }
                 else
@@ -1696,7 +1699,7 @@ void MCFilesExecPerformReadTextUntil(MCExecContext& ctxt, IO_handle p_stream, in
     {
         uindex_t t_new_char_boundary;
         
-        if (!MCFilesExecPerformReadChunk(ctxt, p_index, p_encoding, t_empty_allowed, FU_CODEPOINT, t_duration, p_stream, &t_output, t_stat))
+        if (!MCFilesExecPerformReadChunk(ctxt, p_index, p_encoding, t_empty_allowed, FU_CODEPOINT, t_duration, p_stream, *t_output, t_stat))
             // error occurred while reading a codepoint
             break;
         
