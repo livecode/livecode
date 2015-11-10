@@ -882,41 +882,56 @@ void MCFilesExecPerformOpen(MCExecContext& ctxt, MCNameRef p_name, int p_mode, i
 
 	// Attempt to open the file to find out its current encoding
     // FG-2014-05-21: [[ Bugfix 12246 ]] Don't open devices for BOM read
-	Encoding_type t_encoding = (Encoding_type)p_encoding;
-    if (p_encoding == kMCFileEncodingText && !p_is_driver)
+    Encoding_type t_encoding;
+    uindex_t t_BOM_size;
+    
+    // SN-2015-11-10: [[ Bug 16333 ]] We need to offset the BOM when reading
+    // from the file, if there is any, even if we know what the file encoding is
+    if (p_is_driver)
     {
+        if (p_encoding == kMCFileEncodingText)
+            t_encoding = (Encoding_type)kMCFileEncodingNative;
+        else
+            t_encoding = (Encoding_type)p_encoding;
+        
+        t_BOM_size = 0;
+    }
+    else
+    {
+        t_encoding = (Encoding_type)p_encoding;
+        t_BOM_size = 0;
         IO_handle t_BOM_stream = MCS_open(MCNameGetString(p_name), kMCOpenFileModeRead, True, p_is_driver, 0);
 		if (t_BOM_stream != NULL)
-		{
-			t_encoding = (Encoding_type)MCS_resolve_BOM(t_BOM_stream);
+        {
+            Encoding_type t_bom_encoding;
+            t_bom_encoding = (Encoding_type)MCS_resolve_BOM(t_BOM_stream, t_BOM_size);
 			MCS_close(t_BOM_stream);
+            
+            // Only use the encoding found is case it wasn't provided
+            if (p_encoding == kMCFileEncodingText)
+                t_encoding = t_bom_encoding;
 		}
 		else
 		{
 			t_encoding = (Encoding_type)kMCFileEncodingNative;
 		}
     }
-    // FG-2014-09-23: [[ Bugfix 12545 ]] "text" is not valid when performing I/O
-    else if (p_encoding == kMCFileEncodingText && p_is_driver)
-        t_encoding = (Encoding_type)kMCFileEncodingNative;
-    else
-        t_encoding = (Encoding_type)p_encoding;
 
 	switch (p_mode)
 	{
 	case OM_APPEND:
-        ostream = MCS_open(MCNameGetString(p_name), kMCOpenFileModeAppend, False, p_is_driver, 0);
+        ostream = MCS_open(MCNameGetString(p_name), kMCOpenFileModeAppend, False, p_is_driver, t_BOM_size);
 		break;
 	case OM_NEITHER:
 		break;
 	case OM_READ:
-        istream = MCS_open(MCNameGetString(p_name), kMCOpenFileModeRead, True, p_is_driver, 0);
+        istream = MCS_open(MCNameGetString(p_name), kMCOpenFileModeRead, True, p_is_driver, t_BOM_size);
 		break;
 	case OM_WRITE:
-        ostream = MCS_open(MCNameGetString(p_name), kMCOpenFileModeWrite, False, p_is_driver, 0);
+        ostream = MCS_open(MCNameGetString(p_name), kMCOpenFileModeWrite, False, p_is_driver, t_BOM_size);
 		break;
 	case OM_UPDATE:
-        istream = ostream = MCS_open(MCNameGetString(p_name), kMCOpenFileModeUpdate, False, p_is_driver, 0);
+        istream = ostream = MCS_open(MCNameGetString(p_name), kMCOpenFileModeUpdate, False, p_is_driver, t_BOM_size);
 		break;
 	default:
 		break;
@@ -1369,10 +1384,6 @@ uint4 MCFilesExecPerformReadCodeUnit(MCExecContext& ctxt, int4 p_index, intenum_
 					t_codeunit = MCSwapInt16HostToBig(((unichar_t*)t_bytes . Bytes())[0]);
 				else
 					t_codeunit = *(unichar_t*)t_bytes . Bytes();
-                
-                // SN-2015-11-03: [[ Bug 16286 ]] Skip BOM character
-                if (t_codeunit == 0xFEFF)
-                    break;
 
 				MCStringAppendChar(x_buffer, t_codeunit);
 				t_codeunit_added = 1;
@@ -1398,10 +1409,6 @@ uint4 MCFilesExecPerformReadCodeUnit(MCExecContext& ctxt, int4 p_index, intenum_
                     t_codeunit = MCSwapInt32HostToBig(((uint32_t*)t_bytes . Bytes())[0]);
                 else
                     t_codeunit = *(uint32_t*)t_bytes . Bytes();
-                
-                // SN-2015-11-03: [[ Bug 16286 ]] Skip BOM character
-                if (t_codeunit == 0x0000FEFF)
-                    break;
                 
                 /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)&t_codeunit, t_bytes_read, MCS_file_to_string_encoding((MCFileEncodingType)p_encoding), false, &t_string);
                 /* UNCHECKED */ MCStringAppend(x_buffer, *t_string);
@@ -1474,13 +1481,6 @@ uint4 MCFilesExecPerformReadCodeUnit(MCExecContext& ctxt, int4 p_index, intenum_
 				if (t_sequence_correct)
 				{
 					MCAutoStringRef t_codepoints;
-                    
-                    // SN-2015-11-03: [[ Bug 16286 ]] Skip BOM
-                    if (t_bytes_read == 3 &&
-                            t_bytes . Bytes()[0] == 0xEF &&
-                            t_bytes . Bytes()[1] == 0xBB &&
-                            t_bytes . Bytes()[2] == 0xBF)
-                        break;
                     
 					MCStringCreateWithBytes(t_bytes . Bytes(), t_bytes_read, kMCStringEncodingUTF8, false, &t_codepoints);
 					t_codeunit_added = MCStringGetLength(*t_codepoints);
@@ -1699,7 +1699,7 @@ void MCFilesExecPerformReadTextUntil(MCExecContext& ctxt, IO_handle p_stream, in
     {
         uindex_t t_new_char_boundary;
         
-        if (!MCFilesExecPerformReadChunk(ctxt, p_index, p_encoding, t_empty_allowed, FU_CODEPOINT, t_duration, p_stream, *t_output, t_stat))
+        if (!MCFilesExecPerformReadChunk(ctxt, p_index, p_encoding, t_empty_allowed, FU_CHARACTER, t_duration, p_stream, *t_output, t_stat))
             // error occurred while reading a codepoint
             break;
         
@@ -1725,7 +1725,7 @@ void MCFilesExecPerformReadTextUntil(MCExecContext& ctxt, IO_handle p_stream, in
             unichar_t *t_norm_chunk;
             uint4 t_norm_chunk_size;
 
-            MCUnicodeNormaliseNFC(MCStringGetCharPtr(*t_output) + t_last_char_boundary, t_new_char_boundary, t_norm_chunk, t_norm_chunk_size);
+            MCUnicodeNormaliseNFC(MCStringGetCharPtr(*t_output) + t_last_char_boundary, t_new_char_boundary - t_last_char_boundary, t_norm_chunk, t_norm_chunk_size);
 
             // Append the normalised chunk read to the normalised buffer
             uint4 t_previous_size = t_norm_buf . Size();
@@ -1765,6 +1765,8 @@ void MCFilesExecPerformReadTextUntil(MCExecContext& ctxt, IO_handle p_stream, in
                 --p_count;
             }
         }
+        
+        t_last_char_boundary = t_new_char_boundary;
     }
 
     // We need to discard any char read over the actual amount needed

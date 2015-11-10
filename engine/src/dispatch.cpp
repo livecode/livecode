@@ -735,33 +735,30 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
         }
 
         // SN-2014-10-16: [[ Merge-6.7.0-rc-3 ]] Update to StringRef
-        MCFileEncodingType t_file_encoding = MCS_resolve_BOM(stream);
+        MCFileEncodingType t_file_encoding;
+        uindex_t t_BOM_offset;
         MCStringEncoding t_string_encoding;
         MCAutoStringRef t_raw_script_string, t_LC_script_string;
 
-        uint32_t t_BOM_offset;
+        t_file_encoding = MCS_resolve_BOM(stream, t_BOM_offset);
+        
         switch (t_file_encoding)
         {
         case kMCFileEncodingUTF8:
-            t_BOM_offset = 3;
             t_string_encoding = kMCStringEncodingUTF8;
             break;
         case kMCFileEncodingUTF16:
             t_string_encoding = kMCStringEncodingUTF16;
-            t_BOM_offset = 2;
             break;
         case kMCFileEncodingUTF16BE:
             t_string_encoding = kMCStringEncodingUTF16BE;
-            t_BOM_offset = 2;
             break;
         case kMCFileEncodingUTF16LE:
             t_string_encoding = kMCStringEncodingUTF16LE;
-            t_BOM_offset = 2;
             break;
         default:
             // Assume native
             t_string_encoding = kMCStringEncodingNative;
-            t_BOM_offset = 0;
             break;
         }
 
