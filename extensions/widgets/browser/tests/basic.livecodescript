@@ -18,11 +18,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on TestSetup
 	TestLoadExtension "com.livecode.widget-utils"
-	TestLoadExtension "com.livecode.extensions.livecode.browser"
+	TestLoadExtension "com.livecode.widget.browser"
 end TestSetup
 
 on TestCreateBrowser
-	create widget "testBrowser" as "com.livecode.extensions.livecode.browser"
+	create widget "testBrowser" as "com.livecode.widget.browser"
 	TestAssert "created browser exists", there is a widget "testBrowser"
 	delete widget "testBrowser"
 end TestCreateBrowser
@@ -31,7 +31,7 @@ on TestSetHTMLText
 	local tHTML
 	put "<html><head>TestData</head><body>HTMLText Test Content</body><html>" into tHTML
 	
-	create widget "testBrowser" as "com.livecode.extensions.livecode.browser"
+	create widget "testBrowser" as "com.livecode.widget.browser"
 	set the htmltext of widget "testBrowser" to tHTML
 	
 	TestAssert "url property unset by htmltext", the url of widget "testBrowser" is empty
@@ -41,7 +41,7 @@ on TestSetHTMLText
 end TestSetHTMLText
 
 on TestSetUrlToEmpty
-	create widget "testBrowser" as "com.livecode.extensions.livecode.browser"
+	create widget "testBrowser" as "com.livecode.widget.browser"
 	set the url of widget "testBrowser" to "http://livecode.com"
 	
 	// Now unset the url - this should clear the contents of the browser
