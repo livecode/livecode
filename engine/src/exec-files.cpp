@@ -1401,16 +1401,9 @@ uint4 MCFilesExecPerformReadCodeUnit(MCExecContext& ctxt, int4 p_index, intenum_
             
             if (t_bytes_read == 4 || r_stat == EOF)
             {
-                uint32_t t_codeunit;
                 MCAutoStringRef t_string;
                 
-                // Reverse the bytes in case it's needed
-                if (p_encoding == kMCFileEncodingUTF32BE)
-                    t_codeunit = MCSwapInt32HostToBig(((uint32_t*)t_bytes . Bytes())[0]);
-                else
-                    t_codeunit = *(uint32_t*)t_bytes . Bytes();
-                
-                /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)&t_codeunit, t_bytes_read, MCS_file_to_string_encoding((MCFileEncodingType)p_encoding), false, &t_string);
+                /* UNCHECKED */ MCStringCreateWithBytes(t_bytes . Bytes(), t_bytes_read, MCS_file_to_string_encoding((MCFileEncodingType)p_encoding), false, &t_string);
                 /* UNCHECKED */ MCStringAppend(x_buffer, *t_string);
                 
                 t_codeunit_added = MCStringGetLength(*t_string);
