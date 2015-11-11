@@ -293,9 +293,9 @@
     'rule' MapSyntaxPrecedence(multiplication -> 7)
 
     'rule' MapSyntaxPrecedence(addition -> 8)
+    'rule' MapSyntaxPrecedence(concatenation -> 8)
 
     'rule' MapSyntaxPrecedence(bitwiseshift -> 9)
-    'rule' MapSyntaxPrecedence(concatenation -> 9)
 
     'rule' MapSyntaxPrecedence(bitwiseand -> 10)
 

@@ -344,8 +344,8 @@
     exponentiation,   -- 2 ^ 10
     multiplication,   -- /, *, div, mod
     addition,         -- +, -
-    bitwiseshift,     -- 1 shifted left by 3 bitwise
     concatenation,    -- &, &&
+    bitwiseshift,     -- 1 shifted left by 3 bitwise
     bitwiseand,       -- 5 bitwise and 1
     bitwisexor,       -- 5 bitwise xor 1
     bitwiseor,        -- 5 bitwise or 1
