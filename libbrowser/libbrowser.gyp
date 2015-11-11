@@ -15,8 +15,6 @@
 				# '../libcore/libcore.gyp:libCore',
 				'../thirdparty/libcef/libcef.gyp:libcef_library_wrapper',
 				'../thirdparty/libcef/libcef.gyp:libcef_stubs',
-				
-				'libbrowser-copy',
 			],
 			
 			'include_dirs':
@@ -137,6 +135,32 @@
 							'libbrowser-cefprocess-helpers',
 						],
 					
+						'all_dependent_settings':
+						{
+							'variables':
+							{
+								###'dist_files': [ '<(PRODUCT_DIR)/<(product_name).bundle' ],
+								'dist_aux_files': [ '<(PRODUCT_DIR)/Frameworks' ],
+							},
+						},
+					},
+				],
+				
+				[
+					# Only the CEF platforms need libbrowser-cefprocess
+					'OS == "mac" or OS == "win" or OS == "linux"',
+					{
+						'dependencies':
+						[
+							'libbrowser-cefprocess',
+						],
+					},
+				],
+				
+				# Copy files needed to run from build folder
+				[
+					'OS == "mac"',
+					{
 						# Copy the CEF processes and framework into the expected place
 						'copies':
 						[
@@ -150,25 +174,60 @@
 									'$(SOLUTION_DIR)/prebuilt/lib/mac/Chromium Embedded Framework.framework',
 								],
 							},
-						],
-					
-						'all_dependent_settings':
-						{
-							'variables':
+
 							{
-								###'dist_files': [ '<(PRODUCT_DIR)/<(product_name).bundle' ],
-								'dist_aux_files': [ '<(PRODUCT_DIR)/Frameworks' ],
+								'destination': '<(PRODUCT_DIR)/LiveCode-Community.app/Contents/Frameworks',
+								'files': [
+									'<(PRODUCT_DIR)/libbrowser-cefprocess.app',
+									'<(PRODUCT_DIR)/libbrowser-cefprocess EH.app',
+									'<(PRODUCT_DIR)/libbrowser-cefprocess NP.app',
+									'$(SOLUTION_DIR)/prebuilt/lib/mac/Chromium Embedded Framework.framework',
+								],
+							}
+						],
+					},
+				],
+
+				[
+					'OS == "linux"',
+					{
+						'copies':
+						[
+							{
+								'destination': '<(PRODUCT_DIR)',
+								'files': [
+									'../prebuilt/lib/linux/<(target_arch)/CEF/icudtl.dat',
+								],
 							},
-						},
+							{
+								'destination': '<(PRODUCT_DIR)/Externals/',
+								'files': [
+									'../prebuilt/lib/linux/<(target_arch)/CEF',
+								],
+							}
+						],
 					},
 				],
 				
 				[
-					'OS == "mac" or OS == "win" or OS == "linux"',
+					'OS == "win"',
 					{
-						'dependencies':
+						'copies':
 						[
-							'libbrowser-cefprocess',
+							{
+								'destination':'<(PRODUCT_DIR)/Externals/',
+								'files':
+								[
+									'../prebuilt/lib/win32/<(target_arch)/CEF/',
+								],
+							},
+							{
+								'destination':'<(PRODUCT_DIR)/Externals/CEF/',
+								'files':
+								[
+									'<(PRODUCT_DIR)/libbrowser-cefprocess.exe',
+								],
+							},
 						],
 					},
 				],
@@ -292,89 +351,6 @@
 			{
 				'INFOPLIST_FILE': 'rsrc/libbrowser-cefprocess-Info.plist',
 			},
-		},
-
-		{
-			'target_name': 'libbrowser-copy',
-			'type': 'none',
-			
-			'conditions':
-			[
-				[
-					# Only the CEF platforms need libbrowser-cefprocess
-					'OS == "mac" or OS == "win" or OS == "linux"',
-					{
-						'dependencies':
-						[
-							'libbrowser-cefprocess',
-						],
-					},
-				],
-
-				[
-					'OS == "mac"',
-					{
-						'dependencies':
-						[
-							'libbrowser-cefprocess-helpers',
-						],
-
-						'copies':
-						[
-							{
-								'destination': '<(PRODUCT_DIR)/LiveCode-Community.app/Contents',
-								'files': [
-									'<(PRODUCT_DIR)/Frameworks/',
-								],
-							}
-						],
-					},
-				],
-
-				[
-					'OS == "linux"',
-					{
-						'copies':
-						[
-							{
-								'destination': '<(PRODUCT_DIR)',
-								'files': [
-									'../prebuilt/lib/linux/<(target_arch)/CEF/icudtl.dat',
-								],
-							},
-							{
-								'destination': '<(PRODUCT_DIR)/Externals/',
-								'files': [
-									'../prebuilt/lib/linux/<(target_arch)/CEF',
-								],
-							}
-						],
-					},
-				],
-				
-				[
-					'OS == "win"',
-					{
-						'copies':
-						[
-							{
-								'destination':'<(PRODUCT_DIR)/Externals/',
-								'files':
-								[
-									'../prebuilt/lib/win32/<(target_arch)/CEF/',
-								],
-							},
-							{
-								'destination':'<(PRODUCT_DIR)/Externals/CEF/',
-								'files':
-								[
-									'<(PRODUCT_DIR)/libbrowser-cefprocess.exe',
-								],
-							},
-						],
-					},
-				],
-			],
 		},
 	],
 
