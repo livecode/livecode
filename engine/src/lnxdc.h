@@ -333,11 +333,11 @@ public:
 #endif
     
     // Processes all outstanding GDK events and adds them to the event queue
-    void EnqueueGdkEvents();
+    void EnqueueGdkEvents(bool p_may_block = false);
     
     // Searches the event queue for an event that passes the given filter
     typedef bool (*event_filter)(GdkEvent*, void *);
-    bool GetFilteredEvent(event_filter, GdkEvent* &r_event, void *);
+    bool GetFilteredEvent(event_filter, GdkEvent* &r_event, void *, bool p_may_block = false);
     
     // Utility function - maps an X drawing operation to the GDK equivalent
     static GdkFunction XOpToGdkOp(int op);

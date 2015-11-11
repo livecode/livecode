@@ -102,6 +102,13 @@ bool MCClipboard::IsLocked() const
 
 void MCClipboard::Clear()
 {
+    // Clear the private data
+    if (m_private_data != NULL)
+    {
+        MCValueRelease(m_private_data);
+        m_private_data = NULL;
+    }
+    
     // Pass on the request
     Lock();
     m_clipboard->Clear();
@@ -159,7 +166,7 @@ bool MCClipboard::Rebind(MCRawClipboard* p_clipboard)
 
 bool MCClipboard::IsEmpty() const
 {
-    return m_clipboard->GetItemCount() == 0;
+    return m_clipboard->GetItemCount() == 0 && !HasPrivateData();
 }
 
 bool MCClipboard::AddFileList(MCStringRef p_file_names)
