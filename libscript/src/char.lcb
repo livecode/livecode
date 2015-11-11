@@ -91,7 +91,7 @@ Description:
 Tags: Strings
 */
 
-syntax CountCharsOf is prefix operator with precedence 1
+syntax CountCharsOf is prefix operator with function chunk precedence
 	"the" "number" "of" "chars" "in" <Target: Expression>
 begin
 	MCCharEvalNumberOfCharsIn(Target, output)
@@ -116,7 +116,7 @@ Either locates the char at the given index for use as the target container of an
 Tags: Strings
 */
 
-syntax SingletonCharOf is prefix operator with precedence 3
+syntax SingletonCharOf is prefix operator with subscript chunk precedence
 	"char" <Index: Expression> "of" <Target: Expression>
 begin
 	MCCharFetchCharOf(Index, Target, output)
@@ -142,7 +142,7 @@ Either locates the chars between the given indices for use as the target contain
 Tags: Strings
 */
 
-syntax RangeCharOf is prefix operator with precedence 3
+syntax RangeCharOf is prefix operator with subscript chunk precedence
 	"char" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
 begin
 	MCCharFetchCharRangeOf(Start, Finish, Target, output)
@@ -169,7 +169,7 @@ Either locates the first char for use as the target container of another operati
 Tags: Strings
 */
 
-syntax FirstCharOf is prefix operator with precedence 1
+syntax FirstCharOf is prefix operator with subscript chunk precedence
 	"the" "first" "char" "of" <Target: Expression>
 begin
 	MCCharFetchFirstCharOf(Target, output)
@@ -196,7 +196,7 @@ Either locates the last char for use as the target container of another operatio
 Tags: Strings
 */
 
-syntax LastCharOf is prefix operator with precedence 1
+syntax LastCharOf is prefix operator with subscript chunk precedence
 	"the" "last" "char" "of" <Target: Expression>
 begin
 	MCCharFetchLastCharOf(Target, output)
@@ -320,7 +320,7 @@ Description:
 Tags: Strings
 */
 
-syntax CharIsInString is neutral binary operator with precedence 1
+syntax CharIsInString is neutral binary operator with comparison precedence
     <Needle: Expression> "is" "in" <Source: Expression>
 begin
     MCCharEvalIsAmongTheCharsOf(Needle, Source, output)
@@ -356,12 +356,12 @@ The first (respectively last) offset of <Needle> in <Target> is number of chars 
 Tags: Strings
 */
 
-syntax CharOffset is prefix operator with precedence 1
+syntax CharOffset is prefix operator with function chunk precedence
     "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "in" <Target: Expression>
 begin
     MCCharEvalOffsetOfChars(IsLast, Needle, Target, output)
 end syntax
-syntax CharIndex is prefix operator with precedence 1
+syntax CharIndex is prefix operator with function chunk precedence
     "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "index" "of" <Needle: Expression> "in" <Target: Expression>
 begin
     MCCharEvalOffsetOfChars(IsLast, Needle, Target, output)
@@ -386,12 +386,12 @@ The first (respectively last) offset of <Needle> in <Target> is number of chars 
 
 Tags: Strings
 */
-syntax CharOffsetAfter is prefix operator with precedence 1
+syntax CharOffsetAfter is prefix operator with function chunk precedence
     "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
 begin
     MCCharEvalOffsetOfCharsAfter(IsLast, Needle, After, Target, output)
 end syntax
-syntax CharIndexAfter is prefix operator with precedence 1
+syntax CharIndexAfter is prefix operator with function chunk precedence
     "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "index" "of" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
 begin
     MCCharEvalOffsetOfCharsAfter(IsLast, Needle, After, Target, output)
@@ -423,12 +423,12 @@ The first (respectively last) offset of <Needle> in <Target> is number of chars 
 Tags: Strings
 */
 
-syntax CharOffsetBefore is prefix operator with precedence 1
+syntax CharOffsetBefore is prefix operator with function chunk precedence
     "the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "offset" "of" <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
 begin
     MCCharEvalOffsetOfCharsBefore(IsFirst, Needle, Before, Target, output)
 end syntax
-syntax CharIndexBefore is prefix operator with precedence 1
+syntax CharIndexBefore is prefix operator with function chunk precedence
     "the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "index" "of" <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
 begin
     MCCharEvalOffsetOfCharsBefore(IsFirst, Needle, Before, Target, output)
@@ -449,7 +449,7 @@ Description:
 Tags: Strings
 */
 
-syntax ContainsChars is neutral binary operator with precedence 1
+syntax ContainsChars is neutral binary operator with comparison precedence
     <Source: Expression> "contains" <Needle: Expression>
 begin
     MCCharEvalContains(Source, Needle, output)
@@ -480,7 +480,7 @@ Description:
 Tags: Strings
 */
 
-syntax StringBeginsWithString is neutral binary operator with precedence 1
+syntax StringBeginsWithString is neutral binary operator with comparison precedence
     <Source: Expression> "begins" "with" <Prefix: Expression>
 begin
     MCCharEvalBeginsWith(Source, Prefix, output)
@@ -509,7 +509,7 @@ Description:
 Tags: Strings
 */
 
-syntax StringEndsWithString is neutral binary operator with precedence 1
+syntax StringEndsWithString is neutral binary operator with comparison precedence
     <Source: Expression> "ends" "with" <Suffix: Expression>
 begin
     MCCharEvalEndsWith(Source, Suffix, output)
@@ -583,7 +583,7 @@ Returns the Unicode codepoint index of a single character.
 Tags: Strings
 */
 
-syntax CodeOfChar is prefix operator with precedence 2
+syntax CodeOfChar is prefix operator with function chunk precedence
     "the" "code" "of" <Target: Expression>
 begin
     MCStringEvalCodeOfChar(Target, output)
@@ -601,7 +601,7 @@ given value.
 Tags: Strings
 */
 
-syntax CharWithCode is prefix operator with precedence 2
+syntax CharWithCode is prefix operator with function chunk precedence
     "the" "char" "with" "code" <Index: Expression>
 begin
     MCStringEvalCharWithCode(Index, output)

@@ -46,7 +46,7 @@ output:     Returns true if the given expression <Target> evaluates to the empty
 
 */
 
-syntax IsEmpty is postfix operator with precedence 7
+syntax IsEmpty is postfix operator with comparison precedence
     <Target: Expression> "is" "empty"
 begin
     MCTypeEvalIsEmpty(Target, output)
@@ -60,7 +60,7 @@ output:     Returns false if the given expression <Target> evaluates to the empt
 
 */
 
-syntax IsNotEmpty is postfix operator with precedence 7
+syntax IsNotEmpty is postfix operator with comparison precedence
 	<Target: Expression> "is not" "empty"
 begin
 	MCTypeEvalIsNotEmpty(Target, output)
@@ -80,7 +80,7 @@ Description:
 References: IsNotNothing (operator)
 */
 
-syntax IsDefined is postfix operator with precedence 7
+syntax IsDefined is postfix operator with comparison precedence
     deprecate with message "Use 'is not nothing' instead"
 	<Target: Expression> "is" "defined"
 begin
@@ -100,7 +100,7 @@ References: IsNothing (operator)
 
 */
 
-syntax IsNotDefined is postfix operator with precedence 7
+syntax IsNotDefined is postfix operator with comparison precedence
     deprecate with message "Use 'is nothing' instead"
 	<Target: Expression> "is not" "defined"
 begin
@@ -119,7 +119,7 @@ Description:
 References: IsNothing (operator)
 
 */
-syntax IsUndefined is postfix operator with precedence 7
+syntax IsUndefined is postfix operator with comparison precedence
     deprecate with message "Use 'is nothing' instead"
 	<Target: Expression> "is undefined"
 begin
@@ -137,7 +137,7 @@ Description:
 References: IsNotNothing (operator)
 
 */
-syntax IsNotUndefined is postfix operator with precedence 7
+syntax IsNotUndefined is postfix operator with comparison precedence
     deprecate with message "Use 'is not nothing' instead"
 	<Target: Expression> "is not undefined"
 begin
@@ -159,7 +159,7 @@ Use the <IsNothing> operator to test if operators or handlers have returned anyt
 
 */
 
-syntax NothingIsNothing is neutral binary operator with precedence 7
+syntax NothingIsNothing is neutral binary operator with comparison precedence
     <Left: Expression> "is" <Right: Expression>
 begin
     MCNothingEvalIsEqualToNothing(Left, Right, output)
@@ -185,7 +185,7 @@ Description:
 Use the <IsNotNothing> operator to test if operators or handlers have returned anything.
 */
 
-syntax NothingIsNotNothing is neutral binary operator with precedence 7
+syntax NothingIsNotNothing is neutral binary operator with comparison precedence
     <Left: Expression> "is not" <Right: Expression>
 begin
     MCNothingEvalIsNotEqualToNothing(Left, Right, output)
@@ -202,7 +202,7 @@ output:     Returns true if the given expression <Target> is a boolean, and fals
 
 */
 
-syntax IsABoolean is postfix operator with precedence 7
+syntax IsABoolean is postfix operator with classification precedence
 	<Target: Expression> "is" "a" "boolean"
 begin
 	MCTypeEvalIsABoolean(Target, output)
@@ -216,7 +216,7 @@ output:     Returns true if the given expression <Target> is a number, and false
 
 */
 
-syntax IsANumber is postfix operator with precedence 7
+syntax IsANumber is postfix operator with classification precedence
 	<Target: Expression> "is" "a" "number"
 begin
 	MCTypeEvalIsANumber(Target, output)
@@ -230,7 +230,7 @@ output:     Returns true if the given expression <Target> is a string, and false
 
 */
 
-syntax IsAString is postfix operator with precedence 7
+syntax IsAString is postfix operator with classification precedence
 	<Target: Expression> "is" "a" "string"
 begin
 	MCTypeEvalIsAString(Target, output)
@@ -244,7 +244,7 @@ output:     Returns true if the given expression <Target> is data, and false if 
 
 */
 
-syntax IsAData is postfix operator with precedence 7
+syntax IsAData is postfix operator with classification precedence
 	<Target: Expression> "is" "a" "data"
 begin
 	MCTypeEvalIsAData(Target, output)
@@ -258,7 +258,7 @@ output:     Returns true if the given expression <Target> is an array, and false
 
 */
 
-syntax IsAnArray is postfix operator with precedence 7
+syntax IsAnArray is postfix operator with classification precedence
 	<Target: Expression> "is" "an" "array"
 begin
 	MCTypeEvalIsAnArray(Target, output)
@@ -272,7 +272,7 @@ output:     Returns true if the given expression <Target> is a list, and false i
 
 */
 
-syntax IsAList is postfix operator with precedence 7
+syntax IsAList is postfix operator with classification precedence
 	<Target: Expression> "is" "a" "list"
 begin
 	MCTypeEvalIsAList(Target, output)
