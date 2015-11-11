@@ -1002,14 +1002,14 @@ GdkAtom MCclientlistatom;
 GdkAtom MCdndselectionatom;
 
 
-void MCScreenDC::EnqueueGdkEvents()
+void MCScreenDC::EnqueueGdkEvents(bool p_block)
 {
     while (true)
     {
-        // Run the GLib main loop
+        // Run the GLib main loop. We only block for the first iteration.
         //gdk_threads_leave();
-        while (g_main_context_iteration(NULL, FALSE))
-            ;
+        while (g_main_context_iteration(NULL, p_block))
+            p_block = false;
         //gdk_threads_enter();
         
         // Enqueue any further GDK events
@@ -1025,10 +1025,12 @@ void MCScreenDC::EnqueueGdkEvents()
     }
 }
 
-bool MCScreenDC::GetFilteredEvent(bool (*p_filterfn)(GdkEvent*, void*), GdkEvent* &r_event, void *p_context)
+bool MCScreenDC::GetFilteredEvent(bool (*p_filterfn)(GdkEvent*, void*), GdkEvent* &r_event, void *p_context, bool p_may_block)
 {
-    // Gather all events into the pending events queue
-    EnqueueGdkEvents();
+    // Gather all events into the pending events queue. Because we are looking
+    // for a particular event, we can allow blocking until it arrives if the
+    // caller desires it.
+    EnqueueGdkEvents(p_may_block);
     
     MCEventnode *t_eventnode = pendingevents;
     while (t_eventnode != NULL)
