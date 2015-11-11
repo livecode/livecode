@@ -24,19 +24,15 @@ private function invalidReadResult pResult
    return false
 end invalidReadResult
 
-private function getTextFile  pEncoding, pIsDecomposed, pHasBOM
-   local tBom, tDecomposed
+private function getTextFile  pEncoding, pComposition, pHasBOM
+   local tBom
    if pHasBOM then
       put "BOM" into tBom
    else
       put "noBOM" into tBom
    end if
    
-   if pIsDecomposed then
-      put "_NFD" into tDecomposed
-   end if
-   
-   return merge("[[pEncoding]][[tDecomposed]]_[[tBom]].txt")
+   return merge("[[pEncoding]]_[[pComposition]]_[[tBom]].txt")
 end getTextFile
 
 private function getStackFolder
@@ -125,6 +121,9 @@ constant kReadUntil = "until"
 constant kNoBom = false
 constant kBom = true
 
+constant kDecomposed = "NFD"
+constant kPrecomposed = "NFC"
+
 constant kGuessEncoding = true
 constant kDontGuessEncoding = false
 
@@ -164,7 +163,7 @@ end __testAssert
 private command runTest pEncoding, pReadType
    repeat for each item tBom in kNoBom,kBOM
       repeat for each item tGuess in kGuessEncoding,kDontGuessEncoding
-         repeat for each item tDecomposed in "false,true"
+         repeat for each item tDecomposed in kDecomposed,kPrecomposed
             local tFilename, tTextFile
             put getTextFile(pEncoding, tDecomposed, tBom) into tTextFile
             put getStackFolder() & slash & tTextFile into tFilename
@@ -229,19 +228,19 @@ end TestUnicodeFiles3
 // UTF-16
 ////////////////
 
-// Tests for UTF-16 reading char by char
+// Tests for UTF-16BE reading char by char
 on TestUnicodeFiles4
-   runTest "utf16", kReadCharByChar
+   runTest "utf16BE", kReadCharByChar
 end TestUnicodeFiles4
 
-// Tests for UTF-16 reading all
+// Tests for UTF-16BE reading all
 on TestUnicodeFiles5
-   runTest "utf16", kReadAll
+   runTest "utf16BE", kReadAll
 end TestUnicodeFiles5
 
-// Tests for UTF-16 reading until
+// Tests for UTF-16BE reading until
 on TestUnicodeFiles6
-   runTest "utf16", kReadUntil
+   runTest "utf16BE", kReadUntil
 end TestUnicodeFiles6
 
 // Tests for UTF-16LE reading char by char
@@ -263,19 +262,19 @@ end TestUnicodeFiles9
 // UTF-32
 ////////////////
 
-// Tests for UTF-32 reading char by char
+// Tests for UTF-32BE reading char by char
 on TestUnicodeFiles10
-   runTest "utf32", kReadCharByChar
+   runTest "utf32BE", kReadCharByChar
 end TestUnicodeFiles10
 
-// Tests for UTF-32 reading all
+// Tests for UTF-32BE reading all
 on TestUnicodeFiles11
-   runTest "utf32", kReadAll
+   runTest "utf32BE", kReadAll
 end TestUnicodeFiles11
 
-// Tests for UTF-32 reading until
+// Tests for UTF-32BE reading until
 on TestUnicodeFiles12
-   runTest "utf32", kReadUntil
+   runTest "utf32BE", kReadUntil
 end TestUnicodeFiles12
 
 ////////////////
@@ -295,6 +294,7 @@ end TestUnicodeFiles14
 on TestUnicodeFiles15
    runTest "utf32LE", kReadUntil
 end TestUnicodeFiles15
+
 
 on runAll
    repeat with i=1 to 15
