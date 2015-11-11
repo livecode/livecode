@@ -421,6 +421,8 @@ private:
     bool m_is_eof;
 };
 
+// Our buffer is at least 8 bytes-wide, to avoid constant memory (de)allocation
+#define BUFFERED_FILE_MIN_SIZE 16
 
 // MCBufferedFileHandle implements its own 'PutBack' method, which stores chars
 // in a buffer - and they will be retrieved at the following Read.
@@ -450,6 +452,7 @@ public:
     virtual ~MCBufferedFileHandle()
     {
         delete m_handle;
+        MCMemoryDeallocate(m_buffer);
     }
     
     virtual void Close(void)
@@ -466,23 +469,51 @@ public:
     // Read must take into account the chars / bytes that have been put back
     virtual bool Read(void *p_buffer, uint32_t p_length, uint32_t& r_read)
     {
-        uint32_t t_copy_length;
+        uint32_t t_copy_length, t_remaining, t_new_buffer_length;
         
         // Shortcut if we have no buffer
         if (m_buffer_size == 0)
             return m_handle -> Read(p_buffer, p_length, r_read);
         
         t_copy_length = MCMin(p_length, m_buffer_size);
+        t_remaining = p_length - t_copy_length;
+        t_new_buffer_length =m_buffer_size - t_copy_length;
         
         // We copy from the buffer the adequate amount of bytes
         MCMemoryCopy(p_buffer, m_buffer, t_copy_length);
         
-        // Shrink the buffer after copy
-        MCMemoryMove(m_buffer, m_buffer + t_copy_length, m_buffer_size - t_copy_length);
-        m_buffer_size -= t_copy_length;
-        MCMemoryReallocate(m_buffer, m_buffer_size, m_buffer);
         
-        return m_handle -> Read((char*)p_buffer + t_copy_length, p_length, r_read);
+        // Move the buffer content and shrink it
+        if (m_buffer_size)
+            MCMemoryMove(m_buffer, m_buffer + t_copy_length, t_new_buffer_length);
+        
+
+        // We only shrink the buffer if it is over the minimum size.
+        if (m_buffer_size > BUFFERED_FILE_MIN_SIZE)
+        {
+            uindex_t t_new_size;
+            t_new_size = MCMax(t_new_buffer_length, BUFFERED_FILE_MIN_SIZE);
+            
+            if (!MCMemoryReallocate(m_buffer, t_new_buffer_length, m_buffer))
+                return false;
+        }
+        
+        m_buffer_size = t_new_buffer_length;
+        
+        if (t_remaining != 0)
+        {
+            bool t_success;
+            uint32_t t_bytes_read;
+            t_success = m_handle -> Read((char*)p_buffer + t_copy_length, t_remaining, t_bytes_read);
+            
+            r_read = t_copy_length + t_bytes_read;
+            return t_success;
+        }
+        else
+        {
+            r_read = t_copy_length;
+            return true;
+        }
     }
     
     virtual bool Write(const void *p_buffer, uint32_t p_length)
@@ -513,17 +544,25 @@ public:
         return m_handle -> Flush();
     }
     
-    // PutBack saves the char in our buffer.
-    // If chars are already existing, then
+    // PutBack saves the char at the front of our buffer.
     virtual bool PutBack(char p_char)
     {
-        if (!MCMemoryReallocate(m_buffer, m_buffer_size + 1, m_buffer))
-            return false;
+        if (m_buffer == NULL)
+        {
+            if (!MCMemoryAllocate(BUFFERED_FILE_MIN_SIZE, m_buffer))
+                return false;
+        }
+        else if (m_buffer_size == BUFFERED_FILE_MIN_SIZE)
+        {
+            if (!MCMemoryReallocate(m_buffer, m_buffer_size + 1, m_buffer))
+                return false;
+        }
         
-        // Move the buffer by 1
-        MCMemoryMove(m_buffer + 1, m_buffer, 1);
+        // Move the buffer by 1, to leave empty room at the front of it
+        MCMemoryMove(m_buffer + 1, m_buffer, m_buffer_size);
         
         m_buffer[0] = (byte_t)p_char;
+        
         ++m_buffer_size;
         
         return true;
@@ -566,7 +605,6 @@ private:
             m_buffer_size = 0;
         }
     }
-    
 };
 
 enum MCServiceType
