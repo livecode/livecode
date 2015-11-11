@@ -618,8 +618,8 @@
     'rule' SyntaxPrecedence(-> functionchunk):
         "function chunk"
 
-    'rule' SyntaxPrecedence(-> constructorchunk):
-        "constructor chunk"
+    'rule' SyntaxPrecedence(-> constructor):
+        "constructor"
 
     'rule' SyntaxPrecedence(-> conversion):
         "conversion"

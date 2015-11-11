@@ -437,7 +437,7 @@ random data.
 Tags: Binary, Random
 
 */
-syntax RandomBytes is postfix operator with constructor chunk precedence
+syntax RandomBytes is postfix operator with constructor precedence
 	<Count : Expression> "random" "bytes"
 begin
 	MCDataExecRandomBytes(Count, output)

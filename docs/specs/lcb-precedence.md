@@ -32,7 +32,7 @@ Lower precedence numbers are more tightly-binding.
 | 3     | property          | `the paint of this canvas`    |
 |       | subscript chunk   | `char 2 of tString`           |
 |       | function chunk    | `the length of tList`         |
-|       | constructor chunk | `rectangle tList`             |
+|       | constructor       | `rectangle tList`             |
 | 4     | conversion        | `tString parsed as number`    |
 | 5     | modifier          | `-tNum`, `bitwise not`        |
 | 6     | exponentiation    | `^`                           |

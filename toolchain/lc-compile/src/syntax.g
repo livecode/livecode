@@ -282,7 +282,7 @@
     'rule' MapSyntaxPrecedence(property -> 3)
     'rule' MapSyntaxPrecedence(subscriptchunk -> 3)
     'rule' MapSyntaxPrecedence(functionchunk -> 3)
-    'rule' MapSyntaxPrecedence(constructorchunk -> 3)
+    'rule' MapSyntaxPrecedence(constructor -> 3)
 
     'rule' MapSyntaxPrecedence(conversion -> 4)
 

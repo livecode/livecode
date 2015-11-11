@@ -99,7 +99,7 @@ Example:
 Tags:		Canvas
 */
 
-syntax RectangleMake is prefix operator with constructor chunk precedence
+syntax RectangleMake is prefix operator with constructor precedence
 	"rectangle" <mRect: Expression>
 begin
     MCCanvasRectangleMakeWithList(mRect, output)
@@ -423,7 +423,7 @@ Example:
 Tags: Canvas
 */
 
-syntax ColorMake is prefix operator with constructor chunk precedence
+syntax ColorMake is prefix operator with constructor precedence
 	"color" <mColor: Expression>
 begin
 	MCCanvasColorMakeWithList(mColor, output)
@@ -621,7 +621,7 @@ Example:
 Tags: Canvas
 */
 
-syntax TransformMakeScale is prefix operator with constructor chunk precedence
+syntax TransformMakeScale is prefix operator with constructor precedence
 	"transform" "with" "scale" <mScale: Expression>
 begin
     MCCanvasTransformMakeScaleWithList(mScale, output)
@@ -642,7 +642,7 @@ Example:
 Tags: Canvas
 */
 
-syntax TransformMakeSkew is prefix operator with constructor chunk precedence
+syntax TransformMakeSkew is prefix operator with constructor precedence
 	"transform" "with" "skew" <mSkew: Expression>
 begin
 	MCCanvasTransformMakeSkewWithList(mSkew, output)
@@ -663,7 +663,7 @@ Example:
 Tags: Canvas
 */
 
-syntax TransformMakeRotation is prefix operator with constructor chunk precedence
+syntax TransformMakeRotation is prefix operator with constructor precedence
 	"transform" "with" "rotation" "by" <mRotation: Expression>
 begin
 	MCCanvasTransformMakeRotation(mRotation, output)
@@ -684,7 +684,7 @@ Example:
 Tags: Canvas
 */
 
-syntax TransformMakeTranslation is prefix operator with constructor chunk precedence
+syntax TransformMakeTranslation is prefix operator with constructor precedence
 	"transform" "with" "translation" <mTranslation: Expression>
 begin
     MCCanvasTransformMakeTranslationWithList(mTranslation, output)
@@ -705,7 +705,7 @@ Example:
 Tags: Canvas
 */
 
-syntax TransformMakeWithMatrixAsList is prefix operator with constructor chunk precedence
+syntax TransformMakeWithMatrixAsList is prefix operator with constructor precedence
 	"transform" "with" "matrix" <mMatrix: Expression>
 begin
 	MCCanvasTransformMakeWithMatrixAsList(mMatrix, output)
@@ -1124,7 +1124,7 @@ Example:
 Tags: Canvas
 */
 
-syntax SolidPaintMake is prefix operator with constructor chunk precedence
+syntax SolidPaintMake is prefix operator with constructor precedence
 	"solid" "paint" "with" <mColor: Expression>
 begin
 	MCCanvasSolidPaintMakeWithColor(mColor, output)
@@ -1198,7 +1198,7 @@ Example:
 Tags: Canvas
 */
 
-syntax PatternMake is prefix operator with constructor chunk precedence
+syntax PatternMake is prefix operator with constructor precedence
 	"pattern" "with" <mImage: Expression>
 begin
 	MCCanvasPatternMakeWithImage(mImage, output)
@@ -1228,7 +1228,7 @@ Example:
 Tags: Canvas
 */
 
-syntax PatternMakeTransformed is prefix operator with constructor chunk precedence
+syntax PatternMakeTransformed is prefix operator with constructor precedence
 	"pattern" "with" <mImage: Expression> "transformed" "by" <mTransform: Expression>
 begin
     MCCanvasPatternMakeWithTransformedImage(mImage, mTransform, output)
@@ -1254,7 +1254,7 @@ Example:
 Tags: Canvas
 */
 
-syntax PatternMakeScaledBy is prefix operator with constructor chunk precedence
+syntax PatternMakeScaledBy is prefix operator with constructor precedence
     "pattern" "with" <mImage: Expression> "scaled" "by" <mScale: Expression>
 begin
 	MCCanvasPatternMakeWithImageScaledWithList(mImage, mScale, output)
@@ -1282,7 +1282,7 @@ Example:
 Tags: Canvas
 */
 
-syntax PatternMakeTranslatedBy is prefix operator with constructor chunk precedence
+syntax PatternMakeTranslatedBy is prefix operator with constructor precedence
     "pattern" "with" <mImage: Expression> "translated" "by" <mTranslation: Expression>
 begin
 	MCCanvasPatternMakeWithImageTranslatedWithList(mImage, mTranslation, output)
@@ -1308,7 +1308,7 @@ Example:
 Tags: Canvas
 */
 
-syntax PatternMakeRotatedBy is prefix operator with constructor chunk precedence
+syntax PatternMakeRotatedBy is prefix operator with constructor precedence
     "pattern" "with" <mImage: Expression> "rotated" "by" <mRotation: Expression>
 begin
 	MCCanvasPatternMakeWithRotatedImage(mImage, mRotation, output)
@@ -1542,7 +1542,7 @@ Example:
 Tags: Canvas
 */
 
-syntax GradientStopMake is prefix operator with constructor chunk precedence
+syntax GradientStopMake is prefix operator with constructor precedence
 	"gradient" "stop" "at" <mOffset: Expression> "with" <mColor: Expression>
 begin
 	MCCanvasGradientStopMake(mOffset, mColor, output)
@@ -1572,7 +1572,7 @@ Example:
 Tags: Canvas
 */
 
-syntax GradientMakeWithRamp is prefix operator with constructor chunk precedence
+syntax GradientMakeWithRamp is prefix operator with constructor precedence
 	<mType: GradientType> "gradient" "with" "ramp" <mRamp: Expression>
 begin
 	MCCanvasGradientMakeWithRamp(mType, mRamp, output)
@@ -2098,7 +2098,7 @@ Example:
 Tags: Canvas
 */
 
-syntax ImageMakeFromFile is prefix operator with constructor chunk precedence
+syntax ImageMakeFromFile is prefix operator with constructor precedence
 	"image" "from" "file" <mPath: Expression>
 begin
 	MCCanvasImageMakeWithPath(mPath, output)
@@ -2120,7 +2120,7 @@ Example:
 
 Tags: Canvas
 */
-syntax ImageMakeFromResourceFile is prefix operator with constructor chunk precedence
+syntax ImageMakeFromResourceFile is prefix operator with constructor precedence
 	"image" "from" "resource" "file" <mResource: Expression>
 begin
 	MCCanvasImageMakeWithResourceFile(mResource, output)
@@ -2145,7 +2145,7 @@ Example:
 
 Tags: Canvas
 */
-syntax ImageMakeFromData is prefix operator with constructor chunk precedence
+syntax ImageMakeFromData is prefix operator with constructor precedence
 	"image" "from" "data" <mData: Expression>
 begin
 	MCCanvasImageMakeWithData(mData, output)
@@ -2172,7 +2172,7 @@ Example:
 
 Tags: Canvas
 */
-syntax ImageMakeWithPixels is prefix operator with constructor chunk precedence
+syntax ImageMakeWithPixels is prefix operator with constructor precedence
 	"image" "of" "size" <mSize: Expression> "with" "pixels" <mPixels: Expression>
 begin
 //	MCCanvasImageMakeWithPixels(mSize[0], mSize[1], mPixels, output)
@@ -2363,7 +2363,7 @@ Example:
 
 Tags: Canvas
 */
-syntax PathMake is prefix operator with constructor chunk precedence
+syntax PathMake is prefix operator with constructor precedence
 	"path" <mInstructions: Expression>
 begin
 	MCCanvasPathMakeWithInstructionsAsString(mInstructions, output)
@@ -2412,13 +2412,13 @@ Example:
 
 Tags: Canvas
 */
-syntax PathMakeWithRoundedRectangleWithRadius is prefix operator with constructor chunk precedence
+syntax PathMakeWithRoundedRectangleWithRadius is prefix operator with constructor precedence
 	"rounded" "rectangle" "path" "of" <mRect: Expression> "with" "radius" <mRadius: Expression>
 begin
 	MCCanvasPathMakeWithRoundedRectangle(mRect, mRadius, output)
 end syntax
 
-syntax PathMakeWithRoundedRectangleWithRadii is prefix operator with constructor chunk precedence
+syntax PathMakeWithRoundedRectangleWithRadii is prefix operator with constructor precedence
 	"rounded" "rectangle" "path" "of" <mRect: Expression> "with" "radii" <mRadii: Expression>
 begin
 	MCCanvasPathMakeWithRoundedRectangleWithRadiiAsList(mRect, mRadii, output)
@@ -2440,7 +2440,7 @@ Example:
 
 Tags: Canvas
 */
-syntax PathMakeWithRectangle is prefix operator with constructor chunk precedence
+syntax PathMakeWithRectangle is prefix operator with constructor precedence
 	"rectangle" "path" "of" <mRect: Expression>
 begin
 	MCCanvasPathMakeWithRectangle(mRect, output)
@@ -2463,7 +2463,7 @@ Example:
 
 Tags: Canvas
 */
-syntax PathMakeWithCircle is prefix operator with constructor chunk precedence
+syntax PathMakeWithCircle is prefix operator with constructor precedence
 	"circle" "path" "centered" "at" <mCenter: Expression> "with" "radius" <mRadius: Expression>
 begin
 	MCCanvasPathMakeWithCircle(mCenter, mRadius, output)
@@ -2486,7 +2486,7 @@ Example:
 
 Tags: Canvas
 */
-syntax PathMakeWithEllipse is prefix operator with constructor chunk precedence
+syntax PathMakeWithEllipse is prefix operator with constructor precedence
 	"ellipse" "path" "centered" "at" <mPoint: Expression> "with" "radii" <mRadii: Expression>
 begin
 	MCCanvasPathMakeWithEllipseWithRadiiAsList(mPoint, mRadii, output)
@@ -2509,7 +2509,7 @@ Example:
 
 Tags: Canvas
 */
-syntax PathMakeWithLine is prefix operator with constructor chunk precedence
+syntax PathMakeWithLine is prefix operator with constructor precedence
 	"line" "path" "from" <mFrom: Expression> "to" <mTo: Expression>
 begin
 	MCCanvasPathMakeWithLine(mFrom, mTo, output)
@@ -2536,7 +2536,7 @@ Example:
 
 Tags: Canvas
 */
-syntax PathMakeWithPoints is prefix operator with constructor chunk precedence
+syntax PathMakeWithPoints is prefix operator with constructor precedence
 	( "polygon" <mClosed=true> | "polyline" <mClosed=false> ) "path" "with" "points" <mPoints: Expression>
 begin
 	MCCanvasPathMakeWithPoints(mClosed, mPoints, output)
@@ -2566,7 +2566,7 @@ Example:
 
 Tags: Canvas
 */
-syntax PathMakeWithArc is prefix operator with constructor chunk precedence
+syntax PathMakeWithArc is prefix operator with constructor precedence
 	"arc" "path" "centered" "at" <mCenter: Expression> "with" [ "radius" <mRadius: Expression> | "radii" <mRadii: Expression> ] "from" <mStartAngle: Expression> "to" <mEndAngle: Expression>
 begin
 	MCCanvasPathMakeWithArcWithRadius(mCenter, mRadius, mStartAngle, mEndAngle, output)
@@ -2597,7 +2597,7 @@ Example:
 
 Tags: Canvas
 */
-syntax PathMakeWithSector is prefix operator with constructor chunk precedence
+syntax PathMakeWithSector is prefix operator with constructor precedence
 	"sector" "path" "centered" "at" <mCenter: Expression> "with" [ "radius" <mRadius: Expression> | "radii" <mRadii: Expression> ] "from" <mStartAngle: Expression> "to" <mEndAngle: Expression>
 begin
 	MCCanvasPathMakeWithSectorWithRadius(mCenter, mRadius, mStartAngle, mEndAngle, output)
@@ -2628,7 +2628,7 @@ Example:
 
 Tags: Canvas
 */
-syntax PathMakeWithSegment is prefix operator with constructor chunk precedence
+syntax PathMakeWithSegment is prefix operator with constructor precedence
 	"segment" "path" "centered" "at" <mCenter: Expression> "with" [ "radius" <mRadius: Expression> | "radii" <mRadii: Expression> ] "from" <mStartAngle: Expression> "to" <mEndAngle: Expression>
 begin
 	MCCanvasPathMakeWithSegmentWithRadius(mCenter, mRadius, mStartAngle, mEndAngle, output)
@@ -3198,7 +3198,7 @@ Example:
 
 Tags: Canvas
 */
-syntax EffectMakeWithProperties is prefix operator with constructor chunk precedence
+syntax EffectMakeWithProperties is prefix operator with constructor precedence
 	<mType: EffectType> "effect" "with" "properties" <mProperties: Expression>
 begin
 	MCCanvasEffectMakeWithPropertyArray(mType, mProperties, output)
@@ -3531,7 +3531,7 @@ Example:
 
 Tags: Canvas
 */
-syntax FontMake is prefix operator with constructor chunk precedence
+syntax FontMake is prefix operator with constructor precedence
 	"font" <mName: Expression>
 begin
 	MCCanvasFontMake(mName, output)
@@ -3554,7 +3554,7 @@ Example:
 
 Tags: Canvas
 */
-syntax FontMakeWithSize is prefix operator with constructor chunk precedence
+syntax FontMakeWithSize is prefix operator with constructor precedence
 	"font" <mName: Expression> <mBold=false> <mItalic=false> "at" "size" <mSize: Expression>
 begin
 	MCCanvasFontMakeWithSize(mName, mBold, mItalic, mSize, output)
@@ -3599,7 +3599,7 @@ Example:
 
 Tags: Canvas
 */
-syntax FontMakeWithStyleAndSize is prefix operator with constructor chunk precedence
+syntax FontMakeWithStyleAndSize is prefix operator with constructor precedence
 	"font" <mName: Expression> "with" ( "bold" <mBold=true> <mItalic=false> | "italic" <mBold=false> <mItalic=true> | "bold" "italic" <mBold=true> <mItalic=true> ) "style" "at" "size" <mSize: Expression>
 begin
 	MCCanvasFontMakeWithStyle(mName, mBold, mItalic, output)
@@ -4845,7 +4845,7 @@ end syntax
 
 //////////
 
-syntax NewCanvasWithSize is prefix operator with constructor chunk precedence
+syntax NewCanvasWithSize is prefix operator with constructor precedence
   "a" "new" "canvas" "with" "size" <Size: Expression>
 begin
   MCCanvasNewCanvasWithSize(Size, output)

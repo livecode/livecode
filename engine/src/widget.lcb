@@ -1106,7 +1106,7 @@ Create a new widget object of the specified kind. The widget can then be placed 
 References: PlaceWidget (statement)
 */
 
-syntax ANewWidget is prefix operator with constructor chunk precedence
+syntax ANewWidget is prefix operator with constructor precedence
     "a" "new" "widget" <mKind: Expression>
 begin
     MCWidgetEvalANewWidget(mKind, output)

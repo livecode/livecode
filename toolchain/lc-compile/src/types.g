@@ -350,7 +350,7 @@
     bitwisexor,       -- 5 bitwise xor 1
     bitwiseor,        -- 5 bitwise or 1
     functionchunk,    -- the length of tList
-    constructorchunk, -- rectangle tList
+    constructor,      -- rectangle tList
     comparison,       -- <=, <, is, =
     classification,   -- 5 is a number
     logicalnot,       -- not tBoolean
