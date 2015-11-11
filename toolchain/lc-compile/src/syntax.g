@@ -53,19 +53,24 @@
             BeginIteratorSyntaxRule(ModuleName, Name)
         ||
             where(Class -> prefix(Precedence))
-            BeginPrefixOperatorSyntaxRule(ModuleName, Name, Precedence)
+            MapSyntaxPrecedence(Precedence -> Level)
+            BeginPrefixOperatorSyntaxRule(ModuleName, Name, Level)
         ||
             where(Class -> postfix(Precedence))
-            BeginPostfixOperatorSyntaxRule(ModuleName, Name, Precedence)
+            MapSyntaxPrecedence(Precedence -> Level)
+            BeginPostfixOperatorSyntaxRule(ModuleName, Name, Level)
         ||
             where(Class -> binary(left, Precedence))
-            BeginLeftBinaryOperatorSyntaxRule(ModuleName, Name, Precedence)
+            MapSyntaxPrecedence(Precedence -> Level)
+            BeginLeftBinaryOperatorSyntaxRule(ModuleName, Name, Level)
         ||
             where(Class -> binary(right, Precedence))
-            BeginRightBinaryOperatorSyntaxRule(ModuleName, Name, Precedence)
+            MapSyntaxPrecedence(Precedence -> Level)
+            BeginRightBinaryOperatorSyntaxRule(ModuleName, Name, Level)
         ||
             where(Class -> binary(neutral, Precedence))
-            BeginNeutralBinaryOperatorSyntaxRule(ModuleName, Name, Precedence)
+            MapSyntaxPrecedence(Precedence -> Level)
+            BeginNeutralBinaryOperatorSyntaxRule(ModuleName, Name, Level)
         |)
         
         [|
@@ -262,3 +267,49 @@
         SetRModeOfMarkToInOut(Index)*/
 
 --------------------------------------------------------------------------------
+
+-- Decode SYNTAXPRECEDENCE named operator classes into numeric
+-- precedence levels.
+--
+-- See also /docs/specs/lcb-precedence.md
+
+'action' MapSyntaxPrecedence(SYNTAXPRECEDENCE -> INT)
+    'rule' MapSyntaxPrecedence(scoperesolution -> 1)
+
+    'rule' MapSyntaxPrecedence(functioncall -> 2)
+    'rule' MapSyntaxPrecedence(subscript -> 2)
+
+    'rule' MapSyntaxPrecedence(property -> 3)
+    'rule' MapSyntaxPrecedence(subscriptchunk -> 3)
+    'rule' MapSyntaxPrecedence(functionchunk -> 3)
+    'rule' MapSyntaxPrecedence(constructorchunk -> 3)
+
+    'rule' MapSyntaxPrecedence(conversion -> 4)
+
+    'rule' MapSyntaxPrecedence(modifier -> 5)
+
+    'rule' MapSyntaxPrecedence(exponentiation -> 6)
+
+    'rule' MapSyntaxPrecedence(multiplication -> 7)
+
+    'rule' MapSyntaxPrecedence(addition -> 8)
+
+    'rule' MapSyntaxPrecedence(bitwiseshift -> 9)
+    'rule' MapSyntaxPrecedence(concatenation -> 9)
+
+    'rule' MapSyntaxPrecedence(bitwiseand -> 10)
+
+    'rule' MapSyntaxPrecedence(bitwisexor -> 11)
+
+    'rule' MapSyntaxPrecedence(bitwiseor -> 12)
+
+    'rule' MapSyntaxPrecedence(comparison -> 13)
+    'rule' MapSyntaxPrecedence(classification -> 13)
+
+    'rule' MapSyntaxPrecedence(logicalnot -> 14)
+
+    'rule' MapSyntaxPrecedence(logicaland -> 15)
+
+    'rule' MapSyntaxPrecedence(logicalor -> 16)
+
+    'rule' MapSyntaxPrecedence(sequence -> 17)
