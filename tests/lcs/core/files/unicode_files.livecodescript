@@ -177,25 +177,31 @@ private command runTest pEncoding, pReadType
             // Now read using the method asked for.
             // Note that reading from a file without a BOM and trying to 
             // guess the encoding from the BOM is an expected failure
-            local tContent, tExpectedFailure
+            local tContent, tExpectedFailure, tGuessed
             put (not tBom) and tGuess into tExpectedFailure
+            
+            if tGuess then
+               put "(encoding guessed)" into tGuessed
+            else
+               put "(encoding provided)" into tGuessed
+            end if
             
             switch pReadType
                case kReadAll
                   get readAll(tFilename, tContent)
-                  __TestAssert merge("readAll from [[tTextFile]]"), tContent is kReadAllContent, tExpectedFailure
+                  __TestAssert merge("readAll from [[tTextFile]] [[tGuessed]]"), tContent is kReadAllContent, tExpectedFailure
                   break
                case kReadCharByChar
                   get readCharByChar(tFilename, tContent)
-                  __TestAssert merge("readCharByChar from [[tTextFile]]"), tContent is kReadAllContent, tExpectedFailure
+                  __TestAssert merge("readCharByChar from [[tTextFile]] [[tGuessed]]"), tContent is kReadAllContent, tExpectedFailure
                   break
                case kReadUntil
                   // We read until, and then the remaining part
                   get readUntil(tFilename, tContent)
-                  __TestAssert merge("readUntil from [[tTextFile]] - first read"), tContent is kReadUntilFirstRead, tExpectedFailure
+                  __TestAssert merge("readUntil from [[tTextFile]] [[tGuessed]] - first read"), tContent is kReadUntilFirstRead, tExpectedFailure
                   
                   get readAll(tFilename, tContent)
-                  __TestAssert merge("readUntil from [[tTextFile]] - second read"), tContent is kReadUntilRemaining, tExpectedFailure
+                  __TestAssert merge("readUntil from [[tTextFile]] [[tGuessed]] - second read"), tContent is kReadUntilRemaining, tExpectedFailure
                   break
             end switch
             
