@@ -340,6 +340,7 @@
     property,         -- the paint of tCanvas
     subscriptchunk,   -- char 5 of tString
     conversion,       -- tString parsed as number
+    functionchunk,    -- the length of tList
     modifier,         -- -tNumber, bitwise not tNumber
     exponentiation,   -- 2 ^ 10
     multiplication,   -- /, *, div, mod
@@ -349,7 +350,6 @@
     bitwiseand,       -- 5 bitwise and 1
     bitwisexor,       -- 5 bitwise xor 1
     bitwiseor,        -- 5 bitwise or 1
-    functionchunk,    -- the length of tList
     constructor,      -- rectangle tList
     comparison,       -- <=, <, is, =
     classification,   -- 5 is a number

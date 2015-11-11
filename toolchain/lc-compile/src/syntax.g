@@ -281,10 +281,9 @@
 
     'rule' MapSyntaxPrecedence(property -> 3)
     'rule' MapSyntaxPrecedence(subscriptchunk -> 3)
-    'rule' MapSyntaxPrecedence(functionchunk -> 3)
-    'rule' MapSyntaxPrecedence(constructor -> 3)
 
     'rule' MapSyntaxPrecedence(conversion -> 4)
+    'rule' MapSyntaxPrecedence(functionchunk -> 3)
 
     'rule' MapSyntaxPrecedence(modifier -> 5)
 
@@ -303,13 +302,15 @@
 
     'rule' MapSyntaxPrecedence(bitwiseor -> 12)
 
-    'rule' MapSyntaxPrecedence(comparison -> 13)
-    'rule' MapSyntaxPrecedence(classification -> 13)
+    'rule' MapSyntaxPrecedence(constructor -> 13)
 
-    'rule' MapSyntaxPrecedence(logicalnot -> 14)
+    'rule' MapSyntaxPrecedence(comparison -> 14)
+    'rule' MapSyntaxPrecedence(classification -> 14)
 
-    'rule' MapSyntaxPrecedence(logicaland -> 15)
+    'rule' MapSyntaxPrecedence(logicalnot -> 15)
 
-    'rule' MapSyntaxPrecedence(logicalor -> 16)
+    'rule' MapSyntaxPrecedence(logicaland -> 16)
 
-    'rule' MapSyntaxPrecedence(sequence -> 17)
+    'rule' MapSyntaxPrecedence(logicalor -> 17)
+
+    'rule' MapSyntaxPrecedence(sequence -> 18)

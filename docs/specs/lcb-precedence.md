@@ -31,9 +31,8 @@ Lower precedence numbers are more tightly-binding.
 |       | subscript         | `tList[1]`, `tArray["key"]`   |
 | 3     | property          | `the paint of this canvas`    |
 |       | subscript chunk   | `char 2 of tString`           |
-|       | function chunk    | `the length of tList`         |
-|       | constructor       | `rectangle tList`             |
 | 4     | conversion        | `tString parsed as number`    |
+|       | function chunk    | `the offset of "o" in "foo"`  |
 | 5     | modifier          | `-tNum`, `bitwise not`        |
 | 6     | exponentiation    | `^`                           |
 | 7     | multiplication    | `/`,`*`,`mod`, `div`          |
@@ -43,9 +42,10 @@ Lower precedence numbers are more tightly-binding.
 | 10    | bitwise and       | `7 bitwise and 1`             |
 | 11    | bitwise xor       | `7 bitwise xor 5`             |
 | 12    | bitwise or        | `2 bitwise or 4`              |
-| 13    | comparison        | `<=`, `<`, `is`               |
+| 13    | constructor       | `rectangle tList`             |
+| 14    | comparison        | `<=`, `<`, `is`               |
 |       | classification    | `is a`                        |
-| 14    | logical not       | `not tBoolean`                |
-| 15    | logical and       | `Foo() and Bar()`             |
-| 16    | logical or        | `Foo() or Bar()`              |
-| 17    | sequence          | `,`                           |
+| 15    | logical not       | `not tBoolean`                |
+| 16    | logical and       | `Foo() and Bar()`             |
+| 17    | logical or        | `Foo() or Bar()`              |
+| 18    | sequence          | `,`                           |
