@@ -281,7 +281,7 @@ The browserNavigateFailed message is sent to the widget's script object when the
 */
 
 -- declaring extension as widget, followed by identifier
-widget com.livecode.extensions.livecode.browser
+widget com.livecode.widget.browser
 --
 
 -- dependancy declarations
