@@ -115,7 +115,7 @@ Use to test the existence or otherwise of a script object, for example after att
 References: ResolveScriptObject(statement)
 */
 
-syntax ScriptObjectExists is postfix operator with precedence 3
+syntax ScriptObjectExists is postfix operator with comparison precedence
     <Object: Expression> "exists"
 begin
     MCEngineEvalScriptObjectExists(Object, output)
@@ -141,7 +141,7 @@ Use to test the non-existence or otherwise of a script object, for example after
 References: ResolveScriptObject(statement)
 */
 
-syntax ScriptObjectDoesNotExist is postfix operator with precedence 3
+syntax ScriptObjectDoesNotExist is postfix operator with comparison precedence
     <Object: Expression> "does" "not" "exist"
 begin
     MCEngineEvalScriptObjectDoesNotExists(Object, output)
@@ -172,7 +172,7 @@ Use to manipulate properties of a script object.
 to script objects is not allowed.
 */
 
-syntax PropertyOfScriptObject is prefix operator with precedence 3
+syntax PropertyOfScriptObject is prefix operator with property precedence
     "property" <Property: Expression> "of" <Object: Expression>
 begin
     MCEngineExecGetPropertyOfScriptObject(Property, Object, output)
@@ -201,7 +201,7 @@ Description:
 >*Note:* An error is thrown if the script object does not exist.
 */
 
-syntax OwnerOfScriptObject is prefix operator with precedence 4
+syntax OwnerOfScriptObject is prefix operator with property precedence
 	"the" "owner" "of" <Object: Expression>
 begin
 	MCEngineEvalOwnerOfScriptObject(Object, output)
@@ -232,7 +232,7 @@ Description:
 >*Note:* An error is thrown if the script object does not exist.
 */
 
-syntax ChildrenOfScriptObject is prefix operator with precedence 4
+syntax ChildrenOfScriptObject is prefix operator with property precedence
 	"the" "children" "of" <Object: Expression>
 begin
 	MCEngineEvalChildrenOfScriptObject(Object, output)

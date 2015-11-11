@@ -150,7 +150,7 @@ The result consists of the chars of <Left> followed by those of <Right>.
 Tags: Strings
 */
 
-syntax ConcatenateStrings is left binary operator with precedence 2
+syntax ConcatenateStrings is left binary operator with concatenation precedence
     <Left: Expression> "&" <Right: Expression>
 begin
     MCStringEvalConcatenate(Left, Right, output)
@@ -174,7 +174,7 @@ The result consists of the chars of <Left> followed by a space, and then the cha
 Tags: Strings
 */
 
-syntax ConcatenateStringsWithSpace is left binary operator with precedence 2
+syntax ConcatenateStringsWithSpace is left binary operator with concatenation precedence
     <Left: Expression> "&&" <Right: Expression>
 begin
     MCStringEvalConcatenateWithSpace(Left, Right, output)
@@ -195,7 +195,7 @@ Tags: Strings
 */
 
 
-syntax UppercaseString is prefix operator with precedence 1
+syntax UppercaseString is prefix operator with function chunk precedence
     "the" "upper" "of" <Source: Expression>
 begin
     MCStringEvalUppercaseOf(Source, output)
@@ -214,7 +214,7 @@ Tags: Strings
 */
 
 
-syntax LowercaseString is prefix operator with precedence 1
+syntax LowercaseString is prefix operator with function chunk precedence
     "the" "lower" "of" <Source: Expression>
 begin
     MCStringEvalLowercaseOf(Source, output)
@@ -237,7 +237,7 @@ The ```is``` operator is case sensitive.
 Tags: Strings
 */
 
-syntax StringIsString is neutral binary operator with precedence 7
+syntax StringIsString is neutral binary operator with comparison precedence
     <Left: Expression> "is" <Right: Expression>
 begin
     MCStringEvalIsEqualTo(Left, Right, output)
@@ -258,7 +258,7 @@ The ```is not``` operator is case sensitive.
 Tags: Strings
 */
 
-syntax StringIsNotString is neutral binary operator with precedence 7
+syntax StringIsNotString is neutral binary operator with comparison precedence
     <Left: Expression> "is not" <Right: Expression>
 begin
     MCStringEvalIsNotEqualTo(Left, Right, output)
@@ -279,7 +279,7 @@ Description:
 Tags: Strings
 */
 
-syntax StringIsLessThanString is neutral binary operator with precedence 5
+syntax StringIsLessThanString is neutral binary operator with comparison precedence
     <Left: Expression> "<" <Right: Expression>
 begin
     MCStringEvalIsLessThan(Left, Right, output)
@@ -299,7 +299,7 @@ Description:
 Tags: Strings
 */
 
-syntax StringIsGreaterThanString is neutral binary operator with precedence 5
+syntax StringIsGreaterThanString is neutral binary operator with comparison precedence
     <Left: Expression> ">" <Right: Expression>
 begin
     MCStringEvalIsGreaterThan(Left, Right, output)
