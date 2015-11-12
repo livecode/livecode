@@ -4,19 +4,19 @@
 //    This is where the application executable/bundle will be placed:
 //      Windows: C:/Program Files/LiveCode 4.5 (dp 5)
 //      Mac OS X: /Applications
-//      Linux: /opt/runrev/livecode-4.5-dp-5
+//      Linux: /opt/livecode/livecode-4.5-dp-5
 //
 //  SupportFolder:
 //    This is where supporting (user-accessible) resources will be placed:
 //      Windows: C:/Program Files/LiveCode 4.5 (dp 5)
 //      Mac OS X: /Application/LiveCode 4.5 (dp 5).app/Contents/Support
-//      Linux: /opt/runrev/livecode-4.5-dp-5
+//      Linux: /opt/livecode/livecode-4.5-dp-5
 //
 //  ToolsFolder:
 //    This is where the toolset will be placed:
 //      Windows: C:/Program Files/LiveCode 4.5 (dp 5)
 //      Mac OS X: /Application/LiveCode 4.5 (dp 5).app/Contents/Tools
-//      Linux: /opt/runrev/livecode-4.5-dp-5
+//      Linux: /opt/livecode/livecode-4.5-dp-5
 //
 //  ProductTitle:
 //    LiveCode 4.5 (dp 5)
