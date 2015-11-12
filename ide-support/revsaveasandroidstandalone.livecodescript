@@ -2,7 +2,7 @@
 ################################################################################
 
 local sJavaRoot
-conatant kArchs = "armeabi"
+constant kArchs = "armeabi"
 
 ################################################################################
 
@@ -118,6 +118,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    
    // SN-2015-05-13: [[ AndroidVersions ]] Make sure that the minimum version is
    // the minimum version that we can use.
+   local tMinimumVersion, tMaximumVersion
    put item 1 of revIDEDeployAndroidGetApisList() into tMinimumVersion
    put last item of revIDEDeployAndroidGetApisList() into tMaximumVersion
    
@@ -195,7 +196,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    delete the last char of tExternals
    
    -- Compute the stackfiles list
-   local tStackFiles
+   local tStackFiles, tFunction
    lock messages
    // SN-2014-10-16: [[ ScriptifiedStack ]] revRelativeStackFilesList is no longer in the messagePath
    put "revRelativeStackFilesList(" & quote & pStack & quote & ")" into tFunction
@@ -259,6 +260,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
          computeAssetLocation tBaseFolder, tFile, tFilePath, tFileName
          
          -- Look for manifest template
+         local tManifest
          if tFilePath ends with "AndroidManifest.xml" then
             put url ("binfile:" & tFilePath) into tManifest
          end if
@@ -1198,6 +1200,7 @@ end pathToZipAlign
 
 // SN-2015-07-02: [[ GypifiedAndroid ]] Get the right folder for android binaries
 private function pathToRepoAndroidBinaries
+   local tBuild
    if revEnvironmentBinariesPath() contains "/Debug" then
       put "Debug" into tBuild
    else
@@ -1241,11 +1244,14 @@ function mapFilePath pPath
       set the itemDelimiter to slash
       
       // Get the list of files in the targetted directory
+      local tOldFolder, tFiles
       put the defaultFolder into tOldFolder
       set the defaultFolder to item 1 to -2 of pPath
+      
       put the files into tFiles
       set the defaultFolder to tOldFolder
       
+      local tLineOffset
       put lineOffset(last item of pPath, tFiles) into tLineOffset
       
       // We return empty if we can't find the specified file
