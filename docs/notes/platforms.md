@@ -34,7 +34,6 @@ The Mac engine supports:
 ## iOS
 iOS deployment is possible when running LiveCode IDE on a Mac, and provided Xcode is installed and has been set in LiveCode *Preferences* (in the *Mobile Support* pane).
 Currently, the supported versions of Xcode are:
-*Xcode 4.6 on MacOS X 10.6
 *Xcode 4.6 on MacOS X 10.7
 *Xcode 5.1 on MacOS X 10.8
 *Xcode 6.2 on MacOS X 10.9
