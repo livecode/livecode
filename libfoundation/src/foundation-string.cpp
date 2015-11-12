@@ -4210,8 +4210,13 @@ bool MCStringSplitNative(MCStringRef self, MCStringRef p_elem_del, MCStringRef p
     
     if (__MCStringIsIndirect(p_elem_del))
         p_elem_del = p_elem_del -> string;
-    
-    
+
+	/* Splitting by empty isn't permitted */
+	if (0 == __MCStringGetLength(p_elem_del))
+	{
+		return false;
+	}
+
     const char_t *t_sptr;
     const char_t *t_eptr;
     t_sptr = self -> native_chars;
@@ -4246,7 +4251,12 @@ bool MCStringSplitNative(MCStringRef self, MCStringRef p_elem_del, MCStringRef p
 	{
         if (__MCStringIsIndirect(p_key_del))
             p_elem_del = p_key_del -> string;
-        
+
+		if (0 == __MCStringGetLength(p_key_del))
+		{
+			return false;
+		}
+
 		for(;;)
 		{
 			const char_t *t_element_end;
@@ -4475,7 +4485,7 @@ bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_d
     
     if (__MCStringIsIndirect(p_elem_del))
         p_elem_del = p_elem_del -> string;
-    
+
 	const void *t_echar, *t_kchar;
     bool del_native, key_native;
     del_native = __MCStringIsNative(p_elem_del);
@@ -4488,6 +4498,13 @@ bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_d
         
         key_native = __MCStringIsNative(p_key_del);
 		t_kchar = p_key_del -> chars;
+    }
+
+    /* Splitting by the empty string isn't permitted */
+    if (0 == __MCStringGetLength(p_elem_del) ||
+        (nil != p_key_del && 0 == __MCStringGetLength(p_key_del)))
+    {
+        return false;
     }
 
 	const void *t_sptr;
