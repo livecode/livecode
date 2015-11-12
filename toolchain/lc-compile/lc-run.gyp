@@ -77,7 +77,6 @@
 					[
 						'<@(stdscript_syntax_lcb_files)',
 						'<@(stdscript_other_lcb_files)',
-						'>(lc-compile_host)',
 					],
 					
 					'outputs':
