@@ -1,0 +1,1 @@
+# Keyboard input breaks after the browser widget has been added to the stack

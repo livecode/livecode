@@ -39,7 +39,7 @@ The raw data stored in a file.
 
 Tags: IO, Filesystem
 */
-syntax FileContents is prefix operator with precedence 2
+syntax FileContents is prefix operator with function chunk precedence
 	"the" "contents" "of" "file" <File: Expression>
 begin
 	MCFileExecGetContents(File, output)
@@ -114,7 +114,7 @@ Creates a new, empty directory.
 
 Tags: IO, Filesystem
 */
-syntax GetDirectoryEntries is prefix operator with precedence 5
+syntax GetDirectoryEntries is prefix operator with function chunk precedence
 	"the" "entries" "of" "directory" <Directory: Expression>
 begin
 	MCFileExecGetDirectoryEntries(Directory, output)

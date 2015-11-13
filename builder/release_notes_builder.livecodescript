@@ -264,7 +264,7 @@ function makeBugTable pBugs, pBold
             put tNoID & "<td>" & item 2 of tLine & "</td></tr>" into tNoID
          end if
       else
-         put "http://quality.runrev.com/show_bug.cgi?id=" & item 1 of tLine into tBugUrl
+         put "http://quality.livecode.com/show_bug.cgi?id=" & item 1 of tLine into tBugUrl
          if pBold then
             put tBugs & CR & "<tr><td><strong>" & item 1 of tLine & "</strong></td>" & CR into tBugs
             put tBugs & "<td><a href=" & quote & tBugUrl & quote & "><strong>" & item 2 of tLine & "</strong></a></td></tr>" into tBugs

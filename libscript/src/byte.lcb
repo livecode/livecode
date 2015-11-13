@@ -73,7 +73,7 @@ Description:
 Tags: Binary
 */
 
-syntax CountBytesOf is prefix operator with precedence 1
+syntax CountBytesOf is prefix operator with property precedence
 	"the" "number" "of" "bytes" "in" <Target: Expression>
 begin
 	MCByteEvalNumberOfBytesIn(Target, output)
@@ -96,12 +96,12 @@ The first (respectively last) offset of <Needle> in <Target> is number of bytes 
 Tags: Binary
 */
 
-syntax ByteOffset is prefix operator with precedence 1
+syntax ByteOffset is prefix operator with function chunk precedence
     "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "in" <Target: Expression>
 begin
     MCByteEvalOffsetOfBytes(IsLast, Needle, Target, output)
 end syntax
-syntax ByteIndex is prefix operator with precedence 1
+syntax ByteIndex is prefix operator with function chunk precedence
     "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "index" "of" <Needle: Expression> "in" <Target: Expression>
 begin
     MCByteEvalOffsetOfBytes(IsLast, Needle, Target, output)
@@ -122,12 +122,12 @@ The first (respectively last) offset of <Needle> in <Target> is number of bytes 
 
 Tags: Binary
 */
-syntax ByteOffsetAfter is prefix operator with precedence 1
+syntax ByteOffsetAfter is prefix operator with function chunk precedence
 	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
 begin
 	MCByteEvalOffsetOfBytesAfter(IsLast, Needle, After, Target, output)
 end syntax
-syntax ByteIndexAfter is prefix operator with precedence 1
+syntax ByteIndexAfter is prefix operator with function chunk precedence
 	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "index" "of" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
 begin
 	MCByteEvalOffsetOfBytesAfter(IsLast, Needle, After, Target, output)
@@ -148,12 +148,12 @@ The first (respectively last) offset of <Needle> in <Target> is number of bytes 
 
 Tags: Binary
 */
-syntax ByteOffsetBefore is prefix operator with precedence 1
+syntax ByteOffsetBefore is prefix operator with function chunk precedence
     "the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "offset" "of" <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
 begin
     MCByteEvalOffsetOfBytesBefore(IsFirst, Needle, Before, Target, output)
 end syntax
-syntax ByteIndexBefore is prefix operator with precedence 1
+syntax ByteIndexBefore is prefix operator with function chunk precedence
     "the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "index" "of" <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
 begin
     MCByteEvalOffsetOfBytesBefore(IsFirst, Needle, Before, Target, output)
@@ -172,7 +172,7 @@ Description:
 Tags: Binary
 */
 
-syntax ByteIsInData is neutral binary operator with precedence 1
+syntax ByteIsInData is neutral binary operator with comparison precedence
     <Needle: Expression> "is" "in" <Target: Expression>
 begin
     MCByteEvalIsInBytes(Needle, Target, output)
@@ -193,7 +193,7 @@ Description:
 Tags: Binary
 */
 
-syntax ContainsBytes is neutral binary operator with precedence 1
+syntax ContainsBytes is neutral binary operator with comparison precedence
     <Target: Expression> "contains" <Needle: Expression>
 begin
     MCByteEvalContainsBytes(Target, Needle, output)
@@ -212,7 +212,7 @@ Description:
 Tags: Binary
 */
 
-syntax BeginsWithBytes is neutral binary operator with precedence 1
+syntax BeginsWithBytes is neutral binary operator with comparison precedence
     <Target: Expression> "begins" "with" <Needle: Expression>
 begin
     MCByteEvalBeginsWithBytes(Target, Needle, output)
@@ -231,7 +231,7 @@ Description:
 Tags: Binary
 */
 
-syntax EndsWithBytes is neutral binary operator with precedence 1
+syntax EndsWithBytes is neutral binary operator with comparison precedence
     <Target: Expression> "ends" "with" <Needle: Expression>
 begin
     MCByteEvalEndsWithBytes(Target, Needle, output)
@@ -253,7 +253,7 @@ Either locates the byte at the given index for use as the target container of an
 Tags: Binary
 */
 
-syntax SingletonByteOf is prefix operator with precedence 1
+syntax SingletonByteOf is prefix operator with subscript chunk precedence
 	"byte" <Index: Expression> "of" <Target: Expression>
 begin
 	MCByteFetchByteOf(Index, Target, output)
@@ -276,7 +276,7 @@ Either locates the bytes between the given indices for use as the target contain
 Tags: Binary
 */
 
-syntax RangeByteOf is prefix operator with precedence 1
+syntax RangeByteOf is prefix operator with subscript chunk precedence
 	"byte" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
 begin
 	MCByteFetchByteRangeOf(Start, Finish, Target, output)
@@ -296,7 +296,7 @@ Either locates the first byte for use as the target container of another operati
 Tags: Binary
 */
 
-syntax FirstByteOf is prefix operator with precedence 1
+syntax FirstByteOf is prefix operator with subscript chunk precedence
 	"the" "first" "byte" "of" <Target: Expression>
 begin
 	MCByteFetchFirstByteOf(Target, output)
@@ -316,7 +316,7 @@ Either locates the first byte for use as the target container of another operati
 Tags: Binary
 */
 
-syntax LastByteOf is prefix operator with precedence 1
+syntax LastByteOf is prefix operator with subscript chunk precedence
 	"the" "last" "byte" "of" <Target: Expression>
 begin
 	MCByteFetchLastByteOf(Target, output)
@@ -437,7 +437,7 @@ random data.
 Tags: Binary, Random
 
 */
-syntax RandomBytes is postfix operator with precedence 5
+syntax RandomBytes is postfix operator with constructor precedence
 	<Count : Expression> "random" "bytes"
 begin
 	MCDataExecRandomBytes(Count, output)
@@ -458,7 +458,7 @@ Returns a byte of binary data, created using the given value.  The
 
 Tags: Binary
 */
-syntax ByteWithCode is prefix operator with precedence 2
+syntax ByteWithCode is prefix operator with function chunk precedence
 	"the" "byte" "with" "code" <Value: Expression>
 begin
 	MCByteEvalByteWithCode(Value, output)
@@ -474,7 +474,7 @@ Returns the numeric representation of a single byte of binary data.
 
 Tags: Binary
 */
-syntax CodeOfByte is prefix operator with precedence 2
+syntax CodeOfByte is prefix operator with function chunk precedence
 	"the" "code" "of" <Target: Expression>
 begin
 	MCByteEvalCodeOfByte(Target, output)

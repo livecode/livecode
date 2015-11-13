@@ -583,6 +583,42 @@ private handler listToArray(in pList as List) returns Array
 	return tArray
 end handler
 
+-- Sorts numerically, converting strings to numbers where possible
+private handler CompareKeysNumeric(in pLeft as any, in pRight as any) returns Integer
+	variable tLeft as optional Number
+	variable tRight as optional Number
+	
+	if pLeft is a number then
+		put pLeft into tLeft
+	else
+		put pLeft parsed as number into tLeft
+	end if
+	
+	if pRight is a number then
+		put pRight into tRight
+	else
+		put pRight parsed as number into tRight
+	end if
+
+	if tRight is tLeft then
+		return 0
+	end if
+		
+	if tRight is nothing then
+		return -1
+	end if
+	
+	if tLeft is nothing then
+		return 1
+	end if
+	
+	if tLeft < tRight then
+        return -1
+	end if
+
+    return 1
+end handler
+
 private handler setData(in pArray as Array, in pDefaultArray as Array, out rList as List)
 	variable tList as List
 	put the empty list into tList
@@ -590,7 +626,7 @@ private handler setData(in pArray as Array, in pDefaultArray as Array, out rList
 	if pArray is not empty then
 		variable tOrder as List
 		put the keys of pArray into tOrder
-		sort tOrder in ascending order
+		sort tOrder using handler CompareKeysNumeric
 
 		variable tKeys as List
 		put the keys of pDefaultArray into tKeys

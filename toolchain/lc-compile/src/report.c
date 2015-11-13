@@ -28,6 +28,7 @@ extern int IsDependencyCompile(void);
 
 static int s_error_count;
 int s_verbose_level;
+int s_is_werror_enabled;
 
 void InitializeReports(void)
 {
@@ -162,9 +163,16 @@ static void _Warning(long p_position, const char *p_message)
 {
     if (IsDependencyCompile())
         return;
-    
-    _PrintPosition(p_position);
-    fprintf(stderr, "warning: %s\n", p_message);
+
+    if (s_is_werror_enabled)
+    {
+        _Error(p_position, p_message);
+    }
+    else
+    {
+        _PrintPosition(p_position);
+        fprintf(stderr, "warning: %s\n", p_message);
+    }
 }
 
 static void _ErrorS(long p_position, const char *p_message, const char *p_string)
@@ -173,6 +181,7 @@ static void _ErrorS(long p_position, const char *p_message, const char *p_string
     GetColumnOfPosition(p_position, &t_column);
     GetRowOfPosition(p_position, &t_row);
     _PrintPosition(p_position);
+    fprintf(stderr, "error: ");
     fprintf(stderr, p_message, p_string);
     fprintf(stderr, "\n");
     s_error_count += 1;
@@ -184,13 +193,20 @@ static void _WarningS(long p_position, const char *p_message, const char *p_stri
     
     if (IsDependencyCompile())
         return;
-    
-    GetColumnOfPosition(p_position, &t_column);
-    GetRowOfPosition(p_position, &t_row);
-    _PrintPosition(p_position);
-    fprintf(stderr, "warning: ");
-    fprintf(stderr, p_message, p_string);
-    fprintf(stderr, "\n");
+
+    if (s_is_werror_enabled)
+    {
+       _ErrorS(p_position, p_message, p_string);
+    }
+    else
+    {
+        GetColumnOfPosition(p_position, &t_column);
+        GetRowOfPosition(p_position, &t_row);
+        _PrintPosition(p_position);
+        fprintf(stderr, "warning: ");
+        fprintf(stderr, p_message, p_string);
+        fprintf(stderr, "\n");
+    }
 }
 
 static void _ErrorI(long p_position, const char *p_message, NameRef p_name)

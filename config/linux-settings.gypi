@@ -77,6 +77,7 @@
 					'-fpermissive',				# Be more lax with old code
 					'-Wno-return-type',
 					'-Werror=uninitialized',
+					'-Werror=return-type',
 				],
 				
 				'cflags_c':

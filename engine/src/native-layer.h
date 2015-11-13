@@ -23,15 +23,15 @@ class MCNativeLayer
 {
 public:
     
-    virtual void OnOpen() = 0;
-    virtual void OnClose() = 0;
-    virtual void OnAttach() = 0;
-    virtual void OnDetach() = 0;
-	virtual bool OnPaint(MCGContextRef p_context) = 0;
-    virtual void OnGeometryChanged(const MCRectangle& p_old_rect) = 0;
-    virtual void OnVisibilityChanged(bool p_visible) = 0;
-    virtual void OnToolChanged(Tool p_new_tool) = 0;
-    virtual void OnLayerChanged() = 0;
+    virtual void OnOpen();
+    virtual void OnClose();
+    virtual void OnAttach();
+    virtual void OnDetach();
+	virtual bool OnPaint(MCGContextRef p_context);
+    virtual void OnGeometryChanged(const MCRectangle& p_old_rect);
+    virtual void OnVisibilityChanged(bool p_visible);
+    virtual void OnToolChanged(Tool p_new_tool);
+    virtual void OnLayerChanged();
     
     virtual ~MCNativeLayer() = 0;
     
@@ -47,9 +47,20 @@ public:
 	virtual bool GetCanRenderToContext();
 
 protected:
-    
+	
+	// Platform-specific implementations
+	virtual void doAttach() = 0;
+	virtual void doDetach() = 0;
+	virtual bool doPaint(MCGContextRef p_context) = 0;
+	virtual void doSetVisible(bool p_visible) = 0;
+	virtual void doSetGeometry(const MCRectangle &p_rect) = 0;
+	virtual void doRelayer() = 0;
+	
+	MCWidgetRef m_widget;
+	
     bool m_attached;
     bool m_can_render_to_context;
+	bool m_defer_geometry_changes;
     
     MCNativeLayer();
     

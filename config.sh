@@ -360,7 +360,6 @@ fi
 
 format_args="$(for f in ${FORMATS}; do echo --format ${f} ; done)"
 
-# Android default settings and tools
 if test "${OS}" = "win" ; then
 	basic_args="${format_args} --depth ${DEPTH} --generator-output ${GENERATOR_OUTPUT}"
 else

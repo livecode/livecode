@@ -69,6 +69,8 @@ check: check-$(guess_platform)
 
 check-common-%:
 	$(MAKE) -C tests bin_dir=../$*-bin
+	$(MAKE) -C ide/tests bin_dir=../../$*-bin
+	$(MAKE) -C extensions bin_dir=../$*-bin
 
 ################################################################
 # Linux rules
@@ -166,9 +168,9 @@ check-ios-iphonesimulator5.1:
 	@echo "Skipping iOS simulator 5.1 (no longer supported)"
 
 # Provide some synonyms for "latest iOS SDK"
-$(addsuffix -ios-iphoneos,all config compile check): %: %8.4
+$(addsuffix -ios-iphoneos,all config compile check): %: %$(lastword $(IPHONEOS_VERSIONS))
 	@true
-$(addsuffix -ios-iphonesimulator,all config compile check): %: %8.4
+$(addsuffix -ios-iphonesimulator,all config compile check): %: %$(lastword ($IPHONESIMULATOR_VERSIONS))
 	@true
 
 all_ios_subplatforms = iphoneos iphonesimulator $(IOS_SDKS)

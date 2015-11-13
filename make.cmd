@@ -30,6 +30,10 @@ IF %BUILD_EDITION%==commercial (
   SET BUILD_PROJECT=livecode\livecode.sln
 )
 
-@msbuild %BUILD_PROJECT% /fl /flp:Verbosity=normal /nologo /p:Configuration=%BUILDTYPE% /m:1
+IF -%1-==-- (
+  @msbuild %BUILD_PROJECT% /fl /flp:Verbosity=normal /nologo /p:Configuration=%BUILDTYPE% /m:1
+) ELSE (
+  @msbuild %BUILD_PROJECT% /fl /flp:Verbosity=normal /nologo /p:Configuration=%BUILDTYPE% /m:1 /t:%TARGET%
+)
 
 @exit %ERRORLEVEL%

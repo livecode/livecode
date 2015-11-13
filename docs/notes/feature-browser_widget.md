@@ -24,7 +24,3 @@ To add a browser to your application, simply drag and drop the browser widget on
 * *browserNavigateBegin pUrl* - sent when the browser begins navigation to a new page.
 * *browserNavigateComplete pUrl* - sent when the browser successfully navigates to a new page.
 * *browserNavigateFailed pUrl, pError* - sent when the browser has failed to navigate to a new page.
-
-## Notes
-
-Browser widget properties are not currently saved, so will need to be set in a startup handler in order to initialize the browser as required. Property loading / saving will be implemented in a future release.

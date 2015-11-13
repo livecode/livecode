@@ -40,12 +40,25 @@ on TestMyFeature
 end TestMyFeature
 ````
 
-Before running each test command, the test framework inserts a test library stack, called `TestLibrary`, into the backscripts.  This provides a set of useful utility commands that can be used when writing test commands.  Currently, the following commands are available:
+Before running each test command, the test framework inserts a test library stack, called `TestLibrary`, into the backscripts.  This provides a set of useful utility handlers that can be used when writing test commands.  Currently, the following are available:
 
 * `TestDiagnostic pMessage`: Write *pMessage* to the test log as a message.
 * `TestAssert pDescription, pExpectTrue`: Make a test assertion.  The test is recorded as a failure if *pExpectTrue* is false.  *pDescription* should be a short string that describes the test (e.g. "clipboard is clear").
 * `TestSkip pDescription, pReasonSkipped`: Record a test as having been skipped.  *pReasonSkipped* should be a short explanation of why the test was skipped (e.g. "not supported on Windows").
 * `TestAssertBroken pDescription, pExpectTrue, pReasonBroken`: The same as `TestAssert`, but marking the test as "expected to fail".  *pReasonBroken* should be a short explanation of why the test is currently expected to fail; it should almost always be a reference to a bug report, e.g. "bug 54321".
+* `TestGetEngineRepositoryPath`: A function that returns the path to the main LiveCode engine repository.
+* `TestGetIDERepositoryPath`: A function that returns the path to the LiveCode IDE repository.
+* `TestLoadExtension pName`: Attempt to load the extension with name `pName`, eg `TestLoadExtension "json"` will load the JSON library extension. 
+
+Tests can have additional setup requirements before running, for example loading custom libraries. If the script test contains a handler called `TestSetup`, this will be run prior to running each test command. For example:
+````
+on TestSetup
+   -- All the tests in this script require access to the docs parser
+   start using stack (TestGetEngineRepositoryPath() & slash & "ide-support" & slash & "revdocsparser.livecodescript")
+end TestSetup
+````
+
+Tests may need to clean up temporary files or other resources after running.  If a script test contains a handler called `TestTeardown`, this will be run after running each test command -- even if the test failed.  N.b. `TestTeardown` won't be run if running the test command causes an engine crash.
 
 Crashes or uncaught errors from a test command cause the test to immediately fail.
 
@@ -70,4 +83,4 @@ Each test is a `.cpp` file added to the `test` directory for the program or libr
 
 When you add a new C++ test source file, you need to add it to the target's corresponding `module_test_sources` gyp variable.  These are currently set in the top-level `.gyp` file for each project, except for the engine, for which you should edit the `engine_test_source_files` variable in `engine/engine-sources.gypi`.
 
-Sadly, Google Test provides pretty much no useful documentation on how to write tests.  Your best bet is to look at the test already in the LiveCode source code and the examples in the Google Test source tree.
+For more information on writing C++ tests with Google Test, please consult the [Google Test documentation](https://github.com/google/googletest/blob/master/googletest/docs/Documentation.md).

@@ -91,7 +91,7 @@ The result consists of the bytes of <Left> followed by those of <Right>.
 Tags: Binary
 */
 
-syntax ConcatenateBytes is left binary operator with precedence 2
+syntax ConcatenateBytes is left binary operator with concatenation precedence
     <Left: Expression> "&" <Right: Expression>
 begin
     MCBinaryEvalConcatenateBytes(Left, Right, output)
@@ -113,7 +113,7 @@ Performs a byte by byte comparison of <Left> and <Right>, returning false if the
 Tags: Binary
 */
 
-syntax DataIsData is neutral binary operator with precedence 7
+syntax DataIsData is neutral binary operator with comparison precedence
     <Left: Expression> "is" <Right: Expression>
 begin
     MCBinaryEvalIsEqualTo(Left, Right, output)
@@ -133,7 +133,7 @@ Performs a byte by byte comparison of <Left> and <Right>, returning true if ther
 Tags: Binary
 */
 
-syntax DataIsNotData is neutral binary operator with precedence 7
+syntax DataIsNotData is neutral binary operator with comparison precedence
     <Left: Expression> "is not" <Right: Expression>
 begin
     MCBinaryEvalIsNotEqualTo(Left, Right, output)
@@ -154,7 +154,7 @@ Description:
 Tags: Binary
 */
 
-syntax DataIsLessThanData is neutral binary operator with precedence 5
+syntax DataIsLessThanData is neutral binary operator with comparison precedence
     <Left: Expression> "<" <Right: Expression>
 begin
     MCBinaryEvalIsLessThan(Left, Right, output)
@@ -175,7 +175,7 @@ Description:
 Tags: Binary
 */
 
-syntax DataIsGreaterThanData is neutral binary operator with precedence 5
+syntax DataIsGreaterThanData is neutral binary operator with comparison precedence
     <Left: Expression> ">" <Right: Expression>
 begin
     MCBinaryEvalIsGreaterThan(Left, Right, output)
