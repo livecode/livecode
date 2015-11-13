@@ -87,7 +87,7 @@ on builderBuild pWhich, pPlatforms, pEdition, pType
       case "Archive"
          local tBuildNumber
          put builderGetBuildNumber() into tBuildNumber
-         dispatch "archiveBuilderRun" to stack builderArchiveBuilderStack() with pEdition, tVersion, tBuildNumber, pType
+         dispatch "archiveBuilderRun" to stack builderArchiveBuilderStack() with tVersion, tBuildNumber, pType
          break
    end switch
    	
@@ -210,6 +210,11 @@ function builderSystemFolder
    return item 1 to -2 of the filename of me
 end builderSystemFolder
 
+-- Return the folder of the private builder system
+function builderSystemPrivateFolder
+   return builderPrivateRepoFolder() & slash & "builder" 
+end builderSystemPrivateFolder
+
 -- Returns the folder where intermediate products should be placed
 function builderWorkFolder
    if sWorkDir is not empty then
@@ -320,7 +325,7 @@ function builderNotesBuilderStack
 end builderNotesBuilderStack
 
 function builderArchiveBuilderStack
-   return builderSystemFolder() & slash & "archive_builder.livecodescript"
+   return builderSystemPrivateFolder() & slash & "archive_builder.livecodescript"
 end builderArchiveBuilderStack
 
 function builderModuleInterfaceFolder
