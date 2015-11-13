@@ -99,6 +99,7 @@ bin_dir = ${top_src_dir}/$(BUILD_PLATFORM)-bin
 docs_source_dir = ${top_src_dir}/docs
 docs_private_source_dir = ${private_dir}/docs
 docs_build_dir = ${top_src_dir}/_build/docs-build
+notes_dir = ${top_src_dir}/_build/notes
 
 ifeq ($(BUILD_PLATFORM),mac)
   LIVECODE = $(bin_dir)/LiveCode-Community.app/Contents/MacOS/LiveCode-Community
@@ -183,7 +184,7 @@ dist-tools-commercial:
 	$(buildtool_command) --platform mac --platform win --platform linux --stage tools --edition business \
 	  --built-docs-dir $(docs_build_dir)/cooked-commercial
 
-# Make a list of installers to be uploaded to the distribution server
+# Make a list of installers to be uploaded to the distribution server, and release notes
 # If a checksum file is needed, generate it with sha1sum
 dist-upload-files.txt sha1sum.txt:
 	set -e; \
@@ -195,6 +196,7 @@ dist-upload-files.txt sha1sum.txt:
 	                -o -name 'LiveCode*Server-*-Windows.zip' \
 	                -o -name '*-bin.tar.xz' \
 	  > dist-upload-files.txt; \
+	find "${notes_dir}" -name 'LiveCodeNotes*.pdf' >> dist-upload-files.txt; \
 	if test "$(UPLOAD_ENABLE_CHECKSUM)" = "yes"; then \
 	  $(SHA1SUM) < dist-upload-files.txt > sha1sum.txt; \
 	  echo sha1sum.txt >> dist-upload-files.txt; \
