@@ -3654,6 +3654,69 @@ bool MCStringDelimitedOffset(MCStringRef self, MCRange p_range, MCStringRef p_ne
                                      r_after);
 }
 
+MC_DLLEXPORT bool MCStringForwardDelimitedRegion(MCStringRef self,
+                                                 MCRange p_range,
+                                                 MCStringRef p_delimiter,
+                                                 uindex_t p_first,
+                                                 uindex_t p_last,
+                                                 MCStringOptions p_options,
+                                                 MCRange& r_range)
+{
+	__MCAssertIsString(self);
+	__MCAssertIsString(p_delimiter);
+    
+    if (__MCStringIsIndirect(self))
+        self = self -> string;
+    
+    if (__MCStringIsIndirect(p_delimiter))
+        p_delimiter = p_delimiter -> string;
+    
+    __MCStringClampRange(self, p_range);
+    
+    uindex_t t_start, t_finish;
+    t_start = p_range . offset;
+    t_finish = p_range . offset + p_range . length;
+    
+    MCRange t_first_del;
+    t_first_del = MCRangeMake(0, 0);
+    if (p_first > 0 &&
+        !__MCStringSkip(self,
+                        MCRangeMakeMinMax(t_start, t_finish),
+                        p_delimiter,
+                        p_first,
+                        p_options,
+                        t_first_del))
+    {
+        r_range = MCRangeMake(t_finish,
+                              0);
+        return true;
+    }
+    
+    t_start = t_first_del . offset + t_first_del . length;
+    
+    if (p_first >= p_last)
+    {
+        r_range = MCRangeMakeMinMax(t_start, 0);
+        return true;
+    }
+    
+    MCRange t_last_del;
+    if (!__MCStringSkip(self,
+                        MCRangeMake(t_start, t_finish),
+                        p_delimiter,
+                        p_last - p_first,
+                        p_options,
+                        t_last_del))
+    {
+        r_range = MCRangeMakeMinMax(t_start, t_finish);
+        return true;
+    }
+    
+    r_range = MCRangeMakeMinMax(t_start, t_last_del . offset);
+    
+    return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_DLLEXPORT_DEF

@@ -2283,6 +2283,167 @@ static void skip_word(const char *&sptr, const char *&eptr)
 }
 #endif
 
+void MCStringsMarkTextChunkByOrdinal(MCExecContext& ctxt, Chunk_term p_chunk_type, Chunk_term p_ordinal_type, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark);
+void MCStringsMarkTextChunkByRange(MCExecContext& ctxt, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark);
+
+template
+<
+Chunk_term ChunkType,
+void (*MarkRange)(MCExecContext& ctxt, int4 first, int4 last, MCMarkedText& x_mark)
+>
+static inline bool __MCCRefMarkForEval(MCExecContext& ctxt, MCCRef *self, MCMarkedText& x_mark)
+{
+    int4 t_first, t_last;
+    if (self -> etype == CT_RANGE || self -> etype == CT_EXPRESSION)
+    {
+        if (!ctxt . EvalExprAsInt(self -> startpos, EE_CHUNK_BADRANGESTART, t_first))
+            return false;
+        
+        if (self -> etype != CT_RANGE)
+        {
+            t_last = t_first;
+        }
+        else
+        {
+            if (!ctxt . EvalExprAsInt(self -> endpos, EE_CHUNK_BADRANGEEND, t_last))
+                return false;
+        }
+    }
+    else
+    {
+        switch(self -> etype)
+        {
+            case CT_ANY:
+            case CT_MIDDLE:
+                if (ChunkType != CT_BYTE)
+                    MCStringsMarkTextChunkByOrdinal(ctxt,
+                                                    ChunkType,
+                                                    self -> etype,
+                                                    false,
+                                                    false,
+                                                    false,
+                                                    x_mark);
+                else
+                    MCStringsMarkBytesOfTextByOrdinal(ctxt,
+                                                      self -> etype,
+                                                      x_mark);
+                return true;
+            case CT_LAST:
+                t_first = -1;
+                t_last = -1;
+                break;
+            case CT_FIRST:
+            case CT_SECOND:
+            case CT_THIRD:
+            case CT_FOURTH:
+            case CT_FIFTH:
+            case CT_SIXTH:
+            case CT_SEVENTH:
+            case CT_EIGHTH:
+            case CT_NINTH:
+            case CT_TENTH:
+                t_first = self -> etype - CT_FIRST;
+                t_last = t_first;
+                break;
+            default:
+                ctxt . LegacyThrow(EE_CHUNK_BADEXTENTS);
+                return false;
+        }
+    }
+    
+    MarkRange(ctxt, t_first, t_last, x_mark);
+    
+    return true;
+}
+
+template
+<
+Chunk_term ChunkType
+>
+static inline void __MCCRefMarkChunkRangeForEval(MCExecContext& ctxt, int4 p_first, int4 p_last, MCMarkedText& x_mark)
+{
+    if (ChunkType != CT_BYTE)
+        MCStringsMarkTextChunkByRange(ctxt, ChunkType, p_first, p_last, false, false, false, x_mark);
+    else
+        MCStringsMarkBytesOfTextByRange(ctxt, p_first, p_last, x_mark);
+}
+
+static inline void __MCCRefMarkItemRangeForEval(MCExecContext& ctxt, int4 p_first, int4 p_last, MCMarkedText& x_mark)
+{
+    if (p_first < 0 || p_last < 0)
+    {
+        MCStringsMarkTextChunkByRange(ctxt, CT_ITEM, p_first, p_last, false, false, false, x_mark);
+        return;
+    }
+    
+    if (p_first > p_last)
+        p_last = p_first - 1;
+    else if (p_first == 0)
+        p_first = 1;
+    
+    MCRange t_range;
+    MCStringForwardDelimitedRegion((MCStringRef)x_mark . text,
+                                   MCRangeMakeMinMax(x_mark . start, x_mark . finish),
+                                   ctxt . GetItemDelimiter(),
+                                   (uindex_t)(p_first - 1),
+                                   (uindex_t)p_last,
+                                   ctxt . GetStringComparisonType(),
+                                   t_range);
+    
+    x_mark . start = t_range . offset;
+    x_mark . finish = t_range . offset + t_range . length;
+}
+
+#define __MCCRefMarkChunkForEval(chunk, ctxt, cref, x_mark) \
+        __MCCRefMarkForEval< chunk, __MCCRefMarkChunkRangeForEval<chunk> >(ctxt, cref, x_mark)
+
+void MCChunk::mark_for_eval(MCExecContext& ctxt, MCMarkedText& x_mark)
+{
+    if (cline != nil &&
+        __MCCRefMarkChunkForEval(CT_LINE, ctxt, cline, x_mark))
+        return;
+    
+    if (paragraph != nil &&
+        __MCCRefMarkChunkForEval(CT_PARAGRAPH, ctxt, paragraph, x_mark))
+        return;
+    
+    if (sentence != nil &&
+        __MCCRefMarkChunkForEval(CT_SENTENCE, ctxt, sentence, x_mark))
+        return;
+        
+    if (item != nil &&
+        __MCCRefMarkForEval< CT_ITEM, __MCCRefMarkItemRangeForEval>(ctxt, item, x_mark))
+        return;
+        
+    if (word != nil &&
+        __MCCRefMarkChunkForEval(CT_WORD, ctxt, word, x_mark))
+        return;
+    
+    if (trueword != nil &&
+        __MCCRefMarkChunkForEval(CT_TRUEWORD, ctxt, trueword, x_mark))
+        return;
+        
+    if (token != nil &&
+        __MCCRefMarkChunkForEval(CT_TOKEN, ctxt, token, x_mark))
+        return;
+        
+    if (character != nil &&
+        __MCCRefMarkChunkForEval(CT_CHARACTER, ctxt, character, x_mark))
+        return;
+    
+    if (codepoint != nil &&
+        __MCCRefMarkChunkForEval(CT_CODEPOINT, ctxt, codepoint, x_mark))
+        return;
+    
+    if (codeunit != nil &&
+        __MCCRefMarkChunkForEval(CT_CODEUNIT, ctxt, codeunit, x_mark))
+        return;
+        
+    if (byte != nil &&
+        !__MCCRefMarkChunkForEval(CT_BYTE, ctxt, byte, x_mark))
+        return;
+}
+
 void MCChunk::mark(MCExecContext &ctxt, bool force, bool wholechunk, MCMarkedText& x_mark, bool includechars)
 {
     int4 t_first, t_last;
@@ -3116,16 +3277,22 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
                 t_new_mark . finish = MCDataGetLength(*t_data);
             }
             
-            mark(ctxt, false, false, t_new_mark);
+            mark_for_eval(ctxt, t_new_mark);
             
             // SN-2014-12-15: [[ Bug 14211 ]] mark() can throw errors
             if (ctxt . HasError())
                 return;
             
             if (!isdatachunk())
-                MCStringsEvalTextChunk(ctxt, t_new_mark, r_text . stringref_value), r_text . type = kMCExecValueTypeStringRef;
+            {
+                MCStringsEvalTextChunk(ctxt, t_new_mark, r_text . stringref_value);
+                r_text . type = kMCExecValueTypeStringRef;
+            }
             else
-                MCStringsEvalByteChunk(ctxt, t_new_mark, r_text . dataref_value), r_text . type = kMCExecValueTypeDataRef;
+            {
+                MCStringsEvalByteChunk(ctxt, t_new_mark, r_text . dataref_value);
+                r_text . type = kMCExecValueTypeDataRef;
+            }
 
             MCValueRelease(t_new_mark . text);
         }
