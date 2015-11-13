@@ -220,6 +220,10 @@ static bool __MCStringIsEmpty(MCStringRef string)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#include "foundation-string-native.cpp.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
 // This method creates a 'constant' MCStringRef from the given c-string. At some
 // point we'll make it work 'magically' at compile/build time. For now, uniquing
 // and returning that has a similar effect (if slightly slower).
@@ -2478,7 +2482,7 @@ hash_t MCStringHash(MCStringRef self, MCStringOptions p_options)
         self = self -> string;
     
     if (__MCStringIsNative(self))
-        return MCNativeCharsHash(self -> native_chars, self -> char_count, p_options);
+        return __NativeOp_Hash(self -> native_chars, self -> char_count, p_options);
     
 	return MCUnicodeHash(self -> chars, self -> char_count, (MCUnicodeCompareOption)p_options);
 }
@@ -2510,13 +2514,11 @@ bool MCStringIsEqualTo(MCStringRef self, MCStringRef p_other, MCStringOptions p_
     
     if (self_native && other_native)
     {
-        if (__MCStringGetLength(self) != __MCStringGetLength(p_other))
-            return false;
-        
-        if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareNonliteral)
-            return MCNativeCharsEqualExact(self -> native_chars, self -> char_count, p_other -> native_chars, p_other -> char_count);
-        else
-            return MCNativeCharsEqualCaseless(self -> native_chars, self -> char_count, p_other -> native_chars, p_other -> char_count);
+        return __NativeOp_IsEqualTo(self -> native_chars,
+                                    self -> char_count,
+                                    p_other -> native_chars,
+                                    p_other -> char_count,
+                                    p_options);
     }
 
     return MCUnicodeCompare(self -> chars, self -> char_count, self_native, p_other -> chars, p_other -> char_count, other_native, (MCUnicodeCompareOption)p_options) == 0;
@@ -2546,12 +2548,11 @@ bool MCStringSubstringIsEqualTo(MCStringRef self, MCRange p_sub, MCStringRef p_o
     if (self_native)
     {
         if (__MCStringIsNative(p_other))
-        {
-            if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareNonliteral)
-                return MCNativeCharsEqualExact(self -> native_chars + p_sub . offset, p_sub . length, p_other -> native_chars, p_other -> char_count);
-            else
-                return MCNativeCharsEqualCaseless(self -> native_chars + p_sub . offset, p_sub . length, p_other -> native_chars, p_other -> char_count);
-        }
+            return __NativeOp_IsEqualTo(self -> native_chars + p_sub . offset,
+                                        p_sub . length,
+                                        p_other -> native_chars,
+                                        p_other -> char_count,
+                                        p_options);
         
         if (__MCStringCantBeEqualToNative(p_other, p_options))
             return false;
@@ -2583,10 +2584,11 @@ bool MCStringSubstringIsEqualToSubstring(MCStringRef self, MCRange p_sub, MCStri
     bool other_native = __MCStringIsNative(p_other);
     if (self_native && other_native)
     {
-        if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareNonliteral)
-            return MCNativeCharsEqualExact(self -> native_chars + p_sub . offset, p_sub . length, p_other -> native_chars + p_other_sub . offset, p_other_sub . length);
-        else
-            return MCNativeCharsEqualCaseless(self -> native_chars + p_sub . offset, p_sub . length, p_other -> native_chars + p_other_sub . offset, p_other_sub . length);
+        return __NativeOp_IsEqualTo(self -> native_chars + p_sub . offset,
+                                    p_sub . length,
+                                    p_other -> native_chars + p_other_sub . offset,
+                                    p_other_sub . length,
+                                    p_options);
     }
     
     const void *self_chars, *other_chars;
@@ -2614,10 +2616,11 @@ bool MCStringIsEqualToNativeChars(MCStringRef self, const char_t *p_chars, uinde
         if (__MCStringIsIndirect(self))
             self = self -> string;
         
-        if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareNonliteral)
-            return MCNativeCharsEqualExact(self -> native_chars, self -> char_count, p_chars, p_char_count);
-        
-        return MCNativeCharsEqualCaseless(self -> native_chars, self -> char_count, p_chars, p_char_count);
+        return __NativeOp_IsEqualTo(self -> native_chars,
+                                    self -> char_count,
+                                    p_chars,
+                                    p_char_count,
+                                    p_options);
     }
     
     if (MCStringCantBeEqualToNative(self, p_options))
@@ -2639,6 +2642,16 @@ compare_t MCStringCompareTo(MCStringRef self, MCStringRef p_other, MCStringOptio
     
     if (__MCStringIsIndirect(p_other))
         p_other = p_other -> string;
+    
+    if (__MCStringIsNative(self) &&
+        __MCStringIsNative(p_other))
+    {
+        return __NativeOp_CompareTo(self -> native_chars,
+                                    self -> char_count,
+                                    p_other -> native_chars,
+                                    p_other -> char_count,
+                                    p_options);
+    }
 
     return MCUnicodeCompare(self -> chars, self -> char_count, __MCStringIsNative(self), p_other -> chars, p_other -> char_count, __MCStringIsNative(p_other), (MCUnicodeCompareOption)p_options);
 }
@@ -2659,13 +2672,11 @@ bool MCStringBeginsWith(MCStringRef self, MCStringRef p_prefix, MCStringOptions 
     {
         if (__MCStringIsNative(p_prefix))
         {
-            uindex_t t_prefix_length;
-            if (p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareFolded)
-                t_prefix_length = MCNativeCharsSharedPrefixCaseless(self -> native_chars, self -> char_count, p_prefix -> native_chars, p_prefix -> char_count);
-            else
-                t_prefix_length = MCNativeCharsSharedPrefixExact(self -> native_chars, self -> char_count, p_prefix -> native_chars, p_prefix -> char_count);
-            
-            return t_prefix_length == p_prefix -> char_count;
+            return __NativeOp_BeginsWith(self -> native_chars,
+                                         self -> char_count,
+                                         p_prefix -> native_chars,
+                                         p_prefix -> char_count,
+                                         p_options);
         }
         
         if (__MCStringCantBeEqualToNative(p_prefix, p_options))
@@ -2694,11 +2705,12 @@ bool MCStringSharedPrefix(MCStringRef self, MCRange p_range, MCStringRef p_prefi
     {
         if (__MCStringIsNative(p_prefix))
         {
-            if (p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareFolded)
-                r_self_match_length = MCNativeCharsSharedPrefixCaseless(self -> native_chars + p_range . offset, p_range . length, p_prefix -> native_chars, p_prefix -> char_count);
-            else
-                r_self_match_length = MCNativeCharsSharedPrefixExact(self -> native_chars + p_range . offset, p_range . length, p_prefix -> native_chars, p_prefix -> char_count);
-            
+            r_self_match_length = __NativeOp_SharedPrefix(self -> native_chars + p_range . offset,
+                                                          p_range . length,
+                                                          p_prefix -> native_chars,
+                                                          p_prefix -> char_count,
+                                                          p_options);
+
             return r_self_match_length == p_prefix -> char_count;
         }
         
@@ -2729,13 +2741,11 @@ bool MCStringBeginsWithCString(MCStringRef self, const char_t *p_prefix_cstring,
     
     if (__MCStringIsNative(self))
     {
-        uindex_t t_prefix_length;
-        if (p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareFolded)
-            t_prefix_length = MCNativeCharsSharedPrefixCaseless(self -> native_chars, self -> char_count, p_prefix_cstring, strlen((const char *)p_prefix_cstring));
-        else
-            t_prefix_length = MCNativeCharsSharedPrefixExact(self -> native_chars, self -> char_count, p_prefix_cstring, strlen((const char *)p_prefix_cstring));
-        
-        return t_prefix_length == strlen((const char *)p_prefix_cstring);
+        return __NativeOp_BeginsWith(self -> native_chars,
+                                     self -> char_count,
+                                     p_prefix_cstring,
+                                     strlen((const char *)p_prefix_cstring),
+                                     p_options);
     }
     
 	MCAutoStringRef t_string;
@@ -2759,14 +2769,11 @@ bool MCStringEndsWith(MCStringRef self, MCStringRef p_suffix, MCStringOptions p_
     {
         if (__MCStringIsNative(p_suffix))
         {
-            uindex_t t_prefix_length;
-            if (p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareFolded)
-                t_prefix_length = MCNativeCharsSharedSuffixCaseless(self -> native_chars, self -> char_count, p_suffix -> native_chars, p_suffix -> char_count);
-            else
-                t_prefix_length = MCNativeCharsSharedSuffixExact(self -> native_chars, self -> char_count, p_suffix -> native_chars, p_suffix -> char_count);
-            
-            // self begins with prefix iff t_prefix_length == length(prefix).
-            return t_prefix_length == p_suffix -> char_count;
+            return __NativeOp_EndsWith(self -> native_chars,
+                                       self -> char_count,
+                                       p_suffix -> native_chars,
+                                       p_suffix -> char_count,
+                                       p_options);
         }
         
         if (__MCStringCantBeEqualToNative(p_suffix, p_options))
@@ -2795,10 +2802,11 @@ bool MCStringSharedSuffix(MCStringRef self, MCRange p_range, MCStringRef p_suffi
     {
         if (__MCStringIsNative(p_suffix))
         {
-            if (p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareFolded)
-                r_self_match_length = MCNativeCharsSharedSuffixCaseless(self -> native_chars + p_range . offset, p_range . length, p_suffix -> native_chars, p_suffix -> char_count);
-            else
-                r_self_match_length = MCNativeCharsSharedSuffixExact(self -> native_chars + p_range . offset, p_range . length, p_suffix -> native_chars, p_suffix -> char_count);
+            r_self_match_length = __NativeOp_SharedSuffix(self -> native_chars + p_range . offset,
+                                                          p_range . length,
+                                                          p_suffix -> native_chars,
+                                                          p_suffix -> char_count,
+                                                          p_options);
             
             return r_self_match_length == p_suffix -> char_count;
         }
@@ -2830,13 +2838,11 @@ bool MCStringEndsWithCString(MCStringRef self, const char_t *p_suffix_cstring, M
     
     if (__MCStringIsNative(self))
     {
-        uindex_t t_prefix_length;
-        if (p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareFolded)
-            t_prefix_length = MCNativeCharsSharedSuffixCaseless(self -> native_chars, self -> char_count, p_suffix_cstring, strlen((const char *)p_suffix_cstring));
-        else
-            t_prefix_length = MCNativeCharsSharedSuffixExact(self -> native_chars, self -> char_count, p_suffix_cstring, strlen((const char *)p_suffix_cstring));
-        
-        return t_prefix_length == strlen((const char *)p_suffix_cstring);
+        return __NativeOp_EndsWith(self -> native_chars,
+                                   self -> char_count,
+                                   p_suffix_cstring,
+                                   strlen((const char *)p_suffix_cstring),
+                                   p_options);
     }
     
 	MCAutoStringRef t_string;
@@ -2863,21 +2869,11 @@ bool MCStringContains(MCStringRef self, MCStringRef p_needle, MCStringOptions p_
     {
         if (__MCStringIsNative(p_needle))
         {
-            // Loop through self starting at each char in turn until we find a common prefix of
-            // sufficient length.
-            for(uindex_t t_offset = 0; t_offset < self -> char_count; t_offset += 1)
-            {
-                uindex_t t_prefix_length;
-                if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareNonliteral)
-                    t_prefix_length = MCNativeCharsSharedPrefixExact(self -> native_chars + t_offset, self -> char_count - t_offset, p_needle -> native_chars, p_needle -> char_count);
-                else
-                    t_prefix_length = MCNativeCharsSharedPrefixCaseless(self -> native_chars + t_offset, self -> char_count - t_offset, p_needle -> native_chars, p_needle -> char_count);
-                
-                // If the prefix length is the same as needle, we are done.
-                if (t_prefix_length == p_needle -> char_count)
-                    return true;
-            }
-            return false;
+            return __NativeOp_Contains(self -> native_chars,
+                                       self -> char_count,
+                                       p_needle -> native_chars,
+                                       p_needle -> char_count,
+                                       p_options);
         }
         
         if (__MCStringCantBeEqualToNative(p_needle, p_options))
@@ -2911,21 +2907,11 @@ bool MCStringSubstringContains(MCStringRef self, MCRange p_range, MCStringRef p_
     {
         if (__MCStringIsNative(p_needle))
         {
-            // Loop through self starting at each char in turn until we find a common prefix of
-            // sufficient length.
-            for(uindex_t t_offset = p_range . offset; t_offset < p_range . offset + p_range . length; t_offset += 1)
-            {
-                uindex_t t_prefix_length;
-                if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareNonliteral)
-                    t_prefix_length = MCNativeCharsSharedPrefixExact(self -> native_chars + t_offset, self -> char_count - t_offset, p_needle -> native_chars, p_needle -> char_count);
-                else
-                    t_prefix_length = MCNativeCharsSharedPrefixCaseless(self -> native_chars + t_offset, self -> char_count - t_offset, p_needle -> native_chars, p_needle -> char_count);
-                
-                // If the prefix length is the same as needle, we are done.
-                if (t_prefix_length == p_needle -> char_count)
-                    return true;
-            }
-            return false;
+            return __NativeOp_Contains(self -> native_chars + p_range . offset,
+                                       p_range . length,
+                                       p_needle -> native_chars,
+                                       p_needle -> char_count,
+                                       p_options);
         }
 
         if (__MCStringCantBeEqualToNative(p_needle, p_options))
@@ -2967,22 +2953,17 @@ bool MCStringFirstIndexOfStringInRange(MCStringRef self, MCStringRef p_needle, M
     {
         if (__MCStringIsNative(p_needle))
         {
-            for(uindex_t t_offset = p_range . offset; t_offset < p_range . offset + p_range . length; t_offset += 1)
-            {
-                uindex_t t_prefix_length;
-                if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareNonliteral)
-                    t_prefix_length = MCNativeCharsSharedPrefixExact(self -> native_chars + t_offset, self -> char_count - t_offset, p_needle -> native_chars, p_needle -> char_count);
-                else
-                    t_prefix_length = MCNativeCharsSharedPrefixCaseless(self -> native_chars + t_offset, self -> char_count - t_offset, p_needle -> native_chars, p_needle -> char_count);
-                
-                // If the prefix length is the same as needle, we are done.
-                if (t_prefix_length == p_needle -> char_count)
-                {
-                    r_offset = t_offset;
-                    return true;
-                }
-            }
-            return false;
+            size_t t_relative_offset;
+            if (!__NativeOp_FirstIndexOf(self -> native_chars + p_range . offset,
+                                         p_range . length,
+                                         p_needle -> native_chars,
+                                         p_needle -> char_count,
+                                         p_options,
+                                         t_relative_offset))
+                return false;
+            
+            r_offset = p_range . offset + t_relative_offset;
+            return true;
         }
         
         if (__MCStringCantBeEqualToNative(p_needle, p_options))
@@ -3024,30 +3005,24 @@ bool MCStringFirstIndexOfCharInRange(MCStringRef self, codepoint_t p_needle, MCR
     
     if (__MCStringIsNative(self))
     {
-        if (p_needle >= 0xFF)
+        char_t t_mapped_needle;
+        if (p_needle > 0xFFFF ||
+            !MCUnicodeCharMapToNative(p_needle, t_mapped_needle))
+            return false;
+
+        size_t t_relative_offset;
+        if (!__NativeOp_FirstIndexOf(self -> native_chars + p_range . offset,
+                                     p_range . length,
+                                     &t_mapped_needle,
+                                     1,
+                                     p_options,
+                                     t_relative_offset))
             return false;
         
-        char_t t_char;
-        t_char = (char_t)p_needle;
-        if (p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareFolded)
-            t_char = MCNativeCharFold(t_char);
-        
-        for(uindex_t t_offset = p_range . offset; t_offset < p_range . offset + p_range . length; t_offset += 1)
-        {
-            char_t t_other_char;
-            t_other_char = self -> native_chars[t_offset];
-            if (p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareFolded)
-                t_other_char = MCNativeCharFold(t_other_char);
-            
-            if (t_other_char == t_char)
-            {
-                r_offset = t_offset;
-                return true;
-            }
-        }
-        return false;
+        r_offset = p_range . offset + t_relative_offset;
+        return true;
     }
-    
+
     bool t_result;
     t_result = MCUnicodeFirstIndexOfChar(self -> chars + p_range . offset, p_range . length, p_needle, (MCUnicodeCompareOption)p_options, r_offset);
     
@@ -3082,56 +3057,17 @@ bool MCStringLastIndexOfStringInRange(MCStringRef self, MCStringRef p_needle, MC
     {
         if (__MCStringIsNative(p_needle))
         {
-			const char_t *t_needle = p_needle->native_chars;
-			uindex_t t_needle_len = p_needle->char_count;
-
-			/* If needle is longer than range, can't possibly be found. */
-			if (p_range.length < t_needle_len)
-				return false;
-
-			/* Start search at first possible offset of needle within range */
-			uindex_t t_offset; /* Relative to start of range */
-			t_offset = p_range.length - t_needle_len;
-
-			while (true)
-			{
-				const char_t *t_haystack;
-				uindex_t t_haystack_len;
-
-				t_haystack = self->native_chars + p_range.offset + t_offset;
-				t_haystack_len = p_range.length - t_offset;
-
-				uindex_t t_prefix_length;
-				if (p_options == kMCStringOptionCompareCaseless ||
-				    p_options == kMCStringOptionCompareFolded)
-				{
-					t_prefix_length =
-						MCNativeCharsSharedPrefixCaseless (t_haystack,
-						                                   t_haystack_len,
-						                                   t_needle,
-						                                   t_needle_len);
-				}
-				else
-				{
-					t_prefix_length =
-						MCNativeCharsSharedPrefixExact (t_haystack,
-						                                t_haystack_len,
-						                                t_needle,
-						                                t_needle_len);
-				}
-				if (t_prefix_length == t_needle_len)
-				{
-					r_offset = p_range.offset + t_offset;
-					return true;
-				}
-
-				/* No match at start of range */
-				if (0 == t_offset)
-					break;
-
-				--t_offset;
-			}
-			return false;
+            size_t t_relative_offset;
+            if (!__NativeOp_LastIndexOf(self -> native_chars + p_range . offset,
+                                        p_range . length,
+                                        p_needle -> native_chars,
+                                        p_needle -> char_count,
+                                        p_options,
+                                        t_relative_offset))
+                return false;
+            
+            r_offset = p_range . offset + t_relative_offset;
+            return true;
 		}
         
         if (__MCStringCantBeEqualToNative(p_needle, p_options))
@@ -3154,84 +3090,80 @@ bool MCStringLastIndexOfChar(MCStringRef self, codepoint_t p_needle, uindex_t p_
     
     if (__MCStringIsNative(self))
     {
-        if (p_needle >= 0xFF)
+        char_t t_mapped_needle;
+        if (p_needle > 0xFFFF ||
+            !MCUnicodeCharMapToNative((unichar_t)p_needle, t_mapped_needle))
             return false;
         
-        char_t t_char;
-        t_char = (char_t)p_needle;
-        if (p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareFolded)
-            t_char = MCNativeCharFold(t_char);
+        size_t t_relative_offset;
+        if (!__NativeOp_LastIndexOf(self -> native_chars,
+                                    p_before,
+                                    &t_mapped_needle,
+                                    1,
+                                    p_options,
+                                    t_relative_offset))
+            return false;
         
-        for(uindex_t t_offset = p_before; t_offset > 0; t_offset -= 1)
-        {
-            char_t t_other_char;
-            t_other_char = self -> native_chars[t_offset - 1];
-        if (p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareFolded)
-                t_other_char = MCNativeCharFold(t_other_char);
-            
-            if (t_other_char == t_char)
-            {
-                r_offset = t_offset - 1;
-                return true;
-            }
-        }
-        return false;
+        r_offset = (uindex_t)t_relative_offset;
+        return true;
     }
     
     return MCUnicodeLastIndexOfChar(self -> chars, p_before, p_needle, (MCUnicodeCompareOption)p_options, r_offset);
 }
 
-// Find where both needle and self are native.
-static bool MCStringFindNative(MCStringRef self, MCRange p_range, MCStringRef p_needle, MCStringOptions p_options, MCRange *r_result)
+static bool __MCStringFind(MCStringRef self, MCRange p_range, MCStringRef p_needle, MCStringOptions p_options, MCRange *r_result)
 {
-	// Similar to contains, this searches for needle but only with range of self.
+    bool self_native = __MCStringIsNative(self);
+    if (self_native)
+    {
+        if (__MCStringIsNative(p_needle))
+        {
+            size_t t_relative_offset;
+            if (!__NativeOp_FirstIndexOf(self -> native_chars + p_range . offset,
+                                         p_range . length,
+                                         p_needle -> native_chars,
+                                         p_needle -> char_count,
+                                         p_options,
+                                         t_relative_offset))
+                return false;
+            
+            if (r_result != nil)
+            {
+                r_result -> offset = p_range . offset + t_relative_offset;
+                r_result -> length = p_needle -> char_count;
+            }
+            
+            return true;
+        }
+        
+        if (MCStringCantBeEqualToNative(p_needle, p_options))
+            return false;
+    }
+    
+    // Circumvent performance hit due to possibility of case / form sensitivity affecting delimiter search.
+    // TODO: Implement properly, based on properties of the needle string.
+    if (__MCStringGetLength(p_needle) == 1)
+    {
+        codepoint_t t_codepoint =  MCStringGetCodepointAtIndex(p_needle, 0);
+        // if codepoint is among first 64 ASCII characters then do case and form sensitive comparison.
+        if (t_codepoint < 0x41)
+            p_options = kMCStringOptionCompareExact;
+    }
+    
+    // Similar to contains, this searches for needle but only with range of self.
 	// It also returns the the range in self that needle occupies (but only if
 	// r_result is non-nil).
     
-	// Compute the char ptr and length based on range.
-	const char_t *t_chars;
-	uindex_t t_char_count;
-	t_chars = self -> native_chars + MCMin(p_range . offset, self -> char_count);
-	t_char_count = MCMin(p_range . length, self -> char_count - (t_chars - self -> native_chars));
+    bool t_result;
+    MCRange t_range;
+    t_result = MCUnicodeFind(self->native_chars + (self_native ? p_range . offset : 2 * p_range . offset), p_range . length, __MCStringIsNative(self), p_needle -> chars, p_needle -> char_count, __MCStringIsNative(p_needle), (MCUnicodeCompareOption)p_options, t_range);
     
-	// Loop through the char range until we find a common prefix of sufficient
-	// length.
-	for(uindex_t t_offset = 0; t_offset < t_char_count; t_offset += 1)
-	{
-		// Compute the length of the shared prefix at the current offset.
-		uindex_t t_prefix_length;
-        if (p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareFolded)
-			t_prefix_length = MCNativeCharsSharedPrefixCaseless(t_chars + t_offset, t_char_count - t_offset, p_needle -> native_chars, p_needle -> char_count);
-		else
-			t_prefix_length = MCNativeCharsSharedPrefixExact(t_chars + t_offset, t_char_count - t_offset, p_needle -> native_chars, p_needle -> char_count);
-        
-		// If the prefix length is the same as needle, we are done.
-		if (t_prefix_length == p_needle -> char_count)
-		{
-			// If requested, then compute the resulting range.
-			if (r_result != nil)
-			{
-				// As the length of the prefix is counted relative to needle
-				// we must recompute with things 'the other way around' as
-				// range is relative to self. [ This will not be necessary when
-				// we have a better low-level comparison function that returns
-				// equal char counts for both parties! ].
-                if (p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareFolded)
-					t_prefix_length = MCNativeCharsSharedPrefixCaseless(p_needle -> native_chars, p_needle -> char_count, t_chars + t_offset, t_char_count - t_offset);
-				else
-					t_prefix_length = MCNativeCharsSharedPrefixExact(p_needle -> native_chars, p_needle -> char_count, t_chars + t_offset, t_char_count - t_offset);
-                
-				// Build the range.
-				r_result -> offset = p_range . offset + t_offset;
-				r_result -> length = t_prefix_length;
-			}
-            
-			return true;
-		}
-	}
+    // Correct the range
+    t_range.offset += p_range.offset;
     
-	// If we get here then we didn't find the string we were looking for.
-	return false;
+    if (r_result != nil)
+        *r_result = t_range;
+    return t_result;
 }
 
 MC_DLLEXPORT_DEF
@@ -3248,81 +3180,7 @@ bool MCStringFind(MCStringRef self, MCRange p_range, MCStringRef p_needle, MCStr
     
     __MCStringClampRange(self, p_range);
     
-    // Circumvent performance hit due to possibility of case / form sensitivity affecting delimiter search.
-    // TODO: Implement properly, based on properties of the needle string.
-    if (__MCStringGetLength(p_needle) == 1)
-    {
-        codepoint_t t_codepoint =  MCStringGetCodepointAtIndex(p_needle, 0);
-        // if codepoint is among first 64 ASCII characters then do case and form sensitive comparison.
-        if (t_codepoint < 0x41)
-            p_options = kMCStringOptionCompareExact;
-    }
-    bool self_native = __MCStringIsNative(self);
-    if (self_native)
-    {
-        if (__MCStringIsNative(p_needle))
-            return MCStringFindNative(self, p_range, p_needle, p_options, r_result);
-        
-        if (MCStringCantBeEqualToNative(p_needle, p_options))
-            return false;
-    }
-
-    // Similar to contains, this searches for needle but only with range of self.
-	// It also returns the the range in self that needle occupies (but only if
-	// r_result is non-nil).
-
-    bool t_result;
-    MCRange t_range;
-    t_result = MCUnicodeFind(self->native_chars + (self_native ? p_range . offset : 2 * p_range . offset), p_range . length, __MCStringIsNative(self), p_needle -> chars, p_needle -> char_count, __MCStringIsNative(p_needle), (MCUnicodeCompareOption)p_options, t_range);
-    
-    // Correct the range
-    t_range.offset += p_range.offset;
-    
-    if (r_result != nil)
-        *r_result = t_range;
-    return t_result;
-}
-
-static uindex_t MCStringCountNativeChars(MCStringRef self, MCRange p_range, const char_t *p_needle_chars, uindex_t p_needle_char_count, MCStringOptions p_options)
-{
-    if (__MCStringIsIndirect(self))
-        self = self -> string;
-    
-	// Keep track of how many occurances have been found.
-	uindex_t t_count;
-	t_count = 0;
-    
-	// Compute the char ptr and length based on range.
-	const char_t *t_chars;
-	uindex_t t_char_count;
-	t_chars = self -> native_chars + MCMin(p_range . offset, self -> char_count);
-	t_char_count = MCMin(p_range . length, self -> char_count - (t_chars - self -> native_chars));
-    
-	// Loop through the char range checking for occurances of needle.
-	uindex_t t_offset;
-	t_offset = 0;
-	while(t_offset < t_char_count)
-	{
-		// Compute the length of the shared prefix at the current offset.
-		uindex_t t_prefix_length;
-        if (p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareFolded)
-			t_prefix_length = MCNativeCharsSharedPrefixCaseless(t_chars + t_offset, t_char_count - t_offset, p_needle_chars, p_needle_char_count);
-		else
-			t_prefix_length = MCNativeCharsSharedPrefixExact(t_chars + t_offset, t_char_count - t_offset, p_needle_chars, p_needle_char_count);
-        
-		// If we find a match, increase the count and move past it, otherwise
-		// just bump.
-		if (t_prefix_length == p_needle_char_count)
-		{
-			t_offset += t_prefix_length;
-			t_count += 1;
-		}
-		else
-			t_offset += 1;
-	}
-    
-	// Return the number of occurrences.
-	return t_count;
+    return __MCStringFind(self, p_range, p_needle, p_options, r_result);
 }
 
 static uindex_t MCStringCountStrChars(MCStringRef self, MCRange p_range, const void *p_needle_chars, uindex_t p_needle_char_count, bool p_needle_native, MCStringOptions p_options)
@@ -3380,7 +3238,12 @@ uindex_t MCStringCount(MCStringRef self, MCRange p_range, MCStringRef p_needle, 
     if (MCStringIsNative(self))
     {
         if (__MCStringIsNative(p_needle))
-            return MCStringCountNativeChars(self, p_range, p_needle -> native_chars, p_needle -> char_count, p_options);
+            return __NativeOp_Count(self -> native_chars + p_range . offset,
+                                    p_range . length,
+                                    p_needle -> native_chars,
+                                    p_needle -> char_count,
+                                    p_options,
+                                    nil);
         
         if (__MCStringCantBeEqualToNative(p_needle, p_options))
             return 0;
@@ -3401,10 +3264,17 @@ uindex_t MCStringCountChar(MCStringRef self, MCRange p_range, codepoint_t p_need
 	
     if (MCStringIsNative(self))
     {
-        if (p_needle >= 0xFF)
+        char_t t_mapped_needle;
+        if (p_needle > 0xFFFF ||
+            !MCUnicodeCharMapToNative((unichar_t)p_needle, t_mapped_needle))
             return 0;
         
-        return MCStringCountNativeChars(self, p_range, (const char_t *)&p_needle, 1, p_options);
+        return __NativeOp_Count(self -> native_chars + p_range . offset,
+                                p_range . length,
+                                &t_mapped_needle,
+                                1,
+                                p_options,
+                                nil);
     }
     
 	return MCStringCountStrChars(self, p_range, &t_native_needle, 1, false, p_options);
@@ -4344,11 +4214,12 @@ static void split_find_end_of_element_native(const char_t *sptr, const char_t *e
 	while(sptr < eptr - p_del_length + 1)
 	{
         // Compute the length of the shared prefix at the current offset.
-		uindex_t t_prefix_length;
-        if (p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareFolded)
-			t_prefix_length = MCNativeCharsSharedPrefixCaseless(sptr, eptr - sptr, del, p_del_length);
-		else
-			t_prefix_length = MCNativeCharsSharedPrefixExact(sptr, eptr - sptr, del, p_del_length);
+		size_t t_prefix_length;
+        t_prefix_length = __NativeOp_SharedPrefix(sptr,
+                                                  (size_t)(eptr - sptr),
+                                                  del,
+                                                  p_del_length,
+                                                  p_options);
 		if (t_prefix_length == p_del_length)
 		{
 			r_end_ptr = sptr;
@@ -4366,10 +4237,11 @@ static void split_find_end_of_element_and_key_native(const char_t *sptr, const c
     {
         // Compute the length of the shared prefix at the current offset.
         uindex_t t_prefix_length;
-        if (p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareFolded)
-            t_prefix_length = MCNativeCharsSharedPrefixCaseless(sptr, eptr - sptr, key, p_key_length);
-        else
-            t_prefix_length = MCNativeCharsSharedPrefixExact(sptr, eptr - sptr, key, p_key_length);
+        t_prefix_length = __NativeOp_SharedPrefix(sptr,
+                                                  (size_t)(eptr - sptr),
+                                                  key,
+                                                  p_key_length,
+                                                  p_options);
         if (t_prefix_length == p_key_length)
         {
 			r_key_ptr = sptr;
@@ -4378,10 +4250,11 @@ static void split_find_end_of_element_and_key_native(const char_t *sptr, const c
         
         if (sptr < eptr - p_del_length + 1)
         {
-            if (p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareFolded)
-                t_prefix_length = MCNativeCharsSharedPrefixCaseless(sptr, eptr - sptr, del, p_del_length);
-            else
-                t_prefix_length = MCNativeCharsSharedPrefixExact(sptr, eptr - sptr, del, p_del_length);
+            t_prefix_length = __NativeOp_SharedPrefix(sptr,
+                                                      (size_t)(eptr - sptr),
+                                                      del,
+                                                      p_del_length,
+                                                      p_options);
             if (t_prefix_length == p_del_length)
             {
                 r_key_ptr = r_end_ptr = sptr;
@@ -4494,11 +4367,11 @@ bool MCStringFindAndReplaceChar(MCStringRef self, char_t p_pattern, char_t p_rep
 	else
 	{
 		char_t t_from;
-		t_from = MCNativeCharFold(p_pattern);
+		t_from = __NativeChar_Fold(p_pattern);
         
 		// Now substitute pattern for replacement, taking making sure its a caseless compare.
 		for(uindex_t i = 0; i < self -> char_count; i++)
-			if (MCNativeCharFold(self -> native_chars[i]) == t_from)
+			if (__NativeChar_Fold(self -> native_chars[i]) == t_from)
 				self -> native_chars[i] = p_replacement;
 	}
     
@@ -4991,13 +4864,7 @@ bool MCStringFindAndReplace(MCStringRef self, MCStringRef p_pattern, MCStringRef
     {
         if (MCStringIsNative(p_pattern))
         {
-            if (!MCStringIsNative(p_replacement))
-            {
-                MCRange t_dummy;
-                if (!MCStringFindNative(self, MCRangeMake(0, __MCStringGetLength(self)), p_pattern, p_options, &t_dummy))
-                    return true;
-            }
-            else
+            if (MCStringIsNative(p_replacement))
                 return MCStringFindAndReplaceNative(self, p_pattern, p_replacement, p_options);
         }
         else if (MCStringCantBeEqualToNative(p_pattern, p_options))

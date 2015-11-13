@@ -1,0 +1,935 @@
+/* Copyright (C) 2003-2015 LiveCode Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+#include <foundation.h>
+#include <foundation-auto.h>
+#include <foundation-unicode.h>
+
+#include "foundation-private.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+// This file contains low-level native string operations and is designed to be
+// included in foundation-string.cpp.
+
+// Although the current operations are based around 'char_t' the properties
+// of the strings they assume are that all their characters are 1 unit long,
+// are composed and folding preserves length.
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Identity function used by templates for cases where no case folding is
+// required.
+static inline
+char_t __NativeChar_NoFold(char_t p_char)
+{
+    return p_char;
+}
+
+// Return the folded version of 'char'.
+static inline
+char_t __NativeChar_Fold(char_t p_char)
+{
+#if defined(__WINDOWS_1252__) || defined(__ISO_8859_1__)
+	static char_t kMCStringFoldWindows1252_Mapping[256] =
+	{
+		0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+		0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
+		0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f,
+		0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f,
+		0x40, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f,
+		0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x5b, 0x5c, 0x5d, 0x5e, 0x5f,
+		0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f,
+		0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x7b, 0x7c, 0x7d, 0x7e, 0x7f,
+		0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x9a, 0x8b, 0x9c, 0x8d, 0x9e, 0x8f,
+		0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9a, 0x9b, 0x9c, 0x9d, 0x9e, 0xff,
+		0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 0xab, 0xac, 0xad, 0xae, 0xaf,
+		0xb0, 0xb1, 0xb2, 0xb3, 0xb4, 0xb5, 0xb6, 0xb7, 0xb8, 0xb9, 0xba, 0xbb, 0xbc, 0xbd, 0xbe, 0xbf,
+		0xe0, 0xe1, 0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea, 0xeb, 0xec, 0xed, 0xee, 0xef,
+		0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xd7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xdf,
+		0xe0, 0xe1, 0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea, 0xeb, 0xec, 0xed, 0xee, 0xef,
+		0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff,
+	};
+	return kMCStringFoldWindows1252_Mapping[p_char];
+#elif defined(__MACROMAN__)
+	static char_t kMCStringFoldMacRoman_Mapping[256] =
+	{
+		0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+		0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
+		0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f,
+		0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f,
+		0x40, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f,
+		0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x5b, 0x5c, 0x5d, 0x5e, 0x5f,
+		0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f,
+		0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x7b, 0x7c, 0x7d, 0x7e, 0x7f,
+		0x8a, 0x8c, 0x8d, 0x8e, 0x96, 0x9a, 0x9f, 0x87, 0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8d, 0x8e, 0x8f,
+		0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9a, 0x9b, 0x9c, 0x9d, 0x9e, 0x9f,
+		0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 0xab, 0xac, 0xad, 0xbe, 0xbf,
+		0xb0, 0xb1, 0xb2, 0xb3, 0xb4, 0xb5, 0xb6, 0xb7, 0xb8, 0xb9, 0xba, 0xbb, 0xbc, 0xbd, 0xbe, 0xbf,
+		0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0x88, 0x8b, 0x9b, 0xcf, 0xcf,
+		0xd0, 0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8, 0xd8, 0xda, 0xdb, 0xdc, 0xdd, 0xde, 0xdf,
+		0xe0, 0xe1, 0xe2, 0xe3, 0xe4, 0x89, 0x90, 0x87, 0x91, 0x8f, 0x92, 0x94, 0x95, 0x93, 0x97, 0x99,
+		0xf0, 0x98, 0x9c, 0x9e, 0x9d, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff,
+	};
+	return kMCStringFoldMacRoman_Mapping[p_char];
+#else
+#error Unknown native encoding
+#endif
+}
+
+// Return the folded version of 'char' into 'folded_char', and return true if
+// the char is cased (i.e. there exists c' != c s.t. fold(c') == c).
+static inline bool
+__NativeChar_CheckedFold(char_t p_char,
+                         char_t& r_folded_char)
+{
+    r_folded_char = __NativeChar_Fold(p_char);
+    
+    return p_char >= 0x40;
+}
+
+// Fold 'length' characters in 'chars', placing them into 'out_chars'.
+static inline void
+__NativeStr_Fold(const char_t *p_chars,
+                 size_t p_length,
+                 char_t *r_out_chars)
+{
+    for(; p_length > 0; p_length -= 1)
+        *r_out_chars++ = __NativeChar_Fold(*p_chars++);
+}
+
+// Fold 'length' characters in 'chars', placing them into 'out_chars'.
+// The function returns true if at least one of the chars is cased.
+static inline bool
+__NativeStr_CheckedFold(const char_t *p_chars,
+                        size_t p_length,
+                        char_t *r_out_char)
+{
+    bool t_needs_fold;
+    t_needs_fold = false;
+    
+    for(; p_length > 0; p_length -= 1)
+    {
+        if (__NativeChar_CheckedFold(*p_chars++, *r_out_char++))
+        {
+            t_needs_fold = true;
+            break;
+        }
+    }
+    
+    for(; p_length > 0; p_length -= 1)
+        *r_out_char++ = __NativeChar_Fold(*p_chars++);
+
+    return t_needs_fold;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Return the lower-case version of 'char'.
+static inline
+char_t __NativeChar_Lowercase(char_t p_char)
+{
+    return __NativeChar_Fold(p_char);
+}
+
+// Return the upper-case version of 'char'.
+static inline
+char_t __NativeChar_Uppercase(char_t p_char)
+{
+#if defined(__WINDOWS_1252__) || defined(__ISO_8859_1__)
+	static char_t kMCStringUppercaseWindows1252_Mapping[256] =
+	{
+		0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+		0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
+		0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f,
+		0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f,
+		0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f,
+		0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5a, 0x5b, 0x5c, 0x5d, 0x5e, 0x5f,
+		0x60, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f,
+		0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5a, 0x7b, 0x7c, 0x7d, 0x7e, 0x7f,
+		0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8d, 0x8e, 0x8f,
+		0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x8a, 0x9b, 0x8c, 0x9d, 0x8e, 0x9f,
+		0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 0xab, 0xac, 0xad, 0xae, 0xaf,
+		0xb0, 0xb1, 0xb2, 0xb3, 0xb4, 0xb5, 0xb6, 0xb7, 0xb8, 0xb9, 0xba, 0xbb, 0xbc, 0xbd, 0xbe, 0xbf,
+		0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xcb, 0xcc, 0xcd, 0xce, 0xcf,
+		0xd0, 0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8, 0xd9, 0xda, 0xdb, 0xdc, 0xdd, 0xde, 0xdf,
+		0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xcb, 0xcc, 0xcd, 0xce, 0xcf,
+		0xd0, 0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xf7, 0xd8, 0xd9, 0xda, 0xdb, 0xdc, 0xdd, 0xde, 0x9f,
+	};
+	return kMCStringUppercaseWindows1252_Mapping[p_char];
+#elif defined(__MACROMAN__)
+	static char_t kMCStringUppercaseMacRoman_Mapping[256] =
+	{
+		0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+		0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
+		0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f,
+		0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f,
+		0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f,
+		0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5a, 0x5b, 0x5c, 0x5d, 0x5e, 0x5f,
+		0x60, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f,
+		0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5a, 0x7b, 0x7c, 0x7d, 0x7e, 0x7f,
+		0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0xe7, 0xcb, 0xe5, 0x80, 0xcc, 0x81, 0x82, 0x83, 0xe9,
+		0xe6, 0xe8, 0xea, 0xed, 0xeb, 0xec, 0x84, 0xee, 0xf1, 0xef, 0x85, 0xcd, 0xf2, 0xf4, 0xf3, 0x86,
+		0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 0xab, 0xac, 0xad, 0xae, 0xaf,
+		0xb0, 0xb1, 0xb2, 0xb3, 0xb4, 0xb5, 0xb6, 0xb7, 0xb8, 0xb9, 0xba, 0xbb, 0xbc, 0xbd, 0xae, 0xaf,
+		0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xcb, 0xcc, 0xcd, 0xce, 0xce,
+		0xd0, 0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd9, 0xd9, 0xda, 0xdb, 0xdc, 0xdd, 0xde, 0xdf,
+		0xe0, 0xe1, 0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea, 0xeb, 0xec, 0xed, 0xee, 0xef,
+		0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0x49, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff,
+	};
+	return kMCStringUppercaseMacRoman_Mapping[p_char];
+#else
+#error Unknown native encoding
+#endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Compare two uncased or prefolded chars for caseless equality.
+static inline bool
+__NativeChar_Equal_Unfolded(char_t p_left,
+                            char_t p_right)
+{
+    return p_left == p_right;
+}
+
+// Compare an unfolded char with an uncased or prefolded char for caseless
+// equality.
+static inline bool
+__NativeChar_Equal_Prefolded(char_t p_left,
+                             char_t p_folded_right)
+{
+    if (p_left != p_folded_right)
+        return __NativeChar_Fold(p_left) ==
+                p_folded_right;
+    
+    return true;
+}
+
+// Compare two unfolded chars for caseless equality.
+static inline bool
+__NativeChar_Equal_Folded(char_t p_left,
+                          char_t p_right)
+{
+    if (p_left != p_right)
+        return __NativeChar_Fold(p_left) ==
+                __NativeChar_Fold(p_right);
+    
+    return true;
+}
+
+// Compare two uncased or prefolded chars.
+static inline ssize_t
+__NativeChar_Compare_Unfolded(char_t p_left,
+                              char_t p_right)
+{
+    return p_left - p_right;
+}
+
+// Compare an unfolded char with an uncased or prefolded char.
+static inline ssize_t
+__NativeChar_Compare_Prefolded(char_t p_left,
+                               char_t p_folded_right)
+{
+    if (p_left != p_folded_right)
+        return __NativeChar_Fold(p_left) -
+                p_folded_right;
+    
+    return 0;
+}
+
+// Compare two unfolded chars.
+static inline ssize_t
+__NativeChar_Compare_Folded(char_t p_left,
+                            char_t p_right)
+{
+    if (p_left != p_right)
+        return __NativeChar_Fold(p_left) -
+                __NativeChar_Fold(p_right);
+    
+    return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Check the two strings for equality, using the given char comparison method.
+template<bool (*CharEqual)(char_t left, char_t right)>
+static inline bool
+__NativeStr_Equal(const char_t *p_left_chars,
+                  size_t p_left_length,
+                  const char_t *p_right_chars,
+                  size_t p_right_length)
+{
+    if (p_left_length != p_right_length)
+        return false;
+    
+    if (p_left_chars == p_right_chars)
+        return true;
+    
+    while(p_left_length > 0)
+    {
+        if (!CharEqual(*p_left_chars++, *p_right_chars++))
+            return false;
+        
+        p_left_length -= 1;
+    }
+    
+    return true;
+}
+
+// Compare two strings, using the given char comparison method.
+template<ssize_t (*CharCompare)(char_t left, char_t right)>
+static inline ssize_t
+__NativeStr_Compare(const char_t *p_left_chars,
+                    size_t p_left_length,
+                    const char_t *p_right_chars,
+                    size_t p_right_length)
+{
+    for(;;)
+    {
+        if (p_left_length == 0 || p_right_length == 0)
+            break;
+        
+        ssize_t d;
+        d = CharCompare(*p_left_chars++, *p_right_chars++);
+        if (d != 0)
+            return d;
+
+        p_left_length -= 1;
+        p_right_length -= 1;
+    }
+    
+    return (signed)p_left_length - (signed)p_right_length;
+}
+
+// Find the maximum equal prefix of the two strings, using the given char
+// comparison method. The length of the shared prefix is returned.
+template<bool (*CharEqual)(char_t left, char_t right)>
+static inline size_t
+__NativeStr_Prefix(const char_t *p_left_chars,
+                   size_t p_left_length,
+                   const char_t *p_right_chars,
+                   size_t p_right_length)
+{
+    if (p_right_length < p_left_length)
+        p_left_length = p_right_length;
+    
+    size_t t_prefix;
+    t_prefix = 0;
+    for(;;)
+    {
+        if (p_left_length == 0)
+            break;
+        
+        if (!CharEqual(*p_left_chars++, *p_right_chars++))
+            break;
+        
+        t_prefix += 1;
+        
+        p_left_length -= 1;
+    }
+    
+    return t_prefix;
+}
+
+// Find the maximum equal suffix of the two strings, using the given char
+// comparison method. The length of the shared suffix is returned.
+template<bool (*CharEqual)(char_t left, char_t right)>
+static inline size_t
+__NativeStr_Suffix(const char_t *p_left_chars,
+                   size_t p_left_length,
+                   const char_t *p_right_chars,
+                   size_t p_right_length)
+{
+    p_left_chars += p_left_length;
+    p_right_chars += p_right_length;
+    
+    if (p_right_length < p_left_length)
+        p_left_length = p_right_length;
+    
+    size_t t_suffix;
+    t_suffix = 0;
+    for(;;)
+    {
+        if (p_left_length == 0)
+            break;
+        
+        if (!CharEqual(*--p_left_chars, *--p_right_chars))
+            break;
+        
+        t_suffix += 1;
+        
+        p_left_length -= 1;
+    }
+    
+    return t_suffix;
+}
+
+// Return the hash of the given string, using the give char folding method.
+template<char_t (*CharFold)(char_t chr)>
+static inline hash_t
+__NativeStr_Hash(const char_t *p_chars,
+                 size_t p_char_count)
+{
+#ifdef __64_BIT__
+    // 64-bit variant
+    const uint64_t kPrime = 1099511628211ULL;
+    const uint64_t kOffset = 14695981039346656037ULL;
+    uint64_t t_hash = kOffset;
+    
+    while (p_char_count--)
+    {
+        uint16_t t_char;
+        t_char = (uint16_t)MCUnicodeCharMapFromNative(CharFold(*p_chars++));
+        
+        // Hash the byte
+        t_hash ^= t_char & 0xFF;
+        t_hash *= kPrime;
+        
+        // Hash the second byte of the unichar
+        t_hash ^= t_char >> 8;
+        t_hash *= kPrime;
+    }
+    return t_hash;
+#else
+    // 32-bit variant
+    const uint32_t kPrime = 16777619UL;
+    const uint32_t kOffset = 2166136261UL;
+    uint32_t t_hash = kOffset;
+    
+    while (p_char_count--)
+    {
+        uint16_t t_char;
+        t_char = (uint16_t)MCUnicodeCharMapFromNative(CharFold(*p_chars++));
+        
+        // Hash the byte
+        t_hash ^= t_char & 0xFF;
+        t_hash *= kPrime;
+        
+        // Hash the second byte of the unichar
+        t_hash ^= t_char >> 8;
+        t_hash *= kPrime;
+    }
+    return t_hash;
+#endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Most delimiter based string operations depend on a single 'scanning'
+// operation:
+//
+//   Scan(haystack, needle, max_count -> found_count, last_found_offset)
+//
+// If max_count is 0, then the number of occurances of needle in haystack is
+// returned.
+//
+// If max_count is not 0, then the haystack will be scanned for at most
+// max_count occurances with the number found returned.
+//
+// In both cases, if at least 1 occurance was found then the offset of the last
+// found occurance is also returned.
+
+template<bool (*CharEqual)(char_t left, char_t right)>
+struct __NativeStr_Forward
+{
+    static inline size_t CharScan(const char_t *p_haystack_chars,
+                                  size_t p_haystack_length,
+                                  char_t p_needle_char,
+                                  size_t p_max_count,
+                                  size_t *r_offset)
+    {
+        size_t t_count;
+        t_count = 0;
+        
+        size_t t_char_offset;
+        t_char_offset = 0;
+        
+        size_t t_offset;
+        while(t_char_offset < p_haystack_length)
+        {
+            if (CharEqual(p_haystack_chars[t_char_offset], p_needle_char))
+            {
+                t_offset = t_char_offset;
+                t_count += 1;
+                
+                if (t_count == p_max_count)
+                    break;
+            }
+            
+            t_char_offset += 1;
+        }
+        
+        if (t_count > 0 &&
+            r_offset != nil)
+            *r_offset = t_offset;
+        
+        return t_count;
+    }
+
+    static inline size_t Scan(const char_t *p_haystack_chars,
+                              size_t p_haystack_length,
+                              const char_t *p_needle_chars,
+                              size_t p_needle_length,
+                              size_t p_max_count,
+                              size_t *r_offset)
+    {
+        p_haystack_length -= p_needle_length;
+        
+        size_t t_count;
+        t_count = 0;
+        
+        size_t t_char_offset;
+        t_char_offset = 0;
+        
+        size_t t_offset;
+        while(t_char_offset <= p_haystack_length)
+        {
+            if (__NativeStr_Equal<CharEqual>(p_haystack_chars + t_char_offset,
+                                             p_needle_length,
+                                             p_needle_chars,
+                                             p_needle_length))
+            {
+                t_offset = t_char_offset;
+                t_count += 1;
+                
+                if (t_count == p_max_count)
+                    break;
+                
+                t_char_offset += p_needle_length;
+            }
+            else
+                t_char_offset += 1;
+        }
+        
+        if (t_count > 0 &&
+            r_offset != nil)
+            *r_offset = t_offset;
+        
+        return t_count;
+    }
+};
+
+template<bool (*CharEqual)(char_t left, char_t right)>
+struct __NativeStr_Reverse
+{
+    static inline size_t CharScan(const char_t *p_haystack_chars,
+                                  size_t p_haystack_length,
+                                  char_t p_needle_char,
+                                  size_t p_max_count,
+                                  size_t *r_offset)
+    {
+        size_t t_count;
+        t_count = 0;
+        
+        size_t t_char_offset;
+        t_char_offset = p_haystack_length;
+        
+        size_t t_offset;
+        while(t_char_offset > 0)
+        {
+            if (CharEqual(p_haystack_chars[t_char_offset - 1], p_needle_char))
+            {
+                t_offset = t_char_offset;
+                t_count += 1;
+                
+                if (t_count == p_max_count)
+                    break;
+            }
+            
+            t_char_offset -= 1;
+        }
+        
+        if (t_count > 0 &&
+            r_offset != nil)
+            *r_offset = t_offset - 1;
+        
+        return t_count;
+    }
+    
+    static inline size_t Scan(const char_t *p_haystack_chars,
+                              size_t p_haystack_length,
+                              const char_t *p_needle_chars,
+                              size_t p_needle_length,
+                              size_t p_max_count,
+                              size_t *r_offset)
+    {
+        p_haystack_length -= p_needle_length;
+        
+        size_t t_count;
+        t_count = 0;
+        
+        size_t t_char_offset;
+        t_char_offset = p_haystack_length;
+        
+        size_t t_offset;
+        while(t_char_offset > 0)
+        {
+            if (__NativeStr_Equal<CharEqual>(p_haystack_chars + t_char_offset - 1,
+                                             p_needle_length,
+                                             p_needle_chars,
+                                             p_needle_length))
+            {
+                t_offset = t_char_offset;
+                t_count += 1;
+                
+                if (t_count == p_max_count)
+                    break;
+                
+                t_char_offset -= p_needle_length;
+            }
+            else
+                t_char_offset -= 1;
+        }
+        
+        if (t_count > 0 &&
+            r_offset != nil)
+            *r_offset = t_offset - 1;
+        
+        return t_count;
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+// This is the maximum length of 'needle' which will be prefolded in a caseless
+// operation.
+#define __NATIVEOP_PREFOLD_LIMIT 32
+
+// Returns true if the given string options require folded comparison.
+static inline bool __NativeOp_IsFolded(MCStringOptions p_options)
+{
+    return p_options >= kMCStringOptionCompareCaseless;
+}
+
+// Compare the two strings for equality, taking into account the given options.
+static bool __NativeOp_IsEqualTo(const char_t *p_left_chars,
+                                 size_t p_left_length,
+                                 const char_t *p_right_chars,
+                                 size_t p_right_length,
+                                 MCStringOptions p_options)
+{
+    if (__NativeOp_IsFolded(p_options))
+        return __NativeStr_Equal<__NativeChar_Equal_Folded>(p_left_chars,
+                                                            p_left_length,
+                                                            p_right_chars,
+                                                            p_right_length);
+    
+    return __NativeStr_Equal<__NativeChar_Equal_Unfolded>(p_left_chars,
+                                                          p_left_length,
+                                                          p_right_chars,
+                                                          p_right_length);
+}
+
+// Compare the two strings, taking into account the given options.
+static ssize_t __NativeOp_CompareTo(const char_t *p_left_chars,
+                                    size_t p_left_length,
+                                    const char_t *p_right_chars,
+                                    size_t p_right_length,
+                                    MCStringOptions p_options)
+{
+    if (__NativeOp_IsFolded(p_options))
+        return __NativeStr_Compare<__NativeChar_Compare_Folded>(p_left_chars,
+                                                                p_left_length,
+                                                                p_right_chars,
+                                                                p_right_length);
+    
+    return __NativeStr_Compare<__NativeChar_Compare_Unfolded>(p_left_chars,
+                                                              p_left_length,
+                                                              p_right_chars,
+                                                              p_right_length);
+}
+
+// Hash the given string, taking into account the given options.
+static hash_t __NativeOp_Hash(const char_t *p_chars,
+                              size_t p_char_count,
+                              MCStringOptions p_options)
+{
+    if (__NativeOp_IsFolded(p_options))
+        return __NativeStr_Hash<__NativeChar_Fold>(p_chars,
+                                                   p_char_count);
+
+    return __NativeStr_Hash<__NativeChar_NoFold>(p_chars,
+                                              p_char_count);
+}
+
+// Return the length of maximum shared prefix of the two strings, taking into
+// account the given options.
+static size_t __NativeOp_SharedPrefix(const char_t *p_left_chars,
+                                      size_t p_left_length,
+                                      const char_t *p_right_chars,
+                                      size_t p_right_length,
+                                      MCStringOptions p_options)
+{
+    if (__NativeOp_IsFolded(p_options))
+        return __NativeStr_Prefix<__NativeChar_Equal_Folded>(p_left_chars,
+                                                             p_left_length,
+                                                             p_right_chars,
+                                                             p_right_length);
+    
+    return __NativeStr_Prefix<__NativeChar_Equal_Unfolded>(p_left_chars,
+                                                           p_left_length,
+                                                           p_right_chars,
+                                                           p_right_length);
+}
+
+// Return the length of maximum shared suffix of the two strings, taking into
+// account the given options.
+static size_t __NativeOp_SharedSuffix(const char_t *p_left_chars,
+                                      size_t p_left_length,
+                                      const char_t *p_right_chars,
+                                      size_t p_right_length,
+                                      MCStringOptions p_options)
+{
+    if (__NativeOp_IsFolded(p_options))
+        return __NativeStr_Suffix<__NativeChar_Equal_Folded>(p_left_chars,
+                                                             p_left_length,
+                                                             p_right_chars,
+                                                             p_right_length);
+    
+    return __NativeStr_Suffix<__NativeChar_Equal_Unfolded>(p_left_chars,
+                                                           p_left_length,
+                                                           p_right_chars,
+                                                           p_right_length);
+}
+
+// Perform the appropriate direction 'scan' operation with the given parameters.
+// The direction is determined by the classed used for 'Actions'.
+template<template<bool (*CharEqual)(char_t left, char_t right)> class Actions>
+static size_t __NativeOp_Scan(const char_t *p_haystack_chars,
+                              size_t p_haystack_length,
+                              const char_t *p_needle_chars,
+                              size_t p_needle_length,
+                              size_t p_max_count,
+                              MCStringOptions p_options,
+                              size_t *r_offset)
+{
+    if (p_needle_length > p_haystack_length)
+        return 0;
+    
+    if (p_needle_length == 1)
+    {
+        if (__NativeOp_IsFolded(p_options))
+        {
+            char_t t_folded_needle_char;
+            if (__NativeChar_CheckedFold(p_needle_chars[0], t_folded_needle_char))
+                return Actions<__NativeChar_Equal_Prefolded>::CharScan
+                                    (p_haystack_chars,
+                                     p_haystack_length,
+                                     t_folded_needle_char,
+                                     p_max_count,
+                                     r_offset);
+        }
+        
+        return Actions<__NativeChar_Equal_Unfolded>::CharScan
+                            (p_haystack_chars,
+                             p_haystack_length,
+                             p_needle_chars[0],
+                             p_max_count,
+                             r_offset);
+    }
+    
+    if (__NativeOp_IsFolded(p_options))
+    {
+        if (p_needle_length < __NATIVEOP_PREFOLD_LIMIT)
+        {
+            char_t t_folded_needle[__NATIVEOP_PREFOLD_LIMIT];
+            if (__NativeStr_CheckedFold(p_needle_chars, p_needle_length, t_folded_needle))
+                return Actions<__NativeChar_Equal_Prefolded>::Scan
+                            (p_haystack_chars,
+                             p_haystack_length,
+                             t_folded_needle,
+                             p_needle_length,
+                             p_max_count,
+                             r_offset);
+        }
+        else
+        {
+            return Actions<__NativeChar_Equal_Folded>::Scan
+                        (p_haystack_chars,
+                         p_haystack_length,
+                         p_needle_chars,
+                         p_needle_length,
+                         p_max_count,
+                         r_offset);
+        }
+    }
+    
+    return Actions<__NativeChar_Equal_Unfolded>::Scan
+                (p_haystack_chars,
+                 p_haystack_length,
+                 p_needle_chars,
+                 p_needle_length,
+                 p_max_count,
+                 r_offset);
+}
+
+#define __NativeOp_FowardScan __NativeOp_Scan<__NativeStr_Forward>
+#define __NativeOp_ReverseScan __NativeOp_Scan<__NativeStr_Reverse>
+
+// Search forward for needle in haystack, using the given options.
+// If needle is found, then its offset is returned and the result is true.
+static bool __NativeOp_FirstIndexOf(const char_t *p_haystack_chars,
+                                    size_t p_haystack_length,
+                                    const char_t *p_needle_chars,
+                                    size_t p_needle_length,
+                                    MCStringOptions p_options,
+                                    size_t& r_offset)
+{
+    return __NativeOp_FowardScan(p_haystack_chars,
+                                 p_haystack_length,
+                                 p_needle_chars,
+                                 p_needle_length,
+                                 1,
+                                 p_options,
+                                 &r_offset) == 1;
+}
+
+// Search backward for needle in haystack, using the given options.
+// If needle is found, then its offset is returned and the result is true.
+static bool __NativeOp_LastIndexOf(const char_t *p_haystack_chars,
+                                   size_t p_haystack_length,
+                                   const char_t *p_needle_chars,
+                                   size_t p_needle_length,
+                                   MCStringOptions p_options,
+                                   size_t& r_offset)
+{
+    return __NativeOp_ReverseScan(p_haystack_chars,
+                                  p_haystack_length,
+                                  p_needle_chars,
+                                  p_needle_length,
+                                  1,
+                                  p_options,
+                                  &r_offset) == 1;
+}
+
+// Return the number of occurances of needle in haystack, using the given
+// options. The offset of the last found occurance is returned, if any.
+static size_t __NativeOp_Count(const char_t *p_haystack_chars,
+                               size_t p_haystack_length,
+                               const char_t *p_needle_chars,
+                               size_t p_needle_length,
+                               MCStringOptions p_options,
+                               size_t *r_last_offset)
+{
+    return __NativeOp_FowardScan(p_haystack_chars,
+                                 p_haystack_length,
+                                 p_needle_chars,
+                                 p_needle_length,
+                                 0,
+                                 p_options,
+                                 r_last_offset);
+}
+
+// Return true if haystack contains needle, using the given options.
+static bool __NativeOp_Contains(const char_t *p_haystack_chars,
+                                size_t p_haystack_length,
+                                const char_t *p_needle_chars,
+                                size_t p_needle_length,
+                                MCStringOptions p_options)
+{
+    return __NativeOp_FowardScan(p_haystack_chars,
+                                 p_haystack_length,
+                                 p_needle_chars,
+                                 p_needle_length,
+                                 1,
+                                 p_options,
+                                 nil) == 1;
+}
+
+// Return true if haystack begins with needle, using the given options.
+static bool __NativeOp_BeginsWith(const char_t *p_haystack_chars,
+                                  size_t p_haystack_length,
+                                  const char_t *p_needle_chars,
+                                  size_t p_needle_length,
+                                  MCStringOptions p_options)
+{
+    if (p_needle_length > p_haystack_length)
+        return false;
+    return __NativeOp_IsEqualTo(p_haystack_chars,
+                                p_needle_length,
+                                p_needle_chars,
+                                p_needle_length,
+                                p_options);
+}
+
+// Return true if haystack ends with needle, using the given options.
+static bool __NativeOp_EndsWith(const char_t *p_haystack_chars,
+                                size_t p_haystack_length,
+                                const char_t *p_needle_chars,
+                                size_t p_needle_length,
+                                MCStringOptions p_options)
+{
+    if (p_needle_length > p_haystack_length)
+        return false;
+    return __NativeOp_IsEqualTo(p_haystack_chars + p_haystack_length - p_needle_length,
+                                p_needle_length,
+                                p_needle_chars,
+                                p_needle_length,
+                                p_options);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+char_t MCNativeCharFold(char_t p_char)
+{
+    return __NativeChar_Fold(p_char);
+}
+
+char_t MCNativeCharUppercase(char_t p_char)
+{
+    return __NativeChar_Uppercase(p_char);
+}
+
+void MCNativeCharsLowercase(char_t *p_chars, uindex_t p_char_count)
+{
+	for(uindex_t i = 0; i < p_char_count; i++)
+		p_chars[i] = __NativeChar_Lowercase(p_chars[i]);
+}
+
+void MCNativeCharsUppercase(char_t *p_chars, uindex_t p_char_count)
+{
+	for(uindex_t i = 0; i < p_char_count; i++)
+		p_chars[i] = __NativeChar_Lowercase(p_chars[i]);
+}
+
+bool MCNativeCharsFormatV(char_t*& r_string, uindex_t& r_size, const char *p_format, va_list p_args)
+{
+    int t_count;
+#if defined(_WINDOWS) || defined(_WINDOWS_SERVER)
+	t_count = _vscprintf(p_format, p_args);
+#elif defined(_MACOSX) || defined(_LINUX) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID) || defined(__EMSCRIPTEN__)
+    va_list t_args;
+    va_copy(t_args, p_args);
+	t_count = vsnprintf(nil, 0, p_format, t_args);
+    va_end(t_args);
+#else
+#error "Implement MCCStringFormat"
+#endif
+    
+	char_t *t_new_string;
+	if (!MCMemoryAllocate((size_t)(t_count + 1), t_new_string))
+		return false;
+    
+	vsprintf((char *)t_new_string, p_format, p_args);
+    
+	r_size = (uindex_t)t_count;
+	r_string = t_new_string;
+    
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
