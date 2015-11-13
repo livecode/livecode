@@ -2291,7 +2291,7 @@ MC_DLLEXPORT bool MCStringFind(MCStringRef string, MCRange range, MCStringRef ne
 // and returning the number of occurances found.
 MC_DLLEXPORT uindex_t MCStringCount(MCStringRef string, MCRange range, MCStringRef needle, MCStringOptions options);
 MC_DLLEXPORT uindex_t MCStringCountChar(MCStringRef string, MCRange range, codepoint_t needle, MCStringOptions options);
-
+    
 //////////
 
 // Find the first index of separator in string processing as according to
@@ -2309,7 +2309,28 @@ MC_DLLEXPORT bool MCStringDivideAtIndex(MCStringRef self, uindex_t p_offset, MCS
 MC_DLLEXPORT bool MCStringBreakIntoChunks(MCStringRef string, codepoint_t separator, MCStringOptions options, MCRange*& r_ranges, uindex_t& r_range_count);
 
 //////////
-
+    
+// Search 'range' of 'string' for 'needle' processing as appropriate to options
+// and taking into account 'delimiter' and 'skip'.
+// The function searches for 'needle' after 'skip' occurances of 'delimiter'.
+// The total number of delimiters encountered before 'needle' is found is
+// returned in 'r_index'.
+// If 'r_found' is not nil, it will return the range of the needle string in
+// 'string'.
+// If 'r_before' is not nil, it will return the range of the last delimiter before
+// the found 'needle' string.
+// If 'r_after' is not nil, it will return the range of the first delimiter after
+// the found 'needle' string.
+// If 'needle' is not found in the given range (after skipping) then false is
+// returned.
+// Additionally, if 'needle' is the empty string, then
+// Note: The search done for 'needle' is as a string, in particular 'needle'
+//   can contain 'delimiter'.
+// Note: If needle is the empty string then false will be returned.
+MC_DLLEXPORT bool MCStringDelimitedOffset(MCStringRef string, MCRange range, MCStringRef needle, MCStringRef delimiter, uindex_t skip, MCStringOptions options, uindex_t& r_index, MCRange *r_found, MCRange *r_before, MCRange *r_after);
+    
+//////////
+    
 // Transform the string to its folded form as specified by 'options'. The folded
 // form of a string is that which is used to perform comparisons.
 //

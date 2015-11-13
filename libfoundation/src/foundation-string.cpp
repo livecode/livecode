@@ -3379,6 +3379,283 @@ bool MCStringBreakIntoChunks(MCStringRef self, codepoint_t p_separator, MCString
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Skip 'count' occurrances of 'needle' in 'range' of 'self' according to 'options'.
+// If 'needle' is not found, false is returned and r_last is untouched.
+static bool __MCStringSkip(MCStringRef self, MCRange p_range, MCStringRef p_needle, uindex_t p_count, MCStringOptions p_options, MCRange& r_last)
+{
+    MCAssert(p_count > 0);
+    
+    // Optimize the case of both needle and self native.
+    if (__MCStringIsNative(self) &&
+        __MCStringIsNative(p_needle))
+    {
+        size_t t_last_offset;
+        if (!__NativeOp_Skip(self -> native_chars + p_range . offset,
+                             p_range . length,
+                             p_needle -> native_chars,
+                             p_needle -> char_count,
+                             p_count,
+                             p_options,
+                             &t_last_offset))
+            return false;
+        
+        r_last . offset = p_range . offset + t_last_offset;
+        r_last . length = p_needle -> char_count;
+        return true;
+    }
+    
+    uindex_t t_start, t_finish;
+    t_start = p_range . offset;
+    t_finish = p_range . offset + p_range . length;
+    
+    MCRange t_last;
+    while(p_count > 0)
+    {
+        if (!__MCStringFind(self,
+                            MCRangeMake(t_start, t_finish - t_start),
+                            p_needle,
+                            p_options,
+                            &t_last))
+            return false;
+        
+        // Decrement the number of needles to skip.
+        p_count -= 1;
+        
+        // Move the considered range to start at the end of the previous
+        // needle.
+        t_start = t_last . offset + t_last . length;
+    }
+    
+    r_last = t_last;
+    
+    return true;
+}
+
+// Count occurrances of 'needle' in 'range' of 'self' according to 'options'.
+// If no occurances are found 0 is returned and r_last is untouched.
+static uindex_t __MCStringCount(MCStringRef self, MCRange p_range, MCStringRef p_needle, MCStringOptions p_options, MCRange *r_last)
+{
+    // Optimize the case of both needle and self native.
+    if (__MCStringIsNative(self) &&
+        __MCStringIsNative(p_needle))
+    {
+        size_t t_last_offset;
+        size_t t_count;
+        t_count = __NativeOp_Count(self -> native_chars + p_range . offset,
+                                 p_range . length,
+                                 p_needle -> native_chars,
+                                 p_needle -> char_count,
+                                 p_options,
+                                 &t_last_offset);
+        if (t_count > 0 &&
+            r_last != nil)
+        {
+            r_last -> offset = p_range . offset + t_last_offset;
+            r_last -> length = p_needle -> char_count;
+        }
+        
+        return t_count;
+    }
+    
+    uindex_t t_count;
+    t_count = 0;
+    
+    uindex_t t_start, t_finish;
+    t_start = p_range . offset;
+    t_finish = p_range . offset + p_range . length;
+    
+    MCRange t_last;
+    t_last = MCRangeMake(t_start, 0);
+    while(__MCStringFind(self,
+                         MCRangeMake(t_start, t_finish - t_start),
+                         p_needle,
+                         p_options,
+                         &t_last))
+    {
+        // Increment the number of needles found.
+        t_count += 1;
+        
+        // Move the considered range to start at the end of the previous
+        // needle.
+        t_start = t_last . offset + t_last . length;
+    }
+
+    if (t_count > 0 && r_last != nil)
+        *r_last = t_last;
+    
+    return t_count;
+}
+
+static bool __MCStringDelimitedOffset(MCStringRef self, MCRange p_range, MCStringRef p_needle, MCStringRef p_delimiter, uindex_t p_skip, MCStringOptions p_options, uindex_t& r_index, MCRange *r_found, MCRange *r_before, MCRange *r_after)
+{
+    // Compute the absolute start and finish points of the considered range.
+    // This is much easier to work with than offset / length.
+    // We gradually move 'start' forward past delimiters (and finally the
+    // found string) as the algorithm progresses.
+    uindex_t t_start, t_finish;
+    t_start = p_range . offset;
+    t_finish = p_range . offset + p_range . length;
+    
+    // Skip 'skip' delimiters, if this is not possible then we are done. This
+    // computes the initial 'previous delimiter'.
+    MCRange t_prev_delimiter;
+    t_prev_delimiter = MCRangeMake(t_start, 0);
+    if (p_skip > 0 &&
+        !__MCStringSkip(self,
+                        p_range,
+                        p_delimiter,
+                        p_skip,
+                        p_options,
+                        t_prev_delimiter))
+        return false;
+    
+    // The initial number of delimiters is the number we skip.
+    uindex_t t_delimiter_count;
+    t_delimiter_count = p_skip;
+    
+    // Make sure we start from the end of the last delimiter skipped.
+    t_start = t_prev_delimiter . offset + t_prev_delimiter . length;
+    
+    // Now search for 'needle' in the remaining range. If nothing is found, then
+    // we are done.
+    MCRange t_found_range;
+    if (!__MCStringFind(self,
+                        MCRangeMake(t_start, t_finish - t_start),
+                        p_needle,
+                        p_options,
+                        &t_found_range))
+        return false;
+    
+    // We must now search for delimiters in the substring between the end of the
+    // previous delimiter and the start of the found range.
+    t_delimiter_count += __MCStringCount(self,
+                                         MCRangeMake(t_start, t_found_range . offset - t_start),
+                                         p_delimiter,
+                                         p_options,
+                                         &t_prev_delimiter);
+    
+    // Return the (absolute) number of delimiters encountered.
+    r_index = t_delimiter_count;
+    
+    // Return the range of the found string (if required).
+    if (r_found != nil)
+        *r_found = t_found_range;
+    
+    // Return the range of the delimiter before the found string (if required).
+    if (r_before != nil)
+        *r_before = t_prev_delimiter;
+    
+    // Finally, if 'r_after' is required, we must find the first delimiter
+    // after the found string.
+    if (r_after != nil)
+    {
+        // Update start to be after the found range.
+        t_start = t_found_range . offset + t_found_range . length;
+        
+        MCRange t_next_delimiter;
+        if (!__MCStringFind(self,
+                            MCRangeMake(t_start,
+                                        t_finish - t_start),
+                            p_delimiter,
+                            p_options,
+                            &t_next_delimiter))
+            t_next_delimiter = MCRangeMake(t_finish, 0);
+        
+        *r_after = t_next_delimiter;
+    }
+    
+    return true;
+}
+
+MC_DLLEXPORT_DEF
+bool MCStringDelimitedOffset(MCStringRef self, MCRange p_range, MCStringRef p_needle, MCStringRef p_delimiter, uindex_t p_skip, MCStringOptions p_options, uindex_t& r_index, MCRange *r_found, MCRange *r_before, MCRange *r_after)
+{
+	__MCAssertIsString(self);
+	__MCAssertIsString(p_needle);
+	__MCAssertIsString(p_delimiter);
+    
+    if (__MCStringIsIndirect(self))
+        self = self -> string;
+    
+    if (__MCStringIsIndirect(p_needle))
+        p_needle = p_needle -> string;
+    
+    if (__MCStringIsIndirect(p_delimiter))
+        p_delimiter = p_delimiter -> string;
+    
+    __MCStringClampRange(self, p_range);
+    
+    if (__MCStringIsNative(self) &&
+        __MCStringIsNative(p_needle) &&
+        __MCStringIsNative(p_delimiter) &&
+        __MCStringGetLength(p_delimiter) == 1)
+    {
+        size_t t_index, t_found, t_before, t_after;
+        if (!__NativeOp_ForwardCharDelimitedOffset(self -> native_chars + p_range . offset,
+                                                   p_range . length,
+                                                   p_needle -> native_chars,
+                                                   p_needle -> char_count,
+                                                   p_delimiter -> native_chars[0],
+                                                   p_skip,
+                                                   p_options,
+                                                   t_index,
+                                                   r_found != nil ? &t_found : nil,
+                                                   r_before != nil ? &t_before : nil,
+                                                   r_after != nil ? &t_after : nil))
+            return false;
+        
+        r_index = t_index;
+        if (r_found != nil)
+        {
+            r_found -> offset = p_range . offset + t_found;
+            r_found -> length = p_needle -> char_count;
+        }
+        
+        if (r_before != nil)
+        {
+            if (t_before > 0)
+            {
+                r_before -> offset = p_range . offset + t_before;
+                r_before -> length = 1;
+            }
+            else
+            {
+                r_before -> offset = p_range . offset;
+                r_before -> length = 0;
+            }
+        }
+        
+        if (r_after != nil)
+        {
+            if (t_after < p_range . length)
+            {
+                r_after -> offset = p_range . offset + t_after;
+                r_after -> length = 1;
+            }
+            else
+            {
+                r_after -> offset = p_range . offset + p_range . length;
+                r_after -> length = 0;
+            }
+        }
+        
+        return true;
+    }
+    
+    return __MCStringDelimitedOffset(self,
+                                     p_range,
+                                     p_needle,
+                                     p_delimiter,
+                                     p_skip,
+                                     p_options,
+                                     r_index,
+                                     r_found,
+                                     r_before,
+                                     r_after);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 MC_DLLEXPORT_DEF
 bool MCStringFold(MCStringRef self, MCStringOptions p_options)
 {

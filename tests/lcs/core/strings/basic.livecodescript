@@ -1,4 +1,4 @@
-﻿script "CoreStringsStrings"
+﻿script "CoreStringsBasic"
 /*
 Copyright (C) 2015 LiveCode Ltd.
 
@@ -126,18 +126,18 @@ on TestComparison
    TestAssert "caseless native uncased <= native uncased", kNativeLesserUncasedString <= kNativeGreaterUncasedString
    TestAssert "caseless native uncased > native uncased", kNativeGreaterUncasedString > kNativeLesserUncasedString
    TestAssert "caseless native uncased >= native uncased", kNativeGreaterUncasedString >= kNativeLesserUncasedString
-   
+
    TestAssert "caseless native cased < native cased", kNativeLesserCasedString < kNativeGreaterCasedString
    TestAssert "caseless native cased <= native cased", kNativeLesserCasedString <= kNativeGreaterCasedString
    TestAssert "caseless native cased > native cased", kNativeGreaterCasedString > kNativeLesserCasedString
    TestAssert "caseless native cased >= native cased", kNativeGreaterCasedString >= kNativeLesserCasedString
-   
+
    set the caseSensitive to true
    TestAssert "exact native uncased < native uncased", kNativeLesserUncasedString < kNativeGreaterUncasedString
    TestAssert "exact native uncased <= native uncased", kNativeLesserUncasedString <= kNativeGreaterUncasedString
    TestAssert "exact native uncased > native uncased", kNativeGreaterUncasedString > kNativeLesserUncasedString
    TestAssert "exact native uncased >= native uncased", kNativeGreaterUncasedString >= kNativeLesserUncasedString
-   
+
    TestAssert "exact native cased < native cased", kNativeLesserCasedString < kNativeGreaterCasedString
    TestAssert "exact native cased <= native cased", kNativeLesserCasedString <= kNativeGreaterCasedString
    TestAssert "exact native cased > native cased", kNativeGreaterCasedString > kNativeLesserCasedString

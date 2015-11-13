@@ -816,6 +816,26 @@ static bool __NativeOp_LastIndexOf(const char_t *p_haystack_chars,
                                   &r_offset) == 1;
 }
 
+// Skips count occurances of needle in haystack, using the given options.
+// If the specified number of occurances are found then true is returned and
+// the offset of the last one is passed back.
+static bool __NativeOp_Skip(const char_t *p_haystack_chars,
+                            size_t p_haystack_length,
+                            const char_t *p_needle_chars,
+                            size_t p_needle_length,
+                            size_t p_count,
+                            MCStringOptions p_options,
+                            size_t *r_last_offset)
+{
+    return __NativeOp_FowardScan(p_haystack_chars,
+                                 p_haystack_length,
+                                 p_needle_chars,
+                                 p_needle_length,
+                                 p_count,
+                                 p_options,
+                                 r_last_offset) == p_count;
+}
+
 // Return the number of occurances of needle in haystack, using the given
 // options. The offset of the last found occurance is returned, if any.
 static size_t __NativeOp_Count(const char_t *p_haystack_chars,
@@ -880,6 +900,133 @@ static bool __NativeOp_EndsWith(const char_t *p_haystack_chars,
                                 p_needle_chars,
                                 p_needle_length,
                                 p_options);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// The Core template (parameterized by char equality comparator) for the
+// optimized DelimiterOffset function when delimiter is a single char.
+template<bool (*DelimiterCharEqual)(char_t left, char_t right)>
+static bool __NativeOp_ForwardCharDelimitedOffset_Core(const char_t *p_haystack_chars,
+                                                    size_t p_haystack_length,
+                                                    const char_t *p_needle_chars,
+                                                    size_t p_needle_length,
+                                                    char_t p_delimiter_char,
+                                                    size_t p_skip,
+                                                    MCStringOptions p_options,
+                                                    size_t& r_index,
+                                                    size_t *r_found_offset,
+                                                    size_t *r_before_offset,
+                                                    size_t *r_after_offset)
+{
+    size_t t_index;
+    t_index = 0;
+    
+    size_t t_offset;
+    t_offset = 0;
+    
+    size_t t_end_before;
+    t_end_before = 0;
+    for(; p_skip > 0 && t_offset < p_haystack_length; t_offset++)
+    {
+        if (DelimiterCharEqual(p_haystack_chars[t_offset], p_delimiter_char))
+        {
+            p_skip -= 1;
+            t_index += 1;
+            t_end_before = t_offset;
+        }
+    }
+    
+    size_t t_start_found;
+    if (!__NativeOp_FirstIndexOf(p_haystack_chars + t_offset,
+                                 p_haystack_length - t_offset,
+                                 p_needle_chars,
+                                 p_needle_length,
+                                 p_options,
+                                 t_start_found))
+        return false;
+    
+    t_start_found += t_offset;
+    
+    for(; t_offset < t_start_found; t_offset++)
+    {
+        if (DelimiterCharEqual(p_haystack_chars[t_offset], p_delimiter_char))
+        {
+            t_index += 1;
+            t_end_before = t_offset;
+        }
+    }
+    
+    r_index = t_index;
+    
+    if (r_found_offset != nil)
+        *r_found_offset = t_start_found;
+    
+    if (r_before_offset != nil)
+        *r_before_offset = t_end_before;
+    
+    if (r_after_offset != nil)
+    {
+        for(t_offset = t_start_found + p_needle_length; t_offset < p_haystack_length; t_offset++)
+            if (DelimiterCharEqual(p_haystack_chars[t_offset], p_delimiter_char))
+                break;
+        
+        *r_after_offset = t_offset;
+    }
+    
+    return true;
+}
+
+// Returns true if needle is found in haystack after skip occurances of
+// delimiter.
+// If skip delimiters are not found, or needle is not found then false is
+// returned.
+// Otherwise, r_index will contain the total number of delimiters in haystack
+// before the found needle, found_offset will contain the offset of needle in
+// haystack, before_offset the offset of the char after the previous found
+// delimiter and after_offset the offset of the delimiter after the found
+// string.
+static bool __NativeOp_ForwardCharDelimitedOffset(const char_t *p_haystack_chars,
+                                                  size_t p_haystack_length,
+                                                  const char_t *p_needle_chars,
+                                                  size_t p_needle_length,
+                                                  char_t p_delimiter_char,
+                                                  size_t p_skip,
+                                                  MCStringOptions p_options,
+                                                  size_t& r_index,
+                                                  size_t *r_found_offset,
+                                                  size_t *r_before_offset,
+                                                  size_t *r_after_offset)
+{
+    if (__NativeOp_IsFolded(p_options))
+    {
+        if (__NativeChar_CheckedFold(p_delimiter_char, p_delimiter_char))
+            return __NativeOp_ForwardCharDelimitedOffset_Core<__NativeChar_Equal_Prefolded>
+                        (p_haystack_chars,
+                         p_haystack_length,
+                         p_needle_chars,
+                         p_needle_length,
+                         p_delimiter_char,
+                         p_skip,
+                         p_options,
+                         r_index,
+                         r_found_offset,
+                         r_before_offset,
+                         r_after_offset);
+    }
+    
+    return __NativeOp_ForwardCharDelimitedOffset_Core<__NativeChar_Equal_Unfolded>
+                (p_haystack_chars,
+                 p_haystack_length,
+                 p_needle_chars,
+                 p_needle_length,
+                 p_delimiter_char,
+                 p_skip,
+                 p_options,
+                 r_index,
+                 r_found_offset,
+                 r_before_offset,
+                 r_after_offset);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
