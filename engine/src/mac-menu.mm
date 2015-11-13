@@ -325,9 +325,10 @@ enum MCShadowedItemTags
 //  so we quit!
 - (void)quitApplicationSelected: (id)sender
 {
-    NSApplication* t_app = [NSApplication sharedApplication];
-    
-    [t_app terminate:t_app];
+	// IM-2015-11-13: [[ Bug 16288 ]] Send shutdown request rather than terminating immediately
+	//    to allow shutdown in orderly fashion.
+	bool t_shutdown;
+	MCPlatformCallbackSendApplicationShutdownRequest(t_shutdown);
 }
 
 // SN-2014-11-10: [[ Bug 13836 ]] The menubar should be updated if left item is clicked
