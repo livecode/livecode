@@ -2342,7 +2342,7 @@ static inline bool __MCCRefMarkForEval(MCExecContext& ctxt, MCCRef *self, MCMark
             case CT_EIGHTH:
             case CT_NINTH:
             case CT_TENTH:
-                t_first = self -> etype - CT_FIRST;
+                t_first = (self -> etype - CT_FIRST) + 1;
                 t_last = t_first;
                 break;
             default:
