@@ -3660,8 +3660,7 @@ bool MCStringDelimitedOffset(MCStringRef self, MCRange p_range, MCStringRef p_ne
 MC_DLLEXPORT bool MCStringForwardDelimitedRegion(MCStringRef self,
                                                  MCRange p_range,
                                                  MCStringRef p_delimiter,
-                                                 uindex_t p_first,
-                                                 uindex_t p_last,
+                                                 MCRange p_region,
                                                  MCStringOptions p_options,
                                                  MCRange& r_range)
 {
@@ -3682,11 +3681,11 @@ MC_DLLEXPORT bool MCStringForwardDelimitedRegion(MCStringRef self,
     
     MCRange t_first_del;
     t_first_del = MCRangeMake(t_start, 0);
-    if (p_first > 0 &&
+    if (p_region . offset > 0 &&
         !__MCStringSkip(self,
                         MCRangeMakeMinMax(t_start, t_finish),
                         p_delimiter,
-                        p_first,
+                        p_region . offset,
                         p_options,
                         t_first_del))
     {
@@ -3697,7 +3696,7 @@ MC_DLLEXPORT bool MCStringForwardDelimitedRegion(MCStringRef self,
     
     t_start = t_first_del . offset + t_first_del . length;
     
-    if (p_first >= p_last)
+    if (p_region . length == 0)
     {
         r_range = MCRangeMakeMinMax(t_start, 0);
         return true;
@@ -3707,7 +3706,7 @@ MC_DLLEXPORT bool MCStringForwardDelimitedRegion(MCStringRef self,
     if (!__MCStringSkip(self,
                         MCRangeMakeMinMax(t_start, t_finish),
                         p_delimiter,
-                        p_last - p_first,
+                        p_region . length,
                         p_options,
                         t_last_del))
     {

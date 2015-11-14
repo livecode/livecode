@@ -2368,11 +2368,16 @@ static inline void __MCCRefMarkChunkRangeForEval(MCExecContext& ctxt, int4 p_fir
         MCStringsMarkBytesOfTextByRange(ctxt, p_first, p_last, x_mark);
 }
 
-static inline void __MCCRefMarkLineRangeForEval(MCExecContext& ctxt, int4 p_first, int4 p_last, MCMarkedText& x_mark)
+static inline void __MCCRefMarkDelimitedChunkRangeForEval(MCExecContext& ctxt,
+                                                          Chunk_term p_chunk_type,
+                                                          MCStringRef p_delimiter,
+                                                          int4 p_first,
+                                                          int4 p_last,
+                                                          MCMarkedText& x_mark)
 {
     if (p_first < 0 || p_last < 0)
     {
-        MCStringsMarkTextChunkByRange(ctxt, CT_LINE, p_first, p_last, false, false, false, x_mark);
+        MCStringsMarkTextChunkByRange(ctxt, p_chunk_type, p_first, p_last, false, false, false, x_mark);
         return;
     }
     
@@ -2384,9 +2389,8 @@ static inline void __MCCRefMarkLineRangeForEval(MCExecContext& ctxt, int4 p_firs
     MCRange t_range;
     MCStringForwardDelimitedRegion((MCStringRef)x_mark . text,
                                    MCRangeMakeMinMax(x_mark . start, x_mark . finish),
-                                   ctxt . GetLineDelimiter(),
-                                   (uindex_t)(p_first - 1),
-                                   (uindex_t)p_last,
+                                   p_delimiter,
+                                   MCRangeMakeMinMax((uindex_t)(p_first - 1), (uindex_t)p_last),
                                    ctxt . GetStringComparisonType(),
                                    t_range);
     
@@ -2394,30 +2398,24 @@ static inline void __MCCRefMarkLineRangeForEval(MCExecContext& ctxt, int4 p_firs
     x_mark . finish = t_range . offset + t_range . length;
 }
 
+static inline void __MCCRefMarkLineRangeForEval(MCExecContext& ctxt, int4 p_first, int4 p_last, MCMarkedText& x_mark)
+{
+    __MCCRefMarkDelimitedChunkRangeForEval(ctxt,
+                                           CT_LINE,
+                                           ctxt . GetLineDelimiter(),
+                                           p_first,
+                                           p_last,
+                                           x_mark);
+}
+
 static inline void __MCCRefMarkItemRangeForEval(MCExecContext& ctxt, int4 p_first, int4 p_last, MCMarkedText& x_mark)
 {
-    if (p_first < 0 || p_last < 0)
-    {
-        MCStringsMarkTextChunkByRange(ctxt, CT_ITEM, p_first, p_last, false, false, false, x_mark);
-        return;
-    }
-    
-    if (p_first > p_last)
-        p_last = p_first - 1;
-    else if (p_first == 0)
-        p_first = 1;
-    
-    MCRange t_range;
-    MCStringForwardDelimitedRegion((MCStringRef)x_mark . text,
-                                   MCRangeMakeMinMax(x_mark . start, x_mark . finish),
-                                   ctxt . GetItemDelimiter(),
-                                   (uindex_t)(p_first - 1),
-                                   (uindex_t)p_last,
-                                   ctxt . GetStringComparisonType(),
-                                   t_range);
-    
-    x_mark . start = t_range . offset;
-    x_mark . finish = t_range . offset + t_range . length;
+    __MCCRefMarkDelimitedChunkRangeForEval(ctxt,
+                                           CT_ITEM,
+                                           ctxt . GetItemDelimiter(),
+                                           p_first,
+                                           p_last,
+                                           x_mark);
 }
 
 #define __MCCRefMarkChunkForEval(chunk, ctxt, cref, x_mark) \

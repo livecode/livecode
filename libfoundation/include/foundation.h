@@ -2341,8 +2341,13 @@ MC_DLLEXPORT bool MCStringBreakIntoChunks(MCStringRef string, codepoint_t separa
 //   can contain 'delimiter'.
 // Note: If needle is the empty string then false will be returned.
 MC_DLLEXPORT bool MCStringDelimitedOffset(MCStringRef string, MCRange range, MCStringRef needle, MCStringRef delimiter, uindex_t skip, MCStringOptions options, uindex_t& r_index, MCRange *r_found, MCRange *r_before, MCRange *r_after);
-    
-MC_DLLEXPORT bool MCStringForwardDelimitedRegion(MCStringRef string, MCRange range, MCStringRef delimiter, uindex_t first, uindex_t last, MCStringOptions options, MCRange& r_range);
+
+MC_DLLEXPORT bool MCStringForwardDelimitedRegion(MCStringRef string,
+                                                 MCRange range,
+                                                 MCStringRef delimiter,
+                                                 MCRange region,
+                                                 MCStringOptions options,
+                                                 MCRange& r_range);
     
 //////////
     
