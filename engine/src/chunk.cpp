@@ -2426,43 +2426,43 @@ static inline void __MCCRefMarkItemRangeForEval(MCExecContext& ctxt, int4 p_firs
 void MCChunk::mark_for_eval(MCExecContext& ctxt, MCMarkedText& x_mark)
 {
     if (cline != nil &&
-        __MCCRefMarkForEval<CT_LINE, __MCCRefMarkLineRangeForEval>(ctxt, cline, x_mark))
+        !__MCCRefMarkForEval<CT_LINE, __MCCRefMarkLineRangeForEval>(ctxt, cline, x_mark))
         return;
     
     if (paragraph != nil &&
-        __MCCRefMarkChunkForEval(CT_PARAGRAPH, ctxt, paragraph, x_mark))
+        !__MCCRefMarkChunkForEval(CT_PARAGRAPH, ctxt, paragraph, x_mark))
         return;
     
     if (sentence != nil &&
-        __MCCRefMarkChunkForEval(CT_SENTENCE, ctxt, sentence, x_mark))
+        !__MCCRefMarkChunkForEval(CT_SENTENCE, ctxt, sentence, x_mark))
         return;
         
     if (item != nil &&
-        __MCCRefMarkForEval<CT_ITEM, __MCCRefMarkItemRangeForEval>(ctxt, item, x_mark))
+        !__MCCRefMarkForEval<CT_ITEM, __MCCRefMarkItemRangeForEval>(ctxt, item, x_mark))
         return;
         
     if (word != nil &&
-        __MCCRefMarkChunkForEval(CT_WORD, ctxt, word, x_mark))
+        !__MCCRefMarkChunkForEval(CT_WORD, ctxt, word, x_mark))
         return;
     
     if (trueword != nil &&
-        __MCCRefMarkChunkForEval(CT_TRUEWORD, ctxt, trueword, x_mark))
+        !__MCCRefMarkChunkForEval(CT_TRUEWORD, ctxt, trueword, x_mark))
         return;
         
     if (token != nil &&
-        __MCCRefMarkChunkForEval(CT_TOKEN, ctxt, token, x_mark))
+        !__MCCRefMarkChunkForEval(CT_TOKEN, ctxt, token, x_mark))
         return;
         
     if (character != nil &&
-        __MCCRefMarkChunkForEval(CT_CHARACTER, ctxt, character, x_mark))
+        !__MCCRefMarkChunkForEval(CT_CHARACTER, ctxt, character, x_mark))
         return;
     
     if (codepoint != nil &&
-        __MCCRefMarkChunkForEval(CT_CODEPOINT, ctxt, codepoint, x_mark))
+        !__MCCRefMarkChunkForEval(CT_CODEPOINT, ctxt, codepoint, x_mark))
         return;
     
     if (codeunit != nil &&
-        __MCCRefMarkChunkForEval(CT_CODEUNIT, ctxt, codeunit, x_mark))
+        !__MCCRefMarkChunkForEval(CT_CODEUNIT, ctxt, codeunit, x_mark))
         return;
         
     if (byte != nil &&

@@ -16,24 +16,39 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-on TestForwardRanges
+on TestForwardOrdinals
+  TestAssert "uncased delimiter first", the first item of "aa,bb,cc,dd,ee,ff,gg,hh,ii,jj" is "aa"
+  TestAssert "uncased delimiter second", the second item of "aa,bb,cc,dd,ee,ff,gg,hh,ii,jj" is "bb"
+  TestAssert "uncased delimiter third", the third item of "aa,bb,cc,dd,ee,ff,gg,hh,ii,jj" is "cc"
+  TestAssert "uncased delimiter fourth", the fourth item of "aa,bb,cc,dd,ee,ff,gg,hh,ii,jj" is "dd"
+  TestAssert "uncased delimiter fifth", the fifth item of "aa,bb,cc,dd,ee,ff,gg,hh,ii,jj" is "ee"
+  TestAssert "uncased delimiter sixth", the sixth item of "aa,bb,cc,dd,ee,ff,gg,hh,ii,jj" is "ff"
+  TestAssert "uncased delimiter seventh", the seventh item of "aa,bb,cc,dd,ee,ff,gg,hh,ii,jj" is "gg"
+  TestAssert "uncased delimiter eighth", the eighth item of "aa,bb,cc,dd,ee,ff,gg,hh,ii,jj" is "hh"
+  TestAssert "uncased delimiter ninth", the ninth item of "aa,bb,cc,dd,ee,ff,gg,hh,ii,jj" is "ii"
+  TestAssert "uncased delimiter tenth", the tenth item of "aa,bb,cc,dd,ee,ff,gg,hh,ii,jj" is "jj"
+end TestForwardOrdinals
+
+on TestForwardSingletons
   TestAssert "uncased delimiter front", item 1 of "foo,foobar,bar,barbaz,baz" is "foo"
   TestAssert "uncased delimiter middle", item 3 of "foo,foobar,bar,barbaz,baz" is "bar"
   TestAssert "uncased delimiter back", item 5 of "foo,foobar,bar,barbaz,baz" is "baz"
   TestAssert "uncased delimiter before", item 0 of "foo,foobar,bar,barbaz,baz" is empty
   TestAssert "uncased delimiter after", item 6 of "foo,foobar,bar,barbaz,baz" is empty
 
-  TestAssert "uncased delimiter range front", item 1 to 2 of "foo,foobar,bar,barbaz,baz" is "foo,foobar"
-  TestAssert "uncased delimiter range middle", item 2 to 4 of "foo,foobar,bar,barbaz,baz" is "foobar,bar,barbaz"
-  TestAssert "uncased delimiter range back", item 4 to 5 of "foo,foobar,bar,barbaz,baz" is "barbaz,baz"
-  TestAssert "uncased delimiter range before", item 0 to 2 of "foo,foobar,bar,barbaz,baz" is "foo,foobar"
-  TestAssert "uncased delimiter range after", item 4 to 6 of "foo,foobar,bar,barbaz,baz" is "barbaz,baz"
-
   TestAssert "uncased trailing delimiter front", item 1 of "foo,foobar,bar,barbaz,baz," is "foo"
   TestAssert "uncased trailing delimiter middle", item 3 of "foo,foobar,bar,barbaz,baz," is "bar"
   TestAssert "uncased trailing delimiter back", item 5 of "foo,foobar,bar,barbaz,baz," is "baz"
   TestAssert "uncased trailing delimiter before", item 0 of "foo,foobar,bar,barbaz,baz," is empty
   TestAssert "uncased trailing delimiter after", item 6 of "foo,foobar,bar,barbaz,baz," is empty
+end TestForwardSingletons
+
+on TestForwardRanges
+  TestAssert "uncased delimiter range front", item 1 to 2 of "foo,foobar,bar,barbaz,baz" is "foo,foobar"
+  TestAssert "uncased delimiter range middle", item 2 to 4 of "foo,foobar,bar,barbaz,baz" is "foobar,bar,barbaz"
+  TestAssert "uncased delimiter range back", item 4 to 5 of "foo,foobar,bar,barbaz,baz" is "barbaz,baz"
+  TestAssert "uncased delimiter range before", item 0 to 2 of "foo,foobar,bar,barbaz,baz" is "foo,foobar"
+  TestAssert "uncased delimiter range after", item 4 to 6 of "foo,foobar,bar,barbaz,baz" is "barbaz,baz"
 
   TestAssert "uncased trailing delimiter range front", item 1 to 2 of "foo,foobar,bar,barbaz,baz," is "foo,foobar"
   TestAssert "uncased trailing delimiter range middle", item 2 to 4 of "foo,foobar,bar,barbaz,baz," is "foobar,bar,barbaz"
@@ -41,3 +56,12 @@ on TestForwardRanges
   TestAssert "uncased trailing delimiter range before", item 0 to 2 of "foo,foobar,bar,barbaz,baz," is "foo,foobar"
   TestAssert "uncased trailing delimiter range after", item 4 to 6 of "foo,foobar,bar,barbaz,baz," is "barbaz,baz,"
 end TestForwardRanges
+
+on TestForwardSubSingletons
+  set the lineDelimiter to space
+  TestAssert "uncased delimiter sub front", item 1 of line 2 of "a foo,foobar,bar,barbaz,baz b" is "foo"
+  TestAssert "uncased delimiter sub middle", item 3 of line 2 of "a foo,foobar,bar,barbaz,baz b" is "bar"
+  TestAssert "uncased delimiter sub back", item 5 of line 2 of "a foo,foobar,bar,barbaz,baz b" is "baz"
+  TestAssert "uncased delimiter sub before", item 0 of line 2 of "a foo,foobar,bar,barbaz,baz b" is empty
+  TestAssert "uncased delimiter sub after", item 6 of line 2 of "a foo,foobar,bar,barbaz,baz b" is empty
+end TestForwardSubSingletons
