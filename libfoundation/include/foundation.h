@@ -640,6 +640,9 @@ typedef unsigned char char_t;
 
 // The 'byte_t' type is used to hold a char in a binary string (native).
 typedef uint8_t byte_t;
+
+// Constants used to represent the minimum and maximum values of a byte_t.
+#define BYTE_MIN UINT8_MIN
 #define BYTE_MAX UINT8_MAX
 
 // The 'codepoint_t' type is used to hold a single Unicode codepoint (20-bit
@@ -650,12 +653,20 @@ typedef uint32_t codepoint_t;
 // further characters)
 #define CODEPOINT_NONE UINT32_MAX
 
+// Constants used to represent the minimum and maximum values of a codepoint_t.
+#define CODEPOINT_MIN 0
+#define CODEPOINT_MAX 0x10ffff
+
 // The 'unichar_t' type is used to hold a UTF-16 codeunit.
 #ifdef __WINDOWS__
 typedef wchar_t unichar_t;
 #else
 typedef uint16_t unichar_t;
 #endif
+
+// Constants used to represent the minimum and maximum values of a unichar_t.
+#define UNICHAR_MIN UINT16_MIN
+#define UNICHAR_MAX UINT16_MAX
 
 #ifdef __WINDOWS__
 typedef wchar_t *BSTR;
