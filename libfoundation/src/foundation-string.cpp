@@ -3006,7 +3006,7 @@ bool MCStringFirstIndexOfCharInRange(MCStringRef self, codepoint_t p_needle, MCR
     if (__MCStringIsNative(self))
     {
         char_t t_mapped_needle;
-        if (p_needle > 0xFFFF ||
+        if (p_needle > UNICHAR_MAX ||
             !MCUnicodeCharMapToNative(p_needle, t_mapped_needle))
             return false;
 
@@ -3091,7 +3091,7 @@ bool MCStringLastIndexOfChar(MCStringRef self, codepoint_t p_needle, uindex_t p_
     if (__MCStringIsNative(self))
     {
         char_t t_mapped_needle;
-        if (p_needle > 0xFFFF ||
+        if (p_needle > UNICHAR_MAX ||
             !MCUnicodeCharMapToNative((unichar_t)p_needle, t_mapped_needle))
             return false;
         
@@ -3265,7 +3265,7 @@ uindex_t MCStringCountChar(MCStringRef self, MCRange p_range, codepoint_t p_need
     if (MCStringIsNative(self))
     {
         char_t t_mapped_needle;
-        if (p_needle > 0xFFFF ||
+        if (p_needle > UNICHAR_MAX ||
             !MCUnicodeCharMapToNative((unichar_t)p_needle, t_mapped_needle))
             return 0;
         
@@ -5154,7 +5154,7 @@ bool MCStringFindAndReplaceChar(MCStringRef self, codepoint_t p_pattern, codepoi
     if
     (
         // Either character is outside the BMP
-        (p_pattern > 0xFFFF || p_replacement > 0xFFFF)
+        (p_pattern > UNICHAR_MAX || p_replacement > UNICHAR_MAX)
      
         // Normalisation or case-folding has been requested
         || (p_options != kMCStringOptionCompareExact)
@@ -5638,7 +5638,7 @@ codepoint_t MCStringSurrogatesToCodepoint(unichar_t p_lead, unichar_t p_trail)
 MC_DLLEXPORT_DEF
 unsigned int MCStringCodepointToSurrogates(codepoint_t p_codepoint, unichar_t (&r_units)[2])
 {
-    if (p_codepoint > 0xFFFF)
+    if (p_codepoint > UNICHAR_MAX)
     {
         p_codepoint -= 0x10000;
         r_units[0] = 0xD800 + (p_codepoint >> 10);
