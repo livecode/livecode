@@ -3585,6 +3585,9 @@ bool MCStringDelimitedOffset(MCStringRef self, MCRange p_range, MCStringRef p_ne
     
     __MCStringClampRange(self, p_range);
     
+    if (__MCStringIsEmpty(p_needle))
+        return false;
+    
     if (__MCStringIsNative(self) &&
         __MCStringIsNative(p_needle) &&
         __MCStringIsNative(p_delimiter) &&
