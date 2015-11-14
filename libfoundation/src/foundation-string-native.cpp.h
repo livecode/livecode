@@ -303,10 +303,10 @@ __NativeStr_Compare(const char_t *p_left_chars,
         if (p_left_length == 0 || p_right_length == 0)
             break;
         
-        ssize_t d;
-        d = CharCompare(*p_left_chars++, *p_right_chars++);
-        if (d != 0)
-            return d;
+        ssize_t t_diff;
+        t_diff = CharCompare(*p_left_chars++, *p_right_chars++);
+        if (t_diff != 0)
+            return t_diff;
 
         p_left_length -= 1;
         p_right_length -= 1;
@@ -378,7 +378,7 @@ __NativeStr_Suffix(const char_t *p_left_chars,
     return t_suffix;
 }
 
-// Return the hash of the given string, using the give char folding method.
+// Return the hash of the given string, using the given char folding method.
 template<char_t (*CharFold)(char_t chr)>
 static inline hash_t
 __NativeStr_Hash(const char_t *p_chars,
@@ -777,7 +777,7 @@ static size_t __NativeOp_Scan(const char_t *p_haystack_chars,
                  r_offset);
 }
 
-#define __NativeOp_FowardScan __NativeOp_Scan<__NativeStr_Forward>
+#define __NativeOp_ForwardScan __NativeOp_Scan<__NativeStr_Forward>
 #define __NativeOp_ReverseScan __NativeOp_Scan<__NativeStr_Reverse>
 
 // Search forward for needle in haystack, using the given options.
@@ -789,13 +789,13 @@ static bool __NativeOp_FirstIndexOf(const char_t *p_haystack_chars,
                                     MCStringOptions p_options,
                                     size_t& r_offset)
 {
-    return __NativeOp_FowardScan(p_haystack_chars,
-                                 p_haystack_length,
-                                 p_needle_chars,
-                                 p_needle_length,
-                                 1,
-                                 p_options,
-                                 &r_offset) == 1;
+    return __NativeOp_ForwardScan(p_haystack_chars,
+                                  p_haystack_length,
+                                  p_needle_chars,
+                                  p_needle_length,
+                                  1,
+                                  p_options,
+                                  &r_offset) == 1;
 }
 
 // Search backward for needle in haystack, using the given options.
@@ -827,13 +827,13 @@ static bool __NativeOp_Skip(const char_t *p_haystack_chars,
                             MCStringOptions p_options,
                             size_t *r_last_offset)
 {
-    return __NativeOp_FowardScan(p_haystack_chars,
-                                 p_haystack_length,
-                                 p_needle_chars,
-                                 p_needle_length,
-                                 p_count,
-                                 p_options,
-                                 r_last_offset) == p_count;
+    return __NativeOp_ForwardScan(p_haystack_chars,
+                                  p_haystack_length,
+                                  p_needle_chars,
+                                  p_needle_length,
+                                  p_count,
+                                  p_options,
+                                  r_last_offset) == p_count;
 }
 
 // Return the number of occurances of needle in haystack, using the given
@@ -845,13 +845,13 @@ static size_t __NativeOp_Count(const char_t *p_haystack_chars,
                                MCStringOptions p_options,
                                size_t *r_last_offset)
 {
-    return __NativeOp_FowardScan(p_haystack_chars,
-                                 p_haystack_length,
-                                 p_needle_chars,
-                                 p_needle_length,
-                                 0,
-                                 p_options,
-                                 r_last_offset);
+    return __NativeOp_ForwardScan(p_haystack_chars,
+                                  p_haystack_length,
+                                  p_needle_chars,
+                                  p_needle_length,
+                                  0,
+                                  p_options,
+                                  r_last_offset);
 }
 
 // Return true if haystack contains needle, using the given options.
@@ -861,13 +861,13 @@ static bool __NativeOp_Contains(const char_t *p_haystack_chars,
                                 size_t p_needle_length,
                                 MCStringOptions p_options)
 {
-    return __NativeOp_FowardScan(p_haystack_chars,
-                                 p_haystack_length,
-                                 p_needle_chars,
-                                 p_needle_length,
-                                 1,
-                                 p_options,
-                                 nil) == 1;
+    return __NativeOp_ForwardScan(p_haystack_chars,
+                                  p_haystack_length,
+                                  p_needle_chars,
+                                  p_needle_length,
+                                  1,
+                                  p_options,
+                                  nil) == 1;
 }
 
 // Return true if haystack begins with needle, using the given options.
