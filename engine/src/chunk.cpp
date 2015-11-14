@@ -2368,6 +2368,32 @@ static inline void __MCCRefMarkChunkRangeForEval(MCExecContext& ctxt, int4 p_fir
         MCStringsMarkBytesOfTextByRange(ctxt, p_first, p_last, x_mark);
 }
 
+static inline void __MCCRefMarkLineRangeForEval(MCExecContext& ctxt, int4 p_first, int4 p_last, MCMarkedText& x_mark)
+{
+    if (p_first < 0 || p_last < 0)
+    {
+        MCStringsMarkTextChunkByRange(ctxt, CT_LINE, p_first, p_last, false, false, false, x_mark);
+        return;
+    }
+    
+    if (p_first > p_last)
+        p_last = p_first - 1;
+    else if (p_first == 0)
+        p_first = 1;
+    
+    MCRange t_range;
+    MCStringForwardDelimitedRegion((MCStringRef)x_mark . text,
+                                   MCRangeMakeMinMax(x_mark . start, x_mark . finish),
+                                   ctxt . GetLineDelimiter(),
+                                   (uindex_t)(p_first - 1),
+                                   (uindex_t)p_last,
+                                   ctxt . GetStringComparisonType(),
+                                   t_range);
+    
+    x_mark . start = t_range . offset;
+    x_mark . finish = t_range . offset + t_range . length;
+}
+
 static inline void __MCCRefMarkItemRangeForEval(MCExecContext& ctxt, int4 p_first, int4 p_last, MCMarkedText& x_mark)
 {
     if (p_first < 0 || p_last < 0)
@@ -2400,7 +2426,7 @@ static inline void __MCCRefMarkItemRangeForEval(MCExecContext& ctxt, int4 p_firs
 void MCChunk::mark_for_eval(MCExecContext& ctxt, MCMarkedText& x_mark)
 {
     if (cline != nil &&
-        __MCCRefMarkChunkForEval(CT_LINE, ctxt, cline, x_mark))
+        __MCCRefMarkForEval<CT_LINE, __MCCRefMarkLineRangeForEval>(ctxt, cline, x_mark))
         return;
     
     if (paragraph != nil &&
@@ -2412,7 +2438,7 @@ void MCChunk::mark_for_eval(MCExecContext& ctxt, MCMarkedText& x_mark)
         return;
         
     if (item != nil &&
-        __MCCRefMarkForEval< CT_ITEM, __MCCRefMarkItemRangeForEval>(ctxt, item, x_mark))
+        __MCCRefMarkForEval<CT_ITEM, __MCCRefMarkItemRangeForEval>(ctxt, item, x_mark))
         return;
         
     if (word != nil &&
