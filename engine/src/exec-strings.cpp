@@ -1803,8 +1803,8 @@ __MCStringEvalDelimitedChunkOffset(MCExecContext& ctxt,
     
     if (ctxt . GetWholeMatches())
     {
-        if (t_found . offset != t_after . offset + t_after . length ||
-            t_found . offset + t_found . length != t_before . offset)
+        if (t_found . offset != t_before . offset + t_before . length ||
+            t_found . offset + t_found . length != t_after . offset)
         {
             r_result = 0;
             return;
