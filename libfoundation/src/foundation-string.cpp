@@ -3381,7 +3381,12 @@ bool MCStringBreakIntoChunks(MCStringRef self, codepoint_t p_separator, MCString
 
 // Skip 'count' occurrances of 'needle' in 'range' of 'self' according to 'options'.
 // If 'needle' is not found, false is returned and r_last is untouched.
-static bool __MCStringSkip(MCStringRef self, MCRange p_range, MCStringRef p_needle, uindex_t p_count, MCStringOptions p_options, MCRange& r_last)
+static bool __MCStringSkip(MCStringRef self,
+                           MCRange p_range,
+                           MCStringRef p_needle,
+                           uindex_t p_count,
+                           MCStringOptions p_options,
+                           MCRange& r_last)
 {
     MCAssert(p_count > 0);
     
@@ -3433,7 +3438,11 @@ static bool __MCStringSkip(MCStringRef self, MCRange p_range, MCStringRef p_need
 
 // Count occurrances of 'needle' in 'range' of 'self' according to 'options'.
 // If no occurances are found 0 is returned and r_last is untouched.
-static uindex_t __MCStringCount(MCStringRef self, MCRange p_range, MCStringRef p_needle, MCStringOptions p_options, MCRange *r_last)
+static uindex_t __MCStringCount(MCStringRef self,
+                                MCRange p_range,
+                                MCStringRef p_needle,
+                                MCStringOptions p_options,
+                                MCRange *r_last)
 {
     // Optimize the case of both needle and self native.
     if (__MCStringIsNative(self) &&
@@ -3486,7 +3495,18 @@ static uindex_t __MCStringCount(MCStringRef self, MCRange p_range, MCStringRef p
     return t_count;
 }
 
-static bool __MCStringDelimitedOffset(MCStringRef self, MCRange p_range, MCStringRef p_needle, MCStringRef p_delimiter, uindex_t p_skip, MCStringOptions p_options, uindex_t& r_index, MCRange *r_found, MCRange *r_before, MCRange *r_after)
+////////////////////////////////////////////////////////////////////////////////
+
+static bool __MCStringDelimitedOffset(MCStringRef self,
+                                      MCRange p_range,
+                                      MCStringRef p_needle,
+                                      MCStringRef p_delimiter,
+                                      uindex_t p_skip,
+                                      MCStringOptions p_options,
+                                      uindex_t& r_index,
+                                      MCRange *r_found,
+                                      MCRange *r_before,
+                                      MCRange *r_after)
 {
     // Compute the absolute start and finish points of the considered range.
     // This is much easier to work with than offset / length.
@@ -3568,7 +3588,16 @@ static bool __MCStringDelimitedOffset(MCStringRef self, MCRange p_range, MCStrin
 }
 
 MC_DLLEXPORT_DEF
-bool MCStringDelimitedOffset(MCStringRef self, MCRange p_range, MCStringRef p_needle, MCStringRef p_delimiter, uindex_t p_skip, MCStringOptions p_options, uindex_t& r_index, MCRange *r_found, MCRange *r_before, MCRange *r_after)
+bool MCStringDelimitedOffset(MCStringRef self,
+                             MCRange p_range,
+                             MCStringRef p_needle,
+                             MCStringRef p_delimiter,
+                             uindex_t p_skip,
+                             MCStringOptions p_options,
+                             uindex_t& r_index,
+                             MCRange *r_found,
+                             MCRange *r_before,
+                             MCRange *r_after)
 {
 	__MCAssertIsString(self);
 	__MCAssertIsString(p_needle);
@@ -3657,12 +3686,15 @@ bool MCStringDelimitedOffset(MCStringRef self, MCRange p_range, MCStringRef p_ne
                                      r_after);
 }
 
-MC_DLLEXPORT bool MCStringForwardDelimitedRegion(MCStringRef self,
-                                                 MCRange p_range,
-                                                 MCStringRef p_delimiter,
-                                                 MCRange p_region,
-                                                 MCStringOptions p_options,
-                                                 MCRange& r_range)
+////////////////////////////////////////////////////////////////////////////////
+
+MC_DLLEXPORT_DEF
+bool MCStringForwardDelimitedRegion(MCStringRef self,
+                                    MCRange p_range,
+                                    MCStringRef p_delimiter,
+                                    MCRange p_region,
+                                    MCStringOptions p_options,
+                                    MCRange& r_range)
 {
 	__MCAssertIsString(self);
 	__MCAssertIsString(p_delimiter);
