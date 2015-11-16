@@ -26,4 +26,13 @@ public handler TestSplit()
 	test "split (nul)" when the number of elements in tList is 3
 end handler
 
+public handler TestSplitEmpty()
+	-- Bug 16407
+	variable tString
+	variable tList
+	put "security.selinux\u{0}user.test\u{0}user.uuid" into tString
+	split tSTring by "" into tList
+	test "split (empty)" when the number of elements in tList is 1
+end handler
+
 end module
