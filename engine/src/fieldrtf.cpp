@@ -696,10 +696,12 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
         
 		// Handle a change in link text.
 		if (t_new_style . link_text != ctxt . styles[ctxt . style_index] . link_text)
-		{
-            // MW-2014-06-11: [[ Bug 12556 ]] Make sure the link_text field is synced.
+        {
+            // SN-2015-11-16: [[ Bug 16308 ]] Only add another '}' if metadata
+            if (ctxt . styles[ctxt . style_index] . metadata != nil)
+                ctxt . buffer . appendcstring("}");
 			if (ctxt . styles[ctxt . style_index] . link_text != nil)
-				ctxt . buffer . appendcstring("}}");
+				ctxt . buffer . appendcstring("}");
 
 			while(ctxt . style_index > 0)
 			{
