@@ -211,7 +211,7 @@ void MCStack::view_set_content_scale(MCGFloat p_scale)
 	m_view_content_scale = p_scale;
 	
 	// IM-2014-01-16: [[ StackScale ]] Update view transform after changing view property
-	view_update_transform();
+	view_update_transform(true);
 	// IM-2014-10-22: [[ Bug 13746 ]] Update window mask when stack scale changes
 	loadwindowshape();
 }
@@ -422,7 +422,7 @@ void MCStack::view_calculate_viewports(const MCRectangle &p_stack_rect, MCRectan
 	r_transform = MCGAffineTransformConcat(view_get_stack_transform(t_mode, MCGRectangleGetIntegerBounds(t_scaled_rect), t_view_rect), t_transform);
 }
 	
-void MCStack::view_update_transform(void)
+void MCStack::view_update_transform(bool p_ensure_onscreen)
 {
 	MCRectangle t_view_rect;
 	MCGAffineTransform t_transform;
@@ -447,20 +447,30 @@ void MCStack::view_update_transform(void)
 	}
 	
 	// PM-2015-07-17: [[ Bug 13754 ]] Make sure stack does not disappear off screen when changing the scalefactor
-    MCRectangle t_bounded_rect, t_screen_rect;
-    
-    const MCDisplay* t_nearest_display = MCscreen -> getnearestdisplay(t_view_rect);
-    if (t_nearest_display != NULL)
+    MCRectangle t_bounded_rect;
+    if (p_ensure_onscreen)
     {
-        t_screen_rect = t_nearest_display -> viewport;
-        t_bounded_rect = MCU_bound_rect(t_view_rect, t_screen_rect . x, t_screen_rect . y, t_screen_rect . width, t_screen_rect . height);
+        // AL-2015-10-01: [[ Bug 16017 ]] Remember location of stacks on a second monitor
+        const MCDisplay* t_nearest_display;
+        t_nearest_display = MCscreen -> getnearestdisplay(t_view_rect);
+        
+        if (t_nearest_display != nil)
+        {
+			MCRectangle t_screen_rect;
+            t_screen_rect = t_nearest_display -> viewport;
+            t_bounded_rect = MCU_bound_rect(t_view_rect, t_screen_rect . x, t_screen_rect . y, t_screen_rect . width, t_screen_rect . height);
+        }
+        else
+        {
+            // In noUI mode, we don't have a nearest display.
+            t_bounded_rect = MCU_bound_rect(t_view_rect, 0, 0, MCscreen -> getwidth(), MCscreen -> getheight());
+        }
     }
     else
     {
-        // In noUI mode, we don't have a nearest display.
-        t_bounded_rect = MCU_bound_rect(t_view_rect, 0, 0, MCscreen -> getwidth(), MCscreen -> getheight());
+        t_bounded_rect = t_view_rect;
     }
-	
+    
     // IM-2014-01-16: [[ StackScale ]] Update view rect if needed
     view_setrect(t_bounded_rect);
 }
