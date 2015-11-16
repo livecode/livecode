@@ -562,6 +562,18 @@ void MCArraysExecSplitAsSet(MCExecContext& ctxt, MCStringRef p_string, MCStringR
 
 ////////////////////////////////////////////////////////////////////////////////
 
+//
+// Semantics of 'union tLeft with tRight [recursively]'
+// 
+// repeat for each key tKey in tRight
+//    if tKey is not among the keys of tLeft then
+//        put tRight[tKey] into tLeft[tKey]
+//    else if tRecursive then
+//        union tLeft[tKey] with tRight[tKey] recursively
+//    end if
+// end repeat
+//
+
 void MCArraysDoUnion(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, bool p_recursive, MCValueRef& r_result)
 {
     if (!MCValueIsArray(p_src))
@@ -624,15 +636,28 @@ void MCArraysDoUnion(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, bo
     r_result = MCValueRetain(*t_result);
 }
 
+//
+// Semantics of 'intersect tLeft with tRight [recursively]'
+// 
+// repeat for each key tKey in tLeft
+//    if tKey is not among the keys of tRight then
+//        delete variable tLeft[tKey]
+//    else if tRecursive then
+//        intersect tLeft[tKey] with tRight[tKey] recursively
+//    end if
+// end repeat
+//
+
 void MCArraysDoIntersect(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, bool p_recursive, MCValueRef& r_result)
 {
-    if (!MCValueIsArray(p_src) && !MCValueIsArray(p_dst))
+    if (!MCValueIsArray(p_dst))
     {
         r_result = MCValueRetain(p_dst);
         return;
+        
     }
     
-    if (MCValueIsArray(p_src) != MCValueIsArray(p_dst))
+    if (!MCValueIsArray(p_src))
     {
         r_result = MCValueRetain(kMCEmptyString);
         return;
@@ -643,12 +668,6 @@ void MCArraysDoIntersect(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src
     
     MCArrayRef t_src_array;
     t_src_array = (MCArrayRef)p_src;
-    
-    if (MCArrayIsEmpty(t_src_array) || MCArrayIsEmpty(t_dst_array))
-    {
-        r_result = MCValueRetain(kMCEmptyString);
-        return;
-    }
     
     MCAutoArrayRef t_result;
     if (!MCArrayMutableCopy(t_dst_array, &t_result))

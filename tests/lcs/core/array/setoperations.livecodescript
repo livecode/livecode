@@ -113,19 +113,13 @@ end TestNestedArrayRecursiveUnion
 Semantics of array intersect:
 
 function ArrayIntersect(pLeft, pRight, pRecursive)
-	if the keys of pRight is empty and the keys of pLeft is empty then
-		return pLeft
-	else if the keys of pRight is empty or the keys of pLeft is empty then
-		return empty
-	else
-		repeat for each key tKey in pLeft
-			if tKey is not among the keys of pRight then
-				delete variable pLeft[tKey]
-			else if pRecursive then
-				put ArrayIntersect(pLeft[tKey], pRight[tKey], true) into pLeft[tKey]
-			end if
-		end repeat
-	end if
+	repeat for each key tKey in pLeft
+		if tKey is not among the keys of pRight then
+			delete variable pLeft[tKey]
+		else if pRecursive then
+			put ArrayIntersect(pLeft[tKey], pRight[tKey], true) into pLeft[tKey]
+		end if
+	end repeat
 	
 	return pLeft
 end if
@@ -142,7 +136,7 @@ on TestArrayIntersect
 	put "a" into tString2
 	put "b" into tFixedArray[1]
 	intersect tString2 with tFixedArray
-	TestAssert "intersect: left non-array, right array", tString2 is empty
+	TestAssert "intersect: left non-array, right array", tString2 is "a"
 	
 	local tArray1
 	put "a" into tArray1[1]
@@ -196,7 +190,7 @@ on TestNestedArrayRecursiveIntersect
 	put "b" into tRightArray2[1][1]
 		
 	intersect tLeftArray2 with tRightArray2 recursively
-	TestAssert "recursive intersect: left value non-array, right value array", tLeftArray2[1] is empty
+	TestAssert "recursive intersect: left value non-array, right value array", tLeftArray2[1] is "a"
 	
 	local tLeftArray3, tRightArray3
 	put "a" into tLeftArray3[1][1]
