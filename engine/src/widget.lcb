@@ -623,7 +623,7 @@ Returns:		The location of the mouse pointer when it was clicked.
 
 Example:
 	variable tClick as Point
-	put the click position into tClick
+	put the mouse position into tClick
 	
 	variable tRect as Rectangle
 	put my bounds into tRect
