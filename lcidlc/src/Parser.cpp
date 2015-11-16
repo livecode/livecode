@@ -433,7 +433,7 @@ static bool ParserReduceInterface(ParserRef self)
 		return false;
 	
 	while(ParserWillMatchKeyword(self, kParserKeywordUse))
-		if (!ParserReduceUseClause(self))
+		if (!ParserReduceUseDefinition(self))
 			return false;
 	
 	while(ParserWillMatchKeyword(self, kParserKeywordOn))
@@ -449,29 +449,6 @@ static bool ParserReduceInterface(ParserRef self)
 		return false;
 		
 	if (!InterfaceEnd(self -> interface))
-		return false;
-		
-	return true;
-}
-
-// use-clause
-//   : 'use' ID
-//
-static bool ParserReduceUseClause(ParserRef self)
-{
-	ParserMark(self);
-	
-	if (!ParserMatchKeyword(self, kParserKeywordUse))
-		return false;
-
-	Position t_position;
-	t_position = self -> position;
-
-	NameRef t_use_name;
-	if (!ParserMatchIdentifier(self, t_use_name))
-		return false;
-	
-	if (!InterfaceDefineUse(self -> interface, t_position, t_use_name))
 		return false;
 		
 	return true;
@@ -603,8 +580,10 @@ static bool ParserReduceEnumElementDefinition(ParserRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MERG-2015-11-16: Ensure use clause doesn't clobber use definition
+
 // use-definition
-//   : 'use' ID 'on' { ID , ',' }
+//   : 'use' ID [ 'on' { ID , ',' } ]
 //
 static bool ParserReduceUseDefinition(ParserRef self)
 {
@@ -619,10 +598,10 @@ static bool ParserReduceUseDefinition(ParserRef self)
 	NameRef t_type_name;
 	if (!ParserMatchIdentifier(self, t_type_name))
 		return false;
-	
-	if (!ParserMatchKeyword(self, kParserKeywordOn))
-		return false;
-	
+    
+    if (!ParserMatchKeyword(self, kParserKeywordOn))
+        return InterfaceDefineUse(self -> interface, t_position, t_type_name);
+    
 	for(;;)
 	{
 		NameRef t_platform_name;
