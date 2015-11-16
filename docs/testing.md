@@ -48,6 +48,7 @@ Before running each test command, the test framework inserts a test library stac
 * `TestAssertBroken pDescription, pExpectTrue, pReasonBroken`: The same as `TestAssert`, but marking the test as "expected to fail".  *pReasonBroken* should be a short explanation of why the test is currently expected to fail; it should almost always be a reference to a bug report, e.g. "bug 54321".
 * `TestGetEngineRepositoryPath`: A function that returns the path to the main LiveCode engine repository.
 * `TestGetIDERepositoryPath`: A function that returns the path to the LiveCode IDE repository.
+* `TestLoadExtension pName`: Attempt to load the extension with name `pName`, eg `TestLoadExtension "json"` will load the JSON library extension. 
 
 Tests can have additional setup requirements before running, for example loading custom libraries. If the script test contains a handler called `TestSetup`, this will be run prior to running each test command. For example:
 ````

@@ -33,8 +33,11 @@
 			'outputs':
 			[
 				'<(INTERMEDIATE_DIR)/>(stage)/grammar_full.g',
-				'<(INTERMEDIATE_DIR)/>(stage)/builtin-modules.c',
-				'<(INTERMEDIATE_DIR)/>(stage)/modules/lci/dummy.file',
+                
+                # A specific output file is required here to ensure that all
+                # build systems create the output directory while also
+                # also preventing spurious rebuilds.
+                '<(INTERMEDIATE_DIR)/>(stage)/modules/lci/com.livecode.type.lci',
 			],
 			
 			'action':
@@ -44,7 +47,6 @@
 				'--inputg', '>(template_grammar_file)',
 				'--outputi', '<(INTERMEDIATE_DIR)/>(stage)/modules/lci',
 				'--outputg', '<(INTERMEDIATE_DIR)/>(stage)/grammar_full.g',
-				#'--outputc', '<(INTERMEDIATE_DIR)/>(stage)/builtin-modules.c',
 				'>@(all_syntax_files)',
 			],
 		},

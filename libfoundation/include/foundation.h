@@ -1871,7 +1871,9 @@ enum
 	kMCStringEncodingMacRoman,
 	// The standard Linux (Latin-1) encoding.
 	kMCStringEncodingISO8859_1,
-	// The UTF-8 string encoding.
+	// The UTF-8 string encoding.  In LiveCode, this permits overlong
+	// sequences when decoding, but does not generate them when
+	// encoding.
 	kMCStringEncodingUTF8,
 	// The UTF-16 string encoding in little endian byte-order.
 	kMCStringEncodingUTF16LE,

@@ -77,6 +77,7 @@
 					'-fpermissive',				# Be more lax with old code
 					'-Wno-return-type',
 					'-Werror=uninitialized',
+					'-Werror=return-type',
 				],
 				
 				'cflags_c':
@@ -125,11 +126,23 @@
 		
 		'Release':
 		{
+			'conditions':
+			[
+				[
+					'target_arch != "x86"',
+					{
+						'cflags': 
+						[
+							'-Wno-error=maybe-uninitialized', #warning added only with optimisation ON
+						],
+					},
+				],
+			],
+			
 			'cflags':
 			[
 				'-O3',
 				'-g3',
-				'-Wno-error=maybe-uninitialized', #warning added only with optimisation ON
 			],
 			
 			'defines':

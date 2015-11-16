@@ -194,7 +194,7 @@ bool MCScreenDC::platform_displayinfocacheable(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCScreenDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m)
+void MCScreenDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m, Boolean resizable)
 {
 	MCRectangle srect;
 

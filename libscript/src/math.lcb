@@ -96,7 +96,7 @@ Example:
 Tags: Math
 */
 
-syntax PowOperator is left binary operator with precedence 1
+syntax PowOperator is left binary operator with exponentiation precedence
     <Left: Expression> "^" <Right: Expression>
 begin
     MCMathEvalNumberToPowerOfNumber(Left, Right, output)
@@ -120,7 +120,7 @@ Example:
 Tags: Math
 */
 
-syntax SinOperator is prefix operator with precedence 1
+syntax SinOperator is prefix operator with function chunk precedence
     "the" "sine" "of" <Operand: Expression>
 begin
     MCMathEvalSinNumber(Operand, output)
@@ -144,7 +144,7 @@ Example:
 Tags: Math
 */
 
-syntax CosOperator is prefix operator with precedence 1
+syntax CosOperator is prefix operator with function chunk precedence
     "the" "cosine" "of" <Operand: Expression>
 begin
     MCMathEvalCosNumber(Operand, output)
@@ -172,7 +172,7 @@ Example:
 Tags: Math
 */
 
-syntax TanOperator is prefix operator with precedence 1
+syntax TanOperator is prefix operator with function chunk precedence
     "the" "tangent" "of" <Operand: Expression>
 begin
     MCMathEvalTanNumber(Operand, output)
@@ -203,7 +203,7 @@ The inverse of the sin operator.
 Tags: Math
 */
 
-syntax ArcsinOperator is prefix operator with precedence 1
+syntax ArcsinOperator is prefix operator with function chunk precedence
     "the" "arcsine" "of" <Operand: Expression>
 begin
     MCMathEvalAsinNumber(Operand, output)
@@ -234,7 +234,7 @@ The inverse of the cos operator.
 Tags: Math
 */
 
-syntax ArccosOperator is prefix operator with precedence 1
+syntax ArccosOperator is prefix operator with function chunk precedence
     "the" "arccosine" "of" <Operand: Expression>
 begin
     MCMathEvalAcosNumber(Operand, output)
@@ -265,7 +265,7 @@ The inverse of the tan operator.
 Tags: Math
 */
 
-syntax ArctanOperator is prefix operator with precedence 1
+syntax ArctanOperator is prefix operator with function chunk precedence
     "the" "arctangent" "of" <Operand: Expression>
 begin
     MCMathEvalAtanNumber(Operand, output)
@@ -298,7 +298,7 @@ The angle returned has absolute value less than pi: −π < arctan2(y, x) ≤ π
 Tags: Math
 */
 
-syntax BinaryArctanOperator is prefix operator with precedence 1
+syntax BinaryArctanOperator is prefix operator with function chunk precedence
     "the" "binary" "arctangent" "of" <yCoord: Expression> "and" <xCoord: Expression>
 begin
     MCMathEvalAtan2Number(yCoord, xCoord, output)
@@ -324,7 +324,7 @@ Example:
 Tags: Math
 */
 
-syntax Base10LogOperator is prefix operator with precedence 1
+syntax Base10LogOperator is prefix operator with function chunk precedence
     "the" "log" "of" <Operand: Expression>
 begin
     MCMathEvalBase10LogNumber(Operand, output)
@@ -351,7 +351,7 @@ Tags: Math
 
 */
 
-syntax BaseELogOperator is prefix operator with precedence 1
+syntax BaseELogOperator is prefix operator with function chunk precedence
     "the" "natural" "log" "of" <Operand: Expression>
 begin
     MCMathEvalNaturalLogNumber(Operand, output)
@@ -377,7 +377,7 @@ Example:
 Tags: Math
 */
 
-syntax ExpOperator is prefix operator with precedence 1
+syntax ExpOperator is prefix operator with function chunk precedence
     "the" "exponential" "of" <Operand: Expression>
 begin
     MCMathEvalExpNumber(Operand, output)
@@ -408,7 +408,7 @@ Tags: Math
 
 */
 
-syntax TruncOperator is prefix operator with precedence 1
+syntax TruncOperator is prefix operator with function chunk precedence
     "the" "trunc" "of" <Operand: Expression>
 begin
     MCMathEvalTruncNumber(Operand, output)
@@ -430,7 +430,7 @@ The absolute value of <Operand> is the value of <Operand> if it is greater than 
 Tags: Math
 */
 
-syntax AbsOperator is prefix operator with precedence 1
+syntax AbsOperator is prefix operator with function chunk precedence
     "the" "abs" "of" <Operand: Expression>
 begin
     MCMathEvalAbsNumber(Operand, output)
@@ -469,7 +469,7 @@ Returns: 	The value of <Left>, if it is less than the value of <Right>, and the 
 Tags: Math
 */
 
-syntax MinOperator is prefix operator with precedence 5
+syntax MinOperator is prefix operator with function chunk precedence
     "the" "minimum" "of" <Left: Expression> "and" <Right: Expression>
 begin
     MCMathEvalMinNumber(Left, Right, output)
@@ -491,7 +491,7 @@ Returns: 	The value of <Left>, if it is greater than the value of <Right>, and t
 Tags: Math
 */
 
-syntax MaxOperator is prefix operator with precedence 5
+syntax MaxOperator is prefix operator with function chunk precedence
     "the" "maximum" "of" <Left: Expression> "and" <Right: Expression>
 begin
     MCMathEvalMaxNumber(Left, Right, output)
@@ -515,7 +515,7 @@ Description:
 Tags: Math
 */
 
-syntax MinListOperator is prefix operator with precedence 5
+syntax MinListOperator is prefix operator with function chunk precedence
     "the" "minimum" "value" "of" <ValueList: Expression>
 begin
     MCMathEvalMinList(ValueList, output)
@@ -533,7 +533,7 @@ Description:
 Tags: Math
 */
 
-syntax MaxListOperator is prefix operator with precedence 5
+syntax MaxListOperator is prefix operator with function chunk precedence
     "the" "maximum" "value" "of" <ValueList: Expression>
 begin
     MCMathEvalMaxList(ValueList, output)
@@ -556,7 +556,7 @@ Interprets a string in the desired base and converts it to decimal.
 Tags: Math
 */
 
-syntax BaseConvertFrom is left binary operator with precedence 1
+syntax BaseConvertFrom is left binary operator with conversion precedence
     <Operand: Expression> "converted" "from" "base" <Source: Expression>
 begin
     MCMathEvalConvertToBase10(Operand, Source, output)
@@ -577,7 +577,7 @@ Converts a decimal into the desired base, and returns a string representation.
 Tags: Math
 */
 
-syntax BaseConvertTo is left binary operator with precedence 1
+syntax BaseConvertTo is left binary operator with conversion precedence
     <Operand: Expression> "converted" "to" "base" <Target: Expression>
 begin
     MCMathEvalConvertFromBase10(Operand, Target, output)
@@ -599,7 +599,7 @@ Interprets a string in the desired source base and converts it to the desired ta
 Tags: Math
 */
 
-syntax BaseConvert is left binary operator with precedence 1
+syntax BaseConvert is left binary operator with conversion precedence
     <Operand: Expression> "converted" "from" "base" <Source: Expression> "to" "base" <Target: Expression>
 begin
     MCMathEvalConvertBase(Operand, Source, Target, output)

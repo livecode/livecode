@@ -562,7 +562,7 @@ void MCPlatformWindowMaskRelease(MCPlatformWindowMaskRef mask);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef struct MCPlatformMenu *MCPlatformMenuRef;
+typedef class MCPlatformMenu *MCPlatformMenuRef;
 
 enum MCPlatformMenuItemProperty
 {
@@ -1111,7 +1111,7 @@ void MCPlatformSoundGetProperty(MCPlatformSoundRef sound, MCPlatformSoundPropert
 // what is currently required).
 //
 
-typedef struct MCPlatformSoundRecorder *MCPlatformSoundRecorderRef;
+typedef class MCPlatformSoundRecorder *MCPlatformSoundRecorderRef;
 
 enum MCPlatformSoundRecorderProperty
 {
