@@ -619,7 +619,7 @@ end syntax
 /*
 Summary:		Determines the location of a mouse click.
 
-Returns:		TheThe location of the mouse pointer when it was clicked.
+Returns:		The location of the mouse pointer when it was clicked.
 
 Example:
 	variable tClick as Point
