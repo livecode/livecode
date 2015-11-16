@@ -3250,7 +3250,11 @@ bool MCStringFind(MCStringRef self, MCRange p_range, MCStringRef p_needle, MCStr
     
     // Circumvent performance hit due to possibility of case / form sensitivity affecting delimiter search.
     // TODO: Implement properly, based on properties of the needle string.
-    if (__MCStringGetLength(p_needle) == 1)
+    if (__MCStringGetLength(p_needle) == 0)
+    {
+        return false;
+    }
+    else if (__MCStringGetLength(p_needle) == 1)
     {
         codepoint_t t_codepoint =  MCStringGetCodepointAtIndex(p_needle, 0);
         // if codepoint is among first 64 ASCII characters then do case and form sensitive comparison.
