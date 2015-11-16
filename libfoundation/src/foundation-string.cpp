@@ -4626,23 +4626,30 @@ static void split_find_end_of_element_and_key(const void *sptr, uindex_t length,
     t_del_found = MCUnicodeFind(sptr, length, native, p_del, p_del_length, p_del_native, (MCUnicodeCompareOption)p_options, t_del_found_range);
     // SN-2014-07-29: [[ Bug 13018 ]] Use t_key_found_range for the key, not t_del_found_range
     t_key_found = MCUnicodeFind(sptr, length, native, p_key, p_key_length, p_key_native, (MCUnicodeCompareOption)p_options, t_key_found_range);
-    
-    if (!t_key_found)
-        r_key_end = length;
-    
-    if (!t_del_found)
-        r_element_end = length;
-    
-    if (t_key_found_range . offset > t_del_found_range . offset)
-    {
-        // Delimiter came before the key
-        r_key_end = r_element_end = length;
-        return;
-    }
-    
-    r_key_end = t_key_found_range . offset;
-    r_key_found_length = t_key_found_range . length;
-    split_find_end_of_element(sptr, length, native, p_del, p_del_length, p_del_native, p_options, r_element_end, r_del_found_length);
+
+	if (!t_del_found)
+	{
+		r_element_end = length;
+		r_del_found_length = 0;
+	}
+	else
+	{
+		r_element_end = t_del_found_range.offset;
+		r_del_found_length = t_del_found_range.length;
+	}
+
+	/* Deal with the possibility that the delimiter was found before the key */
+	if (!t_key_found ||
+	    r_element_end < t_key_found_range.offset)
+	{
+		r_key_end = r_element_end;
+		r_key_found_length = 0;
+	}
+	else
+	{
+		r_key_end = t_key_found_range.offset;
+		r_key_found_length = t_key_found_range.length;
+	}
 }
 
 MC_DLLEXPORT_DEF
