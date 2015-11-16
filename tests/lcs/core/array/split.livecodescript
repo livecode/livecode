@@ -84,7 +84,7 @@ on TestSplit
    put empty into tExpected[tRArrow]
    put empty into tExpected[tLArrow]
    split tResult by "," and ":"
-   TestAssertBroken "split key missing (unicode, native, native)", tResult is tExpected
+   TestAssert "split key missing (unicode, native, native)", tResult is tExpected
 end TestSplit
 
 
