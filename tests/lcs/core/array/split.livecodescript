@@ -134,3 +134,98 @@ on TestSplitByEmpty
    end try
 
 end TestSplitByEmpty
+
+
+
+on TestSplitByColumn
+   local tResult, tExpected
+
+   put "a,b:c,d" into tResult
+   put empty into tExpected
+   put "a:c" into tExpected[1]
+   put "b:d" into tExpected[2]
+   set the columnDel to ","
+   set the rowDel to ":"
+   split tResult by column
+
+   TestAssert "split column (native, native, native)", tResult is tExpected
+
+   ----------
+
+   put "a,b:c,d" into tResult
+   set the columnDel to empty
+   set the rowDel to ":"
+   try
+      split tResult by column
+      TestAssert "split column (native, empty, native)", false
+   catch tError
+      TestAssert "split column (native, empty, native)", true
+   end try
+
+   put "a,b:c,d" into tResult
+   set the columnDel to ","
+   set the rowDel to empty
+   try
+      split tResult by column
+      TestAssert "split column (native, native, empty)", false
+   catch tError
+      TestAssert "split column (native, native, empty)", true
+   end try
+end TestSplitByColumn
+
+
+
+on TestSplitByRow
+   local tResult, tExpected
+
+   put "a,b:c,d" into tResult
+   put empty into tExpected
+   put "a,b" into tExpected[1]
+   put "c,d" into tExpected[2]
+   set the columnDel to ","
+   set the rowDel to ":"
+   split tResult by row
+   TestAssert "split row (native, native, native)", tResult is tExpected
+
+   -- The column delimiter isn't actually used when splitting by row.
+   put "a,b:c,d" into tResult
+   set the columnDel to empty
+   set the rowDel to ":"
+   split tResult by row
+   TestAssert "split row (native, empty, native)", tResult is tExpected
+
+   ----------
+
+   put "a,b:c,d" into tResult
+   set the columnDel to ","
+   set the rowDel to empty
+   try
+      split tResult by row
+      TestAssert "split row (native, native, empty)", false
+   catch tError
+      TestAssert "split row (native, native, empty)", true
+   end try
+end TestSplitByRow
+
+
+
+on TestSplitAsSet
+   local tResult, tExpected, tError
+
+   put "a:b" into tResult
+   put empty into tExpected
+   put true into tExpected["a"]
+   put true into tExpected["b"]
+   split tResult with ":" as set
+   TestAssert "split set (native, native)", tResult is tExpected
+
+   ----------
+
+   put "a:b" into tResult
+   try
+      split tResult with empty as set
+      TestAssert "split set (native, empty)", false
+   catch tError
+      TestAssert "split set (native, empty)", true
+   end try
+end TestSplitAsSet

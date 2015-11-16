@@ -1327,14 +1327,6 @@ void MCArrayOp::exec_ctxt(MCExecContext &ctxt)
 	}
 	else
 	{
-		/* Delimiters cannot be empty for split */
-		if (MCStringIsEmpty(*t_element_del) ||
-		    (nil != *t_key_del && MCStringIsEmpty(*t_key_del)))
-		{
-			ctxt.LegacyThrow(EE_ARRAYOP_BADEXP);
-			return;
-		}
-
 		MCAutoStringRef t_string;
         if (!ctxt . ConvertToString(*t_container_value, &t_string))
             return;
