@@ -404,14 +404,6 @@ void MCArraysExecCombineAsSet(MCExecContext& ctxt, MCArrayRef p_array, MCStringR
 
 void MCArraysExecSplit(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_element_delimiter, MCStringRef p_key_delimiter, MCArrayRef& r_array)
 {
-	/* Cannot split by empty delimiters */
-	if (MCStringIsEmpty(p_element_delimiter) ||
-	    (nil != p_key_delimiter && MCStringIsEmpty(p_key_delimiter)))
-	{
-		ctxt.LegacyThrow(EE_ARRAYOP_BADEXP);
-		return;
-	}
-
 	if (MCStringSplit(p_string, p_element_delimiter, p_key_delimiter, ctxt . GetStringComparisonType(), r_array))
 		return;
 
@@ -423,14 +415,7 @@ void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArra
     MCStringRef t_row_delim, t_column_delim;
     t_row_delim = ctxt . GetRowDelimiter();
     t_column_delim = ctxt . GetColumnDelimiter();
-
-	/* Cannot split by empty delimiters */
-	if (MCStringIsEmpty(t_row_delim) || MCStringIsEmpty(t_column_delim))
-	{
-		ctxt.LegacyThrow(EE_ARRAYOP_BADEXP);
-		return;
-	}
-
+    
     // Output array
     MCAutoArrayRef t_array;
     if (!MCArrayCreateMutable(&t_array))
@@ -538,13 +523,6 @@ void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArra
 
 void MCArraysExecSplitAsSet(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_element_delimiter, MCArrayRef& r_array)
 {
-	/* Cannot split by empty delimiters */
-	if (MCStringIsEmpty(p_element_delimiter))
-	{
-		ctxt.LegacyThrow(EE_ARRAYOP_BADEXP);
-		return;
-	}
-
 	// Split the incoming string into its components
     MCAutoArrayRef t_keys;
     if (!MCStringSplit(p_string, p_element_delimiter, nil, ctxt . GetStringComparisonType(), &t_keys))
