@@ -4345,6 +4345,13 @@ bool MCStringAppendFormatV(MCStringRef self, const char *p_format, va_list p_arg
 
 static void split_find_end_of_element_native(const char_t *sptr, const char_t *eptr, const char_t *del, uindex_t p_del_length, const char_t*& r_end_ptr, MCStringOptions p_options)
 {
+	/* Empty delimiters are never found */
+	if (0 == p_del_length)
+	{
+		r_end_ptr = eptr;
+		return;
+	}
+
 	while(sptr < eptr - p_del_length + 1)
 	{
         // Compute the length of the shared prefix at the current offset.
@@ -4366,6 +4373,15 @@ static void split_find_end_of_element_native(const char_t *sptr, const char_t *e
 
 static void split_find_end_of_element_and_key_native(const char_t *sptr, const char_t *eptr, const char_t *del, uindex_t p_del_length, const char_t *key, uindex_t p_key_length, const char_t*& r_key_ptr, const char_t *& r_end_ptr, MCStringOptions p_options)
 {
+	/* Empty delimiters are never found */
+	if (0 == p_key_length)
+	{
+		split_find_end_of_element_native(sptr, eptr, del, p_del_length,
+		                                 r_end_ptr, p_options);
+		r_key_ptr = r_end_ptr;
+		return;
+	}
+
     while(sptr < eptr - p_key_length + 1)
     {
         // Compute the length of the shared prefix at the current offset.
@@ -4380,7 +4396,8 @@ static void split_find_end_of_element_and_key_native(const char_t *sptr, const c
 			break;
         }
         
-        if (sptr < eptr - p_del_length + 1)
+        if (0 < p_del_length &&
+            sptr < eptr - p_del_length + 1)
         {
             if (p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareFolded)
                 t_prefix_length = MCNativeCharsSharedPrefixCaseless(sptr, eptr - sptr, del, p_del_length);
