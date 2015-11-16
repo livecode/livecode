@@ -617,23 +617,23 @@ begin
 end syntax
 
 /*
-Summary:		Determines the location of a mouse click.
+Summary:		Determines the location of a mouse position relative to the top left of the widget.
 
-Returns:		The location of the mouse pointer when it was clicked.
+Returns:		The current location of the mouse pointer.
 
 Example:
-	variable tClick as Point
-	put the mouse position into tClick
+	variable tLoc as Point
+	put the mouse position into tLoc
 	
 	variable tRect as Rectangle
 	put my bounds into tRect
 	
-	if tClick is within tRect then
-		// click was within widget bounds
+	if tLoc is within tRect then
+		// mouse is within widget bounds
 	end if
 	
 Description:
-Use the mouse location to obtain the location of the mouse pointer when it was last clicked. Use the 'current' form to obtain the asynchronous click position.
+Use the mouse location to obtain the location of the mouse pointer. Use the 'current' form to obtain the asynchronous mouse position.
 */
 
 syntax TheClickLocation is expression
