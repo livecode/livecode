@@ -953,7 +953,10 @@ public:
 	
 	virtual void OnLoadError(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefFrame> p_frame, CefLoadHandler::ErrorCode p_error_code, const CefString &p_error_text, const CefString &p_failed_url) OVERRIDE
 	{
-		AddLoadErrorFrame(p_frame->GetIdentifier(), p_failed_url, p_error_text);
+		// IM-2015-11-16: [[ Bug 16360 ]] Contrary to the CEF API docs, OnLoadEnd is NOT called after OnLoadError when the error code is ERR_ABORTED.
+		//    This occurs when requesting a new url be loaded when in the middle of loading the previous url, or when the url load is otherwise cancelled.
+		if (p_error_code != ERR_ABORTED)
+			AddLoadErrorFrame(p_frame->GetIdentifier(), p_failed_url, p_error_text);
 	}
 	
 	// ContextMenuHandler interface
