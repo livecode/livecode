@@ -2360,7 +2360,7 @@ template
 <
 Chunk_term ChunkType
 >
-static inline void __MCCRefMarkChunkRangeForEval(MCExecContext& ctxt, int4 p_first, int4 p_last, MCMarkedText& x_mark)
+inline void __MCCRefMarkChunkRangeForEval(MCExecContext& ctxt, int4 p_first, int4 p_last, MCMarkedText& x_mark)
 {
     if (ChunkType != CT_BYTE)
         MCStringsMarkTextChunkByRange(ctxt, ChunkType, p_first, p_last, false, false, false, x_mark);
@@ -2368,7 +2368,7 @@ static inline void __MCCRefMarkChunkRangeForEval(MCExecContext& ctxt, int4 p_fir
         MCStringsMarkBytesOfTextByRange(ctxt, p_first, p_last, x_mark);
 }
 
-static inline void __MCCRefMarkDelimitedChunkRangeForEval(MCExecContext& ctxt,
+inline void __MCCRefMarkDelimitedChunkRangeForEval(MCExecContext& ctxt,
                                                           Chunk_term p_chunk_type,
                                                           MCStringRef p_delimiter,
                                                           int4 p_first,
@@ -2398,7 +2398,7 @@ static inline void __MCCRefMarkDelimitedChunkRangeForEval(MCExecContext& ctxt,
     x_mark . finish = t_range . offset + t_range . length;
 }
 
-static inline void __MCCRefMarkLineRangeForEval(MCExecContext& ctxt, int4 p_first, int4 p_last, MCMarkedText& x_mark)
+inline void __MCCRefMarkLineRangeForEval(MCExecContext& ctxt, int4 p_first, int4 p_last, MCMarkedText& x_mark)
 {
     __MCCRefMarkDelimitedChunkRangeForEval(ctxt,
                                            CT_LINE,
@@ -2408,7 +2408,7 @@ static inline void __MCCRefMarkLineRangeForEval(MCExecContext& ctxt, int4 p_firs
                                            x_mark);
 }
 
-static inline void __MCCRefMarkItemRangeForEval(MCExecContext& ctxt, int4 p_first, int4 p_last, MCMarkedText& x_mark)
+inline void __MCCRefMarkItemRangeForEval(MCExecContext& ctxt, int4 p_first, int4 p_last, MCMarkedText& x_mark)
 {
     __MCCRefMarkDelimitedChunkRangeForEval(ctxt,
                                            CT_ITEM,
