@@ -122,7 +122,7 @@ function ArrayIntersect(pLeft, pRight, pRecursive)
 	end repeat
 	
 	return pLeft
-end if
+end ArrayIntersect
 */
 
 on TestArrayIntersect
