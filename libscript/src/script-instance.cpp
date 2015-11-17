@@ -2450,7 +2450,7 @@ bool MCScriptEvaluateHandlerOfInstanceInternal(MCScriptInstanceRef p_instance, M
     }
     
     // Calculate the handlerref value we need.
-    MCHandlerRef t_value;
+    MCHandlerRef t_value = nil;
     if (p_handler -> kind == kMCScriptDefinitionKindHandler)
     {
         // LCB handlers are easy - we just wrap up the instance and handler definition
