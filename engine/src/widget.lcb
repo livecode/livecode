@@ -591,19 +591,19 @@ public foreign handler MCWidgetGetClickCount(in pCurrent as CBool, out rCount as
 public foreign handler MCWidgetGetModifierKeys(in pCurrent as CBool, out rKeys as List) returns nothing binds to "<builtin>"
 
 /* 
-Summary:		Determines the location of the mouse pointer.
+Summary:		Determines the location of the mouse pointer relative to the widget.
 
 Returns:		The location of the mouse pointer.
 
 Example:
-	variable tClick as Point
-	put the click position into tClick
+	variable tPosition as Point
+	put the mouse position into tPosition
 	
 	variable tRect as Rectangle
 	put my bounds into tRect
 	
-	if tClick is within tRect then
-		// click was within widget bounds
+	if tPosition is within tRect then
+		// mouse position is within the widget bounds
 	end if
 	
 Description:
