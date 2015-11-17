@@ -432,6 +432,25 @@ static void export_rtf_emit_char_style_changes(text_buffer_t& buffer, export_rtf
 		buffer . appendtextf("\\cb%d\\chcbpat%d ", p_new . background_color_index + 1, p_new . background_color_index + 1);
 }
 
+// Properly close any open style.
+static void close_open_styles(export_rtf_t& ctxt)
+{
+    // We close all the previous styles when a link is over
+    while(ctxt . style_index > 0)
+    {
+        if (ctxt . styles[ctxt . style_index - 1] . metadata != ctxt . styles[ctxt.style_index] . metadata)
+            ctxt . buffer . appendcstring("}}");
+        
+        if (ctxt . styles[ctxt . style_index - 1] . link_text != ctxt . styles[ctxt.style_index] . link_text)
+            ctxt . buffer . appendcstring("}}");
+        
+        if (ctxt . styles[ctxt . style_index - 1] . background_color_index != ctxt . styles[ctxt.style_index] . background_color_index)
+            ctxt . buffer . appendcstring("}");
+        
+        ctxt . style_index -= 1;
+    }
+}
+
 // Emit the paragraph content. This is the second pass of rtf generation, the
 // first pass constructs the necessary tables.
 static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p_event_type, const MCFieldExportEventData& p_event_data)
@@ -668,17 +687,7 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 	}
 	else if (p_event_type == kMCFieldExportEventEndParagraph)
 	{
-		// Make sure any nested styles are finished.
-		while(ctxt . style_index > 0)
-		{
-            // MW-2014-06-11: [[ Bug 12556 ]] Make sure the metadata field is synced.
-            if (ctxt . styles[ctxt . style_index] . metadata != nil)
-                ctxt . buffer . appendcstring("}");
-            if (ctxt . styles[ctxt . style_index] . link_text != nil)
-                ctxt . buffer . appendcstring("}");
-			ctxt . buffer . appendcstring("}");
-			ctxt . style_index -= 1;
-		}
+        close_open_styles(ctxt);
 		
 		if (ctxt . has_metadata)
 			ctxt . buffer . appendcstring("}");
@@ -693,22 +702,21 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 		// with tags.
 		export_rtf_char_style_t t_new_style;
 		export_rtf_fetch_char_style(ctxt, t_new_style, p_event_data . character_style);
+
+        // SN-2015-11-17: [[ Bug 16308 ]] Fix RTF export with styles
+        // For any change in either the background colour, the metadata or the
+        // link associated with the text, we want to reset the style and start
+        // with all of them synchronised.
+        // That may not be the most efficient way, but that allows styles to
+        // overlap without any friction.
+        if (t_new_style . link_text != ctxt . styles[ctxt . style_index] . link_text
+                || t_new_style . metadata != ctxt . styles[ctxt . style_index] . metadata
+                || t_new_style . background_color_index != ctxt . styles[ctxt . style_index] . background_color_index)
+            close_open_styles(ctxt);
         
 		// Handle a change in link text.
 		if (t_new_style . link_text != ctxt . styles[ctxt . style_index] . link_text)
         {
-            // SN-2015-11-16: [[ Bug 16308 ]] Only add another '}' if metadata
-            if (ctxt . styles[ctxt . style_index] . metadata != nil)
-                ctxt . buffer . appendcstring("}");
-			if (ctxt . styles[ctxt . style_index] . link_text != nil)
-				ctxt . buffer . appendcstring("}");
-
-			while(ctxt . style_index > 0)
-			{
-				ctxt . buffer . appendcstring("}");
-				ctxt . style_index -= 1;
-			}
-
 			if (t_new_style . link_text != nil)
 			{
 				ctxt . buffer . appendtextf("{\\field{\\*\\fldinst %s \"%s\"}{\\fldrslt ", t_new_style . link_on ? "HYPERLINK" : "LCANCHOR", MCNameGetCString(t_new_style . link_text));
@@ -721,16 +729,6 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 		// Handle a change in metadata.
 		if (t_new_style . metadata != ctxt . styles[ctxt . style_index] . metadata)
 		{
-            // MW-2014-06-11: [[ Bug 12556 ]] Make sure the metadata field is synced.
-			if (ctxt . styles[ctxt . style_index] . metadata != nil)
-				ctxt . buffer . appendcstring("}}");
-
-			while(ctxt . style_index > 0 && ctxt . styles[ctxt . style_index] . link_text == nil)
-			{
-				ctxt . buffer . appendcstring("}");
-				ctxt . style_index -= 1;
-			}
-
 			if (t_new_style . metadata != nil)
 			{
 				ctxt . buffer . appendtextf("{\\field{\\*\\fldinst LCMETADATA \"%s\"}{\\fldrslt ", MCNameGetCString(t_new_style . metadata));
@@ -743,12 +741,7 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 		// Handle a change in background color.
 		if (t_new_style . background_color_index != ctxt . styles[ctxt . style_index] . background_color_index)
 		{
-			if (t_new_style . background_color_index == -1)
-			{
-				ctxt . buffer . appendcstring("}");
-				ctxt . style_index -= 1;
-			}
-			else if (ctxt . styles[ctxt . style_index] . background_color_index == -1)
+            if (t_new_style . background_color_index != -1)
 			{
 				ctxt . buffer . appendcstring("{");
 				ctxt . styles[ctxt . style_index + 1] = ctxt . styles[ctxt . style_index];
