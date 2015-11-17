@@ -33,14 +33,14 @@
 
 // Identity function used by templates for cases where no case folding is
 // required.
-static inline
+inline
 char_t __MCNativeChar_NoFold(char_t p_char)
 {
     return p_char;
 }
 
 // Return the folded version of 'char'.
-static inline
+inline
 char_t __MCNativeChar_Fold(char_t p_char)
 {
 #if defined(__WINDOWS_1252__) || defined(__ISO_8859_1__)
@@ -199,7 +199,7 @@ char_t __MCNativeChar_Uppercase(char_t p_char)
 ////////////////////////////////////////////////////////////////////////////////
 
 // Compare two uncased or prefolded chars for caseless equality.
-static inline bool
+inline bool
 __MCNativeChar_Equal_Unfolded(char_t p_left,
                               char_t p_right)
 {
@@ -208,7 +208,7 @@ __MCNativeChar_Equal_Unfolded(char_t p_left,
 
 // Compare an unfolded char with an uncased or prefolded char for caseless
 // equality.
-static inline bool
+inline bool
 __MCNativeChar_Equal_Prefolded(char_t p_left,
                                char_t p_folded_right)
 {
@@ -220,7 +220,7 @@ __MCNativeChar_Equal_Prefolded(char_t p_left,
 }
 
 // Compare two unfolded chars for caseless equality.
-static inline bool
+inline bool
 __MCNativeChar_Equal_Folded(char_t p_left,
                             char_t p_right)
 {
@@ -232,7 +232,7 @@ __MCNativeChar_Equal_Folded(char_t p_left,
 }
 
 // Compare two uncased or prefolded chars.
-static inline ssize_t
+inline ssize_t
 __MCNativeChar_Compare_Unfolded(char_t p_left,
                                 char_t p_right)
 {
@@ -240,7 +240,7 @@ __MCNativeChar_Compare_Unfolded(char_t p_left,
 }
 
 // Compare an unfolded char with an uncased or prefolded char.
-static inline ssize_t
+inline ssize_t
 __MCNativeChar_Compare_Prefolded(char_t p_left,
                                  char_t p_folded_right)
 {
@@ -252,7 +252,7 @@ __MCNativeChar_Compare_Prefolded(char_t p_left,
 }
 
 // Compare two unfolded chars.
-static inline ssize_t
+inline ssize_t
 __MCNativeChar_Compare_Folded(char_t p_left,
                               char_t p_right)
 {
