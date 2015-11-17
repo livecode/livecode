@@ -3381,7 +3381,7 @@ bool MCStringBreakIntoChunks(MCStringRef self, codepoint_t p_separator, MCString
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Skip 'count' occurrances of 'needle' in 'range' of 'self' according to 'options'.
+// Skip 'count' occurrences of 'needle' in 'range' of 'self' according to 'options'.
 // If 'needle' is not found, false is returned and r_last is untouched.
 static bool __MCStringSkip(MCStringRef self,
                            MCRange p_range,
@@ -3438,8 +3438,8 @@ static bool __MCStringSkip(MCStringRef self,
     return true;
 }
 
-// Count occurrances of 'needle' in 'range' of 'self' according to 'options'.
-// If no occurances are found 0 is returned and r_last is untouched.
+// Count occurrences of 'needle' in 'range' of 'self' according to 'options'.
+// If no occurrences are found 0 is returned and r_last is untouched.
 static uindex_t __MCStringCount(MCStringRef self,
                                 MCRange p_range,
                                 MCStringRef p_needle,

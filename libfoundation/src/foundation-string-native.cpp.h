@@ -434,14 +434,14 @@ __MCNativeStr_Hash(const char_t *p_chars,
 //
 //   Scan(haystack, needle, max_count -> found_count, last_found_offset)
 //
-// If max_count is 0, then the number of occurances of needle in haystack is
+// If max_count is 0, then the number of occurrences of needle in haystack is
 // returned.
 //
 // If max_count is not 0, then the haystack will be scanned for at most
-// max_count occurances with the number found returned.
+// max_count occurences with the number found returned.
 //
-// In both cases, if at least 1 occurance was found then the offset of the last
-// found occurance is also returned.
+// In both cases, if at least 1 occurrence was found then the offset of the last
+// found occurrence is also returned.
 
 template<bool (*CharEqual)(char_t left, char_t right)>
 struct __MCNativeStr_Forward
@@ -816,8 +816,8 @@ static bool __MCNativeOp_LastIndexOf(const char_t *p_haystack_chars,
                                     &r_offset) == 1;
 }
 
-// Skips count occurances of needle in haystack, using the given options.
-// If the specified number of occurances are found then true is returned and
+// Skips count occurrences of needle in haystack, using the given options.
+// If the specified number of occurrences are found then true is returned and
 // the offset of the last one is passed back.
 static bool __MCNativeOp_Skip(const char_t *p_haystack_chars,
                               size_t p_haystack_length,
@@ -836,8 +836,8 @@ static bool __MCNativeOp_Skip(const char_t *p_haystack_chars,
                                     r_last_offset) == p_count;
 }
 
-// Return the number of occurances of needle in haystack, using the given
-// options. The offset of the last found occurance is returned, if any.
+// Return the number of occurrences of needle in haystack, using the given
+// options. The offset of the last found occurrence is returned, if any.
 static size_t __MCNativeOp_Count(const char_t *p_haystack_chars,
                                  size_t p_haystack_length,
                                  const char_t *p_needle_chars,
@@ -977,7 +977,7 @@ static bool __MCNativeOp_ForwardCharDelimitedOffset_Core(const char_t *p_haystac
     return true;
 }
 
-// Returns true if needle is found in haystack after skip occurances of
+// Returns true if needle is found in haystack after skip occurrences of
 // delimiter.
 // If skip delimiters are not found, or needle is not found then false is
 // returned.

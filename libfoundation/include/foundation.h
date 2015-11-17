@@ -2301,7 +2301,7 @@ MC_DLLEXPORT bool MCStringLastIndexOfChar(MCStringRef string, codepoint_t needle
 MC_DLLEXPORT bool MCStringFind(MCStringRef string, MCRange range, MCStringRef needle, MCStringOptions options, MCRange* r_result);
 
 // Search 'range' of 'string' for 'needle' processing as appropriate to options
-// and returning the number of occurances found.
+// and returning the number of occurrences found.
 MC_DLLEXPORT uindex_t MCStringCount(MCStringRef string, MCRange range, MCStringRef needle, MCStringOptions options);
 MC_DLLEXPORT uindex_t MCStringCountChar(MCStringRef string, MCRange range, codepoint_t needle, MCStringOptions options);
     
@@ -2325,7 +2325,7 @@ MC_DLLEXPORT bool MCStringBreakIntoChunks(MCStringRef string, codepoint_t separa
     
 // Search 'range' of 'string' for 'needle' processing as appropriate to options
 // and taking into account 'delimiter' and 'skip'.
-// The function searches for 'needle' after 'skip' occurances of 'delimiter'.
+// The function searches for 'needle' after 'skip' occurrences of 'delimiter'.
 // The total number of delimiters encountered before 'needle' is found is
 // returned in 'r_index'.
 // If 'r_found' is not nil, it will return the range of the needle string in

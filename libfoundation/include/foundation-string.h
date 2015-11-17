@@ -263,7 +263,7 @@ bool MCStringLastIndexOfChar(MCStringRef string, codepoint_t needle, uindex_t af
 bool MCStringFind(MCStringRef string, MCRange range, MCStringRef needle, MCStringOptions options, MCRange* r_result);
 
 // Search 'range' of 'string' for 'needle' processing as appropriate to options
-// and returning the number of occurances found.
+// and returning the number of occurrences found.
 uindex_t MCStringCount(MCStringRef string, MCRange range, MCStringRef needle, MCStringOptions options);
 uindex_t MCStringCountChar(MCStringRef string, MCRange range, codepoint_t needle, MCStringOptions options);
 
