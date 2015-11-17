@@ -36,7 +36,7 @@ private:
 };
 
 class MCBrowser;
-typedef struct __MCBrowserList *MCBrowserListRef;
+typedef class MCBrowserList *MCBrowserListRef;
 
 // Event handler interface
 class MCBrowserEventHandler : public MCBrowserRefCounted
@@ -152,8 +152,8 @@ MC_DLLEXPORT bool MCBrowserLibraryGetRunloopCallback(MCBrowserRunloopCallback &r
 
 //////////
 
-typedef struct __MCBrowserList *MCBrowserListRef;
-typedef struct __MCBrowserDictionary *MCBrowserDictionaryRef;
+typedef class MCBrowserList *MCBrowserListRef;
+typedef class MCBrowserDictionary *MCBrowserDictionaryRef;
 
 enum MCBrowserValueType
 {
@@ -223,8 +223,8 @@ MC_DLLEXPORT bool MCBrowserDictionaryGetDictionary(MCBrowserDictionaryRef p_dict
 	
 //////////
 
-typedef struct __MCBrowser *MCBrowserRef;
-typedef struct __MCBrowserFactory *MCBrowserFactoryRef;
+typedef class MCBrowser *MCBrowserRef;
+typedef class MCBrowserFactory *MCBrowserFactoryRef;
 
 MC_DLLEXPORT bool MCBrowserFactoryGet(const char *p_factory_id, MCBrowserFactoryRef &r_factory);
 MC_DLLEXPORT bool MCBrowserFactoryCreateBrowser(MCBrowserFactoryRef p_factory, void *p_display, void *p_parent_view, MCBrowserRef &r_browser);

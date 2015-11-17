@@ -1005,7 +1005,7 @@ bool MCAndroidWebViewBrowserFactoryCreate(MCBrowserFactoryRef &r_factory)
 	if (t_factory == nil)
 		return false;
 		
-	r_factory = (MCBrowserFactoryRef)t_factory;
+	r_factory = t_factory;
 	return true;
 }
 

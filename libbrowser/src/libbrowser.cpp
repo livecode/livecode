@@ -180,7 +180,7 @@ bool MCBrowserLibraryInitialize()
 void MCBrowserLibraryFinalize()
 {
 	if (s_browser_factory)
-		delete (MCBrowserFactory*)s_browser_factory;
+		delete s_browser_factory;
 }
 
 //////////
@@ -232,10 +232,10 @@ bool MCBrowserFactoryCreateBrowser(MCBrowserFactoryRef p_factory, void *p_displa
 		return false;
 	
 	MCBrowser *t_browser;
-	if (!((MCBrowserFactory*)p_factory)->CreateBrowser(p_display, p_parent_window, t_browser))
+	if (!p_factory->CreateBrowser(p_display, p_parent_window, t_browser))
 		return false;
 	
-	r_browser = (MCBrowserRef)t_browser;
+	r_browser = t_browser;
 	return true;
 }
 
@@ -246,7 +246,7 @@ MCBrowserRef MCBrowserRetain(MCBrowserRef p_browser)
 	if (p_browser == nil)
 		return nil;
 	
-	((MCBrowser*)p_browser)->Retain();
+	p_browser->Retain();
 	return p_browser;
 }
 
@@ -255,7 +255,7 @@ void MCBrowserRelease(MCBrowserRef p_browser)
 	if (p_browser == nil)
 		return;
 	
-	((MCBrowser*)p_browser)->Release();
+	p_browser->Release();
 }
 
 //////////
@@ -265,7 +265,7 @@ void *MCBrowserGetNativeLayer(MCBrowserRef p_browser)
 	if (p_browser == nil)
 		return nil;
 	
-	return ((MCBrowser*)p_browser)->GetNativeLayer();
+	return p_browser->GetNativeLayer();
 }
 
 bool MCBrowserGetRect(MCBrowserRef p_browser, MCBrowserRect &r_rect)
@@ -273,7 +273,7 @@ bool MCBrowserGetRect(MCBrowserRef p_browser, MCBrowserRect &r_rect)
 	if (p_browser == nil)
 		return false;
 	
-	return ((MCBrowser*)p_browser)->GetRect(r_rect);
+	return p_browser->GetRect(r_rect);
 }
 
 bool MCBrowserSetRect(MCBrowserRef p_browser, const MCBrowserRect &p_rect)
@@ -281,7 +281,7 @@ bool MCBrowserSetRect(MCBrowserRef p_browser, const MCBrowserRect &p_rect)
 	if (p_browser == nil)
 		return false;
 	
-	return ((MCBrowser*)p_browser)->SetRect(p_rect);
+	return p_browser->SetRect(p_rect);
 }
 
 bool MCBrowserGetBoolProperty(MCBrowserRef p_browser, MCBrowserProperty p_property, bool &r_value)
@@ -289,7 +289,7 @@ bool MCBrowserGetBoolProperty(MCBrowserRef p_browser, MCBrowserProperty p_proper
 	if (p_browser == nil)
 		return false;
 	
-	return ((MCBrowser*)p_browser)->GetBoolProperty(p_property, r_value);
+	return p_browser->GetBoolProperty(p_property, r_value);
 }
 
 bool MCBrowserSetBoolProperty(MCBrowserRef p_browser, MCBrowserProperty p_property, bool p_value)
@@ -297,7 +297,7 @@ bool MCBrowserSetBoolProperty(MCBrowserRef p_browser, MCBrowserProperty p_proper
 	if (p_browser == nil)
 		return false;
 	
-	return ((MCBrowser*)p_browser)->SetBoolProperty(p_property, p_value);
+	return p_browser->SetBoolProperty(p_property, p_value);
 }
 
 bool MCBrowserGetStringProperty(MCBrowserRef p_browser, MCBrowserProperty p_property, char *&r_value)
@@ -305,7 +305,7 @@ bool MCBrowserGetStringProperty(MCBrowserRef p_browser, MCBrowserProperty p_prop
 	if (p_browser == nil)
 		return false;
 	
-	return ((MCBrowser*)p_browser)->GetStringProperty(p_property, r_value);
+	return p_browser->GetStringProperty(p_property, r_value);
 }
 
 bool MCBrowserSetStringProperty(MCBrowserRef p_browser, MCBrowserProperty p_property, const char *p_value)
@@ -313,7 +313,7 @@ bool MCBrowserSetStringProperty(MCBrowserRef p_browser, MCBrowserProperty p_prop
 	if (p_browser == nil)
 		return false;
 	
-	return ((MCBrowser*)p_browser)->SetStringProperty(p_property, p_value);
+	return p_browser->SetStringProperty(p_property, p_value);
 }
 
 bool MCBrowserGoBack(MCBrowserRef p_browser)
@@ -321,7 +321,7 @@ bool MCBrowserGoBack(MCBrowserRef p_browser)
 	if (p_browser == nil)
 		return false;
 	
-	return ((MCBrowser*)p_browser)->GoBack();
+	return p_browser->GoBack();
 }
 
 bool MCBrowserGoForward(MCBrowserRef p_browser)
@@ -329,7 +329,7 @@ bool MCBrowserGoForward(MCBrowserRef p_browser)
 	if (p_browser == nil)
 		return false;
 	
-	return ((MCBrowser*)p_browser)->GoForward();
+	return p_browser->GoForward();
 }
 
 bool MCBrowserGoToURL(MCBrowserRef p_browser, const char *p_url)
@@ -337,7 +337,7 @@ bool MCBrowserGoToURL(MCBrowserRef p_browser, const char *p_url)
 	if (p_browser == nil)
 		return false;
 	
-	return ((MCBrowser*)p_browser)->GoToURL(p_url);
+	return p_browser->GoToURL(p_url);
 }
 
 bool MCBrowserEvaluateJavaScript(MCBrowserRef p_browser, const char *p_script, char *&r_result)
@@ -345,7 +345,7 @@ bool MCBrowserEvaluateJavaScript(MCBrowserRef p_browser, const char *p_script, c
 	if (p_browser == nil)
 		return false;
 	
-	return ((MCBrowser*)p_browser)->EvaluateJavaScript(p_script, r_result);
+	return p_browser->EvaluateJavaScript(p_script, r_result);
 }
 
 //////////
@@ -363,37 +363,37 @@ public:
 	virtual void OnNavigationBegin(MCBrowser *p_browser, bool p_in_frame, const char *p_url)
 	{
 		if (m_callback)
-			m_callback(m_context, (MCBrowserRef)p_browser, kMCBrowserRequestTypeNavigate, kMCBrowserRequestStateBegin, p_in_frame, p_url, nil);
+			m_callback(m_context, p_browser, kMCBrowserRequestTypeNavigate, kMCBrowserRequestStateBegin, p_in_frame, p_url, nil);
 	}
 	
 	virtual void OnNavigationComplete(MCBrowser *p_browser, bool p_in_frame, const char *p_url)
 	{
 		if (m_callback)
-			m_callback(m_context, (MCBrowserRef)p_browser, kMCBrowserRequestTypeNavigate, kMCBrowserRequestStateComplete, p_in_frame, p_url, nil);
+			m_callback(m_context, p_browser, kMCBrowserRequestTypeNavigate, kMCBrowserRequestStateComplete, p_in_frame, p_url, nil);
 	}
 	
 	virtual void OnNavigationFailed(MCBrowser *p_browser, bool p_in_frame, const char *p_url, const char *p_error)
 	{
 		if (m_callback)
-			m_callback(m_context, (MCBrowserRef)p_browser, kMCBrowserRequestTypeNavigate, kMCBrowserRequestStateFailed, p_in_frame, p_url, p_error);
+			m_callback(m_context, p_browser, kMCBrowserRequestTypeNavigate, kMCBrowserRequestStateFailed, p_in_frame, p_url, p_error);
 	}
 	
 	virtual void OnDocumentLoadBegin(MCBrowser *p_browser, bool p_in_frame, const char *p_url)
 	{
 		if (m_callback)
-			m_callback(m_context, (MCBrowserRef)p_browser, kMCBrowserRequestTypeDocumentLoad, kMCBrowserRequestStateBegin, p_in_frame, p_url, nil);
+			m_callback(m_context, p_browser, kMCBrowserRequestTypeDocumentLoad, kMCBrowserRequestStateBegin, p_in_frame, p_url, nil);
 	}
 	
 	virtual void OnDocumentLoadComplete(MCBrowser *p_browser, bool p_in_frame, const char *p_url)
 	{
 		if (m_callback)
-			m_callback(m_context, (MCBrowserRef)p_browser, kMCBrowserRequestTypeDocumentLoad, kMCBrowserRequestStateComplete, p_in_frame, p_url, nil);
+			m_callback(m_context, p_browser, kMCBrowserRequestTypeDocumentLoad, kMCBrowserRequestStateComplete, p_in_frame, p_url, nil);
 	}
 	
 	virtual void OnDocumentLoadFailed(MCBrowser *p_browser, bool p_in_frame, const char *p_url, const char *p_error)
 	{
 		if (m_callback)
-			m_callback(m_context, (MCBrowserRef)p_browser, kMCBrowserRequestTypeDocumentLoad, kMCBrowserRequestStateFailed, p_in_frame, p_url, p_error);
+			m_callback(m_context, p_browser, kMCBrowserRequestTypeDocumentLoad, kMCBrowserRequestStateFailed, p_in_frame, p_url, p_error);
 	}
 	
 private:
@@ -408,7 +408,7 @@ bool MCBrowserSetRequestHandler(MCBrowserRef p_browser, MCBrowserRequestCallback
 	
 	if (p_callback == nil)
 	{
-		((MCBrowser*)p_browser)->SetEventHandler(nil);
+		p_browser->SetEventHandler(nil);
 		return true;
 	}
 	
@@ -418,7 +418,7 @@ bool MCBrowserSetRequestHandler(MCBrowserRef p_browser, MCBrowserRequestCallback
 	if (t_wrapper == nil)
 		return false;
 	
-	((MCBrowser*)p_browser)->SetEventHandler(t_wrapper);
+	p_browser->SetEventHandler(t_wrapper);
 	return true;
 }
 
@@ -437,7 +437,7 @@ public:
 	virtual void OnJavaScriptCall(MCBrowser *p_browser, const char *p_handler, MCBrowserListRef p_params)
 	{
 		if (m_callback)
-			m_callback(m_context, (MCBrowserRef)p_browser, p_handler, p_params);
+			m_callback(m_context, p_browser, p_handler, p_params);
 	}
 	
 private:
@@ -452,7 +452,7 @@ bool MCBrowserSetJavaScriptHandler(MCBrowserRef p_browser, MCBrowserJavaScriptCa
 	
 	if (p_callback == nil)
 	{
-		((MCBrowser*)p_browser)->SetJavaScriptHandler(nil);
+		p_browser->SetJavaScriptHandler(nil);
 		return true;
 	}
 	
@@ -462,7 +462,7 @@ bool MCBrowserSetJavaScriptHandler(MCBrowserRef p_browser, MCBrowserJavaScriptCa
 	if (t_wrapper == nil)
 		return false;
 	
-	((MCBrowser*)p_browser)->SetJavaScriptHandler(t_wrapper);
+	p_browser->SetJavaScriptHandler(t_wrapper);
 	return true;
 }
 
