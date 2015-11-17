@@ -112,22 +112,12 @@ end TestNestedArrayRecursiveUnion
 /*
 Semantics of array intersect:
 
-function ArrayIntersect(pLeft, pRight, pRecursive, pTopLevel)
-	if pTopLevel then
-		if the keys of pRight is empty or the keys of pLeft is empty then
-			return empty
-		end if
-	else
-		if the keys of pRight is empty or the keys of pLeft is empty then
-			return pLeft
-		end if
-	end if
-
+function ArrayIntersect(pLeft, pRight, pRecursive)
 	repeat for each key tKey in pLeft
 		if tKey is not among the keys of pRight then
 			delete variable pLeft[tKey]
 		else if pRecursive then
-			put ArrayIntersect(pLeft[tKey], pRight[tKey], true, false) into pLeft[tKey]
+			put ArrayIntersect(pLeft[tKey], pRight[tKey], true) into pLeft[tKey]
 		end if
 	end repeat
 	
@@ -140,13 +130,13 @@ on TestArrayIntersect
 	local tString1	
 	put "a" into tString1
 	intersect tString1 with "b"
-	TestAssert "intersect: left non-array, right non-array", tString1 is empty
+	TestAssert "intersect: left non-array, right non-array", tString1 is "a"
 	
 	local tString2, tFixedArray
 	put "a" into tString2
 	put "b" into tFixedArray[1]
 	intersect tString2 with tFixedArray
-	TestAssert "intersect: left non-array, right array", tString2 is empty
+	TestAssert "intersect: left non-array, right array", tString2 is "a"
 	
 	local tArray1
 	put "a" into tArray1[1]
@@ -198,7 +188,7 @@ on TestNestedArrayRecursiveIntersect
 	local tLeftArray2, tRightArray2
 	put "a" into tLeftArray2[1]
 	put "b" into tRightArray2[1][1]
-	
+		
 	intersect tLeftArray2 with tRightArray2 recursively
 	TestAssert "recursive intersect: left value non-array, right value array", tLeftArray2[1] is "a"
 	
@@ -206,7 +196,7 @@ on TestNestedArrayRecursiveIntersect
 	put "a" into tLeftArray3[1][1]
 	put "b" into tRightArray3[1]
 	intersect tLeftArray3 with tRightArray3 recursively
-	TestAssert "recursive intersect: left value array, right value non-array", tLeftArray3[1][1] is "a"
+	TestAssert "recursive intersect: left value array, right value non-array", tLeftArray3[1] is empty
 	
 	local tLeftArray4, tRightArray4
 	put "a" into tLeftArray4[1][1]

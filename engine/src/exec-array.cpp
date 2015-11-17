@@ -562,6 +562,18 @@ void MCArraysExecSplitAsSet(MCExecContext& ctxt, MCStringRef p_string, MCStringR
 
 ////////////////////////////////////////////////////////////////////////////////
 
+//
+// Semantics of 'union tLeft with tRight [recursively]'
+// 
+// repeat for each key tKey in tRight
+//    if tKey is not among the keys of tLeft then
+//        put tRight[tKey] into tLeft[tKey]
+//    else if tRecursive then
+//        union tLeft[tKey] with tRight[tKey] recursively
+//    end if
+// end repeat
+//
+
 void MCArraysDoUnion(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, bool p_recursive, MCValueRef& r_result)
 {
     if (!MCValueIsArray(p_src))
@@ -624,25 +636,31 @@ void MCArraysDoUnion(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, bo
     r_result = MCValueRetain(*t_result);
 }
 
-void MCArraysDoIntersect(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, bool p_recursive, bool p_top_level, MCValueRef& r_result)
+//
+// Semantics of 'intersect tLeft with tRight [recursively]'
+// 
+// repeat for each key tKey in tLeft
+//    if tKey is not among the keys of tRight then
+//        delete variable tLeft[tKey]
+//    else if tRecursive then
+//        intersect tLeft[tKey] with tRight[tKey] recursively
+//    end if
+// end repeat
+//
+
+void MCArraysDoIntersect(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, bool p_recursive, MCValueRef& r_result)
 {
-    // Existing 6.7 behavior, is to clobber the left on the top level if either side converts to empty array
-    if (p_top_level)
+    if (!MCValueIsArray(p_dst))
     {
-        if (!MCValueIsArray(p_dst) || !MCValueIsArray(p_src))
-        {
-            r_result = MCValueRetain(kMCEmptyString);
-            return;
-        }
+        r_result = MCValueRetain(p_dst);
+        return;
+        
     }
-    // And preserve the left in the recursive case if either side converts to empty array
-    else
+    
+    if (!MCValueIsArray(p_src))
     {
-        if (!MCValueIsArray(p_dst) || !MCValueIsArray(p_src))
-        {
-            r_result = MCValueRetain(p_dst);
-            return;
-        }
+        r_result = MCValueRetain(kMCEmptyString);
+        return;
     }
     
     MCArrayRef t_dst_array;
@@ -650,25 +668,6 @@ void MCArraysDoIntersect(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src
     
     MCArrayRef t_src_array;
     t_src_array = (MCArrayRef)p_src;
-    
-    // Existing 6.7 behavior, is to clobber the left on the top level if either side converts to empty array
-    if (p_top_level)
-    {
-        if (MCArrayIsEmpty(t_dst_array) || MCArrayIsEmpty(t_src_array))
-        {
-            r_result = MCValueRetain(kMCEmptyString);
-            return;
-        }
-    }
-    // And preserve the left in the recursive case if either side converts to empty array
-    else
-    {
-        if (MCArrayIsEmpty(t_dst_array) || MCArrayIsEmpty(t_src_array))
-        {
-            r_result = MCValueRetain(p_dst);
-            return;
-        }
-    }
     
     MCAutoArrayRef t_result;
     if (!MCArrayMutableCopy(t_dst_array, &t_result))
@@ -699,7 +698,7 @@ void MCArraysDoIntersect(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src
         else if (p_recursive)
         {
             MCAutoValueRef t_recursive_result;
-            MCArraysDoIntersect(ctxt, t_dst_value, t_src_value, true, false, &t_recursive_result);
+            MCArraysDoIntersect(ctxt, t_dst_value, t_src_value, true, &t_recursive_result);
             
             if (ctxt . HasError())
                 return;
@@ -719,7 +718,7 @@ void MCArraysExecUnion(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, 
 
 void MCArraysExecIntersect(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result)
 {
-    MCArraysDoIntersect(ctxt, p_dst, p_src, false, true, r_result);
+    MCArraysDoIntersect(ctxt, p_dst, p_src, false, r_result);
 }
 
 void MCArraysExecUnionRecursive(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result)
@@ -729,7 +728,7 @@ void MCArraysExecUnionRecursive(MCExecContext& ctxt, MCValueRef p_dst, MCValueRe
 
 void MCArraysExecIntersectRecursive(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result)
 {
-    MCArraysDoIntersect(ctxt, p_dst, p_src, true, true, r_result);
+    MCArraysDoIntersect(ctxt, p_dst, p_src, true, r_result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
