@@ -34,14 +34,14 @@
 // Identity function used by templates for cases where no case folding is
 // required.
 static inline
-char_t __NativeChar_NoFold(char_t p_char)
+char_t __MCNativeChar_NoFold(char_t p_char)
 {
     return p_char;
 }
 
 // Return the folded version of 'char'.
 static inline
-char_t __NativeChar_Fold(char_t p_char)
+char_t __MCNativeChar_Fold(char_t p_char)
 {
 #if defined(__WINDOWS_1252__) || defined(__ISO_8859_1__)
 	static char_t kMCStringFoldWindows1252_Mapping[256] =
@@ -93,28 +93,28 @@ char_t __NativeChar_Fold(char_t p_char)
 // Return the folded version of 'char' into 'folded_char', and return true if
 // the char is cased (i.e. there exists c' != c s.t. fold(c') == c).
 static inline bool
-__NativeChar_CheckedFold(char_t p_char,
+__MCNativeChar_CheckedFold(char_t p_char,
                          char_t& r_folded_char)
 {
-    r_folded_char = __NativeChar_Fold(p_char);
+    r_folded_char = __MCNativeChar_Fold(p_char);
     
     return p_char >= 0x40;
 }
 
 // Fold 'length' characters in 'chars', placing them into 'out_chars'.
 static inline void
-__NativeStr_Fold(const char_t *p_chars,
+__MCNativeStr_Fold(const char_t *p_chars,
                  size_t p_length,
                  char_t *r_out_chars)
 {
     for(; p_length > 0; p_length -= 1)
-        *r_out_chars++ = __NativeChar_Fold(*p_chars++);
+        *r_out_chars++ = __MCNativeChar_Fold(*p_chars++);
 }
 
 // Fold 'length' characters in 'chars', placing them into 'out_chars'.
 // The function returns true if at least one of the chars is cased.
 static inline bool
-__NativeStr_CheckedFold(const char_t *p_chars,
+__MCNativeStr_CheckedFold(const char_t *p_chars,
                         size_t p_length,
                         char_t *r_out_char)
 {
@@ -123,7 +123,7 @@ __NativeStr_CheckedFold(const char_t *p_chars,
     
     for(; p_length > 0; p_length -= 1)
     {
-        if (__NativeChar_CheckedFold(*p_chars++, *r_out_char++))
+        if (__MCNativeChar_CheckedFold(*p_chars++, *r_out_char++))
         {
             t_needs_fold = true;
             break;
@@ -131,7 +131,7 @@ __NativeStr_CheckedFold(const char_t *p_chars,
     }
     
     for(; p_length > 0; p_length -= 1)
-        *r_out_char++ = __NativeChar_Fold(*p_chars++);
+        *r_out_char++ = __MCNativeChar_Fold(*p_chars++);
 
     return t_needs_fold;
 }
@@ -140,14 +140,14 @@ __NativeStr_CheckedFold(const char_t *p_chars,
 
 // Return the lower-case version of 'char'.
 static inline
-char_t __NativeChar_Lowercase(char_t p_char)
+char_t __MCNativeChar_Lowercase(char_t p_char)
 {
-    return __NativeChar_Fold(p_char);
+    return __MCNativeChar_Fold(p_char);
 }
 
 // Return the upper-case version of 'char'.
 static inline
-char_t __NativeChar_Uppercase(char_t p_char)
+char_t __MCNativeChar_Uppercase(char_t p_char)
 {
 #if defined(__WINDOWS_1252__) || defined(__ISO_8859_1__)
 	static char_t kMCStringUppercaseWindows1252_Mapping[256] =
@@ -200,8 +200,8 @@ char_t __NativeChar_Uppercase(char_t p_char)
 
 // Compare two uncased or prefolded chars for caseless equality.
 static inline bool
-__NativeChar_Equal_Unfolded(char_t p_left,
-                            char_t p_right)
+__MCNativeChar_Equal_Unfolded(char_t p_left,
+                              char_t p_right)
 {
     return p_left == p_right;
 }
@@ -209,11 +209,11 @@ __NativeChar_Equal_Unfolded(char_t p_left,
 // Compare an unfolded char with an uncased or prefolded char for caseless
 // equality.
 static inline bool
-__NativeChar_Equal_Prefolded(char_t p_left,
-                             char_t p_folded_right)
+__MCNativeChar_Equal_Prefolded(char_t p_left,
+                               char_t p_folded_right)
 {
     if (p_left != p_folded_right)
-        return __NativeChar_Fold(p_left) ==
+        return __MCNativeChar_Fold(p_left) ==
                 p_folded_right;
     
     return true;
@@ -221,31 +221,31 @@ __NativeChar_Equal_Prefolded(char_t p_left,
 
 // Compare two unfolded chars for caseless equality.
 static inline bool
-__NativeChar_Equal_Folded(char_t p_left,
-                          char_t p_right)
+__MCNativeChar_Equal_Folded(char_t p_left,
+                            char_t p_right)
 {
     if (p_left != p_right)
-        return __NativeChar_Fold(p_left) ==
-                __NativeChar_Fold(p_right);
+        return __MCNativeChar_Fold(p_left) ==
+                __MCNativeChar_Fold(p_right);
     
     return true;
 }
 
 // Compare two uncased or prefolded chars.
 static inline ssize_t
-__NativeChar_Compare_Unfolded(char_t p_left,
-                              char_t p_right)
+__MCNativeChar_Compare_Unfolded(char_t p_left,
+                                char_t p_right)
 {
     return p_left - p_right;
 }
 
 // Compare an unfolded char with an uncased or prefolded char.
 static inline ssize_t
-__NativeChar_Compare_Prefolded(char_t p_left,
-                               char_t p_folded_right)
+__MCNativeChar_Compare_Prefolded(char_t p_left,
+                                 char_t p_folded_right)
 {
     if (p_left != p_folded_right)
-        return __NativeChar_Fold(p_left) -
+        return __MCNativeChar_Fold(p_left) -
                 p_folded_right;
     
     return 0;
@@ -253,12 +253,12 @@ __NativeChar_Compare_Prefolded(char_t p_left,
 
 // Compare two unfolded chars.
 static inline ssize_t
-__NativeChar_Compare_Folded(char_t p_left,
-                            char_t p_right)
+__MCNativeChar_Compare_Folded(char_t p_left,
+                              char_t p_right)
 {
     if (p_left != p_right)
-        return __NativeChar_Fold(p_left) -
-                __NativeChar_Fold(p_right);
+        return __MCNativeChar_Fold(p_left) -
+                __MCNativeChar_Fold(p_right);
     
     return 0;
 }
@@ -268,10 +268,10 @@ __NativeChar_Compare_Folded(char_t p_left,
 // Check the two strings for equality, using the given char comparison method.
 template<bool (*CharEqual)(char_t left, char_t right)>
 static inline bool
-__NativeStr_Equal(const char_t *p_left_chars,
-                  size_t p_left_length,
-                  const char_t *p_right_chars,
-                  size_t p_right_length)
+__MCNativeStr_Equal(const char_t *p_left_chars,
+                    size_t p_left_length,
+                    const char_t *p_right_chars,
+                    size_t p_right_length)
 {
     if (p_left_length != p_right_length)
         return false;
@@ -293,10 +293,10 @@ __NativeStr_Equal(const char_t *p_left_chars,
 // Compare two strings, using the given char comparison method.
 template<ssize_t (*CharCompare)(char_t left, char_t right)>
 static inline ssize_t
-__NativeStr_Compare(const char_t *p_left_chars,
-                    size_t p_left_length,
-                    const char_t *p_right_chars,
-                    size_t p_right_length)
+__MCNativeStr_Compare(const char_t *p_left_chars,
+                      size_t p_left_length,
+                      const char_t *p_right_chars,
+                      size_t p_right_length)
 {
     for(;;)
     {
@@ -319,10 +319,10 @@ __NativeStr_Compare(const char_t *p_left_chars,
 // comparison method. The length of the shared prefix is returned.
 template<bool (*CharEqual)(char_t left, char_t right)>
 static inline size_t
-__NativeStr_Prefix(const char_t *p_left_chars,
-                   size_t p_left_length,
-                   const char_t *p_right_chars,
-                   size_t p_right_length)
+__MCNativeStr_Prefix(const char_t *p_left_chars,
+                     size_t p_left_length,
+                     const char_t *p_right_chars,
+                     size_t p_right_length)
 {
     if (p_right_length < p_left_length)
         p_left_length = p_right_length;
@@ -349,10 +349,10 @@ __NativeStr_Prefix(const char_t *p_left_chars,
 // comparison method. The length of the shared suffix is returned.
 template<bool (*CharEqual)(char_t left, char_t right)>
 static inline size_t
-__NativeStr_Suffix(const char_t *p_left_chars,
-                   size_t p_left_length,
-                   const char_t *p_right_chars,
-                   size_t p_right_length)
+__MCNativeStr_Suffix(const char_t *p_left_chars,
+                     size_t p_left_length,
+                     const char_t *p_right_chars,
+                     size_t p_right_length)
 {
     p_left_chars += p_left_length;
     p_right_chars += p_right_length;
@@ -381,8 +381,8 @@ __NativeStr_Suffix(const char_t *p_left_chars,
 // Return the hash of the given string, using the given char folding method.
 template<char_t (*CharFold)(char_t chr)>
 static inline hash_t
-__NativeStr_Hash(const char_t *p_chars,
-                 size_t p_char_count)
+__MCNativeStr_Hash(const char_t *p_chars,
+                   size_t p_char_count)
 {
 #ifdef __64_BIT__
     // 64-bit variant
@@ -444,7 +444,7 @@ __NativeStr_Hash(const char_t *p_chars,
 // found occurance is also returned.
 
 template<bool (*CharEqual)(char_t left, char_t right)>
-struct __NativeStr_Forward
+struct __MCNativeStr_Forward
 {
     static inline size_t CharScan(const char_t *p_haystack_chars,
                                   size_t p_haystack_length,
@@ -498,7 +498,7 @@ struct __NativeStr_Forward
         size_t t_offset;
         while(t_char_offset <= p_haystack_length)
         {
-            if (__NativeStr_Equal<CharEqual>(p_haystack_chars + t_char_offset,
+            if (__MCNativeStr_Equal<CharEqual>(p_haystack_chars + t_char_offset,
                                              p_needle_length,
                                              p_needle_chars,
                                              p_needle_length))
@@ -524,7 +524,7 @@ struct __NativeStr_Forward
 };
 
 template<bool (*CharEqual)(char_t left, char_t right)>
-struct __NativeStr_Reverse
+struct __MCNativeStr_Reverse
 {
     static inline size_t CharScan(const char_t *p_haystack_chars,
                                   size_t p_haystack_length,
@@ -578,7 +578,7 @@ struct __NativeStr_Reverse
         size_t t_offset;
         while(t_char_offset > 0)
         {
-            if (__NativeStr_Equal<CharEqual>(p_haystack_chars + t_char_offset - 1,
+            if (__MCNativeStr_Equal<CharEqual>(p_haystack_chars + t_char_offset - 1,
                                              p_needle_length,
                                              p_needle_chars,
                                              p_needle_length))
@@ -610,77 +610,77 @@ struct __NativeStr_Reverse
 #define __NATIVEOP_PREFOLD_LIMIT 32
 
 // Returns true if the given string options require folded comparison.
-static inline bool __NativeOp_IsFolded(MCStringOptions p_options)
+static inline bool __MCNativeOp_IsFolded(MCStringOptions p_options)
 {
     return p_options >= kMCStringOptionCompareCaseless;
 }
 
 // Compare the two strings for equality, taking into account the given options.
-static bool __NativeOp_IsEqualTo(const char_t *p_left_chars,
-                                 size_t p_left_length,
-                                 const char_t *p_right_chars,
-                                 size_t p_right_length,
-                                 MCStringOptions p_options)
+static bool __MCNativeOp_IsEqualTo(const char_t *p_left_chars,
+                                   size_t p_left_length,
+                                   const char_t *p_right_chars,
+                                   size_t p_right_length,
+                                   MCStringOptions p_options)
 {
-    if (__NativeOp_IsFolded(p_options))
-        return __NativeStr_Equal<__NativeChar_Equal_Folded>(p_left_chars,
+    if (__MCNativeOp_IsFolded(p_options))
+        return __MCNativeStr_Equal<__MCNativeChar_Equal_Folded>(p_left_chars,
                                                             p_left_length,
                                                             p_right_chars,
                                                             p_right_length);
     
-    return __NativeStr_Equal<__NativeChar_Equal_Unfolded>(p_left_chars,
+    return __MCNativeStr_Equal<__MCNativeChar_Equal_Unfolded>(p_left_chars,
                                                           p_left_length,
                                                           p_right_chars,
                                                           p_right_length);
 }
 
 // Compare the two strings, taking into account the given options.
-static ssize_t __NativeOp_CompareTo(const char_t *p_left_chars,
-                                    size_t p_left_length,
-                                    const char_t *p_right_chars,
-                                    size_t p_right_length,
-                                    MCStringOptions p_options)
+static ssize_t __MCNativeOp_CompareTo(const char_t *p_left_chars,
+                                      size_t p_left_length,
+                                      const char_t *p_right_chars,
+                                      size_t p_right_length,
+                                      MCStringOptions p_options)
 {
-    if (__NativeOp_IsFolded(p_options))
-        return __NativeStr_Compare<__NativeChar_Compare_Folded>(p_left_chars,
+    if (__MCNativeOp_IsFolded(p_options))
+        return __MCNativeStr_Compare<__MCNativeChar_Compare_Folded>(p_left_chars,
                                                                 p_left_length,
                                                                 p_right_chars,
                                                                 p_right_length);
     
-    return __NativeStr_Compare<__NativeChar_Compare_Unfolded>(p_left_chars,
+    return __MCNativeStr_Compare<__MCNativeChar_Compare_Unfolded>(p_left_chars,
                                                               p_left_length,
                                                               p_right_chars,
                                                               p_right_length);
 }
 
 // Hash the given string, taking into account the given options.
-static hash_t __NativeOp_Hash(const char_t *p_chars,
-                              size_t p_char_count,
-                              MCStringOptions p_options)
+static hash_t __MCNativeOp_Hash(const char_t *p_chars,
+                                size_t p_char_count,
+                                MCStringOptions p_options)
 {
-    if (__NativeOp_IsFolded(p_options))
-        return __NativeStr_Hash<__NativeChar_Fold>(p_chars,
+    if (__MCNativeOp_IsFolded(p_options))
+        return __MCNativeStr_Hash<__MCNativeChar_Fold>(p_chars,
                                                    p_char_count);
 
-    return __NativeStr_Hash<__NativeChar_NoFold>(p_chars,
+    return __MCNativeStr_Hash<__MCNativeChar_NoFold>(p_chars,
                                               p_char_count);
 }
 
 // Return the length of maximum shared prefix of the two strings, taking into
 // account the given options.
-static size_t __NativeOp_SharedPrefix(const char_t *p_left_chars,
-                                      size_t p_left_length,
-                                      const char_t *p_right_chars,
-                                      size_t p_right_length,
-                                      MCStringOptions p_options)
+static size_t __MCNativeOp_SharedPrefix(const char_t *p_left_chars,
+                                        size_t p_left_length,
+                                        const char_t *p_right_chars,
+                                        size_t p_right_length,
+                                        MCStringOptions p_options)
 {
-    if (__NativeOp_IsFolded(p_options))
-        return __NativeStr_Prefix<__NativeChar_Equal_Folded>(p_left_chars,
+    if (__MCNativeOp_IsFolded(p_options))
+        return __MCNativeStr_Prefix<__MCNativeChar_Equal_Folded>(p_left_chars,
                                                              p_left_length,
                                                              p_right_chars,
                                                              p_right_length);
     
-    return __NativeStr_Prefix<__NativeChar_Equal_Unfolded>(p_left_chars,
+    return __MCNativeStr_Prefix<__MCNativeChar_Equal_Unfolded>(p_left_chars,
                                                            p_left_length,
                                                            p_right_chars,
                                                            p_right_length);
@@ -688,19 +688,19 @@ static size_t __NativeOp_SharedPrefix(const char_t *p_left_chars,
 
 // Return the length of maximum shared suffix of the two strings, taking into
 // account the given options.
-static size_t __NativeOp_SharedSuffix(const char_t *p_left_chars,
-                                      size_t p_left_length,
-                                      const char_t *p_right_chars,
-                                      size_t p_right_length,
-                                      MCStringOptions p_options)
+static size_t __MCNativeOp_SharedSuffix(const char_t *p_left_chars,
+                                        size_t p_left_length,
+                                        const char_t *p_right_chars,
+                                        size_t p_right_length,
+                                        MCStringOptions p_options)
 {
-    if (__NativeOp_IsFolded(p_options))
-        return __NativeStr_Suffix<__NativeChar_Equal_Folded>(p_left_chars,
+    if (__MCNativeOp_IsFolded(p_options))
+        return __MCNativeStr_Suffix<__MCNativeChar_Equal_Folded>(p_left_chars,
                                                              p_left_length,
                                                              p_right_chars,
                                                              p_right_length);
     
-    return __NativeStr_Suffix<__NativeChar_Equal_Unfolded>(p_left_chars,
+    return __MCNativeStr_Suffix<__MCNativeChar_Equal_Unfolded>(p_left_chars,
                                                            p_left_length,
                                                            p_right_chars,
                                                            p_right_length);
@@ -709,24 +709,24 @@ static size_t __NativeOp_SharedSuffix(const char_t *p_left_chars,
 // Perform the appropriate direction 'scan' operation with the given parameters.
 // The direction is determined by the classed used for 'Actions'.
 template<template<bool (*CharEqual)(char_t left, char_t right)> class Actions>
-static size_t __NativeOp_Scan(const char_t *p_haystack_chars,
-                              size_t p_haystack_length,
-                              const char_t *p_needle_chars,
-                              size_t p_needle_length,
-                              size_t p_max_count,
-                              MCStringOptions p_options,
-                              size_t *r_offset)
+static size_t __MCNativeOp_Scan(const char_t *p_haystack_chars,
+                                size_t p_haystack_length,
+                                const char_t *p_needle_chars,
+                                size_t p_needle_length,
+                                size_t p_max_count,
+                                MCStringOptions p_options,
+                                size_t *r_offset)
 {
     if (p_needle_length > p_haystack_length)
         return 0;
     
     if (p_needle_length == 1)
     {
-        if (__NativeOp_IsFolded(p_options))
+        if (__MCNativeOp_IsFolded(p_options))
         {
             char_t t_folded_needle_char;
-            if (__NativeChar_CheckedFold(p_needle_chars[0], t_folded_needle_char))
-                return Actions<__NativeChar_Equal_Prefolded>::CharScan
+            if (__MCNativeChar_CheckedFold(p_needle_chars[0], t_folded_needle_char))
+                return Actions<__MCNativeChar_Equal_Prefolded>::CharScan
                                     (p_haystack_chars,
                                      p_haystack_length,
                                      t_folded_needle_char,
@@ -734,7 +734,7 @@ static size_t __NativeOp_Scan(const char_t *p_haystack_chars,
                                      r_offset);
         }
         
-        return Actions<__NativeChar_Equal_Unfolded>::CharScan
+        return Actions<__MCNativeChar_Equal_Unfolded>::CharScan
                             (p_haystack_chars,
                              p_haystack_length,
                              p_needle_chars[0],
@@ -742,13 +742,13 @@ static size_t __NativeOp_Scan(const char_t *p_haystack_chars,
                              r_offset);
     }
     
-    if (__NativeOp_IsFolded(p_options))
+    if (__MCNativeOp_IsFolded(p_options))
     {
         if (p_needle_length < __NATIVEOP_PREFOLD_LIMIT)
         {
             char_t t_folded_needle[__NATIVEOP_PREFOLD_LIMIT];
-            if (__NativeStr_CheckedFold(p_needle_chars, p_needle_length, t_folded_needle))
-                return Actions<__NativeChar_Equal_Prefolded>::Scan
+            if (__MCNativeStr_CheckedFold(p_needle_chars, p_needle_length, t_folded_needle))
+                return Actions<__MCNativeChar_Equal_Prefolded>::Scan
                             (p_haystack_chars,
                              p_haystack_length,
                              t_folded_needle,
@@ -758,7 +758,7 @@ static size_t __NativeOp_Scan(const char_t *p_haystack_chars,
         }
         else
         {
-            return Actions<__NativeChar_Equal_Folded>::Scan
+            return Actions<__MCNativeChar_Equal_Folded>::Scan
                         (p_haystack_chars,
                          p_haystack_length,
                          p_needle_chars,
@@ -768,7 +768,7 @@ static size_t __NativeOp_Scan(const char_t *p_haystack_chars,
         }
     }
     
-    return Actions<__NativeChar_Equal_Unfolded>::Scan
+    return Actions<__MCNativeChar_Equal_Unfolded>::Scan
                 (p_haystack_chars,
                  p_haystack_length,
                  p_needle_chars,
@@ -777,101 +777,117 @@ static size_t __NativeOp_Scan(const char_t *p_haystack_chars,
                  r_offset);
 }
 
-#define __NativeOp_ForwardScan __NativeOp_Scan<__NativeStr_Forward>
-#define __NativeOp_ReverseScan __NativeOp_Scan<__NativeStr_Reverse>
+#define __MCNativeOp_ForwardScan __MCNativeOp_Scan<__MCNativeStr_Forward>
+#define __MCNativeOp_ReverseScan __MCNativeOp_Scan<__MCNativeStr_Reverse>
 
 // Search forward for needle in haystack, using the given options.
 // If needle is found, then its offset is returned and the result is true.
-static bool __NativeOp_FirstIndexOf(const char_t *p_haystack_chars,
-                                    size_t p_haystack_length,
-                                    const char_t *p_needle_chars,
-                                    size_t p_needle_length,
-                                    MCStringOptions p_options,
-                                    size_t& r_offset)
+static bool __MCNativeOp_FirstIndexOf(const char_t *p_haystack_chars,
+                                      size_t p_haystack_length,
+                                      const char_t *p_needle_chars,
+                                      size_t p_needle_length,
+                                      MCStringOptions p_options,
+                                      size_t& r_offset)
 {
-    return __NativeOp_ForwardScan(p_haystack_chars,
-                                  p_haystack_length,
-                                  p_needle_chars,
-                                  p_needle_length,
-                                  1,
-                                  p_options,
-                                  &r_offset) == 1;
+    return __MCNativeOp_ForwardScan(p_haystack_chars,
+                                    p_haystack_length,
+                                    p_needle_chars,
+                                    p_needle_length,
+                                    1,
+                                    p_options,
+                                    &r_offset) == 1;
 }
 
 // Search backward for needle in haystack, using the given options.
 // If needle is found, then its offset is returned and the result is true.
-static bool __NativeOp_LastIndexOf(const char_t *p_haystack_chars,
-                                   size_t p_haystack_length,
-                                   const char_t *p_needle_chars,
-                                   size_t p_needle_length,
-                                   MCStringOptions p_options,
-                                   size_t& r_offset)
+static bool __MCNativeOp_LastIndexOf(const char_t *p_haystack_chars,
+                                     size_t p_haystack_length,
+                                     const char_t *p_needle_chars,
+                                     size_t p_needle_length,
+                                     MCStringOptions p_options,
+                                     size_t& r_offset)
 {
-    return __NativeOp_ReverseScan(p_haystack_chars,
-                                  p_haystack_length,
-                                  p_needle_chars,
-                                  p_needle_length,
-                                  1,
-                                  p_options,
-                                  &r_offset) == 1;
+    return __MCNativeOp_ReverseScan(p_haystack_chars,
+                                    p_haystack_length,
+                                    p_needle_chars,
+                                    p_needle_length,
+                                    1,
+                                    p_options,
+                                    &r_offset) == 1;
 }
 
 // Skips count occurances of needle in haystack, using the given options.
 // If the specified number of occurances are found then true is returned and
 // the offset of the last one is passed back.
-static bool __NativeOp_Skip(const char_t *p_haystack_chars,
-                            size_t p_haystack_length,
-                            const char_t *p_needle_chars,
-                            size_t p_needle_length,
-                            size_t p_count,
-                            MCStringOptions p_options,
-                            size_t *r_last_offset)
+static bool __MCNativeOp_Skip(const char_t *p_haystack_chars,
+                              size_t p_haystack_length,
+                              const char_t *p_needle_chars,
+                              size_t p_needle_length,
+                              size_t p_count,
+                              MCStringOptions p_options,
+                              size_t *r_last_offset)
 {
-    return __NativeOp_ForwardScan(p_haystack_chars,
-                                  p_haystack_length,
-                                  p_needle_chars,
-                                  p_needle_length,
-                                  p_count,
-                                  p_options,
-                                  r_last_offset) == p_count;
+    return __MCNativeOp_ForwardScan(p_haystack_chars,
+                                    p_haystack_length,
+                                    p_needle_chars,
+                                    p_needle_length,
+                                    p_count,
+                                    p_options,
+                                    r_last_offset) == p_count;
 }
 
 // Return the number of occurances of needle in haystack, using the given
 // options. The offset of the last found occurance is returned, if any.
-static size_t __NativeOp_Count(const char_t *p_haystack_chars,
-                               size_t p_haystack_length,
-                               const char_t *p_needle_chars,
-                               size_t p_needle_length,
-                               MCStringOptions p_options,
-                               size_t *r_last_offset)
+static size_t __MCNativeOp_Count(const char_t *p_haystack_chars,
+                                 size_t p_haystack_length,
+                                 const char_t *p_needle_chars,
+                                 size_t p_needle_length,
+                                 MCStringOptions p_options,
+                                 size_t *r_last_offset)
 {
-    return __NativeOp_ForwardScan(p_haystack_chars,
-                                  p_haystack_length,
-                                  p_needle_chars,
-                                  p_needle_length,
-                                  0,
-                                  p_options,
-                                  r_last_offset);
+    return __MCNativeOp_ForwardScan(p_haystack_chars,
+                                    p_haystack_length,
+                                    p_needle_chars,
+                                    p_needle_length,
+                                    0,
+                                    p_options,
+                                    r_last_offset);
 }
 
 // Return true if haystack contains needle, using the given options.
-static bool __NativeOp_Contains(const char_t *p_haystack_chars,
-                                size_t p_haystack_length,
-                                const char_t *p_needle_chars,
-                                size_t p_needle_length,
-                                MCStringOptions p_options)
+static bool __MCNativeOp_Contains(const char_t *p_haystack_chars,
+                                  size_t p_haystack_length,
+                                  const char_t *p_needle_chars,
+                                  size_t p_needle_length,
+                                  MCStringOptions p_options)
 {
-    return __NativeOp_ForwardScan(p_haystack_chars,
-                                  p_haystack_length,
-                                  p_needle_chars,
-                                  p_needle_length,
-                                  1,
-                                  p_options,
-                                  nil) == 1;
+    return __MCNativeOp_ForwardScan(p_haystack_chars,
+                                    p_haystack_length,
+                                    p_needle_chars,
+                                    p_needle_length,
+                                    1,
+                                    p_options,
+                                    nil) == 1;
 }
 
 // Return true if haystack begins with needle, using the given options.
-static bool __NativeOp_BeginsWith(const char_t *p_haystack_chars,
+static bool __MCNativeOp_BeginsWith(const char_t *p_haystack_chars,
+                                    size_t p_haystack_length,
+                                    const char_t *p_needle_chars,
+                                    size_t p_needle_length,
+                                    MCStringOptions p_options)
+{
+    if (p_needle_length > p_haystack_length)
+        return false;
+    return __MCNativeOp_IsEqualTo(p_haystack_chars,
+                                  p_needle_length,
+                                  p_needle_chars,
+                                  p_needle_length,
+                                  p_options);
+}
+
+// Return true if haystack ends with needle, using the given options.
+static bool __MCNativeOp_EndsWith(const char_t *p_haystack_chars,
                                   size_t p_haystack_length,
                                   const char_t *p_needle_chars,
                                   size_t p_needle_length,
@@ -879,27 +895,11 @@ static bool __NativeOp_BeginsWith(const char_t *p_haystack_chars,
 {
     if (p_needle_length > p_haystack_length)
         return false;
-    return __NativeOp_IsEqualTo(p_haystack_chars,
-                                p_needle_length,
-                                p_needle_chars,
-                                p_needle_length,
-                                p_options);
-}
-
-// Return true if haystack ends with needle, using the given options.
-static bool __NativeOp_EndsWith(const char_t *p_haystack_chars,
-                                size_t p_haystack_length,
-                                const char_t *p_needle_chars,
-                                size_t p_needle_length,
-                                MCStringOptions p_options)
-{
-    if (p_needle_length > p_haystack_length)
-        return false;
-    return __NativeOp_IsEqualTo(p_haystack_chars + p_haystack_length - p_needle_length,
-                                p_needle_length,
-                                p_needle_chars,
-                                p_needle_length,
-                                p_options);
+    return __MCNativeOp_IsEqualTo(p_haystack_chars + p_haystack_length - p_needle_length,
+                                  p_needle_length,
+                                  p_needle_chars,
+                                  p_needle_length,
+                                  p_options);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -907,17 +907,17 @@ static bool __NativeOp_EndsWith(const char_t *p_haystack_chars,
 // The Core template (parameterized by char equality comparator) for the
 // optimized DelimiterOffset function when delimiter is a single char.
 template<bool (*DelimiterCharEqual)(char_t left, char_t right)>
-static bool __NativeOp_ForwardCharDelimitedOffset_Core(const char_t *p_haystack_chars,
-                                                    size_t p_haystack_length,
-                                                    const char_t *p_needle_chars,
-                                                    size_t p_needle_length,
-                                                    char_t p_delimiter_char,
-                                                    size_t p_skip,
-                                                    MCStringOptions p_options,
-                                                    size_t& r_index,
-                                                    size_t *r_found_offset,
-                                                    size_t *r_before_offset,
-                                                    size_t *r_after_offset)
+static bool __MCNativeOp_ForwardCharDelimitedOffset_Core(const char_t *p_haystack_chars,
+                                                         size_t p_haystack_length,
+                                                         const char_t *p_needle_chars,
+                                                         size_t p_needle_length,
+                                                         char_t p_delimiter_char,
+                                                         size_t p_skip,
+                                                         MCStringOptions p_options,
+                                                         size_t& r_index,
+                                                         size_t *r_found_offset,
+                                                         size_t *r_before_offset,
+                                                         size_t *r_after_offset)
 {
     size_t t_index;
     t_index = 0;
@@ -938,12 +938,12 @@ static bool __NativeOp_ForwardCharDelimitedOffset_Core(const char_t *p_haystack_
     }
     
     size_t t_start_found;
-    if (!__NativeOp_FirstIndexOf(p_haystack_chars + t_offset,
-                                 p_haystack_length - t_offset,
-                                 p_needle_chars,
-                                 p_needle_length,
-                                 p_options,
-                                 t_start_found))
+    if (!__MCNativeOp_FirstIndexOf(p_haystack_chars + t_offset,
+                                   p_haystack_length - t_offset,
+                                   p_needle_chars,
+                                   p_needle_length,
+                                   p_options,
+                                   t_start_found))
         return false;
     
     t_start_found += t_offset;
@@ -986,22 +986,22 @@ static bool __NativeOp_ForwardCharDelimitedOffset_Core(const char_t *p_haystack_
 // haystack, before_offset the offset of the char after the previous found
 // delimiter and after_offset the offset of the delimiter after the found
 // string.
-static bool __NativeOp_ForwardCharDelimitedOffset(const char_t *p_haystack_chars,
-                                                  size_t p_haystack_length,
-                                                  const char_t *p_needle_chars,
-                                                  size_t p_needle_length,
-                                                  char_t p_delimiter_char,
-                                                  size_t p_skip,
-                                                  MCStringOptions p_options,
-                                                  size_t& r_index,
-                                                  size_t *r_found_offset,
-                                                  size_t *r_before_offset,
-                                                  size_t *r_after_offset)
+static bool __MCNativeOp_ForwardCharDelimitedOffset(const char_t *p_haystack_chars,
+                                                    size_t p_haystack_length,
+                                                    const char_t *p_needle_chars,
+                                                    size_t p_needle_length,
+                                                    char_t p_delimiter_char,
+                                                    size_t p_skip,
+                                                    MCStringOptions p_options,
+                                                    size_t& r_index,
+                                                    size_t *r_found_offset,
+                                                    size_t *r_before_offset,
+                                                    size_t *r_after_offset)
 {
-    if (__NativeOp_IsFolded(p_options))
+    if (__MCNativeOp_IsFolded(p_options))
     {
-        if (__NativeChar_CheckedFold(p_delimiter_char, p_delimiter_char))
-            return __NativeOp_ForwardCharDelimitedOffset_Core<__NativeChar_Equal_Prefolded>
+        if (__MCNativeChar_CheckedFold(p_delimiter_char, p_delimiter_char))
+            return __MCNativeOp_ForwardCharDelimitedOffset_Core<__MCNativeChar_Equal_Prefolded>
                         (p_haystack_chars,
                          p_haystack_length,
                          p_needle_chars,
@@ -1015,7 +1015,7 @@ static bool __NativeOp_ForwardCharDelimitedOffset(const char_t *p_haystack_chars
                          r_after_offset);
     }
     
-    return __NativeOp_ForwardCharDelimitedOffset_Core<__NativeChar_Equal_Unfolded>
+    return __MCNativeOp_ForwardCharDelimitedOffset_Core<__MCNativeChar_Equal_Unfolded>
                 (p_haystack_chars,
                  p_haystack_length,
                  p_needle_chars,
@@ -1033,24 +1033,24 @@ static bool __NativeOp_ForwardCharDelimitedOffset(const char_t *p_haystack_chars
 
 char_t MCNativeCharFold(char_t p_char)
 {
-    return __NativeChar_Fold(p_char);
+    return __MCNativeChar_Fold(p_char);
 }
 
 char_t MCNativeCharUppercase(char_t p_char)
 {
-    return __NativeChar_Uppercase(p_char);
+    return __MCNativeChar_Uppercase(p_char);
 }
 
 void MCNativeCharsLowercase(char_t *p_chars, uindex_t p_char_count)
 {
 	for(uindex_t i = 0; i < p_char_count; i++)
-		p_chars[i] = __NativeChar_Lowercase(p_chars[i]);
+		p_chars[i] = __MCNativeChar_Lowercase(p_chars[i]);
 }
 
 void MCNativeCharsUppercase(char_t *p_chars, uindex_t p_char_count)
 {
 	for(uindex_t i = 0; i < p_char_count; i++)
-		p_chars[i] = __NativeChar_Lowercase(p_chars[i]);
+		p_chars[i] = __MCNativeChar_Lowercase(p_chars[i]);
 }
 
 bool MCNativeCharsFormatV(char_t*& r_string, uindex_t& r_size, const char *p_format, va_list p_args)

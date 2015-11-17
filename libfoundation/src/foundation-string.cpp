@@ -2482,7 +2482,9 @@ hash_t MCStringHash(MCStringRef self, MCStringOptions p_options)
         self = self -> string;
     
     if (__MCStringIsNative(self))
-        return __NativeOp_Hash(self -> native_chars, self -> char_count, p_options);
+        return __MCNativeOp_Hash(self -> native_chars,
+                                 self -> char_count,
+                                 p_options);
     
 	return MCUnicodeHash(self -> chars, self -> char_count, (MCUnicodeCompareOption)p_options);
 }
@@ -2514,11 +2516,11 @@ bool MCStringIsEqualTo(MCStringRef self, MCStringRef p_other, MCStringOptions p_
     
     if (self_native && other_native)
     {
-        return __NativeOp_IsEqualTo(self -> native_chars,
-                                    self -> char_count,
-                                    p_other -> native_chars,
-                                    p_other -> char_count,
-                                    p_options);
+        return __MCNativeOp_IsEqualTo(self -> native_chars,
+                                      self -> char_count,
+                                      p_other -> native_chars,
+                                      p_other -> char_count,
+                                      p_options);
     }
 
     return MCUnicodeCompare(self -> chars, self -> char_count, self_native, p_other -> chars, p_other -> char_count, other_native, (MCUnicodeCompareOption)p_options) == 0;
@@ -2548,11 +2550,11 @@ bool MCStringSubstringIsEqualTo(MCStringRef self, MCRange p_sub, MCStringRef p_o
     if (self_native)
     {
         if (__MCStringIsNative(p_other))
-            return __NativeOp_IsEqualTo(self -> native_chars + p_sub . offset,
-                                        p_sub . length,
-                                        p_other -> native_chars,
-                                        p_other -> char_count,
-                                        p_options);
+            return __MCNativeOp_IsEqualTo(self -> native_chars + p_sub . offset,
+                                          p_sub . length,
+                                          p_other -> native_chars,
+                                          p_other -> char_count,
+                                          p_options);
         
         if (__MCStringCantBeEqualToNative(p_other, p_options))
             return false;
@@ -2584,11 +2586,11 @@ bool MCStringSubstringIsEqualToSubstring(MCStringRef self, MCRange p_sub, MCStri
     bool other_native = __MCStringIsNative(p_other);
     if (self_native && other_native)
     {
-        return __NativeOp_IsEqualTo(self -> native_chars + p_sub . offset,
-                                    p_sub . length,
-                                    p_other -> native_chars + p_other_sub . offset,
-                                    p_other_sub . length,
-                                    p_options);
+        return __MCNativeOp_IsEqualTo(self -> native_chars + p_sub . offset,
+                                      p_sub . length,
+                                      p_other -> native_chars + p_other_sub . offset,
+                                      p_other_sub . length,
+                                      p_options);
     }
     
     const void *self_chars, *other_chars;
@@ -2616,11 +2618,11 @@ bool MCStringIsEqualToNativeChars(MCStringRef self, const char_t *p_chars, uinde
         if (__MCStringIsIndirect(self))
             self = self -> string;
         
-        return __NativeOp_IsEqualTo(self -> native_chars,
-                                    self -> char_count,
-                                    p_chars,
-                                    p_char_count,
-                                    p_options);
+        return __MCNativeOp_IsEqualTo(self -> native_chars,
+                                      self -> char_count,
+                                      p_chars,
+                                      p_char_count,
+                                      p_options);
     }
     
     if (MCStringCantBeEqualToNative(self, p_options))
@@ -2646,11 +2648,11 @@ compare_t MCStringCompareTo(MCStringRef self, MCStringRef p_other, MCStringOptio
     if (__MCStringIsNative(self) &&
         __MCStringIsNative(p_other))
     {
-        return __NativeOp_CompareTo(self -> native_chars,
-                                    self -> char_count,
-                                    p_other -> native_chars,
-                                    p_other -> char_count,
-                                    p_options);
+        return __MCNativeOp_CompareTo(self -> native_chars,
+                                      self -> char_count,
+                                      p_other -> native_chars,
+                                      p_other -> char_count,
+                                      p_options);
     }
 
     return MCUnicodeCompare(self -> chars, self -> char_count, __MCStringIsNative(self), p_other -> chars, p_other -> char_count, __MCStringIsNative(p_other), (MCUnicodeCompareOption)p_options);
@@ -2672,11 +2674,11 @@ bool MCStringBeginsWith(MCStringRef self, MCStringRef p_prefix, MCStringOptions 
     {
         if (__MCStringIsNative(p_prefix))
         {
-            return __NativeOp_BeginsWith(self -> native_chars,
-                                         self -> char_count,
-                                         p_prefix -> native_chars,
-                                         p_prefix -> char_count,
-                                         p_options);
+            return __MCNativeOp_BeginsWith(self -> native_chars,
+                                           self -> char_count,
+                                           p_prefix -> native_chars,
+                                           p_prefix -> char_count,
+                                           p_options);
         }
         
         if (__MCStringCantBeEqualToNative(p_prefix, p_options))
@@ -2705,11 +2707,11 @@ bool MCStringSharedPrefix(MCStringRef self, MCRange p_range, MCStringRef p_prefi
     {
         if (__MCStringIsNative(p_prefix))
         {
-            r_self_match_length = __NativeOp_SharedPrefix(self -> native_chars + p_range . offset,
-                                                          p_range . length,
-                                                          p_prefix -> native_chars,
-                                                          p_prefix -> char_count,
-                                                          p_options);
+            r_self_match_length = __MCNativeOp_SharedPrefix(self -> native_chars + p_range . offset,
+                                                            p_range . length,
+                                                            p_prefix -> native_chars,
+                                                            p_prefix -> char_count,
+                                                            p_options);
 
             return r_self_match_length == p_prefix -> char_count;
         }
@@ -2741,11 +2743,11 @@ bool MCStringBeginsWithCString(MCStringRef self, const char_t *p_prefix_cstring,
     
     if (__MCStringIsNative(self))
     {
-        return __NativeOp_BeginsWith(self -> native_chars,
-                                     self -> char_count,
-                                     p_prefix_cstring,
-                                     strlen((const char *)p_prefix_cstring),
-                                     p_options);
+        return __MCNativeOp_BeginsWith(self -> native_chars,
+                                       self -> char_count,
+                                       p_prefix_cstring,
+                                       strlen((const char *)p_prefix_cstring),
+                                       p_options);
     }
     
 	MCAutoStringRef t_string;
@@ -2769,11 +2771,11 @@ bool MCStringEndsWith(MCStringRef self, MCStringRef p_suffix, MCStringOptions p_
     {
         if (__MCStringIsNative(p_suffix))
         {
-            return __NativeOp_EndsWith(self -> native_chars,
-                                       self -> char_count,
-                                       p_suffix -> native_chars,
-                                       p_suffix -> char_count,
-                                       p_options);
+            return __MCNativeOp_EndsWith(self -> native_chars,
+                                         self -> char_count,
+                                         p_suffix -> native_chars,
+                                         p_suffix -> char_count,
+                                         p_options);
         }
         
         if (__MCStringCantBeEqualToNative(p_suffix, p_options))
@@ -2802,11 +2804,11 @@ bool MCStringSharedSuffix(MCStringRef self, MCRange p_range, MCStringRef p_suffi
     {
         if (__MCStringIsNative(p_suffix))
         {
-            r_self_match_length = __NativeOp_SharedSuffix(self -> native_chars + p_range . offset,
-                                                          p_range . length,
-                                                          p_suffix -> native_chars,
-                                                          p_suffix -> char_count,
-                                                          p_options);
+            r_self_match_length = __MCNativeOp_SharedSuffix(self -> native_chars + p_range . offset,
+                                                            p_range . length,
+                                                            p_suffix -> native_chars,
+                                                            p_suffix -> char_count,
+                                                            p_options);
             
             return r_self_match_length == p_suffix -> char_count;
         }
@@ -2838,11 +2840,11 @@ bool MCStringEndsWithCString(MCStringRef self, const char_t *p_suffix_cstring, M
     
     if (__MCStringIsNative(self))
     {
-        return __NativeOp_EndsWith(self -> native_chars,
-                                   self -> char_count,
-                                   p_suffix_cstring,
-                                   strlen((const char *)p_suffix_cstring),
-                                   p_options);
+        return __MCNativeOp_EndsWith(self -> native_chars,
+                                     self -> char_count,
+                                     p_suffix_cstring,
+                                     strlen((const char *)p_suffix_cstring),
+                                     p_options);
     }
     
 	MCAutoStringRef t_string;
@@ -2869,11 +2871,11 @@ bool MCStringContains(MCStringRef self, MCStringRef p_needle, MCStringOptions p_
     {
         if (__MCStringIsNative(p_needle))
         {
-            return __NativeOp_Contains(self -> native_chars,
-                                       self -> char_count,
-                                       p_needle -> native_chars,
-                                       p_needle -> char_count,
-                                       p_options);
+            return __MCNativeOp_Contains(self -> native_chars,
+                                         self -> char_count,
+                                         p_needle -> native_chars,
+                                         p_needle -> char_count,
+                                         p_options);
         }
         
         if (__MCStringCantBeEqualToNative(p_needle, p_options))
@@ -2907,11 +2909,11 @@ bool MCStringSubstringContains(MCStringRef self, MCRange p_range, MCStringRef p_
     {
         if (__MCStringIsNative(p_needle))
         {
-            return __NativeOp_Contains(self -> native_chars + p_range . offset,
-                                       p_range . length,
-                                       p_needle -> native_chars,
-                                       p_needle -> char_count,
-                                       p_options);
+            return __MCNativeOp_Contains(self -> native_chars + p_range . offset,
+                                         p_range . length,
+                                         p_needle -> native_chars,
+                                         p_needle -> char_count,
+                                         p_options);
         }
 
         if (__MCStringCantBeEqualToNative(p_needle, p_options))
@@ -2954,12 +2956,12 @@ bool MCStringFirstIndexOfStringInRange(MCStringRef self, MCStringRef p_needle, M
         if (__MCStringIsNative(p_needle))
         {
             size_t t_relative_offset;
-            if (!__NativeOp_FirstIndexOf(self -> native_chars + p_range . offset,
-                                         p_range . length,
-                                         p_needle -> native_chars,
-                                         p_needle -> char_count,
-                                         p_options,
-                                         t_relative_offset))
+            if (!__MCNativeOp_FirstIndexOf(self -> native_chars + p_range . offset,
+                                           p_range . length,
+                                           p_needle -> native_chars,
+                                           p_needle -> char_count,
+                                           p_options,
+                                           t_relative_offset))
                 return false;
             
             r_offset = p_range . offset + t_relative_offset;
@@ -3011,12 +3013,12 @@ bool MCStringFirstIndexOfCharInRange(MCStringRef self, codepoint_t p_needle, MCR
             return false;
 
         size_t t_relative_offset;
-        if (!__NativeOp_FirstIndexOf(self -> native_chars + p_range . offset,
-                                     p_range . length,
-                                     &t_mapped_needle,
-                                     1,
-                                     p_options,
-                                     t_relative_offset))
+        if (!__MCNativeOp_FirstIndexOf(self -> native_chars + p_range . offset,
+                                       p_range . length,
+                                       &t_mapped_needle,
+                                       1,
+                                       p_options,
+                                       t_relative_offset))
             return false;
         
         r_offset = p_range . offset + t_relative_offset;
@@ -3058,12 +3060,12 @@ bool MCStringLastIndexOfStringInRange(MCStringRef self, MCStringRef p_needle, MC
         if (__MCStringIsNative(p_needle))
         {
             size_t t_relative_offset;
-            if (!__NativeOp_LastIndexOf(self -> native_chars + p_range . offset,
-                                        p_range . length,
-                                        p_needle -> native_chars,
-                                        p_needle -> char_count,
-                                        p_options,
-                                        t_relative_offset))
+            if (!__MCNativeOp_LastIndexOf(self -> native_chars + p_range . offset,
+                                          p_range . length,
+                                          p_needle -> native_chars,
+                                          p_needle -> char_count,
+                                          p_options,
+                                          t_relative_offset))
                 return false;
             
             r_offset = p_range . offset + t_relative_offset;
@@ -3096,12 +3098,12 @@ bool MCStringLastIndexOfChar(MCStringRef self, codepoint_t p_needle, uindex_t p_
             return false;
         
         size_t t_relative_offset;
-        if (!__NativeOp_LastIndexOf(self -> native_chars,
-                                    p_before,
-                                    &t_mapped_needle,
-                                    1,
-                                    p_options,
-                                    t_relative_offset))
+        if (!__MCNativeOp_LastIndexOf(self -> native_chars,
+                                      p_before,
+                                      &t_mapped_needle,
+                                      1,
+                                      p_options,
+                                      t_relative_offset))
             return false;
         
         r_offset = (uindex_t)t_relative_offset;
@@ -3119,12 +3121,12 @@ static bool __MCStringFind(MCStringRef self, MCRange p_range, MCStringRef p_need
         if (__MCStringIsNative(p_needle))
         {
             size_t t_relative_offset;
-            if (!__NativeOp_FirstIndexOf(self -> native_chars + p_range . offset,
-                                         p_range . length,
-                                         p_needle -> native_chars,
-                                         p_needle -> char_count,
-                                         p_options,
-                                         t_relative_offset))
+            if (!__MCNativeOp_FirstIndexOf(self -> native_chars + p_range . offset,
+                                           p_range . length,
+                                           p_needle -> native_chars,
+                                           p_needle -> char_count,
+                                           p_options,
+                                           t_relative_offset))
                 return false;
             
             if (r_result != nil)
@@ -3238,12 +3240,12 @@ uindex_t MCStringCount(MCStringRef self, MCRange p_range, MCStringRef p_needle, 
     if (MCStringIsNative(self))
     {
         if (__MCStringIsNative(p_needle))
-            return __NativeOp_Count(self -> native_chars + p_range . offset,
-                                    p_range . length,
-                                    p_needle -> native_chars,
-                                    p_needle -> char_count,
-                                    p_options,
-                                    nil);
+            return __MCNativeOp_Count(self -> native_chars + p_range . offset,
+                                      p_range . length,
+                                      p_needle -> native_chars,
+                                      p_needle -> char_count,
+                                      p_options,
+                                      nil);
         
         if (__MCStringCantBeEqualToNative(p_needle, p_options))
             return 0;
@@ -3269,12 +3271,12 @@ uindex_t MCStringCountChar(MCStringRef self, MCRange p_range, codepoint_t p_need
             !MCUnicodeCharMapToNative((unichar_t)p_needle, t_mapped_needle))
             return 0;
         
-        return __NativeOp_Count(self -> native_chars + p_range . offset,
-                                p_range . length,
-                                &t_mapped_needle,
-                                1,
-                                p_options,
-                                nil);
+        return __MCNativeOp_Count(self -> native_chars + p_range . offset,
+                                  p_range . length,
+                                  &t_mapped_needle,
+                                  1,
+                                  p_options,
+                                  nil);
     }
     
 	return MCStringCountStrChars(self, p_range, &t_native_needle, 1, false, p_options);
@@ -3395,13 +3397,13 @@ static bool __MCStringSkip(MCStringRef self,
         __MCStringIsNative(p_needle))
     {
         size_t t_last_offset;
-        if (!__NativeOp_Skip(self -> native_chars + p_range . offset,
-                             p_range . length,
-                             p_needle -> native_chars,
-                             p_needle -> char_count,
-                             p_count,
-                             p_options,
-                             &t_last_offset))
+        if (!__MCNativeOp_Skip(self -> native_chars + p_range . offset,
+                               p_range . length,
+                               p_needle -> native_chars,
+                               p_needle -> char_count,
+                               p_count,
+                               p_options,
+                               &t_last_offset))
             return false;
         
         r_last . offset = p_range . offset + t_last_offset;
@@ -3450,12 +3452,12 @@ static uindex_t __MCStringCount(MCStringRef self,
     {
         size_t t_last_offset;
         size_t t_count;
-        t_count = __NativeOp_Count(self -> native_chars + p_range . offset,
-                                 p_range . length,
-                                 p_needle -> native_chars,
-                                 p_needle -> char_count,
-                                 p_options,
-                                 &t_last_offset);
+        t_count = __MCNativeOp_Count(self -> native_chars + p_range . offset,
+                                     p_range . length,
+                                     p_needle -> native_chars,
+                                     p_needle -> char_count,
+                                     p_options,
+                                     &t_last_offset);
         if (t_count > 0 &&
             r_last != nil)
         {
@@ -3623,17 +3625,17 @@ bool MCStringDelimitedOffset(MCStringRef self,
         __MCStringGetLength(p_delimiter) == 1)
     {
         size_t t_index, t_found, t_before, t_after;
-        if (!__NativeOp_ForwardCharDelimitedOffset(self -> native_chars + p_range . offset,
-                                                   p_range . length,
-                                                   p_needle -> native_chars,
-                                                   p_needle -> char_count,
-                                                   p_delimiter -> native_chars[0],
-                                                   p_skip,
-                                                   p_options,
-                                                   t_index,
-                                                   r_found != nil ? &t_found : nil,
-                                                   r_before != nil ? &t_before : nil,
-                                                   r_after != nil ? &t_after : nil))
+        if (!__MCNativeOp_ForwardCharDelimitedOffset(self -> native_chars + p_range . offset,
+                                                     p_range . length,
+                                                     p_needle -> native_chars,
+                                                     p_needle -> char_count,
+                                                     p_delimiter -> native_chars[0],
+                                                     p_skip,
+                                                     p_options,
+                                                     t_index,
+                                                     r_found != nil ? &t_found : nil,
+                                                     r_before != nil ? &t_before : nil,
+                                                     r_after != nil ? &t_after : nil))
             return false;
         
         r_index = t_index;
@@ -4589,7 +4591,7 @@ static void split_find_end_of_element_native(const char_t *sptr, const char_t *e
 	{
         // Compute the length of the shared prefix at the current offset.
 		size_t t_prefix_length;
-        t_prefix_length = __NativeOp_SharedPrefix(sptr,
+        t_prefix_length = __MCNativeOp_SharedPrefix(sptr,
                                                   (size_t)(eptr - sptr),
                                                   del,
                                                   p_del_length,
@@ -4611,7 +4613,7 @@ static void split_find_end_of_element_and_key_native(const char_t *sptr, const c
     {
         // Compute the length of the shared prefix at the current offset.
         uindex_t t_prefix_length;
-        t_prefix_length = __NativeOp_SharedPrefix(sptr,
+        t_prefix_length = __MCNativeOp_SharedPrefix(sptr,
                                                   (size_t)(eptr - sptr),
                                                   key,
                                                   p_key_length,
@@ -4624,7 +4626,7 @@ static void split_find_end_of_element_and_key_native(const char_t *sptr, const c
         
         if (sptr < eptr - p_del_length + 1)
         {
-            t_prefix_length = __NativeOp_SharedPrefix(sptr,
+            t_prefix_length = __MCNativeOp_SharedPrefix(sptr,
                                                       (size_t)(eptr - sptr),
                                                       del,
                                                       p_del_length,
@@ -4741,11 +4743,11 @@ bool MCStringFindAndReplaceChar(MCStringRef self, char_t p_pattern, char_t p_rep
 	else
 	{
 		char_t t_from;
-		t_from = __NativeChar_Fold(p_pattern);
+		t_from = __MCNativeChar_Fold(p_pattern);
         
 		// Now substitute pattern for replacement, taking making sure its a caseless compare.
 		for(uindex_t i = 0; i < self -> char_count; i++)
-			if (__NativeChar_Fold(self -> native_chars[i]) == t_from)
+			if (__MCNativeChar_Fold(self -> native_chars[i]) == t_from)
 				self -> native_chars[i] = p_replacement;
 	}
     
