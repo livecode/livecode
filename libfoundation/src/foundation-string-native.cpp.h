@@ -499,9 +499,9 @@ struct __MCNativeStr_Forward
         while(t_char_offset <= p_haystack_length)
         {
             if (__MCNativeStr_Equal<CharEqual>(p_haystack_chars + t_char_offset,
-                                             p_needle_length,
-                                             p_needle_chars,
-                                             p_needle_length))
+                                               p_needle_length,
+                                               p_needle_chars,
+                                               p_needle_length))
             {
                 t_offset = t_char_offset;
                 t_count += 1;
@@ -579,9 +579,9 @@ struct __MCNativeStr_Reverse
         while(t_char_offset > 0)
         {
             if (__MCNativeStr_Equal<CharEqual>(p_haystack_chars + t_char_offset - 1,
-                                             p_needle_length,
-                                             p_needle_chars,
-                                             p_needle_length))
+                                               p_needle_length,
+                                               p_needle_chars,
+                                               p_needle_length))
             {
                 t_offset = t_char_offset;
                 t_count += 1;
@@ -624,14 +624,14 @@ static bool __MCNativeOp_IsEqualTo(const char_t *p_left_chars,
 {
     if (__MCNativeOp_IsFolded(p_options))
         return __MCNativeStr_Equal<__MCNativeChar_Equal_Folded>(p_left_chars,
-                                                            p_left_length,
-                                                            p_right_chars,
-                                                            p_right_length);
+                                                                p_left_length,
+                                                                p_right_chars,
+                                                                p_right_length);
     
     return __MCNativeStr_Equal<__MCNativeChar_Equal_Unfolded>(p_left_chars,
-                                                          p_left_length,
-                                                          p_right_chars,
-                                                          p_right_length);
+                                                              p_left_length,
+                                                              p_right_chars,
+                                                              p_right_length);
 }
 
 // Compare the two strings, taking into account the given options.
@@ -643,14 +643,14 @@ static ssize_t __MCNativeOp_CompareTo(const char_t *p_left_chars,
 {
     if (__MCNativeOp_IsFolded(p_options))
         return __MCNativeStr_Compare<__MCNativeChar_Compare_Folded>(p_left_chars,
-                                                                p_left_length,
-                                                                p_right_chars,
-                                                                p_right_length);
+                                                                    p_left_length,
+                                                                    p_right_chars,
+                                                                    p_right_length);
     
     return __MCNativeStr_Compare<__MCNativeChar_Compare_Unfolded>(p_left_chars,
-                                                              p_left_length,
-                                                              p_right_chars,
-                                                              p_right_length);
+                                                                  p_left_length,
+                                                                  p_right_chars,
+                                                                  p_right_length);
 }
 
 // Hash the given string, taking into account the given options.
@@ -660,10 +660,10 @@ static hash_t __MCNativeOp_Hash(const char_t *p_chars,
 {
     if (__MCNativeOp_IsFolded(p_options))
         return __MCNativeStr_Hash<__MCNativeChar_Fold>(p_chars,
-                                                   p_char_count);
+                                                       p_char_count);
 
     return __MCNativeStr_Hash<__MCNativeChar_NoFold>(p_chars,
-                                              p_char_count);
+                                                     p_char_count);
 }
 
 // Return the length of maximum shared prefix of the two strings, taking into
@@ -676,14 +676,14 @@ static size_t __MCNativeOp_SharedPrefix(const char_t *p_left_chars,
 {
     if (__MCNativeOp_IsFolded(p_options))
         return __MCNativeStr_Prefix<__MCNativeChar_Equal_Folded>(p_left_chars,
-                                                             p_left_length,
-                                                             p_right_chars,
-                                                             p_right_length);
+                                                                 p_left_length,
+                                                                 p_right_chars,
+                                                                 p_right_length);
     
     return __MCNativeStr_Prefix<__MCNativeChar_Equal_Unfolded>(p_left_chars,
-                                                           p_left_length,
-                                                           p_right_chars,
-                                                           p_right_length);
+                                                               p_left_length,
+                                                               p_right_chars,
+                                                               p_right_length);
 }
 
 // Return the length of maximum shared suffix of the two strings, taking into
@@ -696,14 +696,14 @@ static size_t __MCNativeOp_SharedSuffix(const char_t *p_left_chars,
 {
     if (__MCNativeOp_IsFolded(p_options))
         return __MCNativeStr_Suffix<__MCNativeChar_Equal_Folded>(p_left_chars,
-                                                             p_left_length,
-                                                             p_right_chars,
-                                                             p_right_length);
+                                                                 p_left_length,
+                                                                 p_right_chars,
+                                                                 p_right_length);
     
     return __MCNativeStr_Suffix<__MCNativeChar_Equal_Unfolded>(p_left_chars,
-                                                           p_left_length,
-                                                           p_right_chars,
-                                                           p_right_length);
+                                                               p_left_length,
+                                                               p_right_chars,
+                                                               p_right_length);
 }
 
 // Perform the appropriate direction 'scan' operation with the given parameters.
