@@ -487,6 +487,9 @@ struct __MCNativeStr_Forward
                               size_t p_max_count,
                               size_t *r_offset)
     {
+        if (p_needle_length == 0)
+            return 0;
+        
         p_haystack_length -= p_needle_length;
         
         size_t t_count;
@@ -567,6 +570,9 @@ struct __MCNativeStr_Reverse
                               size_t p_max_count,
                               size_t *r_offset)
     {
+        if (p_needle_length == 0)
+            return 0;
+        
         p_haystack_length -= p_needle_length;
         
         size_t t_count;
@@ -879,6 +885,7 @@ static bool __MCNativeOp_BeginsWith(const char_t *p_haystack_chars,
 {
     if (p_needle_length > p_haystack_length)
         return false;
+    
     return __MCNativeOp_IsEqualTo(p_haystack_chars,
                                   p_needle_length,
                                   p_needle_chars,
@@ -895,6 +902,7 @@ static bool __MCNativeOp_EndsWith(const char_t *p_haystack_chars,
 {
     if (p_needle_length > p_haystack_length)
         return false;
+    
     return __MCNativeOp_IsEqualTo(p_haystack_chars + p_haystack_length - p_needle_length,
                                   p_needle_length,
                                   p_needle_chars,
@@ -919,6 +927,9 @@ static bool __MCNativeOp_ForwardCharDelimitedOffset_Core(const char_t *p_haystac
                                                          size_t *r_before_offset,
                                                          size_t *r_after_offset)
 {
+    if (p_needle_length == 0)
+        return false;
+    
     size_t t_index;
     t_index = 0;
     
