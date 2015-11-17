@@ -1,0 +1,27 @@
+Name: mobileControls
+
+Type: function
+
+Syntax: the mobileControls
+
+Syntax: mobileControls()
+
+Summary: Returns a list of all native mobile controls currently in existence.
+
+Synonyms: iphoneControls
+
+Introduced: 4.6
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+put mobileControls() into tControlList
+
+Returns: The <mobileControls> function returns a return-delimited list of control names or ids. Where a control has a name that is used, otherwise its id is used. Only controls created with the <mobileControlCreate> command are present in the list.
+
+Description:
+Use the <mobileControls> function to get a list of all native controls currently in existence created using <mobileControlCreate>.
+
+References: mobileControlDelete (command), mobileControlDo (command), mobileControlSet (command), mobileControlCreate (command), mobileControlGet (function), mobileControlTarget (function)

@@ -1,0 +1,36 @@
+Name: recordFormat
+
+Type: property
+
+Syntax: set the recordFormat to <fileFormat> 
+
+Summary: Specifies the file <format> for sound files recorded with the <record sound> <command>.
+
+Introduced: 2.0
+
+OS: mac,windows
+
+Platforms: desktop,server,web
+
+Example:
+set the recordFormat to "wave"
+
+Example:
+set the recordFormat to the storedSoundFormat of me
+
+Value (enum): The <recordFormat> is one of the following:By default, the <recordFormat> <property> is "aiff"
+-aiff : records a file in AIFF format
+-wave : records a file in WAV format
+-ulaw : records a file in AU format
+-movie : records a file in QuickTime format
+
+The result: >*Important:*  If the <recordFormat> is set to "movie", the resulting <file> is in the <QuickTime> file format. <QuickTime> files cannot be played as <audio clip|audio clips>. To play such a sound, either create a <player> and set its <filename> <property> to the <file path|path> of the <file> you recorded, or use the play videoclip form of the <play> <command>.
+
+Description:
+Use the <recordFormat> <property> to specify what kind of file to create when recording a sound, depending on how the file will be used.
+
+The <recordFormat> <property> determines what kind of file is created when you use the <record sound> <command> to record sound.
+
+Not all sound file formats are compatible with all supported codecs. If you try to record sound using a recordCompressionType that is not compatible with the <recordFormat>, the <compress|compression> type will be changed automatically to a <codec> that is compatible with the specified <recordFormat>.
+
+References: recordFormat (property), filename (property), file (keyword), player (keyword), record sound (command), play (command), format (function), property (glossary), compress (glossary), audio clip (glossary), QuickTime (glossary), file path (glossary), command (glossary), codec (glossary)

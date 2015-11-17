@@ -83,7 +83,8 @@ void ValueRelease(ValueRef self)
 			Value *t_name;
 			for(t_name = s_names; t_name != nil && t_name -> name . next != self; t_name = t_name -> name . next)
 				;
-			t_name -> name . next = self -> name . next;
+            if (t_name != nil)
+                t_name -> name . next = self -> name . next;
 		}
 		
 		ValueRelease(self -> name . string);

@@ -38,6 +38,18 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec-interface.h"
 
+static MCRectangle
+MCBlockMakeRectangle(double x, double y,
+                     double width, double height)
+{
+	MCRectangle p_result;
+	p_result.x = int2(x);
+	p_result.y = int2(y);
+	p_result.width = uint2(width);
+	p_result.height = uint2(height);
+	return p_result;
+}
+
 // Default MCBlock constructor - makes a block with everything initialized
 // to zero.
 MCBlock::MCBlock(void)
@@ -125,7 +137,7 @@ MCBlock::~MCBlock()
 		freeatts();
 }
 
-bool MCBlock::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor)
+bool MCBlock::visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor)
 {
 	return p_visitor -> OnBlock(this);
 }
@@ -151,7 +163,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	}
 
 	if ((stat = IO_read_uint4(&flags, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 
 	// MW-2012-03-04: [[ StackFile5500 ]] If this isn't an extended block, then strip the
 	//   metadata flag.
@@ -172,7 +184,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 		{
 			uint2 t_font_index;
 			if ((stat = IO_read_uint2(&t_font_index, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 
 			// MW-2012-02-17: [[ LogFonts ]] Map the font index we have to the font attrs.
 			//   Note that we ignore the 'unicode' tag since that is encoded in flags.
@@ -196,11 +208,11 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 			// MW-2013-11-19: [[ UnicodeFileFormat ]] This path only happens sfv < 1300
 			//   so is legacy.
 			if ((stat = IO_read_nameref_legacy(atts->fontname, stream, false)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			if ((stat = IO_read_uint2(&atts->fontsize, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			if ((stat = IO_read_uint2(&atts->fontstyle, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 
 			// MW-2012-02-17; [[ SplitTextAttrs ]] All the font attrs are set.
 			flags |= F_FATTR_MASK;
@@ -210,7 +222,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	{
 		atts->color = new MCColor;
 		if ((stat = IO_read_mccolor(*atts->color, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (flags & F_HAS_COLOR_NAME)
 		{
 			// MW-2012-01-06: [[ Block Changes ]] We no longer use the color name
@@ -219,7 +231,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 			//   so is legacy,
 			char *colorname;
 			if ((stat = IO_read_cstring_legacy(colorname, stream, 2)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			delete colorname;
 			flags &= ~F_HAS_COLOR_NAME;
 		}
@@ -228,7 +240,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	{
 		atts->backcolor = new MCColor;
 		if ((stat = IO_read_mccolor(*atts->backcolor, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (version < 2000 || flags & F_HAS_BACK_COLOR_NAME)
 		{
 			// MW-2012-01-06: [[ Block Changes ]] We no longer use the backcolor name
@@ -237,14 +249,14 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 			//   so is legacy,
 			char *backcolorname;
 			if ((stat = IO_read_cstring_legacy(backcolorname, stream, 2)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			delete backcolorname;
 			flags &= ~F_HAS_BACK_COLOR_NAME;
 		}
 	}
 	if (flags & F_HAS_SHIFT)
 		if ((stat = IO_read_int2(&atts->shift, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 
 	// MW-2012-05-04: [[ Values ]] linkText / imageSource / metaData are now uniqued
 	//   strings.
@@ -252,7 +264,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	{
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		if ((stat = IO_read_stringref_new(atts->linktext, stream, version >= 7000)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		/* UNCHECKED */ MCValueInterAndRelease(atts -> linktext, atts -> linktext);
 	}
 
@@ -260,7 +272,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	{
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		if ((stat = IO_read_stringref_new(atts->imagesource, stream, version >= 7000)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		/* UNCHECKED */ MCValueInterAndRelease(atts -> imagesource, atts -> imagesource);
 	}
 
@@ -270,7 +282,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	{
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		if ((stat = IO_read_stringref_new(atts->metadata, stream, version >= 7000)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		/* UNCHECKED */ MCValueInterAndRelease(atts -> metadata, atts -> metadata);
 	}
 
@@ -278,7 +290,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	//   to the end of the attrs record.
 	if (is_ext)
 		if ((stat = MCS_seek_set(stream, t_attr_end)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	
 	// ***** IMPORTANT *****
 	// The "index" and "size" values loaded below are byte indices into the
@@ -292,9 +304,9 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	// the block of the correct offsets as soon as it knows them.
 	uint2 index, size;
 	if ((stat = IO_read_uint2(&index, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint2(&size, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	m_index = index;
 	m_size = size;
 
@@ -714,18 +726,11 @@ bool MCBlock::fit(coord_t x, coord_t maxwidth, findex_t& r_break_index, bool& r_
 	// MW-2013-12-19: [[ Bug 11606 ]] Track the width of the text within the block as a float
 	//   but use the integer width to break. This ensures measure(a & b) == measure(a) + measure(b)
 	//   (otherwise you get drift as the accumulated width the block calculates is different
-	//    from the width of the text that is drawn).
+	//    from the width of the text that is drawn). 
 
 	coord_t t_width_float;
 	t_width_float = 0;
 
-	// MW-2009-04-23: [[ Bug ]] For printing, we measure complete runs of text otherwise we get
-	//   positioning issues.
-	coord_t t_last_break_width;
-	t_last_break_width = 0;
-	uint2 t_last_break_i;
-	t_last_break_i = m_index;
-	
 	findex_t i;
 	i = m_index;
 	
@@ -977,18 +982,19 @@ void MCBlock::split(findex_t p_index)
 void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_left, coord_t p_cell_right, int2 y, findex_t start, findex_t length, Boolean image, uint32_t style)
 {
 	// MW-2012-02-16: [[ FontRefs ]] Fetch the font metrics we need to draw.
-	int32_t t_ascent, t_descent;
+	coord_t t_ascent, t_descent, t_leading, t_xheight;
 	t_ascent = MCFontGetAscent(m_font);
 	t_descent = MCFontGetDescent(m_font);
+    t_leading = MCFontGetLeading(m_font);
+    t_xheight = MCFontGetXHeight(m_font);
+    
+    // Width for strike-through/underline lines. Factor is arbitrary...
+    coord_t t_strikewidth;
+    t_strikewidth = ceilf(MCFontGetAscent(m_font)/16);
 	
 	// MW-2012-01-25: [[ ParaStyles ]] Fetch the vGrid setting from the owning paragraph.
 	if (parent -> getvgrid())
 	{
-		// MW-2012-02-09: [[ ParaStyles ]] Fetch the padding setting from the owning paragraph.
-		// MW-2012-03-19: [[ Bug 10069 ]] Use the horiztonal padding value here.
-		int32_t t_padding;
-		t_padding = parent -> gethpadding();
-
         MCRectangle t_cell_clip;
         t_cell_clip = dc->getclip();
         dc -> save();
@@ -1005,10 +1011,10 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_left, coord_t p_cel
 					t_next_tab = -1;
             }
 			else*/
-				t_next_tab = -1;
+				t_next_tab = UINDEX_MAX;
 
 			findex_t t_next_index;
-			if (t_next_tab == -1)
+			if (t_next_tab == UINDEX_MAX)
 				t_next_index = start + length;
 			else
 				t_next_index = t_next_tab;
@@ -1039,21 +1045,29 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_left, coord_t p_cel
 			if (t_next_index - t_index > 0)
 			{
 				if ((style & FA_UNDERLINE) != 0)
-					dc -> drawline(x, y + 1, x + t_width, y + 1);
+                {
+                    MCRectangle t_underlinerect;
+                    t_underlinerect = MCU_make_rect(x, y + t_strikewidth, t_width, t_strikewidth);
+                    dc -> fillrect(t_underlinerect);
+                }
 				if ((style & FA_STRIKEOUT) != 0)
-					dc -> drawline(x, y - (t_ascent >> 1), x + t_width, y - (t_ascent >> 1));
+                {
+                    MCRectangle t_strikerect;
+                    t_strikerect = MCU_make_rect(x, y - (t_xheight / 2) - (t_strikewidth / 2), t_width, t_strikewidth);
+                    dc -> fillrect(t_strikerect);
+                }
 				if ((style & FA_BOX) != 0)
 				{
 					// MW-2012-09-04: [[ Bug 9759 ]] Adjust any pattern origin to scroll with text.
 					parent -> getparent() -> setforeground(dc, DI_BORDER, False, True);
 					parent -> getparent() -> adjustpixmapoffset(dc, DI_BORDER);
-					MCRectangle trect = { x - 1, y - t_ascent, t_width + 3, t_ascent + t_descent };
+					MCRectangle trect = MCBlockMakeRectangle(x - 1, y - t_ascent, t_width + 3, t_ascent + t_descent);
 					dc->drawrect(trect);
 					parent -> getparent() -> setforeground(dc, DI_FORE, False, True);
 				}
 				else if ((style & FA_3D_BOX) != 0)
 				{
-					MCRectangle trect = { x - 1, y - t_ascent, t_width + 2, t_ascent + t_descent };
+					MCRectangle trect = MCBlockMakeRectangle(x - 1, y - t_ascent, t_width + 2, t_ascent + t_descent);
 					parent -> getparent() -> draw3d(dc, trect, ETCH_RAISED, 1);
 					parent -> getparent() -> setforeground(dc, DI_FORE, False, True);
 				}
@@ -1061,7 +1075,7 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_left, coord_t p_cel
 
 			x += t_width;
 
-			if (t_next_tab != -1)
+			if (t_next_tab != UINDEX_MAX)
 			{
 				x = p_cell_right;
 				t_next_index = parent->IncrementIndex(t_next_index);
@@ -1139,9 +1153,17 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_left, coord_t p_cel
 
 		// Apply strike/underline.
 		if ((style & FA_UNDERLINE) != 0)
-			dc -> drawline(t_line_x, y + 1, t_line_x + t_line_width, y + 1);
+        {
+            MCRectangle t_underlinerect;
+            t_underlinerect = MCU_make_rect(t_line_x, y + t_strikewidth, t_line_width, t_strikewidth);
+            dc -> fillrect(t_underlinerect);
+        }
 		if ((style & FA_STRIKEOUT) != 0)
-			dc -> drawline(t_line_x, y - (t_ascent >> 1), t_line_x + t_line_width, y - (t_ascent >> 1));		
+        {
+            MCRectangle t_strikerect;
+            t_strikerect = MCU_make_rect(t_line_x, y - (t_xheight / 2) - (t_strikewidth / 2), t_line_width, t_strikewidth);
+            dc -> fillrect(t_strikerect);
+        }
 	}
 }
 
@@ -1205,8 +1227,7 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t lx, coord_t cx, int2 y, findex_t
 	if (flags & F_HAS_BACK_COLOR)
 		dc->setbackground(*atts->backcolor);
 
-	if (t_foreground_color != NULL)
-		dc -> setforeground(*t_foreground_color);
+    setcolorfornormaltext(dc, t_foreground_color);
 	
 	uint32_t t_style;
 	t_style = 0;
@@ -1320,11 +1341,13 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t lx, coord_t cx, int2 y, findex_t
 				f->getforecolor(DI_HILITE, False, True, hc, t_pattern, x, y, dc, f);
 				if (hc.pixel == fc.pixel)
 					f->setforeground(dc, DI_BACK, False, True);
+                else
+                    setcolorforselectedtext(dc, nil);
 			}
 			else
-				f->setforeground(dc, DI_BACK, False, True);
+                setcolorforselectedtext(dc, t_foreground_color);
 		}
-		
+
 		// Draw the selected text.
         // SN-2014-08-13: [[ Bug 13016 ]] Added a parameter for the left of the cell
 		drawstring(dc, x, lx, cx, y, m_index, m_size, (flags & F_HAS_BACK_COLOR) != 0, t_style);
@@ -1374,7 +1397,7 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t lx, coord_t cx, int2 y, findex_t
 			// MW-2012-09-04: [[ Bug 9759 ]] Adjust any pattern origin to scroll with text.
 			f->setforeground(dc, DI_BORDER, False, True);
 			f->adjustpixmapoffset(dc, DI_BORDER);
-			MCRectangle trect = { x - 1, y - t_ascent, t_width + 2, t_ascent + t_descent };
+			MCRectangle trect = MCBlockMakeRectangle(x - 1, y - t_ascent, t_width + 2, t_ascent + t_descent);
 			
 			// MW-2014-03-11: [[ Bug 11882 ]] Ensure we use miter join for drawing the border.
 			dc->setlineatts(1, LineSolid, CapButt, JoinMiter);
@@ -1385,7 +1408,7 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t lx, coord_t cx, int2 y, findex_t
 		}
 		else if (fontstyle & FA_3D_BOX)
 		{
-			MCRectangle trect = { x - 1, y - t_ascent, t_width + 2, t_ascent + t_descent };
+			MCRectangle trect = MCBlockMakeRectangle(x - 1, y - t_ascent, t_width + 2, t_ascent + t_descent);
 			f->draw3d(dc, trect, ETCH_RAISED, 1);
 			f->setforeground(dc, DI_FORE, False, True);
 		}
@@ -1916,7 +1939,7 @@ uint2 MCBlock::getascent(void)
 	if (flags & F_HAS_IMAGE && atts->image != NULL)
 		return MCU_max(0, atts->image->getrect().height - shift + 2);
 	else
-		return MCU_max(0, heightfromsize(MCFontGetAscent(m_font)) - MCFontGetDescent(m_font) - shift);
+		return MCU_max(0, heightfromsize(ceilf(MCFontGetAscent(m_font))) - uint2(ceilf(MCFontGetDescent(m_font))) - shift);
 }
 
 uint2 MCBlock::getdescent(void)
@@ -1925,7 +1948,35 @@ uint2 MCBlock::getdescent(void)
 	if (flags & F_HAS_IMAGE && atts->image != NULL)
 		return MCU_max(0, shift);
 	else
-		return MCU_max(0, MCFontGetDescent(m_font) + shift);
+		return MCU_max(0, uint2(ceilf(MCFontGetDescent(m_font))) + shift);
+}
+
+coord_t MCBlock::GetAscent() const
+{
+   	int2 shift = flags & F_HAS_SHIFT ? atts->shift : 0;
+    // MW-2007-07-05: [[ Bug 1943 ]] - Images do not have correct ascent height *MIGHT NEED REVERSION*
+    if (flags & F_HAS_IMAGE && atts->image != NULL)
+        return MCU_max(0, atts->image->getrect().height - shift + 2);
+    else
+        return MCU_max(0.0f, MCFontGetAscent(m_font) - shift);
+}
+
+coord_t MCBlock::GetDescent() const
+{
+    int2 shift = flags & F_HAS_SHIFT ? atts->shift : 0;
+    if (flags & F_HAS_IMAGE && atts->image != NULL)
+        return MCU_max(0, shift);
+    else
+        return MCU_max(0.0f, MCFontGetDescent(m_font) + shift);
+}
+
+coord_t MCBlock::GetLeading() const
+{
+    int2 shift = flags & F_HAS_SHIFT ? atts->shift : 0;
+    if (flags & F_HAS_IMAGE && atts->image != NULL)
+        return GetAscent()+GetDescent();
+    else
+        return MCFontGetLeading(m_font);
 }
 
 void MCBlock::freeatts()
@@ -2295,9 +2346,6 @@ uint32_t MCBlock::measureattrs(void)
 
 bool MCBlock::GetFirstLineBreak(findex_t& r_index)
 {
-	findex_t t_index;
-	t_index = m_index;
-
 	uindex_t t_offset;
     // AL-2014-08-21: [[ Bug 13247 ]] Don't repeatedly search to the end of the paragraph to find line break.
     //  The search should only be in the range of the block.
@@ -2427,4 +2475,37 @@ MCBlock *MCBlock::GetPrevBlockVisualOrder()
         return segment -> prev() -> GetLastVisualBlock();
     
     return nil;
+}
+
+void MCBlock::setcolorfornormaltext(MCDC* dc, MCColor* p_color)
+{
+    MCField* f = parent->getparent();
+    
+    if (p_color != nil)
+        dc->setforeground(*p_color);
+    else if (flags & F_HAS_COLOR)
+        dc->setforeground(*atts -> color);
+    else
+        f->setforeground(dc, DI_PSEUDO_TEXT_COLOR, False, True);
+}
+
+void MCBlock::setcolorforhilite(MCDC* dc)
+{
+    MCField* f = parent->getparent();
+    
+    f->setforeground(dc, DI_PSEUDO_TEXT_BACKGROUND_SEL, False, True);
+}
+
+void MCBlock::setcolorforselectedtext(MCDC* dc, MCColor* p_color)
+{
+    MCField* f = parent->getparent();
+    
+    if (p_color != nil)
+        dc->setforeground(*p_color);
+    else if (flags & F_HAS_COLOR)
+        dc->setforeground(*atts -> color);
+    else if (!IsMacLF()) // TODO: if platform reverses selected text
+        f->setforeground(dc, DI_PSEUDO_TEXT_COLOR_SEL_BACK, False, True, true);
+    else
+        f->setforeground(dc, DI_PSEUDO_TEXT_COLOR_SEL_FORE, False, True, true);
 }

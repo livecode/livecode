@@ -1,0 +1,30 @@
+Name: defaultNetworkInterface
+
+Type: property
+
+Syntax: set the defaultNetworkInterface to <networkInterface> 
+
+Summary: Determines which network interface should be used for socketed and HTTP connections.
+
+Introduced: 4.6.3
+
+OS: mac,windows,linux
+
+Platforms: desktop,server
+
+Example:
+set the defaultNetworkInterface to "192.168.1.10"
+
+Parameters:
+networkInterface: An IPv4 address as a string. For example: "192.168.1.10"
+
+The result: If the <defaultNetworkInterface> is not valid interface, an error is present in the result of the connection attempt.
+
+Description:
+Use the <defaultNetworkInterface> property on all desktop and server platforms to specify which network interface should be used for socketed and HTTP connections.  This is useful if you have SSL certificates bound to a particular IP address.
+
+If the <defaultNetworkInterface> is empty, the standard interface is used.
+
+>*Note:* SSL certificates are bound to a particular IP address. If your device has multiple network interfaces, to utilize your SSL certificate set the <defaultNetworkInterface> to the address specified in the certificate.
+
+References: sslCertificates (property)

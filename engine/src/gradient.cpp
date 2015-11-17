@@ -150,7 +150,7 @@ void MCGradientFillInit(MCGradientFill *&r_gradient, MCRectangle p_rect)
 
 void MCGradientFillFree(MCGradientFill *p_gradient)
 {
-	delete p_gradient -> ramp;
+	delete[] p_gradient -> ramp;
 	delete p_gradient;
 }
 
@@ -448,10 +448,10 @@ bool MCGradientFillGetProperties(MCExecContext& ctxt, MCGradientFill* p_gradient
             t_success = MCArrayStoreValue(*v, kMCCompareExact, *t_key, t_prop_value);
     }
     
+    MCerrorlock--;
+    
     if (t_success)
     {
-        MCerrorlock--;
-        
         r_value . arrayref_value = MCValueRetain(*v);
         r_value . type = kMCExecValueTypeArrayRef;
         return true;
@@ -969,7 +969,10 @@ bool MCGradientFillSetProperties(MCExecContext& ctxt, MCGradientFill*& x_gradien
         MCAutoArrayRef t_array;
         MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value , kMCExecValueTypeArrayRef, &(&t_array));
         if (ctxt . HasError())
+        {
+            delete t_gradient;
             return false;
+        }
         
         if (MCArrayIsEmpty(*t_array))
         {

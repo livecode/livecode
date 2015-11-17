@@ -1,0 +1,43 @@
+Name: save
+
+Type: command
+
+Syntax: save <stack> [as <filePath>]
+
+Summary: Saves a <stack file> on the user's system.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,web,mobile
+
+Security: disk
+
+Example:
+save stack "project1"
+
+Example:
+save this stack as "Backup"
+
+Example:
+save stack "project1" as "/Disk/Folder/File"
+
+Parameters:
+stack: Any open stack.
+filePath: The filePath specifies the name and location of the file you want to save to. If you specify a name but not a location, LiveCode assumes the file is in the defaultFolder. If the file does not exist, LiveCode creates it.
+
+The result: If the stack cannot be saved (for example, if you try to save it to a nonexistent drive or to a CD-ROM), the result <function> is set to "Can't open stack file".
+
+Description:
+Use the <save> <command> to save changes to a <stack> or to save a copy of a <stack> into another <file>.
+
+The <save> <command> saves all <stacks> stored in the same <file> as the specified <stack>. That is, if you save a <main stack>, all <substacks> of that stack are also saved in the same <file>, and if you save a <substack>, its <main stack> and any other <substacks> are also saved.
+
+If the stack has not yet been saved and doesn't have a filename, you must use theform.
+
+You cannot save to a standalone application's file; <standalone application|standalones> are read-only.
+
+References: stackFileVersion (property), substacks (property), stack (object), as (keyword), file (keyword), substack (glossary), stack file (glossary), command (glossary), standalone application (glossary), main stack (glossary), stacks (function), create stack (command), function (control_st)
+
+Tags: file system

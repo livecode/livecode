@@ -1,0 +1,31 @@
+Name: raiseWindows
+
+Type: property
+
+Syntax: set the raiseWindows to {true | false}
+
+Syntax: get the raiseWindows
+
+Summary: Set the <raiseWindows> global property to true if you want to force LiveCode's windows to move as one layer.
+
+Introduced: 2.7.2
+
+OS: mac,windows,linux
+
+Platforms: desktop,server
+
+Example:
+put the raiseWindows into tWindowsRaise
+
+Example:
+set the raiseWindows to true
+
+Example:
+set the raiseWindows to windowsRaise()
+
+Description:
+When the <raiseWindows> is set to true, LiveCode's windows move as one layer, this means it will not be possible for another application to become interleaved with LiveCode's windows, as is possible if the property is set to false.
+
+References: backdrop (property), hideBackdrop (property), hidePalettes (property)
+
+Tags: ui

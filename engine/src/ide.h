@@ -233,6 +233,8 @@ public:
 private:
 	enum
 	{
+        PLATFORM_NONE,
+        
 		PLATFORM_WINDOWS,
 		PLATFORM_LINUX,
 		PLATFORM_MACOSX,
@@ -244,6 +246,8 @@ private:
 
 		PLATFORM_IOS_EMBEDDED,
 		PLATFORM_ANDROID_EMBEDDED,
+
+		PLATFORM_EMSCRIPTEN,
 		
 		PLATFORM_SERVER,
 	};
@@ -264,6 +268,7 @@ public:
 private:
 	enum
 	{
+        PLATFORM_NONE,
 		PLATFORM_WINDOWS,
 		PLATFORM_LINUX,
 		PLATFORM_MACOSX
@@ -285,6 +290,7 @@ public:
 private:
 	enum
 	{
+        PLATFORM_NONE,
 		PLATFORM_WINDOWS,
 		PLATFORM_LINUX,
 		PLATFORM_MACOSX

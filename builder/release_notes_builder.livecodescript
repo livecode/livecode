@@ -109,6 +109,12 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType
    put tBody & notesFolderLCBToHTML(pVersion, tTags, tContents) into tBody
    put tBody & gPageBreak into tBody
    
+   put tBody & newSection("LiveCode Extension changes", 1, tContents) into tBody
+   
+   builderLog "message", "Adding entries for extension bugfixes and features"
+   put tBody & notesFolderExtensionsToHTML(pVersion, tTags, tContents) into tBody
+   put tBody & gPageBreak into tBody
+   
    builderLog "message", "Adding entries for dictionary and user guide changes"
    local tChangeList
    local tChangeStatusList
@@ -436,13 +442,10 @@ function notesFolderToHTML pIsIDE, pFolder, pVersion, pTags, @xContents, @rUpdat
             else
                put tLine into tFile
             end if
-            put url ("file:" & tFile) into tFileText
-            put the number of lines of tFileText into tNumLines
             
-            // AL-2014-11-14: Still a one-liner if the bugfix note contains a second empty line
-            if tNumLines is 2 and word 1 of line 2 of tFileText is empty then
-               delete line 2 of tFileText
-            end if
+            # Delete any empty trailing lines
+            put word 1 to -1 of url ("file:" & tFile) into tFileText
+            put the number of lines of tFileText into tNumLines
             
             if tLine contains "bugfix" then
                local tOffset
@@ -452,7 +455,7 @@ function notesFolderToHTML pIsIDE, pFolder, pVersion, pTags, @xContents, @rUpdat
                put tOneLiners & tId & "," & tTitle & CR into tOneLiners
                put tId & " - " & tTitle & CR after rUpdateBugs
             end if
-            if tNumLines > 1 and not (tNumLines is 2 and the last line of tFileText is not empty) then
+            if tNumLines > 1 then
                if tLine contains "feature" then put char 2 to -1 of line 1 of tFileText & CR after rUpdateFeatures
                put markdownToHTML(tFileText, 2, 1, xContents, true) into tParsedFile
                if tParsedFile is not empty then
@@ -503,7 +506,7 @@ function notesFolderLCBToHTML pVersion, pTags, @xContents
    
    local tDataA
    repeat for each line tFile in tList
-      addLCBReleaseNoteData tFile, tDataA
+      addLCBReleaseNoteData tFile, "", tDataA
    end repeat
    
    local tConglomeratedMarkdown
@@ -511,20 +514,40 @@ function notesFolderLCBToHTML pVersion, pTags, @xContents
    return markdownToHTML(tConglomeratedMarkdown, 2, 1, xContents, true)
 end notesFolderLCBToHTML
 
+function notesFolderExtensionsToHTML pVersion, pTags, @xContents
+   local tBody
+   local tNumTags
+   put relevantTags(pVersion, pTags) into pTags
+   put the number of lines in pTags into tNumTags
+   
+   local tFirstVersion, tCurVersion
+   put line 1 of pTags into tFirstVersion
+   put line -1 of pTags into tCurVersion
+   
+   local tDataA
+   addExtensionReleaseNoteData tFirstVersion, tCurVersion, tDataA
+   
+   local tConglomeratedMarkdown
+   put noteDataLCBToMD(tDataA) into tConglomeratedMarkdown
+   return markdownToHTML(tConglomeratedMarkdown, 2, 1, xContents, true)
+end notesFolderExtensionsToHTML
+
 function noteSubsectionDataToMD pLevel, pDataA
    local tHashes
    repeat pLevel
       put "#" after tHashes
    end repeat
    
-   local tMD
-   repeat for each key tSubsection in pDataA
-      put tHashes && tSubsection & return after tMD
-      if pDataA[tSubsection]["data"] is not empty then
-         put pDataA[tSubsection]["data"] & return after tMD
+   local tMD, tSubsections
+   put the keys of pDataA into tSubsections
+   sort tSubsections by pDataA[each]["order"]
+   repeat for each line tSection in tSubsections
+      put tHashes && tSection & return after tMD
+      if pDataA[tSection]["data"] is not empty then
+         put pDataA[tSection]["data"] & return after tMD
       end if
-      if pDataA[tSubsection]["subsection"] is not empty then
-         put noteSubsectionDataToMD(pLevel + 1, pDataA[tSubsection]["subsection"]) & return after tMD
+      if pDataA[tSection]["subsection"] is not empty then
+         put noteSubsectionDataToMD(pLevel + 1, pDataA[tSection]["subsection"]) & return after tMD
       end if
    end repeat
    return tMD
@@ -580,16 +603,90 @@ on addDataToSection pLevel, @xData, @xSectionA
          local tSection
          put word 2 to -1 of it into tSection
          delete line 1 of xData
+         
+         local tSectionOrder
+         if tSection is not among the keys of xSectionA["subsection"] then
+            put the number of elements of xSectionA["subsection"] + 1 into tSectionOrder
+            put tSectionOrder into xSectionA["subsection"][tSection]["order"]
+         end if
          addDataToSection pLevel + 1, xData, xSectionA["subsection"][tSection]
       end if
    end repeat
 end addDataToSection
 
-on addLCBReleaseNoteData pFile, @xDataA
+function fetchExtensionName pFolder
+   local tManifestContents, tId
+   put url ("file:" & pFolder & slash & "manifest.xml") into tManifestContents
+   put revXMLCreateTree(tManifestContents,true,true,false) into tId
+   
+   if tId begins with "xmlerr" then
+      return empty
+   end if
+   
+   local tTargetName
+   put textDecode(revXMLNodeContents(tId, "/package/title"), "utf-8") into tTargetName
+   if tTargetName begins with "xmlerr" then
+      return empty
+   end if
+   return tTargetName
+end fetchExtensionName
+
+on generateExtensionsDiff pFirstVersion, pCurrentVersion, pType, @xDataA
+   local tDefaultFolder
+   put the defaultFolder into tDefaultFolder
+   set the defaultFolder to builderRepoFolder() & slash & "extensions" & slash & pType
+   
+   local tExtensions
+   put the folders into tExtensions
+   filter tExtensions without ".."
+   
+   set the defaultFolder to tDefaultFolder
+   
+   local tExtensionFileList, tExtensionName
+   repeat for each line tExtension in tExtensions
+      put fetchNameOnlyDiff(pFirstVersion, pCurrentVersion, "extensions" & slash & pType & slash & tExtension & slash & "notes") into tExtensionFileList
+      if tExtensionFileList is not empty then
+         put fetchExtensionName(builderRepoFolder() & slash & "extensions" & slash & pType & slash & tExtension) into tExtensionName
+         if tExtensionName is empty then
+            put tExtension into tExtensionName
+         end if
+         put tExtensionFileList into xDataA[pType][tExtensionName]
+      end if
+   end repeat
+end generateExtensionsDiff
+
+constant kExtensionsSections = "libraries,modules,widgets"
+
+on addExtensionReleaseNoteData pFirstVersion, pCurVersion, @xDataA
+   local tReleaseNoteDataA
+   repeat for each item tSection in kExtensionsSections
+      generateExtensionsDiff pFirstVersion, pCurVersion, tSection, tReleaseNoteDataA
+   end repeat
+   
+   local tExtensionDataA
+   repeat for each key tType in tReleaseNoteDataA
+      repeat for each key tName in tReleaseNoteDataA[tType]
+         put empty into tExtensionDataA
+         local tSectionName
+         if tType is "widgets" then
+            put tName && "Widget" into tSectionName
+            else
+            # Modules/libraries names don't need modifying
+            put tName into tSectionName
+         end if
+         repeat for each line tFile in tReleaseNoteDataA[tType][tName]
+            addLCBReleaseNoteData tFile, tSectionName, xDataA 
+         end repeat
+      end repeat
+   end repeat
+   
+end addExtensionReleaseNoteData
+
+on addLCBReleaseNoteData pFile, pSectionName, @xDataA
    local tNoteData
    put url ("file:" & pFile) into tNoteData
    
-   local tCount, tSection
+   local tCount, tSection, tBugList
    
    repeat while tNoteData is not empty
       get line 1 of tNoteData
@@ -602,23 +699,39 @@ on addLCBReleaseNoteData pFile, @xDataA
       if tCount is 1 then
          # If this is not a bug number, then it is a section
          if lineIsBugInfo(it) then
-            if xDataA[tSection]["bugs"] is empty then
-               put word 2 to -1 of it into xDataA[tSection]["bugs"]
+            if tBugList is empty then
+               put word 2 to -1 of it into tBugList
             else
-               put return & word 2 to -1 of it after xDataA[tSection]["bugs"]
+               put return & word 2 to -1 of it after tBugList
             end if
             delete line 1 of tNoteData
          else
+            if tSection is not empty and pSectionName is empty then
+               put tBugList into xDataA[tSection]["bugs"]
+               put empty into tBugList
+            end if
             put word 2 to -1 of it into tSection
             delete line 1 of tNoteData
-            addDataToSection 1, tNoteData, xDataA[tSection]
+            if pSectionName is not empty then
+               local tSectionOrder
+               if tSection is not among the keys of xDataA[pSectionName]["subsection"] then
+                  put the number of elements of xDataA[pSectionName]["subsection"] + 1 into tSectionOrder
+                  put tSectionOrder into xDataA[pSectionName]["subsection"][tSection]["order"]
+               end if
+               addDataToSection 1, tNoteData, xDataA[pSectionName]["subsection"][tSection]
+            else
+               addDataToSection 1, tNoteData, xDataA[tSection]
+            end if
          end if
       else
          // throw error?
          delete line 1 of tNoteData
       end if
-      
    end repeat
+   
+   if pSectionName is not empty then
+      put tBugList into xDataA[pSectionName]["bugs"]
+   end if
 end addLCBReleaseNoteData
 
 function dictPath

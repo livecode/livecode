@@ -1,0 +1,25 @@
+Name: inverse
+
+Type: keyword
+
+Syntax: inverse
+
+Summary: Used with the <visual effect> <command>, included in <LiveCode> for compatibility with imported <HyperCard> <stacks>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+visual effect dissolve to inverse
+
+Description:
+In HyperCard, the <inverse> <keyword> indicates that the color inverse of the <current card> is shown at the end of the visual effect.
+
+In LiveCode, the <inverse> <keyword> is a synonym of the <white> <keyword>.
+
+References: white (keyword), black (keyword), visual effect (command), stacks (function), keyword (glossary), current card (glossary), LiveCode (glossary), command (glossary), HyperCard (glossary)
+
+Tags: multimedia

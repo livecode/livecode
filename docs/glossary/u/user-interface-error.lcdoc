@@ -1,0 +1,10 @@
+Name: user interface error
+
+Synonyms: user interface error,LiveCode user interface error
+
+Type: glossary
+
+Description:
+An internal <error> caused by a <anomaly|bug> in LiveCode, not a <anomaly|bug> in your <script|scripts>.
+
+References: error (glossary), anomaly (glossary), script (glossary)

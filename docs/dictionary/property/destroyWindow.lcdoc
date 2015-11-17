@@ -1,0 +1,34 @@
+Name: destroyWindow
+
+Type: property
+
+Syntax: set the destroyWindow of <stack> to {true | false}
+
+Summary: Specifies whether the memory used by a <stack window> is purged when the <stack> is closed.
+
+Associations: stack
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+set the destroyWindow of stack "Test Harness" to true
+
+Value (bool):The <destroyWindow> of a stack is true or false.
+By default, the <destroyWindow> <property> of newly created <stacks> is set to false.
+
+Description:
+Use the <destroyWindow> <property> when installing new <externals>, or to save memory.
+
+If a stack's <destroyWindow> <property> is set to true, closing the <stack> removes the data structure maintaining that window.
+
+External commands and external functions are removed from memory only when the stack controlling them is removed from memory. When you install a new external, or replace it with a new version while debugging, LiveCode cannot use it until you either quit LiveCode and then reopen the stack, or close the stack (after setting its <destroyWindow> to true) and then reopen it.
+
+>*Note:* Despite its alarming name, the <destroyWindow> <property> does not destroy or damage a <stack>. It simply frees the memory used for its window.
+
+References: externals (property), externalPackages (property), deleteStack (message), stack (object), property (glossary), stack window (glossary), stacks (function)
+
+Tags: windowing

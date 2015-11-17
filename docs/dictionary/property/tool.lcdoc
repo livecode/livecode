@@ -1,0 +1,30 @@
+Name: tool
+
+Type: property
+
+Syntax: set the tool [of <stack>] to <toolName> 
+
+Summary: Specifies which <tool> is currently chosen.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,web,mobile
+
+Example:
+set the tool to "button tool"
+
+Example:
+set the tool to pointer
+
+Value (enum): The <tool> <function> <return|returns> one of the following <tool> names:browse, pointer, button, field, scrollbar, graphic, image, player, select, pencil, bucket, brush, eraser, spray can, rectangle, line, round rect, oval, polygon, curve, regular polygon, dropperfollowed by the word "tool".When setting the <tool> <property>, you can omit the word "tool"
+
+Description:
+Use the <tool> <property> to check which <tool> is in use before performing an action that depends on the <tool>.
+
+The tool names are the same as the names used with the <choose> <command> to select a <tool> for use.
+
+Setting the <tool> is equivalent to choosing the <tool> with the <choose> <command>.
+
+References: powerKeys (property), choose (command), tool (function), property (glossary), command (glossary), return (glossary), function (control_st)

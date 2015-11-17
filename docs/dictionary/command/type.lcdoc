@@ -1,0 +1,46 @@
+Name: type
+
+Type: command
+
+Syntax: type <string> [with <key> [, <key> [, <key> ]]]
+
+Summary: Simulates typing on the keyboard.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+type "ABC"
+
+Example:
+type field "output"
+
+Example:
+type allKeyboardKeys with shiftKey,optionKey
+
+Parameters:
+string (string): 
+key: One of commandKey, controlKey, optionKey, or shiftKey. You can specify up to three keys, separated by commas. (On Windows and Unix systems, commandKey indicates the Control key.)
+
+Description:
+Use the <type> command to show text appearing in a <field> at typing pace or to send keyboard <event|events> to a <stack>.
+
+The <type> <command> sends a <rawKeyDown> and <rawKeyUp> message to the <current card> for each <character> typed.
+
+The type command does not automatically place an insertion point in a field, so if you want to simulate typing into a field, you must first use the select command to place the insertion point:
+
+  select after field "Data"
+  type "Hello"
+
+The speed at which characters are typed is controlled by the <typingRate> <property>. To quickly put text into a <field> without delay, use the <put> <command> instead.
+
+>*Note:* To type text into a <field>, you must first place the <insertion point> in the <field> using the <select> or <click> <command>.
+
+>*Note:* As the <type> command is designed to emulate exactly what happens when a user types a key on the keyboard, the <rawKeyDown>, <keyDown>, <rawKeyUp> and <keyUp> messages are sent by the command. If these messages are blocked, the text will not appear in the selected field.
+
+References: typingRate (property), blindTyping (property), field (keyword), character (keyword), rawKeyUp (message), keyDown (message), rawKeyDown (message), keyUp (message), put (command), select (command), click (command), stack (object), property (glossary), current card (glossary), insertion point (glossary), command (glossary), event (glossary)
+
+Tags: ui

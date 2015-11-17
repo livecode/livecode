@@ -20,6 +20,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	PARSEDEFS_H
 #define	PARSEDEFS_H
 
+#include "mcutility.h"
+#include "sysdefs.h"
+
 typedef struct _constant
 {
 	MCString name;
@@ -233,6 +236,7 @@ enum Export_format {
 	EX_RAW_GRAY,
 	EX_RAW_INDEXED,
 	EX_BMP,
+    EX_OBJECT,
 };
 
 enum Factor_rank {
@@ -648,6 +652,16 @@ enum Is_type {
 	IT_NOT_AMONG_THE_DRAG_DATA,
 	IT_AMONG_THE_CLIPBOARD_DATA,
 	IT_NOT_AMONG_THE_CLIPBOARD_DATA,
+    IT_AMONG_THE_RAW_CLIPBOARD_DATA,
+    IT_NOT_AMONG_THE_RAW_CLIPBOARD_DATA,
+    IT_AMONG_THE_RAW_DRAGBOARD_DATA,
+    IT_NOT_AMONG_THE_RAW_DRAGBOARD_DATA,
+    IT_AMONG_THE_FULL_CLIPBOARD_DATA,
+    IT_NOT_AMONG_THE_FULL_CLIPBOARD_DATA,
+    IT_AMONG_THE_FULL_DRAGBOARD_DATA,
+    IT_NOT_AMONG_THE_FULL_DRAGBOARD_DATA,
+    IT_REALLY,
+    IT_NOT_REALLY,
 };
 
 enum Is_validation {
@@ -663,6 +677,10 @@ enum Is_validation {
 	IV_ARRAY,
 	// MERG-2013-06-24: [[ IsAnAsciiString ]] Tag for 'ascii'.
     IV_ASCII,
+    
+    IV_STRING,
+    IV_BINARY_STRING,
+    IV_REAL,
 };
 
 enum Lock_constants {
@@ -676,6 +694,7 @@ enum Lock_constants {
     LC_RECENT,
     LC_SCREEN,
 	LC_SCREEN_FOR_EFFECT,
+    LC_CLIPBOARD,
 };
 
 enum Mark_constants {
@@ -1198,6 +1217,8 @@ enum Properties {
 	P_FULLSCREENMODE,
 	// IM-2014-01-07: [[ StackScale ]] Property tag for the scalefactor
 	P_SCALE_FACTOR,
+    // MERG-2015-08-31: [[ ScriptOnly ]] Property tag for scriptOnly
+    P_SCRIPT_ONLY,
     P_FILE_NAME,
     P_SAVE_COMPRESSED,
     P_USER_LEVEL,
@@ -1595,7 +1616,10 @@ enum Properties {
     // MW-2014-08-12: [[ EditionType ]] Returns whether the engine is commercial or community
     P_EDITION_TYPE,
     
-	// ARRAY STYLE PROPERTIES
+    // MERG-2015-10-11: [[ DocumentFilename ]] Property tag for documentFilename
+    P_DOCUMENT_FILENAME,
+    
+    // ARRAY STYLE PROPERTIES
 	P_FIRST_ARRAY_PROP,
     P_CUSTOM_KEYS = P_FIRST_ARRAY_PROP,
     P_CUSTOM_PROPERTIES,
@@ -1685,6 +1709,15 @@ enum Properties {
     P_LOCALIZED_TITLE,
     P_LOCALIZED_DESCRIPTION,
     P_LOCALIZED_PRICE,
+    P_KIND,
+
+    // MW-2014-12-10: [[ Extensions ]] 'loadedExtensions' global property
+    P_LOADED_EXTENSIONS,
+    
+    P_RAW_CLIPBOARD_DATA,
+    P_RAW_DRAGBOARD_DATA,
+    P_FULL_CLIPBOARD_DATA,
+    P_FULL_DRAGBOARD_DATA,
     
     __P_LAST,
 };
@@ -1718,7 +1751,9 @@ enum Repeat_form {
     RF_STEP,
     RF_UNTIL,
     RF_WHILE,
-    RF_WITH
+    RF_WITH,
+    // SN-2015-06-18: [[ Bug 15509 ]] Parse 'times' in 'repeat for x times'
+    RF_TIMES
 };
 
 enum Reset_type {
@@ -1903,6 +1938,16 @@ enum Sugar_constants {
 	
     // MM-2014-06-13: [[ Bug 12567 ]] Added host. Used in 'with verification for host <host>'
 	SG_HOST,
+    
+    SG_EXTENSION,
+	SG_RESOURCE,
+	SG_PATH,
+    
+    // AL-2015-06-11: [[ Load Extension From Var ]] Add 'data' syntactic sugar
+    SG_DATA,
+    
+    SG_REALLY,
+    SG_REAL,
 };
 
 enum Statements {

@@ -1,0 +1,272 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+*/
+
+
+-- declaring the extension as a widget, followed by the identifier
+widget com.livecode.widget.checkBox
+--
+
+-- dependancy declarations
+use com.livecode.canvas
+use com.livecode.widget
+use com.livecode.engine
+
+-- metadata
+metadata author is "LiveCode"
+metadata version is "1.0.0"
+metadata title is "Check Box"
+metadata svgicon is "M34.5,0l-3.1,1.6c-0.4,0.2-0.9,0.6-1.5,1c-0.7-0.5-1.6-0.8-2.5-0.8H4.3C1.9,1.9,0,3.8,0,6.2v23.1c0,2.4,1.9,4.3,4.3,4.3h23.1c2.4,0,4.3-1.9,4.3-4.3V6.2c0-0.8-0.3-1.6-0.7-2.3L34.5,0z M5,29.1V6.4h20.9c-1.6,1.5-3.3,3.3-4.9,5.1l-7.4,8.1l-0.9-2.9l-0.9-2.9H9.8c-1,0-2.2,0.4-2.7,0.8l-0.8,0.8l3.1,5.8c1.7,3.2,3.5,5.8,3.9,5.8c0.4,0,2.6-2.9,4.8-6.4c1.9-3,5.5-7.9,8.7-11.6v20.3H5z"
+
+-- property declarations
+property checkboxTheme 			get mTheme 		set setTheme
+property checkboxLabel 			get mLabel 		set setLabel
+property isChecked		get mIsChecked 	set setChecked
+--
+
+-- private instance variables
+private variable mTheme as String
+private variable mLabel as String
+private variable mIsChecked as Boolean
+
+private variable mState as String
+--
+
+-- constants
+constant kPadding is 10
+constant kWidth is 12
+
+constant kWhite is [1,1,1]
+constant kBlack is [0,0,0]
+
+constant kFontSize is 12
+constant kIconSize is 10
+--
+
+public handler OnSave(out rProperties as Array)
+	put the empty array into rProperties
+	
+	put mTheme into rProperties["theme"]
+	put mLabel into rProperties["label"]
+	put mIsChecked into rProperties["checked"]
+end handler
+
+public handler OnLoad(in pProperties as Array)
+	put pProperties["theme"] into mTheme
+	put pProperties["label"] into mLabel
+	put pProperties["checked"] into mIsChecked
+end handler
+
+public handler OnCreate()
+	put "windows-8" into mTheme
+	put "Check Box" into mLabel
+	put false into mIsChecked
+	put "" into mState
+end handler
+
+public handler OnPaint()
+	
+	-- stroke the box first if macos
+	if mTheme contains "macos" then
+		set the stroke width of this canvas to 1
+		set the paint of this canvas to getPaint("border")
+		stroke getPath("checkbox") on this canvas
+	end if
+	--
+	
+	-- draw the box and fill with paint
+	set the paint of this canvas to getPaint("checkbox")
+	fill getPath("checkbox") on this canvas
+	--
+	
+	-- stroke the box now if windows
+	if mTheme contains "windows" then
+		set the stroke width of this canvas to 2
+		set the paint of this canvas to getPaint("border")
+		stroke getPath("checkbox") on this canvas
+	end if
+	
+	-- if the box is checked, fill check icon in the box
+	if mIsChecked is true then
+		set the font of this canvas to getFont("icon")
+		set the paint of this canvas to getPaint("icon")
+		fill text "\u{f00c}" at center of getRect("checkbox") on this canvas
+	end if
+	--
+	
+	-- draw and fill the label text
+	set the font of this canvas to getFont("label")
+	set the paint of this canvas to getPaint("label")
+	fill text mLabel at left of getRect("label") on this canvas
+	--
+	
+end handler
+
+public handler OnMouseDown()
+	put "pressed" into mState
+	redraw all
+end handler
+--
+public handler OnMouseUp()
+	put "" into mState
+	setChecked(not(mIsChecked))
+	redraw all
+    
+	post "mouseUp" with [mLabel]
+end handler
+
+private handler getPath(in pString as String) returns Path
+	if pString is "checkbox" then
+		if mTheme contains "macos" then
+			return rounded rectangle path of rectangle [kPadding, my height/2 - kWidth/2, kPadding+kWidth, my height/2 + kWidth/2] with radius 2
+		else 
+			return rectangle path of rectangle [kPadding, my height/2 - kWidth/2, kPadding+kWidth, my height/2 + kWidth/2]
+		end if
+	end if
+end handler
+
+private handler getRect(in pObject as String) returns Rectangle
+	if pObject is "checkbox" then
+		return rectangle [kPadding, my height/2 - kWidth/2, kPadding+kWidth, my height/2 + kWidth/2]
+
+	else if pObject is "label" then
+		return rectangle [2*kPadding+kWidth,  my height/2 - kWidth/2, my width - kPadding, my height/2 + kWidth/2]
+	end if
+end handler
+
+private handler getPaint(in pObject as String) returns Paint
+
+	if pObject is "border" then
+		if mTheme is "macos-yosemite" and mIsChecked is true then
+			return solid paint with color [51/255, 153/255, 1]
+		else if mTheme is "windows-8" then
+			return solid paint with color [160/255, 160/255, 160/255]
+		else
+			return solid paint with color kBlack
+		end if
+		
+	else if pObject is "checkbox" then
+		
+		if mTheme is "macos-yosemite" then
+	
+			if mIsChecked is true then
+				return solid paint with color [51/255,153/255,1]
+			else if mIsChecked is false then
+				return solid paint with color kWhite
+			end if
+			
+		else if mTheme is "macos-10.0" then
+			
+			variable tStop1
+			variable tStop2
+			variable tStop3
+			variable tColor1 as Color
+			variable tColor2 as Color
+			variable tColor3 as Color
+			variable tPaint as Paint
+			
+			if mIsChecked is false then
+				put color [1, 1, 1] into tColor1
+				put color [224/255, 224/255, 224/255, 0.25] into tColor2
+				put color [192/255, 192/255, 192/255, 0.75] into tColor3
+				
+			else if mIsChecked is true then
+			
+				if mState is "pressed" then
+					put color [0/255, 102/255, 255/255, 0.3] into tColor1
+					put color [0/255, 102/255, 255/255, 0.75] into tColor2
+					put color [0/255, 102/255, 255/255, 0.3] into tColor3
+				else
+					put color [102/255, 178/255, 1.0, 0.05] into tColor1
+					put color [102/255, 178/255, 1.0, 0.85] into tColor2
+					put color [102/255, 178/255, 1.0, 0.05] into tColor3
+				end if
+				
+			end if
+			
+			-- create a new gradient paint
+			put gradient stop at 0.25 with tColor1 into tStop1
+			put gradient stop at 0.5 with tColor2 into tStop2
+			put gradient stop at 0.75 with tColor3 into tStop3
+						
+			put linear gradient with ramp [tStop1, tStop2, tStop3] into tPaint
+			scale tPaint by [my height, my width]
+			rotate tPaint by 90
+			return tPaint
+		
+		else if mTheme is "windows-8" then
+			return solid paint with color kWhite
+			
+		end if
+		
+	else if pObject is "icon" then
+		if mTheme is "macos-yosemite" then
+			return solid paint with color kWhite
+		else
+			return solid paint with color kBlack
+		end if
+	
+	else if pObject is "label" then
+		
+		if mTheme is "macos-yosemite" then
+			return solid paint with color [32/255, 32/255, 32/255]
+		else if mTheme is "macos-10.0" then
+			return solid paint with color kBlack
+		else if mTheme is "windows-8" then
+			return solid paint with color [96/255, 96/255, 96/255]
+		end if
+		
+	end if
+	
+	return solid paint with color [0, 0, 0]
+end handler
+
+private handler getFont(in pObject as String) returns Font
+	if pObject is "icon" then
+		return font "fontawesome" at size kIconSize
+		
+	else if pObject is "label" then
+		if mTheme is "macos-10.0" then
+			return font "Lucida Grande" at size kFontSize-1
+		else if mTheme is "macos-yosemite" then
+			return font "Helvetica Neue" at size kFontSize
+		else if mTheme is "windows-8" then
+			return font "Segoe WP" at size kFontSize
+		end if 
+	end if
+	
+	return font (the name of the font of this canvas)
+end handler
+
+public handler setTheme(in pTheme as String) returns nothing
+	put pTheme into mTheme
+	redraw all
+end handler
+
+public handler setLabel(in pLabel as String) returns nothing
+	put pLabel into mLabel
+	redraw all
+end handler
+
+public handler setChecked(in pIsChecked as Boolean) returns nothing
+	put pIsChecked into mIsChecked
+	redraw all
+end handler
+
+end widget

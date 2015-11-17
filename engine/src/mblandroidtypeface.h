@@ -29,7 +29,7 @@ struct MCAndroidFont
 bool MCAndroidTypefaceCreateWithData(void *p_data, uint32_t p_length, MCAndroidTypefaceRef &r_typeface);
 bool MCAndroidTypefaceCreateWithName(const char *p_name, bool p_bold, bool p_italic, MCAndroidTypefaceRef &r_typeface);
 void MCAndroidTypefaceRelease(MCAndroidTypefaceRef p_typeface);
-bool MCAndroidTypefaceGetMetrics(MCAndroidTypefaceRef p_typeface, uint32_t p_size, float &r_ascent, float &r_descent);
+bool MCAndroidTypefaceGetMetrics(MCAndroidTypefaceRef p_typeface, uint32_t p_size, float &r_ascent, float &r_descent, float& r_leading, float& r_xheight);
 bool MCAndroidTypefaceMeasureText(MCAndroidTypefaceRef p_typeface, uint32_t p_size, const char *p_text, uint32_t p_text_length, bool p_utf16, float &r_length);
 
 #endif

@@ -10,19 +10,18 @@
 			'target_name': 'perfect',
 			'type': 'executable',
 
-			'conditions':
-			[
-				[
-					'OS == "linux" or OS == "android"',
-					{
-						'toolsets': ['host'],
-					},
-				],
-			],
+			'toolsets': ['target','host'],
+
+			'product_name': 'perfect-<(_toolset)',
 
 			'sources':
 			[
 				'perfect.c',
+			],
+
+			'cflags_c!':
+			[
+				'-Wstrict-prototypes',
 			],
 
 			'msvs_settings':
@@ -67,9 +66,25 @@
 			{
 				'variables':
 				{
-					'perfect_path': '<(PRODUCT_DIR)/perfect<(EXECUTABLE_SUFFIX)',
+					'perfect_path': '<(PRODUCT_DIR)/<(_product_name)',
 				},
 			},
+			
+			'conditions':
+			[
+				[
+					'OS == "ios"',
+					{
+						'direct_dependent_settings':
+						{
+							'variables':
+							{
+								'perfect_path': '<(mac_tools_dir)/perfect-host',
+							},
+						},
+					},
+				],
+			],
 		},
 	],
 }

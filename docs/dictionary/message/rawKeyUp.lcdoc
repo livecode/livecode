@@ -1,0 +1,34 @@
+Name: rawKeyUp
+
+Type: message
+
+Syntax: rawKeyUp <keyCode> 
+
+Summary: Sent when the user releases any key that was pressed (other than a <modifier key>).
+
+Associations: field
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+on rawKeyUp theCode -- boldface all asterisks
+  get the HTMLText of me
+  replace "*" with "&lt;b&gt;*&lt;/b&gt;" in it
+  set the HTMLText of me to it
+end rawKeyUp
+
+Parameters:
+keyCode: The raw keycode of the released key.
+
+The result: If the <rawKeyUp> <message> is sent as the result of a keypress, the <message> is sent to the <active (focused) control(glossary)>, or to the <current card> if no <control> is <focus|focused>. If the message is sent as the result of typing something in a field, the rawKeyDown <message> is sent before the text is changed, and the <rawKeyUp> <message> is sent after the change has been made.
+
+Description:
+Handle the <rawKeyUp> <message> if you want to intercept raw <event|events> from the keyboard or if you want to <handle> keys that aren't mapped to any <character>.
+
+References: control (keyword), keysDown (function), current card (glossary), event (glossary), handle (glossary), character (glossary), focus (glossary), message (glossary), modifier key (glossary), active control (glossary)
+
+Tags: ui

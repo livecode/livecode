@@ -1,0 +1,52 @@
+Name: startup
+
+Type: message
+
+Syntax: startup <mode> 
+
+Summary: Sent to the first <stack> opened when the <application> starts up.
+
+Associations: stack
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+on startup pMode
+global gRunningFromU3Drive
+switch pMode
+ case "u3launch"
+ put true into gRunningFromU3Drive
+ break
+ case empty
+ put false into gRunningFromU3Drive
+ break
+end switch
+end startup
+
+Parameters:
+mode: 
+
+Description:
+Handle the <startup> <message> if you want to do initialization or other tasks when the <application> starts up. 
+
+If you are developing your application to work from a U3 compliant drive, you can use the <mode> argument to respond to U3 actions.
+<mode> is one of
+        *  u3install : sent when the u3p file is being installed onto the U3 drive 
+        *  u3configure : sent when the application is first run from a U3 drive 
+        *  u3launch : sent when the application is started from a U3 drive (after installation and configuration) 
+        *  u3cleanup : sent when the LaunchPad requests the application cleans up  
+        *  u3uninstall : sent when the application is being removed from the U3 drive.
+
+The <startup> <message> is sent only when the <application> starts up, not when a <stack> is opened when the <application> is already running.
+
+If the application is opened with multiple stacks, the <startup> message is sent to the first <stack> opened.
+
+You will only get the U3 actions u3install, u3configure, u3cleanup and u3uninstall if the corresponding tick boxes have been checked in the advanced U3 settings of the Standalone Settings.
+
+References: application (glossary), message (glossary), resume (message), openBackground (message), u3eject (message), relaunch (message), stack (object)
+
+Tags: windowing

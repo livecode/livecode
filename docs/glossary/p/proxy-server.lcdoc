@@ -1,0 +1,12 @@
+Name: proxy server
+
+Synonyms: proxy,proxies,proxy server
+
+Type: glossary
+
+Description:
+A <server> that intercepts requests for a particular service (such as a web document).
+
+References: server (glossary)
+
+Tags: networking

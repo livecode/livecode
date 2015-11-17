@@ -55,6 +55,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "cpalette.h"
 #include "vclip.h"
 #include "redraw.h"
+#include "widget.h"
 
 #include "globals.h"
 #include "mctheme.h"
@@ -230,17 +231,24 @@ const char *MCCard::gettypestring()
 	return MCcardstring;
 }
 
-bool MCCard::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor)
+bool MCCard::visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor)
 {
-	bool t_continue;
-	t_continue = true;
-
 	// If the card doesn't match the part number, we do nothing.
 	if (p_part != 0 && getid() != p_part)
 		return true;
 
-	if (p_style == VISIT_STYLE_DEPTH_LAST)
-		t_continue = p_visitor -> OnCard(this);
+	return MCObject::visit(p_options, p_part, p_visitor);
+}
+
+bool MCCard::visit_self(MCObjectVisitor *p_visitor)
+{
+	return p_visitor -> OnCard(this);
+}
+
+bool MCCard::visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor)
+{
+	bool t_continue;
+	t_continue = true;
 
 	if (t_continue && objptrs != NULL)
 	{
@@ -248,14 +256,11 @@ bool MCCard::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_vis
 		t_objptr = objptrs;
 		do
 		{
-			t_continue = t_objptr -> visit(p_style, p_part, p_visitor);
+			t_continue = t_objptr -> visit(p_options, p_part, p_visitor);
 			t_objptr = t_objptr -> next();
 		}
 		while(t_continue && t_objptr != objptrs);
 	}
-
-	if (t_continue && p_style == VISIT_STYLE_DEPTH_FIRST)
-		t_continue = p_visitor -> OnCard(this);
 
 	return t_continue;
 }
@@ -583,7 +588,15 @@ Boolean MCCard::mfocus(int2 x, int2 y)
 				else
 					mfocused = tptr;
 
-				if (newfocused && mfocused != NULL && mfocused -> getref() -> gettype() != CT_GROUP)
+                // The widget event manager handles enter/leave itself
+				if (newfocused && mfocused != NULL &&
+                    mfocused -> getref() -> gettype() != CT_GROUP &&
+#ifdef WIDGETS_HANDLE_DND
+                    mfocused -> getref() -> gettype() != CT_WIDGET)
+#else
+                    (MCdispatcher -> isdragtarget() ||
+                    mfocused -> getref() -> gettype() != CT_WIDGET))
+#endif
 				{
 					mfocused->getref()->enter();
 					
@@ -990,18 +1003,22 @@ void MCCard::timer(MCNameRef mptr, MCParameter *params)
 			if (mfocused == NULL && MCbuttonstate)
 			{
 				if (tool == T_BROWSE)
+				{
 					if (message(MCM_mouse_still_down) == ES_ERROR)
 						senderror();
 					else
 						again = True;
+				}
 			}
 			if (hashandlers & HH_IDLE)
 			{
 				if (tool == T_BROWSE)
+				{
 					if (message(MCM_idle) == ES_ERROR)
 						senderror();
 					else
 						again = True;
+				}
 			}
 			if (again)
 				MCscreen->addtimer(this, MCM_idle, MCidleRate);
@@ -1012,7 +1029,7 @@ void MCCard::timer(MCNameRef mptr, MCParameter *params)
 }
 
 #ifdef LEGACY_EXEC
-Exec_stat MCCard::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+Exec_stat MCCard::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
 {
 	MCRectangle minrect;
 	uint2 num;
@@ -1153,7 +1170,7 @@ Exec_stat MCCard::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep,
 		return ES_ERROR;
 #endif /* MCCard::getprop */
 	default:
-		return MCObject::getprop_legacy(parid, which, ep, effective);
+		return MCObject::getprop_legacy(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }
@@ -1484,6 +1501,20 @@ void MCCard::recompute()
 	}
 }
 
+void MCCard::toolchanged(Tool p_new_tool)
+{
+    if (objptrs != NULL)
+    {
+        MCObjptr *optr = objptrs;
+        do
+        {
+            optr->getref()->toolchanged(p_new_tool);
+            optr = optr->next();
+        }
+        while (optr != objptrs);
+    }
+}
+
 void MCCard::kfocusset(MCControl *target)
 {
 	if (objptrs != NULL)
@@ -1798,7 +1829,7 @@ void MCCard::relayercontrol_insert(MCControl *p_control, MCControl *p_target)
 
 Exec_stat MCCard::relayer(MCControl *optr, uint2 newlayer)
 {
-	if (!opened || !MCrelayergrouped && optr->getparent()->gettype() == CT_GROUP || (optr -> getparent() -> gettype() == CT_CARD && optr -> getparent() != this))
+	if (!opened || (!MCrelayergrouped && optr->getparent()->gettype() == CT_GROUP) || (optr -> getparent() -> gettype() == CT_CARD && optr -> getparent() != this))
 		return ES_ERROR;
 	uint2 oldlayer = 0;
 	if (!MCrelayergrouped)
@@ -1927,6 +1958,8 @@ Exec_stat MCCard::relayer(MCControl *optr, uint2 newlayer)
 		gptr->clearfocus(optr);
 	}
 
+    optr->layerchanged();
+    
 	if (getstack() == MCmousestackptr
 	        && MCU_point_in_rect(optr->getrect(), MCmousex, MCmousey))
 		mfocus(MCmousex, MCmousey);
@@ -1946,7 +1979,7 @@ MCCard *MCCard::findname(Chunk_term type, MCNameRef inname)
 
 MCCard *MCCard::findid(Chunk_term type, uint4 inid, Boolean alt)
 {
-	if (type == CT_CARD && (inid == obj_id || alt && inid == altid))
+	if (type == CT_CARD && (inid == obj_id || (alt && inid == altid)))
 		return this;
 	else
 		return NULL;
@@ -1990,9 +2023,9 @@ Boolean MCCard::count(Chunk_term otype, Chunk_term ptype,
 
 			// MW-2011-08-08: [[ Groups ]] Use 'isbackground()' rather than !F_GROUP_ONLY.
 			if (ptype == CT_UNDEFINED
-			        || otype == CT_GROUP && ttype == CT_GROUP
-			        || ptype != CT_BACKGROUND && ttype != CT_GROUP
-			        || (ttype == CT_GROUP && ptype == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground())
+			    || (otype == CT_GROUP && ttype == CT_GROUP)
+			    || (ptype != CT_BACKGROUND && ttype != CT_GROUP)
+			    || ((ttype == CT_GROUP && ptype == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground()))
 				if (optr->getref()->count(otype, stop, num))
 				{
 					if (!opened)
@@ -2035,9 +2068,9 @@ MCControl *MCCard::getnumberedchild(integer_t p_number, Chunk_term p_obj_type, C
 		
 		// MW-2011-08-08: [[ Groups ]] Use 'isbackground()' rather than !F_GROUP_ONLY.
 		if (p_parent_type == CT_UNDEFINED
-		        || p_obj_type == CT_GROUP && t_type == CT_GROUP
-		        || p_parent_type != CT_BACKGROUND && t_type != CT_GROUP
-		        || (t_type == CT_GROUP && p_parent_type == CT_BACKGROUND) == static_cast<MCGroup *>(t_optr->getref())->isbackground())
+		    || (p_obj_type == CT_GROUP && t_type == CT_GROUP)
+		    || (p_parent_type != CT_BACKGROUND && t_type != CT_GROUP)
+		    || ((t_type == CT_GROUP && p_parent_type == CT_BACKGROUND) == static_cast<MCGroup *>(t_optr->getref())->isbackground()))
 		{
 			if (!t_optr->getref()->getopened())
 				t_optr->getref()->setparent(this);
@@ -2129,11 +2162,11 @@ MCControl *MCCard::getchild(Chunk_term etype, MCStringRef p_expression,
 				{
 					Chunk_term ttype = optr->getref()->gettype();
 					if (ptype == CT_UNDEFINED
-				        || otype == CT_GROUP && ttype == CT_GROUP
-				        || ptype != CT_BACKGROUND && ttype != CT_GROUP
-				        || (ttype == CT_GROUP && ptype == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground())
+					    || (otype == CT_GROUP && ttype == CT_GROUP)
+					    || (ptype != CT_BACKGROUND && ttype != CT_GROUP)
+					    || ((ttype == CT_GROUP && ptype == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground()))
 					{
-						if (otype == CT_LAYER && t_object -> gettype() > CT_CARD || t_object -> gettype() == otype)
+						if ((otype == CT_LAYER && t_object -> gettype() > CT_CARD) || t_object -> gettype() == otype)
 							return (MCControl *)t_object;
 					}
 				}
@@ -2146,9 +2179,9 @@ MCControl *MCCard::getchild(Chunk_term etype, MCStringRef p_expression,
 
 				// MW-2011-08-08: [[ Groups ]] Use 'isbackground()' rather than !F_GROUP_ONLY.
 				if (ptype == CT_UNDEFINED
-				        || otype == CT_GROUP && ttype == CT_GROUP
-				        || ptype != CT_BACKGROUND && ttype != CT_GROUP
-				        || (ttype == CT_GROUP && ptype == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground())
+				    || (otype == CT_GROUP && ttype == CT_GROUP)
+				    || (ptype != CT_BACKGROUND && ttype != CT_GROUP)
+				    || ((ttype == CT_GROUP && ptype == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground()))
 				{
 					if (!optr->getref()->getopened())
 						optr->getref()->setparent(this);
@@ -2188,9 +2221,9 @@ MCControl *MCCard::getchild(Chunk_term etype, MCStringRef p_expression,
 
 					// MW-2011-08-08: [[ Groups ]] Use 'isbackground()' rather than !F_GROUP_ONLY.
 					if (ptype == CT_UNDEFINED
-							|| otype == CT_GROUP && ttype == CT_GROUP
-							|| ptype != CT_BACKGROUND && ttype != CT_GROUP
-							|| (ttype == CT_GROUP && ptype == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground())
+					    || (otype == CT_GROUP && ttype == CT_GROUP)
+					    || (ptype != CT_BACKGROUND && ttype != CT_GROUP)
+					    || ((ttype == CT_GROUP && ptype == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground()))
 						foundobj = optr->getref()->findid(otype, tofindid, True);
 					if (foundobj != NULL)
 					{
@@ -2219,9 +2252,9 @@ MCControl *MCCard::getchild(Chunk_term etype, MCStringRef p_expression,
 				Chunk_term ttype = optr->getref()->gettype();					
 				// MW-2011-08-08: [[ Groups ]] Use 'isbackground()' rather than !F_GROUP_ONLY.
 				if (ptype == CT_UNDEFINED
-					|| otype == CT_GROUP && ttype == CT_GROUP
-					|| ptype != CT_BACKGROUND && ttype != CT_GROUP
-					|| (ttype == CT_GROUP && ptype == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground())
+				    || (otype == CT_GROUP && ttype == CT_GROUP)
+				    || (ptype != CT_BACKGROUND && ttype != CT_GROUP)
+				    || ((ttype == CT_GROUP && ptype == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground()))
 				{
 					if (!optr->getref()->getopened())
 						optr->getref()->setparent(this);
@@ -2825,10 +2858,7 @@ void MCCard::erasefocus(MCObject *p_object)
 MCObjptr *MCCard::newcontrol(MCControl *cptr, Boolean needredraw)
 {
 	if (opened)
-	{
 		cptr->setparent(this);
-		cptr->open();
-	}
 
 	MCObjptr *newptr = new MCObjptr;
 	newptr->setparent(this);
@@ -2838,6 +2868,9 @@ MCObjptr *MCCard::newcontrol(MCControl *cptr, Boolean needredraw)
 	// MW-2011-08-19: [[ Layers ]] Notify the stack that a layer may have ben inserted.
 	layer_added(cptr, objptrs != newptr ? newptr -> prev() : nil, nil);
 
+	if (opened)
+		cptr->open();
+	
 	return newptr;
 }
 
@@ -3069,10 +3102,12 @@ MCRectangle MCCard::computecrect()
 		do
 		{
 			if (optr->getref()->isvisible())
+			{
 				if (minrect.width == 0)
 					minrect = optr->getref()->getrect();
 				else
 					minrect = MCU_union_rect(optr->getref()->getrect(), minrect);
+			}
 			optr = optr->next();
 		}
 		while (optr != objptrs);
@@ -3108,8 +3143,22 @@ void MCCard::updateselection(MCControl *cptr, const MCRectangle &oldrect,
 		Boolean was, is;
 		if (MCselectintersect)
 		{
-			was = cptr->maskrect(oldrect);
-			is = cptr->maskrect(selrect);
+            was = cptr->maskrect(oldrect);
+            is = cptr->maskrect(selrect);
+
+            // AL-2015-10-07:: [[ External Handles ]] If either dimension is 0,
+            //  recheck the selection intersect
+            MCRectangle t_rect;
+            t_rect = cptr -> getrect();
+
+            if (t_rect . width == 0 || t_rect . height == 0)
+            {
+                if (!was)
+                    was = MCU_line_intersect_rect(oldrect, t_rect);
+                
+                if (!is)
+                    is = MCU_line_intersect_rect(selrect, t_rect);
+            }
 		}
 		else
 		{
@@ -3329,7 +3378,7 @@ IO_stat MCCard::load(IO_handle stream, uint32_t version)
 	IO_stat stat;
 
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 
 //---- 2.7+:
 //  . F_OPAQUE is now valid - default true
@@ -3343,19 +3392,19 @@ IO_stat MCCard::load(IO_handle stream, uint32_t version)
 
 	rect.y = 0; // in case saved on mac with editMenus false
 	if ((stat = loadpropsets(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	while (True)
 	{
 		uint1 type;
 		if ((stat = IO_read_uint1(&type, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (type == OT_PTR)
 		{
 			MCObjptr *newptr = new MCObjptr;
 			if ((stat = newptr->load(stream)) != IO_NORMAL)
 			{
 				delete newptr;
-				return stat;
+				return checkloadstat(stat);
 			}
 			newptr->setparent(this);
 			newptr->appendto(objptrs);
@@ -3381,7 +3430,7 @@ IO_stat MCCard::loadobjects(IO_handle stream, uint32_t version)
 		{
 			uint1 t_object_type;
 			if ((stat = IO_read_uint1(&t_object_type, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 
 			MCControl *t_control;
 			switch(t_object_type)
@@ -3410,6 +3459,9 @@ IO_stat MCCard::loadobjects(IO_handle stream, uint32_t version)
 			case OT_MCEPS:
 				t_control = new MCEPS;
 			break;
+            case OT_WIDGET:
+                t_control = new MCWidget;
+                break;
 			case OT_MAGNIFY:
 				t_control = new MCMagnify;
 			break;
@@ -3417,14 +3469,14 @@ IO_stat MCCard::loadobjects(IO_handle stream, uint32_t version)
 				t_control = new MCColors;
 			break;
 			default:
-				return IO_ERROR;
+				return checkloadstat(IO_ERROR);
 			break;
 			}
 
 			if ((stat = t_control -> load(stream, version)) != IO_NORMAL)
 			{
 				delete t_control;
-				return stat;
+				return checkloadstat(stat);
 			}
 
 			t_objptr -> setref(t_control);
@@ -3434,7 +3486,7 @@ IO_stat MCCard::loadobjects(IO_handle stream, uint32_t version)
 		while(t_objptr != objptrs);
 	}
 
-	return stat;
+	return checkloadstat(stat);
 }
 
 IO_stat MCCard::save(IO_handle stream, uint4 p_part, bool p_force_ext)
@@ -3725,22 +3777,33 @@ void MCCard::scheduledelete(bool p_is_child)
     MCObject::scheduledelete(p_is_child);
     
     if (objptrs != NULL)
-	{
-		MCObjptr *optr = objptrs;
-		do
-		{
-			// MW-2011-08-09: [[ Groups ]] Shared groups just get reparented, rather
-			//   than removed from the stack since they cannot be 'owned' by the card.
-			if (optr->getref()->gettype() == CT_GROUP && static_cast<MCGroup *>(optr->getref())->isshared())
-			{
+    {
+        MCObjptr *optr = objptrs;
+        do
+        {
+            // MW-2011-08-09: [[ Groups ]] Shared groups just get reparented, rather
+            //   than removed from the stack since they cannot be 'owned' by the card.
+            if (optr->getref()->gettype() == CT_GROUP && static_cast<MCGroup *>(optr->getref())->isshared())
+            {
                 // Do nothing for shared groups as they move to the stack.
-			}
-			else
-			{
+            }
+            else
+            {
                 optr -> getref() -> scheduledelete(true);
-			}
-			optr = optr->next();
-		}
-		while (optr != objptrs);
-	}
+            }
+            optr = optr->next();
+        }
+        while (optr != objptrs);
+    }
 }
+
+MCPlatformControlType MCCard::getcontroltype()
+{
+    return kMCPlatformControlTypeWindow;
+}
+
+MCPlatformControlPart MCCard::getcontrolsubpart()
+{
+    return kMCPlatformControlPartNone;
+}
+

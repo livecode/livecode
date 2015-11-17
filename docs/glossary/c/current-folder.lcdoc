@@ -1,0 +1,14 @@
+Name: current folder
+
+Synonyms: working directory,working directories,current directory,current directories,working folder,current folder,default folder
+
+Type: glossary
+
+Description:
+The <folder> where saved <file|files> will be placed by <default>. <relative file path|Relative file paths> are interpreted as starting from the current folder. 
+ 
+The current folder is specified by the <defaultFolder> <property>.
+
+References: defaultFolder (property), default (glossary), file (glossary), property (glossary), relative file path (glossary), folder (glossary)
+
+Tags: file system

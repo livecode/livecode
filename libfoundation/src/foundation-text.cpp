@@ -309,7 +309,7 @@ codepoint_t MCTextFilter_NormalizeNFC::GetNextCodepoint()
     MCMemoryCopy(m_State, t_norm, t_norm_length * sizeof(unichar_t));
     m_StateLength = t_norm_length;
     m_ReadIndex = 0;
-    delete[] t_norm;
+	free (t_norm);
     
     // All done
     if (m_State[0] > 0xD800 && m_State[0] < 0xDBFF)
@@ -397,7 +397,7 @@ codepoint_t MCTextFilter_NormalizeNFC::GetNextCodepointReverse()
         m_State[kMCTextFilterMaxNormLength - t_norm_length--] = t_norm[i++];
     m_StateLength = i;
     m_ReadIndex = 0;
-    delete[] t_norm;
+	free (t_norm);
     
     // All done
     if (m_StateLength > 1 && m_State[kMCTextFilterMaxNormLength - 2] > 0xD800 && m_State[kMCTextFilterMaxNormLength - 2] < 0xDBFF)

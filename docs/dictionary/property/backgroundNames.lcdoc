@@ -1,0 +1,36 @@
+Name: backgroundNames
+
+Type: property
+
+Syntax: get the backgroundNames of <stack> 
+
+Summary: Reports the <background|backgrounds> in a <stack>.
+
+Associations: stack
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+put the backgroundNames of this stack after allObjectsList
+
+Value:
+The <backgroundNames> of a <stack> reports a list of group names, one per <line>.
+This property is read-only and cannot be set.
+
+Description:
+Use the <backgroundNames> <property> to find out which <background|backgrounds> are available.
+
+The <backgroundNames> is the list of all <background|backgrounds> in the <stack> whose <backgroundBehavior> <property> is set to true, whether they appear on the <current card> or not. If a <group(command)> in the <stack> contains <group(glossary)|groups>, only the top-level <group(glossary)|groups> are reported.
+
+To find out which groups are placed on a card, use the groupNames <property>.
+
+Changes:
+In versions before 1.1, groupNames and backgroundNames were synonyms and could be used interchangeably.
+
+References: backgroundBehavior (property), line (keyword), group (command), stack (object), property (glossary), current card (glossary), background (glossary), group (glossary)
+
+Tags: objects

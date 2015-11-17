@@ -1,0 +1,25 @@
+Name: numeric
+
+Type: keyword
+
+Syntax: numeric
+
+Summary: Used with the <sort> and <sort container> <command|commands>, to <sort> numbers as a unit, not as a sequence of <characters>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+sort cards numeric by field "Social Security Number"
+
+Description:
+Use the <numeric> <keyword> when <sort|sorting> by a <field> or portion of a <container> that is a number.
+
+Alphabetical sorting does not take into account the special format of numbers with more than one digit. For example, a normal sort places 72 after 1280, because the first digit of 72 is greater than the first digit of 1280 (7 is greater than 1). The <numeric> <keyword> <sort|sorts> numbers in <numeric> order, rather than alphabetical order.
+
+References: characters (keyword), text (keyword), field (keyword), numeric (keyword), sort (command), sort container (command), keyword (glossary), command (glossary), container (glossary), sort (glossary)
+
+Tags: database

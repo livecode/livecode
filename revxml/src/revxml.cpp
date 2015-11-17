@@ -217,7 +217,7 @@ void REVXML_QUIT()
 }
 
 //------------------------------------UTILITY FUNCTIONS--------------------------
-void DispatchMetaCardMessage(char *messagename,char *tmessage)
+void DispatchMetaCardMessage(const char *messagename, const char *tmessage)
 {
 int retvalue = 0;
 SetGlobal("xmlvariable",tmessage,&retvalue);
@@ -227,7 +227,7 @@ sprintf(mcmessage,"global xmlvariable;try;send \"%s xmlvariable\" to current car
 SendCardMessage(mcmessage, &retvalue);
 }
 
-bool stringToBool(char *p_string)
+bool stringToBool(const char *p_string)
 {
 	if (stricmp(p_string, "true") == 0)
 		return true;
@@ -385,14 +385,15 @@ void XML_NewDocument(char *args[], int nargs, char **retstring,
 	*pass = False;
 	*error = False;
 	char *result = NULL;
-	CXMLDocument *newdoc = new CXMLDocument;
-	if (nargs < 2){
 
+	if (nargs < 2){
 
 		*error = True;
 		result = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
 	}
 	else{
+		CXMLDocument *newdoc = new CXMLDocument;
+
 		Bool wellformed = util_strnicmp(args[1],"TRUE",4) == 0;
 		
 		Bool buildtree = True;
@@ -1342,20 +1343,19 @@ void XML_SetElementContents(char *args[], int nargs, char **retstring, Bool *pas
                         t_new_node_list = xmlStringGetNodeList(tdoc -> GetDocPtr(), t_encoded_string);
 
                         // Create a new text element to hold the content
-                        CXMLElement *t_new_element;
-                        t_new_element = new CXMLElement();
-                        t_new_element -> SetNodePtr(t_new_node_list);
+                        CXMLElement t_new_element;
+                        t_new_element.SetNodePtr(t_new_node_list);
 
                         // Save the previous first child element
                         xmlNodePtr t_old_first_element;
                         t_old_first_element = telement . GetNodePtr() -> children;
 
                         // Set the new text element to be the first child
-                        telement . GetNodePtr() -> children = t_new_element -> GetNodePtr();
+                        telement . GetNodePtr() -> children = t_new_element.GetNodePtr();
                         telement . GetNodePtr() -> children -> next = t_old_first_element;
 
                         if (t_old_first_element != NULL)
-                            t_old_first_element -> prev = t_new_element -> GetNodePtr();
+                            t_old_first_element -> prev = t_new_element.GetNodePtr();
                     }
 				}
 				else
@@ -2183,6 +2183,8 @@ void XML_FindElementByAttributeValue(char *args[], int nargs, char **retstring, 
 							result = curelement -> GetPath();
 							break;
 						}
+                        
+                        delete tvalue;
 					}
 
 				}

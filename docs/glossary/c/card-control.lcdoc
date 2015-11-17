@@ -1,0 +1,12 @@
+Name: card control
+
+Synonyms: card button,card field,card control,card object
+
+Type: glossary
+
+Description:
+A <control> (such as a <field> or <button>) that is not part of a <group> and therefore appears on only one <card> of a <stack>.
+
+References: control (object), button (object), field (object), stack (object), card (object), group (glossary)
+
+Tags: objects

@@ -1,0 +1,28 @@
+Name: browserStartedLoading
+
+Type: message
+
+Syntax: browserStartedLoading <url> 
+
+Summary: Sent when the given url has started to load.
+
+Introduced: 4.5.3
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+on browserStartedLoading pURL
+  put "loading" && pURL && "..." into field "status"
+end browserStartedLoading
+
+Parameters:
+url: The URL that has started to load.
+
+Description:
+Handle the <browserStartedLoading> message to perform an action when a URL has started to load in a mobile browser created using <mobileControlCreate>.
+
+The <browserStartedLoading> message is sent to the object containing the script that created the browser control after a request has been allowed and the URL has started loading.
+
+References: mobileControlCreate (command), mobileControlDelete (command), mobileControlSet (command), mobileControlGet (function), mobileControlTarget (function), mobileControls (function), browserLoadRequest (message), browserLoadFailed (message), browserFinishedLoading (message)

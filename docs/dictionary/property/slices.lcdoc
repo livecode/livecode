@@ -1,0 +1,30 @@
+Name: slices
+
+Type: property
+
+Syntax: set the slices to <number> 
+
+Summary: Specifies how many angles a <line> can snap to when drawing a <line> or irregular <polygon> with the Shift key held down.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+set the slices to 4 -- only 90-degree angles with shift key
+
+Example:
+set the slices to card field 2
+
+Value:
+The <slices> is an <integer> greater than 1.
+By default, the <slices> <property> is 16.
+
+Description:
+Use the <slices> <property> to draw lines at specified angles.
+
+The <slices> <property> is specified in <degree|degrees>. 360 (the number of <degree|degrees> in a full circle) divided by the <slices> yields the angle of each slice to the next slice. For example, if the <slices> is set to 16,  the angle of a line drawn with the Shift key held down can be any multiple of 22.5 <degree|degrees> (360 divided by 16).
+
+References: polySides (property), centered (property), grid (property), integer (keyword), polygon (keyword), line (keyword), property (glossary), degree (glossary)

@@ -1,0 +1,14 @@
+Name: literal string
+
+Synonyms: literal string,string literal,literal
+
+Type: glossary
+
+Description:
+A group of <character|characters> used exactly as they are, rather than as the name of an <object>, <property>, <function>, or <variable>. 
+ 
+Literal strings are usually enclosed in <double quote|double quotes> (").
+
+References: property (glossary), character (glossary), variable (glossary), double quote (glossary), function (glossary), object (object)
+
+Tags: properties

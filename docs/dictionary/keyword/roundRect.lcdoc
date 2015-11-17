@@ -1,0 +1,36 @@
+Name: roundRect
+
+Type: keyword
+
+Syntax: roundRect
+
+Summary: Specifies that a <button> or <graphic> is shaped like a rectangle with rounded corners. It also designates the <paint tool> used to draw rounded-corner rectangles.
+
+Synonyms: round rect,round rectangle,roundRectangle
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the style of graphic "Outline" to roundRect
+
+Example:
+choose round rectangle tool
+
+Description:
+Use the <roundRect> <keyword> to paint a rounded rectangle or square with the <penColor> or to change a <graphic(keyword)> or <button> to a rounded rectangle shape.
+
+When using the Round Rectangle tool, the cursor is a crosshairs shape (over stack windows) or an arrow (anywhere else). This tool is used to draw a rounded rectangle or square in the penColor, filled with the <brushColor> (or <brushPattern>).
+
+If you try to paint with the Round Rectangle tool on a card that has no images, an image the size of the card is created to hold the painting. If the current card already has one or more images, painting outside the image has no effect.
+
+Setting the style of a <button> or <graphic(keyword)> to roundRect makes the graphic into a rounded rectangle. Rounded rectangle <graphic(object)|graphics>, unlike painted rounded rectangles, can be changed and reshaped: use the height and width <properties> to change the shape and size.
+
+>*Important:*  You can use the synonyms--round rect, round rectangle, and roundRectangle--to choose the round rectangle paint tool, but not to set a <graphic(object)|graphic's> <style> <property>.
+
+References: style (property), brushColor (property), properties (property), penColor (property), brushPattern (property), button (keyword), graphic (keyword), choose (command), graphic (object), keyword (glossary), property (glossary), paint tool (glossary)
+
+Tags: ui

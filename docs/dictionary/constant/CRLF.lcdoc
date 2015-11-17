@@ -1,0 +1,30 @@
+Name: CRLF
+
+Type: constant
+
+Syntax: CRLF
+
+Summary: Equivalent to a carriage return (ASCII 13, Control-M) followed by a line feed (ASCII 10, Control-J).
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+read from file myData until CRLF
+
+Example:
+put line x of field "Information" & CRLF after dataToExport
+
+Description:
+Use the <CRLF> <constant> as an easier-to-read substitute for numToChar(13) & numToChar(10).
+
+The <CRLF> <constant> is needed because you can't type the <characters> it represents in a <script>.
+
+The line feed character is the standard end-of-line delimiter on Unix systems. The end-of-line delimiter for Mac OS systems is a carriage return, and the end-of-line delimiter for Windows systems is a carriage return followed by a line feed.
+
+References: characters (keyword), return (constant), script (property), constant (command), read from file (command), write to file (command)
+
+Tags: text processing

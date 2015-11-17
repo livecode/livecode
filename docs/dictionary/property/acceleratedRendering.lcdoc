@@ -1,0 +1,46 @@
+Name: acceleratedRendering
+
+Type: property
+
+Syntax: set the acceleratedRendering of <stack> to { true | false }
+
+Summary: Specifies whether to use accelerated rendering for this stack
+
+Associations: stack
+
+Introduced: 5.0.2
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,mobile
+
+Example:
+set the acceleratedRendering of this stack to true
+
+Parameters:
+Stack: The name or ID of the stack.
+
+Description:
+Use the acceleratedRendering property to put LiveCode into accelerated rendering mode and set the compositor properties to recommended defaults.
+
+The <acceleratedRendering> property has been added to help simplify the use of the accelerated rendering features. When set to true, LiveCode automatically configures the compositor properties to the best defaults for the current platform.
+
+When <acceleratedRendering> is set to true, if the compositorType has not previously been set, the engine configures the compositor properties as follows:
+
+* Mac: compositorType = CoreGraphics, compositorTileSize = 32, compositorCacheLimit = 32Mb
+* Windows/Linux: compositorType = Software, compositorTileSize = 32, compositorCacheLimit = 32Mb
+* iOS (non-Retina iPhone): compositorType = OpenGL, compositorTileSize = 32, compositorCacheLimit = 16Mb
+* iOS (iPad / Retina iPhone): compositorType = OpenGL, compositorTileSize = 64, compositorCacheLimit = 32Mb
+* iOS (iPad Retina): compositorType = OpenGL, compositorTileSize = 64, compositorCacheLimit = 64Mb
+* Android (VGA screen or smaller): compositorType = OpenGL, compositorTileSize = 32, compositorCacheLimit = 16Mb
+* Android (larger than VGA screen): compositorType = OpenGL, compositorTileSize = 64, compositorCacheLimit = 32Mb
+
+If the <acceleratedRendering> property is set to false, then the compositorType is set to empty.
+
+>*Warning:* Changing the compositor settings from their defaults is only recommended for advanced users.
+
+>*Note:* Set the <acceleratedRendering> property in a preOpenStack or preOpenCard handler - it is not persistent (not saved into the stackfile).
+
+References: compositorTileSize (property), layerMode (property), compositorType (property), compositorCacheLimit (property)
+
+Tags: windowing

@@ -1,0 +1,30 @@
+Name: ;
+
+Type: keyword
+
+Syntax: ;
+
+Summary: The <character> <;> is used to place two <statement|statements> on a single <line>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+go next card; wait 1 second; go previous card
+
+Example:
+repeat with x = 1 to 10; doSomething x; end repeat
+
+Description:
+Use the ; character to compress code into fewer visible lines for easier reading.
+
+Lines that are split with <;> are shown in the <script editor> as a single <line>, but when <execute|executed>, are treated as multiple <lines> of code. The following line counts as three <statement|statements>:
+
+  go card 1; beep 2; answer the date
+
+A <;> character which is used within a <literal string> does not signal a new line, because the <;> is treated as part of the <string> instead of being treated as a line break.
+
+References: character (keyword), \ (keyword), line (keyword), string (keyword), lines (keyword), literal string (glossary), statement (glossary), script editor (glossary), execute (glossary)

@@ -1,0 +1,30 @@
+Name: HCStack
+
+Type: property
+
+Syntax: get the HCStack of <stack> 
+
+Summary: Reports whether a <stack> was originally <import|imported> from <HyperCard>.
+
+Associations: stack
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the HCAddressing of this stack to the HCStack of this stack
+
+Value (bool):The <HCStack> of a <stack> is true or false.
+This property is read-only and cannot be set.
+
+Description:
+Use the <HCStack> <property> to find out whether you need to adjust <properties> for compatibility with <script|scripts> <import|imported> from <HyperCard>.
+
+If the specified stack was originally a HyperCard stack that was imported into LiveCode, its <HCStack> <property> is true.
+
+If the specified stack was never a HyperCard stack, its <HCStack> <property> is false.
+
+References: HCImportStat (property), properties (property), property (glossary), script (glossary), import (glossary), HyperCard (glossary), stack (object)

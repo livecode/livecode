@@ -202,8 +202,9 @@ void MCAudioClip::timer(MCNameRef mptr, MCParameter *params)
 			delete this;
 	}
 }
- #ifdef LEGACY_EXEC
-Exec_stat MCAudioClip::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+
+#ifdef LEGACY_EXEC
+Exec_stat MCAudioClip::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective, bool recursive)
 {
 	switch (which)
     {
@@ -223,7 +224,7 @@ Exec_stat MCAudioClip::getprop_legacy(uint4 parid, Properties which, MCExecPoint
 		break;
 #endif /* MCAudioClip::getprop */ 
 	default:
-		return MCObject::getprop_legacy(parid, which, ep, effective);
+		return MCObject::getprop_legacy(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }
@@ -731,7 +732,7 @@ Boolean MCAudioClip::open_audio()
 		return x11audio -> init(NULL, nchannels, swidth);
 	return false ;
 }
-#elif defined _SERVER || defined(_MOBILE)
+#elif defined _SERVER || defined(_MOBILE) || defined(__EMSCRIPTEN__)
 Boolean MCAudioClip::open_audio()
 {
 	return False;
@@ -853,7 +854,7 @@ Boolean MCAudioClip::play()
 	}
 
 	return True;
-#elif defined(_SERVER) || defined(_MOBILE)
+#elif defined(_SERVER) || defined(_MOBILE) || defined(__EMSCRIPTEN__)
 	return True;
 #else
 #error "MCAudioClip::play() not supported for this platform"
@@ -964,26 +965,26 @@ IO_stat MCAudioClip::load(IO_handle stream, uint32_t version)
 	IO_stat stat;
 
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint4(&size, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if (size != 0)
 	{
 		samples = new int1[size];
 		if ((stat = IO_read(samples, size, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	}
 	if ((stat = IO_read_uint2(&format, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint2(&nchannels, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint2(&swidth, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint2(&rate, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if (flags & F_LOUDNESS)
 		if ((stat = IO_read_uint2(&loudness, stream)) != IO_NORMAL)
-            return stat;
+            return checkloadstat(stat);
 	return loadpropsets(stream, version);
 }
 

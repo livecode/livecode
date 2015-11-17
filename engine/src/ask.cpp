@@ -87,10 +87,12 @@ Parse_stat MCAsk::parse(MCScriptPoint &sp)
 	initpoint(sp);
 
 	if (sp . next(t_type) == PS_NORMAL)
+	{
 		if (sp . lookup(SP_ASK, t_literal) == PS_NORMAL)
 			mode = (Ask_type)t_literal -> which;
 		else
 			sp . backup();
+	}
 
 	// MW-2008-07-23: [[ Bug 6821 ]] ask files "foo" crashes.
 	//   This is because the mode check is not strict enough. If the given ask
@@ -124,10 +126,12 @@ Parse_stat MCAsk::parse(MCScriptPoint &sp)
 			t_error = PE_ANSWER_BADTITLE;
 	
 	if (t_error == PE_UNDEFINED && sp . skip_token(SP_FACTOR, TT_PREP, PT_AS) == PS_NORMAL)
+	{
 		if (sp . skip_token(SP_ASK, TT_UNDEFINED, AT_SHEET) == PS_NORMAL)
 			sheet = True;
 		else
 			t_error = PE_ANSWER_BADRESPONSE;
+	}
 			
 	if (t_error != PE_UNDEFINED)
 	{

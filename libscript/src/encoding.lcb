@@ -1,0 +1,169 @@
+/* Copyright (C) 2003-2015 LiveCode Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.encoding
+
+foreign handler EvalEncodedOfValue(in Target as any, out Value as data) returns nothing binds to "<builtin>"
+foreign handler EvalDecodedOfValue(in Target as data, out Value as any) returns nothing binds to "<builtin>"
+
+foreign handler ExecCompress(inout Target as data) returns nothing binds to "<builtin>"
+foreign handler ExecDecompress(inout Target as data) returns nothing binds to "<builtin>"
+
+foreign handler ExecEncodeUsingBase64(in Source as data, out Value as string) returns nothing binds to "<builtin>"
+foreign handler ExecDecodeUsingBase64(in Source as string, out Value as data) returns nothing binds to "<builtin>"
+
+foreign handler ExecEncodeUsingBinary(in Source as data, in Format as string, out Value as string) returns nothing binds to "<builtin>"
+foreign handler ExecDecodeUsingBinary(in Source as string, in Format as string, out Value as data) returns nothing binds to "<builtin>"
+
+foreign handler ExecEncodeUsingUTF8(in Source as string, out Target as data) returns nothing binds to "<builtin>"
+foreign handler ExecDecodeUsingUTF8(in Source as data, out Target as string) returns nothing binds to "<builtin>"
+foreign handler ExecEncodeUsingUTF16(in Source as string, out Target as data) returns nothing binds to "<builtin>"
+foreign handler ExecDecodeUsingUTF16(in Source as data, out Target as string) returns nothing binds to "<builtin>"
+foreign handler ExecEncodeUsingUTF32(in Source as string, out Target as data) returns nothing binds to "<builtin>"
+foreign handler ExecDecodeUsingUTF32(in Source as data, out Target as string) returns nothing binds to "<builtin>"
+foreign handler ExecEncodeUsingASCII(in Source as string, out Target as data) returns nothing binds to "<builtin>"
+foreign handler ExecDecodeUsingASCII(in Source as data, out Target as string) returns nothing binds to "<builtin>"
+
+foreign handler EvalURLEncoded(in Target as string, out Value as string) returns nothing binds to "<builtin>"
+foreign handler EvalURLDecoded(in Target as string, out Value as string) returns nothing binds to "<builtin>"
+
+--
+
+syntax EncodeValue is statement
+   "the" "encoded" "of" <Target: Expression>
+begin 
+    EvalEncodedOfValue(Target, output)
+end syntax
+
+syntax DecodeValue is statement
+    "the" "decoded" "of" <Target: Expression>
+begin 
+    EvalDecodedOfValue(Target, output)
+end syntax
+
+--
+
+syntax CompressData is statement
+   "compress" <Target: Expression>
+begin 
+    ExecCompress(Target)
+end syntax
+
+syntax DecompressData is statement
+    "decode" <Target: Expression>
+begin 
+    ExecCompress(Target)
+end syntax
+
+--
+
+syntax EncodeUsingBase64 is statement
+"encode" <Source: Expression> "using" "base64" ["into" <Target: Expression>]
+begin
+    ExecEncodeUsingBase64(Source, Source)
+    ExecEncodeUsingBase64(Source, Target)
+end syntax
+
+syntax DecodeUsingBase64 is statement
+"decode" <Source: Expression> "using" "base64" ["into" <Target: Expression>]
+begin
+    ExecDecodeUsingBase64(Source, Source)
+    ExecDecodeUsingBase64(Source, Target)
+end syntax
+
+--
+
+syntax EncodeUsingBinary is statement
+"encode" <Source: Expression> "using" "binary" "format" <Format: Expression> ["into" <Target: Expression>]
+begin
+    ExecEncodeUsingBinary(Source, Format, Source)
+    ExecEncodeUsingBinary(Source, Format, Target)
+end syntax
+
+syntax DecodeUsingBinary is statement
+   "decode" <Source: Expression> "using" "binary" "format" <Format: Expression> ["into" <Target: Expression>]
+begin
+    ExecDecodeUsingBinary(Source, Format, Source)
+    ExecDecodeUsingBinary(Source, Format, Target)
+end syntax
+
+--
+
+syntax EncodeTextUsingUTF8 is statement
+    "encode" <Target: Expression> "using" "utf8"
+begin
+    ExecEncodeTextUsingUTF8(Target, Target)
+end syntax
+
+syntax DecodeTextUsingUTF8 is statement
+    "decode" <Target: Expression> "using" "utf8"
+begin
+    ExecDecodeTextUsingUTF8(Target, Target)
+end syntax
+
+syntax EncodeTextUsingUTF16 is statement
+    "encode" <Target: Expression> "using" "utf16"
+begin
+    ExecEncodeTextUsingUTF16(Target, Target)
+end syntax
+
+syntax DecodeTextUsingUTF16 is statement
+    "decode" <Target: Expression> "using" "utf16"
+begin
+    ExecDecodeTextUsingUTF16(Target, Target)
+end syntax
+
+syntax EncodeTextUsingUTF32 is statement
+    "encode" <Target: Expression> "using" "utf32"
+begin
+    ExecEncodeTextUsingUTF32(Target, Target)
+end syntax
+
+syntax DecodeTextUsingUTF32 is statement
+    "decode" <Target: Expression> "using" "utf32"
+begin
+    ExecDecodeTextUsingUTF32(Target, Target)
+end syntax
+
+syntax EncodeTextUsingAscii is statement
+    "encode" <Target: Expression> "using" "ascii"
+begin
+    ExecEncodeTextUsingUTF8(Target, Target)
+end syntax
+
+syntax DecodeTextUsingASCII is statement
+    "decode" <Target: Expression> "using" "ascii"
+begin
+    ExecDecodeTextUsingASCII(Target, Target)
+end syntax
+
+--
+
+syntax URLEncoded is prefix operator with precedence 3
+    "the" "url" "encoded" "of" <Target: Expression>
+begin
+    EvalURLEncoded(Target, output)
+end syntax
+
+syntax URLDecoded is prefix operator with precedence 3
+    "the" "url" "decoded" "of" <Target: Expression>
+begin
+    EvalURLDecoded(Target, output)
+end syntax
+
+--
+
+end module

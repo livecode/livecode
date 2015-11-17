@@ -33,6 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 #include "player.h"
 #include "exec-interface.h"
+#include "filepath.h"
 
 #include "osspec.h"
 
@@ -251,16 +252,6 @@ void MCPlayer::Redraw(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-// SN-2015-01-06: [[ Merge-6.7.2-rc-1 ]] Update to MCStringRef
-static bool MCPathIsAbsolute(MCStringRef p_path)
-{
-    if (MCStringIsEmpty(p_path))
-        return false;
-
-    return MCStringGetCharAtIndex(p_path, 0) == '/'
-            || MCStringGetCharAtIndex(p_path, 0) == ':';
-}
 
 static bool MCPathIsURL(MCStringRef p_path)
 {

@@ -84,9 +84,6 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 
 	if (m_rep != nil)
 	{
-		uint32_t t_frame_duration;
-		t_frame_duration = 0;
-		
 		if (m_rep->GetType() == kMCImageRepVector)
 		{
 			MCU_set_rect(drect, dx - sx, dy - sy, rect.width, rect.height);
@@ -134,7 +131,7 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
                     t_has_transform = true;
                     t_transform = MCGAffineTransformMakeIdentity();
                 }
-                t_transform = MCGAffineTransformScale(t_transform, dw / (float)sw, dh / (float)sh);
+                t_transform = MCGAffineTransformPreScale(t_transform, dw / (float)sw, dh / (float)sh);
             }
             
 			MCGFloat t_device_scale;
@@ -165,9 +162,6 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 			t_success = t_rep->LockImageFrame(currentframe, t_device_scale, t_frame);
 			if (t_success)
 			{
-				// IM-2014-08-01: [[ Bug 13021 ]] Get frame duration to avoid re-locking later
-				t_frame_duration = t_frame.duration;
-				
 				MCImageDescriptor t_image;
 				MCMemoryClear(&t_image, sizeof(MCImageDescriptor));
 
@@ -231,6 +225,12 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 			{
 				if (!m_animate_posted)
 				{
+					// IM-2014-11-25: [[ ImageRep ]] Use ImageRep method to get frame duration
+					uint32_t t_frame_duration;
+					t_frame_duration = 0;
+					
+					/* UNCHECKED */ m_rep->GetFrameDuration(currentframe, t_frame_duration);
+					
 					m_animate_posted = true;
 					MCscreen->addtimer(this, MCM_internal, t_frame_duration);
 				}

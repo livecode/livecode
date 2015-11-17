@@ -1,0 +1,14 @@
+Name: scrollbar
+
+Synonyms: scrollbar,scroll bar
+
+Type: object
+
+Description:
+An <object> that displays a quantity, horizontally or vertically. 
+ 
+(<field|Fields> and <group|groups> can also have scrollbars, but these are part of the <field> or <group>, rather than separate <object|objects>.)
+
+References: field (object), object (object), group (glossary)
+
+Tags: objects

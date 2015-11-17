@@ -57,6 +57,7 @@ The currently-supported PLATFORMs are:
   linux-x86_64
   android-armv6
   win-x86
+  emscripten
 
 EOF
   exit $1
@@ -176,6 +177,7 @@ case ${PLATFORM} in
   mac) ;;
   ios) ;;
   win-x86) ;;
+  emscripten) ;;
   *)
     echo "ERROR: Unrecognised platform: '${PLATFORM}'" >&2
     exit 1;;
@@ -198,6 +200,7 @@ if test -z "$OS"; then
     mac*) OS="mac" ;;
     ios*) OS="ios" ;;
     win*) OS="win" ;;
+    emscripten*) OS="emscripten" ;;
   esac
 fi
 
@@ -206,7 +209,7 @@ if test -z "$FORMATS"; then
   case ${OS} in
     # Always use Linux-style makefiles for Android as the Android toolchain
     # is more Linux-y than Darwin-y
-    linux|android) FORMATS="make-linux" ;;
+    linux|android|emscripten) FORMATS="make-linux" ;;
     mac|ios)       FORMATS="xcode" ;;
     win)           FORMATS="msvs" ;;
   esac
@@ -245,6 +248,7 @@ if test -z "$TARGET_ARCH"; then
     *-x86)     TARGET_ARCH="x86" ;;
     *-x86_64)  TARGET_ARCH="x86_64" ;;
     *-armv6)   TARGET_ARCH="armv6" ;;
+    emscripten) TARGET_ARCH="js" ;;
 
     mac*|ios*)
       case ${XCODE_TARGET_SDK} in
@@ -319,8 +323,8 @@ if test "${OS}" = "android" ; then
 
     ANDROID_AR=${AR:-${ANDROID_TOOLCHAIN}ar}
     ANDROID_CC=${CC:-${ANDROID_TOOLCHAIN}clang -target arm-linux-androideabi -march=armv6 -integrated-as}
-    ANDROID_CXX=${CXX:-${ANDROID_TOOLCHAIN}clang -target arm-linux-androideabi -march=armv6 -integrated-as}
-    ANDROID_LINK=${LINK:-${ANDROID_TOOLCHAIN}clang -target arm-linux-androideabi -march=armv6 -integrated-as -fuse-ld=bfd}
+    ANDROID_CXX=${CXX:-${ANDROID_TOOLCHAIN}clang++ -target arm-linux-androideabi -march=armv6 -integrated-as}
+    ANDROID_LINK=${LINK:-${ANDROID_TOOLCHAIN}clang++ -target arm-linux-androideabi -march=armv6 -integrated-as -fuse-ld=bfd}
     ANDROID_OBJCOPY=${OBJCOPY:-${ANDROID_TOOLCHAIN}objcopy}
     ANDROID_OBJDUMP=${OBJDUMP:-${ANDROID_TOOLCHAIN}objdump}
     ANDROID_STRIP=${STRIP:-${ANDROID_TOOLCHAIN}strip}
@@ -343,12 +347,24 @@ if test "${OS}" = "android" ; then
 
 fi # End of Android defaults & tools
 
+
+# Emscripten default settings and tools
+if test "${OS}" = "emscripten" ; then
+    NODE_JS=${NODE_JS:-node}
+fi
+
+
 ################################################################
 # Invoke gyp
 ################################################################
 
 format_args="$(for f in ${FORMATS}; do echo --format ${f} ; done)"
-basic_args="${format_args} --depth ${DEPTH} --generator-output ${GENERATOR_OUTPUT}"
+
+if test "${OS}" = "win" ; then
+	basic_args="${format_args} --depth ${DEPTH} --generator-output ${GENERATOR_OUTPUT}"
+else
+	basic_args="${format_args} --depth ${DEPTH} --generator-output ${GENERATOR_OUTPUT} -G default_target=default"
+fi
 
 if [ "${BUILD_EDITION}" == "commercial" ] ; then
   basic_args="${basic_args} ../livecode-commercial.gyp"
@@ -356,6 +372,10 @@ fi
 
 case ${OS} in
   linux)
+    invoke_gyp $basic_args "-DOS=${OS}" "-Dtarget_arch=${TARGET_ARCH}" "$@"
+    ;;
+  emscripten)
+    export NODE_JS
     invoke_gyp $basic_args "-DOS=${OS}" "-Dtarget_arch=${TARGET_ARCH}" "$@"
     ;;
   android)

@@ -94,7 +94,7 @@ public:
 
 	// MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 #ifdef LEGACY_EXEC
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
 	virtual Exec_stat getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint &, MCNameRef key, Boolean effective);
 	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	virtual Exec_stat setarrayprop_legacy(uint4 parid, Properties which, MCExecPoint&, MCNameRef key, Boolean effective);

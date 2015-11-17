@@ -1,0 +1,38 @@
+Name: minimizeBox
+
+Type: property
+
+Syntax: set the minimizeBox of <stack> to {true | false}
+
+Summary: Shows a window's <minimize button|minimize box> or <collapse box>.
+
+Synonyms: collapseBox
+
+Associations: stack
+
+Introduced: 2.1
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the minimizeBox of me to true
+set the minimizeBox of the templateStack to false
+
+Value (bool): The <minimizeBox> <property> of a <stack> is true or false. By <default>, the <minimizeBox> of a newly created <stack> is set to true.
+
+Description:
+Use the <minimizeBox> property to display the collapse box or minimize box in a window's title bar.
+
+The terminology varies depending on platform. The <minimizeBox> <property> determines whether the <collapse box> (<Mac OS|Mac OS systems>), <minimize button|minimize box> (OS X and <Windows|Windows systems>) or <iconify> box (<Unix|Unix systems>) appears in a <stack window|stack window's> <title bar>.
+
+>*Note:* On <OS X|OS X systems>, if the <minimizeBox> <property> is false, the <minimize button|minimize box> is disabled rather than hidden.
+
+The setting of this property affects the decorations property, and vice versa. Setting a stack's <minimizeBox> property determines whether its decorations property includes "minimize" (or is "default", for window styles that normally include a minimize box). Conversely, setting a stack's decorations property sets its <minimizeBox> to true or false depending on whether the decorations includes "minimize" (or is "default").
+
+Setting the <minimizeBox> <property> causes the <stack window> to flash briefly.
+
+References: closeBox (property), zoomBox (property), default (keyword), unIconifyStack (message), stack (object), property (glossary), stack window (glossary), OS X (glossary), collapse box (glossary), Windows (glossary), Mac OS (glossary), Unix (glossary), title bar (glossary), minimize button (glossary), iconify (glossary)
+
+Tags: windowing

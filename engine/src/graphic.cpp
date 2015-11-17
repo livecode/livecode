@@ -232,7 +232,7 @@ const char *MCGraphic::gettypestring()
 Boolean MCGraphic::mfocus(int2 x, int2 y)
 {
 	if (!(flags & F_VISIBLE || MCshowinvisibles)
-	        || flags & F_DISABLED && (getstack()->gettool(this) == T_BROWSE))
+	    || (flags & F_DISABLED && (getstack()->gettool(this) == T_BROWSE)))
 		return False;
 	if ((state & CS_SIZE || state & CS_MOVE) && points != NULL
 	        && getstyleint(flags) != F_G_RECTANGLE)
@@ -297,6 +297,9 @@ Boolean MCGraphic::mfocus(int2 x, int2 y)
 		// MW-2011-08-18: [[ Layers ]] Notify of a changed rect and invalidate.
 		layer_rectchanged(drect, true);
 		message_with_args(MCM_mouse_move, x, y);
+        
+        // AL-2015-07-15: [[ Bug 15605 ]] Notify property listener of the change in points property
+        signallisteners(P_POINTS);
 		return True;
 	}
 	else if (m_edit_tool != NULL && m_edit_tool->mfocus(x, y))
@@ -324,6 +327,9 @@ Boolean MCGraphic::mdown(uint2 which)
 			nrealpoints++;
 		startx = mx;
 		starty = my;
+        
+        // AL-2015-07-15: [[ Bug 15605 ]] Notify property listener of the change in points property
+        signallisteners(P_POINTS);
 		return True;
 	}
 	if (state & CS_MFOCUSED)
@@ -515,7 +521,7 @@ void MCGraphic::setgradientrect(MCGradientFill *p_gradient, const MCRectangle &n
 }
 
 #ifdef LEGACY_EXEC
-Exec_stat MCGraphic::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+Exec_stat MCGraphic::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
 {
 	uint2 i;
 	int graphic_type;
@@ -828,7 +834,7 @@ Exec_stat MCGraphic::getprop_legacy(uint4 parid, Properties which, MCExecPoint& 
 		break;
 #endif /* MCGraphic::getprop */
 	default:
-		return MCControl::getprop_legacy(parid, which, ep, effective);
+		return MCControl::getprop_legacy(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }
@@ -1619,7 +1625,7 @@ void MCGraphic::draw_arrow(MCDC *dc, MCPoint &p1, MCPoint &p2)
 {
 	real8 dx = p2.x - p1.x;
 	real8 dy = p2.y - p1.y;
-	if (arrowsize == 0 || dx == 0.0 && dy == 0.0)
+	if (arrowsize == 0 || (dx == 0.0 && dy == 0.0))
 		return;
 	MCPoint pts[3];
 	real8 angle = atan2(dy, dx);
@@ -1991,7 +1997,7 @@ void MCGraphic::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRecta
 	if (fstyle & FA_UNDERLINE)
 		dc->drawline(sx, sy + 1, sx + twidth, sy + 1);
 	if (fstyle & FA_STRIKEOUT)
-		dc->drawline(sx, sy - (MCFontGetAscent(m_font) >> 1), sx + twidth, sy - (MCFontGetAscent(m_font) >> 1));
+		dc->drawline(sx, sy - (MCFontGetAscent(m_font) / 2), sx + twidth, sy - (MCFontGetAscent(m_font) / 2));
 }
 
 // MW-2011-09-06: [[ Redraw ]] Added 'sprite' option - if true, ink and opacity are not set.
@@ -2013,7 +2019,7 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		
 		// MW-2009-06-10: [[ Bitmap Effects ]]
 		if (m_bitmap_effects == NULL)
-			dc -> begin(dc -> gettype() == CONTEXT_TYPE_PRINTER && (m_fill_gradient != NULL) || (m_stroke_gradient != NULL));
+			dc -> begin((dc -> gettype() == CONTEXT_TYPE_PRINTER && (m_fill_gradient != NULL)) || (m_stroke_gradient != NULL));
 		else
 		{
 			if (!dc -> begin_with_effects(m_bitmap_effects, rect))
@@ -2219,23 +2225,37 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		MCAutoArrayRef lines;
 		/* UNCHECKED */ MCStringSplit(slabel, MCSTR("\n"), nil, kMCCompareExact, &lines);
 		uindex_t nlines = MCArrayGetCount(*lines);
-		
-		uint2 fheight;
-		fheight = gettextheight();
 
 		uint2 fontstyle;
 		fontstyle = gettextstyle();
 
-		int32_t fascent, fdescent;
+		coord_t fascent, fdescent, fleading;
 		fascent = MCFontGetAscent(m_font);
 		fdescent = MCFontGetDescent(m_font);
-
+        fleading = MCFontGetLeading(m_font);
+        
+        coord_t fheight;
+        fheight = fascent + fdescent + fleading;
+        
 		int2 centerx = trect.x + leftmargin + ((trect.width - leftmargin - rightmargin) >> 1);
 		int2 centery = trect.y + topmargin + ((trect.height - topmargin - bottommargin) >> 1);
-		uint2 theight = nlines == 1 ? fascent : nlines * fheight;
-		int2 sx = trect.x + leftmargin + borderwidth - DEFAULT_BORDER;
-		int2 sy = centery - (theight >> 1) + fascent;
-		
+
+        coord_t sx, sy, theight;
+        if (nlines == 1)
+        {
+            // Centre things on the middle of the ascent
+            sx = trect.x + leftmargin + borderwidth - DEFAULT_BORDER;
+            sy = roundf(centery + (fascent-fdescent)/2);
+            theight = fascent;
+        }
+        else
+        {
+            // Centre things by centring the bounding box of the text
+            sx = trect.x + leftmargin + borderwidth - DEFAULT_BORDER;
+            sy = centery - (nlines * fheight / 2) + fleading/2 + fascent;
+            theight = nlines * fheight;
+        }
+        
 		uint2 i;
 		uint2 twidth = 0;
 		for (i = 0 ; i < nlines ; i++)
@@ -2546,16 +2566,16 @@ IO_stat MCGraphic::extendedload(MCObjectInputStream& p_stream, uint32_t p_versio
 	if (p_remaining > 0)
 	{
 		uint4 t_flags, t_length, t_header_size;
-		t_stat = p_stream . ReadTag(t_flags, t_length, t_header_size);
+		t_stat = checkloadstat(p_stream . ReadTag(t_flags, t_length, t_header_size));
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . Mark();
+			t_stat = checkloadstat(p_stream . Mark());
 
 		uint4 t_corrected_length;
 		t_corrected_length = 0;
 
 		if (t_stat == IO_NORMAL && (t_flags & GRAPHIC_EXTRA_MITERLIMIT) != 0)
 		{
-			t_stat = p_stream . ReadFloat32(m_stroke_miter_limit);
+			t_stat = checkloadstat(p_stream . ReadFloat32(m_stroke_miter_limit));
 			if (t_length == 0)
 				t_corrected_length += 4;
 		}
@@ -2563,7 +2583,7 @@ IO_stat MCGraphic::extendedload(MCObjectInputStream& p_stream, uint32_t p_versio
 		if (t_stat == IO_NORMAL && (t_flags & GRAPHIC_EXTRA_FILLGRADIENT) != 0)
 		{
 			MCGradientFillInit(m_fill_gradient, rect);
-			t_stat = MCGradientFillUnserialize(m_fill_gradient, p_stream);
+			t_stat = checkloadstat(MCGradientFillUnserialize(m_fill_gradient, p_stream));
 			if (t_length == 0)
 				t_corrected_length += MCGradientFillMeasure(m_fill_gradient);
 		}
@@ -2571,7 +2591,7 @@ IO_stat MCGraphic::extendedload(MCObjectInputStream& p_stream, uint32_t p_versio
 		if (t_stat == IO_NORMAL && (t_flags & GRAPHIC_EXTRA_STROKEGRADIENT) != 0)
 		{
 			MCGradientFillInit(m_stroke_gradient, rect);
-			t_stat = MCGradientFillUnserialize(m_stroke_gradient, p_stream);
+			t_stat = checkloadstat(MCGradientFillUnserialize(m_stroke_gradient, p_stream));
 			if (t_length == 0)
 				t_corrected_length += MCGradientFillMeasure(m_stroke_gradient);
 		}
@@ -2579,13 +2599,13 @@ IO_stat MCGraphic::extendedload(MCObjectInputStream& p_stream, uint32_t p_versio
 		// MW-2008-08-12: [[ Bug 2849 ]] Make sure margins are saved with the graphic object
 		if (t_stat == IO_NORMAL && (t_flags & GRAPHIC_EXTRA_MARGINS) != 0)
 		{
-			t_stat = p_stream . ReadS16(leftmargin);
+			t_stat = checkloadstat(p_stream . ReadS16(leftmargin));
 			if (t_stat == IO_NORMAL)
-				t_stat = p_stream . ReadS16(topmargin);
+				t_stat = checkloadstat(p_stream . ReadS16(topmargin));
 			if (t_stat == IO_NORMAL)
-				t_stat = p_stream . ReadS16(rightmargin);
+				t_stat = checkloadstat(p_stream . ReadS16(rightmargin));
 			if (t_stat == IO_NORMAL)
-				t_stat = p_stream . ReadS16(bottommargin);
+				t_stat = checkloadstat(p_stream . ReadS16(bottommargin));
 		}
 
 		// During the 3.0.0 development cycle, the graphic extended data area was different since it
@@ -2593,7 +2613,7 @@ IO_stat MCGraphic::extendedload(MCObjectInputStream& p_stream, uint32_t p_versio
 		// be non-zero, and length to be zero. In this case, we rely on the file pointer not needing
 		// updating so we only do the following for non-zero length.
 		if (t_stat == IO_NORMAL && t_length != 0)
-			t_stat = p_stream . Skip(t_length);
+			t_stat = checkloadstat(p_stream . Skip(t_length));
 
 		if (t_stat == IO_NORMAL)
 		{
@@ -2737,7 +2757,7 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 	Boolean loaddashes = False;
 
 	if ((stat = MCControl::load(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 
 //---- 2.7+:
 //  . F_G_ANTI_ALIASED now defined
@@ -2750,58 +2770,58 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 		m_font_flags |= FF_HAS_UNICODE;
 
 	if ((stat = IO_read_uint2(&angle, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint2(&linesize, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	switch (flags & F_STYLE)
 	{
 	case F_G_RECTANGLE:
 		break;
 	case F_ROUNDRECT:
 		if ((stat = IO_read_uint2(&roundradius, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		break;
 	case F_REGULAR:
 		if ((stat = IO_read_uint2(&nsides, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		break;
 	case F_OVAL:
 		if ((stat = IO_read_uint2(&startangle, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if ((stat = IO_read_uint2(&arcangle, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		break;
 	case F_POLYGON:
 		if ((stat = IO_read_uint2(&markerlsize, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if ((stat = IO_read_uint2(&nmarkerpoints, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (nmarkerpoints != 0)
 		{
 			markerpoints = new MCPoint[nmarkerpoints];
 			for (i = 0 ; i < nmarkerpoints ; i++)
 			{
 				if ((stat = IO_read_int2(&markerpoints[i].x, stream)) != IO_NORMAL)
-					return stat;
+					return checkloadstat(stat);
 				if ((stat = IO_read_int2(&markerpoints[i].y, stream)) != IO_NORMAL)
-					return stat;
+					return checkloadstat(stat);
 			}
 		}
 	case F_LINE:
 	case F_CURVE:
 		if ((stat = IO_read_uint2(&arrowsize, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if ((stat = IO_read_uint2(&nrealpoints, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (nrealpoints != 0)
 		{
 			realpoints = new MCPoint[nrealpoints];
 			for (i = 0 ; i < nrealpoints ; i++)
 			{
 				if ((stat = IO_read_int2(&realpoints[i].x, stream)) != IO_NORMAL)
-					return stat;
+					return checkloadstat(stat);
 				if ((stat = IO_read_int2(&realpoints[i].y, stream)) != IO_NORMAL)
-					return stat;
+					return checkloadstat(stat);
 			}
 		}
 		if (version < 1400)
@@ -2813,14 +2833,14 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 	if (loaddashes || flags & F_DASHES)
 	{
 		if ((stat = IO_read_uint2(&ndashes, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (ndashes != 0)
 		{
 			flags |= F_DASHES;
 			dashes = new uint1[ndashes];
 			for (i = 0 ; i < ndashes ; i++)
 				if ((stat = IO_read_uint1(&dashes[i], stream)) != IO_NORMAL)
-					return stat;
+					return checkloadstat(stat);
 			// sanity check: ensure dashes are not all 0
 			bool t_allzero = true;
 			for (i=0; i<ndashes && t_allzero; i++)
@@ -2842,12 +2862,12 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 		if (version < 7000)
 		{
 			if ((stat = IO_read_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		}
 		else
 		{
 			if ((stat = IO_read_stringref_new(label, stream, true)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		}
     }
 	

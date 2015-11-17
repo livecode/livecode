@@ -51,5 +51,14 @@
 				],
 			},
 		],
+		[
+			'OS == "emscripten"',
+			{
+				'includes':
+				[
+					'emscripten.gypi',
+				],
+			},
+		],
 	],
 }

@@ -1,0 +1,12 @@
+Name: resource fork
+
+Synonyms: resource fork
+
+Type: glossary
+
+Description:
+The part of a <Mac OS> <file> that holds structured data in the form of <resource|resources> (as opposed to the <data fork>).
+
+References: file (glossary), resource (glossary), data fork (glossary), Mac OS (glossary)
+
+Tags: file system

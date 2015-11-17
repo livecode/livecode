@@ -1,0 +1,33 @@
+Name: mnemonic
+
+Type: property
+
+Syntax: set the mnemonic of <button> to <number> 
+
+Summary: Specifies which <character> of a <button(object)|button's> name can be used with the <Alt key> to <trigger> the <button(keyword)>.
+
+Associations: button
+
+Introduced: 1.0
+
+OS: windows,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the mnemonic of button "Avant!" to 1 -- uses the first letter, A
+
+Value:
+The <mnemonic> of a <button(keyword)> is a positive <integer>. Zero indicates that there is no shortcut provided.
+By default, the <mnemonic> <property> of newly created <button(object)|buttons> is set to zero.
+
+Description:
+Use the <mnemonic> <property> to provide a keyboard substitute for clicking a button on <Windows|Windows systems>.
+
+The <mnemonic> is any number between 1 and the number of <characters> in the <button(object)|button's> name. The <character> at that position is underlined, and pressing the <Alt key> with that <character> sends a <mouseUp> message to the <button(keyword)>. If the <number> is zero, the <button(keyword)> does not have an <Alt key> equivalent.
+
+This property has no effect on Mac OS or Unix systems.
+
+References: acceleratorText (property), character (keyword), characters (keyword), button (keyword), integer (keyword), mouseUp (message), button (object), property (glossary), Windows (glossary), trigger (glossary), Alt key (glossary)
+
+Tags: ui

@@ -2563,7 +2563,7 @@ enum Exec_errors
 	// {EE-0840} secure: error in host name expression
 	EE_SECURE_BADHOST,
 	
-    // MM-2014-06-13: [[ Bug 12567 ]] New variant open socket <socket> with verification for host <host>
+	// MM-2014-06-13: [[ Bug 12567 ]] New variant open socket <socket> with verification for host <host>
 	// {EE-0841} open: error in host name expression
 	EE_OPEN_BADHOST,
     
@@ -2574,7 +2574,7 @@ enum Exec_errors
     // MW-2014-10-23: Improve the error message you get from 'start using <name>'
     // {EE-0843} start: script of specified stack won't compile
     EE_START_WONTCOMPILE,
-    
+
     // SN-2014-12-16: [[ Bug 14181 ]] hostnameToAddress should have no message on server
     // {EE-0844} hostnameToAddress: callbacks are not allowed on server
     EE_HOSTNAME_BADMESSAGE,
@@ -2582,7 +2582,7 @@ enum Exec_errors
     // SN-2014-12-15: [[ Bug 14211 ]] Add an error when using a parsed bad extents (such as 'next')
     // {EE-0845} Chunk: bad extents provided
     EE_CHUNK_BADEXTENTS,
-    
+
     // {EE-0846} Error evaluating expression
     EE_EXPR_EVALERROR,
     
@@ -2622,16 +2622,76 @@ enum Exec_errors
     // {EE-0858} MCInternalPayloadPatch: error in base item expression
     EE_INTERNAL_BASE_BADITEM,
 
-	// MDW-2014-09-28: [[ feature_floor ]]
-	// {EE-0859} floor: bad parameter
-	EE_FLOOR_BADSOURCE,
-
-	// MDW-2014-09-28: [[ feature_floor ]]
-	// {EE-0860} ceil: bad parameter
+    // MDW-2014-09-28: [[ feature_floor ]]
+    // {EE-0859} floor: bad parameter
+    EE_FLOOR_BADSOURCE,
+    
+    // MDW-2014-09-28: [[ feature_floor ]]
+    // {EE-0860} ceil: bad parameter
     EE_CEIL_BADSOURCE,
-
+    
     // {EE-861} commandArguments: bad parameter
     EE_COMMANDARGUMENTS_BADPARAM,
+    
+    // AL-2015-07-07: The following error codes are 8.0 specific so should have their numbers
+    //  incremented whenever new codes are merged up from below.
+    // MW-2014-12-10: [[ Extensions ]] The error codes used to indicate an extension error.
+    // {EE-0862} extension: error occured with domain
+    EE_EXTENSION_ERROR_DOMAIN,
+    // {EE-0863} extension: error occured with description
+    EE_EXTENSION_ERROR_DESCRIPTION,
+    // {EE-0864} extension: error occured with file
+    EE_EXTENSION_ERROR_FILE,
+    // {EE-0865} extension: error occured with line
+    EE_EXTENSION_ERROR_LINE,
+    
+    // {EE-0866} load: error in extension expression
+    EE_LOAD_BADEXTENSION,
+    
+    // {EE-0867} load: error in resource path expression
+    EE_LOAD_BADRESOURCEPATH,
+    
+    // {EE-0868} System error: function
+    EE_SYSTEM_FUNCTION,
+
+    // {EE-0869} System error: code
+    EE_SYSTEM_CODE,
+
+    // {EE-0870} System error: message
+    EE_SYSTEM_MESSAGE,
+    
+    // {EE-0871} Import: bad array
+    EE_IMPORT_BADARRAY,
+    
+    // {EE-0872} Import: not an object array
+    EE_IMPORT_NOTANOBJECTARRAY,
+
+    // {EE-0873} clipboard: bad item type or data
+    EE_CLIPBOARD_BADREP,
+    
+    // {EE-0874} clipboard: failed to insert item
+    EE_CLIPBOARD_INSERTFAILED,
+    
+    // {EE-0875} clipboard: clipboard not locked
+    EE_CLIPBOARD_NOTLOCKED,
+    
+    // {EE-0876} clipboard: already locked
+    EE_CLIPBOARD_ALREADYLOCKED,
+    
+    // {EE-0877} clipboard: needs to be cleared (contains external data)
+    EE_CLIPBOARD_EXTERNALDATA,
+	
+	// {EE-0878} go: error in widget expression
+	EE_GO_BADWIDGETEXP,
+	
+	// {EE-0879} launch: error in widget expression
+	EE_LAUNCH_BADWIDGETEXP,
+
+	// {EE-0880} do: error in widget expression
+	EE_DO_BADWIDGETEXP,
+
+    // {EE-0881} documentFilename: bad filename
+    EE_DOCUMENTFILENAME_BADFILENAME,    
 };
 
 extern const char *MCexecutionerrors;

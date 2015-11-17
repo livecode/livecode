@@ -1,0 +1,159 @@
+/* Copyright (C) 2003-2015 LiveCode Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+This library consists of the foundational mathematical operations included in the standard library of LiveCode Builder.
+*/
+
+module com.livecode.mathfoundation
+
+use com.livecode.foreign
+
+public foreign handler MCMathFoundationExecRoundRealToNearest(inout Target as CDouble) returns nothing binds to "<builtin>"
+public foreign handler MCMathFoundationExecRoundNumberToNearest(inout Target as Number) returns nothing binds to "<builtin>"
+
+public foreign handler MCMathFoundationEvalRoundedRealToNearest(in Target as CDouble, out Value as CDouble) returns nothing binds to "<builtin>"
+public foreign handler MCMathFoundationEvalRoundedNumberToNearest(in Target as Number, out Value as Number) returns nothing binds to "<builtin>"
+
+public foreign handler MCMathFoundationEvalFloorReal(in Target as CDouble, out Value as CDouble) returns nothing binds to "<builtin>"
+public foreign handler MCMathFoundationEvalFloorNumber(in Target as Number, out Value as Number) returns nothing binds to "<builtin>"
+public foreign handler MCMathFoundationEvalCeilingReal(in Target as CDouble, out Value as CDouble) returns nothing binds to "<builtin>"
+public foreign handler MCMathFoundationEvalCeilingNumber(in Target as Number, out Value as Number) returns nothing binds to "<builtin>"
+
+public foreign handler MCMathFoundationEvalPi(out Value as CDouble) returns nothing binds to "<builtin>"
+--
+
+//public constant pi = 3.14159265358979323846
+
+/*
+Summary: The constant pi
+
+Example:
+	variable tVar as Number
+	put the cos of pi into tVar -- tVar contains -1
+
+Description:
+The ratio of a circle's circumference to its diameter.
+
+Tags: Math
+*/
+
+syntax PiConstant is expression
+    "pi"
+begin
+    MCMathFoundationEvalPi(output)
+end syntax
+
+--
+
+/*
+Summary:    Rounds <Target> to the nearest integer.
+Target:     An expression that evaluates to a numeric container.
+
+Example:
+	variable tNum as Number
+	put -5.5 into tNum
+	round tNum -- tNum contains -6
+	
+Description:
+Replaces <Target> with the greatest integer less than or equal to <Target>, or the least integer greater than or equal to <Target> depending on which is closest. If <Target> is exactly halfway between two integers, rounds to the one with greatest absolute value, i.e. away from 0.
+
+Tags: Math
+*/
+
+syntax RoundToNearest is statement
+    "round" <Target: Expression>
+begin
+    MCMathFoundationExecRoundNumberToNearest(Target)
+end syntax
+
+/*
+Summary:    Rounds <Target> to the nearest integer.
+Target:     An expression that evaluates to a number.
+
+Returns:		The rounded value of <Target>
+
+Example:
+	variable tNum as Number
+	variable tRounded as Number
+	put -5.5 into tNum
+	put the rounded of tNum into tRounded -- tRounded contains -6
+
+Description:
+Return the greatest integer less than or equal to <Target>, or the least integer greater than or equal to <Target> depending on which is closest. If <Target> is exactly halfway between two integers, returns the one with greatest absolute value, i.e. away from 0.
+
+Tags: Math
+*/
+
+syntax RoundedToNearest is prefix operator with function chunk precedence
+    "the" "rounded" "of" <Target: Expression>
+begin
+    MCMathFoundationEvalRoundedNumberToNearest(Target, output)
+end syntax
+
+--
+
+/* 
+Summary:    Returns the floor of <Target>.
+Target:     An expression that evaluates to a number.
+
+Returns: 	The floor of <Target>
+
+Example:
+	variable tNum as Number
+	variable tFloor as Number
+	put -5.5 into tNum
+	put the floor of tNum into tFloor -- tFloor contains -6
+
+Description:
+The floor of <Target> is the greatest integer less than or equal to <Target>.
+
+Tags: Math
+*/
+
+
+syntax FloorOperator is prefix operator with function chunk precedence
+    "the" "floor" "of" <Target: Expression>
+begin
+    MCMathFoundationEvalFloorNumber(Target, output)
+end syntax
+
+/* 
+Summary:    Returns the ceiling of <Target>.
+Target:     An expression that evaluates to a number.
+
+Returns: 	The ceiling of <Target>
+
+Example:
+	variable tNum as Number
+	variable tCeiling as Number
+	put -5.5 into tNum
+	put the ceiling of tNum into tCeiling -- tCeiling contains -5
+
+Description:
+The ceiling of <Target> is the least integer greater than or equal to <Target>.
+
+Tags: Math
+
+*/
+
+syntax CeilOperator is prefix operator with function chunk precedence
+    "the" "ceiling" "of" <Target: Expression>
+begin
+    MCMathFoundationEvalCeilingNumber(Target, output)
+end syntax
+
+end module

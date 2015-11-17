@@ -1,0 +1,717 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.list.tests
+
+use com.livecode.list
+use com.livecode.__INTERNAL._testlib
+
+public handler TestEmpty()
+	variable tList
+	put the empty list into tList
+	test "empty (empty)" when tList is empty
+	test "empty (empty list)" when tList is the empty list
+	test "empty (empty literal)" when tList is []
+	test "empty (no elements)" when the number of elements in tList is 0
+end handler
+
+public handler TestLiteral()
+	variable tList
+	put [[], "x", 1, true] into tList
+	test "literal" when the number of elements in tList is 4
+end handler
+
+public handler TestIs()
+	test "is" when [[], "x", 1, true] is [[], "x", 1, true]
+	test "is not" when [[], "x", 1, true] is not [[1], "x", 1, true]
+end handler
+
+handler TestHead_Empty()
+	return the head of []
+end handler
+handler TestHead_FirstEmpty()
+	return the first element of []
+end handler
+public handler TestHead()
+	variable tList
+	put ["x", 1, true] into tList
+
+	test "head" when the head of tList is "x"
+	test "first" when the first element of tList is "x"
+
+	MCUnitTestHandlerThrows(TestHead_Empty, "head (empty)")
+	MCUnitTestHandlerThrows(TestHead_FirstEmpty, "first (empty)")
+end handler
+
+handler TestTail_Empty()
+	return the tail of []
+end handler
+handler TestTail_LastEmpty()
+	return the last element of []
+end handler
+public handler TestTail()
+	variable tList
+	put ["x", 1, true] into tList
+	test "tail" when the tail of tList
+	test "last" when the last element of tList
+
+	MCUnitTestHandlerThrows(TestTail_Empty, "tail (empty)")
+	MCUnitTestHandlerThrows(TestTail_LastEmpty, "last (empty)")
+end handler
+
+public handler TestPush()
+	variable tList
+	put ["x", 1, true] into tList
+
+	push "y" onto tList
+	test "push" when the tail of tList is "y"
+
+	push "z" onto front of tList
+	test "push front" when the head of tList is "z"
+
+	push "w" onto back of tList
+	test "push back" when the tail of tList is "w"
+
+	test "push (result)" when tList is ["z", "x", 1, true, "y", "w"]
+end handler
+
+handler TestPop_Empty()
+	variable tList
+	put [] into tList
+	pop tList
+end handler
+handler TestPop_FrontEmpty()
+	variable tList
+	put [] into tList
+	pop front of tList
+end handler
+handler TestPop_BackEmpty()
+	variable tList
+	put [] into tList
+	pop back of tList
+end handler
+public handler TestPop()
+	variable tList
+	variable tPopped
+
+	put ["x", 1, 2, true] into tList
+
+	pop tList into tPopped
+	test "pop" when tPopped
+
+	pop front of tList into tPopped
+	test "pop front" when tPopped is "x"
+
+	pop back of tList into tPopped
+	test "pop back" when tPopped is 2
+
+	test "pop (result)" when tList is [1]
+
+	pop tList
+	test "pop (no output)" when tList is empty
+
+	MCUnitTestHandlerThrows(TestPop_Empty, "pop (empty)")
+	MCUnitTestHandlerThrows(TestPop_FrontEmpty, "pop front (empty)")
+	MCUnitTestHandlerThrows(TestPop_BackEmpty, "pop back (empty)")
+end handler
+
+public handler TestCount()
+	test "count" when the number of elements in [1, 2, ["a", "b"]] is 3
+end handler
+
+public handler TestContainsELement()
+	variable tList
+	put ["x", 1, true] into tList
+	test "element is in" when "x" is in tList
+	test "element is not in" when not [] is in tList
+end handler
+
+public handler TestContainsList()
+	variable tList
+	put ["x", 1, true, []] into tList
+	test "contains" when tList contains ["x", 1]
+
+	test "contains (missing)" when not tList contains [1, "x"]
+	test "contains (empty)" when not [] contains []
+
+	-- Bug 14596
+	test "contains (missing, overlap)" when not ["x", 1, true, ""] contains ["", true]
+end handler
+
+public handler TestBeginsWith()
+	variable tList
+	put ["x", 1, true, []] into tList
+	test "begins with" when tList begins with ["x", 1]
+	test "begins with (missing)" when not tList begins with [1, true]
+	test "begins with (empty)" when tList begins with []
+end handler
+
+public handler TestEndsWith()
+	variable tList
+	put ["x", 1, true, []] into tList
+	test "ends with" when tList ends with [true, []]
+	test "ends with (missing)" when not tList ends with [1, true]
+	test "ends with (empty)" when tList ends with []
+end handler
+
+handler TestSubscript_Zero()
+	return [1][0]
+end handler
+handler TestSubscript_Empty()
+	return [][1]
+end handler
+handler TestSubscript_After()
+	return[1][2]
+end handler
+handler TestSubscript_Before()
+	return[1][-2]
+end handler
+public handler TestSubscript()
+	variable tList
+	put ["x", 1, true, []] into tList
+	test "subscript (syntax, +ve)" when element 2 of tList is 1
+	test "subscript (syntax, -ve)" when element -2 of tList is true
+	test "subscript (operator, +ve)" when tList[4] is []
+	test "subscript (operator, -ve)" when tList[-4] is "x"
+	test "subscript (operator literal)" when [4][1] is 4
+
+	MCUnitTestHandlerThrows(TestSubscript_Zero, "subscript (operator, zero)")
+	MCUnitTestHandlerThrows(TestSubscript_Empty, "subscript (operator, empty)")
+	MCUnitTestHandlerThrows(TestSubscript_After, "subscript (operator, after)")
+	MCUnitTestHandlerThrows(TestSubscript_Before, "subscript (operator, before)")
+end handler
+
+handler TestRange_Zero()
+	return element 0 to 0 of [1]
+end handler
+handler TestRange_Before()
+	variable tList
+	put element -4 to -3 of ["x", 1, true] into tList
+end handler
+handler TestRange_After()
+	return element 3 to 4 of ["x", 1, true]
+end handler
+public handler TestRange()
+	variable tList
+	put ["x", 1, true, []] into tList
+	test "range (+ve)" when element 2 to 3 of tList is [1, true]
+	test "range (+ve, same)" when element 2 to 2 of tList is [1]
+	test "range (-ve)" when element -3 to -2 of tList is [1, true]
+	test "range (-ve, same)" when element -2 to -2 of tList is [true]
+
+	MCUnitTestHandlerThrows(TestRange_Zero, "range (zero)")
+	MCUnitTestHandlerThrows(TestRange_After, "range (after)")
+	MCUnitTestHandlerThrows(TestRange_Before, "range (before)")
+end handler
+
+handler TestDeleteSingle_Zero()
+	variable tList
+	put ["x", 1, true, []] into tList
+	delete element 0 of tList
+end handler
+handler TestDeleteSingle_Before()
+	variable tList
+	put ["x", 1, true, []] into tList
+	delete element -5 of tList
+end handler
+handler TestDeleteSingle_After()
+	variable tList
+	put ["x", 1, true, []] into tList
+	delete element 5 of tList
+end handler
+public handler TestDeleteSingle()
+	variable tList
+	variable tTemplate
+	put ["x", 1, true, []] into tTemplate
+
+	put tTemplate into tList
+	delete element 3 of tList
+	test "delete single (+ve)" when tList is ["x", 1, []]
+
+	put tTemplate into tList
+	delete element -3 of tList
+	test "delete single (-ve)" when tList is ["x", true, []]
+
+	put tTemplate into tList
+	delete the first element of tList
+	test "delete first" when tList is [1, true, []]
+
+	put tTemplate into tList
+	delete the last element of tList
+	test "delete last" when tList is ["x", 1, true]
+
+	MCUnitTestHandlerThrows(TestDeleteSingle_Zero, "delete single (zero)")
+	MCUnitTestHandlerThrows(TestDeleteSingle_Before, "delete single (before)")
+	MCUnitTestHandlerThrows(TestDeleteSingle_After, "delete single (after)")
+end handler
+
+handler TestDeleteRange_Zero()
+	variable tList
+	put ["x", 1, true, []] into tList
+	delete element 0 to 0 of tList
+end handler
+handler TestDeleteRange_Before()
+	variable tList
+	put ["x", 1, true, []] into tList
+	delete element -5 to -4 of tList
+end handler
+handler TestDeleteRange_After()
+	variable tList
+	put ["x", 1, true, []] into tList
+	delete element 4 to 5 of tList
+end handler
+public handler TestDeleteRange()
+	variable tList
+	variable tTemplate
+	put ["x", 1, true, []] into tTemplate
+
+	put tTemplate into tList
+	delete element 2 to 3 of tList
+	test "delete range (+ve)" when tList is ["x", []]
+
+	put tTemplate into tList
+	delete element -3 to -2 of tList
+	test "delete range (-ve)" when tList is ["x", []]
+
+	MCUnitTestHandlerThrows(TestDeleteRange_Zero, "delete range (zero)")
+	MCUnitTestHandlerThrows(TestDeleteRange_Before, "delete range (before)")
+	MCUnitTestHandlerThrows(TestDeleteRange_After, "delete range (after)")
+end handler
+
+public handler TestSplice()
+	variable tList
+	variable tTemplate
+	put [1, 1, 1, 1] into tTemplate
+
+	put tTemplate into tList
+	splice [2, 2] into element 2 to 3 of tList
+	test "splice (+ve)" when tList is [1, 2, 2, 1]
+
+	put tTemplate into tList
+	splice [2, 2] into element -3 to -2 of tList
+	test "splice (-ve)" when tList is [1, 2, 2, 1]
+
+	put tTemplate into tList
+	splice [2, 2] into element 2 to 2 of tList
+	test "splice (+ve, same)" when tList is [1, 2, 2, 1, 1]
+
+	put tTemplate into tList
+	splice [2, 2] into element 2 of tList
+	test "splice (+ve, single)" when tList is [1, 2, 2, 1, 1]
+
+	put tTemplate into tList
+	splice the empty list into element 1 to 4 of tList
+	test "splice (+ve, empty)" when tList is empty
+end handler
+
+handler TestSpliceBefore_Zero()
+	variable tList
+	put [1] into tList
+	splice tList before element 0 of tList
+end handler
+
+handler TestSpliceAfter_Limit()
+	variable tList
+	put [1] into tList
+	splice tList after element 2 of tList
+end handler
+
+public handler TestSpliceBefore()
+	variable tList
+	variable tTemplate
+	put [1, 1, 1, 1] into tTemplate
+
+	put tTemplate into tList
+	splice [2, 2] before element 2 of tList
+	test "splice before" when tList is [1, 2, 2, 1, 1, 1]
+
+	put tTemplate into tList
+	splice the empty list before element 2 of tList
+	test "splice before (empty)" when tList is tTemplate
+	
+	MCUnitTestHandlerThrows(TestSpliceBefore_Zero, "splice before (zero)")
+end handler
+
+public handler TestSpliceAfter()
+	variable tList
+	variable tTemplate
+	put [1, 1, 1, 1] into tTemplate
+
+	put tTemplate into tList
+	splice [2, 2] after element 2 of tList
+	test "splice after" when tList is [1, 1, 2, 2, 1, 1]
+
+	put tTemplate into tList
+	splice the empty list after element 2 of tList
+	test "splice after (empty)" when tList is tTemplate
+	
+	MCUnitTestHandlerThrows(TestSpliceAfter_Limit, "splice after (limit)")
+end handler
+
+public handler TestRepeatElement()
+	variable tIter
+	variable tCount
+
+	put 0 into tCount
+
+	repeat for each element tIter in [1, 1, 1, 1]
+		test "repeat element (iter)" when tIter is 1
+		add 1 to tCount
+	end repeat
+
+	test "repeat element (count)" when tCount is 4
+end handler
+
+----------------------------------------------------------------
+-- Finding indices
+----------------------------------------------------------------
+
+public handler TestIndex()
+	variable tList
+	put ["x", 1, true, [], []] into tList
+
+	test "index" when the index of 1 in tList is 2
+	test "index (list)" when the index of [] in tList is 4
+	test "index (missing)" when the index of false in tList is 0
+
+	test "first index" when the first index of [] in tList is 4
+	test "last index" when the last index of [] in tList is 5
+
+	test "index (empty)" when the index of 1 in [] is 0
+end handler
+
+----------------------------------------------------------------
+
+handler TestIndexAfter_InvalidPositive()
+	return the index of true after 2 in [true]
+end handler
+handler TestIndexAfter_InvalidNegative()
+	return the index of true after -3 in [true]
+end handler
+handler TestFirstIndexAfter_InvalidPositive()
+	return the first index of true after 2 in [true]
+end handler
+handler TestFirstIndexAfter_InvalidNegative()
+	return the first index of true after -3 in [true]
+end handler
+handler TestLastIndexAfter_InvalidPositive()
+	return the last index of true after 2 in [true]
+end handler
+handler TestLastIndexAfter_InvalidNegative()
+	return the last index of true after -3 in [true]
+end handler
+public handler TestIndexAfter()
+	variable tList
+	put [true, false, true, true, false] into tList
+
+	test "index after (+ve)" when the index of true after 1 in tList is 3
+	test "index after (-ve)" when the index of true after -5 in tList is 3
+	test "index after (-ve, limit)" when the index of true after -6 in tList is 1
+	test "index after (+ve, missing)" when the index of true after 4 in tList is 0
+	test "index after (-ve, missing)" when the index of true after -2 in tList is 0
+
+	MCUnitTestHandlerThrows(TestIndexAfter_InvalidPositive, "index after (+ve, invalid)")
+	MCUnitTestHandlerThrows(TestIndexAfter_InvalidNegative, "index after (-ve, invalid)")
+end handler
+public handler TestFirstIndexAfter()
+	variable tList
+	put [true, false, true, true, false] into tList
+
+	test "first index after (+ve)" when the first index of true after 1 in tList is 3
+	test "first index after (-ve)" when the first index of true after -5 in tList is 3
+	test "first index after (-ve, limit)" when the first index of true after -6 in tList is 1
+	test "first index after (+ve, missing)" when the first index of true after 4 in tList is 0
+	test "first index after (-ve, missing)" when the first index of true after -2 in tList is 0
+
+	MCUnitTestHandlerThrows(TestFirstIndexAfter_InvalidPositive, "first index after (+ve, invalid)")
+	MCUnitTestHandlerThrows(TestFirstIndexAfter_InvalidNegative, "first index after (-ve, invalid)")
+end handler
+public handler TestLastIndexAfter()
+	variable tList
+	put [true, false, true, true, false] into tList
+
+	test "last index after (+ve)" when the last index of true after 1 in tList is 4
+	test "last index after (-ve)" when the last index of true after -5 in tList is 4
+	test "last index after (-ve, limit)" when the last index of true after -6 in tList is 4
+	test "last index after (+ve, missing)" when the last index of true after 4 in tList is 0
+	test "last index after (-ve, missing)" when the last index of true after -2 in tList is 0
+
+	MCUnitTestHandlerThrows(TestLastIndexAfter_InvalidPositive, "last index after (+ve, invalid)")
+	MCUnitTestHandlerThrows(TestLastIndexAfter_InvalidNegative, "last index after (-ve, invalid)")
+end handler
+public handler TestIndexAfterZero()
+	-- "index of _ after 0 in _" should be equivalent to "index of _ in _"
+	variable tList
+	put [true, false, true, true, false] into tList
+	variable tNoAfter
+
+	put the index of true in tList into tNoAfter
+	test "index after (+ve, 0)" when the index of true after 0 in tList is tNoAfter
+
+	put the first index of true in tList into tNoAfter
+	test "first index after (+ve, 0)" when the first index of true after 0 in tList is tNoAfter
+
+	put the last index of true in tList into tNoAfter
+	test "last index after (+ve, 0)" when the last index of true after 0 in tList is tNoAfter
+end handler
+
+----------------------------------------------------------------
+
+handler TestIndexBefore_InvalidPositive()
+	return the index of true before 3 in [true]
+end handler
+handler TestIndexBefore_InvalidNegative()
+	return the index of true before -2 in [true]
+end handler
+handler TestFirstIndexBefore_InvalidPositive()
+	return the first index of true before 3 in [true]
+end handler
+handler TestFirstIndexBefore_InvalidNegative()
+	return the first index of true before -2 in [true]
+end handler
+handler TestLastIndexBefore_InvalidPositive()
+	return the last index of true before 3 in [true]
+end handler
+handler TestLastIndexBefore_InvalidNegative()
+	return the last index of true before -2 in [true]
+end handler
+public handler TestIndexBefore()
+	variable tList
+	put [false, true, true, false, true] into tList
+
+	test "index before (+ve)" when the index of true before 4 in tList is 3
+	test "index before (-ve)" when the index of true before -2 in tList is 3
+	test "index before (+ve, limit)" when the index of true before 6 in tList is 5
+	test "index before (+ve, missing)" when the index of true before 2 in tList is 0
+	test "index before (-ve, missing)" when the index of true before -4 in tList is 0
+
+	MCUnitTestHandlerThrows(TestIndexBefore_InvalidPositive, "index before (+ve, invalid)")
+	MCUnitTestHandlerThrows(TestIndexBefore_InvalidNegative, "index before (-ve, invalid)")
+end handler
+public handler TestFirstIndexBefore()
+	variable tList
+	put [false, true, true, false, true] into tList
+
+	test "first index before (+ve)" when the first index of true before 4 in tList is 2
+	test "first index before (-ve)" when the first index of true before -2 in tList is 2
+	test "first index before (+ve, limit)" when the first index of true before 6 in tList is 2
+	test "first index before (+ve, missing)" when the first index of true before 2 in tList is 0
+	test "first index before (-ve, missing)" when the first index of true before -4 in tList is 0
+
+	MCUnitTestHandlerThrows(TestFirstIndexBefore_InvalidPositive, "first index before (+ve, invalid)")
+	MCUnitTestHandlerThrows(TestFirstIndexBefore_InvalidNegative, "first index before (-ve, invalid)")
+end handler
+public handler TestLastIndexBefore()
+	variable tList
+	put [false, true, true, false, true] into tList
+
+	test "last index before (+ve)" when the last index of true before 4 in tList is 3
+	test "last index before (-ve)" when the last index of true before -2 in tList is 3
+	test "last index before (+ve, limit)" when the last index of true before 6 in tList is 5
+	test "last index before (+ve, missing)" when the last index of true before 2 in tList is 0
+	test "last index before (-ve, missing)" when the last index of true before -4 in tList is 0
+
+	MCUnitTestHandlerThrows(TestLastIndexBefore_InvalidPositive, "last index before (+ve, invalid)")
+	MCUnitTestHandlerThrows(TestLastIndexBefore_InvalidNegative, "last index before (-ve, invalid)")
+end handler
+public handler TestIndexBeforeZero()
+	-- "index of _ before 0 in _" should be equivalent to
+	-- "last index of _ in _"
+	variable tList
+	put [false, true, true, false, true] into tList
+	variable tNoBefore
+
+	put the last index of true in tList into tNoBefore
+	test "index before (+ve, 0)" when the index of true before 0 in tList is tNoBefore
+
+	put the first index of true in tList into tNoBefore
+	test "first index before (+ve, 0)" when the first index of true before 0 in tList is tNoBefore
+
+	put the last index of true in tList into tNoBefore
+	test "last index before (+ve, 0)" when the last index of true before 0 in tList is tNoBefore
+end handler
+
+----------------------------------------------------------------
+-- Finding subsequence offsets
+----------------------------------------------------------------
+
+public handler TestOffset()
+	variable tList
+	put ["x", 1, true, [], []] into tList
+
+	test "offset" when the offset of [1, true] in tList is 2
+	test "offset (missing)" when the offset of [true, 1] in tList is 0
+	test "offset (missing, overlap start)" when the offset of [false, "x"] in tList is 0
+	test "offset (missing, overlap end)" when the offset of [[], [], false] in tList is 0
+
+	test "first offset" when the first offset of [[]] in tList is 4
+	test "last offset" when the last offset of [[]] in tList is 5
+
+	test "offset (empty)" when the offset of [] in tList is 0
+end handler
+
+----------------------------------------------------------------
+
+handler TestOffsetAfter_InvalidPositive()
+	return the offset of [true] after 2 in [true]
+end handler
+handler TestOffsetAfter_InvalidNegative()
+	return the offset of [true] after -3 in [true]
+end handler
+handler TestFirstOffsetAfter_InvalidPositive()
+	return the first offset of [true] after 2 in [true]
+end handler
+handler TestFirstOffsetAfter_InvalidNegative()
+	return the first offset of [true] after -3 in [true]
+end handler
+handler TestLastOffsetAfter_InvalidPositive()
+	return the last offset of [true] after 2 in [true]
+end handler
+handler TestLastOffsetAfter_InvalidNegative()
+	return the last offset of [true] after -3 in [true]
+end handler
+public handler TestOffsetAfter()
+	variable tList
+	put [true, false, true, true, false] into tList
+
+	test "offset after (+ve)" when the offset of [true,false] after 1 in tList is 4
+	test "offset after (-ve)" when the offset of [true,false] after -5 in tList is 4
+	test "offset after (-ve, limit)" when the offset of [true,false] after -6 in tList is 1
+	test "offset after (+ve, missing)" when the offset of [false,true] after 2 in tList is 0
+	test "offset after (-ve, missing)" when the offset of [false,true] after -4 in tList is 0
+
+	MCUnitTestHandlerThrows(TestOffsetAfter_InvalidPositive, "offset after (+ve, invalid)")
+	MCUnitTestHandlerThrows(TestOffsetAfter_InvalidNegative, "offset after (-ve, invalid)")
+end handler
+public handler TestFirstOffsetAfter()
+	variable tList
+	put [true, false, true, true, false] into tList
+
+	test "first offset after (+ve)" when the first offset of [true,false] after 1 in tList is 4
+	test "first offset after (-ve)" when the first offset of [true,false] after -5 in tList is 4
+	test "first offset after (-ve, limit)" when the first offset of [true,false] after -6 in tList is 1
+	test "first offset after (+ve, missing)" when the first offset of [false,true] after 2 in tList is 0
+	test "first offset after (-ve, missing)" when the first offset of [false,true] after -4 in tList is 0
+
+	MCUnitTestHandlerThrows(TestFirstOffsetAfter_InvalidPositive, "first offset after (+ve, invalid)")
+	MCUnitTestHandlerThrows(TestFirstOffsetAfter_InvalidNegative, "first offset after (-ve, invalid)")
+end handler
+public handler TestLastOffsetAfter()
+	variable tList
+	put [true, false, true, true, false] into tList
+
+	test "last offset after (+ve)" when the last offset of [true] after 1 in tList is 4
+	test "last offset after (-ve)" when the last offset of [true] after -5 in tList is 4
+	test "last offset after (-ve, limit)" when the last offset of [true] after -6 in tList is 4
+	test "last offset after (+ve, missing)" when the last offset of [true] after 4 in tList is 0
+	test "last offset after (-ve, missing)" when the last offset of [true] after -2 in tList is 0
+
+	MCUnitTestHandlerThrows(TestLastOffsetAfter_InvalidPositive, "last offset after (+ve, invalid)")
+	MCUnitTestHandlerThrows(TestLastOffsetAfter_InvalidNegative, "last offset after (-ve, invalid)")
+end handler
+public handler TestOffsetAfterZero()
+	-- "offset of _ after 0 in _" should be equivalent to "offset of _ in _"
+	variable tList
+	put [true, false, true, true, false] into tList
+	variable tNoAfter
+
+	put the offset of [true,false] in tList into tNoAfter
+	test "offset after (+ve, 0)" when the offset of [true,false] after 0 in tList is tNoAfter
+
+	put the first offset of [true,false] in tList into tNoAfter
+	test "first offset after (+ve, 0)" when the first offset of [true,false] after 0 in tList is tNoAfter
+
+	put the last offset of [true,false] in tList into tNoAfter
+	test "last offset after (+ve, 0)" when the last offset of [true,false] after 0 in tList is tNoAfter
+end handler
+
+----------------------------------------------------------------
+
+handler TestOffsetBefore_InvalidPositive()
+	return the offset of [true] before 3 in [true]
+end handler
+handler TestOffsetBefore_InvalidNegative()
+	return the offset of [true] before -2 in [true]
+end handler
+handler TestFirstOffsetBefore_InvalidPositive()
+	return the first offset of [true] before 3 in [true]
+end handler
+handler TestFirstOffsetBefore_InvalidNegative()
+	return the first offset of [true] before -2 in [true]
+end handler
+handler TestLastOffsetBefore_InvalidPositive()
+	return the last offset of [true] before 3 in [true]
+end handler
+handler TestLastOffsetBefore_InvalidNegative()
+	return the last offset of [true] before -2 in [true]
+end handler
+public handler TestOffsetBefore()
+	variable tList
+	put [true, false, true, true, false] into tList
+
+	test "offset before (+ve)" when the offset of [true,false] before 4 in tList is 1
+	test "offset before (-ve)" when the offset of [true,false] before -2 in tList is 1
+	test "offset before (+ve, limit)" when the offset of [true,false] before 6 in tList is 4
+	test "offset before (+ve, missing)" when the offset of [false,true] before 2 in tList is 0
+	test "offset before (-ve, missing)" when the offset of [false,true] before -4 in tList is 0
+
+	MCUnitTestHandlerThrows(TestOffsetBefore_InvalidPositive, "offset before (+ve, invalid)")
+	MCUnitTestHandlerThrows(TestOffsetBefore_InvalidNegative, "offset before (-ve, invalid)")
+end handler
+public handler TestFirstOffsetBefore()
+	variable tList
+	put [true, false, true, true, false] into tList
+
+	test "first offset before (+ve)" when the first offset of [true,false] before 5 in tList is 1
+	test "first offset before (-ve)" when the first offset of [true,false] before -1 in tList is 1
+	test "first offset before (+ve, limit)" when the first offset of [true,false] before 6 in tList is 1
+	test "first offset before (+ve, missing)" when the first offset of [false,true] before 2 in tList is 0
+	test "first offset before (-ve, missing)" when the first offset of [false,true] before -4 in tList is 0
+
+	MCUnitTestHandlerThrows(TestFirstOffsetBefore_InvalidPositive, "first offset before (+ve, invalid)")
+	MCUnitTestHandlerThrows(TestFirstOffsetBefore_InvalidNegative, "first offset before (-ve, invalid)")
+end handler
+public handler TestLastOffsetBefore()
+	variable tList
+	put [true, false, true, true, false] into tList
+
+	test "last offset before (+ve)" when the last offset of [true,false] before 4 in tList is 1
+	test "last offset before (-ve)" when the last offset of [true,false] before -2 in tList is 1
+	test "last offset before (+ve, limit)" when the last offset of [true,false] before 6 in tList is 4
+	test "last offset before (+ve, missing)" when the last offset of [false,true] before 2 in tList is 0
+	test "last offset before (-ve, missing)" when the last offset of [false,true] before -4 in tList is 0
+
+	MCUnitTestHandlerThrows(TestLastOffsetBefore_InvalidPositive, "last offset before (+ve, invalid)")
+	MCUnitTestHandlerThrows(TestLastOffsetBefore_InvalidNegative, "last offset before (-ve, invalid)")
+end handler
+public handler TestOffsetBeforeZero()
+	-- "offset of _ before 0 in _" should be equivalent to "last offset of _ in _"
+	variable tList
+	put [true, false, true, true, false] into tList
+	variable tNoBefore
+
+	put the last offset of [true,false] in tList into tNoBefore
+	test "offset before (+ve, 0)" when the offset of [true,false] before 0 in tList is tNoBefore
+
+	put the first offset of [true,false] in tList into tNoBefore
+	test "first offset before (+ve, 0)" when the first offset of [true,false] before 0 in tList is tNoBefore
+
+	put the last offset of [true,false] in tList into tNoBefore
+	test "last offset before (+ve, 0)" when the last offset of [true,false] before 0 in tList is tNoBefore
+end handler
+
+end module

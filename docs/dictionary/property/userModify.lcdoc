@@ -1,0 +1,18 @@
+Name: userModify
+
+Type: property
+
+Syntax: set the userModify to {true | false}
+
+Summary: Has no effect and is included in <LiveCode> for compatibility with imported <HyperCard> stacks.
+
+Introduced: 1.0
+
+Platforms: desktop,server,web
+
+Description:
+In HyperCard, the <userModify> <property> determines whether the user can make temporary changes to a <lock|locked> <stack>. In LiveCode, this <property> has no effect.
+
+The <userModify> <property> is always set to true. A <handler> can set it to any <value> without causing a <error|script error>, but the actual <value> is not changed.
+
+References: cantModify (property), stack (object), property (glossary), handler (glossary), LiveCode (glossary), lock (glossary), HyperCard (glossary), error (glossary), value (function)

@@ -1,0 +1,89 @@
+Name: mobileStoreProductProperty
+
+Type: function
+
+Syntax: mobileStoreProductProperty (<productID>, <propertyName>)
+
+Summary: Retrieve a property of a purchased product.
+
+Introduced: 6.7
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+on purchaseStateUpdate pPurchaseID, pProductID, pState
+   switch pState
+      case "paymentReceived" 
+         answer "Payment received. Date of purchase is : " && mobileStoreProductProperty (pProductID, "purchaseDate")        
+         offerPurchasedProduct pProduct     
+         mobileStoreConfirmPurchase pProductID
+         mobileStoreDisablePurchaseUpdates
+         
+      case "error"
+         ...
+      case "invalidSKU"
+         ...
+      case "alreadyEntitled"
+         ...
+      case "restored"
+         ...
+      case "cancelled"
+         ...
+   end switch   
+end purchaseStateUpdate
+
+Parameters:
+productID: The identifier of the requested product.
+propertyName: The name of the requested property to get.
+
+Returns: Returns the value of the requested property for the purchased product.
+
+Description:
+Use the <mobileStoreProductProperty> function to retrieve a property of the purchased product.
+
+The function <mobileStoreProductProperty> is used to retrieve a property of the purchased product. It should be handled in the <purchaseStateUpdate> message.
+
+>*Note:*  The properties that can be queried depend on the store that is used.
+
+For Samsung Store (Android), you can query the properties:
+- title : title of the item purchased
+- <productId> : identifier of the purchased product
+- price : price of purchased product
+- currencyUnit : currency unit of the product price
+- description : description of the item as specified in Samsung Seller Office
+- itemImageUrl : URL where the image (if any) of the purchased product is stored
+- itemDownloadUrl : URL to download the purchased product
+- paymentId : payment ID of the purchased product
+- purchaseId : purchase ID of the purchased product
+- purchaseDate :  purchase date, in milliseconds
+- verifyUrl : IAP server URL for checking if the purchase is valid for the IAP server, using the "purchaseId" value 
+
+For Google Play Store (Android), you can query the properties :
+- <productId> : identifier of the purchased product
+- packageName : application package for which the purchase originated
+- orderId : unique order identifier for the transaction. This corresponds to the Google Wallet Order ID
+- purchaseTime : time the product was purchased, in milliseconds 
+- developerPayload : developer-specified string that contains supplemental information about an order. You can specify a value for this in <mobileStoreMakePurchase> 
+- purchaseToken : token that uniquely identifies a purchase for a given item and user pair.
+- itemType : type of the purchased product, inapp or subs
+- signature : string containing the signature of the purchase data that was signed with the private key of the developer. The data signature uses the RSASSA-PKCS1-v1_5 scheme
+
+For Amazon Store (Android) you can query the properties : 
+- <productId> : identifier of the purchased product
+- itemType : type of the purchased item, CONSUMABLE, ENTITLED or SUBSCRIPTION
+- subscriptionPeriod : string indicating the start and end date for subscription (only for itemType = "SUBSCRIPTION")
+- purchaseToken : purchase token that can be used from an external server to validate purchases
+
+For iTunes Store (iOS), you can query for the properties:
+- quantity : amount of product purchased. You can specify a value for this in <mobileStoreMakePurchase> 
+- <productId> : identifier of the purchased product
+- receipt : block of data that can be used to confirm the purchase from a remote server with the itunes store
+- purchaseDate : date the purchase/restore request was sent
+- transactionIdentifier : unique identifier for a successful purchase/restore
+- originalPurchaseDate : date of original purchase, for restored purchases
+- originalTransactionIdentifier : transaction identifier of the original purchase, for restored purchases
+- originalReceipt : the receipt for the original purchase, for restored purchases
+
+References: mobileStoreRestorePurchases (command), mobileStoreDisablePurchaseUpdates (command), mobileStoreEnablePurchaseUpdates (command), mobileStoreRequestProductDetails (command), mobileStoreMakePurchase (command), mobileStoreSetProductType (command), mobileStoreConsumePurchase (command), mobileStoreConfirmPurchase (command), mobileStoreVerifyPurchase (command), mobileStoreCanMakePurchase (function), mobileStorePurchasedProducts (function), mobileStorePurchaseError (function), purchaseStateUpdate (message), productRequestError (message), productDetailsReceived (message)

@@ -1,0 +1,48 @@
+Name: line
+
+Type: keyword
+
+Syntax: line
+
+Summary: Designates a return-<delimit|delimited> <string> as part of a <chunk expression>. It also designates the <paint tool> used to draw line shapes and specifies, through the <style> <property>, that a <graphic> is a line.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+get line 3 of the stacks
+
+Example:
+choose line tool
+
+Example:
+set the style of graphic "Divider" to "line"
+
+Description:
+Use the <line> <keyword> to paint a curved line with the <penColor>, to draw a line shape, or to refer to a specific <line> or <lines> in a <container>.
+
+When using the Line tool, the cursor is a crosshairs shape (over stack windows) or an arrow (anywhere else). This tool is used to draw a straight line in the penColor.
+
+If you try to paint with the Line tool on a card that has no images, an image the size of the card is created to hold the painting. If the current card already has one or more images, painting outside the image has no effect.
+
+Setting the <style> of a <graphic(keyword)> to "line" makes the <graphic(keyword)> into a curved line. Line <graphic(object)|graphics>, unlike painted lines, can be changed and reshaped: use the <points> <property> to change the line's angle and position.
+
+>*Note:* To avoid script errors, enclose the word "line" in <double quote|double quotes> when you use it to indicate a <graphic(object)|graphic's> <style>. This prevents <LiveCode> from getting confused about whether you mean the line style, or the contents of a line in a <container>.
+
+By default, a line is delimited by return (ASCII 10). However, you can set the <lineDelimiter> <property> to any <character> in order to directly address <chunk|chunks> <delimit|delimited> by that character.
+
+A line is a string of characters delimited by a single return character (or a single one of the <lineDelimiter> <character>). A single <line> can contain multiple <characters>, multiple <words>, and multiple <items>.
+
+>*Note:* In LiveCode, if the last character of a string is return, this is ignored by the <line> keyword. For example the last line of the following string is "Line 3" :
+
+   Line 1
+   Line 2
+   Line 3
+  &lt;empty Line&gt;
+
+References: characters (keyword), string (keyword), character (keyword), lines (keyword), line (keyword), word (keyword), graphic (keyword), words (keyword), items (keyword), style (property), points (property), lineDelimiter (property), penColor (property), choose (command), graphic (object), property (glossary), LiveCode (glossary), chunk expression (glossary), container (glossary), chunk (glossary), keyword (glossary), double quote (glossary), delimit (glossary), paint tool (glossary)
+
+Tags: text processing

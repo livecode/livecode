@@ -46,6 +46,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "external.h"
 
 #include "exec-interface.h"
+#include "osspec.h"
 
 //////////
 
@@ -438,9 +439,6 @@ void MCStack::SetName(MCExecContext& ctxt, MCStringRef p_name)
 			// If the name has changed process...
 			if (!hasname(*t_old_name))
 			{
-				bool t_is_mainstack;
-				t_is_mainstack = MCdispatcher -> ismainstack(this) == True;
-
 				// First flush any references to parentScripts on this stack
 				MCParentScript::FlushStack(this);
 				setextendedstate(false, ECS_HAS_PARENTSCRIPTS);
@@ -630,10 +628,12 @@ void MCStack::SetCantModify(MCExecContext& ctxt, bool setting)
 			return;
 		}
 		if (mode == WM_TOP_LEVEL || mode == WM_TOP_LEVEL_LOCKED)
+		{
 			if (flags & F_CANT_MODIFY || !MCdispatcher->cut(True))
 				mode = WM_TOP_LEVEL_LOCKED;
 			else
 				mode = WM_TOP_LEVEL;
+		}
 		stopedit();
 		dirtywindowname();
 		resetcursor(True);
@@ -838,12 +838,12 @@ void MCStack::SetMetal(MCExecContext& ctxt, bool setting)
 	SetDecoration(P_METAL, setting);
 }
 
-void MCStack::GetShadow(MCExecContext& ctxt, bool& r_setting)
+void MCStack::GetWindowShadow(MCExecContext& ctxt, bool& r_setting)
 {
 	r_setting = (flags & F_DECORATIONS && decorations & WD_NOSHADOW) == False;
 }
 
-void MCStack::SetShadow(MCExecContext& ctxt, bool setting)
+void MCStack::SetWindowShadow(MCExecContext& ctxt, bool setting)
 {
 	SetDecoration(P_SHADOW, setting);
 }
@@ -2171,5 +2171,42 @@ void MCStack::SetIgnoreMouseEvents(MCExecContext &ctxt, bool p_ignore)
 void MCStack::GetIgnoreMouseEvents(MCExecContext &ctxt, bool &r_ignored)
 {
     r_ignored = getextendedstate(ECS_IGNORE_MOUSE_EVENTS);
+}
+
+// MERG-2015-08-31: [[ ScriptOnly ]] Setter and getter for scriptOnly
+void MCStack::GetScriptOnly(MCExecContext& ctxt, bool& r_script_only)
+{
+    r_script_only = isscriptonly();
+}
+
+void MCStack::SetScriptOnly(MCExecContext& ctxt, bool p_script_only)
+{
+    m_is_script_only = p_script_only;
+}
+
+// MERG-2015-10-11: [[ DocumentFilename ]] Add stack documentFilename property
+void MCStack::GetDocumentFilename(MCExecContext &ctxt, MCStringRef& r_document_filename)
+{
+    r_document_filename = MCValueRetain(m_document_filename);
+}
+
+void MCStack::SetDocumentFilename(MCExecContext &ctxt, MCStringRef p_document_filename)
+{
+    MCStringRef t_resolved_filename;
+    
+    if (MCStringIsEmpty(p_document_filename))
+    {
+        t_resolved_filename = p_document_filename;
+    }
+    else if (!MCS_resolvepath(p_document_filename, t_resolved_filename))
+    {
+        ctxt . LegacyThrow(EE_DOCUMENTFILENAME_BADFILENAME);
+        return;
+    }
+    
+    MCValueAssign(m_document_filename, t_resolved_filename);
+    
+    updatedocumentfilename();
+
 }
 

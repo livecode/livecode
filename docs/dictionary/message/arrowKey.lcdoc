@@ -1,0 +1,36 @@
+Name: arrowKey
+
+Type: message
+
+Syntax: arrowKey {up | down | left | right}
+
+Summary: the <active (focused) control(glossary)>, or to the <current card> if no <control> is <focus|focused>, when the user presses an arrow key.
+
+Associations: button
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+on arrowKey theKey -- make Up arrow go to the first card
+  if theKey is "up" then go to card 1
+  else pass arrowKey
+end arrowKey
+
+Description:
+The parameter indicates which arrow key was pressed.
+
+Handle the <arrowKey> <message> if you want to do something special when the user presses an arrow key.
+
+If the <arrowKey> <handler> does not <pass> the <message> or <send> it to a further <object> in the <message path>, LiveCode does not perform the usual arrow key action (moving the <insertion point>, moving the <selected> <object>, or navigating to another card). <pass|Passing> the <message> lets the arrow key action take place.
+
+If the focused control is part of a group, and the group's tabGroupBehavior <property> is set to true, no <arrowKey> <message> is sent when the user presses an arrow key.
+
+>*Note:* Sending an <arrowKey> message does nothing unless there is an <arrowKey> <handler> in the <message path>. This is a difference from <HyperCard|HyperTalk's> handling of the <arrowKey> <message>.
+
+References: navigationArrows (property), textArrows (property), selected (property), functionKey (message), selectionChanged (message), control (keyword), pass (control_st), property (glossary), current card (glossary), handler (glossary), focus (glossary), message path (glossary), pass (glossary), insertion point (glossary), message (glossary), HyperCard (glossary), active control (glossary), send (command), object (object)
+
+Tags: ui

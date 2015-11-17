@@ -1,0 +1,14 @@
+Name: folder
+
+Synonyms: folder,directory,directories
+
+Type: glossary
+
+Description:
+A collection of <file|files> and other <folder|folders>. 
+ 
+The synonym "directory" is more common among <Unix> users. The term "folder" is more often used by <Mac OS>, <OS X>, and <Windows> users.
+
+References: file (glossary), Windows (glossary), Unix (glossary), Mac OS (glossary), OS X (glossary), folder (glossary)
+
+Tags: file system

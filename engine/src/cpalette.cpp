@@ -175,7 +175,7 @@ Boolean MCColors::mup(uint2 which, bool p_release)
 }
 
 #ifdef LEGACY_EXEC
-Exec_stat MCColors::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+Exec_stat MCColors::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
 {
 	switch (which)
 	{
@@ -188,7 +188,7 @@ Exec_stat MCColors::getprop_legacy(uint4 parid, Properties which, MCExecPoint& e
 		break;
 #endif /* MCColors::getprop */ 
 	default:
-		return MCControl::getprop_legacy(parid, which, ep, effective);
+		return MCControl::getprop_legacy(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }
@@ -278,10 +278,12 @@ void MCColors::draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_
 				draw3d(dc, trect, ETCH_SUNKEN, borderwidth);
 		}
 	if (flags & F_SHOW_BORDER)
+	{
 		if (flags & F_3D)
 			draw3d(dc, rect, ETCH_SUNKEN, borderwidth);
 		else
 			drawborder(dc, rect, borderwidth);
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -314,6 +316,6 @@ IO_stat MCColors::load(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	return loadpropsets(stream, version);
 }

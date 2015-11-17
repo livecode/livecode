@@ -1,0 +1,30 @@
+Name: lock cursor
+
+Type: command
+
+Syntax: lock cursor
+
+Summary: Sets the <lockCursor> <property> to true, preventing the <cursor> shape from changing.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+lock cursor
+
+Example:
+if the mouse is not down then lock cursor
+
+Description:
+Use the <lock cursor> <command> to make the <cursor> retain a specified <appearance> until you change it.
+
+The <lock cursor> <command> sets the <lockCursor> <property> to true.
+
+Set the <cursor> <property> to change the <cursor>.
+
+References: lock moves (command), lock screen (command), unlock cursor (command), lock colorMap (command), lockCursor (property), cursor (property), property (glossary), command (glossary), appearance (glossary)
+
+Tags: ui

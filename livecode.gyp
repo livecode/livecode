@@ -7,6 +7,18 @@
 	'targets':
 	[
 		{
+			'target_name': 'default',
+			'type': 'none',
+			'dependencies': [ 'binzip-copy', ],
+		},
+
+		{
+			'target_name': 'check',
+			'type': 'none',
+			'dependencies': [ 'cpptest-run-all', ],
+		},
+
+		{
 			'target_name': 'LiveCode-all',
 			'type': 'none',
 			
@@ -15,19 +27,33 @@
 				# Engines
 				'engine/engine.gyp:standalone',
 
-				# The revsecurity library is an output and not an intermediate product
-				'thirdparty/libopenssl/libopenssl.gyp:revsecurity',
-				
-				# Externals
-				'revdb/revdb.gyp:external-revdb',
-				'revdb/revdb.gyp:dbmysql',
-				'revdb/revdb.gyp:dbsqlite',
-				'revxml/revxml.gyp:external-revxml',
-				'revzip/revzip.gyp:external-revzip',
+				# LCB toolchain
+				'toolchain/toolchain.gyp:toolchain-all',
+
+				# Widgets and libraries
+				'extensions/extensions.gyp:extensions',
+
+				# lcidlc
+				'lcidlc/lcidlc.gyp:lcidlc',
 			],
 			
 			'conditions':
 			[
+				
+				[
+					'OS != "emscripten"',
+					{
+						'dependencies':
+						[
+							'thirdparty/libopenssl/libopenssl.gyp:revsecurity',
+							'revdb/revdb.gyp:external-revdb',
+							'revdb/revdb.gyp:dbmysql',
+							'revdb/revdb.gyp:dbsqlite',
+							'revxml/revxml.gyp:external-revxml',
+							'revzip/revzip.gyp:external-revzip',
+						],
+					},
+				],
 				[
 					'mobile == 0',
 					{
@@ -88,11 +114,20 @@
 					},
 				],
 				[
-					'OS != "android"',
+					'OS != "android" and OS != "emscripten"',
 					{
 						'dependencies':
 						[
 							'revpdfprinter/revpdfprinter.gyp:external-revpdfprinter',
+						],
+					},
+				],
+				[
+					'OS == "emscripten"',
+					{
+						'dependencies':
+						[
+							'engine/engine.gyp:javascriptify',
 						],
 					},
 				],
@@ -157,5 +192,33 @@
 				'files': [ '>@(dist_files)', '>@(dist_aux_files)', ],
 			}],
 		},
+		
+		{
+			'target_name': 'cpptest-run-all',
+			'type': 'none',
+
+			'dependencies':
+			[
+				'libcpptest/libcpptest.gyp:run-test-libcpptest',
+				'libfoundation/libfoundation.gyp:run-test-libFoundation',
+				'engine/kernel-standalone.gyp:run-test-kernel-standalone',
+			],
+
+			'conditions':
+			[
+				[
+					'mobile == 0',
+					{
+						'dependencies':
+						[
+							'engine/kernel-server.gyp:run-test-kernel-server',
+							'engine/kernel-development.gyp:run-test-kernel-development',
+							'engine/kernel-installer.gyp:run-test-kernel-installer',
+						],
+					},
+				],
+			],
+		},
+
 	],
 }

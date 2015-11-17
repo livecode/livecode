@@ -1,0 +1,27 @@
+Name: mobileRestorePurchases
+
+Type: command
+
+Syntax: mobileRestorePurchases
+
+Summary: Instructs the App Store or Marketplace to re-send notifications of previously completed purchases.
+
+Introduced: 5.0.1
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+if tDeviceFirstRun is true then
+   mobileRestorePurchases
+end if
+
+Description:
+Use the <mobileRestorePurchases> command to instruct the App Store or Marketplace to re-send notifications of previously completed purchases.
+
+The <mobileRestorePurchases> command instructs the App Store or Marketplace to re-send notifications of previously completed purchases.
+
+This would typically be called the first time an app is run after installation on a new device to restore any items bought through the app.
+
+References: mobilePurchaseSet (command), mobileDisablePurchaseUpdates (command), mobilePurchaseVerify (command), iphoneRequestProductDetails (command), mobilePurchaseSendRequest (command), mobilePurchaseConfirmDelivery (command), mobileEnablePurchaseUpdates (command), mobilePurchaseCreate (command), mobilePurchaseState (function), mobilePurchaseError (function), mobileCanMakePurchase (function), mobilePurchaseGet (function), mobilePurchases (function), purchaseStateUpdate (message)

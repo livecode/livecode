@@ -1,17 +1,19 @@
 {		
 	'dependencies':
 	[
-		'encode_version',
+		'engine-common.gyp:encode_version',
 		
 		'../libfoundation/libfoundation.gyp:libFoundation',
 		'../libgraphics/libgraphics.gyp:libGraphics',
+		'../libscript/libscript.gyp:libScript',
+
+		'../libbrowser/libbrowser.gyp:libbrowser',
 	],
 
 	'conditions':
 	[
 		[
-			# Only the Linux and Android builds support proper cross-compilation
-			'OS == "linux" or OS == "android"',
+			'cross_compile != 0',
 			{
 				'dependencies':
 				[

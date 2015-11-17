@@ -1,0 +1,37 @@
+Name: put unicode
+
+Type: command
+
+Syntax: put  unicode <value> {before | into | after} <fieldChunk> 
+
+Summary: Inserts a unicode string into a field where specified.
+
+Associations: field
+
+Introduced: 5.5
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,mobile
+
+Example:
+put unicode tUTF16String after field "list"
+
+Example:
+put unicode tUTF16String into line 2 of field "list"
+
+Example:
+put unicode tUTF16_Line1 after field 1
+put return after field 1
+put unicode tUTF16_Line2 after field 2
+
+Parameters:
+value: A UTF-16 encoded string.
+fieldChunk: The position in the field where the unicode string is to be inserted.
+
+Description:
+Use the put unicode command to insert a unicode string at a specified position in a field.
+
+References: put header (command), put (command), put markup (command), put text (command), put content (command), after (keyword), before (keyword)
+
+Tags: text processing

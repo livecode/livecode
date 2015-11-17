@@ -1,0 +1,41 @@
+Name: unicodePlainText
+
+Type: property
+
+Syntax: set the unicodePlainText of [chunk of] field to string
+
+Syntax: get the unicodePlainText of [chunk of] field
+
+Summary: Returns the contents of a field chunk as plain text.
+
+Associations: field
+
+Introduced: 4.6
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+write the unicodePlainText of field 1 to file myTextFile
+
+Example:
+put word 1 to 3 of the unicodePlainText of field "lorem" into tFirstThreeWords
+
+Value: The <unicodePlainText> of a field is a string.
+
+Description:
+Use the <unicodePlainText> property to get the content of a field as plain text with any listStyle properties being converted appropriately into plain-text for the paragraphs the affect.
+
+When you get a field's <unicodePlainText>, the field's text is converted to plain text with any listStyle property being converted appropriately into plain-text.
+
+Any paragraphs with listStyle set are prefixed by an appropriate plain-text form of the bullet or index. The property returns text encoded in UTF-16 in host byte-order.
+
+Deprecated: In LiveCode 7.0 the language was changed to handle unicode transparently. This means that language functionality which previously aided unicode text manipulation is no longer required. This property should not be used in new code; simply get the plainText as normal. The following are now equivalent:
+
+get the unicodePlainText of field 1
+get textEncode(the plainText of field 1, "UTF16")
+
+References: plainText (property), dontWrap (property), unicodeFormattedText (property), formattedText (property)
+
+Tags: text processing

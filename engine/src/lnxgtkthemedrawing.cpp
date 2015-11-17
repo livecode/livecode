@@ -596,13 +596,13 @@ moz_gtk_checkbox_get_metrics(gint * indicator_size, gint * indicator_spacing)
 
 	if (indicator_size)
 	{
-		gtk_widget_style_get_ptr(gCheckboxWidget, "indicator_size",
+		gtk_widget_style_get_ptr(gCheckboxWidget, "indicator-size",
 		                       indicator_size, NULL);
 	}
 
 	if (indicator_spacing)
 	{
-		gtk_widget_style_get_ptr(gCheckboxWidget, "indicator_spacing",
+		gtk_widget_style_get_ptr(gCheckboxWidget, "indicator-spacing",
 		                       indicator_spacing, NULL);
 	}
 
@@ -616,13 +616,13 @@ gint moz_gtk_radiobutton_get_metrics(gint * indicator_size,
 
 	if (indicator_size)
 	{
-		gtk_widget_style_get_ptr(gRadiobuttonWidget, "indicator_size",
+		gtk_widget_style_get_ptr(gRadiobuttonWidget, "indicator-size",
 		                       indicator_size, NULL);
 	}
 
 	if (indicator_spacing)
 	{
-		gtk_widget_style_get_ptr(gRadiobuttonWidget, "indicator_spacing",
+		gtk_widget_style_get_ptr(gRadiobuttonWidget, "indicator-spacing",
 		                       indicator_spacing, NULL);
 	}
 
@@ -654,7 +654,7 @@ GtkStateType state_type = ConvertGtkState(state);
      * vertically center in the box, since XUL sometimes ignores our
      * GetMinimumWidgetSize in the vertical dimension
      */
-    x = rect->x;
+    x = rect->x + indicator_spacing;
     y = rect->y + (rect->height - indicator_size) / 2;
     width = indicator_size;
     height = indicator_size;
@@ -1199,14 +1199,11 @@ moz_gtk_listbox_paint(GdkDrawable * drawable, GdkRectangle * rect,
 void spinbutton_get_rects(GtkArrowType type, GdkRectangle *rect,
                           GdkRectangle &buttonrect, GdkRectangle &arrowrect)
 {
-	GdkRectangle *ret;
 	gint arrow_size;
 	int x, y, width, height;
 	int h, w;
 
 	ensure_spinbutton_widget();
-
-	ret = new GdkRectangle;
 
 	arrow_size = rect->width - (2 * XTHICKNESS(gSpinbuttonWidget->style));
 
@@ -1295,16 +1292,6 @@ moz_gtk_scale_track_paint(GtkThemeWidgetType type,
                           gint flags)
 {
 	ensure_scale_widget();
-	GtkWidget *widget;
-
-	if(type == MOZ_GTK_SCALE_TRACK_VERTICAL)
-	{
-		widget = gVScaleWidget;
-	}
-	else
-	{
-		widget = gHScaleWidget;
-	}
 
 	GtkStyle *style;
 	GtkScale *scale;

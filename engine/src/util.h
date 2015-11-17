@@ -21,10 +21,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef UTIL_H
 #define UTIL_H
 
+#include "parsedef.h"
+#include "sysdefs.h"
+#include "typedefs.h"
+#include "mcsemaphore.h"
+
 typedef struct
 {
 	uint2 lockscreen;
-	uint2 errorlock;
+	MCSemaphore errorlock;
 	Boolean watchcursor;
 	Boolean lockerrors;
 	Boolean lockmessages;
@@ -135,8 +140,7 @@ extern void MCU_additem(char *&dptr, const char *sptr, Boolean first);
 extern void MCU_addline(char *&dptr, const char *sptr, Boolean first);
 extern void MCU_break_string(const MCString &s, MCString *&ptrs, uint2 &nptrs,
 	                             Boolean isunicode = False);
-extern void MCU_sort(MCSortnode *items, uint4 nitems,
-                       Sort_type dir, Sort_type form);
+
 #ifndef _DEBUG_MEMORY
 extern void MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize);
 #endif
@@ -157,6 +161,7 @@ extern void MCU_set_rect(MCRectangle &rect, int2 x, int2 y, uint2 w, uint2 h);
 extern void MCU_set_rect(MCRectangle32 &rect, int32_t x, int32_t y, int32_t w, int32_t h);
 extern Boolean MCU_point_in_rect(const MCRectangle &srect, int2 x, int2 y);
 extern Boolean MCU_rect_in_rect(const MCRectangle &p, const MCRectangle &w);
+extern bool MCU_line_intersect_rect(const MCRectangle& srect, const MCRectangle& line);
 extern Boolean MCU_point_on_line(MCPoint *points, uint2 npoints,
 	                                 int2 x, int2 y, uint2 linesize);
 extern Boolean MCU_point_in_polygon(MCPoint *points, uint2 npoints,
@@ -235,10 +240,6 @@ extern void MCU_unicodetomultibyte(const char *s, uint4 len, char *d,
 extern bool MCU_compare_strings_native(const char *p_a, bool p_a_isunicode, const char *p_b, bool p_b_isunicode);
 #endif
 extern double MCU_squared_distance_from_line(int4 sx, int4 sy, int4 ex, int4 ey, int4 x, int4 y);
-
-// MW-2013-05-21: [[ RandomBytes ]] Generate random bytes using either OpenSSL (if available)
-//   or platform support (if not).
-extern bool MCU_random_bytes(size_t p_bytecount, MCDataRef& r_bytes);
 
 // AL-2015-02-06: [[ SB Inclusions ]] Add utility functions for module loading
 // SN-2015-02-23: [[ Broken Win Compilation ]] Use void*, as the function is imported

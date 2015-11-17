@@ -1,0 +1,37 @@
+Name: paragraphOffset
+
+Type: function
+
+Syntax: paragraphOffset(<stringToFind>, <stringToSearch> [, <paragraphsToSkip>])
+
+Summary: Returns the number of paragraphs between the beginning of a value and an occurrence of a specified string.
+
+Introduced: 7.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+paragraphOffset("This is the second paragraph. It follows the first paragraph of this piece of text.", tSampleText)
+
+Example:
+put tReplacement into paragraph (paragraphOffset(tOriginal,tReceivedData)) of tReceivedData
+
+Parameters:
+stringToFind (string): 
+stringToSearch (string): 
+paragraphsToSkip: The paragraphsToSkip is a non-negative integer. If you don't specify how many paragraphsToSkip, the paragraphOffset function does not skip any paragraphs.
+
+Returns: The <paragraphOffset> function returns a non-negative integer.
+
+Description:
+Use the <paragraphOffset> function to find which paragraph a string occurs in.
+
+The value returned by the <paragraphOffset> function is the number of the paragraph where the <stringToFind> appears in <stringToSearch>. If the <stringToFind> is not in <stringToSearch>, the <paragraphOffset> function returns zero. If the <stringToFind> is more than one paragraph, the <paragraphOffset> function always returns zero, even if the <stringToFind> appears in the <stringToSearch>.
+
+If you specify how many <paragraphsToSkip>, the <paragraphOffset> function skips the specified number of paragraphs in the <stringToSearch>. The value returned is relative to this starting point instead of the beginning of the <stringToSearch>.
+
+References: wholeMatches (property), wordOffset (function), tokenOffset (function), sentenceOffset (function), byteOffset (function), truewordOffset (function), codeunitOffset (function), codepointOffset (function), offset (function)
+
+Tags: text processing

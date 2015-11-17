@@ -1,0 +1,12 @@
+Name: unary
+
+Synonyms: unary
+
+Type: glossary
+
+Description:
+An <operator> that takes one <operand>.
+
+References: operator (glossary), operand (glossary)
+
+Tags: math

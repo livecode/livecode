@@ -1,0 +1,41 @@
+Name: lineDelimiter
+
+Type: property
+
+Syntax: set the lineDelimiter to <character|character(s)>
+
+Summary: Specifies the <character|character(s)> used to separate <lines> in <chunk expression|chunk expressions>.
+
+Synonyms: lineDel
+
+Introduced: 2.0
+
+Changed: 7.0.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the lineDelimiter to numToChar(13)
+
+Example:
+set the lineDelimiter to myRecordDelimiter
+
+Example:
+set the itemDelimiter to ";;"
+
+Value:
+From LiveCode 7.0, <lineDelimiter> can be a string of one or several <character|characters>.
+By default, the <lineDelimiter> <property> is set to <return>.
+
+Description:
+Use the <lineDelimiter> <property> to divide text into <chunk|chunks> based on a <delimit|delimiting> <character>.
+
+From LiveCode 7.0, <lineDelimiter> can be a string of one or several <character|characters>. <chunk expression|Chunk expressions> use the <lineDelimiter> to determine where one <line> ends and the next begins.
+
+Since the <lineDelimiter> is a <local property>, its value is <reset> to <return> when the current <handler> finishes <execute|executing>. It retains its <value> only for the current <handler>, and setting it in one <handler> does not affect its <value> in other <handler|handlers> it <call|calls>.
+
+References: line (keyword), character (keyword), lines (keyword), return (constant), formfeed (constant), reset (command), value (function), property (glossary), chunk expression (glossary), handler (glossary), execute (glossary), call (glossary), chunk (glossary), local property (glossary), delimit (glossary)
+
+Tags: text processing

@@ -38,6 +38,9 @@ enum MCLocaleTextLayout
 // Opaque pointer type to a locale
 typedef struct __MCLocale* MCLocaleRef;
 
+// The basic (POSIX-compatible) locale
+extern MCLocaleRef kMCBasicLocale;
+
 // Gets a reference to the named locale or returns false
 bool    MCLocaleCreateWithName(MCStringRef p_locale_name, MCLocaleRef &r_locale);
 

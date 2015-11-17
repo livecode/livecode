@@ -100,8 +100,22 @@ void MCU_init()
 		qa_points[i].y = MAXINT2 - (short)(cos(angle) * (real8)MAXINT2);
 		angle += increment;
 	}
-	MCrandomseed = (int4)(intptr_t)&MCdispatcher + MCS_getpid() + (int4)time(NULL);
-	MCU_srand();
+
+    /* Attempt to seed the random number generator using the system entropy
+     * source. If that fails, fall back to constructing using some of the
+     * entropy available from the properties of the current process. */
+    MCAutoDataRef t_seed_data;
+    if (MCSRandomData(sizeof(MCrandomseed), &t_seed_data))
+    {
+        MCMemoryCopy(&MCrandomseed, MCDataGetBytePtr(*t_seed_data),
+                     sizeof(MCrandomseed));
+    }
+    else
+    {
+        MCLog("Warning: Failed to seed random number generator", NULL);
+        MCrandomseed = (int4)(intptr_t)&MCdispatcher + MCS_getpid() + (int4)time(NULL);
+    }
+    MCU_srand();
 }
 
 void MCU_watchcursor(MCStack *sptr, Boolean force)
@@ -155,7 +169,7 @@ void MCU_resetprops(Boolean update)
 			MCselected->redraw();
 		}
 	}
-	MCerrorlock = 0;
+	MCerrorlock.Reset();
 	MClockerrors = MClockmessages = MClockrecent = False;
 	MCscreen->setlockmoves(False);
 	MCerrorlockptr = NULL;
@@ -164,6 +178,13 @@ void MCU_resetprops(Boolean update)
 	MCdynamiccard = NULL;
 	MCdynamicpath = False;
 	MCexitall = False;
+    
+    // The clipboard lock is counted and needs to be balanced
+    while (MCclipboardlockcount)
+    {
+        MCclipboardlockcount--;
+        MCclipboard->Unlock();
+    }
 }
 
 void MCU_saveprops(MCSaveprops &sp)
@@ -1212,114 +1233,6 @@ void MCU_break_string(const MCString &s, MCString *&ptrs, uint2 &nptrs,
 	}
 }
 
-// AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
-#if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
-extern compare_t MCSystemCompareInternational(MCStringRef, MCStringRef);
-#endif
-
-static void msort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, Boolean reverse)
-{
-	if (n <= 1)
-		return;
-
-	uint4 n1 = n / 2;
-	uint4 n2 = n - n1;
-	MCSortnode *b1 = b;
-	MCSortnode *b2 = b + n1;
-
-	msort(b1, n1, t, form, reverse);
-	msort(b2, n2, t, form, reverse);
-
-	MCSortnode *tmp = t;
-	while (n1 > 0 && n2 > 0)
-	{
-		// NOTE:
-		//
-		// This code assumes the types in the MCSortnodes are correct for the
-		// requested sort type. Bad things will happen if this isn't true...
-		bool first;
-		switch (form)
-		{
-		case ST_INTERNATIONAL:
-			{
-                char *t1, *t2;
-                /* UNCHECKED */ MCStringConvertToCString(b1->svalue, t1);
-                /* UNCHECKED */ MCStringConvertToCString(b2->svalue, t2);
-				const char *s1, *s2;
-				s1 = t1;
-				s2 = t2;
-				
-				// WARNING: this will *not* work properly on anything other
-				// than OSX, iOS or Android: the LC_COLLATE locale facet is set to the
-				// locale "en_US.<native encoding>"...
-				//
-				// Additionally, UTF-16 strings don't work at all.
-                
-                // AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
-#if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
-				int result = MCSystemCompareInternational(b1->svalue, b2->svalue);
-#else
-				int result = strcoll(s1, s2);
-#endif
-				delete t1;
-                delete t2;
-				first = reverse ? result >= 0 : result <= 0;
-				break;
-			}
-
-		case ST_TEXT:
-			{
-				// This mode performs the comparison in a locale-independent,
-                // case-sensitive manner. The strings are sorted by order of
-                // codepoint values rather than any lexical sorting order.
-                compare_t result = MCStringCompareTo(b1->svalue, b2->svalue, kMCStringOptionCompareExact);
-
-				first = reverse ? result >= 0 : result <= 0;
-				break;
-			}
-        case ST_BINARY:
-            {
-                compare_t result = MCDataCompareTo(b1->dvalue, b2->dvalue);
-                
-				first = reverse ? result >= 0 : result <= 0;
-				break;
-            }
-		default:
-			{
-				first = reverse
-							? MCNumberFetchAsReal(b1->nvalue) >= MCNumberFetchAsReal(b2->nvalue)
-							: MCNumberFetchAsReal(b1->nvalue) <= MCNumberFetchAsReal(b2->nvalue);
-				break;
-			}
-		}
-		
-		if (first)
-		{
-			*tmp++ = *b1++;
-			n1--;
-		}
-		else
-		{
-			*tmp++ = *b2++;
-			n2--;
-		}
-	}
-	for (uindex_t i = 0; i < n1; i++)
-		tmp[i] = b1[i];
-	for (uindex_t i = 0; i < (n - n2); i++)
-		b[i] = t[i];
-}
-
-void MCU_sort(MCSortnode *items, uint4 nitems,
-              Sort_type dir, Sort_type form)
-{
-	if (nitems <= 1)
-		return;
-	MCSortnode *tmp = new MCSortnode[nitems];
-	msort(items, nitems, tmp, form, dir == ST_DESCENDING);
-	delete[] tmp;
-}
-
 #if !defined(_DEBUG_MEMORY)
 void MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize)
 {
@@ -1363,7 +1276,8 @@ static const char **nametable[] =
     &MCnullstring, &MCscrollbarstring,
     &MCimagestring, &MCgraphicstring,
     &MCepsstring, &MCmagnifierstring,
-    &MCcolorstring, &MCfieldstring
+    &MCcolorstring, &MCwidgetstring,
+    &MCfieldstring
 };
 
 bool MCU_matchname(MCNameRef test, Chunk_term type, MCNameRef name)
@@ -1411,7 +1325,7 @@ void MCU_roundrect(MCPoint *&points, uint2 &npoints,
 
 	if (points == NULL || npoints != 4 * QA_NPOINTS + 1)
 	{
-		delete points;
+		delete[] points;
 		points = new MCPoint[4 * QA_NPOINTS + 1];
 	}
 
@@ -1582,11 +1496,11 @@ Boolean MCU_parsepoint(MCPoint &point, MCStringRef data)
     if (!MCStringCanBeNative(data))
         return false;
     
-    const char *sptr;
-    uint4 l;
-    l = MCStringGetLength(data);
-    sptr = (const char *)MCStringGetNativeCharPtr(data);
-    
+    MCAutoPointer<char> t_data;
+    /* UNCHECKED */ MCStringConvertToCString(data, &t_data);
+    const char *sptr = *t_data;
+    uint4 l = MCStringGetLength(data);
+
 	Boolean done1, done2;
 	// MDW-2013-06-09: [[ Bug 11041 ]] Round non-integer values to nearest.
 	int2 i1= (int2)(MCU_strtol(sptr, l, ',', done1, True));
@@ -1631,6 +1545,36 @@ Boolean MCU_rect_in_rect(const MCRectangle &p, const MCRectangle &w)
 	        && p.y >= w.y && p.y + p.height <= w.y + w.height)
 		return True;
 	return False;
+}
+
+// AL-2015-10-07:: [[ External Handles ]] Check if possible zero-width line
+// 'intersects' with rect.
+bool MCU_line_intersect_rect(const MCRectangle& srect, const MCRectangle& line)
+{
+    MCRectangle t_test_rect;
+    t_test_rect = line;
+    
+    
+    // If the line is zero-width or zero-height, adjust the test rect
+    //  so that we can just use MCU_intersect_rect.
+    if (t_test_rect . width == 0)
+    {
+        t_test_rect . width++;
+        if (srect . x > t_test_rect . x)
+            t_test_rect . x--;
+    }
+    
+    if (t_test_rect . height == 0)
+    {
+        t_test_rect . height++;
+        if (srect . y > t_test_rect . y)
+            t_test_rect . y--;
+    }
+
+    MCRectangle t_intersect;
+    t_intersect = MCU_intersect_rect(srect, t_test_rect);
+
+    return t_intersect . width != 0 && t_intersect . height != 0;
 }
 
 
@@ -2063,6 +2007,18 @@ void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
 		MCstacks->restartidle();
 	if (MCtopstackptr != NULL)
 		MCtopstackptr->updatemenubar();
+    
+    MCStacknode *t_node, *t_first_node;
+    t_node = t_first_node = MCstacks->topnode();
+    while (t_node)
+    {
+        t_node->getstack()->toolchanged(MCcurtool);
+        
+        if (t_node->next() == t_first_node)
+            t_node = nil;
+        else
+            t_node = t_node->next();
+    }
     
     // MW-2014-04-24: [[ Bug 12249 ]] Prod each player to make sure its buffered correctly for the new tool.
     for(MCPlayer *t_player = MCplayers; t_player != NULL; t_player = t_player -> getnextplayer())
@@ -2797,7 +2753,7 @@ static CharSet2WinCharset charset2wincharsets[] = {
 uint1 MCU_wincharsettocharset(uint2 wincharset)
 {
 	uint2 i;
-	for (i = 0; i < ELEMENTS(langtocharsets); i++)
+	for (i = 0; i < ELEMENTS(charset2wincharsets); i++)
 		if (charset2wincharsets[i].wincharset == wincharset)
 			return charset2wincharsets[i].charset;
 	return 0;
@@ -2806,7 +2762,7 @@ uint1 MCU_wincharsettocharset(uint2 wincharset)
 uint1 MCU_charsettowincharset(uint1 charset)
 {
 	uint2 i;
-	for (i = 0; i < ELEMENTS(langtocharsets); i++)
+	for (i = 0; i < ELEMENTS(charset2wincharsets); i++)
 		if (charset2wincharsets[i].charset == charset)
 			return charset2wincharsets[i].wincharset;
 	return 0;
@@ -3211,15 +3167,6 @@ bool MCU_compare_strings_native(const char *p_a, bool p_a_isunicode, const char 
 	return t_compval;
 }
 #endif
-
-///////////////////////////////////////////////////////////////////////////////
-
-// MW-2013-05-21: [[ RandomBytes ]] Utility function for generating random bytes.
-bool MCU_random_bytes(size_t p_bytecount, MCDataRef& r_bytes)
-{
-	// IM-2014-08-06: [[ Bug 13038 ]] Use system implementation directly instead of SSL
-	return MCS_random_bytes(p_bytecount, r_bytes);
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 

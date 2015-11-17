@@ -1,0 +1,33 @@
+Name: pageIncrement
+
+Type: property
+
+Syntax: set the pageIncrement of <scrollbar> to <pageAmount> 
+
+Summary: Specifies how far a <scrollbar> moves when the user clicks somewhere in its gray region.
+
+Synonyms: pageInc
+
+Associations: scrollbar
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+set the pageIncrement of scrollbar "Content" to 200
+
+Value:
+The <pageIncrement> property of a scrollbar is a number between the scrollbar's startValue and endValue.
+By default, the <pageIncrement> property of newly created scrollbars is set to 8192.
+
+Description:
+Use the <pageIncrement> property to change the amount that is scrolled when the gray region is clicked.
+
+When the user clicks in the gray region above or below the scrolling thumb (to the left or right, for a horizontal scrollbar), the scrollbar moves one page up or down (or to the left or right). Use the <pageIncrement> property to specify how far the scrolling thumb moves. The amount the scrollbar moves will equal the pageIncrement minus the lineIncrement. Setting the pageIncrement to be less than the lineIncrement causes the scrollbar to run backwards.
+
+The startValue and endValue properties set the scale used for the pageIncrement/lineIncrement combination, so for example, if the <pageIncrement> minus the <lineIncrement> is set to one-tenth of the difference between the startValue and endValue, clicking the gray region moves the scrollbar one-tenth of its length.
+
+References: repeatRate (property), lineIncrement (property), scrollbarPageDec (message), scrollbarPageInc (message), scrollbar (keyword)

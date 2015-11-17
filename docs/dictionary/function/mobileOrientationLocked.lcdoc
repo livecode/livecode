@@ -1,0 +1,31 @@
+Name: mobileOrientationLocked
+
+Type: function
+
+Syntax: mobileOrientationLocked()
+
+Summary: Queries the current lock state.
+
+Synonyms: iphoneOrientationLocked
+
+Introduced: 4.5.3
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+answer mobileOrientationLocked() with "Okay"
+
+Returns (enum): The <mobileOrientationLocked> function returns a boolean value:
+- true : orientation changes are locked
+- false : orientation changes are note locked
+
+Description:
+Use the <mobileOrientationLocked> function to query the current orientation lock state.
+
+The <mobileOrientationLocked> function tests if the current orientation is locked. This may be while your application is performing a task and you do not want the orientation to change until the task is complete.
+
+The orientation lock can be nested, and when an unlock request causes the nesting to return to zero, the interface rotates to match the device's current orientation (assuming it is in the set of allowed orientations).
+
+References: mobileSetAllowedOrientations (command), mobileUnlockOrientation (command), mobileAllowedOrientations (function), mobileDeviceOrientation (function), mobileOrientation (function), orientationChanged (message)

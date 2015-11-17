@@ -24,7 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //#include "execpt.h"
 #include "date.h"
 
-#if defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER) || defined(_DARWIN_SERVER)
+#if defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER) || defined(_DARWIN_SERVER) || defined(__EMSCRIPTEN__)
 #include <time.h>
 #define sys_time_t time_t
 #define sys_localtime localtime
@@ -250,11 +250,11 @@ static void cache_locale(void)
 	s_datetime_locale -> date_formats[1] = MCSTR("%a, %b %#d, %#Y");
 	s_datetime_locale -> date_formats[2] = MCSTR("%A, %B %#d, %#Y");
 
-    MCStringRef t_time_ampm;
+    MCAutoStringRef t_time_ampm;
     t_time_ampm = query_locale(T_FMT_AMPM);
     
     // AL-2014-01-16: [[ Bug 11672 ]] If the locale doesn't use AM/PM, then always use 24-hour time.
-    if (MCStringIsEmpty(t_time_ampm))
+    if (MCStringIsEmpty(*t_time_ampm))
     {
         s_datetime_locale -> time24_formats[0] = MCSTR("!%H:%M");
         s_datetime_locale -> time24_formats[1] = MCSTR("!%H:%M:%S");
@@ -264,10 +264,10 @@ static void cache_locale(void)
         // PM-2015-09-07: [[ Bug 9942 ]] On Linux, the short/abbr system time
         //  should not return the seconds
         MCStringRef t_short_time;
-        t_short_time = string_prepend(swap_time_tokens(t_time_ampm), '!');
+        t_short_time = string_prepend(swap_time_tokens(*t_time_ampm), '!');
 
         s_datetime_locale -> time_formats[0] = remove_seconds(t_short_time);
-        s_datetime_locale -> time_formats[1] = swap_time_tokens(t_time_ampm);
+        s_datetime_locale -> time_formats[1] = swap_time_tokens(*t_time_ampm);
 
         // string_prepend() returns a new StringRef, which we must release
         MCValueRelease(t_short_time);

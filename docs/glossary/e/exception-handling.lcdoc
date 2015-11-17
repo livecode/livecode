@@ -1,0 +1,10 @@
+Name: exception handling
+
+Synonyms: exception handling,exception handler,exception-handle,exception-handling,exception-handled
+
+Type: glossary
+
+Description:
+A programming structure that attempts to execute one or more <statement|statements>, and then takes appropriate action if there is an <execution error>.
+
+References: statement (glossary), execution error (glossary)

@@ -1,0 +1,409 @@
+/* Copyright (C) 2003-2015 LiveCode Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+This library provides operations for interacting with LiveCode Script from LiveCode Builder.
+
+Tags: Engine
+
+Name: ScriptObject
+
+Type: type
+
+Summary: An opaque type corresponding to a LiveCode script object.
+
+Syntax: ScriptObject
+
+Description:
+Use the <ResolveScriptObject|resolve script object>, or <MyScriptObject|my script object> to obtain an object of type <ScriptObject>
+
+References: ResolveScriptObject(statement), MyScriptObject(expression)
+*/
+
+module com.livecode.engine
+
+use com.livecode.foreign
+
+public foreign type ScriptObject binds to "MCEngineScriptObjectTypeInfo"
+
+public foreign handler MCEngineExecResolveScriptObject(in pObjectId as String) returns ScriptObject binds to "<builtin>"
+public foreign handler MCEngineEvalScriptObjectExists(in pObject as ScriptObject, out rExists as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCEngineEvalScriptObjectDoesNotExists(in pObject as ScriptObject, out rExists as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCEngineExecGetPropertyOfScriptObject(in pProperty as String, in pObject as ScriptObject, out rValue as any) returns nothing binds to "<builtin>"
+public foreign handler MCEngineExecSetPropertyOfScriptObject(in pValue as any, in pProperty as String, in pObject as ScriptObject) returns nothing binds to "<builtin>"
+public foreign handler MCEngineEvalOwnerOfScriptObject(in pObject as ScriptObject, out rParent as ScriptObject) returns nothing binds to "<builtin>"
+public foreign handler MCEngineEvalChildrenOfScriptObject(in pObject as ScriptObject, out rChildren as List) returns nothing binds to "<builtin>"
+public foreign handler MCEngineExecSendToScriptObject(in pIsFunction as CBool, in pMessage as String, in pTarget as ScriptObject) returns optional any binds to "<builtin>"
+public foreign handler MCEngineExecSendToScriptObjectWithArguments(in pIsFunction as CBool, in pMessage as String, in pTarget as ScriptObject, in pArguments as optional List) returns optional any binds to "<builtin>"
+public foreign handler MCEngineExecPostToScriptObject(in pMessage as String, in pTarget as ScriptObject) returns nothing binds to "<builtin>"
+public foreign handler MCEngineExecPostToScriptObjectWithArguments(in pMessage as String, in pTarget as ScriptObject, in pArguments as optional List) returns nothing binds to "<builtin>"
+public foreign handler MCEngineEvalMessageWasHandled(out pHandled as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCEngineEvalMessageWasNotHandled(out pHandled as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCEngineExecExecuteScript(in pScript as String) returns any binds to "<builtin>"
+public foreign handler MCEngineExecLog(in pMessage as optional any) returns nothing binds to "<builtin>"
+public foreign handler MCEngineExecLogWithValues(in pFormat as String, in pValues as List) returns nothing binds to "<builtin>"
+
+public type MCRunloopActionCallback is Pointer
+public type MCRunloopActionRef is Pointer
+public foreign handler MCEngineAddRunloopAction(in pCallback as MCRunloopActionCallback, in pContext as Pointer, out rAction as MCRunloopActionRef) returns CBool binds to "<builtin>"
+public foreign handler MCEngineRemoveRunloopAction(in pAction as MCRunloopActionRef) returns nothing binds to "<builtin>"
+public foreign handler MCEngineRunloopWait() returns CBool binds to "<builtin>"
+public foreign handler MCEngineRunloopBreakWait() returns nothing binds to "<builtin>"
+
+/*
+Summary:	Resolves a string to a script object.
+Object:		The string describing the script object.
+
+The result:	The resolved script object. 
+
+Example:
+	variable tObject as ScriptObject
+	resolve script object "button 1 of card 1 of this stack"
+	put the result into tObject
+	if tObject exists then
+		get property "name" of tObject
+		log the result
+	else
+		log "No such button"
+	end if	
+	
+Description:
+Use the <ResolveScriptObject|resolve script object> statement to obtain a <ScriptObject> in LiveCode Builder, in order to interact with it.
+
+>*Note:* An error is thrown if this syntax is used in a context where access
+to script objects is not allowed.
+*/
+
+syntax ResolveScriptObject is statement
+    "resolve" "script" "object" <Object: Expression>
+begin
+    MCEngineExecResolveScriptObject(Object)
+end syntax
+
+/*
+Summary:	Tests the existence of a script object.
+Object:		An expression that evaluates to a <ScriptObject>.
+
+The result:	True if the object <Object> exists, and false otherwise.
+
+Example:
+	variable tObject as ScriptObject
+	resolve script object "card 5 of this stack"
+	put the result into tObject
+	if tObject exists then
+		set property "name" of tObject to "Card5"
+	else
+		log "No such card"
+	end if	
+	
+Description:
+Use to test the existence or otherwise of a script object, for example after attempting to resolve the object from a string using <ResolveScriptObject | resolve script object>
+
+References: ResolveScriptObject(statement)
+*/
+
+syntax ScriptObjectExists is postfix operator with comparison precedence
+    <Object: Expression> "exists"
+begin
+    MCEngineEvalScriptObjectExists(Object, output)
+end syntax
+
+/*
+Summary:	Tests the existence of a script object.
+Object:		An expression that evaluates to a <ScriptObject>.
+
+The result:	True if the object <Object> exists, and false otherwise.
+
+Example:
+	variable tObject as ScriptObject
+	resolve script object "card 5 of this stack"
+	put the result into tObject
+	if tObject does not exist then
+		log "No such card"
+	end if	
+	
+Description:
+Use to test the non-existence or otherwise of a script object, for example after attempting to resolve the object from a string using <ResolveScriptObject|resolve script object>
+
+References: ResolveScriptObject(statement)
+*/
+
+syntax ScriptObjectDoesNotExist is postfix operator with comparison precedence
+    <Object: Expression> "does" "not" "exist"
+begin
+    MCEngineEvalScriptObjectDoesNotExists(Object, output)
+end syntax
+
+/*
+Summary:	The property of a script object.
+Property: 	The name of the property to manipulate
+Object:		An expression that evaluates to a <ScriptObject>.
+
+
+Example:
+	public handler OnMouseUp() returns nothing
+		set property "name" of my script object to "Clicked Widget"
+	end handler
+
+Example:
+	resolve script object "this stack"
+	set property "invisible" of the result to true
+    get property "script" of my script object
+	
+Description:
+Use to manipulate properties of a script object.
+
+>*Note:* An error is thrown if the script object does not exist.
+
+>*Note:* An error is thrown if this syntax is used in a context where access
+to script objects is not allowed.
+*/
+
+syntax PropertyOfScriptObject is prefix operator with property precedence
+    "property" <Property: Expression> "of" <Object: Expression>
+begin
+    MCEngineExecGetPropertyOfScriptObject(Property, Object, output)
+    MCEngineExecSetPropertyOfScriptObject(input, Property, Object)
+end syntax
+
+/*
+Summary:	Get the parent object of a script object.
+Object:		An expression that evaluates to a <ScriptObject>.
+The result:	The <ScriptObject> that is the owner of <Object>.
+
+Example:
+	public handler MyName() returns String
+		get property "short name" of my script object
+		return the result
+	end handler
+
+	public handler OnMouseUp() returns nothing
+		// Send a message to the widget's parent so it can handle the click
+		dispatch "widgetClicked" to the owner of my script object with [ MyName() ]
+	end handler
+
+Description:
+	Use to get the script object that contains a script object.
+
+>*Note:* An error is thrown if the script object does not exist.
+*/
+
+syntax OwnerOfScriptObject is prefix operator with property precedence
+	"the" "owner" "of" <Object: Expression>
+begin
+	MCEngineEvalOwnerOfScriptObject(Object, output)
+end syntax
+
+/*
+Summary:	Get the child objects of a script object.
+Object:		An expression that evaluates to a <ScriptObject>
+The result:	A list of <ScriptObject>s that are contained within <Object>.
+
+Example:
+	public handler GetSiblings(in pObject as ScriptObject) returns List
+		// Return the sibling objects of an object
+		return the children of the owner of pObject
+	end handler
+
+Example:
+	// Unset the highlight of all the controls in a group
+	resolve script object "group \qcheckboxes\q of this card"
+	variable tObject
+	repeat for each element tObject in the children of the result
+		set property "hilite" of tObject to false
+	end repeat
+
+Description:
+	Use to get the script objects contained within a script object.
+
+>*Note:* An error is thrown if the script object does not exist.
+*/
+
+syntax ChildrenOfScriptObject is prefix operator with property precedence
+	"the" "children" "of" <Object: Expression>
+begin
+	MCEngineEvalChildrenOfScriptObject(Object, output)
+end syntax
+
+/*
+Summary: 	Send a message to a script object.
+Message: 	The message to dispatch.
+Object:		The script object to dispatch the message to.
+Arguments:	A list of arguments for the message.
+
+The result:	The result of the message dispatch
+
+Example:
+	public handler OnMouseUp() returns nothing
+		// Send a message to the script so it can handle it.
+		send "buttonClicked" to my script object
+	end handler
+	
+Example:
+	// myScriptFunction takes three arguments and performs some kind of calculation
+
+	variable tObject as ScriptObject
+	resolve script object "this stack"
+	put the result into tObject
+	send function "myScriptFunction" to tObject with [ 2, 3, 4 ]
+	
+	// the result contains the return value of 'myScriptFunction'
+    
+Description:
+Sends a message to the given script object and waits for it to finish so that it
+can return a value.
+
+After a send, 'the message was handled' predicate can be used to determine if the
+message passed through the message path untouched.
+
+>*Note:* An error is thrown if this syntax is used in a context where access
+to script objects is not allowed.
+*/
+syntax SendToScriptObject is statement
+    "send" ( "function" <IsFunction=true> | "command" <IsFunction=false> | <IsFunction=false> ) <Message: Expression> "to" <Object: Expression> [ "with" <Arguments: Expression> ]
+begin
+    MCEngineExecSendToScriptObject(IsFunction, Message, Object)
+    MCEngineExecSendToScriptObjectWithArguments(IsFunction, Message, Object, Arguments)
+end syntax
+
+/*
+Summary: 	Post a message to a script object.
+Message: 	The message to dispatch.
+Object:		The script object to dispatch the message to.
+Arguments:	A list of arguments for the message.
+
+Example:
+	public handler OnMouseUp() returns nothing
+		// Send a message to the script so it can handle it.
+		post "buttonClicked" to my script object
+	end handler
+    
+Description:
+Post a message to the given script object and returns immediately. Posting a message
+will cause the message to be sent at the next wait point (usually when the current
+event has finished being handled).
+*/
+syntax PostToScriptObject is statement
+    "post" <Message: Expression> "to" <Object: Expression> [ "with" <Arguments: Expression> ]
+begin
+    MCEngineExecPostToScriptObject(Message, Object)
+    MCEngineExecPostToScriptObjectWithArguments(Message, Object, Arguments)
+end syntax
+
+/*
+Summary: 	Determines whether a message was handled
+
+Example:
+	public handler OnMouseUp() returns nothing
+		dispatch "buttonClicked" to my script object
+		if the message was handled then
+			return
+		end if	
+		log "The message was not handled"
+	end handler
+	
+Description:
+Determines if a dispatched message was handled by any script objects in the message path.
+*/
+
+syntax MessageWasHandled is expression
+    "the" "message" "was" "handled"
+begin
+    MCEngineEvalMessageWasHandled(output)
+end syntax
+
+/*
+Summary: 	Determines whether a message was handled
+
+Example:
+	public handler OnMouseUp() returns nothing
+		dispatch "buttonClicked" to my script object
+		if the message was not handled then
+			log "The message was not handled"
+		end if	
+	end handler
+	
+Description:
+Determines if a dispatched message was handled by any script objects in the message path.
+*/
+
+syntax MessageWasNotHandled is expression
+    "the" "message" "was" "not" "handled"
+begin
+    MCEngineEvalMessageWasNotHandled(output)
+end syntax
+
+/*
+Summary: 	Executes some LiveCode script.
+Script: 	The script to execute.
+
+Example:
+	public handler SnapshotMe() returns nothing
+		variable tVar as String
+		get property "number" of my script object
+		put the result formatted as string into tVar
+
+		// Create a snapshot from the rect of the widget
+		execute script "import snapshot from rect (the rect of widget " & tVar & ") of widget " & tVar
+	end handler
+
+Description:
+Executes the given piece of LiveCode script in the context of the current script
+object.
+>*Note:* An error is thrown if this syntax is used in a context where access
+to script objects is not allowed.
+*/
+
+syntax ExecuteScript is statement
+    "execute" "script" <Script: Expression>
+begin
+    MCEngineExecExecuteScript(Script)
+end syntax
+
+/*
+Summary: 	Logs a string.
+String:		The string to log.
+Arguments:	A list of arguments.
+
+Example:
+	variable tList as List
+	get property "name" of my script object
+	push the result onto tList
+	
+	get property "id" of my script object
+	push the result onto tList
+	
+	log "Widget %@ has id %@" with tList
+
+Description:
+The log command triggers a logChanged message with the accumulated log messages since the logChanged message was last handled.
+This can be handled in LiveCode Script, for example:
+```
+on logChanged pLog
+	write pLog to stdout
+end logChanged
+```
+
+*/
+
+syntax Log is statement
+    "log" <Message: Expression> [ "with" <Arguments: Expression> ]
+begin
+    MCEngineExecLog(Message)
+    MCEngineExecLogWithValues(Message, Arguments)
+end syntax
+
+end module

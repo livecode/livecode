@@ -43,7 +43,7 @@ public:
 	MCXImageCacheNode(GdkPixbuf *p_bitmap, GtkThemeWidgetType p_moztype, GtkWidgetState *p_state, uint4 p_flags);
 	~MCXImageCacheNode();
 	
-	Boolean matches ( uint4 p_width, uint4 p_height, GtkThemeWidgetType p_moztype, GtkWidgetState *p_state, uint4 p_flags ) ;
+	Boolean matches ( int32_t p_width, int32_t p_height, GtkThemeWidgetType p_moztype, GtkWidgetState *p_state, uint4 p_flags ) ;
 
 	GdkPixbuf* get_cached_image (void);
 

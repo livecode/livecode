@@ -1,0 +1,167 @@
+/*
+Copyright (C) 2014-2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+
+//module com.livecode.map
+
+public foreign handler EvalKeysOf(in Target as array, out Value as list) as undefined binds to "<builtin>"
+public foreign handler EvalElementsOf(in Target as array, out Value as list) as undefined binds to "<builtin>"
+
+/*
+Not needed if we switch to 'contains' syntax - equivalent to 'the keys of <map> contains <needle>'
+otherwise '<needle> is among the elements of the elements of <map>' may be too wordy.
+*/
+
+public foreign handler EvalIsAmongTheKeysOfCaseless(in Needle as string, in IsNot as bool, in Target as array, out Result as bool) as undefined binds to "<builtin>"
+public foreign handler EvalIsAmongTheKeysOfNumeric(in Needle as integer, in IsNot as bool, in Target as array, out Result as bool) as undefined binds to "<builtin>"
+public foreign handler EvalIsAmongTheKeysOfMatrix(in Needle as list, in IsNot as bool, in Target as array, out Result as bool) as undefined binds to "<builtin>"
+
+public foreign handler EvalIsAmongTheElementsOf(in Needle as any, in IsNot as bool, in Target as array, out Result as bool) as undefined binds to "<builtin>"
+
+public foreign handler EvalNumberOfElementsIn(in Target as array, out Count as index) as undefined binds to "<builtin>"
+
+/*
+Case sensitive map ops / access / storage
+To enable this syntax requires underlying map types which distinguish the case sensitive and caseless key maps
+Or we pass in a context parameter as for string comparison operations.
+
+public foreign handler EvalIsAmongTheKeysOfCaseSensitive(in Needle as string, in IsNot as bool, in Target as array, out Result as bool) as undefined binds to "<builtin>"
+
+public foreign handler FetchElementOfCaseSensitive(in Target as array, in Key as string, out Value as any) as undefined binds to "<builtin>"
+public foreign handler StoreElementOfCaseSensitive(in Value as any, inout Target as array, in Key as string) as undefined binds to "<builtin>"
+*/
+
+// Case insensitive map access / storage
+public foreign handler FetchElementOfCaseless(in Target as array, in Key as string, out Value as any) as undefined binds to "<builtin>"
+public foreign handler StoreElementOfCaseless(in Value as any, inout Target as array, in Key as string) as undefined binds to "<builtin>"
+
+// Numeric map element access / storage
+public foreign handler FetchElementOfNumeric(in Target as array, in Key as integer, out Value as any) as undefined binds to "<builtin>"
+public foreign handler StoreElementOfNumeric(in Value as any, inout Target as array, in Key as integer) as undefined binds to "<builtin>"
+
+// Matrix element access / storage
+public foreign handler FetchElementOfMatrix(in Target as array, in Key as array, out Value as any) as undefined binds to "<builtin>"
+public foreign handler StoreElementOfMatrix(in Value as any, inout Target as array, in Key as integer) as undefined binds to "<builtin>"
+
+--
+
+/* 
+Summary:        Returns the keys of a map.
+Target:         An expression which evaluates to a map.
+output:         A list whose elements are the keys of <Target>. 
+                Note that the list is not ordered in any way.
+*/
+
+syntax KeysOf is prefix operator with precedence 1
+    "the" "keys" "of" <Target: Expression>
+begin
+    EvalKeysOf(Target, output)
+end syntax
+
+/* 
+Summary:        Returns the elements of a map.
+Target:         An expression which evaluates to a map.
+output:         A list whose elements are the elements of <Target>. 
+                Note that the list is not ordered in any way.
+*/
+
+syntax ElementsOf is prefix operator with precedence 1
+    "the" "elements" "of" <Target: Expression>
+begin
+    EvalElementsOf(Target, output)
+end syntax
+
+--
+
+/*
+Summary:        Returns the number of elements in <Target>
+Target:         An expression which evaluates to a map.
+*/
+
+syntax CountElementsOf is prefix operator with precedence 1
+    "the" "number" "of" "elements" "in" <Target: Expression>
+begin
+    EvalNumberOfElementsIn(Target, output)
+end syntax
+
+--
+
+/* 
+Summary:        Determines if a map has a given key
+Needle:         An expression which evaluates to an integer, string, or list of integers.
+Target:         An expression which evaluates to a map.
+output:         Returns true if <Needle> can be found among the keys of <Target>.
+
+*/
+                
+syntax AmongKeysOf is neutral binary operator with precedence 1
+    <Needle: Expression> "is" ["not" <IsNot=true>] "among" "the" "keys" "of" <Target: Expression>
+begin
+//  EvalIsAmongTheKeysOfCaseSensitive(Needle, IsNot, Target, output)
+    EvalIsAmongTheKeysOfCaseless(Needle, IsNot, Target, output)
+    EvalIsAmongTheKeysOfNumeric(Needle, IsNot, Target, output)
+    EvalIsAmongTheKeysOfMatrix(Needle, IsNot, Target, output)
+end syntax
+
+/* 
+Summary:        Determines if a map contains a given element
+Needle:         Any expression.
+Target:         An expression which evaluates to a map.
+output:         Returns true if <Needle> can be found among the elements of <Target>.
+
+*/
+                
+syntax AmongElementsOf is neutral binary operator with precedence 1
+    <Needle: Expression> "is" ["not" <IsNot=true>] "among" "the" "elements" "of" <Target: Expression>
+begin
+    EvalIsAmongTheElementsOf(Needle, IsNot, Target, output)
+end syntax
+
+--
+
+/*
+
+Summary:            Designates the element with key <Key> in <Target>.
+Key: 				An expression which evaluates to an integer, string, or list of integers.
+Target:				An expression which evaluates to a map.
+output:             Either locates the element container with the given key for use as the target 
+                    container of another operation, or evaluates the element with the given key 
+                    as the source of another operation.
+*/
+
+syntax SingletonElementOf is postfix operator with precedence 1
+	<Target: Expression> "[" <Key: Expression> "]"
+begin
+//	FetchElementOfCaseSensitive(Target, Key, output)
+    FetchElementOfCaseless(Target, Key, output)
+    FetchElementOfNumeric(Target, Key, output)
+    FetchElementOfMatrix(Target, Key, output)
+//	StoreElementOfCaseSensitive(input, Target, Key)
+	StoreElementOfCaseless(input, Target, Key)
+	StoreElementOfNumeric(input, Target, Key)
+	StoreElementOfMatrix(input, Target, Key)
+end syntax
+
+--
+
+syntax EmptyMap is expression
+	"the" "empty" "map"
+begin
+	MCMapEvalEmpty(output)
+end syntax
+
+end module

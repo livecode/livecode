@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleExecutable</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundleGetInfoString</key>
+	<string>$(BUILD_LONG_VERSION), Copyright 2000-2015 LiveCode Ltd.</string>
+	<key>CFBundleIconFile</key>
+	<string>installer.icns</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.runrev.livecode.test</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleLongVersionString</key>
+	<string>$(BUILD_LONG_VERSION), Copyright 2000-2015 LiveCode Ltd.</string>
+	<key>CFBundleName</key>
+	<string>Installer</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(BUILD_LONG_VERSION)</string>
+	<key>CFBundleSignature</key>
+	<string>Revo</string>
+	<key>CFBundleVersion</key>
+	<string>$(BUILD_LONG_VERSION)</string>
+	<key>CSResourcesFileMapped</key>
+	<false/>
+	<key>LFPrefersCarbon</key>
+	<true/>
+	<key>LSGetAppDiedEvents</key>
+	<true/>
+	<key>NSAppleScriptEnabled</key>
+	<string>YES</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright 2000-2015, LiveCode Ltd., All Rights Reserved.</string>
+	<key>NSPrincipalClass</key>
+	<string>com_runrev_livecode_MCApplication</string>
+</dict>
+</plist>

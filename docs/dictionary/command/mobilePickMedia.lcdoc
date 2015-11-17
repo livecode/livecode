@@ -1,0 +1,57 @@
+Name: mobilePickMedia
+
+Type: command
+
+Syntax: mobilePickMedia [<multiple>] [, &quot; <music> &quot;] [, &quot; <podCast> &quot;] [, &quot; <audioBook> &quot;] [, &quot; <anyAudio> &quot;]
+
+Summary: Allows the user to select iPod media items on iOS or start a media selector on Android.
+
+Synonyms: iphonePickMedia
+
+Introduced: 5.0.1
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+mobilePickMedia
+
+Example:
+mobilePickMedia true
+
+Example:
+mobilePickMedia "music", "audioBook"
+
+Example:
+local tResult, tLine
+mobilePickMedia true, "podCast"
+put the result into tResult
+repeat for each line tLine in tResult
+   play tLine
+end repeat
+
+Parameters:
+multiple (boolean): A boolean that specifies if the user is allowed to select one or multiple media items on iOS. You can only select one item at a time on Android. The default is false.
+music: Specifies that the user should be allowed to select music items on iOS.
+podCast: Specifies that the user should be allowed to select pod casts on iOS.
+audioBook: Specifies that the user should be allowed to select audio books on iOS.
+anyAudio: Specifies that the user should be allowed to select any audio item on iOS.
+
+The result:
+The selected media items are returned as the result in a return delimited list on iOS. On Android, a single media item is returned.
+If no item is selected or <mobilePickMedia> is used on the iOS simulator, then empty is returned.
+
+Description:
+Allows the user to select media items from the iPod library or Android file system and returns paths to the media items.
+
+Use the <mobilePickMedia> command to display a native iOS media picker that allows the user to select iPod media items. On Android, this command allows you to select from possible media picker applications that can be used to select media items.
+
+The <mobilePickMedia> command can be launched, allowing the user to select either one or multiple media items on iOS. You can only select on item on Android. If the user is allowed to select one media item, the iOS media picker is dismissed automatically, once the item is selected, the behavior on Android is application dependent. If the user is allowed to select multiple items on iOS, the user has to select the Done button, once all of the selections have been made.
+
+The remaining arguments specify the type of media items the user should be allowed to select from the iPod library. On Android, it is not necessary to specify any arguments. The application that is launched is in control of the audio media types that are to be selected.
+>*Note:* <mobilePickMedia> does not return anything for m4p files or iCloud files that are not physically on the device, even if they are displayed in the picker itself.
+>*Note:* On iOS, <mobilePickMedia> returns references to the iTunes data store on the iOS device. These media references can only be played with the <mobilePlaySoundOnChannel> command.
+>*Note:* <mobilePickMedia> is not available on the iOS simulator.
+
+References: mobilePlaySoundOnChannel (command), mobilePick (command), mobilePickDate (command)

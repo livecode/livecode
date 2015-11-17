@@ -1,0 +1,27 @@
+Name: formfeed
+
+Type: constant
+
+Syntax: formfeed
+
+Summary: Equivalent to the form feed <character> (ASCII 12, Control-L).
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+put formFeed after collatedData
+
+Description:
+Use the <formFeed> <constant> as an easier-to-read substitute for numToChar(12).
+
+The <formfeed> <constant> is needed because you can't type the <character> it represents in a <script>.
+
+The form feed character is used by some applications and printers to indicate a page break.
+
+References: character (keyword), break (keyword), return (constant), script (property), lineDelimiter (property), itemDelimiter (property), constant (command)
+
+Tags: printing

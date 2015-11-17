@@ -1,0 +1,33 @@
+Name: recentNames
+
+Type: property
+
+Syntax: get the recentNames [of <stack>]
+
+Summary: Reports a list of the most <recent cards|recently visited cards>, in reverse order.
+
+Synonyms: backList
+
+Associations: stack
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+put line 1 of the recentNames after myVisitedCards
+
+Value: The <recentNames> is a list of short <name> properties of <card|cards>, one <name> per <line>. If a <stack> is specified, the list contains only the <recent cards> in the <stack>. If not, all <recent cards> are listed.
+
+Description:
+Use the <recentNames> <property> to find out which <card(object)|cards> the user has visited, or to re-visit a <card(keyword)>.
+
+The <recentNames> are listed in reverse order, with the <current card> at the top of the list, the most <recent cards|recently visited card> next, and so on. Each visit to a <card(keyword)> causes its <name> to be placed at the top of the list, even if the same <card(keyword)> appears elsewhere in the list. The <recentNames> thus provides a complete track of the visitor's navigation.
+
+Cards visited while the lockRecent <property> is set to true are not added to the list.
+
+References: card (keyword), line (keyword), name (property), unlock recent (command), card (object), recent cards (glossary), property (glossary), current card (glossary)
+
+Tags: navigation

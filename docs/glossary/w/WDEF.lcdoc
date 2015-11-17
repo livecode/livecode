@@ -1,0 +1,12 @@
+Name: WDEF
+
+Synonyms: WDEF,WDEF resource
+
+Type: glossary
+
+Description:
+Window Definition. A <Mac OS> and <OS X> <resource> that describes how a window is drawn. You can specify custom window styles by using your own WDEF <resource|resources> along with the <decorations> <property>.
+
+References: decorations (property), property (glossary), resource (glossary), Mac OS (glossary), OS X (glossary)
+
+Tags: file system

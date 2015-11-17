@@ -1,0 +1,45 @@
+Name: resizeStack
+
+Type: message
+
+Syntax: resizeStack <newWidth>, <newHeight>, <oldWidth>, <oldHeight> 
+
+Summary: Sent to the <current card> when the <stack window> is resized.
+
+Associations: card
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+on resizeStack newWidth,newHeight -- put an object in the middle
+  set the location of graphic "Middle" \
+     to newWidth div 2,newHeight div 2
+  pass resizeStack
+end resizeStack
+
+Parameters:
+newWidth: The stack's new width in pixels.
+newHeight: The stack's new height in pixels.
+oldWidth: The stack's original width in pixels.
+oldHeight: The stack's original height in pixels.
+
+Description:
+Handle the <resizeStack> <message> if you want to update the position of <object|objects> or do other tasks when the <stack window> changes size.
+
+The <resizeStack> <message> is sent when the user resizes the <stack> by dragging its size box. It is also sent if a <handler> changes the size of the <stack> by changing its <properties> (<width>, <height>, and so on).
+
+The <resizeStack> <message> is sent after the resizing is finished. This means that you cannot prevent a <stack|stack's> size from being changed by <trap|trapping> this <message>. If the <stack|stack's> <liveResizing> <property> is true, <resizeStack> <message|messages> are sent continuously during resizing, but you still cannot prevent resizing by trapping the <message>.
+
+On Mac OS X systems when the <liveResizing> <property> is true and on all other systems, the <oldWidth> and <oldHeight> for each <resizeStack> <message> is the same as the <newWidth> and <newHeight> for the previous <resizeStack>. The <stack|stack's> original <width> and <height> are passed only with the first <resizeStack> <message> sent during a resize operation. 
+
+The screen is locked while a <resizeStack> <handler> is running, so it is not necessary to use the <lock screen> <command> to prevent changes from being seen. (However, the <lockScreen> <property> is not set to true.)
+
+>*Note:* If the <stack's vScroll property> is nonzero, the amount of scroll is not included in the <newHeight> and <oldHeight>. This means that the <parameter|parameters> of the <resizeStack> < message(keyword)> are always equal to the <stack's height> before and after resizing, regardless of the <vScroll> setting.
+
+References: maxWidth (property), width (property), height (property), minHeight (property), resizable (property), lockScreen (property), properties (property), vScroll (property), liveResizing (property), moveStack (message), resizeControl (message), unIconifyStack (message), revChangeWindowSize (command), lock screen (command), stack's vScroll property (object), stack's height (object), stack (object), object (object), property (glossary), current card (glossary), stack window (glossary), handler (glossary), message (glossary), parameter (glossary), command (glossary), trap (glossary)
+
+Tags: windowing

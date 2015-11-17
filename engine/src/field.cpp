@@ -385,13 +385,15 @@ const char *MCField::gettypestring()
 	return MCfieldstring;
 }
 
-bool MCField::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor)
+bool MCField::visit_self(MCObjectVisitor *p_visitor)
+{
+	return p_visitor -> OnField(this);
+}
+
+bool MCField::visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor)
 {
 	bool t_continue;
 	t_continue = true;
-
-	if (p_style == VISIT_STYLE_DEPTH_LAST)
-		t_continue = p_visitor -> OnField(this);
 
 	if (t_continue && fdata != NULL)
 	{
@@ -423,7 +425,7 @@ bool MCField::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_vi
 				MCParagraph *tpgptr = pgptr;
 				do
 				{
-					t_continue = tpgptr -> visit(p_style, p_part, p_visitor);
+					t_continue = tpgptr -> visit(p_options, p_part, p_visitor);
 					tpgptr = tpgptr->next();
 				}
 				while(t_continue && tpgptr != pgptr);
@@ -433,9 +435,6 @@ bool MCField::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_vi
 		}
 		while(t_fdata != fdata);
 	}
-
-	if (t_continue && p_style == VISIT_STYLE_DEPTH_FIRST)
-		t_continue = p_visitor -> OnField(this);
 
 	return t_continue;
 }
@@ -579,8 +578,8 @@ void MCField::kfocus()
 		if (flags & F_LIST_BEHAVIOR)
 		{
 			if (!(flags & F_TOGGLE_HILITE))
-                if (!focusedparagraph->isselection()
-                        && !focusedparagraph->IsEmpty()
+				if ((!focusedparagraph->isselection()
+				     && !focusedparagraph->IsEmpty())
 				        || focusedparagraph->next() != focusedparagraph)
 				{
 					focusedparagraph->sethilite(True);
@@ -848,7 +847,7 @@ Boolean MCField::mfocus(int2 x, int2 y)
 {
 	Tool tool = getstack()->gettool(this);
 	if (!(flags & F_VISIBLE || MCshowinvisibles)
-            || flags & F_DISABLED && tool == T_BROWSE || state & CS_NO_FILE)
+	    || (flags & F_DISABLED && tool == T_BROWSE) || state & CS_NO_FILE)
 		return False;
 	if (sbfocus(x, y, hscrollbar, vscrollbar))
 	{
@@ -961,32 +960,45 @@ void MCField::munfocus()
 
 void MCField::mdrag(void)
 {
-	// MW-2008-02-27: [[ Bug 5968 ]] dragStart sent if click started in scrollbar
+	// Don't act as a field drag if the cursor is within a scrollbar
 	if (getstate(CS_HSCROLL) || getstate(CS_VSCROLL))
 		return;
 
-	// MW-2008-03-31: [[ Bug 6294 ]] dragStart should only be sent to an unlocked
-	//   field if there's a selection already.
+	// We can do an automatic (engine-based) drag from a field if the following
+    // conditions are true:
+    //  - the drag start message was not handled (or failed, or passed)
+    //  - the field contains draggable text
+    //
 	bool t_auto_start;
 	if (getflag(F_LOCK_TEXT) || getstate(CS_SOURCE_TEXT))
 		t_auto_start = message(MCM_drag_start) != ES_NORMAL;
 	else
 		t_auto_start = false;
 
+    // This field is the object being dragged
 	MCdragtargetptr = this;
 
+    // If we're not using engine-based dragging, there isn't anything more to
+    // do for the moment.
 	if (!t_auto_start)
 		return;
 
+    // If there is nothing to drag, there are no contents to put on the drag
+    // board.
 	if (!getstate(CS_SOURCE_TEXT))
 		return;
 
+    // Serialise the current selection and place it on the drag board.
 	MCAutoDataRef t_data;
 	pickleselection(&t_data);
 	if (*t_data != nil)
 	{
 		MCallowabledragactions = DRAG_ACTION_MOVE | DRAG_ACTION_COPY;
-		MCdragdata -> Store(TRANSFER_TYPE_STYLED_TEXT, *t_data);
+		if (!MCdragboard->AddLiveCodeStyledText(*t_data))
+        {
+            // If we failed to put the data on the drag board, prohibit the drag
+            MCallowabledragactions = 0;
+        }
 	}
 }
 
@@ -1044,7 +1056,7 @@ Boolean MCField::mdown(uint2 which)
 				}
 			}
 			if (flags & F_TRAVERSAL_ON ||
-                (flags & F_LOCK_TEXT || MCmodifierstate & MS_CONTROL) && flags & F_LIST_BEHAVIOR)
+			    ((flags & F_LOCK_TEXT || MCmodifierstate & MS_CONTROL) && flags & F_LIST_BEHAVIOR))
 			{
 				if (flags & F_TRAVERSAL_ON && !(state & CS_KFOCUSED)
 				        && !(flags & F_NO_AUTO_HILITE))
@@ -1174,8 +1186,8 @@ Boolean MCField::mup(uint2 which, bool p_release)
                     {
                         if (flags & F_LIST_BEHAVIOR
                                 && (my - rect.y > (int4)(textheight + topmargin - texty)
-                                    || paragraphs == paragraphs->next()
-                                    && paragraphs->IsEmpty()))
+                                    || (paragraphs == paragraphs->next()
+                                        && paragraphs->IsEmpty())))
                             message_with_valueref_args(MCM_mouse_release, MCSTR("1"));
 						else
 						{
@@ -1235,16 +1247,36 @@ Boolean MCField::mup(uint2 which, bool p_release)
 			else
 				message_with_valueref_args(MCM_mouse_release, MCSTR("2"));
 		}
-		else if (MCscreen -> hasfeature(PLATFORM_FEATURE_TRANSIENT_SELECTION) && MCselectiondata -> HasText())
+		else if (MCscreen -> hasfeature(PLATFORM_FEATURE_TRANSIENT_SELECTION))
 		{
-			MCAutoStringRef t_string;
-			if (MCselectiondata -> Fetch(TRANSFER_TYPE_TEXT, (MCValueRef&)&t_string))
-			{
-				extend = extendwords = False;
-				// MW-2012-01-25: [[ FieldMetrics ]] Co-ordinates are now card-based.
-				setfocus(mx, my);
-				typetext(*t_string);
-			}
+            // Lock the selection
+            MCselection->Lock();
+            
+            // Pasting styled text with middle-click isn't currently supported.
+            // On the only platform where we support selection pasting (Linux),
+            // a large number of apps use HTML to supply styled text but our
+            // HTML parsing code doesn't really understand HTML so trying to
+            // paste styled text here just causes a mess.
+            //
+            // Strangely, this doesn't seem to affect normal pasting as the
+            // affected apps also supply RTF there, which we can parse fairly
+            // well.
+            if (MCselection->HasText())
+            {
+                MCAutoStringRef t_text;
+                if (MCselection->CopyAsText(&t_text))
+                {
+                    // Set the focus position based on the current mouse
+                    // position and enter the text as if it came from the
+                    // keyboard.
+                    extend = extendwords = False;
+                    setfocus(mx, my);
+                    typetext(*t_text);
+                }
+            }
+            
+            // Unlock the selection
+            MCselection->Unlock();
 		}
 		break;
 	case Button3:
@@ -1329,6 +1361,7 @@ void MCField::timer(MCNameRef mptr, MCParameter *params)
 	else if (MCNameIsEqualTo(mptr, MCM_internal2, kMCCompareCaseless))
 		{
 			if (opened)
+			{
 				if (state & CS_SELECTING)
 				{
 					// MW-2012-01-25: [[ FieldMetrics ]] Co-ordinates are now card-based.
@@ -1337,12 +1370,15 @@ void MCField::timer(MCNameRef mptr, MCParameter *params)
 					MCscreen->addtimer(this, MCM_internal2, MCsyncrate);
 				}
 				else
+				{
 					if (state & CS_DRAG_TEXT)
 					{
 						if (!MCU_point_in_rect(getfrect(), mx, my))
 							dragtext();
 						MCscreen->addtimer(this, MCM_internal2, MCsyncrate);
 					}
+				}
+			}
 		}
 		else
 			MCControl::timer(mptr, params);
@@ -1387,7 +1423,7 @@ void MCField::setrect(const MCRectangle &nrect)
 }
 
 #ifdef LEGACY_EXEC
-Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
 {
 	switch (which)
 	{
@@ -1645,7 +1681,7 @@ Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 		return gettextatts(parid, P_ENCODING, ep, nil, False, 0, INT32_MAX, false);
 #endif /* MCField::getprop */
 	default:
-		return MCControl::getprop_legacy(parid, which, ep, effective);
+		return MCControl::getprop_legacy(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }
@@ -2616,7 +2652,7 @@ Exec_stat MCField::vscroll(int4 offset, Boolean doredraw)
 			drect.y -= DEFAULT_BORDER;
 			drect.height += flags & F_HSCROLLBAR ? DEFAULT_BORDER : DEFAULT_BORDER * 2;
 			if (state & CS_KFOCUSED && !(extraflags & EF_NO_FOCUS_BORDER)
-			        && (IsMacEmulatedLF() || IsMacLFAM() && !MCaqua))
+			    && (IsMacEmulatedLF() || (IsMacLFAM() && !MCaqua)))
 				drect = MCU_reduce_rect(drect, 1);
 		}
 	//to-do change for drawing xp text fields
@@ -2970,7 +3006,7 @@ void MCField::resolvechars(uint32_t p_part_id, findex_t& x_si, findex_t& x_ei, f
     t_top_para = t_pg = resolveparagraphs(p_part_id);
     
     // Loop through the paragraphs until we've gone x_si code units in
-    uindex_t t_index = 0;
+    findex_t t_index = 0;
     while ((t_index + t_pg->gettextlengthcr()) < x_si)
     {
         t_index += t_pg->gettextlengthcr();
@@ -2987,7 +3023,7 @@ void MCField::resolvechars(uint32_t p_part_id, findex_t& x_si, findex_t& x_ei, f
     p_start += t_char_range.length;
     
     // Loop until we get to the starting paragraph (or reach the end of the field)
-    uindex_t t_pg_char_length = t_pg -> gettextlengthcr(true);
+    findex_t t_pg_char_length = t_pg -> gettextlengthcr(true);
     while (t_pg_char_length <= p_start)
     {
         // Move to the next paragraph
@@ -3243,16 +3279,16 @@ IO_stat MCField::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
     if (p_length > 0)
     {
 		uint4 t_flags, t_length, t_header_length;
-		t_stat = p_stream . ReadTag(t_flags, t_length, t_header_length);
+		t_stat = checkloadstat(p_stream . ReadTag(t_flags, t_length, t_header_length));
         
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . Mark();
+			t_stat = checkloadstat(p_stream . Mark());
         
         // MW-2014-06-20: [[ 13315 ]] Load the textDirection of the field.
         if (t_stat == IO_NORMAL && (t_flags & FIELD_EXTRA_TEXTDIRECTION) != 0)
         {
             uint8_t t_value;
-            t_stat = p_stream . ReadU8(t_value);
+            t_stat = checkloadstat(p_stream . ReadU8(t_value));
             if (t_stat == IO_NORMAL)
                 text_direction = (MCTextDirection)t_value;
         }
@@ -3264,17 +3300,17 @@ IO_stat MCField::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
             intenum_t *t_alignments;
             t_alignments = NULL;
 
-            t_stat = p_stream . ReadU16(t_nalign);
+            t_stat = checkloadstat(p_stream . ReadU16(t_nalign));
 
             if (t_stat == IO_NORMAL && t_nalign != 0)
             {
                 if (!MCMemoryAllocate(sizeof(intenum_t) * t_nalign, t_alignments))
-                    t_stat = IO_ERROR;
+                    t_stat = checkloadstat(IO_ERROR);
 
                 for (uint2 i = 0; i < t_nalign && t_stat == IO_NORMAL; ++i)
                 {
                     int8_t t_align;
-                    if ((t_stat = p_stream . ReadS8(t_align)) == IO_NORMAL)
+                    if ((t_stat = checkloadstat(p_stream . ReadS8(t_align))) == IO_NORMAL)
                         t_alignments[i] = t_align;
                 }
 
@@ -3289,7 +3325,7 @@ IO_stat MCField::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
         }
         
         if (t_stat == IO_NORMAL)
-            t_stat = p_stream . Skip(t_length);
+            t_stat = checkloadstat(p_stream . Skip(t_length));
         
         if (t_stat == IO_NORMAL)
             p_length -= t_length + t_header_length;
@@ -3397,26 +3433,26 @@ IO_stat MCField::load(IO_handle stream, uint32_t version)
 	IO_stat stat;
 
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_int2(&leftmargin, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_int2(&rightmargin, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_int2(&topmargin, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_int2(&bottommargin, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_int2(&indent, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if (flags & F_TABS)
 	{
 		if ((stat = IO_read_uint2(&ntabs, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		tabs = new uint2[ntabs];
 		uint2 i;
 		for (i = 0 ; i < ntabs ; i++)
 			if ((stat = IO_read_uint2(&tabs[i], stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 	}
 	if (version <= 2000)
 	{
@@ -3427,19 +3463,19 @@ IO_stat MCField::load(IO_handle stream, uint32_t version)
 	if (flags & F_VGRID)
 		flags |= F_DONT_WRAP;
 	if ((stat = loadpropsets(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	while (True)
 	{
 		uint1 type;
 		if ((stat = IO_read_uint1(&type, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (type == OT_FDATA)
 		{
 			MCCdata *newfdata = new MCCdata;
 			if ((stat = newfdata->load(stream, this, version)) != IO_NORMAL)
 			{
 				delete newfdata;
-				return stat;
+				return checkloadstat(stat);
 			}
 			newfdata->appendto(fdata);
 		}
@@ -3451,7 +3487,7 @@ IO_stat MCField::load(IO_handle stream, uint32_t version)
 					vscrollbar = new MCScrollbar;
 					vscrollbar->setparent(this);
 					if ((stat = vscrollbar->load(stream, version)) != IO_NORMAL)
-						return stat;
+						return checkloadstat(stat);
 					vscrollbar->setflag(getflag(F_DISABLED), F_DISABLED);
 					vscrollbar->allowmessages(False);
 					vscrollbar->setembedded();
@@ -3463,7 +3499,7 @@ IO_stat MCField::load(IO_handle stream, uint32_t version)
 						hscrollbar = new MCScrollbar;
 						hscrollbar->setparent(this);
 						if ((stat = hscrollbar->load(stream, version)) != IO_NORMAL)
-							return stat;
+							return checkloadstat(stat);
 						hscrollbar->setflag(getflag(F_DISABLED), F_DISABLED);
 						hscrollbar->allowmessages(False);
 						hscrollbar->setembedded();
@@ -3541,4 +3577,30 @@ bool MCField::IsCursorMovementVisual()
         return true;
 #endif
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPlatformControlType MCField::getcontroltype()
+{
+    MCPlatformControlType t_type;
+    t_type = kMCPlatformControlTypeInputField;
+    
+    if (flags & F_LIST_BEHAVIOR)
+        t_type = kMCPlatformControlTypeList;
+    
+    return t_type;
+}
+
+MCPlatformControlPart MCField::getcontrolsubpart()
+{
+    return kMCPlatformControlPartNone;
+}
+
+MCPlatformControlState MCField::getcontrolstate()
+{
+    int t_state;
+    t_state = MCControl::getcontrolstate();
+    
+    return MCPlatformControlState(t_state);
 }

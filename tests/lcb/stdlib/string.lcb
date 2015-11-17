@@ -1,0 +1,88 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.string.tests
+
+use com.livecode.string
+
+public handler TestPutBefore()
+	variable tString
+	put "y" into tString
+	put "x" before tString
+	test "put before" when tString is "xy"
+end handler
+
+public handler TestPutAfter()
+	variable tString
+	put "x" into tString
+	put "y" after tString
+	test "put after" when tString is "xy"
+end handler
+
+public handler TestReplace()
+	variable tString
+
+	put "x.x" into tString
+	replace "." with "x" in tString
+	test "replace (single instance)" when tString is "xxx"
+
+	put "..." into tString
+	replace "." with "x" in tString
+	test "replace (multiple instance)" when tString is "xxx"
+
+	put ".xx" into tString
+	replace ".x" with "x" in tString
+	test "replace (multichar)" when tString is "xx"
+
+	put ".xx" into tString
+	replace ".x" with "." in tString
+	test "replace (multichar non-recursing)" when tString is ".x"
+end handler
+
+public handler TestConcat()
+	test "concat" when "x" & "y" is "xy"
+	test "concat (space)" when "x" && "y" is "x y"
+end handler
+
+public handler TestUpper()
+	test "uppercase" when the upper of "xY" is "XY"
+	test diagnostic "TODO test some Unicode corner cases"
+end handler
+
+public handler TestLower()
+	test "lowercase" when the lower of "xY" is "xy"
+	test diagnostic "TODO test some Unicode corner cases"
+end handler
+
+public handler TestEquality()
+	test "equality" when "xy" is "xy"
+	test "equality (case sensitive)" when "xY" is not "xy"
+	test diagnostic "TODO case sensitivity options"
+end handler
+
+public handler TestCompare()
+	test "compare" when "X" < "y"
+	test "compare (case sensitive)" when "x" > "Y"
+	test "compare (empty)" when "" < "x"
+end handler
+
+public handler TestEmpty()
+	test "empty (syntax)" when "" is the empty string
+	test "empty (predicate)" when "" is empty
+end handler
+
+end module

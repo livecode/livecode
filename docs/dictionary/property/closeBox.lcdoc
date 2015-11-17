@@ -1,0 +1,36 @@
+Name: closeBox
+
+Type: property
+
+Syntax: set the closeBox of <stack> to {true | false}
+
+Summary: Shows a window's <close box>.
+
+Associations: stack
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+set the closeBox of this stack to false
+
+Value (bool): The <closeBox> <property> of a <stack> is true or false. By <default>, the <closeBox> of a newly created <stack> is set to true.
+
+Description:
+Use the <closeBox> property to display the close box in a window's title bar.
+
+The setting of this property affects the <decorations> property, and vice versa. Setting a stack's <closeBox> property determines whether its <decorations> property includes "close" (or is "default", for window styles that normally include a close box). Conversely, setting a stack's <decorations> property sets its <closeBox> to true or false depending on whether the <decorations> includes "close" (or is "default").
+
+>*Note:* On OS X systems, if the <closeBox> property is false, the close box is disabled rather than hidden.
+
+Setting the <closeBox> <property> causes the <stack window> to flash briefly.
+
+Changes:
+The closeBox property was fully implemented in version 2.1. In previous versions, it was included in LiveCode for compatibility with imported SuperCard projects, but setting it had no effect.
+
+References: decorations (property), minimizeBox (property), default (keyword), closeStack (message), stack (object), property (glossary), stack window (glossary), close box (glossary)
+
+Tags: windowing

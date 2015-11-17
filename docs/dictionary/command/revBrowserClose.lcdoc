@@ -1,0 +1,34 @@
+Name: revBrowserClose
+
+Type: command
+
+Syntax: revBrowserClose <instanceId> 
+
+Syntax: XBrowser_Close [ <instanceId>]
+
+Summary: Destroy the specified browser
+
+Synonyms: XBrowser_Close
+
+Introduced: 2.8.1
+
+OS: mac,windows
+
+Platforms: desktop
+
+Security: network
+
+Example:
+revBrowserClose tBrowserId
+
+Parameters:
+instanceId: The integer identifier of a browser object
+
+The result: The <revBrowserClose> command puts empty into the <result>.
+
+Description:
+The <revBrowserClose> command destroys the browser specified by the <instanceId>. The browser is closed and removed from memory.
+
+>*Note:* For general information on using the browser library, see the notes in the <revBrowserOpen function> reference.
+
+References: revBrowserSnapshot (command), revBrowserStop (command), result (function), revBrowserOpen function (function), revBrowserInstances (function), revBrowserOpen (function), browserNewInstance (message), browserClosing (message)

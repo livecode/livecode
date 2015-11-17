@@ -50,7 +50,7 @@
 extern OSErr MCS_path2FSSpec(MCStringRef fname, FSSpec *fspec);
 
 #elif defined(_MAC_DESKTOP)
-#include "osxprefix.h"
+#include <QuickTime/QuickTime.h>
 
 #ifdef __LITTLE_ENDIAN__
 #define PIXEL_FORMAT_32 k32BGRAPixelFormat
@@ -1154,6 +1154,11 @@ void MCQTEffectEnd(void)
 }
 
 #else    // if not FEATURE_QUICKTIME_EFFECTS
+
+bool MCQTInit()
+{
+    return false;
+}
 
 void MCQTEffectsList(MCStringRef &r_list)
 {

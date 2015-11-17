@@ -1,0 +1,12 @@
+Name: double-byte font
+
+Synonyms: double-byte font,Unicode font
+
+Type: glossary
+
+Description:
+A font in which each character is represented by 2 bytes. Languages such as Japanese, Chinese, and Korean, which contain more symbols than can be represented by 256 code points, require double-byte character sets. 
+ 
+Double-byte fonts usually also contain a full complement of alphabetic characters occupying the first 256 positions in the font, so you can display Roman-alphabet text and Unicode text using the same font.
+
+Tags: text processing

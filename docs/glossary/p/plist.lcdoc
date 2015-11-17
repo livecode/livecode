@@ -1,0 +1,12 @@
+Name: plist
+
+Synonyms: plist,plist file,property list,property list file
+
+Type: glossary
+
+Description:
+A specially-formatted <XML document> that <OS X> uses to store data about applications.
+
+References: XML document (glossary), OS X (glossary)
+
+Tags: file system

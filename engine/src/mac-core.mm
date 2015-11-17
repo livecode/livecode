@@ -25,6 +25,8 @@
 
 #include "graphics_util.h"
 
+#include "libscript/script.h"
+
 #include <objc/objc-runtime.h>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -550,12 +552,23 @@ void MCPlatformGetSystemProperty(MCPlatformSystemProperty p_property, MCPlatform
 	switch(p_property)
 	{
 		case kMCPlatformSystemPropertyDoubleClickInterval:
-			*(uint16_t *)r_value = GetDblTime() * 1000.0 / 60.0;
+            // Get the double-click interval, in milliseconds
+            *(uint16_t *)r_value = uint16_t([NSEvent doubleClickInterval] * 1000.0);
 			break;
 			
 		case kMCPlatformSystemPropertyCaretBlinkInterval:
-			*(uint16_t *)r_value = GetCaretTime() * 1000.0 / 60.0;
+        {
+            // Query the user's settings for the cursor blink rate
+            NSInteger t_rate_ms = [[NSUserDefaults standardUserDefaults] integerForKey:@"NSTextInsertionPointBlinkPeriod"];
+            
+            // If the query failed, use the standard value (this seems to be
+            // 567ms on OSX, not that this is documented anywhere).
+            if (t_rate_ms == 0)
+                t_rate_ms = 567;
+            
+            *(uint16_t *)r_value = uint16_t(t_rate_ms);
 			break;
+        }
 			
 		case kMCPlatformSystemPropertyHiliteColor:
 		{
@@ -1155,7 +1168,7 @@ void MCPlatformGetScreenPixelScale(uindex_t p_index, MCGFloat& r_scale)
 	NSScreen *t_screen;
 	t_screen = [[NSScreen screens] objectAtIndex: p_index];
 	if ([t_screen respondsToSelector: @selector(backingScaleFactor)])
-		r_scale = objc_msgSend_fpret(t_screen, @selector(backingScaleFactor));
+		r_scale = objc_msgSend_fpret_type<CGFloat>(t_screen, @selector(backingScaleFactor));
 	else
 		r_scale = 1.0f;
 }
@@ -1972,7 +1985,10 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int main(int argc, char *argv[], char *envp[])
+extern "C" bool MCModulesInitialize(void);
+extern "C" void MCModulesFinalize(void);
+
+int platform_main(int argc, char *argv[], char *envp[])
 {
 	extern bool MCS_mac_elevation_bootstrap_main(int argc, char* argv[]);
 	if (argc == 2 && strcmp(argv[1], "-elevated-slave") == 0)
@@ -1991,10 +2007,10 @@ int main(int argc, char *argv[], char *envp[])
 	// Register for reconfigurations.
 	CGDisplayRegisterReconfigurationCallback(display_reconfiguration_callback, nil);
     
-	
-	if (!MCInitialize())
+	if (!MCInitialize() || !MCSInitialize() ||
+	    !MCModulesInitialize() || !MCScriptInitialize())
 		exit(-1);
-	
+    
 	// On OSX, argv and envp are encoded as UTF8
 	MCStringRef *t_new_argv;
 	/* UNCHECKED */ MCMemoryNewArray(argc, t_new_argv);
@@ -2043,6 +2059,8 @@ int main(int argc, char *argv[], char *envp[])
 	// Drain the autorelease pool.
 	[t_pool release];
 	
+    MCScriptFinalize();
+    MCModulesFinalize();
 	MCFinalize();
 	
 	return 0;

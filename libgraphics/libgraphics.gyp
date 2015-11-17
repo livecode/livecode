@@ -24,6 +24,8 @@
 			
 			'sources':
 			[
+				'include/graphics.h',
+
 				'src/graphics-internal.h',
 				
 				'src/blur.cpp',
@@ -34,7 +36,8 @@
 				'src/legacyblendmodes.cpp',
 				'src/legacygradients.cpp',
 				'src/lnxtext.cpp',
-				'src/mblandroidtext.cpp',
+				'src/harfbuzztext.cpp',
+				'src/hb-sk.cpp',
 				#'src/osxtext.cpp', # UNUSED?
 				'src/path.cpp',
 				'src/region.cpp',
@@ -55,18 +58,23 @@
 					},
 				],
 				[
-					'OS == "android"',
+					'OS != "android" and OS != "emscripten"',
+					{
+						'sources!':
+						[
+							'src/harfbuzztext.cpp',
+							'src/hb-sk.cpp',
+						],
+					},
+				],
+				[
+					'OS == "android" or OS == "emscripten"',
 					{
 						'dependencies':
 						[
 							'../prebuilt/libicu.gyp:libicu',
 							'../thirdparty/libfreetype/libfreetype.gyp:libfreetype',
 							'../thirdparty/libharfbuzz/libharfbuzz.gyp:libharfbuzz',
-						],
-						
-						'sources':
-						[
-							'src/hb-sk.cpp',
 						],
 					},
 				],

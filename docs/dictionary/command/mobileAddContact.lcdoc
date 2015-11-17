@@ -1,0 +1,50 @@
+Name: mobileAddContact
+
+Type: command
+
+Syntax: mobileAddContact <contactArray> 
+
+Summary: Allows the user to add a contact to the contact list.
+
+Introduced: 5.5.1
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+put "Just adding this" into tContact["note"]
+put "Jobs Ave" into tContact["address"]["home"][1]["street"]
+put "Job City" into tContact["address"]["home"][1]["city"]
+put "test@livecode.com" into tContactData["email"]["home"][1]
+mobileUpdateContact tContact
+
+Parameters:
+contactArray (array): 
+ (enum): <name/> Person Information - The personal information of the contact is stored at the top level of the array and has the following keys:
+- "firstname": The first name.
+- "middlename": The middle name.
+- "lastname": The last name.
+- "alternatename": The alternative name.
+- "nickname": The nick name (iOS only).
+- "firstnamephonetic": The phonetic transcription of the first name.
+- "middlenamephonetic": The phonetic transcription of the middle name.
+- "lastnamephonetic": The phonetic transcription of the last name.
+- "prefix": The name prefix.
+- "suffix": The name suffix.
+- "organization": The name of the organization.
+- "jobtitle": The job title (iOS only).
+- "department": The name of the department (iOS only).
+- "message": A person message (iOS only).
+- "note": A person note.
+
+Returns:
+The ID of the contact that was created.
+If no contact could be created, then empty is returned.
+
+Description:
+Allows the user to create a contact in the contact list, based on some existing contact information. The contact information is collected in a nested array structure that is defined as follows:
+
+Use the <mobileAddContact> command to add a contact to the contact list.
+
+References: mobilePickDate (command), mobileRemoveContact (command), mobilePickMedia (command), mobilePickContact (command), mobileShowContact (command), mobilePick (command), mobileFindContact (command), mobileCreateContact (command), mobileGetContactData (function)

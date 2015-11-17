@@ -1,0 +1,12 @@
+Name: vertex
+
+Synonyms: vertexes,vertices,vertex
+
+Type: glossary
+
+Description:
+The point where two lines are joined at an angle. A corner of a <polygon> shape.
+
+References: polygon (glossary)
+
+Tags: ui

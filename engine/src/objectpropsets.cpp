@@ -174,7 +174,7 @@ bool MCObjectPropertySet::restrict(MCStringRef p_string)
     MCArrayCreateMutable(&t_new_props);
     uinteger_t t_size;
     t_size = t_split . Count();
-    for (index_t i = 0; i < t_size && t_success; i++)
+    for (uindex_t i = 0; i < t_size && t_success; i++)
     {
         MCNewAutoNameRef t_key_name;
         if (t_success)
@@ -480,12 +480,12 @@ IO_stat MCObject::loadpropsets(IO_handle stream, uint32_t version)
 	{
 		uint1 type;
 		if ((stat = IO_read_uint1(&type, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (type == OT_CUSTOM)
 		{
 			MCNameRef pname;
 			if ((stat = IO_read_nameref_new(pname, stream, true)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			
 			MCObjectPropertySet *v;
 			/* UNCHECKED */ MCObjectPropertySet::createwithname_nocopy(pname, v);
@@ -498,7 +498,7 @@ IO_stat MCObject::loadpropsets(IO_handle stream, uint32_t version)
 				props = p = v;
 
 			if ((stat = p->loadprops_new(stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		}
 		else
 		{
@@ -563,12 +563,12 @@ IO_stat MCObject::loadpropsets_legacy(IO_handle stream)
 	{
 		uint1 type;
 		if ((stat = IO_read_uint1(&type, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (type == OT_CUSTOM)
 		{
 			MCNameRef pname;
 			if ((stat = IO_read_nameref_new(pname, stream, false)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 
 			// If there is already a next pset, then it means its had array values loaded.
 			// Thus we just advance and update the name.
@@ -586,7 +586,7 @@ IO_stat MCObject::loadpropsets_legacy(IO_handle stream)
 			}
 
 			if ((stat = p->loadprops_legacy(stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		}
 		else
 		{
@@ -605,6 +605,8 @@ IO_stat MCObject::loadarraypropsets_legacy(MCObjectInputStream& p_stream)
 	// Note that props is always non-empty if we get here since we will have already loaded the
 	// root custom properties.
 	MCObjectPropertySet *t_prop;
+
+	MCAssert (nil != props);
 	t_prop = props;
 
 	uint32_t t_index;
@@ -631,8 +633,7 @@ IO_stat MCObject::loadarraypropsets_legacy(MCObjectInputStream& p_stream)
 
 				MCObjectPropertySet *t_new_prop;
 				/* UNCHEKED */ MCObjectPropertySet::createwithname(kMCEmptyName, t_new_prop);
-				if (t_prop != NULL)
-					t_prop -> setnext(t_new_prop);
+				t_prop -> setnext(t_new_prop);
 
 				t_prop = t_new_prop;
 				t_index += 1;
@@ -643,7 +644,7 @@ IO_stat MCObject::loadarraypropsets_legacy(MCObjectInputStream& p_stream)
 		}
 	}
 
-	return t_stat;
+	return checkloadstat(t_stat);
 }
 
 IO_stat MCObject::saveunnamedpropset_legacy(IO_handle stream)

@@ -1,0 +1,39 @@
+Name: mediaTypes
+
+Type: property
+
+Syntax: get the mediaTypes of <player> 
+
+Summary: Specifies one or more types of media used in in a <QuickTime> movie.
+
+Associations: player
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+if the mediaTypes of player 1 contains "audio" then increaseLoudness
+
+Value (enum): The <mediaTypes> is a list of one or more of the following, separated by commas:
+        - video
+        - audio
+        - text
+        - qtvr
+        - sprite
+        - flash
+
+This property is read:only and cannot be set
+
+Description:
+Use the <mediaTypes> <property> to find out what kinds of media a <QuickTime> movie contains.
+
+Most QuickTime movies provide more than one media type. For example, a typical movie might provide one video and one audio track.
+
+If more than one track in the movie uses the same media type, the media type is specified only once in the <mediaTypes> property. For example, "audio" appears only once in the <mediaTypes>, even if the movie contains more than one audio track.
+
+References: trackCount (property), QuickTime (glossary), property (glossary)
+
+Tags: multimedia

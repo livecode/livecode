@@ -1,0 +1,34 @@
+Name: cut
+
+Type: command
+
+Syntax: cut [<object>]
+
+Summary: Copies the <selected> text or the <selected> section of an <image>, or an <object>, and deletes it from the <selection>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+cut -- cuts whatever is selected
+
+Example:
+cut player "Quivering Apple" from recent card
+
+Example:
+cut the selectedObject
+
+Parameters:
+object: Any available object. If no object is specified, the cut command cuts whatever is currently selected to the clipboard.
+
+Description:
+Use the <cut> command to place <object|objects> or text on the <clipboard> while removing them from the <stack>.
+
+If no object is specified, the <cut> <command> is equivalent to choosing <a/>Edit menu<img src="202656"/>Cut<important/>.
+
+References: selected (property), cutKey (message), selection (keyword), image (keyword), stack (object), object (object), clipboard (function), copy (command), delete (command), command (glossary)
+
+Tags: ui

@@ -1,0 +1,12 @@
+Name: whitespace
+
+Synonyms: white space,whitespace,white space character,whitespace character
+
+Type: glossary
+
+Description:
+<character|Characters> that don't contain any visible text: returns, linefeeds, spaces, and tabs, or any combination of these <characters(keyword)>.
+
+References: character (glossary)
+
+Tags: text processing

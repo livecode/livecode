@@ -1,0 +1,34 @@
+Name: localNotificationReceived
+
+Type: message
+
+Syntax: localNotificationReceived <message> 
+
+Summary: Sent when the application receives a local notification from the operating system.
+
+Associations: stack
+
+Introduced: 5.5
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+on localNotificationReceived tMessage
+   answer "Local Notification:" && quote & tMessage & quote with "Okay"
+end localNotificationReceived
+
+Parameters:
+message: The Notification Message received. This is text that was submitted when the message was scheduled with the operating system.
+
+Description:
+Handles the <localNotificationReceived> message to perform an action when the operating system schedules a local message for the application.
+
+The localNotifiationReceived message is handled once the application receives a local notification from the operating system.
+
+Depending on the status of the application, iOS can launch a dialog box or open the login screen to inform the user that an application has information for them. Android can create an application icon in the status bar. The user can then decide whether or not to open the application. If the application is opened as a result of the notification, then LiveCode can handle the message. If an application is currently running when it receives a notification, then LiveCode can handle the message and process it as required.
+
+If a badge number is received with the notification, then that badge value is displayed on the applications icon (iOS only), but only if the application is not currently running. If the application is running, then a badge value update does not take place, as the application can handle the message without being launched.
+
+References: mobileCancelAllLocalNotifications (command), mobileCreateLocalNotification (command), mobileCancelLocalNotification (command), iphoneSetNotificationBadgeValue (command), iphoneGetNotificationBadgeValue (function)

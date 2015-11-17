@@ -1,0 +1,30 @@
+Name: show menubar
+
+Type: command
+
+Syntax: show menubar
+
+Summary: Displays the <menu bar> on <Mac OS|Mac OS systems>.
+
+Introduced: 1.0
+
+OS: mac
+
+Platforms: desktop,server,web
+
+Example:
+show menubar
+
+Example:
+if the mouseV &lt; 20 then show menubar
+
+Description:
+Use the <show menubar> <command> to display the <menu bar> if it has been hidden. For example, if the <menu bar> is hidden, you might want to show it only if the user moves the mouse to the top of the screen.
+
+The menu bar can be hidden only on Mac OS systems. This command has no effect on Windows or Unix systems.
+
+Hiding the menu bar in LiveCode does not affect its appearance in other applications; if the user switches to another application, the menu bar becomes visible. If the user switches back to LiveCode, the menu bar is hidden again.
+
+References: show groups (command), show taskbar (command), hide menubar (command), Mac OS (glossary), command (glossary), menu bar (glossary)
+
+Tags: menus

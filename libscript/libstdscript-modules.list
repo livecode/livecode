@@ -1,0 +1,29 @@
+# This file must be in dependency order; no file must depend on files
+# later in the list.
+#
+# If a filename has a ! character prefixed to its start, it will *not*
+# be included in the bootstrap phase (so it can't contain any syntax
+# definitions).
+#
+foreign.mlc
+arithmetic.mlc
+array.mlc
+binary.mlc
+bitwise.mlc
+byte.mlc
+char.mlc
+codeunit.mlc
+date.mlc
+file.mlc
+list.mlc
+logic.mlc
+math-foundation.mlc
+math.mlc
+sort.mlc
+stream.mlc
+string.mlc
+system.mlc
+type.mlc
+type-convert.mlc
+!unittest-impl.mlc
+unittest.mlc

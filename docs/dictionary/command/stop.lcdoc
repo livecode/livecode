@@ -1,0 +1,33 @@
+Name: stop
+
+Type: command
+
+Syntax: stop [playing] {<player> | <videoClip> | <audioClip>}
+
+Summary: Stops a currently playing sound or movie.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+stop player "video"
+
+Example:
+stop playing audioClip "track1"
+
+Parameters:
+player: A reference to a <player> that holds a currently playing sound or movie.
+videoClip: A reference to a <video clip> that is currently playing.
+audioClip: A reference to an <audio clip> that is currently playing.
+
+Description:
+Use the <stop> <command> to halt a sound or movie before it finishes. For example, you can use the <stop> <command> in the <script> of a <button>, to let the user click to stop a repeating sound.  
+
+The <stop> <command> stops playing a <video clip> or <audio clip> started with the <play> <command>.
+
+References: script (property), playDestination (property), button (keyword), start (command), revStopAnimation (command), stop recording (command), play (command), command (glossary), video clip (glossary), audio clip (glossary)
+
+Tags: multimedia

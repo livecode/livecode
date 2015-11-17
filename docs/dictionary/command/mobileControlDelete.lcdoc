@@ -1,0 +1,29 @@
+Name: mobileControlDelete
+
+Type: command
+
+Syntax: mobileControlDelete <control> 
+
+Summary: Deletes a native mobile control.
+
+Synonyms: iphoneControlDelete
+
+Introduced: 4.6
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+mobileControlDelete tControlID
+
+Example:
+mobileControlDelete "myControlName"
+
+Parameters:
+control: The name or the id of the control to be deleted.
+
+Description:
+Use <mobileControlDelete> to delete a native mobile control that was created with <mobileControlCreate>.
+
+References: mobileControlCreate (command), mobileControlSet (command), mobileControlDo (command), mobileControlGet (function), mobileControlTarget (function), mobileControls (function)

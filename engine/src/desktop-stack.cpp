@@ -190,6 +190,7 @@ void MCStack::realize(void)
 		
 		if (m_window_shape != nil)
 			MCPlatformSetWindowProperty(t_window, kMCPlatformWindowPropertyMask, kMCPlatformPropertyTypeWindowMask, (MCPlatformWindowMaskRef *)&m_window_shape -> handle);
+		MCPlatformSetWindowBoolProperty(t_window, kMCPlatformWindowPropertyIsOpaque, isopaque());
 		MCPlatformSetWindowProperty(t_window, kMCPlatformWindowPropertyStyle, kMCPlatformPropertyTypeWindowStyle, &t_window_style);
 		MCPlatformSetWindowBoolProperty(t_window, kMCPlatformWindowPropertyHasTitleWidget, t_has_titlebox);
 		MCPlatformSetWindowBoolProperty(t_window, kMCPlatformWindowPropertyHasCloseWidget, t_has_closebox);
@@ -213,6 +214,9 @@ void MCStack::realize(void)
         
         // MW-2014-06-11: [[ Bug 12467 ]] Make sure we reset the cursor property of the window.
         resetcursor(True);
+        
+        // MERG-2015-10-11: [[ DocumentFilename ]] update the window with the document filename property
+        MCPlatformSetWindowProperty(t_window, kMCPlatformWindowPropertyDocumentFilename, kMCPlatformPropertyTypeMCString, &m_document_filename);
 	}
 	
 	start_externals();
@@ -329,6 +333,13 @@ void MCStack::view_platform_updatewindowwithcallback(MCRegionRef p_region, MCSta
 	// Unset the file-local static.
 	s_update_callback = nil;
 	s_update_context = nil;
+}
+
+// MERG-2015-10-12: [[ DocumentFilename ]] Stub for documentFilename.
+void MCStack::updatedocumentfilename(void)
+{
+    if (window != nil)
+        MCPlatformSetWindowProperty(window, kMCPlatformWindowPropertyDocumentFilename, kMCPlatformPropertyTypeMCString, &m_document_filename);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

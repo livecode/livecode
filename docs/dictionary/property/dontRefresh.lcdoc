@@ -1,0 +1,32 @@
+Name: dontRefresh
+
+Type: property
+
+Syntax: set the dontRefresh of <videoClip> to {true | false}
+
+Summary: Specifies whether the last <frame> of a <video clip> remains visible or is cleared at the end of the movie.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the dontRefresh of videoclip "Sample Movie" to true
+
+Value (bool):The <dontRefresh> of a <video clip> is true or false.
+By default, the <dontRefresh> <property> of newly created <video clip|video clips> is set to false.
+
+Description:
+Use the <dontRefresh> <property> to leave the final <frame> of a movie visible.
+
+If a video clip's <dontRefresh> <property> is true, the last <frame> of the movie remains on the screen after the movie is finished playing, until that portion of the screen is <redraw|redrawn>.
+
+If the <dontRefresh> is false, the last <frame> disappears at the end of the movie.
+
+>*Note:* The <color table> used by the movie does not persist after the movie finishes playing. This means that if the <screenColors> is 256 or fewer, the colors in the last frame may shift when the movie ends. To prevent this problem, you can set the <colorMap> <property> to the set of colors used by the movie.
+
+References: templateVideoClip (keyword), frameRate (property), colorMap (property), videoClipPlayer (property), play (command), screenColors (function), property (glossary), redraw (glossary), frame (glossary), video clip (glossary), color table (glossary)
+
+Tags: multimedia

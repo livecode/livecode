@@ -1,0 +1,18 @@
+module com.livecode.__INTERNAL._testlib.tests
+
+use com.livecode.__INTERNAL._testlib
+
+handler _Throws() returns nothing
+	return 1
+end handler
+
+handler _Throws2() returns nothing
+	return 2
+end handler
+
+public handler TestUnitTestHandlerThrows()
+	MCUnitTestHandlerThrows(_Throws, "unit tests expecting errors")
+	MCUnitTestHandlerThrows(_Throws2, "unit tests expecting errors (multiple)")
+end handler
+
+end module

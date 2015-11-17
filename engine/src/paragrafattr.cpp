@@ -60,7 +60,7 @@ static struct {const char *name; Properties prop; } kMCParagraphAttrsProps[] =
 	{"dontWrap", P_DONT_WRAP},
 	{"padding", P_PADDING},
     {"listIndex", P_LIST_INDEX},
-	{nil},
+	{nil, P_UNDEFINED},
 };
 
 bool MCParagraph::hasattrs(void)
@@ -209,7 +209,7 @@ IO_stat MCParagraph::loadattrs(IO_handle stream, uint32_t version)
 	// Read in the size of the attrs.
 	uint32_t t_size;
 	if (t_stat == IO_NORMAL)
-		t_stat = IO_read_uint2or4(&t_size, stream);
+		t_stat = checkloadstat(IO_read_uint2or4(&t_size, stream));
 	
 	// Fetch the stream position at this point and use it to compute
 	// the end of the record.
@@ -220,7 +220,7 @@ IO_stat MCParagraph::loadattrs(IO_handle stream, uint32_t version)
 	// Read the (first) flags word
 	uint2 t_flags;
 	if (t_stat == IO_NORMAL)
-		t_stat = IO_read_uint2(&t_flags, stream);
+		t_stat = checkloadstat(IO_read_uint2(&t_flags, stream));
 		
 	// Initialize the paragraph attrs to default values.
     if (t_stat == IO_NORMAL)
@@ -233,7 +233,7 @@ IO_stat MCParagraph::loadattrs(IO_handle stream, uint32_t version)
 	if (t_stat == IO_NORMAL && (attrs -> flags & (PA_HAS_TEXT_ALIGN | PA_HAS_LIST_STYLE | PA_HAS_VGRID | PA_HAS_HGRID | PA_HAS_DONT_WRAP)) != 0)
 	{
 		uint2 t_value;
-		t_stat = IO_read_uint2(&t_value, stream);
+		t_stat = checkloadstat(IO_read_uint2(&t_value, stream));
 		if (t_stat == IO_NORMAL)
 		{
 			attrs -> text_align = (t_value & 0x03);
@@ -245,36 +245,36 @@ IO_stat MCParagraph::loadattrs(IO_handle stream, uint32_t version)
 		}
 	}
 	if (t_stat == IO_NORMAL && (attrs -> flags & (PA_HAS_BORDER_WIDTH)) != 0)
-		t_stat = IO_read_uint1(&attrs -> border_width, stream);
+		t_stat = checkloadstat(IO_read_uint1(&attrs -> border_width, stream));
 	// MW-2012-02-29: [[ Bug ]] Read the first indent field if either has first
 	//   or has list indent.
 	if (t_stat == IO_NORMAL && ((attrs -> flags & PA_HAS_FIRST_INDENT) != 0 || (attrs -> flags & PA_HAS_LIST_INDENT) != 0))
-		t_stat = IO_read_int2(&attrs -> first_indent, stream);
+		t_stat = checkloadstat(IO_read_int2(&attrs -> first_indent, stream));
 	if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_LEFT_INDENT) != 0)
-		t_stat = IO_read_int2(&attrs -> left_indent, stream);
+		t_stat = checkloadstat(IO_read_int2(&attrs -> left_indent, stream));
 	if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_RIGHT_INDENT) != 0)
-		t_stat = IO_read_int2(&attrs -> right_indent, stream);
+		t_stat = checkloadstat(IO_read_int2(&attrs -> right_indent, stream));
 	if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_SPACE_ABOVE) != 0)
-		t_stat = IO_read_int2(&attrs -> space_above, stream);
+		t_stat = checkloadstat(IO_read_int2(&attrs -> space_above, stream));
 	if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_SPACE_BELOW) != 0)
-		t_stat = IO_read_int2(&attrs -> space_below, stream);
+		t_stat = checkloadstat(IO_read_int2(&attrs -> space_below, stream));
 	if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_TABS) != 0)
 	{
-		t_stat = IO_read_uint2(&attrs -> tab_count, stream);
+		t_stat = checkloadstat(IO_read_uint2(&attrs -> tab_count, stream));
 		if (t_stat == IO_NORMAL)
 		{
 			attrs -> tabs = new uint16_t[attrs -> tab_count];
 			for(uint32_t i = 0; i < attrs -> tab_count && t_stat == IO_NORMAL; i++)
-				t_stat = IO_read_uint2(&attrs -> tabs[i], stream);
+				t_stat = checkloadstat(IO_read_uint2(&attrs -> tabs[i], stream));
 		}
 	}
 	if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_BACKGROUND_COLOR) != 0)
-		t_stat = IO_read_uint4(&attrs -> background_color, stream);
+		t_stat = checkloadstat(IO_read_uint4(&attrs -> background_color, stream));
 	if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_BORDER_COLOR) != 0)
-		t_stat = IO_read_uint4(&attrs -> border_color, stream);
+		t_stat = checkloadstat(IO_read_uint4(&attrs -> border_color, stream));
 	// MW-2012-02-22: [[ Bug ]] Load the padding setting from the stream.
 	if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_PADDING) != 0)
-		t_stat = IO_read_uint1(&attrs -> padding, stream);
+		t_stat = checkloadstat(IO_read_uint1(&attrs -> padding, stream));
 
 	// MW-2012-03-19: [[ HiddenText ]] If there is still more to read, we must have
 	//   a second flags word.
@@ -282,7 +282,7 @@ IO_stat MCParagraph::loadattrs(IO_handle stream, uint32_t version)
 	{
 		uint2 t_flags_2;
 		if (t_stat == IO_NORMAL)
-			t_stat = IO_read_uint2(&t_flags_2, stream);
+			t_stat = checkloadstat(IO_read_uint2(&t_flags_2, stream));
 		if (t_stat == IO_NORMAL)
 		{
 				attrs -> flags |= t_flags_2 << 16;
@@ -294,10 +294,10 @@ IO_stat MCParagraph::loadattrs(IO_handle stream, uint32_t version)
 		
 		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_METADATA) != 0)
-            t_stat = IO_read_stringref_new(attrs -> metadata, stream, version >= 7000);
+            t_stat = checkloadstat(IO_read_stringref_new(attrs -> metadata, stream, version >= 7000));
 
 		if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_LIST_INDEX) != 0)
-			t_stat = IO_read_uint2(&attrs -> list_index, stream);
+			t_stat = checkloadstat(IO_read_uint2(&attrs -> list_index, stream));
         
         // SN-2015-05-01: [[ Bug 15175 ]] Load the paragraph's tab alignments
         if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_TAB_ALIGNMENTS) != 0)
@@ -306,12 +306,12 @@ IO_stat MCParagraph::loadattrs(IO_handle stream, uint32_t version)
             uint16_t t_nalignments;
             t_alignments = NULL;
             
-            t_stat = IO_read_uint2(&t_nalignments, stream);
+            t_stat = checkloadstat(IO_read_uint2(&t_nalignments, stream));
             
             if (t_stat == IO_NORMAL)
             {
                 if (!MCMemoryAllocate(sizeof(intenum_t) * t_nalignments, t_alignments))
-                    t_stat = IO_ERROR;
+                    t_stat = checkloadstat(IO_ERROR);
                 
                 for (uint16_t i = 0; i < t_nalignments && t_stat == IO_NORMAL; ++i)
                 {
@@ -333,9 +333,9 @@ IO_stat MCParagraph::loadattrs(IO_handle stream, uint32_t version)
 	
 	// Finally skip to the end of the record for future modifications.
 	if (t_stat == IO_NORMAL)
-		t_stat = MCS_seek_set(stream, t_attr_end);
+		t_stat = checkloadstat(MCS_seek_set(stream, t_attr_end));
 
-	return t_stat;
+	return checkloadstat(t_stat);
 }
 
 IO_stat MCParagraph::saveattrs(IO_handle stream)
@@ -973,6 +973,7 @@ Exec_stat MCParagraph::getparagraphattr(Properties which, MCExecPoint& ep, Boole
 }
 #endif
 
+#ifdef OLD_EXEC
 template<typename T> static void copysingleattr_int(MCParagraphAttrs *other_attrs, MCParagraphAttrs*& attrs, uint32_t p_flag, size_t p_field_offset)
 {
 	if (other_attrs == nil || (other_attrs -> flags & p_flag) == 0)
@@ -1028,12 +1029,13 @@ static void copysingleattr_int32(MCParagraphAttrs *other_attrs, MCParagraphAttrs
 {
 	copysingleattr_int<int32_t>(other_attrs, attrs, p_flag, p_field_offset);
 }
+#endif /* OLD_EXEC */
 
 void MCParagraph::copysingleattr(Properties which, MCParagraph *other)
 {
+#ifdef OLD_EXEC
 	switch(which)
 	{
-#ifdef OLD_EXEC
 	case P_TEXT_ALIGN:
 		if (other -> attrs == nil || (other -> attrs -> flags & PA_HAS_TEXT_ALIGN) == 0)
 		{
@@ -1222,8 +1224,8 @@ void MCParagraph::copysingleattr(Properties which, MCParagraph *other)
 			attrs -> flags |= PA_HAS_METADATA;
 		}
 		break;
-#endif
 	}
+#endif
 
 	if (attrs == nil)
 		return;

@@ -133,6 +133,7 @@ static int stack_real_mode(MCStack *p_stack)
 	return p_stack -> getmode();
 }
 
+#ifdef _WINDOWS
 static bool stack_is_above(MCStack *p_stack_a, MCStack *p_stack_b)
 {
 	int t_mode_a, t_mode_b;
@@ -147,6 +148,7 @@ static bool stack_is_above(MCStack *p_stack_a, MCStack *p_stack_b)
 
 	return t_mode_a > t_mode_b;
 }
+#endif /* _WINDOWS */
 
 void MCStacklist::top(MCStack *sptr)
 {

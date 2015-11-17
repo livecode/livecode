@@ -3,82 +3,24 @@
 	[
 		'../common.gypi',
 		'engine-sources.gypi',
-		'kernel.gypi',
-		'kernel-development.gypi',
-		'kernel-installer.gypi',
-		'kernel-standalone.gypi',
-		'kernel-server.gypi',
 	],
+	
+	'target_defaults':
+	{
+		'conditions':
+		[
+			[
+				'OS == "linux" or OS == "android" or OS == "emscripten"',
+				{
+					# Ensure that the symbols LCB binds to are exported from the engine
+					'ldflags': [ '-rdynamic' ],
+				},
+			],
+		],
+	},
 	
 	'targets':
 	[
-		{
-			'target_name': 'encode_version',
-			'type': 'none',
-			
-			'actions':
-			[
-				{
-					'action_name': 'encode_version',
-					'inputs':
-					[
-						'../util/encode_version.pl',
-						'../version',
-						'include/revbuild.h.in',
-					],
-					'outputs':
-					[
-						'<(SHARED_INTERMEDIATE_DIR)/include/revbuild.h',
-					],
-					
-					'action':
-					[
-						'<@(perl)',
-						'../util/encode_version.pl',
-						'.',
-						'<(SHARED_INTERMEDIATE_DIR)',
-					],
-				},
-			],
-			
-			'direct_dependent_settings':
-			{
-				'include_dirs':
-				[
-					'<(SHARED_INTERMEDIATE_DIR)/include',
-				],
-			},
-		},
-		
-		{
-			'target_name': 'quicktime_stubs',
-			'type': 'none',
-			
-			'actions':
-			[
-				{
-					'action_name': 'quicktime_stubs',
-					'inputs':
-					[
-						'../util/weak_stub_maker.pl',
-						'src/quicktime.stubs',
-					],
-					'outputs':
-					[
-						'<(SHARED_INTERMEDIATE_DIR)/src/quicktimestubs.mac.cpp',
-					],
-					
-					'action':
-					[
-						'<@(perl)',
-						'../util/weak_stub_maker.pl',
-						'src/quicktime.stubs',
-						'<@(_outputs)',
-					],
-				},
-			],
-		},
-		
 		{
 			'target_name': 'encode_environment_stack',
 			'type': 'none',
@@ -109,26 +51,7 @@
 				},
 			],
 		},
-		
-		{
-			'target_name': 'security-community',
-			'type': 'static_library',
-			
-			'dependencies':
-			[
-				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl',
 				
-				# Because our headers are so messed up...
-				'../libfoundation/libfoundation.gyp:libFoundation',
-				'../libgraphics/libgraphics.gyp:libGraphics',
-			],
-			
-			'sources':
-			[
-				'<@(engine_security_source_files)',
-			],
-		},
-		
 		{
 			'target_name': 'server',
 			'type': 'executable',
@@ -136,7 +59,7 @@
 			
 			'dependencies':
 			[
-				'kernel-server',
+				'kernel-server.gyp:kernel-server',
 				
 				'../libfoundation/libfoundation.gyp:libFoundation',
 				'../libgraphics/libgraphics.gyp:libGraphics',
@@ -145,8 +68,14 @@
 			'sources':
 			[
 				'<@(engine_security_source_files)',
+				'src/main.cpp',
 			],
-			
+
+			'include_dirs':
+			[
+				'../libfoundation/include',
+			],
+
 			'conditions':
 			[
 				[
@@ -191,8 +120,8 @@
 			
 			'dependencies':
 			[
-				'kernel-standalone',
-				'security-community',
+				'kernel-standalone.gyp:kernel-standalone',
+				'engine-common.gyp:security-community',
 			],
 			
 			'sources':
@@ -200,9 +129,22 @@
 				'src/dummy.cpp',
 				'rsrc/standalone.rc',
 			],
-			
+
 			'conditions':
 			[
+				[
+					'OS != "win" and OS != "android"',
+					{
+						'sources':
+						[
+							'src/main.cpp',
+						],
+						'include_dirs':
+						[
+							'../libfoundation/include',
+						],
+					},
+				],
 				[
 					'OS == "mac"',
 					{
@@ -236,12 +178,13 @@
 							'DYLIB_COMPATIBILITY_VERSION': '',
 							'DYLIB_CURRENT_VERSION': '',
 							'MACH_O_TYPE': 'mh_object',
+							'LINK_WITH_STANDARD_LIBRARIES': 'NO',
 							'OTHER_LDFLAGS':
 							[
 								'-Wl,-sectcreate,__MISC,__deps,<(deps_file)',
-								'-Wl,-exported_symbol,_main',
-								'-Wl,-exported_symbol,_load_module',
-								'-Wl,-exported_symbol,_resolve_symbol',
+								'-Wl,-u,_main',
+								'-Wl,-u,_load_module',
+								'-Wl,-u,_resolve_symbol',
 								#'-all_load',		# Dead stripping later will remove un-needed symbols
 							],
 						},
@@ -253,7 +196,7 @@
 					{
 						'ldflags':
 						[
-							'-T', '<(src_top_dir_abs)/engine/linux.link',
+							'-T', '$(abs_srcdir)/engine/linux.link',
 						],
 					},
 				],
@@ -267,12 +210,17 @@
 						'product_dir': '<(PRODUCT_DIR)',	# Shared libraries are not placed in PRODUCT_DIR by default
 						'type': 'shared_library',
 						
+						'sources':
+						[
+							'engine/linux.link',
+						],
+						
 						'ldflags':
 						[
 							# Helpful for catching build problems
 							'-Wl,-no-undefined',
 							
-							'-Wl,-T,<(src_top_dir_abs)/engine/linux.link',
+							'-Wl,-T,$(abs_srcdir)/engine/linux.link',
 						],
 						
 						'actions':
@@ -394,6 +342,30 @@
 						},
 					},
 				],
+				[
+					'OS == "emscripten"',
+					{
+						'all_dependent_settings':
+						{
+							'variables':
+							{
+								'dist_aux_files':
+								[
+									'rsrc/emscripten-standalone-template/',
+									'rsrc/emscripten-startup-template.livecodescript/',
+									'<(PRODUCT_DIR)/standalone-community-<(version_string).js',
+									'<(PRODUCT_DIR)/standalone-community-<(version_string).html',
+									'<(PRODUCT_DIR)/standalone-community-<(version_string).html.mem',
+								],
+							},
+						},
+
+						'sources!':
+						[
+							'src/dummy.cpp',
+						],
+					},
+				],
 			],
 			
 			'all_dependent_settings':
@@ -415,7 +387,13 @@
 							},
 						],
 						[
-							'OS != "android" and OS != "ios"',
+							'OS == "emscripten"',
+							{
+								'dist_files': [],
+							}
+						],
+						[
+							'OS != "android" and OS != "ios" and OS != "emscripten"',
 							{
 								'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(app_bundle_suffix)' ],
 							}
@@ -441,8 +419,8 @@
 			
 			'dependencies':
 			[
-				'kernel-installer',
-				'security-community',
+				'kernel-installer.gyp:kernel-installer',
+				'engine-common.gyp:security-community',
 			],
 			
 			'sources':
@@ -450,9 +428,22 @@
 				'src/dummy.cpp',
 				'rsrc/installer.rc',
 			],
-			
+
 			'conditions':
 			[
+				[
+					'OS != "win" and OS != "android"',
+					{
+						'sources':
+						[
+							'src/main.cpp',
+						],
+						'include_dirs':
+						[
+							'../libfoundation/include',
+						],
+					},
+				],
 				[
 					'OS == "mac"',
 					{
@@ -476,7 +467,7 @@
 					{
 						'ldflags':
 						[
-							'-T', '<(src_top_dir_abs)/engine/linux.link',
+							'-T', '$(abs_srcdir)/engine/linux.link',
 						],
 					},
 				],
@@ -545,9 +536,9 @@
 			
 			'dependencies':
 			[
-				'kernel-development',
+				'kernel-development.gyp:kernel-development',
 				'encode_environment_stack',
-				'security-community',
+				'engine-common.gyp:security-community',
 			],
 			
 			'sources':
@@ -558,6 +549,19 @@
 
 			'conditions':
 			[
+				[
+					'OS != "win" and OS != "android"',
+					{
+						'sources':
+						[
+							'src/main.cpp',
+						],
+						'include_dirs':
+						[
+							'../libfoundation/include',
+						],
+					},
+				],
 				[
 					'OS == "mac"',
 					{
@@ -612,9 +616,22 @@
 			[
 				'standalone',
 			],
-			
+
 			'conditions':
 			[
+				[
+					'OS != "win" and OS != "android"',
+					{
+						'sources':
+						[
+							'src/main.cpp',
+						],
+						'include_dirs':
+						[
+							'../libfoundation/include',
+						],
+					},
+				],
 				[
 					'OS == "ios"',
 					{
@@ -707,13 +724,98 @@
 			
 						'dependencies':
 						[
-							'kernel-standalone',
-							'security-community',
+							'kernel-standalone.gyp:kernel-standalone',
+							'engine-common.gyp:security-community',
 						],
 			
 						'sources':
 						[
 							'src/dummy.cpp',
+							'src/main.cpp',
+						],
+
+						'include_dirs':
+						[
+							'../libfoundation/include',
+						],
+
+					},
+				],
+			},
+		],
+		[
+			'OS == "emscripten"',
+			{
+				'targets':
+				[
+					{
+						'target_name': 'javascriptify',
+						'type': 'none',
+
+						'dependencies':
+						[
+							'standalone',
+						],
+
+						'variables':
+						{
+							'version_suffix': '<(version_string)',
+						},
+
+						'actions':
+						[
+							{
+								'action_name': 'javascriptify',
+								'message': 'Javascript-ifying the Emscripten engine',
+
+								'inputs':
+								[
+									'../util/emscripten-javascriptify.py',
+									'<(PRODUCT_DIR)/standalone-community.bc',
+									'rsrc/emscripten-html-template.html',
+									'src/em-whitelist.json',
+									'src/em-preamble.js',
+									'src/em-preamble-overlay.js',
+									'src/em-util.js',
+									'src/em-async.js',
+									'src/em-dialog.js',
+									'src/em-event.js',
+									'src/em-surface.js',
+									'src/em-url.js',
+									'src/em-standalone.js',
+								],
+
+								'outputs':
+								[
+									'<(PRODUCT_DIR)/standalone-community-<(version_suffix).js',
+									'<(PRODUCT_DIR)/standalone-community-<(version_suffix).html',
+									'<(PRODUCT_DIR)/standalone-community-<(version_suffix).html.mem',
+								],
+
+								'action':
+								[
+									'../util/emscripten-javascriptify.py',
+									'--input',
+									'<(PRODUCT_DIR)/standalone-community.bc',
+									'--output',
+									'<(PRODUCT_DIR)/standalone-community-<(version_suffix).html',
+									'--shell-file',
+									'rsrc/emscripten-html-template.html',
+									'--whitelist',
+									'src/em-whitelist.json',
+									'--pre-js',
+									'src/em-preamble.js',
+									'src/em-preamble-overlay.js',
+									'--js-library',
+									'src/em-util.js',
+									'src/em-async.js',
+									'src/em-dialog.js',
+									'src/em-event.js',
+									'src/em-surface.js',
+									'src/em-url.js',
+									'src/em-standalone.js',
+								],
+							},
 						],
 					},
 				],

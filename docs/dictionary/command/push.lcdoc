@@ -1,0 +1,35 @@
+Name: push
+
+Type: command
+
+Syntax: push <card> 
+
+Summary: Places a card's long <ID> in a list, from which it can be retrieved later with the <pop> <command>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+push card -- pushes current card
+
+Example:
+push card "Starting Point"
+
+Parameters:
+card: Any card reference.
+
+Description:
+Use the <push> <command> to store one or more locations for later use, or to keep a reference to the <current card> so you can return to it after temporarily visiting another <card(keyword)>.
+
+When you push a card, its <ID> is placed at the top of the list. The next time you use the <pop> <command>, that <card(object)|card's> ID is deleted from the list, and the previously-pushed <card(keyword)> becomes the first <line> of the list. In this way, you can store multiple locations with the <push> <command>, and use the <pop> <command> to revisit them in reverse order.
+
+The list of pushed cards is cleared when you quit the application.
+
+The Home card (the first card of the "license.rev" stack) is always the last card on the list.
+
+References: lockRecent (property), ID (property), card (keyword), line (keyword), go (command), pop (command), card (object), command (glossary), current card (glossary)
+
+Tags: navigation

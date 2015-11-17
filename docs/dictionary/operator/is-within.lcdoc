@@ -1,0 +1,38 @@
+Name: is within
+
+Type: operator
+
+Syntax: <point> is within <rectangle> 
+
+Summary: <evaluate|Evaluates> to true if a <point> is inside the specified rectangle, false if it is outside.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+"22,33" is within "22,17,150,200" -- evaluates to true
+
+Example:
+the mouseLoc is within the rect of this stack
+
+Parameters:
+point: Any expression that evaluates to a point--a vertical and horizontal distance from the top left of the current stack, separated by a comma.
+rectangle: Any expression that evaluates to a rectangle--a right, top, left, and bottom edge, separated by commas.
+
+Description:
+Use the <is within> <operator> to determine whether a <point> is inside a rectangle.
+
+The expression
+<point> is within the rect of object
+is equivalent to
+  within(object,point)
+unless the object is a graphic or image, or a tabbed button.
+
+The <is within> <operator> is the logical inverse of the <is not within> <operator>. When one is true, the other is false.
+
+References: point (keyword), is not within (operator), within (function), evaluate (glossary), operator (glossary)
+
+Tags: ui

@@ -1,0 +1,34 @@
+Name: polygon
+
+Type: keyword
+
+Syntax: polygon
+
+Summary: Designates the <paint tool> used to draw irregular <polygon> shapes. It also specifies, through the <style> <property>, that a <graphic> is an irregular <polygon> shape.
+
+Synonyms: poly
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+choose polygon tool
+
+Example:
+set the style of the templateGraphic to polygon
+
+Description:
+Use the <polygon> <keyword> to paint an irregular <polygon(keyword)> with the <penColor> or to change a <graphic(keyword)> to an irregular <polygon(keyword)> shape.
+
+When using the Polygon tool, the cursor is a crosshairs shape (over stack windows) or an arrow (anywhere else). This tool is used to draw an irregular polygon in the penColor, filled with the <brushColor> (or <brushPattern>).
+
+If you try to paint with the Polygon tool on a card that has no images, an image the size of the card is created to hold the painting. If the current card already has one or more images, painting outside the image has no effect.
+
+Setting the <style> of a <graphic(keyword)> to "polygon" makes the <graphic(keyword)> into an irregular <polygon(keyword)>. Irregular <polygon(keyword)> <graphic(object)|graphics>, unlike painted <polygon(glossary)|polygons>, can be changed and reshaped: use the <points> <properties> to change the shape.
+
+References: style (property), brushColor (property), points (property), properties (property), penColor (property), brushPattern (property), polygon (keyword), graphic (keyword), choose (command), graphic (object), property (glossary), keyword (glossary), paint tool (glossary), polygon (glossary)
+
+Tags: ui

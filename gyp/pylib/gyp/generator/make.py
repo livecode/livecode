@@ -136,7 +136,7 @@ quiet_cmd_alink = AR($(TOOLSET)) $@
 cmd_alink = rm -f $@ && $(AR.$(TOOLSET)) crs $@ $(filter %.o,$^)
 
 quiet_cmd_alink_thin = AR($(TOOLSET)) $@
-cmd_alink_thin = rm -f $@ && $(AR.$(TOOLSET)) crsT $@ $(filter %.o,$^)
+cmd_alink_thin = rm -f $@ && $(AR.$(TOOLSET)) crs $@ $(filter %.o,$^)
 
 # Commas need to be escaped in some circumstances
 COMMA := ,
@@ -287,7 +287,7 @@ CXX.target ?= %(CXX.target)s
 CXXFLAGS.target ?= $(CXXFLAGS)
 LINK.target ?= %(LINK.target)s
 LDFLAGS.target ?= $(LDFLAGS)
-AR.target ?= $(AR)
+AR.target ?= %(AR.target)s
 
 # C++ apps need to be linked with g++.
 LINK ?= $(CXX.target)
@@ -1483,6 +1483,7 @@ $(obj).$(TOOLSET)/$(TARGET)/%%.o: $(obj)/%%%s FORCE_DO_CMD
             ldflags.append(r'-Wl,-rpath-link=\$(builddir)/lib.%s/' %
                            self.toolset)
         library_dirs = config.get('library_dirs', [])
+        library_dirs = map(Sourceify, map(self.Absolutify, library_dirs))
         ldflags += [('-L%s' % library_dir) for library_dir in library_dirs]
         self.WriteList(ldflags, 'LDFLAGS_%s' % configname)
         if self.flavor == 'mac':
