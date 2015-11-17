@@ -49,7 +49,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 MCNativeLayer::MCNativeLayer() :
-  m_attached(false), m_can_render_to_context(true), m_defer_geometry_changes(false)
+	m_widget(nil), m_attached(false), m_can_render_to_context(true),
+	m_defer_geometry_changes(false)
 {
     ;
 }
