@@ -136,6 +136,7 @@ MCWidgetEventManager::MCWidgetEventManager() :
   m_target(nil),
   m_doubleclick_time(MCdoubletime),
   m_doubleclick_distance(MCdoubledelta),
+  m_check_mouse_focus(false),
   m_touches()
 {
     
