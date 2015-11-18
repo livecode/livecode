@@ -440,10 +440,7 @@ bool MCMacOSXPrinter::Reset(MCStringRef p_name, PMPrintSettings p_settings, PMPa
 	if (t_success && t_printer != NULL)
 	{
 		OSErr t_err;
-		if (PMSessionSetCurrentPMPrinter != NULL)
-			t_err = PMSessionSetCurrentPMPrinter(t_session, t_printer);
-		else
-			t_err = PMSessionSetCurrentPrinter(t_session, PMPrinterGetName(t_printer));
+        t_err = PMSessionSetCurrentPrinter(t_session, PMPrinterGetName(t_printer));
 
 		if (t_err != noErr)
 			t_success = false;
@@ -471,7 +468,7 @@ bool MCMacOSXPrinter::Reset(MCStringRef p_name, PMPrintSettings p_settings, PMPa
 
 	PMPaper t_paper;
 	t_paper = NULL;
-	if (t_success && MCmajorosversion >= 0x1040 && PMGetPageFormatPaper != NULL)
+	if (t_success && MCmajorosversion >= 0x1040)
 	{
 		OSErr t_err;
 		t_err = PMGetPageFormatPaper(t_page_format, &t_paper);
@@ -570,7 +567,7 @@ void MCMacOSXPrinter::SetProperties(bool p_include_output)
 	PDEBUG(stderr, "SetProperties: PMGetPageFormatPaper\n");
 	PMRect t_pm_paper_rect;
 	PMPaper t_pm_paper;
-	if (PMGetPageFormatPaper != NULL && PMGetPageFormatPaper(m_page_format, &t_pm_paper) == noErr)
+	if (PMGetPageFormatPaper(m_page_format, &t_pm_paper) == noErr)
 	{
 		PDEBUG(stderr, "SetProperties: PMPaperGetWidth\n");
 		double t_width;
@@ -623,7 +620,7 @@ void MCMacOSXPrinter::SetProperties(bool p_include_output)
 
 	PDEBUG(stderr, "SetProperties: PMGetDuplex\n");
 	PMDuplexMode t_pm_duplex;
-	if (PMGetDuplex != NULL && PMGetDuplex(m_settings, &t_pm_duplex) == noErr)
+	if (PMGetDuplex(m_settings, &t_pm_duplex) == noErr)
 		t_job_duplex = t_pm_duplex == kPMDuplexNone ? PRINTER_DUPLEX_MODE_SIMPLEX : (t_pm_duplex == kPMDuplexNoTumble ? PRINTER_DUPLEX_MODE_LONG_EDGE : PRINTER_DUPLEX_MODE_SHORT_EDGE);
 	else
 		t_job_duplex = PRINTER_DEFAULT_JOB_DUPLEX;
@@ -969,10 +966,7 @@ void MCMacOSXPrinter::ResetSession(void)
 {
 	PMPrintSession t_session;
 	PMCreateSession(&t_session);
-	if (PMSessionSetCurrentPMPrinter != NULL)
-		PMSessionSetCurrentPMPrinter(t_session, m_printer);
-	else
-		PMSessionSetCurrentPrinter(t_session, PMPrinterGetName(m_printer));
+    PMSessionSetCurrentPMPrinter(t_session, m_printer);
 	
 	PMSessionValidatePrintSettings(t_session, m_settings, kPMDontWantBoolean);
 	PMSessionValidatePageFormat(t_session, m_page_format, kPMDontWantBoolean);

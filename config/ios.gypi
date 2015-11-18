@@ -170,6 +170,7 @@
 							'-Wno-unused-parameter',
 							'-Werror=uninitialized',
 							'-Werror=return-type',
+							'-Werror=tautological-compare',
 						],
 					},
 				},

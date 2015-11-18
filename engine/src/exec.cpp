@@ -2638,7 +2638,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         {
             uinteger_t t_value;
             MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeUInt, &t_value);
-            if (t_value < 0 || t_value > 65535)
+            if (t_value > 65535)
                 ctxt . LegacyThrow(EE_PROPERTY_NAN);
             if (!ctxt . HasError())
                 ((void(*)(MCExecContext&, void *, uinteger_t))prop -> setter)(ctxt, mark, t_value);
@@ -2885,7 +2885,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             {
                 t_value_ptr = &t_value;
                 MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeUInt, &t_value);
-                if (t_value < 0 || t_value > 255)
+                if (t_value > 255)
                     ctxt . LegacyThrow(EE_PROPERTY_NAN);
             }
             
@@ -2925,7 +2925,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             {
                 t_value_ptr = &t_value;
                 MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeUInt, &t_value);
-                if (t_value < 0 || t_value > 65535)
+                if (t_value > 65535)
                     ctxt . LegacyThrow(EE_PROPERTY_NAN);
             }
             

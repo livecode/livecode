@@ -303,11 +303,6 @@ bool MCStackIdCache::RehashBuckets(uindex_t p_new_item_count)
 	t_new_capacity_idx = m_capacity_idx;
 	if (p_new_item_count != 0)
 	{
-		// If we are shrinking we just shrink down to the level needed by the currently
-		// used buckets.
-		if (p_new_item_count < 0)
-			p_new_item_count = 0;
-
 		// Work out the smallest possible capacity greater than the requested capacity.
 		uindex_t t_new_capacity_req;
 		t_new_capacity_req = m_count + p_new_item_count;
