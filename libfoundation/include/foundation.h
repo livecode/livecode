@@ -2255,12 +2255,14 @@ MC_DLLEXPORT compare_t MCStringCompareTo(MCStringRef string, MCStringRef other, 
 // Returns true if the string begins with the prefix string, processing as
 // appropriate according to options.
 MC_DLLEXPORT bool MCStringBeginsWith(MCStringRef string, MCStringRef prefix, MCStringOptions options);
+MC_DLLEXPORT bool MCStringBeginsWithR(MCStringRef string, MCStringRef prefix, MCStringOptions options, uindex_t& r_self_match_length);
 MC_DLLEXPORT bool MCStringSharedPrefix(MCStringRef self, MCRange p_range, MCStringRef p_prefix, MCStringOptions p_options, uindex_t& r_self_match_length);
 MC_DLLEXPORT bool MCStringBeginsWithCString(MCStringRef string, const char_t *prefix_cstring, MCStringOptions options);
 
 // Returns true if the string ends with the suffix string, processing as
 // appropriate according to options.
 MC_DLLEXPORT bool MCStringEndsWith(MCStringRef string, MCStringRef suffix, MCStringOptions options);
+MC_DLLEXPORT bool MCStringEndsWithR(MCStringRef string, MCStringRef suffix, MCStringOptions options, uindex_t& r_self_match_length);
 MC_DLLEXPORT bool MCStringSharedSuffix(MCStringRef self, MCRange p_range, MCStringRef p_suffix, MCStringOptions p_options, uindex_t& r_self_match_length);
 MC_DLLEXPORT bool MCStringEndsWithCString(MCStringRef string, const char_t *suffix_cstring, MCStringOptions options);
 
@@ -2348,7 +2350,7 @@ MC_DLLEXPORT bool MCStringForwardDelimitedRegion(MCStringRef string,
                                                  MCRange region,
                                                  MCStringOptions options,
                                                  MCRange& r_range);
-    
+
 //////////
     
 // Transform the string to its folded form as specified by 'options'. The folded

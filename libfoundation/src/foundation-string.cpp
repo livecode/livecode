@@ -2659,7 +2659,7 @@ compare_t MCStringCompareTo(MCStringRef self, MCStringRef p_other, MCStringOptio
 }
 
 MC_DLLEXPORT_DEF
-bool MCStringBeginsWith(MCStringRef self, MCStringRef p_prefix, MCStringOptions p_options)
+bool MCStringBeginsWithR(MCStringRef self, MCStringRef p_prefix, MCStringOptions p_options, uindex_t& r_self_match_length)
 {
 	__MCAssertIsString(self);
 	__MCAssertIsString(p_prefix);
@@ -2674,18 +2674,29 @@ bool MCStringBeginsWith(MCStringRef self, MCStringRef p_prefix, MCStringOptions 
     {
         if (__MCStringIsNative(p_prefix))
         {
-            return __MCNativeOp_BeginsWith(self -> native_chars,
-                                           self -> char_count,
-                                           p_prefix -> native_chars,
-                                           p_prefix -> char_count,
-                                           p_options);
+            if (!__MCNativeOp_BeginsWith(self -> native_chars,
+                                         self -> char_count,
+                                         p_prefix -> native_chars,
+                                         p_prefix -> char_count,
+                                         p_options))
+                return false;
+            
+            r_self_match_length = p_prefix -> char_count;
+            return true;
         }
         
         if (__MCStringCantBeEqualToNative(p_prefix, p_options))
             return false;
     }
 
-    return MCUnicodeBeginsWith(self -> chars, self -> char_count, __MCStringIsNative(self), p_prefix -> chars, p_prefix -> char_count, __MCStringIsNative(p_prefix), (MCUnicodeCompareOption)p_options);
+    return MCUnicodeBeginsWith(self -> chars, self -> char_count, __MCStringIsNative(self), p_prefix -> chars, p_prefix -> char_count, __MCStringIsNative(p_prefix), (MCUnicodeCompareOption)p_options, r_self_match_length);
+}
+
+MC_DLLEXPORT_DEF
+bool MCStringBeginsWith(MCStringRef self, MCStringRef p_prefix, MCStringOptions p_options)
+{
+    uindex_t t_length;
+    return MCStringBeginsWithR(self, p_prefix, p_options, t_length);
 }
 
 MC_DLLEXPORT_DEF
@@ -2756,7 +2767,7 @@ bool MCStringBeginsWithCString(MCStringRef self, const char_t *p_prefix_cstring,
 }
 
 MC_DLLEXPORT_DEF
-bool MCStringEndsWith(MCStringRef self, MCStringRef p_suffix, MCStringOptions p_options)
+bool MCStringEndsWithR(MCStringRef self, MCStringRef p_suffix, MCStringOptions p_options, uindex_t& r_self_match_length)
 {
 	__MCAssertIsString(self);
 	__MCAssertIsString(p_suffix);
@@ -2771,18 +2782,29 @@ bool MCStringEndsWith(MCStringRef self, MCStringRef p_suffix, MCStringOptions p_
     {
         if (__MCStringIsNative(p_suffix))
         {
-            return __MCNativeOp_EndsWith(self -> native_chars,
-                                         self -> char_count,
-                                         p_suffix -> native_chars,
-                                         p_suffix -> char_count,
-                                         p_options);
+            if (!__MCNativeOp_EndsWith(self -> native_chars,
+                                       self -> char_count,
+                                       p_suffix -> native_chars,
+                                       p_suffix -> char_count,
+                                       p_options))
+                return false;
+
+            r_self_match_length = p_suffix -> char_count;
+            return true;
         }
         
         if (__MCStringCantBeEqualToNative(p_suffix, p_options))
             return false;
     }
 
-    return MCUnicodeEndsWith(self -> chars, self -> char_count, __MCStringIsNative(self), p_suffix -> chars, p_suffix -> char_count, __MCStringIsNative(p_suffix), (MCUnicodeCompareOption)p_options);
+    return MCUnicodeEndsWith(self -> chars, self -> char_count, __MCStringIsNative(self), p_suffix -> chars, p_suffix -> char_count, __MCStringIsNative(p_suffix), (MCUnicodeCompareOption)p_options, r_self_match_length);
+}
+
+MC_DLLEXPORT_DEF
+bool MCStringEndsWith(MCStringRef self, MCStringRef p_suffix, MCStringOptions p_options)
+{
+    uindex_t t_length;
+    return MCStringEndsWithR(self, p_suffix, p_options, t_length);
 }
 
 MC_DLLEXPORT_DEF

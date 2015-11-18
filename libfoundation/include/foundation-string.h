@@ -226,11 +226,13 @@ compare_t MCStringCompareTo(MCStringRef string, MCStringRef other, MCStringOptio
 // Returns true if the string begins with the prefix string, processing as
 // appropriate according to options.
 bool MCStringBeginsWith(MCStringRef string, MCStringRef prefix, MCStringOptions options);
+bool MCStringBeginsWithR(MCStringRef string, MCStringRef prefix, MCStringOptions options, uindex_t& r_string_match_length);
 bool MCStringBeginsWithCString(MCStringRef string, const char_t *prefix_cstring, MCStringOptions options);
 
 // Returns true if the string ends with the suffix string, processing as
 // appropriate according to options.
 bool MCStringEndsWith(MCStringRef string, MCStringRef suffix, MCStringOptions options);
+bool MCStringEndsWithR(MCStringRef string, MCStringRef suffix, MCStringOptions options, uindex_t& r_string_match_length);
 bool MCStringEndsWithCString(MCStringRef string, const char_t *suffix_cstring, MCStringOptions options);
 
 // Returns true if the string contains the given needle string, processing as

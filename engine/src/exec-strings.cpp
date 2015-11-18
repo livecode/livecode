@@ -1557,7 +1557,7 @@ void MCStringsEvalBeginsWith(MCExecContext& ctxt, MCStringRef p_whole, MCStringR
     
     bool t_found;
     uindex_t t_self_length;
-    t_found = MCStringSharedPrefix(p_whole, MCRangeMake(0, MCStringGetLength(p_whole)), p_part, t_compare_option, t_self_length);
+    t_found = MCStringBeginsWithR(p_whole, p_part, t_compare_option, t_self_length);
     if (!t_found)
     {
         r_result = false;
@@ -1576,7 +1576,7 @@ void MCStringsEvalEndsWith(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef
     
     bool t_found;
     uindex_t t_self_length;
-    t_found = MCStringSharedSuffix(p_whole, MCRangeMake(0, MCStringGetLength(p_whole)), p_part, t_compare_option, t_self_length);
+    t_found = MCStringEndsWithR(p_whole, p_part, t_compare_option, t_self_length);
     if (!t_found)
     {
         r_result = false;
@@ -1766,7 +1766,7 @@ __MCStringsEvalChunkOffset(MCExecContext& ctxt,
 // If needle is not in the revised haystack, then the result is 0.
 //
 // If wholeMatches is false, then the result is the number of delimiters between
-// the start of the revised haystack and the first occurance of needle.
+// the start of the revised haystack and the first occurrence of needle.
 //
 // If wholeMatches is true, then if either side of the found needle is bos, eos
 // or delimiter, the result is the same as for wholeMatches false; otherwise, the
