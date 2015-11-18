@@ -94,7 +94,6 @@ output_dir=${top_src_dir}
 work_dir=${top_src_dir}/_cache/builder_tool
 private_dir=${top_src_dir}/..
 bin_dir = ${top_src_dir}/$(BUILD_PLATFORM)-bin
-notes_dir = ${top_src_dir}/_build/notes
 
 ifeq ($(BUILD_PLATFORM),mac)
   LIVECODE = $(bin_dir)/LiveCode-Community.app/Contents/MacOS/LiveCode-Community
@@ -169,8 +168,8 @@ dist-upload-files.txt sha1sum.txt:
 	                -o -name '*-bin.tar.xz' \
 	  > dist-upload-files.txt; \
 	if test "${UPLOAD_RELEASE_NOTES}" = "yes"; then \
-		find "${notes_dir}" -name 'LiveCodeNotes*.pdf' >> dist-upload-files.txt; \
-	fi \
+		find "_build/notes" -name 'LiveCodeNotes*.pdf' >> dist-upload-files.txt; \
+	fi; \
 	if test "$(UPLOAD_ENABLE_CHECKSUM)" = "yes"; then \
 	  $(SHA1SUM) < dist-upload-files.txt > sha1sum.txt; \
 	  echo sha1sum.txt >> dist-upload-files.txt; \
@@ -214,3 +213,5 @@ distmac-extract:
 # Final installer creation for Mac
 distmac-disk-%:
 	$(buildtool_command) --platform mac --stage disk --edition $*
+
+distmac-upload: dist-upload
