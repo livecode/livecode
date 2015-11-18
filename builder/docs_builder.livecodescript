@@ -2115,7 +2115,8 @@ end docsBuilderParseDictionaryToLibraryArray
 function docsBuilderParseDictionary pLibraryName, pAuthor, pRootDir, pRecursive
    local tLibraryA
    if there is a folder pRootDir then
-      put pLibraryName into tLibraryA["name"]
+      put revDocsModifyForUrl(pLibraryName) into tLibraryA["name"]
+      put pLibraryName into tLibraryA["display name"]
       put pAuthor into tLibraryA["author"]
       put "dictionary" into tLibraryA["type"]
       
@@ -2174,7 +2175,8 @@ command docsBuilderGenerateDistributedAPI
       end repeat
       put empty into tParsedA
    end repeat
-   put "LiveCode Builder" into tLibrariesA[tCount]["name"]
+   put "LiveCode Builder" into tLibrariesA[tCount]["display name"]
+   put revDocsModifyForUrl("LiveCode Builder") into tLibrariesA[tCount]["name"]
    put "LiveCode" into tLibrariesA[tCount]["author"]
    put "dictionary" into tLibrariesA[tCount]["type"]
    add 1 to tCount
@@ -2182,8 +2184,74 @@ command docsBuilderGenerateDistributedAPI
    local tJSON
    put revDocsFormatLibrariesArrayAsJSON(tLibrariesA) into tJSON
    
+   docsBuilderPopulateDatabase tLibrariesA
+   
    put textEncode(tJSON, "utf-8") into url ("binfile:" & builderAPIFolder() & slash & "distributed_api.js")
 end docsBuilderGenerateDistributedAPI
+
+on docsBuilderPopulateDatabase pLibrariesA
+   local tDefaultFolder
+   put the defaultFolder into tDefaultFolder
+   set the defaultFolder to builderAPIFolder()
+   
+   local tConnection
+   put revOpenDatabase("sqlite","api.sqlite",,,,,,) into tConnection
+   if tConnection is not a number then 
+      builderLog "error", "unable to create sqlite API database" & return & the result
+      exit docsBuilderPopulateDatabase
+   end if
+   
+   local tSQL
+   put "CREATE TABLE libraries(library text, author text, type text)" into tSQL
+   revExecuteSQL tConnection, tSQL
+   if the result is not a number then
+      builderLog "error", "unable to create libraries table" & return & the result
+      exit docsBuilderPopulateDatabase
+   end if
+   
+   local tLibraryA, tName
+   repeat for each key tKey in pLibrariesA
+      put pLibrariesA[tKey] into tLibraryA
+      
+      put tLibraryA["name"] into tName
+      if tName is empty then
+         put revDocsModifyForURL(tLibraryA["display name"]) into tName
+      end if 
+      
+      put "INSERT into libraries VALUES('" & tName & "','" & tLibraryA["author"] & "','" & tLibraryA["type"] & "')" into tSQL
+      revExecuteSQL tConnection, tSQL
+      if the result is not a number then
+         builderLog "error", "unable to insert" && tName && "data into libraries table" & return & the result
+         exit docsBuilderPopulateDatabase
+      end if
+      
+      put "CREATE TABLE" && tName & "(entry_name text, data blob)" into tSQL
+      revExecuteSQL tConnection, tSQL
+      if the result is not a number then
+         builderLog "error", "unable to create table" && tName & return & the result
+         exit docsBuilderPopulateDatabase
+      end if
+      
+      local tDocA, tEncodedData, tDocName
+      repeat for each element tDocA in tLibraryA["doc"]
+         put arrayEncode(tDocA) into tEncodedData
+         
+         put tDocA["name"] into tDocName
+         if tDocName is empty then
+            put revDocsModifyForURL(tDocA["display name"]) into tDocName
+         end if 
+         
+         put "INSERT into" && tName && "VALUES('" & tDocName & "',:1)" into tSQL
+         revExecuteSQL tConnection, tSQL, "*btEncodedData"
+         if the result is not a number then
+            builderLog "error", "unable to insert data for" && tName & ":" & tDocName & return & the result
+            exit docsBuilderPopulateDatabase
+         end if
+      end repeat
+   end repeat
+   
+   set the defaultFolder to tDefaultFolder
+end docsBuilderPopulateDatabase
 
 --- LEGACY
 
