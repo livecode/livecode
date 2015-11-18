@@ -56,7 +56,6 @@
 				'include/foundation-math.h',
 				'include/foundation-objc.h',
 				'include/foundation-stdlib.h',
-				'include/foundation-string.h',
 				'include/foundation-system.h',
 				'include/foundation-text.h',
 				'include/foundation-unicode.h',
