@@ -847,13 +847,6 @@ static bool __MCStringFormatSupportedForUnicode(const char *p_format)
 	return true;
 }
 
-#if defined(__32_BIT__)
-#define FORMAT_ARG_32_BIT 1
-#define FORMAT_ARG_64_BIT 2
-#elif defined(__64_BIT__)
-#define FORMAT_ARG_32_BIT 1
-#define FORMAT_ARG_64_BIT 1
-#endif
 
 MC_DLLEXPORT_DEF
 bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args)
@@ -869,95 +862,262 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 	
 	const char *t_format_ptr;
 	t_format_ptr = p_format;
-	while(t_success && *t_format_ptr != '\0')
+	while (t_success && *t_format_ptr != '\0')
 	{
-		const char *t_format_start_ptr;
-		t_format_start_ptr = t_format_ptr;
+        const char *t_format_start_ptr, *t_format_end_ptr;
+		t_format_start_ptr = t_format_end_ptr = t_format_ptr;
 		
 		bool t_has_range;
 		t_has_range = false;
 		
-		int t_arg_count;
-		t_arg_count = 0;
-		while(*t_format_ptr != '\0')
-		{
-			if (*t_format_ptr == '%')
-			{
-                // AL-2014-09-19: Flush chars between format strings
-                if (t_format_ptr != t_format_start_ptr)
-                    break;
+        // We need to track integer, floating-point and 'long double' argument
+        // counts separately. The last group needs to be tracked individually as
+        // it is passed in different registers on x86_64 to other floating-point
+        // values.
+        //
+        // The integer types are themselves broken down by type, to ensure we
+        // always use the correct type in the call to va_arg. We don't need to
+        // track anything smaller than an int as the rules for '...' params say
+        // that parameters are promoted to int/double.
+        size_t t_int_arg_count = 0;
+        size_t t_long_arg_count = 0;
+        size_t t_llong_arg_count = 0;
+        size_t t_ptr_arg_count = 0;
+        size_t t_float_arg_count = 0;
+        size_t t_ldouble_arg_count = 0;
+        
+        // Whether we are dealing with an MCValueRef or not
+        bool t_is_valueref = false;
+        
+        // Loop until we encounter something that can't be handled by the C
+        // library (i.e a ValueRef formatting command) or reach the end of the
+        // formatting string.
+        while (!t_is_valueref && *t_format_ptr != '\0')
+        {
+            // Is this a formatting command?
+            if (*t_format_ptr != '%')
+            {
+                // Not a formatting command; continue
+                t_format_ptr++;
+                t_format_end_ptr = t_format_ptr;
+            }
+            else
+            {
+                // Move past the '%' and begin processing the formatting command
+                t_format_ptr++;
                 
-				t_format_ptr++;
-				
-				if (*t_format_ptr == '@')
-					break;
-				
-                // AL-2014-11-19: [[ Bug 14059 ]] Add support for variable length zero padding
-                if (*t_format_ptr == '0')
+                // Skip any flag characters at the beginning of the format
+                while (*t_format_ptr == '-'
+                    || *t_format_ptr == '+'
+                    || *t_format_ptr == ' '
+                    || *t_format_ptr == '#'
+                    || *t_format_ptr == '0')
+                {
                     t_format_ptr++;
+                }
                 
-				if (*t_format_ptr == '*')
-				{
-					t_arg_count += FORMAT_ARG_32_BIT;
-					t_format_ptr++;
-					
-					if (*t_format_ptr == '@')
-					{
-						t_format_start_ptr = t_format_ptr;
-                        t_has_range = true;
-						break;
-					}
-				}
-				else
-				{
-					while(*t_format_ptr != '\0' && isdigit(*t_format_ptr))
-						t_format_ptr++;
-				}
-				
-				if (*t_format_ptr == '.')
-				{
-					t_format_ptr++;
-					if (*t_format_ptr == '*')
-					{
-						t_arg_count += FORMAT_ARG_32_BIT;
-						t_format_ptr++;
-					}
-					else
-					{
-						while(*t_format_ptr != '\0' && isdigit(*t_format_ptr))
-							t_format_ptr++;
-					}
-				}
-				
-				// MW-2014-10-23: [[ Bug 13757 ]] Make sure we process the VS specific 'I64d' format
-				//   as 64-bit.
-				if (strncmp(t_format_ptr, "lld", 3) == 0 ||
-					strncmp(t_format_ptr, "llu", 3) == 0 ||
-					strncmp(t_format_ptr, "lf", 2) == 0 ||
-					strncmp(t_format_ptr, "f", 1) == 0 ||
-                    strncmp(t_format_ptr, "g", 1) == 0 ||
-					strncmp(t_format_ptr, "I64d", 4) == 0)
-					t_arg_count += FORMAT_ARG_64_BIT;
-                // SN-2015-01-05: [[ Bug 14304 ]] There is no argument to be popped from the list
-                //   if we are considering a "%%" sequence
-				else if (*t_format_ptr != '%')
-					t_arg_count += FORMAT_ARG_32_BIT;
-			}
-			
-			t_format_ptr += 1;
-		}
+                // Skip any width specifier that is present
+                bool t_indirect_width = false;
+                if (*t_format_ptr == '*')
+                {
+                    // Width will be specified via an argument of type int
+                    t_int_arg_count++;
+                    t_format_ptr++;
+                    t_indirect_width = true;
+                }
+                else
+                {
+                    // Skip any digits specifying the width
+                    while (isdigit(*t_format_ptr))
+                        t_format_ptr++;
+                }
+                
+                // Skip any precision specifier that is present
+                bool t_indirect_precision = false;
+                if (*t_format_ptr == '.')
+                {
+                    t_format_ptr++;
+                    if (*t_format_ptr == '*')
+                    {
+                        // Precision will be specified via an argument of type int
+                        t_int_arg_count++;
+                        t_format_ptr++;
+                        t_indirect_precision = true;
+                    }
+                    else
+                    {
+                        // Skip any digits specifying the precision
+                        while (isdigit(*t_format_ptr))
+                            t_format_ptr++;
+                    }
+                }
+                
+                // Process any size specifiers that are present
+                size_t* t_type_count = NULL;
+                switch (*t_format_ptr)
+                {
+                    case 'h':
+                        // Char or short, depending on the number of 'h' chars
+                        t_format_ptr++;
+                        if (*t_format_ptr == 'h')
+                            t_format_ptr++;
+                        t_type_count = &t_int_arg_count;
+                        break;
+                    
+                    case 'l':
+                        // Long or long-long, depending on the number of 'l' chars
+                        t_format_ptr++;
+                        if (*t_format_ptr == 'l')
+                        {
+                            // Type is long-long
+                            t_format_ptr++;
+                            t_type_count = &t_llong_arg_count;
+                        }
+                        else
+                        {
+                            // Type is long
+                            t_type_count = &t_long_arg_count;
+                        }
+                        break;
+                        
+                    case 'j':
+                        // intmax_t or uintmax_t - these are aliases for long
+                        // long on all of our suppoerted platforms.
+                        t_format_ptr++;
+                        t_type_count = &t_llong_arg_count;
+                        break;
+                        
+                    case 'z':
+                    case 't':
+                        // size_t/ptrdiff_t - what's the underlying type?
+                        t_format_ptr++;
+                        if (sizeof(size_t) == sizeof(long long))
+                            t_type_count = &t_llong_arg_count;
+                        else if (sizeof(size_t) == sizeof(long))
+                            t_type_count = &t_long_arg_count;
+                        else /* if (sizeof(size_t) == sizeof(int)) */
+                            t_type_count = &t_int_arg_count;
+                        break;
+
+                    case 'L':
+                        // Long double
+                        t_format_ptr++;
+                        t_type_count = &t_ldouble_arg_count;
+                        break;
+                        
+    #ifdef _WIN32
+                    case 'I':
+                        // MCVC-specific integer size specifiers
+                        if (strncmp(t_format_ptr, "I64", 3))
+                        {
+                            t_type_count = &t_llong_arg_count;
+                            t_format_ptr += 3;
+                        }
+                        else if (strncmp(t_format_ptr, "I32", 3))
+                        {
+                            t_type_count = &t_long_arg_count;
+                            t_format_ptr += 3;
+                        }
+                        else
+                        {
+                            t_type_count = &t_int_arg_count;
+                            t_format_ptr += 1;
+                        }
+    #endif
+                        
+                    default:
+                        // Not a recognised size specifier. We'll resolve the
+                        // type_count pointer depending on the formatting type.
+                        t_type_count = NULL;
+                        break;
+                }
+                
+                // Process the formatting specifier
+                switch (*t_format_ptr)
+                {
+                        case 'd':
+                        case 'i':
+                        case 'u':
+                        case 'o':
+                        case 'x':
+                        case 'X':
+                        case 'c':
+                            // Integer type - default to int if not specified
+                            if (t_type_count == NULL)
+                                t_type_count = &t_int_arg_count;
+                            break;
+                        
+                        case 'f':
+                        case 'F':
+                        case 'e':
+                        case 'E':
+                        case 'g':
+                        case 'G':
+                        case 'a':
+                        case 'A':
+                            // Floating-point type - default to double if not specified
+                            if (t_type_count == NULL)
+                                t_type_count = &t_float_arg_count;
+                            break;
+                        
+                        case 's':
+                        case 'p':
+                            // Pointer types. The size is ignored.
+                            t_type_count = &t_ptr_arg_count;
+                            break;
+                        
+                        case '@':
+                            // MCValueRef formatting. The parameter is a pointer
+                            // but we're not going to skip it - we'll actually
+                            // consume it directly, so don't increase the arg
+                            // count.
+                            t_type_count = NULL;
+                            t_is_valueref = true;
+                        
+                            // Same applies to any indirect width or precision
+                            if (t_indirect_width)
+                            {
+                                t_int_arg_count--;
+                                t_has_range = true;
+                            }
+                            if (t_indirect_precision)
+                                t_int_arg_count--;
+                            break;
+                        
+                        case '%':
+                            // A literal '%' character
+                            t_type_count = NULL;
+                            break;
+                        
+                    // We explicitly don't support 'n' as a format
+                    case 'n':
+                    default:
+                        // Oh dear. Something we didn't recognise!
+                        MCAssert(false);
+                        t_success = false;
+                        break;
+                }
+                
+                // Skip the formatting specifier
+                t_format_ptr++;
+                
+                // If this wasn't a valueref format, we can pass this formatting
+                // command to the platforms string formatter.
+                if (!t_is_valueref)
+                    t_format_end_ptr = t_format_ptr;
+                
+                // Update the count
+                if (t_success && t_type_count != NULL)
+                    (*t_type_count)++;
+            }
+        }
 		
-        if (t_format_start_ptr != t_format_ptr)
+        if (t_format_start_ptr != t_format_end_ptr)
         {
             char *t_format;
-            uint32_t t_format_size;
+            size_t t_format_size;
 
-            // [[ vsnprintf ]] On Linux, the trailing '%' from '%@' placeholder causes vsprintf to fail
-            // and return -1 in MCNativeCharsFormat (and thus creates a 0-byte sized array).
-            if (*t_format_ptr == '@' && *(t_format_ptr - 1) == '%')
-                t_format_size = t_format_ptr - t_format_start_ptr - 1;
-            else
-                t_format_size = t_format_ptr - t_format_start_ptr;
+            t_format_size = t_format_end_ptr - t_format_start_ptr;
 
             /* UNCHECKED */ t_format = (char *)malloc(t_format_size + 1);
             if (t_format == nil)
@@ -984,20 +1144,59 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 				t_success = MCStringAppendNativeChars(t_buffer, t_string, t_size);
 
 			if (t_success)
-				while(t_arg_count > 0)
+            {
+                // We now need to skip the arguments in the var args list that
+                // were consumed by the native formatting function.
+                
+                while (t_int_arg_count > 0)
 				{
-					va_arg(p_args, uintptr_t);
-					t_arg_count -= 1;
+                    // Consume an integer argument
+                    (void)va_arg(p_args, int);
+                    t_int_arg_count--;
 				}
+                
+                while (t_long_arg_count > 0)
+                {
+                    // Consume a long integer argument
+                    (void)va_arg(p_args, long);
+                    t_long_arg_count--;
+                }
+                
+                while (t_llong_arg_count > 0)
+                {
+                    // Consume a long-long integer argument
+                    (void)va_arg(p_args, long long);
+                    t_llong_arg_count--;
+                }
+                
+                while (t_ptr_arg_count > 0)
+                {
+                    // Consume a pointer argument
+                    (void)va_arg(p_args, void*);
+                    t_ptr_arg_count--;
+                }
+                
+                while (t_float_arg_count > 0)
+                {
+                    // Consume a floating-point argument
+                    (void)va_arg(p_args, double);
+                    t_float_arg_count--;
+                }
+                
+                while (t_ldouble_arg_count > 0)
+                {
+                    // Consome a long-double argument
+                    (void)va_arg(p_args, long double);
+                    t_ldouble_arg_count--;
+                }
+            }
 					
             MCMemoryDeallocate(t_string);
 			free(t_format);
 		}
 		
-		if (t_success && *t_format_ptr == '@')
+		if (t_success && t_is_valueref)
 		{
-			t_format_ptr += 1;
-		
 			const MCRange *t_range;
 			if (t_has_range)
 				t_range = va_arg(p_args, const MCRange *);
@@ -1018,6 +1217,9 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 			else
 				t_success = MCStringAppendSubstring(t_buffer, *t_string, *t_range);
 		}
+        
+        // Process another chunk of the formatting string
+        t_is_valueref = false;
 	}
 
 	if (t_success)
