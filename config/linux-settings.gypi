@@ -68,6 +68,9 @@
 					'-Wall',
 					'-Wextra',
 					'-Wno-unused-parameter',	# Just contributes build noise
+					'-Wno-return-type',
+					'-Werror=uninitialized',
+					'-Werror=return-type',
 				],
 			},
 			{
@@ -76,8 +79,6 @@
 					'-w',						# Disable warnings
 					'-fpermissive',				# Be more lax with old code
 					'-Wno-return-type',
-					'-Werror=uninitialized',
-					'-Werror=return-type',
 				],
 				
 				'cflags_c':
