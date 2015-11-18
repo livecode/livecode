@@ -2659,7 +2659,7 @@ compare_t MCStringCompareTo(MCStringRef self, MCStringRef p_other, MCStringOptio
 }
 
 MC_DLLEXPORT_DEF
-bool MCStringBeginsWithR(MCStringRef self, MCStringRef p_prefix, MCStringOptions p_options, uindex_t& r_self_match_length)
+bool MCStringBeginsWith(MCStringRef self, MCStringRef p_prefix, MCStringOptions p_options, uindex_t *r_self_match_length)
 {
 	__MCAssertIsString(self);
 	__MCAssertIsString(p_prefix);
@@ -2681,7 +2681,8 @@ bool MCStringBeginsWithR(MCStringRef self, MCStringRef p_prefix, MCStringOptions
                                          p_options))
                 return false;
             
-            r_self_match_length = p_prefix -> char_count;
+            if (r_self_match_length != nil)
+                *r_self_match_length = p_prefix -> char_count;
             return true;
         }
         
@@ -2690,13 +2691,6 @@ bool MCStringBeginsWithR(MCStringRef self, MCStringRef p_prefix, MCStringOptions
     }
 
     return MCUnicodeBeginsWith(self -> chars, self -> char_count, __MCStringIsNative(self), p_prefix -> chars, p_prefix -> char_count, __MCStringIsNative(p_prefix), (MCUnicodeCompareOption)p_options, r_self_match_length);
-}
-
-MC_DLLEXPORT_DEF
-bool MCStringBeginsWith(MCStringRef self, MCStringRef p_prefix, MCStringOptions p_options)
-{
-    uindex_t t_length;
-    return MCStringBeginsWithR(self, p_prefix, p_options, t_length);
 }
 
 MC_DLLEXPORT_DEF
@@ -2767,7 +2761,7 @@ bool MCStringBeginsWithCString(MCStringRef self, const char_t *p_prefix_cstring,
 }
 
 MC_DLLEXPORT_DEF
-bool MCStringEndsWithR(MCStringRef self, MCStringRef p_suffix, MCStringOptions p_options, uindex_t& r_self_match_length)
+bool MCStringEndsWith(MCStringRef self, MCStringRef p_suffix, MCStringOptions p_options, uindex_t *r_self_match_length)
 {
 	__MCAssertIsString(self);
 	__MCAssertIsString(p_suffix);
@@ -2789,7 +2783,9 @@ bool MCStringEndsWithR(MCStringRef self, MCStringRef p_suffix, MCStringOptions p
                                        p_options))
                 return false;
 
-            r_self_match_length = p_suffix -> char_count;
+            if (r_self_match_length != nil)
+                *r_self_match_length = p_suffix -> char_count;
+            
             return true;
         }
         
@@ -2798,13 +2794,6 @@ bool MCStringEndsWithR(MCStringRef self, MCStringRef p_suffix, MCStringOptions p
     }
 
     return MCUnicodeEndsWith(self -> chars, self -> char_count, __MCStringIsNative(self), p_suffix -> chars, p_suffix -> char_count, __MCStringIsNative(p_suffix), (MCUnicodeCompareOption)p_options, r_self_match_length);
-}
-
-MC_DLLEXPORT_DEF
-bool MCStringEndsWith(MCStringRef self, MCStringRef p_suffix, MCStringOptions p_options)
-{
-    uindex_t t_length;
-    return MCStringEndsWithR(self, p_suffix, p_options, t_length);
 }
 
 MC_DLLEXPORT_DEF

@@ -2259,16 +2259,20 @@ MC_DLLEXPORT compare_t MCStringCompareTo(MCStringRef string, MCStringRef other, 
 
 // Returns true if the string begins with the prefix string, processing as
 // appropriate according to options.
-MC_DLLEXPORT bool MCStringBeginsWith(MCStringRef string, MCStringRef prefix, MCStringOptions options);
-MC_DLLEXPORT bool MCStringBeginsWithR(MCStringRef string, MCStringRef prefix, MCStringOptions options, uindex_t& r_self_match_length);
-MC_DLLEXPORT bool MCStringSharedPrefix(MCStringRef self, MCRange p_range, MCStringRef p_prefix, MCStringOptions p_options, uindex_t& r_self_match_length);
+// If 'r_string_match_length' is used, then it will contain the length of the
+// match in 'string'. This might not be the same as the length of 'prefix' due
+// to case folding and normalization concerns in unicode strings.
+MC_DLLEXPORT bool MCStringBeginsWith(MCStringRef string, MCStringRef prefix, MCStringOptions options, uindex_t *r_string_match_length = nil);
+MC_DLLEXPORT bool MCStringSharedPrefix(MCStringRef self, MCRange p_range, MCStringRef p_prefix, MCStringOptions p_options, uindex_t& r_string_match_length);
 MC_DLLEXPORT bool MCStringBeginsWithCString(MCStringRef string, const char_t *prefix_cstring, MCStringOptions options);
 
 // Returns true if the string ends with the suffix string, processing as
 // appropriate according to options.
-MC_DLLEXPORT bool MCStringEndsWith(MCStringRef string, MCStringRef suffix, MCStringOptions options);
-MC_DLLEXPORT bool MCStringEndsWithR(MCStringRef string, MCStringRef suffix, MCStringOptions options, uindex_t& r_self_match_length);
-MC_DLLEXPORT bool MCStringSharedSuffix(MCStringRef self, MCRange p_range, MCStringRef p_suffix, MCStringOptions p_options, uindex_t& r_self_match_length);
+// If 'r_string_match_length' is used, then it will contain the length of the
+// match in 'string'. This might not be the same as the length of 'suffix' due
+// to case folding and normalization concerns in unicode strings.
+MC_DLLEXPORT bool MCStringEndsWith(MCStringRef string, MCStringRef suffix, MCStringOptions options, uindex_t *r_string_match_length = nil);
+MC_DLLEXPORT bool MCStringSharedSuffix(MCStringRef self, MCRange p_range, MCStringRef p_suffix, MCStringOptions p_options, uindex_t& r_string_match_length);
 MC_DLLEXPORT bool MCStringEndsWithCString(MCStringRef string, const char_t *suffix_cstring, MCStringOptions options);
 
 // Returns true if the string contains the given needle string, processing as

@@ -1557,7 +1557,7 @@ void MCStringsEvalBeginsWith(MCExecContext& ctxt, MCStringRef p_whole, MCStringR
     
     bool t_found;
     uindex_t t_self_length;
-    t_found = MCStringBeginsWithR(p_whole, p_part, t_compare_option, t_self_length);
+    t_found = MCStringBeginsWith(p_whole, p_part, t_compare_option, &t_self_length);
     if (!t_found)
     {
         r_result = false;
@@ -1576,7 +1576,7 @@ void MCStringsEvalEndsWith(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef
     
     bool t_found;
     uindex_t t_self_length;
-    t_found = MCStringEndsWithR(p_whole, p_part, t_compare_option, t_self_length);
+    t_found = MCStringEndsWith(p_whole, p_part, t_compare_option, &t_self_length);
     if (!t_found)
     {
         r_result = false;
