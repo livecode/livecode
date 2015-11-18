@@ -383,7 +383,7 @@ on TestFiles29
    local tFolders
    put the folders into tFolders
    
-   TestAssert "Folders", first line of tFolders is ".."
+   TestAssert "Fist line of the folders is always  '..'", first line of tFolders is ".."
 end TestFiles29
 
 on TestFiles30
@@ -399,8 +399,7 @@ on TestFiles30
    
    put the folders into tFolders
    
-   TestAssert "Tests", (the number of lines in tFolders is 1) \
-         and (line 1 of tFolders is "..")
+   TestAssert "'..' is the only folder in an empty folder", the folders is ".."
    
    delete folder tNewFolder
    
