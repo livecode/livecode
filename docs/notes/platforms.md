@@ -50,6 +50,7 @@ Currently, the supported versions of Xcode are:
 
 It is also possible to set other versions of Xcode, to allow testing on a wider range of iOS simulators. For instance, on Yosemite, you can add *Xcode 5.1* in the *Mobile Support* preferences, to let you test your stack on the *iOS Simulator 7.1*.
 We currently support the following iOS Simulators:
+*5.1
 *6.1
 *7.1
 *8.2
