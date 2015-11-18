@@ -34,25 +34,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// CAVEAT!
-//
-// The currently implementation of the string value is native-only. Although
-// the main (Unicode) methods will work, the input will get coerced to native
-// encoding.
-//
-// When all the work is done to change the engine to use MCValueRef exclusively,
-// gaining full transparent Unicode *should* just be a case of reimplementing
-// the string value!
-
-// NOTE!
-//
-// As it stands the underlying (native) char buffer always has an implicit NUL
-// terminator added on. This is merely an aid to integration until all the uses
-// of the legacy 'NativeCString' method is eliminated from use in the engine
-// (which is pre-requisite for unicodification).
-
-////////////////////////////////////////////////////////////////////////////////
-
 // This method ensures there is 'count' chars of empty space starting at 'at'
 // in 'string'. It returns false if allocation fails.
 static bool __MCStringExpandAt(MCStringRef string, uindex_t at, uindex_t count);
