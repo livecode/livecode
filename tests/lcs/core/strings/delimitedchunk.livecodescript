@@ -41,6 +41,48 @@ on TestForwardSingletons
   TestAssert "uncased trailing delimiter back", item 5 of "foo,foobar,bar,barbaz,baz," is "baz"
   TestAssert "uncased trailing delimiter before", item 0 of "foo,foobar,bar,barbaz,baz," is empty
   TestAssert "uncased trailing delimiter after", item 6 of "foo,foobar,bar,barbaz,baz," is empty
+
+  set the itemDelimiter to "<>"
+
+  TestAssert "uncased multidelimiter front", item 1 of "foo<>foobar<>bar<>barbaz<>baz" is "foo"
+  TestAssert "uncased multidelimiter middle", item 3 of "foo<>foobar<>bar<>barbaz<>baz" is "bar"
+  TestAssert "uncased multidelimiter back", item 5 of "foo<>foobar<>bar<>barbaz<>baz" is "baz"
+  TestAssert "uncased multidelimiter before", item 0 of "foo<>foobar<>bar<>barbaz<>baz" is empty
+  TestAssert "uncased multidelimiter after", item 6 of "foo<>foobar<>bar<>barbaz<>baz" is empty
+
+  TestAssert "uncased trailing multidelimiter front", item 1 of "foo<>foobar<>bar<>barbaz<>baz<>" is "foo"
+  TestAssert "uncased trailing multidelimiter middle", item 3 of "foo<>foobar<>bar<>barbaz<>baz<>" is "bar"
+  TestAssert "uncased trailing multidelimiter back", item 5 of "foo<>foobar<>bar<>barbaz<>baz<>" is "baz"
+  TestAssert "uncased trailing multidelimiter before", item 0 of "foo<>foobar<>bar<>barbaz<>baz<>" is empty
+  TestAssert "uncased trailing multidelimiter after", item 6 of "foo<>foobar<>bar<>barbaz<>baz<>" is empty
+
+  set the itemDelimiter to "!!"
+
+  TestAssert "uncased symmetric multidelimiter front", item 1 of "foo!!foobar!!bar!!barbaz!!baz" is "foo"
+  TestAssert "uncased symmetric multidelimiter middle", item 3 of "foo!!foobar!!bar!!barbaz!!baz" is "bar"
+  TestAssert "uncased symmetric multidelimiter back", item 5 of "foo!!foobar!!bar!!barbaz!!baz" is "baz"
+  TestAssert "uncased symmetric multidelimiter before", item 0 of "foo!!foobar!!bar!!barbaz!!baz" is empty
+  TestAssert "uncased symmetric multidelimiter after", item 6 of "foo!!foobar!!bar!!barbaz!!baz" is empty
+
+  TestAssert "uncased trailing symmetric multidelimiter front", item 1 of "foo!!foobar!!bar!!barbaz!!baz!!" is "foo"
+  TestAssert "uncased trailing symmetric multidelimiter middle", item 3 of "foo!!foobar!!bar!!barbaz!!baz!!" is "bar"
+  TestAssert "uncased trailing symmetric multidelimiter back", item 5 of "foo!!foobar!!bar!!barbaz!!baz!!" is "baz"
+  TestAssert "uncased trailing symmetric multidelimiter before", item 0 of "foo!!foobar!!bar!!barbaz!!baz!!" is empty
+  TestAssert "uncased trailing symmetric multidelimiter after", item 6 of "foo!!foobar!!bar!!barbaz!!baz!!" is empty
+
+  set the itemDelimiter to "!!"
+
+  TestAssert "uncased overlapping symmetric multidelimiter front", item 1 of "foo!!!foobar!!!bar!!!barbaz!!!baz" is "foo"
+  TestAssert "uncased overlapping symmetric multidelimiter middle", item 3 of "foo!!!foobar!!!bar!!!barbaz!!!baz" is "!bar"
+  TestAssert "uncased overlapping symmetric multidelimiter back", item 5 of "foo!!!foobar!!!bar!!!barbaz!!!baz" is "!baz"
+  TestAssert "uncased overlapping symmetric multidelimiter before", item 0 of "foo!!!foobar!!!bar!!!barbaz!!!baz" is empty
+  TestAssert "uncased overlapping symmetric multidelimiter after", item 6 of "foo!!!foobar!!!bar!!!barbaz!!!baz" is empty
+
+  TestAssert "uncased trailing overlapping symmetric multidelimiter front", item 1 of "foo!!!foobar!!!bar!!!barbaz!!!baz!!" is "foo"
+  TestAssert "uncased trailing overlapping overlapping symmetric multidelimiter middle", item 3 of "foo!!!foobar!!!bar!!!barbaz!!!baz!!" is "!bar"
+  TestAssert "uncased trailing overlapping symmetric multidelimiter back", item 5 of "foo!!!foobar!!!bar!!!barbaz!!!baz!!" is "!baz"
+  TestAssert "uncased trailing overlapping symmetric multidelimiter before", item 0 of "foo!!!foobar!!!bar!!!barbaz!!!baz!!" is empty
+  TestAssert "uncased trailing overlapping symmetric multidelimiter after", item 6 of "foo!!!foobar!!!bar!!!barbaz!!!baz!!" is empty
 end TestForwardSingletons
 
 on TestForwardRanges
