@@ -936,16 +936,13 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
 {
 	MCS_getentries_state *t_state;
 	t_state = static_cast<MCS_getentries_state *>(p_context);
-	
-	if (!t_state -> files != p_entry -> is_folder)
-		return true;
+
+    // We never list '..', if the OS / filesystem lets us get it
+    if (MCStringIsEqualToCString(p_entry -> name, "..", kMCStringOptionCompareExact))
+        return true;
     
-#if defined(_MACOSX)
-    // Mac doesn't list the '..' folder
-    if (p_entry -> is_folder && MCListIsEmpty(t_state -> list)
-            && !MCStringIsEqualToCString(p_entry -> name, "..", kMCStringOptionCompareExact))
-        MCListAppendCString(t_state -> list, "..");
-#endif
+    if (!t_state -> files != p_entry -> is_folder)
+        return true;
 	
 	if (t_state -> details)
 	{
@@ -1012,6 +1009,11 @@ bool MCS_getentries(bool p_files, bool p_detailed, MCListRef& r_list)
 	t_state.details = p_detailed;
 	t_state.list = *t_list;
 	
+    // SN-2015-11-09: [[ Bug 16223 ]] Make sure that the list starts with ..
+    // if we ask for folders.
+    if (!p_files)
+        MCListAppendCString(*t_list, "..");
+    
 	if (!MCsystem -> ListFolderEntries(MCS_getentries_callback, (void*)&t_state))
 		return false;
     
