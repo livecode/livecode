@@ -44,7 +44,7 @@ inline
 char_t __MCNativeChar_Fold(char_t p_char)
 {
 #if defined(__WINDOWS_1252__) || defined(__ISO_8859_1__)
-	static char_t kMCStringFoldWindows1252_Mapping[256] =
+	static const char_t kMCStringFoldWindows1252_Mapping[256] =
 	{
 		0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
 		0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
@@ -65,7 +65,7 @@ char_t __MCNativeChar_Fold(char_t p_char)
 	};
 	return kMCStringFoldWindows1252_Mapping[p_char];
 #elif defined(__MACROMAN__)
-	static char_t kMCStringFoldMacRoman_Mapping[256] =
+	static const char_t kMCStringFoldMacRoman_Mapping[256] =
 	{
 		0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
 		0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
@@ -94,18 +94,20 @@ char_t __MCNativeChar_Fold(char_t p_char)
 // the char is cased (i.e. there exists c' != c s.t. fold(c') == c).
 static inline bool
 __MCNativeChar_CheckedFold(char_t p_char,
-                         char_t& r_folded_char)
+                           char_t& r_folded_char)
 {
     r_folded_char = __MCNativeChar_Fold(p_char);
     
+    // TODO: This can be improved in the future to be more 'accurate' - there
+    //   are uncased chars further up in the native encodings.
     return p_char >= 0x40;
 }
 
 // Fold 'length' characters in 'chars', placing them into 'out_chars'.
 static inline void
 __MCNativeStr_Fold(const char_t *p_chars,
-                 size_t p_length,
-                 char_t *r_out_chars)
+                   size_t p_length,
+                   char_t *r_out_chars)
 {
     for(; p_length > 0; p_length -= 1)
         *r_out_chars++ = __MCNativeChar_Fold(*p_chars++);
@@ -115,8 +117,8 @@ __MCNativeStr_Fold(const char_t *p_chars,
 // The function returns true if at least one of the chars is cased.
 static inline bool
 __MCNativeStr_CheckedFold(const char_t *p_chars,
-                        size_t p_length,
-                        char_t *r_out_char)
+                          size_t p_length,
+                          char_t *r_out_char)
 {
     bool t_needs_fold;
     t_needs_fold = false;
@@ -1052,16 +1054,16 @@ char_t MCNativeCharUppercase(char_t p_char)
     return __MCNativeChar_Uppercase(p_char);
 }
 
-void MCNativeCharsLowercase(char_t *p_chars, uindex_t p_char_count)
+void MCNativeCharsLowercase(char_t *x_chars, uindex_t p_char_count)
 {
 	for(uindex_t i = 0; i < p_char_count; i++)
-		p_chars[i] = __MCNativeChar_Lowercase(p_chars[i]);
+		x_chars[i] = __MCNativeChar_Lowercase(x_chars[i]);
 }
 
-void MCNativeCharsUppercase(char_t *p_chars, uindex_t p_char_count)
+void MCNativeCharsUppercase(char_t *x_chars, uindex_t p_char_count)
 {
 	for(uindex_t i = 0; i < p_char_count; i++)
-		p_chars[i] = __MCNativeChar_Uppercase(p_chars[i]);
+		x_chars[i] = __MCNativeChar_Uppercase(x_chars[i]);
 }
 
 bool MCNativeCharsFormatV(char_t*& r_string, uindex_t& r_size, const char *p_format, va_list p_args)
