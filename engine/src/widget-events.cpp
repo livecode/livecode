@@ -126,16 +126,17 @@ MCWidgetEventManager::MCWidgetEventManager() :
   m_click_count(0),
   m_click_button(0),
   m_mouse_buttons(0),
+  m_mouse_focus(nil),
+  m_mouse_grab(nil),
   m_keycode(0),
   m_modifiers(0),
   m_keystring(nil),
-  m_mouse_focus(nil),
-  m_mouse_grab(nil),
   m_keyboard_focus(nil),
   m_drag_target(nil),
   m_target(nil),
   m_doubleclick_time(MCdoubletime),
   m_doubleclick_distance(MCdoubledelta),
+  m_check_mouse_focus(false),
   m_touches()
 {
     
