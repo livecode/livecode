@@ -615,7 +615,7 @@ struct __MCNativeStr_Reverse
 
 // This is the maximum length of 'needle' which will be prefolded in a caseless
 // operation.
-#define __NATIVEOP_PREFOLD_LIMIT 32
+#define __NATIVEOP_PREFOLD_LIMIT 64
 
 // Returns true if the given string options require folded comparison.
 static inline bool __MCNativeOp_IsFolded(MCStringOptions p_options)
