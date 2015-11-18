@@ -36,6 +36,28 @@ constant kNativeCasedMiddle = "loWor"
 constant kNativeLesserCasedString = "ABC"
 constant kNativeGreaterCasedString = "bcd"
 
+on TestStringOptions
+  set the caseSensitive to false
+  set the formSensitive to false
+  TestAssert "case false form false - case is false", the caseSensitive is false
+  TestAssert "case false form false - form is false", the formSensitive is false
+
+  set the caseSensitive to true
+  set the formSensitive to true
+  TestAssert "case true form true - case is true", the caseSensitive is true
+  TestAssert "case true form true - form is true", the formSensitive is true
+
+  set the caseSensitive to false
+  set the formSensitive to true
+  TestAssert "case false form true - case is false", the caseSensitive is false
+  TestAssert "case false form true - form is true", the formSensitive is true
+
+  set the caseSensitive to true
+  set the formSensitive to false
+  TestAssert "case true form false - case is true", the caseSensitive is true
+  TestAssert "case true form false - form is false", the formSensitive is false
+end TestStringOptions
+
 on TestBeginsWith
   set the caseSensitive to false
   TestAssert "caseless native uncased begins with native uncased", kNativeUncasedString begins with kNativeUncasedPrefix

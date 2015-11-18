@@ -1249,6 +1249,7 @@ public:
         m_nftrailing = 6;
         m_cutoff = 35;
         m_stat = ES_NORMAL;
+        m_string_options = kMCStringOptionCompareCaseless;
     }
 
 #ifdef LEGACY_EXEC
@@ -1282,7 +1283,7 @@ public:
         m_nftrailing = 6;
         m_cutoff = 35;
         m_stat = ES_NORMAL;
-        m_numberexpected = False;
+        m_string_options = kMCStringOptionCompareCaseless;
     }
 
     ~MCExecContext()
@@ -1349,24 +1350,17 @@ public:
 
 	bool GetCaseSensitive(void) const
 	{
-        return m_casesensitive == True;
+        return (m_string_options & kMCStringOptionFoldBit) == 0;
 	}
     
     bool GetFormSensitive(void) const
     {
-        return m_formsensitive == True;
+        return (m_string_options & kMCStringOptionNormalizeBit) == 0;
     }
     
     MCStringOptions GetStringComparisonType() const
     {
-        if (GetCaseSensitive() && GetFormSensitive())
-            return kMCStringOptionCompareExact;
-        else if (GetCaseSensitive())
-            return kMCStringOptionCompareNonliteral;
-        else if (GetFormSensitive())
-            return kMCStringOptionCompareFolded;
-        else
-            return kMCStringOptionCompareCaseless;
+        return m_string_options;
     }
 
 	bool GetConvertOctals(void) const
@@ -1445,12 +1439,18 @@ public:
 
 	void SetCaseSensitive(bool p_value)
 	{
-        m_casesensitive = p_value;
+        if (p_value)
+            m_string_options &= ~(unsigned)kMCStringOptionFoldBit;
+        else
+            m_string_options |= kMCStringOptionFoldBit;
 	}
     
     void SetFormSensitive(bool p_value)
     {
-        m_formsensitive = p_value;
+        if (p_value)
+            m_string_options &= ~(unsigned)kMCStringOptionNormalizeBit;
+        else
+            m_string_options |= kMCStringOptionNormalizeBit;
     }
 
 	void SetConvertOctals(bool p_value)
@@ -1500,7 +1500,7 @@ public:
     
     void SetNumberExpected(Boolean p_value)
     {
-        m_numberexpected = p_value;
+        m_numberexpected = (bool)p_value;
     }
 
     //////////
@@ -1788,27 +1788,29 @@ private:
 
     MCHandlerlist *m_hlist;
     MCHandler *m_curhandler;
+    
+    MCStringRef m_itemdel;
+    MCStringRef m_columndel;
+    MCStringRef m_linedel;
+    MCStringRef m_rowdel;
+    
     uint2 m_nffw;
     uint2 m_nftrailing;
     uint2 m_nfforce;
     uint2 m_cutoff;
     uint2 m_line;
     uint2 m_pos;
-    Boolean m_convertoctals;
-    Boolean m_casesensitive;
-    Boolean m_formsensitive;
-    Boolean m_wholematches;
-    Boolean m_usesystemdate;
-    Boolean m_useunicode;
-    Boolean m_deletearray;
+    
+    MCStringOptions m_string_options;
+    
+    bool m_convertoctals : 1;
+    bool m_wholematches : 1;
+    bool m_usesystemdate : 1;
+    bool m_useunicode : 1;
     // SN-2014-04-08 [[ NumberExpectation ]]
     // New property allowing to specify, when evaluating a literal number,
     // that we expect a number over a valueref
-    Boolean m_numberexpected;
-    MCStringRef m_itemdel;
-    MCStringRef m_columndel;
-    MCStringRef m_linedel;
-    MCStringRef m_rowdel;
+    bool m_numberexpected : 1;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1914,14 +1914,19 @@ typedef uint32_t MCStringOptions;
 enum
 {
 	// Compare the strings codepoint for codepoint.
-	kMCStringOptionCompareExact = 0,
+	kMCStringOptionCompareExact = 0U,
 	// Compare the strings codepoint for codepoint after normalization.
-	kMCStringOptionCompareNonliteral = 1,
+	kMCStringOptionCompareNonliteral = 1U,
+    // Compare strings without normalization but with case folding
+    kMCStringOptionCompareFolded = 2U,
 	// Compare the strings codepoint for codepoint after normalization and
 	// folding.
-	kMCStringOptionCompareCaseless = 2,
-    // Compare strings without normalization but with case folding
-    kMCStringOptionCompareFolded = 3,
+	kMCStringOptionCompareCaseless = 3U,
+    
+    // If this bit is set it means the strings are normalized.
+    kMCStringOptionNormalizeBit = 1U << 0,
+    // If this bit is set it means the strings are folded.
+    kMCStringOptionFoldBit = 1U << 1,
 };
 
 /////////

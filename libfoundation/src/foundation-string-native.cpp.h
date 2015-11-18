@@ -618,7 +618,7 @@ struct __MCNativeStr_Reverse
 // Returns true if the given string options require folded comparison.
 static inline bool __MCNativeOp_IsFolded(MCStringOptions p_options)
 {
-    return p_options >= kMCStringOptionCompareCaseless;
+    return p_options >= kMCStringOptionCompareFolded;
 }
 
 // Compare the two strings for equality, taking into account the given options.
