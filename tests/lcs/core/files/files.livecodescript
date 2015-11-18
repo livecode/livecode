@@ -16,7 +16,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-on TestFiles2
+on TestFolderInListing
    
    
    set the defaultFolder to specialFolderPath("temporary")
@@ -24,27 +24,27 @@ on TestFiles2
    put "evalThereIsAFolderTest" into tTestFolder
    create folder tTestFolder
    
-   TestAssert "test", tTestFolder is among the lines of the directories
+   TestAssert merge("[[tTestFolder]] is in the folder listing"), tTestFolder is among the lines of the directories
    
    delete folder tTestFolder
    
    repeat for each line tLine in the directories
-      TestAssert "test", there is a folder tLine
-      TestAssert "test", there is not a file tLine
+      TestAssert merge("Folder [[tLine]] is a folder"), there is a folder tLine
+      TestAssert merge("Folder [[tLine]] is not a file"), there is not a file tLine
    end repeat
    
-end TestFiles2
-on TestFiles5
+end TestFolderInListing
+
+on TestBugfix12039
    // 12039
-   
    put the defaultFolder into tOldCwd
    set the defaultFolder to specialFolderPath("temporary")
    
    put "evalfilestest.txt" into tTestfile
    put "some text" into url ("binfile:" & tTestfile)
-   TestAssert "test", tTestfile is among the lines of the files
+   TestAssert merge("[[tTestFile]] is amongs the files"), tTestfile is among the lines of the files
    delete file tTestfile
-   TestAssert "test", tTestfile is not among the lines of the files
+   TestAssert merge("[[tTestFile]] is not amongst the files after deletion"), tTestfile is not among the lines of the files
    
    set the defaultFolder to tOldCwd
    
@@ -56,26 +56,24 @@ on TestFiles5
       end if
    end repeat
    
-end TestFiles5
-on TestFiles6
-   
-   
+end TestBugfix12039
+
+on TestRegistryKeys
    // set up test keys & values
    if the platform is "Win32" then
       local tTestKey = "HKEY_CURRENT_USER\Software\LiveCode\tests\ListRegistry\"
       repeat for each item tKey in "Key1,Key2,Key1\Key1"
-         TestAssert "test", setRegistry(tTestKey & tKey & "\value", "value of" && tKey)
+         TestAssert merge("set Registry key [[tTestKey]]"), setRegistry(tTestKey & tKey & "\value", "value of" && tKey)
       end repeat
       
-      TestAssert "test", listRegistry(tTestKey) is ("Key1" & return & "Key2")
-      TestAssert "test", listRegistry(tTestKey & "Key1") is "Key1"
-      TestAssert "test", listRegistry(tTestKey & "Key2") is empty
+      TestAssert merge("Key [tTestKey]] has right value"), listRegistry(tTestKey) is ("Key1" & return & "Key2")
+      TestAssert merge("Key [tTestKey]]Key1 has right value"), listRegistry(tTestKey & "Key1") is "Key1"
+      TestAssert merge("Key [tTestKey]]Key2 has right value"), listRegistry(tTestKey & "Key2") is empty
    end if
    
-end TestFiles6
-on TestFiles7
-   
-   
+end TestRegistryKeys
+
+on TestShortFilePath
    if the platform is "win32" then
       local tFolder, tShortFolder
       put the longfilepath of the defaultFolder into tFolder
@@ -88,13 +86,10 @@ on TestFiles7
       
    else
       // Doesn't run on other platforms
-      TestAssert "test", true
    end if
-   
-end TestFiles7
-on TestFiles8
-   
-   
+end TestShortFilePath
+
+on TestFileCreationWithOpenForWrite
    set the defaultFolder to specialFolderPath("temporary")
    
    local tFileName
@@ -102,19 +97,17 @@ on TestFiles8
    
    open file tFileName for write
    
-   TestAssert "test", tFileName is among the lines of the openFiles
+   TestAssert "Open file for write creates the file", tFileName is among the lines of the openFiles
    
    close file tFileName
    
-end TestFiles8
-on TestFiles11
-   
-   TestAssert "test", the processId is an integer
-   
-end TestFiles11
-on TestFiles14
-   
-   
+end TestFileCreationWithOpenForWrite
+
+on TestProcessID
+   TestAssert "processID is an integer", the processId is an integer
+end TestProcessID
+
+on TestShortFilePath2
    if the platform is "win32" then
       local tShortFolder, tLongFolder
       	
@@ -139,15 +132,13 @@ on TestFiles14
    else
       TestAssert "test", (the shortfilepath of the defaultFolder) is (the defaultFolder)
    end if
-   
-end TestFiles14
-on TestFiles15
-   
-   
+end TestShortFilePath2
+
+on TestSpecialFolderPath
    local tFolder, tHome
    put specialFolderPath("Temporary") into tFolder
-   TestAssert "test", tFolder is not empty
-   TestAssert "test", there is a folder tFolder
+   TestAssert "temporary folder is not empty", tFolder is not empty
+   TestAssert "temporary folder exists", there is a folder tFolder
    
    // windows numeric folder codes
    if the platform is "win32" then
@@ -155,10 +146,12 @@ on TestFiles15
       
       // user app data
       put specialFolderPath("0x1a") into tFolder
-      TestAssert "test", tFolder is not empty
-      TestAssert "test", there is a folder tFolder
+      TestAssert "user app data folder is not empty", tFolder is not empty
+      TestAssert "user app data folder exists", there is a folder tFolder
       	
-      TestAssert "test", (tHome is not empty) and (tFolder is not tHome) and (tFolder begins with tHome)
+      TestAssert "home folder is empty", tHome is not empty 
+      TestAssert "home folder is not user app data folder", tFolder is not tHome
+      TestAssert "user app data folder is in home folder", tFolder begins with tHome
    end if
    
    // mac 4-letter codes
@@ -167,87 +160,92 @@ on TestFiles15
       
       // user public folder
       put specialFolderPath("pubb") into tFolder
-      TestAssert "test", tFolder is not empty
-      TestAssert "test", there is a folder tFolder
+      TestAssert "user public folder is not empty", tFolder is not empty
+      TestAssert "user public folder  exists", there is a folder tFolder
       	
-      TestAssert "test", (tHome is not empty) and (tFolder is not tHome) and (tFolder begins with tHome)
+      	
+      TestAssert "home folder is empty", tHome is not empty 
+      TestAssert "home folder is not user public folder", tFolder is not tHome
+      TestAssert "user public folder is in home folder", tFolder begins with tHome
    end if
    
-end TestFiles15
-on TestFiles16
-   
-   
+end TestSpecialFolderPath
+
+
+on TestTempName
    local tPath
    put tempname() into tPath
    
-   TestAssert "test", tempname() is not tPath
-   TestAssert "test", tPath is not empty
-   TestAssert "test", there is not a file tPath
-   
-end TestFiles16
-on TestFiles17
-   
-   
+   TestAssert "tempName does not return twice the same", tempname() is not tPath
+   TestAssert "tempName does not return empty", tPath is not empty
+   TestAssert "tempName does not return an existing filename", there is not a file tPath
+end TestTempName
+
+
+on TestThereIsAFile
    set the defaultFolder to specialFolderPath("temporary")
    
    put "evalThereIsAFileTest.txt" into tTestfile
    put "some text" into url ("binfile:" & tTestfile)
    
-   TestAssert "test", there is a file tTestFile
-   TestAssert "test", not (there is not a file tTestFile)
+   TestAssert merge("after creation - there is a file [[tTestFile]]"), there is a file tTestFile
+   TestAssert merge("after creation - not(there is not a file [[tTestFile]]"), not (there is not a file tTestFile)
    
    delete file tTestfile
    
-   TestAssert "test", not (there is a file tTestFile)
-   TestAssert "test", there is not a file tTestFile
-   
-end TestFiles17
-on TestFiles18
-   
-   
+   TestAssert merge("after deletion - not (there is a file [[tTestFile]]"), not (there is a file tTestFile)
+   TestAssert merge("after deletion - there is not a file [[tTestFile]]"), there is not a file tTestFile
+end TestThereIsAFile
+
+
+on TestThereIsAFolder
    set the defaultFolder to specialFolderPath("temporary")
    
    put "evalThereIsAFolderTest" into tTestFolder
    create folder tTestFolder
    
-   TestAssert "test", there is a folder tTestFolder
-   TestAssert "test", not (there is not a folder tTestFolder)
+   TestAssert merge("after creation - there is a folder [[tTestFolder]]"), there is a folder tTestFolder
+   TestAssert merge("after creation - there is a folder[[tTestFolder]]"), not (there is not a folder tTestFolder)
    
    delete folder tTestFolder
    
-   TestAssert "test", not (there is a folder tTestFolder)
-   TestAssert "test", there is not a folder tTestFolder
+   TestAssert merge("after deletion - not (there is a folder [[tTestFolder]]"), not (there is a folder tTestFolder)
+   TestAssert merge("after deletion - not (there is a folder [[tTestFolder]]"), there is not a folder tTestFolder
+end TestThereIsAFolder
+
+
+on TestFileOpOnClosedFile
+   local tFileName
+   put the tempName into tFileName
    
-end TestFiles18
-on TestFiles20
+   open file tFileName for write
+   close file tFileName
    
-   
-   open file "Test.tmp" for write
+   write "Hello" to file tFileName
+   TestAssert "write on closed file", the result is "File is not open for write"
    
    close file "Test.tmp"
-   
-   close file "Test.tmp"
-   
-   TestAssert "test", the result is "File is not open"
+   TestAssert "close a closed file", the result is "File is not open"
    
    delete file "Test.tmp"
+end TestFileOpOnClosedFile
+
+
+on TestDeleteFile
+   local tFileName
+   put the tempName into tFileName
    
-end TestFiles20
-on TestFiles22
+   open file tFileName for write
+   close file tFileName
    
+   delete file tFileName
    
-   open file "Test.tmp" for write
+   TestAssert "Delete file", there is not a file "Test.tmp"
    
-   close file "Test.tmp"
-   
-   delete file "Test.tmp"
-   
-   TestAssert "test", there is not a file "Test.tmp"
-   
-end TestFiles22
-on TestFiles23
-   
-   
+end TestDeleteFile
+
+
+on TestLaunch
    local taskList
    
    if the platform is "Win32" then
@@ -261,7 +259,7 @@ on TestFiles23
       
       put shell("tasklist /V") into taskList
       
-      TestAssert "test", taskList contains "notepad.exe"
+      TestAssert "Notepad has been launched", taskList contains "notepad.exe"
    else if the platform is "MacOS" then
       put shell("ps -ax") into taskList
       
@@ -269,7 +267,7 @@ on TestFiles23
       
       put shell("ps -ax") into taskList
       
-      TestAssert "test", taskList contains "textEdit.app"
+      TestAssert "textEdit has been launched", taskList contains "textEdit.app"
       
       set the wholematches to false
       get lineOffset("textEdit.app", taskList)
@@ -277,11 +275,10 @@ on TestFiles23
       put word 1 of line it of taskList into tPID
       get shell ("kill" && tPID)
    end if	
-   
-end TestFiles23
-on TestFiles24
-   
-   
+end TestLaunch
+
+
+on TestLaunchWith
    set the defaultFolder to specialFolderPath("Desktop")
    
    open file "Test.txt" for write
@@ -297,7 +294,7 @@ on TestFiles24
       
       put shell("tasklist /V") into taskList
       
-      TestAssert "test", taskList contains "notepad.exe"
+      TestAssert "file Text.txt lauched with Notepad", taskList contains "notepad.exe"
       
       get shell("taskkill /IM notepad.exe")
       
@@ -308,7 +305,7 @@ on TestFiles24
       
       put shell("ps -ax") into taskList
       
-      TestAssert "test", taskList contains "textEdit"
+      TestAssert "file Text.txt launched with TextEdit", taskList contains "textEdit"
       set the wholematches to false
       get lineOffset("textEdit.app", taskList)
       local tPID
@@ -316,24 +313,25 @@ on TestFiles24
       get shell ("kill" && tPID)	
       
    end if	
-   
-end TestFiles24
-on TestFiles26
-   
-   
-   if the platform is "Android" or the platform is "iphone" then set the defaultFolder to specialFolderPath("cache")
+end TestLaunchWith
+
+
+on TestWriteInCacheFolder
+   if the platform is not "Android" and the platform is not "iphone" then 
+      exit TestWriteInCacheFolder
+   end if
+   set the defaultFolder to specialFolderPath("cache")
    open file "Test.tmp" for write
    
    close file "Test.tmp"
    
-   TestAssert "test", there is a file "Test.tmp"
+   TestAssert "file created", there is a file "Test.tmp"
    
    delete file "Test.tmp"
-   
-end TestFiles26
-on TestFiles27
-   
-   
+end TestWriteInCacheFolder
+
+
+on TestReadFromProcess
    local tOutput
    
    if the platform is "Win32" then	
@@ -360,8 +358,10 @@ on TestFiles27
       close process "cmd.exe"
    end if
    
-end TestFiles27
-on TestFiles28
+end TestReadFromProcess
+
+
+on TestRenameFile
    
    
    if the platform is "Android" or the platform is "iphone" then set the defaultFolder to specialFolderPath("cache")
@@ -372,21 +372,21 @@ on TestFiles28
    
    rename "Test.tmp" to "Test2.tmp"
    
-   TestAssert "test", there is a file "Test2.tmp" and there is not a file "Test.tmp"
+   TestAssert "File renamed", there is a file "Test2.tmp" and there is not a file "Test.tmp"
    
    delete file "Test2.tmp"
    
-end TestFiles28
+end TestRenameFile
 
-on TestFiles29
+on TestFoldersFirstLine
    // ".." must be the first folder listed
    local tFolders
    put the folders into tFolders
    
    TestAssert "Fist line of the folders is always  '..'", first line of tFolders is ".."
-end TestFiles29
+end TestFoldersFirstLine
 
-on TestFiles30
+on TestFoldersInEmptyFolder
    // Bug 16223: if no folder is listed by 'the folders', there should still
    // be ".." at the head of the list
    local tFolders, tNewFolder
@@ -403,4 +403,4 @@ on TestFiles30
    
    delete folder tNewFolder
    
-end TestFiles30
+end TestFoldersInEmptyFolder
