@@ -1166,7 +1166,7 @@ function revDocsParseElements pExtractedA, pBlocksA, pFilename
             local tCount
             put 1 into tCount
             repeat for each item tItem in tElementA["content"]
-               put word 1 to -1 of tItem into tParsedA[tKey][tCount]
+               put tolower(word 1 to -1 of tItem) into tParsedA[tKey][tCount]
                add 1 to tCount
             end repeat
             break
