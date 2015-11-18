@@ -409,12 +409,12 @@ void MCButton::SetHiliteBorder(MCExecContext& ctxt, bool setting)
 
 void MCButton::GetHiliteFill(MCExecContext& ctxt, bool& r_setting)
 {
-	r_setting = getflag(F_AUTO_ARM);
+	r_setting = getflag(F_HILITE_FILL);
 }
 
 void MCButton::SetHiliteFill(MCExecContext& ctxt, bool setting)
 {
-	if (changeflag(setting, F_AUTO_ARM))
+	if (changeflag(setting, F_HILITE_FILL))
 		Redraw();
 }
 
