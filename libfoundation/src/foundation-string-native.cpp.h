@@ -1061,7 +1061,7 @@ void MCNativeCharsLowercase(char_t *p_chars, uindex_t p_char_count)
 void MCNativeCharsUppercase(char_t *p_chars, uindex_t p_char_count)
 {
 	for(uindex_t i = 0; i < p_char_count; i++)
-		p_chars[i] = __MCNativeChar_Lowercase(p_chars[i]);
+		p_chars[i] = __MCNativeChar_Uppercase(p_chars[i]);
 }
 
 bool MCNativeCharsFormatV(char_t*& r_string, uindex_t& r_size, const char *p_format, va_list p_args)

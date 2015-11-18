@@ -58,6 +58,20 @@ on TestStringOptions
   TestAssert "case true form false - form is false", the formSensitive is false
 end TestStringOptions
 
+on TestToUpper
+  set the caseSensitive to true
+  TestAssert "upper of lowercase", toUpper("xy") is "XY"
+  TestAssert "upper of uppercase", toUpper("XY") is "XY"
+  TestAssert "upper of mixedcase", toUpper("xY") is "XY"
+end TestToUpper
+
+on TestToLower
+  set the caseSensitive to true
+  TestAssert "lower of lowercase", toLower("xy") is "xy"
+  TestAssert "lower of uppercase", toLower("XY") is "xy"
+  TestAssert "lower of mixedcase", toLower("xY") is "xy"
+end TestToLower
+
 on TestBeginsWith
   set the caseSensitive to false
   TestAssert "caseless native uncased begins with native uncased", kNativeUncasedString begins with kNativeUncasedPrefix
