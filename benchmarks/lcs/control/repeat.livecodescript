@@ -17,16 +17,16 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on BenchmarkRepeatCount
-  BenchmarkStartTiming
-  repeat 100000000 times
-  end repeat
-  BenchmarkEndTiming
+   BenchmarkStartTiming
+   repeat 100000000 times
+   end repeat
+   BenchmarkStopTiming
 end BenchmarkRepeatCount
 
 on BenchmarkRepeatWith
-  BenchmarkStartTiming
-  repeat with i = 1 to 100000000
-  end repeat
-  BenchmarkEndTiming
+   BenchmarkStartTiming
+   repeat with i = 1 to 100000000
+   end repeat
+   BenchmarkStopTiming
 end BenchmarkRepeatWith
 

@@ -30,9 +30,9 @@ on BenchmarkStartTiming
 	put the millisecs into sBenchmarkStartTime
 end BenchmarkStartTiming
 
-on BenchmarkEndTiming
+on BenchmarkStopTiming
 	write (the millisecs - sBenchmarkStartTime) to stdout
-end BenchmarkEndTiming
+end BenchmarkStopTiming
 
 on errorDialog executionError, parseError
    write executionError & return to stderr
