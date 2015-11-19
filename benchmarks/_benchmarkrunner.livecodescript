@@ -41,7 +41,7 @@ private function getCommandLineInfo
    -- ".livecodescript" file as the command for running the test
    -- runner, and everything after it as test runner arguments
    local tCommandArguments
-   if the version contains "6.7" then
+   if the version begins with "6.7" then
       put $0 into tSelfCommand[1]
       if the environment is "command line" then
          put "-ui" into tCommandArguments[1]
