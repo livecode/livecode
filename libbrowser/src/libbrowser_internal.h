@@ -79,7 +79,7 @@ struct MCBrowserFactoryMap
 	MCBrowserFactoryCreationFunc constructor;
 };
 
-extern MCBrowserFactoryMap s_factory_list[];
+extern MCBrowserFactoryMap* s_factory_list;
 
 ////////////////////////////////////////////////////////////////////////////////
 

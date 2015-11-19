@@ -588,7 +588,7 @@ void MCMacOSXPrinter::SetProperties(bool p_include_output)
 
 	PDEBUG(stderr, "SetProperties: PMGetDuplex\n");
 	PMDuplexMode t_pm_duplex;
-	if (PMGetDuplex != NULL && PMGetDuplex(m_settings, &t_pm_duplex) == noErr)
+	if (PMGetDuplex(m_settings, &t_pm_duplex) == noErr)
 		t_job_duplex = t_pm_duplex == kPMDuplexNone ? PRINTER_DUPLEX_MODE_SIMPLEX : (t_pm_duplex == kPMDuplexNoTumble ? PRINTER_DUPLEX_MODE_LONG_EDGE : PRINTER_DUPLEX_MODE_SHORT_EDGE);
 	else
 		t_job_duplex = PRINTER_DEFAULT_JOB_DUPLEX;
@@ -922,6 +922,7 @@ void MCMacOSXPrinter::ResetSession(void)
 	PMPrintSession t_session;
 	PMCreateSession(&t_session);
     PMSessionSetCurrentPMPrinter(t_session, m_printer);
+
 	PMSessionValidatePrintSettings(t_session, m_settings, kPMDontWantBoolean);
 	PMSessionValidatePageFormat(t_session, m_page_format, kPMDontWantBoolean);
 	

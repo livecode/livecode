@@ -27,11 +27,13 @@
 
 bool MCAndroidWebViewBrowserFactoryCreate(MCBrowserFactoryRef &r_factory);
 
-MCBrowserFactoryMap s_factory_list[] =
+MCBrowserFactoryMap kMCBrowserFactoryMap[] =
 {
 	{ "androidwebview", nil, MCAndroidWebViewBrowserFactoryCreate },
 	{ nil, nil, nil },
 };
+
+MCBrowserFactoryMap* s_factory_list = kMCBrowserFactoryMap;
 
 ////////////////////////////////////////////////////////////////////////////////
 
