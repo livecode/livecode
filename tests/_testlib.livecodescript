@@ -41,8 +41,8 @@ private function _TestValidateReason pReason
       throw "Bad test directive reason '" & line 1 of pReason & "...': multiple lines"
    end if
    
-   if pDescription contains "#" then
-      throw "Bad test directive reason '" & pDescription & "': contains '#'"
+   if pReason contains "#" then
+      throw "Bad test directive reason '" & pReason & "': contains '#'"
    end if
    
    return line 1 of pReason
@@ -177,9 +177,9 @@ on TestLoadExtension pName
    
    if tExtensionFile is not empty then
       if there is a folder (tExtensionFolder & slash & "resources") then
-         load extension from file tExtensionFile with resource path (tExtensionFolder & slash & "resources")
+         do "load extension from file tExtensionFile with resource path (tExtensionFolder & slash & " & quote & "resources" & quote
       else
-         load extension from file tExtensionFile
+         do "load extension from file tExtensionFile"
       end if
       
       put the result into tError
