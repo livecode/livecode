@@ -184,7 +184,7 @@ __MCSFileGetContents (MCStringRef p_native_path,
 		uint32_t t_bytes_request;
 		DWORD t_bytes_read;
 
-		t_bytes_request = MCMax ((t_file_size - t_total_read), UINT32_MAX);
+		t_bytes_request = MCMin ((t_file_size - t_total_read), UINT32_MAX);
 
 		if (!ReadFile (t_handle, t_buffer,
 		               t_bytes_request, &t_bytes_read, NULL))
