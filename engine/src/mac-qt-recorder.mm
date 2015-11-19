@@ -44,6 +44,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef FEATURE_QUICKTIME
+
 class MCQTSoundRecorder;
 
 @interface com_runrev_livecode_MCQTSoundRecorderObserver: NSObject
@@ -859,12 +861,21 @@ double MCQTSoundRecorder::GetLoudness()
     
     MCMemoryDeleteArray(t_levels);
     
-    return MCU_min(t_loudness * 100, 100);
+    return MCU_min(t_loudness * 100.0, 100.0);
 }
 
 MCQTSoundRecorder *MCQTSoundRecorderCreate(void)
 {
     return new MCQTSoundRecorder;
 }
+
+#else   /* ifdef FEATURE_QUICKTIME */
+
+class MCQTSoundRecorder* MCQTSoundRecorderCreate()
+{
+    return NULL;
+}
+
+#endif
 
 ////////////////////////////////////////////////////////

@@ -1,0 +1,39 @@
+Name: compositorType
+
+Type: property
+
+Syntax: set the compositorType of <stack> to <compositorType> 
+
+Summary: Specifies which compositor is used when rendering a stack.
+
+Associations: stack
+
+Introduced: 5.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,mobile
+
+Example:
+set the compositorType of this stack to "software"
+
+Example:
+put "none" into tCompositorType
+set the compositorType of this stack to tCompositorType
+
+Parameters:
+Stack: The name or ID of the stack.
+compositorType (enum): A string containing the type of compositor to use. One of the following:
+- "empty" (or 'none'): Do not use accelerated rendering (the default).
+- "software": Use the built-in rendering engine to composite.
+- "coregraphics": Use CoreGraphics to composite (Mac / iOS only) (Recommended for Mac OS).
+- "opengl": Use OpenGL to composite (iOS only).
+
+Description:
+Use the compositorType property to specify which compositor is used when rendering your stack. Setting this property puts LiveCode into accelerated rendering mode which offers performance benefits, particularly when animating.
+
+>*Note:* Set the compositor properties in a preOpenStack or preOpenCard handler - they are not persistent (not saved into the stackfile).
+
+References: compositorCacheLimit (property), compositorTileSize (property), layerMode (property)
+
+Tags: windowing

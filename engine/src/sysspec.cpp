@@ -74,6 +74,7 @@ extern MCSystemInterface *MCDesktopCreateWindowsSystem(void);
 extern MCSystemInterface *MCDesktopCreateLinuxSystem(void);
 extern MCSystemInterface *MCMobileCreateIPhoneSystem(void);
 extern MCSystemInterface *MCMobileCreateAndroidSystem(void);
+extern MCSystemInterface *MCDesktopCreateEmscriptenSystem(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -241,7 +242,7 @@ void MCS_common_init(void)
 
 	// MW-2013-10-08: [[ Bug 11259 ]] We use our own tables on linux since
 	//   we use a fixed locale which isn't available on all systems.
-#if !defined(_LINUX_SERVER) && !defined(_LINUX_DESKTOP) && !defined(_WINDOWS_DESKTOP) && !defined(_WINDOWS_SERVER)
+#if !defined(_LINUX_SERVER) && !defined(_LINUX_DESKTOP) && !defined(_WINDOWS_DESKTOP) && !defined(_WINDOWS_SERVER) && !defined(__EMSCRIPTEN__)
 	MCuppercasingtable = new uint1[256];
 	for(uint4 i = 0; i < 256; ++i)
 		MCuppercasingtable[i] = (uint1)toupper((uint1)i);
@@ -277,6 +278,8 @@ void MCS_init(void)
     MCsystem = MCMobileCreateIPhoneSystem();
 #elif defined (_ANDROID_MOBILE)
     MCsystem = MCMobileCreateAndroidSystem();
+#elif defined (__EMSCRIPTEN__)
+    MCsystem = MCDesktopCreateEmscriptenSystem();
 #else
 #error Unknown server platform.
 #endif
@@ -1014,7 +1017,7 @@ bool MCS_getentries(bool p_files, bool p_detailed, MCListRef& r_list)
     if (!p_files)
         MCListAppendCString(*t_list, "..");
     
-	if (!MCsystem -> ListFolderEntries(MCS_getentries_callback, (void*)&t_state))
+	if (!MCsystem -> ListFolderEntries(nil, MCS_getentries_callback, (void*)&t_state))
 		return false;
     
 	if (!MCListCopy(*t_list, r_list))

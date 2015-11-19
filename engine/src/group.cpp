@@ -45,6 +45,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "font.h"
 #include "redraw.h"
 #include "objectstream.h"
+#include "widget.h"
 
 #include "mctheme.h"
 #include "globals.h"
@@ -240,27 +241,26 @@ const char *MCGroup::gettypestring()
 	return MCgroupstring;
 }
 
-bool MCGroup::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_visitor)
+bool MCGroup::visit_self(MCObjectVisitor* p_visitor)
+{
+	return p_visitor -> OnGroup(this);
+}
+
+bool MCGroup::visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor* p_visitor)
 {
 	bool t_continue;
 	t_continue = true;
-
-	if (p_style == VISIT_STYLE_DEPTH_LAST)
-		t_continue = p_visitor -> OnGroup(this);
 
 	if (t_continue && controls != NULL)
 	{
 		MCControl *cptr = controls;
 		do
 		{
-			t_continue = cptr -> visit(p_style, p_part, p_visitor);
+			t_continue = cptr -> visit(p_options, p_part, p_visitor);
 			cptr = cptr->next();
 		}
 		while(t_continue && cptr != controls);
 	}
-
-	if (t_continue && p_style == VISIT_STYLE_DEPTH_FIRST)
-		t_continue = p_visitor -> OnGroup(this);
 
 	return t_continue;
 }
@@ -336,7 +336,7 @@ void MCGroup::kfocus()
 
 Boolean MCGroup::kfocusnext(Boolean top)
 {
-	if (state & CS_KFOCUSED && flags & F_TAB_GROUP_BEHAVIOR
+	if ((state & CS_KFOCUSED && flags & F_TAB_GROUP_BEHAVIOR)
 	        || !(flags & F_TRAVERSAL_ON) || !(flags & F_VISIBLE || MCshowinvisibles))
 		return False;
 	if (newkfocused != NULL)
@@ -393,7 +393,7 @@ Boolean MCGroup::kfocusnext(Boolean top)
 
 Boolean MCGroup::kfocusprev(Boolean bottom)
 {
-	if (state & CS_KFOCUSED && flags & F_TAB_GROUP_BEHAVIOR
+	if ((state & CS_KFOCUSED && flags & F_TAB_GROUP_BEHAVIOR)
 	        || !(flags & F_TRAVERSAL_ON) || !(flags & F_VISIBLE || MCshowinvisibles))
 		return False;
 	MCControl *startptr = NULL;
@@ -535,7 +535,7 @@ void MCGroup::mdrag(void)
 Boolean MCGroup::mfocus(int2 x, int2 y)
 {
 	if (!(flags & F_VISIBLE || MCshowinvisibles)
-	        || flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE)
+	    || (flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE))
 		return False;
 	if (state & CS_MENU_ATTACHED)
 		return MCObject::mfocus(x, y);
@@ -803,8 +803,9 @@ void MCGroup::setrect(const MCRectangle &nrect)
 	t_size_changed = nrect . width != rect . width || nrect . height != rect . height;
 
 	if (controls != NULL)
-		if (state & CS_SIZE || rect.x + rect.width == nrect.x + nrect.width
-		        && rect.y + rect.height == nrect.y + nrect.height)
+		if (state & CS_SIZE ||
+		    (rect.x + rect.width == nrect.x + nrect.width &&
+		     rect.y + rect.height == nrect.y + nrect.height))
 		{
 			if (flags & F_HSCROLLBAR || flags & F_VSCROLLBAR)
 			{
@@ -861,7 +862,7 @@ void MCGroup::setrect(const MCRectangle &nrect)
 }
 
 #ifdef LEGACY_EXEC
-Exec_stat MCGroup::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+Exec_stat MCGroup::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective, bool recursive)
 {
 	switch (which)
 	{
@@ -1046,7 +1047,7 @@ Exec_stat MCGroup::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
         break;
 #endif
 	default:
-		return MCControl::getprop_legacy(parid, which, ep, effective);
+		return MCControl::getprop_legacy(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }
@@ -1652,7 +1653,7 @@ MCControl *MCGroup::findchildwithid(Chunk_term type, uint4 p_id)
 MCControl *MCGroup::findid(Chunk_term type, uint4 inid, Boolean alt)
 {
 	if ((type == CT_GROUP || type == CT_LAYER)
-	        && (inid == obj_id || alt && inid == altid))
+	    && (inid == obj_id || (alt && inid == altid)))
 		return this;
 
 	if (controls != NULL && (alt || type == CT_IMAGE))
@@ -2627,10 +2628,12 @@ void MCGroup::computecrect()
 		do
 		{
 			if (cptr->getflag(F_VISIBLE))
+			{
 				if (minrect.width == 0)
 					minrect = cptr->getrect();
 				else
 					minrect = MCU_union_rect(cptr->getrect(), minrect);
+			}
 			cptr = cptr->next();
 		}
 		while (cptr != controls);
@@ -3098,10 +3101,12 @@ void MCGroup::drawbord(MCDC *dc, const MCRectangle &dirty)
 		else
 		{
 			if (flags & F_SHOW_BORDER)
+			{
 				if (flags & F_3D)
 					draw3d(dc, trect, ETCH_SUNKEN, borderwidth);
 				else
 					drawborder(dc, trect, borderwidth);
+			}
 		}
 	}
 }
@@ -3143,10 +3148,10 @@ IO_stat MCGroup::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 	if (p_remaining > 0)
 	{
 		uint4 t_flags, t_length, t_header_length;
-		t_stat = p_stream . ReadTag(t_flags, t_length, t_header_length);
+		t_stat = checkloadstat(p_stream . ReadTag(t_flags, t_length, t_header_length));
         
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . Mark();
+			t_stat = checkloadstat(p_stream . Mark());
         
         // MW-2014-06-20: [[ ClipsToRect ]] ClipsToRect doesn't require any storage
         //   as if the flag is present its true, otherwise false.
@@ -3154,7 +3159,7 @@ IO_stat MCGroup::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
             m_clips_to_rect = true;
         
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . Skip(t_length);
+			t_stat = checkloadstat(p_stream . Skip(t_length));
         
 		if (t_stat == IO_NORMAL)
 			p_remaining -= t_length + t_header_length;
@@ -3265,7 +3270,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 
 	// MW-2011-08-10: [[ Groups ]] Make sure the group has F_GROUP_SHARED set
 	//   if it is a background.
@@ -3283,25 +3288,25 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 		if (version < 7000)
 		{
 			if ((stat = IO_read_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		}
 		else
 		{
 			if ((stat = IO_read_stringref_new(label, stream, true)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		}
 	}
 	
 	if (flags & F_MARGINS)
 	{
 		if ((stat = IO_read_int2(&leftmargin, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if ((stat = IO_read_int2(&rightmargin, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if ((stat = IO_read_int2(&topmargin, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if ((stat = IO_read_int2(&bottommargin, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (leftmargin == defaultmargin
 		        && leftmargin == rightmargin
 		        && leftmargin == topmargin
@@ -3311,21 +3316,21 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 	if (flags & F_BOUNDING_RECT)
 	{
 		if ((stat = IO_read_int2(&minrect.x, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if ((stat = IO_read_int2(&minrect.y, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if ((stat = IO_read_uint2(&minrect.width, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if ((stat = IO_read_uint2(&minrect.height, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	}
 	if ((stat = loadpropsets(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	while (True)
 	{
 		uint1 type;
 		if ((stat = IO_read_uint1(&type, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		switch (type)
 		{
 		case OT_GROUP:
@@ -3335,7 +3340,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 				if ((stat = newgroup->load(stream, version)) != IO_NORMAL)
 				{
 					delete newgroup;
-					return stat;
+					return checkloadstat(stat);
 				}
 				MCControl *newcontrol = newgroup;
 				
@@ -3354,7 +3359,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 				if ((stat = newbutton->load(stream, version)) != IO_NORMAL)
 				{
 					delete newbutton;
-					return stat;
+					return checkloadstat(stat);
 				}
 				MCControl *cptr = (MCControl *)newbutton;
 				cptr->appendto(controls);
@@ -3367,7 +3372,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 				if ((stat = newfield->load(stream, version)) != IO_NORMAL)
 				{
 					delete newfield;
-					return stat;
+					return checkloadstat(stat);
 				}
 				newfield->appendto(controls);
 			}
@@ -3379,7 +3384,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 				if ((stat = newimage->load(stream, version)) != IO_NORMAL)
 				{
 					delete newimage;
-					return stat;
+					return checkloadstat(stat);
 				}
 				MCControl *cptr = (MCControl *)newimage;
 				cptr->appendto(controls);
@@ -3392,7 +3397,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 				if ((stat = newscrollbar->load(stream, version)) != IO_NORMAL)
 				{
 					delete newscrollbar;
-					return stat;
+					return checkloadstat(stat);
 				}
 				if (flags & F_VSCROLLBAR && vscrollbar == NULL)
 				{
@@ -3418,7 +3423,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 				if ((stat = newgraphic->load(stream, version)) != IO_NORMAL)
 				{
 					delete newgraphic;
-					return stat;
+					return checkloadstat(stat);
 				}
 				newgraphic->appendto(controls);
 			}
@@ -3430,11 +3435,23 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 				if ((stat = neweps->load(stream, version)) != IO_NORMAL)
 				{
 					delete neweps;
-					return stat;
+					return checkloadstat(stat);
 				}
 				neweps->appendto(controls);
 			}
-			break;
+        break;
+        case OT_WIDGET:
+        {
+            MCWidget *neweps = new MCWidget;
+            neweps->setparent(this);
+            if ((stat = neweps->load(stream, version)) != IO_NORMAL)
+            {
+                delete neweps;
+                return checkloadstat(stat);
+            }
+            neweps->appendto(controls);
+        }
+        break;
 		case OT_MAGNIFY:
 			{
 				MCMagnify *newmag = new MCMagnify;
@@ -3442,7 +3459,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 				if ((stat = newmag->load(stream, version)) != IO_NORMAL)
 				{
 					delete newmag;
-					return stat;
+					return checkloadstat(stat);
 				}
 				newmag->appendto(controls);
 			}
@@ -3454,7 +3471,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 				if ((stat = newcolors->load(stream, version)) != IO_NORMAL)
 				{
 					delete newcolors;
-					return stat;
+					return checkloadstat(stat);
 				}
 				newcolors->appendto(controls);
 			}
@@ -3466,7 +3483,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 				if ((stat = newplayer->load(stream, version)) != IO_NORMAL)
 				{
 					delete newplayer;
-					return stat;
+					return checkloadstat(stat);
 				}
 				newplayer->appendto(controls);
 			}
@@ -3567,7 +3584,7 @@ bool MCGroup::resolveparentscript(void)
 MCObject *MCGroup::hittest(int32_t x, int32_t y)
 {
 	if (!(flags & F_VISIBLE || MCshowinvisibles)
-		|| flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE)
+	    || (flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE))
 		return nil;
 	
 	// If not inside the groups bounds, do nothing.
@@ -3640,8 +3657,8 @@ void MCGroup::relayercontrol(MCControl *p_source, MCControl *p_target)
 	if (p_source == p_target)
 		return;
 
-	if (p_source -> next() != controls && p_source -> next() == p_target ||
-		p_target == nil && p_source -> next() == controls)
+	if ((p_source -> next() != controls && p_source -> next() == p_target) ||
+	    (p_target == nil && p_source -> next() == controls))
 		return;
 
 	p_source -> remove(controls);

@@ -211,58 +211,86 @@
 				'fetch-mac',
 				'fetch-win',
 				'fetch-ios',
+				'fetch-emscripten',
 			],
 		},
 		{
 			'target_name': 'fetch',
 			'type': 'none',
 			
+			'toolsets': ['host','target'],
+			
+			'variables':
+			{
+				'conditions':
+				[
+					[
+						'_toolset == "host"',
+						{
+							'fetch_os': '<(host_os)',
+						},
+						{
+							'fetch_os': '<(OS)',
+						},
+					],
+				],
+			},
+			
 			'conditions':
 			[
 				[
-					'OS == "android"',
+					'fetch_os == "android"',
 					{
 						'dependencies':
 						[
-							'fetch-android',
+							'fetch-android#target',
 						],
 					},
 				],
 				[
-					'OS == "linux"',
+					'fetch_os == "linux"',
 					{
 						'dependencies':
 						[
-							'fetch-linux',
+							'fetch-linux#target',
 						],
 					},
 				],
 				[
-					'OS == "mac"',
+					'fetch_os == "mac"',
 					{
 						'dependencies':
 						[
-							'fetch-mac',
+							'fetch-mac#target',
 						],
 					},
 				],
 				[
-					'OS == "win"',
+					'fetch_os == "win"',
 					{
 						'dependencies':
 						[
-							'fetch-win',
+							'fetch-win#target',
 						],
 					},
 				],
 				[
-					'OS == "ios"',
+					'fetch_os == "ios"',
 					{
 						'dependencies':
 						[
-							'fetch-ios',
+							'fetch-ios#target',
 						],
 					},
+				],
+				[
+					'fetch_os == "emscripten"',
+					{
+						'dependencies':
+						[
+							'fetch-emscripten#target',
+						],
+					}
 				],
 			],
 		},
@@ -353,7 +381,7 @@
 		{
 			'target_name': 'fetch-win',
 			'type': 'none',
-			
+
 			'actions':
 			[
 				{
@@ -383,7 +411,7 @@
 		{
 			'target_name': 'fetch-ios',
 			'type': 'none',
-			
+
 			'actions':
 			[
 				{
@@ -404,6 +432,34 @@
 					[
 						'./fetch-libraries.sh',
 						'ios',
+					],
+				},
+			],
+		},
+		{
+			'target_name': 'fetch-emscripten',
+			'type': 'none',
+
+			'actions':
+			[
+				{
+					'action_name': 'fetch',
+					'message': 'Fetching prebuilt libraries for Emscripten',
+
+					'inputs':
+					[
+						'fetch-libraries.sh',
+					],
+
+					'outputs':
+					[
+						'lib/emscripten/js',
+					],
+
+					'action':
+					[
+						'./fetch-libraries.sh',
+						'emscripten',
 					],
 				},
 			],

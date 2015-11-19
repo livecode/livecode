@@ -64,6 +64,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 #include "resolution.h"
+#include "libscript/script.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -97,6 +98,8 @@ __attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
 __attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {0};
 #elif defined(TARGET_PLATFORM_MOBILE)
+MCCapsuleInfo MCcapsule = {0};
+#elif defined(__EMSCRIPTEN__)
 MCCapsuleInfo MCcapsule = {0};
 #endif
 
@@ -307,6 +310,47 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 		}
 	}
 	break;
+            
+    case kMCCapsuleSectionTypeModule:
+    {
+        char *t_module_data;
+        t_module_data = new char[p_length];
+        if (IO_read(t_module_data, p_length, p_stream) != IO_NORMAL)
+        {
+            MCresult -> sets("failed to read module");
+            return false;
+        }
+    
+        bool t_success;
+        t_success = true;
+        
+        MCStreamRef t_stream;
+        t_stream = nil;
+        if (t_success)
+            t_success = MCMemoryInputStreamCreate(t_module_data, p_length, t_stream);
+        
+        MCScriptModuleRef t_module;
+        if (t_success)
+            t_success = MCScriptCreateModuleFromStream(t_stream, t_module);
+        
+        if (t_stream != nil)
+            MCValueRelease(t_stream);
+        free(t_module_data);
+        
+        if (!t_success)
+        {
+            MCresult -> sets("failed to load module");
+            return false;
+        }
+        
+        extern bool MCEngineAddExtensionFromModule(MCScriptModuleRef module);
+        if (!MCEngineAddExtensionFromModule(t_module))
+        {
+            MCScriptReleaseModule(t_module);
+            return false;
+        }
+    }
+    break;
 
 	case kMCCapsuleSectionTypeDigest:
 		uint8_t t_read_digest[16];
@@ -368,7 +412,7 @@ IO_stat MCDispatch::startup(void)
         // temporary fix until ranged formats for stringrefs is working
         MCAutoStringRef t_dir;
         /* UNCHECKED */ MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), &t_dir);
-        /* UNCHECKED */ MCStringFormat(&t_path, "%@/iphone_test.livecode", *t_dir);
+        /* UNCHECKED */ MCStringFormat(&t_path, "%@/iphone_test.rev", *t_dir);
 
         t_stream = MCS_open(*t_path, kMCOpenFileModeRead, False, False, 0);
 #endif
@@ -475,6 +519,86 @@ IO_stat MCDispatch::startup(void)
 	
 	// MW-2010-12-18: Startup message / stack init now down in 'main'
     
+	return IO_NORMAL;
+}
+
+#elif defined(__EMSCRIPTEN__)
+
+#include "stacksecurity.h"
+
+#define kMCEmscriptenBootStackFilename "/boot/standalone/__boot.livecode"
+#define kMCEmscriptenStartupStackFilename "/boot/__startup.livecode"
+
+IO_stat
+MCDispatch::startup()
+{
+	/* The standalone data should already have been unpacked by now */
+
+	/* Load & run the startup script in a temporary stack */
+	MCStack *t_startup_stack = nil;
+	if (IO_NORMAL != MCdispatcher->loadfile(MCSTR(kMCEmscriptenStartupStackFilename),
+	                                        t_startup_stack))
+	{
+		MCresult->sets("failed to load startup stack");
+		return IO_ERROR;
+	}
+
+	/* Check the stack */
+	if (!MCStackSecurityEmscriptenStartupCheck(t_startup_stack))
+	{
+		MCresult->sets("startup stack checks failed");
+		return IO_ERROR;
+	}
+
+	MCdefaultstackptr = MCstaticdefaultstackptr = t_startup_stack;
+
+	/* Attempt to run the startup handler */
+	if (ES_NORMAL != t_startup_stack->message(MCM_start_up, nil, false, true))
+	{
+		/* Handler couldn't be run at all, or threw an error */
+		MCresult->sets("failed to run startup stack");
+	}
+	/* The startup stack *should* set the result on failure */
+	{
+		MCExecContext ctxt;
+		MCAutoValueRef t_result;
+		MCresult->eval(ctxt, &t_result);
+		if (!MCValueIsEmpty(*t_result))
+		{
+			return IO_ERROR;
+		}
+	}
+
+	/* Delete the startup stack */
+	MCdispatcher->destroystack(t_startup_stack, true);
+
+	/* Load the initial stack */
+	MCStack *t_stack;
+	if (IO_NORMAL != MCdispatcher->loadfile(MCSTR(kMCEmscriptenBootStackFilename),
+	                                        t_stack))
+	{
+		MCresult->sets("failed to read initial stackfile");
+		return IO_ERROR;
+	}
+
+	MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
+
+	/* Complete startup tasks and send the startup message */
+
+	MCModeResetCursors();
+	MCImage::init();
+
+	MCallowinterrupts = false;
+
+	MCdefaultstackptr->extraopen(false);
+
+	send_startup_message();
+
+	if (!MCquit)
+	{
+		MCdefaultstackptr->open();
+	}
+
 	return IO_NORMAL;
 }
 

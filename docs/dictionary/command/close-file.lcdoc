@@ -1,0 +1,40 @@
+Name: close file
+
+Type: command
+
+Syntax: close file <filePath> 
+
+Summary: Closes a <file> that was opened with the <open file> <command>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Security: disk
+
+Example:
+close file "/Desktop/Temp"
+
+Example:
+close file line 1 of the openFiles
+
+Example:
+open file (specialFolderPath("desktop") & "/text.txt")
+write "This is a test" to file (specialFolderPath("desktop") & "/text.txt")
+close file (specialFolderPath("desktop") & "/text.txt")
+
+Parameters:
+filePath: The name and location of the file you want to close. If you specify a name but not a location, LiveCode assumes the file is in the defaultFolder.
+
+The result: If you try to close a file that is not already open, the result function is set to.
+
+Description:
+Use the <close file> <command> to release a <file> after reading from it or writing to it. (A <file> that is open for writing can't be used by any other application until you've closed the <file>.)
+
+Any files you have opened are closed automatically when you quit the application.
+
+References: serialControlString (property), file (keyword), modem: (keyword), printer: (keyword), COMn: (keyword), LPT1: (keyword), write to file (command), close driver (command), open file (command), close (command), seek (command), read from file (command), delete file (command), openFiles (function), sysError (function), command (glossary)
+
+Tags: file system

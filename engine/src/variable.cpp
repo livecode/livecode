@@ -855,7 +855,7 @@ bool MCVariable::remove(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_lengt
 		}
 	}
     
-	if (value . type != kMCValueTypeCodeArray)
+	if (value . type != kMCExecValueTypeArrayRef)
 		return true;
     
 	if (!converttomutablearray())

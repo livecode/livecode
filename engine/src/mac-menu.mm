@@ -1013,12 +1013,12 @@ static void MCPlatformStopUsingMenuAsMenubar(MCPlatformMenuRef p_menu)
 
 void MCPlatformShowMenubar(void)
 {
-	ShowMenuBar();
+    [NSMenu setMenuBarVisible:YES];
 }
 
 void MCPlatformHideMenubar(void)
 {
-	HideMenuBar();
+    [NSMenu setMenuBarVisible:NO];
 }
 
 void MCPlatformSetMenubar(MCPlatformMenuRef p_menu)

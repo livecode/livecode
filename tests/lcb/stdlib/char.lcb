@@ -1,0 +1,444 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.char.tests
+
+use com.livecode.char
+use com.livecode.__INTERNAL._testlib
+
+public handler TestCount()
+	test "count" when the number of chars in "xxx" is 3
+end handler
+
+----------------------------------------------------------------
+
+handler TestPutChar_Zero()
+	variable tString
+	put "xxx" into tString
+	put "." into char 0 of tString
+end handler
+handler TestPutChar_Before()
+	variable tString
+	put "xxx" into tString
+	put "." into char -4 of tString
+end handler
+handler TestPutChar_After()
+	variable tString
+	put "xxx" into tString
+	put "." into char 4 of tString
+end handler
+public handler TestPutChar()
+	variable tString
+	put "xxx" into tString
+	put "." into char 2 of tString
+	test "put char (+ve)" when tString is "x.x"
+
+	put "xxx" into tString
+	put "." into char -2 of tString
+	test "put char (-ve)" when tString is "x.x"
+
+	MCUnitTestHandlerThrows(TestPutChar_Zero, "put char (0)")
+	MCUnitTestHandlerThrows(TestPutChar_Before, "put char (before)")
+	MCUnitTestHandlerThrows(TestPutChar_After, "put char (after)")
+end handler
+
+handler TestGetChar_Zero()
+	variable tString
+	put "xxx" into tString
+	get char 0 of tString
+end handler
+handler TestGetChar_Before()
+	return char -4 of "xxx"
+end handler
+handler TestGetChar_After()
+	return char 4 of "xxx"
+end handler
+public handler TestGetChar()
+	variable tString
+	put char 2 of "x.x" into tString
+	test "get char (+ve)" when tString is "."
+
+	put char -2 of "x.x" into tString
+	test "get char (-ve)" when tString is "."
+
+	MCUnitTestHandlerThrows(TestGetChar_Zero, "get char (0)")
+	MCUnitTestHandlerThrows(TestGetChar_Before, "get char (before)")
+	MCUnitTestHandlerThrows(TestGetChar_After, "get char (after)")
+end handler
+
+----------------------------------------------------------------
+
+public handler TestRange()
+	variable tString
+
+	-- Put into range
+	put "xxxx" into tString
+	put "." into char 2 to 2 of tString
+	test "range (put, +ve, equal)" when tString is "x.xx"
+
+	put "." into char 2 to 3 of tString
+	test "range (put, +ve)" when tString is "x.x"
+
+	put "xxxx" into tString
+	put "." into char -2 to -2 of tString
+	test "range (put, -ve, equal)" when tString is "xx.x"
+
+	put "." into char -3 to -2 of tString
+	test "range (put, -ve)" when tString is "x.x"
+
+	-- Get from range
+	put "xx.x" into tString
+	test "range (get, +ve, equal)" when char 3 to 3 of tString is "."
+	test "range (get, +ve)" when char 2 to 3 of tString is "x."
+	test "range (get, +ve, equal)" when char -2 to -2 of tString is "."
+	test "range (get, +ve)" when char -3 to -2 of tString is "x."
+end handler
+
+----------------------------------------------------------------
+
+handler TestFirst_GetEmpty()
+	return the first char of ""
+end handler
+handler TestFirst_PutEmpty()
+	variable tString
+	put "" into tString
+	put "xxx" into the first char of tString
+end handler
+public handler TestFirst()
+	variable tString
+
+	put "xxx" into tString
+	put "." into the first char of tString
+	test "first (put single)" when tString is ".xx"
+
+	put "yz" into the first char of tString
+	test "first (put multiple)" when tString is "yzxx"
+
+	test "first (get)" when the first char of tString is "y"
+
+	put "xyz" into tString
+	put tString into the first char of tString
+	test "first (self)" when tString is "xyzyz"
+
+	MCUnitTestHandlerThrows(TestFirst_GetEmpty, "first (get empty)")
+	MCUnitTestHandlerThrows(TestFirst_PutEmpty, "first (put empty)")
+end handler
+
+handler TestLast_GetEmpty()
+	return the last char of ""
+end handler
+handler TestLast_PutEmpty()
+	variable tString
+	put "" into tString
+	put "xxx" into the last char of tString
+end handler
+public handler TestLast()
+	variable tString
+
+	put "xxx" into tString
+	put "." into the last char of tString
+	test "last (put)" when tString is "xx."
+
+	put "yz" into the last char of tString
+	test "last (put multiple)" when tString is "xxyz"
+
+	test "last (get)" when the last char of tString is "z"
+
+	put "xyz" into tString
+	put tString into the last char of tString
+	test "first (self)" when tString is "xyxyz"
+
+	MCUnitTestHandlerThrows(TestLast_GetEmpty, "last (get empty)")
+	MCUnitTestHandlerThrows(TestLast_PutEmpty, "last (put empty)")
+end handler
+
+----------------------------------------------------------------
+
+handler TestDeleteSingle_Zero()
+	variable tString
+	put "x" into tString
+	delete char 0 of tString
+end handler
+handler TestDeleteSingle_Before()
+	variable tString
+	put "x" into tString
+	delete char -2 of tString
+end handler
+handler TestDeleteSingle_After()
+	variable tString
+	put "x" into tString
+	delete char 2 of tString
+end handler
+handler TestDeleteSingle_FirstEmpty()
+	variable tString
+	put "" into tString
+	delete the first char of tString
+end handler
+handler TestDeleteSingle_LastEmpty()
+	variable tString
+	put "" into tString
+	delete the last char of tString
+end handler
+public handler TestDeleteSingle()
+	variable tString
+
+	put "xyz" into tString
+	delete char 2 of tString
+	test "delete single (+ve)" when tString is "xz"
+
+	put "xyz" into tString
+	delete char -2 of tString
+	test "delete single (-ve)" when tString is "xz"
+
+	MCUnitTestHandlerThrows(TestDeleteSingle_Zero, "delete (single, 0)")
+	MCUnitTestHandlerThrows(TestDeleteSingle_Before, "delete (single, before)")
+	MCUnitTestHandlerThrows(TestDeleteSingle_After, "delete (single, after)")
+
+	put "xyz" into tString
+	delete the first char of tString
+	test "delete first" when tString is "yz"
+
+	put "xyz" into tString
+	delete the last char of tString
+	test "delete last" when tString is "xy"
+
+	MCUnitTestHandlerThrows(TestDeleteSingle_FirstEmpty, "delete first (empty)")
+	MCUnitTestHandlerThrows(TestDeleteSingle_LastEmpty, "delete last (empty)")
+end handler
+
+handler TestDeleteRange_Zero()
+	variable tString
+	put "xxx" into tString
+	delete char 0 to 0 of tString
+end handler
+handler TestDeleteRange_Reverse()
+	variable tString
+	put "xxx" into tString
+	delete char 3 to 2 of tString
+end handler
+handler TestDeleteRange_After()
+	variable tString
+	put "xyz" into tString
+	delete char 3 to 5 of tString
+end handler
+handler TestDeleteRange_Before()
+	variable tString
+	put "xyz" into tString
+	delete char -5 to -3 of tString
+	test diagnostic tString
+end handler
+public handler TestDeleteRange()
+	variable tString
+
+	put "xyz" into tString
+	delete char 2 to 2 of tString
+	test "delete range (+ve, equal)" when tString is "xz"
+
+	put "xyz" into tString
+	delete char -2 to -2 of tString
+	test "delete range (-ve, equal)" when tString is "xz"
+
+	put "wxyz" into tString
+	delete char 2 to 3 of tString
+	test "delete range (+ve)" when tString is "wz"
+
+	put "wxyz" into tString
+	delete char -3 to -2 of tString
+	test "delete range (+ve)" when tString is "wz"
+
+	MCUnitTestHandlerThrows(TestDeleteRange_Zero, "delete range (0)")
+	MCUnitTestHandlerThrows(TestDeleteRange_Before, "delete range (before)")
+	MCUnitTestHandlerThrows(TestDeleteRange_After, "delete range (after)")
+	MCUnitTestHandlerThrows(TestDeleteRange_Reverse, "delete range (reverse)")
+end handler
+
+----------------------------------------------------------------
+
+public handler TestContainsChar()
+	test "char is in" when "y" is in "xyz"
+	test "char isn't in" when not "w" is in "xyz"
+
+	test "multi-codeunit char isn't in" when not "\u{1f499}" is in "\r\n"
+
+	test diagnostic "TODO 'y' is not in 'xyz'"
+end handler
+
+public handler TestContainsString()
+	test "contains" when "wxyz" contains "xy"
+	test "contains (missing)" when not "wxyz" contains ".xy"
+end handler
+
+public handler TestOffset()
+	-- Only test single-character needles for now
+	test "offset (single)" when the offset of "x" in ".xx." is 2
+	test "first offset (single)" when the first offset of "x" in ".xx." is 2
+	test "last offset (single)" when the last offset of "x" in ".xx." is 3
+
+	test "offset (missing)" when the offset of "xx" in ".x.x." is 0
+
+	test "offset (single, same)" when the offset of "x" in "x" is 1
+	test "first offset (single, same)" when the first offset of "x" in "x" is 1
+	-- bug 14677
+	test "last offset (single, same)" when the last offset of "x" in "x" is 1
+
+	test "offset (empty)" when the offset of "" in "x" is 0
+	test "first offset (empty)" when the first offset of "" in "x" is 0
+	test "last offset (empty)" when the last offset of "" in "x" is 0
+	test "offset (empty, empty)" when the offset of "" in "" is 0
+
+	-- For chars, "index" is synonymous with "offset"
+	test "index" when the index of "x" in ".xx." is 2
+end handler
+
+public handler TestOffsetUnicode()
+	test "offset (native, BMP)" when the index of " " in "\u{2192} right" is 2
+	test "offset (BMP, BMP)" when the index of "\u{2192}" in "\u{2192} right" is 1
+end handler
+
+public handler TestOffsetAfter()
+	-- Only test single-character needles for now
+	test "offset after (single, +ve)" when the offset of "x" after 1 in "x.xx." is 3
+	test "first offset after (single, +ve)" when the first offset of "x" after 1 in "x.xx." is 3
+	test "last offset after (single, +ve)" when the last offset of "x" after 1 in "x.xx." is 4
+	test "offset after (single, -ve)" when the offset of "x" after -5 in "x.xx." is 3
+	test "first offset after (single, -ve)" when the first offset of "x" after -5 in "x.xx." is 3
+	test "last offset after (single, -ve)" when the last offset of "x" after -5 in "x.xx." is 4
+
+	test "offset after (single, missing, +ve)" when the offset of "x" after 1 in "x.." is 0
+	test "first offset after (single, missing, +ve)" when the first offset of "x" after 1 in "x.." is 0
+	test "last offset after (single, missing, +ve)" when the last offset of "x" after 1 in "x.." is 0
+	test "offset after (single, missing, -ve)" when the offset of "x" after -3 in "x.." is 0
+	test "first offset after (single, missing, -ve)" when the first offset of "x" after -3 in "x.." is 0
+	test "last offset after (single, missing, -ve)" when the last offset of "x" after -3 in "x.." is 0
+
+	MCUnitTestHandlerThrows(TestOffsetAfter_SingleInvalidPositive, "offset after (single, invalid +ve)")
+	MCUnitTestHandlerThrows(TestOffsetAfter_SingleInvalidNegative, "offset after (single, invalid -ve)")
+	MCUnitTestHandlerThrows(TestFirstOffsetAfter_SingleInvalidPositive, "first offset after (single, invalid +ve)")
+	MCUnitTestHandlerThrows(TestFirstOffsetAfter_SingleInvalidNegative, "first offset after (single, invalid -ve)")
+	MCUnitTestHandlerThrows(TestLastOffsetAfter_SingleInvalidPositive, "last offset after (single, invalid +ve)")
+	MCUnitTestHandlerThrows(TestLastOffsetAfter_SingleInvalidNegative, "last offset after (single, invalid -ve)")
+
+	-- For chars, "index" is synonymous with "offset"
+	test "index after" when the index of "x" after 2 in ".xx." is 3
+end handler
+
+handler TestOffsetAfter_SingleInvalidPositive()
+	get the offset of "x" after 2 in "x"
+end handler
+
+handler TestOffsetAfter_SingleInvalidNegative()
+	get the offset of "x" after -3 in "x"
+end handler
+
+handler TestFirstOffsetAfter_SingleInvalidPositive()
+	get the first offset of "x" after 2 in "x"
+end handler
+
+handler TestFirstOffsetAfter_SingleInvalidNegative()
+	get the first offset of "x" after -3 in "x"
+end handler
+
+handler TestLastOffsetAfter_SingleInvalidPositive()
+	get the last offset of "x" after 2 in "x"
+end handler
+
+handler TestLastOffsetAfter_SingleInvalidNegative()
+	get the last offset of "x" after -3 in "x"
+end handler
+
+
+public handler TestOffsetAfterZero()
+	-- "offset of _ after 0 in _" should be equivalent to "offset of _ in _"
+	variable tNoAfter
+	put the offset of "x" in "x" into tNoAfter
+	test "offset after (single, 0)" when the offset of "x" after 0 in "x" is tNoAfter
+
+	put the first offset of "x" in "x" into tNoAfter
+	test "first offset after (single, 0)" when the first offset of "x" after 0 in "x" is tNoAfter
+
+	put the last offset of "x" in ".x." into tNoAfter
+	test "last offset after (single, 0)" when the last offset of "x" after 0 in ".x." is tNoAfter
+
+	-- bug 14677
+	put the last offset of "x" in "x" into tNoAfter
+	test "the last offset after (single, 0, same)" when the last offset of "x" after 0 in "x" is tNoAfter
+end handler
+
+public handler TestBeginsWith()
+	test "begins with" when "xx." begins with "xx"
+	test "begins with (missing)" when not ".xx" begins with "xx"
+end handler
+
+public handler TestEndsWith()
+	test "ends with" when ".xx" ends with "xx"
+	test "ends with (missing)" when not "xx." ends with "xx"
+end handler
+
+public handler TestNewline()
+	test "newline" when newline is "\n"
+end handler
+
+public handler TestRepeatChar()
+	variable tIter
+	variable tCount
+
+	put 0 into tCount
+
+	repeat for each char tIter in "xyz"
+		add 1 to tCount
+		test "repeatchar (iter)" when tIter is char tCount of "xyz"
+	end repeat
+
+	test "repeatchar (count)" when tCount is 3
+end handler
+
+----------------------------------------------------------------
+
+handler TestCharWithCode_Negative()
+	return the char with code -1
+end handler
+public handler TestCharWithCode()
+	variable tString
+
+	put the char with code 120 into tString
+	test "code->byte" when tString is "x"
+
+	put the char with code 8594 into tString
+	test "code->byte (BMP)" when tString is "\u{2192}"
+
+	put the char with code 119070 into tString
+	test "code->byte (SMP)" when tString is "\u{1d11e}"
+
+	MCUnitTestHandlerThrows(TestCharWithCode_Negative, "code->byte (-ve)")
+end handler
+
+handler TestCodeOfChar_Long()
+	return the code of "xx"
+end handler
+handler TestCodeOfChar_Empty()
+	return the code of ""
+end handler
+public handler TestCodeOfChar()
+	test "char->code" when the code of "x" is 120
+	test "char->code (BMP)" when the code of "\u{2192}" is 8594
+	test "char->code (SMP)" when the code of "\u{1d11e}" is 119070
+
+	MCUnitTestHandlerThrows(TestCodeOfChar_Long, "char->code (multibyte)")
+	MCUnitTestHandlerThrows(TestCodeOfChar_Empty, "char->code (empty)")
+end handler
+
+end module

@@ -16,6 +16,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
+#include "sysdefs.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -204,7 +205,9 @@ MCMovingList::~MCMovingList()
 
 MCUIDC::MCUIDC()
 {
+#if defined(FEATURE_NOTIFY)
 	MCNotifyInitialize();
+#endif
     
 	messageid = 0;
 	nmessages = maxmessages = 0;
@@ -261,8 +264,10 @@ MCUIDC::~MCUIDC()
 	while (nmessages != 0)
 		cancelmessageindex(0, True);
 	delete messages;
-    
+
+#if defined(FEATURE_NOTIFY)
 	MCNotifyFinalize();
+#endif
 }
 
 
@@ -737,6 +742,12 @@ Boolean MCUIDC::uinttowindow(uintptr_t, Window &w)
 	return True;
 }
 
+void *MCUIDC::GetNativeWindowHandle(Window p_window)
+{
+	return nil;
+}
+
+
 void MCUIDC::getbeep(uint4 property, int4& r_value)
 {
 	r_value = 0;
@@ -876,12 +887,13 @@ Boolean MCUIDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		siguser();
         
 		MCModeQueueEvents();
-        
-        if ((MCNotifyDispatch(dispatch == True) ||
-             donepending) && anyevent ||
-            abort)
-            break;
-        
+
+#if defined(FEATURE_NOTIFY)
+		if ((MCNotifyDispatch(dispatch == True) || donepending) && anyevent)
+			break;
+#endif
+		if (abort)
+			break;
 		if (MCquit)
             break;
         
@@ -904,11 +916,25 @@ Boolean MCUIDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 
 void MCUIDC::pingwait(void)
 {
-#ifdef _DESKTOP
+#if defined(_DESKTOP) && defined(FEATURE_NOTIFY)
 	// MW-2013-06-14: [[ DesktopPingWait ]] Use the notify mechanism to wake up
 	//   any running wait.
 	MCNotifyPing(false);
 #endif
+}
+
+bool MCUIDC::FindRunloopAction(MCRunloopActionCallback p_callback, void *p_context, MCRunloopActionRef &r_action)
+{
+	for (MCRunloopAction *t_action = m_runloop_actions; t_action != nil; t_action = t_action->next)
+	{
+		if (t_action->callback == p_callback && t_action->context == p_context)
+		{
+			r_action = t_action;
+			return true;
+		}
+	}
+	
+	return false;
 }
 
 // IM-2014-03-06: [[ revBrowserCEF ]] Add callback & context to runloop action list
@@ -917,13 +943,23 @@ bool MCUIDC::AddRunloopAction(MCRunloopActionCallback p_callback, void *p_contex
 	MCRunloopAction *t_action;
 	t_action = nil;
 
+	if (FindRunloopAction(p_callback, p_context, t_action))
+	{
+		r_action = t_action;
+		r_action->references++;
+		
+		return true;
+	}
+	
 	if (!MCMemoryNew(t_action))
 		return false;
 
 	t_action->callback = p_callback;
 	t_action->context = p_context;
 
+	t_action->references = 1;
 	t_action->next = m_runloop_actions;
+	
 	m_runloop_actions = t_action;
 
 	r_action = t_action;
@@ -937,6 +973,12 @@ void MCUIDC::RemoveRunloopAction(MCRunloopActionRef p_action)
 	if (p_action == nil)
 		return;
 
+	if (p_action->references > 1)
+	{
+		p_action->references--;
+		return;
+	}
+	
 	MCRunloopAction *t_remove_action;
 	t_remove_action = nil;
 
@@ -1137,7 +1179,22 @@ void MCUIDC::addtimer(MCObject *optr, MCNameRef mptr, uint4 delay)
     // Remove existing message from the queue.
     cancelmessageobject(optr, mptr);
     
-    doaddmessage(optr, mptr, MCS_time() + delay / 1000.0, 0, NULL);
+    doaddmessage(optr, mptr, MCS_time() + delay / 1000.0, 0);
+}
+
+void MCUIDC::addsubtimer(MCObject *optr, MCValueRef suboptr, MCNameRef mptr, uint4 delay)
+{
+    cancelmessageobject(optr, mptr, suboptr);
+    
+    MCParameter *t_param;
+    t_param = new MCParameter;
+    t_param -> setvalueref_argument(suboptr);
+    doaddmessage(optr, mptr, MCS_time() + delay / 1000.0, 0, t_param);
+}
+
+void MCUIDC::cancelsubtimer(MCObject *optr, MCNameRef mptr, MCValueRef suboptr)
+{
+    cancelmessageobject(optr, mptr, suboptr);
 }
 
 void MCUIDC::cancelmessageindex(uint2 i, Boolean dodelete)
@@ -1169,12 +1226,14 @@ void MCUIDC::cancelmessageid(uint4 id)
 		}
 }
 
-void MCUIDC::cancelmessageobject(MCObject *optr, MCNameRef mptr)
+void MCUIDC::cancelmessageobject(MCObject *optr, MCNameRef mptr, MCValueRef subobject)
 {
     // MW-2014-05-14: [[ Bug 12294 ]] Cancel list in reverse order to minimize movement.
 	for (uindex_t i = nmessages ; i > 0 ; i--)
 		if (messages[i - 1].object == optr
-		        && (mptr == NULL || MCNameIsEqualTo(messages[i - 1].message, mptr, kMCCompareCaseless)))
+		        && (mptr == NULL || MCNameIsEqualTo(messages[i - 1].message, mptr, kMCCompareCaseless))
+                && (subobject == NULL || (messages[i - 1] . params != nil &&
+                                          messages[i - 1] . params -> getvalueref_argument() == subobject)))
 			cancelmessageindex(i - 1, True);
 }
 
@@ -1874,41 +1933,6 @@ void MCUIDC::stopplayingsound(void)
 
 //
 
-bool MCUIDC::ownsselection(void)
-{
-	return false;
-}
-
-MCPasteboard *MCUIDC::getselection(void)
-{
-	return NULL;
-}
-
-bool MCUIDC::setselection(MCPasteboard *p_pasteboard)
-{
-	return false;
-}
-
-void MCUIDC::flushclipboard(void)
-{
-}
-
-bool MCUIDC::ownsclipboard(void)
-{
-	return false;
-}
-
-MCPasteboard *MCUIDC::getclipboard(void)
-{
-	return NULL;
-}
-
-bool MCUIDC::setclipboard(MCPasteboard *p_pasteboard)
-{
-	return false;
-}
-
-
 // TD-2013-07-01: [[ DynamicFonts ]]
 bool MCUIDC::loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_font_handle)
 {
@@ -1922,7 +1946,7 @@ bool MCUIDC::unloadfont(MCStringRef p_path, bool p_globally, void *r_loaded_font
 
 //
 
-MCDragAction MCUIDC::dodragdrop(Window w, MCPasteboard* p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset)
+MCDragAction MCUIDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset)
 {
 	return DRAG_ACTION_NONE;
 }
@@ -1968,6 +1992,15 @@ void MCUIDC::hidecursoruntilmousemoves(void)
     // appropriate function.
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCUIDC::platform_get_display_handle(void *&r_display)
+{
+	return nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCUIDC::breakModalLoops()
 {
     modal_loop* loop = m_modal_loops;
@@ -1990,3 +2023,4 @@ void MCUIDC::modalLoopEnd()
 {
     m_modal_loops = m_modal_loops->chain;
 }
+

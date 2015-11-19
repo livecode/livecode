@@ -1,0 +1,10 @@
+Name: temporary memory
+
+Synonyms: temporary memory,system memory,MultiFinder memory
+
+Type: glossary
+
+Description:
+Memory that is temporarily allocated by Mac OS to applications on request. 
+ 
+On Mac OS systems, each application has a fixed amount of memory, which is set in the application's "Get Info" window. Temporary memory is in addition to this allocation, and is responsible for applications taking more memory than their allocation.

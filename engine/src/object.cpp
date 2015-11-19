@@ -52,6 +52,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "player.h"
 #include "scrolbar.h"
 #include "styledtext.h"
+#include "flst.h"
+#include "widget.h"
 
 #include "globals.h"
 #include "mctheme.h"
@@ -770,10 +772,12 @@ void MCObject::timer(MCNameRef mptr, MCParameter *params)
 	{
 		if (opened && hashandlers & HH_IDLE
 		        && getstack()->gettool(this) == T_BROWSE)
+		{
 			if (message(mptr, params, True, True) == ES_ERROR)
 				senderror();
 			else
 				MCscreen->addtimer(this, MCM_idle, MCidleRate);
+		}
 	}
 	else
 	{
@@ -1167,6 +1171,18 @@ void MCObject::recompute()
 {
 }
 
+void MCObject::toolchanged(Tool)
+{
+}
+
+void MCObject::layerchanged()
+{
+}
+
+void MCObject::visibilitychanged(bool p_visible)
+{
+}
+
 const MCRectangle& MCObject::getrect(void) const
 {
 	return rect;
@@ -1328,11 +1344,35 @@ Boolean MCObject::resizeparent()
 	return False;
 }
 
-Boolean MCObject::getforecolor(uint2 di, Boolean rev, Boolean hilite,
+Boolean MCObject::getforecolor(uint2 p_di, Boolean rev, Boolean hilite,
                                MCColor &c, MCPatternRef &r_pattern,
-                               int2 &x, int2 &y, MCDC *dc, MCObject *o)
+                               int2 &x, int2 &y, MCDC *dc, MCObject *o, bool selected)
 {
-	uint2 i;
+    uint2 di;
+    switch (p_di)
+    {
+        case DI_PSEUDO_TEXT_COLOR:
+        case DI_PSEUDO_TEXT_COLOR_SEL_FORE:
+        case DI_PSEUDO_BUTTON_TEXT:
+            di = DI_FORE;
+            break;
+            
+        case DI_PSEUDO_TEXT_BACKGROUND:
+        case DI_PSEUDO_TEXT_COLOR_SEL_BACK:
+        case DI_PSEUDO_BUTTON_TEXT_SEL:
+            di = DI_BACK;
+            break;
+            
+        case DI_PSEUDO_TEXT_BACKGROUND_SEL:
+            di = DI_HILITE;
+            break;
+        
+        default:
+            di = p_di;
+            break;
+    }
+    
+    uint2 i;
 	if (dc->getdepth() > 1)
 	{
 		Boolean hasindex = getcindex(di, i);
@@ -1366,17 +1406,78 @@ Boolean MCObject::getforecolor(uint2 di, Boolean rev, Boolean hilite,
 				if (MClook != LF_MOTIF && hilite && flags & F_OPAQUE
 				        && !(flags & F_DISABLED))
 				{
-					if (di == DI_BACK)
-						c = dc->getwhite();
-					else
-						parent->getforecolor(di, rev, False, c, r_pattern, x, y, dc, o);
+                    //if (di == DI_BACK)
+                    //	c = dc->getwhite();
+                    //else
+						parent->getforecolor(p_di, rev, hilite, c, r_pattern, x, y, dc, o, selected);
 					return True;
 				}
 				if (parent && parent != MCdispatcher)
-					return parent->getforecolor(di, rev, False, c, r_pattern, x, y, dc, o);
+					return parent->getforecolor(p_di, rev, hilite, c, r_pattern, x, y, dc, o, selected);
 			}
 	}
 
+    // Try to get the colour from the system theme rather than these hard-coded values
+    MCPlatformControlType t_control_type;
+    MCPlatformControlPart t_control_part;
+    MCPlatformControlState t_control_state;
+    MCPlatformThemeProperty t_theme_prop;
+    MCPlatformThemePropertyType t_theme_prop_type;
+    Properties which;
+    switch (p_di)
+    {
+        case DI_TOP:
+            which = P_TOP_COLOR;
+            break;
+            
+        case DI_BOTTOM:
+            which = P_BOTTOM_COLOR;
+            break;
+            
+        case DI_PSEUDO_TEXT_COLOR_SEL_FORE:
+        case DI_PSEUDO_TEXT_COLOR_SEL_BACK:
+        case DI_PSEUDO_BUTTON_TEXT_SEL:
+            selected = true;
+            /* FALLTHROUGH */
+            
+        case DI_FORE:
+        case DI_PSEUDO_TEXT_COLOR:
+        case DI_PSEUDO_BUTTON_TEXT:
+            which = P_FORE_COLOR;
+            break;
+            
+        case DI_BACK:
+        case DI_PSEUDO_TEXT_BACKGROUND:
+            which = P_BACK_COLOR;
+            break;
+            
+        case DI_HILITE:
+        case DI_PSEUDO_TEXT_BACKGROUND_SEL:
+            which = P_HILITE_COLOR;
+            break;
+            
+        case DI_FOCUS:
+            which = P_FOCUS_COLOR;
+            break;
+            
+        case DI_BORDER:
+            which = P_BORDER_COLOR;
+            break;
+            
+        case DI_SHADOW:
+            which = P_SHADOW_COLOR;
+            break;
+            
+    }
+    if (o->getthemeselectorsforprop(which, t_control_type, t_control_part, t_control_state, t_theme_prop, t_theme_prop_type))
+    {
+        if (selected)
+            t_control_state |= kMCPlatformControlStateSelected;
+        
+        if (MCPlatformGetControlThemePropColor(t_control_type, t_control_part, t_control_state, t_theme_prop, c))
+            return True;
+    }
+    
 	switch (di)
 	{
 
@@ -1422,7 +1523,7 @@ Boolean MCObject::getforecolor(uint2 di, Boolean rev, Boolean hilite,
 	return True;
 }
 
-void MCObject::setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite)
+void MCObject::setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite, bool selected)
 {
 	uint2 idi = di;
 	if (rev)
@@ -1436,6 +1537,7 @@ void MCObject::setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite)
 			idi = DI_TOP;
 			break;
 		case DI_BACK:
+        case DI_PSEUDO_BUTTON_TEXT_SEL:
 			idi = DI_HILITE;
 			break;
 		default:
@@ -1447,7 +1549,7 @@ void MCObject::setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite)
 	MCColor color;
 	MCPatternRef t_pattern = nil;
 	int2 x, y;
-	if (getforecolor(idi, rev, hilite, color, t_pattern, x, y, dc, this))
+	if (getforecolor(idi, rev, hilite, color, t_pattern, x, y, dc, this, selected))
 	{
 		MCColor fcolor;
 		if (dc->getdepth() == 1 && di != DI_BACK
@@ -1812,27 +1914,51 @@ uint32_t MCObject::getcoloraspixel(uint2 di)
 
 // MW-2012-02-14: [[ FontRefs ]] New method for getting the font props from the
 //   object without creating a fontstruct.
-void MCObject::getfontattsnew(MCNameRef& fname, uint2 &size, uint2 &style)
+uint32_t MCObject::getfontattsnew(MCNameRef& fname, uint2 &size, uint2 &style)
 {
-	// MW-2012-02-19: [[ SplitTextAttrs ]] If we don't have all the attrs at this
+    // Flags for which font properties have been set explicitly at some level
+    uint32_t t_explicit_flags;
+    t_explicit_flags = 0;
+    
+    // MW-2012-02-19: [[ SplitTextAttrs ]] If we don't have all the attrs at this
 	//   level, we must fetch the parent attrs first.
 	if ((m_font_flags & FF_HAS_ALL_FATTR) != FF_HAS_ALL_FATTR)
 	{
 		if (this != MCdispatcher)
 		{
 			if (parent == nil)
-				MCdefaultstackptr -> getfontattsnew(fname, size, style);
+				t_explicit_flags = MCdefaultstackptr -> getfontattsnew(fname, size, style);
 			else
-				parent -> getfontattsnew(fname, size, style);
+				t_explicit_flags = parent -> getfontattsnew(fname, size, style);
 		}
-		else
-		{
-			// This should never happen as the dispatcher always has font props
-			// set.
-			MCUnreachable();
-		}
+
+        MCFontRef t_default_font;
+        MCPlatformGetControlThemePropFont(getcontroltype(), getcontrolsubpart(), getcontrolstate(), kMCPlatformThemePropertyTextFont, t_default_font);
+        
+        MCFontStruct* t_font_struct;
+        t_font_struct = MCFontGetFontStruct(t_default_font);
+        
+        Boolean t_printer;
+        MCNameRef t_fname;
+        uint2 t_size, t_style;
+        MCdispatcher->getfontlist()->getfontstructinfo(t_fname, t_size, t_style, t_printer, t_font_struct);
+        
+        if ((t_explicit_flags & FF_HAS_TEXTFONT) == 0)
+            fname = t_fname;
+        
+        if ((t_explicit_flags & FF_HAS_TEXTSIZE) == 0)
+            size = t_size;
+        
+        if ((t_explicit_flags & FF_HAS_TEXTSTYLE) == 0)
+            style = t_style;
+        
+        // This should never happen as the dispatcher always has font props set.
+        //MCUnreachable();
 	}
 
+    // These flags have been set explicitly
+    t_explicit_flags |= m_font_flags & FF_HAS_ALL_FATTR;
+    
 	// If we have a textfont, replace that value.
 	if ((m_font_flags & FF_HAS_TEXTFONT) != 0)
 		fname = m_font_attrs -> name;
@@ -1844,6 +1970,8 @@ void MCObject::getfontattsnew(MCNameRef& fname, uint2 &size, uint2 &style)
 	// If we have a textstyle, replace that value.
 	if ((m_font_flags & FF_HAS_TEXTSTYLE) != 0)
 		style = m_font_attrs -> style;
+    
+    return t_explicit_flags;
 }
 
 
@@ -1997,7 +2125,7 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	MCtargetptr = oldtargetptr;
 	MCdynamicpath = olddynamic;
 
-	if (stat == ES_ERROR && MCerrorlock == 0 && !MCtrylock)
+	if (stat == ES_ERROR && !MCerrorlock && !MCtrylock)
 	{
 		if (MCnoui)
 		{
@@ -2366,7 +2494,7 @@ Bool MCObject::hashandler(Handler_type p_type, MCNameRef p_message)
 
 MCHandler *MCObject::findhandler(Handler_type p_type, MCNameRef p_message)
 {
-	if (hlist != NULL || parsescript(False, False) && hlist != NULL)
+	if (hlist != NULL || (parsescript(False, False) && hlist != NULL))
 	{
 		MCHandler *t_handler;
 		if (hlist -> findhandler(p_type, p_message, t_handler) == ES_NORMAL)
@@ -2505,14 +2633,18 @@ void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
 			dc->fillpolygon(t_points, 6);
 
 			gen_3d_bottom_points(t_points, lx + 1, ty + 1, rx - 1, by - 1, 1);
-			if (MClook != LF_MAC && MClook != LF_AM || style != ETCH_SUNKEN)
+			if ((MClook != LF_MAC && MClook != LF_AM) || style != ETCH_SUNKEN)
+			{
 				if (reversed)
+				{
 					if (gettype() == CT_FIELD)
 						parent->setforeground(dc, DI_BACK, False);
 					else
 						setforeground(dc, DI_BACK, False);
+				}
 				else
 					setforeground(dc, DI_BOTTOM, False);
+			}
 			dc->fillpolygon(t_points, 6);
 
 			gen_3d_bottom_points(t_points, lx, ty, rx, by, 1);
@@ -2538,8 +2670,8 @@ void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
 	}
 	if (t != tb)
 	{
-		delete t;
-		delete b;
+		delete[] t;
+		delete[] b;
 	}
 }
 
@@ -2873,7 +3005,7 @@ MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_si
 	
 	MCGAffineTransform t_transform = MCGAffineTransformMakeTranslation(-r.x, -r.y);
 	if (p_size != nil)
-		t_transform = MCGAffineTransformScale(t_transform, p_size->x / (float)r.width, p_size->y / (float)r.height);
+		t_transform = MCGAffineTransformPreScale(t_transform, p_size->x / (float)r.width, p_size->y / (float)r.height);
 
 	MCGContextConcatCTM(t_gcontext, t_transform);
 	
@@ -2982,17 +3114,17 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 	uint2 i;
 
 	if ((stat = IO_read_uint4(&obj_id, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 	MCNameRef t_name;
 	if ((stat = IO_read_nameref_new(t_name, stream, version >= 7000)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	MCNameDelete(_name);
 	_name = t_name;
 
 	if ((stat = IO_read_uint4(&flags, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 
 	// MW-2012-02-19: [[ SplitTextAttrs ]] If we have a font flag, then it means
 	//   we must start off the font flags with all attrs set - this might be
@@ -3013,9 +3145,9 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 		if (version > 1300)
 		{
 			if ((stat = IO_read_uint2(&t_font_index, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			if ((stat = IO_read_uint2(&fontheight, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 
 			// MW-2012-02-19: [[ SplitTextAttrs ]] We have a font index for processing
 			//   later on.
@@ -3028,13 +3160,13 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 			// MW-2013-11-19: [[ UnicodeFileFormat ]] This codepath is only hit on sfv <= 1300,
 			//   so will never be unicode.
 			if ((stat = IO_read_cstring_legacy(fontname, stream, 2)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			if ((stat = IO_read_uint2(&fontheight, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			if ((stat = IO_read_uint2(&fontsize, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			if ((stat = IO_read_uint2(&fontstyle, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
             MCAutoStringRef t_fontname;
             /* UNCHECKED */ MCStringCreateWithCString(fontname, &t_fontname);
 			setfontattrs(*t_fontname, fontsize, fontstyle);
@@ -3048,7 +3180,7 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 	if (flags & F_SCRIPT)
 	{
 		if ((stat = IO_read_stringref_new(_script, stream, version >= 7000)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
         
         // SN-2014-11-07: [[ Bug 13957 ]] It's possible to get a NULL script but having the
         //  F_SCRIPT flag. Unset the flag in case it's needed
@@ -3058,9 +3190,9 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 	}
 
 	if ((stat = IO_read_uint2(&dflags, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint2(&ncolors, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if (ncolors > 0)
 	{
 		colors = new MCColor[ncolors];
@@ -3083,11 +3215,11 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 		{
 			while (i < ncolors)
 				colornames[i++] = nil;
-			return stat;
+			return checkloadstat(stat);
 		}
 	}
 	if ((stat = IO_read_uint2(&npatterns, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	uint2 addflags = npatterns & 0xFFF0;
 	npatterns &= 0x0F;
 	if (npatterns > 0)
@@ -3095,27 +3227,27 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 		/* UNCHECKED */ MCMemoryNewArray(npatterns, patterns);
 		for (i = 0 ; i < npatterns ; i++)
 			if ((stat = IO_read_uint4(&patterns[i].id, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 	}
 	if ((stat = IO_read_int2(&rect.x, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_int2(&rect.y, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint2(&rect.width, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint2(&rect.height, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv < 7000, then we have just the unnamed
 	//   propset here.
 	if (version < 7000 && addflags & AF_CUSTOM_PROPS)
 		if ((stat = loadunnamedpropset_legacy(stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	if (addflags & AF_BORDER_WIDTH)
 		if ((stat = IO_read_uint1(&borderwidth, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	if (addflags & AF_SHADOW_OFFSET)
 		if ((stat = IO_read_int1(&shadowoffset, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	if (addflags & AF_TOOL_TIP)
 	{
 		// MW-2012-03-09: [[ StackFile5500 ]] If the version is 5.5 and above, then
@@ -3129,7 +3261,7 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 			//   so leave as legacy.
 			// Read the tooltip, as encoded in its native format
 			if ((stat = IO_read_stringref_legacy(tooltip, stream, false)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		}
 		else if (version < 7000)
 		{
@@ -3137,21 +3269,21 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 			//   formatted.
 			// The tooltip should be written out encoded in UTF-8 (not UTF-16)
 			if ((stat = IO_read_stringref_legacy_utf8(tooltip, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		}
 		else
 		{
 			// MW-2013-11-19: [[ UnicodeFileFormat ]] sfv >= 7000 so unicode.
 			if ((stat = IO_read_stringref_new(tooltip, stream, true)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		}
 	}
 	if (addflags & AF_ALT_ID)
 		if ((stat = IO_read_uint2(&altid, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	if (addflags & AF_INK)
 		if ((stat = IO_read_uint1(&ink, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	if (addflags & AF_CANT_SELECT)
 		extraflags |= EF_CANT_SELECT;
 	if (addflags & AF_NO_FOCUS_BORDER)
@@ -3177,7 +3309,7 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 				t_length -= 1;
 				
 				MCAutoStringRef t_script_string;
-				stat = t_stream -> ReadTranslatedStringRef(&t_script_string);
+				stat = checkloadstat(t_stream -> ReadTranslatedStringRef(&t_script_string));
 				if (stat == IO_NORMAL)
 				{
 					// Adjust the remaining length based on the length of the string read
@@ -3200,27 +3332,27 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 			if (version < 7000 && stat == IO_NORMAL)
 			{
 				uint1 t_byte;
-				stat = t_stream -> ReadU8(t_byte);
+				stat = checkloadstat(t_stream -> ReadU8(t_byte));
 				if (stat == IO_NORMAL && t_byte != 0)
-					stat = IO_ERROR;
+					stat = checkloadstat(IO_ERROR);
 			}
 
 			// Make sure we flush the rest of the (unknown) stream
 			if (stat == IO_NORMAL)
-				stat = t_stream -> Flush();
+				stat = checkloadstat(t_stream -> Flush());
 			
 			delete t_stream;
 		}
 		
 		if (stat != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	}
 	else if (addflags & AF_LONG_SCRIPT)
 	{
 		MCAutoStringRef t_script_string;
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		if ((stat = IO_read_stringref_new(&t_script_string, stream, version >= 7000, 4)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		
 		setscript(*t_script_string);
 		
@@ -3229,7 +3361,7 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 
 	if (addflags & AF_BLEND_LEVEL)
 		if ((stat = IO_read_uint1(&blendlevel, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 
 	// MW-2013-03-28: The restrictions byte is no longer relevant due to new
 	//   licensing.
@@ -3237,7 +3369,7 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 	{
 		uint1 t_restrictions;
 		if ((stat = IO_read_uint1(&t_restrictions, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	}
 
 	// MW-2012-02-19: [[ SplitTextAttrs ]] Now that we've read the extended props
@@ -3331,7 +3463,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	//   long scripts, and put extended data after it.
 	if (MCstackfileversion < 7000)
 	{
-		if (flags & F_SCRIPT && MCStringGetLength(_script) >= MAXUINT2 || t_extended)
+		if ((flags & F_SCRIPT && MCStringGetLength(_script) >= MAXUINT2) || t_extended)
 		{
 			addflags |= AF_LONG_SCRIPT;
 			flags &= ~F_SCRIPT;
@@ -3601,11 +3733,11 @@ IO_stat MCObject::defaultextendedload(MCObjectInputStream& p_stream, uint32_t p_
 	if (p_remaining > 0)
 	{
 		uint4 t_flags, t_length, t_header_size;
-		t_stat = p_stream . ReadTag(t_flags, t_length, t_header_size);
+		t_stat = checkloadstat(p_stream . ReadTag(t_flags, t_length, t_header_size));
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . Mark();
+			t_stat = checkloadstat(p_stream . Mark());
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . Skip(t_length);
+			t_stat = checkloadstat(p_stream . Skip(t_length));
 		if (t_stat == IO_NORMAL)
 			p_remaining -= t_length + t_header_size;
 	}
@@ -3619,7 +3751,7 @@ IO_stat MCObject::defaultextendedload(MCObjectInputStream& p_stream, uint32_t p_
 IO_stat MCObject::defaultextendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 {
 	IO_stat t_stat;
-	t_stat = p_stream . WriteTag(0, 0);
+	t_stat = checkloadstat(p_stream . WriteTag(0, 0));
 	if (t_stat == IO_NORMAL)
 		t_stat = MCObject::extendedsave(p_stream, p_part);
 
@@ -4525,14 +4657,28 @@ void MCObject::unlockshape(MCObjectShape& p_shape)
 
 // MW-2012-02-14: [[ FontRefs ]] New method which maps the object's concrete font
 //   on open.
-void MCObject::mapfont(void)
+bool MCObject::mapfont(bool recursive)
 {
-	// MW-2012-02-24: [[ FontRefs ]] Fix a problem with images used as icons.
+    // This may be called even when the font has already been mapped
+    if (m_font != nil)
+    {
+        if (hasfontattrs())
+            return true;
+        if (parent == nil)
+            return false;
+        return parent->mapfont(true);
+    }
+    
+    // MW-2012-02-24: [[ FontRefs ]] Fix a problem with images used as icons.
 	//   Images don't use the fontref, so don't do anything if we are an image.
 
 	if (gettype() == CT_IMAGE)
-		return;
+		return false;
 	
+    // This is only set if an explicitly-set font was found at some point
+    bool t_explicit_font;
+    t_explicit_font = false;
+    
 	// MW-2012-03-02: [[ Bug 10044 ]] If the parent isn't open, then we won't have a
 	//   font. This causes problems for some things (like import snapshot) so in this
 	//   case we ask the parent to map it's font.
@@ -4543,8 +4689,9 @@ void MCObject::mapfont(void)
 	if (parent != nil && parent -> m_font == nil)
 	{
 		t_mapped_parent = true;
-		parent -> mapfont();
 	}
+    if (parent != nil)
+        t_explicit_font = parent -> mapfont(true);
 	
 	// MW-2013-12-19: [[ Bug 11606 ]] Make sure we check for a stack using ideal layout
 	//   as this requires new font computation.
@@ -4552,7 +4699,9 @@ void MCObject::mapfont(void)
 	// copy the parent's font.
 	if (hasfontattrs() || (gettype() == CT_STACK && static_cast<MCStack *>(this) -> getuseideallayout()))
 	{
-		// MW-2012-02-19: [[ SplitTextAttrs ]] Compute the attrs to write out. If we don't
+        t_explicit_font = true;
+        
+        // MW-2012-02-19: [[ SplitTextAttrs ]] Compute the attrs to write out. If we don't
 		//   have all of the attrs, fetch the inherited ones.
 		MCNameRef t_textfont;
 		uint2 t_textstyle, t_textsize;
@@ -4567,14 +4716,14 @@ void MCObject::mapfont(void)
 		//   set, make sure we create a printer font.
 		// MW-2013-12-04: [[ Bug 11513 ]] Make sure we check for ideal layout, rather than
 		//   just for formatForPrinting.
-		if (parent != nil && MCFontHasPrinterMetrics(parent -> m_font) ||
-			gettype() == CT_STACK && ((MCStack *)this) -> getuseideallayout())
+		if ((parent != nil && parent -> m_font != nil && MCFontHasPrinterMetrics(parent -> m_font)) ||
+		    (gettype() == CT_STACK && ((MCStack *)this) -> getuseideallayout()))
 			t_font_style |= kMCFontStylePrinterMetrics;
 
 		// Create our font.
 		/* UNCHECKED */ MCFontCreate(t_textfont, t_font_style, t_textsize, m_font);
 	}
-	else if (parent != nil)
+	else if (parent != nil && t_explicit_font)
 	{
 		if (parent -> m_font == nil)
 		{
@@ -4583,12 +4732,16 @@ void MCObject::mapfont(void)
 		else
 			m_font = MCFontRetain(parent -> m_font);
 	}
-	else
-	{
-		// This should never happen as the only object with nil parent when
-		// opened should be MCdispatcher, which always has font attrs.
-		MCUnreachable();
-	}
+    else if (recursive)
+    {
+        // No font style font - it will be resolved after unwinding
+        return false;
+    }
+    else
+    {
+        // No font style was found. Use the themed font
+        MCPlatformGetControlThemePropFont(getcontroltype(), getcontrolsubpart(), getcontrolstate(), kMCPlatformThemePropertyTextFont, m_font);
+    }
 	
 	// MW-2012-03-02: [[ Bug 10044 ]] If we had to temporarily map the parent's font
 	//   then unmap it here.
@@ -4596,6 +4749,8 @@ void MCObject::mapfont(void)
 	//   first place.
 	if (t_mapped_parent)
 		parent -> unmapfont();
+    
+    return t_explicit_font;
 }
 
 // MW-2012-02-14: [[ FontRefs ]] New method which unmaps the object's concrete font
@@ -4635,6 +4790,25 @@ bool MCObject::recomputefonts(MCFontRef p_parent_font)
 	MCFontRelease(t_current_font);
 
 	return t_changed;
+}
+
+void MCObject::copyfont(MCFontRef& r_font)
+{
+    bool t_need_unmap;
+    t_need_unmap = false;
+    if (m_font == nil)
+    {
+        mapfont();
+        t_need_unmap = true;
+    }
+    
+    if (m_font != nil)
+        r_font = MCFontRetain(m_font);
+    else
+        r_font = nil;
+    
+    if (t_need_unmap)
+        unmapfont();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4859,6 +5033,25 @@ MCRectangle MCObject::measuretext(MCStringRef p_text, bool p_is_unicode)
     return t_bounds;
 }
 
+struct MCHasWidgetsObjectVisitor: public MCObjectVisitor
+{
+    bool found_widget;
+    
+    bool OnWidget(MCWidget *p_widget)
+    {
+        found_widget = true;
+        return false;
+    }
+};
+
+bool MCObject::haswidgets(void)
+{
+    MCHasWidgetsObjectVisitor t_visitor;
+    t_visitor . found_widget = false;
+    visit(VISIT_STYLE_DEPTH_FIRST, 0, &t_visitor);
+    return t_visitor . found_widget;
+}
+
 // AL-2015-06-30: [[ Bug 15556 ]] Refactored function to sync mouse focus
 void MCObject::sync_mfocus(void)
 {
@@ -4909,9 +5102,31 @@ void MCObject::sync_mfocus(void)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool MCObject::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor)
+bool MCObject::visit_self(MCObjectVisitor *p_visitor)
 {
 	return p_visitor -> OnObject(this);
+}
+
+bool MCObject::visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor)
+{
+	bool t_continue;
+	t_continue = true;
+	
+	if (MCObjectVisitorIsDepthLast(p_options))
+		t_continue = visit_self(p_visitor);
+	
+	if (t_continue && MCObjectVisitorIsRecursive(p_options))
+		t_continue = visit_children(p_options, p_part, p_visitor);
+	
+	if (t_continue && MCObjectVisitorIsDepthFirst(p_options))
+		t_continue = visit_self(p_visitor);
+	
+	return t_continue;
+}
+
+bool MCObject::visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor)
+{
+	return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4983,6 +5198,11 @@ bool MCObjectVisitor::OnPlayer(MCPlayer *p_player)
 bool MCObjectVisitor::OnStyledText(MCStyledText *p_styled_text)
 {
 	return OnObject(p_styled_text);
+}
+
+bool MCObjectVisitor::OnWidget(MCWidget *p_widget)
+{
+	return OnControl(p_widget);
 }
 
 bool MCObjectVisitor::OnParagraph(MCParagraph *p_paragraph)

@@ -1,0 +1,61 @@
+/* Copyright (C) 2003-2015 LiveCode Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.foreign
+
+----------------------------------------------------------------
+-- Universal types
+----------------------------------------------------------------
+
+public foreign type Pointer binds to "MCForeignPointerTypeInfo"
+
+public foreign type UInt32 binds to "MCForeignUIntTypeInfo"
+public foreign type Int32 binds to "MCForeignIntTypeInfo"
+
+public foreign type UIntSize binds to "MCForeignSizeTypeInfo"
+public foreign type IntSize binds to "MCForeignSSizeTypeInfo"
+
+public foreign type Float32 binds to "MCForeignFloatTypeInfo"
+public foreign type Float64 binds to "MCForeignDoubleTypeInfo"
+
+----------------------------------------------------------------
+-- C types
+----------------------------------------------------------------
+
+public foreign type CBool binds to "MCForeignBoolTypeInfo"
+public type CInt is Int32
+public type CUInt is UInt32
+public type CFloat is Float32
+public type CDouble is Float64
+
+----------------------------------------------------------------
+-- LiveCode engine types
+----------------------------------------------------------------
+
+public type LCInt is Int32
+public type LCUInt is UInt32
+public type LCIndex is Int32
+public type LCUIndex is UInt32
+
+----------------------------------------------------------------
+-- Nul-terminated string pointer types
+----------------------------------------------------------------
+
+public foreign type ZStringNative binds to "MCNativeCStringTypeInfo"
+public foreign type ZStringUTF16 binds to "MCWStringTypeInfo"
+public foreign type ZStringUTF8 binds to "MCUTF8StringTypeInfo"
+
+end module

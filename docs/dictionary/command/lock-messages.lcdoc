@@ -1,0 +1,30 @@
+Name: lock messages
+
+Type: command
+
+Syntax: lock messages
+
+Summary: Sets the <lockMessages> <property> to true, preventing <setProp trigger|setProp triggers>, <getProp call|getProp calls>, and certain <message|messages> from being sent.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+lock messages
+
+Example:
+if the commandKey is down then lock messages
+
+Description:
+Use the <lock messages> <command> when a <handler> performs an action (such as opening a <stack>) and you want to speed up access by preventing unnecessary <navigation message|navigation messages> (such as <openStack>) from being sent.
+
+The <lock messages> <command> sets the <lockMessages> <property> to true.
+
+When all pending handlers are finished executing, the <lockMessages> <property> is set back to false.
+
+References: lockMessages (property), openStack (message), revUpdateGeometry (command), lock moves (command), lock recent (command), unlock messages (command), lock error dialogs (command), lock screen (command), revCacheGeometry (command), stack (object), property (glossary), getProp call (glossary), navigation message (glossary), handler (glossary), setProp trigger (glossary), message (glossary), command (glossary)
+
+Tags: objects

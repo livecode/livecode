@@ -1,0 +1,46 @@
+Name: mod
+
+Type: operator
+
+Syntax: <number> mod <divisor> 
+
+Summary: Evaluates to the <remainder> left over when one number is divided by another.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+23 mod 5 -- evaluates to 3 (23 div 5 is 4, with 3 left over)
+
+Example:
+12 mod 4 -- evaluates to zero
+
+Example:
+23 mod -5 -- evaluates to 3
+
+Parameters:
+number: A number, or an expression that evaluates to a number, or an array containing only numbers.
+divisor: Any non-zero number. If the number is an array, the divisor is either a non-zero number or an array containing only non-zero numbers.
+
+The result: >*Note:* Using non-integer <number> and <divisor> usually produces sensible results. However, mathematically, modulus is generally defined as a function over the integers, and the results using non-integers may not consistently be what you expect.
+
+Description:
+Use the <mod> <operator> to perform modulus arithmetic.
+
+If the <number> to be divided is an <array>, each of the <array> <element(glossary)|elements> must be a number. If an <array> is divided by a number, each <element(keyword)> is divided by the number. If an <array> is divided by an <array>, both <array|arrays> must have the same number of <element(glossary)|elements> and the same dimension, and each <element(keyword)> in one <array> is divided by the corresponding <element(keyword)> of the other <array>.
+
+If an element of an array is empty, the <mod> <operator> treats its contents as zero.
+
+If <number> can be divided evenly into <divisor>, the <expression> number mod divisor is zero.
+
+Attempting to divide by zero causes an execution error.
+
+Changes:
+The option to divide arrays was introduced in version 1.1. In previous versions, only single numbers could be used with the mod operator.
+
+References: / (operator), operator (glossary), remainder (glossary), array (glossary), element (glossary), expression (glossary), element (keyword)
+
+Tags: math

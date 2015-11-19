@@ -1,0 +1,25 @@
+Name: tabbed
+
+Type: keyword
+
+Syntax: tabbed
+
+Summary: Specifies one of the menu types that can be used with the <menuMode> <property>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the menuMode of button "Dialog Tabs" to tabbed
+
+Description:
+Use the <tabbed> <keyword> to create a set of tabs in a window.
+
+Tabbed buttons are normally used to switch between sets of options.
+
+References: popup (keyword), menuMode (property), property (glossary), keyword (glossary)
+
+Tags: menus

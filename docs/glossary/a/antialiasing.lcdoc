@@ -1,0 +1,10 @@
+Name: antialiasing
+
+Synonyms: antialiasing,antialias,antialiased,anti-aliasing,anti-alias,anti-aliased
+
+Type: glossary
+
+Description:
+Blurring a sharp edge in an image, by using intermediate colors on the edge between the image and its background. This fools the eye into seeing a smooth edge instead of the "jaggies" that result from a diagonal or curved edge when seen on screen.
+
+Tags: multimedia

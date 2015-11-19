@@ -1,0 +1,14 @@
+Name: table
+
+Synonyms: table,database table
+
+Type: glossary
+
+Description:
+In a <database>, a set of <record|records> that each have the same fields and contain the same kind of data. 
+ 
+You can display a table in the form of a grid. Each <record|row> corresponds to a single <record>. Each <column> corresponds to one of the fields that's in each <record>.
+
+References: database (glossary), record (glossary), column (glossary)
+
+Tags: database

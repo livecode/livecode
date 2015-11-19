@@ -1,0 +1,31 @@
+Name: boundingBox
+
+Type: property
+
+Syntax: set the boundingBox of <EPSObject> to <left>, <top>, <width>, <height> 
+
+Summary: Specifies the <value> of the "%%BoundingBox" <comment> in an <import|imported> <PostScript|PostScript file>.
+
+Introduced: 1.0
+
+OS: linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the boundingBox of EPS 1 to 100,100,500,600
+
+Value: The <boundingBox> of an <EPS|EPS object> consists of four <integer|integers>, separated by commas.
+
+Description:
+Use the <boundingBox> <property> to control the <appearance> of an <EPS|EPS object>.
+
+The %%BoundingBox comment specifies the height, width, and placement on the page of a PostScript file. Use the <boundingBox> <property> to find out these <properties> of the <PostScript> code in an <EPS|EPS object>, or to set them if the <PostScript|PostScript file> did not do so.
+
+The four components of the <boundingBox> <property> are equal to the <EPS|EPS object's> <xOffset>, <yOffset>, <xExtent>, and <yExtent> <properties> respectively.
+
+This property is supported only on Unix systems with Display PostScript installed.
+
+References: postScript (property), yOffset (property), yExtent (property), xExtent (property), prolog (property), xOffset (property), scaleIndependently (property), properties (property), value (function), property (glossary), EPS (glossary), PostScript (glossary), import (glossary), comment (glossary), appearance (glossary), integer (glossary)
+
+Tags: multimedia

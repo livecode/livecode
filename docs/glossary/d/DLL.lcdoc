@@ -1,0 +1,10 @@
+Name: DLL
+
+Synonyms: DLL
+
+Type: glossary
+
+Description:
+Dynamic Link Library. A set of custom functions that have been written in a programming language and compiled for use on <Windows|Windows systems>.
+
+References: Windows (glossary)

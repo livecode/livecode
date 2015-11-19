@@ -1,0 +1,433 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+*/
+
+-- declaring the extension as a widget, followed by the identifier
+widget community.livecode.livecode.list
+
+-- dependency declarations
+use com.livecode.canvas
+use com.livecode.widget
+use com.livecode.engine
+--
+
+-- metadata
+metadata author is "LiveCode"
+metadata version is "1.0.1"
+metadata title is "List"
+
+-- property declarations
+property listData 		get mListData 		set setListData
+--
+
+-- private instance variables
+private variable mListData as List
+private variable mListCount as Integer
+private variable mlistHeight as Real
+private variable mRowHeight as Real
+private variable mViewHeight as Real
+private variable mViewWidth as Real
+private variable mListTravel as Real
+private variable mViewTopPosition as Real
+private variable mFirstListItem as Integer
+private variable mMargin as Real
+
+// Drag related 
+private variable mDragging as Boolean
+private variable mDragStartLoc as Point
+--
+
+
+public handler OnCreate() as undefined
+	variable tArray as Array
+	put the empty array into tArray
+	put the empty list into mListData
+	
+	repeat 100 times
+		put "contacts" into tArray["name"]
+		put "Contacts" into tArray["label"]
+		put "f005" into tArray["icon"]
+		put "f005" into tArray["icon-selected"]
+		push tArray onto back of mListData
+		put the empty array into tArray
+	
+		put "dashboard" into tArray["name"]
+		put "hint" into tArray["hint"]
+		put "Dashboard" into tArray["label"]
+		push tArray onto back of mListData
+		put the empty array into tArray
+	
+		put "hospital" into tArray["name"]
+		put "Hospital" into tArray["label"]
+		put "hint" into tArray["hint"]
+		put "f0f9" into tArray["icon"]
+		put "f0f9" into tArray["icon-selected"]
+		push tArray onto back of mListData
+		put the empty array into tArray
+	end repeat
+	
+	put 0 into mViewTopPosition
+	
+	setupConstants()
+end handler
+
+public handler OnPaint() as undefined
+	variable tTop as Real
+	variable tPath as Path
+	variable tLeft as Real
+	
+	put mlistHeight - mViewHeight into mListTravel
+	if mListTravel < 0 then
+		put 0 into mListTravel
+	end if
+	if mViewTopPosition > mListTravel then
+		put mListTravel into mViewTopPosition
+	end if
+	
+	put 0 into tTop
+	put mViewWidth * 0.05 into mMargin
+	if mMargin > 20 then
+		put 20 into mMargin
+	else if mMargin < 5 then
+		put 5 into mMargin
+	end if
+	
+	put the height of my bounds into mViewHeight
+	put the width of my bounds into mViewWidth
+	
+	put rectangle path of my bounds into tPath
+	set the paint of this canvas to getPaint("background","fill")
+	fill tPath on this canvas	
+	
+	variable tListItem as Array
+	put the empty array into tListItem
+	
+	variable tx as Integer
+	put 1 into tx
+	
+	put the floor of mViewTopPosition / mRowHeight into mFirstListItem
+	if mFirstListItem < 1 then
+		put 1 into mFirstListItem
+	end if
+	
+	variable tTopOffset
+	put mViewTopPosition mod mRowHeight into tTopOffset
+	subtract tTopOffset from tTop
+	
+	//log "Start Index: %@ | top offset: %@" with [mFirstListItem,tTopOffset]
+	repeat with tx from mFirstListItem up to the number of elements in mListData
+		put element tx of mListData into tListItem
+		put mMargin into tLeft
+		// Draw the background
+		
+		put rectangle path of rectangle [0,tTop,mViewWidth,tTop+mRowHeight-1] into tPath
+		set the paint of this canvas to getPaint("row","fill")
+		fill tPath on this canvas
+		
+		// Draw the separating line
+		put rectangle path of rectangle [mMargin,tTop+mRowHeight-1,mViewWidth,tTop+mRowHeight] into tPath
+		set the paint of this canvas to getPaint("row","stroke")
+		fill tPath on this canvas
+		
+		// Draw hint
+		set the font of this canvas to font getFontName() at size 14
+		if "hint" is among the keys of tListItem then
+			fill text tListItem["hint"] at right of rectangle [mMargin,tTop,mViewWidth-mMargin-15,tTop+mRowHeight] on this canvas
+		end if
+		
+		// Draw arrow
+		set the font of this canvas to font "fontawesome" at size 20
+		fill text "\u{0f105}" at right of rectangle [mViewWidth-30-mMargin,tTop,mViewWidth-mMargin,tTop+mRowHeight] on this canvas
+		
+		// Draw Icon
+		put mMargin into tLeft
+		if "icon" is among the keys of tListItem then
+			if "icon-color" is among the keys of tListItem then
+				set the paint of this canvas to stringToColor(tListItem["icon-color"])
+			else
+				set the paint of this canvas to getPaint("icon","fill")
+			end if
+			
+			variable tIconCodePoint as String
+			put tListItem["icon"] into tIconCodePoint
+            get the char with code (tIconCodePoint converted from base 16)
+			fill text the result at left of rectangle [mMargin,tTop,mViewWidth-mMargin-15,tTop+mRowHeight] on this canvas
+			put mMargin+25 into tLeft
+		end if
+		
+		// Draw Label
+		set the font of this canvas to font getFontName() at size 14
+		set the paint of this canvas to getPaint("text","fill")
+		fill text tListItem["label"] at left of rectangle [tLeft,tTop,mViewWidth-mMargin-15,tTop+mRowHeight] on this canvas
+		
+		if tTop > mViewHeight then
+			exit repeat
+		end if
+		add mRowHeight to tTop
+	end repeat
+	
+	// Draw Scrollbar
+	put rounded rectangle path of scrollbarRect() with radius 3 into tPath
+	set the paint of this canvas to getPaint("scrollbar", "fill")
+	fill tPath on this canvas	
+end handler
+
+public handler OnMouseDown() as undefined
+	put the mouse position into mDragStartLoc
+	
+	if mDragStartLoc is within scrollbarRect() then
+		
+		put true into mDragging
+	end if
+end handler
+
+public handler onMouseMove() as undefined
+	if mDragging is true then
+		// Get the scrollbar ratio
+		variable tScrollbarRatio as Real
+		put mViewHeight / mlistHeight into tScrollbarRatio
+		if tScrollbarRatio > 1 then
+			put 1 into tScrollbarRatio
+		end if
+	
+		// Get the scrollbar height
+		variable tScrollbarHeight as Real
+		put mViewHeight * tScrollbarRatio into tScrollbarHeight
+		if tScrollbarHeight < 25 then
+			put 25 into tScrollbarHeight
+		end if
+	
+		// Get the scrollbar position ratio
+		variable tScrollPositionRatio as Real
+		put mViewTopPosition / mListTravel into tScrollPositionRatio
+	
+		// Get the scrollbar space
+		variable tScrollbarSpace as Real
+		variable tScrollbarSpaceTop as Real
+		put mViewHeight - tScrollbarHeight into tScrollbarSpace
+		put tScrollbarHeight / 2 into tScrollbarSpaceTop
+		
+		// Get the mouse y position within the space
+		variable sMouseY as Real
+		put the y of the mouse position into sMouseY
+		
+		variable tNewScrollbarY as Real
+		put sMouseY-tScrollbarSpaceTop into tNewScrollbarY
+		if tNewScrollbarY < tScrollbarSpaceTop then
+			put tScrollbarSpaceTop into tNewScrollbarY
+		else if tNewScrollbarY > tScrollbarSpaceTop+tScrollbarSpace then
+			put tScrollbarSpaceTop+tScrollbarSpace into tNewScrollbarY
+		end if
+		
+		// Calculate the new top position of list
+		
+		put tNewScrollbarY / tScrollbarSpace into tScrollPositionRatio
+		put mListTravel * tScrollPositionRatio into mViewTopPosition
+	
+		redraw all
+	end if
+end handler
+
+public handler OnMouseUp() as undefined
+	if mDragging is true then
+		redraw all
+	end if
+	put false into mDragging
+end handler
+
+public handler OnMouseCancel() as undefined
+	if mDragging is true then
+		redraw all
+	end if
+	put false into mDragging
+end handler
+
+public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real) as undefined
+	if pDeltaY < 0 then
+		subtract mRowHeight from mViewTopPosition
+	else
+		add mRowHeight to mViewTopPosition
+	end if
+	if mViewTopPosition < 0 then 
+		put 0 into mViewTopPosition
+	end if
+	redraw all
+end handler
+
+private handler setListData(in pListData as Array) as undefined
+	put pListData into mListData
+	redraw all
+end handler
+
+public handler getPaint(pLocation, pType) as Paint
+	if pLocation is "background" then
+		if pType is "fill" then
+			return solid paint with stringToColor("248,248,248")
+		else if pType is "stroke" then
+			return solid paint with stringToColor("178,178,178")
+		end if
+	else if pLocation is "row" then
+		if pType is "fill" then
+			return solid paint with stringToColor("255,255,255")
+		else if pType is "stroke" then
+			return solid paint with stringToColor("200,199,204")
+		end if
+	else if pLocation is "text" then
+		if pType is "fill" then
+			return solid paint with stringToColor("0,0,0")
+		else if pType is "selected-fill" then
+			return solid paint with stringToColor("0,122,255")
+		end if
+	else if pLocation is "icon" then
+		if pType is "fill" then
+			return solid paint with stringToColor("0,122,255")
+		end if
+	else if pLocation is "scrollbar" then
+		if pType is "fill" then
+			return solid paint with stringToColor("0,0,0,0.2")
+		end if
+	end if
+	
+	return solid paint with stringToColor("255,100,200")
+end handler
+
+private handler getFontName() as String
+	return "Helvetica Neue"
+	
+	return the name of the font of this canvas
+end handler
+
+private handler getFontSize() as Number
+	return 11
+end handler
+
+private handler setupConstants() as undefined
+	put the number of elements in mListData into mListCount
+	put 40 into mRowHeight
+	put mRowHeight * mListCount into mlistHeight
+	put the height of my bounds into mViewHeight
+	put the width of my bounds into mViewWidth
+	put mViewWidth * 0.05 into mMargin
+	if mMargin > 20 then
+		put 20 into mMargin
+	else if mMargin < 5 then
+		put 5 into mMargin
+	end if
+	put mlistHeight - mViewHeight into mListTravel
+	if mListTravel < 0 then
+		put 0 into mListTravel
+	end if
+	put false into mDragging
+end handler
+
+private handler scrollbarRect() as Rectangle
+	variable tScrollbarRatio as Real
+	put mViewHeight / mlistHeight into tScrollbarRatio
+	if tScrollbarRatio > 1 then
+		put 1 into tScrollbarRatio
+	end if
+	
+	variable tScrollbarHeight as Real
+	put mViewHeight * tScrollbarRatio into tScrollbarHeight
+	if tScrollbarHeight < 25 then
+		put 25 into tScrollbarHeight
+	end if
+	
+	variable tScrollPositionRatio as Real
+	put mViewTopPosition / mListTravel into tScrollPositionRatio
+	
+	variable tScrollbarSpace as Real
+	variable tScrollbarY as Real
+	put mViewHeight - tScrollbarHeight into tScrollbarSpace
+	put tScrollbarSpace * tScrollPositionRatio into tScrollbarY
+
+	return rectangle [mViewWidth-10,tScrollbarY,mViewWidth-5,tScrollbarY+tScrollbarHeight]
+end handler
+
+private handler scrollbarHeight() as Real
+	variable tScrollbarHeight as Real
+	variable tScrollbarRatio as Real
+
+	put mViewHeight / mlistHeight into tScrollbarRatio
+	
+	if tScrollbarRatio >= 1 or tScrollbarRatio <= 0 then 
+		return mViewHeight
+	end if
+	
+	put mViewHeight * tScrollbarRatio into tScrollbarHeight
+	
+	if tScrollbarHeight < 25 then
+		return 25
+	else
+		return tScrollbarHeight
+	end if
+end handler
+
+//public handler OnDragStart() as Boolean
+	//put the mouse position into sDragLastPosition
+	
+	//if sDragLastPosition is within scrollbarRect() then
+	//	log "Dragging scrollbar!!"
+	//end if
+	
+	//return true
+//end handler
+
+//public handler onDragDrop() as undefined
+//	log "Drag ended: %@" with [the mouse position]
+//end handler
+
+//public handler onDragMove(in pX as Real, in pY as Real) as undefined
+//	log "Drag move: %@" with [pY]
+//	if element 2 of sDragLastPosition is not pY then
+//		add element 2 of sDragLastPosition - pY to mViewTopPosition
+//		put [pX,pY] into sDragLastPosition
+//	end if
+//end handler
+
+private handler stringToColor(in pString as String) as Color
+	variable tRed as Real
+	variable tGreen as Real
+	variable tBlue as Real
+	variable tAlpha as Real
+
+	variable tComponentList as List
+	split pString by "," into tComponentList
+
+	variable tComponentCount
+	put the number of elements in tComponentList into tComponentCount
+	if tComponentCount is not 3 and tComponentCount is not 4 then
+		// Invalid number of components detected
+		throw "Invalid color"
+	end if
+
+	put (element 1 of tComponentList) parsed as number into tRed
+	put (element 2 of tComponentList) parsed as number into tGreen
+	put (element 3 of tComponentList) parsed as number into tBlue
+
+	if tComponentCount is 4 then
+		put (element 4 of tComponentList) parsed as number into tAlpha
+	else
+		put 1.0 into tAlpha
+	end if
+
+	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha ]
+end handler
+
+end widget

@@ -1103,6 +1103,54 @@ Parse_stat MCIs::parse(MCScriptPoint &sp, Boolean the)
 	initpoint(sp);
 	if (sp.skip_token(SP_FACTOR, TT_UNOP, O_NOT) == PS_NORMAL)
 		form = IT_NOT;
+    if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_REALLY) == PS_NORMAL)
+    {
+        if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_NOTHING) == PS_NORMAL)
+            valid = IV_UNDEFINED;
+        else
+        {
+            if (sp.skip_token(SP_VALIDATION, TT_UNDEFINED, TT_UNDEFINED) != PS_NORMAL)
+            {
+                MCperror -> add(PE_ISREALLY_NOAN, sp);
+                return PS_ERROR;
+            }
+            
+            if (sp.skip_token(SP_SORT, TT_UNDEFINED, ST_BINARY) == PS_NORMAL)
+            {
+                if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_STRING) != PS_NORMAL)
+                {
+                    MCperror -> add(PE_ISREALLY_NOSTRING, sp);
+                    return PS_ERROR;
+                }
+                
+                valid = IV_BINARY_STRING;
+            }
+            else if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_NOTHING) == PS_NORMAL)
+                valid = IV_UNDEFINED;
+            else if (sp . skip_token(SP_VALIDATION, TT_UNDEFINED, IV_LOGICAL) == PS_NORMAL)
+                valid = IV_LOGICAL;
+            else if (sp . skip_token(SP_VALIDATION, TT_UNDEFINED, IV_ARRAY) == PS_NORMAL)
+                valid = IV_ARRAY;
+            else if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_STRING) == PS_NORMAL)
+                valid = IV_STRING;
+            else if (sp . skip_token(SP_VALIDATION, TT_UNDEFINED, IV_INTEGER) == PS_NORMAL)
+                valid = IV_INTEGER;
+            else if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_REAL) == PS_NORMAL)
+                valid = IV_REAL;
+            else
+            {
+                MCperror -> add(PE_ISREALLY_NOTYPE, sp);
+                return PS_ERROR;
+            }
+        }
+            
+        if (form != IT_NOT)
+            form = IT_REALLY;
+        else
+            form = IT_NOT_REALLY;
+        
+        return PS_BREAK;
+    }
 	if (sp.next(type) != PS_NORMAL)
 	{
 		MCperror->add(PE_IS_NORIGHT, sp);
@@ -1187,7 +1235,12 @@ Parse_stat MCIs::parse(MCScriptPoint &sp, Boolean the)
 						if (sp . next(type) == PS_NORMAL)
 						{
 							if ((sp.lookup(SP_FACTOR, te) == PS_NORMAL
-									&& (te->which == P_DRAG_DATA || te->which == P_CLIPBOARD_DATA)))
+									&& (te->which == P_DRAG_DATA
+                                        || te->which == P_CLIPBOARD_DATA
+                                        || te->which == P_RAW_CLIPBOARD_DATA
+                                        || te->which == P_RAW_DRAGBOARD_DATA
+                                        || te->which == P_FULL_CLIPBOARD_DATA
+                                        || te->which == P_FULL_DRAGBOARD_DATA)))
 							{
 								if (te -> which == P_CLIPBOARD_DATA)
 								{
@@ -1196,7 +1249,35 @@ Parse_stat MCIs::parse(MCScriptPoint &sp, Boolean the)
 									else
 										form = IT_AMONG_THE_CLIPBOARD_DATA;
 								}
-								else
+                                else if (te -> which == P_RAW_CLIPBOARD_DATA)
+                                {
+                                    if (form == IT_NOT_AMONG)
+                                        form = IT_NOT_AMONG_THE_RAW_CLIPBOARD_DATA;
+                                    else
+                                        form = IT_AMONG_THE_RAW_CLIPBOARD_DATA;
+                                }
+                                else if (te -> which == P_RAW_DRAGBOARD_DATA)
+                                {
+                                   if (form == IT_NOT_AMONG)
+                                       form = IT_NOT_AMONG_THE_RAW_DRAGBOARD_DATA;
+                                    else
+                                        form = IT_AMONG_THE_RAW_DRAGBOARD_DATA;
+                                }
+                                else if (te -> which == P_FULL_CLIPBOARD_DATA)
+                                {
+                                    if (form == IT_NOT_AMONG)
+                                        form = IT_NOT_AMONG_THE_FULL_CLIPBOARD_DATA;
+                                    else
+                                        form = IT_AMONG_THE_FULL_CLIPBOARD_DATA;
+                                }
+                                else if (te -> which == P_FULL_DRAGBOARD_DATA)
+                                {
+                                    if (form == IT_NOT_AMONG)
+                                        form = IT_NOT_AMONG_THE_FULL_DRAGBOARD_DATA;
+                                    else
+                                        form = IT_AMONG_THE_FULL_DRAGBOARD_DATA;
+                                }
+								else /* if (te -> which == P_DRAG_DATA) */
 								{
 									if (form == IT_NOT_AMONG)
 										form = IT_NOT_AMONG_THE_DRAG_DATA;
@@ -1760,6 +1841,67 @@ Exec_stat MCIs::eval(MCExecPoint &ep)
 void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
     bool t_result;
+    
+    // Implementation of 'is [ not ] really'
+    if (form == IT_REALLY || form == IT_NOT_REALLY)
+    {
+        MCAutoValueRef t_value;
+        
+        if (!ctxt . EvalExprAsValueRef(right, EE_IS_BADLEFT, &t_value))
+            return;
+        
+        bool t_result;
+        switch(valid)
+        {
+            case IV_UNDEFINED:
+                if (form == IT_REALLY)
+                    MCEngineEvalIsReallyNothing(ctxt, *t_value, t_result);
+                else
+                    MCEngineEvalIsNotReallyNothing(ctxt, *t_value, t_result);
+                break;
+            case IV_LOGICAL:
+                if (form == IT_REALLY)
+                    MCEngineEvalIsReallyABoolean(ctxt, *t_value, t_result);
+                else
+                    MCEngineEvalIsNotReallyABoolean(ctxt, *t_value, t_result);
+                break;
+            case IV_INTEGER:
+                if (form == IT_REALLY)
+                    MCEngineEvalIsReallyAnInteger(ctxt, *t_value, t_result);
+                else
+                    MCEngineEvalIsNotReallyAnInteger(ctxt, *t_value, t_result);
+                break;
+            case IV_REAL:
+                if (form == IT_REALLY)
+                    MCEngineEvalIsReallyAReal(ctxt, *t_value, t_result);
+                else
+                    MCEngineEvalIsNotReallyAReal(ctxt, *t_value, t_result);
+                break;
+            case IV_STRING:
+                if (form == IT_REALLY)
+                    MCEngineEvalIsReallyAString(ctxt, *t_value, t_result);
+                else
+                    MCEngineEvalIsNotReallyAString(ctxt, *t_value, t_result);
+                break;
+            case IV_BINARY_STRING:
+                if (form == IT_REALLY)
+                    MCEngineEvalIsReallyABinaryString(ctxt, *t_value, t_result);
+                else
+                    MCEngineEvalIsNotReallyABinaryString(ctxt, *t_value, t_result);
+                break;
+            case IV_ARRAY:
+                if (form == IT_REALLY)
+                    MCEngineEvalIsReallyAnArray(ctxt, *t_value, t_result);
+                else
+                    MCEngineEvalIsNotReallyAnArray(ctxt, *t_value, t_result);
+                break;
+        }
+        
+        if (!ctxt . HasError())
+            MCExecValueTraits<bool>::set(r_value, t_result);
+        
+		return;
+    }
 
     // Implementation of 'is a <type>'
     if (valid != IV_UNDEFINED)
@@ -1827,6 +1969,10 @@ void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
             else
                 MCStringsEvalIsNotAscii(ctxt, *t_value, t_result);
             break;
+
+		default:
+			MCUnreachable();
+			break;
         }
 
         if (!ctxt . HasError())
@@ -1953,6 +2099,10 @@ void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
                 else
                     MCStringsEvalIsNotAmongTheCodeunitsOf(ctxt, *t_left, *t_right, t_result);
                 break;
+
+			default:
+				MCUnreachable();
+				break;
             }
         }
         break;
@@ -1960,6 +2110,14 @@ void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     case IT_NOT_AMONG_THE_CLIPBOARD_DATA:
     case IT_AMONG_THE_DRAG_DATA:
     case IT_NOT_AMONG_THE_DRAG_DATA:
+    case IT_AMONG_THE_RAW_CLIPBOARD_DATA:
+    case IT_NOT_AMONG_THE_RAW_CLIPBOARD_DATA:
+    case IT_AMONG_THE_RAW_DRAGBOARD_DATA:
+    case IT_NOT_AMONG_THE_RAW_DRAGBOARD_DATA:
+    case IT_AMONG_THE_FULL_CLIPBOARD_DATA:
+    case IT_NOT_AMONG_THE_FULL_CLIPBOARD_DATA:
+    case IT_AMONG_THE_FULL_DRAGBOARD_DATA:
+    case IT_NOT_AMONG_THE_FULL_DRAGBOARD_DATA:
         {
             MCNewAutoNameRef t_right;
 
@@ -1974,6 +2132,24 @@ void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
                 MCPasteboardEvalIsAmongTheKeysOfTheDragData(ctxt, *t_right, t_result);
             else if (form == IT_NOT_AMONG_THE_DRAG_DATA)
                 MCPasteboardEvalIsNotAmongTheKeysOfTheDragData(ctxt, *t_right, t_result);
+            else if (form == IT_AMONG_THE_RAW_CLIPBOARD_DATA)
+                MCPasteboardEvalIsAmongTheKeysOfTheRawClipboardData(ctxt, *t_right, t_result);
+            else if (form == IT_NOT_AMONG_THE_RAW_CLIPBOARD_DATA)
+                MCPasteboardEvalIsNotAmongTheKeysOfTheRawClipboardData(ctxt, *t_right, t_result);
+            else if (form == IT_AMONG_THE_RAW_DRAGBOARD_DATA)
+                MCPasteboardEvalIsAmongTheKeysOfTheRawDragData(ctxt, *t_right, t_result);
+            else if (form == IT_NOT_AMONG_THE_RAW_DRAGBOARD_DATA)
+                MCPasteboardEvalIsNotAmongTheKeysOfTheRawDragData(ctxt, *t_right, t_result);
+            else if (form == IT_AMONG_THE_FULL_CLIPBOARD_DATA)
+                MCPasteboardEvalIsAmongTheKeysOfTheFullClipboardData(ctxt, *t_right, t_result);
+            else if (form == IT_NOT_AMONG_THE_FULL_CLIPBOARD_DATA)
+                MCPasteboardEvalIsNotAmongTheKeysOfTheFullClipboardData(ctxt, *t_right, t_result);
+            else if (form == IT_AMONG_THE_FULL_DRAGBOARD_DATA)
+                MCPasteboardEvalIsAmongTheKeysOfTheFullDragData(ctxt, *t_right, t_result);
+            else if (form == IT_NOT_AMONG_THE_FULL_DRAGBOARD_DATA)
+                MCPasteboardEvalIsNotAmongTheKeysOfTheFullDragData(ctxt, *t_right, t_result);
+            else
+                MCUnreachable();
         }
         break;
     case IT_IN:

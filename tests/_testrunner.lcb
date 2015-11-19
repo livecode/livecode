@@ -1,0 +1,654 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.__INTERNAL._testrunner
+
+use com.livecode.foreign
+use com.livecode.file
+use com.livecode.system
+use com.livecode.unittest
+
+-- Workaround string formatting issues
+handler FormatInt(in pNumber as Number) returns String
+	variable tNumberString
+
+	put pNumber formatted as string into tNumberString
+
+	if "." is in tNumberString then
+		variable tDotOffset
+		put the first offset of "." in tNumberString into tDotOffset
+		delete char tDotOffset to (the number of chars in tNumberString) of tNumberString
+	end if
+
+	return tNumberString
+end handler
+
+----------------------------------------------------------------
+-- Wrapper for "system" library function
+----------------------------------------------------------------
+
+foreign handler __system(in Command as ZStringNative) returns CInt binds to "system"
+
+handler System(in pCommand as String) returns Number
+	variable tExitStatus as Number
+	put __system(pCommand) into tExitStatus
+
+	if tExitStatus is in [0, -1] then
+		return tExitStatus
+	end if
+
+	if the operating system is "linux" then
+		-- Basically the WEXITSTATUS macro from C...
+		return tExitStatus shifted right by 8 bitwise
+	else
+		return tExitStatus
+	end if
+end handler
+
+----------------------------------------------------------------
+-- UTF-8 encoding/decoding
+----------------------------------------------------------------
+
+-- FIXME this should use proper LiveCode builder syntax for string
+-- encoding/decoding.
+
+foreign handler MCStringEncode(in Source as String, in Encoding as CInt, in IsExternalRep as CBool, out Encoded as Data) returns CBool binds to "<builtin>"
+foreign handler MCStringDecode(in Encoded as Data, in Encoding as CInt, in IsExternalRep as CBool, out Result as String) returns CBool binds to "<builtin>"
+
+handler EncodeUTF8(in pString as String) returns Data
+	variable tEncoded as Data
+	MCStringEncode(pString, 4 /* UTF-8 */, false, tEncoded)
+	return tEncoded
+end handler
+
+handler DecodeUTF8(in pData as Data) returns String
+	variable tString as String
+	MCStringDecode(pData, 4 /* UTF-8 */, false, tString)
+	return tString
+end handler
+
+----------------------------------------------------------------
+-- Status messages
+----------------------------------------------------------------
+
+variable sPrintData as optional Array
+
+handler PrintInitializeTput(in pArgs as String) returns String
+	variable tTempFile as String
+	put "tput.tmp" into tTempFile
+
+	variable tCommand
+	put "tput" && pArgs && ">" && tTempFile into tCommand
+
+	variable tResult as String
+	if System(tCommand) is not 0 then
+		put "" into tResult
+	else
+		put DecodeUTF8(the contents of file tTempFile) into tResult
+		delete file tTempFile
+	end if
+
+	return tResult
+end handler
+
+handler PrintInitialize()
+	if sPrintData is not nothing then
+		return
+	end if
+
+	put the empty array into sPrintData
+
+	-- Check whether colour is possible
+	variable tColors as String
+	put PrintInitializeTput("colors") into tColors
+	if tColors is empty or tColors parsed as number <= 8 then
+		-- Use empty colour codes
+		put "" into sPrintData["normal"]
+		put "" into sPrintData["bold"]
+		put "" into sPrintData["red"]
+		put "" into sPrintData["green"]
+		put "" into sPrintData["yellow"]
+		put "" into sPrintData["cyan"]
+	else
+		-- Get specific colour codes
+		put PrintInitializeTput("sgr0") into sPrintData["normal"]
+		put PrintInitializeTput("bold") into sPrintData["bold"]
+		put PrintInitializeTput("setaf 1") into sPrintData["red"]
+		put PrintInitializeTput("setaf 2") into sPrintData["green"]
+		put PrintInitializeTput("setaf 3") into sPrintData["yellow"]
+		put PrintInitializeTput("setaf 6") into sPrintData["cyan"]
+	end if
+end handler
+
+handler PrintStatus(in pType as String, in pMessage as String)
+	PrintInitialize()
+
+	if the last char of pMessage is not "\n" then
+		put "\n" after pMessage
+	end if
+
+	-- Add colour codes, if possible
+	if pType is "ERROR" or pType is "FAIL" then
+		put sPrintData["red"] & sPrintData["bold"] before pType
+	else if pType is "XFAIL" or pType is "XPASS" then
+		put sPrintData["yellow"] before pType
+	else if pType is "PASS" then
+		put sPrintData["green"] before pType
+	else if pType is "SKIP" then
+		put sPrintData["cyan"] before pType
+	end if
+	put sPrintData["normal"] after pType
+
+	variable tOutput as String
+	put pType & ":" && pMessage into tOutput
+	write EncodeUTF8(tOutput) to the error stream
+end handler
+
+-- The error message is used to indicate that something went wrong
+-- with the actual testing infrastructure, not that a test failed.
+handler PrintError(in pMessage as String)
+	PrintStatus("ERROR", pMessage)
+	quit with status 1
+end handler
+
+handler PrintFail(in pModulePath as String, in pHandlerName as String)
+	PrintStatus("FAIL", " " & pModulePath & ":" && pHandlerName)
+end handler
+
+handler PrintPass(in pModulePath as String, in pHandlerName as String)
+	PrintStatus("PASS", " " & pModulePath & ":" && pHandlerName)
+end handler
+
+handler PrintXFail(in pModulePath as String, in pHandlerName as String)
+	PrintStatus("XFAIL", pModulePath & ":" && pHandlerName)
+end handler
+
+handler PrintXPass(in pModulePath as String, in pHandlerName as String)
+	PrintStatus("XPASS", pModulePath & ":" && pHandlerName)
+end handler
+
+handler PrintSkip(in pModulePath as String, in pHandlerName as String)
+	PrintStatus("SKIP", " " & pModulePath & ":" && pHandlerName)
+end handler
+
+--================================================================
+-- Run the tests in a module
+--================================================================
+
+variable sLcRunPath as String
+
+handler GetModuleTempPath(in pModulePath as String) returns String
+	return pModulePath & ".tmp"
+end handler
+
+----------------------------------------------------------------
+-- Try and make the module path prettier, for presentation purposes
+--
+-- Eliminate any common prefix between the module path and the path to
+-- the test runner's module file, then remove ".lcm" suffix.
+handler GetModulePrettyPath(in pModulePath as String) returns String
+	-- FIXME HACK HACK HACK
+	variable tPrefix as String
+	put the command name into tPrefix
+	put char 1 to (the last offset of "/" in tPrefix) of tPrefix into tPrefix
+
+	if 1 is the first offset of tPrefix in pModulePath then
+		delete char 1 to (the number of chars in tPrefix) of pModulePath
+	end if
+
+	variable tLen as Number
+	put the number of chars in pModulePath into tLen
+	if (tLen-3) is the last offset of ".lcm" in pModulePath then
+		delete char (tLen-3) to tLen of pModulePath
+	end if
+	return pModulePath
+end handler
+
+----------------------------------------------------------------
+-- Get a list of handlers available in a module
+--
+-- Uses "lc-run --list-handlers" to get a list of runnable top-level
+-- handlers in pModulePath.
+--
+-- FIXME Currently, this is implemented by redirecting the lc-run's
+-- output into a temporary file, then reading the file in.  It would
+-- be much better to use a pipe instead, if possible.
+handler GetModuleHandlers(in pModulePath as String, out rHandlerNames as List) returns Boolean
+	variable tTempPath as String
+	put GetModuleTempPath(pModulePath) into tTempPath
+
+	variable tCommand as String
+	put sLcRunPath && "--list-handlers" && pModulePath && ">" & tTempPath into tCommand
+
+	if System(tCommand) is not 0 then
+		put the empty list into rHandlerNames
+		return false
+	end if
+
+	split DecodeUTF8(the contents of file tTempPath) by "\n" into rHandlerNames
+	delete file tTempPath
+
+	return true
+end handler
+
+----------------------------------------------------------------
+-- Run a module handler, capturing the output
+--
+-- Uses "lc-run --handler <foo>" to invoke the handler.  The handler
+-- is expected to output TAP on standard output (e.g. by using the
+-- com.livecode.unittest syntax).
+--
+-- FIXME Currently, this is implemented by redirecting the lc-run's
+-- output into a temporary file, then reading the file in.  It would
+-- be much better to use a pipe instead, if possible.
+--
+-- FIXME We may want to capture the stderr output into the log at some
+-- point.
+handler GetTestOutput(in pModulePath as String, in pHandlerName as String, out rOutput as String) returns Boolean
+
+	variable tTempPath as String
+	put GetModuleTempPath(pModulePath) into tTempPath
+
+	variable tCommand as String
+	put sLcRunPath && "--handler" && pHandlerName && pModulePath && ">" & tTempPath into tCommand
+
+	-- Put something helpful into the output
+	put "###" && GetModulePrettyPath(pModulePath) && pHandlerName && "\n\n" into rOutput
+
+	variable tExitStatus as Number
+	put System(tCommand) into tExitStatus
+	if tExitStatus is not 0 then
+		put "not ok -" && pHandlerName && "#" && "Handler exited with status" && FormatInt(tExitStatus) & "\n" after rOutput
+		return false
+	end if
+
+	put DecodeUTF8(the contents of file tTempPath) after rOutput
+	delete file tTempPath
+
+	return true
+end handler
+
+----------------------------------------------------------------
+-- Check whether a handler should be considered as a test
+handler IsTestHandler(in pHandlerName as String) returns Boolean
+	if 1 is the first offset of "Test" in pHandlerName then
+		return true
+	else
+		return false
+	end if
+end handler
+
+----------------------------------------------------------------
+-- Analyze test output and check whether it indicates success
+--
+-- Performs a basic pass over a set of test output and returns one of
+-- "PASS", "XPASS", "FAIL", "XFAIL", "SKIP", or "" (if the output
+-- contained no test results).
+handler GetTestStatus(in pOutput as String) returns String
+	variable tFail as Boolean
+	variable tXFail as Boolean
+	variable tXPass as Boolean
+	variable tPass as Boolean
+	variable tSkipped as Boolean
+	put false into tFail
+	put false into tXFail
+	put false into tXPass
+	put false into tPass
+	put false into tSkipped
+
+	variable tOutputLines as List
+	split pOutput by "\n" into tOutputLines
+
+	variable tLine as String
+	repeat for each element tLine in tOutputLines
+		variable tOkay as Boolean
+		variable tTodo as Boolean
+		variable tSkip as Boolean
+
+		-- Check whether the line starts with "not ok"
+		if 1 is the first offset of "not ok" in tLine then
+			put false into tOkay
+		else if 1 is the first offset of "ok" in tLine then
+			put true into tOkay
+		else
+			next repeat -- no test on this line
+		end if
+
+		variable tLineElements as List
+		split tLine by "#" into tLineElements
+
+		-- Check for a diagnostic mode (TODO or SKIP)
+		put false into tSkip
+		if 1 < the number of elements in tLineElements then
+			if 1 is the first offset of " SKIP" in tLineElements[2] then
+				put true into tSkip
+			end if
+		end if
+		put false into tTodo
+		if 1 < the number of elements in tLineElements then
+			if 1 is the first offset of " TODO" in tLineElements[2] then
+				put true into tTodo
+			end if
+		end if
+
+		if tOkay then
+			if tTodo then
+				put true into tXPass
+			else if tSkip then
+				put true into tSkipped
+			else
+				put true into tPass
+			end if
+		else
+			if tTodo then
+				put true into tXFail
+			else
+				return "FAIL"
+			end if
+		end if
+	end repeat
+
+	if tFail then
+		return "FAIL"
+	else if tXPass then
+		return "XPASS"
+	else if tXFail then
+		return "XFAIL"
+	else if tPass then
+		return "PASS"
+	else if tSkipped then
+		return "SKIP"
+	else
+		return the empty string
+	end if
+end handler
+
+----------------------------------------------------------------
+-- Main entry point for running the tests from a compiled builder
+-- program.
+--
+-- Must be called like this:
+--
+--     lc-run --handler RunModuleTests -- \
+--         _testrunner.lcm --lc-run /path/to/lc-run /path/to/foo.lcm
+--
+-- RunModuleTests() will run a handler from the target module if all
+-- of the following conditions are met:
+--
+--   * Public handler
+--   * Name starts with "Test"
+--   * Takes no arguments
+--
+public handler RunModuleTests()
+	-- Windows is banned because UTF-8 output on Windows might not
+	-- do the right thing, i.e. for a stupid reason.
+	if the operating system is "windows" then
+		test diagnostic "Not implemented on Windows"
+		quit with status 1
+	end if
+
+	---------- Analyze arguments
+
+	variable tModulePath as String
+
+	-- FIXME this is stupidly fragile.  We need a command-line
+	-- argument parsing library
+
+	if the number of elements in the command arguments < 3 then
+		PrintError("_testrunner.RunModuleTests: Too few arguments")
+	end if
+
+	if element 1 of the command arguments is not "--lc-run" then
+		PrintError("_testrunner.RunModuleTests: Bad arguments (expected '--lc-run'")
+	end if
+
+	put element 2 of the command arguments into sLcRunPath
+	put element 3 of the command arguments into tModulePath
+
+	---------- Get a list of handlers
+
+	variable tHandlers as List
+	if not GetModuleHandlers(tModulePath, tHandlers) then
+		PrintError(tModulePath & ": Failed to list handlers")
+	end if
+
+	---------- Run each of the handlers in turn
+
+	variable tHandlerName as String
+	repeat for each element tHandlerName in tHandlers
+		if not IsTestHandler(tHandlerName) then
+			next repeat
+		end if
+
+		variable tHandlerOutput as String
+		variable tTestStatus as String
+		variable tPrettyModule as String
+
+		GetTestOutput(tModulePath, tHandlerName, tHandlerOutput)
+
+		put GetTestStatus(tHandlerOutput) into tTestStatus
+		put GetModulePrettyPath(tModulePath) into tPrettyModule
+		if tTestStatus is "FAIL" then
+			PrintFail(tPrettyModule, tHandlerName)
+		else if tTestStatus is "XFAIL" then
+			PrintXFail(tPrettyModule, tHandlerName)
+		else if tTestStatus is "XPASS" then
+			PrintXPass(tPrettyModule, tHandlerName)
+		else if tTestStatus is "SKIP" then
+			PrintSkip(tPrettyModule, tHandlerName)
+		else
+			PrintPass(tPrettyModule, tHandlerName)
+		end if
+
+		write EncodeUTF8(tHandlerOutput) to the output stream
+		write EncodeUTF8("\n") to the output stream
+
+	end repeat
+end handler
+
+--================================================================
+-- Analyze TAP logs and print a summary
+--================================================================
+
+----------------------------------------------------------------
+-- Print a pretty summary of the test results
+--
+handler PrintTestSummary(in tPass as Number, in tXPass as Number, in tXFail as Number, in tFail as Number, in tSkip as Number)
+
+	variable tSummaryString as String
+
+	variable tTotal as Number
+	put tPass + tFail + tXPass + tXFail + tSkip into tTotal
+
+	--
+	if tXFail is 0 and tFail is 0 then
+		put "All" && FormatInt(tTotal) && "tests passed\n" into tSummaryString
+
+	else if tFail is 0 then
+		put "All" && FormatInt(tTotal) && "tests behaved as expected\n" into tSummaryString
+
+	else
+		put FormatInt(tFail) && "OF" && FormatInt(tTotal) && "TESTS FAILED\n" into tSummaryString
+	end if
+
+	-- Format extra summary information from expected failure annotations
+	if tXPass > 0 then
+		put "\t" & FormatInt(tXPass) && "unexpected passes\n" after tSummaryString
+	end if
+	if tXFail > 0 then
+		put "\t" & FormatInt(tXFail) && "expected failures\n" after tSummaryString
+	end if
+	if tSkip > 0 then
+		put "\t" & FormatInt(tSkip) && "skipped\n" after tSummaryString
+	end if
+
+	variable tDecoration as String
+	put "================================================================\n" into tDecoration
+	put tDecoration & tSummaryString & tDecoration into tSummaryString
+
+	write EncodeUTF8(tSummaryString) to the error stream
+end handler
+
+----------------------------------------------------------------
+-- Main entry point for test summary mode
+--
+-- Must be called like this:
+--
+--     lc-run --handler SummarizeTests -- \
+--         _testrunner.lcm --summary-log /path/to/summary [LOGFILE ...]
+--
+public handler SummarizeTests()
+
+	---------- Analyze arguments
+	variable tLogPaths as List
+	variable tSummaryLogPath as String
+
+	-- Get summary log filename
+	if the number of elements in the command arguments < 2 then
+		PrintError("_testrunner.SummarizeTests: Too few arguments")
+	end if
+
+	if element 1 of the command arguments is not "--summary-log" then
+		PrintError("_testrunner.SummarizeTests: Bad arguments (expected '--summary-log'")
+	end if
+
+	put element 2 of the command arguments into tSummaryLogPath
+
+	-- Get the input log files
+	put the command arguments into tLogPaths
+	delete element 1 to 2 of tLogPaths
+
+	---------- Count occurrences of test states
+
+	variable tSummaryLog as String
+
+	put the empty string into tSummaryLog
+
+	variable tPassCount as Number
+	variable tFailCount as Number
+	variable tXPassCount as Number
+	variable tXFailCount as Number
+	variable tSkipCount as Number
+
+	put 0 into tPassCount
+	put 0 into tFailCount
+	put 0 into tXPassCount
+	put 0 into tXFailCount
+	put 0 into tSkipCount
+
+	-- Process all of the log files line-by-line.  Count up the
+	-- number of success, failures, expected failures and
+	-- unexpected passes.  If a log file reports failures or
+	-- unexpected passes, add it to the summary log.
+
+	variable tLogFilePath as String
+	repeat for each element tLogFilePath in tLogPaths
+
+		-- Read in the log file
+		variable tLog as String
+		put DecodeUTF8(the contents of file tLogFilePath) into tLog
+
+		-- Split into lines
+		variable tLogLines as List
+		split tLog by "\n" into tLogLines
+
+		-- Keep track of whether the log is interesting enough
+		-- to store in the summary file.
+		variable tIsInteresting as Boolean
+		put false into tIsInteresting
+
+		-- Analyze each log line
+		variable tLine as String
+		repeat for each element tLine in tLogLines
+
+			variable tStatus as String
+			put GetTestStatus(tLine) into tStatus
+
+			if tStatus is "PASS" then
+				put tPassCount + 1 into tPassCount
+			else if tStatus is "XFAIL" then
+				put tXFailCount + 1 into tXFailCount
+				put true into tIsInteresting
+			else if tStatus is "XPASS" then
+				put tXPassCount + 1 into tXPassCount
+				put true into tIsInteresting
+			else if tStatus is "FAIL" then
+				put tFailCount + 1 into tFailCount
+			else if tStatus is "SKIP" then
+				put tSkipCount + 1 into tSkipCount
+			else
+				next repeat -- no test on this line
+			end if
+		end repeat
+
+		-- If the log is interesting, append it to the summary
+		-- log
+		if tIsInteresting then
+			put "\n################################################################\n\n" after tSummaryLog
+			put tLog after tSummaryLog
+		end if
+	end repeat
+
+	---------- Write out the summary log
+	put EncodeUTF8(tSummaryLog) into the contents of file tSummaryLogPath
+
+	---------- Format test summary
+	PrintTestSummary(tPassCount, tXPassCount, tXFailCount, tFailCount, tSkipCount)
+
+	if tFailCount is not 0 then
+		quit with status 1
+	end if
+end handler
+
+--================================================================
+--Test system tests
+--================================================================
+
+/*
+public handler TestPass()
+		test diagnostic "Normal tests"
+		test 2 > 1
+		test "Basic test" when true
+end handler
+public handler TestXFail()
+		test diagnostic "Tests which are expected to fail"
+		broken test false
+		broken test "Failed 2" when false
+		broken test false because "broken"
+		broken test "Failed 4" when false because "really broken"
+end handler
+public handler TestXPass()
+		test diagnostic "Tests which are expected to fail but don't"
+		broken test true
+		broken test "Failed 2" when true
+		broken test true because "broken"
+		broken test "Failed 4" when true because "really broken"
+end handler
+public handler TestFail()
+		test diagnostic "Tests which actually fail"
+		test false
+end handler
+public handler TestSkip()
+		test diagnostic "Skipped tests"
+		skip test
+		skip test "Skipped 2"
+		skip test because "Not implemented"
+		skip test "Skipped 4" because "Not supported on this platform"
+end handler
+*/
+
+end module

@@ -1,0 +1,316 @@
+/* Copyright (C) 2003-2015 LiveCode Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+This library consists of the sorting operations provided by the standard library of LiveCode Builder.
+*/
+
+module com.livecode.sort
+
+public foreign handler MCSortExecSortListAscending(inout Target as List) returns nothing binds to "<builtin>"
+public foreign handler MCSortExecSortListDescending(inout Target as List) returns nothing binds to "<builtin>"
+
+public foreign handler MCSortExecSortListAscendingText(inout Target as List) returns nothing binds to "<builtin>"
+public foreign handler MCSortExecSortListAscendingBinary(inout Target as List) returns nothing binds to "<builtin>"
+public foreign handler MCSortExecSortListAscendingNumeric(inout Target as List) returns nothing binds to "<builtin>"
+public foreign handler MCSortExecSortListAscendingDateTime(inout Target as List) returns nothing binds to "<builtin>"
+public foreign handler MCSortExecSortListDescendingText(inout Target as List) returns nothing binds to "<builtin>"
+public foreign handler MCSortExecSortListDescendingBinary(inout Target as List) returns nothing binds to "<builtin>"
+public foreign handler MCSortExecSortListDescendingNumeric(inout Target as List) returns nothing binds to "<builtin>"
+public foreign handler MCSortExecSortListDescendingDateTime(inout Target as List) returns nothing binds to "<builtin>"
+
+--
+
+/* 
+
+Summary:        Sorts <Target> in ascending order.
+Target:         An expression that evaluates to a list.
+
+Example:
+    variable tTestList as List
+	put [4,3,1,5,2] into tTestList
+	
+    sort tTestList -- tTestList is [1,2,3,4,5]
+	
+Description:
+Generic sort is performed by comparing the elements of a homogeneous list according to the default comparison function associated to the type of its elements.
+>*Note:* It is an error if <Target> is not homogeneous, i.e. if it contains any elements of differing type.
+
+Tags: Sorting
+*/
+
+syntax SortListAscending is statement
+    "sort" <Target: Expression> ["in" "ascending" "order"]
+begin 
+    MCSortExecSortListAscending(Target)
+end syntax
+
+/* 
+
+Summary:        Sorts <Target> in descending text order.
+Target:         An expression that evaluates to a list of strings.
+
+Example:
+   	variable tTestList as List
+	put ["a", "b", "c"] into tTestList
+	
+    sort tTestList in descending order -- tTestList is ["c", "b", "a"]
+
+Description:
+Generic sort is performed by comparing the elements of a homogeneous list according to the default comparison function associated to the type of its elements.
+>*Note:* It is an error if <Target> is not homogeneous, i.e. if it contains any elements of differing type.
+
+Tags: Sorting
+*/
+
+syntax SortListDescending is statement
+    "sort" <Target: Expression> "in" "descending" "order"
+begin 
+    MCSortExecSortListDescending(Target)
+end syntax
+
+--
+
+/* 
+
+Summary:        Sorts <Target> in ascending text order.
+Target:         An expression that evaluates to a list of strings.
+
+Example:
+    variable tTestList as List
+	
+	variable tChar
+	repeat for each char tChar in "spoilage"
+		push tChar onto tTestList
+	end repeat
+		
+    sort tTestList in ascending text order
+    variable tString as String
+    combine tTestList with "" into tString -- tString is "aegilops"
+
+Description:
+Text sort is performed by comparing string elements on a codepoint by codepoint basis.
+>*Note:* It is an error if <Target> contains any elements of non-string type.
+
+Tags: Sorting
+*/
+
+syntax SortListAscendingText is statement
+    "sort" <Target: Expression> "in" "ascending" "text" "order"
+begin 
+    MCSortExecSortListAscendingText(Target)
+end syntax
+
+/* 
+
+Summary:        Sorts <Target> in descending text order.
+Target:         An expression that evaluates to a list of strings.
+
+Example:
+    variable tTestList as List
+    put the empty list into tTestList
+
+    push "abcd" onto tTestList
+    push "xyz" onto tTestList
+
+    sort tTestList in descending text order -- tTestList is ["xyz", "abcd"]
+
+Description:
+Text sort is performed by comparing string elements on a codepoint by codepoint basis.
+>*Note:* It is an error if <Target> contains any elements of non-string type.
+
+Tags: Sorting
+*/
+
+syntax SortListDescendingText is statement
+    "sort" <Target: Expression> "in" "descending" "text" "order"
+begin 
+    MCSortExecSortListDescendingText(Target)
+end syntax
+
+--
+
+/* 
+
+Summary:        Sorts <Target> in ascending binary order.
+Target:         An expression that evaluates to a list of binary data.
+
+Description:
+Binary sort is performed by comparing data elements on a byte by byte basis.
+>*Note:* It is an error if <Target> contains any elements of non-data type.
+
+Tags: Sorting
+*/
+
+syntax SortListAscendingBinary is statement
+    "sort" <Target: Expression> "in" "ascending" "byte" "order"
+begin 
+    MCSortExecSortListAscendingBinary(Target)
+end syntax
+
+/* 
+
+Summary:        Sorts <Target> in descending binary order.
+Target:         An expression that evaluates to a list of binary data.
+
+Description:
+Binary sort is performed by comparing data elements on a byte by byte basis.
+>*Note:* It is an error if <Target> contains any elements of non-data type.
+
+Tags: Sorting
+*/
+
+syntax SortListDescendingBinary is statement
+    "sort" <Target: Expression> "in" "descending" "byte" "order"
+begin 
+    MCSortExecSortListDescendingBinary(Target)
+end syntax
+
+--
+
+/* 
+
+Summary:        Sorts <Target> in ascending numeric order.
+Target:         An expression that evaluates to a list of numbers.
+
+Example:
+    variable tTestList as List
+    put [3,4,5,1,2] into tTestList
+
+    sort tTestList in ascending numeric order -- tTestList is [1,2,3,4,5]
+
+Description:
+Numeric sort is performed by comparing numeric elements by cardinality.
+>*Note:* It is an error if <Target> contains any elements of non-numeric type.
+
+Tags: Sorting
+*/
+
+syntax SortListAscendingNumeric is statement
+    "sort" <Target: Expression> "in" "ascending" "numeric" "order"
+begin 
+    MCSortExecSortListAscendingNumeric(Target)
+end syntax
+
+/* 
+
+Summary:        Sorts <Target> in descending numeric order.
+Target:         An expression that evaluates to a list of numbers.
+
+Example:
+    variable tTestList as List
+    put [3,4,5,1,2] into tTestList
+
+    sort tTestList in descending numeric order -- tTestList is [5,4,3,2,1]
+    	
+Description:
+Numeric sort is performed by comparing numeric elements by cardinality.
+>*Note:* It is an error if <Target> contains any elements of non-numeric type.
+
+Tags: Sorting
+*/
+
+syntax SortListDescendingNumeric is statement
+    "sort" <Target: Expression> "in" "descending" "numeric" "order"
+begin 
+    MCSortExecSortListDescendingNumeric(Target)
+end syntax
+
+--
+
+syntax SortListAscendingDateTime is statement
+    "sort" <Target: Expression> "in" "ascending" "chronological" "order"
+begin 
+    MCSortExecSortListAscendingDateTime(Target)
+end syntax
+
+syntax SortListDescendingDateTime is statement
+    "sort" <Target: Expression> "in" "descending" "chronological" "order"
+begin 
+    MCSortExecSortListDescendingDateTime(Target)
+end syntax
+
+--
+
+/*
+Summary: A handler type that can be used in the <SortListUsingHandler> command.
+
+Parameters:
+pLeft: The left hand value to compare.
+pRight: The right hand value to compare.
+
+Returns: 
+An integer less than 0 if pLeft is less than pRight with respect to the intended ordering,
+an integer greater than 0 if pLeft is greater than pRight with respect to the intended ordering,
+or 0 if pLeft is equal to pRight.
+
+Description:
+Any handler of type <SortCompare> can be passed to <SortListUsingHandler> to sort a list. 
+It takes two arguments, and returns an integer based on the comparison.
+
+Tags: Sorting
+*/
+public handler type SortCompare(in pLeft as any, in pRight as any) returns Integer
+
+public foreign handler MCSortExecSortListUsingHandler(inout Target as List, in Handler as SortCompare) returns nothing binds to "<builtin>"
+
+/*
+Summary:        Sorts <Target> using <Handler> as a comparison function.
+Target:         An expression that evaluates to a list.
+Handler: 		A handler of type <SortCompare>
+
+Example:
+variable sKeyIndex as Number
+
+private handler CompareListsByElement(in pLeft as any, in pRight as any) returns Integer
+   variable tLeft as Number
+   variable tRight as Number
+   put pLeft[sKeyIndex] into tLeft
+   put pRight[sKeyIndex] into tRight
+
+   if tLeft > tRight then
+      return 1
+   else if tLeft < tRight then
+      return -1
+   else
+      return 0
+   end if
+end handler
+
+-- Sort lists according to value at specified index of each list
+public handler TestSortListOfLists(in pList as List, in pKeyIndex as Number) returns List
+   put pKeyIndex into sKeyIndex
+   sort pList using handler CompareListsByElement
+   return pList
+end handler
+ 
+Description:
+<SortListUsingHandler> sorts a list by comparing the elements of a list according to the 
+comparison implemented by the <Handler> argument.
+
+>*Note:* Supplying an inconsistent comparison operator to <SortListUsingHandler> causes 
+undefined behavior.
+
+Tags: Sorting
+*/
+
+syntax SortListUsingHandler is statement
+    "sort" <Target: Expression> "using" "handler" <Handler: Expression>
+begin 
+    MCSortExecSortListUsingHandler(Target, Handler)
+end syntax
+
+end module

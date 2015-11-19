@@ -70,7 +70,7 @@ function doPackage {
 	fi
 
 	# Package up CEF
-	if [ "$PLATFORM" = "win32" ] ; then
+	if [ "$PLATFORM" = "win32" -o "$PLATFORM" = "linux" ] ; then
 		tar -cf "${CEF_TAR}" "${LIBPATH}/CEF"
 	elif [ "$PLATFORM" = "mac" ] ; then
 		tar -cf "${CEF_TAR}" "${LIBPATH}/Chromium Embedded Framework.framework"

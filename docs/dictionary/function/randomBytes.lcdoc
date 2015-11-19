@@ -1,0 +1,37 @@
+Name: randomBytes
+
+Type: function
+
+Syntax: randomBytes(<byteCount>)
+
+Summary: Returns <byteCount> random bytes.
+
+Introduced: 4.6
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+randomBytes(10)
+
+Example:
+randomBytes(the number of characters of myVar)
+
+Parameters:
+byteCount: A number specifying how many random bytes to generate.
+
+Returns: The <randomBytes> function returns <byteCount> random bytes.
+
+Description:
+Use the <randomBytes> function to generate cryptographic-quality random data.
+
+The <randomBytes> function returns <byteCount> random bytes using the OpenSSL library's random data generator to do so.
+
+The random data is derived from non-predictable sources where possible, meaning that it can (for the most part) be considered truly random. This is contrast to the <random> function which uses a pseudo-random number generator and <randomSeed> value.
+
+>*Note:* Make sure the security library is included when building applications that use this function as a standalone. If the library cannot be found at runtime, the function with throw an error.
+
+References: randomSeed (property), random (function)
+
+Tags: math

@@ -1,0 +1,29 @@
+Name: traceReturn
+
+Type: property
+
+Syntax: set the traceReturn to {true | false}
+
+Summary: Used by the <debugger|script debugger> to specify whether a <handler> is being traced through, line by line.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,web
+
+Example:
+set the traceReturn to true
+
+Value (bool): The <traceReturn> property is true or false.
+
+Description:
+Use the <traceReturn> <property> to step forward in the script being <debug|debugged>.
+
+When a handler is traced, each line is executed, after a specified delay. Using the script debugger, you can trace a handler slowly while watching the order in which lines are executed and the value of variables as they change, in order to track down any errors in the handler.
+
+If the debugger is not active, setting this property has no effect.
+
+>*Important:*  This <property> may change or be removed in future releases.
+
+References: debugDo (command), property (glossary), handler (glossary), debugger (glossary), debug (glossary)

@@ -1479,6 +1479,7 @@ Boolean MCSocket::read_done()
 		if (nread >= revents->size)
 		{
 			if (revents->size == 0)
+			{
 				if (nread == 0)
 					return False;
 				else
@@ -1487,6 +1488,7 @@ Boolean MCSocket::read_done()
 					if (fd == 0)
 						MCresult->sets("eof");
 				}
+			}
 			return True;
 		}
 	}
@@ -1853,10 +1855,10 @@ void MCSocket::setselect()
 	if (fd)
 	{
 #if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
-		if (connected && !closing && (!shared && revents != NULL || accepting || datagram))
+		if (connected && !closing && ((!shared && revents != NULL) || accepting || datagram))
 #else
 
-		if (connected && !closing && (!shared && revents != NULL|| accepting))
+		if (connected && !closing && ((!shared && revents != NULL) || accepting))
 #endif
 
 			bioselectstate |= BIONB_TESTREAD;
@@ -1969,6 +1971,7 @@ int4 MCSocket::write(const char *buffer, uint4 towrite, Boolean securewrite)
 		{
 #endif
 			if (sslstate & SSTATE_RETRYCONNECT)
+			{
 				if (!sslconnect())
 				{
 					errno = EPIPE;
@@ -1976,9 +1979,12 @@ int4 MCSocket::write(const char *buffer, uint4 towrite, Boolean securewrite)
 				}
 #ifndef _WINDOWS
 				else if (sslstate & SSTATE_RETRYACCEPT)
+				{
 					if (!sslaccept())
 						return -1;
+				}
 #endif
+			}
 			//for write which requires read...if read is available return and wait for write again
 			errno =  EAGAIN;
 			return -1;
@@ -2428,10 +2434,12 @@ void MCSocket::sslclose()
 	if (_ssl_context)
 	{
 		if (_ssl_conn)
+		{
 			if (sslstate & SSTATE_CONNECTED)
 				SSL_shutdown(_ssl_conn);
 			else
 				SSL_clear(_ssl_conn);
+		}
 		SSL_free(_ssl_conn);
 		SSL_CTX_free(_ssl_context);
 		_ssl_context = NULL;

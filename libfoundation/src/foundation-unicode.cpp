@@ -378,7 +378,7 @@ bool MCUnicodeGetProperty(const unichar_t *p_chars, uindex_t p_char_count, MCUni
             {
                 int32_t t_prop;
                 t_prop = MCUnicodeGetIntegerProperty(t_char, p_property);
-                if (t_prop < UINT8_MIN || t_prop > UINT8_MAX)
+                if (t_prop < 0 || t_prop > UINT8_MAX)
                     return false;
                 ((uint8_t*)x_result_array)[t_offset] = uint8_t(t_prop);
                 if (t_advance == 2)
@@ -390,7 +390,7 @@ bool MCUnicodeGetProperty(const unichar_t *p_chars, uindex_t p_char_count, MCUni
             {
                 int32_t t_prop;
                 t_prop = MCUnicodeGetIntegerProperty(t_char, p_property);
-                if (t_prop < UINT16_MIN || t_prop > UINT16_MAX)
+                if (t_prop < 0 || t_prop > UINT16_MAX)
                     return false;
                 ((uint16_t*)x_result_array)[t_offset] = uint16_t(t_prop);
                 if (t_advance == 2)
@@ -402,7 +402,7 @@ bool MCUnicodeGetProperty(const unichar_t *p_chars, uindex_t p_char_count, MCUni
             {
                 int32_t t_prop;
                 t_prop = MCUnicodeGetIntegerProperty(t_char, p_property);
-                if (t_prop < UINT32_MIN || t_prop > UINT32_MAX)
+                if (t_prop < 0 || t_prop > UINT32_MAX)
                     return false;
                 ((uint32_t*)x_result_array)[t_offset] = uint32_t(t_prop);
                 if (t_advance == 2)
@@ -454,6 +454,7 @@ bool MCUnicodeGetProperty(const unichar_t *p_chars, uindex_t p_char_count, MCUni
                 ((const unichar_t**)x_result_array)[t_offset] = t_prop;
                 if (t_advance == 2)
                     ((const unichar_t**)x_result_array)[t_offset + 1] = t_prop;
+				break;
             }
         
             default:
@@ -934,22 +935,30 @@ int32_t MCUnicodeCompare(const void *p_first, uindex_t p_first_length, bool p_fi
 
 bool MCUnicodeBeginsWith(const void *p_first, uindex_t p_first_length, bool p_first_native,
                          const void *p_second, uindex_t p_second_length, bool p_second_native,
-                         MCUnicodeCompareOption p_option)
+                         MCUnicodeCompareOption p_option, uindex_t *r_first_match_length)
 {
     // Check for a shared prefix
     uindex_t t_first_match_length, t_second_match_length;
     MCUnicodeSharedPrefix(p_first, p_first_length, p_first_native, p_second, p_second_length, p_second_native, p_option, t_first_match_length, t_second_match_length);
-    return t_second_match_length == p_second_length;
+    if (t_second_match_length != p_second_length)
+        return false;
+    if (r_first_match_length != nil)
+        *r_first_match_length = t_first_match_length;
+    return true;
 }
 
 bool MCUnicodeEndsWith(const void *p_first, uindex_t p_first_length, bool p_first_native,
                        const void *p_second, uindex_t p_second_length, bool p_second_native,
-                         MCUnicodeCompareOption p_option)
+                         MCUnicodeCompareOption p_option, uindex_t *r_first_match_length)
 {
     // Check for a shared suffix
     uindex_t t_first_match_length, t_second_match_length;
     MCUnicodeSharedSuffix(p_first, p_first_length, p_first_native, p_second, p_second_length, p_second_native, p_option, t_first_match_length, t_second_match_length);
-    return t_second_match_length == p_second_length;
+    if (t_second_match_length != p_second_length)
+        return false;
+    if (r_first_match_length != nil)
+        *r_first_match_length = t_first_match_length;
+    return true;
 }
 
 bool MCUnicodeContains(const void *p_string, uindex_t p_string_length, bool p_string_native,
@@ -969,12 +978,28 @@ bool MCUnicodeFirstIndexOf(const void *p_string, uindex_t p_string_length, bool 
         return false;
     
     // Shortcut for native char - for which we are sure to have only one char to compare, and no composing characters
-    if (p_needle_length == 1 && *(codepoint_t *)p_needle < 0x10)
-    {
-        // if we got here, the string should not have been native.
-        MCAssert(!p_string_native);
-        return MCUnicodeFirstIndexOfChar((const unichar_t *)p_string, p_string_length, *(codepoint_t *)p_needle, p_option, r_index);
-    }
+	if (p_needle_length == 1)
+	{
+		codepoint_t t_needle;
+		bool t_ok_fast;
+		if (p_needle_native)
+		{
+			t_needle = codepoint_t(*reinterpret_cast<const char_t *>(p_needle));
+			t_ok_fast = t_needle < 0x80; /* Needle is one ASCII char */
+		}
+		else
+		{
+			t_needle = codepoint_t(*reinterpret_cast<const unichar_t *>(p_needle));
+			t_ok_fast = t_needle < 0xd800; /* Needle is in BMP */
+		}
+
+		if (t_ok_fast)
+		{
+			// if we got here, the string should not have been native.
+			MCAssert(!p_string_native);
+			return MCUnicodeFirstIndexOfChar((const unichar_t *)p_string, p_string_length, t_needle, p_option, r_index);
+		}
+	}
     
     // Create filter chains for the strings being searched
     MCTextFilter* t_string_filter = MCTextFilterCreate(p_string, p_string_length, p_string_native ? kMCStringEncodingNative : kMCStringEncodingUTF16, p_option);

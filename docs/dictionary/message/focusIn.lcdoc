@@ -1,0 +1,29 @@
+Name: focusIn
+
+Type: message
+
+Syntax: focusIn
+
+Summary: Sent to a <control> when it becomes <active (focused)(glossary)>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+on focusIn -- boldface the text of the control
+  set the textStyle of the target to "bold"
+end focusIn
+
+Description:
+Handle the <focusIn> <message> if you want to perform preparation or do other tasks when a control receives the <focus|keyboard focus>.
+
+If the control is an unlocked field or a button whose menuMode is "comboBox", the <openField> <message> is sent to it instead of the <focusIn> <message>.
+
+A locked field receives the <focusIn> <message> when the user tabs to it or otherwise makes it <active (focused)(glossary)>, or when text in it is <selected> by a <handler>.
+
+References: control (keyword), selected (property), openField (message), resume (message), focus (command), handler (glossary), focus (glossary), message (glossary), active control (glossary)
+
+Tags: ui

@@ -1,0 +1,44 @@
+Name: autoHilite
+
+Type: property
+
+Syntax: set the autoHilite of {<button> | <field>} to {true | false}
+
+Summary: Specifies whether a <button> <highlight|highlights> when it's pressed, or whether <selected> text in a <field> is <highlight|highlighted>.
+
+Synonyms: autoHilight
+
+Associations: button
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the autoHilite of last button to false
+
+Example:
+if the autoHilite of me is false then beep
+
+Value (bool): The <autoHilite> of a <button> or <field> is true or false.
+
+Description:
+Use the <autoHilite> <property> to give visual feedback to users when they click a <field(keyword)> or <button(keyword)>.
+
+If a button's <autoHilite> <property> is true, clicking it changes its appearance. This provides visual feedback to the user. (The exact change in appearance depends on the <style> <property> of the <button(keyword)> and on the current setting of the <lookAndFeel> <property>.)
+
+The button remains highlighted while the mouse is within it and the mouse button is down. If the user moves the mouse outside the button while keeping the mouse button depressed, the button becomes unhighlighted.  If the user then moves the mouse back over the button, the button becomes highlighted again.
+
+While the button is highlighted, its <hilite> <property> is also set to true.
+
+If the button's style <property> is "checkbox" or "radioButton", clicking it turns the control on or off. If the <button(object)|button's> <style> is menu, the <autoHilite> has no effect.
+
+If a field's <autoHilite> <property> is true, the user can move the text <selection> by clicking in the <field(keyword)>, and text <select|selected> with the <select> <command> is highlighted. If the <field(object)|field's> <autoHilite> is false, user actions cannot change the <selection> or place the <insertion point> in the <field(keyword)> by clicking, although a <handler> can do so with the <select> <command> and the user can do so with the arrow keys.
+
+If a field whose <listBehavior> <property> is true also has its <autoHilite> <property> set to false, list behavior does not work for the field, and a clicked line does not <highlight>.
+
+References: showHilite (property), style (property), hilitedButtonName (property), listBehavior (property), lookAndFeel (property), selected (property), field (keyword), selection (keyword), button (keyword), hilite (command), select (command), field (object), button (object), property (glossary), highlight (glossary), insertion point (glossary), handler (glossary), command (glossary), select (glossary)
+
+Tags: ui

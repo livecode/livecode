@@ -20,6 +20,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	FILEDEFS_H
 #define	FILEDEFS_H
 
+#include "typedefs.h"
+
 #define SIGNATURE "# MetaCard "
 
 #define READ_PIPE_SIZE 16384
@@ -83,6 +85,8 @@ enum Object_type {
 	OT_PARAGRAPH_EXT,
 	// MW-2012-03-04: [[ StackFile5500 ]] The extended block tag.
 	OT_BLOCK_EXT,
+    // MW-2014-12-16: [[ Widgets ]] The widget object tag.
+    OT_WIDGET,
 };
 
 #define IO_WRITTEN    (1UL << 0)

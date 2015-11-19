@@ -24,11 +24,13 @@ static bool __MCSetClone(MCSetRef self, bool as_mutable, MCSetRef& r_new_self);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCSetCreateSingleton(uindex_t p_element, MCSetRef& r_set)
 {
 	return MCSetCreateWithIndices(&p_element, 1, r_set);
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetCreateWithIndices(uindex_t *p_elements, uindex_t p_element_count, MCSetRef& r_set)
 {
 	if (p_element_count == 0)
@@ -54,6 +56,7 @@ bool MCSetCreateWithIndices(uindex_t *p_elements, uindex_t p_element_count, MCSe
 	return MCSetCopyAndRelease(t_set, r_set);
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetCreateWithLimbsAndRelease(uindex_t *p_limbs, uindex_t p_limb_count, MCSetRef& r_set)
 {
 	MCAssert(nil != p_limbs);
@@ -70,6 +73,7 @@ bool MCSetCreateWithLimbsAndRelease(uindex_t *p_limbs, uindex_t p_limb_count, MC
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetCreateMutable(MCSetRef& r_set)
 {
 	__MCSet *self;
@@ -85,6 +89,7 @@ bool MCSetCreateMutable(MCSetRef& r_set)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCSetCopy(MCSetRef self, MCSetRef& r_new_set)
 {
 	__MCAssertIsSet(self);
@@ -97,6 +102,7 @@ bool MCSetCopy(MCSetRef self, MCSetRef& r_new_set)
 	return __MCSetClone(self, false, r_new_set);
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetCopyAndRelease(MCSetRef self, MCSetRef& r_new_set)
 {
 	__MCAssertIsSet(self);
@@ -117,12 +123,14 @@ bool MCSetCopyAndRelease(MCSetRef self, MCSetRef& r_new_set)
 	return __MCSetClone(self, false, r_new_set);
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetMutableCopy(MCSetRef self, MCSetRef& r_new_set)
 {
 	__MCAssertIsSet(self);
 	return __MCSetClone(self, true, r_new_set);
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetMutableCopyAndRelease(MCSetRef self, MCSetRef& r_new_set)
 {
 	__MCAssertIsSet(self);
@@ -139,6 +147,7 @@ bool MCSetMutableCopyAndRelease(MCSetRef self, MCSetRef& r_new_set)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCSetIsMutable(MCSetRef self)
 {
 	__MCAssertIsSet(self);
@@ -148,6 +157,7 @@ bool MCSetIsMutable(MCSetRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCSetIsEmpty(MCSetRef self)
 {
 	__MCAssertIsSet(self);
@@ -158,6 +168,7 @@ bool MCSetIsEmpty(MCSetRef self)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetIsEqualTo(MCSetRef self, MCSetRef other_self)
 {
 	__MCAssertIsSet(self);
@@ -175,6 +186,7 @@ bool MCSetIsEqualTo(MCSetRef self, MCSetRef other_self)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetContains(MCSetRef self, MCSetRef other_self)
 {
 	__MCAssertIsSet(self);
@@ -191,6 +203,7 @@ bool MCSetContains(MCSetRef self, MCSetRef other_self)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetIntersects(MCSetRef self, MCSetRef other_self)
 {
 	__MCAssertIsSet(self);
@@ -207,6 +220,7 @@ bool MCSetIntersects(MCSetRef self, MCSetRef other_self)
 	return false;
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetContainsIndex(MCSetRef self, uindex_t p_element)
 {
 	__MCAssertIsSet(self);
@@ -218,6 +232,7 @@ bool MCSetContainsIndex(MCSetRef self, uindex_t p_element)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCSetIncludeIndex(MCSetRef self, uindex_t p_index)
 {
 	if (!MCSetIsMutable(self))
@@ -232,6 +247,7 @@ bool MCSetIncludeIndex(MCSetRef self, uindex_t p_index)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetExcludeIndex(MCSetRef self, uindex_t p_index)
 {
 	if (!MCSetIsMutable(self))
@@ -245,6 +261,7 @@ bool MCSetExcludeIndex(MCSetRef self, uindex_t p_index)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetUnion(MCSetRef self, MCSetRef p_other_set)
 {
 	if (!MCSetIsMutable(self))
@@ -259,6 +276,7 @@ bool MCSetUnion(MCSetRef self, MCSetRef p_other_set)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetDifference(MCSetRef self, MCSetRef p_other_set)
 {
 	if (!MCSetIsMutable(self))
@@ -274,6 +292,7 @@ bool MCSetDifference(MCSetRef self, MCSetRef p_other_set)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetIntersect(MCSetRef self, MCSetRef p_other_set)
 {
 	if (!MCSetIsMutable(self))
@@ -288,6 +307,7 @@ bool MCSetIntersect(MCSetRef self, MCSetRef p_other_set)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetIterate(MCSetRef self, uindex_t& x_iterator, uindex_t& r_element)
 {
 	__MCAssertIsSet(self);
@@ -315,7 +335,7 @@ static bool __MCSetClone(MCSetRef self, bool p_as_mutable, MCSetRef& r_new_self)
 
 	if (!MCMemoryNewArray(self -> limb_count, t_new_set -> limbs, t_new_set -> limb_count))
 	{
-		MCValueRelease(self);
+		MCValueRelease(t_new_set);
 		return false;
 	}
 

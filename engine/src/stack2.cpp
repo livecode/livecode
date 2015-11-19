@@ -714,7 +714,7 @@ IO_stat MCStack::saveas(const MCStringRef p_fname)
 		MCStack *sptr = this;
 		if (!MCdispatcher->ismainstack(sptr))
 			sptr = (MCStack *)sptr->parent;
-		MCdispatcher->savestack(sptr, p_fname);
+		return MCdispatcher->savestack(sptr, p_fname);
 	}
 	return IO_NORMAL;
 }
@@ -3338,6 +3338,23 @@ MCRectangle MCStack::getvisiblerect(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCStack::substackhaswidgets(void)
+{
+	if (substacks != NULL)
+	{
+		MCStack *t_stack = substacks;
+		do
+		{
+			if (t_stack -> haswidgets())
+				return true;
+			t_stack = (MCStack*)t_stack->next();
+		}
+		while (t_stack != substacks);
+	}
+
+	return false;
+}
+
 bool MCStack::foreachstack(MCStackForEachCallback p_callback, void *p_context)
 {
     if (!p_callback(this, p_context))
@@ -3351,7 +3368,7 @@ bool MCStack::foreachstack(MCStackForEachCallback p_callback, void *p_context)
 		MCStack *t_stack = substacks;
 		do
 		{
-            t_continue = p_callback(t_stack, p_context);
+            		t_continue = p_callback(t_stack, p_context);
 			t_stack = (MCStack *)t_stack->next();
 		}
 		while (t_continue && t_stack != substacks);

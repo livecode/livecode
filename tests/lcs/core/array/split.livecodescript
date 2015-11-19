@@ -90,48 +90,64 @@ end TestSplit
 
 
 on TestSplitByEmpty
-   local tResult, tExpected, tError
+   local tResult, tExpected, tRArrow
+   put numToCodePoint(0x2192) into tRArrow
 
    put "a,b" into tResult
    put empty into tExpected
    put tResult into tExpected[1]
-   try
-      split tResult by empty
-      TestAssert "split (native, empty)", false
-   catch tError
-      TestAssert "split (native, empty)", true
-   end try
+   split tResult by empty
+   TestAssert "split (native, empty)", tResult is tExpected
+
+   put "a" & tRArrow & "b" into tResult
+   put empty into tExpected
+   put tResult into tExpected[1]
+   split tResult by empty
+   TestAssert "split (unicode, empty)", tResult is tExpected
+
+   ----------
 
    put "a:b,c:d" into tResult
    put empty into tExpected
    put "b,c:d" into tExpected["a"]
-   try
-      split tResult by empty and ":"
-      TestAssert "split key (native, empty, native)", false
-   catch tError
-      TestAssert "split key (native, empty, native)", true
-   end try
+   split tResult by empty and ":"
+   TestAssert "split key (native, empty, native)", tResult is tExpected
+
+   put "a:b,c:" & tRArrow into tResult
+   put empty into tExpected
+   put char 3 to -1 of tResult into tExpected["a"]
+   split tResult by empty and ":"
+   TestAssert "split key (unicode, empty, native)", tResult is tExpected
+
+   ----------
 
    put "a:b,c:d" into tResult
    put empty into tExpected
    put empty into tExpected["a:b"]
    put empty into tExpected["c:d"]
-   try
-      split tResult by "," and empty
-      TestAssert "split key (native, native, empty)", false
-   catch tError
-      TestAssert "split key (native, native, empty)", true
-   end try
+   split tResult by "," and empty
+   TestAssert "split key (native, native, empty)", tResult is tExpected
+
+   put tRArrow & ":b,c:" & tRArrow into tResult
+   put empty into tExpected
+   put empty into tExpected[tRArrow & ":b"]
+   put empty into tExpected["c:" & tRArrow]
+   split tResult by "," and empty
+   TestAssert "split key (unicode, native, empty)", tResult is tExpected
+
+   ----------
 
    put "a:b,c:d" into tResult
    put empty into tExpected
    put empty into tExpected[tResult]
-   try
-      split tResult by empty and empty
-      TestAssert "split key (native, empty, empty)", false
-   catch tError
-      TestAssert "split key (native, empty, empty)", true
-   end try
+   split tResult by empty and empty
+   TestAssert "split key (native, empty, empty)", tResult is tExpected
+
+   put "a:b,c:" & tRArrow into tResult
+   put empty into tExpected
+   put empty into tExpected[tResult]
+   split tResult by empty and empty
+   TestAssert "split key (unicode, empty, empty)", tResult is tExpected
 
 end TestSplitByEmpty
 
@@ -153,24 +169,22 @@ on TestSplitByColumn
    ----------
 
    put "a,b:c,d" into tResult
+   put empty into tExpected
+   put "a,b:c,d" into tExpected[1]
    set the columnDel to empty
    set the rowDel to ":"
-   try
-      split tResult by column
-      TestAssert "split column (native, empty, native)", false
-   catch tError
-      TestAssert "split column (native, empty, native)", true
-   end try
+   split tResult by column
+   TestAssert "split column (native, empty, native)", tResult is tExpected
 
    put "a,b:c,d" into tResult
+   put empty into tExpected
+   put "a" into tExpected[1]
+   put "b:c" into tExpected[2]
+   put "d" into tExpected[3]
    set the columnDel to ","
    set the rowDel to empty
-   try
-      split tResult by column
-      TestAssert "split column (native, native, empty)", false
-   catch tError
-      TestAssert "split column (native, native, empty)", true
-   end try
+   split tResult by column
+   TestAssert "split column (native, native, empty)", tResult is tExpected
 end TestSplitByColumn
 
 
@@ -197,14 +211,12 @@ on TestSplitByRow
    ----------
 
    put "a,b:c,d" into tResult
+   put empty into tExpected
+   put "a,b:c,d" into tExpected[1]
    set the columnDel to ","
    set the rowDel to empty
-   try
-      split tResult by row
-      TestAssert "split row (native, native, empty)", false
-   catch tError
-      TestAssert "split row (native, native, empty)", true
-   end try
+   split tResult by row
+   TestAssert "split row (native, native, empty)", tResult is tExpected
 end TestSplitByRow
 
 
@@ -222,10 +234,8 @@ on TestSplitAsSet
    ----------
 
    put "a:b" into tResult
-   try
-      split tResult with empty as set
-      TestAssert "split set (native, empty)", false
-   catch tError
-      TestAssert "split set (native, empty)", true
-   end try
+   put empty into tExpected
+   put true into tExpected["a:b"]
+   split tResult with empty as set
+   TestAssert "split set (native, empty)", tResult is tExpected
 end TestSplitAsSet

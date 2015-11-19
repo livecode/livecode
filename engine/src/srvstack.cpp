@@ -199,3 +199,21 @@ void MCStack::redrawicon(void)
 void MCStack::enablewindow(bool enable)
 {
 }
+
+// MERG-2015-10-12: [[ DocumentFilename ]] Stub for documentFilename.
+void MCStack::updatedocumentfilename(void)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCStack::configure_window_buffer()
+{
+	return true;
+}
+
+void MCStack::release_window_buffer()
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////

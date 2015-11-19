@@ -1,0 +1,12 @@
+Name: environment variable
+
+Synonyms: shell variable,environment variable
+
+Type: glossary
+
+Description:
+Information the operating system provides about the system or the user. Environment variables are used only on <OS X> and <Unix|Unix systems>.
+
+References: Unix (glossary), OS X (glossary)
+
+Tags: properties

@@ -95,8 +95,6 @@ MCScreenDC::MCScreenDC()
 	m_in_resize = false;
 
 	m_dst_profile = nil;
-	
-	MCNotifyInitialize();
 }
 
 MCScreenDC::~MCScreenDC()

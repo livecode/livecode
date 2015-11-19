@@ -72,13 +72,15 @@ MCParagraph *MCStyledText::grabparagraphs(MCField *p_field)
 	return t_result;
 }
 
-bool MCStyledText::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor)
+bool MCStyledText::visit_self(MCObjectVisitor *p_visitor)
+{
+	return p_visitor->OnStyledText(this);
+}
+
+bool MCStyledText::visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor)
 {
 	bool t_continue;
 	t_continue = true;
-
-	if (p_style == VISIT_STYLE_DEPTH_LAST)
-		t_continue = p_visitor -> OnStyledText(this);
 
 	if (t_continue && m_paragraphs != NULL)
 	{
@@ -86,14 +88,11 @@ bool MCStyledText::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor 
 		MCParagraph *tpgptr = pgptr;
 		do
 		{
-			t_continue = tpgptr -> visit(p_style, p_part, p_visitor);
+			t_continue = tpgptr -> visit(p_options, p_part, p_visitor);
 			tpgptr = tpgptr->next();
 		}
 		while(t_continue && tpgptr != pgptr);
 	}
-
-	if (p_style == VISIT_STYLE_DEPTH_FIRST)
-		t_continue = p_visitor -> OnStyledText(this);
 
 	return t_continue;
 }
@@ -129,7 +128,7 @@ IO_stat MCStyledText::load(IO_handle p_stream, uint32_t p_version)
 	{
 		uint1 type;
 		if ((stat = IO_read_uint1(&type, p_stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		switch (type)
 		{
 		// MW-2012-03-04: [[ StackFile5500 ]] Handle both the paragraph and extended
@@ -145,7 +144,7 @@ IO_stat MCStyledText::load(IO_handle p_stream, uint32_t p_version)
 				if ((stat = newpar->load(p_stream, p_version, type == OT_PARAGRAPH_EXT)) != IO_NORMAL)
 				{
 					delete newpar;
-					return stat;
+					return checkloadstat(stat);
 				}
 
 				newpar->appendto(paragraphs);

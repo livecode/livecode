@@ -1,0 +1,25 @@
+Name: ascending
+
+Type: keyword
+
+Syntax: ascending
+
+Summary: Used with the <sort> <command> to specify that <sort|sorting> is in normal order (from less to greater).
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+sort this stack ascending by field "Order Number"
+
+Description:
+Use the <ascending> <keyword> to improve the clarity of your code. For example, if a <handler> contains several <sort(command)> <command|commands> and some are in descending order, you can use the <ascending> <keyword> explicitly to <point> up the fact that there are both ascending and descending <sort(glossary)|sorts>.
+
+Since ascending is the default sort order, you never actually need to use the <ascending> <keyword>; if you leave it out, the <sort(command)> is performed in ascending order anyway.
+
+References: sort (command), sort container (command), keyword (glossary), handler (glossary), command (glossary), sort (glossary), point (keyword)
+
+Tags: database

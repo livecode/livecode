@@ -416,39 +416,55 @@ function markdownToHTML @pText, pHLevel, pCLevel, @xContents, pTopLevel
             appendLink pCLevel + tHValue,tCurHeading, tParsedContents # add it to the table of contents
          else
             if tCurLine begins with "!-" or tCurLine begins with "/*" or tCurLine begins with "`" then # for blocks of warnings (!-), notes (/*) or code (`), don't do any further processing to the block
+               local tClosing
+               switch
+                  case tCurLine begins with "!-"
+                     put "-!" into tClosing
+                     break
+                  case tCurLine begins with "/*"
+                     put "*/" into tClosing
+                     break
+                  case tCurLine begins with "`"
+                     put "`" into tClosing
+                     break
+               end switch
                if tClosers is not empty then # close any open tags
                   put tParsedBody & tClosers & CR into tParsedBody
                   put empty into tClosers
                end if
-               put x into tSectionLine
-               put tCurLine into tLine
-               if tNumIndents > 0 then # if there were indents before the block marker, put them inside the block
-                  local tTabs
-                  repeat with k = 1 to tNumIndents
-                     put tTabs & gIndent into tTabs
-                  end repeat
-                  if tLine begins with "`" then
-                     put char 1 of tLine & tTabs & char 2 to -1 of tLine into tLine
-                  else
-                     put char 1 to 2 of tLine  & tTabs & char 3 to -1 of tLine into tLine
+               
+               # Ensure this is a multiline element
+               if not char 2 to -1 of tCurLine contains tClosing then
+                  put x into tSectionLine
+                  put tCurLine into tLine
+                  if tNumIndents > 0 then # if there were indents before the block marker, put them inside the block
+                     local tTabs
+                     repeat with k = 1 to tNumIndents
+                        put tTabs & gIndent into tTabs
+                     end repeat
+                     if tLine begins with "`" then
+                        put char 1 of tLine & tTabs & char 2 to -1 of tLine into tLine
+                     else
+                        put char 1 to 2 of tLine  & tTabs & char 3 to -1 of tLine into tLine
+                     end if
+                     put empty into tTabs
                   end if
-                  put empty into tTabs
-               end if
-               repeat until tLine ends with "-!" or tLine ends with "*/" or tLine ends with "`" or  tSectionLine is tNumLines # find the end of the section
-                  local tLinkUrl
-                  repeat while matchText(tLine,gLinkRegex, tLinkText, tLinkUrl) # linkify any links
+                  repeat until tLine ends with tClosing or  tSectionLine is tNumLines # find the end of the section
+                     local tLinkUrl
+                     repeat while matchText(tLine,gLinkRegex, tLinkText, tLinkUrl) # linkify any links
+                        addLink tLine, tLinkText, tLinkUrl
+                     end repeat
+                     put tParsedBody & tLine & "<br>" & CR into tParsedBody # adding <br> tags to each line
+                     add 1 to tSectionLine
+                     put line tSectionLine of pText into tLine
+                  end repeat
+                  repeat while matchText(tLine,gLinkRegex, tLinkText, tLinkUrl) # check for links in the last line
                      addLink tLine, tLinkText, tLinkUrl
                   end repeat
-                  put tParsedBody & tLine & "<br>" & CR into tParsedBody # adding <br> tags to each line
-                  add 1 to tSectionLine
-                  put line tSectionLine of pText into tLine
-               end repeat
-               repeat while matchText(tLine,gLinkRegex, tLinkText, tLinkUrl) # check for links in the last line
-                  addLink tLine, tLinkText, tLinkUrl
-               end repeat
-               put tParsedBody & tLine & CR into tParsedBody
-               put tSectionLine into x
-               put empty into tCurLine
+                  put tParsedBody & tLine & CR into tParsedBody
+                  put tSectionLine into x
+                  put empty into tCurLine
+               end if
             else if tCurLine is empty then # if the line is empty
                if tClosers is not empty then
                   put tParsedBody & tClosers & CR into tParsedBody

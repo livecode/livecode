@@ -1,0 +1,1 @@
+# Array property references in variables not resolved properly

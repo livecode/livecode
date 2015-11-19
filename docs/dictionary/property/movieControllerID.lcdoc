@@ -1,0 +1,36 @@
+Name: movieControllerID
+
+Type: property
+
+Syntax: get the movieControllerID of <player> 
+
+Summary: Reports a pointer to a movie's controller.
+
+Associations: player
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+put the movieControllerID of player "Intro" into field "IDs"
+
+Example:
+get myLink(the movieControllerID of player 3) -- an example external
+
+Value:
+The <movieControllerID> of a <stack> is an <integer>.
+The <movieControllerID> <property> is <read-only> and cannot be set.
+
+Description:
+Use the <movieControllerID> <property> to pass to an <external> that needs to manipulate the <player>.
+
+The controller ID is provided by the operating system.
+
+Some externals need to manipulate the QuickTime movie directly, and do so by referencing the ID. Such externals require you to pass the ID when you use the external.
+
+References: windowID (property), showController (property), integer (keyword), player (keyword), play (command), stack (object), property (glossary), external (glossary), read-only (glossary)
+
+Tags: multimedia

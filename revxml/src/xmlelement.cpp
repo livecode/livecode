@@ -615,16 +615,16 @@ return True if element found
 Bool CXMLElement::GoChildByPath(char *tpath)
 {
 	if (!isinited()) return False;
-	char *sptr = tpath;
+	const char *sptr = tpath;
 	char *childpointer = NULL;
 	CXMLElement telement;
 	telement.CopyElement(this);
 	if (*sptr == '/') sptr++; //skip first slash
 	Bool foundmatch = False;
-	char *endptr = sptr + strlen(sptr);
+	const char *endptr = sptr + strlen(sptr);
 	while (sptr < endptr)
 	{
-		char *namestart,*nameend,*nextname,*numpointer;
+		const char *namestart,*nameend,*nextname,*numpointer;
 		nextname = strchr(sptr, '/' );
 		if (!nextname) nextname = endptr;
 		namestart = sptr;
@@ -831,7 +831,8 @@ char *CXMLElement::GetAttributeValue(char *attname, Bool isbuffered)
 			do 
 			{
 				if (!attname || util_strnicmp(tattribute.GetName(), attname, strlen(attname)) == 0)
-					return tattribute.GetContent();
+                // AL-2015-09-02: [[ Bug 15848 ]] if isbuffered is true, returned string is freed by the caller
+					return strdup(tattribute.GetContent());
 			} while (tattribute.GoNext());
 		}
 	}

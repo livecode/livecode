@@ -55,7 +55,7 @@ public:
 		
 		m_data = NULL;
 		m_frontier = NULL;
-		m_capacity = NULL;
+		m_capacity = 0;
 	}
 
 private:

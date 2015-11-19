@@ -1,0 +1,36 @@
+Name: HCAddressing
+
+Type: property
+
+Syntax: set the HCAddressing of <stack> to {true | false}
+
+Summary: Determines whether <grouped control|grouped fields> and <card control|card buttons> are assumed if the <field> or <button|button's> <domain> is not specified.
+
+Associations: stack
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the HCAddressing of stack nextImport to true
+
+Value (bool):The <HCAddressing> of a <stack> is true or false.
+By default, the <HCAddressing> of <stacks> you create in LiveCode is set to false.
+
+Description:
+Use the <HCAddressing> <property> for compatibility with <HyperCard>.
+
+When you open a HyperCard stack and convert it to a LiveCode stack, the new stack's <HCAddressing> <property> is set to true.
+
+If the <HCAddressing> <property> is set to true, <expression|expressions> in the <stack's> <script|scripts> that refer to <field|fields> without specifying <card> or <background> are assumed to refer to <grouped control|grouped controls>, and <expression|expressions> that refer to other control types are assumed to refer to <card control|card controls>. For example, the number of fields reports the number of grouped fields, while button 5 refers to the fifth card button. Also, the <value|values> reported by the <long> or <abbreviated> <name> and <ID> <properties> of <controls> include "card" or "background" as the first word, depending on whether the <control(keyword)> is part of a <group>.
+
+If the <HCAddressing> <property> is false, <expression|expressions> that refer to <field|fields> or <buttons> without specifying <card> or <background> are assumed to refer to all <field|fields> or <buttons>. For example, the number of fields reports the total number of card and <background> <field|fields>, and button 5 refers to the fifth button.
+
+If a stack's <HCAddressing> <property> is true, the <style> <property> of a <button(keyword)> whose style is "menu" reports "popup" instead. This is because HyperCard uses a style setting of "popup" to designate popup menus.
+
+References: style (property), properties (property), backgroundBehavior (property), name (property), ID (property), abbreviated (keyword), button (keyword), long (keyword), field (keyword), control (keyword), group (command), field (object), stack (object), button (object), domain (glossary), script (glossary), HyperCard (glossary), property (glossary), control (glossary), expression (glossary), stack (glossary), card (glossary), grouped control (glossary), background (glossary), value (glossary), card control (glossary), button (glossary), stacks (function)
+
+Tags: objects

@@ -1,0 +1,32 @@
+Name: startUpIconic
+
+Type: property
+
+Syntax: set the startupIconic of <stack> to {true | false}
+
+Summary: Specifies whether, when a <stack> opens, it should be <iconify|iconified> or displayed as a window.
+
+Associations: stack
+
+Introduced: 1.0
+
+OS: linux
+
+Platforms: desktop,server,web
+
+Example:
+set the startupIconic of stack "Imports" to true
+
+Value (bool):The <startUpIconic> of a <stack> is true or false.
+By default, the <startUpIconic> <property> of newly created <stacks> is set to false.
+
+Description:
+Use the <startUpIconic> <property> to control a <stack|stack's> appearance when it first opens.
+
+If a stack's <startUpIconic> <property> is set to true, the <stack> is opened as a <desktop> icon rather than a window.
+
+The setting of this property has no effect on Mac OS or Windows systems, nor on some Unix systems.
+
+References: unIconifyStack (message), stack (object), iconify (glossary), property (glossary), desktop (glossary), stacks (function)
+
+Tags: windowing

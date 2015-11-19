@@ -21,6 +21,8 @@
 			'ext_suffix': '.dll',
 			'exe_suffix': '.exe',
 			'debug_info_suffix': '',
+
+			'silence_warnings': 0,
 		},
 		
 		# Don't assume a Cygwin environment when invoking actions
@@ -38,7 +40,6 @@
 						'PreprocessorDefinitions': ['_DEBUG'],
 						'RuntimeLibrary': '1',
 						'DebugInformationFormat': '4',
-						'BasicRuntimeChecks': '3',
 					},
 					
 					'VCLinkerTool':
@@ -50,6 +51,22 @@
 						'EnableCOMDATFolding': '2',
 					},
 				},
+				
+				'target_conditions':
+				[
+					[
+						'silence_warnings == 0',
+						{
+							'msvs_settings':
+							{
+								'VCCLCompilerTool':
+								{
+									'BasicRuntimeChecks': 3,
+								},
+							},
+						},
+					],
+				],
 			},
 			
 			'Release':
@@ -128,6 +145,27 @@
 					],
 				},
 			],
+			[
+				'silence_warnings == 0',
+				{
+					'msvs_settings':
+					{
+						'VCCLCompilerTool':
+						{
+							'WarningLevel': '3',
+						},
+					},
+				},
+				{
+					'msvs_settings':
+					{
+						'VCCLCompilerTool':
+						{
+							'WarningLevel': '0',
+						},
+					},
+				},
+			],
 		],
 		
 		'msvs_settings':
@@ -137,7 +175,6 @@
 				'ExceptionHandling': '0',
 				'BufferSecurityCheck': 'false',
 				'RuntimeTypeInfo': 'false',
-				'WarningLevel': '3',
 				'Detect64BitPortabilityProblems': 'false',
 			},
 			

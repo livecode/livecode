@@ -1,0 +1,409 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+This widget is a list, can be single or multiple lists or list items.
+This widget has one property that can be set: listArray.
+*/
+
+-- declaring the extension as a widget, followed by identifier
+widget community.livecode.livecode.multiList
+--
+
+-- dependency declarations 
+use com.livecode.canvas
+use com.livecode.widget
+use com.livecode.engine
+
+-- metadata
+metadata title is "iOS Multi List"
+metadata author is "LiveCode"
+metadata version is "1.0.0"
+
+-- property declarations
+property listArray			get mListArray			set setListArray
+--
+
+-- private instance variables
+private variable mListArray as Array
+private variable mNumItems as List
+
+private variable mBottom as Real
+private variable mMargin as Real
+private variable mRowRectList as List
+private variable mPressed as Boolean
+private variable mSelectedRow as optional Integer
+private variable mTopView as Real
+private variable mShowScroll as Boolean
+--
+
+-- constants
+constant kPadding is 10
+constant kHeight is 30
+constant kIconMargin is 20
+
+constant kTransparent is [1,1,1,0]
+constant kWhite is [1,1,1]
+constant kBlack is [0,0,0]
+--
+
+public handler OnCreate()
+	
+	-- properties
+	variable tItemList as List
+	put the empty array into mListArray
+	put the empty list into tItemList
+	
+	// item list, each element contains an array with keys label, icon, hint, next, check
+	// if icon is empty then no icon in list
+	// if hint is empty then no hint
+	// if next is empty then no next chevron
+	// if check is empty then not a check list
+	
+	push elementWithValues("Item 1",the empty string,"hint 1","next","checked") onto tItemList
+	push elementWithValues("Item 2",the empty string,the empty string,"next","unchecked") onto tItemList
+	
+	put tItemList into mListArray["ALERT TONES"]
+	
+	put the empty list into tItemList
+	push elementWithValues("Item 1","f0c2",the empty string,the empty string,the empty string) onto tItemList
+	push elementWithValues("Item 2","f0ed",the empty string,the empty string,the empty string) onto tItemList
+	push elementWithValues("Item 3","f0ee",the empty string,the empty string,the empty string) onto tItemList
+	put tItemList into mListArray["CUSTOM"]
+	
+	variable tElement
+	put the empty list into mNumItems
+	repeat for each element tElement in mListArray
+		push the number of elements in tElement onto back of mNumItems
+	end repeat
+	
+	-- variables
+	put 0 into mBottom
+	put 0 into mMargin
+	put the empty list into mRowRectList
+	put false into mPressed
+	put 0 into mSelectedRow
+	put 0 into mTopView
+	put false into mShowScroll
+	
+end handler
+
+public handler OnPaint()
+	
+	put the empty list into mRowRectList
+	put 0 into mBottom
+	
+	variable tKeys as List
+	put the keys of mListArray into tKeys
+	
+	variable tX as optional Integer
+	put 0 into tX
+	
+	variable tElement1
+	repeat for each element tElement1 in tKeys
+		add 1 to tX
+		
+		set the font of this canvas to getFont("title")
+		set the paint of this canvas to getPaint("title")
+		fill text tElement1 at bottom left of getRect("title",tX) on this canvas
+		
+		set the paint of this canvas to getPaint("list")
+		fill rectangle path of getRect("list",tX) on this canvas
+	
+		set the paint of this canvas to getPaint("lines")
+		set the stroke width of this canvas to 1
+		stroke getHLine(0,my width,mTopView+mBottom+kHeight-0.5) on this canvas
+		
+		variable tList as List
+		put mListArray[tElement1] into tList
+		
+		variable tY as optional Integer
+		put 0 into tY
+		
+		variable tLabelRect as Rectangle
+		variable tRowRectData as Array
+		put the empty array into tRowRectData
+		
+		variable tElement2
+		repeat for each element tElement2 in tList
+			add 1 to tY
+			
+			put [0, mTopView+mBottom+(tY)*kHeight, my width, mTopView+mBottom+(tY+1)*kHeight] into tRowRectData["rect"]
+			put tElement1 into tRowRectData["section"]
+			put tY into tRowRectData["index"]
+			push tRowRectData onto mRowRectList
+			
+			if tElement2["icon"] is not the empty string then
+				put kPadding+kIconMargin into mMargin
+				set the paint of this canvas to getPaint("icon")
+				set the font of this canvas to getFont("icon")
+                get the char with code ((tElement2["icon"]) converted from base 16)
+				fill text the result at center of getRect("icon",tY) on this canvas
+				
+			else
+				put kPadding into mMargin
+				
+			end if
+			
+			put getRect("item",tY) into tLabelRect
+			
+			if tElement2["check"] is not empty then
+			
+				if tElement2["check"] is "checked" then
+					set the paint of this canvas to getPaint("icon")
+					set the font of this canvas to getFont("icon")
+					fill text "\u{f00c}" at left of tLabelRect on this canvas
+				end if
+				
+				add -kIconMargin to the width of tLabelRect
+				add kIconMargin to the x of tLabelRect
+				
+			end if
+				
+			set the font of this canvas to getFont("item")
+			set the paint of this canvas to getPaint("item")
+			fill text tElement2["label"] at left of tLabelRect on this canvas
+				
+			if tElement2["next"] is not empty then
+				add (-kPadding) to the x of tLabelRect
+				set the paint of this canvas to getPaint("lines")
+				set the font of this canvas to getFont("icon")
+				fill text "\u{f054}" at right of tLabelRect on this canvas
+				
+			end if
+			
+			if tElement2["hint"] is not empty then
+				add (-kIconMargin) to the x of tLabelRect
+				set the paint of this canvas to getPaint("hint")
+				set the font of this canvas to getFont("hint")
+				fill text tElement2["hint"] at right of tLabelRect on this canvas
+				
+			end if
+			
+			set the paint of this canvas to getPaint("lines")
+			if tY is not (element tX of mNumItems) then
+				stroke getHLine(mMargin, my width, (the trunc of mTopView+mBottom+(tY+1)*kHeight)-0.5) on this canvas
+			end if
+			
+		end repeat
+		
+		put mBottom+kHeight+(element tX of mNumItems)*kHeight into mBottom
+		stroke getHLine(0, my width, (the trunc of mTopView+mBottom)+0.5) on this canvas
+	
+	end repeat
+	
+	-- scrollbar
+	if mBottom+kHeight > my height then
+	
+		if mShowScroll is true then
+			set the paint of this canvas to getPaint("scrollbar")
+		else 
+			set the paint of this canvas to solid paint with color kTransparent
+		end if
+		
+		fill rounded rectangle path of getRect("scrollbar",0) with radius 0.15*kPadding on this canvas
+	end if
+	
+	if mPressed is true then
+		set the paint of this canvas to getPaint("row")
+		fill rectangle path of rectangle (mRowRectList[mSelectedRow]["rect"]) on this canvas
+	end if
+	
+end handler
+
+public handler OnGeometryChanged()
+	put 0 into mTopView
+end handler
+
+public handler OnMouseDown()
+			
+	variable tZ as Integer
+	repeat with tZ from 1 up to (the number of elements in mRowRectList)
+		if the click position is within rectangle mRowRectList[tZ]["rect"] then
+			put true into mPressed
+			put tZ into mSelectedRow
+			redraw all
+		end if
+	end repeat
+	
+end handler	
+
+public handler OnMouseUp()
+	variable tArray as Array
+	put mRowRectList[mSelectedRow] into tArray
+
+	variable tLabel as String
+	put mListArray[tArray["section"]][tArray["index"]]["label"] into tLabel
+
+	post "rowSelected" with [tLabel]
+	put false into mPressed
+	put 0 into mSelectedRow
+	redraw all
+end handler
+
+public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real)
+
+	if my height < mBottom then
+		add pDeltaY to mTopView
+		
+		if mTopView > 0 then
+			put 0 into mTopView
+		else if mTopView < -(kHeight+mBottom-my height) then
+			put -(kHeight+mBottom-my height) into mTopView
+		end if
+	
+		redraw all
+	end if
+end handler
+
+public handler OnMouseEnter()
+	put true into mShowScroll
+	redraw all
+end handler
+
+public handler OnMouseLeave()
+	put false into mShowScroll
+	redraw all
+end handler
+
+public handler setListArray(in pArray as Array) as undefined
+	put pArray into mListArray
+	redraw all
+end handler
+
+public handler getPaint(in pString as String) as Paint
+	if pString is "title" or pString is "hint" then
+		return solid paint with color [96/255, 96/255, 96/255]
+		
+	else if pString is "item" then
+		return solid paint with color kBlack
+		
+	else if pString is "lines" then
+		return solid paint with color [224/255, 224/255, 224/255]
+		
+	else if pString is "list" then
+		return solid paint with color kWhite
+		
+	else if pString is "icon" then
+		return solid paint with color [51/255, 153/255, 1]
+		
+	else if pString is "row" then
+		return solid paint with color [192/255, 192/255, 192/255,0.25]
+		
+	else if pString is "scrollbar" then
+		return solid paint with color [96/255, 96/255, 96/255, 0.5]
+		
+	end if
+end handler
+
+private handler getRect(in pString as String, in pInt as Integer) as Rectangle
+
+	if pString is "title" then
+		return rectangle [kPadding, mTopView+mBottom, my width, mTopView+mBottom+kHeight]
+		
+	else if pString is "list" then
+		return rectangle [0, mTopView+mBottom+kHeight, my width, mTopView+mBottom+kHeight+(element pInt of mNumItems)*kHeight]
+		
+	else if pString is "item" then
+		return rectangle [mMargin, mTopView+mBottom+(pInt)*kHeight, my width, mTopView+mBottom+(pInt+1)*kHeight]
+		
+	else if pString is "icon" then
+		return rectangle [0, mTopView+mBottom+(pInt)*kHeight, mMargin, mTopView+mBottom+(pInt+1)*kHeight]
+		
+	else if pString is "scrollbar" then
+	
+		variable tScrollPad as Real
+		variable tTopScroll as Real
+		
+		put 0.3*kPadding into tScrollPad
+		put mTopView*(my height/(mBottom+kHeight)) into tTopScroll
+		
+		return rectangle [my width-2*tScrollPad, tScrollPad-tTopScroll, my width-tScrollPad, -tScrollPad-tTopScroll + my height*(my height/(mBottom+kHeight))]
+	end if
+	
+end handler
+
+private handler getFont(in pString as String) as Font
+	if pString is "title" then
+		return font "Helvetica Neue" at size 11
+		
+	else if pString is "item" or pString is "hint" then
+		return font "Helvetica Neue" at size 12
+		
+	else if pString is "icon" then
+		return font "fontawesome" at size 12
+		
+	end if
+end handler
+
+private handler getHLine(in pLeft as Real, in pRight as Real, in pHeight as Real) as Path
+	return line path from point [pLeft, pHeight] to point [pRight, pHeight]
+end handler
+
+public handler getDataList() returns Array
+	variable tArray as Array
+	put the empty array into tArray
+	
+	variable tKey as String
+	variable tCount as Integer
+	put 0 into tCount
+	repeat for each key tKey in mListArray
+		put the empty array into tArray[tKey]
+		variable tElement as Array
+		repeat for each element tElement in mListArray[tKey]
+			add 1 to tCount
+			put tElement into tArray[tKey][tCount formatted as string]
+		end repeat
+	end repeat
+	return tArray
+end handler
+
+public handler setDataList(in pArray as Array)
+	variable tArray as Array
+	put the empty array into tArray
+	
+	variable tKey as String
+	repeat for each key tKey in pArray
+		put the empty array into tArray[tKey]
+		variable tElement as List
+		put the empty list into tElement
+		variable tKeys as List
+		variable tOrder as String
+		put the keys of pArray[tKey] into tKeys
+		sort tKeys in ascending order
+		repeat for each element tOrder in tKeys
+			push pArray[tKey][tOrder] onto tElement
+			put tElement into tArray[tKey]
+		end repeat
+	end repeat
+	return tArray
+end handler
+
+private handler elementWithValues(in pLabel as String, in pIcon as String, in pHint as String, in pNext as String, in pCheck as String) returns Array
+	variable tArray as Array
+	put the empty array into tArray
+	put pLabel into tArray["label"]
+	put pIcon into tArray["icon"]
+	put pHint into tArray["hint"]
+	put pNext into tArray["next"]
+	put pCheck into tArray["check"]
+	
+	return tArray
+end handler
+
+
+end widget

@@ -1,0 +1,34 @@
+Name: beepPitch
+
+Type: property
+
+Syntax: set the beepPitch to <pitchFrequency> 
+
+Summary: Sets the frequency of the sound played by the <beep> <command>.
+
+Introduced: 1.0
+
+OS: linux
+
+Platforms: desktop,server,web
+
+Example:
+set the beepPitch to 220 -- A below middle C
+
+Example:
+set the beepPitch to -1 -- restores default
+
+Value: The <beepPitch> is an <integer> between zero and 20000.
+
+Description:
+Use the <beepPitch> <property> to make the beep sound higher or lower.
+
+The <pitchFrequency> is the frequency in Hz (cycles per second). A value of 440 is A above middle C. Halving the frequency lowers the pitch one octave; doubling the frequency raises it one octave.
+
+Set the <beepPitch> to -1 to use the <default> system setting.
+
+The <beepPitch> has no effect and does not report a meaningful value on <Mac OS> or <Windows|Windows systems>, and on some <Unix|Unix systems> which don't allow changing the beep pitch.
+
+References: beep (command), property (glossary), Windows (glossary), Unix (glossary), command (glossary), Mac OS (glossary), default (keyword), integer (keyword)
+
+Tags: multimedia

@@ -253,6 +253,8 @@ const char *MCDeployErrorToString(MCDeployError p_error)
 			return "could not open spill file";
 		case kMCDeployErrorNoPayload:
 			return "could not open payload file";
+        case kMCDeployErrorNoModule:
+            return "could not open module file";
 		case kMCDeployErrorBadFile:
 		case kMCDeployErrorBadRead:
 		case kMCDeployErrorBadWrite:
@@ -308,6 +310,9 @@ const char *MCDeployErrorToString(MCDeployError p_error)
 		case kMCDeployErrorMacOSXBadCpuType:
 		case kMCDeployErrorMacOSXBadTarget:
 			return "invalid mac/ios standalone engine file";
+
+		case kMCDeployErrorEmscriptenBadStack:
+			return "could not prepare startup stack";
 
 		case kMCDeployErrorNoCertificate:
 			return "could not load certificate";

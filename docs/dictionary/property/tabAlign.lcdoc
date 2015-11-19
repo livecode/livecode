@@ -1,0 +1,32 @@
+Name: tabAlign
+
+Type: property
+
+Syntax: set the tabAlign [of line lineNumber] of field to tabAlignList
+
+Summary: Specifies the alignment of tab stops in a field.
+
+Associations: field
+
+Introduced: 7.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the tabAlign of field 1 to "left,left,right,center"
+
+Example:
+put "A" & tab & "B" & tab & "C" & cr & "left" & tab & "center" & tab & "right" into field 1
+set the tabStops of field 1 to "100"
+set the tabAlign of field 1 to "left,center,right"
+
+Value (enum): The <tabAlign> of a field is a return delimited list of alignments, separated by commas. The alignments can be one of "left", "right" and "center".By default, the <tabAlign> property of newly created fields is set to empty
+
+Description:
+Use the <tabAlign> property to set the alignment of tab separated text.
+
+References: textAlign (property), formattedWidth (property), autoTab (property), formattedText (property), width (property), listStyle (property), tabStops (property), listBehavior (property), hScrollbar (property), textSize (property), tabKey (message)
+
+Tags: ui

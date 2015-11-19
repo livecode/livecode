@@ -1,0 +1,27 @@
+
+   INSTALLATION
+   ------------
+
+   Unpacking the Gentle distribution file creates a directory `gentle-97'
+   that includes subdirectories `gentle', `lib', and `reflex'.
+
+   Go to directory `gentle' and type
+
+	 build
+
+   This creates the executable program `gentle', the Gentle compiler,
+   as well as the the object file `grts.o', the Gentle runtime system.
+
+   Go to directory `lib' and type
+
+	 build
+
+   This compiles the modules of the user library.
+
+   Go to directory `reflex' and type
+
+	 build
+
+   This creates the executable program `reflex',
+   a generator for Lex specifications.
+

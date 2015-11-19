@@ -346,12 +346,12 @@ int32_t MCUnicodeCompare(const void *p_first, uindex_t p_first_length, bool p_fi
 // Returns whether the first string begins with the second
 bool MCUnicodeBeginsWith(const void *p_first, uindex_t p_first_length, bool p_first_native,
                          const void *p_second, uindex_t p_second_length, bool p_second_native,
-                         MCUnicodeCompareOption);
+                         MCUnicodeCompareOption, uindex_t *r_first_match_length);
 
 // Returns whether the first string ends with the second
 bool MCUnicodeEndsWith(const void *p_first, uindex_t p_first_length, bool p_first_native,
                        const void *p_second, uindex_t p_second_length, bool p_second_native,
-                       MCUnicodeCompareOption);
+                       MCUnicodeCompareOption, uindex_t *r_first_match_length);
 
 // Returns whether the string contains the given substring
 bool MCUnicodeContains(const void *p_string, uindex_t p_string_length, bool p_string_native,
@@ -565,7 +565,7 @@ inline uinteger_t MCUnicodeCodepointAdvanceSurrogate(const unichar_t* p_input, u
 	{
         // FG-2014-10-23: [[ Bugfix 13761 ]] Codepoint was calculated incorrectly
         uinteger_t t_codepoint;
-		t_codepoint = 0x10000 + ((p_input[x_index] - 0xD800) << 10) | (p_input[x_index + 1] - 0xDC00);
+		t_codepoint = (0x10000U + ((p_input[x_index] - 0xD800U) << 10)) | (p_input[x_index + 1] - 0xDC00U);
 		x_index += 2;
 		return t_codepoint;
 	}

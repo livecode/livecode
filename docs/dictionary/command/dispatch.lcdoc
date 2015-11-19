@@ -1,0 +1,40 @@
+Name: dispatch
+
+Type: command
+
+Syntax: dispatch <message> [ to <target> ][ with <argumentList> ]
+
+Summary: Sends a message to an object via the normal message path.
+
+Introduced: 3.5
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+dispatch "updateWidget"
+
+Example:
+dispatch "setList" with tNewList
+
+Parameters:
+message: Is an expression that evaluates to the name of a handler.
+target: A reference to any LiveCode object.
+argumentList: A comma separated list of expressions containing the arguments to send.
+
+It (enum): Once finished, the variable ' <it> ' contains one of the following three values:
+-"handled" : the message was handled and not passed
+-"unhandled" : no matching handlers were found
+-"passed" : the message was handled but passed by all handlers
+
+Description:
+Use the <dispatch> command to send a mesage to an object, via the message path and find out whether it was handled or not.
+
+The <dispatch> command is most useful when using <behavior|behaviors>, as it allows a <behavior> script to send an 'event' to one of its child objects and then perform an action depending on the outcome.
+
+Executing a <dispatch> command causes the <message> to be sent to the target object with the given argument list. This message passes through the message path in the normal way.
+
+If no <target> is specified, the <message> is sent to ' <me> '. In the context of a <behavior>, this is typically the child that is executing rather than the <behavior> object itself.
+
+References: behavior (property), me (keyword), it (keyword), closeControl (message), preOpenControl (message), send (command), on (control_st)

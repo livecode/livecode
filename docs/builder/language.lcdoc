@@ -1,0 +1,347 @@
+Library: com.livecode.language
+
+Name: If
+
+Type: control structure
+
+Syntax: 
+if <IfCondition> then 
+	<IfStatementList> 
+[else if <ElseCondition> then 
+	<ElseIfStatementList>] 
+[else 
+	<ElseStatementList>]
+end if
+
+Summary: Executes a list of statements depending on the value of a condition.
+
+Parameters:
+IfCondition(bool): An expression which evaluates to a boolean.
+IfStatementList: A set of statements.
+ElseCondition(bool): An expression which evaluates to a boolean.
+ElseIfStatementList: A set of statements.
+ElseStatementList: A set of statements. 
+
+Description:
+Use the if control structure to execute a statement (or list of statements) only under certain circumstances. If <IfCondition> evaluates to true, the statements in <IfStatementList> are executed. For each condition <ElseCondition> such that none of the previous conditions evaluates to true, the condition is evaluated and the corresponding statements in <ElseIfStatementList> are executed. If none of the conditions evaluate to true, the statements in <ElseStatementList> are executed.
+
+Name: RepeatForEach
+
+Type: control structure
+
+Syntax: 
+repeat for each <Iterator> in <Container>
+	<StatementList>
+end repeat
+
+Summary: Executes a list of statements until the <Iterator> is exhausted.
+
+Parameters:
+Iterator: Any iterator expression.
+Container: The container over which to iterate.
+StatementList: A set of statements. 
+
+Example:
+	variable tElement
+	variable tNumbers as list
+	put the empty list into tNumbers
+	
+	repeat for each element tElement in ["a", 1, 2, 3, "b", "c", 4]
+		if tElement is a number then
+			push tElement onto tNumbers
+		end if
+	end repeat
+	
+	// tNumbers contains [1, 2, 3, 4]
+
+Description:
+Use the repeat for each control structure to iterate though the chars of a string, bytes of data, elements of a list or array, or keys of an array.
+>*Note:* The variable which contains the iterand must be declared prior to being used in the repeat loop.
+
+References: RepeatForEachChar(iterator), RepeatForEachByte(iterator), RepeatForEachKey(iterator), RepeatForEachElementInList(iterator), RepeatForEachElementInArray(iterator)
+
+Name: RepeatForever
+
+Type: control structure
+
+Syntax: 
+repeat forever
+	<StatementList>
+end repeat
+
+Summary: Executes a list of statements continually.
+
+Parameters:
+StatementList: A set of statements. 
+
+Example:
+	variable tCount as number
+	variable tList as list
+	put [ 1, 2, 3, 4, 5, 6, 7, 8, "A", 9, 10 ] into tList
+	put 0 into tCount
+	repeat forever
+		if tList[tCount] is not a number then
+			exit repeat
+		end if
+		add 1 to tCount
+	end repeat
+	
+	// tCount is 8
+
+Description:
+Use the repeat forever structure to execute a set of statements until either an error is thrown, or exit repeat is executed.
+
+Name: RepeatTimes
+
+Type: control structure
+
+Syntax: 
+repeat <Count> times
+	<StatementList>
+end repeat
+
+Summary: Executes a list of statements a given number of times.
+
+Parameters:
+Count(integer): An expression which evaluates to an integer.
+StatementList: A set of statements. 
+
+Example:
+public handler TwoToThePower(in pOperand as integer) as number
+
+	if pOperand is 0 then
+		return 1
+	end if	
+
+	variable tCount as number
+	put the abs of pOperand into tCount
+	
+	variable tResult as number
+	put 1 into tResult
+	repeat tCount times
+		multiply tResult by 2
+	end repeat
+		
+	if pOperand < 0 then 
+		return 1 / tResult
+	end if
+	
+	return tResult
+end handler
+
+Description:
+Use the repeat <Count> times structure to execute a set of statements a given number of times, when the statements executed do not rely on knowing which iteration the repeat loop is on.
+
+Name: RepeatWhile
+
+Type: control structure
+
+Syntax: 
+repeat while <Condition>
+	<StatementList>
+end repeat
+
+Summary: Executes a list of statements while a condition continues to be true.
+
+Parameters:
+Condition(bool): An expression which evaluates to a boolean.
+StatementList: A set of statements. 
+
+Description:
+Use the repeat while <Condition> structure to execute a set of statements repeatedly, while the <Condition> continues to evaluate to true.
+
+Name: RepeatUntil
+
+Type: control structure
+
+Syntax: 
+repeat until <Condition>
+	<StatementList>
+end repeat
+
+Summary: Executes a list of statements until a condition becomes true.
+
+Parameters:
+Condition(bool): An expression which evaluates to a boolean.
+StatementList: A set of statements. 
+
+Description:
+Use the repeat until <Condition> structure to execute a set of statements repeatedly, until the <Condition> evaluates to true.
+
+Name: RepeatWith
+
+Type: control structure
+
+Syntax: 
+repeat with <Counter> from <Start> ( up | down ) to <Finish> [ by <Step> ]
+	<StatementList>
+end repeat
+
+Summary: Executes a list of statements 
+
+Parameters:
+Counter: A numeric variable.
+Start(number): The initial value of <Counter>
+Finish(number): The boundary value of <Counter>
+Step(number): The value by which to increase or decrease the <Counter>
+StatementList: A set of statements. 
+
+Example:
+	public handler Factorial(in pOperand as integer) as number
+		if pOperand < 1 then
+			return 0
+		end if
+		
+		variable tTotal as number
+		put 1 into tTotal
+		
+		variable tCounter as integer
+		repeat with tCounter from 1 up to pOperand 
+			multiply tTotal by tCounter
+		end repeat
+		
+		return tCounter
+	end handler
+	
+Description:
+Use the repeat with <Counter> structure to execute a set of statements until the value of <Counter> reaches or crosses (depending on iteration direction) the value of <Finish>. The counter is increased (or decreased) by <Step> on each iteration of the loop.
+
+Name: NextRepeat
+Type: control structure
+Summary: Begin the next iteration of a repeat loop.
+Syntax: next repeat
+Example:
+	variable tList as list
+	variable tElement
+	put [1, 2, 3, "a", 4, "b", 5] into tList
+	
+	variable tSum as number
+	put 0 into tSum
+	repeat for each element tElement in tList
+		if tElement is not a number then
+			next repeat
+		end if
+		
+		add tElement to tSum
+	end repeat
+	
+Description:
+Use <NextRepeat|next repeat> to skip to the next iteration of a repeat loop. This is particularly useful when operations are only to be performed on iterands which satisfy certain criteria.
+
+Name: ExitRepeat
+Type: control structure
+Summary: Exit a repeat loop.
+Syntax: exit repeat
+Example:
+	public handler ListUpToSentinel(in pList as list, in pSentinel as string) as list
+	
+		variable tElement
+		variable tNewList as list
+		put the empty list into tNewList
+		
+		repeat for each element tElement in pList
+			if tElement is a string and tElement is pSentinel then
+				exit repeat
+			end if
+			push tElement onto tNewList
+		end repeat
+
+		return tNewList
+	end handler
+Description:
+Use <ExitRepeat|exit repeat> to exit a repeat loop, for example when a certain condition is met.
+
+
+Name: Return
+Type: statement
+Syntax: return [<returnValue>]
+Summary: Causes execution of the current handler to end, and control return to the caller.
+
+Parameters:
+returnValue (any): The value to return
+
+Description:
+Use the return control structure to halt execution of the current handler, to return control to the caller, and optionally to return a value.
+Note: It is a checked runtime error for a value returned from a handler to not match the return type of the handler it is in.
+
+Name: ThrowError
+Type: statement
+Syntax: throw <errorString>
+Summary: Causes an error to be raised.
+
+Parameters:
+errorString (string): The error to throw.
+
+Example:
+	variable tVar as optional number
+	put "Z" parsed as string into tVar
+	if tVar is not defined then
+		throw tVar && "is not a number
+	end if
+	
+Description:
+The throw statement causes an error to be raised. This causes execution to terminate, and the error is passed back to environment.
+
+The Error expression must be an expression that evaluates to a string.
+
+Note: There is currently no try / catch mechanism in LiveCode Builder, so throwing an error will cause the error to be raised in LiveCode Script in the appropriate context.
+
+Name: PutInto
+Type: statement
+Summary: Put a value into a container.
+Syntax: put <sourceValue> into <targetContainer>
+
+Parameters:
+sourceValue (any): The value to put into the <targetContainer>
+targetContainer (any): A valid target for <sourceValue>
+
+Description:
+Assigns the result of evaluating <sourceValue> to <targetContainer>.
+>*Note:* It is a checked runtime error for the source value's type to not be compatible with the target expression's type.
+
+
+Name: SetTo
+Type: statement
+Summary: Put a value into a container.
+Syntax: set <targetContainer> to <sourceValue>
+
+Parameters:
+targetContainer (any): A valid target for <sourceValue>
+sourceValue (any): The value to put into the <targetContainer>
+
+Description:
+Assigns the result of evaluating <sourceValue> to <targetContainer>.
+>*Note:* It is a checked runtime error for the source value's type to not be compatible with the target expression's type.
+
+Name: Get
+Type: statement
+Summary: Evaluate an expression and put it into the result.
+Syntax: get <expression>
+Parameters:
+expression: Any expression.
+
+Description:
+The get statement evaluates the Value expression and returns it as the result of the statement. The value is subsequently available by using <TheResult|the result> expression.
+
+References: TheResult(expression)
+
+Name: TheResult
+Type: expression
+Summary: The result of the previous statement. 
+Syntax: the result
+Example:
+	resolve script object "this stack"
+	get property "name" of the result
+	log the result
+
+Example:
+	get 20
+	subtract 1 from the result
+	divide the result by 2
+	round the result
+	-- the result is 10
+
+Description:
+Use <TheResult|the result> to obtain the return value of the previous (executed) non-control structure statement.
+>*Note:* Result expressions are not assignable.
+

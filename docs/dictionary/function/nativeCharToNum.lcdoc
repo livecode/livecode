@@ -1,0 +1,39 @@
+Name: nativeCharToNum
+
+Type: function
+
+Syntax: the nativeCharToNum of <nativeCharacter> 
+
+Syntax: nativeCharToNum(<nativeCharacter>)
+
+Summary: Returns the 8-bit value corresponding to a native character.
+
+Introduced: 7.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+put nativeCharToNum("A")
+
+Example:
+get nativeCharToNum(space)
+
+Parameters:
+nativeCharacter: A single native character.
+
+Returns (integer): The <nativeCharToNum> function returns an integer between 0 and 255.
+
+Description:
+Use the <nativeCharToNum> function to translate native characters to their 8-bit numerical value.
+
+The <> </a> function is the inverse of the <numToNativeChar> function.
+
+These functions convert between text and native characters and are replacements for the deprecated <numToChar> and <charToNum> functions.
+
+As the native character sets for each platform have a limited and different repertoire, these functions should not be used when preservation of Unicode text is desired. Any characters that cannot be mapped to the native character set are replaced with a question mark character (?).
+
+Unless needed for compatibility reasons, it is recommended that you use the <numToCodepoint> and <codepointToNum> functions instead.
+
+References: nativeCharToNum (function), numToChar (function), charToNum (function), numToNativeChar (function), numToCodepoint (function),  (function), codepointToNum (function)

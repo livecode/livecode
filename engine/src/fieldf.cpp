@@ -39,6 +39,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "mctheme.h"
 #include "redraw.h"
+#include "line.h"
 
 #include "context.h"
 
@@ -522,7 +523,7 @@ uint2 MCField::getfwidth() const
 		width -= shadowoffset;
 	if (flags & F_VSCROLLBAR)
 		width -= vscrollbar->getrect().width;
-	if (width > 0 && width < MAXUINT2)
+	if (width > 0 && width < (int4) MAXUINT2)
 		return (uint2)width;
 	else
 		return 0;
@@ -537,7 +538,7 @@ uint2 MCField::getfheight() const
 		height -= shadowoffset;
 	if (flags & F_HSCROLLBAR)
 		height -= hscrollbar->getrect().height;
-	if (height > 0 && height < MAXUINT2)
+	if (height > 0 && height < (int4) MAXUINT2)
 		return (uint2)height;
 	else
 		return 0;
@@ -771,7 +772,7 @@ void MCField::positioncursor(Boolean force, Boolean goal, MCRectangle &drect, in
 	// MW-2006-02-26: Even if the screen is locked we still want to set the cursor
 	//   position, otherwise the repositioning gets deferred too much.
 	if (!(state & (CS_KFOCUSED | CS_DRAG_TEXT))
-	        || !(flags & F_LIST_BEHAVIOR) && flags & F_LOCK_TEXT)
+	    || (!(flags & F_LIST_BEHAVIOR) && flags & F_LOCK_TEXT))
 		return;
 
 	// OK-2008-07-22 : Crash fix.
@@ -1057,10 +1058,46 @@ void MCField::drawrect(MCDC *dc, const MCRectangle &dirty)
 			d = fixedd;
 		}
 
+        // Calculate the total heights of all paragraphs for vertical centring
+        // purposes (this is currently only for combo box entry fields)
+        if (parent && parent->gettype() == CT_BUTTON)
+        {
+            coord_t t_totalpgheight;
+            t_totalpgheight = 0.0f;
+            MCParagraph* t_pg = pgptr;
+            do
+            {
+                t_totalpgheight += pgptr->getheight(fixedheight);
+                t_pg = t_pg->next();
+            }
+            while (t_pg != paragraphs);
+            
+            // Single-line fields look better when centred slightly differently
+            bool t_single_line;
+            t_single_line = paragraphs->next() == paragraphs && t_pg->getlines()->next() == t_pg->getlines();
+            if (t_single_line)
+            {
+                t_totalpgheight -= paragraphs->getlines()->GetLeading();
+            }
+            
+            // Adjust the drawing y coordinate to account for centring
+            if (t_totalpgheight < getfheight())
+            {
+                // Amount of unused space in the field
+                coord_t t_spare;
+                t_spare = getfheight() - t_totalpgheight;
+
+                if (t_single_line)
+                    y += t_spare/2 + (paragraphs->getlines()->GetAscent() - paragraphs->getlines()->GetDescent())/4;
+                else
+                    y += t_spare/2;
+            }
+        }
+        
 		int32_t pgheight;
 		do
 		{
-			pgheight = pgptr->getheight(fixedheight);
+            pgheight = pgptr->getheight(fixedheight);
 			
 			// MW-2012-03-15: [[ Bug 10069 ]] A paragraph might render a grid line above or below
 			//   so make sure we render paragraphs above and below the apparant limits.
@@ -1398,7 +1435,7 @@ void MCField::startselection(int2 x, int2 y, Boolean words)
 	else
 	{
 		if (flags & F_LIST_BEHAVIOR)
-			if (MCmodifierstate & MS_CONTROL && flags & F_NONCONTIGUOUS_HILITES
+			if ((MCmodifierstate & MS_CONTROL && flags & F_NONCONTIGUOUS_HILITES)
 			        || flags & F_TOGGLE_HILITE)
 				contiguous = False;
 			else
@@ -1483,7 +1520,13 @@ void MCField::endselection()
 	{
 		firstparagraph = lastparagraph = NULL;
 		firsty = 0;
-		MCscreen -> setselection(NULL);
+        
+        // Clear the selection, if we're the owner (we don't clear if we're not
+        // the owner as that means the last selection was made in another
+        // program and the user might be focusing in the field to paste that
+        // selection).
+        if (MCselection->IsOwned())
+            MCselection->Clear();
 	}
 	else
 	{
@@ -1499,18 +1542,22 @@ void MCField::endselection()
 		}
 		if (MCscreen -> hasfeature(PLATFORM_FEATURE_TRANSIENT_SELECTION))
 		{
-			MCAutoStringRef t_string;
+            // Grab the currently selected text so we can place it on the OS'
+            // transient-selection clipboard.
+            MCAutoStringRef t_string;
 			selectedtext(&t_string);
-
-			if (*t_string != nil)
+				
+            if (*t_string != nil)
             {
-                // SN-2014-12-08: [[ Bug 12784 ]] Only make this field the selectedfield
-                //  if it is Focusable
-                if (MCselectiondata -> Store(TRANSFER_TYPE_TEXT, *t_string)
-                        && flags & F_TRAVERSAL_ON)
-					MCactivefield = this;
-			}
-		}
+                // Place the data on the selection clipboard
+                bool t_success = MCselection->AddText(*t_string);
+                
+                // If successful and this field is focusable, make it the currently
+                // focused field.
+                if (t_success && (flags & F_TRAVERSAL_ON))
+                    MCactivefield = this;
+            }
+        }
 
 		if (!(flags & F_LOCK_TEXT) && MCU_point_in_rect(rect, mx, my))
 		{
@@ -1528,7 +1575,14 @@ void MCField::unselect(Boolean clear, Boolean internal)
 	if (state & CS_SELECTING)
 		endselection();
 	if (MCactivefield == this && internal)
-		MCscreen -> setselection(NULL);
+    {
+        // Clear the selection, if we're the owner (we don't clear if we're not
+        // the owner as that means the last selection was made in another
+        // program and the user might be focusing in the field to paste that
+        // selection).
+        if (MCselection->IsOwned())
+            MCselection->Clear();
+    }
 	if (clear || (MCactivefield == this && !(state & CS_KFOCUSED)))
 		MCactivefield = NULL;
 	if (!opened || focusedparagraph == NULL)
@@ -1807,7 +1861,10 @@ void MCField::finsertnew(Field_translations function, MCStringRef p_string, KeyS
 		
 		// MW-UNDO-FIX: Make sure we only append to a previous record if it
 		//   is immediately after the last one.
-		if (us != NULL && (us->type == UT_DELETE_TEXT || us->type == UT_TYPE_TEXT) && MCundos->getobject() == this && us->ud.text.index+us->ud.text.newchars == si)
+		if (us != NULL &&
+		    (us->type == UT_DELETE_TEXT || us->type == UT_TYPE_TEXT) &&
+		    MCundos->getobject() == this &&
+		    (findex_t) (us->ud.text.index+us->ud.text.newchars) == si)
 		{
 			if (us->type == UT_DELETE_TEXT)
 			{
@@ -2126,6 +2183,9 @@ void MCField::fscroll(Field_translations function, MCStringRef p_string, KeySym 
 		vscroll(getfheight() - fheight, True);
 		newval = texty;
 	break;
+    default:
+        // If no scroll action is given, then scroll hasn't changed so do nothing.
+        return;
 	}
 	resetscrollbars(True);
 	message_with_args(MCM_scrollbar_drag, newval);

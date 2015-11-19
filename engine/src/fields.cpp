@@ -2192,7 +2192,6 @@ Boolean MCField::locmark(Boolean wholeline, Boolean wholeword,
 
 Boolean MCField::locmarkpoint(MCPoint p, Boolean wholeline, Boolean wholeword, Boolean chunk, Boolean inc_cr, int4 &si, int4 &ei)
 {
-	MCRectangle frect = getfrect();
 	int4 cx, cy;
 	
 	cx = p . x;
@@ -2221,7 +2220,7 @@ Boolean MCField::locmarkpoint(MCPoint p, Boolean wholeline, Boolean wholeword, B
 	cy -= y;
 	if (chunk && cy > pgptr->getheight(fixedheight))
 		return False;
-	if (wholeline || wholeword && flags & F_LIST_BEHAVIOR)
+	if (wholeline || (wholeword && flags & F_LIST_BEHAVIOR))
 	{
 		ei = si + pgptr->gettextlengthcr();
 		if (!inc_cr || flags & F_LIST_BEHAVIOR || pgptr->next() == paragraphs)
@@ -2753,13 +2752,20 @@ void MCField::cuttext()
 
 void MCField::copytext()
 {
-	if (!focusedparagraph->isselection() && firstparagraph == lastparagraph)
+    // Do nothing if there is nothing to copy
+    if (!focusedparagraph->isselection() && firstparagraph == lastparagraph)
 		return;
 
+    // Serialise the text. Failures are ignored here as there isn't really a
+    // good way to alert the user that a copy-to-clipboard operation failed.
 	MCAutoDataRef t_data;
-	/* UNCHECKED */ pickleselection(&t_data);
+	pickleselection(&t_data);
 	if (*t_data != nil)
-		MCclipboarddata -> Store(TRANSFER_TYPE_STYLED_TEXT, *t_data);
+    {
+        // Clear the clipboard and copy the selection to it
+        MCclipboard->Clear();
+        MCclipboard->AddLiveCodeStyledText(*t_data);
+    }
 }
 
 void MCField::cuttextindex(uint4 parid, findex_t si, findex_t ei)

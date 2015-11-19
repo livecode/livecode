@@ -4470,19 +4470,24 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         _CurrentRuneLocale->__runetype[202] = _CurrentRuneLocale->__runetype[201];
         
-        // Initialize our case mapping tables
-        
-        MCuppercasingtable = new uint1[256];
-        for(uint4 i = 0; i < 256; ++i)
-            MCuppercasingtable[i] = (uint1)i;
-        UppercaseText((char *)MCuppercasingtable, 256, smRoman);
-        
-        MClowercasingtable = new uint1[256];
-        for(uint4 i = 0; i < 256; ++i)
-            MClowercasingtable[i] = (uint1)i;
-        LowercaseText((char *)MClowercasingtable, 256, smRoman);
-        
-        //
+        // Initialize our case mapping tables. We always use the MacRoman locale.
+        CFStringRef t_raw;
+        CFMutableStringRef t_lower, t_upper;
+        CFIndex t_ignored;
+        MCuppercasingtable = new uint8_t[256];
+        MClowercasingtable = new uint8_t[256];
+        for(uindex_t i = 0; i < 256; ++i)
+            MCuppercasingtable[i] = uint8_t(i);
+        t_raw = CFStringCreateWithBytes(NULL, MCuppercasingtable, 256, kCFStringEncodingMacRoman, false);
+        t_lower = CFStringCreateMutableCopy(NULL, 0, t_raw);
+        t_upper = CFStringCreateMutableCopy(NULL, 0, t_raw);
+        CFStringLowercase(t_lower, NULL);
+        CFStringUppercase(t_upper, NULL);
+        CFStringGetBytes(t_lower, CFRangeMake(0, 256), kCFStringEncodingMacRoman, '?', false, MClowercasingtable, 256, &t_ignored);
+        CFStringGetBytes(t_upper, CFRangeMake(0, 256), kCFStringEncodingMacRoman, '?', false, MCuppercasingtable, 256, &t_ignored);
+        CFRelease(t_raw);
+        CFRelease(t_lower);
+        CFRelease(t_upper);
         
         MCinfinity = HUGE_VAL;
         
@@ -4747,10 +4752,10 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 #endif
 #endif /* MCS_getprocessor_dsk_mac */
 //get machine processor
-#ifdef __LITTLE_ENDIAN__
-        return MCN_x86;
+#ifdef __64_BIT__
+        return MCN_x86_64;
 #else
-        return MCN_motorola_powerpc;
+        return MCN_x86;
 #endif
     }
 	virtual bool GetAddress(MCStringRef& r_address)
@@ -5902,7 +5907,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
     }
     
 #define CATALOG_MAX_ENTRIES 16
-	virtual bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *x_context)
+	virtual bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *x_context)
     {
 #ifdef /* MCS_getentries_dsk_mac */ LEGACY_SYSTEM
         OSStatus t_os_status;
@@ -6054,20 +6059,22 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         FSCloseIterator(t_catalog_iterator);
 #endif /* MCS_getentries_dsk_mac */  
         
-        MCAutoStringRef t_curdir, t_redirect;
+        MCAutoStringRef t_path, t_redirect;
         bool t_success;
         t_success = true;
-        
-        MCS_getcurdir(&t_curdir);
+		if (p_folder == nil)
+			MCS_getcurdir(&t_path);
+		else
+			&t_path = MCValueRetain (p_folder);
         // MW-2014-09-17: [[ Bug 13455 ]] First list in the usual path.
-        t_success = MCS_getentries_for_folder(*t_curdir, p_callback, x_context);
+        t_success = MCS_getentries_for_folder(*t_path, p_callback, x_context);
         
         bool *t_files = (bool *)x_context;
         // MW-2014-09-17: [[ Bug 13455 ]] If we are fetching files, and the path is inside MacOS, then
         //   merge the list with files from the corresponding path in Resources/_MacOS.
         // NOTE: the overall operation should still succeed if the redirect doesn't exist
         if (t_success && *t_files &&
-            MCS_apply_redirect(*t_curdir, false, &t_redirect))
+            MCS_apply_redirect(*t_path, false, &t_redirect))
             t_success = MCS_getentries_for_folder(*t_redirect, p_callback, x_context) || t_success;
         
         return t_success;

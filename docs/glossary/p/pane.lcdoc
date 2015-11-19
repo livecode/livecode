@@ -1,0 +1,12 @@
+Name: pane
+
+Synonyms: pane,window pane
+
+Type: glossary
+
+Description:
+An area in a window whose content changes depending on the setting you choose. Typically, you switch between panes by choosing the pane you want from a <popup menu> at the top of the window.
+
+References: popup menu (glossary)
+
+Tags: windowing

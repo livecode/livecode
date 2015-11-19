@@ -1,0 +1,42 @@
+Name: linkHiliteColor
+
+Type: property
+
+Syntax: set the linkHiliteColor to {<colorName> | <RGBColor>}
+
+Syntax: set the linkHiliteColor of <stack> to {empty | <colorName> | <RGBColor>}
+
+Summary: Specifies the color of <grouped text> that is being clicked.
+
+Introduced: 1.1
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the linkHiliteColor to "125,0,255"
+
+Example:
+set the linkHiliteColor of this stack to myColor
+
+Value:
+The <linkHiliteColor> is a <color reference>.
+A <colorName> is any standard color name.
+
+An <RGBColor> consists of three comma-separated <integer|integers> between zero and 255, specifying the level of each of red, green, and blue; or an HTML-style color consisting of a hash mark (#) followed by three <hexadecimal> numbers, one for each of red, green, and blue.
+
+By default, the <linkHiliteColor> is set to "255,0,0" (bright red). The <linkHiliteColor> of a newly created <stack> is set to empty by <default>.
+
+Description:
+Use the <linkHiliteColor> <property> to make <grouped text> look and behave like links in a <browser|web browser>.
+
+The <linkHiliteColor> appears to show that <grouped text> is being clicked. When the <mouse button> is released, the text color changes to the <linkVisitedColor>.
+
+If the <linkHiliteColor> of a <stack> is empty, <grouped text> in that <stack> is shown with the <global> <linkHiliteColor> <property> when being clicked.
+
+If the <linkHiliteColor> of a <stack> is not empty, <grouped text> in that <stack> is shown with the <stack|stack's> <linkHiliteColor> <property>, regardless of the <global> setting.
+
+References: link (keyword), default (keyword), linkVisitedColor (property), backgroundColor (property), colors (property), foregroundColor (property), global (command), colorNames (function), property (glossary), color reference (glossary), mouse button (glossary), integer (glossary), grouped text (glossary), hexadecimal (glossary), browser (glossary), stack (object)
+
+Tags: ui

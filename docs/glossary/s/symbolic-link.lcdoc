@@ -1,0 +1,14 @@
+Name: symbolic link
+
+Synonyms: symbolic link,symlink,syminks,symlinked,symlinking,soft link,softlink,softlinked,softlinking
+
+Type: glossary
+
+Description:
+On <Unix|Unix systems>, an alternative <file path> for a <file> or <folder|directory>. Specifying the symbolic link in a <file> operation uses the <file> or <folder|directory> the link refers to. 
+ 
+(The <Mac OS> and <OS X> equivalent is the <alias>. The <Windows> equivalent is the <shortcut>.)
+
+References: file (glossary), shortcut (glossary), OS X (glossary), alias (glossary), Windows (glossary), Mac OS (glossary), file path (glossary), folder (glossary), Unix (glossary)
+
+Tags: file system

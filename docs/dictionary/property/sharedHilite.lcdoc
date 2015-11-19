@@ -1,0 +1,32 @@
+Name: sharedHilite
+
+Type: property
+
+Syntax: set the sharedHilite of <button> to {true | false}
+
+Summary: Specifies whether a <grouped control|grouped button's> <hilite> <property> is the same on all <card|cards> with that <group>.
+
+Associations: button
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the sharedHilite of button "Option 1" to false
+
+Value (bool):The <sharedHilite> of a <button(keyword)> is true or false.
+By default, the <sharedHilite> of newly created <button(object)|buttons> is set to true.
+
+Description:
+Use the <sharedHilite> <property> to cause a <button(keyword)> (such as a <radio button> or <checkbox>) to display the same state wherever it is shown.
+
+If a button's <sharedHilite> <property> is set to true, the <hilite> <property> of that <button(keyword)> is the same on all <card(object)|cards> where the <button(keyword)> appears. <highlight|Highlighting> the button on one <card(keyword)> <highlight|highlights> it on all of them. If the <button(object)|button's> <sharedHilite> is false, it can have a different <hilite> <property> on each <card(keyword)> where it appears, and <highlighting(glossary)> a button <highlight|highlights> it only on the <current card>.
+
+Set the <sharedHilite> <property> to false for <radio button|radio buttons> and <checkbox|checkboxes> (and for other <button(object)|buttons> whose <hilite> is retained to display a setting or a state) if the state the <button(keyword)> displays is different for each <card(keyword)>.
+
+References: sharedText (property), card (keyword), button (keyword), hilite (command), group (command), card (object), button (object), property (glossary), grouped control (glossary), current card (glossary), highlight (glossary), radio button (glossary), checkbox (glossary)
+
+Tags: ui

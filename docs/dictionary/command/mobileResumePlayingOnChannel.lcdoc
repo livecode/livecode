@@ -1,0 +1,31 @@
+Name: mobileResumePlayingOnChannel
+
+Type: command
+
+Syntax: mobileResumePlayingOnChannel <channel> 
+
+Summary: Resumes playback of the current sound on the given channel.
+
+Synonyms: iphoneResumePlayingOnChannel
+
+Introduced: 4.6
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+mobileResumePlayingOnChannel theChannel
+
+Example:
+mobileResumePlayingOnChannel "current"
+
+Parameters:
+channel: The name of the channel the sound is playing on.
+
+Description:
+Use the <mobileResumePlayingOnChannel> command to resume playing a sound on a channel.
+
+The <mobileResumePlayingOnChannel> command resumes playback of the current sound on the given channel.
+
+References: mobileDeleteSoundChannel (command), mobilePlaySoundOnChannel (command), mobileSetSoundChannelVolume (command), mobilePausePlayingOnChannel (command), mobileStopPlayingOnChannel (command), mobileSoundChannelVolume (function), mobileSoundOnChannel (function), mobileNextSoundOnChannel (function), mobileSoundChannels (function), mobileSoundChannelStatus (function), soundFinishedOnChannel (message)

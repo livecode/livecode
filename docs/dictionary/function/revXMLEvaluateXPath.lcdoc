@@ -1,0 +1,71 @@
+Name: revXMLEvaluateXPath
+
+Type: function
+
+Syntax: revXMLEvaluateXPath(pDocID, pXPathExpression [, charDelimiter ] )
+
+Summary: The charDelimiter defaults to cr. If not specified then the items will be returned one per line:
+J. K. Rowling
+Harry Potter
+Cory Doctorow
+Little Brother
+
+Introduced: 6.5
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+put "/bookstore/book/[price&lt;40]/" into pXPathExpression
+put revXMLEvaluateXPath(pDocID, pXPathExpression)
+
+Description:
+The revXMLEvaluateXPath function returns the data set resulting from evaluating the xpath expression against the specified xml tree. For instance, given xml data of
+
+&lt;?xml version="1.0" encoding="ISO-8859-1"?&gt;
+&lt;bookstore&gt;
+&lt;book category="COOKING"&gt;
+  &lt;title lang="en"&gt;Everyday Italian&lt;/title&gt;
+  &lt;author&gt;Giada De Laurentiis&lt;/author&gt;
+  &lt;year&gt;2005&lt;/year&gt;
+  &lt;price&gt;30.00&lt;/price&gt;
+&lt;/book&gt;
+&lt;book category="CHILDREN"&gt;
+  &lt;title lang="en"&gt;Harry Potter&lt;/title&gt;
+  &lt;author&gt;J K. Rowling&lt;/author&gt;
+  &lt;year&gt;2005&lt;/year&gt;
+  &lt;price&gt;29.99&lt;/price&gt;
+&lt;/book&gt;
+&lt;book category="WEB"&gt;
+  &lt;title lang="en"&gt;XQuery Kick Start&lt;/title&gt;
+  &lt;author&gt;James McGovern&lt;/author&gt;
+  &lt;author&gt;Per Bothner&lt;/author&gt;
+  &lt;author&gt;Kurt Cagle&lt;/author&gt;
+  &lt;author&gt;James Linn&lt;/author&gt;
+  &lt;author&gt;Vaidyanathan Nagarajan&lt;/author&gt;
+  &lt;year&gt;2003&lt;/year&gt;
+  &lt;price&gt;49.99&lt;/price&gt;
+&lt;/book&gt;
+&lt;book category="WEB"&gt;
+  &lt;title lang="en"&gt;Learning XML&lt;/title&gt;
+  &lt;author&gt;Erik T. Ray&lt;/author&gt;
+  &lt;year&gt;2003&lt;/year&gt;
+  &lt;price&gt;39,95&lt;/price&gt;
+&lt;/book&gt;
+&lt;/bookstore&gt;
+
+then
+
+put "/bookstore/book/[price&lt;40]/" into pXPathExpression
+put revXMLEvaluateXPath(pDocID, pXPathExpression)
+
+gives you 
+
+bookstore/book[1]
+bookstore/book[2]
+bookstore/book[4]
+
+References: revXMLCreateTreeFromFile (function), revXMLDataFromXPathQuery (function), revXMLCreateTree (function)
+
+Tags: xml

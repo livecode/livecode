@@ -1284,20 +1284,14 @@ bool MCJavaObjectFromValueRef(JNIEnv *p_env, MCValueRef p_value, jobject& r_obje
             t_success = false;
             break;
             
-        case kMCValueTypeCodePoint:
-            // TODO
-            t_success = false;
-            break;
-            
-        case KMCValueTypeCodeRectangle:
-            // TODO
-            t_success = false;
-            break;
-            
         case kMCValueTypeCodeCustom:
             // TODO
             t_success = false;
             break;
+            
+        default:
+          MCUnreachable();
+          break;
     }
     
     return t_success;
@@ -1395,8 +1389,6 @@ static MCJavaType valueref_to_returntype(MCValueRef p_value)
         case kMCValueTypeCodeName:
         case kMCValueTypeCodeList:
         case kMCValueTypeCodeSet:
-        case kMCValueTypeCodePoint:
-        case KMCValueTypeCodeRectangle:
         case kMCValueTypeCodeCustom:
         default:
             return kMCJavaTypeMCValueRef;

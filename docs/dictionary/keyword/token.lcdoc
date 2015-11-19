@@ -1,0 +1,44 @@
+Name: token
+
+Type: keyword
+
+Syntax: token
+
+Summary: Designates a <LiveCode> token as part of a <chunk expression>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+get token 1 of "someFunction(a+b)" -- yields someFunction
+
+Example:
+get token 2 of "someFunction(a+b)" -- yields (
+
+Example:
+get token 3 of "someFunction(a+b)" -- yields a
+
+Example:
+get token 3 of "a+b" -- yields b
+
+Description:
+Use the <token> keyword to parse a LiveCode statement.
+
+A token is a string of characters delimited by certain punctuation marks. The rules for deciding what a token is are as follows:
+
+1. Each of the following characters is a token: =, +, -, *, /, [, ], (, ), {, }, &lt;, &gt;, and comma (,).
+
+2. Each of the following characters is a token delimiter: ; (semicolon), space, return, and tab.
+
+3. Each string of any other characters that is either separated by one of the above characters, or delimited by double quotes, is a token. The token does not include the separating character(s).
+
+A single token can contain multiple characters, but not multiple words, items, or lines.
+
+>*Note:* The token chunk is implemented for the LiveCode language, and probably isn't suitable for use in a general-purpose language parser.
+
+References: word (keyword), real8 (keyword), chunk expression (glossary), LiveCode (glossary)
+
+Tags: text processing

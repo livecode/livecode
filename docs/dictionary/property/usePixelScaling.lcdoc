@@ -1,0 +1,42 @@
+Name: usePixelScaling
+
+Type: property
+
+Syntax: set the usePixelScaling to { true | false } 
+
+Summary: Determines whether or not LiveCode will automatically apply pixel scaling.
+
+Introduced: 6.6
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,mobile
+
+Example:
+on preOpenStack
+   set the usePixelScaling to false
+end preOpenStack
+
+Value (bool): The <usePixelScaling> property returns true or false.
+
+Description:
+Set the usePixelScaling property to false to prevent LiveCode automatically scaling your stack.
+
+If the <usePixelScaling> property is set to false, pixel scaling will be disabled and LiveCode will draw at a 1:1 scale, allowing the operating system to perform any default scaling. For example, by default, iOS will upscale stacks running on retina devices.
+
+When the <usePixelScaling> property is false, the <pixelScale property> is set to 1 and is not modifiable.
+
+Due to limitations of the platform, applications on Windows will not be able to enable or disable pixel scaling. On Android there is no equivalent OS-level scaling provided, so pixel scaling will always be used.
+
+Handling multiple displays
+Desktop systems may have multiple displays attached, each with their own density value. On platforms that support different scale values for each display, LiveCode  automatically renders each stack at the correct scale for the screen on which it is displayed.
+
+As there may be multiple displays with differing scale values, The global systemPixelScale property returns the maximum screen density for all connected displays.
+
+Two additional global properties have been added to provide the pixel scale values when multiple displays are available:
+* The <screenPixelScale property (property)>returns the pixel scale of the main screen
+* The <screenPixelScales property> a return-delimited list of the pixel scale of each connected display
+
+References: iphoneUseDeviceResolution (command), pixelScale (property), systemPixelScale (property), usePixelScaling (property), pixelScale property (property), screenPixelScales (property), screenPixelScale (property), screenPixelScales property (property), screenPixelScale property (property)
+
+Tags: windowing

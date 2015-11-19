@@ -1,0 +1,60 @@
+Name: revMail
+
+Type: command
+
+Syntax: revMail <address>, [<ccAddress>, [<mailSubject>, [<messageBody>]]]
+
+Summary: Opens a new email message in the user's email program.
+
+Introduced: 2.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+revMail "guido@example.net"
+
+Example:
+revMail "help@example.com",,"Help!",field "Message"
+
+Example:
+revMail "support@livecode.com","me@example.org","Installation Help"
+
+Example:
+revMail the bugAddress of this stack,,"Auto Bug Report",myBugsList
+
+Parameters:
+address (string): A string consisting of one or more email addresses, separated by commas. These addresses appear in the 'To:' header of the email message.
+ccAddress (string): A string consisting of one or more email addresses, separated by commas. These addresses appear in the 'Cc:' header of the email message.
+mailSubject (string): A string consisting of a single line. This text appears in the 'Subject:' header of the email message.
+messageBody (string): This text appears in the 'body' of the email message.
+
+The result: On return on iOS, the result is set to one of:. On return on Android, the result is set to:. * unknown - On Android the email activity does not return its status back to the calling activity so the result is set to 'unknown' in all cases.
+
+Description:
+Use the <revMail> <command> to create an email message from within a <stack>.
+
+When LiveCode executes the <revMail> <command>, the user's email program is opened (if necessary) and a new email message with the specified <parameter|parameters> is created. The user can change any of the settings before sending the message, and the message is not sent automatically: the user must explicitly send it (for example, by clicking a 'Mail' button in the email program).
+
+On Mac OS systems, the mail message is opened in the application the user has set for the 'mailto:' protocol in the Internet control panel (or, for older system versions, Internet Config).
+
+On iOS, <revMail> hooks into the iOS MessageUI framework.
+
+* not configured - if the user has turned off or has not setup mail access on their device
+* cancel - if the user chooses to cancel the send
+* saved - if the user chose to save the message in drafts
+* sent - if the user elected to send the email
+* failed - if sending the email was attempted, but it failed
+
+>*Important:*  On <Mac OS|Mac OS systems>, the <revMail> <command> requires that AppleScript be installed and that the GURL <Apple Event> be supported. GURL support is included in <Mac OS> 8.5 or later, and is available for <Mac OS> 8.0 and 8.1 if the Internet Scripting file is installed in the Scripting Additions folder inside the Extensions folder. (This <file> is installed by the Internet Access installer on the 8.0 installation CD.) The <revMail> <command> is not supported for <Mac OS> versions before 8.0.
+
+For some older email programs, it may not be possible to specify a <ccAddress>, <mailSubject>, or <messageBody>. Generally, the <revMail> <command> still works with such programs, but only the 'To:' header is set.
+
+>*Note:*  When included in a <standalone application>, the <Common library> is implemented as a hidden <group> and made available when the <group> receives its first <openBackground> message. During the first part of the <application|application's> startup process, before this <message> is sent, the <revMail> <command> is not yet available. This may affect attempts to use this <command> in <startup>, <preOpenStack>, <openStack>, or <preOpenCard> <handler|handlers> in the <main stack>. Once the <application> has finished starting up, the <library> is available and the <revMail> <command> can be used in any <handler>.
+
+>*Note:* Once the <revMail> command is called, you have no more control over what the user does with the message. They are free to modify the message and the addresses as they see fit.
+
+References: file (keyword), startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), mobileComposeUnicodeMail (command), revGoURL (command), revMailUnicode (command), mobileComposeMail (command), mobileComposeHtmlMail (command), stack (object), parameter (glossary), main stack (glossary), handler (glossary), message (glossary), group (glossary), Mac OS (glossary), standalone application (glossary), Apple Event (glossary), command (glossary), application (glossary), revMail (library), Common library (library), library (library)
+
+Tags: networking

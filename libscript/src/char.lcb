@@ -1,0 +1,610 @@
+/* Copyright (C) 2003-2015 LiveCode Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+This library consists of the operations on chars included in the standard library of LiveCode Builder.
+*/
+
+module com.livecode.char
+
+use com.livecode.foreign
+
+public foreign handler MCCharFetchCharOf(in Index as LCIndex, in Target as String, out Value as String) returns nothing binds to "<builtin>"
+public foreign handler MCCharStoreCharOf(in Value as String, in Index as LCIndex, inout Target as String) returns nothing binds to "<builtin>"
+public foreign handler MCCharFetchCharRangeOf(in Start as LCIndex, in Finish as LCIndex, in Target as String, out Value as String) returns nothing binds to "<builtin>"
+public foreign handler MCCharStoreCharRangeOf(in Value as String, in Start as LCIndex, in Finish as LCIndex, inout Target as String) returns nothing binds to "<builtin>"
+
+public foreign handler MCCharEvalNumberOfCharsIn(in Target as String, out Count as LCIndex) returns nothing binds to "<builtin>"
+
+public foreign handler MCCharEvalIsAmongTheCharsOf(in Needle as String, in Target as String, out Value as CBool) returns nothing binds to "<builtin>"
+
+public foreign handler MCCharStoreBeforeCharOf(in Value as String, in Index as LCIndex, inout Target as String) returns nothing binds to "<builtin>"
+public foreign handler MCCharStoreAfterCharOf(in Value as String, in Index as LCIndex, inout Target as String) returns nothing binds to "<builtin>"
+
+public foreign handler MCCharEvalOffsetOfChars(in IsLast as CBool, in Needle as String, in Target as String, out Offset as LCUIndex) returns nothing binds to "<builtin>"
+public foreign handler MCCharEvalOffsetOfCharsBefore(in IsLast as CBool, in Needle as String, in Before as LCIndex, in Target as String, out Offset as LCUIndex) returns nothing binds to "<builtin>"
+public foreign handler MCCharEvalOffsetOfCharsAfter(in IsFirst as CBool, in Needle as String, in After as LCIndex, in Target as String, out Offset as LCUIndex) returns nothing binds to "<builtin>"
+
+public foreign handler MCCharEvalContains(in Source as String, in Needle as String, out Result as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCCharEvalBeginsWith(in Source as String, in Prefix as String, out Result as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCCharEvalEndsWith(in Source as String, in Suffix as String, out Result as CBool) returns nothing binds to "<builtin>"
+
+public foreign handler MCCharEvalNewlineCharacter(out Value as String) returns nothing binds to "<builtin>"
+
+public foreign handler MCCharRepeatForEachChar(inout Iterator as optional Pointer, out Iterand as String, in Container as String) returns CBool binds to "<builtin>"
+
+public foreign handler MCCharFetchFirstCharOf(in Target as String, out Value as String) returns nothing binds to "<builtin>"
+public foreign handler MCCharStoreFirstCharOf(in Value as String, inout Target as String) returns nothing binds to "<builtin>"
+
+public foreign handler MCCharFetchLastCharOf(in Target as String, out Value as String) returns nothing binds to "<builtin>"
+public foreign handler MCCharStoreLastCharOf(in Value as String, inout Target as String) returns nothing binds to "<builtin>"
+
+public foreign handler MCCharExecDeleteCharOf(in Index as LCIndex, inout Target as String) returns nothing binds to "<builtin>"
+public foreign handler MCCharExecDeleteCharRangeOf(in Start as LCIndex, in Finish as LCIndex, inout Target as String) returns nothing binds to "<builtin>"
+
+public foreign handler MCCharExecDeleteLastCharOf(inout Target as String) returns nothing binds to "<builtin>"
+public foreign handler MCCharExecDeleteFirstCharOf(inout Target as String) returns nothing binds to "<builtin>"
+
+public foreign handler MCStringEvalCodeOfChar(in pChar as String, out pCode as LCUInt) returns nothing binds to "<builtin>"
+public foreign handler MCStringEvalCharWithCode(in pCode as LCUInt, out pChar as String) returns nothing binds to "<builtin>"
+
+--
+
+/*
+Summary:            Counts the number of chars in <Target>.
+
+Target: 			An expression which evaluates to a string.
+
+Returns:			The number of chars in <Target>.
+
+Example: 			
+
+	variable tVar as Number
+	variable tSource as String
+	put "hello" into tString
+	put the number of chars in tString into tVar
+	
+	variable tString as String
+	put the empty string into tString	
+	repeat tVar times
+		put "a" after tString
+	end repeat
+	
+	// tString contains "aaaaa"
+	
+Description:
+>*Note:* The number of chars returns the number of codeunits of the target string. It does not perform any grapheme boundary analysis.
+
+Tags: Strings
+*/
+
+syntax CountCharsOf is prefix operator with function chunk precedence
+	"the" "number" "of" "chars" "in" <Target: Expression>
+begin
+	MCCharEvalNumberOfCharsIn(Target, output)
+end syntax
+
+--
+
+/*
+
+Summary:            Designates the char at index <Index> in <Target>.
+Index: 				An expression which evaluates to a valid integer index of <Target>.
+Target:				An expression which evaluates to a string.           
+
+Example: 			put the empty string into char 5 of tString // Locates char 5 and removes it from tString
+Example: 			get char 5 of tString // Evaluates char 5
+
+Description:
+Either locates the char at the given index for use as the target container of another operation, or evaluates the char at the given index as the source of another operation.
+
+>*Note:* It is an error if <Index> is out of range.
+
+Tags: Strings
+*/
+
+syntax SingletonCharOf is prefix operator with subscript chunk precedence
+	"char" <Index: Expression> "of" <Target: Expression>
+begin
+	MCCharFetchCharOf(Index, Target, output)
+	MCCharStoreCharOf(input, Index, Target)
+end syntax
+
+/*
+
+Summary:            Designates the chars between indices <Start> and <Finish> in <Target>.
+
+Start:              An expression which evaluates to a valid integer index of <Target>.
+Finish:             An expression which evaluates to a valid integer index of <Target>.
+Target:             An expression which evaluates to a string.        
+                    
+Example: 			put tChars into char 5 to 10 of tString // Locates chars 5 to 10 of tString and replace them with tChars
+Example: 			get char 5 to 10 of tString // Evaluates chars 5 to 10
+
+Description:
+Either locates the chars between the given indices for use as the target container of another operation, or evaluates the chars at the given indices as the source of another operation.
+
+>*Note:* It is an error if either <Start> or <Finish> are out of range.
+
+Tags: Strings
+*/
+
+syntax RangeCharOf is prefix operator with subscript chunk precedence
+	"char" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
+begin
+	MCCharFetchCharRangeOf(Start, Finish, Target, output)
+	MCCharStoreCharRangeOf(input, Start, Finish, Target)
+end syntax
+
+/*
+
+Summary:            Designates the first char in <Target>.
+Target:				An expression which evaluates to a string.
+
+Example:
+	variable tVar as String
+	put "char" into tVar
+	
+	variable tFirst as String
+	put the first char of tVar into tFirst -- tFirst contains "c"
+
+Description:
+Either locates the first char for use as the target container of another operation, or evaluates the first char as the source of another operation.
+
+>*Note:* It is an error if <Target> is empty.
+
+Tags: Strings
+*/
+
+syntax FirstCharOf is prefix operator with subscript chunk precedence
+	"the" "first" "char" "of" <Target: Expression>
+begin
+	MCCharFetchFirstCharOf(Target, output)
+	MCCharStoreFirstCharOf(input, Target)
+end syntax
+
+/*
+
+Summary:            Designates the last char in <Target>.
+Target:				An expression which evaluates to a string.
+
+Example:
+	variable tVar as String
+	put "char" into tVar
+	
+	variable tLast as String
+	put the last char of tVar into tLast -- tLast contains "r"
+
+Description:
+Either locates the last char for use as the target container of another operation, or evaluates the last char as the source of another operation.
+
+>*Note:* It is an error if <Target> is empty.
+
+Tags: Strings
+*/
+
+syntax LastCharOf is prefix operator with subscript chunk precedence
+	"the" "last" "char" "of" <Target: Expression>
+begin
+	MCCharFetchLastCharOf(Target, output)
+	MCCharStoreLastCharOf(input, Target)
+end syntax
+
+--
+
+/*
+
+Summary:            Deletes the char at index <Index> in <Target>.
+Index: 				An expression which evaluates to a valid integer index of <Target>.
+Target:				A string container.
+
+Example:
+	variable tVar as String
+	put "thorough" into tVar
+	delete char 3 of tVar -- tVar contains "through"
+
+Description:
+Replaces the char at the given index with the empty string.
+
+>*Note:* It is an error if <Index> is out of range.
+
+Tags: Strings
+*/
+
+syntax DeleteSingletonCharOf is statement
+	"delete" "char" <Index: Expression> "of" <Target: Expression>
+begin
+	MCCharExecDeleteCharOf(Index, Target)
+end syntax
+
+/*
+
+Summary:            Deletes the chars between indices <Start> and <Finish> in <Target>.
+
+Start:              An expression which evaluates to a valid integer index of <Target>.
+Finish:             An expression which evaluates to a valid integer index of <Target>.
+Target:             A string container.
+
+Example:
+	variable tVar as String
+	put "surround" into tVar
+	delete char 2 to 4 of tVar -- tVar contains "sound"
+
+Description:
+Replaces the chars between the given indices with the empty string.
+
+>*Note:* It is an error if either <Start> or <Finish> are out of range.
+
+Tags: Strings
+*/
+
+syntax DeleteRangeCharOf is statement
+	"delete" "char" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
+begin
+	MCCharExecDeleteCharRangeOf(Start, Finish, Target)
+end syntax
+
+/*
+
+Summary:            Deletes the first char in <Target>.
+Target:				A string container.
+
+Example:
+	variable tVar as String
+	put "seven" into tVar
+	delete the first char of tVar -- tVar contains "even"
+
+Description:
+Replaces the first char in <Target> with the empty string.
+
+>*Note:* It is an error if <Target> is the empty string.
+
+Tags: Strings
+*/
+
+syntax DeleteFirstCharOf is statement
+	"delete" "the" "first" "char" "of" <Target: Expression>
+begin
+	MCCharExecDeleteFirstCharOf(Target)
+end syntax
+
+/*
+
+Summary:            Deletes the last char in <Target>.
+Target:				A string container.
+
+Example:
+	variable tVar as String
+	put "deadliness" into tVar
+	delete the last char of tVar -- tVar contains "deadlines"
+
+Description:
+Replaces the last char in <Target> with the empty string.
+
+>*Note:* It is an error if <Target> is the empty string.
+
+Tags: Strings
+*/
+
+syntax DeleteLastCharOf is statement
+	"delete" "the" "last" "char" "of" <Target: Expression>
+begin
+	MCCharExecDeleteLastCharOf(Target)
+end syntax
+
+--
+
+/*
+Summary:            Determines whether <Needle> is in <Target>.
+Needle: 			An expression which evaluates to a char.
+Target: 			An expression which evaluates to a string.
+
+Returns: 	True if <Needle> is among the chars of <Target>, and false otherwise.
+
+Description:
+>*Note:* It is an error if <Needle> evaluates to a string consisting of more than one char.
+
+Tags: Strings
+*/
+
+syntax CharIsInString is neutral binary operator with comparison precedence
+    <Needle: Expression> "is" "in" <Source: Expression>
+begin
+    MCCharEvalIsAmongTheCharsOf(Needle, Source, output)
+end syntax
+
+--
+
+/*
+
+Summary:            Finds the first or last occurrence of <Needle> within <Target>
+
+Needle: 			An expression which evaluates to a string.
+Target: 			An expression which evaluates to a string.
+
+Returns: 	Returns the offset of <Needle> in <Target>.
+
+Example:
+	variable tVar as Number
+	put the first offset of "art" in "cartoon" into tVar -- tVar contains 2
+
+Example:
+	variable tVar as Number
+	variable tFilePath as String
+	put "/Users/user/Documents/file.txt" into tFilePath
+	put the last offset of "/" in tFilePath into tVar
+	
+	variable tFileName as String
+	put char 1 to tVar of tFilePath into tFileName -- tVar contains "file.txt"
+
+Description:
+The first (respectively last) offset of <Needle> in <Target> is number of chars between the first char of <Target> and the first (respectively last) occurrence of <Needle>. If neither first or last is specified, then the first offset is found. If <Needle> does not occur in <Target>, then the output is 0.
+
+Tags: Strings
+*/
+
+syntax CharOffset is prefix operator with function chunk precedence
+    "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "in" <Target: Expression>
+begin
+    MCCharEvalOffsetOfChars(IsLast, Needle, Target, output)
+end syntax
+syntax CharIndex is prefix operator with function chunk precedence
+    "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "index" "of" <Needle: Expression> "in" <Target: Expression>
+begin
+    MCCharEvalOffsetOfChars(IsLast, Needle, Target, output)
+end syntax
+
+/*
+
+Summary:            Finds the first or last occurrence of <Needle> after a specified index in <Target>
+
+Needle: 			An expression which evaluates to a string.
+Target: 			An expression which evaluates to a string.
+After:              An expression which evaluates to a valid integer index of Target.
+
+Returns: 	Returns the offset of <Needle> after <After> in <Target>.
+
+Example:
+	variable tVar as Number
+	put the offset of "nse" after 4 in "nonsense" into tVar -- tVar contains 2
+	
+Description:
+The first (respectively last) offset of <Needle> in <Target> is number of chars between the first char of the substring of <Target> beginning at char <After> + 1, and the first (respectively last) occurrence of <Needle> in the substring. If neither first or last is specified, then the first offset is found. If <Needle> does not occur in the given substring of <Target>, then the output is 0.
+
+Tags: Strings
+*/
+syntax CharOffsetAfter is prefix operator with function chunk precedence
+    "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
+begin
+    MCCharEvalOffsetOfCharsAfter(IsLast, Needle, After, Target, output)
+end syntax
+syntax CharIndexAfter is prefix operator with function chunk precedence
+    "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "index" "of" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
+begin
+    MCCharEvalOffsetOfCharsAfter(IsLast, Needle, After, Target, output)
+end syntax
+
+/*
+
+Summary:            Finds the first or last occurrence of <Needle> before a specified index in <Target>.
+
+Needle: 			An expression which evaluates to a string.
+Target: 			An expression which evaluates to a string.
+Before:              An expression which evaluates to a valid integer index of Target.
+
+Returns: 	Returns the offset of <Needle> before <Before> in <Target>.
+
+Example:
+	variable tVar as Number
+	variable tLastDot as Number
+	variable tAddress as String
+	variable tTLD as String
+	put "http://www.livecode.com/index.html" into tAddress
+	put the last offset of "." in tAddress into tLastDot
+	put the offset of "." before tLastDot in tAddress into tVar
+	put char tVar + 1 to tVar + 3 of tAddress into tTLD -- tTLD contains "com"
+	
+Description:
+The first (respectively last) offset of <Needle> in <Target> is number of chars between the first char of <Target>, and the first (respectively last) occurrence of <Needle> in the substring of <Target> ending at char <Before> - 1. If neither first or last is specified, then the last offset is found. If <Needle> does not occur in the given substring of <Target>, then the output is 0.
+
+Tags: Strings
+*/
+
+syntax CharOffsetBefore is prefix operator with function chunk precedence
+    "the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "offset" "of" <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
+begin
+    MCCharEvalOffsetOfCharsBefore(IsFirst, Needle, Before, Target, output)
+end syntax
+syntax CharIndexBefore is prefix operator with function chunk precedence
+    "the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "index" "of" <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
+begin
+    MCCharEvalOffsetOfCharsBefore(IsFirst, Needle, Before, Target, output)
+end syntax
+
+/*
+Summary:            Determines whether <Source> contains <Needle>.
+Needle: 			An expression which evaluates to a string.
+Source: 			An expression which evaluates to a string.
+
+Returns: 	Returns true if <Source> contains <Needle>.
+
+Description:
+<Source> contains <Needle> if and only if the chars of <Needle> occur as a subsequence of the chars of <Source>.
+
+>*Note:* Since "" is a substring of every string, every string contains the empty string.
+
+Tags: Strings
+*/
+
+syntax ContainsChars is neutral binary operator with comparison precedence
+    <Source: Expression> "contains" <Needle: Expression>
+begin
+    MCCharEvalContains(Source, Needle, output)
+end syntax
+
+--
+
+/*
+Summary:            Determines whether <Source> begins with <Prefix>
+Prefix: 			An expression which evaluates to a string.
+Source: 			An expression which evaluates to a string.
+
+Returns: 	Returns true if <Source> begins with <Prefix>.
+
+Example:
+	variable tVar as String
+	variable tResult as String
+	put "abcde" into tVar
+	if tVar begins with "abc" then
+		put "success" into tResult
+	end if	
+
+Description:
+<Source> begins with <Prefix> if and only if the chars of <Prefix> occur as an initial subsequence of the chars of <Source>.
+
+>*Note:* Since "" is an initial substring of every string, every string begins with the empty string.
+
+Tags: Strings
+*/
+
+syntax StringBeginsWithString is neutral binary operator with comparison precedence
+    <Source: Expression> "begins" "with" <Prefix: Expression>
+begin
+    MCCharEvalBeginsWith(Source, Prefix, output)
+end syntax
+
+/*
+Summary:            Determines whether <Source> ends with <Suffix>
+Suffix: 			An expression which evaluates to a string.
+Source: 			An expression which evaluates to a string.
+
+Returns: 	Returns true if <Source> ends with <Suffix>.
+
+Example:
+	variable tVar as String
+	variable tResult as String
+	put "abcde" into tVar
+	if tVar ends with "cde" then
+		put "success" into tResult
+	end if	
+	
+Description:
+<Source> ends with <Suffix> if and only if the chars of <Suffix> occur as a final subsequence of the chars of <Source>.
+
+>*Note:* Since "" is a final substring of every string, every string ends with the empty string.
+
+Tags: Strings
+*/
+
+syntax StringEndsWithString is neutral binary operator with comparison precedence
+    <Source: Expression> "ends" "with" <Suffix: Expression>
+begin
+    MCCharEvalEndsWith(Source, Suffix, output)
+end syntax
+
+--
+
+/*
+Summary:			The new line character
+
+Example:
+	variable tList as List
+	push "line 1" onto tList
+	push "line 2" onto tList
+	push "line 3" onto tList
+	
+	variable tLines as String
+	combine tList with newline into tLines -- tLines has 3 lines
+
+Description:
+Use the <newline> constant to add new lines to a string variable.
+
+Tags: Strings
+*/
+
+syntax NewLineCharacter is expression
+    "newline"
+begin
+    MCCharEvalNewlineCharacter(output)
+end syntax
+
+/*
+Summary:        Repeat over the chars of a string
+Iterand:        A string container.
+
+Example:
+	variable tString as String
+	put "stressed" into tString
+	
+	variable tReversed as String
+	variable tChar as String
+	put "" into tReversed
+	repeat for each char tChar in tString
+		put tChar before tReversed
+	end repeat
+
+    // tReversed is "desserts"
+
+Description:
+Use repeat for each to perform an operation on each char of a string. On each iteration, the <Iterand> will contain the next char of the string being iterated over.
+
+Tags: Strings, Control structures
+*/
+
+syntax RepeatForEachChar is iterator
+    "char" <Iterand: Expression>
+begin
+    MCCharRepeatForEachChar(iterator, Iterand, container)
+end syntax
+
+----------------------------------------------------------------
+
+/*
+Summary:	Get the numeric value of a single char
+
+Target:	A string containing one character
+
+Description:
+Returns the Unicode codepoint index of a single character.
+
+Tags: Strings
+*/
+
+syntax CodeOfChar is prefix operator with function chunk precedence
+    "the" "code" "of" <Target: Expression>
+begin
+    MCStringEvalCodeOfChar(Target, output)
+end syntax
+
+/*
+Summary:	Create a 1-char string from a number
+
+Value:		A Unicode codepoint index
+
+Description:
+Returns a string containing one Unicode character created using the
+given value.
+
+Tags: Strings
+*/
+
+syntax CharWithCode is prefix operator with function chunk precedence
+    "the" "char" "with" "code" <Index: Expression>
+begin
+    MCStringEvalCharWithCode(Index, output)
+end syntax
+
+end module

@@ -1,0 +1,297 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+-- declaring extension as widget, followed by identifier
+widget com.livecode.widget.progressBar
+--
+
+-- adding metadata to ensure extension displays correctly in livecode
+metadata title is "Progress Bar"
+metadata author is "LiveCode"
+metadata version is "1.0.5"
+metadata svgicon is "M0,0v29.5h101.5V0H0z M97.5,25.5H4v-2.9h66.5V6.9H4V4h93.5V25.5z"
+--
+
+-- dependency declarations
+use com.livecode.canvas
+use com.livecode.widget
+--
+
+-- property declarations
+property progressTheme					get mTheme				set setTheme
+property thumbPosition			get mThumbPosition		set setThumbPosition
+property progressAmount				get mProgress			set setProgress
+--
+
+-- private instance variables
+private variable mTheme 			as String
+private variable mThumbPosition		as Real
+private variable mProgress 			as Real
+
+private variable mShift 			as Real
+--
+
+-- constants
+constant kBarHeight is 11
+constant kProgressHeight is 4
+
+constant kTransparent is [1,1,1,0]
+constant kWhite is [1,1,1]
+constant kBlack is [0,0,0]
+--
+public handler OnSave(out rProperties as Array)
+	put the empty array into rProperties
+	
+	put mTheme into rProperties["theme"]
+	put mThumbPosition into rProperties["thumbPosition"]
+	put mProgress into rProperties["progress"]
+end handler
+
+public handler OnLoad(in pProperties as Array)
+	put pProperties["theme"] into mTheme
+	put pProperties["thumbPosition"] into mThumbPosition
+	put pProperties["progress"] into mProgress
+end handler
+
+public handler OnCreate()
+	-- properties
+	put "macos-yosemite" into mTheme
+	put 0.0 into mThumbPosition
+	put 0.0 into mProgress
+	
+	-- variables
+	put 0.0 into mShift
+	
+	-- schedule timer
+	if mTheme is "macos-10.0" then
+		schedule timer in 0.05 seconds
+	end if
+end handler
+
+public handler OnPaint()
+	
+	-- getting the thumb position
+	updateThumbPosition()
+	
+	-- draw the rounded rectangle and fill with paint
+	variable tBarPath as Path
+	put getBarPath() into tBarPath
+	set the paint of this canvas to getBarPaint()
+	fill tBarPath on this canvas
+	--
+	
+	-- draw the progress bar (background progress bar for yosemite)
+	set the paint of this canvas to getProgressPaint()
+	fill getProgressPath() on this canvas
+	
+	-- draw a straight line at the end of the progress bar for macos
+	if mTheme is "macos-10.0" or mTheme is "macos-yosemite" and mProgress is not 0.0 then
+		set the stroke width of this canvas to getStrokeWidth() 
+		set the paint of this canvas to solid paint with getProgressStrokeColor()
+		stroke getStrokePath() on this canvas
+	end if
+	--
+	
+	-- draw the progress bar for macos-yosemite
+	if mTheme is "macos-yosemite" and mProgress is not 0.0 then	
+		set the paint of this canvas to getYosemiteProgressPaint()
+		fill getYosemiteProgressPath() on this canvas
+	end if
+	--
+	
+	-- draw the border by stroking the bar
+	set the stroke width of this canvas to 0.9
+	set the paint of this canvas to solid paint with getStrokeColor()
+	stroke tBarPath on this canvas
+	--
+	
+end handler
+
+public handler OnTimer()
+	add 1.0 to mShift
+	redraw all
+	schedule timer in 0.05 seconds
+end handler
+
+private handler getBarPath()
+
+	if mTheme is "macos-10.0" then
+		return rounded rectangle path of rectangle [0, 0, my width, kBarHeight] with radius 2.5
+		
+	else if mTheme is "macos-yosemite" then
+		return rectangle path of rectangle [0, 0, my width, kBarHeight]
+		
+	else if mTheme is "windows-8" then
+		return rectangle path of rectangle [0, kBarHeight/4, my width, 3*kBarHeight/4]
+	end if
+	
+end handler
+
+private handler getProgressPath() returns Path
+
+	if mTheme is "macos-10.0" then
+		return rounded rectangle path of rectangle [0, 0, mThumbPosition, kBarHeight] with radius 2.5
+		
+	else if mTheme is "macos-yosemite" then
+		return rounded rectangle path of rectangle [2, kBarHeight/2 - kProgressHeight/2, my width - 2, kBarHeight/2 + kProgressHeight/2] with radius 10
+	
+	else if mTheme is "windows-8" then 
+		return rectangle path of rectangle [0, kBarHeight/4, mThumbPosition, 3*kBarHeight/4]
+	
+	end if
+end handler
+
+private handler getBarPaint() returns Paint
+
+	variable tPaint as Paint
+	
+	if mTheme is "macos-10.0" then
+		variable tStop1
+		variable tStop2
+		variable tStop3
+		
+		put gradient stop at 0 with color [160/255, 160/255, 160/255, 0.5] into tStop1
+		put gradient stop at (kBarHeight/2)/(my height) with color [160/255, 160/255, 160/255, 0.3] into tStop2
+		put gradient stop at kBarHeight/(my height) with color [160/255, 160/255, 160/255, 0.2] into tStop3
+		
+		put linear gradient with ramp [tStop1, tStop2, tStop3] into tPaint
+		scale tPaint by [my height, my width]
+		rotate tPaint by 90
+		
+	else if mTheme is "macos-yosemite" then
+		put solid paint with color [224/255, 224/255, 224/255, 0.75] into tPaint
+		
+	else if mTheme is "windows-8" then
+		put solid paint with color [192/255, 192/255, 192/255, 0.75] into tPaint
+	end if
+	
+	return tPaint
+end handler
+
+private handler getProgressPaint() returns Paint
+
+	variable tPaint as Paint
+	
+	if mTheme is "macos-10.0" then
+		variable tImage as Image
+		variable tFile as String
+		
+		if mThumbPosition is my width then
+			
+			put "scrollbar_complete.png" into tFile
+			put image from resource file tFile into tImage 
+			put pattern with tImage into tPaint
+			scale tPaint by [my width, 0.9]
+			
+		else
+			put "scrollbar.png" into tFile
+			put image from resource file tFile into tImage
+			put pattern with tImage into tPaint
+			translate tPaint by [-mShift,0]
+			
+		end if
+		
+	else if mTheme is "macos-yosemite" then
+		put solid paint with color [192/255, 192/255, 192/255, 0.75] into tPaint
+		
+	else if mTheme is "windows-8" then
+		put solid paint with color [62/255, 154/255, 215/255] into tPaint
+	end if
+	return tPaint
+end handler
+
+private handler getStrokeColor() returns Color
+	if mTheme is "macos-10.0" then
+		return color [128/255, 128/255, 128/255]
+	else if mTheme is "macos-yosemite" then
+		return color kTransparent
+	else if mTheme is "windows-8" then
+		return color kTransparent
+	end if
+end handler
+
+private handler getStrokeWidth() returns Real
+	if mTheme is "macos-10.0" then
+		return 0.5
+	else if mTheme is "macos-yosemite" then
+		return 2
+	end if 
+end handler
+
+private handler getProgressStrokeColor() returns Color
+	if mTheme is "macos-10.0" then
+		return color [128/255, 128/255, 128/255]
+	else if mTheme is "macos-yosemite" then
+		return color [51/255, 153/255, 1.0]
+	end if 
+end handler
+
+private handler getStrokePath() returns Path
+	if mTheme is "macos-10.0" then
+		return line path from point [mThumbPosition, 0] to point [mThumbPosition, kBarHeight]
+	else if mTheme is "macos-yosemite" then
+		return line path from point [mThumbPosition, kBarHeight/2 - kProgressHeight/2] to point [mThumbPosition, kBarHeight/2 + kProgressHeight/2]
+	end if
+end handler
+
+private handler getYosemiteProgressPath() returns Path
+	return rounded rectangle path of rectangle [2, kBarHeight/2 - kProgressHeight/2, mThumbPosition, kBarHeight/2 + kProgressHeight/2] with radius 10	
+end handler
+
+private handler getYosemiteProgressPaint() returns Paint
+	return solid paint with color [51/255, 153/255, 1.0]
+end handler
+
+public handler setTheme(in pTheme as String)
+	put pTheme into mTheme
+	redraw all
+end handler
+
+public handler setThumbPosition(in pProgress as Real) returns nothing
+	
+	variable tProgress as Real
+	if pProgress > 100 then
+		put 100 into tProgress
+	else if pProgress < 0 then
+		put 0 into tProgress
+	else
+		put pProgress into tProgress
+	end if
+	
+	if mTheme is "macos-yosemite" then
+		put (tProgress/100)*(my width - 4) + 2 into mThumbPosition
+	else
+		put (tProgress/100)*(my width) into mThumbPosition
+	end if
+	
+	redraw all
+end handler
+
+public handler setProgress(in pProgress as Real) returns nothing
+	put pProgress into mProgress
+	redraw all
+end handler
+
+private handler updateThumbPosition() returns nothing
+	if mTheme is "macos-yosemite" then
+		put (mProgress/100)*(my width - 4) + 2 into mThumbPosition
+	else
+		put (mProgress/100)*(my width) into mThumbPosition
+	end if
+end handler
+
+end widget

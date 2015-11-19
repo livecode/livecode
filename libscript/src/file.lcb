@@ -1,0 +1,125 @@
+/*
+Copyright (C) 2014-2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+This module specifies the syntax definitions and bindings for file i/o operations in modular LiveCode.
+*/
+
+module com.livecode.file
+
+--
+
+public foreign handler MCFileExecGetContents(in File as String, out Contents as Data) returns nothing binds to "<builtin>"
+public foreign handler MCFileExecSetContents(in Contents as Data, in File as String) returns nothing binds to "<builtin>"
+
+/*
+Summary:	The data stored in a file.
+
+File:		An expression that evaluates to a filename.
+
+Description:
+The raw data stored in a file.
+
+>*Note:* Setting the contents of a file will replace the file with a
+>newly-created file with the new contents.
+
+Tags: IO, Filesystem
+*/
+syntax FileContents is prefix operator with function chunk precedence
+	"the" "contents" "of" "file" <File: Expression>
+begin
+	MCFileExecGetContents(File, output)
+	MCFileExecSetContents(input, File)
+end syntax
+
+--
+
+public foreign handler MCFileExecDeleteFile(in File as String) returns nothing binds to "<builtin>"
+
+/*
+Summary:	Delete a file from the filesystem.
+
+File:		An expression that evaluates to a filename.
+
+Description:
+Deletes the specified file.
+
+Tags: IO, Filesystem
+*/
+syntax DeleteFile is statement
+	"delete" "file" <File: Expression>
+begin
+	MCFileExecDeleteFile(File)
+end syntax
+
+--
+
+public foreign handler MCFileExecCreateDirectory(in Directory as String) returns nothing binds to "<builtin>"
+public foreign handler MCFileExecDeleteDirectory(in Directory as String) returns nothing binds to "<builtin>"
+public foreign handler MCFileExecGetDirectoryEntries(in Directory as String, out Entries as List) returns nothing binds to "<builtin>"
+
+/*
+Summary:	Create a named directory.
+
+Directory:	An expression that evaluates to a filename.
+
+Description:
+Creates a new, empty directory.
+
+Tags: IO, Filesystem
+*/
+syntax CreateDirectory is statement
+	"create" "directory" <Directory: Expression>
+begin
+	MCFileExecCreateDirectory(Directory)
+end syntax
+
+/*
+Summary:	Delete a directory.
+
+Directory:	An expression that evaluates to a filename.
+
+Description:
+Deletes a directory.  The directory must be empty.
+
+Tags: IO, Filesystem
+*/
+syntax DeleteDirectory is statement
+	"delete" "directory" <Directory: Expression>
+begin
+	MCFileExecDeleteDirectory(Directory)
+end syntax
+
+/*
+Summary:	List the contents of a directory.
+
+Directory:	An expression that evaluates to a filename.
+
+Description:
+Creates a new, empty directory.
+
+Tags: IO, Filesystem
+*/
+syntax GetDirectoryEntries is prefix operator with function chunk precedence
+	"the" "entries" "of" "directory" <Directory: Expression>
+begin
+	MCFileExecGetDirectoryEntries(Directory, output)
+end syntax
+
+--
+
+end module

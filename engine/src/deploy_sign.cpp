@@ -879,7 +879,9 @@ static bool MCDeploySignWindowsAddTimeStamp(const MCDeploySignParameters& p_para
 	PKCS7_SIGNER_INFO *t_signer_info;
 	t_signer_info = sk_PKCS7_SIGNER_INFO_value(p_signature -> d . sign -> signer_info, 0);
 
-	// Build a request to send to the time-stamp authority
+	// Build a request to send to the time-stamp authority. If there is a 'blob'
+    // field in this request, then we must reset the signature field before freeing
+    // it as that is borrowed from elsewhere.
 	SpcTimeStampRequest *t_request;
 	t_request = nil;
 	if (t_success)
@@ -1032,7 +1034,11 @@ static bool MCDeploySignWindowsAddTimeStamp(const MCDeploySignParameters& p_para
 	// the sig.
 	if (t_request != nil)
 	{
-		t_request -> blob -> signature = nil;
+        // If we have a 'blob' field then we will have potentially borrowed a
+        // signature from another data structure so must unhook that here to
+        // stop it being freed in SpcTimeStampRequest_free.
+        if (t_request -> blob != nil)
+            t_request -> blob -> signature = nil;
 		SpcTimeStampRequest_free(t_request);
 	}
 
@@ -1430,7 +1436,7 @@ bool MCDeploySignLoadPVK(MCStringRef p_filename, MCStringRef p_passphrase, EVP_P
 	// Next we read the salt (if any)
 	uint8_t *t_salt;
 	t_salt = nil;
-	if (t_header . salt_length > 0)
+	if (t_success && t_header . salt_length > 0)
 	{
 		if (t_success)
 			t_success = MCMemoryNewArray(t_header . salt_length, t_salt);
@@ -1465,7 +1471,7 @@ bool MCDeploySignLoadPVK(MCStringRef p_filename, MCStringRef p_passphrase, EVP_P
 			t_success = MCDeployThrowOpenSSL(kMCDeployErrorBadPrivateKey);
 
 	// We now have everything we need to attempt to decrypt the key (if necessary).
-	if (t_header . is_encrypted)
+	if (t_success && t_header . is_encrypted)
 	{
 		// First check we have a password
 		if (t_success && p_passphrase == nil)

@@ -1,0 +1,283 @@
+/* Copyright (C) 2003-2015 LiveCode Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+  This library consists of the general operations on types provided by the standard library of LiveCode Builder.
+*/
+
+module com.livecode.type
+
+use com.livecode.foreign
+
+public foreign handler MCTypeEvalIsEmpty(in Target as any, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCTypeEvalIsNotEmpty(in Target as any, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCTypeEvalIsDefined(in Target as optional any, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCTypeEvalIsNotDefined(in Target as optional any, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCTypeEvalIsABoolean(in Target as optional any, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCTypeEvalIsANumber(in Target as optional any, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCTypeEvalIsAString(in Target as optional any, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCTypeEvalIsAData(in Target as optional any, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCTypeEvalIsAnArray(in Target as optional any, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCTypeEvalIsAList(in Target as optional any, out Value as CBool) returns nothing binds to "<builtin>"
+
+public foreign handler MCNothingEvalIsEqualToNothing(in Left as optional any, in Right as nothing, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCNothingEvalIsNothingEqualTo(in Left as nothing, in Right as optional any, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCNothingEvalIsNotEqualToNothing(in Left as optional any, in Right as nothing, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCNothingEvalIsNothingNotEqualTo(in Left as nothing, in Right as optional any, out Value as CBool) returns nothing binds to "<builtin>"
+
+/*
+Summary:    Determines whether <Target> is empty or not.
+
+Target:     Any expression
+output:     Returns true if the given expression <Target> evaluates to the empty value of that type, and false otherwise.
+
+*/
+
+syntax IsEmpty is postfix operator with comparison precedence
+    <Target: Expression> "is" "empty"
+begin
+    MCTypeEvalIsEmpty(Target, output)
+end syntax
+
+/*
+Summary:    Determines whether <Target> is empty or not.
+
+Target:     Any expression
+output:     Returns false if the given expression <Target> evaluates to the empty value of that type, and true otherwise.
+
+*/
+
+syntax IsNotEmpty is postfix operator with comparison precedence
+	<Target: Expression> "is not" "empty"
+begin
+	MCTypeEvalIsNotEmpty(Target, output)
+end syntax
+
+--
+
+/*
+Summary:    Determines whether <Target> is defined or not.
+
+Target:     Any expression
+output:     Returns true if the given expression <Target> is defined, and false if not.
+
+Description:
+>*Note:* The <IsDefined> operator is deprecated. Please use <IsNotNothing|is not nothing> instead.
+
+References: IsNotNothing (operator)
+*/
+
+syntax IsDefined is postfix operator with comparison precedence
+    deprecate with message "Use 'is not nothing' instead"
+	<Target: Expression> "is" "defined"
+begin
+	MCTypeEvalIsDefined(Target, output)
+end syntax
+
+/*
+Summary:    Determines whether <Target> is defined or not.
+
+Target:     Any expression
+output:     Returns false if the given expression <Target> is defined, and true if not.
+
+Description:
+>*Note:* The <IsNotDefined> operator is deprecated. Please use <IsNothing|is nothing> instead.
+
+References: IsNothing (operator)
+
+*/
+
+syntax IsNotDefined is postfix operator with comparison precedence
+    deprecate with message "Use 'is nothing' instead"
+	<Target: Expression> "is not" "defined"
+begin
+	MCTypeEvalIsNotDefined(Target, output)
+end syntax
+
+/*
+Summary:	Determines whether <Target> is defined or not.
+
+Target:	Any expression
+Output:	Returns false if the given expression <Target> is defined, and true otherwise
+
+Description:
+>*Note:* The <IsUndefined> operator is deprecated. Please use <IsNothing|is nothing> instead.
+
+References: IsNothing (operator)
+
+*/
+syntax IsUndefined is postfix operator with comparison precedence
+    deprecate with message "Use 'is nothing' instead"
+	<Target: Expression> "is undefined"
+begin
+	MCTypeEvalIsNotDefined(Target, output)
+end syntax
+
+/*
+Summary:	Determines whether <Target> is defined or not.
+Target:	Any expression
+Output:	Returns true if the given expression <Target> is defined, and false otherwise.
+
+Description:
+>*Note:* The <IsNotUndefined> operator is deprecated. Please use <IsNotNothing|is not nothing> instead.
+
+References: IsNotNothing (operator)
+
+*/
+syntax IsNotUndefined is postfix operator with comparison precedence
+    deprecate with message "Use 'is not nothing' instead"
+	<Target: Expression> "is not undefined"
+begin
+	MCTypeEvalIsDefined(Target, output)
+end syntax
+
+--
+
+/*
+Name: IsNothing
+Type: operator
+Syntax: <Target> is nothing
+Summary:	Determines whether <Target> is nothing or not.
+Target:	Any expression
+output:	Returns true if the given expression <Target> is nothing, and false otherwise.
+
+Description:
+Use the <IsNothing> operator to test if operators or handlers have returned anything.
+
+*/
+
+syntax NothingIsNothing is neutral binary operator with comparison precedence
+    <Left: Expression> "is" <Right: Expression>
+begin
+    MCNothingEvalIsEqualToNothing(Left, Right, output)
+    MCNothingEvalIsNothingEqualTo(Left, Right, output)
+end syntax
+
+/*
+Name: IsNotNothing
+Type: operator
+Syntax: <Target> is not nothing
+Summary:	Determines whether <Target> is nothing or not.
+Target:	Any expression
+output:	Returns false if the given expression <Target> is nothing, and true otherwise.
+
+Example:
+public handler CanBeNumber(in pString as String) returns Boolean
+    variable tNum as optional Number
+    put pString parsed as number into tNum
+    return tNum is not nothing
+end handler
+
+Description:
+Use the <IsNotNothing> operator to test if operators or handlers have returned anything.
+*/
+
+syntax NothingIsNotNothing is neutral binary operator with comparison precedence
+    <Left: Expression> "is not" <Right: Expression>
+begin
+    MCNothingEvalIsNotEqualToNothing(Left, Right, output)
+    MCNothingEvalIsNothingNotEqualTo(Left, Right, output)
+end syntax
+
+--
+
+/*
+Summary:    Determines whether <Target> is a boolean or not.
+
+Target:     Any expression
+output:     Returns true if the given expression <Target> is a boolean, and false if not.
+
+*/
+
+syntax IsABoolean is postfix operator with classification precedence
+	<Target: Expression> "is" "a" "boolean"
+begin
+	MCTypeEvalIsABoolean(Target, output)
+end syntax
+
+/*
+Summary:    Determines whether <Target> is a number or not.
+
+Target:     Any expression
+output:     Returns true if the given expression <Target> is a number, and false if not.
+
+*/
+
+syntax IsANumber is postfix operator with classification precedence
+	<Target: Expression> "is" "a" "number"
+begin
+	MCTypeEvalIsANumber(Target, output)
+end syntax
+
+/*
+Summary:    Determines whether <Target> is a string or not.
+
+Target:     Any expression
+output:     Returns true if the given expression <Target> is a string, and false if not.
+
+*/
+
+syntax IsAString is postfix operator with classification precedence
+	<Target: Expression> "is" "a" "string"
+begin
+	MCTypeEvalIsAString(Target, output)
+end syntax
+
+/*
+Summary:    Determines whether <Target> is data or not.
+
+Target:     Any expression
+output:     Returns true if the given expression <Target> is data, and false if not.
+
+*/
+
+syntax IsAData is postfix operator with classification precedence
+	<Target: Expression> "is" "a" "data"
+begin
+	MCTypeEvalIsAData(Target, output)
+end syntax
+
+/*
+Summary:    Determines whether <Target> is an array or not.
+
+Target:     Any expression
+output:     Returns true if the given expression <Target> is an array, and false if not.
+
+*/
+
+syntax IsAnArray is postfix operator with classification precedence
+	<Target: Expression> "is" "an" "array"
+begin
+	MCTypeEvalIsAnArray(Target, output)
+end syntax
+
+/*
+Summary:    Determines whether <Target> is a list or not.
+
+Target:     Any expression
+output:     Returns true if the given expression <Target> is a list, and false if not.
+
+*/
+
+syntax IsAList is postfix operator with classification precedence
+	<Target: Expression> "is" "a" "list"
+begin
+	MCTypeEvalIsAList(Target, output)
+end syntax
+
+--
+
+end module

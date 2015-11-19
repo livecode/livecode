@@ -1,0 +1,10 @@
+Name: call
+
+Synonyms: call,called,calling
+
+Type: glossary
+
+Description:
+To invoke a <handler>; to cause a <handler> to <execute>. In particular, to cause a <function> or <getProp> handler to <execute> and <return> a <value>.
+
+References: handler (glossary), execute (glossary), return (glossary), function (glossary), value (glossary), getProp (control_st)

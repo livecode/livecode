@@ -1,0 +1,45 @@
+Name: clone
+
+Type: command
+
+Syntax: clone [invisible] <object> 
+
+Summary: Duplicates an <object>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web
+
+Example:
+clone field 1
+
+Example:
+clone the selectedObject
+
+Example:
+clone this card
+
+Example:
+clone invisible stack "myStack"
+
+Parameters:
+object: An object or stack reference or an expression that resolves to either.
+
+It: The <clone> command places the long id property of the newly created object in the <it Keyword>.
+
+Description:
+Use the <clone> <command> to create a copy of an existing <object>.
+
+If the <object> is a <control>, its copy is placed on the <current card>, 32 <pixels> below and to the right of the original <object>. The copy's <name> and other <properties> are the same as those of the original. If the <object> is a <grouped control>, the clone is also <owner|owned> by the <group>.
+
+>*Note:*  If invisible is specified the new object will have its visible property set to false.
+
+If the <object> is a <card>, the copy becomes the <current card>.
+
+If the <object> is a <stack>, the newly created <stack> is opened. It is named "Copy of" and the stack's name.
+
+The <clone> <command> does not affect the contents of the <clipboard>.
+
+References: pixels (property), properties (property), name (property), newButton (message), newCard (message), newGroup (message), newPlayer (message), newGraphic (message), newField (message), newScrollbar (message), newEPS (message), newImage (message), card (keyword), control (keyword), it Keyword (keyword), stack (object), object (object), grouped control (glossary), current card (glossary), owner (glossary), command (glossary), create card (command), paste (command), group (command), copy (command), create stack (command), clipboard (function)

@@ -17,6 +17,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	CHUNK_H
 #define	CHUNK_H
 
+#ifndef __MC_FOUNDATION_CHUNK__
+#include "foundation-chunk.h"
+#endif
+
 #include "express.h"
 
 class MCCRef
@@ -126,6 +130,7 @@ public:
     /* WRAPPER */ Exec_stat mark(MCExecPoint &ep, Boolean force, Boolean wholechunk, MCMarkedText& r_mark, bool includechars = true);
 #endif
     void mark(MCExecContext &ctxt, bool set, bool wholechunk, MCMarkedText& x_mark, bool includechars = true);
+    void mark_for_eval(MCExecContext& ctxt, MCMarkedText& x_mark);
 #ifdef LEGACY_EXEC
 	Exec_stat mark_legacy(MCExecPoint &, int4 &start, int4 &end, Boolean force, Boolean wholechunk, bool include_characters = true);
 
@@ -236,42 +241,6 @@ public:
 	}
 };
 
-class MCTextChunkIterator
-{
-    MCStringRef text;
-    MCScriptPoint *sp;
-    Chunk_term type;
-    MCRange range;
-    bool exhausted;
-    uindex_t length;
-    bool first_chunk;
-    MCAutoArray<MCRange> breaks;
-    uindex_t break_position;
-    
-    // store the number of codeunits matched in text when searching for
-    //  delimiter, so that we can increment the range appropriately.
-    uindex_t delimiter_length;
-    
-    public:
-    MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_text);
-    // AL-2015-02-10: [[ Bug 14532 ]] Add text chunk iterator constructor for restricted range chunk operations.
-    MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_text, MCRange p_restriction);
-    ~MCTextChunkIterator();
-    
-    MCRange getrange()
-    {
-        return range;
-    }
-    
-    bool isexhausted()
-    {
-        return exhausted;
-    }
-    
-    bool next(MCExecContext& ctxt);
-    bool copystring(MCStringRef& r_string);
-    uindex_t countchunks(MCExecContext& ctxt);
-    bool isamong(MCExecContext& ctxt, MCStringRef p_needle);
-    uindex_t chunkoffset(MCExecContext& ctxt, MCStringRef p_needle, uindex_t p_start_offset);
-};
+MCChunkType MCChunkTypeFromChunkTerm(Chunk_term p_chunk_term);
+
 #endif

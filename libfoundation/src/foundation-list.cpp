@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <foundation.h>
+#include <foundation-auto.h>
 
 #include "foundation-private.h"
 
@@ -46,6 +47,7 @@ bool MCListCreateMutable(MCStringRef p_delimiter, MCListRef& r_list)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCListAppend(MCListRef self, MCValueRef p_value)
 {
 	__MCAssertIsList(self);
@@ -79,9 +81,11 @@ bool MCListAppend(MCListRef self, MCValueRef p_value)
 		break;
 
 	default:
-		// value type conversion not implemented
-		MCAssert(false);
-		return false;
+		if (!MCStringFormat(t_string, "%@", p_value))
+		{
+			return false;
+		}
+		break;
 	}
 	if (!t_first && !MCStringAppend(self -> buffer, self -> delimiter))
 		return false;
@@ -89,6 +93,7 @@ bool MCListAppend(MCListRef self, MCValueRef p_value)
 	return MCStringAppend(self -> buffer, t_string);
 }
 
+MC_DLLEXPORT_DEF
 bool MCListCopy(MCListRef self, MCListRef& r_list)
 {
 	__MCAssertIsList(self);
@@ -123,6 +128,7 @@ bool MCListCopy(MCListRef self, MCListRef& r_list)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCListCopyAndRelease(MCListRef self, MCListRef& r_list)
 {
 	__MCAssertIsList(self);
@@ -142,6 +148,7 @@ bool MCListCopyAndRelease(MCListRef self, MCListRef& r_list)
     return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCListCopyAsString(MCListRef self, MCStringRef& r_string)
 {
 	__MCAssertIsList(self);
@@ -158,6 +165,7 @@ bool MCListCopyAsString(MCListRef self, MCStringRef& r_string)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCListCopyAsStringAndRelease(MCListRef self, MCStringRef& r_string)
 {
 	if (!MCListCopyAsString(self, r_string))
@@ -168,6 +176,7 @@ bool MCListCopyAsStringAndRelease(MCListRef self, MCStringRef& r_string)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCListAppendFormat(MCListRef self, const char *p_format, ...)
 {
 	__MCAssertIsList(self);
@@ -193,6 +202,7 @@ bool MCListAppendFormat(MCListRef self, const char *p_format, ...)
 	return t_success;
 }
 
+MC_DLLEXPORT_DEF
 bool MCListAppendNativeChars(MCListRef self, const char_t *p_chars, uindex_t p_char_count)
 {
 	__MCAssertIsList(self);
@@ -209,11 +219,13 @@ bool MCListAppendNativeChars(MCListRef self, const char_t *p_chars, uindex_t p_c
 	return MCStringAppendNativeChars(self -> buffer, p_chars, p_char_count);
 }
 
+MC_DLLEXPORT_DEF
 bool MCListAppendSubstring(MCListRef self, MCStringRef p_string, MCRange p_range)
 {
 	return MCListAppendFormat(self, "%*@", &p_range, p_string);
 }
 
+MC_DLLEXPORT_DEF
 bool MCListIsEmpty(MCListRef self)
 {
 	__MCAssertIsList(self);
@@ -222,7 +234,7 @@ bool MCListIsEmpty(MCListRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCListRef kMCEmptyList;
+MC_DLLEXPORT_DEF MCListRef kMCEmptyList;
 
 bool __MCListInitialize(void)
 {
@@ -256,7 +268,10 @@ bool __MCListIsEqualTo(__MCList *list, __MCList *other_list)
 
 bool __MCListCopyDescription(__MCList *self, MCStringRef& r_string)
 {
-	return false;
+	MCAutoStringRef t_self_string;
+	if (!MCListCopyAsString (self, &t_self_string))
+		return false;
+	return MCValueCopyDescription(*t_self_string, r_string);
 }
 
 bool __MCListImmutableCopy(__MCList *self, bool p_release, __MCList*& r_immutable_value)

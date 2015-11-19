@@ -72,6 +72,11 @@ static bool s_cgi_processed_post = false;
 class MCStreamCache;
 static MCStreamCache *s_cgi_stdin_cache;
 
+/* Maximum number of POST variables permitted. */
+enum {
+	kMCCGIMaxFormFields = (1<<10),
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static bool cgi_send_cookies(void);
@@ -486,7 +491,7 @@ public:
 	
 	void* GetFilePointer()
 	{
-		return false;
+		return NULL;
 	}
 	
 	int64_t GetFileSize()
@@ -740,16 +745,20 @@ static bool cgi_native_from_encoding(MCSOutputTextEncoding p_encoding, MCDataRef
         return false;
 }
 
-static void cgi_store_data_urlencoded(MCVariable *p_variable, MCDataRef p_data, bool p_native_encoding, char p_delimiter, bool p_remove_whitespace)
+static void cgi_store_data_urlencoded(MCVariable *p_variable, MCDataRef p_data, bool p_native_encoding, char p_delimiter, bool p_remove_whitespace, uint32_t p_max_values)
 {
     uindex_t t_length;
     uindex_t t_encoded_index;
+	uindex_t t_num_values;
     t_encoded_index = 0;
     t_length = MCDataGetLength(p_data);
+	t_num_values = 0;
 
     while(t_encoded_index < t_length)
     {
         uindex_t t_delimiter_index;
+
+		if (p_max_values > 0 && t_num_values >= p_max_values) break;
 
         if (p_remove_whitespace)
             while (MCDataGetByteAtIndex(p_data, t_encoded_index) == ' ')
@@ -802,17 +811,19 @@ static void cgi_store_data_urlencoded(MCVariable *p_variable, MCDataRef p_data, 
         }
 
         t_encoded_index = t_delimiter_index + 1;
+		++t_num_values;
     }
 }
 
 static void cgi_store_cookie_urlencoded(MCVariable *p_variable, MCDataRef p_data, bool p_native)
 {
-    cgi_store_data_urlencoded(p_variable, p_data, p_native, ';', true);
+    cgi_store_data_urlencoded(p_variable, p_data, p_native, ';', true, 0);
 }
 
 static void cgi_store_form_urlencoded(MCVariable *p_variable, MCDataRef p_data, bool p_native)
 {
-    cgi_store_data_urlencoded(p_variable, p_data, p_native, '&', false);
+    cgi_store_data_urlencoded(p_variable, p_data, p_native, '&', false,
+							  kMCCGIMaxFormFields);
 }
 
 

@@ -1,0 +1,397 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/**
+This library provides syntax for unit testing LiveCode Builder
+programs.  It is used by the LiveCode Builder standard library's
+testsuite.
+
+To use this library, write your tests in a Builder source code file.
+Each group of tests should be a public handler with a name beginning
+with `Test`.  If possible, use one test per handler.  Otherwise, add a
+`plan N tests` statement at the start of the handler.
+
+Example:
+
+	public handler TestSelf()
+		plan 10 tests
+
+		test diagnostic "Normal tests"
+		test 2 > 1
+		test "Basic test" when true
+
+		test diagnostic "Skipped tests"
+		skip test
+		skip test "Skipped 2"
+		skip test because "Not implemented"
+		skip test "Skipped 4" because "Not supported on this platform"
+
+		test diagnostic "Tests which are expected to fail"
+		broken test false
+		broken test "Failed 2" when false
+		broken test false because "broken"
+		broken test "Failed 4" when false because "really broken"
+	end handler
+
+The test results are output on standard output in TAP (Test Anything
+Protocol) format.
+
+Tags: Unit tests
+*/
+
+module com.livecode.unittest
+
+public foreign handler MCUnitPlan(in pCount as Number) returns nothing binds to "lcb:com.livecode.unittest.__IMPL.MCUnitPlan"
+public foreign handler MCUnitDiagnostic(in pMessage as String) returns nothing binds to "lcb:com.livecode.unittest.__IMPL.MCUnitDiagnostic"
+foreign handler MCUnitOutputTest(in pCondition as Boolean, in pDescription as String, in pDirective as String, in pReason as String) returns nothing binds to "lcb:com.livecode.unittest.__IMPL.MCUnitOutputTest"
+
+----------------------------------------------------------------
+-- Test syntax
+----------------------------------------------------------------
+
+/**
+Summary:	Announce how many test results are expected from the unit test.
+
+Parameters:
+	Count: The number of tests that are expected
+
+Example:
+	plan 3 tests
+
+Description:
+Log the number of unit test assertions which are expected to occur in the
+current unit test.  This may be used by the test framework to flag an error if
+too few test results appear in the test result.  For example, this allows the
+test framework to detect whether a unit test failed silently.
+
+Using `plan _ tests` is optional, and a unit test is valid even if its omitted.
+
+Tags: Unit tests
+*/
+syntax UnitPlan is statement
+	"plan" <Count: Expression> "tests"
+begin
+	MCUnitPlan(Count)
+end syntax
+
+/**
+Summary:	Log unit test diagnostic message.
+
+Parameters:
+	Message:	The message to log, as a String.
+
+Example:
+	test diagnostic "File access tests"
+
+Description:
+Log a message as a test diagnostic.  The <Message> may have multiple lines.
+You may wish to log diagnostic messages to help make the test log easier to
+read by adding info about what's being tested, or add information when a test
+fails to help understand why the failure occurred.
+
+Tags: Unit tests
+*/
+syntax UnitDiagnostic is statement
+	"test" "diagnostic" <Message: Expression>
+begin
+	MCUnitDiagnostic(Message)
+end syntax
+
+----------------------------------------------------------------
+
+/**
+Summary:	Make a unit test assertion
+
+Parameters:
+	Condition:	An expression that evaluates to `true` if the test is successful
+
+Example:
+	test 2 > 1
+
+Description:
+Make a basic unit test assertion, with no test description.  It is usually more
+helpful to use <UnitTestDescription>.
+
+References: UnitTestDescription(statement)
+
+Tags: Unit tests
+*/
+syntax UnitTest is statement
+	"test" <Condition: Expression>
+begin
+	MCUnitTest(Condition)
+end syntax
+
+public handler MCUnitTest(in pCondition as Boolean)
+	MCUnitOutputTest(pCondition, "", "", "")
+end handler
+
+/**
+Summary:	Make a unit test assertion with a description
+
+Parameters:
+	Description:	A short description of the test
+	Condition:	An expression that evaluates to `true` if the test is successful
+
+Example:
+	test "integer greater than" when 2 > 1
+
+Description:
+Make a unit test assertion.  The test is considered to have passed if
+<Condition> is true.  The <Description> string is a short message that
+summarises what the test is checking.
+
+Tags: Unit tests
+*/
+syntax UnitTestDescription is statement
+	"test" <Description: Expression> "when" <Condition: Expression>
+begin
+	MCUnitTestDescription(Description, Condition)
+end syntax
+
+public handler MCUnitTestDescription(in pDescription as String, in pCondition as Boolean)
+	MCUnitOutputTest(pCondition, pDescription, "", "")
+end handler
+
+----------------------------------------------------------------
+
+/**
+Summary:	Record a skipped test
+
+Description:
+Record that a test was skipped, with no description or reason.  It is usually
+more helpful to use <UnitTestSkipDescriptionAndReason>.
+
+References: UnitTestSkipDescriptionAndReason(statement)
+
+Tags: Unit tests
+*/
+syntax UnitTestSkip is statement
+	"skip" "test"
+begin
+	MCUnitTestSkip()
+end syntax
+
+public handler MCUnitTestSkip()
+	MCUnitOutputTest(true, "", "SKIP", "")
+end handler
+
+/**
+Summary: Record a skipped test with a description
+
+Parameters:
+	Description:	A short description of the skipped test
+
+Example:
+	skip test "open web socket"
+
+Description:
+Record that a test was skipped.  The <Description> string is a short message
+that summarises the test that was skipped.
+
+Tags: Unit tests
+*/
+syntax UnitTestSkipDescription is statement
+	"skip" "test" <Description: Expression>
+begin
+	MCUnitTestSkipDescription(Description)
+end syntax
+
+public handler MCUnitTestSkipDescription(in pDescription as String)
+	MCUnitOutputTest(true, pDescription, "SKIP", "")
+end handler
+
+/**
+Summary: Record a skipped test with a reason for skipping
+
+Parameters:
+	Reason:	A short explanation of why the test was skipped
+
+Example:
+	skip test because "not implemented"
+
+Description:
+Record that a test was skipped, including a reason for skipping the test.  The
+<Reason> is a short message that describes why the test has to be skipped.
+
+Tags: Unit tests
+*/
+syntax UnitTestSkipReason is statement
+	"skip" "test" "because" <Reason: Expression>
+begin
+	MCUnitTestSkipReason(Reason)
+end syntax
+
+public handler MCUnitTestSkipReason(in pReason as String)
+	MCUnitOutputTest(true, "", "SKIP", pReason)
+end handler
+
+/**
+Summary: Record a skipped test with a test description and reason for skipping
+
+Parameters:
+	Description:	A short description of the skipped test
+	Reason:	A brief explanation of why the test was skipped
+
+Example:
+	skip test "open web socket" because "not implemented"
+
+Description:
+Record that a test was skipped.  The <Description> is a message that summarises
+the test that was skipped, and the <Reason> explains why the test couldn't be
+done.  For example, the feature being tested isn't supported by the platform
+that the test is running on.
+
+Tags: Unit tests
+*/
+syntax UnitTestSkipDescriptionAndReason is statement
+	"skip" "test" <Description: Expression> "because" <Reason: Expression>
+begin
+	MCUnitTestSkipDescriptionAndReason(Description, Reason)
+end syntax
+
+public handler MCUnitTestSkipDescriptionAndReason(in pDescription as String, in pReason as String)
+	MCUnitOutputTest(true, pDescription, "SKIP", pReason)
+end handler
+
+----------------------------------------------------------------
+
+/**
+Summary: Make a failing unit test assertion
+
+Parameters:
+	Condition:	An expression that evaluates to `true` if the test is successful
+
+Example:
+	broken test 1 > 2
+
+Description:
+Make a unit test assertion, in the expectation that it will fail, and without
+providing a description or reason.  It is usually more helpful to use
+<UnitTestFailsDescriptionAndReason>.
+
+References: UnitTestFailsDescriptionAndReason(statement)
+
+Tags: Unit tests
+*/
+syntax UnitTestFails is statement
+	"broken" "test" <Condition: Expression>
+begin
+	MCUnitTestFails(Condition)
+end syntax
+
+public handler MCUnitTestFails(in pCondition as Boolean)
+	MCUnitOutputTest(pCondition, "", "TODO", "")
+end handler
+
+/**
+Summary: Make a failing unit test assertion with a description
+
+Parameters:
+	Description:	A short description of the test
+	Condition:	An expression that evaluates to `true` if the test is successful
+
+Example:
+	broken test "weird comparison" when 1 > 2
+
+Description:
+Make a unit test assertion, in the expectation that it will fail. The test is
+considered to have passed if <Condition> is true.  The <Description> string is
+a short message that summarises what the test is checking.
+
+If the test fails, it will not cause a test suite failure; instead, an
+"expected failure" will be recorded.  If the test passes, an "unexpected pass"
+will be recorded instead of a normal test pass.
+
+Tags: Unit tests
+*/
+syntax UnitTestFailsDescription is statement
+	"broken" "test" <Description: Expression> "when" <Condition: Expression>
+begin
+	MCUnitTestFailsDescription(Description, Condition)
+end syntax
+
+public handler MCUnitTestFailsDescription(in pDescription as String, in pCondition as Boolean)
+	MCUnitOutputTest(pCondition, pDescription, "TODO", "")
+end handler
+
+/**
+Summary: Make a failing unit test assertion with a reason for brokenness
+
+Parameters:
+	Condition: An expression that evaluates to `true` if the test is successful
+	Reason:	A short explanation of why the test is broken
+
+Example:
+	broken test 1 > 2 because "bug 12345"
+
+Description:
+Make a unit test assertion, in the expectation that it will fail. The test is
+considered to have passed if <Condition> is true.  The <Reason> is a shor
+message that describes why the test is broken (usually referencing a bug
+report).
+
+If the test fails, it will not cause a test suite failure; instead, an
+"expected failure" will be recorded.  If the test passes, an "unexpected pass"
+will be recorded instead of a normal test pass.
+
+Tags: Unit tests
+*/
+syntax UnitTestFailsReason is statement
+	"broken" "test" <Condition: Expression> "because" <Reason: Expression>
+begin
+	MCUnitTestFailsReason(Condition, Reason)
+end syntax
+
+public handler MCUnitTestFailsReason(in pCondition as Boolean, in pReason as String)
+	MCUnitOutputTest(pCondition, "", "TODO", pReason)
+end handler
+
+/**
+Summary: Make a failing unit test assertion with a reason for brokenness
+
+Parameters:
+	Description:	A short description of the failing test
+	Condition:	An expression that evaluates to `true` if the test is successful
+	Reason:	A short explanation of why the test is broken
+
+Example:
+	broken test "weird comparison" when 1 > 2 because "bug 12345"
+
+Description:
+Make a unit test assertion, in the expectation that it will fail. The test is
+considered to have passed if <Condition> is true.  The <Description> is a
+message that summarises the broken test, and the <Reason> explains why the test
+is broken (usually referencing a bug report).
+
+If the test fails, it will not cause a test suite failure; instead, an
+"expected failure" will be recorded.  If the test passes, an "unexpected pass"
+will be recorded instead of a normal test pass.
+
+Tags: Unit tests
+*/
+syntax UnitTestFailsDescriptionAndReason is statement
+	"broken" "test" <Description: Expression> "when" <Condition: Expression> "because" <Reason: Expression>
+begin
+	MCUnitTestFailsDescriptionAndReason(Description, Condition, Reason)
+end syntax
+
+public handler MCUnitTestFailsDescriptionAndReason(in pDescription as String, in pCondition as Boolean, in pReason as String)
+	MCUnitOutputTest(pCondition, pDescription, "TODO", pReason)
+end handler
+
+end module

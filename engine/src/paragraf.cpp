@@ -444,12 +444,12 @@ uint8_t MCParagraph::firststrongisolate(uindex_t p_offset) const
     return t_level;
 }
 
-bool MCParagraph::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_visitor)
+bool MCParagraph::visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor* p_visitor)
 {
 	bool t_continue;
 	t_continue = true;
 
-	if (p_style == VISIT_STYLE_DEPTH_LAST)
+	if (MCObjectVisitorIsDepthLast(p_options))
 		t_continue = p_visitor -> OnParagraph(this);
 	
 	if (t_continue && blocks != NULL)
@@ -457,13 +457,13 @@ bool MCParagraph::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* 
 		MCBlock *bptr = blocks;
 		do
 		{
-			t_continue = bptr -> visit(p_style, p_part, p_visitor);
+			t_continue = bptr -> visit(p_options, p_part, p_visitor);
 			bptr = bptr->next();
 		}
 		while(t_continue && bptr != blocks);
 	}
 
-	if (t_continue && p_style == VISIT_STYLE_DEPTH_FIRST)
+	if (t_continue && MCObjectVisitorIsDepthFirst(p_options))
 		t_continue = p_visitor -> OnParagraph(this);
 
 	return t_continue;
@@ -489,16 +489,16 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 		// This string can contain a mixture of Unicode and native - t_length is the number
         // of bytes.
         if ((stat = IO_read_string_legacy_full(&t_text_data, t_length, stream, 2, true, false)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 
         if (!MCStringCreateMutable(0, m_text))
-			return IO_ERROR;
+			return checkloadstat(IO_ERROR);
 
         // MW-2012-03-04: [[ StackFile5500 ]] If this is an extended paragraph then
         //   load in the attribute extension record.
         if (is_ext)
             if ((stat = loadattrs(stream, version)) != IO_NORMAL)
-                return IO_ERROR;
+                return checkloadstat(IO_ERROR);
 		
 		// If the whole text isn't covered by the saved blocks, the index of the
 		// portion not covered needs to be retained so that it can be added to
@@ -507,7 +507,7 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 		while (True)
 		{
 			if ((stat = IO_read_uint1(&type, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			switch (type)
 			{
 				// MW-2012-03-04: [[ StackFile5500 ]] Handle either a normal block, or
@@ -523,7 +523,7 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 					if ((stat = newblock->load(stream, version, type == OT_BLOCK_EXT)) != IO_NORMAL)
 					{
 						delete newblock;
-						return stat;
+						return checkloadstat(IO_ERROR);
 					}
 					
 					// The indices returned here are *wrong* from the point of view
@@ -538,7 +538,7 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
                     // SN-2014-10-31: [[ Bug 13881 ]] Ensure that the block hasn't been corrupted.
                     //  (leads to a potential crash, in case the corrupted stack ends up to be valid).
                     if (index > t_length)
-                        return IO_ERROR;
+                        return checkloadstat(IO_ERROR);
                     
                     // Some stacks seem to be saved with invalid blocks that
                     // exceed the length of the paragraph character data
@@ -574,12 +574,12 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 
                             // Append to the paragraph text
                             if (!MCStringAppendChars(m_text, (const unichar_t*)dptr - t_len, t_len))
-                                return IO_ERROR;
+                                return checkloadstat(IO_ERROR);
 							
                             if (len > 0)
                             {
                                 if (!MCStringAppendChar(m_text, (unichar_t)*(const uint8_t *)dptr))
-                                    return IO_ERROR;
+                                    return checkloadstat(IO_ERROR);
                                 t_len += 1;
                             }
                             
@@ -604,7 +604,7 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 
 						// String is in native format. Append to paragraph text
                         if (!MCStringAppendNativeChars(m_text, (const char_t*)(*t_text_data + index), len))
-                            return IO_ERROR;
+                            return checkloadstat(IO_ERROR);
 
                         // Fix the indices used by the block
                         newblock->SetRange(t_index, len);
@@ -627,7 +627,7 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 					if (t_last_added == 0)
 					{
                         if (!MCStringAppendNativeChars(m_text, (const char_t*)*t_text_data, t_length))
-							return IO_ERROR;
+							return checkloadstat(IO_ERROR);
 						t_last_added = t_length;
 					}
 					
@@ -645,7 +645,7 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 		// MW-2013-11-20: [[ UnicodeFileFormat ]] The text is just a stringref, so no
 		//   magical swizzling to be done.
 		if ((stat = IO_read_stringref_new(m_text, stream, true)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
         
         // The paragraph text *must* be mutable
         /* UNCHECKED */ MCStringMutableCopyAndRelease(m_text, m_text);
@@ -654,12 +654,12 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
         //   load in the attribute extension record.
         if (is_ext)
             if ((stat = loadattrs(stream, version)) != IO_NORMAL)
-                return IO_ERROR;
+                return checkloadstat(stat);
 		
 		while (True)
 		{
 			if ((stat = IO_read_uint1(&type, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			switch (type)
 			{
 					// MW-2012-03-04: [[ StackFile5500 ]] Handle either a normal block, or
@@ -675,7 +675,7 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 					if ((stat = newblock->load(stream, version, type == OT_BLOCK_EXT)) != IO_NORMAL)
 					{
 						delete newblock;
-						return stat;
+						return checkloadstat(stat);
 					}
 					
                     // De-(plitter about with) the block indices (the saving code doubles them because
@@ -1439,9 +1439,10 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 	
 	dc->save();
 
-	uint2 ascent, descent;
+	coord_t ascent, descent, leading, linespace, baseline;
 	ascent = fixeda;
 	descent = fixedd;
+    leading = 0;
 
 	// MW-2012-03-16: [[ Bug 10001 ]] Compute the paragraph offset (from leftmargin) and minimal width.
 	int32_t t_paragraph_offset, t_paragraph_width;
@@ -1505,9 +1506,12 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 	{
 		if (fixeda == 0)
 		{
-			ascent = lptr -> getascent();
-			descent = lptr -> getdescent();
+			ascent = lptr -> GetAscent();
+			descent = lptr -> GetDescent();
+            leading = lptr -> GetLeading();
 		}
+        
+        linespace = ascent + descent + leading;
 
 		if (t_current_y < t_clip . y + t_clip . height && t_current_y + ascent + descent > t_clip . y)
 		{
@@ -1515,7 +1519,7 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 			t_current_x = t_inner_rect . x + computelineinneroffset(t_inner_rect . width, lptr);
 
 			if (startindex != endindex || state & PS_FRONT || state & PS_BACK)
-				fillselect(dc, lptr, t_current_x, t_current_y, ascent + descent, t_select_x, t_select_width);
+				fillselect(dc, lptr, t_current_x, t_current_y, linespace, t_select_x, t_select_width);
 
 			uint32_t t_list_style;
 			t_list_style = getliststyle();
@@ -1583,12 +1587,12 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 
 			lptr->draw(dc, t_current_x, t_current_y + ascent - 1, si, ei, m_text, pstyle);
 			if (fstart != fend)
-				drawfound(dc, lptr, t_current_x, t_current_y, ascent + descent, fstart, fend);
+				drawfound(dc, lptr, t_current_x, t_current_y, linespace, fstart, fend);
 			if (compstart != compend)
-				drawcomposition(dc, lptr, t_current_x, t_current_y, ascent + descent, compstart, compend, compconvstart, compconvend);
+				drawcomposition(dc, lptr, t_current_x, t_current_y, linespace, compstart, compend, compconvstart, compconvend);
 		}
 
-		t_current_y += ascent + descent;
+		t_current_y += linespace;
 
 		lptr = lptr->next();
 	}
@@ -2835,6 +2839,10 @@ uint1 MCParagraph::fmovefocus(Field_translations type, bool p_force_logical)
             moving_left = bptr -> is_rtl();
             type = FT_FORWARDWORD;
             break;
+
+		default:
+			/* Field translations that don't require RTL fix-ups */
+			break;
     }
 
     findex_t oldfocused = focusedindex;
@@ -3656,7 +3664,7 @@ uint2 MCParagraph::getwidth() const
 
 uint2 MCParagraph::getheight(uint2 fixedheight) const
 {
-	uint2 height = 0;
+	coord_t height = 0;
 
 	// MW-2012-03-05: [[ HiddenText ]] If the paragraph is currently hidden, then it
 	//   is of height 0.
@@ -3673,7 +3681,7 @@ uint2 MCParagraph::getheight(uint2 fixedheight) const
 		do
 		{
 			if (fixedheight == 0)
-				height += lptr->getheight();
+				height += lptr->GetHeight();
 			else
 				height += fixedheight;
 			lptr = lptr->next();
@@ -4012,29 +4020,6 @@ void MCParagraph::getclickindex(int2 x, int2 y,
 		
 		return;
 	}
-}
-
-// MW-2008-07-25: [[ Bug 6830 ]] Make sure we use the block retreat/advance
-//   methods to navigate relatively to an index, otherwise Unicodiness isn't
-//   taken into account.
-static codepoint_t GetCodepointAtRelativeIndex(MCBlock *p_block, findex_t p_index, findex_t p_delta)
-{
-	while(p_block != NULL && p_delta < 0)
-	{
-		p_block = p_block -> RetreatIndex(p_index);
-		p_delta += 1;
-	}
-	
-	while(p_block != NULL && p_delta > 0)
-	{
-		p_block = p_block -> AdvanceIndex(p_index);
-		p_delta -= 1;
-	}
-	
-	if (p_block == NULL)
-		return 0xFFFFFFFF;
-	
-	return p_block -> getparent() -> GetCodepointAtIndex(p_index);
 }
 
 findex_t MCParagraph::findwordbreakbefore(MCBlock *p_block, findex_t p_index)

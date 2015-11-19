@@ -101,6 +101,9 @@ struct MCDeployParameters
 
 	// The output path for the new executable.
 	MCStringRef output;
+    
+    // The list of modules to include.
+    MCArrayRef modules;
 	
 	
 	MCDeployParameters()
@@ -120,7 +123,8 @@ struct MCDeployParameters
 		manifest		= MCValueRetain(kMCEmptyString);
 		payload			= MCValueRetain(kMCEmptyString);
 		spill			= MCValueRetain(kMCEmptyString);
-		output			= MCValueRetain(kMCEmptyString);
+        output			= MCValueRetain(kMCEmptyString);
+        modules         = MCValueRetain(kMCEmptyArray);
         library         = MCValueRetain(kMCEmptyArray);
         
         // SN-2015-04-23: [[ Merge-6.7.5-rc-1 ]] Initialise fontmappings array
@@ -132,24 +136,25 @@ struct MCDeployParameters
 	}
 	
 	~MCDeployParameters()
-	{
-			MCValueRelease(engine);
-			MCValueRelease(engine_x86);
-			MCValueRelease(engine_ppc);
-			MCValueRelease(version_info);
-			MCValueRelease(stackfile);
-            MCValueRelease(auxiliary_stackfiles);
-			MCValueRelease(externals);
-			MCValueRelease(startup_script);
-			MCValueRelease(redirects);
-			MCValueRelease(app_icon);
-			MCValueRelease(doc_icon);
-			MCValueRelease(manifest);
-			MCValueRelease(payload);
-			MCValueRelease(spill);
-			MCValueRelease(output);
-            MCValueRelease(library);
-            MCMemoryDeleteArray(min_os_versions);
+    {
+        MCValueRelease(engine);
+        MCValueRelease(engine_x86);
+        MCValueRelease(engine_ppc);
+        MCValueRelease(version_info);
+        MCValueRelease(stackfile);
+        MCValueRelease(auxiliary_stackfiles);
+        MCValueRelease(externals);
+        MCValueRelease(startup_script);
+        MCValueRelease(redirects);
+        MCValueRelease(app_icon);
+        MCValueRelease(doc_icon);
+        MCValueRelease(manifest);
+        MCValueRelease(payload);
+        MCValueRelease(spill);
+        MCValueRelease(output);
+        MCValueRelease(modules);
+        MCValueRelease(library);
+        MCMemoryDeleteArray(min_os_versions);
 	}
 	
 	// Creates using an array of parameters
@@ -161,6 +166,7 @@ Exec_stat MCDeployToLinux(const MCDeployParameters& p_params);
 Exec_stat MCDeployToMacOSX(const MCDeployParameters& p_params);
 Exec_stat MCDeployToIOS(const MCDeployParameters& p_params, bool embedded);
 Exec_stat MCDeployToAndroid(const MCDeployParameters& p_params);
+Exec_stat MCDeployToEmscripten(const MCDeployParameters& p_params);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -373,6 +379,7 @@ enum MCDeployError
 	kMCDeployErrorNoEngine,
 	kMCDeployErrorNoStackfile,
 	kMCDeployErrorNoAuxStackfile,
+    kMCDeployErrorNoModule,
 	kMCDeployErrorNoOutput,
 	kMCDeployErrorNoSpill,
 	kMCDeployErrorNoPayload,
@@ -423,6 +430,9 @@ enum MCDeployError
 	kMCDeployErrorMacOSXUnknownLoadCommand,
 	kMCDeployErrorMacOSXBadCpuType,
 	kMCDeployErrorMacOSXBadTarget,
+
+	/* An error occurred while creating the startup stack */
+	kMCDeployErrorEmscriptenBadStack,
 
 	// SIGN ERRORS
 

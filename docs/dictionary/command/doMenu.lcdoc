@@ -1,0 +1,32 @@
+Name: doMenu
+
+Type: command
+
+Syntax: doMenu <menuItem> [of menu <menuName>]
+
+Summary: Simulates a choice from a <menu>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+doMenu "New Card" of menu "Object"
+
+Example:
+doMenu (line 10 of tList)
+
+Parameters:
+menuItem: The name of a menu item.
+menuName: The name of the menu in which the menuItem appears.
+
+Description:
+Use the <doMenu> <command> to choose a <menu item>.
+
+The <doMenu> <command> is not implemented for all <menu item|menu items>. This command is included in <LiveCode> for compatibility with imported <HyperCard> stacks.
+
+References: copy (command), enable menu (command), paste (command), menuItem (keyword), menu (keyword), LiveCode (glossary), command (glossary), menu item (glossary), HyperCard (glossary)
+
+Tags: menus

@@ -69,16 +69,16 @@ class MPlayer
 		int m_pfd_read[2];
 	    pid_t m_cpid;
 	
-		uint4 m_duration ;
-		uint4 m_timescale ;
-		uint4 m_loudness ;
+		uint32_t m_duration ;
+		uint32_t m_timescale ;
+		uint32_t m_loudness ;
 
 	
 		bool launch_player(void) ;
-		void write_command ( char * p_cmd) ;
-		char * read_command( char * p_ans ) ;
-		char * get_property ( char * p_prop ) ;
-		void set_property ( char * p_prop, char * p_value ) ;
+		void write_command (const char * p_cmd) ;
+		char * read_command(const char * p_ans ) ;
+		char * get_property (const char * p_prop) ;
+		void set_property (const char * p_prop, const char * p_value) ;
 
 
 } ;

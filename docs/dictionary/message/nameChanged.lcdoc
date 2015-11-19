@@ -1,0 +1,34 @@
+Name: nameChanged
+
+Type: message
+
+Syntax: nameChanged <oldName>, <newName> 
+
+Summary: Sent to an <object> when its <name> is changed.
+
+Associations: stack,card,field,button,graphic,scrollbar,player,image
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+on nameChanged myOldName,myNewName -- replace name in a menu button
+  put lineOffset(myOldName,button "Window List") into namePosition
+  put myNewName into line namePosition of button "Window List"
+end nameChanged
+
+Parameters:
+oldName: The object's original name.
+newName: The object's new name.
+
+Description:
+Handle the <nameChanged> <message> if you want to make updates when an <object|object's> <name> is changed. For example, if you have a <popup menu> with the names of <stacks>, the <menu> should be updated when a <stack|stack's> name changes.
+
+The actual change is not triggered by the <nameChanged> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the name from being changed.
+
+References: showName (property), groupNames (property), cardNames (property), name (property), number (property), trap (glossary), message (glossary), popup menu (glossary), menu (glossary), IDChanged (message), stack (object), object (object), stacks (function), pass (control_st)
+
+Tags: objects

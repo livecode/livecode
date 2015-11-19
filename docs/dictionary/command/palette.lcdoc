@@ -1,0 +1,39 @@
+Name: palette
+
+Type: command
+
+Syntax: palette <stack> 
+
+Summary: Opens a <stack> in a <palette|palette window>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+palette stack "Tools"
+
+Example:
+palette the defaultStack
+
+Parameters:
+stack: Any stack reference.
+
+Description:
+Use the <palette> <command> to display a <stack> in a <palette(glossary)|palette window>.
+
+Use palette windows to display tools or information about main windows.
+
+A palette window behaves like an ordinary window, except that its appearance is different, with a narrower title bar. If the raisePalettes <property> is set to true, any <palette(glossary)|palettes> float in their own <layer>, above all ordinary windows. <palette(glossary)|palettes> cannot be resized or edited.  To edit a <palette(command)>, use the <topLevel> <command> to display it in an <editable window>.
+
+The <palette> <command> closes the <stack> and reopens it as a <palette(command)>, so <closeStack> and <openStack>, <closeCard> and <openCard>, and (if applicable) <closeBackground> and <openBackground> <message|messages> are sent to the <current card> as a result of <execute|executing> this <command>. Use the <lock messages> <command> before <execute|executing> <palette> if you want to prevent the close <message|messages> from being sent; the open <message|messages> are sent regardless of the setting of the <lockMessages> <property>.
+
+If the stack is already displayed as a palette, the <palette> <command> does not close and reopen it.
+
+The Browse tool is always used in palette windows, regardless of the current setting of the tool <property>.
+
+References: hidePalettes (property), activatePalettes (property), lockMessages (property), layer (property), openCard (message), closeStack (message), closeCard (message), closeBackground (message), openStack (message), openBackground (message), topLevel (command), lock messages (command), drawer (command), modeless (command), palette (command), stack (object), property (glossary), current card (glossary), palette (glossary), execute (glossary), message (glossary), editable window (glossary), command (glossary)
+
+Tags: windowing

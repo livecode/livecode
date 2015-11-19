@@ -225,7 +225,7 @@ void MCArraysExecCombineByRow(MCExecContext& ctxt, MCArrayRef p_array, MCStringR
         MCArrayApply(p_array, list_array_elements, &t_lisctxt);
         qsort(t_lisctxt . elements, t_count, sizeof(array_element_t), compare_array_element);
 
-        for (int i = 0; i < t_count && t_success; ++i)
+        for (uindex_t i = 0; i < t_count && t_success; ++i)
         {
             MCAutoStringRef t_string;
             if (ctxt . ConvertToString(t_lisctxt . elements[i] . value, &t_string))
@@ -276,7 +276,7 @@ void MCArraysExecCombineByColumn(MCExecContext& ctxt, MCArrayRef p_array, MCStri
             index_t t_last_index;
             t_valid_keys = true;
             t_last_index = 0;
-            for (int i = 0; i < t_count && t_valid_keys; ++i)
+            for (uindex_t i = 0; i < t_count && t_valid_keys; ++i)
             {
                 if (!t_last_index)
                     t_last_index = t_lisctxt . elements[i] . key;
@@ -299,7 +299,7 @@ void MCArraysExecCombineByColumn(MCExecContext& ctxt, MCArrayRef p_array, MCStri
                 // MCMemoryNewArray initialises all t_next_row_indices elements to 0.
                 /* UNCHECKED */ MCMemoryNewArray(t_count, t_next_row_indices);
                 
-                for (int i = 0; i < t_count && t_success; ++i)
+                for (uindex_t i = 0; i < t_count && t_success; ++i)
                 {
                     if (t_lisctxt . elements[i] . key == 0) // The index 0 is ignored
                         continue;
@@ -323,7 +323,7 @@ void MCArraysExecCombineByColumn(MCExecContext& ctxt, MCArrayRef p_array, MCStri
                         t_elements_over = 0;
                         
                         // Iterate through all the elements of the array
-                        for (int i = 0; i < t_count && t_success; ++i)
+                        for (uindex_t i = 0; i < t_count && t_success; ++i)
                         {
                             // Only consider this element if it has any uncombined rows remaining
                             if (t_next_row_indices[i] < MCStringGetLength(t_strings[i]))
@@ -406,14 +406,6 @@ void MCArraysExecCombineAsSet(MCExecContext& ctxt, MCArrayRef p_array, MCStringR
 
 void MCArraysExecSplit(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_element_delimiter, MCStringRef p_key_delimiter, MCArrayRef& r_array)
 {
-	/* Cannot split by empty delimiters */
-	if (MCStringIsEmpty(p_element_delimiter) ||
-	    (nil != p_key_delimiter && MCStringIsEmpty(p_key_delimiter)))
-	{
-		ctxt.LegacyThrow(EE_ARRAYOP_BADEXP);
-		return;
-	}
-
 	if (MCStringSplit(p_string, p_element_delimiter, p_key_delimiter, ctxt . GetStringComparisonType(), r_array))
 		return;
 
@@ -425,14 +417,7 @@ void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArra
     MCStringRef t_row_delim, t_column_delim;
     t_row_delim = ctxt . GetRowDelimiter();
     t_column_delim = ctxt . GetColumnDelimiter();
-
-	/* Cannot split by empty delimiters */
-	if (MCStringIsEmpty(t_row_delim) || MCStringIsEmpty(t_column_delim))
-	{
-		ctxt.LegacyThrow(EE_ARRAYOP_BADEXP);
-		return;
-	}
-
+    
     // Output array
     MCAutoArrayRef t_array;
     if (!MCArrayCreateMutable(&t_array))
@@ -540,13 +525,6 @@ void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArra
 
 void MCArraysExecSplitAsSet(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_element_delimiter, MCArrayRef& r_array)
 {
-	/* Cannot split by empty delimiters */
-	if (MCStringIsEmpty(p_element_delimiter))
-	{
-		ctxt.LegacyThrow(EE_ARRAYOP_BADEXP);
-		return;
-	}
-
 	// Split the incoming string into its components
     MCAutoArrayRef t_keys;
     if (!MCStringSplit(p_string, p_element_delimiter, nil, ctxt . GetStringComparisonType(), &t_keys))
@@ -583,6 +561,18 @@ void MCArraysExecSplitAsSet(MCExecContext& ctxt, MCStringRef p_string, MCStringR
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+//
+// Semantics of 'union tLeft with tRight [recursively]'
+// 
+// repeat for each key tKey in tRight
+//    if tKey is not among the keys of tLeft then
+//        put tRight[tKey] into tLeft[tKey]
+//    else if tRecursive then
+//        union tLeft[tKey] with tRight[tKey] recursively
+//    end if
+// end repeat
+//
 
 void MCArraysDoUnion(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, bool p_recursive, MCValueRef& r_result)
 {
@@ -646,25 +636,31 @@ void MCArraysDoUnion(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, bo
     r_result = MCValueRetain(*t_result);
 }
 
-void MCArraysDoIntersect(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, bool p_recursive, bool p_top_level, MCValueRef& r_result)
+//
+// Semantics of 'intersect tLeft with tRight [recursively]'
+// 
+// repeat for each key tKey in tLeft
+//    if tKey is not among the keys of tRight then
+//        delete variable tLeft[tKey]
+//    else if tRecursive then
+//        intersect tLeft[tKey] with tRight[tKey] recursively
+//    end if
+// end repeat
+//
+
+void MCArraysDoIntersect(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, bool p_recursive, MCValueRef& r_result)
 {
-    // Existing 6.7 behavior, is to clobber the left on the top level if either side converts to empty array
-    if (p_top_level)
+    if (!MCValueIsArray(p_dst))
     {
-        if (!MCValueIsArray(p_dst) || !MCValueIsArray(p_src))
-        {
-            r_result = MCValueRetain(kMCEmptyString);
-            return;
-        }
+        r_result = MCValueRetain(p_dst);
+        return;
+        
     }
-    // And preserve the left in the recursive case if either side converts to empty array
-    else
+    
+    if (!MCValueIsArray(p_src))
     {
-        if (!MCValueIsArray(p_dst) || !MCValueIsArray(p_src))
-        {
-            r_result = MCValueRetain(p_dst);
-            return;
-        }
+        r_result = MCValueRetain(kMCEmptyString);
+        return;
     }
     
     MCArrayRef t_dst_array;
@@ -672,25 +668,6 @@ void MCArraysDoIntersect(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src
     
     MCArrayRef t_src_array;
     t_src_array = (MCArrayRef)p_src;
-    
-    // Existing 6.7 behavior, is to clobber the left on the top level if either side converts to empty array
-    if (p_top_level)
-    {
-        if (MCArrayIsEmpty(t_dst_array) || MCArrayIsEmpty(t_src_array))
-        {
-            r_result = MCValueRetain(kMCEmptyString);
-            return;
-        }
-    }
-    // And preserve the left in the recursive case if either side converts to empty array
-    else
-    {
-        if (MCArrayIsEmpty(t_dst_array) || MCArrayIsEmpty(t_src_array))
-        {
-            r_result = MCValueRetain(p_dst);
-            return;
-        }
-    }
     
     MCAutoArrayRef t_result;
     if (!MCArrayMutableCopy(t_dst_array, &t_result))
@@ -721,7 +698,7 @@ void MCArraysDoIntersect(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src
         else if (p_recursive)
         {
             MCAutoValueRef t_recursive_result;
-            MCArraysDoIntersect(ctxt, t_dst_value, t_src_value, true, false, &t_recursive_result);
+            MCArraysDoIntersect(ctxt, t_dst_value, t_src_value, true, &t_recursive_result);
             
             if (ctxt . HasError())
                 return;
@@ -741,7 +718,7 @@ void MCArraysExecUnion(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, 
 
 void MCArraysExecIntersect(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result)
 {
-    MCArraysDoIntersect(ctxt, p_dst, p_src, false, true, r_result);
+    MCArraysDoIntersect(ctxt, p_dst, p_src, false, r_result);
 }
 
 void MCArraysExecUnionRecursive(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result)
@@ -751,7 +728,7 @@ void MCArraysExecUnionRecursive(MCExecContext& ctxt, MCValueRef p_dst, MCValueRe
 
 void MCArraysExecIntersectRecursive(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result)
 {
-    MCArraysDoIntersect(ctxt, p_dst, p_src, true, true, r_result);
+    MCArraysDoIntersect(ctxt, p_dst, p_src, true, r_result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1118,7 +1095,7 @@ bool MCArraysCopyMatrix(MCExecContext& ctxt, MCArrayRef self, matrix_t*& r_matri
 	integer_t t_row_offset = t_extents[0].min;
 	integer_t t_col_offset = t_extents[1].min;
 
-	if (MCArrayGetCount(self) != t_rows * t_cols)
+	if (MCArrayGetCount(self) != (uindex_t) t_rows * t_cols)
 		return false;
 
 	MCAutoPointer<matrix_t> t_matrix;
@@ -1235,7 +1212,7 @@ bool MCArraysCopyTransposed(MCArrayRef self, MCArrayRef& r_transposed)
 	integer_t t_row_end = t_extents[0].min + t_rows;
 	integer_t t_col_end = t_extents[1].min + t_cols;
 
-	if (MCArrayGetCount(self) != t_rows * t_cols)
+	if (MCArrayGetCount(self) != (uindex_t) t_rows * t_cols)
 		return false;
 
 	MCAutoArrayRef t_transposed;

@@ -17,6 +17,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_SYSDEFS__
 #define __MC_SYSDEFS__
 
+
+#include "globdefs.h"
+
+
 //////////////////////////////////////////////////////////////////////
 //
 //  MODE AND FEATURE DEFINITIONS
@@ -35,6 +39,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define FEATURE_RELAUNCH_SUPPORT
 #define FEATURE_QUICKTIME
 #define FEATURE_QUICKTIME_EFFECTS
+#define FEATURE_NOTIFY 1
 
 #elif defined(_MAC_DESKTOP)
 
@@ -42,10 +47,17 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define MCSSL
 #define FEATURE_TASKBAR_ICON
-#define FEATURE_QUICKTIME_EFFECTS
 #define FEATURE_PLATFORM_PLAYER
 #define FEATURE_PLATFORM_RECORDER
 #define FEATURE_PLATFORM_AUDIO
+#define FEATURE_NOTIFY 1
+
+// QuickTime is not supported in 64-bit OSX applications as it has been
+// deprecated by Apple.
+#ifndef __LP64__
+#define FEATURE_QUICKTIME
+#define FEATURE_QUICKTIME_EFFECTS
+#endif
 
 #elif defined(_LINUX_DESKTOP)
 
@@ -53,24 +65,28 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define MCSSL
 #define FEATURE_MPLAYER
+#define FEATURE_NOTIFY 1
 
 #elif defined(_WINDOWS_SERVER)
 
 #define PLATFORM_STRING "Win32"
 
 #define MCSSL
+#define FEATURE_NOTIFY 1
 
 #elif defined(_MAC_SERVER)
 
 #define PLATFORM_STRING "MacOS"
 
 #define MCSSL
+#define FEATURE_NOTIFY 1
 
 #elif defined(_LINUX_SERVER) || defined(_DARWIN_SERVER)
 
 #define PLATFORM_STRING "Linux"
 
 #define MCSSL
+#define FEATURE_NOTIFY 1
 
 #elif defined(_IOS_MOBILE)
 
@@ -79,12 +95,24 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __LF__
 #define PLATFORM_STRING "iphone"
 
+#define FEATURE_PLATFORM_URL 1
+#define FEATURE_NOTIFY 1
+
 #elif defined(_ANDROID_MOBILE)
 
 #define MCSSL
 #define __ISO_8859_1__
 #define __LF__
 #define PLATFORM_STRING "android"
+
+#define FEATURE_PLATFORM_URL 1
+#define FEATURE_NOTIFY 1
+
+#elif defined(__EMSCRIPTEN__)
+
+#define PLATFORM_STRING "HTML"
+
+#define FEATURE_PLATFORM_URL 1
 
 #endif
 
@@ -96,7 +124,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #if defined(_MSC_VER)
 #define _HAS_VSCPRINTF
 #define _HAS_QSORT_S
-#elif defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER)
+#elif defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER) || defined(__EMSCRIPTEN__)
 #define _HAS_VSNPRINTF
 #undef _HAS_QSORT_R
 #elif defined(_MAC_DESKTOP) || defined(_MAC_SERVER) || defined(_DARWIN_SERVER) || defined(_IOS_MOBILE)
@@ -122,6 +150,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifdef __OBJC__
 #include <foundation-objc.h>
 #endif
+
+//////////////////////////////////////////////////////////////////////
+//
+//  FOUNDATION SYSTEM LIBRARY
+//
+
+#include <foundation-system.h>
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -237,12 +272,6 @@ typedef struct __MCWinSysIconHandle *MCWinSysIconHandle;
 typedef struct __MCWinSysMetafileHandle *MCWinSysMetafileHandle;
 typedef struct __MCWinSysEnhMetafileHandle *MCWinSysEnhMetafileHandle;
 
-#define PLACEMENT_NEW_DEFINED
-inline void *operator new (size_t size, void *p)
-{
-	return p;
-}
-
 #if defined(_DEBUG)
 
 #include <crtdbg.h>
@@ -269,6 +298,9 @@ extern void _dbg_MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize,
 
 #endif
 
+// VS before 2013 doesn't provide this function
+inline float roundf(float f) { return f >= 0.0f ? floorf(f + 0.5f) : ceilf(f - 0.5f); }
+
 // MW-2010-10-14: This constant is the amount of 'extra' stack space ensured to be present
 //   after a recursionlimit check has failed.
 #define MC_UNCHECKED_STACKSIZE 65536U
@@ -280,6 +312,11 @@ struct MCFontStruct
 	int ascent;
 	int descent;
 	Boolean printer;
+    
+    coord_t m_ascent;
+    coord_t m_descent;
+    coord_t m_leading;
+    coord_t m_xheight;
 };
 
 #define SECONDS_MIN 0.0
@@ -337,6 +374,13 @@ struct MCFontStruct
 	uint2 style;
 	int ascent;
 	int descent;
+    
+    coord_t m_ascent;
+    coord_t m_descent;
+    coord_t m_em;
+    coord_t m_xheight;
+    coord_t m_capheight;
+    coord_t m_leading;
 };
 
 #define fixmaskrop(a) (a)
@@ -345,7 +389,7 @@ struct MCFontStruct
 #define SECONDS_MIN -32535244799.0
 #define SECONDS_MAX 32535244799.0
 
-#elif defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER)
+#elif defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER) || defined(__EMSCRIPTEN__)
 
 #include <stdarg.h>
 #include <errno.h>
@@ -377,7 +421,7 @@ inline uint1 MCS_toupper(uint1 p_char)
 }
 
 extern uint2 MCctypetable[];
-#define _ctype(x, y) ((MCctypetable[(x)] & (1 << (y))) != 0)
+#define _ctype(x, y) ((MCctypetable[(uindex_t) (x)] & (1 << (y))) != 0)
 #define isalpha(x) (_ctype(x, 0))
 #define isupper(x) (_ctype(x, 1))
 #define islower(x) (_ctype(x, 2))
@@ -392,9 +436,15 @@ extern uint2 MCctypetable[];
 
 struct MCFontStruct
 {
-	uint16_t size;
+    MCSysFontHandle fid;
+    uint16_t size;
 	uint2 ascent;
 	uint2 descent;
+    
+    coord_t m_ascent;
+    coord_t m_descent;
+    coord_t m_leading;
+    coord_t m_xheight;
 };
 
 #define fixmaskrop(a) (a)
@@ -443,6 +493,11 @@ struct MCFontStruct
 	uint2 style;
 	int ascent;
 	int descent;
+    
+    coord_t m_ascent;
+    coord_t m_descent;
+    coord_t m_leading;
+    coord_t m_xheight;
 };
 
 #define fixmaskrop(a) (a)
@@ -484,6 +539,11 @@ struct MCFontStruct
 	int ascent;
 	int descent;
 	MCSysFontHandle fid;
+    
+    coord_t m_ascent;
+    coord_t m_descent;
+    coord_t m_leading;
+    coord_t m_xheight;
 };
 
 #define fixmaskrop(a) (a)
@@ -505,12 +565,7 @@ struct MCFontStruct
 //  NEW / DELETE REDEFINTIONS
 //
 
-#ifndef PLACEMENT_NEW_DEFINED
-inline void *operator new (size_t size, void *p)
-{
-	return p;
-}
-#endif
+#include <new>
 
 // MW-2014-08-14: [[ Bug 13154 ]] Make sure we use the nothrow variants of new / delete.
 // SN-2015-04-17: [[ Bug 15187 ]] Don't use the nothrow variant on iOS Simulator
@@ -1170,8 +1225,8 @@ class MCParameter;
 class MCStack;
 class MCExecContext;
 
-typedef uint4 MCDragAction;
-typedef uint4 MCDragActionSet;
+typedef uint32_t MCDragAction;
+typedef uint32_t MCDragActionSet;
 
 typedef struct _Streamnode Streamnode;
 typedef struct _Linkatts Linkatts;
@@ -1303,8 +1358,10 @@ enum Chunk_term {
     CT_EPS,
     CT_MAGNIFY,
     CT_COLOR_PALETTE,
+    CT_WIDGET,
     CT_FIELD,
 	CT_LAST_CONTROL = CT_FIELD,
+    CT_FIRST_TEXT_CHUNK = CT_FIELD,
     CT_LINE,
     CT_PARAGRAPH,
     CT_SENTENCE,

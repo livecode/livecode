@@ -1,0 +1,75 @@
+/* Copyright (C) 2003-2015 LiveCode Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.segmentchunk
+
+use com.livecode.foreign
+
+public foreign handler FetchSegmentOf(in Index as index, in Target as string, out Value as string) returns nothing binds to "<builtin>"
+public foreign handler StoreSegmentOf(in Value as string, in Index as index, inout Target as string) returns nothing binds to "<builtin>"
+public foreign handler FetchSegmentRangeOf(in Start as index, in Finish as index, in Target as data, out Value as string) returns nothing binds to "<builtin>"
+public foreign handler StoreSegmentRangeOf(in Value as string, in Start as index, in Finish as index, inout Target as string) returns nothing binds to "<builtin>"
+
+public foreign handler EvalNumberOfSegmentsIn(in Target as string, out Count as index) returns nothing binds to "<builtin>"
+
+public foreign handler EvalIsAmongTheSegmentsOf(in Needle as string, in Target as string, out Result as bool) returns nothing binds to "<builtin>"
+public foreign handler EvalIsNotAmongTheSegmentsOf(in Needle as string, in Target as string, out Result as bool) returns nothing binds to "<builtin>"
+
+public foreign handler EvalOffsetOfSegmentIn(in Needle as string, in Target as string, out Offset as index) returns nothing binds to "<builtin>"
+
+--
+
+syntax SingletonSegmentOf is prefix operator with precedence 1
+	"segment" <Index: Expression> "of" <Target: Expression>
+begin
+	FetchSegmentOf(Index, Target, output)
+	StoreSegmentOf(input, Index, Target)
+end syntax
+
+syntax RangeSegmentOf is prefix operator with precedence 1
+	"segment" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
+begin
+	FetchSegmentRangeOf(Start, Finish, Target, output)
+	StoreSegmentRangeOf(input, Start, Finish, Target)
+end syntax
+
+syntax CountSegmentsOf is prefix operator with precedence 1
+	"the" "number" "of" "segments" "in" <Target: Expression>
+begin
+	EvalNumberOfSegmentsIn(Target, output)
+end syntax
+
+syntax AmongSegmentsOf is left binary operator with precedence 1
+	<Needle: Expression> "is" "among" "the" "segments" "of" <Target: Expression>
+begin
+	EvalIsAmongTheSegmentsOf(Needle, Target, output)
+end syntax
+
+syntax NotAmongSegmentsOf is left binary operator with precedence 1
+	<Needle: Expression> "is" "not" "among" "the" "segments" "of" <Target: Expression>
+begin
+	EvalIsNotAmongTheSegmentsOf(Needle, Target, output)
+end syntax
+
+syntax SegmentOffset is prefix operator with precedence 1
+	"the" "offset" "of" "segment" <Needle: Expression> "in" <Target: Expression>
+begin
+	EvalOffsetOfSegmentIn(Needle, Target, output)
+end syntax
+
+--
+
+end module

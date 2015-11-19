@@ -1,0 +1,14 @@
+Name: prepend
+
+Synonyms: prepend,prepended,prepending
+
+Type: glossary
+
+Description:
+To add data to the beginning of a <container> or <file>, without removing its current contents. 
+ 
+For example, if a <file> contains "Apple", and you append "Red", the file now reads "RedApple".
+
+References: file (glossary), container (glossary)
+
+Tags: text processing

@@ -46,7 +46,7 @@ bool MCCStringClone(const char *p_string, char *& r_new_string)
 		return true;
 	}
 
-	if (!MCMemoryAllocate(p_string == nil ? 1 : strlen(p_string) + 1, r_new_string))
+	if (!MCMemoryAllocate(strlen(p_string) + 1, r_new_string))
 		return false;
 	strcpy(r_new_string, p_string);
 	return true;
@@ -83,7 +83,7 @@ bool MCCStringFormat(char*& r_string, const char *p_format, ...)
 	va_start(t_args, p_format);
 	t_count = _vscprintf(p_format, t_args);
 	va_end(t_args);
-#elif defined(_MACOSX) || defined(_LINUX) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID) || defined(_MAC_SERVER) || defined(_LINUX_SERVER)
+#elif defined(_MACOSX) || defined(_LINUX) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID) || defined(_MAC_SERVER) || defined(_LINUX_SERVER) || defined(__EMSCRIPTEN__)
 	va_start(t_args, p_format);
 	t_count = vsnprintf(nil, 0, p_format, t_args);
 	va_end(t_args);
@@ -109,7 +109,7 @@ bool MCCStringFormatV(char*& r_string, const char *p_format, va_list p_args)
 	int t_count;
 #if defined(_WINDOWS) || defined(_WINDOWS_SERVER)
 	t_count = _vscprintf(p_format, p_args);
-#elif defined(_MACOSX) || defined(_LINUX) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID) || defined(_MAC_SERVER) || defined(_LINUX_SERVER)
+#elif defined(_MACOSX) || defined(_LINUX) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID) || defined(_MAC_SERVER) || defined(_LINUX_SERVER) || defined(__EMSCRIPTEN__)
 	t_count = vsnprintf(nil, 0, p_format, p_args);
 #else
 #error "Implement MCCStringFormat"
@@ -134,7 +134,7 @@ bool MCCStringAppendFormat(char*& x_string, const char *p_format, ...)
 	va_start(t_args, p_format);
 	t_count = _vscprintf(p_format, t_args);
 	va_end(t_args);
-#elif defined(_MACOSX) || defined(_LINUX) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID) || defined(_MAC_SERVER) || defined(_LINUX_SERVER)
+#elif defined(_MACOSX) || defined(_LINUX) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID) || defined(_MAC_SERVER) || defined(_LINUX_SERVER) || defined(__EMSCRIPTEN__)
 	va_start(t_args, p_format);
 	t_count = vsnprintf(nil, 0, p_format, t_args);
 	va_end(t_args);
@@ -305,11 +305,13 @@ bool MCCStringFromUnicodeSubstring(const unichar_t *p_chars, uint32_t p_char_cou
 
 bool MCCStringFromUnicode(const unichar_t *p_unicode_string, char*& r_string)
 {
+	if (NULL == p_unicode_string)
+		return false;
+
 	uint32_t t_wstring_length;
 	t_wstring_length = 0;
-	if (p_unicode_string != nil)
-		while(p_unicode_string[t_wstring_length] != 0)
-			t_wstring_length++;
+	while(p_unicode_string[t_wstring_length] != 0)
+		t_wstring_length++;
 	
 	return MCCStringFromUnicodeSubstring(p_unicode_string, t_wstring_length, r_string);
 }
@@ -1399,9 +1401,6 @@ uint32_t MCArrayMeasureForStreamLegacy(MCArrayRef self, bool p_nested_only)
 
 static bool is_array_nested(void *p_context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)
 {
-	bool *t_nested_ptr;
-	t_nested_ptr = (bool *)p_context;
-	
 	if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeArray)
 		return false;
 
@@ -1955,7 +1954,8 @@ bool deserialize_data(const char *p_stream, uint32_t p_stream_size, uint32_t &r_
 		if (r_data == nil)
 		{
 			t_size = t_data_size;
-			MCMemoryAllocate(t_size, t_data);
+			if (!MCMemoryAllocate(t_size, t_data))
+				return false;
 		}
 		else
 		{

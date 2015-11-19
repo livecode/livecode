@@ -952,8 +952,12 @@ void MCButton::GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width)
 				}
 			}
 			else
+            {
 				if (getstyleint(flags) == F_CHECK || getstyleint(flags) == F_RADIO)
-					fwidth += CHECK_SIZE + leftmargin;
+                {
+                    fwidth += leftmargin + GetCheckSize();
+                }
+            }
 			if (menumode == WM_OPTION)
 				fwidth += optionrect.width + (optionrect.width >> 1);
 			if (menumode == WM_CASCADE)
@@ -982,8 +986,8 @@ void MCButton::GetFormattedHeight(MCExecContext& ctxt, integer_t& r_height)
 					fheight = trect.height;
 			}
 		}
-		else if ((getstyleint(flags) == F_CHECK || getstyleint(flags) == F_RADIO) && CHECK_SIZE > fheight)
-			fheight = CHECK_SIZE;
+		else if ((getstyleint(flags) == F_CHECK || getstyleint(flags) == F_RADIO) && GetCheckSize() > fheight)
+			fheight = GetCheckSize();
 		else if (getstyleint(flags) == F_MENU && menumode == WM_TOP_LEVEL)
 			fheight += 8;
 		r_height = fheight;

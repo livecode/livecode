@@ -75,6 +75,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // This is in here so we do not need GLIBC2.4
 extern "C" void __attribute__ ((noreturn)) __stack_chk_fail (void)
 {
+	abort();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -196,17 +197,18 @@ static void configureSerialPort(int sRefNum)
     {
         *each = '\0';
         each++;
-        if (str != NULL)
-            parseSerialControlStr(str, &theTermios);
+        parseSerialControlStr(str, &theTermios);
         str = each;
     }
-    delete controlptr;
+
     //configure the serial output device
     parseSerialControlStr(str,&theTermios);
     if (tcsetattr(sRefNum, TCSANOW, &theTermios) < 0)
     {
         MCLog("Error setting terminous attributes", nil);
     }
+
+    delete[] controlptr;
     return;
 }
 
@@ -273,7 +275,7 @@ static IO_stat MCS_lnx_shellread(int fd, char *&buffer, uint4 &buffersize, uint4
 
 static Boolean MCS_lnx_nodelay(int4 fd)
 {
-    return fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) & O_APPEND | O_NONBLOCK)
+	return fcntl(fd, F_SETFL, (fcntl(fd, F_GETFL, 0) & O_APPEND) | O_NONBLOCK)
            >= 0;
 }
 
@@ -1754,6 +1756,8 @@ public:
             t_mode = IO_UPDATE_MODE;
         else if (p_mode == kMCOpenFileModeAppend)
             t_mode = IO_APPEND_MODE;
+		else /* No access requested */
+			return NULL;
 
         t_fptr = fopen(*t_path_sys, t_mode);
 
@@ -1821,10 +1825,12 @@ public:
         if (t_fptr == NULL && p_mode != kMCOpenFileModeRead)
             t_fptr = fopen(*t_path_sys, IO_CREATE_MODE);
 
-        configureSerialPort((short)fileno(t_fptr));
-
         if (t_fptr != NULL)
+        {
+            configureSerialPort((short)fileno(t_fptr));
+
             t_handle = new MCStdioFileHandle(t_fptr);
+        }
 
         return t_handle;
     }
@@ -1891,7 +1897,7 @@ public:
         dlclose(p_module);
     }
 
-    virtual bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *x_context)
+    virtual bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *x_context)
     {
 #ifdef /* MCS_getentries_dsk_lnx */ LEGACY_SYSTEM
         uint4 flag = files ? S_IFREG : S_IFDIR;
@@ -1951,9 +1957,15 @@ public:
         closedir(dirptr);
         *dptr = tptr;
 #endif /* MCS_getentries_dsk_lnx */
+		MCAutoStringRefAsSysString t_path;
+		if (p_folder == nil)
+			/* UNCHECKED */ t_path . Lock(MCSTR("."));
+		else
+			/* UNCHECKED */ t_path . Lock(p_folder);
+
         DIR *dirptr;
 
-        if ((dirptr = opendir(".")) == NULL)
+        if ((dirptr = opendir(*t_path)) == NULL)
         {
             return false;
         }
@@ -1962,6 +1974,19 @@ public:
 
         bool t_success = true;
 
+		/* For each directory entry, we need to construct a path that can
+		 * be passed to stat(2).  Allocate a buffer large enough for the
+		 * path, a path separator character, and any possible filename. */
+		size_t t_path_len = strlen(*t_path);
+		size_t t_entry_path_len = t_path_len + 1 + NAME_MAX;
+		char *t_entry_path = new char[t_entry_path_len + 1];
+		strcpy (t_entry_path, *t_path);
+		if ((*t_path)[t_path_len - 1] != '/')
+		{
+			strcat (t_entry_path, "/");
+			++t_path_len;
+		}
+
         while (t_success && (direntp = readdir64(dirptr)) != NULL)
         {
             MCSystemFolderEntry p_entry;
@@ -1969,8 +1994,14 @@ public:
 
             if (MCCStringEqual(direntp->d_name, "."))
                 continue;
+
+			/* Truncate the directory entry path buffer to the path
+			 * separator. */
+			t_entry_path[t_path_len] = 0;
+			strcat (t_entry_path, direntp->d_name);
+
             struct stat buf;
-            stat(direntp->d_name, &buf);
+            stat(t_entry_path, &buf);
 
             if (direntp -> d_name != nil && MCStringCreateWithSysString(direntp -> d_name, t_unicode_name))
                 p_entry.name = t_unicode_name;
@@ -1990,6 +2021,7 @@ public:
             MCValueRelease(t_unicode_name);
         }
 
+		delete t_entry_path;
         closedir(dirptr);
 
         return t_success;
@@ -1999,9 +2031,9 @@ public:
     virtual bool GetExecutablePath(MCStringRef &r_executable)
     {
         char t_executable[PATH_MAX];
-        uint32_t t_size;
+		ssize_t t_size;
         t_size = readlink("/proc/self/exe", t_executable, PATH_MAX);
-        if (t_size == PATH_MAX)
+		if (t_size >= PATH_MAX || t_size < 0)
             return false;
         
         t_executable[t_size] = 0;
@@ -2330,6 +2362,20 @@ public:
                     execl(*t_shellcmd_sys, *t_shellcmd_sys, "-s", NULL);
                     _exit(-1);
                 }
+                if (MCprocesses[index].pid == -1)
+                {
+					MCeerror->add(EE_SYSTEM_FUNCTION, 0, 0, "fork");
+					MCeerror->add(EE_SYSTEM_CODE, 0, 0, errno);
+					MCeerror->add(EE_SYSTEM_MESSAGE, 0, 0, strerror(errno));
+					close(tochild[0]);
+					close(tochild[1]);
+					close(toparent[0]);
+					close(toparent[1]);
+
+                    MCprocesses[index].pid = 0;
+                    // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
+                    return false;
+                }
                 CheckProcesses();
                 close(tochild[0]);
 
@@ -2341,32 +2387,23 @@ public:
                 close(tochild[1]);
                 close(toparent[1]);
                 MCS_lnx_nodelay(toparent[0]);
-                if (MCprocesses[index].pid == -1)
-                {
-                    if (MCprocesses[index].pid > 0)
-                        Kill(MCprocesses[index].pid, SIGKILL);
-
-                    MCprocesses[index].pid = 0;
-                    MCeerror->add
-                    (EE_SHELL_BADCOMMAND, 0, 0, p_filename);
-                    // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
-                    return false;
-                }
             }
             else
             {
+                MCeerror->add(EE_SYSTEM_FUNCTION, 0, 0, "pipe");
+                MCeerror->add(EE_SYSTEM_CODE, 0, 0, errno);
+                MCeerror->add(EE_SYSTEM_MESSAGE, 0, 0, strerror(errno));
                 close(tochild[0]);
                 close(tochild[1]);
-                MCeerror->add
-                (EE_SHELL_BADCOMMAND, 0, 0, p_filename);
                 // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
                 return false;
             }
         }
         else
         {
-            MCeerror->add
-            (EE_SHELL_BADCOMMAND, 0, 0, p_filename);
+            MCeerror->add(EE_SYSTEM_FUNCTION, 0, 0, "pipe");
+            MCeerror->add(EE_SYSTEM_CODE, 0, 0, errno);
+            MCeerror->add(EE_SYSTEM_MESSAGE, 0, 0, strerror(errno));
             // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
             return false;
         }
@@ -3165,7 +3202,8 @@ public:
         timeoutval.tv_sec = (long)delay;
         timeoutval.tv_usec = (long)((delay - floor(delay)) * 1000000.0);
 
-            n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
+        n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
+        
         if (n <= 0)
             return handled;
         if (MCshellfd != -1 && FD_ISSET(MCshellfd, &rmaskfd))
@@ -3250,9 +3288,8 @@ public:
             if (MCinputfd > maxfd)
                 maxfd = MCinputfd;
         }
+
         handled = MCSocketsAddToFileDescriptorSets(maxfd, rmaskfd, wmaskfd, emaskfd);
-        if (handled)
-            p_delay = 0.0;
 
         if (g_notify_pipe[0] != -1)
         {
@@ -3261,13 +3298,46 @@ public:
                 maxfd = g_notify_pipe[0];
         }
 
+        // Prepare GLib for the poll we are about to do
+        gint t_glib_ready_priority;
+        if (g_main_context_prepare(NULL, &t_glib_ready_priority))
+            handled = true;
+        
+        // If things are already ready, ensure the timeout is zero
+        if (handled)
+            p_delay = 0.0;
+            
+        // Get the list of file descriptors that the GLib main loop needs to
+        // add to the poll operation.
+        GMainContext* t_glib_main_context = g_main_context_default();
+        MCAutoArray<GPollFD> t_glib_fds;
+        gint t_glib_timeout;
+        t_glib_fds.Extend(g_main_context_query(t_glib_main_context, G_MAXINT, &t_glib_timeout, NULL, 0));
+        g_main_context_query(t_glib_main_context, G_MAXINT, &t_glib_timeout, t_glib_fds.Ptr(), t_glib_fds.Size());
+        
+        // Add the GLib descriptors to the list
+        for (uindex_t i = 0; i < t_glib_fds.Size(); i++)
+        {
+            // Are we polling this FD for reading?
+            if (t_glib_fds[i].events & (G_IO_IN|G_IO_PRI))
+                FD_SET(t_glib_fds[i].fd, &rmaskfd);
+            if (t_glib_fds[i].events & (G_IO_OUT))
+                FD_SET(t_glib_fds[i].fd, &wmaskfd);
+            if (t_glib_fds[i].events & (G_IO_ERR|G_IO_HUP))
+                FD_SET(t_glib_fds[i].fd, &emaskfd);
+            
+            if (t_glib_fds[i].events != 0 && t_glib_fds[i].fd > maxfd)
+                maxfd = t_glib_fds[i].fd;
+        }
+        
         MCModePreSelectHook(maxfd, rmaskfd, wmaskfd, emaskfd);
 
         struct timeval timeoutval;
         timeoutval.tv_sec = (long)p_delay;
         timeoutval.tv_usec = (long)((p_delay - floor(p_delay)) * 1000000.0);
 
-            n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
+        n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
+        
         if (n <= 0)
             return handled;
         if (MCshellfd != -1 && FD_ISSET(MCshellfd, &rmaskfd))
@@ -3276,6 +3346,21 @@ public:
             readinput = True;
         MCSocketsHandleFileDescriptorSets(rmaskfd, wmaskfd, emaskfd);
 
+        // Check whether any of the GLib file descriptors were signalled
+        for (uindex_t i = 0; i < t_glib_fds.Size(); i++)
+        {
+            if (FD_ISSET(t_glib_fds[i].fd, &rmaskfd))
+                t_glib_fds[i].revents |= G_IO_IN;
+            if (FD_ISSET(t_glib_fds[i].fd, &wmaskfd))
+                t_glib_fds[i].revents |= G_IO_OUT;
+            if (FD_ISSET(t_glib_fds[i].fd, &emaskfd))
+                t_glib_fds[i].revents |= G_IO_ERR;
+        }
+        
+        // Let GLib know which file descriptors were signalled. We don't
+        // dispatch these now as that will happen later.
+        g_main_context_check(t_glib_main_context, G_MAXINT, t_glib_fds.Ptr(), t_glib_fds.Size());
+        
         if (g_notify_pipe[0] != -1 && FD_ISSET(g_notify_pipe[0], &rmaskfd))
         {
             char t_notify_char;

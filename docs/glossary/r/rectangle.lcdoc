@@ -1,0 +1,12 @@
+Name: rectangle
+
+Synonyms: rectangle
+
+Type: glossary
+
+Description:
+A way of specifying a size and location on the screen, consisting of four <integer|integers> separated by commas. The four <integer|integers> are the position of the left, top, right, and bottom edges, in that order.
+
+References: integer (glossary)
+
+Tags: printing

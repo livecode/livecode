@@ -1,0 +1,33 @@
+Name: printPaperSize
+
+Type: property
+
+Syntax: set the printPaperSize to width, height
+
+Syntax: get the printPaperSize
+
+Summary: Reports the size of the paper to print to.
+
+Introduced: 2.0
+
+OS: mac,windows,linux,ios
+
+Platforms: desktop,server,web,mobile
+
+Security: printing
+
+Example:
+if tPaperSize is "A4" then
+  set the printPaperSize to "595,842"
+end if
+
+Value: The <printPaperSize> is specified in points, in the form width,height..
+
+Description:
+Use the <printPaperSize> to determine or set the size of the paper to print to. This size is the size of the physical paper before any scaling or rotation is applied.
+
+To have an effect, this property must be set before calling <open printing>.
+
+References: open printing (command), answer printer (command)
+
+Tags: printing

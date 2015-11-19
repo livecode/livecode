@@ -1,0 +1,37 @@
+Name: iphoneSetAudioCategory
+
+Type: command
+
+Syntax: iphoneSetAudioCategory <category> 
+
+Summary: Sets the category identifier for an audio session.
+
+Introduced: 5.5.3
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+iphoneSetAudioCategory "ambient"
+
+Example:
+iphoneSetAudioCategory "play and record"
+
+Parameters:
+category (enum): The audio category to use. One of:
+- "ambient": Audio from other applications can mix into the sound of the running application. Audio is silenced by locking the screen or setting the Ring/Silent switch to silent.
+- "solo ambient": Audio from other applications is silenced when the application is running. Audio is silenced by locking the screen or setting the Ring/Silent switch to silent. This is the default mode.
+- "playback": Audio from other applications is silenced when the application is running. Audio is not silenced by locking the screen or setting the Ring/Silent switch to silent.
+- "record": Silences all playback and allows sound to be recorded, even if the screen is locked.
+- "play and record": Audio from other applications is silenced when the application is running. Audio is not silenced by locking the screen or setting the Ring/Silent switch to silent. Use this feature for recording and playing sound, such as in VOIP applications.
+- "audio processing": Audio playback and recording is disabled from all applications.
+
+Description:
+Use the <iphoneSetAudioCategory> command to set the audio category identifier for the audio session.
+
+The iphoneSetAudioCatagory command allows the current audio session category to be set and changed while the application is running. This command should be used if the application sound output is to be muted, played on its own or mixed with the sound from other applications.
+
+References: play (command), play file (command), mobilePlaySoundOnChannel (command)
+
+Tags: multimedia

@@ -1,0 +1,26 @@
+Name: using
+
+Type: keyword
+
+Syntax: using
+
+Summary: Used with the <combine> and <split> <command|commands> to specify the <delimiter|delimiters> for transforming a <variable> between an <array> and a <string>.
+
+Introduced: 1.0
+
+OS: ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+combine myArray using return
+
+Example:
+combine thisArray using comma and tab
+
+Description:
+Use the <using> <keyword> to designate a delimiter for the <string> version of an <array>.
+
+The <by> and <with> <keyword|keywords> are synonyms for the <using> <keyword> when used with the <combine> or <split> <command>.
+
+References: combine (command), split (command), with (keyword), string (keyword), by (keyword), keyword (glossary), variable (glossary), command (glossary), delimiter (glossary), array (glossary)

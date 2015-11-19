@@ -1,0 +1,12 @@
+Name: array
+
+Synonyms: array
+
+Type: glossary
+
+Description:
+A list of <element|elements> that are all stored in a single <variable> or <property>.
+
+References: property (glossary), variable (glossary), element (glossary)
+
+Tags: properties

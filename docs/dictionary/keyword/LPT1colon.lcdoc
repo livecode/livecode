@@ -1,0 +1,27 @@
+Name: LPT1:
+
+Type: keyword
+
+Syntax: LPT1:
+
+Summary: Used with the <open file>, <read from file>, <write to file>, and <close file> <command|commands> to specify the line printer (parallel) <port> on <Windows|Windows systems>.
+
+Introduced: 2.0
+
+OS: windows
+
+Platforms: desktop,server,web
+
+Example:
+write myData to file "LPT1:"
+
+Description:
+Use the <LPT1:> <keyword> to communicate through the parallel <port>.
+
+To read data from the parallel port, use the <read from file> <command>, specifying the keyword LPT1: as the file to read from.
+
+To write data to the parallel port, use the <write to file> <command>.
+
+References: write to file (command), close file (command), open file (command), write to driver (command), read from file (command), COMn: (keyword), keyword (glossary), Windows (glossary), command (glossary), port (glossary)
+
+Tags: networking

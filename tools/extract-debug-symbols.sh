@@ -13,30 +13,43 @@ STRIP="${STRIP:-strip}"
 
 function extract_linux_or_android {
 
-for input in $@ ; do
-	output="${input}${suffix}"	
+for input in "$@" ; do
+	output="${input}${suffix}"
+
+	# The --preserve-dates flag for strip and objcopy only has whole
+	# second resolution, so save the timestamps in a separate file
+	# instead.
+	touch -m -r "$input" "$input.timestamps"
 
 	# Extract a copy of the debugging information
 	$OBJCOPY --only-keep-debug "$input" "$output" 
 	
-	# If this file is a dynamic library, don't do a full strip or we'll
-	# destroy it (no symbols => can't link to it)
-	if [[ "$($OBJDUMP -f $input)" =~ "DYNAMIC" ]] ; then
-		$STRIP -x --preserve-dates --strip-debug "$input"
-	else
-		$STRIP -x --preserve-dates --strip-debug --strip-unneeded "$input"
-	fi
+	# Because we export symbols from the engine, only debug symbols
+	# should be stripped.
+	$STRIP -x --strip-debug "$input"
 	
 	# Add a hint for the debugger so it can find the debug info
-	$OBJCOPY --preserve-dates --remove-section=.gnu_debuglink "$input"
-	$OBJCOPY --preserve-dates --add-gnu-debuglink="$output" "$input"
+	$OBJCOPY --remove-section=.gnu_debuglink "$input"
+	$OBJCOPY --add-gnu-debuglink="$output" "$input"
+
+	# Restore the original modification time
+	touch -m -r "$input.timestamps" "$input"
+	rm "$input.timestamps" 2>&1
+done
+
+}
+
+function extract_emscripten {
+
+for input in "$@" ; do
+	touch "${input}${suffix}"
 done
 
 }
 
 function extract_mac_or_ios {
 
-for input in $@ ; do
+for input in "$@" ; do
 	output="${input}${suffix}"
 
 	# If this is an app bundle, find the executable name
@@ -76,6 +89,9 @@ case $os in
 	mac|ios)
 		extract_mac_or_ios ${inputs}
 		;;
+	emscripten)
+		extract_emscripten ${inputs}
+		;;	
 	*)
 		echo OS "$os" not supported by this script
 		exit 1

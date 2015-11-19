@@ -964,11 +964,11 @@ template<typename T> void SetCharPropOfCharChunkOfParagraph(MCExecContext& ctxt,
     // Sanity check for lengths
     uindex_t t_para_len;
     t_para_len = p_paragraph->gettextlength();
-    if (si > t_para_len)
+    if (si > 0 && (uindex_t) si > t_para_len)
     {
         si = ei = t_para_len;
     }
-    else if (ei > t_para_len)
+    else if (ei > 0 && (uindex_t) ei > t_para_len)
     {
         ei = t_para_len;
     }
@@ -1048,7 +1048,7 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
 
             // MCParagraph scope
             {
-                uindex_t t_ei;
+                findex_t t_ei;
                 t_ei = MCU_min(ei, pgptr -> gettextlength());
                 bool t_blocks_changed;
                 bool t_need_layout;
@@ -1159,7 +1159,7 @@ template<typename T> void SetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCFie
             
             // MCParagraph scope
             {
-                uindex_t t_ei;
+                findex_t t_ei;
                 t_ei = MCU_min(ei, pgptr -> gettextlength());
                 bool t_blocks_changed;
                 bool t_need_layout;
@@ -1512,7 +1512,7 @@ void MCField::SetStyledTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, 
     MCParagraph *stpgptr = styledtexttoparagraphs(value);
 
     if (stpgptr == nil)
-        stpgptr = texttoparagraphs(MCnullmcstring, false);
+        stpgptr = texttoparagraphs(kMCEmptyString);
         
     setparagraphs(stpgptr, p_part_id, p_start, p_finish);
     
@@ -1904,11 +1904,11 @@ void MCField::SetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
 
     // Loop while there is a range to flag and and we haven't gone further than ei
     while (t_range_index < value . count
-           && t_next_range . start < ei
+           && (findex_t) t_next_range . start < ei
            && t_paragraph_offset < ei)
     {
         // if the next range doesn't cover this paragraph, we skip the paragraph
-        if (t_next_range . start > t_paragraph_offset + sptr -> gettextlengthcr())
+        if ((findex_t) t_next_range . start > t_paragraph_offset + sptr -> gettextlengthcr())
         {
             t_paragraph_offset += sptr -> gettextlengthcr();
             sptr = sptr -> next();
@@ -1927,7 +1927,7 @@ void MCField::SetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
                && t_block_offset < ei)
         {
             // skip block if it's not covered by the next range
-            if (t_next_range . start > t_block_offset + bptr -> GetLength())
+            if ((findex_t) t_next_range . start > t_block_offset + bptr -> GetLength())
             {
                 t_block_offset += bptr -> GetLength();
                 bptr = bptr -> next();
@@ -1936,7 +1936,7 @@ void MCField::SetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
 
             // if the range doesn't start at the beginning of the block
             // we must split the block and skip the first part
-            if (t_next_range . start > t_block_offset)
+            if ((findex_t) t_next_range . start > t_block_offset)
             {
                 bptr -> split(t_next_range . start);
                 t_block_offset += bptr -> GetLength();
@@ -1945,7 +1945,7 @@ void MCField::SetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
 
             // if the range doesn't cover the block up to its end
             // we must split it
-            if (t_next_range . end < t_block_offset + bptr -> GetLength())
+            if ((findex_t) t_next_range . end < t_block_offset + bptr -> GetLength())
                 bptr -> split(t_next_range . end);
 
             // Flag the block
@@ -1953,7 +1953,7 @@ void MCField::SetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
 
             // if the range went further than the block
             // we must keep track of this and update the next range to be flagged
-            if (t_next_range . end > t_block_offset + bptr -> GetLength())
+            if ((findex_t) t_next_range . end > t_block_offset + bptr -> GetLength())
                 t_next_range . start = t_block_offset + bptr -> GetLength();
             // otherwise we set the next range to the appropriate value
             else if (t_range_index < value . count)

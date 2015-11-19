@@ -23,6 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCNumberCreateWithInteger(integer_t p_value, MCNumberRef& r_number)
 {
 	__MCNumber *self;
@@ -36,6 +37,7 @@ bool MCNumberCreateWithInteger(integer_t p_value, MCNumberRef& r_number)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCNumberCreateWithReal(real64_t p_value, MCNumberRef& r_number)
 {
 	__MCNumber *self;
@@ -50,7 +52,7 @@ bool MCNumberCreateWithReal(real64_t p_value, MCNumberRef& r_number)
 	return true;
 }
 
-
+MC_DLLEXPORT_DEF
 bool MCNumberCreateWithUnsignedInteger(uinteger_t p_value, MCNumberRef& r_number)
 {
     if (p_value <= INTEGER_MAX)
@@ -59,18 +61,21 @@ bool MCNumberCreateWithUnsignedInteger(uinteger_t p_value, MCNumberRef& r_number
     return MCNumberCreateWithReal((real64_t)p_value, r_number);
 }
 
+MC_DLLEXPORT_DEF
 bool MCNumberIsInteger(MCNumberRef self)
 {
 	__MCAssertIsNumber(self);
 	return (self -> flags & kMCNumberFlagIsReal) == 0;
 }
 
+MC_DLLEXPORT_DEF
 bool MCNumberIsReal(MCNumberRef self)
 {
 	__MCAssertIsNumber(self);
 	return (self -> flags & kMCNumberFlagIsReal) != 0;
 }
 
+MC_DLLEXPORT_DEF
 real64_t MCNumberFetchAsReal(MCNumberRef self)
 {
 	if (MCNumberIsReal(self))
@@ -78,6 +83,7 @@ real64_t MCNumberFetchAsReal(MCNumberRef self)
 	return (real64_t)self -> integer;
 }
 
+MC_DLLEXPORT_DEF
 integer_t MCNumberFetchAsInteger(MCNumberRef self)
 {
 	if (MCNumberIsInteger(self))
@@ -85,6 +91,7 @@ integer_t MCNumberFetchAsInteger(MCNumberRef self)
 	return self -> real < 0.0 ? (integer_t)(self -> real - 0.5) : (integer_t)(self -> real + 0.5);
 }
 
+MC_DLLEXPORT_DEF
 uinteger_t MCNumberFetchAsUnsignedInteger(MCNumberRef self)
 {
 	if (MCNumberIsInteger(self))
@@ -106,7 +113,7 @@ compare_t MCNumberCompareTo(MCNumberRef self, MCNumberRef p_other_self)
 	// Otherwise fetch both as reals.
 	double x, y;
 	x = t_self_is_integer ? (double)self -> integer : self -> real;
-	y = t_self_is_integer ? (double)p_other_self -> integer : p_other_self -> real;
+	y = t_other_self_is_integer ? (double)p_other_self -> integer : p_other_self -> real;
 
 	// TODO: Handle nan / infinity / etc.
 		
@@ -143,7 +150,7 @@ bool __MCNumberParseNativeString(const char *p_string, uindex_t p_length, bool p
     }
     
     errno = 0;
-    
+
     char *t_end;
     t_end  = nil;
     // SN-2014-10-06: [[ Bug 13594 ]] We want an unsigned integer if possible
@@ -166,7 +173,7 @@ bool __MCNumberParseNativeString(const char *p_string, uindex_t p_length, bool p
     else if (t_base == 10)
     {
         errno = 0;
-        
+
         real64_t t_real;
         t_real = strtod(p_string, &t_end);
         
@@ -185,6 +192,7 @@ bool __MCNumberParseNativeString(const char *p_string, uindex_t p_length, bool p
 	return t_success;
 }
 
+MC_DLLEXPORT_DEF
 bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_t char_count, MCNumberRef &r_number)
 {
     uindex_t length = MCStringGetLength(p_string);
@@ -208,11 +216,13 @@ bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_t char_co
 	return t_success;
 }
 
+MC_DLLEXPORT_DEF
 bool MCNumberParse(MCStringRef p_string, MCNumberRef &r_number)
 {
     return MCNumberParseOffset(p_string, 0, MCStringGetLength(p_string), r_number);
 }
 
+MC_DLLEXPORT_DEF
 bool MCNumberParseUnicodeChars(const unichar_t *p_chars, uindex_t p_char_count, MCNumberRef& r_number)
 {
 	char *t_native_chars;
@@ -235,6 +245,45 @@ bool MCNumberParseUnicodeChars(const unichar_t *p_chars, uindex_t p_char_count, 
 	return t_success;
 }
 
+MC_DLLEXPORT_DEF
+bool MCNumberParseOffsetPartial(MCStringRef p_string, uindex_t offset, uindex_t &r_chars_used, MCNumberRef &r_number)
+{
+	bool t_success;
+	t_success = true;
+	
+	char *t_buffer;
+	t_buffer = nil;
+	
+	const char *t_native_string;
+	t_native_string = nil;
+	
+	uindex_t t_length;
+	t_length = MCStringGetLength(p_string);
+	
+	if (offset > t_length)
+		offset = t_length;
+	
+	if (MCStringIsNative(p_string))
+		t_native_string = (const char*)MCStringGetNativeCharPtr(p_string) + offset;
+	else
+	{
+		t_success = MCMemoryNewArray(t_length - offset + 1, t_buffer);
+		
+		uindex_t t_native_char_count;
+		if (t_success)
+			t_success = MCUnicodeCharsMapToNative(MCStringGetCharPtr(p_string) + offset, t_length - offset, (char_t*)t_buffer, t_native_char_count, '?');
+
+		t_native_string = t_buffer;
+	}
+	
+	if (t_success)
+		t_success = __MCNumberParseNativeString(t_native_string, t_length - offset, false, r_chars_used, r_number);
+	
+	MCMemoryDeleteArray(t_buffer);
+	
+	return t_success;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool __MCNumberCopyDescription(__MCNumber *self, MCStringRef& r_string)
@@ -254,6 +303,33 @@ hash_t __MCNumberHash(__MCNumber *self)
 bool __MCNumberIsEqualTo(__MCNumber *self, __MCNumber *p_other_self)
 {
 	return MCNumberCompareTo(self, p_other_self) == 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MC_DLLEXPORT_DEF MCNumberRef kMCZero;
+MC_DLLEXPORT_DEF MCNumberRef kMCOne;
+MC_DLLEXPORT_DEF MCNumberRef kMCMinusOne;
+
+bool __MCNumberInitialize(void)
+{
+    if (!MCNumberCreateWithInteger(0, kMCZero))
+        return false;
+    
+    if (!MCNumberCreateWithInteger(1, kMCOne))
+        return false;
+		
+    if (!MCNumberCreateWithInteger(-1, kMCMinusOne))
+        return false;
+		
+    return true;
+}
+
+void __MCNumberFinalize(void)
+{
+    MCValueRelease(kMCZero);
+    MCValueRelease(kMCOne);
+    MCValueRelease(kMCMinusOne);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -49,7 +49,7 @@ bool MCUuidGenerateRandom(MCUuid& r_uuid)
 	// Fill the UUID with random bytes (returns false if not enough random data
 	// is available).
     MCAutoDataRef t_data;
-	if (!MCU_random_bytes(sizeof(MCUuid), &t_data))
+	if (!MCSRandomData (sizeof(MCUuid), &t_data))
 		return false;
     MCMemoryCopy(&r_uuid, MCDataGetBytePtr(*t_data), sizeof(MCUuid));
     
@@ -166,7 +166,7 @@ bool MCUuidFromCString(const char *p_string, MCUuid& r_uuid)
 	r_uuid . clock_seq_hi_and_reserved = (t_clock >> 8) & 0xff;
 	
 	// Parse the 'node' part.
-	for(int i = 0; i < sizeof(r_uuid . node); i++)
+	for(size_t i = 0; i < sizeof(r_uuid . node); i++)
 	{
 		char t_hex_byte[3];
 		t_hex_byte[0] = p_string[24 + i * 2];
@@ -236,7 +236,7 @@ void MCUuidFromBytes(uint8_t p_bytes[16], MCUuid& r_uuid)
 				p_bytes[9];
 				
 	// Pack the 'node' field.
-	for(int i = 0; i < sizeof(r_uuid . node); i++)
+	for(size_t i = 0; i < sizeof(r_uuid . node); i++)
 		r_uuid . node[i] = p_bytes[10 + i];
 }
 

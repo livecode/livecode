@@ -1,0 +1,235 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.math.tests
+
+use com.livecode.math
+use com.livecode.foreign
+use com.livecode.__INTERNAL._testlib
+
+-- Empirically-chosen epsilon for floating-point comparisons
+constant EPSILON is 0.00000000001
+
+public handler TestFloor()
+	test "Floor (+ve)" when the floor of 5.5 is 5
+	test "Floor (-ve)" when the floor of -5.5 is -6
+end handler
+
+public handler TestCeil()
+	test "Ceil (+ve)" when the ceiling of 5.5 is 6
+	test "Ceil (-ve)" when the ceiling of -5.5 is -5
+end handler
+
+public handler TestRound()
+	variable tNum as Number
+	put 5.1 into tNum
+	round tNum
+	test "Round (in-place)" when tNum is 5
+
+	test "Round (+ve)" when the rounded of 5.1 is 5
+	test "Round (-ve)" when the rounded of -5.1 is -5
+	test "Round (+ve, .5)" when the rounded of 4.5 is 5
+	test "Round (-ve, .5)" when the rounded of -4.5 is -5
+end handler
+
+public handler TestPow()
+	test "pow (-ve, -ve)" when -2 ^ -2 is 0.25
+	test "pow (-ve, +ve)" when (-2) ^ 2 is 4
+	test "pow (-ve, +ve)" when -2 ^ 3 is -8
+	test "pow (+ve, -ve)" when 2 ^ -2 is 0.25
+	test "pow (+ve, +ve)" when 2 ^ 2 is 4
+	test "pow (0, 1)" when 0 ^ 1 is 0
+	test "pow (+ve, 0)" when 2 ^ 0 is 1
+	test "pow (-ve, 0)" when (-2) ^ 0 is 1
+end handler
+
+handler TestPowDomain_Imag()
+	return (-1) ^ 0.5
+end handler
+public handler TestPowDomain()
+	-- bug 14679
+	MCUnitTestHandlerThrows(TestPowDomain_Imag, "pow (imaginary)")
+end handler
+
+public handler TestPowPrecedence()
+	test "pow vs. unary−" when -2 ^ 2 is 4
+	test "pow vs. unary−" when -2 ^ 0 is 1
+end handler
+
+public handler TestLog10()
+	test "log10 (function, +ve)" when log10(1000) is 3
+	test "log10 (syntax, +ve)" when the log of 1000 is 3
+end handler
+
+handler TestLog10Domain_Negative() returns nothing
+	variable tVar
+	put the log of -1 into tVar
+end handler
+handler TestLog10Domain_Zero() returns nothing
+	variable tVar
+	put the log of 0 into tVar
+end handler
+public handler TestLog10Domain()
+	-- bug 14678
+	MCUnitTestHandlerThrows(TestLog10Domain_Negative, "log10 (syntax, -ve)")
+
+	MCUnitTestHandlerThrowsBroken(TestLog10Domain_Zero, "log10 (syntax, 0)", "bug 14678")
+end handler
+
+public handler TestSin()
+	test "sin (function)" when sin(pi / 2) is 1
+	test "sin (syntax)" when the sine of (pi / 2) is 1
+end handler
+
+public handler TestCos()
+	test "cos (function)" when cos(pi) is -1
+	test "cos (syntax)" when the cosine of pi is -1
+end handler
+
+public handler TestTan()
+	test "tan (function)" when tan(pi/4) - 1 < EPSILON
+	test "tan (syntax)" when the tangent of (pi/4) - 1 < EPSILON
+end handler
+
+public handler TestArcsin()
+	test "arcsin (function)" when asin(1) is pi / 2
+	test "arcsin (syntax)" when the arcsine of 1 is pi / 2
+end handler
+
+public handler TestArccos()
+	test "arccos (function)" when acos(-1) is pi
+	test "arccos (syntax)" when the arccosine of -1 is pi
+end handler
+
+public handler TestArctan()
+	test "arctan (function)" when atan(1) is pi / 4
+	test "arctan (syntax)" when the arctangent of 1 is pi / 4
+	test "arctan2 (function)" when atan2(-1,-1) is -3 * pi / 4
+	test "arctan2 (function)" when the binary arctangent of -1 and -1 is -3 * pi / 4
+end handler
+
+handler TestTrigonometricDomain_Arcsin()
+	return asin((1 + any number) / any number)
+end handler
+handler TestTrigonometricDomain_Arccos()
+	return acos((1 + any number) / any number)
+end handler
+public handler TestTrigonometricDomain()
+	MCUnitTestHandlerThrows(TestTrigonometricDomain_Arcsin, "arcsin (> 1)")
+	MCUnitTestHandlerThrows(TestTrigonometricDomain_Arccos, "arccos (> 1)")
+end handler
+
+public handler TestExp()
+	variable tExp
+	put exp(3) into tExp
+	test "exp (function)" when tExp > 20 and tExp < 20.1
+
+	put the exponential of 3 into tExp
+	test "exp (syntax)" when tExp > 20 and tExp < 20.1
+end handler
+
+public handler TestLn()
+	variable tLn
+	put the natural log of 55 into tLn
+	test "ln (syntax) " when tLn > 4 and tLn < 4.01
+
+	put ln(55) into tLn
+	test "ln (function) " when tLn > 4 and tLn < 4.01
+end handler
+
+handler TestLnDomain_Negative() returns nothing
+	variable tVar
+	put the natural log of -1 into tVar
+end handler
+handler TestLnDomain_Zero() returns nothing
+	variable tVar
+	put the natural log of 0 into tVar
+end handler
+public handler TestLnDomain()
+	-- bug 14678
+	MCUnitTestHandlerThrows(TestLnDomain_Negative, "ln (syntax, -ve)")
+	MCUnitTestHandlerThrowsBroken(TestLnDomain_Zero, "ln (syntax, 0)", "bug 14678")
+end handler
+
+public handler TestExpLog()
+	test "exp-log" when the abs of the natural log of the exponential of 3 - 3 < EPSILON
+	test "log-exp" when the abs of the exponential of the natural log of 80 - 80 < EPSILON
+end handler
+
+public handler TestTrunc()
+	test "trunc (+ve)" when the trunc of 5.5 is 5
+	test "trunk (-ve)" when the trunc of -5.5 is -5
+end handler
+
+public handler TestAbs()
+	test "abs (+ve)" when the abs of 5.5 is 5.5
+	test "abs (-ve)" when the abs of -5.5 is 5.5
+end handler
+
+public handler TestMinBinary()
+	test "min (syntax)" when the minimum of 3 and 5 is 3
+	test "min (function)" when min(4, 5) is 4
+end handler
+
+handler TestMinList_Empty()
+	return the minimum value of []
+end handler
+public handler TestMinList()
+	test "min (list)" when the minimum value of [2, 1, 3] is 1
+
+	MCUnitTestHandlerThrows(TestMinList_Empty, "min (empty list)")
+end handler
+
+public handler TestMaxBinary()
+	test "max (syntax)" when the maximum of 3 and 5 is 5
+	test "max (function)" when max(4, 5) is 5
+end handler
+
+handler TestMaxList_Empty()
+	return the maximum value of []
+end handler
+public handler TestMaxList()
+	test "max (list)" when the maximum value of [2, 1, 3] is 3
+
+	MCUnitTestHandlerThrows(TestMaxList_Empty, "max (empty list)")
+end handler
+
+handler TestBaseConvert_InvalidFormat() returns LCUInt
+	return "0xf004" converted from base 16 -- bug 14889
+end handler
+public handler TestBaseConvertFrom()
+	test "convert from hex" when "6A" converted from base 16 is 106
+	test "convert from binary" when "1001010" converted from base 2 is 74
+
+	MCUnitTestHandlerThrows(TestBaseConvert_InvalidFormat, "convert from hex (0x)")
+end handler
+
+public handler TestBaseConvertTo()
+	test "convert to binary" when 7 converted to base 2 is "111"
+	test "convert to base 12" when 500 converted to base 12 is "358"
+end handler
+
+public handler TestBaseConvertBase()
+	test "convert from base to base" when "1122" converted from base 4 to base 14 is "66"
+end handler
+
+public handler TestRandomNumber()
+	test "Random number range" when any number < 1 and any number >= 0
+end handler
+
+
+end module

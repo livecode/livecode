@@ -1,6 +1,6 @@
 script "CoreNetwork"
 /*
-Copyright (C) 2015 Runtime Revolution Ltd.
+Copyright (C) 2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -45,7 +45,7 @@ close socket tSock
 
 end TestNetwork13
 
-on TestNetwork5
+on TestPeerAddress
 put "www.livecode.com:80" into tSock
 open socket tSock 
 
@@ -55,12 +55,12 @@ put the millisecs into tTime
 repeat while the millisecs - tTime < tTimeOut
 	get the peeraddress of tSock
 	if it is not empty then
-		TestAssert "test", it is among the lines of hostnametoaddress(tSock)
+		TestAssert "peeraddress", it is among the lines of hostnametoaddress(tSock)
 		close socket tSock
-		exit TestNetwork5
+		exit TestPeerAddress
 	end if
 end repeat
 
-TestAssert "test", false
+TestSkip "peeraddress", "connection timed out"
 close socket tSock
-end TestNetwork5
+end TestPeerAddress

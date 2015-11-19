@@ -1,0 +1,14 @@
+Name: byte order
+
+Synonyms: byte order,byte ordering
+
+Type: glossary
+
+Description:
+The order in which an operating system stores <byte|bytes> when using multi- <byte> data types. 
+ 
+When transferring data between two systems that use different byte orders, it may be necessary to convert from one byte order to the other.
+
+References: byte (glossary)
+
+Tags: text processing

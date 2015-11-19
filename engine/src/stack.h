@@ -219,6 +219,7 @@ protected:
 	
 	// MW-2011-09-13: [[ Masks ]] The window mask for the stack.
 	MCWindowShape *m_window_shape;
+	MCSysBitmapHandle m_window_buffer;
 
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
@@ -285,6 +286,12 @@ protected:
 	
 	// IM-2014-05-27: [[ Bug 12321 ]] Indicate if we need to purge fonts when reopening the window
 	bool m_purge_fonts;
+    
+    // MERG-2015-10-11: [[ DocumentFilename ]] The filename the stack represnts
+    MCStringRef m_document_filename;
+    
+    virtual MCPlatformControlType getcontroltype();
+    virtual MCPlatformControlPart getcontrolsubpart();
 
     MCStackAttachment *m_attachments;
     
@@ -301,7 +308,8 @@ public:
 	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
     virtual const MCObjectPropertyTable *getmodepropertytable(void) const { return &kModePropertyTable; }
 	
-	virtual bool visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_visitor);
+	virtual bool visit_self(MCObjectVisitor *p_visitor);
+	virtual bool visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor* p_visitor);
 	
 	virtual void open();
 	virtual void close();
@@ -321,8 +329,9 @@ public:
 	virtual Boolean doubleup(uint2 which);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 	virtual void setrect(const MCRectangle &nrect);
+
 #ifdef LEGACY_EXEC
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
 	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 #endif
 
@@ -333,9 +342,15 @@ public:
 	virtual Exec_stat handle(Handler_type, MCNameRef, MCParameter *, MCObject *pass_from);
 	virtual void recompute();
 	
+    virtual void toolchanged(Tool p_new_tool);
+    
 	// MW-2011-09-20: [[ Collision ]] Compute shape of stack.
 	virtual bool lockshape(MCObjectShape& r_shape);
 	virtual void unlockshape(MCObjectShape& shape);
+	
+	// IM-2015-02-23: [[ WidgetPopup ]] Return true if the contents of this stack are competely opaque.
+	// By default, stacks are opaque.
+	virtual bool isopaque(void) { return true; }
 	
 	// MW-2011-08-17: [[ Redraw ]] Render the stack into the given context 'dirty' is the
 	//   hull of the clipping region.
@@ -549,6 +564,11 @@ public:
     
 	//////////
 	
+    // MW-2014-12-17: [[ Widgets ]] Returns true if one of the stacks substacks have widgets.
+    bool substackhaswidgets();
+    
+	//////////
+    
 	void setgeom();
 	
 	//////////
@@ -578,6 +598,7 @@ public:
 	Boolean hcaddress();
 	Boolean hcstack();
 	
+	virtual bool haspassword() { return false; }
 	virtual bool iskeyed() { return true; }
 	virtual void securescript(MCObject *) { }
 	virtual void unsecurescript(MCObject *) { }
@@ -722,6 +743,7 @@ public:
 	void getstackfile(MCStringRef p_name, MCStringRef &r_name);
 	void setfilename(MCStringRef f);
 
+	virtual IO_stat load(IO_handle stream, uint32_t version); /* Don't use this */
 	virtual IO_stat load(IO_handle stream, uint32_t version, uint1 type);
 	IO_stat load_stack(IO_handle stream, uint32_t version);
 	IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);
@@ -865,6 +887,9 @@ public:
 	//   invoked.
 	void updatewindow(MCRegionRef region);
 	
+	bool configure_window_buffer();
+	void release_window_buffer();
+
 	// MW-2012-08-06: [[ Fibers ]] Ensure the tilecache is updated to reflect the current
 	//   frame.
 	void updatetilecache(void);
@@ -945,6 +970,7 @@ public:
 	
 	void getstyle(uint32_t &wstyle, uint32_t &exstyle);
 	void constrain(intptr_t lp);
+
 #endif // _WINDOWS_DESKTOP specific
 #elif defined(_MAC_DESKTOP)
 #elif defined(_LINUX_DESKTOP)
@@ -1026,8 +1052,8 @@ public:
 
 	void mode_constrain(MCRectangle& rect);
 	bool mode_needstoopen(void);
-
-	////////// PROPERTY SUPPORT METHODS
+    
+    ////////// PROPERTY SUPPORT METHODS
 
 	void SetDecoration(Properties which, bool setting);
 	void GetGroupProps(MCExecContext& ctxt, Properties which, MCStringRef& r_props);
@@ -1088,8 +1114,8 @@ public:
 	void SetSystemWindow(MCExecContext& ctxt, bool setting);
 	void GetMetal(MCExecContext& ctxt, bool& r_setting);
 	void SetMetal(MCExecContext& ctxt, bool setting);
-	void GetShadow(MCExecContext& ctxt, bool& r_setting);
-	void SetShadow(MCExecContext& ctxt, bool setting);
+	void GetWindowShadow(MCExecContext& ctxt, bool& r_setting);
+	void SetWindowShadow(MCExecContext& ctxt, bool setting);
 	void GetResizable(MCExecContext& ctxt, bool& r_setting);
 	void SetResizable(MCExecContext& ctxt, bool setting);
 	void GetMinWidth(MCExecContext& ctxt, uinteger_t& r_width);
@@ -1190,6 +1216,14 @@ public:
     void SetIgnoreMouseEvents(MCExecContext &ctxt, bool p_ignore);
     void GetIgnoreMouseEvents(MCExecContext &ctxt, bool &r_ignored);
     
+    // MERG-2015-08-31: [[ ScriptOnly ]] Setter and getter added
+    void GetScriptOnly(MCExecContext &ctxt, bool &r_script_only);
+    void SetScriptOnly(MCExecContext &ctxt, bool p_script_only);
+    
+    // MERG-2015-10-11: [[ DocumentFilename ]] Add stack documentFilename property
+    void GetDocumentFilename(MCExecContext &ctxt, MCStringRef& r_document_filename);
+    void SetDocumentFilename(MCExecContext &ctxt, MCStringRef p_document_filename);
+    
     virtual void SetForePixel(MCExecContext& ctxt, uinteger_t* pixel);
 	virtual void SetBackPixel(MCExecContext& ctxt, uinteger_t* pixel);
 	virtual void SetHilitePixel(MCExecContext& ctxt, uinteger_t* pixel);
@@ -1229,6 +1263,9 @@ public:
 private:
 	void loadexternals(void);
 	void unloadexternals(void);
+    
+    // MERG-2015-10-12: [[ DocumentFilename ]] documentFilename property
+    void updatedocumentfilename(void);
 
 	void mode_load(void);
 

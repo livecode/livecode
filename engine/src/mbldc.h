@@ -81,6 +81,8 @@ public:
 	virtual void platform_querymouse(int16_t &r_x, int16_t &r_y);
 	virtual void platform_setmouse(int16_t p_x, int16_t p_y);
 	
+	virtual void *GetNativeWindowHandle(Window p_window);
+	
 	// IM-2014-01-28: [[ HiDPI ]] Convenience methods to convert logical to screen coords and back
 	
     static MCGFloat logicaltoscreenscale(void);
@@ -189,11 +191,6 @@ public:
 	bool ownsclipboard(void);
 	bool setclipboard(MCPasteboard *p_pasteboard);
 	MCPasteboard *getclipboard(void);
-
-	//
-
-	// SN-2014-07-11: [[ Bug 12769 ]] Update the signature - the non-implemented UIDC dodragdrop was called otherwise
-	MCDragAction dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset);
 
 	//
 

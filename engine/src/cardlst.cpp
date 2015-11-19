@@ -141,7 +141,7 @@ void MCCardlist::getlongids(MCStack *stack, MCExecPoint &ep)
 
 void MCCardlist::addcard(MCCard *card)
 {
-	if (cards != NULL && cards->card == card || MClockrecent)
+	if ((cards != NULL && cards->card == card) || MClockrecent)
 		return;
 	MCCardnode *nptr = new MCCardnode;
 	nptr->card = card;

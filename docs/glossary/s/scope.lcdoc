@@ -1,0 +1,14 @@
+Name: scope
+
+Synonyms: scope,scoped,scoping
+
+Type: glossary
+
+Description:
+The extent of places where a <variable> can be used. 
+ 
+A <variable|variable's> scope can be either <local variable|local>, <script local variable|script local>, or <global>. A <local variable> can be used only in the current <handler>. A <script local variable> can be used in any <handler> in a <script>, but can't be used in <handler|handlers> that are in other <script|scripts>. A <global> variable can be used in any <handler> where it's <declare|declared>.
+
+References: variable (glossary), handler (glossary), global (glossary), script (glossary), local variable (glossary), declare (glossary), script local variable (glossary)
+
+Tags: properties

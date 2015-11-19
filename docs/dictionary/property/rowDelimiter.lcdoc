@@ -1,0 +1,39 @@
+Name: rowDelimiter
+
+Type: property
+
+Syntax: set the rowDelimiter to <character|character(s)>
+
+Syntax: get the rowDelimiter
+
+Summary: Specifies the <character|character(s)> used to separate rows in a string.
+
+Introduced: 2.8.1
+
+Changed: 7.0.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the rowDelimiter to comma
+
+Example:
+put the rowDelimiter into tRowDelimiter
+
+Example:
+set the rowDelimiter to ";;"
+
+Value:
+From LiveCode 7.0, <rowDelimiter> can be a string of one or several <character|characters>. 
+By default, the rowDelimiter is set to return.
+
+Description:
+Use the <rowDelimiter> property in conjunction with the <split command> to divide text into an array of rows or with the <combine command> to combine an array of rows into a string.
+
+From LiveCode 7.0, <rowDelimiter> can be a string of one or several <character|characters>.
+
+Since the <rowDelimiter> is a local property, its value is reset to return when the current handler finishes executing. It retains its value only for the current handler and setting it in one handler does not affect its value in other handlers called.
+
+References: combine command (command), split (command), split command (command)

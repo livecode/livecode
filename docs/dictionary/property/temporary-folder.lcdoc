@@ -1,0 +1,30 @@
+Name: temporary folder
+
+Type: property
+
+Syntax: the temporary folder
+
+Summary: Returns the path to the folder used for storage of temporary files.
+
+Introduced: 5.0.2
+
+OS: mac,windows,linux,ios
+
+Platforms: desktop,mobile
+
+Example:
+get the temporary folder
+
+Example:
+put the temporary folder & "/log.txt" into tTempLog
+
+Description:
+Returns the path to the folder used for the storage of temporary files.
+
+On Mac OS X, Windows and Linux the temporary folder property returns the path to the folder used for the storage of temporary files.
+
+On iOS the temporary folder property returns the folder in which the application should store any temporary data that is not needed between launches (this folder is not backed up by iTunes on sync).
+
+This property is read only and is equivalent to the specialFolderPath("temporary") function.
+
+References: engine folder (property), desktop folder (property), home folder (property), documents folder (property), specialFolderPath (function)

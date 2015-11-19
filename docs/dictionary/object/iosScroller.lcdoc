@@ -1,0 +1,34 @@
+Name: iosScroller
+
+Type: object
+
+Syntax: iosScroller
+
+Summary: A native iOS control, UIScrollView, that is used as an overlay on the part of the screen you wish to interact with the iOS scrollbars.
+
+Introduced: 4.5.3
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+mobileControlCreate "scroller", "name list scroller"
+
+Example:
+mobileControlCreate "scroller"
+put the result into sScrollerID
+mobileControlSet sScrollerID,"rect", (10,10,100,100)
+mobileControlSet sScrollerID, "contentRect", (10,10,100,700)
+mobileControlSet sScrollerID, "visible", "true"
+
+Description:
+An iosScroller(UIScrollView) control is created using a control type of "scroller". 
+
+Rather than act as a container for other controls the iosScroller is intended to be used as an overlay on the part of the screen you wish to interact with the proper iOS scrollbars. By responding to the various iosScroller messages, you can move LiveCode controls or set the appropriate scroll properties of groups and fields to get a native scrolling effect.
+
+>*Note:* For full details of what the UIScrollViewContol is capable of, and background about it see the iOS reference document.
+
+References: mobileControlDelete (command), mobileControlDo (command), mobileControlSet (command), mobileControlCreate (command), mobileControlGet (function), mobileControlTarget (function)
+
+Tags: objects

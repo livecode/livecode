@@ -1,0 +1,35 @@
+Name: markerLineSize
+
+Type: property
+
+Syntax: set the markerLineSize of <graphic> to <pixels> 
+
+Summary: The <markerLineSize> specifies the thickness of the border of markers that are drawn at each <vertex> of an irregular <polygon> <graphic>.
+
+Associations: graphic
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the markerLineSize of last graphic to 0 -- no border
+
+Value:
+The <markerLineSize> of a <graphic(keyword)> is a <non-negative> <integer>.
+By default, the <markerLineSize> <property> of newly created <graphic(object)|graphics> is set to 1.
+
+Description:
+Use the <markerLineSize> <property> to change the appearance of the small shapes at each <vertex> of a <graphic>.
+
+Irregular polygon graphics can be drawn with a marker at each vertex. The <markerLineSize> <property> specifies the width of the line that outlines each marker. The marker's shape is determined by the <markerPoints> <property>, and its outline color is determined by the <hiliteColor> <property>.
+
+If the style <property> of the <graphic> is not polygon or curve, the setting of its markerPattern <property> has no effect.
+
+If the <markerPoints> <property> is empty or the <markerDrawn> <property> is false, the <markerLineSize> <property> has no effect.
+
+References: markerPoints (property), hilitePattern (property), markerDrawn (property), lineSize (property), hiliteColor (property), markerFilled (property), integer (keyword), polygon (keyword), graphic (keyword), graphic (object), vertex (glossary), property (glossary), non-negative (glossary)
+
+Tags: ui
