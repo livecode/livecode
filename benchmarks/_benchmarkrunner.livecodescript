@@ -34,15 +34,27 @@ end startup
 
 private function getCommandLineInfo
    local tRawArg, tSelfCommand, tSelfScript, tInArgs, tArgs
-
+   
    put false into tInArgs
-
+   
    -- Treat everything up to & including the first
    -- ".livecodescript" file as the command for running the test
    -- runner, and everything after it as test runner arguments
-   put the commandName into tSelfCommand[1]
-   repeat for each element tRawArg in the commandArguments
-
+   local tCommandArguments
+   if the version contains "6.7" then
+      put $0 into tSelfCommand[1]
+      if the environment is "command line" then
+         put "-ui" into tCommandArguments[1]
+      end if
+      repeat with i = 1 to $#
+         put value("$" & i) into tCommandArguments[the number of elements in tCommandArguments + 1]
+      end repeat
+   else
+      do "put the commandName into tSelfCommand[1]"
+      do "put the commandArguments into tCommandArguments"
+   end if
+   repeat for each element tRawArg in tCommandArguments
+      
       if tInArgs then
          put tRawArg into tArgs[1 + the number of elements in tArgs]
       else
@@ -52,14 +64,14 @@ private function getCommandLineInfo
             put true into tInArgs
          end if
       end if
-
+      
    end repeat
-
+   
    local tInfo
    put tSelfCommand into tInfo["self-command"]
    put tSelfScript into tInfo["self-script"]
    put tArgs into tInfo["args"]
-
+   
    return tInfo
 end getCommandLineInfo
 
@@ -289,15 +301,7 @@ private function runGetBenchmarkCommandNames pFilename
    local tScript
 
    -- Get the contents of the file
-   open file pFilename for "UTF-8" text read
-   if the result is not empty then
-      throw the result
-   end if
-
-   read from file pFilename until end
-   put it into tScript
-
-   close file pFilename
+   put url ("file:" & pFilename) into tScript
 
    -- Scan the file for "on Benchmark*" definitions
    local tCommandNames, tCount, tLine, tName
