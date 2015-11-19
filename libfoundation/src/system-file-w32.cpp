@@ -99,14 +99,14 @@ static bool
 __MCSFileThrowWriteErrorWithErrorCode (MCStringRef p_native_path,
                                        DWORD p_error_code)
 {
-	return __MCSFileThrowIOErrorWithErrorCode (p_native_path, MCSTR("Failed to write to file '%{path}': %{description"), p_error_code);
+	return __MCSFileThrowIOErrorWithErrorCode (p_native_path, MCSTR("Failed to write to file '%{path}': %{description}"), p_error_code);
 }
 
 static bool
 __MCSFileThrowOpenErrorWithErrorCode (MCStringRef p_native_path,
                                       DWORD p_error_code)
 {
-	return __MCSFileThrowIOErrorWithErrorCode (p_native_path, MCSTR("Failed to open file '%{path}': %{description"), p_error_code);
+	return __MCSFileThrowIOErrorWithErrorCode (p_native_path, MCSTR("Failed to open file '%{path}': %{description}"), p_error_code);
 }
 
 /* ================================================================

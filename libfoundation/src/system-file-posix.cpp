@@ -223,7 +223,7 @@ __MCSFileGetContents (MCStringRef p_native_path,
 		if (NULL == t_cstream)
 		{
 			int t_save_errno = errno;
-			return __MCSFileThrowIOErrorWithErrno (p_native_path, MCSTR ("Failed to open file '%{path}': fdopen() failed: %{description"), t_save_errno);
+			return __MCSFileThrowIOErrorWithErrno (p_native_path, MCSTR ("Failed to open file '%{path}': fdopen() failed: %{description}"), t_save_errno);
 		}
 
 		if (!__MCSFileGetContentsStream (p_native_path, t_cstream,
