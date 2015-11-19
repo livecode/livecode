@@ -27,6 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 //#include "execpt.h"
 #include "mcstring.h"
+#include "uidc.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -474,7 +475,14 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 		{
 			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "{\\colortbl;");
 			for(uint32_t i = 0; i < ctxt . colors . count(); i++)
-				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\red%d\\green%d\\blue%d;", (ctxt . colors[i] >> 16) & 0xff, (ctxt . colors[i] >> 8) & 0xff, (ctxt . colors[i] >> 0) & 0xff);
+            {
+                // SN-2015-11-19: [[ Bug 16451 ]] MCscreen knows better than
+                // us how to unpack a colour pixel.
+                MCColor t_color;
+                t_color . pixel = ctxt . colors[i];
+                MCscreen -> querycolor(t_color);
+                /* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\red%d\\green%d\\blue%d;", t_color . red, t_color . green, t_color . blue);
+            }
 			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}\n");
 		}
 		
