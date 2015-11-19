@@ -2283,3 +2283,98 @@ function revDocsFormatLibraryDataAsJSON pID, pLibraryDataA
    return tJSON
    
 end revDocsFormatLibraryDataAsJSON
+
+##################################################
+#
+#        Docs API database
+#
+##################################################
+
+constant kAPIDatabaseFile = "api.sqlite"
+
+on revDocsOpenAPIDatabase pFolder
+   local tDefaultFolder
+   put the defaultFolder into tDefaultFolder
+   set the defaultFolder to pFolder
+   
+   local tConnection
+   put revOpenDatabase("sqlite",kAPIDatabaseFile,,,,,,) into tConnection
+   
+   if tConnection is not a number then
+      return "unable to create sqlite API database" & return & the result
+   end if
+   
+   return tConnection
+end revDocsOpenAPIDatabase
+
+on revDocsUpdateDatabase pConnection, pLibraryA
+   if pConnection is empty then
+      return "no database connection"
+   end if
+   
+   local tSQL, tResult
+   
+   -- Create the libraries table. This might already exist, so do it unchecked.
+   put "CREATE TABLE libraries(library text, author text, type text)" into tSQL
+   revExecuteSQL pConnection, tSQL
+   
+   local tName
+   put pLibraryA["name"] into tName
+   if tName is empty then
+      put revDocsModifyForURL(pLibraryA["display name"]) into tName
+   end if 
+   
+   -- Try an UPDATE first. If this fails, the entry might not exist already, so try an INSERT.
+   put "UPDATE libraries SET author = '" & pLibraryA["author"] & "', type = '" & pLibraryA["type"] & "' WHERE library = '" & tName & "'" into tSQL
+   revExecuteSQL pConnection, tSQL
+   put the result into tResult
+   if tResult is not a number or tResult is 0 then
+      put "INSERT into libraries VALUES('" & tName & "','" & pLibraryA["author"] & "','" & pLibraryA["type"] & "')" into tSQL
+      revExecuteSQL pConnection, tSQL
+      put the result into tResult
+   end if
+   
+   if tResult is not a number then
+      return "unable to open table 'libraries'" & return & tResult
+   end if
+   
+   -- Create the table for this library. This might already exist, so do it unchecked.
+   put "CREATE TABLE" && tName & "(name text, type text, data blob)" into tSQL
+   revExecuteSQL pConnection, tSQL
+   
+   revDocsUpdateLibrary pConnection, tName, pLibraryA["doc"]
+   if the result is not empty then
+      return "unable to update data for library" && tName & return & the result
+   end if
+   
+   return empty
+end revDocsUpdateDatabase
+
+on revDocsUpdateLibrary pConnection, pName, pDocDataA
+   local tDocA, tEncodedData, tDocName
+   repeat for each element tDocA in pDocDataA
+      put tDocA["name"] into tDocName
+      if tDocName is empty then
+         put revDocsModifyForURL(tDocA["display name"]) into tDocName
+      end if 
+      
+      put arrayEncode(tDocA) into tEncodedData
+      
+      -- Try an UPDATE first. If this fails, the entry might not exist already, so try an INSERT.
+      put "UPDATE" && pName && "SET data = :1 " into tSQL
+      put "WHERE name = '" & tDocName & "' " after tSQL
+      put "AND type='" & tDocA["type"] & "'" after tSQL
+      revExecuteSQL pConnection, tSQL, "*btEncodedData"
+      put the result into tResult
+      if tResult is not a number or tResult is 0 then
+         put "INSERT into" && pName && "VALUES('" & tDocName & "','" & tDocA["type"] & "',:1)" into tSQL
+         revExecuteSQL pConnection, tSQL, "*btEncodedData"
+         put the result into tResult
+      end if
+      
+      if tResult is not a number then
+         return "unable to insert data for" && tName & ":" & tDocName & return & the result
+      end if
+   end repeat
+   return empty
+end revDocsUpdateLibrary
