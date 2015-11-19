@@ -1674,6 +1674,11 @@ enum Parse_errors
 	// MM-2014-06-13: [[ Bug 12567 ]] New variant open socket <socket> with verification for host <host>
 	// {PE-0545} open: expected 'host'
 	PE_OPEN_NOHOST,	
+
+    // SN-2015-11-15: [[ Bug 165452 ]] New error, if a global variable shadows
+    // a local variable declared beforehand
+    // {PE-0546} global: shadowing a local variable
+    PE_GLOBAL_SHADOW,
 };
 
 extern const char *MCparsingerrors;
