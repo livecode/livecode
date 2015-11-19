@@ -114,12 +114,12 @@ private command doRun pInfo
    local tScript, tCommand, tLog
    put pInfo["args"][2] into tScript
    put pInfo["args"][3] into tCommand
-   if tScript is empty then
-      runAllScripts pInfo
-   else if tCommand is empty then
+   if tCommand is not empty then
+      runSingleCommand pInfo, tScript, tCommand
+   else if tScript is not empty and there is no folder tScript then
       runSingleScript pInfo, tScript
    else
-      runSingleCommand pInfo, tScript, tCommand
+      runAllScripts pInfo, tScript
    end if
    
    put the result into tLog
@@ -189,10 +189,10 @@ end invokeGetLibraryStack
 
 -- Run all the benchmark scripts that can be found below the current
 -- directory
-private command runAllScripts pInfo
+private command runAllScripts pInfo, pFolder
    local tFile, tLog
-   repeat for each element tFile in runGetBenchmarkFileNames()
-      runBenchmarkScript pInfo, tFile
+   repeat for each element tFile in runGetBenchmarkFileNames(pFolder)
+      runSingleScript pInfo, tFile
       put the result after tLog
    end repeat
 
@@ -214,10 +214,11 @@ end runSingleScript
 -- Run a specific named benchmark command tCommand in a script file
 -- tScriptFile
 private command runSingleCommand pInfo, pScriptFile, pCommand
+   local tBenchmarkName
+   put char 10 to -1 of pCommand into tBenchmarkName
+   write "Running " & tBenchmarkName & "..." & return to stdout
+   
    local tArg, tCommandLine
-   
-   write "Running " & pCommand & "... " to stdout
-   
    repeat for each element tArg in pInfo["self-command"]
       put tArg & " " after tCommandLine
    end repeat
@@ -226,29 +227,43 @@ private command runSingleCommand pInfo, pScriptFile, pCommand
    
    -- Invoke the test in a subprocess.  This ensures that we can detect
    -- if a crash occurs
-   local tBenchmarkTime, tBenchmarkExitStatus
-   put shell(tCommandLine) into tBenchmarkTime
+   local tBenchmarkTimes, tBenchmarkExitStatus
+   put shell(tCommandLine) into tBenchmarkTimes
    put the result into tBenchmarkExitStatus
    
-   -- Check the exit status. 
+   -- The output from the shell will be a list of tab separated lines.
+   --   <variantname> tab <timetaken>
+   
+   -- Check the exit status and process for logging.
    if tBenchmarkExitStatus is not empty then
-      put "failed" into tBenchmarkTime
+      write tab & "failed" & return to stdout
+      write tBenchmarkTimes & return to stderr
+      return tBenchmarkName & tab & "failed" & return
    end if
    
-   write tBenchmarkTime & " ms" & return to stdout
+   local tLog
+   set the itemDelimiter to tab
+   repeat for each line tResult in tBenchmarkTimes
+      if item 1 of tResult is not empty then
+         write tab & item 1 of tResult & space & item 2 of tResult & " ms" & return to stdout
+      else
+         write tab & item 2 of tResult & " ms" & return to stdout
+      end if
+      put tBenchmarkName & tab & tResult & return after tLog
+   end repeat
    
-   return pCommand & tab & tBenchmarkTime & return
+   return tLog
 end runSingleCommand
 
 -- Get all livecode script files beneath the CWD, apart from
 -- filenames starting with "." or "_"
-private function runGetBenchmarkFileNames
+private function runGetBenchmarkFileNames pFolder
    local tFiles, tCount
 
    put empty into tFiles
    put 0 into tCount
 
-   runGetBenchmarkFileNames_Recursive the defaultfolder, empty, tFiles, tCount
+   runGetBenchmarkFileNames_Recursive the defaultfolder & slash & pFolder, pFolder, tFiles, tCount
 
    return tFiles
 end runGetBenchmarkFileNames
