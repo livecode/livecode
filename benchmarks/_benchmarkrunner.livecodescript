@@ -114,8 +114,8 @@ private command doRun pInfo
    local tScript, tCommand, tLog
    put pInfo["args"][2] into tScript
    put pInfo["args"][3] into tCommand
-   if tScript is empty then
-      runAllScripts pInfo
+   if tScript is empty or there is a folder tScript then
+      runAllScripts pInfo, tScript
    else if tCommand is empty then
       runSingleScript pInfo, tScript
    else
@@ -189,10 +189,9 @@ end invokeGetLibraryStack
 
 -- Run all the benchmark scripts that can be found below the current
 -- directory
-private command runAllScripts pInfo
+private command runAllScripts pInfo, pFolder
    local tFile, tLog
    repeat for each element tFile in runGetBenchmarkFileNames()
-      runBenchmarkScript pInfo, tFile
       runSingleScript pInfo, tFile
       put the result after tLog
    end repeat
@@ -243,13 +242,13 @@ end runSingleCommand
 
 -- Get all livecode script files beneath the CWD, apart from
 -- filenames starting with "." or "_"
-private function runGetBenchmarkFileNames
+private function runGetBenchmarkFileNames pFolder
    local tFiles, tCount
 
    put empty into tFiles
    put 0 into tCount
 
-   runGetBenchmarkFileNames_Recursive the defaultfolder, empty, tFiles, tCount
+   runGetBenchmarkFileNames_Recursive the defaultfolder & slash & pFolder, empty, tFiles, tCount
 
    return tFiles
 end runGetBenchmarkFileNames
