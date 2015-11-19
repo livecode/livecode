@@ -1266,7 +1266,8 @@ function revDocsParseDocTextToLibraryArray pFile, pText, pLibraryName, pAuthor
    local tLibraryA
    put revDocsParseDocText(pText, pFile) into tLibraryA
    if pLibraryName is not empty then
-      put pLibraryName into tLibraryA["name"]
+      put pLibraryName into tLibraryA["display name"]
+      put revDocsModifyForUrl(pLibraryName) into tLIbraryA["name"]
    end if
    put pAuthor into tLibraryA["author"]
    return tLibraryA
@@ -1344,7 +1345,8 @@ function revDocsParseDocText pText, pFilename
          case empty
             exit repeat
          case "Library"
-            put tElementsA[tStartNum]["content"] into tParsedA["name"]
+            put tElementsA[tStartNum]["content"] into tParsedA["display name"]
+            put revDocsModifyForURL(tParsedA["display name"]) into tParsedA["name"]
             add 1 to tStartNum
             break
          case "Description"
@@ -1374,7 +1376,7 @@ function revDocsParseDocText pText, pFilename
    
    local tAssociationsDefault
    put "Associations" into tAssociationsDefault["name"]
-   put tParsedA["name"] into tAssociationsDefault["content"]
+   put tParsedA["display name"] into tAssociationsDefault["content"]
    repeat with tElementNum = tStartNum to the number of elements in tElementsA
       add 1 to tEntryElementCount
       local tElementA
@@ -1895,8 +1897,8 @@ end __tabs
 function revDocsFormatLibraryArrayAsJSON pLibraryA
    local tJSON
    put "{" after tJSON
-   put return & __tabs(2) & keyValue("display name",pLibraryA["name"]) & comma after tJSON
-   put return & __tabs(2) & keyValue("name",revDocsModifyForURL(pLibraryA["name"])) & comma after tJSON
+   put return & __tabs(2) & keyValue("display name",pLibraryA["display name"]) & comma after tJSON
+   put return & __tabs(2) & keyValue("name",pLibraryA["name"]) & comma after tJSON
    put return & __tabs(2) & keyValue("author",pLibraryA["author"]) & comma after tJSON
    put return & __tabs(2) & escape("doc") & ":[" after tJSON
    

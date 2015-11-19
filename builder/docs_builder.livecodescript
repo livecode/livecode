@@ -2115,7 +2115,8 @@ end docsBuilderParseDictionaryToLibraryArray
 function docsBuilderParseDictionary pLibraryName, pAuthor, pRootDir, pRecursive
    local tLibraryA
    if there is a folder pRootDir then
-      put pLibraryName into tLibraryA["name"]
+      put revDocsModifyForUrl(pLibraryName) into tLibraryA["name"]
+      put pLibraryName into tLibraryA["display name"]
       put pAuthor into tLibraryA["author"]
       put "dictionary" into tLibraryA["type"]
       
@@ -2174,7 +2175,8 @@ command docsBuilderGenerateDistributedAPI
       end repeat
       put empty into tParsedA
    end repeat
-   put "LiveCode Builder" into tLibrariesA[tCount]["name"]
+   put "LiveCode Builder" into tLibrariesA[tCount]["display name"]
+   put revDocsModifyForUrl("LiveCode Builder") into tLibrariesA[tCount]["name"]
    put "LiveCode" into tLibrariesA[tCount]["author"]
    put "dictionary" into tLibrariesA[tCount]["type"]
    add 1 to tCount
