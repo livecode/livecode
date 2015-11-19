@@ -214,10 +214,11 @@ end runSingleScript
 -- Run a specific named benchmark command tCommand in a script file
 -- tScriptFile
 private command runSingleCommand pInfo, pScriptFile, pCommand
+   local tBenchmarkName
+   put char 10 to -1 of pCommand into tBenchmarkName
+   write "Running " & tBenchmarkName & "..." & return to stdout
+   
    local tArg, tCommandLine
-   
-   write "Running " & pCommand & "... " to stdout
-   
    repeat for each element tArg in pInfo["self-command"]
       put tArg & " " after tCommandLine
    end repeat
@@ -226,18 +227,32 @@ private command runSingleCommand pInfo, pScriptFile, pCommand
    
    -- Invoke the test in a subprocess.  This ensures that we can detect
    -- if a crash occurs
-   local tBenchmarkTime, tBenchmarkExitStatus
-   put shell(tCommandLine) into tBenchmarkTime
+   local tBenchmarkTimes, tBenchmarkExitStatus
+   put shell(tCommandLine) into tBenchmarkTimes
    put the result into tBenchmarkExitStatus
    
-   -- Check the exit status. 
+   -- The output from the shell will be a list of tab separated lines.
+   --   <variantname> tab <timetaken>
+   
+   -- Check the exit status and process for logging.
    if tBenchmarkExitStatus is not empty then
-      put "failed" into tBenchmarkTime
+      write tab & "failed" & return to stdout
+      write tBenchmarkTimes & return to stderr
+      return tBenchmarkName & tab & "failed" & return
    end if
    
-   write tBenchmarkTime & " ms" & return to stdout
+   local tLog
+   set the itemDelimiter to tab
+   repeat for each line tResult in tBenchmarkTimes
+      if item 1 of tResult is not empty then
+         write tab & item 1 of tResult & space & item 2 of tResult & " ms" & return to stdout
+      else
+         write tab & item 2 of tResult & " ms" & return to stdout
+      end if
+      put tBenchmarkName & tab & tResult & return after tLog
+   end repeat
    
-   return pCommand & tab & tBenchmarkTime & return
+   return tLog
 end runSingleCommand
 
 -- Get all livecode script files beneath the CWD, apart from
