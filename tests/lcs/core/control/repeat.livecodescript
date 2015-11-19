@@ -43,12 +43,18 @@ on TestRepeatForEachKeyInArray
   put 2 into tArray["bar"]
   put 3 into tArray["baz"]
 
-  local tTotal
+  local tTotal, tLastKey
   repeat for each key tKey in tArray
-    add tArray[tKey] to tTotal
+     add tArray[tKey] to tTotal
+     put tKey into tLastKey
   end repeat
-
   TestAssert "repeat for each key in array", tTotal is 6
+  TestAssert "repeat for each key in array preserves last value", tKey is tLastKey
+  
+  put "something" into tKey
+  repeat for each key tKey in empty
+  end repeat
+  TestAssert "repeat for each key in empty preserves initial value", tKey is "something"
 end TestRepeatForEachKeyInArray
 
 on TestRepeatForEachKeyInSequence
@@ -72,12 +78,18 @@ on TestRepeatForEachElementInArray
   put 2 into tArray["bar"]
   put 3 into tArray["baz"]
 
-  local tTotal
+  local tTotal, tLastElement
   repeat for each element tElement in tArray
-    add tElement to tTotal
+     add tElement to tTotal
+     put tElement into tLastElement
   end repeat
-
   TestAssert "repeat for each element in array", tTotal is 6
+  TestAssert "repeat for each element preserves last value", tElement is tLastElement
+  
+  put "something" into tElement
+  repeat for each element tElement in empty
+  end repeat
+  TestAssert "repeat for each element in empty preserves initial value", tElement is "something"
 end TestRepeatForEachElementInArray
 
 on TestRepeatForEachElementInSequence
@@ -91,8 +103,8 @@ on TestRepeatForEachElementInSequence
    repeat for each element tElement in tArray
       put tElement & comma after tComputedString
    end repeat
-   
    TestAssert "repeat for each element in sequence", tComputedString is tExpectedString
+   TestAssert "repeat for each element in sequence preserves last value", tElement is 10000
 end TestRepeatForEachElementInSequence
 
 on TestRepeatForEachByte
@@ -106,8 +118,13 @@ on TestRepeatForEachByte
    repeat for each byte tByte in tBytes
       put byteToNum(tByte) & comma after tComputedString
    end repeat
-   
    TestAssert "repeat for each byte", tComputedString is tExpectedString
+   TestAssert "repeat for each byte preserves last value", tByte is the last byte of tBytes
+   
+   put "something" into tByte
+   repeat for each byte tByte in empty
+   end repeat
+  TestAssert "repeat for each byte in empty preserves initial value", tByte is "something"
 end TestRepeatForEachByte
 
 on TestRepeatForEachChar
@@ -159,6 +176,33 @@ on TestRepeatForEachChar
       end repeat
       TestAssert "repeat for each codeunit -" && tType, tComputedString is tExpectedCodeunitString
    end repeat
+   
+   repeat for each character tChar in "abc"
+   end repeat
+   TestAssertBroken "repeat for each character preserves last value", tChar is "c", "bug 16453"
+   
+   repeat for each codepoint tChar in "abc"
+   end repeat
+   TestAssertBroken "repeat for each codepoint preserves last value", tChar is "c", "bug 16453"
+   
+   repeat for each codeunit tChar in "abc"
+   end repeat
+   TestAssertBroken "repeat for each codeunit preserves last value", tChar is "c", "bug 16453"
+   
+   put "something" into tChar
+   repeat for each character tChar in empty
+   end repeat
+   TestAssertBroken "repeat for each character in empty preserves initial value", tChar is "something", "anomaly 16454"
+   
+   put "something" into tChar
+   repeat for each codepoint tChar in empty
+   end repeat
+   TestAssertBroken "repeat for each codepoint in empty preserves initial value", tChar is "something", "anomaly 16454"
+   
+   put "something" into tChar
+   repeat for each codeunit tChar in empty
+   end repeat
+   TestAssertBroken "repeat for each codeunit in empty preserves initial value", tChar is "something", "anomaly 16454"
 end TestRepeatForEachChar
 
 on TestRepeatForEachDelimitedChunk
@@ -170,12 +214,19 @@ on TestRepeatForEachDelimitedChunk
       put tChunk & comma after tComputedChunks
    end repeat
    TestAssert "repeat for each item", tComputedChunks is (tChunks & comma)
+   TestAssert "repeat for each item preserves last value", tChunk is the last item of tChunks
    
    put empty into tComputedChunks
    repeat for each item tChunk in (tChunks & comma)
       put tChunk & comma after tComputedChunks
    end repeat
    TestAssert "repeat for each item trailing delimiter", tComputedChunks is (tChunks & comma)
+   TestAssertBroken "repeat for each item trailing delimiter preserves last value", tChunk is the last item of tChunks, "bug 16453"
+   
+   put "something" into tChunk
+   repeat for each item tChunk in empty
+   end repeat
+   TestAssertBroken "repeat for each item in empty preserves initial value", tChunk is "something", "anomaly 16454"
    
    replace comma with return in tChunks
    
@@ -184,12 +235,19 @@ on TestRepeatForEachDelimitedChunk
       put tChunk & return after tComputedChunks
    end repeat
    TestAssert "repeat for each line", tComputedChunks is (tChunks & return)
+   TestAssert "repeat for each line preserves last value", tChunk is the last line of tChunks
    
    put empty into tComputedChunks
    repeat for each line tChunk in (tChunks & return)
       put tChunk & return after tComputedChunks
    end repeat
-   TestAssert "repeat for each item trailing delimiter", tComputedChunks is (tChunks & return)
+   TestAssert "repeat for each line trailing delimiter", tComputedChunks is (tChunks & return)
+   TestAssertBroken "repeat for each line trailing delimiter preserves last value", tChunk is the last line of tChunks, "bug 16453"
+   
+   put "something" into tChunk
+   repeat for each line tChunk in empty
+   end repeat
+   TestAssertBroken "repeat for each line in empty preserves initial value", tChunk is "something", "anomaly 16454"
 end TestRepeatForEachDelimitedChunk
 
 on TestRepeatForEachSegment
@@ -202,6 +260,12 @@ on TestRepeatForEachSegment
       put tSegment & comma after tComputedString
    end repeat
    TestAssert "repeat for each segment", tComputedString is tExpectedString
+   TestAssert "repeat for each segment preserves last value", tSegment is the last segment of tSegments
+   
+   put "something" into tSegment
+   repeat for each segment tSegment in empty
+   end repeat
+   TestAssertBroken "repeat for each segment in empty preserves initial value", tSegment is "something", "anomaly 16454"
 end TestRepeatForEachSegment
 
 on TestRepeatForEachTrueWord
@@ -214,4 +278,10 @@ on TestRepeatForEachTrueWord
       put tTrueWord & comma after tComputedString
    end repeat
    TestAssert "repeat for each true word", tComputedString is tExpectedString
+   TestAssert "repeat for each true word preserves last value", tTrueWord is the last trueWord of tTrueWords
+   
+   put "something" into tTrueWord
+   repeat for each trueWord tTrueWord in empty
+   end repeat
+   TestAssertBroken "repeat for each true word in empty preserves initial value", tTrueWord is "something", "anomaly 16454"
 end TestRepeatForEachTrueWord
