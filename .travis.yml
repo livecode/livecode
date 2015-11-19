@@ -1,0 +1,42 @@
+# Very basic Travis CI (http://travis-ci.org) control file that allows
+# some basic Linux-based continuous integration testing (for free).
+
+language: c++
+
+# Use container-based infrastructure
+sudo: false
+
+# Skip vulcan CI branches
+branches:
+  only:
+    - /^develop.*$/
+    - /^release.*$/
+    - coverity_scan
+
+# Environment variables
+env:
+  global:
+    - CXX_STD: "gnu++98"
+
+# Set up the source tree by fetching Linux-specific prebuilt objects
+install: (cd prebuilt && ./fetch-libraries.sh linux)
+
+# Build the default target set and run the test suite.
+script: make all-linux && make -C tests/lcs
+
+addons:
+  # Packages needed for building LiveCode
+  apt:
+    packages:
+      - libx11-dev
+      - libxext-dev
+      - libxrender-dev
+      - libxft-dev
+      - libxinerama-dev
+      - libxv-dev
+      - libxcursor-dev
+      - libfreetype6-dev
+      - libgtk2.0-dev
+      - libpopt-dev
+      - libesd0-dev
+      - liblcms-dev
