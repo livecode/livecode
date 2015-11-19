@@ -2326,13 +2326,19 @@ on revDocsUpdateDatabase pConnection, pLibraryA
       put revDocsModifyForURL(pLibraryA["display name"]) into tName
    end if 
    
+   local tAuthor
+   put pLibraryA["author"] into tAuthor
+   
+   local tType
+   put pLibraryA["type"] into tType
+   
    -- Try an UPDATE first. If this fails, the entry might not exist already, so try an INSERT.
-   put "UPDATE libraries SET author = '" & pLibraryA["author"] & "', type = '" & pLibraryA["type"] & "' WHERE library = '" & tName & "'" into tSQL
-   revExecuteSQL pConnection, tSQL
+   put "UPDATE libraries SET author = :1, type = :2 WHERE library = :3" into tSQL
+   revExecuteSQL pConnection, tSQL, "tAuthor", "tType", "tName" 
    put the result into tResult
    if tResult is not a number or tResult is 0 then
-      put "INSERT into libraries VALUES('" & tName & "','" & pLibraryA["author"] & "','" & pLibraryA["type"] & "')" into tSQL
-      revExecuteSQL pConnection, tSQL
+      put "INSERT into libraries VALUES(:1, :2, :3)" into tSQL
+      revExecuteSQL pConnection, tSQL, "tName", "tAuthor", "tType"
       put the result into tResult
    end if
    
@@ -2353,24 +2359,25 @@ on revDocsUpdateDatabase pConnection, pLibraryA
 end revDocsUpdateDatabase
 
 on revDocsUpdateLibrary pConnection, pName, pDocDataA
-   local tDocA, tEncodedData, tDocName
+   local tDocA, tDocName
    repeat for each element tDocA in pDocDataA
       put tDocA["name"] into tDocName
       if tDocName is empty then
          put revDocsModifyForURL(tDocA["display name"]) into tDocName
       end if 
       
-      put arrayEncode(tDocA) into tEncodedData
+      local tType
+      put tDocA["type"] into tType
       
+      local tEncodedData
+      put arrayEncode(tDocA) into tEncodedData
       -- Try an UPDATE first. If this fails, the entry might not exist already, so try an INSERT.
-      put "UPDATE" && pName && "SET data = :1 " into tSQL
-      put "WHERE name = '" & tDocName & "' " after tSQL
-      put "AND type='" & tDocA["type"] & "'" after tSQL
-      revExecuteSQL pConnection, tSQL, "*btEncodedData"
+      put "UPDATE" && pName && "SET data = :1 WHERE name = :2 AND type = :3" into tSQL
+      revExecuteSQL pConnection, tSQL, "*btEncodedData", "tDocName", "tType"
       put the result into tResult
       if tResult is not a number or tResult is 0 then
-         put "INSERT into" && pName && "VALUES('" & tDocName & "','" & tDocA["type"] & "',:1)" into tSQL
-         revExecuteSQL pConnection, tSQL, "*btEncodedData"
+         put "INSERT into" && pName && "VALUES(:1, :2, :3)" into tSQL
+         revExecuteSQL pConnection, tSQL, "tDocName", "tType", "*btEncodedData"
          put the result into tResult
       end if
       
