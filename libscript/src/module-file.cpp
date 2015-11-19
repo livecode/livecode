@@ -36,6 +36,14 @@ MCFileExecSetContents (MCDataRef p_contents, MCStringRef p_path)
 ////////////////////////////////////////////////////////////////////////////////
 
 extern "C" MC_DLLEXPORT_DEF void
+MCFileEvalCurrentDirectory (MCStringRef & r_path)
+{
+	/* UNCHECKED */ MCSFileGetCurrentDirectory (r_path);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" MC_DLLEXPORT_DEF void
 MCFileExecDeleteFile (MCStringRef p_path)
 {
 	/* UNCHECKED */ MCSFileDelete (p_path);

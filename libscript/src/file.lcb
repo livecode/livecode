@@ -48,6 +48,24 @@ end syntax
 
 --
 
+public foreign handler MCFileEvalCurrentDirectory(out Directory as String) returns nothing binds to "<builtin>"
+
+/*
+Summary:	The current working directory.
+
+Description:
+The current working directory of the LiveCode process.
+
+Tags: System, Filesystem
+*/
+syntax CurrentDirectory is expression
+	"the" "current" "directory"
+begin
+	MCFileEvalCurrentDirectory(output)
+end syntax
+
+--
+
 public foreign handler MCFileExecDeleteFile(in File as String) returns nothing binds to "<builtin>"
 
 /*
