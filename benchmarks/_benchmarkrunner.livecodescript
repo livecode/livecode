@@ -114,12 +114,12 @@ private command doRun pInfo
    local tScript, tCommand, tLog
    put pInfo["args"][2] into tScript
    put pInfo["args"][3] into tCommand
-   if tScript is empty or there is a folder tScript then
-      runAllScripts pInfo, tScript
-   else if tCommand is empty then
+   if tCommand is not empty then
+      runSingleCommand pInfo, tScript, tCommand
+   else if tScript is not empty and there is no folder tScript then
       runSingleScript pInfo, tScript
    else
-      runSingleCommand pInfo, tScript, tCommand
+      runAllScripts pInfo, tScript
    end if
    
    put the result into tLog
@@ -191,7 +191,7 @@ end invokeGetLibraryStack
 -- directory
 private command runAllScripts pInfo, pFolder
    local tFile, tLog
-   repeat for each element tFile in runGetBenchmarkFileNames()
+   repeat for each element tFile in runGetBenchmarkFileNames(pFolder)
       runSingleScript pInfo, tFile
       put the result after tLog
    end repeat
@@ -263,7 +263,7 @@ private function runGetBenchmarkFileNames pFolder
    put empty into tFiles
    put 0 into tCount
 
-   runGetBenchmarkFileNames_Recursive the defaultfolder & slash & pFolder, empty, tFiles, tCount
+   runGetBenchmarkFileNames_Recursive the defaultfolder & slash & pFolder, pFolder, tFiles, tCount
 
    return tFiles
 end runGetBenchmarkFileNames
