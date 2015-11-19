@@ -193,6 +193,7 @@ private command runAllScripts pInfo
    local tFile, tLog
    repeat for each element tFile in runGetBenchmarkFileNames()
       runBenchmarkScript pInfo, tFile
+      runSingleScript pInfo, tFile
       put the result after tLog
    end repeat
 
