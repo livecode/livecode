@@ -87,8 +87,14 @@ private command _TestOutput pIsOkay, pDescription, pDirective, pReason
       end if
    end if
    
-   write tMessage & return to stdout
+   _TestWriteOutput tMessage & return
 end _TestOutput
+
+private command _TestWriteOutput pMessage
+   -- As stdout is considered to be a 'native' stream, we encode to UTF-8 first
+   -- then will unencode in the test runner.
+   write textEncode(pMessage, "UTF8") to stdout
+end _TestWriteOutput
 
 ----------------------------------------------------------------
 -- Unit test library functions
@@ -97,7 +103,7 @@ end _TestOutput
 on TestDiagnostic pMessage
    local tLine
    repeat for each line tLine in pMessage
-      write "#" && tLine & return to stdout
+      _TestWriteOutput "#" && tLine & return
    end repeat
 end TestDiagnostic
 
