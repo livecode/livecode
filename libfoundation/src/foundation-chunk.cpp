@@ -496,10 +496,17 @@ MCTextChunkIterator_Codepoint::~MCTextChunkIterator_Codepoint()
 bool MCTextChunkIterator_Codepoint::Next()
 {
     m_range . offset = m_range . offset + m_range . length;
+    
     if (m_range . offset >= m_length)
         return false;
     
-    m_range . length = MCStringIsValidSurrogatePair(m_text, m_range . offset) ? 2 : 1;
+    if (MCStringIsValidSurrogatePair(m_text, m_range . offset))
+        m_range . length = 2;
+    else
+        m_range . length = 1;
+    
+    if (m_range . offset + m_range . length == m_length)
+        m_exhausted = true;
     
     return true;
 }
@@ -536,7 +543,9 @@ MCTextChunkIterator_Codeunit::~MCTextChunkIterator_Codeunit()
 bool MCTextChunkIterator_Codeunit::Next()
 {
     m_range . offset = m_range . offset + m_range . length;
-    if (m_range . offset >= m_length)
+    if (m_range . offset == m_length - 1)
+        m_exhausted = true;
+    else if (m_range . offset >= m_length)
         return false;
     
     m_range . length = 1;
@@ -619,6 +628,9 @@ bool MCTextChunkIterator_Delimited::Next()
         m_range . length = t_found_range . offset - m_range . offset;
         // AL-2014-10-15: [[ Bug 13671 ]] Keep track of matched delimiter length to increment offset correctly
         m_delimiter_length = t_found_range . length;
+        
+        if (t_found_range . offset + t_found_range . length == m_length)
+            m_exhausted = true;
     }
 
     return true;
