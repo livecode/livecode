@@ -368,6 +368,33 @@ void MCKeywordsExecuteRepeatStatements(MCExecContext& ctxt, MCStatement *stateme
     }
 }
 
+void MCKeywordsExecRepeatCount(MCExecContext& ctxt, MCStatement *statements, MCExpression *endcond, uint2 line, uint2 pos)
+{
+    MCAutoValueRef t_condition;
+    
+    if (!ctxt . TryToEvaluateExpression(endcond, line, pos, EE_REPEAT_BADFORCOND, &t_condition))
+        return;
+    
+    // SN-2015-01-14: [[ Bug 14377 ]] Throw an error as it used to be done
+    integer_t t_count;
+    if (!ctxt . ConvertToInteger(*t_condition, t_count) && (MCtrace || MCnbreakpoints)
+        && !MCtrylock && !MClockerrors)
+    {
+        MCB_error(ctxt, line, pos, EE_REPEAT_BADFORCOND);
+        return;
+    }
+    
+    while(t_count > 0)
+    {
+        bool t_done;
+        MCKeywordsExecuteRepeatStatements(ctxt, statements, line, pos, t_done);
+        if (t_done)
+            break;
+        
+        t_count -= 1;
+    }
+}
+
 void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExpression *endcond, MCVarref *loopvar, File_unit each, uint2 line, uint2 pos)
 {
     MCAutoArrayRef t_array;
@@ -382,10 +409,7 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
 	uintptr_t t_iterator;
     // SN2015-06-15: [[ Bug 15457 ]] The index can be a negative index.
     index_t t_sequenced_iterator;
-    const byte_t *t_data_ptr, *t_data_end;
-    Parse_stat ps;
-    MCScriptPoint *sp = nil;
-    int4 count = 0;
+    const byte_t *t_data_ptr;
     
     MCTextChunkIterator *tci = nil;
     
@@ -394,88 +418,74 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
     
     bool t_sequence_array;
     t_sequence_array = false;
-    
-    if (loopvar != NULL)
+
+    if (each == FU_ELEMENT || each == FU_KEY)
     {
-        if (each == FU_ELEMENT || each == FU_KEY)
+        if (!ctxt . ConvertToArray(*t_condition, &t_array))
+            return;
+        
+        // SN-2015-06-15: [[ Bug 15457 ]] If this is a numerical array, do
+        //  it in order - even if it does not start at 1
+        if (each == FU_ELEMENT && MCArrayIsNumericSequence(*t_array, t_sequenced_iterator))
         {
-            if (!ctxt . ConvertToArray(*t_condition, &t_array))
+            t_sequence_array = true;
+            if (!MCArrayFetchValueAtIndex(*t_array, t_sequenced_iterator, t_value))
                 return;
-            
-            // SN-2015-06-15: [[ Bug 15457 ]] If this is a numerical array, do
-            //  it in order - even if it does not start at 1
-            if (each == FU_ELEMENT && MCArrayIsNumericSequence(*t_array, t_sequenced_iterator))
-            {
-                t_sequence_array = true;
-                if (!MCArrayFetchValueAtIndex(*t_array, t_sequenced_iterator, t_value))
-                    return;
-            }
-            else
-            {
-                t_iterator = 0;
-                if (!MCArrayIterate(*t_array, t_iterator, t_key, t_value))
-                    return;
-            }
-        }
-        else if (each == FU_BYTE)
-        {
-            if (!ctxt . ConvertToData(*t_condition, &t_data))
-                return;
-            
-            t_length = MCDataGetLength(*t_data);
-            t_data_ptr = MCDataGetBytePtr(*t_data);
         }
         else
         {
-            if (!ctxt . ConvertToString(*t_condition, &t_string))
+            t_iterator = 0;
+            if (!MCArrayIterate(*t_array, t_iterator, t_key, t_value))
                 return;
-            
-            switch (each)
-            {
-                case FU_LINE:
-                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_LINE);
-                    break;
-                case FU_PARAGRAPH:
-                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_PARAGRAPH);
-                    break;
-                case FU_SENTENCE:
-                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_SENTENCE);
-                    break;
-                case FU_ITEM:
-                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_ITEM);
-                    break;
-                case FU_WORD:
-                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_WORD);
-                    break;
-                case FU_TRUEWORD:
-                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_TRUEWORD);
-                    break;
-                case FU_TOKEN:
-                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_TOKEN);
-                    break;
-                case FU_CODEPOINT:
-                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_CODEPOINT);
-                    break;
-                case FU_CODEUNIT:
-                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_CODEUNIT);
-                    break;
-                case FU_CHARACTER:
-                default:
-                    tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_CHARACTER);
-                    break;
-            } 
         }
+    }
+    else if (each == FU_BYTE)
+    {
+        if (!ctxt . ConvertToData(*t_condition, &t_data))
+            return;
+        
+        t_length = MCDataGetLength(*t_data);
+        t_data_ptr = MCDataGetBytePtr(*t_data);
     }
     else
     {
-        // SN-2015-01-14: [[ Bug 14377 ]] Throw an error as it used to be done
-        if (!ctxt . ConvertToInteger(*t_condition, count) && (MCtrace || MCnbreakpoints)
-                && !MCtrylock && !MClockerrors)
-        {
-            MCB_error(ctxt, line, pos, EE_REPEAT_BADFORCOND);
+        if (!ctxt . ConvertToString(*t_condition, &t_string))
             return;
-        }
-        count = MCU_max(count, 0);
+        
+        switch (each)
+        {
+            case FU_LINE:
+                tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_LINE);
+                break;
+            case FU_PARAGRAPH:
+                tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_PARAGRAPH);
+                break;
+            case FU_SENTENCE:
+                tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_SENTENCE);
+                break;
+            case FU_ITEM:
+                tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_ITEM);
+                break;
+            case FU_WORD:
+                tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_WORD);
+                break;
+            case FU_TRUEWORD:
+                tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_TRUEWORD);
+                break;
+            case FU_TOKEN:
+                tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_TOKEN);
+                break;
+            case FU_CODEPOINT:
+                tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_CODEPOINT);
+                break;
+            case FU_CODEUNIT:
+                tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_CODEUNIT);
+                break;
+            case FU_CHARACTER:
+            default:
+                tci = MCStringsTextChunkIteratorCreate(ctxt, *t_string, CT_CHARACTER);
+                break;
+        } 
     }
     
     bool done;
@@ -491,83 +501,76 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
     {
         MCAutoStringRef t_unit;
         MCAutoDataRef t_byte;
-        if (loopvar != NULL)
+        switch (each)
         {
-            switch (each)
+            case FU_KEY:
             {
-                case FU_KEY:
+                loopvar -> set(ctxt, t_key);
+                if (!MCArrayIterate(*t_array, t_iterator, t_key, t_value))
+                    endnext = true;
+            }
+            break;
+                
+            case FU_ELEMENT:
+            {
+                loopvar -> set(ctxt, t_value);
+                // SN-2015-06-15: [[ Bug 15457 ]] Sequenced, numeric arrays
+                //  have their own iterator
+                if (t_sequence_array)
                 {
-                    // MW-2010-12-15: [[ Bug 9218 ]] Make a copy of the key so that it can't be mutated
-                    //   accidentally.
-                    MCNewAutoNameRef t_key_copy;
-                    MCNameClone(t_key, &t_key_copy);
-                    loopvar -> set(ctxt, *t_key_copy);
+                    if (!MCArrayFetchValueAtIndex(*t_array, ++t_sequenced_iterator, t_value))
+                        endnext = true;
+                }
+                else
+                {
                     if (!MCArrayIterate(*t_array, t_iterator, t_key, t_value))
                         endnext = true;
                 }
-                    break;
-                case FU_ELEMENT:
-                {
-                    loopvar -> set(ctxt, t_value);
-                    // SN-2015-06-15: [[ Bug 15457 ]] Sequenced, numeric arrays
-                    //  have their own iterator
-                    if (t_sequence_array)
-                    {
-                        if (!MCArrayFetchValueAtIndex(*t_array, ++t_sequenced_iterator, t_value))
-                            endnext = true;
-                    }
-                    else
-                    {
-                        if (!MCArrayIterate(*t_array, t_iterator, t_key, t_value))
-                            endnext = true;
-                    }
-                }
-                    break;
-                
-                case FU_BYTE:
-                {
-                    // SN-2014-04-14 [[ Bug 12184 ]] If we have no data at all, we don't want to start the loop
-                    if (t_length)
-                    {
-                        MCDataCreateWithBytes(t_data_ptr++, 1, &t_byte);
-                        
-                        endnext = (--t_length) == 0;
-                    }
-                    else
-                        done = true;
-                }
-                    break;
-                    
-                default:
-                {
-                    t_found = MCStringsTextChunkIteratorNext(ctxt, tci);
-                    endnext = tci -> IsExhausted();
-                    
-                    if (!t_found)
-                    {
-                        t_unit = kMCEmptyString;
-                        done = true;
-                    }
-                    else
-                        tci -> CopyString(&t_unit);
-                }
             }
-            // MW-2010-12-15: [[ Bug 9218 ]] Added KEY to the type of repeat that already
-            //   copies the value.
-            // MW-2011-02-08: [[ Bug ]] Make sure we don't use 't_unit' if the repeat type is 'key' or
-            //   'element'.
-            // Set the loop variable to whatever the value was in the last iteration.
-            if (each == FU_BYTE)
+            break;
+            
+            case FU_BYTE:
             {
-                // SN-2014-04-14 [[ Bug 12184 ]] We don't need to set anything since we are not going in the loop
-                if (!done)
-                    loopvar -> set(ctxt, *t_byte);
+                // SN-2014-04-14 [[ Bug 12184 ]] If we have no data at all, we don't want to start the loop
+                if (t_length)
+                {
+                    MCDataCreateWithBytes(t_data_ptr++, 1, &t_byte);
+                    
+                    endnext = (--t_length) == 0;
+                }
+                else
+                    done = true;
             }
-            else if (each != FU_ELEMENT && each != FU_KEY)
-                loopvar -> set(ctxt, *t_unit);
+            break;
+                
+            default:
+            {
+                t_found = MCStringsTextChunkIteratorNext(ctxt, tci);
+                endnext = tci -> IsExhausted();
+                
+                if (!t_found)
+                {
+                    t_unit = kMCEmptyString;
+                    done = true;
+                }
+                else
+                    tci -> CopyString(&t_unit);
+            }
+            break;
         }
-        else
-            done = count-- == 0;
+        // MW-2010-12-15: [[ Bug 9218 ]] Added KEY to the type of repeat that already
+        //   copies the value.
+        // MW-2011-02-08: [[ Bug ]] Make sure we don't use 't_unit' if the repeat type is 'key' or
+        //   'element'.
+        // Set the loop variable to whatever the value was in the last iteration.
+        if (each == FU_BYTE)
+        {
+            // SN-2014-04-14 [[ Bug 12184 ]] We don't need to set anything since we are not going in the loop
+            if (!done)
+                loopvar -> set(ctxt, *t_byte);
+        }
+        else if (each != FU_ELEMENT && each != FU_KEY)
+            loopvar -> set(ctxt, *t_unit);
         
         if (!done)
             MCKeywordsExecuteRepeatStatements(ctxt, statements, line, pos, done);
@@ -593,7 +596,6 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
 void MCKeywordsExecRepeatWith(MCExecContext& ctxt, MCStatement *statements, MCExpression *step, MCExpression *startcond, MCExpression *endcond, MCVarref *loopvar, real8 stepval, uint2 line, uint2 pos)
 {
     real8 endn = 0.0;
-    MCExecValue t_condition;
     
     if (step != NULL)
     {
