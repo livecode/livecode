@@ -2182,8 +2182,29 @@ command docsBuilderGenerateDistributedAPI
    local tJSON
    put revDocsFormatLibrariesArrayAsJSON(tLibrariesA) into tJSON
    
+   docsBuilderPopulateDatabase tLibrariesA
+   
    put textEncode(tJSON, "utf-8") into url ("binfile:" & builderAPIFolder() & slash & "distributed_api.js")
 end docsBuilderGenerateDistributedAPI
+
+on docsBuilderPopulateDatabase pLibrariesA
+   local tConnection
+   revDocsOpenAPIDatabase builderAPIFolder()
+   
+   put the result into tConnection
+   if tConnection is not a number then
+      builderLog "error", the result
+      exit docsBuilderPopulateDatabase
+   end if
+   
+   repeat for each key tKey in pLibrariesA
+      revDocsUpdateDatabase tConnection, pLibrariesA[tKey]
+      if the result is not empty then
+         builderLog "error", the result
+         exit docsBuilderPopulateDatabase
+      end if
+   end repeat
+end docsBuilderPopulateDatabase
 
 --- LEGACY
 
