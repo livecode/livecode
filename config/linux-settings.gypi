@@ -68,8 +68,6 @@
 					'-Wall',
 					'-Wextra',
 					'-Wno-unused-parameter',	# Just contributes build noise
-					'-Wno-return-type',
-					'-Werror=uninitialized',
 					'-Werror=return-type',
 				],
 			},
@@ -117,6 +115,7 @@
 			[
 				'-O0',
 				'-g3',
+				'-Werror=uninitialized',
 			],
 			
 			'defines':
@@ -127,19 +126,6 @@
 		
 		'Release':
 		{
-			'conditions':
-			[
-				[
-					'target_arch != "x86"',
-					{
-						'cflags': 
-						[
-							'-Wno-error=maybe-uninitialized', #warning added only with optimisation ON
-						],
-					},
-				],
-			],
-			
 			'cflags':
 			[
 				'-O3',
@@ -159,6 +145,7 @@
 			[
 				'-O0',
 				'-g0',
+				'-Werror=uninitialized',
 			],
 			
 			'defines':
