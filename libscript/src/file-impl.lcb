@@ -1,0 +1,223 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.file.__IMPL
+-- DON'T USE THIS MODULE, USE com.livecode.unittest INSTEAD
+
+constant kSeparator is "/"
+
+-- We have to use this instead of "the current directory" in order to
+-- avoid a cyclic module dependency.
+private foreign handler MCFileEvalCurrentDirectory(out Directory as String) returns nothing binds to "<builtin>"
+
+----------------------------------------------------------------
+
+/* Return true if pPath is an absolute path */
+private handler IsAbsolutePath(in pPath as String) returns Boolean
+	if pPath is empty then
+		return false
+	end if
+
+	if the operating system is not "win" then
+		return pPath begins with kSeparator
+	end if
+
+	-- On Windows only, check whether the path starts with a drive
+	-- letter, e.g. "C:/".  Drive-relative paths, e.g. "C:foo", are not
+	-- supported.
+	variable tDriveLetter as String
+	put the upper of char 1 of pPath into tDriveLetter
+	if tDriveLetter >= "A" and tDriveLetter <= "Z" and \
+			char 2 of pPath is ":" then
+
+		if char 3 of pPath is kSeparator then
+			return true
+		else
+			throw "Unsupported drive-relative Windows path: '" & pPath & "'"
+		end if
+	end if
+
+	return false
+end handler
+
+/*
+Construct a path from a list of path components, <pElements>.  Empty
+path components are ignored.  At the boundary between any two
+components, any trailing path separators in the first component and
+any leading separators in the second component are removed, and
+exactly one separator is inserted.
+*/
+private handler BuildPath(in pElements as List) returns String
+	variable tComponent as String
+	variable tResult as String
+
+	put "" into tResult
+
+	repeat for each element tComponent in pElements
+
+		if tComponent is empty then
+			next repeat
+		end if
+
+		if tResult is empty then
+			put tComponent into tResult
+			next repeat
+		end if
+
+		-- Remove all leading separators from the component
+		repeat while the first char of tComponent is kSeparator
+			delete the first char of tComponent
+		end repeat
+
+		-- Remove all but 1 trailing separator from the accumulated
+		-- result
+		repeat while the last char of tComponent is kSeparator
+			delete the last char of tComponent
+		end repeat
+
+		put kSeparator & tComponent after tResult
+
+	end repeat
+
+	return tResult
+end handler
+
+private handler SplitPathRoot(in pPath as String, out rRoot as String, \
+		out rRelative as String) returns nothing
+
+	variable tLeadingSlashes as String
+
+	if not IsAbsolutePath(pPath) then
+		throw "No root part in relative path '" & pPath & "'"
+
+	else if the operating system is not "win" then
+		-- On POSIX systems, two slashes "//" at the start of a path is
+		-- special, but three or more aren't.
+		put pPath into rRelative
+		put "" into rRoot
+
+		repeat while rRelative begins with kSeparator
+			delete char 1 of rRelative
+			put kSeparator after rRoot
+		end repeat
+
+		if the number of chars in rRoot is not 2 then
+			put kSeparator into rRoot
+		end if
+
+	else
+		-- On Windows, things are slightly more complicated.
+
+		if pPath begins with kSeparator then
+
+			if the number of chars in pPath is 1 or \
+					char 2 of pPath is not kSeparator then
+				-- If the path begins with one separator, so it's relative
+				-- to the current drive letter.
+				put kSeparator into rRoot
+				put pPath into rRelative
+				delete char 1 of rRelative
+
+			else
+				-- The path begins with two or more separators, so it must be a
+				-- UNC path.
+				variable tRootEndOffset as Number
+				put the first index of kSeparator after 2 in pPath into tRootEndOffset
+				put char 1 to tRootEndOffset of pPath into rRoot
+				put pPath into rRelative
+				delete char 1 to tRootEndOffset of rRelative
+
+			end if
+
+		else
+			-- The path *doesn't* begin with a separator, so at this
+			-- point it presumably starts with a drive letter,
+			-- e.g. "C:/".
+			put char 1 to 3 of pPath into rRoot
+			put pPath into rRelative
+			delete char 1 to 3 of rRelative
+		end if
+	end if
+end handler
+
+private handler CanonicalizePath(in pPath as String) returns String
+
+	-- First, ensure that the path is absolute
+	variable tAbsolute
+	variable tCurrentDirectory
+	if IsAbsolutePath(pPath) then
+		put pPath into tAbsolute
+	else
+		MCFileEvalCurrentDirectory(tCurrentDirectory)
+		put BuildPath([tCurrentDirectory, pPath]) into tAbsolute
+	end if
+
+	-- Split the path into a leading root part and a relative part.
+	-- The idea is to perform canonicalisation on the relative part,
+	-- then stitch the path back together.
+	variable tRoot as String
+	variable tRelative as String
+	SplitPathRoot(tAbsolute, tRoot, tRelative)
+
+	variable tRawElements as List
+	split tRelative by kSeparator into tRawElements
+
+	variable tElements as List
+	put [] into tElements
+
+	variable tComponent as String
+	repeat for each element tComponent in tRawElements
+		if tComponent is empty or tComponent is "." then
+			-- Ignore
+		else if tComponent is ".." then
+			if tElements is not empty then
+				delete the last element of tElements
+			end if
+		else
+			push tComponent onto back of tElements
+		end if
+	end repeat
+
+	variable tCanonical
+	put tRoot & BuildPath(tElements) into tCanonical
+
+	if pPath ends with kSeparator and \
+			not tCanonical ends with kSeparator then
+		put kSeparator after pPath
+	end if
+
+	return tCanonical
+end handler
+
+-- FIXME there should be version of this function that takes a
+-- specific directory against which to resolve pArgument if it's a
+-- relative directory.
+public handler MCFileEvalCommandArgumentParsedAsFile(in pArgument as String, \
+		out rFile as String)
+
+	-- Translate separator characters on Windows
+	-- FIXME prune out illegal characters on all OSes
+	if the operating system is "win" then
+		-- Translate separators
+		replace "\\" with "/" in pArgument
+	end if
+
+	-- Make the path canonical
+	put CanonicalizePath(pArgument) into rFile
+end handler
+
+end module
