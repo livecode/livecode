@@ -205,8 +205,9 @@ IO_stat MCHcstak::macreadresources(void)
 
                 MCAutoStringRef t_resname_string;
                 MCNewAutoNameRef t_resname;
-                /* UNCHECKED */ MCStringCreateWithPascalString(resname, &t_resname_string);
-                /* UNCHECKED */ MCNameCreate(*t_resname_string, &t_resname);
+                if (!MCStringCreateWithPascalString(resname, &t_resname_string)
+                    || !MCNameCreate(*t_resname_string, &t_resname))
+                    return IO_ERROR;
                 
 				HLock(hres);
 				if (rtype == 'ICON')
