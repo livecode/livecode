@@ -2270,12 +2270,14 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         else
         {
             MCAutoStringRefAsPascalString t_rname;
-            /* UNCHECKED */ t_rname.Lock(p_name);
+            if (!t_rname.Lock(p_name))
+                return false;
             rh = Get1NamedResource(rtype, *t_rname);
         }
         
         MCAutoStringRefAsPascalString t_newname;
-        /* UNCHECKED */ t_newname.Lock(p_name);
+        if (!t_newname.Lock(p_name))
+            return false;
 
         if (rh != NULL)
         {
@@ -2398,7 +2400,8 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         }
         
         ResType rtype;
-        /* UNCHECKED */ FourCharCodeFromString(p_type, 0, rtype);
+        if (!FourCharCodeFromString(p_type, 0, rtype))
+            return false;
         
         // MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
         rtype = (ResType)MCSwapInt32HostToNetwork(rtype);
@@ -2410,7 +2413,8 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         {
             // Name wasn't numerical, therefore it is a resource name
             MCAutoStringRefAsPascalString t_rsrc_name;
-            /* UNCHECKED */ t_rsrc_name.Lock(p_name);
+            if (!t_rsrc_name.Lock(p_name))
+                return false;
             rh = Get1NamedResource(rtype, *t_rsrc_name);
         }
         else
