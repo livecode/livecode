@@ -5818,6 +5818,9 @@ bool MCTextChunkIterator::next(MCExecContext& ctxt)
                 range . length = t_found_range . offset - range . offset;
                 // AL-2014-10-15: [[ Bug 13671 ]] Keep track of matched delimiter length to increment offset correctly
                 delimiter_length = t_found_range . length;
+                
+                if (t_found_range . offset + t_found_range . length == length)
+                    exhausted = true;
             }
             
         }
@@ -5838,7 +5841,12 @@ bool MCTextChunkIterator::next(MCExecContext& ctxt)
             
             // calculate the length of the paragraph
             if (t_newline_found || t_pg_found)
+            {
                 range . length = t_offset - range . offset;
+                
+                if (t_offset == length - 1)
+                    exhausted = true;
+            }
             else
             {
                 // AL-2014-03-20: [[ Bug 11945 ]] We've got a final paragraph if delimiters are not found
@@ -5871,6 +5879,10 @@ bool MCTextChunkIterator::next(MCExecContext& ctxt)
             
         case CT_CODEPOINT:
             range . length = MCStringIsValidSurrogatePair(text, range . offset) ? 2 : 1;
+            
+            if (t_offset + range.length == length)
+                exhausted = true;
+            
             return true;
             
         case CT_CODEUNIT:
