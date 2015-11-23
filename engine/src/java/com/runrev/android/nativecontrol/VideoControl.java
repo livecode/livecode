@@ -163,7 +163,15 @@ public class VideoControl extends NativeControl
         else
             m_video_view.setMediaController(null);
     }
-    
+	
+	// PM-2015-11-05: [[ Bug 16368 ]] Toggling the visibility of the android player should show/hide the controller (if any)
+	// Override setVisible() of NativeControl 
+	public void setVisible(boolean p_visible)
+	{
+		m_video_view.setControllerVisible(p_visible);
+		super.setVisible(p_visible);
+	}
+	
     public void setCurrentTime(int msec)
     {
         m_video_view.seekTo(msec);

@@ -4,19 +4,19 @@
 //    This is where the application executable/bundle will be placed:
 //      Windows: C:/Program Files/LiveCode 4.5 (dp 5)
 //      Mac OS X: /Applications
-//      Linux: /opt/runrev/livecode-4.5-dp-5
+//      Linux: /opt/livecode/livecode-4.5-dp-5
 //
 //  SupportFolder:
 //    This is where supporting (user-accessible) resources will be placed:
 //      Windows: C:/Program Files/LiveCode 4.5 (dp 5)
 //      Mac OS X: /Application/LiveCode 4.5 (dp 5).app/Contents/Support
-//      Linux: /opt/runrev/livecode-4.5-dp-5
+//      Linux: /opt/livecode/livecode-4.5-dp-5
 //
 //  ToolsFolder:
 //    This is where the toolset will be placed:
 //      Windows: C:/Program Files/LiveCode 4.5 (dp 5)
 //      Mac OS X: /Application/LiveCode 4.5 (dp 5).app/Contents/Tools
-//      Linux: /opt/runrev/livecode-4.5-dp-5
+//      Linux: /opt/livecode/livecode-4.5-dp-5
 //
 //  ProductTitle:
 //    LiveCode 4.5 (dp 5)
@@ -66,14 +66,17 @@ installer LiveCode
 		include Mobile.MacOSX
 		include Runtime.iOS
 		include Runtime.Android
+		include Runtime.Emscripten
 	if TargetPlatform is Windows then
 		include Mobile.Windows
 		include Runtime.Android
+		include Runtime.Emscripten
 		shortcut "Desktop/[[ProductTitle]]" to "[[TargetFolder]]/[[ProductName]].exe"
 		shortcut "Programs/RunRev/[[ProductTitle]]" to "[[TargetFolder]]/[[ProductName]].exe"
 	if TargetPlatform is Linux then
 		include Mobile.Linux
 		include Runtime.Android
+		include Runtime.Emscripten
 		desktop application "repo:Installer/application.desktop" as "runrev-[[ProductTag]]"
 		if TargetEdition is Community then
 			desktop icon "repo:Installer/application.png" as "runrev-[[ProductTag]]"
@@ -88,8 +91,6 @@ installer LiveCode
 		include Commercial.IndyComponents
 	if TargetEdition is Business then
 		include Commercial.BusinessComponents
-	if TargetEdition is Community then
-		include Runtime.Emscripten
 
 component Runtime
 	include Runtime.[[TargetPlatform]]
@@ -112,13 +113,13 @@ component Uninstaller
 		register key "HKLM/Software/Microsoft/Windows/CurrentVersion/Uninstall/[[ProductTitle]]"
 		with RegistryRoot as "HKLM/Software/Microsoft/Windows/CurrentVersion/Uninstall/[[ProductTitle]]" do
 			register value "DisplayIcon" as path "[[TargetFolder]]/[[ProductName]].exe"
-			register value "DisplayName" as "RunRev [[ProductTitle]]"
+			register value "DisplayName" as "[[ProductTitle]]"
 			register value "DisplayVersion" as "[[VersionTag]]"
 			register value "InstallDate" as "[[TodaysDate]]"
 			register value "InstallLocation" as path "[[TargetFolder]]"
 			register value "NoModify" as 1
 			register value "NoRepair" as 1
-			register value "Publisher" as "RunRev Ltd."
+			register value "Publisher" as "LiveCode Ltd."
 			register value "Version" as "[[VersionTag]]"
 			register value "UninstallString" as path "\q[[TargetFolder]]/.setup.exe\q uninstall"
 	if TargetPlatform is "Linux" then
@@ -538,6 +539,8 @@ component Documentation
 
 component Extensions
 	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.browser
+	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.clock
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.colorswatch
@@ -644,6 +647,9 @@ component Engine.MacOSX
 	executable macosx:revpdfprinter.bundle as "[[TargetFolder]]/Contents/MacOS/revpdfprinter.bundle"
 	executable macosx:revsecurity.dylib as "[[TargetFolder]]/Contents/MacOS/revsecurity.dylib"
 	into "[[TargetFolder]]/Contents/Frameworks/" place
+		executable macosx:Frameworks/libbrowser-cefprocess.app
+		executable "macosx:Frameworks/libbrowser-cefprocess EH.app"
+		executable "macosx:Frameworks/libbrowser-cefprocess NP.app"
 		executable macosx:Frameworks/revbrowser-cefprocess.app
 		executable "macosx:Frameworks/revbrowser-cefprocess EH.app"
 		executable "macosx:Frameworks/revbrowser-cefprocess NP.app"
@@ -688,6 +694,7 @@ component Runtime.Emscripten
 		file emscripten:standalone[[BaseEditionTagLower]]-[[VersionTag]].html
 		file emscripten:standalone[[BaseEditionTagLower]]-[[VersionTag]].html.mem
 		file emscripten:standalone[[BaseEditionTagLower]]-[[VersionTag]].js
+		file emscripten:emscripten-startup-template.livecodescript
 		rfolder emscripten:emscripten-standalone-template
 
 //////////
@@ -721,6 +728,7 @@ component Runtime.iOS
 		file ios:iphonesimulator6.1/mobile-template.plist as "Settings.plist"
 		file ios:iphonesimulator6.1/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphonesimulator6.1/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator6.1/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphonesimulator6.1/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphonesimulator6.1/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-7_1" place
@@ -735,6 +743,7 @@ component Runtime.iOS
 		file ios:iphonesimulator7.1/mobile-template.plist as "Settings.plist"
 		file ios:iphonesimulator7.1/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphonesimulator7.1/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator7.1/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphonesimulator7.1/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphonesimulator7.1/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-8_2" place
@@ -750,6 +759,7 @@ component Runtime.iOS
 		file ios:iphonesimulator8.2/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphonesimulator8.2/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
 		file ios:iphonesimulator8.2/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator8.2/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphonesimulator8.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphonesimulator8.2/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-8_4" place
@@ -765,6 +775,7 @@ component Runtime.iOS
 		file ios:iphonesimulator8.4/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphonesimulator8.4/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
 		file ios:iphonesimulator8.4/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator8.4/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphonesimulator8.4/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphonesimulator8.4/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-9_1" place
@@ -780,6 +791,7 @@ component Runtime.iOS
 		file ios:iphonesimulator9.1/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphonesimulator9.1/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
 		file ios:iphonesimulator9.1/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator9.1/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphonesimulator9.1/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphonesimulator9.1/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Device-8_2" place
@@ -800,6 +812,7 @@ component Runtime.iOS
 		file ios:iphoneos8.2/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
 		file ios:iphoneos8.2/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
 		file ios:iphoneos8.2/template-ResourceRules.plist as "ResourceRules.plist"
+		file ios:iphoneos8.2/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphoneos8.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphoneos8.2/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Device-8_4" place
@@ -820,6 +833,7 @@ component Runtime.iOS
 		file ios:iphoneos8.4/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
 		file ios:iphoneos8.4/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
 		file ios:iphoneos8.4/template-ResourceRules.plist as "ResourceRules.plist"
+		file ios:iphoneos8.4/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphoneos8.4/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphoneos8.4/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Device-9_1" place
@@ -840,6 +854,7 @@ component Runtime.iOS
 		file ios:iphoneos9.1/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
 		file ios:iphoneos9.1/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
 		file ios:iphoneos9.1/template-ResourceRules.plist as "ResourceRules.plist"
+		file ios:iphoneos9.1/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphoneos9.1/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphoneos9.1/fontmap as "fontmap"
 
@@ -893,6 +908,7 @@ component Externals.MacOSX
 component Externals.CEF.Linux
 	into [[TargetFolder]]/Externals/CEF place
 		executable linux-[[TargetArchitecture]]:revbrowser-cefprocess
+		executable linux-[[TargetArchitecture]]:libbrowser-cefprocess
 		executable linux-[[TargetArchitecture]]:CEF/libcef.so
 		executable linux-[[TargetArchitecture]]:CEF/libffmpegsumo.so
 		executable linux-[[TargetArchitecture]]:CEF/libpdf.so
@@ -904,9 +920,12 @@ component Externals.CEF.Linux
 	// Horrible workaround for a libCEF bug
 	into [[TargetFolder]] place
 		file linux-[[TargetArchitecture]]:CEF/icudtl.dat
+		executable linux-[[TargetArchitecture]]:revbrowser-cefprocess
+		executable linux-[[TargetArchitecture]]:libbrowser-cefprocess
 
 component Externals.CEF.Windows
 	into [[TargetFolder]]/Externals/CEF place
+		executable windows:libbrowser-cefprocess.exe
 		executable windows:revbrowser-cefprocess.exe
 		executable windows:CEF/libcef.dll
 		executable windows:CEF/d3dcompiler_43.dll
@@ -916,7 +935,7 @@ component Externals.CEF.Windows
 		executable windows:CEF/libEGL.dll
 		executable windows:CEF/libGLESv2.dll
 		executable windows:CEF/pdf.dll
-		file windows:CEF/locales/en-US.pak
+		rfolder windows:CEF/locales
 		file windows:CEF/cef.pak
 		file windows:CEF/cef_100_percent.pak
 		file windows:CEF/cef_200_percent.pak
@@ -924,6 +943,9 @@ component Externals.CEF.Windows
 
 component Externals.CEF.MacOSX
 	into [[TargetFolder]]/Externals/CEF place
+		executable macosx:Frameworks/libbrowser-cefprocess.app
+		executable "macosx:Frameworks/libbrowser-cefprocess EH.app"
+		executable "macosx:Frameworks/libbrowser-cefprocess NP.app"
 		executable macosx:Frameworks/revbrowser-cefprocess.app
 		executable "macosx:Frameworks/revbrowser-cefprocess EH.app"
 		executable "macosx:Frameworks/revbrowser-cefprocess NP.app"

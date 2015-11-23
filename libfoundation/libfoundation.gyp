@@ -6,6 +6,11 @@
 		[
 			'libFoundation',
 		],
+		'module_test_sources':
+		[
+			'test/environment.cpp',
+			'test/test_string.cpp',
+		],
 	},
 
 
@@ -51,7 +56,6 @@
 				'include/foundation-math.h',
 				'include/foundation-objc.h',
 				'include/foundation-stdlib.h',
-				'include/foundation-string.h',
 				'include/foundation-system.h',
 				'include/foundation-text.h',
 				'include/foundation-unicode.h',
@@ -80,7 +84,6 @@
 				'src/foundation-locale.cpp',
 				'src/foundation-math.cpp',
 				'src/foundation-name.cpp',
-				'src/foundation-nativechars.cpp',
 				'src/foundation-number.cpp',
 				'src/foundation-pickle.cpp',
 				'src/foundation-proper-list.cpp',
@@ -89,6 +92,7 @@
 				'src/foundation-stream.cpp',
 				'src/foundation-string.cpp',
 				'src/foundation-string-cf.cpp',
+                'src/foundation-string-native.cpp.h',
 				'src/foundation-text.cpp',
 				'src/foundation-typeconvert.cpp',
 				'src/foundation-typeinfo.cpp',

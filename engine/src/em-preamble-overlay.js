@@ -100,6 +100,7 @@ Module['preRun'].push(function() {
 	overlay.style.position = 'absolute';
 	overlay.style.right = '1px';
 	overlay.style.bottom = '1px';
+	overlay.style.color = '#000000';
 	overlay.style.backgroundColor = '#FFFFFF';
 	overlay.style.border = '1px solid #AED036';
 	overlay.style.borderRadius = '5px';

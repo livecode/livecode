@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2015 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -62,7 +62,8 @@ enum MCBrowserProperty
 {
 //	kMCBrowserRect,
 	// Boolean properties
-	kMCBrowserScrollbars,
+	kMCBrowserVerticalScrollbarEnabled,
+	kMCBrowserHorizontalScrollbarEnabled,
 	kMCBrowserAllowNewWindows,
 	kMCBrowserEnableContextMenu,
 	
@@ -137,11 +138,13 @@ typedef bool (*MCBrowserAllocator)(size_t p_size, void *&r_mem);
 typedef void (*MCBrowserDeallocator)(void *p_mem);
 typedef bool (*MCBrowserReallocator)(void *p_mem, size_t p_new_size, void *&r_new_mem);
 typedef bool (*MCBrowserWaitFunction)(void);
+typedef void (*MCBrowserBreakWaitFunction)(void);
 	
 MC_DLLEXPORT void MCBrowserLibrarySetAllocator(MCBrowserAllocator p_alloc);
 MC_DLLEXPORT void MCBrowserLibrarySetDeallocator(MCBrowserDeallocator p_dealloc);
 MC_DLLEXPORT void MCBrowserLibrarySetReallocator(MCBrowserReallocator p_realloc);
 MC_DLLEXPORT void MCBrowserLibrarySetWaitFunction(MCBrowserWaitFunction p_wait);
+MC_DLLEXPORT void MCBrowserLibrarySetBreakWaitFunction(MCBrowserBreakWaitFunction p_breakwait);
 
 typedef void (*MCBrowserRunloopCallback)(void *p_context);
 	

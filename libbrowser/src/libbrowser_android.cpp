@@ -21,13 +21,19 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#define LIBBROWSER_DUMMY_URL "http://libbrowser_dummy_url/"
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCAndroidWebViewBrowserFactoryCreate(MCBrowserFactoryRef &r_factory);
 
-MCBrowserFactoryMap s_factory_list[] =
+MCBrowserFactoryMap kMCBrowserFactoryMap[] =
 {
 	{ "androidwebview", nil, MCAndroidWebViewBrowserFactoryCreate },
 	{ nil, nil, nil },
 };
+
+MCBrowserFactoryMap* s_factory_list = kMCBrowserFactoryMap;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -606,8 +612,11 @@ public:
 	{
 		switch (p_property)
 		{
-			case kMCBrowserScrollbars:
-				return GetScrollbarsEnabled(r_value);
+			case kMCBrowserVerticalScrollbarEnabled:
+				return GetVerticalScrollbarEnabled(r_value);
+				
+			case kMCBrowserHorizontalScrollbarEnabled:
+				return GetHorizontalScrollbarEnabled(r_value);
 			
 			default:
 				break;
@@ -620,9 +629,12 @@ public:
 	{
 		switch (p_property)
 		{
-			case kMCBrowserScrollbars:
-				return SetScrollbarsEnabled(p_value);
+			case kMCBrowserVerticalScrollbarEnabled:
+				return SetVerticalScrollbarEnabled(p_value);
 			
+			case kMCBrowserHorizontalScrollbarEnabled:
+				return SetHorizontalScrollbarEnabled(p_value);
+				
 			default:
 				break;
 		}
@@ -643,6 +655,9 @@ public:
 			case kMCBrowserJavaScriptHandlers:
 				return GetJavaScriptHandlers(r_utf8_string);
 				
+			case kMCBrowserHTMLText:
+				return GetHTMLText(r_utf8_string);
+				
 			default:
 				break;
 		}
@@ -659,6 +674,9 @@ public:
 			
 			case kMCBrowserJavaScriptHandlers:
 				return SetJavaScriptHandlers(p_utf8_string);
+				
+			case kMCBrowserHTMLText:
+				return SetHTMLText(p_utf8_string);
 				
 			default:
 				break;
@@ -723,21 +741,35 @@ public:
 			MCCStringFree(m_js_tag);
 			m_js_tag = nil;
 			/* UNCHECKED */ MCCStringClone(p_result, m_js_result);
+			
+			MCBrowserRunloopBreakWait();
 		}
 	}
 	
 	//////////
 	
 private:
-	bool GetScrollbarsEnabled(bool &r_value)
+	bool GetVerticalScrollbarEnabled(bool &r_value)
 	{
-		MCAndroidObjectRemoteCall(m_view, "getScrollingEnabled", "b", &r_value);
+		MCAndroidObjectRemoteCall(m_view, "getVerticalScrollbarEnabled", "b", &r_value);
 		return true;
 	}
 	
-	bool SetScrollbarsEnabled(bool p_value)
+	bool SetVerticalScrollbarEnabled(bool p_value)
 	{
-		MCAndroidObjectRemoteCall(m_view, "setScrollingEnabled", "vb", nil, p_value);
+		MCAndroidObjectRemoteCall(m_view, "setVerticalScrollbarEnabled", "vb", nil, p_value);
+		return true;
+	}
+	
+	bool GetHorizontalScrollbarEnabled(bool &r_value)
+	{
+		MCAndroidObjectRemoteCall(m_view, "getHorizontalScrollbarEnabled", "b", &r_value);
+		return true;
+	}
+	
+	bool SetHorizontalScrollbarEnabled(bool p_value)
+	{
+		MCAndroidObjectRemoteCall(m_view, "setHorizontalScrollbarEnabled", "vb", nil, p_value);
 		return true;
 	}
 	
@@ -748,9 +780,20 @@ private:
 		
 		MCAndroidObjectRemoteCall(m_view, "getUrl", "s", &t_url);
 		if (t_url == nil)
-			return false;
+			return MCCStringClone("", r_utf8_string);
 			
 		r_utf8_string = t_url;
+		return true;
+	}
+	
+	bool GetHTMLText(char *&r_htmltext)
+	{
+		return EvaluateJavaScript("document.documentElement.outerHTML", r_htmltext);
+	}
+	
+	bool SetHTMLText(const char *p_utf8_string)
+	{
+		MCAndroidObjectRemoteCall(m_view, "loadHtml", "vss", nil, LIBBROWSER_DUMMY_URL, p_utf8_string);
 		return true;
 	}
 	
@@ -875,11 +918,14 @@ JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doSta
     t_url = nil;
     /* UNCHECKED */ MCBrowserJavaStringToUtf8String(env, url, t_url);
     
-	MCBrowser *t_browser;
-	if (MCBrowserFindWithJavaView(env, object, t_browser))
+	if (!MCCStringBeginsWith(t_url, LIBBROWSER_DUMMY_URL))
 	{
-		((MCAndroidWebViewBrowser*)t_browser)->OnNavigationBegin(false, t_url);
-		((MCAndroidWebViewBrowser*)t_browser)->OnDocumentLoadBegin(false, t_url);
+		MCBrowser *t_browser;
+		if (MCBrowserFindWithJavaView(env, object, t_browser))
+		{
+			((MCAndroidWebViewBrowser*)t_browser)->OnNavigationBegin(false, t_url);
+			((MCAndroidWebViewBrowser*)t_browser)->OnDocumentLoadBegin(false, t_url);
+		}
 	}
 
 	MCCStringFree(t_url);
@@ -892,11 +938,14 @@ JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doFin
     t_url = nil;
     /* UNCHECKED */ MCBrowserJavaStringToUtf8String(env, url, t_url);
     
-	MCBrowser *t_browser;
-	if (MCBrowserFindWithJavaView(env, object, t_browser))
+	if (!MCCStringBeginsWith(t_url, LIBBROWSER_DUMMY_URL))
 	{
-		((MCAndroidWebViewBrowser*)t_browser)->OnDocumentLoadComplete(false, t_url);
-		((MCAndroidWebViewBrowser*)t_browser)->OnNavigationComplete(false, t_url);
+		MCBrowser *t_browser;
+		if (MCBrowserFindWithJavaView(env, object, t_browser))
+		{
+			((MCAndroidWebViewBrowser*)t_browser)->OnDocumentLoadComplete(false, t_url);
+			((MCAndroidWebViewBrowser*)t_browser)->OnNavigationComplete(false, t_url);
+		}
 	}
 
 	MCCStringFree(t_url);
@@ -913,11 +962,14 @@ JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doLoa
     t_error = nil;
     /* UNCHECKED */ MCBrowserJavaStringToUtf8String(env, error, t_error);
     
-	MCBrowser *t_browser;
-	if (MCBrowserFindWithJavaView(env, object, t_browser))
+	if (!MCCStringBeginsWith(t_url, LIBBROWSER_DUMMY_URL))
 	{
-		((MCAndroidWebViewBrowser*)t_browser)->OnDocumentLoadFailed(false, t_url, t_error);
-		((MCAndroidWebViewBrowser*)t_browser)->OnNavigationFailed(false, t_url, t_error);
+		MCBrowser *t_browser;
+		if (MCBrowserFindWithJavaView(env, object, t_browser))
+		{
+			((MCAndroidWebViewBrowser*)t_browser)->OnDocumentLoadFailed(false, t_url, t_error);
+			((MCAndroidWebViewBrowser*)t_browser)->OnNavigationFailed(false, t_url, t_error);
+		}
 	}
 
 	MCCStringFree(t_url);

@@ -1557,7 +1557,7 @@ void MCStringsEvalBeginsWith(MCExecContext& ctxt, MCStringRef p_whole, MCStringR
     
     bool t_found;
     uindex_t t_self_length;
-    t_found = MCStringSharedPrefix(p_whole, MCRangeMake(0, MCStringGetLength(p_whole)), p_part, t_compare_option, t_self_length);
+    t_found = MCStringBeginsWith(p_whole, p_part, t_compare_option, &t_self_length);
     if (!t_found)
     {
         r_result = false;
@@ -1576,7 +1576,7 @@ void MCStringsEvalEndsWith(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef
     
     bool t_found;
     uindex_t t_self_length;
-    t_found = MCStringSharedSuffix(p_whole, MCRangeMake(0, MCStringGetLength(p_whole)), p_part, t_compare_option, t_self_length);
+    t_found = MCStringEndsWith(p_whole, p_part, t_compare_option, &t_self_length);
     if (!t_found)
     {
         r_result = false;
@@ -1736,7 +1736,12 @@ void MCStringsEvalIsNotAmongTheBytesOf(MCExecContext& ctxt, MCDataRef p_chunk, M
 
 ////////////////////////////////////////////////////////////////////////////////
 
-uindex_t MCStringsChunkOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, Chunk_term p_chunk_type)
+static uindex_t
+__MCStringsEvalChunkOffset(MCExecContext& ctxt,
+                           MCStringRef p_chunk,
+                           MCStringRef p_string,
+                           uindex_t p_start_offset,
+                           Chunk_term p_chunk_type)
 {
     MCChunkType t_type;
     t_type = MCChunkTypeFromChunkTerm(p_chunk_type);
@@ -1750,49 +1755,118 @@ uindex_t MCStringsChunkOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCString
     return t_offset;
 }
 
+// This function implements the semantics of the (line|item)Offset functions.
+//
+// If needle is empty, then the result is 0.
+//
+// First, <start_offset> delimiters are skipped - resulting in the result of the
+// operation occuring on haystack starting at the first character after the last
+// skipped delimiter.
+//
+// If needle is not in the revised haystack, then the result is 0.
+//
+// If wholeMatches is false, then the result is the number of delimiters between
+// the start of the revised haystack and the first occurrence of needle.
+//
+// If wholeMatches is true, then if either side of the found needle is bos, eos
+// or delimiter, the result is the same as for wholeMatches false; otherwise, the
+// result is 0.
+//
+static void
+__MCStringEvalDelimitedChunkOffset(MCExecContext& ctxt,
+                                   MCStringRef p_needle,
+                                   MCStringRef p_haystack,
+                                   MCStringRef p_delimiter,
+                                   uindex_t p_start_offset,
+                                   uindex_t& r_result)
+{
+    MCRange t_found, t_before, t_after;
+    uindex_t t_index;
+    bool t_present;
+    
+    t_present = MCStringDelimitedOffset(p_haystack,
+                                        MCRangeMake(0, MCStringGetLength(p_haystack)),
+                                        p_needle,
+                                        p_delimiter,
+                                        p_start_offset,
+                                        ctxt . GetStringComparisonType(),
+                                        t_index,
+                                        ctxt . GetWholeMatches() ? &t_found : nil,
+                                        ctxt . GetWholeMatches() ? &t_before : nil,
+                                        ctxt . GetWholeMatches() ? &t_after : nil);
+    
+    if (!t_present)
+    {
+        r_result = 0;
+        return;
+    }
+    
+    if (ctxt . GetWholeMatches())
+    {
+        if (t_found . offset != t_before . offset + t_before . length ||
+            t_found . offset + t_found . length != t_after . offset)
+        {
+            r_result = 0;
+            return;
+        }
+    }
+    
+    r_result = t_index - p_start_offset + 1;
+}
+
 void MCStringsEvalLineOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
-    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_LINE);
+    __MCStringEvalDelimitedChunkOffset(ctxt,
+                                       p_chunk,
+                                       p_string,
+                                       ctxt . GetLineDelimiter(),
+                                       p_start_offset,
+                                       r_result);
 }
 
 void MCStringsEvalParagraphOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
-    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_PARAGRAPH);
+    r_result = __MCStringsEvalChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_PARAGRAPH);
 }
 
 void MCStringsEvalSentenceOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
-    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_SENTENCE);
+    r_result = __MCStringsEvalChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_SENTENCE);
 }
 
 void MCStringsEvalItemOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
-    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_ITEM);
+    __MCStringEvalDelimitedChunkOffset(ctxt,
+                                       p_chunk,
+                                       p_string,
+                                       ctxt . GetItemDelimiter(),
+                                       p_start_offset,
+                                       r_result);
 }
 
 void MCStringsEvalWordOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
-    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_WORD);
+    r_result = __MCStringsEvalChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_WORD);
 }
 
 void MCStringsEvalTrueWordOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
-    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_TRUEWORD);
+    r_result = __MCStringsEvalChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_TRUEWORD);
 }
 
 void MCStringsEvalTokenOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
-    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_TOKEN);
+    r_result = __MCStringsEvalChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_TOKEN);
 }
 
 void MCStringsEvalCodepointOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
-    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_CODEPOINT);
+    r_result = __MCStringsEvalChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_CODEPOINT);
 }
 
 void MCStringsEvalCodeunitOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
-    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_CODEUNIT);
+    r_result = __MCStringsEvalChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_CODEUNIT);
 }
 
 void MCStringsEvalByteOffset(MCExecContext& ctxt, MCDataRef p_chunk, MCDataRef p_string, uindex_t p_start_offset, uindex_t& r_result)

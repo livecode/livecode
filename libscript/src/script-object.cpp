@@ -233,7 +233,8 @@ bool MCScriptInitialize(void)
         MCMemoryOutputStreamFinish(t_stream, t_buffer, t_size);
         MCValueRelease(t_stream);
         
-        MCMemoryInputStreamCreate(t_buffer, t_size, t_stream);
+		if (!MCMemoryInputStreamCreate(t_buffer, t_size, t_stream))
+			return false;
         if (!MCScriptCreateModuleFromStream(t_stream, s_builtin_module))
             return false;
         

@@ -55,13 +55,12 @@
 
 
 MCNativeLayerX11::MCNativeLayerX11(MCWidgetRef p_widget, x11::Window p_view) :
-  m_widget(p_widget),
   m_child_window(NULL),
   m_input_shape(NULL),
   m_socket(NULL),
   m_widget_xid(p_view)
 {
-    
+	m_widget = p_widget;
 }
 
 MCNativeLayerX11::~MCNativeLayerX11()
@@ -83,7 +82,7 @@ MCNativeLayerX11::~MCNativeLayerX11()
 void MCNativeLayerX11::OnToolChanged(Tool p_new_tool)
 {
     updateInputShape();
-    OnVisibilityChanged(ShouldShowWidget(MCWidgetGetHost(m_widget)));
+	MCNativeLayer::OnToolChanged(p_new_tool);
 }
 
 void MCNativeLayerX11::updateInputShape()
@@ -96,29 +95,6 @@ void MCNativeLayerX11::updateInputShape()
     else
         // In run mode. Unset the input event mask
         gdk_window_input_shape_combine_region(gtk_widget_get_window(GTK_WIDGET(m_child_window)), NULL, 0, 0);
-}
-
-void MCNativeLayerX11::OnOpen()
-{
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
-    // Unhide the widget, if required
-    if (isAttached() && t_widget->getopened() == 1)
-        doAttach();
-}
-
-void MCNativeLayerX11::OnClose()
-{
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
-    if (isAttached() && t_widget->getopened() == 0)
-        doDetach();
-}
-
-void MCNativeLayerX11::OnAttach()
-{
-    m_attached = true;
-    doAttach();
 }
 
 void MCNativeLayerX11::doAttach()
@@ -160,13 +136,7 @@ void MCNativeLayerX11::doAttach()
     // Act as if there were a re-layer to put the widget in the right place
     doRelayer();
     
-    OnVisibilityChanged(ShouldShowWidget(t_widget));
-}
-
-void MCNativeLayerX11::OnDetach()
-{
-    m_attached = false;
-    doDetach();
+    doSetVisible(ShouldShowWidget(t_widget));
 }
 
 void MCNativeLayerX11::doDetach()
@@ -175,43 +145,47 @@ void MCNativeLayerX11::doDetach()
     gtk_widget_hide(GTK_WIDGET(m_child_window));
 }
 
-void MCNativeLayerX11::OnPaint(MCGContextRef)
+// We can't get a snapshot of X11 windows so override this to return false
+bool MCNativeLayerX11::GetCanRenderToContext()
 {
-    // Do nothing. Painting is handled entirely by X11.
+	return false;
 }
 
-void MCNativeLayerX11::OnGeometryChanged(const MCRectangle& p_old_rect)
+bool MCNativeLayerX11::doPaint(MCGContextRef p_context)
+{
+    return false;
+}
+
+void MCNativeLayerX11::doSetGeometry(const MCRectangle& p_rect)
 {
     MCWidget* t_widget = MCWidgetGetHost(m_widget);
     
     // Move the overlay window first, to ensure events don't get stolen
-    MCRectangle t_rect;
-    t_rect = t_widget->getrect();
 
     // Clear any minimum size parameters for the GTK widgets
     gtk_widget_set_size_request(GTK_WIDGET(m_socket), -1, -1);
     gtk_widget_set_size_request(GTK_WIDGET(m_child_window), -1, -1);
     
     // Resize by adjusting the widget's containing GtkWindow
-    gdk_window_move_resize(gtk_widget_get_window(GTK_WIDGET(m_child_window)), t_rect.x, t_rect.y, t_rect.width, t_rect.height);
+    gdk_window_move_resize(gtk_widget_get_window(GTK_WIDGET(m_child_window)), p_rect.x, p_rect.y, p_rect.width, p_rect.height);
     
     // Resize the socket
-    gdk_window_move_resize(gtk_widget_get_window(GTK_WIDGET(m_socket)), 0, 0, t_rect.width, t_rect.height);
+    gdk_window_move_resize(gtk_widget_get_window(GTK_WIDGET(m_socket)), 0, 0, p_rect.width, p_rect.height);
     
     // We need to set the requested minimum size in order to get in-process GTK
     // widgets to re-size automatically. Unfortunately, that is the only widget
     // category that this works for... others need to do it themselves.
-    gtk_widget_set_size_request(GTK_WIDGET(m_child_window), t_rect.width, t_rect.height);
-    gtk_widget_set_size_request(GTK_WIDGET(m_socket), t_rect.width, t_rect.height);
+    gtk_widget_set_size_request(GTK_WIDGET(m_child_window), p_rect.width, p_rect.height);
+    gtk_widget_set_size_request(GTK_WIDGET(m_socket), p_rect.width, p_rect.height);
     
     // Update the contained window too
     GdkWindow* t_remote;
     t_remote = gtk_socket_get_plug_window(m_socket);
     if (t_remote != NULL)
-        gdk_window_move_resize(t_remote, 0, 0, t_rect.width, t_rect.height);
+        gdk_window_move_resize(t_remote, 0, 0, p_rect.width, p_rect.height);
 }
 
-void MCNativeLayerX11::OnVisibilityChanged(bool p_visible)
+void MCNativeLayerX11::doSetVisible(bool p_visible)
 {
     if (p_visible)
         gtk_widget_show(GTK_WIDGET(m_child_window));
@@ -219,12 +193,7 @@ void MCNativeLayerX11::OnVisibilityChanged(bool p_visible)
         gtk_widget_hide(GTK_WIDGET(m_child_window));
 
 	if (p_visible)
-		OnGeometryChanged(MCRectangleMake(0,0,0,0));
-}
-
-void MCNativeLayerX11::OnLayerChanged()
-{
-    doRelayer();
+		doSetGeometry(MCWidgetGetHost(m_widget)->getrect());
 }
 
 void MCNativeLayerX11::doRelayer()
@@ -258,7 +227,7 @@ void MCNativeLayerX11::doRelayer()
     }
     
     // Make the widget visible, if appropriate
-    OnVisibilityChanged(ShouldShowWidget(t_widget));
+    doSetVisible(ShouldShowWidget(t_widget));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

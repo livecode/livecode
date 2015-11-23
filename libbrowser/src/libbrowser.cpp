@@ -206,8 +206,8 @@ bool MCBrowserFactoryEnsureAvailable(MCBrowserFactoryMap &p_map, MCBrowserFactor
 
 bool MCBrowserFactoryGet(const char *p_factory, MCBrowserFactoryRef &r_factory)
 {
-	if (s_factory_list == nil)
-		return false; // no browser factories available;
+    if (s_factory_list == nil)
+        return false; // no browser factories available;
 	
 	if (p_factory == nil || MCCStringIsEmpty(p_factory) || MCCStringEqualCaseless(p_factory, "default"))
 	{
@@ -475,6 +475,13 @@ extern "C" void MCBrowserLibrarySetWaitFunction(MCBrowserWaitFunction p_wait)
 	s_browser_wait_func = p_wait;
 }
 
+static MCBrowserBreakWaitFunction s_browser_breakwait_func = nil;
+
+extern "C" void MCBrowserLibrarySetBreakWaitFunction(MCBrowserBreakWaitFunction p_breakwait)
+{
+	s_browser_breakwait_func = p_breakwait;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 struct MCBrowserRunloopAction
@@ -611,6 +618,13 @@ bool MCBrowserRunloopWait()
 		return s_browser_wait_func();
 	
 	return true;
+}
+
+void MCBrowserRunloopBreakWait()
+{
+	MCLog("break wait", nil);
+	if (s_browser_breakwait_func)
+		s_browser_breakwait_func();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -463,7 +463,7 @@ bool CreateNSURLAuthenticationChallenge(bool p_is_proxy, const CefString &p_url,
 	return t_success;
 }
 
-@interface MCCefBrowserAuthDialogCallback : NSObject
+@interface com_livecode_libbrowser_MCCefBrowserAuthDialogCallback : NSObject
 {
 	CefString user;
 	CefString password;
@@ -479,7 +479,7 @@ bool CreateNSURLAuthenticationChallenge(bool p_is_proxy, const CefString &p_url,
 
 @end
 
-@implementation MCCefBrowserAuthDialogCallback
+@implementation com_livecode_libbrowser_MCCefBrowserAuthDialogCallback
 
 @synthesize user;
 @synthesize password;
@@ -518,11 +518,11 @@ bool MCCefBrowserOSX::PlatformGetAuthCredentials(bool p_is_proxy, const CefStrin
 	if (t_success)
 		t_success = CreateNSURLAuthenticationChallenge(p_is_proxy, p_url, p_realm, p_auth_scheme, t_challenge);
 	
-	MCCefBrowserAuthDialogCallback* t_callback;
+	com_livecode_libbrowser_MCCefBrowserAuthDialogCallback* t_callback;
 	t_callback = nil;
 	
 	if (t_success)
-		t_success = nil != (t_callback = [[ MCCefBrowserAuthDialogCallback alloc] init]);
+		t_success = nil != (t_callback = [[ com_livecode_libbrowser_MCCefBrowserAuthDialogCallback alloc] init]);
 	
 	if (t_success)
 	{

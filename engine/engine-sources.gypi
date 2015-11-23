@@ -507,33 +507,33 @@
 			
 			# Group "Text"
 			'src/text.h',
-			'src/text-api.h',
-			'src/text-block.h',
-			'src/text-breakblock.h',
-			'src/text-breakingengine.h',
-			'src/text-cell.h',
-			'src/text-controlblock.h',
-			'src/text-imageblock.h',
-			'src/text-line.h',
-			'src/text-pane.h',
-			'src/text-paragraph.h',
-			'src/text-run.h',
-			'src/text-segment.h',
-			'src/text-simplebreakingengine.h',
+			#'src/text-api.h',
+			#'src/text-block.h',
+			#'src/text-breakblock.h',
+			#'src/text-breakingengine.h',
+			#'src/text-cell.h',
+			#'src/text-controlblock.h',
+			#'src/text-imageblock.h',
+			#'src/text-line.h',
+			#'src/text-pane.h',
+			#'src/text-paragraph.h',
+			#'src/text-run.h',
+			#'src/text-segment.h',
+			#'src/text-simplebreakingengine.h',
 			'src/text.cpp',
-			'src/text-api.cpp',
-			'src/text-block.cpp',
-			'src/text-breakblock.cpp',
-			'src/text-breakingengine.cpp',
-			'src/text-cell.cpp',
-			'src/text-controlblock.cpp',
-			'src/text-imageblock.cpp',
-			'src/text-line.cpp',
-			'src/text-pane.cpp',
-			'src/text-paragraph.cpp',
-			'src/text-run.cpp',
-			'src/text-segment.cpp',
-			'src/text-simplebreakingengine.cpp',
+			#'src/text-api.cpp',
+			#'src/text-block.cpp',
+			#'src/text-breakblock.cpp',
+			#'src/text-breakingengine.cpp',
+			#'src/text-cell.cpp',
+			#'src/text-controlblock.cpp',
+			#'src/text-imageblock.cpp',
+			#'src/text-line.cpp',
+			#'src/text-pane.cpp',
+			#'src/text-paragraph.cpp',
+			#'src/text-run.cpp',
+			#'src/text-segment.cpp',
+			#'src/text-simplebreakingengine.cpp',
 			
 			# Group "Desktop"
 			'src/quicktime.cpp',
@@ -564,6 +564,7 @@
 			'src/socket_resolve.cpp',
 
 			'src/clipboard.h',
+			'src/em-clipboard.h',
 			'src/lnx-clipboard.h',
 			'src/mac-clipboard.h',
 			'src/mblandroid-clipboard.h',
@@ -571,6 +572,7 @@
 			'src/raw-clipboard.h',
 			'src/w32-clipboard.h',
 			'src/clipboard.cpp',
+			'src/em-clipboard.cpp',
 			'src/lnx-clipboard.cpp',
 			'src/mac-clipboard.mm',
 			'src/mblandroid-clipboard.cpp',
@@ -689,11 +691,11 @@
 			'src/osxfield.cpp',
 			'src/osxfiles.cpp',
 			'src/osximage.cpp',
-			'src/osxmisc.cpp',
+			'src/osxmisc.mm',
 			'src/osxprinter.cpp',
 			'src/osxstack.cpp',
 			'src/osxtextlayout.cpp',
-			'src/osxtheme.cpp',
+			'src/osxtheme.mm',
 			
 			# Group "Desktop - Windows"
 			'src/w32compat.h',
@@ -819,7 +821,7 @@
 			'src/internal.cpp',
 			'src/mode_installer.cpp',
 			'src/mode_installer_lnx.cpp',
-			'src/mode_installer_osx.cpp',
+			'src/mode_installer_osx.mm',
 			'src/mode_installer_w32.cpp',
 		],
 		
@@ -963,6 +965,13 @@
 		'engine_other_lcb_files':
 		[
 			'src/browser.lcb',
+		],
+
+		# Engine cpptest source files
+		'engine_test_source_files':
+		[
+			'test/test_lextable.cpp',
+			'test/test_new.cpp',
 		],
 	},
 	
@@ -1127,6 +1136,15 @@
 					],
 				},
 			],
+            [
+                'OS == "mac" and target_sdk=="macosx10.6"',
+                {
+                    'sources!':
+                    [
+                        'src/mac-av-player.mm',
+                    ],
+                },
+            ],
 			[
 				'OS != "mac" and OS != "ios"',
 				{

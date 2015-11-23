@@ -3,7 +3,7 @@
 Each distinct version has its own complete folder – multiple versions will no longer install side-by-side: on Windows (and Linux), each distinct version will gain its own start menu (application menu) entry; on Mac, each distinct version will have its own app bundle.
 The default location for the install on the different platforms when installing for 'all users' are:
 *Windows: <x86 program files folder>/RunRev/LiveCode <version>
-*Linux: /opt/runrev/livecode-<version>
+*Linux: /opt/livecode/livecode-<version>
 *Mac: /Applications/LiveCode <version>.app
 The default location for the install on the different platforms when installing for 'this user' are:
 *Windows: <user roaming app data folder>/RunRev/Components/LiveCode <version>
@@ -16,7 +16,7 @@ On Mac, simply drag the app bundle to the Trash.
 On Linux, the situation is currently less than ideal:
 *open a terminal
 **cd* to the folder containing your LiveCode install. e.g.
-	`cd /opt/runrev/livecode-<version>`
+	`cd /opt/livecode/livecode-<version>`
 *execute the *.setup.x86* file. i.e.
 	`./.setup.x86`
 *follow the on-screen instructions.

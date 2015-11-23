@@ -22,7 +22,7 @@
 
 				'../thirdparty/libgif/libgif.gyp:libgif',
 				'../thirdparty/libjpeg/libjpeg.gyp:libjpeg',
-				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl',
+				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl_stubs',
 				'../thirdparty/libpcre/libpcre.gyp:libpcre',
 				'../thirdparty/libpng/libpng.gyp:libpng',
 				'../thirdparty/libz/libz.gyp:libz',
@@ -55,6 +55,13 @@
 						'include_dirs':
 						[
 							'../thirdparty/headers/linux/include/cairo',
+						],
+						
+						'defines':
+                        [
+                            # We use some features that are behind config macros in old versions of Pango
+                            'PANGO_ENABLE_BACKEND',
+                            'PANGO_ENABLE_ENGINE',
 						],
 					},
 				],
@@ -106,6 +113,18 @@
 						],
 					},
 				],
+				[
+					'OS == "mac"',
+					{
+						'defines':
+						[
+							# We want to use the new prototypes for the Objective-C
+							# dispatch methods as it helps catch certain errors at
+							# compile time rather than run time.
+							'OBJC_OLD_DISPATCH_PROTOTYPES=0',
+						],
+					},
+				],
 			],
 			
 			'link_settings':
@@ -124,16 +143,6 @@
 								'$(SDKROOT)/System/Library/Frameworks/Security.framework',
 								'$(SDKROOT)/System/Library/Frameworks/SystemConfiguration.framework',
 							],
-							
-							# Adding AVFoundation in the list of libraries does not allow
-							# us to weak link it. Only adding the linking flag does the job
-							'xcode_settings':
-							{
-								'OTHER_LDFLAGS':
-								[
-									'-weak_framework AVFoundation',
-								]
-							},
 						},
 					],
 					[
@@ -149,6 +158,30 @@
 							],
 						},
 					],
+					[
+						'OS == "mac" and target_sdk != "macosx10.6"',
+                        {
+							# Adding AVFoundation in the list of libraries does not allow
+							# us to weak link it. Only adding the linking flag does the job
+							'xcode_settings':
+							{
+								'OTHER_LDFLAGS':
+								[
+                                    '-weak_framework AVFoundation',
+								]
+							},
+                        },
+                    ],
+                    [
+                        'OS == "mac" and target_sdk == "macosx10.6"',
+                        {
+                            'libraries!':
+                            [
+                                '$(SDKROOT)/System/Library/Frameworks/AVFoundation.framework',
+                                '$(SDKROOT)/System/Library/Frameworks/CoreMedia.framework',
+                            ],
+                        },
+                    ],
 					[
 						'OS == "ios"',
 						{

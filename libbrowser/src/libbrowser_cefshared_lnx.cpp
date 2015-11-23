@@ -22,6 +22,11 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+const char *MCCefPlatformGetExecutableFolder(void);
+const char *MCCefPlatformGetCefFolder();
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCCefLinuxAppendPath(const char *p_base, const char *p_path, char *&r_path)
 {
 	if (p_base == nil)
@@ -30,6 +35,46 @@ bool MCCefLinuxAppendPath(const char *p_base, const char *p_path, char *&r_path)
 		return MCCStringFormat(r_path, "%s%s", p_base, p_path);
 	else
 		return MCCStringFormat(r_path, "%s/%s", p_base, p_path);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+const char *MCCefPlatformGetResourcesDirPath(void)
+{
+    return MCCefPlatformGetCefFolder();
+}
+
+// IM-2014-10-03: [[ revBrowserCEF ]] locales located in CEF subfolder relative to revbrowser external
+const char *MCCefPlatformGetLocalePath(void)
+{
+	static char *s_locale_path = nil;
+
+	if (s_locale_path == nil)
+		/* UNCHECKED */ MCCefLinuxAppendPath(MCCefPlatformGetCefFolder(), "locales", s_locale_path);
+
+	return s_locale_path;
+}
+
+// IM-2015-10-16: [[ BrowserWidget ]] relocate subprocess exe next to application exe so hardcoded "icudtl.dat" file can be shared.
+const char *MCCefPlatformGetSubProcessName(void)
+{
+	static char *s_exe_path = nil;
+
+	if (s_exe_path == nil)
+		/* UNCHECKED */ MCCefLinuxAppendPath(MCCefPlatformGetExecutableFolder(), "libbrowser-cefprocess", s_exe_path);
+
+	return s_exe_path;
+}
+
+// IM-2014-10-03: [[ revBrowserCEF ]] libcef library located in CEF subfolder relative to revbrowser external
+const char *MCCefPlatformGetCefLibraryPath(void)
+{
+	static char *s_lib_path = nil;
+
+	if (s_lib_path == nil)
+		/* UNCHECKED */ MCCefLinuxAppendPath(MCCefPlatformGetCefFolder(), "libcef.so", s_lib_path);
+
+	return s_lib_path;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -80,58 +125,37 @@ static bool get_link_path(const char *p_link, char *&r_path)
 		t_buffer[t_link_size] = '\0';
 		r_path = t_buffer;
 	}
-	else if (t_buffer != NULL)
+	else
 		MCBrowserMemoryDeallocate(t_buffer);
 	
 	return t_success;
 }
 
-bool MCCefLinuxGetExecutablePath(char *&r_path)
+static bool get_exe_path_from_proc_fs(char *&r_path)
 {
 	return get_link_path("/proc/self/exe", r_path);
 }
 
-////////////////////////////////////////////////////////////////////////////////
+//////////
 
-const char *MCCefPlatformGetCefFolder();
-
-const char *MCCefPlatformGetResourcesDirPath(void)
+const char *MCCefPlatformGetExecutableFolder(void)
 {
-    return MCCefPlatformGetCefFolder();
-}
-
-// IM-2014-10-03: [[ revBrowserCEF ]] locales located in CEF subfolder relative to revbrowser external
-const char *MCCefPlatformGetLocalePath(void)
-{
-	static char *s_locale_path = nil;
-
-	if (s_locale_path == nil)
-		/* UNCHECKED */ MCCefLinuxAppendPath(MCCefPlatformGetCefFolder(), "locales", s_locale_path);
-
-	return s_locale_path;
-}
-
-// IM-2014-10-03: [[ revBrowserCEF ]] subprocess executable located in CEF subfolder relative to revbrowser external
-const char *MCCefPlatformGetSubProcessName(void)
-{
-	static char *s_exe_path = nil;
+    static char *s_exe_path = nil;
 
 	if (s_exe_path == nil)
-		/* UNCHECKED */ MCCefLinuxAppendPath(MCCefPlatformGetCefFolder(), "libbrowser-cefprocess", s_exe_path);
-
+	{
+		bool t_success;
+		t_success = get_exe_path_from_proc_fs(s_exe_path);
+		if (t_success)
+		{
+			// remove library component from path
+			uint32_t t_index;
+			if (MCCStringLastIndexOf(s_exe_path, '/', t_index))
+				s_exe_path[t_index] = '\0';
+		}
+	}
+	
 	return s_exe_path;
 }
 
-// IM-2014-10-03: [[ revBrowserCEF ]] libcef library located in CEF subfolder relative to revbrowser external
-const char *MCCefPlatformGetCefLibraryPath(void)
-{
-	static char *s_lib_path = nil;
-
-	if (s_lib_path == nil)
-		/* UNCHECKED */ MCCefLinuxAppendPath(MCCefPlatformGetCefFolder(), "libcef.so", s_lib_path);
-
-	return s_lib_path;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
-

@@ -17,8 +17,6 @@
 #include <include/cef_app.h>
 
 #include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 
 #include "core.h"
 #include "cefshared.h"
@@ -64,80 +62,15 @@ int main(int argc, char *argv[])
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool get_link_size(const char *p_path, uint32_t &r_size)
-{
-	if (p_path == nil)
-		return false;
-		
-	struct stat t_stat;
-	if (lstat(p_path, &t_stat) == -1)
-		return false;
-	
-	r_size = t_stat.st_size;
-	return true;
-}
-
-bool get_link_path(const char *p_link, char *&r_path)
-{
-	bool t_success;
-	t_success = true;
-	
-	char *t_buffer;
-	t_buffer = nil;
-	uint32_t t_buffer_size;
-	t_buffer_size = 0;
-	
-	uint32_t t_link_size;
-	t_success = get_link_size(p_link, t_link_size);
-	
-	while (t_success && t_link_size + 1 > t_buffer_size)
-	{
-		t_buffer_size = t_link_size + 1;
-		t_success = MCMemoryReallocate(t_buffer, t_buffer_size, t_buffer);
-		
-		if (t_success)
-		{
-			int32_t t_read;
-			t_read = readlink(p_link, t_buffer, t_buffer_size);
-			
-			t_success = t_read >= 0;
-			t_link_size = t_read;
-		}
-	}
-	
-	if (t_success)
-	{
-		t_buffer[t_link_size] = '\0';
-		r_path = t_buffer;
-	}
-	else
-		MCMemoryDeallocate(t_buffer);
-	
-	return t_success;
-}
-
-bool get_exe_path_from_proc_fs(char *&r_path)
-{
-	return get_link_path("/proc/self/exe", r_path);
-}
-
+const char *MCCefPlatformGetExecutableFolder(void);
+bool MCCefLinuxAppendPath(const char *p_base, const char *p_path, char *&r_path);
 const char *MCCefPlatformGetCefFolder(void)
 {
-    static char *s_cef_path = nil;
+	static char *s_cef_path = nil;
 
 	if (s_cef_path == nil)
-	{
-		bool t_success;
-		t_success = get_exe_path_from_proc_fs(s_cef_path);
-		if (t_success)
-		{
-			// remove library component from path
-			uint32_t t_index;
-			if (MCCStringLastIndexOf(s_cef_path, '/', t_index))
-				s_cef_path[t_index] = '\0';
-		}
-	}
-	
+		/* UNCHECKED */ MCCefLinuxAppendPath(MCCefPlatformGetExecutableFolder(), "Externals/CEF", s_cef_path);
+
 	return s_cef_path;
 }
 

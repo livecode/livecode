@@ -117,7 +117,7 @@ bool MCCefWin32AppendPath(const char *p_base, const char *p_path, char *&r_path)
 //#ifdef _DEBUG
 //#define CEF_PATH_PREFIX ""
 //#else
-#define CEF_PATH_PREFIX "CEF\\"
+#define CEF_PATH_PREFIX "Externals\\CEF\\"
 //#endif
 
 // IM-2014-03-25: [[ revBrowserCEF ]] locales located in CEF subfolder relative to revbrowser dll

@@ -45,11 +45,8 @@ struct MCThemeDrawInfo
 		
 		struct
 		{
-			Rect bounds;
-			ThemeButtonKind kind;
-			ThemeButtonDrawInfo info;
-			CFAbsoluteTime animation_start;
-			CFAbsoluteTime animation_current;
+			HIRect bounds;
+			HIThemeButtonDrawInfo info;
 		} button;
 		
 		struct

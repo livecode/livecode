@@ -1,6 +1,6 @@
 ﻿script "CoreEngineClipboard"
 /*
-Copyright (C) 2015 Runtime Revolution Ltd.
+Copyright (C) 2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -24,21 +24,21 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 -- Utility function that returns the smallest possible valid PNG image
 local sTinyPNG
 private function _TinyPNG
-   if sTinyPNG is empty then put url "binfile:core/engine/tiny.png" into sTinyPNG
+   if sTinyPNG is empty then put url "binfile:lcs/core/engine/tiny.png" into sTinyPNG
    return sTinyPNG
 end _TinyPNG
 
 -- Utility function that returns the smallest possible valid GIF image
 local sTinyGIF
 private function _TinyGIF
-   if sTinyGIF is empty then put url "binfile:core/engine/tiny.gif" into sTinyGIF
+   if sTinyGIF is empty then put url "binfile:lcs/core/engine/tiny.gif" into sTinyGIF
    return sTinyGIF
 end _TinyGIF
 
 -- Utility function that returns the smallest possible valid JPEG image
 local sTinyJPEG
 private function _TinyJPEG
-   if sTinyJPEG is empty then put url "binfile:core/engine/tiny.jpg" into sTinyJPEG
+   if sTinyJPEG is empty then put url "binfile:lcs/core/engine/tiny.jpg" into sTinyJPEG
    return sTinyJPEG
 end _TinyJPEG
 

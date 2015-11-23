@@ -50,6 +50,7 @@ property actionData		get getActionData		set setActionData
 
 property isHeader		get mIsHeader			set mIsHeader
 property navBarRight	get getNavBarRight
+property formattedWidth get mFormattedWidth
 
 private variable mNavData 			as List
 private variable mSelectedNavItem 	as Integer
@@ -70,6 +71,8 @@ private variable mIsHeader 			as Boolean
 
 private variable mHoverTab          as Boolean
 private variable mHoverIndex        as Integer
+
+private variable mFormattedWidth as Real
 
 constant kBlack is [0,0,0]
 constant kNavColor is [0,0,0,0.5]
@@ -141,6 +144,7 @@ public handler OnCreate()
 
     put 0 into mHoverIndex
     put false into mHoverTab
+	 put 0 into mFormattedWidth
 end handler
 
 public handler OnSave(out rProperties as Array)
@@ -216,7 +220,7 @@ public handler OnMouseMove()
 end handler
 
 public handler OnGeometryChanged()
-	put true into mRecalculate
+	recalculateRects()
 end handler
 
 private handler updateHover()
@@ -347,14 +351,33 @@ private handler drawAction(in pIndex as Integer)
 	end if
 end handler
 
-private handler recalculateRects()
-	calculateTabRects()
-	calculateActionRects()
+-- The padding to add if there are actions and tabs.
+-- Since layout depends entirely on the height of the widget, so does the padding.
+private handler internalPadding() returns Real
+	return 2 *  kPaddingRatio * my height
+end handler
 
+private handler recalculateRects()
+	variable tTabWidth as Real
+	variable tActionWidth as Real
+	calculateTabRects(tTabWidth)
+	calculateActionRects(tActionWidth)
+
+	variable tFormattedWidth as Real
+	put tTabWidth + tActionWidth into tFormattedWidth
+	-- Add extra padding if there are actions and tabs
+	if tTabWidth is not 0 and tActionWidth is not 0 then
+		add internalPadding() to tFormattedWidth
+	end if 
+	
+	put tFormattedWidth into mFormattedWidth
 	put false into mRecalculate
 end handler
 
-private handler calculateRects(in pTabs as Boolean, in pFromLeft as Boolean, in pIcons as Boolean, in pData as List) returns List
+private handler calculateRects(in pTabs as Boolean, in pFromLeft as Boolean, in pIcons as Boolean, in pData as List, out rFormattedWidth as Real) returns List
+	variable tFormattedWidth as Real
+	put 0 into tFormattedWidth
+	
 	variable tPadding as Real
 	if pTabs then
 		put my height * kPaddingRatio * (1 - kTabPaddingRatio) into tPadding
@@ -388,8 +411,7 @@ private handler calculateRects(in pTabs as Boolean, in pFromLeft as Boolean, in 
 	repeat for each element tElement in pData
 		if pIcons is false then
 			variable tTextRect as Rectangle
-			set the font of this canvas to getFont("label")
-			measure tElement["label"] on this canvas into tTextRect
+			put the bounds of text tElement["label"] with getFont("label") into tTextRect
 			put the width of tTextRect into tWidth
 		else
 			put tBottom - tPadding into tWidth
@@ -412,22 +434,33 @@ private handler calculateRects(in pTabs as Boolean, in pFromLeft as Boolean, in 
 		end if
 	end repeat
 
+	if the number of elements in pData is not 0 then
+		if pFromLeft then
+			put tRight into tFormattedWidth
+		else
+			put my width - tLeft into tFormattedWidth
+		end if
+		-- Add the padding to the opposite side
+		add tPadding to tFormattedWidth
+	end if 
+	
+	put tFormattedWidth into rFormattedWidth
 	return tRects
 end handler
 
-private handler calculateTabRects()
+private handler calculateTabRects(out rWidth as Real)
 	if mShowNavIcons then
-		put calculateRects(true, true, mShowNavIcons, mNavData) into mTabRects
+		put calculateRects(true, true, mShowNavIcons, mNavData, rWidth) into mTabRects
 	else
-		put calculateRects(true, true, mShowNavIcons, mNavData) into mTabRects
+		put calculateRects(true, true, mShowNavIcons, mNavData, rWidth) into mTabRects
 	end if
 end handler
 
-private handler calculateActionRects()
+private handler calculateActionRects(out rWidth as Real)
 	if mIsHeader then
-		put calculateRects(false, false, mShowActionIcons, mActionData) into mActionRects
+		put calculateRects(false, false, mShowActionIcons, mActionData, rWidth) into mActionRects
 	else
-		put calculateRects(false, true, mShowActionIcons, mActionData) into mActionRects
+		put calculateRects(false, true, mShowActionIcons, mActionData, rWidth) into mActionRects
 	end if
 end handler
 
@@ -460,7 +493,7 @@ end handler
 private handler getFont(in pType as String) returns Font
 
 	variable tFont as String
-	put the name of the font of this canvas into tFont
+	put the name of my font into tFont
 
 	if pType is "title" then
 		return font tFont with bold style at size mSize
@@ -583,6 +616,42 @@ private handler listToArray(in pList as List) returns Array
 	return tArray
 end handler
 
+-- Sorts numerically, converting strings to numbers where possible
+private handler CompareKeysNumeric(in pLeft as any, in pRight as any) returns Integer
+	variable tLeft as optional Number
+	variable tRight as optional Number
+	
+	if pLeft is a number then
+		put pLeft into tLeft
+	else
+		put pLeft parsed as number into tLeft
+	end if
+	
+	if pRight is a number then
+		put pRight into tRight
+	else
+		put pRight parsed as number into tRight
+	end if
+
+	if tRight is tLeft then
+		return 0
+	end if
+		
+	if tRight is nothing then
+		return -1
+	end if
+	
+	if tLeft is nothing then
+		return 1
+	end if
+	
+	if tLeft < tRight then
+        return -1
+	end if
+
+    return 1
+end handler
+
 private handler setData(in pArray as Array, in pDefaultArray as Array, out rList as List)
 	variable tList as List
 	put the empty list into tList
@@ -590,7 +659,7 @@ private handler setData(in pArray as Array, in pDefaultArray as Array, out rList
 	if pArray is not empty then
 		variable tOrder as List
 		put the keys of pArray into tOrder
-		sort tOrder in ascending order
+		sort tOrder using handler CompareKeysNumeric
 
 		variable tKeys as List
 		put the keys of pDefaultArray into tKeys
@@ -613,8 +682,7 @@ private handler setData(in pArray as Array, in pDefaultArray as Array, out rList
 	end if
 
 	put tList into rList
-
-	put true into mRecalculate
+	recalculateRects()
 	redraw all
 end handler
 
@@ -739,7 +807,7 @@ end handler
 
 private handler setShowNavIcons(in pShowIcons as Boolean)
 	put pShowIcons into mShowNavIcons
-	put true into mRecalculate
+	recalculateRects()
 	redraw all
 end handler
 
@@ -819,6 +887,7 @@ end handler
 
 public handler setShowActionIcons(in pShowIcons as Boolean)
 	put pShowIcons into mShowActionIcons
+	recalculateRects()
 	redraw all
 end handler
 

@@ -538,11 +538,12 @@ void MCLinuxRawClipboard::SetDragContext(GdkDragContext* p_context)
 
 bool MCLinuxRawClipboard::HasGDK()
 {
+#ifndef _SERVER
     // Only try to initialise GDK once
     static bool s_try_gdk = false;
     static bool s_has_gdk = !MCnoui && initialise_weak_link_X11()
-                            && initialise_weak_link_gobject()
-                            && initialise_weak_link_gdk();
+    && initialise_weak_link_gobject()
+    && initialise_weak_link_gdk();
     if (!s_try_gdk)
     {
         s_try_gdk = true;
@@ -550,6 +551,9 @@ bool MCLinuxRawClipboard::HasGDK()
             gdk_init(0, NULL);
     }
     return s_has_gdk;
+#else
+    return false;
+#endif
 }
 
 
@@ -712,17 +716,42 @@ static bool SelectionNotifyFilter(GdkEvent *t_event, void *)
     return (t_event->type == GDK_SELECTION_NOTIFY);
 }
 
+// Timeout function that is triggered if we don't receive a reply from the
+// current seelction owner. If this timeout triggers, the selection is regarded
+// as being empty.
+static bool s_selection_timeout;
+static gboolean SelectionNotifyTimeout(gpointer)
+{
+    // If we didn't receive the selection notification by now, we have timed out
+    s_selection_timeout = true;
+    
+    // Remove this timer
+    return FALSE;
+}
+
 static bool WaitForSelectionNotify()
 {
+    // Add a timeout that will be triggered if there is no reply. We will wait
+    // for a maximum of 1 second.
+    guint t_timeout_event;
+    s_selection_timeout = false;
+    t_timeout_event = g_timeout_add(1000, &SelectionNotifyTimeout, NULL);
+    
     // Loop until a selection notify event is received
     MCScreenDC *dc = (MCScreenDC*)MCscreen;
     GdkEvent *t_notify;
-    while (!dc->GetFilteredEvent(SelectionNotifyFilter, t_notify, NULL))
+    while (!dc->GetFilteredEvent(SelectionNotifyFilter, t_notify, NULL, true))
     {
-        // TODO: timeout
+        // If we timed out, stop waiting
+        if (s_selection_timeout)
+            break;
     }
     
-    return true;
+    // If the timeout didn't trigger, remove it manually
+    if (!s_selection_timeout)
+        g_source_destroy(g_main_context_find_source_by_id(NULL, t_timeout_event));
+    
+    return !s_selection_timeout;
 }
 #endif
 
@@ -771,14 +800,17 @@ void MCLinuxRawClipboardItem::FetchExternalRepresentations(GdkDragContext* p_dra
                               GDK_CURRENT_TIME);
         
         // Wait for a SelectionNotify event that tells us the data is ready
-        WaitForSelectionNotify();
+        bool t_timed_out = !WaitForSelectionNotify();
         
         // Get the data for this property
-        guchar* t_data;
         GdkAtom t_type;
         gint t_format;
-        gint t_data_length = gdk_selection_property_get(m_clipboard->GetClipboardWindow(),
-                                                        &t_data, &t_type, &t_format);
+        guchar* t_data = NULL;
+        gint t_data_length = 0;
+        if (!t_timed_out)
+        {
+            t_data_length = gdk_selection_property_get(m_clipboard->GetClipboardWindow(), &t_data, &t_type, &t_format);
+        }
         
         // Was the property received successfully?
         if (t_data == NULL || t_type != GDK_SELECTION_TYPE_ATOM)
@@ -848,14 +880,17 @@ MCLinuxRawClipboardItemRep::MCLinuxRawClipboardItemRep(MCLinuxRawClipboard* p_cl
                           p_selection, p_atom, GDK_CURRENT_TIME);
     
     // Wait for a SelectionNotify event that tells us the data is ready
-    WaitForSelectionNotify();
+    bool t_timed_out = !WaitForSelectionNotify();
     
     // Get the data for this property
-    guchar* t_data;
     GdkAtom t_type;
     gint t_format;
-    gint t_data_length = gdk_selection_property_get(p_clipboard->GetClipboardWindow(),
-                                                    &t_data, &t_type, &t_format);
+    guchar* t_data = NULL;
+    gint t_data_length = 0;
+    if (!t_timed_out)
+    {
+        t_data_length = gdk_selection_property_get(p_clipboard->GetClipboardWindow(), &t_data, &t_type, &t_format);
+    }
     
     // Copy the data for this property
     MCDataCreateWithBytes(t_data, t_data_length, &m_bytes);

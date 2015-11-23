@@ -8,9 +8,10 @@
 			'../libfoundation/libfoundation.gyp:libFoundation',
 			'../libgraphics/libgraphics.gyp:libGraphics',
 		],
-		'module_test_additional_sources':
+		'module_test_sources':
 		[
-			'<@(engine_security_source_files)'
+			'<@(engine_test_source_files)',
+			'<@(engine_security_source_files)',
 		],
 		'module_test_include_dirs':
 		[
@@ -89,6 +90,12 @@
 						[
 							'../thirdparty/headers/linux/include/cairo',
 						],
+						
+						'defines':
+                        [
+	                        'PANGO_ENABLE_BACKEND',
+	                        'PANGO_ENABLE_ENGINE',
+	                    ],
 					},
 				],
 				[

@@ -1370,8 +1370,37 @@ Boolean MCButton::mup(uint2 which, bool p_release)
                 // If the mouse release was handled, close the submenu. This
                 // takes care of backwards compatibility. Otherwise, ignore the
                 // mouse-up event.
+                //
+                // We also need to close the menu if the button release happened
+                // outside of the menu tree.
+                bool t_outside = true;
+                MCObject* t_menu = this;
+                while (t_outside && t_menu != NULL)
+                {
+                    // Check whether the click was inside the menu (the rect
+                    // that we need to check is the rect of the stack containing
+                    // the menu).
+                    MCRectangle t_rect = t_menu->getstack()->getrect();
+                    t_outside = (t_rect.x < MCmousex
+                                 || MCmousex >= (t_rect.x + t_rect.width)
+                                 || t_rect.y < MCmousey
+                                 || MCmousey >= (t_rect.y + t_rect.height));
+                    
+                    // Move to the parent menu, if it exists
+                    if (t_menu->getstack()->getparent()    // Stack's parent
+                        && t_menu->getstack()->getparent()->gettype() == CT_BUTTON)
+                    {
+                        // This is a submenu
+                        t_menu = t_menu->getstack()->getparent();
+                    }
+                    else
+                    {
+                        // We walked up to the top of the submenu tree
+                        t_menu = NULL;
+                    }
+                }
                 Exec_stat es = message_with_args(MCM_mouse_release, which);
-                if (es != ES_NOT_HANDLED && es != ES_PASS)
+                if (t_outside || (es != ES_NOT_HANDLED && es != ES_PASS))
                     closemenu(True, True);
             }
 		}
@@ -1666,6 +1695,8 @@ void MCButton::setrect(const MCRectangle &nrect)
 			winfo.type = WTHEME_TYPE_COMBOTEXT;
 			MCcurtheme->getwidgetrect(winfo, WTHEME_METRIC_CONTENTSIZE,comboentryrect,trect);
 
+			// PM-2015-10-12: [[ Bug 16193 ]] Make sure the label stays always within the combobox when resizing
+			trect.y = nrect.y + nrect.height / 2 - trect.height / 2;
 		}
 		else
 		{

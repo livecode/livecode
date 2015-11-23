@@ -252,7 +252,7 @@ public:
 	virtual uint16_t platform_getheight(void);
 	virtual bool platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
 	virtual bool platform_getwindowgeometry(Window w, MCRectangle &drect);
-	virtual void platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
+	virtual void platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m, Boolean resizable);
 	virtual void platform_querymouse(int16_t &r_x, int16_t &r_y);
 	virtual void platform_setmouse(int16_t p_x, int16_t p_y);
 	
@@ -333,11 +333,11 @@ public:
 #endif
     
     // Processes all outstanding GDK events and adds them to the event queue
-    void EnqueueGdkEvents();
+    void EnqueueGdkEvents(bool p_may_block = false);
     
     // Searches the event queue for an event that passes the given filter
     typedef bool (*event_filter)(GdkEvent*, void *);
-    bool GetFilteredEvent(event_filter, GdkEvent* &r_event, void *);
+    bool GetFilteredEvent(event_filter, GdkEvent* &r_event, void *, bool p_may_block = false);
     
     // Utility function - maps an X drawing operation to the GDK equivalent
     static GdkFunction XOpToGdkOp(int op);

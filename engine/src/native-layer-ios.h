@@ -26,16 +26,8 @@ class MCNativeLayerIOS : public MCNativeLayer
 {
 public:
     
-    virtual void OnOpen();
-    virtual void OnClose();
-    virtual void OnAttach();
-    virtual void OnDetach();
-    virtual void OnPaint(MCGContextRef);
-    virtual void OnGeometryChanged(const MCRectangle& p_old_rect);
-    virtual void OnVisibilityChanged(bool p_visible);
-    virtual void OnToolChanged(Tool p_new_tool);
-    virtual void OnLayerChanged();
-    
+	virtual bool GetCanRenderToContext();
+
     MCNativeLayerIOS(MCWidgetRef, UIView *p_native_view);
     ~MCNativeLayerIOS();
     
@@ -43,7 +35,6 @@ public:
 	
 private:
     
-    MCWidgetRef m_widget;
     UIView* m_view;
     //NSBitmapImageRep *m_cached;
     
@@ -51,14 +42,15 @@ private:
     UIView* getMainView();
     
     // Performs the attach/detach operations
-    void doAttach();
-    void doDetach();
+    virtual void doAttach();
+    virtual void doDetach();
     
+	virtual bool doPaint(MCGContextRef p_context);
+	virtual void doSetGeometry(const MCRectangle &p_rect);
+	virtual void doSetVisible(bool p_visible);
+	
     // Performs a relayering operation
-    void doRelayer();
-    
-    // Sets the rect of the view
-    void doSetRect(const MCRectangle&);
+    virtual void doRelayer();
 };
 
 #endif // ifndef __MC_NATIVE_LAYER_IOS__

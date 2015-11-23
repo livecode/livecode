@@ -213,7 +213,7 @@ public:
 	virtual bool platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
 	virtual bool platform_displayinfocacheable(void);
 	virtual bool platform_getwindowgeometry(Window w, MCRectangle &drect);
-	virtual void platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
+	virtual void platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m, Boolean resizable);
 	virtual void platform_querymouse(int16_t &r_x, int16_t &r_y);
 	virtual void platform_setmouse(int16_t p_x, int16_t p_y);
 	virtual MCStack *platform_getstackatpoint(int32_t x, int32_t y);

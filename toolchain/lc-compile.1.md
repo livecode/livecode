@@ -43,6 +43,9 @@ specified.
 * --manifest _MANIFEST_:
   Generate a module manifest in _MANIFEST_.  This is used by the LiveCode IDE.
 
+* -Werror:
+  Turn all warnings into errors.
+
 * -h, --help:
   Print some basic usage information.
 

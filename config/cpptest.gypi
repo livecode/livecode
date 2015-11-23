@@ -2,7 +2,7 @@
 	'variables':
 	{
 		'module_test_dependencies%': '',
-		'module_test_additional_sources%': '',
+		'module_test_sources%': '',
 		'module_test_include_dirs%': '',
 		'module_test_defines%': '',
 	},
@@ -33,8 +33,7 @@
 
 			'sources':
 			[
-				'<!@(ls -1 test/*.cpp)',
-				'<@(module_test_additional_sources)',
+				'<@(module_test_sources)',
 			],
 
 			'include_dirs': [ '<@(module_test_include_dirs)', ],
@@ -112,7 +111,7 @@
 						'../util/run-tests.pl',
 						'<(exec_wrapper)',
 						'<(PRODUCT_DIR)/test-<(module_name)<(test_suffix)',
-						'test-<(module_name).log',
+						'<(PRODUCT_DIR)/test-<(module_name).log',
 					],
 
 				},
