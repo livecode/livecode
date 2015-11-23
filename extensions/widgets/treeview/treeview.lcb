@@ -536,9 +536,9 @@ private handler paintDataItem(in pDataItem as Array, in pTop as Real, in pRow as
 		
 	variable tPath as Path	
 	// Draw the alternating row backgrounds if applicable
-	if mAlternateRowBackgrounds is true then
+	if mAlternateRowBackgrounds is true or pDataItem["selected"] is true then
 		put rectangle path of rectangle [0,pTop,mViewWidth,pTop+mRowHeight] into tPath
-		if pRow mod 2 is 1 then
+		if pRow mod 2 is 1 or pDataItem["selected"] is true then
 			set the paint of this canvas to getPaint("row","fill" & tStyle)
 		else
 			set the paint of this canvas to getPaint("row","fill_alternate" & tStyle)
