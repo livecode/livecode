@@ -148,23 +148,27 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    end if
    
    -- Now all the names
+   local tProductName
    if pEdition is "Community" then
       packageCompilerConfigureVariable tPackager, "ProductTitle", "LiveCode Community" && getReadableVersion(pVersion)
       packageCompilerConfigureVariable tPackager, "ProductTag", "livecodecommunity_" & getTaggedVersion(pVersion)
-      if pPlatform is "Linux" or pPlatform is "Linux-x86_64" or pPlatform is "Linux-armv6hf" then
-         packageCompilerConfigureVariable tPackager, "ProductName", "livecodecommunity"
-      else
-         packageCompilerConfigureVariable tPackager, "ProductName", "LiveCode Community"
-      end if
+      put "LiveCode Community" into tProductName
    else if pEdition is "Indy" then
       packageCompilerConfigureVariable tPackager, "ProductTitle", "LiveCode Indy" && getReadableVersion(pVersion)
       packageCompilerConfigureVariable tPackager, "ProductTag", "livecodeindy_" & getTaggedVersion(pVersion)
-      packageCompilerConfigureVariable tPackager, "ProductName", "LiveCode Indy"
+      put "LiveCode Indy" into tProductName
    else if pEdition is "Business" then
       packageCompilerConfigureVariable tPackager, "ProductTitle", "LiveCode Business" && getReadableVersion(pVersion)
       packageCompilerConfigureVariable tPackager, "ProductTag", "livecodebusiness_" & getTaggedVersion(pVersion)
-      packageCompilerConfigureVariable tPackager, "ProductName", "LiveCode Business"
+      put "LiveCode Business" into tProductName
    end if
+   -- For Linux only, case-fold the product name to lowercase and
+   -- remove all spaces
+   if pPlatform is "Linux" or pPlatform is "Linux-x86_64" or pPlatform is "Linux-armv6hf" then
+      put toLower(tProductName) into tProductName
+      replace " " with "" in tProductName
+   end if
+   packageCompilerConfigureVariable tPackager, "ProductName", tProductName
    
    -- The edition tags.
    packageCompilerConfigureVariable tPackager, "EditionTagLower", "-" & toLower(char 1 of tEditionType) & char 2 to -1 of tEditionType

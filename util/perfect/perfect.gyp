@@ -32,6 +32,36 @@
 				},
 			},
 
+			'xcode_settings':
+			{
+				'conditions':
+				[
+					[
+						'OS == "mac" or OS == "ios"',
+						{
+							'SDKROOT': '<(host_sdk)',
+						},
+					],
+                    [
+                        'OS == "mac" and target_sdk != "macosx10.6"',
+                        {
+                            'ARCHS': '<(host_arch)',
+                        },
+                    ],
+					[
+						# FIXME Force the perfect executable to be put into
+						# the target SDK's output directory, so that it
+						# appears in the PRODUCT_DIR when building against
+						# the target SDK
+						'OS == "ios"',
+						{
+							'SYMROOT': '$(SOLUTION_DIR)/_build/ios/<(target_sdk)',
+                            'ARCHS': '<(host_arch)',
+						},
+					],
+				],
+			},
+
 			'direct_dependent_settings':
 			{
 				'variables':

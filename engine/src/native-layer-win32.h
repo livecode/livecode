@@ -25,16 +25,6 @@ class MCNativeLayerWin32 : public MCNativeLayer
 {
 public:
     
-    virtual void OnOpen();
-    virtual void OnClose();
-    virtual void OnAttach();
-    virtual void OnDetach();
-    virtual bool OnPaint(MCGContextRef);
-    virtual void OnGeometryChanged(const MCRectangle& p_old_rect);
-    virtual void OnVisibilityChanged(bool p_visible);
-	virtual void OnToolChanged(Tool p_new_tool);
-	virtual void OnLayerChanged();
-    
 	virtual bool GetNativeView(void *&r_view);
 	
     MCNativeLayerWin32(MCWidgetRef, HWND p_view);
@@ -42,7 +32,6 @@ public:
     
 private:
     
-    MCWidgetRef m_widget;
     HWND m_hwnd;
     HBITMAP m_cached;
     
@@ -50,11 +39,15 @@ private:
     HWND getStackWindow();
     
     // Performs the attach/detach operations
-    void doAttach();
-    void doDetach();
-
+	virtual void doAttach();
+	virtual void doDetach();
+	
+	virtual bool doPaint(MCGContextRef p_context);
+	virtual void doSetGeometry(const MCRectangle &p_rect);
+	virtual void doSetVisible(bool p_visible);
+	
 	// Performs a relayering operation
-	void doRelayer();
+	virtual void doRelayer();
 };
 
 #endif // ifndef __MC_WIDGET_NATIVE__

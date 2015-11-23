@@ -206,8 +206,8 @@ bool MCBrowserFactoryEnsureAvailable(MCBrowserFactoryMap &p_map, MCBrowserFactor
 
 bool MCBrowserFactoryGet(const char *p_factory, MCBrowserFactoryRef &r_factory)
 {
-	if (s_factory_list == nil)
-		return false; // no browser factories available;
+    if (s_factory_list == nil)
+        return false; // no browser factories available;
 	
 	if (p_factory == nil || MCCStringIsEmpty(p_factory) || MCCStringEqualCaseless(p_factory, "default"))
 	{

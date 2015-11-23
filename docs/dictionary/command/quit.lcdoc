@@ -2,7 +2,7 @@ Name: quit
 
 Type: command
 
-Syntax: quit
+Syntax: quit [<exitCode>]
 
 Summary: Quits the <application>.
 
@@ -13,12 +13,15 @@ OS: mac,windows,linux,ios,android
 Platforms: desktop,server,web,mobile
 
 Example:
-quit
+quit 1
 
 Example:
 if it is "OK" then
   quit
 end if
+
+Parameters:
+exitCode: The exit status to return to the operating system.  If you don't specify an exitCode, the exit status is 0.  The exitCode must be an integer greater than or equal to 0.
 
 Description:
 Use the <quit> <command> to exit LiveCode (or a <standalone application>).

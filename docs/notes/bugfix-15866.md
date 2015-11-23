@@ -1,1 +1,1 @@
-# line breaks do not survive parsing by documentation reader
+# Markdown table centering syntax treated as docs element

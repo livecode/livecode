@@ -24,6 +24,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <sys/stat.h>
 
+#import <AppKit/AppKit.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef bool (*MCSystemListProcessesCallback)(void *context, uint32_t id, MCStringRef path, MCStringRef description);
@@ -90,43 +92,23 @@ bool MCSystemCanDeleteFile(MCStringRef p_file)
 ////////////////////////////////////////////////////////////////////////////////
 
 // MM-2011-03-16: Make the installer doc icon bounce.
-
-static NMRecPtr s_bounce_nmr = nil;
+static NSInteger s_attention_request_id;
 
 void MCSystemCancelRequestUserAttention(void)
 {
-	if (s_bounce_nmr != nil)
-	{
-		NMRemove(s_bounce_nmr);
-		MCMemoryDelete(s_bounce_nmr);
-		s_bounce_nmr = nil;
-	}
+    if (s_attention_request_id != 0)
+        [NSApp cancelUserAttentionRequest: s_attention_request_id];
+    s_attention_request_id = 0;
 }
 
 void MCSystemRequestUserAttention(void)
 {
-	if (s_bounce_nmr != nil)
+    if (s_attention_request_id != 0)
 		MCSystemCancelRequestUserAttention();
 	
-	bool t_success;
-	t_success = true;
-	
-	if (t_success)
-		t_success = MCMemoryNew(s_bounce_nmr);
-	
-	if (t_success)
-	{
-		s_bounce_nmr -> nmMark = 1;
-		s_bounce_nmr -> qType = nmType;
-		if (NMInstall(s_bounce_nmr) != noErr)
-			t_success = false;
-	}
-	
-	if (!t_success)
-	{
-		MCMemoryDelete(s_bounce_nmr);
-		s_bounce_nmr = nil;
-	}
+    // We request attention as "critical" rather than "informational" so that
+    // the dock icon will bounce until the application is activated.
+    s_attention_request_id = [NSApp requestUserAttention: NSCriticalRequest];
 }
 
 // MM-2011-04-04: Added prototype.

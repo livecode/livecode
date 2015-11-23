@@ -351,8 +351,10 @@ static iconv_t fetch_converter(const char *p_encoding)
 
     if (t_current == NULL)
     {
+        // SN-2015-11-19: [[ Bug 16450 ]] Ask for UTF-16LE to avoid iconv to put
+        // a BOM char at the start of the stream
         iconv_t t_converter;
-        t_converter = iconv_open("UTF-16", p_encoding);
+        t_converter = iconv_open("UTF-16LE", p_encoding);
 
         ConverterRecord *t_record;
         t_record = new ConverterRecord;

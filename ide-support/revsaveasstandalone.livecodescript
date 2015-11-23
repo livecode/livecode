@@ -685,7 +685,7 @@ private command revCreateStandalone pStack, pFolder
       // IM-2014-03-20: [[ revBrowserCEF ]] Ensure CEF support files are copied if requested
       local tRevBrowser, tLibBrowser
       put "Browser (CEF)" is among the lines of sStandaloneSettingsA["scriptLibraries"] into tRevBrowser
-      put "com.livecode.extensions.livecode.browser" is among the lines of sStandaloneSettingsA["extensions"] into tLibBrowser
+      put "com.livecode.widget.browser" is among the lines of sStandaloneSettingsA["extensions"] into tLibBrowser
       revCopyCEFResources tPlatform, tStandalonePath[tPlatform], tRevBrowser, tLibBrowser
       
       revBuildStandaloneDeploy tPlatform, tStackSourceFile[tPlatform], tEngineSourceFile[tPlatform], tStandalonePath[tPlatform]

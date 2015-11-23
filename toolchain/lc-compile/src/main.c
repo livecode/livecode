@@ -55,6 +55,9 @@ void bootstrap_main(int argc, char *argv[])
     }
     
     s_is_bootstrap = 1;
+
+    /* Treat all warnings as errors in bootstrap mode */
+    s_is_werror_enabled = 1;
     
     for(i = 0; i < argc; i++)
     {
@@ -104,6 +107,7 @@ usage(int status)
 "      --deps changed-order Generate the order the input source files should be\n"
 "                           compiled in, but only if they need recompiling.\n"
 "      --manifest MANIFEST  Filename for generated manifest.\n"
+"      -Werror              Turn all warnings into errors.\n"
 "  -v, --verbose            Output extra debugging information.\n"
 "  -h, --help               Print this message.\n"
 "  --                       Treat all remaining arguments as filenames.\n"
@@ -112,7 +116,7 @@ usage(int status)
 "searched in the order they appear.  An interface file may be generated in\n"
 "the first PATH specified.\n"
 "\n"
-"Report bugs to <http://quality.runrev.com/>\n"
+"Report bugs to <http://quality.livecode.com/>\n"
             );
     exit (status);
 }
@@ -178,6 +182,15 @@ static void full_main(int argc, char *argv[])
             if (0 == strcmp(opt, "--manifest") && optarg)
             {
                 SetManifestOutputFile(argv[++argi]);
+                continue;
+            }
+            /* FIXME This should be expanded to support "-W error",
+             * "--warn error", "--warn=error", etc.  Also options for
+             * enabling/disabling/errorifying particular warning
+             * types. */
+            if (0 == strcmp(opt, "-Werror"))
+            {
+                s_is_werror_enabled = 1;
                 continue;
             }
             if (0 == strcmp(opt, "-v") || 0 == strcmp(opt, "--verbose"))
