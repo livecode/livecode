@@ -527,10 +527,7 @@ sysfolders;
 // http://lists.apple.com/archives/carbon-development/2003/Oct/msg00318.html
 
 static sysfolders sysfolderlist[] = {
-    {&MCN_apple, 'amnu', kOnAppropriateDisk, 'amnu'},
     {&MCN_desktop, 'desk', kOnAppropriateDisk, 'desk'},
-    {&MCN_control, 'ctrl', kOnAppropriateDisk, 'ctrl'},
-    {&MCN_extension,'extn', kOnAppropriateDisk, 'extn'},
     {&MCN_fonts,'font', kOnAppropriateDisk, 'font'},
     {&MCN_preferences,'pref', kUserDomain, 'pref'},
     {&MCN_temporary,'temp', kUserDomain, 'temp'},
