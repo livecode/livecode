@@ -2378,21 +2378,48 @@ on revDocsUpdateLibrary pConnection, pName, pDocDataA
       local tType
       put tDocA["type"] into tType
       
-      local tEncodedData
+      local tEncodedData, tResult
       put arrayEncode(tDocA) into tEncodedData
-      -- Try an UPDATE first. If this fails, the entry might not exist already, so try an INSERT.
-      put "UPDATE" && pName && "SET data = :1 WHERE name = :2 AND type = :3" into tSQL
-      revExecuteSQL pConnection, tSQL, "*btEncodedData", "tDocName", "tType"
+      # Try an UPDATE first. If this fails, the entry might not exist already, so try an INSERT.
+      put "UPDATE dictionary_data SET entry_data = :1 WHERE entry_name = :2 AND entry_type = :3 AND library_id = :4" into tSQL
+      revExecuteSQL pConnection, tSQL, "*btEncodedData", "tDocName", "tType", "tLibraryID"
       put the result into tResult
       if tResult is not a number or tResult is 0 then
-         put "INSERT into" && pName && "VALUES(:1, :2, :3)" into tSQL
-         revExecuteSQL pConnection, tSQL, "tDocName", "tType", "*btEncodedData"
+         put "INSERT into dictionary_data VALUES(:1, :2, :3, :4)" into tSQL
+         revExecuteSQL pConnection, tSQL, "tLibraryID", "tDocName", "tType", "*btEncodedData"
          put the result into tResult
       end if
       
       if tResult is not a number then
-         return "unable to insert data for" && tName & ":" & tDocName & return & the result
+         return "unable to insert data for" && pName & ":" & tDocName & return & the result
       end if
    end repeat
    return empty
 end revDocsUpdateLibrary
+
+on revDocsRemoveLibrary pConnection, pName
+   # Find the library id
+   local tSQL, tLibraryID
+   put "SELECT library_id FROM libraries WHERE library_name = :1" into tSQL
+   put revDataFromQuery(comma, return, pConnection, tSQL, pName) into tLibraryID
+   
+   if the result is not a number then
+      return "error finding library id for" && pName & return & the result
+   end if
+   
+   # Delete all entries associated with this library
+   put "DELETE * FROM dictionary_data WHERE library_id = :1" into tSQL
+   revExecuteSQL pConnection, tSQL, "tLibraryID"
+   if the result is not a number then
+      return "unable to delete data for" && pName & return & the result
+   end if
+   
+   # Delete the library entry from the libraries table
+   put "DELETE * FROM libraries WHERE library_name = :1" into tSQL
+   revExecuteSQL pConnection, tSQL, pName 
+   if the result is not a number then
+      return "unable to remove library" && pName && "from libraries table" & return & the result
+   end if	
+   
+   return empty
+end revDocsRemoveLibrary
