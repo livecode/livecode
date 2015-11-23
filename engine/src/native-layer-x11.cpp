@@ -71,7 +71,7 @@ MCNativeLayerX11::~MCNativeLayerX11()
     }
     if (m_child_window != NULL)
     {
-        g_object_unref(m_child_window);
+        gtk_widget_destroy(GTK_WIDGET(m_child_window));
     }
     if (m_input_shape != NULL)
     {
@@ -104,7 +104,8 @@ void MCNativeLayerX11::doAttach()
     if (m_socket == NULL)
     {
         // Create a new GTK socket to deal with the XEMBED protocol
-        m_socket = GTK_SOCKET(gtk_socket_new());
+        GtkSocket *t_socket;
+		t_socket = GTK_SOCKET(gtk_socket_new());
         
         // Create a new GTK window to hold the socket
         MCRectangle t_rect;
@@ -115,17 +116,20 @@ void MCNativeLayerX11::doAttach()
         gdk_window_reparent(gtk_widget_get_window(GTK_WIDGET(m_child_window)), getStackGdkWindow(), t_rect.x, t_rect.y);
         
         // Add the socket to the window
-        gtk_container_add(GTK_CONTAINER(m_child_window), GTK_WIDGET(m_socket));
+        gtk_container_add(GTK_CONTAINER(m_child_window), GTK_WIDGET(t_socket));
         
         // The socket needs to be realised before going any further or any
         // operations on it will fail.
-        gtk_widget_realize(GTK_WIDGET(m_socket));
+        gtk_widget_realize(GTK_WIDGET(t_socket));
         
         // Show the socket (we'll control visibility at the window level)
-        gtk_widget_show(GTK_WIDGET(m_socket));
+        gtk_widget_show(GTK_WIDGET(t_socket));
         
         // Create an empty region to act as an input mask while in edit mode
         m_input_shape = gdk_region_new();
+
+		// Retain a reference to the socket
+		m_socket = GTK_SOCKET(g_object_ref(G_OBJECT(t_socket)));
     }
     
     // Attach the X11 window to this socket
