@@ -8257,7 +8257,8 @@ static OSStatus getDesc(short locKind, MCStringRef zone, MCStringRef machine,
         {
             // Convert the process name (as a Pascal string) into a StringRef
             MCAutoStringRef t_process_name;
-            /* UNCHECKED */ MCStringCreateWithBytes(pInfoRec.processName+1, *pInfoRec.processName, kMCStringEncodingMacRoman, false, &t_process_name);
+            if (!MCStringCreateWithPascalString(pInfoRec.processName, &t_process_name))
+                return ioErr;
             if (MCStringIsEqualTo(*t_process_name, app, kMCStringOptionCompareCaseless))
             {
                 processFound = True;
@@ -8279,6 +8280,7 @@ static OSStatus getAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef
 	Size rSize;
 	DescType dt;
 	Size s;
+    bool t_success = false;
 	if ((errno = AESizeOfAttribute(ae, key, &dt, &s)) == noErr)
 	{
 		switch (dt)
@@ -8294,7 +8296,7 @@ static OSStatus getAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef
             {
                 byte_t *result = new byte_t[s + 1];
                 AEGetAttributePtr(ae, key, dt, &rType, result, s, &rSize);
-                /* UNCHECKED */ MCStringCreateWithBytes(result, s, kMCStringEncodingUTF8, false, r_result);
+                t_success = MCStringCreateWithBytes(result, s, kMCStringEncodingUTF8, false, r_result);
                 delete[] result;
                 break;
             }
@@ -8302,7 +8304,7 @@ static OSStatus getAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef
             {
                 char_t *result = new char_t[s + 1];
                 AEGetAttributePtr(ae, key, dt, &rType, result, s, &rSize);
-                /* UNCHECKED */ MCStringCreateWithNativeChars(result, s, r_result);
+                t_success = MCStringCreateWithNativeChars(result, s, r_result);
                 delete[] result;
                 break;
             }
@@ -8312,7 +8314,7 @@ static OSStatus getAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef
                 AEGetAttributePtr(ae, key, dt, &rType, &t_type, s, &rSize);
                 char *result;
                 result = FourCharCodeToString(t_type);
-                /* UNCHECKED */ MCStringCreateWithNativeChars((char_t*)result, 4, r_result);
+                t_success = MCStringCreateWithNativeChars((char_t*)result, 4, r_result);
                 delete[] result;
 			}
                 break;
@@ -8320,56 +8322,56 @@ static OSStatus getAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef
 			{
 				int16_t i;
 				AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
-                /* UNCHECKED */ MCStringFormat(r_result, PRId16, i);
+                t_success = MCStringFormat(r_result, PRId16, i);
 				break;
 			}
             case typeSInt32:
 			{
 				int32_t i;
 				AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
-                /* UNCHECKED */ MCStringFormat(r_result, PRId32, i);
+                t_success = MCStringFormat(r_result, PRId32, i);
 				break;
 			}
             case typeSInt64:
             {
                 int64_t i;
                 AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
-                /* UNCHECKED */ MCStringFormat(r_result, PRId64, i);
+                t_success = MCStringFormat(r_result, PRId64, i);
                 break;
             }
             case typeIEEE32BitFloatingPoint:
 			{
 				float32_t f;
 				AEGetAttributePtr(ae, key, dt, &rType, &f, s, &rSize);
-                /* UNCHECKED */ MCStringFormat(r_result, "%12.12g", f);
+                t_success = MCStringFormat(r_result, "%12.12g", f);
 				break;
 			}
             case typeIEEE64BitFloatingPoint:
 			{
 				float64_t f;
 				AEGetAttributePtr(ae, key, dt, &rType, &f, s, &rSize);
-                /* UNCHECKED */ MCStringFormat(r_result, "%12.12g", f);
+                t_success = MCStringFormat(r_result, "%12.12g", f);
 				break;
 			}
             case typeUInt16:
             {
                 uint16_t i;
                 AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
-                /* UNCHECKED */ MCStringFormat(r_result, PRIu16, i);
+                t_success = MCStringFormat(r_result, PRIu16, i);
                 break;
             }
             case typeUInt32:
 			{
 				uint32_t i;
 				AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
-                /* UNCHECKED */ MCStringFormat(r_result, PRIu32, i);
+                t_success = MCStringFormat(r_result, PRIu32, i);
 				break;
 			}
             case typeUInt64:
             {
                 uint64_t i;
                 AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
-                /* UNCHECKED */ MCStringFormat(r_result, PRIu64, i);
+                t_success = MCStringFormat(r_result, PRIu64, i);
                 break;
             }
             case typeNull:
@@ -8381,7 +8383,7 @@ static OSStatus getAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef
 			{
 				FSSpec fs;
 				errno = AEGetAttributePtr(ae, key, dt, &rType, &fs, s, &rSize);
-				/* UNCHECKED */ MCS_mac_FSSpec2path(&fs, r_result);
+				t_success = MCS_mac_FSSpec2path(&fs, r_result);
 			}
                 break;
 #endif
@@ -8389,14 +8391,18 @@ static OSStatus getAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef
 			{
 				FSRef t_fs_ref;
 				errno = AEGetAttributePtr(ae, key, dt, &rType, &t_fs_ref, s, &rSize);
-                /* UNCHECKED */ MCS_mac_fsref_to_path(t_fs_ref, r_result);
+                t_success = MCS_mac_fsref_to_path(t_fs_ref, r_result);
 			}
                 break;
             default:
-                /* UNCHECKED */ MCStringFormat(r_result, "unknown type %4.4s", (char*)&dt);
+                t_success = MCStringFormat(r_result, "unknown type %4.4s", (char*)&dt);
                 break;
 		}
 	}
+    
+    if (!t_success && errno == 0)
+        errno = ioErr;
+    
 	return errno;
 }
 
