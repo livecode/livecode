@@ -89,7 +89,7 @@ button,
 input,
 select,
 textarea {
-    font-family: sans-serif;
+    font-family: "DejaVu Sans", sans-serif;
 }
 
 /**
@@ -227,7 +227,7 @@ code,
 kbd,
 pre,
 samp {
-    font-family: monospace, serif;
+    font-family: "Courier New", "DejaVu Sans Mono", monospace;
     _font-family: 'courier new', monospace;
     font-size: 1em;
 }
