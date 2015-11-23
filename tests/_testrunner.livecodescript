@@ -112,12 +112,17 @@ private command doRun pInfo
    end if
 
    put the result into tAnalysis
-
-   -- Save the log to file
-   open file kLogFilename for "UTF-8" text write
-   write tAnalysis["log"] to file kLogFilename
-   close file kLogFilename
-
+   
+   -- Save the log to file.
+   -- We process to binary data ourselves to ensure encoding and
+   -- line endings are appropriate.
+   local tLogForWriting
+   put textEncode(tAnalysis["log"], "utf8") into tLogForWriting
+   if the platform is "win32" then
+      replace return with numToChar(13) & numToChar(10) in tLogForWriting
+   end if
+   put tLogForWriting into url ("binfile:" & kLogFilename)
+   
    if tapGetWorstResult(tAnalysis) is "FAIL" then
       quit 1
    end if
@@ -260,6 +265,9 @@ private command runTestCommand pInfo, pScriptFile, pCommand
    local tTestOutput, tTestExitStatus
    put shell(tCommandLine) into tTestOutput
    put the result into tTestExitStatus
+   
+   -- The output from the subprocesses will be native encoded utf-8.
+   put textDecode(tTestOutput, "utf8") into tTestOutput
 
    -- Check the exit status.  If it suggests failure, add a "not ok" stanza
    -- to the tail of the TAP output

@@ -399,12 +399,6 @@ static bool osx_cf_cache_locale(MCDateTimeLocale *p_info)
 	bool t_success;
 	t_success = true;
 	
-	if (t_success)
-	{
-		if (CFDateFormatterCreate == NULL)
-			t_success = false;
-	}
-	
 	CFLocaleRef t_locale;
 	t_locale = NULL;
 	if (t_success)
