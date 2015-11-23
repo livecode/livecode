@@ -80,48 +80,6 @@
 		<p><b>Android Note:</b> An Android application is installed on the phone in the form of its zip package. This means that any assets that are included are not available as discrete files in the native filesystem. In order to manage this the engine essentially 'virtualizes' the asset files you include, allowing (read-only) manipulation with all the standard LiveCode file and folder handling syntax. To access the assets you have included within your application, use filenames relative to <b>specialFolderPath</b> ("engine").</p>
 	
 	.</description>
-    <options title="For Mac OS systems:">
-      <option>
-        <item>Desktop</item>
-        <description>The Desktop folder, where files or folders on the desktop are placed.</description>
-      </option>
-      <option>
-        <item>System</item>
-        <description>The active System Folder.</description>
-      </option>
-      <option>
-        <item>Apple</item>
-        <description>The Apple Menu Items folder inside the System Folder.</description>
-      </option>
-      <option>
-        <item>Control</item>
-        <description>The Control Panels folder inside the System Folder.</description>
-      </option>
-      <option>
-        <item>Extension</item>
-        <description>The Extensions folder inside the System Folder.</description>
-      </option>
-      <option>
-        <item>Fonts</item>
-        <description>The Fonts folder inside the System Folder.</description>
-      </option>
-      <option>
-        <item>Preferences</item>
-        <description>The Preferences folder inside the System Folder.</description>
-      </option>
-      <option>
-        <item>Temporary</item>
-        <description>For storage of temporary files.</description>
-      </option>
-      <option>
-        <item>Engine</item>
-        <description>The folder containing the engine and the executable files copied in the standalone application.</description>
-      </option>
-      <option>
-        <item>Resources</item>
-        <description>In development mode, the current stack folder. In a standalone, the resources folder where non-executable files, or folders specified from the Standalone Builder, are copied.</description>
-      </option>
-    </options>
     <options title="For Mac OS X systems:">
       <option>
         <item>Home</item>
@@ -134,10 +92,6 @@
       <option>
         <item>System</item>
         <description>The Apple Menu Items folder inside the System Folder.</description>
-      </option>
-      <option>
-        <item>Control</item>
-        <description>The active System Folder.</description>
       </option>
       <option>
         <item>Fonts</item>
@@ -256,10 +210,6 @@
       <option>
         <item>Temporary</item>
         <description>For storage of temporary files (typically "/tmp").</description>
-      </option>
-      <option>
-        <item>0x000e</item>
-        <description>The "My Videos" folder.</description>
       </option>
       <option>
         <item>Engine</item>
