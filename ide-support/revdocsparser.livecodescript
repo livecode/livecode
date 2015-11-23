@@ -2316,8 +2316,8 @@ on revDocsUpdateDatabase pConnection, pLibraryA
    
    local tSQL, tResult
    
-   -- Create the libraries table. This might already exist, so do it unchecked.
-   put "CREATE TABLE libraries(library text, author text, type text)" into tSQL
+   # Create the libraries table. This might already exist, so do it unchecked.
+   put "CREATE TABLE libraries(library_id integer primary key, library_name text, author text, type text)" into tSQL
    revExecuteSQL pConnection, tSQL
    
    local tName
@@ -2332,12 +2332,12 @@ on revDocsUpdateDatabase pConnection, pLibraryA
    local tType
    put pLibraryA["type"] into tType
    
-   -- Try an UPDATE first. If this fails, the entry might not exist already, so try an INSERT.
-   put "UPDATE libraries SET author = :1, type = :2 WHERE library = :3" into tSQL
+   # Try an UPDATE first. If this fails, the entry might not exist already, so try an INSERT.
+   put "UPDATE libraries SET author = :1, type = :2 WHERE library_name = :3" into tSQL
    revExecuteSQL pConnection, tSQL, "tAuthor", "tType", "tName" 
    put the result into tResult
    if tResult is not a number or tResult is 0 then
-      put "INSERT into libraries VALUES(:1, :2, :3)" into tSQL
+      put "INSERT into libraries VALUES(NULL, :1, :2, :3)" into tSQL
       revExecuteSQL pConnection, tSQL, "tName", "tAuthor", "tType"
       put the result into tResult
    end if
@@ -2346,8 +2346,8 @@ on revDocsUpdateDatabase pConnection, pLibraryA
       return "unable to open table 'libraries'" & return & tResult
    end if
    
-   -- Create the table for this library. This might already exist, so do it unchecked.
-   put "CREATE TABLE" && tName & "(name text, type text, data blob)" into tSQL
+   # Create the library data table. This might already exist, so do it unchecked.
+   put "CREATE TABLE dictionary_data(library_id integer, entry_name text, entry_type text, entry_data blob)" into tSQL
    revExecuteSQL pConnection, tSQL
    
    revDocsUpdateLibrary pConnection, tName, pLibraryA["doc"]
@@ -2359,6 +2359,15 @@ on revDocsUpdateDatabase pConnection, pLibraryA
 end revDocsUpdateDatabase
 
 on revDocsUpdateLibrary pConnection, pName, pDocDataA
+   # Find the library id
+   local tSQL, tLibraryID
+   put "SELECT library_id FROM libraries WHERE library_name = :1" into tSQL
+   put revDataFromQuery(comma, return, pConnection, tSQL, "pName") into tLibraryID
+   
+   if the result is not a number then
+      return "error finding library id for" && pName & return & the result
+   end if
+   
    local tDocA, tDocName
    repeat for each element tDocA in pDocDataA
       put tDocA["name"] into tDocName
