@@ -1989,6 +1989,9 @@ MC_DLLEXPORT bool MCStringCreateWithCFString(CFStringRef cf_string, MCStringRef&
 MC_DLLEXPORT bool MCStringCreateWithCFStringAndRelease(CFStringRef cf_string, MCStringRef& r_string);
 #endif
 
+// Create a string from a Pascal-style (counted) string. This always uses the MacRoman encoding.
+MC_DLLEXPORT bool MCStringCreateWithPascalString(const unsigned char* pascal_string, MCStringRef& r_string);
+    
 #if !defined(__WINDOWS__)
 // Create a string from a C string in the system encoding
 MC_DLLEXPORT bool MCStringCreateWithSysString(const char *sys_string, MCStringRef &r_string);
