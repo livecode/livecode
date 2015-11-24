@@ -630,6 +630,8 @@ MCDataRef MCMacRawClipboardItemRep::CopyData() const
         // Get the data for this type
         NSData* t_bytes = [m_item dataForType:(NSString*)t_type];
         CFRelease(t_type);
+        if (t_bytes == nil)
+            return NULL;
         
         // Convert the data to a DataRef
         MCDataRef t_data;
