@@ -179,15 +179,15 @@ on TestRepeatForEachChar
    
    repeat for each character tChar in "abc"
    end repeat
-   TestAssertBroken "repeat for each character preserves last value", tChar is "c", "bug 16453"
+   TestAssert "repeat for each character preserves last value", tChar is "c"
    
    repeat for each codepoint tChar in "abc"
    end repeat
-   TestAssertBroken "repeat for each codepoint preserves last value", tChar is "c", "bug 16453"
+   TestAssert "repeat for each codepoint preserves last value", tChar is "c"
    
    repeat for each codeunit tChar in "abc"
    end repeat
-   TestAssertBroken "repeat for each codeunit preserves last value", tChar is "c", "bug 16453"
+   TestAssert "repeat for each codeunit preserves last value", tChar is "c"
    
    put "something" into tChar
    repeat for each character tChar in empty
@@ -221,7 +221,7 @@ on TestRepeatForEachDelimitedChunk
       put tChunk & comma after tComputedChunks
    end repeat
    TestAssert "repeat for each item trailing delimiter", tComputedChunks is (tChunks & comma)
-   TestAssertBroken "repeat for each item trailing delimiter preserves last value", tChunk is the last item of tChunks, "bug 16453"
+   TestAssert "repeat for each item trailing delimiter preserves last value", tChunk is the last item of tChunks
    
    put "something" into tChunk
    repeat for each item tChunk in empty
@@ -242,7 +242,7 @@ on TestRepeatForEachDelimitedChunk
       put tChunk & return after tComputedChunks
    end repeat
    TestAssert "repeat for each line trailing delimiter", tComputedChunks is (tChunks & return)
-   TestAssertBroken "repeat for each line trailing delimiter preserves last value", tChunk is the last line of tChunks, "bug 16453"
+   TestAssert "repeat for each line trailing delimiter preserves last value", tChunk is the last line of tChunks
    
    put "something" into tChunk
    repeat for each line tChunk in empty

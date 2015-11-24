@@ -573,6 +573,10 @@ private:
     CFStringRef m_cfstring;
 };
 
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+
 class MCAutoStringRefAsPascalString
 {
 public:
@@ -620,8 +624,6 @@ public:
 private:
     unsigned char *m_pascal_string;
 };
-
-#endif // __MAC__ || __IOS__
 
 ////////////////////////////////////////////////////////////////////////////////
 
