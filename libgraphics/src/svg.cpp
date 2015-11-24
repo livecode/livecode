@@ -27,7 +27,9 @@ static void __MCGSvgRender(MCGSvgRef self, MCGContextRef target);
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-bool MCGSvgCreate(const void *p_data, size_t p_data_size, MCGSvgRef& r_svg)
+bool MCGSvgCreate(const void *p_data,
+                  size_t p_data_size,
+                  MCGSvgRef& r_svg)
 {
     bool t_success;
     t_success = true;
@@ -104,7 +106,8 @@ void MCGSvgRender(MCGSvgRef self, MCGContextRef target)
 #define NANOSVG_IMPLEMENTATION
 #include "nanosvg.h"
 
-static void __nsvgUnionBounds(float x_bounds[4], float p_new_bounds[4])
+static void __nsvgUnionBounds(float x_bounds[4],
+                              float p_new_bounds[4])
 {
     if (p_new_bounds[0] < x_bounds[0])
         x_bounds[0] = p_new_bounds[0];
@@ -116,7 +119,8 @@ static void __nsvgUnionBounds(float x_bounds[4], float p_new_bounds[4])
         x_bounds[3] = p_new_bounds[3];
 }
 
-static void __nsvgMeasure(NSVGimage *p_image, MCGRectangle& r_bounds)
+static void __nsvgMeasure(NSVGimage *p_image,
+                          MCGRectangle& r_bounds)
 {
     float t_bounds[4];
     t_bounds[0] = FLT_MAX;
@@ -132,7 +136,9 @@ static void __nsvgMeasure(NSVGimage *p_image, MCGRectangle& r_bounds)
     r_bounds . size . height = t_bounds[3] - t_bounds[1];
 }
 
-static void __MCGSvgCreate(MCGSvgRef self, const void *p_data, size_t p_data_size)
+static void __MCGSvgCreate(MCGSvgRef self,
+                           const void *p_data,
+                           size_t p_data_size)
 {
     // NSVG expects a NUL terminated string and then mutates the string you give it so
     // we allocate a copy of the input data one byte bigger and explicitly NUL
@@ -178,16 +184,28 @@ static void __MCGSvgInvalidate(MCGSvgRef self)
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-typedef void (*MCGContextSetGradientProc)(MCGContextRef self, MCGGradientFunction p_function, const MCGFloat* p_stops, const MCGColor* p_colors, uindex_t p_ramp_length, bool p_mirror, bool p_wrap, uint32_t p_repeats, MCGAffineTransform p_transform, MCGImageFilter p_filter);
+typedef void (*MCGContextSetGradientProc)(MCGContextRef self,
+                                          MCGGradientFunction p_function,
+                                          const MCGFloat* p_stops,
+                                          const MCGColor* p_colors,
+                                          uindex_t p_ramp_length,
+                                          bool p_mirror,
+                                          bool p_wrap,
+                                          uint32_t p_repeats,
+                                          MCGAffineTransform p_transform,
+                                          MCGImageFilter p_filter);
 
-static bool __MCGSvgApplyGradient(char p_gradient_type, NSVGgradient *p_gradient, MCGContextRef p_context, MCGContextSetGradientProc p_setter)
+static bool __MCGSvgApplyGradient(char p_gradient_type,
+                                  NSVGgradient *p_gradient,
+                                  MCGContextRef p_context,
+                                  MCGContextSetGradientProc p_setter)
 {
     MCGFloat *t_stops;
-    if (!MCMemoryNewArray(p_gradient -> nstops, t_stops))
+    if (!MCMemoryNewArray((unsigned)p_gradient -> nstops, t_stops))
         return false;
     
     MCGColor *t_colors;
-    if (!MCMemoryNewArray(p_gradient -> nstops, t_colors))
+    if (!MCMemoryNewArray((unsigned)p_gradient -> nstops, t_colors))
     {
         MCMemoryDeleteArray(t_stops);
         return false;
@@ -208,12 +226,11 @@ static bool __MCGSvgApplyGradient(char p_gradient_type, NSVGgradient *p_gradient
              kMCGGradientFunctionRadial,
              t_stops,
              t_colors,
-             p_gradient -> nstops,
+             (unsigned)p_gradient -> nstops,
              p_gradient -> spread == NSVG_SPREAD_REFLECT ? true : false,
              p_gradient -> spread != NSVG_SPREAD_PAD ? true : false,
              1,
-             MCGAffineTransformMake(
-                                    p_gradient -> xform[0], p_gradient -> xform[1],
+             MCGAffineTransformMake(p_gradient -> xform[0], p_gradient -> xform[1],
                                     p_gradient -> xform[2], p_gradient -> xform[3],
                                     p_gradient -> xform[4], p_gradient -> xform[5]),
              kMCGImageFilterNone);
@@ -251,9 +268,9 @@ static void __MCGSvgRender(MCGSvgRef self, MCGContextRef p_context)
                  t_shape -> fill . type == NSVG_PAINT_RADIAL_GRADIENT)
         {
             if (!__MCGSvgApplyGradient(t_shape -> fill . type,
-                                        t_shape -> fill . gradient,
-                                        p_context,
-                                        MCGContextSetFillGradient))
+                                       t_shape -> fill . gradient,
+                                       p_context,
+                                       MCGContextSetFillGradient))
                 continue;
             
             t_need_fill = true;
@@ -285,9 +302,9 @@ static void __MCGSvgRender(MCGSvgRef self, MCGContextRef p_context)
                      t_shape -> stroke . type == NSVG_PAINT_RADIAL_GRADIENT)
             {
                 if (!__MCGSvgApplyGradient(t_shape -> stroke . type,
-                                            t_shape -> stroke . gradient,
-                                            p_context,
-                                            MCGContextSetStrokeGradient))
+                                           t_shape -> stroke . gradient,
+                                           p_context,
+                                           MCGContextSetStrokeGradient))
                     continue;
                 
                 t_need_stroke = true;
@@ -295,7 +312,8 @@ static void __MCGSvgRender(MCGSvgRef self, MCGContextRef p_context)
             
             if (t_need_stroke)
             {
-                MCGContextSetStrokeWidth(p_context, t_shape -> strokeWidth);
+                MCGContextSetStrokeWidth(p_context,
+                                         t_shape -> strokeWidth);
                 MCGContextSetStrokeJoinStyle(p_context,
                                              t_shape -> strokeLineJoin == NSVG_JOIN_MITER ?
                                              kMCGJoinStyleMiter :
@@ -323,7 +341,8 @@ static void __MCGSvgRender(MCGSvgRef self, MCGContextRef p_context)
             float *t_ords;
             t_ords = t_subpath -> pts;
             
-            MCGContextMoveTo(p_context, MCGPointMake(t_ords[0], t_ords[1]));
+            MCGContextMoveTo(p_context,
+                             MCGPointMake(t_ords[0], t_ords[1]));
             t_ords += 2;
             
             for(int i = 0; i < t_subpath -> npts - 1; i += 3)
