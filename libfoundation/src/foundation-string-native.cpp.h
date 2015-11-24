@@ -386,7 +386,7 @@ static inline hash_t
 __MCNativeStr_Hash(const char_t *p_chars,
                    size_t p_char_count)
 {
-#ifdef __64_BIT__
+#ifdef __LARGE__
     // 64-bit variant
     const uint64_t kPrime = 1099511628211ULL;
     const uint64_t kOffset = 14695981039346656037ULL;
