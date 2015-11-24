@@ -324,16 +324,20 @@ static void __MCGSvgRender(MCGSvgRef self, MCGContextRef p_context)
                                          t_shape -> strokeWidth);
                 MCGContextSetStrokeJoinStyle(p_context,
                                              t_shape -> strokeLineJoin == NSVG_JOIN_MITER ?
-                                             kMCGJoinStyleMiter :
-                                             t_shape -> strokeLineJoin == NSVG_JOIN_ROUND ?
-                                             kMCGJoinStyleRound :
-                                             kMCGJoinStyleBevel);
+                                                kMCGJoinStyleMiter :
+                                                t_shape -> strokeLineJoin == NSVG_JOIN_ROUND ?
+                                                    kMCGJoinStyleRound :
+                                                    kMCGJoinStyleBevel);
                 MCGContextSetStrokeCapStyle(p_context,
                                             t_shape -> strokeLineCap == NSVG_CAP_BUTT ?
-                                            kMCGCapStyleButt :
-                                            t_shape -> strokeLineCap == NSVG_CAP_ROUND ?
-                                            kMCGCapStyleRound :
-                                            kMCGCapStyleSquare);
+                                                kMCGCapStyleButt :
+                                                t_shape -> strokeLineCap == NSVG_CAP_ROUND ?
+                                                    kMCGCapStyleRound :
+                                                    kMCGCapStyleSquare);
+                MCGContextSetStrokeDashes(p_context,
+                                          t_shape -> strokeDashOffset,
+                                          t_shape -> strokeDashArray,
+                                          (unsigned)t_shape -> strokeDashCount);
             }
         }
         
