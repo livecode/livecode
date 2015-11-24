@@ -2347,7 +2347,7 @@ Example:
 Tags: Canvas
 */
 
-syntax SvgMakeFromFile is prefix operator with precedence 4
+syntax SvgMakeFromFile is prefix operator with constructor precedence
 	"svg" "from" "file" <mPath: Expression>
 begin
 	MCCanvasSvgMakeWithFile(mPath, output)
@@ -2369,7 +2369,7 @@ Example:
 
 Tags: Canvas
 */
-syntax SvgMakeFromResourceFile is prefix operator with precedence 4
+syntax SvgMakeFromResourceFile is prefix operator with constructor precedence
 	"svg" "from" "resource" "file" <mResource: Expression>
 begin
 	MCCanvasSvgMakeWithResourceFile(mResource, output)
@@ -2394,7 +2394,7 @@ Example:
 
 Tags: Canvas
 */
-syntax SvgMakeFromString is prefix operator with precedence 4
+syntax SvgMakeFromString is prefix operator with constructor precedence
 	"svg" "from" "string" <mString: Expression>
 begin
 	MCCanvasSvgMakeWithString(mString, output)
@@ -2407,7 +2407,7 @@ mSvg:		An expression which evaluates to an svg object.
 
 Tags:	Canvas
 */
-syntax SvgPropertyBoundingBox is prefix operator with precedence 4
+syntax SvgPropertyBoundingBox is prefix operator with property precedence
 	"the" "bounding" "box" "of" <mSvg: Expression>
 begin
 	MCCanvasSvgGetBoundingBox(mSvg, output)
@@ -2420,7 +2420,7 @@ mSvg:		An expression which evaluates to an svg object.
 
 Tags:	Canvas
 */
-syntax SvgPropertyViewingBox is prefix operator with precedence 4
+syntax SvgPropertyViewingBox is prefix operator with property precedence
 	"the" "viewing" "box" "of" <mSvg: Expression>
 begin
 	MCCanvasSvgGetViewingBox(mSvg, output)
