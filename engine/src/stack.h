@@ -406,7 +406,7 @@ public:
 	
 	// IM-2014-01-16: [[ StackScale ]] Ensure the view rect & transform are in sync with the configured view properties
 	// (stack viewport, fullscreen mode, fullscreen, scale factor)
-	void view_update_transform(void);
+	void view_update_transform(bool p_ensure_onscreen = false);
 	
 	// IM-2014-01-16: [[ StackScale ]] Calculate the new view rect, transform, and adjusted stack rect for the given stack rect
 	void view_calculate_viewports(const MCRectangle &p_stack_rect, MCRectangle &r_adjusted_stack_rect, MCRectangle &r_view_rect, MCGAffineTransform &r_transform);
@@ -743,6 +743,7 @@ public:
 	void getstackfile(MCStringRef p_name, MCStringRef &r_name);
 	void setfilename(MCStringRef f);
 
+	virtual IO_stat load(IO_handle stream, uint32_t version); /* Don't use this */
 	virtual IO_stat load(IO_handle stream, uint32_t version, uint1 type);
 	IO_stat load_stack(IO_handle stream, uint32_t version);
 	IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);
@@ -1113,8 +1114,8 @@ public:
 	void SetSystemWindow(MCExecContext& ctxt, bool setting);
 	void GetMetal(MCExecContext& ctxt, bool& r_setting);
 	void SetMetal(MCExecContext& ctxt, bool setting);
-	void GetShadow(MCExecContext& ctxt, bool& r_setting);
-	void SetShadow(MCExecContext& ctxt, bool setting);
+	void GetWindowShadow(MCExecContext& ctxt, bool& r_setting);
+	void SetWindowShadow(MCExecContext& ctxt, bool setting);
 	void GetResizable(MCExecContext& ctxt, bool& r_setting);
 	void SetResizable(MCExecContext& ctxt, bool setting);
 	void GetMinWidth(MCExecContext& ctxt, uinteger_t& r_width);

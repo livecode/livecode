@@ -46,8 +46,8 @@ public foreign handler MCEngineExecGetPropertyOfScriptObject(in pProperty as Str
 public foreign handler MCEngineExecSetPropertyOfScriptObject(in pValue as any, in pProperty as String, in pObject as ScriptObject) returns nothing binds to "<builtin>"
 public foreign handler MCEngineEvalOwnerOfScriptObject(in pObject as ScriptObject, out rParent as ScriptObject) returns nothing binds to "<builtin>"
 public foreign handler MCEngineEvalChildrenOfScriptObject(in pObject as ScriptObject, out rChildren as List) returns nothing binds to "<builtin>"
-public foreign handler MCEngineExecSendToScriptObject(in pIsFunction as CBool, in pMessage as String, in pTarget as ScriptObject) returns any binds to "<builtin>"
-public foreign handler MCEngineExecSendToScriptObjectWithArguments(in pIsFunction as CBool, in pMessage as String, in pTarget as ScriptObject, in pArguments as optional List) returns any binds to "<builtin>"
+public foreign handler MCEngineExecSendToScriptObject(in pIsFunction as CBool, in pMessage as String, in pTarget as ScriptObject) returns optional any binds to "<builtin>"
+public foreign handler MCEngineExecSendToScriptObjectWithArguments(in pIsFunction as CBool, in pMessage as String, in pTarget as ScriptObject, in pArguments as optional List) returns optional any binds to "<builtin>"
 public foreign handler MCEngineExecPostToScriptObject(in pMessage as String, in pTarget as ScriptObject) returns nothing binds to "<builtin>"
 public foreign handler MCEngineExecPostToScriptObjectWithArguments(in pMessage as String, in pTarget as ScriptObject, in pArguments as optional List) returns nothing binds to "<builtin>"
 public foreign handler MCEngineEvalMessageWasHandled(out pHandled as CBool) returns nothing binds to "<builtin>"
@@ -61,6 +61,7 @@ public type MCRunloopActionRef is Pointer
 public foreign handler MCEngineAddRunloopAction(in pCallback as MCRunloopActionCallback, in pContext as Pointer, out rAction as MCRunloopActionRef) returns CBool binds to "<builtin>"
 public foreign handler MCEngineRemoveRunloopAction(in pAction as MCRunloopActionRef) returns nothing binds to "<builtin>"
 public foreign handler MCEngineRunloopWait() returns CBool binds to "<builtin>"
+public foreign handler MCEngineRunloopBreakWait() returns nothing binds to "<builtin>"
 
 /*
 Summary:	Resolves a string to a script object.
@@ -114,7 +115,7 @@ Use to test the existence or otherwise of a script object, for example after att
 References: ResolveScriptObject(statement)
 */
 
-syntax ScriptObjectExists is postfix operator with precedence 3
+syntax ScriptObjectExists is postfix operator with comparison precedence
     <Object: Expression> "exists"
 begin
     MCEngineEvalScriptObjectExists(Object, output)
@@ -140,7 +141,7 @@ Use to test the non-existence or otherwise of a script object, for example after
 References: ResolveScriptObject(statement)
 */
 
-syntax ScriptObjectDoesNotExist is postfix operator with precedence 3
+syntax ScriptObjectDoesNotExist is postfix operator with comparison precedence
     <Object: Expression> "does" "not" "exist"
 begin
     MCEngineEvalScriptObjectDoesNotExists(Object, output)
@@ -171,7 +172,7 @@ Use to manipulate properties of a script object.
 to script objects is not allowed.
 */
 
-syntax PropertyOfScriptObject is prefix operator with precedence 3
+syntax PropertyOfScriptObject is prefix operator with property precedence
     "property" <Property: Expression> "of" <Object: Expression>
 begin
     MCEngineExecGetPropertyOfScriptObject(Property, Object, output)
@@ -200,7 +201,7 @@ Description:
 >*Note:* An error is thrown if the script object does not exist.
 */
 
-syntax OwnerOfScriptObject is prefix operator with precedence 4
+syntax OwnerOfScriptObject is prefix operator with property precedence
 	"the" "owner" "of" <Object: Expression>
 begin
 	MCEngineEvalOwnerOfScriptObject(Object, output)
@@ -231,7 +232,7 @@ Description:
 >*Note:* An error is thrown if the script object does not exist.
 */
 
-syntax ChildrenOfScriptObject is prefix operator with precedence 4
+syntax ChildrenOfScriptObject is prefix operator with property precedence
 	"the" "children" "of" <Object: Expression>
 begin
 	MCEngineEvalChildrenOfScriptObject(Object, output)

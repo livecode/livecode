@@ -272,7 +272,7 @@ private handler getPath(in pString as String) returns Path
 
 	if pString is "clock face" then
 		put (my width)/10 into mFontSize
-		return circle path centered at point [(my width)/2, (my height)/2] with radius (my width)/2
+		return circle path centered at point [(my width)/2, (my height)/2] with radius (my width/2)
 
 	else if pString is "second hand" or pString is "minute hand" then
 		return line path from point [0, 0] to point [0, -0.7*(my width)/2]
@@ -281,10 +281,10 @@ private handler getPath(in pString as String) returns Path
 		return line path from point [0,0] to point [0, -0.45*(my width/2)]
 
 	else if pString is "outer nub" then
-		return circle path centered at point [(my width)/2, (my height)/2] with radius 0.06*(my width/2)
+		return circle path centered at point [(my width)/2, (my height)/2] with radius (0.06*my width/2)
 
 	else if pString is "inner nub" then
-		return circle path centered at point [(my width)/2, (my height)/2] with radius 0.02*(my width/2)
+		return circle path centered at point [(my width)/2, (my height)/2] with radius (0.02*my width/2)
 
 	end if
 end handler

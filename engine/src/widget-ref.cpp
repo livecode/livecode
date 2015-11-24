@@ -427,7 +427,8 @@ bool MCWidgetBase::OnMouseScroll(coord_t p_delta_x, coord_t p_delta_y, bool& r_b
 
 bool MCWidgetBase::OnGeometryChanged(void)
 {
-    if (GetHost()->getNativeLayer())
+    if (GetHost() != nil &&
+        GetHost()->getNativeLayer())
         GetHost()->getNativeLayer()->OnGeometryChanged(GetHost()->getrect());
     
     return Dispatch(MCNAME("OnGeometryChanged"));
@@ -435,7 +436,8 @@ bool MCWidgetBase::OnGeometryChanged(void)
 
 bool MCWidgetBase::OnLayerChanged()
 {
-    if (GetHost()->getNativeLayer())
+    if (GetHost() != nil &&
+        GetHost()->getNativeLayer())
         GetHost()->getNativeLayer()->OnLayerChanged();
     
     return Dispatch(MCNAME("OnLayerChanged"));
@@ -443,7 +445,8 @@ bool MCWidgetBase::OnLayerChanged()
 
 bool MCWidgetBase::OnVisibilityChanged(bool p_visible)
 {
-    if (GetHost()->getNativeLayer())
+    if (GetHost() != nil &&
+        GetHost()->getNativeLayer())
         GetHost()->getNativeLayer()->OnVisibilityChanged(p_visible);
     
     
@@ -466,7 +469,8 @@ bool MCWidgetBase::OnParentPropertyChanged(void)
 
 bool MCWidgetBase::OnToolChanged(Tool p_tool)
 {
-    if (GetHost()->getNativeLayer())
+    if (GetHost() != nil &&
+        GetHost()->getNativeLayer())
         GetHost()->getNativeLayer()->OnToolChanged(p_tool);
     
     bool t_success;
@@ -679,6 +683,14 @@ void MCWidgetBase::PlaceWidget(MCWidgetRef p_child, MCWidgetRef p_other_widget, 
     if (t_child -> GetOwner() == nil)
         t_child -> SetOwner(AsWidget());
     
+    // Make sure the new child is opened, if the host is.
+    if (GetHost() != nil &&
+        GetHost() -> getopened() != 0)
+        t_child -> OnOpen();
+    
+    // Tell the eventmanager that the child widget has been placed.
+    MCwidgeteventmanager -> widget_appearing(p_child);
+    
     // Force a redraw.
     MCWidgetRedrawAll(p_child);
 }
@@ -687,6 +699,11 @@ void MCWidgetBase::UnplaceWidget(MCWidgetRef p_child)
 {
     MCWidgetChild *t_child;
     t_child = MCWidgetAsChild(p_child);
+    
+    // Make sure the widget is closed, if the host is open.
+    if (GetHost() != nil &&
+        GetHost() -> getopened() != 0)
+        t_child -> OnClose();
     
     // Find out where the widget is.
     uindex_t t_current_offset;
@@ -700,6 +717,9 @@ void MCWidgetBase::UnplaceWidget(MCWidgetRef p_child)
     // Remove the widget.
     if (!MCProperListRemoveElement(m_children, t_current_offset))
         return;
+    
+    // Tell the eventmanager that the child widget has been unplaced.
+    MCwidgeteventmanager -> widget_disappearing(p_child);
     
     // Reparent the widget.
     MCWidgetRedrawAll(p_child);
@@ -966,10 +986,7 @@ void MCWidgetChild::SetOwner(MCWidgetRef p_owner)
     if (p_owner == m_owner)
         return;
     
-    MCValueRelease(m_owner);
     m_owner = p_owner;
-    if (m_owner != nil)
-        MCValueRetain(m_owner);
 }
 
 bool MCWidgetChild::SetFrame(MCGRectangle p_frame)
@@ -978,6 +995,7 @@ bool MCWidgetChild::SetFrame(MCGRectangle p_frame)
         return true;
     
     m_frame = p_frame;
+    
     return OnGeometryChanged();
 }
 
@@ -1076,6 +1094,21 @@ MCNameRef MCWidgetGetKind(MCWidgetRef self)
 bool MCWidgetIsRoot(MCWidgetRef self)
 {
     return MCWidgetAsBase(self) -> IsRoot();
+}
+
+bool MCWidgetIsAncestorOf(MCWidgetRef self, MCWidgetRef p_child)
+{
+    for(;;)
+    {
+        if (self == p_child)
+            return true;
+        
+        p_child = MCWidgetGetOwner(p_child);
+        if (p_child == nil)
+            break;
+    }
+    
+    return false;
 }
 
 MCWidget *MCWidgetGetHost(MCWidgetRef self)

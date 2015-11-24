@@ -407,18 +407,18 @@ private handler fetchPath(in pObject as String) returns Path
 	-- iOS paths
 	if mWidgetTheme is "iOS" then
 		if pObject is "track" then
-			return rounded rectangle path of rectangle [mWidth/2 - 3*mHeight/8, mHeight/4, mWidth/2 + 3*mHeight/8, 3*mHeight/4] with radius mHeight/4
+			return rounded rectangle path of rectangle [mWidth/2 - 3*mHeight/8, mHeight/4, mWidth/2 + 3*mHeight/8, 3*mHeight/4] with radius (mHeight/4)
 		else if pObject is "thumb" then
 			if mSwitchIsInOnPosition then
-				return circle path centered at point [mWidth/2 + 3*mHeight/16, mHeight/2] with radius mHeight/4
+				return circle path centered at point [mWidth/2 + 3*mHeight/16, mHeight/2] with radius (mHeight/4)
 			else
-				return circle path centered at point [mWidth/2 - 3*mHeight/16, mHeight/2] with radius mHeight/4
+				return circle path centered at point [mWidth/2 - 3*mHeight/16, mHeight/2] with radius (mHeight/4)
 			end if
 		else if pObject is "thumbExtensionCircle" then
 			if mSwitchIsInOnPosition then
-				return circle path centered at point [mWidth/2 + mHeight/16, mHeight/2] with radius mHeight/4
+				return circle path centered at point [mWidth/2 + mHeight/16, mHeight/2] with radius (mHeight/4)
 			else
-				return circle path centered at point [mWidth/2 - mHeight/16, mHeight/2] with radius mHeight/4
+				return circle path centered at point [mWidth/2 - mHeight/16, mHeight/2] with radius (mHeight/4)
 			end if
 		else if pObject is "thumbExtensionRect" then
 			if mSwitchIsInOnPosition then
@@ -437,12 +437,12 @@ private handler fetchPath(in pObject as String) returns Path
 				return circle path centered at point [3*mRadius, mHeight/2] with radius mRadius
 			end if
 		else if pObject is "track" then
-			return rounded rectangle path of rectangle [2.5*mRadius, mHeight/2 - 2*mRadius/3, 5.5*mRadius, mHeight/2 + 2*mRadius/3] with radius 2*mRadius/3
+			return rounded rectangle path of rectangle [2.5*mRadius, mHeight/2 - 2*mRadius/3, 5.5*mRadius, mHeight/2 + 2*mRadius/3] with radius (2*mRadius/3)
 		else if pObject is "pressedHilite" then
 			if mSwitchIsInOnPosition then
-				return circle path centered at point [5*mRadius, mHeight/2] with radius 2.5*mRadius
+				return circle path centered at point [5*mRadius, mHeight/2] with radius (2.5*mRadius)
 			else
-				return circle path centered at point [3*mRadius, mHeight/2] with radius 2.5*mRadius
+				return circle path centered at point [3*mRadius, mHeight/2] with radius (2.5*mRadius)
 			end if
 		end if
 

@@ -60,24 +60,17 @@ int main(int argc, char *argv[])
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern bool MCCefLinuxGetExecutablePath(char *&r_path);
+#define CEF_PATH_PREFIX "Externals/CEF"
+
+const char *MCCefPlatformGetExecutableFolder(void);
+bool MCCefLinuxAppendPath(const char *p_base, const char *p_path, char *&r_path);
 
 const char *MCCefPlatformGetCefFolder(void)
 {
-    static char *s_cef_path = nil;
+	static char *s_cef_path = nil;
 
 	if (s_cef_path == nil)
-	{
-		bool t_success;
-		t_success = MCCefLinuxGetExecutablePath(s_cef_path);
-		if (t_success)
-		{
-			// remove end component from path
-			uint32_t t_index;
-			if (MCCStringLastIndexOf(s_cef_path, '/', t_index))
-				s_cef_path[t_index] = '\0';
-		}
-	}
+		/* UNCHECKED */ MCCefLinuxAppendPath(MCCefPlatformGetExecutableFolder(), CEF_PATH_PREFIX, s_cef_path);
 	
 	MCLog("libbrowser-cefprocess cef folder: %s", s_cef_path);
 	

@@ -1296,7 +1296,10 @@ void MCRepeat::exec_ctxt(MCExecContext& ctxt)
     switch (form)
 	{
         case RF_FOR:
-            MCKeywordsExecRepeatFor(ctxt, statements, endcond, loopvar, each, line, pos);
+            if (loopvar != nil)
+                MCKeywordsExecRepeatFor(ctxt, statements, endcond, loopvar, each, line, pos);
+            else
+                MCKeywordsExecRepeatCount(ctxt, statements, endcond, line, pos);
             break;
         case RF_WITH:
             MCKeywordsExecRepeatWith(ctxt, statements, step, startcond, endcond, loopvar, stepval, line, pos);

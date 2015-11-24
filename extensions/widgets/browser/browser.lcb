@@ -24,35 +24,37 @@ Licensed under the terms of the Creative Commons Attribution 3.0 Unported Licens
 /*
 This widget displays web content within a native web browser view.
 
-Name: browserUrl
+Name: URL
 Type: property
 
 Syntax:
-set the browserUrl of <widget> to <pUrl>
-get the browserUrl of <widget>
+set the URL of <widget> to <pUrl>
+get the URL of <widget>
 
-Summary: The url displayed by the browser.
+Summary: The URL displayed by the browser.
 
 Parameters:
 pUrl(string): A string specifying a URL.
 
 Example:
-	// Navigate to livecode.com by setting the browserUrl property, keeping a copy of the
+	// Navigate to livecode.com by setting the url property, keeping a copy of the
 	//    previous URL
 	local tOldUrl
-	put the browserUrl of widget "myBrowser" into tOldUrl
-	set the browserUrl of widget "myBrowser" to "http://livecode.com"
+	put the URL of widget "myBrowser" into tOldUrl
+	set the URL of widget "myBrowser" to "http://livecode.com"
 
 Description:
-The <browserUrl> is the URL of the content be displayed in the browser.
+The <URL> is the URL of the content be displayed in the browser.
 
+*Note:* The url property reflects the currently displaying page in the browser, and will change when navigating to another page. Setting the htmlText will result in the url property being empty.
+*Note:* Setting the url property to empty will clear the currently loaded page, resulting in a blank page being displayed and the url and htmlText properties being empty.
 
-Name: browserHtmltext
+Name: htmlText
 Type: property
 
 Syntax:
-set the browserHtmltext of <widget> to <pHtmlText>
-get the browserHtmltext of <widget>
+set the htmlText of <widget> to <pHtmlText>
+get the htmlText of <widget>
 
 Summary: The HTML text of the content displayed by the browser.
 
@@ -63,34 +65,51 @@ Example:
 	// Render a web page in the browser by specifying custom HTML content
 	local tHTML
 	put "<html><head><title>My Page Title</title></head><body>My Page Contents</body></html>" into tHTML
-	set the browserHtmltext of widget "myBrowser" to tHTML
+	set the htmlText of widget "myBrowser" to tHTML
 
 Description:
-The <browserHtmltext> is the HTML representation of the content displayed in the browser.
+The <htmlText> is the HTML representation of the content displayed in the browser.
 
+*Note:* When the htmltext has been set, the url property will be empty. When the url property is not empty, the htmlText will fetch the source of the current url displayed in the browser.
 
-Name: browserScrollbars
+Name: vScrollbar
 Type: property
 
 Syntax:
-set the browserScrollbars of <widget> to <pEnabled>
-get the browserScrollbars of <widget>
+set the vScrollbar of <widget> to <pEnabled>
+get the vScrollbar of <widget>
 
-Summary: Controls whether scrollbars are visible and enabled within the browser.
+Summary: Controls whether the vertical scrollbar is visible and enabled within the browser.
 
 Parameters:
 pEnabled(boolean): True or false.
 
 Description:
-Controls whether scrollbars are visible and enabled within the browser.
+Controls whether the vertical scrollbar is visible and enabled within the browser.
 
 
-Name: browserUseragent
+Name: hScrollbar
 Type: property
 
 Syntax:
-set the browserUseragent of <widget> to <pUserAgent>
-get the browserUseragent of <widget>
+set the hScrollbar of <widget> to <pEnabled>
+get the hScrollbar of <widget>
+
+Summary: Controls whether the horizontal scrollbar is visible and enabled within the browser.
+
+Parameters:
+pEnabled(boolean): True or false.
+
+Description:
+Controls whether the horizontal scrollbar is visible and enabled within the browser.
+
+
+Name: userAgent
+Type: property
+
+Syntax:
+set the userAgent of <widget> to <pUserAgent>
+get the userAgent of <widget>
 
 Summary: The identifier sent by the browser when fetching content from remote URLs.
 
@@ -99,19 +118,19 @@ pUserAgent(string): A string conforming to the http specifications at http://www
 
 Example:
 	// Set custom User-Agent header. The remote web server may be configured to deliver custom content for browsers using this User-Agent.
-	set the browserUseragent of widget "myBrowser" to "myAppEmbeddedBrowser"
+	set the userAgent of widget "myBrowser" to "myAppEmbeddedBrowser"
 	launch url "http://myexampleserver.com/content.html" in widget "myBrowser"
 
 Description:
-The <browserUseragent> is the identifier sent by the browser when fetching content from remote URLs.
+The <userAgent> is the identifier sent by the browser when fetching content from remote URLs.
 
 
-Name: browserJavascripthandlers
+Name: javascriptHandlers
 Type: property
 
 Syntax:
-set the browserJavascripthandlers of <widget> to <pHanderList>
-get the browserJavascripthandlers of <widget>
+set the javascriptHandlers of <widget> to <pHanderList>
+get the javascriptHandlers of <widget>
 
 Summary: A list of LiveCode handlers that are made available to JavaScript calls within the browser.
 
@@ -128,7 +147,7 @@ Example:
 	...
 	
 	// Set up the browser javascript handler list
-	set the browserJavascripthandlers to "myJSHandler" & return & "myOtherJSHandler"
+	set the javascriptHandlers to "myJSHandler" & return & "myOtherJSHandler"
 
 	...
 	
@@ -136,8 +155,9 @@ Example:
 	liveCode.myJSHandler("myMessage", 12345);
 	
 Description:
-The <browserJavascripthandlers> is a list of LiveCode handlers that are made available to JavaScript calls within the browser. The handlers will appear as methods attached to a global "liveCode" object. You can call these methods as you would any other JavaScript function and pass whatever parameters you require.
+The <javascriptHandlers> is a list of LiveCode handlers that are made available to JavaScript calls within the browser. The handlers will appear as methods attached to a global "liveCode" object. You can call these methods as you would any other JavaScript function and pass whatever parameters you require.
 
+>*Warning:* Setting the <javascriptHandlers> property gives JavaScript running within the Web browser permission to execute parts of your application through the handlers you choose to expose. If using this feature, make sure that you have complete control over the webpages which you load into the browser widget, and consider using https to ensure that third-parties cannot inject malicious code into them.
 
 
 Name: browserDocumentLoadBegin
@@ -261,7 +281,7 @@ The browserNavigateFailed message is sent to the widget's script object when the
 */
 
 -- declaring extension as widget, followed by identifier
-widget com.livecode.extensions.livecode.browser
+widget com.livecode.widget.browser
 --
 
 -- dependancy declarations
@@ -281,19 +301,22 @@ metadata svgicon is "M21.7,12c0,5.4-4.4,9.7-9.7,9.7S2.3,17.4,2.3,12S6.6,2.3,12,2
 --
 
 -- property declarations
-property browserUrl get getUrl set setUrl
-metadata browserUrl.editor is "com.livecode.pi.text"
+property URL get getUrl set setUrl
+metadata URL.editor is "com.livecode.pi.text"
 
-property browserHtmltext get getHtmlText set setHtmlText
+property htmlText get getHtmlText set setHtmlText
 
-property browserScrollbars get getScrollbars set setScrollbars
-metadata browserScrollbars.editor is "com.livecode.pi.boolean"
+property vScrollbar get getVScrollbar set setVScrollbar
+metadata vScrollbar.editor is "com.livecode.pi.boolean"
 
-property browserUseragent get getUserAgent set setUserAgent
-metadata browserUseragent.editor is "com.livecode.pi.text"
+property hScrollbar get getHScrollbar set setHScrollbar
+metadata hScrollbar.editor is "com.livecode.pi.boolean"
 
-property browserJavascripthandlers get getJavaScriptHandlers set setJavaScriptHandlers
-metadata browserJavascripthandlers.editor is "com.livecode.pi.text"
+property userAgent get getUserAgent set setUserAgent
+metadata userAgent.editor is "com.livecode.pi.text"
+
+property javascriptHandlers get getJavaScriptHandlers set setJavaScriptHandlers
+metadata javascriptHandlers.editor is "com.livecode.pi.text"
 
 --------------------------------------------------------------------------------
 
@@ -303,9 +326,7 @@ foreign handler MCHandlerGetFunctionPtr(in pHandler as any, out rFuncPtr as Poin
 
 variable mBrowser as optional MCBrowserRef
 variable mBrowserType as String
-variable mProperties as optional Array
-
-variable mContentSource as String
+variable mProperties as Array
 
 --
 
@@ -313,18 +334,15 @@ variable mScriptObject as ScriptObject
 
 --------------------------------------------------------------------------------
 
-constant kPersistentProps is ["scrollbars", "allowNewWindows", "enableContextMenu", "userAgent", "javaScriptHandlers"]
+constant kPersistentProps is ["verticalScrollbarEnabled", "horizontalScrollbarEnabled", "allowNewWindows", "enableContextMenu", "userAgent", "javaScriptHandlers"]
 
 --------------------------------------------------------------------------------
 
 public handler OnLoad(in pProperties as Array)
-	loadProperties(pProperties)
+	put pProperties into mProperties
 end handler
 
 public handler OnSave(out rProperties as Array)
-	if mBrowser is not nothing then
-		put saveProperties() into mProperties
-	end if
 	put mProperties into rProperties
 end handler
 
@@ -336,7 +354,6 @@ public handler OnCreate()
 
 	put the empty string into mBrowserType
 	put the empty array into mProperties
-	put the empty string into mContentSource
 end handler
 
 --
@@ -374,15 +391,12 @@ public handler OnOpen()
 	//   the callbacks (which don't have a target widget when called).
 	put my script object into mScriptObject
 	
-	loadProperties(mProperties)
+	applyProperties(mProperties)
 end handler
 
 --
 
 public handler OnClose()
-	// Save browser properties
-	put saveProperties() into mProperties
-	
 	//set my native layer to nothing
 	MCWidgetSetMyNativeLayer(nothing)
 	
@@ -429,6 +443,10 @@ private handler OnBrowserRequestCallback(in pContext as optional Pointer, in pBr
 		put [pUrl] into tArgs
 	end if
 	
+	if pType is kMCBrowserRequestTypeNavigate and pState is kMCBrowserRequestStateBegin and not pFrame then
+		updateUrlProperty(pUrl)
+	end if
+	
 	post tMessage to mScriptObject with tArgs
 end handler
 
@@ -457,37 +475,67 @@ private handler getProperty(in pProperty as String) returns any
 end handler
 
 private handler setProperty(in pProperty as String, in pValue as any)
-	if mBrowser is nothing then
-		put pValue into mProperties[pProperty]
-	else
+	put pValue into mProperties[pProperty]
+	if mBrowser is not nothing then
 		/* UNCHECKED */ browserSetProperty(mBrowser, pProperty, pValue)
 	end if
 end handler
 
 --
 
+private handler clearBrowser()
+	setHtmlText(the empty string)
+end handler
+
 private handler getUrl() returns String
-	return getProperty("url")
+	if "url" is among the keys of mProperties then
+		return mProperties["url"]
+	else
+		return the empty string
+	end if
 end handler
 
 private handler setUrl(in pUrl as String)
-	put "url" into mContentSource
-	if mBrowser is nothing then
-		put pUrl into mProperties["url"]
+	if pUrl is empty then
+		clearBrowser()
 	else
-		MCBrowserGoToURL(mBrowser, pUrl)
+		updateUrlProperty(pUrl)
+
+		if mBrowser is not nothing then
+			if not MCBrowserGoToURL(mBrowser, pUrl) then
+				throw "error launching url " & pUrl
+			end if
+		end if
+	end if
+end handler
+
+private handler updateUrlProperty(pUrl as String)
+	put pUrl into mProperties["url"]
+	if "htmlText" is among the keys of mProperties then
+		delete mProperties["htmlText"]
 	end if
 end handler
 
 --
 
 private handler getHtmlText() returns String
-	return getProperty("htmlText")
+	if "htmlText" is among the keys of mProperties then
+		return mProperties["htmlText"]
+	else
+		return getProperty("htmlText")
+	end if
 end handler
 
 private handler setHtmlText(in pHtmlText as String)
-	put "htmlText" into mContentSource
+	updateHtmlTextProperty(pHtmlText)
 	setProperty("htmlText", pHtmlText)
+end handler
+
+private handler updateHtmlTextProperty(in pHtmlText as String)
+	put pHtmlText into mProperties["htmlText"]
+	if "url" is among the keys of mProperties then
+		delete mProperties["url"]
+	end if
 end handler
 
 --
@@ -512,17 +560,27 @@ end handler
 
 --
 
-private handler getScrollbars() returns Boolean
-	return getProperty("scrollbars")
+private handler getVScrollbar() returns Boolean
+	return getProperty("verticalScrollbarEnabled")
 end handler
 
-private handler setScrollbars(in pScrollbars as Boolean)
-	setProperty("scrollbars", pScrollbars)
+private handler setVScrollbar(in pVScrollbar as Boolean)
+	setProperty("verticalScrollbarEnabled", pVScrollbar)
+end handler
+
+--
+
+private handler getHScrollbar() returns Boolean
+	return getProperty("horizontalScrollbarEnabled")
+end handler
+
+private handler setHScrollbar(in pHScrollbar as Boolean)
+	setProperty("horizontalScrollbarEnabled", pHScrollbar)
 end handler
 
 ----------
 
-private handler loadProperties(in pProperties as Array)
+private handler applyProperties(in pProperties as Array)
 	variable tKey
 	repeat for each element tKey in kPersistentProps
 		if tKey is among the keys of pProperties then
@@ -536,30 +594,10 @@ private handler loadProperties(in pProperties as Array)
 	end if
 end handler
 
-private handler saveProperties() returns Array
-	variable tProps
-	put the empty array into tProps
-	
-	variable tKey
-	repeat for each element tKey in kPersistentProps
-		put getProperty(tKey) into tProps[tKey]
-	end repeat
-	
-	if mContentSource is not empty then
-		put getProperty(mContentSource) into tProps[mContentSource]
-	end if
-	
-	return tProps
-end handler
-
 ----------
 
 public handler OnLaunchUrl(in pUrl as String)
-	if mBrowser is not nothing then
-		if not MCBrowserGoToURL(mBrowser, pUrl) then
-			throw "error launching url " & pUrl
-		end if
-	end if
+	setUrl(pUrl)
 end handler
 
 public handler OnGoBack()

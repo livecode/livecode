@@ -184,7 +184,7 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_START_ANGLE, UInt16, Interface, StartAngle)
 	DEFINE_RW_PROPERTY(P_ARC_ANGLE, UInt16, Interface, ArcAngle)
 	DEFINE_RW_PROPERTY(P_ROUND_ENDS, Bool, Interface, RoundEnds)
-	DEFINE_RW_PROPERTY(P_DASHES, ItemsOfUInt, Interface, Dashes)
+	DEFINE_RW_PROPERTY(P_DASHES, ItemsOfLooseUInt, Interface, Dashes)
 	
 	DEFINE_RW_PROPERTY(P_EDIT_BACKGROUND, Bool, Interface, EditBackground)
 	
@@ -391,7 +391,7 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
     DEFINE_RO_PROPERTY(P_SCREEN_PIXEL_SCALE, Double, Interface, ScreenPixelScale)
     // IM-2014-01-27: [[ HiDPI ]] Global property screenPixelScales returns a return-delimited
     // list of the pixel scales of all connected screens
-    DEFINE_RO_PROPERTY(P_SCREEN_PIXEL_SCALES, LinesOfDouble, Interface, ScreenPixelScales)
+    DEFINE_RO_PROPERTY(P_SCREEN_PIXEL_SCALES, LinesOfLooseDouble, Interface, ScreenPixelScales)
     
     // MW-2014-08-12: [[ EditionType ]] Return whether the engine is community or commercial.
     DEFINE_RO_PROPERTY(P_EDITION_TYPE, String, Engine, EditionType)
@@ -412,6 +412,42 @@ static bool MCPropertyInfoTableLookup(Properties p_which, Boolean p_effective, c
 			r_info = &kMCPropertyInfoTable[i];
 			return true;
 		}
+	
+	return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct Property_Override
+{
+	LT lt;
+	Properties property;
+};
+
+// List of syntax marks that should be interpreted as properties (if preceded by "the")
+Property_Override property_overrides[] =
+{
+	{{"url", TT_CHUNK, CT_URL}, P_URL},
+};
+extern const uint32_t property_overrides_size = ELEMENTS(property_overrides);
+
+bool lookup_property_override(const LT&p_lt, Properties &r_property)
+{
+	for (uint32_t i = 0; i < property_overrides_size; i++)
+		if (p_lt.type == property_overrides[i].lt.type && p_lt.which == property_overrides[i].lt.which)
+		{
+			r_property = property_overrides[i].property;
+			return true;
+		}
+	
+	return false;
+}
+
+bool lookup_property_override_name(uint16_t p_property, MCNameRef &r_name)
+{
+	for (uint32_t i = 0; i < property_overrides_size; i++)
+		if (property_overrides[i].property == p_property)
+			return MCNameCreateWithCString(property_overrides[i].lt.token, r_name);
 	
 	return false;
 }
@@ -519,13 +555,19 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	}
 	else
 		if (te->type != TT_PROPERTY)
+		{
+			Properties t_override;
+			
 			if (te->type == TT_CLASS && te->which == CT_MARKED)
 				which = P_MARKED;
+			else if (the && lookup_property_override(*te, t_override))
+				which = t_override;
 			else
 			{
 				MCperror->add(PE_PROPERTY_NOTAPROP, sp);
 				return PS_ERROR;
 			}
+		}
 		else
 			which = (Properties)te->which;
 

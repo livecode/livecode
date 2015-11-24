@@ -75,7 +75,7 @@ static void convertmctocgrect(MCRectangle r, CGRect& r_cg)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static ThemeButtonKind getthemebuttonpartandstate(const MCWidgetInfo &winfo, ThemeButtonDrawInfo &bNewInfo,const MCRectangle &drect,Rect &macR);
+static void getthemebuttonpartandstate(const MCWidgetInfo &winfo, HIThemeButtonDrawInfo &bNewInfo,const MCRectangle &drect, HIRect &macR);
 static void drawthemebutton(MCDC *dc, const MCWidgetInfo &widgetinfo, const MCRectangle &drect);
 static void drawthemetabs(MCDC *dc, const MCWidgetInfo &widgetinfo, const MCRectangle &drect);
 static Widget_Part HitTestScrollControls(const MCWidgetInfo &winfo, int2 mx,int2 my, const MCRectangle &drect);
@@ -106,6 +106,13 @@ static void converttohirect(const Rect *trect, HIRect *dhrect)
 	dhrect->size.height = trect->bottom - trect->top;
 }
 
+static void converttohirect(const MCRectangle& in, HIRect& out)
+{
+    out.origin.x = in.x;
+    out.origin.y = in.y;
+    out.size.width = in.width;
+    out.size.height = in.height;
+}
 
 static void converttonativerect(const MCRectangle &mcR, Rect &macR)
 {
@@ -240,14 +247,14 @@ void MCNativeTheme::getwidgetrect(const MCWidgetInfo &winfo, Widget_Metric wmetr
 				uint1 comboframesize = 2;
 				if (winfo.part == WTHEME_PART_COMBOTEXT)
 				{
-					ThemeButtonDrawInfo bNewInfo;
-					Rect macR,maccontentbounds;
-					ThemeButtonKind themebuttonkind = getthemebuttonpartandstate(winfo, bNewInfo,srect,macR);
-                    
-					GetThemeButtonBackgroundBounds (&macR,themebuttonkind,&bNewInfo,&maccontentbounds);
+					HIThemeButtonDrawInfo bNewInfo;
+					HIRect macR,maccontentbounds;
+					getthemebuttonpartandstate(winfo, bNewInfo,srect,macR);
+
+                    HIThemeGetButtonBackgroundBounds(&macR, &bNewInfo, &maccontentbounds);
                     
 					drect = srect;
-					drect.height = maccontentbounds.bottom - maccontentbounds.top - 1;
+					drect.height = maccontentbounds.size.height - 1;
 					drect = MCU_reduce_rect(drect,2);
 					drect.width -= combobuttonrect.width;
 				}
@@ -398,7 +405,7 @@ Widget_Part MCNativeTheme::hittest(const MCWidgetInfo &winfo, int2 mx,int2 my, c
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static ThemeButtonKind getthemebuttonpartandstate(const MCWidgetInfo &widgetinfo, ThemeButtonDrawInfo &bNewInfo,const MCRectangle &drect,Rect &macR)
+static void getthemebuttonpartandstate(const MCWidgetInfo &widgetinfo, HIThemeButtonDrawInfo &bNewInfo,const MCRectangle &drect, HIRect &macR)
 {
 	MCRectangle trect = drect;
 	ThemeButtonKind themebuttonkind;
@@ -429,6 +436,9 @@ static ThemeButtonKind getthemebuttonpartandstate(const MCWidgetInfo &widgetinfo
 	}
 	//set state stuff
 
+    // Version number is always zero
+    bNewInfo.version = 0;
+    
 	if (widgetinfo.state & WTHEME_STATE_DISABLED)
 		bNewInfo.state = kThemeStateInactive;
 	else
@@ -454,8 +464,9 @@ static ThemeButtonKind getthemebuttonpartandstate(const MCWidgetInfo &widgetinfo
 		if (!(widgetinfo.state & (WTHEME_STATE_PRESSED | WTHEME_STATE_SUPPRESSDEFAULT)))
 			bNewInfo.adornment = kThemeAdornmentDefault;
 	}
-	//MCScreenDC *pms = (MCScreenDC *)MCscreen;
-	converttonativerect(trect, macR);
+
+    Rect t_rect;
+	converttonativerect(trect, t_rect);
 	
 	if (themebuttonkind == kThemeCheckBox || themebuttonkind == kThemeRadioButton)
 	{
@@ -465,30 +476,33 @@ static ThemeButtonKind getthemebuttonpartandstate(const MCWidgetInfo &widgetinfo
 			else
 				themebuttonkind = kThemeSmallRadioButton;
 		else
-			macR.left--;
+			t_rect.left--;
 	}
 	else if (themebuttonkind == kThemePushButton || themebuttonkind == kThemePopupButton)
 	{
 		if (themebuttonkind == kThemePushButton && trect.height < 21)
 		{
-			macR.top--;
-			macR.left += 2;
-			macR.right -= 2;
+			t_rect.top--;
+			t_rect.left += 2;
+			t_rect.right -= 2;
 		}
-		macR.bottom -= 2;
+		t_rect.bottom -= 2;
 		
 		// IM-2014-02-12: [[ Bug 11785 ]] Constrain option button height to 20 px.
 		//   Drawing above this height is not supported on OSX with a retina display. 
-		if (themebuttonkind == kThemePopupButton && macR.bottom - macR.top > 20)
+		if (themebuttonkind == kThemePopupButton && t_rect.bottom - t_rect.top > 20)
 		{
 			// center within button rect
-			uint32_t t_adjust = ((macR.bottom - macR.top) - 20) / 2;
-			macR.top += t_adjust;
-			macR.bottom = macR.top + 20;
+			uint32_t t_adjust = ((t_rect.bottom - t_rect.top) - 20) / 2;
+			t_rect.top += t_adjust;
+			t_rect.bottom = t_rect.top + 20;
 		}
 	}
 
-	return themebuttonkind;
+    converttohirect(&t_rect, &macR);
+    
+    // Set the kind, too
+    bNewInfo.kind = themebuttonkind;
 }
 
 //draw theme button to MCScreen
@@ -496,14 +510,14 @@ static void drawthemebutton(MCDC *dc, const MCWidgetInfo &widgetinfo, const MCRe
 {
 	MCThemeDrawInfo t_info;
 	t_info . dest = drect;
-	t_info . button . kind =  getthemebuttonpartandstate(widgetinfo, t_info . button . info, drect, t_info . button . bounds);
-	if (t_info . button . kind == kThemePushButton && t_info . button . info . adornment == kThemeAdornmentDefault)
+	getthemebuttonpartandstate(widgetinfo, t_info . button . info, drect, t_info . button . bounds);
+	if (t_info . button . info . kind == kThemePushButton && t_info . button . info . adornment == kThemeAdornmentDefault)
 	{
-		t_info . button . animation_start = MCMacGetAnimationStartTime();
-		t_info . button . animation_current = MCMacGetAnimationCurrentTime();
+		t_info . button . info . animation . time . start = MCMacGetAnimationStartTime();
+		t_info . button . info . animation . time . current = MCMacGetAnimationCurrentTime();
 	}
 	else
-		t_info . button . animation_start = t_info . button . animation_current = 0;
+		t_info . button . info . animation . time . start = t_info . button . info . animation . time . current = 0;
 		
 	dc -> drawtheme(THEME_DRAW_TYPE_BUTTON, &t_info);
 }
@@ -627,10 +641,10 @@ static void DrawMacAMScrollControls(MCDC *dc, const MCWidgetInfo &winfo, const M
 	{
 		if (drect.height > drect.width && drect.height / drect.width < 3)
 		{
-			converttonativerect(drect, t_info . button . bounds);
-			t_info . button . bounds . left++;
+			converttohirect(drect, t_info . button . bounds);
+			t_info . button . bounds . origin . x++;
+            t_info . button . bounds . size . width--;
 				
-			ThemeButtonDrawInfo bNewInfo;
 			if (winfo.state & WTHEME_STATE_DISABLED)
 				t_info . button . info . state = kThemeStateInactive;
 			else
@@ -643,7 +657,7 @@ static void DrawMacAMScrollControls(MCDC *dc, const MCWidgetInfo &winfo, const M
 					t_info . button . info . state = kThemeStateActive;
 			t_info . button . info . adornment = kThemeAdornmentNone;
 			t_info . button . info . value = kThemeButtonOff;
-			t_info . button . kind = kThemeIncDecButton;
+			t_info . button . info . kind = kThemeIncDecButton;
 			dc -> drawtheme(THEME_DRAW_TYPE_BUTTON, &t_info);
 		}
 		else
@@ -699,9 +713,8 @@ static void getscrollbarpressedstate(const MCWidgetInfo &winfo, HIThemeTrackDraw
 			{
 			case WTHEME_PART_ARROW_DEC:
 				{
-					ThemeScrollBarArrowStyle astyle;
-					GetThemeScrollBarArrowStyle(&astyle);
-					if (astyle == kThemeScrollBarArrowsSingle)
+                    NSString* t_arrow_style = [[NSUserDefaults standardUserDefaults] objectForKey:@"AppleScrollBarVariant"];
+                    if (![t_arrow_style isEqualToString:@"DoubleBoth"])
 					{
 						if (doublesbarrows)
 							ps = kThemeLeftInsideArrowPressed;
@@ -879,8 +892,7 @@ void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRe
 			t_info . trackInfo . slider . pressState = p_info . slider . info . trackInfo . slider . pressState;
 			if (p_info . slider . count > 0)
 				HIThemeDrawTrackTickMarks(&t_info, p_info . slider . count, t_context, kHIThemeOrientationNormal);
-			if (MCmajorosversion >= 0x1050)
-				t_info . bounds . origin . y += 1;
+            t_info . bounds . origin . y += 1;
             
 			HIThemeDrawTrack(&t_info, NULL, t_context, kHIThemeOrientationNormal);
 		}
@@ -937,20 +949,7 @@ void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRe
 			
 		case THEME_DRAW_TYPE_BUTTON:
 		{
-			HIThemeButtonDrawInfo t_info;
-			HIRect t_bounds;
-			
-			assign(t_bounds, p_info . button . bounds);
-			
-			t_info . version = 0;
-			t_info . state = p_info . button . info . state;
-			t_info . value = p_info . button . info . value;
-			t_info . adornment = p_info . button . info . adornment;
-			t_info . kind = p_info . button . kind;
-			t_info . animation . time . start = p_info . button . animation_start;
-			t_info . animation . time . current = p_info . button . animation_current;
-            
-			HIThemeDrawButton(&t_bounds, &t_info, t_context, kHIThemeOrientationNormal, NULL);
+			HIThemeDrawButton(&p_info.button.bounds, &p_info.button.info, t_context, kHIThemeOrientationNormal, NULL);
 		}
 			break;
 			

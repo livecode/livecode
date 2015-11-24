@@ -587,30 +587,6 @@ bool __MCCustomDefaultMutableCopy(MCValueRef, bool, MCValueRef &);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-hash_t MCNativeCharsHash(const char_t *chars, uindex_t char_count, MCStringOptions p_options);
-
-bool MCNativeCharsEqualExact(const char_t *left, uindex_t left_length, const char_t *right, uindex_t right_length);
-bool MCNativeCharsEqualCaseless(const char_t *left, uindex_t left_length, const char_t *right, uindex_t right_length);
-
-compare_t MCNativeCharsCompareExact(const char_t *left, uindex_t left_length, const char_t *right, uindex_t right_length);
-compare_t MCNativeCharsCompareCaseless(const char_t *left, uindex_t left_length, const char_t *right, uindex_t right_length);
-
-// Return the number of characters of prefix that are equal to those at the
-// beginning of string.
-uindex_t MCNativeCharsSharedPrefixExact(const char_t *string, uindex_t left_length, const char_t *suffix, uindex_t right_length);
-uindex_t MCNativeCharsSharedPrefixCaseless(const char_t *string, uindex_t left_length, const char_t *suffix, uindex_t right_length);
-
-// Return the number of characters of suffix that are equal to those at the
-// end of string.
-uindex_t MCNativeCharsSharedSuffixExact(const char_t *string, uindex_t left_length, const char_t *suffix, uindex_t right_length);
-uindex_t MCNativeCharsSharedSuffixCaseless(const char_t *string, uindex_t left_length, const char_t *suffix, uindex_t right_length);
-
-// Lowercase all the characters in-place.
-void MCNativeCharsLowercase(char_t *chars, uindex_t char_count);
-
-// Uppercase all the characters in-place.
-void MCNativeCharsUppercase(char_t *chars, uindex_t char_count);
-
 // Fold the given native char for caseless comparison.
 char_t MCNativeCharFold(char_t c);
 
@@ -625,34 +601,6 @@ bool MCNativeCharsFormatV(char_t*& r_string, uindex_t& r_size, const char *forma
 
 //////////
 
-//hash_t MCUnicodeCharsHashExact(const unichar_t *chars, uindex_t char_count);
-//hash_t MCUnicodeCharsHashCaseless(const unichar_t *chars, uindex_t char_count);
-
-//bool MCUnicodeCharsEqualExact(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
-//bool MCUnicodeCharsEqualCaseless(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
-
-//compare_t MCUnicodeCharsCompareExact(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
-//compare_t MCUnicodeCharsCompareCaseless(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
-
-// Return the number of characters of prefix that are equal to those at the
-// beginning of string.
-//uindex_t MCUnicodeCharsSharedPrefixExact(const unichar_t *string, uindex_t left_length, const unichar_t *suffix, uindex_t right_length);
-//uindex_t MCUnicodeCharsSharedPrefixCaseless(const unichar_t *string, uindex_t left_length, const unichar_t *suffix, uindex_t right_length);
-
-// Return the number of characters of suffix that are equal to those at the
-// end of string.
-//uindex_t MCUnicodeCharsSharedSuffixExact(const unichar_t *string, uindex_t left_length, const unichar_t *suffix, uindex_t right_length);
-//uindex_t MCUnicodeCharsSharedSuffixCaseless(const unichar_t *string, uindex_t left_length, const unichar_t *suffix, uindex_t right_length);
-
-// Lowercase all the characters in-place.
-//void MCUnicodeCharsLowercase(unichar_t *chars, uindex_t char_count);
-
-// Uppercase all the characters in-place.
-//void MCUnicodeCharsUppercase(unichar_t *chars, uindex_t char_count);
-
-//bool MCUnicodeCharsEqualExact(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
-//bool MCUnicodeCharsEqualCaseless(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
-
 bool MCUnicodeCharsMapToNative(const unichar_t *uchars, uindex_t uchar_count, char_t *nchars, uindex_t& r_nchar_count, char_t invalid);
 void MCUnicodeCharsMapFromNative(const char_t *chars, uindex_t char_count, unichar_t *uchars);
 
@@ -662,12 +610,6 @@ uindex_t MCUnicodeCharsMapFromUTF8(const byte_t *utf8bytes, uindex_t utf8byte_co
 bool MCUnicodeCharMapToNative(unichar_t uchar, char_t& r_nchar);
 char_t MCUnicodeCharMapToNativeLossy(unichar_t nchar);
 unichar_t MCUnicodeCharMapFromNative(char_t nchar);
-
-//unichar_t MCUnicodeCharFold(unichar_t);
-
-//unichar_t MCUnicodeCharLowercase(unichar_t);
-
-//unichar_t MCUnicodeCharUppercase(unichar_t);
 
 ////////////////////////////////////////////////////////////////////////////////
 // INTERNAL MCVALUE TYPE ASSERTIONS

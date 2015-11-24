@@ -58,8 +58,10 @@ public foreign handler MCBrowserLibraryInitialize() returns CBool binds to "<bui
 public foreign handler MCBrowserLibraryFinalize() returns nothing binds to "<builtin>"
 
 public foreign handler type MCBrowserWaitFunction() returns CBool
+public foreign handler type MCBrowserBreakWaitFunction() returns nothing
 
 public foreign handler MCBrowserLibrarySetWaitFunction(in pWait as MCBrowserWaitFunction) returns nothing binds to "<builtin>"
+public foreign handler MCBrowserLibrarySetBreakWaitFunction(in pBreakWait as MCBrowserBreakWaitFunction) returns nothing binds to "<builtin>"
 public foreign handler MCBrowserLibraryGetRunloopCallback(out rCallback as Pointer, out rContext as Pointer) returns CBool binds to "<builtin>"
 
 public foreign handler MCBrowserFactoryGet(in pFactoryId as ZStringUTF8, out rFactory as MCBrowserFactoryRef) returns CBool binds to "<builtin>"
@@ -124,15 +126,16 @@ public constant kMCBrowserValueTypeDictionary is 6
 
 --
 
-public constant kMCBrowserPropertyScrollbars is 0
-public constant kMCBrowserPropertyAllowNewWindows is 1
-public constant kMCBrowserPropertyEnableContextMenu is 2
-public constant kMCBrowserPropertyUrl is 3
-public constant kMCBrowserPropertyHtmlText is 4
-public constant kMCBrowserPropertyUserAgent is 5
-public constant kMCBrowserPropertyJavaScriptHandlers is 6
+public constant kMCBrowserPropertyVerticalScrollbarEnabled is 0
+public constant kMCBrowserPropertyHorizontalScrollbarEnabled is 1
+public constant kMCBrowserPropertyAllowNewWindows is 2
+public constant kMCBrowserPropertyEnableContextMenu is 3
+public constant kMCBrowserPropertyUrl is 4
+public constant kMCBrowserPropertyHtmlText is 5
+public constant kMCBrowserPropertyUserAgent is 6
+public constant kMCBrowserPropertyJavaScriptHandlers is 7
 
-public constant kMCBrowserPropertyMap is ["scrollbars", "allowNewWindows", "enableContextMenu", "url", "htmlText", "userAgent", "javaScriptHandlers"]
+public constant kMCBrowserPropertyMap is ["verticalScrollbarEnabled", "horizontalScrollbarEnabled", "allowNewWindows", "enableContextMenu", "url", "htmlText", "userAgent", "javaScriptHandlers"]
 
 --
 
@@ -153,11 +156,11 @@ public constant kMCBrowserRequestStateMap is ["begin", "complete", "failed"]
 
 -- constant kStringProps is ["url", "htmlText", "userAgent", "javaScriptHandlers"]
 -- TODO - replace literal values with constants when possible
-constant kStringProps is [3, 4, 5, 6]
+constant kStringProps is [4, 5, 6, 7]
 
--- constant kBoolProps is ["scrollbars", "allowNewWindows", "enableContextMenu"]
+-- constant kBoolProps is ["verticalScrollbarEnabled", "horizontalScrollbarEnabled", "allowNewWindows", "enableContextMenu"]
 -- TODO - replace literal values with constants when possible
-constant kBoolProps is [0, 1, 2]
+constant kBoolProps is [0, 1, 2, 3]
 
 --------------------------------------------------------------------------------
 
@@ -171,63 +174,63 @@ public handler browserListToLCBList(in pBrowserList as MCBrowserListRef, out rLi
 		return false
 	end if
 	
-	variable i
-	repeat with i from 0 up to tCount - 1
+	variable tIndex
+	repeat with tIndex from 0 up to tCount - 1
 		variable tType as MCBrowserValueType
-		if not MCBrowserListGetType(pBrowserList, i, tType) then
-			log "couldn't get type of %@" with [i]
+		if not MCBrowserListGetType(pBrowserList, tIndex, tType) then
+			log "couldn't get type of %@" with [tIndex]
 			return false
 		end if
 		
 		if tType is kMCBrowserValueTypeBoolean then
 			variable tBoolean as CBool
-			if not MCBrowserListGetBoolean(pBrowserList, i, tBoolean) then
-				log "couldn't get boolean %@" with [i]
+			if not MCBrowserListGetBoolean(pBrowserList, tIndex, tBoolean) then
+				log "couldn't get boolean %@" with [tIndex]
 				return false
 			end if
 			push tBoolean onto tList
 		else if tType is kMCBrowserValueTypeInteger then
 			variable tInteger as CInt
-			if not MCBrowserListGetInteger(pBrowserList, i, tInteger) then
-				log "couldn't get integer %@" with [i]
+			if not MCBrowserListGetInteger(pBrowserList, tIndex, tInteger) then
+				log "couldn't get integer %@" with [tIndex]
 				return false
 			end if
 			push tInteger onto tList
 		else if tType is kMCBrowserValueTypeDouble then
 			variable tDouble as CDouble
-			if not MCBrowserListGetDouble(pBrowserList, i, tDouble) then
-				log "couldn't get double %@" with [i]
+			if not MCBrowserListGetDouble(pBrowserList, tIndex, tDouble) then
+				log "couldn't get double %@" with [tIndex]
 				return false
 			end if
 			push tDouble onto tList
 		else if tType is kMCBrowserValueTypeUTF8String then
 			variable tUTF8String as ZStringNative
-			if not MCBrowserListGetUTF8String(pBrowserList, i, tUTF8String) then
-				log "couldn't get string %@" with [i]
+			if not MCBrowserListGetUTF8String(pBrowserList, tIndex, tUTF8String) then
+				log "couldn't get string %@" with [tIndex]
 				return false
 			end if
 			push tUTF8String onto tList
 		else if tType is kMCBrowserValueTypeList then
 			variable tBrowserList as MCBrowserListRef
-			if not MCBrowserListGetList(pBrowserList, i, tBrowserList) then
-				log "couldn't get list %@" with [i]
+			if not MCBrowserListGetList(pBrowserList, tIndex, tBrowserList) then
+				log "couldn't get list %@" with [tIndex]
 				return false
 			end if
 			variable tConvertedList as List
 			if not browserListToLCBList(tBrowserList, tConvertedList) then
-				log "couldn't convert list %@" with [i]
+				log "couldn't convert list %@" with [tIndex]
 				return false
 			end if
 			push tConvertedList onto tList
 		else if tType is kMCBrowserValueTypeDictionary then
 			variable tBrowserDict as MCBrowserDictionaryRef
-			if not MCBrowserListGetDictionary(pBrowserList, i, tBrowserDict) then
-				log "couldn't get dictionary %@" with [i]
+			if not MCBrowserListGetDictionary(pBrowserList, tIndex, tBrowserDict) then
+				log "couldn't get dictionary %@" with [tIndex]
 				return false
 			end if
 			variable tConvertedDict as Array
 			if not browserDictionaryToLCBArray(tBrowserDict, tConvertedDict) then 
-				log "couldn't convert dictionary %@" with [i]
+				log "couldn't convert dictionary %@" with [tIndex]
 				return false
 			end if
 			push tConvertedDict onto tList
@@ -252,69 +255,69 @@ public handler browserDictionaryToLCBArray(in pBrowserDict as MCBrowserDictionar
 		return false
 	end if
 	
-	variable i
-	repeat with i from 0 up to tCount - 1
+	variable tIndex
+	repeat with tIndex from 0 up to tCount - 1
 		variable tKey as String
-		if not MCBrowserDictionaryGetKey(pBrowserDict, i, tKey) then
-			log "couldn't get key of %@" with [i]
+		if not MCBrowserDictionaryGetKey(pBrowserDict, tIndex, tKey) then
+			log "couldn't get key of %@" with [tIndex]
 			return false
 		end if
 		
 		variable tType as MCBrowserValueType
 		if not MCBrowserDictionaryGetType(pBrowserDict, tKey, tType) then
-			log "couldn't get type of %@" with [i]
+			log "couldn't get type of %@" with [tIndex]
 			return false
 		end if
 		
 		if tType is kMCBrowserValueTypeBoolean then
 			variable tBoolean as CBool
 			if not MCBrowserDictionaryGetBoolean(pBrowserDict, tKey, tBoolean) then
-				log "couldn't get boolean %@" with [i]
+				log "couldn't get boolean %@" with [tIndex]
 				return false
 			end if
 			put tBoolean into tArray[tKey]
 		else if tType is kMCBrowserValueTypeInteger then
 			variable tInteger as CInt
 			if not MCBrowserDictionaryGetInteger(pBrowserDict, tKey, tInteger) then
-				log "couldn't get integer %@" with [i]
+				log "couldn't get integer %@" with [tIndex]
 				return false
 			end if
 			put tInteger into tArray[tKey]
 		else if tType is kMCBrowserValueTypeDouble then
 			variable tDouble as CDouble
 			if not MCBrowserDictionaryGetDouble(pBrowserDict, tKey, tDouble) then
-				log "couldn't get double %@" with [i]
+				log "couldn't get double %@" with [tIndex]
 				return false
 			end if
 			put tDouble into tArray[tKey]
 		else if tType is kMCBrowserValueTypeUTF8String then
 			variable tUTF8String as ZStringNative
 			if not MCBrowserDictionaryGetUTF8String(pBrowserDict, tKey, tUTF8String) then
-				log "couldn't get string %@" with [i]
+				log "couldn't get string %@" with [tIndex]
 				return false
 			end if
 			put tUTF8String into tArray[tKey]
 		else if tType is kMCBrowserValueTypeList then
 			variable tBrowserList as MCBrowserListRef
 			if not MCBrowserDictionaryGetList(pBrowserDict, tKey, tBrowserList) then
-				log "couldn't get list %@" with [i]
+				log "couldn't get list %@" with [tIndex]
 				return false
 			end if
 			variable tConvertedList as List
 			if not browserListToLCBList(tBrowserList, tConvertedList) then
-				log "couldn't convert list %@" with [i]
+				log "couldn't convert list %@" with [tIndex]
 				return false
 			end if
 			put tConvertedList into tArray[tKey]
 		else if tType is kMCBrowserValueTypeDictionary then
 			variable tBrowserDict as MCBrowserDictionaryRef
 			if not MCBrowserDictionaryGetDictionary(pBrowserDict, tKey, tBrowserDict) then
-				log "couldn't get dictionary %@" with [i]
+				log "couldn't get dictionary %@" with [tIndex]
 				return false
 			end if
 			variable tConvertedDict as Array
 			if not browserDictionaryToLCBArray(tBrowserDict, tConvertedDict) then 
-				log "couldn't convert dictionary %@" with [i]
+				log "couldn't convert dictionary %@" with [tIndex]
 				return false
 			end if
 			put tConvertedDict into tArray[tKey]
@@ -393,6 +396,10 @@ private handler doWait() returns CBool
 	return true
 end handler
 
+private handler doBreakWait() returns nothing
+	MCEngineRunloopBreakWait()
+end handler
+
 public handler libbrowserInit() returns nothing
 	if mInitialized is not nothing then
 		return
@@ -403,6 +410,7 @@ public handler libbrowserInit() returns nothing
 	end if
 
 	MCBrowserLibrarySetWaitFunction(doWait)
+	MCBrowserLibrarySetBreakWaitFunction(doBreakWait)
 
 	variable tCallback as MCRunloopActionCallback
 	variable tContext as Pointer

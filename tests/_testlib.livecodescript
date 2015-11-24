@@ -1,6 +1,6 @@
 ﻿script "TestLibrary"
 /*
-Copyright (C) 2015 Runtime Revolution Ltd.
+Copyright (C) 2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -41,8 +41,8 @@ private function _TestValidateReason pReason
       throw "Bad test directive reason '" & line 1 of pReason & "...': multiple lines"
    end if
    
-   if pDescription contains "#" then
-      throw "Bad test directive reason '" & pDescription & "': contains '#'"
+   if pReason contains "#" then
+      throw "Bad test directive reason '" & pReason & "': contains '#'"
    end if
    
    return line 1 of pReason
@@ -87,8 +87,14 @@ private command _TestOutput pIsOkay, pDescription, pDirective, pReason
       end if
    end if
    
-   write tMessage & return to stdout
+   _TestWriteOutput tMessage & return
 end _TestOutput
+
+private command _TestWriteOutput pMessage
+   -- As stdout is considered to be a 'native' stream, we encode to UTF-8 first
+   -- then will unencode in the test runner.
+   write textEncode(pMessage, "UTF8") to stdout
+end _TestWriteOutput
 
 ----------------------------------------------------------------
 -- Unit test library functions
@@ -97,7 +103,7 @@ end _TestOutput
 on TestDiagnostic pMessage
    local tLine
    repeat for each line tLine in pMessage
-      write "#" && tLine & return to stdout
+      _TestWriteOutput "#" && tLine & return
    end repeat
 end TestDiagnostic
 
@@ -117,3 +123,71 @@ on ErrorDialog executionError, parseError
    write executionError & return to stderr
    quit 1
 end ErrorDialog
+
+function TestGetEngineRepositoryPath
+  set the itemdelimiter to "/"
+  return item 1 to -3 of the filename of me
+end TestGetEngineRepositoryPath
+
+function TestGetIDERepositoryPath
+  set the itemdelimiter to "/"
+  return item 1 to -3 of the filename of me & slash & "ide"
+end TestGetIDERepositoryPath
+
+on TestLoadExtension pName	
+   set the itemdelimiter to "."
+   local tExtensionUnzipFolder
+   put "com.livecode.extensions.livecode." & toLower(item -1 of pName) into tExtensionUnzipFolder
+
+   local tPath, tRepoPath
+   put specialfolderpath("engine") into tPath
+   put TestGetEngineRepositoryPath() into tRepoPath
+   
+   local tError
+   put "extension" && pName && "not found" into tError
+   
+   # Find the built extensions folder
+   local tExtensionsFolder
+   set the itemdelimiter to slash
+   repeat while tPath is not tRepoPath and tPath is not empty
+      if there is a folder (tPath & slash & "packaged_extensions") then
+         put (tPath & slash & "packaged_extensions") into tExtensionsFolder
+         exit repeat
+      end if
+      delete item -1 of tPath
+   end repeat
+   
+   TestDiagnostic tExtensionsFolder
+
+   local tExtensionFolder
+   if tExtensionsFolder is not empty then
+      if there is a folder (tExtensionsFolder & slash & tExtensionUnzipFolder) then
+        put (tExtensionsFolder & slash & tExtensionUnzipFolder) into tExtensionFolder
+      end if
+   end if
+   
+    TestDiagnostic tExtensionFolder
+   
+   local tExtensionFile
+   if tExtensionFolder is not empty then
+      if there is a file (tExtensionFolder & slash & "module.lcm") then
+         put (tExtensionFolder & slash & "module.lcm") into tExtensionFile
+      end if
+   end if
+   
+   if tExtensionFile is not empty then
+      if there is a folder (tExtensionFolder & slash & "resources") then
+         do "load extension from file tExtensionFile with resource path (tExtensionFolder & slash & " & quote & "resources" & quote
+      else
+         do "load extension from file tExtensionFile"
+      end if
+      
+      put the result into tError
+   end if
+   
+   if tError is not empty then
+      write tError & return to stderr
+      quit 1
+   end if
+   
+end TestLoadExtension

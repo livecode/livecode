@@ -46,7 +46,7 @@ Returns: 	If the left hand expression evaluates to false, the value of the expre
             Note that the right hand expression is only evaluated if the left hand expression is true.
 */
 
-//syntax LogicOr is left binary operator of precedence 4
+//syntax LogicOr is left binary operator with logical or precedence
 //    <Left: Expression> "or" <Right: Expression>
 //begin
 //    EvalOr(Left, Right, output)
@@ -63,7 +63,7 @@ Returns: 	If the left hand expression evaluates to true, the value of the expres
             Note that the right hand expression is only evaluated if the left hand expression is false.
 */
 
-//syntax LogicAnd is left binary operator of precedence 3
+//syntax LogicAnd is left binary operator with logical or precedence
 //    <Left: Expression> "and" <Right: Expression>
 //begin
 //    EvalAnd(Left, Right, output)
@@ -85,7 +85,7 @@ Tags: Logic
 	
 */
 
-syntax LogicNot is prefix operator with precedence 6
+syntax LogicNot is prefix operator with logical not precedence
     "not" <Operand: Expression>
 begin
     MCLogicEvalNot(Operand, output)
@@ -109,7 +109,7 @@ Example:
 Tags: Logic
 */
 
-syntax BooleanIsEqualToBoolean is neutral binary operator with precedence 7
+syntax BooleanIsEqualToBoolean is neutral binary operator with comparison precedence
     <Left: Expression> "is" <Right: Expression>
 begin
     MCLogicEvalIsEqualTo(Left, Right, output)
@@ -131,7 +131,7 @@ Example:
 Tags: Logic
 */
 
-syntax BooleanIsNotEqualToBoolean is neutral binary operator with precedence 7
+syntax BooleanIsNotEqualToBoolean is neutral binary operator with comparison precedence
     <Left: Expression> "is not" <Right: Expression>
 begin
     MCLogicEvalIsNotEqualTo(Left, Right, output)
@@ -154,7 +154,7 @@ Description:
 Use <BooleanFormattedAsString> when you want to manipulate a boolean value as text.
 */
 
-syntax BooleanFormattedAsString is postfix operator with precedence 1
+syntax BooleanFormattedAsString is postfix operator with conversion precedence
     <Operand: Expression> "formatted" "as" "string"
 begin
     MCLogicEvalBoolFormattedAsString(Operand, output)
@@ -204,7 +204,7 @@ Use <StringParsedAsBoolean> when you want to determine if a string contains "tru
 
 >*Note:* Only the strings "true" and "false" will parse to give a boolean value. Any other input will cause an error to be thrown.
 */
-syntax StringParsedAsBoolean is postfix operator with precedence 1
+syntax StringParsedAsBoolean is postfix operator with conversion precedence
     <Operand: Expression> "parsed" "as" "boolean"
 begin
     MCLogicEvalStringParsedAsBool(Operand, output)

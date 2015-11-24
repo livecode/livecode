@@ -6,11 +6,12 @@ To add a browser to your application, simply drag and drop the browser widget on
 
 ## Properties
 
-* *browserUrl* - The URL of the page displayed in the browser.
-* *browserHtmltext* - The HTML source of the content displayed in the browser
-* *browserScrollbars* - Whether or not the browser displays scrollbars
-* *browserUserAgent* - The identifier sent by the browser when fetching web content.
-* *browserJavascriptHandlers* - A list of object script handlers that can be called by javascript code in the page loaded in the browser.
+* *url* - The URL of the page displayed in the browser.
+* *htmltext* - The HTML source of the content displayed in the browser
+* *vscrollbar* - Whether or not the browser displays a vertical scrollbar
+* *hscrollbar* - Whether or not the browser displays a horizontal scrollbar
+* *userAgent* - The identifier sent by the browser when fetching web content.
+* *javascriptHandlers* - A list of object script handlers that can be called by javascript code in the page loaded in the browser.
 
 ## Messages
 

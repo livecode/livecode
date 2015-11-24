@@ -378,7 +378,11 @@ static void lookup_name_for_prop(Properties p_which, MCNameRef& r_name)
             /* UNCHECKED */ MCNameCreateWithCString(factor_table[i] . token, r_name);
             return;
         }
-    
+	
+	extern bool lookup_property_override_name(uint16_t p_property, MCNameRef &r_name);
+	if (lookup_property_override_name(p_which, r_name))
+		return;
+
     assert(false);
 }
 
@@ -448,8 +452,10 @@ bool MCWidget::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
 		case P_ABBREV_OWNER:
 		case P_LONG_OWNER:
 		case P_PROPERTIES:
+		case P_CUSTOM_PROPERTIES:
 		case P_CUSTOM_PROPERTY_SET:
 		case P_CUSTOM_PROPERTY_SETS:
+        case P_CUSTOM_KEYS:
 		case P_INK:
 		case P_CANT_SELECT:
 		case P_BLEND_LEVEL:
@@ -551,8 +557,10 @@ bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
 		case P_ABBREV_OWNER:
 		case P_LONG_OWNER:
 		case P_PROPERTIES:
+		case P_CUSTOM_PROPERTIES:
 		case P_CUSTOM_PROPERTY_SET:
 		case P_CUSTOM_PROPERTY_SETS:
+        case P_CUSTOM_KEYS:
 		case P_INK:
 		case P_CANT_SELECT:
 		case P_BLEND_LEVEL:

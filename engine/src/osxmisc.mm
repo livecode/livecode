@@ -35,6 +35,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "resolution.h"
 
+#import <AppKit/AppKit.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  REFACTORED FROM TEXT.CPP
@@ -159,12 +161,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 void MCMacDisableScreenUpdates(void)
 {
-	DisableScreenUpdates();
+    NSDisableScreenUpdates();
 }
 
 void MCMacEnableScreenUpdates(void)
 {
-	EnableScreenUpdates();
+	NSEnableScreenUpdates();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

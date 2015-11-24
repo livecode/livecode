@@ -13,6 +13,7 @@ function build_widget {
 	LC_COMPILE=$4
 	
 	"${LC_COMPILE}" \
+		-Werror \
 		--modulepath "${MODULE_DIR}" \
 		--manifest "${WIDGET_DIR}/manifest.xml" \
 		--output "${WIDGET_DIR}/module.lcm" \

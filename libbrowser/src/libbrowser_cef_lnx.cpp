@@ -219,33 +219,17 @@ bool MCCefPlatformCreateBrowser(void *p_display, void *p_window_id, MCCefBrowser
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define CEF_PATH_PREFIX "CEF"
+#define CEF_PATH_PREFIX "Externals/CEF"
 
-extern bool MCCefLinuxGetExecutablePath(char *&r_path);
+const char *MCCefPlatformGetExecutableFolder(void);
+bool MCCefLinuxAppendPath(const char *p_base, const char *p_path, char *&r_path);
 
 const char *MCCefPlatformGetCefFolder(void)
 {
 	static char *s_cef_path = nil;
 
 	if (s_cef_path == nil)
-	{
-		bool t_success;
-		t_success = true;
-
-		if (t_success)
-			t_success = MCCefLinuxGetExecutablePath(s_cef_path);
-			
-		if (t_success)
-		{
-			// remove last component from path
-			uint32_t t_index;
-			if (MCCStringLastIndexOf(s_cef_path, '/', t_index))
-				s_cef_path[t_index] = '\0';
-            
-            // Append the name of the folder containing the CEF components
-            MCCStringAppend(s_cef_path, "/" CEF_PATH_PREFIX);
-		}
-	}
+		/* UNCHECKED */ MCCefLinuxAppendPath(MCCefPlatformGetExecutableFolder(), CEF_PATH_PREFIX, s_cef_path);
 	
 	MCLog("libbrowser cef folder: %s", s_cef_path);
 

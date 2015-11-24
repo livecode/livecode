@@ -636,6 +636,8 @@ public:
 					MCAssert(false);
 			}
 			
+			MCBrowserRunloopBreakWait();
+			
 			return true;
 		}
 		else if (t_message_name == MC_CEFMSG_JS_HANDLER)
@@ -951,7 +953,10 @@ public:
 	
 	virtual void OnLoadError(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefFrame> p_frame, CefLoadHandler::ErrorCode p_error_code, const CefString &p_error_text, const CefString &p_failed_url) OVERRIDE
 	{
-		AddLoadErrorFrame(p_frame->GetIdentifier(), p_failed_url, p_error_text);
+		// IM-2015-11-16: [[ Bug 16360 ]] Contrary to the CEF API docs, OnLoadEnd is NOT called after OnLoadError when the error code is ERR_ABORTED.
+		//    This occurs when requesting a new url be loaded when in the middle of loading the previous url, or when the url load is otherwise cancelled.
+		if (p_error_code != ERR_ABORTED)
+			AddLoadErrorFrame(p_frame->GetIdentifier(), p_failed_url, p_error_text);
 	}
 	
 	// ContextMenuHandler interface
@@ -1284,8 +1289,15 @@ void MCCefBrowserBase::SetSource(const char *p_source)
 	m_browser->GetMainFrame()->LoadString(t_source, t_url);
 }
 
+#define MCCEF_VERTICAL_OVERFLOW_PROPERTY "document.body.style.overflowY"
+#define MCCEF_HORIZONTAL_OVERFLOW_PROPERTY "document.body.style.overflowX"
+inline const char *scrollbar_property(MCCefScrollbarDirection p_direction)
+{
+	return p_direction == kMCCefScrollbarVertical ? MCCEF_VERTICAL_OVERFLOW_PROPERTY : MCCEF_HORIZONTAL_OVERFLOW_PROPERTY;
+}
+
 // IM-2014-08-25: [[ Bug 13272 ]] Implement CEF browser scrollbar property.
-bool MCCefBrowserBase::GetOverflowHidden()
+bool MCCefBrowserBase::GetOverflowHidden(MCCefScrollbarDirection p_direction)
 {
 	// property available through JavaScript
 	bool t_success;
@@ -1293,7 +1305,7 @@ bool MCCefBrowserBase::GetOverflowHidden()
 	
 	CefString t_value;
 	
-	t_success = EvalJavaScript("document.body.style.overflow", t_value);
+	t_success = EvalJavaScript(scrollbar_property(p_direction), t_value);
 	
 	// assume scrollbars are visible if property fetch fails
 	if (!t_success)
@@ -1303,7 +1315,7 @@ bool MCCefBrowserBase::GetOverflowHidden()
 }
 
 // IM-2014-08-25: [[ Bug 13272 ]] Implement CEF browser scrollbar property.
-void MCCefBrowserBase::SetOverflowHidden(bool p_hidden)
+void MCCefBrowserBase::SetOverflowHidden(MCCefScrollbarDirection p_direction, bool p_hidden)
 {
 	// property available through JavaScript
 	
@@ -1313,7 +1325,7 @@ void MCCefBrowserBase::SetOverflowHidden(bool p_hidden)
 	char *t_overflow_script;
 	t_overflow_script = nil;
 	
-	t_success = MCCStringFormat(t_overflow_script, "document.body.style.overflow = \"%s\"", p_hidden ? "hidden" : "");
+	t_success = MCCStringFormat(t_overflow_script, "%s = \"%s\"", scrollbar_property(p_direction), p_hidden ? "hidden" : "");
 	
 	CefString t_return_value;
 	
@@ -1323,16 +1335,28 @@ void MCCefBrowserBase::SetOverflowHidden(bool p_hidden)
 	MCCStringFree(t_overflow_script);
 }
 
-bool MCCefBrowserBase::GetScrollbars(void)
+bool MCCefBrowserBase::GetVerticalScrollbarEnabled(void)
 {
 	// IM-2014-08-25: [[ Bug 13272 ]] Show / hide scrollbars by setting the overflow style to empty / "hidden".
-	return !GetOverflowHidden();
+	return !GetOverflowHidden(kMCCefScrollbarVertical);
 }
 
-void MCCefBrowserBase::SetScrollbars(bool p_scrollbars)
+void MCCefBrowserBase::SetVerticalScrollbarEnabled(bool p_scrollbars)
 {
 	// IM-2014-08-25: [[ Bug 13272 ]] Show / hide scrollbars by setting the overflow style to empty / "hidden".
-	/* UNCHECKED */ SetOverflowHidden(!p_scrollbars);
+	/* UNCHECKED */ SetOverflowHidden(kMCCefScrollbarVertical, !p_scrollbars);
+}
+
+bool MCCefBrowserBase::GetHorizontalScrollbarEnabled(void)
+{
+	// IM-2014-08-25: [[ Bug 13272 ]] Show / hide scrollbars by setting the overflow style to empty / "hidden".
+	return !GetOverflowHidden(kMCCefScrollbarHorizontal);
+}
+
+void MCCefBrowserBase::SetHorizontalScrollbarEnabled(bool p_scrollbars)
+{
+	// IM-2014-08-25: [[ Bug 13272 ]] Show / hide scrollbars by setting the overflow style to empty / "hidden".
+	/* UNCHECKED */ SetOverflowHidden(kMCCefScrollbarHorizontal, !p_scrollbars);
 }
 
 bool MCCefBrowserBase::GetRect(MCBrowserRect &r_rect)
@@ -1551,8 +1575,12 @@ bool MCCefBrowserBase::GetBoolProperty(MCBrowserProperty p_property, bool &r_val
 			r_value = GetEnableContextMenu();
 			return true;
 			
-		case kMCBrowserScrollbars:
-			r_value = GetScrollbars();
+		case kMCBrowserVerticalScrollbarEnabled:
+			r_value = GetVerticalScrollbarEnabled();
+			return true;
+			
+		case kMCBrowserHorizontalScrollbarEnabled:
+			r_value = GetHorizontalScrollbarEnabled();
 			return true;
 			
 		default:
@@ -1574,8 +1602,12 @@ bool MCCefBrowserBase::SetBoolProperty(MCBrowserProperty p_property, bool p_valu
 			SetEnableContextMenu(p_value);
 			return true;
 			
-		case kMCBrowserScrollbars:
-			SetScrollbars(p_value);
+		case kMCBrowserVerticalScrollbarEnabled:
+			SetVerticalScrollbarEnabled(p_value);
+			return true;
+			
+		case kMCBrowserHorizontalScrollbarEnabled:
+			SetHorizontalScrollbarEnabled(p_value);
 			return true;
 			
 		default:

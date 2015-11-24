@@ -640,6 +640,9 @@ typedef unsigned char char_t;
 
 // The 'byte_t' type is used to hold a char in a binary string (native).
 typedef uint8_t byte_t;
+
+// Constants used to represent the minimum and maximum values of a byte_t.
+#define BYTE_MIN UINT8_MIN
 #define BYTE_MAX UINT8_MAX
 
 // The 'codepoint_t' type is used to hold a single Unicode codepoint (20-bit
@@ -650,12 +653,20 @@ typedef uint32_t codepoint_t;
 // further characters)
 #define CODEPOINT_NONE UINT32_MAX
 
+// Constants used to represent the minimum and maximum values of a codepoint_t.
+#define CODEPOINT_MIN 0
+#define CODEPOINT_MAX 0x10ffff
+
 // The 'unichar_t' type is used to hold a UTF-16 codeunit.
 #ifdef __WINDOWS__
 typedef wchar_t unichar_t;
 #else
 typedef uint16_t unichar_t;
 #endif
+
+// Constants used to represent the minimum and maximum values of a unichar_t.
+#define UNICHAR_MIN UINT16_MIN
+#define UNICHAR_MAX UINT16_MAX
 
 #ifdef __WINDOWS__
 typedef wchar_t *BSTR;
@@ -1871,7 +1882,9 @@ enum
 	kMCStringEncodingMacRoman,
 	// The standard Linux (Latin-1) encoding.
 	kMCStringEncodingISO8859_1,
-	// The UTF-8 string encoding.
+	// The UTF-8 string encoding.  In LiveCode, this permits overlong
+	// sequences when decoding, but does not generate them when
+	// encoding.
 	kMCStringEncodingUTF8,
 	// The UTF-16 string encoding in little endian byte-order.
 	kMCStringEncodingUTF16LE,
@@ -1904,11 +1917,16 @@ enum
 	kMCStringOptionCompareExact = 0,
 	// Compare the strings codepoint for codepoint after normalization.
 	kMCStringOptionCompareNonliteral = 1,
+    // Compare strings without normalization but with case folding
+    kMCStringOptionCompareFolded = 2,
 	// Compare the strings codepoint for codepoint after normalization and
 	// folding.
-	kMCStringOptionCompareCaseless = 2,
-    // Compare strings without normalization but with case folding
-    kMCStringOptionCompareFolded = 3,
+	kMCStringOptionCompareCaseless = 3,
+    
+    // If this bit is set it means the strings are normalized.
+    kMCStringOptionNormalizeBit = 1 << 0,
+    // If this bit is set it means the strings are folded.
+    kMCStringOptionFoldBit = 1 << 1,
 };
 
 /////////
@@ -2241,14 +2259,20 @@ MC_DLLEXPORT compare_t MCStringCompareTo(MCStringRef string, MCStringRef other, 
 
 // Returns true if the string begins with the prefix string, processing as
 // appropriate according to options.
-MC_DLLEXPORT bool MCStringBeginsWith(MCStringRef string, MCStringRef prefix, MCStringOptions options);
-MC_DLLEXPORT bool MCStringSharedPrefix(MCStringRef self, MCRange p_range, MCStringRef p_prefix, MCStringOptions p_options, uindex_t& r_self_match_length);
+// If 'r_string_match_length' is used, then it will contain the length of the
+// match in 'string'. This might not be the same as the length of 'prefix' due
+// to case folding and normalization concerns in unicode strings.
+MC_DLLEXPORT bool MCStringBeginsWith(MCStringRef string, MCStringRef prefix, MCStringOptions options, uindex_t *r_string_match_length = nil);
+MC_DLLEXPORT bool MCStringSharedPrefix(MCStringRef self, MCRange p_range, MCStringRef p_prefix, MCStringOptions p_options, uindex_t& r_string_match_length);
 MC_DLLEXPORT bool MCStringBeginsWithCString(MCStringRef string, const char_t *prefix_cstring, MCStringOptions options);
 
 // Returns true if the string ends with the suffix string, processing as
 // appropriate according to options.
-MC_DLLEXPORT bool MCStringEndsWith(MCStringRef string, MCStringRef suffix, MCStringOptions options);
-MC_DLLEXPORT bool MCStringSharedSuffix(MCStringRef self, MCRange p_range, MCStringRef p_suffix, MCStringOptions p_options, uindex_t& r_self_match_length);
+// If 'r_string_match_length' is used, then it will contain the length of the
+// match in 'string'. This might not be the same as the length of 'suffix' due
+// to case folding and normalization concerns in unicode strings.
+MC_DLLEXPORT bool MCStringEndsWith(MCStringRef string, MCStringRef suffix, MCStringOptions options, uindex_t *r_string_match_length = nil);
+MC_DLLEXPORT bool MCStringSharedSuffix(MCStringRef self, MCRange p_range, MCStringRef p_suffix, MCStringOptions p_options, uindex_t& r_string_match_length);
 MC_DLLEXPORT bool MCStringEndsWithCString(MCStringRef string, const char_t *suffix_cstring, MCStringOptions options);
 
 // Returns true if the string contains the given needle string, processing as
@@ -2288,10 +2312,10 @@ MC_DLLEXPORT bool MCStringLastIndexOfChar(MCStringRef string, codepoint_t needle
 MC_DLLEXPORT bool MCStringFind(MCStringRef string, MCRange range, MCStringRef needle, MCStringOptions options, MCRange* r_result);
 
 // Search 'range' of 'string' for 'needle' processing as appropriate to options
-// and returning the number of occurances found.
+// and returning the number of occurrences found.
 MC_DLLEXPORT uindex_t MCStringCount(MCStringRef string, MCRange range, MCStringRef needle, MCStringOptions options);
 MC_DLLEXPORT uindex_t MCStringCountChar(MCStringRef string, MCRange range, codepoint_t needle, MCStringOptions options);
-
+    
 //////////
 
 // Find the first index of separator in string processing as according to
@@ -2309,7 +2333,35 @@ MC_DLLEXPORT bool MCStringDivideAtIndex(MCStringRef self, uindex_t p_offset, MCS
 MC_DLLEXPORT bool MCStringBreakIntoChunks(MCStringRef string, codepoint_t separator, MCStringOptions options, MCRange*& r_ranges, uindex_t& r_range_count);
 
 //////////
+    
+// Search 'range' of 'string' for 'needle' processing as appropriate to options
+// and taking into account 'delimiter' and 'skip'.
+// The function searches for 'needle' after 'skip' occurrences of 'delimiter'.
+// The total number of delimiters encountered before 'needle' is found is
+// returned in 'r_index'.
+// If 'r_found' is not nil, it will return the range of the needle string in
+// 'string'.
+// If 'r_before' is not nil, it will return the range of the last delimiter before
+// the found 'needle' string.
+// If 'r_after' is not nil, it will return the range of the first delimiter after
+// the found 'needle' string.
+// If 'needle' is not found in the given range (after skipping) then false is
+// returned.
+// Additionally, if 'needle' is the empty string, then
+// Note: The search done for 'needle' is as a string, in particular 'needle'
+//   can contain 'delimiter'.
+// Note: If needle is the empty string then false will be returned.
+MC_DLLEXPORT bool MCStringDelimitedOffset(MCStringRef string, MCRange range, MCStringRef needle, MCStringRef delimiter, uindex_t skip, MCStringOptions options, uindex_t& r_index, MCRange *r_found, MCRange *r_before, MCRange *r_after);
 
+MC_DLLEXPORT bool MCStringForwardDelimitedRegion(MCStringRef string,
+                                                 MCRange range,
+                                                 MCStringRef delimiter,
+                                                 MCRange region,
+                                                 MCStringOptions options,
+                                                 MCRange& r_range);
+
+//////////
+    
 // Transform the string to its folded form as specified by 'options'. The folded
 // form of a string is that which is used to perform comparisons.
 //

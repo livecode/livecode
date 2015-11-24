@@ -254,19 +254,6 @@ bool MCUIWebViewBrowser::GoToURL(const char *p_url)
 	return true;
 }
 
-bool MCUIWebViewBrowser::SetScrollingEnabled(bool p_value)
-{
-	UIWebView *t_view;
-	if (!GetView(t_view))
-		return false;
-	
-	MCBrowserRunBlockOnMainFiber(^{
-		[GetScrollView() setScrollEnabled: p_value ? YES : NO];
-	});
-	
-	return true;
-}
-
 bool MCUIWebViewBrowser::GetUrl(char *&r_url)
 {
 	UIWebView *t_view;
@@ -277,18 +264,57 @@ bool MCUIWebViewBrowser::GetUrl(char *&r_url)
 	MCBrowserRunBlockOnMainFiber(^{
 		t_success = MCCStringClone([[[[t_view request] URL] absoluteString] cStringUsingEncoding: NSUTF8StringEncoding], r_url);
 	});
-
+	
 	return t_success;
 }
 
-bool MCUIWebViewBrowser::GetScrollingEnabled(bool& r_value)
+bool MCUIWebViewBrowser::SetVerticalScrollbarEnabled(bool p_value)
 {
 	UIWebView *t_view;
 	if (!GetView(t_view))
 		return false;
 	
 	MCBrowserRunBlockOnMainFiber(^{
-		r_value = [GetScrollView() isScrollEnabled];
+		GetScrollView().showsVerticalScrollIndicator = p_value ? YES : NO;
+	});
+	
+	return true;
+}
+
+bool MCUIWebViewBrowser::GetVerticalScrollbarEnabled(bool& r_value)
+{
+	UIWebView *t_view;
+	if (!GetView(t_view))
+		return false;
+	
+	MCBrowserRunBlockOnMainFiber(^{
+		r_value = GetScrollView().showsVerticalScrollIndicator;
+	});
+	
+	return true;
+}
+
+bool MCUIWebViewBrowser::SetHorizontalScrollbarEnabled(bool p_value)
+{
+	UIWebView *t_view;
+	if (!GetView(t_view))
+		return false;
+	
+	MCBrowserRunBlockOnMainFiber(^{
+		GetScrollView().showsHorizontalScrollIndicator = p_value ? YES : NO;
+	});
+	
+	return true;
+}
+
+bool MCUIWebViewBrowser::GetHorizontalScrollbarEnabled(bool& r_value)
+{
+	UIWebView *t_view;
+	if (!GetView(t_view))
+		return false;
+	
+	MCBrowserRunBlockOnMainFiber(^{
+		r_value = GetScrollView().showsHorizontalScrollIndicator;
 	});
 	
 	return true;
@@ -408,8 +434,11 @@ bool MCUIWebViewBrowser::SetBoolProperty(MCBrowserProperty p_property, bool p_va
 {
 	switch (p_property)
 	{
-		case kMCBrowserScrollbars:
-			return SetScrollingEnabled(p_value);
+		case kMCBrowserVerticalScrollbarEnabled:
+			return SetVerticalScrollbarEnabled(p_value);
+			
+		case kMCBrowserHorizontalScrollbarEnabled:
+			return SetHorizontalScrollbarEnabled(p_value);
 			
 		default:
 			break;
@@ -422,8 +451,11 @@ bool MCUIWebViewBrowser::GetBoolProperty(MCBrowserProperty p_property, bool &r_v
 {
 	switch (p_property)
 	{
-		case kMCBrowserScrollbars:
-			return GetScrollingEnabled(r_value);
+		case kMCBrowserVerticalScrollbarEnabled:
+			return GetVerticalScrollbarEnabled(r_value);
+			
+		case kMCBrowserHorizontalScrollbarEnabled:
+			return GetHorizontalScrollbarEnabled(r_value);
 			
 		default:
 			break;
