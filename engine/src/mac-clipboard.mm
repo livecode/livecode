@@ -618,9 +618,13 @@ MCDataRef MCMacRawClipboardItemRep::CopyData() const
         if (*t_type_string == NULL)
             return NULL;
         
+        // Convert the type string to a UTI
+        MCAutoStringRef t_uti;
+        t_uti.Give(MCMacRawClipboard::CopyAsUTI(*t_type_string));
+        
         // Convert from a StringRef to a CFString
         CFStringRef t_type;
-        if (!MCStringConvertToCFStringRef(*t_type_string, t_type))
+        if (!MCStringConvertToCFStringRef(*t_uti, t_type))
             return NULL;
         
         // Get the data for this type
