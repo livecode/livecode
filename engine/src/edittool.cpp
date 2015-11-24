@@ -252,12 +252,10 @@ void MCGradientEditTool::gradient_rects(MCRectangle *rects)
 
 MCRectangle MCGradientEditTool::drawrect()
 {
-	MCRectangle drect; 
+    MCRectangle drect = {0,0,0,0};
 	if (gradient == NULL)
-	{
-		drect.width = 0;
-		drect.height = 0;
-		return drect;
+    {
+        return drect;
 	}
 
 	MCRectangle rects[3];
