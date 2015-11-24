@@ -291,7 +291,7 @@ bool MCGDashesToSkDashPathEffect(MCGDashesRef self, SkDashPathEffect*& r_path_ef
         
 	SkScalar *t_dashes;
 	if (t_success)
-		t_success = MCMemoryNewArray(self -> count, t_dashes);
+		t_success = MCMemoryNewArray(t_dash_count, t_dashes);
 	
 	SkDashPathEffect *t_dash_effect;
 	t_dash_effect = NULL;
