@@ -220,6 +220,16 @@ static bool __MCGSvgApplyGradient(char p_gradient_type,
                                        ((p_gradient -> stops[i] . color >> 24) & 0xFF) / 1.0f);
     }
     
+    // NanoSVG gives us the inverse gradient transform for a vertically dominant
+    // orientation. Thus we must invert the transform and rotate by 90 degrees
+    // anti-clockwise.
+    MCGAffineTransform t_transform;
+    t_transform = MCGAffineTransformMake(p_gradient -> xform[0], p_gradient -> xform[1],
+                                         p_gradient -> xform[2], p_gradient -> xform[3],
+                                         p_gradient -> xform[4], p_gradient -> xform[5]);
+    t_transform = MCGAffineTransformInvert(t_transform);
+    t_transform = MCGAffineTransformPostRotate(t_transform, 90);
+    
     p_setter(p_context,
              p_gradient_type == NSVG_PAINT_LINEAR_GRADIENT ?
              kMCGGradientFunctionLinear :
@@ -230,9 +240,7 @@ static bool __MCGSvgApplyGradient(char p_gradient_type,
              p_gradient -> spread == NSVG_SPREAD_REFLECT ? true : false,
              p_gradient -> spread != NSVG_SPREAD_PAD ? true : false,
              1,
-             MCGAffineTransformMake(p_gradient -> xform[0], p_gradient -> xform[1],
-                                    p_gradient -> xform[2], p_gradient -> xform[3],
-                                    p_gradient -> xform[4], p_gradient -> xform[5]),
+             t_transform,
              kMCGImageFilterNone);
     
     MCMemoryDeleteArray(t_colors);
