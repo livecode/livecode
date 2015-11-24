@@ -295,7 +295,7 @@ MCStringRef MCMacRawClipboard::CopyAsUTI(MCStringRef p_key)
         CFRelease(t_class);
         return NULL;
     }
-    CFStringRef t_uti = UTTypeCreatePreferredIdentifierForTag(t_class, t_tag, NULL);
+    CFStringRef t_uti = UTTypeCreatePreferredIdentifierForTag(t_class, t_tag, kUTTypeData);
     CFRelease(t_class);
     CFRelease(t_tag);
     if (t_uti == NULL)
