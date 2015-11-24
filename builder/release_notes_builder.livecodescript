@@ -30,7 +30,9 @@ on Bugzilla. Multiline files will have their own subsection in the release notes
    global gExperimental, gPageBreak, gAnchor
    
    function releaseNotesCSS
-      return url ("file:" & builderSystemFolder() & slash & "release_notes_css_prefix.txt")
+   local tFile
+   put builderSystemFolder() & slash & "release_notes_css_prefix.txt" into tFile
+   return getFileContentsUTF8(tFile)
 end releaseNotesCSS
 
 command releaseNotesBuilderInitialize
@@ -248,10 +250,7 @@ function notesFileToHTML pFileName, pVersion, @xContents
    put empty into tBody
 
    put notesPath() & slash & pFileName into tFile
-   open file tFile for "UTF8" read
-   read from file tFile until end
-   put it into tFileText
-   close file tFile
+   put getFileContentsUTF8(tFile) into tFileText
 
    if tFileText is not empty then
       replace "<version>" with pVersion in tFileText
@@ -291,10 +290,10 @@ function makeBugTable pBugs, pBold
 end makeBugTable
 
 function getTerms pFileList
-   local tTermList, tFile, tTerm
+   local tTermList, tLine, tTerm
    repeat for each line tLine in pFileList
-      put url ("file:" & tLine) into tFile
-      get matchText(tFile, "<term>(.*)</term>", tTerm)
+      get matchText(getFileContentsUTF8(tLine), "<term>(.*)</term>", tTerm)
+
       put tTermList & tTerm & CR into tTermList
    end repeat
    filter tTermList without empty
@@ -327,10 +326,14 @@ command getDictionaryChanges pVersion, pTags, @rStatusList, @rOtherList
    put shell("git diff --name-only " & tFrom & "...HEAD -- " & dictPath()) into tModifiedEntries
    
    repeat for each line tLine in tModifiedEntries
-      local tFile
-      if there is not a file (item 1 of tLine) then next repeat
+      local tFile, tError
       if not (tLine ends with tExtension) then next repeat
-      put url ("file:" & item 1 of tLine) into tFile
+
+      try
+         put getFileContentsUTF8(item 1 of tLine) into tFile
+      catch tError
+         next repeat
+      end try
       
       if tExtension is "xml" then
          local tVersion
@@ -456,7 +459,7 @@ function notesFolderToHTML pIsIDE, pFolder, pVersion, pTags, @xContents, @rUpdat
             end if
             
             # Delete any empty trailing lines
-            put word 1 to -1 of url ("file:" & tFile) into tFileText
+            put word 1 to -1 of getFileContentsUTF8(tFile) into tFileText
             put the number of lines of tFileText into tNumLines
             
             if tLine contains "bugfix" then
@@ -696,7 +699,7 @@ end addExtensionReleaseNoteData
 
 on addLCBReleaseNoteData pFile, pSectionName, @xDataA
    local tNoteData
-   put url ("file:" & pFile) into tNoteData
+   put getFileContentsUTF8(pFile) into tNoteData
    
    local tCount, tSection, tBugList
    
@@ -857,3 +860,23 @@ on fetchIDECommits pFirstVersion, pLastVersion, @rFirst, @rLast
    get matchText(tDiff, "\-" & tString, rFirst)
    get matchText(tDiff, "\+" & tString, rLast)
 end fetchIDECommits
+
+private function getFileContentsUTF8 pFile
+   local tData, tResult
+
+   open file pFile for "UTF-8" text read
+   put the result into tResult
+   if tResult is not empty then
+      throw the result
+   end if
+
+   read from file pFile until end
+   if the result is not empty and the result is not "EOF" then
+      throw the result
+   end if
+   put it into tData
+
+   close file pFile -- unchecked
+
+   return tData
+end getFileContentsUTF8
