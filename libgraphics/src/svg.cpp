@@ -257,6 +257,9 @@ static void __MCGSvgRender(MCGSvgRef self, MCGContextRef p_context)
     
     for(NSVGshape *t_shape = self -> image -> shapes; t_shape != NULL; t_shape = t_shape -> next)
     {
+        if ((t_shape -> flags & NSVG_FLAGS_VISIBLE) == 0)
+            continue;
+        
         if (t_shape -> opacity == 0.0f)
             continue;
         
@@ -346,7 +349,6 @@ static void __MCGSvgRender(MCGSvgRef self, MCGContextRef p_context)
         
         MCGContextSetOpacity(p_context, t_shape -> opacity);
         
-        // First build a path (as it might get reused).
         MCGContextBeginPath(p_context);
         for(NSVGpath *t_subpath = t_shape -> paths; t_subpath != NULL; t_subpath = t_subpath -> next)
         {
