@@ -195,6 +195,79 @@ typedef void (*MCGContextSetGradientProc)(MCGContextRef self,
                                           MCGAffineTransform p_transform,
                                           MCGImageFilter p_filter);
 
+static bool __MCGSvgCreateGradient(char p_gradient_type,
+                                   NSVGgradient *p_gradient,
+                                   MCGGradientRef& r_gradient)
+{
+    MCGFloat *t_stops;
+    if (!MCMemoryNewArray((unsigned)p_gradient -> nstops, t_stops))
+        return false;
+    
+    MCGColor *t_colors;
+    if (!MCMemoryNewArray((unsigned)p_gradient -> nstops, t_colors))
+    {
+        MCMemoryDeleteArray(t_stops);
+        return false;
+    }
+
+    for(int i = 0; i < p_gradient -> nstops; i++)
+    {
+        t_stops[i] = p_gradient -> stops[i] . offset;
+        t_colors[i] = MCGColorMakeRGBA((p_gradient -> stops[i] . color & 0xFF) / 1.0f,
+                                       ((p_gradient -> stops[i] . color >> 8) & 0xFF) / 1.0f,
+                                       ((p_gradient -> stops[i] . color >> 16) & 0xFF) / 1.0f,
+                                       ((p_gradient -> stops[i] . color >> 24) & 0xFF) / 1.0f);
+    }
+    
+    // NanoSVG gives us the inverse gradient transform for a vertically dominant
+    // orientation. Thus we must invert the transform and rotate by 90 degrees
+    // anti-clockwise.
+    MCGAffineTransform t_transform;
+    t_transform = MCGAffineTransformMake(p_gradient -> xform[0], p_gradient -> xform[1],
+                                         p_gradient -> xform[2], p_gradient -> xform[3],
+                                         p_gradient -> xform[4], p_gradient -> xform[5]);
+    t_transform = MCGAffineTransformInvert(t_transform);
+    t_transform = MCGAffineTransformPostRotate(t_transform, 90);
+    
+    MCGGradientTileMode t_tile_mode;
+    if (p_gradient -> spread == NSVG_SPREAD_PAD)
+        t_tile_mode = kMCGGradientTileModeClamp;
+    else if (p_gradient -> spread == NSVG_SPREAD_REFLECT)
+        t_tile_mode = kMCGGradientTileModeMirror;
+    else
+        t_tile_mode = kMCGGradientTileModeRepeat;
+    
+    MCGGradientRef t_gradient;
+    if (p_gradient_type == NSVG_PAINT_LINEAR_GRADIENT)
+    {
+        if (!MCGGradientCreateLinear(t_stops, t_colors, (uint32_t)p_gradient -> nstops, t_tile_mode, t_transform, t_gradient))
+            t_gradient = NULL;
+    }
+    else if (p_gradient_type == NSVG_PAINT_RADIAL_GRADIENT)
+    {
+        if (!MCGGradientCreateRadial(t_stops,
+                                     t_colors,
+                                     (uint32_t)p_gradient -> nstops,
+                                     t_tile_mode,
+                                     t_transform,
+                                     MCGPointMake(p_gradient -> fx, p_gradient -> fy),
+                                     t_gradient))
+            t_gradient = NULL;
+    }
+    else
+        t_gradient = NULL;
+    
+    MCMemoryDeleteArray(t_colors);
+    MCMemoryDeleteArray(t_stops);
+    
+    if (t_gradient == NULL)
+        return false;
+    
+    r_gradient = t_gradient;
+    
+    return true;
+}
+
 static bool __MCGSvgApplyGradient(char p_gradient_type,
                                   NSVGgradient *p_gradient,
                                   MCGContextRef p_context,
@@ -278,11 +351,16 @@ static void __MCGSvgRender(MCGSvgRef self, MCGContextRef p_context)
         else if (t_shape -> fill . type == NSVG_PAINT_LINEAR_GRADIENT ||
                  t_shape -> fill . type == NSVG_PAINT_RADIAL_GRADIENT)
         {
-            if (!__MCGSvgApplyGradient(t_shape -> fill . type,
-                                       t_shape -> fill . gradient,
-                                       p_context,
-                                       MCGContextSetFillGradient))
+            MCGGradientRef t_gradient;
+            if (!__MCGSvgCreateGradient(t_shape -> fill . type,
+                                        t_shape -> fill . gradient,
+                                        t_gradient))
                 continue;
+            
+            MCGContextSetFillGradientRef(p_context,
+                                         t_gradient);
+            
+            MCGGradientRelease(t_gradient);
             
             t_need_fill = true;
         }
@@ -312,10 +390,16 @@ static void __MCGSvgRender(MCGSvgRef self, MCGContextRef p_context)
             else if (t_shape -> stroke . type == NSVG_PAINT_LINEAR_GRADIENT ||
                      t_shape -> stroke . type == NSVG_PAINT_RADIAL_GRADIENT)
             {
-                if (!__MCGSvgApplyGradient(t_shape -> stroke . type,
-                                           t_shape -> stroke . gradient,
-                                           p_context,
-                                           MCGContextSetStrokeGradient))
+                MCGGradientRef t_gradient;
+                if (!__MCGSvgCreateGradient(t_shape -> stroke . type,
+                                            t_shape -> stroke . gradient,
+                                            t_gradient))
+                    continue;
+                
+                MCGContextSetStrokeGradientRef(p_context,
+                                               t_gradient);
+                
+                MCGGradientRelease(t_gradient);
                     continue;
                 
                 t_need_stroke = true;

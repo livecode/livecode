@@ -805,7 +805,7 @@ MCGradientAffineCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient
 	int4 d = vy * wx - vx *wy;
 	
 	uint1 t_kind;
-	switch (p_gradient_ref -> function)
+	switch (p_gradient_ref -> generalized . function)
 	{
 		case kMCGGradientFunctionLinear:
 			t_kind = kMCGradientKindLinear;
@@ -862,7 +862,7 @@ MCGradientAffineCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient
     (*t_combiner) -> origin . y = (int2) t_transform . ty;
 	(*t_combiner) -> ramp_length = p_gradient_ref -> ramp_length;
 	(*t_combiner) -> mirror = p_gradient_ref -> mirror;
-	(*t_combiner) -> repeat = p_gradient_ref -> repeats;
+	(*t_combiner) -> repeat = p_gradient_ref -> generalized . repeats;
 	(*t_combiner) -> wrap = p_gradient_ref -> wrap;
 	
 	if (d != 0)
@@ -877,7 +877,7 @@ MCGradientAffineCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient
 	}
     
     // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types.
-	switch (p_gradient_ref -> filter)
+	switch (p_gradient_ref -> generalized . filter)
 	{
 		case kMCGImageFilterNone:
 		{

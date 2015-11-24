@@ -134,7 +134,14 @@ static void MCGGradientDestroy(MCGGradientRef self)
 	}
 }
 
-bool MCGGradientCreate(MCGGradientFunction p_function, const MCGFloat* p_stops, const MCGColor* p_colors, uindex_t p_ramp_length, bool p_mirror, bool p_wrap, uint32_t p_repeats, MCGAffineTransform p_transform, MCGImageFilter p_filter, MCGGradientRef& r_gradient)
+static bool __MCGGradientCreate(MCGGradientKind p_kind,
+                                const MCGFloat* p_stops,
+                                const MCGColor* p_colors,
+                                uindex_t p_ramp_length,
+                                bool p_mirror,
+                                bool p_wrap,
+                                MCGAffineTransform p_transform,
+                                MCGGradientRef& r_gradient)
 {
 	bool t_success;
 	t_success = true;
@@ -142,7 +149,7 @@ bool MCGGradientCreate(MCGGradientFunction p_function, const MCGFloat* p_stops, 
 	__MCGGradient *t_gradient;
 	t_gradient = NULL;
 	if (t_success)
-		t_success = MCMemoryNew(t_gradient);	
+		t_success = MCMemoryNew(t_gradient);
 	
 	if (t_success)
 		t_success = MCMemoryNewArray(p_ramp_length, t_gradient -> colors);
@@ -150,28 +157,115 @@ bool MCGGradientCreate(MCGGradientFunction p_function, const MCGFloat* p_stops, 
 	if (t_success)
 		t_success = MCMemoryNewArray(p_ramp_length, t_gradient -> stops);
 	
-	if (t_success)
+    if (t_success)
 	{
 		for (uint32_t i = 0; i < p_ramp_length; i++)
 		{
 			t_gradient -> stops[i] = p_stops[i];
 			t_gradient -> colors[i] = p_colors[i];
 		}
-		
-		t_gradient -> function = p_function;
 		t_gradient -> ramp_length = p_ramp_length;
 		t_gradient -> mirror = p_mirror;
 		t_gradient -> wrap = p_wrap;
-		t_gradient -> repeats = p_repeats;
-		t_gradient -> transform = p_transform;
-		t_gradient -> filter = p_filter;
+        t_gradient -> transform = p_transform;
+        
+        t_gradient -> kind = p_kind;
+        
 		t_gradient -> references = 1;
-		r_gradient = t_gradient;
+		
+        r_gradient = t_gradient;
+    }
+    else
+        MCGGradientDestroy(t_gradient);
+    
+    return t_success;
+}
+
+bool MCGGradientCreateGeneralized(MCGGradientFunction p_function,
+                                  const MCGFloat* p_stops,
+                                  const MCGColor* p_colors,
+                                  uindex_t p_ramp_length,
+                                  bool p_mirror,
+                                  bool p_wrap,
+                                  uint32_t p_repeats,
+                                  MCGAffineTransform p_transform,
+                                  MCGImageFilter p_filter,
+                                  MCGGradientRef& r_gradient)
+{
+	bool t_success;
+	t_success = true;
+	
+	__MCGGradient *t_gradient;
+	t_gradient = NULL;
+
+	if (t_success)
+        t_success = __MCGGradientCreate(kMCGGradientKindGeneralized,
+                                        p_stops,
+                                        p_colors,
+                                        p_ramp_length,
+                                        p_mirror,
+                                        p_wrap,
+                                        p_transform,
+                                        t_gradient);
+
+	if (t_success)
+	{
+		t_gradient -> generalized . function = p_function;
+		t_gradient -> generalized . repeats = p_repeats;
+		t_gradient -> generalized . filter = p_filter;
+     
+        r_gradient = t_gradient;
 	}
 	else
 		MCGGradientDestroy(t_gradient);
 	
 	return t_success;
+}
+
+bool MCGGradientCreateLinear(const MCGFloat* p_stops,
+                             const MCGColor* p_colors,
+                             uindex_t p_ramp_length,
+                             MCGGradientTileMode p_tile_mode,
+                             MCGAffineTransform p_transform,
+                             MCGGradientRef& r_gradient)
+{
+	return __MCGGradientCreate(kMCGGradientKindLinear,
+                               p_stops,
+                               p_colors,
+                               p_ramp_length,
+                               p_tile_mode == kMCGGradientTileModeMirror,
+                               p_tile_mode == kMCGGradientTileModeRepeat,
+                               p_transform,
+                               r_gradient);
+}
+
+
+bool MCGGradientCreateRadial(const MCGFloat* p_stops,
+                             const MCGColor* p_colors,
+                             uindex_t p_ramp_length,
+                             MCGGradientTileMode p_tile_mode,
+                             MCGAffineTransform p_transform,
+                             MCGPoint p_focal_point,
+                             MCGGradientRef& r_gradient)
+{
+	__MCGGradient *t_gradient;
+	t_gradient = NULL;
+    
+	if (!__MCGGradientCreate(kMCGGradientKindRadial,
+                             p_stops,
+                             p_colors,
+                             p_ramp_length,
+                             p_tile_mode == kMCGGradientTileModeMirror,
+                             p_tile_mode == kMCGGradientTileModeRepeat,
+                             p_transform,
+                             t_gradient))
+        return false;
+    
+    t_gradient -> radial . focal_point = p_focal_point;
+        
+    r_gradient = t_gradient;
+    
+    return true;
 }
 
 MCGGradientRef MCGGradientRetain(MCGGradientRef self)
@@ -193,20 +287,65 @@ void MCGGradientRelease(MCGGradientRef self)
 
 bool MCGGradientToSkShader(MCGGradientRef self, MCGRectangle p_clip, SkShader*& r_shader)
 {
-	bool t_success;
-	t_success = true;	
-	
-	// MM-2013-11-19: [[ Bug 11471 ]] Move to legacy gradient code for all gradient kinds - there was a loss of quality using Skia.
-	SkShader *t_gradient_shader;
-	t_gradient_shader = new MCGLegacyGradientShader(self, p_clip);
-	t_success = t_gradient_shader != NULL;
-	
-	if (t_success)
-		r_shader = t_gradient_shader;
-	else if (t_gradient_shader != NULL)
-		t_gradient_shader -> unref();		
-
-	return t_success;
+    SkShader *t_shader;
+    if (self -> kind == kMCGGradientKindGeneralized)
+    {
+        // MM-2013-11-19: [[ Bug 11471 ]] Move to legacy gradient code for all gradient kinds - there was a loss of quality using Skia.
+        t_shader = new MCGLegacyGradientShader(self, p_clip);
+        if (t_shader == NULL)
+            return false;
+    }
+    else
+    {
+#if !MCGCOLOR_IS_SKCOLOR
+#error MCGGradientToSkShader requires MCGColor == SkColor
+#endif
+#if !MCGFLOAT_IS_SKSCALAR
+#error MCGGradientToSkShader requires MCGFloat == SkScalar
+#endif
+        SkShader::TileMode t_tile_mode;
+		if (!self -> wrap)
+			t_tile_mode = SkShader::kClamp_TileMode;
+		else if (!self -> mirror)
+			t_tile_mode = SkShader::kRepeat_TileMode;
+		else
+			t_tile_mode = SkShader::kMirror_TileMode;
+        
+        if (self -> kind == kMCGGradientKindLinear)
+        {
+            SkPoint t_points[2];
+            t_points[0] = SkPoint::Make(SkIntToScalar(0), SkIntToScalar(0));
+            t_points[1] = SkPoint::Make(SkIntToScalar(1), SkIntToScalar(0));
+            t_shader = SkGradientShader::CreateLinear(t_points,
+                                                      (SkColor *)self -> colors,
+                                                      (SkScalar *)self -> stops,
+                                                      (int)self -> ramp_length,
+                                                      t_tile_mode);
+        }
+        else if (self -> kind == kMCGGradientKindRadial)
+        {
+            SkPoint t_center;
+            t_center = SkPoint::Make(SkIntToScalar(0), SkIntToScalar(0));
+            t_shader = SkGradientShader::CreateRadial(t_center,
+                                                      SkIntToScalar(1),
+                                                      (SkColor *)self -> colors,
+                                                      (SkScalar *)self -> stops,
+                                                      (int)self -> ramp_length,
+                                                      t_tile_mode);
+        }
+        else
+        {
+            MCUnreachableReturn(false);
+        }
+        
+		SkMatrix t_transform;
+		MCGAffineTransformToSkMatrix(self -> transform, t_transform);
+		t_shader -> setLocalMatrix(t_transform);
+    }
+    
+    r_shader = t_shader;
+    
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -889,7 +1028,11 @@ MCGAffineTransform MCGAffineTransformPostSkew(const MCGAffineTransform &p_transf
 MCGAffineTransform MCGAffineTransformInvert(const MCGAffineTransform& p_transform)
 {
 	MCGFloat t_det = p_transform.a * p_transform.d - p_transform.c * p_transform.b;
-
+    if (t_det == 0.0)
+    {
+        return MCGAffineTransformMake(0.0,0.0,0.0,0.0,0.0,0.0);
+    }
+    
 	MCAssert(t_det != 0.0);
 
 	MCGAffineTransform t_result;

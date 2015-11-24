@@ -2483,6 +2483,9 @@ static void nsvg__parseGradient(NSVGparser* p, const char** attr, char type)
 
 	nsvg__xformIdentity(grad->xform);
 
+    bool has_fx, has_fy;
+    has_fx = false;
+    has_fy = false;
 	for (i = 0; attr[i]; i += 2) {
 		if (strcmp(attr[i], "id") == 0) {
 			strncpy(grad->id, attr[i+1], 63);
@@ -2503,8 +2506,10 @@ static void nsvg__parseGradient(NSVGparser* p, const char** attr, char type)
 				grad->radial.r = nsvg__parseCoordinateRaw(attr[i + 1]);
 			} else if (strcmp(attr[i], "fx") == 0) {
 				grad->radial.fx = nsvg__parseCoordinateRaw(attr[i + 1]);
+                has_fx = true;
 			} else if (strcmp(attr[i], "fy") == 0) {
 				grad->radial.fy = nsvg__parseCoordinateRaw(attr[i + 1]);
+                has_fy = true;
 			} else if (strcmp(attr[i], "x1") == 0) {
 				grad->linear.x1 = nsvg__parseCoordinateRaw(attr[i + 1]);
 			} else if (strcmp(attr[i], "y1") == 0) {
@@ -2527,7 +2532,13 @@ static void nsvg__parseGradient(NSVGparser* p, const char** attr, char type)
 			}
 		}
 	}
-
+    
+    if (!has_fx)
+        grad->radial.fx = grad->radial.cx;
+    
+    if (!has_fy)
+        grad->radial.fy = grad->radial.cy;
+    
 	grad->next = p->gradients;
 	p->gradients = grad;
 }

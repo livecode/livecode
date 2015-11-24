@@ -58,23 +58,72 @@ bool MCGPatternToSkShader(MCGPatternRef pattern, SkShader*& r_shader);
 
 typedef struct __MCGGradient *MCGGradientRef;
 
-struct __MCGGradient
+enum MCGGradientKind
 {
-	MCGGradientFunction	function;	
-	MCGColor			*colors;
-	MCGFloat			*stops;
-	uindex_t			ramp_length;	
-	bool				mirror;
-	bool				wrap;
-	uint32_t			repeats;	
-	MCGAffineTransform	transform;
-	MCGImageFilter		filter;	
-	uint32_t			references;
+    kMCGGradientKindGeneralized,
+    kMCGGradientKindLinear,
+    kMCGGradientKindRadial,
 };
 
-bool MCGGradientCreate(MCGGradientFunction function, const MCGFloat* stops, const MCGColor* colors, uindex_t ramp_length, bool mirror, bool wrap, uint32_t repeats, MCGAffineTransform transform, MCGImageFilter filter, MCGGradientRef& r_gradient);
+struct __MCGGradient
+{
+	uint32_t			references;
+	MCGColor			*colors;
+	MCGFloat			*stops;
+	uindex_t			ramp_length;
+	MCGAffineTransform	transform;
+    MCGGradientKind     kind;
+    bool				mirror : 1;
+    bool				wrap : 1;
+    union
+    {
+        struct
+        {
+            MCGGradientFunction	function;
+            uint32_t			repeats;
+            MCGImageFilter		filter;
+        } generalized;
+        struct
+        {
+            MCGPoint focal_point;
+        } radial;
+    };
+};
+
+// Create a 'generalized' gradient. These are the gradients used by LiveCode's
+// graphic object, and consist of a function which maps a co-ordinate to a point
+// on the ramp with various options. These gradients use custom SkShaders to
+// render.
+//
+bool MCGGradientCreateGeneralized(MCGGradientFunction function,
+                                  const MCGFloat* stops,
+                                  const MCGColor* colors,
+                                  uindex_t ramp_length,
+                                  bool mirror,
+                                  bool wrap,
+                                  uint32_t repeats,
+                                  MCGAffineTransform transform,
+                                  MCGImageFilter filter,
+                                  MCGGradientRef& r_gradient);
+
+bool MCGGradientCreateLinear(const MCGFloat* stops,
+                             const MCGColor* colors,
+                             uindex_t ramp_length,
+                             MCGGradientTileMode tile_mode,
+                             MCGAffineTransform transform,
+                             MCGGradientRef& r_gradient);
+
+bool MCGGradientCreateRadial(const MCGFloat* stops,
+                             const MCGColor* colors,
+                             uindex_t ramp_length,
+                             MCGGradientTileMode tile_mode,
+                             MCGAffineTransform transform,
+                             MCGPoint focal_point,
+                             MCGGradientRef& r_gradient);
+
 MCGGradientRef MCGGradientRetain(MCGGradientRef gradient);
 void MCGGradientRelease(MCGGradientRef gradient);
+
 bool MCGGradientToSkShader(MCGGradientRef gradient, MCGRectangle clip, SkShader*& r_shader);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -223,6 +272,8 @@ void MCGAffineTransformFromSkMatrix(const SkMatrix &matrix, MCGAffineTransform &
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#define MCGCOLOR_IS_SKCOLOR 1
+
 inline SkColor MCGColorToSkColor(MCGColor p_color)
 {
 	return p_color;
@@ -257,9 +308,11 @@ inline MCGFloat MCGFloatSin(MCGFloat p_angle)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-inline SkScalar MCGFloatToSkScalar(MCGFloat p_ploat)
+#define MCGFLOAT_IS_SKSCALAR 1
+
+inline SkScalar MCGFloatToSkScalar(MCGFloat p_float)
 {
-	return p_ploat;
+	return p_float;
 }
 
 inline MCGFloat MCGFloatFromSkScalar(SkScalar p_scalar)
@@ -446,6 +499,9 @@ void *MCGCacheTableGet(MCGCacheTableRef cache_table, void *key, uint32_t key_len
 
 // MM-2014-04-16: [[ Bug 11964 ]] Updated prototype to take transform parameter.
 MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font, const MCGAffineTransform &p_transform);
+
+void MCGContextSetFillGradientRef(MCGContextRef context, MCGGradientRef gradient);
+void MCGContextSetStrokeGradientRef(MCGContextRef context, MCGGradientRef gradient);
 
 ////////////////////////////////////////////////////////////////////////////////
 

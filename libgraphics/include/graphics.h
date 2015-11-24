@@ -30,6 +30,8 @@ typedef struct __MCGMask *MCGMaskRef;
 typedef struct __MCGDashes *MCGDashesRef;
 typedef struct __MCGRegion *MCGRegionRef;
 
+typedef struct __MCGGradient *MCGGradientRef;
+
 typedef struct __MCGSvg *MCGSvgRef;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -825,6 +827,9 @@ bool MCGPathGetBoundingBox(MCGPathRef path, MCGRectangle &r_bounds);
 
 typedef bool (*MCGPathIterateCallback)(void *p_context, MCGPathCommand p_command, MCGPoint *p_points, uint32_t p_point_count);
 bool MCGPathIterate(MCGPathRef p_path, MCGPathIterateCallback p_callback, void *p_context);
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
