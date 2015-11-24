@@ -143,21 +143,27 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType
    put tBody & getPastNotes(tTags) into tBody
    
    local tNotesFileURL
-   local tNotesFile
+   local tNotesFile, tHtmlNotesFile
    builderEnsureFolder  builderRepoFolder() & slash & targetPath()
    put builderRepoFolder() & slash & targetPath() & slash & "LiveCodeNotes-" & replaceText(pVersion, "[-,\.]", "_") into tNotesFile
-   put "file:" & tNotesFile & ".html" into tNotesFileURL
+   put tNotesFile & ".html" into tHtmlNotesFile
+   put "file:" & tHtmlNotesFile into tNotesFileURL
    
    local tNotesPrefix
    local tNotesSuffix
    local tTitle
    put "LiveCode " & pVersion & " Release Notes" into tTitle
-   put "<html><br>" & CR & releaseNotesCSS() & CR into tNotesPrefix
-   put tNotesPrefix & "<h1 style = " & quote & "text-align : center" & quote & ">" & tTitle & "</h1>" & CR into tNotesPrefix
-   put tNotesPrefix & "<h2>Table of contents</h2>" & CR into tNotesPrefix
-   put "</html>" into tNotesSuffix   
-   
-   put tNotesPrefix & tContents & gPageBreak & tBody & tNotesSuffix into url tNotesFileURL
+   put "<html><head>" & CR into tNotesPrefix
+   put "<meta charset=" & quote & "UTF-8" & quote & ">" & CR after tNotesPrefix
+   put releaseNotesCSS() & CR after tNotesPrefix
+   put "</head>" & CR after tNotesPrefix
+   put "<body><h1 style = " & quote & "text-align : center" & quote & ">" & tTitle & "</h1>" & CR after tNotesPrefix
+   put "<h2>Table of contents</h2>" & CR after tNotesPrefix
+   put "</body></html>" into tNotesSuffix   
+
+   open file tHtmlNotesFile for "UTF-8" text write
+   write tNotesPrefix & tContents & gPageBreak & tBody & tNotesSuffix to file tHtmlNotesFile
+   close file tHtmlNotesFile
    
    builderLog "message", "Converting release notes to PDF"
    HTMLToPDF tNotesFile, tTitle
@@ -186,6 +192,7 @@ command HTMLToPDF pName, pTitle
    put " --header-right " & quote & pTitle & " " & the date & quote into tOptions
    put tOptions & " --header-font-size 8 --header-spacing 5 --footer-center [page] --footer-font-size 8 --footer-spacing 5 " into tOptions
    put tOptions & "--margin-top 30 --margin-bottom 20 --margin-left 20 --margin-right 20 --enable-internal-links " into tOptions
+   put "--encoding UTF-8 " after tOptions
 
    if $WKHTMLTOPDF is empty then
       put builderRepoFolder() & slash & "builder" & slash & "wkhtmltopdf" into tCommand
@@ -235,12 +242,17 @@ function newSection pSection, pLevel, @xContents
 end newSection
 
 function notesFileToHTML pFileName, pVersion, @xContents
-   local tFileUrl
+   local tFile
    local tFileText
    local tBody
    put empty into tBody
-   put "file:" & notesPath() & slash & pFileName into tFileUrl
-   put url tFileUrl into tFileText
+
+   put notesPath() & slash & pFileName into tFile
+   open file tFile for "UTF8" read
+   read from file tFile until end
+   put it into tFileText
+   close file tFile
+
    if tFileText is not empty then
       replace "<version>" with pVersion in tFileText
       put markdownToHTML(tFileText, 1, 0, xContents, true) into tBody
