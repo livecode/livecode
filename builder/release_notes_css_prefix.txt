@@ -230,6 +230,8 @@ samp {
     font-family: "Courier New", "DejaVu Sans Mono", monospace;
     _font-family: 'courier new', monospace;
     font-size: 1em;
+    background: rgb(240,240,240);
+    padding: 0.2em;
 }
 
 /**
