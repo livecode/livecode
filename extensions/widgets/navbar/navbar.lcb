@@ -862,7 +862,11 @@ private handler calculateIosIconRects() returns nothing
 				put rectangle [((2 * tX - 1) * mBoxWidth - mHeight * (1 - kIconPaddingRatio)) / 2, mHeight * kIconPaddingRatio, ((2 * tX - 1) * mBoxWidth + mHeight * (1 - kIconPaddingRatio)) / 2, mHeight * (1 - (kIconPaddingRatio + kLabelHeightRatio + kLabelPaddingRatio))] into tIconRect
 			else if mItemStyle is "icons" then
 				variable tIconSpacing
-				put (mWidth - 2 * mHeight) / (mNavItemCount - 1) into tIconSpacing
+                if mNavItemCount is 1 then
+                    put 0 into tIconSpacing
+                else
+                    put (mWidth - 2 * mHeight) / (mNavItemCount - 1) into tIconSpacing
+                end if
 				put rectangle [(1- kIconOnlyPaddingRatio) * mHeight + (tX - 1) * tIconSpacing, kIconOnlyPaddingRatio * mHeight, (1+ kIconOnlyPaddingRatio) * mHeight + (tX - 1) * tIconSpacing, (1 - kIconOnlyPaddingRatio) * mHeight] into tIconRect
 			end if
 
