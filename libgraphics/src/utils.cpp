@@ -284,6 +284,11 @@ bool MCGDashesToSkDashPathEffect(MCGDashesRef self, SkDashPathEffect*& r_path_ef
 	bool t_success;
 	t_success = true;
 	
+    // Skia won't except odd numbers of dashes, so we must replicate in that case.
+    uint32_t t_dash_count;
+    if (t_success)
+        t_dash_count = (self -> count % 2) == 0 ? self -> count : self -> count * 2;
+        
 	SkScalar *t_dashes;
 	if (t_success)
 		t_success = MCMemoryNewArray(self -> count, t_dashes);
@@ -292,10 +297,10 @@ bool MCGDashesToSkDashPathEffect(MCGDashesRef self, SkDashPathEffect*& r_path_ef
 	t_dash_effect = NULL;
 	if (t_success)
 	{
-		for (uint32_t i = 0; i < self -> count; i++)
-			t_dashes[i] = MCGFloatToSkScalar(self -> lengths[i]);	
+		for (uint32_t i = 0; i < t_dash_count; i++)
+			t_dashes[i] = MCGFloatToSkScalar(self -> lengths[i % self -> count]);
 	
-		t_dash_effect = new SkDashPathEffect(t_dashes, self -> count, MCGFloatToSkScalar(self -> phase));
+		t_dash_effect = new SkDashPathEffect(t_dashes, (int)t_dash_count, MCGFloatToSkScalar(self -> phase));
 		t_success = t_dash_effect != NULL;
 	}
 	
