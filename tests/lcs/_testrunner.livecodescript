@@ -1,6 +1,6 @@
 ﻿script "TestRunner"
 /*
-Copyright (C) 2015 Runtime Revolution Ltd.
+Copyright (C) 2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -90,7 +90,7 @@ private command doInvoke pInfo
    put pInfo["args"][2] into pInfo["invoke"]["script"]
    put pInfo["args"][3] into pInfo["invoke"]["command"]
    
-   invokeLoadLibrary pInfo
+   invokeLoadLibraries pInfo
    invokeTest pInfo
 end doInvoke
 
@@ -137,28 +137,41 @@ private command invokeTest pInfo
    dispatch pInfo["invoke"]["command"] to tStackName
 end invokeTest
 
--- Add the unit test library stack to the backscripts
-private command invokeLoadLibrary pInfo
-   local tStackName, tStackFile
+-- Add the unit test library stack and the input library to the backscripts
+private command invokeLoadLibraries pInfo
+   invokeDoLoadLibrary invokeGetLibraryStack(pInfo)    
+   invokeDoLoadLibrary invokeGetInputLibraryStack(pInfo)
+end invokeLoadLibraries
+
+-- Loads stack located at pLibraryPath into the backscripts
+private command invokeDoLoadLibrary pLibraryPath
+   local tStackName
    
    -- This should auto-load the library
-   put invokeGetLibraryStack(pInfo) into tStackFile
-   put the name of stack tStackFile into tStackName
+   put the name of stack pLibraryPath into tStackName
    
    -- Add the library to the backscripts
    insert the script of stack tStackName into back
-end invokeLoadLibrary
+end invokeDoLoadLibrary
 
--- Return the filename of the unit test library stack
-private function invokeGetLibraryStack pInfo
+-- Return the folder of this script
+private function invokeGetStackFolder pInfo
    local tFilename
    put pInfo["self-script"] into tFilename
    
    set the itemDelimiter to slash
-   put "_testlib.livecodescript" into item -1 of tFilename
-   
-   return tFilename
+   return item 1 to -2 of tFilename
+end invokeGetStackFolder
+
+-- Return the filename of the unit test library stack
+private function invokeGetLibraryStack pInfo
+   return invokeGetStackFolder(pInfo) & slash & "_testlib.livecodescript"
 end invokeGetLibraryStack
+
+-- Return the filename of the input library stack
+private function invokeGetInputLibraryStack pInfo
+   return invokeGetStackFolder(pInfo) & slash & "_inputlib.livecodescript"
+end invokeGetInputLibraryStack
 
 ----------------------------------------------------------------
 -- Support for running tests
