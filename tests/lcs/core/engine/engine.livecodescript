@@ -151,6 +151,8 @@ on TestProcessor
    else
       // Mac and Linux
       put shell("uname -m") into tProcessors
+      // Delete LF finishing the command output
+      delete last char of tProcessors
    end if
    
    TestAssert "the processor is correct", the processor is among the items of tProcessors
@@ -168,13 +170,12 @@ on TestOpenNonExistantFile
    TestAssert "Can't open non-existant file", the result is "can't open that file"
 end TestOpenNonExistantFile
 
-
 on TestScriptLimits
    local tLimits
    put the scriptlimits into tLimits
-   TestAssert "4 items in the scriptLimits", the number of items in tLimits is 4
+   TestAssert "Script limits contains 4 items", the number of items in tLimits is 4
    repeat for each item tLimit in tLimits
-      TestAssert "test", tLimit is an integer
+      TestAssert "Each item is an integer", tLimit is an integer
    end repeat
 end TestScriptLimits
 
@@ -252,7 +253,7 @@ on TestVariableNames
    local tGlobals
    put line 4 of the cVariableNames of button 1 into tGlobals
    
-   TestAssert "3 global variables", the number of items in tGlobals is 3
+   TestAssert "Has 3 global variables", the number of items in tGlobals is 3
    TestAssert "Check script global", "gScriptGlobal" is among the items of tGlobals
    TestAssert "Checkhandler global", "gHandlerGlobal" is among the items of tGlobals
    TestAssert "Check shared global", "gSharedGlobal" is among the items of tGlobals
@@ -322,7 +323,7 @@ on TestDeleteChunkofChunk
    local tString
    constant kLine = "foo,bar,baz"
    
-   put kLine & LF & kLine & kLine into tString
+   put kLine & LF & kLine & LF & kLine into tString
    
    delete item 2 to -1 of line 2 of tString
    
