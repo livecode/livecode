@@ -1266,7 +1266,8 @@ function revDocsParseDocTextToLibraryArray pFile, pText, pLibraryName, pAuthor
    local tLibraryA
    put revDocsParseDocText(pText, pFile) into tLibraryA
    if pLibraryName is not empty then
-      put pLibraryName into tLibraryA["name"]
+      put pLibraryName into tLibraryA["display name"]
+      put revDocsModifyForUrl(pLibraryName) into tLIbraryA["name"]
    end if
    put pAuthor into tLibraryA["author"]
    return tLibraryA
@@ -1344,7 +1345,8 @@ function revDocsParseDocText pText, pFilename
          case empty
             exit repeat
          case "Library"
-            put tElementsA[tStartNum]["content"] into tParsedA["name"]
+            put tElementsA[tStartNum]["content"] into tParsedA["display name"]
+            put revDocsModifyForURL(tParsedA["display name"]) into tParsedA["name"]
             add 1 to tStartNum
             break
          case "Description"
@@ -1374,7 +1376,7 @@ function revDocsParseDocText pText, pFilename
    
    local tAssociationsDefault
    put "Associations" into tAssociationsDefault["name"]
-   put tParsedA["name"] into tAssociationsDefault["content"]
+   put tParsedA["display name"] into tAssociationsDefault["content"]
    repeat with tElementNum = tStartNum to the number of elements in tElementsA
       add 1 to tEntryElementCount
       local tElementA
@@ -1895,8 +1897,8 @@ end __tabs
 function revDocsFormatLibraryArrayAsJSON pLibraryA
    local tJSON
    put "{" after tJSON
-   put return & __tabs(2) & keyValue("display name",pLibraryA["name"]) & comma after tJSON
-   put return & __tabs(2) & keyValue("name",revDocsModifyForURL(pLibraryA["name"])) & comma after tJSON
+   put return & __tabs(2) & keyValue("display name",pLibraryA["display name"]) & comma after tJSON
+   put return & __tabs(2) & keyValue("name",pLibraryA["name"]) & comma after tJSON
    put return & __tabs(2) & keyValue("author",pLibraryA["author"]) & comma after tJSON
    put return & __tabs(2) & escape("doc") & ":[" after tJSON
    
@@ -2283,3 +2285,141 @@ function revDocsFormatLibraryDataAsJSON pID, pLibraryDataA
    return tJSON
    
 end revDocsFormatLibraryDataAsJSON
+
+##################################################
+#
+#        Docs API database
+#
+##################################################
+
+constant kAPIDatabaseFile = "api.sqlite"
+
+on revDocsOpenAPIDatabase pFolder
+   local tDefaultFolder
+   put the defaultFolder into tDefaultFolder
+   set the defaultFolder to pFolder
+   
+   local tConnection
+   put revOpenDatabase("sqlite",kAPIDatabaseFile,,,,,,) into tConnection
+   
+   if tConnection is not a number then
+      return "unable to create sqlite API database" & return & the result
+   end if
+   
+   return tConnection
+end revDocsOpenAPIDatabase
+
+on revDocsUpdateDatabase pConnection, pLibraryA
+   if pConnection is empty then
+      return "no database connection"
+   end if
+   
+   local tSQL, tResult
+   
+   # Create the libraries table. This might already exist, so do it unchecked.
+   put "CREATE TABLE libraries(library_id integer primary key, library_name text, author text, type text)" into tSQL
+   revExecuteSQL pConnection, tSQL
+   
+   local tName
+   put pLibraryA["name"] into tName
+   if tName is empty then
+      put revDocsModifyForURL(pLibraryA["display name"]) into tName
+   end if 
+   
+   local tAuthor
+   put pLibraryA["author"] into tAuthor
+   
+   local tType
+   put pLibraryA["type"] into tType
+   
+   # Try an UPDATE first. If this fails, the entry might not exist already, so try an INSERT.
+   put "UPDATE libraries SET author = :1, type = :2 WHERE library_name = :3" into tSQL
+   revExecuteSQL pConnection, tSQL, "tAuthor", "tType", "tName" 
+   put the result into tResult
+   if tResult is not a number or tResult is 0 then
+      put "INSERT into libraries VALUES(NULL, :1, :2, :3)" into tSQL
+      revExecuteSQL pConnection, tSQL, "tName", "tAuthor", "tType"
+      put the result into tResult
+   end if
+   
+   if tResult is not a number then
+      return "unable to open table 'libraries'" & return & tResult
+   end if
+   
+   # Create the library data table. This might already exist, so do it unchecked.
+   put "CREATE TABLE dictionary_data(library_id integer, entry_name text, entry_type text, entry_data blob)" into tSQL
+   revExecuteSQL pConnection, tSQL
+   
+   revDocsUpdateLibrary pConnection, tName, pLibraryA["doc"]
+   if the result is not empty then
+      return "unable to update data for library" && tName & return & the result
+   end if
+   
+   return empty
+end revDocsUpdateDatabase
+
+on revDocsUpdateLibrary pConnection, pName, pDocDataA
+   # Find the library id
+   local tSQL, tLibraryID
+   put "SELECT library_id FROM libraries WHERE library_name = :1" into tSQL
+   put revDataFromQuery(comma, return, pConnection, tSQL, "pName") into tLibraryID
+   
+   if the result is not a number then
+      return "error finding library id for" && pName & return & the result
+   end if
+   
+   local tDocA, tDocName
+   repeat for each element tDocA in pDocDataA
+      put tDocA["name"] into tDocName
+      if tDocName is empty then
+         put revDocsModifyForURL(tDocA["display name"]) into tDocName
+      end if 
+      
+      local tType
+      put tDocA["type"] into tType
+      
+      local tEncodedData, tResult
+      put arrayEncode(tDocA) into tEncodedData
+      # Try an UPDATE first. If this fails, the entry might not exist already, so try an INSERT.
+      put "UPDATE dictionary_data SET entry_data = :1 WHERE entry_name = :2 AND entry_type = :3 AND library_id = :4" into tSQL
+      revExecuteSQL pConnection, tSQL, "*btEncodedData", "tDocName", "tType", "tLibraryID"
+      put the result into tResult
+      if tResult is not a number or tResult is 0 then
+         put "INSERT into dictionary_data VALUES(:1, :2, :3, :4)" into tSQL
+         revExecuteSQL pConnection, tSQL, "tLibraryID", "tDocName", "tType", "*btEncodedData"
+         put the result into tResult
+      end if
+      
+      if tResult is not a number then
+         return "unable to insert data for" && pName & ":" & tDocName & return & the result
+      end if
+   end repeat
+   return empty
+end revDocsUpdateLibrary
+
+on revDocsRemoveLibrary pConnection, pName
+   # Find the library id
+   local tSQL, tLibraryID
+   put "SELECT library_id FROM libraries WHERE library_name = :1" into tSQL
+   put revDataFromQuery(comma, return, pConnection, tSQL, pName) into tLibraryID
+   
+   if the result is not a number then
+      return "error finding library id for" && pName & return & the result
+   end if
+   
+   # Delete all entries associated with this library
+   put "DELETE * FROM dictionary_data WHERE library_id = :1" into tSQL
+   revExecuteSQL pConnection, tSQL, "tLibraryID"
+   if the result is not a number then
+      return "unable to delete data for" && pName & return & the result
+   end if
+   
+   # Delete the library entry from the libraries table
+   put "DELETE * FROM libraries WHERE library_name = :1" into tSQL
+   revExecuteSQL pConnection, tSQL, pName 
+   if the result is not a number then
+      return "unable to remove library" && pName && "from libraries table" & return & the result
+   end if	
+   
+   return empty
+end revDocsRemoveLibrary
