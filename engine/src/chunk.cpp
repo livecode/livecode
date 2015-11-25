@@ -4527,6 +4527,58 @@ bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
     return getsetprop(ctxt, which, index, effective, false, p_value);
 }
 
+bool MCChunk::getsetcustomprop(MCExecContext &ctxt, MCNameRef p_prop_name, MCNameRef p_index_name, bool p_is_get_operation, MCExecValue &r_value)
+{
+    bool t_success;
+    t_success = true;
+    
+    MCObject *t_object;
+    uint4 t_parid;
+    if (t_success)
+        t_success = getobjforprop(ctxt, t_object, t_parid);
+    
+    // MW-2011-09-02: Moved handling of customprop != nil case into resolveprop,
+    //   so t_prop_name is always non-nil if t_prop == P_CUSTOM.
+    // MW-2011-11-23: [[ Array Chunk Props ]] Moved handling of arrayprops into
+    //   MCChunk::setprop.
+    if (t_success)
+    {
+        if (p_index_name == nil)
+        {
+            if (p_is_get_operation)
+                t_success = t_object -> getcustomprop(ctxt, t_object -> getdefaultpropsetname(), p_prop_name, r_value);
+            else
+                t_success = t_object -> setcustomprop(ctxt, t_object -> getdefaultpropsetname(), p_prop_name, r_value);
+        }
+        else
+        {
+            if (p_is_get_operation)
+                t_success = t_object -> getcustomprop(ctxt, p_prop_name, p_index_name, r_value);
+            else
+                t_success = t_object -> setcustomprop(ctxt, p_prop_name, p_index_name, r_value);
+        }
+    }
+    
+    if (t_success)
+    {
+        // MM-2012-09-05: [[ Property Listener ]] Make sure setting a custom property sends propertyChanged message to listeners.
+        t_object -> signallisteners(P_CUSTOM);
+        return true;
+    }
+    
+    return false;
+}
+
+bool MCChunk::getcustomprop(MCExecContext& ctxt, MCNameRef p_prop_name, MCNameRef p_index_name, MCExecValue& r_value)
+{
+    return getsetcustomprop(ctxt, p_prop_name, p_index_name, true, r_value);
+}
+
+bool MCChunk::setcustomprop(MCExecContext& ctxt, MCNameRef p_prop_name, MCNameRef p_index_name, MCExecValue p_value)
+{
+    return getsetcustomprop(ctxt, p_prop_name, p_index_name, false, p_value);
+}
+
 Chunk_term MCChunk::getlastchunktype(void)
 {
     if (byte != nil)
