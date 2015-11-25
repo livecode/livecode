@@ -126,8 +126,6 @@ public handler OnCreate()
 		push tNav onto mNavData
 	end repeat
 
-	put 10 into mSize
-
 	put 1 into mSelectedNavItem
 
 	put false into mShowNavIcons
@@ -495,12 +493,15 @@ private handler getFont(in pType as String) returns Font
 	variable tFont as String
 	put the name of my font into tFont
 
+    variable tSize as Integer
+    put the floor of (my height / 2) into tSize
+
 	if pType is "title" then
-		return font tFont with bold style at size mSize
+		return font tFont with bold style at size tSize
 	else if pType is "label" then
-		return font tFont at size mSize
+		return font tFont at size tSize
 	else if pType is "icon" then
-		return font "fontawesome" at size mSize
+		return font "fontawesome" at size tSize
 	end if
 
 end handler
