@@ -24,7 +24,6 @@ on  TestCombineStrings
    put testArrayData("stringKeys") into tKeys
    put testArrayData("stringValues") into tValues
    
-   set the itemDelimiter to tab
    repeat with x = 1 to the number of items in tKeys
       put item x of tValues into tArray[item x of tKeys]
       put item x of tKeys & tab & item x of tValues & return after tUncombinedData
@@ -43,7 +42,7 @@ end  TestCombineStrings
 on  TestCombineNumbers
    local tArray, tKeyList
    local tUncombinedData
-   set the itemDel to tab
+
    repeat with x = 1 to 5
       put x into tArray[x]
       put x & tab & x & return after tUncombinedData
@@ -62,7 +61,6 @@ on  TestCombineMixed
    put testArrayData("stringKeys") into tKeys
    put testArrayData("stringValues") into tValues
    
-   set the itemDelimiter to tab
    repeat with x = 1 to the number of items in tKeys
       put item x of tValues into tArray[item x of tKeys]
       put item x of tKeys & tab & item x of tValues & return after tUncombinedData
@@ -89,7 +87,6 @@ on  test_arrayCombineByRow
    
    put testArrayData("stringValues") into tValues
    
-   set the itemDelimiter to tab
    repeat with x = 1 to the number of items in tValues
       put item x of tValues into tArray[x]
       put item x of tValues & the rowDelimiter after tUncombinedData
@@ -111,7 +108,6 @@ on  test_arrayCombineByRow
    
    put testArrayData("stringValues") into tValues
    
-   set the itemDelimiter to tab
    repeat with x = 1 to the number of items in tValues
       put item x of tValues into tArray[x]
       put item x of tValues & the columnDelimiter after tUncombinedData
