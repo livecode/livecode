@@ -70,7 +70,7 @@ on builderBuild pWhich, pPlatforms, pEdition, pType
          end repeat
          break
       case "Notes"
-         dispatch "releaseNotesBuilderRun" to stack builderNotesBuilderStack() with pEdition, tVersion
+         dispatch "releaseNotesBuilderRun" to stack builderNotesBuilderStack() with pEdition, tVersion, pType, builderOutputFolder()
          break
       case "Docs"
          dispatch "docsBuilderRun" to stack builderDocsBuilderStack() with pEdition, tVersion
