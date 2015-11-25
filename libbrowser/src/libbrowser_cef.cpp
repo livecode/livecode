@@ -1712,6 +1712,6 @@ bool MCCefBrowserFactoryCreate(MCBrowserFactoryRef &r_factory)
 		return false;
 	}
 	
-	r_factory = (MCBrowserFactoryRef)t_factory;
+	r_factory = t_factory;
 	return true;
 }
