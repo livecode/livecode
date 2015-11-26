@@ -79,7 +79,7 @@ end TestFrontScripts
 
 on TestFunctionNames
    TestAssert "functionNames is not empty", the functionNames is not empty
-   TestAssert "'functionName' is amongst the functionNames", "functionNames" is among the lines of the functionNames
+   TestAssert "'functionNames' is amongst the functionNames", "functionNames" is among the lines of the functionNames
 end TestFunctionNames
 
 
