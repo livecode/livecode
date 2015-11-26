@@ -90,7 +90,7 @@ private command doInvoke pInfo
    put pInfo["args"][2] into pInfo["invoke"]["script"]
    put pInfo["args"][3] into pInfo["invoke"]["command"]
    
-   invokeLoadLibraries pInfo
+   invokeLoadLibrary pInfo
    invokeTest pInfo
 end doInvoke
 
@@ -138,23 +138,19 @@ private command invokeTest pInfo
 end invokeTest
 
 -- Add the unit test library stack and the input library to the backscripts
-private command invokeLoadLibraries pInfo
-   invokeDoLoadLibrary invokeGetLibraryStack(pInfo)    
-   invokeDoLoadLibrary invokeGetInputLibraryStack(pInfo)
-end invokeLoadLibraries
-
--- Loads stack located at pLibraryPath into the backscripts
-private command invokeDoLoadLibrary pLibraryPath
-   local tStackName
+private command invokeLoadLibrary pInfo
+   local tStackName, tStackFile
    
    -- This should auto-load the library
-   put the name of stack pLibraryPath into tStackName
+   put invokeGetLibraryStack(pInfo) into tStackFile
+   put the name of stack tStackFile into tStackName
    
    -- Add the library to the backscripts
    insert the script of stack tStackName into back
-end invokeDoLoadLibrary
+   
+   start using stack invokeGetInputLibraryStack(pInfo)
+end invokeLoadLibrary
 
--- Return the folder of this script
 private function invokeGetStackFolder pInfo
    local tFilename
    put pInfo["self-script"] into tFilename
@@ -168,7 +164,6 @@ private function invokeGetLibraryStack pInfo
    return invokeGetStackFolder(pInfo) & slash & "_testlib.livecodescript"
 end invokeGetLibraryStack
 
--- Return the filename of the input library stack
 private function invokeGetInputLibraryStack pInfo
    return invokeGetStackFolder(pInfo) & slash & "_inputlib.livecodescript"
 end invokeGetInputLibraryStack

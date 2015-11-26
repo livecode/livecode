@@ -17,14 +17,16 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 local sTestStrings, sTestNumbers, sTestConversionStrings, sTestFilePaths, sArrayData
+local sInitialised
 
 private function __testFilesFolder
    set the itemDelimiter to slash
-   return item 1 to -2 of the filename of this stack & slash & "testFiles"
+   return item 1 to -2 of the filename of me & slash & "inputFiles"
 end __testFilesFolder
 
 private function getTestFile pTestFile
    local tContent, tFilePath
+   
    put __testFilesFolder() & slash & pTestFile into tFilePath
    
    // test files are written without BOM
@@ -37,17 +39,17 @@ private function getTestFile pTestFile
    return tContent
 end getTestFile
 
-on libraryStack
-   setUpValues
-end libraryStack
-
 on setUpValues
+   if sInitialised then
+      exit setUpValues
+   end if
+   
+   put true into sInitialised
+   
    //load in strings
    local tStrings
    put getTestFile("testStrings.txt") into tStrings
    put empty into sArrayData
-   
-   set the itemDel to tab
    
    local tFirstLine
    put line 1 of tStrings into tFirstLine
@@ -69,7 +71,6 @@ on setUpValues
    local tNumbers
    put getTestFile("testNumbers.txt") into tNumbers
    
-   set the itemDel to tab
    repeat for each line tLine in tNumbers
       put item 2 of tLine into sTestNumbers[item 1 of tLine][1]
       put item 3 of tLine into sTestNumbers[item 1 of tLine][2]
@@ -78,9 +79,8 @@ on setUpValues
    
    // Load in conversion strings
    local tConversionStrings
-   put getTestFile("testConversionStrings.txt") tConversionStrings
+   put getTestFile("testConversionStrings.txt") into tConversionStrings
    
-   set the itemDel to tab
    repeat for each line tLine in tConversionStrings
       put item 2 of tLine into sTestConversionStrings[item 1 of tLine]["lowerCase"]
       put item 3 of tLine into sTestConversionStrings[item 1 of tLine]["upperCase"]
@@ -95,7 +95,6 @@ on setUpValues
    local tFilePaths
    put getTestFile("testFilePaths.txt") into tFilePaths
    
-   set the itemDel to tab
    repeat for each line tLine in tFilePaths
       put item 2 of tLine into sTestFilePaths[item 1 of tLine]
    end repeat
@@ -105,31 +104,35 @@ on setUpValues
    local tArrayData
    put getTestFile("testArrayData.txt") into tArrayData
    
-   set the itemDel to tab
    repeat for each line tLine in tArrayData
       put item 2 to -1 of tLine into sArrayData[item 1 of tLine]
    end repeat
 end setUpValues
 
 function testString pType,pNumber, pValue
+   setupValues
    if pValue is empty then put "string" into pValue   
    put "String:" && pType, pNumber, pValue && sTestStrings[pType][pNumber][pValue]& return after url ("binfile:" & specialFolderPath("desktop")  & "/log.txt")
    return sTestStrings[pType][pNumber][pValue]
 end testString
 
 function testNumber pType,pNumber
+   setupValues
    return sTestNumbers[pType][pNumber]
 end testNumber
 
 function testConversionString pStringType, pConversionType
+   setupValues
    return sTestConversionStrings[pStringType][pConversionType]
 end testConversionString
 
 function testFilePath pType
+   setupValues
    return sTestFilePaths[pType]
 end testFilePath
 
 function testFolderList
+   setupValues
    local tFileList
    repeat for each element tFile in sTestFilePaths
       put tFile & return after tFileList
@@ -139,6 +142,7 @@ function testFolderList
 end testFolderList
 
 function testFileList
+   setupValues
    local tFileList
    repeat for each element tFile in sTestFilePaths
       put tFile & ".txt" & return after tFileList
@@ -148,5 +152,6 @@ function testFileList
 end testFileList
 
 function testArrayData pKey
+   setupValues
    return sArrayData[pKey]
 end testArrayData
