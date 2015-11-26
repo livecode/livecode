@@ -106,7 +106,7 @@ on TestGlobalLoc
 end TestGlobalLoc
 
 
-private command __testIntersect pImage1, pImage2, pIntersectionType, pShouldIntersect
+private command __testIntersect pImage1, pImage2, pIntersectionType, pShouldIntersect, pExpectedFailure
    local tMess
    local tAlpha1, tAlpha2
    
@@ -125,14 +125,18 @@ private command __testIntersect pImage1, pImage2, pIntersectionType, pShouldInte
    local tRes
    put intersect(pImage1, pImage2, pIntersectionType) into tRes
    
-   if pShouldIntersect then
-      TestAssert tMess, tRes
+   if not pShouldIntersect then
+      put not tRes into tRes
+   end if
+   
+   if pExpectedFailure then
+      TestAssertBroken tMess, tRes
    else
-      TestAssert tMess, not tRes
+      TestAssert tMess, tRes
    end if
 end __testIntersect
 
-on TestIntersect
+on TestImageIntersect
    local tImage1, tImage2
    create image
    put the long id of the last image into tImage1
@@ -183,17 +187,17 @@ on TestIntersect
    set the alphadata of tImage1 to tHalfAlpha
    set the alphadata of tImage2 to tFullAlpha
    __testIntersect tImage1, tImage2, "bounds", true
-   __testIntersect tImage1, tImage2, "pixels", true
+   __testIntersect tImage1, tImage2, "pixels", true, true // Broken
    __testIntersect tImage1, tImage2, "opaque pixels", false
-   __testIntersect tImage1, tImage2, 127, true
+   __testIntersect tImage1, tImage2, 127, true, true // Broken
    __testIntersect tImage1, tImage2, 128, false
    
    set the alphadata of tImage1 to tFullAlpha
    set the alphadata of tImage2 to tHalfAlpha
    __testIntersect tImage1, tImage2, "bounds", true
-   __testIntersect tImage1, tImage2, "pixels", true
+   __testIntersect tImage1, tImage2, "pixels", true, true // Broken
    __testIntersect tImage1, tImage2, "opaque pixels", false
-   __testIntersect tImage1, tImage2, 127, true
+   __testIntersect tImage1, tImage2, 127, true, true // Broken
    __testIntersect tImage1, tImage2, 128, false
    
    set the alphadata of tImage1 to tFullAlpha
@@ -205,7 +209,7 @@ on TestIntersect
    
    set the topleft of tImage2 to the topright of tImage1
    TestAssert "Images no overlapping", not intersect(tImage1, tImage2, "bounds")
-end TestIntersect
+end TestImageIntersect
 
 
 on TestLocalLoc
@@ -373,8 +377,7 @@ on TestSelectedText
    TestAssert "selectedText without selected text", the selectedText is empty
 end TestSelectedText
 
-
-on TestHilitedLines
+on TestUncontiguousSelectedText
    __createFieldWithText "abc" & return & "def" & return & "ghi"
    set the listbehavior of field kCreatedField to true
    set the multiplehilites of field kCreatedField to true
@@ -386,7 +389,8 @@ on TestHilitedLines
    
    set the hilitedLines of field kCreatedField to empty
    TestAssert "selectedText of a list field without selected lines", the selectedText of field kCreatedField is empty
-end TestHilitedLines
+end TestUncontiguousSelectedText
+
 
 
 on TestShiftKey

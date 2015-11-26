@@ -40,10 +40,10 @@ end TestEmptyInTheBeginning
 
 on TestEmptyInTheMiddle
    local tHilitedLines
-   createtField
+   createField
    
-   set the hilitedlines of field "myTestField" to 1,empty,3
-   put the hilitedlines of field "myTestField" into tHilitedLines
+   set the hilitedlines of field kFieldName to 1,empty,3
+   put the hilitedlines of field kFieldName into tHilitedLines
 
    TestAssert "empty in the middle", tHilitedLines is "1,3"
 end TestEmptyInTheMiddle
@@ -52,8 +52,8 @@ on TestEmptyInTheEnd
    local tHilitedLines
    createField
    
-   set the hilitedlines of field "myTestField" to 1,2,empty
-   put the hilitedlines of field "myTestField" into tHilitedLines
+   set the hilitedlines of field kFieldName to 1,2,empty
+   put the hilitedlines of field kFieldName into tHilitedLines
    
    TestAssert "empty in the end", tHilitedLines is "1,2"
 end TestEmptyInTheEnd
