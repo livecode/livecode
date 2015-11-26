@@ -1545,12 +1545,20 @@ void MCUIDC::siguser()
 
 Boolean MCUIDC::lookupcolor(MCStringRef s, MCColor *color)
 {
-	uint4 slength = MCStringGetLength(s);
-	MCAutoPointer<char> startptr;
+    // SN-2015-11-26: [[ Bug 16501 ]] Do not use GetOldString (nativises)
+    MCAutoPointer<char> t_cstring;
+    MCStringConvertToCString(s, &t_cstring);
+
+    uint4 slength = strlen(*t_cstring);
+    MCAutoPointer<char> startptr;
     startptr = new char[slength + 1];
-	char *sptr = *startptr;
-	MCU_lower(sptr, MCStringGetOldString(s));
-	sptr[slength] = '\0';
+
+    MCU_lower(*startptr, *t_cstring);
+
+    (*startptr)[slength] = '\0';
+
+    char* sptr = *startptr;
+
 	if (*sptr == '#')
 	{
 		uint2 r, g, b;
