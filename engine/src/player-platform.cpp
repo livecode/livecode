@@ -1858,6 +1858,9 @@ void MCPlayer::syncbuffering(MCContext *p_dc)
     // MW-2014-04-24: [[ Bug 12249 ]] If we are not in browse mode for this object, then it should be buffered.
     t_should_buffer = t_should_buffer || getstack() -> gettool(this) != T_BROWSE;
 	
+	// PM-2015-11-26: [[ Bug 13277 ]] If the scalefactor is not 1, then the player should be buffered.
+	t_should_buffer = t_should_buffer || getstack() -> view_get_content_scale() != 1.0;
+	
 	if (m_platform_player != nil)
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOffscreen, kMCPlatformPropertyTypeBool, &t_should_buffer);
 }
