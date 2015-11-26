@@ -452,7 +452,21 @@ extern "C" MC_DLLEXPORT_DEF void MCArithmeticEvalNotEqualToNumber(MCNumberRef p_
 extern "C" MC_DLLEXPORT_DEF MCStringRef MCArithmeticExecFormatNumberAsString(MCNumberRef p_operand)
 {
     MCAutoStringRef t_output;
-    MCStringFormat(&t_output, "%f", MCNumberFetchAsReal(p_operand));
+	if (MCNumberIsInteger(p_operand))
+	{
+		if (!MCStringFormat(&t_output, "%i", MCNumberFetchAsInteger(p_operand)))
+		{
+			return nil;
+		}
+	}
+	else
+	{
+		if (!MCStringFormat(&t_output, "%g", MCNumberFetchAsReal(p_operand)))
+		{
+			return nil;
+		}
+	}
+
     return MCValueRetain(*t_output);
 }
 
