@@ -9,6 +9,8 @@
 		'debug_info_suffix': '.dbg',
 		
 		'c++_std': '<!(echo ${CXX_STD:-c++03})',
+
+		'supports_lto': '<!(if ${CC:-cc} -flto -c -o /dev/null /dev/null 2>/dev/null >/dev/null; then echo 1; else echo 0; fi)',
 	},
 	
 	'defines':
@@ -130,6 +132,26 @@
 			[
 				'-O3',
 				'-g3',
+			],
+
+			'conditions':
+			[
+				[
+					'supports_lto != 0',
+					{
+						'cflags':
+						[
+							'-flto',
+						],
+
+						'ldflags':
+						[
+							'-flto',
+							'-O3',
+							'-g3',
+						],
+					},
+				],
 			],
 			
 			'defines':
