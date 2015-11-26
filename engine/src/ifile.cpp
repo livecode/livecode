@@ -324,7 +324,7 @@ bool MCImageExport(MCImageBitmap *p_bitmap, Export_format p_format, MCImagePalet
 	{
 		if (p_palette_settings != nil && p_palette_settings->type != kMCImagePaletteTypeEmpty)
 		{
-			t_success = MCImageQuantizeColors(p_bitmap, p_palette_settings, p_dither, p_format == F_GIF || p_format == F_PNG, t_indexed);
+			t_success = MCImageQuantizeColors(p_bitmap, p_palette_settings, p_dither, p_format == EX_GIF || p_format == EX_PNG, t_indexed);
 			if (t_success)
 				t_success = MCImageEncode(t_indexed, p_format, p_metadata, p_stream, t_size);
 		}

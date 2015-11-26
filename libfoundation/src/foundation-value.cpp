@@ -285,6 +285,9 @@ struct MCValuePool
 };
 static MCValuePool *s_value_pools;
 
+// Stores the number of pools that we have.
+uindex_t kMCValuePoolCount = kMCValueTypeCodeList + 1;
+
 bool __MCValueCreate(MCValueTypeCode p_type_code, size_t p_size, __MCValue*& r_value)
 {
 	void *t_value;
@@ -782,7 +785,7 @@ MCBooleanRef kMCFalse;
 
 bool __MCValueInitialize(void)
 {
-    if (!MCMemoryNewArray(kMCValueTypeCodeList + 1, s_value_pools))
+    if (!MCMemoryNewArray(kMCValuePoolCount, s_value_pools))
         return false;
     
 	if (!__MCValueCreate(kMCValueTypeCodeNull, kMCNull))
@@ -802,7 +805,7 @@ bool __MCValueInitialize(void)
 
 void __MCValueFinalize(void)
 {
-    for(uindex_t i = 0; i < sizeof(s_value_pools) / sizeof(s_value_pools[0]); i++)
+    for(uindex_t i = 0; i < kMCValuePoolCount; i++)
         while(s_value_pools[i] . count > 0)
         {
             __MCValue *t_value;

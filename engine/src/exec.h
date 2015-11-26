@@ -243,11 +243,12 @@ enum MCPropertyType
 	kMCPropertyTypeOptionalEnum,
 	kMCPropertyTypeName,
     kMCPropertyTypeLinesOfString,
-    kMCPropertyTypeLinesOfUInt,
+    kMCPropertyTypeLinesOfLooseUInt,
     kMCPropertyTypeLinesOfUIntX2,
-    kMCPropertyTypeLinesOfDouble,
+    kMCPropertyTypeLinesOfLooseDouble,
     kMCPropertyTypeLinesOfPoint,
-    kMCPropertyTypeItemsOfUInt,
+    kMCPropertyTypeItemsOfLooseUInt,
+	kMCPropertyTypeOptionalItemsOfLooseUInt,
     kMCPropertyTypeItemsOfString,
     kMCPropertyTypeMixedBool,
 	kMCPropertyTypeMixedInt16,
@@ -264,9 +265,9 @@ enum MCPropertyType
 	kMCPropertyTypeMixedCustom,
 	kMCPropertyTypeMixedEnum,
 	kMCPropertyTypeMixedOptionalEnum,
-	kMCPropertyTypeMixedItemsOfUInt,
+	kMCPropertyTypeMixedItemsOfLooseUInt,
     kMCPropertyTypeMixedItemsOfString,
-    kMCPropertyTypeMixedLinesOfUInt,
+    kMCPropertyTypeMixedLinesOfLooseUInt,
     kMCPropertyTypeRecord,
     kMCPropertyTypeLegacyPoints,
 };
@@ -353,6 +354,7 @@ template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, u
     
 	(static_cast<O *>(obj -> object) ->* Method)(ctxt, obj -> part_id, t_si, t_ei, count, arg);
 }
+
 
 template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, uint32_t, int32_t, int32_t, bool&, A)> inline void MCPropertyObjectChunkMixedThunk(MCExecContext& ctxt, MCObjectChunkPtr *obj, B mixed, A arg)
 {
@@ -487,9 +489,9 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyThunkGetOptionalEnumType(mth) MCPropertyThunkImp(mth, intenum_t*&)
 #define MCPropertyThunkGetArray(mth) MCPropertyThunkImp(mth, MCArrayRef&)
 #define MCPropertyThunkGetName(mth) MCPropertyThunkImp(mth, MCNameRef&)
-#define MCPropertyThunkGetItemsOfUInt(mth) MCPropertyListThunkImp(mth,uindex_t&,uinteger_t*&)
+#define MCPropertyThunkGetItemsOfLooseUInt(mth) MCPropertyListThunkImp(mth,uindex_t&,uinteger_t*&)
 #define MCPropertyThunkGetLinesOfString(mth) MCPropertyListThunkImp(mth,uindex_t&,MCStringRef*&)
-#define MCPropertyThunkGetLinesOfDouble(mth) MCPropertyListThunkImp(mth,uindex_t&,double*&)
+#define MCPropertyThunkGetLinesOfLooseDouble(mth) MCPropertyListThunkImp(mth,uindex_t&,double*&)
 #define MCPropertyThunkGetItemsOfString(mth) MCPropertyListThunkImp(mth,uindex_t*,MCStringRef*&)
 
 #define MCPropertyThunkSetAny(mth) MCPropertyThunkImp(mth, MCValueRef)
@@ -519,9 +521,9 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyThunkSetOptionalEnumType(mth) MCPropertyThunkImp(mth, intenum_t*)
 #define MCPropertyThunkSetArray(mth) MCPropertyThunkImp(mth, MCArrayRef)
 #define MCPropertyThunkSetName(mth) MCPropertyThunkImp(mth, MCNameRef)
-#define MCPropertyThunkSetItemsOfUInt(mth) MCPropertyListThunkImp(mth,uindex_t,uinteger_t*)
+#define MCPropertyThunkSetItemsOfLooseUInt(mth) MCPropertyListThunkImp(mth,uindex_t,uinteger_t*)
 #define MCPropertyThunkSetLinesOfString(mth) MCPropertyListThunkImp(mth,uindex_t,MCStringRef*)
-#define MCPropertyThunkSetLinesOfDouble(mth) MCPropertyListThunkImp(mth,uindex_t,double*)
+#define MCPropertyThunkSetLinesOfLooseDouble(mth) MCPropertyListThunkImp(mth,uindex_t,double*)
 #define MCPropertyThunkSetItemsOfString(mth) MCPropertyListThunkImp(mth,uindex_t,MCStringRef*)
 
 #define MCPropertyObjectThunkImp(obj, mth, typ) (void(*)(MCExecContext&,MCObjectPtr*,typ))MCPropertyObjectThunk<obj,typ,&obj::mth>
@@ -564,9 +566,9 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectThunkGetColor(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCColor&)
 
 #define MCPropertyObjectListThunkGetLinesOfString(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t&, MCStringRef*&)
-#define MCPropertyObjectListThunkGetLinesOfUInt(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t&, uinteger_t*&)
+#define MCPropertyObjectListThunkGetLinesOfLooseUInt(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t&, uinteger_t*&)
 #define MCPropertyObjectListThunkGetLinesOfPoint(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t&, MCPoint*&)
-#define MCPropertyObjectListThunkGetItemsOfUInt(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t&, uinteger_t*&)
+#define MCPropertyObjectListThunkGetItemsOfLooseUInt(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t&, uinteger_t*&)
 #define MCPropertyObjectListThunkGetItemsOfString(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t&, MCStringRef*&)
 
 #define MCPropertyObjectListThunkGetLegacyPoints(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t&, MCPoint*&)
@@ -599,9 +601,9 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectThunkSetColor(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCColor)
 
 #define MCPropertyObjectListThunkSetLinesOfString(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t, MCStringRef*)
-#define MCPropertyObjectListThunkSetLinesOfUInt(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t, uinteger_t*)
+#define MCPropertyObjectListThunkSetLinesOfLooseUInt(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t, uinteger_t*)
 #define MCPropertyObjectListThunkSetLinesOfPoint(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t, MCPoint*)
-#define MCPropertyObjectListThunkSetItemsOfUInt(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t, uinteger_t*)
+#define MCPropertyObjectListThunkSetItemsOfLooseUInt(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t, uinteger_t*)
 #define MCPropertyObjectListThunkSetItemsOfString(obj, mth), MCPropertyObjectListThunkImp(obj, mth, uindex_t, MCStringRef*)
 
 #define MCPropertyObjectListThunkSetLegacyPoints(obj, mth) MCPropertyObjectListThunkImp(obj, mth, uindex_t, MCPoint*)
@@ -702,7 +704,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectChunkMixedThunkGetOptionalUInt16(obj, mth) MCPropertyObjectChunkMixedThunkImp(obj, mth, bool&, uinteger_t*&)
 #define MCPropertyObjectChunkMixedThunkGetOptionalEnumType(obj, mth) MCPropertyObjectChunkMixedThunkImp(obj, mth, bool&, intenum_t*&)
 #define MCPropertyObjectChunkMixedThunkGetOptionalString(obj, mth) MCPropertyObjectChunkMixedThunkImp(obj, mth, bool&, MCStringRef&)
-#define MCPropertyObjectChunkMixedListThunkGetItemsOfUInt(obj, mth) MCPropertyObjectChunkMixedListThunkImp(obj, mth, bool&, uindex_t&, uinteger_t*&)
+#define MCPropertyObjectChunkMixedListThunkGetItemsOfLooseUInt(obj, mth) MCPropertyObjectChunkMixedListThunkImp(obj, mth, bool&, uindex_t&, uinteger_t*&)
 #define MCPropertyObjectChunkMixedListThunkGetItemsOfString(obj, mth), MCPropertyObjectChunkMixedListThunkImp(obj, mth, bool&, uindex_t&, MCStringRef*&)
 
 #define MCPropertyObjectChunkMixedThunkSetBool(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, bool)
@@ -717,7 +719,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectChunkMixedThunkSetOptionalUInt16(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, uinteger_t*)
 #define MCPropertyObjectChunkMixedThunkSetOptionalEnumType(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, intenum_t*)
 #define MCPropertyObjectChunkMixedThunkSetOptionalString(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCStringRef)
-#define MCPropertyObjectChunkMixedListThunkSetItemsOfUInt(obj, mth) MCPropertyObjectChunkListThunkImp(obj, mth, uindex_t, uinteger_t*)
+#define MCPropertyObjectChunkMixedListThunkSetItemsOfLooseUInt(obj, mth) MCPropertyObjectChunkListThunkImp(obj, mth, uindex_t, uinteger_t*)
 #define MCPropertyObjectChunkMixedListThunkSetItemsOfString(obj, mth) MCPropertyObjectChunkListThunkImp(obj, mth, uindex_t, MCStringRef*)
 
 #define MCPropertyObjectChunkMixedArrayThunkGetOptionalBool(obj, mth) MCPropertyObjectChunkMixedArrayThunkImp(obj, mth, bool&, bool*&)
@@ -1557,6 +1559,8 @@ public:
 	bool CopyElementAsFilepath(MCArrayRef, MCNameRef key, bool case_sensitive, MCStringRef &r_path);
 	bool CopyElementAsFilepathArray(MCArrayRef, MCNameRef key, bool case_sensitive, MCArrayRef &r_path_array);
 	
+	bool CopyElementAsEnum(MCArrayRef, MCNameRef key, bool case_sensitive, MCExecEnumTypeInfo *enum_type_info, intenum_t &r_intenum);
+
 	//////////
 	
 	bool CopyOptElementAsBoolean(MCArrayRef, MCNameRef key, bool case_sensitive, MCBooleanRef &r_boolean);
@@ -1861,6 +1865,8 @@ extern MCExecMethodInfo *kMCArraysExecSplitByColumnMethodInfo;
 extern MCExecMethodInfo *kMCArraysExecSplitAsSetMethodInfo;
 extern MCExecMethodInfo *kMCArraysExecUnionMethodInfo;
 extern MCExecMethodInfo *kMCArraysExecIntersectMethodInfo;
+extern MCExecMethodInfo *kMCArraysExecUnionRecursiveMethodInfo;
+extern MCExecMethodInfo *kMCArraysExecIntersectRecursiveMethodInfo;
 extern MCExecMethodInfo *kMCArraysEvalArrayEncodeMethodInfo;
 extern MCExecMethodInfo *kMCArraysEvalArrayDecodeMethodInfo;
 extern MCExecMethodInfo *kMCArraysEvalMatrixMultiplyMethodInfo;
@@ -1881,10 +1887,10 @@ void MCArraysExecCombineAsSet(MCExecContext& ctxt, MCArrayRef p_array, MCStringR
 void MCArraysExecSplit(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_element_delimiter, MCStringRef p_key_delimiter, MCArrayRef& r_array);
 void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArrayRef& r_array);
 void MCArraysExecSplitAsSet(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_element_delimiter, MCArrayRef& r_array);
-void MCArraysExecUnion(MCExecContext& ctxt, MCArrayRef x_dst_array, MCArrayRef p_src_array);
-void MCArraysExecIntersect(MCExecContext& ctxt, MCArrayRef x_dst_array, MCArrayRef p_src_array);
-void MCArraysExecUnionRecursive(MCExecContext& ctxt, MCArrayRef x_dst_array, MCArrayRef p_src_array);
-void MCArraysExecIntersectRecursive(MCExecContext& ctxt, MCArrayRef x_dst_array, MCArrayRef p_src_array);
+void MCArraysExecUnion(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result);
+void MCArraysExecIntersect(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result);
+void MCArraysExecUnionRecursive(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result);
+void MCArraysExecIntersectRecursive(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result);
 void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef version, MCDataRef& r_encoding);
 void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCDataRef p_encoding, MCArrayRef& r_array);
 void MCArraysEvalMatrixMultiply(MCExecContext& ctxt, MCArrayRef p_left, MCArrayRef p_right, MCArrayRef& r_result);

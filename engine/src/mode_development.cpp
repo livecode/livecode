@@ -150,7 +150,7 @@ MCPropertyInfo MCStack::kModeProperties[] =
 {
     DEFINE_RW_OBJ_PROPERTY(P_IDE_OVERRIDE, Bool, MCStack, IdeOverride)
     DEFINE_RO_OBJ_PROPERTY(P_REFERRING_STACK, String, MCStack, ReferringStack)
-    DEFINE_RO_OBJ_LIST_PROPERTY(P_UNPLACED_GROUP_IDS, LinesOfUInt, MCStack, UnplacedGroupIds)
+    DEFINE_RO_OBJ_LIST_PROPERTY(P_UNPLACED_GROUP_IDS, LinesOfLooseUInt, MCStack, UnplacedGroupIds)
 };
 
 MCObjectPropertyTable MCStack::kModePropertyTable =

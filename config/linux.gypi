@@ -89,7 +89,6 @@
 						'-Wall',
 						'-Wextra',
 						'-Wno-unused-parameter',	# Just contributes build noise
-						'-Werror=uninitialized',
 						'-Werror=return-type',
 					],
 				},
@@ -134,6 +133,7 @@
 				[
 					'-O0',
 					'-g3',
+					'-Werror=uninitialized',
 				],
 				
 				'defines':
@@ -148,7 +148,6 @@
 				[
 					'-O3',
 					'-g3',
-					'-Wno-error=maybe-uninitialized', #warning added only with optimisation ON
 				],
 				
 				'defines':
@@ -164,6 +163,7 @@
 				[
 					'-O0',
 					'-g0',
+					'-Werror=uninitialized',
 				],
 				
 				'defines':
