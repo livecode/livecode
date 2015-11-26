@@ -1,4 +1,9 @@
 {
+	'variables':
+	{
+		'supports_lto': '<!(if ${CC} -flto -c -o /dev/null /dev/null 2>/dev/null >/dev/null; then echo 1; else echo 0; fi)',
+	},
+	
 	'cflags':
 	[
 		'-fstrict-aliasing',
@@ -68,6 +73,26 @@
 			[
 				'-O3',
 				'-g3',
+			],
+
+			'conditions':
+			[
+				[
+					'supports_lto != 0',
+					{
+						'cflags':
+						[
+							'-flto',
+						],
+
+						'ldflags':
+						[
+							'-flto',
+							'-O3',
+							'-g3',
+						],
+					},
+				],
 			],
 			
 			'defines':
