@@ -255,7 +255,7 @@ end TestScreenColors
 
 
 on TestScreenDepth
-   TestAssert "test", the screendepth is among the items of "2,4,8,16,24,32"
+   TestAssert "test", the screendepth is among the items of "0,1,2,4,8,16,24,32"
 end TestScreenDepth
 
 
