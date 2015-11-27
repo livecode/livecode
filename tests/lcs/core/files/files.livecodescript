@@ -138,10 +138,12 @@ end TestShortFilePath2
 
 
 private command __testFolderExists pSkip, pFolder, pFolderType
+   local tMess
+   put merge("[[pFolderType]] folder exists") into tMess
    if pSkip then
-      TestSkip
+      TestSkip tMess
    else
-      TestAssert merge("[[pFolderType]] folder exists"), there is a folder pFolder
+      TestAssert tMess, there is a folder pFolder
    end if
 end __testFolderExists
 
@@ -190,7 +192,7 @@ on TestSpecialFolderPath
    // Not all the platforms actually have a Desktop folder - such as servers
    // so we only check that the path returned is not empty.
    if the environment is "mobile" then
-      TestSkip
+      TestSkip  "specialFolderPath(desktop) is not empty"
    else
       TestAssert "specialFolderPath(desktop) is not empty", specialFolderPath("desktop") is not empty
    end if
