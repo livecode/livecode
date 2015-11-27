@@ -2143,6 +2143,14 @@ void MCStringsEvalIsAscii(MCExecContext& ctxt, MCValueRef p_value, bool& r_resul
         r_result = false;
         return;
     }
+
+    // SN-2015-11-27: [[ Bug 16504 ]] Empty strings are not a valid ascii string
+    if (MCStringIsEmpty(*t_string))
+    {
+        r_result = false;
+        return;
+    }
+
     MCAutoPointer<char> temp;
     /* UNCHECKED */ MCStringConvertToCString(*t_string, &temp);
     const char *t_cstring;
