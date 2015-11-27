@@ -187,8 +187,13 @@ on TestSpecialFolderPath
    __testSpecialFolder tSkip, "home"
    __testSpecialFolder tSkip, "temporary"
    
-   put the environment is "mobile" into tSkip
-   __testSpecialFolder tSkip, "desktop"
+   // Not all the platforms actually have a Desktop folder - such as servers
+   // so we only check that the path returned is not empty.
+   if the environment is "mobile" then
+      TestSkip
+   else
+      TestAssert "specialFolderPath(desktop) is not empty", specialFolderPath("desktop") is not empty
+   end if
    
    put the environment is "mobile" or the platform contains "linux" into tSkip
    __testSpecialFolder tSkip, "system"
