@@ -26,6 +26,20 @@
 		'../thirdparty/libcairo/src',			# Required by the GDK headers
 		'../thirdparty/libfreetype/include',	# Required by the Pango headers
 	],
+
+	'conditions':
+	[
+		[
+			# For consistency, we should use the same linker in both Debug and Release builds
+			'supports_lto != 0',
+			{
+				'ldflags':
+				[
+					'-fuse-ld=gold',
+				],
+			},
+		],
+	],
 	
 	# Static libraries that are to be included into dynamic libraries
 	# need to be compiled with the correct compilation flags
@@ -142,13 +156,15 @@
 						'cflags':
 						[
 							'-flto',
+							'-ffunction-sections',
 						],
 
 						'ldflags':
 						[
 							'-flto',
-							'-O3',
-							'-g3',
+							'-Wl,--icf=all',
+							'>@(_cflags)',
+							'>@(_cflags_cc)',
 						],
 					},
 				],

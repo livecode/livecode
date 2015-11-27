@@ -324,7 +324,7 @@ if test "${OS}" = "android" ; then
     ANDROID_AR=${AR:-${ANDROID_TOOLCHAIN}ar}
     ANDROID_CC=${CC:-${ANDROID_TOOLCHAIN}clang -target arm-linux-androideabi -march=armv6 -integrated-as}
     ANDROID_CXX=${CXX:-${ANDROID_TOOLCHAIN}clang++ -target arm-linux-androideabi -march=armv6 -integrated-as}
-    ANDROID_LINK=${LINK:-${ANDROID_TOOLCHAIN}clang++ -target arm-linux-androideabi -march=armv6 -integrated-as -fuse-ld=bfd}
+    ANDROID_LINK=${LINK:-${ANDROID_TOOLCHAIN}clang++ -target arm-linux-androideabi -march=armv6 -integrated-as}
     ANDROID_OBJCOPY=${OBJCOPY:-${ANDROID_TOOLCHAIN}objcopy}
     ANDROID_OBJDUMP=${OBJDUMP:-${ANDROID_TOOLCHAIN}objdump}
     ANDROID_STRIP=${STRIP:-${ANDROID_TOOLCHAIN}strip}
