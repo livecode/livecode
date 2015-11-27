@@ -1,6 +1,6 @@
 ﻿script "TestLibrary"
 /*
-Copyright (C) 2015 Runtime Revolution Ltd.
+Copyright (C) 2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -41,8 +41,8 @@ private function _TestValidateReason pReason
       throw "Bad test directive reason '" & line 1 of pReason & "...': multiple lines"
    end if
    
-   if pDescription contains "#" then
-      throw "Bad test directive reason '" & pDescription & "': contains '#'"
+   if pReason contains "#" then
+      throw "Bad test directive reason '" & pReason & "': contains '#'"
    end if
    
    return line 1 of pReason

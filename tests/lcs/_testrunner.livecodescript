@@ -1,6 +1,6 @@
 ﻿script "TestRunner"
 /*
-Copyright (C) 2015 Runtime Revolution Ltd.
+Copyright (C) 2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -137,7 +137,7 @@ private command invokeTest pInfo
    dispatch pInfo["invoke"]["command"] to tStackName
 end invokeTest
 
--- Add the unit test library stack to the backscripts
+-- Add the unit test library stack and the input library to the backscripts
 private command invokeLoadLibrary pInfo
    local tStackName, tStackFile
    
@@ -147,18 +147,26 @@ private command invokeLoadLibrary pInfo
    
    -- Add the library to the backscripts
    insert the script of stack tStackName into back
+   
+   start using stack invokeGetInputLibraryStack(pInfo)
 end invokeLoadLibrary
 
--- Return the filename of the unit test library stack
-private function invokeGetLibraryStack pInfo
+private function invokeGetStackFolder pInfo
    local tFilename
    put pInfo["self-script"] into tFilename
    
    set the itemDelimiter to slash
-   put "_testlib.livecodescript" into item -1 of tFilename
-   
-   return tFilename
+   return item 1 to -2 of tFilename
+end invokeGetStackFolder
+
+-- Return the filename of the unit test library stack
+private function invokeGetLibraryStack pInfo
+   return invokeGetStackFolder(pInfo) & slash & "_testlib.livecodescript"
 end invokeGetLibraryStack
+
+private function invokeGetInputLibraryStack pInfo
+   return invokeGetStackFolder(pInfo) & slash & "_inputlib.livecodescript"
+end invokeGetInputLibraryStack
 
 ----------------------------------------------------------------
 -- Support for running tests
