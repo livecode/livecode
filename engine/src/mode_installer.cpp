@@ -106,8 +106,8 @@ __declspec(allocate(".project")) volatile MCCapsuleInfo MCcapsule = {};
 #define PROJECT_SECTION_NAME ".project"
 
 extern MCCapsuleInfo MCpayload, MCcapsule;
-asm (".section .payload, \"aw\", @nobits; .global MCpayload; MCpayload: .align 16; .space 16;");
-asm (".section .project, \"aw\", @nobits; .global MCcapsule; MCcapsule: .align 16; .space 16;");
+asm (".section .payload, \"aw\", \"nobits\"; .global MCpayload; MCpayload: .align 16; .space 16;");
+asm (".section .project, \"aw\", \"nobits\"; .global MCcapsule; MCcapsule: .align 16; .space 16;");
 
 #elif defined(_MACOSX)
 
