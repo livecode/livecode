@@ -173,7 +173,7 @@ public:
 	Boolean setenabledtracks(const MCString &s);
 	void getnodes(MCExecPoint &ep);
 	void gethotspots(MCExecPoint &ep);
-    
+	    
 	// MW-2011-09-23: Ensures the buffering state is consistent with current flags
 	//   and such.
 	void syncbuffering(MCContext *dc);
@@ -190,6 +190,7 @@ public:
 	{
 		scale = s;
 	}
+	void scale_native_rect(void);
 	Boolean prepare(const char *options);
 	Boolean playstart(const char *options);
 	Boolean playpause(Boolean on);

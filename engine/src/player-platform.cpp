@@ -1135,6 +1135,7 @@ Boolean MCPlayer::doubleup(uint2 which)
     return True;
 }
 
+
 void MCPlayer::setrect(const MCRectangle &nrect)
 {
 	rect = nrect;
@@ -1858,9 +1859,6 @@ void MCPlayer::syncbuffering(MCContext *p_dc)
     // MW-2014-04-24: [[ Bug 12249 ]] If we are not in browse mode for this object, then it should be buffered.
     t_should_buffer = t_should_buffer || getstack() -> gettool(this) != T_BROWSE;
 	
-	// PM-2015-11-26: [[ Bug 13277 ]] If the scalefactor is not 1, then the player should be buffered.
-	t_should_buffer = t_should_buffer || getstack() -> view_get_content_scale() != 1.0;
-	
 	if (m_platform_player != nil)
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOffscreen, kMCPlatformPropertyTypeBool, &t_should_buffer);
 }
@@ -2114,6 +2112,15 @@ void MCPlayer::showcontroller(Boolean show)
             drect . height -= t_height;
         
         layer_setrect(drect, true);
+	}
+}
+
+void MCPlayer::scale_native_rect(void)
+{
+	if (m_platform_player != nil)
+	{
+		double t_scale_factor = getstack() -> view_get_content_scale();
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyScalefactor, kMCPlatformPropertyTypeDouble, &t_scale_factor);
 	}
 }
 
