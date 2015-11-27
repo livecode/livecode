@@ -194,9 +194,24 @@
 					# Use a linker script to add the project and payload sections to the Linux executable
 					'OS == "linux"',
 					{
-						'ldflags':
+						'target_conditions':
 						[
-							'-T', '$(abs_srcdir)/engine/linux.link',
+							[
+								'supports_lto != 0',
+								{
+									'ldflags':
+									[
+										'-Wl,--sort-section=none',
+										'-Wl,--section-ordering-file,$(abs_srcdir)/engine/linux-section-order.txt',
+									],
+								},			
+								{
+									'ldflags':
+									[
+										'-T', '$(abs_srcdir)/engine/linux.link',
+									],
+								},
+							],
 						],
 					},
 				],
@@ -463,13 +478,28 @@
 				],
 				[
 					# Use a linker script to add the project and payload sections to the Linux executable
-					'OS == "linux"',
-					{
-						'ldflags':
-						[
-							'-T', '$(abs_srcdir)/engine/linux.link',
-						],
-					},
+                                        'OS == "linux"',
+                                        {
+                                                'target_conditions':
+                                                [
+                                                        [
+                                                                'supports_lto != 0',
+                                                                {
+                                                                        'ldflags':
+                                                                        [
+                                                                                '-Wl,--sort-section=none',
+                                                                                '-Wl,--section-ordering-file,$(abs_srcdir)/engine/linux-section-order.txt',
+                                                                        ],
+                                                                },
+                                                                {
+                                                                        'ldflags':
+                                                                        [
+                                                                                '-T', '$(abs_srcdir)/engine/linux.link',
+                                                                        ],
+                                                                },
+                                                        ],
+                                                ],
+                                        },
 				],
 			],
 			
