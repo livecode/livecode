@@ -1,9 +1,4 @@
 {
-	'variables':
-	{
-		'supports_lto': '<!(if ${CC} -flto -c -o /dev/null /dev/null 2>/dev/null >/dev/null; then echo 1; else echo 0; fi)',
-	},
-	
 	'cflags':
 	[
 		'-fstrict-aliasing',
@@ -22,7 +17,7 @@
 		'-fno-exceptions',
 		'-fno-rtti',
 	],
-	
+
 	'target_conditions':
 	[
 		[
@@ -46,6 +41,21 @@
 					'-w',						# Disable warnings
 					'-fpermissive',				# Be more lax with old code
 					'-Wno-return-type',
+				],
+			},
+		],
+		[
+			'supports_lto != 0',
+			{
+				'ldflags':
+				[
+					'-fuse-ld=gold',
+				],
+			},
+			{
+				'ldflags':
+				[
+					'-fuse-ld=bfd',
 				],
 			},
 		],
@@ -83,13 +93,15 @@
 						'cflags':
 						[
 							'-flto',
+							'-ffunction-sections',
 						],
 
 						'ldflags':
 						[
-							'-flto',
-							'-O3',
-							'-g3',
+							'-Wl,--icf=all',
+							'>@(_cflags)',
+							'>@(_cflags_cc)',
+							
 						],
 					},
 				],
