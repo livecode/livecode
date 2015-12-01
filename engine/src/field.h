@@ -525,9 +525,7 @@ public:
 	Exec_stat getparagraphmacunicodestyles(MCParagraph *p_start, MCParagraph *p_finish, MCDataRef& r_data);
 	MCParagraph *macstyletexttoparagraphs(const MCString &textdata, const MCString &styledata, Boolean isunicode);
 	MCParagraph *macunicodestyletexttoparagraphs(MCDataRef p_text, MCDataRef p_styles);
-#ifndef __64_BIT__
 	static bool macmatchfontname(const char *p_font_name, char p_derived_font_name[]);
-#endif
 #endif
 
     MCParagraph *rtftoparagraphs(MCStringRef p_data);
