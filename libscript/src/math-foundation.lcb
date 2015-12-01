@@ -98,7 +98,7 @@ Return the greatest integer less than or equal to <Target>, or the least integer
 Tags: Math
 */
 
-syntax RoundedToNearest is prefix operator with precedence 1
+syntax RoundedToNearest is prefix operator with function chunk precedence
     "the" "rounded" "of" <Target: Expression>
 begin
     MCMathFoundationEvalRoundedNumberToNearest(Target, output)
@@ -125,7 +125,7 @@ Tags: Math
 */
 
 
-syntax FloorOperator is prefix operator with precedence 1
+syntax FloorOperator is prefix operator with function chunk precedence
     "the" "floor" "of" <Target: Expression>
 begin
     MCMathFoundationEvalFloorNumber(Target, output)
@@ -150,7 +150,7 @@ Tags: Math
 
 */
 
-syntax CeilOperator is prefix operator with precedence 1
+syntax CeilOperator is prefix operator with function chunk precedence
     "the" "ceiling" "of" <Target: Expression>
 begin
     MCMathFoundationEvalCeilingNumber(Target, output)

@@ -591,19 +591,19 @@ public foreign handler MCWidgetGetClickCount(in pCurrent as CBool, out rCount as
 public foreign handler MCWidgetGetModifierKeys(in pCurrent as CBool, out rKeys as List) returns nothing binds to "<builtin>"
 
 /* 
-Summary:		Determines the location of the mouse pointer.
+Summary:		Determines the location of the mouse pointer relative to the widget.
 
 Returns:		The location of the mouse pointer.
 
 Example:
-	variable tClick as Point
-	put the click position into tClick
+	variable tPosition as Point
+	put the mouse position into tPosition
 	
 	variable tRect as Rectangle
 	put my bounds into tRect
 	
-	if tClick is within tRect then
-		// click was within widget bounds
+	if tPosition is within tRect then
+		// mouse position is within the widget bounds
 	end if
 	
 Description:
@@ -707,13 +707,13 @@ end syntax
 //public foreign handler MCWidgetEvalStateIsPressed(in pState /*as PressedState*/, in pCurrently as CBool, out rPressed as CBool) returns nothing binds to "<builtin>"
 //public foreign handler MCWidgetEvalStateIsNotPressed(in pState /*as PressedState*/, in pCurrently as CBool, out rNotPressed as CBool) returns nothing binds to "<builtin>"
 
-/*syntax IsPressed is postfix operator with precedence 5
+/*syntax IsPressed is postfix operator with function chunk precedence
   <mState: Expression> "is" ( "currently" <Currently=true> | <Currently=false> ) "pressed"
 begin
     MCWidgetEvalStateIsPressed(mState, Currently, output)
 end syntax
 
-syntax IsNotPressed is postfix operator with precedence 5
+syntax IsNotPressed is postfix operator with function chunk precedence
   <mState: Expression> "is not" ( "currently" <Currently=true> | <Currently=false> ) "pressed"
 begin
     MCWidgetEvalStateIsNotPressed(mState, Currently, output)
@@ -742,7 +742,7 @@ Example:
 	end if
 */
 	
-syntax IsPointWithinRect is neutral binary operator with precedence 5
+syntax IsPointWithinRect is neutral binary operator with comparison precedence
   <Point: Expression> "is" "within" <Rect: Expression>
 begin
     MCWidgetEvalIsPointWithinRect(Point, Rect, output)
@@ -765,7 +765,7 @@ Example:
 	end if
 */
 	
-syntax IsPointNotWithinRect is neutral binary operator with precedence 5
+syntax IsPointNotWithinRect is neutral binary operator with comparison precedence
   <Point: Expression> "is not" "within" <Rect: Expression>
 begin
     MCWidgetEvalIsPointNotWithinRect(Point, Rect, output)
@@ -1106,7 +1106,7 @@ Create a new widget object of the specified kind. The widget can then be placed 
 References: PlaceWidget (statement)
 */
 
-syntax ANewWidget is prefix operator with precedence 1
+syntax ANewWidget is prefix operator with constructor precedence
     "a" "new" "widget" <mKind: Expression>
 begin
     MCWidgetEvalANewWidget(mKind, output)
@@ -1238,7 +1238,7 @@ widget properties.
 
 */
 
-syntax PropertyOfWidget is prefix operator with precedence 3
+syntax PropertyOfWidget is prefix operator with property precedence
 	"property" <mName: Expression> "of" <mWidget: Expression>
 begin
 	MCWidgetGetPropertyOfWidget(mName, mWidget, output)
@@ -1269,7 +1269,7 @@ Use the rectangle property to set the rectangle of a child widget.
 
 */
 
-syntax WidgetRectangleProperty is prefix operator with precedence 2
+syntax WidgetRectangleProperty is prefix operator with property precedence
 	"the" "rectangle" "of" <mWidget: Expression>
 begin
 	MCWidgetGetRectangleOfWidget(mWidget, output)
@@ -1300,7 +1300,7 @@ Use the width property to set the width of a child widget.
 
 */
 
-syntax WidgetWidthProperty is prefix operator with precedence 2
+syntax WidgetWidthProperty is prefix operator with property precedence
 	"the" "width" "of" <mWidget: Expression>
 begin
 	MCWidgetGetWidthOfWidget(mWidget, output)
@@ -1331,7 +1331,7 @@ Use the height property to set the height of a child widget.
 
 */
 
-syntax WidgetHeightProperty is prefix operator with precedence 2
+syntax WidgetHeightProperty is prefix operator with property precedence
 	"the" "height" "of" <mWidget: Expression>
 begin
 	MCWidgetGetHeightOfWidget(mWidget, output)
@@ -1362,7 +1362,7 @@ The location property is of type com.livecode.canvas.Point.
 
 */
 
-syntax WidgetLocationProperty is prefix operator with precedence 2
+syntax WidgetLocationProperty is prefix operator with property precedence
 	"the" "location" "of" <mWidget: Expression>
 begin
 	MCWidgetGetLocationOfWidget(mWidget, output)
@@ -1393,7 +1393,7 @@ References: MyDisabled (expression)
 
 */
 
-syntax WidgetEnabledProperty is prefix operator with precedence 2
+syntax WidgetEnabledProperty is prefix operator with property precedence
 	"the" "enabled" "of" <mWidget: Expression>
 begin
 	MCWidgetGetEnabledOfWidget(mWidget, output)
@@ -1424,14 +1424,14 @@ References: MyDisabled (expression)
 
 */
 
-syntax WidgetDisabledProperty is prefix operator with precedence 2
+syntax WidgetDisabledProperty is prefix operator with property precedence
 	"the" "disabled" "of" <mWidget: Expression>
 begin
 	MCWidgetGetDisabledOfWidget(mWidget, output)
 	MCWidgetSetDisabledOfWidget(input, mWidget)
 end syntax
 
-syntax WidgetFontProperty is prefix operator with precedence 4
+syntax WidgetFontProperty is prefix operator with property precedence
 	"the" "font" "of" <mWidget: Expression>
 begin
 	MCWidgetGetFontOfWidget(mWidget, output)
@@ -1471,7 +1471,7 @@ to be used to disambiguate widget objects returned from operators such as <TheTa
 References: TheTarget (operator), MyChildren (operator)
 */
 
-syntax AnnotationOfWidget is prefix operator with precedence 3
+syntax AnnotationOfWidget is prefix operator with property precedence
 	"annotation" <mName: Expression> "of" <mWidget: Expression>
 begin
 	MCWidgetGetAnnotationOfWidget(mName, mWidget, output)
@@ -1487,7 +1487,7 @@ public foreign handler MCWidgetGetStackNativeDisplayOfWidget(in pWidget as Widge
 /*
 TODO - docs
 */
-syntax NativeLayerOfWidget is prefix operator with precedence 3
+syntax NativeLayerOfWidget is prefix operator with property precedence
 	"native" "layer" "of" <mWidget: Expression>
 begin
 	MCWidgetGetNativeLayerOfWidget(mWidget, output)

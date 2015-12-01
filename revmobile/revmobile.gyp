@@ -31,7 +31,7 @@
 			'conditions':
 			[
 				[
-					'OS == "linux" or OS =="mac"',
+					'OS == "linux"',
 					{
 						'libraries':
 						[

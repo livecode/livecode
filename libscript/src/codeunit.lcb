@@ -86,7 +86,7 @@ Description:
 Tags: Strings
 */
 
-syntax CountCodeunitsOf is prefix operator with precedence 1
+syntax CountCodeunitsOf is prefix operator with function chunk precedence
 	"the" "number" "of" "codeunits" "in" <Target: Expression>
 begin
 	MCCodeunitEvalNumberOfCodeunitsIn(Target, output)
@@ -111,7 +111,7 @@ Either locates the codeunit at the given index for use as the target container o
 Tags: Strings
 */
 
-syntax SingletonCodeunitOf is prefix operator with precedence 3
+syntax SingletonCodeunitOf is prefix operator with subscript chunk precedence
 	"codeunit" <Index: Expression> "of" <Target: Expression>
 begin
 	MCCodeunitFetchCodeunitOf(Index, Target, output)
@@ -137,7 +137,7 @@ Either locates the codeunits between the given indices for use as the target con
 Tags: Strings
 */
 
-syntax RangeCodeunitOf is prefix operator with precedence 3
+syntax RangeCodeunitOf is prefix operator with subscript chunk precedence
 	"codeunit" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
 begin
 	MCCodeunitFetchCodeunitRangeOf(Start, Finish, Target, output)
@@ -164,7 +164,7 @@ Either locates the first codeunit for use as the target container of another ope
 Tags: Strings
 */
 
-syntax FirstCodeunitOf is prefix operator with precedence 1
+syntax FirstCodeunitOf is prefix operator with subscript chunk precedence
 	"the" "first" "codeunit" "of" <Target: Expression>
 begin
 	MCCodeunitFetchFirstCodeunitOf(Target, output)
@@ -191,7 +191,7 @@ Either locates the last codeunit for use as the target container of another oper
 Tags: Strings
 */
 
-syntax LastCodeunitOf is prefix operator with precedence 1
+syntax LastCodeunitOf is prefix operator with subscript chunk precedence
 	"the" "last" "codeunit" "of" <Target: Expression>
 begin
 	MCCodeunitFetchLastCodeunitOf(Target, output)
@@ -315,7 +315,7 @@ Description:
 Tags: Strings
 */
 
-syntax CodeunitIsInString is neutral binary operator with precedence 1
+syntax CodeunitIsInString is neutral binary operator with comparison precedence
     <Needle: Expression> "is" "in" <Source: Expression>
 begin
     MCCodeunitEvalIsAmongTheCodeunitsOf(Needle, Source, output)
@@ -351,7 +351,7 @@ The first (respectively last) offset of <Needle> in <Target> is number of codeun
 Tags: Strings
 */
 
-syntax CodeunitOffset is prefix operator with precedence 1
+syntax CodeunitOffset is prefix operator with function chunk precedence
     "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" "codeunits" <Needle: Expression> "in" <Target: Expression>
 begin
     MCCodeunitEvalOffsetOfCodeunits(IsLast, Needle, Target, output)
@@ -377,7 +377,7 @@ The first (respectively last) offset of <Needle> in <Target> is number of codeun
 Tags: Strings
 */
 
-syntax CodeunitOffsetAfter is prefix operator with precedence 1
+syntax CodeunitOffsetAfter is prefix operator with function chunk precedence
     "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" "codeunits" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
 begin
     MCCodeunitEvalOffsetOfCodeunitsAfter(IsLast, Needle, After, Target, output)
@@ -409,7 +409,7 @@ The first (respectively last) offset of <Needle> in <Target> is number of codeun
 Tags: Strings
 */
 
-syntax CodeunitOffsetBefore is prefix operator with precedence 1
+syntax CodeunitOffsetBefore is prefix operator with function chunk precedence
     "the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "offset" "of" "codeunits" <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
 begin
     MCCodeunitEvalOffsetOfCodeunitsBefore(IsFirst, Needle, Before, Target, output)

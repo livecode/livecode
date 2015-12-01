@@ -42,6 +42,9 @@
 		'-fno-exceptions',
 		'-fno-rtti',
 		'-std=<(c++_std)',
+
+		'-Werror=mismatched-tags',
+		'-Werror=overloaded-virtual',
 	],
 
 	'target_conditions':

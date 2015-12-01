@@ -556,6 +556,12 @@ void MCPlatformHandleDragDrop(MCPlatformWindowRef p_window, bool& r_accepted)
 {
 	MCdispatcher -> wmdragdrop(p_window);
 	
+    // On some platforms (Mac and iOS), the drag board used for drag-and-drop
+    // operations may not be the main drag board. Reset the drag board back to
+    // the main one after the drag has left.
+    MCAutoRefcounted<MCRawClipboard> t_dragboard(MCRawClipboard::CreateSystemDragboard());
+    MCdragboard->Rebind(t_dragboard);
+    
 	// PLATFORM-TODO: Should we do more than this? i.e. Should the dragDrop
 	//   message be able to signal refusal?
 	r_accepted = true;

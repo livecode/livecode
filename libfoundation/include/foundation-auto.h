@@ -577,6 +577,56 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class MCAutoStringRefAsPascalString
+{
+public:
+    MCAutoStringRefAsPascalString(void)
+    {
+        m_pascal_string = nil;
+    }
+    
+    ~MCAutoStringRefAsPascalString(void)
+    {
+        Unlock();
+    }
+    
+    bool Lock(MCStringRef p_string)
+    {
+        // A Pascal-style counted string can only contain a maximum of 255 chars
+        // so the string length has to be clamped to that.
+        uindex_t t_length = MCStringGetLength(p_string);
+        if (t_length > 255)
+            return false;
+        
+        // Allocate a buffer, adding an extra char for the count byte
+        MCMemoryNewArray(t_length + 1, m_pascal_string);
+        
+        // Copy the string to the buffer, leaving a byte at the beginning for
+        // the count.
+        MCStringGetNativeChars(p_string, MCRangeMake(0, t_length), m_pascal_string+1);
+        
+        // Write the count byte
+        *m_pascal_string = uint8_t(t_length);
+        return true;
+    }
+    
+    void Unlock(void)
+    {
+        MCMemoryDeleteArray(m_pascal_string);
+        m_pascal_string = nil;
+    }
+    
+    unsigned char* operator * (void)
+    {
+        return m_pascal_string;
+    }
+    
+private:
+    unsigned char *m_pascal_string;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 class MCAutoStringRefAsSysString
 {
 public:

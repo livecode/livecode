@@ -43,13 +43,16 @@
 						'<@(engine_other_lcb_files)',
 						'<@(stdscript_syntax_lcb_files)',
 						'<@(stdscript_other_lcb_files)',
-						'>(lc-compile_host)',
 					],
 					
 					'outputs':
 					[
 						'<(INTERMEDIATE_DIR)/engine_lcb_modules.c',
-						'<(PRODUCT_DIR)/modules/lci/dummy.file',
+                        
+  						# A specific output file is required here to ensure that
+  						# all build systems create the output directory while
+  						# also preventing spurious rebuilds.
+  						'<(PRODUCT_DIR)/modules/lci/com.livecode.type.lci',
 					],
 					
 					'action':
@@ -59,7 +62,6 @@
 						'--bootstrap',
 						'--inputg', '../toolchain/lc-compile/src/grammar.g',
 						'--outputi', '<(PRODUCT_DIR)/modules/lci',
-						#'--outputg', '<(INTERMEDIATE_DIR)/>(stage)/grammar_full.g',
 						'--outputc', '<(INTERMEDIATE_DIR)/engine_lcb_modules.c',
 						'<@(_inputs)',
 					],

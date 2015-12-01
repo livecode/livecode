@@ -2858,10 +2858,7 @@ void MCCard::erasefocus(MCObject *p_object)
 MCObjptr *MCCard::newcontrol(MCControl *cptr, Boolean needredraw)
 {
 	if (opened)
-	{
 		cptr->setparent(this);
-		cptr->open();
-	}
 
 	MCObjptr *newptr = new MCObjptr;
 	newptr->setparent(this);
@@ -2871,6 +2868,9 @@ MCObjptr *MCCard::newcontrol(MCControl *cptr, Boolean needredraw)
 	// MW-2011-08-19: [[ Layers ]] Notify the stack that a layer may have ben inserted.
 	layer_added(cptr, objptrs != newptr ? newptr -> prev() : nil, nil);
 
+	if (opened)
+		cptr->open();
+	
 	return newptr;
 }
 

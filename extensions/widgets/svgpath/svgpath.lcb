@@ -349,7 +349,6 @@ public handler OnPaint()
 	
 	if mAngle > 0 then
 		rotate tPath by mAngle
-		log the instructions of tPath
 	end if
 		
 	// scale to fit within widget and maintain aspect ratio
@@ -358,6 +357,8 @@ public handler OnPaint()
 	else
 		scale tPath by [my width / the width of the bounding box of tPath, \
 			my height / the height of the bounding box of tPath]
+			put the bounding box of tPath into tBounds
+			translate tPath by [the left of tBounds * -1, the top of tBounds * -1]
 	end if
 		
 	if mState is "up" and mHilited is false then

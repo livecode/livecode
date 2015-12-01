@@ -173,14 +173,9 @@ public handler TestLessThanEqual()
 end handler
 
 public handler TestFormatString()
-	test diagnostic "TODO -1 formatted as string (bug 14594)"
-	broken test "format as string (int)" when (-1) formatted as string is "-1" because "bug 14546"
+	test "format as string (int)" when (-1) formatted as string is "-1"
 
-	variable tNum
-	put (-1.0) formatted as string into tNum
-	test diagnostic "TODO test full string, not just prefix"
-	test diagnostic tNum
-	test "format as string (real)" when tNum begins with "-1."
+	test "format as string (real)" when (-1.1) formatted as string is "-1.1"
 end handler
 
 public handler TestParseString()

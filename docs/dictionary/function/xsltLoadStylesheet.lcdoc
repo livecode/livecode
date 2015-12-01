@@ -8,7 +8,7 @@ Summary: The xsltLoadStylesheet function loads an xslt stylesheet into memory fr
 
 Introduced: 6.5
 
-OS: mac,windows,linux,ios,android,windows_mobile,linux_mobile
+OS: mac,windows,linux,ios,android
 
 Platforms: desktop,server,web,mobile
 

@@ -209,7 +209,7 @@ The unary plus operator is a no-op on the predefined numeric types.
 Tags: Math
 */
 
-syntax PlusUnaryOperator is prefix operator with precedence 0
+syntax PlusUnaryOperator is prefix operator with modifier precedence
     "+" <Operand: Expression>
 begin
     MCArithmeticEvalPlusNumber(Operand, output)
@@ -228,7 +228,7 @@ Example:
 Tags: Math
 */
 
-syntax MinusUnaryOperator is prefix operator with precedence 0
+syntax MinusUnaryOperator is prefix operator with modifier precedence
     "-" <Operand: Expression>
 begin
     MCArithmeticEvalMinusNumber(Operand, output)
@@ -250,7 +250,7 @@ Example:
 Tags: Math
 */
 
-syntax PlusOperator is left binary operator with precedence 4
+syntax PlusOperator is left binary operator with addition precedence
     <Left: Expression> "+" <Right: Expression>
 begin
     MCArithmeticEvalNumberPlusNumber(Left, Right, output)
@@ -270,7 +270,7 @@ Example:
 Tags: Math
 */
 
-syntax MinusOperator is left binary operator with precedence 4
+syntax MinusOperator is left binary operator with addition precedence
     <Left: Expression> "-" <Right: Expression>
 begin
     MCArithmeticEvalNumberMinusNumber(Left, Right, output)
@@ -291,7 +291,7 @@ Tags: Math
 
 */
 
-syntax TimesOperator is left binary operator with precedence 3
+syntax TimesOperator is left binary operator with multiplication precedence
     <Left: Expression> "*" <Right: Expression>
 begin
     MCArithmeticEvalNumberTimesNumber(Left, Right, output)
@@ -311,7 +311,7 @@ Example:
 Tags: Math
 */
 
-syntax OverOperator is left binary operator with precedence 3
+syntax OverOperator is left binary operator with multiplication precedence
     <Left: Expression> "/" <Right: Expression>
 begin
     MCArithmeticEvalNumberOverNumber(Left, Right, output)
@@ -335,7 +335,7 @@ Returns the remainder on dividing <Left> by <Right>
 
 */
 
-syntax ModOperator is neutral binary operator with precedence 3
+syntax ModOperator is neutral binary operator with multiplication precedence
     <Left: Expression> "mod" <Right: Expression>
 begin
     MCArithmeticEvalNumberModNumber(Left, Right, output)
@@ -363,7 +363,7 @@ successive values of x wrap y cycle through the sequence 1, 2, ..., y.
 
 */
 
-syntax WrapOperator is neutral binary operator with precedence 3
+syntax WrapOperator is neutral binary operator with multiplication precedence
     <Left: Expression> "wrap" <Right: Expression>
 begin
     MCArithmeticEvalNumberWrapNumber(Left, Right, output)
@@ -379,7 +379,7 @@ Right:      An expression that evaluates to a number.
 Returns: 	True if <Left> is greater than <Right>, and false otherwise.
 */
 
-syntax NumberIsGreaterThanNumber is neutral binary operator with precedence 5
+syntax NumberIsGreaterThanNumber is neutral binary operator with comparison precedence
     <Left: Expression> ">" <Right: Expression>
 begin
     MCArithmeticEvalNumberIsGreaterThanNumber(Left, Right, output)
@@ -393,7 +393,7 @@ Right:      An expression that evaluates to a number.
 Returns: 	True if <Left> is greater than or equal to <Right>, and false otherwise.
 */
 
-syntax NumberIsGreaterThanOrEqualToNumber is neutral binary operator with precedence 5
+syntax NumberIsGreaterThanOrEqualToNumber is neutral binary operator with comparison precedence
     <Left: Expression> ">=" <Right: Expression>
 begin
     MCArithmeticEvalNumberIsGreaterThanOrEqualToNumber(Left, Right, output)
@@ -411,7 +411,7 @@ Description:
 Tags: Math
 */
 
-syntax NumberIsLessThanNumber is neutral binary operator with precedence 5
+syntax NumberIsLessThanNumber is neutral binary operator with comparison precedence
     <Left: Expression> "<" <Right: Expression>
 begin
     MCArithmeticEvalNumberIsLessThanNumber(Left, Right, output)
@@ -430,7 +430,7 @@ Tags: Math
 */
 
 
-syntax NumberIsLessThanOrEqualToNumber is neutral binary operator with precedence 5
+syntax NumberIsLessThanOrEqualToNumber is neutral binary operator with comparison precedence
     <Left: Expression> "<=" <Right: Expression>
 begin
     MCArithmeticEvalNumberIsLessThanOrEqualToNumber(Left, Right, output)
@@ -450,7 +450,7 @@ Description:
 Tags: Math
 */
 
-syntax NumberIsEqualToNumber is neutral binary operator with precedence 6
+syntax NumberIsEqualToNumber is neutral binary operator with comparison precedence
     <Left: Expression> "=" <Right: Expression>
 begin
     MCArithmeticEvalEqualToNumber(Left, Right, output)
@@ -471,7 +471,7 @@ References: NumberIsEqualToNumber (operator)
 Tags: Math
 */
 
-syntax NumberIsNumber is neutral binary operator with precedence 7
+syntax NumberIsNumber is neutral binary operator with comparison precedence
     <Left: Expression> "is" <Right: Expression>
 begin
     MCArithmeticEvalEqualToNumber(Left, Right, output)
@@ -493,7 +493,7 @@ Tags: Math
 */
 
 
-syntax NumberIsNotNumber is neutral binary operator with precedence 7
+syntax NumberIsNotNumber is neutral binary operator with comparison precedence
     <Left: Expression> "is not" <Right: Expression>
 begin
     MCArithmeticEvalNotEqualToNumber(Left, Right, output)
@@ -517,7 +517,7 @@ Description:
 Use <NumberFormattedAsString> when you want to manipulate a numeric value as text.
 */
 
-syntax NumberFormattedAsString is postfix operator with precedence 1
+syntax NumberFormattedAsString is postfix operator with conversion precedence
     <Operand: Expression> "formatted" "as" "string"
 begin
     MCArithmeticEvalNumberFormattedAsString(Operand, output)
@@ -572,7 +572,7 @@ Description:
 Use <StringParsedAsNumber> when you want to interpret text numerically. nothing is returned if parsing was not possible.
 */
 
-syntax StringParsedAsNumber is postfix operator with precedence 1
+syntax StringParsedAsNumber is postfix operator with conversion precedence
     <Operand: Expression> "parsed" "as" "number"
 begin
     MCArithmeticEvalStringParsedAsNumber(Operand, output)
@@ -641,7 +641,7 @@ Use <ListOfStringParsedAsListOfNumber> when you want to interpret pieces of text
 *Note:* It is an error if any element of <Operand> is not a string.
 */
 
-syntax ListOfStringParsedAsListOfNumber is postfix operator with precedence 1
+syntax ListOfStringParsedAsListOfNumber is postfix operator with conversion precedence
     <Operand: Expression> "parsed" "as" "list" "of" "number"
 begin
     MCArithmeticEvalListOfStringParsedAsListOfNumber(Operand, output)

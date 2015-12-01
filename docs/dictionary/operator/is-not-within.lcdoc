@@ -20,7 +20,7 @@ point: Any expression that evaluates to a point--a vertical and horizontal dista
 rectangle: Any expression that evaluates to a rectangle--a right, top, left, and bottom edge, separated by commas.
 
 Description:
-Use the <is not within> <operator> to determine whether a <point> is inside a rectangle.
+Use the <is not within> <operator> to determine whether a <point> is outside a rectangle.
 
 The <is not within> <operator> is the logical inverse of the <is within> <operator>. When one is true, the other is false.
 
