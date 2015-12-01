@@ -30,7 +30,9 @@ on Bugzilla. Multiline files will have their own subsection in the release notes
    global gExperimental, gPageBreak, gAnchor
    
    function releaseNotesCSS
-      return url ("file:" & builderSystemFolder() & slash & "release_notes_css_prefix.txt")
+   local tFile
+   put builderSystemFolder() & slash & "release_notes_css_prefix.txt" into tFile
+   return getFileContentsUTF8(tFile)
 end releaseNotesCSS
 
 command releaseNotesBuilderInitialize
@@ -143,21 +145,27 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType
    put tBody & getPastNotes(tTags) into tBody
    
    local tNotesFileURL
-   local tNotesFile
+   local tNotesFile, tHtmlNotesFile
    builderEnsureFolder  builderRepoFolder() & slash & targetPath()
    put builderRepoFolder() & slash & targetPath() & slash & "LiveCodeNotes-" & replaceText(pVersion, "[-,\.]", "_") into tNotesFile
-   put "file:" & tNotesFile & ".html" into tNotesFileURL
+   put tNotesFile & ".html" into tHtmlNotesFile
+   put "file:" & tHtmlNotesFile into tNotesFileURL
    
    local tNotesPrefix
    local tNotesSuffix
    local tTitle
    put "LiveCode " & pVersion & " Release Notes" into tTitle
-   put "<html><br>" & CR & releaseNotesCSS() & CR into tNotesPrefix
-   put tNotesPrefix & "<h1 style = " & quote & "text-align : center" & quote & ">" & tTitle & "</h1>" & CR into tNotesPrefix
-   put tNotesPrefix & "<h2>Table of contents</h2>" & CR into tNotesPrefix
-   put "</html>" into tNotesSuffix   
-   
-   put tNotesPrefix & tContents & gPageBreak & tBody & tNotesSuffix into url tNotesFileURL
+   put "<html><head>" & CR into tNotesPrefix
+   put "<meta charset=" & quote & "UTF-8" & quote & ">" & CR after tNotesPrefix
+   put releaseNotesCSS() & CR after tNotesPrefix
+   put "</head>" & CR after tNotesPrefix
+   put "<body><h1 style = " & quote & "text-align : center" & quote & ">" & tTitle & "</h1>" & CR after tNotesPrefix
+   put "<h2>Table of contents</h2>" & CR after tNotesPrefix
+   put "</body></html>" into tNotesSuffix   
+
+   open file tHtmlNotesFile for "UTF-8" text write
+   write tNotesPrefix & tContents & gPageBreak & tBody & tNotesSuffix to file tHtmlNotesFile
+   close file tHtmlNotesFile
    
    builderLog "message", "Converting release notes to PDF"
    HTMLToPDF tNotesFile, tTitle
@@ -186,6 +194,7 @@ command HTMLToPDF pName, pTitle
    put " --header-right " & quote & pTitle & " " & the date & quote into tOptions
    put tOptions & " --header-font-size 8 --header-spacing 5 --footer-center [page] --footer-font-size 8 --footer-spacing 5 " into tOptions
    put tOptions & "--margin-top 30 --margin-bottom 20 --margin-left 20 --margin-right 20 --enable-internal-links " into tOptions
+   put "--encoding UTF-8 " after tOptions
 
    if $WKHTMLTOPDF is empty then
       put builderRepoFolder() & slash & "builder" & slash & "wkhtmltopdf" into tCommand
@@ -235,12 +244,14 @@ function newSection pSection, pLevel, @xContents
 end newSection
 
 function notesFileToHTML pFileName, pVersion, @xContents
-   local tFileUrl
+   local tFile
    local tFileText
    local tBody
    put empty into tBody
-   put "file:" & notesPath() & slash & pFileName into tFileUrl
-   put url tFileUrl into tFileText
+
+   put notesPath() & slash & pFileName into tFile
+   put getFileContentsUTF8(tFile) into tFileText
+
    if tFileText is not empty then
       replace "<version>" with pVersion in tFileText
       put markdownToHTML(tFileText, 1, 0, xContents, true) into tBody
@@ -279,10 +290,10 @@ function makeBugTable pBugs, pBold
 end makeBugTable
 
 function getTerms pFileList
-   local tTermList, tFile, tTerm
+   local tTermList, tLine, tTerm
    repeat for each line tLine in pFileList
-      put url ("file:" & tLine) into tFile
-      get matchText(tFile, "<term>(.*)</term>", tTerm)
+      get matchText(getFileContentsUTF8(tLine), "<term>(.*)</term>", tTerm)
+
       put tTermList & tTerm & CR into tTermList
    end repeat
    filter tTermList without empty
@@ -315,10 +326,14 @@ command getDictionaryChanges pVersion, pTags, @rStatusList, @rOtherList
    put shell("git diff --name-only " & tFrom & "...HEAD -- " & dictPath()) into tModifiedEntries
    
    repeat for each line tLine in tModifiedEntries
-      local tFile
-      if there is not a file (item 1 of tLine) then next repeat
+      local tFile, tError
       if not (tLine ends with tExtension) then next repeat
-      put url ("file:" & item 1 of tLine) into tFile
+
+      try
+         put getFileContentsUTF8(item 1 of tLine) into tFile
+      catch tError
+         next repeat
+      end try
       
       if tExtension is "xml" then
          local tVersion
@@ -444,7 +459,7 @@ function notesFolderToHTML pIsIDE, pFolder, pVersion, pTags, @xContents, @rUpdat
             end if
             
             # Delete any empty trailing lines
-            put word 1 to -1 of url ("file:" & tFile) into tFileText
+            put word 1 to -1 of getFileContentsUTF8(tFile) into tFileText
             put the number of lines of tFileText into tNumLines
             
             if tLine contains "bugfix" then
@@ -684,7 +699,7 @@ end addExtensionReleaseNoteData
 
 on addLCBReleaseNoteData pFile, pSectionName, @xDataA
    local tNoteData
-   put url ("file:" & pFile) into tNoteData
+   put getFileContentsUTF8(pFile) into tNoteData
    
    local tCount, tSection, tBugList
    
@@ -845,3 +860,23 @@ on fetchIDECommits pFirstVersion, pLastVersion, @rFirst, @rLast
    get matchText(tDiff, "\-" & tString, rFirst)
    get matchText(tDiff, "\+" & tString, rLast)
 end fetchIDECommits
+
+private function getFileContentsUTF8 pFile
+   local tData, tResult
+
+   open file pFile for "UTF-8" text read
+   put the result into tResult
+   if tResult is not empty then
+      throw the result
+   end if
+
+   read from file pFile until end
+   if the result is not empty and the result is not "EOF" then
+      throw the result
+   end if
+   put it into tData
+
+   close file pFile -- unchecked
+
+   return tData
+end getFileContentsUTF8

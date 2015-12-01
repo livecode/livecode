@@ -78,21 +78,21 @@ bool
 __MCSFileThrowReadErrorWithErrno (MCStringRef p_native_path,
                                   int p_errno)
 {
-	return __MCSFileThrowIOErrorWithErrno (p_native_path, MCSTR("Failed to read from file '%{path}': %{description"), p_errno);
+	return __MCSFileThrowIOErrorWithErrno (p_native_path, MCSTR("Failed to read from file '%{path}': %{description}"), p_errno);
 }
 
 bool
 __MCSFileThrowWriteErrorWithErrno (MCStringRef p_native_path,
                                    int p_errno)
 {
-	return __MCSFileThrowIOErrorWithErrno (p_native_path, MCSTR("Failed to write to file '%{path}': %{description"), p_errno);
+	return __MCSFileThrowIOErrorWithErrno (p_native_path, MCSTR("Failed to write to file '%{path}': %{description}"), p_errno);
 }
 
 bool
 __MCSFileThrowOpenErrorWithErrno (MCStringRef p_native_path,
                                   int p_errno)
 {
-	return __MCSFileThrowIOErrorWithErrno (p_native_path, MCSTR("Failed to open file '%{path}': %{description"), p_errno);
+	return __MCSFileThrowIOErrorWithErrno (p_native_path, MCSTR("Failed to open file '%{path}': %{description}"), p_errno);
 }
 
 bool

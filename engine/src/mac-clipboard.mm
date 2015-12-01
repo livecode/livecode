@@ -295,7 +295,7 @@ MCStringRef MCMacRawClipboard::CopyAsUTI(MCStringRef p_key)
         CFRelease(t_class);
         return NULL;
     }
-    CFStringRef t_uti = UTTypeCreatePreferredIdentifierForTag(t_class, t_tag, NULL);
+    CFStringRef t_uti = UTTypeCreatePreferredIdentifierForTag(t_class, t_tag, kUTTypeData);
     CFRelease(t_class);
     CFRelease(t_tag);
     if (t_uti == NULL)
@@ -618,9 +618,13 @@ MCDataRef MCMacRawClipboardItemRep::CopyData() const
         if (*t_type_string == NULL)
             return NULL;
         
+        // Convert the type string to a UTI
+        MCAutoStringRef t_uti;
+        t_uti.Give(MCMacRawClipboard::CopyAsUTI(*t_type_string));
+        
         // Convert from a StringRef to a CFString
         CFStringRef t_type;
-        if (!MCStringConvertToCFStringRef(*t_type_string, t_type))
+        if (!MCStringConvertToCFStringRef(*t_uti, t_type))
             return NULL;
         
         // Get the data for this type

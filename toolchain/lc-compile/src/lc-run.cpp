@@ -189,6 +189,32 @@ MCRunPrintMessage (FILE *p_stream,
 #define MC_RUN_STRING_EQUAL(s,c) \
 	(MCStringIsEqualToCString ((s),(c),kMCStringOptionCompareExact))
 
+/* Some extremely basic command-line argument processing.  This takes
+ * a command-line argument and transforms it to a path in the LiveCode
+ * internal format (i.e. "/" as separator).
+ *
+ * FIXME This is currently very basic.  For correctness, it should
+ * make the path absolute and then canonicalize it (by removing
+ * multiple separators, ".." and "."  elements, and generating an
+ * error if invalid path characters are found). */
+static bool
+MCRunParseCommandLineFilename (MCStringRef p_arg,
+                               MCStringRef & r_filename)
+{
+#if defined (__WINDOWS__)
+	/* On Windows, simply turn all backslashes to slashes and hope that the
+	 * result is sensible. */
+	MCAutoStringRef t_filename;
+	return
+		MCStringMutableCopy (p_arg, &t_filename) &&
+		MCStringFindAndReplaceChar (*t_filename, '\\', '/',
+		                            kMCStringOptionCompareExact) &&
+		MCStringCopy (*t_filename, r_filename);
+#else
+	return MCStringCopy (p_arg, r_filename);
+#endif
+}
+
 static bool
 MCRunParseCommandLine (int argc,
                        const char *argv[],
@@ -276,9 +302,14 @@ MCRunParseCommandLine (int argc,
 
 				++t_arg_idx; /* Consume option argument */
 
+				/* Convert argument to filename */
+				MCAutoStringRef t_load_path;
+				if (!MCRunParseCommandLineFilename (t_argopt, &t_load_path))
+					return false;
+
 				/* Add to load list */
 				if (!MCProperListPushElementOntoFront (x_config.m_load_filenames,
-				                                       t_argopt))
+				                                       *t_load_path))
 					return false;
 				continue;
 			}
@@ -309,7 +340,9 @@ MCRunParseCommandLine (int argc,
 		 * command arguments". */
 		if (!t_have_filename)
 		{
-			t_filename = MCValueRetain (t_arg);
+			if (!MCRunParseCommandLineFilename (t_arg, &t_filename))
+				return false;
+
 			t_have_filename = true;
 			t_accept_options = false;
 		}

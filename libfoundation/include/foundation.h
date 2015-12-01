@@ -87,8 +87,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #undef __SMALL__
 // __MEDIUM__ will be defined if pointers are 64-bit and indicies are 32-bit.
 #undef __MEDIUM__
-// __HUGE__ will be defined if pointers are 64-bit and indicies are 64-bit.
-#undef __HUGE__
+// __LARGE__ will be defined if pointers are 64-bit and indicies are 64-bit.
+#undef __LARGE__
 
 // __WINDOWS_1252__ will be defined if it is the native charset of the platform.
 #undef __WINDOWS_1252__
@@ -132,7 +132,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __LITTLE_ENDIAN__ 1
 #define __X86_64__ 1
 #define __LLP64__ 1
-#define __HUGE__ 1
+#define __MEDIUM__ 1
 #else
 #error Unknown target architecture
 #endif
@@ -176,7 +176,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __LITTLE_ENDIAN__ 1
 #define __X86_64__ 1
 #define __LP64__ 1
-#define __HUGE__ 1
+#define __MEDIUM__ 1
 #endif
 
 // Native char set
@@ -275,7 +275,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __LITTLE_ENDIAN__ 1
 #define __ARM64__
 #define __LP64__ 1
-#define __HUGE__ 1
+#define __MEDIUM__ 1
 #endif
 
 // Native char set
@@ -583,17 +583,25 @@ typedef int32_t compare_t;
 #define INDEX_MIN INT32_MIN
 #define INDEX_MAX INT32_MAX
 
-#else
+#elif defined(__LARGE__)
 
-typedef uint32_t uindex_t;
-typedef int32_t index_t;
+// This memory model would allow 64-bit indicies in Foundation types. This,
+// however, has never been tested and so is only here for completeness at
+// this time.
+
+typedef uint64_t uindex_t;
+typedef int64_t index_t;
 typedef uint64_t hash_t;
 typedef int64_t compare_t;
 
-#define UINDEX_MIN UINT32_MIN
-#define UINDEX_MAX UINT32_MAX
-#define INDEX_MIN INT32_MIN
-#define INDEX_MAX INT32_MAX
+#define UINDEX_MIN UINT64_MIN
+#define UINDEX_MAX UINT64_MAX
+#define INDEX_MIN INT64_MIN
+#define INDEX_MAX INT64_MAX
+
+#else
+
+#error No memory model defined for this platform and architecture combination
 
 #endif
 
@@ -1989,6 +1997,9 @@ MC_DLLEXPORT bool MCStringCreateWithCFString(CFStringRef cf_string, MCStringRef&
 MC_DLLEXPORT bool MCStringCreateWithCFStringAndRelease(CFStringRef cf_string, MCStringRef& r_string);
 #endif
 
+// Create a string from a Pascal-style (counted) string. This always uses the MacRoman encoding.
+MC_DLLEXPORT bool MCStringCreateWithPascalString(const unsigned char* pascal_string, MCStringRef& r_string);
+    
 #if !defined(__WINDOWS__)
 // Create a string from a C string in the system encoding
 MC_DLLEXPORT bool MCStringCreateWithSysString(const char *sys_string, MCStringRef &r_string);
