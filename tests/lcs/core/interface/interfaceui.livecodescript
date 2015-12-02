@@ -16,8 +16,11 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-// Meta Data
-### ui:true
+on TestSetup
+   if the environment is "command line" then
+      return "SKIP GUI-only tests"
+   end if
+end TestSetup
 
 on TestInterface2
 create stack "Test"

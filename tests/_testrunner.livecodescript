@@ -144,14 +144,23 @@ end ErrorDialog
 
 -- Execute a test
 private command invokeTest pInfo
-   local tStackName
+   local tStackName, tResult
 
    -- This should auto-load the test script
    put the name of stack pInfo["invoke"]["script"] into tStackName
 
-   -- Dispatch the test setup command, and the test command itself
+   -- Dispatch the test setup command, and check if skipping was requested
    dispatch kSetupMessage to tStackName
+   put the result into tResult
+   if word 1 of tResult is "SKIP" then
+      TestSkip pInfo["invoke"]["command"], word 2 to -1 of tResult
+      exit invokeTest
+   end if
+
+   -- Run the actual test itself
    dispatch pInfo["invoke"]["command"] to tStackName
+
+   -- Do common cleanup tasks
    dispatch kTeardownMessage to tStackName
 end invokeTest
 
@@ -195,36 +204,9 @@ private command runAllScripts pInfo
    return tAnalysis
 end runAllScripts
 
--- Output a skipped line in the results for eachcommand in the given test file
-private command runTestSkipAll pInfo, pScriptFile, pReason
-   local tSkipTemplate, tAnalysis
-   put "ok - [[tCommand]] # SKIP" && pReason into tSkipTemplate
-
-   repeat for each element tCommand in runGetTestCommandNames(pScriptFile)
-      runTestProcessOutput pScriptFile, tCommand, merge(tSkipTemplate)
-      put tapCombine(tAnalysis, the result) into tAnalysis
-   end repeat
-end runTestSkipAll
-
 -- Run the tests found in one specific script file
 private command runTestScript pInfo, pScriptFile
-   local tCommand, tAnalysis, tMetadata
-   put runGetTestMetadata(pScriptFile) into tMetadata
-
-   -- Only run tests that require UI if possible
-   local tCanRunUITests
-   put true into tCanRunUITests
-   repeat for each element tElement in pInfo["self-command"]
-      if tElement is "-ui" then
-         put false into tCanRunUITests
-         exit repeat
-      end if
-   end repeat
-
-   if tMetadata["ui"] is true and not tCanRunUITests then
-      runTestSkipAll pInfo, pScriptFile, "test requires UI mode"
-      return the result
-   end if
+   local tCommand, tAnalysis
 
    repeat for each element tCommand in runGetTestCommandNames(pScriptFile)
       runTestCommand pInfo, pScriptFile, tCommand
@@ -422,51 +404,6 @@ private command runPrintSummary pAnalysis
 
    write tSummaryString to stdout
 end runPrintSummary
-
--- Get all the metadata keys and values in the stack file
-private function runGetTestMetadata pFilename
-   local tScript
-
-   -- Get the contents of the file
-   open file pFilename for "UTF-8" text read
-   if the result is not empty then
-      throw the result
-   end if
-
-   read from file pFilename until end
-   put it into tScript
-
-   close file pFilename
-
-   -- Scan the file for metadata -
-   -- Metadata is given in the form ### <key> : <value>
-
-   local tKey, tValue, tMetadata
-   repeat for each line tLine in tScript
-      -- save some time by only looking at commented out lines
-      if token 1 of tLine is not empty then
-         next repeat
-      end if
-
-      -- remove whitespace
-      put word 1 to -1 of tLine into tLine
-
-      if not (tLine begins with "###") then
-         next repeat
-      end if
-
-      -- remove hashes
-      put char 4 to -1 of tLine into tLine
-
-      set the itemdelimiter to ":"
-      put word 1 to -1 of (item 1 of tLine) into tKey
-      put word 1 to -1 of (item 2 of tLine) into tValue
-
-      put tValue into tMetadata[tKey]
-   end repeat
-
-   return tMetadata
-end runGetTestMetadata
 
 ----------------------------------------------------------------
 -- Logging helpers
