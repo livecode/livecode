@@ -1225,44 +1225,46 @@ private handler convertArrayToList(in pArray as Array, in pLevel as Integer, in 
 	end if
 	
 	variable tKey as String
-	variable tElement as Array
-	
 	repeat for each element tKey in tKeys
-		put the empty array into tElement
-		put tKey into tElement["key"]
-		put pLevel into tElement["indent"]
-		put false into tElement["selected"]
-		
-		variable tPath as List
-		put pPath into tPath
-		push tKey onto tPath
-		
-		put tPath into tElement["path"]	
-		if pArray[tKey] is an array then
-			put false into tElement["leaf"]
-			put true into tElement["folded"]
-			push tElement onto tList
-		else
-			put true into tElement["leaf"]
-			put pArray[tKey] into tElement["value"]
-			variable tString as optional String			
-			if pArray[tKey] is nothing then
-				put "" into tString
-			else if pArray[tKey] is a string then
-				put pArray[tKey] into tString
-			else if pArray[tKey] is a boolean then
-				format pArray[tKey] as string into tString
-			else if pArray[tKey] is a number then
-				format pArray[tKey] as string into tString
-			else
-				put "Can't display value" into tString
-			end if	
-			put tString into tElement["string_value"]
-			push tElement onto tList
-		end if	
+		push elementForList(tKey, pPath, pLevel, pArray) onto tList
 	end repeat
 	
 	return tList
+end handler
+
+private handler elementForList(in pKey as String, pPath as List, in pLevel as Integer, in pArray as Array) returns Array
+	variable tElement as Array
+	put the empty array into tElement
+	put pKey into tElement["key"]
+	put pLevel into tElement["indent"]
+	put false into tElement["selected"]
+		
+	variable tPath as List
+	put pPath into tPath
+	push pKey onto tPath
+		
+	put tPath into tElement["path"]	
+	if pArray[pKey] is an array then
+		put false into tElement["leaf"]
+		put true into tElement["folded"]
+	else
+		put true into tElement["leaf"]
+		put pArray[pKey] into tElement["value"]
+		variable tString as optional String			
+		if pArray[pKey] is nothing then
+			put "" into tString
+		else if pArray[pKey] is a string then
+			put pArray[pKey] into tString
+		else if pArray[pKey] is a boolean then
+			format pArray[pKey] as string into tString
+		else if pArray[pKey] is a number then
+			format pArray[pKey] as string into tString
+		else
+			put "Can't display value" into tString
+		end if	
+		put tString into tElement["string_value"]
+	end if
+	return tElement
 end handler
 
 // A handler type for passing into 'applyToNode'
