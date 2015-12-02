@@ -20,6 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "em-filehandle.h"
 #include "em-util.h"
 
+#include "filedefs.h"
 #include "osspec.h"
 
 #include <fcntl.h>
@@ -88,6 +89,9 @@ MCEmscriptenSystem::~MCEmscriptenSystem()
 bool
 MCEmscriptenSystem::Initialize()
 {
+	IO_stdout = OpenFd(1, kMCOpenFileModeWrite);
+	IO_stderr = OpenFd(2, kMCOpenFileModeWrite);
+
 	return true;
 }
 
