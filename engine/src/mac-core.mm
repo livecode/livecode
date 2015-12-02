@@ -218,7 +218,7 @@ enum
 
 //////////
 
-static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_reply, long p_context)
+static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_reply, SRefCon p_context)
 {
     return [[NSApp delegate] preDispatchAppleEvent: p_event withReply: p_reply];
 }

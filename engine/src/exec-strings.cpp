@@ -1780,35 +1780,86 @@ __MCStringEvalDelimitedChunkOffset(MCExecContext& ctxt,
                                    uindex_t p_start_offset,
                                    uindex_t& r_result)
 {
-    MCRange t_found, t_before, t_after;
     uindex_t t_index;
     bool t_present;
-    
-    t_present = MCStringDelimitedOffset(p_haystack,
-                                        MCRangeMake(0, MCStringGetLength(p_haystack)),
-                                        p_needle,
-                                        p_delimiter,
-                                        p_start_offset,
-                                        ctxt . GetStringComparisonType(),
-                                        t_index,
-                                        ctxt . GetWholeMatches() ? &t_found : nil,
-                                        ctxt . GetWholeMatches() ? &t_before : nil,
-                                        ctxt . GetWholeMatches() ? &t_after : nil);
+    if (!ctxt . GetWholeMatches())
+    {
+        // If we aren't interested in whole matches, then we just search once.
+        t_present = MCStringDelimitedOffset(p_haystack,
+                                            MCRangeMake(0, MCStringGetLength(p_haystack)),
+                                            p_needle,
+                                            p_delimiter,
+                                            p_start_offset,
+                                            ctxt . GetStringComparisonType(),
+                                            t_index,
+                                            nil,
+                                            nil,
+                                            nil);
+    }
+    else
+    {
+        // If we do want whole matches, we need to make sure that we search until
+        // we exhaust the haystack of occurrances of needle, or a needle is found
+        // with a delimiter either side.
+        
+        // Initialize to search the whole of the haystack.
+        MCRange t_range;
+        t_range = MCRangeMake(0, MCStringGetLength(p_haystack));
+        
+        // As we iterate by searching through a decreasing suffix of the haystack
+        // we must keep a running count of the index.
+        t_index = 0;
+        
+        // The first time through we need to use the start offset.
+        uindex_t t_start_offset;
+        t_start_offset = 0;
+        
+        for(;;)
+        {
+            MCRange t_found, t_before, t_after;
+            uindex_t t_relative_index;
+            t_present = MCStringDelimitedOffset(p_haystack,
+                                                t_range,
+                                                p_needle,
+                                                p_delimiter,
+                                                t_start_offset,
+                                                ctxt . GetStringComparisonType(),
+                                                t_relative_index,
+                                                &t_found,
+                                                &t_before,
+                                                &t_after);
+        
+            // If there are no more occurrances of needle, then we are done.
+            if (!t_present)
+                break;
+            
+            // Update the running index.
+            t_index += t_relative_index;
+            
+            // If the found string has a delimiter either side, then we are
+            // done.
+            if (t_found . offset == t_before . offset + t_before . length &&
+                t_found . offset + t_found . length == t_after . offset)
+                break;
+            
+            // We must now update the search range to start after the after
+            // delimiter.
+            t_range = MCRangeMakeMinMax(t_after . offset + t_after . length,
+                                        MCStringGetLength(p_haystack));
+            
+            // We have just skipped a delimiter (the 'after' one) so increment
+            // the index.
+            t_index += 1;
+            
+            // We don't want to skip any delimiters next time through.
+            t_start_offset = 0;
+        }
+    }
     
     if (!t_present)
     {
         r_result = 0;
         return;
-    }
-    
-    if (ctxt . GetWholeMatches())
-    {
-        if (t_found . offset != t_before . offset + t_before . length ||
-            t_found . offset + t_found . length != t_after . offset)
-        {
-            r_result = 0;
-            return;
-        }
     }
     
     r_result = t_index - p_start_offset + 1;
