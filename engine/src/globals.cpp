@@ -1114,6 +1114,11 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
         if (!t_success)
             return false;
     }
+    else
+    {
+        MCcommandname = MCValueRetain(kMCEmptyString);
+        MCcommandarguments = MCValueRetain(kMCEmptyArray);
+    }
     
     MCDeletedObjectsSetup();
 
