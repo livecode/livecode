@@ -60,6 +60,12 @@ bool MCWidgetQueryProperty(MCWidgetRef widget, MCNameRef property, MCTypeInfoRef
 bool MCWidgetSetProperty(MCWidgetRef widget, MCNameRef property, MCValueRef value);
 bool MCWidgetGetProperty(MCWidgetRef widget, MCNameRef property, MCValueRef& r_value);
 
+bool MCWidgetHasPropertyOfChunk(MCWidgetRef widget, MCNameRef p_property, MCNameRef p_chunk_name, bool p_getter);
+bool MCWidgetQueryPropertyOfChunk(MCWidgetRef widget, MCNameRef p_property, MCNameRef p_chunk_name, bool p_getter, MCTypeInfoRef& r_type_info);
+
+bool MCWidgetSetPropertyOfChunk(MCWidgetRef widget, MCNameRef p_property, MCNameRef p_chunk_name, MCProperListRef p_path, MCValueRef p_value);
+bool MCWidgetGetPropertyOfChunk(MCWidgetRef widget, MCNameRef p_property, MCNameRef p_chunk_name, MCProperListRef p_path, MCValueRef& r_value);
+
 bool MCWidgetOnLoad(MCWidgetRef widget, MCValueRef rep);
 bool MCWidgetOnSave(MCWidgetRef widget, MCValueRef& r_rep);
 bool MCWidgetOnOpen(MCWidgetRef widget);
