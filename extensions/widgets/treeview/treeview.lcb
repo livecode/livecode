@@ -1553,27 +1553,6 @@ private handler applyFoldState(in pLevel as Integer, in pStart as Integer, in pF
 
 end handler
 
-// Given a 'path' of array keys as a list, and a value, adjust the mDataList and mData variables
-// 	to reflect the action of putting pValue into mData[element 1 of pPath][element 2 of pPath]...
-private handler setDataOnPath(in pPath as List) returns nothing
-	
-	// pPath having 1 element is an error, as that means mData is just a string rather than an array
-	if the number of elements in pPath is 1 then
-		return
-	end if
-	
-	// The last element of pPath is the actual value, the rest of it is the keys.
-	variable tActualPath as List
-	put element 1 to -2 of pPath into tActualPath
-	
-	variable tValue as String
-	put element -1 of pPath into tValue
-	
-	// Simultaneously adjust the backing list and array to reflect the added value.
-	setDataListOnPath(tActualPath, tValue, 0, mDataList, mData)
-
-end handler
-
 private handler setRowBackgrounds(in pShowAlternateBackgrounds as Boolean) returns nothing
 	put pShowAlternateBackgrounds into mAlternateRowBackgrounds
 	redraw all
@@ -1656,6 +1635,38 @@ end handler
 private handler setArrayData(in pData as Array) returns nothing
 	put pData into mData
 	put true into mUpdateDataList
+	redraw all
+end handler
+
+// Replace the existing data wholesale with a new array pData
+public handler getArrayDataOfElement(in pPath as List) returns any
+    variable tValue
+    put mData into tValue
+
+    variable tElement as String
+	repeat for each element tElement in pPath
+        put tValue[tElement] into tValue
+    end repeat
+
+    return tValue
+end handler
+
+// Given a 'path' of array keys as a list, and a value, adjust the mDataList and mData variables
+// 	to reflect the action of putting pValue into mData[element 1 of pPath][element 2 of pPath]...
+public handler setArrayDataOfElement(in pPath as List, in pValue as any) returns nothing
+	// Update the array
+	setValueOnPath(pPath, pValue, mData)
+	
+	// Update the display list
+	setValueOfDataListOnPath(pPath, pValue, 0, 1, mData, mDataList)
+	
+	// Call unfold on the changed path. This only results in a display change if
+	//  all keys in pPath except the last are already unfolded.
+	unfoldPath(pPath)
+	
+	post "dataChanged"
+	
+	put true into mUpdateSeparator
 	redraw all
 end handler
 
