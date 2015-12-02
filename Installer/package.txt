@@ -151,6 +151,7 @@ component Plugins
 		stack ide:Plugins/Go_RevNet.rev
 		stack ide:Plugins/Navigator.rev
 		stack "ide:Plugins/RegExBuilder 1.6.rev"
+		stack ide:Plugins/revapplicationoverview.rev
 		stack ide:Plugins/revexample.rev
 		stack "ide:Plugins/revSmartProperties 1.2.rev"
 		stack "ide:Plugins/revSmartSave 1.1.rev"
