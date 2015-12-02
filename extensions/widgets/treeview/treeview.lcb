@@ -1200,6 +1200,31 @@ private handler CompareKeysNumeric(in pLeft as any, in pRight as any) returns In
 	end if
 end handler
 
+private handler CompareKeys(in pLeft as String, in pRight as String) returns Integer
+	if mSortNumeric then
+		return CompareKeysNumeric(pLeft, pRight)
+	end if
+	
+	if pLeft is pRight then
+		return 0
+	end if
+	
+	if pLeft < pRight then
+		if mSortAscending then
+			return -1
+		else
+			return 1
+		end if
+	end if
+	
+	if mSortAscending then
+		return 1
+	else
+		return -1
+	end if
+		
+end handler
+
 // Convert an array to a list, as used by this widget. Ignoring the 'folded' ans selected
 //  parameters, mDataList should always be the result of calling this on mData
 private handler convertArrayToList(in pArray as Array, in pLevel as Integer, in pPath as List) returns List
@@ -1555,53 +1580,70 @@ private handler setRowBackgrounds(in pShowAlternateBackgrounds as Boolean) retur
 end handler
 
 // Recursive implementation of setting data on a given path. 
-// Acts on a list (in the format used by this widget) and an array simultaneously.
-private handler setDataListOnPath(in pPath as List, in pValue as any, in pLevel as Integer, inout xList as List, inout xArray as Array) returns nothing
-
+// Acts on the list in the format used by this widget.
+private handler setValueOfDataListOnPath(in pPath as List, in pValue as any, in pLevel as Integer, in pStart as Integer, in pArray as Array, inout xList as List) returns nothing
 	variable tElement as Array
 	variable tCount as Integer
-	variable tNewElement as Array
-	put the empty array into tNewElement
-	
-	repeat with tCount from 1 up to the number of elements in xList
-		put element tCount of xList into tElement
-		
-		// The easy case - just insert the new element
-		if tElement["key"] > element pLevel + 1 of pPath then
-		
-			// update the backing array
-			setValueOnPath(element pLevel + 1 to -1 of pPath, pValue, tNewElement)
-			put tNewElement[element pLevel + 1 of pPath] into xArray[element pLevel + 1 of pPath] 
-			
-			// update the list
-			splice convertArrayToList(tNewElement, pLevel, pPath) before element tCount of xList
-			return
-			
-		// We already have a key for the start of this path
-		else if tElement["key"] is element pLevel + 1 of pPath then
-			// The new element replaces the old one if the new one is just a string...
-			if the number of elements in pPath is pLevel + 1 then
-				put pValue into xArray[element pLevel + 1 of pPath]
-				put pValue into tElement["value"]
-				
-			// ...or if the old one was just as string.
-			else if tElement["leaf"] then
-				setValueOnPath(element pLevel + 2 to -1 of pPath, pValue, tNewElement)
-				put tNewElement into xArray[element pLevel + 1 of pPath]
-				splice convertArrayToList(tNewElement, pLevel, pPath) after element tCount of xList 
 
-			// Otherwise, go one step further into the path and set
-			else
-				setDataListOnPath(pPath, pValue, pLevel + 1, element tCount + 1 to -1 of xList, xArray[element pLevel + 1 of pPath])
-			end if
+	variable tPath as List
+	if pLevel is 0 then
+		put [] into tPath
+	else
+		put element 1 to pLevel of pPath into tPath
+	end if
+		
+	// If we're past the end of the list, we just need to add the current key 
+	if pStart >= the number of elements in xList then
+		splice convertArrayToList(pArray, pLevel, tPath) after element -1 of xList
+		return
+	end if	
+	
+	// Go through the list looking for the key at the appropriate level
+	repeat with tCount from pStart + 1 up to the number of elements in xList
+		put element tCount of xList into tElement
+
+		// Skip any elements of the list that are children at the level we're looking
+		if tElement["indent"] > pLevel then
+			next repeat
+		end if
+		
+		// if the next indent is less that where we're looking, we know this key is
+		// new and can be added below the current one.
+		if tElement["indent"] < pLevel then
+			splice convertArrayToList(pArray, pLevel, tPath) before element tCount of xList
+			return
+		end if	
+
+		// Otherwise the level is correct and we compare keys to find where to put the value
+		variable tComparison as Integer
+		put CompareKeys(element pLevel + 1 of pPath, tElement["key"]) into tComparison
+		
+		// If this is greater than the key at the current row, go to the next row
+		if tComparison is 1 then
+			next repeat
+		end if
+		
+		// If it is less, then add the key before the current row
+		if tComparison is -1 then
+			splice convertArrayToList(pArray, pLevel, tPath) before element tCount of xList
 			return
 		end if
+		
+		// If we get here, the key already exists and we're either replacing it or recursing
+		if tElement["leaf"] or tElement["folded"] then
+			// If the old element was a leaf or was folded then just replace it - we don't have to
+			//  deal with potentially removing subelements
+			splice convertArrayToList(pArray, pLevel, tPath) into element tCount to tCount of xList
+		else if the number of elements in pPath is pLevel + 1 then
+			// We have a previously unfolded subelement, so remove its subelements and re-unfold
+			deleteSubElements(tCount, tElement["indent"], xList)
+			splice convertArrayToList(pArray, pLevel, tPath) into element tCount to tCount of xList
+		else
+			setValueOfDataListOnPath(pPath, pValue, pLevel + 1, tCount, pArray[element pLevel + 1 of pPath], xList)
+		end if		
+		
+		exit repeat
 	end repeat
-	
-	// If we reached the end of the list then append this to the end
-	setValueOnPath(element pLevel + 1 to -1 of pPath, pValue, tNewElement)
-	put tNewElement[element pLevel + 1 of pPath] into xArray[element pLevel + 1 of pPath] 
-	splice convertArrayToList(tNewElement, pLevel, pPath) after element tCount of xList
 end handler
 
 --------------------------------------------------------------------------------
