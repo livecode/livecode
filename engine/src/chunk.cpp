@@ -3139,8 +3139,12 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
     MCAutoValueRef t_valueref;
     bool t_exec_expr = false;
 
-    if (source != NULL && url == NULL && stack == NULL && background == NULL && card == NULL
-        && group == NULL && object == NULL)
+    if (iselementchunk())
+    {
+        ctxt . LegacyThrow(EE_CHUNK_OBJECTNOTCONTAINER);
+        return;
+    }
+    else if (source != NULL && url == NULL && noobjectchunks())
     {
         if (desttype != DT_OWNER)
         {
@@ -3534,7 +3538,12 @@ Exec_stat MCChunk::set_legacy(MCExecPoint &ep, Preposition_type ptype)
 
 bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCValueRef p_value, bool p_unicode)
 {
-    if (destvar != nil)
+    if (iselementchunk())
+    {
+        ctxt . LegacyThrow(EE_CHUNK_SETNOTACONTAINER);
+        return false;
+    }
+    else if (destvar != nil)
     {
         MCVariableChunkPtr t_var_chunk;
         if (!evalvarchunk(ctxt, false, true, t_var_chunk))
@@ -3618,7 +3627,12 @@ bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCValueRef p_val
 
 bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCExecValue p_value, bool p_unicode)
 {    
-    if (destvar != nil)
+    if (iselementchunk())
+    {
+        ctxt . LegacyThrow(EE_CHUNK_SETNOTACONTAINER);
+        return false;
+    }
+    else if (destvar != nil)
     {
         MCVariableChunkPtr t_var_chunk;
         if (!evalvarchunk(ctxt, false, true, t_var_chunk))
