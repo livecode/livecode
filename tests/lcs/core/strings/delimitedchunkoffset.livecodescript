@@ -39,6 +39,9 @@ on TestItemOffset
     TestAssert tMatch && "whole : not partial item offset in middle", itemOffset("ar", "foof,barb,dezd") is 0
     TestAssert tMatch && "whole : not partial item offset at end", itemOffset("zd", "foof,barb,dezd") is 0
     TestAssert tMatch && "whole : not partial list item offset", itemOffset("of,barb,de", "foof,barb,dezd") is 0
+
+    TestAssert tMatch && "whole : whole repeated item offset", itemOffset("barb", "foofbarb,foof,barb,dezd") is 3
+    TestAssert tMatch && "whole : whole repeated list item offset", itemOffset("barb,dezd", "bard,dezdfoof,foof,barb,dezd") is 4
   end repeat
 
   set the wholeMatches to true
@@ -78,6 +81,9 @@ on TestLineOffset
     TestAssert tMatch && "whole : not partial item offset in middle", lineOffset("ar", "foof,barb,dezd") is 0
     TestAssert tMatch && "whole : not partial item offset at end", lineOffset("zd", "foof,barb,dezd") is 0
     TestAssert tMatch && "whole : not partial list item offset", lineOffset("of,barb,de", "foof,barb,dezd") is 0
+
+    TestAssert tMatch && "whole : whole repeated line offset", lineOffset("barb", "foofbarb,foof,barb,dezd") is 3
+    TestAssert tMatch && "whole : whole repeated list line offset", lineOffset("barb,dezd", "bard,dezdfoof,foof,barb,dezd") is 4
   end repeat
 
   set the wholeMatches to true
