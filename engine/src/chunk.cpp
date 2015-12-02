@@ -291,7 +291,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 				sp.backup();
 				return PS_NORMAL;
 			case TT_TO:
-				if (curref != NULL && lterm >= CT_LINE)
+				if (curref != NULL && MCChunkTermHasRange(lterm))
 				{
 					if (curref->etype == CT_RANGE)
 					{
@@ -5827,4 +5827,9 @@ bool MCChunkTermIsNestable(Chunk_term p_chunk_term)
         default:
             return false;
     }
+}
+
+bool MCChunkTermHasRange(Chunk_term p_chunk_term)
+{
+    return p_chunk_term >= CT_LINE && p_chunk_term < CT_ELEMENT;
 }

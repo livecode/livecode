@@ -265,5 +265,6 @@ public:
 
 MCChunkType MCChunkTypeFromChunkTerm(Chunk_term p_chunk_term);
 bool MCChunkTermIsNestable(Chunk_term p_chunk_term);
+bool MCChunkTermHasRange(Chunk_term p_chunk_term);
 
 #endif
