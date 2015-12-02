@@ -44,6 +44,10 @@ class MCChunk : public MCExpression
 	MCCRef *card;
 	MCCRef *group;
 	MCCRef *object;
+    
+    // [[ Element Chunk ]] Add element chunk
+    MCCRef *element;
+    
 	MCCRef *cline;
 	MCCRef *token;
 	MCCRef *item;
@@ -237,15 +241,21 @@ public:
 	{
 		destobj = d;
 	}
-	Boolean nochunks()
+	bool notextchunks()
 	{
         // SN-2014-03-21: [[ Bug 11954 ]] Typo was ensuring to return false in any case
 		return cline == NULL && paragraph == NULL && sentence == NULL && item == NULL
                 && trueword == NULL && word == NULL && token == NULL && character == NULL
                 && codepoint == NULL && codeunit == NULL && byte == NULL;
 	}
+    bool noobjectchunks()
+    {
+        return stack == nil && background == nil && card == nil
+                && group == nil && object == nil;
+    }
 };
 
 MCChunkType MCChunkTypeFromChunkTerm(Chunk_term p_chunk_term);
+bool MCChunkTermIsNestable(Chunk_term p_chunk_term);
 
 #endif

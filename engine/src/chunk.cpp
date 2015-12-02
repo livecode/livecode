@@ -127,6 +127,7 @@ MCCRef::~MCCRef()
 MCChunk::MCChunk(Boolean isforset)
 {
 	url = stack = background = card = group = object = NULL;
+    element = NULL;
 	cline = item = word = token = character = NULL;
     paragraph = sentence = trueword = NULL;
     codepoint = codeunit = byte = NULL;
@@ -168,6 +169,12 @@ MCChunk::~MCChunk()
 		object = object->next;
 		delete tptr;
 	}
+    while (element != NULL)
+    {
+		MCCRef *tptr = element;
+		element = element->next;
+		delete tptr;
+    }
 	delete cline;
 	delete item;
 	delete word;
@@ -354,7 +361,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 				case CT_TYPES:
 					// MW-2011-08-08: [[ Bug ]] Allow control ... of control ...
 					if ((lterm != CT_UNDEFINED && nterm > lterm)
-					    || (nterm == lterm && nterm != CT_GROUP && nterm != CT_LAYER && nterm != CT_STACK))
+					    || (nterm == lterm && !MCChunkTermIsNestable(nterm)))
 					{
 						MCperror->add(PE_CHUNK_BADORDER, sp);
 						return PS_ERROR;
@@ -452,6 +459,12 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 						object = curref;
 						break;
 
+                    case CT_ELEMENT:
+                        // Allow a chain of element chunks
+                        curref -> next = element;
+                        element = curref;
+                        break;
+                            
 					case CT_LINE:
 						cline = curref;
                         break;
@@ -489,6 +502,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 						fprintf(stderr, "MCChunk: ERROR bad chunk type %d\n", nterm);
 						break;
 					}
+                    // All text chunks and the element chunk need a target
 					if (nterm < CT_LINE)
 						need_target = False;
 					lterm = nterm;
@@ -5752,5 +5766,19 @@ MCChunkType MCChunkTypeFromChunkTerm(Chunk_term p_chunk_term)
             return kMCChunkTypeByte;
         default:
             MCUnreachableReturn(kMCChunkTypeLine);
+    }
+}
+
+bool MCChunkTermIsNestable(Chunk_term p_chunk_term)
+{
+    switch (p_chunk_term)
+    {
+        case CT_STACK:
+        case CT_GROUP:
+        case CT_LAYER:
+        case CT_ELEMENT:
+            return true;
+        default:
+            return false;
     }
 }
