@@ -162,28 +162,21 @@ private command invokeTest pInfo
    dispatch "TestTearDown" to tStackName
 end invokeTest
 
--- Add the unit test library stack to the backscripts
+-- Add the test library stack to the backscripts
 private command invokeLoadLibrary pInfo
-   local tStackName, tStackFile
+	-- Compute the filename of the library stack
+	local tFilename
+	put pInfo["self-script"] into tFilename
 
-   -- This should auto-load the library
-   put invokeGetLibraryStack(pInfo) into tStackFile
-   put the name of stack tStackFile into tStackName
+	set the itemDelimiter to slash
+	put "_testlib.livecodescript" into item -1 of tFilename
 
-   -- Add the library to the backscripts
-   insert the script of stack tStackName into back
+	-- Load the library
+	local tStackname
+	put the name of stack tFilename into tStackname
+
+	send "revLoadLibrary" to stack tStackname
 end invokeLoadLibrary
-
--- Return the filename of the unit test library stack
-private function invokeGetLibraryStack pInfo
-   local tFilename
-   put pInfo["self-script"] into tFilename
-
-   set the itemDelimiter to slash
-   put "_testlib.livecodescript" into item -1 of tFilename
-
-   return tFilename
-end invokeGetLibraryStack
 
 ----------------------------------------------------------------
 -- Support for running tests
