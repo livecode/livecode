@@ -378,6 +378,8 @@ public handler OnCreate() returns nothing
 	
 	put the empty array into mFoldState
 	put the empty array into mData	
+    put [] into mDataList
+    push the empty array onto mDataList
 end handler
 
 public handler OnSave(out rProperties as Array)
@@ -1141,12 +1143,13 @@ end handler
 // 	the value of xArray[element 1 of pPath][element 2 of pPath]... is pValue
 // 	creating the keys if necessary
 private handler setValueOnPath(in pPath as List, in pValue as any, inout xArray as Array)
-	if the number of elements in pPath is 1 then
+    if (element 1 of pPath) is not among the keys of xArray then
+        put the empty array into xArray[element 1 of pPath]
+    end if
+    
+    if the number of elements in pPath is 1 then
 		put pValue into xArray[element 1 of pPath]
 	else
-		if (element 1 of pPath) is not among the keys of xArray then
-			put the empty array into xArray[element 1 of pPath]
-		end if
 		setValueOnPath(element 2 to -1 of pPath, pValue, xArray[element 1 of pPath])
 	end if
 end handler
@@ -1638,7 +1641,6 @@ private handler setArrayData(in pData as Array) returns nothing
 	redraw all
 end handler
 
-// Replace the existing data wholesale with a new array pData
 public handler getArrayDataOfElement(in pPath as List) returns any
     variable tValue
     put mData into tValue
@@ -1660,12 +1662,10 @@ public handler setArrayDataOfElement(in pPath as List, in pValue as any) returns
 	// Update the display list
 	setValueOfDataListOnPath(pPath, pValue, 0, 1, mData, mDataList)
 	
-	// Call unfold on the changed path. This only results in a display change if
-	//  all keys in pPath except the last are already unfolded.
-	unfoldPath(pPath)
-	
 	post "dataChanged"
 	
+	// The data count may have changed.
+	put true into mRecalculate
 	put true into mUpdateSeparator
 	redraw all
 end handler
