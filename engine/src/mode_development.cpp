@@ -524,7 +524,7 @@ void MCStack::mode_load(void)
 		MClockmessages++;
         MCExecValue t_value;
         MCExecContext ctxt(nil, nil, nil);
-        getcustomprop(ctxt, kMCEmptyName, t_ide_override_name, t_value);
+        getcustomprop(ctxt, kMCEmptyName, t_ide_override_name, nil, t_value);
 		MClockmessages--;
 
 		bool t_treat_as_ide;

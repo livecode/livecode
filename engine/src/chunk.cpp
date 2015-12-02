@@ -4564,16 +4564,16 @@ bool MCChunk::getsetcustomprop(MCExecContext &ctxt, MCNameRef p_prop_name, MCNam
         if (p_index_name == nil)
         {
             if (p_is_get_operation)
-                t_success = t_object -> getcustomprop(ctxt, t_object -> getdefaultpropsetname(), p_prop_name, r_value);
+                t_success = t_object -> getcustomprop(ctxt, t_object -> getdefaultpropsetname(), p_prop_name, *t_path, r_value);
             else
-                t_success = t_object -> setcustomprop(ctxt, t_object -> getdefaultpropsetname(), p_prop_name, r_value);
+                t_success = t_object -> setcustomprop(ctxt, t_object -> getdefaultpropsetname(), p_prop_name, *t_path, r_value);
         }
         else
         {
             if (p_is_get_operation)
-                t_success = t_object -> getcustomprop(ctxt, p_prop_name, p_index_name, r_value);
+                t_success = t_object -> getcustomprop(ctxt, p_prop_name, p_index_name, *t_path, r_value);
             else
-                t_success = t_object -> setcustomprop(ctxt, p_prop_name, p_index_name, r_value);
+                t_success = t_object -> setcustomprop(ctxt, p_prop_name, p_index_name, *t_path, r_value);
         }
     }
     

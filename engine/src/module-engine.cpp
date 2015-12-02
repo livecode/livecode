@@ -237,7 +237,7 @@ MCValueRef MCEngineGetPropertyOfObject(MCExecContext &ctxt, MCStringRef p_proper
 		t_propset_name = p_object -> getdefaultpropsetname();
 		if (!MCNameCreate(p_property, &t_propset_key))
 			return nil;
-		p_object -> getcustomprop(ctxt, *t_propset_name, *t_propset_key, t_value);
+		p_object -> getcustomprop(ctxt, *t_propset_name, *t_propset_key, nil, t_value);
 	}
 	else
 		p_object -> getprop(ctxt, p_part_id, t_prop, nil, False, t_value);
@@ -309,7 +309,7 @@ void MCEngineSetPropertyOfObject(MCExecContext &ctxt, MCStringRef p_property, MC
             MCValueRelease(t_value_copy);
             return;
         }
-		p_object -> setcustomprop(ctxt, *t_propset_name, *t_propset_key, t_value);
+		p_object -> setcustomprop(ctxt, *t_propset_name, *t_propset_key, nil, t_value);
     }
     else
 		p_object -> setprop(ctxt, p_part_id, t_prop, nil, False, t_value);
