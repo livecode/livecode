@@ -22,6 +22,19 @@ Open the `livecode.sln` solution file in Visual Studio, and build the "check" pr
 
 There's not currently a convenient way to run the LiveCode Script and LiveCode Builder tests on Windows.
 
+### Running tests on Emscripten
+
+To run the C++ tests, run `make check-emscripten` from the top of the livecode git repository working tree.
+
+To run the LiveCode Script tests:
+
+1) Run `tools/emscripten_testgen.sh`.  This generates an HTML5 standalone in the `_tests/emscripten` directory.
+
+2) Open `_tests/emscripten/tests.html` in a web browser.
+
+The tests are run automatically as the web page loads, and the TAP log
+output is shown in the browser.
+
 ## Writing Tests
 
 If at all possible, please add tests whenever make a change to LiveCode -- whether it's a feature added, a bug fixed, or a behaviour tweaked.

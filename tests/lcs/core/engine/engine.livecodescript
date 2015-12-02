@@ -220,11 +220,12 @@ TestAssert "test", tError is not 0
 
 end TestEngine19
 
-on TestEngine20
+on TestSystemVersion
+   if the platform is "HTML" then
+      TestSkip "systemVersion not empty", "bug 16539"
+   TestAssert "test", the systemVersion is not empty
+end TestSystemVersion
 
-TestAssert "test", the systemVersion is not empty
-
-end TestEngine20
 on TestEngine21
 
 
