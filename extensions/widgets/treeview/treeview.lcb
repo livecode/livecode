@@ -1151,11 +1151,6 @@ private handler setValueOnPath(in pPath as List, in pValue as any, inout xArray 
 	end if
 end handler
 
-// Return the whole stored array
-private handler getArrayData() returns Array
-	return mData
-end handler
-
 -- Sorts numerically, converting strings to numbers where possible
 private handler CompareKeysNumeric(in pLeft as any, in pRight as any) returns Integer
 	variable tLeft as optional Number
@@ -1630,6 +1625,11 @@ end handler
 --		Properties
 --
 --------------------------------------------------------------------------------
+
+// Return the whole stored array
+private handler getArrayData() returns Array
+	return mData
+end handler
 
 // Replace the existing data wholesale with a new array pData
 private handler setArrayData(in pData as Array) returns nothing
