@@ -223,7 +223,7 @@ bool MCWidgetBase::QueryPropertyOfChunk(MCNameRef p_property, MCNameRef p_chunk_
         if (MCHandlerTypeInfoGetParameterCount(t_handler_typeinfo) != 2)
             return false;
         
-        r_type_info = MCHandlerTypeInfoGetParameterType(t_handler_typeinfo, 2);
+        r_type_info = MCHandlerTypeInfoGetParameterType(t_handler_typeinfo, 1);
     }
 
     return true;
