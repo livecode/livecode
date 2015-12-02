@@ -17,7 +17,10 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on TestFolderInListing
-   
+   if the platform is "HTML" then
+      TestSkip "(folder) is in the folder listing", "bug 16543"
+      exit TestFolderInListing
+   end if
    
    set the defaultFolder to specialFolderPath("temporary")
    
@@ -36,6 +39,11 @@ on TestFolderInListing
 end TestFolderInListing
 
 on TestBugfix12039
+   if the platform is "HTML" then
+      TestSkip "(file) is among the files", "bug 16543"
+      exit TestFolderInListing
+   end if
+
    // 12039
    put the defaultFolder into tOldCwd
    set the defaultFolder to specialFolderPath("temporary")
