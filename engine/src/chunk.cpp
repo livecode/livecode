@@ -224,8 +224,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 			{
 				if (need_target)
 				{
-					if (desttype == DT_ISDEST && stack == NULL && background == NULL
-					        && card == NULL && group == NULL && object == NULL)
+					if (desttype == DT_ISDEST && noobjectchunks())
 					{
 						MCExpression *newfact = NULL;
 						// MW-2011-06-22: [[ SERVER ]] Update to use SP findvar method to take into account
@@ -269,13 +268,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 				//   then it should be evaluated as a string. However, if the string chunk
 				//   is of a previously parsed object then we must pass as a dest so the
 				//   object resolves correctly.
-				if (desttype != DT_ISDEST && (cline != NULL || paragraph != NULL || sentence != NULL
-				                              || item != NULL || word != NULL || trueword != NULL
-				                              || token != NULL || character != NULL || codepoint != NULL
-                                              || codeunit != NULL || byte != NULL) &&
-											 (stack == nil && background == nil &&
-											  card == nil && group == nil &&
-											  object == nil))
+				if (desttype != DT_ISDEST && !notextchunks() && noobjectchunks())
 				{
 					sp.backup();
 					if (sp.parseexp(True, False, &source) != PS_NORMAL)
@@ -544,9 +537,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 						if (function == F_SELECTED_LINE || function == F_SELECTED_CHUNK)
 						{}
 					}
-					else if (cline != NULL || paragraph != NULL || sentence != NULL || item != NULL
-                             || trueword != NULL || word != NULL || token != NULL || character != NULL
-                             || codepoint != NULL || codeunit != NULL || byte != NULL)
+					else if (!notextchunks())
 					{
 						sp.backup();
 						if (sp.parseexp(True, False, &source) != PS_NORMAL)
@@ -650,8 +641,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 			default: /* factor */
 				if (need_target)
 				{
-					if (stack != NULL || background != NULL || card != NULL
-					        || group != NULL || object != NULL)
+					if (!noobjectchunks())
 					{
 						MCperror->add
 						(PE_CHUNK_NOCHUNK, sp);
@@ -681,8 +671,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 		{ /* token type != ST_ID */
 			if (need_target)
 			{
-				if (stack != NULL || background != NULL || card != NULL
-				        || group != NULL || object != NULL)
+				if (!noobjectchunks())
 				{
 					MCperror->add(PE_CHUNK_NOCHUNK, sp);
 					return PS_ERROR;
@@ -1037,7 +1026,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
                 break;
         }
     }
-    else if (stack == nil && background == nil && card == nil && group == nil && object == nil)
+    else if (noobjectchunks())
     {
         // Optional obj: this doesn't throw an error
         //  but rather leave r_object . object set to nil
@@ -3197,8 +3186,7 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
 
         if (t_object . object == nil)
         {
-            if (url == NULL || stack != NULL || background != NULL ||
-                card != NULL || group != NULL || object != NULL)
+            if (url == NULL || !noobjectchunks())
             {
                 ctxt . LegacyThrow(EE_CHUNK_CANTFINDOBJECT);
                 return;
@@ -4253,9 +4241,7 @@ bool MCChunk::getobjforprop(MCExecContext& ctxt, MCObject*& r_object, uint4& r_p
         && function != F_SELECTED_IMAGE
         && function != F_DRAG_SOURCE && function != F_DRAG_DESTINATION)
 		tfunction = True;
-	if (!tfunction && cline == nil && paragraph == nil && sentence == nil
-        && item == nil && trueword == nil && word == nil && token == nil
-        && character == nil && codepoint == nil && codeunit == nil && byte == nil)
+	if (!tfunction && notextchunks())
 	{
 		r_object = objptr;
 		r_parid = parid;
