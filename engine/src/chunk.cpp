@@ -4551,6 +4551,10 @@ bool MCChunk::getsetcustomprop(MCExecContext &ctxt, MCNameRef p_prop_name, MCNam
     if (t_success)
         t_success = getobjforprop(ctxt, t_object, t_parid);
     
+    MCAutoProperListRef t_path;
+    if (t_success && iselementchunk())
+        t_success = evalelementchunk(ctxt, &t_path);
+    
     // MW-2011-09-02: Moved handling of customprop != nil case into resolveprop,
     //   so t_prop_name is always non-nil if t_prop == P_CUSTOM.
     // MW-2011-11-23: [[ Array Chunk Props ]] Moved handling of arrayprops into
@@ -4720,6 +4724,48 @@ bool MCChunk::evalobjectchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_fo
     r_chunk . chunk = !t_function ? getlastchunktype() : CT_CHARACTER;
 
     return true;
+}
+
+bool MCChunk::evalelementchunk(MCExecContext& ctxt, MCProperListRef& r_elements)
+{
+    MCAutoProperListRef t_elements;
+    if (!MCProperListCreateMutable(&t_elements))
+        return false;
+    
+    MCCRef *t_chunk;
+
+    for (t_chunk = element; t_chunk != nil; t_chunk = t_chunk -> next)
+    {
+        MCValueRef t_evaluated;
+        if (!ctxt . EvalExprAsValueRef(t_chunk -> startpos, EE_CHUNK_BADEXPRESSION, t_evaluated))
+            return false;
+    
+        if (MCValueIsArray(t_evaluated))
+        {
+            if (!MCExtensionConvertFromScriptType(ctxt, kMCProperListTypeInfo, t_evaluated))
+            {
+                MCValueRelease(t_evaluated);
+                return false;
+            }
+            
+            if (!MCProperListAppendList(*t_elements, (MCProperListRef)t_evaluated))
+                return false;
+        }
+        else
+        {
+            if (!MCExtensionConvertFromScriptType(ctxt, kMCStringTypeInfo, t_evaluated))
+            {
+                MCValueRelease(t_evaluated);
+                return false;
+            }
+            
+            if (!MCProperListPushElementOntoBack(*t_elements, t_evaluated))
+                return false;
+        }
+        
+    }
+        
+    return MCProperListCopy(*t_elements, r_elements);
 }
 
 #ifdef LEGACY_EXEC

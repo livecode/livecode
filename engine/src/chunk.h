@@ -101,7 +101,8 @@ public:
     bool evalobjectchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force, MCObjectChunkPtr& r_chunk);
     bool evalvarchunk(MCExecContext& ctxt, bool whole_chunk, bool force, MCVariableChunkPtr& r_chunk);
     bool evalurlchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force, int p_preposition, MCUrlChunkPtr& r_chunk);
-	
+	bool evalelementchunk(MCExecContext& ctxt, MCProperListRef& r_elements);
+    
 	void take_components(MCChunk *tchunk);
 
     // getobj calls getoptionalobj and throws in case nothing is returned.
@@ -228,6 +229,13 @@ public:
     bool isdatachunk(void) const
     {
         return (byte != nil);
+    }
+    
+    // Returns true if the element chunk is non-nil and thus a property of
+    // the chunk expression should be evaluated accordingly
+    bool iselementchunk(void) const
+    {
+        return (element != nil);
     }
 #ifdef LEGACY_EXEC
 	// Returns the field, part and range of the text chunk
