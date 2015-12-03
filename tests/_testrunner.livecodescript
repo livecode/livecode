@@ -147,6 +147,14 @@ private command invokeTest pInfo
    -- This should auto-load the test script
    put the name of stack pInfo["invoke"]["script"] into tStackName
 
+   -- Check that the stack script actually compiles
+   set the script of tStackname to the script of tStackname
+   put the result into tResult
+   if tResult is not empty then
+      TestDiagnostic tResult
+   end if
+   TestAssert "script compiles", tResult is empty
+
    -- Dispatch the test setup command, and check if skipping was requested
    dispatch "TestSetup" to tStackName
    put the result into tResult
