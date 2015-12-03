@@ -473,7 +473,7 @@ end TestEngine35
 on TestEngine36
    if the platform is "HTML" then
       TestSkip "cancel message", "bug 16076"
-      exit TestEngine25
+      exit TestEngine36
    end if
 
 local tTime

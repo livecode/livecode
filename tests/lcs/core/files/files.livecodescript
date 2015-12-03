@@ -316,7 +316,7 @@ end TestLaunch
 
 
 on TestLaunchWith
-   if the plaform is "HTML" then
+   if the platform is "HTML" then
       TestSkip "launch subprocess with", "HTML5 platform does not support subprocesses"
       exit TestLaunchWith
    end if
