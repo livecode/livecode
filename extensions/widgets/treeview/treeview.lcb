@@ -1677,13 +1677,17 @@ private handler setArrayData(in pData as Array) returns nothing
 	redraw all
 end handler
 
-public handler getArrayDataOfElement(in pPath as List) returns any
+public handler getArrayDataOfElement(in pPath as List) returns optional any
     variable tValue
     put mData into tValue
 
     variable tElement as String
 	repeat for each element tElement in pPath
-        put tValue[tElement] into tValue
+        if tValue is an array and tElement is among the keys of tValue then
+            put tValue[tElement] into tValue
+        else
+            return nothing
+        end if
     end repeat
 
     return tValue
