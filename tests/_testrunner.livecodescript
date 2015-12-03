@@ -99,7 +99,7 @@ private command doRun pInfo
    put pInfo["args"][2] into tScript
    put pInfo["args"][3] into tCommand
 
-   runLoadLibrary
+   runLoadLibrary pInfo
    
    if tScript is empty then
       runAllScripts pInfo
