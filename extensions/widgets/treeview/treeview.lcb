@@ -76,15 +76,51 @@ metadata svgicon is "M152.4,249.7c-6.4,0-11.8,4.3-13.5,10.1h-10v-26.7h10c1.7,5.8
 
 -- property declarations
 /**
-Syntax: set the arrayData of <widget> to <pArray>
-Syntax: get the arrayData of <widget>
-Summary: The array being displayed by the widget
+Syntax: set the arrayData of [element <pIndex> of [element <pIndex> of ...]] <widget> to <pValue>
+Syntax: get the arrayData of [element <pIndex> of [element <pIndex> of ...]] <widget>
+
+Summary: The data from the array being displayed by the widget
 
 Parameters:
-pArray (array): The array data.
+pValue: Any value to insert at the specified location in the array.
+pIndex: Either a string, or a numerically indexed array, giving the list of keys for the target array element.
+
+Example:
+local tArray
+put "a" into tArray["x"]["y"]
+
+local tTreeView
+create widget "Tree View" as "com.livecode.widget.treeView"
+put it into tTreeView
+
+set the arrayData of tTreeView to tArray
+
+put the arrayData of element "y" of element "x" of tTreeView -- puts "a"
+
+Example:
+local tArray
+put "a" into tArray["x"]["y"]["z"]
+
+local tTreeView
+create widget "Tree View" as "com.livecode.widget.treeView"
+put it into tTreeView
+
+set the arrayData of tTreeView to tArray
+
+local tPath
+put "x" into tPath[1]
+put "y" into tPath[2]
+put "z" into tPath[3]
+
+set the arrayData of element tPath of tTreeView to "b"
+
+put the arrayData of tTreeView into tArray
+put tArray["x"]["y"]["z"] -- puts "b"
+
 
 Description:
-The arrayData is the data currently being displayed by the tree view widget.
+The <arrayData> is the data currently being displayed by the tree view widget. Using the `of element` form allows
+access to the individual nodes of the tree view via the path to its elements.
 **/
 
 property arrayData 					get getArrayData 				set setArrayData
