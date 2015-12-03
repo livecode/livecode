@@ -455,7 +455,7 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
    put there is a pSource into tIsScript
    
    # Keep track of whether we should warn about the comment style
-   local tCommentWarning
+   local tNumCommentStars
    
    repeat for each line tLine in pText
       # Check to see if this is the start of a handler / syntax or a block of comments 
@@ -557,9 +557,9 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
                   
                   # Warn when docs are contained in /* comments instead of /**                  
                   if tFirstWord begins with "/**" then
-                     put false into tCommentWarning
+                     put 2 into tNumCommentStars
                   else
-                     put true into tCommentWarning
+                     put 1 into tNumCommentStars
                   end if
                   
                   # If this is script, and this is an initial block of comments,
@@ -575,7 +575,8 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
                   local tCommentOffset
                   put true into tInComment
                   put offset("/*", tLine) into tCommentOffset
-                  put char tCommentOffset + 2 to -1 of tLine into tLine
+                  put char (tCommentOffset + tNumCommentStars + 1) to -1 of tLine into tLine
+                  
                   # If there's nothing else on this line, don't add it.
                   if word 1 of tLine is empty then next repeat
                end if
@@ -588,7 +589,13 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
          if word -1 of tLine ends with "*/" then
             put false into tInComment
             put offset("*/", tLine) into tCommentOffset
-            put char 1 to tCommentOffset - 1 of tLine into tLine
+            delete char tCommentOffset to -1 of tLine
+            
+            # Remove another star if this is a double-star comment closer
+            if char -1 of tLine is "*" then
+               delete char -1 of tLine
+            end if
+            
             # If there's nothing else on this line, don't add it.
             if word 1 of tLine is empty then
                next repeat
@@ -643,10 +650,10 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
             end switch
             
             # Warn about comment format if appropriate
-            if tCommentWarning then
+            if tNumCommentStars is 1 then
                logWarning "Docs comments for" && tEntryData["type"] && tEntryData["name"] && "should be contained in /** comments", pSource
             end if	
-            put false into tCommentWarning
+            put empty into tNumCommentStars
             
          else
             if tEntryData["need_docs"] then
@@ -931,7 +938,7 @@ end revDocsCollectGlossarySynonyms
 private function __elementRegex
    # Regex used to determine if this line starts a new element
    # Matched substrings are element name, (optional) param type, same line element content
-   return "^ *([tT]he [rR]esult|\w*) *(?:\(( *(?:optional |in |out |inout )?<?\w*>?) *\))? *: *(.*)"
+   return "^ *([tT]he [rR]esult|\w+) *(?:\(( *(?:optional |in |out |inout )?<?\w*>?) *\))? *: *(.*)"
 end __elementRegex
 
 /*
@@ -1159,7 +1166,7 @@ function revDocsParseElements pExtractedA, pBlocksA, pFilename
             local tCount
             put 1 into tCount
             repeat for each item tItem in tElementA["content"]
-               put word 1 to -1 of tItem into tParsedA[tKey][tCount]
+               put tolower(word 1 to -1 of tItem) into tParsedA[tKey][tCount]
                add 1 to tCount
             end repeat
             break
@@ -1259,7 +1266,8 @@ function revDocsParseDocTextToLibraryArray pFile, pText, pLibraryName, pAuthor
    local tLibraryA
    put revDocsParseDocText(pText, pFile) into tLibraryA
    if pLibraryName is not empty then
-      put pLibraryName into tLibraryA["name"]
+      put pLibraryName into tLibraryA["display name"]
+      put revDocsModifyForUrl(pLibraryName) into tLIbraryA["name"]
    end if
    put pAuthor into tLibraryA["author"]
    return tLibraryA
@@ -1337,7 +1345,8 @@ function revDocsParseDocText pText, pFilename
          case empty
             exit repeat
          case "Library"
-            put tElementsA[tStartNum]["content"] into tParsedA["name"]
+            put tElementsA[tStartNum]["content"] into tParsedA["display name"]
+            put revDocsModifyForURL(tParsedA["display name"]) into tParsedA["name"]
             add 1 to tStartNum
             break
          case "Description"
@@ -1367,7 +1376,7 @@ function revDocsParseDocText pText, pFilename
    
    local tAssociationsDefault
    put "Associations" into tAssociationsDefault["name"]
-   put tParsedA["name"] into tAssociationsDefault["content"]
+   put tParsedA["display name"] into tAssociationsDefault["content"]
    repeat with tElementNum = tStartNum to the number of elements in tElementsA
       add 1 to tEntryElementCount
       local tElementA
@@ -1888,8 +1897,8 @@ end __tabs
 function revDocsFormatLibraryArrayAsJSON pLibraryA
    local tJSON
    put "{" after tJSON
-   put return & __tabs(2) & keyValue("display name",pLibraryA["name"]) & comma after tJSON
-   put return & __tabs(2) & keyValue("name",revDocsModifyForURL(pLibraryA["name"])) & comma after tJSON
+   put return & __tabs(2) & keyValue("display name",pLibraryA["display name"]) & comma after tJSON
+   put return & __tabs(2) & keyValue("name",pLibraryA["name"]) & comma after tJSON
    put return & __tabs(2) & keyValue("author",pLibraryA["author"]) & comma after tJSON
    put return & __tabs(2) & escape("doc") & ":[" after tJSON
    
@@ -2276,3 +2285,141 @@ function revDocsFormatLibraryDataAsJSON pID, pLibraryDataA
    return tJSON
    
 end revDocsFormatLibraryDataAsJSON
+
+##################################################
+#
+#        Docs API database
+#
+##################################################
+
+constant kAPIDatabaseFile = "api.sqlite"
+
+on revDocsOpenAPIDatabase pFolder
+   local tDefaultFolder
+   put the defaultFolder into tDefaultFolder
+   set the defaultFolder to pFolder
+   
+   local tConnection
+   put revOpenDatabase("sqlite",kAPIDatabaseFile,,,,,,) into tConnection
+   
+   if tConnection is not a number then
+      return "unable to create sqlite API database" & return & the result
+   end if
+   
+   return tConnection
+end revDocsOpenAPIDatabase
+
+on revDocsUpdateDatabase pConnection, pLibraryA
+   if pConnection is empty then
+      return "no database connection"
+   end if
+   
+   local tSQL, tResult
+   
+   # Create the libraries table. This might already exist, so do it unchecked.
+   put "CREATE TABLE libraries(library_id integer primary key, library_name text, author text, type text)" into tSQL
+   revExecuteSQL pConnection, tSQL
+   
+   local tName
+   put pLibraryA["name"] into tName
+   if tName is empty then
+      put revDocsModifyForURL(pLibraryA["display name"]) into tName
+   end if 
+   
+   local tAuthor
+   put pLibraryA["author"] into tAuthor
+   
+   local tType
+   put pLibraryA["type"] into tType
+   
+   # Try an UPDATE first. If this fails, the entry might not exist already, so try an INSERT.
+   put "UPDATE libraries SET author = :1, type = :2 WHERE library_name = :3" into tSQL
+   revExecuteSQL pConnection, tSQL, "tAuthor", "tType", "tName" 
+   put the result into tResult
+   if tResult is not a number or tResult is 0 then
+      put "INSERT into libraries VALUES(NULL, :1, :2, :3)" into tSQL
+      revExecuteSQL pConnection, tSQL, "tName", "tAuthor", "tType"
+      put the result into tResult
+   end if
+   
+   if tResult is not a number then
+      return "unable to open table 'libraries'" & return & tResult
+   end if
+   
+   # Create the library data table. This might already exist, so do it unchecked.
+   put "CREATE TABLE dictionary_data(library_id integer, entry_name text, entry_type text, entry_data blob)" into tSQL
+   revExecuteSQL pConnection, tSQL
+   
+   revDocsUpdateLibrary pConnection, tName, pLibraryA["doc"]
+   if the result is not empty then
+      return "unable to update data for library" && tName & return & the result
+   end if
+   
+   return empty
+end revDocsUpdateDatabase
+
+on revDocsUpdateLibrary pConnection, pName, pDocDataA
+   # Find the library id
+   local tSQL, tLibraryID
+   put "SELECT library_id FROM libraries WHERE library_name = :1" into tSQL
+   put revDataFromQuery(comma, return, pConnection, tSQL, "pName") into tLibraryID
+   
+   if the result is not a number then
+      return "error finding library id for" && pName & return & the result
+   end if
+   
+   local tDocA, tDocName
+   repeat for each element tDocA in pDocDataA
+      put tDocA["name"] into tDocName
+      if tDocName is empty then
+         put revDocsModifyForURL(tDocA["display name"]) into tDocName
+      end if 
+      
+      local tType
+      put tDocA["type"] into tType
+      
+      local tEncodedData, tResult
+      put arrayEncode(tDocA) into tEncodedData
+      # Try an UPDATE first. If this fails, the entry might not exist already, so try an INSERT.
+      put "UPDATE dictionary_data SET entry_data = :1 WHERE entry_name = :2 AND entry_type = :3 AND library_id = :4" into tSQL
+      revExecuteSQL pConnection, tSQL, "*btEncodedData", "tDocName", "tType", "tLibraryID"
+      put the result into tResult
+      if tResult is not a number or tResult is 0 then
+         put "INSERT into dictionary_data VALUES(:1, :2, :3, :4)" into tSQL
+         revExecuteSQL pConnection, tSQL, "tLibraryID", "tDocName", "tType", "*btEncodedData"
+         put the result into tResult
+      end if
+      
+      if tResult is not a number then
+         return "unable to insert data for" && pName & ":" & tDocName & return & the result
+      end if
+   end repeat
+   return empty
+end revDocsUpdateLibrary
+
+on revDocsRemoveLibrary pConnection, pName
+   # Find the library id
+   local tSQL, tLibraryID
+   put "SELECT library_id FROM libraries WHERE library_name = :1" into tSQL
+   put revDataFromQuery(comma, return, pConnection, tSQL, pName) into tLibraryID
+   
+   if the result is not a number then
+      return "error finding library id for" && pName & return & the result
+   end if
+   
+   # Delete all entries associated with this library
+   put "DELETE * FROM dictionary_data WHERE library_id = :1" into tSQL
+   revExecuteSQL pConnection, tSQL, "tLibraryID"
+   if the result is not a number then
+      return "unable to delete data for" && pName & return & the result
+   end if
+   
+   # Delete the library entry from the libraries table
+   put "DELETE * FROM libraries WHERE library_name = :1" into tSQL
+   revExecuteSQL pConnection, tSQL, pName 
+   if the result is not a number then
+      return "unable to remove library" && pName && "from libraries table" & return & the result
+   end if	
+   
+   return empty
+end revDocsRemoveLibrary

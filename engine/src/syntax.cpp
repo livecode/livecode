@@ -147,7 +147,7 @@ void MCSyntaxFactoryDefineParameter(MCSyntaxFactoryRef self, MCNameRef p_name, b
 static void MCSyntaxFactoryPushOperand(MCSyntaxFactoryRef self)
 {
 	if (self -> operand_index + 1 > self -> operand_capacity)
-		MCMemoryResizeArray((self -> operand_capacity == 0 ? 16 : self -> operand_capacity) * 2, self -> operand_stack, self -> operand_capacity);
+		/* UNCHECKED */ MCMemoryResizeArray((self -> operand_capacity == 0 ? 16 : self -> operand_capacity) * 2, self -> operand_stack, self -> operand_capacity);
 	
 	self -> operand_stack[self -> operand_index++] = self -> operand_count++;
 }

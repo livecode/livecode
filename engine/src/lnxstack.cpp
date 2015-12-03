@@ -292,11 +292,24 @@ void MCStack::sethints()
     // Build the class name
     MCAutoStringRef t_class_name;
     MCAutoStringRefAsCString t_class_name_cstr;
-    bool t_community;
-    t_community = MClicenseparameters.license_class == kMCLicenseClassCommunity;
+	const char *t_edition_name;
+	switch (MClicenseparameters.license_class)
+	{
+	case kMCLicenseClassProfessional:
+		t_edition_name = "business";
+		break;
+	case kMCLicenseClassCommercial:
+		t_edition_name = "indy";
+		break;
+	case kMCLicenseClassNone:
+	case kMCLicenseClassCommunity:
+	default:
+		t_edition_name = "community";
+		break;
+	}
     
     /* UNCHECKED */ MCStringCreateMutable(0, &t_class_name);
-    /* UNCHECKED */ MCStringAppendFormat(*t_class_name, "%s%s_%s", MCapplicationstring, t_community ? "community" : "", MC_BUILD_ENGINE_SHORT_VERSION);
+    /* UNCHECKED */ MCStringAppendFormat(*t_class_name, "%s%s_%s", MCapplicationstring, t_edition_name, MC_BUILD_ENGINE_SHORT_VERSION);
     /* UNCHECKED */ MCStringFindAndReplaceChar(*t_class_name, '.', '_', kMCStringOptionCompareExact);
     /* UNCHECKED */ MCStringFindAndReplaceChar(*t_class_name, '-', '_', kMCStringOptionCompareExact);
     /* UNCHECKED */ t_class_name_cstr.Lock(*t_class_name);

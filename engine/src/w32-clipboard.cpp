@@ -871,6 +871,38 @@ MCDataRef MCWin32RawClipboardItemRep::CopyData() const
 	// Release the data associated with the storage medium
 	ReleaseStgMedium(&p_medium);
 
+    // If the type was one of CF_TEXT, CF_OEMTEXT or CF_UNICODETEXT, it has
+    // probably been NUL-terminated. Because we automatically add this on the
+    // outgoing side, we should also remove it on the incoming side.
+    if (m_format.cfFormat == CF_TEXT || m_format.cfFormat == CF_OEMTEXT || m_format.cfFormat == CF_UNICODETEXT)
+    {
+        // Make the data mutable
+        MCDataMutableCopyAndRelease(t_data, t_data);
+        
+        // Trim the terminating NULL, if it exists
+        uindex_t t_length = MCDataGetLength(t_data);
+        if (m_format.cfFormat == CF_UNICODETEXT)
+        {
+            // 16-bit NUL
+            if (MCDataGetByteAtIndex(t_data, t_length-1) == 0
+                && MCDataGetByteAtIndex(t_data, t_length-2) == 0)
+            {
+                MCDataRemove(t_data, MCRangeMake(t_length-2, 2));
+            }
+        }
+        else
+        {
+            // 8-bit NUL
+            if (MCDataGetByteAtIndex(t_data, t_length-1) == 0)
+            {
+                MCDataRemove(t_data, MCRangeMake(t_length-1, 1));
+            }
+        }
+        
+        // Make the data immutable again
+        MCDataCopyAndRelease(t_data, t_data);
+    }
+    
 	// Update the data cache and return it
 	m_bytes = t_data;
 	return t_data;

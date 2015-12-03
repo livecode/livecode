@@ -21,6 +21,7 @@
 extern "C" {
 #endif
 
+extern int s_is_werror_enabled;
 extern int s_verbose_level;
 
 void InitializeReports(void);

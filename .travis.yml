@@ -38,7 +38,7 @@ addons:
   # 'coverity_scan' branch.
   coverity_scan:
     project:
-      name: "runrev/livecode"
+      name: "livecode/livecode"
       description: "Build submitted via Travis CI"
     notification_email: engineteam@livecode.com
     build_command: "make all-linux"

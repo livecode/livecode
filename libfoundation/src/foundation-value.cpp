@@ -103,7 +103,7 @@ MCTypeInfoRef MCValueGetTypeInfo(MCValueRef p_value)
     
     MCLog("%p, %d", p_value, MCValueGetTypeCode(p_value));
     
-    MCUnreachable();
+    MCUnreachableReturn(kMCNullTypeInfo);
 }
 
 MC_DLLEXPORT_DEF
@@ -219,12 +219,10 @@ hash_t MCValueHash(MCValueRef p_value)
     case kMCValueTypeCodeForeignValue:
         return __MCForeignValueHash((__MCForeignValue *)self);
 	default:
-		break;
+        break;
 	}
 
-	MCAssert(false);
-
-	return 0;
+	MCUnreachableReturn(false);
 }
 
 MC_DLLEXPORT_DEF
@@ -304,9 +302,7 @@ bool MCValueIsEqualTo(MCValueRef p_value, MCValueRef p_other_value)
 	}
 
 	// We should never get here!
-	MCAssert(false);
-
-	return false;
+	MCUnreachableReturn(false);
 }
 
 MC_DLLEXPORT_DEF
@@ -351,8 +347,7 @@ bool MCValueCopyDescription(MCValueRef p_value, MCStringRef& r_desc)
 	default:
 		return MCStringCopy (MCSTR("<unknown>"), r_desc);
 	}
-	MCUnreachable();
-	return false;
+	MCUnreachableReturn(false);
 }
 
 //////////
@@ -471,7 +466,9 @@ struct MCValuePool
     uindex_t count;
 };
 static MCValuePool *s_value_pools;
-#define kMCValuePoolSize (kMCValueTypeCodeList + 1)
+
+// Stores the number of pools that we have.
+uindex_t kMCValuePoolCount = kMCValueTypeCodeList + 1;
 
 bool __MCValueCreate(MCValueTypeCode p_type_code, size_t p_size, __MCValue*& r_value)
 {
@@ -576,7 +573,7 @@ void __MCValueDestroy(__MCValue *self)
         break;
     default:
         // Shouldn't get here
-        MCAssert(false);
+        MCUnreachableReturn();
 	}
 
     // MW-2014-03-21: [[ Faster ]] If we are pooling this typecode, and the
@@ -1069,7 +1066,7 @@ MC_DLLEXPORT_DEF MCBooleanRef kMCFalse;
 
 bool __MCValueInitialize(void)
 {
-    if (!MCMemoryNewArray(kMCValuePoolSize, s_value_pools))
+    if (!MCMemoryNewArray(kMCValuePoolCount, s_value_pools))
         return false;
     
 	if (!__MCValueCreate(kMCValueTypeCodeNull, kMCNull))
@@ -1089,7 +1086,7 @@ bool __MCValueInitialize(void)
 
 void __MCValueFinalize(void)
 {
-    for(uindex_t i = 0; i < kMCValuePoolSize; i++)
+    for(uindex_t i = 0; i < kMCValuePoolCount; i++)
         while(s_value_pools[i] . count > 0)
         {
             __MCValue *t_value;

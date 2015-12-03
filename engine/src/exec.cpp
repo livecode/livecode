@@ -656,6 +656,22 @@ bool MCExecContext::CopyElementAsFilepathArray(MCArrayRef p_array, MCNameRef p_k
 	return true;
 }
 
+
+bool MCExecContext::CopyElementAsEnum(MCArrayRef p_array, MCNameRef p_key, bool p_case_sensitive, MCExecEnumTypeInfo *p_enum_type_info, intenum_t &r_intenum)
+{
+	MCValueRef t_val = nil;
+	if (!MCArrayFetchValue(p_array, p_case_sensitive, p_key, t_val))
+		return false;
+		
+	MCExecValue t_value;
+	t_value . valueref_value = t_val;
+	t_value . type = kMCExecValueTypeValueRef;
+	
+	MCExecParseEnum(*this, p_enum_type_info, t_value, r_intenum);
+	return true;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCExecContext::CopyOptElementAsBoolean(MCArrayRef p_array, MCNameRef p_name, bool p_case_sensitive, MCBooleanRef &r_boolean)
@@ -1551,7 +1567,7 @@ static bool MCPropertyFormatPointList(MCPoint *p_list, uindex_t p_count, char_t 
 	return false;
 }
 
-static bool MCPropertyParseUIntList(MCStringRef p_input, char_t p_delimiter, uindex_t& r_count, uinteger_t*& r_list)
+static bool MCPropertyParseLooseUIntList(MCStringRef p_input, char_t p_delimiter, uindex_t& r_count, uinteger_t*& r_list)
 {
     uindex_t t_length;
 	t_length = MCStringGetLength(p_input);
@@ -1575,23 +1591,30 @@ static bool MCPropertyParseUIntList(MCStringRef p_input, char_t p_delimiter, uin
 	
 	while (t_success && t_old_offset <= t_length)
 	{
-		MCAutoStringRef t_uint_string;
-		uinteger_t t_d;
-		
+		// PM-2015-10-13: [[ Bug 16203 ]] Replace any "empty" elements with 0 in the list, ignoring trailing delimiters
 		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareExact, t_new_offset))
+		{
+			if (t_old_offset == t_length)
+				break;
 			t_new_offset = t_length;
+		}
 		
-        if (t_new_offset <= t_old_offset)
-            break;
+		if (t_new_offset == t_old_offset)
+			t_success = t_list . Push(0);
+		else
+		{
+			MCAutoStringRef t_uint_string;
+			uinteger_t t_d;
         
-		if (t_success)
-            t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_uint_string);
-		
-		if (t_success)
-			t_success = MCU_stoui4(*t_uint_string, t_d);
-		
-		if (t_success)
-			t_success = t_list . Push(t_d);
+			if (t_success)
+				t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_uint_string);
+			
+			if (t_success)
+				t_success = MCU_stoui4(*t_uint_string, t_d);
+			
+			if (t_success)
+				t_success = t_list . Push(t_d);
+		}
 		
 		t_old_offset = t_new_offset + 1;
 	}
@@ -1602,7 +1625,7 @@ static bool MCPropertyParseUIntList(MCStringRef p_input, char_t p_delimiter, uin
 	return t_success;
 }
 
-static bool MCPropertyParseDoubleList(MCStringRef p_input, char_t p_delimiter, uindex_t& r_count, double*& r_list)
+static bool MCPropertyParseLooseDoubleList(MCStringRef p_input, char_t p_delimiter, uindex_t& r_count, double*& r_list)
 {
     uindex_t t_length;
 	t_length = MCStringGetLength(p_input);
@@ -1623,26 +1646,33 @@ static bool MCPropertyParseDoubleList(MCStringRef p_input, char_t p_delimiter, u
 	t_old_offset = 0;
 	uindex_t t_new_offset;
 	t_new_offset = 0;
-	
+		
 	while (t_success && t_old_offset <= t_length)
 	{
-		MCAutoStringRef t_double_string;
-		double t_d;
-		
+		// PM-2015-10-13: [[ Bug 16203 ]] Replace any "empty" elements with 0.0 in the list, ignoring trailing delimiters
 		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareExact, t_new_offset))
+		{
+			if (t_old_offset == t_length)
+			break;
 			t_new_offset = t_length;
-		
-        if (t_new_offset <= t_old_offset)
-            break;
-        
-		if (t_success)
-            t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_double_string);
-		
-		if (t_success)
-			t_success = MCTypeConvertStringToReal(*t_double_string, t_d);
-		
-		if (t_success)
-			t_success = t_list . Push(t_d);
+		}
+
+		if (t_new_offset == t_old_offset)
+			t_success = t_list . Push(0.0);
+		else
+		{
+			MCAutoStringRef t_double_string;
+			double t_d;
+			
+            if (t_success)
+                t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_double_string);
+            
+            if (t_success)
+                t_success = MCTypeConvertStringToReal(*t_double_string, t_d);
+            
+            if (t_success)
+                t_success = t_list . Push(t_d);
+		}
 		
 		t_old_offset = t_new_offset + 1;
 	}
@@ -2189,8 +2219,8 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         }
             break;
             
-        case kMCPropertyTypeLinesOfUInt:
-        case kMCPropertyTypeItemsOfUInt:
+        case kMCPropertyTypeLinesOfLooseUInt:
+        case kMCPropertyTypeItemsOfLooseUInt:
         {
             uinteger_t* t_value;
             uindex_t t_count;
@@ -2200,7 +2230,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             if (!ctxt . HasError())
             {
                 char_t t_delimiter;
-                t_delimiter = prop -> type == kMCPropertyTypeLinesOfUInt ? '\n' : ',';
+                t_delimiter = prop -> type == kMCPropertyTypeLinesOfLooseUInt ? '\n' : ',';
                 if (MCPropertyFormatUIntList(t_value, t_count, t_delimiter, r_value . stringref_value))
                 {
                     r_value . type = kMCExecValueTypeStringRef;
@@ -2211,7 +2241,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         }
             break;
             
-        case kMCPropertyTypeLinesOfDouble:
+        case kMCPropertyTypeLinesOfLooseDouble:
         {
             double* t_value;
             uindex_t t_count;
@@ -2221,7 +2251,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             if (!ctxt . HasError())
             {
                 char_t t_delimiter;
-                t_delimiter = prop -> type == kMCPropertyTypeLinesOfDouble ? '\n' : ',';
+                t_delimiter = prop -> type == kMCPropertyTypeLinesOfLooseDouble ? '\n' : ',';
                 if (MCPropertyFormatDoubleList(t_value, t_count, t_delimiter, r_value . stringref_value))
                 {
                     r_value . type = kMCExecValueTypeStringRef;
@@ -2514,8 +2544,8 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         }
             break;
             
-        case kMCPropertyTypeMixedLinesOfUInt:
-        case kMCPropertyTypeMixedItemsOfUInt:
+        case kMCPropertyTypeMixedLinesOfLooseUInt:
+        case kMCPropertyTypeMixedItemsOfLooseUInt:
         {
             bool t_mixed;
             uinteger_t* t_value;
@@ -2533,7 +2563,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 else
                 {
                     char_t t_delimiter;
-                    t_delimiter = prop -> type == kMCPropertyTypeMixedLinesOfUInt ? '\n' : ',';
+                    t_delimiter = prop -> type == kMCPropertyTypeMixedLinesOfLooseUInt ? '\n' : ',';
                     if (MCPropertyFormatUIntList(t_value, t_count, t_delimiter, r_value . stringref_value))
                     {
                         r_value . type = kMCExecValueTypeStringRef;
@@ -2627,7 +2657,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         {
             uinteger_t t_value;
             MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeUInt, &t_value);
-            if (t_value < 0 || t_value > 65535)
+            if (t_value > 65535)
                 ctxt . LegacyThrow(EE_PROPERTY_NAN);
             if (!ctxt . HasError())
                 ((void(*)(MCExecContext&, void *, uinteger_t))prop -> setter)(ctxt, mark, t_value);
@@ -2874,7 +2904,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             {
                 t_value_ptr = &t_value;
                 MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeUInt, &t_value);
-                if (t_value < 0 || t_value > 255)
+                if (t_value > 255)
                     ctxt . LegacyThrow(EE_PROPERTY_NAN);
             }
             
@@ -2914,7 +2944,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             {
                 t_value_ptr = &t_value;
                 MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeUInt, &t_value);
-                if (t_value < 0 || t_value > 65535)
+                if (t_value > 65535)
                     ctxt . LegacyThrow(EE_PROPERTY_NAN);
             }
             
@@ -3029,10 +3059,10 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         }
             break;
                       
-        case kMCPropertyTypeLinesOfUInt:
-        case kMCPropertyTypeItemsOfUInt:
+        case kMCPropertyTypeLinesOfLooseUInt:
+        case kMCPropertyTypeItemsOfLooseUInt:
         // AL-2014-09-24: [[ Bug 13529 ]] Handle mixed items of uint case
-        case kMCPropertyTypeMixedItemsOfUInt:
+        case kMCPropertyTypeMixedItemsOfLooseUInt:
         {
             MCAutoStringRef t_input;
             uinteger_t* t_value;
@@ -3041,10 +3071,10 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             t_count = 0;
             
             char_t t_delimiter;
-            t_delimiter = prop -> type == kMCPropertyTypeLinesOfUInt ? '\n' : ',';
+            t_delimiter = prop -> type == kMCPropertyTypeLinesOfLooseUInt ? '\n' : ',';
             
             MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_input));
-            if (!MCPropertyParseUIntList(*t_input, t_delimiter, t_count, t_value))
+            if (!MCPropertyParseLooseUIntList(*t_input, t_delimiter, t_count, t_value))
                 ctxt . LegacyThrow(EE_PROPERTY_NAN);
             
             if (!ctxt . HasError())
@@ -3056,7 +3086,7 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         }
             break;
             
-        case kMCPropertyTypeLinesOfDouble:
+        case kMCPropertyTypeLinesOfLooseDouble:
         {
             MCAutoStringRef t_input;
             double* t_value;
@@ -3065,10 +3095,10 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             t_count = 0;
             
             char_t t_delimiter;
-            t_delimiter = prop -> type == kMCPropertyTypeLinesOfDouble ? '\n' : ',';
+            t_delimiter = prop -> type == kMCPropertyTypeLinesOfLooseDouble ? '\n' : ',';
             
             MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_input));
-            if (!MCPropertyParseDoubleList(*t_input, t_delimiter, t_count, t_value))
+            if (!MCPropertyParseLooseDoubleList(*t_input, t_delimiter, t_count, t_value))
                 ctxt . LegacyThrow(EE_PROPERTY_NAN);
             
             if (!ctxt . HasError())

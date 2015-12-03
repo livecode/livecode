@@ -862,7 +862,11 @@ private handler calculateIosIconRects() returns nothing
 				put rectangle [((2 * tX - 1) * mBoxWidth - mHeight * (1 - kIconPaddingRatio)) / 2, mHeight * kIconPaddingRatio, ((2 * tX - 1) * mBoxWidth + mHeight * (1 - kIconPaddingRatio)) / 2, mHeight * (1 - (kIconPaddingRatio + kLabelHeightRatio + kLabelPaddingRatio))] into tIconRect
 			else if mItemStyle is "icons" then
 				variable tIconSpacing
-				put (mWidth - 2 * mHeight) / (mNavItemCount - 1) into tIconSpacing
+                if mNavItemCount is 1 then
+                    put 0 into tIconSpacing
+                else
+                    put (mWidth - 2 * mHeight) / (mNavItemCount - 1) into tIconSpacing
+                end if
 				put rectangle [(1- kIconOnlyPaddingRatio) * mHeight + (tX - 1) * tIconSpacing, kIconOnlyPaddingRatio * mHeight, (1+ kIconOnlyPaddingRatio) * mHeight + (tX - 1) * tIconSpacing, (1 - kIconOnlyPaddingRatio) * mHeight] into tIconRect
 			end if
 
@@ -1282,25 +1286,25 @@ private handler defaultNavArray() returns Array
 end handler
 
 private handler navDataDifferent(in pLeft as List, in pRight as List) returns Boolean
+    if the number of elements in pLeft is not the number of elements in pRight then
+        return true
+    end if
+
 	variable tIndex as Number
 	repeat with tIndex from 1 up to the number of elements in pLeft
-			if tIndex > the number of elements in pRight then
-				return true
-			end if
+        if pLeft[tIndex]["label"] is not pRight[tIndex]["label"] then
+            return true
+        end if
 
-			if pLeft[tIndex]["label"] is not pRight[tIndex]["label"] then
-				return true
-			end if
+        if pLeft[tIndex]["icon_name"] is not pRIght[tIndex]["icon_name"] then
+            return true
+        end if
 
-			if pLeft[tIndex]["icon_name"] is not pRIght[tIndex]["icon_name"] then
-				return true
-			end if
-
-			if pLeft[tIndex]["selected_icon_name"] is not pRight[tIndex]["selected_icon_name"] then
-				if not (pLeft[tIndex]["selected_icon_name"] is "" and pRight[tIndex]["selected_icon_name"] is pRight[tIndex]["icon_name"]) and not (pLeft[tIndex]["selected_icon_name"] is pLeft[tIndex]["icon_name"] and pRight[tIndex]["selected_icon_name"] is "") then
-					return true
-				end if
-			end if
+        if pLeft[tIndex]["selected_icon_name"] is not pRight[tIndex]["selected_icon_name"] then
+            if not (pLeft[tIndex]["selected_icon_name"] is "" and pRight[tIndex]["selected_icon_name"] is pRight[tIndex]["icon_name"]) and not (pLeft[tIndex]["selected_icon_name"] is pLeft[tIndex]["icon_name"] and pRight[tIndex]["selected_icon_name"] is "") then
+                return true
+            end if
+        end if
 	end repeat
 	return false
 end handler

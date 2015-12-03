@@ -15,7 +15,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
+/**
 A widget to display array data in a tree view
 
 Name: selectedElementChanged
@@ -60,7 +60,7 @@ pPath: The path to the clicked element
 Description:
 The actionDoubleClick message is sent to the widget's script object when a row of the widget
 is double-clicked. The <pPath> parameter contains the path to the element whose row was clicked.
-*/
+**/
 
 widget com.livecode.widget.treeView
 
@@ -72,10 +72,10 @@ use com.livecode.widgetutils
 metadata author is "LiveCode"
 metadata version is "1.0.0"
 metadata title is "Tree View"
-metadata userVisible is "false"
+metadata svgicon is "M152.4,249.7c-6.4,0-11.8,4.3-13.5,10.1h-10v-26.7h10c1.7,5.8,7.1,10.1,13.5,10.1c7.8,0,14.1-6.3,14.1-14.1s-6.3-14.1-14.1-14.1c-6.4,0-11.8,4.3-13.5,10.1h-10v-16.1c8.4-1.8,14.8-9.3,14.8-18.3c0-10.4-8.4-18.8-18.8-18.8s-18.8,8.4-18.8,18.8c0,9,6.3,16.5,14.7,18.3v58.8h18c1.7,5.8,7.1,10.1,13.5,10.1c7.8,0,14.1-6.3,14.1-14.1S160.2,249.7,152.4,249.7z M128.7,202h-7.5v-7.5h-7.5V187h7.5v-7.5h7.5v7.5h7.5v7.5h-7.5V202z"
 
 -- property declarations
-/*
+/**
 Syntax: set the arrayData of <widget> to <pArray>
 Syntax: get the arrayData of <widget>
 Summary: The array being displayed by the widget
@@ -85,11 +85,11 @@ pArray (array): The array data.
 
 Description:
 The arrayData is the data currently being displayed by the tree view widget.
-*/
+**/
 
 property arrayData 					get getArrayData 				set setArrayData
 
-/*
+/**
 Syntax: set the alternateRowBackgrounds of <widget> to {true|false}
 Syntax: get the alternateRowBackgrounds of <widget>
 
@@ -97,11 +97,11 @@ Summary: Whether the alternate rows of the widget have different backgrounds or 
 
 Description:
 Use the alternateRowBackgrounds property if you want to more clearly distinguish the rows displayed by the widget.
-*/
+**/
 
 property alternateRowBackgrounds 	get mAlternateRowBackgrounds 	set setRowBackgrounds
 
-/*
+/**
 Syntax: set the selectedElement of <widget> to <pPath>
 Syntax: get the selectedElement of <widget>
 
@@ -116,11 +116,11 @@ of the widget, to select a row corresponding to tArray["key1"]["subkey2"]["subsu
 
 
 ``` set the selectedElement of widget "Array Viewer" to "key1,subkey2,subsubkey5" ```
-*/
+**/
 
 property selectedElement			get getSelectedElement			set setSelectedElement
 
-/*
+/**
 Syntax: set the showFrameBorder of <widget> to {true|false}
 Syntax: get the showFrameBorder of <widget>
 
@@ -128,11 +128,11 @@ Summary: Whether the widget has a border or not.
 
 Description:
 Use the showFrameBorder property to show the bounds of the widget object.
-*/
+**/
 
 property showFrameBorder			get mFrameBorder				set setFrameBorder
 
-/*
+/**
 Syntax: set the selectedRowColor of <widget> to <pColor>
 Syntax: get the selectedRowColor of <widget>
 
@@ -143,13 +143,13 @@ pColor: The color to use to highlight a row when it is selected.
 
 Description:
 Use the <selectedRowColor> property to get or set the color the tree view widget uses to highlight the selected row.
-*/
+**/
 
 property selectedRowColor			get mSelectedRowColor			set setSelectedRowColor
 metadata selectedRowColor.editor is "com.livecode.pi.color"
 metadata selectedRowColor.default is "10,105,216"
 
-/*
+/**
 Syntax: set the readOnly of <widget> to {true|false}
 Syntax: get the readOnly of <widget>
 
@@ -160,11 +160,11 @@ The <readOnly> property controls whether the widget presents the option to add e
 If false, the first row of the widget is always "Add new element", and when rows are hovered over, icons
 appear at the right to enable the removal of that element, or the addition of a new subelement.
 
-*/
+**/
 
 property readOnly					get mReadOnly					set setReadOnly
 
-/*
+/**
 Syntax: set the arrayStyle of <widget> to {true|false}
 Syntax: get the arrayStyle of <widget>
 
@@ -175,11 +175,11 @@ The <arrayStyle> property controls whether the keys of the <arrayData> of the wi
 square brackets around them or not.
 
 References: arrayData (property)
-*/
+**/
 
 property arrayStyle                 get mArrayStyle                 set setArrayStyle
 
-/*
+/**
 Syntax: set the sortOrder of <widget> to <pOrder>
 Syntax: get the sortOrder of <widget>
 
@@ -195,14 +195,14 @@ Use the <sortOrder> property to display the elements of the tree view in ascendi
 keys of its <arrayData>, given the current <sortType>.
 
 References: arrayData (property), sortType (property)
-*/
+**/
 
 property sortOrder                 get getSortOrder                 set setSortOrder
 
 metadata sortOrder.editor is "com.livecode.pi.enum"
 metadata sortOrder.options is "ascending,descending"
 
-/*
+/**
 Syntax: set the sortType of <widget> to <pType>
 Syntax: get the sortType of <widget>
 
@@ -218,14 +218,14 @@ Use the <sortType> property to use text or numeric comparison when ordering the 
 of the tree view widget.
 
 References: sortOrder (property)
-*/
+**/
 
 property sortType                 get getSortType                 set setSortType
 
 metadata sortType.editor is "com.livecode.pi.enum"
 metadata sortType.options is "text,numeric"
 
-/*
+/**
 Syntax: set the showSeparator of <widget> to {true|false}
 Syntax: get the showSeparator of <widget>
 
@@ -236,10 +236,10 @@ Use the <showSeparator> property to display the keys and values of the <arrayDat
 of the tree view widget in columns separated by a movable divide.
 
 Related: separatorRatio (property)
-*/
+**/
 property showSeparator		get mShowSeparator		set setShowSeparator
 
-/*
+/**
 Syntax: set the separatorRatio of <widget> to {true|false}
 Syntax: get the separatorRatio of <widget>
 
@@ -252,7 +252,7 @@ of the tree view widget in columns separated by a movable divide.
 The <separatorRatio> is the size of the first column as a ratio of the total view area.
 
 Related: showSeparator (property)
-*/
+**/
 property separatorRatio		get mSeparatorRatio		set setSeparatorRatio
 metadata separatorRatio.editor is "com.livecode.pi.number"
 metadata separatorRatio.step is "0.05"
@@ -536,9 +536,9 @@ private handler paintDataItem(in pDataItem as Array, in pTop as Real, in pRow as
 		
 	variable tPath as Path	
 	// Draw the alternating row backgrounds if applicable
-	if mAlternateRowBackgrounds is true then
+	if mAlternateRowBackgrounds is true or pDataItem["selected"] is true then
 		put rectangle path of rectangle [0,pTop,mViewWidth,pTop+mRowHeight] into tPath
-		if pRow mod 2 is 1 then
+		if pRow mod 2 is 1 or pDataItem["selected"] is true then
 			set the paint of this canvas to getPaint("row","fill" & tStyle)
 		else
 			set the paint of this canvas to getPaint("row","fill_alternate" & tStyle)
@@ -793,8 +793,10 @@ public handler OnClick() returns nothing
 		return
 	end if
 
+    variable tPathString as String
     if mHoverIcon is "inspect" then
-        post "actionInspect" with tData["path"]
+        combine tData["path"] with "," into tPathString
+        post "actionInspect" with [tPathString]
         return
     end if
 
@@ -830,7 +832,8 @@ public handler OnClick() returns nothing
 
 	if the click count > 1 then
 		if tData["leaf"] then
-			post "actionDoubleClick" with tData["path"]
+            combine tData["path"] with "," into tPathString
+			post "actionDoubleClick" with [tPathString]
 		else
 		   if tData["folded"] is true then
 			   unfoldPath(tData["path"])

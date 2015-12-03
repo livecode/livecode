@@ -1,0 +1,38 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.typeconvert.tests
+
+public handler TestSplit()
+	-- Bug 15440
+	variable tString
+	variable tList
+	put "security.selinux\u{0}user.test\u{0}user.uuid" into tString
+	split tString by "\u{0}" into tList
+	test "split (nul)" when the number of elements in tList is 3
+end handler
+
+public handler TestSplitEmpty()
+	-- Bug 16407
+	variable tString
+	variable tList
+	put "security.selinux\u{0}user.test\u{0}user.uuid" into tString
+	split tSTring by "" into tList
+	test "split (empty)" when the number of elements in tList is 1
+end handler
+
+end module

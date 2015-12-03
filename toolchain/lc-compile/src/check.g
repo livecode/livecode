@@ -1586,6 +1586,7 @@
     'rule' GetExpressionPosition(list(Position, _) -> Position):
     'rule' GetExpressionPosition(call(Position, _, _) -> Position):
     'rule' GetExpressionPosition(invoke(Position, _, _) -> Position):
+    'rule' GetExpressionPosition(result(Position) -> Position):
     'rule' GetExpressionPosition(nil -> Position)
         GetUndefinedPosition(-> Position)
 

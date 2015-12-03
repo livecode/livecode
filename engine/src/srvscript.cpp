@@ -388,6 +388,7 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 								 &t_file_contents))
 		{
 			MCeerror -> add(EE_INCLUDE_FILENOTFOUND, 0, 0, t_file -> filename);
+			delete t_file;
 			return false;
 		}
 

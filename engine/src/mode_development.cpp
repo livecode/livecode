@@ -150,7 +150,7 @@ MCPropertyInfo MCStack::kModeProperties[] =
 {
     DEFINE_RW_OBJ_PROPERTY(P_IDE_OVERRIDE, Bool, MCStack, IdeOverride)
     DEFINE_RO_OBJ_PROPERTY(P_REFERRING_STACK, String, MCStack, ReferringStack)
-    DEFINE_RO_OBJ_LIST_PROPERTY(P_UNPLACED_GROUP_IDS, LinesOfUInt, MCStack, UnplacedGroupIds)
+    DEFINE_RO_OBJ_LIST_PROPERTY(P_UNPLACED_GROUP_IDS, LinesOfLooseUInt, MCStack, UnplacedGroupIds)
 };
 
 MCObjectPropertyTable MCStack::kModePropertyTable =
@@ -2271,13 +2271,15 @@ void MCModeGetRevObjectListeners(MCExecContext& ctxt, uindex_t& r_count, MCStrin
 #ifdef FEATURE_PROPERTY_LISTENER
     // MM-2012-09-05: [[ Property Listener ]]
     MCInternalObjectListenerGetListeners(ctxt, r_listeners, r_count);
-#endif			
+#else
     r_count = 0;
+#endif
 }
 void MCModeGetRevPropertyListenerThrottleTime(MCExecContext& ctxt, uinteger_t& r_time)
 {
 #ifdef FEATURE_PROPERTY_LISTENER
     r_time = MCpropertylistenerthrottletime;
-#endif			
+#else
     r_time = 0;
+#endif
 }

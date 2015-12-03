@@ -1111,7 +1111,7 @@ void MCPlatformSoundGetProperty(MCPlatformSoundRef sound, MCPlatformSoundPropert
 // what is currently required).
 //
 
-typedef struct MCPlatformSoundRecorder *MCPlatformSoundRecorderRef;
+typedef class MCPlatformSoundRecorder *MCPlatformSoundRecorderRef;
 
 enum MCPlatformSoundRecorderProperty
 {

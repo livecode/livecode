@@ -935,22 +935,30 @@ int32_t MCUnicodeCompare(const void *p_first, uindex_t p_first_length, bool p_fi
 
 bool MCUnicodeBeginsWith(const void *p_first, uindex_t p_first_length, bool p_first_native,
                          const void *p_second, uindex_t p_second_length, bool p_second_native,
-                         MCUnicodeCompareOption p_option)
+                         MCUnicodeCompareOption p_option, uindex_t *r_first_match_length)
 {
     // Check for a shared prefix
     uindex_t t_first_match_length, t_second_match_length;
     MCUnicodeSharedPrefix(p_first, p_first_length, p_first_native, p_second, p_second_length, p_second_native, p_option, t_first_match_length, t_second_match_length);
-    return t_second_match_length == p_second_length;
+    if (t_second_match_length != p_second_length)
+        return false;
+    if (r_first_match_length != nil)
+        *r_first_match_length = t_first_match_length;
+    return true;
 }
 
 bool MCUnicodeEndsWith(const void *p_first, uindex_t p_first_length, bool p_first_native,
                        const void *p_second, uindex_t p_second_length, bool p_second_native,
-                         MCUnicodeCompareOption p_option)
+                         MCUnicodeCompareOption p_option, uindex_t *r_first_match_length)
 {
     // Check for a shared suffix
     uindex_t t_first_match_length, t_second_match_length;
     MCUnicodeSharedSuffix(p_first, p_first_length, p_first_native, p_second, p_second_length, p_second_native, p_option, t_first_match_length, t_second_match_length);
-    return t_second_match_length == p_second_length;
+    if (t_second_match_length != p_second_length)
+        return false;
+    if (r_first_match_length != nil)
+        *r_first_match_length = t_first_match_length;
+    return true;
 }
 
 bool MCUnicodeContains(const void *p_string, uindex_t p_string_length, bool p_string_native,

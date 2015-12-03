@@ -3380,7 +3380,7 @@ void MCCanvasPathMakeWithEllipse(MCCanvasPointRef p_center, MCCanvasFloat p_radi
 	if (!MCGPathCreateMutable(t_path))
 		return;
 	
-	MCGPathAddEllipse(t_path, *MCCanvasPointGet(p_center), MCGSizeMake(2*p_radius_x, 2*p_radius_y), 0);
+	MCGPathAddEllipse(t_path, *MCCanvasPointGet(p_center), MCGSizeMake(p_radius_x, p_radius_y), 0);
 	if (MCGPathIsValid(t_path))
 		MCCanvasPathMakeWithMCGPath(t_path, r_path);
 	
@@ -5309,6 +5309,20 @@ void MCCanvasSetDashPhase(MCCanvasFloat p_phase, MCCanvasRef p_canvas)
 {
 	MCCanvasGetProps(p_canvas).dash_phase = p_phase;
 	MCCanvasGet(p_canvas)->dashes_changed = true;
+}
+
+//////////
+
+MC_DLLEXPORT_DEF
+void MCCanvasGetClipBounds(MCCanvasRef p_canvas, MCCanvasRectangleRef &r_bounds)
+{
+	__MCCanvasImpl *t_canvas;
+	t_canvas = MCCanvasGet(p_canvas);
+	
+	MCGRectangle t_bounds;
+	t_bounds = MCGContextGetClipBounds(t_canvas->context);
+	
+	/* UNCHECKED */ MCCanvasRectangleCreateWithMCGRectangle(t_bounds, r_bounds);
 }
 
 //////////

@@ -520,14 +520,23 @@ gtk libgtk-x11-2.0.so.0
 gtk_print_dialog libgtk-x11-2.0.so.0
 	gtk_print_unix_dialog_new: (pointer, pointer) -> (pointer)
 	gtk_print_unix_dialog_get_selected_printer: (pointer) -> (pointer)
+	gtk_print_unix_dialog_set_settings: (pointer, pointer) -> ()
 	gtk_print_unix_dialog_get_settings: (pointer) -> (pointer)
 
+	gtk_print_settings_new: () -> (pointer)
+	gtk_print_settings_set_n_copies: (pointer, integer) -> ()
 	gtk_print_settings_get_n_copies: (pointer) -> (integer)
+	gtk_print_settings_set_collate: (pointer, integer) -> ()
 	gtk_print_settings_get_collate: (pointer) -> (integer)
-	gtk_print_settings_get_paper_width: (pointer) -> (double)
-	gtk_print_settings_get_paper_height: (pointer) -> (double)
+	gtk_print_settings_set_paper_width: (pointer, double, integer) -> ()
+	gtk_print_settings_get_paper_width: (pointer, integer) -> (double)
+	gtk_print_settings_set_paper_height: (pointer, double, integer) -> ()
+	gtk_print_settings_get_paper_height: (pointer, integer) -> (double)
+	gtk_print_settings_set_use_color: (pointer, integer) -> ()
 	gtk_print_settings_get_use_color: (pointer) -> (integer)
+	gtk_print_settings_set_orientation: (pointer, integer) -> ()
 	gtk_print_settings_get_orientation: (pointer) -> (integer)
+	gtk_print_settings_set_duplex: (pointer, integer) -> ()
 	gtk_print_settings_get_duplex: (pointer) -> (integer)
 
 	gtk_page_setup_unix_dialog_new: (pointer, pointer) -> (pointer)
@@ -636,6 +645,8 @@ glib libglib-2.0.so.0
 	g_main_context_query: (pointer, integer, pointer, pointer, integer) -> (integer)
 	g_main_context_check: (pointer, integer, pointer, integer) -> (integer)
 	g_main_context_dispatch: (pointer) -> ()
+	g_main_context_find_source_by_id: (pointer, integer) -> (pointer)
+	g_source_destroy: (pointer) -> ()
 
 esd libesd.so.0
 	esd_close: (integer) -> (integer)

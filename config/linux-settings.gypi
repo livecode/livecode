@@ -68,6 +68,7 @@
 					'-Wall',
 					'-Wextra',
 					'-Wno-unused-parameter',	# Just contributes build noise
+					'-Werror=return-type',
 				],
 			},
 			{
@@ -76,8 +77,6 @@
 					'-w',						# Disable warnings
 					'-fpermissive',				# Be more lax with old code
 					'-Wno-return-type',
-					'-Werror=uninitialized',
-					'-Werror=return-type',
 				],
 				
 				'cflags_c':
@@ -116,6 +115,7 @@
 			[
 				'-O0',
 				'-g3',
+				'-Werror=uninitialized',
 			],
 			
 			'defines':
@@ -126,19 +126,6 @@
 		
 		'Release':
 		{
-			'conditions':
-			[
-				[
-					'target_arch != "x86"',
-					{
-						'cflags': 
-						[
-							'-Wno-error=maybe-uninitialized', #warning added only with optimisation ON
-						],
-					},
-				],
-			],
-			
 			'cflags':
 			[
 				'-O3',
@@ -158,6 +145,7 @@
 			[
 				'-O0',
 				'-g0',
+				'-Werror=uninitialized',
 			],
 			
 			'defines':

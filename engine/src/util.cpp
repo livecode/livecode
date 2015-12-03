@@ -1243,7 +1243,7 @@ void MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize)
 			memcpy(ndata, *data, osize * csize);
 		else
 			memcpy(ndata, *data, nsize * csize);
-		delete *data;
+		delete[] *data;
 	}
 	*data = ndata;
 }

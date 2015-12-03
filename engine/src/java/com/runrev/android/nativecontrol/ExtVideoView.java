@@ -308,6 +308,17 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
             return;
         }
     }
+	
+	// PM-2015-11-05: [[ Bug 16368 ]] Toggling the visibility of the android player should show/hide the controller (if any)
+	public void setControllerVisible(boolean p_visible)
+	{
+		if (mMediaController != null ){
+			if (p_visible)
+				mMediaController.show(0);
+			else
+				mMediaController.hide();
+		}
+	}
 
     public void setMediaController(MediaController controller) {
         if (mMediaController != null) {

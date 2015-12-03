@@ -1522,7 +1522,7 @@ void MCPasteboardSetFullClipboardData(MCExecContext& ctxt, MCNameRef p_index, MC
 
 void MCPasteboardGetFullDragData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef& r_value)
 {
-    MCPasteboardSetFullClipboardOrDragData(ctxt, p_index, MCdragboard, r_value);
+    MCPasteboardGetFullClipboardOrDragData(ctxt, p_index, MCdragboard, r_value);
 }
 
 void MCPasteboardSetFullDragData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef p_value)
@@ -1591,11 +1591,11 @@ void MCPasteboardGetFullClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_ind
             break;
             
         case TRANSFER_TYPE_FILES:
-            p_clipboard->CopyAsFileList((MCStringRef&)t_data);
+            p_clipboard->CopyAsFileList((MCStringRef&)&t_data);
             break;
             
         case TRANSFER_TYPE_PRIVATE:
-            p_clipboard->CopyAsPrivateData((MCDataRef&)t_data);
+            p_clipboard->CopyAsPrivateData((MCDataRef&)&t_data);
             break;
             
         case TRANSFER_TYPE_NULL:
