@@ -4195,7 +4195,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         //     - MM reads the decimal major version number
         //     - m  reads the hexadecimal minor version number
         //     - b  reads the hexadecimal bugfix number.
-        long t_major, t_minor, t_bugfix;
+        SInt32 t_major, t_minor, t_bugfix;
         if (Gestalt(gestaltSystemVersionMajor, &t_major) == noErr &&
             Gestalt(gestaltSystemVersionMinor, &t_minor) == noErr &&
             Gestalt(gestaltSystemVersionBugFix, &t_bugfix) == noErr)
@@ -4267,8 +4267,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         // MW-2005-04-04: [[CoreImage]] Load in CoreImage extension
         extern void MCCoreImageRegister(void);
-        if (MCmajorosversion >= 0x1040)
-            MCCoreImageRegister();
+        MCCoreImageRegister();
+        
         // END HERE
 		
         if (!MCnoui)
@@ -4404,7 +4404,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         return NULL;
 #endif /* MCS_getsystemversion_dsk_mac */
-        long t_major, t_minor, t_bugfix;
+        SInt32 t_major, t_minor, t_bugfix;
         Gestalt(gestaltSystemVersionMajor, &t_major);
         Gestalt(gestaltSystemVersionMinor, &t_minor);
         Gestalt(gestaltSystemVersionBugFix, &t_bugfix);
