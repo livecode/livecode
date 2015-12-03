@@ -223,6 +223,7 @@ end TestEngine19
 on TestSystemVersion
    if the platform is "HTML" then
       TestSkip "systemVersion not empty", "bug 16539"
+   end if
    TestAssert "test", the systemVersion is not empty
 end TestSystemVersion
 

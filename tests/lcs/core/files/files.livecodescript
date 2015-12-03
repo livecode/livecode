@@ -41,7 +41,7 @@ end TestFolderInListing
 on TestBugfix12039
    if the platform is "HTML" then
       TestSkip "(file) is among the files", "bug 16543"
-      exit TestFolderInListing
+      exit TestBugfix12039
    end if
 
    // 12039
