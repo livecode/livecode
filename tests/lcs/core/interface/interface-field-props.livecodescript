@@ -69,13 +69,13 @@ end TestHighlightColors
 
 on TestLinkHighlightColors
 	set the linkhilitecolor to "blue"
-	TestAssertBroken "linkhilitecolor set to blue", the linkhilitecolor is "blue", "bug 16280"
+	TestAssert "linkhilitecolor set to blue", the linkhilitecolor is "blue"
 
 	set the linkhilitecolor to "255,255,0"
-	TestAssertBroken "linkhilitecolor set to RGB value", the linkhilitecolor is "255,255,0", "bug 16280"
+	TestAssert "linkhilitecolor set to RGB value", the linkhilitecolor is "255,255,0"
 
 	set the linkhilitecolor to "#336633"
-	TestAssertBroken "linkhilitecolor set to hex value", the linkhilitecolor is "#336633", "bug 16280"
+	TestAssert "linkhilitecolor set to hex value", the linkhilitecolor is "#336633"
 end TestLinkHighlightColors
 
 on TestFieldAutoHighlightDefault
