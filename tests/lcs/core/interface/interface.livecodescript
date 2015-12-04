@@ -241,7 +241,7 @@ TestAssert "test", the mouse is "up"
 
 end TestInterface30
 on TestInterface37
-   if the platform is "HTML" then
+   if the platform is "HTML5" then
       TestSkip "moving button", "bug 16076"
       exit TestInterface37
    end if
@@ -794,7 +794,7 @@ TestAssert "test", line 1 of field "tf" is "a" and line 2 of field "tf" is "b" a
 
 end TestInterface107
 on TestInterface99
-   if the platform is "HTML" then
+   if the platform is "HTML5" then
       TestSkip "stop moving button", "bug 16076"
       exit TestInterface99
    end if
@@ -816,7 +816,7 @@ TestAssert "test", not (the loc of button 1 is 0,0)
 end TestInterface99
 -- no key options working properly
 on TestInterface101
-   if the platform is "HTML" then
+   if the platform is "HTML5" then
       TestSkip "key options", "bug 16544"
       exit TestInterface101
    end if
