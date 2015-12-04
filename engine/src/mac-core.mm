@@ -220,7 +220,7 @@ enum
 
 static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_reply, SRefCon p_context)
 {
-    return [[NSApp delegate] preDispatchAppleEvent: p_event withReply: p_reply];
+    return [(com_runrev_livecode_MCApplication*)[NSApp delegate] preDispatchAppleEvent: p_event withReply: p_reply];
 }
 
 - (OSErr)preDispatchAppleEvent: (const AppleEvent *)p_event withReply: (AppleEvent *)p_reply

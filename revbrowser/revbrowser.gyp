@@ -79,6 +79,14 @@
 							'$(SDKROOT)/System/Library/Frameworks/WebKit.framework',
 						],
 						
+						'xcode_settings':
+						{
+							# Latest SDK that this can compile against is 10.9 but
+							# we currently use 10.8 and keep that here to avoid
+							# having to do yet more SDK downloading.
+							'SDKROOT': 'macosx10.8',
+						},
+
 						# Copy the CEF processes and framework into the expected place
 						'copies':
 						[
