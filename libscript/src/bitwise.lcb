@@ -51,7 +51,7 @@ Tags: Bitwise operations
 
 */
 
-syntax BitwiseAnd is left binary operator with precedence 2
+syntax BitwiseAnd is left binary operator with bitwise and precedence
     <Left: Expression> "bitwise and" <Right: Expression>
 begin
     MCBitwiseEvalBitwiseAnd(Left, Right, output)
@@ -76,7 +76,7 @@ Each bit of <Left> bitwise or <Right> is 0 if and only if both the corresponding
 Tags: Bitwise operations
 */
 
-syntax BitwiseOr is left binary operator with precedence 4
+syntax BitwiseOr is left binary operator with bitwise or precedence
     <Left: Expression> "bitwise or" <Right: Expression>
 begin
     MCBitwiseEvalBitwiseOr(Left, Right, output)
@@ -100,7 +100,7 @@ Each bit of <Left> bitwise xor <Right> is 1 if and only if exactly one of the co
 Tags: Bitwise operations
 */
 
-syntax BitwiseXor is left binary operator with precedence 3
+syntax BitwiseXor is left binary operator with bitwise xor precedence
     <Left: Expression> "bitwise xor" <Right: Expression>
 begin
     MCBitwiseEvalBitwiseXor(Left, Right, output)
@@ -124,7 +124,7 @@ complement integer, i.e. equivalent to -(x + 1).
 Tags: Bitwise operations
 */
 
-syntax BitwiseNot is prefix operator with precedence 1
+syntax BitwiseNot is prefix operator with modifier precedence
     "bitwise" "not" <Operand: Expression>
 begin
     MCBitwiseEvalBitwiseNot(Operand, output)
@@ -151,7 +151,7 @@ by x is equivalent to multiplying by 2^x.
 Tags: Bitwise operations
 */
 
-syntax BitwiseShiftLeft is postfix operator with precedence 1
+syntax BitwiseShiftLeft is postfix operator with bitwise shift precedence
     <Operand: Expression> "shifted" "left" "by" <Shift: Expression> "bitwise"
 begin
     MCBitwiseEvalBitwiseShiftLeft(Operand, Shift, output)
@@ -176,7 +176,7 @@ right by x is equivalent to dividing by 2^x (rounding down)
 Tags: Bitwise operations
 */
 
-syntax BitwiseShiftRight is postfix operator with precedence 1
+syntax BitwiseShiftRight is postfix operator with bitwise shift precedence
     <Operand: Expression> "shifted" "right" "by" <Shift: Expression> "bitwise"
 begin
     MCBitwiseEvalBitwiseShiftRight(Operand, Shift, output)
@@ -184,7 +184,7 @@ end syntax
 
 --
 
-//syntax BitwiseRotate is postfix operator with precedence 1
+//syntax BitwiseRotate is postfix operator with bitwise shift precedence
 //    <Operand: Expression> "rotated" "by" <Shift: Expression> "bitwise"
 //begin
 //    EvalBitwiseRotate(Operand, Shift, output)

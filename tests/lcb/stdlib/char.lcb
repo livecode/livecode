@@ -304,6 +304,11 @@ public handler TestOffset()
 	test "index" when the index of "x" in ".xx." is 2
 end handler
 
+public handler TestOffsetUnicode()
+	test "offset (native, BMP)" when the index of " " in "\u{2192} right" is 2
+	test "offset (BMP, BMP)" when the index of "\u{2192}" in "\u{2192} right" is 1
+end handler
+
 public handler TestOffsetAfter()
 	-- Only test single-character needles for now
 	test "offset after (single, +ve)" when the offset of "x" after 1 in "x.xx." is 3

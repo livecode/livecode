@@ -87,14 +87,9 @@ void MCPlatformDoDragDrop(MCPlatformWindowRef p_window, MCPlatformAllowedDragOpe
     // This is required as the OSX drag-and-drop loop requires a pasteboard to
     // be specified.
     NSPasteboard *t_pboard;
-    bool t_is_private;
-    t_is_private = false;
     t_pboard = [NSPasteboard pasteboardWithName: NSDragPboard];
     if ([[t_pboard pasteboardItems] count] == 0)
     {
-        t_is_private = true;
-        t_pboard = [NSPasteboard pasteboardWithUniqueName];
-        
         NSPasteboardItem *t_item;
         t_item = [[[NSPasteboardItem alloc] init] autorelease];
         [t_item setString: @"" forType: @"com.runrev.livecode.private"];
@@ -105,9 +100,6 @@ void MCPlatformDoDragDrop(MCPlatformWindowRef p_window, MCPlatformAllowedDragOpe
     
 	NSDragOperation t_op;
 	t_op = [((MCMacPlatformWindow *)p_window) -> GetView() dragImage: t_image offset: t_image_loc allowing: t_allowed_operations pasteboard: t_pboard];
-	
-    if (t_is_private)
-        [t_pboard releaseGlobally];
     
 	[t_image release];
 	

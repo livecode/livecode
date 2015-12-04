@@ -55,10 +55,9 @@
 #include "graphics_util.h"
 
 MCNativeLayerIOS::MCNativeLayerIOS(MCWidgetRef p_widget, UIView *p_native_view) :
-  m_widget(p_widget),
   m_view([p_native_view retain])
 {
-    ;
+	m_widget = p_widget;
 }
 
 MCNativeLayerIOS::~MCNativeLayerIOS()
@@ -70,39 +69,6 @@ MCNativeLayerIOS::~MCNativeLayerIOS()
     }
 }
 
-void MCNativeLayerIOS::OnToolChanged(Tool p_new_tool)
-{
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-	
-	OnVisibilityChanged(ShouldShowWidget(t_widget));
-	t_widget->Redraw();
-}
-
-void MCNativeLayerIOS::OnOpen()
-{
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
-    // Unhide the widget, if required
-    if (isAttached() && t_widget->getopened() == 1)
-        doAttach();
-}
-
-void MCNativeLayerIOS::OnClose()
-{
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
-    if (isAttached() && t_widget->getopened() == 1)
-        doDetach();
-}
-
-#import <UIKit/UIButton.h>
-
-void MCNativeLayerIOS::OnAttach()
-{
-    m_attached = true;
-    doAttach();
-}
-
 void MCNativeLayerIOS::doAttach()
 {
     MCWidget* t_widget = MCWidgetGetHost(m_widget);
@@ -110,13 +76,7 @@ void MCNativeLayerIOS::doAttach()
     // Act as if there was a re-layer to put the widget in the right place
     doRelayer();
     
-	OnVisibilityChanged(ShouldShowWidget(t_widget));
-}
-
-void MCNativeLayerIOS::OnDetach()
-{
-    m_attached = false;
-    doDetach();
+	doSetVisible(ShouldShowWidget(t_widget));
 }
 
 void MCNativeLayerIOS::doDetach()
@@ -133,19 +93,12 @@ bool MCNativeLayerIOS::GetCanRenderToContext()
 	return false;
 }
 
-bool MCNativeLayerIOS::OnPaint(MCGContextRef)
+bool MCNativeLayerIOS::doPaint(MCGContextRef p_context)
 {
 	return false;
 }
 
-void MCNativeLayerIOS::OnGeometryChanged(const MCRectangle& p_old_rect)
-{
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
-    doSetRect(t_widget->getrect());
-}
-
-void MCNativeLayerIOS::doSetRect(const MCRectangle& p_rect)
+void MCNativeLayerIOS::doSetGeometry(const MCRectangle& p_rect)
 {
     CGRect t_nsrect;
     MCGRectangle t_xformed;
@@ -158,18 +111,13 @@ void MCNativeLayerIOS::doSetRect(const MCRectangle& p_rect)
     });
 }
 
-void MCNativeLayerIOS::OnVisibilityChanged(bool p_visible)
+void MCNativeLayerIOS::doSetVisible(bool p_visible)
 {
     MCIPhoneRunBlockOnMainFiber(^{
         [m_view setHidden:p_visible ? NO : YES];
     });
 	if (p_visible)
-		OnGeometryChanged(MCRectangleMake(0,0,0,0));
-}
-
-void MCNativeLayerIOS::OnLayerChanged()
-{
-    doRelayer();
+		doSetGeometry(MCWidgetGetHost(m_widget)->getrect());
 }
 
 void MCNativeLayerIOS::doRelayer()

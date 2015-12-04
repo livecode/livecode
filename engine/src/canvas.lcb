@@ -99,7 +99,7 @@ Example:
 Tags:		Canvas
 */
 
-syntax RectangleMake is prefix operator with precedence 2
+syntax RectangleMake is prefix operator with constructor precedence
 	"rectangle" <mRect: Expression>
 begin
     MCCanvasRectangleMakeWithList(mRect, output)
@@ -129,14 +129,14 @@ Example:
 Tags:		Canvas
 */
 
-syntax RectanglePropertyLeft is prefix operator with precedence 2
+syntax RectanglePropertyLeft is prefix operator with property precedence
 	"the" "left" "of" <mRect:Expression>
 begin
 	MCCanvasRectangleGetLeft(mRect, output)
 	MCCanvasRectangleSetLeft(input, mRect)
 end syntax
 
-syntax RectanglePropertyX is prefix operator with precedence 2
+syntax RectanglePropertyX is prefix operator with property precedence
 	"the" "x" "of" <mRect:Expression>
 begin
 	MCCanvasRectangleGetLeft(mRect, output)
@@ -167,14 +167,14 @@ Example:
 Tags:		Canvas
 */
 
-syntax RectanglePropertyTop is prefix operator with precedence 2
+syntax RectanglePropertyTop is prefix operator with property precedence
 	"the" "top" "of" <mRect:Expression>
 begin
 	MCCanvasRectangleGetTop(mRect, output)
 	MCCanvasRectangleSetTop(input, mRect)
 end syntax
 
-syntax RectanglePropertyY is prefix operator with precedence 2
+syntax RectanglePropertyY is prefix operator with property precedence
 	"the" "y" "of" <mRect:Expression>
 begin
 	MCCanvasRectangleGetTop(mRect, output)
@@ -205,7 +205,7 @@ Example:
 Tags:		Canvas
 */
 
-syntax RectanglePropertyRight is prefix operator with precedence 2
+syntax RectanglePropertyRight is prefix operator with property precedence
 	"the" "right" "of" <mRect:Expression>
 begin
 	MCCanvasRectangleGetRight(mRect, output)
@@ -236,7 +236,7 @@ Example:
 Tags:		Canvas
 */
 
-syntax RectanglePropertyBottom is prefix operator with precedence 2
+syntax RectanglePropertyBottom is prefix operator with property precedence
 	"the" "bottom" "of" <mRect:Expression>
 begin
 	MCCanvasRectangleGetBottom(mRect, output)
@@ -267,7 +267,7 @@ Example:
 Tags:		Canvas
 */
 
-syntax RectanglePropertyWidth is prefix operator with precedence 2
+syntax RectanglePropertyWidth is prefix operator with property precedence
 	"the" "width" "of" <mRect:Expression>
 begin
 	MCCanvasRectangleGetWidth(mRect, output)
@@ -298,7 +298,7 @@ Example:
 Tags:		Canvas
 */
 
-syntax RectanglePropertyHeight is prefix operator with precedence 2
+syntax RectanglePropertyHeight is prefix operator with property precedence
 	"the" "height" "of" <mRect:Expression>
 begin
 	MCCanvasRectangleGetHeight(mRect, output)
@@ -331,7 +331,7 @@ Example:
 Tags:	Canvas
 */
 
-syntax PointMake is prefix operator with precedence 2
+syntax PointMake is prefix operator with property precedence
 	"point" <mPoint: Expression>
 begin
 	MCCanvasPointMakeWithList(mPoint, output)
@@ -358,7 +358,7 @@ Example:
 Tags:	Canvas
 */
 
-syntax PointPropertyX is prefix operator with precedence 2
+syntax PointPropertyX is prefix operator with property precedence
 	"the" "x" "of" <mPoint: Expression>
 begin
 	MCCanvasPointGetX(mPoint, output)
@@ -386,7 +386,7 @@ Example:
 Tags:	Canvas
 */
 
-syntax PointPropertyY is prefix operator with precedence 2
+syntax PointPropertyY is prefix operator with property precedence
 	"the" "y" "of" <mPoint: Expression>
 begin
 	MCCanvasPointGetY(mPoint, output)
@@ -423,7 +423,7 @@ Example:
 Tags: Canvas
 */
 
-syntax ColorMake is prefix operator with precedence 4
+syntax ColorMake is prefix operator with constructor precedence
 	"color" <mColor: Expression>
 begin
 	MCCanvasColorMakeWithList(mColor, output)
@@ -466,7 +466,7 @@ Example:
 Tags: Canvas
 */
 
-syntax ColorPropertyRed is prefix operator with precedence 4
+syntax ColorPropertyRed is prefix operator with property precedence
 	"the" "red" "of" <mColor: Expression>
 begin
 	MCCanvasColorGetRed(mColor, output)
@@ -497,7 +497,7 @@ Example:
 Tags: Canvas
 */
 
-syntax ColorPropertyGreen is prefix operator with precedence 4
+syntax ColorPropertyGreen is prefix operator with property precedence
 	"the" "green" "of" <mColor: Expression>
 begin
 	MCCanvasColorGetGreen(mColor, output)
@@ -528,7 +528,7 @@ Example:
 Tags: Canvas
 */
 
-syntax ColorPropertyBlue is prefix operator with precedence 4
+syntax ColorPropertyBlue is prefix operator with property precedence
 	"the" "blue" "of" <mColor: Expression>
 begin
 	MCCanvasColorGetBlue(mColor, output)
@@ -559,7 +559,7 @@ Example:
 Tags: Canvas
 */
 
-syntax ColorPropertyAlpha is prefix operator with precedence 4
+syntax ColorPropertyAlpha is prefix operator with property precedence
 	"the" "alpha" "of" <mColor: Expression>
 begin
 	MCCanvasColorGetAlpha(mColor, output)
@@ -621,7 +621,7 @@ Example:
 Tags: Canvas
 */
 
-syntax TransformMakeScale is prefix operator with precedence 4
+syntax TransformMakeScale is prefix operator with constructor precedence
 	"transform" "with" "scale" <mScale: Expression>
 begin
     MCCanvasTransformMakeScaleWithList(mScale, output)
@@ -642,7 +642,7 @@ Example:
 Tags: Canvas
 */
 
-syntax TransformMakeSkew is prefix operator with precedence 4
+syntax TransformMakeSkew is prefix operator with constructor precedence
 	"transform" "with" "skew" <mSkew: Expression>
 begin
 	MCCanvasTransformMakeSkewWithList(mSkew, output)
@@ -663,7 +663,7 @@ Example:
 Tags: Canvas
 */
 
-syntax TransformMakeRotation is prefix operator with precedence 4
+syntax TransformMakeRotation is prefix operator with constructor precedence
 	"transform" "with" "rotation" "by" <mRotation: Expression>
 begin
 	MCCanvasTransformMakeRotation(mRotation, output)
@@ -684,7 +684,7 @@ Example:
 Tags: Canvas
 */
 
-syntax TransformMakeTranslation is prefix operator with precedence 4
+syntax TransformMakeTranslation is prefix operator with constructor precedence
 	"transform" "with" "translation" <mTranslation: Expression>
 begin
     MCCanvasTransformMakeTranslationWithList(mTranslation, output)
@@ -705,7 +705,7 @@ Example:
 Tags: Canvas
 */
 
-syntax TransformMakeWithMatrixAsList is prefix operator with precedence 4
+syntax TransformMakeWithMatrixAsList is prefix operator with constructor precedence
 	"transform" "with" "matrix" <mMatrix: Expression>
 begin
 	MCCanvasTransformMakeWithMatrixAsList(mMatrix, output)
@@ -749,7 +749,7 @@ Example:
 Tags: Canvas
 */
 
-syntax TransformPropertyScale is prefix operator with precedence 4
+syntax TransformPropertyScale is prefix operator with property precedence
 	"the" "scale" "of" <mTransform: Expression>
 begin
 	MCCanvasTransformGetScaleAsList(mTransform, output)
@@ -777,7 +777,7 @@ Example:
 Tags: Canvas
 */
 
-syntax TransformPropertyRotation is prefix operator with precedence 4
+syntax TransformPropertyRotation is prefix operator with property precedence
 	"the" "rotation" "of" <mTransform: Expression>
 begin
 	MCCanvasTransformGetRotation(mTransform, output)
@@ -805,7 +805,7 @@ Example:
 Tags: Canvas
 */
 
-syntax TransformPropertySkew is prefix operator with precedence 4
+syntax TransformPropertySkew is prefix operator with property precedence
 	"the" "skew" "of" <mTransform: Expression>
 begin
 	MCCanvasTransformGetSkewAsList(mTransform, output)
@@ -833,7 +833,7 @@ Example:
 Tags: Canvas
 */
 
-syntax TransformPropertyTranslation is prefix operator with precedence 4
+syntax TransformPropertyTranslation is prefix operator with property precedence
 	"the" "translation" "of" <mTransform: Expression>
 begin
 	MCCanvasTransformGetTranslationAsList(mTransform, output)
@@ -867,7 +867,7 @@ Example:
 Tags: Canvas
 */
 
-syntax TransformPropertyMatrixAsList is prefix operator with precedence 4
+syntax TransformPropertyMatrixAsList is prefix operator with property precedence
 	"the" "matrix" "of" <mTransform: Expression>
 begin
 	MCCanvasTransformGetMatrixAsList(mTransform, output)
@@ -898,7 +898,7 @@ Example:
 Tags: Canvas
 */
 
-syntax TransformPropertyInverse is prefix operator with precedence 4
+syntax TransformPropertyInverse is prefix operator with property precedence
 	"the" "inverse" "of" <mTransform: Expression>
 begin
 	MCCanvasTransformGetInverse(mTransform, output)
@@ -1096,7 +1096,7 @@ Note:
 Tags: Canvas
 */
 
-syntax TransformOperationMultiply is left binary operator with precedence 3
+syntax TransformOperationMultiply is left binary operator with multiplication precedence
 	<Left: Expression> "*" <Right: Expression>
 begin
 	MCCanvasTransformMultiply(Left, Right, output)
@@ -1124,7 +1124,7 @@ Example:
 Tags: Canvas
 */
 
-syntax SolidPaintMake is prefix operator with precedence 4
+syntax SolidPaintMake is prefix operator with constructor precedence
 	"solid" "paint" "with" <mColor: Expression>
 begin
 	MCCanvasSolidPaintMakeWithColor(mColor, output)
@@ -1159,7 +1159,7 @@ Example:
 Tags:	Canvas
 */
 
-syntax SolidPaintPropertyColor is prefix operator with precedence 4
+syntax SolidPaintPropertyColor is prefix operator with property precedence
 	"the" "color" "of" <mSolid: Expression>
 begin
 	MCCanvasSolidPaintGetColor(mSolid, output)
@@ -1198,7 +1198,7 @@ Example:
 Tags: Canvas
 */
 
-syntax PatternMake is prefix operator with precedence 4
+syntax PatternMake is prefix operator with constructor precedence
 	"pattern" "with" <mImage: Expression>
 begin
 	MCCanvasPatternMakeWithImage(mImage, output)
@@ -1228,7 +1228,7 @@ Example:
 Tags: Canvas
 */
 
-syntax PatternMakeTransformed is prefix operator with precedence 4
+syntax PatternMakeTransformed is prefix operator with constructor precedence
 	"pattern" "with" <mImage: Expression> "transformed" "by" <mTransform: Expression>
 begin
     MCCanvasPatternMakeWithTransformedImage(mImage, mTransform, output)
@@ -1254,7 +1254,7 @@ Example:
 Tags: Canvas
 */
 
-syntax PatternMakeScaledBy is prefix operator with precedence 4
+syntax PatternMakeScaledBy is prefix operator with constructor precedence
     "pattern" "with" <mImage: Expression> "scaled" "by" <mScale: Expression>
 begin
 	MCCanvasPatternMakeWithImageScaledWithList(mImage, mScale, output)
@@ -1282,7 +1282,7 @@ Example:
 Tags: Canvas
 */
 
-syntax PatternMakeTranslatedBy is prefix operator with precedence 4
+syntax PatternMakeTranslatedBy is prefix operator with constructor precedence
     "pattern" "with" <mImage: Expression> "translated" "by" <mTranslation: Expression>
 begin
 	MCCanvasPatternMakeWithImageTranslatedWithList(mImage, mTranslation, output)
@@ -1308,7 +1308,7 @@ Example:
 Tags: Canvas
 */
 
-syntax PatternMakeRotatedBy is prefix operator with precedence 4
+syntax PatternMakeRotatedBy is prefix operator with constructor precedence
     "pattern" "with" <mImage: Expression> "rotated" "by" <mRotation: Expression>
 begin
 	MCCanvasPatternMakeWithRotatedImage(mImage, mRotation, output)
@@ -1345,7 +1345,7 @@ Example:
 Tags:	Canvas
 */
 
-syntax PatternPropertyImage is prefix operator with precedence 4
+syntax PatternPropertyImage is prefix operator with property precedence
 	"the" "image" "of" <mPattern: Expression>
 begin
 	MCCanvasPatternGetImage(mPattern, output)
@@ -1377,7 +1377,7 @@ Example:
 Tags:	Canvas
 */
 
-syntax PatternPropertyTransform is prefix operator with precedence 4
+syntax PatternPropertyTransform is prefix operator with property precedence
 	"the" "transform" "of" <mPattern: Expression>
 begin
 	MCCanvasPatternGetTransform(mPattern, output)
@@ -1542,7 +1542,7 @@ Example:
 Tags: Canvas
 */
 
-syntax GradientStopMake is prefix operator with precedence 4
+syntax GradientStopMake is prefix operator with constructor precedence
 	"gradient" "stop" "at" <mOffset: Expression> "with" <mColor: Expression>
 begin
 	MCCanvasGradientStopMake(mOffset, mColor, output)
@@ -1572,7 +1572,7 @@ Example:
 Tags: Canvas
 */
 
-syntax GradientMakeWithRamp is prefix operator with precedence 4
+syntax GradientMakeWithRamp is prefix operator with constructor precedence
 	<mType: GradientType> "gradient" "with" "ramp" <mRamp: Expression>
 begin
 	MCCanvasGradientMakeWithRamp(mType, mRamp, output)
@@ -1629,7 +1629,7 @@ Example:
 Tags:	Canvas
 */
 
-syntax GradientStopPropertyOffset is prefix operator with precedence 4
+syntax GradientStopPropertyOffset is prefix operator with property precedence
 	"the" "offset" "of" <mStop: Expression>
 begin
 	MCCanvasGradientStopGetOffset(mStop, output)
@@ -1657,7 +1657,7 @@ Example:
 Tags:	Canvas
 */
 
-syntax GradientStopPropertyColor is prefix operator with precedence 4
+syntax GradientStopPropertyColor is prefix operator with property precedence
 	"the" "color" "of" <mStop: Expression>
 begin
 	MCCanvasGradientStopGetColor(mStop, output)
@@ -1689,7 +1689,7 @@ Example:
 Tags:	Canvas
 */
 
-syntax GradientPropertyRamp is prefix operator with precedence 4
+syntax GradientPropertyRamp is prefix operator with property precedence
 	"the" "ramp" "of" <mGradient: Expression>
 begin
 	MCCanvasGradientGetRamp(mGradient, output)
@@ -1718,7 +1718,7 @@ Example:
 Tags:	Canvas
 */
 
-syntax GradientPropertyType is prefix operator with precedence 4
+syntax GradientPropertyType is prefix operator with property precedence
 	"the" "type" "of" <mGradient: Expression>
 begin
 	MCCanvasGradientGetTypeAsString(mGradient, output)
@@ -1747,7 +1747,7 @@ Example:
 Tags:	Canvas
 */
 
-syntax GradientPropertyRepeat is prefix operator with precedence 4
+syntax GradientPropertyRepeat is prefix operator with property precedence
 	"the" "repeat" "of" <mGradient: Expression>
 begin
 	MCCanvasGradientGetRepeat(mGradient, output)
@@ -1774,7 +1774,7 @@ Example:
 Tags:	Canvas
 */
 
-syntax GradientPropertyWrap is prefix operator with precedence 4
+syntax GradientPropertyWrap is prefix operator with property precedence
 	"the" "wrap" "of" <mGradient: Expression>
 begin
 	MCCanvasGradientGetWrap(mGradient, output)
@@ -1801,7 +1801,7 @@ Example:
 Tags:	Canvas
 */
 
-syntax GradientPropertyMirror is prefix operator with precedence 4
+syntax GradientPropertyMirror is prefix operator with property precedence
 	"the" "mirror" "of" <mGradient: Expression>
 begin
 	MCCanvasGradientGetMirror(mGradient, output)
@@ -1829,7 +1829,7 @@ Example:
 Tags:	Canvas
 */
 
-syntax GradientPropertyFrom is prefix operator with precedence 4
+syntax GradientPropertyFrom is prefix operator with property precedence
 	"the" "from" "of" <mGradient: Expression>
 begin
 	MCCanvasGradientGetFrom(mGradient, output)
@@ -1857,7 +1857,7 @@ Example:
 Tags:	Canvas
 */
 
-syntax GradientPropertyTo is prefix operator with precedence 4
+syntax GradientPropertyTo is prefix operator with property precedence
 	"the" "to" "of" <mGradient: Expression>
 begin
 	MCCanvasGradientGetTo(mGradient, output)
@@ -1885,7 +1885,7 @@ Example:
 Tags:	Canvas
 */
 
-syntax GradientPropertyVia is prefix operator with precedence 4
+syntax GradientPropertyVia is prefix operator with property precedence
 	"the" "via" "of" <mGradient: Expression>
 begin
 	MCCanvasGradientGetVia(mGradient, output)
@@ -1923,7 +1923,7 @@ Example:
 Tags:	Canvas
 */
 
-syntax GradientPropertyTransform is prefix operator with precedence 4
+syntax GradientPropertyTransform is prefix operator with property precedence
 	"the" "transform" "of" <mGradient: Expression>
 begin
 	MCCanvasGradientGetTransform(mGradient, output)
@@ -2098,7 +2098,7 @@ Example:
 Tags: Canvas
 */
 
-syntax ImageMakeFromFile is prefix operator with precedence 4
+syntax ImageMakeFromFile is prefix operator with constructor precedence
 	"image" "from" "file" <mPath: Expression>
 begin
 	MCCanvasImageMakeWithPath(mPath, output)
@@ -2120,7 +2120,7 @@ Example:
 
 Tags: Canvas
 */
-syntax ImageMakeFromResourceFile is prefix operator with precedence 4
+syntax ImageMakeFromResourceFile is prefix operator with constructor precedence
 	"image" "from" "resource" "file" <mResource: Expression>
 begin
 	MCCanvasImageMakeWithResourceFile(mResource, output)
@@ -2145,7 +2145,7 @@ Example:
 
 Tags: Canvas
 */
-syntax ImageMakeFromData is prefix operator with precedence 4
+syntax ImageMakeFromData is prefix operator with constructor precedence
 	"image" "from" "data" <mData: Expression>
 begin
 	MCCanvasImageMakeWithData(mData, output)
@@ -2172,7 +2172,7 @@ Example:
 
 Tags: Canvas
 */
-syntax ImageMakeWithPixels is prefix operator with precedence 4
+syntax ImageMakeWithPixels is prefix operator with constructor precedence
 	"image" "of" "size" <mSize: Expression> "with" "pixels" <mPixels: Expression>
 begin
 //	MCCanvasImageMakeWithPixels(mSize[0], mSize[1], mPixels, output)
@@ -2210,7 +2210,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax ImagePropertyWidth is prefix operator with precedence 2
+syntax ImagePropertyWidth is prefix operator with property precedence
 	"the" "width" "of" <mImage: Expression>
 begin
 	MCCanvasImageGetWidth(mImage, output)
@@ -2236,7 +2236,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax ImagePropertyHeight is prefix operator with precedence 2
+syntax ImagePropertyHeight is prefix operator with property precedence
 	"the" "height" "of" <mImage: Expression>
 begin
 	MCCanvasImageGetHeight(mImage, output)
@@ -2244,7 +2244,7 @@ end syntax
 
 //////////
 
-//syntax ImageMetadataProperty is prefix operator with precedence 4
+//syntax ImageMetadataProperty is prefix operator with property precedence
 //	"the" "metadata" "of" <mImage: Expression>
 //begin
 //	MCCanvasImageGetMetadata(mImage, output)
@@ -2270,7 +2270,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax ImagePropertyPixels is prefix operator with precedence 4
+syntax ImagePropertyPixels is prefix operator with property precedence
 	"the" "pixels" "of" <mImage: Expression>
 begin
 	MCCanvasImageGetPixels(mImage, output)
@@ -2363,7 +2363,7 @@ Example:
 
 Tags: Canvas
 */
-syntax PathMake is prefix operator with precedence 4
+syntax PathMake is prefix operator with constructor precedence
 	"path" <mInstructions: Expression>
 begin
 	MCCanvasPathMakeWithInstructionsAsString(mInstructions, output)
@@ -2412,13 +2412,13 @@ Example:
 
 Tags: Canvas
 */
-syntax PathMakeWithRoundedRectangleWithRadius is prefix operator with precedence 4
+syntax PathMakeWithRoundedRectangleWithRadius is prefix operator with constructor precedence
 	"rounded" "rectangle" "path" "of" <mRect: Expression> "with" "radius" <mRadius: Expression>
 begin
 	MCCanvasPathMakeWithRoundedRectangle(mRect, mRadius, output)
 end syntax
 
-syntax PathMakeWithRoundedRectangleWithRadii is prefix operator with precedence 4
+syntax PathMakeWithRoundedRectangleWithRadii is prefix operator with constructor precedence
 	"rounded" "rectangle" "path" "of" <mRect: Expression> "with" "radii" <mRadii: Expression>
 begin
 	MCCanvasPathMakeWithRoundedRectangleWithRadiiAsList(mRect, mRadii, output)
@@ -2440,7 +2440,7 @@ Example:
 
 Tags: Canvas
 */
-syntax PathMakeWithRectangle is prefix operator with precedence 4
+syntax PathMakeWithRectangle is prefix operator with constructor precedence
 	"rectangle" "path" "of" <mRect: Expression>
 begin
 	MCCanvasPathMakeWithRectangle(mRect, output)
@@ -2463,7 +2463,7 @@ Example:
 
 Tags: Canvas
 */
-syntax PathMakeWithCircle is prefix operator with precedence 4
+syntax PathMakeWithCircle is prefix operator with constructor precedence
 	"circle" "path" "centered" "at" <mCenter: Expression> "with" "radius" <mRadius: Expression>
 begin
 	MCCanvasPathMakeWithCircle(mCenter, mRadius, output)
@@ -2486,7 +2486,7 @@ Example:
 
 Tags: Canvas
 */
-syntax PathMakeWithEllipse is prefix operator with precedence 4
+syntax PathMakeWithEllipse is prefix operator with constructor precedence
 	"ellipse" "path" "centered" "at" <mPoint: Expression> "with" "radii" <mRadii: Expression>
 begin
 	MCCanvasPathMakeWithEllipseWithRadiiAsList(mPoint, mRadii, output)
@@ -2509,7 +2509,7 @@ Example:
 
 Tags: Canvas
 */
-syntax PathMakeWithLine is prefix operator with precedence 4
+syntax PathMakeWithLine is prefix operator with constructor precedence
 	"line" "path" "from" <mFrom: Expression> "to" <mTo: Expression>
 begin
 	MCCanvasPathMakeWithLine(mFrom, mTo, output)
@@ -2536,7 +2536,7 @@ Example:
 
 Tags: Canvas
 */
-syntax PathMakeWithPoints is prefix operator with precedence 4
+syntax PathMakeWithPoints is prefix operator with constructor precedence
 	( "polygon" <mClosed=true> | "polyline" <mClosed=false> ) "path" "with" "points" <mPoints: Expression>
 begin
 	MCCanvasPathMakeWithPoints(mClosed, mPoints, output)
@@ -2566,7 +2566,7 @@ Example:
 
 Tags: Canvas
 */
-syntax PathMakeWithArc is prefix operator with precedence 4
+syntax PathMakeWithArc is prefix operator with constructor precedence
 	"arc" "path" "centered" "at" <mCenter: Expression> "with" [ "radius" <mRadius: Expression> | "radii" <mRadii: Expression> ] "from" <mStartAngle: Expression> "to" <mEndAngle: Expression>
 begin
 	MCCanvasPathMakeWithArcWithRadius(mCenter, mRadius, mStartAngle, mEndAngle, output)
@@ -2597,7 +2597,7 @@ Example:
 
 Tags: Canvas
 */
-syntax PathMakeWithSector is prefix operator with precedence 4
+syntax PathMakeWithSector is prefix operator with constructor precedence
 	"sector" "path" "centered" "at" <mCenter: Expression> "with" [ "radius" <mRadius: Expression> | "radii" <mRadii: Expression> ] "from" <mStartAngle: Expression> "to" <mEndAngle: Expression>
 begin
 	MCCanvasPathMakeWithSectorWithRadius(mCenter, mRadius, mStartAngle, mEndAngle, output)
@@ -2628,7 +2628,7 @@ Example:
 
 Tags: Canvas
 */
-syntax PathMakeWithSegment is prefix operator with precedence 4
+syntax PathMakeWithSegment is prefix operator with constructor precedence
 	"segment" "path" "centered" "at" <mCenter: Expression> "with" [ "radius" <mRadius: Expression> | "radii" <mRadii: Expression> ] "from" <mStartAngle: Expression> "to" <mEndAngle: Expression>
 begin
 	MCCanvasPathMakeWithSegmentWithRadius(mCenter, mRadius, mStartAngle, mEndAngle, output)
@@ -2669,7 +2669,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax PathPropertySubpath is prefix operator with precedence 4
+syntax PathPropertySubpath is prefix operator with property precedence
 	"subpath" <mStart: Expression> [ "to" <mEnd: Expression> ] "of" <mPath: Expression>
 begin
 	MCCanvasPathGetSubpaths(mStart, mEnd, mPath, output)
@@ -2696,7 +2696,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax PathPropertyBoundingBox is prefix operator with precedence 4
+syntax PathPropertyBoundingBox is prefix operator with property precedence
 	"the" "bounding" "box" "of" <mPath: Expression>
 begin
 	MCCanvasPathGetBoundingBox(mPath, output)
@@ -2723,7 +2723,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax PathPropertyInstructions is prefix operator with precedence 4
+syntax PathPropertyInstructions is prefix operator with property precedence
 	"the" "instructions" "of" <mPath: Expression>
 begin
 	MCCanvasPathGetInstructionsAsString(mPath, output)
@@ -3198,7 +3198,7 @@ Example:
 
 Tags: Canvas
 */
-syntax EffectMakeWithProperties is prefix operator with precedence 4
+syntax EffectMakeWithProperties is prefix operator with constructor precedence
 	<mType: EffectType> "effect" "with" "properties" <mProperties: Expression>
 begin
 	MCCanvasEffectMakeWithPropertyArray(mType, mProperties, output)
@@ -3250,7 +3250,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax EffectPropertyType is prefix operator with precedence 4
+syntax EffectPropertyType is prefix operator with property precedence
 	"the" "type" "of" <mEffect: Expression>
 begin
 	MCCanvasEffectGetTypeAsString(mEffect, output)
@@ -3280,7 +3280,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax EffectPropertyColor is prefix operator with precedence 4
+syntax EffectPropertyColor is prefix operator with property precedence
 	"the" "color" "of" <mEffect: Expression>
 begin
 	MCCanvasEffectGetColor(mEffect, output)
@@ -3312,7 +3312,7 @@ Example:
 Tags:	Canvas
 References: CanvasPropertyBlendMode(operator):
 */
-syntax EffectPropertyBlendMode is prefix operator with precedence 4
+syntax EffectPropertyBlendMode is prefix operator with property precedence
 	"the" "blend" "mode" "of" <mEffect: Expression>
 begin
 	MCCanvasEffectGetBlendModeAsString(mEffect, output)
@@ -3343,7 +3343,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax EffectPropertySize is prefix operator with precedence 4
+syntax EffectPropertySize is prefix operator with property precedence
 	"the" "size" "of" <mEffect: Expression>
 begin
 	MCCanvasEffectGetSize(mEffect, output)
@@ -3374,7 +3374,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax EffectPropertySpread is prefix operator with precedence 4
+syntax EffectPropertySpread is prefix operator with property precedence
 	"the" "spread" "of" <mEffect: Expression>
 begin
 	MCCanvasEffectGetSpread(mEffect, output)
@@ -3405,7 +3405,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax EffectPropertyDistance is prefix operator with precedence 4
+syntax EffectPropertyDistance is prefix operator with property precedence
 	"the" "distance" "of" <mEffect: Expression>
 begin
 	MCCanvasEffectGetDistance(mEffect, output)
@@ -3436,7 +3436,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax EffectPropertyAngle is prefix operator with precedence 4
+syntax EffectPropertyAngle is prefix operator with property precedence
 	"the" "angle" "of" <mEffect: Expression>
 begin
 	MCCanvasEffectGetAngle(mEffect, output)
@@ -3467,7 +3467,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax EffectPropertyKnockOut is prefix operator with precedence 4
+syntax EffectPropertyKnockOut is prefix operator with property precedence
 	"the" "knockout" "of" <mEffect: Expression>
 begin
 	MCCanvasEffectGetKnockOut(mEffect, output)
@@ -3498,7 +3498,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax EffectPropertySource is prefix operator with precedence 4
+syntax EffectPropertySource is prefix operator with property precedence
 	"the" "source" "of" <mEffect: Expression>
 begin
 	MCCanvasEffectGetSourceAsString(mEffect, output)
@@ -3531,7 +3531,7 @@ Example:
 
 Tags: Canvas
 */
-syntax FontMake is prefix operator with precedence 4
+syntax FontMake is prefix operator with constructor precedence
 	"font" <mName: Expression>
 begin
 	MCCanvasFontMake(mName, output)
@@ -3554,7 +3554,7 @@ Example:
 
 Tags: Canvas
 */
-syntax FontMakeWithSize is prefix operator with precedence 4
+syntax FontMakeWithSize is prefix operator with constructor precedence
 	"font" <mName: Expression> <mBold=false> <mItalic=false> "at" "size" <mSize: Expression>
 begin
 	MCCanvasFontMakeWithSize(mName, mBold, mItalic, mSize, output)
@@ -3599,7 +3599,7 @@ Example:
 
 Tags: Canvas
 */
-syntax FontMakeWithStyleAndSize is prefix operator with precedence 4
+syntax FontMakeWithStyleAndSize is prefix operator with constructor precedence
 	"font" <mName: Expression> "with" ( "bold" <mBold=true> <mItalic=false> | "italic" <mBold=false> <mItalic=true> | "bold" "italic" <mBold=true> <mItalic=true> ) "style" "at" "size" <mSize: Expression>
 begin
 	MCCanvasFontMakeWithStyle(mName, mBold, mItalic, output)
@@ -3642,7 +3642,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax FontPropertyName is prefix operator with precedence 4
+syntax FontPropertyName is prefix operator with property precedence
 	"the" "name" "of" <mFont:Expression>
 begin
 	MCCanvasFontGetName(mFont, output)
@@ -3668,7 +3668,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax FontPropertyBold is prefix operator with precedence 4
+syntax FontPropertyBold is prefix operator with property precedence
 	"the" "bold" "of" <mFont:Expression>
 begin
 	MCCanvasFontGetBold(mFont, output)
@@ -3694,7 +3694,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax FontPropertyItalic is prefix operator with precedence 4
+syntax FontPropertyItalic is prefix operator with property precedence
 	"the" "italic" "of" <mFont:Expression>
 begin
 	MCCanvasFontGetItalic(mFont, output)
@@ -3720,7 +3720,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax FontPropertySize is prefix operator with precedence 4
+syntax FontPropertySize is prefix operator with property precedence
 	"the" "size" "of" <mFont:Expression>
 begin
 	MCCanvasFontGetSize(mFont, output)
@@ -3763,7 +3763,7 @@ Description:
 
 Tags:	Canvas
 */
-syntax FontOperationTextLayoutBounds is prefix operator with precedence 4
+syntax FontOperationTextLayoutBounds is prefix operator with function chunk precedence
 	"the" [ "layout" ] "bounds" "of" "text" <mText: Expression> "with" <mFont: Expression>
 begin
 	MCCanvasFontMeasureTextTypographicBounds(mText, mFont, output)
@@ -3792,7 +3792,7 @@ The layout bounds of the text, constructed from the ascent and descent values of
 
 Tags:	Canvas
 */
-syntax FontOperationTextLayoutBoundsOnCanvas is prefix operator with precedence 4
+syntax FontOperationTextLayoutBoundsOnCanvas is prefix operator with function chunk precedence
 	"the" [ "layout" ] "bounds" "of" "text" <mText: Expression> "on" <mCanvas: Expression>
 begin
 	MCCanvasFontMeasureTextTypographicBoundsOnCanvas(mText, mCanvas, output)
@@ -3823,7 +3823,7 @@ Description:
 
 Tags:	Canvas
 */
-syntax FontOperationTextImageBounds is prefix operator with precedence 4
+syntax FontOperationTextImageBounds is prefix operator with function chunk precedence
 	"the" "image" "bounds" "of" "text" <mText: Expression> "with" <mFont: Expression>
 begin
 	MCCanvasFontMeasureTextImageBounds(mText, mFont, output)
@@ -3852,7 +3852,7 @@ The exact bounds of the text, which will fully enclose each character.
 
 Tags:	Canvas
 */
-syntax FontOperationTextImageBoundsOnCanvas is prefix operator with precedence 4
+syntax FontOperationTextImageBoundsOnCanvas is prefix operator with function chunk precedence
 	"the" "image" "bounds" "of" "text" <mText: Expression> "on" <mCanvas: Expression>
 begin
 	MCCanvasFontMeasureTextImageBoundsOnCanvas(mText, mCanvas, output)
@@ -3901,6 +3901,8 @@ public foreign handler MCCanvasSetDashes(in pDashes as List, in pCanvas as Canva
 public foreign handler MCCanvasGetDashPhase(in pCanvas as Canvas, out rPhase as CanvasFloat) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasSetDashPhase(in pPhase as CanvasFloat, in pCanvas as Canvas) returns nothing binds to "<builtin>"
 
+public foreign handler MCCanvasGetClipBounds(in pCanvas as Canvas, out rBounds as Rectangle) returns nothing binds to "<builtin>"
+
 //////////
 
 /*
@@ -3916,7 +3918,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax CanvasPropertyPaint is prefix operator with precedence 4
+syntax CanvasPropertyPaint is prefix operator with property precedence
 	"the" "paint" "of" <mCanvas: Expression>
 begin
 	MCCanvasGetPaint(mCanvas, output)
@@ -3938,7 +3940,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax CanvasPropertyFillRule is prefix operator with precedence 4
+syntax CanvasPropertyFillRule is prefix operator with property precedence
 	"the" "fill" "rule" "of" <mCanvas: Expression>
 begin
 	MCCanvasGetFillRuleAsString(mCanvas, output)
@@ -3960,7 +3962,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax CanvasPropertyAntialias is prefix operator with precedence 4
+syntax CanvasPropertyAntialias is prefix operator with property precedence
 	"the" "antialias" "of" <mCanvas: Expression>
 begin
 	MCCanvasGetAntialias(mCanvas, output)
@@ -3982,7 +3984,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax CanvasPropertyOpacity is prefix operator with precedence 4
+syntax CanvasPropertyOpacity is prefix operator with property precedence
 	"the" "opacity" "of" <mCanvas: Expression>
 begin
 	MCCanvasGetOpacity(mCanvas, output)
@@ -4004,7 +4006,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax CanvasPropertyBlendMode is prefix operator with precedence 4
+syntax CanvasPropertyBlendMode is prefix operator with property precedence
 	"the" "blend" "mode" "of" <mCanvas: Expression>
 begin
 	MCCanvasGetBlendModeAsString(mCanvas, output)
@@ -4027,7 +4029,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax CanvasPropertyStippled is prefix operator with precedence 4
+syntax CanvasPropertyStippled is prefix operator with property precedence
 	"the" "stippled" "of" <mCanvas: Expression>
 begin
 	MCCanvasGetStippled(mCanvas, output)
@@ -4049,7 +4051,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax CanvasPropertyImageResizeQuality is prefix operator with precedence 4
+syntax CanvasPropertyImageResizeQuality is prefix operator with property precedence
 	"the" "image" "resize" "quality" "of" <mCanvas: Expression>
 begin
 	MCCanvasGetImageResizeQualityAsString(mCanvas, output)
@@ -4071,7 +4073,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax CanvasPropertyStrokeWidth is prefix operator with precedence 4
+syntax CanvasPropertyStrokeWidth is prefix operator with property precedence
 	"the" "stroke" "width" "of" <mCanvas: Expression>
 begin
 	MCCanvasGetStrokeWidth(mCanvas, output)
@@ -4093,7 +4095,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax CanvasPropertyFont is prefix operator with precedence 4
+syntax CanvasPropertyFont is prefix operator with property precedence
 	"the" "font" "of" <mCanvas:Expression>
 begin
 	MCCanvasGetFont(mCanvas, output)
@@ -4116,7 +4118,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax CanvasPropertyJoinStyle is prefix operator with precedence 4
+syntax CanvasPropertyJoinStyle is prefix operator with property precedence
 	"the" "join" "style" "of" <mCanvas:Expression>
 begin
 	MCCanvasGetJoinStyleAsString(mCanvas, output)
@@ -4139,7 +4141,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax CanvasPropertyCapStyle is prefix operator with precedence 4
+syntax CanvasPropertyCapStyle is prefix operator with property precedence
 	"the" "cap" "style" "of" <mCanvas:Expression>
 begin
 	MCCanvasGetCapStyleAsString(mCanvas, output)
@@ -4162,7 +4164,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax CanvasPropertyMiterLimit is prefix operator with precedence 4
+syntax CanvasPropertyMiterLimit is prefix operator with property precedence
 	"the" "miter" "limit" "of" <mCanvas:Expression>
 begin
 	MCCanvasGetMiterLimit(mCanvas, output)
@@ -4185,7 +4187,7 @@ Example:
 
 Tags:	Canvas
 */
-syntax CanvasPropertyDashes is prefix operator with precedence 4
+syntax CanvasPropertyDashes is prefix operator with property precedence
 	"the" "dashes" "of" <mCanvas:Expression>
 begin
 	MCCanvasGetDashes(mCanvas, output)
@@ -4209,11 +4211,38 @@ Example:
 
 Tags:	Canvas
 */
-syntax CanvasPropertyDashPhase is prefix operator with precedence 4
+syntax CanvasPropertyDashPhase is prefix operator with property precedence
 	"the" "dash" "phase" "of" <mCanvas:Expression>
 begin
 	MCCanvasGetDashPhase(mCanvas, output)
 	MCCanvasSetDashPhase(input, mCanvas)
+end syntax
+
+//////////
+
+/*
+Summary:	The current clipping bounds of the canvas.
+
+mCanvas:	An expression which evaluates to a canvas.
+
+Description:	The clipping bounds of the canvas. Drawing operations on <mCanvas> will be confined to the clip region.
+
+Example:
+	// Set the canvas clip
+	clip to rectangle [50,50,100,100] on this canvas
+
+	// Fill rectangle path on canvas, covering only the current clip region.
+	variable tBounds as Rectangle
+	put the clipping bounds of this canvas into tBounds
+	fill rectangle path of tBounds on this canvas
+
+Tags:	Canvas
+*/
+
+syntax CanvasPropertyClippingBounds is prefix operator with property precedence
+	"the" "clipping" "bounds" "of" <mCanvas: Expression>
+begin
+	MCCanvasGetClipBounds(mCanvas, output)
 end syntax
 
 //////////
@@ -4845,25 +4874,25 @@ end syntax
 
 //////////
 
-syntax NewCanvasWithSize is prefix operator with precedence 1
+syntax NewCanvasWithSize is prefix operator with constructor precedence
   "a" "new" "canvas" "with" "size" <Size: Expression>
 begin
   MCCanvasNewCanvasWithSize(Size, output)
 end syntax
 
-syntax GetPixelDataOfCanvas is prefix operator with precedence 1
+syntax GetPixelDataOfCanvas is prefix operator with property precedence
   "the" "pixel" "data" "of" <Canvas: Expression>
 begin
   MCCanvasGetPixelDataOfCanvas(Canvas, output)
 end syntax
 
-syntax GetPixelWidthOfCanvas is prefix operator with precedence 1
+syntax GetPixelWidthOfCanvas is prefix operator with property precedence
   "the" "pixel" "width" "of" <Canvas: Expression>
 begin
   MCCanvasGetPixelWidthOfCanvas(Canvas, output)
 end syntax
 
-syntax GetPixelHeightOfCanvas is prefix operator with precedence 1
+syntax GetPixelHeightOfCanvas is prefix operator with property precedence
   "the" "pixel" "height" "of" <Canvas: Expression>
 begin
   MCCanvasGetPixelHeightOfCanvas(Canvas, output)

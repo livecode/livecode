@@ -45,6 +45,9 @@ bool MCWidgetIsRoot(MCWidgetRef widget);
 MCWidget *MCWidgetGetHost(MCWidgetRef widget);
 MCWidgetRef MCWidgetGetOwner(MCWidgetRef widget);
 
+// Returns true if p_widget is p_child, or an ancestor of it.
+bool MCWidgetIsAncestorOf(MCWidgetRef p_widget, MCWidgetRef p_child);
+
 MCGRectangle MCWidgetGetFrame(MCWidgetRef widget);
 bool MCWidgetGetDisabled(MCWidgetRef widget);
 bool MCWidgetCopyFont(MCWidgetRef widget, MCFontRef& r_font);

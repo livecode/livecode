@@ -888,6 +888,9 @@ def GenerateOutput(target_list, target_dicts, data, params):
       # (rule_sources) that apply to it.
       concrete_outputs_all = []
 
+      # All rule prerequisites
+      prerequisites_all = []
+
       # messages & actions are keyed by the same indices as rule['rule_sources']
       # and concrete_outputs_by_rule_source.  They contain the message and
       # action to perform after resolving input-dependent variables.  The
@@ -1016,6 +1019,9 @@ def GenerateOutput(target_list, target_dicts, data, params):
           prerequisites.extend(rule.get('inputs', []))
           for prerequisite_index in xrange(0, len(prerequisites)):
             prerequisite = prerequisites[prerequisite_index]
+            # Add the prerequisite to the list if not already there
+            if prerequisite not in prerequisites_all:
+              prerequisites_all.append(prerequisite)
             if prerequisite_index == len(prerequisites) - 1:
               eol = ''
             else:
@@ -1071,6 +1077,8 @@ exit 1
               'name': 'Rule "' + rule['rule_name'] + '"',
               'shellScript': script,
               'showEnvVarsInLog': 0,
+              'outputPaths': concrete_outputs_all,
+              'inputPaths': prerequisites_all,
             })
 
         if support_xct:

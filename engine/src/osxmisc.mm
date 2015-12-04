@@ -35,6 +35,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "resolution.h"
 
+#import <AppKit/AppKit.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  REFACTORED FROM TEXT.CPP
@@ -159,12 +161,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 void MCMacDisableScreenUpdates(void)
 {
-	DisableScreenUpdates();
+    NSDisableScreenUpdates();
 }
 
 void MCMacEnableScreenUpdates(void)
 {
-	EnableScreenUpdates();
+	NSEnableScreenUpdates();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -174,7 +176,7 @@ void MCMacEnableScreenUpdates(void)
 
 IO_stat MCHcstak::macreadresources(void)
 {		//on MAC, read resources in MAC stack directly, by opening stack's resource fork
-	SInt16 resFileRefNum;
+	ResFileRefNum resFileRefNum;
 	
     MCAutoStringRef t_path;
     MCAutoStringRef t_error;
@@ -182,8 +184,8 @@ IO_stat MCHcstak::macreadresources(void)
 	if (MCS_mac_openresourcefile_with_path(*t_path, fsRdPerm, false, resFileRefNum, &t_error))
 		return IO_NORMAL;
 	
-	short rtypeCount = Count1Types(); //get the # of total resource types in current res file
-	for (int i = 1; i <= rtypeCount; i++)
+	ResourceCount rtypeCount = Count1Types(); //get the # of total resource types in current res file
+	for (ResourceIndex i = 1; i <= rtypeCount; i++)
 	{
 		ResType rtype;   //resource type
 		Get1IndType(&rtype, i); //get each resource type
@@ -200,24 +202,30 @@ IO_stat MCHcstak::macreadresources(void)
 				uint2 id;
 				Str255 resname;
 				GetResInfo(hres, (short *)&id, &rtype, resname);
-				p2cstr(resname); //convert pascal string to C string
+
+                MCAutoStringRef t_resname_string;
+                MCNewAutoNameRef t_resname;
+                if (!MCStringCreateWithPascalString(resname, &t_resname_string)
+                    || !MCNameCreate(*t_resname_string, &t_resname))
+                    return IO_ERROR;
+                
 				HLock(hres);
 				if (rtype == 'ICON')
 				{
 					MCHcbmap *newicon = new MCHcbmap;
 					newicon->appendto(icons);
-					newicon->icon(id, strclone((char *)resname), *hres);
+					newicon->icon(id, *t_resname, *hres);
 				}
 				else if (rtype == 'CURS')
 				{
 					MCHcbmap *newcurs = new MCHcbmap;
 					newcurs->appendto(cursors);
-					newcurs->cursor(id, strclone((char*)resname), *hres);
+					newcurs->cursor(id, *t_resname, *hres);
 				}
 				else if (rtype == 'snd ')
 				{
 					MCHcsnd *newsnd = new MCHcsnd;
-					if (newsnd->import(id, strclone((char*)resname), *hres))
+					if (newsnd->import(id, *t_resname, *hres))
 						newsnd->appendto(snds);
 						else
 							delete newsnd;

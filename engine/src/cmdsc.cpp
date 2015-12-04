@@ -1119,6 +1119,8 @@ void MCCreate::exec_ctxt(MCExecContext& ctxt)
         t_new_stack -> setparent(MCdispatcher -> gethome());
         t_new_stack -> message(MCM_new_stack);
         t_new_stack -> setflag(False, F_VISIBLE);
+		// PM-2015-10-26: [[ Bug 16283 ]] Automatically update project browser to show newly created script only stacks
+		t_new_stack -> open();
         ep . clear();
         t_new_stack -> setasscriptonly(ep);
         optr = t_new_stack;

@@ -111,7 +111,7 @@ References: IndexedElementOfList(operator)
 Tags: Lists
 */
 
-syntax HeadOfList is prefix operator with precedence 1
+syntax HeadOfList is prefix operator with subscript chunk precedence
     "the" "head" "of" <Target: Expression>
 begin
     MCListEvalHeadOf(Target, output)
@@ -145,7 +145,7 @@ References: IndexedElementOfList(operator)
 Tags: Lists
 */
 
-syntax TailOfList is prefix operator with precedence 1
+syntax TailOfList is prefix operator with subscript chunk precedence
     "the" "tail" "of" <Target: Expression>
 begin
     MCListEvalTailOf(Target, output)
@@ -235,7 +235,7 @@ Returns the number of elements in the list.
 Tags: Lists
 */
 
-syntax CountElementsOfList is prefix operator with precedence 1
+syntax CountElementsOfList is prefix operator with property precedence
     "the" "number" "of" "elements" "in" <Target: Expression>
 begin
     MCListEvalNumberOfElementsIn(Target, output)
@@ -263,7 +263,7 @@ Description:
 Tags: Lists
 */
                 
-syntax ElementIsInList is neutral binary operator with precedence 1
+syntax ElementIsInList is neutral binary operator with comparison precedence
     <Needle: Expression> "is" "in" <Target: Expression>
 begin
     MCListEvalIsAmongTheElementsOf(Needle, Target, output)
@@ -294,7 +294,7 @@ Description:
 Tags: Lists
 */
                 
-syntax ListContainsElements is neutral binary operator with precedence 1
+syntax ListContainsElements is neutral binary operator with comparison precedence
     <Target: Expression> "contains" <Needle: Expression>
 begin
     MCListEvalContainsElements(Target, Needle, output)
@@ -326,7 +326,7 @@ Description:
 Tags: Lists
 */
 
-syntax ListBeginsWithList is neutral binary operator with precedence 1
+syntax ListBeginsWithList is neutral binary operator with comparison precedence
     <Source: Expression> "begins" "with" <Prefix: Expression>
 begin
     MCListEvalBeginsWith(Source, Prefix, output)
@@ -356,7 +356,7 @@ Description:
 Tags: Lists
 */
 
-syntax ListEndsWithList is neutral binary operator with precedence 1
+syntax ListEndsWithList is neutral binary operator with comparison precedence
     <Source: Expression> "ends" "with" <Suffix: Expression>
 begin
     MCListEvalEndsWith(Source, Suffix, output)
@@ -388,7 +388,7 @@ In particular, this means that comparison between string elements is case sensit
 Tags: Lists
 */
 
-syntax ListIsList is neutral binary operator with precedence 7
+syntax ListIsList is neutral binary operator with comparison precedence
     <Left: Expression> "is" <Right: Expression>
 begin
     MCListEvalIsEqualTo(Left, Right, output)
@@ -417,7 +417,7 @@ In particular, this means that comparison between string elements is case sensit
 Tags: Lists
 */
 
-syntax ListIsNotList is neutral binary operator with precedence 7
+syntax ListIsNotList is neutral binary operator with comparison precedence
     <Left: Expression> "is not" <Right: Expression>
 begin
     MCListEvalIsNotEqualTo(Left, Right, output)
@@ -447,7 +447,7 @@ Either locates the element container at the given index for use as the target co
 Tags: Lists
 */
 
-syntax SingletonElementOfList is prefix operator with precedence 1
+syntax SingletonElementOfList is prefix operator with subscript chunk precedence
 	"element" <Index: Expression> "of" <Target: Expression>
 begin
     MCListFetchElementOf(Index, Target, output)
@@ -477,7 +477,7 @@ Either locates the element container at the given index for use as the target co
 Tags: Lists
 */
 
-syntax IndexedElementOfList is postfix operator with precedence 1
+syntax IndexedElementOfList is postfix operator with subscript precedence
     <Target: Expression> "[" <Index: Expression> "]"
 begin
     MCListFetchIndexOf(Target, Index, output)
@@ -508,7 +508,7 @@ Either locates the element containers between the given indices for use as a lis
 Tags: Lists
 */
 
-syntax RangeElementsOfList is prefix operator with precedence 1
+syntax RangeElementsOfList is prefix operator with subscript chunk precedence
 	"element" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
 begin
     MCListFetchElementRangeOf(Start, Finish, Target, output)
@@ -528,7 +528,7 @@ Either locates the first element for use as the target container of another oper
 Tags: Lists
 */
 
-syntax FirstElementOf is prefix operator with precedence 1
+syntax FirstElementOf is prefix operator with subscript chunk precedence
 	"the" "first" "element" "of" <Target: Expression>
 begin
 	MCListFetchFirstElementOf(Target, output)
@@ -548,7 +548,7 @@ Either locates the first element for use as the target container of another oper
 Tags: Lists
 */
 
-syntax LastElementOf is prefix operator with precedence 1
+syntax LastElementOf is prefix operator with subscript chunk precedence
 	"the" "last" "element" "of" <Target: Expression>
 begin
 	MCListFetchLastElementOf(Target, output)
@@ -893,7 +893,7 @@ element found is returned.  If no element of <Haystack> is equal to
 
 Tags: Lists
 */
-syntax ListIndex is prefix operator with precedence 1
+syntax ListIndex is prefix operator with function chunk precedence
 	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "index" "of" <Needle: Expression> "in" <Haystack: Expression>
 begin
 	MCListEvalIndexOfElement(IsLast, Needle, Haystack, output)
@@ -927,7 +927,7 @@ the position of the element found is returned.  If no element of
 
 Tags: Lists
 */
-syntax ListIndexAfter is prefix operator with precedence 1
+syntax ListIndexAfter is prefix operator with function chunk precedence
 	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "index" "of" <Needle: Expression> "after" <After: Expression> "in" <Haystack: Expression>
 begin
 	MCListEvalIndexOfElementAfter(IsLast, Needle, After, Haystack, output)
@@ -962,7 +962,7 @@ specified, the last matching element is found.
 
 Tags: Lists
 */
-syntax ListIndexBefore is prefix operator with precedence 1
+syntax ListIndexBefore is prefix operator with function chunk precedence
 	"the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "index" "of" <Needle: Expression> "before" <Before: Expression> "in" <Haystack: Expression>
 begin
 	MCListEvalIndexOfElementBefore(IsFirst, Needle, Before, Haystack, output)
@@ -999,7 +999,7 @@ the return value is 0.
 
 Tags: Lists
 */
-syntax ListOffset is prefix operator with precedence 1
+syntax ListOffset is prefix operator with function chunk precedence
 	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "in" <Haystack: Expression>
 begin
 	MCListEvalOffsetOfList(IsLast, Needle, Haystack, output)
@@ -1037,7 +1037,7 @@ position <After> is equal to <Needle>, the return value is 0.
 
 Tags: Lists
 */
-syntax ListOffsetAfter is prefix operator with precedence 1
+syntax ListOffsetAfter is prefix operator with function chunk precedence
 	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" <Needle: Expression> "after" <After: Expression> "in" <Haystack: Expression>
 begin
 	MCListEvalOffsetOfListAfter(IsLast, Needle, After, Haystack, output)
@@ -1074,7 +1074,7 @@ is equal to <Needle>, the return value is 0.  If neither "first" nor
 
 Tags: Lists
 */
-syntax ListOffsetBefore is prefix operator with precedence 1
+syntax ListOffsetBefore is prefix operator with function chunk precedence
 	"the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "offset" "of" <Needle: Expression> "before" <Before: Expression> "in" <Haystack: Expression>
 begin
 	MCListEvalOffsetOfListBefore(IsFirst, Needle, Before, Haystack, output)
