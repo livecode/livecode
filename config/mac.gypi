@@ -28,6 +28,7 @@
 		'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES',
 		'COPY_PHASE_STRIP': 'NO',
 		'STRIP_INSTALLED_PRODUCT': 'NO',
+		'CLANG_LINK_OBJC_RUNTIME': 'NO',
 	},
 	
 	'target_defaults':
