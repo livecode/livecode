@@ -231,9 +231,6 @@ static void abort_key_timer_callback(CFRunLoopTimerRef p_timer, void *p_info)
 	NSRunLoop *t_loop;
 	t_loop = [NSRunLoop currentRunLoop];
 	
-	NSData *t_future;
-	t_future = [NSDate distantFuture];
-	
 	m_termination_port = [[NSPort port] retain];
 	[m_termination_port setDelegate: self];
 	[t_loop addPort: m_termination_port forMode: NSDefaultRunLoopMode];
