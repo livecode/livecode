@@ -126,6 +126,7 @@
 			{
 				'INFOPLIST_FILE': 'reviphone-Info.plist',
 				'CLANG_LINK_OBJC_RUNTIME': 'YES',
+				'SDKROOT': 'macosx',
 			},
 		},
 		
