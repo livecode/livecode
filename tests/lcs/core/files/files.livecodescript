@@ -309,14 +309,14 @@ on TestLaunch
       local tPID
       put word 1 of line it of taskList into tPID
       get shell ("kill" && tPID)
-   else if the platform is "HTML" then
+   else if the platform is "HTML5" then
       TestSkip "launch subprocess", "HTML5 platform does not support subprocesses"
    end if	
 end TestLaunch
 
 
 on TestLaunchWith
-   if the platform is "HTML" then
+   if the platform is "HTML5" then
       TestSkip "launch subprocess with", "HTML5 platform does not support subprocesses"
       exit TestLaunchWith
    end if
