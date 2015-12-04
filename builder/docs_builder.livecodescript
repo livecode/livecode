@@ -2199,7 +2199,8 @@ on docsBuilderPopulateDatabase pLibrariesA
       exit docsBuilderPopulateDatabase
    end if
    
-   repeat for each key tKey in pLibrariesA
+   repeat for each key tKey in pLibrariesA   	  
+   	  builderLog "message", "adding library" && pLibrariesA[tKey]["display name"] && "to docs database"
       revDocsUpdateDatabase tConnection, pLibrariesA[tKey]
       if the result is not empty then
          builderLog "error", the result
