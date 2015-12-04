@@ -17,7 +17,10 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on TestFolderInListing
-   
+   if the platform is "HTML" then
+      TestSkip "(folder) is in the folder listing", "bug 16543"
+      exit TestFolderInListing
+   end if
    
    set the defaultFolder to specialFolderPath("temporary")
    
@@ -36,6 +39,11 @@ on TestFolderInListing
 end TestFolderInListing
 
 on TestBugfix12039
+   if the platform is "HTML" then
+      TestSkip "(file) is among the files", "bug 16543"
+      exit TestBugfix12039
+   end if
+
    // 12039
    put the defaultFolder into tOldCwd
    set the defaultFolder to specialFolderPath("temporary")
@@ -90,6 +98,11 @@ on TestShortFilePath
 end TestShortFilePath
 
 on TestFileCreationWithOpenForWrite
+   if the platform is "HTML" then
+      TestSkip "Open file for write creates the file", "bug 16543"
+      exit TestFileCreationWithOpenForWrite
+   end if
+
    set the defaultFolder to specialFolderPath("temporary")
    
    local tFileName
@@ -136,10 +149,16 @@ end TestShortFilePath2
 
 on TestSpecialFolderPath
    local tFolder, tHome
-   put specialFolderPath("Temporary") into tFolder
-   TestAssert "temporary folder is not empty", tFolder is not empty
-   TestAssert "temporary folder exists", there is a folder tFolder
-   
+
+   if the platform is "HTML" then
+      TestSkip "temporary folder is not empty", "bug 16543"
+      TestSkip "temporary folder exists", "bug 16543"
+   else
+      put specialFolderPath("Temporary") into tFolder
+      TestAssert "temporary folder is not empty", tFolder is not empty
+      TestAssert "temporary folder exists", there is a folder tFolder
+   end if
+
    // windows numeric folder codes
    if the platform is "win32" then
       put specialFolderPath("home") into tHome
@@ -183,6 +202,14 @@ end TestTempName
 
 
 on TestThereIsAFile
+   if the platform is "HTML" then
+      TestSkip "after creation - there is a file (file)", "bug 16543"
+      TestSkip "after creation - not (there is not a file (file))", "bug 16543"
+      TestSkip "after deletion - not (there is a file (file))", "bug 16543"
+      TestSkip "after deletion - there is not a file (file)", "bug 16543"
+      exit TestThereIsAFile
+   end if
+
    set the defaultFolder to specialFolderPath("temporary")
    
    put "evalThereIsAFileTest.txt" into tTestfile
@@ -199,6 +226,14 @@ end TestThereIsAFile
 
 
 on TestThereIsAFolder
+   if the platform is "HTML" then
+      TestSkip "after creation - there is a folder (folder)", "bug 16543"
+      TestSkip "after creation - not (there is not a folder (folder))", "bug 16543"
+      TestSkip "after deletion - not (there is a folder (folder))", "bug 16543"
+      TestSkip "after deletion - there is not a folder (folder)", "bug 16543"
+      exit TestThereIsAFolder
+   end if
+
    set the defaultFolder to specialFolderPath("temporary")
    
    put "evalThereIsAFolderTest" into tTestFolder
@@ -274,11 +309,18 @@ on TestLaunch
       local tPID
       put word 1 of line it of taskList into tPID
       get shell ("kill" && tPID)
+   else if the platform is "HTML" then
+      TestSkip "launch subprocess", "HTML5 platform does not support subprocesses"
    end if	
 end TestLaunch
 
 
 on TestLaunchWith
+   if the platform is "HTML" then
+      TestSkip "launch subprocess with", "HTML5 platform does not support subprocesses"
+      exit TestLaunchWith
+   end if
+
    set the defaultFolder to specialFolderPath("Desktop")
    
    open file "Test.txt" for write

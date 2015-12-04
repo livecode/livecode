@@ -17,6 +17,11 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on TestSetup
+   -- Only run these tests on desktop platforms
+   if the platform is not among the items of "MacOS,Windows,Linux" then
+      return "SKIP Tests are not runnable on" && the platform
+   end if
+
    local tDocsParser
    put TestGetEngineRepositoryPath() & "/ide-support/revdocsparser.livecodescript" into tDocsParser
    start using stack tDocsParser

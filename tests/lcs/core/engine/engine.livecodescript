@@ -220,11 +220,14 @@ TestAssert "test", tError is not 0
 
 end TestEngine19
 
-on TestEngine20
+on TestSystemVersion
+   if the platform is "HTML" then
+      TestSkip "systemVersion not empty", "bug 16539"
+      exit TestSystemVersion
+   end if
+   TestAssert "test", the systemVersion is not empty
+end TestSystemVersion
 
-TestAssert "test", the systemVersion is not empty
-
-end TestEngine20
 on TestEngine21
 
 
@@ -312,7 +315,10 @@ TestAssert "test", item 1 of tItem3 is an integer
 end TestEngine24
 
 on TestEngine25
-
+   if the platform is "HTML" then
+      TestSkip "cancel message", "bug 16076"
+      exit TestEngine25
+   end if
 
 create button
 
@@ -465,7 +471,10 @@ close stack "Test1"
 end TestEngine35
 
 on TestEngine36
-
+   if the platform is "HTML" then
+      TestSkip "cancel message", "bug 16076"
+      exit TestEngine36
+   end if
 
 local tTime
 
