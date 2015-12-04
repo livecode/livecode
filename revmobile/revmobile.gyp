@@ -125,6 +125,7 @@
 			'xcode_settings':
 			{
 				'INFOPLIST_FILE': 'reviphone-Info.plist',
+				'CLANG_LINK_OBJC_RUNTIME': 'YES',
 			},
 		},
 		
@@ -157,6 +158,11 @@
 			[
 				'$(SDKROOT)/System/Library/Frameworks/CoreFoundation.framework',
 			],
+
+			'xcode_settings':
+			{
+				'CLANG_LINK_OBJC_RUNTIME': 'YES',
+			},
 		},
 	],
 }
