@@ -228,7 +228,7 @@ fi
 # Default Xcode target SDK
 if test -z "$XCODE_TARGET_SDK"; then
  case ${OS} in
-   mac) XCODE_TARGET_SDK="macosx" ;;
+   mac) XCODE_TARGET_SDK="macosx10.10" ;;
    ios) XCODE_TARGET_SDK="iphoneos" ;;
  esac
 fi

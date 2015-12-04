@@ -1,7 +1,7 @@
 {
 	'variables':
 	{
-		'target_sdk%': 'macosx',
+		'target_sdk%': 'macosx10.10',
 		'host_sdk%': 'macosx',
 		
 		'output_dir': '../mac-bin',
