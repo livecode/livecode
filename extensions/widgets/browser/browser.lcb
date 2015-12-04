@@ -302,7 +302,6 @@ metadata svgicon is "M21.7,12c0,5.4-4.4,9.7-9.7,9.7S2.3,17.4,2.3,12S6.6,2.3,12,2
 
 -- property declarations
 property URL get getUrl set setUrl
-metadata URL.editor is "com.livecode.pi.text"
 
 property htmlText get getHtmlText set setHtmlText
 
