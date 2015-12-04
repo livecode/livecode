@@ -18,6 +18,29 @@ end builderLog
 
 command builderInitialize
    start using stack (builderSystemFolder() & slash & "package_compiler.livecodescript")
+   
+   	# Ensure the db external is available
+	local tDBExtPath
+	put builderOutputFolder() & "/revdb" into tDBExtPath
+	
+	local tPlatform
+	put the platform into tPlatform
+	switch tPlatform
+	case "macos"
+		put ".bundle" after tDBExtPath
+		break
+	case "linux"
+		put ".so" after tDBExtPath
+		break
+	case "windows"
+		put ".dll" after tDBExtPath
+		break
+	default
+		throw "Invalid platform" && tPlatform
+		break
+	end switch
+
+	set the externals of this stack to tDBExtPath
 end builderInitialize
 
 command builderFinalize
