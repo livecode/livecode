@@ -1709,7 +1709,7 @@ enum Parse_errors
 
     // SN-2015-11-15: [[ Bug 165452 ]] New error, if a global variable shadows
     // a local variable declared beforehand
-    // {PE-0545} global: shadowing a local variable
+    // {PE-0555} global: shadowing a local variable
     PE_GLOBAL_SHADOW,
 };
 
