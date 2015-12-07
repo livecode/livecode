@@ -3090,16 +3090,10 @@ void MCObject::Set3D(MCExecContext& ctxt, bool setting)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCObject::SetVisibility(MCExecContext& ctxt, uint32_t part, bool setting, bool visible)
+void MCObject::SetVisible(MCExecContext& ctxt, uint32_t part, bool setting)
 {
 	bool dirty;
 	dirty = changeflag(setting, F_VISIBLE);
-
-	if (!visible)
-	{
-		flags ^= F_VISIBLE;
-		dirty = !dirty;
-	}
 
 	// MW-2011-10-17: [[ Bug 9813 ]] Record the current effective rect of the object.
 	MCRectangle t_old_effective_rect;
@@ -3130,11 +3124,6 @@ void MCObject::GetVisible(MCExecContext& ctxt, uint32_t part, bool& r_setting)
 	r_setting = isvisible(false);
 }
 
-void MCObject::SetVisible(MCExecContext& ctxt, uint32_t part, bool setting)
-{
-	SetVisibility(ctxt, part, setting, true);
-}
-
 void MCObject::GetEffectiveVisible(MCExecContext& ctxt, uint32_t part, bool& r_setting)
 {
 	r_setting = isvisible(true);
@@ -3147,7 +3136,7 @@ void MCObject::GetInvisible(MCExecContext& ctxt, uint32_t part, bool& r_setting)
 
 void MCObject::SetInvisible(MCExecContext& ctxt, uint32_t part, bool setting)
 {
-	SetVisibility(ctxt, part, setting, false);
+	SetVisible(ctxt, part, !setting);
 }
 
 void MCObject::GetEffectiveInvisible(MCExecContext& ctxt, uint32_t part, bool& r_setting)

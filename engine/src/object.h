@@ -900,7 +900,6 @@ public:
 	void SetPattern(MCExecContext& ctxt, uint2 p_new_pixmap, uint4* p_new_id);
 	bool GetPatterns(MCExecContext& ctxt, bool effective, MCStringRef& r_patterns);
 
-	void SetVisibility(MCExecContext& ctxt, uint32_t part, bool flag, bool visible);
 	void SetRectProp(MCExecContext& ctxt, bool effective, MCRectangle p_rect);
 	void GetRectPoint(MCExecContext& ctxt, bool effective, Properties which, MCPoint &r_point);
 	void SetRectPoint(MCExecContext& ctxt, bool effective, Properties which, MCPoint point);
