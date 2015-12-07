@@ -3127,7 +3127,7 @@ void MCObject::SetVisibility(MCExecContext& ctxt, uint32_t part, bool setting, b
 
 void MCObject::GetVisible(MCExecContext& ctxt, uint32_t part, bool& r_setting)
 {
-	r_setting = getflag(F_VISIBLE);
+	r_setting = isvisible(false);
 }
 
 void MCObject::SetVisible(MCExecContext& ctxt, uint32_t part, bool setting)
@@ -3137,20 +3137,12 @@ void MCObject::SetVisible(MCExecContext& ctxt, uint32_t part, bool setting)
 
 void MCObject::GetEffectiveVisible(MCExecContext& ctxt, uint32_t part, bool& r_setting)
 {
-    bool t_vis;
-    t_vis = getflag(F_VISIBLE);
-    
-    // if visible and effective and parent is a
-    // group then keep searching parent properties
-    if (t_vis && parent != NULL && parent->gettype() == CT_GROUP)
-        parent->GetEffectiveVisible(ctxt, part, t_vis);
-    
-    r_setting = t_vis;
+	r_setting = isvisible(true);
 }
 
 void MCObject::GetInvisible(MCExecContext& ctxt, uint32_t part, bool& r_setting)
 {
-	r_setting = (flags & F_VISIBLE) == False;
+	r_setting = !isvisible(false);
 }
 
 void MCObject::SetInvisible(MCExecContext& ctxt, uint32_t part, bool setting)
@@ -3160,9 +3152,7 @@ void MCObject::SetInvisible(MCExecContext& ctxt, uint32_t part, bool setting)
 
 void MCObject::GetEffectiveInvisible(MCExecContext& ctxt, uint32_t part, bool& r_setting)
 {
-	bool t_setting;
-    GetEffectiveVisible(ctxt, part, t_setting);
-    r_setting = !t_setting;
+    r_setting = !isvisible(true);
 }
 
 void MCObject::GetEnabled(MCExecContext& ctxt, uint32_t part, bool& r_setting)

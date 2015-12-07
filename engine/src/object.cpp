@@ -1307,16 +1307,15 @@ MCParentScript *MCObject::getparentscript(void) const
 	return parent_script != NULL ? parent_script -> GetParent() : NULL;
 }
 
-Boolean MCObject::isvisible()
+bool MCObject::isvisible(bool p_effective)
 {
-	MCObject *p = this;
-	while (p->parent != NULL && p->parent->gettype() == CT_GROUP)
-	{
-		if (!(p->flags & F_VISIBLE))
-			return False;
-		p = p->parent;
-	}
-	return (p->flags & F_VISIBLE) != 0;
+	if (!getflag(F_VISIBLE))
+		return false;
+	
+	if (p_effective && parent != nil && parent->gettype() == CT_GROUP)
+		return parent->isvisible(true);
+	
+	return true;
 }
 
 Boolean MCObject::resizeparent()

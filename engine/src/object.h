@@ -620,7 +620,10 @@ public:
 	MCImage *resolveimageid(uint4 image_id);
 	MCImage *resolveimagename(MCStringRef name);
 	
-	Boolean isvisible();
+	// IM-2015-12-07: [[ ObjectVisibility ]]
+	// Returns the visibility of the object. If effective is true then only returns true if the parent (and its parent, etc.) is also visible.
+	bool isvisible(bool p_effective = true);
+	
 	Boolean resizeparent();
 	Boolean getforecolor(uint2 di, Boolean reversed, Boolean hilite, MCColor &c,
 	                     MCPatternRef &r_pattern, int2 &x, int2 &y, MCDC *dc, MCObject *o, bool selected = false);
