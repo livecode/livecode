@@ -50,7 +50,7 @@ command releaseNotesBuilderFinalize
    stop using stack (builderSystemFolder() & slash & "markdown_compiler.livecodescript")
 end releaseNotesBuilderFinalize
 
-command releaseNotesBuilderRun pEdition, pVersion, pReleaseType
+command releaseNotesBuilderRun pEdition, pVersion, pReleaseType, pOutputDir
    builderLog "report", "Building release notes for version" && pVersion
    
    releaseNotesBuilderInitialize
@@ -138,8 +138,14 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType
    
    local tNotesFileURL
    local tNotesFile
-   builderEnsureFolder  builderRepoFolder() & slash & targetPath()
-   put builderRepoFolder() & slash & targetPath() & slash & "LiveCodeNotes-" & replaceText(pVersion, "[-,\.]", "_") into tNotesFile
+   local tOutputDir
+   if pOutputDir is empty then
+      put builderRepoFolder() & slash & targetPath() into tOutputDir
+   else
+      put pOutputDir into tOutputDir
+   end if
+   builderEnsureFolder tOutputDir
+   put tOutputDir & slash & "LiveCodeNotes-" & replaceText(pVersion, "[-,\.]", "_") into tNotesFile
    put "file:" & tNotesFile & ".html" into tNotesFileURL
    
    local tNotesPrefix

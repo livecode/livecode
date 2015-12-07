@@ -58,10 +58,41 @@ Parse_stat MCGlobal::parse(MCScriptPoint &sp)
 			(PE_GLOBAL_BADNAME, sp);
 			return PS_ERROR;
 		}
+
+        // SN-2015-11-19: [[ Bug 16452 ]] We need to check whether a local
+        // variable already exists at a script/handler level, to avoid shadowing
+        bool t_shadowing;
+        t_shadowing = false;
+
+        MCVarref* t_var;
+        t_var = NULL;
 		if (sp.gethandler() == NULL)
-			sp.gethlist()->newglobal(sp.gettoken_nameref());
+        {
+            sp.gethlist() -> findvar(sp.gettoken_nameref(), false, &t_var);
+            if (t_var == NULL || !MCexplicitvariables)
+                sp.gethlist()->newglobal(sp.gettoken_nameref());
+            else
+                t_shadowing = true;
+        }
 		else
-			sp.gethandler()->newglobal(sp.gettoken_nameref());
+        {
+            sp.gethandler()->findvar(sp.gettoken_nameref(), &t_var);
+            if (t_var == NULL || !MCexplicitvariables)
+                sp.gethandler()->newglobal(sp.gettoken_nameref());
+            else
+                t_shadowing = true;
+        }
+
+        // Clearup fetched var
+        delete t_var;
+
+        // In case we are shadowing a local variable, then we raise an error
+        if (t_shadowing)
+        {
+            MCperror -> add(PE_GLOBAL_SHADOW, sp);
+            return PS_ERROR;
+        }
+
 		switch (sp.next(type))
 		{
 		case PS_NORMAL:
