@@ -123,7 +123,7 @@ component Uninstaller
 			register value "Version" as "[[VersionTag]]"
 			register value "UninstallString" as path "\q[[TargetFolder]]/.setup.exe\q uninstall"
 	if TargetPlatform is "Linux" then
-		place uninstaller at "[[TargetFolder]]/.setup.x86"
+		place uninstaller at "[[TargetFolder]]/setup.[[TargetArchitecture]]"
 	if TargetPlatform is "MacOSX" then
 		place uninstaller at "[[TargetFolder]]/LiveCode Setup.app"
 

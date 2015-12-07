@@ -17,7 +17,7 @@ On Linux, the situation is currently less than ideal:
 *open a terminal
 **cd* to the folder containing your LiveCode install. e.g.
 	`cd /opt/livecode/livecode-<version>`
-*execute the *.setup.x86* file. i.e.
+*execute the *setup.x86* (or *setup.x86_64* for 64-bit LiveCode) file. i.e.
 	`./.setup.x86`
 *follow the on-screen instructions.
 # Reporting installer issues
