@@ -36,21 +36,10 @@ Parameters:
 folderIdentifier (enum): One of the items below. 
 Windows >*Note:* For Windows systems, you can also specify a CSIDL number that identifies a special folder. You can find a complete list of available CDISL values on the <a href="http://vbnet.mvps.org/index.html?code/browse/csidlversions.htm">Microsoft web site</a>. Not all CSIDL numbers work on all Windows versions, refer to the link above to find out more about CSIDLs. 
 iOS >*Note:* iOS imposes strict controls over what you can and cannot access. Each application in iOS is stored in its own 'sandbox' folder (referred to as the home folder). An application is free to read and write files within this folder and its descendants, but it is not allowed to access anything outside of the 'sandbox'. 
-Android >*Note:* An Android application is installed on the phone in the form of its zip package. This means that any assets that are included are not available as discrete files in the native filesystem. In order to manage this the engine essentially 'virtualizes' the asset files you include, allowing (read-only) manipulation with all the standard LiveCode file and folder handling syntax. To access the assets you have included within your application, use filenames relative to <specialFolderPath> ("engine").  . For Mac OS systems: For Mac OS X systems: For Windows systems: Windows CSIDL numbers: For Unix systems: For iOS systems: For Android systems:
-- "Desktop": The Desktop folder, where files or folders on the desktop are placed.
-- "System": The active System Folder.
-- "Apple": The Apple Menu Items folder inside the System Folder.
-- "Control": The Control Panels folder inside the System Folder.
-- "Extension": The Extensions folder inside the System Folder.
-- "Fonts": The Fonts folder inside the System Folder.
-- "Preferences": The Preferences folder inside the System Folder.
-- "Temporary": For storage of temporary files.
-- "Engine": The folder containing the engine and the executable files copied in the standalone application.
-- "Resources": In development mode, the current stack folder. In a standalone, the resources folder where non-executable files, or folders specified from the Standalone Builder, are copied.
+Android >*Note:* An Android application is installed on the phone in the form of its zip package. This means that any assets that are included are not available as discrete files in the native filesystem. In order to manage this the engine essentially 'virtualizes' the asset files you include, allowing (read-only) manipulation with all the standard LiveCode file and folder handling syntax. To access the assets you have included within your application, use filenames relative to <specialFolderPath> ("engine").  . For Mac OS X systems: For Windows systems: Windows CSIDL numbers: For Unix systems: For iOS systems: For Android systems:
 - "Home": The current user's home directory (e.g. "/Users/Fred").
 - "Desktop": The user's Desktop folder.
 - "System": The Apple Menu Items folder inside the System Folder.
-- "Control": The active System Folder.
 - "Fonts": The system Fonts folder.
 - "Preferences": The Preferences folder inside the user's Library folder.
 - "Temporary": For storage of temporary files.
@@ -79,7 +68,6 @@ Android >*Note:* An Android application is installed on the phone in the form of
 - "Home": The current user's home directory (e.g. "/home/fred").
 - "Desktop": The current user's desktop (e.g. "/home/fred/Desktop").
 - "Temporary": For storage of temporary files (typically "/tmp").
-- "0x000e": The "My Videos" folder.
 - "Engine": The folder containing the engine.
 - "Resources": In development mode, the current stack folder. In a standalone, the resources folder where files or folders specified from the Standalone Builder are copied.
 - "home": The (unique) folder containing the application bundle and its associated data and folders.
