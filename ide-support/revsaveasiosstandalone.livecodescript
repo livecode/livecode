@@ -1712,7 +1712,7 @@ private command symlinkRedirect pSource, pTarget
       put escapeSingleQuote(pSource) into tEscapedSource
       put escapeSingleQuote(pTarget) into tEscapedTarget
       
-      put get shell(merge("ln '[[tEscapedSource]]' '[[tEscapedTarget]]' || cp '[[tEscapedSource]]' '[[tEscapedTarget]]'"))
+      get shell(merge("ln '[[tEscapedSource]]' '[[tEscapedTarget]]' || cp '[[tEscapedSource]]' '[[tEscapedTarget]]'"))
       
       if the result is not empty then
          // Both 'ln' and 'cp' failedn
