@@ -39,7 +39,7 @@ LiveCode supports Linux installations which meet the following requirements:
 
 **Note:** If the optional requirements are not present then LiveCode will still run but the specified features will be disabled.
 
-**Note:** The requirements for GUI functionality are also required by Firefox and Chrome, so if your Linux distritution runs one of those, it will run LiveCode.
+**Note:** The requirements for GUI functionality are also required by Firefox and Chrome, so if your Linux distribution runs one of those, it will run LiveCode.
 
 **Note:** It may be possible to compile and run LiveCode Community for Linux on other architectures but this is not officially supported.
 
