@@ -24,7 +24,7 @@ extern bool MCCefBrowserFactoryCreate(MCBrowserFactoryRef &r_factory);
 // Overcome the tautological error if s_factory_list is a static pointer
 MCBrowserFactoryMap kMCBrowserFactoryMap[] =
 {
-    { "cef", nil, MCCefBrowserFactoryCreate },
+    { "CEF", nil, MCCefBrowserFactoryCreate },
     { nil, nil, nil },
 };
 
