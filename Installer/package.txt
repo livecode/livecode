@@ -537,7 +537,7 @@ component Documentation
 		// Temporary work-around
 		file ide:Documentation/html_viewer/resources/data/api/built_api.js as resources/data/api/built_api.js
 		file ide:Documentation/html_viewer/resources/data/guide/built_guide.js as resources/data/guide/built_guide.js
-		file ide::Documentation/html_viewer/resources/data/api/built_api.js as resources/data/api/api.sqlite
+		file ide::Documentation/html_viewer/resources/data/api/api.sqlite as resources/data/api/api.sqlite
 component Extensions
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.browser
