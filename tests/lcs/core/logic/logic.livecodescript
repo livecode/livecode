@@ -88,14 +88,22 @@ on TestIsA
    // Positive integer
    __checkVariableType 42, "integer,number,date,color,ascii string"
    
-   // Negative integer
-   __checkVariableType -42, "integer,number,date,color,ascii string"
+   // Negative integer - is a date on Mac only.
+   if the platform is "macos" then
+      __checkVariableType -42, "integer,number,date,color,ascii string"
+   else
+      __checkVariableType -42, "integer,number,color,ascii string"
+   end if
    
    // Positive real
    __checkVariableType 3.14, "number,date,ascii string"
    
-   // Negative real
-   __checkVariableType -3.14, "number,date,ascii string"
+   // Negative real - is a date on Mac only.
+   if the platform is "macos" then
+      __checkVariableType -3.14, "number,date,ascii string"
+   else
+      __checkVariableType -3.14, "number,ascii string"
+   end if
    
    // Positive scientific notation - integer
    __checkVariableType 3.14E2, "number,date,integer,ascii string"
