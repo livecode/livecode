@@ -287,10 +287,6 @@ end TestVersion
 
 
 on TestCancelPendingMessage
-if the platform is "HTML" then
-TestSkip "cancel message", "bug 16076"
-exit TestCancelPendingMessage
-end if
 
 create button
 
@@ -429,10 +425,6 @@ end TestReleaseStackMessage
 
 
 on TestMilliseconds
-if the platform is "HTML" then
-TestSkip "cancel message", "bug 16076"
-exit TestMilliseconds
-end if
 
 local tTime
 
@@ -446,10 +438,6 @@ end TestMilliseconds
 
 
 on TestSeconds
-if the platform is "HTML" then
-TestSkip "cancel message", "bug 16076"
-exit TestSeconds
-end if
 
 local tTime
 
@@ -463,10 +451,6 @@ end TestSeconds
 
 
 on TestTicks
-if the platform is "HTML" then
-TestSkip "cancel message", "bug 16076"
-exit TestTicks
-end if
 
 local tTime
 
