@@ -20,7 +20,7 @@ substring (string): The substring and string are both strings, or expressions th
 string (string): 
 
 Description:
-Use the <is not in> <operator> to find out whether a <string> contains a substring.
+Use the <is not in> <operator> to find out whether a <string> does not contain a substring.
 
 The expression
 firstString is not in secondString

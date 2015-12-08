@@ -2247,12 +2247,28 @@ void MCStringsExecFilterRegexIntoIt(MCExecContext& ctxt, MCStringRef p_source, M
 
 void MCStringsEvalIsAscii(MCExecContext& ctxt, MCValueRef p_value, bool& r_result)
 {
+    // SN-2015-11-26: [[ Bug 16500 ]] Arrays will successfully convert to an
+    // empty string, which is a valid ASCII string. Cut short in this case
+    if (MCValueIsArray(p_value))
+    {
+        r_result = false;
+        return;
+    }
+
     MCAutoStringRef t_string;
 	if (!ctxt . ConvertToString(p_value, &t_string))
     {
         r_result = false;
         return;
     }
+
+    // SN-2015-11-27: [[ Bug 16504 ]] Empty strings are not a valid ascii string
+    if (MCStringIsEmpty(*t_string))
+    {
+        r_result = false;
+        return;
+    }
+
     MCAutoPointer<char> temp;
     /* UNCHECKED */ MCStringConvertToCString(*t_string, &temp);
     const char *t_cstring;
