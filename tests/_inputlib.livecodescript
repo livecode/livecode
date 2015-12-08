@@ -16,6 +16,10 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+on revLoadLibrary
+   insert the script of me into back
+end revLoadLibrary
+
 local sTestStrings, sTestNumbers, sTestConversionStrings, sTestFilePaths, sArrayData
 local sInitialised
 

@@ -172,15 +172,14 @@ end invokeTest
 
 -- Add the unit test library stack and the input library to the backscripts
 private command invokeLoadLibrary pInfo
-   -- Compute the filename of the library stack and load it
-   local tStackname
-   put invokeGetLibraryStack(pInfo) into tStackFile
-   put the name of stack tStackFile into tStackName
-
-   send "revLoadLibrary" to stack tStackname
-   
-   -- Use the test input library
-   start using stack invokeGetInputLibraryStack(pInfo)
+   local tLibrary, tStackName, tStackFile
+   repeat for each item tLibrary in "_testlib,_inputlib"
+      -- Compute the filename of the library stack and load it
+      put invokeGetStackFolder(pInfo) & slash & tLibrary & ".livecodescript" into tStackFile
+      put the name of stack tStackFile into tStackName
+      
+      send "revLoadLibrary" to stack tStackname
+   end repeat
 end invokeLoadLibrary
 
 private function invokeGetStackFolder pInfo
@@ -190,15 +189,6 @@ private function invokeGetStackFolder pInfo
    set the itemDelimiter to slash
    return item 1 to -2 of tFilename
 end invokeGetStackFolder
-
--- Return the filename of the unit test library stack
-private function invokeGetLibraryStack pInfo
-   return invokeGetStackFolder(pInfo) & slash & "_testlib.livecodescript"
-end invokeGetLibraryStack
-
-private function invokeGetInputLibraryStack pInfo
-   return invokeGetStackFolder(pInfo) & slash & "_inputlib.livecodescript"
-end invokeGetInputLibraryStack
 
 ----------------------------------------------------------------
 -- Support for running tests
