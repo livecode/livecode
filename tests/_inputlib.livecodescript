@@ -21,7 +21,7 @@ local sInitialised
 
 private function __testFilesFolder
    set the itemDelimiter to slash
-   return item 1 to -2 of the filename of me & slash & "lcs input files"
+   return item 1 to -2 of the filename of me & slash & "lcs-input-files"
 end __testFilesFolder
 
 private function getTestFile pTestFile
