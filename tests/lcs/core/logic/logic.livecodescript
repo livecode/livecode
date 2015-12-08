@@ -89,13 +89,13 @@ on TestIsA
    __checkVariableType 42, "integer,number,date,color,ascii string"
    
    // Negative integer
-   __checkVariableType -42, "integer,number,color,ascii string"
+   __checkVariableType -42, "integer,number,date,color,ascii string"
    
    // Positive real
    __checkVariableType 3.14, "number,date,ascii string"
    
    // Negative real
-   __checkVariableType -3.14, "number,ascii string"
+   __checkVariableType -3.14, "number,date,ascii string"
    
    // Positive scientific notation - integer
    __checkVariableType 3.14E2, "number,date,integer,ascii string"

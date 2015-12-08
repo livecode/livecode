@@ -179,9 +179,6 @@ on TestSpecialFolderPath
    put specialFolderPath("engine") into tEngine
    __testFolderExists tSkip, tEngine, "engine"
 
-   put specialFolderPath("resources") into tResources
-   __testFolderExists tSkip, tResources, "resources"
-
    local tFolder, tHome
 
    if the platform is "html" then
@@ -196,6 +193,7 @@ on TestSpecialFolderPath
       TestAssert "temporary folder exists", there is a folder tFolder
    end if
    
+   put specialFolderPath("resources") into tResources
    if the platform is "macos" and the environment is "standalone" then
       // Standalone on Mac have their non-executable resource in a specific folder
       set the itemDelimiter to slash
@@ -260,7 +258,6 @@ on TestSpecialFolderPath
    __testSpecialFolder tSkip, "pref", "preferences"
    __testSpecialFolder tSkip, "sprf", "PreferencePanes"
    __testSpecialFolder tSkip, "temp", "Temporary files"
-   __testSpecialFolder tSkip, "flnt", "Chewable files"
    __testSpecialFolder tSkip, "vtmp", "Temporary cachedf files"
    __testSpecialFolder tSkip, "apps", "Applications"
    __testSpecialFolder tSkip, "root", "Root"
@@ -273,7 +270,6 @@ on TestSpecialFolderPath
    __testSpecialFolder tSkip, "docs", "User docs"
    __testSpecialFolder tSkip, "pdoc", "User pictures"
    __testSpecialFolder tSkip, "mdoc", "User movies"
-   __testSpecialFolder tSkip, "site", "User site"
    __testSpecialFolder tSkip, "pubb", "User public"
    
    ////////////////////////////////////////////////////////////////////////////////
@@ -491,7 +487,7 @@ on TestReadFromProcess
       
       close process tProcess
    else if the platform is "macos" or the platform contains "linux" then
-      put "sh" into tProcess
+      put "/bin/sh" into tProcess
       
       open process tProcess for update
       
