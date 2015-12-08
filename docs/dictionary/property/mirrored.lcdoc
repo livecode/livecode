@@ -1,0 +1,27 @@
+Name: mirrored
+
+Type: property
+
+Syntax: set the mirrored of <player> to {true | false}
+
+Summary: Specifies whether a <player> displays the video frames in "mirrored" mode.
+
+Associations: player
+
+Introduced: 6.7
+
+OS: mac
+
+Platforms: desktop
+
+Example:
+set the mirrored of player "myPlayer" to true
+
+Value (bool): The <mirrored> of a <player> is true or false.
+
+Description:
+Use the <mirrored> <property> to flip horizontally the frames of a player.
+
+References: startTime (property), showSelection (property), player (keyword), property (glossary)
+
+Tags: multimedia

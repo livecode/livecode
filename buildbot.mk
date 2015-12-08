@@ -200,7 +200,7 @@ dist-upload-files.txt sha1sum.txt:
 	                -o -name '*-bin.tar.xz' \
 	  > dist-upload-files.txt; \
 	if test "${UPLOAD_RELEASE_NOTES}" = "yes"; then \
-		find "_build/notes" -name 'LiveCodeNotes*.pdf' >> dist-upload-files.txt; \
+		find . -maxdepth 1 -name 'LiveCodeNotes*.pdf' >> dist-upload-files.txt; \
 	fi; \
 	if test "$(UPLOAD_ENABLE_CHECKSUM)" = "yes"; then \
 	  $(SHA1SUM) < dist-upload-files.txt > sha1sum.txt; \
