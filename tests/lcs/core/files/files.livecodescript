@@ -165,15 +165,6 @@ on TestSpecialFolderPath
    __testFolderExists tSkip, tEngine, "engine"
 
    local tFolder, tHome
-
-   if the platform is "android" then
-      TestSkip "temporary folder is not empty", "temporary folder not available on android"
-      TestSkip "temporary folder exists", "temporary folder not available on android"
-   else
-      put specialFolderPath("Temporary") into tFolder
-      TestAssert "temporary folder is not empty", tFolder is not empty
-      TestAssert "temporary folder exists", there is a folder tFolder
-   end if
    
    put specialFolderPath("resources") into tResources
    if the platform is "macos" and the environment is "standalone" then
@@ -214,7 +205,7 @@ on TestSpecialFolderPath
    __testSpecialFolder tSkip, "fonts"
    
    //////////////////////////////////////////////////////////////////////////////////////////
-   // windows numeric folder codes
+   TestDiagnostic "Windows numeric folder codes"
    put the platform is not "win32" into tSkip
    __testSpecialFolder tSkip, "0x001a", "User app"
    __testSpecialFolder tSkip, "0x0023", "All user app"
@@ -227,6 +218,7 @@ on TestSpecialFolderPath
    
    //////////////////////////////////////////////////////////////////////////////////////////
    // Mac-specific
+   TestDiagnostic "Mac-specific special folders"
    put the platform is not "macos" into tSkip
    
    // Preferences folder
