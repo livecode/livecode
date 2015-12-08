@@ -148,11 +148,11 @@ else if the platform is "android" then
 put "arm,i386" into tProcessors
 else if the platform is "iphone" then
 put "arm,arm64,i386,x86_64" into tProcessors
+else if the platform is among the items of "Mac OS,Linux" then
+   // Mac and Linux
+   put line 1 of shell("uname -m") into tProcessors
 else
-// Mac and Linux
-put shell("uname -m") into tProcessors
-// Delete LF finishing the command output
-delete last char of tProcessors
+   -- Unknown platform for "the processor"
 end if
 
 TestAssert "the processor is correct", the processor is among the items of tProcessors
