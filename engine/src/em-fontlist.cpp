@@ -70,11 +70,6 @@ MCFontnode::MCFontnode(MCNameRef p_name,
     // Load the font as requested
     m_font_info.fid = emscripten_get_font_by_name(p_name);
 
-    /* FIXME Dummy values */
-	m_font_info.size = p_size;
-	m_font_info.ascent = p_size - 1;
-	m_font_info.descent = p_size * 2 / 14 + 1;
-
     //MCLog("Created dummy font: %@ %hi %hi", p_name, p_size, p_style);
 }
 
