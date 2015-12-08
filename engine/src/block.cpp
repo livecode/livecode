@@ -1932,25 +1932,6 @@ void MCBlock::reset()
 	width = 0;
 }
 
-uint2 MCBlock::getascent(void)
-{
-	int2 shift = flags & F_HAS_SHIFT ? atts->shift : 0;
-	// MW-2007-07-05: [[ Bug 1943 ]] - Images do not have correct ascent height *MIGHT NEED REVERSION*
-	if (flags & F_HAS_IMAGE && atts->image != NULL)
-		return MCU_max(0, atts->image->getrect().height - shift + 2);
-	else
-		return MCU_max(0, heightfromsize(ceilf(MCFontGetAscent(m_font))) - uint2(ceilf(MCFontGetDescent(m_font))) - shift);
-}
-
-uint2 MCBlock::getdescent(void)
-{
-	int2 shift = flags & F_HAS_SHIFT ? atts->shift : 0;
-	if (flags & F_HAS_IMAGE && atts->image != NULL)
-		return MCU_max(0, shift);
-	else
-		return MCU_max(0, uint2(ceilf(MCFontGetDescent(m_font))) + shift);
-}
-
 coord_t MCBlock::GetAscent() const
 {
    	int2 shift = flags & F_HAS_SHIFT ? atts->shift : 0;
@@ -1972,7 +1953,6 @@ coord_t MCBlock::GetDescent() const
 
 coord_t MCBlock::GetLeading() const
 {
-    int2 shift = flags & F_HAS_SHIFT ? atts->shift : 0;
     if (flags & F_HAS_IMAGE && atts->image != NULL)
         return GetAscent()+GetDescent();
     else
