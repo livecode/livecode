@@ -148,11 +148,11 @@ else if the platform is "android" then
 put "arm,i386" into tProcessors
 else if the platform is "iphone" then
 put "arm,arm64,i386,x86_64" into tProcessors
+else if the platform is among the items of "Mac OS,Linux" then
+   // Mac and Linux
+   put line 1 of shell("uname -m") into tProcessors
 else
-// Mac and Linux
-put shell("uname -m") into tProcessors
-// Delete LF finishing the command output
-delete last char of tProcessors
+   -- Unknown platform for "the processor"
 end if
 
 TestAssert "the processor is correct", the processor is among the items of tProcessors
@@ -287,10 +287,6 @@ end TestVersion
 
 
 on TestCancelPendingMessage
-if the platform is "HTML" then
-TestSkip "cancel message", "bug 16076"
-exit TestCancelPendingMessage
-end if
 
 create button
 
@@ -429,10 +425,6 @@ end TestReleaseStackMessage
 
 
 on TestMilliseconds
-if the platform is "HTML" then
-TestSkip "cancel message", "bug 16076"
-exit TestMilliseconds
-end if
 
 local tTime
 
@@ -446,10 +438,6 @@ end TestMilliseconds
 
 
 on TestSeconds
-if the platform is "HTML" then
-TestSkip "cancel message", "bug 16076"
-exit TestSeconds
-end if
 
 local tTime
 
@@ -463,10 +451,6 @@ end TestSeconds
 
 
 on TestTicks
-if the platform is "HTML" then
-TestSkip "cancel message", "bug 16076"
-exit TestTicks
-end if
 
 local tTime
 
