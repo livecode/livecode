@@ -723,11 +723,14 @@ private command installCopyUninstaller pTarget
       end if
       
       // SN-2014-10-28: [[ Bug 16410 ]] The uninstaller needs the execution permission
-      local tChmodResult
-      get shell("chmod +x " & quote & installShortenPath(pTarget) & quote)
-      if it is not empty then
-         log "CopyUninstaller:    setting executable permission failed - " & it
-         reportError "Unable to install uninstaller at '" & pTarget * "'."
+      // (on Linux)
+      if the platform contains "linux" then
+         local tChmodResult
+         get shell("chmod +x " & quote & installShortenPath(pTarget) & quote)
+         if it is not empty then
+            log "CopyUninstaller:    setting executable permission failed - " & it
+            reportError "Unable to install uninstaller at '" & pTarget * "'."
+         end if
       end if
    end if
 end installCopyUninstaller
