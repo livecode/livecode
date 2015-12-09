@@ -24,6 +24,13 @@ end revLoadLibrary
 -- Helper functions
 ----------------------------------------------------------------
 
+private function _TestValidateCount pCount
+   if pCount is not an integer or pCount <= 0 then
+      throw "Bad test count '" & pCount & "': must be positive integer"
+   end if
+   return pCount
+end _TestValidateCount
+
 private function _TestValidateDescription pDescription
    if the number of lines in pDescription > 1 then
       throw "Bad test description '" & line 1 of pDescription & "...': multiple lines"
@@ -103,6 +110,10 @@ end _TestWriteOutput
 ----------------------------------------------------------------
 -- Unit test library functions
 ----------------------------------------------------------------
+
+on TestPlan pCount
+   _TestWriteOutput "1.." & _TestValidateCount(pCount) & return
+end TestPlan
 
 on TestDiagnostic pMessage
    local tLine
