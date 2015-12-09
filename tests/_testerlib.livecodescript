@@ -218,12 +218,22 @@ end TesterTapGetTestCount
 -- Combine two sets of TAP results
 function TesterTapCombine pAnalysisA, pAnalysisB
    local tCombined, tKey
-   repeat for each key tKey in pAnalysisB
-      if tKey is "log" then
-         put pAnalysisA[tKey] & pAnalysisB[tKey] into tCombined[tKey]
-      else
-         put pAnalysisA[tKey] + pAnalysisB[tKey] into tCombined[tKey]
-      end if
-   end repeat
+
+   if pAnalysisA is an array and pAnalysisB is an array then
+      repeat for each key tKey in pAnalysisB
+         if tKey is "log" then
+            put pAnalysisA[tKey] & pAnalysisB[tKey] into tCombined[tKey]
+         else
+            put pAnalysisA[tKey] + pAnalysisB[tKey] into tCombined[tKey]
+         end if
+      end repeat
+   else if pAnalysisA is an array then
+      put pAnalysisA into tCombined
+   else if pAnalysisB is an array then
+      put pAnalysisB into tCombined
+   else
+      put 1 into tCombined[1]
+      delete tCombined[1]
+   end if
    return tCombined
 end TesterTapCombine
