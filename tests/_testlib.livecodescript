@@ -172,16 +172,12 @@ on TestLoadExtension pName
       delete item -1 of tPath
    end repeat
    
-   TestDiagnostic tExtensionsFolder
-
    local tExtensionFolder
    if tExtensionsFolder is not empty then
       if there is a folder (tExtensionsFolder & slash & tExtensionUnzipFolder) then
         put (tExtensionsFolder & slash & tExtensionUnzipFolder) into tExtensionFolder
       end if
    end if
-   
-    TestDiagnostic tExtensionFolder
    
    local tExtensionFile
    if tExtensionFolder is not empty then
