@@ -228,10 +228,6 @@ end TestMouse
 
 
 on TestMovingControls
-   if the platform is "HTML" then
-      TestSkip "moving button", "bug 16076"
-      exit TestMovingControls
-   end if
 
    TestAssert "No moving controls", the movingControls is empty
    create button
@@ -699,10 +695,6 @@ end TestSortField
 
 
 on TestMoveControl
-   if the platform is "HTML" then
-      TestSkip "stop moving button", "bug 16076"
-      exit TestMoveControl
-   end if
 
    create button
    
