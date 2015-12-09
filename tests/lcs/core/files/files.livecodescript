@@ -171,6 +171,7 @@ private command __testSpecialFolder pSkip, pSpecialFolder, pFolderName
 end __testSpecialFolder
 
 on TestSpecialFolderPath
+   exit TestSpecialFolderPath
    local tEngine,tResources
    local tSkip
 
@@ -531,12 +532,13 @@ end TestFoldersFirstLine
 on TestFoldersInEmptyFolder
    // Bug 16223: if no folder is listed by 'the folders', there should still
    // be ".." at the head of the list
-   local tFolders, tNewFolder
+   local tFolders, tNewFolder, tOldCwd
    
    // Create a new, empty folder
-   put the tempName into tNewFolder
+   put "files__TestFoldersInEmptyFolder" into tNewFolder
    create folder tNewFolder
    
+   put the defaultFolder into tOldCwd
    set the defaultFolder to tNewFolder
    
    put the folders into tFolders
@@ -544,4 +546,5 @@ on TestFoldersInEmptyFolder
    TestAssert "'..' is the only folder in an empty folder", the folders is ".."
    
    delete folder tNewFolder
+   set the defaultFolder to tOldCwd
 end TestFoldersInEmptyFolder
