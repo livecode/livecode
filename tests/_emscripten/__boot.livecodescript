@@ -2,7 +2,7 @@
 
 private command TestLoadLibrary pBasename
 	local tStackname
-	put the name of stack (pBasename & ".livecodescript") into tStackname
+	put the name of stack ("tests/" & pBasename & ".livecodescript") into tStackname
 
 	dispatch revLoadLibrary to tStackname
 end TestLoadLibrary
@@ -14,6 +14,7 @@ on startup
 	write "# Loading test libraries" & return to stdout
 	TestLoadLibrary "_testlib"
 	TestLoadLibrary "_testerlib"
+	TestLoadLibrary "_inputlib"
 
 	-- Run tests
 	local tTestFile, tStackName, tCommand, tSetupResult

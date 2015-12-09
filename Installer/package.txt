@@ -123,7 +123,7 @@ component Uninstaller
 			register value "Version" as "[[VersionTag]]"
 			register value "UninstallString" as path "\q[[TargetFolder]]/.setup.exe\q uninstall"
 	if TargetPlatform is "Linux" then
-		place uninstaller at "[[TargetFolder]]/.setup.x86"
+		place uninstaller at "[[TargetFolder]]/setup.[[TargetArchitecture]]"
 	if TargetPlatform is "MacOSX" then
 		place uninstaller at "[[TargetFolder]]/LiveCode Setup.app"
 
@@ -537,7 +537,7 @@ component Documentation
 		// Temporary work-around
 		file ide:Documentation/html_viewer/resources/data/api/built_api.js as resources/data/api/built_api.js
 		file ide:Documentation/html_viewer/resources/data/guide/built_guide.js as resources/data/guide/built_guide.js
-		file ide::Documentation/html_viewer/resources/data/api/built_api.js as resources/data/api/api.sqlite
+		file ide::Documentation/html_viewer/resources/data/api/api.sqlite as resources/data/api/api.sqlite
 component Extensions
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.browser

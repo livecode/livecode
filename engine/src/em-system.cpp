@@ -167,14 +167,12 @@ MCEmscriptenSystem::GetVersion(MCStringRef & r_string)
 bool
 MCEmscriptenSystem::GetMachine(MCStringRef & r_string)
 {
-	MCEmscriptenNotImplemented();
-	return false;
+	return MCStringCopy(kMCEmptyString, r_string);
 }
 
 MCNameRef
 MCEmscriptenSystem::GetProcessor()
 {
-	MCEmscriptenNotImplemented();
 	return kMCEmptyName;
 }
 
