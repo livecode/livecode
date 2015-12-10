@@ -76,6 +76,9 @@ guess_platform () {
         i*86|x86)
           echo "linux-x86"
           return 0 ;;
+        arm*)
+          echo "linux-rpi"
+          return 0 ;;
       esac;;
   esac
   return 1
@@ -173,6 +176,7 @@ fi
 case ${PLATFORM} in
   linux-x86) ;;
   linux-x86_64) ;;
+  linux-rpi) ;;
   android-armv6) ;;
   mac) ;;
   ios) ;;
@@ -248,6 +252,7 @@ if test -z "$TARGET_ARCH"; then
     *-x86)     TARGET_ARCH="x86" ;;
     *-x86_64)  TARGET_ARCH="x86_64" ;;
     *-armv6)   TARGET_ARCH="armv6" ;;
+    *-rpi)     TARGET_ARCH="armv6hf" ;;
     emscripten) TARGET_ARCH="js" ;;
 
     mac*|ios*)
@@ -347,6 +352,45 @@ if test "${OS}" = "android" ; then
 
 fi # End of Android defaults & tools
 
+# RaspberryPi cross-compilation
+if test "${PLATFORM}" = "linux-rpi" ; then
+	# Are we cross-compiling? (Almost certainly!)
+	case "$(uname -p)" in
+		arm*) ;;
+		*)
+			# Is there a toolchain directory and prefix set?
+			if [ -z "${RPI_TOOLCHAIN_DIR}" ] ; then
+				RPI_TOOLCHAIN_DIR="${HOME}/x-tools/rpi/bin"
+			fi
+			if [ -z "${RPI_TOOLCHAIN_PREFIX}" ] ; then
+				RPI_TOOLCHAIN_PREFIX="arm-rpi-linux-gnueabi-"
+			fi
+			
+			# Raspbian image root directory
+			if [ -z "${RPI_ROOT_DIR}" ] ; then
+				RPI_ROOT_DIR="${HOME}/raspbian/root"
+			fi
+			
+			export RPI_TOOLCHAIN="${RPI_TOOLCHAIN_DIR}/${RPI_TOOLCHAIN_PREFIX}"
+			
+			export AR=${AR:-${RPI_TOOLCHAIN}ar}
+			export CC=${CC:-${RPI_TOOLCHAIN}gcc}
+			export CXX=${CXX:-${RPI_TOOLCHAIN}g++}
+			export LINK=${LINK:-${RPI_TOOLCHAIN}g++}
+			export OBJCOPY=${OBJCOPY:-${RPI_TOOLCHAIN}objcopy}
+			export OBJDUMP=${OBJDUMP:-${RPI_TOOLCHAIN}objdump}
+			export STRIP=${STRIP:-${RPI_TOOLCHAIN}strip}
+			
+			# Add the Raspbian libraries to the link path but only *after* the 
+			# toolchain's system libraries. If they end up before these paths,
+			# references to libc.so and ld-linux.so stop working.
+			export LINK="${LINK} -L=/lib -L=/usr/lib -L${RPI_ROOT_DIR}/usr/lib -L${RPI_ROOT_DIR}/usr/lib/arm-linux-gnueabihf"
+			
+			linux_extra_args="-Dcross_compile=1"
+			
+			;;
+	esac
+fi
 
 # Emscripten default settings and tools
 if test "${OS}" = "emscripten" ; then
@@ -372,7 +416,7 @@ fi
 
 case ${OS} in
   linux)
-    invoke_gyp $basic_args "-DOS=${OS}" "-Dtarget_arch=${TARGET_ARCH}" "$@"
+    invoke_gyp $basic_args "-DOS=${OS}" "-Dtarget_arch=${TARGET_ARCH}" ${linux_extra_args} "$@"
     ;;
   emscripten)
     export NODE_JS
