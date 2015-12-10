@@ -1671,7 +1671,8 @@ void EmitDetachRegisterFromExpression(long expr)
             }
     }
     
-    Debug_Emit("DetachRegister(%d, %p)", t_remove -> reg, t_remove -> expr);
+    if (t_remove != nil)
+        Debug_Emit("DetachRegister(%d, %p)", t_remove -> reg, t_remove -> expr);
     
     MCMemoryDelete(t_remove);
 }
