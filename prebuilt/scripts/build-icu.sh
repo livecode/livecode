@@ -65,8 +65,8 @@ function buildICU {
 				CONFIG_TYPE="Linux"
 				if [ "${ARCH}" == "x86_64" ] ; then
 					CONFIG_TYPE+=" --with-library-bits=64"
-				elif [ "${ARCH}" == "armv6-hf" ] ; then
-					CONFIG_TYPE+=" --host=arm-linux-gnueabihf --with-cross-build=${HOST_ICU_DIR}"
+				elif [ "${ARCH}" == "armv6hf" ] ; then
+					CONFIG_TYPE+=" --host=arm-rpi-linux-gnueabihf --with-cross-build=${HOST_ICU_DIR}"
 				else
 					CONFIG_TYPE+=" --with-library-bits=32"
 				fi
