@@ -1381,10 +1381,7 @@ Boolean MCButton::mup(uint2 which, bool p_release)
                     // that we need to check is the rect of the stack containing
                     // the menu).
                     MCRectangle t_rect = t_menu->getstack()->getrect();
-                    t_outside = (t_rect.x < MCmousex
-                                 || MCmousex >= (t_rect.x + t_rect.width)
-                                 || t_rect.y < MCmousey
-                                 || MCmousey >= (t_rect.y + t_rect.height));
+                    t_outside = !MCU_point_in_rect(rect, mx, my);
                     
                     // Move to the parent menu, if it exists
                     if (t_menu->getstack()->getparent()    // Stack's parent
