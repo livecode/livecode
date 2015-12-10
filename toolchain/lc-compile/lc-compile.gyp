@@ -54,7 +54,7 @@
 										{
 											'dist_files':
 											[
-												'<(lc-compile_target)',
+												'>(lc-compile_target)',
 											],
 										},
 									},
