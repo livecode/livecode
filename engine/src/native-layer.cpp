@@ -140,56 +140,80 @@ bool MCNativeLayer::ShouldShowWidget(MCWidget *p_widget)
 	return p_widget->getflag(F_VISIBLE) && p_widget->isInRunMode();
 }
 
-MCWidget* MCNativeLayer::findNextLayerAbove(MCWidget* p_widget)
+struct MCNativeLayerFindWidgetObjectVisitor: public MCObjectVisitor
 {
-	MCObjptr *t_first_object;
-	t_first_object = p_widget->getcard()->getobjptrs();
+	MCWidget *current_widget;
+	MCWidget *found_widget;
 	
-	MCObjptr *t_object;
-	t_object = p_widget->getcard()->getobjptrforcontrol(p_widget)->next();
+	bool find_above;
+	bool reached_current;
 	
-	while (t_object != t_first_object)
+	bool OnWidget(MCWidget *p_widget)
 	{
-		MCControl *t_control;
-		t_control = t_object->getref();
 		// We are only looking for widgets with a native layer
-		if (t_control->gettype() == CT_WIDGET && reinterpret_cast<MCWidget*>(t_control)->getNativeLayer() != nil)
-		{
-			// Found what we are looking for
-			return reinterpret_cast<MCWidget*>(t_control);
-		}
+		if (p_widget->getNativeLayer() != nil)
+			return OnNativeLayerWidget(p_widget);
 		
-		// Next control
-		t_object = t_object->next();
+		return true;
 	}
 	
-	return nil;
+	bool OnNativeLayerWidget(MCWidget *p_widget)
+	{
+		if (find_above)
+		{
+			if (reached_current)
+			{
+				found_widget = p_widget;
+				return false;
+			}
+			else if (p_widget == current_widget)
+			{
+				reached_current = true;
+				return true;
+			}
+			return true;
+		}
+		else
+		{
+			if (p_widget == current_widget)
+			{
+				reached_current = true;
+				return false;
+			}
+			else
+			{
+				found_widget = p_widget;
+				return true;
+			}
+		}
+	}
+};
+
+
+MCWidget* MCNativeLayer::findNextLayerAbove(MCWidget* p_widget)
+{
+	MCNativeLayerFindWidgetObjectVisitor t_visitor;
+	t_visitor.current_widget = p_widget;
+	t_visitor.found_widget = nil;
+	t_visitor.reached_current = false;
+	t_visitor.find_above = true;
+	
+	p_widget->getcard()->visit(kMCObjectVisitorRecursive, 0, &t_visitor);
+	
+	return t_visitor.found_widget;
 }
 
 MCWidget* MCNativeLayer::findNextLayerBelow(MCWidget* p_widget)
 {
-	MCObjptr *t_last_object;
-	t_last_object = p_widget->getcard()->getobjptrs()->prev();
+	MCNativeLayerFindWidgetObjectVisitor t_visitor;
+	t_visitor.current_widget = p_widget;
+	t_visitor.found_widget = nil;
+	t_visitor.reached_current = false;
+	t_visitor.find_above = false;
 	
-	MCObjptr *t_object;
-	t_object = p_widget->getcard()->getobjptrforcontrol(p_widget)->prev();
+	p_widget->getcard()->visit(kMCObjectVisitorRecursive, 0, &t_visitor);
 	
-	while (t_object != t_last_object)
-	{
-		MCControl *t_control;
-		t_control = t_object->getref();
-		// We are only looking for widgets with a native layer
-		if (t_control->gettype() == CT_WIDGET && reinterpret_cast<MCWidget*>(t_control)->getNativeLayer() != nil)
-		{
-			// Found what we are looking for
-			return reinterpret_cast<MCWidget*>(t_control);
-		}
-		
-		// Previous control
-		t_object = t_object->prev();
-	}
-	
-	return nil;
+	return t_visitor.found_widget;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

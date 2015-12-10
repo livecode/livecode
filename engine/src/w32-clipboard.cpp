@@ -466,7 +466,14 @@ bool MCWin32RawClipboard::PushUpdates()
 
 	// Clipboard is now clean
 	if (t_result == S_OK)
+	{
+		// Flush the clipboard. By doing this now, we ensure that other apps
+		// won't hang if LiveCode is busy processing something and they
+		// attempt to fetch data from the clipboard.
+		OleFlushClipboard();
+		
 		m_dirty = false;
+	}
 
 	return (t_result == S_OK);
 }
