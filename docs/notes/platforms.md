@@ -88,3 +88,11 @@ You also need to have Java *JDK 1.6* installed on your machine (or *openjdk-6* o
 Once you have set the path of your Android SDK in the *LiveCode Preferences > Mobile Support*, you can deploy your stack to Android devices running Android >= 2.3.3.
 
 Android Watch is not officially supported at the moment.
+
+## HTML5
+
+LiveCode applications can be deployed to run in a web browser, by running the LiveCode engine in JavaScript and using modern HTML5 JavaScript APIs.
+
+HTML5 deployment does not require any additional development tools to be installed.
+
+LiveCode HTML5 standalone applications are currently supported for running in recent versions of [Mozilla Firefox](https://www.mozilla.org/firefox/new/), [Google Chrome](https://www.google.com/chrome/) or [Safari](https://support.apple.com/HT204416).  For more information, please see the "HTML5 Deployment" guide in the LiveCode IDE.
