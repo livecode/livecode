@@ -1615,6 +1615,7 @@
     'rule' GenerateExpression(Result, Context, Expr -> Output):
         EmitCreateRegister(-> Output)
         GenerateExpressionInRegister(Result, Context, Expr, Output)
+        GenerateInvoke_FreeArgument(Expr)
 
 'action' GenerateExpressionInRegister(INT, INT, EXPRESSION, INT)
 
@@ -1651,15 +1652,19 @@
     'rule' GenerateExpressionInRegister(Result, Context, logicalor(_, Left, Right), Output):
         EmitDeferLabel(-> ShortLabel)
         GenerateExpressionInRegister(Result, Context, Left, Output)
+        GenerateInvoke_FreeArgument(Left)
         EmitJumpIfTrue(Output, ShortLabel)
         GenerateExpressionInRegister(Result, Context, Right, Output)
+        GenerateInvoke_FreeArgument(Right)
         EmitResolveLabel(ShortLabel)
 
     'rule' GenerateExpressionInRegister(Result, Context, logicaland(_, Left, Right), Output):
         EmitDeferLabel(-> ShortLabel)
         GenerateExpressionInRegister(Result, Context, Left, Output)
+        GenerateInvoke_FreeArgument(Left)
         EmitJumpIfFalse(Output, ShortLabel)
         GenerateExpressionInRegister(Result, Context, Right, Output)
+        GenerateInvoke_FreeArgument(Right)
         EmitResolveLabel(ShortLabel)
 
     'rule' GenerateExpressionInRegister(Result, Context, as(_, _, _), Output):
@@ -1691,7 +1696,6 @@
         EmitEndInvoke()
         EmitDestroyRegister(IgnoredReg)
         GenerateInvoke_AssignArguments(Result, Context, Signature, Arguments)
-        GenerateInvoke_FreeArguments(Arguments)
         
     'rule' GenerateExpressionInRegister(_, _, Expr, _):
         print(Expr)

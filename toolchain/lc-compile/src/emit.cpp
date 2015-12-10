@@ -172,6 +172,17 @@ extern "C" void DependDefineDependency(NameRef module_name, NameRef dependency_n
 
 //////////
 
+struct AttachedReg
+{
+    AttachedReg *next;
+    long expr;
+    long reg;
+};
+
+static AttachedReg *s_attached_regs = nil;
+
+//////////
+
 //static MCTypeInfoRef *s_typeinfos = nil;
 //static uindex_t s_typeinfo_count = 0;
 
@@ -853,6 +864,13 @@ void EmitBeginContextHandlerDefinition(long p_index, PositionRef p_position, Nam
 
 void EmitEndHandlerDefinition(void)
 {
+    if (s_attached_regs != nil)
+    {
+        for(AttachedReg *t_reg = s_attached_regs; t_reg != NULL; t_reg = t_reg -> next)
+            Debug_Emit("Dangling register %d attached to %p", t_reg -> reg, t_reg -> expr);
+        Fatal_InternalInconsistency("Handler code generated with dangling register attachments");
+    }
+    
     MCScriptEndHandlerInModule(s_builder);
 
     Debug_Emit("EndHandlerDefinition()");
@@ -1602,15 +1620,6 @@ void EmitReturnNothing(void)
 
 ////////
 
-struct AttachedReg
-{
-    AttachedReg *next;
-    long expr;
-    long reg;
-};
-
-static AttachedReg *s_attached_regs = nil;
-
 static bool FindAttachedReg(long expr, AttachedReg*& r_attach)
 {
     for(AttachedReg *t_reg = s_attached_regs; t_reg != nil; t_reg = t_reg -> next)
@@ -1634,6 +1643,8 @@ void EmitAttachRegisterToExpression(long reg, long expr)
     t_attach -> expr = expr;
     t_attach -> reg = reg;
     s_attached_regs = t_attach;
+    
+    Debug_Emit("AttachRegister(%d, %p)", reg, expr);
 }
 
 void EmitDetachRegisterFromExpression(long expr)
@@ -1659,6 +1670,8 @@ void EmitDetachRegisterFromExpression(long expr)
                 break;
             }
     }
+    
+    Debug_Emit("DetachRegister(%d, %p)", t_remove -> reg, t_remove -> expr);
     
     MCMemoryDelete(t_remove);
 }
