@@ -37,7 +37,6 @@
 #include "securemode.h"
 
 #include "system.h"
-#include "object.h"
 
 #include "foundation.h"
 
@@ -378,7 +377,7 @@ void MCS_getresourcesfolder(bool p_standalone, MCStringRef &r_resources_folder)
         t_stack_filename = MCdefaultstackptr -> getfilename();
 		
 		// PM-2015-12-10: [[ Bug 16577 ]] If we are on a substack, use the parent stack filename
-		if (MCStringIsEmpty(t_stack_filename) )
+		if (MCStringIsEmpty(t_stack_filename))
 		{
 			MCStack *t_parent_stack;
 			t_parent_stack = static_cast<MCStack *>(MCdefaultstackptr -> getparent());
