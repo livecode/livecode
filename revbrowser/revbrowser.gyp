@@ -59,7 +59,7 @@
 			[
 				# Only supported on OSX, Windows and Linux
 				[
-					'OS != "mac" and OS != "win" and OS != "linux"',
+					'(OS != "mac" and OS != "win" and OS != "linux") or (OS == "linux" and target_arch != "x86" and target_arch != "x86_64")',
 					{
 						'type': 'none',
 					},
@@ -122,7 +122,7 @@
 					},
 				],
 				[
-					'OS == "linux"',
+					'OS == "linux" and (target_arch == "x86" or target_arch == "x86_64")',
 					{
 						'libraries':
 						[
@@ -177,13 +177,13 @@
 			'conditions':
 			[
 				[
-					'OS != "mac" and OS != "win" and OS != "linux"',
+					'(OS != "mac" and OS != "win" and OS != "linux") or (OS == "linux" and target_arch != "x86" and target_arch != "x86_64")',
 					{
 						'type': 'none',
 					},
 				],
 				[
-					'OS == "win" or OS == "linux"',
+					'OS == "win" or (OS == "linux" and (target_arch == "x86" or target_arch == "x86_64"))',
 					{
 						# Distributing the OSX version is done separately
 						'all_dependent_settings':
