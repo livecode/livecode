@@ -30,7 +30,7 @@ function doPackage {
 	local LIBPATH="lib/${PLATFORM}/${ARCHDIR}/${SUBPLATFORM}"
 
 	local OPENSSL_TAR="${PACKAGE_DIR}/OpenSSL-${OpenSSL_VERSION}${SUFFIX}.tar"
-	local CURL_TAR="${PACKAGE_DIR}/Curl-${CURL_VERSION}${SUFFIX}.tar"
+	local CURL_TAR="${PACKAGE_DIR}/Curl-${Curl_VERSION}${SUFFIX}.tar"
 	local ICU_TAR="${PACKAGE_DIR}/ICU-${ICU_VERSION}${SUFFIX}.tar"
 	local CEF_TAR="${PACKAGE_DIR}/CEF-${CEF_VERSION}${SUFFIX}.tar"
 
