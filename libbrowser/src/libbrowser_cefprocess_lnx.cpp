@@ -27,12 +27,19 @@ extern bool MCCefCreateApp(CefRefPtr<CefApp> &r_app);
 
 extern "C" int initialise_weak_link_cef(void);
 extern "C" int initialise_weak_link_cef_with_path(const char *p_path);
+extern "C" int initialise_weak_link_X11(void);
 
 int main(int argc, char *argv[])
 {
 	const char *t_lib_path;
 	t_lib_path = MCCefPlatformGetCefLibraryPath();
 	
+#if !defined(BUILDING_CEFPROCESS)
+    // We need to call some Xlib functions directly
+    if (!initialise_weak_link_X11())
+        return -1;
+#endif
+    
 	// IM-2014-03-18: [[ revBrowserCEF ]] Initialise dynamically loaded cef library
 	if (t_lib_path != nil)
 	{

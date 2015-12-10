@@ -304,6 +304,11 @@
 				'../thirdparty/libcef/libcef.gyp:libcef_stubs',
 			],
 
+            'defines':
+            [
+                'BUILDING_CEFPROCESS=1',
+            ],
+
 			'include_dirs':
 			[
 				'include',
