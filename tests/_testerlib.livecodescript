@@ -232,8 +232,7 @@ function TesterTapCombine pAnalysisA, pAnalysisB
    else if pAnalysisB is an array then
       put pAnalysisB into tCombined
    else
-      put 1 into tCombined[1]
-      delete tCombined[1]
+      put empty into tCombined
    end if
    return tCombined
 end TesterTapCombine
