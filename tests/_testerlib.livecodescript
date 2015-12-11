@@ -31,13 +31,17 @@ end revLoadLibrary
 
 -- Get all livecode script files beneath the CWD, apart from
 -- filenames starting with "." or "_"
-function TesterGetTestFileNames
+function TesterGetTestFileNames pBaseFolder
    local tFiles, tCount
 
    put empty into tFiles
    put 0 into tCount
 
-   TesterGetTestFileNames_Recursive the defaultfolder, empty, tFiles, tCount
+   if pBaseFolder is empty then
+      put the defaultfolder into pBaseFolder
+   end if
+
+   TesterGetTestFileNames_Recursive pBaseFolder, empty, tFiles, tCount
 
    return tFiles
 end TesterGetTestFileNames
