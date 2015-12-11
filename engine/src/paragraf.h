@@ -836,7 +836,7 @@ public:
 #endif
 
 	void restricttoline(findex_t& si, findex_t& ei);
-	findex_t heightoflinewithindex(findex_t si, uint2 fixedheight);
+	uint2 heightoflinewithindex(findex_t si, uint2 fixedheight);
 	
 	uint2 getopened()
 	{
