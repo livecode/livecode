@@ -18,12 +18,15 @@
 
 #include "libbrowser_internal.h"
 
-extern bool MCUIWebViewBrowserFactoryCreate(MCBrowserFactoryRef &r_factory);
+extern bool MCCefBrowserFactoryCreate(MCBrowserFactoryRef &r_factory);
 
+
+// Overcome the tautological error if s_factory_list is a static pointer
 MCBrowserFactoryMap kMCBrowserFactoryMap[] =
 {
-	{ "UIWebView", nil, MCUIWebViewBrowserFactoryCreate },
-	{ nil, nil, nil },
+    { "CEF", nil, MCCefBrowserFactoryCreate },
+    { nil, nil, nil },
 };
 
 MCBrowserFactoryMap* s_factory_list = kMCBrowserFactoryMap;
+

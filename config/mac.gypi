@@ -176,6 +176,7 @@
 			'xcode_settings':
 			{
 				'ARCHS': 'i386 x86_64',
+				'ONLY_ACTIVE_ARCH': 'YES',
 				'GCC_OPTIMIZATION_LEVEL': '0',
 			},
 		},
