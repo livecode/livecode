@@ -57,7 +57,11 @@ static void MCLogicalFontTableGetEntry(uint32_t p_index, MCNameRef& r_textfont, 
 
 static void MCLogicalFontTableSetEntry(uint32_t p_index, MCNameRef p_textfont, uint2 p_textstyle, uint2 p_textsize, bool p_unicode)
 {
-	s_logical_font_table[p_index] . textfont = p_textfont;
+    // Clear the entry - this avoid spurious warnings from valgrind due to
+    // padding bytes in the entries.
+    memset(&s_logical_font_table[p_index], 0, sizeof(MCLogicalFontTableEntry));
+    
+    s_logical_font_table[p_index] . textfont = p_textfont;
 	s_logical_font_table[p_index] . textstyle = p_textstyle;
 	s_logical_font_table[p_index] . textsize = p_textsize & 0x7fff;
 	if (p_unicode)
