@@ -2274,7 +2274,7 @@ bool MCUnicodeWildcardMatch(const void *source_chars, uindex_t source_length, bo
 							{
                                 // we're still ok if the current source grapheme falls within the appropriate range.
                                 // If not, there may be other options within this pair of brackets
-								if (t_source_cp >= t_lower_limit || t_source_cp <= t_pattern_cp)
+								if (t_source_cp >= t_lower_limit && t_source_cp <= t_pattern_cp)
 									ok = true;
 							}
 						}
