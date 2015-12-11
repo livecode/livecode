@@ -291,7 +291,7 @@ uindex_t kMCValuePoolCount = kMCValueTypeCodeList + 1;
 bool __MCValueCreate(MCValueTypeCode p_type_code, size_t p_size, __MCValue*& r_value)
 {
 	void *t_value;
-    
+	
     // MW-2014-03-21: [[ Faster ]] If we are pooling this typecode, and the
     //   pool isn't empty grab the ptr from there.
     if (p_type_code <= kMCValueTypeCodeList && s_value_pools[p_type_code] . count > 0)
@@ -354,6 +354,12 @@ void __MCValueDestroy(__MCValue *self)
         // Shouldn't get here
         MCAssert(false);
 	}
+	
+	// Ensure that an immediate abort will be caused in Debug mode if a destroyed MCValueRef pointer is passed to
+	// a libfoundation function
+#ifdef _DEBUG
+	self -> flags = 0;
+#endif
 
     // MW-2014-03-21: [[ Faster ]] If we are pooling this typecode, and the
     //   pool isn't full, add it to the pool.
@@ -364,7 +370,7 @@ void __MCValueDestroy(__MCValue *self)
         s_value_pools[t_code] . values = self;
         return;
     }
-    
+	
 	MCMemoryDelete(self);
 }
 
