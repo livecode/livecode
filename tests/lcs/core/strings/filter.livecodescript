@@ -1,4 +1,4 @@
-﻿script "CoreStringSort"
+﻿script "CoreStringFilter"
 /*
 Copyright (C) 2015 LiveCode Ltd.
 
@@ -15,9 +15,6 @@ for more details.
 
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
-
-on TestFilterEmpty
-end TestFilterEmpty
 
 /*
 	Filter wildcard special characters:
