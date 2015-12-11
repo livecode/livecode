@@ -2263,7 +2263,14 @@ void MCObject::SetColors(MCExecContext& ctxt, MCStringRef p_input)
 		if (!MCStringFirstIndexOfChar(p_input, '\n', t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
 		
-		if (t_new_offset > t_old_offset)
+		// PM-2015-12-02: [[ Bug 16524 ]] Make sure empty lines reset color props
+		if (t_new_offset == t_old_offset)
+		{
+			uint2 i;
+			if (getcindex(index, i))
+				destroycindex(index, i);
+		}
+		else if (t_new_offset > t_old_offset)
 		{
 			MCInterfaceNamedColor t_color;
 			t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_color_string);
