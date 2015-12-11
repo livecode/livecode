@@ -87,7 +87,6 @@ MCWidget::MCWidget(void)
     m_kind = nil;
     m_rep = nil;
     m_widget = nil;
-    m_native_layer = nil;
 }
 
 MCWidget::MCWidget(const MCWidget& p_other) :
@@ -96,7 +95,6 @@ MCWidget::MCWidget(const MCWidget& p_other) :
     m_kind = nil;
     m_rep = nil;
     m_widget = nil;
-    m_native_layer = nil;
 }
 
 MCWidget::~MCWidget(void)
@@ -104,7 +102,6 @@ MCWidget::~MCWidget(void)
     MCValueRelease(m_widget);
     MCValueRelease(m_kind);
     MCValueRelease(m_rep);
-    delete m_native_layer;
 }
 
 void MCWidget::bind(MCNameRef p_kind, MCValueRef p_rep)
@@ -896,39 +893,6 @@ void MCWidget::SetDisabled(MCExecContext& ctxt, uint32_t p_part_id, bool p_flag)
     
     if (t_is_disabled != getflag(F_DISABLED))
         recompute();
-}
-
-bool MCWidget::GetNativeView(void *&r_view)
-{
-	if (m_native_layer == nil)
-		return false;
-	
-	return m_native_layer->GetNativeView(r_view);
-}
-
-bool MCWidget::SetNativeView(void *p_view)
-{
-	bool t_success;
-	t_success = true;
-	
-	MCNativeLayer *t_layer;
-	t_layer = nil;
-	
-	if (t_success && p_view != nil)
-	{
-		t_layer = MCNativeLayer::CreateNativeLayer(getwidget(), p_view);
-		t_success = t_layer != nil;
-	}
-	
-	if (t_success)
-	{
-		if (m_native_layer != nil)
-			delete m_native_layer;
-		
-		m_native_layer = t_layer;
-	}
-	
-	return t_success;
 }
 
 MCWidgetRef MCWidget::getwidget(void) const

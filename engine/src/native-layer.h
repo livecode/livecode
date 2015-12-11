@@ -19,6 +19,8 @@
 #define __MC_NATIVE_LAYER__
 
 
+class MCObject;
+
 class MCNativeLayer
 {
 public:
@@ -41,12 +43,14 @@ public:
 	virtual bool GetNativeView(void *&r_view) = 0;
 	
 	// Implemented by the platform-specific native layers: creates a new layer
-	static MCNativeLayer* CreateNativeLayer(MCWidgetRef p_widget, void *p_native_view);
+	static MCNativeLayer *CreateNativeLayer(MCObject *p_object, void *p_native_view);
 
 	void SetCanRenderToContext(bool p_can_render);
 	virtual bool GetCanRenderToContext();
 
 protected:
+	
+	void UpdateVisibility();
 	
 	// Platform-specific implementations
 	virtual void doAttach() = 0;
@@ -56,21 +60,23 @@ protected:
 	virtual void doSetGeometry(const MCRectangle &p_rect) = 0;
 	virtual void doRelayer() = 0;
 	
-	MCWidgetRef m_widget;
+	MCObject *m_object;
 	
     bool m_attached;
+	bool m_visible;
+	bool m_show_for_tool;
     bool m_can_render_to_context;
 	bool m_defer_geometry_changes;
     
     MCNativeLayer();
     
-	// Returns true if the widget should be currently visible
-	virtual bool ShouldShowWidget(MCWidget *p_widget);
-
+	// Returns true if the layer should be currently visible
+	virtual bool ShouldShowLayer();
+	
     // Utility function for subclasses: given a widget, finds the native layer
     // immediately below or above it. If none exist, returns nil.
-    static MCWidget* findNextLayerBelow(MCWidget*);
-    static MCWidget* findNextLayerAbove(MCWidget*);
+    static MCObject* findNextLayerBelow(MCObject*);
+    static MCObject* findNextLayerAbove(MCObject*);
 };
 
 

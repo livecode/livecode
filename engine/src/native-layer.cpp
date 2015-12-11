@@ -49,8 +49,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 MCNativeLayer::MCNativeLayer() :
-	m_widget(nil), m_attached(false), m_can_render_to_context(true),
-	m_defer_geometry_changes(false)
+	m_object(nil), m_attached(false), m_can_render_to_context(true),
+	m_defer_geometry_changes(false), m_visible(false), m_show_for_tool(false)
 {
     ;
 }
@@ -95,23 +95,39 @@ bool MCNativeLayer::OnPaint(MCGContextRef p_context)
 void MCNativeLayer::OnGeometryChanged(const MCRectangle &p_old_rect)
 {
 	if (!m_defer_geometry_changes)
-		doSetGeometry(MCWidgetGetHost(m_widget)->getrect());
+		doSetGeometry(m_object->getrect());
 }
 
 void MCNativeLayer::OnToolChanged(Tool p_new_tool)
 {
-	MCWidget* t_widget = MCWidgetGetHost(m_widget);
+	bool t_showing;
+	t_showing = ShouldShowLayer();
 	
-	OnVisibilityChanged(ShouldShowWidget(t_widget));
-	t_widget->Redraw();
+	m_show_for_tool = p_new_tool == T_BROWSE || p_new_tool == T_HELP;
+
+	if (t_showing != (ShouldShowLayer()))
+		UpdateVisibility();
+
+	m_object->Redraw();
 }
 
 void MCNativeLayer::OnVisibilityChanged(bool p_visible)
 {
-	if (p_visible)
+	bool t_showing;
+	t_showing = ShouldShowLayer();
+	
+	m_visible = p_visible;
+	
+	if (t_showing != (ShouldShowLayer()))
+		UpdateVisibility();
+}
+
+void MCNativeLayer::UpdateVisibility()
+{
+	if (ShouldShowLayer())
 	{
 		if (m_defer_geometry_changes)
-			doSetGeometry(MCWidgetGetHost(m_widget)->getrect());
+			doSetGeometry(m_object->getrect());
 		m_defer_geometry_changes = false;
 	}
 	else
@@ -120,7 +136,7 @@ void MCNativeLayer::OnVisibilityChanged(bool p_visible)
 			m_defer_geometry_changes = true;
 	}
 	
-	doSetVisible(p_visible);
+	doSetVisible(ShouldShowLayer());
 }
 
 void MCNativeLayer::OnLayerChanged()
@@ -135,15 +151,15 @@ bool MCNativeLayer::isAttached() const
     return m_attached;
 }
 
-bool MCNativeLayer::ShouldShowWidget(MCWidget *p_widget)
+bool MCNativeLayer::ShouldShowLayer()
 {
-	return p_widget->getflag(F_VISIBLE) && p_widget->isInRunMode();
+	return m_show_for_tool && m_visible;
 }
 
 struct MCNativeLayerFindWidgetObjectVisitor: public MCObjectVisitor
 {
-	MCWidget *current_widget;
-	MCWidget *found_widget;
+	MCObject *current_object;
+	MCObject *found_object;
 	
 	bool find_above;
 	bool reached_current;
@@ -152,21 +168,21 @@ struct MCNativeLayerFindWidgetObjectVisitor: public MCObjectVisitor
 	{
 		// We are only looking for widgets with a native layer
 		if (p_widget->getNativeLayer() != nil)
-			return OnNativeLayerWidget(p_widget);
+			return OnNativeLayerObject(p_widget);
 		
 		return true;
 	}
 	
-	bool OnNativeLayerWidget(MCWidget *p_widget)
+	bool OnNativeLayerObject(MCObject *p_object)
 	{
 		if (find_above)
 		{
 			if (reached_current)
 			{
-				found_widget = p_widget;
+				found_object = p_object;
 				return false;
 			}
-			else if (p_widget == current_widget)
+			else if (p_object == current_object)
 			{
 				reached_current = true;
 				return true;
@@ -175,14 +191,14 @@ struct MCNativeLayerFindWidgetObjectVisitor: public MCObjectVisitor
 		}
 		else
 		{
-			if (p_widget == current_widget)
+			if (p_object == current_object)
 			{
 				reached_current = true;
 				return false;
 			}
 			else
 			{
-				found_widget = p_widget;
+				found_object = p_object;
 				return true;
 			}
 		}
@@ -190,30 +206,30 @@ struct MCNativeLayerFindWidgetObjectVisitor: public MCObjectVisitor
 };
 
 
-MCWidget* MCNativeLayer::findNextLayerAbove(MCWidget* p_widget)
+MCObject* MCNativeLayer::findNextLayerAbove(MCObject* p_object)
 {
 	MCNativeLayerFindWidgetObjectVisitor t_visitor;
-	t_visitor.current_widget = p_widget;
-	t_visitor.found_widget = nil;
+	t_visitor.current_object = p_object;
+	t_visitor.found_object = nil;
 	t_visitor.reached_current = false;
 	t_visitor.find_above = true;
 	
-	p_widget->getcard()->visit(kMCObjectVisitorRecursive, 0, &t_visitor);
+	p_object->getcard()->visit(kMCObjectVisitorRecursive, 0, &t_visitor);
 	
-	return t_visitor.found_widget;
+	return t_visitor.found_object;
 }
 
-MCWidget* MCNativeLayer::findNextLayerBelow(MCWidget* p_widget)
+MCObject* MCNativeLayer::findNextLayerBelow(MCObject* p_object)
 {
 	MCNativeLayerFindWidgetObjectVisitor t_visitor;
-	t_visitor.current_widget = p_widget;
-	t_visitor.found_widget = nil;
+	t_visitor.current_object = p_object;
+	t_visitor.found_object = nil;
 	t_visitor.reached_current = false;
 	t_visitor.find_above = false;
 	
-	p_widget->getcard()->visit(kMCObjectVisitorRecursive, 0, &t_visitor);
+	p_object->getcard()->visit(kMCObjectVisitorRecursive, 0, &t_visitor);
 	
-	return t_visitor.found_widget;
+	return t_visitor.found_object;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

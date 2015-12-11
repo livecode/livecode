@@ -27,6 +27,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "platform.h"
 
+#include "native-layer.h"
+
 enum {
     MAC_SHADOW,
     MAC_THUMB_TOP,
@@ -321,6 +323,10 @@ protected:
 	static MCObjectPropertyTable kPropertyTable;
     static MCPropertyInfo kModeProperties[];
 	static MCObjectPropertyTable kModePropertyTable;
+
+	// The native layer associated with this object
+	MCNativeLayer* m_native_layer;
+	
 public:
 	MCObject();
 	MCObject(const MCObject &oref);
@@ -457,6 +463,12 @@ public:
 	virtual void relayercontrol_remove(MCControl *control);
 	virtual void relayercontrol_insert(MCControl *control, MCControl *target);
 
+	bool GetNativeView(void *&r_view);
+	bool SetNativeView(void *p_view);
+	
+	// Gets the current native layer (if any) associated with this object
+	MCNativeLayer* getNativeLayer() const;
+	
 	MCNameRef getdefaultpropsetname(void);
 
 #ifdef LEGACY_EXEC

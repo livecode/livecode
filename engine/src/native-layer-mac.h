@@ -29,7 +29,7 @@ public:
     
 	virtual bool GetNativeView(void *&r_view);
 	
-    MCNativeLayerMac(MCWidgetRef, NSView *p_view);
+    MCNativeLayerMac(MCObject *p_object, NSView *p_view);
     ~MCNativeLayerMac();
     
 private:

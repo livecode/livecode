@@ -174,9 +174,6 @@ public:
     virtual void visibilitychanged(bool p_visible);
     virtual void layerchanged();
 	
-	bool GetNativeView(void *&r_view);
-	bool SetNativeView(void *p_view);
-	
     virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool flag);
     
     void GetKind(MCExecContext& ctxt, MCNameRef& r_kind);
@@ -192,12 +189,6 @@ public:
     
     bool isInRunMode();
     
-    // Gets the current native layer (if any) associated with this widget
-    MCNativeLayer* getNativeLayer() const
-    {
-        return m_native_layer;
-    }
-    
 protected:
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
@@ -212,9 +203,6 @@ private:
     
     // The LCB Widget object.
     MCWidgetRef m_widget;
-    
-    // The native layer associated with this widget
-    MCNativeLayer* m_native_layer;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

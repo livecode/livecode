@@ -59,11 +59,11 @@
 #include "graphics_util.h"
 
 
-MCNativeLayerMac::MCNativeLayerMac(MCWidgetRef p_widget, NSView *p_view) :
+MCNativeLayerMac::MCNativeLayerMac(MCObject *p_object, NSView *p_view) :
   m_view(p_view),
   m_cached(nil)
 {
-	m_widget = p_widget;
+	m_object = p_object;
 	[m_view retain];
 }
 
@@ -82,8 +82,6 @@ MCNativeLayerMac::~MCNativeLayerMac()
 
 void MCNativeLayerMac::doAttach()
 {
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
     // Act as if there was a re-layer to put the widget in the right place
     // *** Can we assume open happens in back-to-front order? ***
     doRelayer();
@@ -91,8 +89,8 @@ void MCNativeLayerMac::doAttach()
     // Restore the visibility state of the widget (in case it changed due to a
     // tool change while on another card - we don't get a message then)
 	
-	doSetGeometry(t_widget->getrect());
-	doSetVisible(ShouldShowWidget(t_widget));
+	doSetGeometry(m_object->getrect());
+	doSetVisible(ShouldShowLayer());
 }
 
 void MCNativeLayerMac::doDetach()
@@ -136,11 +134,9 @@ bool MCNativeLayerMac::doPaint(MCGContextRef p_context)
 
 void MCNativeLayerMac::doSetGeometry(const MCRectangle &p_rect)
 {
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
     NSRect t_nsrect;
     MCRectangle t_cardrect;
-    t_cardrect = t_widget->getcard()->getrect();
+    t_cardrect = m_object->getcard()->getrect();
     t_nsrect = NSMakeRect(p_rect.x, t_cardrect.height-p_rect.y-p_rect.height, p_rect.width, p_rect.height);
     [m_view setFrame:t_nsrect];
     [m_view setNeedsDisplay:YES];
@@ -155,14 +151,12 @@ void MCNativeLayerMac::doSetVisible(bool p_visible)
 
 void MCNativeLayerMac::doRelayer()
 {
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
     // Find which native layer this should be inserted below
-    MCWidget* t_before;
-    t_before = findNextLayerAbove(t_widget);
+    MCObject *t_before;
+    t_before = findNextLayerAbove(m_object);
     
     // Insert the widget in the correct place (but only if the card is current)
-    if (isAttached() && t_widget->getcard() == t_widget->getstack()->getcurcard())
+    if (isAttached() && m_object->getcard() == m_object->getstack()->getcurcard())
     {
         [m_view removeFromSuperview];
         if (t_before != nil)
@@ -183,8 +177,7 @@ void MCNativeLayerMac::doRelayer()
 
 NSWindow* MCNativeLayerMac::getStackWindow()
 {
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    return ((MCMacPlatformWindow*)(t_widget->getstack()->getwindow()))->GetHandle();
+    return ((MCMacPlatformWindow*)(m_object->getstack()->getwindow()))->GetHandle();
 }
 
 bool MCNativeLayerMac::GetNativeView(void *&r_view)
@@ -195,11 +188,11 @@ bool MCNativeLayerMac::GetNativeView(void *&r_view)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCWidgetRef p_widget, void *p_view)
+MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCObject *p_object, void *p_view)
 {
 	if (p_view == nil)
 		return nil;
 	
-    return new MCNativeLayerMac(p_widget, (NSView*)p_view);
+    return new MCNativeLayerMac(p_object, (NSView*)p_view);
 }
 

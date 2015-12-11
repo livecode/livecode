@@ -158,6 +158,8 @@ MCObject::MCObject()
     // Object's do not begin in the parentScript table.
     m_is_parent_script = false;
     
+	m_native_layer = nil;
+
     // Attach ourselves to an object pool.
     MCDeletedObjectsOnObjectCreated(this);
 }
@@ -256,6 +258,8 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
     // table at the start.
     m_is_parent_script = false;
     
+	m_native_layer = nil;
+
     // Attach ourselves to an object pool.
     MCDeletedObjectsOnObjectCreated(this);
 }
@@ -314,6 +318,8 @@ MCObject::~MCObject()
     // If this object is a parent-script make sure we flush it from the table.
 	if (m_is_parent_script)
 		MCParentScript::FlushObject(this);
+	
+	delete m_native_layer;
     
     // Detach ourselves from the object pool.
     MCDeletedObjectsOnObjectDestroyed(this);
@@ -4997,6 +5003,61 @@ void MCObject::relayercontrol_remove(MCControl *p_control)
 void MCObject::relayercontrol_insert(MCControl *p_control, MCControl *p_target)
 {
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Gets the current native layer (if any) associated with this object
+MCNativeLayer* MCObject::getNativeLayer() const
+{
+	return m_native_layer;
+}
+
+bool MCObject::GetNativeView(void *&r_view)
+{
+	if (m_native_layer == nil)
+		return false;
+	
+	return m_native_layer->GetNativeView(r_view);
+}
+
+bool MCObject::SetNativeView(void *p_view)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCNativeLayer *t_layer;
+	t_layer = nil;
+	
+	if (t_success && p_view != nil)
+	{
+		t_layer = MCNativeLayer::CreateNativeLayer(this, p_view);
+		t_success = t_layer != nil;
+	}
+	
+	if (t_success)
+	{
+		if (m_native_layer != nil)
+			delete m_native_layer;
+		
+		m_native_layer = t_layer;
+		if (m_native_layer != nil)
+		{
+			if (opened)
+			{
+				m_native_layer->OnOpen();
+				m_native_layer->OnAttach();
+			}
+			
+			m_native_layer->OnGeometryChanged(getrect());
+			m_native_layer->OnToolChanged(getstack()->gettool(this));
+			m_native_layer->OnVisibilityChanged(isvisible());
+		}
+	}
+	
+	return t_success;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 void MCObject::scheduledelete(bool p_is_child)
 {
