@@ -819,6 +819,9 @@ private command DictionaryCreate
    local tAdded, tModified
    DictionaryScan tAdded, tModified
    
+   sort lines of tAdded ascending text
+   sort lines of tModified ascending text
+   
    MarkdownAppend "# Dictionary additions"
    MarkdownAppend tAdded
    MarkdownAppend "# Dictionary changes"
