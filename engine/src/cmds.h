@@ -1553,13 +1553,17 @@ class MCRead : public MCStatement
 	Functions timeunits;
 	MCExpression *at;
 public:
-	MCRead()
+    MCRead() :
+      arg(OA_UNDEFINED),
+      fname(NULL),
+      cond(RF_UNDEFINED),
+      stop(NULL),
+      unit(FU_CHARACTER),
+      maxwait(NULL),
+      timeunits(F_UNDEFINED),
+      at(NULL)
 	{
-		fname = NULL;
-		maxwait = NULL;
-		stop = NULL;
-		unit = FU_CHARACTER;
-		at = NULL;
+        ;
 	}
 	virtual ~MCRead();
 #ifdef LEGACY_EXEC
