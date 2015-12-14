@@ -933,6 +933,10 @@ private function BugUrl pId
 end BugUrl
 
 private command BugGenerate pBugInfo
+   V2BugGenerate pBugInfo
+end BugGenerate
+
+private command V1BugGenerate pBugInfo
    
    local tTags, tTagCount
    put the keys of pBugInfo into tTags
@@ -978,7 +982,58 @@ private command BugGenerate pBugInfo
       
       subtract 1 from tTagCount
    end repeat
-end BugGenerate
+end V1BugGenerate
+
+private command V2BugGenerate pBugInfo
+   local tTags, tTagCount
+   put the keys of pBugInfo into tTags
+   GitSortTags tTags
+   put the number of lines of tTags into tTagCount
+   
+   MarkdownAppend "## Specific bug fixes"
+   
+   local tVersion, tBugs, tPrettyVersion, tBugList
+   local tLine, tId, tDesc, tUrl
+   repeat tTagCount times
+      put line tTagCount of tTags into tVersion
+      
+      put pBugInfo[tVersion] into tBugs
+      sort lines of tBugs by item 1 of each
+      
+      put empty into tBugList
+      
+      -- Generate version info
+      if tVersion is "HEAD" then
+         put sVersion into tPrettyVersion
+      else
+         put tVersion into tPrettyVersion
+      end if
+      put merge("Bugs fixed in [[tPrettyVersion]]:") into tBugList
+      
+      -- Generate list of bug numbers with links
+      repeat for each line tLine in tBugs
+         put item 1 of tLine into tId
+         put HtmlEscape(item 2 to -1 of tLine) into tDesc
+         put BugUrl(tId) into tUrl
+         
+         put " <a href=" & quote & tUrl & quote && "title=" & quote & tDesc & quote & ">" & \
+               tId & "</a>" & comma after tBugList
+      end repeat
+      put "." into char -1 of tBugList
+      
+      -- This version's bugs should be bold
+      if tPrettyVersion is sVersion then
+         put "**" before tBugList
+         put "**" after tBugList
+      end if
+      
+      MarkdownAppend "*" && tBugList
+      
+      subtract 1 from tTagCount
+   end repeat
+   
+   MarkdownAppend empty
+end V2BugGenerate
 
 ----------------------------------------------------------------
 -- Markdown helpers
@@ -1028,6 +1083,18 @@ private command MarkdownSplitMetadata pText, @rMarkdown, @rMetadata
    
    put line (tMetadataEnd + 2) to -1 of pText into rMarkdown
 end MarkdownSplitMetadata
+
+----------------------------------------------------------------
+-- HTML helper functions
+----------------------------------------------------------------
+
+private function HtmlEscape pText
+   replace "&" with "&amp;" in pText
+   replace "<" with "&lt;" in pText
+   replace ">" with "&gt;" in pText
+   replace quote with "&quot;" in pText
+   return ptext
+end HtmlEscape
 
 ----------------------------------------------------------------
 -- Git helper functions
