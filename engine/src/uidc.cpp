@@ -1672,7 +1672,7 @@ Boolean MCUIDC::lookupcolor(MCStringRef s, MCColor *color)
 	char *tptr = sptr;
 	while (*tptr)
 		if (isspace((uint1)*tptr))
-			strcpy(tptr, tptr + 1);
+            memmove(tptr, tptr + 1, strlen(tptr));
 		else
 			tptr++;
 	uint2 high = ELEMENTS(color_table);
