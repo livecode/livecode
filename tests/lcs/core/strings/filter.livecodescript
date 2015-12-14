@@ -22,7 +22,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 	? - matches a single occurrence of any character
 	[abc] - matches any of a, b or c
 	[a-m] - matches any lowercase character in the first half of the alphabet
-	[!<string>] - matches iff [<string>] does not match
+	[!abc] - matches any character which is not a, b or c
+	
+	The last three of these can be combined to create more complex character classes, for
+	example [!abcA-C] - matches any character which is not a, b or c (upper or lower case)
 */
 on __testFilterRangeAndOptions pIsNative, pLower, pMid, pUpper
 	local tTestType
