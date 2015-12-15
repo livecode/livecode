@@ -824,8 +824,8 @@ private command DictionaryCreate
    
    MarkdownAppend "# Dictionary additions"
    MarkdownAppend tAdded
-   MarkdownAppend "# Dictionary changes"
-   MarkdownAppend tModified
+   --MarkdownAppend "# Dictionary changes"
+   --MarkdownAppend tModified
 end DictionaryCreate
 
 private command DictionaryScan @xAdded, @xModified
