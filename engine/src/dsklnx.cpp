@@ -2339,6 +2339,7 @@ public:
             {
                 MCU_realloc((char **)&MCprocesses, MCnprocesses,
                             MCnprocesses + 1, sizeof(Streamnode));
+                MCprocesses[MCnprocesses].pid = 0;
                 MCprocesses[MCnprocesses].name = (MCNameRef)MCValueRetain(MCM_shell);
                 MCprocesses[MCnprocesses].mode = OM_NEITHER;
                 MCprocesses[MCnprocesses].ohandle = NULL;

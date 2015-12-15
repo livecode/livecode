@@ -1092,6 +1092,22 @@ bool __MCValueInitialize(void)
 
 void __MCValueFinalize(void)
 {
+    MCMemoryDeleteArray(s_unique_values);
+    s_unique_values = nil;
+    s_unique_value_count = 0;
+    s_unique_value_capacity_idx = 0;
+    
+    MCValueRelease(kMCFalse);
+    kMCFalse = nil;
+    
+    MCValueRelease(kMCTrue);
+    kMCTrue = nil;
+    
+    MCValueRelease(kMCNull);
+    kMCNull = nil;
+    
+    // Make sure to delete the value pools last, as they need to be around until
+    // all other valuerefs have been deleted.
     for(uindex_t i = 0; i < kMCValuePoolCount; i++)
         while(s_value_pools[i] . count > 0)
         {
@@ -1110,20 +1126,7 @@ void __MCValueFinalize(void)
             MCMemoryDelete(t_value);
         }
 	MCMemoryDeleteArray(s_value_pools);
-    
-	MCMemoryDeleteArray(s_unique_values);
-	s_unique_values = nil;
-	s_unique_value_count = 0;
-	s_unique_value_capacity_idx = 0;
-
-	MCValueRelease(kMCFalse);
-	kMCFalse = nil;
-	
-	MCValueRelease(kMCTrue);
-	kMCTrue = nil;
-
-	MCValueRelease(kMCNull);
-	kMCNull = nil;
+    s_value_pools = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -4391,7 +4391,7 @@ static bool mask_intersects_with_rect(const MCRectangle &p_rect, const object_ma
 		t_src_row = (uint32_t*)t_src_ptr;
 		
 		for (uint32_t x = 0; x < t_rect.width; x++)
-			if (MCGPixelGetNativeAlpha(*t_src_ptr++) > p_threshold)
+			if (MCGPixelGetNativeAlpha(*t_src_row++) > p_threshold)
 				return true;
 		
 		t_src_ptr += p_mask.image->stride;
