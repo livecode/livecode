@@ -31,9 +31,9 @@ LiveCode supports Linux installations which meet the following requirements:
   * gksu (optional, required for privilege elevation support)
 
 * Requirements for 32-bit Intel/AMD:
-  * glibc 2.3.6 or later
+  * glibc 2.11 or later
 * Requirements for 64-bit Intel/AMD:
-  * glibc 2.15 or later
+  * glibc 2.13 or later
 * Requirements for ARMv6:
   * glibc 2.7 or later
 
