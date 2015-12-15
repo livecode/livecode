@@ -1177,16 +1177,22 @@ void MCObject::recompute()
 {
 }
 
-void MCObject::toolchanged(Tool)
+void MCObject::toolchanged(Tool p_new_tool)
 {
+	if (getNativeLayer() != nil)
+		getNativeLayer()->OnToolChanged(p_new_tool);
 }
 
 void MCObject::layerchanged()
 {
+	if (getNativeLayer() != nil)
+		getNativeLayer()->OnLayerChanged();
 }
 
 void MCObject::visibilitychanged(bool p_visible)
 {
+	if (getNativeLayer() != nil)
+		getNativeLayer()->OnVisibilityChanged(p_visible);
 }
 
 const MCRectangle& MCObject::getrect(void) const

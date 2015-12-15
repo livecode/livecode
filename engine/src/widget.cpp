@@ -657,26 +657,26 @@ bool MCWidget::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
 
 void MCWidget::toolchanged(Tool p_new_tool)
 {
-    if (m_widget == nil)
-        return;
-    
-    MCwidgeteventmanager -> event_toolchanged(this, p_new_tool);
+	MCControl::toolchanged(p_new_tool);
+
+	if (m_widget != nil)
+		MCwidgeteventmanager -> event_toolchanged(this, p_new_tool);
 }
 
 void MCWidget::layerchanged()
 {
-    if (m_widget == nil)
-        return;
-    
-    MCwidgeteventmanager -> event_layerchanged(this);
+	MCControl::layerchanged();
+
+	if (m_widget != nil)
+		MCwidgeteventmanager -> event_layerchanged(this);
 }
 
 void MCWidget::visibilitychanged(bool p_visible)
 {
-    if (m_widget == nil)
-        return;
-    
-    MCwidgeteventmanager -> event_visibilitychanged(this, p_visible);
+	MCControl::visibilitychanged(p_visible);
+	
+	if (m_widget != nil)
+		MCwidgeteventmanager -> event_visibilitychanged(this, p_visible);
 }
 
 Exec_stat MCWidget::handle(Handler_type p_type, MCNameRef p_method, MCParameter *p_parameters, MCObject *p_passing_object)

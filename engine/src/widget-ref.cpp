@@ -436,20 +436,11 @@ bool MCWidgetBase::OnGeometryChanged(void)
 
 bool MCWidgetBase::OnLayerChanged()
 {
-    if (GetHost() != nil &&
-        GetHost()->getNativeLayer())
-        GetHost()->getNativeLayer()->OnLayerChanged();
-    
     return Dispatch(MCNAME("OnLayerChanged"));
 }
 
 bool MCWidgetBase::OnVisibilityChanged(bool p_visible)
 {
-    if (GetHost() != nil &&
-        GetHost()->getNativeLayer())
-        GetHost()->getNativeLayer()->OnVisibilityChanged(p_visible);
-    
-    
     MCAutoValueRefArray t_args;
     if (!t_args . New(1))
         return false;
@@ -469,10 +460,6 @@ bool MCWidgetBase::OnParentPropertyChanged(void)
 
 bool MCWidgetBase::OnToolChanged(Tool p_tool)
 {
-    if (GetHost() != nil &&
-        GetHost()->getNativeLayer())
-        GetHost()->getNativeLayer()->OnToolChanged(p_tool);
-    
     bool t_success;
     t_success = true;
     if (p_tool == T_BROWSE)
