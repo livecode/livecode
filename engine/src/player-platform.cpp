@@ -1135,7 +1135,7 @@ Boolean MCPlayer::doubleup(uint2 which)
     return True;
 }
 
-void MCPlayer::setrect(const MCRectangle &nrect)
+void MCPlayer::doSetRect(const MCRectangle &nrect)
 {
 	rect = nrect;
 	

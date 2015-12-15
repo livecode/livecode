@@ -1399,7 +1399,7 @@ uint2 MCField::gettransient() const
 	return 0;
 }
 
-void MCField::setrect(const MCRectangle &nrect)
+void MCField::doSetRect(const MCRectangle &nrect)
 {
 	// The contents only need to be laid out if the size changes. In particular,
     // it is the width that is important; the height does not affect layout.

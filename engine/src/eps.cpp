@@ -181,7 +181,7 @@ Boolean MCEPS::mup(uint2 which, bool p_release)
 	return True;
 }
 
-void MCEPS::setrect(const MCRectangle &nrect)
+void MCEPS::doSetRect(const MCRectangle &nrect)
 {
 	if (rect.width != nrect.width || rect.height != nrect.height)
 	{

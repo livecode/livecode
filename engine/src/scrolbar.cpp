@@ -589,7 +589,7 @@ Boolean MCScrollbar::doubleup(uint2 which)
 	return MCControl::doubleup(which);
 }
 
-void MCScrollbar::setrect(const MCRectangle &nrect)
+void MCScrollbar::doSetRect(const MCRectangle &nrect)
 {
 	rect = nrect;
 	compute_barsize();

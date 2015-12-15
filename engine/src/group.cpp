@@ -797,7 +797,7 @@ Boolean MCGroup::doubleup(uint2 which)
 	return False;
 }
 
-void MCGroup::setrect(const MCRectangle &nrect)
+void MCGroup::doSetRect(const MCRectangle &nrect)
 {
 	bool t_size_changed;
 	t_size_changed = nrect . width != rect . width || nrect . height != rect . height;

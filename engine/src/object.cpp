@@ -821,7 +821,14 @@ uint2 MCObject::gettransient() const
 	return 0;
 }
 
-void MCObject::setrect(const MCRectangle &nrect)
+void MCObject::setrect(const MCRectangle &p_rect)
+{
+	doSetRect(p_rect);
+	
+	geometrychanged(getrect());
+}
+
+void MCObject::doSetRect(const MCRectangle &nrect)
 {
 	rect = nrect;
 }
@@ -1193,6 +1200,12 @@ void MCObject::visibilitychanged(bool p_visible)
 {
 	if (getNativeLayer() != nil)
 		getNativeLayer()->OnVisibilityChanged(p_visible);
+}
+
+void MCObject::geometrychanged(const MCRectangle &p_rect)
+{
+	if (getNativeLayer() != nil)
+		getNativeLayer()->OnGeometryChanged(p_rect);
 }
 
 const MCRectangle& MCObject::getrect(void) const

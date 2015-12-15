@@ -427,10 +427,6 @@ bool MCWidgetBase::OnMouseScroll(coord_t p_delta_x, coord_t p_delta_y, bool& r_b
 
 bool MCWidgetBase::OnGeometryChanged(void)
 {
-    if (GetHost() != nil &&
-        GetHost()->getNativeLayer())
-        GetHost()->getNativeLayer()->OnGeometryChanged(GetHost()->getrect());
-    
     return Dispatch(MCNAME("OnGeometryChanged"));
 }
 

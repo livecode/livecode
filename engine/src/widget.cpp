@@ -348,17 +348,6 @@ void MCWidget::timer(MCNameRef p_message, MCParameter *p_parameters)
     }
 }
 
-void MCWidget::setrect(const MCRectangle& p_rectangle)
-{
-	MCRectangle t_old_rect;
-	t_old_rect = rect;
-	
-	rect = p_rectangle;
-	
-    if (m_widget != nil)
-        MCwidgeteventmanager->event_setrect(this, t_old_rect);
-}
-
 void MCWidget::recompute(void)
 {
     if (m_widget != nil)
@@ -677,6 +666,14 @@ void MCWidget::visibilitychanged(bool p_visible)
 	
 	if (m_widget != nil)
 		MCwidgeteventmanager -> event_visibilitychanged(this, p_visible);
+}
+
+void MCWidget::geometrychanged(const MCRectangle &p_rect)
+{
+	MCControl::geometrychanged(p_rect);
+
+	if (m_widget != nil)
+		MCwidgeteventmanager -> event_setrect(this, p_rect);
 }
 
 Exec_stat MCWidget::handle(Handler_type p_type, MCNameRef p_method, MCParameter *p_parameters, MCObject *p_passing_object)

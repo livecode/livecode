@@ -152,7 +152,6 @@ public:
     
 	virtual void timer(MCNameRef p_message, MCParameter *p_parameters);
 
-	virtual void setrect(const MCRectangle& p_rectangle);
 	virtual void recompute(void);
     
 	virtual Exec_stat handle(Handler_type, MCNameRef, MCParameter *, MCObject *pass_from);
@@ -173,6 +172,7 @@ public:
     virtual void toolchanged(Tool p_new_tool);
     virtual void visibilitychanged(bool p_visible);
     virtual void layerchanged();
+	virtual void geometrychanged(const MCRectangle &p_rect);
 	
     virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool flag);
     

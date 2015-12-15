@@ -366,7 +366,8 @@ public:
 	
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 	virtual uint2 gettransient() const;
-	virtual void setrect(const MCRectangle &nrect);
+	virtual void doSetRect(const MCRectangle &nrect);
+	virtual void setrect(const MCRectangle &p_rect);
 
 	// MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 #ifdef LEGACY_EXEC
@@ -402,6 +403,9 @@ public:
     
     // AL-2015-09-23: [[ Native Widgets ]] Informs the object that its visibility has changed
     virtual void visibilitychanged(bool p_visible);
+	
+	// IM-2015-12-11: [[ Native Widgets ]] Informs the object that its rect has changed
+	virtual void geometrychanged(const MCRectangle &p_rect);
     
 	// MW-2011-09-20: [[ Collision ]] Compute the shape of the object's mask.
 	virtual bool lockshape(MCObjectShape& r_shape);
