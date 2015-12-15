@@ -7,8 +7,9 @@ framework.
 Due to a number of stability issues in CEF on OSX, we have decided to
 make this new implementation the default for OSX browser widgets.
 
-# **browserType** property.
+# New browserType property
 
-This new browser widget property has been added to allow switching to
-an alternative implementation if required. To revert to using the
-CEF-based browser on OSX, set this property to "CEF".
+A new **browserType** property has been added to the browser widget to
+allow switching to an alternative implementation if required. To
+revert to using the CEF-based browser on OSX, set this property to
+"CEF".
