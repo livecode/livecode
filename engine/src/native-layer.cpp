@@ -92,10 +92,10 @@ bool MCNativeLayer::OnPaint(MCGContextRef p_context)
 	return doPaint(p_context);
 }
 
-void MCNativeLayer::OnGeometryChanged(const MCRectangle &p_old_rect)
+void MCNativeLayer::OnGeometryChanged(const MCRectangle &p_new_rect)
 {
 	if (!m_defer_geometry_changes)
-		doSetGeometry(m_object->getrect());
+		doSetGeometry(p_new_rect);
 }
 
 void MCNativeLayer::OnToolChanged(Tool p_new_tool)
@@ -156,7 +156,7 @@ bool MCNativeLayer::ShouldShowLayer()
 	return m_show_for_tool && m_visible;
 }
 
-struct MCNativeLayerFindWidgetObjectVisitor: public MCObjectVisitor
+struct MCNativeLayerFindObjectVisitor: public MCObjectVisitor
 {
 	MCObject *current_object;
 	MCObject *found_object;
@@ -164,11 +164,11 @@ struct MCNativeLayerFindWidgetObjectVisitor: public MCObjectVisitor
 	bool find_above;
 	bool reached_current;
 	
-	bool OnWidget(MCWidget *p_widget)
+	bool OnObject(MCObject *p_object)
 	{
-		// We are only looking for widgets with a native layer
-		if (p_widget->getNativeLayer() != nil)
-			return OnNativeLayerObject(p_widget);
+		// We are only looking for objects with a native layer
+		if (p_object->getNativeLayer() != nil)
+			return OnNativeLayerObject(p_object);
 		
 		return true;
 	}
@@ -208,26 +208,26 @@ struct MCNativeLayerFindWidgetObjectVisitor: public MCObjectVisitor
 
 MCObject* MCNativeLayer::findNextLayerAbove(MCObject* p_object)
 {
-	MCNativeLayerFindWidgetObjectVisitor t_visitor;
+	MCNativeLayerFindObjectVisitor t_visitor;
 	t_visitor.current_object = p_object;
 	t_visitor.found_object = nil;
 	t_visitor.reached_current = false;
 	t_visitor.find_above = true;
 	
-	p_object->getcard()->visit(kMCObjectVisitorRecursive, 0, &t_visitor);
+	p_object->getparent()->visit_children(0, 0, &t_visitor);
 	
 	return t_visitor.found_object;
 }
 
 MCObject* MCNativeLayer::findNextLayerBelow(MCObject* p_object)
 {
-	MCNativeLayerFindWidgetObjectVisitor t_visitor;
+	MCNativeLayerFindObjectVisitor t_visitor;
 	t_visitor.current_object = p_object;
 	t_visitor.found_object = nil;
 	t_visitor.reached_current = false;
 	t_visitor.find_above = false;
 	
-	p_object->getcard()->visit(kMCObjectVisitorRecursive, 0, &t_visitor);
+	p_object->getparent()->visit_children(0, 0, &t_visitor);
 	
 	return t_visitor.found_object;
 }

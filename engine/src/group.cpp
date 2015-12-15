@@ -3696,6 +3696,25 @@ void MCGroup::relayercontrol_insert(MCControl *p_control, MCControl *p_target)
 		p_control -> layer_redrawall();
 }
 
+bool MCGroup::getNativeContainerLayer(MCNativeLayer *&r_layer)
+{
+	if (getNativeLayer() == nil)
+	{
+		void *t_view;
+		if (!MCNativeLayer::CreateNativeContainer(t_view))
+			return false;
+		if (!SetNativeView(t_view))
+		{
+			MCNativeLayer::ReleaseNativeView(t_view);
+			return false;
+		}
+	}
+	
+	r_layer = getNativeLayer();
+	
+	return true;
+}
+
 void MCGroup::scheduledelete(bool p_is_child)
 {
     MCControl::scheduledelete(p_is_child);

@@ -44,6 +44,7 @@
 #include "globals.h"
 #include "context.h"
 
+#include "group.h"
 #include "widget.h"
 #include "native-layer-mac.h"
 
@@ -135,9 +136,11 @@ bool MCNativeLayerMac::doPaint(MCGContextRef p_context)
 void MCNativeLayerMac::doSetGeometry(const MCRectangle &p_rect)
 {
     NSRect t_nsrect;
-    MCRectangle t_cardrect;
-    t_cardrect = m_object->getcard()->getrect();
-    t_nsrect = NSMakeRect(p_rect.x, t_cardrect.height-p_rect.y-p_rect.height, p_rect.width, p_rect.height);
+    MCRectangle t_parent_rect;
+    t_parent_rect = m_object->getparent()->getrect();
+	MCRectangle t_rect;
+	t_rect = MCRectangleMake(p_rect.x - t_parent_rect.x, p_rect.y - t_parent_rect.y, p_rect.width, p_rect.height);
+    t_nsrect = NSMakeRect(t_rect.x, t_parent_rect.height-t_rect.y-t_rect.height, t_rect.width, t_rect.height);
     [m_view setFrame:t_nsrect];
     [m_view setNeedsDisplay:YES];
     [m_cached release];
@@ -154,7 +157,13 @@ void MCNativeLayerMac::doRelayer()
     // Find which native layer this should be inserted below
     MCObject *t_before;
     t_before = findNextLayerAbove(m_object);
-    
+	
+	NSView *t_parent_view;
+	t_parent_view = nil;
+	
+	if (!getParentView(t_parent_view))
+		return;
+	
     // Insert the widget in the correct place (but only if the card is current)
     if (isAttached() && m_object->getcard() == m_object->getstack()->getcurcard())
     {
@@ -162,22 +171,41 @@ void MCNativeLayerMac::doRelayer()
         if (t_before != nil)
         {
             // There is another native layer above this one
-            MCNativeLayerMac *t_before_layer;
-            t_before_layer = reinterpret_cast<MCNativeLayerMac*>(t_before->getNativeLayer());
-            [[getStackWindow() contentView] addSubview:m_view positioned:NSWindowBelow relativeTo:t_before_layer->m_view];
+			NSView *t_before_view;
+			/* UNCHECKED */ t_before->GetNativeView((void*&)t_before_view);
+            [t_parent_view addSubview:m_view positioned:NSWindowBelow relativeTo:t_before_view];
         }
         else
         {
             // This is the top-most native layer
-            [[getStackWindow() contentView] addSubview:m_view];
+            [t_parent_view addSubview:m_view];
         }
-        [[getStackWindow() contentView] setNeedsDisplay:YES];
+        [t_parent_view setNeedsDisplay:YES];
     }
 }
 
 NSWindow* MCNativeLayerMac::getStackWindow()
 {
     return ((MCMacPlatformWindow*)(m_object->getstack()->getwindow()))->GetHandle();
+}
+
+bool MCNativeLayerMac::getParentView(NSView *&r_view)
+{
+	if (m_object->getparent()->gettype() == CT_GROUP)
+	{
+		MCNativeLayer *t_container;
+		t_container = nil;
+		
+		if (!((MCGroup*)m_object->getparent())->getNativeContainerLayer(t_container))
+			return false;
+		
+		return t_container->GetNativeView((void*&)r_view);
+	}
+	else
+	{
+		r_view = [getStackWindow() contentView];
+		return true;
+	}
 }
 
 bool MCNativeLayerMac::GetNativeView(void *&r_view)
@@ -196,3 +224,23 @@ MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCObject *p_object, void *p_view
     return new MCNativeLayerMac(p_object, (NSView*)p_view);
 }
 
+bool MCNativeLayer::CreateNativeContainer(void *&r_view)
+{
+	NSView *t_view;
+	t_view = [[[ NSView alloc] init] autorelease];
+	
+	if (t_view == nil)
+		return false;
+	
+	r_view = t_view;
+	
+	return true;
+}
+
+void MCNativeLayer::ReleaseNativeView(void *p_view)
+{
+	if (p_view == nil)
+		return;
+	
+	[(NSView*)p_view release];
+}

@@ -39,6 +39,8 @@ private:
 
     // Returns the NSWindow* for the stack containing this widget
     NSWindow* getStackWindow();
+	// Returns the nsview of the parent of this control
+	bool getParentView(NSView *&r_view);
     
     // Performs the attach/detach operations
 	virtual void doAttach();
