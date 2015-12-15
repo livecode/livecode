@@ -1,10 +1,14 @@
-# Documentation Markup
+# Introduction
+
+LiveCode uses a custom documentation format for the dictionary and for extension APIs. The 
+format has very few special characters and is intended to maximise readability and 
+modifiability. 
+
+# Format
 
 Documentation for a LiveCode API or documentation entry consists of a series of elements and their values, in the following form:
 
 *elementName* : *content*
-
-An API for an extension is automatically added to the library dropdown menu in the dictionary.
 
 There are several standard types of *content*; which one may be used depends on the *elementName*.
 

@@ -1,6 +1,4 @@
-[TOC]
-
-# Livecode Builder
+# Introduction
 
 LiveCode Builder is a variant of the current LiveCode scripting language (LiveCode Script) which has been designed for 'systems' building. It is statically compiled with optional static typing and direct foreign code interconnect (allowing easy access to APIs written in other languages).
 
