@@ -16,8 +16,9 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-constant kLanguages = "roman greek"
+constant kLanguages = "roman greek deseret"
 constant kGreekMapping = "αβψδεφγηιξκλμνοπqρστθωςχυζ"
+constant kDeseretMapping = "𐐨𐐩𐐪𐐫𐐬𐐭𐐮𐐯𐐰𐐱𐐲𐐳𐐴𐐵𐐶𐐷𐐸𐐹𐐺𐐻𐐼𐐽𐐾𐐿𐑀𐑁"
 
 function mapLetter pChar, pLanguage
    local tNum
@@ -26,6 +27,8 @@ function mapLetter pChar, pLanguage
    local tAlphabet
    if pLanguage is "greek" then
       put kGreekMapping into tAlphabet
+   else if pLanguage is "deseret" then
+      put kDeseretMapping into tAlphabet
    end if
    	
    switch 
@@ -54,6 +57,7 @@ function map pInput
       case "roman"
          return pInput
       case "greek"
+      case "deseret"
          return mapWord(pInput, sLanguage)
    end switch	
 end map
