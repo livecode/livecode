@@ -3354,16 +3354,17 @@ static bool __MCStringFind(MCStringRef self, MCRange p_range, MCStringRef p_need
 	// It also returns the the range in self that needle occupies (but only if
 	// r_result is non-nil).
     
-    bool t_result;
     MCRange t_range;
-    t_result = MCUnicodeFind(self->native_chars + (self_native ? p_range . offset : 2 * p_range . offset), p_range . length, __MCStringIsNative(self), p_needle -> chars, p_needle -> char_count, __MCStringIsNative(p_needle), (MCUnicodeCompareOption)p_options, t_range);
-    
-    // Correct the range
-    t_range.offset += p_range.offset;
+    if (!MCUnicodeFind(self->native_chars + (self_native ? p_range . offset : 2 * p_range . offset), p_range . length, __MCStringIsNative(self), p_needle -> chars, p_needle -> char_count, __MCStringIsNative(p_needle), (MCUnicodeCompareOption)p_options, t_range))
+        return false;
     
     if (r_result != nil)
+    {
+        // Correct the range
+        t_range.offset += p_range.offset;
         *r_result = t_range;
-    return t_result;
+    }
+    return true;
 }
 
 MC_DLLEXPORT_DEF
