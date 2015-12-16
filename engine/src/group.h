@@ -130,6 +130,8 @@ public:
 	virtual void relayercontrol_remove(MCControl *control);
 	virtual void relayercontrol_insert(MCControl *control, MCControl *target);
 
+	virtual void toolchanged(Tool p_new_tool);
+	
 	bool getNativeContainerLayer(MCNativeLayer *&r_layer);
 	
     virtual void scheduledelete(bool p_is_child);

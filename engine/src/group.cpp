@@ -265,6 +265,22 @@ bool MCGroup::visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, 
 	return t_continue;
 }
 
+void MCGroup::toolchanged(Tool p_new_tool)
+{
+	MCControl::toolchanged(p_new_tool);
+	if (controls != nil)
+	{
+		MCControl *t_ctrl;
+		t_ctrl = controls;
+		do
+		{
+			t_ctrl->toolchanged(p_new_tool);
+			t_ctrl = t_ctrl->next();
+		}
+		while (t_ctrl != controls);
+	}
+}
+
 void MCGroup::open()
 {
 	MCControl::open();
