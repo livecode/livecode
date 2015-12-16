@@ -573,7 +573,9 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 							// Byte swap, if required
 							for (uindex_t i = 0; i < t_unicode_buffer.Size(); ++i)
 							{
-								swap_uint2(&t_unicode_buffer[i]);
+								uint2 t_char = uint2(t_unicode_buffer[i]);
+								swap_uint2(&t_char);
+								t_unicode_buffer[i] = t_char;
 							}
 
                             // Append to the paragraph text
