@@ -210,9 +210,6 @@ bool MCWidgetBase::OnOpen(void)
     if (!DispatchRecursive(kDispatchOrderBeforeBottomUp, MCNAME("OnOpen")))
 		return false;
 
-	if (GetHost()->getNativeLayer())
-		GetHost()->getNativeLayer()->OnOpen();
-	
 	return OnAttach();
 }
 
@@ -221,9 +218,6 @@ bool MCWidgetBase::OnClose(void)
 	if (!OnDetach())
 		return false;
 	
-    if (GetHost()->getNativeLayer())
-        GetHost()->getNativeLayer()->OnClose();
-    
     bool t_success;
     t_success = true;
     

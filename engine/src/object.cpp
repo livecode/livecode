@@ -374,6 +374,8 @@ void MCObject::open()
 
 	for (uint32_t i = 0 ; i < npatterns ; i++)
 		patterns[i].pattern = MCpatternlist->allocpat(patterns[i].id, this);
+	
+	OnOpen();
 }
 
 void MCObject::close()
@@ -381,6 +383,8 @@ void MCObject::close()
 	if (opened == 0 || --opened != 0)
 		return;
 
+	OnClose();
+	
 	if (state & CS_MENU_ATTACHED)
 		closemenu(False, True);
 
@@ -1206,6 +1210,18 @@ void MCObject::geometrychanged(const MCRectangle &p_rect)
 {
 	if (getNativeLayer() != nil)
 		getNativeLayer()->OnGeometryChanged(p_rect);
+}
+
+void MCObject::OnOpen()
+{
+	if (getNativeLayer() != nil)
+		getNativeLayer()->OnAttach();
+}
+
+void MCObject::OnClose()
+{
+	if (getNativeLayer() != nil)
+		getNativeLayer()->OnDetach();
 }
 
 const MCRectangle& MCObject::getrect(void) const
@@ -5062,10 +5078,7 @@ bool MCObject::SetNativeView(void *p_view)
 		if (m_native_layer != nil)
 		{
 			if (opened)
-			{
-				m_native_layer->OnOpen();
 				m_native_layer->OnAttach();
-			}
 			
 			m_native_layer->OnGeometryChanged(getrect());
 			m_native_layer->OnToolChanged(getstack()->gettool(this));

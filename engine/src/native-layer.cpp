@@ -62,19 +62,6 @@ MCNativeLayer::~MCNativeLayer()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCNativeLayer::OnOpen()
-{
-	// Unhide the widget, if required
-	if (isAttached())
-		doAttach();
-}
-
-void MCNativeLayer::OnClose()
-{
-	if (isAttached())
-		doDetach();
-}
-
 void MCNativeLayer::OnAttach()
 {
 	m_attached = true;

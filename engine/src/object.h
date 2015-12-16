@@ -406,6 +406,11 @@ public:
 	
 	// IM-2015-12-11: [[ Native Widgets ]] Informs the object that its rect has changed
 	virtual void geometrychanged(const MCRectangle &p_rect);
+	
+	// IM-2015-12-16: [[ NativeWidgets ]] Informs the object that it has been opened.
+	virtual void OnOpen();
+	// IM-2015-12-16: [[ NativeWidgets ]] Informs the object that it will be closed.
+	virtual void OnClose();
     
 	// MW-2011-09-20: [[ Collision ]] Compute the shape of the object's mask.
 	virtual bool lockshape(MCObjectShape& r_shape);

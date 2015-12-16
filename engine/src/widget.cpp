@@ -157,22 +157,6 @@ bool MCWidget::visit_self(MCObjectVisitor* p_visitor)
     return p_visitor -> OnWidget(this);
 }
 
-void MCWidget::open(void)
-{
-	MCControl::open();
-	// IM-2015-09-01: [[ Bug 15836 ]] Only send widget event when transitioning from 0 -> 1
-	if (opened == 1 && m_widget != nil)
-		MCwidgeteventmanager->event_open(this);
-}
-
-void MCWidget::close(void)
-{
-	// IM-2015-09-01: [[ Bug 15836 ]] Only send widget event when transitioning from 1 -> 0
-	if (opened == 1 && m_widget != nil)
-		MCwidgeteventmanager->event_close(this);
-	MCControl::close();
-}
-
 void MCWidget::kfocus(void)
 {
 	MCControl::kfocus();
@@ -674,6 +658,22 @@ void MCWidget::geometrychanged(const MCRectangle &p_rect)
 
 	if (m_widget != nil)
 		MCwidgeteventmanager -> event_setrect(this, p_rect);
+}
+
+void MCWidget::OnOpen()
+{
+	if (m_widget != nil)
+		MCwidgeteventmanager -> event_open(this);
+	
+	MCControl::OnOpen();
+}
+
+void MCWidget::OnClose()
+{
+	MCControl::OnClose();
+	
+	if (m_widget != nil)
+		MCwidgeteventmanager -> event_close(this);
 }
 
 Exec_stat MCWidget::handle(Handler_type p_type, MCNameRef p_method, MCParameter *p_parameters, MCObject *p_passing_object)

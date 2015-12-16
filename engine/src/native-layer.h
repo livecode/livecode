@@ -25,8 +25,6 @@ class MCNativeLayer
 {
 public:
     
-    virtual void OnOpen();
-    virtual void OnClose();
     virtual void OnAttach();
     virtual void OnDetach();
 	virtual bool OnPaint(MCGContextRef p_context);

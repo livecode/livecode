@@ -130,9 +130,6 @@ public:
     
 	virtual bool visit_self(MCObjectVisitor *p_visitor);
 	
-	virtual void open(void);
-	virtual void close(void);
-
 	virtual void kfocus(void);
 	virtual void kunfocus(void);
 	virtual Boolean kdown(MCStringRef p_key_string, KeySym p_key);
@@ -173,6 +170,8 @@ public:
     virtual void visibilitychanged(bool p_visible);
     virtual void layerchanged();
 	virtual void geometrychanged(const MCRectangle &p_rect);
+	virtual void OnOpen();
+	virtual void OnClose();
 	
     virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool flag);
     
