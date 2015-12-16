@@ -1,5 +1,9 @@
+---
+version: 8.0.0-dp-9
+---
 # LiveCode Builder Tools
 ## lc-compile
-### Warnings
+### Command-line interface
 
-* The `-Werror` option converts all compilation warnings into errors.
+* The new `-Werror` command line flag converts all compilation
+  warnings into errors.

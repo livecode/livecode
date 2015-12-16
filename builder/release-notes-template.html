@@ -1,5 +1,9 @@
-<style type="text/css">
-
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <script src="ide/Documentation/html_viewer/js/marked.js"></script>
+    <style type="text/css">
 /*! normalize.css v1.1.1 | MIT License | git.io/normalize */
 
 /* ==========================================================================
@@ -89,7 +93,7 @@ button,
 input,
 select,
 textarea {
-    font-family: "DejaVu Sans", sans-serif;
+    font-family: sans-serif;
 }
 
 /**
@@ -132,8 +136,9 @@ a:hover {
  */
 
 h1 {
+    padding-top: 0.5em;
     font-size: 2em;
-    margin: 0.67em 0;
+    margin: 1em 0;
 }
 
 h2 {
@@ -227,11 +232,9 @@ code,
 kbd,
 pre,
 samp {
-    font-family: "Courier New", "DejaVu Sans Mono", monospace;
+    font-family: monospace, serif;
     _font-family: 'courier new', monospace;
     font-size: 1em;
-    background: rgb(240,240,240);
-    padding: 0.2em;
 }
 
 /**
@@ -578,5 +581,107 @@ table{border-spacing:1em 2px;}
 .list_content{  } /* width:63%; float:left; */
 .list_content h2{ margin-top:0}
 .list_content .button{ margin-top:10px; display:inline-block}
-
 </style>
+<style type="text/css">
+  /* Customisations specific to release notes */
+  html,
+  button,
+  input,
+  selection,
+  textarea {
+    font-family: "DejaVu Sans", sans-serif;
+  }
+
+  code,
+  kbd,
+  pre,
+  samp {
+    font-family: "Courier New", "DejaVu Sans Mono", monospace;
+    background: rgb(240,240,240);
+    padding: 0.2em;
+    display: inline-block;
+    border-radius: 1ex;
+  }
+
+  table.currentbugs {
+    font-weight: bold;
+  }
+
+  h1,h2,h3,h4 {
+    font-family: FontAwesome, "DejaVu Sans", sans-serif;
+    page-break-inside: avoid;
+  }
+
+  h1 {
+    background-color: rgb(159,201,42);
+    color: #ffffff;
+    padding: 1ex;
+    border-radius: 1ex;
+  }
+
+  h1.title {
+    text-align: center;
+    background-color: #ffffff;
+    color: #585858;
+  }
+
+  .experimental {
+    color: #ff0000;
+  }
+  </style>
+  </head>
+  <body>
+    <div id="content"/>
+    <script>
+var markdown = '@MARKDOWN@';
+
+function regenerate() {
+	// Override the markdown parser's heading generation in order to
+	// generate table of contents.
+	var toc_renderer = new marked.Renderer();
+	var toc_html = '<ul class="toc">\n';
+	var current_level = 1;
+	var max_level = 2;
+
+	toc_renderer.heading = function(text, level) {
+		if (level <= max_level) {
+
+			var escapedText = text.toLowerCase().replace(/[^\w]+/g, '-');
+			var item = '<li><a href="#' + escapedText + '">' + text + '</a></li>\n';
+
+			if (level > current_level) {
+				toc_html += '<ul class="toc">\n' + item;
+			} else if (level < current_level) {
+				toc_html += '</ul>\n' + item;
+			} else {
+				toc_html += item;
+			}
+			current_level = level;
+		}
+
+		return '<h' + level + ' id="' + escapedText + '">'
+			+ text +
+			'</h' + level + '>';
+	}
+
+	// A paragraph containing just "[TOC]" is a table of contents
+	toc_renderer.paragraph = function(text) {
+		if (text.trim() == '[TOC]') {
+			return '<div id="table_of_contents"></div>';
+		}
+		return '<p>' + text + '</p>\n';
+	}
+
+	var content_html = marked(markdown, { renderer: toc_renderer });
+	document.getElementById('content').innerHTML = content_html;
+
+	var toc = document.getElementById('table_of_contents');
+	if (toc) {
+		toc.innerHTML = toc_html;
+	}
+}
+
+regenerate();
+    </script>
+  </body>
+</html>

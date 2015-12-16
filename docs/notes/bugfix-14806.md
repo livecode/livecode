@@ -1,1 +1,0 @@
-# LCB-Canvas: curve through examples are incorrect in docs
