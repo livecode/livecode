@@ -133,15 +133,20 @@ bool MCNativeLayerMac::doPaint(MCGContextRef p_context)
     return true;
 }
 
+NSRect MCNativeLayerMac::calculateFrameRect(const MCRectangle &p_rect)
+{
+	int32_t t_gp_height;
+	t_gp_height = m_object->getcard()->getrect().height;
+	
+	NSRect t_rect;
+	t_rect = NSMakeRect(p_rect.x, t_gp_height - (p_rect.y + p_rect.height), p_rect.width, p_rect.height);
+	
+	return t_rect;
+}
+
 void MCNativeLayerMac::doSetGeometry(const MCRectangle &p_rect)
 {
-    NSRect t_nsrect;
-    MCRectangle t_parent_rect;
-    t_parent_rect = m_object->getparent()->getrect();
-	MCRectangle t_rect;
-	t_rect = MCRectangleMake(p_rect.x - t_parent_rect.x, p_rect.y - t_parent_rect.y, p_rect.width, p_rect.height);
-    t_nsrect = NSMakeRect(t_rect.x, t_parent_rect.height-t_rect.y-t_rect.height, t_rect.width, t_rect.height);
-    [m_view setFrame:t_nsrect];
+    [m_view setFrame:calculateFrameRect(p_rect)];
     [m_view setNeedsDisplay:YES];
     [m_cached release];
     m_cached = nil;
@@ -224,18 +229,52 @@ MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCObject *p_object, void *p_view
     return new MCNativeLayerMac(p_object, (NSView*)p_view);
 }
 
+//////////
+
+// IM-2015-12-16: [[ NativeLayer ]] Keep the coordinate system of group contents the same as
+//                the top-level window view by keeping its bounds the same as its frame.
+//                This allows us to place contents in terms of window coords without having to
+//                adjust for the location of the group container.
+@interface com_runrev_livecode_MCContainerView: NSView
+
+- (void)setFrameOrigin:(NSPoint)newOrigin;
+- (void)setFrameSize:(NSSize)newSize;
+
+@end
+
+@compatibility_alias MCContainerView com_runrev_livecode_MCContainerView;
+
+@implementation com_runrev_livecode_MCContainerView
+
+- (void)setFrameOrigin:(NSPoint)newOrigin
+{
+	[super setFrameOrigin:newOrigin];
+	[self setBoundsOrigin:newOrigin];
+}
+
+- (void)setFrameSize:(NSSize)newSize
+{
+	[super setFrameSize:newSize];
+	[self setBoundsSize:newSize];
+}
+
+@end
+
 bool MCNativeLayer::CreateNativeContainer(void *&r_view)
 {
 	NSView *t_view;
-	t_view = [[[ NSView alloc] init] autorelease];
+	t_view = [[[ MCContainerView alloc] init] autorelease];
 	
 	if (t_view == nil)
 		return false;
 	
+	[t_view setAutoresizesSubviews:NO];
 	r_view = t_view;
 	
 	return true;
 }
+
+//////////
 
 void MCNativeLayer::ReleaseNativeView(void *p_view)
 {

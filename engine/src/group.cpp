@@ -2748,6 +2748,10 @@ bool MCGroup::computeminrect(Boolean scrolling)
 		else
 			t_all = true;
 		state = oldstate;
+		
+		// IM-2015-12-16: [[ NativeLayer ]] The group rect has changed, so send geometry change notification.
+		geometrychanged(getrect());
+		
 		return t_all;
 	}
 	else if ((flags & F_HSCROLLBAR || flags & F_VSCROLLBAR)

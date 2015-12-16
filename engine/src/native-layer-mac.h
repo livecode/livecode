@@ -41,6 +41,8 @@ private:
     NSWindow* getStackWindow();
 	// Returns the nsview of the parent of this control
 	bool getParentView(NSView *&r_view);
+
+	NSRect calculateFrameRect(const MCRectangle &p_rect);
     
     // Performs the attach/detach operations
 	virtual void doAttach();
