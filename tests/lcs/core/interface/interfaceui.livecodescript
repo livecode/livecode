@@ -20,7 +20,7 @@ on TestSetup
    if the environment is "command line" then
       return "SKIP GUI-only tests"
    end if
-   if the platform is "HTML" then
+   if the platform is "HTML5" then
       return "SKIP bug 16544"
    end if
 end TestSetup

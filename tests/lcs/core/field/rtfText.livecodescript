@@ -91,7 +91,7 @@ end testRtfExport
 ////////////////////////////////////////////////////////////////////////////////
 
 on TestSetup
-   if the platform is "HTML" then
+   if the platform is "HTML5" then
       return "SKIP bug 16545"
    end if
 end TestSetup
