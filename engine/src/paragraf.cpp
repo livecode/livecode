@@ -3089,9 +3089,9 @@ int2 MCParagraph::setfocus(int4 x, int4 y, uint2 fixedheight,
 	ty = computetopmargin();
 
 	MCLine *lptr = lines;
-	uint2 theight;
+	uint16_t theight;
 	if (fixedheight == 0)
-		theight = lptr->getheight();
+		theight = ceilf(lptr->GetHeight());
 	else
 		theight = fixedheight;
 	
@@ -3102,7 +3102,7 @@ int2 MCParagraph::setfocus(int4 x, int4 y, uint2 fixedheight,
 		ty += theight;
 		lptr = lptr->next();
 		if (fixedheight == 0)
-			theight = lptr->getheight();
+            theight = ceilf(lptr->GetHeight());
 	};
 
 	// MW-2012-01-08: [[ ParaStyles ]] Adjust the end of processing to
@@ -3314,7 +3314,7 @@ MCRectangle MCParagraph::getdirty(uint2 fixedheight)
 		//   can differ from the line height we use - so fetch the actual height so we
 		//   can adjust the dirty rect.
 		int32_t t_line_height;
-		t_line_height = lptr -> getheight();
+        t_line_height = ceilf(lptr->GetHeight());
 		if (fixedheight == 0)
 			height = t_line_height;
 
@@ -3443,7 +3443,7 @@ MCRectangle MCParagraph::getcursorrect(findex_t fi, uint2 fixedheight, bool p_in
 	while (fi >= i + l && lptr->next() != lines)
 	{
 		if (fixedheight == 0)
-			drect.y += lptr->getheight();
+			drect.y += ceilf(lptr->GetHeight());
 		else
 			drect.y += fixedheight;
 		lptr = lptr->next();
@@ -3451,7 +3451,7 @@ MCRectangle MCParagraph::getcursorrect(findex_t fi, uint2 fixedheight, bool p_in
 		t_first_line = false;
 	};
 	if (fixedheight == 0)
-		drect.height = lptr->getheight() - 2;
+		drect.height = ceilf(lptr->GetHeight()) - 2;
 	else
 		drect.height = fixedheight - 2;
 	drect.x = lptr->GetCursorXPrimary(fi, moving_forward);
@@ -3509,7 +3509,7 @@ MCRectangle MCParagraph::getsplitcursorrect(findex_t fi, uint2 fixedheight, bool
 	while (fi >= i + l && lptr->next() != lines)
 	{
 		if (fixedheight == 0)
-			drect.y += lptr->getheight();
+			drect.y += ceilf(lptr->GetHeight());
 		else
 			drect.y += fixedheight;
 		lptr = lptr->next();
@@ -3517,7 +3517,7 @@ MCRectangle MCParagraph::getsplitcursorrect(findex_t fi, uint2 fixedheight, bool
 		t_first_line = false;
 	};
 	if (fixedheight == 0)
-		drect.height = lptr->getheight() - 2;
+		drect.height = ceilf(lptr->GetHeight()) - 2;
 	else
 		drect.height = fixedheight - 2;
     if (primary)
@@ -3618,8 +3618,8 @@ void MCParagraph::getmaxline(uint2 &width, uint2 &aheight, uint2 &dheight)
 				t_line_width -= MCMin(0, t_first_indent);
 
 			width = MCU_max(width, t_line_width);
-			aheight = MCU_max(aheight, lptr->getascent());
-			dheight = MCU_max(dheight, lptr->getdescent());
+			aheight = MCU_max(aheight, uint16_t(ceilf(lptr->GetAscent() + lptr->GetLeading())));
+			dheight = MCU_max(dheight, uint16_t(ceilf(lptr->GetDescent())));
 			lptr = lptr->next();
 		}
 		while (lptr != lines);
@@ -3760,7 +3760,7 @@ void MCParagraph::indextoloc(findex_t tindex, uint2 fixedheight, coord_t &x, coo
 			break;
 		}
 		if (fixedheight == 0)
-			y += lptr->getheight();
+            y += lptr->GetHeight();
 		else
 			y += fixedheight;
 		lptr = lptr->next();
@@ -3778,7 +3778,7 @@ uint2 MCParagraph::getyextent(findex_t tindex, uint2 fixedheight)
 	do
 	{
 		if (fixedheight == 0)
-			y += lptr->getheight();
+            y += ceilf(lptr->GetHeight());
 		else
 			y += fixedheight;
 		lptr->GetRange(i, l);
@@ -3938,7 +3938,7 @@ void MCParagraph::getclickindex(int2 x, int2 y,
 {
 	uint2 theight;
 	if (fixedheight == 0)
-		theight = lines->getheight();
+        theight = ceilf(lines->GetHeight());
 	else
 		theight = fixedheight;
 
@@ -3951,7 +3951,7 @@ void MCParagraph::getclickindex(int2 x, int2 y,
 		ty += theight;
 		lptr = lptr->next();
 		if (fixedheight == 0)
-			theight = lptr->getheight();
+            theight = ceilf(lptr->GetHeight());
 	};
 
 	// MW-2012-01-08: [[ ParaStyles ]] Text finishes before spacing below.
@@ -4319,7 +4319,7 @@ Boolean MCParagraph::pageheight(uint2 fixedheight, uint2 &theight,
     
 	do
 	{
-		uint2 lheight = fixedheight == 0 ? lptr->getheight() : fixedheight;
+        uint2 lheight = fixedheight == 0 ? ceilf(lptr->GetHeight()) : fixedheight;
 		if (lheight > theight)
 			return False;
 		theight -= lheight;
@@ -4359,7 +4359,7 @@ Boolean MCParagraph::pagerange(uint2 fixedheight, uint2 &theight,
     
 	do
 	{
-		uint2 lheight = fixedheight == 0 ? lptr->getheight() : fixedheight;
+		uint2 lheight = fixedheight == 0 ? ceilf(lptr->GetHeight()) : fixedheight;
 		if (lheight > theight)
 			return False;
 		theight -= lheight;
@@ -4416,7 +4416,7 @@ void MCParagraph::restricttoline(findex_t& si, findex_t& ei)
 	si = ei = 0;
 }
 
-findex_t MCParagraph::heightoflinewithindex(findex_t si, uint2 fixedheight)
+uint2 MCParagraph::heightoflinewithindex(findex_t si, uint2 fixedheight)
 {
 	MCLine *t_line;
 	t_line = lines;
@@ -4425,7 +4425,7 @@ findex_t MCParagraph::heightoflinewithindex(findex_t si, uint2 fixedheight)
 		findex_t i, l;
 		t_line -> GetRange(i, l);
 		if (i >= si && si < (i + l))
-			return fixedheight == 0 ? t_line -> getheight() : fixedheight;
+			return fixedheight == 0 ? ceilf(t_line->GetHeight()) : fixedheight;
 		t_line = t_line -> next();
 	}
 	while(t_line != lines);

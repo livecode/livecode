@@ -8,6 +8,7 @@ on startup
    
    __loadExternal "revzip"
    __loadExternal "revxml"
+   __loadExternal "revdb"
    
    put false into sWarnAsError
    

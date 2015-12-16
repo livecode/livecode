@@ -31,13 +31,17 @@ end revLoadLibrary
 
 -- Get all livecode script files beneath the CWD, apart from
 -- filenames starting with "." or "_"
-function TesterGetTestFileNames
+function TesterGetTestFileNames pBaseFolder
    local tFiles, tCount
 
    put empty into tFiles
    put 0 into tCount
 
-   TesterGetTestFileNames_Recursive the defaultfolder, empty, tFiles, tCount
+   if pBaseFolder is empty then
+      put the defaultfolder into pBaseFolder
+   end if
+
+   TesterGetTestFileNames_Recursive pBaseFolder, empty, tFiles, tCount
 
    return tFiles
 end TesterGetTestFileNames
@@ -218,12 +222,21 @@ end TesterTapGetTestCount
 -- Combine two sets of TAP results
 function TesterTapCombine pAnalysisA, pAnalysisB
    local tCombined, tKey
-   repeat for each key tKey in pAnalysisB
-      if tKey is "log" then
-         put pAnalysisA[tKey] & pAnalysisB[tKey] into tCombined[tKey]
-      else
-         put pAnalysisA[tKey] + pAnalysisB[tKey] into tCombined[tKey]
-      end if
-   end repeat
+
+   if pAnalysisA is an array and pAnalysisB is an array then
+      repeat for each key tKey in pAnalysisB
+         if tKey is "log" then
+            put pAnalysisA[tKey] & pAnalysisB[tKey] into tCombined[tKey]
+         else
+            put pAnalysisA[tKey] + pAnalysisB[tKey] into tCombined[tKey]
+         end if
+      end repeat
+   else if pAnalysisA is an array then
+      put pAnalysisA into tCombined
+   else if pAnalysisB is an array then
+      put pAnalysisB into tCombined
+   else
+      put empty into tCombined
+   end if
    return tCombined
 end TesterTapCombine

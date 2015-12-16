@@ -716,9 +716,21 @@ private command installCopyUninstaller pTarget
       set the itemDel to comma
    else
       put url ("binfile:" & the effective filename of stack "Installer") into url ("binfile:" & installShortenPath(pTarget))
+      
       if the result is not empty then
          log "CopyUninstaller:    copying failed -" && the result
          reportError "Unable to installer uninstaller at '" & pTarget & "'."
+      end if
+      
+      // SN-2014-10-28: [[ Bug 16410 ]] The uninstaller needs the execution permission
+      // (on Linux)
+      if the platform contains "linux" then
+         local tChmodResult
+         get shell("chmod +x " & quote & installShortenPath(pTarget) & quote)
+         if it is not empty then
+            log "CopyUninstaller:    setting executable permission failed - " & it
+            reportError "Unable to install uninstaller at '" & pTarget * "'."
+         end if
       end if
    end if
 end installCopyUninstaller

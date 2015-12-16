@@ -1,0 +1,11 @@
+type,number,string,unitLength,codePointLength,graphemeLength
+ascii,1,abc,3,3,3
+ascii,2,def,3,3,3,
+nativeAsUnicode,1,áčé,6,6,3,,
+nativeAsUnicode,2,óćö,3,3,3
+nativeNotUnicode,1,€ƒ„,3,3,3
+nativeNotUnicode,2,…†Œ,3,3,3
+simpleUnicode,1,αβγ,3,3,3
+simpleUnicode,2,ΓΔΕ,3,3,3
+unicode,1,룗룙룜,6,3,3
+unicode,2,뤻뤼뤾,6,3,3

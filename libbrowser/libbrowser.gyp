@@ -49,9 +49,14 @@
 				'src/libbrowser_uiwebview.h',
 				'src/libbrowser_uiwebview.mm',
 				
+				'src/libbrowser_osx_webview.h',
+				'src/libbrowser_osx_webview.mm',
+				
 				'src/libbrowser_android.cpp',
 				
-				'src/libbrowser_desktop_factories.cpp',
+				'src/libbrowser_lnx_factories.cpp',
+				'src/libbrowser_win_factories.cpp',
+				'src/libbrowser_osx_factories.cpp',
 				'src/libbrowser_ios_factories.cpp',
 			],
 			
@@ -65,7 +70,6 @@
 						'sources!':
 						[
 							'src/libbrowser_cef.cpp',
-							'src/libbrowser_desktop_factories.cpp',
 						],
 					},
 				],
@@ -78,6 +82,11 @@
 							'src/libbrowser_cef_osx.mm',
 							'src/libbrowser_cefshared_osx.cpp',
 							'src/WebAuthenticationPanel.m',
+
+							'src/libbrowser_osx_webview.h',
+							'src/libbrowser_osx_webview.mm',
+							
+							'src/libbrowser_osx_factories.cpp',
 						],
 					},
 				],
@@ -90,6 +99,8 @@
 							'src/libbrowser_cef_win.cpp',
 							'src/libbrowser_win.rc.h',
 							'src/libbrowser_win.rc',
+							
+							'src/libbrowser_win_factories.cpp',
 						],
 					},
 				],
@@ -102,6 +113,8 @@
 							'src/libbrowser_cef_lnx.cpp',
 							'src/libbrowser_cefshared_lnx.cpp',
 							'src/signal_restore_posix.cpp',
+							
+							'src/libbrowser_lnx_factories.cpp',
 						],
 					},
 				],
@@ -135,6 +148,15 @@
 							'libbrowser-cefprocess-helpers',
 						],
 					
+						'link_settings':
+						{
+							'libraries':
+							[
+								'$(SDKROOT)/System/Library/Frameworks/WebKit.framework',
+								'$(SDKROOT)/System/Library/Frameworks/JavaScriptCore.framework',
+							],
+						},
+						
 						'all_dependent_settings':
 						{
 							'variables':

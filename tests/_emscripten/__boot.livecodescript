@@ -2,23 +2,30 @@
 
 private command TestLoadLibrary pBasename
 	local tStackname
-	put the name of stack (pBasename & ".livecodescript") into tStackname
+	put the name of stack ("tests/" & pBasename & ".livecodescript") into tStackname
 
 	dispatch revLoadLibrary to tStackname
 end TestLoadLibrary
 
 on startup
-	set the defaultfolder to "/boot/standalone"
 
 	-- Load test libraries
 	write "# Loading test libraries" & return to stdout
 	TestLoadLibrary "_testlib"
 	TestLoadLibrary "_testerlib"
+	TestLoadLibrary "_inputlib"
 
 	-- Run tests
-	local tTestFile, tStackName, tCommand, tSetupResult
+	local tTestFiles, tTestFile, tStackName, tCommand, tSetupResult
 
-	repeat for each element tTestFile in TesterGetTestFileNames()
+	put TesterGetTestFileNames("/boot/standalone") into tTestFiles
+
+	repeat for each element tTestFile in tTestFiles
+		-- Ensure that the test stack filename is absolute
+		if the first char of tTestFile is not slash then
+			put "/boot/standalone/" before tTestFile
+		end if
+
 		put the name of stack tTestFile into tStackName
 
 		TestDiagnostic "framework: Running tests from" && tTestFile

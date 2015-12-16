@@ -21,6 +21,9 @@ em_stack_dir=${em_test_build_dir}/standalone/boot/standalone
 # Get version information
 short_ver=$(perl ${top_src_dir}/util/decode_version.pl BUILD_SHORT_VERSION ${top_src_dir}/version)
 
+# Comput boot stack hash
+boot_hash=$(head -c1024 ${em_test_src_dir}/__boot.livecodescript | sha1sum -b | cut -f1 -d" ")
+
 # Clean up from previous run and create required directories
 rm -rf ${em_test_build_dir}
 mkdir -p ${em_test_build_dir}
@@ -39,16 +42,11 @@ cp -r ${top_src_dir}/engine/rsrc/emscripten-standalone-template ${em_test_build_
 # Copy in test suite stacks
 mkdir -p ${em_stack_dir}
 cp -a ${test_src_dir} ${em_stack_dir}
-# Clean up undesirable files
-find ${test_src_dir} \
-     -not -name \*.livecodescript -o \
-     -name '_*' -o \
-     -name '.*' \
-     -print \
-     -exec rm '{}' ';'
-cp ${test_src_dir}/_test*lib.livecodescript ${em_stack_dir}
-# Copy in startup and boot stacks
+# Copy in boot stack
 cp ${em_test_src_dir}/__boot.livecodescript ${em_test_build_dir}/standalone/boot/standalone/__boot.livecode
-cp ${em_test_src_dir}/__startup.livecodescript ${em_test_build_dir}/standalone/boot/__startup.livecode
+# Copy in startup stack and make substitutions
+cp ${top_src_dir}/engine/rsrc/emscripten-startup-template.livecodescript ${em_test_build_dir}/standalone/boot/__startup.livecode
+sed -i -e"s,@BOOT_HASH@,${boot_hash}," ${em_test_build_dir}/standalone/boot/__startup.livecode
+sed -i -e"s,@ENGINE_VERSION@,${short_ver}," ${em_test_build_dir}/standalone/boot/__startup.livecode
 # Create the standalone.zip file
 ( cd ${em_test_build_dir}/standalone && zip -0qr ${em_test_build_dir}/standalone.zip * )

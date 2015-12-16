@@ -2299,7 +2299,7 @@ bool MCUnicodeWildcardMatch(const void *source_chars, uindex_t source_length, bo
 							{
                                 // we're still ok if the current source grapheme falls within the appropriate range.
                                 // If not, there may be other options within this pair of brackets
-								if (t_source_cp >= t_lower_limit || t_source_cp <= t_pattern_cp)
+								if (t_source_cp >= t_lower_limit && t_source_cp <= t_pattern_cp)
 									ok = true;
 							}
 						}
@@ -2347,8 +2347,6 @@ bool MCUnicodeWildcardMatch(const void *source_chars, uindex_t source_length, bo
                 // try and match the rest of the source string recursively.
                 while (t_source_filter -> HasData())
                 {
-                    t_source_cp = t_source_filter -> GetNextCodepoint();
-                    
                     uindex_t t_sindex, t_pindex;
                     // if this is a candidate for a match, recurse.
                     if (t_source_cp == t_pattern_cp)
@@ -2380,6 +2378,7 @@ bool MCUnicodeWildcardMatch(const void *source_chars, uindex_t source_length, bo
                     
                     // if we don't find a match, eat the source codepoint and continue.
                     t_source_filter -> AdvanceCursor();
+                    t_source_cp = t_source_filter -> GetNextCodepoint();
                 }
             }
                 return false;

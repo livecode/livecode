@@ -560,7 +560,6 @@ private handler drawYLabels() returns Real
 	repeat with tCount from 0 up to mVPointCount
 		put mYIncrement * tCount into tNumber
 		put tNumber formatted as string into tString
-		put char 1 to -8 of tString into tString
 
 		measure tString on this canvas
 		put the result into tTextBounds
@@ -573,7 +572,6 @@ private handler drawYLabels() returns Real
 	repeat with tCount from 0 up to mVPointCount
 		put mYIncrement * tCount into tNumber
 		put tNumber formatted as string into tString
-		put char 1 to -8 of tString into tString
 		//fill text tString at point [0,the top of mGridRect + (((mVPointCount)-tCount) * mGridVWidth)] on this canvas
 		variable tY as Real
 		put the top of mGridRect + (((mVPointCount)-tCount) * mGridVWidth) into tY
