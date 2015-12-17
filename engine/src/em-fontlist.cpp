@@ -86,6 +86,8 @@ MCFontnode::MCFontnode(MCNameRef p_name,
     m_font_info.m_leading = t_metrics.fLeading;
     m_font_info.m_xheight = t_metrics.fXHeight;
 
+    m_font_info.size = p_size;
+
     //MCLog("Created dummy font: %@ %hi %hi", p_name, p_size, p_style);
 }
 
