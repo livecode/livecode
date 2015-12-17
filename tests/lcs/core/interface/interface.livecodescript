@@ -713,7 +713,7 @@ end TestMoveControl
 
 -- no key options working properly
 on TestUndo
-   if the platform is "HTML" then
+   if the platform is "HTML5" then
       TestSkip "key options", "bug 16544"
       exit TestUndo
    end if
