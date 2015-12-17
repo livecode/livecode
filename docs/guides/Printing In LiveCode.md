@@ -514,11 +514,11 @@ scale to take up the entire width of the paper and half the height.
 Figure 65 – Stack with text field to print into a layout
 
 	local tRect
-	put 0,0,item 3 of the printRectangle,
-		/ round(item 4 of the printRectangle / 2) into tRect
-	print this card from the topleft of field "theText" 
-		/ to the bottomRight of field "theText" 
-		/ into tRect
+	put 0,0,item 3 of the printRectangle, \
+		round(item 4 of the printRectangle / 2) into tRect
+	print this card from the topleft of field "theText" \
+		to the bottomRight of field "theText" \
+		into tRect
 
 This results in the print out shown in figure 74 below.
 
@@ -547,17 +547,17 @@ To print these onto a single sheet:
 	-- work with the header stack
 	set the defaultStack to "header"
 	-- print the header field onto the top left of the paper
-	print this card from the topLeft of field "header" 
-		/ to the bottomRight of field "header" 
-		/ into the rect of field "header"
+	print this card from the topLeft of field "header" \
+		to the bottomRight of field "header" \
+		into the rect of field "header"
 	-- save the bottom of the header
 	put the bottom of field "header" into tHeaderBottom
 	set the defaultStack to "report editor"
 	-- print the table field below the header
-	print this card from the `topLeft`of field "report table" 
-		/ to the bottomRight of field "report table" 
-		/ into 0,tHeaderBottom,the`right of field "report table", 
-		/ the bottom of field "report table" + tHeaderBottom
+	print this card from the `topLeft`of field "report table" \
+		to the bottomRight of field "report table" \
+		into 0,tHeaderBottom,the`right of field "report table", \
+		the bottom of field "report table" + tHeaderBottom
 	-- send `the`job to `the`printer
 	close`printing
 
@@ -640,23 +640,23 @@ prints into the rectangles:
 	-- print from the rectangle of our header group 
 	-- into the rectangle we stored earlier
 	-- we could use a graphic or any rectangular area instead of a group
-	print this card from the topLeft of group "header" 
-		/ to the bottomRight of group "header" into tHeaderRect
+	print this card from the topLeft of group "header" \
+		to the bottomRight of group "header" into tHeaderRect
 
 	set the defaultStack to "body contents"
 
-	print this card from the topLeft `of`group "body" 
-		/ to the bottomRight of group "body" into tBodyRect
+	print this card from the topLeft `of`group "body" \
+		to the bottomRight of group "body" into tBodyRect
 
 	set the defaultStack to "footer1"
 
-	print this card from the topLeft of group "footer1" 
-		/ to the bottomRight of group "footer1" into tFooter1Rect
+	print this card from the topLeft of group "footer1" \
+		to the bottomRight of group "footer1" into tFooter1Rect
 
 	set the defaultStack to "footer2"
 
-	print this card from the topLeft of group "footer2" 
-		/ to the bottomRight of group "footer2"
+	print this card from the topLeft of group "footer2" \
+		to the bottomRight of group "footer2"
 
 	-- send the print job to the printer
 	close printing
@@ -731,8 +731,8 @@ formatForPrinting property, above.)
 	-- print the field rectangle
 	-- you may want to add an output "into" rectangle
 
-	print this card from the topLeft of field "body text" 
-		\ to the bottomRight of field "body text"
+	print this card from the topLeft of field "body text" \ 
+		to the bottomRight of field "body text"
 
 	-- print a new page
 	print break

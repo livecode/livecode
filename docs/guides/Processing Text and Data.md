@@ -1638,10 +1638,10 @@ present in a list:
 
 	set the itemDelimiter to "."
 	sort lines of fld 1 numeric by char 2 to -1 of the first item of each
-	put char 2 to -1 of the first item 
-		/ of the first line of fld 1 into tMinimumInteger
-	put char 2 to -1 of the first item 
-		/ of the last line of fld 1 into tMaximumInteger
+	put char 2 to -1 of the first item \
+		of the first line of fld 1 into tMinimumInteger
+	put char 2 to -1 of the first item \
+		of the last line of fld 1 into tMaximumInteger
 
 | **Original list:** | **Result:**     
 |--------------------|-----------------------|                 

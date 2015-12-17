@@ -166,8 +166,8 @@ moving or renaming a bundle, refer to them as a folder.
 When using the **rename** command, to rename a bundle, use the rename
 folder form of the command:
 
-	rename folder "/Volumes/Disk/Applications/MyApp/" to
-		/ "/Volumes/Disk/Applications/OtherApp/"
+	rename folder "/Volumes/Disk/Applications/MyApp/" to \
+		"/Volumes/Disk/Applications/OtherApp/"
 
 Similarly, when dealing with a bundle, use the **delete folder** command
 instead of **delete file**, and the **revCopyFolder** command instead of
@@ -708,8 +708,8 @@ from the server and substitutes the downloaded data for the URL. When
 you put something into an ftp URL, LiveCode uploads the data to the ftp
 server:
 
-	put image 10 into URL 
-		/ "ftp://user:passwd@ftp.example.net/picture.jpg"
+	put image 10 into URL \
+		"ftp://user:passwd@ftp.example.net/picture.jpg"
 
 FTP servers require a user name and password, which you can specify in
 the URL. If you don't specify a user name and password, LiveCode adds
@@ -950,8 +950,8 @@ You can also specify ranges, and even one chunk inside another:
 If the URL is local (that is, if it is a **file**, **binfile**, or
 **resfile** URL), you can put a value into a chunk of the URL:
 
-	put it into char 7 of URL "binfile:/picture.gif" put return after
- 		/ word 25 of URL "file:../datafile" 
+	put it into char 7 of URL "binfile:/picture.gif" put return after \
+ 		word 25 of URL "file:../datafile" 
 	put field 3 into line 20 of URL "file:myfile.txt" 
 
 You can also put a value into a chunk of an **ftp** or **http** URL.
@@ -1078,8 +1078,8 @@ document.
 If you use the **put** command with a **file** or **binfile** URL as the
 destination, the document is downloaded to the file:
 
-	put URL "ftp://ftp.example.net/myfile.jpg" into URL
-		/ "binfile:/Disk/Folder/myfile.jpg"
+	put URL "ftp://ftp.example.net/myfile.jpg" into URL \
+		"binfile:/Disk/Folder/myfile.jpg"
 
 ### Non-blocking transfers
 
@@ -1398,8 +1398,8 @@ results in sending a GET request to the server:
 You can add headers, or replace the Host or User-Agent header, by
 setting the **HTTPHeaders** property before using the URL:
 
-	set the HTTPHeaders to "User-Agent: MyApp" & return 
-		/ & "Connection: close" 
+	set the HTTPHeaders to "User-Agent: MyApp" & return \
+		& "Connection: close" 
 	put URL "http://www.example.org/myfile" into myVariable
 
 Now the request sent to the server looks like this:
