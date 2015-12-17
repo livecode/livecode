@@ -862,8 +862,6 @@ private function ExtensionsGetName pExtPath
    local tManifestFile
    put tBuiltPath & "/manifest.xml" into tManifestFile
    
-   write tManifestFile & return to stderr
-   
    local tManifest, tXmlId
    put FileGetContents(tManifestFile) into tManifest
    put revXMLCreateTree(tManifest, true, true, false) into tXmlId
