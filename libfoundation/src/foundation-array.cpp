@@ -1136,7 +1136,7 @@ void __MCArrayDump(MCArrayRef array)
 	for(uindex_t i = 0; i < t_size; i++)
 	{
 		__MCArrayKeyValue *t_entry;
-		t_entry = &array -> key_values[i];
+		t_entry = &t_contents -> key_values[i];
 
 		if (t_entry -> value != UINTPTR_MIN && t_entry -> value != UINTPTR_MAX)
 		{
@@ -1146,7 +1146,19 @@ void __MCArrayDump(MCArrayRef array)
 			MCValueRef t_value;
 			t_value = (MCValueRef)t_entry -> value;
 			
-			if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeArray)
+            __MCValue *t_key_s, *t_value_s;
+            t_key_s = (__MCValue *)t_key;
+            t_value_s = (__MCValue *)t_value;
+            
+            if (t_key_s -> references == 0 || t_key_s -> flags == 0xffffffff)
+            {
+                MCLog("INVALID(%p)", t_key_s);
+            }
+            else if (t_value_s -> references == 0 || t_value_s -> flags == 0xffffffff)
+            {
+                MCLog("[%@] = INVALID(%p)", MCStringGetCString(MCNameGetString(t_key)), t_value_s);
+            }
+			else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeArray)
 			{
                 MCLog("[%@]:", t_key);
 				__MCArrayDump((MCArrayRef)t_value);
