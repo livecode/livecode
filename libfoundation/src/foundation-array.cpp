@@ -388,7 +388,7 @@ bool MCArrayIsFormSensitive(MCArrayRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool __MCArrayValidate(MCArrayRef self);
+bool __MCArrayValidate(MCArrayRef self);
 
 MC_DLLEXPORT_DEF
 bool MCArrayFetchValue(MCArrayRef self, bool p_case_sensitive, MCNameRef p_key, MCValueRef& r_value)
@@ -1063,7 +1063,7 @@ void __MCArrayFinalize(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool __MCArrayValidate(MCArrayRef array)
+bool __MCArrayValidate(MCArrayRef array)
 {
 	// If the array is indirect, get the contents.
 	MCArrayRef t_contents;

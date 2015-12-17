@@ -1224,6 +1224,11 @@ void MCVariable::synchronize(MCExecContext& ctxt, bool p_notify)
 			}
 		}
 	}
+    
+    extern bool __MCArrayValidate(MCArrayRef value);
+    if (MCExecTypeIsValueRef(value . type) &&
+        MCValueIsArray(value . valueref_value))
+        MCAssert(__MCArrayValidate(value . arrayref_value));
 }
 
 #if 0
