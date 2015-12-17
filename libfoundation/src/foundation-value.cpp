@@ -152,11 +152,12 @@ void MCValueRelease(MCValueRef p_value)
     if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeArray)
         MCAssert(__MCArrayValidate((MCArrayRef)p_value));
     
+    MCAssert(self -> references > self -> array_references);
+    
     uint32_t t_new_references;
     t_new_references = self -> references - 1;
     if (t_new_references == 0)
     {
-        MCAssert(self -> array_references == 0);
         __MCValueDestroy(self);
         return;
     }
