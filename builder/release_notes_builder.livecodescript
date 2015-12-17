@@ -1209,7 +1209,7 @@ private function GitGetRepoPath pType
          break
    end switch
    
-   local tRepoPath, tExitCode
+   local tRepoPath
    put GitRunInPath(FileGetPath(pType), "rev-parse --show-toplevel") into tRepoPath
    
    return line 1 of tRepoPath
@@ -1298,7 +1298,7 @@ private function GitGetRelevantTags pType
 end GitGetRelevantTags
 
 private function GitGetChangedFiles pType, pFirstVersion, pLastVersion
-   local tPath, tExitCode, tFiles
+   local tPath, tFiles
    
    put FileGetPath(pType) into tPath
    put GitRunInPath(tPath, merge("diff --name-only [[pFirstVersion]]...[[pLastVersion]] -- .")) into tFiles
