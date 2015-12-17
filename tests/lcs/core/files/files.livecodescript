@@ -179,7 +179,7 @@ on TestSpecialFolderPath
    end if
    
    // Only Linux and HTML5 do not have a Document special folder
-   put the platform contains "linux" or the platform is "html" into tSkip
+   put the platform contains "linux" or the platform is "html5" into tSkip
    __testSpecialFolder tSkip, "documents"
    
    // Only mobiles have Cache special folder
@@ -192,13 +192,13 @@ on TestSpecialFolderPath
    
    // Not all the platforms actually have a Desktop folder - such as servers
    // so we only check that the path returned is not empty.
-   if the environment is "mobile" or the platform is "html" then
+   if the environment is "mobile" or the platform is "html5" then
       TestSkip  "specialFolderPath(desktop) is not empty"
    else
       TestAssert "specialFolderPath(desktop) is not empty", specialFolderPath("desktop") is not empty
    end if
    
-   put the environment is "mobile" or the platform contains "linux" or the platform is "html" into tSkip
+   put the environment is "mobile" or the platform contains "linux" or the platform is "html5" into tSkip
    __testSpecialFolder tSkip, "system"
    __testSpecialFolder tSkip, "support"
 
@@ -357,7 +357,7 @@ on TestLaunch
       local tPID
       put word 1 of line it of taskList into tPID
       get shell ("kill" && tPID)
-   else if the platform is "HTML" then
+   else if the platform is "HTML5" then
       TestSkip "launch subprocess", "HTML5 platform does not support subprocesses"
    else
       testSkip
@@ -366,7 +366,7 @@ end TestLaunch
 
 
 on TestLaunchWith
-   if the platform is "HTML" then
+   if the platform is "HTML5" then
       TestSkip "launch subprocess with", "HTML5 platform does not support subprocesses"
       exit TestLaunchWith
    end if

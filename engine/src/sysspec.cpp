@@ -378,6 +378,15 @@ void MCS_getresourcesfolder(bool p_standalone, MCStringRef &r_resources_folder)
         uindex_t t_slash_index;
         MCStringRef t_stack_filename;
         t_stack_filename = MCdefaultstackptr -> getfilename();
+		
+		// PM-2015-12-10: [[ Bug 16577 ]] If we are on a substack, use the parent stack filename
+		if (MCStringIsEmpty(t_stack_filename))
+		{
+			MCStack *t_parent_stack;
+			t_parent_stack = static_cast<MCStack *>(MCdefaultstackptr -> getparent());
+			if (t_parent_stack != NULL)
+				t_stack_filename = t_parent_stack -> getfilename();
+		}
 
         if (!MCStringLastIndexOfChar(t_stack_filename, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_slash_index))
             t_slash_index = MCStringGetLength(t_stack_filename);

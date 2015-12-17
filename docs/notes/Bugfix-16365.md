@@ -1,1 +1,4 @@
-fix positioning of SVG when maintainAspectRatio if off, additionally remove path-logging when angle > 0
+---
+version: 8.0.0-dp-9
+---
+# fix positioning of SVG when maintainAspectRatio is off

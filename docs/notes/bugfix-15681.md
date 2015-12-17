@@ -1,1 +1,0 @@
-# Occasional issue parsing SVG data in LCB

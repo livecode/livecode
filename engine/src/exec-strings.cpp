@@ -1812,7 +1812,7 @@ __MCStringEvalDelimitedChunkOffset(MCExecContext& ctxt,
         
         // The first time through we need to use the start offset.
         uindex_t t_start_offset;
-        t_start_offset = 0;
+        t_start_offset = p_start_offset;
         
         for(;;)
         {

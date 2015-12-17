@@ -110,7 +110,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #elif defined(__EMSCRIPTEN__)
 
-#define PLATFORM_STRING "HTML"
+#define PLATFORM_STRING "HTML5"
 
 #define FEATURE_PLATFORM_URL 1
 
