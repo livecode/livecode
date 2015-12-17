@@ -1157,11 +1157,7 @@ bool __MCValueInitialize(void)
 
 void __MCValueFinalize(void)
 {
-    MCMemoryDeleteArray(s_unique_values);
-    s_unique_values = nil;
-    s_unique_value_count = 0;
-    s_unique_value_capacity_idx = 0;
-    
+    // First delete the constant valuerefs.
     MCValueRelease(kMCFalse);
     kMCFalse = nil;
     
@@ -1171,6 +1167,12 @@ void __MCValueFinalize(void)
     MCValueRelease(kMCNull);
     kMCNull = nil;
     
+    // Next delete the unique value array.
+    MCMemoryDeleteArray(s_unique_values);
+    s_unique_values = nil;
+    s_unique_value_count = 0;
+    s_unique_value_capacity_idx = 0;
+    
     // Make sure to delete the value pools last, as they need to be around until
     // all other valuerefs have been deleted.
     for(uindex_t i = 0; i < kMCValuePoolCount; i++)
@@ -1178,15 +1180,15 @@ void __MCValueFinalize(void)
         {
             __MCFreedValue *t_value;
             t_value = s_value_pools[i] . values;
-
+            
 #ifdef HAVE_VALGRIND
 			/* Valgrind support */
 			/* The first few bytes of the buffer actually contain the
 			 * address of the following buffer. */
 			VALGRIND_MAKE_MEM_DEFINED(t_value, sizeof (__MCFreedValue));
 #endif /* HAVE_VALGRIND */
-
-			s_value_pools[i] . values = t_value;
+            
+			s_value_pools[i] . values = t_value -> next;
 			s_value_pools[i] . count -= 1;
             MCMemoryDelete(t_value);
         }
