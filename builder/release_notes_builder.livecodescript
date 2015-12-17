@@ -1175,6 +1175,16 @@ end HtmlEscape
 -- Git helper functions
 ----------------------------------------------------------------
 
+private function GitRunInPath pPath, pCommand
+   local tOutput, tExitCode
+   put shell(merge("cd '[[pPath]]' && git [[pCommand]]")) into tOutput
+   put the result into tExitCode
+   if tExitCode is not 0 then
+      throw merge("Failed to run 'git [[pCommand]]'") & return & tOutput
+   end if
+   return tOutput
+end GitRunInPath
+
 private function GitGetRepoPath pType
    switch pType
       case empty
@@ -1188,26 +1198,16 @@ private function GitGetRepoPath pType
          break
    end switch
    
-   local tPath, tRepoPath, tExitCode
-   put FileGetPath(pType) into tPath
-   put shell(merge("git -C '[[tPath]]' rev-parse --show-toplevel")) into tRepoPath
-   put the result into tExitCode
-   if tExitCode is not 0 then
-      throw merge("Failed to run 'git rev-parse': [[tExitCode]]")
-   end if
+   local tRepoPath, tExitCode
+   put GitRunInPath(FileGetPath(pType), "rev-parse --show-toplevel") into tRepoPath
    
    return line 1 of tRepoPath
 end GitGetRepoPath
 
 private function GitGetTags pType
-   local tTags, tPath, tExitCode
+   local tTags, tExitCode
    
-   put FileGetPath(pType) into tPath
-   put shell(merge("git -C '[[tPath]]' tag")) into tTags
-   put the result into tExitCode
-   if tExitCode is not 0 then
-      throw merge("Failed to run 'git tag': [[tExitCode]]")
-   end if
+   put GitRunInPath(FileGetPath(pType), "tag") into tTags
    
    GitSortTags tTags
    
@@ -1290,13 +1290,9 @@ private function GitGetChangedFiles pType, pFirstVersion, pLastVersion
    local tPath, tExitCode, tFiles
    
    put FileGetPath(pType) into tPath
-   put shell(merge("git -C '[[tPath]]' diff --name-only [[pFirstVersion]]...[[pLastVersion]] -- .")) into tFiles
-   put the result into tExitCode
-   if tExitCode is not 0 then
-      throw merge("Failed to run 'git diff': [[tExitCode]]")
-   end if
+   put GitRunInPath(tPath, merge("diff --name-only [[pFirstVersion]]...[[pLastVersion]] -- .")) into tFiles
    
-   local tFile, tResult, tRepoPath
+   local tFile, tRepoPath, tResult
    put empty into tResult
    put GitGetRepoPath(pType) into tRepoPath
    repeat for each line tFile in tFiles
