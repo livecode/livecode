@@ -112,8 +112,10 @@ function builderPlatform
          return "macosx"
       case "iphone"
          return "ios"
-      case "android"
       case "html5"
+         return "emscripten"
+      case "android"
+         return "android"
       default
          return the platform
    end switch
