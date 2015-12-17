@@ -449,12 +449,14 @@ MC_DLLEXPORT_DEF
 bool MCArrayStoreValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNameRef *p_path, uindex_t p_path_length, MCValueRef p_new_value)
 {
 	// The array must be mutable.
-	MCAssert(MCArrayIsMutable(self));
+    MCAssert(MCArrayIsMutable(self));
+    
 	MCAssert(nil != p_path);
 	MCAssert(0 < p_path_length);
 	__MCAssertIsName(p_path[0]);
     
-    MCAssert(__MCArrayValidate(self));
+    MCAssert(MCValueGetTypeCode(p_new_value) != kMCValueTypeCodeArray ||
+             __MCArrayValidate((MCArrayRef)p_new_value));
     
 	// Ensure it is not indirect.
 	if (__MCArrayIsIndirect(self))
@@ -476,6 +478,9 @@ bool MCArrayStoreValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNam
 		{
 			MCValueRelease(t_value);
 			self -> key_values[t_slot] . value = (uintptr_t)MCValueRetain(p_new_value);
+            
+            __MCArrayValidate(self);
+            
 			return true;
 		}
 
@@ -513,6 +518,9 @@ bool MCArrayStoreValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNam
 			self -> key_values[t_slot] . key = MCValueRetain(p_path[0]);
 			self -> key_values[t_slot] . value = (uintptr_t)MCValueRetain(p_new_value);
 			self -> key_value_count += 1;
+            
+            __MCArrayValidate(self);
+            
 			return true;
 		}
 	}
@@ -540,6 +548,8 @@ bool MCArrayStoreValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNam
 	
 	self -> key_values[t_slot] . value = (uintptr_t)t_array;
 
+    __MCArrayValidate(self);
+    
 	return true;
 }
 

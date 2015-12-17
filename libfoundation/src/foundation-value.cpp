@@ -128,6 +128,9 @@ MCValueRef MCValueRetain(MCValueRef p_value)
 
 	MCAssert(self != nil);
     __MCAssertIsValue(self);
+
+ //   if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeArray)
+ //       MCAssert(__MCArrayValidate(p_value));
     
 	self -> references += 1;
 
