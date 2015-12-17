@@ -156,6 +156,7 @@ void MCValueRelease(MCValueRef p_value)
     t_new_references = self -> references - 1;
     if (t_new_references == 0)
     {
+        MCAssert(self -> array_references == 0);
         __MCValueDestroy(self);
         return;
     }
@@ -581,6 +582,7 @@ bool __MCValueCreate(MCValueTypeCode p_type_code, size_t p_size, __MCValue*& r_v
 	__MCValue *self = (__MCValue *)t_value;
 
 	self -> references = 1;
+    self -> array_references = 0;
 	self -> flags = (p_type_code << 28);
     
 	r_value = self;

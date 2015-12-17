@@ -57,6 +57,17 @@ static bool __MCArrayFindKeyValueSlot(__MCArray *self, bool case_sensitive, MCNa
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void __MCArrayRetainInArray(MCValueRef p_value)
+{
+    ((__MCValue *)p_value) -> array_references += 1;
+}
+
+void __MCArrayReleaseInArray(MCValueRef p_value)
+{
+    MCAssert(((__MCValue *)p_value) -> array_references > 0);
+    ((__MCValue *)p_value) -> array_references -= 1;
+}
+
 MC_DLLEXPORT_DEF
 bool MCArrayCreate(bool p_case_sensitive, const MCNameRef *p_keys, const MCValueRef *p_values, uindex_t p_length, MCArrayRef& r_array)
 {
@@ -476,8 +487,10 @@ bool MCArrayStoreValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNam
 		// If the path length is 1, then just set the value and return.
 		if (p_path_length == 1)
 		{
+            __MCArrayReleaseInArray(t_value);
 			MCValueRelease(t_value);
 			self -> key_values[t_slot] . value = (uintptr_t)MCValueRetain(p_new_value);
+            __MCArrayRetainInArray(p_new_value);
             
             __MCArrayValidate(self);
             
@@ -492,9 +505,11 @@ bool MCArrayStoreValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNam
 			MCArrayRef t_mutable_array;
 			if (!MCArrayIsMutable((MCArrayRef)t_value))
 			{
+                __MCArrayReleaseInArray(t_value);
 				if (!MCArrayMutableCopyAndRelease((MCArrayRef)t_value, t_mutable_array))
 					return false;
 				self -> key_values[t_slot] . value = (uintptr_t)t_mutable_array;
+                __MCArrayRetainInArray(t_mutable_array);
 			}
 			else
 				t_mutable_array = (MCArrayRef)t_value;
@@ -517,6 +532,7 @@ bool MCArrayStoreValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNam
 		{
 			self -> key_values[t_slot] . key = MCValueRetain(p_path[0]);
 			self -> key_values[t_slot] . value = (uintptr_t)MCValueRetain(p_new_value);
+            __MCArrayRetainInArray(p_new_value);
 			self -> key_value_count += 1;
             
             __MCArrayValidate(self);
@@ -539,7 +555,10 @@ bool MCArrayStoreValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNam
 
 	// We've successfully built the rest of the path, so replace or add the new key-value.
 	if (t_found)
+    {
+        __MCArrayReleaseInArray((MCValueRef)self -> key_values[t_slot] . value);
 		MCValueRelease((MCValueRef)self -> key_values[t_slot] . value);
+    }
 	else
 	{
 		self -> key_values[t_slot] . key = MCValueRetain(p_path[0]);
@@ -547,6 +566,7 @@ bool MCArrayStoreValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNam
 	}
 	
 	self -> key_values[t_slot] . value = (uintptr_t)t_array;
+    __MCArrayRetainInArray(t_array);
 
     __MCArrayValidate(self);
     
@@ -587,6 +607,7 @@ bool MCArrayRemoveValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNa
 		if (p_path_length == 1)
 		{
 			MCValueRelease(self -> key_values[t_slot] . key);
+            __MCArrayReleaseInArray(t_value);
 			MCValueRelease(t_value);
 
 			self -> key_values[t_slot] . key = nil;
@@ -608,8 +629,10 @@ bool MCArrayRemoveValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNa
 			MCArrayRef t_mutable_array;
             if (!MCArrayIsMutable((MCArrayRef)t_value))
 			{
+                __MCArrayReleaseInArray(t_value);
 				if (!MCArrayMutableCopyAndRelease((MCArrayRef)t_value, t_mutable_array))
 					return false;
+                __MCArrayRetainInArray(t_mutable_array);
 				self -> key_values[t_slot] . value = (uintptr_t)t_mutable_array;
 			}
 			else
@@ -695,6 +718,7 @@ void __MCArrayDestroy(__MCArray *self)
 				continue;
 
 			MCValueRelease(self -> key_values[i] . key);
+            __MCArrayReleaseInArray((MCValueRef)self -> key_values[i] . value);
 			MCValueRelease((MCValueRef)self -> key_values[i] . value);
 
 			t_used -= 1;
@@ -846,9 +870,11 @@ static bool __MCArrayMakeContentsImmutable(__MCArray *self)
 		if (self -> key_values[i] . value != UINTPTR_MIN && self -> key_values[i] . value != UINTPTR_MAX)
 		{
 			__MCValue *t_new_value;
+            __MCArrayReleaseInArray((MCValueRef)self -> key_values[i] . value);
 			if (!__MCValueImmutableCopy((__MCValue *)self -> key_values[i] . value, true, t_new_value))
 				return false;
-
+            
+            __MCArrayRetainInArray(t_new_value);
 			self -> key_values[i] . value = (uintptr_t)t_new_value;
 		}
 	}
@@ -912,6 +938,7 @@ static bool __MCArrayResolveIndirect(__MCArray *self)
 		{
 			if (t_contents -> key_values[i] . value != UINTPTR_MIN && t_contents -> key_values[i] . value != UINTPTR_MAX)
 			{
+                __MCArrayRetainInArray((MCValueRef)t_contents -> key_values[i] . value);
 				self -> key_values[i] . value = (uintptr_t)MCValueRetain((MCValueRef)t_contents -> key_values[i] . value);
 				self -> key_values[i] . key = MCValueRetain(t_contents -> key_values[i] . key);
 			}

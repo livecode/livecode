@@ -47,6 +47,7 @@ struct __MCValue
 {
 	uint32_t references;
 	uint32_t flags;
+    uint32_t array_references;
 };
 
 //////////
