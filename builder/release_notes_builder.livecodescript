@@ -901,7 +901,7 @@ private command DictionaryScan @xAdded, @xModified
          the last line of tTags) into tChangedFiles
    
    -- Check whether each entry was added or just modified
-   local tFiles
+   local tFile
    repeat for each line tFile in tChangedFiles
       if tFile is among the lines of tPermittedFiles then
          DictionaryScanFile tFile, xAdded, xModified
@@ -1188,16 +1188,26 @@ private function GitGetRepoPath pType
          break
    end switch
    
-   local tPath
+   local tPath, tRepoPath, tExitCode
    put FileGetPath(pType) into tPath
-   return line 1 of shell(merge("git -C '[[tPath]]' rev-parse --show-toplevel"))
+   put shell(merge("git -C '[[tPath]]' rev-parse --show-toplevel")) into tRepoPath
+   put the result into tExitCode
+   if tExitCode is not 0 then
+      throw merge("Failed to run 'git rev-parse': [[tExitCode]]")
+   end if
+   
+   return line 1 of tRepoPath
 end GitGetRepoPath
 
 private function GitGetTags pType
-   local tTags, tPath
+   local tTags, tPath, tExitCode
    
    put FileGetPath(pType) into tPath
    put shell(merge("git -C '[[tPath]]' tag")) into tTags
+   put the result into tExitCode
+   if tExitCode is not 0 then
+      throw merge("Failed to run 'git tag': [[tExitCode]]")
+   end if
    
    GitSortTags tTags
    
@@ -1277,12 +1287,17 @@ private function GitGetRelevantTags pType
 end GitGetRelevantTags
 
 private function GitGetChangedFiles pType, pFirstVersion, pLastVersion
-   local tPath, tFiles
+   local tPath, tExitCode, tFiles
    
    put FileGetPath(pType) into tPath
    put shell(merge("git -C '[[tPath]]' diff --name-only [[pFirstVersion]]...[[pLastVersion]] -- .")) into tFiles
+   put the result into tExitCode
+   if tExitCode is not 0 then
+      throw merge("Failed to run 'git diff': [[tExitCode]]")
+   end if
    
    local tFile, tResult, tRepoPath
+   put empty into tResult
    put GitGetRepoPath(pType) into tRepoPath
    repeat for each line tFile in tFiles
       put tRepoPath & slash & tFile & return after tResult
