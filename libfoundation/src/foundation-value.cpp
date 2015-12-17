@@ -27,6 +27,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 static bool __MCValueInter(__MCValue *value, bool release, MCValueRef& r_unique_value);
 static void __MCValueUninter(__MCValue *value);
 
+extern bool __MCArrayValidate(MCArrayRef value);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCTypeInfoRef __MCCustomValueResolveTypeInfo(__MCValue *p_value)
@@ -129,8 +131,8 @@ MCValueRef MCValueRetain(MCValueRef p_value)
 	MCAssert(self != nil);
     __MCAssertIsValue(self);
 
- //   if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeArray)
- //       MCAssert(__MCArrayValidate(p_value));
+    if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeArray)
+        MCAssert(__MCArrayValidate((MCArrayRef)p_value));
     
 	self -> references += 1;
 
@@ -146,7 +148,10 @@ void MCValueRelease(MCValueRef p_value)
         return;
     
     __MCAssertIsValue(self);
-        
+    
+    if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeArray)
+        MCAssert(__MCArrayValidate((MCArrayRef)p_value));
+    
     uint32_t t_new_references;
     t_new_references = self -> references - 1;
     if (t_new_references == 0)
@@ -165,6 +170,9 @@ bool MCValueCopy(MCValueRef p_value, MCValueRef& r_immutable_copy)
 	MCAssert(p_value != nil);
     __MCAssertIsValue(p_value);
     
+    if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeArray)
+        MCAssert(__MCArrayValidate((MCArrayRef)p_value));
+    
 	__MCValue *t_copy;
 	if (__MCValueImmutableCopy((__MCValue *)p_value, false, t_copy))
 	{
@@ -180,6 +188,9 @@ bool MCValueCopyAndRelease(MCValueRef p_value, MCValueRef& r_immutable_copy)
 {
 	MCAssert(p_value != nil);
     __MCAssertIsValue(p_value);
+    
+    if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeArray)
+        MCAssert(__MCArrayValidate((MCArrayRef)p_value));
     
 	__MCValue *t_copy;
 	if (__MCValueImmutableCopy((__MCValue *)p_value, true, t_copy))

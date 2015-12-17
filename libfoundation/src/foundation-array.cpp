@@ -1082,6 +1082,9 @@ bool __MCArrayValidate(MCArrayRef array)
 	else
 		t_contents = array -> contents;
     
+    if (t_contents -> key_values == NULL)
+        return true;
+    
 	uindex_t t_size;
 	t_size = __MCArrayGetTableSize(array);
     
