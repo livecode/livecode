@@ -1156,7 +1156,7 @@ void __MCArrayDump(MCArrayRef array)
             }
             else if (t_value_s -> references == 0 || t_value_s -> flags == 0xffffffff)
             {
-                MCLog("[%@] = INVALID(%p)", MCStringGetCString(MCNameGetString(t_key)), t_value_s);
+                MCLog("[%@] = INVALID(%p)", t_key, t_value_s);
             }
 			else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeArray)
 			{
