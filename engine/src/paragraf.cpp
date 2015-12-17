@@ -557,37 +557,51 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 					if (newblock->IsSavedAsUnicode())
 					{
 						//len >>= 1;
-						if (len && t_length > 0)
+						if (len > 0 && t_length > 0)
 						{
-							uint2 *dptr = (uint2*)(*t_text_data + index);
+							// Copy to a new buffer to ensure alignment
+							MCAutoArray<unichar_t> t_unicode_buffer;
+							if (!t_unicode_buffer.New(len / sizeof(unichar_t)))
+							{
+								return checkloadstat(IO_ERROR);
+							}
+
+							uindex_t t_buffer_len = t_unicode_buffer.Size() * sizeof(unichar_t);
+							MCMemoryCopy(t_unicode_buffer.Ptr(),
+							             *t_text_data + index, t_buffer_len);
                             
 							// Byte swap, if required
-                            // SN-2014-09-29: [[ Bug 13552 ]] Make sure to take in account odd number of bytes
-                            // for unicode, as it may occur
-							uindex_t t_len = 0;
-                            while (len >= 2)
-                            {
-								swap_uint2(dptr++);
-                                len -= 2;
-                                t_len += 1;
-                            }
+							for (uindex_t i = 0; i < t_unicode_buffer.Size(); ++i)
+							{
+								uint2 t_char = uint2(t_unicode_buffer[i]);
+								swap_uint2(&t_char);
+								t_unicode_buffer[i] = t_char;
+							}
 
                             // Append to the paragraph text
-                            if (!MCStringAppendChars(m_text, (const unichar_t*)dptr - t_len, t_len))
+							if (!MCStringAppendChars(m_text, t_unicode_buffer.Ptr(),
+							                         t_unicode_buffer.Size()))
+							{
                                 return checkloadstat(IO_ERROR);
-							
-                            if (len > 0)
-                            {
-                                if (!MCStringAppendChar(m_text, (unichar_t)*(const uint8_t *)dptr))
-                                    return checkloadstat(IO_ERROR);
-                                t_len += 1;
-                            }
-                            
+							}
+
+							// Take into account possible trailing junk
+							uindex_t t_unicode_count = t_unicode_buffer.Size();
+							for (uindex_t i = t_buffer_len; i < uindex_t(len); ++i)
+							{
+								unichar_t t_trailing = (*t_text_data)[index + i];
+								if (!MCStringAppendChar(m_text, t_trailing))
+								{
+									return checkloadstat(IO_ERROR);
+								}
+								++t_unicode_count;
+							}
+
 							// The indices used by the block are incorrect and need
 							// to be updated (offsets into the stored string and
 							// the string held by the paragraph will differ if any
 							// portion of the stored string was non-UTF-16)
-                            newblock->SetRange(t_index, t_len);
+                            newblock->SetRange(t_index, t_unicode_count);
 						}
                         // SN-2014-09-29: [[ Bug 13552 ]] Update the block range, even if its length is 0
                         else
