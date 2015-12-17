@@ -326,6 +326,14 @@ bool MCVariable::setvalueref(MCValueRef p_value)
 	return setvalueref(nil, 0, false, p_value);
 }
 
+void MCVariable::validate(void)
+{
+    extern bool __MCArrayValidate(MCArrayRef value);
+    if (MCExecTypeIsValueRef(value . type) &&
+        MCValueIsArray(value . valueref_value))
+        MCAssert(__MCArrayValidate(value . arrayref_value));
+}
+
 bool MCVariable::setvalueref(MCNameRef *p_path, uindex_t p_length, bool p_case_sensitive, MCValueRef p_value)
 {
 	if (p_length == 0)
@@ -336,6 +344,9 @@ bool MCVariable::setvalueref(MCNameRef *p_path, uindex_t p_length, bool p_case_s
         
 		MCExecTypeRelease(value);
 		MCExecTypeSetValueRef(value, t_new_value);
+        
+        validate();
+        
 		return true;
 	}
 
@@ -347,8 +358,11 @@ bool MCVariable::setvalueref(MCNameRef *p_path, uindex_t p_length, bool p_case_s
         return false;
 
     if (MCArrayStoreValueOnPath(value . arrayref_value, p_case_sensitive, p_path, p_length, *t_copied_value))
+    {
+        validate();
 		return true;
-
+    }
+    
 	return false;
 }
 
@@ -507,6 +521,8 @@ bool MCVariable::give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariable
         value = p_value;
     }
     
+    validate();
+    
     // SN-2014-09-18 [[ Bug 13453 ]] give_value should notify the debugger about it
     synchronize(ctxt, true);
     return true;
@@ -623,7 +639,11 @@ bool MCVariable::modify_data(MCExecContext& ctxt, MCDataRef p_data, MCNameRef *p
 		setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), t_value_as_data))
 	{
 		MCValueRelease(t_value_as_data);
+        
+        validate();
+        
         synchronize(ctxt, true);
+        
 		return true;
 	}
     
@@ -667,6 +687,7 @@ bool MCVariable::modify_string(MCExecContext& ctxt, MCStringRef p_value, MCNameR
         setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), t_current_value_as_string))
     {
         MCValueRelease(t_current_value_as_string);
+        validate();
         synchronize(ctxt, true);
         return true;
     }
@@ -746,6 +767,7 @@ bool MCVariable::replace_data(MCExecContext& ctxt, MCDataRef p_replacement, MCRa
         setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), t_current_value_as_data))
     {
         MCValueRelease(t_current_value_as_data);
+        validate();
         synchronize(ctxt, true);
         return true;
     }
@@ -781,6 +803,7 @@ bool MCVariable::replace_string(MCExecContext& ctxt, MCStringRef p_replacement, 
         setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), t_current_value_as_string))
     {
         MCValueRelease(t_current_value_as_string);
+        validate();
         synchronize(ctxt, true);
         return true;
     }
@@ -863,6 +886,8 @@ bool MCVariable::remove(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_lengt
     
 	MCArrayRemoveValueOnPath(value . arrayref_value, ctxt . GetCaseSensitive(), p_path, p_length);
     
+    validate();
+    
 	return true;
     
 }
@@ -888,7 +913,9 @@ bool MCVariable::converttomutablearray(void)
 		MCExecTypeRelease(value);
 		MCExecTypeSetValueRef(value, t_array);
 	}
-
+    
+    validate();
+    
 	return true;
 }
 
@@ -1224,11 +1251,6 @@ void MCVariable::synchronize(MCExecContext& ctxt, bool p_notify)
 			}
 		}
 	}
-    
-    extern bool __MCArrayValidate(MCArrayRef value);
-    if (MCExecTypeIsValueRef(value . type) &&
-        MCValueIsArray(value . valueref_value))
-        MCAssert(__MCArrayValidate(value . arrayref_value));
 }
 
 #if 0
