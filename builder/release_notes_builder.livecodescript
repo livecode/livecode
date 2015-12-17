@@ -32,9 +32,12 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType, pOutputDir
       DictionaryCreate
       PreviousCreate
       
-      Output
+      OutputNotes
+      OutputUpdates
       
-      Finalize      
+      Finalize
+      
+      return FileGetUTF8Contents(OutputGetUpdatesFilename("html"))
    catch tError
       builderLog "error", tError
    end try
@@ -50,7 +53,7 @@ end NotesGetExperimentalText
 -- Output
 ----------------------------------------------------------------
 
-private function OutputGetFilename tSuffix, pVersion
+private function OutputGetNotesFilename tSuffix, pVersion
    if pVersion is empty then
       put sVersion into pVersion
    end if
@@ -58,37 +61,47 @@ private function OutputGetFilename tSuffix, pVersion
    local tBasename
    put "LiveCodeNotes-" & replaceText(pVersion, "[-,\.]", "_") into tBasename
    return sOutputPath & slash & tBasename & "." & tSuffix
-end OutputGetFilename
+end OutputGetNotesFilename
 
-private function OutputGetUrl tSuffix, pVersion
+private function OutputGetUpdatesFilename tSuffix, pVersion
+   if pVersion is empty then
+      put sVersion into pVersion
+   end if
+   
+   local tBasename
+   put "LiveCodeUpdates-" & replaceText(pVersion, "[-,\.]", "_") into tBasename
+   return sOutputPath & slash & tBasename & "." & tSuffix
+end OutputGetUpdatesFilename
+
+private function OutputGetNotesUrl tSuffix, pVersion
    put replaceText(pVersion, "[-,\.]", "_") into pVersion
    
    return "https://downloads.livecode.com/livecode/" & pVersion & \
          "/LiveCodeNotes-" & pVersion & "." & tSuffix
-end OutputGetUrl
+end OutputGetNotesUrl
 
-private function OutputGetTitle
+private function OutputGetNotesTitle
    return merge("LiveCode [[sVersion]] Release Notes")
-end OutputGetTitle
+end OutputGetNotesTitle
 
-private command Output
-   OutputMarkdown
-   OutputHtml
-   OutputPdf
-end Output
+private command OutputNotes
+   OutputNotesMarkdown
+   OutputNotesHtml
+   OutputNotesPdf
+end OutputNotes
 
-private command OutputMarkdown
+private command OutputNotesMarkdown
    local tPath
-   put OutputGetFilename("md") into tPath
+   put OutputGetNotesFilename("md") into tPath
    builderLog "report", merge("Writing [[tPath]]")
-   FileSetUTF8Contents tPath, sMarkdownText
-end OutputMarkdown
+   FileSetUTF8Contents tPath, sMarkdownText["notes"]
+end OutputNotesMarkdown
 
-private command OutputHtml
+private command OutputNotesHtml
    -- Try to do the minimum possible escaping to be able to insert the
    -- markdown into a JavaScript string
    local tEscaped
-   put sMarkdownText into tEscaped
+   put sMarkdownText["notes"] into tEscaped
    replace "\" with "\\" in tEscaped
    replace "'" with "\'" in tEscaped
    replace return with "\n" in tEscaped
@@ -101,13 +114,13 @@ private command OutputHtml
    replace "@MARKDOWN@" with tEscaped in tHtml
    
    local tOutpath
-   put OutputGetFilename("html") into tOutpath
+   put OutputGetNotesFilename("html") into tOutpath
    
    builderLog "report", merge("Writing [[tOutpath]]")
    FileSetUTF8Contents tOutpath, tHtml
-end OutputHtml
+end OutputNotesHtml
 
-private command OutputPdf
+private command OutputNotesPdf
    local tCommand
    
    -- Use wkhtmltopdf to convert the HTML representation
@@ -118,10 +131,10 @@ private command OutputPdf
    end if
    
    local tTitle, tDate, tHtmlPath, tPdfPath
-   put OutputGetTitle() into tTitle
+   put OutputGetNotesTitle() into tTitle
    put the date into tDate
-   put OutputGetFilename("html") into tHtmlPath
-   put OutputGetFilename("pdf") into tPdfPath
+   put OutputGetNotesFilename("html") into tHtmlPath
+   put OutputGetNotesFilename("pdf") into tPdfPath
    
    local tArgs
    put empty into tArgs
@@ -139,7 +152,29 @@ private command OutputPdf
    if tExitCode is not 0 then
       throw merge("Failed to run [[tCommand]]: exit code [[tExitCode]]")
    end if
-end OutputPdf
+end OutputNotesPdf
+
+private command OutputUpdates  
+   OutputUpdatesMarkdown
+   OutputUpdatesHtml
+end OutputUpdates
+
+private command OutputUpdatesMarkdown
+   local tPath
+   put OutputGetUpdatesFilename("md") into tPath
+   builderLog "report", merge("Writing [[tPath]]")
+   FileSetUTF8Contents tPath, sMarkdownText["updates"] 
+end OutputUpdatesMarkdown
+
+private command OutputUpdatesHtml
+   local tHtml, tToc
+   put markdownToHtml(sMarkdownText["updates"], 3, 0, tToc, true) into tHtml
+   
+   local tPath
+   put OutputGetUpdatesFilename("html") into tPath
+   builderLog "report", merge("Writing [[tPath]]")
+   FileSetUTF8Contents tPath, tHtml
+end OutputUpdatesHtml
 
 ----------------------------------------------------------------
 -- Base file sections
@@ -153,17 +188,19 @@ private command BaseCreate
    BaseCreateOverview
    BaseCreateIssues
    
-   MarkdownAppend BaseReadFile("platforms")
-   MarkdownAppend BaseReadFile("setup")
-   MarkdownAppend BaseReadFile("proposed_changes")
+   MarkdownAppend "notes", BaseReadFile("platforms")
+   MarkdownAppend "notes", BaseReadFile("setup")
+   MarkdownAppend "notes", BaseReadFile("proposed_changes")
+   
+   BaseCreateUpdates
 end BaseCreate
 
 private command BaseCreateTitle
-   MarkdownAppend "<h1 class=" & quote & "title" & quote & ">" & OutputGetTitle() & "</h1>" & return
+   MarkdownAppend "notes", "<h1 class=" & quote & "title" & quote & ">" & OutputGetNotesTitle() & "</h1>" & return
 end BaseCreateTitle
 
 private command BaseCreateContents
-   MarkdownAppend "[TOC]"
+   MarkdownAppend "notes", "[TOC]"
 end BaseCreateContents
 
 private command BaseCreateOverview
@@ -176,7 +213,7 @@ private command BaseCreateOverview
       put merge("This document describes all the changes that have been made for LiveCode [[sVersion]], including bug fixes and new syntax.") after tOverview
    end if
    
-   MarkdownAppend tOverview
+   MarkdownAppend "notes", tOverview
 end BaseCreateOverview
 
 private command BaseCreateIssues
@@ -188,7 +225,7 @@ private command BaseCreateIssues
       put "There are no known issues with this release." after tIssues
    end if
    
-   MarkdownAppend tIssues
+   MarkdownAppend "notes", tIssues
 end BaseCreateIssues
 
 private function BaseReadFile pBasename
@@ -200,6 +237,11 @@ private function BaseReadFile pBasename
       return empty
    end if
 end BaseReadFile
+
+private command BaseCreateUpdates
+   MarkdownAppend "updates", merge("LiveCode [[sVersion]] is now available.") & return
+   MarkdownAppend "updates", "Changes in this release include:" & return
+end BaseCreateUpdates
 
 ----------------------------------------------------------------
 -- Old-style release notes
@@ -223,7 +265,8 @@ files get their own section in the release notes.
 private command V1NotesCreate pType, pTitle
    builderLog "report", merge("Creating [[pType]] release notes")
    
-   MarkdownAppend merge("# [[pTitle]]")
+   MarkdownAppend "notes", merge("# [[pTitle]]")
+   MarkdownAppend "updates", merge("# [[pTitle]]")
    
    -- First, gather all files, their contents, and their metadata
    local tScannedNotes
@@ -476,11 +519,21 @@ private command V1NotesGenerateBlock pVersion, pHeader, pBody
       put false into tExperimental
    end if
    
-   MarkdownAppend merge("## [[pHeader]] ([[pVersion]][[tAnnotation]])")
-   MarkdownAppend pBody & return
+   MarkdownAppend "notes", merge("## [[pHeader]] ([[pVersion]][[tAnnotation]])")
+   MarkdownAppend "notes", pBody & return
    
    if tExperimental then
-      MarkdownAppend NotesGetExperimentalText()
+      MarkdownAppend "notes", NotesGetExperimentalText()
+   end if
+   
+   -- Include only brand new notes in the updater notes
+   if pVersion is sVersion then
+      MarkdownAppend "updates", merge("## [[pHeader]]")
+      MarkdownAppend "updates", pBody & return
+      
+      if tExperimental then
+         MarkdownAppend "updates", NotesGetExperimentalText()
+      end if
    end if
 end V1NotesGenerateBlock
 
@@ -491,7 +544,8 @@ end V1NotesGenerateBlock
 private command V2NotesCreate pType, pTitle
    builderLog "report", merge("Creating [[pType]] release notes")
    
-   MarkdownAppend merge("# [[pTitle]]")
+   MarkdownAppend "notes", merge("# [[pTitle]]")
+   MarkdownAppend "updates", merge("# [[pTitle]]")
    
    local tScannedNotes
    put V2NotesScan(pType) into tScannedNotes
@@ -592,6 +646,7 @@ private command V2NotesCollateFile pType, pVersion, pFileInfo, @xCollated, @xBug
       -- Otherwise, just add it to the current section of the
       -- collated notes
       put tLine & return after xCollated[tSectionPath]["__markdown"]
+      put pVersion into xCollated[tSectionPath]["__version"]
       
       if word 1 to -1 of tLine is not empty then
          put true into tHaveContent
@@ -678,17 +733,22 @@ private command V2NotesAppendSection pName, pCollatedSection, @xCollated
 end V2NotesAppendSection
 
 private command V2NotesGenerate pType, pCollated, pLevel
-   MarkdownAppend V2NotesGenerateContent(pType, pCollated, pLevel)
+   MarkdownAppend "notes", V2NotesGenerateContent(pType, pCollated, pLevel)
+   MarkdownAppend "updates", V2NotesGenerateContent(pType, pCollated, pLevel, true)
 end V2NotesGenerate
 
-private function V2NotesGenerateContent pType, pCollated, pLevel
+-- If <pOnlyCurrent> is true, then only generate content that's brand new in
+-- the release that notes are being generated for
+private function V2NotesGenerateContent pType, pCollated, pLevel, pOnlyCurrent
    -- Compute the content from this node + all child nodes
    local tContent
    
-   if (word 1 to -1 of pCollated["__markdown"]) is not empty then
-      put pCollated["__markdown"] into tContent
-      if the last char of tContent is not return then
-         put return after tContent
+   if not (pOnlyCurrent is true and (pCollated["__version"] is not sVersion)) then
+      if (word 1 to -1 of pCollated["__markdown"]) is not empty then
+         put pCollated["__markdown"] into tContent
+         if the last char of tContent is not return then
+            put return after tContent
+         end if
       end if
    end if
    
@@ -696,7 +756,7 @@ private function V2NotesGenerateContent pType, pCollated, pLevel
    local tSectionContent, tHeader
    
    repeat with tId = 1 to pCollated["__count"]
-      put V2NotesGenerateContent(pType, pCollated[tId], pLevel + 1) into tSectionContent
+      put V2NotesGenerateContent(pType, pCollated[tId], pLevel + 1, pOnlyCurrent) into tSectionContent
       
       -- Only generate a subsection header if the subsection (and all
       -- the subsections it contains) doesn't contain any notes
@@ -724,7 +784,8 @@ constant kExtensionStrings = "widget,library,module"
 
 private command ExtensionsCreate
    BuilderLog "report", "Creating extension release notes"
-   MarkdownAppend "# LiveCode extension changes"
+   MarkdownAppend "notes", "# LiveCode extension changes"
+   MarkdownAppend "updates", "# LiveCode extension changes"
    
    local tType, tTypePath, tFolder
    local tCollated, tBugInfo
@@ -822,10 +883,10 @@ private command DictionaryCreate
    sort lines of tAdded ascending text
    sort lines of tModified ascending text
    
-   MarkdownAppend "# Dictionary additions"
-   MarkdownAppend tAdded
-   --MarkdownAppend "# Dictionary changes"
-   --MarkdownAppend tModified
+   MarkdownAppend "notes", "# Dictionary additions"
+   MarkdownAppend "notes", tAdded
+   --MarkdownAppend "notes", "# Dictionary changes"
+   --MarkdownAppend "notes", tModified
 end DictionaryCreate
 
 private command DictionaryScan @xAdded, @xModified
@@ -896,7 +957,7 @@ end DictionaryScanFile
 
 private command PreviousCreate
    builderLog "report", "Listing previous release notes"
-   MarkdownAppend "# Previous release notes"
+   MarkdownAppend "notes", "# Previous release notes"
    
    local tTags, tTagCount
    put GitGetTags() into tTags
@@ -914,8 +975,8 @@ private command PreviousCreate
          next repeat
          
       else      
-         put OutputGetUrl(tVersion) into tUrl
-         MarkdownAppend merge("* [LiveCode [[tVersion]] Release Notes]([[tUrl]])")
+         put OutputGetNotesUrl(tVersion) into tUrl
+         MarkdownAppend "notes", merge("* [LiveCode [[tVersion]] Release Notes]([[tUrl]])")
       end if
       
       subtract 1 from tTagCount
@@ -963,25 +1024,25 @@ private command V1BugGenerate pBugInfo
       if tPrettyVersion is "HEAD" then 
          put sVersion into tPrettyVersion
       end if
-      MarkdownAppend merge("## Specific bug fixes ([[tPrettyVersion]])")
+      MarkdownAppend "notes", merge("## Specific bug fixes ([[tPrettyVersion]])")
       
       -- Generate the table itself
       -- Use HTML to allow using HTML classes to distinguish between
       if tCurrent then
-         MarkdownAppend "<table class=" & quote & "currentbugs" & quote & ">"
+         MarkdownAppend "notes", "<table class=" & quote & "currentbugs" & quote & ">"
       else
-         MarkdownAppend "<table class=" & quote & "bugs" & quote & ">"
+         MarkdownAppend "notes", "<table class=" & quote & "bugs" & quote & ">"
       end if
       repeat for each line tLine in tBugs
          put item 1 of tLine into tId
          put item 2 to -1 of tLine into tDesc
          put BugUrl(tId) into tUrl
          
-         MarkdownAppend "<tr><td><a href=" & quote & tUrl & quote & ">" & tId & "</a>" & \
+         MarkdownAppend "notes", "<tr><td><a href=" & quote & tUrl & quote & ">" & tId & "</a>" & \
                "</td><td>" & tDesc & "</td></tr>"
       end repeat
       
-      MarkDownAppend "</table>"
+      MarkDownAppend "notes", "</table>"
       
       subtract 1 from tTagCount
    end repeat
@@ -993,7 +1054,7 @@ private command V2BugGenerate pBugInfo
    GitSortTags tTags
    put the number of lines of tTags into tTagCount
    
-   MarkdownAppend "## Specific bug fixes"
+   MarkdownAppend "notes", "## Specific bug fixes"
    
    local tVersion, tBugs, tPrettyVersion, tBugList
    local tLine, tId, tDesc, tUrl
@@ -1030,20 +1091,31 @@ private command V2BugGenerate pBugInfo
          put "**" after tBugList
       end if
       
-      MarkdownAppend "*" && tBugList
+      MarkdownAppend "notes", "*" && tBugList
+      
+      -- Only this version's bugs should appear in the updater
+      if tPrettyVersion is sVersion then
+         MarkdownAppend "updates", "## Bugs fixed"
+         put empty into tBugList
+         repeat for each line tLine in tBugs
+            put space & item 1 of tLine & comma after tBugList
+         end repeat
+         put "." into char -1 of tBugList
+         MarkdownAppend "updates", tBugList & return
+      end if
       
       subtract 1 from tTagCount
    end repeat
    
-   MarkdownAppend empty
+   MarkdownAppend "notes", empty
 end V2BugGenerate
 
 ----------------------------------------------------------------
 -- Markdown helpers
 ----------------------------------------------------------------
 
-private command MarkdownAppend pText
-   put pText & return after sMarkdownText
+private command MarkdownAppend pKey, pText
+   put pText & return after sMarkdownText[pKey]
 end MarkdownAppend
 
 /*
