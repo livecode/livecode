@@ -388,6 +388,8 @@ bool MCArrayIsFormSensitive(MCArrayRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static bool __MCArrayValidate(MCArrayRef self);
+
 MC_DLLEXPORT_DEF
 bool MCArrayFetchValue(MCArrayRef self, bool p_case_sensitive, MCNameRef p_key, MCValueRef& r_value)
 {
@@ -401,7 +403,9 @@ bool MCArrayFetchValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNam
 	MCAssert(nil != p_path);
 	MCAssert(0 < p_path_length);
 	__MCAssertIsName(p_path[0]);
-
+    
+    MCAssert(__MCArrayValidate(self));
+    
 	// If the array is indirect, get the contents.
 	MCArrayRef t_contents;
 	if (!__MCArrayIsIndirect(self))
@@ -449,7 +453,9 @@ bool MCArrayStoreValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNam
 	MCAssert(nil != p_path);
 	MCAssert(0 < p_path_length);
 	__MCAssertIsName(p_path[0]);
-
+    
+    MCAssert(__MCArrayValidate(self));
+    
 	// Ensure it is not indirect.
 	if (__MCArrayIsIndirect(self))
 		if (!__MCArrayResolveIndirect(self))
@@ -552,7 +558,9 @@ bool MCArrayRemoveValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNa
 	MCAssert(MCArrayIsMutable(self));
 	MCAssert(nil != p_path);
 	MCAssert(0 < p_path_length);
-
+    
+    MCAssert(__MCArrayValidate(self));
+    
 	// Ensure it is not indirect.
 	if (__MCArrayIsIndirect(self))
 		if (!__MCArrayResolveIndirect(self))
@@ -1054,6 +1062,64 @@ void __MCArrayFinalize(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+static bool __MCArrayValidate(MCArrayRef array)
+{
+	// If the array is indirect, get the contents.
+	MCArrayRef t_contents;
+	if (!__MCArrayIsIndirect(array))
+		t_contents = array;
+	else
+		t_contents = array -> contents;
+    
+	uindex_t t_size;
+	t_size = __MCArrayGetTableSize(array);
+    
+	for(uindex_t i = 0; i < t_size; i++)
+	{
+		__MCArrayKeyValue *t_entry;
+		t_entry = &t_contents -> key_values[i];
+        
+		if (t_entry -> value != UINTPTR_MIN && t_entry -> value != UINTPTR_MAX)
+		{
+			MCNameRef t_key;
+			t_key = t_entry -> key;
+            
+			MCValueRef t_value;
+			t_value = (MCValueRef)t_entry -> value;
+			
+            __MCValue *t_key_s, *t_value_s;
+            t_key_s = (__MCValue *)t_key;
+            t_value_s = (__MCValue *)t_value;
+            
+            if (t_key_s -> references == 0 || t_key_s -> flags == 0xffffffff)
+            {
+                MCLog("Invalid key %p", t_key_s);
+                return false;
+            }
+            
+            if (t_value_s -> references == 0 || t_value_s -> flags == 0xffffffff)
+            {
+                MCLog("Invalid value for key %s - %p", MCStringGetCString(MCNameGetString(t_key)), t_value_s);
+                return false;
+            }
+            
+			if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeArray)
+			{
+                if (!__MCArrayValidate((MCArrayRef)t_value))
+                {
+                    MCLog("Invalid array value for key %s - %p", MCStringGetCString(MCNameGetString(t_key)), t_value_s);
+                    return false;
+                }
+			}
+			else
+			{
+			}
+		}
+	}
+    
+    return true;
+}
 
 void __MCArrayDump(MCArrayRef array)
 {

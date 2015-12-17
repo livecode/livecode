@@ -351,6 +351,16 @@ void MCDebuggingSetWatchedVariables(MCExecContext& ctxt, MCStringRef p_value)
 	MCB_parsewatches(ctxt, p_value);
 }
 
+void MCDebuggingDumpExecutionContexts(void)
+{
+    if (MCECptr == nil)
+        return;
+    
+    MCAutoStringRef t_ctxts;
+    MCDebuggingGetExecutionContexts(*MCECptr, &t_ctxts);
+    MCLog("%s", MCStringGetCString(*t_ctxts));
+}
+    
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCDebuggingExecAssert(MCExecContext& ctxt, int type, bool p_eval_success, bool p_result)
