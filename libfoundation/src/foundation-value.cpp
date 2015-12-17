@@ -139,24 +139,21 @@ void MCValueRelease(MCValueRef p_value)
 {
 	__MCValue *self = (__MCValue *)p_value;
 
-	if (self != nil)
-	{
-        __MCAssertIsValue(self);
+	if (self == nil)
+        return;
+    
+    __MCAssertIsValue(self);
         
-        uint32_t t_new_references;
-        t_new_references = self -> references - 1;
-        if (t_new_references > 0)
-        {
-            self -> references = t_new_references;
-            return;
-        }
-        else
-            ;
-	}
-	else
-		return;
-
-	__MCValueDestroy(self);
+    uint32_t t_new_references;
+    t_new_references = self -> references - 1;
+    if (t_new_references == 0)
+    {
+        __MCValueDestroy(self);
+        return;
+    }
+    
+    self -> references = t_new_references;
+    return;
 }
 
 MC_DLLEXPORT_DEF
