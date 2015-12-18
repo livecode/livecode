@@ -664,7 +664,7 @@ bool MCExecContext::CopyElementAsEnum(MCArrayRef p_array, MCNameRef p_key, bool 
 		return false;
 		
 	MCExecValue t_value;
-	t_value . valueref_value = t_val;
+	t_value . valueref_value = MCValueRetain(t_val);
 	t_value . type = kMCExecValueTypeValueRef;
 	
 	MCExecParseEnum(*this, p_enum_type_info, t_value, r_intenum);
