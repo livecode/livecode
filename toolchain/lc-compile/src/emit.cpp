@@ -145,9 +145,15 @@ extern "C" void EmitStringConstant(long value, long *idx);
 extern "C" void EmitBeginListConstant(void);
 extern "C" void EmitContinueListConstant(long idx);
 extern "C" void EmitEndListConstant(long *idx);
+extern "C" void EmitBeginArrayConstant(void);
+extern "C" void EmitContinueArrayConstant(long key_idx, long value_idx);
+extern "C" void EmitEndArrayConstant(long *idx);
 extern "C" void EmitBeginAssignList(long reg);
 extern "C" void EmitContinueAssignList(long reg);
 extern "C" void EmitEndAssignList(void);
+extern "C" void EmitBeginAssignArray(long reg);
+extern "C" void EmitContinueAssignArray(long reg);
+extern "C" void EmitEndAssignArray(void);
 extern "C" void EmitFetch(long reg, long var, long level);
 extern "C" void EmitStore(long reg, long var, long level);
 extern "C" void EmitReturn(long reg);
@@ -1553,6 +1559,27 @@ void EmitEndListConstant(long *idx)
     Debug_Emit("EndListConstant(-> %ld)", *idx);
 }
 
+void EmitBeginArrayConstant(void)
+{
+    MCScriptBeginArrayValueInModule(s_builder);
+
+    Debug_Emit("BeginArrayConstant()", 0);
+}
+
+void EmitContinueArrayConstant(long key_idx, long value_idx)
+{
+	MCScriptContinueArrayValueInModule(s_builder, key_idx, value_idx);
+
+	Debug_Emit("ContinueArrayConstant(%ld, %ld)", key_idx, value_idx);
+}
+
+void EmitEndArrayConstant(long *idx)
+{
+    MCScriptEndArrayValueInModule(s_builder, (uindex_t&)*idx);
+
+    Debug_Emit("EndArrayConstant(-> %ld)", *idx);
+}
+
 void EmitBeginAssignList(long reg)
 {
     MCScriptEmitBeginAssignListInModule(s_builder, reg);
@@ -1572,6 +1599,27 @@ void EmitEndAssignList(void)
     MCScriptEmitEndAssignListInModule(s_builder);
 
     Debug_Emit("EndAssignList()", 0);
+}
+
+void EmitBeginAssignArray(long reg)
+{
+    MCScriptEmitBeginAssignArrayInModule(s_builder, reg);
+
+    Debug_Emit("BeginAssignArray(%ld)", reg);
+}
+
+void EmitContinueAssignArray(long reg)
+{
+    MCScriptEmitContinueAssignArrayInModule(s_builder, reg);
+
+    Debug_Emit("ContinueAssignArray(%ld)", reg);
+}
+
+void EmitEndAssignArray(void)
+{
+    MCScriptEmitEndAssignArrayInModule(s_builder);
+
+    Debug_Emit("EndAssignArray()", 0);
 }
 
 void EmitAssign(long dst, long src)
