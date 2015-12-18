@@ -848,8 +848,19 @@ private function ExtensionsGetSectionName pExtPath
 end ExtensionsGetSectionName
 
 private function ExtensionsGetName pExtPath
+   -- Compute the path to the installed widget data
+   local tShortName
+   set the itemdelimiter to slash
+   put item -1 of pExtPath into tShortName
+   
+   local tBuiltPath
+   put FileGetPath("built-extensions") into tBuiltPath
+   put "/com.livecode.extensions.livecode." after tBuiltPath
+   put tShortName after tBuiltPath
+   
+   -- ...and the path of the manifest file
    local tManifestFile
-   put pExtPath & "/manifest.xml" into tManifestFile
+   put tBuiltPath & "/manifest.xml" into tManifestFile
    
    local tManifest, tXmlId
    put FileGetContents(tManifestFile) into tManifest
@@ -901,7 +912,7 @@ private command DictionaryScan @xAdded, @xModified
          the last line of tTags) into tChangedFiles
    
    -- Check whether each entry was added or just modified
-   local tFiles
+   local tFile
    repeat for each line tFile in tChangedFiles
       if tFile is among the lines of tPermittedFiles then
          DictionaryScanFile tFile, xAdded, xModified
@@ -1175,6 +1186,16 @@ end HtmlEscape
 -- Git helper functions
 ----------------------------------------------------------------
 
+private function GitRunInPath pPath, pCommand
+   local tOutput, tExitCode
+   put shell(merge("cd '[[pPath]]' && git [[pCommand]]")) into tOutput
+   put the result into tExitCode
+   if tExitCode is not 0 then
+      throw merge("Failed to run 'git [[pCommand]]'") & return & tOutput
+   end if
+   return tOutput
+end GitRunInPath
+
 private function GitGetRepoPath pType
    switch pType
       case empty
@@ -1188,16 +1209,16 @@ private function GitGetRepoPath pType
          break
    end switch
    
-   local tPath
-   put FileGetPath(pType) into tPath
-   return line 1 of shell(merge("git -C '[[tPath]]' rev-parse --show-toplevel"))
+   local tRepoPath
+   put GitRunInPath(FileGetPath(pType), "rev-parse --show-toplevel") into tRepoPath
+   
+   return line 1 of tRepoPath
 end GitGetRepoPath
 
 private function GitGetTags pType
-   local tTags, tPath
+   local tTags, tExitCode
    
-   put FileGetPath(pType) into tPath
-   put shell(merge("git -C '[[tPath]]' tag")) into tTags
+   put GitRunInPath(FileGetPath(pType), "tag") into tTags
    
    GitSortTags tTags
    
@@ -1280,9 +1301,10 @@ private function GitGetChangedFiles pType, pFirstVersion, pLastVersion
    local tPath, tFiles
    
    put FileGetPath(pType) into tPath
-   put shell(merge("git -C '[[tPath]]' diff --name-only [[pFirstVersion]]...[[pLastVersion]] -- .")) into tFiles
+   put GitRunInPath(tPath, merge("diff --name-only [[pFirstVersion]]...[[pLastVersion]] -- .")) into tFiles
    
-   local tFile, tResult, tRepoPath
+   local tFile, tRepoPath, tResult
+   put empty into tResult
    put GitGetRepoPath(pType) into tRepoPath
    repeat for each line tFile in tFiles
       put tRepoPath & slash & tFile & return after tResult
@@ -1318,6 +1340,9 @@ private function FileGetPath pType
          return sOutputPath
       case "extensions"
          return builderRepoFolder() & "/extensions"
+      case "built-extensions"
+         builderFetchEngine
+         return the result & "/packaged_extensions"
       case "dictionary"
          return builderRepoFolder() & "/docs/dictionary"
       default
