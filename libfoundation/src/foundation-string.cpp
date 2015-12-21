@@ -305,7 +305,8 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
         {
             unichar_t *t_buffer;
             uindex_t t_length = p_byte_count / 2;
-            MCMemoryAllocate(t_length * sizeof(unichar_t), t_buffer);
+			if (!MCMemoryNewArray(t_length, t_buffer))
+				return false;
 
             for (uindex_t i = 0; i < t_length; i++)
             {
