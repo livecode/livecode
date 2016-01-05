@@ -6306,16 +6306,21 @@ __MCStringCreateWithStrings(MCStringRef& r_string, bool p_has_separator, unichar
     
     // Calculate the required length and is-native status of the result string
     uindex_t t_one_length, t_two_length;
-    t_one_length = MCStringGetLength(p_one);
-    t_two_length = MCStringGetLength(p_two);
-    bool t_native = MCStringIsNative(p_one) && MCStringIsNative(p_two);
+    t_one_length = __MCStringGetLength(p_one);
+    t_two_length = __MCStringGetLength(p_two);
+    bool t_native, t_can_be_native;
+    t_native = __MCStringIsNative(p_one) && __MCStringIsNative(p_two);
+    t_can_be_native = __MCStringCanBeNative(p_one) && __MCStringCanBeNative(p_two);
     uindex_t t_length = t_one_length + t_two_length;
     
     // Take the separator into account
     char_t t_native_separator;
     if (p_has_separator)
     {
-        t_native = t_native && MCUnicodeCharMapToNative(p_separator, t_native_separator);
+        bool t_separator_native;
+        t_separator_native = MCUnicodeCharMapToNative(p_separator, t_native_separator);
+        t_native = t_native && t_separator_native;
+        t_can_be_native = t_can_be_native && t_separator_native;
         t_length++;
     }
     
@@ -6344,9 +6349,6 @@ __MCStringCreateWithStrings(MCStringRef& r_string, bool p_has_separator, unichar
             // Terminate the string
             self->char_count = t_length-1;
             self->native_chars[self->char_count] = '\0';
-            
-            // Set the flags
-            self->flags |= kMCStringFlagCanBeNative;
         }
     }
     else
@@ -6358,7 +6360,7 @@ __MCStringCreateWithStrings(MCStringRef& r_string, bool p_has_separator, unichar
         if (t_success)
         {
             // Copy the first string
-            if (!MCStringIsNative(p_one))
+            if (!__MCStringIsNative(p_one))
                 MCMemoryCopy(self->chars, p_one->chars, t_one_length*sizeof(unichar_t));
             else
             {
@@ -6376,7 +6378,7 @@ __MCStringCreateWithStrings(MCStringRef& r_string, bool p_has_separator, unichar
             }
             
             // Copy the second string
-            if (!MCStringIsNative(p_two))
+            if (!__MCStringIsNative(p_two))
                 MCMemoryCopy(self->chars + t_one_length, p_two->chars, t_two_length*sizeof(unichar_t));
             else
             {
@@ -6394,6 +6396,10 @@ __MCStringCreateWithStrings(MCStringRef& r_string, bool p_has_separator, unichar
             self->flags |= kMCStringFlagIsNotNative;
         }
     }
+    
+    // If both sides and the separator can be native, set the flag
+    if (t_can_be_native)
+        self->flags |= kMCStringFlagCanBeNative;
     
     // Set the output value
     if (t_success)
