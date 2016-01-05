@@ -1413,6 +1413,7 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                 t_argument = nil;
                 
                 // Nothing to free.
+                t_arg_new[t_arg_index] = false;
             }
         }
         
