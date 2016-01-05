@@ -2208,6 +2208,8 @@ on docsBuilderPopulateDatabase pLibrariesA
       exit docsBuilderPopulateDatabase
    end if
    
+   revExecuteSQL tConnection,"BEGIN TRANSACTION"
+   
    repeat for each key tKey in pLibrariesA   	  
    	  builderLog "message", "adding library" && pLibrariesA[tKey]["display name"] && "to docs database"
       revDocsUpdateDatabase tConnection, pLibrariesA[tKey]
@@ -2216,6 +2218,9 @@ on docsBuilderPopulateDatabase pLibrariesA
          exit docsBuilderPopulateDatabase
       end if
    end repeat
+   
+   revExecuteSQL tConnection,"COMMIT"
+   revCloseDatabase tConnection
 end docsBuilderPopulateDatabase
 
 --- LEGACY
