@@ -27,6 +27,7 @@
 		'objcopy': '<!(echo ${OBJCOPY:-objcopy})',
 		'objdump': '<!(echo ${OBJDUMP:-objdump})',
 		'strip':   '<!(echo ${STRIP:-strip})',
+		'ar': '<!(echo ${AR:-ar})',
 	},
 	
 	'target_defaults':

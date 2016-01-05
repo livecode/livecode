@@ -51,6 +51,11 @@
 				[
 					'-fuse-ld=gold',
 				],
+
+				'arflags':
+				[
+					'--plugin', '<!(echo $(dirname <(ar))/../lib/LLVMgold.so)',
+				],
 			},
 			{
 				'ldflags':
